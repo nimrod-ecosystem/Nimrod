@@ -1,34 +1,28 @@
-// Per-user state handle — the client half of the server-side state boundary.
+// Per-(user, profile, instance) OVERWRITE state handle — config/layout/settings.
 //
-// Non-negotiable (architecture.md): the SERVER is the source of truth. This
-// handle keeps only an in-memory mirror. There is deliberately NO localStorage /
-// IndexedDB store of record anywhere — that is what makes devices interchangeable
-// and kills the "swap" problem by construction.
+// Server is the source of truth (architecture.md); this holds an in-memory mirror
+// only — NO localStorage/IndexedDB store of record.
 //
-// Lifecycle:
-//   load()          GET the server's copy on open (server wins)
-//   get()           read the in-memory mirror
-//   set(patch)      merge, notify subscribers, debounced-PUT to the server
-//   subscribe(fn)   observe changes (own writes, first load, or another device)
-//   startPolling()  interim live-sync until the server can push (see note below)
-//   flush()         force a pending PUT (call on hide/unload)
-//
-// The identity is carried as the `X-Dev-User` header so one browser can act as a
-// chosen user in dev. When real auth lands this becomes a cookie/token and this
-// file does not otherwise change.
+// Write policy is last-write-wins WITH optimistic concurrency (DECISIONS.md):
+//   - every value carries a `version`;
+//   - a PUT sends the version it read as `base_version`;
+//   - the server rejects a stale write with 409 + the current truth;
+//   - we rebase our still-pending keys onto that truth and retry.
+// `pending` tracks exactly the keys we've changed since the last successful flush,
+// so a rebase preserves a concurrent writer's other keys — no lost update.
 
-export function createState({ module, user, baseURL = '', pollMs = 1500, debounceMs = 250 }) {
+export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRetries = 5 }) {
   let data = {};
+  let version = 0;
   let loaded = false;
-  let dirty = false;          // unsaved local edits — guards the poller from clobbering
+  let dirty = false;
+  let pending = {};        // keys changed since last successful flush
   let putTimer = null;
   let pollTimer = null;
   const subscribers = new Set();
 
-  const url = `${baseURL}/api/state/${encodeURIComponent(module)}`;
   const authHeaders = () => (user ? { 'X-Dev-User': user } : {});
-
-  function snapshot() { return structuredClone(data); }
+  const snapshot = () => structuredClone(data);
 
   function notify() {
     const snap = snapshot();
@@ -42,6 +36,7 @@ export function createState({ module, user, baseURL = '', pollMs = 1500, debounc
     if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
     const body = await res.json();
     data = body.data || {};
+    version = body.version || 0;
     loaded = true;
     notify();
     return snapshot();
@@ -49,32 +44,55 @@ export function createState({ module, user, baseURL = '', pollMs = 1500, debounc
 
   function set(patch) {
     data = { ...data, ...patch };
+    Object.assign(pending, patch);
     dirty = true;
-    notify();               // optimistic: subscribers see it immediately
-    scheduleFlush();        // ...and it round-trips to the server
-  }
-
-  function scheduleFlush() {
+    notify();
     clearTimeout(putTimer);
-    putTimer = setTimeout(flush, debounceMs);
+    putTimer = setTimeout(() => { flush().catch((e) => console.error(e)); }, debounceMs);
   }
 
-  async function flush() {
+  async function flush(retries = maxRetries) {
     clearTimeout(putTimer);
-    if (!dirty) return;
-    const body = JSON.stringify({ data });
-    dirty = false;          // cleared before await; a racing set() re-dirties it
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body,
-    });
-    if (!res.ok) { dirty = true; throw new Error(`PUT ${url} -> ${res.status}`); }
+    if (!Object.keys(pending).length) { dirty = false; return; }
+
+    const sending = { ...pending };   // the keys this attempt is responsible for
+    pending = {};
+    dirty = false;
+
+    let res;
+    try {
+      res = await fetch(url, {
+        method: 'PUT',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data, base_version: version }),
+      });
+    } catch (err) {
+      pending = { ...sending, ...pending }; dirty = true; throw err;
+    }
+
+    if (res.ok) {
+      const body = await res.json();
+      version = body.version;
+      return;
+    }
+
+    if (res.status === 409) {
+      const body = await res.json();               // { data, version } — server truth
+      pending = { ...sending, ...pending };        // keep our keys to retry
+      data = { ...(body.data || {}), ...pending };  // rebase onto truth
+      version = body.version || 0;
+      notify();
+      if (retries > 0) return flush(retries - 1);
+      console.error('state: gave up after repeated version conflicts');
+      return;
+    }
+
+    pending = { ...sending, ...pending }; dirty = true;
+    throw new Error(`PUT ${url} -> ${res.status}`);
   }
 
-  // Interim convergence across devices. A dirty mirror is never overwritten, so
-  // in-flight local edits are safe. This is a stopgap for real server push
-  // (SSE/WebSocket) in a later slice — see architecture.md "Open questions".
+  // Interim cross-device convergence until server push (SSE) lands. Never
+  // overwrites a dirty mirror; adopts the server's data+version otherwise.
   function startPolling() {
     if (pollTimer) return;
     pollTimer = setInterval(async () => {
@@ -83,12 +101,13 @@ export function createState({ module, user, baseURL = '', pollMs = 1500, debounc
         const res = await fetch(url, { headers: authHeaders() });
         if (!res.ok) return;
         const body = await res.json();
-        const incoming = body.data || {};
-        if (JSON.stringify(incoming) !== JSON.stringify(data)) {
-          data = incoming;
+        if ((body.version || 0) !== version &&
+            JSON.stringify(body.data || {}) !== JSON.stringify(data)) {
+          data = body.data || {};
+          version = body.version || 0;
           notify();
         }
-      } catch { /* transient; try again next tick */ }
+      } catch { /* transient */ }
     }, pollMs);
   }
 
@@ -103,5 +122,5 @@ export function createState({ module, user, baseURL = '', pollMs = 1500, debounc
     clearTimeout(putTimer);
   }
 
-  return { load, get: snapshot, set, subscribe, flush, startPolling, destroy };
+  return { load, get: snapshot, set, subscribe, flush, startPolling, destroy, getVersion: () => version };
 }

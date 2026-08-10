@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nimrod — shared-systems slice (bus + per-user state)</title>
+<title>Nimrod — profiles + module system (slice 2)</title>
 <style>
   :root{
     --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C;
@@ -14,7 +14,7 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
     font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:900px;margin:0 auto;padding:28px 22px 60px}
+  .wrap{max-width:940px;margin:0 auto;padding:28px 22px 60px}
   a{color:var(--midnight)} a:hover{color:var(--rosy-deep)}
   h1{font-size:1.5rem;letter-spacing:-.01em;margin:0 0 .2em}
   .eyebrow{text-transform:uppercase;letter-spacing:.15em;font-size:.7rem;font-weight:700;
@@ -23,76 +23,117 @@
   code{background:var(--cream-soft);border:1px solid var(--line);border-radius:6px;
     padding:1px 6px;font-size:.86em}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:22px;margin-top:22px}
-  .who{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .who{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;
     font-size:.95rem;color:var(--ink-soft)}
   .who b{color:var(--midnight)}
   .pill{font-size:.8rem;border:1px solid var(--line);background:var(--cream-soft);
     border-radius:999px;padding:5px 12px;text-decoration:none;color:var(--ink)}
 
-  /* counter module surface */
-  #app .counter{display:flex;flex-direction:column;align-items:center;gap:14px}
-  #app .count{font-size:4rem;font-weight:800;color:var(--darkgreen);line-height:1;
-    font-variant-numeric:tabular-nums}
-  #app .row{display:flex;gap:12px}
-  #app .cbtn{width:64px;height:56px;font-size:1.6rem;font-weight:700;cursor:pointer;
-    background:var(--moss);color:#fff;border:none;border-radius:12px}
-  #app .cbtn:hover{background:#6f8449}
-  #app .sink-note{margin:2px 0 0;font-size:.8rem;color:var(--muted)}
-
-  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px}
-  .controls button{padding:9px 15px;border-radius:10px;font-weight:600;cursor:pointer;
+  .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:18px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  select,input[type=text]{padding:8px 10px;border:1px solid var(--line);border-radius:9px;
+    background:#fff;color:var(--ink);font-size:.95rem}
+  button{padding:9px 14px;border-radius:9px;font-weight:600;cursor:pointer;
     border:1.5px solid var(--moss);background:transparent;color:var(--darkgreen)}
-  .controls button:hover{background:var(--cream-soft)}
-  .hint{font-size:.86rem;color:var(--muted);margin:8px 0 0}
+  button:hover{background:var(--cream-soft)}
+
+  /* dashboard grid of module cards */
+  #dashboard{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:20px}
+  .module{display:flex;flex-direction:column;padding:0;overflow:hidden}
+  .mhead{display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;border-bottom:1px solid var(--line);background:var(--cream-soft)}
+  .mtitle{font-weight:700;font-size:.98rem;color:var(--darkgreen)}
+  .mremove{border-color:transparent;color:var(--muted);padding:4px 8px;font-size:.9rem}
+  .mremove:hover{background:#f0e9e7;color:var(--rosy-deep)}
+  .mbody{padding:20px;display:flex;justify-content:center}
+
+  .kind-note{margin:6px 0 0;font-size:.76rem;color:var(--muted)}
+  .counter{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .count{font-size:3.4rem;font-weight:800;color:var(--darkgreen);line-height:1;font-variant-numeric:tabular-nums}
+  .row{display:flex;gap:10px}
+  .cbtn{width:56px;height:50px;font-size:1.5rem;font-weight:700;color:#fff;background:var(--moss);
+    border:none;border-radius:11px;cursor:pointer}
+  .cbtn:hover{background:#6f8449}
+  .cbtn.wide{width:auto;padding:0 20px;height:44px;font-size:1rem}
+
+  .presslog{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
+  .total{display:flex;flex-direction:column;align-items:center;line-height:1.1}
+  .total span{font-size:2.6rem;font-weight:800;color:var(--midnight);font-variant-numeric:tabular-nums}
+  .total small{color:var(--muted);font-size:.72rem}
+  ul.log{list-style:none;margin:6px 0 0;padding:0;width:100%;max-width:230px;font-size:.82rem;color:var(--ink-soft)}
+  ul.log li{padding:4px 8px;border:1px solid var(--line);border-radius:7px;margin-bottom:5px;
+    background:var(--cream-soft);font-variant-numeric:tabular-nums}
 
   ul.checks{margin:.4em 0 0;padding-left:1.1em}
   ul.checks li{margin:.5em 0;color:var(--ink-soft)}
   ul.checks b{color:var(--ink)}
-  .foot{margin-top:26px;font-size:.85rem;color:var(--muted)}
+  .foot{margin-top:22px;font-size:.85rem;color:var(--muted)}
+  @media(max-width:720px){ #dashboard{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <p class="eyebrow">Nimrod · platform · slice 1</p>
-  <h1>Shared systems: the module bus + per-user, server-side state</h1>
-  <p class="sub">A throwaway harness for the first validated slice. The counter is a
-    trivial module wired to the real bus and the real server-backed state handle. The
-    server (not this page) is the source of truth.</p>
+  <p class="eyebrow">Nimrod · platform · slice 2</p>
+  <h1>Profiles &amp; the module system</h1>
+  <p class="sub">A profile is a device-independent container of module instances. Each instance
+    has its own server-backed state (overwrite, versioned) and its own append-only event stream.
+    Switch profiles and the whole dashboard swaps.</p>
 
   <div class="who">
-    You are acting as user <b data-user-label>…</b>.
-    <a class="pill" href="?user=alice">open as “alice”</a>
-    <a class="pill" href="?user=bob">open as “bob”</a>
-    <a class="pill" href="?user=dev-user">open as “dev-user”</a>
+    User <b data-user-label>…</b>.
+    <a class="pill" href="?user=alice">alice</a>
+    <a class="pill" href="?user=bob">bob</a>
+    <a class="pill" href="?user=dev-user">dev-user</a>
   </div>
 
-  <div class="card">
-    <div id="app"><!-- counter module mounts here --></div>
-    <div class="controls">
-      <button id="switch-btn">Simulated switch / remote (+1)</button>
+  <div class="card" style="margin-top:18px">
+    <div class="bar">
+      <div class="field">
+        <label for="profile-picker">Active profile</label>
+        <select id="profile-picker"></select>
+      </div>
+      <div class="field">
+        <label for="add-module">Add module to this profile</label>
+        <div style="display:flex;gap:8px">
+          <select id="add-module"></select>
+          <button id="add-module-btn">Add</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="new-profile-name">New profile</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="new-profile-name" placeholder="e.g. Phone" size="12">
+          <button id="new-profile-btn">Create</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Extra input source</label>
+        <button id="switch-btn">Simulated switch (+1)</button>
+      </div>
     </div>
-    <p class="hint">Inputs that drive this one module: the <b>+ / –</b> buttons, the
-      <b>keyboard</b> (<code>+</code> <code>–</code> or <code>↑</code> <code>↓</code>),
-      and the <b>switch</b> above — three separate <em>sources</em>, one <code>counter/delta</code>
-      sink. The keyboard and switch were added in <code>app.js</code> with no change to the module.</p>
+
+    <div id="dashboard"><!-- module instances mount here --></div>
   </div>
 
-  <div class="card">
+  <div class="card" style="margin-top:18px">
     <p class="eyebrow" style="margin-bottom:.6em">What this slice proves</p>
     <ul class="checks">
-      <li><b>Server is the source of truth.</b> Open this page in a second tab as the
-        <em>same</em> user — changes converge (state round-trips through
-        <code>/api/state/counter</code>; no <code>localStorage</code> as the store of record).</li>
-      <li><b>Users are isolated.</b> Open as <em>alice</em> and <em>bob</em> — independent counts.</li>
-      <li><b>Inputs are interchangeable.</b> A new source drives the module by emitting onto its
-        topic; the module’s sink never changes.</li>
+      <li><b>Profiles are device-independent containers.</b> Switch the active profile and the
+        dashboard swaps; open the same profile in another tab and it matches (server truth).</li>
+      <li><b>Two storage kinds are locked in the schema.</b> The counter uses <em>overwrite</em>
+        state (last-write-wins + version); the press log uses <em>append-only</em> events that
+        can’t be overwritten or deleted — remove the module and the config goes, the events stay.</li>
+      <li><b>Optimistic concurrency.</b> A stale config write is rejected (409); the client
+        rebases its keys onto the server truth and retries — no lost update.</li>
+      <li><b>Inputs stay interchangeable.</b> The buttons, keyboard (<code>+ –</code> / <code>↑ ↓</code>),
+        and switch all drive the counter <em>and</em> the press log via one bus topic.</li>
     </ul>
   </div>
 
-  <p class="foot">Dev harness only — not the product UI. Served by the platform server
-    (<code>web/server</code>). See <code>docs/architecture.md</code>.</p>
+  <p class="foot">Dev harness only — not the product UI. See <code>docs/architecture.md</code> and
+    <code>docs/modules/</code>.</p>
 </div>
 
 <script type="module" src="./app.js"></script>

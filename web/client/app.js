@@ -1,38 +1,141 @@
-// App wiring for the shared-systems demo.
+// App wiring for the profiles + module-system demo (slice 2).
 //
-// Read this alongside modules/counter.js. The point of the file is the section
-// marked "SECOND / THIRD INPUT SOURCE": those sources drive the counter with
-// ZERO changes to the module — that's the acceptance criterion, made literal.
+// Boot -> ensure the user has profiles -> render a profile picker -> open the
+// active profile by mounting each of its module instances with its own scoped
+// bus + per-instance state/events handles. Switching profiles tears the dashboard
+// down and rebuilds it. The counter's extra input sources (keyboard, switch) from
+// slice 1 still live here — untouched module, proving the bus seam holds.
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
-import { mountModule } from './module.js';
-import './modules/counter.js';   // side-effect: registers the 'counter' module
+import { createEvents } from './events.js';
+import { createProfilesClient } from './profile.js';
+import { mountModule, listManifests } from './module.js';
+import './modules/counter.js';    // registers 'counter'
+import './modules/presslog.js';   // registers 'presslog'
 
-// Identity is stubbed. `?user=` selects who this browser acts as (dev only) and
-// is carried to the server as X-Dev-User. Real auth replaces this later.
 const params = new URLSearchParams(location.search);
 const user = params.get('user') || 'dev-user';
 
 const bus = createBus();
-const state = createState({ module: 'counter', user });
+const profiles = createProfilesClient({ user });
 
-const mount = document.getElementById('app');
-const counter = mountModule('counter', { mount, bus, state, user });
+const dashEl = document.getElementById('dashboard');
+const pickerEl = document.getElementById('profile-picker');
+const addSelEl = document.getElementById('add-module');
+const addBtnEl = document.getElementById('add-module-btn');
+const newNameEl = document.getElementById('new-profile-name');
+const newBtnEl = document.getElementById('new-profile-btn');
+
+let activeProfileId = null;
+let mounted = [];   // [{ instance, state, events }]
+
+// --- seeding (dev harness convenience) -------------------------------------
+// Give a brand-new user two profiles so "switch profile swaps the dashboard" is
+// visible immediately. Real onboarding replaces this.
+async function ensureProfiles() {
+  let list = await profiles.list();
+  if (list.length === 0) {
+    const room = await profiles.create('Room screen');
+    await profiles.addModule(room.id, 'counter');
+    await profiles.addModule(room.id, 'presslog');
+    const bedside = await profiles.create('Bedside');
+    await profiles.addModule(bedside.id, 'counter');
+    list = await profiles.list();
+  }
+  return list;
+}
+
+function renderPicker(list) {
+  pickerEl.innerHTML = '';
+  for (const p of list) {
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.name;
+    if (p.id === activeProfileId) opt.selected = true;
+    pickerEl.append(opt);
+  }
+}
+
+function renderAddMenu() {
+  addSelEl.innerHTML = '';
+  for (const m of listManifests()) {
+    const opt = document.createElement('option');
+    opt.value = m.type; opt.textContent = m.title;
+    addSelEl.append(opt);
+  }
+}
+
+function teardown() {
+  for (const m of mounted) m.instance.destroy();
+  mounted = [];
+  dashEl.innerHTML = '';
+}
+
+async function openProfile(pid) {
+  teardown();
+  activeProfileId = pid;
+  const profile = await profiles.get(pid);
+
+  for (const mod of profile.modules) {
+    const card = document.createElement('section');
+    card.className = 'card module';
+    const head = document.createElement('div');
+    head.className = 'mhead';
+    head.innerHTML = `<span class="mtitle"></span><button class="mremove" title="remove from profile">✕</button>`;
+    const body = document.createElement('div');
+    body.className = 'mbody';
+    card.append(head, body);
+    dashEl.append(card);
+
+    const state = createState({ url: profiles.stateURL(pid, mod.id), user });
+    const events = createEvents({ url: profiles.eventsURL(pid, mod.id), user });
+    const instance = mountModule(mod.type, { mount: body, bus, state, events, user, profileId: pid });
+
+    head.querySelector('.mtitle').textContent = instance.manifest.title;
+    head.querySelector('.mremove').addEventListener('click', async () => {
+      await profiles.removeModule(pid, mod.id);   // removes config; events persist
+      openProfile(pid);
+    });
+
+    await state.load();
+    await events.load();
+    instance.init();
+    state.startPolling();
+    events.startPolling();
+    mounted.push({ instance, state, events });
+  }
+}
+
+pickerEl.addEventListener('change', () => openProfile(pickerEl.value));
+addBtnEl.addEventListener('click', async () => {
+  if (!activeProfileId) return;
+  await profiles.addModule(activeProfileId, addSelEl.value);
+  openProfile(activeProfileId);
+});
+newBtnEl.addEventListener('click', async () => {
+  const name = (newNameEl.value || '').trim();
+  if (!name) return;
+  const p = await profiles.create(name);
+  newNameEl.value = '';
+  activeProfileId = p.id;
+  renderPicker(await profiles.list());
+  openProfile(p.id);
+});
 
 async function boot() {
   document.querySelectorAll('[data-user-label]').forEach((el) => (el.textContent = user));
-  await state.load();     // server is the source of truth on open
-  counter.init();
-  state.startPolling();   // interim cross-device live-sync (see state.js)
+  renderAddMenu();
+  const list = await ensureProfiles();
+  activeProfileId = list[0].id;
+  renderPicker(list);
+  await openProfile(activeProfileId);
 }
 boot().catch((err) => console.error('boot failed', err));
 
 // ---------------------------------------------------------------------------
-// SECOND INPUT SOURCE — a keyboard. Added here, at the app layer, with no edit
-// to counter.js. It drives the counter purely by emitting onto the same
-// "counter/delta" topic through its own binding. The binding does the reshaping
-// (raw key -> +1/-1); an unmapped key returns undefined and is ignored.
+// Slice-1 carry-over: extra input SOURCES for the counter, added at the app layer
+// with zero edits to counter.js. They emit onto "counter/delta"; whichever counter
+// instance is mounted in the active profile receives them.
 const keyboard = bus.createSource('keyboard');
 bus.addBinding({
   source: 'keyboard', signal: 'key', topic: 'counter/delta',
@@ -47,18 +150,13 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// THIRD INPUT SOURCE — a simulated external "switch/remote" device (the kind of
-// single-action accessible input a patient might use). Same story: new source,
-// new binding, same topic, module untouched.
 const sw = bus.createSource('switch');
 bus.addBinding({ source: 'switch', signal: 'hit', topic: 'counter/delta', transform: () => +1 });
 document.getElementById('switch-btn')?.addEventListener('click', () => sw.emit('hit'));
 // ---------------------------------------------------------------------------
 
-window.addEventListener('resize', () => counter.onResize());
-window.addEventListener('pagehide', () => state.flush());
-document.addEventListener('visibilitychange', () => { if (document.hidden) counter.onHide(); });
+window.addEventListener('resize', () => mounted.forEach((m) => m.instance.onResize()));
+window.addEventListener('pagehide', () => mounted.forEach((m) => m.state.flush()));
 
-// Exposed only so the demo page can show the acceptance checks live; not part of
-// the module or bus contract.
-window.__nimrodDemo = { bus, state, user };
+// Exposed only for the demo/validation harness; not part of any contract.
+window.__nimrodDemo = { bus, profiles, user, get activeProfileId() { return activeProfileId; }, get mounted() { return mounted; } };

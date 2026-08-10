@@ -5,13 +5,22 @@ codebase, not a copy of the old bedside dashboard. The old app is a design refer
 *what* the modules do, not a source to paste from.
 
 ## Layout
-- `server/` — the thin coordination layer (FastAPI + SQLite). Per-user state only; no media,
-  no AI. `app.py`, `db.py` (the `StateStore` seam), `identity.py` (the auth seam).
+- `server/` — the thin coordination layer (FastAPI + SQLite). Coordination only; no media,
+  no AI. `app.py` (profiles + state + events API), `db.py` (the store: overwrite state with
+  versioning + append-only events with triggers, Postgres-swappable), `identity.py` (the
+  auth seam).
 - `client/` — framework-light ES modules: `bus.js` (sources→bindings→sinks), `state.js`
-  (server-backed per-user state handle), `module.js` (the module contract), `app.js` (wiring),
-  `modules/` (one file per module), and `index.html` (a dev harness).
+  (versioned overwrite-state handle), `events.js` (append-only handle), `profile.js`
+  (profiles client), `module.js` (manifest registry + contract), `app.js` (wiring),
+  `modules/` (one file per module: `counter`, `presslog`), and `index.html` (a dev harness).
 
-## Run it (shared-systems slice)
+## Slices landed
+1. **Shared systems** — module bus + per-user, server-side state (no `localStorage` store of
+   record). ✓
+2. **Profiles + module system** — device-independent profiles of module instances; two
+   storage kinds (overwrite state with optimistic concurrency; append-only events). ✓
+
+## Run it
 ```
 cd web/server
 py -3.13 -m venv .venv

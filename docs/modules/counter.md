@@ -24,10 +24,12 @@ switch, scan, gaze, or voice source feeds the same topic with no module change).
   it to state. This is the module's entire downstream contract and never changes.
 
 ## State & storage
-Server-side, keyed to the account, via the state handle: `{ "count": <number> }` under module
-`counter`. Reads on open (`GET /api/state/counter`), writes debounced (`PUT`). The client holds
-an in-memory mirror only — **no `localStorage`/IndexedDB**. Two devices as the same user
-converge (interim: dirty-guarded polling); different users are fully isolated.
+**Overwrite kind** (config/settings): server-side, keyed to `(user, profile, instance)` via the
+state handle: `{ "count": <number> }`. Reads on open (`GET /api/profiles/:pid/state/:key`),
+writes debounced (`PUT` with `base_version`). Last-write-wins with optimistic concurrency — a
+stale write is rejected (409) and the client rebases + retries. In-memory mirror only — **no
+`localStorage`/IndexedDB**. Same user across devices converges (interim: dirty-guarded polling);
+different users and different profiles are fully isolated.
 
 ## Privacy notes
 Touches no private/clinical data — just an integer. No cloud AI, no media. (A real patient

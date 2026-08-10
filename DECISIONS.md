@@ -54,7 +54,25 @@ First slice built + validated in `web/`. Settles what `architecture.md` had left
 - **Bus** (`web/client/bus.js`) is sources → bindings → sinks; new input methods are new
   sources, nothing downstream touched.
 - **Interim cross-device sync = dirty-guarded GET polling** in the client; a stopgap for real
-  server push (SSE/WebSocket), tracked as an open question. _(reopen if push is needed sooner)_
+  server push, superseded by the SSE decision below.
+
+## Profiles, storage kinds & server push (2026-08-10)
+Second slice built + validated in `web/`.
+- **Profiles** are the device-independent container: a user has one or more, each an ordered
+  set of module instances. Everything under a profile is ownership-gated (404 otherwise).
+- **Module system:** modules register a manifest `{type,title,description}` + factory; the
+  runtime mounts each instance with its own scoped bus + own `state`/`events` handles.
+- **Two storage kinds, locked in the schema:**
+  - **Overwrite state** (config/layout/settings): last-write-wins **with a version** for
+    optimistic concurrency — write carries the version it read, server rejects a stale write
+    (409), client re-reads + rebases pending keys + retries. No lost update.
+  - **APPEND-ONLY events** (event/log/progress/clinical): never overwritten or deleted;
+    enforced by **DB triggers**. Removing a module deletes its config but keeps its events.
+    This exists specifically to prevent the press-game data-loss class of bug **by design**.
+- **Server push = SSE, not WebSocket** (server→client: state-changed, push-to-device,
+  presence; client keeps sending changes via the state PUT; WebRTC signaling later rides
+  SSE+POST, media stays P2P). **Don't build it speculatively** — implement SSE when the first
+  real-time feature needs it (device composer / presence) and retire the interim polling then.
 
 ## Reach & hosting
 - **Any-network by default** — "open a link and it works." Uses a small always-on host
