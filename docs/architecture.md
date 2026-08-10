@@ -75,11 +75,39 @@ The first slice (`web/`) is built and validated. What it locks in:
   source + binding, with nothing downstream touched (validated with keyboard and switch
   sources driving the counter module unmodified).
 - **Interim live-sync:** clients converge across devices by polling `GET` with a dirty-guard.
-  This is a stopgap for real server push (SSE/WebSocket) — see the open questions.
+  This is a stopgap for real server push (SSE) — see below.
+
+> Slice 2 evolved the state store and API from the flat `(user, module)` shape above to
+> profile-scoped keys and **two distinct storage kinds**. Details next.
+
+## Profiles, module instances & the two storage kinds — settled 2026-08-10 (slice 2)
+
+- **Profiles** are the device-independent container. A user has one or more (`profiles`
+  table); each holds an ordered set of **module instances** (`profile_modules`). Opening a
+  profile mounts its instances on any device — this is what "replace a screen and it comes
+  back" means concretely. Everything under a profile is ownership-gated: a request for a
+  profile you don't own is a 404.
+- **Module system:** a module registers a manifest `{type, title, description}` + a factory
+  (`web/client/module.js`). The runtime mounts each instance with its **own** scoped bus and
+  its **own** per-instance `state`/`events` handles, all released on destroy. Instances are
+  keyed by a generated id, so a profile can hold several of the same type.
+- **Two storage kinds — locked into the schema on purpose:**
+  - **Overwrite state** (config / layout / settings): `state` table, one row per
+    `(user, profile, key)`, **last-write-wins with a `version` column** for optimistic
+    concurrency. A `PUT` carries the `base_version` it read; a stale write gets **409** + the
+    current truth; the client rebases its still-pending keys and retries (`web/client/state.js`)
+    — no lost update.
+  - **Append-only events** (event / log / progress / clinical): `events` table, immutable.
+    Append + read only; **DB triggers abort any UPDATE/DELETE**. Removing a module deletes its
+    overwrite state but **leaves its events intact**. This is the by-design guard against the
+    class of bug where re-saving config clobbered accumulated activity data.
+- **Store is still Postgres-swappable** — standard SQL, `ON CONFLICT … DO UPDATE`, and the
+  append-only guarantee expressed as triggers a Postgres port reproduces.
 
 ## Open questions to settle as we build
-- **Server push** to replace the interim GET-polling in `state.js` (SSE or WebSocket).
+- **Server push = SSE** (decided: SSE, not WebSocket; WebRTC signaling later rides SSE+POST,
+  media stays P2P). *Build it when the first real-time feature needs it* (device composer /
+  presence), and retire the interim polling then — not speculatively.
 - Auth: Google OAuth for visitors; device token / kiosk auth for a patient's own screen
   (the `current_user()` seam is where it lands).
 - The storage-link abstraction (BYO storage) — design early; modules depend on it.
-- Concurrent-write policy (last-write-wins today; may need per-field merge or versioning).
