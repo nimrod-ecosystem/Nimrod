@@ -66,6 +66,22 @@
   ul.log li{padding:4px 8px;border:1px solid var(--line);border-radius:7px;margin-bottom:5px;
     background:var(--cream-soft);font-variant-numeric:tabular-nums}
 
+  /* clock */
+  .clock{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;position:relative}
+  .clock .time{font-weight:800;color:var(--darkgreen);line-height:1;font-variant-numeric:tabular-nums}
+  .clock[data-size="s"] .time{font-size:2.2rem}
+  .clock[data-size="m"] .time{font-size:3.2rem}
+  .clock[data-size="l"] .time{font-size:4.4rem}
+  .clock .when{font-size:1rem;color:var(--midnight);font-weight:600;text-transform:capitalize}
+  .clock .date{font-size:.9rem;color:var(--muted)}
+  .clock .gear{position:absolute;top:-6px;right:-6px;border-color:transparent;background:transparent;
+    color:var(--muted);padding:2px 6px;font-size:1rem;line-height:1}
+  .clock .gear:hover{color:var(--midnight)}
+  .clock .settings{margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;
+    font-size:.82rem;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:10px;width:100%}
+  .clock .settings label{display:flex;align-items:center;gap:6px}
+  .clock .settings select{padding:3px 6px;font-size:.82rem}
+
   ul.checks{margin:.4em 0 0;padding-left:1.1em}
   ul.checks li{margin:.5em 0;color:var(--ink-soft)}
   ul.checks b{color:var(--ink)}

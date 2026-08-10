@@ -11,6 +11,7 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule, listManifests } from './module.js';
+import './modules/clock.js';      // registers 'clock'
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'
 
@@ -37,6 +38,7 @@ async function ensureProfiles() {
   let list = await profiles.list();
   if (list.length === 0) {
     const room = await profiles.create('Room screen');
+    await profiles.addModule(room.id, 'clock');
     await profiles.addModule(room.id, 'counter');
     await profiles.addModule(room.id, 'presslog');
     const bedside = await profiles.create('Bedside');
