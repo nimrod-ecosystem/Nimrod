@@ -74,6 +74,29 @@ Second slice built + validated in `web/`.
   SSE+POST, media stays P2P). **Don't build it speculatively** — implement SSE when the first
   real-time feature needs it (device composer / presence) and retire the interim polling then.
 
+## Default modules & media sources (2026-08-10)
+Slice 3 = the four default-dashboard modules (**photos · camera · YouTube · clock**), the
+milestone that must land before any funding channel opens. Scoped, not yet built.
+- **Build order = sub-slices, easy→hard: clock → camera → photos → youtube**, one validated +
+  committed per session (like slices 1–2).
+- **Camera = local self-view / rearview mirror ONLY, not a call.** `getUserMedia → <video>`,
+  **zero network egress** — this hard-encodes the "camera stays on the patient's device"
+  invariant before the later WebRTC-call slice. Config stores a camera *preference* (label),
+  with graceful fallback since `deviceId` differs per screen.
+- **YouTube:** playlists are **public** video refs → safe in overwrite state (not patient
+  data). Use `youtube-nocookie`. Sing-along MVP = a curated karaoke playlist; lyric/caption
+  overlay is a fast-follow. Audio arbitration/ducking is out of scope for this slice.
+- **Photos media = user-owned, referenced by link — never hosted by the platform, never cloud
+  (Drive is non-sensitive assets only).** A **media-source abstraction**: per-user
+  `media_sources {id, label, base_url, kind}`; a photos instance references `{sourceId, album}`;
+  a client resolver fetches the listing + images straight from the user's origin — **the server
+  never sees the bytes.**
+- **Decision: build the LOCAL MEDIA AGENT first** (full BYO storage + compute now), not a
+  url-list stopgap. The agent is a small **user-run** file server (an optional mode of `server/`
+  or a sibling) that serves a chosen folder with a listing endpoint + CORS to the platform
+  origin. `base_url` is entered by the user at runtime (localhost on the kiosk; their
+  LAN/Tailscale address remotely) — **never committed to the repo.**
+
 ## Reach & hosting
 - **Any-network by default** — "open a link and it works." Uses a small always-on host
   (~$5/mo) for presence/signaling + a TURN relay. **Tailscale is optional** (an advanced

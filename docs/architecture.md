@@ -104,10 +104,26 @@ The first slice (`web/`) is built and validated. What it locks in:
 - **Store is still Postgres-swappable** — standard SQL, `ON CONFLICT … DO UPDATE`, and the
   append-only guarantee expressed as triggers a Postgres port reproduces.
 
+## Media sources (BYO storage) — direction set 2026-08-10 (slice 3)
+
+Patient media (photos) never lives in the repo, on the platform server, or in cloud storage.
+A **media source** is a reference to a **user-owned origin**:
+
+- Per-user `media_sources { id, label, base_url, kind }` (overwrite state — the `base_url` is
+  the user's own server, entered at runtime, **never in the repo**).
+- A module instance references `{ sourceId, album, … }`; a client **resolver** turns that into
+  fetchable URLs by calling the source's listing API and loading images **directly from the
+  user's origin — the platform server never sees the bytes.**
+- **Chosen first implementation: a local media agent** — a small user-run file server (an
+  optional mode of `web/server` or a sibling) exposing a listing endpoint + CORS to the
+  platform origin over a folder the user picks. This is BYO storage + BYO compute in full;
+  `url-list`/manifest sources can be added later as another `kind` behind the same resolver.
+
 ## Open questions to settle as we build
 - **Server push = SSE** (decided: SSE, not WebSocket; WebRTC signaling later rides SSE+POST,
   media stays P2P). *Build it when the first real-time feature needs it* (device composer /
   presence), and retire the interim polling then — not speculatively.
 - Auth: Google OAuth for visitors; device token / kiosk auth for a patient's own screen
   (the `current_user()` seam is where it lands).
-- The storage-link abstraction (BYO storage) — design early; modules depend on it.
+- Media-agent auth (how the user's origin authenticates the platform client) and offline
+  caching of already-seen media — settle when building the photos slice.
