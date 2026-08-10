@@ -1,0 +1,4 @@
+# Nimrod platform server — shared-systems slice
+# Thin coordination layer only: accounts (stub), per-user state. No media, no AI.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0

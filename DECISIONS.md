@@ -40,6 +40,22 @@ there's a real reason, but treat it as settled by default. Dates are when decide
 - **BYO storage + BYO compute.** Files live in a folder the user owns; the platform
   references them, never hosts or locks them in. AI runs on the user's own machine.
 
+## Platform server & state store (2026-08-10)
+First slice built + validated in `web/`. Settles what `architecture.md` had left open:
+- **Server = Python + FastAPI** (uvicorn), one language with the rest of the tooling. It's
+  the thin coordination layer only — serves the client on the same origin, no media, no AI.
+- **State store = SQLite now, Postgres-swappable** behind a two-method `StateStore` interface
+  (`web/server/db.py`). One row per `(user_id, module)`; `data` is an opaque JSON blob.
+- **Per-user state API:** `GET/PUT /api/state/:module`, keyed to the account. Client keeps an
+  in-memory mirror only — **no localStorage/IndexedDB as the store of record** (verified).
+- **Identity is a stub with a seam:** `current_user()` returns `dev-user` today, honours an
+  `X-Dev-User`/`?user=` override in dev; Google OAuth / kiosk tokens plug in there later with
+  no downstream change.
+- **Bus** (`web/client/bus.js`) is sources → bindings → sinks; new input methods are new
+  sources, nothing downstream touched.
+- **Interim cross-device sync = dirty-guarded GET polling** in the client; a stopgap for real
+  server push (SSE/WebSocket), tracked as an open question. _(reopen if push is needed sooner)_
+
 ## Reach & hosting
 - **Any-network by default** — "open a link and it works." Uses a small always-on host
   (~$5/mo) for presence/signaling + a TURN relay. **Tailscale is optional** (an advanced
