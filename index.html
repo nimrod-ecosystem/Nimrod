@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — free, private technology for patient care &amp; recovery</title>
+<style>
+  :root{
+    /* palette from the reference swatches — color values are free to use */
+    --darkgreen:#0A3323;   /* deepest green — hero, text */
+    --moss:#839958;        /* moss green — accents, fills */
+    --beige:#F7F4D5;       /* warm cream — page background */
+    --rosy:#D3968C;        /* rosy brown — warm CTA accent */
+    --midnight:#105666;    /* midnight green — secondary accent, links */
+
+    --bg:#F7F4D5;
+    --cream-soft:#FBF9E9;  /* slightly lighter cream for lift */
+    --card:#FFFFFF;
+    --ink:#0A3323;
+    --ink-soft:#3c5346;
+    --muted:#5d7064;
+    --line:#e4e0c2;
+    --line-soft:#ece8cf;
+    --rosy-deep:#a85f52;   /* accessible rosy for small text/links */
+    --radius:16px; --max:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--midnight)}
+  a:hover{color:var(--rosy-deep)}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+  h1,h2,h3{line-height:1.18;letter-spacing:-.01em;color:var(--ink)}
+  h2{font-size:1.7rem;margin:0 0 .45em}
+  .eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;
+    font-weight:700;color:var(--midnight);margin:0 0 .7em}
+
+  /* NAV */
+  nav{position:sticky;top:0;z-index:20;background:rgba(247,244,213,.9);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:16px;height:64px}
+  .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;color:var(--darkgreen)}
+  .brand span{color:var(--rosy-deep)}
+  .freetag{font-size:.72rem;font-weight:600;color:var(--midnight);
+    border:1px solid var(--line);background:var(--cream-soft);
+    padding:4px 10px;border-radius:999px;white-space:nowrap}
+  nav .right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .btn{display:inline-block;padding:9px 17px;border-radius:10px;font-weight:600;
+    font-size:.92rem;border:1.5px solid transparent;cursor:pointer;text-decoration:none}
+  .btn.primary{background:var(--rosy);color:#3a1f18;border-color:var(--rosy)}
+  .btn.primary:hover{background:#c9887d;color:#3a1f18}
+  .btn.outline{background:transparent;color:var(--darkgreen);border-color:var(--moss)}
+  .btn.outline:hover{border-color:var(--darkgreen);background:var(--cream-soft)}
+  .btn.ondark{background:var(--rosy);color:#3a1f18;border-color:var(--rosy)}
+  .btn.ondark.ghost{background:transparent;color:var(--beige);border-color:rgba(247,244,213,.45)}
+  .btn.ondark.ghost:hover{border-color:var(--beige);background:rgba(247,244,213,.08)}
+
+  /* HERO */
+  header.hero{color:var(--beige);
+    background:radial-gradient(1100px 480px at 78% -12%,rgba(131,153,88,.35),transparent 62%),
+               linear-gradient(160deg,#0A3323 0%,#0d4030 55%,#105666 130%)}
+  header.hero .wrap{padding:86px 24px 74px}
+  header.hero .eyebrow{color:var(--rosy)}
+  header.hero h1{color:var(--beige);font-size:clamp(2.2rem,5vw,3.5rem);
+    margin:.15em 0 .4em;max-width:18ch}
+  header.hero p.lead{font-size:1.2rem;color:#e7ecd7;max-width:62ch;margin:0 0 1.7em}
+  .cta{display:flex;gap:13px;flex-wrap:wrap}
+  .pills{display:flex;gap:9px;flex-wrap:wrap;margin-top:30px}
+  .pill{font-size:.8rem;color:#dbe3cf;border:1px solid rgba(247,244,213,.28);
+    border-radius:999px;padding:6px 13px}
+  .pill b{color:var(--rosy);font-weight:600}
+
+  /* SECTIONS */
+  section{padding:64px 0;border-top:1px solid var(--line)}
+  .lead-sub{color:var(--ink-soft);max-width:66ch;font-size:1.06rem}
+
+  /* value grid */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:34px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:32px}
+  .val{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+  .val h3{margin:.1em 0 .35em;font-size:1.12rem}
+  .val p{margin:0;color:var(--muted);font-size:.97rem}
+  .val .ic{font-size:1.5rem;margin-bottom:10px}
+  .community{margin-top:30px;background:var(--cream-soft);border:1px solid var(--line);
+    border-left:4px solid var(--moss);border-radius:12px;padding:22px 24px}
+  .community p{margin:0;color:var(--ink-soft);font-size:1.02rem;max-width:74ch}
+
+  /* story */
+  .story{background:var(--cream-soft)}
+  .story .body{max-width:70ch}
+  .story p{color:var(--ink-soft);font-size:1.07rem}
+  .story p.kicker{color:var(--ink);font-weight:600;font-size:1.14rem;margin-bottom:1em}
+  .story .close{font-weight:600;color:var(--ink)}
+
+  /* roadmap */
+  .road{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:14px}
+  .col{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;display:flex;flex-direction:column}
+  .col h3{display:flex;align-items:center;gap:9px;margin:.1em 0 .2em;font-size:1.06rem}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .col.live .dot{background:var(--moss);box-shadow:0 0 0 3px rgba(131,153,88,.22)}
+  .col.test .dot{background:var(--midnight);box-shadow:0 0 0 3px rgba(16,86,102,.18)}
+  .col.plan .dot{background:var(--rosy);box-shadow:0 0 0 3px rgba(211,150,140,.22)}
+  .col .cap{font-size:.78rem;color:var(--muted);margin:0 0 15px;letter-spacing:.02em}
+  ul.feat{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+  ul.feat li{position:relative;padding-left:20px;font-size:.95rem;color:var(--muted)}
+  ul.feat li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;
+    border-radius:2px}
+  .col.live ul.feat li::before{background:var(--moss)}
+  .col.test ul.feat li::before{background:var(--midnight)}
+  .col.plan ul.feat li::before{background:var(--rosy)}
+  ul.feat li b{color:var(--ink);font-weight:600}
+
+  /* default dashboard callout */
+  .dash{margin-top:28px;background:var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+  .dash h3{margin:0 0 4px}
+  .dash p{color:var(--muted);margin:.2em 0 18px;font-size:.97rem;max-width:70ch}
+  .mods{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .mod{background:var(--cream-soft);border:1px solid var(--line);border-radius:12px;
+    padding:16px;text-align:center}
+  .mod .mi{font-size:1.6rem}
+  .mod .mn{font-weight:700;font-size:.93rem;margin-top:7px;color:var(--ink)}
+  .mod .md{font-size:.78rem;color:var(--muted);margin-top:2px}
+  .device-note{margin-top:16px;font-size:.92rem;color:var(--ink-soft);
+    background:rgba(16,86,102,.06);border:1px solid var(--line);
+    border-radius:10px;padding:13px 16px}
+  .device-note b{color:var(--midnight)}
+  .milestone{margin-top:14px;font-size:.9rem;color:var(--ink-soft);
+    background:rgba(211,150,140,.12);border:1px solid var(--rosy);
+    border-radius:10px;padding:12px 16px}
+  .milestone b{color:var(--rosy-deep)}
+
+  /* privacy strip */
+  .strip{background:var(--cream-soft)}
+
+  /* future */
+  .future p{color:var(--ink-soft);max-width:70ch;font-size:1.06rem}
+
+  /* get involved */
+  .involve{text-align:center;color:var(--beige);
+    background:linear-gradient(160deg,#0A3323,#105666)}
+  .involve .eyebrow{color:var(--rosy)}
+  .involve h2{font-size:1.9rem;color:var(--beige)}
+  .involve p{color:#e2e8d5;max-width:58ch;margin:0 auto 26px}
+  .involve .cta{justify-content:center}
+
+  footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:.85rem}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}
+
+  @media(max-width:820px){
+    .grid,.grid3,.road,.mods{grid-template-columns:1fr}
+    .mods{grid-template-columns:repeat(2,1fr)}
+    .freetag{display:none}
+    nav .wrap{gap:10px}
+    .btn{padding:8px 13px;font-size:.86rem}
+  }
+</style>
+</head>
+<body>
+<!--
+  ============================================================
+  EDITING THIS PAGE — quick guide
+  • All visible wording lives between HTML tags like <p>...</p>,
+    <h1>...</h1>, <h2>...</h2>. To change copy, edit the text
+    between the tags in any text editor (Notepad, or VS Code — free).
+  • Sections are labeled below with comments: NAV, HERO, INTENTION,
+    BACKSTORY, PROGRESS, PRIVACY, FUTURE, GET INVOLVED, FOOTER.
+  • To experiment live without saving: open the page in Chrome,
+    right-click any text -> "Inspect", then double-click the text
+    in the panel to edit it on screen (changes reset on refresh).
+  • All colors are defined once at the top, in the :root { } block.
+  ============================================================
+-->
+
+<nav>
+  <div class="wrap">
+    <div class="brand">Nimrod<span>.</span></div>
+    <span class="freetag">Free &amp; private</span>
+    <div class="right">
+      <a href="#" class="btn outline">Log in</a>
+      <a href="#" class="btn primary">Create account</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Free · open source · private by design</p>
+    <h1>Technology for quality of life, recovery, and care.</h1>
+    <p class="lead">Nimrod is a free system built to improve daily life and support recovery for
+      people with TBI, stroke, and other serious conditions — and to help their families
+      communicate, advocate, and stay close. Private, modular, and able to run on equipment you
+      probably already own.</p>
+    <div class="cta">
+      <a href="#" class="btn ondark">Create account</a>
+      <a href="#intention" class="btn ondark ghost">See what it does</a>
+    </div>
+    <div class="pills">
+      <span class="pill"><b>Free for everyone</b></span>
+      <span class="pill"><b>Private</b> &nbsp;nothing personal leaves your device</span>
+      <span class="pill"><b>Open source</b></span>
+      <span class="pill"><b>Runs on gear you own</b></span>
+    </div>
+  </div>
+</header>
+
+<!-- 1 · INTENTION -->
+<section id="intention">
+  <div class="wrap">
+    <p class="eyebrow">What it's for</p>
+    <h2>Built for patient care, first and always.</h2>
+    <p class="lead-sub">The focus of Nimrod is simple: do whatever technology can to help a
+      patient recover and live better — and to give the people caring for them real tools.</p>
+    <div class="grid">
+      <div class="val">
+        <div class="ic">🌤️</div>
+        <h3>Improve quality of life</h3>
+        <p>Give a disoriented patient something familiar and calming: their own photos, music, faces,
+          and a clear window on the room around them.</p>
+      </div>
+      <div class="val">
+        <div class="ic">🌱</div>
+        <h3>Support recovery</h3>
+        <p>Activities and exercises that learn from the patient and gently teach them to use the
+          system — meeting them wherever their abilities are today, and growing with them.</p>
+      </div>
+      <div class="val">
+        <div class="ic">🤝</div>
+        <h3>Communication &amp; advocacy</h3>
+        <p>Help families communicate with and advocate for TBI, stroke, and other patients — a way to
+          reach them, to give them a voice, and to keep a clear record of how they're doing.</p>
+      </div>
+      <div class="val">
+        <div class="ic">🔒</div>
+        <h3>Free, private, and yours</h3>
+        <p>Open source and free. Private by design — your cameras, files, and data stay on your own
+          hardware. A modular ecosystem to fit your needs, and it runs on equipment you probably
+          already own.</p>
+      </div>
+    </div>
+    <div class="community">
+      <p>Although Nimrod is being built first for one person's recovery, it's designed to be useful
+        for <b>everyone</b>. The more people who use it, the more who build modules for it — and a
+        thriving community makes it better for every patient and family who comes next.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · BACKSTORY -->
+<section id="backstory" class="story">
+  <div class="wrap">
+    <h2>Backstory</h2>
+    <div class="body">
+      <p class="kicker">My fiancée suffered a traumatic brain injury and multiple strokes.</p>
+      <p>She was emerging from a coma in a skilled nursing facility that was unfamiliar to her.
+        Because of her strokes, her head was turned so that she could only see the exterior wall. I
+        was scrambling to do whatever I could to improve her quality of life there while managing her
+        care and trying to navigate all of the unfamiliar medical and legal territory that came with
+        it.</p>
+      <p>It started with a digital picture frame to give her something to look at, and her old phone
+        and a Bluetooth speaker for music. I then added a smart display — a camera and screen I could
+        video-call — so I could actually see her and check in when I wasn't there. It helped, but it
+        was far from private. I knew she'd never wanted a device like that in our room, but she was
+        defenseless and unable to communicate in a place that was unfamiliar to me as well. I hated
+        leaving her there — but unfortunately, you can't be there with them all the time. In the short
+        run, being able to see her and know she was okay outweighed the privacy concerns — but it's a
+        big part of why everything I built afterward is private by design.</p>
+      <p>I quickly realized how scary and disorienting the whole thing must be for her — not being
+        able to see who was coming or going, or what was being done to her. I already had a Raspberry
+        Pi and a webcam. I got an inexpensive monitor and set everything up in her room so the webcam
+        could act as a rearview mirror, showing her what was behind her. That was the beginning of the
+        computer system I started building to help us through her recovery.</p>
+      <p>As I developed it, it became clear that it could help other people too — and I'm now working
+        to make that happen. I want to build something that is free for everyone and can run on
+        whatever electronics they already have: simple enough for patients with severe cognitive
+        deficits, and deep enough to offer them and their loved ones everything I possibly could to
+        help.</p>
+      <p class="close">I want to be straightforward about one thing: my primary goal will always be
+        helping Christine. Whatever her current needs and abilities are will dictate my focus.</p>
+      <p style="margin-top:1.5em;font-size:.98rem;color:var(--muted)">A note on how this was made: I
+        don't have an extensive programming background. I built it with AI tools and existing
+        open-source work, paying close attention to detail and testing everything thoroughly — first
+        at home, then with Christine. Help from experienced developers would be more than welcome.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · WHAT'S LIVE / TESTED / PLANNED -->
+<section id="progress">
+  <div class="wrap">
+    <p class="eyebrow">Where the project stands</p>
+    <h2>Real, running software — not a mockup.</h2>
+    <p class="lead-sub">This isn't a concept. A working dashboard has been in use for months at a
+      bedside, and a deep library of accessible modules has already been tested with a real patient.</p>
+
+    <div class="dash">
+      <h3>The default dashboard — live today</h3>
+      <p>One calm, fullscreen surface that hosts everything as arrangeable modules.</p>
+      <div class="mods">
+        <div class="mod"><div class="mi">🖼️</div><div class="mn">Photos</div><div class="md">a familiar window</div></div>
+        <div class="mod"><div class="mi">📷</div><div class="mn">Camera</div><div class="md">rearview mirror</div></div>
+        <div class="mod"><div class="mi">▶️</div><div class="mn">YouTube</div><div class="md">+ sing-along</div></div>
+        <div class="mod"><div class="mi">🕐</div><div class="mn">Clock</div><div class="md">orientation</div></div>
+      </div>
+      <div class="device-note"><b>Runs on what you already have.</b> It's a web app — open it in a
+        browser on a phone, tablet, computer, or an inexpensive Raspberry Pi and monitor. No special
+        equipment, no vendor hardware.</div>
+      <div class="milestone"><b>Launch milestone:</b> get these four default modules into the public
+        open-source repository before opening any way to support the project.</div>
+    </div>
+
+    <div class="road" style="margin-top:30px">
+      <div class="col live">
+        <h3><span class="dot"></span>Live now</h3>
+        <p class="cap">Running at the bedside</p>
+        <ul class="feat">
+          <li><b>Default dashboard</b> — photos, rearview camera, YouTube + sing-along, clock</li>
+          <li><b>Runs in any modern browser</b> — phone, tablet, PC, Mac, or Raspberry Pi</li>
+          <li><b>Your own media</b>, served locally and able to run offline</li>
+        </ul>
+      </div>
+      <div class="col test">
+        <h3><span class="dot"></span>Tested with a real patient</h3>
+        <p class="cap">Proven, not yet default</p>
+        <ul class="feat">
+          <li><b>Private video calls &amp; silent check-in</b> — the camera stays on her device</li>
+          <li><b>Accessible input</b> — yes/no scanning, switch/tilt, press-to-play</li>
+          <li><b>Hands-free control</b> — camera-based hand &amp; color tracking, already built</li>
+          <li><b>Communication &amp; play</b> — AAC board, word / match games, sing-along</li>
+          <li><b>Vision Probe</b> — a caregiver-run visual-response check, in early testing</li>
+        </ul>
+      </div>
+      <div class="col plan">
+        <h3><span class="dot"></span>Planned</h3>
+        <p class="cap">On the build path</p>
+        <ul class="feat">
+          <li><b>Accounts &amp; profiles</b> — every person gets their own profile and dashboard</li>
+          <li><b>Module library</b> — add and share modules; anyone can build one</li>
+          <li><b>Device-independent setups</b> — your layout lives in your account, not on a machine</li>
+          <li><b>A private, on-device assistant</b> to help set things up and lend a hand</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- privacy reinforcement -->
+<section class="strip">
+  <div class="wrap">
+    <p class="eyebrow">The line we don't cross</p>
+    <h2>Your personal data never leaves your machine.</h2>
+    <div class="grid3">
+      <div class="val"><div class="ic">🎥</div><h3>Video stays between you</h3>
+        <p>Calls and camera feeds flow directly between your own devices. The site relays a tiny
+          "let's connect" handshake and nothing else.</p></div>
+      <div class="val"><div class="ic">🧠</div><h3>The intelligence is local</h3>
+        <p>The AI that handles a patient's private information runs on open-source models on your own
+          computer. No outside service ever sees it.</p></div>
+      <div class="val"><div class="ic">🗂️</div><h3>You keep your files</h3>
+        <p>Photos and recordings live in a folder you own. The system points to them; it never hosts
+          them or locks them away.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · FUTURE -->
+<section id="future" class="future">
+  <div class="wrap">
+    <p class="eyebrow">What's next</p>
+    <h2>From one bedside to something anyone can use.</h2>
+    <p>The same foundation that runs one patient's screen becomes a system anyone can set up for a
+      loved one: personal accounts and profiles, a setup you can open on any device, and a growing
+      library of modules that the community can extend — eventually including tools for the therapists,
+      nurses, and other caregivers who support them, not just families. The built-in assistant grows into a private,
+      on-device companion — helping families set things up, turning recordings into a clear record for
+      a clinician to review, and eventually taking simple spoken requests, all without anything
+      private ever leaving the home, hospital, or care facility.</p>
+    <p style="margin-top:1.1em">It's also built to connect to the tools people already use. Planned
+      integrations include Home Assistant, Alexa, and Google Home — and, through the same modules and
+      shared bus that run the screen, the ability for a patient to control their own environment:
+      lights, a thermostat, a fan, whatever matters to them, using whatever input they can — a switch,
+      a look, a tap, or their voice. The setup assistant is itself one of these integrations, and
+      clear, open documentation for every module lets people, and their own AI tools, understand,
+      extend, and connect to the system.</p>
+  </div>
+</section>
+
+<!-- GET INVOLVED -->
+<section id="involve" class="involve">
+  <div class="wrap">
+    <p class="eyebrow">Join in</p>
+    <h2>Free to use. Open to build on.</h2>
+    <p>Nimrod is free, open source, and independent — no product to sell you, no ads, no data
+      harvesting. Create an account to use it, or help build the thing that makes it better for the
+      next family.</p>
+    <div class="cta">
+      <a href="#" class="btn ondark">Create account</a>
+      <a href="#" class="btn ondark ghost">Log in</a>
+      <a href="#" class="btn ondark ghost">View the code</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>Nimrod — free &amp; open source. Built to last, designed to evolve.</div>
+    <div>Private by design · Local-first · No tracking</div>
+  </div>
+</footer>
+
+</body>
+</html>
