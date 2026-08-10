@@ -41,6 +41,13 @@ __pycache__/
 .venv/
 venv/
 
+# Server-local database (per-user state lives here at runtime; never committed)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
 # OS / editor
 .DS_Store
 Thumbs.db

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — shared-systems slice (bus + per-user state)</title>
+<style>
+  :root{
+    --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C;
+    --midnight:#105666; --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF;
+    --ink:#0A3323; --ink-soft:#3c5346; --muted:#5d7064; --line:#e4e0c2;
+    --rosy-deep:#a85f52; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 22px 60px}
+  a{color:var(--midnight)} a:hover{color:var(--rosy-deep)}
+  h1{font-size:1.5rem;letter-spacing:-.01em;margin:0 0 .2em}
+  .eyebrow{text-transform:uppercase;letter-spacing:.15em;font-size:.7rem;font-weight:700;
+    color:var(--midnight);margin:0 0 .5em}
+  .sub{color:var(--ink-soft);max-width:64ch;margin:.2em 0 0}
+  code{background:var(--cream-soft);border:1px solid var(--line);border-radius:6px;
+    padding:1px 6px;font-size:.86em}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;margin-top:22px}
+  .who{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;
+    font-size:.95rem;color:var(--ink-soft)}
+  .who b{color:var(--midnight)}
+  .pill{font-size:.8rem;border:1px solid var(--line);background:var(--cream-soft);
+    border-radius:999px;padding:5px 12px;text-decoration:none;color:var(--ink)}
+
+  /* counter module surface */
+  #app .counter{display:flex;flex-direction:column;align-items:center;gap:14px}
+  #app .count{font-size:4rem;font-weight:800;color:var(--darkgreen);line-height:1;
+    font-variant-numeric:tabular-nums}
+  #app .row{display:flex;gap:12px}
+  #app .cbtn{width:64px;height:56px;font-size:1.6rem;font-weight:700;cursor:pointer;
+    background:var(--moss);color:#fff;border:none;border-radius:12px}
+  #app .cbtn:hover{background:#6f8449}
+  #app .sink-note{margin:2px 0 0;font-size:.8rem;color:var(--muted)}
+
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px}
+  .controls button{padding:9px 15px;border-radius:10px;font-weight:600;cursor:pointer;
+    border:1.5px solid var(--moss);background:transparent;color:var(--darkgreen)}
+  .controls button:hover{background:var(--cream-soft)}
+  .hint{font-size:.86rem;color:var(--muted);margin:8px 0 0}
+
+  ul.checks{margin:.4em 0 0;padding-left:1.1em}
+  ul.checks li{margin:.5em 0;color:var(--ink-soft)}
+  ul.checks b{color:var(--ink)}
+  .foot{margin-top:26px;font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Nimrod · platform · slice 1</p>
+  <h1>Shared systems: the module bus + per-user, server-side state</h1>
+  <p class="sub">A throwaway harness for the first validated slice. The counter is a
+    trivial module wired to the real bus and the real server-backed state handle. The
+    server (not this page) is the source of truth.</p>
+
+  <div class="who">
+    You are acting as user <b data-user-label>…</b>.
+    <a class="pill" href="?user=alice">open as “alice”</a>
+    <a class="pill" href="?user=bob">open as “bob”</a>
+    <a class="pill" href="?user=dev-user">open as “dev-user”</a>
+  </div>
+
+  <div class="card">
+    <div id="app"><!-- counter module mounts here --></div>
+    <div class="controls">
+      <button id="switch-btn">Simulated switch / remote (+1)</button>
+    </div>
+    <p class="hint">Inputs that drive this one module: the <b>+ / –</b> buttons, the
+      <b>keyboard</b> (<code>+</code> <code>–</code> or <code>↑</code> <code>↓</code>),
+      and the <b>switch</b> above — three separate <em>sources</em>, one <code>counter/delta</code>
+      sink. The keyboard and switch were added in <code>app.js</code> with no change to the module.</p>
+  </div>
+
+  <div class="card">
+    <p class="eyebrow" style="margin-bottom:.6em">What this slice proves</p>
+    <ul class="checks">
+      <li><b>Server is the source of truth.</b> Open this page in a second tab as the
+        <em>same</em> user — changes converge (state round-trips through
+        <code>/api/state/counter</code>; no <code>localStorage</code> as the store of record).</li>
+      <li><b>Users are isolated.</b> Open as <em>alice</em> and <em>bob</em> — independent counts.</li>
+      <li><b>Inputs are interchangeable.</b> A new source drives the module by emitting onto its
+        topic; the module’s sink never changes.</li>
+    </ul>
+  </div>
+
+  <p class="foot">Dev harness only — not the product UI. Served by the platform server
+    (<code>web/server</code>). See <code>docs/architecture.md</code>.</p>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
