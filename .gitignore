@@ -1,0 +1,49 @@
+# ============================================================
+#  PRIVACY FIRST — never commit patient data or personal media
+#  (These patterns are a safety net, not a substitute for care.)
+# ============================================================
+# Patient / personal media and data
+**/photos/
+**/media/
+**/recordings/
+**/clinical/
+*.mov
+*.mp4
+*.wav
+*.m4a
+*.jpg
+*.jpeg
+*.png
+*.heic
+# Allow intentional, non-sensitive UI/asset images by un-ignoring a known folder:
+!web/assets/ui/**
+
+# Secrets & local config
+.env
+.env.*
+*.local
+config.local.*
+secrets.*
+*.key
+*.pem
+
+# Node
+node_modules/
+dist/
+build/
+.cache/
+npm-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
