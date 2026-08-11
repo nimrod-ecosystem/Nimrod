@@ -130,6 +130,16 @@ picker** comes just before/with photos; the rest are recorded so they aren't re-
   already have — `sources → bindings → sinks` IS a node graph; the youtube daypart schedule is a
   time-trigger node. It would author rules like "at 7pm → playlist X", "button B → switch to Y".
 
+## Media / Sources tab (2026-08-11, scoped — not yet built)
+A first-class **settings surface over the per-user `media_sources` registry**: one place that lists
+every folder/source the user has connected (local media-agent folders, a Drive folder, …) and lets
+them **assign each source to a use** — this folder → photos, that one → interstitial recordings,
+another → music. **One connected folder can serve multiple modules;** the tab is where `source → use`
+gets wired. Generalizes the existing media-source abstraction (`media_sources {id,label,base_url,kind}`)
+into a user-managed surface, and fits BYO storage (the platform references folders, never hosts them).
+Modules reference a **source + selector**, not a hard path — consistent with content-as-meaning (folders
+are sources the renderer reads). Mike's idea 2026-08-11; reopenable.
+
 ## Content as MEANING, not pixels (site-wide, 2026-08-11)
 Cross-cutting principle for the **content-library + user-settings schema**, applied across
 every module (AAC, vision probe, word games, interstitials, …). Generalizes the pattern the
@@ -155,19 +165,32 @@ vision-probe stimuli registry already proves (source-agnostic renderer: photo �
   repo) is left as-is — do NOT retrofit this into it.
 
 ## Interstitials module (2026-08-11, scoped — sequences AFTER the foundation, NOT now)
+Between-video segments: personal messages + educational bits (alphabet/counting/vocab/word games).
 Built on the **new Nimrod site**, not the old Cici `dashboard_web` (corrected 2026-08-11 — an
 earlier plan wrongly targeted the bedside build; leave that build alone). **Sequences after the
 foundation is in place:** profiles + module system + media/storage + theme/voice settings. Full
-spec incoming; short version recorded here so it isn't lost:
+spec in `docs/modules/interstitials.md`; load-bearing points:
 
-- **Four-quadrant layout:** media / Cici top-left · **self-view camera stays top-right** (the
-  invariant camera position) · subject photo + name bottom-left · live-rendered graphic
-  bottom-right.
-- **Generated content = live render + TTS in the user's voice** (per the content-as-meaning
-  principle above). **Personal messages = recordings** (real human voice IS the content).
-- **Recording via `R` key**, with **local STT** watching for intent like "restart please" /
-  "never mind delete that" — **match intent, not exact words** — since Cici edits the takes
-  locally.
+- **Three-quadrant layout + an invariant camera:** media / Cici presenter top-left · subject
+  photo + name bottom-left · live-rendered graphic (numeral/letters/word) bottom-right. **Top-right
+  is the self-view camera and NEVER changes** — for Christine that rearview "mirror" is her constant
+  orientation anchor; never cover it.
+- **Two content kinds.** _Generated_ (educational) = semantic data only: BR graphic drawn live in
+  the user's theme + audio via **TTS in the user's selected voice** — never pre-rendered, never
+  recorded, so a voice change re-speaks everything for free. _Recorded_ (personal) = the real human
+  voice + face ARE the content; play as media. Recordings are an **optional enhancement, never
+  required** — generic default is TTS + live render.
+- **Voice engine = Piper** (local, OSS, runs on a Pi; doubles as Cici's voice). Web Speech API is
+  an interim fallback. Voice is a per-user setting.
+- **Recording via `R` key** (matches the printable sign for staff/visitors), Cici edits takes
+  locally, local STT watches for **three intent cues** — start "message for Christine" (tag+route,
+  becomes the lead-in), "restart please" (redo), "never mind delete that" (discard). **Match intent,
+  not exact words.** Recordings stored **local-only/private** (may include staff → confidential,
+  consent-based).
+- **Non-blocking, skippable, never requires input;** short (fatigue), auto-returns to video,
+  weighted pick avoiding immediate repeats.
+- **Content-gathering can start NOW, independently of the build:** audio Mike already has + greetings
+  collected with the sign are portable data the module plays later.
 
 ## Reach & hosting
 - **Any-network by default** — "open a link and it works." Uses a small always-on host
