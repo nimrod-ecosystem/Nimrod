@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rng.js — deterministic tests</title>
+<style>
+  body{margin:0;background:#F7F4D5;color:#0A3323;
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:820px;margin:0 auto;padding:26px 20px 60px}
+  h1{font-size:1.35rem;margin:0 0 .3em}
+  .sub{color:#3c5346;margin:.2em 0 1.2em}
+  .tally{font-size:1.1rem;font-weight:800;padding:10px 14px;border-radius:10px;display:inline-block;margin-bottom:16px}
+  .ok{background:#e5f0df;color:#245c2f;border:1px solid #bcd8ac}
+  .bad{background:#f6e2de;color:#8a2f22;border:1px solid #e2b6ac}
+  ul{list-style:none;margin:0;padding:0}
+  li{padding:6px 10px;border:1px solid #e4e0c2;border-radius:8px;margin-bottom:6px;background:#FBF9E9}
+  li.p::before{content:"✓ ";color:#2f7d3a;font-weight:800}
+  li.f::before{content:"✗ ";color:#b23b2a;font-weight:800}
+  li.f{background:#f6e2de;border-color:#e2b6ac}
+  .note{color:#5d7064;font-size:.86rem}
+  code{background:#fff;border:1px solid #e4e0c2;border-radius:5px;padding:0 4px}
+  h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:#105666;margin:22px 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>rng.js — deterministic tests</h1>
+  <p class="sub">The real picker, exercised on a seeded PRNG so every run is identical.
+    Dev harness only.</p>
+  <div id="tally" class="tally">running…</div>
+  <div id="sections"></div>
+</div>
+
+<script type="module">
+import { mulberry32, shuffle, weightOf, pick, statsFromEvents, record, DEFAULTS } from '../rng.js';
+
+const sections = [];
+let cur = null;
+function section(name){ cur = { name, tests: [] }; sections.push(cur); }
+function ok(cond, name, detail=''){ cur.tests.push({ pass: !!cond, name, detail }); }
+function approx(a, b, tol){ return Math.abs(a - b) <= tol; }
+
+// ---------------------------------------------------------------- PRNG
+section('Seedable PRNG (mulberry32)');
+{
+  const a = mulberry32(42), b = mulberry32(42), c = mulberry32(43);
+  const seqA = [a(), a(), a(), a(), a()];
+  const seqB = [b(), b(), b(), b(), b()];
+  const seqC = [c(), c(), c(), c(), c()];
+  ok(seqA.every((v, i) => v === seqB[i]), 'same seed → identical stream');
+  ok(seqA.some((v, i) => v !== seqC[i]), 'different seed → different stream');
+  ok(seqA.every((v) => v >= 0 && v < 1), 'all values in [0,1)');
+  // rough uniformity of the seeded stream
+  const r = mulberry32(7); let sum = 0; const N = 20000;
+  for (let i = 0; i < N; i++) sum += r();
+  ok(approx(sum / N, 0.5, 0.02), 'mean ≈ 0.5 over 20k draws', `mean=${(sum / N).toFixed(4)}`);
+}
+
+// ---------------------------------------------------------------- shuffle
+section('Fisher–Yates shuffle');
+{
+  const src = [1, 2, 3, 4, 5, 6, 7, 8];
+  const out = shuffle(src, mulberry32(1));
+  ok(src.join(',') === '1,2,3,4,5,6,7,8', 'does not mutate input');
+  ok([...out].sort((a, b) => a - b).join(',') === '1,2,3,4,5,6,7,8', 'output is a permutation');
+  ok(shuffle(src, mulberry32(1)).join(',') === out.join(','), 'deterministic for a given seed');
+  // it actually reorders (not identity) for this seed
+  ok(out.join(',') !== '1,2,3,4,5,6,7,8', 'reorders (not identity) for seed 1');
+}
+
+// ---------------------------------------------------------------- weightOf
+section('weightOf factors');
+{
+  const now = 1_000_000_000_000;
+  ok(approx(weightOf('x', null, now, {}), 1, 1e-9), 'never-played, no factors → weight 1');
+  const wFew = weightOf('x', { n: 0, last: 0 }, now, {});
+  const wMany = weightOf('x', { n: 24, last: 0 }, now, {});
+  ok(wMany < wFew, 'more plays → lower freshness weight', `n0=${wFew.toFixed(3)} n24=${wMany.toFixed(3)}`);
+  // recency: just played is heavily suppressed vs long ago
+  const justNow = weightOf('x', { n: 1, last: now - 60_000 }, now, {});   // 1 min ago
+  const longAgo = weightOf('x', { n: 1, last: now - 5 * 86_400_000 }, now, {}); // 5 days
+  ok(justNow < longAgo, 'recent play suppressed vs long-ago', `1min=${justNow.toFixed(3)} 5d=${longAgo.toFixed(3)}`);
+  ok(justNow <= 0.5 * longAgo, 'recency suppression is strong');
+  // diversity: same channel as last-played is penalized
+  const chans = { x: 'A', y: 'B' };
+  const base = weightOf('x', { n: 0, last: 0 }, now, { channels: chans }, 'B'); // x is chan A, last was B
+  const penal = weightOf('x', { n: 0, last: 0 }, now, { channels: chans }, 'A'); // x is chan A, last was A
+  ok(approx(penal, base * DEFAULTS.channelPenalty, 1e-9), 'same-channel-as-last → × channelPenalty',
+    `base=${base.toFixed(3)} penalized=${penal.toFixed(3)}`);
+  // duration: longer plays less often
+  const dShort = weightOf('s', { n: 0, last: 0 }, now, { durations: { s: 300 } });
+  const dLong = weightOf('l', { n: 0, last: 0 }, now, { durations: { l: 1200 } });
+  ok(dLong < dShort, 'longer duration → lower weight', `300s=${dShort.toFixed(4)} 1200s=${dLong.toFixed(4)}`);
+}
+
+// ---------------------------------------------------------------- pick basics
+section('pick — basics & guards');
+{
+  ok(pick([], {}, {}) === null, 'empty pool → null');
+  ok(pick(['only'], {}, { recent: ['only'] }) === 'only', 'single item returned even if recent');
+  // hard-exclude the just-played in a reasonable pool
+  const ids = ['a', 'b', 'c', 'd', 'e'];
+  let sawA = false;
+  for (let s = 0; s < 500; s++) {
+    const p = pick(ids, {}, { recent: ['a'], rand: mulberry32(s) });
+    if (p === 'a') { sawA = true; break; }
+  }
+  ok(!sawA, 'just-played id is hard-excluded from the next pick');
+}
+
+// ---------------------------------------------------------------- coverage sim
+section('pick — coverage & fresh-surfacing (seeded simulation)');
+{
+  const ids = Array.from({ length: 12 }, (_, i) => 'v' + i);
+  let stats = {};
+  const recent = [];
+  const counts = Object.fromEntries(ids.map((id) => [id, 0]));
+  const rand = mulberry32(2026);
+  let now = 1_000_000_000_000;
+  const DRAWS = 6000;
+  for (let i = 0; i < DRAWS; i++) {
+    const p = pick(ids, stats, { now, recent, rand });
+    counts[p]++;
+    stats = record(stats, p, now);
+    recent.push(p); if (recent.length > 6) recent.shift();
+    now += 8 * 60_000; // ~8 min between plays
+  }
+  const played = ids.filter((id) => counts[id] > 0).length;
+  ok(played === ids.length, 'every item gets played (full coverage)', `${played}/${ids.length}`);
+  const vals = ids.map((id) => counts[id]);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  ok(max / min < 1.6, 'roughly even distribution (max/min < 1.6)', `min=${min} max=${max} ratio=${(max / min).toFixed(2)}`);
+
+  // fresh-surfacing: a brand-new id added mid-run should play within a few draws
+  const ids2 = ids.concat(['NEW']);
+  let drawsUntilNew = Infinity;
+  const rec2 = recent.slice();
+  for (let i = 0; i < 60; i++) {
+    const p = pick(ids2, stats, { now, recent: rec2, rand });
+    if (p === 'NEW') { drawsUntilNew = i + 1; break; }
+    stats = record(stats, p, now);
+    rec2.push(p); if (rec2.length > 6) rec2.shift();
+    now += 8 * 60_000;
+  }
+  ok(drawsUntilNew <= 5, 'a freshly-added item surfaces within 5 draws', `took ${drawsUntilNew}`);
+}
+
+// ---------------------------------------------------------------- diversity sim
+section('pick — channel diversity kills same-channel runs');
+{
+  // 10 videos from channel A (a just-added burst) + 4 from B + 4 from C.
+  const ids = [];
+  const channels = {};
+  for (let i = 0; i < 10; i++) { ids.push('a' + i); channels['a' + i] = 'A'; }
+  for (let i = 0; i < 4; i++) { ids.push('b' + i); channels['b' + i] = 'B'; }
+  for (let i = 0; i < 4; i++) { ids.push('c' + i); channels['c' + i] = 'C'; }
+
+  function runRepeatRate(useDiversity) {
+    let stats = {}; const recent = []; const rand = mulberry32(99);
+    let now = 1_000_000_000_000; let sameAsPrev = 0; let total = 0; let prevChan = null;
+    const opts = useDiversity ? { channels } : {}; // diversity off = don't pass channels
+    for (let i = 0; i < 4000; i++) {
+      const p = pick(ids, stats, { now, recent, rand, ...opts });
+      const ch = channels[p];
+      if (prevChan != null) { total++; if (ch === prevChan) sameAsPrev++; }
+      prevChan = ch;
+      stats = record(stats, p, now);
+      recent.push(p); if (recent.length > 6) recent.shift();
+      now += 8 * 60_000;
+    }
+    return sameAsPrev / total;
+  }
+  const off = runRepeatRate(false);
+  const on = runRepeatRate(true);
+  ok(on < off, 'diversity lowers back-to-back same-channel rate', `off=${(off * 100).toFixed(1)}% on=${(on * 100).toFixed(1)}%`);
+  ok(on < 0.20, 'with diversity, <20% of plays repeat the previous channel', `${(on * 100).toFixed(1)}%`);
+}
+
+// ---------------------------------------------------------------- events → stats
+section('statsFromEvents & record');
+{
+  const events = [
+    { id: 'x', at: 100 }, { id: 'y', at: 150 }, { id: 'x', at: 400 }, { id: 'x', at: 300 },
+  ];
+  const st = statsFromEvents(events);
+  ok(st.x.n === 3 && st.y.n === 1, 'counts play events per id', `x=${st.x.n} y=${st.y.n}`);
+  ok(st.x.last === 400, 'last = max timestamp (order-independent)', `last=${st.x.last}`);
+  ok(statsFromEvents([]).x === undefined, 'empty log → empty stats');
+  ok(statsFromEvents(undefined) && Object.keys(statsFromEvents(undefined)).length === 0, 'undefined log tolerated');
+  // custom keys
+  const st2 = statsFromEvents([{ vid: 'q', ts: 9 }], { idKey: 'vid', atKey: 'ts' });
+  ok(st2.q.n === 1 && st2.q.last === 9, 'honours custom idKey/atKey');
+  // record is non-mutating
+  const base = { x: { n: 1, last: 10 } };
+  const next = record(base, 'x', 20);
+  ok(base.x.n === 1 && base.x.last === 10, 'record does not mutate input');
+  ok(next.x.n === 2 && next.x.last === 20, 'record increments n & sets last');
+}
+
+// ---------------------------------------------------------------- render
+let pass = 0, fail = 0;
+const secEl = document.getElementById('sections');
+for (const s of sections) {
+  const h = document.createElement('h2'); h.textContent = s.name; secEl.appendChild(h);
+  const ul = document.createElement('ul');
+  for (const t of s.tests) {
+    if (t.pass) pass++; else fail++;
+    const li = document.createElement('li');
+    li.className = t.pass ? 'p' : 'f';
+    li.innerHTML = `${t.name}${t.detail ? ` <span class="note">— ${t.detail}</span>` : ''}`;
+    ul.appendChild(li);
+  }
+  secEl.appendChild(ul);
+}
+const tally = document.getElementById('tally');
+tally.textContent = `${pass}/${pass + fail} passed` + (fail ? ` · ${fail} FAILED` : ' · all green');
+tally.className = 'tally ' + (fail ? 'bad' : 'ok');
+document.title = (fail ? `FAIL ${fail}` : 'PASS') + ' — rng.js tests';
+window.__results = { pass, fail, sections };
+</script>
+</body>
+</html>
