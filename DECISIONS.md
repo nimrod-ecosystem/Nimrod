@@ -97,6 +97,39 @@ milestone that must land before any funding channel opens. Scoped, not yet built
   origin. `base_url` is entered by the user at runtime (localhost on the kiosk; their
   LAN/Tailscale address remotely) — **never committed to the repo.**
 
+## Randomization, storage model & themes (2026-08-10, scoped — not yet built)
+Design decisions from the pre-photos planning pass. Build order impact: a shared **weighted
+picker** comes just before/with photos; the rest are recorded so they aren't re-litigated.
+
+- **One shared weighted picker** for photos AND youtube, reimplemented clean from the proven old
+  engine (`Cici/dashboard_web/modules/yt_select.js` in the private repo — reference only, don't
+  copy). Weight = **freshness × recency × duration**, with a **hard-exclusion of the last k plays**,
+  and a new **channel/source-diversity** factor (down-weight the channel just played) to kill the
+  "run of same-channel videos" problem — including the burst you get right after adding many
+  new videos from one channel. Pure + **seed-injectable** (`rand`/`now` passed in) so it's unit-
+  testable and, later, seedable for cross-device sync. NOT a shuffle bag (a bag gives refill-runs).
+- **Play stats are per-video, GLOBAL across playlists** (already true in the old engine): one
+  `{count,last}` per video id, so "weight by how often it's played on *any* playlist" is the
+  default. **Play history is stored as append-only events; the counts derive from it** (never lost).
+- **Store of record = the platform's server-side per-user store** (slices 1–2): config/playlists/
+  themes/game-saves → overwrite state; history → append-only events. This is the "cloud save"
+  model. **GitHub Pages only serves the static landing page — it cannot run the server or store
+  user data.** The server (FastAPI) runs on a small always-on host (~$5/mo) or self-host; in dev it
+  runs on the developer's own machine. Only **tiny text** lives there (KB of config, ~150 B/play) —
+  **big media never touches the server** (BYO media agent), so it stays small and cheap (SQLite now,
+  Postgres later). **Google Sheets and CSV-to-a-user-folder are OPTIONAL export/sync layers** (human-
+  editable playlists, therapist-reviewable data, BYO backup) — never the store of record.
+- **Themes are per-PROFILE** (2026-08-10, corrected): a theme belongs to a profile, so visiting
+  someone's profile shows *their* theme. Hints at profiles being visitable later (a small social
+  dimension). A theme may also attach to a dashboard layout. Own slice, after the four default modules.
+- **Cross-device sync (calling)** — sharing the current pick + playhead so both ends watch the same
+  thing to talk about it — is the feature that pulls **real-time forward** (WebRTC data channel during
+  a call; SSE generally). Its own slice on the call infra; the picker is built seed-ready so this is a
+  small add, not a rewrite. Mike sees this as a potential signature feature.
+- **Node-editor / state-machine tab** (direction, future): a visual authoring UI over the bus we
+  already have — `sources → bindings → sinks` IS a node graph; the youtube daypart schedule is a
+  time-trigger node. It would author rules like "at 7pm → playlist X", "button B → switch to Y".
+
 ## Reach & hosting
 - **Any-network by default** — "open a link and it works." Uses a small always-on host
   (~$5/mo) for presence/signaling + a TURN relay. **Tailscale is optional** (an advanced
