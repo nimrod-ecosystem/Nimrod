@@ -130,6 +130,45 @@ picker** comes just before/with photos; the rest are recorded so they aren't re-
   already have — `sources → bindings → sinks` IS a node graph; the youtube daypart schedule is a
   time-trigger node. It would author rules like "at 7pm → playlist X", "button B → switch to Y".
 
+## Content as MEANING, not pixels (site-wide, 2026-08-11)
+Cross-cutting principle for the **content-library + user-settings schema**, applied across
+every module (AAC, vision probe, word games, interstitials, …). Generalizes the pattern the
+vision-probe stimuli registry already proves (source-agnostic renderer: photo → img → emoji).
+
+- **Store content as semantic data (meaning), not as rendered pixels/authored art.** A word,
+  a prompt, a card, an interstitial subject = its *meaning* + references, not a baked image or
+  a pre-rendered frame.
+- **Theme / font / colors / Cici character / voice are PER-USER settings the renderer reads at
+  render time.** Content carries no styling. Swapping a user's theme or voice re-renders all
+  their content with zero per-theme / per-voice re-authoring — theme + voice selection work
+  everywhere **for free**.
+- **Fall back to recorded / authored media ONLY when a real human voice or a specific image IS
+  the content** — e.g. a personal recorded message, or a real photo of a specific person. Those
+  are content, not styling, so they're stored as media and are exempt from re-rendering.
+- **Implication for the schema:** content items need a first-class **content-type discriminator**
+  — _generated/semantic_ (live-rendered + TTS in the user's voice) vs _recorded/authored_ (media
+  is the content). This two-track distinction is designed in from the start, not bolted on.
+- **Load-bearing dependency:** the "voice works everywhere for free" promise rests on per-user
+  local TTS/voice being good enough. Until it is, the recorded-media track is the fallback that
+  covers the gap. Voice selection is a per-user setting like theme.
+- **Scope: Nimrod site only.** The existing Cici bedside build (`dashboard_web` in the private
+  repo) is left as-is — do NOT retrofit this into it.
+
+## Interstitials module (2026-08-11, scoped — sequences AFTER the foundation, NOT now)
+Built on the **new Nimrod site**, not the old Cici `dashboard_web` (corrected 2026-08-11 — an
+earlier plan wrongly targeted the bedside build; leave that build alone). **Sequences after the
+foundation is in place:** profiles + module system + media/storage + theme/voice settings. Full
+spec incoming; short version recorded here so it isn't lost:
+
+- **Four-quadrant layout:** media / Cici top-left · **self-view camera stays top-right** (the
+  invariant camera position) · subject photo + name bottom-left · live-rendered graphic
+  bottom-right.
+- **Generated content = live render + TTS in the user's voice** (per the content-as-meaning
+  principle above). **Personal messages = recordings** (real human voice IS the content).
+- **Recording via `R` key**, with **local STT** watching for intent like "restart please" /
+  "never mind delete that" — **match intent, not exact words** — since Cici edits the takes
+  locally.
+
 ## Reach & hosting
 - **Any-network by default** — "open a link and it works." Uses a small always-on host
   (~$5/mo) for presence/signaling + a TURN relay. **Tailscale is optional** (an advanced
