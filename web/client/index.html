@@ -10,10 +10,13 @@
     --midnight:#105666; --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF;
     --ink:#0A3323; --ink-soft:#3c5346; --muted:#5d7064; --line:#e4e0c2;
     --rosy-deep:#a85f52; --radius:16px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  /* theme.js sets the palette vars on :root per active profile; the transition
+     makes a theme switch a smooth fade rather than a hard flip. */
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--font);
+    transition:background .25s ease,color .25s ease}
   .wrap{max-width:940px;margin:0 auto;padding:28px 22px 60px}
   a{color:var(--midnight)} a:hover{color:var(--rosy-deep)}
   h1{font-size:1.5rem;letter-spacing:-.01em;margin:0 0 .2em}
@@ -180,6 +183,10 @@
           <select id="add-module"></select>
           <button id="add-module-btn">Add</button>
         </div>
+      </div>
+      <div class="field">
+        <label for="theme-picker">Theme (this profile)</label>
+        <select id="theme-picker"></select>
       </div>
       <div class="field">
         <label for="new-profile-name">New profile</label>

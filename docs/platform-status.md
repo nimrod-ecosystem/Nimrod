@@ -63,6 +63,19 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   log, coverage + no-immediate-repeat over 24 advances, channel-diversity <40% back-to-back,
   ENDED auto-advance, `prev()` replay-no-log, clean destroy) **and** a live-embed smoke that mounted
   the REAL adapter and built an actual `youtube-nocookie.com/embed/` iframe over the network.
+- **Themes — per-profile (first half of the theme+voice slice)** (`web/client/theme.js`). A theme is
+  a **render setting on the profile**, not content (content-as-meaning): a full map of the palette
+  CSS variables the modules already draw through (`--bg`, `--ink`, `--card`, `--moss`, `--midnight`
+  …), applied to the page root by `applyTheme(root, id)`. Because every module references the
+  variables, **all four re-theme for free** — no per-module work. Four themes ship (Nimrod-light
+  default, **Dusk** dark/calm, **High-contrast**, **Warm**). Storage needed **zero server change**:
+  the per-profile settings blob `{theme[, voice]}` rides the existing versioned overwrite-state store
+  under the reserved key `settings` (module ids are 32-hex UUIDs, so no collision). `app.js` loads +
+  applies each profile's theme before mounting its modules and persists picker changes; switching
+  profiles re-applies. Validated by a 15-check **browser** test (`web/client/dev/theme_test.html`,
+  live server): pure apply/resolve + default fallback + full-overwrite, computed-`:root` change,
+  and **per-profile persistence + isolation** (two profiles keep different themes). Live-verified in
+  the app: the Default dashboard switched light↔Dusk and the choice persisted server-side.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
@@ -80,9 +93,13 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Themes + voice settings** slice (per-profile) — the foundation piece the interstitials module
-   needs; see `docs/modules/interstitials.md`. **The four default modules are done** (clock ✓
-   camera ✓ photos ✓ youtube ✓) — this is the milestone that had to land before any funding channel.
+1. **Voice settings — second half of the theme+voice slice** (per-profile). Themes ✓ (above). Add a
+   per-profile `voice` field to the same `settings` blob + a shared `speak()` util (Web Speech API
+   `speechSynthesis` as the interim engine; **Piper** local/OSS is the target, see
+   `docs/modules/interstitials.md`), a voice picker + a test-speak button in the shell, and validate
+   persistence + per-profile isolation like themes. Modules consume `speak()` later (interstitials).
+   **The four default modules are done** (clock ✓ camera ✓ photos ✓ youtube ✓) — the milestone that
+   had to land before any funding channel.
 2. **Educational interstitials** (generated kind: scheduler + three-quadrant renderer + live graphic
    + Piper TTS), then personal/recorded segments. Then the **dashboard composer**; **Media/Sources
    tab** (surface over `media_sources` — also where photos gets its real source-picker UI). Later:

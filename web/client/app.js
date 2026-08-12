@@ -11,6 +11,7 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule, listManifests } from './module.js';
+import { applyTheme, listThemes } from './theme.js';
 import './modules/clock.js';      // registers 'clock'
 import './modules/camera.js';     // registers 'camera'
 import './modules/photos.js';     // registers 'photos'
@@ -30,9 +31,11 @@ const addSelEl = document.getElementById('add-module');
 const addBtnEl = document.getElementById('add-module-btn');
 const newNameEl = document.getElementById('new-profile-name');
 const newBtnEl = document.getElementById('new-profile-btn');
+const themePickerEl = document.getElementById('theme-picker');
 
 let activeProfileId = null;
 let mounted = [];   // [{ instance, state, events }]
+let profileSettings = null;   // per-profile render settings handle (theme now; voice next)
 
 // --- seeding (dev harness convenience) -------------------------------------
 // Give a brand-new user two profiles so "switch profile swaps the dashboard" is
@@ -70,15 +73,35 @@ function renderAddMenu() {
   }
 }
 
+function renderThemePicker() {
+  themePickerEl.innerHTML = '';
+  for (const t of listThemes()) {
+    const opt = document.createElement('option');
+    opt.value = t.id; opt.textContent = t.label;
+    themePickerEl.append(opt);
+  }
+}
+
 function teardown() {
   for (const m of mounted) m.instance.destroy();
   mounted = [];
   dashEl.innerHTML = '';
+  if (profileSettings) { profileSettings.destroy(); profileSettings = null; }
 }
 
 async function openProfile(pid) {
   teardown();
   activeProfileId = pid;
+
+  // Per-profile render settings (theme now; voice next) ride the versioned
+  // overwrite store under the reserved key 'settings' — module ids are 32-hex
+  // UUIDs, so it never collides with an instance's state. Load + apply the theme
+  // BEFORE mounting modules, so they render already themed (no flash of default).
+  profileSettings = createState({ url: profiles.stateURL(pid, 'settings'), user });
+  profileSettings.subscribe((s) => { themePickerEl.value = applyTheme(document.documentElement, s.theme); });
+  await profileSettings.load();
+  profileSettings.startPolling();
+
   const profile = await profiles.get(pid);
 
   for (const mod of profile.modules) {
@@ -112,6 +135,11 @@ async function openProfile(pid) {
 }
 
 pickerEl.addEventListener('change', () => openProfile(pickerEl.value));
+themePickerEl.addEventListener('change', () => {
+  const id = themePickerEl.value;
+  applyTheme(document.documentElement, id);   // instant, optimistic
+  profileSettings?.set({ theme: id });        // persist to THIS profile (versioned)
+});
 addBtnEl.addEventListener('click', async () => {
   if (!activeProfileId) return;
   await profiles.addModule(activeProfileId, addSelEl.value);
@@ -130,6 +158,7 @@ newBtnEl.addEventListener('click', async () => {
 async function boot() {
   document.querySelectorAll('[data-user-label]').forEach((el) => (el.textContent = user));
   renderAddMenu();
+  renderThemePicker();
   const list = await ensureProfiles();
   activeProfileId = list[0].id;
   renderPicker(list);
