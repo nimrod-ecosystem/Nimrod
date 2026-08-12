@@ -3,6 +3,19 @@
 **Type:** advisor spec, reopenable. Full brief captured 2026-08-11 (source: Mike's
 `nimrod_interstitial_brief.md`). Summary + cross-refs live in `../../DECISIONS.md`.
 
+> **CORRECTION (Mike, 2026-08-12) — SURFACE REVERSAL.** The interstitial is **ONE module that
+> pops up IN the YouTube section between videos**, then returns to the video. It is **NOT** a
+> separate multi-quadrant dashboard panel, and it does **NOT** embed its own self-view camera.
+> The "three-/four-quadrant layout + invariant top-right camera" described below is **SUPERSEDED** —
+> Mike: *"the three module setup was the wrong idea."* The **substance still holds** (generated =
+> semantic data → live graphic in the profile theme + TTS in the profile voice; recorded = real
+> media; weighted pick; skippable/non-blocking; content-as-meaning). What changes is the **surface**:
+> a single pop-up in the YouTube stage, most likely triggered off YouTube's `ENDED` (ENDED → play an
+> interstitial in place → resume `youtube/next`). The self-view camera stays its **own** module
+> elsewhere on the dashboard. The nimrod_95 sub-slice-1 module (`web/client/modules/interstitials.js`,
+> a standalone 2×2 renderer, validated 16/16) is **reference only for the generated-content flow** —
+> rework the surface to the in-YouTube pop-up. Read the layout section below as historical.
+
 > **CORRECTION to an earlier handoff:** this was previously scoped for the *old* Cici
 > `dashboard_web`. That was wrong — build it on the **new Nimrod site** instead, and **leave the
 > current Cici bedside dashboard as-is** (do not retrofit it). Building on the platform avoids
