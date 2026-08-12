@@ -49,6 +49,20 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   **browser** integration test (`web/client/dev/photos_test.html`) mounting the real module against
   a live server + agent: renders, picker coverage + no-immediate-repeat over 24 advances,
   append-only play logging, `prev()` replay, clean destroy — all green.
+- **Slice 3d — youtube** (`web/client/modules/youtube.js`) — **completes the four default modules**
+  (clock ✓ camera ✓ photos ✓ youtube ✓). Photos' twin on the SAME shared picker (`rng.js`): a
+  playlist of **public** video refs `[{id, channel, title, durationSec}]` lives in per-profile
+  overwrite state (public refs, not patient data → no media agent), `channel` drives the
+  diversity factor and `durationSec` the duration factor. Renders through an **injectable player
+  adapter** — default is a `youtube-nocookie` IFrame-API embed; the module core (playlist → picker
+  → advance → **append-only** play log, stats via `statsFromEvents`) never touches YouTube, so it's
+  validated deterministically. Interchangeable inputs via bus sinks `youtube/next` / `youtube/prev`
+  (own buttons + **video-ENDED auto-advance** + any source); playlist add/remove UI parses a URL or
+  bare id; dev-seed `?ytVideos=ID:channel,…`. Validated two ways: a 17-check **browser** test
+  (`web/client/dev/youtube_test.html`, live server + STUB player — parser units, first-load + play
+  log, coverage + no-immediate-repeat over 24 advances, channel-diversity <40% back-to-back,
+  ENDED auto-advance, `prev()` replay-no-log, clean destroy) **and** a live-embed smoke that mounted
+  the REAL adapter and built an actual `youtube-nocookie.com/embed/` iframe over the network.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
@@ -66,12 +80,14 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Slice 3d — youtube (+ sing-along)** — `youtube-nocookie` embed, playlist (public refs) in
-   state, transport via bus sinks, wired to the same shared picker (`rng.js`). Last of the four
-   default modules (clock ✓ camera ✓ photos ✓ youtube ←).
-2. **Themes + voice settings** slice (per-profile) — the foundation piece the interstitials module
-   needs; see `docs/modules/interstitials.md`.
-3. **Educational interstitials** (generated kind: scheduler + three-quadrant renderer + live graphic
+1. **Themes + voice settings** slice (per-profile) — the foundation piece the interstitials module
+   needs; see `docs/modules/interstitials.md`. **The four default modules are done** (clock ✓
+   camera ✓ photos ✓ youtube ✓) — this is the milestone that had to land before any funding channel.
+2. **Educational interstitials** (generated kind: scheduler + three-quadrant renderer + live graphic
    + Piper TTS), then personal/recorded segments. Then the **dashboard composer**; **Media/Sources
    tab** (surface over `media_sources` — also where photos gets its real source-picker UI). Later:
    real-time/SSE + call sync; node-editor tab.
+3. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
+   for photos; exercise the picker's cross-album/cross-channel diversity end-to-end (only
+   single-source pools were driven in the module tests); **sing-along** (curated karaoke playlist +
+   lyric/caption overlay) is a youtube fast-follow; audio ducking/arbitration is its own concern.
