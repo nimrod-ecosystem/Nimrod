@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>director (Lineup) — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .director .d-ph{aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:8px;background:#FBF9E9;border:1px dashed #e4e0c2;border-radius:10px;text-align:center;padding:16px}
+  .director .d-slot[hidden]{display:none}
+  #host,#host2{width:360px;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>director (Lineup) — integration test</h1>
+<p>Mounts the real <code>director</code> container against the live server, with a STUB youtube
+player + an injected machine clock/timers, so the coordination — engine → weighted daypart-gated
+pick → show one provider slot → segment/done handoff — is exercised deterministically.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="host2"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { mulberry32 } from '../rng.js';
+import '../modules/youtube.js?v=2';      // registers 'youtube'
+import '../modules/director.js?v=2';     // registers 'director'
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'director-test-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const atHour = (h) => new Date(2026, 0, 5, h, 0, 0).getTime();
+
+// fake, manually-stepped timers (one placeholder timer armed at a time)
+function fakeTimers(){
+  let seq = 0; let armed = [];
+  return {
+    setTimer: (fn) => { const id = ++seq; armed.push({ id, fn }); return id; },
+    clearTimer: (id) => { armed = armed.filter((t) => t.id !== id); },
+    fireDue: () => { const due = armed; armed = []; due.forEach((t) => t.fn()); },
+    pending: () => armed.length,
+  };
+}
+// stub youtube player: records loaded ids; fireEnded() triggers the module's onEnded
+function makeStubPlayer(){
+  let handlers = {}; const loaded = [];
+  return {
+    loaded,
+    current: () => loaded[loaded.length - 1] ?? null,
+    fireEnded: () => handlers.onEnded?.(),
+    factory(el, h){ handlers = h || {}; return { load: (id) => loaded.push(id), stop(){}, destroy(){} }; },
+  };
+}
+const PLAYLIST = [
+  { id: 'vidA000001', channel: 'A', title: 'A-1' }, { id: 'vidA000002', channel: 'A', title: 'A-2' },
+  { id: 'vidB000001', channel: 'B', title: 'B-1' }, { id: 'vidB000002', channel: 'B', title: 'B-2' },
+];
+// which provider slot is currently shown
+const curProv = (host) => host.querySelector('.d-slot:not([hidden])')?.dataset.prov ?? null;
+const isPlaceholder = (host) => !!host.querySelector('.d-slot:not([hidden]) .d-ph');
+
+async function mountDirector({ host, hour, seed, timers, stub }){
+  const profiles = createProfilesClient({ user: USER });
+  const profile = await profiles.create('TEST-director-' + hour + '-' + seed);
+  const mod = await profiles.addModule(profile.id, 'director');
+  // pre-seed the child youtube playlist (child storage key = `<instanceId>.youtube`)
+  const seedYt = createState({ url: profiles.stateURL(profile.id, `${mod.id}-youtube`), user: USER });
+  await seedYt.load(); seedYt.set({ playlist: PLAYLIST }); await seedYt.flush();
+
+  const bus = createBus();
+  const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+  const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+  await state.load(); await events.load();
+  const instance = mountModule('director', {
+    mount: host, bus, state, events, user: USER, profileId: profile.id,
+    rootBus: bus, instanceId: mod.id,
+    makeState: (key) => createState({ url: profiles.stateURL(profile.id, key), user: USER }),
+    makeEvents: (key) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER }),
+    playerFactory: stub.factory,
+    machineIO: { now: () => atHour(hour), rand: mulberry32(seed), setTimer: timers.setTimer, clearTimer: timers.clearTimer },
+    autoFinishMs: 1000,
+  });
+  instance.init();
+  await sleep(120);       // let the async child mount + machine.start settle
+  return { instance, bus, host };
+}
+
+(async () => {
+  try {
+    // ── DAYTIME: rotation across providers ───────────────────────────────────
+    const host = document.getElementById('host');
+    const T = fakeTimers();
+    const stub = makeStubPlayer();
+    const { instance, bus } = await mountDirector({ host, hour: 12, seed: 2026, timers: T, stub });
+
+    check('starts on the youtube provider (initial state)', curProv(host) === 'youtube', `current=${curProv(host)}`);
+    check('youtube child mounted & autostarted a video', stub.current() !== null, `loaded=${stub.loaded.length}`);
+    check('only one provider slot is visible at a time', host.querySelectorAll('.d-slot:not([hidden])').length === 1);
+
+    // a video ENDING hands back to the director -> it picks a DIFFERENT provider
+    stub.fireEnded();
+    await sleep(40);
+    const afterEnded = curProv(host);
+    check('segment/done(ended) advances the director off youtube', afterEnded && afterEnded !== 'youtube', `now=${afterEnded}`);
+    check('the picked provider renders its placeholder', isPlaceholder(host));
+    check('the placeholder armed its auto-finish timer', T.pending() === 1, `pending=${T.pending()}`);
+
+    // the placeholder finishing (timeout) advances again, to yet another provider
+    T.fireDue();
+    await sleep(40);
+    const afterTimeout = curProv(host);
+    check('segment/done(timeout) advances again (no immediate repeat)', afterTimeout && afterTimeout !== afterEnded, `${afterEnded} -> ${afterTimeout}`);
+
+    // the BIG skip button skips the whole segment
+    host.querySelector('[data-skip]').click();
+    await sleep(40);
+    const afterSkip = curProv(host);
+    check('the big Skip button skips the segment (segment/done skipped)', afterSkip && afterSkip !== afterTimeout, `${afterTimeout} -> ${afterSkip}`);
+
+    // run a longer rotation; youtube gets revisited and, on revisit, ADVANCES
+    const seenDaytime = new Set([ 'youtube', afterEnded, afterTimeout, afterSkip ]);
+    const loadsBefore = stub.loaded.length;
+    for (let i = 0; i < 24; i++) {
+      if (curProv(host) === 'youtube') stub.fireEnded();
+      else if (T.pending()) T.fireDue();
+      else host.querySelector('[data-skip]').click();
+      await sleep(15);
+      seenDaytime.add(curProv(host));
+    }
+    check('daytime rotation uses several providers', seenDaytime.size >= 4, `seen=${[...seenDaytime].join(',')}`);
+    check('every shown provider is daytime-legal', [...seenDaytime].every((p) => p && ['youtube','personal','educational','wordgame','trivia','singalong'].includes(p)));
+    check('re-activating youtube ADVANCES it (director drives youtube/next)', stub.loaded.length > loadsBefore, `loads ${loadsBefore} -> ${stub.loaded.length}`);
+
+    // teardown: after destroy, further events are ignored
+    const provAtDestroy = curProv(host);
+    instance.destroy();
+    bus.publish('segment/done', { reason: 'ended' });
+    await sleep(20);
+    check('destroy() stops the machine — later events do nothing', curProv(host) === provAtDestroy, `stayed ${curProv(host)}`);
+
+    // ── MORNING: youtube only (she may be sleeping) ──────────────────────────
+    const host2 = document.getElementById('host2');
+    const T2 = fakeTimers();
+    const stub2 = makeStubPlayer();
+    const d2 = await mountDirector({ host: host2, hour: 7, seed: 5, timers: T2, stub: stub2 });
+    const seenMorning = new Set([ curProv(host2) ]);
+    for (let i = 0; i < 12; i++) {
+      // morning only ever shows youtube, which ends via the stub
+      if (curProv(host2) === 'youtube') stub2.fireEnded();
+      else if (T2.pending()) T2.fireDue();
+      await sleep(15);
+      seenMorning.add(curProv(host2));
+    }
+    check('morning: only the youtube provider is ever shown', seenMorning.size === 1 && seenMorning.has('youtube'), `seen=${[...seenMorning].join(',')}`);
+    check('morning: youtube still advances each cycle', stub2.loaded.length >= 2, `loads=${stub2.loaded.length}`);
+    d2.instance.destroy();
+    check('second instance destroys cleanly', true);
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

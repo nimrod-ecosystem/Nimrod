@@ -261,10 +261,15 @@ registerModule(
             </div>
           </div>`;
 
-        // the player adapter owns the stage; the video ending is just another source
+        // the player adapter owns the stage; the video ending is just another source.
+        // A video ending is ALSO a `segment/done` on the bus — the uniform seam the
+        // content director listens on (ended | skipped | timeout are equivalent to it).
+        // Harmless when standalone (no director subscribed); when a director drives this
+        // instance it seeds autoAdvance=false, so only segment/done fires — the director
+        // advances, not youtube itself.
         player = makePlayer(stage(), {
-          onEnded: () => { if (cfg.autoAdvance) bus.publish('youtube/next'); },
-          onError: () => { if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next'); },
+          onEnded: () => { bus.publish('segment/done', { provider: 'youtube', reason: 'ended' }); if (cfg.autoAdvance) bus.publish('youtube/next'); },
+          onError: () => { bus.publish('segment/done', { provider: 'youtube', reason: 'error' }); if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next'); },
         });
 
         // the module's two sinks — any source pointed at these topics drives it
