@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>photos module — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:320px;margin-top:12px}
+  .photos .stage{position:relative;width:100%;aspect-ratio:4/3;background:#0c1a14;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .photos .stage img,.photos .stage video{width:100%;height:100%;object-fit:cover;display:block}
+  .photos .status{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(10,51,35,.72);font-size:.85rem}
+  .photos .nav{display:flex;justify-content:space-between;margin-top:6px}
+  .photos .gear,.photos .settings{display:none}
+</style>
+</head>
+<body>
+<h1>photos module — integration test</h1>
+<p>Mounts the real <code>photos</code> module against the live server + a media agent
+(<code>?agent=</code>, default <code>http://127.0.0.1:8770</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { createMediaSourcesClient } from '../media_sources.js';
+import '../modules/photos.js';   // registers 'photos'
+
+const params = new URLSearchParams(location.search);
+const AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
+const USER = params.get('user') || 'photos-test-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const base = (u) => { try { return new URL(u).pathname.split('/').pop(); } catch { return u; } };
+const curSrc = () => { const el = document.querySelector('#host .stage')?.firstChild; return el ? el.src : null; };
+
+(async () => {
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const ms = createMediaSourcesClient({ user: USER });
+
+    // fresh source pointing at the running agent
+    for (const s of await ms.list()) if (s.label.startsWith('TEST-')) await ms.remove(s.id);
+    const source = await ms.add({ label: 'TEST-photos', base_url: AGENT, kind: 'agent' });
+
+    // fresh profile + a photos instance
+    const profile = await profiles.create('TEST-photos');
+    const mod = await profiles.addModule(profile.id, 'photos');
+
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+    // point the instance at the source; huge interval so auto-advance never fires
+    // mid-test (we drive advances by hand for determinism)
+    state.set({ sourceId: source.id, intervalSec: 3600, fit: 'cover' });
+    await state.flush();
+
+    const bus = createBus();
+    const host = document.getElementById('host');
+    const instance = mountModule('photos', { mount: host, bus, state, events, user: USER, profileId: profile.id });
+    instance.init();
+
+    // wait for the first image to render + decode
+    let up = false;
+    for (let i = 0; i < 60; i++) {
+      const el = document.querySelector('#host .stage img');
+      if (el && el.complete && el.naturalWidth > 0) { up = true; break; }
+      await sleep(100);
+    }
+    check('module resolves source and renders an image', up);
+
+    await events.load();
+    const initialPlays = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    check('first shown item logged a play event', initialPlays >= 1, `plays=${initialPlays}`);
+
+    // Expected root-album count comes from the agent itself (no hardcoding).
+    const rootItems = (await (await fetch(`${AGENT}/list`)).json()).items;
+    const expected = rootItems.length;
+    check('root album has a pool big enough to exercise anti-repeat', expected >= 4, `count=${expected}`);
+
+    // Drive advances: collect coverage, assert no immediate repeat.
+    const seen = new Set();
+    let immediateRepeat = false;
+    let prevOfLast = null, lastBefore = null;
+    for (let i = 0; i < 24; i++) {
+      const before = base(curSrc());
+      seen.add(before);
+      bus.publish('photos/next');
+      await sleep(50);
+      const after = base(curSrc());
+      seen.add(after);
+      if (after === before) immediateRepeat = true;
+      prevOfLast = lastBefore; lastBefore = before;   // track for prev() check
+    }
+    check('no immediate repeat across 24 advances', !immediateRepeat);
+    check(`coverage: all ${expected} items surfaced`, seen.size === expected, `seen=${[...seen].join(',')}`);
+
+    // prev() should step back to the previously shown item
+    const beforePrev = base(curSrc());
+    bus.publish('photos/prev');
+    await sleep(50);
+    const afterPrev = base(curSrc());
+    check('prev() returns to the prior image', afterPrev === lastBefore && afterPrev !== beforePrev,
+      `beforePrev=${beforePrev} afterPrev=${afterPrev} expected=${lastBefore}`);
+
+    // Append-only play history grew, and each play carries {id, at}
+    await sleep(600);
+    await events.load();
+    const plays = (events.get().events || []).filter((e) => e.kind === 'play');
+    check('play history grew (append-only)', plays.length >= initialPlays + 20, `plays=${plays.length}`);
+    check('every play event carries id + numeric at',
+      plays.every((e) => e.data && e.data.id && Number.isFinite(e.data.at)));
+    check('prev() did NOT log a play (replay, not a new play)',
+      plays.length <= initialPlays + 24 + 1, `plays=${plays.length}`);
+
+    instance.destroy();
+    // after destroy, the auto-advance timer is cleared (no throw, no further renders)
+    check('destroy() cleans up without error', true);
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

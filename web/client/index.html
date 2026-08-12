@@ -97,6 +97,28 @@
   .camera .settings label{display:flex;align-items:center;gap:6px}
   .camera .settings select{padding:3px 6px;font-size:.82rem;max-width:170px}
 
+  /* photos */
+  .photos{width:100%;position:relative}
+  .photos .stage{position:relative;width:100%;aspect-ratio:4/3;background:#0c1a14;border-radius:10px;
+    overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .photos .stage img,.photos .stage video{width:100%;height:100%;object-fit:cover;display:block;background:#0c1a14}
+  .photos .status{position:absolute;top:0;left:0;right:0;bottom:38px;display:flex;align-items:center;
+    justify-content:center;gap:10px;color:var(--beige);background:rgba(10,51,35,.72);font-size:.9rem;
+    text-align:center;padding:12px}
+  .photos .status button{border-color:rgba(247,244,213,.5);color:var(--beige);background:transparent}
+  .photos .nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px}
+  .photos .pbtn{width:40px;height:34px;font-size:1.2rem;font-weight:700;color:#fff;background:var(--moss);
+    border:none;border-radius:9px;cursor:pointer}
+  .photos .pbtn:hover{background:#6f8449}
+  .photos .source-label{font-size:.78rem;color:var(--muted);text-align:center;flex:1;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .photos .gear{position:absolute;top:6px;right:6px;border-color:transparent;background:rgba(10,51,35,.55);
+    color:var(--beige);padding:2px 7px;font-size:1rem;line-height:1;border-radius:8px}
+  .photos .settings{margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+    font-size:.82rem;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:10px;width:100%}
+  .photos .settings label{display:flex;align-items:center;gap:6px}
+  .photos .settings select{padding:3px 6px;font-size:.82rem}
+
   ul.checks{margin:.4em 0 0;padding-left:1.1em}
   ul.checks li{margin:.5em 0;color:var(--ink-soft)}
   ul.checks b{color:var(--ink)}
