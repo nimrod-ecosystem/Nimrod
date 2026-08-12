@@ -14,6 +14,7 @@ import { mountModule, listManifests } from './module.js';
 import './modules/clock.js';      // registers 'clock'
 import './modules/camera.js';     // registers 'camera'
 import './modules/photos.js';     // registers 'photos'
+import './modules/youtube.js';    // registers 'youtube'
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'
 
