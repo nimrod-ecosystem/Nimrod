@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>interstitials module — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:360px;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>interstitials module — integration test</h1>
+<p>Mounts the real <code>interstitials</code> module against the live server with a
+STUB <code>speak</code> injected (no audio) and the self-view camera off, so the
+generated-content flow — content library → shared picker (<code>rng.js</code>) →
+live graphic + TTS-in-the-profile-voice → append-only play log — is exercised
+deterministically. Also unit-tests the pure graphic renderer.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { graphicHTML } from '../modules/interstitials.js';   // registers 'interstitials' + exports the pure graphic
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'interstitials-test-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// 6 generated items across 3 kinds, each with a UNIQUE speak line so the injected
+// recorder is a reliable observation channel for which item is showing.
+const ITEMS = [
+  { id: 'c1', kind: 'counting', graphic: { type: 'number',  value: 1   }, speak: 'one',   enabled: true },
+  { id: 'c2', kind: 'counting', graphic: { type: 'number',  value: 2   }, speak: 'two',   enabled: true },
+  { id: 'a1', kind: 'alphabet', graphic: { type: 'letters', value: 'A' }, speak: 'ay',    enabled: true },
+  { id: 'a2', kind: 'alphabet', graphic: { type: 'letters', value: 'B' }, speak: 'bee',   enabled: true },
+  { id: 'w1', kind: 'vocab',    graphic: { type: 'word',    value: 'cup' }, speak: 'cup',  enabled: true },
+  { id: 'w2', kind: 'vocab',    graphic: { type: 'word',    value: 'dog' }, speak: 'dog',  enabled: true },
+];
+const kindOf = Object.fromEntries(ITEMS.map((i) => [i.speak, i.kind]));
+
+(async () => {
+  try {
+    // --- pure: the live graphic renderer -----------------------------------
+    const gNum = graphicHTML({ type: 'number', value: 3 });
+    check('graphic number renders the value + counting dots',
+      gNum.includes('>3<') && (gNum.match(/<i><\/i>/g) || []).length === 3, gNum);
+    check('graphic letters upper-cases', graphicHTML({ type: 'letters', value: 'a' }).includes('>A<'));
+    const gWord = graphicHTML({ type: 'word', value: 'cup' });
+    check('graphic word is spelled then whole',
+      gWord.includes('>C</span>') && gWord.includes('>U</span>') && gWord.includes('>P</span>') && gWord.includes('>cup<'));
+    check('graphic none renders nothing', graphicHTML({ type: 'none' }) === '' && graphicHTML(null) === '');
+
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-interstitials');
+
+    // set the profile VOICE so we can prove the module reads it for speak()
+    const settings = createState({ url: profiles.stateURL(profile.id, 'settings'), user: USER });
+    await settings.load();
+    settings.set({ voice: { uri: 'test-voice-x', rate: 1.2 } });
+    await settings.flush();
+
+    const mod = await profiles.addModule(profile.id, 'interstitials');
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+    state.set({ items: ITEMS, autoPlay: false, selfView: false, intervalSec: 3600 });
+    await state.flush();
+
+    // injected speak recorder — no audio, and it captures the voice pref passed in
+    const spoken = [];
+    const recSpeak = (text, pref) => { spoken.push({ text, pref }); };
+
+    const bus = createBus();
+    const host = document.getElementById('host');
+    const instance = mountModule('interstitials', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id, speak: recSpeak,
+    });
+    instance.init();
+    await sleep(120);
+
+    const graphicCell = () => host.querySelector('.interstitial [data-cell="graphic"]');
+    check('module renders a first segment (graphic present)', (graphicCell()?.innerHTML || '').length > 0);
+    check('first segment spoke its line', spoken.length >= 1, `spoken=${spoken.length}`);
+
+    await events.load();
+    const initialPlays = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    check('first segment logged a play event', initialPlays >= 1, `plays=${initialPlays}`);
+
+    // let the profile settings load, then advance and confirm speak used the profile voice
+    await sleep(400);
+    bus.publish('interstitial/next');
+    await sleep(60);
+    check('speak() uses the profile voice pref (module read the settings blob)',
+      spoken[spoken.length - 1]?.pref?.uri === 'test-voice-x', `pref=${JSON.stringify(spoken[spoken.length - 1]?.pref)}`);
+
+    // drive advances: coverage + no immediate repeat + kind diversity
+    const startLen = spoken.length;
+    let immediateRepeat = false;
+    for (let i = 0; i < 18; i++) {
+      const before = spoken[spoken.length - 1]?.text;
+      bus.publish('interstitial/next');
+      await sleep(25);
+      const after = spoken[spoken.length - 1]?.text;
+      if (after === before) immediateRepeat = true;
+    }
+    const seen = new Set(spoken.map((s) => s.text));
+    check('every advance re-speaks (graphic + TTS each time)', spoken.length >= startLen + 18);
+    check('no immediate repeat across 18 advances', !immediateRepeat);
+    check(`coverage: all ${ITEMS.length} items surfaced`, seen.size === ITEMS.length, `seen=${seen.size}/${ITEMS.length}`);
+
+    // kind diversity — back-to-back same kind should be uncommon (3 kinds, penalty)
+    let sameKind = 0;
+    for (let i = 1; i < spoken.length; i++) if (kindOf[spoken[i].text] === kindOf[spoken[i - 1].text]) sameKind++;
+    check('kind diversity keeps same-kind back-to-back low (<50%)', sameKind / (spoken.length - 1) < 0.5,
+      `rate=${((sameKind / (spoken.length - 1)) * 100).toFixed(0)}%`);
+
+    await sleep(400);
+    await events.load();
+    const plays = (events.get().events || []).filter((e) => e.kind === 'play');
+    check('play history grew (append-only)', plays.length >= initialPlays + 18, `plays=${plays.length}`);
+    check('every play event carries id + numeric at',
+      plays.every((e) => e.data && e.data.id && Number.isFinite(e.data.at)));
+
+    // skip advances without throwing
+    const beforeSkip = spoken.length;
+    bus.publish('interstitial/skip');
+    await sleep(40);
+    check('skip advances to the next segment', spoken.length === beforeSkip + 1);
+
+    instance.destroy();
+    check('destroy() cleans up without error', true);
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

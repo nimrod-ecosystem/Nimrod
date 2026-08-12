@@ -90,6 +90,25 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   persistence + isolation + **theme/voice coexisting in one blob without clobber**. Live-verified: 7
   real system voices populated and Test spoke.
 
+- **Interstitials — sub-slice 1: the generated kind** (`web/client/modules/interstitials.js`). The
+  first between-video segment module (docs/modules/interstitials.md), generated/educational content
+  only (recorded personal messages + `R`-capture are sub-slice 2). Built on the same spine: a
+  **data-driven content library** of generated items (`{kind, graphic:{type,value}, speak}`; ships a
+  default alphabet/counting/vocab set) → the **shared picker** (`rng.js`, `kind` = the diversity axis
+  so it won't show three counting items in a row) → **2×2 renderer** (TL Cici presenter · **TR
+  self-view camera — the invariant, never covered** · BL subject+name · BR the **live graphic drawn
+  from the value in the profile's theme**, themed for free via the shell's CSS vars) → **TTS in the
+  profile's voice** through `voice.js` `speak()`. Non-blocking + skippable (`interstitial/next` /
+  `/skip` bus sinks + an optional auto-advance timer); append-only play log, picker stats derive.
+  Two injection seams keep it deterministic — `ctx.speak` (a test records calls; no audio) and
+  `cfg.selfView=false` (skip `getUserMedia`). It reads the profile **voice** from the `settings` blob
+  via a self-contained read handle (`/api/profiles/{pid}/state/settings`) — a "module reads profile
+  settings" pattern to formalize via `ctx` when a second speaking module needs it. Validated by a
+  16-check **browser** test (`web/client/dev/interstitials_test.html`, live server): pure graphic
+  renderer (number+dots / letters / spelled word / none), first render+speak+play, **speak uses the
+  profile voice** (proves the settings read), coverage + no-immediate-repeat over 18 advances,
+  kind-diversity <50% back-to-back, append-only log, skip advances, clean destroy.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and
@@ -106,13 +125,15 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Educational interstitials — generated kind** (`docs/modules/interstitials.md`). The foundation
-   it needs is now in place: four default modules ✓, per-profile **theme** ✓ and **voice** ✓ (it
-   renders live BR graphics in the profile's theme and speaks via the profile's voice through
-   `speak()`). First validated sub-slice: the scheduler + three-quadrant renderer (self-view camera
-   pinned top-right, never covered) + a small data-only alphabet/counting/vocab set rendered live +
-   spoken by TTS. Then recorded personal segments (`R`-key capture + intent cues). **Piper** replaces
-   Web Speech when the local voice is stood up.
+1. **Interstitials — sub-slice 2: recorded personal segments.** Generated kind ✓ (above). Add the
+   `recorded` mode (real voice/face IS the content): audio/video + still + name, played as media; and
+   **`R`-key capture** with local-STT intent cues ("message for Christine" tags + becomes the lead-in;
+   "restart please"; "never mind delete that"). Recordings are **local-only/private** (may include
+   staff → consent-based). Then: a real content-library editor UI, the daypart/"between videos"
+   trigger wired to youtube's ENDED, and **Piper** replacing Web Speech for the local voice.
+2. **Dashboard composer** + **Media/Sources tab** (surface over `media_sources`; also photos' real
+   source-picker UI + a youtube playlist UI). Later: real-time/SSE + call sync; node-editor tab;
+   role-name refactor of the palette CSS vars.
 2. **Educational interstitials** (generated kind: scheduler + three-quadrant renderer + live graphic
    + Piper TTS), then personal/recorded segments. Then the **dashboard composer**; **Media/Sources
    tab** (surface over `media_sources` — also where photos gets its real source-picker UI). Later:
