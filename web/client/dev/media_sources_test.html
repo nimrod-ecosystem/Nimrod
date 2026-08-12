@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>media_sources — resolver integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  img{max-width:80px;border:1px solid #ccc;margin-top:8px;display:block}
+</style>
+</head>
+<body>
+<h1>media_sources — resolver integration test</h1>
+<p>Runs against the live platform server (same origin) + a live media agent.
+Agent URL from <code>?agent=</code> (default <code>http://127.0.0.1:8770</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<img id="proof" alt="" hidden>
+
+<script type="module">
+import { createMediaSourcesClient, resolveListing, sourceHealth, mediaUrl }
+  from '../media_sources.js';
+
+const params = new URLSearchParams(location.search);
+const AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
+const USER = params.get('user') || 'test-media-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+
+function check(name, cond, detail = '') {
+  const ok = !!cond;
+  ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+
+async function loadsAsImage(url) {
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.onload = () => resolve(im.naturalWidth > 0);
+    im.onerror = () => resolve(false);
+    im.src = url;
+  });
+}
+
+(async () => {
+  const client = createMediaSourcesClient({ user: USER });
+  try {
+    // Clean slate: remove any leftover TEST- sources from a prior run.
+    for (const s of await client.list()) {
+      if (s.label.startsWith('TEST-')) await client.remove(s.id);
+    }
+    check('registry starts clean for this user',
+      (await client.list()).filter((s) => s.label.startsWith('TEST-')).length === 0);
+
+    // mediaUrl builds correctly (pure — no network).
+    check('mediaUrl encodes segments, keeps slashes',
+      mediaUrl('http://h:8770/', 'trip 19/a b.jpg') === 'http://h:8770/files/trip%2019/a%20b.jpg',
+      mediaUrl('http://h:8770/', 'trip 19/a b.jpg'));
+
+    // Add a source pointing at the running agent.
+    const created = await client.add({ label: 'TEST-agent', base_url: AGENT, kind: 'agent' });
+    check('add returns id + normalized base_url', !!created.id && created.base_url === AGENT, JSON.stringify(created));
+
+    const sources = await client.list();
+    const source = sources.find((s) => s.id === created.id);
+    check('source appears in the per-user registry', !!source);
+
+    // Invalid base_url is rejected by the server (defense-in-depth).
+    let rejected = false;
+    try { await client.add({ label: 'TEST-bad', base_url: 'javascript:alert(1)', kind: 'agent' }); }
+    catch { rejected = true; }
+    check('server rejects a non-http base_url', rejected);
+
+    // Health probe (cross-origin GET to the agent).
+    const health = await sourceHealth(source);
+    check('sourceHealth reports ok (cross-origin /health)', health.ok === true, JSON.stringify(health));
+
+    // Resolve the listing — the core of the slice.
+    const { items, albums } = await resolveListing(source);
+    check('resolveListing returns items', items.length > 0, `count=${items.length}`);
+    check('every item has an absolute url under the agent /files',
+      items.every((it) => it.url.startsWith(`${AGENT}/files/`)), items[0] && items[0].url);
+    check('every item carries the sourceId', items.every((it) => it.sourceId === source.id));
+    check('item id equals its path (stable picker key)', items.every((it) => it.id === it.path));
+
+    // Fetch the bytes cross-origin (fetch enforces CORS — the real proof).
+    const first = items.find((it) => it.kind === 'image') || items[0];
+    let bytesOk = false, blobSize = 0;
+    try {
+      const r = await fetch(first.url);
+      const b = await r.blob();
+      blobSize = b.size; bytesOk = r.ok && b.size > 0;
+    } catch (e) { check('fetch bytes threw', false, String(e)); }
+    check('image bytes fetch cross-origin (CORS on /files)', bytesOk, `size=${blobSize}`);
+
+    // And it actually decodes as an image (render proof).
+    const rendered = await loadsAsImage(first.url);
+    check('resolved url renders as an <img>', rendered, first.url);
+    if (rendered) { const p = document.getElementById('proof'); p.src = first.url; p.hidden = false; }
+
+    // album navigation, if the agent exposed one
+    if (albums.length) {
+      const { items: aItems } = await resolveListing(source, albums[0]);
+      check('album listing resolves', aItems.length >= 0, `album=${albums[0]}`);
+    }
+
+    // Cleanup.
+    await client.remove(source.id);
+    check('source removed from registry',
+      !(await client.list()).some((s) => s.id === source.id));
+
+  } catch (e) {
+    check('unexpected error', false, String(e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true';
+  sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

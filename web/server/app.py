@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
@@ -22,7 +23,8 @@ from db import SQLiteStore
 from identity import current_user
 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")      # ids, module types, state keys, streams
-NAME_RE = re.compile(r"^[\w .\-]{1,64}$")          # human profile names
+NAME_RE = re.compile(r"^[\w .\-]{1,64}$")          # human profile names + source labels
+SOURCE_KINDS = {"agent"}                            # media-source adapters (extensible)
 
 CLIENT_DIR = Path(__file__).resolve().parent.parent / "client"
 DB_PATH = os.environ.get("NIMROD_DB", str(Path(__file__).resolve().parent / "nimrod.db"))
@@ -49,9 +51,26 @@ class EventPost(BaseModel):
     data: dict = {}
 
 
+class SourceCreate(BaseModel):
+    label: str
+    base_url: str
+    kind: str = "agent"
+
+
 def _check(value: str, rx: re.Pattern, what: str) -> None:
     if not rx.match(value):
         raise HTTPException(status_code=400, detail=f"invalid {what}")
+
+
+def _clean_base_url(raw: str) -> str:
+    """Validate + normalize a media-source base_url. Only http(s) with a host is
+    allowed — this URL is fetched by the browser, so file://, javascript:, and
+    friends must never round-trip. Returns the URL with any trailing slash stripped."""
+    url = (raw or "").strip()
+    p = urlparse(url)
+    if p.scheme not in ("http", "https") or not p.netloc:
+        raise HTTPException(status_code=400, detail="invalid base_url (must be http(s)://host)")
+    return url.rstrip("/")
 
 
 def owned_profile(user: str, pid: str) -> dict:
@@ -99,6 +118,32 @@ def remove_module(pid: str, mid: str, user: str = Depends(current_user)):
     _check(mid, ID_RE, "module id")
     owned_profile(user, pid)
     store.remove_module(user, pid, mid)
+    return {"ok": True}
+
+
+# ------------------------------------------------------------- media sources
+# Per-user registry of connected media folders (each a user-run media agent). The
+# server stores only the reference {label, base_url, kind}; the client resolver
+# fetches listings + bytes straight from base_url. The server never sees the bytes.
+@app.get("/api/media-sources")
+def list_sources(user: str = Depends(current_user)):
+    return {"sources": store.list_sources(user)}
+
+
+@app.post("/api/media-sources")
+def create_source(body: SourceCreate, user: str = Depends(current_user)):
+    _check(body.label, NAME_RE, "source label")
+    if body.kind not in SOURCE_KINDS:
+        raise HTTPException(status_code=400, detail="invalid source kind")
+    base_url = _clean_base_url(body.base_url)
+    return store.create_source(user, body.label, base_url, body.kind)
+
+
+@app.delete("/api/media-sources/{sid}")
+def remove_source(sid: str, user: str = Depends(current_user)):
+    _check(sid, ID_RE, "source id")
+    if not store.remove_source(user, sid):
+        raise HTTPException(status_code=404, detail="no such source")
     return {"ok": True}
 
 

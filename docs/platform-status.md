@@ -28,6 +28,16 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   sees a byte**. Returns relative paths (client prefixes with a runtime `base_url`, never in the
   repo); case-insensitive extension match incl. videos; read-only + path-traversal guarded. 18
   end-to-end checks in `web/media_agent/test_agent.py`, all green.
+- **Slice 3c-2 — `media_sources` model + client resolver.** Per-user registry of connected
+  folders on the server (`media_sources {id,label,base_url,kind}`, its own table modeled on
+  `profiles`; `GET/POST /api/media-sources`, `DELETE /api/media-sources/{id}`; ownership-gated;
+  `base_url` validated to http(s) only). Client `web/client/media_sources.js` = the registry
+  client + the **resolver**: fetches a source's `/list` and builds `base_url + /files/<path>`
+  image URLs **straight from the agent — the platform server never touches the bytes**. Validated
+  two ways: 12 store-layer checks (`web/server/test_media_sources.py`, CRUD + per-user isolation)
+  and a 14-check **browser** integration test (`web/client/dev/media_sources_test.html`) run
+  against a live server + live agent — real cross-origin CORS fetch of image bytes and an `<img>`
+  render, all green.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
@@ -47,12 +57,13 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
 ## Next
 1. **Slice 3c — photos** (highest-priority default module). Sub-slices, one validated per session:
    - **3c-1 — local media agent** (folder listing + CORS): **DONE** — `web/media_agent/`.
-   - **3c-2 — `media_sources` model + client resolver** — NEXT. Per-user `media_sources
-     {id,label,base_url,kind}` in overwrite state; a client resolver that fetches an agent's
-     `/list` and builds `base_url + "/files/" + path` image URLs. Server still never sees bytes.
-   - **3c-3 — photos slideshow module** — a module driven by any input source through the shared
-     picker (`rng.js`), rendering resolved images; play history → append-only events (the picker's
-     stats derive from them via `statsFromEvents`).
+   - **3c-2 — `media_sources` model + client resolver**: **DONE** — `web/server` (registry +
+     endpoints) + `web/client/media_sources.js` (resolver).
+   - **3c-3 — photos slideshow module** — NEXT. A module driven by any input source through the
+     shared picker (`rng.js`), rendering resolved images from a `{sourceId, album}` reference;
+     play history → append-only events (the picker's stats derive from them via `statsFromEvents`).
+     Derive the picker's channel-diversity from each item's album/folder. Add a `+ Photos` entry to
+     the module registry and a minimal source-picker UI (or seed a dev source) so it mounts.
 2. **Slice 3d — youtube (+ sing-along)** — `youtube-nocookie` embed, playlist (public refs) in
    state, transport via bus sinks, wired to the same shared picker.
 3. **Themes + voice settings** slice (per-profile) — the foundation piece the interstitials module
