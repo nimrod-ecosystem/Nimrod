@@ -164,17 +164,23 @@ vision-probe stimuli registry already proves (source-agnostic renderer: photo �
 - **Scope: Nimrod site only.** The existing Cici bedside build (`dashboard_web` in the private
   repo) is left as-is — do NOT retrofit this into it.
 
-## Interstitials module (2026-08-11, scoped — sequences AFTER the foundation, NOT now)
+## Interstitials module (2026-08-11, scoped; SURFACE corrected 2026-08-12)
 Between-video segments: personal messages + educational bits (alphabet/counting/vocab/word games).
 Built on the **new Nimrod site**, not the old Cici `dashboard_web` (corrected 2026-08-11 — an
-earlier plan wrongly targeted the bedside build; leave that build alone). **Sequences after the
-foundation is in place:** profiles + module system + media/storage + theme/voice settings. Full
-spec in `docs/modules/interstitials.md`; load-bearing points:
+earlier plan wrongly targeted the bedside build; leave that build alone). Full spec in
+`docs/modules/interstitials.md`; load-bearing points:
 
-- **Three-quadrant layout + an invariant camera:** media / Cici presenter top-left · subject
-  photo + name bottom-left · live-rendered graphic (numeral/letters/word) bottom-right. **Top-right
-  is the self-view camera and NEVER changes** — for Christine that rearview "mirror" is her constant
-  orientation anchor; never cover it.
+- **SURFACE (corrected 2026-08-12, Mike):** the interstitial is **ONE module that pops up IN the
+  YouTube section between videos**, then returns to the video — **not** a separate multi-quadrant
+  panel, and it does **not** embed its own self-view camera. The prior **three-/four-quadrant layout +
+  invariant top-right camera is SUPERSEDED** ("the three module setup was the wrong idea"). The
+  substance is unchanged (generated = live graphic-in-theme + TTS-in-voice; recorded = media; weighted
+  pick; skippable); only the surface changes — a pop-up in the YouTube stage, likely off YouTube's
+  `ENDED`. The camera stays its own module. The nimrod_95 sub-slice-1 module (`web/client/modules/
+  interstitials.js`, a standalone 2×2 renderer, 16/16) is **reference only** for the generated flow.
+- ~~Three-quadrant layout + an invariant camera~~ (superseded — see above): media / Cici presenter
+  top-left · subject photo + name bottom-left · live graphic bottom-right; top-right the self-view
+  camera. Historical.
 - **Two content kinds.** _Generated_ (educational) = semantic data only: BR graphic drawn live in
   the user's theme + audio via **TTS in the user's selected voice** — never pre-rendered, never
   recorded, so a voice change re-speaks everything for free. _Recorded_ (personal) = the real human
