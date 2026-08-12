@@ -76,6 +76,19 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   live server): pure apply/resolve + default fallback + full-overwrite, computed-`:root` change,
   and **per-profile persistence + isolation** (two profiles keep different themes). Live-verified in
   the app: the Default dashboard switched light↔Dusk and the choice persisted server-side.
+- **Voice — per-profile (second half; the theme+voice slice is now COMPLETE)** (`web/client/voice.js`).
+  Voice is a per-profile render setting on the SAME `settings` blob (`{theme, voice:{uri,lang,rate,
+  pitch}}`) — content-as-meaning: change the voice and spoken content re-speaks for free.
+  Interim engine = the browser **Web Speech API** (`speechSynthesis`); **Piper** (local/OSS, doubles
+  as Cici's voice) is the target and slots in behind the same `speak()`. `speak(text, pref, {synth,
+  Utterance})` is injectable (unit-tested without vocalizing); `resolveVoice()` degrades gracefully —
+  exact voice by `uri` → language match → engine default → first — so a saved voice absent on another
+  device (voices are per-machine, like camera deviceIds) never throws. Shell adds a voice picker +
+  rate + Test-speak button; `waitForVoices()` handles Web Speech's async load. Validated by a
+  17-check **browser** test (`web/client/dev/voice_test.html`, stub engine): resolution + fallbacks,
+  the `speak()` seam (chosen voice, cancel-first, rate/pitch clamp, no-voices path), and per-profile
+  persistence + isolation + **theme/voice coexisting in one blob without clobber**. Live-verified: 7
+  real system voices populated and Test spoke.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
@@ -93,13 +106,13 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Voice settings — second half of the theme+voice slice** (per-profile). Themes ✓ (above). Add a
-   per-profile `voice` field to the same `settings` blob + a shared `speak()` util (Web Speech API
-   `speechSynthesis` as the interim engine; **Piper** local/OSS is the target, see
-   `docs/modules/interstitials.md`), a voice picker + a test-speak button in the shell, and validate
-   persistence + per-profile isolation like themes. Modules consume `speak()` later (interstitials).
-   **The four default modules are done** (clock ✓ camera ✓ photos ✓ youtube ✓) — the milestone that
-   had to land before any funding channel.
+1. **Educational interstitials — generated kind** (`docs/modules/interstitials.md`). The foundation
+   it needs is now in place: four default modules ✓, per-profile **theme** ✓ and **voice** ✓ (it
+   renders live BR graphics in the profile's theme and speaks via the profile's voice through
+   `speak()`). First validated sub-slice: the scheduler + three-quadrant renderer (self-view camera
+   pinned top-right, never covered) + a small data-only alphabet/counting/vocab set rendered live +
+   spoken by TTS. Then recorded personal segments (`R`-key capture + intent cues). **Piper** replaces
+   Web Speech when the local voice is stood up.
 2. **Educational interstitials** (generated kind: scheduler + three-quadrant renderer + live graphic
    + Piper TTS), then personal/recorded segments. Then the **dashboard composer**; **Media/Sources
    tab** (surface over `media_sources` — also where photos gets its real source-picker UI). Later:

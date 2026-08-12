@@ -189,6 +189,18 @@
         <select id="theme-picker"></select>
       </div>
       <div class="field">
+        <label for="voice-picker">Voice (this profile)</label>
+        <div style="display:flex;gap:8px">
+          <select id="voice-picker"></select>
+          <select id="voice-rate" title="speaking rate">
+            <option value="0.8">slow</option>
+            <option value="1" selected>normal</option>
+            <option value="1.3">fast</option>
+          </select>
+          <button id="voice-test">Test</button>
+        </div>
+      </div>
+      <div class="field">
         <label for="new-profile-name">New profile</label>
         <div style="display:flex;gap:8px">
           <input type="text" id="new-profile-name" placeholder="e.g. Phone" size="12">
