@@ -38,6 +38,17 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   and a 14-check **browser** integration test (`web/client/dev/media_sources_test.html`) run
   against a live server + live agent — real cross-origin CORS fetch of image bytes and an `<img>`
   render, all green.
+- **Slice 3c-3 — photos slideshow module** (`web/client/modules/photos.js`) — **completes Slice 3c
+  (photos), the highest-priority default module.** Holds a `{sourceId, album}` reference → registry
+  lookup → resolver → items; advances through the shared picker (`rng.js`), rendering images (and
+  video, Range-backed). In-memory `recent` gives immediate anti-repeat; **play history is
+  append-only events and the picker's stats derive from them** (`statsFromEvents`) — no mutable
+  store of record. Inputs are interchangeable via bus sinks `photos/next` / `photos/prev` (own
+  buttons + auto-advance timer + any other source). Source wiring is dev-seeded for now (config or
+  `?photoSource=`); the real picker UI is the future Media/Sources tab. Validated by a 10-check
+  **browser** integration test (`web/client/dev/photos_test.html`) mounting the real module against
+  a live server + agent: renders, picker coverage + no-immediate-repeat over 24 advances,
+  append-only play logging, `prev()` replay, clean destroy — all green.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
@@ -55,19 +66,12 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Slice 3c — photos** (highest-priority default module). Sub-slices, one validated per session:
-   - **3c-1 — local media agent** (folder listing + CORS): **DONE** — `web/media_agent/`.
-   - **3c-2 — `media_sources` model + client resolver**: **DONE** — `web/server` (registry +
-     endpoints) + `web/client/media_sources.js` (resolver).
-   - **3c-3 — photos slideshow module** — NEXT. A module driven by any input source through the
-     shared picker (`rng.js`), rendering resolved images from a `{sourceId, album}` reference;
-     play history → append-only events (the picker's stats derive from them via `statsFromEvents`).
-     Derive the picker's channel-diversity from each item's album/folder. Add a `+ Photos` entry to
-     the module registry and a minimal source-picker UI (or seed a dev source) so it mounts.
-2. **Slice 3d — youtube (+ sing-along)** — `youtube-nocookie` embed, playlist (public refs) in
-   state, transport via bus sinks, wired to the same shared picker.
-3. **Themes + voice settings** slice (per-profile) — the foundation piece the interstitials module
+1. **Slice 3d — youtube (+ sing-along)** — `youtube-nocookie` embed, playlist (public refs) in
+   state, transport via bus sinks, wired to the same shared picker (`rng.js`). Last of the four
+   default modules (clock ✓ camera ✓ photos ✓ youtube ←).
+2. **Themes + voice settings** slice (per-profile) — the foundation piece the interstitials module
    needs; see `docs/modules/interstitials.md`.
-4. **Educational interstitials** (generated kind: scheduler + three-quadrant renderer + live graphic
+3. **Educational interstitials** (generated kind: scheduler + three-quadrant renderer + live graphic
    + Piper TTS), then personal/recorded segments. Then the **dashboard composer**; **Media/Sources
-   tab** (surface over `media_sources`). Later: real-time/SSE + call sync; node-editor tab.
+   tab** (surface over `media_sources` — also where photos gets its real source-picker UI). Later:
+   real-time/SSE + call sync; node-editor tab.
