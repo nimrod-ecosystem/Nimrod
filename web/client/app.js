@@ -18,6 +18,7 @@ import './modules/camera.js';     // registers 'camera'
 import './modules/photos.js';     // registers 'photos'
 import './modules/youtube.js';    // registers 'youtube'
 import './modules/interstitials.js'; // registers 'interstitials'
+import './modules/director.js';   // registers 'director' (the content director / Lineup)
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'
 
@@ -150,7 +151,16 @@ async function openProfile(pid) {
 
     const state = createState({ url: profiles.stateURL(pid, mod.id), user });
     const events = createEvents({ url: profiles.eventsURL(pid, mod.id), user });
-    const instance = mountModule(mod.type, { mount: body, bus, state, events, user, profileId: pid });
+    // Additive ctx for CONTAINER modules (leaf modules ignore these): the root bus
+    // for children to re-scope, this instance's id to namespace child storage, and
+    // per-key handle factories so a container can mount its own children.
+    const instance = mountModule(mod.type, {
+      mount: body, bus, state, events, user, profileId: pid,
+      rootBus: bus,
+      instanceId: mod.id,
+      makeState: (key) => createState({ url: profiles.stateURL(pid, key), user }),
+      makeEvents: (key) => createEvents({ url: profiles.eventsURL(pid, key), user }),
+    });
 
     head.querySelector('.mtitle').textContent = instance.manifest.title;
     head.querySelector('.mremove').addEventListener('click', async () => {

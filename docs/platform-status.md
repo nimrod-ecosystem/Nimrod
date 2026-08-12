@@ -131,6 +131,27 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   youtube-only, primetime excludes the word game, the Today-card timer cycle + loop, guards +
   local-over-global transition order, and clean unsubscribe on stop.
 
+- **Content director — container module** (`web/client/modules/director.js`, "Lineup"). The thin
+  MODULE over the engine: a **container** that owns its placed window and hands its inner region to
+  **one segment provider at a time** (Mike: "drop the state machine into the window… it hands its
+  inner region to one child provider"). It mounts the real **youtube** module as a child in its own
+  slot and renders the not-yet-built providers (personal / educational / word-game / trivia /
+  sing-along) as **labelled placeholders** — the same "stub the missing half" pattern youtube used for
+  its player. The engine picks on `segment/done`; the container shows that provider's slot. **Big Skip
+  button skips the whole segment** (`segment/done{skipped}`); within-segment controls stay in the
+  child. **youtube wiring:** youtube now emits `segment/done` on ENDED (and error) alongside its
+  existing behaviour — harmless standalone (no subscriber), and when directed it's seeded
+  `autoAdvance=false` so the director advances it. **Child-mount seam:** the app passes container ctx
+  (`rootBus`, `instanceId`, `makeState`/`makeEvents`); child storage lives under `<instanceId>-youtube`
+  (server key rule `[A-Za-z0-9_-]{1,64}`; a 32-hex instanceId + dash can't collide with a sibling id or
+  the reserved `settings` key). Validated by a **15-check** browser test (`dev/director_test.html`,
+  live server + stub player + injected clock/timers): starts on youtube, rotates off it on
+  segment/done(ended), placeholder auto-finish (timeout) and the Skip button both advance with no
+  immediate repeat, every shown provider is daypart-legal, re-activating youtube advances it, morning
+  shows youtube only, and clean destroy stops the machine. Live-verified in the app (added "Lineup" →
+  youtube slot shown, others hidden, child mounted). youtube's own 17-check test still green (no
+  regression from the segment/done line).
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and
@@ -147,26 +168,22 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Content director — container module wrapper + wiring.** Engine ✓ (above). Add the thin MODULE
-   layer: register a `statemachine` container module you drop into any window; give it a **child-mount
-   seam** (mount/show one provider at a time in its own region, via `mountModule`); wire **youtube to
-   emit `segment/done` on ENDED and on the big-button SKIP** (within-segment next stays a secondary
-   control), and load the director config from per-profile state. Validate live in the app.
-2. **Personal videos** (recorded track): audio/video + still + name, played **in the shared stage with
-   TTS**; absorbs "who's this?" greetings. Then **`R`-key capture** with local-STT intent cues
+1. **Personal videos** (recorded track): audio/video + still + name, played **in the shared stage with
+   TTS**; absorbs "who's this?" greetings. It becomes a **real provider** in the director (replacing the
+   placeholder). Then **`R`-key capture** with local-STT intent cues
    ("message for Christine" tags + becomes the lead-in; "restart please"; "never mind delete that").
    Recordings **local-only/private** (may include staff → consent-based).
-3. **Educational** (generated track): ports the nimrod_95 generated flow (content library → `rng.js` →
-   live graphic-in-theme → `speak()` → append-only log). Later: content-library editor UI; **Piper**
-   replacing Web Speech.
-4. **Today card**: clock → weather → calendar on the same engine. **iCal (`.ics`) URL first** (no
+2. **Educational** (generated track): ports the nimrod_95 generated flow (content library → `rng.js` →
+   live graphic-in-theme → `speak()` → append-only log); becomes a real provider replacing its
+   placeholder. Later: content-library editor UI; **Piper** replacing Web Speech.
+3. **Today card**: clock → weather → calendar on the same engine. **iCal (`.ics`) URL first** (no
    OAuth), then **Google Calendar** read-only when login lands (server never stores events; pick which
    calendar shows). **Deferred:** agency/check-in, on-this-day/memories.
-5. **Dashboard composer** + **Media/Sources tab** (surface over `media_sources`; also photos' real
+4. **Dashboard composer** + **Media/Sources tab** (surface over `media_sources`; also photos' real
    source-picker UI + a youtube playlist UI). Later: real-time/SSE + call sync; node-editor tab (the
    visual authoring surface over this same state-machine engine); role-name refactor of the palette CSS
    vars.
-6. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
+5. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
    for photos; exercise the picker's cross-album/cross-channel diversity end-to-end (only
    single-source pools were driven in the module tests); **sing-along** (curated karaoke playlist +
    lyric/caption overlay) is a youtube fast-follow; audio ducking/arbitration is its own concern.
