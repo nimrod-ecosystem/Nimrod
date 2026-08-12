@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>themes — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>themes — integration test</h1>
+<p>Exercises <code>theme.js</code> (pure apply/resolve) and the per-profile
+persistence of a theme setting through the live server's overwrite-state store
+(reserved key <code>settings</code>), including per-profile isolation.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { applyTheme, resolveThemeId, listThemes, THEMES, DEFAULT_THEME } from '../theme.js';
+import { createState } from '../state.js';
+import { createProfilesClient } from '../profile.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'theme-test-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: USER });
+
+(async () => {
+  try {
+    // --- pure: registry + resolve ------------------------------------------
+    const themes = listThemes();
+    check('listThemes returns several themes incl. default',
+      themes.length >= 2 && themes.some((t) => t.id === 'default'), `n=${themes.length}`);
+    check('resolveThemeId: unknown id -> default', resolveThemeId('nope') === DEFAULT_THEME);
+    check('resolveThemeId: null -> default', resolveThemeId(null) === DEFAULT_THEME);
+    check('resolveThemeId: known id kept', resolveThemeId('dusk') === 'dusk');
+
+    // --- pure: applyTheme sets the CSS variables on a target ---------------
+    const scratch = document.createElement('div');
+    const ret = applyTheme(scratch, 'dusk');
+    check('applyTheme returns the resolved id', ret === 'dusk');
+    check('applyTheme sets --bg to the theme value',
+      scratch.style.getPropertyValue('--bg').trim() === THEMES.dusk.vars['--bg'],
+      `got=${scratch.style.getPropertyValue('--bg')}`);
+    check('applyTheme sets the light-text var for dark theme',
+      scratch.style.getPropertyValue('--darkgreen').trim() === THEMES.dusk.vars['--darkgreen']);
+
+    // unknown theme falls back to default's palette
+    const scratch2 = document.createElement('div');
+    applyTheme(scratch2, 'does-not-exist');
+    check('unknown theme applies the DEFAULT palette',
+      scratch2.style.getPropertyValue('--bg').trim() === THEMES.default.vars['--bg']);
+
+    // switching themes fully overwrites (no leftover var from the prior theme)
+    applyTheme(scratch, 'default');
+    check('re-applying default overwrites a previously-set var',
+      scratch.style.getPropertyValue('--bg').trim() === THEMES.default.vars['--bg']);
+
+    // --- live: applying to :root changes the COMPUTED style ----------------
+    const rootBefore = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    applyTheme(document.documentElement, 'dusk');
+    const rootAfter = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    check('applying to :root changes computed --bg',
+      rootAfter.toLowerCase() === THEMES.dusk.vars['--bg'].toLowerCase() && rootAfter !== rootBefore,
+      `after=${rootAfter}`);
+    applyTheme(document.documentElement, 'default');   // restore so the page isn't left dark
+
+    // --- persistence: a theme survives a fresh settings handle -------------
+    const profiles = createProfilesClient({ user: USER });
+    const p1 = await profiles.create('TEST-theme-1');
+    const s1 = settingsHandle(profiles, p1.id);
+    await s1.load();
+    s1.set({ theme: 'contrast' });
+    await s1.flush();
+
+    const s1b = settingsHandle(profiles, p1.id);   // brand-new handle, same profile
+    await s1b.load();
+    check('theme persists across a fresh settings handle (server truth)',
+      s1b.get().theme === 'contrast', `got=${s1b.get().theme}`);
+
+    // --- per-profile isolation: two profiles keep their own theme ----------
+    const p2 = await profiles.create('TEST-theme-2');
+    const s2 = settingsHandle(profiles, p2.id);
+    await s2.load();
+    s2.set({ theme: 'warm' });
+    await s2.flush();
+
+    const a = settingsHandle(profiles, p1.id); await a.load();
+    const b = settingsHandle(profiles, p2.id); await b.load();
+    check('profile 1 keeps its own theme', a.get().theme === 'contrast', `got=${a.get().theme}`);
+    check('profile 2 keeps its own theme', b.get().theme === 'warm', `got=${b.get().theme}`);
+    check('the two profiles hold DIFFERENT themes (isolation)', a.get().theme !== b.get().theme);
+
+    // a profile with no setting resolves to the default theme
+    const p3 = await profiles.create('TEST-theme-3');
+    const s3 = settingsHandle(profiles, p3.id); await s3.load();
+    check('a profile with no saved theme -> default',
+      resolveThemeId(s3.get().theme) === DEFAULT_THEME, `raw=${JSON.stringify(s3.get().theme)}`);
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
