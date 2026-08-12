@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>voice — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>voice — integration test</h1>
+<p>Exercises <code>voice.js</code> with a STUB speech engine (deterministic, no
+audio): voice resolution + fallbacks, the injectable <code>speak()</code> seam,
+and per-profile persistence of the <code>voice</code> preference through the live
+server's overwrite-state store (the same <code>settings</code> blob as themes).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { listVoices, resolveVoice, speak } from '../voice.js';
+import { createState } from '../state.js';
+import { createProfilesClient } from '../profile.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'voice-test-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+
+// --- a deterministic, offline stub of the Web Speech engine -----------------
+const VOICES = [
+  { voiceURI: 'en-US-1', name: 'Alice',  lang: 'en-US', default: true },
+  { voiceURI: 'en-GB-1', name: 'Daniel', lang: 'en-GB', default: false },
+  { voiceURI: 'fr-FR-1', name: 'Amelie', lang: 'fr-FR', default: false },
+];
+function makeStubSynth() {
+  return { spoken: [], canceled: 0,
+    getVoices: () => VOICES,
+    cancel() { this.canceled++; },
+    speak(u) { this.spoken.push(u); } };
+}
+class FakeUtterance {
+  constructor(text) { this.text = text; this.rate = 1; this.pitch = 1; this.voice = null; this.lang = ''; }
+}
+const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: USER });
+
+(async () => {
+  try {
+    // --- pure: resolveVoice + fallbacks ------------------------------------
+    check('resolveVoice: exact uri wins', resolveVoice({ uri: 'en-GB-1' }, VOICES)?.voiceURI === 'en-GB-1');
+    check('resolveVoice: unknown uri -> language match',
+      resolveVoice({ uri: 'nope', lang: 'fr' }, VOICES)?.voiceURI === 'fr-FR-1');
+    check('resolveVoice: no match -> engine default',
+      resolveVoice({ uri: 'nope' }, VOICES)?.voiceURI === 'en-US-1');
+    check('resolveVoice: no pref -> engine default', resolveVoice({}, VOICES)?.voiceURI === 'en-US-1');
+    check('resolveVoice: empty voice list -> null', resolveVoice({ uri: 'en-US-1' }, []) === null);
+
+    check('listVoices reads from the injected engine', listVoices(makeStubSynth()).length === 3);
+
+    // --- the speak() seam --------------------------------------------------
+    let synth = makeStubSynth();
+    const u1 = speak('hello', { uri: 'en-GB-1' }, { synth, Utterance: FakeUtterance });
+    check('speak enqueues one utterance with the chosen voice',
+      synth.spoken.length === 1 && synth.spoken[0].voice?.voiceURI === 'en-GB-1' && synth.spoken[0].text === 'hello');
+    check('speak cancels any in-flight utterance first', synth.canceled === 1);
+
+    synth = makeStubSynth();
+    const u2 = speak('x', { rate: 5, pitch: -3 }, { synth, Utterance: FakeUtterance });
+    check('speak clamps rate to <=2 and pitch to >=0', u2.rate === 2 && u2.pitch === 0, `rate=${u2.rate} pitch=${u2.pitch}`);
+
+    synth = makeStubSynth();
+    const u3 = speak('x', { uri: 'ghost-voice' }, { synth, Utterance: FakeUtterance });
+    check('a saved voice that does not exist falls back (no throw)',
+      !!u3 && u3.voice?.voiceURI === 'en-US-1');
+
+    synth = makeStubSynth();
+    check('empty text speaks nothing', speak('', { uri: 'en-US-1' }, { synth, Utterance: FakeUtterance }) === null && synth.spoken.length === 0);
+
+    // Engine present but NO voices yet (Web Speech before it populates, or a kiosk
+    // with none installed): still enqueue, with no concrete voice, honoring the
+    // preferred language so the browser can pick a system default.
+    const emptySynth = { spoken: [], canceled: 0, getVoices: () => [], cancel() { this.canceled++; }, speak(u) { this.spoken.push(u); } };
+    const u4 = speak('hi', { lang: 'en-US' }, { synth: emptySynth, Utterance: FakeUtterance });
+    check('no voices yet -> still speaks, voice=null, uses preferred lang',
+      emptySynth.spoken.length === 1 && u4.voice === null && u4.lang === 'en-US', `voice=${u4.voice} lang=${u4.lang}`);
+
+    // --- persistence: the voice pref survives a fresh settings handle ------
+    const profiles = createProfilesClient({ user: USER });
+    const p1 = await profiles.create('TEST-voice-1');
+    const s1 = settingsHandle(profiles, p1.id);
+    await s1.load();
+    s1.set({ voice: { uri: 'en-GB-1', lang: 'en-GB', rate: 1.3 } });
+    await s1.flush();
+
+    const s1b = settingsHandle(profiles, p1.id);
+    await s1b.load();
+    check('voice pref persists across a fresh handle (server truth)',
+      s1b.get().voice?.uri === 'en-GB-1' && s1b.get().voice?.rate === 1.3, `got=${JSON.stringify(s1b.get().voice)}`);
+
+    // --- theme + voice coexist in the one settings blob (merge, no clobber)-
+    s1b.set({ theme: 'dusk' });
+    await s1b.flush();
+    const s1c = settingsHandle(profiles, p1.id);
+    await s1c.load();
+    check('setting theme did NOT clobber the saved voice (blob merge)',
+      s1c.get().theme === 'dusk' && s1c.get().voice?.uri === 'en-GB-1',
+      `theme=${s1c.get().theme} voice=${JSON.stringify(s1c.get().voice)}`);
+
+    // --- per-profile isolation ---------------------------------------------
+    const p2 = await profiles.create('TEST-voice-2');
+    const s2 = settingsHandle(profiles, p2.id);
+    await s2.load();
+    s2.set({ voice: { uri: 'fr-FR-1', lang: 'fr-FR' } });
+    await s2.flush();
+
+    const a = settingsHandle(profiles, p1.id); await a.load();
+    const b = settingsHandle(profiles, p2.id); await b.load();
+    check('profile 1 keeps its own voice', a.get().voice?.uri === 'en-GB-1');
+    check('profile 2 keeps its own voice', b.get().voice?.uri === 'fr-FR-1');
+    check('the two profiles hold DIFFERENT voices (isolation)', a.get().voice?.uri !== b.get().voice?.uri);
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
