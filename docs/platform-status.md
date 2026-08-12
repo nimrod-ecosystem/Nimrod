@@ -108,6 +108,28 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   renderer (number+dots / letters / spelled word / none), first render+speak+play, **speak uses the
   profile voice** (proves the settings read), coverage + no-immediate-repeat over 18 advances,
   kind-diversity <50% back-to-back, append-only log, skip advances, clean destroy.
+  - **RE-SHAPED (see DECISIONS.md):** "interstitial" is retired as a module. This module's generated
+    flow becomes the **Educational** module; the recorded track becomes **Personal videos**; the
+    between-videos sequencing moves to the **content director** below. Keep this file as the reference
+    for the generated flow.
+
+- **State-machine engine + daypart clock** (`web/client/statemachine.js`, `web/client/daypart.js`).
+  The reusable runtime Mike asked for ("shouldn't the scheduler be a state machine module that can do
+  other things?") — a declarative machine over the bus: states with `enter` actions, transitions
+  triggered by **bus events / timers / a `segment/done` signal**, optional guards, and a target chosen
+  by a fixed `to` **or a weighted `pick`** (`rng.js`) among daypart-gated candidates. Pure + injectable
+  (`now`, `rand`, timers), DOM-free. `daypart.js` is the **single time-of-day source** (morning /
+  daytime / primetime / sleepytime) feeding both the director's gate and YouTube's daypart playlists.
+  Its first config is the **content director** — one state per segment provider (youtube ·
+  personal-videos · educational · word-game · trivia · sing-along); on `segment/done`
+  (`ended` | `skipped` | `timeout`, all equivalent — the seam that fixes the missing youtube-skip
+  path) it weighted-picks the next provider gated by daypart (**morning & sleepytime = youtube only**).
+  A second config (Today card: clock → weather → calendar on a timer) proves the engine generalizes.
+  Validated headless by a **30-check** browser test (`web/client/dev/statemachine_test.html`, seeded
+  PRNG + fake timers): daypart boundaries incl. midnight wrap, entry+segment-done activation for all
+  three reasons, daytime variety with no back-to-back repeat + always daypart-legal, morning/sleepytime
+  youtube-only, primetime excludes the word game, the Today-card timer cycle + loop, guards +
+  local-over-global transition order, and clean unsubscribe on stop.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
@@ -125,20 +147,26 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Interstitials — sub-slice 2: recorded personal segments.** Generated kind ✓ (above). Add the
-   `recorded` mode (real voice/face IS the content): audio/video + still + name, played as media; and
-   **`R`-key capture** with local-STT intent cues ("message for Christine" tags + becomes the lead-in;
-   "restart please"; "never mind delete that"). Recordings are **local-only/private** (may include
-   staff → consent-based). Then: a real content-library editor UI, the daypart/"between videos"
-   trigger wired to youtube's ENDED, and **Piper** replacing Web Speech for the local voice.
-2. **Dashboard composer** + **Media/Sources tab** (surface over `media_sources`; also photos' real
-   source-picker UI + a youtube playlist UI). Later: real-time/SSE + call sync; node-editor tab;
-   role-name refactor of the palette CSS vars.
-2. **Educational interstitials** (generated kind: scheduler + three-quadrant renderer + live graphic
-   + Piper TTS), then personal/recorded segments. Then the **dashboard composer**; **Media/Sources
-   tab** (surface over `media_sources` — also where photos gets its real source-picker UI). Later:
-   real-time/SSE + call sync; node-editor tab.
-3. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
+1. **Content director — container module wrapper + wiring.** Engine ✓ (above). Add the thin MODULE
+   layer: register a `statemachine` container module you drop into any window; give it a **child-mount
+   seam** (mount/show one provider at a time in its own region, via `mountModule`); wire **youtube to
+   emit `segment/done` on ENDED and on the big-button SKIP** (within-segment next stays a secondary
+   control), and load the director config from per-profile state. Validate live in the app.
+2. **Personal videos** (recorded track): audio/video + still + name, played **in the shared stage with
+   TTS**; absorbs "who's this?" greetings. Then **`R`-key capture** with local-STT intent cues
+   ("message for Christine" tags + becomes the lead-in; "restart please"; "never mind delete that").
+   Recordings **local-only/private** (may include staff → consent-based).
+3. **Educational** (generated track): ports the nimrod_95 generated flow (content library → `rng.js` →
+   live graphic-in-theme → `speak()` → append-only log). Later: content-library editor UI; **Piper**
+   replacing Web Speech.
+4. **Today card**: clock → weather → calendar on the same engine. **iCal (`.ics`) URL first** (no
+   OAuth), then **Google Calendar** read-only when login lands (server never stores events; pick which
+   calendar shows). **Deferred:** agency/check-in, on-this-day/memories.
+5. **Dashboard composer** + **Media/Sources tab** (surface over `media_sources`; also photos' real
+   source-picker UI + a youtube playlist UI). Later: real-time/SSE + call sync; node-editor tab (the
+   visual authoring surface over this same state-machine engine); role-name refactor of the palette CSS
+   vars.
+6. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
    for photos; exercise the picker's cross-album/cross-channel diversity end-to-end (only
    single-source pools were driven in the module tests); **sing-along** (curated karaoke playlist +
    lyric/caption overlay) is a youtube fast-follow; audio ducking/arbitration is its own concern.

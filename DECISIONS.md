@@ -164,7 +164,14 @@ vision-probe stimuli registry already proves (source-agnostic renderer: photo �
 - **Scope: Nimrod site only.** The existing Cici bedside build (`dashboard_web` in the private
   repo) is left as-is — do NOT retrofit this into it.
 
-## Interstitials module (2026-08-11, scoped; SURFACE corrected 2026-08-12)
+## Interstitials module (2026-08-11, scoped; SURFACE corrected 2026-08-12; RE-SHAPED 2026-08-12)
+> **RE-SHAPED (Mike, 2026-08-12):** "interstitial" is retired as a module — it named a *slot*
+> (between videos), not content. The between-ness is now the **content director's** job (see the
+> next section, "State-machine module + content director"). The content itself splits into **two
+> real modules**: **Personal videos** (recorded) and **Educational** (generated). The section below
+> is the original scoping; read it for the content substance, which is unchanged and ported onto
+> those two modules.
+
 Between-video segments: personal messages + educational bits (alphabet/counting/vocab/word games).
 Built on the **new Nimrod site**, not the old Cici `dashboard_web` (corrected 2026-08-11 — an
 earlier plan wrongly targeted the bedside build; leave that build alone). Full spec in
@@ -197,6 +204,66 @@ earlier plan wrongly targeted the bedside build; leave that build alone). Full s
   weighted pick avoiding immediate repeats.
 - **Content-gathering can start NOW, independently of the build:** audio Mike already has + greetings
   collected with the sign are portable data the module plays later.
+
+## State-machine module + content director (2026-08-12, engine slice built + validated)
+Mike's reframe of the interstitial rework, and the better architecture: don't build a special-purpose
+"scheduler" — build **ONE reusable state-machine module** and configure it many ways. It is the
+runtime the future visual node-editor tab authors (`sources → bindings → sinks` IS the node graph);
+today its states/transitions are JSON.
+
+- **The engine** (`web/client/statemachine.js`, built + validated). A declarative machine that runs
+  over the bus: states with `enter` actions (publish a topic), transitions triggered by **bus events,
+  timers, or a segment-done signal**, optional **guards**, and a target chosen by a **fixed `to` OR a
+  weighted `pick`** (via `rng.js`) among candidates. Pure/injectable (`now`, `rand`, timers all passed
+  in) → deterministic, DOM-free, tested headless (`dev/statemachine_test.html`, **30 checks green**).
+  Two configs already exercise it — proof it isn't over-built (a weighted rotation is one state with a
+  self-transition; a card cycler is three states on a timer).
+- **Daypart clock** (`web/client/daypart.js`, built + validated). Named time-of-day stretches
+  (morning / daytime / primetime / sleepytime), pure + injectable. **Single source of truth for
+  time-of-day** with two consumers: the director's daypart gate AND YouTube's daypart-playlist
+  selection ("at 7pm → primetime playlist") — so they agree by construction, configured once.
+- **Content DIRECTOR = the first config of the engine.** One state per **segment provider**
+  (youtube · personal-videos · educational · word-game · trivia · sing-along); on `segment/done` it
+  **weighted-picks the next provider, gated by the current daypart**, and hands it the stage. Uses
+  `rng.js`, so no immediate repeats and even coverage. **`segment/done` carries a reason —
+  `ended` | `skipped` | `timeout` — and all three are the same to the director** (a video finishing,
+  a skip, or a timeout all hand control back). This is the uniform seam that fixes the "no youtube
+  skip" gap.
+- **Skip semantics (Mike):** the **big/obvious button skips the whole SEGMENT** (emits
+  `segment/done{reason:'skipped'}` → back to the director); **within-segment next** (e.g. next video
+  inside youtube) is a **smaller, secondary control**.
+- **Dayparts (defaults, editable):** morning 06–09 · daytime 09–17 · primetime 17–21 · sleepytime
+  21–06. **Morning & sleepytime enable YouTube ONLY** — they just run their existing
+  daypart playlists; no games/segments then (Mike: "there are already playlists for those times").
+  **Sing-along = daytime + primetime.** Word game = daytime. Making a daypart calmer is a **data edit**
+  to the enabled-set, not code; a later time-of-day-specific content set flips sleepytime from
+  "excluded" to "different, calmer" with no engine change.
+- **Shared stage = the state-machine module's OWN window** (Mike: "drop the state machine into the
+  window you want on the modules page or anywhere else you can put modules"). It is a **container
+  module**: it owns its placed window and **mounts/shows one child provider at a time** in its own
+  region (via the runtime's `mountModule`), not a special global stage. This is the child-mount seam
+  the module wrapper adds next.
+- **The two content modules** (replace "interstitials"):
+  - **Personal videos** (recorded) — family/friend/staff messages, life memories, and greetings
+    ("Hi, this is your fiancé Mike…", absorbing the old "who's this?" idea). Renders **in the shared
+    video stage, with TTS** for text/captions. The real voice/face IS the content (content-as-meaning
+    "recorded" track).
+  - **Educational** (generated) — alphabet/counting/vocab: semantic data → **live graphic in the
+    profile theme + TTS in the profile voice** (content-as-meaning "generated" track). The nimrod_95
+    `interstitials.js` generated flow (library → `rng.js` → graphic-in-theme → `speak()` → append-only
+    log) ports here intact; its 2×2 renderer is dropped.
+- **Today card = another config of the same engine** — cycles **clock → weather → calendar** on a
+  timer (reality-orientation, genuinely therapeutic for TBI). **Google Calendar:** display the user's
+  **own** calendar read-only; ship **iCal (`.ics`) URL first** (no OAuth, works for any calendar), add
+  **Google OAuth calendar scope** when login lands. Client fetches directly; **the platform server
+  never stores the events** (same "server never sees the bytes" rule as media). The card lets the user
+  **pick which calendar** shows, so a private clinical calendar isn't on a visitor-visible screen.
+- **Build order:** (1) engine + daypart + director config, validated headless = **DONE**. Then, each
+  its own validated slice: (2) the container module wrapper + child-mount seam + wiring youtube to emit
+  `segment/done` on ended **and** skip; (3) Personal videos; (4) Educational; (5) Today card (+ iCal,
+  then Google Calendar). **Deferred:** agency/check-in (comfort/yes-no), on-this-day/memories.
+- **Still true:** non-blocking, skippable, never requires input; photos-#1 and the calm dayparts always
+  dominate low-energy times; short segments (fatigue).
 
 ## Reach & hosting
 - **Any-network by default** — "open a link and it works." Uses a small always-on host

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>statemachine.js — deterministic tests</title>
+<style>
+  body{margin:0;background:#F7F4D5;color:#0A3323;
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:820px;margin:0 auto;padding:26px 20px 60px}
+  h1{font-size:1.35rem;margin:0 0 .3em}
+  .sub{color:#3c5346;margin:.2em 0 1.2em}
+  .tally{font-size:1.1rem;font-weight:800;padding:10px 14px;border-radius:10px;display:inline-block;margin-bottom:16px}
+  .ok{background:#e5f0df;color:#245c2f;border:1px solid #bcd8ac}
+  .bad{background:#f6e2de;color:#8a2f22;border:1px solid #e2b6ac}
+  ul{list-style:none;margin:0;padding:0}
+  li{padding:6px 10px;border:1px solid #e4e0c2;border-radius:8px;margin-bottom:6px;background:#FBF9E9}
+  li.p::before{content:"✓ ";color:#2f7d3a;font-weight:800}
+  li.f::before{content:"✗ ";color:#b23b2a;font-weight:800}
+  li.f{background:#f6e2de;border-color:#e2b6ac}
+  .note{color:#5d7064;font-size:.86rem}
+  h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:#105666;margin:22px 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>statemachine.js — deterministic tests</h1>
+  <p class="sub">The real engine over the real bus, on a seeded PRNG + fake timers, so
+    every run is identical. Content director + Today-card cycle + guards. Dev harness only.</p>
+  <div id="tally" class="tally">running…</div>
+  <div id="sections"></div>
+</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createMachine } from '../statemachine.js';
+import { daypartForHour, daypartAt, DEFAULT_DAYPARTS } from '../daypart.js';
+import { mulberry32 } from '../rng.js';
+
+const sections = [];
+let cur = null;
+function section(name){ cur = { name, tests: [] }; sections.push(cur); }
+function ok(cond, name, detail=''){ cur.tests.push({ pass: !!cond, name, detail }); }
+const uniq = (a) => [...new Set(a)];
+
+// A fake, manually-stepped scheduler so `after` timers are deterministic. One
+// timer is armed at a time in these configs; fireDue() flushes whatever is armed.
+function fakeTimers(){
+  let seq = 0; let armed = [];
+  const setTimer = (fn) => { const id = ++seq; armed.push({ id, fn }); return id; };
+  const clearTimer = (id) => { armed = armed.filter((t) => t.id !== id); };
+  const fireDue = () => { const due = armed; armed = []; due.forEach((t) => t.fn()); };
+  const pending = () => armed.length;
+  return { setTimer, clearTimer, fireDue, pending };
+}
+// A local-time instant at a given hour-of-day (TZ-independent: built + read local).
+const atHour = (h) => new Date(2026, 0, 5, h, 0, 0).getTime();
+
+// ── daypart.js ──────────────────────────────────────────────────────────────
+section('daypart — boundaries & midnight wrap');
+{
+  ok(daypartForHour(7)  === 'morning',    '07:00 → morning');
+  ok(daypartForHour(12) === 'daytime',    '12:00 → daytime');
+  ok(daypartForHour(18) === 'primetime',  '18:00 → primetime');
+  ok(daypartForHour(23) === 'sleepytime', '23:00 → sleepytime');
+  ok(daypartForHour(3)  === 'sleepytime', '03:00 → sleepytime (wraps past midnight)');
+  ok(daypartForHour(6)  === 'morning',    '06:00 boundary is inclusive → morning');
+  ok(daypartForHour(8.9) === 'morning' && daypartForHour(9) === 'daytime', 'boundary flips exactly at the start hour');
+  ok(daypartAt(atHour(12)) === 'daytime', 'daypartAt() reads local wall-clock → daytime at noon');
+}
+
+// ── The content DIRECTOR config (one instance of the engine) ─────────────────
+const PROVIDERS = ['youtube','personal','educational','wordgame','trivia','singalong'];
+const director = {
+  initial: 'youtube',
+  daypart: {
+    enabled: {
+      morning:    ['youtube'],                                                   // playlist only
+      daytime:    ['youtube','personal','educational','wordgame','trivia','singalong'],
+      primetime:  ['youtube','personal','educational','trivia','singalong'],     // no word game
+      sleepytime: ['youtube'],                                                   // playlist only
+    },
+  },
+  on: { 'segment/done': [ { pick: { from: PROVIDERS } } ] },                     // any reason → pick next
+  states: Object.fromEntries(PROVIDERS.map((p) => [p, { enter: { publish: p + '/activate' } }])),
+};
+
+function runDirector({ hour, seed = 1, dones = [] }){
+  const bus = createBus();
+  const acts = [];
+  for (const p of PROVIDERS) bus.subscribe(p + '/activate', () => acts.push(p));
+  const t = fakeTimers();
+  const m = createMachine(director, { bus, now: () => atHour(hour), rand: mulberry32(seed), setTimer: t.setTimer, clearTimer: t.clearTimer });
+  m.start();                                             // enters 'youtube' → acts:['youtube']
+  for (const reason of dones) bus.publish('segment/done', { reason });
+  return { acts, m, bus };
+}
+
+section('director — activates a provider on entry & on every segment/done');
+{
+  const { acts } = runDirector({ hour: 12, dones: [] });
+  ok(acts.length === 1 && acts[0] === 'youtube', 'start enters initial state and activates it (youtube)', acts.join(','));
+
+  const ended   = runDirector({ hour: 12, dones: ['ended'] });
+  const skipped = runDirector({ hour: 12, dones: ['skipped'] });
+  const timeout = runDirector({ hour: 12, dones: ['timeout'] });
+  ok(ended.acts.length   === 2, "reason 'ended' hands back to the director (video finished)",   ended.acts.join(','));
+  ok(skipped.acts.length === 2, "reason 'skipped' hands back too (big button skips the segment)", skipped.acts.join(','));
+  ok(timeout.acts.length === 2, "reason 'timeout' hands back too",                               timeout.acts.join(','));
+}
+
+section('director — daytime variety, no immediate repeat, always daypart-legal');
+{
+  const dones = Array.from({ length: 30 }, () => 'ended');
+  const { acts } = runDirector({ hour: 12, seed: 2026, dones });
+  ok(acts.length === 31, '30 dones → 30 further activations (+1 initial)', String(acts.length));
+  ok(uniq(acts).length >= 3, 'more than one provider is used across a daytime run', uniq(acts).join(','));
+  let repeats = 0;
+  for (let i = 1; i < acts.length; i++) if (acts[i] === acts[i-1]) repeats++;
+  ok(repeats === 0, 'never activates the same provider twice in a row', `${repeats} back-to-back`);
+  const allowed = new Set(director.daypart.enabled.daytime);
+  ok(acts.every((p) => allowed.has(p)), 'every activation is enabled for daytime');
+  ok(!acts.includes('__none__'), 'no phantom activations');
+}
+
+section('director — morning & sleepytime run YouTube only');
+{
+  const dones = Array.from({ length: 20 }, () => 'ended');
+  const morning    = runDirector({ hour: 7,  seed: 5, dones });
+  const sleepy     = runDirector({ hour: 23, seed: 5, dones });
+  ok(morning.acts.length === 21 && uniq(morning.acts).join(',') === 'youtube',
+     'morning: only youtube ever activates', uniq(morning.acts).join(','));
+  ok(sleepy.acts.length === 21 && uniq(sleepy.acts).join(',') === 'youtube',
+     'sleepytime: only youtube ever activates', uniq(sleepy.acts).join(','));
+  // primetime excludes the word game but allows others
+  const prime = runDirector({ hour: 18, seed: 7, dones: Array.from({ length: 40 }, () => 'ended') });
+  ok(!prime.acts.includes('wordgame'), 'primetime: the word game is never activated');
+  ok(prime.acts.includes('youtube'), 'primetime: youtube still plays');
+}
+
+// ── The TODAY-CARD config (same engine, timer cycle) ─────────────────────────
+const today = {
+  initial: 'clock',
+  states: {
+    clock:    { enter: { publish: 'todaycard/show', payload: 'clock' },    after: { ms: 8000, to: 'weather'  } },
+    weather:  { enter: { publish: 'todaycard/show', payload: 'weather' },  after: { ms: 8000, to: 'calendar' } },
+    calendar: { enter: { publish: 'todaycard/show', payload: 'calendar' }, after: { ms: 8000, to: 'clock'    } },
+  },
+};
+
+section('today card — same engine cycles clock → weather → calendar on a timer');
+{
+  const bus = createBus();
+  const shown = [];
+  bus.subscribe('todaycard/show', (which) => shown.push(which));
+  const t = fakeTimers();
+  const m = createMachine(today, { bus, now: () => atHour(9), setTimer: t.setTimer, clearTimer: t.clearTimer });
+  m.start();
+  ok(shown.join(',') === 'clock', 'starts on clock', shown.join(','));
+  ok(t.pending() === 1, 'a single timer is armed while a card is shown');
+  t.fireDue(); t.fireDue(); t.fireDue();                 // weather, calendar, back to clock
+  ok(shown.join(',') === 'clock,weather,calendar,clock', 'cycles in order and loops back', shown.join(','));
+  ok(m.state === 'clock', 'engine state tracks the current card');
+  m.stop();
+  ok(t.pending() === 0, 'stop() disarms the pending timer', String(t.pending()));
+}
+
+// ── Guards, transition order, teardown ───────────────────────────────────────
+section('engine — guards, local-before-global, clean teardown');
+{
+  // guard blocks the first transition, allows the second (first-applicable wins)
+  const g = {
+    initial: 'a',
+    states: {
+      a: { enter: { publish: 'x/a' }, on: { go: [ { to: 'b', when: 'never' }, { to: 'c', when: 'always' } ] } },
+      b: { enter: { publish: 'x/b' } },
+      c: { enter: { publish: 'x/c' } },
+    },
+  };
+  const bus1 = createBus(); const hits1 = [];
+  ['x/a','x/b','x/c'].forEach((t) => bus1.subscribe(t, () => hits1.push(t)));
+  const m1 = createMachine(g, { bus: bus1, guards: { never: () => false, always: () => true } });
+  m1.start(); bus1.publish('go');
+  ok(hits1.join(',') === 'x/a,x/c', 'blocked transition is skipped; first passing guard wins', hits1.join(','));
+  ok(m1.state === 'c', 'landed in c, not b');
+
+  // local transition overrides the global one for the same topic
+  const g2 = {
+    initial: 'a',
+    on: { go: [ { to: 'global' } ] },
+    states: {
+      a: { on: { go: [ { to: 'local' } ] } },
+      local:  { enter: { publish: 'y/local' } },
+      global: { enter: { publish: 'y/global' } },
+    },
+  };
+  const bus2 = createBus(); const hits2 = [];
+  ['y/local','y/global'].forEach((t) => bus2.subscribe(t, () => hits2.push(t)));
+  const m2 = createMachine(g2, { bus: bus2 });
+  m2.start(); bus2.publish('go');
+  ok(hits2.join(',') === 'y/local', 'state-local transition wins over the global one', hits2.join(','));
+
+  // after stop(), the machine ignores further events (bus unsubscribed)
+  const { acts, m, bus } = runDirector({ hour: 12, dones: ['ended'] });
+  const before = acts.length;
+  m.stop();
+  bus.publish('segment/done', { reason: 'ended' });
+  ok(acts.length === before, 'stop() unsubscribes — later events do nothing', `${before} → ${acts.length}`);
+}
+
+// ── render ───────────────────────────────────────────────────────────────────
+let pass = 0, fail = 0;
+const secEl = document.getElementById('sections');
+for (const s of sections) {
+  const h = document.createElement('h2'); h.textContent = s.name; secEl.appendChild(h);
+  const ul = document.createElement('ul');
+  for (const t of s.tests) {
+    if (t.pass) pass++; else fail++;
+    const li = document.createElement('li');
+    li.className = t.pass ? 'p' : 'f';
+    li.innerHTML = `${t.name}${t.detail ? ` <span class="note">— ${t.detail}</span>` : ''}`;
+    ul.appendChild(li);
+  }
+  secEl.appendChild(ul);
+}
+const tally = document.getElementById('tally');
+tally.textContent = `${pass}/${pass + fail} passed` + (fail ? ` · ${fail} FAILED` : ' · all green');
+tally.className = 'tally ' + (fail ? 'bad' : 'ok');
+document.title = (fail ? `FAIL ${fail}` : 'PASS') + ' — statemachine.js tests';
+window.__results = { pass, fail, sections };
+</script>
+</body>
+</html>
