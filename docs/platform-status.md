@@ -20,6 +20,14 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   (`statsFromEvents`). 29 deterministic tests in `web/client/dev/rng_test.html` (coverage,
   fresh-surfacing, recency suppression, diversity: same-channel back-to-back 36% → 11%). First
   piece of the photos slice; built for photos AND youtube.
+- **Slice 3c-1 — local media agent** (`web/media_agent/agent.py`). The BYO-storage half of the
+  photos slice: a **zero-dependency, user-run** file server (stdlib `http.server`, `python
+  agent.py --root <folder>`) that lists a chosen folder (`GET /list[?album=]`) and serves the
+  bytes (`GET /files/<rel>`, Range-aware for video) with **CORS on every response** — so the
+  browser client fetches media straight off the user's machine and **the platform server never
+  sees a byte**. Returns relative paths (client prefixes with a runtime `base_url`, never in the
+  repo); case-insensitive extension match incl. videos; read-only + path-traversal guarded. 18
+  end-to-end checks in `web/media_agent/test_agent.py`, all green.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
@@ -37,9 +45,14 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Slice 3c — photos + local media agent** — the agent (folder listing + CORS), the
-   `media_sources` model + resolver, and the slideshow driven by any input source, using the
-   shared picker (`rng.js`, done). Highest-priority default module.
+1. **Slice 3c — photos** (highest-priority default module). Sub-slices, one validated per session:
+   - **3c-1 — local media agent** (folder listing + CORS): **DONE** — `web/media_agent/`.
+   - **3c-2 — `media_sources` model + client resolver** — NEXT. Per-user `media_sources
+     {id,label,base_url,kind}` in overwrite state; a client resolver that fetches an agent's
+     `/list` and builds `base_url + "/files/" + path` image URLs. Server still never sees bytes.
+   - **3c-3 — photos slideshow module** — a module driven by any input source through the shared
+     picker (`rng.js`), rendering resolved images; play history → append-only events (the picker's
+     stats derive from them via `statsFromEvents`).
 2. **Slice 3d — youtube (+ sing-along)** — `youtube-nocookie` embed, playlist (public refs) in
    state, transport via bus sinks, wired to the same shared picker.
 3. **Themes + voice settings** slice (per-profile) — the foundation piece the interstitials module
