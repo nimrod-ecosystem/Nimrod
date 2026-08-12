@@ -52,6 +52,22 @@ class SQLiteStore:
                 );
                 CREATE INDEX IF NOT EXISTS ix_profiles_user ON profiles(user_id);
 
+                -- Per-USER media sources: a folder the user connected via a local
+                -- media agent (or later, another adapter). NOT per-profile — one
+                -- connected folder is reusable across modules and profiles. A photos
+                -- instance references {sourceId, album}; the client resolver fetches
+                -- the listing + bytes straight from base_url (the server never sees
+                -- the bytes — it only stores this tiny reference).
+                CREATE TABLE IF NOT EXISTS media_sources (
+                    id         TEXT PRIMARY KEY,
+                    user_id    TEXT NOT NULL,
+                    label      TEXT NOT NULL,
+                    base_url   TEXT NOT NULL,
+                    kind       TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS ix_media_sources_user ON media_sources(user_id);
+
                 CREATE TABLE IF NOT EXISTS profile_modules (
                     id         TEXT PRIMARY KEY,
                     profile_id TEXT NOT NULL,
@@ -153,6 +169,48 @@ class SQLiteStore:
                 "DELETE FROM state WHERE user_id=? AND profile_id=? AND key=?",
                 (user_id, pid, mid),
             )
+
+    # ---------------------------------------------------------- media sources
+    # Per-user registry of connected media folders. The `base_url` points at a
+    # user-run media agent; the platform stores only this reference and never the
+    # bytes. Ownership is enforced by user_id on every read/write.
+    def create_source(self, user_id: str, label: str, base_url: str, kind: str) -> dict:
+        sid, ts = _new_id(), _now()
+        with self._lock, self._conn as c:
+            c.execute(
+                "INSERT INTO media_sources(id, user_id, label, base_url, kind, created_at) VALUES(?,?,?,?,?,?)",
+                (sid, user_id, label, base_url, kind, ts),
+            )
+        return {"id": sid, "label": label, "base_url": base_url, "kind": kind, "created_at": ts}
+
+    def list_sources(self, user_id: str) -> list[dict]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, label, base_url, kind, created_at FROM media_sources "
+                "WHERE user_id=? ORDER BY created_at",
+                (user_id,),
+            ).fetchall()
+        return [
+            {"id": r[0], "label": r[1], "base_url": r[2], "kind": r[3], "created_at": r[4]}
+            for r in rows
+        ]
+
+    def get_source(self, user_id: str, sid: str) -> dict | None:
+        with self._lock:
+            r = self._conn.execute(
+                "SELECT id, label, base_url, kind, created_at FROM media_sources WHERE user_id=? AND id=?",
+                (user_id, sid),
+            ).fetchone()
+        if r is None:
+            return None
+        return {"id": r[0], "label": r[1], "base_url": r[2], "kind": r[3], "created_at": r[4]}
+
+    def remove_source(self, user_id: str, sid: str) -> bool:
+        with self._lock, self._conn as c:
+            cur = c.execute(
+                "DELETE FROM media_sources WHERE user_id=? AND id=?", (user_id, sid)
+            )
+        return cur.rowcount > 0
 
     # ----------------------------------------------- overwrite state (LWW + version)
     def get_state(self, user_id: str, pid: str, key: str) -> dict:
