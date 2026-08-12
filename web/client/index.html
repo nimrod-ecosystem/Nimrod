@@ -149,6 +149,34 @@
   .youtube .settings .ytrow span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .youtube .settings .ytrow button{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:.9rem}
 
+  /* interstitials — 2x2 grid, TR is the invariant self-view */
+  .interstitial{width:100%;position:relative}
+  .interstitial .ig-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+    gap:8px;width:100%;aspect-ratio:16/10}
+  .interstitial .ig-cell{border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;background:var(--cream-soft);padding:8px;position:relative}
+  .interstitial .ig-cell.camera{background:#0c1a14}
+  .interstitial .ig-cell.camera video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  .interstitial .ig-cammuted{color:var(--beige);font-size:.8rem;opacity:.8}
+  .interstitial .ig-presenter{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--midnight);font-weight:600}
+  .interstitial .ig-avatar{width:40px;height:40px;border-radius:50%;background:var(--moss);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem}
+  .interstitial .ig-avatar.big{width:64px;height:64px;font-size:1.7rem}
+  .interstitial .ig-cell.subject{flex-direction:column;gap:8px}
+  .interstitial .ig-cell.subject img{width:56px;height:56px;border-radius:50%;object-fit:cover}
+  .interstitial .ig-name{font-weight:700;color:var(--darkgreen);font-size:.95rem}
+  .interstitial .ig-number{font-size:4.2rem;font-weight:800;color:var(--darkgreen);line-height:1;font-variant-numeric:tabular-nums}
+  .interstitial .ig-dots{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:8px;max-width:70%}
+  .interstitial .ig-dots i{width:12px;height:12px;border-radius:50%;background:var(--moss);display:block}
+  .interstitial .ig-letters{font-size:4.6rem;font-weight:800;color:var(--midnight);line-height:1}
+  .interstitial .ig-word{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .interstitial .ig-spell{display:flex;gap:8px}
+  .interstitial .ig-spell span{font-size:2rem;font-weight:800;color:var(--midnight)}
+  .interstitial .ig-wordfull{font-size:1.4rem;color:var(--darkgreen);font-weight:600}
+  .interstitial .ig-nav{display:flex;justify-content:flex-end;margin-top:8px}
+  .interstitial .ig-btn{font-size:.85rem;color:#fff;background:var(--moss);border:none;border-radius:9px;padding:6px 12px;cursor:pointer}
+  .interstitial .ig-btn:hover{background:#6f8449}
+
   ul.checks{margin:.4em 0 0;padding-left:1.1em}
   ul.checks li{margin:.5em 0;color:var(--ink-soft)}
   ul.checks b{color:var(--ink)}
