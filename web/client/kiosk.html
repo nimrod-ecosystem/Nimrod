@@ -65,9 +65,13 @@
 <script type="module">
 import { createProfilesClient } from './profile.js';
 import { cachedFetch } from './cache.js';
+import { setDeviceKey } from './auth.js';
 import { mountKiosk } from './kiosk.js';
 
 const params = new URLSearchParams(location.search);
+// one-time pairing: launch once with ?key=<secret> and the device stores it, then
+// auto-auths (X-Device-Key) on every request from then on.
+if (params.get('key')) setDeviceKey(params.get('key'));
 const user = params.get('user') || 'dev-user';
 const wantProfile = params.get('profile');
 const boot = document.getElementById('boot');

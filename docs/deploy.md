@@ -35,10 +35,13 @@ These don't exist yet; each is a small validated slice I'll build when you're re
    and by an HTTP round-trip. The Postgres driver adapter's own **live smoke is this deploy** (Part B:
    deploy → open the URL → create a profile) since there's no local Postgres in dev. `requirements.txt`
    adds `psycopg[binary]` + `psycopg-pool` (used only when `DATABASE_URL` is set).
-2. **Device-secret auth in `web/server/identity.py`.** `current_user()` currently returns `dev-user`.
-   Add: a secret sent as a header (e.g. `X-Device-Key`) is looked up against an env-configured
-   `DEVICE_KEYS` map → the user id. The client (kiosk) sends its stored secret on every request. Unknown
-   secret → 401. (Keeps the `X-Dev-User` dev override behind a `DEV_MODE` flag.)
+2. **✅ Device-secret auth in `web/server/identity.py`** (built). A secret sent as `X-Device-Key` is
+   matched (constant-time) against the env `DEVICE_KEYS` (`user:secret,…`) → the user id. The kiosk
+   pairs once via `?key=<secret>` (stored locally, sent on every request through the shared client
+   `auth.js`). With `NIMROD_ENV=prod` it's **fail-closed**: only a valid device key is accepted — no
+   dev override, no shared default, and a prod server with no `DEVICE_KEYS` denies everything. Validated:
+   `test_identity.py` (14 checks) + a prod HTTP smoke (valid key → 200, missing/wrong/`X-Dev-User` → 401)
+   + a client round-trip.
 3. **Env-based config.** Server reads `PORT`, `DATABASE_URL`, `DEVICE_KEYS`, `DEV_MODE` from the env; a
    `web/server/render.yaml` (or the Render dashboard equivalent) declares the build + start command.
 4. **Media-agent service.** A tiny wrapper so `agent.py` runs on her device as an always-on service
@@ -67,8 +70,9 @@ I'll build 1–4 and mark them done here before you run the click-ops.
    - **Instance type:** **Starter (~$7/mo)** — always-on (the free tier sleeps after 15 min idle).
 3. 👉 **Environment variables:**
    - `DATABASE_URL` = the Neon string from Part A
-   - `DEVICE_KEYS` = `christine:<a-long-random-secret>` (generate a random string; this is her device's key)
-   - `DEV_MODE` = `false`
+   - `DEVICE_KEYS` = `christine:<a-long-random-secret>` (generate a random string; this is her device's key.
+     Add more `,user:secret` pairs later for other devices/people)
+   - `NIMROD_ENV` = `prod` (turns on fail-closed auth — only a valid device key is accepted)
 4. 👉 Deploy. When it's live you get a URL like `https://nimrod-xxxx.onrender.com`. Open it — you should
    see the app. (It's HTTPS, so the camera will work.)
 
@@ -94,9 +98,10 @@ Now `https://bedside.nimrodecosystem.com` serves the app, cached + HTTPS.
 2. ⚙️ Install the media agent as an always-on service (Part-D helper from the ⚙️ list), pointed at that
    folder, e.g. serving `http://localhost:8770`. It restarts on boot.
 3. 👉 Open Chrome/Chromium in **kiosk mode** at `https://bedside.nimrodecosystem.com/kiosk.html`.
-4. 👉 **First-run pairing:** the kiosk asks for (or is launched with) the **device secret** you set in
-   `DEVICE_KEYS` — it stores it locally and sends it on every request, so the screen auto-auths as her
-   from then on. (Exact mechanism ships with ⚙️ #2.)
+4. 👉 **First-run pairing (one time):** open the kiosk once as
+   `https://bedside.nimrodecosystem.com/kiosk.html?key=<the DEVICE_KEYS secret>`. The device stores the
+   secret locally and sends it (`X-Device-Key`) on every request from then on, so the screen auto-auths
+   as her. Afterward, launch it without `?key=`.
 5. 👉 **Point her modules at the local agent** (one-time, scriptable): set the photos + personal-video
    source `base_url` to `http://localhost:8770`. Until the Media/Sources UI exists, this is a small
    seed step I'll give you as a one-liner.
