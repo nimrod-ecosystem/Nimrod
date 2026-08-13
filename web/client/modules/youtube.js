@@ -27,7 +27,7 @@
 import { registerModule } from '../module.js';
 import { pick, statsFromEvents } from '../rng.js';
 
-const DEFAULTS = { playlist: [], autoAdvance: true };
+const DEFAULTS = { playlist: [], autoAdvance: true, directed: false };
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 
 // Parse a YouTube video id from a URL or a bare id. Accepts youtu.be/<id>,
@@ -233,8 +233,10 @@ registerModule(
       if (sync) sync.checked = !!cfg.autoAdvance;
       if (!ids.length) { setStatus('No videos yet. Add one in settings.'); currentId = null; updateLabel(); return; }
       setStatus(null);
-      // start playing only if nothing is up yet (config re-fires on every settings edit)
-      if (!currentId || !byId[currentId]) advance();
+      // start playing only if nothing is up yet (config re-fires on every settings edit).
+      // A `directed` instance (driven by the content director) does NOT autostart — the
+      // director advances it on activation, so it never double-advances.
+      if (!cfg.directed && (!currentId || !byId[currentId])) advance();
       else updateLabel();
     }
 

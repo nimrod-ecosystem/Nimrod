@@ -177,6 +177,23 @@
   .interstitial .ig-btn{font-size:.85rem;color:#fff;background:var(--moss);border:none;border-radius:9px;padding:6px 12px;cursor:pointer}
   .interstitial .ig-btn:hover{background:#6f8449}
 
+  /* personal videos — recorded messages, video-first with a name caption */
+  .personal{width:100%;position:relative}
+  .personal .stage{position:relative;width:100%;aspect-ratio:16/9;background:#0c1a14;border-radius:10px;
+    overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .personal .stage video{width:100%;height:100%;display:block;background:#0c1a14}
+  .personal .caption{margin-top:8px;text-align:center;font-weight:700;color:var(--midnight)}
+  .personal .status{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;
+    justify-content:center;gap:10px;color:var(--beige);background:rgba(10,51,35,.72);font-size:.9rem;
+    text-align:center;padding:12px}
+  .personal .status button{border-color:rgba(247,244,213,.5);color:var(--beige);background:transparent}
+  .personal .nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px}
+  .personal .pbtn{width:40px;height:34px;font-size:1.2rem;font-weight:700;color:#fff;background:var(--moss);
+    border:none;border-radius:9px;cursor:pointer}
+  .personal .pbtn:hover{background:#6f8449}
+  .personal .source-label{font-size:.78rem;color:var(--muted);text-align:center;flex:1;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
   /* director (Lineup) — a container that shows one provider slot at a time */
   .director{width:100%;position:relative}
   .director .d-stage{position:relative;width:100%}

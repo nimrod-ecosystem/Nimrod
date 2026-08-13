@@ -30,7 +30,7 @@ import { createMachine } from '../statemachine.js';
 // module; `real:false` renders a placeholder until that module exists.
 export const PROVIDERS = [
   { id: 'youtube',     label: 'Video',          real: true  },
-  { id: 'personal',    label: 'Personal video', real: false },
+  { id: 'personal',    label: 'Personal video', real: true  },
   { id: 'educational', label: 'Educational',    real: false },
   { id: 'wordgame',    label: 'Word game',      real: false },
   { id: 'trivia',      label: 'Trivia',         real: false },
@@ -71,10 +71,9 @@ registerModule(
 
     let machine = null;
     let current = null;
-    const adapters = {};      // provider id -> { activate, deactivate, destroy }
+    const adapters = {};      // provider id -> { activate, deactivate, destroy, flush, resize }
     const slots = {};         // provider id -> slot element
     let phTimer = null;       // the active placeholder's auto-finish timer
-    let yt = null;            // { child, state, events }
 
     const stage = () => mount.querySelector('[data-stage]');
     function setLabel(id) {
@@ -112,33 +111,40 @@ registerModule(
       };
     }
 
-    // The real youtube module, mounted as a child in its own slot. Seeded with
-    // autoAdvance=false so the DIRECTOR advances it (via youtube/next on re-activate),
-    // not youtube itself — youtube instead just fires segment/done when a video ends.
-    async function mountYoutube(el) {
-      // child storage key: `<instanceId>-youtube`. The server key rule is
-      // [A-Za-z0-9_-]{1,64}; instanceId is a 32-hex UUID, so the dash-suffixed key
-      // can never collide with a sibling module id or the reserved `settings` key.
-      const st = makeState(`${instanceId}-youtube`);
-      const ev = makeEvents(`${instanceId}-youtube`);
-      await st.load(); await ev.load();
-      if (st.get().autoAdvance !== false) st.set({ autoAdvance: false });
-      const child = mountModule('youtube', {
-        mount: el, bus: rootBus, state: st, events: ev, user, profileId,
-        playerFactory: ctx.playerFactory,           // tests inject a stub player
-      });
-      child.init();
-      st.startPolling(); ev.startPolling();
-      yt = { child, state: st, events: ev };
+    // A real provider mounted as a child module in its own slot (youtube, personal, …).
+    // Child storage key = `<instanceId>-<providerId>` (server key rule [A-Za-z0-9_-]{1,64};
+    // a 32-hex instanceId + dash never collides with a sibling id or the reserved
+    // `settings` key). Seeded autoAdvance=false so the DIRECTOR advances it (via
+    // `<id>/next` on re-activation), not the child — the child instead just fires
+    // `segment/done` when its segment ends.
+    function makeChildAdapter(p) {
+      let child = null, cState = null, cEvents = null;
+      return {
+        async mount(el) {
+          cState = makeState(`${instanceId}-${p.id}`);
+          cEvents = makeEvents(`${instanceId}-${p.id}`);
+          await cState.load(); await cEvents.load();
+          // directed: the child does NOT autostart or self-advance — the director drives
+          // every activation via `<id>/next`, so a hidden child never fires a spurious
+          // segment/done, and an unconfigured provider hands straight back.
+          const s = cState.get();
+          if (s.autoAdvance !== false || s.directed !== true) cState.set({ autoAdvance: false, directed: true });
+          child = mountModule(p.id, {              // provider id IS the module type
+            mount: el, bus: rootBus, state: cState, events: cEvents, user, profileId,
+            playerFactory: ctx.playerFactory,      // youtube uses it; others ignore it
+          });
+          child.init();
+          cState.startPolling(); cEvents.startPolling();
+        },
+        // every activation advances the child to its next segment (directed children
+        // don't autostart, so this is what shows content; an empty one hands back).
+        activate() { rootBus.publish(`${p.id}/next`); },
+        deactivate() { /* no pause API yet — hidden; real pause is a polish item */ },
+        flush() { try { cState?.flush?.(); } catch { /* noop */ } },
+        resize() { try { child?.onResize?.(); } catch { /* noop */ } },
+        destroy() { try { child?.destroy(); } catch { /* noop */ } cState?.destroy?.(); cEvents?.destroy?.(); },
+      };
     }
-    const youtubeAdapter = {
-      primed: false,
-      // first activation: youtube autostarts from its own config. Later activations:
-      // tell it to advance to the next video.
-      activate() { if (this.primed) rootBus.publish('youtube/next'); else this.primed = true; },
-      deactivate() { /* no pause API yet — hidden; real pause is a polish item */ },
-      destroy() { try { yt?.child?.destroy(); } catch { /* noop */ } yt?.state?.destroy?.(); yt?.events?.destroy?.(); },
-    };
 
     return {
       init() {
@@ -169,15 +175,16 @@ registerModule(
         const cfg = saved.config || DIRECTOR_CONFIG;
 
         (async () => {
-          await mountYoutube(slots['youtube']);
-          adapters['youtube'] = youtubeAdapter;
-          for (const p of PROVIDERS) if (!p.real) adapters[p.id] = placeholderAdapter(p, slots[p.id]);
+          for (const p of PROVIDERS) {
+            if (p.real) { const a = makeChildAdapter(p); await a.mount(slots[p.id]); adapters[p.id] = a; }
+            else adapters[p.id] = placeholderAdapter(p, slots[p.id]);
+          }
           machine = createMachine(cfg, { bus, setTimer, clearTimer, now: io.now, rand: io.rand });
           machine.start();               // enters 'youtube' -> youtube/activate -> showProvider('youtube')
         })().catch((e) => console.error('director init', e));
       },
-      onResize() { try { yt?.child?.onResize?.(); } catch { /* noop */ } },
-      onHide() { try { yt?.state?.flush?.(); } catch { /* noop */ } },
+      onResize() { for (const id of Object.keys(adapters)) adapters[id].resize?.(); },
+      onHide() { for (const id of Object.keys(adapters)) adapters[id].flush?.(); },
       destroy() {
         try { machine?.stop(); } catch { /* noop */ }
         if (phTimer != null) { clearTimer(phTimer); phTimer = null; }
