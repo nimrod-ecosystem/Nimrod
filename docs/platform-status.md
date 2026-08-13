@@ -186,6 +186,24 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   clean destroy. It's now a **real provider in the director** (its placeholder is gone); the director's
   15-check test still green with **three** real providers.
 
+- **Kiosk shell — the full-screen product surface** (`web/client/kiosk.html`, `web/client/kiosk.js`,
+  shared `web/client/modules.css`). The first cut of the dashboard for actual bedside use, distinct from
+  `index.html` (the dev harness). Caregiver-driven by keyboard + mouse (the patient isn't controlling it
+  yet). Opens ONE profile full-screen with: a **STAGE** that shows one module at a time
+  (photos / youtube / the Lineup director / …), switchable by number keys or on-screen dots; a
+  persistent **MIRROR** — the camera self-view pinned in a corner, mounted once and left running while
+  the stage changes (her orientation anchor — never covered); and an auto-hiding control bar. Stage
+  modules are mounted **lazily** (only the visible one is live, so a hidden youtube/director isn't
+  playing audio behind the scenes); the camera is the one exception. Reuses the exact runtime + container
+  ctx the harness uses, so a Lineup director works here. `kiosk.html` auto-seeds a starter *Bedside*
+  profile (photos · camera · director) for a fresh user. Validated by a **19-check** browser test
+  (`dev/kiosk_test.html`, live server): partition (camera → mirror, rest → stage), photos is the default
+  primary, one module in the stage at a time, lazy teardown on switch, the mirror survives switches,
+  keyboard select, mirror toggle, clean destroy. Live-verified in `kiosk.html` (photos stage + camera
+  mirror + dots; pressing `2` swapped the stage to the director, mirror intact).
+  RESILIENCE TODO (flagged in code): cache the profile config locally so a brief coordination-server
+  outage doesn't blank her screen — the media agent is local, so photos/videos keep playing.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and
@@ -207,13 +225,15 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
    message from Oscar") in the profile voice, and **`R`-key capture** with local-STT intent cues
    ("message for Christine" tags + becomes the lead-in; "restart please"; "never mind delete that").
    Recordings **local-only/private** (may include staff → consent-based).
-2. **★ Minimal usable bedside dashboard** (the nearest "she's actually using it" milestone — see the
-   distance note below). A **full-screen kiosk layout** (photos/director dominant, no dev chrome) — the
-   first cut of the dashboard composer — plus a **real deploy**: the FastAPI server on an always-on
-   host or a Pi, the media agent running where her media lives, **scripted source config** (stand-in for
-   the Media/Sources UI), kiosk **auto-auth** as her, and basic **switch → skip / next** input wiring.
-   This is a handful of focused slices, not weeks of unknowns — worth targeting before more content
-   modules, so she gets photos + Oscar on the new site and we learn from real use.
+2. **★ Minimal usable bedside dashboard.** Kiosk layout ✓ (above). Remaining for "she's using it":
+   (a) **deploy** — the thin FastAPI server on a **managed host** (Render/Railway/Fly, a few $/mo; it
+   holds only KB of config, so it's cheap + reliable — beats self-hosting for uptime), the media agent
+   running where her media lives, **scripted source config** (stand-in for the Media/Sources UI); (b)
+   **kiosk resilience** — cache the profile config locally so a server blip doesn't blank her screen
+   (media agent is local); (c) **kiosk auto-auth** as her (identity is a `dev-user` stub today). Input is
+   keyboard/mouse for now (she isn't controlling it yet). Bar per Mike = her current lock screen: mirror
+   ✓, singalong = a curated youtube karaoke playlist (content, not code), **record = still owed** (the
+   R-capture personal-video recorder). Old site stays the fallback for anything not yet rebuilt.
 3. **Today card**: clock → weather → calendar on the same engine. **iCal (`.ics`) URL first** (no
    OAuth), then **Google Calendar** read-only when login lands (server never stores events; pick which
    calendar shows). **Deferred:** agency/check-in, on-this-day/memories.

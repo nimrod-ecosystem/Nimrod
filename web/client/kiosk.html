@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nimrod — bedside</title>
+<link rel="stylesheet" href="./modules.css">
+<style>
+  html,body{height:100%;margin:0;background:#07120d;color:var(--ink);
+    font:16px/1.5 var(--font);overflow:hidden;transition:background .25s ease}
+  #boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#cfe0d6;font-size:1.1rem;text-align:center;padding:24px}
+  .kiosk{position:fixed;inset:0}
+  .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex}
+  .k-stage .k-mod{flex:1;min-width:0;display:flex}
+  .k-stage .k-mod > *{flex:1;min-width:0}
+  /* the camera "mirror" — pinned corner, always on top, never covered */
+  .k-mirror{position:absolute;right:2.5vmin;bottom:2.5vmin;width:24vw;max-width:360px;
+    aspect-ratio:4/3;z-index:5;border-radius:12px;overflow:hidden;
+    box-shadow:0 6px 24px rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.18)}
+  .k-mirror .k-mod{width:100%;height:100%}
+  /* auto-hiding control bar */
+  .k-controls{position:absolute;left:50%;bottom:2.2vmin;transform:translateX(-50%);
+    display:flex;gap:14px;align-items:center;background:rgba(7,18,13,.82);
+    border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px 12px;z-index:8;
+    transition:opacity .3s ease}
+  .k-controls.hidden{opacity:0;pointer-events:none}
+  .k-mods{display:flex;gap:6px}
+  .k-dot{font-size:.82rem;text-transform:capitalize;color:#cfe0d6;background:transparent;
+    border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer}
+  .k-dot.on{background:var(--moss);border-color:var(--moss);color:#fff;font-weight:700}
+  .k-actions{display:flex;gap:8px;border-left:1px solid rgba(255,255,255,.15);padding-left:12px}
+  .k-actions button{font-size:.82rem;color:#cfe0d6;background:transparent;
+    border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer}
+  .k-actions button:hover,.k-dot:hover{background:rgba(255,255,255,.10)}
+</style>
+</head>
+<body>
+<div id="boot">Loading her dashboard…</div>
+<div id="root"></div>
+
+<script type="module">
+import { createProfilesClient } from './profile.js';
+import { mountKiosk } from './kiosk.js';
+
+const params = new URLSearchParams(location.search);
+const user = params.get('user') || 'dev-user';
+const wantProfile = params.get('profile');
+const boot = document.getElementById('boot');
+const root = document.getElementById('root');
+
+// A starter bedside profile so opening the kiosk "just works" for a fresh user:
+// photos (her #1), the camera mirror, and the Lineup director (which rotates
+// youtube / personal videos / educational). Real onboarding replaces this.
+async function ensureProfile(profiles) {
+  let list = await profiles.list();
+  if (wantProfile) { const p = list.find((x) => x.id === wantProfile); if (p) return p.id; }
+  if (!list.length) {
+    const p = await profiles.create('Bedside');
+    await profiles.addModule(p.id, 'photos');
+    await profiles.addModule(p.id, 'camera');
+    await profiles.addModule(p.id, 'director');
+    return p.id;
+  }
+  return list[0].id;
+}
+
+(async () => {
+  try {
+    const profiles = createProfilesClient({ user });
+    const profileId = await ensureProfile(profiles);
+    await mountKiosk(root, { user, profileId, profiles });
+    boot.remove();
+  } catch (e) {
+    boot.textContent = 'Could not reach the dashboard server. It will retry when the connection returns.';
+    console.error('kiosk boot failed', e);
+  }
+})();
+</script>
+</body>
+</html>
