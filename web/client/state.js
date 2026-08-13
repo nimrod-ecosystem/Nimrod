@@ -12,6 +12,7 @@
 // so a rebase preserves a concurrent writer's other keys — no lost update.
 
 import { cacheGet, cacheSet } from './cache.js';
+import { authHeaders } from './auth.js';
 
 // `cacheKey` (optional) opts this handle into OFFLINE RESILIENCE: every successful
 // load caches {data,version} in localStorage, and a load whose network fetch FAILS
@@ -29,7 +30,6 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
   let pollTimer = null;
   const subscribers = new Set();
 
-  const authHeaders = () => (user ? { 'X-Dev-User': user } : {});
   const snapshot = () => structuredClone(data);
 
   function notify() {
@@ -41,7 +41,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
 
   async function load() {
     try {
-      const res = await fetch(url, { headers: authHeaders() });
+      const res = await fetch(url, { headers: authHeaders(user) });
       if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
       const body = await res.json();
       data = body.data || {};
@@ -82,7 +82,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     try {
       res = await fetch(url, {
         method: 'PUT',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
         body: JSON.stringify({ data, base_version: version }),
       });
     } catch (err) {
@@ -117,7 +117,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     pollTimer = setInterval(async () => {
       if (dirty) return;
       try {
-        const res = await fetch(url, { headers: authHeaders() });
+        const res = await fetch(url, { headers: authHeaders(user) });
         if (!res.ok) return;
         const body = await res.json();
         if ((body.version || 0) !== version &&

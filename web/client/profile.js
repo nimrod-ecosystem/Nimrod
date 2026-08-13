@@ -5,18 +5,19 @@
 // same modules + state come back. This module also vends the per-instance URLs
 // the state/events handles need.
 
+import { authHeaders } from './auth.js';
+
 export function createProfilesClient({ user, baseURL = '' }) {
-  const authHeaders = () => (user ? { 'X-Dev-User': user } : {});
 
   async function json(res) {
     if (!res.ok) throw new Error(`${res.url} -> ${res.status}`);
     return res.json();
   }
-  const jsonHeaders = () => ({ ...authHeaders(), 'Content-Type': 'application/json' });
+  const jsonHeaders = () => ({ ...authHeaders(user), 'Content-Type': 'application/json' });
 
   return {
     list: () =>
-      fetch(`${baseURL}/api/profiles`, { headers: authHeaders() }).then(json).then((b) => b.profiles),
+      fetch(`${baseURL}/api/profiles`, { headers: authHeaders(user) }).then(json).then((b) => b.profiles),
 
     create: (name) =>
       fetch(`${baseURL}/api/profiles`, {
@@ -24,7 +25,7 @@ export function createProfilesClient({ user, baseURL = '' }) {
       }).then(json),
 
     get: (pid) =>
-      fetch(`${baseURL}/api/profiles/${pid}`, { headers: authHeaders() }).then(json),
+      fetch(`${baseURL}/api/profiles/${pid}`, { headers: authHeaders(user) }).then(json),
 
     addModule: (pid, type) =>
       fetch(`${baseURL}/api/profiles/${pid}/modules`, {
@@ -33,7 +34,7 @@ export function createProfilesClient({ user, baseURL = '' }) {
 
     removeModule: (pid, mid) =>
       fetch(`${baseURL}/api/profiles/${pid}/modules/${mid}`, {
-        method: 'DELETE', headers: authHeaders(),
+        method: 'DELETE', headers: authHeaders(user),
       }).then(json),
 
     // Per-instance handle URLs. `key`/`stream` are the module instance id.

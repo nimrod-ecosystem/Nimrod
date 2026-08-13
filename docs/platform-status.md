@@ -238,6 +238,18 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   `requirements.txt` adds `psycopg[binary]` + `psycopg-pool` (used only when `DATABASE_URL` is set). This
   is ⚙️ #1 of the four deploy prerequisites; next: device-secret auth, env config + render.yaml,
   media-agent-as-a-service.
+- **Device-secret auth** (`web/server/identity.py`, `web/client/auth.js`). ⚙️ #2 of the deploy
+  prerequisites. A per-device secret sent as `X-Device-Key` is matched (constant-time) against the env
+  `DEVICE_KEYS` (`user:secret,…`) → the user id; the kiosk pairs once via `?key=<secret>` (stored
+  locally, sent on every request through the shared client `auth.js` — the four fetch modules now route
+  through it). With `NIMROD_ENV=prod` it's **fail-closed**: only a valid key is accepted (no dev
+  override, no shared default; a prod server with no keys denies everything). The dev `X-Dev-User`/`?user`
+  override still works with `NIMROD_ENV` unset, so the harness + tests are unchanged. Validated:
+  `test_identity.py` (**14 checks**) + a prod HTTP smoke (valid → 200; missing/wrong key + `X-Dev-User`
+  → 401) + a client refactor round-trip. Remaining deploy prereqs: env config + render.yaml,
+  media-agent-as-a-service. The bigger security picture (HTTPS in transit, per-user ownership on every
+  query, parameterized SQL, append-only tamper-proofing; residual = operator + Cloudflare/Render/Neon
+  see the small config text) is in the deploy discussion.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host

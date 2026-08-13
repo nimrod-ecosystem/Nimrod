@@ -18,8 +18,8 @@
 // picker's play-stats key on it correctly.
 
 import { cachedFetch } from './cache.js';
+import { authHeaders } from './auth.js';
 
-const authHeaders = (user) => (user ? { 'X-Dev-User': user } : {});
 const trimSlash = (u) => String(u || '').replace(/\/+$/, '');
 
 // Build the absolute media URL for an item on a source: base_url + /files/<path>,

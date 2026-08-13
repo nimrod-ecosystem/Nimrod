@@ -6,13 +6,13 @@
 // Server assigns the id and timestamp on append — the client clock is never
 // trusted for the record.
 
+import { authHeaders } from './auth.js';
+
 export function createEvents({ url, user, pollMs = 1500 }) {
   let cache = { events: [], total: 0 };
   let loaded = false;
   let pollTimer = null;
   const subscribers = new Set();
-
-  const authHeaders = () => (user ? { 'X-Dev-User': user } : {});
 
   function notify() {
     for (const fn of [...subscribers]) {
@@ -21,7 +21,7 @@ export function createEvents({ url, user, pollMs = 1500 }) {
   }
 
   async function refresh() {
-    const res = await fetch(url, { headers: authHeaders() });
+    const res = await fetch(url, { headers: authHeaders(user) });
     if (!res.ok) return cache;
     cache = await res.json();
     loaded = true;
@@ -32,7 +32,7 @@ export function createEvents({ url, user, pollMs = 1500 }) {
   async function append(kind, data = {}) {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
       body: JSON.stringify({ kind, data }),
     });
     if (!res.ok) throw new Error(`POST ${url} -> ${res.status}`);
