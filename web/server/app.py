@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from db import SQLiteStore
+from db import PostgresStore, SQLiteStore
 from identity import current_user
 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")      # ids, module types, state keys, streams
@@ -29,7 +29,10 @@ SOURCE_KINDS = {"agent"}                            # media-source adapters (ext
 CLIENT_DIR = Path(__file__).resolve().parent.parent / "client"
 DB_PATH = os.environ.get("NIMROD_DB", str(Path(__file__).resolve().parent / "nimrod.db"))
 
-store = SQLiteStore(DB_PATH)
+# Postgres in deploy (DATABASE_URL, e.g. Neon — durable, external, backed up),
+# SQLite for local dev. Same logic runs on both (db._Store). See docs/deploy.md.
+DATABASE_URL = os.environ.get("DATABASE_URL")
+store = PostgresStore(DATABASE_URL) if DATABASE_URL else SQLiteStore(DB_PATH)
 app = FastAPI(title="Nimrod platform server", version="0.2.0")
 
 
