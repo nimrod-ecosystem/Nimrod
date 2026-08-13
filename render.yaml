@@ -1,0 +1,26 @@
+# Render blueprint — the coordination server (thin: per-user config text only; no
+# media, no AI). One-click deploy: Render dashboard -> New -> Blueprint -> pick this
+# repo. It reads every setting from here EXCEPT the two secrets (DATABASE_URL,
+# DEVICE_KEYS), which you enter once in the dashboard so they never live in git.
+#
+# Pairs with docs/deploy.md. The client is served on the same origin by app.py
+# (StaticFiles), so there's no separate frontend service to deploy for v1.
+services:
+  - type: web
+    name: nimrod
+    runtime: python
+    plan: starter                       # always-on (~$7/mo). "free" sleeps after 15 min idle.
+    rootDir: web/server                 # the FastAPI app + requirements.txt live here
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT   # Render supplies $PORT
+    healthCheckPath: /                  # StaticFiles serves the client at / -> 200
+    autoDeploy: true                    # redeploy on push to the tracked branch
+    envVars:
+      - key: NIMROD_ENV
+        value: prod                     # fail-closed auth: only a valid X-Device-Key is accepted
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DATABASE_URL               # Neon Postgres connection string
+        sync: false                     # secret — set in the Render dashboard, not in git
+      - key: DEVICE_KEYS                # "christine:<secret>,mike:<secret>,..."
+        sync: false                     # secret — set in the Render dashboard, not in git

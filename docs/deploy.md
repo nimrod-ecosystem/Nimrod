@@ -42,8 +42,12 @@ These don't exist yet; each is a small validated slice I'll build when you're re
    dev override, no shared default, and a prod server with no `DEVICE_KEYS` denies everything. Validated:
    `test_identity.py` (14 checks) + a prod HTTP smoke (valid key → 200, missing/wrong/`X-Dev-User` → 401)
    + a client round-trip.
-3. **Env-based config.** Server reads `PORT`, `DATABASE_URL`, `DEVICE_KEYS`, `DEV_MODE` from the env; a
-   `web/server/render.yaml` (or the Render dashboard equivalent) declares the build + start command.
+3. **✅ Env-based config + `render.yaml`** (built). The server already reads its config from the env
+   (`PORT` via the start command, `DATABASE_URL` in `app.py`, `NIMROD_ENV` + `DEVICE_KEYS` in
+   `identity.py`). A repo-root **`render.yaml` blueprint** declares the service (rootDir `web/server`,
+   build/start commands, health check, `NIMROD_ENV=prod`, always-on plan, Python version) and marks
+   `DATABASE_URL` + `DEVICE_KEYS` as **dashboard secrets kept out of git**. Validated: the blueprint
+   parses with the right fields; the prod env path was smoke-tested.
 4. **Media-agent service.** A tiny wrapper so `agent.py` runs on her device as an always-on service
    (Windows Scheduled Task / a `.bat` at login, or a Linux `systemd` unit on a Pi), pointed at her media
    folder, restarting on boot.
@@ -59,22 +63,19 @@ I'll build 1–4 and mark them done here before you run the click-ops.
 2. 👉 **Render:** sign up. Connect your GitHub so it can see the `Nimrod` repo.
 3. 👉 **Cloudflare:** sign up (free).
 
-## Part B — the server on Render
+## Part B — the server on Render (via the blueprint)
 
-1. 👉 Render dashboard → **New → Web Service** → pick the `Nimrod` repo.
-2. 👉 Settings:
-   - **Root directory:** `web/server`
-   - **Runtime:** Python 3
-   - **Build command:** `pip install -r requirements.txt`
-   - **Start command:** `uvicorn app:app --host 0.0.0.0 --port $PORT`
-   - **Instance type:** **Starter (~$7/mo)** — always-on (the free tier sleeps after 15 min idle).
-3. 👉 **Environment variables:**
+1. 👉 Render dashboard → **New → Blueprint** → pick the `Nimrod` repo. Render reads the repo-root
+   `render.yaml` and pre-fills everything: the service, `rootDir: web/server`, the build + start
+   commands, the health check, `NIMROD_ENV=prod`, and the always-on Starter plan (~$7/mo).
+2. 👉 It prompts for the two **secrets** (they live in the dashboard, never in git):
    - `DATABASE_URL` = the Neon string from Part A
-   - `DEVICE_KEYS` = `christine:<a-long-random-secret>` (generate a random string; this is her device's key.
-     Add more `,user:secret` pairs later for other devices/people)
-   - `NIMROD_ENV` = `prod` (turns on fail-closed auth — only a valid device key is accepted)
-4. 👉 Deploy. When it's live you get a URL like `https://nimrod-xxxx.onrender.com`. Open it — you should
-   see the app. (It's HTTPS, so the camera will work.)
+   - `DEVICE_KEYS` = `christine:<a-long-random-secret>` (generate a random string — her device's key;
+     add more `,user:secret` pairs later for other devices/people)
+3. 👉 Apply. When it's live you get a URL like `https://nimrod-xxxx.onrender.com`. Open it — you should
+   see the app (HTTPS, so the camera will work). Redeploys are automatic on push to the tracked branch.
+   *(Prefer the blueprint; a manual "New → Web Service" with the same settings also works if you'd rather
+   set the fields by hand.)*
 
 ## Part C — domain + CDN on Cloudflare
 
