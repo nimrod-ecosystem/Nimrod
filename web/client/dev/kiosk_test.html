@@ -17,8 +17,9 @@
 <body>
 <h1>kiosk shell — integration test</h1>
 <p>Mounts the real <code>mountKiosk</code> against the live server on a seeded profile
-(photos · camera · clock). Verifies the stage shows one module at a time, the camera is a
-persistent mirror, switching is lazy, and keyboard/mirror controls work.</p>
+(photos · camera · clock · youtube). Verifies the stage shows one module at a time, the camera + clock
+are persistent HUD overlays, the mirror size/corner + clock corner come from per-profile settings and
+are tunable live, and lazy switching works.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="root"></div>
@@ -43,43 +44,50 @@ function check(name, cond, detail = '') {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const stageHas = (sel) => !!root.querySelector('.k-stage ' + sel);
 const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
+const clockHas = (sel) => !!root.querySelector('.k-clock ' + sel);
+const ds = () => root.querySelector('.kiosk').dataset;
 
 (async () => {
   let kiosk = null;
   try {
     const profiles = createProfilesClient({ user: USER });
     const p = await profiles.create('TEST-bedside');
-    // photos first (the default primary / her #1), camera (-> mirror), clock (2nd stage)
+    // photos (default primary / her #1) + youtube (2nd stage) + camera (mirror) + clock (HUD)
     await profiles.addModule(p.id, 'photos');
     await profiles.addModule(p.id, 'camera');
     await profiles.addModule(p.id, 'clock');
+    await profiles.addModule(p.id, 'youtube');
 
     const bus = createBus();
     kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus });
     await sleep(120);
 
-    // partition: 2 stage modules (photos, clock) + a camera mirror
-    check('two stage modules (camera pulled to the mirror)', kiosk.stageCount() === 2, `count=${kiosk.stageCount()}`);
-    check('a camera mirror is present', kiosk.hasCamera() === true);
-    check('the mirror is visible', !root.querySelector('.k-mirror')?.hidden);
+    // camera + clock are pulled OUT of the stage into HUD overlays; photos + counter remain
+    check('two stage modules (camera + clock pulled to HUD)', kiosk.stageCount() === 2, `count=${kiosk.stageCount()}`);
+    check('a camera mirror overlay is present', kiosk.hasCamera() === true && mirrorHas('.camera'));
+    check('a clock HUD overlay is present', kiosk.hasClock() === true && clockHas('.clock'));
 
-    // the stage shows the FIRST non-camera module (photos = her #1)
-    check('primary is photos (first non-camera)', kiosk.primaryType() === 'photos', `primary=${kiosk.primaryType()}`);
+    // the stage shows the FIRST stage module (photos = her #1)
+    check('primary is photos (first non-HUD module)', kiosk.primaryType() === 'photos', `primary=${kiosk.primaryType()}`);
     check('the stage renders the photos module', stageHas('.photos'));
-    check('the camera renders in the mirror', mirrorHas('.camera'));
-    check('only the primary is mounted in the stage (clock not yet)', !stageHas('.clock'));
+    check('only the primary is mounted in the stage (youtube not yet)', !stageHas('.youtube'));
 
-    // control bar shows a dot per stage module, one active
+    // default layout from settings: large mirror, top-right; clock bottom-left
+    check('default mirror size is large', kiosk.layout().mirrorSize === 'lg' && ds().mirrorSize === 'lg', JSON.stringify(kiosk.layout()));
+    check('default mirror corner is top-right', kiosk.layout().mirrorCorner === 'tr' && ds().mirrorCorner === 'tr');
+    check('default clock corner is bottom-left', kiosk.layout().clockCorner === 'bl' && ds().clockCorner === 'bl');
+
+    // control dots: one per stage module, one active
     check('a control dot per stage module', root.querySelectorAll('.k-mods .k-dot').length === 2);
     check('exactly one dot is active', root.querySelectorAll('.k-mods .k-dot.on').length === 1);
 
-    // switch primary -> clock (lazy: photos torn down, clock mounted)
+    // switch primary -> youtube (lazy: photos torn down, youtube mounted); HUD survives
     await kiosk.showPrimary(1);
     await sleep(60);
-    check('switching makes clock the primary', kiosk.primaryType() === 'clock', `primary=${kiosk.primaryType()}`);
-    check('the stage now renders the clock', stageHas('.clock'));
+    check('switching makes youtube the primary', kiosk.primaryType() === 'youtube', `primary=${kiosk.primaryType()}`);
+    check('the stage now renders the youtube module', stageHas('.youtube'));
     check('the previous stage module was torn down (lazy)', !stageHas('.photos'));
-    check('the camera mirror survives the switch', mirrorHas('.camera') && kiosk.hasCamera());
+    check('the camera + clock HUD survive the switch', mirrorHas('.camera') && clockHas('.clock'));
 
     // keyboard: number key selects a stage module
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }));
@@ -92,6 +100,17 @@ const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
     kiosk.toggleMirrorFull();
     check('mirror mode toggles back off', kiosk.mirrorFull() === false && !root.querySelector('.kiosk.mirror-full'));
 
+    // live bedside tuning of the mirror, persisted to the profile settings
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '[' }));
+    await sleep(30);
+    check('"[" shrinks the mirror (lg -> md) and applies it', kiosk.layout().mirrorSize === 'md' && ds().mirrorSize === 'md', JSON.stringify(kiosk.layout()));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '\\' }));
+    await sleep(30);
+    check('"\\" cycles the mirror corner (tr -> br)', kiosk.layout().mirrorCorner === 'br' && ds().mirrorCorner === 'br', JSON.stringify(kiosk.layout()));
+    kiosk.setMirror({ size: 'sm', corner: 'bl' });
+    await sleep(30);
+    check('setMirror() updates size + corner', kiosk.layout().mirrorSize === 'sm' && kiosk.layout().mirrorCorner === 'bl');
+
     // "next" just publishes to the bus — must not throw
     let threw = false;
     try { kiosk.next(); } catch { threw = true; }
@@ -99,7 +118,7 @@ const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
 
     kiosk.destroy();
     check('destroy() tears everything down without error', true);
-    check('stage is empty after destroy', !stageHas('.photos') && !stageHas('.clock'));
+    check('stage + HUD are empty after destroy', !stageHas('.photos') && !mirrorHas('.camera') && !clockHas('.clock'));
 
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));
