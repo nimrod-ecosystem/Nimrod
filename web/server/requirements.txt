@@ -1,4 +1,9 @@
-# Nimrod platform server — shared-systems slice
-# Thin coordination layer only: accounts (stub), per-user state. No media, no AI.
+# Nimrod platform server — thin coordination layer only: accounts (stub), per-user
+# state. No media, no AI.
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
+
+# Postgres (deploy only — SQLite is used for local dev when DATABASE_URL is unset).
+# psycopg[binary] ships a prebuilt driver; psycopg-pool is the connection pool.
+psycopg[binary]>=3.2,<4
+psycopg-pool>=3.2,<4

@@ -28,9 +28,13 @@ edge CDN. That adds CORS + a configurable API base URL — skip it until there's
 
 These don't exist yet; each is a small validated slice I'll build when you're ready to deploy:
 
-1. **Postgres backend in `web/server/db.py`.** Read `DATABASE_URL` from the env; use Postgres when set,
-   fall back to the current SQLite for local dev. The `StateStore` interface was designed for exactly
-   this — it's a backend swap, not a rewrite. (Validated with the existing store tests against Postgres.)
+1. **✅ Postgres backend in `web/server/db.py`** (built). Both engines share one `_Store` logic class;
+   `app.py` picks `PostgresStore` when `DATABASE_URL` is set, else `SQLiteStore` for local dev. The
+   shared logic (optimistic concurrency, append-only triggers, ownership) is validated by
+   `test_store.py` (23 checks) + `test_media_sources.py` (12) via SQLite — the same code Postgres runs —
+   and by an HTTP round-trip. The Postgres driver adapter's own **live smoke is this deploy** (Part B:
+   deploy → open the URL → create a profile) since there's no local Postgres in dev. `requirements.txt`
+   adds `psycopg[binary]` + `psycopg-pool` (used only when `DATABASE_URL` is set).
 2. **Device-secret auth in `web/server/identity.py`.** `current_user()` currently returns `dev-user`.
    Add: a secret sent as a header (e.g. `X-Device-Key`) is looked up against an env-configured
    `DEVICE_KEYS` map → the user id. The client (kiosk) sends its stored secret on every request. Unknown

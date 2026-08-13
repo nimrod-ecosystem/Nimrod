@@ -227,6 +227,18 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   kiosk's 19-check test still green (incl. the mirror-mode fix). **Still open for real deploy:** kiosk
   auto-auth as her (identity is a `dev-user` stub).
 
+- **Postgres backend for deploy** (`web/server/db.py`). Both engines now share one `_Store` logic class;
+  `app.py` selects `PostgresStore` when `DATABASE_URL` is set (Neon/any Postgres — durable, external,
+  backed up), else `SQLiteStore` for local dev. Standard SQL throughout; the only dialect deltas are the
+  id column (AUTOINCREMENT vs BIGSERIAL), reading a new id back (lastrowid vs RETURNING), and the
+  append-only trigger syntax. The shared business rules — optimistic concurrency, append-only trigger
+  enforcement, per-user ownership, module-removal-keeps-events — are validated by `test_store.py`
+  (**23 checks**) + `test_media_sources.py` (12) via SQLite (the same code path Postgres runs) and by an
+  HTTP round-trip. The Postgres driver adapter's live smoke is the deploy itself (docs/deploy.md Part B).
+  `requirements.txt` adds `psycopg[binary]` + `psycopg-pool` (used only when `DATABASE_URL` is set). This
+  is ⚙️ #1 of the four deploy prerequisites; next: device-secret auth, env config + render.yaml,
+  media-agent-as-a-service.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and
