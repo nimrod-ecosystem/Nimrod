@@ -61,7 +61,7 @@ const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
     // partition: 2 stage modules (photos, clock) + a camera mirror
     check('two stage modules (camera pulled to the mirror)', kiosk.stageCount() === 2, `count=${kiosk.stageCount()}`);
     check('a camera mirror is present', kiosk.hasCamera() === true);
-    check('the mirror is visible', kiosk.mirrorVisible() === true);
+    check('the mirror is visible', !root.querySelector('.k-mirror')?.hidden);
 
     // the stage shows the FIRST non-camera module (photos = her #1)
     check('primary is photos (first non-camera)', kiosk.primaryType() === 'photos', `primary=${kiosk.primaryType()}`);
@@ -86,11 +86,11 @@ const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
     await sleep(60);
     check('keyboard "1" selects the first stage module (photos)', kiosk.primaryType() === 'photos' && stageHas('.photos'));
 
-    // mirror toggle
-    kiosk.toggleMirror();
-    check('mirror toggles off', kiosk.mirrorVisible() === false);
-    kiosk.toggleMirror();
-    check('mirror toggles back on', kiosk.mirrorVisible() === true);
+    // mirror MODE = press M to make the camera full screen
+    kiosk.toggleMirrorFull();
+    check('mirror mode makes the camera full screen', kiosk.mirrorFull() === true && !!root.querySelector('.kiosk.mirror-full'));
+    kiosk.toggleMirrorFull();
+    check('mirror mode toggles back off', kiosk.mirrorFull() === false && !root.querySelector('.kiosk.mirror-full'));
 
     // "next" just publishes to the bus — must not throw
     let threw = false;

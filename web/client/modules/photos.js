@@ -34,7 +34,7 @@ registerModule(
   { type: 'photos', title: 'Photos', description: 'slideshow over your own media (BYO storage)' },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
-    const client = createMediaSourcesClient({ user });
+    const client = createMediaSourcesClient({ user, cache: true });   // registry survives a server blip
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {}, channels = {};

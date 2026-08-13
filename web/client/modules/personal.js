@@ -32,7 +32,7 @@ registerModule(
   { type: 'personal', title: 'Personal videos', description: 'recorded messages from your people (BYO storage)' },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
-    const client = createMediaSourcesClient({ user });
+    const client = createMediaSourcesClient({ user, cache: true });   // registry survives a server blip
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {};

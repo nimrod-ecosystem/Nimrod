@@ -19,6 +19,10 @@
     aspect-ratio:4/3;z-index:5;border-radius:12px;overflow:hidden;
     box-shadow:0 6px 24px rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.18)}
   .k-mirror .k-mod{width:100%;height:100%}
+  /* MIRROR MODE (M): the camera fills the whole screen */
+  .kiosk.mirror-full .k-mirror{position:fixed;inset:0;width:auto;max-width:none;aspect-ratio:auto;
+    border:0;border-radius:0;box-shadow:none;z-index:30}
+  .kiosk.mirror-full .k-stage{visibility:hidden}
   /* auto-hiding control bar */
   .k-controls{position:absolute;left:50%;bottom:2.2vmin;transform:translateX(-50%);
     display:flex;gap:14px;align-items:center;background:rgba(7,18,13,.82);
@@ -41,6 +45,7 @@
 
 <script type="module">
 import { createProfilesClient } from './profile.js';
+import { cachedFetch } from './cache.js';
 import { mountKiosk } from './kiosk.js';
 
 const params = new URLSearchParams(location.search);
@@ -53,7 +58,8 @@ const root = document.getElementById('root');
 // photos (her #1), the camera mirror, and the Lineup director (which rotates
 // youtube / personal videos / educational). Real onboarding replaces this.
 async function ensureProfile(profiles) {
-  let list = await profiles.list();
+  // cached so a boot before the server is reachable still finds her profile
+  let list = await cachedFetch('profiles:' + user, () => profiles.list());
   if (wantProfile) { const p = list.find((x) => x.id === wantProfile); if (p) return p.id; }
   if (!list.length) {
     const p = await profiles.create('Bedside');

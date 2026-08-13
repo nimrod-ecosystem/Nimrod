@@ -11,7 +11,15 @@
 // `pending` tracks exactly the keys we've changed since the last successful flush,
 // so a rebase preserves a concurrent writer's other keys — no lost update.
 
-export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRetries = 5 }) {
+import { cacheGet, cacheSet } from './cache.js';
+
+// `cacheKey` (optional) opts this handle into OFFLINE RESILIENCE: every successful
+// load caches {data,version} in localStorage, and a load whose network fetch FAILS
+// falls back to that last-known-good instead of throwing. The server stays the
+// source of truth (the cache is only read on failure). Handles without a cacheKey
+// behave exactly as before. Used by the kiosk so a server blip doesn't blank the
+// screen; the dev harness leaves it off.
+export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRetries = 5, cacheKey = null }) {
   let data = {};
   let version = 0;
   let loaded = false;
@@ -32,14 +40,25 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
   }
 
   async function load() {
-    const res = await fetch(url, { headers: authHeaders() });
-    if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
-    const body = await res.json();
-    data = body.data || {};
-    version = body.version || 0;
-    loaded = true;
-    notify();
-    return snapshot();
+    try {
+      const res = await fetch(url, { headers: authHeaders() });
+      if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+      const body = await res.json();
+      data = body.data || {};
+      version = body.version || 0;
+      loaded = true;
+      if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });   // last-known-good
+      notify();
+      return snapshot();
+    } catch (err) {
+      // server unreachable: fall back to the last cached config so the screen keeps
+      // its layout/settings (the local media agent keeps serving the bytes).
+      if (cacheKey) {
+        const c = cacheGet(`state:${cacheKey}`);
+        if (c) { data = c.data || {}; version = c.version || 0; loaded = true; notify(); return snapshot(); }
+      }
+      throw err;
+    }
   }
 
   function set(patch) {

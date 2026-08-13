@@ -17,6 +17,8 @@
 // picker (rng.js). The item `id` == its path, stable across sessions, so the
 // picker's play-stats key on it correctly.
 
+import { cachedFetch } from './cache.js';
+
 const authHeaders = (user) => (user ? { 'X-Dev-User': user } : {});
 const trimSlash = (u) => String(u || '').replace(/\/+$/, '');
 
@@ -30,11 +32,18 @@ export function mediaUrl(baseUrl, path) {
 }
 
 // --- Registry client (platform API) ----------------------------------------
-export function createMediaSourcesClient({ user, base = '' } = {}) {
-  async function list() {
+export function createMediaSourcesClient({ user, base = '', cache = false } = {}) {
+  async function fetchList() {
     const res = await fetch(`${base}/api/media-sources`, { headers: authHeaders(user) });
     if (!res.ok) throw new Error(`GET /api/media-sources -> ${res.status}`);
     return (await res.json()).sources;
+  }
+  // `cache:true` opts into offline resilience: the registry (which folder → which
+  // base_url) survives a coordination-server outage, so photos/personal can still
+  // resolve media from the LOCAL agent. The agent's own /list is already local.
+  async function list() {
+    if (cache) return cachedFetch(`media-sources:${user || 'anon'}`, fetchList);
+    return fetchList();
   }
   async function add({ label, base_url, kind = 'agent' }) {
     const res = await fetch(`${base}/api/media-sources`, {
