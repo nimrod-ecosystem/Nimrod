@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>educational — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:340px;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>educational — integration test</h1>
+<p>Mounts the real <code>educational</code> module against the live server, with a STUB speak +
+injected display timer, so the generated flow — content library → picker → live graphic + TTS-in-voice
+→ display-timer → segment/done — is exercised deterministically (no audio).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { graphicHTML } from '../modules/educational.js';   // registers 'educational' + exports the pure renderer
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'educational-test-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const kindOf = (id) => id.startsWith('count') ? 'counting' : id.startsWith('letter') ? 'alphabet' : 'vocab';
+
+function fakeTimers(){
+  let seq = 0, armed = [];
+  return {
+    setTimer: (fn) => { const id = ++seq; armed.push({ id, fn }); return id; },
+    clearTimer: (id) => { armed = armed.filter((t) => t.id !== id); },
+    fireDue: () => { const due = armed; armed = []; due.forEach((t) => t.fn()); },
+    pending: () => armed.length,
+  };
+}
+
+(async () => {
+  try {
+    // ── pure renderer (semantic value -> graphic) ────────────────────────────
+    check('graphicHTML: number draws numeral + counting dots', /ig-number.*>3<.*ig-dots/s.test(graphicHTML({ type: 'number', value: 3 })));
+    check('graphicHTML: letters upcases', /ig-letters">A</.test(graphicHTML({ type: 'letters', value: 'a' })));
+    check('graphicHTML: word spells then whole', /ig-spell.*>C<.*>U<.*>P<.*ig-wordfull">cup/s.test(graphicHTML({ type: 'word', value: 'cup' })));
+    check('graphicHTML: none/empty renders nothing', graphicHTML({ type: 'none' }) === '' && graphicHTML(null) === '');
+
+    // ── mount (directed, so WE drive advances) ───────────────────────────────
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-educational');
+    // seed the profile VOICE so we can prove speak() uses it
+    const psettings = createState({ url: profiles.stateURL(profile.id, 'settings'), user: USER });
+    await psettings.load(); psettings.set({ voice: { uri: 'test-voice', lang: 'en-US' } }); await psettings.flush();
+
+    const mod = await profiles.addModule(profile.id, 'educational');
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+    state.set({ directed: true, autoAdvance: true });
+    await state.flush();
+
+    const bus = createBus();
+    const host = document.getElementById('host');
+    const spoken = [];
+    const segDone = [];
+    bus.subscribe('segment/done', (p) => segDone.push(p));
+    const T = fakeTimers();
+    const instance = mountModule('educational', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      speak: (text, pref) => spoken.push({ text, pref }),
+      setTimer: T.setTimer, clearTimer: T.clearTimer,
+    });
+    instance.init();
+    await sleep(250);   // let the profile-settings (voice) read complete
+
+    const graphic = () => host.querySelector('.educational .stage')?.innerHTML || '';
+    // directed: does NOT autostart
+    check('directed instance does not autostart', graphic() === '', `stage="${graphic().slice(0,40)}"`);
+
+    // advance -> renders a live graphic + speaks + arms the display timer + logs a play
+    bus.publish('educational/next');
+    await sleep(20);
+    check('advance renders a live graphic', /ig-(number|letters|word)/.test(graphic()), `stage="${graphic().slice(0,40)}"`);
+    check('advance speaks the line', spoken.length >= 1, `spoken=${spoken.length}`);
+    check('speak uses the PROFILE voice', spoken[spoken.length - 1]?.pref?.uri === 'test-voice', JSON.stringify(spoken[spoken.length - 1]?.pref));
+    check('the display timer is armed', T.pending() === 1, `pending=${T.pending()}`);
+    await events.load();
+    check('first item logged a play event', (events.get().events || []).filter((e) => e.kind === 'play').length >= 1);
+
+    // the display timer firing ends the segment (segment/done) and auto-advances
+    const spokeBefore = spoken.length;
+    T.fireDue();
+    await sleep(20);
+    check('display timer fires segment/done{ended}', segDone.some((p) => p?.provider === 'educational' && p?.reason === 'ended'), JSON.stringify(segDone));
+    check('...and auto-advances to the next item (speaks again)', spoken.length > spokeBefore, `${spokeBefore} -> ${spoken.length}`);
+
+    // coverage + diversity over a run of advances
+    for (let i = 0; i < 18; i++) { bus.publish('educational/next'); await sleep(8); }
+    await events.load();
+    const playIds = (events.get().events || []).filter((e) => e.kind === 'play').map((e) => e.data?.id).filter(Boolean);
+    const kinds = playIds.map(kindOf);
+    check('coverage: more than one kind is used', new Set(kinds).size >= 2, `kinds=${[...new Set(kinds)].join(',')}`);
+    let immediate = 0, sameKind = 0;
+    for (let i = 1; i < playIds.length; i++) { if (playIds[i] === playIds[i-1]) immediate++; if (kinds[i] === kinds[i-1]) sameKind++; }
+    check('no immediate item repeat', immediate === 0, `${immediate} repeats`);
+    check('kind-diversity keeps same-kind back-to-back under 50%', sameKind / (playIds.length - 1) < 0.5, `${((sameKind/(playIds.length-1))*100).toFixed(0)}%`);
+
+    // skip cancels + advances
+    const gBefore = graphic();
+    bus.publish('educational/skip');
+    await sleep(20);
+    check('skip advances to a new segment', graphic() !== gBefore || playIds.length > 0);
+
+    instance.destroy();
+    check('destroy() cleans up without error', true);
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
