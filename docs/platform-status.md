@@ -203,6 +203,14 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   mirror + dots; pressing `2` swapped the stage to the director, mirror intact).
   **Mirror mode** = pressing `M` makes the camera **full-screen** (the corner mirror expands over the
   stage; press again to return) — the camera stream stays mounted.
+  - **Default layout (2026-08-13):** one content surface + a small HUD, not the old four-quadrant split.
+    The camera **mirror** and a translucent **clock** are persistent HUD overlays (mounted once, left
+    running while the stage changes); everything else cycles in the stage. The mirror's **size + corner**
+    and the clock's **corner** are **per-profile settings** (on the `settings` blob with theme + voice),
+    so they re-render for free and are tunable live at the bedside — `[`/`]` resize the mirror, `\` cycles
+    its corner, persisted to the profile. Defaults: large mirror top-right, clock bottom-left. The
+    kiosk's test is now **24 checks** (HUD partition, default layout from settings, lazy switch with the
+    HUD surviving, live tuning + `setMirror`, mirror mode, clean destroy).
 
 - **Offline resilience — last-known-good cache** (`web/client/cache.js`; opt-in on `state.js` +
   `media_sources.js`; wired into the kiosk). A tiny localStorage JSON mirror so a brief

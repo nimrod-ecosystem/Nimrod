@@ -15,14 +15,33 @@
   .k-stage .k-mod{flex:1;min-width:0;display:flex}
   .k-stage .k-mod > *{flex:1;min-width:0}
   /* the camera "mirror" — pinned corner, always on top, never covered */
-  .k-mirror{position:absolute;right:2.5vmin;bottom:2.5vmin;width:24vw;max-width:360px;
-    aspect-ratio:4/3;z-index:5;border-radius:12px;overflow:hidden;
+  /* the camera "mirror" — a HUD overlay; size + corner are per-profile settings */
+  .k-mirror{position:absolute;aspect-ratio:4/3;z-index:5;border-radius:12px;overflow:hidden;
     box-shadow:0 6px 24px rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.18)}
   .k-mirror .k-mod{width:100%;height:100%}
+  .kiosk[data-mirror-size="sm"] .k-mirror{width:18vw}
+  .kiosk[data-mirror-size="md"] .k-mirror{width:24vw}
+  .kiosk[data-mirror-size="lg"] .k-mirror{width:32vw}
+  .kiosk[data-mirror-corner="tr"] .k-mirror{top:2.5vmin;right:2.5vmin}
+  .kiosk[data-mirror-corner="tl"] .k-mirror{top:2.5vmin;left:2.5vmin}
+  .kiosk[data-mirror-corner="br"] .k-mirror{bottom:2.5vmin;right:2.5vmin}
+  .kiosk[data-mirror-corner="bl"] .k-mirror{bottom:2.5vmin;left:2.5vmin}
+  /* translucent clock HUD — corner is a per-profile setting (default bottom-left) */
+  .k-clock{position:absolute;z-index:6;padding:9px 15px;border-radius:12px;
+    background:rgba(255,255,255,.14);color:#eef4f0;max-width:34vw}
+  .kiosk[data-clock-corner="bl"] .k-clock{bottom:2.5vmin;left:2.5vmin}
+  .kiosk[data-clock-corner="br"] .k-clock{bottom:2.5vmin;right:2.5vmin}
+  .kiosk[data-clock-corner="tl"] .k-clock{top:2.5vmin;left:2.5vmin}
+  .kiosk[data-clock-corner="tr"] .k-clock{top:2.5vmin;right:2.5vmin}
+  .k-clock .k-mod{width:100%}
+  .k-clock .clock{align-items:flex-start;gap:2px}
+  .k-clock .clock .time{color:#fff;font-size:1.7rem}
+  .k-clock .clock .when{color:#cfe0d6;font-size:.8rem}
+  .k-clock .clock .date{color:#aecbbd;font-size:.72rem}
   /* MIRROR MODE (M): the camera fills the whole screen */
-  .kiosk.mirror-full .k-mirror{position:fixed;inset:0;width:auto;max-width:none;aspect-ratio:auto;
+  .kiosk.mirror-full .k-mirror{position:fixed;inset:0;width:auto;aspect-ratio:auto;
     border:0;border-radius:0;box-shadow:none;z-index:30}
-  .kiosk.mirror-full .k-stage{visibility:hidden}
+  .kiosk.mirror-full .k-stage,.kiosk.mirror-full .k-clock{visibility:hidden}
   /* auto-hiding control bar */
   .k-controls{position:absolute;left:50%;bottom:2.2vmin;transform:translateX(-50%);
     display:flex;gap:14px;align-items:center;background:rgba(7,18,13,.82);
@@ -65,6 +84,7 @@ async function ensureProfile(profiles) {
     const p = await profiles.create('Bedside');
     await profiles.addModule(p.id, 'photos');
     await profiles.addModule(p.id, 'camera');
+    await profiles.addModule(p.id, 'clock');
     await profiles.addModule(p.id, 'director');
     return p.id;
   }
