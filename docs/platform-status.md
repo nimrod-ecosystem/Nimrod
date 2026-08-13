@@ -246,8 +246,10 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   override, no shared default; a prod server with no keys denies everything). The dev `X-Dev-User`/`?user`
   override still works with `NIMROD_ENV` unset, so the harness + tests are unchanged. Validated:
   `test_identity.py` (**14 checks**) + a prod HTTP smoke (valid → 200; missing/wrong key + `X-Dev-User`
-  → 401) + a client refactor round-trip. Remaining deploy prereqs: env config + render.yaml,
-  media-agent-as-a-service. The bigger security picture (HTTPS in transit, per-user ownership on every
+  → 401) + a client refactor round-trip. Env config + a repo-root **`render.yaml`** blueprint ✓ (⚙️ #3;
+  declares the service + `NIMROD_ENV=prod`, keeps `DATABASE_URL`/`DEVICE_KEYS` as dashboard secrets out
+  of git; parse-validated). **Remaining deploy prereq: media-agent-as-a-service** (⚙️ #4). The bigger
+  security picture (HTTPS in transit, per-user ownership on every
   query, parameterized SQL, append-only tamper-proofing; residual = operator + Cloudflare/Render/Neon
   see the small config text) is in the deploy discussion.
 
@@ -284,12 +286,19 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
 3. **Today card**: clock → weather → calendar on the same engine. **iCal (`.ics`) URL first** (no
    OAuth), then **Google Calendar** read-only when login lands (server never stores events; pick which
    calendar shows). **Deferred:** agency/check-in, on-this-day/memories.
-4. **Media/Sources tab + full dashboard composer.** The real source-picker UI (personal + photos both
+4. **Sharing / permissions model** (Mike, 2026-08-13). Today profiles are single-owner (404 to anyone
+   else). To let family view/share info (e.g. a medication schedule as a normal structured-state module,
+   so it's already device-independent — open your login on a phone and it's there), add a grant model:
+   a profile or specific modules shared read/edit to another account. Then, optional follow-on:
+   **client-side encryption** for sensitive server-state fields so "on the cloud" ≠ "cloud-readable"
+   (keeps the operator/providers from reading it). Deep clinical data (recordings, AI analysis) stays
+   local-only regardless. Medications = structured state (shareable), not a file.
+5. **Media/Sources tab + full dashboard composer.** The real source-picker UI (personal + photos both
    need it — dev-seeded today) over `media_sources`; a youtube playlist UI; an educational content
    editor; **Piper** replacing Web Speech. Later: real-time/SSE + call sync; node-editor tab (the
    visual authoring surface over this same state-machine engine); role-name refactor of the palette CSS
    vars.
-5. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
+6. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
    for photos; exercise the picker's cross-album/cross-channel diversity end-to-end (only
    single-source pools were driven in the module tests); **sing-along** (curated karaoke playlist +
    lyric/caption overlay) is a youtube fast-follow; audio ducking/arbitration is its own concern.
