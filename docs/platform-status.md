@@ -152,6 +152,23 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   youtube slot shown, others hidden, child mounted). youtube's own 17-check test still green (no
   regression from the segment/done line).
 
+- **Personal videos — the recorded provider** (`web/client/modules/personal.js`). The interstitials
+  *recorded* track re-homed as its own module and photos' video twin: holds a `{sourceId, album,
+  subjectName}` reference → the `media_sources` resolver (`/list`) → **video** items → shared picker
+  (`rng.js`) → plays one clip in a `<video>` **straight from the user's media agent** (bytes never
+  touch the platform server) with a **name caption**. Director-ready like youtube: a clip ENDING is a
+  `segment/done{provider:'personal'}` (standalone it also auto-advances); an **empty/unconfigured**
+  source hands back with `segment/done{empty}` instead of freezing. A **`directed`** flag (seeded by
+  the container) suppresses autostart so a hidden child never fires a spurious segment/done — the
+  director drives every activation. Christine's first clips are **Oscar's messages** (`…/Voice
+  messages/Oscar`). Validated by an **11-check** browser test (`dev/personal_test.html`, live server +
+  the Oscar agent): lists exactly Oscar's two mp4s (the .amr / extensionless files skipped), renders a
+  `<video>` from the agent, name caption, append-only play log, coverage over advances, ENDED →
+  segment/done + auto-advance, `prev()` replay-no-log, empty provider hands back, clean destroy.
+  Live-verified in the app (added Personal videos with the Oscar source → "Oscar singing ABC's.mp4"
+  playing, caption "From Oscar"). It's now a **real provider in the director** (youtube's placeholder
+  neighbour is gone); the director's 15-check test still green with two real providers.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and
@@ -168,9 +185,9 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   forward; picker is built seed-ready so it's a small add later.
 
 ## Next
-1. **Personal videos** (recorded track): audio/video + still + name, played **in the shared stage with
-   TTS**; absorbs "who's this?" greetings. It becomes a **real provider** in the director (replacing the
-   placeholder). Then **`R`-key capture** with local-STT intent cues
+1. **Personal videos — enhancements.** Base provider ✓ (above). Add **audio-only** messages (the .amr /
+   voice notes), a **still + name** fallback when there's no video, an optional **TTS lead-in** ("A
+   message from Oscar") in the profile voice, and **`R`-key capture** with local-STT intent cues
    ("message for Christine" tags + becomes the lead-in; "restart please"; "never mind delete that").
    Recordings **local-only/private** (may include staff → consent-based).
 2. **Educational** (generated track): ports the nimrod_95 generated flow (content library → `rng.js` →
@@ -179,10 +196,10 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
 3. **Today card**: clock → weather → calendar on the same engine. **iCal (`.ics`) URL first** (no
    OAuth), then **Google Calendar** read-only when login lands (server never stores events; pick which
    calendar shows). **Deferred:** agency/check-in, on-this-day/memories.
-4. **Dashboard composer** + **Media/Sources tab** (surface over `media_sources`; also photos' real
-   source-picker UI + a youtube playlist UI). Later: real-time/SSE + call sync; node-editor tab (the
-   visual authoring surface over this same state-machine engine); role-name refactor of the palette CSS
-   vars.
+4. **Media/Sources tab + dashboard composer.** The real source-picker UI (personal + photos both need
+   it — dev-seeded today) over `media_sources`; a youtube playlist UI. Later: real-time/SSE + call
+   sync; node-editor tab (the visual authoring surface over this same state-machine engine); role-name
+   refactor of the palette CSS vars.
 5. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
    for photos; exercise the picker's cross-album/cross-channel diversity end-to-end (only
    single-source pools were driven in the module tests); **sing-along** (curated karaoke playlist +

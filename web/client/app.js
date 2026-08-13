@@ -18,6 +18,7 @@ import './modules/camera.js';     // registers 'camera'
 import './modules/photos.js';     // registers 'photos'
 import './modules/youtube.js';    // registers 'youtube'
 import './modules/interstitials.js'; // registers 'interstitials'
+import './modules/personal.js';   // registers 'personal' (Personal videos — recorded)
 import './modules/director.js';   // registers 'director' (the content director / Lineup)
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'

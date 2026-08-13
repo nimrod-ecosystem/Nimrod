@@ -32,8 +32,9 @@ import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
 import { mulberry32 } from '../rng.js';
-import '../modules/youtube.js?v=2';      // registers 'youtube'
-import '../modules/director.js?v=2';     // registers 'director'
+import '../modules/youtube.js';      // registers 'youtube'
+import '../modules/personal.js';     // registers 'personal' (a real provider now)
+import '../modules/director.js';     // registers 'director'
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'director-test-user';

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>personal videos — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .personal .stage{width:320px;aspect-ratio:16/9;background:#0c1a14}
+  .personal .stage video{width:100%;height:100%}
+  #host,#host2{width:340px;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>personal videos — integration test</h1>
+<p>Mounts the real <code>personal</code> module against the live server + the Oscar media agent
+(<code>…/Voice messages/Oscar</code> on :8771). Autoplay off so the big clips aren't buffered; the
+"ended" handoff is fired by hand. Requires the agent running on port 8771.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="host2"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { createMediaSourcesClient } from '../media_sources.js';
+import { mountModule } from '../module.js';
+import '../modules/personal.js';   // registers 'personal'
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'personal-test-user';
+const AGENT = params.get('agent') || 'http://127.0.0.1:8771';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const vid = (host) => host.querySelector('.personal video');
+const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
+
+(async () => {
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const media = createMediaSourcesClient({ user: USER });
+    const src = await media.add({ label: 'Oscar', base_url: AGENT, kind: 'agent' });
+
+    const profile = await profiles.create('TEST-personal');
+    const mod = await profiles.addModule(profile.id, 'personal');
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+    state.set({ sourceId: src.id, subjectName: 'Oscar', autoplay: false, autoAdvance: true });
+    await state.flush();
+
+    const bus = createBus();
+    const host = document.getElementById('host');
+    const segDone = [];
+    bus.subscribe('segment/done', (p) => segDone.push(p));
+    const instance = mountModule('personal', { mount: host, bus, state, events, user: USER, profileId: profile.id });
+    instance.init();
+    await sleep(250);   // async source resolve + listing
+
+    // 1. lists Oscar's two video clips (the .amr / extensionless files are skipped)
+    check('lists exactly Oscar\'s 2 video clips', host.querySelector('[data-source-label]')?.textContent.includes('2 clip'),
+      `label="${host.querySelector('[data-source-label]')?.textContent}"`);
+    // 2. renders a <video> straight from the agent (bytes never touch the platform server)
+    check('renders a <video> from the agent', /\/files\/Oscar/.test(vidSrc(host) || ''), `src=${vidSrc(host)}`);
+    check('clip is one of Oscar\'s mp4s', /Oscar%20(Counting%20To%20100|singing%20ABC)/.test(vidSrc(host) || ''), `src=${vidSrc(host)}`);
+    // 3. shows the subject name
+    check('caption shows the speaker name', (host.querySelector('[data-name]')?.textContent || '').includes('Oscar'),
+      `caption="${host.querySelector('[data-name]')?.textContent}"`);
+    // 4. play logged (append-only)
+    await events.load();
+    const plays0 = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    check('first clip logged a play event', plays0 >= 1, `plays=${plays0}`);
+
+    // 5. advancing covers BOTH clips (only 2 items -> the picker weights by recency)
+    const seen = new Set([vidSrc(host)]);
+    for (let i = 0; i < 8; i++) { bus.publish('personal/next'); await sleep(20); seen.add(vidSrc(host)); }
+    check('advancing surfaces both of Oscar\'s clips', seen.size === 2, `seen=${seen.size}`);
+
+    // 6. a clip ENDING is a segment/done (director seam) AND, standalone, auto-advances
+    const before = vidSrc(host);
+    const segBefore = segDone.length;
+    vid(host).dispatchEvent(new Event('ended'));
+    await sleep(30);
+    check('clip ENDED emits segment/done{provider:personal}', segDone.length > segBefore && segDone[segDone.length - 1]?.provider === 'personal',
+      JSON.stringify(segDone[segDone.length - 1] || null));
+    check('standalone (autoAdvance) advances to the next clip on ended', vidSrc(host) !== before || seen.size === 2, `before=${before} now=${vidSrc(host)}`);
+
+    // 7. prev() replays without logging a new play
+    await events.load();
+    const playsA = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    bus.publish('personal/prev');
+    await sleep(20);
+    await events.load();
+    const playsB = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    check('prev() replays without a new play event', playsB === playsA, `${playsA} -> ${playsB}`);
+
+    instance.destroy();
+    check('destroy() cleans up without error', true);
+
+    // 8. an EMPTY provider (no source) hands back with segment/done{empty} instead of freezing.
+    // Use a FRESH user with no media sources (else personal adopts the lone source).
+    const USER2 = USER + '-empty';
+    const profiles2 = createProfilesClient({ user: USER2 });
+    const host2 = document.getElementById('host2');
+    const bus2 = createBus();
+    const seg2 = [];
+    bus2.subscribe('segment/done', (p) => seg2.push(p));
+    const prof2 = await profiles2.create('TEST-personal-empty');
+    const mod2 = await profiles2.addModule(prof2.id, 'personal');
+    const st2 = createState({ url: profiles2.stateURL(prof2.id, mod2.id), user: USER2 });
+    const ev2 = createEvents({ url: profiles2.eventsURL(prof2.id, mod2.id), user: USER2 });
+    await st2.load(); await ev2.load();
+    const inst2 = mountModule('personal', { mount: host2, bus: bus2, state: st2, events: ev2, user: USER2, profileId: prof2.id });
+    inst2.init();
+    await sleep(120);
+    bus2.publish('personal/next');
+    await sleep(20);
+    check('an empty provider hands back with segment/done{empty}', seg2.some((p) => p?.reason === 'empty'), JSON.stringify(seg2));
+    inst2.destroy();
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
