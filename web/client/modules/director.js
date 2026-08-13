@@ -31,7 +31,7 @@ import { createMachine } from '../statemachine.js';
 export const PROVIDERS = [
   { id: 'youtube',     label: 'Video',          real: true  },
   { id: 'personal',    label: 'Personal video', real: true  },
-  { id: 'educational', label: 'Educational',    real: false },
+  { id: 'educational', label: 'Educational',    real: true  },
   { id: 'wordgame',    label: 'Word game',      real: false },
   { id: 'trivia',      label: 'Trivia',         real: false },
   { id: 'singalong',   label: 'Sing-along',     real: false },
@@ -132,6 +132,8 @@ registerModule(
           child = mountModule(p.id, {              // provider id IS the module type
             mount: el, bus: rootBus, state: cState, events: cEvents, user, profileId,
             playerFactory: ctx.playerFactory,      // youtube uses it; others ignore it
+            speak: ctx.speak,                      // educational uses it (real TTS in app; stub in tests)
+            setTimer: io.setTimer, clearTimer: io.clearTimer,  // educational's display timer (fake in tests)
           });
           child.init();
           cState.startPolling(); cEvents.startPolling();

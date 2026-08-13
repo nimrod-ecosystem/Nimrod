@@ -169,6 +169,23 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   playing, caption "From Oscar"). It's now a **real provider in the director** (youtube's placeholder
   neighbour is gone); the director's 15-check test still green with two real providers.
 
+- **Educational — the generated provider** (`web/client/modules/educational.js`). The nimrod_95
+  interstitials *generated* flow re-homed as its own module and reworked from the retired 2×2 layout to
+  a **single in-stage live graphic** (no camera/presenter quadrants). Content-as-meaning: an item is
+  semantic data (`{kind, graphic:{type,value}, speak}`; ships an alphabet/counting/vocab seed) → shared
+  picker (`rng.js`, `kind` = diversity axis) → **graphic drawn live in the profile theme** (exported
+  pure `graphicHTML`) + **TTS in the profile voice** (`voice.js speak()`, reading the profile's
+  `settings` blob). Director-ready: a generated item has no natural end, so it ends on a **display
+  timer** → `segment/done{provider:'educational'}` (standalone it also auto-advances); `directed`
+  suppresses autostart. Two injection seams keep it deterministic — `ctx.speak` (test records, no audio)
+  and `ctx.setTimer`/`ctx.clearTimer` (the container forwards its own, so the director's tests stay
+  deterministic). Validated by a **17-check** browser test (`dev/educational_test.html`, live server,
+  stub speak + fake timer): pure renderer (number+dots / letters / spelled word / none), directed
+  no-autostart, advance renders+speaks+logs, **speak uses the profile voice**, display-timer fires
+  segment/done+auto-advance, coverage + no-immediate-repeat + kind-diversity <50% over a run, skip,
+  clean destroy. It's now a **real provider in the director** (its placeholder is gone); the director's
+  15-check test still green with **three** real providers.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and
@@ -190,16 +207,21 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
    message from Oscar") in the profile voice, and **`R`-key capture** with local-STT intent cues
    ("message for Christine" tags + becomes the lead-in; "restart please"; "never mind delete that").
    Recordings **local-only/private** (may include staff → consent-based).
-2. **Educational** (generated track): ports the nimrod_95 generated flow (content library → `rng.js` →
-   live graphic-in-theme → `speak()` → append-only log); becomes a real provider replacing its
-   placeholder. Later: content-library editor UI; **Piper** replacing Web Speech.
+2. **★ Minimal usable bedside dashboard** (the nearest "she's actually using it" milestone — see the
+   distance note below). A **full-screen kiosk layout** (photos/director dominant, no dev chrome) — the
+   first cut of the dashboard composer — plus a **real deploy**: the FastAPI server on an always-on
+   host or a Pi, the media agent running where her media lives, **scripted source config** (stand-in for
+   the Media/Sources UI), kiosk **auto-auth** as her, and basic **switch → skip / next** input wiring.
+   This is a handful of focused slices, not weeks of unknowns — worth targeting before more content
+   modules, so she gets photos + Oscar on the new site and we learn from real use.
 3. **Today card**: clock → weather → calendar on the same engine. **iCal (`.ics`) URL first** (no
    OAuth), then **Google Calendar** read-only when login lands (server never stores events; pick which
    calendar shows). **Deferred:** agency/check-in, on-this-day/memories.
-4. **Media/Sources tab + dashboard composer.** The real source-picker UI (personal + photos both need
-   it — dev-seeded today) over `media_sources`; a youtube playlist UI. Later: real-time/SSE + call
-   sync; node-editor tab (the visual authoring surface over this same state-machine engine); role-name
-   refactor of the palette CSS vars.
+4. **Media/Sources tab + full dashboard composer.** The real source-picker UI (personal + photos both
+   need it — dev-seeded today) over `media_sources`; a youtube playlist UI; an educational content
+   editor; **Piper** replacing Web Speech. Later: real-time/SSE + call sync; node-editor tab (the
+   visual authoring surface over this same state-machine engine); role-name refactor of the palette CSS
+   vars.
 5. **Deferred from 3c/3d** (fold into the Media/Sources tab + a playlist UI): a real source-picker
    for photos; exercise the picker's cross-album/cross-channel diversity end-to-end (only
    single-source pools were driven in the module tests); **sing-along** (curated karaoke playlist +

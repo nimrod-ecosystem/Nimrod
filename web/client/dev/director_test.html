@@ -34,6 +34,7 @@ import { mountModule } from '../module.js';
 import { mulberry32 } from '../rng.js';
 import '../modules/youtube.js';      // registers 'youtube'
 import '../modules/personal.js';     // registers 'personal' (a real provider now)
+import '../modules/educational.js';  // registers 'educational' (a real provider now)
 import '../modules/director.js';     // registers 'director'
 
 const params = new URLSearchParams(location.search);
@@ -96,6 +97,7 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     makeState: (key) => createState({ url: profiles.stateURL(profile.id, key), user: USER }),
     makeEvents: (key) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER }),
     playerFactory: stub.factory,
+    speak: () => {},   // educational is a real provider now — keep the test silent + deterministic
     machineIO: { now: () => atHour(hour), rand: mulberry32(seed), setTimer: timers.setTimer, clearTimer: timers.clearTimer },
     autoFinishMs: 1000,
   });
@@ -121,8 +123,8 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     await sleep(40);
     const afterEnded = curProv(host);
     check('segment/done(ended) advances the director off youtube', afterEnded && afterEnded !== 'youtube', `now=${afterEnded}`);
-    check('the picked provider renders its placeholder', isPlaceholder(host));
-    check('the placeholder armed its auto-finish timer', T.pending() === 1, `pending=${T.pending()}`);
+    check('the picked provider rendered its segment (placeholder or real)', !!host.querySelector('.d-slot:not([hidden])')?.firstChild);
+    check('the segment armed a finish timer (placeholder or educational display)', T.pending() === 1, `pending=${T.pending()}`);
 
     // the placeholder finishing (timeout) advances again, to yet another provider
     T.fireDue();
