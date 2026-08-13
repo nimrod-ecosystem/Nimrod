@@ -201,8 +201,23 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   primary, one module in the stage at a time, lazy teardown on switch, the mirror survives switches,
   keyboard select, mirror toggle, clean destroy. Live-verified in `kiosk.html` (photos stage + camera
   mirror + dots; pressing `2` swapped the stage to the director, mirror intact).
-  RESILIENCE TODO (flagged in code): cache the profile config locally so a brief coordination-server
-  outage doesn't blank her screen — the media agent is local, so photos/videos keep playing.
+  **Mirror mode** = pressing `M` makes the camera **full-screen** (the corner mirror expands over the
+  stage; press again to return) — the camera stream stays mounted.
+
+- **Offline resilience — last-known-good cache** (`web/client/cache.js`; opt-in on `state.js` +
+  `media_sources.js`; wired into the kiosk). A tiny localStorage JSON mirror so a brief
+  coordination-server outage (or a boot before the network is up) doesn't blank her screen — her
+  **photos/videos come from the LOCAL media agent**, so with the config cached they keep playing. The
+  server stays the source of truth: the cache is written on every successful read and only READ when a
+  read fails. `createState({cacheKey})` serves the cached config on a failed load (handles without a
+  cacheKey are unchanged — still throw); `createMediaSourcesClient({cache:true})` (enabled in photos +
+  personal) keeps the folder→base_url registry through an outage; the kiosk caches the profile list +
+  the profile's module layout + every module's config. NOT a store of record (DECISIONS.md). Validated
+  by an **11-check** browser test (`dev/resilience_test.html`, live server + a dead endpoint): cache
+  primitives, `createState` serves last-known config when the server is unreachable + a non-cached
+  handle still fails, and the media registry serves its cached source when the server is down. The
+  kiosk's 19-check test still green (incl. the mirror-mode fix). **Still open for real deploy:** kiosk
+  auto-auth as her (identity is a `dev-user` stub).
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
@@ -225,15 +240,15 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
    message from Oscar") in the profile voice, and **`R`-key capture** with local-STT intent cues
    ("message for Christine" tags + becomes the lead-in; "restart please"; "never mind delete that").
    Recordings **local-only/private** (may include staff → consent-based).
-2. **★ Minimal usable bedside dashboard.** Kiosk layout ✓ (above). Remaining for "she's using it":
-   (a) **deploy** — the thin FastAPI server on a **managed host** (Render/Railway/Fly, a few $/mo; it
-   holds only KB of config, so it's cheap + reliable — beats self-hosting for uptime), the media agent
-   running where her media lives, **scripted source config** (stand-in for the Media/Sources UI); (b)
-   **kiosk resilience** — cache the profile config locally so a server blip doesn't blank her screen
-   (media agent is local); (c) **kiosk auto-auth** as her (identity is a `dev-user` stub today). Input is
-   keyboard/mouse for now (she isn't controlling it yet). Bar per Mike = her current lock screen: mirror
-   ✓, singalong = a curated youtube karaoke playlist (content, not code), **record = still owed** (the
-   R-capture personal-video recorder). Old site stays the fallback for anything not yet rebuilt.
+2. **★ Minimal usable bedside dashboard.** Kiosk layout ✓ · kiosk resilience ✓ (above). Remaining for
+   "she's using it": (a) **deploy** — static client on **Cloudflare Pages** (free CDN) + the thin FastAPI
+   server on a **managed host** (Render primary; ~$7/mo always-on + managed Postgres — it holds only KB
+   of config, so cheap + reliable, beats self-hosting for uptime), the media agent running where her
+   media lives, **scripted source config** (stand-in for the Media/Sources UI); (b) **kiosk auto-auth**
+   as her (identity is a `dev-user` stub today). Input is keyboard/mouse for now (she isn't controlling
+   it yet). Bar per Mike = her current lock screen: mirror ✓, singalong = a curated youtube karaoke
+   playlist (content, not code), **record = still owed** (the R-capture personal-video recorder). Old
+   site stays the fallback for anything not yet rebuilt.
 3. **Today card**: clock → weather → calendar on the same engine. **iCal (`.ics`) URL first** (no
    OAuth), then **Google Calendar** read-only when login lands (server never stores events; pick which
    calendar shows). **Deferred:** agency/check-in, on-this-day/memories.

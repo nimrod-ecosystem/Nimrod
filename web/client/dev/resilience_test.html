@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>offline resilience — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>offline resilience — integration test</h1>
+<p>Verifies the last-known-good cache: <code>createState</code> and the media-source registry serve
+their cached value when the coordination server is unreachable (so the kiosk keeps its config and the
+local media agent keeps serving photos), while non-cached handles still fail as before.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { cacheGet, cacheSet, cachedFetch } from '../cache.js';
+import { createState } from '../state.js';
+import { createProfilesClient } from '../profile.js';
+import { createMediaSourcesClient } from '../media_sources.js';
+
+const params = new URLSearchParams(location.search);
+const USER = 'resilience-user-' + Math.floor(performance.now());
+const DEAD = 'http://127.0.0.1:9';   // nothing listening -> fetch rejects
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const threw = async (fn) => { try { await fn(); return false; } catch { return true; } };
+
+(async () => {
+  try {
+    // ── cache.js primitives ──────────────────────────────────────────────────
+    const k = 'unit:' + Math.floor(performance.now());
+    check('cacheGet on a missing key -> null', cacheGet(k) === null);
+    cacheSet(k, { a: 1 });
+    check('cacheSet/cacheGet round-trips', cacheGet(k)?.a === 1);
+    let calls = 0;
+    const fresh = await cachedFetch(k + ':cf', async () => { calls++; return { v: 'fresh' }; });
+    check('cachedFetch returns + stores fresh on success', fresh.v === 'fresh' && cacheGet(k + ':cf')?.v === 'fresh');
+    const fallback = await cachedFetch(k + ':cf', async () => { throw new Error('down'); });
+    check('cachedFetch falls back to cache on failure', fallback.v === 'fresh');
+    check('cachedFetch throws when failing with nothing cached', await threw(() => cachedFetch(k + ':none', async () => { throw new Error('down'); })));
+
+    // ── createState resilience ───────────────────────────────────────────────
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-resilience');
+    const mod = await profiles.addModule(profile.id, 'counter');
+    const CK = `${USER}:${profile.id}:${mod.id}`;
+    const url = profiles.stateURL(profile.id, mod.id);
+
+    const s1 = createState({ url, user: USER, cacheKey: CK });
+    await s1.load();
+    s1.set({ hello: 'world', n: 7 });
+    await s1.flush();
+    await s1.load();   // caches {data:{hello,n}, version}
+    check('a good load returns fresh server data', s1.get().hello === 'world');
+
+    // a NEW handle with the same cacheKey but a DEAD url serves the last-known config
+    const s2 = createState({ url: `${DEAD}/state`, user: USER, cacheKey: CK });
+    const snap = await s2.load();
+    check('createState serves last-known config when the server is unreachable', snap.hello === 'world' && snap.n === 7, JSON.stringify(snap));
+
+    // a handle WITHOUT a cacheKey still throws on a dead server (unchanged behavior)
+    const s3 = createState({ url: `${DEAD}/state`, user: USER });
+    check('a non-cached handle still fails on a dead server', await threw(() => s3.load()));
+
+    // ── media-source registry resilience ─────────────────────────────────────
+    const media = createMediaSourcesClient({ user: USER, cache: true });
+    await media.add({ label: 'Oscar', base_url: 'http://127.0.0.1:8771', kind: 'agent' });
+    const live = await media.list();
+    check('media registry lists the connected source (and caches it)', live.length >= 1, `n=${live.length}`);
+
+    const mediaDead = createMediaSourcesClient({ user: USER, cache: true, base: DEAD });
+    const cachedSources = await mediaDead.list();
+    check('media registry serves the cached source when the server is down', cachedSources.length === live.length, `cached=${cachedSources.length}`);
+
+    const mediaNoCache = createMediaSourcesClient({ user: USER, cache: false, base: DEAD });
+    check('a non-cached media client still fails on a dead server', await threw(() => mediaNoCache.list()));
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

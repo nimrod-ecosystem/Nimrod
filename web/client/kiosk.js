@@ -27,6 +27,7 @@ import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { applyTheme } from './theme.js';
+import { cachedFetch } from './cache.js';
 import './modules/clock.js';
 import './modules/camera.js';
 import './modules/photos.js';
@@ -52,7 +53,7 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
         <div class="k-mods" data-mods></div>
         <div class="k-actions">
           <button data-act="next" title="next (→ / space)">Next ▸</button>
-          <button data-act="mirror" title="toggle mirror (M)">Mirror</button>
+          <button data-act="mirror" title="mirror mode (M) — camera full screen">Mirror</button>
           <button data-act="fs" title="fullscreen (F)">⛶</button>
         </div>
       </div>
@@ -62,15 +63,17 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   const controlsEl = root.querySelector('[data-controls]');
   const modsEl = root.querySelector('[data-mods]');
 
+  const ck = (key) => `${user}:${profileId}:${key}`;   // resilience cache key per handle
+
   const childCtx = (mod) => ({
     bus, user, profileId,
     rootBus: bus, instanceId: mod.id,
-    makeState: (key) => createState({ url: profiles.stateURL(profileId, key), user }),
+    makeState: (key) => createState({ url: profiles.stateURL(profileId, key), user, cacheKey: ck(key) }),
     makeEvents: (key) => createEvents({ url: profiles.eventsURL(profileId, key), user }),
   });
 
   async function mountInstance(mod, host) {
-    const state = createState({ url: profiles.stateURL(profileId, mod.id), user });
+    const state = createState({ url: profiles.stateURL(profileId, mod.id), user, cacheKey: ck(mod.id) });
     const events = createEvents({ url: profiles.eventsURL(profileId, mod.id), user });
     const instance = mountModule(mod.type, { mount: host, state, events, ...childCtx(mod) });
     await state.load().catch(() => {});
@@ -86,14 +89,15 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   }
 
   // ---- theme (per-profile settings) ---------------------------------------
-  const settings = createState({ url: profiles.stateURL(profileId, 'settings'), user });
+  const settings = createState({ url: profiles.stateURL(profileId, 'settings'), user, cacheKey: ck('settings') });
   await settings.load().catch(() => {});
   applyTheme(document.documentElement, settings.get().theme);
   settings.subscribe((s) => applyTheme(document.documentElement, s.theme));
   settings.startPolling();
 
   // ---- partition modules: camera -> mirror, the rest -> stage --------------
-  const profile = await profiles.get(profileId);
+  // cached so a server blip at boot still yields the last-known dashboard layout.
+  const profile = await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
   const stageDefs = [];          // {id,type} for cyclable stage modules (mounted lazily)
   let cameraDef = null;
   for (const mod of profile.modules) {
@@ -141,14 +145,24 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
     if (stageRec.type === 'director') bus.publish('segment/done', { reason: 'skipped' });
     else bus.publish(`${stageRec.type}/next`);
   }
-  function toggleMirror() { if (cameraRec) mirrorEl.hidden = !mirrorEl.hidden; }
+  // MIRROR MODE (M): make the camera fill the whole screen (the mirror element
+  // expands over the stage); press again to return it to the corner. The camera
+  // stream stays mounted — it's the same element, just resized via a class.
+  const kioskEl = root.querySelector('.kiosk');
+  let mirrorFull = false;
+  function toggleMirrorFull() {
+    if (!cameraRec) return;
+    mirrorFull = !mirrorFull;
+    kioskEl.classList.toggle('mirror-full', mirrorFull);
+    try { cameraRec.instance.onResize?.(); } catch { /* noop */ }
+  }
   function toggleFs() {
     if (!document.fullscreenElement) root.requestFullscreen?.().catch(() => {});
     else document.exitFullscreen?.().catch(() => {});
   }
 
   controlsEl.querySelector('[data-act="next"]').addEventListener('click', nextInPrimary);
-  controlsEl.querySelector('[data-act="mirror"]').addEventListener('click', toggleMirror);
+  controlsEl.querySelector('[data-act="mirror"]').addEventListener('click', toggleMirrorFull);
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
   // auto-hide the control bar
@@ -161,7 +175,7 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
     else if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextInPrimary(); }
     else if (e.key === 'ArrowLeft') showPrimary(primary - 1);
     else if (e.key === 'ArrowUp') showPrimary(primary + 1);
-    else if (e.key.toLowerCase() === 'm') toggleMirror();
+    else if (e.key.toLowerCase() === 'm') toggleMirrorFull();
     else if (e.key.toLowerCase() === 'f') toggleFs();
     else return;
     poke();
@@ -174,10 +188,10 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
     stageCount: () => stageDefs.length,
     hasCamera: () => !!cameraRec,
     primaryType: () => stageDefs[primary]?.type ?? null,
-    mirrorVisible: () => !mirrorEl.hidden,
+    mirrorFull: () => mirrorFull,
     showPrimary,
     next: nextInPrimary,
-    toggleMirror,
+    toggleMirrorFull,
     destroy() {
       window.removeEventListener('keydown', onKey);
       root.removeEventListener('mousemove', poke);
