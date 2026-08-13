@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>kiosk shell — integration test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #root{position:relative;width:520px;height:300px;margin-top:12px;border:1px solid #ccc}
+  #root .kiosk{position:absolute}
+</style>
+</head>
+<body>
+<h1>kiosk shell — integration test</h1>
+<p>Mounts the real <code>mountKiosk</code> against the live server on a seeded profile
+(photos · camera · clock). Verifies the stage shows one module at a time, the camera is a
+persistent mirror, switching is lazy, and keyboard/mirror controls work.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="root"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'kiosk-test-user-' + Math.floor(performance.now());
+const out = document.getElementById('results');
+const root = document.getElementById('root');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const stageHas = (sel) => !!root.querySelector('.k-stage ' + sel);
+const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
+
+(async () => {
+  let kiosk = null;
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const p = await profiles.create('TEST-bedside');
+    // photos first (the default primary / her #1), camera (-> mirror), clock (2nd stage)
+    await profiles.addModule(p.id, 'photos');
+    await profiles.addModule(p.id, 'camera');
+    await profiles.addModule(p.id, 'clock');
+
+    const bus = createBus();
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus });
+    await sleep(120);
+
+    // partition: 2 stage modules (photos, clock) + a camera mirror
+    check('two stage modules (camera pulled to the mirror)', kiosk.stageCount() === 2, `count=${kiosk.stageCount()}`);
+    check('a camera mirror is present', kiosk.hasCamera() === true);
+    check('the mirror is visible', kiosk.mirrorVisible() === true);
+
+    // the stage shows the FIRST non-camera module (photos = her #1)
+    check('primary is photos (first non-camera)', kiosk.primaryType() === 'photos', `primary=${kiosk.primaryType()}`);
+    check('the stage renders the photos module', stageHas('.photos'));
+    check('the camera renders in the mirror', mirrorHas('.camera'));
+    check('only the primary is mounted in the stage (clock not yet)', !stageHas('.clock'));
+
+    // control bar shows a dot per stage module, one active
+    check('a control dot per stage module', root.querySelectorAll('.k-mods .k-dot').length === 2);
+    check('exactly one dot is active', root.querySelectorAll('.k-mods .k-dot.on').length === 1);
+
+    // switch primary -> clock (lazy: photos torn down, clock mounted)
+    await kiosk.showPrimary(1);
+    await sleep(60);
+    check('switching makes clock the primary', kiosk.primaryType() === 'clock', `primary=${kiosk.primaryType()}`);
+    check('the stage now renders the clock', stageHas('.clock'));
+    check('the previous stage module was torn down (lazy)', !stageHas('.photos'));
+    check('the camera mirror survives the switch', mirrorHas('.camera') && kiosk.hasCamera());
+
+    // keyboard: number key selects a stage module
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }));
+    await sleep(60);
+    check('keyboard "1" selects the first stage module (photos)', kiosk.primaryType() === 'photos' && stageHas('.photos'));
+
+    // mirror toggle
+    kiosk.toggleMirror();
+    check('mirror toggles off', kiosk.mirrorVisible() === false);
+    kiosk.toggleMirror();
+    check('mirror toggles back on', kiosk.mirrorVisible() === true);
+
+    // "next" just publishes to the bus — must not throw
+    let threw = false;
+    try { kiosk.next(); } catch { threw = true; }
+    check('next() drives the current module without error', !threw);
+
+    kiosk.destroy();
+    check('destroy() tears everything down without error', true);
+    check('stage is empty after destroy', !stageHas('.photos') && !stageHas('.clock'));
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+    try { kiosk?.destroy(); } catch { /* noop */ }
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

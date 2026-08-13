@@ -1,0 +1,88 @@
+/* modules.css — shared component styles for module internals + the theme palette
+   variables. Linked by kiosk.html (the product surface). index.html (the dev
+   harness) still carries its own inline copy; consolidating it onto this file is a
+   later cleanup. theme.js overrides these :root vars per active profile. */
+
+:root{
+  --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C;
+  --midnight:#105666; --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF;
+  --ink:#0A3323; --ink-soft:#3c5346; --muted:#5d7064; --line:#e4e0c2;
+  --rosy-deep:#a85f52; --radius:16px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+
+/* clock */
+.clock{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;position:relative}
+.clock .time{font-weight:800;color:var(--darkgreen);line-height:1;font-variant-numeric:tabular-nums}
+.clock[data-size="s"] .time{font-size:2.2rem}
+.clock[data-size="m"] .time{font-size:3.2rem}
+.clock[data-size="l"] .time{font-size:4.4rem}
+.clock .when{font-size:1rem;color:var(--midnight);font-weight:600;text-transform:capitalize}
+.clock .date{font-size:.9rem;color:var(--muted)}
+.clock .gear,.clock .settings{display:none}
+
+/* camera */
+.camera{width:100%;height:100%;position:relative}
+.camera .stage{position:relative;width:100%;height:100%;background:#0c1a14;border-radius:10px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center}
+.camera video{width:100%;height:100%;object-fit:cover;display:block;background:#0c1a14}
+.camera .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
+  color:var(--beige);background:rgba(10,51,35,.72);font-size:.85rem;text-align:center;padding:10px}
+.camera .status button{border:1px solid rgba(247,244,213,.5);color:var(--beige);background:transparent;
+  border-radius:8px;padding:6px 10px;cursor:pointer}
+.camera .gear,.camera .settings{display:none}
+
+/* photos */
+.photos{width:100%;height:100%;position:relative}
+.photos .stage{position:relative;width:100%;height:100%;background:#0c1a14;border-radius:10px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center}
+.photos .stage img,.photos .stage video{width:100%;height:100%;object-fit:contain;display:block;background:#0c1a14}
+.photos .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
+  color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
+.photos .status button{border:1px solid rgba(247,244,213,.5);color:var(--beige);background:transparent;border-radius:8px;padding:6px 10px}
+.photos .nav,.photos .gear,.photos .settings{display:none}
+
+/* youtube */
+.youtube{width:100%;height:100%;position:relative}
+.youtube .stage{position:relative;width:100%;height:100%;background:#0c1a14;border-radius:10px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center}
+.youtube .stage iframe{width:100%;height:100%;border:0;display:block}
+.youtube .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
+  color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
+.youtube .nav,.youtube .gear,.youtube .settings{display:none}
+
+/* personal videos */
+.personal{width:100%;height:100%;position:relative;display:flex;flex-direction:column}
+.personal .stage{position:relative;flex:1;min-height:0;background:#0c1a14;border-radius:10px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center}
+.personal .stage video{width:100%;height:100%;object-fit:contain;display:block;background:#0c1a14}
+.personal .caption{margin-top:8px;text-align:center;font-weight:700;font-size:1.3rem;color:var(--beige)}
+.personal .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
+  color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
+.personal .nav{display:none}
+
+/* educational — a single live graphic, drawn in the profile theme */
+.educational{width:100%;height:100%;display:flex;flex-direction:column;align-items:center}
+.educational .stage{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;background:var(--cream-soft);border:1px solid var(--line);border-radius:10px}
+.educational .caption{margin-top:8px;text-align:center;font-weight:700;color:var(--midnight)}
+.educational .nav{display:none}
+.educational .ig-number{font-size:9rem;font-weight:800;color:var(--darkgreen);line-height:1;font-variant-numeric:tabular-nums}
+.educational .ig-dots{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px;max-width:70%}
+.educational .ig-dots i{width:22px;height:22px;border-radius:50%;background:var(--moss);display:block}
+.educational .ig-letters{font-size:10rem;font-weight:800;color:var(--midnight);line-height:1}
+.educational .ig-word{display:flex;flex-direction:column;align-items:center;gap:10px}
+.educational .ig-spell{display:flex;gap:14px}
+.educational .ig-spell span{font-size:4rem;font-weight:800;color:var(--midnight)}
+.educational .ig-wordfull{font-size:2.4rem;color:var(--darkgreen);font-weight:600}
+
+/* director (Lineup) — one provider slot at a time, filling its container */
+.director{width:100%;height:100%;position:relative;display:flex;flex-direction:column}
+.director .d-stage{position:relative;flex:1;min-height:0}
+.director .d-slot{width:100%;height:100%}
+.director .d-bar{display:none}   /* the kiosk provides its own controls */
+.director .d-ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;background:var(--cream-soft);border:1px dashed var(--line);border-radius:10px;text-align:center;padding:16px}
+.director .d-ph-kind{font-size:2rem;font-weight:800;color:var(--darkgreen)}
+.director .d-ph-note{font-size:.9rem;color:var(--muted)}
