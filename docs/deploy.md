@@ -24,9 +24,10 @@ is executable). The ⚙️ items are listed up top so the order is clear; everyt
 Later optimization (not needed for v1): split the static client onto **Cloudflare Pages** for a true
 edge CDN. That adds CORS + a configurable API base URL — skip it until there's a reason.
 
-## ⚙️ Build first (code slices, before the steps below are executable)
+## ⚙️ Prerequisites — all built + validated
 
-These don't exist yet; each is a small validated slice I'll build when you're ready to deploy:
+These four code slices had to exist before the click-ops were runnable. All are done (validation noted);
+the runbook below is executable end to end:
 
 1. **✅ Postgres backend in `web/server/db.py`** (built). Both engines share one `_Store` logic class;
    `app.py` picks `PostgresStore` when `DATABASE_URL` is set, else `SQLiteStore` for local dev. The
@@ -99,28 +100,39 @@ Now `https://bedside.nimrodecosystem.com` serves the app, cached + HTTPS.
 
 ## Part D — her bedside device
 
-1. 👉 Put her media on the device (or attach her drive), e.g. a `photos` folder and a `videos` folder.
+1. 👉 Put her media in **one folder** on the device (or attach her drive), e.g. everything under
+   `~/cici-media`. Photos + videos together is fine — the photos module shows images *and* video; personal
+   videos shows the videos.
 2. 👉 Install the media agent as an always-on service from `web/media_agent/deploy/` (see its README):
    **Pi/Linux** `sudo ./install-linux.sh /path/to/media https://bedside.nimrodecosystem.com`;
    **Windows** copy `agent.env.example`→`agent.env`, edit it, then run `install-windows.ps1`. It serves
-   that folder on `http://localhost:8770` and restarts on boot.
-3. 👉 Open Chrome/Chromium in **kiosk mode** at `https://bedside.nimrodecosystem.com/kiosk.html`.
-4. 👉 **First-run pairing (one time):** open the kiosk once as
-   `https://bedside.nimrodecosystem.com/kiosk.html?key=<the DEVICE_KEYS secret>`. The device stores the
-   secret locally and sends it (`X-Device-Key`) on every request from then on, so the screen auto-auths
-   as her. Afterward, launch it without `?key=`.
-5. 👉 **Point her modules at the local agent** (one-time, scriptable): set the photos + personal-video
-   source `base_url` to `http://localhost:8770`. Until the Media/Sources UI exists, this is a small
-   seed step I'll give you as a one-liner.
+   that folder on `http://localhost:8770` and restarts on boot. Check: `curl http://localhost:8770/health`.
+3. 👉 **Register that folder as her media source** — once, from any machine with `curl` + her key. The
+   photos + personal modules **auto-adopt the single source**, so there's no per-module config:
+   ```
+   curl -X POST https://bedside.nimrodecosystem.com/api/media-sources \
+     -H "X-Device-Key: <her secret>" -H "Content-Type: application/json" \
+     -d '{"label":"Bedside media","base_url":"http://localhost:8770","kind":"agent"}'
+   ```
+   (Register exactly ONE source so auto-adopt is unambiguous; a real source-picker is the Media/Sources tab.)
+4. 👉 **Pair the kiosk — this must be its FIRST launch.** On her device, open the kiosk once WITH the key:
+   `https://bedside.nimrodecosystem.com/kiosk.html?key=<her secret>`. It stores the secret locally and
+   auto-auths as her from then on. (A prod server returns 401 to any request without a valid key, so an
+   un-paired first launch would just fail — pair first.)
+5. 👉 **Set it to launch on boot in kiosk mode, WITHOUT the key** (it's stored now). E.g. Chromium:
+   `chromium-browser --kiosk --noerrdialogs --disable-session-crashed-bubble https://bedside.nimrodecosystem.com/kiosk.html`,
+   added to the device's autostart.
 
 ## Part E — verify
 
-- 👉 Photos rotate full-screen; the camera mirror shows the room (top-right); the clock reads correct
-  time bottom-left.
+- 👉 On her screen: photos rotate full-screen; the camera mirror shows the room (top-right); the clock
+  reads the correct time bottom-left.
 - 👉 Pull the network for a minute — photos/videos **keep playing** (local agent + cached config); it
   just stops syncing changes. Restore the network — it resyncs.
-- 👉 From your phone, open `https://bedside.nimrodecosystem.com` (with your own login later) and confirm
-  a config change reaches her screen within a couple seconds.
+- 👉 **Sync check:** pair a second browser with the same key (open `…/kiosk.html?key=<her secret>` on your
+  desktop), change a setting (e.g. the theme), and confirm her screen picks it up within a couple seconds.
+  (Her *media* only loads on her device — the agent is on her `localhost` by design; another device would
+  need the agent reachable over Tailscale/LAN, or the future sharing model. Config/state syncs anywhere.)
 
 ## Cost + upkeep
 
@@ -128,6 +140,12 @@ Now `https://bedside.nimrodecosystem.com` serves the app, cached + HTTPS.
   serves *every* family who uses the site, not per-user. Scale up only when usage genuinely grows.
 - Redeploys are automatic on push to `main` (Render watches the repo). Neon backs up the database on its
   own. Her device just needs the media agent running (the service handles restart-on-boot).
+- **After a client update:** Cloudflare caches the static JS/HTML, so after a deploy **purge it**
+  (Cloudflare → Caching → Purge Everything) so devices pick up the new code — or add a cache rule that
+  bypasses cache for `*.html` / `*.js`. (The kiosk holds its page open, so this mainly bites on a
+  reboot/reload; it's the same stale-JS trap we hit in dev.)
+- **If the Render build fails on the Python version,** adjust `PYTHON_VERSION` in `render.yaml` to a
+  version Render offers (it's pinned to a specific patch).
 
 ## Self-hosters (other families)
 
