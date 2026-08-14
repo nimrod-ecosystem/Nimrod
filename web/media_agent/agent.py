@@ -304,14 +304,21 @@ class Handler(SimpleHTTPRequestHandler):
 def main(argv=None):
     global ROOT, ORIGIN
     ap = argparse.ArgumentParser(description="Nimrod local media agent (BYO storage).")
-    ap.add_argument("--root", required=True, help="folder to serve (your photos/videos live here)")
-    ap.add_argument("--host", default="0.0.0.0", help="bind address (default: all interfaces)")
-    ap.add_argument("--port", type=int, default=8770, help="port (default: 8770)")
-    ap.add_argument("--origin", default="*",
-                    help="CORS Access-Control-Allow-Origin (default '*'; set to your "
-                         "platform origin e.g. http://localhost:8000 to lock it down)")
+    # CLI args take precedence; each falls back to an env var so the agent can run as
+    # an always-on service (systemd / Windows task) configured from an env file.
+    ap.add_argument("--root", default=os.environ.get("NIMROD_MEDIA_ROOT"),
+                    help="folder to serve (your photos/videos live here; or set NIMROD_MEDIA_ROOT)")
+    ap.add_argument("--host", default=os.environ.get("NIMROD_MEDIA_HOST", "0.0.0.0"),
+                    help="bind address (default: all interfaces; or NIMROD_MEDIA_HOST)")
+    ap.add_argument("--port", type=int, default=int(os.environ.get("NIMROD_MEDIA_PORT", "8770")),
+                    help="port (default: 8770; or NIMROD_MEDIA_PORT)")
+    ap.add_argument("--origin", default=os.environ.get("NIMROD_MEDIA_ORIGIN", "*"),
+                    help="CORS Access-Control-Allow-Origin (default '*'; set to your platform origin "
+                         "e.g. https://bedside.example.com to lock it down; or NIMROD_MEDIA_ORIGIN)")
     args = ap.parse_args(argv)
 
+    if not args.root:
+        ap.error("a folder to serve is required — pass --root or set NIMROD_MEDIA_ROOT")
     root = Path(args.root).expanduser()
     if not root.is_dir():
         ap.error(f"--root is not a folder: {root}")

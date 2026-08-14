@@ -48,11 +48,15 @@ These don't exist yet; each is a small validated slice I'll build when you're re
    build/start commands, health check, `NIMROD_ENV=prod`, always-on plan, Python version) and marks
    `DATABASE_URL` + `DEVICE_KEYS` as **dashboard secrets kept out of git**. Validated: the blueprint
    parses with the right fields; the prod env path was smoke-tested.
-4. **Media-agent service.** A tiny wrapper so `agent.py` runs on her device as an always-on service
-   (Windows Scheduled Task / a `.bat` at login, or a Linux `systemd` unit on a Pi), pointed at her media
-   folder, restarting on boot.
+4. **✅ Media-agent service** (built) — `web/media_agent/deploy/`. The agent now reads its config from
+   env vars (`NIMROD_MEDIA_ROOT`/`_PORT`/`_ORIGIN`), so it runs cleanly as a service: **Pi/Linux** a
+   `systemd` unit via `install-linux.sh` (restart on crash, start on boot); **Windows** a Task-Scheduler
+   logon task via `install-windows.ps1` + `run-agent.ps1` (restart loop). See the `deploy/README.md`.
+   Validated: `test_agent.py` (18) still green, the env-config path serves the folder over HTTP, and the
+   Windows env parser handles paths-with-spaces + the origin URL. The actual `systemctl enable` /
+   `Register-ScheduledTask` is Part D.
 
-I'll build 1–4 and mark them done here before you run the click-ops.
+**All four ⚙️ prerequisites are built — the runbook below is now fully executable.**
 
 ---
 
@@ -96,8 +100,10 @@ Now `https://bedside.nimrodecosystem.com` serves the app, cached + HTTPS.
 ## Part D — her bedside device
 
 1. 👉 Put her media on the device (or attach her drive), e.g. a `photos` folder and a `videos` folder.
-2. ⚙️ Install the media agent as an always-on service (Part-D helper from the ⚙️ list), pointed at that
-   folder, e.g. serving `http://localhost:8770`. It restarts on boot.
+2. 👉 Install the media agent as an always-on service from `web/media_agent/deploy/` (see its README):
+   **Pi/Linux** `sudo ./install-linux.sh /path/to/media https://bedside.nimrodecosystem.com`;
+   **Windows** copy `agent.env.example`→`agent.env`, edit it, then run `install-windows.ps1`. It serves
+   that folder on `http://localhost:8770` and restarts on boot.
 3. 👉 Open Chrome/Chromium in **kiosk mode** at `https://bedside.nimrodecosystem.com/kiosk.html`.
 4. 👉 **First-run pairing (one time):** open the kiosk once as
    `https://bedside.nimrodecosystem.com/kiosk.html?key=<the DEVICE_KEYS secret>`. The device stores the

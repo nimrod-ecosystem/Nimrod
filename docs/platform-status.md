@@ -248,7 +248,11 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   `test_identity.py` (**14 checks**) + a prod HTTP smoke (valid → 200; missing/wrong key + `X-Dev-User`
   → 401) + a client refactor round-trip. Env config + a repo-root **`render.yaml`** blueprint ✓ (⚙️ #3;
   declares the service + `NIMROD_ENV=prod`, keeps `DATABASE_URL`/`DEVICE_KEYS` as dashboard secrets out
-  of git; parse-validated). **Remaining deploy prereq: media-agent-as-a-service** (⚙️ #4). The bigger
+  of git; parse-validated). **Media-agent-as-a-service ✓** (⚙️ #4, `web/media_agent/deploy/`): the agent
+  reads env config (`NIMROD_MEDIA_*`) and runs as a systemd unit (Pi, `install-linux.sh`) or a
+  Task-Scheduler logon task (Windows, `install-windows.ps1` + `run-agent.ps1`); validated (test_agent 18
+  green, env-config serves, the Windows env parser handles spaces + the origin URL). **All four deploy
+  prerequisites are now built — docs/deploy.md is fully executable.** The bigger
   security picture (HTTPS in transit, per-user ownership on every
   query, parameterized SQL, append-only tamper-proofing; residual = operator + Cloudflare/Render/Neon
   see the small config text) is in the deploy discussion.
