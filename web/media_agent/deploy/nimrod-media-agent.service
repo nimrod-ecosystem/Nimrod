@@ -1,0 +1,17 @@
+[Unit]
+Description=Nimrod local media agent — serves your photos/videos to your dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# install-linux.sh generates a copy of this with the paths + user filled in. If you
+# edit it by hand, set the python path, the agent.py path, and the login user below.
+EnvironmentFile=/etc/nimrod/agent.env
+ExecStart=/usr/bin/python3 /opt/nimrod/web/media_agent/agent.py
+Restart=always
+RestartSec=3
+User=unclemikemic
+
+[Install]
+WantedBy=multi-user.target
