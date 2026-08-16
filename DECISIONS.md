@@ -265,6 +265,55 @@ today its states/transitions are JSON.
 - **Still true:** non-blocking, skippable, never requires input; photos-#1 and the calm dayparts always
   dominate low-energy times; short segments (fatigue).
 
+## Cici ↔ the scheduler & media (2026-08-14, scoped — ideas, not built)
+How the local AI companion (Cici) interacts with the state-machine engine + media. None of the Cici-AI
+layer is built yet (it's the "brain on local Ollama / cloud-API" plan in the private repo's CONTEXT), but
+the seams it plugs into — the bus, the deterministic picker with its knowable next-pick, the
+generated-content renderer, content-as-meaning — ARE built and were shaped for this. Mike's ideas
+2026-08-14; reopenable.
+
+- **Cici speaks the BUS — no special integration.** It plugs in like any other source/sink:
+  - as a **source**, it emits intents the bus already routes ("play photos of her sister", "skip",
+    "switch to the calm playlist") — just another input method, interchangeable with a switch/keyboard;
+  - as a **content generator**, it authors the *semantic data* the existing generated/educational renderer
+    already draws + speaks (a counting drill, a vocab word, a trivia question). Cici makes MEANING; the
+    renderer presents it (content-as-meaning). It is not a separate playback path.
+- **Keep Cici OUT of the deterministic core pick.** The picker is pure + seed-injectable so playback is
+  reproducible (needed for the future "watch the same thing together" call-sync). An LLM choosing the next
+  item would break that. So Cici **wraps** a decision the engine already made — mechanism (state machine)
+  vs. personality/DJ (Cici) — it never *is* the pick.
+- **Generate AHEAD, never block.** Local models take seconds; the picker commits the next pick *before* it
+  plays, so Cici prepares content for item B *while* item A is playing, not at the transition.
+- **Trivia about the upcoming song/video.** Cici reads the committed next-pick + metadata and pre-generates
+  a tidbit, spoken as a short segment before the item plays.
+- **"The answer is the next video" game** (Mike's idea — architecturally clean *because* the next pick is
+  knowable ahead). The director commits video B → activates a `trivia` segment with B as context → Cici
+  builds a question whose answer is B → the **reveal is B playing**. Only engine addition: pass the
+  **pending target** to the entering segment; everything else exists.
+- **Photo tagging / "learn to tag" (high-leverage).** Untagged media caps everything downstream. Cici + a
+  **local vision model** (moondream/LLaVA) *suggests* tags/caption/who's in a photo; the human confirms or
+  corrects. That human-in-the-loop labeling enriches the metadata that makes "show photos of X", memory
+  prompts, and trivia possible — and **doubles as local training data** (her recognition set, per the
+  vision-probe notes). **Her photos are patient data → this runs on LOCAL Companion Cici, never the cloud.**
+- **Retroactive cue-spotting (Cici "wake word" + spoken commands over recordings)** (Mike, 2026-08-14).
+  The highlight pipeline already transcribes room recordings with **local Whisper**; add a **cue pass**
+  that scans each transcript for intent cues — "**Cici** …", "**make a note of** …", "**delete this**"
+  (video) — matching INTENT, not exact words (same pattern as the interstitial R-capture cues: "message
+  for Christine", "restart please", "never mind delete that"). It's "retroactive" because it's batch over
+  recordings, not a live wake word. **Doubles as a review queue + training data:** the same pass surfaces
+  the moments Mike would be reviewing anyway (correction/labeling he's meaning to do), so review and
+  cue-honoring are one workflow. **Always surfaces detected commands for a human confirm before anything
+  destructive** — a heard "delete this" queues the clip for approval, never auto-deletes. Local only
+  (patient recordings); needs Whisper + disk room.
+- **The privacy split falls out of the per-data boundary.** Anything about HER photos/data → local
+  Companion Cici. Generic content (trivia about a PUBLIC youtube song, onboarding) → cloud-eligible Helper
+  Cici if you want better quality. The boundary already draws this line.
+- **Shared/synced viewing:** if two ends watch the same thing (call-sync), Cici-generated content (the
+  trivia question) must be **shared too** — generated once and distributed, or seeded identically — so both
+  see the same thing. Solo playback: local generation is fine.
+- See `[[content-as-meaning-principle]]`, `[[cici-interstitials-module]]`, and the State-machine +
+  content-director section above; deep Cici architecture lives in the private repo (CICI_COMPANION_SPEC).
+
 ## Reach & hosting
 - **Any-network by default** — "open a link and it works." Uses a small always-on host
   (~$5/mo) for presence/signaling + a TURN relay. **Tailscale is optional** (an advanced
