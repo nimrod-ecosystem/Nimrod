@@ -306,3 +306,14 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
    for photos; exercise the picker's cross-album/cross-channel diversity end-to-end (only
    single-source pools were driven in the module tests); **sing-along** (curated karaoke playlist +
    lyric/caption overlay) is a youtube fast-follow; audio ducking/arbitration is its own concern.
+7. **Cici ↔ scheduler & media** (needs the Cici-AI layer first; ideas captured in DECISIONS.md). Cici
+   plugs into the existing seams — as a bus **source** (voice/intent → play/skip) and a **content
+   generator** for the generated track (authoring the semantic data the renderer already presents), while
+   the deterministic pick stays pure. **Retroactive cue-spotting** (Mike, 2026-08-14): a local-Whisper
+   pass over room recordings that spots spoken cues — "Cici …", "make a note of …", "delete this" — a
+   retroactive wake word; doubles as a review queue + training data; always surfaces commands for a human
+   confirm before anything destructive. Local only. Slices: **AI photo-tagging** (local VLM suggests tags/caption/people,
+   human confirms — enriches metadata + doubles as training data; her photos stay local); **trivia about
+   the upcoming song/video** (read the committed next-pick, generate-ahead); the **"answer is the next
+   video" game** (director passes the pending target to a trivia segment; reveal = the video). Generate
+   ahead, never block; her-data → local Companion Cici, generic → cloud-eligible Helper Cici.
