@@ -22,6 +22,7 @@ import './modules/personal.js';   // registers 'personal' (Personal videos — r
 import './modules/educational.js'; // registers 'educational' (generated learning segments)
 import './modules/director.js';   // registers 'director' (the content director / Lineup)
 import './modules/sprint.js';     // registers 'sprint' (focus timer -> points ledger)
+import './modules/progress.js';   // registers 'progress' (points dashboard <- ledger)
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'
 

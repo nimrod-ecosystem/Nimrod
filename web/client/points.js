@@ -22,18 +22,41 @@
 // truth and listen on the bus for immediacy. `award()` below does both halves once.
 //
 // EVENT SHAPE — kind `points`, data:
-//   { amount, mult, source, tags, note }
-//     amount  base points (the "atom" ~= one small win ~= ~1 minute of focused work)
-//     mult    multiplier (1 default; 1.5 stretch hours; 2 alongside family)
-//     source  who awarded them ('sprint', 'wordforge', …) — the dashboard groups by it
+//   { amount, mult, type, source, tags, note, minutes? }
+//     amount  base points (the "atom" ~= one small win ~= ~1 minute of focused work).
+//             NEGATIVE is legal and meaningful: a penalty, or spending points on a reward.
+//     mult    multiplier (1 default; 1.5 stretch hours; 2 alongside family/for-Mom)
+//     type    the ledger's category — see TYPES below. Mirrors the "Type" column of the
+//             points-tracker spreadsheet this model came from, so the two stay portable.
+//     source  who awarded them ('sprint', 'progress', 'wordforge', …) — totals group by it
 //     tags    free labels (subject, quest, task)
-//     note    human note (the sprint's task label, the word answered)
+//     note    human note (the sprint's task label, the reward bought)
+//     minutes optional — focused MINUTES this event represents. Only school-time events
+//             carry it, and it is what the weekly hours engine counts (see below).
 //   The server stamps `id` and `created_at`; the client clock is never the record.
+//
+// EARNING vs SPENDING. One stream carries both, separated by `type`: a `Reward` event is
+// a purchase (stored NEGATIVE), everything else is earning. So balance is just the sum of
+// the whole log, while "earned" and "spent" stay separately reportable — the same split
+// the spreadsheet model draws between its Daily Log and its purchases list.
+//
+// SCHOOL TIME IS NOT PAID TWICE. The spreadsheet model runs two engines "kept separate so
+// nothing double-counts": discrete tasks, and school HOURS (~1 point per focused minute,
+// with weekly x1 / x1.5 stretch / x2 overtime bands). A finished sprint pays the BASE rate
+// once, immediately, and also records its `minutes`. The weekly banding can therefore be
+// paid later as a TOP-UP on the stretch/overtime portion only — it must never re-pay the
+// base, or the two engines collide.
 //
 // KNOWN BOUND: totals here are derived from the most-recent `limit` events (default
 // 1000). That is months of a real school year, but it IS a window — when it is
 // outgrown the fix is a server-side rollup/aggregate endpoint, not a client cache
 // of the total (a cached total can drift from an immutable log; a derived one can't).
+
+// The ledger's categories. The first four mirror the points-tracker spreadsheet's "Type"
+// column; `School` is focused school time (carries `minutes`); `Reward` is a purchase.
+export const TYPES = ['Obligatory', 'Bonus', 'Idea', 'Penalty', 'School', 'Reward'];
+export const REWARD_TYPE = 'Reward';
+export const SCHOOL_TYPE = 'School';
 
 export const POINTS_STREAM = 'points';        // well-known shared stream key
 export const POINTS_TOPIC  = 'points/award';  // bus topic — live nudge, NOT the record
@@ -55,8 +78,37 @@ export function pointsEvents(events) {
   return (events || []).filter((e) => e && e.kind === POINTS_KIND);
 }
 
+// The BALANCE: the whole log summed. Purchases are negative, so this is earned - spent.
 export function sumPoints(events) {
   return pointsEvents(events).reduce((n, e) => n + pointsValue(e), 0);
+}
+
+const isSpend = (e) => (e.data && e.data.type) === REWARD_TYPE;
+
+// Everything that isn't a purchase — penalties included, exactly as the Daily Log sums them.
+export function sumEarned(events) {
+  return pointsEvents(events).filter((e) => !isSpend(e)).reduce((n, e) => n + pointsValue(e), 0);
+}
+
+// Purchases, reported POSITIVE ("you have spent 110") though stored negative.
+export function sumSpent(events) {
+  return -pointsEvents(events).filter(isSpend).reduce((n, e) => n + pointsValue(e), 0);
+}
+
+// Focused minutes recorded by school-time events — the input to the weekly hours engine.
+export function sumMinutes(events, sinceMs = null) {
+  return pointsEvents(events)
+    .filter((e) => (e.data && e.data.type) === SCHOOL_TYPE)
+    .filter((e) => sinceMs == null || new Date(e.created_at).getTime() >= sinceMs)
+    .reduce((n, e) => n + (Number(e.data.minutes) || 0), 0);
+}
+
+// Local start-of-week (Monday 00:00) — the boundary the weekly hours target resets on.
+export function weekStart(now = Date.now()) {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));   // Sunday(0) back 6, Monday(1) back 0
+  return d.getTime();
 }
 
 // { source -> total }, for the dashboard's "where did today's points come from".
@@ -102,32 +154,45 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
   }
   const stream = makeEvents(POINTS_STREAM, { limit, pollMs });
 
-  async function award({ amount, source, mult = 1, tags = [], note = '' } = {}) {
+  async function award({ amount, source, mult = 1, type = 'Bonus', tags = [], note = '', minutes = null } = {}) {
     const n = Number(amount);
     if (!Number.isFinite(n) || n === 0) return null;           // nothing earned, nothing recorded
     const m = Number(mult);
     const data = {
       amount: n,
       mult: Number.isFinite(m) && m > 0 ? m : 1,
+      type: TYPES.includes(type) ? type : 'Bonus',
       source: String(source || 'unknown'),
       tags: Array.isArray(tags) ? tags.filter(Boolean).map(String) : [],
       note: String(note || ''),
     };
+    if (Number.isFinite(Number(minutes)) && Number(minutes) > 0) data.minutes = Number(minutes);
     await stream.append(POINTS_KIND, data);                    // 1. the record (durable, first)
     const value = Math.round(data.amount * data.mult);
     if (bus) bus.publish(POINTS_TOPIC, { ...data, value });    // 2. the nudge (live)
     return { ...data, value };
   }
 
+  // Spending is an award with the sign flipped and the Reward type — one stream, one
+  // append path, so a purchase can no more be silently edited away than a point earned.
+  const spend = ({ amount, note = '', source = 'progress', tags = [] } = {}) => {
+    const n = Math.abs(Number(amount) || 0);
+    return n ? award({ amount: -n, mult: 1, type: REWARD_TYPE, source, tags, note }) : Promise.resolve(null);
+  };
+
   return {
     award,
+    spend,
     load: () => stream.load(),
     startPolling: () => stream.startPolling(),
     subscribe: (fn) => stream.subscribe(fn),
     get: () => stream.get(),
     events: () => pointsEvents(stream.get().events || []),
-    total: () => sumPoints(stream.get().events || []),
+    total: () => sumPoints(stream.get().events || []),          // the balance
+    earned: () => sumEarned(stream.get().events || []),
+    spent: () => sumSpent(stream.get().events || []),
     totalToday: (now = Date.now()) => sumPointsOn(stream.get().events || [], todayKey(now)),
+    minutesThisWeek: (now = Date.now()) => sumMinutes(stream.get().events || [], weekStart(now)),
     bySource: () => sumBySource(stream.get().events || []),
     destroy: () => stream.destroy(),
   };
