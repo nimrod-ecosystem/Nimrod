@@ -40,12 +40,18 @@
 // the whole log, while "earned" and "spent" stay separately reportable — the same split
 // the spreadsheet model draws between its Daily Log and its purchases list.
 //
-// SCHOOL TIME IS NOT PAID TWICE. The spreadsheet model runs two engines "kept separate so
-// nothing double-counts": discrete tasks, and school HOURS (~1 point per focused minute,
-// with weekly x1 / x1.5 stretch / x2 overtime bands). A finished sprint pays the BASE rate
-// once, immediately, and also records its `minutes`. The weekly banding can therefore be
-// paid later as a TOP-UP on the stretch/overtime portion only — it must never re-pay the
-// base, or the two engines collide.
+// A POINT IS A MINUTE OF SUBJECT CREDIT. This is the rule the whole economy turns on, and
+// it is about understanding rather than seat time: **games do not pay for time spent.**
+// They pay for correct answers, and each point earned also discharges one minute of that
+// SUBJECT's required time. Someone who understands quickly finishes their hours quickly;
+// someone who stares at a wall for an hour earns nothing from it.
+//
+// So an event can carry BOTH a currency value and `minutes` of subject credit, and for a
+// game those are the same number. A sprint is the other shape: it pays for focused time
+// at ~1 point per minute, and records those minutes.
+//
+// SCHOOL TIME IS STILL NOT PAID TWICE. The weekly banding (x1.5 stretch / x2 overtime) is
+// a TOP-UP on the stretch/overtime portion only — it must never re-pay the base.
 //
 // KNOWN BOUND: totals here are derived from the most-recent `limit` events (default
 // 1000). That is months of a real school year, but it IS a window — when it is
@@ -101,6 +107,21 @@ export function sumMinutes(events, sinceMs = null) {
     .filter((e) => (e.data && e.data.type) === SCHOOL_TYPE)
     .filter((e) => sinceMs == null || new Date(e.created_at).getTime() >= sinceMs)
     .reduce((n, e) => n + (Number(e.data.minutes) || 0), 0);
+}
+
+// Minutes of credit per SUBJECT — the six-subject view Ohio's requirement is written in.
+// Counts every event carrying `minutes`, whichever engine produced it: a sprint's focused
+// time and a game's correct answers both discharge the same requirement.
+export function minutesBySubject(events, sinceMs = null) {
+  const out = {};
+  for (const e of pointsEvents(events)) {
+    const m = Number(e.data && e.data.minutes);
+    if (!Number.isFinite(m) || m <= 0) continue;
+    if (sinceMs != null && new Date(e.created_at).getTime() < sinceMs) continue;
+    const subj = (e.data && e.data.subject) || 'Unassigned';
+    out[subj] = (out[subj] || 0) + m;
+  }
+  return out;
 }
 
 // Local start-of-week (Monday 00:00) — the boundary the weekly hours target resets on.
@@ -163,7 +184,8 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
   }
   const stream = makeEvents(POINTS_STREAM, { limit, pollMs });
 
-  async function award({ amount, source, mult = 1, type = 'Bonus', tags = [], note = '', minutes = null } = {}) {
+  async function award({ amount, source, mult = 1, type = 'Bonus', tags = [], note = '',
+                         minutes = null, subject = null } = {}) {
     const n = Number(amount);
     if (!Number.isFinite(n) || n === 0) return null;           // nothing earned, nothing recorded
     const m = Number(mult);
@@ -176,6 +198,7 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
       note: String(note || ''),
     };
     if (Number.isFinite(Number(minutes)) && Number(minutes) > 0) data.minutes = Number(minutes);
+    if (subject) data.subject = String(subject);
     await stream.append(POINTS_KIND, data);                    // 1. the record (durable, first)
     const value = Math.round(data.amount * data.mult);
     if (bus) bus.publish(POINTS_TOPIC, { ...data, value });    // 2. the nudge (live)
@@ -202,6 +225,7 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
     spent: () => sumSpent(stream.get().events || []),
     totalToday: (now = Date.now()) => sumPointsOn(stream.get().events || [], todayKey(now)),
     minutesThisWeek: (now = Date.now()) => sumMinutes(stream.get().events || [], weekStart(now)),
+    subjectsThisWeek: (now = Date.now()) => minutesBySubject(stream.get().events || [], weekStart(now)),
     todayFrom: (source, now = Date.now()) =>
       sumPointsOnBySource(stream.get().events || [], todayKey(now), source),
     bySource: () => sumBySource(stream.get().events || []),

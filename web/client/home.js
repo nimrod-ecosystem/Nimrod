@@ -1,5 +1,6 @@
-// home.js — the HOME page: what a signed-in person sees, and the only place they
-// compose what they want to use.
+// home.js — the HOME SHELL: what a signed-in person sees. A sidebar of TABS over one
+// main panel; this file owns the shell and the "Screens" tab, and each other tab is its
+// own module (the composer lives in composer.js).
 //
 // The three surfaces, and why they're separate:
 //   landing.html  public. What Nimrod is, and a way in. Signed out only.
@@ -30,9 +31,71 @@ export function kioskURL(profileId) {
   return `/kiosk.html?profile=${encodeURIComponent(profileId)}`;
 }
 
-// Mounts the page. `profiles` is the profiles client; `manifests` the module registry
-// listing; `onOpen` is injectable so a test can assert the hand-off without navigating.
-export async function mountHome(root, { email = '', profiles, manifests = [], onOpen = null } = {}) {
+// The tabs in the sidebar. Adding one means adding a `mount` here — the shell doesn't
+// need to know anything else about it. (An "Audio hub" tab belongs here when it exists;
+// an empty tab is worse than no tab, so it isn't stubbed.)
+export const TABS = [
+  { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
+  { id: 'composer', label: 'Composer', hint: 'arrange them on the display' },
+];
+
+// The shell: sidebar + one mounted panel. `mountTab` is injectable so a test can drive
+// the navigation without the real panels.
+export async function mountHome(root, { email = '', profiles, manifests = [], onOpen = null,
+                                       makeSettings = null, mountTab = null } = {}) {
+  let active = 'screens';
+  let panel = null;
+
+  root.innerHTML = `
+    <div class="shell">
+      <nav class="s-side">
+        <div class="s-brand">Nimrod<span>.</span></div>
+        <ul class="s-nav">
+          ${TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}
+        </ul>
+        <div class="s-foot">
+          ${email ? `<div class="s-email">${esc(email)}</div>` : ''}
+          <a class="s-signout" href="/auth/logout">Sign out</a>
+        </div>
+      </nav>
+      <main class="s-main" data-panel></main>
+    </div>`;
+
+  const main = root.querySelector('[data-panel]');
+  const mount = mountTab || (async (id, host) => {
+    if (id === 'composer') {
+      const { mountComposer } = await import('./composer.js');
+      const c = mountComposer(host, { profiles, manifests, onOpen, makeSettings });
+      await c.refresh();
+      return c;
+    }
+    return mountScreens(host, { profiles, manifests, onOpen });
+  });
+
+  async function show(id) {
+    active = TABS.some((t) => t.id === id) ? id : 'screens';
+    for (const b of root.querySelectorAll('[data-tab]')) b.classList.toggle('on', b.dataset.tab === active);
+    if (panel && panel.destroy) { try { panel.destroy(); } catch (e) { console.error(e); } }
+    main.innerHTML = '';
+    panel = await mount(active, main);
+  }
+
+  for (const b of root.querySelectorAll('[data-tab]')) {
+    b.addEventListener('click', () => { show(b.dataset.tab); });
+  }
+
+  const api = {
+    show,
+    active: () => active,
+    panel: () => panel,
+    destroy() { if (panel && panel.destroy) panel.destroy(); },
+  };
+  await show('screens');
+  return api;
+}
+
+// The SCREENS tab: create a screen, fill it with modules, open it.
+export async function mountScreens(root, { profiles, manifests = [], onOpen = null } = {}) {
   const catalog = moduleCatalog(manifests);
   // The server stores module instances as {id, type} — no human title. Look the title up
   // from the registry so a chip reads "Quests", not "quests"; fall back to the type for a
@@ -44,14 +107,6 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
 
   root.innerHTML = `
     <div class="home">
-      <header class="h-top">
-        <div class="h-brand">Nimrod<span>.</span></div>
-        <div class="h-who">
-          ${email ? `<span class="h-email">${esc(email)}</span>` : ''}
-          <a class="h-signout" href="/auth/logout">Sign out</a>
-        </div>
-      </header>
-
       <div class="h-intro">
         <h1>Your screens</h1>
         <p>A <b>screen</b> is a set of modules — photos, a clock, games, the lineup — that you

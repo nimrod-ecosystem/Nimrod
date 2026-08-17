@@ -13,7 +13,61 @@
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--font);-webkit-font-smoothing:antialiased}
-  .home{max-width:880px;margin:0 auto;padding:20px 24px 64px}
+  .home{max-width:880px}
+
+  /* ---- the shell: sidebar + one panel ---- */
+  .shell{display:grid;grid-template-columns:212px 1fr;min-height:100vh}
+  .s-side{display:flex;flex-direction:column;gap:18px;padding:20px 14px;
+    background:var(--cream-soft);border-right:1px solid var(--line)}
+  .s-brand{font-weight:800;font-size:1.25rem;letter-spacing:-.02em;padding:0 8px}
+  .s-brand span{color:var(--rosy-deep)}
+  .s-nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+  .s-navb{width:100%;text-align:left;padding:9px 11px;border:0;border-radius:9px;background:transparent;
+    color:var(--ink-soft);font:inherit;font-size:.93rem;font-weight:600;cursor:pointer}
+  .s-navb:hover{background:rgba(0,0,0,.05);color:var(--ink)}
+  .s-navb.on{background:var(--moss);color:#fff}
+  .s-foot{margin-top:auto;padding:0 8px;font-size:.8rem;display:flex;flex-direction:column;gap:4px}
+  .s-email{color:var(--muted);word-break:break-all}
+  .s-signout{color:var(--midnight)}
+  .s-main{padding:22px 26px 64px;max-width:900px}
+
+  /* ---- composer ---- */
+  .composer h1{font-size:1.6rem;margin:0 0 .25em;letter-spacing:-.01em}
+  .composer .c-lead{margin:0 0 16px;color:var(--ink-soft);max-width:62ch}
+  .composer .c-screens,.composer .c-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .composer .c-chip{padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+  .composer .c-chip.on{background:var(--moss);border-color:var(--moss);color:#fff}
+  .composer .c-msg{min-height:1.3em;font-size:.85rem;font-weight:600;color:var(--midnight);margin-bottom:8px}
+  .composer .c-msg.bad{color:var(--rosy-deep)}
+  .composer .c-grid{gap:8px;aspect-ratio:16/9;width:100%;max-width:620px;margin-bottom:10px;
+    background:var(--cream-soft);border:1px solid var(--line);border-radius:12px;padding:8px}
+  .composer .c-slot{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:6px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px;min-width:0}
+  .composer .c-slot-n{position:absolute;top:5px;left:8px;font-size:.66rem;font-weight:800;color:var(--muted)}
+  .composer .c-slot-name{font-size:.85rem;font-weight:700;text-align:center;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;max-width:100%}
+  .composer .c-empty{color:var(--muted);font-weight:500}
+  .composer .c-pick{max-width:92%;padding:4px 6px;border:1px solid var(--line);border-radius:7px;
+    background:var(--card);color:var(--ink);font:inherit;font-size:.76rem}
+  .composer .c-note{font-size:.8rem;color:var(--muted);margin:0 0 12px}
+  .composer .c-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .composer .c-btn{padding:9px 15px;border:1px solid var(--line);border-radius:10px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  .composer .c-btn:hover:not(:disabled){background:var(--cream-soft)}
+  .composer .c-btn:disabled{opacity:.45;cursor:not-allowed}
+  .composer .c-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+
+  @media (max-width:720px){
+    .shell{grid-template-columns:1fr}
+    .s-side{flex-direction:row;align-items:center;gap:10px;border-right:0;border-bottom:1px solid var(--line);
+      padding:10px 14px;flex-wrap:wrap}
+    .s-nav{flex-direction:row}
+    .s-foot{margin-top:0;margin-left:auto;flex-direction:row;gap:10px;align-items:center}
+    .s-email{display:none}
+    .s-main{padding:16px}
+  }
+
 
   .h-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     padding-bottom:14px;border-bottom:1px solid var(--line)}
@@ -72,6 +126,7 @@
 
 <script type="module">
 import { createProfilesClient } from './profile.js';
+import { createState } from './state.js';
 import { authHeaders } from './auth.js';
 import { listManifests } from './module.js';
 import { mountHome } from './home.js';
@@ -110,10 +165,14 @@ const root = document.getElementById('root');
   }
 
   try {
+    const profiles = createProfilesClient({ user: me.user });
     await mountHome(root, {
       email: me.email || '',
-      profiles: createProfilesClient({ user: me.user }),
+      profiles,
       manifests: listManifests(),
+      // The composer edits each screen's `settings` blob — the same key the kiosk reads
+      // its theme, voice and layout from.
+      makeSettings: (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: me.user }),
     });
   } catch (e) {
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +

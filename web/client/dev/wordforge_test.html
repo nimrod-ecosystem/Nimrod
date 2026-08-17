@@ -224,10 +224,23 @@ a || b || c`);
     check('a wrong answer contributed real points, not zero',
       expected >= wrongs * DEFAULTS.tryPoints && wrongs > 0);
 
-    section('the daily cap');
-    check('a daily cap is configured', DEFAULTS.dailyCap > 0, String(DEFAULTS.dailyCap));
-    check('the round could not have exceeded it', ledger.total() <= DEFAULTS.dailyCap,
-      `${ledger.total()} vs ${DEFAULTS.dailyCap}`);
+    section('points are understanding, not time served');
+    // The cap exists as a knob but is OFF: this game pays only for correct answers, so an
+    // idle window earns nothing however long it sits there, and capping the points would
+    // cap the ability to demonstrate understanding.
+    check('the daily cap ships OFF', DEFAULTS.dailyCap === 0, String(DEFAULTS.dailyCap));
+    const schoolEvents = ledger.events().filter((e) => e.data.source === GAME);
+    check('game points are school CREDIT, not a chore bonus',
+      schoolEvents.every((e) => e.data.type === 'School'),
+      [...new Set(schoolEvents.map((e) => e.data.type))].join());
+    check('each point earned is also a MINUTE of subject credit',
+      schoolEvents.every((e) => e.data.minutes === e.data.amount),
+      JSON.stringify(schoolEvents.map((e) => [e.data.amount, e.data.minutes])));
+    check('the credit is attributed to a subject',
+      schoolEvents.every((e) => !!e.data.subject), JSON.stringify([...new Set(schoolEvents.map((e) => e.data.subject))]));
+    check('the minutes roll up per subject',
+      ledger.subjectsThisWeek()['English language arts'] === ledger.total(),
+      JSON.stringify(ledger.subjectsThisWeek()));
     check('the ledger can report what one source paid today',
       ledger.todayFrom(GAME) === ledger.total(), `${ledger.todayFrom(GAME)} vs ${ledger.total()}`);
     check('...and reports zero for a source that paid nothing', ledger.todayFrom('nothing-here') === 0);
