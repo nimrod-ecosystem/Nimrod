@@ -31,6 +31,17 @@
   .s-signout{color:var(--midnight)}
   .s-main{padding:22px 26px 64px;max-width:900px}
 
+
+  /* ---- adulting ---- */
+  .adulting h1{font-size:1.6rem;margin:0 0 .25em;letter-spacing:-.01em}
+  .adulting .a-lead{margin:0 0 16px;color:var(--ink-soft);max-width:62ch}
+  .adulting .a-who{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .adulting .a-chip{padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+  .adulting .a-chip.on{background:var(--moss);border-color:var(--moss);color:#fff}
+  .adulting .a-note{font-size:.85rem;color:var(--muted)}
+  .adulting .a-host{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;max-width:560px}
   /* ---- composer ---- */
   .composer h1{font-size:1.6rem;margin:0 0 .25em;letter-spacing:-.01em}
   .composer .c-lead{margin:0 0 16px;color:var(--ink-soft);max-width:62ch}
@@ -127,6 +138,8 @@
 <script type="module">
 import { createProfilesClient } from './profile.js';
 import { createState } from './state.js';
+import { createEvents } from './events.js';
+import { createBus } from './bus.js';
 import { authHeaders } from './auth.js';
 import { listManifests } from './module.js';
 import { mountHome } from './home.js';
@@ -146,6 +159,10 @@ import './modules/progress.js';
 import './modules/wordforge.js';
 
 const root = document.getElementById('root');
+
+// The Adulting board namespaces its own state key as `adulting-board:<profileId>`, so the
+// profile can be recovered from the key when no explicit one is passed.
+const keyPid = (key) => String(key).split(':')[1] || '';
 
 // Signed in? A Google session cookie rides along automatically; a paired device key
 // works too. 401 means "not signed in" -> the landing page is where you belong.
@@ -173,6 +190,15 @@ const root = document.getElementById('root');
       // The composer edits each screen's `settings` blob — the same key the kiosk reads
       // its theme, voice and layout from.
       makeSettings: (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: me.user }),
+      // The Adulting tab mounts a real module, so it needs the same handle factories a
+      // screen gives one. `forPid` lets a mounted module make sibling handles (its points
+      // ledger) against the profile it was mounted for.
+      user: me.user,
+      bus: createBus(),
+      makeState: (key, opts, forPid) =>
+        createState({ url: profiles.stateURL(forPid || keyPid(key), key), user: me.user, ...opts }),
+      makeEvents: (key, opts, forPid) =>
+        createEvents({ url: profiles.eventsURL(forPid || keyPid(key), key), user: me.user, ...opts }),
     });
   } catch (e) {
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +

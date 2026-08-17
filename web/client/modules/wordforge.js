@@ -10,6 +10,13 @@
 // ALSO a minute of credit toward its subject (see points.js) — understand it faster and
 // you are done sooner, which is the entire point of the design.
 //
+// "I DON'T KNOW" IS A FIRST-CLASS ANSWER. There is a button for it, so nobody has to
+// deliberately pick something wrong just to see the explanation. It pays the same as a
+// wrong guess — honesty shouldn't cost more than guessing — and it is recorded
+// DIFFERENTLY: a guess is `responded: true, correct: false` (a false alarm), while "I
+// don't know" is `responded: false` (a miss). The progress dashboard already tells those
+// apart, so "got it wrong" and "didn't know it" stop being the same number.
+//
 // WRONG ANSWERS PAY, AND THEY EXPLAIN. A wrong answer is not worth zero: it shows the
 // right answer with the reason, and awards a smaller "for trying" amount when the player
 // acknowledges the explanation. The point of a learning game is the correction, so the
@@ -185,7 +192,8 @@ export function makeQuestion(item, words, rand = Math.random) {
   };
 }
 
-// What an answer is worth. A wrong answer is NOT zero — see the header.
+// What an answer is worth. A wrong answer is NOT zero — see the header. Saying "I don't
+// know" is worth the same as guessing wrong: honesty should not cost more than a guess.
 export function scoreFor({ correct, streak = 0, cfg = DEFAULTS }) {
   if (!correct) return { base: cfg.tryPoints, bonus: 0, total: cfg.tryPoints };
   const bonus = (cfg.streakEvery > 0 && streak > 0 && streak % cfg.streakEvery === 0) ? cfg.streakBonus : 0;
@@ -254,12 +262,14 @@ registerModule(
 
     // Answering does three things: score it, record it in BOTH streams, and — when it's
     // wrong — hold the round open on the explanation until it's acknowledged.
+    // `i === null` means "I don't know" — no option was picked.
     async function answer(i) {
       if (answered || !q) return;
-      const correct = i === q.answer;
+      const declared = i === null;
+      const correct = !declared && i === q.answer;
       if (correct) streak += 1; else streak = 0;
       const award = scoreFor({ correct, streak, cfg });
-      answered = { picked: i, correct, award };
+      answered = { picked: declared ? null : i, correct, declared, award };
       render();
 
       // The MEASUREMENT: one trial, concept = the word, so Progress can rank what's hard.
@@ -269,7 +279,9 @@ registerModule(
         mode: 'practice',
         concept: q.concept,
         band: q.band || null,
-        responded: true,
+        // A guess is a response; "I don't know" is not. Keeping them apart is what lets
+        // progress distinguish "answered it wrong" from "didn't know it".
+        responded: !declared,
         correct,
         latencyMs: Date.now() - askedAt,
         prompt: q.prompt,
@@ -354,24 +366,29 @@ registerModule(
 
       let feedback = '';
       if (answered) {
-        feedback = answered.correct
-          ? `<div class="wf-fb is-right">
+        if (answered.correct) {
+          feedback = `<div class="wf-fb is-right">
                <b>Right.</b> +${answered.award.total}
                ${answered.award.bonus ? `<span class="wf-bonus">includes a +${answered.award.bonus} streak bonus</span>` : ''}
              </div>
-             <button class="wf-btn wf-primary" data-next>Next</button>`
+             <button class="wf-btn wf-primary" data-next>Next</button>`;
+        } else {
           // A miss is a teaching moment: the explanation, then the points for taking it in.
-          : `<div class="wf-fb is-wrong">
-               <b>Not quite.</b> ${esc(q.explain)}
-               <span class="wf-try">+${answered.award.total} for the try — press “Got it” to bank it.</span>
+          // Saying so plainly gets a different opening line from a wrong guess, but the
+          // same explanation and the same points.
+          feedback = `<div class="wf-fb is-wrong">
+               <b>${answered.declared ? 'Fair enough — here it is.' : 'Not quite.'}</b> ${esc(q.explain)}
+               <span class="wf-try">+${answered.award.total} for ${answered.declared ? 'asking' : 'the try'} — press “Got it” to bank it.</span>
              </div>
              <button class="wf-btn wf-primary" data-next>Got it</button>`;
+        }
       }
 
       host.innerHTML = `
         <p class="wf-kind">${q.kind === 'better' ? 'Which is better?' : q.kind === 'blank' ? 'Fill the blank' : 'What does it mean?'}</p>
         <p class="wf-prompt">${esc(q.prompt)}</p>
         <div class="wf-opts">${opts}</div>
+        ${answered ? '' : '<button class="wf-btn wf-idk" data-idk>I don’t know — show me</button>'}
         ${feedback}`;
 
       for (const b of host.querySelectorAll('[data-opt]')) {
@@ -379,6 +396,8 @@ registerModule(
       }
       const nx = host.querySelector('[data-next]');
       if (nx) nx.addEventListener('click', advance);
+      const idk = host.querySelector('[data-idk]');
+      if (idk) idk.addEventListener('click', () => answer(null));
     }
 
     return {
@@ -400,7 +419,7 @@ registerModule(
         tel.load().catch(() => {});
 
         // Anything on the bus can answer — a keypad, a switch, a companion.
-        bus.subscribe('wordforge/answer', (i) => answer(Number(i)));
+        bus.subscribe('wordforge/answer', (i) => answer(i === null || i === 'idk' ? null : Number(i)));
         bus.subscribe('wordforge/next', () => advance());
 
         state.subscribe((s) => {

@@ -42,6 +42,18 @@ export const SOURCE = 'quests';
 
 // Seeded from the points-tracker's "Task Menu" tab. `double` = eligible for the x2
 // multiplier (helping family / doing it for Mom). Negative base = a penalty.
+//
+// THIS IS NOT ONLY A CHORE LIST FOR A CHILD. The board is per-profile, so an adult keeps
+// their own — same mechanic, own habits, own numbers. The health and habit entries below
+// are the seed for that; a household edits its own copy of this list rather than living
+// with someone else's idea of what counts.
+//
+// One caution worth stating once, in the place it belongs. Attaching points to FOOD is
+// the one entry here that can misfire, because scoring what a young person eats can teach
+// something nobody wanted to teach. The seeded list is therefore deliberately asymmetric:
+// the food entries reward SKILL and initiative (cooking, planning, choosing well), and
+// the subtraction is small and aimed at a habit rather than a meal. An adult's own board
+// can be as blunt as they like — it's theirs. Edit freely; this is data, not doctrine.
 export const DEFAULT_TASKS = [
   { task: 'Clean the litter box',        type: 'Obligatory', base: 5,   double: false, note: 'opt-in, then required' },
   { task: 'Do the dishes',               type: 'Bonus',      base: 15,  double: false, note: 'anytime, no penalty' },
@@ -60,6 +72,14 @@ export const DEFAULT_TASKS = [
   { task: 'Left dirty dishes out',       type: 'Penalty',    base: -10, double: false, note: 'the sink is right there' },
   { task: 'Garbage left out of a bin',   type: 'Penalty',    base: -10, double: false, note: 'anywhere but a bin' },
   { task: 'Left a mess for someone else', type: 'Penalty',   base: -15, double: false, note: 'someone else has to do it' },
+
+  // --- health & habits (an adult's board seeds with these too) ---
+  { task: 'Cooked a real meal from scratch', type: 'Bonus',  base: 20,  double: true,  note: 'skill + it feeds someone' },
+  { task: 'Packed a proper lunch',       type: 'Bonus',      base: 8,   double: false, note: 'planning counts' },
+  { task: 'Ate the vegetables',          type: 'Bonus',      base: 5,   double: false, note: '' },
+  { task: 'Drank water instead of soda', type: 'Bonus',      base: 3,   double: false, note: '' },
+  { task: 'Junk food instead of a meal', type: 'Penalty',    base: -5,  double: false, note: 'instead of, not as well as' },
+  { task: 'Smoked a cigarette',          type: 'Penalty',    base: -60, double: false, note: 'an hour of work, gone' },
 ];
 
 // Seeded from the "Rewards Store" tab. Needs cost fewer points per dollar than wants.

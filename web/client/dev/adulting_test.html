@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>adulting board + “I don’t know” — integration test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#wf{margin-top:12px;width:480px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:14px}
+  .a-chip{padding:6px 12px;border:1px solid #e4e0c2;border-radius:99px;background:#fff;font:inherit;cursor:pointer}
+  .a-chip.on{background:#839958;color:#fff}
+</style>
+</head>
+<body>
+<h1>adulting board + “I don’t know” — integration test</h1>
+<p>Two things: an adult's own points board mounted outside any screen (same module, same
+ledger, own profile), and the “I don't know” button — which must reach the explanation without
+making anyone deliberately answer wrong, and must be RECORDED differently from a wrong guess.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="wf"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { createPointsLedger } from '../points.js';
+import { createTelemetry, isMiss, isFalseAlarm, summarize } from '../telemetry.js';
+import { mountAdulting, BOARD_KEY } from '../adulting.js';
+import { DEFAULT_TASKS } from '../modules/quests.js';
+import { DEFAULTS, scoreFor } from '../modules/wordforge.js';
+import '../modules/quests.js';
+import '../modules/wordforge.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('adult-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const seeded = (seed) => { let x = seed >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; };
+
+(async () => {
+  try {
+    // ================= the catalog is not just a chore list =================
+    section('the catalog covers adult habits too');
+    const find = (k) => DEFAULT_TASKS.find((t) => t.task.toLowerCase().includes(k));
+    check('smoking is in the catalog and costs a lot', find('cigarette') && find('cigarette').base <= -60,
+      JSON.stringify(find('cigarette')));
+    check('...more than any household penalty',
+      find('cigarette').base < Math.min(...DEFAULT_TASKS.filter((t) => /dish|garbage|mess/i.test(t.task)).map((t) => t.base)));
+    check('cooking a real meal pays, and doubles for family',
+      find('cooked a real meal').base > 0 && find('cooked a real meal').double === true,
+      JSON.stringify(find('cooked a real meal')));
+    check('food entries mostly REWARD skill rather than punish eating',
+      DEFAULT_TASKS.filter((t) => /meal|lunch|vegetable|water|junk/i.test(t.task)).filter((t) => t.base > 0).length >
+      DEFAULT_TASKS.filter((t) => /meal|lunch|vegetable|water|junk/i.test(t.task)).filter((t) => t.base < 0).length);
+    check('the junk-food subtraction is small next to the habit one',
+      Math.abs(find('junk food').base) < Math.abs(find('cigarette').base) / 5,
+      `${find('junk food').base} vs ${find('cigarette').base}`);
+
+    // ================= an adult's own board =================
+    section('a board of your own, outside any screen');
+    const profiles = createProfilesClient({ user: USER });
+    const mike = await profiles.create('Mike');
+    const oscar = await profiles.create('Oscar');
+
+    const makeState = (key, opts, forPid) =>
+      createState({ url: profiles.stateURL(forPid || String(key).split(':')[1], key), user: USER, ...opts });
+    const makeEvents = (key, opts, forPid) =>
+      createEvents({ url: profiles.eventsURL(forPid || String(key).split(':')[1], key), user: USER, ...opts });
+
+    const host = document.getElementById('host');
+    const board = mountAdulting(host, {
+      profiles, bus: createBus(), user: USER, makeState, makeEvents, initialProfileId: mike.id,
+    });
+    await board.refresh();
+    await sleep(600);
+
+    check('every profile is offered as a board', host.querySelectorAll('[data-who-id]').length === 2,
+      String(host.querySelectorAll('[data-who-id]').length));
+    check('it opens on the one asked for', board.current().id === mike.id, board.current() && board.current().name);
+    check('the REAL quest board is mounted, not a copy', !!host.querySelector('.quests [data-balance]'));
+    check('the board key is namespaced away from module instance ids', /^[a-z-]+$/.test(BOARD_KEY));
+
+    const bal = () => Number(host.querySelector('[data-balance]').textContent);
+    const taskBtn = (k) => [...host.querySelectorAll('[data-task]')]
+      .find((b) => b.textContent.toLowerCase().includes(k));
+
+    check('the board starts empty', bal() === 0, String(bal()));
+    taskBtn('cooked a real meal').click();
+    await sleep(600);
+    check('logging a task moves the balance', bal() === 20, String(bal()));
+    taskBtn('cigarette').click();
+    await sleep(600);
+    check('a cigarette costs real points', bal() === 20 - 60, String(bal()));
+
+    // isolation: the other profile's board is untouched
+    host.querySelector(`[data-who-id="${oscar.id}"]`).click();
+    await sleep(800);
+    check('switching profile switches boards', board.current().id === oscar.id);
+    check('...and the other person’s points are not on it', bal() === 0, String(bal()));
+
+    const mikeLedger = createPointsLedger({ makeEvents: (k, o) => makeEvents(k, o, mike.id) });
+    await mikeLedger.load();
+    check('the board writes to the PROFILE’s shared points ledger',
+      mikeLedger.total() === -40, String(mikeLedger.total()));
+    const oscarLedger = createPointsLedger({ makeEvents: (k, o) => makeEvents(k, o, oscar.id) });
+    await oscarLedger.load();
+    check('...and the two ledgers are entirely separate', oscarLedger.total() === 0, String(oscarLedger.total()));
+    mikeLedger.destroy(); oscarLedger.destroy();
+    board.destroy();
+
+    // ================= "I don't know" =================
+    section('“I don’t know” reaches the explanation honestly');
+    const wfHost = document.getElementById('wf');
+    const wmod = await profiles.addModule(oscar.id, 'wordforge');
+    const wst = createState({ url: profiles.stateURL(oscar.id, wmod.id), user: USER });
+    await wst.load();
+    const wf = mountModule('wordforge', {
+      mount: wfHost, bus: createBus(), state: wst,
+      events: createEvents({ url: profiles.eventsURL(oscar.id, wmod.id), user: USER }),
+      user: USER, profileId: oscar.id,
+      makeState: (k, o) => makeState(k, o, oscar.id),
+      makeEvents: (k, o) => makeEvents(k, o, oscar.id),
+      rand: seeded(4242),
+    });
+    wf.init();
+    await sleep(400);
+
+    const q = (s) => wfHost.querySelector(s);
+    check('the button is offered before answering', !!q('[data-idk]'), 'no I-don’t-know button');
+    check('it says what it does', /show me/i.test(q('[data-idk]').textContent), q('[data-idk]').textContent);
+
+    const before = oscarLedger ? 0 : 0;
+    const led = createPointsLedger({ makeEvents: (k, o) => makeEvents(k, o, oscar.id) });
+    await led.load();
+    const start = led.total();
+
+    q('[data-idk]').click();
+    await sleep(400);
+    check('the explanation appears without picking anything', !!q('.wf-fb.is-wrong'),
+      wfHost.textContent.slice(0, 80));
+    check('nothing was marked as a wrong CHOICE', !wfHost.querySelector('.wf-opt.is-wrong'));
+    check('the right answer is still revealed', !!wfHost.querySelector('.wf-opt.is-right'));
+    check('it does not scold', /fair enough/i.test(q('.wf-fb.is-wrong').textContent),
+      q('.wf-fb.is-wrong').textContent.slice(0, 60));
+    check('the button offers to bank it', q('[data-next]').textContent.trim() === 'Got it');
+
+    await led.load();
+    check('nothing is banked before acknowledging', led.total() === start, `${start} -> ${led.total()}`);
+    q('[data-next]').click();
+    await sleep(700);
+    await led.load();
+    check('asking pays the same as guessing wrong', led.total() === start + DEFAULTS.tryPoints,
+      `${start} -> ${led.total()} (expected +${DEFAULTS.tryPoints})`);
+    check('...which is what scoreFor says a miss is worth',
+      scoreFor({ correct: false }).total === DEFAULTS.tryPoints);
+
+    // the recording is what makes it different
+    const tel = createTelemetry({ makeEvents: (k, o) => makeEvents(k, o, oscar.id) });
+    await tel.load();
+    const trials = tel.trials();
+    check('the attempt was recorded', trials.length === 1, String(trials.length));
+    check('“I don’t know” is a MISS, not a wrong answer',
+      isMiss(trials[0]) && !isFalseAlarm(trials[0]), JSON.stringify(trials[0].data));
+    check('...so `correct` is null rather than false', trials[0].data.correct === null,
+      String(trials[0].data.correct));
+    check('the two accuracy measures now differ, which is the point',
+      summarize(trials).accuracy === 0 && summarize(trials).whenAnswered === null,
+      JSON.stringify(summarize(trials)));
+
+    led.destroy(); tel.destroy(); wf.destroy();
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
