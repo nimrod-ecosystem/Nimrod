@@ -210,6 +210,8 @@ registerModule(
           const awarded = await ledger.award({
             amount: sprintPoints(cfg),
             mult: cfg.mult,
+            type: 'School',          // school TIME — carries minutes for the weekly engine
+            minutes: cfg.workMin,
             source: SOURCE,
             tags: ['sprint', ...(cfg.task ? [cfg.task] : [])],
             note: cfg.task || `${cfg.workMin}-minute sprint`,

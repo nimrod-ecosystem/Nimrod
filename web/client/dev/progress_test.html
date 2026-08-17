@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>progress dashboard — integration test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#sprintHost{width:420px;margin-top:12px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:12px}
+</style>
+</head>
+<body>
+<h1>progress dashboard — integration test</h1>
+<p>Mounts the REAL <code>progress</code> module against the live dev server, alongside a REAL
+<code>sprint</code> module on the same profile. Proves the end-to-end seam: a finished sprint appends
+to the shared <code>points</code> stream and the dashboard — a different module, its own instance —
+shows it. Also covers logging tasks, the x2 multiplier, penalties, confirm-to-buy, the balance,
+and the weekly hours banding.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="sprintHost"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { createPointsLedger, POINTS_TOPIC, sumEarned, sumSpent, sumMinutes, weekStart } from '../points.js';
+import { weeklyTarget, hoursBand, fmtHours, DEFAULT_TASKS, DEFAULT_REWARDS } from '../modules/progress.js';
+import '../modules/sprint.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || ('progress-test-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeClock(start) {
+  let t = start; const tickers = new Map(); let id = 0;
+  return {
+    now: () => t,
+    setTicker: (fn) => { const k = ++id; tickers.set(k, fn); return k; },
+    clearTicker: (k) => tickers.delete(k),
+    advance(ms) { t += ms; for (const fn of [...tickers.values()]) fn(); },
+  };
+}
+const MIN = 60000;
+
+(async () => {
+  try {
+    // ============ pure helpers ============
+    section('weekly hours engine (pure)');
+    check('weekly target = X*Y + Z', weeklyTarget({ hoursPerDay: 4, schoolDays: 5, stretchHours: 5 }).target === 25);
+    check('base cap = X*Y', weeklyTarget({ hoursPerDay: 4, schoolDays: 5, stretchHours: 5 }).base === 20);
+
+    const b0 = hoursBand(12);
+    check('under the base cap -> base band', b0.label === 'base' && b0.stretchHrs === 0 && b0.topUp === 0, JSON.stringify(b0));
+    const b1 = hoursBand(22);
+    check('past base -> stretch band', b1.label === 'stretch (x1.5 zone)' && b1.stretchHrs === 2, JSON.stringify(b1));
+    check('stretch top-up is the EXTRA 0.5x only', b1.topUp === Math.round(2 * 0.5 * 60), String(b1.topUp));
+    const b2 = hoursBand(28);
+    check('past target -> overtime band', b2.label === 'overtime (x2 zone)' && b2.overHrs === 3, JSON.stringify(b2));
+    check('overtime top-up = stretch 0.5x + overtime 1.0x',
+      b2.topUp === Math.round((5 * 0.5 + 3 * 1.0) * 60), String(b2.topUp));
+    check('top-up never re-pays the base rate', hoursBand(20).topUp === 0, String(hoursBand(20).topUp));
+    check('fmtHours', fmtHours(2.5) === '2h 30m' && fmtHours(3) === '3h', fmtHours(2.5));
+    check('seed data came from the tracker', DEFAULT_TASKS.length === 12 && DEFAULT_REWARDS.length === 7,
+      `${DEFAULT_TASKS.length}/${DEFAULT_REWARDS.length}`);
+    check('the penalty seed is negative', DEFAULT_TASKS.some((t) => t.type === 'Penalty' && t.base < 0));
+
+    // ============ the module ============
+    section('progress module');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-progress');
+    const makeState  = (key, opts) => createState({ url: profiles.stateURL(profile.id, key), user: USER, ...opts });
+    const makeEvents = (key, opts) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER, ...opts });
+
+    const bus = createBus();
+    const mod = await profiles.addModule(profile.id, 'progress');
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load();
+
+    const host = document.getElementById('host');
+    const inst = mountModule('progress', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id, makeState, makeEvents,
+    });
+    inst.init();
+    await sleep(200);
+
+    const txt = (sel) => host.querySelector(sel)?.textContent?.trim();
+    const balance = () => Number(txt('[data-balance]'));
+    const tabBtn = (name) => [...host.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === name);
+    const items = () => [...host.querySelectorAll('[data-task]')];
+    const buys = () => [...host.querySelectorAll('[data-buy]')];
+
+    check('starts at zero', balance() === 0, txt('[data-balance]'));
+    check('task catalog rendered from data', items().length === DEFAULT_TASKS.length, String(items().length));
+    check('hours bar starts empty', txt('[data-hours]') === '0h / 25h', txt('[data-hours]'));
+
+    // log a plain task
+    const dishes = DEFAULT_TASKS.findIndex((t) => t.task === 'Do the dishes');
+    items()[dishes].click();
+    await sleep(250);
+    check('logging a task moves the balance', balance() === 15, txt('[data-balance]'));
+    check('the log confirms what was earned', /\+15/.test(txt('[data-flash]') || ''), txt('[data-flash]'));
+
+    // the x2 multiplier, only on double-eligible tasks
+    const photo = DEFAULT_TASKS.findIndex((t) => t.task === 'Scan & tag a photo');
+    host.querySelector('[data-double]').checked = true;
+    host.querySelector('[data-double]').dispatchEvent(new Event('change'));
+    items()[photo].click();
+    await sleep(250);
+    check('x2 doubles a double-eligible task', balance() === 17, txt('[data-balance]'));
+    check('the x2 toggle resets after use', !host.querySelector('[data-double]').checked);
+
+    // x2 must NOT apply to an ineligible task
+    host.querySelector('[data-double]').checked = true;
+    host.querySelector('[data-double]').dispatchEvent(new Event('change'));
+    items()[dishes].click();
+    await sleep(250);
+    check('x2 is ignored on a non-eligible task', balance() === 32, txt('[data-balance]'));
+
+    // a penalty subtracts
+    const penalty = DEFAULT_TASKS.findIndex((t) => t.type === 'Penalty');
+    items()[penalty].click();
+    await sleep(250);
+    check('a penalty subtracts', balance() === -8, txt('[data-balance]'));
+
+    // earn it back so we can shop
+    for (let i = 0; i < 4; i++) { items()[DEFAULT_TASKS.findIndex((t) => t.task === 'Mow the lawn')].click(); await sleep(200); }
+    check('earning recovers the balance', balance() === 232, txt('[data-balance]'));
+    check('earned and spent are reported apart', txt('[data-earned]') === '232' && txt('[data-spent]') === '0',
+      `${txt('[data-earned]')}/${txt('[data-spent]')}`);
+
+    // ---- rewards: confirm-to-buy ----
+    section('rewards');
+    tabBtn('rewards').click();
+    await sleep(120);
+    check('reward store rendered from data', buys().length === DEFAULT_REWARDS.length, String(buys().length));
+    const gameIdx = DEFAULT_REWARDS.findIndex((r) => r.cost === 800);
+    check('unaffordable rewards are disabled', buys()[gameIdx].disabled);
+
+    const treat = DEFAULT_REWARDS.findIndex((r) => r.cost === 50);
+    const beforeBuy = balance();
+    buys()[treat].click();                      // first tap = arm only
+    await sleep(150);
+    check('one tap does NOT spend', balance() === beforeBuy, txt('[data-balance]'));
+    check('it asks for confirmation', /confirm/i.test(txt('[data-flash]') || ''), txt('[data-flash]'));
+    buys()[treat].click();                      // second tap = buy
+    await sleep(300);
+    check('confirming spends the points', balance() === beforeBuy - 50, txt('[data-balance]'));
+    check('spending is reported separately from earning',
+      txt('[data-spent]') === '50' && txt('[data-earned]') === '232', `${txt('[data-earned]')}/${txt('[data-spent]')}`);
+
+    // ---- the log ----
+    section('log');
+    tabBtn('log').click();
+    await sleep(150);
+    const rows = host.querySelectorAll('.p-log tbody tr');
+    check('every entry is listed', rows.length === 9, String(rows.length));   // 4 tasks + 4 mows + 1 purchase
+    check('the purchase shows as negative', host.querySelector('.p-log .p-neg')?.textContent.trim() === '-50',
+      host.querySelector('.p-log .p-neg')?.textContent);
+
+    // ---- THE SEAM: a different module's points show up here ----
+    section('cross-module: a sprint feeds the dashboard');
+    const clock = fakeClock(weekStart(Date.now()) + 36 * 3600 * 1000);   // mid-week, this week
+    const smod = await profiles.addModule(profile.id, 'sprint');
+    const sstate = createState({ url: profiles.stateURL(profile.id, smod.id), user: USER });
+    await sstate.load();
+    const sinst = mountModule('sprint', {
+      mount: document.getElementById('sprintHost'), bus, state: sstate,
+      events: createEvents({ url: profiles.eventsURL(profile.id, smod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents,
+      now: clock.now, setTicker: clock.setTicker, clearTicker: clock.clearTicker, speak: () => {},
+    });
+    sinst.init();
+    await sleep(150);
+
+    const beforeSprint = balance();
+    bus.publish('sprint/control', 'start');
+    await sleep(50);
+    clock.advance(25 * MIN);                     // finish the sprint
+    await sleep(500);                            // award + the dashboard's live-nudge refresh
+    check('the dashboard picked up the sprint WITHOUT a manual reload',
+      balance() === beforeSprint + 25, `${beforeSprint} -> ${balance()}`);
+
+    tabBtn('log').click();
+    await sleep(150);
+    check('the sprint entry is attributed to its own source',
+      [...host.querySelectorAll('.p-log .p-src')].some((e) => e.textContent.trim() === 'sprint'),
+      [...host.querySelectorAll('.p-log .p-src')].map((e) => e.textContent).join(','));
+
+    check('the sprint logged school MINUTES for the hours engine',
+      sumMinutes((await (async () => { const l = createPointsLedger({ makeEvents }); await l.load(); const e = l.events(); l.destroy(); return e; })()), weekStart(Date.now())) === 25);
+    check('the hours bar moved', txt('[data-hours]') === '0h 25m / 25h', txt('[data-hours]'));
+    check('25 minutes is still the base band', txt('[data-band]') === 'base', txt('[data-band]'));
+    check('no unpaid top-up is claimed in the base band', txt('[data-topup]') === '', txt('[data-topup]'));
+
+    // ---- the dashboard must never append ----
+    section('the dashboard only reads');
+    const audit = createPointsLedger({ makeEvents });
+    await audit.load();
+    const countBefore = audit.events().length;
+    bus.publish(POINTS_TOPIC, { amount: 999, mult: 1, source: 'spoof', value: 999 });
+    await sleep(400);
+    await audit.load();
+    check('a bus nudge alone never creates a record (no double-count)',
+      audit.events().length === countBefore, `${countBefore} -> ${audit.events().length}`);
+    check('the balance is unchanged by the bare nudge', balance() === beforeSprint + 25, txt('[data-balance]'));
+    check('totals agree with the raw stream',
+      balance() === sumEarned(audit.events()) - sumSpent(audit.events()),
+      `${balance()} vs ${sumEarned(audit.events())}-${sumSpent(audit.events())}`);
+    audit.destroy();
+
+    // ---- bus-driven logging ----
+    section('bus seam');
+    const beforeBus = balance();
+    bus.publish('progress/log', 'Do the dishes');
+    await sleep(400);
+    check('anything on the bus can log a task by name', balance() === beforeBus + 15, `${beforeBus} -> ${balance()}`);
+
+    sinst.destroy();
+    inst.destroy();
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

@@ -297,6 +297,38 @@ source writes the SAME record. The decisions:
 First source: the **Sprint** focus timer (`docs/modules/sprint.md`). Next consumer: a points/quest
 dashboard reading the same stream.
 
+## Points ↔ Google Sheets: the ledger is the record, the Sheet is the mirror (2026-08-17)
+Mike wants a household points sheet attached to the site — a default layout anyone can copy, the
+parent owning the file and sharing it with the student, and Nimrod able to reach it directly.
+The decisions:
+
+- **Sync is ONE-WAY, out.** Nimrod's append-only `points` stream stays the record; it pushes rows
+  into the Sheet. A spreadsheet is a great place to chart, project and re-derive the numbers (and
+  a genuinely good first algebra lesson) and a bad place to keep score — offline it's unreachable,
+  and the person earning the points could edit their own total. Two-way sync buys conflicts and
+  duplicate rows for a convenience the mirror already covers.
+- **The Sheet's `Ledger` tab is machine-owned; every other tab is the family's.** Rows are keyed
+  by the server's `Event ID` and written once, so a re-run can never duplicate or renumber
+  history, and hand-written formulas/charts on the other tabs survive every sync.
+- **Narrowest scope: `drive.file`** on the owner's own Google account — access only to files they
+  explicitly pick, not the whole Drive, and easy to revoke. Not a service account with blanket
+  access.
+- **Blocked on Google OAuth**, which was already the top unbuilt feature; this is an additive
+  slice on the same `identity.py` seam. Layout spec (usable by hand today) + sync design:
+  `docs/points-sheet.md`.
+
+## Two point engines, never double-counted (2026-08-17)
+The household model runs discrete TASKS and school HOURS as separate engines "so nothing
+double-counts" — and school hours pay ~1 point per focused minute, which is exactly what the
+sprint timer pays. Resolution:
+
+- A finished sprint pays the **base** rate **once**, immediately (a 12-year-old needs the payoff
+  now, not at week's end), and records its `minutes` on the event.
+- The weekly banding is then a **TOP-UP on the stretch/overtime portion only** — the extra 0.5x
+  past `X*Y` hours and 1.0x past the target. It must never re-pay the base.
+- Until that weekly job is built, the dashboard **shows the top-up as unpaid** rather than
+  implying it was paid. Displaying an owed bonus is honest; silently adding it is not.
+
 ## Cici ↔ the scheduler & media (2026-08-14, scoped — ideas, not built)
 How the local AI companion (Cici) interacts with the state-machine engine + media. None of the Cici-AI
 layer is built yet (it's the "brain on local Ollama / cloud-API" plan in the private repo's CONTEXT), but
