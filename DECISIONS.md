@@ -265,6 +265,38 @@ today its states/transitions are JSON.
 - **Still true:** non-blocking, skippable, never requires input; photos-#1 and the calm dayparts always
   dominate low-energy times; short segments (fatigue).
 
+## Points ledger — one shared record for every point source (2026-08-17, built + validated)
+A points game (finish a work sprint, answer a question right, do a chore) only works if every
+source writes the SAME record. The decisions:
+
+- **The record is a PROFILE-SCOPED append-only stream** named `points`, not per-module storage.
+  `ctx.state`/`ctx.events` are keyed per *(user, profile, module INSTANCE)*, so one module's points
+  would be invisible to a dashboard instance. A well-known shared stream key solves it with **no
+  server change** — the API's stream key is an arbitrary string — and append-only means points
+  can't be quietly edited away. Modules reach it through `ctx.makeEvents('points')`, so a module
+  still never builds a storage URL itself.
+- **The bus topic `points/award` is a live NUDGE, not the record.** It exists so a mounted
+  dashboard updates instantly instead of at its next poll.
+- **Only the SOURCE appends.** A consumer that both listened on the bus and appended would
+  double-count. Consumers read the stream for truth and the bus for immediacy; `award()` does both
+  halves exactly once.
+- **Event shape:** kind `points`, data `{ amount, mult, source, tags, note }` — base and multiplier
+  stored separately so both stay visible, `source` so totals can be grouped by where they came
+  from. The server stamps `id` and `created_at`; the client clock is never the record.
+- **Totals are DERIVED, never cached.** Reading them from the immutable log can't drift; a stored
+  running total can, and it loses updates under last-write-wins. Bound: the derived total covers
+  the most-recent `limit` events (default 1000). When that's outgrown the fix is a **server-side
+  rollup endpoint**, not a client-side cached total.
+- **Earned means earned.** A finished work block pays; a skipped one pays nothing, and a sprint
+  whose deadline passed while nobody was watching pays only inside a grace window. Paying for work
+  that didn't happen would make the whole ledger worthless.
+- **A tool's visual identity is a THEME, not module code.** A learning-tool style spec (teal +
+  amber) ships as the `forge` theme, so those modules stay content-as-meaning and re-skin with
+  every other theme for free.
+
+First source: the **Sprint** focus timer (`docs/modules/sprint.md`). Next consumer: a points/quest
+dashboard reading the same stream.
+
 ## Cici ↔ the scheduler & media (2026-08-14, scoped — ideas, not built)
 How the local AI companion (Cici) interacts with the state-machine engine + media. None of the Cici-AI
 layer is built yet (it's the "brain on local Ollama / cloud-API" plan in the private repo's CONTEXT), but

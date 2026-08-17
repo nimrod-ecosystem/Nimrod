@@ -21,6 +21,7 @@ import './modules/interstitials.js'; // registers 'interstitials'
 import './modules/personal.js';   // registers 'personal' (Personal videos — recorded)
 import './modules/educational.js'; // registers 'educational' (generated learning segments)
 import './modules/director.js';   // registers 'director' (the content director / Lineup)
+import './modules/sprint.js';     // registers 'sprint' (focus timer -> points ledger)
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'
 
@@ -160,8 +161,8 @@ async function openProfile(pid) {
       mount: body, bus, state, events, user, profileId: pid,
       rootBus: bus,
       instanceId: mod.id,
-      makeState: (key) => createState({ url: profiles.stateURL(pid, key), user }),
-      makeEvents: (key) => createEvents({ url: profiles.eventsURL(pid, key), user }),
+      makeState: (key, opts) => createState({ url: profiles.stateURL(pid, key), user, ...opts }),
+      makeEvents: (key, opts) => createEvents({ url: profiles.eventsURL(pid, key), user, ...opts }),
     });
 
     head.querySelector('.mtitle').textContent = instance.manifest.title;

@@ -134,6 +134,34 @@ Now `https://bedside.nimrodecosystem.com` serves the app, cached + HTTPS.
   (Her *media* only loads on her device — the agent is on her `localhost` by design; another device would
   need the agent reachable over Tailscale/LAN, or the future sharing model. Config/state syncs anywhere.)
 
+## Part F — Google login (OAuth) — the "regular user" path
+
+The device key is the unattended-kiosk fallback; **Google login is how a normal user signs in.** With
+it, someone opens the site → **Sign in with Google** → they're in, with a default profile. One-time setup:
+
+1. 👉 **Google Cloud Console** → create/select a project (the dedicated project account that anchors
+   YouTube/Drive is ideal) → **APIs & Services → OAuth consent screen**: External, app name "Nimrod",
+   your support email, scopes `openid` + `email` + `profile`. In **Testing** mode add yourself (and
+   Christine's account) as **test users** — that's enough for a handful of people; "publish" later for
+   the public.
+2. 👉 **Credentials → Create credentials → OAuth client ID → Web application.** Under **Authorized
+   redirect URIs** add exactly: `https://nimrod.onrender.com/auth/callback` (add the `bedside.` one too
+   if/when you use the custom domain). Copy the **Client ID** and **Client secret**.
+3. 👉 In **Render → Environment**, set (all secret):
+   - `GOOGLE_CLIENT_ID` = the client id
+   - `GOOGLE_CLIENT_SECRET` = the client secret
+   - `SESSION_SECRET` = a long random string (signs the login cookie)
+   Save → it redeploys.
+4. 👉 Open `https://nimrod.onrender.com` → it redirects to the kiosk → **Sign in with Google** → you land
+   on a dashboard with a default profile. The session lasts 30 days, so a bedside device stays signed in.
+
+Notes: the server reads HTTPS correctly behind Render via `--proxy-headers` (in `render.yaml`), so the
+callback URL is built as `https://…`. If the callback ever mismatches, set `OAUTH_REDIRECT_URI` in Render
+to the exact URL. The device-key path still works as the unattended fallback; both satisfy `/api/me`.
+Validated: 19 auth-logic checks (`test_identity.py`, incl. session auth) + a prod HTTP smoke (`/api/me`
+401→200, `/` redirect, `/auth/login` 503 until configured). The live Google round-trip is verified here,
+in Part F.
+
 ## Cost + upkeep
 
 - **Neon** free · **Cloudflare** free · **Render Starter ~$7/mo** = **~$7/mo total**, and that ONE server

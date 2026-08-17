@@ -14,10 +14,12 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
-from fastapi import Depends, FastAPI, HTTPException
+from authlib.integrations.starlette_client import OAuth
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from starlette.middleware.sessions import SessionMiddleware
 
 from db import PostgresStore, SQLiteStore
 from identity import current_user
@@ -34,6 +36,31 @@ DB_PATH = os.environ.get("NIMROD_DB", str(Path(__file__).resolve().parent / "nim
 DATABASE_URL = os.environ.get("DATABASE_URL")
 store = PostgresStore(DATABASE_URL) if DATABASE_URL else SQLiteStore(DB_PATH)
 app = FastAPI(title="Nimrod platform server", version="0.2.0")
+
+# --- sessions + Google login (OAuth) ---------------------------------------
+# A signed-cookie session carries the logged-in user (and holds the OAuth CSRF
+# state during the flow). SESSION_SECRET must be a long random string in prod.
+_PROD = os.environ.get("NIMROD_ENV", "dev") == "prod"
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.environ.get("SESSION_SECRET", "dev-only-insecure-change-me"),
+    same_site="lax",          # survives the round-trip back from Google
+    https_only=_PROD,
+    max_age=60 * 60 * 24 * 30,  # 30 days — a bedside kiosk stays signed in
+)
+
+# Google is registered only when its credentials are present, so the app still
+# boots (and dev/device-key auth still works) with OAuth unconfigured.
+oauth = OAuth()
+GOOGLE_OK = bool(os.environ.get("GOOGLE_CLIENT_ID") and os.environ.get("GOOGLE_CLIENT_SECRET"))
+if GOOGLE_OK:
+    oauth.register(
+        name="google",
+        client_id=os.environ["GOOGLE_CLIENT_ID"],
+        client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
 
 
 class ProfileCreate(BaseModel):
@@ -190,6 +217,45 @@ def append_event(pid: str, stream: str, body: EventPost, user: str = Depends(cur
 
 
 # Serve the client app from the same origin. Registered LAST so /api/* wins.
+# --------------------------------------------------------------- auth (login)
+# Who am I? The client checks this on boot: 200 -> signed in (mount the dashboard),
+# 401 -> show "Sign in with Google". A device key or an OAuth session both satisfy it.
+@app.get("/api/me")
+def api_me(request: Request, user: str = Depends(current_user)):
+    return {"user": user, "email": request.session.get("email"), "google": GOOGLE_OK}
+
+
+@app.get("/auth/login")
+async def auth_login(request: Request):
+    if not GOOGLE_OK:
+        raise HTTPException(status_code=503, detail="Google login is not configured")
+    # OAUTH_REDIRECT_URI is an escape hatch if the proxy-built URL is ever wrong;
+    # otherwise build it from the request (needs uvicorn --proxy-headers behind TLS).
+    redirect_uri = os.environ.get("OAUTH_REDIRECT_URI") or str(request.url_for("auth_callback"))
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@app.get("/auth/callback", name="auth_callback")
+async def auth_callback(request: Request):
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except Exception:
+        return RedirectResponse(url="/?login=failed")
+    info = token.get("userinfo") or {}
+    sub = info.get("sub")
+    if not sub:
+        return RedirectResponse(url="/?login=failed")
+    request.session["user"] = f"google:{sub}"   # stable per-Google-account id
+    request.session["email"] = info.get("email")
+    return RedirectResponse(url="/")
+
+
+@app.get("/auth/logout")
+def auth_logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/")
+
+
 # The PRODUCT surface is the kiosk. Send the bare URL there instead of index.html (the
 # dev harness, which can't run in prod). kiosk.html auto-seeds a default profile.
 @app.get("/")

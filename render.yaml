@@ -12,15 +12,23 @@ services:
     plan: starter                       # always-on (~$7/mo). "free" sleeps after 15 min idle.
     rootDir: web/server                 # the FastAPI app + requirements.txt live here
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT   # Render supplies $PORT
-    healthCheckPath: /                  # StaticFiles serves the client at / -> 200
+    # --proxy-headers/--forwarded-allow-ips so the app sees HTTPS (Render terminates
+    # TLS) and builds the correct OAuth callback URL.
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /kiosk.html        # static, no auth, 200 (/ now 302-redirects to it)
     autoDeploy: true                    # redeploy on push to the tracked branch
     envVars:
       - key: NIMROD_ENV
-        value: prod                     # fail-closed auth: only a valid X-Device-Key is accepted
+        value: prod                     # fail-closed auth: only a valid session or device key is accepted
       - key: PYTHON_VERSION
         value: "3.12.7"
       - key: DATABASE_URL               # Neon Postgres connection string
         sync: false                     # secret — set in the Render dashboard, not in git
-      - key: DEVICE_KEYS                # "christine:<secret>,mike:<secret>,..."
+      - key: DEVICE_KEYS                # "christine:<secret>,..." (unattended-kiosk fallback)
         sync: false                     # secret — set in the Render dashboard, not in git
+      - key: SESSION_SECRET             # long random string — signs the login cookie
+        sync: false
+      - key: GOOGLE_CLIENT_ID           # from Google Cloud Console (OAuth 2.0 client)
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

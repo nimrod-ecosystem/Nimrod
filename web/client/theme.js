@@ -114,6 +114,29 @@ export const THEMES = {
       '--rosy-deep': '#a85f42',
     },
   },
+
+  // Teal + amber, the look Oscar's game contract specifies for his learning tools.
+  // It lives here rather than in his modules so the games stay content-as-meaning:
+  // any profile can wear it, and his modules re-skin with every other theme for free.
+  forge: {
+    label: 'Forge (teal + amber)',
+    vars: {
+      ...BASE,
+      '--bg': '#f2f6f6',
+      '--ink': '#0d2f34',
+      '--ink-soft': '#274a50',
+      '--muted': '#5c777c',
+      '--line': '#cfe0e1',
+      '--card': '#ffffff',
+      '--cream-soft': '#e8f1f1',
+      '--darkgreen': '#0d2f34',
+      '--moss': '#14636A',      // primary button / accent -> teal
+      '--midnight': '#B5651D',  // links / secondary accent -> amber
+      '--beige': '#f2f6f6',
+      '--rosy': '#d9a05b',
+      '--rosy-deep': '#8c4a12',
+    },
+  },
 };
 
 export const DEFAULT_THEME = 'default';

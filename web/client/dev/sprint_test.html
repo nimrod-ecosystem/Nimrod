@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>sprint timer + points ledger — integration test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#host2{width:360px;margin-top:12px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:12px}
+</style>
+</head>
+<body>
+<h1>sprint timer + points ledger — integration test</h1>
+<p>Mounts the REAL <code>sprint</code> module against the live dev server with an injected
+clock (no real waiting, no audio). Proves the phase machine, the persisted deadline,
+resume-after-remount, and — the point of the slice — that a finished sprint lands in the
+shared profile-scoped <code>points</code> stream where a dashboard or any other module can read it.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="host2"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import {
+  POINTS_STREAM, POINTS_TOPIC, POINTS_KIND,
+  pointsValue, sumPoints, sumBySource, dayKey, sumPointsOn, createPointsLedger,
+} from '../points.js';
+import { formatClock, phaseMs, sprintPoints, nextPhase, DEFAULTS } from '../modules/sprint.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'sprint-test-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(title) {
+  const h = document.createElement('h2'); h.textContent = title; out.append(h);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---- an injectable clock + ticker: time only moves when the test moves it ----
+function fakeClock(start = 1_700_000_000_000) {
+  let t = start;
+  const tickers = new Map();
+  let id = 0;
+  return {
+    now: () => t,
+    setTicker: (fn) => { const k = ++id; tickers.set(k, fn); return k; },
+    clearTicker: (k) => tickers.delete(k),
+    // advance wall time, then run the tickers once (the module polls, it doesn't schedule)
+    advance(ms) { t += ms; for (const fn of [...tickers.values()]) fn(); },
+    set(ms) { t = ms; },
+  };
+}
+
+const MIN = 60000;
+
+(async () => {
+  try {
+    // ============ pure helpers (no server needed) ============
+    section('pure helpers');
+    check('formatClock 25 min', formatClock(25 * MIN) === '25:00', formatClock(25 * MIN));
+    check('formatClock rounds up partial second', formatClock(1500) === '00:02', formatClock(1500));
+    check('formatClock clamps negative', formatClock(-5000) === '00:00', formatClock(-5000));
+    check('phaseMs work default', phaseMs('work', {}) === 25 * MIN);
+    check('phaseMs honours config', phaseMs('break', { breakMin: 7 }) === 7 * MIN);
+    check('phaseMs idle is 0', phaseMs('idle', {}) === 0);
+    check('sprintPoints = minutes x per-minute', sprintPoints({ workMin: 25, pointsPerMin: 1 }) === 25);
+    check('sprintPoints scales', sprintPoints({ workMin: 20, pointsPerMin: 2 }) === 40);
+    check('sprintPoints falls back to defaults', sprintPoints({}) === DEFAULTS.workMin);
+    check('nextPhase work -> break', JSON.stringify(nextPhase('work', 0, 4)) === '{"phase":"break","cycle":1}');
+    check('nextPhase 4th work -> long break', JSON.stringify(nextPhase('work', 3, 4)) === '{"phase":"long","cycle":4}');
+    check('nextPhase break -> work, cycle held', JSON.stringify(nextPhase('break', 2, 4)) === '{"phase":"work","cycle":2}');
+
+    section('points math');
+    const ev = (amount, mult, source, at) => ({ kind: POINTS_KIND, created_at: at, data: { amount, mult, source } });
+    check('pointsValue applies multiplier', pointsValue(ev(25, 2, 'sprint')) === 50);
+    check('pointsValue defaults mult to 1', pointsValue({ kind: POINTS_KIND, data: { amount: 25 } }) === 25);
+    check('pointsValue rounds', pointsValue(ev(25, 1.5, 'sprint')) === 38, String(pointsValue(ev(25, 1.5, 'sprint'))));
+    check('pointsValue ignores junk', pointsValue({ kind: POINTS_KIND, data: { amount: 'x' } }) === 0);
+    const feed = [ev(25, 1, 'sprint'), ev(10, 2, 'wordforge'), { kind: 'other', data: { amount: 999 } }];
+    check('sumPoints counts only points events', sumPoints(feed) === 45, String(sumPoints(feed)));
+    check('sumBySource groups', JSON.stringify(sumBySource(feed)) === '{"sprint":25,"wordforge":20}', JSON.stringify(sumBySource(feed)));
+    const today = new Date(); today.setHours(12, 0, 0, 0);
+    const yday = new Date(today.getTime() - 24 * 3600 * 1000);
+    const dated = [ev(25, 1, 'sprint', today.toISOString()), ev(30, 1, 'sprint', yday.toISOString())];
+    check('sumPointsOn isolates a local day', sumPointsOn(dated, dayKey(today.toISOString())) === 25);
+
+    // ============ server-backed: the shared ledger ============
+    section('shared points ledger (profile-scoped stream)');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-sprint');
+    const makeState  = (key, opts) => createState({ url: profiles.stateURL(profile.id, key), user: USER, ...opts });
+    const makeEvents = (key, opts) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER, ...opts });
+
+    const bus = createBus();
+    const nudges = [];
+    bus.subscribe(POINTS_TOPIC, (p) => nudges.push(p));
+
+    const led = createPointsLedger({ makeEvents, bus });
+    await led.load();
+    check('ledger starts empty', led.total() === 0);
+    await led.award({ amount: 10, source: 'probe', tags: ['t'], note: 'n' });
+    check('award appended to the stream', led.total() === 10, String(led.total()));
+    check('award published the live nudge', nudges.length === 1 && nudges[0].value === 10);
+    await led.award({ amount: 0, source: 'probe' });
+    check('zero-point award is not recorded', led.total() === 10 && nudges.length === 1);
+    // The stream is SHARED: a second, independent handle sees the same record.
+    const led2 = createPointsLedger({ makeEvents });
+    await led2.load();
+    check('a separate handle reads the same shared stream', led2.total() === 10, String(led2.total()));
+    led2.destroy();
+
+    // ============ server-backed: the module ============
+    section('sprint module');
+    const clock = fakeClock();
+    const spoken = [];
+    const mod = await profiles.addModule(profile.id, 'sprint');
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load();
+
+    const done = [];
+    bus.subscribe('sprint/done', (p) => done.push(p));
+
+    const host = document.getElementById('host');
+    const inst = mountModule('sprint', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      makeState, makeEvents,
+      now: clock.now, setTicker: clock.setTicker, clearTicker: clock.clearTicker,
+      speak: (t) => spoken.push(t),
+    });
+    inst.init();
+    await sleep(60);
+
+    const clockText = () => host.querySelector('[data-clock]').textContent;
+    const phaseText = () => host.querySelector('[data-plabel]').textContent;
+    const toggleText = () => host.querySelector('[data-toggle]').textContent;
+
+    check('idle shows the work duration', clockText() === '25:00', clockText());
+    check('idle phase label', phaseText() === 'Ready', phaseText());
+
+    // start via the BUS (not the buttons) — proves the input seam
+    bus.publish('sprint/control', 'start');
+    await sleep(20);
+    check('bus start -> Sprint phase', phaseText() === 'Sprint', phaseText());
+    check('start announced through the voice seam', spoken.length === 1 && /Sprint started/.test(spoken[0]), spoken[0]);
+    check('toggle button now reads Pause', toggleText() === 'Pause', toggleText());
+
+    clock.advance(10 * MIN);
+    check('countdown ticks down', clockText() === '15:00', clockText());
+
+    bus.publish('sprint/control', 'pause');
+    await sleep(20);
+    check('pause holds the remainder', clockText() === '15:00', clockText());
+    check('pause button reads Resume', toggleText() === 'Resume', toggleText());
+    clock.advance(5 * MIN);
+    check('paused time does not drain', clockText() === '15:00', clockText());
+
+    bus.publish('sprint/control', 'start');
+    await sleep(20);
+    clock.advance(14 * MIN);
+    check('resume continues from the remainder', clockText() === '01:00', clockText());
+
+    const before = led.total();
+    clock.advance(1 * MIN);          // deadline reached -> complete()
+    await sleep(120);
+    await led.load();
+    check('finished sprint awarded points', led.total() === before + 25, `${before} -> ${led.total()}`);
+    check('sprint/done emitted with the points', done.some((d) => d.phase === 'work' && d.reason === 'ended' && d.points === 25));
+    check('auto-advances into the break', phaseText() === 'Break', phaseText());
+    check('break length loaded', clockText() === '05:00', clockText());
+    check('completion announced', spoken.some((t) => /Sprint complete\. 25 points/.test(t)), spoken.join(' | '));
+
+    const awarded = led.events().filter((e) => e.data.source === 'sprint');
+    check('ledger record carries source+tags', awarded.length === 1 && awarded[0].data.source === 'sprint'
+      && awarded[0].data.tags.includes('sprint'), JSON.stringify(awarded[0] && awarded[0].data));
+    // THE POINT OF THE SLICE: a totally independent reader (stand-in for the future
+    // dashboard) sees the module's points, because they live on the shared stream —
+    // not on the sprint instance's own private event stream.
+    const reader = createEvents({ url: profiles.eventsURL(profile.id, POINTS_STREAM), user: USER, limit: 500 });
+    await reader.load();
+    check('another module can read the sprint points off the shared stream',
+      sumBySource(reader.get().events).sprint === 25, JSON.stringify(sumBySource(reader.get().events)));
+    const priv = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await priv.load();
+    check('nothing was double-written to the instance stream', priv.get().total === 0, String(priv.get().total));
+    reader.destroy(); priv.destroy();
+
+    // skipping must NOT pay
+    const beforeSkip = led.total();
+    bus.publish('sprint/control', 'skip');       // skip the break -> back to work
+    await sleep(20);
+    check('skip advances break -> Sprint', phaseText() === 'Sprint', phaseText());
+    bus.publish('sprint/control', 'skip');       // skip the WORK sprint
+    await sleep(120);
+    await led.load();
+    check('skipped sprint earns nothing', led.total() === beforeSkip, `${beforeSkip} -> ${led.total()}`);
+    check('skip emits sprint/done with reason=skipped', done.some((d) => d.reason === 'skipped' && d.points === 0));
+
+    // multiplier
+    bus.publish('sprint/control', 'reset');
+    await sleep(20);
+    check('reset returns to Ready', phaseText() === 'Ready', phaseText());
+    const sel = host.querySelector('[data-mult]');
+    sel.value = '2';
+    sel.dispatchEvent(new Event('change'));
+    await sleep(20);
+    check('multiplier shows the adjusted worth', host.querySelector('[data-worth]').textContent === 'worth +50',
+      host.querySelector('[data-worth]').textContent);
+    const beforeMult = led.total();
+    bus.publish('sprint/control', 'start');
+    await sleep(20);
+    clock.advance(25 * MIN);
+    await sleep(120);
+    await led.load();
+    check('x2 sprint banks double', led.total() === beforeMult + 50, `${beforeMult} -> ${led.total()}`);
+
+    // ---- resume after a remount (the persisted deadline) ----
+    section('resume after remount');
+    bus.publish('sprint/control', 'reset');
+    await sleep(20);
+    sel.value = '1'; sel.dispatchEvent(new Event('change'));
+    bus.publish('sprint/control', 'start');
+    await sleep(20);
+    clock.advance(10 * MIN);
+    await state.flush();
+    inst.destroy();
+
+    // remount into a second host, same profile+instance, clock advanced but NOT past the end
+    const state2 = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events2 = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state2.load();
+    const host2 = document.getElementById('host2');
+    const inst2 = mountModule('sprint', {
+      mount: host2, bus, state: state2, events: events2, user: USER, profileId: profile.id,
+      makeState, makeEvents,
+      now: clock.now, setTicker: clock.setTicker, clearTicker: clock.clearTicker,
+      speak: (t) => spoken.push(t),
+    });
+    inst2.init();
+    await sleep(80);
+    const clock2 = () => host2.querySelector('[data-clock]').textContent;
+    check('remount resumes mid-sprint, not from zero', clock2() === '15:00', clock2());
+    check('remount keeps the Sprint phase', host2.querySelector('[data-plabel]').textContent === 'Sprint');
+
+    // A deadline that passed INSIDE the grace window still pays. UNMOUNT FIRST, then
+    // move time — that is the real scenario (nobody watching), and it keeps the live
+    // instance's ticker from completing the sprint before the remount reconciles it.
+    await state2.flush();
+    inst2.destroy();
+    const beforeGrace = led.total();
+    clock.advance(15 * MIN + 5 * MIN);        // 5 min overdue, grace is 60
+    const state3 = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    await state3.load();
+    const inst3 = mountModule('sprint', {
+      mount: host2, bus, state: state3, events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents,
+      now: clock.now, setTicker: clock.setTicker, clearTicker: clock.clearTicker, speak: (t) => spoken.push(t),
+    });
+    inst3.init();
+    await sleep(150);
+    await led.load();
+    check('sprint that ended inside the grace window still pays', led.total() === beforeGrace + 25, `${beforeGrace} -> ${led.total()}`);
+
+    // a deadline older than the grace window expires unpaid
+    bus.publish('sprint/control', 'reset');
+    await sleep(20);
+    bus.publish('sprint/control', 'start');
+    await sleep(20);
+    await state3.flush();
+    const beforeStale = led.total();
+    inst3.destroy();                          // unmount first, then let hours pass
+    clock.advance(25 * MIN + 120 * MIN);      // 2 h overdue, grace is 60 min
+    const state4 = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    await state4.load();
+    const inst4 = mountModule('sprint', {
+      mount: host2, bus, state: state4, events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents,
+      now: clock.now, setTicker: clock.setTicker, clearTicker: clock.clearTicker, speak: (t) => spoken.push(t),
+    });
+    inst4.init();
+    await sleep(150);
+    await led.load();
+    check('stale sprint expires with no points', led.total() === beforeStale, `${beforeStale} -> ${led.total()}`);
+    check('expiry is shown, not silent', /expired/i.test(host2.querySelector('[data-notice]').textContent),
+      host2.querySelector('[data-notice]').textContent);
+
+    // ---- cleanup ----
+    inst4.destroy();
+    led.destroy();
+    check('destroy stopped the ticker (no throw on later time)', (() => { try { clock.advance(60 * MIN); return true; } catch { return false; } })());
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String(err && err.stack || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

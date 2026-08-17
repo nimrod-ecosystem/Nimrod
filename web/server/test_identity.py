@@ -28,18 +28,19 @@ def check(name: str, cond: bool, detail: str = ""):
 
 
 class FakeReq:
-    def __init__(self, headers=None, query=None):
+    def __init__(self, headers=None, query=None, session=None):
         self.headers = dict(headers or {})
         self.query_params = dict(query or {})
+        self.session = dict(session or {})   # SessionMiddleware provides this in the real app
 
 
-def user_of(headers=None, query=None):
-    return current_user(FakeReq(headers, query))
+def user_of(headers=None, query=None, session=None):
+    return current_user(FakeReq(headers, query, session))
 
 
-def raises_401(headers=None, query=None):
+def raises_401(headers=None, query=None, session=None):
     try:
-        current_user(FakeReq(headers, query))
+        current_user(FakeReq(headers, query, session))
         return False
     except HTTPException as e:
         return e.status_code == 401
@@ -78,6 +79,16 @@ def main():
     check("prod: X-Dev-User is ignored (override disabled) -> 401", raises_401({"X-Dev-User": "alice"}))
     check("prod: ?user= is ignored -> 401", raises_401(query={"user": "alice"}))
     check("prod: one user's key never resolves to another user", user_of({"X-Device-Key": "def"}) != "christine")
+
+    # --- OAuth session: a signed-in user, no device key needed ---------------
+    check("prod: a login session resolves to its user", user_of(session={"user": "google:123"}) == "google:123")
+    check("prod: session works with no key present", user_of(session={"user": "google:abc"}) == "google:abc")
+    check("prod: an empty session still 401s", raises_401(session={}))
+    check("prod: a device key takes precedence over the session",
+          user_of({"X-Device-Key": "abc"}, session={"user": "google:zzz"}) == "christine")
+    setenv()  # dev
+    check("dev: a login session resolves to its user", user_of(session={"user": "google:9"}) == "google:9")
+    setenv(NIMROD_ENV="prod", DEVICE_KEYS="christine:abc,mike:def")
 
     # --- prod, no DEVICE_KEYS: deny everything (fail closed) ------------------
     setenv(NIMROD_ENV="prod")
