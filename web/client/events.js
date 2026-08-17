@@ -8,7 +8,12 @@
 
 import { authHeaders } from './auth.js';
 
-export function createEvents({ url, user, pollMs = 1500 }) {
+// `limit` (optional) caps how many of the most-recent events the server returns
+// (the API's own ?limit param; server default 50). A per-instance log is happy with
+// the default; a SHARED ledger stream (see points.js) wants a bigger window so its
+// derived totals cover more history.
+export function createEvents({ url, user, pollMs = 1500, limit = null }) {
+  const listURL = limit ? `${url}${url.includes('?') ? '&' : '?'}limit=${limit}` : url;
   let cache = { events: [], total: 0 };
   let loaded = false;
   let pollTimer = null;
@@ -21,7 +26,7 @@ export function createEvents({ url, user, pollMs = 1500 }) {
   }
 
   async function refresh() {
-    const res = await fetch(url, { headers: authHeaders(user) });
+    const res = await fetch(listURL, { headers: authHeaders(user) });
     if (!res.ok) return cache;
     cache = await res.json();
     loaded = true;

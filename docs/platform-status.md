@@ -257,6 +257,24 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   query, parameterized SQL, append-only tamper-proofing; residual = operator + Cloudflare/Render/Neon
   see the small config text) is in the deploy discussion.
 
+- **Points ledger + Sprint (focus) timer** (2026-08-17) — the platform's first POINT SOURCE and the
+  shared record every later one writes to. `client/points.js` defines the seam: the RECORD is a
+  **profile-scoped append-only stream** named `points` (reached with `ctx.makeEvents('points')` — no
+  server change needed, the API's stream key is just a string), and the live NUDGE is the bus topic
+  `points/award`. **Only the source appends**, so a consumer listening on the bus can't double-count;
+  consumers read the stream for truth and the bus for immediacy. Event shape
+  `{amount, mult, source, tags, note}` with the server stamping `id`/`created_at`.
+  `client/modules/sprint.js` is the first source: work/break/long-break phases, a persisted deadline
+  (a reload resumes mid-sprint), a task label, stacking multipliers, spoken phase changes in the
+  profile voice, ONE bus sink (`sprint/control`) so any input can drive it, and the rule that
+  **finishing a work block pays and skipping one doesn't**. A deadline that passed while the tab was
+  shut still pays inside a grace window and expires unpaid beyond it. Supporting changes: `events.js`
+  takes a `limit`, `makeState`/`makeEvents` take per-handle options, and a `forge` (teal + amber)
+  theme so learning tools get their look as a THEME, not as code. Validated by a **54-check** browser
+  test (`dev/sprint_test.html`, live server + injected clock) plus live dev-harness verification with
+  real time (countdown ticks, full reload resumes mid-sprint with the task intact, clean console).
+  Doc: `docs/modules/sprint.md`.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and

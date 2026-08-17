@@ -232,6 +232,24 @@
   ul.checks b{color:var(--ink)}
   .foot{margin-top:22px;font-size:.85rem;color:var(--muted)}
   @media(max-width:720px){ #dashboard{grid-template-columns:1fr} }
+  /* sprint (focus timer) */
+  .sprint{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:4px 0}
+  .sprint .s-phase{font-size:.95rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--midnight)}
+  .sprint[data-phase="work"] .s-phase{color:var(--moss)}
+  .sprint .s-clock{font-size:3.6rem;font-weight:800;line-height:1;color:var(--darkgreen);font-variant-numeric:tabular-nums}
+  .sprint .s-notice{min-height:1.2em;font-size:.85rem;font-weight:600;color:var(--midnight);text-align:center}
+  .sprint .s-task{width:100%;max-width:320px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;
+    background:var(--cream-soft);color:var(--ink);font:inherit;font-size:.95rem;text-align:center}
+  .sprint .s-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+  .sprint .s-btn{padding:8px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);
+    color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+  .sprint .s-btn:hover{background:var(--cream-soft)}
+  .sprint .s-primary{background:var(--moss);border-color:var(--moss);color:#fff;min-width:104px}
+  .sprint .s-primary:hover{filter:brightness(.93);background:var(--moss)}
+  .sprint .s-mult{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.85rem}
+  .sprint .s-worth{font-size:.85rem;font-weight:700;color:var(--midnight)}
+  .sprint .s-foot{font-size:.8rem;color:var(--muted);text-align:center}
 </style>
 </head>
 <body>

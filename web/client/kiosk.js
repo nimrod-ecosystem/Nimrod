@@ -36,6 +36,7 @@ import './modules/youtube.js';
 import './modules/personal.js';
 import './modules/educational.js';
 import './modules/director.js';
+import './modules/sprint.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -74,8 +75,8 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   const childCtx = (mod) => ({
     bus, user, profileId,
     rootBus: bus, instanceId: mod.id,
-    makeState: (key) => createState({ url: profiles.stateURL(profileId, key), user, cacheKey: ck(key) }),
-    makeEvents: (key) => createEvents({ url: profiles.eventsURL(profileId, key), user }),
+    makeState: (key, opts) => createState({ url: profiles.stateURL(profileId, key), user, cacheKey: ck(key), ...opts }),
+    makeEvents: (key, opts) => createEvents({ url: profiles.eventsURL(profileId, key), user, ...opts }),
   });
 
   async function mountInstance(mod, host) {

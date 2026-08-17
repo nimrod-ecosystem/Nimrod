@@ -56,6 +56,15 @@
   .k-actions button{font-size:.82rem;color:#cfe0d6;background:transparent;
     border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer}
   .k-actions button:hover,.k-dot:hover{background:rgba(255,255,255,.10)}
+  /* sign-in screen (shown when not authenticated) */
+  #login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:18px;color:#e8f0ea;text-align:center;padding:24px}
+  #login h1{font-size:1.5rem;font-weight:600;margin:0;letter-spacing:.02em}
+  #login p{color:#9fb3a8;margin:0;max-width:34ch}
+  #login .gbtn{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1f1f1f;
+    border:none;border-radius:10px;padding:12px 22px;font-size:1rem;font-weight:600;cursor:pointer}
+  #login .gbtn:hover{background:#f1f1f1}
+  #login .err{color:#e79; font-size:.9rem}
 </style>
 </head>
 <body>
@@ -65,23 +74,50 @@
 <script type="module">
 import { createProfilesClient } from './profile.js';
 import { cachedFetch } from './cache.js';
-import { setDeviceKey } from './auth.js';
+import { setDeviceKey, authHeaders } from './auth.js';
 import { mountKiosk } from './kiosk.js';
 
 const params = new URLSearchParams(location.search);
-// one-time pairing: launch once with ?key=<secret> and the device stores it, then
-// auto-auths (X-Device-Key) on every request from then on.
+// one-time device-key pairing (unattended-kiosk fallback): launch once with
+// ?key=<secret> and the device stores it. Regular users just sign in with Google.
 if (params.get('key')) setDeviceKey(params.get('key'));
-const user = params.get('user') || 'dev-user';
 const wantProfile = params.get('profile');
 const boot = document.getElementById('boot');
 const root = document.getElementById('root');
+const LAST_USER = 'nimrod:lastUser';
 
-// A starter bedside profile so opening the kiosk "just works" for a fresh user:
-// photos (her #1), the camera mirror, and the Lineup director (which rotates
-// youtube / personal videos / educational). Real onboarding replaces this.
-async function ensureProfile(profiles) {
-  // cached so a boot before the server is reachable still finds her profile
+// Who am I? A Google-login session cookie (sent automatically, same-origin) or a
+// stored device key satisfies /api/me. 401 => signed out; a network error => offline
+// (boot from cache using the last signed-in user so a server blip doesn't blank her).
+async function whoami() {
+  try {
+    const r = await fetch('/api/me', { headers: authHeaders(params.get('user')) });
+    if (r.status === 401) return { state: 'anon' };
+    if (r.ok) {
+      const u = (await r.json()).user;
+      try { localStorage.setItem(LAST_USER, u); } catch { /* private mode */ }
+      return { state: 'in', user: u };
+    }
+    return { state: 'error' };
+  } catch {
+    let u = null; try { u = localStorage.getItem(LAST_USER); } catch { /* noop */ }
+    return u ? { state: 'in', user: u } : { state: 'error' };
+  }
+}
+
+function showLogin(failed) {
+  boot.remove();
+  root.innerHTML =
+    '<div id="login"><h1>Nimrod</h1><p>Sign in to open the dashboard.</p>' +
+    '<button class="gbtn" id="gsi">Sign in with Google</button>' +
+    (failed ? '<div class="err">Sign-in didn’t complete. Please try again.</div>' : '') +
+    '</div>';
+  document.getElementById('gsi').addEventListener('click', () => { location.href = '/auth/login'; });
+}
+
+// A starter profile so a fresh account "just works": photos, the camera mirror, the
+// clock, and the Lineup director (rotates youtube / personal videos / educational).
+async function ensureProfile(profiles, user) {
   let list = await cachedFetch('profiles:' + user, () => profiles.list());
   if (wantProfile) { const p = list.find((x) => x.id === wantProfile); if (p) return p.id; }
   if (!list.length) {
@@ -96,10 +132,13 @@ async function ensureProfile(profiles) {
 }
 
 (async () => {
+  const who = await whoami();
+  if (who.state === 'anon') { showLogin(params.get('login') === 'failed'); return; }
+  if (who.state === 'error') { boot.textContent = 'Connecting…'; setTimeout(() => location.reload(), 6000); return; }
   try {
-    const profiles = createProfilesClient({ user });
-    const profileId = await ensureProfile(profiles);
-    await mountKiosk(root, { user, profileId, profiles });
+    const profiles = createProfilesClient({ user: who.user });
+    const profileId = await ensureProfile(profiles, who.user);
+    await mountKiosk(root, { user: who.user, profileId, profiles });
     boot.remove();
   } catch (e) {
     boot.textContent = 'Could not reach the dashboard server. It will retry when the connection returns.';

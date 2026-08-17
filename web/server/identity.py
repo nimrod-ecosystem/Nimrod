@@ -58,16 +58,30 @@ def _match_device_key(provided: str | None) -> str | None:
     return None
 
 
+def _session_user(request: Request) -> str | None:
+    # request.session exists only when SessionMiddleware is installed (the app) —
+    # guard so unit tests / middleware-less contexts don't crash.
+    try:
+        return request.session.get("user")
+    except (AssertionError, AttributeError):
+        return None
+
+
 def current_user(request: Request) -> str:
-    # A valid device secret always wins (works in dev + prod).
+    # A valid device secret (unattended kiosk) always wins — works in dev + prod.
     user = _match_device_key(request.headers.get("X-Device-Key"))
     if user:
         return user
+
+    # A Google-login session (a regular signed-in user) — works in dev + prod.
+    sess = _session_user(request)
+    if sess:
+        return sess
 
     # Dev convenience: header/query override, then the stub user.
     if not _is_prod():
         override = request.headers.get("X-Dev-User") or request.query_params.get("user")
         return override.strip() if override else DEV_USER
 
-    # Prod with no valid device key: fail closed.
-    raise HTTPException(status_code=401, detail="invalid or missing device key")
+    # Prod with no key and no session: fail closed.
+    raise HTTPException(status_code=401, detail="sign in, or provide a valid device key")
