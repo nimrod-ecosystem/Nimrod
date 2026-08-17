@@ -397,6 +397,35 @@ landing page would never be exercised.
 leaving the old marketing page there would mean two landing pages drifting apart. One copy, in the
 app, next to the product it describes.
 
+## A wrong answer explains itself and still pays (2026-08-17)
+Mike, on the first learning game: "a wrong answer should still give some points for trying and give
+the explanation to how he would have gotten the right answer." Implemented, with one addition that
+protects it:
+
+- A miss reveals the right answer **with the reason** — for a word, its meaning plus a real sentence
+  using it; for a sentence pair, the actual *why* from the bank.
+- It awards `tryPoints` (3) against `correctPoints` (10). Less than being right, but not zero.
+- **The try points are banked when the explanation is acknowledged ("Got it"), not when the answer is
+  wrong.** The correction is the thing worth rewarding, so the reward is attached to reading it.
+  With each item appearing at most once per round, there is no wrong-answer farm to run.
+- A streak bonus never applies to a miss.
+
+The general rule for future games: pay for engagement with the correction, not for the error.
+
+## A game writes to BOTH streams; the dashboards need no wiring (2026-08-17)
+`wordforge` is the proof of the two-stream design. One module, two writes:
+`points` (an award, source `wordforge`) and `gameplay` (a trial, `concept` = the word). The quest
+board and the progress dashboard each read their own stream and update themselves; neither knows the
+game exists. Any future game does the same by building a ledger and a telemetry handle from
+`ctx.makeEvents` — there is no registration step, and nothing downstream to change.
+
+## Deleting a screen cannot erase a score (2026-08-17)
+`DELETE /api/profiles/{pid}` removes the profile, its module instances and its overwrite state. It
+deliberately does NOT touch events — a DB trigger forbids that, and it should: the points ledger and
+gameplay telemetry are the RECORD, and deleting a screen must not be a back door to rewriting it.
+The consequence is stated to the user before they confirm: the history is kept, and a new screen
+will not show it, because it is a different screen.
+
 ## Cici ↔ the scheduler & media (2026-08-14, scoped — ideas, not built)
 How the local AI companion (Cici) interacts with the state-machine engine + media. None of the Cici-AI
 layer is built yet (it's the "brain on local Ollama / cloud-API" plan in the private repo's CONTEXT), but

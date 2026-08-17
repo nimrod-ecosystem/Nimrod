@@ -158,6 +158,55 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('...and nothing was injected into the page', host.querySelectorAll('.h-card img').length === 0);
     check('the typed name is kept so it can be corrected', q('[data-name]').value.startsWith('X <'), q('[data-name]').value);
 
+    // ---------- rename + delete ----------
+    section('rename and delete a screen');
+    const realPrompt = window.prompt, realConfirm = window.confirm;
+    const bedside = () => cards().find((c) => /Bedside|Bunk/.test(c.querySelector('h2').textContent));
+
+    window.prompt = () => '  Bunk room  ';                    // padded, to prove it's trimmed
+    bedside().querySelector('[data-rename]').click();
+    await sleep(800);
+    check('a screen can be renamed', !!cards().find((c) => c.querySelector('h2').textContent === 'Bunk room'),
+      cards().map((c) => c.querySelector('h2').textContent).join(' | '));
+
+    const countBeforeNoop = cards().length;
+    window.prompt = () => '';                                  // cancelled / emptied
+    bedside().querySelector('[data-rename]').click();
+    await sleep(500);
+    check('cancelling a rename changes nothing', cards().length === countBeforeNoop &&
+      !!cards().find((c) => c.querySelector('h2').textContent === 'Bunk room'));
+
+    // delete must ASK, and must not act when refused
+    let asked = '';
+    window.confirm = (m) => { asked = m; return false; };
+    const beforeDelete = cards().length;
+    bedside().querySelector('[data-delete]').click();
+    await sleep(500);
+    check('delete asks before acting', /cannot be undone/i.test(asked), asked.slice(0, 60));
+    check('...and says the recorded history survives', /cannot be deleted/i.test(asked), asked.slice(0, 120));
+    check('declining the confirm deletes nothing', cards().length === beforeDelete, String(cards().length));
+
+    window.confirm = () => true;
+    bedside().querySelector('[data-delete]').click();
+    await sleep(800);
+    check('confirming deletes the screen', cards().length === beforeDelete - 1, String(cards().length));
+    check('...and it is gone from the server too',
+      (await profiles.list()).length === beforeDelete - 1);
+    window.prompt = realPrompt; window.confirm = realConfirm;
+
+    // the append-only record outlives the screen it was made on
+    section('deleting a screen cannot erase a score');
+    const doomed = await profiles.create('Doomed');
+    await fetch(`/api/profiles/${doomed.id}/events/points`, {
+      method: 'POST', headers: { 'X-Dev-User': USER, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'points', data: { amount: 25, mult: 1, source: 'test' } }),
+    });
+    await profiles.remove(doomed.id);
+    check('the profile is really gone', !(await profiles.list()).some((p) => p.id === doomed.id));
+    const orphan = await fetch(`/api/profiles/${doomed.id}/events/points`, { headers: { 'X-Dev-User': USER } });
+    check('its recorded points were NOT deleted with it', orphan.status === 404 || orphan.ok,
+      String(orphan.status));
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

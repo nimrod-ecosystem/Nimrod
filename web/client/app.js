@@ -24,6 +24,7 @@ import './modules/director.js';   // registers 'director' (the content director 
 import './modules/sprint.js';     // registers 'sprint' (focus timer -> points ledger)
 import './modules/quests.js';     // registers 'quests' (the quest board <- ledger)
 import './modules/progress.js';   // registers 'progress' (measurement <- gameplay stream)
+import './modules/wordforge.js';  // registers 'wordforge' (a game -> BOTH streams)
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'
 

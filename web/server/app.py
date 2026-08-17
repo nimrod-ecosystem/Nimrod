@@ -134,6 +134,22 @@ def get_profile(pid: str, user: str = Depends(current_user)):
     return owned_profile(user, pid)
 
 
+@app.patch("/api/profiles/{pid}")
+def rename_profile(pid: str, body: ProfileCreate, user: str = Depends(current_user)):
+    owned_profile(user, pid)
+    _check(body.name, NAME_RE, "profile name")
+    store.rename_profile(user, pid, body.name)
+    return store.get_profile(user, pid)
+
+
+@app.delete("/api/profiles/{pid}")
+def delete_profile(pid: str, user: str = Depends(current_user)):
+    """Remove a screen. Its append-only events SURVIVE by design (see db.delete_profile)."""
+    owned_profile(user, pid)
+    store.delete_profile(user, pid)
+    return {"ok": True}
+
+
 @app.post("/api/profiles/{pid}/modules")
 def add_module(pid: str, body: ModuleAdd, user: str = Depends(current_user)):
     _check(pid, ID_RE, "profile id")

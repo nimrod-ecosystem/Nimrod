@@ -86,8 +86,12 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     return `
       <section class="h-card">
         <div class="h-card-head">
-          <h2>${esc(p.name)}</h2>
-          <button class="h-btn h-primary" data-open="${esc(p.id)}" ${mods.length ? '' : 'disabled'}>Open</button>
+          <h2 data-title>${esc(p.name)}</h2>
+          <div class="h-actions">
+            <button class="h-btn h-quiet" data-rename="${esc(p.id)}">Rename</button>
+            <button class="h-btn h-quiet h-danger" data-delete="${esc(p.id)}">Delete</button>
+            <button class="h-btn h-primary" data-open="${esc(p.id)}" ${mods.length ? '' : 'disabled'}>Open</button>
+          </div>
         </div>
         <div class="h-chips">${chips}</div>
         <div class="h-add">
@@ -116,6 +120,41 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         await refresh();
         say(`Added ${type}.`);
       }));
+    }
+    for (const b of root.querySelectorAll('[data-rename]')) {
+      b.addEventListener('click', () => {
+        const p = list.find((x) => x.id === b.dataset.rename);
+        const name = (prompt('Rename this screen to:', p ? p.name : '') || '').trim();
+        if (!name || (p && name === p.name)) return;
+        guard(async () => {
+          await profiles.rename(b.dataset.rename, name);
+          await refresh();
+          say(`Renamed to “${name}”.`);
+        });
+      });
+    }
+    for (const b of root.querySelectorAll('[data-delete]')) {
+      b.addEventListener('click', () => {
+        const p = list.find((x) => x.id === b.dataset.delete);
+        // Spell out what survives BEFORE they confirm. Deleting drops the layout and
+        // settings, but the append-only record (points earned, gameplay logged) cannot
+        // be deleted — and a new screen won't get it back, because it's a new id.
+        const ok = confirm([
+          `Delete “${p ? p.name : 'this screen'}”?`,
+          '',
+          'Its modules and settings go away. Points and game history already recorded ' +
+          'are kept on the server and cannot be deleted — but a new screen will not ' +
+          'show them, because it is a different screen.',
+          '',
+          'This cannot be undone.',
+        ].join('\n'));
+        if (!ok) return;
+        guard(async () => {
+          await profiles.remove(b.dataset.delete);
+          await refresh();
+          say('Screen deleted. Its recorded history is kept on the server.');
+        });
+      });
     }
     for (const b of root.querySelectorAll('[data-remove]')) {
       b.addEventListener('click', () => guard(async () => {

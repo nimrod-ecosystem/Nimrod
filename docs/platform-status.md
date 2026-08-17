@@ -321,6 +321,23 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   screen with quests/progress/sprint/clock → Open → the kiosk mounts it → a task logs and the
   balance moves 0 → 15. Docs: `web/README.md`.
 
+- **Word Forge — the first game, writing to BOTH streams** (2026-08-17) — `client/modules/wordforge.js`.
+  A vocabulary game over the word bank (define / fill-the-blank / which-sentence-is-better), content
+  as editable data in the documented line formats. **A wrong answer explains itself and still pays**:
+  it reveals the right answer with the reason (the meaning + a real sentence, or the actual *why* for
+  a sentence pair) and awards `tryPoints` (3 vs 10) — **banked on "Got it", not on being wrong**, so
+  the reward attaches to taking the correction in, and each item appears once per round so there is
+  no farm. Streak bonus +5 every 5, never on a miss. It writes an award to `points` (source
+  `wordforge`) AND a trial to `gameplay` with `concept` = the WORD, so the quest board's balance and
+  the progress dashboard's per-concept ranking both update with **no wiring**. Validated by a
+  **47-check** test that mounts the real `quests` and `progress` modules on the same profile and
+  plays a full round. Docs: `docs/modules/wordforge.md`.
+- **Screens can be renamed and deleted** (2026-08-17) — `PATCH`/`DELETE /api/profiles/{pid}` plus
+  `profiles.rename`/`remove` and the buttons on home. Deleting drops the profile, its modules and its
+  settings; **its append-only events survive** (a DB trigger forbids deleting them), so deleting a
+  screen can never quietly erase a score — and the confirm dialog says exactly that, including that
+  a new screen won't show the old history. 43 checks (`dev/home_test.html`).
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and

@@ -91,6 +91,26 @@ class _Store:
             "modules": [{"id": m[0], "type": m[1], "position": m[2]} for m in mods],
         }
 
+    def rename_profile(self, user_id: str, pid: str, name: str) -> None:
+        with self._tx() as cur:
+            cur.execute(self._q("UPDATE profiles SET name=? WHERE id=? AND user_id=?"),
+                        (name, pid, user_id))
+
+    def delete_profile(self, user_id: str, pid: str) -> None:
+        """Delete a profile, its module instances, and their overwrite state.
+
+        EVENTS ARE NOT TOUCHED — a DB trigger forbids deleting them, and that is the
+        point: the points ledger and gameplay telemetry are the RECORD, and deleting a
+        screen must not be a way to quietly erase a score. The rows are left in place,
+        keyed to a profile id that no longer resolves. Callers should tell the user this
+        before they confirm, because it also means the history is not coming back when
+        they make a new screen.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q("DELETE FROM profile_modules WHERE profile_id=?"), (pid,))
+            cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"), (user_id, pid))
+            cur.execute(self._q("DELETE FROM profiles WHERE id=? AND user_id=?"), (pid, user_id))
+
     def add_module(self, pid: str, type_: str) -> dict:
         mid, ts = _new_id(), _now()
         with self._tx() as cur:
