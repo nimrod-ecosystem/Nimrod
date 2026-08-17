@@ -292,6 +292,18 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   profile finishing a sprint and this board picking it up with no reload — plus live harness
   verification. Docs: `docs/modules/quests.md`, `docs/points-sheet.md`.
 
+- **`progress` — the measurement dashboard** (2026-08-17) — datadash.js ported and generalised.
+  `client/telemetry.js` adds the second shared stream, `gameplay`: ONE `trial` shape whose three
+  outcomes (hit / false alarm / miss) express a go/no-go cue and a school answer alike, so ONE
+  PERSON CAN PLAY GAMES FROM BOTH SETS and the viewer filters by GAME, never by persona.
+  `client/modules/progress.js` renders accuracy per session (inline themed SVG), per-CONCEPT
+  mastery hardest-first with improving/slipping trends, a sessions table, and CSV export. Two
+  accuracy measures kept apart (misses counted vs excluded); "when answered" and "missed" cards
+  appear only where misses exist. Read-only — games are the only writers. Validated by a
+  **54-check** browser test seeded with a reaction game AND a learning game on one profile, plus
+  live harness verification. Docs: `docs/modules/progress.md`. NOTE: no game writes to the stream
+  yet — producers land with the Cici game ports and the first learning game.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and

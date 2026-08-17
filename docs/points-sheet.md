@@ -19,21 +19,16 @@ two have distinct jobs:
 Sync is therefore **one-way, out**. Two-way sync is possible later but buys conflicts and
 duplicate rows, and it would hand the score back to whoever can open the sheet.
 
-## What does NOT go in a Sheet
+## Two streams, both mirrored
 
-This applies to a **points economy** — chores, quests, rewards, a learner's own score on
-their own Google account. It does **not** extend to the platform's other event stream.
+The Sheet mirrors **both** of the platform's event streams:
 
-The `gameplay` telemetry stream (see the `progress` module) holds reaction times, error
-rates, and session-over-session change for people using these games therapeutically —
-including a brain-injured adult in a care facility. That is health-adjacent data about
-someone who cannot easily consent to onward sharing, and this repo's non-negotiable is
-that patient data does not leave the machine.
+- **`points`** — the economy: what was earned and spent (the `Ledger` tab).
+- **`gameplay`** — telemetry: right vs wrong, per concept, per session (the `Gameplay` tab).
 
-So: **telemetry stays in Nimrod and is visualised in-app**, with a CSV/JSON export the
-caregiver triggers *deliberately* when handing a clinician a file. No standing sync to
-Google. The distinction is not the data's shape — both streams are append-only event
-logs — it is whose data it is and who can consent to moving it.
+An earlier draft of this doc carved telemetry out on privacy grounds. That was withdrawn —
+game performance is not sensitive health data. Actual clinical records are simply not something
+this platform holds.
 
 ## The default layout
 
@@ -53,6 +48,24 @@ One row per ledger event, in order. Columns match the stream's event shape exact
 - `Source` — `sprint`, `quests`, a game's name. Lets you slice by where points came from.
 - `Base` / `x` / `Points` — `Points = Base × x`. Negative for penalties and purchases.
 - `Minutes` — only on `School` rows; the input to the weekly hours engine.
+
+### `Gameplay` — written by Nimrod (do not hand-edit)
+One row per trial (a single answer, cue, or attempt). This is what the graphs are built from.
+
+| A | B | C | D | E | F | G | H | I |
+|---|---|---|---|---|---|---|---|---|
+| `Event ID` | `Timestamp` | `Game` | `Session` | `Mode` | `Concept` | `Responded` | `Correct` | `Latency ms` |
+
+- `Event ID` — the sync key, same rule as `Ledger`: written once, never rewritten.
+- `Game` — which game produced it, so one person playing games from **both** sets stays legible.
+- `Session` — groups trials into a sitting; the per-session accuracy chart keys off it.
+- `Concept` — the skill or category being exercised. This is the column that answers "what is he
+  getting and what is he struggling with", so games should always set it.
+- `Responded` / `Correct` — the unified trial outcome (see `telemetry.js`): responded+correct is a
+  hit, responded+incorrect is a false alarm / wrong answer, not-responded is a miss.
+
+Useful formulas: accuracy for a concept
+`=COUNTIFS(Gameplay!F:F,"fractions",Gameplay!H:H,TRUE)/COUNTIFS(Gameplay!F:F,"fractions")`
 
 ### `Task Menu` — yours
 `Task | Type | Base Points | Double-eligible | Notes`. The catalog. Paste it into the

@@ -347,17 +347,27 @@ the new points dashboard. Decision: **no — split the modules, share the substr
   available proof that the ledger seam generalises beyond points.
 - **The points board was renamed `quests`** (the curriculum's own word). `progress` is reserved
   for datadash's port, which is the name it already had and the meaning already in people's
-  heads; and `quests` avoids colliding with the `points.js` ledger library. Renamed while still
-  uncommitted, so the change cost nothing.
+  heads; and `quests` avoids colliding with the `points.js` ledger library.
 
-## Patient telemetry does not go to Google (2026-08-17)
-A corollary of the Sheets decision above, and a limit on it. The points economy syncs out to a
-household Google Sheet. The `gameplay` telemetry stream does **not**: reaction times and error
-rates for a brain-injured adult in a care facility are health-adjacent data about someone who
-cannot easily consent to onward sharing, and this repo's non-negotiable is that patient data
-stays on the machine. Telemetry is visualised **in-app**, with a CSV/JSON export the caregiver
-triggers deliberately when handing a clinician a file — never a standing sync. The two streams
-have the same technical shape; what differs is whose data it is and who can consent to moving it.
+**`progress` is NOT a Cici-only module — corrected (2026-08-17).** An earlier draft described it
+as "the Cici game-stats dashboard". Mike: he wants the same instrument for Oscar — graphs of how
+much he is learning, which concepts he is getting and which he is struggling with — "similar to
+what we have for Christine, but tracking progress in school instead of consciousness." And **one
+person may play games from both sets.** So `progress` is the general MEASUREMENT module over one
+`gameplay` stream; what differs between a response game and a learning game is which metrics are
+meaningful, not which module or which person. The stream therefore uses ONE unified trial shape
+(see `telemetry.js`) that expresses both, and the viewer switches by GAME, never by persona.
+
+## Gameplay telemetry DOES go to the Sheet — corrected (2026-08-17)
+An earlier draft of this file carved gameplay telemetry out of the Sheets sync on the grounds
+that it was health-adjacent data. **Mike (Christine's guardian) corrected that: the game data is
+not sensitive health data.** It is game performance — how someone did at a game — not diagnosis,
+medication, or clinical notes. The carve-out is withdrawn; do not re-raise it.
+
+So the Sheet mirrors **both** streams: the `points` ledger AND `gameplay` telemetry (right vs
+wrong, and whatever else a game records). Mike asked for exactly that — the spreadsheet should
+track points earned, right vs wrong, "and maybe other things too". Real clinical records remain
+out of scope for the platform entirely; that is a separate matter from game scores.
 
 ## Cici ↔ the scheduler & media (2026-08-14, scoped — ideas, not built)
 How the local AI companion (Cici) interacts with the state-machine engine + media. None of the Cici-AI

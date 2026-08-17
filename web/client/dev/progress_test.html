@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>progress (gameplay measurement) — integration test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:520px;margin-top:12px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:12px}
+</style>
+</head>
+<body>
+<h1>progress (gameplay measurement) — integration test</h1>
+<p>Mounts the REAL <code>progress</code> module against the live dev server, seeded with a
+<b>reaction game</b> (hits / misses / false alarms, à la the old <code>datadash</code>) and a
+<b>learning game</b> (right vs wrong per concept) <b>on the same profile</b> — the case where one
+person plays games from both sets. Proves the shared trial shape carries both, the per-concept
+mastery view, improving-vs-slipping trends, the per-session chart, and that the module never writes.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import {
+  createTelemetry, GAMEPLAY_STREAM, GAMEPLAY_TOPIC, TRIAL_KIND,
+  summarize, games as gamesOf, modes as modesOf, filterTrials, bySession, byConcept,
+  conceptTrend, isHit, isMiss, isFalseAlarm, fmtPct,
+} from '../telemetry.js';
+import { sessionChart, fmtDur, sessionDurationMs, CONCEPT_LIMIT } from '../modules/progress.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || ('progress-test-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// synthetic trials for the pure-helper checks (server events carry created_at)
+let seq = 0;
+const T = (d, at) => ({ kind: TRIAL_KIND, created_at: at || new Date(1700000000000 + (seq++) * 1000).toISOString(), data: d });
+
+(async () => {
+  try {
+    // ================= pure: the unified trial shape =================
+    section('the unified trial shape');
+    const hit  = T({ game: 'g', session: 's1', responded: true,  correct: true,  latencyMs: 400 });
+    const fa   = T({ game: 'g', session: 's1', responded: true,  correct: false, latencyMs: 300 });
+    const miss = T({ game: 'g', session: 's1', responded: false, correct: null });
+    check('responded + correct is a hit', isHit(hit) && !isMiss(hit) && !isFalseAlarm(hit));
+    check('responded + wrong is a false alarm', isFalseAlarm(fa) && !isHit(fa));
+    check('no response is a miss', isMiss(miss) && !isHit(miss) && !isFalseAlarm(miss));
+
+    const s1 = summarize([hit, hit, fa, miss]);
+    check('accuracy counts misses against you', Math.abs(s1.accuracy - 0.5) < 1e-9, String(s1.accuracy));
+    check('whenAnswered excludes misses', Math.abs(s1.whenAnswered - 2 / 3) < 1e-9, String(s1.whenAnswered));
+    check('the two measures differ exactly when there are misses',
+      summarize([hit, fa]).accuracy === summarize([hit, fa]).whenAnswered);
+    check('mean latency uses hits only', s1.meanLatency === 400, String(s1.meanLatency));
+    check('counts are right', s1.trials === 4 && s1.hits === 2 && s1.falseAlarms === 1 && s1.misses === 1);
+    check('empty summarize is null, not zero', summarize([]).accuracy === null);
+    check('non-trial events are ignored', summarize([hit, { kind: 'points', data: { amount: 9 } }]).trials === 1);
+
+    // ================= pure: concepts and trends =================
+    section('concepts and trends');
+    const mk = (concept, correct, i) => T({ game: 'g', session: 's', concept, responded: true, correct },
+      new Date(1700000000000 + i * 60000).toISOString());
+    // "fractions": bad early, good late -> improving.  "commas": good early, bad late -> slipping.
+    const improving = [0,1,2,3].map((i) => mk('fractions', false, i)).concat([4,5,6,7].map((i) => mk('fractions', true, i)));
+    const slipping  = [0,1,2,3].map((i) => mk('commas', true, i)).concat([4,5,6,7].map((i) => mk('commas', false, i)));
+    check('an improving concept trends up', conceptTrend(improving).trend === 'up', JSON.stringify(conceptTrend(improving)));
+    check('a slipping concept trends down', conceptTrend(slipping).trend === 'down', JSON.stringify(conceptTrend(slipping)));
+    check('a steady concept trends flat',
+      conceptTrend([0,1,2,3,4,5,6,7].map((i) => mk('spelling', true, i))).trend === 'flat');
+    check('too little data yields NO trend claim', conceptTrend([mk('x', true, 0), mk('x', false, 1)]).trend === null);
+
+    const cons = byConcept(improving.concat(slipping));
+    // Both sit at 50%. The SLIPPING one must come first — "50% and falling" needs attention
+    // before "50% and climbing", and this list is read top-down.
+    check('equal accuracy: the slipping concept outranks the improving one',
+      cons[0].concept === 'commas' && cons[1].concept === 'fractions',
+      cons.map((c) => `${c.concept}:${c.accuracy}:${c.trend}`).join(' '));
+    check('per-concept accuracy is right', Math.abs(cons[0].accuracy - 0.5) < 1e-9);
+    check('a genuinely worse concept still outranks a slipping one',
+      byConcept(improving.concat(slipping).concat(
+        [0,1,2,3,4,5,6,7].map((i) => mk('spelling', false, i)))
+      )[0].concept === 'spelling');
+
+    // ================= pure: sessions and filters =================
+    section('sessions, games, filters');
+    const mixed = [
+      T({ game: 'react', session: 'r1', mode: 'calm', responded: true, correct: true }),
+      T({ game: 'react', session: 'r1', mode: 'calm', responded: false, correct: null }),
+      T({ game: 'wordforge', session: 'w1', mode: 'practice', concept: 'obsolete', responded: true, correct: true }),
+    ];
+    check('games are discovered from the data', JSON.stringify(gamesOf(mixed)) === '["react","wordforge"]', JSON.stringify(gamesOf(mixed)));
+    check('modes are discovered too', JSON.stringify(modesOf(mixed)) === '["calm","practice"]', JSON.stringify(modesOf(mixed)));
+    check('filtering by game isolates one', filterTrials(mixed, { game: 'react' }).length === 2);
+    check('filtering by game+mode narrows further', filterTrials(mixed, { game: 'wordforge', mode: 'practice' }).length === 1);
+    const sess = bySession(mixed);
+    check('sessions group by id, oldest first', sess.length === 2 && sess[0].session === 'r1', JSON.stringify(sess.map((s) => s.session)));
+    check('a session summarizes its own trials', sess[0].trials === 2 && sess[0].hits === 1 && sess[0].misses === 1);
+    check('session duration is derived from its trials', sessionDurationMs(sess[0]) >= 0);
+    check('fmtDur reads as time', fmtDur(95000) === '1m 35s', fmtDur(95000));
+    check('the chart renders bars for scored sessions', /<rect/.test(sessionChart(sess)));
+    check('the chart says so when there is nothing', /No sessions/.test(sessionChart([])));
+
+    // ================= the module, server-backed =================
+    section('progress module — one profile, games from BOTH sets');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-progress');
+    const makeState  = (key, opts) => createState({ url: profiles.stateURL(profile.id, key), user: USER, ...opts });
+    const makeEvents = (key, opts) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER, ...opts });
+
+    const bus = createBus();
+    const nudges = [];
+    bus.subscribe(GAMEPLAY_TOPIC, (p) => nudges.push(p));
+
+    // A REACTION game: two sittings, improving. Misses and false alarms both present.
+    const writer = createTelemetry({ makeEvents, bus });
+    await writer.load();
+    const r1 = writer.session({ game: 'reaction', mode: 'calm' });
+    for (const t of [true, true, false, null, null]) {
+      await r1.trial(t === null
+        ? { concept: 'sustained attention', responded: false }
+        : { concept: t ? 'sustained attention' : 'inhibition', responded: true, correct: t, latencyMs: 520, waitMs: 2000 });
+    }
+    const r2 = writer.session({ game: 'reaction', mode: 'challenge' });
+    for (let i = 0; i < 5; i++) {
+      await r2.trial({ concept: 'sustained attention', responded: true, correct: true, latencyMs: 430, waitMs: 1500 });
+    }
+    // A LEARNING game on the SAME profile: right vs wrong per concept.
+    const w1 = writer.session({ game: 'wordforge', mode: 'practice' });
+    for (const [concept, ok] of [['obsolete', true], ['obsolete', true], ['salvage', false],
+                                 ['salvage', false], ['salvage', false], ['tolerance', true]]) {
+      await w1.trial({ concept, responded: true, correct: ok, latencyMs: 3000, prompt: concept });
+    }
+    check('every trial was recorded', writer.trials().length === 16, String(writer.trials().length));
+    check('logging published a live nudge each time', nudges.length === 16, String(nudges.length));
+    check('a trial with no game is refused', (await writer.log({ session: 'x', responded: true })) === null);
+    check('a non-response never records correct=false',
+      writer.trials().filter((t) => !t.data.responded).every((t) => t.data.correct === null));
+
+    const mod = await profiles.addModule(profile.id, 'progress');
+    const host = document.getElementById('host');
+    const inst = mountModule('progress', {
+      mount: host, bus,
+      state: createState({ url: profiles.stateURL(profile.id, mod.id), user: USER }),
+      events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents,
+    });
+    inst.init();
+    await sleep(400);
+
+    const txt = (sel) => host.querySelector(sel)?.textContent?.trim();
+    const cards = () => [...host.querySelectorAll('.g-card')].map((c) =>
+      [c.querySelector('.g-k').textContent, c.querySelector('.g-v').textContent]);
+    const cardVal = (k) => (cards().find((c) => c[0] === k) || [])[1];
+    const gameBtns = () => [...host.querySelectorAll('[data-game]')];
+    const conceptRows = () => [...host.querySelectorAll('.g-crow')].map((r) => ({
+      name: r.querySelector('.g-cname').textContent.replace(/[▲▼–]/g, '').trim(),
+      pct: r.querySelector('.g-cpct').firstChild.textContent.trim(),
+      trend: (r.querySelector('.g-trend') || {}).textContent || '',
+    }));
+
+    check('both games appear in the picker', gameBtns().map((b) => b.dataset.game).join(',') === ',reaction,wordforge',
+      gameBtns().map((b) => b.dataset.game).join(','));
+    check('"All" is selected by default', gameBtns()[0].classList.contains('on'));
+    check('all 16 trials counted across both games', cardVal('trials') === '16', cardVal('trials'));
+    check('3 sessions counted', cardVal('sessions') === '3', cardVal('sessions'));
+    check('the session chart drew a bar per session',
+      host.querySelectorAll('.g-chart rect').length === 3, String(host.querySelectorAll('.g-chart rect').length));
+
+    // ---- the question Mike actually asked: what is he struggling with? ----
+    section('what is hard, and is it getting better');
+    check('concepts render hardest-first', conceptRows()[0].name === 'salvage', JSON.stringify(conceptRows()));
+    check('the hardest concept shows its real accuracy', conceptRows()[0].pct === '0%', conceptRows()[0].pct);
+    check('a mastered concept sits at the bottom',
+      conceptRows()[conceptRows().length - 1].pct === '100%', JSON.stringify(conceptRows()));
+
+    // ---- filtering to one game (the both-sets case) ----
+    gameBtns().find((b) => b.dataset.game === 'wordforge').click();
+    await sleep(200);
+    check('filtering to the learning game narrows the trials', cardVal('trials') === '6', cardVal('trials'));
+    check('filtering narrows the sessions too', cardVal('sessions') === '1', cardVal('sessions'));
+    check('only that game’s concepts remain',
+      conceptRows().every((r) => ['salvage', 'obsolete', 'tolerance'].includes(r.name)), JSON.stringify(conceptRows()));
+    check('accuracy is that game’s, not the mixture', cardVal('accuracy') === '50%', cardVal('accuracy'));
+
+    gameBtns().find((b) => b.dataset.game === 'reaction').click();
+    await sleep(200);
+    check('switching to the reaction game switches the whole view', cardVal('trials') === '10', cardVal('trials'));
+    check('misses are surfaced for the reaction game', cardVal('missed') === '2', cardVal('missed'));
+    check('accuracy counts the 2 misses against the reaction game', cardVal('accuracy') === '70%', cardVal('accuracy'));
+    check('"when answered" appears only where misses exist, and excludes them',
+      cardVal('when answered') === '88%', cardVal('when answered'));   // 7 hits / 8 answered
+
+    const modeBtns = [...host.querySelectorAll('[data-mode]')];
+    check('its modes are offered', modeBtns.map((b) => b.dataset.mode).join(',') === ',calm,challenge',
+      modeBtns.map((b) => b.dataset.mode).join(','));
+    modeBtns.find((b) => b.dataset.mode === 'challenge').click();
+    await sleep(200);
+    check('mode filter narrows to one sitting', cardVal('sessions') === '1' && cardVal('accuracy') === '100%',
+      `${cardVal('sessions')}/${cardVal('accuracy')}`);
+
+    // ---- the sessions tab ----
+    section('sessions tab');
+    gameBtns()[0].click();                       // back to All
+    await sleep(200);
+    [...host.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === 'sessions').click();
+    await sleep(200);
+    check('every session is listed', host.querySelectorAll('.g-table tbody tr').length === 3,
+      String(host.querySelectorAll('.g-table tbody tr').length));
+    check('the table names which game each sitting was',
+      [...host.querySelectorAll('.g-table tbody td:nth-child(2)')].map((td) => td.firstChild.textContent).sort().join(',')
+        === 'reaction,reaction,wordforge');
+
+    // ---- read-only guarantee ----
+    section('the module only reads');
+    const audit = createTelemetry({ makeEvents });
+    await audit.load();
+    const before = audit.trials().length;
+    bus.publish(GAMEPLAY_TOPIC, { game: 'spoof', session: 'x', responded: true, correct: true });
+    await sleep(500);
+    await audit.load();
+    check('a bare nudge never creates a trial', audit.trials().length === before, `${before} -> ${audit.trials().length}`);
+    check('the spoof game never entered the picker',
+      !gameBtns().some((b) => b.dataset.game === 'spoof'), gameBtns().map((b) => b.dataset.game).join(','));
+    audit.destroy();
+
+    // ---- the streams stay separate ----
+    section('gameplay and points are separate streams');
+    const pts = createEvents({ url: profiles.eventsURL(profile.id, 'points'), user: USER });
+    await pts.load();
+    check('telemetry did not leak into the points ledger', pts.get().total === 0, String(pts.get().total));
+    pts.destroy();
+
+    writer.destroy();
+    inst.destroy();
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
