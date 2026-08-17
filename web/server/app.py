@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -190,4 +190,11 @@ def append_event(pid: str, stream: str, body: EventPost, user: str = Depends(cur
 
 
 # Serve the client app from the same origin. Registered LAST so /api/* wins.
+# The PRODUCT surface is the kiosk. Send the bare URL there instead of index.html (the
+# dev harness, which can't run in prod). kiosk.html auto-seeds a default profile.
+@app.get("/")
+def root():
+    return RedirectResponse(url="/kiosk.html")
+
+
 app.mount("/", StaticFiles(directory=str(CLIENT_DIR), html=True), name="client")
