@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>lessons — the level-up gate</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#wf{margin-top:12px;width:480px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:14px}
+</style>
+</head>
+<body>
+<h1>lessons — the level-up gate</h1>
+<p>Watch a lesson, and that topic's questions enter the game's pool. Proves the gate both ways:
+locked words stay out of the deck (and the game SAYS what's waiting), and after the unlock they
+play. The unlock is append-only, so it can't be lost.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="wf"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import {
+  createLessons, unlockedFrom, unlockLog, gate, lockedTopics,
+  DEFAULT_TOPICS, LESSON_TOPIC, WATCHED_KIND,
+} from '../lessons.js';
+import { videoHTML } from '../modules/lessons.js';
+import { parseWords, buildDeck } from '../modules/wordforge.js';
+import '../modules/lessons.js';
+import '../modules/wordforge.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('less-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const seeded = (s0) => { let x = s0 >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; };
+
+const WORDS = `
+# three ungated words, so a 4-way choice always has distractors
+alpha | first letter | Alpha comes first.
+beta  | second       | Beta follows alpha.
+gamma | third        | Gamma is third.
+delta | a change     | Delta means change.
+# gated behind topics
+etymon | the original form of a word | Etymon is the root a word grew from. | 9 | roots
+lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | roots
+terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concision
+`;
+
+(async () => {
+  try {
+    // ================= pure =================
+    section('the gate');
+    const words = parseWords(WORDS);
+    check('optional columns parse', words.length === 7, String(words.length));
+    check('an ungated word carries no topic', !words.find((w) => w.word === 'alpha').topic);
+    check('a gated word carries its topic and grade',
+      words.find((w) => w.word === 'etymon').topic === 'roots' &&
+      words.find((w) => w.word === 'etymon').grade === 9,
+      JSON.stringify(words.find((w) => w.word === 'etymon')));
+    check('the original 3-column format still parses',
+      parseWords('solo | alone | He worked solo.').length === 1);
+
+    const none = new Set();
+    const g0 = gate(words, none);
+    check('with nothing unlocked, only untopiced words are open', g0.open.length === 4, String(g0.open.length));
+    check('...and the rest are held', g0.locked.length === 3, String(g0.locked.length));
+    check('CONTENT WITHOUT A TOPIC IS NEVER GATED', g0.open.every((w) => !w.topic));
+
+    const g1 = gate(words, new Set(['roots']));
+    check('unlocking a topic releases exactly its words', g1.open.length === 6 && g1.locked.length === 1,
+      `${g1.open.length}/${g1.locked.length}`);
+    check('...and the other topic stays shut', g1.locked[0].topic === 'concision');
+
+    const held = lockedTopics(words, none, DEFAULT_TOPICS);
+    check('what is held back is countable and named',
+      held[0].count === 2 && /roots/i.test(held[0].id), JSON.stringify(held));
+    check('...with the human label, not the id', held[0].label === 'Word roots & origins', held[0].label);
+
+    const evs = [
+      { kind: WATCHED_KIND, created_at: '2026-01-01T10:00:00Z', data: { topic: 'roots' } },
+      { kind: WATCHED_KIND, created_at: '2026-01-02T10:00:00Z', data: { topic: 'roots' } },
+      { kind: 'other', created_at: '2026-01-02T10:00:00Z', data: { topic: 'nope' } },
+    ];
+    check('unlocks derive from the log', unlockedFrom(evs).has('roots') && unlockedFrom(evs).size === 1);
+    check('watching twice unlocks once', unlockLog(evs).length === 1);
+    check('the log keeps the FIRST time, which is when it was earned',
+      unlockLog(evs)[0].at === '2026-01-01T10:00:00Z', unlockLog(evs)[0].at);
+    check('unrelated event kinds are ignored', !unlockedFrom(evs).has('nope'));
+
+    check('a youtube topic embeds privately',
+      /youtube-nocookie\.com\/embed\/abc123/.test(videoHTML({ kind: 'youtube', value: 'abc123' })));
+    check('a plain url becomes a video element', /<video/.test(videoHTML({ kind: 'url', value: '/a.mp4' })));
+    check('no video is not an error', videoHTML(null) === '');
+
+    // ================= the module =================
+    section('the lessons module');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-lessons');
+    const makeState = (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o });
+    const makeEvents = (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o });
+    const bus = createBus();
+
+    const lmod = await profiles.addModule(profile.id, 'lessons');
+    const lst = createState({ url: profiles.stateURL(profile.id, lmod.id), user: USER });
+    await lst.load();
+    lst.set({ minWatchSec: 0, topics: DEFAULT_TOPICS });   // no wait, so the test isn't a timer
+    await lst.flush();
+
+    const host = document.getElementById('host');
+    const linst = mountModule('lessons', {
+      mount: host, bus, state: lst,
+      events: createEvents({ url: profiles.eventsURL(profile.id, lmod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents,
+    });
+    linst.init();
+    await sleep(500);
+
+    const cards = () => [...host.querySelectorAll('.l-card')];
+    check('every topic is a card', cards().length === DEFAULT_TOPICS.length, String(cards().length));
+    check('none start unlocked', host.querySelectorAll('.l-card.is-done').length === 0);
+    check('the counter is honest', /0 of 3/.test(host.querySelector('[data-count]').textContent),
+      host.querySelector('[data-count]').textContent);
+    check('the unlock button is not offered before opening the lesson',
+      host.querySelectorAll('[data-watched]').length === 0);
+
+    host.querySelector('[data-open="roots"]').click();
+    await sleep(200);
+    check('opening a lesson reveals the unlock button', !!host.querySelector('[data-watched="roots"]'));
+    check('...enabled, since the wait is zero here', !host.querySelector('[data-watched="roots"]').disabled);
+
+    const nudges = [];
+    bus.subscribe(LESSON_TOPIC, (p) => nudges.push(p));
+    host.querySelector('[data-watched="roots"]').click();
+    await sleep(700);
+    check('watching unlocks the topic', host.querySelectorAll('.l-card.is-done').length === 1,
+      String(host.querySelectorAll('.l-card.is-done').length));
+    check('the counter moved', /1 of 3/.test(host.querySelector('[data-count]').textContent),
+      host.querySelector('[data-count]').textContent);
+    check('it announced itself on the bus', nudges.length === 1 && nudges[0].topic === 'roots',
+      JSON.stringify(nudges));
+
+    const audit = createLessons({ makeEvents });
+    await audit.load();
+    check('the unlock is in the append-only log', audit.unlocked().has('roots'));
+    check('...and carries the human label for a transcript',
+      audit.get().events.some((e) => e.data.label === 'Word roots & origins'));
+
+    // ================= the game respects it =================
+    section('the game plays what was unlocked');
+    const wmod = await profiles.addModule(profile.id, 'wordforge');
+    const wst = createState({ url: profiles.stateURL(profile.id, wmod.id), user: USER });
+    await wst.load();
+    wst.set({ wordsText: WORDS, roundLength: 40 });
+    await wst.flush();
+
+    const wf = mountModule('wordforge', {
+      mount: document.getElementById('wf'), bus, state: wst,
+      events: createEvents({ url: profiles.eventsURL(profile.id, wmod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents, rand: seeded(99),
+    });
+    wf.init();
+    await sleep(900);
+
+    const wfHost = document.getElementById('wf');
+    const deckSize = () => Number((wfHost.querySelector('[data-progress]').textContent.split('/')[1] || '0').trim());
+    // The deck is words + sentence pairs; only WORDS are gated, so the 4 seeded pairs are
+    // always in it. 4 ungated words + 2 from `roots` + 4 pairs = 10.
+    check('the deck contains the unlocked topic’s words plus the ungated ones',
+      deckSize() === 10, `deck=${deckSize()} (expected 4 ungated + 2 roots + 4 pairs)`);
+    check('the still-locked topic is NOT silently dropped — the game says so',
+      /waiting behind/i.test(wfHost.querySelector('[data-held]').textContent),
+      wfHost.querySelector('[data-held]').textContent);
+    check('...naming the topic that holds it',
+      /concision|commas|fewer words/i.test(wfHost.querySelector('[data-held]').textContent),
+      wfHost.querySelector('[data-held]').textContent);
+
+    // unlock the second topic and start a fresh round
+    const les = createLessons({ makeEvents, bus });
+    await les.load();
+    await les.watch('concision', { label: 'Saying it in fewer words' });
+    await sleep(900);
+    bus.publish('wordforge/control', 'x');            // no-op; the round restarts below
+    wf.destroy();
+    const wst2 = createState({ url: profiles.stateURL(profile.id, wmod.id), user: USER });
+    await wst2.load();
+    wfHost.innerHTML = '';
+    const wf2 = mountModule('wordforge', {
+      mount: wfHost, bus: createBus(), state: wst2,
+      events: createEvents({ url: profiles.eventsURL(profile.id, wmod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents, rand: seeded(99),
+    });
+    wf2.init();
+    await sleep(900);
+    check('after the second lesson every word is in play', deckSize() === 11,
+      `deck=${deckSize()} (expected all 7 words + 4 pairs)`);
+    check('...and nothing is reported as held back',
+      wfHost.querySelector('[data-held]').textContent.trim() === '',
+      wfHost.querySelector('[data-held]').textContent);
+
+    les.destroy(); audit.destroy(); wf2.destroy(); linst.destroy();
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
