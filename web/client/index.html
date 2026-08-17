@@ -363,6 +363,28 @@
   .wordforge .wf-done{text-align:center;padding:22px 10px}
   .wordforge .wf-done-n{font-size:2.8rem;font-weight:800;color:var(--darkgreen);line-height:1}
   .wordforge .wf-done p{margin:2px 0 6px;color:var(--muted);font-size:.9rem}
+  /* lessons (watch to unlock) */
+  .lessons{display:flex;flex-direction:column;gap:10px;width:100%}
+  .lessons .l-top{font-size:.78rem;color:var(--muted);font-weight:600}
+  .lessons .l-list{display:flex;flex-direction:column;gap:9px}
+  .lessons .l-card{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:12px 14px}
+  .lessons .l-card.is-done{border-color:var(--moss);background:var(--cream-soft)}
+  .lessons .l-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .lessons .l-head h3{margin:0;font-size:1rem}
+  .lessons .l-badge{margin-left:7px;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;
+    color:#fff;background:var(--moss);border-radius:99px;padding:2px 7px;vertical-align:middle}
+  .lessons .l-blurb{margin:3px 0 0;font-size:.82rem;color:var(--muted)}
+  .lessons .l-btn{padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;white-space:nowrap}
+  .lessons .l-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+  .lessons .l-btn:disabled{opacity:.45;cursor:not-allowed}
+  .lessons .l-body{margin-top:11px}
+  .lessons .l-video{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#0c1a14;display:block}
+  .lessons .l-none{font-size:.85rem;color:var(--muted);text-align:center;padding:20px;background:var(--cream-soft);
+    border:1px dashed var(--line);border-radius:10px;margin:0}
+  .lessons .l-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .lessons .l-wait{font-size:.78rem;color:var(--muted)}
+  .wordforge .wf-held{font-size:.75rem;color:var(--midnight);text-align:center;min-height:1em}
 </style>
 </head>
 <body>

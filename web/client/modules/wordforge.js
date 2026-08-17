@@ -32,6 +32,12 @@
 // Neither stream knows about the other; this module simply writes to both, and the two
 // dashboards pick it up with no wiring.
 //
+// TOPICS LEVEL UP. A bank entry may carry `topic: '<id>'`; those questions stay OUT of the
+// deck until the matching lesson has been watched (see ../lessons.js). Entries with NO
+// topic are always in play, so a bank written before this existed is unaffected. When
+// something is being held back the game SAYS so — a silently shorter deck reads as "that's
+// all there is", which is the opposite of a level-up.
+//
 // CONTENT IS DATA. The word bank lives in per-profile state in the documented line format
 // (`word | meaning | sentence`, and `better || weaker || why`), so it is editable — and in
 // this curriculum, modding the bank is itself an assignment.
@@ -42,6 +48,7 @@
 import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
+import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
 
 export const GAME = 'wordforge';
 
@@ -201,12 +208,19 @@ export function scoreFor({ correct, streak = 0, cfg = DEFAULTS }) {
 }
 
 // The documented line formats, so a profile's bank can be edited as text.
+// `word | meaning | sentence | grade? | topic?` — the last two are optional, so every
+// bank written to the original three-column format still parses unchanged.
 export function parseWords(text) {
   return String(text || '').split('\n').map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#') && l.includes('|') && !l.includes('||'))
     .map((l) => l.split('|').map((x) => x.trim()))
     .filter((p) => p.length >= 3 && p[0] && p[1])
-    .map(([word, meaning, sentence]) => ({ word, meaning, sentence }));
+    .map(([word, meaning, sentence, grade, topic]) => {
+      const it = { word, meaning, sentence };
+      if (Number(grade) > 0) it.grade = Number(grade);
+      if (topic) it.topic = topic;
+      return it;
+    });
 }
 
 export function parsePairs(text) {
@@ -230,6 +244,9 @@ registerModule(
 
     let ledger = null;
     let tel = null;
+    let lessons = null;
+    let topics = DEFAULT_TOPICS;
+    let held = [];            // topics still holding words back, for the note
     let session = null;
     let words = DEFAULT_WORDS;
     let pairs = DEFAULT_PAIRS;
@@ -247,7 +264,13 @@ registerModule(
     const el = (sel) => mount.querySelector(sel);
 
     function newRound() {
-      deck = buildDeck(words, pairs, { roundLength: cfg.roundLength, rand });
+      // Only what's unlocked goes in the deck. Pairs are ungated for now — they carry no
+      // topic — so `gate` passes them straight through.
+      const unlocked = lessons ? lessons.unlocked() : new Set();
+      const openWords = gate(words, unlocked).open;
+      held = lockedTopics(words, unlocked, topics);
+      deck = buildDeck(openWords.length >= 4 ? openWords : words, pairs,
+        { roundLength: cfg.roundLength, rand });
       at = 0; streak = 0; earned = 0;
       next();
     }
@@ -343,6 +366,13 @@ registerModule(
         ? 'daily points reached — still counts for practice'
         : (streak >= 2 ? `${streak} in a row` : '');
       el('[data-progress]').textContent = deck.length ? `${Math.min(at + 1, deck.length)} / ${deck.length}` : '';
+      // Never let the deck just be quietly shorter — name what's waiting and why.
+      const heldEl = el('[data-held]');
+      if (heldEl) {
+        heldEl.textContent = held.length
+          ? `${held.reduce((n, h) => n + h.count, 0)} more waiting behind: ${held.map((h) => h.label).join(', ')}`
+          : '';
+      }
 
       if (!q) {
         host.innerHTML = `
@@ -410,10 +440,22 @@ registerModule(
               <span class="wf-progress" data-progress></span>
             </div>
             <div class="wf-body" data-body></div>
+            <div class="wf-held" data-held></div>
           </div>`;
 
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });
         tel = createTelemetry({ makeEvents: ctx.makeEvents, bus });
+        lessons = createLessons({ makeEvents: ctx.makeEvents, bus });
+        // The FIRST round waits for the unlock log, so it can't deal a deck that ignores
+        // what's been unlocked and then silently change shape one round later. Deal it on
+        // failure too — an unreachable server must not leave a blank game.
+        lessons.load()
+          .then(() => lessons.startPolling())
+          .catch(() => {})
+          .then(() => { if (!deck.length) newRound(); });
+        // A lesson finished elsewhere (the Lessons module, another device) — the new words
+        // join the pool at the START of the next round, not mid-question.
+        bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
         session = tel.session({ game: GAME, mode: 'practice' });
         ledger.load().catch(() => {});
         tel.load().catch(() => {});
@@ -427,6 +469,7 @@ registerModule(
           const w = Array.isArray(snap.words) ? snap.words : (snap.wordsText ? parseWords(snap.wordsText) : null);
           const p = Array.isArray(snap.pairs) ? snap.pairs : (snap.pairsText ? parsePairs(snap.pairsText) : null);
           words = (w && w.length >= 4) ? w : DEFAULT_WORDS;   // need 4 for a 4-way choice
+          topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
           pairs = (p && p.length) ? p : DEFAULT_PAIRS;
           cfg = {
             correctPoints: Number(snap.correctPoints) > 0 ? Number(snap.correctPoints) : DEFAULTS.correctPoints,
@@ -439,7 +482,6 @@ registerModule(
           };
         });
 
-        newRound();
       },
 
       onResize() {},
@@ -447,6 +489,7 @@ registerModule(
       destroy() {
         if (ledger) { ledger.destroy(); ledger = null; }
         if (tel) { tel.destroy(); tel = null; }
+        if (lessons) { lessons.destroy(); lessons = null; }
       },
     };
   },
