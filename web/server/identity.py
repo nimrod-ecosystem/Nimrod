@@ -67,6 +67,31 @@ def _session_user(request: Request) -> str | None:
         return None
 
 
+def optional_user(request: Request) -> str | None:
+    """Who is this, or None — never raises.
+
+    ``current_user`` fails closed with a 401, which is right for the API but wrong for a
+    PAGE: the landing page has to render for a stranger. This answers "should I show the
+    landing, or send them home?".
+
+    Deliberately does NOT fall back to the dev stub user. If it did, the landing page
+    would be unreachable in dev (everyone would look signed in) and so would never get
+    tested. An explicit ``?user=``/``X-Dev-User`` in dev still counts, because that is a
+    deliberate act of impersonation.
+    """
+    user = _match_device_key(request.headers.get("X-Device-Key"))
+    if user:
+        return user
+    sess = _session_user(request)
+    if sess:
+        return sess
+    if not _is_prod():
+        override = request.headers.get("X-Dev-User") or request.query_params.get("user")
+        if override and override.strip():
+            return override.strip()
+    return None
+
+
 def current_user(request: Request) -> str:
     # A valid device secret (unattended kiosk) always wins — works in dev + prod.
     user = _match_device_key(request.headers.get("X-Device-Key"))

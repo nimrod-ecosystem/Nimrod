@@ -23,7 +23,7 @@ See [`DECISIONS.md`](DECISIONS.md) for the choices that shape it and
 
 | Path | What it is |
 |------|------------|
-| `index.html` | The public landing page (served free via GitHub Pages). |
+| `index.html` | GitHub Pages entry point — now just a **pointer** to the live site. The real landing page moved into the app (`web/client/landing.html`) so there is only one copy to keep true. |
 | `web/` | The platform web app — rebuilt fresh. See `web/README.md`. |
 | `docs/` | Architecture notes and a per-module documentation convention. |
 | `docs/modules/` | One markdown walkthrough per module (for people **and** their AI tools). |

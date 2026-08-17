@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — your screens</title>
+<style>
+  :root{
+    --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C; --midnight:#105666;
+    --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF; --ink:#0A3323; --ink-soft:#3c5346;
+    --muted:#5d7064; --line:#e4e0c2; --rosy-deep:#a85f52; --radius:16px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--font);-webkit-font-smoothing:antialiased}
+  .home{max-width:880px;margin:0 auto;padding:20px 24px 64px}
+
+  .h-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    padding-bottom:14px;border-bottom:1px solid var(--line)}
+  .h-brand{font-weight:800;font-size:1.3rem;letter-spacing:-.02em}
+  .h-brand span{color:var(--rosy-deep)}
+  .h-who{display:flex;align-items:center;gap:12px;font-size:.85rem}
+  .h-email{color:var(--muted)}
+  .h-signout{color:var(--midnight)}
+
+  .h-intro{margin:26px 0 18px}
+  .h-intro h1{font-size:1.8rem;margin:0 0 .3em;letter-spacing:-.01em}
+  .h-intro p{margin:0;color:var(--ink-soft);max-width:60ch}
+
+  .h-new{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .h-new input{flex:1 1 260px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
+    background:var(--card);color:var(--ink);font:inherit;font-size:.95rem}
+  .h-btn{padding:9px 15px;border:1px solid var(--line);border-radius:10px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  .h-btn:hover:not(:disabled){background:var(--cream-soft)}
+  .h-btn:disabled{opacity:.45;cursor:not-allowed}
+  .h-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+  .h-primary:hover:not(:disabled){filter:brightness(.93);background:var(--moss)}
+
+  .h-msg{min-height:1.4em;font-size:.85rem;font-weight:600;color:var(--midnight);margin-bottom:10px}
+  .h-msg.bad{color:var(--rosy-deep)}
+
+  .h-list{display:flex;flex-direction:column;gap:12px}
+  .h-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+  .h-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .h-card-head h2{font-size:1.15rem;margin:0}
+  .h-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .h-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 10px;border-radius:99px;
+    background:var(--cream-soft);border:1px solid var(--line);font-size:.8rem;font-weight:600}
+  .h-x{border:0;background:transparent;color:var(--muted);font:inherit;font-size:1rem;line-height:1;
+    cursor:pointer;padding:0 5px;border-radius:99px}
+  .h-x:hover{color:var(--rosy-deep);background:rgba(0,0,0,.05)}
+  .h-none,.h-hint{font-size:.8rem;color:var(--muted)}
+  .h-add{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .h-add select{padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.85rem}
+  .h-empty,.h-loading{color:var(--muted);text-align:center;padding:28px;background:var(--card);
+    border:1px dashed var(--line);border-radius:var(--radius)}
+
+  @media (max-width:520px){
+    .h-card-head{flex-direction:column;align-items:stretch}
+    .h-card-head .h-btn{width:100%}
+  }
+</style>
+</head>
+<body>
+<div id="root"><p class="h-loading" style="max-width:880px;margin:40px auto">Loading…</p></div>
+
+<script type="module">
+import { createProfilesClient } from './profile.js';
+import { authHeaders } from './auth.js';
+import { listManifests } from './module.js';
+import { mountHome } from './home.js';
+
+// Importing a module registers it, which is what puts it in the "Add module" picker.
+// This list IS the catalog a person can choose from.
+import './modules/clock.js';
+import './modules/camera.js';
+import './modules/photos.js';
+import './modules/youtube.js';
+import './modules/personal.js';
+import './modules/educational.js';
+import './modules/director.js';
+import './modules/sprint.js';
+import './modules/quests.js';
+import './modules/progress.js';
+
+const root = document.getElementById('root');
+
+// Signed in? A Google session cookie rides along automatically; a paired device key
+// works too. 401 means "not signed in" -> the landing page is where you belong.
+(async () => {
+  let me;
+  try {
+    const r = await fetch('/api/me', { headers: authHeaders(new URLSearchParams(location.search).get('user')) });
+    if (r.status === 401) { location.href = '/'; return; }
+    if (!r.ok) throw new Error(`/api/me -> ${r.status}`);
+    me = await r.json();
+  } catch (e) {
+    root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
+      'Could not reach the server. It will retry when the connection returns.</p>';
+    setTimeout(() => location.reload(), 6000);
+    console.error('home boot failed', e);
+    return;
+  }
+
+  try {
+    await mountHome(root, {
+      email: me.email || '',
+      profiles: createProfilesClient({ user: me.user }),
+      manifests: listManifests(),
+    });
+  } catch (e) {
+    root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
+      'Signed in, but your screens could not be loaded. Reload to try again.</p>';
+    console.error('home mount failed', e);
+  }
+})();
+</script>
+</body>
+</html>

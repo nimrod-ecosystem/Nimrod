@@ -12,7 +12,15 @@ codebase, not a copy of the old bedside dashboard. The old app is a design refer
 - `client/` — framework-light ES modules: `bus.js` (sources→bindings→sinks), `state.js`
   (versioned overwrite-state handle), `events.js` (append-only handle), `profile.js`
   (profiles client), `module.js` (manifest registry + contract), `app.js` (wiring),
-  `modules/` (one file per module: `counter`, `presslog`), and `index.html` (a dev harness).
+  `modules/` (one file per module), and the three USER-FACING surfaces:
+  **`landing.html`** (public — what Nimrod is, and Sign in with Google),
+  **`home.html`** + `home.js` (signed in — your screens: create one, add modules, Open it), and
+  **`kiosk.html`** + `kiosk.js` (the running screen, full-screen, one module at a time).
+  `index.html` is the DEV HARNESS, reachable at `/index.html`.
+
+  The server picks between the first two at `/`: signed out serves the landing, signed in
+  redirects to `/home.html`. Home COMPOSES and the kiosk PLAYS — the kiosk may run unattended
+  for days in a care facility, so it is not also a management UI.
 
 ## Slices landed
 1. **Shared systems** — module bus + per-user, server-side state (no `localStorage` store of
