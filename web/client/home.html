@@ -44,6 +44,9 @@
   .h-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
   .h-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .h-card-head h2{font-size:1.15rem;margin:0}
+  .h-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .h-quiet{font-weight:500;font-size:.82rem;padding:7px 11px;color:var(--ink-soft)}
+  .h-danger:hover:not(:disabled){background:#fbecea;border-color:var(--rosy);color:var(--rosy-deep)}
   .h-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
   .h-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 10px;border-radius:99px;
     background:var(--cream-soft);border:1px solid var(--line);font-size:.8rem;font-weight:600}
@@ -59,7 +62,8 @@
 
   @media (max-width:520px){
     .h-card-head{flex-direction:column;align-items:stretch}
-    .h-card-head .h-btn{width:100%}
+    .h-actions{display:grid;grid-template-columns:1fr 1fr}
+    .h-actions .h-primary{grid-column:1 / -1}
   }
 </style>
 </head>
@@ -84,6 +88,7 @@ import './modules/director.js';
 import './modules/sprint.js';
 import './modules/quests.js';
 import './modules/progress.js';
+import './modules/wordforge.js';
 
 const root = document.getElementById('root');
 

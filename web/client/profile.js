@@ -27,6 +27,18 @@ export function createProfilesClient({ user, baseURL = '' }) {
     get: (pid) =>
       fetch(`${baseURL}/api/profiles/${pid}`, { headers: authHeaders(user) }).then(json),
 
+    rename: (pid, name) =>
+      fetch(`${baseURL}/api/profiles/${pid}`, {
+        method: 'PATCH', headers: jsonHeaders(), body: JSON.stringify({ name }),
+      }).then(json),
+
+    // Deletes the profile + its modules and settings. Its append-only events remain —
+    // the server refuses to delete those, so a score can't be erased by deleting a screen.
+    remove: (pid) =>
+      fetch(`${baseURL}/api/profiles/${pid}`, {
+        method: 'DELETE', headers: authHeaders(user),
+      }).then(json),
+
     addModule: (pid, type) =>
       fetch(`${baseURL}/api/profiles/${pid}/modules`, {
         method: 'POST', headers: jsonHeaders(), body: JSON.stringify({ type }),

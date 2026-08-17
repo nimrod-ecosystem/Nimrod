@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>word forge — integration test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#progressHost,#questsHost{width:460px;margin-top:12px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:12px}
+</style>
+</head>
+<body>
+<h1>word forge — integration test</h1>
+<p>Mounts the REAL <code>wordforge</code> module against the live dev server, with the REAL
+<code>quests</code> and <code>progress</code> modules on the same profile. Proves the thing the whole
+architecture was built for: one game writes to BOTH streams, and two dashboards that know nothing
+about it pick it up. Also covers the design rule that a WRONG answer explains itself and still pays —
+but only once the explanation is acknowledged.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="questsHost"></div>
+<div id="progressHost"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { createPointsLedger, sumBySource } from '../points.js';
+import { createTelemetry, byConcept, summarize } from '../telemetry.js';
+import {
+  GAME, DEFAULTS, DEFAULT_WORDS, DEFAULT_PAIRS, CONCEPT_PAIRS,
+  shuffle, buildDeck, makeQuestion, scoreFor, parseWords, parsePairs,
+} from '../modules/wordforge.js';
+import '../modules/quests.js';
+import '../modules/progress.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('wf-test-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// A SEEDED pseudo-random: reproducible run to run, but with real variety. A constant
+// rand (e.g. always 0) is deterministic yet degenerate — it pins the correct option to
+// the same slot every time, so "always click the first option" would never once be right
+// and the test would prove nothing about scoring a correct answer.
+function seeded(seed) {
+  let x = seed >>> 0;
+  return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; };
+}
+const fixedRand = seeded(20260817);
+
+(async () => {
+  try {
+    // ================= pure =================
+    section('content format');
+    const words = parseWords(`# comment
+obsolete | no longer used | The phone became obsolete.
+salvage | to save something usable | He salvaged the drive.
+bad line without a pipe
+a || b || c`);
+    check('word lines parse', words.length === 2 && words[0].word === 'obsolete', JSON.stringify(words));
+    check('pair lines are not mistaken for word lines', !words.some((w) => w.word === 'a'));
+    const prs = parsePairs('good || bad || because\nnot a pair | just | pipes');
+    check('pair lines parse', prs.length === 1 && prs[0].why === 'because', JSON.stringify(prs));
+    check('the seeded bank is big enough for 4-way choices', DEFAULT_WORDS.length >= 4 && DEFAULT_PAIRS.length >= 1);
+
+    section('scoring — a wrong answer is not worth zero');
+    const right = scoreFor({ correct: true, streak: 1 });
+    const wrong = scoreFor({ correct: false, streak: 0 });
+    check('a right answer pays full', right.total === DEFAULTS.correctPoints, String(right.total));
+    check('a WRONG answer still pays for trying', wrong.total === DEFAULTS.tryPoints && wrong.total > 0, String(wrong.total));
+    check('...but less than being right', wrong.total < right.total);
+    check('a streak pays a bonus at the interval',
+      scoreFor({ correct: true, streak: DEFAULTS.streakEvery }).bonus === DEFAULTS.streakBonus);
+    check('...and not in between', scoreFor({ correct: true, streak: DEFAULTS.streakEvery + 1 }).bonus === 0);
+    check('a wrong answer never gets a streak bonus',
+      scoreFor({ correct: false, streak: DEFAULTS.streakEvery }).bonus === 0);
+
+    section('questions');
+    const deck = buildDeck(DEFAULT_WORDS, DEFAULT_PAIRS, { roundLength: 6, rand: fixedRand });
+    check('a round is capped at roundLength', deck.length === 6, String(deck.length));
+    check('shuffle keeps every item', shuffle([1, 2, 3, 4], fixedRand).sort().join() === '1,2,3,4');
+
+    const w = DEFAULT_WORDS[0];
+    const qd = makeQuestion({ kind: 'define', word: w }, DEFAULT_WORDS, fixedRand);
+    check('define asks about the word', qd.prompt.includes(w.word), qd.prompt);
+    check('define offers 4 choices', qd.options.length === 4, String(qd.options.length));
+    check('the right meaning is among them', qd.options[qd.answer] === w.meaning);
+    check('define tags the WORD as the concept', qd.concept === w.word, qd.concept);
+    check('define explains with the meaning AND an example',
+      qd.explain.includes(w.meaning) && qd.explain.includes(w.sentence), qd.explain);
+
+    const qb = makeQuestion({ kind: 'blank', word: w }, DEFAULT_WORDS, fixedRand);
+    check('fill-the-blank hides the word', !qb.prompt.toLowerCase().includes(w.word) && qb.prompt.includes('_____'), qb.prompt);
+    check('...and the word is the answer', qb.options[qb.answer] === w.word);
+
+    const qp = makeQuestion({ kind: 'better', pair: DEFAULT_PAIRS[0] }, DEFAULT_WORDS, fixedRand);
+    check('which-is-better offers both sentences', qp.options.length === 2);
+    check('...the better one is the answer', qp.options[qp.answer] === DEFAULT_PAIRS[0].better);
+    check('...and the explanation is the why', qp.explain === DEFAULT_PAIRS[0].why);
+    check('pair rounds tag a writing concept, not a word', qp.concept === CONCEPT_PAIRS, qp.concept);
+
+    // ================= the module, server-backed =================
+    section('playing — one game, BOTH streams');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-wordforge');
+    const makeState  = (key, opts) => createState({ url: profiles.stateURL(profile.id, key), user: USER, ...opts });
+    const makeEvents = (key, opts) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER, ...opts });
+    const bus = createBus();
+
+    const mod = await profiles.addModule(profile.id, 'wordforge');
+    const st = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    await st.load();
+    const host = document.getElementById('host');
+    const inst = mountModule('wordforge', {
+      mount: host, bus, state: st,
+      events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents, rand: fixedRand,
+    });
+    inst.init();
+    await sleep(400);
+
+    const q = (s) => host.querySelector(s);
+    const txt = (s) => q(s)?.textContent?.trim();
+    const opts = () => [...host.querySelectorAll('[data-opt]')];
+    const rightIdx = () => opts().findIndex((b) => b.classList.contains('is-right'));
+
+    check('a question is showing', opts().length >= 2, String(opts().length));
+    check('the round counter starts at 1', /^1 \//.test(txt('[data-progress]') || ''), txt('[data-progress]'));
+
+    // --- answer WRONG on purpose ---
+    const ledger = createPointsLedger({ makeEvents });
+    await ledger.load();
+    const before = ledger.total();
+
+    // click an option that is not the answer (find it after answering is impossible, so
+    // read the module's own marking by clicking index 0 then checking, and retry if it
+    // happened to be right)
+    let wrongPicked = false;
+    for (const i of [0, 1]) {
+      if (host.querySelector('[data-opt]:disabled')) break;
+      opts()[i].click();
+      await sleep(300);
+      if (host.querySelector('.wf-opt.is-wrong')) { wrongPicked = true; break; }
+      // it was right — advance and try again on the next question
+      host.querySelector('[data-next]').click();
+      await sleep(300);
+    }
+    check('a wrong answer can be produced', wrongPicked || !!host.querySelector('.wf-opt.is-wrong'));
+    check('the right answer is revealed', rightIdx() >= 0, String(rightIdx()));
+    check('the miss is EXPLAINED, not just marked wrong',
+      (txt('.wf-fb.is-wrong') || '').length > 30, txt('.wf-fb.is-wrong'));
+    check('...and it offers the points for trying',
+      /for the try/.test(txt('.wf-fb.is-wrong') || ''), txt('.wf-fb.is-wrong'));
+    check('the button asks you to take the correction in', txt('[data-next]') === 'Got it', txt('[data-next]'));
+
+    await sleep(400);
+    await ledger.load();
+    check('the try points are NOT paid before the explanation is acknowledged',
+      ledger.total() === before, `${before} -> ${ledger.total()}`);
+
+    host.querySelector('[data-next]').click();     // "Got it"
+    await sleep(600);
+    await ledger.load();
+    check('acknowledging the explanation banks the try points',
+      ledger.total() === before + DEFAULTS.tryPoints, `${before} -> ${ledger.total()}`);
+
+    // --- play out the rest of the round, always picking the first option ---
+    // The deck is deterministic under fixedRand but the ANSWER position varies, so this
+    // naturally produces a mix of right and wrong — which is exactly what we want to
+    // check the arithmetic against.
+    const seen = [{ correct: false }];          // the deliberate miss above, already banked
+    for (let n = 0; n < 12; n++) {
+      const o = opts();
+      if (!o.length) break;                      // round finished
+      o[0].click();
+      await sleep(320);
+      seen.push({ correct: !!host.querySelector('.wf-fb.is-right') });
+      const nx = host.querySelector('[data-next]');
+      if (!nx) break;
+      nx.click();                                // "Next" or "Got it" — both advance
+      await sleep(360);
+    }
+
+    const rights = seen.filter((x) => x.correct).length;
+    const wrongs = seen.length - rights;
+    check('the round produced both right and wrong answers', rights > 0 && wrongs > 0, `${rights}R / ${wrongs}W`);
+
+    // Recompute what the round SHOULD have paid, streak bonuses included.
+    let streak = 0, expected = 0;
+    for (const s2 of seen) {
+      streak = s2.correct ? streak + 1 : 0;
+      expected += scoreFor({ correct: s2.correct, streak }).total;
+    }
+    await sleep(500);
+    await ledger.load();
+    check('the ledger total matches the scoring rules exactly',
+      ledger.total() === expected, `${ledger.total()} vs ${expected}`);
+    check('every point came from the game',
+      (sumBySource(ledger.events()).wordforge || 0) === ledger.total(),
+      JSON.stringify(sumBySource(ledger.events())));
+    check('a wrong answer contributed real points, not zero',
+      expected >= wrongs * DEFAULTS.tryPoints && wrongs > 0);
+
+    // --- telemetry ---
+    section('the measurement half');
+    const tel = createTelemetry({ makeEvents });
+    await tel.load();
+    const trials = tel.trials();
+    check('every answer logged a trial', trials.length >= 2, String(trials.length));
+    check('trials are attributed to the game', trials.every((t) => t.data.game === GAME));
+    check('trials carry a CONCEPT (what is hard)', trials.every((t) => !!t.data.concept),
+      JSON.stringify(trials.map((t) => t.data.concept)));
+    check('trials record right AND wrong', new Set(trials.map((t) => t.data.correct)).size === 2,
+      JSON.stringify(trials.map((t) => t.data.correct)));
+    check('trials time the answer', trials.every((t) => Number.isFinite(t.data.latencyMs)));
+    check('they all share one session', new Set(trials.map((t) => t.data.session)).size === 1);
+    check('per-concept accuracy is computable', byConcept(tel.get().events).length >= 1);
+
+    // ================= the two dashboards see it =================
+    section('the dashboards pick it up with no wiring');
+    const qm = await profiles.addModule(profile.id, 'quests');
+    const qInst = mountModule('quests', {
+      mount: document.getElementById('questsHost'), bus,
+      state: createState({ url: profiles.stateURL(profile.id, qm.id), user: USER }),
+      events: createEvents({ url: profiles.eventsURL(profile.id, qm.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents,
+    });
+    qInst.init();
+
+    const pm = await profiles.addModule(profile.id, 'progress');
+    const pInst = mountModule('progress', {
+      mount: document.getElementById('progressHost'), bus,
+      state: createState({ url: profiles.stateURL(profile.id, pm.id), user: USER }),
+      events: createEvents({ url: profiles.eventsURL(profile.id, pm.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents,
+    });
+    pInst.init();
+    await sleep(900);
+
+    const qHost = document.getElementById('questsHost');
+    const pHost = document.getElementById('progressHost');
+    check('the quest board shows the game’s points in the balance',
+      Number(qHost.querySelector('[data-balance]').textContent) === ledger.total(),
+      `${qHost.querySelector('[data-balance]').textContent} vs ${ledger.total()}`);
+    check('the progress dashboard lists the game',
+      [...pHost.querySelectorAll('[data-game]')].some((b) => b.dataset.game === GAME),
+      [...pHost.querySelectorAll('[data-game]')].map((b) => b.dataset.game).join(','));
+    check('the progress dashboard counted the trials',
+      [...pHost.querySelectorAll('.g-card')].some((c) =>
+        c.querySelector('.g-k').textContent === 'trials' && Number(c.querySelector('.g-v').textContent) === trials.length),
+      [...pHost.querySelectorAll('.g-card')].map((c) => c.querySelector('.g-k').textContent + '=' + c.querySelector('.g-v').textContent).join(','));
+    check('it can already name a concept that was missed',
+      [...pHost.querySelectorAll('.g-crow')].length >= 1,
+      String([...pHost.querySelectorAll('.g-crow')].length));
+
+    qInst.destroy(); pInst.destroy(); inst.destroy(); ledger.destroy(); tel.destroy();
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

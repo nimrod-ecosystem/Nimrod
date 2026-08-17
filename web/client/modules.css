@@ -189,3 +189,30 @@
 .gprogress .g-table td{padding:4px 5px;border-bottom:1px solid var(--line)}
 .gprogress .g-src{display:block;font-size:.64rem;color:var(--muted)}
 .gprogress .g-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:18px}
+
+/* wordforge (vocabulary game) */
+.wordforge{display:flex;flex-direction:column;gap:10px;width:100%}
+.wordforge .wf-top{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--muted)}
+.wordforge .wf-score{font-weight:800;color:var(--darkgreen);font-variant-numeric:tabular-nums}
+.wordforge .wf-streak{color:var(--midnight);font-weight:700}
+.wordforge .wf-progress{margin-left:auto;font-variant-numeric:tabular-nums}
+.wordforge .wf-kind{margin:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.wordforge .wf-prompt{margin:4px 0 12px;font-size:1.15rem;font-weight:600;line-height:1.4}
+.wordforge .wf-opts{display:flex;flex-direction:column;gap:7px}
+.wordforge .wf-opt{text-align:left;padding:11px 13px;border:1px solid var(--line);border-radius:11px;
+  background:var(--card);color:var(--ink);font:inherit;font-size:.95rem;cursor:pointer;line-height:1.4}
+.wordforge .wf-opt:hover:not(:disabled){background:var(--cream-soft);border-color:var(--moss)}
+.wordforge .wf-opt:disabled{cursor:default}
+.wordforge .wf-opt.is-right{border-color:var(--moss);background:#f0f4e8;box-shadow:inset 3px 0 0 var(--moss)}
+.wordforge .wf-opt.is-wrong{border-color:var(--rosy);background:#fbecea;box-shadow:inset 3px 0 0 var(--rosy-deep)}
+.wordforge .wf-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5}
+.wordforge .wf-fb.is-right{background:#f0f4e8;border:1px solid var(--moss)}
+.wordforge .wf-fb.is-wrong{background:var(--cream-soft);border:1px solid var(--line)}
+.wordforge .wf-bonus,.wordforge .wf-try{display:block;margin-top:4px;font-size:.78rem;color:var(--midnight);font-weight:600}
+.wordforge .wf-btn{margin-top:10px;padding:10px 18px;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.wordforge .wf-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+.wordforge .wf-primary:hover{filter:brightness(.93)}
+.wordforge .wf-done{text-align:center;padding:22px 10px}
+.wordforge .wf-done-n{font-size:2.8rem;font-weight:800;color:var(--darkgreen);line-height:1}
+.wordforge .wf-done p{margin:2px 0 6px;color:var(--muted);font-size:.9rem}
