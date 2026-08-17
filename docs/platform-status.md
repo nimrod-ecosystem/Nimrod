@@ -338,6 +338,23 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   screen can never quietly erase a score — and the confirm dialog says exactly that, including that
   a new screen won't show the old history. 43 checks (`dev/home_test.html`).
 
+- **Balance, bands, and a daily cap** (2026-08-17) — Mike caught that Word Forge at 10 points a
+  correct answer was paying **30-40 points per MINUTE** against an economy that runs at ~1/min.
+  Repriced to 2/1/+3, anchored on the Task Menu's own price for "look up a word's meaning" (2), and
+  the rates for every source are now tracked in **`docs/points-balance.md`** with the rule: estimate
+  the minutes, divide, and cap anything repeatable. Added a **`dailyCap` (40)** — Mike's use case is
+  a game parked on a second monitor between other things, which is a good way to learn and a
+  terrible way to price an economy. Past the cap the game keeps playing and **keeps recording
+  trials**; only the currency stops (capping the currency must not cap the measurement).
+  `points.js` gained `todayFrom(source)`.
+  **Grade bands:** word-bank entries carry a `grade`, telemetry gained an optional `band` field and
+  `byBand()`, and `progress` has a **Bands tab** that appears only when the data has bands. It is
+  the content's OWN label, never a percentile or national comparison — deriving one needs a normed
+  instrument, and inventing one would fabricate a number about a child's education.
+  **`educational` gained a text format** (`itemsText`, `kind | graphicType:value | spoken line`) —
+  it already read its library from per-profile state, so this makes it editable without hand-writing
+  JSON. Word Forge 59 checks, progress 54, both green.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and

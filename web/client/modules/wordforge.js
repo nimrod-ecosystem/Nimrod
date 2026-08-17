@@ -34,20 +34,33 @@ import { createTelemetry } from '../telemetry.js';
 export const GAME = 'wordforge';
 
 // Seeded from the word bank in the documented format. Editable per profile.
+//
+// The 4th column is a GRADE BAND. Read it for exactly what it is: **the bank's own label
+// for how hard a word is**, so the progress dashboard can say "grade-8 words at 85%,
+// grade-10 at 40%". It is NOT a normed score and not a comparison against other children
+// — that would take a standardized instrument with a sampled population behind it, which
+// this is not. These starting values are estimates in the spirit of the Dale-Chall
+// familiar-word bands; correct them freely, they are data.
 export const DEFAULT_WORDS = [
-  ['obsolete', 'no longer used because something newer exists', 'The old phone became obsolete the moment the new model shipped.'],
-  ['refurbish', 'to clean up and repair something so it works like new', 'Volunteers refurbish old laptops and give them to families who need them.'],
-  ['salvage', 'to save something usable from what would be thrown out', 'He managed to salvage the hard drive from the broken computer.'],
-  ['tolerance', "the tiny allowed difference between a part's real size and its target", "If the tolerance is too tight, the printed parts won't fit together."],
-  ['proportion', 'the relationship in size between two things', 'He kept the desk organizer in proportion so it matched his monitor.'],
-  ['persuade', 'to convince someone to do or believe something', 'She wrote a letter to persuade the council to support the repair law.'],
-  ['civic', 'relating to a city and the duties of its citizens', 'Voting is a basic civic responsibility.'],
-  ['surplus', 'more than what is needed; extra', 'The company had a surplus of old monitors it planned to scrap.'],
-  ['initiative', 'the drive to do something without being told', 'He showed initiative by building a tool that logged his points automatically.'],
-  ['concise', 'saying a lot in few words', 'Her concise answer made the point without wasting a sentence.'],
-  ['deliberate', 'done on purpose, carefully considered', 'Planned obsolescence is a deliberate choice, not an accident.'],
-  ['tedious', 'boring and slow because it takes a long time', 'Copying the numbers by hand was tedious, so he wrote a script.'],
-].map(([word, meaning, sentence]) => ({ word, meaning, sentence }));
+  ['obsolete', 'no longer used because something newer exists', 'The old phone became obsolete the moment the new model shipped.', 8],
+  ['refurbish', 'to clean up and repair something so it works like new', 'Volunteers refurbish old laptops and give them to families who need them.', 8],
+  ['salvage', 'to save something usable from what would be thrown out', 'He managed to salvage the hard drive from the broken computer.', 7],
+  ['tolerance', "the tiny allowed difference between a part's real size and its target", "If the tolerance is too tight, the printed parts won't fit together.", 9],
+  ['proportion', 'the relationship in size between two things', 'He kept the desk organizer in proportion so it matched his monitor.', 6],
+  ['persuade', 'to convince someone to do or believe something', 'She wrote a letter to persuade the council to support the repair law.', 6],
+  ['civic', 'relating to a city and the duties of its citizens', 'Voting is a basic civic responsibility.', 7],
+  ['surplus', 'more than what is needed; extra', 'The company had a surplus of old monitors it planned to scrap.', 8],
+  ['initiative', 'the drive to do something without being told', 'He showed initiative by building a tool that logged his points automatically.', 8],
+  ['concise', 'saying a lot in few words', 'Her concise answer made the point without wasting a sentence.', 9],
+  ['deliberate', 'done on purpose, carefully considered', 'Planned obsolescence is a deliberate choice, not an accident.', 8],
+  ['tedious', 'boring and slow because it takes a long time', 'Copying the numbers by hand was tedious, so he wrote a script.', 9],
+].map(([word, meaning, sentence, grade]) => ({ word, meaning, sentence, grade }));
+
+// A grade number -> the label the dashboard groups by. One place, so it can't drift.
+export function bandOf(grade) {
+  const n = Number(grade);
+  return Number.isFinite(n) && n > 0 ? `grade ${n}` : null;
+}
 
 export const DEFAULT_PAIRS = [
   ['Refurbished laptops give low-income families affordable computers.',
@@ -62,7 +75,7 @@ export const DEFAULT_PAIRS = [
   ['Planned obsolescence keeps working devices out of circulation.',
    "Planned obsolescence is when they make it so working devices don't stay around to get used.",
    'The first is tight and precise; the second rambles.'],
-].map(([better, weaker, why]) => ({ better, weaker, why }));
+].map(([better, weaker, why]) => ({ better, weaker, why, grade: 8 }));
 
 // PRICED AGAINST THE REST OF THE ECONOMY, not invented.
 //
@@ -82,6 +95,12 @@ export const DEFAULTS = {
   streakEvery: 5,      // a bonus every N correct in a row
   streakBonus: 3,
   roundLength: 10,     // items per round; each appears at most once
+  // A DAILY CAP, because of how this is meant to be used: parked on a second monitor and
+  // dipped into while something loads. That is a good way to learn and a terrible way to
+  // price an economy — left open for six hours it would out-earn a day of real work. Past
+  // the cap the game keeps playing and KEEPS RECORDING TRIALS (the learning still counts,
+  // and progress still measures it); only the currency stops. ~20 correct answers.
+  dailyCap: 40,
 };
 
 export const CONCEPT_PAIRS = 'sentence quality';
@@ -120,12 +139,14 @@ export function makeQuestion(item, words, rand = Math.random) {
       options: opts,
       answer: opts.indexOf(p.better),
       concept: CONCEPT_PAIRS,
+      band: bandOf(p.grade),
       explain: p.why,
     };
   }
 
   const w = item.word;
   const others = shuffle(words.filter((x) => x.word !== w.word), rand).slice(0, 3);
+  const band = bandOf(w.grade);
 
   if (item.kind === 'blank') {
     // Blank the word out of its own sentence; the options are words.
@@ -137,6 +158,7 @@ export function makeQuestion(item, words, rand = Math.random) {
       options: opts,
       answer: opts.indexOf(w.word),
       concept: w.word,
+      band,
       explain: `“${w.word}” means ${w.meaning}.`,
     };
   }
@@ -148,6 +170,7 @@ export function makeQuestion(item, words, rand = Math.random) {
     options: opts,
     answer: opts.indexOf(w.meaning),
     concept: w.word,
+    band,
     explain: `“${w.word}” means ${w.meaning}. For example: ${w.sentence}`,
   };
 }
@@ -200,6 +223,7 @@ registerModule(
     let streak = 0;
     let earned = 0;
     let answered = null;      // null = unanswered; else {picked, correct, award}
+    let capped = false;       // today's payout for this game is spent
     let askedAt = 0;
 
     const el = (sel) => mount.querySelector(sel);
@@ -234,6 +258,7 @@ registerModule(
         session: session.id,
         mode: 'practice',
         concept: q.concept,
+        band: q.band || null,
         responded: true,
         correct,
         latencyMs: Date.now() - askedAt,
@@ -245,11 +270,18 @@ registerModule(
       if (correct) await bank(award, q.concept, 'correct');
     }
 
+    // Pay, unless today's cap for this game is already spent. The trial was logged either
+    // way — capping the currency must not cap the measurement.
     async function bank(award, concept, note) {
-      earned += award.total;
+      const spentToday = ledger.todayFrom(GAME);
+      const room = cfg.dailyCap > 0 ? Math.max(0, cfg.dailyCap - spentToday) : award.total;
+      const pay = Math.min(award.total, room);
+      capped = cfg.dailyCap > 0 && room <= 0;
+      if (pay <= 0) { render(); return; }
+      earned += pay;
       try {
         await ledger.award({
-          amount: award.total,
+          amount: pay,
           mult: 1,
           type: 'Bonus',
           source: GAME,
@@ -281,7 +313,9 @@ registerModule(
       const host = el('[data-body]');
       if (!host) return;
       el('[data-score]').textContent = `${earned} this round`;
-      el('[data-streak]').textContent = streak >= 2 ? `${streak} in a row` : '';
+      el('[data-streak]').textContent = capped
+        ? 'daily points reached — still counts for practice'
+        : (streak >= 2 ? `${streak} in a row` : '');
       el('[data-progress]').textContent = deck.length ? `${Math.min(at + 1, deck.length)} / ${deck.length}` : '';
 
       if (!q) {
@@ -367,6 +401,7 @@ registerModule(
             streakEvery: Number(snap.streakEvery) >= 0 ? Number(snap.streakEvery) : DEFAULTS.streakEvery,
             streakBonus: Number(snap.streakBonus) >= 0 ? Number(snap.streakBonus) : DEFAULTS.streakBonus,
             roundLength: Number(snap.roundLength) > 0 ? Number(snap.roundLength) : DEFAULTS.roundLength,
+            dailyCap: Number(snap.dailyCap) >= 0 ? Number(snap.dailyCap) : DEFAULTS.dailyCap,
           };
         });
 

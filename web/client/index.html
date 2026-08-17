@@ -312,7 +312,8 @@
   .gprogress .g-tabs{display:flex;gap:6px}
   .gprogress .g-tab{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);
     color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-  .gprogress .g-tab.on{background:var(--moss);border-color:var(--moss);color:#fff}
+    .gprogress .g-tab[hidden]{display:none}
+.gprogress .g-tab.on{background:var(--moss);border-color:var(--moss);color:#fff}
   .gprogress .g-ghost{flex:0 0 auto;font-weight:500;color:var(--midnight)}
   .gprogress .g-ghost:disabled{opacity:.4;cursor:not-allowed}
   .gprogress .g-panel{max-height:340px;overflow-y:auto}

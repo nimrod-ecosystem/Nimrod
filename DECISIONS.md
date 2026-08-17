@@ -426,6 +426,32 @@ gameplay telemetry are the RECORD, and deleting a screen must not be a back door
 The consequence is stated to the user before they confirm: the history is kept, and a new screen
 will not show it, because it is a different screen.
 
+## Point sources are priced per MINUTE, and repeatable ones are capped (2026-08-17)
+Mike: "Is that a lot of points if the standard is about a point per minute? ... I don't want any OP
+modules that just spit out points." He was right — Word Forge's first draft paid 30-40 points a
+minute against an economy that runs at ~1/min.
+
+- Every source is now priced against the **Task Menu**, and the rates are tracked in
+  `docs/points-balance.md`. Adding or repricing a source means adding a row.
+- Anything that can be repeated indefinitely gets a **daily cap**. `ledger.todayFrom(source)` is
+  the primitive. Word Forge's is 40/day (~20 correct answers), because Mike intends it to sit on a
+  second monitor and be dipped into — good for learning, ruinous for an economy if uncapped.
+- **Capping the currency must never cap the measurement.** Past the cap the game still plays and
+  still logs trials; `progress` keeps measuring. Those are different questions and they get
+  different answers.
+
+## Grade bands are the content's own labels, never a national comparison (2026-08-17)
+Mike asked whether progress could show grade level or a national/world average.
+
+- **Yes** to a band that comes from the content: bank entries carry a `grade`, trials carry a
+  `band`, and `progress` reports accuracy per band ("grade-8 words at 85%"). Honest, explainable,
+  and it gets better as the bank grows from his other subjects.
+- **No** to percentiles or national averages. Those require a normed instrument with a sampled
+  population; we cannot derive one, and a number that merely LOOKED like a national comparison would
+  be fabricating something about a child's education that Mike might act on. The Bands tab says so
+  in the UI, and hides itself entirely when the data carries no bands.
+- The most informative comparison — him against himself over time — was already built.
+
 ## Cici ↔ the scheduler & media (2026-08-14, scoped — ideas, not built)
 How the local AI companion (Cici) interacts with the state-machine engine + media. None of the Cici-AI
 layer is built yet (it's the "brain on local Ollama / cloud-API" plan in the private repo's CONTEXT), but

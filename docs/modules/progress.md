@@ -34,6 +34,12 @@ where the number informs). They share a substrate and nothing else.
 - **Concepts tab** — a bar per concept, hardest first, with `▲ improving / ▼ slipping / –
   flat` and the trial count. Capped at `CONCEPT_LIMIT` (12) with a note saying how many
   were hidden — a truncated list that doesn't say it's truncated reads as "that's all".
+- **Bands tab** — accuracy by the content's own difficulty label ("grade 8", a unit name),
+  easiest first. **It only appears when the data actually carries bands**, because an empty
+  tab teaches nothing. This is explicitly *not* a percentile or a national comparison —
+  those need a normed instrument with a sampled population behind them, and inventing one
+  would be fabricating a number about a child's education that someone might act on. It
+  says only what it knows: how they did on material this content labelled that hard.
 - **Sessions tab** — one row per sitting: when, which game, trials, right, wrong, missed,
   accuracy, avg response, length.
 - **Export CSV** — the current filter's trials, for handing a teacher or clinician a file.
@@ -62,6 +68,7 @@ One `trial` event per attempt. See `telemetry.js` for the full contract.
 | `concept` | **the skill or topic exercised.** This is the field that answers "what's hard" — always set it. |
 | `responded` | did they act at all |
 | `correct` | was it right (`null` when they didn't respond — "wrong" and "no answer" must never blur) |
+| `band` | optional difficulty label the game supplies (a grade, a unit). Drives the Bands tab. |
 | `latencyMs` | cue/question → response |
 | `waitMs` | how long the game made them wait (pacing) |
 | `prompt` | optional human label of the item |
@@ -113,5 +120,5 @@ and mode filters, the chart, the sessions table, that a bare nudge never creates
 and that telemetry never leaks into the points ledger. Live-verified in the dev harness
 with real logged trials: `salvage 33%` sorted above `tolerance 100%` and `obsolete 100%`.
 
-**No game writes to this stream yet** — the producers land when the Cici games are ported
-and when the first learning game is built.
+**`wordforge` writes to this stream** (see [wordforge.md](wordforge.md)); the Cici games
+(`pressgame`, `wordgame`) are still to be ported.

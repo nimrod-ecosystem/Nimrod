@@ -31,10 +31,47 @@ import { createState } from '../state.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { speak as speakDefault, cancel as cancelSpeak } from '../voice.js';
 
+// The library is per-PROFILE data, so two people on one account get different segments.
+// It has always been readable from `state.items` as objects; `state.itemsText` adds the
+// same editable LINE FORMAT the other content modules use, so a person can edit their
+// library as text instead of hand-writing JSON:
+//
+//     kind | graphicType:value | the line to speak
+//     counting | number:3   | Three. One, two, three.
+//     alphabet | letters:A  | A. A is for apple.
+//     vocab    | word:cup   | Cup. This is a cup.
+//
+// `id` is derived from the kind and value, so lines need no bookkeeping. `items`
+// (objects) still wins when present; text is the convenience, not a second source of
+// truth. Blank lines and `#` comments are ignored.
+export function parseItems(text) {
+  const out = [];
+  for (const line of String(text || '').split('\n')) {
+    const l = line.trim();
+    if (!l || l.startsWith('#')) continue;
+    const parts = l.split('|').map((x) => x.trim());
+    if (parts.length < 3) continue;
+    const [kind, graphic, speak] = parts;
+    const i = graphic.indexOf(':');
+    if (i < 0 || !kind || !speak) continue;
+    const type = graphic.slice(0, i).trim();
+    const value = graphic.slice(i + 1).trim();
+    if (!type || !value) continue;
+    out.push({
+      id: `${kind}-${value}`.toLowerCase().replace(/[^a-z0-9_-]+/g, '-'),
+      kind,
+      graphic: { type, value: type === 'number' ? Number(value) : value },
+      speak,
+      enabled: true,
+    });
+  }
+  return out;
+}
+
 // A small default library so a fresh instance shows something immediately. Data only
 // — the meaning, not pixels. Editable/extendable later via the module's state / a
 // future content-library editor.
-const DEFAULT_ITEMS = [
+export const DEFAULT_ITEMS = [
   { id: 'count-1', kind: 'counting', graphic: { type: 'number', value: 1 }, speak: 'One.', enabled: true },
   { id: 'count-3', kind: 'counting', graphic: { type: 'number', value: 3 }, speak: 'Three. One, two, three.', enabled: true },
   { id: 'count-5', kind: 'counting', graphic: { type: 'number', value: 5 }, speak: 'Five. Count with me: one, two, three, four, five.', enabled: true },
@@ -85,7 +122,10 @@ registerModule(
     let settings = null;
 
     function indexItems() {
-      const raw = Array.isArray(cfg.items) && cfg.items.length ? cfg.items : DEFAULT_ITEMS;
+      const fromText = (!Array.isArray(cfg.items) || !cfg.items.length) && cfg.itemsText
+        ? parseItems(cfg.itemsText) : null;
+      const raw = Array.isArray(cfg.items) && cfg.items.length ? cfg.items
+        : (fromText && fromText.length ? fromText : DEFAULT_ITEMS);
       const list = raw.filter((it) => it && it.id && it.enabled !== false);
       items = list;
       ids = list.map((it) => it.id);

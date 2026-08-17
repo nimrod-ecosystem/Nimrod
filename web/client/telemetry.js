@@ -33,6 +33,9 @@
 //     correct    was it right (null when they didn't respond)
 //     latencyMs  cue/question -> response
 //     waitMs     how long the game made them wait before the cue (pacing)
+//     band       optional grouping label the game supplies — e.g. a grade band from its
+//                own content ("grade 8"). It is the CONTENT'S OWN label, not a normed or
+//                national measure; see byBand() and docs/modules/progress.md.
 //     prompt     optional human label of the item, for a readable log
 //   The server stamps `id` and `created_at`; the client clock is never the record.
 //
@@ -127,6 +130,29 @@ export function conceptTrend(items, minPerHalf = 3) {
 const TREND_URGENCY = { down: 0, flat: 1, up: 3 };
 const urgency = (t) => (t in TREND_URGENCY ? TREND_URGENCY[t] : 2);   // no trend yet: middle
 
+// Per-BAND accuracy — "how is he doing on grade-8 words vs grade-10 words".
+//
+// A band is whatever label the game attached to the item (see the `band` field). It is
+// descriptive of the CONTENT, not a percentile against other children: nothing here is
+// normed, and presenting it as though it were would be inventing a number about someone's
+// education. Sorted by band label so the progression reads in order.
+export function byBand(list) {
+  const by = new Map();
+  for (const t of trials(list)) {
+    const b = t.data.band;
+    if (!b) continue;                       // unlabelled content simply doesn't appear
+    if (!by.has(b)) by.set(b, []);
+    by.get(b).push(t);
+  }
+  return [...by.entries()]
+    .map(([band, items]) => ({ band, ...summarize(items), ...conceptTrend(items) }))
+    .sort((a, b) => String(a.band).localeCompare(String(b.band), undefined, { numeric: true }));
+}
+
+export function bands(list) {
+  return [...new Set(trials(list).map((t) => t.data.band).filter(Boolean))];
+}
+
 // Per-concept mastery, HARDEST FIRST — the answer to "what is he struggling with".
 export function byConcept(list) {
   const by = new Map();
@@ -158,7 +184,7 @@ export function createTelemetry({ makeEvents, bus = null, limit = 1000, pollMs =
   }
   const stream = makeEvents(GAMEPLAY_STREAM, { limit, pollMs });
 
-  async function log({ game, session, mode = null, concept = null,
+  async function log({ game, session, mode = null, concept = null, band = null,
                        responded = true, correct = null, latencyMs = null,
                        waitMs = null, prompt = '' } = {}) {
     if (!game) return null;                       // an unattributed trial is unreadable
@@ -172,6 +198,7 @@ export function createTelemetry({ makeEvents, bus = null, limit = 1000, pollMs =
     };
     if (mode) data.mode = String(mode);
     if (concept) data.concept = String(concept);
+    if (band) data.band = String(band);
     if (Number.isFinite(Number(latencyMs))) data.latencyMs = Number(latencyMs);
     if (Number.isFinite(Number(waitMs))) data.waitMs = Number(waitMs);
     if (prompt) data.prompt = String(prompt);

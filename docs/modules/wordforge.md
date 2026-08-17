@@ -48,6 +48,25 @@ learning, and the ceiling rather than the floor. The first draft used 10/3, whic
 out near 30–40 points a minute — a module that sprays points and devalues every other way
 of earning them.
 
+### The daily cap
+Because of how this is meant to be used — parked on a second monitor, dipped into while
+something loads — the payout is capped at **`dailyCap: 40`** points a day (~20 correct
+answers, ~8 minutes, roughly 1.5 sprints). Left open for hours it would otherwise out-earn
+a full day of real work.
+
+Past the cap **the game keeps playing and keeps recording trials.** Only the currency
+stops; the learning still counts and `progress` still measures it. The header reads
+"daily points reached — still counts for practice." Capping the currency must never cap
+the measurement.
+
+Full rates for every source: [`../points-balance.md`](../points-balance.md).
+
+### Grade bands
+Each bank entry carries a `grade`, which becomes a **band** (`grade 8`) on every trial, so
+`progress` can report "grade-8 words at 85%, grade-10 at 40%". Read it for what it is: the
+**bank's own label** for how hard a word is — editable data, not a normed score and not a
+comparison against other children. Words without a grade simply carry no band.
+
 ## Inputs → outputs (on the bus)
 - **Sinks:** `wordforge/answer` (option index) and `wordforge/next` — so a keypad, a
   switch, or a companion can play it without touching this module.
@@ -59,11 +78,12 @@ Per-instance state, all editable:
 
 | key | meaning |
 | --- | --- |
-| `words` / `wordsText` | the bank, as objects or as text in `word \| meaning \| sentence` lines |
+| `words` / `wordsText` | the bank, as objects (with an optional `grade`) or as text in `word \| meaning \| sentence` lines |
 | `pairs` / `pairsText` | sentence pairs, as objects or `better \|\| weaker \|\| why` lines |
 | `correctPoints` `tryPoints` | 2 / 1 |
 | `streakEvery` `streakBonus` | 5 / 3 |
 | `roundLength` | 10 |
+| `dailyCap` | 40 — payout stops, play and measurement continue |
 
 Both banks fall back to the seeded defaults, and `words` needs at least 4 entries (a
 four-way choice needs three distractors). **Editing the bank is itself an assignment** in

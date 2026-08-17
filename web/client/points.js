@@ -137,6 +137,15 @@ export function sumPointsOn(events, key) {
 
 export function todayKey(now = Date.now()) { return dayKey(new Date(now).toISOString()); }
 
+// What ONE source has already paid out today. This is what a DAILY CAP is built on:
+// a game meant to be dipped into between other things must not turn into an income
+// stream just because it was left open for six hours.
+export function sumPointsOnBySource(events, key, source) {
+  return pointsEvents(events)
+    .filter((e) => dayKey(e.created_at) === key && (e.data && e.data.source) === source)
+    .reduce((n, e) => n + pointsValue(e), 0);
+}
+
 // ---------- the handle ----------
 
 // A ledger over the shared stream. `makeEvents` is ctx.makeEvents — a module never
@@ -193,6 +202,8 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
     spent: () => sumSpent(stream.get().events || []),
     totalToday: (now = Date.now()) => sumPointsOn(stream.get().events || [], todayKey(now)),
     minutesThisWeek: (now = Date.now()) => sumMinutes(stream.get().events || [], weekStart(now)),
+    todayFrom: (source, now = Date.now()) =>
+      sumPointsOnBySource(stream.get().events || [], todayKey(now), source),
     bySource: () => sumBySource(stream.get().events || []),
     destroy: () => stream.destroy(),
   };
