@@ -329,6 +329,36 @@ sprint timer pays. Resolution:
 - Until that weekly job is built, the dashboard **shows the top-up as unpaid** rather than
   implying it was paid. Displaying an owed bonus is honest; silently adding it is not.
 
+## Two dashboards, one substrate: `quests` (economy) vs `progress` (measurement) (2026-08-17)
+The old Cici dashboard already had a "progress" module — `Cici/dashboard_web/modules/datadash.js`,
+a go/no-go assessment screen over the `pressgame`/`wordgame` logs: hits, omissions, commissions,
+appropriate-signal rate, mean reaction time, pacing, per session, filterable by player and by
+Calm/Challenge mode, with a trend chart and CSV/JSON export. Mike asked whether to fold it into
+the new points dashboard. Decision: **no — split the modules, share the substrate.**
+
+- They are different instruments. The points board is an **economy**: a balance you earn and
+  spend, where the number exists to motivate. Datadash is a **measurement**: evidence a therapist
+  reads. Merged, each has to pretend to be the other — a clinician does not want "balance: 232",
+  and a student does not want their commission-error rate.
+- They DO share the plumbing, and it already exists: a profile-scoped append-only stream reached
+  with `ctx.makeEvents('<key>')`, the "only the source appends" rule, and a live-nudge bus topic.
+  Telemetry is the same mechanism under a different well-known key: **`gameplay`** instead of
+  `points`. Porting datadash is therefore wiring, not invention — and it is the strongest
+  available proof that the ledger seam generalises beyond points.
+- **The points board was renamed `quests`** (the curriculum's own word). `progress` is reserved
+  for datadash's port, which is the name it already had and the meaning already in people's
+  heads; and `quests` avoids colliding with the `points.js` ledger library. Renamed while still
+  uncommitted, so the change cost nothing.
+
+## Patient telemetry does not go to Google (2026-08-17)
+A corollary of the Sheets decision above, and a limit on it. The points economy syncs out to a
+household Google Sheet. The `gameplay` telemetry stream does **not**: reaction times and error
+rates for a brain-injured adult in a care facility are health-adjacent data about someone who
+cannot easily consent to onward sharing, and this repo's non-negotiable is that patient data
+stays on the machine. Telemetry is visualised **in-app**, with a CSV/JSON export the caregiver
+triggers deliberately when handing a clinician a file — never a standing sync. The two streams
+have the same technical shape; what differs is whose data it is and who can consent to moving it.
+
 ## Cici ↔ the scheduler & media (2026-08-14, scoped — ideas, not built)
 How the local AI companion (Cici) interacts with the state-machine engine + media. None of the Cici-AI
 layer is built yet (it's the "brain on local Ollama / cloud-API" plan in the private repo's CONTEXT), but

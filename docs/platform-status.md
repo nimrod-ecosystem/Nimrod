@@ -275,9 +275,9 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   real time (countdown ticks, full reload resumes mid-sprint with the task intact, clean console).
   Doc: `docs/modules/sprint.md`.
 
-- **Progress dashboard + ledger categories** (2026-08-17) — the CONSUMER end of the points seam,
+- **Quest board + ledger categories** (2026-08-17) — the CONSUMER end of the points seam,
   modelled on the household points-tracker spreadsheet (Task Menu / Daily Log / Rewards Store /
-  Weekly Hours / Dashboard) so the two stay portable. `client/modules/progress.js`: balance with
+  Weekly Hours / Dashboard) so the two stay portable. `client/modules/quests.js`: balance with
   earned/spent broken out, a tappable task catalog (data, per-profile, `x2` only on double-eligible
   tasks, negative-point penalties), a reward store with **confirm-to-buy**, the recent log, and the
   week's school hours against target with the x1 / x1.5 stretch / x2 overtime band. `points.js`
@@ -288,9 +288,9 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   the weekly banding's top-up (the EXTRA 0.5x/1.0x, never the base) is **displayed as unpaid** until
   the weekly job lands. The dashboard **only refreshes** on the `points/award` nudge — it never
   appends, and there's a check for exactly that. Validated by a **40-check** browser test
-  (`dev/progress_test.html`) including the end-to-end seam — a real `sprint` module on the same
-  profile finishing a sprint and this dashboard picking it up with no reload — plus live harness
-  verification. Docs: `docs/modules/progress.md`, `docs/points-sheet.md`.
+  (`dev/quests_test.html`) including the end-to-end seam — a real `sprint` module on the same
+  profile finishing a sprint and this board picking it up with no reload — plus live harness
+  verification. Docs: `docs/modules/quests.md`, `docs/points-sheet.md`.
 
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host

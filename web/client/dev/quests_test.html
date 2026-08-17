@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>progress dashboard — integration test</title>
+<title>quest board — integration test</title>
 <link rel="stylesheet" href="../modules.css">
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
@@ -15,8 +15,8 @@
 </style>
 </head>
 <body>
-<h1>progress dashboard — integration test</h1>
-<p>Mounts the REAL <code>progress</code> module against the live dev server, alongside a REAL
+<h1>quest board — integration test</h1>
+<p>Mounts the REAL <code>quests</code> module against the live dev server, alongside a REAL
 <code>sprint</code> module on the same profile. Proves the end-to-end seam: a finished sprint appends
 to the shared <code>points</code> stream and the dashboard — a different module, its own instance —
 shows it. Also covers logging tasks, the x2 multiplier, penalties, confirm-to-buy, the balance,
@@ -34,11 +34,11 @@ import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
 import { createPointsLedger, POINTS_TOPIC, sumEarned, sumSpent, sumMinutes, weekStart } from '../points.js';
-import { weeklyTarget, hoursBand, fmtHours, DEFAULT_TASKS, DEFAULT_REWARDS } from '../modules/progress.js';
+import { weeklyTarget, hoursBand, fmtHours, DEFAULT_TASKS, DEFAULT_REWARDS } from '../modules/quests.js';
 import '../modules/sprint.js';
 
 const params = new URLSearchParams(location.search);
-const USER = params.get('user') || ('progress-test-' + Math.floor(Math.random() * 1e6));
+const USER = params.get('user') || ('quests-test-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
 function check(name, cond, detail = '') {
@@ -85,20 +85,20 @@ const MIN = 60000;
     check('the penalty seed is negative', DEFAULT_TASKS.some((t) => t.type === 'Penalty' && t.base < 0));
 
     // ============ the module ============
-    section('progress module');
+    section('quest board module');
     const profiles = createProfilesClient({ user: USER });
-    const profile = await profiles.create('TEST-progress');
+    const profile = await profiles.create('TEST-quests');
     const makeState  = (key, opts) => createState({ url: profiles.stateURL(profile.id, key), user: USER, ...opts });
     const makeEvents = (key, opts) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER, ...opts });
 
     const bus = createBus();
-    const mod = await profiles.addModule(profile.id, 'progress');
+    const mod = await profiles.addModule(profile.id, 'quests');
     const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
     const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
     await state.load();
 
     const host = document.getElementById('host');
-    const inst = mountModule('progress', {
+    const inst = mountModule('quests', {
       mount: host, bus, state, events, user: USER, profileId: profile.id, makeState, makeEvents,
     });
     inst.init();
@@ -173,10 +173,10 @@ const MIN = 60000;
     section('log');
     tabBtn('log').click();
     await sleep(150);
-    const rows = host.querySelectorAll('.p-log tbody tr');
+    const rows = host.querySelectorAll('.q-log tbody tr');
     check('every entry is listed', rows.length === 9, String(rows.length));   // 4 tasks + 4 mows + 1 purchase
-    check('the purchase shows as negative', host.querySelector('.p-log .p-neg')?.textContent.trim() === '-50',
-      host.querySelector('.p-log .p-neg')?.textContent);
+    check('the purchase shows as negative', host.querySelector('.q-log .q-neg')?.textContent.trim() === '-50',
+      host.querySelector('.q-log .q-neg')?.textContent);
 
     // ---- THE SEAM: a different module's points show up here ----
     section('cross-module: a sprint feeds the dashboard');
@@ -204,8 +204,8 @@ const MIN = 60000;
     tabBtn('log').click();
     await sleep(150);
     check('the sprint entry is attributed to its own source',
-      [...host.querySelectorAll('.p-log .p-src')].some((e) => e.textContent.trim() === 'sprint'),
-      [...host.querySelectorAll('.p-log .p-src')].map((e) => e.textContent).join(','));
+      [...host.querySelectorAll('.q-log .q-src')].some((e) => e.textContent.trim() === 'sprint'),
+      [...host.querySelectorAll('.q-log .q-src')].map((e) => e.textContent).join(','));
 
     check('the sprint logged school MINUTES for the hours engine',
       sumMinutes((await (async () => { const l = createPointsLedger({ makeEvents }); await l.load(); const e = l.events(); l.destroy(); return e; })()), weekStart(Date.now())) === 25);
@@ -232,7 +232,7 @@ const MIN = 60000;
     // ---- bus-driven logging ----
     section('bus seam');
     const beforeBus = balance();
-    bus.publish('progress/log', 'Do the dishes');
+    bus.publish('quests/log', 'Do the dishes');
     await sleep(400);
     check('anything on the bus can log a task by name', balance() === beforeBus + 15, `${beforeBus} -> ${balance()}`);
 
