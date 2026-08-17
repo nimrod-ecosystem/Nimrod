@@ -80,9 +80,21 @@ const MIN = 60000;
       b2.topUp === Math.round((5 * 0.5 + 3 * 1.0) * 60), String(b2.topUp));
     check('top-up never re-pays the base rate', hoursBand(20).topUp === 0, String(hoursBand(20).topUp));
     check('fmtHours', fmtHours(2.5) === '2h 30m' && fmtHours(3) === '3h', fmtHours(2.5));
-    check('seed data came from the tracker', DEFAULT_TASKS.length === 12 && DEFAULT_REWARDS.length === 7,
+    check('seed data came from the tracker', DEFAULT_TASKS.length >= 12 && DEFAULT_REWARDS.length === 7,
       `${DEFAULT_TASKS.length}/${DEFAULT_REWARDS.length}`);
-    check('the penalty seed is negative', DEFAULT_TASKS.some((t) => t.type === 'Penalty' && t.base < 0));
+    check('every seeded task has a type the ledger knows',
+      DEFAULT_TASKS.every((t) => ['Obligatory', 'Bonus', 'Idea', 'Penalty'].includes(t.type)),
+      [...new Set(DEFAULT_TASKS.map((t) => t.type))].join());
+    check('every PENALTY costs points and every earner pays them',
+      DEFAULT_TASKS.every((t) => (t.type === 'Penalty' ? t.base < 0 : t.base > 0)),
+      DEFAULT_TASKS.filter((t) => (t.type === 'Penalty') !== (t.base < 0)).map((t) => t.task).join());
+    check('the household penalties are stocked (dishes, garbage, mess)',
+      ['dish', 'garbage', 'mess'].every((k) =>
+        DEFAULT_TASKS.some((t) => t.type === 'Penalty' && t.task.toLowerCase().includes(k))),
+      DEFAULT_TASKS.filter((t) => t.type === 'Penalty').map((t) => t.task).join(' | '));
+    check('a small penalty costs less than missing an obligation',
+      Math.max(...DEFAULT_TASKS.filter((t) => /dish|garbage/i.test(t.task)).map((t) => t.base)) >
+      Math.min(...DEFAULT_TASKS.filter((t) => t.type === 'Penalty').map((t) => t.base)));
 
     // ============ the module ============
     section('quest board module');

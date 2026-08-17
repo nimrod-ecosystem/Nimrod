@@ -12,6 +12,10 @@
     color:#cfe0d6;font-size:1.1rem;text-align:center;padding:24px}
   .kiosk{position:fixed;inset:0}
   .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex}
+  .k-stage.k-grid{display:grid;gap:2vmin}
+  .k-stage.k-grid .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden}
+  .k-stage.k-grid .k-cell .k-mod{flex:1;min-width:0;display:flex;overflow:auto}
+  .k-stage.k-grid .k-cell .k-mod > *{flex:1;min-width:0}
   .k-stage .k-mod{flex:1;min-width:0;display:flex}
   .k-stage .k-mod > *{flex:1;min-width:0}
   /* the camera "mirror" — pinned corner, always on top, never covered */

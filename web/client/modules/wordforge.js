@@ -5,6 +5,11 @@
 //   blank   — here's a sentence with a hole, which word fills it?
 //   better  — two sentences, which one is better writing? (and why)
 //
+// POINTS ARE UNDERSTANDING, NOT TIME SERVED. The game pays for correct answers and never
+// for minutes elapsed, so leaving it open on a second monitor earns nothing. Each point is
+// ALSO a minute of credit toward its subject (see points.js) — understand it faster and
+// you are done sooner, which is the entire point of the design.
+//
 // WRONG ANSWERS PAY, AND THEY EXPLAIN. A wrong answer is not worth zero: it shows the
 // right answer with the reason, and awards a smaller "for trying" amount when the player
 // acknowledges the explanation. The point of a learning game is the correction, so the
@@ -95,12 +100,17 @@ export const DEFAULTS = {
   streakEvery: 5,      // a bonus every N correct in a row
   streakBonus: 3,
   roundLength: 10,     // items per round; each appears at most once
-  // A DAILY CAP, because of how this is meant to be used: parked on a second monitor and
-  // dipped into while something loads. That is a good way to learn and a terrible way to
-  // price an economy — left open for six hours it would out-earn a day of real work. Past
-  // the cap the game keeps playing and KEEPS RECORDING TRIALS (the learning still counts,
-  // and progress still measures it); only the currency stops. ~20 correct answers.
-  dailyCap: 40,
+  // A daily cap, OFF by default (0 = no cap).
+  //
+  // An earlier version capped this at 40/day on the theory that a game left open on a
+  // second monitor would print money. That reasoning was wrong for this economy: the game
+  // pays NOTHING for time — only for correct answers — so an idle window earns zero no
+  // matter how long it sits there. And since a point is also a minute of subject credit,
+  // capping the points would cap the ability to demonstrate understanding, which is the
+  // opposite of the goal. The knob stays for a game that ever does need one.
+  dailyCap: 0,
+  // Which subject a point of credit discharges.
+  subject: 'English language arts',
 };
 
 export const CONCEPT_PAIRS = 'sentence quality';
@@ -283,7 +293,11 @@ registerModule(
         await ledger.award({
           amount: pay,
           mult: 1,
-          type: 'Bonus',
+          // School credit, not a chore bonus: each point is also a MINUTE of this
+          // subject. Understanding discharges the requirement; time alone does not.
+          type: 'School',
+          minutes: pay,
+          subject: cfg.subject,
           source: GAME,
           tags: ['wordforge', concept],
           note: `${note}: ${concept}`,
@@ -402,6 +416,7 @@ registerModule(
             streakBonus: Number(snap.streakBonus) >= 0 ? Number(snap.streakBonus) : DEFAULTS.streakBonus,
             roundLength: Number(snap.roundLength) > 0 ? Number(snap.roundLength) : DEFAULTS.roundLength,
             dailyCap: Number(snap.dailyCap) >= 0 ? Number(snap.dailyCap) : DEFAULTS.dailyCap,
+            subject: typeof snap.subject === 'string' && snap.subject ? snap.subject : DEFAULTS.subject,
           };
         });
 

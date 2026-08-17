@@ -25,7 +25,7 @@ lands. Run the server first:
 <script type="module">
 import { createProfilesClient } from '../profile.js';
 import { listManifests } from '../module.js';
-import { mountHome, moduleCatalog, kioskURL } from '../home.js';
+import { mountScreens, moduleCatalog, kioskURL } from '../home.js';
 import '../modules/clock.js';
 import '../modules/photos.js';
 import '../modules/sprint.js';
@@ -89,8 +89,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const profiles = createProfilesClient({ user: USER });
     const host = document.getElementById('host');
     let opened = null;
-    const home = await mountHome(host, {
-      email: 'someone@example.com', profiles, manifests: listManifests(),
+    // The SCREENS panel. The sidebar shell around it (tabs, identity, sign-out) is
+    // covered by dev/composer_test.html.
+    const home = await mountScreens(host, {
+      profiles, manifests: listManifests(),
       onOpen: (id) => { opened = id; },
     });
 
@@ -99,8 +101,6 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const cards = () => [...host.querySelectorAll('.h-card')];
 
     check('a fresh account sees an empty state, not a blank page', !!q('.h-empty'), txt('.h-list'));
-    check('the signed-in identity is shown', txt('.h-email') === 'someone@example.com', txt('.h-email'));
-    check('there is a way OUT', q('.h-signout').getAttribute('href') === '/auth/logout');
 
     // create
     q('[data-name]').value = 'Oscar';

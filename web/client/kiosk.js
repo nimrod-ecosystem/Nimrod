@@ -27,6 +27,7 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
+import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { applyTheme } from './theme.js';
 import { cachedFetch } from './cache.js';
 import './modules/clock.js';
@@ -124,12 +125,24 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   // ---- partition modules: camera -> mirror, clock -> clock HUD, rest -> stage
   // cached so a server blip at boot still yields the last-known dashboard layout.
   const profile = await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
+
+  // A LAYOUT, if the composer saved one. It wins for whatever it places: a module sitting
+  // in a slot is rendered there, so camera/clock only fall back to being HUD overlays when
+  // they were NOT placed. With no layout, everything below behaves exactly as it did
+  // before this existed — every screen made before the composer keeps working.
+  const savedLayout = (settings.get().kiosk || {}).layout;
+  const layout = isArranged(savedLayout)
+    ? normalizeLayout(savedLayout, profile.modules.map((m) => m.id))
+    : null;
+  const placedIds = new Set(layout ? layout.slots.filter(Boolean) : []);
+
   const stageDefs = [];
   let cameraDef = null, clockDef = null;
   for (const mod of profile.modules) {
+    if (placedIds.has(mod.id)) continue;                      // it lives in a slot
     if (mod.type === 'camera') cameraDef = mod;
     else if (mod.type === 'clock') clockDef = mod;
-    else stageDefs.push(mod);
+    else if (!layout) stageDefs.push(mod);                    // no layout: the old stage
   }
 
   // persistent HUD overlays (mounted once, left running)
@@ -140,6 +153,26 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   }
   let cameraRec = cameraDef ? await mountOverlay(cameraDef, mirrorEl) : null;
   let clockRec = clockDef ? await mountOverlay(clockDef, clockEl) : null;
+
+  // ---- a LAID-OUT stage: every slot mounted at once, in its grid position ----
+  const slotRecs = [];
+  async function mountLayout() {
+    stageEl.classList.add('k-grid');
+    stageEl.setAttribute('style', gridStyle(layout.preset));
+    for (let i = 0; i < layout.slots.length; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'k-cell';
+      cell.setAttribute('style', slotStyle(layout.preset, i));
+      stageEl.append(cell);
+      const id = layout.slots[i];
+      if (!id) continue;                                      // an empty slot is allowed
+      const def = profile.modules.find((m) => m.id === id);
+      if (!def) continue;
+      const host = document.createElement('div'); host.className = 'k-mod';
+      cell.append(host);
+      slotRecs.push(await mountInstance(def, host));
+    }
+  }
 
   // ---- the stage: one module at a time, mounted lazily --------------------
   let primary = 0;
@@ -156,6 +189,7 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   }
   function renderMods() {
     modsEl.innerHTML = '';
+    if (layout) return;                     // nothing to switch between — it's all visible
     stageDefs.forEach((d, j) => {
       const b = document.createElement('button');
       b.className = 'k-dot' + (j === primary ? ' on' : '');
@@ -170,6 +204,15 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   // everything else via <type>/next. Only the visible module is mounted, so this
   // never nudges a hidden one.
   function nextInPrimary() {
+    // In a laid-out screen there is no "next": every slot is already on screen. Nudge the
+    // first slot instead, so the button still advances a playlist rather than doing nothing.
+    if (layout) {
+      const rec = slotRecs[0];
+      if (!rec) return;
+      if (rec.type === 'director') bus.publish('segment/done', { reason: 'skipped' });
+      else bus.publish(`${rec.type}/next`);
+      return;
+    }
     if (!stageRec) return;
     if (stageRec.type === 'director') bus.publish('segment/done', { reason: 'skipped' });
     else bus.publish(`${stageRec.type}/next`);
@@ -229,10 +272,16 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   };
   window.addEventListener('keydown', onKey);
 
-  await showPrimary(0);
+  if (layout) await mountLayout(); else await showPrimary(0);
 
   return {
     stageCount: () => stageDefs.length,
+    // NOTE: `layout()` was already taken by the mirror/clock HUD positions below. A second
+    // `layout:` key in this same object literal is silently shadowed by it — which is
+    // exactly what happened first time. This one is the composed SLOT layout.
+    slotLayout: () => (layout ? { ...layout } : null),
+    slotCount: () => slotRecs.length,
+    slotTypes: () => slotRecs.map((r) => r.type),
     hasCamera: () => !!cameraRec,
     hasClock: () => !!clockRec,
     primaryType: () => stageDefs[primary]?.type ?? null,
@@ -247,6 +296,7 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
       root.removeEventListener('mousemove', poke);
       clearTimeout(hideT);
       destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec);
+      while (slotRecs.length) destroyRec(slotRecs.pop());
       settings.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },

@@ -55,6 +55,11 @@ export const DEFAULT_TASKS = [
   { task: 'Guild Game session (host it)', type: 'Obligatory', base: 60, double: true,  note: 'weekly commitment' },
   { task: 'Mow the lawn',                type: 'Obligatory', base: 60,  double: false, note: 'higher-trust job' },
   { task: 'Missed a mandatory task',     type: 'Penalty',    base: -40, double: false, note: "lose what you'd have earned" },
+  // Penalties for the small things that make a house unpleasant. Priced well under the
+  // missed-obligation penalty: these are corrections, not punishments.
+  { task: 'Left dirty dishes out',       type: 'Penalty',    base: -10, double: false, note: 'the sink is right there' },
+  { task: 'Garbage left out of a bin',   type: 'Penalty',    base: -10, double: false, note: 'anywhere but a bin' },
+  { task: 'Left a mess for someone else', type: 'Penalty',   base: -15, double: false, note: 'someone else has to do it' },
 ];
 
 // Seeded from the "Rewards Store" tab. Needs cost fewer points per dollar than wants.
@@ -179,6 +184,15 @@ registerModule(
       el('[data-topup]').textContent = band.topUp
         ? `stretch/overtime bonus not yet paid: +${band.topUp}`
         : '';
+
+      // Where the credit went. A point earned in a game is also a minute of that subject,
+      // so this is the six-subject view, not a second scoreboard.
+      const subjects = ledger ? ledger.subjectsThisWeek(now()) : {};
+      const rows = Object.entries(subjects).sort((a, b) => b[1] - a[1]);
+      el('[data-subjects]').innerHTML = rows.length
+        ? rows.map(([name, mins]) =>
+            `<span class="q-subj"><b>${esc(name)}</b> ${fmtHours(mins / 60)}</span>`).join('')
+        : '';
       el('[data-flash]').textContent = flash;
     }
 
@@ -281,6 +295,7 @@ registerModule(
               <div class="q-hours-row"><span data-hours>0h / 25h</span><span class="q-band" data-band></span></div>
               <div class="q-track"><i data-bar></i></div>
               <div class="q-topup" data-topup></div>
+              <div class="q-subjects" data-subjects></div>
             </div>
             <div class="q-flash" data-flash></div>
             <div class="q-tabs">

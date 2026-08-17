@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>sidebar shell + dashboard composer — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff;overflow:hidden}
+  #kioskHost{margin-top:12px;width:640px;height:360px;position:relative;background:#0c1a14;border-radius:12px;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>sidebar shell + dashboard composer — integration test</h1>
+<p>Drives the REAL home shell, the REAL composer, and then boots the REAL kiosk against the
+layout the composer saved — the round trip that matters, since a composer whose preview doesn't
+match the screen is worse than none.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="kioskHost"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createProfilesClient } from '../profile.js';
+import { listManifests } from '../module.js';
+import { mountHome, TABS } from '../home.js';
+import { mountComposer } from '../composer.js';
+import { mountKiosk } from '../kiosk.js';
+import {
+  PRESETS, preset, slotCount, normalizeLayout, isArranged, gridStyle, slotStyle, placement,
+} from '../layout.js';
+import '../modules/clock.js';
+import '../modules/photos.js';
+import '../modules/quests.js';
+import '../modules/progress.js';
+import '../modules/wordforge.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('comp-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+(async () => {
+  try {
+    // ================= pure: the layout model =================
+    section('the layout model');
+    check('every preset declares its slot count', PRESETS.every((p) => p.slots >= 1));
+    check('an unknown preset falls back rather than blanking the screen', preset('nope').id === 'full');
+    check('slotCount reads the preset', slotCount('quad') === 4 && slotCount('side') === 2);
+
+    const ids = ['a', 'b', 'c', 'd', 'e'];
+    const n1 = normalizeLayout({ preset: 'quad', slots: ['a', 'b'] }, ids);
+    check('slots are padded to the preset', n1.slots.length === 4 && n1.slots[2] === null, JSON.stringify(n1));
+    const n2 = normalizeLayout({ preset: 'side', slots: ['a', 'b', 'c', 'd'] }, ids);
+    check('...and truncated when the shape shrinks', n2.slots.length === 2 && n2.slots[1] === 'b', JSON.stringify(n2));
+    const n3 = normalizeLayout({ preset: 'quad', slots: ['a', 'GONE', 'b', null] }, ids);
+    check('a module removed from the profile is dropped, not left dangling',
+      n3.slots[1] === null && n3.slots[2] === 'b', JSON.stringify(n3));
+    const n4 = normalizeLayout({ preset: 'quad', slots: ['a', 'a', 'b', null] }, ids);
+    check('one instance cannot occupy two slots', n4.slots[0] === 'a' && n4.slots[1] === null, JSON.stringify(n4));
+
+    check('an empty layout counts as NO layout', !isArranged({ preset: 'quad', slots: [null, null] }));
+    check('...and one with anything in it counts', isArranged({ preset: 'quad', slots: [null, 'a'] }));
+    check('the grid style is real CSS', /grid-template-columns/.test(gridStyle('quad')));
+    check('an asymmetric preset positions its first slot', /grid-area/.test(slotStyle('main', 0)));
+    check('a symmetric preset needs no explicit area', slotStyle('quad', 0) === '');
+
+    const pl = placement({ preset: 'side', slots: ['a'] }, [{ id: 'a', type: 'clock' }, { id: 'b', type: 'photos' }]);
+    check('placement reports what is left over', pl.unplaced.length === 1 && pl.unplaced[0].id === 'b');
+
+    // ================= the shell =================
+    section('the home shell');
+    const profiles = createProfilesClient({ user: USER });
+    const makeSettings = (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: USER });
+
+    const host = document.getElementById('host');
+    const mounted = [];
+    const shell = await mountHome(host, {
+      email: 'mike@example.com', profiles, manifests: listManifests(), makeSettings,
+      mountTab: async (id, el) => { mounted.push(id); el.textContent = `panel:${id}`; return { id, destroy() {} }; },
+    });
+    check('the sidebar lists every tab',
+      [...host.querySelectorAll('[data-tab]')].map((b) => b.dataset.tab).join() === TABS.map((t) => t.id).join(),
+      [...host.querySelectorAll('[data-tab]')].map((b) => b.dataset.tab).join());
+    check('it opens on Screens', shell.active() === 'screens' && mounted[0] === 'screens');
+    check('the active tab is marked', host.querySelector('[data-tab="screens"]').classList.contains('on'));
+    check('the signed-in identity and a way out live in the sidebar',
+      host.querySelector('.s-email').textContent === 'mike@example.com' &&
+      host.querySelector('.s-signout').getAttribute('href') === '/auth/logout');
+
+    host.querySelector('[data-tab="composer"]').click();
+    await sleep(200);
+    check('clicking a tab switches the panel', shell.active() === 'composer' && mounted[1] === 'composer');
+    check('...and only ONE panel is mounted at a time', host.querySelector('.s-main').textContent === 'panel:composer');
+    check('the marker moved with it',
+      host.querySelector('[data-tab="composer"]').classList.contains('on') &&
+      !host.querySelector('[data-tab="screens"]').classList.contains('on'));
+    shell.destroy();
+
+    // ================= the composer =================
+    section('the composer');
+    const profile = await profiles.create('Composed');
+    const added = {};
+    for (const t of ['clock', 'photos', 'quests', 'wordforge']) {
+      added[t] = await profiles.addModule(profile.id, t);
+    }
+
+    host.innerHTML = '';
+    let opened = null;
+    const comp = mountComposer(host, {
+      profiles, manifests: listManifests(), makeSettings,
+      onOpen: (id) => { opened = id; },
+    });
+    await comp.refresh();
+    await sleep(300);
+
+    const q = (sel) => host.querySelector(sel);
+    const slots = () => [...host.querySelectorAll('.c-slot')];
+    const assign = (i, id) => {
+      const sel = host.querySelector(`[data-assign="${i}"]`);
+      sel.value = id || '';
+      sel.dispatchEvent(new Event('change'));
+    };
+
+    check('the screen is picked automatically', !!q('.c-chip.on'), q('.c-screens')?.textContent);
+    check('it starts on the default preset with one slot', slots().length === 1, String(slots().length));
+    check('an unarranged screen offers nothing to save', q('[data-save]').disabled);
+
+    q('[data-preset="quad"]').click();
+    await sleep(120);
+    check('choosing a preset redraws the slots', slots().length === 4, String(slots().length));
+    check('the preview grid uses the shared style', /grid-template-columns/.test(q('.c-grid').getAttribute('style')));
+
+    assign(0, added.quests.id);
+    await sleep(120);
+    assign(1, added.progress ? added.progress.id : added.photos.id);
+    await sleep(120);
+    assign(3, added.clock.id);
+    await sleep(150);
+    check('assigned slots show the module name',
+      slots()[0].querySelector('.c-slot-name').textContent.trim() === 'Quests',
+      slots()[0].querySelector('.c-slot-name').textContent);
+    check('an unassigned slot reads as empty', /empty/.test(slots()[2].textContent));
+    check('leftovers are named, not silently hidden', /Not on screen/.test(q('.c-note').textContent),
+      q('.c-note').textContent);
+
+    // moving a module must not leave a copy behind
+    assign(2, added.quests.id);
+    await sleep(150);
+    check('re-assigning a module MOVES it rather than duplicating',
+      comp.layout().slots.filter((x) => x === added.quests.id).length === 1,
+      JSON.stringify(comp.layout().slots));
+
+    check('now there is something to save', !q('[data-save]').disabled);
+    q('[data-save]').click();
+    await sleep(700);
+    check('saving is confirmed', /saved/i.test(q('[data-cmsg]').textContent), q('[data-cmsg]').textContent);
+
+    const readBack = makeSettings(profile.id);
+    await readBack.load();
+    const saved = (readBack.get().kiosk || {}).layout;
+    check('the layout really persisted', !!saved && saved.preset === 'quad', JSON.stringify(saved));
+    check('...with the slot assignment intact',
+      saved.slots[2] === added.quests.id && saved.slots[3] === added.clock.id, JSON.stringify(saved.slots));
+
+    q('[data-open]').click();
+    await sleep(100);
+    check('"Open screen" hands off the profile being arranged', opened === profile.id);
+
+    // ================= the kiosk renders it =================
+    section('the kiosk renders what was composed');
+    const bus = createBus();
+    const kiosk = await mountKiosk(document.getElementById('kioskHost'), {
+      user: USER, profileId: profile.id, profiles, bus,
+    });
+    await sleep(600);
+    check('the kiosk picked up the saved layout', !!kiosk.slotLayout(), JSON.stringify(kiosk.slotLayout()));
+    check('...the same preset the composer chose', kiosk.slotLayout().preset === 'quad', JSON.stringify(kiosk.slotLayout()));
+    check('every assigned slot is mounted at once', kiosk.slotCount() === 3, String(kiosk.slotCount()));
+    check('...and they are the modules that were placed',
+      kiosk.slotTypes().sort().join() === ['clock', 'photos', 'quests'].sort().join(),
+      kiosk.slotTypes().join());
+    check('the stage became a grid', !!document.querySelector('#kioskHost .k-stage.k-grid'));
+    check('a cell exists for every slot of the preset',
+      document.querySelectorAll('#kioskHost .k-cell').length === 4,
+      String(document.querySelectorAll('#kioskHost .k-cell').length));
+    check('the module-switcher dots are gone — everything is already visible',
+      document.querySelectorAll('#kioskHost .k-dot').length === 0);
+    check('a PLACED clock is in its slot, not the HUD overlay', !kiosk.hasClock());
+
+    // clearing it returns the screen to the old one-at-a-time behaviour
+    const s2 = makeSettings(profile.id);
+    await s2.load();
+    s2.set({ kiosk: { ...(s2.get().kiosk || {}), layout: null } });
+    await s2.flush();
+    kiosk.destroy();
+    document.getElementById('kioskHost').innerHTML = '';
+    const kiosk2 = await mountKiosk(document.getElementById('kioskHost'), {
+      user: USER, profileId: profile.id, profiles, bus: createBus(),
+    });
+    await sleep(600);
+    check('clearing the layout restores the one-module-at-a-time stage', kiosk2.slotLayout() === null, JSON.stringify({got:kiosk2.slotLayout(), stored:(s2.get().kiosk||{}).layout}));
+    check('...and the switcher dots come back', document.querySelectorAll('#kioskHost .k-dot').length > 0,
+      String(document.querySelectorAll('#kioskHost .k-dot').length));
+    check('...and the clock is a HUD overlay again', kiosk2.hasClock());
+    kiosk2.destroy();
+    comp.destroy(); readBack.destroy(); s2.destroy();
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

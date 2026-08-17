@@ -61,3 +61,10 @@ Thumbs.db
 # the non-personal parts (the sheet LAYOUT) that are safe to publish.
 oscar-build-kit/
 *.xlsx
+
+# Working notes live in the PRIVATE monorepo (Nimrod_Ecosystem), never here.
+# A stray `cd` into this repo once appended session flags to a file of this name and
+# it got committed. Belt and braces.
+pending_flags.md
+handoffs/
+CONTEXT.md
