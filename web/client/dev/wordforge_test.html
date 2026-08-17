@@ -34,10 +34,10 @@ import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
 import { createPointsLedger, sumBySource } from '../points.js';
-import { createTelemetry, byConcept, summarize } from '../telemetry.js';
+import { createTelemetry, byConcept, byBand, bands as bandsOf, summarize } from '../telemetry.js';
 import {
   GAME, DEFAULTS, DEFAULT_WORDS, DEFAULT_PAIRS, CONCEPT_PAIRS,
-  shuffle, buildDeck, makeQuestion, scoreFor, parseWords, parsePairs,
+  shuffle, buildDeck, makeQuestion, scoreFor, parseWords, parsePairs, bandOf,
 } from '../modules/wordforge.js';
 import '../modules/quests.js';
 import '../modules/progress.js';
@@ -114,6 +114,13 @@ a || b || c`);
     check('...the better one is the answer', qp.options[qp.answer] === DEFAULT_PAIRS[0].better);
     check('...and the explanation is the why', qp.explain === DEFAULT_PAIRS[0].why);
     check('pair rounds tag a writing concept, not a word', qp.concept === CONCEPT_PAIRS, qp.concept);
+
+    section('grade bands — the bank’s own labels');
+    check('every seeded word carries a grade', DEFAULT_WORDS.every((w) => Number(w.grade) > 0));
+    check('a grade becomes a readable band', bandOf(8) === 'grade 8', String(bandOf(8)));
+    check('a missing grade yields NO band rather than a fake one', bandOf(undefined) === null && bandOf(0) === null);
+    const qBand = makeQuestion({ kind: 'define', word: DEFAULT_WORDS[0] }, DEFAULT_WORDS, fixedRand);
+    check('a question carries its band', qBand.band === bandOf(DEFAULT_WORDS[0].grade), String(qBand.band));
 
     // ================= the module, server-backed =================
     section('playing — one game, BOTH streams');
@@ -217,6 +224,14 @@ a || b || c`);
     check('a wrong answer contributed real points, not zero',
       expected >= wrongs * DEFAULTS.tryPoints && wrongs > 0);
 
+    section('the daily cap');
+    check('a daily cap is configured', DEFAULTS.dailyCap > 0, String(DEFAULTS.dailyCap));
+    check('the round could not have exceeded it', ledger.total() <= DEFAULTS.dailyCap,
+      `${ledger.total()} vs ${DEFAULTS.dailyCap}`);
+    check('the ledger can report what one source paid today',
+      ledger.todayFrom(GAME) === ledger.total(), `${ledger.todayFrom(GAME)} vs ${ledger.total()}`);
+    check('...and reports zero for a source that paid nothing', ledger.todayFrom('nothing-here') === 0);
+
     // --- telemetry ---
     section('the measurement half');
     const tel = createTelemetry({ makeEvents });
@@ -231,6 +246,14 @@ a || b || c`);
     check('trials time the answer', trials.every((t) => Number.isFinite(t.data.latencyMs)));
     check('they all share one session', new Set(trials.map((t) => t.data.session)).size === 1);
     check('per-concept accuracy is computable', byConcept(tel.get().events).length >= 1);
+    check('trials carry the grade BAND too', trials.some((t) => !!t.data.band),
+      JSON.stringify(trials.map((t) => t.data.band)));
+    const bandRows = byBand(tel.get().events);
+    check('accuracy is reportable per band', bandRows.length >= 1, JSON.stringify(bandRows.map((b) => b.band)));
+    check('bands read in order, easiest first',
+      bandRows.map((b) => b.band).join(',') === [...bandRows.map((b) => b.band)]
+        .sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true })).join(','),
+      bandRows.map((b) => b.band).join(','));
 
     // ================= the two dashboards see it =================
     section('the dashboards pick it up with no wiring');
@@ -265,6 +288,8 @@ a || b || c`);
       [...pHost.querySelectorAll('.g-card')].some((c) =>
         c.querySelector('.g-k').textContent === 'trials' && Number(c.querySelector('.g-v').textContent) === trials.length),
       [...pHost.querySelectorAll('.g-card')].map((c) => c.querySelector('.g-k').textContent + '=' + c.querySelector('.g-v').textContent).join(','));
+    check('the Bands tab appears once the data has bands',
+      !pHost.querySelector('[data-tab="bands"]').hidden);
     check('it can already name a concept that was missed',
       [...pHost.querySelectorAll('.g-crow')].length >= 1,
       String([...pHost.querySelectorAll('.g-crow')].length));

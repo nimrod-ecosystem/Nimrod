@@ -28,7 +28,7 @@ import { registerModule } from '../module.js';
 import {
   createTelemetry, GAMEPLAY_TOPIC,
   summarize, games as gamesOf, modes as modesOf, filterTrials, bySession, byConcept,
-  fmtPct, fmtMs,
+  byBand, bands as bandsOf, fmtPct, fmtMs,
 } from '../telemetry.js';
 
 // How many concept bars to draw before the list stops being readable.
@@ -99,10 +99,10 @@ registerModule(
 
     // ---- CSV export: the caregiver/teacher hands someone a file, deliberately ----
     function exportCsv() {
-      const rows = [['timestamp', 'game', 'session', 'mode', 'concept', 'responded', 'correct', 'latency_ms', 'wait_ms', 'prompt']];
+      const rows = [['timestamp', 'game', 'session', 'mode', 'concept', 'band', 'responded', 'correct', 'latency_ms', 'wait_ms', 'prompt']];
       for (const t of shown()) {
         const d = t.data;
-        rows.push([t.created_at, d.game, d.session, d.mode || '', d.concept || '',
+        rows.push([t.created_at, d.game, d.session, d.mode || '', d.concept || '', d.band || '',
           d.responded, d.correct == null ? '' : d.correct,
           d.latencyMs ?? '', d.waitMs ?? '', d.prompt || '']);
       }
@@ -171,6 +171,33 @@ registerModule(
       return `<p class="g-note">hardest first · ▲ improving, ▼ slipping</p>${rows}${more}`;
     }
 
+    // Accuracy by the content's own difficulty label — "grade-8 words at 85%, grade-10 at
+    // 40%". Ordered easiest-first so the drop-off is where you'd expect to read it.
+    //
+    // Deliberately NOT a percentile or a national comparison. Those need a normed
+    // instrument with a sampled population; inventing one would be fabricating a number
+    // about a child's education that someone might act on. This says only what it knows:
+    // how they did on the material THIS bank labelled that hard.
+    function renderBands() {
+      const list = byBand(shown());
+      if (!list.length) {
+        return `<div class="g-empty">No difficulty labels in this data yet.<br>
+          <span class="g-note">Games can tag each item with a band (a grade level, a unit)
+          and it will appear here.</span></div>`;
+      }
+      const rows = list.map((b) => {
+        const pct = b.accuracy == null ? 0 : Math.round(b.accuracy * 100);
+        const trend = b.trend ? `<i class="g-trend g-${b.trend}" title="earlier ${fmtPct(b.earlier)} → recent ${fmtPct(b.recent)}">${TREND_MARK[b.trend]}</i>` : '';
+        return `<div class="g-crow">
+            <div class="g-cname">${esc(b.band)}${trend}</div>
+            <div class="g-cbar"><i style="width:${pct}%"></i></div>
+            <div class="g-cpct">${fmtPct(b.accuracy)}<span>${b.trials}</span></div>
+          </div>`;
+      }).join('');
+      return `<p class="g-note">how they did on material the content labelled this hard —
+        the bank's own labels, not a national comparison</p>${rows}`;
+    }
+
     function renderSessions(sessions) {
       if (!sessions.length) return '<div class="g-empty">No sessions yet.</div>';
       const rows = [...sessions].reverse().map((s) => `
@@ -202,7 +229,16 @@ registerModule(
       renderCards(s, sessions);
       el('[data-chart]').innerHTML = sessionChart(sessions);
       for (const b of mount.querySelectorAll('[data-tab]')) b.classList.toggle('on', b.dataset.tab === tab);
-      el('[data-panel]').innerHTML = tab === 'concepts' ? renderConcepts() : renderSessions(sessions);
+      // The Bands tab only appears when the data actually carries bands — an empty tab
+      // teaches nothing.
+      const hasBands = bandsOf(list).length > 0;
+      const bandsBtn = mount.querySelector('[data-tab="bands"]');
+      if (bandsBtn) bandsBtn.hidden = !hasBands;
+      if (!hasBands && tab === 'bands') tab = 'concepts';
+      el('[data-panel]').innerHTML =
+        tab === 'concepts' ? renderConcepts() :
+        tab === 'bands' ? renderBands() :
+        renderSessions(sessions);
       el('[data-export]').disabled = !list.length;
     }
 
@@ -217,6 +253,7 @@ registerModule(
             <div class="g-chart" data-chart></div>
             <div class="g-tabs">
               <button class="g-tab on" data-tab="concepts">Concepts</button>
+              <button class="g-tab" data-tab="bands" hidden>Bands</button>
               <button class="g-tab" data-tab="sessions">Sessions</button>
               <button class="g-tab g-ghost" data-export>Export CSV</button>
             </div>
