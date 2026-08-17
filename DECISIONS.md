@@ -369,6 +369,34 @@ wrong, and whatever else a game records). Mike asked for exactly that — the sp
 track points earned, right vs wrong, "and maybe other things too". Real clinical records remain
 out of scope for the platform entirely; that is a separate matter from game scores.
 
+## Three surfaces: landing, home, kiosk — and home COMPOSES while the kiosk PLAYS (2026-08-17)
+The site had no front door. `/` redirected to `/kiosk.html`, so a working Google sign-in deposited
+people on a full-screen display with no way to compose it; the only place to create a profile or
+add a module was the DEV HARNESS. Mike: "I need this site running correctly or else the games
+won't be playable" — and that was literally true, because there was nowhere to put a game.
+
+- **`landing.html`** — public. What Nimrod is, and Sign in with Google. `/` serves it to a signed-out
+  visitor and redirects a signed-in one to home. Moved into the app from the repo root, where it was
+  never served and every CTA was a dead `href="#"`.
+- **`home.html`** — signed in. Your screens: create one, add/remove modules, Open it. The module
+  picker is built from the live registry (`listManifests()`), so a new module appears in the UI the
+  moment it's imported — no separate list to forget to update.
+- **`kiosk.html`** — the running screen. Unchanged, including `?key=` device pairing.
+
+**Home composes, the kiosk plays.** The kiosk may sit in a care facility running unattended for
+days; it must stay a calm display, not also a management UI. Everything you'd fiddle with lives on
+home, and "Open" hands the finished profile over with `?profile=<id>` (which the kiosk already
+supported).
+
+**`identity.optional_user()`** is the new seam: `current_user` fails closed with a 401, which is
+right for the API and wrong for a page a stranger must be able to load. It deliberately does NOT
+fall back to the dev stub user — otherwise everyone would look signed in during development and the
+landing page would never be exercised.
+
+**The repo-root `index.html` became a pointer to the live site.** GitHub Pages serves the repo root;
+leaving the old marketing page there would mean two landing pages drifting apart. One copy, in the
+app, next to the product it describes.
+
 ## Cici ↔ the scheduler & media (2026-08-14, scoped — ideas, not built)
 How the local AI companion (Cici) interacts with the state-machine engine + media. None of the Cici-AI
 layer is built yet (it's the "brain on local Ollama / cloud-API" plan in the private repo's CONTEXT), but

@@ -16,13 +16,13 @@ from urllib.parse import urlparse
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from db import PostgresStore, SQLiteStore
-from identity import current_user
+from identity import current_user, optional_user
 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")      # ids, module types, state keys, streams
 NAME_RE = re.compile(r"^[\w .\-]{1,64}$")          # human profile names + source labels
@@ -247,7 +247,9 @@ async def auth_callback(request: Request):
         return RedirectResponse(url="/?login=failed")
     request.session["user"] = f"google:{sub}"   # stable per-Google-account id
     request.session["email"] = info.get("email")
-    return RedirectResponse(url="/")
+    # Land on HOME: a person who just signed in needs their screens, not a
+    # full-screen kiosk they have no way to compose.
+    return RedirectResponse(url="/home.html")
 
 
 @app.get("/auth/logout")
@@ -256,11 +258,18 @@ def auth_logout(request: Request):
     return RedirectResponse(url="/")
 
 
-# The PRODUCT surface is the kiosk. Send the bare URL there instead of index.html (the
-# dev harness, which can't run in prod). kiosk.html auto-seeds a default profile.
+# THE FRONT DOOR. Three surfaces, and "/" picks between the first two:
+#   landing.html  public — what Nimrod is, and a way in
+#   home.html     signed in — your screens: compose them, then open one
+#   kiosk.html    the running screen (also the device-key pairing target, ?key=...)
+# Previously "/" went straight to the kiosk, so signing in dropped you on a full-screen
+# display with no way to add anything to it. index.html stays the DEV HARNESS, reachable
+# at /index.html and unchanged.
 @app.get("/")
-def root():
-    return RedirectResponse(url="/kiosk.html")
+def root(request: Request):
+    if optional_user(request):
+        return RedirectResponse(url="/home.html")
+    return FileResponse(CLIENT_DIR / "landing.html")
 
 
 app.mount("/", StaticFiles(directory=str(CLIENT_DIR), html=True), name="client")

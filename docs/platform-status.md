@@ -304,6 +304,23 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   live harness verification. Docs: `docs/modules/progress.md`. NOTE: no game writes to the stream
   yet — producers land with the Cici game ports and the first learning game.
 
+- **The front door: landing + home** (2026-08-17) — the site had no coherent way in. `/` redirected
+  straight to `/kiosk.html`, so signing in with Google dropped you on a full-screen kiosk that
+  auto-seeded a bedside profile and gave you **no way to add anything to it** — which is exactly why
+  the games weren't playable: there was nowhere to put them. Meanwhile the real landing page sat at
+  the repo root, unserved by the app, with every CTA an `href="#"`.
+  Now three surfaces: **`landing.html`** (public, moved into the app, CTAs wired to `/auth/login`,
+  and it reports a failed sign-in instead of silently re-rendering), **`home.html` + `home.js`**
+  (NEW — your screens: create, add/remove modules from the live registry, Open), and
+  **`kiosk.html`** (unchanged; still the `?key=` pairing target, and it already accepted
+  `?profile=`). `/` serves the landing when signed out and redirects to `/home.html` when signed in
+  (`identity.optional_user`, a non-raising counterpart to `current_user`); `/auth/callback` now
+  lands on home. The repo-root `index.html` became a pointer to the live site so GitHub Pages
+  can't serve a second, drifting landing page. Validated by a **34-check** browser test
+  (`dev/home_test.html`) covering the routing and the page, plus an end-to-end walk: compose a
+  screen with quests/progress/sprint/clock → Open → the kiosk mounts it → a task logs and the
+  balance moves 0 → 15. Docs: `web/README.md`.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and

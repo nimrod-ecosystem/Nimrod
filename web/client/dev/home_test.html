@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>home page — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff}
+</style>
+</head>
+<body>
+<h1>home page — integration test</h1>
+<p>Mounts the REAL home page against the live dev server, and checks the ENTRY ROUTING
+(<code>/</code>, <code>/home.html</code>, <code>/kiosk.html</code>) that decides where a person
+lands. Run the server first:
+<code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createProfilesClient } from '../profile.js';
+import { listManifests } from '../module.js';
+import { mountHome, moduleCatalog, kioskURL } from '../home.js';
+import '../modules/clock.js';
+import '../modules/photos.js';
+import '../modules/sprint.js';
+import '../modules/quests.js';
+import '../modules/progress.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('home-test-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+(async () => {
+  try {
+    // ---------- pure ----------
+    section('pure helpers');
+    const cat = moduleCatalog([{ type: 'z', title: 'Zebra' }, { type: 'a', title: 'Apple' }, null, { title: 'no type' }]);
+    check('catalog sorts by TITLE, not load order', cat.map((m) => m.type).join(',') === 'a,z', cat.map((m) => m.type).join(','));
+    check('catalog drops entries with no type', cat.length === 2, String(cat.length));
+    check('kiosk URL carries the profile', kioskURL('abc123') === '/kiosk.html?profile=abc123', kioskURL('abc123'));
+    check('kiosk URL escapes a hostile id',
+      kioskURL('a b&c=1') === '/kiosk.html?profile=a%20b%26c%3D1', kioskURL('a b&c=1'));
+
+    // ---------- entry routing: the thing that was broken ----------
+    section('entry routing');
+    // NOTE: redirect:'manual' yields an OPAQUE response (status 0, no headers) in the
+    // browser, so follow the redirect and inspect where we ended up instead.
+    const anonRes = await fetch('/');
+    check('/ serves the landing itself for a signed-OUT visitor (no redirect)',
+      anonRes.status === 200 && new URL(anonRes.url).pathname === '/', `${anonRes.status} ${anonRes.url}`);
+    const landing = await anonRes.text();
+    check('/ is the LANDING page, not the kiosk', /Technology for quality of life/.test(landing));
+    check('the landing has no dead CTAs left', !/href="#"\s+class="btn/.test(landing));
+    check('the landing signs you in through Google', /href="\/auth\/login"/.test(landing));
+
+    const signedIn = await fetch(`/?user=${encodeURIComponent(USER)}`);
+    check('/ sends a signed-IN visitor to HOME, not the kiosk',
+      new URL(signedIn.url).pathname === '/home.html', signedIn.url);
+    const homeBody = await signedIn.text();
+    // the visible list is rendered by home.js at runtime; the served HTML identifies
+    // itself by its title, which is what a raw fetch can actually see.
+    check('...and that really is the home page', /<title>[^<]*your screens/i.test(homeBody));
+    check('...and NOT the kiosk', !/id="kiosk"/.test(homeBody));
+
+    check('the dev harness is still reachable at /index.html',
+      (await fetch('/index.html')).ok);
+    check('the kiosk is still reachable directly (the bedside pairing URL)',
+      (await fetch('/kiosk.html')).ok);
+    check('/api/me identifies the signed-in user',
+      (await (await fetch('/api/me', { headers: { 'X-Dev-User': USER } })).json()).user === USER);
+
+    // ---------- the page ----------
+    section('home page');
+    const profiles = createProfilesClient({ user: USER });
+    const host = document.getElementById('host');
+    let opened = null;
+    const home = await mountHome(host, {
+      email: 'someone@example.com', profiles, manifests: listManifests(),
+      onOpen: (id) => { opened = id; },
+    });
+
+    const q = (s) => host.querySelector(s);
+    const txt = (s) => q(s)?.textContent?.trim();
+    const cards = () => [...host.querySelectorAll('.h-card')];
+
+    check('a fresh account sees an empty state, not a blank page', !!q('.h-empty'), txt('.h-list'));
+    check('the signed-in identity is shown', txt('.h-email') === 'someone@example.com', txt('.h-email'));
+    check('there is a way OUT', q('.h-signout').getAttribute('href') === '/auth/logout');
+
+    // create
+    q('[data-name]').value = 'Oscar';
+    q('[data-new]').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    await sleep(700);
+    check('creating a screen adds a card', cards().length === 1, String(cards().length));
+    check('the card is named what you typed', txt('.h-card h2') === 'Oscar', txt('.h-card h2'));
+    check('an EMPTY screen cannot be opened', q('[data-open]').disabled);
+    check('...and it says why', /at least one module/.test(txt('.h-add') || ''), txt('.h-add'));
+
+    // add modules
+    q('[data-pick]').value = 'quests';
+    q('[data-add]').click();
+    await sleep(700);
+    q('[data-pick]').value = 'progress';
+    q('[data-add]').click();
+    await sleep(700);
+    const chips = () => [...host.querySelectorAll('.h-chip')].map((c) => c.firstChild.textContent.trim());
+    check('added modules appear as chips', chips().length === 2, JSON.stringify(chips()));
+    check('chips show HUMAN titles, not raw types',
+      chips().join(',') === 'Quests,Progress', JSON.stringify(chips()));
+    check('a filled screen can now be opened', !q('[data-open]').disabled);
+
+    // the hand-off to the kiosk — the whole point of the page
+    const pid = q('[data-open]').dataset.open;
+    q('[data-open]').click();
+    await sleep(100);
+    check('Open hands the profile to the kiosk', opened === pid, `${opened} vs ${pid}`);
+
+    // remove
+    host.querySelector('.h-chip .h-x').click();
+    await sleep(700);
+    check('a module can be removed again', chips().length === 1, JSON.stringify(chips()));
+    check('removing says the recorded data is kept', /kept/i.test(txt('[data-msg]') || ''), txt('[data-msg]'));
+
+    // a second screen, and isolation between them
+    q('[data-name]').value = 'Bedside';
+    q('[data-new]').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    await sleep(700);
+    check('a second screen can be made', cards().length === 2, String(cards().length));
+    check('the new one starts empty — modules are per screen',
+      cards().find((c) => c.querySelector('h2').textContent === 'Bedside').querySelectorAll('.h-chip').length === 0);
+    check('every screen offers the whole module catalog',
+      [...host.querySelectorAll('[data-pick]')].every((s) => s.options.length === home.catalog().length));
+
+    // A name that would be dangerous if it ever reached the DOM raw. The SERVER refuses
+    // it outright (NAME_RE), so it never gets that far — and the page has to say so
+    // rather than appearing to succeed. (home.js escapes as well, for defence in depth.)
+    const before = cards().length;
+    q('[data-name]').value = 'X <img src=x onerror=alert(1)>';
+    q('[data-new]').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    await sleep(700);
+    check('a name containing markup is REFUSED, not stored', cards().length === before, String(cards().length));
+    check('...and the refusal is shown, not swallowed', /didn.t save/i.test(txt('[data-msg]') || ''), txt('[data-msg]'));
+    check('...and nothing was injected into the page', host.querySelectorAll('.h-card img').length === 0);
+    check('the typed name is kept so it can be corrected', q('[data-name]').value.startsWith('X <'), q('[data-name]').value);
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
