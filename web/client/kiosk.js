@@ -60,6 +60,7 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
       <div class="k-controls" data-controls>
         <div class="k-mods" data-mods></div>
         <div class="k-actions">
+          <button data-act="home" title="back to your screens (H)">⌂ Screens</button>
           <button data-act="next" title="next (→ / space)">Next ▸</button>
           <button data-act="mirror" title="mirror mode (M) — camera full screen">Mirror</button>
           <button data-act="fs" title="fullscreen (F)">⛶</button>
@@ -198,6 +199,11 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
     patchMirror({ corner: CORNERS[wrap((i < 0 ? 0 : i) + 1, CORNERS.length)] });
   }
 
+  // A way OUT. The browser back button was the only route home, which is fine for a
+  // paired bedside screen that never leaves the kiosk and wrong for everyone else.
+  // It lives in the auto-hiding chrome, so an unattended screen still shows nothing.
+  const goHome = () => { location.href = '/home.html'; };
+  controlsEl.querySelector('[data-act="home"]').addEventListener('click', goHome);
   controlsEl.querySelector('[data-act="next"]').addEventListener('click', nextInPrimary);
   controlsEl.querySelector('[data-act="mirror"]').addEventListener('click', toggleMirrorFull);
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
@@ -212,6 +218,7 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
     else if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextInPrimary(); }
     else if (e.key === 'ArrowLeft') showPrimary(primary - 1);
     else if (e.key === 'ArrowUp') showPrimary(primary + 1);
+    else if (e.key.toLowerCase() === 'h') { goHome(); return; }
     else if (e.key.toLowerCase() === 'm') toggleMirrorFull();
     else if (e.key.toLowerCase() === 'f') toggleFs();
     else if (e.key === '[') cycleMirrorSize(-1);

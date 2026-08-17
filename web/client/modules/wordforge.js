@@ -64,11 +64,23 @@ export const DEFAULT_PAIRS = [
    'The first is tight and precise; the second rambles.'],
 ].map(([better, weaker, why]) => ({ better, weaker, why }));
 
+// PRICED AGAINST THE REST OF THE ECONOMY, not invented.
+//
+// The economy runs at roughly ONE POINT PER MINUTE of real effort: a school hour is 60,
+// dishes are 15 (~10 min), mowing is 60 (~1 hr) — and, the anchor that matters here, the
+// Task Menu already prices **"look up a word's meaning" at 2 points**. Answering a word
+// question correctly is that same act, so it is worth about the same: 2.
+//
+// Do the arithmetic before changing these. A question takes ~15-20s, so a player answers
+// ~3 per minute. At 2 points a correct answer that is ~6 points/minute — already several
+// times the base rate, which is defensible for concentrated learning but is the ceiling,
+// not the floor. The original 10/3 worked out near 30-40 points per minute: a module that
+// simply sprays points and devalues every other way of earning them.
 export const DEFAULTS = {
-  correctPoints: 10,   // a right answer
-  tryPoints: 3,        // a wrong answer, once the explanation is acknowledged
+  correctPoints: 2,    // a right answer — the Task Menu's price for looking a word up
+  tryPoints: 1,        // a wrong answer, once the explanation is acknowledged
   streakEvery: 5,      // a bonus every N correct in a row
-  streakBonus: 5,
+  streakBonus: 3,
   roundLength: 10,     // items per round; each appears at most once
 };
 

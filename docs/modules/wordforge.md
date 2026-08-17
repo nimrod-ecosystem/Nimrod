@@ -27,14 +27,26 @@ This is the design rule the module is built around.
 
 A miss is not worth zero. It reveals the right answer **with the reason** — for a word,
 its meaning plus a real sentence using it; for a sentence pair, the actual *why* from the
-bank ("the second has a comma splice"). Then it offers `tryPoints` (3, vs 10 for a
+bank ("the second has a comma splice"). Then it offers `tryPoints` (1, vs 2 for a
 correct answer).
 
 **The try points are banked on "Got it", not on being wrong.** The correction is the
 thing being rewarded, so the reward is attached to taking it in. Combined with each item
 appearing at most once per round, there is no wrong-answer farm to run.
 
-A streak bonus (+5 every 5 correct in a row) is shown live and never applies to a miss.
+A streak bonus (+3 every 5 correct in a row) is shown live and never applies to a miss.
+
+## The numbers are priced, not invented
+The economy runs at roughly **one point per minute of real effort** (a school hour is 60;
+dishes 15; mowing 60). The anchor for this game is that the Task Menu already prices
+**"look up a word's meaning" at 2 points** — answering a word question correctly is the
+same act, so it is worth the same.
+
+Check the arithmetic before changing these. At ~3 questions a minute, 2 points a correct
+answer is ~6 points/minute: several times the base rate, defensible for concentrated
+learning, and the ceiling rather than the floor. The first draft used 10/3, which worked
+out near 30–40 points a minute — a module that sprays points and devalues every other way
+of earning them.
 
 ## Inputs → outputs (on the bus)
 - **Sinks:** `wordforge/answer` (option index) and `wordforge/next` — so a keypad, a
@@ -49,8 +61,8 @@ Per-instance state, all editable:
 | --- | --- |
 | `words` / `wordsText` | the bank, as objects or as text in `word \| meaning \| sentence` lines |
 | `pairs` / `pairsText` | sentence pairs, as objects or `better \|\| weaker \|\| why` lines |
-| `correctPoints` `tryPoints` | 10 / 3 |
-| `streakEvery` `streakBonus` | 5 / 5 |
+| `correctPoints` `tryPoints` | 2 / 1 |
+| `streakEvery` `streakBonus` | 5 / 3 |
 | `roundLength` | 10 |
 
 Both banks fall back to the seeded defaults, and `words` needs at least 4 entries (a
