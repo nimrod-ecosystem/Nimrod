@@ -23,6 +23,7 @@ import './modules/educational.js'; // registers 'educational' (generated learnin
 import './modules/director.js';   // registers 'director' (the content director / Lineup)
 import './modules/sprint.js';     // registers 'sprint' (focus timer -> points ledger)
 import './modules/quests.js';     // registers 'quests' (the quest board <- ledger)
+import './modules/progress.js';   // registers 'progress' (measurement <- gameplay stream)
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'
 

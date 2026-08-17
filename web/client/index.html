@@ -291,6 +291,47 @@
   .quests .q-log .q-pos{color:var(--moss);font-weight:700;text-align:right}
   .quests .q-log .q-neg{color:var(--rosy-deep);font-weight:700;text-align:right}
   .quests .q-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:14px}
+  /* progress (gameplay measurement — accuracy, concepts, sessions) */
+  .gprogress{display:flex;flex-direction:column;gap:8px;width:100%}
+  .gprogress .g-filters{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+  .gprogress .g-filters:empty{display:none}
+  .gprogress .g-flabel{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
+  .gprogress .g-fbtn{padding:4px 9px;border:1px solid var(--line);border-radius:99px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.78rem;cursor:pointer}
+  .gprogress .g-fbtn.on{background:var(--moss);border-color:var(--moss);color:#fff}
+  .gprogress .g-cards{display:flex;flex-wrap:wrap;gap:7px}
+  .gprogress .g-card{flex:1 1 84px;border:1px solid var(--line);border-radius:11px;background:var(--cream-soft);padding:8px 10px}
+  .gprogress .g-v{font-size:1.35rem;font-weight:800;line-height:1.1;color:var(--darkgreen);font-variant-numeric:tabular-nums}
+  .gprogress .g-k{font-size:.66rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .gprogress .g-h{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:2px}
+  .gprogress .g-chart svg{width:100%;height:150px;display:block;background:var(--cream-soft);
+    border:1px solid var(--line);border-radius:11px}
+  .gprogress .g-grid{stroke:var(--line)}
+  .gprogress .g-axis{fill:var(--muted);font-size:10px}
+  .gprogress .g-bar{fill:var(--moss)}
+  .gprogress .g-tabs{display:flex;gap:6px}
+  .gprogress .g-tab{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+  .gprogress .g-tab.on{background:var(--moss);border-color:var(--moss);color:#fff}
+  .gprogress .g-ghost{flex:0 0 auto;font-weight:500;color:var(--midnight)}
+  .gprogress .g-ghost:disabled{opacity:.4;cursor:not-allowed}
+  .gprogress .g-panel{max-height:340px;overflow-y:auto}
+  .gprogress .g-note{font-size:.72rem;color:var(--muted);margin:2px 0 7px}
+  .gprogress .g-crow{display:grid;grid-template-columns:minmax(90px,1fr) 2fr auto;gap:8px;align-items:center;margin-bottom:6px}
+  .gprogress .g-cname{font-size:.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gprogress .g-cbar{height:9px;border-radius:99px;background:var(--cream-soft);border:1px solid var(--line);overflow:hidden}
+  .gprogress .g-cbar i{display:block;height:100%;background:var(--moss)}
+  .gprogress .g-cpct{font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;min-width:56px}
+  .gprogress .g-cpct span{display:block;font-size:.64rem;font-weight:500;color:var(--muted)}
+  .gprogress .g-trend{font-style:normal;font-size:.7rem;margin-left:5px}
+  .gprogress .g-up{color:var(--moss)}
+  .gprogress .g-down{color:var(--rosy-deep)}
+  .gprogress .g-flat{color:var(--muted)}
+  .gprogress .g-table{width:100%;border-collapse:collapse;font-size:.75rem}
+  .gprogress .g-table th{text-align:left;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:4px 5px}
+  .gprogress .g-table td{padding:4px 5px;border-bottom:1px solid var(--line)}
+  .gprogress .g-src{display:block;font-size:.64rem;color:var(--muted)}
+  .gprogress .g-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:18px}
 </style>
 </head>
 <body>

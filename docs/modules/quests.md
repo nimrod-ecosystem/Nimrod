@@ -4,12 +4,12 @@
 > spend into, the log, and the week's school hours — all read from the shared ledger.
 
 ## Not to be confused with `progress`
-`progress` is a **different** module: the Cici game-stats dashboard (accuracy, reaction
-time, omissions, session-over-session), ported from `datadash.js`. That one is a
-**measurement** — evidence for a therapist. This one is an **economy** — a balance you
-earn and spend, where the number exists to motivate. They share the substrate (a
-profile-scoped append-only stream) and nothing else; merging them would force each to
-pretend to be the other. See "The other consumer" in [`../points-sheet.md`](../points-sheet.md).
+`progress` is a **different** module: the measurement dashboard over the `gameplay`
+telemetry stream — accuracy, reaction time, per-concept mastery, session over session,
+for **any** game and any player. This one is an **economy**: a balance you earn and
+spend, where the number exists to motivate. They share the substrate (a profile-scoped
+append-only stream) and nothing else; merging them would force each to pretend to be the
+other. See [`progress.md`](progress.md).
 
 ## Purpose
 `sprint` and every learning game after it append to one shared, profile-scoped `points`
