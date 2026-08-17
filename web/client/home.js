@@ -37,12 +37,14 @@ export function kioskURL(profileId) {
 export const TABS = [
   { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
   { id: 'composer', label: 'Composer', hint: 'arrange them on the display' },
+  { id: 'adulting', label: 'Adulting', hint: 'your own points board' },
 ];
 
 // The shell: sidebar + one mounted panel. `mountTab` is injectable so a test can drive
 // the navigation without the real panels.
 export async function mountHome(root, { email = '', profiles, manifests = [], onOpen = null,
-                                       makeSettings = null, mountTab = null } = {}) {
+                                       makeSettings = null, makeState = null, makeEvents = null,
+                                       user = null, bus = null, mountTab = null } = {}) {
   let active = 'screens';
   let panel = null;
 
@@ -68,6 +70,12 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const c = mountComposer(host, { profiles, manifests, onOpen, makeSettings });
       await c.refresh();
       return c;
+    }
+    if (id === 'adulting') {
+      const { mountAdulting } = await import('./adulting.js');
+      const a = mountAdulting(host, { profiles, bus, user, makeState, makeEvents });
+      await a.refresh();
+      return a;
     }
     return mountScreens(host, { profiles, manifests, onOpen });
   });

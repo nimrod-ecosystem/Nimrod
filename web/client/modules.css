@@ -208,6 +208,8 @@
 .wordforge .wf-opt:disabled{cursor:default}
 .wordforge .wf-opt.is-right{border-color:var(--moss);background:#f0f4e8;box-shadow:inset 3px 0 0 var(--moss)}
 .wordforge .wf-opt.is-wrong{border-color:var(--rosy);background:#fbecea;box-shadow:inset 3px 0 0 var(--rosy-deep)}
+.wordforge .wf-idk{display:block;width:100%;margin-top:10px;background:transparent;border-style:dashed;color:var(--muted);font-weight:600}
+.wordforge .wf-idk:hover{background:var(--cream-soft);color:var(--ink)}
 .wordforge .wf-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5}
 .wordforge .wf-fb.is-right{background:#f0f4e8;border:1px solid var(--moss)}
 .wordforge .wf-fb.is-wrong{background:var(--cream-soft);border:1px solid var(--line)}
