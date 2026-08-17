@@ -1,4 +1,4 @@
-// progress.js — the PROGRESS dashboard: the consumer end of the points ledger.
+// quests.js — the QUEST BOARD: the consumer end of the points ledger.
 //
 // Every point source (the sprint timer, and every learning game after it) appends to one
 // shared, profile-scoped `points` stream. This module is what reads it back: the balance,
@@ -24,6 +24,13 @@
 // state, not code — seeded below from the spreadsheet, editable per profile, and a learner
 // modding them is itself part of the curriculum. Colour and voice come from the theme.
 //
+// NAMING. This is `quests`, not `progress`. `progress` already means something else in
+// this ecosystem — the Cici game-stats dashboard (accuracy, reaction time, omissions per
+// session) that is being ported as its own module over a `gameplay` telemetry stream.
+// Those are different instruments: this one is an ECONOMY (a balance you earn and spend,
+// where the number motivates), that one is a MEASUREMENT (evidence for a therapist).
+// They share the substrate — a profile-scoped append-only stream — and nothing else.
+//
 // TESTABILITY: ctx.now() is injectable (default Date.now), like sprint.js.
 
 import { registerModule } from '../module.js';
@@ -31,7 +38,7 @@ import {
   createPointsLedger, POINTS_TOPIC, pointsValue, sumEarned, sumSpent, sumMinutes, weekStart,
 } from '../points.js';
 
-export const SOURCE = 'progress';
+export const SOURCE = 'quests';
 
 // Seeded from the points-tracker's "Task Menu" tab. `double` = eligible for the x2
 // multiplier (helping family / doing it for Mom). Negative base = a penalty.
@@ -102,7 +109,7 @@ const esc = (s) => String(s == null ? '' : s)
 // ---------- the module ----------
 
 registerModule(
-  { type: 'progress', title: 'Progress', description: 'points balance, tasks, rewards — reads the shared ledger' },
+  { type: 'quests', title: 'Quests', description: 'points balance, tasks, rewards — reads the shared ledger' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now = ctx.now || (() => Date.now());
@@ -133,7 +140,7 @@ registerModule(
         source: SOURCE,
         tags: ['task'],
         note: t.task,
-      }).catch((err) => { console.error('progress: log failed', err); return null; });
+      }).catch((err) => { console.error('quests: log failed', err); return null; });
       flash = res
         ? (res.value >= 0 ? `+${res.value} — ${t.task}` : `${res.value} — ${t.task}`)
         : 'Could not save that — try again.';
@@ -148,7 +155,7 @@ registerModule(
       if (pendingBuy !== i) { pendingBuy = i; flash = `Tap again to confirm — ${r.reward}`; render(); return; }
       pendingBuy = null;
       const res = await ledger.spend({ amount: r.cost, source: SOURCE, tags: ['reward'], note: r.reward })
-        .catch((err) => { console.error('progress: buy failed', err); return null; });
+        .catch((err) => { console.error('quests: buy failed', err); return null; });
       flash = res ? `Bought ${r.reward} — ${r.cost} points` : 'Could not save that — try again.';
       render();
     }
@@ -178,33 +185,33 @@ registerModule(
     function renderTasks() {
       const anyDouble = tasks.some((t) => t.double);
       return `
-        <div class="p-toolbar">
-          ${anyDouble ? `<label class="p-toggle"><input type="checkbox" data-double ${doubling ? 'checked' : ''}> x2 (with family / for Mom)</label>` : ''}
+        <div class="q-toolbar">
+          ${anyDouble ? `<label class="q-toggle"><input type="checkbox" data-double ${doubling ? 'checked' : ''}> x2 (with family / for Mom)</label>` : ''}
         </div>
-        <div class="p-list">
+        <div class="q-list">
           ${tasks.map((t, i) => `
-            <button class="p-item" data-task="${i}" data-kind="${esc(t.type)}">
-              <span class="p-item-main">
-                <span class="p-item-name">${esc(t.task)}</span>
-                ${t.note ? `<span class="p-item-note">${esc(t.note)}</span>` : ''}
+            <button class="q-item" data-task="${i}" data-kind="${esc(t.type)}">
+              <span class="q-item-main">
+                <span class="q-item-name">${esc(t.task)}</span>
+                ${t.note ? `<span class="q-item-note">${esc(t.note)}</span>` : ''}
               </span>
-              <span class="p-item-pts">${t.base >= 0 ? '+' : ''}${esc(t.base)}${t.double ? '<i class="p-x2">x2</i>' : ''}</span>
+              <span class="q-item-pts">${t.base >= 0 ? '+' : ''}${esc(t.base)}${t.double ? '<i class="q-x2">x2</i>' : ''}</span>
             </button>`).join('')}
         </div>`;
     }
 
     function renderRewards(balance) {
       return `
-        <div class="p-list">
+        <div class="q-list">
           ${rewards.map((r, i) => {
             const afford = balance >= r.cost;
             return `
-            <button class="p-item" data-buy="${i}" data-kind="${esc(r.kind)}" ${afford ? '' : 'disabled'}>
-              <span class="p-item-main">
-                <span class="p-item-name">${esc(r.reward)}</span>
-                <span class="p-item-note">${esc(r.kind)}${r.note ? ' · ' + esc(r.note) : ''}</span>
+            <button class="q-item" data-buy="${i}" data-kind="${esc(r.kind)}" ${afford ? '' : 'disabled'}>
+              <span class="q-item-main">
+                <span class="q-item-name">${esc(r.reward)}</span>
+                <span class="q-item-note">${esc(r.kind)}${r.note ? ' · ' + esc(r.note) : ''}</span>
               </span>
-              <span class="p-item-pts">${pendingBuy === i ? 'confirm?' : '-' + esc(r.cost)}</span>
+              <span class="q-item-pts">${pendingBuy === i ? 'confirm?' : '-' + esc(r.cost)}</span>
             </button>`;
           }).join('')}
         </div>`;
@@ -212,9 +219,9 @@ registerModule(
 
     function renderLog() {
       const evs = [...events()].reverse().slice(0, 40);
-      if (!evs.length) return `<p class="p-empty">Nothing logged yet. Finish a sprint or tap a task.</p>`;
+      if (!evs.length) return `<p class="q-empty">Nothing logged yet. Finish a sprint or tap a task.</p>`;
       return `
-        <table class="p-log">
+        <table class="q-log">
           <thead><tr><th>When</th><th>What</th><th>Base</th><th>x</th><th>Points</th></tr></thead>
           <tbody>
             ${evs.map((e) => {
@@ -225,10 +232,10 @@ registerModule(
               const v = pointsValue(e);
               return `<tr data-kind="${esc(d.type || '')}">
                 <td>${esc(stamp)}</td>
-                <td>${esc(d.note || d.source || '')}<span class="p-src">${esc(d.source || '')}</span></td>
+                <td>${esc(d.note || d.source || '')}<span class="q-src">${esc(d.source || '')}</span></td>
                 <td>${esc(d.amount)}</td>
                 <td>${esc(d.mult)}</td>
-                <td class="${v < 0 ? 'p-neg' : 'p-pos'}">${v >= 0 ? '+' : ''}${v}</td>
+                <td class="${v < 0 ? 'q-neg' : 'q-pos'}">${v >= 0 ? '+' : ''}${v}</td>
               </tr>`;
             }).join('')}
           </tbody>
@@ -236,7 +243,7 @@ registerModule(
     }
 
     function render() {
-      if (!mount.querySelector('.progress')) return;
+      if (!mount.querySelector('.quests')) return;
       const balance = events().reduce((n, e) => n + pointsValue(e), 0);
 
       for (const b of mount.querySelectorAll('[data-tab]')) {
@@ -262,26 +269,26 @@ registerModule(
     return {
       init() {
         mount.innerHTML = `
-          <div class="progress">
-            <div class="p-head">
-              <div class="p-balance"><b data-balance>0</b><span>points</span></div>
-              <div class="p-sub">
+          <div class="quests">
+            <div class="q-head">
+              <div class="q-balance"><b data-balance>0</b><span>points</span></div>
+              <div class="q-sub">
                 <span>earned <b data-earned>0</b></span>
                 <span>spent <b data-spent>0</b></span>
               </div>
             </div>
-            <div class="p-hours">
-              <div class="p-hours-row"><span data-hours>0h / 25h</span><span class="p-band" data-band></span></div>
-              <div class="p-track"><i data-bar></i></div>
-              <div class="p-topup" data-topup></div>
+            <div class="q-hours">
+              <div class="q-hours-row"><span data-hours>0h / 25h</span><span class="q-band" data-band></span></div>
+              <div class="q-track"><i data-bar></i></div>
+              <div class="q-topup" data-topup></div>
             </div>
-            <div class="p-flash" data-flash></div>
-            <div class="p-tabs">
-              <button class="p-tab on" data-tab="tasks">Tasks</button>
-              <button class="p-tab" data-tab="rewards">Rewards</button>
-              <button class="p-tab" data-tab="log">Log</button>
+            <div class="q-flash" data-flash></div>
+            <div class="q-tabs">
+              <button class="q-tab on" data-tab="tasks">Tasks</button>
+              <button class="q-tab" data-tab="rewards">Rewards</button>
+              <button class="q-tab" data-tab="log">Log</button>
             </div>
-            <div class="p-panel" data-panel></div>
+            <div class="q-panel" data-panel></div>
           </div>`;
 
         for (const b of mount.querySelectorAll('[data-tab]')) {
@@ -298,7 +305,7 @@ registerModule(
         bus.subscribe(POINTS_TOPIC, () => { ledger.load().catch(() => {}); });
 
         // A named task can also be logged from anywhere on the bus (a button, a game, an AI).
-        bus.subscribe('progress/log', (payload) => {
+        bus.subscribe('quests/log', (payload) => {
           const name = typeof payload === 'string' ? payload : payload && payload.task;
           const i = tasks.findIndex((t) => t.task === name);
           if (i >= 0) logTask(i);

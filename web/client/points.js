@@ -28,7 +28,7 @@
 //     mult    multiplier (1 default; 1.5 stretch hours; 2 alongside family/for-Mom)
 //     type    the ledger's category — see TYPES below. Mirrors the "Type" column of the
 //             points-tracker spreadsheet this model came from, so the two stay portable.
-//     source  who awarded them ('sprint', 'progress', 'wordforge', …) — totals group by it
+//     source  who awarded them ('sprint', 'quests', 'wordforge', …) — totals group by it
 //     tags    free labels (subject, quest, task)
 //     note    human note (the sprint's task label, the reward bought)
 //     minutes optional — focused MINUTES this event represents. Only school-time events
@@ -175,7 +175,7 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
 
   // Spending is an award with the sign flipped and the Reward type — one stream, one
   // append path, so a purchase can no more be silently edited away than a point earned.
-  const spend = ({ amount, note = '', source = 'progress', tags = [] } = {}) => {
+  const spend = ({ amount, note = '', source = 'quests', tags = [] } = {}) => {
     const n = Math.abs(Number(amount) || 0);
     return n ? award({ amount: -n, mult: 1, type: REWARD_TYPE, source, tags, note }) : Promise.resolve(null);
   };

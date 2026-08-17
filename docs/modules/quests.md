@@ -1,7 +1,15 @@
-# Module: progress
+# Module: quests
 
 > The points dashboard: balance, the task catalog you earn from, the reward store you
 > spend into, the log, and the week's school hours — all read from the shared ledger.
+
+## Not to be confused with `progress`
+`progress` is a **different** module: the Cici game-stats dashboard (accuracy, reaction
+time, omissions, session-over-session), ported from `datadash.js`. That one is a
+**measurement** — evidence for a therapist. This one is an **economy** — a balance you
+earn and spend, where the number exists to motivate. They share the substrate (a
+profile-scoped append-only stream) and nothing else; merging them would force each to
+pretend to be the other. See "The other consumer" in [`../points-sheet.md`](../points-sheet.md).
 
 ## Purpose
 `sprint` and every learning game after it append to one shared, profile-scoped `points`
@@ -34,7 +42,7 @@ without touching this module.
 - **Sinks:**
   - `points/award` — the ledger's live nudge. This module **only refreshes** on it. It
     must never append in response, or every point would be counted twice.
-  - `progress/log` — `"<task name>"` or `{ task }`; logs that task from the catalog.
+  - `quests/log` — `"<task name>"` or `{ task }`; logs that task from the catalog.
 - **Emits:** ledger appends only (task logs, purchases), which themselves publish
   `points/award`.
 
@@ -77,10 +85,10 @@ owner's own Google account.
   over the same stream; the spreadsheet has the math.
 - **Sheets sync** — see `../points-sheet.md`. Blocked on Google OAuth.
 - **New point sources** need nothing here: build a ledger from `ctx.makeEvents` and
-  `award()` with your own `source`. This dashboard picks it up on the next nudge.
+  `award()` with your own `source`. This board picks it up on the next nudge.
 
 ## Status
-**Tested.** `client/dev/progress_test.html` — 40 checks against a live dev server: the
+**Tested.** `client/dev/quests_test.html` — 40 checks against a live dev server: the
 weekly hours engine (bands, and that the top-up never re-pays the base), catalog and store
 rendered from data, task logging, the x2 toggle applying *only* to eligible tasks,
 penalties, confirm-to-buy, earned/spent reported apart, the log, and the end-to-end seam —

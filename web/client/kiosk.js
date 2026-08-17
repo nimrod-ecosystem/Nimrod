@@ -37,7 +37,7 @@ import './modules/personal.js';
 import './modules/educational.js';
 import './modules/director.js';
 import './modules/sprint.js';
-import './modules/progress.js';
+import './modules/quests.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];

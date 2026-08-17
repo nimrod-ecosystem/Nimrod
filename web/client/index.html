@@ -250,47 +250,47 @@
     color:var(--ink);font:inherit;font-size:.85rem}
   .sprint .s-worth{font-size:.85rem;font-weight:700;color:var(--midnight)}
   .sprint .s-foot{font-size:.8rem;color:var(--muted);text-align:center}
-  /* progress (points dashboard) */
-  .progress{display:flex;flex-direction:column;gap:8px;width:100%}
-  .progress .p-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
-  .progress .p-balance{display:flex;align-items:baseline;gap:6px}
-  .progress .p-balance b{font-size:2.6rem;font-weight:800;line-height:1;color:var(--darkgreen);font-variant-numeric:tabular-nums}
-  .progress .p-balance span{font-size:.85rem;color:var(--muted)}
-  .progress .p-sub{display:flex;gap:12px;font-size:.85rem;color:var(--muted)}
-  .progress .p-sub b{color:var(--ink);font-variant-numeric:tabular-nums}
-  .progress .p-hours-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--ink-soft)}
-  .progress .p-band{font-weight:700;color:var(--midnight)}
-  .progress .p-track{height:8px;border-radius:99px;background:var(--cream-soft);border:1px solid var(--line);overflow:hidden;margin-top:3px}
-  .progress .p-track i{display:block;height:100%;background:var(--moss);width:0}
-  .progress .p-topup{font-size:.76rem;color:var(--midnight);min-height:1em;margin-top:2px}
-  .progress .p-flash{min-height:1.2em;font-size:.85rem;font-weight:600;color:var(--midnight)}
-  .progress .p-tabs{display:flex;gap:6px}
-  .progress .p-tab{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);
+  /* quests (the quest board / points economy) */
+  .quests{display:flex;flex-direction:column;gap:8px;width:100%}
+  .quests .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .quests .q-balance{display:flex;align-items:baseline;gap:6px}
+  .quests .q-balance b{font-size:2.6rem;font-weight:800;line-height:1;color:var(--darkgreen);font-variant-numeric:tabular-nums}
+  .quests .q-balance span{font-size:.85rem;color:var(--muted)}
+  .quests .q-sub{display:flex;gap:12px;font-size:.85rem;color:var(--muted)}
+  .quests .q-sub b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .quests .q-hours-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--ink-soft)}
+  .quests .q-band{font-weight:700;color:var(--midnight)}
+  .quests .q-track{height:8px;border-radius:99px;background:var(--cream-soft);border:1px solid var(--line);overflow:hidden;margin-top:3px}
+  .quests .q-track i{display:block;height:100%;background:var(--moss);width:0}
+  .quests .q-topup{font-size:.76rem;color:var(--midnight);min-height:1em;margin-top:2px}
+  .quests .q-flash{min-height:1.2em;font-size:.85rem;font-weight:600;color:var(--midnight)}
+  .quests .q-tabs{display:flex;gap:6px}
+  .quests .q-tab{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);
     color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-  .progress .p-tab.on{background:var(--moss);border-color:var(--moss);color:#fff}
-  .progress .p-panel{max-height:360px;overflow-y:auto}
-  .progress .p-toolbar{display:flex;justify-content:flex-end;padding:2px 0 6px}
-  .progress .p-toggle{font-size:.8rem;color:var(--ink-soft);display:flex;align-items:center;gap:5px;cursor:pointer}
-  .progress .p-list{display:flex;flex-direction:column;gap:5px}
-  .progress .p-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;
+  .quests .q-tab.on{background:var(--moss);border-color:var(--moss);color:#fff}
+  .quests .q-panel{max-height:360px;overflow-y:auto}
+  .quests .q-toolbar{display:flex;justify-content:flex-end;padding:2px 0 6px}
+  .quests .q-toggle{font-size:.8rem;color:var(--ink-soft);display:flex;align-items:center;gap:5px;cursor:pointer}
+  .quests .q-list{display:flex;flex-direction:column;gap:5px}
+  .quests .q-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;
     padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);
     font:inherit;cursor:pointer}
-  .progress .p-item:hover:not(:disabled){background:var(--cream-soft)}
-  .progress .p-item:disabled{opacity:.45;cursor:not-allowed}
-  .progress .p-item[data-kind="Penalty"]{border-color:var(--rosy)}
-  .progress .p-item-main{display:flex;flex-direction:column;gap:1px;min-width:0}
-  .progress .p-item-name{font-weight:600;font-size:.9rem}
-  .progress .p-item-note{font-size:.74rem;color:var(--muted)}
-  .progress .p-item-pts{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--midnight)}
-  .progress .p-item[data-kind="Penalty"] .p-item-pts{color:var(--rosy-deep)}
-  .progress .p-x2{font-style:normal;font-size:.68rem;margin-left:4px;color:var(--muted)}
-  .progress .p-log{width:100%;border-collapse:collapse;font-size:.78rem}
-  .progress .p-log th{text-align:left;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:4px 6px}
-  .progress .p-log td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-  .progress .p-log .p-src{display:block;font-size:.68rem;color:var(--muted)}
-  .progress .p-log .p-pos{color:var(--moss);font-weight:700;text-align:right}
-  .progress .p-log .p-neg{color:var(--rosy-deep);font-weight:700;text-align:right}
-  .progress .p-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:14px}
+  .quests .q-item:hover:not(:disabled){background:var(--cream-soft)}
+  .quests .q-item:disabled{opacity:.45;cursor:not-allowed}
+  .quests .q-item[data-kind="Penalty"]{border-color:var(--rosy)}
+  .quests .q-item-main{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .quests .q-item-name{font-weight:600;font-size:.9rem}
+  .quests .q-item-note{font-size:.74rem;color:var(--muted)}
+  .quests .q-item-pts{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--midnight)}
+  .quests .q-item[data-kind="Penalty"] .q-item-pts{color:var(--rosy-deep)}
+  .quests .q-x2{font-style:normal;font-size:.68rem;margin-left:4px;color:var(--muted)}
+  .quests .q-log{width:100%;border-collapse:collapse;font-size:.78rem}
+  .quests .q-log th{text-align:left;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:4px 6px}
+  .quests .q-log td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  .quests .q-log .q-src{display:block;font-size:.68rem;color:var(--muted)}
+  .quests .q-log .q-pos{color:var(--moss);font-weight:700;text-align:right}
+  .quests .q-log .q-neg{color:var(--rosy-deep);font-weight:700;text-align:right}
+  .quests .q-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:14px}
 </style>
 </head>
 <body>
