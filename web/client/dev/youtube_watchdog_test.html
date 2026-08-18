@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>youtube stuck-loading watchdog — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;width:420px;height:240px;position:relative;background:#0c1a14;border-radius:12px;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>youtube stuck-loading watchdog</h1>
+<p>The failure this fixes: Christine's screen found frozen on a loading spinner. A video that never
+starts fires neither <code>onEnded</code> nor <code>onError</code> — a hung request is not a player
+error — so the director waited forever for a <code>segment/done</code> that was never coming.
+Driven with an injected player that simply never plays, and a fake clock, so no network is involved.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import '../modules/youtube.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('yt-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A fake clock: timers only fire when the test advances time.
+function fakeTimers() {
+  let now = 0, seq = 0;
+  const pending = new Map();
+  return {
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + ms }); return id; },
+    clearTimer: (id) => pending.delete(id),
+    advance(ms) {
+      now += ms;
+      for (const [id, t] of [...pending.entries()]) {
+        if (t.at <= now) { pending.delete(id); t.fn(); }
+      }
+    },
+    armed: () => pending.size,
+  };
+}
+
+// A player that loads and then does absolutely nothing — the real-world hang.
+function stuckPlayerFactory(log) {
+  return (mountEl, { onEnded, onError, onPlaying }) => {
+    const api = {
+      load(id) { log.loads.push(id); if (api.playOnLoad) onPlaying?.(); },
+      stop() {}, destroy() {},
+      playNow: () => onPlaying?.(),
+      endNow: () => onEnded?.(),
+      errorNow: () => onError?.('boom'),
+      playOnLoad: false,
+    };
+    log.player = api;
+    return api;
+  };
+}
+
+const PLAYLIST = [
+  { id: 'aaaaaaaaaaa', channel: 'a' },
+  { id: 'bbbbbbbbbbb', channel: 'b' },
+  { id: 'ccccccccccc', channel: 'c' },
+];
+
+async function mountYT({ stallMs = 20000, autoAdvance = true } = {}) {
+  const profiles = createProfilesClient({ user: USER });
+  const profile = await profiles.create('TEST-yt-' + Math.floor(Math.random() * 1e5));
+  const mod = await profiles.addModule(profile.id, 'youtube');
+  const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+  await state.load();
+  state.set({ playlist: PLAYLIST, autoAdvance, stallMs });
+  await state.flush();
+
+  const bus = createBus();
+  const done = [], nexts = [];
+  bus.subscribe('segment/done', (p) => done.push(p));
+  bus.subscribe('youtube/next', () => nexts.push(1));
+
+  const timers = fakeTimers();
+  const log = { loads: [], player: null };
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const inst = mountModule('youtube', {
+    mount: host, bus, state,
+    events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+    user: USER, profileId: profile.id,
+    makeState: (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o }),
+    makeEvents: (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o }),
+    playerFactory: stuckPlayerFactory(log),
+    setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+  });
+  inst.init();
+  await sleep(500);
+  return { inst, bus, done, nexts, timers, log, host };
+}
+
+(async () => {
+  try {
+    // ================= the hang, and the recovery =================
+    section('a video that never starts');
+    const a = await mountYT({ stallMs: 20000 });
+    check('a video was asked for', a.log.loads.length === 1, JSON.stringify(a.log.loads));
+    check('the watchdog is armed while it loads', a.timers.armed() === 1, String(a.timers.armed()));
+    check('nothing has been declared done yet', a.done.length === 0);
+
+    a.timers.advance(19000);
+    check('it does NOT give up on a slow-but-working load', a.log.loads.length === 1 && a.done.length === 0,
+      `${a.log.loads.length} loads / ${a.done.length} done`);
+
+    a.timers.advance(2000);          // past 20s
+    check('after the stall it RETRIES the same video first',
+      a.log.loads.length === 2 && a.log.loads[1] === a.log.loads[0], JSON.stringify(a.log.loads));
+    check('...and still hasn’t abandoned the segment', a.done.length === 0, JSON.stringify(a.done));
+    check('...with the watchdog re-armed', a.timers.armed() === 1);
+
+    a.timers.advance(21000);         // the retry stalls too
+    check('a second stall ENDS the segment', a.done.length === 1, JSON.stringify(a.done));
+    check('...with reason=timeout, the director’s vocabulary',
+      a.done[0].reason === 'timeout' && a.done[0].provider === 'youtube', JSON.stringify(a.done[0]));
+    check('...and it moves to the next video', a.nexts.length === 1, String(a.nexts.length));
+    check('the screen SAYS what happened rather than sitting blank',
+      /wouldn.t load|moving on/i.test(a.host.textContent), a.host.textContent.slice(0, 80));
+    a.inst.destroy();
+
+    // ================= the happy path is untouched =================
+    section('a video that plays');
+    const b = await mountYT();
+    b.log.player.playNow();
+    check('playing disarms the watchdog', b.timers.armed() === 0, String(b.timers.armed()));
+    b.timers.advance(60000);
+    check('...so a long video is never interrupted', b.done.length === 0, JSON.stringify(b.done));
+    check('...and it is not reloaded underneath the viewer', b.log.loads.length === 1);
+
+    b.log.player.endNow();
+    check('a normal ending still ends the segment',
+      b.done.length === 1 && b.done[0].reason === 'ended', JSON.stringify(b.done));
+    b.timers.advance(60000);
+    check('...exactly once — the watchdog cannot double-fire', b.done.length === 1, JSON.stringify(b.done));
+    b.inst.destroy();
+
+    // ================= an explicit error =================
+    section('an explicit player error');
+    const c = await mountYT();
+    c.log.player.errorNow();
+    check('an error ends the segment', c.done.length === 1 && c.done[0].reason === 'error',
+      JSON.stringify(c.done));
+    c.timers.advance(60000);
+    check('...and the watchdog does not then fire a SECOND done for the same video',
+      c.done.length === 1, JSON.stringify(c.done));
+    c.inst.destroy();
+
+    // ================= recovery across videos =================
+    section('recovering onto the next video');
+    const d = await mountYT();
+    d.timers.advance(21000);         // stall 1 -> retry
+    d.timers.advance(21000);         // stall 2 -> give up, next
+    check('the first video gave up', d.done.length === 1);
+    // the module advanced; simulate the next one actually playing
+    await sleep(200);
+    d.log.player.playNow();
+    check('a later video that works clears the state', d.timers.armed() === 0);
+    d.timers.advance(60000);
+    check('...and no stale timeout arrives afterwards', d.done.length === 1, JSON.stringify(d.done));
+    d.inst.destroy();
+
+    // ================= the escape hatch =================
+    section('the watchdog can be turned off');
+    const e = await mountYT({ stallMs: 0 });
+    check('stallMs=0 arms nothing', e.timers.armed() === 0, String(e.timers.armed()));
+    e.timers.advance(120000);
+    check('...and nothing times out', e.done.length === 0, JSON.stringify(e.done));
+    e.inst.destroy();
+
+    // ================= a single-video playlist =================
+    section('one video, nowhere to advance to');
+    const f = await mountYT();
+    f.timers.advance(21000); f.timers.advance(21000);
+    check('it still declares the segment done so a DIRECTOR can move on',
+      f.done.length === 1 && f.done[0].reason === 'timeout', JSON.stringify(f.done));
+    f.inst.destroy();
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

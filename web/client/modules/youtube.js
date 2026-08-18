@@ -27,7 +27,10 @@
 import { registerModule } from '../module.js';
 import { pick, statsFromEvents } from '../rng.js';
 
-const DEFAULTS = { playlist: [], autoAdvance: true, directed: false };
+// `stallMs` is the STUCK-LOADING WATCHDOG (see the header). 20s is long enough that a
+// slow-but-working load on facility wifi isn't cut off, short enough that nobody sits in
+// front of a frozen screen for long.
+const DEFAULTS = { playlist: [], autoAdvance: true, directed: false, stallMs: 20000 };
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 
 // Parse a YouTube video id from a URL or a bare id. Accepts youtu.be/<id>,
@@ -70,7 +73,12 @@ function loadIframeApi() {
   return _apiPromise;
 }
 
-function createYtPlayer(mountEl, { onEnded, onError }) {
+// The player reports THREE things upward, and the third is the one that was missing:
+// `onPlaying`. Without it there is no way to tell "loading" from "loaded and stuck", and a
+// video that never starts fires neither onEnded nor onError — a hung network request is not
+// a player error. That silence is what left Christine's screen frozen on a loading spinner
+// with the director politely waiting for a `segment/done` that was never coming.
+function createYtPlayer(mountEl, { onEnded, onError, onPlaying }) {
   let player = null, ready = false, pending = null, destroyed = false;
   const host = document.createElement('div');
   mountEl.append(host);
@@ -83,7 +91,10 @@ function createYtPlayer(mountEl, { onEnded, onError }) {
       playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3 },
       events: {
         onReady: () => { ready = true; if (pending) { player.loadVideoById(pending); pending = null; } },
-        onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED) onEnded?.(); },
+        onStateChange: (e) => {
+          if (e.data === YT.PlayerState.ENDED) onEnded?.();
+          else if (e.data === YT.PlayerState.PLAYING) onPlaying?.();   // disarms the watchdog
+        },
         onError: (e) => onError?.(e?.data),
       },
     });
@@ -109,6 +120,52 @@ registerModule(
     let history = [], histPos = -1; // for prev()
     let currentId = null;
     let player = null;
+
+    // ---- the stuck-loading watchdog ----
+    // Armed every time a video is asked for, disarmed the moment it actually plays. If it
+    // never plays: reload once (a wifi stall usually clears), and if it still doesn't,
+    // declare the segment done so the director moves on to something else.
+    //
+    // It lives HERE rather than inside the player adapter for two reasons: the module is
+    // what knows about the bus and `autoAdvance`, and putting it here means an injected
+    // test player exercises the real recovery path instead of bypassing it.
+    const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
+    const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
+    let stallTimer = null;
+    let stallRetried = false;
+
+    function clearStall() {
+      if (stallTimer != null) { clearTimer(stallTimer); stallTimer = null; }
+    }
+
+    function armStall(id) {
+      clearStall();
+      if (!(cfg.stallMs > 0)) return;      // 0 disables it
+      stallTimer = setTimer(() => onStall(id), cfg.stallMs);
+    }
+
+    function onStall(id) {
+      stallTimer = null;
+      if (id !== currentId) return;        // we've moved on; nothing to recover
+      if (!stallRetried) {
+        stallRetried = true;
+        setStatus('Still loading — trying again…');
+        player?.load(id);
+        armStall(id);
+        return;
+      }
+      // Given up on this one. `timeout` is the director's existing vocabulary for
+      // "this segment is over", alongside ended | skipped.
+      setStatus('That video wouldn’t load. Moving on.');
+      bus.publish('segment/done', { provider: 'youtube', reason: 'timeout', id });
+      if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next');
+    }
+
+    function onPlaying() {
+      clearStall();
+      stallRetried = false;
+      setStatus('');
+    }
 
     const stage = () => mount.querySelector('[data-stage]');
 
@@ -143,7 +200,9 @@ registerModule(
     function show(id, record = true) {
       if (!byId[id] || !player) return;
       currentId = id;
+      stallRetried = false;
       player.load(id);
+      armStall(id);
       updateLabel();
       if (record) {
         recent.push(id);
@@ -270,8 +329,11 @@ registerModule(
         // instance it seeds autoAdvance=false, so only segment/done fires — the director
         // advances, not youtube itself.
         player = makePlayer(stage(), {
-          onEnded: () => { bus.publish('segment/done', { provider: 'youtube', reason: 'ended' }); if (cfg.autoAdvance) bus.publish('youtube/next'); },
-          onError: () => { bus.publish('segment/done', { provider: 'youtube', reason: 'error' }); if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next'); },
+          onEnded: () => { clearStall(); bus.publish('segment/done', { provider: 'youtube', reason: 'ended' }); if (cfg.autoAdvance) bus.publish('youtube/next'); },
+          // An explicit player/API error already ends the segment; just stop the watchdog
+          // so it can't fire a second `segment/done` for the same video.
+          onError: () => { clearStall(); bus.publish('segment/done', { provider: 'youtube', reason: 'error' }); if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next'); },
+          onPlaying,
         });
 
         // the module's two sinks — any source pointed at these topics drives it
@@ -308,7 +370,8 @@ registerModule(
       },
       onResize() {},
       onHide() { state.flush(); },
-      destroy() { try { player?.destroy(); } catch { /* noop */ } player = null; },
+      destroy() {
+        clearStall(); try { player?.destroy(); } catch { /* noop */ } player = null; },
     };
   },
 );
