@@ -19,6 +19,7 @@
 export const LESSONS_STREAM = 'lessons';
 export const LESSON_TOPIC = 'lesson/unlocked';   // bus topic — live nudge
 export const WATCHED_KIND = 'watched';
+export const RELOCKED_KIND = 'relocked';
 
 // Seed topics. Videos are per-profile data; these carry no video until someone points them
 // at one, and a topic with no video unlocks on the honour button alone.
@@ -34,18 +35,29 @@ export const DEFAULT_TOPICS = [
 // ---------- pure ----------
 
 export function watchedEvents(events) {
-  return (events || []).filter((e) => e && e.kind === WATCHED_KIND && e.data && e.data.topic);
+  return (events || []).filter((e) => e && (e.kind === WATCHED_KIND || e.kind === RELOCKED_KIND)
+    && e.data && e.data.topic);
 }
 
-// The set of topic ids that have been unlocked.
+// The set of topic ids currently unlocked.
+//
+// A LOG THAT CAN STILL BE UNDONE. The obvious alternative was a flag — a set in state,
+// last-write-wins. The log wins because an unlock is something that was EARNED: state
+// could lose one to a concurrent save from another device, and there'd be no record of
+// when it happened. But "append-only" must not mean "no take-backs", or a topic unlocked
+// by a misclick is unlocked forever. So a `relocked` event is also legal, and the current
+// state is the LATEST event per topic. History stays intact; the door can still shut.
 export function unlockedFrom(events) {
-  return new Set(watchedEvents(events).map((e) => e.data.topic));
+  const latest = new Map();
+  for (const e of watchedEvents(events)) latest.set(e.data.topic, e.kind);   // chronological
+  return new Set([...latest.entries()].filter(([, k]) => k === WATCHED_KIND).map(([t]) => t));
 }
 
 // When each was unlocked — the transcript view.
 export function unlockLog(events) {
   const seen = new Map();
   for (const e of watchedEvents(events)) {
+    if (e.kind !== WATCHED_KIND) continue;
     if (!seen.has(e.data.topic)) seen.set(e.data.topic, e.created_at);   // first time counts
   }
   return [...seen.entries()].map(([topic, at]) => ({ topic, at }));
@@ -56,10 +68,10 @@ export function unlockLog(events) {
 // The rule that keeps this from breaking existing banks: an item with no `topic` is
 // ALWAYS available. Gating is opt-in per item, not a wall that drops in front of
 // everything the moment this feature exists.
-export function gate(items, unlocked) {
+export function gate(items, unlocked, key = 'topic') {
   const open = [], locked = [];
   for (const it of items || []) {
-    const t = it && it.topic;
+    const t = it && it[key];
     if (!t || (unlocked && unlocked.has(t))) open.push(it);
     else locked.push(it);
   }
@@ -68,10 +80,10 @@ export function gate(items, unlocked) {
 
 // Which topics are still holding content back — so a game can say "3 more words are
 // waiting behind Word roots" instead of silently having a shorter deck.
-export function lockedTopics(items, unlocked, topics = []) {
+export function lockedTopics(items, unlocked, topics = [], key = 'topic') {
   const counts = new Map();
-  for (const it of gate(items, unlocked).locked) {
-    counts.set(it.topic, (counts.get(it.topic) || 0) + 1);
+  for (const it of gate(items, unlocked, key).locked) {
+    counts.set(it[key], (counts.get(it[key]) || 0) + 1);
   }
   return [...counts.entries()].map(([id, count]) => ({
     id, count, label: (topics.find((t) => t.id === id) || {}).label || id,
@@ -93,8 +105,18 @@ export function createLessons({ makeEvents, bus = null, limit = 500, pollMs = 40
     return data;
   }
 
+  // Shut a topic again — a misclick, or a deliberate "review this before you go on".
+  async function relock(topic) {
+    if (!topic) return null;
+    const data = { topic: String(topic) };
+    await stream.append(RELOCKED_KIND, data);
+    if (bus) bus.publish(LESSON_TOPIC, data);
+    return data;
+  }
+
   return {
     watch,
+    relock,
     load: () => stream.load(),
     startPolling: () => stream.startPolling(),
     subscribe: (fn) => stream.subscribe(fn),

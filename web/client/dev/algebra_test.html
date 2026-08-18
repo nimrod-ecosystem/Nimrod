@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>algebra + calculator — integration test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;width:460px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:14px}
+</style>
+</head>
+<body>
+<h1>algebra + calculator — integration test</h1>
+<p>The answer box is a working four-function calculator with a separate <b>Submit answer</b>, because
+no real job does this arithmetic by hand. Covers the calculator itself, every generator's answer and
+worked solution, the lesson gate over problem types, and the round trip into both streams.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { createPointsLedger, sumBySource, minutesBySubject } from '../points.js';
+import { createTelemetry, isMiss, isFalseAlarm, byConcept, byBand } from '../telemetry.js';
+import { createLessons, unlockedFrom, WATCHED_KIND, RELOCKED_KIND } from '../lessons.js';
+import {
+  GAME, DEFAULTS, GENERATORS, POOLS, bandOf, lessonOf, availablePool, scoreFor,
+  calcInit, calcPress, calcValue, CALC_KEYS,
+} from '../modules/algebra.js';
+import '../modules/algebra.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('alg-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const seeded = (s0) => { let x = s0 >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; };
+const type = (keys) => keys.split('').reduce((st, k) => calcPress(st, k), calcInit());
+
+(async () => {
+  try {
+    // ================= the calculator =================
+    section('the calculator');
+    check('it starts at zero', calcInit().entry === '0');
+    check('digits replace the leading zero', type('7').entry === '7', type('7').entry);
+    check('digits accumulate', type('123').entry === '123', type('123').entry);
+    check('it adds', calcValue(calcPress(type('7+3'), '=')) === 10, JSON.stringify(calcPress(type('7+3'), '=')));
+    check('it subtracts', calcValue(calcPress(type('9-4'), '=')) === 5);
+    check('it multiplies', calcValue(calcPress(type('6*7'), '=')) === 42);
+    check('it divides', calcValue(calcPress(type('84/2'), '=')) === 42);
+    check('operations chain like a real calculator', calcValue(calcPress(type('2+3+4'), '=')) === 9,
+      String(calcValue(calcPress(type('2+3+4'), '='))));
+    check('decimals work', calcValue(calcPress(type('1.5*2'), '=')) === 3);
+    check('a decimal point cannot be doubled', type('1..5').entry === '1.5', type('1..5').entry);
+    check('divide by zero says error rather than Infinity',
+      calcPress(type('5/0'), '=').entry === 'error', calcPress(type('5/0'), '=').entry);
+    check('C clears everything', calcPress(type('123+45'), 'C').entry === '0');
+    check('backspace removes one digit', calcPress(type('123'), '<').entry === '12');
+    check('...and bottoms out at zero, not empty', calcPress(calcPress(type('7'), '<'), '<').entry === '0');
+    check('± flips the sign for negative answers', calcPress(type('5'), '±').entry === '-5');
+    check('...and flips back', calcPress(calcPress(type('5'), '±'), '±').entry === '5');
+    check('a negative answer reads back as a number', calcValue(calcPress(type('5'), '±')) === -5);
+    check('= with nothing pending is harmless', calcPress(type('7'), '=').entry === '7');
+    check('the keypad offers all four operations', ['+', '-', '*', '/'].every((k) => CALC_KEYS.includes(k)));
+
+    // ================= the problems =================
+    section('every generator is correct and explains itself');
+    const r = seeded(31337);
+    for (const [key, gen] of Object.entries(GENERATORS)) {
+      let ok = true, why = '';
+      for (let i = 0; i < 40; i++) {
+        const p = gen(r);
+        if (!Number.isInteger(p.answer)) { ok = false; why = `non-integer answer ${p.answer}`; break; }
+        if (!p.concept || !p.prompt || !p.how) { ok = false; why = 'missing concept/prompt/how'; break; }
+        if (![1, 2, 3].includes(p.points)) { ok = false; why = `odd difficulty ${p.points}`; break; }
+        // The worked solution must actually state the answer it claims.
+        if (!String(p.how).includes(String(p.answer))) { ok = false; why = `how doesn't show ${p.answer}: ${p.how}`; break; }
+      }
+      check(`${key}: 40 generated problems are sound`, ok, why);
+    }
+    check('difficulty maps to a readable band',
+      bandOf(1) === 'easy (1 pt)' && bandOf(2) === 'medium (2 pt)' && bandOf(3) === 'hard (3 pt)');
+    check('harder problems are worth more', GENERATORS.distSolve(r).points > GENERATORS.addEq(r).points);
+    check('scoring uses the problem’s own difficulty', scoreFor({ correct: true, points: 3 }).total === 3);
+    check('a miss still pays the try', scoreFor({ correct: false, points: 3 }).total === DEFAULTS.tryPoints);
+    check('...and never a streak bonus', scoreFor({ correct: false, points: 3, streak: 5 }).bonus === 0);
+
+    // ================= the gate over problem types =================
+    section('the skill tree gates problem types');
+    check('a hard type declares its lesson', lessonOf('distribute') === 'distributing', String(lessonOf('distribute')));
+    check('an easy type needs none', lessonOf('addEq') === null);
+    const locked = availablePool('mixed', new Set());
+    check('with nothing unlocked, gated types are out',
+      !locked.open.includes('distribute') && !locked.open.includes('varsBothSides'),
+      locked.open.join(','));
+    check('...and the easy ones still play', locked.open.includes('addEq') && locked.open.includes('twoStep'));
+    const opened = availablePool('mixed', new Set(['distributing']));
+    check('unlocking a lesson releases exactly its types',
+      opened.open.includes('distribute') && !opened.open.includes('varsBothSides'), opened.open.join(','));
+
+    // relocking — the answer to "should it be a flag?"
+    const evs = [
+      { kind: WATCHED_KIND, created_at: '2026-01-01T00:00:00Z', data: { topic: 'distributing' } },
+      { kind: RELOCKED_KIND, created_at: '2026-01-02T00:00:00Z', data: { topic: 'distributing' } },
+    ];
+    check('a topic can be shut again', !unlockedFrom(evs).has('distributing'));
+    check('...and re-opened after that',
+      unlockedFrom([...evs, { kind: WATCHED_KIND, created_at: '2026-01-03T00:00:00Z', data: { topic: 'distributing' } }])
+        .has('distributing'));
+
+    // ================= the module =================
+    section('playing');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-algebra');
+    const makeState = (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o });
+    const makeEvents = (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o });
+    const bus = createBus();
+
+    const mod = await profiles.addModule(profile.id, 'algebra');
+    const st = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    await st.load();
+    st.set({ pool: 'warm' });          // easy pool: answers are small and ungated
+    await st.flush();
+
+    const host = document.getElementById('host');
+    const inst = mountModule('algebra', {
+      mount: host, bus, state: st,
+      events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+      user: USER, profileId: profile.id, makeState, makeEvents, rand: seeded(777),
+    });
+    inst.init();
+    await sleep(700);
+
+    const q = (s) => host.querySelector(s);
+    const keyBtn = (k) => host.querySelector(`[data-key="${k}"]`);
+    const display = () => q('[data-display]').textContent.trim();
+
+    check('a problem is showing', (q('.al-prompt').textContent || '').length > 2, q('.al-prompt')?.textContent);
+    check('the input IS a calculator, not a text box',
+      host.querySelectorAll('[data-key]').length >= 16 && !host.querySelector('input[type="text"]'),
+      String(host.querySelectorAll('[data-key]').length));
+    check('Submit is its own button, separate from =',
+      !!q('[data-submit]') && !!keyBtn('=') && q('[data-submit]') !== keyBtn('='));
+    check('the calculator can be used for working out', (() => {
+      keyBtn('9').click(); keyBtn('*').click(); keyBtn('9').click(); keyBtn('=').click();
+      return display() === '81';
+    })(), display());
+    check('pressing = did NOT submit an answer', !q('.al-fb'));
+
+    // answer the CURRENT problem correctly by reading it off the DOM
+    const ledger = createPointsLedger({ makeEvents });
+    await ledger.load();
+    const before = ledger.total();
+
+    // Work out the answer from the visible prompt for the warm pool's forms.
+    function solveVisible(text) {
+      let m = text.match(/^If x = (-?\d+), what is (\d+)x \+ (\d+)\?$/);
+      if (m) return Number(m[2]) * Number(m[1]) + Number(m[3]);
+      m = text.match(/^x \+ (\d+) = (-?\d+)$/); if (m) return Number(m[2]) - Number(m[1]);
+      m = text.match(/^x − (\d+) = (-?\d+)$/); if (m) return Number(m[2]) + Number(m[1]);
+      m = text.match(/^(\d+)x = (-?\d+)$/);    if (m) return Number(m[2]) / Number(m[1]);
+      return null;
+    }
+    const want = solveVisible(q('.al-prompt').textContent.trim());
+    check('the test can read the problem', want !== null, q('.al-prompt').textContent);
+
+    keyBtn('C').click();
+    for (const ch of String(want)) keyBtn(ch === '-' ? '±' : ch).click();
+    check('the answer is typed on the calculator', Number(display()) === want, `${display()} vs ${want}`);
+    q('[data-submit]').click();
+    await sleep(600);
+    check('a correct answer is marked correct', !!q('.al-fb.is-right'), q('.al-fb')?.textContent);
+    await ledger.load();
+    check('it paid the problem’s difficulty', ledger.total() > before, `${before} -> ${ledger.total()}`);
+
+    // next problem: say "I don't know"
+    q('[data-next]').click();
+    await sleep(400);
+    const beforeIdk = ledger.total();
+    q('[data-idk]').click();
+    await sleep(400);
+    check('"I don’t know" shows the worked solution', /al-how/.test(q('.al-fb.is-wrong').innerHTML),
+      q('.al-fb.is-wrong')?.textContent?.slice(0, 70));
+    check('...without scolding', /here’s how it works/i.test(q('.al-fb.is-wrong').textContent),
+      q('.al-fb.is-wrong').textContent.slice(0, 40));
+    await ledger.load();
+    check('nothing is banked until acknowledged', ledger.total() === beforeIdk);
+    q('[data-next]').click();
+    await sleep(600);
+    await ledger.load();
+    check('acknowledging pays the try', ledger.total() === beforeIdk + DEFAULTS.tryPoints,
+      `${beforeIdk} -> ${ledger.total()}`);
+
+    // ================= both streams =================
+    section('both streams, again');
+    check('points are attributed to the game', (sumBySource(ledger.events()).algebra || 0) === ledger.total(),
+      JSON.stringify(sumBySource(ledger.events())));
+    check('the points are MATH minutes, not generic ones',
+      (minutesBySubject(ledger.get().events).Math || 0) === ledger.total(),
+      JSON.stringify(minutesBySubject(ledger.get().events)));
+
+    const tel = createTelemetry({ makeEvents });
+    await tel.load();
+    const trials = tel.trials();
+    check('every attempt logged a trial', trials.length === 2, String(trials.length));
+    check('trials name the concept, not just the game', trials.every((t) => !!t.data.concept),
+      JSON.stringify(trials.map((t) => t.data.concept)));
+    check('trials carry the difficulty band', trials.every((t) => /pt\)$/.test(t.data.band || '')),
+      JSON.stringify(trials.map((t) => t.data.band)));
+    check('the correct one is a hit, the "don’t know" is a MISS',
+      trials.filter((t) => t.data.correct === true).length === 1 && trials.some(isMiss));
+    check('...and NOT recorded as a wrong answer', !trials.some(isFalseAlarm));
+    check('per-concept and per-band views both work',
+      byConcept(tel.get().events).length >= 1 && byBand(tel.get().events).length >= 1);
+
+    ledger.destroy(); tel.destroy(); inst.destroy();
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

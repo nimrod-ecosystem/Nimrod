@@ -42,6 +42,7 @@ import './modules/quests.js';
 import './modules/progress.js';
 import './modules/wordforge.js';
 import './modules/lessons.js';
+import './modules/algebra.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
