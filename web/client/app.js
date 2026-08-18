@@ -26,6 +26,7 @@ import './modules/quests.js';     // registers 'quests' (the quest board <- ledg
 import './modules/progress.js';   // registers 'progress' (measurement <- gameplay stream)
 import './modules/wordforge.js';  // registers 'wordforge' (a game -> BOTH streams)
 import './modules/lessons.js';    // registers 'lessons' (watch to unlock topics)
+import './modules/algebra.js';    // registers 'algebra' (solve for x, with a calculator)
 import './modules/counter.js';    // registers 'counter'
 import './modules/presslog.js';   // registers 'presslog'
 

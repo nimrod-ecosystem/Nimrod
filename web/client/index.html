@@ -385,6 +385,37 @@
   .lessons .l-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
   .lessons .l-wait{font-size:.78rem;color:var(--muted)}
   .wordforge .wf-held{font-size:.75rem;color:var(--midnight);text-align:center;min-height:1em}
+  /* algebra (solve for x, with a calculator) */
+  .algebra{display:flex;flex-direction:column;gap:10px;width:100%}
+  .algebra .al-top{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--muted)}
+  .algebra .al-earned{font-weight:800;color:var(--darkgreen);font-variant-numeric:tabular-nums}
+  .algebra .al-streak{margin-left:auto;color:var(--midnight);font-weight:700}
+  .algebra .al-kind{margin:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .algebra .al-prompt{margin:4px 0 12px;font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .algebra .al-calc{max-width:280px}
+  .algebra .al-display{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--cream-soft);
+    font-size:1.5rem;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px}
+  .algebra .al-pad{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+  .algebra .al-key{padding:11px 0;border:1px solid var(--line);border-radius:9px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:1rem;font-weight:600;cursor:pointer}
+  .algebra .al-key:hover{background:var(--cream-soft)}
+  .algebra .al-key.is-op{background:var(--cream-soft);color:var(--midnight);font-weight:800}
+  .algebra .al-key.is-fn{color:var(--muted)}
+  .algebra .al-key.is-eq{grid-column:span 2;background:var(--midnight);border-color:var(--midnight);color:#fff}
+  .algebra .al-btn{padding:11px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);
+    color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+  .algebra .al-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+  .algebra .al-submit{max-width:280px;margin-top:8px;font-size:1rem}
+  .algebra .al-submit:disabled{opacity:.45;cursor:not-allowed}
+  .algebra .al-idk{max-width:280px;margin-top:7px;background:transparent;border-style:dashed;color:var(--muted);
+    font-size:.85rem}
+  .algebra .al-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5;max-width:420px}
+  .algebra .al-fb.is-right{background:#f0f4e8;border:1px solid var(--moss)}
+  .algebra .al-fb.is-wrong{background:var(--cream-soft);border:1px solid var(--line)}
+  .algebra .al-how{display:block;margin-top:5px}
+  .algebra .al-bonus,.algebra .al-try{display:block;margin-top:4px;font-size:.78rem;color:var(--midnight);font-weight:600}
+  .algebra .al-held{font-size:.75rem;color:var(--midnight);min-height:1em}
 </style>
 </head>
 <body>
