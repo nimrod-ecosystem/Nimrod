@@ -25,6 +25,7 @@
 // rendering. It also leaves room for other back-ends (local video, Vimeo) later.
 
 import { registerModule } from '../module.js';
+import { createWatchdog } from '../watchdog.js';
 import { pick, statsFromEvents } from '../rng.js';
 
 // `stallMs` is the STUCK-LOADING WATCHDOG (see the header). 20s is long enough that a
@@ -121,50 +122,27 @@ registerModule(
     let currentId = null;
     let player = null;
 
-    // ---- the stuck-loading watchdog ----
-    // Armed every time a video is asked for, disarmed the moment it actually plays. If it
-    // never plays: reload once (a wifi stall usually clears), and if it still doesn't,
-    // declare the segment done so the director moves on to something else.
+    // ---- the stuck-loading watchdog (shared primitive, see ../watchdog.js) ----
+    // Armed when a video is asked for, satisfied the moment it actually plays. A stall
+    // reloads the same video once — most are a blip — and a second stall ends the segment
+    // so whatever is driving this can move on.
     //
-    // It lives HERE rather than inside the player adapter for two reasons: the module is
-    // what knows about the bus and `autoAdvance`, and putting it here means an injected
-    // test player exercises the real recovery path instead of bypassing it.
+    // It lives in the MODULE rather than the player adapter because the module is what
+    // knows about the bus and `autoAdvance`; and because an injected test player then
+    // exercises the real recovery path instead of bypassing it.
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
-    let stallTimer = null;
-    let stallRetried = false;
+    let stall = null;
 
-    function clearStall() {
-      if (stallTimer != null) { clearTimer(stallTimer); stallTimer = null; }
-    }
-
-    function armStall(id) {
-      clearStall();
-      if (!(cfg.stallMs > 0)) return;      // 0 disables it
-      stallTimer = setTimer(() => onStall(id), cfg.stallMs);
-    }
-
-    function onStall(id) {
-      stallTimer = null;
-      if (id !== currentId) return;        // we've moved on; nothing to recover
-      if (!stallRetried) {
-        stallRetried = true;
-        setStatus('Still loading — trying again…');
-        player?.load(id);
-        armStall(id);
-        return;
-      }
-      // Given up on this one. `timeout` is the director's existing vocabulary for
-      // "this segment is over", alongside ended | skipped.
-      setStatus('That video wouldn’t load. Moving on.');
-      bus.publish('segment/done', { provider: 'youtube', reason: 'timeout', id });
-      if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next');
-    }
+    function clearStall() { stall?.disarm(); }
+    function armStall(id) { stall?.arm(id); }
 
     function onPlaying() {
-      clearStall();
-      stallRetried = false;
+      stall?.ok();
       setStatus('');
+      // Heartbeat for a container's slower backstop: this segment is alive. A provider
+      // that never sends one is exactly what the backstop is there to catch.
+      bus.publish('segment/progress', { provider: 'youtube', id: currentId });
     }
 
     const stage = () => mount.querySelector('[data-stage]');
@@ -200,7 +178,6 @@ registerModule(
     function show(id, record = true) {
       if (!byId[id] || !player) return;
       currentId = id;
-      stallRetried = false;
       player.load(id);
       armStall(id);
       updateLabel();
@@ -328,6 +305,28 @@ registerModule(
         // Harmless when standalone (no director subscribed); when a director drives this
         // instance it seeds autoAdvance=false, so only segment/done fires — the director
         // advances, not youtube itself.
+        stall = createWatchdog({
+          // A GETTER, not a snapshot: cfg is filled in by the state subscription, which may
+          // not have arrived yet when this is constructed.
+          setTimer, clearTimer, stallMs: () => cfg.stallMs, retries: 1,
+          onRetry: (id) => {
+            setStatus('Still loading — trying again…');
+            player?.load(id);
+          },
+          onGiveUp: (id) => {
+            setStatus('That video wouldn’t load. Moving on.');
+            // `timeout` is the director's existing vocabulary for "this segment is over",
+            // alongside ended | skipped.
+            bus.publish('segment/done', { provider: 'youtube', reason: 'timeout', id });
+            if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next');
+          },
+        });
+
+        // HIDDEN MEANS DISARMED. A container shows one provider at a time and leaves the
+        // rest mounted; without this, a hidden player's stall would fire `segment/done`
+        // and cut short whatever is actually on screen.
+        bus.subscribe('youtube/deactivate', () => clearStall());
+
         player = makePlayer(stage(), {
           onEnded: () => { clearStall(); bus.publish('segment/done', { provider: 'youtube', reason: 'ended' }); if (cfg.autoAdvance) bus.publish('youtube/next'); },
           // An explicit player/API error already ends the segment; just stop the watchdog
@@ -369,7 +368,7 @@ registerModule(
         });
       },
       onResize() {},
-      onHide() { state.flush(); },
+      onHide() { clearStall(); state.flush(); },
       destroy() {
         clearStall(); try { player?.destroy(); } catch { /* noop */ } player = null; },
     };

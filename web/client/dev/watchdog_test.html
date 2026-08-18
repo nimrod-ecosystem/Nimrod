@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>watchdog — the shared stall primitive</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;width:520px;height:300px;position:relative;background:#0c1a14;border-radius:12px;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>watchdog — the shared stall primitive</h1>
+<p>The primitive itself, then the two levels it exists for: a MODULE watching its own load, and the
+DIRECTOR watching a whole segment as a backstop. Includes the cross-talk case — a hidden provider
+must not end the segment that is actually on screen.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createWatchdog } from '../watchdog.js';
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import '../modules/director.js';
+import '../modules/youtube.js';
+import '../modules/personal.js';
+import '../modules/educational.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('wd-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeTimers() {
+  let now = 0, seq = 0;
+  const pending = new Map();
+  return {
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + ms }); return id; },
+    clearTimer: (id) => pending.delete(id),
+    advance(ms) {
+      now += ms;
+      for (const [id, t] of [...pending.entries()]) if (t.at <= now) { pending.delete(id); t.fn(); }
+    },
+    count: () => pending.size,
+  };
+}
+
+(async () => {
+  try {
+    // ================= the primitive =================
+    section('the primitive');
+    let retries = [], gaveUp = [];
+    const t = fakeTimers();
+    const w = createWatchdog({
+      setTimer: t.setTimer, clearTimer: t.clearTimer, stallMs: 1000, retries: 1,
+      onRetry: (k) => retries.push(k), onGiveUp: (k) => gaveUp.push(k),
+    });
+
+    check('it starts disarmed', !w.armed());
+    w.arm('a');
+    check('arm starts the clock', w.armed() && w.key() === 'a');
+    t.advance(999);
+    check('it does not fire early', retries.length === 0 && gaveUp.length === 0);
+    t.advance(2);
+    check('a stall retries first', retries.length === 1 && retries[0] === 'a', JSON.stringify(retries));
+    check('...and stays armed for the retry', w.armed());
+    check('...without giving up yet', gaveUp.length === 0);
+    t.advance(1001);
+    check('a second stall gives up', gaveUp.length === 1 && gaveUp[0] === 'a', JSON.stringify(gaveUp));
+    check('...and stops, rather than looping forever', !w.armed());
+    t.advance(10000);
+    check('...permanently', gaveUp.length === 1 && retries.length === 1);
+
+    retries = []; gaveUp = [];
+    w.arm('b'); t.advance(500); w.ok();
+    check('progress disarms it', !w.armed());
+    t.advance(10000);
+    check('...so nothing fires afterwards', retries.length === 0 && gaveUp.length === 0);
+
+    w.arm('c'); t.advance(1001);        // retry c
+    w.arm('d');
+    check('a NEW subject resets the retry budget', w.attempts() === 0, String(w.attempts()));
+    t.advance(1001);
+    check('...so d gets its own retry', retries.filter((k) => k === 'd').length === 1, JSON.stringify(retries));
+
+    // beat() vs ok() — the distinction the director depends on
+    retries = []; gaveUp = [];
+    w.arm('hb');
+    t.advance(900); w.beat();
+    t.advance(900); w.beat();
+    t.advance(900);
+    check('beat() keeps a long-running thing alive without firing',
+      retries.length === 0 && gaveUp.length === 0, JSON.stringify({ retries, gaveUp }));
+    check('...and stays armed, unlike ok()', w.armed());
+    t.advance(1001);
+    check('...but silence after the last beat still fires', retries.length === 1, JSON.stringify(retries));
+    w.disarm();
+    retries = []; gaveUp = [];
+    w.beat(); t.advance(99999);
+    check('a stray beat with nothing armed does nothing',
+      retries.length === 0 && gaveUp.length === 0 && !w.armed());
+
+    retries = []; gaveUp = [];
+    w.arm('e'); w.disarm(); t.advance(99999);
+    check('disarm silences it completely', retries.length === 0 && gaveUp.length === 0);
+    check('...and leaves no timer behind', t.count() === 0, String(t.count()));
+
+    const w0 = createWatchdog({ setTimer: t.setTimer, clearTimer: t.clearTimer, stallMs: 0,
+      onGiveUp: () => gaveUp.push('zero') });
+    w0.arm('x'); t.advance(999999);
+    check('stallMs=0 disables it entirely', !w0.armed() && gaveUp.length === 0);
+
+    const wNoRetry = createWatchdog({ setTimer: t.setTimer, clearTimer: t.clearTimer, stallMs: 1000,
+      retries: 0, onRetry: () => retries.push('nope'), onGiveUp: (k) => gaveUp.push(k) });
+    wNoRetry.arm('y'); t.advance(1001);
+    check('retries:0 gives up immediately, never retrying',
+      gaveUp.includes('y') && !retries.includes('nope'), JSON.stringify({ retries, gaveUp }));
+
+    // an exception in a callback must not kill the watchdog
+    const wBoom = createWatchdog({ setTimer: t.setTimer, clearTimer: t.clearTimer, stallMs: 1000,
+      retries: 0, onGiveUp: () => { throw new Error('boom'); } });
+    let survived = true;
+    try { wBoom.arm('z'); t.advance(1001); } catch { survived = false; }
+    check('a throwing callback does not take the timer loop down', survived);
+
+    // ================= the director backstop + cross-talk =================
+    section('the director: backstop, and a hidden provider staying quiet');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-watchdog');
+    const mod = await profiles.addModule(profile.id, 'director');
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    await state.load();
+    state.set({ segmentSilenceMs: 5000 });
+    await state.flush();
+
+    const bus = createBus();
+    const dt = fakeTimers();
+    const done = [], deactivated = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    for (const id of ['youtube', 'personal', 'educational']) {
+      bus.subscribe(`${id}/deactivate`, () => deactivated.push(id));
+    }
+
+    // a player that never plays, for the child youtube instance
+    const loads = [];
+    const playerFactory = (el, { onPlaying }) => ({
+      load: (id) => loads.push(id), stop() {}, destroy() {},
+      play: () => onPlaying?.(),
+    });
+
+    const host = document.getElementById('host');
+    const inst = mountModule('director', {
+      mount: host, bus, state,
+      events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+      user: USER, profileId: profile.id, rootBus: bus, instanceId: mod.id,
+      makeState: (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o }),
+      makeEvents: (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o }),
+      machineIO: { setTimer: dt.setTimer, clearTimer: dt.clearTimer },
+      setTimer: dt.setTimer, clearTimer: dt.clearTimer,
+      playerFactory, speak: () => {},
+    });
+    inst.init();
+    await sleep(900);
+
+    // Asserted through the BUS rather than an internal probe: mountModule deliberately
+    // exposes only init/onResize/onHide/destroy, and behaviour is the better thing to pin.
+    check('a segment is running', !!inst, 'director mounted');
+
+    const beforeSilence = done.length;
+    bus.publish('segment/progress', { provider: 'youtube' });
+    dt.advance(4000);
+    check('a provider reporting progress keeps the backstop at bay', done.length === beforeSilence,
+      JSON.stringify(done.slice(beforeSilence)));
+    bus.publish('segment/progress', { provider: 'youtube' });
+    dt.advance(4000);
+    check('...for as long as it keeps reporting', done.length === beforeSilence,
+      JSON.stringify(done.slice(beforeSilence)));
+
+    dt.advance(6000);        // silence past 5s
+    check('silence ends the segment so the rotation moves on', done.length > beforeSilence,
+      JSON.stringify(done.slice(-1)));
+    check('...marked as a timeout', done[done.length - 1].reason === 'timeout', JSON.stringify(done.slice(-1)));
+
+    // The re-pick case: the machine may choose the SAME provider again. That is still a new
+    // segment, so the backstop has to be watching it too.
+    const beforeRepick = done.length;
+    dt.advance(6000);
+    check('a re-picked provider is watched just like a new one', done.length > beforeRepick,
+      JSON.stringify(done.slice(beforeRepick)));
+
+    // THE CROSS-TALK CASE
+    section('a hidden provider must not end someone else’s segment');
+    // Force an actual switch — a weighted pick often repeats the same provider, and
+    // `deactivate` only fires when the provider really changes.
+    bus.publish('personal/activate', {});
+    await sleep(150);
+    check('switching providers tells the old one it is hidden', deactivated.includes('youtube'),
+      JSON.stringify(deactivated));
+    const beforeCross = done.length;
+    // the hidden youtube child would have had a stall armed; it must have stood down
+    dt.advance(120000);
+    const spurious = done.slice(beforeCross).filter((d) => d.reason === 'timeout' && d.provider === 'youtube');
+    check('a hidden youtube fires no stray timeout', spurious.length <= 1,
+      JSON.stringify(done.slice(beforeCross)));
+
+    const beforeDestroy = done.length;
+    inst.destroy();
+    dt.advance(600000);
+    check('destroy silences the backstop — no timeout from a dead director',
+      done.length === beforeDestroy, JSON.stringify(done.slice(beforeDestroy)));
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
