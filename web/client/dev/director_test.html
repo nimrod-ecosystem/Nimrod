@@ -124,7 +124,10 @@ async function mountDirector({ host, hour, seed, timers, stub }){
     const afterEnded = curProv(host);
     check('segment/done(ended) advances the director off youtube', afterEnded && afterEnded !== 'youtube', `now=${afterEnded}`);
     check('the picked provider rendered its segment (placeholder or real)', !!host.querySelector('.d-slot:not([hidden])')?.firstChild);
-    check('the segment armed a finish timer (placeholder or educational display)', T.pending() === 1, `pending=${T.pending()}`);
+    // >= 1, not === 1: since the stall-watchdog work the director ALSO arms a slow
+    // segment backstop alongside whatever the segment itself armed, so the exact count is
+    // not the thing worth pinning — that a finish timer exists is.
+    check('the segment armed a finish timer (placeholder or educational display)', T.pending() >= 1, `pending=${T.pending()}`);
 
     // the placeholder finishing (timeout) advances again, to yet another provider
     T.fireDue();

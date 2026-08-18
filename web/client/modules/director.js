@@ -25,6 +25,7 @@
 
 import { registerModule, mountModule } from '../module.js';
 import { createMachine } from '../statemachine.js';
+import { createWatchdog } from '../watchdog.js';
 
 // Segment providers the director can rotate through. `real:true` mounts the actual
 // module; `real:false` renders a placeholder until that module exists.
@@ -71,6 +72,7 @@ registerModule(
 
     let machine = null;
     let current = null;
+    let segmentWatch = null;   // the backstop over ANY provider (see below)
     const adapters = {};      // provider id -> { activate, deactivate, destroy, flush, resize }
     const slots = {};         // provider id -> slot element
     let phTimer = null;       // the active placeholder's auto-finish timer
@@ -84,12 +86,19 @@ registerModule(
 
     // Hand the window to one provider: hide the others, activate this one.
     function showProvider(id) {
-      if (id === current) { adapters[id]?.activate?.(); return; }
+      // Re-picking the SAME provider is normal (a weighted pick repeats), and it is still a
+      // new segment — so the backstop must be re-armed here too. Without this it stayed
+      // disarmed after the first timeout and the screen could freeze again with nothing
+      // watching.
+      if (id === current) { segmentWatch?.arm(id); adapters[id]?.activate?.(); return; }
       if (current && adapters[current]) adapters[current].deactivate?.();
       current = id;
       for (const pid of Object.keys(slots)) slots[pid].hidden = (pid !== id);
       setLabel(id);
       adapters[id]?.activate?.();
+      // Restart the backstop for the new segment. A provider that reports progress keeps
+      // it at bay; one that goes silent gets moved past.
+      segmentWatch?.arm(id);
     }
 
     // A not-yet-built provider: a themed card that auto-finishes after a beat, so the
@@ -141,7 +150,10 @@ registerModule(
         // every activation advances the child to its next segment (directed children
         // don't autostart, so this is what shows content; an empty one hands back).
         activate() { rootBus.publish(`${p.id}/next`); },
-        deactivate() { /* no pause API yet — hidden; real pause is a polish item */ },
+        // Tell the child it is hidden. It stays mounted (no pause API yet), but anything
+        // it has armed — a stall watchdog especially — must stand down, or a hidden
+        // provider will end the segment that is currently on screen.
+        deactivate() { rootBus.publish(`${p.id}/deactivate`); },
         flush() { try { cState?.flush?.(); } catch { /* noop */ } },
         resize() { try { child?.onResize?.(); } catch { /* noop */ } },
         destroy() { try { child?.destroy(); } catch { /* noop */ } cState?.destroy?.(); cEvents?.destroy?.(); },
@@ -170,10 +182,37 @@ registerModule(
         bus.addBinding({ source: 'director-skip', signal: 'skip', topic: 'segment/done', transform: () => ({ reason: 'skipped' }) });
         mount.querySelector('[data-skip]').addEventListener('click', () => skip.emit('skip'));
 
+        const saved = state.get() || {};
+
         // react to the engine's activation topics
         for (const p of PROVIDERS) bus.subscribe(`${p.id}/activate`, () => showProvider(p.id));
 
-        const saved = state.get() || {};
+        // ---- THE BACKSTOP ----
+        // A provider's own watchdog (youtube has one) is opt-in, so it cannot be relied on:
+        // the next provider someone writes won't have one, and that is exactly the screen
+        // that ends up frozen. So the director also watches the SEGMENT. Any provider that
+        // is alive says so with `segment/progress`; silence for `segmentSilenceMs` means
+        // the rotation moves on regardless of whose fault it was.
+        //
+        // It is deliberately much slower than a module's own watchdog (default 3 minutes,
+        // against youtube's 20 seconds), because a long video is legitimately quiet between
+        // heartbeats and cutting one off would be a worse bug than the one being fixed.
+        // 0 disables it.
+        const silenceMs = Number.isFinite(Number(saved.segmentSilenceMs))
+          ? Number(saved.segmentSilenceMs) : 180000;
+        segmentWatch = createWatchdog({
+          setTimer, clearTimer, stallMs: silenceMs, retries: 0,   // no retry — it can't fix a child
+          onGiveUp: (id) => {
+            console.warn(`director: no progress from "${id}" — moving on`);
+            rootBus.publish('segment/done', { provider: id, reason: 'timeout' });
+          },
+        });
+        // beat(), not ok(): a segment is open-ended, so each heartbeat RESETS the clock.
+        // ok() would stop watching after the first one.
+        bus.subscribe('segment/progress', () => segmentWatch?.beat());
+        // A finished segment is not a stalled one; the next activate re-arms it.
+        bus.subscribe('segment/done', () => segmentWatch?.disarm());
+
         const cfg = saved.config || DIRECTOR_CONFIG;
 
         (async () => {
@@ -188,6 +227,7 @@ registerModule(
       onResize() { for (const id of Object.keys(adapters)) adapters[id].resize?.(); },
       onHide() { for (const id of Object.keys(adapters)) adapters[id].flush?.(); },
       destroy() {
+        segmentWatch?.disarm();
         try { machine?.stop(); } catch { /* noop */ }
         if (phTimer != null) { clearTimer(phTimer); phTimer = null; }
         for (const id of Object.keys(adapters)) { try { adapters[id].destroy?.(); } catch { /* noop */ } }
