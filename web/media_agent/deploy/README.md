@@ -9,6 +9,7 @@ The agent is configured from **environment variables** (CLI args still override)
 | Variable | Meaning | Default |
 |---|---|---|
 | `NIMROD_MEDIA_ROOT` | folder of photos/videos to serve | *(required)* |
+| `NIMROD_MEDIA_HOST` | bind address (`127.0.0.1` = localhost only) | `0.0.0.0` (installer sets `127.0.0.1`) |
 | `NIMROD_MEDIA_PORT` | port to listen on | `8770` |
 | `NIMROD_MEDIA_ORIGIN` | CORS origin — your dashboard URL | `*` (lock it down in prod) |
 
@@ -45,6 +46,14 @@ task launches it hidden at logon and restarts it if it stops. Check it with
 
 ## Notes
 
+- **Bind address — the one that matters.** The agent has **no authentication**, and CORS
+  is a *browser* policy: it does nothing against `curl`. So an all-interfaces bind
+  (`0.0.0.0`) on a shared or public network means anyone on that network can list and
+  download every file you are serving. `install-linux.sh` therefore binds
+  **`127.0.0.1`** by default — correct for the common case where the agent runs on the
+  kiosk machine itself. Serving a different device? Pass
+  `sudo NIMROD_MEDIA_HOST=0.0.0.0 ./install-linux.sh ...`, and prefer a private/tailnet
+  address over `0.0.0.0` where you can.
 - **CORS:** set `NIMROD_MEDIA_ORIGIN` to your dashboard origin so only your site can
   read the listing. `*` is for local testing only.
 - **Same device as the kiosk?** Then `base_url` for the media source is
