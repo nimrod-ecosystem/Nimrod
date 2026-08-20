@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" role="img" aria-label="Long field — sample image">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5d7064"/><stop offset="100%" stop-color="#a9b48a"/>
+    </linearGradient>
+    <radialGradient id="v" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#F7F4D5" stop-opacity=".38"/>
+      <stop offset="100%" stop-color="#F7F4D5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)"/>
+  <circle cx="600" cy="336" r="470" fill="url(#v)"/>
+  <g fill="#F7F4D5" opacity=".16">
+    <circle cx="650" cy="480" r="99"/>
+    <circle cx="590" cy="310" r="69"/>
+  </g>
+  <text x="600" y="742" text-anchor="middle" fill="#F7F4D5" opacity=".62"
+        font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="30">Long field · sample</text>
+</svg>

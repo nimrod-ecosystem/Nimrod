@@ -34,7 +34,12 @@ registerModule(
   { type: 'photos', title: 'Photos', description: 'slideshow over your own media (BYO storage)' },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
-    const client = createMediaSourcesClient({ user, cache: true });   // registry survives a server blip
+    // `ctx.sources` is injectable so a page can supply its own registry — demo.html hands
+    // in a static one holding only the bundled sample images, which is how the demo shows a
+    // working screen to someone who has not signed in and should NOT be asked for their
+    // photos before they trust the site. Everywhere else this is the real registry, which
+    // is cached so it survives a server blip.
+    const client = ctx.sources || createMediaSourcesClient({ user, cache: true });
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {}, channels = {};

@@ -312,4 +312,24 @@ def root(request: Request):
     return FileResponse(CLIENT_DIR / "landing.html")
 
 
+# Make the browser REVALIDATE code and pages instead of guessing.
+# StaticFiles sends ETag + Last-Modified but no Cache-Control, so a browser applies
+# heuristic freshness and can keep serving a cached ES module after a deploy — the page
+# looks unchanged and the old module quietly keeps running. That is expensive to diagnose
+# (it cost a chunk of one night) and much worse on a kiosk that stays open for weeks.
+# `no-cache` does NOT mean "don't cache": it means "ask first", which with an ETag is a
+# cheap 304 when nothing changed. Media keeps normal caching — those bytes are immutable
+# and big.
+CODE_TYPES = ('.html', '.js', '.css', '.json')
+
+
+@app.middleware("http")
+async def revalidate_code(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.endswith(CODE_TYPES) or path.endswith('/'):
+        response.headers.setdefault("Cache-Control", "no-cache")
+    return response
+
+
 app.mount("/", StaticFiles(directory=str(CLIENT_DIR), html=True), name="client")
