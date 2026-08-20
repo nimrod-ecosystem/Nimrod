@@ -1,54 +1,88 @@
-// media.js — the MEDIA SOURCES panel: connect the folders your photos live in.
+// media.js — the MEDIA panel: connect the folders your photos live in.
 //
 // WHY THIS EXISTS: photos.js fails with "No photo source connected. Add one in
 // Media / Sources." — and until this panel there WAS no Media / Sources. The
 // registry API (/api/media-sources) and its client have existed since the start;
-// the only missing piece was somewhere for a person to type a base_url.
+// the only missing piece was somewhere for a person to say where their photos are.
 //
-// THE MODEL, in one line: the platform NEVER stores media, only a reference to
-// where it lives (a label + a base_url), so something has to record that once.
-// The bytes are then fetched by the browser straight from the agent at base_url.
+// TWO WAYS IN, and the order matters. Picking a folder in the browser is FIRST because
+// it needs nothing installed — that is the path a person should ever see. Running the
+// media agent is second, and it is for a DEVICE: a bedside kiosk that boots unattended
+// and must serve files with nobody logged in. Leading with the agent (as this panel
+// first did) makes the product look like it requires a Python install to view your own
+// photos, which is not a product.
 //
-// A NOTE ON base_url THAT SAVES A LOT OF CONFUSION: a source is per-USER, not
-// per-device, and `http://localhost:8770` means "the agent on whatever machine is
-// showing this screen". So ONE source entry can serve the kiosk at the bedside AND
-// a desktop, each from its own local agent — provided each runs one. An HTTPS page
-// is allowed to fetch http://localhost, which is why this works at all.
+// THE MODEL, unchanged by either: the platform NEVER stores media, only a reference to
+// where it lives. Agent sources are per-USER (a base_url, shared across devices); folder
+// sources are per-DEVICE (a handle in IndexedDB that cannot leave the machine — see
+// folder_source.js). The panel labels which is which, because "why don't my photos show
+// up on the other screen?" is otherwise a genuinely confusing afternoon.
 
 import { createMediaSourcesClient, resolveListing } from './media_sources.js';
+import {
+  isFolderPickerSupported, pickFolder, folderPermission, requestFolderAccess,
+} from './folder_source.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const DEFAULT_URL = 'http://localhost:8770';
 
-// `client` and `resolve` are injectable so the test can drive this with no network.
-export function mountMedia(root, { user = null, client = null, resolve = resolveListing } = {}) {
+// `client`, `resolve` and `folders` are injectable so the test can drive every state
+// without a server, a media agent, or a real folder-permission prompt.
+export function mountMedia(root, {
+  user = null,
+  client = null,
+  resolve = resolveListing,
+  folders = null,
+} = {}) {
   const sources = client || createMediaSourcesClient({ user });
+  const fs = folders || {
+    isSupported: isFolderPickerSupported,
+    pick: pickFolder,
+    permission: folderPermission,
+    request: requestFolderAccess,
+  };
   let list = [];
   let busy = false;
+
+  const supported = fs.isSupported();
 
   root.innerHTML = `
     <div class="home">
       <div class="h-intro">
         <h1>Media</h1>
         <p>Your photos and videos stay on your own machine — Nimrod only remembers
-          <b>where</b> they are. Run the media agent on the computer that holds them, then
-          connect it here once.</p>
+          <b>where</b> they are. Nothing is uploaded.</p>
       </div>
 
-      <form class="h-new" data-new>
-        <input type="text" data-label placeholder="Name it (e.g. Christine's photos)"
-               aria-label="source name" required>
-        <input type="text" data-url placeholder="${DEFAULT_URL}" value="${DEFAULT_URL}"
-               aria-label="agent address" required>
-        <button type="submit" class="h-btn h-primary">Connect</button>
-      </form>
-      <p class="h-hint"><b>${DEFAULT_URL}</b> means “the agent on whatever machine is showing
-        the screen” — right for the usual setup where the agent runs on the kiosk itself.</p>
+      <div class="h-card">
+        <div class="h-card-head"><b>Photos on this computer</b></div>
+        ${supported
+          ? `<p class="h-quiet">Choose a folder and the browser reads it directly. Nothing to
+               install. This folder is remembered <b>on this device only</b>.</p>
+             <button class="h-btn h-primary" data-pick>Choose a folder…</button>`
+          : `<p class="h-quiet">This browser can’t open a folder directly — that needs Chrome,
+               Edge, or another Chromium browser. Use the media agent below instead.</p>`}
+      </div>
 
       <div class="h-msg" data-msg></div>
       <div class="h-list" data-list><p class="h-loading">Loading…</p></div>
+
+      <details class="h-card" data-advanced>
+        <summary><b>Connect a device that serves media</b></summary>
+        <p class="h-quiet">For a screen that runs on its own — a bedside kiosk, a spare
+          tablet, a NAS. Run the media agent there, then give its address. Unlike a folder,
+          this is remembered for <b>your whole account</b>, and
+          <b>${DEFAULT_URL}</b> means “the agent on whatever machine is showing the screen”.</p>
+        <form class="h-new" data-new>
+          <input type="text" data-label placeholder="Name it (e.g. Christine's bedside)"
+                 aria-label="source name" required>
+          <input type="text" data-url placeholder="${DEFAULT_URL}" value="${DEFAULT_URL}"
+                 aria-label="agent address" required>
+          <button type="submit" class="h-btn">Connect</button>
+        </form>
+      </details>
     </div>`;
 
   const el = (sel) => root.querySelector(sel);
@@ -60,37 +94,69 @@ export function mountMedia(root, { user = null, client = null, resolve = resolve
     msgEl.classList.toggle('bad', !!bad);
   };
 
-  // Probe a source the same way a module will: ask the agent for its listing. This is
-  // the difference between "saved" and "actually works" — a typo'd port or a stopped
-  // agent otherwise shows up much later as an empty screen at the bedside.
+  // Probe a source the way a module will, so "saved" and "actually works" are not confused.
+  // A stopped agent or a lapsed folder permission otherwise shows up much later as a blank
+  // screen at a bedside, which is the worst possible place to discover it.
   async function probe(src) {
     const cell = root.querySelector(`[data-probe="${CSS.escape(src.id)}"]`);
     if (!cell) return;
     cell.textContent = 'checking…';
+    cell.classList.remove('bad');
+
+    if (src.kind === 'folder') {
+      const perm = await fs.permission(src.id);
+      if (perm === 'missing') {
+        cell.textContent = 'this device no longer has this folder — connect it again';
+        cell.classList.add('bad');
+        return;
+      }
+      if (perm !== 'granted') {
+        // Not an error state to hide: the browser drops folder permission on restart unless
+        // it was granted persistently, and someone has to click to restore it.
+        cell.innerHTML = 'needs permission again — '
+          + `<button class="h-btn" data-allow="${esc(src.id)}">Allow access</button>`;
+        cell.classList.add('bad');
+        cell.querySelector('[data-allow]').addEventListener('click', () => allow(src));
+        return;
+      }
+    }
+
     try {
       const listing = await resolve(src, '');
       const albums = listing.albums || [];
       const n = listing.count;
       cell.textContent = n
-        ? `reachable — ${n} item${n === 1 ? '' : 's'}`
+        ? `ready — ${n} item${n === 1 ? '' : 's'}`
         : (albums.length
-            ? `reachable, but no media at the top level — folders inside: ${albums.join(', ')}`
-            : 'reachable, but the folder is empty');
+            ? `no photos at the top level — folders inside: ${albums.join(', ')}`
+            : 'this folder is empty');
       cell.classList.toggle('bad', !n);
     } catch {
-      cell.textContent = 'not reachable — is the agent running on that machine?';
+      cell.textContent = src.kind === 'folder'
+        ? 'could not read this folder'
+        : 'not reachable — is the agent running on that machine?';
       cell.classList.add('bad');
     }
   }
 
+  async function allow(src) {
+    const res = await fs.request(src.id);
+    if (res === 'granted') { say(''); probe(src); }
+    else say('Access was not granted, so those photos can’t be shown.', true);
+  }
+
   function card(s) {
+    const where = s.kind === 'folder'
+      ? 'a folder on this device'
+      : esc(s.base_url || '');
+    const scope = s.kind === 'folder' ? 'this device only' : 'all your devices';
     return `
       <div class="h-card">
         <div class="h-card-head">
           <b>${esc(s.label)}</b>
           <button class="h-btn" data-remove="${esc(s.id)}">Disconnect</button>
         </div>
-        <div class="h-quiet">${esc(s.base_url)}</div>
+        <div class="h-quiet">${where} · ${scope}</div>
         <div class="h-quiet" data-probe="${esc(s.id)}">checking…</div>
       </div>`;
   }
@@ -98,8 +164,9 @@ export function mountMedia(root, { user = null, client = null, resolve = resolve
   function render() {
     listEl.innerHTML = list.length
       ? list.map(card).join('')
-      : `<p class="h-loading">No media connected yet. Start the agent on the machine holding
-           your photos, then connect it above.</p>`;
+      : `<p class="h-loading">No photos connected yet.${supported
+            ? ' Choose a folder above to get started.'
+            : ''}</p>`;
 
     for (const b of root.querySelectorAll('[data-remove]')) {
       b.addEventListener('click', () => remove(b.dataset.remove));
@@ -113,8 +180,23 @@ export function mountMedia(root, { user = null, client = null, resolve = resolve
       render();
     } catch (err) {
       console.error(err);
-      listEl.innerHTML = '<p class="h-loading">Could not load your media sources.</p>';
+      listEl.innerHTML = '<p class="h-loading">Could not load your connected photos.</p>';
     }
+  }
+
+  async function choose() {
+    if (busy) return;
+    busy = true;
+    say('');
+    try {
+      await fs.pick('');
+      await refresh();
+      say('Folder connected.');
+    } catch (err) {
+      // An AbortError just means they closed the picker — that is not a failure to report.
+      if (err && err.name === 'AbortError') say('');
+      else { console.error(err); say('That folder could not be opened.', true); }
+    } finally { busy = false; }
   }
 
   async function add(label, base_url) {
@@ -128,7 +210,7 @@ export function mountMedia(root, { user = null, client = null, resolve = resolve
       say('Connected.');
     } catch (err) {
       console.error(err);
-      // The server validates base_url, so a 400 here is almost always a typo'd address.
+      // The server validates base_url, so a failure here is almost always a typo'd address.
       say('That didn’t connect — check the address (it must start with http:// or https://).', true);
     } finally { busy = false; }
   }
@@ -145,6 +227,8 @@ export function mountMedia(root, { user = null, client = null, resolve = resolve
       say('That didn’t disconnect — try again.', true);
     } finally { busy = false; }
   }
+
+  if (supported) el('[data-pick]').addEventListener('click', choose);
 
   el('[data-new]').addEventListener('submit', (e) => {
     e.preventDefault();

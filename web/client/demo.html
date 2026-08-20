@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — try it, no account</title>
+<!--
+  demo.html — the REAL screen, with no account and nothing installed.
+
+  WHY THIS PAGE EXISTS: someone who has just found this is usually having a hard week.
+  They will not create an account to find out what it is. The landing page can only
+  describe the product; this one runs it.
+
+  WHY IT SHOWS *THEIR* PHOTOS INSTEAD OF STOCK IMAGES: the thing that makes Nimrod
+  different is that your media never leaves your machine. Sample pictures would
+  demonstrate a slideshow, which nobody needs a demo for. Picking a real folder and
+  watching it work — with no sign-in, no upload, and no install — demonstrates the
+  actual claim. The bytes are read by the browser and go nowhere.
+
+  It mounts the SAME modules the kiosk mounts (module.js + modules/photos.js +
+  modules/clock.js), with in-memory state so nothing is stored and no server is called.
+  If it drifts from the real thing it stops being evidence, so it deliberately does not
+  reimplement any of it.
+-->
+<style>
+  :root{ --ink:#F7F4D5; --bg:#0A3323; --line:rgba(247,244,213,.22); --soft:rgba(247,244,213,.72); }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex;flex-direction:column}
+
+  .bar{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);
+    flex:0 0 auto;flex-wrap:wrap}
+  .brand{font-weight:800;letter-spacing:-.02em}
+  .brand span{color:#839958}
+  .bar .grow{flex:1}
+  .btn{padding:9px 16px;border:1px solid var(--line);border-radius:10px;background:transparent;
+    color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+  .btn:hover{background:rgba(247,244,213,.08)}
+  .btn.primary{background:#839958;border-color:#839958;color:#0A3323}
+  .note{font-size:.85rem;color:var(--soft)}
+
+  .stage{position:relative;flex:1 1 auto;min-height:0;display:grid;
+    grid-template-columns:1fr 320px;grid-template-rows:1fr;gap:14px;padding:14px}
+  .cell{position:relative;min-width:0;min-height:0;border:1px solid var(--line);border-radius:16px;
+    overflow:hidden;background:rgba(0,0,0,.18)}
+  @media (max-width:820px){ .stage{grid-template-columns:1fr;grid-template-rows:1fr auto} }
+
+  .invite{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:14px;text-align:center;padding:28px;z-index:5}
+  .invite h2{margin:0;font-size:1.35rem;letter-spacing:-.01em}
+  .invite p{margin:0;max-width:46ch;color:var(--soft)}
+  .invite[hidden]{display:none}
+
+  .foot{flex:0 0 auto;padding:10px 18px;border-top:1px solid var(--line);
+    display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .foot a{color:#F7F4D5}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="brand">Nimrod<span>.</span></div>
+  <div class="note">A live demo. No account, nothing installed, nothing uploaded.</div>
+  <div class="grow"></div>
+  <button class="btn" data-pick hidden>Choose a folder…</button>
+  <a class="btn" href="/">Back</a>
+</div>
+
+<div class="stage">
+  <div class="cell" data-photos>
+    <div class="invite" data-invite>
+      <h2>See it with your own photos</h2>
+      <p data-invite-text>Pick a folder on this computer. The browser reads it directly — the
+        pictures are never uploaded, and you are not signing in to anything.</p>
+      <button class="btn primary" data-pick-main>Choose a folder…</button>
+      <p class="note" data-privacy>Nothing leaves this device. Close the tab and nothing is kept.</p>
+    </div>
+  </div>
+  <div class="cell" data-clock></div>
+</div>
+
+<div class="foot">
+  <span class="note">This is the same screen software running at a bedside — the modules here are
+    the real ones, not a mock-up.</span>
+  <span class="grow"></span>
+  <a href="/home.html">Make your own screen →</a>
+</div>
+
+<script type="module">
+import { mountModule } from './module.js';
+import { createBus } from './bus.js';
+import { isFolderPickerSupported, pickFolder, listFolderSources } from './folder_source.js';
+import './modules/photos.js';
+import './modules/clock.js';
+
+// In-memory stand-ins for the per-instance handles the kiosk normally builds from the
+// server. Same surface (state.js / events.js), but nothing is persisted or sent — which is
+// what makes an account unnecessary here.
+function memState(initial = {}) {
+  let data = { ...initial };
+  const subs = new Set();
+  const emit = () => subs.forEach((f) => { try { f(data); } catch (e) { console.error(e); } });
+  return {
+    load: async () => data,
+    get: () => data,
+    set: (patch) => { data = { ...data, ...patch }; emit(); },
+    subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+    flush: async () => {},
+    startPolling: () => {},
+    destroy: () => subs.clear(),
+    getVersion: () => 0,
+  };
+}
+function memEvents() {
+  const rows = [];
+  const subs = new Set();
+  return {
+    load: async () => rows,
+    append: async (kind, data) => { const e = { kind, data }; rows.push(e); subs.forEach((f) => f(rows)); return e; },
+    get: () => rows,
+    subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+    startPolling: () => {},
+    destroy: () => subs.clear(),
+  };
+}
+
+const bus = createBus();
+const mounted = [];
+function mount(type, host) {
+  const m = mountModule(type, {
+    mount: host, bus, user: null,
+    state: memState(), events: memEvents(),
+  });
+  m.init();
+  mounted.push(m);
+  return m;
+}
+
+const photosHost = document.querySelector('[data-photos]');
+const invite = document.querySelector('[data-invite]');
+const inviteText = document.querySelector('[data-invite-text]');
+const privacy = document.querySelector('[data-privacy]');
+
+// The photos module renders into its own child so the invitation can sit on top of it.
+const photosMount = document.createElement('div');
+photosMount.style.cssText = 'position:absolute;inset:0';
+photosHost.prepend(photosMount);
+
+mount('clock', document.querySelector('[data-clock]'));
+const photos = mount('photos', photosMount);
+
+const supported = isFolderPickerSupported();
+for (const b of document.querySelectorAll('[data-pick],[data-pick-main]')) b.hidden = !supported;
+
+if (!supported) {
+  // Say what is actually true rather than showing a dead button: this browser cannot open
+  // a folder, so the honest demo here is the screen itself, without their pictures in it.
+  inviteText.textContent = 'This browser can’t open a folder directly — that needs Chrome, '
+    + 'Edge, or another Chromium browser. Everything else on this screen is live.';
+  privacy.textContent = '';
+}
+
+async function showInviteIfEmpty() {
+  const local = await listFolderSources();
+  invite.hidden = local.length > 0;
+}
+
+async function choose() {
+  try {
+    await pickFolder('');
+    invite.hidden = true;
+    // Re-mount photos so it picks up the new source the same way the kiosk would on load.
+    photos.destroy();
+    photosMount.innerHTML = '';
+    const m = mount('photos', photosMount);
+    mounted.push(m);
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;    // they closed the picker; not a failure
+    console.error(err);
+    inviteText.textContent = 'That folder could not be opened. Try another one.';
+  }
+}
+
+for (const b of document.querySelectorAll('[data-pick],[data-pick-main]')) {
+  b.addEventListener('click', choose);
+}
+
+showInviteIfEmpty();
+window.addEventListener('beforeunload', () => mounted.forEach((m) => { try { m.destroy(); } catch {} }));
+</script>
+</body>
+</html>

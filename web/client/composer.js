@@ -1,7 +1,8 @@
 // composer.js — the DASHBOARD COMPOSER: arrange a screen's modules into a layout.
 //
 // A tab inside home, not a page of its own. Pick a screen, pick how it's divided, drop a
-// module into each slot, save. "Open" then launches exactly that arrangement in the kiosk.
+// module into each slot. "Save & open" commits it and launches it; "Preview" launches the
+// arrangement you are looking at WITHOUT saving, so a layout can be tried and abandoned.
 //
 // The preview is built from the SAME `layout.js` grid helpers the kiosk renders with, so
 // what you arrange here and what appears on the screen cannot drift apart — the usual way
@@ -12,6 +13,7 @@
 // slot grid is the real spatial model, so drag can be added on top later without changing
 // anything that is stored.
 
+import { stashPreviewLayout } from './preview.js';
 import {
   PRESETS, preset, normalizeLayout, isArranged, gridStyle, slotStyle, placement,
 } from './layout.js';
@@ -86,7 +88,8 @@ export function mountComposer(root, {
         : 'Every module is placed.'}</p>
       <div class="c-actions">
         <button class="c-btn c-primary" data-save ${dirty ? '' : 'disabled'}>Save layout</button>
-        <button class="c-btn" data-open>Open screen</button>
+        <button class="c-btn" data-open>Save &amp; open</button>
+        <button class="c-btn" data-preview>Preview</button>
         <button class="c-btn" data-clear>Clear</button>
       </div>`;
 
@@ -111,14 +114,22 @@ export function mountComposer(root, {
       });
     }
     el('[data-save]').addEventListener('click', save);
-    // The panel promises "Open screen launches exactly this arrangement" — so it has to
-    // SAVE first. Opening while `dirty` launched the last SAVED layout (often none at all),
-    // which looks exactly like the composer silently ignoring everything you just arranged.
+    // Two ways out, because they are genuinely different intentions.
+    // "Save & open" commits first: opening while `dirty` used to launch the last SAVED
+    // layout (often none at all), which looked exactly like the composer ignoring
+    // everything you had just arranged.
     el('[data-open]').addEventListener('click', async () => {
       if (dirty) {
         await save();
         if (dirty) return;              // save failed; `say()` already explained why
       }
+      open(current.id);
+    });
+    // "Preview" commits nothing: it hands the CURRENT arrangement to the kiosk for one
+    // load, so a layout can be tried — or swapped to temporarily — without becoming the
+    // screen. Reloading there returns to the saved one.
+    el('[data-preview]').addEventListener('click', () => {
+      stashPreviewLayout(current.id, layout);
       open(current.id);
     });
     el('[data-clear]').addEventListener('click', () => {
@@ -171,7 +182,7 @@ export function mountComposer(root, {
     <div class="composer" data-composer>
       <h1>Dashboard composer</h1>
       <p class="c-lead">Choose a screen, pick how it's divided, and put a module in each slot.
-        “Open screen” launches exactly this arrangement.</p>
+        “Save &amp; open” keeps this arrangement; “Preview” just tries it.</p>
       <div class="c-screens" data-screens></div>
       <div class="c-msg" data-cmsg></div>
       <div data-cbody></div>
