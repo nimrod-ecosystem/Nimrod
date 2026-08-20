@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>media sources panel — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff}
+</style>
+</head>
+<body>
+<h1>media sources panel — test</h1>
+<p>Drives the REAL <code>mountMedia</code> panel with a fake registry client and a fake
+listing resolver, so it needs no server and no media agent. Covers the states a person
+actually hits when connecting the folder their photos live in.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountMedia } from '../media.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const text = (el) => (el ? el.textContent : '');
+
+// A fake registry: the same surface createMediaSourcesClient exposes.
+function fakeClient(initial = []) {
+  let rows = [...initial];
+  let n = 0;
+  const calls = { add: [], remove: [] };
+  return {
+    calls,
+    list: async () => [...rows],
+    add: async ({ label, base_url, kind }) => {
+      calls.add.push({ label, base_url, kind });
+      if (!/^https?:\/\//.test(base_url)) throw new Error('400');   // mirrors the server's check
+      const row = { id: 'src' + (++n), label, base_url, kind };
+      rows.push(row);
+      return row;
+    },
+    remove: async (id) => { calls.remove.push(id); rows = rows.filter((r) => r.id !== id); return { ok: true }; },
+  };
+}
+
+const host = document.getElementById('host');
+const mount = (opts) => mountMedia(host, opts);
+
+// ---------------------------------------------------------------- empty state
+section('nothing connected yet');
+{
+  const p = mount({ client: fakeClient([]), resolve: async () => ({ albums: [], items: [], count: 0 }) });
+  await p.refresh();
+  check('invites you to connect a folder', /No media connected yet/.test(host.textContent));
+  check('the address box is prefilled with localhost:8770',
+        host.querySelector('[data-url]').value === 'http://localhost:8770');
+}
+
+// ---------------------------------------------------------------- connecting
+section('connecting a folder');
+{
+  const client = fakeClient([]);
+  const p = mount({ client, resolve: async () => ({ albums: [], items: [{}, {}, {}], count: 3 }) });
+  await p.refresh();
+  host.querySelector('[data-label]').value = "Christine's photos";
+  host.querySelector('[data-url]').value = 'http://localhost:8770';
+  host.querySelector('[data-new]').dispatchEvent(new Event('submit', { cancelable: true }));
+  await tick(); await tick(); await tick();
+
+  check('it is sent to the registry as an agent source',
+        client.calls.add.length === 1 && client.calls.add[0].kind === 'agent',
+        JSON.stringify(client.calls.add));
+  check('the connected folder is listed', /Christine's photos/.test(host.textContent));
+  check('the name box is cleared, ready for the next one',
+        host.querySelector('[data-label]').value === '');
+  check('it says how many items it actually found',
+        /reachable — 3 items/.test(host.textContent), host.textContent.slice(0, 200));
+}
+
+// ------------------------------------------------- the trap: media in a subfolder
+// The agent's root can hold FOLDERS rather than images (~/cici-media -> photos/, music/).
+// A source pointed there lists zero items, and a screen made from it is silently blank.
+// The panel has to name that, or the failure only shows up at the bedside.
+section('the folder holds subfolders, not photos');
+{
+  const p = mount({
+    client: fakeClient([{ id: 's1', label: 'Pi', base_url: 'http://localhost:8770', kind: 'agent' }]),
+    resolve: async () => ({ albums: ['music', 'photos'], items: [], count: 0 }),
+  });
+  await p.refresh();
+  await tick(); await tick();
+  const probe = host.querySelector('[data-probe]');
+  check('it warns there is no media at the top level', /no media at the top level/.test(text(probe)), text(probe));
+  check('it names the folders it did find', /photos/.test(text(probe)) && /music/.test(text(probe)), text(probe));
+  check('and it is flagged as a problem, not a success', probe.classList.contains('bad'));
+}
+
+// ---------------------------------------------------------------- agent is down
+section('the agent is not running');
+{
+  const p = mount({
+    client: fakeClient([{ id: 's1', label: 'Pi', base_url: 'http://localhost:8770', kind: 'agent' }]),
+    resolve: async () => { throw new Error('failed to fetch'); },
+  });
+  await p.refresh();
+  await tick(); await tick();
+  const probe = host.querySelector('[data-probe]');
+  check('it says the agent is unreachable rather than failing silently',
+        /not reachable/.test(text(probe)), text(probe));
+  check('flagged as a problem', probe.classList.contains('bad'));
+}
+
+// ---------------------------------------------------------------- a bad address
+section('a typo in the address');
+{
+  const client = fakeClient([]);
+  const p = mount({ client, resolve: async () => ({ albums: [], items: [], count: 0 }) });
+  await p.refresh();
+  host.querySelector('[data-label]').value = 'Typo';
+  host.querySelector('[data-url]').value = 'localhost:8770';        // no scheme
+  host.querySelector('[data-new]').dispatchEvent(new Event('submit', { cancelable: true }));
+  await tick(); await tick(); await tick();
+  check('it explains the address needs http:// rather than just failing',
+        /http:\/\//.test(text(host.querySelector('[data-msg]'))), text(host.querySelector('[data-msg]')));
+  check('nothing was added', !/Typo/.test(host.querySelector('[data-list]').textContent));
+}
+
+// ---------------------------------------------------------------- disconnecting
+section('disconnecting');
+{
+  const client = fakeClient([{ id: 's1', label: 'Old drive', base_url: 'http://localhost:8770', kind: 'agent' }]);
+  const p = mount({ client, resolve: async () => ({ albums: [], items: [{}], count: 1 }) });
+  await p.refresh();
+  host.querySelector('[data-remove]').click();
+  await tick(); await tick(); await tick();
+  check('the source is removed from the registry', client.calls.remove.length === 1);
+  check('it disappears from the list', !/Old drive/.test(host.querySelector('[data-list]').textContent));
+  check('and it reassures you the files are untouched',
+        /files were not touched/.test(text(host.querySelector('[data-msg]'))));
+}
+
+document.getElementById('summary').textContent =
+  `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

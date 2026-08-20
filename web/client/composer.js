@@ -111,7 +111,16 @@ export function mountComposer(root, {
       });
     }
     el('[data-save]').addEventListener('click', save);
-    el('[data-open]').addEventListener('click', () => open(current.id));
+    // The panel promises "Open screen launches exactly this arrangement" — so it has to
+    // SAVE first. Opening while `dirty` launched the last SAVED layout (often none at all),
+    // which looks exactly like the composer silently ignoring everything you just arranged.
+    el('[data-open]').addEventListener('click', async () => {
+      if (dirty) {
+        await save();
+        if (dirty) return;              // save failed; `say()` already explained why
+      }
+      open(current.id);
+    });
     el('[data-clear]').addEventListener('click', () => {
       layout = normalizeLayout({ preset: layout.preset, slots: [] }, []);
       dirty = true; render();

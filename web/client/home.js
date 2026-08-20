@@ -37,6 +37,7 @@ export function kioskURL(profileId) {
 export const TABS = [
   { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
   { id: 'composer', label: 'Composer', hint: 'arrange them on the display' },
+  { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
   { id: 'adulting', label: 'Adulting', hint: 'your own points board' },
 ];
 
@@ -70,6 +71,12 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const c = mountComposer(host, { profiles, manifests, onOpen, makeSettings });
       await c.refresh();
       return c;
+    }
+    if (id === 'media') {
+      const { mountMedia } = await import('./media.js');
+      const m = mountMedia(host, { user });
+      await m.refresh();
+      return m;
     }
     if (id === 'adulting') {
       const { mountAdulting } = await import('./adulting.js');
