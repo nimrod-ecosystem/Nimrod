@@ -1,0 +1,55 @@
+{
+  "album": "",
+  "albums": [],
+  "items": [
+    {
+      "id": "sample-01.svg",
+      "name": "Morning window",
+      "path": "sample-01.svg",
+      "kind": "image",
+      "size": 984,
+      "mtime": 0
+    },
+    {
+      "id": "sample-02.svg",
+      "name": "Quiet water",
+      "path": "sample-02.svg",
+      "kind": "image",
+      "size": 978,
+      "mtime": 0
+    },
+    {
+      "id": "sample-03.svg",
+      "name": "Warm evening",
+      "path": "sample-03.svg",
+      "kind": "image",
+      "size": 980,
+      "mtime": 0
+    },
+    {
+      "id": "sample-04.svg",
+      "name": "Garden",
+      "path": "sample-04.svg",
+      "kind": "image",
+      "size": 968,
+      "mtime": 0
+    },
+    {
+      "id": "sample-05.svg",
+      "name": "Long field",
+      "path": "sample-05.svg",
+      "kind": "image",
+      "size": 976,
+      "mtime": 0
+    },
+    {
+      "id": "sample-06.svg",
+      "name": "First light",
+      "path": "sample-06.svg",
+      "kind": "image",
+      "size": 979,
+      "mtime": 0
+    }
+  ],
+  "count": 6
+}
