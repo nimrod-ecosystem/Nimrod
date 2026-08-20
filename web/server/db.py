@@ -60,6 +60,17 @@ class _Store:
     def _migrate(self) -> None:
         raise NotImplementedError
 
+    # ---------------------------------------------------------------- health
+    def ping(self) -> None:
+        """Cheapest possible round-trip to the database. Raises if it is unreachable.
+
+        Exists so /api/healthz can distinguish "the app is up" from "the app is up but
+        the database is not" WITHOUT a login. Every real endpoint needs auth, so before
+        this the only way to see a DB outage was to sign in and watch the UI break."""
+        with self._tx() as cur:
+            cur.execute("SELECT 1")
+            cur.fetchone()
+
     # ---------------------------------------------------------------- profiles
     def create_profile(self, user_id: str, name: str) -> dict:
         pid, ts = _new_id(), _now()
@@ -297,7 +308,17 @@ class PostgresStore(_Store):
         # Lazy import so this module still imports (and SQLite dev/tests still run)
         # when psycopg isn't installed. psycopg[binary] + psycopg-pool ship on Render.
         from psycopg_pool import ConnectionPool
-        self._pool = ConnectionPool(conninfo=dsn, min_size=1, max_size=5, kwargs={"autocommit": False})
+        # `check` is NOT optional against a serverless Postgres. Neon suspends an idle
+        # database and drops its connections; without a check the pool keeps handing out
+        # dead ones and EVERY DB request 500s until the process restarts. check_connection
+        # validates (and silently replaces) a connection before it is handed over.
+        # `max_idle` retires connections before they rot, so the check rarely has to fire.
+        self._pool = ConnectionPool(
+            conninfo=dsn, min_size=1, max_size=5,
+            kwargs={"autocommit": False},
+            check=ConnectionPool.check_connection,
+            max_idle=120.0,
+        )
         self._pool.wait()
         self._migrate()
 

@@ -9,6 +9,7 @@ Then open http://localhost:8000/.
 """
 from __future__ import annotations
 
+import logging
 import os
 import re
 from pathlib import Path
@@ -23,6 +24,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from db import PostgresStore, SQLiteStore
 from identity import current_user, optional_user
+
+log = logging.getLogger("nimrod")
 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")      # ids, module types, state keys, streams
 NAME_RE = re.compile(r"^[\w .\-]{1,64}$")          # human profile names + source labels
@@ -109,6 +112,27 @@ def owned_profile(user: str, pid: str) -> dict:
     if profile is None:
         raise HTTPException(status_code=404, detail="no such profile")
     return profile
+
+
+@app.get("/api/healthz")
+def healthz():
+    """Unauthenticated liveness probe: is the app up AND can it reach the database?
+
+    Deliberately reports only the exception CLASS on failure, never the message — this
+    endpoint is public, and a psycopg error text can carry host/DSN detail. The class
+    name is enough to tell the two failure modes apart: OperationalError means the
+    connection is gone (a suspended/unreachable database), while a ProgrammingError
+    means the SQL itself is wrong. Full detail goes to the server log.
+    """
+    engine = "postgres" if DATABASE_URL else "sqlite"
+    try:
+        store.ping()
+    except Exception as e:                                  # noqa: BLE001 - probe reports every failure
+        log.exception("healthz: database unreachable")
+        return JSONResponse(status_code=503,
+                            content={"ok": False, "db": "down", "engine": engine,
+                                     "error": type(e).__name__})
+    return {"ok": True, "db": "up", "engine": engine}
 
 
 @app.get("/api/whoami")
