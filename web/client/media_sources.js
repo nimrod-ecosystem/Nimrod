@@ -19,6 +19,7 @@
 
 import { cachedFetch } from './cache.js';
 import { authHeaders } from './auth.js';
+import { listFolderSources, removeFolderSource, resolveFolderListing } from './folder_source.js';
 
 const trimSlash = (u) => String(u || '').replace(/\/+$/, '');
 
@@ -41,9 +42,29 @@ export function createMediaSourcesClient({ user, base = '', cache = false } = {}
   // `cache:true` opts into offline resilience: the registry (which folder → which
   // base_url) survives a coordination-server outage, so photos/personal can still
   // resolve media from the LOCAL agent. The agent's own /list is already local.
+  // Two kinds of source, merged here so no consumer has to know the difference:
+  //   * `agent`  — registered on the platform, shared across this user's devices.
+  //   * `folder` — a browser folder handle, stored in IndexedDB on THIS DEVICE only
+  //                (folder_source.js explains why it cannot be sent to the server).
+  // The merge happens AFTER the cached fetch on purpose — folding device-local rows into
+  // the cached server payload would write them into the offline mirror as if the server
+  // had sent them, and they would then appear on devices that never had the folder.
   async function list() {
-    if (cache) return cachedFetch(`media-sources:${user || 'anon'}`, fetchList);
-    return fetchList();
+    // A failing registry call must NOT hide device-local folders. Two cases where it
+    // otherwise would: the coordination server is unreachable (the offline-resilience
+    // case this project cares about), and the demo page, where nobody is signed in and
+    // /api/media-sources is a 401 by design. Folders live on the device and are still
+    // perfectly usable in both.
+    let remote = [];
+    try {
+      remote = (cache
+        ? await cachedFetch(`media-sources:${user || 'anon'}`, fetchList)
+        : await fetchList()) || [];
+    } catch (err) {
+      console.warn('media-sources: registry unavailable, using device-local folders only', err);
+    }
+    const local = await listFolderSources();
+    return [...remote, ...local];
   }
   async function add({ label, base_url, kind = 'agent' }) {
     const res = await fetch(`${base}/api/media-sources`, {
@@ -54,7 +75,11 @@ export function createMediaSourcesClient({ user, base = '', cache = false } = {}
     if (!res.ok) throw new Error(`POST /api/media-sources -> ${res.status}`);
     return res.json();
   }
+  // A folder source only exists on this device, so it is removed from IndexedDB — asking
+  // the platform to delete an id it has never seen would just 404.
   async function remove(id) {
+    const local = await listFolderSources();
+    if (local.some((s) => s.id === id)) return removeFolderSource(id);
     const res = await fetch(`${base}/api/media-sources/${id}`, {
       method: 'DELETE', headers: authHeaders(user),
     });
@@ -69,6 +94,9 @@ export function createMediaSourcesClient({ user, base = '', cache = false } = {}
 // to each item. `fetchImpl` is injectable for tests. Throws on a dead/erroring
 // agent so the caller can show "source unreachable" rather than a blank wall.
 export async function resolveListing(source, album = '', { fetchImpl = fetch } = {}) {
+  // A folder source has no base_url to fetch — the browser reads the files directly.
+  // Same return shape, so photos.js and personal.js are unchanged.
+  if (source && source.kind === 'folder') return resolveFolderListing(source, album);
   const base = trimSlash(source.base_url);
   const q = album ? `?album=${encodeURIComponent(album)}` : '';
   const res = await fetchImpl(`${base}/list${q}`);

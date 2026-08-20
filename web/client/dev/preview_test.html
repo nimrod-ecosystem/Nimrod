@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>preview handoff — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>preview handoff — test</h1>
+<p>The composer hands an UNSAVED layout to the kiosk for exactly one load. The properties
+below are what keep "try it" from quietly turning into "that is now the screen".</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { stashPreviewLayout, takePreviewLayout, PREVIEW_KEY } from '../preview.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+
+const LAYOUT = { preset: 'quad', slots: ['m1', 'm2', null, 'm3'] };
+
+section('handing a layout over');
+{
+  sessionStorage.removeItem(PREVIEW_KEY);
+  stashPreviewLayout('p1', LAYOUT);
+  const got = takePreviewLayout('p1');
+  check('the kiosk receives exactly what the composer was showing',
+        JSON.stringify(got) === JSON.stringify(LAYOUT), JSON.stringify(got));
+}
+
+section('it is one-shot');
+{
+  sessionStorage.removeItem(PREVIEW_KEY);
+  stashPreviewLayout('p1', LAYOUT);
+  takePreviewLayout('p1');
+  check('a second read gets nothing — reloading returns to the SAVED screen',
+        takePreviewLayout('p1') === null);
+  check('and nothing is left behind in storage', sessionStorage.getItem(PREVIEW_KEY) === null);
+}
+
+section('it cannot leak onto another screen');
+{
+  sessionStorage.removeItem(PREVIEW_KEY);
+  stashPreviewLayout('p1', LAYOUT);
+  check('a different screen does not pick it up', takePreviewLayout('p2') === null);
+  check('and the stale stash is cleared rather than lurking',
+        sessionStorage.getItem(PREVIEW_KEY) === null);
+}
+
+section('nothing stashed');
+{
+  sessionStorage.removeItem(PREVIEW_KEY);
+  check('an ordinary kiosk load is unaffected', takePreviewLayout('p1') === null);
+}
+
+section('corrupt stash');
+{
+  sessionStorage.setItem(PREVIEW_KEY, 'not json{');
+  check('garbage does not throw on a bedside screen', takePreviewLayout('p1') === null);
+  sessionStorage.removeItem(PREVIEW_KEY);
+}
+
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

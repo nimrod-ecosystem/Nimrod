@@ -28,6 +28,7 @@ import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
+import { takePreviewLayout } from './preview.js';
 import { applyTheme } from './theme.js';
 import { cachedFetch } from './cache.js';
 import './modules/clock.js';
@@ -132,10 +133,17 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   // in a slot is rendered there, so camera/clock only fall back to being HUD overlays when
   // they were NOT placed. With no layout, everything below behaves exactly as it did
   // before this existed — every screen made before the composer keeps working.
-  const savedLayout = (settings.get().kiosk || {}).layout;
+  // A PREVIEW layout, if the composer sent one. It is a ONE-SHOT handoff in sessionStorage:
+  // read once, cleared immediately, never written to the profile. This is what lets someone
+  // try an arrangement — or swap to one temporarily — without committing it, which the
+  // composer's save-then-open behaviour otherwise took away.
+  const previewLayout = takePreviewLayout(profileId);
+
+  const savedLayout = previewLayout || (settings.get().kiosk || {}).layout;
   const layout = isArranged(savedLayout)
     ? normalizeLayout(savedLayout, profile.modules.map((m) => m.id))
     : null;
+  if (previewLayout && layout) showPreviewBadge();
   const placedIds = new Set(layout ? layout.slots.filter(Boolean) : []);
 
   const stageDefs = [];
@@ -303,4 +311,15 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },
   };
+}
+
+function showPreviewBadge() {
+  const b = document.createElement('div');
+  b.textContent = 'Preview — not saved';
+  b.setAttribute('data-preview-badge', '');
+  b.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9999;'
+    + 'padding:6px 14px;border-radius:999px;font:600 13px/1.2 system-ui,sans-serif;'
+    + 'background:rgba(10,51,35,.88);color:#F7F4D5;border:1px solid rgba(247,244,213,.35)';
+  document.body.appendChild(b);
+  setTimeout(() => b.remove(), 6000);
 }

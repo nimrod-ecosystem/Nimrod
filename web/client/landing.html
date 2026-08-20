@@ -37,6 +37,11 @@
   .eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;
     font-weight:700;color:var(--midnight);margin:0 0 .7em}
 
+  .mgroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin:14px 0 6px}
+  .mgroup h4{margin:0 0 .4em;font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;color:var(--midnight)}
+  .mgroup ul{margin:0;padding-left:1.1em}
+  .mgroup li{margin:.3em 0;font-size:.93rem}
+
   /* NAV */
   nav{position:sticky;top:0;z-index:20;background:rgba(247,244,213,.9);
     backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
@@ -181,6 +186,7 @@
     <span class="freetag">Free &amp; private</span>
     <div class="right">
       <a href="/auth/login" class="btn outline">Sign in</a>
+      <a href="/demo.html" class="btn">Try it</a>
       <a href="/auth/login" class="btn primary">Get started</a>
     </div>
   </div>
@@ -195,8 +201,8 @@
       communicate, advocate, and stay close. Private, modular, and able to run on equipment you
       probably already own.</p>
     <div class="cta">
-      <a href="/auth/login" class="btn ondark">Get started — it’s free</a>
-      <a href="#intention" class="btn ondark ghost">See what it does</a>
+      <a href="/demo.html" class="btn ondark">Try it now — no account</a>
+      <a href="/auth/login" class="btn ondark ghost">Get started — it’s free</a>
     </div>
     <div class="pills">
       <span class="pill"><b>Free for everyone</b></span>
@@ -311,6 +317,15 @@
       <div class="device-note"><b>Runs on what you already have.</b> It's a web app — open it in a
         browser on a phone, tablet, computer, or an inexpensive Raspberry Pi and monitor. No special
         equipment, no vendor hardware.</div>
+      <h3 style="margin-top:26px">Every module, today</h3>
+      <p>A screen is built from modules. These are the ones that exist right now — the same
+        list your account offers you.</p>
+      <div class="mgroups">
+        <div class="mgroup"><h4>The screen</h4><ul><li><b>Photos</b> — slideshow over your own media</li><li><b>Camera</b> — local self-view / rearview mirror — never leaves the device</li><li><b>Clock</b> — orientation — time, weekday & date</li><li><b>YouTube</b> — weighted-shuffle player over your own playlist</li><li><b>Personal videos</b> — recorded messages from your people</li><li><b>Lineup</b> — rotates videos, personal videos & learning by time of day</li></ul></div>
+        <div class="mgroup"><h4>Learning & play</h4><ul><li><b>Word Forge</b> — vocabulary game — wrong answers explain themselves and still count</li><li><b>Algebra</b> — solve for x — with a calculator, because every real job has one</li><li><b>Lessons</b> — watch a lesson to unlock its questions</li><li><b>Educational</b> — generated learning segments — alphabet, counting, vocabulary</li><li><b>Sprint</b> — focus timer — finish a sprint, bank the points</li></ul></div>
+        <div class="mgroup"><h4>Keeping track</h4><ul><li><b>Quests</b> — points balance, tasks and rewards</li><li><b>Progress</b> — how a game is going over time — accuracy, concepts, reaction time</li></ul></div>
+      </div>
+
       <div class="milestone"><b>Launch milestone met:</b> all four default modules are in the public
         open-source repository.</div>
     </div>
