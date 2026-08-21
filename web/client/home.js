@@ -36,7 +36,6 @@ export function kioskURL(profileId) {
 // an empty tab is worse than no tab, so it isn't stubbed.)
 export const TABS = [
   { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
-  { id: 'composer', label: 'Composer', hint: 'arrange them on the display' },
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
   { id: 'adulting', label: 'Adulting', hint: 'your own points board' },
 ];
@@ -66,12 +65,6 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
 
   const main = root.querySelector('[data-panel]');
   const mount = mountTab || (async (id, host) => {
-    if (id === 'composer') {
-      const { mountComposer } = await import('./composer.js');
-      const c = mountComposer(host, { profiles, manifests, onOpen, makeSettings });
-      await c.refresh();
-      return c;
-    }
     if (id === 'media') {
       const { mountMedia } = await import('./media.js');
       const m = mountMedia(host, { user });
@@ -84,7 +77,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       await a.refresh();
       return a;
     }
-    return mountScreens(host, { profiles, manifests, onOpen });
+    return mountScreens(host, { profiles, manifests, onOpen, makeSettings });
   });
 
   async function show(id) {
@@ -110,7 +103,9 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
 }
 
 // The SCREENS tab: create a screen, fill it with modules, open it.
-export async function mountScreens(root, { profiles, manifests = [], onOpen = null } = {}) {
+export async function mountScreens(root, {
+  profiles, manifests = [], onOpen = null, makeSettings = null,
+} = {}) {
   const catalog = moduleCatalog(manifests);
   // The server stores module instances as {id, type} — no human title. Look the title up
   // from the registry so a chip reads "Quests", not "quests"; fall back to the type for a
@@ -171,13 +166,60 @@ export async function mountScreens(root, { profiles, manifests = [], onOpen = nu
           <button class="h-btn" data-add="${esc(p.id)}">Add module</button>
           ${mods.length ? '' : '<span class="h-hint">a screen needs at least one module to open</span>'}
         </div>
+        ${mods.length && makeSettings ? `
+        <div class="h-arrange">
+          <button class="h-btn h-quiet" data-arrange="${esc(p.id)}" aria-expanded="false">Arrange layout</button>
+          <div class="h-arrange-body" data-arrange-body="${esc(p.id)}" hidden></div>
+        </div>` : ''}
       </section>`;
   }
 
+  const arrangers = new Map();          // profileId -> mounted composer
+
+  function destroyArrangers() {
+    for (const c of arrangers.values()) { try { c.destroy(); } catch (e) { console.error(e); } }
+    arrangers.clear();
+  }
+
+  async function toggleArrange(btn) {
+    const pid = btn.dataset.arrange;
+    const body = root.querySelector(`[data-arrange-body="${CSS.escape(pid)}"]`);
+    if (!body) return;
+    const opening = body.hidden;
+    body.hidden = !opening;
+    btn.setAttribute('aria-expanded', String(opening));
+    btn.textContent = opening ? 'Done arranging' : 'Arrange layout';
+    if (!opening) {
+      // Closing must land any debounced write before the handle goes away, or the last
+      // change made would be the one silently lost.
+      const c = arrangers.get(pid);
+      if (c) { try { await c.settle(); } catch (e) { console.error(e); } c.destroy(); arrangers.delete(pid); }
+      body.innerHTML = '';
+      return;
+    }
+    if (arrangers.has(pid)) return;
+    const { mountComposer } = await import('./composer.js');
+    const c = mountComposer(body, {
+      profiles, manifests, makeSettings, onOpen: open,
+      initialProfileId: pid, embedded: true, autosave: true,
+    });
+    arrangers.set(pid, c);
+    await c.refresh();
+    await c.select(pid);
+  }
+
   function render() {
+    destroyArrangers();
     listEl.innerHTML = list.length
       ? list.map(card).join('')
       : `<p class="h-empty">No screens yet. Name one above and hit Create.</p>`;
+
+    // Arranging is part of the screen, not a separate place you have to remember to visit.
+    // The composer is mounted lazily: most visits to this page are not about layout, and a
+    // settings handle per screen would be a request per card at load.
+    for (const b of root.querySelectorAll('[data-arrange]')) {
+      b.addEventListener('click', () => toggleArrange(b));
+    }
 
     for (const b of root.querySelectorAll('[data-open]')) {
       b.addEventListener('click', () => open(b.dataset.open));

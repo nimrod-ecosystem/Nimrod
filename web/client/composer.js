@@ -21,8 +21,14 @@ import {
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// `embedded` drops the heading and the screen-picker chips, because when this is mounted
+// INSIDE a screen's own card the screen is already chosen and named above it. `autosave`
+// removes the Save button entirely and commits shortly after each change — Mike arranged a
+// four-up layout, pressed Open without pressing Save, and got the unsaved (empty) one. The
+// fix is not a better warning; it is not having a step you can forget.
 export function mountComposer(root, {
   profiles, manifests = [], makeSettings, onOpen = null, initialProfileId = null,
+  embedded = false, autosave = false, saveDelayMs = 350,
 } = {}) {
   const titleOf = (type) => (manifests.find((m) => m.type === type) || {}).title || type;
   const open = onOpen || ((id) => { location.href = `/kiosk.html?profile=${encodeURIComponent(id)}`; });
@@ -33,6 +39,19 @@ export function mountComposer(root, {
   let layout = { preset: 'full', slots: [null] };
   let dirty = false;
   let busy = false;
+  let saveTimer = null;
+
+  // Debounced: changing a preset re-renders every slot, and a person clicking through
+  // presets should not fire a write per click.
+  function queueSave() {
+    if (!autosave) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { saveTimer = null; save(); }, saveDelayMs);
+  }
+  // Anything that must act on the CURRENT arrangement has to land the pending write first.
+  async function settle() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; await save(); }
+  }
 
   const el = (sel) => root.querySelector(sel);
   const say = (t, bad = false) => {
@@ -59,11 +78,12 @@ export function mountComposer(root, {
   function render() {
     if (!el('[data-composer]')) return;
 
-    // screen picker
-    el('[data-screens]').innerHTML = list.length
+    // screen picker (absent when embedded — the card around it already names the screen)
+    const picker = el('[data-screens]');
+    if (picker) picker.innerHTML = list.length
       ? list.map((p) =>
           `<button class="c-chip${current && p.id === current.id ? ' on' : ''}" data-screen="${esc(p.id)}">${esc(p.name)}</button>`).join('')
-      : '<span class="c-note">No screens yet — make one on the Screens tab.</span>';
+      : '<span class="c-note">No screens yet — make one above.</span>';
 
     const body = el('[data-cbody]');
     if (!current) { body.innerHTML = ''; return; }
@@ -87,8 +107,8 @@ export function mountComposer(root, {
         ? `Not on screen: ${unplaced.map((m) => esc(titleOf(m.type))).join(', ')} — still saved, just not shown.`
         : 'Every module is placed.'}</p>
       <div class="c-actions">
-        <button class="c-btn c-primary" data-save ${dirty ? '' : 'disabled'}>Save layout</button>
-        <button class="c-btn" data-open>Save &amp; open</button>
+        ${autosave ? '' : `<button class="c-btn c-primary" data-save ${dirty ? '' : 'disabled'}>Save layout</button>`}
+        <button class="c-btn" data-open>${autosave ? 'Open' : 'Save &amp; open'}</button>
         <button class="c-btn" data-preview>Preview</button>
         <button class="c-btn" data-clear>Clear</button>
       </div>`;
@@ -98,7 +118,7 @@ export function mountComposer(root, {
         // Keep what still fits when the shape changes; a narrower preset drops the tail
         // rather than silently reshuffling everything the person just arranged.
         layout = normalizeLayout({ preset: b.dataset.preset, slots: layout.slots }, modules().map((m) => m.id));
-        dirty = true; render();
+        dirty = true; render(); queueSave();
       });
     }
     for (const sel of root.querySelectorAll('[data-assign]')) {
@@ -110,15 +130,17 @@ export function mountComposer(root, {
         if (id) for (let k = 0; k < slots.length; k++) if (slots[k] === id) slots[k] = null;
         slots[i] = id;
         layout = normalizeLayout({ preset: layout.preset, slots }, modules().map((m) => m.id));
-        dirty = true; render();
+        dirty = true; render(); queueSave();
       });
     }
-    el('[data-save]').addEventListener('click', save);
+    const saveBtn = el('[data-save]');
+    if (saveBtn) saveBtn.addEventListener('click', save);
     // Two ways out, because they are genuinely different intentions.
     // "Save & open" commits first: opening while `dirty` used to launch the last SAVED
     // layout (often none at all), which looked exactly like the composer ignoring
     // everything you had just arranged.
     el('[data-open]').addEventListener('click', async () => {
+      await settle();
       if (dirty) {
         await save();
         if (dirty) return;              // save failed; `say()` already explained why
@@ -129,12 +151,13 @@ export function mountComposer(root, {
     // load, so a layout can be tried — or swapped to temporarily — without becoming the
     // screen. Reloading there returns to the saved one.
     el('[data-preview]').addEventListener('click', () => {
+      clearTimeout(saveTimer); saveTimer = null;   // previewing must not commit anything
       stashPreviewLayout(current.id, layout);
       open(current.id);
     });
     el('[data-clear]').addEventListener('click', () => {
       layout = normalizeLayout({ preset: layout.preset, slots: [] }, []);
-      dirty = true; render();
+      dirty = true; render(); queueSave();
     });
   }
 
@@ -178,15 +201,21 @@ export function mountComposer(root, {
     if (target) await select(target.id);
   }
 
-  root.innerHTML = `
-    <div class="composer" data-composer>
-      <h1>Dashboard composer</h1>
-      <p class="c-lead">Choose a screen, pick how it's divided, and put a module in each slot.
-        “Save &amp; open” keeps this arrangement; “Preview” just tries it.</p>
-      <div class="c-screens" data-screens></div>
-      <div class="c-msg" data-cmsg></div>
-      <div data-cbody></div>
-    </div>`;
+  root.innerHTML = embedded
+    ? `<div class="composer c-embedded" data-composer>
+         <p class="c-lead">Pick how this screen is divided, then put a module in each slot.
+           Changes save as you make them.</p>
+         <div class="c-msg" data-cmsg></div>
+         <div data-cbody></div>
+       </div>`
+    : `<div class="composer" data-composer>
+         <h1>Dashboard composer</h1>
+         <p class="c-lead">Choose a screen, pick how it's divided, and put a module in each slot.
+           “Save &amp; open” keeps this arrangement; “Preview” just tries it.</p>
+         <div class="c-screens" data-screens></div>
+         <div class="c-msg" data-cmsg></div>
+         <div data-cbody></div>
+       </div>`;
 
   root.addEventListener('click', (e) => {
     const b = e.target.closest('[data-screen]');
@@ -197,6 +226,10 @@ export function mountComposer(root, {
     refresh,
     select,
     layout: () => layout,
-    destroy() { if (settings) { settings.destroy(); settings = null; } },
+    settle,
+    destroy() {
+      clearTimeout(saveTimer); saveTimer = null;
+      if (settings) { settings.destroy(); settings = null; }
+    },
   };
 }
