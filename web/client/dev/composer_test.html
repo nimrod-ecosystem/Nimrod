@@ -29,7 +29,7 @@ import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
 import { listManifests } from '../module.js';
-import { mountHome, TABS } from '../home.js';
+import { mountHome, TABS, mountScreens } from '../home.js';
 import { mountComposer } from '../composer.js';
 import { mountKiosk } from '../kiosk.js';
 import {
@@ -102,12 +102,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       host.querySelector('.s-email').textContent === 'mike@example.com' &&
       host.querySelector('.s-signout').getAttribute('href') === '/auth/logout');
 
-    host.querySelector('[data-tab="composer"]').click();
+    // Composer is no longer a tab of its own — arranging lives inside the screen it
+    // arranges (see "arranging from the screen card" below).
+    check('there is no separate Composer tab to forget to visit',
+      !host.querySelector('[data-tab="composer"]'));
+
+    host.querySelector('[data-tab="media"]').click();
     await sleep(200);
-    check('clicking a tab switches the panel', shell.active() === 'composer' && mounted[1] === 'composer');
-    check('...and only ONE panel is mounted at a time', host.querySelector('.s-main').textContent === 'panel:composer');
+    check('clicking a tab switches the panel', shell.active() === 'media' && mounted[1] === 'media');
+    check('...and only ONE panel is mounted at a time', host.querySelector('.s-main').textContent === 'panel:media');
     check('the marker moved with it',
-      host.querySelector('[data-tab="composer"]').classList.contains('on') &&
+      host.querySelector('[data-tab="media"]').classList.contains('on') &&
       !host.querySelector('[data-tab="screens"]').classList.contains('on'));
     shell.destroy();
 
@@ -219,6 +224,59 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('...and the clock is a HUD overlay again', kiosk2.hasClock());
     kiosk2.destroy();
     comp.destroy(); readBack.destroy(); s2.destroy();
+
+    // ============ arranging from the screen card (the merge) ============
+    // The whole point: there is no separate place to go and no Save button to forget.
+    // Mike arranged a four-up layout, pressed Open without pressing Save, and got the
+    // empty one — so a layout made here must be committed WITHOUT any explicit save.
+    {
+      section('arranging from the screen card');
+      host.innerHTML = '';
+      const scr = await mountScreens(host, {
+        profiles, manifests: listManifests(), makeSettings, onOpen: () => {},
+      });
+      await scr.refresh();
+      await sleep(200);
+
+      const arrangeBtn = host.querySelector(`[data-arrange="${profile.id}"]`);
+      check('every screen with modules offers to arrange itself', !!arrangeBtn);
+      check('the arranger starts closed', host.querySelector(`[data-arrange-body="${profile.id}"]`).hidden);
+
+      arrangeBtn.click();
+      await sleep(400);
+      const body = host.querySelector(`[data-arrange-body="${profile.id}"]`);
+      check('opening it reveals the arranger in place', !body.hidden && !!body.querySelector('[data-composer]'));
+      check('it does not re-ask which screen — the card already says', !body.querySelector('[data-screens]'));
+      check('and there is no Save button to forget', !body.querySelector('[data-save]'));
+
+      // arrange something, then WAIT — no save is pressed anywhere
+      body.querySelector('[data-preset="side"]').click();
+      await sleep(60);
+      const sel = body.querySelector('[data-assign="0"]');
+      sel.value = added.photos.id;
+      sel.dispatchEvent(new Event('change'));
+      await sleep(900);                       // past the autosave debounce
+
+      const check2 = createState({ url: profiles.stateURL(profile.id, 'settings'), user: USER });
+      await check2.load();
+      const saved = (check2.get().kiosk || {}).layout;
+      check('the arrangement is saved without anyone pressing save',
+        !!saved && saved.preset === 'side' && saved.slots[0] === added.photos.id,
+        JSON.stringify(saved));
+
+      // closing must not drop a change still inside the debounce window
+      const sel2 = body.querySelector('[data-assign="1"]');
+      sel2.value = added.clock.id;
+      sel2.dispatchEvent(new Event('change'));
+      host.querySelector(`[data-arrange="${profile.id}"]`).click();   // close immediately
+      await sleep(500);
+      await check2.load();
+      const afterClose = (check2.get().kiosk || {}).layout;
+      check('closing the arranger lands a change still in flight',
+        !!afterClose && afterClose.slots[1] === added.clock.id, JSON.stringify(afterClose));
+      check2.destroy();
+      scr.destroy && scr.destroy();
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
