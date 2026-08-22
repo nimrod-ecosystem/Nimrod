@@ -22,12 +22,16 @@ which backend they got — so if these contracts drift, this is where it shows.<
 <div id="host"></div>
 
 <script type="module">
-import { createLocalBackend, seedStarterScreen, hasLocalData, clearLocalData } from '../local_store.js';
+import {
+  createLocalBackend, createLocalMediaSources, seedStarterScreen, hasLocalData, clearLocalData,
+} from '../local_store.js';
 import { mountScreens } from '../home.js';
 import { listManifests } from '../module.js';
 import '../modules/clock.js';
 import '../modules/photos.js';
 import '../modules/quests.js';
+import '../modules/wordforge.js';
+import '../modules/youtube.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -150,13 +154,52 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       check('a starter screen is created', !!seeded);
       const full = await profiles.get(seeded.id);
       check('with something worth looking at on it',
-        full.modules.map((m) => m.type).sort().join() === 'clock,photos',
-        JSON.stringify(full.modules));
+        full.modules.map((m) => m.type).sort().join() === 'clock,photos,wordforge,youtube',
+        JSON.stringify(full.modules.map((m) => m.type)));
 
       const again = await seedStarterScreen(profiles);
       check('a returning visitor is NOT seeded a second time', again === null);
       check('and their own data is what persists', (await profiles.list()).length === 1);
       check('hasLocalData() reports it', await hasLocalData());
+    }
+
+    // ------------------------------------------- the starter screen's arrangement
+    // Clockwise from the top left: photos, word game, clock, YouTube. 'quad' is a plain
+    // 2x2 filled in DOM order (TL, TR, BL, BR), so clockwise is slots 0,1,3,2 — the easy
+    // mistake here is writing 0,1,2,3 and quietly mirroring the bottom row.
+    section('the starter screen is arranged, not just filled');
+    {
+      await clearLocalData();
+      const backend = createLocalBackend();
+      const p = await seedStarterScreen(backend.profiles, backend.makeSettings);
+      const mods = (await backend.profiles.get(p.id)).modules;
+      const typeOf = (id) => (mods.find((m) => m.id === id) || {}).type;
+
+      const st = backend.makeSettings(p.id);
+      await st.load();
+      const layout = (st.get().kiosk || {}).layout;
+      check('it comes arranged four-up', layout && layout.preset === 'quad', JSON.stringify(layout));
+      check('top left is photos', typeOf(layout.slots[0]) === 'photos', typeOf(layout.slots[0]));
+      check('top right is the word game', typeOf(layout.slots[1]) === 'wordforge', typeOf(layout.slots[1]));
+      check('bottom right is the clock', typeOf(layout.slots[3]) === 'clock', typeOf(layout.slots[3]));
+      check('bottom left is YouTube', typeOf(layout.slots[2]) === 'youtube', typeOf(layout.slots[2]));
+      check('every slot is filled', layout.slots.every(Boolean));
+      st.destroy();
+    }
+
+    // ------------------------------------------------------- media, signed out
+    section('photos have something to show a stranger');
+    {
+      const media = createLocalMediaSources();
+      const list = await media.list();
+      check('exactly one source, so photos.js auto-selects it', list.length === 1, JSON.stringify(list));
+      check('and it is the bundled samples, not a request for their folder',
+        list[0].id === 'demo-samples' && /demo-media$/.test(list[0].base_url), JSON.stringify(list[0]));
+      check('it is an ordinary agent source, so the normal resolver handles it',
+        list[0].kind === 'agent');
+      let refused = false;
+      try { await media.add({ label: 'x', base_url: 'http://x' }); } catch { refused = true; }
+      check('saving a source to an account is refused while signed out', refused);
     }
 
     // ------------------------------------- the real panel, on the local backend

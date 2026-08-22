@@ -52,7 +52,12 @@ const wrap = (i, n) => ((i % n) + n) % n;
 
 // Mount a kiosk for one profile into `root`. Returns a small control handle
 // (also used by the dev test). `profiles`/`bus` are injectable.
-export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) {
+// `makeState` / `makeEvents` / `sources` are injectable for the same reason home.html needs
+// them: signed out, there is no server to hold any of this, and the kiosk has to run anyway.
+// Default to the server-backed handles so every existing caller is unchanged.
+export async function mountKiosk(root, {
+  user, profileId, profiles, bus, makeState = null, makeEvents = null, sources = null,
+} = {}) {
   bus = bus || createBus();
   profiles = profiles || createProfilesClient({ user });
 
@@ -80,16 +85,24 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
 
   const ck = (key) => `${user}:${profileId}:${key}`;   // resilience cache key per handle
 
+  const stateFor = (key, opts = {}) => (makeState
+    ? makeState(key, opts, profileId)
+    : createState({ url: profiles.stateURL(profileId, key), user, cacheKey: ck(key), ...opts }));
+  const eventsFor = (key, opts = {}) => (makeEvents
+    ? makeEvents(key, opts, profileId)
+    : createEvents({ url: profiles.eventsURL(profileId, key), user, ...opts }));
+
   const childCtx = (mod) => ({
     bus, user, profileId,
     rootBus: bus, instanceId: mod.id,
-    makeState: (key, opts) => createState({ url: profiles.stateURL(profileId, key), user, cacheKey: ck(key), ...opts }),
-    makeEvents: (key, opts) => createEvents({ url: profiles.eventsURL(profileId, key), user, ...opts }),
+    ...(sources ? { sources } : {}),
+    makeState: (key, opts) => stateFor(key, opts),
+    makeEvents: (key, opts) => eventsFor(key, opts),
   });
 
   async function mountInstance(mod, host) {
-    const state = createState({ url: profiles.stateURL(profileId, mod.id), user, cacheKey: ck(mod.id) });
-    const events = createEvents({ url: profiles.eventsURL(profileId, mod.id), user });
+    const state = stateFor(mod.id);
+    const events = eventsFor(mod.id);
     const instance = mountModule(mod.type, { mount: host, state, events, ...childCtx(mod) });
     await state.load().catch(() => {});
     await events.load().catch(() => {});
@@ -104,7 +117,7 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
   }
 
   // ---- per-profile settings: theme + the kiosk LAYOUT (data-driven) --------
-  const settings = createState({ url: profiles.stateURL(profileId, 'settings'), user, cacheKey: ck('settings') });
+  const settings = stateFor('settings');
   function applyLayout(s) {
     const k = (s && s.kiosk) || {};
     const m = { ...KDEF.mirror, ...(k.mirror || {}) };
@@ -127,7 +140,9 @@ export async function mountKiosk(root, { user, profileId, profiles, bus } = {}) 
 
   // ---- partition modules: camera -> mirror, clock -> clock HUD, rest -> stage
   // cached so a server blip at boot still yields the last-known dashboard layout.
-  const profile = await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
+  const profile = makeState
+    ? await profiles.get(profileId)        // local backend: it IS the source of truth
+    : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
 
   // A LAYOUT, if the composer saved one. It wins for whatever it places: a module sitting
   // in a slot is rendered there, so camera/clock only fall back to being HUD overlays when

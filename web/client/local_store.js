@@ -22,6 +22,8 @@
 //     network here, and a lost write because someone closed the tab 300ms early would be
 //     indistinguishable from the bug we just spent a night removing.
 
+import { listFolderSources, removeFolderSource } from './folder_source.js';
+
 const DB_NAME = 'nimrod-local';
 const DB_VERSION = 1;
 const PROFILES = 'profiles';
@@ -256,14 +258,54 @@ export async function hasLocalData() {
   catch { return false; }
 }
 
-// A first visit should not land on an empty page — someone deciding whether this is worth
+// Media, signed out. The bundled samples are served through the ordinary media-agent
+// listing contract (`demo-media/list`), so photos.js goes down the SAME resolver it uses for
+// real media — no special case to drift.
+//
+// It returns the samples ONLY until the visitor connects a folder of their own, then only
+// their folders. That is deliberate: photos.js auto-selects when there is exactly one source,
+// so keeping the count at one means someone who picks their own photos immediately SEES their
+// own photos, instead of having to find a source picker that does not exist yet.
+export function createLocalMediaSources({ baseUrl = null } = {}) {
+  const samples = () => ({
+    id: 'demo-samples',
+    label: 'Sample photos',
+    kind: 'agent',
+    base_url: baseUrl || new URL('demo-media', location.href).href.replace(/\/+$/, ''),
+  });
+  return {
+    async list() {
+      const own = await listFolderSources();
+      return own.length ? own : [samples()];
+    },
+    async add() { throw new Error('sign in to save a media source to your account'); },
+    async remove(id) { return removeFolderSource(id); },
+  };
+}
+
+// The four-up starter screen, clockwise from the top left: photos, the word game, the clock,
+// and YouTube. A first visit should not land on an empty page — someone deciding whether this is worth
 // their time needs to see a screen, not a form. One starter screen, with the two modules
 // that show what this is for.
-export async function seedStarterScreen(profilesClient = createLocalProfilesClient()) {
+export async function seedStarterScreen(profilesClient = createLocalProfilesClient(),
+                                       makeSettings = (pid) => createLocalState(pid, 'settings')) {
   if (await hasLocalData()) return null;
   const p = await profilesClient.create('My screen');
-  await profilesClient.addModule(p.id, 'photos');
-  await profilesClient.addModule(p.id, 'clock');
+
+  // 'quad' is a plain 2x2 filled in DOM order, so its slots are TL, TR, BL, BR. Clockwise
+  // from the top left is therefore slots 0, 1, 3, 2 — not 0,1,2,3.
+  const photos = await profilesClient.addModule(p.id, 'photos');
+  const word = await profilesClient.addModule(p.id, 'wordforge');
+  const clock = await profilesClient.addModule(p.id, 'clock');
+  const tube = await profilesClient.addModule(p.id, 'youtube');
+
+  const settings = makeSettings(p.id);
+  await settings.load();
+  settings.set({
+    kiosk: { layout: { preset: 'quad', slots: [photos.id, word.id, tube.id, clock.id] } },
+  });
+  await settings.flush();
+  settings.destroy();
   return p;
 }
 
