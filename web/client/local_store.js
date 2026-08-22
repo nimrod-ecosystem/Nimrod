@@ -283,12 +283,22 @@ export function createLocalMediaSources({ baseUrl = null } = {}) {
   };
 }
 
+// Time-of-day playlists for the starter screen. `start` is the hour a daypart begins; it
+// runs until the next one, and the last wraps past midnight.
+export const STARTER_SCHEDULE = [
+  { name: 'Morning',    start: 7,  playlistId: 'PLHUSsSIwni6Y' },
+  { name: 'Daytime',    start: 11, playlistId: 'PLR0lG5yo6NRE' },
+  { name: 'Primetime',  start: 18, playlistId: 'PLapSyaBgXvpk' },
+  { name: 'Sleepytime', start: 23, playlistId: 'PLEWwXAKdpWIw' },
+];
+
 // The four-up starter screen, clockwise from the top left: photos, the word game, the clock,
 // and YouTube. A first visit should not land on an empty page — someone deciding whether this is worth
 // their time needs to see a screen, not a form. One starter screen, with the two modules
 // that show what this is for.
 export async function seedStarterScreen(profilesClient = createLocalProfilesClient(),
-                                       makeSettings = (pid) => createLocalState(pid, 'settings')) {
+                                       makeSettings = (pid) => createLocalState(pid, 'settings'),
+                                       makeState = (pid, key) => createLocalState(pid, key)) {
   if (await hasLocalData()) return null;
   const p = await profilesClient.create('My screen');
 
@@ -306,6 +316,16 @@ export async function seedStarterScreen(profilesClient = createLocalProfilesClie
   });
   await settings.flush();
   settings.destroy();
+
+  // Give YouTube something to play. These are curated, general-audience playlists — calm
+  // in the evening, livelier in the day — so a visitor sees the time-of-day scheduler
+  // actually doing something rather than an empty panel telling them to add videos.
+  const tubeState = makeState(p.id, tube.id);
+  await tubeState.load();
+  tubeState.set({ schedule: STARTER_SCHEDULE });
+  await tubeState.flush();
+  tubeState.destroy();
+
   return p;
 }
 

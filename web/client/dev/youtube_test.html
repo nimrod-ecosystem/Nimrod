@@ -31,7 +31,7 @@ import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
-import { parseVideoId } from '../modules/youtube.js';   // registers 'youtube' + exports the parser
+import { parseVideoId, parsePlaylistId, pickDaypart } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'youtube-test-user';
@@ -52,19 +52,26 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function makeStubPlayer() {
   let handlers = {};
   const loaded = [];
-  return {
+  const out = {
     loaded,
     current: () => loaded[loaded.length - 1] ?? null,
     fireEnded: () => handlers.onEnded?.(),
+    cued: [],
+    // stand in for YouTube handing back a cued playlist's video ids
+    deliverList: (ids) => handlers.onPlaylist?.(ids),
     factory(mountEl, h) {
       handlers = h || {};
-      return {
+      const self = {
         load: (id) => { loaded.push(id); },
+        cueList: (listId) => { self._cued.push(listId); },
         stop: () => {},
         destroy: () => {},
       };
+      self._cued = out.cued;
+      return self;
     },
   };
+  return out;
 }
 
 // 8 videos across 3 channels (A:3, B:3, C:2) — enough to exercise anti-repeat,
@@ -89,6 +96,40 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
     check('parseVideoId: youtu.be url', parseVideoId('https://youtu.be/dQw4w9WgXcQ') === 'dQw4w9WgXcQ');
     check('parseVideoId: /shorts/ url', parseVideoId('https://www.youtube.com/shorts/dQw4w9WgXcQ') === 'dQw4w9WgXcQ');
     check('parseVideoId: rejects junk', parseVideoId('not a video') === null);
+
+    // ---------------- playlist ids -------------------------------------
+    check('parsePlaylistId: full playlist url',
+      parsePlaylistId('https://www.youtube.com/playlist?list=PLR0lG5yo6NRE') === 'PLR0lG5yo6NRE');
+    check('parsePlaylistId: list= inside a watch url',
+      parsePlaylistId('https://youtube.com/watch?v=abc&list=PLR0lG5yo6NRE') === 'PLR0lG5yo6NRE');
+    check('parsePlaylistId: a bare id', parsePlaylistId('PLR0lG5yo6NRE') === 'PLR0lG5yo6NRE');
+    // The one that actually bites: a VIDEO id pasted into the playlist box.
+    check('parsePlaylistId: refuses a video id', parsePlaylistId('dQw4w9WgXcQ') === '');
+    check('parsePlaylistId: refuses junk', parsePlaylistId('nope') === '');
+
+    // ---------------- the daypart clock --------------------------------
+    const SCHED = [
+      { name: 'Morning',    start: 7,  playlistId: 'PLmorning' },
+      { name: 'Daytime',    start: 11, playlistId: 'PLday' },
+      { name: 'Primetime',  start: 18, playlistId: 'PLprime' },
+      { name: 'Sleepytime', start: 23, playlistId: 'PLsleep' },
+    ];
+    const at = (h, m = 0) => new Date(2026, 7, 20, h, m, 0);
+    check('daypart: mid-morning', pickDaypart(SCHED, at(9)).name === 'Morning');
+    check('daypart: exactly on a boundary belongs to the new one',
+      pickDaypart(SCHED, at(11)).name === 'Daytime');
+    check('daypart: a minute before a boundary is still the old one',
+      pickDaypart(SCHED, at(10, 59)).name === 'Morning');
+    check('daypart: evening', pickDaypart(SCHED, at(19)).name === 'Primetime');
+    // THE WRAP — 2am is before every start hour, and belongs to the LAST daypart.
+    check('daypart: after midnight wraps to the last daypart',
+      pickDaypart(SCHED, at(2)).name === 'Sleepytime');
+    check('daypart: 23:30 is sleepytime too', pickDaypart(SCHED, at(23, 30)).name === 'Sleepytime');
+    check('daypart: an unsorted schedule still works',
+      pickDaypart([SCHED[2], SCHED[0], SCHED[3], SCHED[1]], at(9)).name === 'Morning');
+    check('daypart: entries without a playlist are ignored',
+      pickDaypart([{ name: 'Empty', start: 8 }, SCHED[0]], at(9)).name === 'Morning');
+    check('daypart: no schedule at all is null', pickDaypart([], at(9)) === null);
 
     const profiles = createProfilesClient({ user: USER });
     const profile = await profiles.create('TEST-youtube');
@@ -167,6 +208,49 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
 
     instance.destroy();
     check('destroy() cleans up without error', true);
+
+    // ============ a scheduled playlist drives the pool ============
+    // The point of the port: a playlist says WHAT is available; the weighted picker still
+    // decides what plays. So cueing must fill the pool, not hand YouTube the running order.
+    {
+      const p2 = await profiles.create('TEST-youtube-sched');
+      const m2 = await profiles.addModule(p2.id, 'youtube');
+      const st2 = createState({ url: profiles.stateURL(p2.id, m2.id), user: USER });
+      const ev2 = createEvents({ url: profiles.eventsURL(p2.id, m2.id), user: USER });
+      await st2.load(); await ev2.load();
+      st2.set({ schedule: SCHED, autoAdvance: true });
+      await st2.flush();
+
+      const stub2 = makeStubPlayer();
+      const host2 = document.createElement('div');
+      document.body.append(host2);
+      const inst2 = mountModule('youtube', {
+        mount: host2, bus: createBus(), state: st2, events: ev2, user: USER, profileId: p2.id,
+        playerFactory: stub2.factory,
+        nowDate: () => at(9),                 // mid-morning
+        scheduleTickMs: 5,
+      });
+      inst2.init();
+      await sleep(80);
+
+      check('the clock picks the playlist to cue', stub2.cued[0] === 'PLmorning', JSON.stringify(stub2.cued));
+      check('nothing plays until the playlist reports its videos', stub2.current() === null);
+      check('and it says what it is waiting for', /Loading Morning/.test(host2.textContent),
+        host2.textContent.slice(0, 80));
+
+      stub2.deliverList(['v1', 'v2', 'v3']);
+      await sleep(80);
+      check('once the ids arrive a video starts', ['v1', 'v2', 'v3'].includes(stub2.current()),
+        String(stub2.current()));
+      check('the videos came from the playlist, not the running order YouTube would use',
+        stub2.loaded.length === 1);
+      check('the panel names the daypart that is on', /playing Morning now/.test(host2.textContent),
+        host2.textContent.slice(0, 160));
+
+      inst2.destroy();
+      st2.destroy(); ev2.destroy();
+      host2.remove();
+    }
 
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));

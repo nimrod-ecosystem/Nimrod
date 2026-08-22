@@ -31,7 +31,15 @@ import { pick, statsFromEvents } from '../rng.js';
 // `stallMs` is the STUCK-LOADING WATCHDOG (see the header). 20s is long enough that a
 // slow-but-working load on facility wifi isn't cut off, short enough that nobody sits in
 // front of a frozen screen for long.
-const DEFAULTS = { playlist: [], autoAdvance: true, directed: false, stallMs: 20000 };
+const DEFAULTS = {
+  playlist: [],            // explicit video refs {id, channel, title, durationSec}
+  playlistId: '',          // a YouTube playlist to draw from instead of / as well as the above
+  schedule: [],            // [{name, start, playlistId}] — time-of-day playlists
+  graceMin: 10,            // a nearly-finished video may run this long past a daypart boundary
+  autoAdvance: true,
+  directed: false,
+  stallMs: 20000,
+};
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 
 // Parse a YouTube video id from a URL or a bare id. Accepts youtu.be/<id>,
@@ -58,6 +66,33 @@ export function parseVideoId(input) {
 // via the ENDED state; a load before "ready" is queued. Kept tiny + isolated so
 // the network/DOM dependency lives here and nowhere in the module core.
 let _apiPromise = null;
+// The "list=" value of a playlist URL, or a bare id. Playlist ids are not video ids and
+// the two get pasted into the same box constantly, so this is deliberately strict about the
+// PL/UU/LL/FL/RD prefixes rather than accepting anything that looks id-shaped.
+export function parsePlaylistId(input) {
+  const raw = String(input || '').trim();
+  if (!raw) return '';
+  const m = raw.match(/[?&]list=([A-Za-z0-9_-]+)/);
+  const id = m ? m[1] : raw;
+  return /^(PL|UU|LL|FL|RD|OL)[A-Za-z0-9_-]+$/.test(id) ? id : '';
+}
+
+// Which daypart covers `date`? The schedule is a set of start HOURS; each runs until the
+// next one begins, and the last WRAPS PAST MIDNIGHT into the first. That wrap is the whole
+// reason this is a separate, exported function: "before the first start belongs to the last
+// daypart" is the case that gets written wrong and is invisible until 2am.
+export function pickDaypart(schedule, date = new Date()) {
+  const parts = (Array.isArray(schedule) ? schedule : [])
+    .filter((d) => d && d.playlistId && Number.isFinite(Number(d.start)))
+    .map((d) => ({ ...d, start: Number(d.start) }))
+    .sort((a, b) => a.start - b.start);
+  if (!parts.length) return null;
+  const h = date.getHours() + date.getMinutes() / 60;
+  let cur = parts[parts.length - 1];           // the wrap: earlier than the first start
+  for (const d of parts) if (h >= d.start) cur = d;
+  return cur;
+}
+
 function loadIframeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
   if (_apiPromise) return _apiPromise;
@@ -79,8 +114,8 @@ function loadIframeApi() {
 // video that never starts fires neither onEnded nor onError — a hung network request is not
 // a player error. That silence is what left Christine's screen frozen on a loading spinner
 // with the director politely waiting for a `segment/done` that was never coming.
-function createYtPlayer(mountEl, { onEnded, onError, onPlaying }) {
-  let player = null, ready = false, pending = null, destroyed = false;
+function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onPlaylist }) {
+  let player = null, ready = false, pending = null, pendingList = null, destroyed = false;
   const host = document.createElement('div');
   mountEl.append(host);
 
@@ -91,10 +126,20 @@ function createYtPlayer(mountEl, { onEnded, onError, onPlaying }) {
       width: '100%', height: '100%',
       playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3 },
       events: {
-        onReady: () => { ready = true; if (pending) { player.loadVideoById(pending); pending = null; } },
+        onReady: () => {
+          ready = true;
+          if (pendingList) { player.cuePlaylist({ list: pendingList, listType: 'playlist' }); pendingList = null; }
+          else if (pending) { player.loadVideoById(pending); pending = null; }
+        },
         onStateChange: (e) => {
           if (e.data === YT.PlayerState.ENDED) onEnded?.();
           else if (e.data === YT.PlayerState.PLAYING) onPlaying?.();   // disarms the watchdog
+          // CUED is how a cued PLAYLIST announces itself: getPlaylist() is empty until now.
+          // We only ever want the ids — the weighted picker chooses what actually plays, so
+          // the playlist is a SOURCE of videos, not the running order.
+          else if (e.data === YT.PlayerState.CUED) {
+            try { const l = player.getPlaylist?.(); if (l && l.length) onPlaylist?.(l); } catch { /* not a list */ }
+          }
         },
         onError: (e) => onError?.(e?.data),
       },
@@ -102,7 +147,12 @@ function createYtPlayer(mountEl, { onEnded, onError, onPlaying }) {
   }).catch((err) => onError?.(err));
 
   return {
-    load(id) { if (destroyed) return; if (ready && player) player.loadVideoById(id); else pending = id; },
+    load(id) { if (destroyed) return; if (ready && player) player.loadVideoById(id); else { pending = id; pendingList = null; } },
+    cueList(listId) {
+      if (destroyed) return;
+      if (ready && player) player.cuePlaylist({ list: listId, listType: 'playlist' });
+      else { pendingList = listId; pending = null; }
+    },
     stop() { pending = null; try { player?.stopVideo?.(); } catch { /* not ready */ } },
     destroy() { destroyed = true; pending = null; try { player?.destroy?.(); } catch { /* noop */ } host.remove(); },
   };
@@ -121,6 +171,19 @@ registerModule(
     let history = [], histPos = -1; // for prev()
     let currentId = null;
     let player = null;
+
+    // ---- time-of-day playlists ------------------------------------------
+    // `fromList` holds the video ids a cued playlist reported. It is kept separate from
+    // cfg.playlist so the two can coexist: a screen can have a curated playlist for the
+    // hour AND a handful of pinned videos, and editing one never clobbers the other.
+    let fromList = [];
+    let activeList = null;       // the playlistId currently loaded
+    let activePart = null;       // the daypart it came from, if any
+    let pendingPart = null;      // a boundary crossed mid-video, waiting for it to finish
+    let graceTimer = null;
+    let tickTimer = null;
+    const nowDate = ctx.nowDate || (() => new Date());
+    const scheduleTickMs = ctx.scheduleTickMs || 60000;
 
     // ---- the stuck-loading watchdog (shared primitive, see ../watchdog.js) ----
     // Armed when a video is asked for, satisfied the moment it actually plays. A stall
@@ -158,7 +221,12 @@ registerModule(
     // defaults to the video id (so a video with no channel still counts as its own
     // channel — diversity degrades gracefully, never divides by an empty axis).
     function indexPlaylist() {
-      const list = Array.isArray(cfg.playlist) ? cfg.playlist : [];
+      const pinned = Array.isArray(cfg.playlist) ? cfg.playlist : [];
+      // Ids from a cued playlist carry no title/channel/duration — YouTube does not hand
+      // them over without the Data API. They degrade the same way a video added with no
+      // channel does: their own id becomes their channel, duration 0 means the
+      // duration weighting simply does not apply to them.
+      const list = pinned.concat(fromList.map((id) => ({ id })));
       const seen = new Set();
       const clean = [];
       for (const v of list) {
@@ -205,6 +273,16 @@ registerModule(
         .filter((e) => e.kind === 'play')
         .map((e) => ({ id: e.data?.id, at: e.data?.at || Date.parse(e.created_at) || 0 }));
       return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
+    }
+
+    function renderSchedule() {
+      const el = mount.querySelector('[data-sched]');
+      if (!el) return;
+      const parts = Array.isArray(cfg.schedule) ? cfg.schedule.filter((d) => d && d.playlistId) : [];
+      if (!parts.length) { el.textContent = ''; return; }
+      const on = pickDaypart(cfg.schedule, nowDate());
+      el.textContent = `Playlists by time of day: ${parts.map((d) => d.name).join(' · ')}`
+        + (on ? ` — playing ${on.name} now` : '');
     }
 
     function updateLabel() {
@@ -262,12 +340,80 @@ registerModule(
       return true;
     }
 
+    // One phrasing for "waiting on a playlist", used by both the cue and the empty-pool
+    // branch below — they fire in that order, so two different strings meant the specific
+    // one was immediately overwritten by the generic one.
+    function loadingMessage() {
+      const part = pickDaypart(cfg.schedule, nowDate());
+      return part ? `Loading ${part.name}…` : 'Loading playlist…';
+    }
+
+    // Load whichever playlist the clock says, if any. Re-cueing the SAME list is skipped —
+    // it would restart the pool and interrupt whatever is playing for no reason.
+    function syncPlaylistSource() {
+      const part = pickDaypart(cfg.schedule, nowDate());
+      const wanted = (part && part.playlistId) || cfg.playlistId || '';
+      if (!wanted) { activeList = null; activePart = null; return; }
+      if (wanted === activeList) { activePart = part; return; }
+      activeList = wanted;
+      activePart = part;
+      fromList = [];
+      if (player && player.cueList) {
+        setStatus(loadingMessage());
+        player.cueList(wanted);
+      }
+    }
+
+    // A daypart boundary should not cut a video off mid-sentence. Wait for it to end —
+    // but only up to graceMin, so a very long video cannot hold the screen in the wrong
+    // daypart all evening.
+    function checkSchedule() {
+      const part = pickDaypart(cfg.schedule, nowDate());
+      if (!part || !activePart || part.name === activePart.name) return;
+      if (!currentId) { syncPlaylistSource(); return; }
+      if (pendingPart && pendingPart.name === part.name) return;
+      pendingPart = part;
+      clearTimer(graceTimer);
+      graceTimer = setTimer(() => { pendingPart = null; syncPlaylistSource(); },
+                            Math.max(0, Number(cfg.graceMin) || 0) * 60000);
+    }
+
+    function applyPendingPart() {
+      if (!pendingPart) return false;
+      pendingPart = null;
+      clearTimer(graceTimer); graceTimer = null;
+      syncPlaylistSource();
+      return true;
+    }
+
+    // Watch the clock for a daypart boundary — but ONLY when there is a schedule to watch.
+    // Self-rescheduling rather than an interval so it uses the same injected timer seam the
+    // watchdog does. A minute is plenty: boundaries land on the hour.
+    function syncScheduleWatch() {
+      const wanted = !!pickDaypart(cfg.schedule, nowDate());
+      if (wanted && !tickTimer) {
+        const tick = () => {
+          try { checkSchedule(); } catch (e) { console.error('youtube: schedule', e); }
+          tickTimer = setTimer(tick, scheduleTickMs);
+        };
+        tickTimer = setTimer(tick, scheduleTickMs);
+      } else if (!wanted && tickTimer) {
+        clearTimer(tickTimer); tickTimer = null;
+      }
+    }
+
     function applyConfig() {
+      syncPlaylistSource();
+      syncScheduleWatch();
       indexPlaylist();
       renderPlaylist();
+      renderSchedule();
       const sync = mount.querySelector('[data-opt="autoAdvance"]');
       if (sync) sync.checked = !!cfg.autoAdvance;
-      if (!ids.length) { setStatus('No videos yet. Add one in settings.'); currentId = null; updateLabel(); return; }
+      if (!ids.length) {
+        setStatus(activeList ? loadingMessage() : 'No videos yet. Add one in settings.');
+        currentId = null; updateLabel(); return;
+      }
       setStatus(null);
       // start playing only if nothing is up yet (config re-fires on every settings edit).
       // A `directed` instance (driven by the content director) does NOT autostart — the
@@ -295,6 +441,11 @@ registerModule(
                 <input type="text" data-add-channel placeholder="channel (optional)">
                 <button data-add>Add</button>
               </div>
+              <div class="addrow">
+                <input type="text" data-list-url placeholder="playlist link or id (PL…)">
+                <button data-set-list>Use playlist</button>
+              </div>
+              <div class="yt-sched" data-sched></div>
               <div class="list" data-list></div>
             </div>
           </div>`;
@@ -328,7 +479,24 @@ registerModule(
         bus.subscribe('youtube/deactivate', () => clearStall());
 
         player = makePlayer(stage(), {
-          onEnded: () => { clearStall(); bus.publish('segment/done', { provider: 'youtube', reason: 'ended' }); if (cfg.autoAdvance) bus.publish('youtube/next'); },
+          // A cued playlist hands over its ids here. They join the pool and the weighted
+          // picker takes over — the playlist decides WHAT is available, never the order.
+          onPlaylist: (list) => {
+            fromList = Array.from(new Set(list || []));
+            indexPlaylist();
+            renderPlaylist();
+            if (!ids.length) return;
+            setStatus(null);
+            if (!cfg.directed) advance(); else updateLabel();
+          },
+          onEnded: () => {
+            clearStall();
+            // A daypart boundary crossed while this was playing: now is the moment to
+            // change over, not mid-video.
+            const switched = applyPendingPart();
+            bus.publish('segment/done', { provider: 'youtube', reason: 'ended' });
+            if (!switched && cfg.autoAdvance) bus.publish('youtube/next');
+          },
           // An explicit player/API error already ends the segment; just stop the watchdog
           // so it can't fire a second `segment/done` for the same video.
           onError: () => { clearStall(); bus.publish('segment/done', { provider: 'youtube', reason: 'error' }); if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next'); },
@@ -350,6 +518,13 @@ registerModule(
           const s = mount.querySelector('[data-settings]');
           s.hidden = !s.hidden;
         });
+        mount.querySelector('[data-set-list]').addEventListener('click', () => {
+          const el = mount.querySelector('[data-list-url]');
+          const id = parsePlaylistId(el.value);
+          if (!id) { setStatus('That is not a playlist link — a playlist URL has "list=PL…" in it.'); return; }
+          el.value = '';
+          state.set({ playlistId: id });
+        });
         mount.querySelector('[data-add]').addEventListener('click', () => addFromInput());
         mount.querySelector('[data-add-url]').addEventListener('keydown', (e) => { if (e.key === 'Enter') addFromInput(); });
         mount.querySelector('[data-opt="autoAdvance"]').addEventListener('change', (e) => {
@@ -366,10 +541,13 @@ registerModule(
           if (seedFromQuery()) return;   // set() re-enters this subscriber with the seeded list
           applyConfig();
         });
+
       },
       onResize() {},
       onHide() { clearStall(); state.flush(); },
       destroy() {
+        clearTimer(tickTimer); tickTimer = null;
+        clearTimer(graceTimer); graceTimer = null;
         clearStall(); try { player?.destroy(); } catch { /* noop */ } player = null; },
     };
   },
