@@ -42,9 +42,14 @@ export const TABS = [
 
 // The shell: sidebar + one mounted panel. `mountTab` is injectable so a test can drive
 // the navigation without the real panels.
+// `signedIn` decides the sidebar's way in/out. It defaults to "there is an email", which is
+// true for a Google session, but it is passed explicitly by home.html — a signed-in account
+// with no email on it would otherwise be offered a Sign IN link.
 export async function mountHome(root, { email = '', profiles, manifests = [], onOpen = null,
                                        makeSettings = null, makeState = null, makeEvents = null,
-                                       user = null, bus = null, mountTab = null } = {}) {
+                                       user = null, bus = null, mountTab = null,
+                                       signedIn = null } = {}) {
+  const isSignedIn = signedIn == null ? !!email : !!signedIn;
   let active = 'screens';
   let panel = null;
 
@@ -57,7 +62,9 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         </ul>
         <div class="s-foot">
           ${email ? `<div class="s-email">${esc(email)}</div>` : ''}
-          <a class="s-signout" href="/auth/logout">Sign out</a>
+          ${isSignedIn
+            ? '<a class="s-signout" href="/auth/logout">Sign out</a>'
+            : '<a class="s-signout" href="/auth/login">Sign in</a>'}
         </div>
       </nav>
       <main class="s-main" data-panel></main>

@@ -119,6 +119,9 @@
     cursor:pointer;padding:0 5px;border-radius:99px}
   .h-x:hover{color:var(--rosy-deep);background:rgba(0,0,0,.05)}
   .h-none,.h-hint{font-size:.8rem;color:var(--muted)}
+  .h-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;
+    padding:10px 18px;background:var(--cream-soft);border-bottom:1px solid var(--line);
+    font-size:.92rem}
   .h-add{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   /* the arranger, folded into the screen it arranges */
   .h-arrange{margin-top:12px;border-top:1px solid var(--line-soft);padding-top:10px}
@@ -139,6 +142,7 @@
 </style>
 </head>
 <body>
+<div id="banner"></div>
 <div id="root"><p class="h-loading" style="max-width:880px;margin:40px auto">Loading…</p></div>
 
 <script type="module">
@@ -146,6 +150,7 @@ import { createProfilesClient } from './profile.js';
 import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createBus } from './bus.js';
+import { createLocalBackend, seedStarterScreen } from './local_store.js';
 import { authHeaders } from './auth.js';
 import { listManifests } from './module.js';
 import { mountHome } from './home.js';
@@ -172,15 +177,27 @@ const root = document.getElementById('root');
 // profile can be recovered from the key when no explicit one is passed.
 const keyPid = (key) => String(key).split(':')[1] || '';
 
-// Signed in? A Google session cookie rides along automatically; a paired device key
-// works too. 401 means "not signed in" -> the landing page is where you belong.
+// Signed in? A Google session cookie rides along automatically; a paired device key works
+// too. 401 is NOT a dead end: the whole page runs against browser storage instead, so
+// someone can try the real thing before deciding to hand over an email address. Signing in
+// is then an upgrade — keep this, and use it on your other devices — rather than a gate.
+function localBanner() {
+  document.getElementById('banner').innerHTML = `
+    <div class="h-banner">
+      <span><b>You're not signed in.</b> Everything here is saved on this device only —
+        close the browser and it stays, but it won't follow you to another one.</span>
+      <a class="h-btn h-primary" href="/auth/login">Sign in to keep it</a>
+    </div>`;
+}
+
 (async () => {
-  let me;
+  let me = null;
+  let signedIn = false;
   try {
     const r = await fetch('/api/me', { headers: authHeaders(new URLSearchParams(location.search).get('user')) });
-    if (r.status === 401) { location.href = '/'; return; }
-    if (!r.ok) throw new Error(`/api/me -> ${r.status}`);
-    me = await r.json();
+    if (r.status === 401) { me = null; }
+    else if (!r.ok) throw new Error(`/api/me -> ${r.status}`);
+    else { me = await r.json(); signedIn = true; }
   } catch (e) {
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
       'Could not reach the server. It will retry when the connection returns.</p>';
@@ -190,23 +207,34 @@ const keyPid = (key) => String(key).split(':')[1] || '';
   }
 
   try {
-    const profiles = createProfilesClient({ user: me.user });
+    // One choice, here: after this line nothing below can tell which backend it got.
+    const backend = signedIn ? null : createLocalBackend();
+    if (!signedIn) { localBanner(); await seedStarterScreen(backend.profiles); }
+
+    const profiles = signedIn ? createProfilesClient({ user: me.user }) : backend.profiles;
     await mountHome(root, {
-      email: me.email || '',
+      email: signedIn ? (me.email || '') : '',
+      signedIn,
       profiles,
       manifests: listManifests(),
       // The composer edits each screen's `settings` blob — the same key the kiosk reads
       // its theme, voice and layout from.
-      makeSettings: (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: me.user }),
+      makeSettings: signedIn
+        ? (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: me.user })
+        : backend.makeSettings,
       // The Adulting tab mounts a real module, so it needs the same handle factories a
       // screen gives one. `forPid` lets a mounted module make sibling handles (its points
       // ledger) against the profile it was mounted for.
-      user: me.user,
+      user: signedIn ? me.user : null,
       bus: createBus(),
-      makeState: (key, opts, forPid) =>
-        createState({ url: profiles.stateURL(forPid || keyPid(key), key), user: me.user, ...opts }),
-      makeEvents: (key, opts, forPid) =>
-        createEvents({ url: profiles.eventsURL(forPid || keyPid(key), key), user: me.user, ...opts }),
+      makeState: signedIn
+        ? (key, opts, forPid) =>
+            createState({ url: profiles.stateURL(forPid || keyPid(key), key), user: me.user, ...opts })
+        : backend.makeState,
+      makeEvents: signedIn
+        ? (key, opts, forPid) =>
+            createEvents({ url: profiles.eventsURL(forPid || keyPid(key), key), user: me.user, ...opts })
+        : backend.makeEvents,
     });
   } catch (e) {
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
