@@ -252,6 +252,68 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       host2.remove();
     }
 
+    // ============ shuffle is on by default; order is opt-out ============
+    {
+      const p3 = await profiles.create('TEST-youtube-order');
+      const m3 = await profiles.addModule(p3.id, 'youtube');
+      const st3 = createState({ url: profiles.stateURL(p3.id, m3.id), user: USER });
+      const ev3 = createEvents({ url: profiles.eventsURL(p3.id, m3.id), user: USER });
+      await st3.load(); await ev3.load();
+      st3.set({ playlist: PLAYLIST, autoAdvance: false, shuffle: false });
+      await st3.flush();
+
+      const stub3 = makeStubPlayer();
+      const host3 = document.createElement('div');
+      document.body.append(host3);
+      const bus3 = createBus();
+      const inst3 = mountModule('youtube', {
+        mount: host3, bus: bus3, state: st3, events: ev3, user: USER, profileId: p3.id,
+        playerFactory: stub3.factory,
+      });
+      inst3.init();
+      await sleep(60);
+      // advance the same way the rest of this file does — the click goes out over the
+      // input bus, which is not wired up in a bare test host.
+      bus3.publish('youtube/next');
+      await sleep(30);
+      bus3.publish('youtube/next');
+      await sleep(30);
+
+      const order = PLAYLIST.map((v) => v.id);
+      const seen = stub3.loaded;
+      const startedAt = order.indexOf(seen[0]);
+      check('with shuffle off it walks the playlist in order',
+        seen[1] === order[(startedAt + 1) % order.length] &&
+        seen[2] === order[(startedAt + 2) % order.length],
+        JSON.stringify(seen.slice(0, 3)));
+
+      const shufBox = host3.querySelector('[data-opt="shuffle"]');
+      check('the panel shows shuffle is off', shufBox && shufBox.checked === false);
+      inst3.destroy(); st3.destroy(); ev3.destroy(); host3.remove();
+
+      // A screen that never mentions shuffle must still shuffle — that is the default the
+      // whole weighted picker depends on.
+      const p4 = await profiles.create('TEST-youtube-default');
+      const m4 = await profiles.addModule(p4.id, 'youtube');
+      const st4 = createState({ url: profiles.stateURL(p4.id, m4.id), user: USER });
+      const ev4 = createEvents({ url: profiles.eventsURL(p4.id, m4.id), user: USER });
+      await st4.load(); await ev4.load();
+      st4.set({ playlist: PLAYLIST });          // no `shuffle` key at all
+      await st4.flush();
+      const stub4 = makeStubPlayer();
+      const host4 = document.createElement('div');
+      document.body.append(host4);
+      const inst4 = mountModule('youtube', {
+        mount: host4, bus: createBus(), state: st4, events: ev4, user: USER, profileId: p4.id,
+        playerFactory: stub4.factory,
+      });
+      inst4.init();
+      await sleep(60);
+      const box4 = host4.querySelector('[data-opt="shuffle"]');
+      check('shuffle is ON when nothing says otherwise', box4 && box4.checked === true);
+      inst4.destroy(); st4.destroy(); ev4.destroy(); host4.remove();
+    }
+
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));
   }

@@ -36,6 +36,7 @@ const DEFAULTS = {
   playlistId: '',          // a YouTube playlist to draw from instead of / as well as the above
   schedule: [],            // [{name, start, playlistId}] — time-of-day playlists
   graceMin: 10,            // a nearly-finished video may run this long past a daypart boundary
+  shuffle: true,           // weighted-random pick (the default); off = straight playlist order
   autoAdvance: true,
   directed: false,
   stallMs: 20000,
@@ -260,6 +261,16 @@ registerModule(
 
     function advance() {
       if (!ids.length) return;
+      // Shuffle is the default and is the whole reason a playlist is treated as a POOL:
+      // the weighted picker spreads plays across channels, backs off things played
+      // recently, and stops one long video from dominating. Straight playlist order is
+      // opt-out, for the case where the order is the point — a lesson series, a story.
+      if (cfg.shuffle === false) {
+        const at = ids.indexOf(currentId);
+        const next = ids[(at + 1) % ids.length];
+        if (next) show(next, true);
+        return;
+      }
       const id = pick(ids, stats, { now: Date.now(), rand: Math.random, recent, channels, durations });
       if (id) show(id, true);
     }
@@ -410,6 +421,8 @@ registerModule(
       renderSchedule();
       const sync = mount.querySelector('[data-opt="autoAdvance"]');
       if (sync) sync.checked = !!cfg.autoAdvance;
+      const shuf = mount.querySelector('[data-opt="shuffle"]');
+      if (shuf) shuf.checked = cfg.shuffle !== false;
       if (!ids.length) {
         setStatus(activeList ? loadingMessage() : 'No videos yet. Add one in settings.');
         currentId = null; updateLabel(); return;
@@ -436,6 +449,7 @@ registerModule(
             <button class="gear" data-gear aria-label="youtube settings">⚙</button>
             <div class="settings" data-settings hidden>
               <label class="chk"><input type="checkbox" data-opt="autoAdvance"> auto-advance when a video ends</label>
+              <label class="chk"><input type="checkbox" data-opt="shuffle"> shuffle (off = play the playlist in order)</label>
               <div class="addrow">
                 <input type="text" data-add-url placeholder="YouTube link or id">
                 <input type="text" data-add-channel placeholder="channel (optional)">
@@ -529,6 +543,9 @@ registerModule(
         mount.querySelector('[data-add-url]').addEventListener('keydown', (e) => { if (e.key === 'Enter') addFromInput(); });
         mount.querySelector('[data-opt="autoAdvance"]').addEventListener('change', (e) => {
           state.set({ autoAdvance: e.target.checked });
+        });
+        mount.querySelector('[data-opt="shuffle"]').addEventListener('change', (e) => {
+          state.set({ shuffle: e.target.checked });
         });
 
         // play history -> picker stats
