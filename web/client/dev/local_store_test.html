@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>signed-out mode — local store test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff}
+</style>
+</head>
+<body>
+<h1>signed-out mode — local store test</h1>
+<p>Runs the REAL <code>mountScreens</code> against the browser-storage backend, plus the
+store contracts underneath it. The point of signed-out mode is that the pages cannot tell
+which backend they got — so if these contracts drift, this is where it shows.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createLocalBackend, seedStarterScreen, hasLocalData, clearLocalData } from '../local_store.js';
+import { mountScreens } from '../home.js';
+import { listManifests } from '../module.js';
+import '../modules/clock.js';
+import '../modules/photos.js';
+import '../modules/quests.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function fatal(what, err) {
+  failed++;
+  const d = document.createElement('div');
+  d.className = 'fail';
+  d.textContent = `FAIL  ${what}: ${(err && err.stack) || err}`;
+  out.append(d);
+  const s = document.getElementById('summary');
+  s.textContent = `${passed} passed, ${failed} failed (aborted)`; s.className = 'fail';
+}
+window.addEventListener('error', (e) => fatal('uncaught', e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => fatal('unhandled rejection', e.reason));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+(async () => {
+  try {
+    await clearLocalData();
+
+    // ------------------------------------------------------------ profiles
+    section('screens, with no account');
+    {
+      const { profiles } = createLocalBackend();
+      check('a fresh browser has nothing', (await profiles.list()).length === 0);
+
+      const a = await profiles.create('Bedside');
+      const b = await profiles.create('Kitchen');
+      check('creating returns the same shape the server returns',
+        !!a.id && a.name === 'Bedside' && !!a.created_at, JSON.stringify(a));
+      check('both are listed', (await profiles.list()).length === 2);
+
+      const m1 = await profiles.addModule(a.id, 'photos');
+      const m2 = await profiles.addModule(a.id, 'clock');
+      check('modules come back with an id and a position',
+        !!m1.id && m1.position === 0 && m2.position === 1, JSON.stringify([m1, m2]));
+
+      const full = await profiles.get(a.id);
+      check('get() returns the screen WITH its modules',
+        full.modules.length === 2 && full.modules[0].type === 'photos', JSON.stringify(full.modules));
+
+      await profiles.rename(a.id, 'Her screen');
+      check('renaming sticks', (await profiles.get(a.id)).name === 'Her screen');
+
+      await profiles.removeModule(a.id, m1.id);
+      const after = await profiles.get(a.id);
+      check('removing a module renumbers the rest',
+        after.modules.length === 1 && after.modules[0].position === 0, JSON.stringify(after.modules));
+
+      await profiles.remove(b.id);
+      check('deleting a screen removes it', (await profiles.list()).length === 1);
+    }
+
+    // ------------------------------------------------------------- state
+    section('settings survive a reload');
+    {
+      const { profiles, makeSettings } = createLocalBackend();
+      const [p] = await profiles.list();
+
+      const s1 = makeSettings(p.id);
+      await s1.load();
+      let seen = null;
+      s1.subscribe((v) => { seen = v; });
+      s1.set({ theme: 'calm', kiosk: { layout: { preset: 'quad', slots: ['a', null, null, null] } } });
+      check('subscribers hear the change immediately', seen && seen.theme === 'calm');
+      await s1.flush();
+
+      // a NEW handle, as a fresh page load would build
+      const s2 = makeSettings(p.id);
+      await s2.load();
+      check('a new page load reads it back',
+        s2.get().theme === 'calm' && s2.get().kiosk.layout.preset === 'quad', JSON.stringify(s2.get()));
+      check('set() MERGES rather than replacing, like the server client',
+        Object.keys(s2.get()).sort().join() === 'kiosk,theme', Object.keys(s2.get()).join());
+      check('version advances so getVersion() still answers', s2.getVersion() > 0);
+      s1.destroy(); s2.destroy();
+    }
+
+    // ------------------------------------------------------------ events
+    section('events are append-only, and outlive their module');
+    {
+      const { profiles, makeEvents } = createLocalBackend();
+      const [p] = await profiles.list();
+      const ev = makeEvents('gameplay', {}, p.id);
+      await ev.load();
+      await ev.append('trial', { correct: true });
+      await ev.append('trial', { correct: false });
+      check('appends land in order with the server payload shape',
+        ev.get().events.length === 2 && ev.get().total === 2 &&
+        ev.get().events[0].kind === 'trial' && !!ev.get().events[0].created_at,
+        JSON.stringify(ev.get()));
+
+      const ev2 = makeEvents('gameplay', {}, p.id);
+      await ev2.load();
+      check('they survive a reload', ev2.get().events.length === 2);
+
+      // the rule that matters: a score cannot be erased by deleting the screen
+      await profiles.remove(p.id);
+      const ev3 = makeEvents('gameplay', {}, p.id);
+      await ev3.load();
+      check('deleting the screen does NOT erase its events', ev3.get().events.length === 2,
+        JSON.stringify(ev3.get()));
+      ev.destroy(); ev2.destroy(); ev3.destroy();
+    }
+
+    // ------------------------------------------------------------- seeding
+    section('a first visit is not an empty page');
+    {
+      await clearLocalData();
+      const { profiles } = createLocalBackend();
+      const seeded = await seedStarterScreen(profiles);
+      check('a starter screen is created', !!seeded);
+      const full = await profiles.get(seeded.id);
+      check('with something worth looking at on it',
+        full.modules.map((m) => m.type).sort().join() === 'clock,photos',
+        JSON.stringify(full.modules));
+
+      const again = await seedStarterScreen(profiles);
+      check('a returning visitor is NOT seeded a second time', again === null);
+      check('and their own data is what persists', (await profiles.list()).length === 1);
+      check('hasLocalData() reports it', await hasLocalData());
+    }
+
+    // ------------------------------------- the real panel, on the local backend
+    // The whole promise of signed-out mode: the page cannot tell the difference.
+    section('the real Screens panel, with no account');
+    {
+      await clearLocalData();
+      const backend = createLocalBackend();
+      await seedStarterScreen(backend.profiles);
+
+      const host = document.getElementById('host');
+      const panel = await mountScreens(host, {
+        profiles: backend.profiles,
+        manifests: listManifests(),
+        makeSettings: backend.makeSettings,
+        onOpen: () => {},
+      });
+      await panel.refresh();
+      await sleep(60);
+
+      check('the seeded screen renders', /My screen/.test(host.textContent));
+      check('its modules are shown as chips', /Photos/.test(host.textContent) && /Clock/.test(host.textContent));
+
+      // create one the way a visitor would
+      host.querySelector('[data-name]').value = 'Made while signed out';
+      host.querySelector('[data-new]').dispatchEvent(new Event('submit', { cancelable: true }));
+      await sleep(200);
+      check('a visitor can make a screen with no account',
+        /Made while signed out/.test(host.textContent));
+      check('and it is really stored', (await backend.profiles.list()).length === 2);
+
+      // arrange it — the inline arranger must autosave through the local backend too
+      const list = await backend.profiles.list();
+      const seededId = list.find((p) => p.name === 'My screen').id;
+      const arrangeBtn = host.querySelector(`[data-arrange="${seededId}"]`);
+      check('an arranger is offered for a screen with modules', !!arrangeBtn);
+      arrangeBtn.click();
+      await sleep(400);
+      const body = host.querySelector(`[data-arrange-body="${seededId}"]`);
+      body.querySelector('[data-preset="side"]').click();
+      await sleep(60);
+      const mods = (await backend.profiles.get(seededId)).modules;
+      const sel = body.querySelector('[data-assign="0"]');
+      sel.value = mods[0].id;
+      sel.dispatchEvent(new Event('change'));
+      await sleep(900);                         // past the autosave debounce
+
+      const readBack = backend.makeSettings(seededId);
+      await readBack.load();
+      const layout = (readBack.get().kiosk || {}).layout;
+      check('arranging saves itself with no account and no save button',
+        !!layout && layout.preset === 'side' && layout.slots[0] === mods[0].id,
+        JSON.stringify(layout));
+      readBack.destroy();
+      panel.destroy && panel.destroy();
+    }
+
+    await clearLocalData();
+    const s = document.getElementById('summary');
+    s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    s.className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    fatal('unexpected error', err);
+  }
+})();
+</script>
+</body>
+</html>
