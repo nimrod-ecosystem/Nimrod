@@ -80,6 +80,9 @@ import { createProfilesClient } from './profile.js';
 import { cachedFetch } from './cache.js';
 import { setDeviceKey, authHeaders } from './auth.js';
 import { mountKiosk } from './kiosk.js';
+import {
+  createLocalBackend, createLocalMediaSources, seedStarterScreen,
+} from './local_store.js';
 
 const params = new URLSearchParams(location.search);
 // one-time device-key pairing (unattended-kiosk fallback): launch once with
@@ -135,9 +138,42 @@ async function ensureProfile(profiles, user) {
   return list[0].id;
 }
 
+// Signed out, the kiosk runs against browser storage instead of refusing to open. This is
+// what makes "try it" the real product rather than a demo of it: the screen a stranger sees
+// here is the same screen, mounting the same modules, and the only difference is where its
+// handful of bytes are kept. Signing in becomes an upgrade, not a turnstile.
+async function bootLocal() {
+  const backend = createLocalBackend();
+  await seedStarterScreen(backend.profiles, backend.makeSettings);
+  const list = await backend.profiles.list();
+  const wanted = wantProfile && list.find((p) => p.id === wantProfile);
+  const profileId = (wanted || list[0]).id;
+  await mountKiosk(root, {
+    user: null,
+    profileId,
+    profiles: backend.profiles,
+    makeState: backend.makeState,
+    makeEvents: backend.makeEvents,
+    // Photos needs SOMETHING to show a stranger, and asking for their folder before they
+    // trust the site is a nonstarter — so the bundled samples stand in until they connect
+    // a folder of their own.
+    sources: createLocalMediaSources(),
+  });
+  boot.remove();
+}
+
 (async () => {
   const who = await whoami();
-  if (who.state === 'anon') { showLogin(params.get('login') === 'failed'); return; }
+  // A FAILED sign-in still gets the login screen — someone who just tried to sign in needs
+  // to be told it did not work, not quietly handed a local screen instead.
+  if (who.state === 'anon' && params.get('login') === 'failed') { showLogin(true); return; }
+  if (who.state === 'anon') {
+    try { await bootLocal(); } catch (e) {
+      console.error('local kiosk boot failed', e);
+      showLogin(false);
+    }
+    return;
+  }
   if (who.state === 'error') { boot.textContent = 'Connecting…'; setTimeout(() => location.reload(), 6000); return; }
   try {
     const profiles = createProfilesClient({ user: who.user });
