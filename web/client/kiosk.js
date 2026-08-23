@@ -186,7 +186,8 @@ export async function mountKiosk(root, {
     stageEl.setAttribute('style', gridStyle(layout.preset));
     for (let i = 0; i < layout.slots.length; i++) {
       const cell = document.createElement('div');
-      cell.className = 'k-cell';
+      // `mod-box` lets the module size itself against this cell (see modules.css).
+      cell.className = 'k-cell mod-box';
       cell.setAttribute('style', slotStyle(layout.preset, i));
       stageEl.append(cell);
       const id = layout.slots[i];
