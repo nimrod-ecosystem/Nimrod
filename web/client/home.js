@@ -38,6 +38,7 @@ export const TABS = [
   { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
   { id: 'inputs',   label: 'Inputs',   hint: 'bind switches, controllers and keys to actions' },
+  { id: 'output',   label: 'Output',   hint: 'how this screen answers — spoken, on screen, a sound' },
   { id: 'adulting', label: 'Adulting', hint: 'your own points board' },
 ];
 
@@ -85,6 +86,12 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const i = mountInputs(host, { profiles, user, makeUserState });
       await i.refresh();
       return i;
+    }
+    if (id === 'output') {
+      const { mountOutput } = await import('./output_panel.js');
+      const o = mountOutput(host, { user, makeUserState });
+      await o.refresh();
+      return o;
     }
     if (id === 'adulting') {
       const { mountAdulting } = await import('./adulting.js');
