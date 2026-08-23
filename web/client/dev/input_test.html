@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>input bus — bind, gate, time, log</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>input bus — bind, gate, time, log</h1>
+<p>The five decisions between a physical press and an action: which action it drives, whether the
+role gate permits it, whether it survives the timing filters, publishing it, and logging it —
+<em>including</em> the ones that were thrown away. Then the keyboard adapter that makes the shipped
+default real, and the fail-closed allowlist that builds the opt-in research payload.
+No server needed; runs entirely against a fake clock.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createActionRegistry, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION } from '../actions.js';
+import { createInputBus, ACTIVATION_TOPIC, deviceClass, REJECTIONS } from '../input.js';
+import { createAccessLog, toOutbound, toOutboundBatch, summarize, byReason } from '../access.js';
+import { attachKeyboard, keyControl, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from '../input_keyboard.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function threw(fn) { try { fn(); return false; } catch { return true; } }
+
+// A fake clock the input bus reads AND schedules against, so hold/debounce/lockout are
+// tested as arithmetic rather than as waiting.
+function fakeClock(start = 1_000_000) {
+  let t = start, seq = 0;
+  const pending = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: t + ms }); return id; },
+    clearTimer: (id) => pending.delete(id),
+    advance(ms) {
+      const target = t + ms;
+      // Earliest-due first, and re-checked each pass so a timer set from inside a
+      // callback still fires within the same advance().
+      for (;;) {
+        let next = null;
+        for (const [id, x] of pending) if (x.at <= target && (!next || x.at < next[1].at)) next = [id, x];
+        if (!next) break;
+        pending.delete(next[0]);
+        t = next[1].at;
+        next[1].fn();
+      }
+      t = target;
+    },
+    count: () => pending.size,
+  };
+}
+
+// One rig per section so nothing leaks between them.
+function rig({ gate = 'both', maxHoldMs = 12000 } = {}) {
+  const clock = fakeClock();
+  const bus = createBus();
+  const actions = createActionRegistry();
+  actions.registerAll(SYSTEM_ACTIONS);
+  actions.register({ id: 'photos/next', label: 'Next photo', topic: 'photos/next', group: 'Photos' });
+  actions.register({ id: 'photos/prev', label: 'Previous photo', topic: 'photos/prev', group: 'Photos' });
+  actions.register({ id: 'sprint/go', label: 'Start sprint', topic: 'sprint/control', payload: 'start', group: 'Sprint' });
+
+  const log = createAccessLog({ session: 'abcdef01-2345-6789-abcd-ef0123456789' });
+  const fired = [];
+  ['photos/next', 'photos/prev', 'sprint/control'].forEach((t) => bus.subscribe(t, (p) => fired.push([t, p])));
+
+  const input = createInputBus({
+    bus, actions, gate, maxHoldMs,
+    now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    onActivation: log.record,
+  });
+  return { clock, bus, actions, input, log, fired, recs: () => log.get() };
+}
+const last = (a) => a[a.length - 1];
+
+(async () => {
+  try {
+    // ================= the action catalogue =================
+    section('the action catalogue');
+    {
+      const a = createActionRegistry();
+      check('an action needs a machine-safe id', threw(() => a.register({ id: 'Photos Next!', label: 'x', topic: 't' })));
+      check('an action needs a human label — the binder shows it to a person',
+        threw(() => a.register({ id: 'photos/next', topic: 'photos/next' })));
+      check('an action needs a topic', threw(() => a.register({ id: 'photos/next', label: 'Next' })));
+
+      const off = a.register({ id: 'photos/next', label: 'Next photo', topic: 'photos/next', group: 'Photos' });
+      a.register({ id: 'photos/prev', label: 'Previous photo', topic: 'photos/prev', group: 'Photos' });
+      a.registerAll(SYSTEM_ACTIONS);
+      check('it lists what is bindable, grouped for display',
+        a.size() === 3 && [...a.groups().keys()].join(',') === 'Photos,System',
+        [...a.groups().keys()].join(','));
+      check('an action carries its topic, so a binding never names one', a.get('photos/next').topic === 'photos/next');
+      off();
+      check('unregister removes it', !a.has('photos/next'));
+
+      // The remount case: re-registering then running the OLD cleanup must not delete
+      // the live entry.
+      const first = a.register({ id: 'photos/next', label: 'Next photo', topic: 'photos/next' });
+      a.register({ id: 'photos/next', label: 'Next photo (v2)', topic: 'photos/next2' });
+      first();
+      check('a re-registration survives the old instance\'s cleanup',
+        a.get('photos/next')?.topic === 'photos/next2', String(a.get('photos/next')?.topic));
+    }
+
+    // ================= press: the straight path =================
+    section('press: the straight path');
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'b1', actionId: 'photos/next', device: 'switch:1', control: 'jack:a' });
+
+      r.input.down('switch:1', 'jack:a');
+      check('a bound press publishes the action\'s topic', r.fired.length === 1 && r.fired[0][0] === 'photos/next');
+      check('and it is logged as accepted', last(r.recs()).accepted === true && last(r.recs()).reason === null);
+      r.input.up('switch:1', 'jack:a');
+      check('the release of a press-edge binding is not a second event', r.fired.length === 1);
+
+      r.input.down('switch:1', 'jack:z');
+      check('an UNBOUND control is still an event — it is data, not nothing',
+        last(r.recs()).reason === 'unbound' && last(r.recs()).accepted === false);
+      check('an unbound press names no action', last(r.recs()).actionId === null);
+      r.input.up('switch:1', 'jack:z');
+
+      r.input.addBinding({ actionId: 'sprint/go', device: 'switch:1', control: 'jack:b' });
+      r.input.down('switch:1', 'jack:b');
+      check('the action\'s payload rides along', last(r.fired)[1] === 'start', JSON.stringify(last(r.fired)));
+
+      check('a binding must name an action', threw(() => r.input.addBinding({ device: 'd', control: 'c' })));
+      check('a binding must name a control', threw(() => r.input.addBinding({ actionId: 'photos/next', device: 'd' })));
+      check('a bad edge is refused loudly', threw(() => r.input.addBinding({ actionId: 'photos/next', device: 'd', control: 'c', edge: 'hover' })));
+      check('a bad role is refused loudly', threw(() => r.input.addBinding({ actionId: 'photos/next', device: 'd', control: 'c', role: 'nurse' })));
+    }
+
+    // ================= press vs release, per binding =================
+    section('press vs release — per binding, not global');
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'p', actionId: 'photos/next', device: 'switch:1', control: 'a', edge: 'press' });
+      r.input.addBinding({ id: 'q', actionId: 'photos/prev', device: 'switch:2', control: 'a', edge: 'release' });
+
+      r.input.down('switch:2', 'a');
+      check('a release-edge binding does NOT fire on the way down', r.fired.length === 0);
+      r.clock.advance(300);
+      r.input.up('switch:2', 'a');
+      check('it fires on let-go', r.fired.length === 1 && r.fired[0][0] === 'photos/prev');
+      check('and the log carries how long it was held', last(r.recs()).heldMs === 300, String(last(r.recs()).heldMs));
+
+      r.input.down('switch:1', 'a');
+      check('the two edges coexist on one bus — same instant, different device, press fires down',
+        r.fired.length === 2 && last(r.fired)[0] === 'photos/next');
+    }
+
+    // ================= hold, debounce, lockout =================
+    section('timing — hold, debounce, lockout (per binding)');
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'h', actionId: 'photos/next', device: 'switch:1', control: 'a', holdMs: 400 });
+
+      r.input.down('switch:1', 'a');
+      r.clock.advance(399);
+      check('hold-to-activate does not fire early', r.fired.length === 0);
+      r.clock.advance(1);
+      check('it fires the moment the threshold is met, still held', r.fired.length === 1);
+      r.input.up('switch:1', 'a');
+      check('and letting go afterwards adds nothing', r.fired.length === 1);
+
+      r.clock.advance(5000);
+      r.input.down('switch:1', 'a');
+      r.clock.advance(200);
+      r.input.up('switch:1', 'a');
+      check('released before the threshold, it never fires', r.fired.length === 1);
+      check('and the miss is logged as too-short, with the actual hold',
+        last(r.recs()).reason === 'too-short' && last(r.recs()).heldMs === 200,
+        JSON.stringify(last(r.recs())));
+    }
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'd', actionId: 'photos/next', device: 'switch:1', control: 'a', debounceMs: 100 });
+
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      r.clock.advance(40);
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      check('a bounce inside the debounce window does not reach the action', r.fired.length === 1);
+      check('and the swallowed press is logged with its reason', last(r.recs()).reason === 'debounce');
+      r.clock.advance(200);
+      r.input.down('switch:1', 'a');
+      check('a genuine press after the window gets through', r.fired.length === 2);
+    }
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'l', actionId: 'photos/next', device: 'switch:1', control: 'a', lockoutMs: 500 });
+
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      r.clock.advance(200);
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      check('repeat-lockout stops the second activation', r.fired.length === 1);
+      check('logged as lockout, not silently dropped', last(r.recs()).reason === 'lockout');
+      r.clock.advance(400);
+      r.input.down('switch:1', 'a');
+      check('once the lockout expires it acts again', r.fired.length === 2);
+    }
+
+    // ================= the role gate =================
+    section('the role gate — moderator / patient / both');
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'm', actionId: 'photos/next', device: 'switch:1', control: 'm', role: 'moderator' });
+      r.input.addBinding({ id: 'p', actionId: 'photos/prev', device: 'switch:1', control: 'p', role: 'patient' });
+      r.input.addBinding({ id: 'u', actionId: 'sprint/go', device: 'switch:1', control: 'u', role: 'universal' });
+
+      const press = (c) => { r.input.down('switch:1', c); r.input.up('switch:1', c); r.clock.advance(50); };
+
+      check('it boots to both — a screen must never come up with her inputs dead', r.input.getGate() === 'both');
+      press('m'); press('p'); press('u');
+      check('with the gate open, all three act', r.fired.length === 3);
+
+      r.input.setGate('moderator');
+      r.fired.length = 0;
+      press('m'); press('p'); press('u');
+      check('moderator-only: the patient\'s switch is refused', r.fired.length === 2);
+      const gated = r.recs().filter((x) => x.reason === 'role-gated');
+      check('the refusal is logged with the gate that caused it',
+        gated.length === 1 && gated[0].bindingId === 'p' && gated[0].gate === 'moderator');
+      check('universal always acts — it belongs to both roles', r.fired.some((f) => f[0] === 'sprint/control'));
+
+      r.input.setGate('patient');
+      r.fired.length = 0;
+      press('m'); press('p');
+      check('patient-only inverts it', r.fired.length === 1 && r.fired[0][0] === 'photos/prev');
+
+      check('the cycle is both -> moderator -> patient -> both',
+        [r.input.setGate('both'), r.input.cycleGate(), r.input.cycleGate(), r.input.cycleGate()].join(',')
+        === 'both,moderator,patient,both');
+
+      // The gate control is an action like any other — which is the point: it can live
+      // on a physical switch, not just a keyboard.
+      r.input.setGate('both');
+      r.input.addBinding({ id: 'g', actionId: ROLE_CYCLE_ACTION, device: 'switch:9', control: 'x', role: 'patient' });
+      r.input.down('switch:9', 'x'); r.input.up('switch:9', 'x');
+      check('cycling the gate is itself a bindable action', r.input.getGate() === 'moderator');
+      r.clock.advance(50);
+      r.input.down('switch:9', 'x'); r.input.up('switch:9', 'x');
+      check('and it is exempt from the gate — you cannot lock yourself out of the lock',
+        r.input.getGate() === 'patient', r.input.getGate());
+    }
+    {
+      // Evaluated at the instant of action, not when the press began.
+      const r = rig({ gate: 'moderator' });
+      r.input.addBinding({ id: 'h', actionId: 'photos/next', device: 'switch:1', control: 'a', role: 'patient', holdMs: 400 });
+      r.input.down('switch:1', 'a');
+      r.clock.advance(200);
+      r.input.setGate('both');
+      r.clock.advance(200);
+      check('a gate opened mid-hold lets the activation through', r.fired.length === 1);
+    }
+
+    // ================= max-hold auto-release (the Cici carry-over) =================
+    section('max-hold auto-release — the "won\'t let go" case');
+    {
+      const r = rig({ maxHoldMs: 1000 });
+      r.input.addBinding({ id: 'p', actionId: 'photos/next', device: 'switch:1', control: 'a', edge: 'press' });
+      r.input.addBinding({ id: 'q', actionId: 'photos/prev', device: 'switch:2', control: 'a', edge: 'release' });
+
+      r.input.down('switch:1', 'a');
+      check('the control is held', r.input.heldControls().length === 1);
+      r.clock.advance(1000);
+      check('an unreleased press is auto-released, so nothing stays held forever', r.input.heldControls().length === 0);
+
+      r.fired.length = 0;
+      r.input.down('switch:2', 'a');
+      r.clock.advance(1000);
+      check('a synthesized release does NOT fire a release-edge binding — nobody let go', r.fired.length === 0);
+      check('it is logged as auto-release, which is exactly the false activation to count',
+        last(r.recs()).reason === 'auto-release');
+
+      r.input.down('switch:1', 'a');
+      r.input.down('switch:2', 'a');
+      r.input.releaseAll();
+      check('releaseAll is the caregiver\'s unstick-now', r.input.heldControls().length === 0);
+
+      r.input.down('switch:3', 'unbound-and-stuck');
+      r.clock.advance(1000);
+      check('even an UNBOUND stuck control clears — the watchdog arms before the lookup',
+        r.input.heldControls().length === 0);
+
+      check('max-hold is tunable', r.input.setMaxHold(2500) === 2500 && r.input.getMaxHold() === 2500);
+      check('and junk does not disable it', r.input.setMaxHold(0) === 2500 && r.input.setMaxHold(-1) === 2500);
+    }
+    {
+      const r = rig({ maxHoldMs: 1000 });
+      r.input.addBinding({ id: 'h', actionId: 'photos/next', device: 'switch:1', control: 'a', holdMs: 400 });
+      r.input.down('switch:1', 'a');
+      r.clock.advance(2000);
+      check('a hold binding fires once and the watchdog does not re-fire it', r.fired.length === 1);
+      check('the timer table is empty afterwards — nothing is left armed', r.clock.count() === 0, String(r.clock.count()));
+    }
+
+    // ================= hot-swap profiles =================
+    section('hot-swappable profiles');
+    {
+      const r = rig();
+      r.input.setBindings([
+        { id: 'a1', actionId: 'photos/next', device: 'switch:1', control: 'a' },
+        { id: 'a2', actionId: 'photos/prev', device: 'switch:1', control: 'b' },
+      ]);
+      check('a profile is a set of bindings, swapped whole', r.input.listBindings().length === 2);
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      check('profile A acts', r.fired.length === 1 && r.fired[0][0] === 'photos/next');
+
+      r.input.setBindings([{ id: 'b1', actionId: 'photos/prev', device: 'switch:1', control: 'a' }]);
+      r.clock.advance(50);
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      check('after the swap the same switch drives the new action', last(r.fired)[0] === 'photos/prev');
+      check('and the old lockout history went with it', r.fired.length === 2);
+
+      // A hold armed under the old profile must not fire into the new one.
+      r.input.setBindings([{ id: 'h', actionId: 'photos/next', device: 'switch:1', control: 'z', holdMs: 400 }]);
+      r.input.down('switch:1', 'z');
+      r.clock.advance(200);
+      const before = r.fired.length;
+      r.input.setBindings([{ id: 'other', actionId: 'photos/prev', device: 'switch:1', control: 'q' }]);
+      r.clock.advance(400);
+      check('a hold armed under the previous profile is dropped, not fired into the new one',
+        r.fired.length === before, JSON.stringify(r.fired.slice(before)));
+
+      r.input.setBindings([{ id: 's', actionId: 'photos/gone', device: 'switch:1', control: 'a' }]);
+      r.clock.advance(50);
+      r.input.down('switch:1', 'a');
+      check('a stale binding pointing at a retired action is logged, not thrown',
+        last(r.recs()).reason === 'unknown-action');
+    }
+
+    // ================= the log =================
+    section('the rejection log and what it measures');
+    {
+      const r = rig();
+      const seen = [];
+      r.bus.subscribe(ACTIVATION_TOPIC, (rec) => seen.push(rec));
+      r.input.addBinding({ id: 'x', actionId: 'photos/next', device: 'switch:1', control: 'a', lockoutMs: 1000 });
+
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      r.clock.advance(100);
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      r.clock.advance(100);
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+
+      const s = summarize(r.recs());
+      check('one accepted, two rejected', s.accepted === 1 && s.rejected === 2, JSON.stringify(s));
+      check('false-activation rate is the headline number', Math.abs(s.falseActivationRate - 2 / 3) < 1e-9);
+      check('rejections break down by reason', byReason(r.recs())[0].key === 'lockout');
+      check('every decision is also on the bus for a live binding tester', seen.length === r.recs().length);
+      check('the log records the device CLASS alongside the instance',
+        last(r.recs()).deviceClass === 'switch' && last(r.recs()).device === 'switch:1');
+      check('an unknown device class degrades to "other"', deviceClass('weird-thing:1') === 'other');
+      check('every reason the bus can emit is in the closed set',
+        r.recs().every((x) => x.reason === null || REJECTIONS.includes(x.reason)));
+    }
+
+    // ================= the outbound allowlist =================
+    section('the opt-in research payload — fail closed');
+    {
+      const SESSION = 'abcdef01-2345-6789-abcd-ef0123456789';
+      const AT = new Date(2026, 7, 22, 10, 30).getTime();   // 10:30 local -> "daytime"
+      const good = {
+        at: AT, device: 'hid:0x1234 Acme SwitchPro', deviceClass: 'hid', control: 'key:ctrl+shift+e',
+        actionId: 'photos/next', bindingId: 'b1', edge: 'press', role: 'patient', gate: 'both',
+        accepted: true, reason: null, heldMs: 120, latencyMs: 120,
+      };
+      const row = toOutbound(good, { session: SESSION, seq: 0 });
+      check('an ordinary record produces a payload', !!row);
+      check('the device INSTANCE never leaves — only its class',
+        row.deviceClass === 'hid' && !('device' in row), JSON.stringify(row));
+      check('the control never leaves — on a keyboard that is which key', !('control' in row));
+      check('the absolute timestamp never leaves', !('at' in row));
+      check('but time-of-day does, coarsely, because it is a research question',
+        row.daypart === 'daytime', String(row.daypart));
+      check('the internal binding id never leaves', !('bindingId' in row));
+      check('the payload holds nothing but allowlisted fields',
+        Object.keys(row).every((k) => k in { session: 1, seq: 1, actionId: 1, deviceClass: 1, edge: 1, role: 1, gate: 1, accepted: 1, reason: 1, heldMs: 1, latencyMs: 1, daypart: 1 }),
+        Object.keys(row).join(','));
+
+      check('a field nobody anticipated is not carried through',
+        !('note' in toOutbound({ ...good, note: 'Christine had a rough night' }, { session: SESSION, seq: 0 })));
+      check('a reason outside the closed set kills the whole event, it is not scrubbed',
+        toOutbound({ ...good, accepted: false, reason: 'nurse said so' }, { session: SESSION, seq: 0 }) === null);
+      check('free text smuggled into an id field kills the event',
+        toOutbound({ ...good, actionId: 'photos/next; her room is 214' }, { session: SESSION, seq: 0 }) === null);
+      check('a missing required field kills the event',
+        toOutbound({ ...good, gate: undefined }, { session: SESSION, seq: 0 }) === null);
+      check('a non-opaque session id kills the event',
+        toOutbound(good, { session: 'christine@example.com', seq: 0 }) === null);
+      check('an absurd duration kills the event',
+        toOutbound({ ...good, heldMs: 9e9 }, { session: SESSION, seq: 0 }) === null);
+      check('so does a NaN',
+        toOutbound({ ...good, latencyMs: NaN }, { session: SESSION, seq: 0 }) === null);
+      check('an unbound press still exports — actionId is optional, not required',
+        !!toOutbound({ ...good, actionId: null, accepted: false, reason: 'unbound' }, { session: SESSION, seq: 0 }));
+
+      const batch = toOutboundBatch([good, { ...good, reason: 'nonsense', accepted: false }, good], { session: SESSION });
+      check('a batch drops the bad row and keeps the rest', batch.length === 2);
+      check('rows carry a sequence, so order survives without a clock', batch[0].seq === 0 && batch[1].seq === 2);
+    }
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'x', actionId: 'photos/next', device: 'switch:1', control: 'a' });
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      const payload = r.log.outbound();
+      check('the live log exports its own opt-in payload', payload.length === 1 && payload[0].actionId === 'photos/next');
+      check('and the local record it came from keeps everything', r.log.get()[0].control === 'a');
+    }
+
+    // ================= the keyboard adapter =================
+    section('the keyboard adapter — and the shipped default');
+    {
+      const r = rig();
+      const target = document.createElement('div');
+      const detach = attachKeyboard(r.input, { target });
+      r.input.setBindings([
+        ...DEFAULT_BINDINGS,
+        { id: 'k', actionId: 'photos/next', device: KEYBOARD_DEVICE, control: 'key:arrowright' },
+      ]);
+
+      const key = (type, init) => {
+        const e = new KeyboardEvent(type, { bubbles: true, cancelable: true, ...init });
+        target.dispatchEvent(e);
+        return e;
+      };
+
+      check('a chord names itself in a fixed order',
+        keyControl({ key: 'E', ctrlKey: true, shiftKey: true }) === 'key:ctrl+shift+e');
+      check('a bare modifier is not a control', keyControl({ key: 'Shift', shiftKey: true }) === null);
+
+      check('the shipped default is not a browser-reserved key',
+        DEFAULT_BINDINGS[0].control === 'key:ctrl+shift+e' && !/^key:f\d+$/.test(DEFAULT_BINDINGS[0].control));
+      key('keydown', { key: 'E', ctrlKey: true, shiftKey: true });
+      key('keyup', { key: 'E', ctrlKey: true, shiftKey: true });
+      check('and it works out of the box — the gate cycles with nothing configured',
+        r.input.getGate() === 'moderator', r.input.getGate());
+      r.input.setGate('both');
+
+      key('keydown', { key: 'ArrowRight' });
+      check('a bound key drives its action', r.fired.length === 1 && r.fired[0][0] === 'photos/next');
+      key('keyup', { key: 'ArrowRight' });
+      check('the keyup clears the held control', r.input.heldControls().length === 0);
+
+      const unbound = key('keydown', { key: 'q' });
+      check('an unbound key is left entirely alone — typing must keep working',
+        !unbound.defaultPrevented && r.fired.length === 1);
+
+      const held = key('keydown', { key: 'ArrowRight' });
+      check('a bound key does stop the browser default', held.defaultPrevented);
+      const repeat = key('keydown', { key: 'ArrowRight', repeat: true });
+      check('OS auto-repeat is ignored — it would fake presses she never made',
+        !repeat.defaultPrevented && r.fired.length === 2);
+      key('keyup', { key: 'ArrowRight' });
+
+      // Modifiers released first: the keyup's control name would not match the press.
+      r.input.setBindings([{ id: 'c', actionId: 'photos/prev', device: KEYBOARD_DEVICE, control: 'key:ctrl+shift+e', edge: 'release' }]);
+      key('keydown', { key: 'E', ctrlKey: true, shiftKey: true });
+      key('keyup', { key: 'E' });                       // modifiers already up
+      check('letting the modifiers go first still releases the press',
+        r.input.heldControls().length === 0 && last(r.fired)[0] === 'photos/prev');
+
+      key('keydown', { key: 'E', ctrlKey: true, shiftKey: true });
+      const beforeBlur = r.fired.length;
+      target.dispatchEvent(new FocusEvent('blur'));
+      check('losing focus releases everything held', r.input.heldControls().length === 0);
+      check('but alt-tabbing is not letting go — a release binding must not fire',
+        r.fired.length === beforeBlur && last(r.log.get()).reason === 'auto-release');
+
+      const typing = document.createElement('input');
+      target.append(typing);
+      const inField = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
+      Object.defineProperty(inField, 'target', { value: typing });
+      r.input.setBindings([{ id: 'k', actionId: 'photos/next', device: KEYBOARD_DEVICE, control: 'key:arrowright' }]);
+      const beforeTyping = r.fired.length;
+      target.dispatchEvent(inField);
+      check('keystrokes inside a text field belong to the field, not the bus',
+        r.fired.length === beforeTyping);
+
+      detach();
+      key('keydown', { key: 'ArrowRight' });
+      check('detaching stops it cleanly', r.fired.length === beforeTyping);
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
