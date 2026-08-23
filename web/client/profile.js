@@ -51,6 +51,11 @@ export function createProfilesClient({ user, baseURL = '' }) {
 
     // Per-instance handle URLs. `key`/`stream` are the module instance id.
     stateURL:  (pid, key) => `${baseURL}/api/profiles/${pid}/state/${key}`,
+    // Per-USER, not per screen. For things that describe the person rather than one of
+    // their screens — input bindings above all: which switch they use and how long they
+    // need to hold it is true everywhere, and re-entering it per screen is exactly the
+    // per-device toil this project exists to avoid.
+    userStateURL: (key) => `${baseURL}/api/user-state/${key}`,
     eventsURL: (pid, stream) => `${baseURL}/api/profiles/${pid}/events/${stream}`,
   };
 }

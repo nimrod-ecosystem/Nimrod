@@ -219,11 +219,11 @@ const last = (a) => a[a.length - 1];
     }
 
     // ================= the role gate =================
-    section('the role gate — moderator / patient / both');
+    section('the role gate — moderator / participant / both');
     {
       const r = rig();
       r.input.addBinding({ id: 'm', actionId: 'photos/next', device: 'switch:1', control: 'm', role: 'moderator' });
-      r.input.addBinding({ id: 'p', actionId: 'photos/prev', device: 'switch:1', control: 'p', role: 'patient' });
+      r.input.addBinding({ id: 'p', actionId: 'photos/prev', device: 'switch:1', control: 'p', role: 'participant' });
       r.input.addBinding({ id: 'u', actionId: 'sprint/go', device: 'switch:1', control: 'u', role: 'universal' });
 
       const press = (c) => { r.input.down('switch:1', c); r.input.up('switch:1', c); r.clock.advance(50); };
@@ -235,36 +235,36 @@ const last = (a) => a[a.length - 1];
       r.input.setGate('moderator');
       r.fired.length = 0;
       press('m'); press('p'); press('u');
-      check('moderator-only: the patient\'s switch is refused', r.fired.length === 2);
+      check('moderator-only: the participant\'s switch is refused', r.fired.length === 2);
       const gated = r.recs().filter((x) => x.reason === 'role-gated');
       check('the refusal is logged with the gate that caused it',
         gated.length === 1 && gated[0].bindingId === 'p' && gated[0].gate === 'moderator');
       check('universal always acts — it belongs to both roles', r.fired.some((f) => f[0] === 'sprint/control'));
 
-      r.input.setGate('patient');
+      r.input.setGate('participant');
       r.fired.length = 0;
       press('m'); press('p');
-      check('patient-only inverts it', r.fired.length === 1 && r.fired[0][0] === 'photos/prev');
+      check('participant-only inverts it', r.fired.length === 1 && r.fired[0][0] === 'photos/prev');
 
-      check('the cycle is both -> moderator -> patient -> both',
+      check('the cycle is both -> moderator -> participant -> both',
         [r.input.setGate('both'), r.input.cycleGate(), r.input.cycleGate(), r.input.cycleGate()].join(',')
-        === 'both,moderator,patient,both');
+        === 'both,moderator,participant,both');
 
       // The gate control is an action like any other — which is the point: it can live
       // on a physical switch, not just a keyboard.
       r.input.setGate('both');
-      r.input.addBinding({ id: 'g', actionId: ROLE_CYCLE_ACTION, device: 'switch:9', control: 'x', role: 'patient' });
+      r.input.addBinding({ id: 'g', actionId: ROLE_CYCLE_ACTION, device: 'switch:9', control: 'x', role: 'participant' });
       r.input.down('switch:9', 'x'); r.input.up('switch:9', 'x');
       check('cycling the gate is itself a bindable action', r.input.getGate() === 'moderator');
       r.clock.advance(50);
       r.input.down('switch:9', 'x'); r.input.up('switch:9', 'x');
       check('and it is exempt from the gate — you cannot lock yourself out of the lock',
-        r.input.getGate() === 'patient', r.input.getGate());
+        r.input.getGate() === 'participant', r.input.getGate());
     }
     {
       // Evaluated at the instant of action, not when the press began.
       const r = rig({ gate: 'moderator' });
-      r.input.addBinding({ id: 'h', actionId: 'photos/next', device: 'switch:1', control: 'a', role: 'patient', holdMs: 400 });
+      r.input.addBinding({ id: 'h', actionId: 'photos/next', device: 'switch:1', control: 'a', role: 'participant', holdMs: 400 });
       r.input.down('switch:1', 'a');
       r.clock.advance(200);
       r.input.setGate('both');
@@ -381,7 +381,7 @@ const last = (a) => a[a.length - 1];
       const AT = new Date(2026, 7, 22, 10, 30).getTime();   // 10:30 local -> "daytime"
       const good = {
         at: AT, device: 'hid:0x1234 Acme SwitchPro', deviceClass: 'hid', control: 'key:ctrl+shift+e',
-        actionId: 'photos/next', bindingId: 'b1', edge: 'press', role: 'patient', gate: 'both',
+        actionId: 'photos/next', bindingId: 'b1', edge: 'press', role: 'participant', gate: 'both',
         accepted: true, reason: null, heldMs: 120, latencyMs: 120,
       };
       const row = toOutbound(good, { session: SESSION, seq: 0 });
@@ -464,6 +464,16 @@ const last = (a) => a[a.length - 1];
       const unbound = key('keydown', { key: 'q' });
       check('an unbound key is left entirely alone — typing must keep working',
         !unbound.defaultPrevented && r.fired.length === 1);
+
+      // The rule above ate every key during a capture, so "press a control" did nothing
+      // at all with a keyboard. Capture has to see keys the bus has never heard of.
+      const seen = [];
+      r.input.beginCapture({ onDone: (d) => seen.push(d) });
+      key('keydown', { key: 'j' });
+      key('keyup', { key: 'j' });
+      check('but while CAPTURING, an unbound key is exactly what we are waiting for',
+        seen.length === 1 && seen[0].control === 'key:j', JSON.stringify(seen));
+      check('and capturing it did not fire anything', r.fired.length === 1);
 
       const held = key('keydown', { key: 'ArrowRight' });
       check('a bound key does stop the browser default', held.defaultPrevented);
