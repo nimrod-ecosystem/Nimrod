@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>remote channel — tell me on whichever device I am near</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>remote channel — tell me on whichever device I am near</h1>
+<p>The sending device says WHAT; the receiving device applies the same person's routing to
+decide HOW. Two fake devices share one fake mailbox, so the round trip — and the four ways it
+would otherwise go wrong — are testable without a second machine.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createOutputBus, DEFAULT_ROUTING } from '../output.js';
+import { createRemoteChannel, createRemoteReceiver, deviceId, REMOTE_KIND } from '../output_remote.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const flush = () => new Promise((r) => setTimeout(r, 0));
+
+// One append-only stream, shared by every "device" in a test. Mirrors events.js: an
+// `id`-ordered list, a cache, and subscribers told when it changes.
+function mailbox() {
+  const events = [];
+  const subs = new Set();
+  let nextId = 1;
+  return {
+    events,
+    handle() {
+      const subsLocal = new Set();
+      const api = {
+        load: async () => {},
+        get: () => ({ events: [...events] }),
+        append: async (kind, data) => {
+          const ev = { id: nextId++, kind, data, created_at: new Date(0).toISOString() };
+          events.push(ev);
+          for (const fn of subs) fn();
+          return ev;
+        },
+        subscribe: (fn) => { subs.add(fn); subsLocal.add(fn); return () => subs.delete(fn); },
+        startPolling() {},
+        destroy() { for (const fn of subsLocal) subs.delete(fn); },
+      };
+      return api;
+    },
+    // Something that is NOT one of our devices posting. `notify:false` models a device
+    // that is NOT polling right now — asleep, tab hidden, offline — so the message lands
+    // in the mailbox and is only seen on the next sweep.
+    async fromElsewhere(data, notify = true) {
+      const ev = { id: nextId++, kind: REMOTE_KIND, data, created_at: new Date(0).toISOString() };
+      events.push(ev);
+      if (notify) for (const fn of subs) fn();
+      return ev;
+    },
+  };
+}
+
+// A whole device: its own output bus, its own local channels, its own copy of the
+// person's routing, plus a remote channel and a receiver on the shared mailbox.
+function device(box, { name, routing = DEFAULT_ROUTING, now = () => 1000 } = {}) {
+  const got = { screen: [], speech: [], sound: [] };
+  const chan = (n) => ({ name: n, concurrency: 3, available: () => true,
+    present(item, { done }) { got[n].push(item.text); done(); return null; } });
+  const events = box.handle();
+  const log = [];
+  const output = createOutputBus({
+    channels: { screen: chan('screen'), speech: chan('speech'), sound: chan('sound'),
+      remote: createRemoteChannel({ events, from: name }) },
+    routing, now, onDelivery: (r) => log.push(r),
+  });
+  const received = [];
+  const receiver = createRemoteReceiver({ events, output, self: name, now,
+    onReceive: (r) => received.push(r) });
+  return { name, output, events, got, log, receiver, received,
+    dropped: (reason) => log.filter((r) => r.reason === reason) };
+}
+
+const EVERYWHERE = { status: ['screen'], say: ['speech', 'remote'], notify: ['screen', 'remote'], alert: ['screen', 'speech', 'remote'] };
+
+(async () => {
+  try {
+    // ================= identity =================
+    section('knowing which device you are');
+    {
+      const store = new Map();
+      const fake = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) };
+      const a = deviceId(fake);
+      check('a device gets an id', !!a && a.length > 5);
+      check('and keeps it across reloads', deviceId(fake) === a);
+      const other = deviceId({ getItem: () => null, setItem: () => {} });
+      check('a different device gets a different one', other !== a);
+      check('storage being unavailable does not throw',
+        !!deviceId({ getItem: () => { throw new Error('private mode'); },
+                     setItem: () => { throw new Error('private mode'); } }));
+    }
+
+    // ================= the round trip =================
+    section('the round trip');
+    {
+      const box = mailbox();
+      const bedside = device(box, { name: 'bedside', routing: EVERYWHERE });
+      const kitchen = device(box, { name: 'kitchen', routing: { alert: ['speech'] } });
+      await bedside.receiver.start();
+      await kitchen.receiver.start();
+
+      bedside.output.alert('the chair needs service');
+      await flush(); await flush();
+
+      check('the sender still renders it locally', bedside.got.screen.length === 1);
+      check('and it reaches the mailbox', box.events.length === 1);
+      check('the other device gets it', kitchen.got.speech.join() === 'the chair needs service');
+      // The whole point: the sender does not decide how it looks over there.
+      check('...rendered by ITS OWN routing, not the sender\'s',
+        kitchen.got.screen.length === 0, JSON.stringify(kitchen.got));
+      check('the receiver reports what it took', kitchen.received.filter((r) => r.delivered).length === 1);
+    }
+
+    // ================= hearing yourself =================
+    section('the four ways this goes wrong');
+    {
+      const box = mailbox();
+      const a = device(box, { name: 'a', routing: EVERYWHERE });
+      await a.receiver.start();
+      a.output.notify('hello');
+      await flush(); await flush();
+      check('a device does not render its own message twice',
+        a.got.screen.length === 1, JSON.stringify(a.got.screen));
+      check('and does not treat it as received at all', a.received.length === 0);
+    }
+    {
+      // The echo loop: a device whose routing includes `remote` receives a message and
+      // would post it straight back out.
+      const box = mailbox();
+      const a = device(box, { name: 'a', routing: EVERYWHERE });
+      const b = device(box, { name: 'b', routing: EVERYWHERE });
+      await a.receiver.start(); await b.receiver.start();
+
+      a.output.notify('ping');
+      for (let i = 0; i < 8; i++) await flush();
+      check('a received message is NOT posted back out — no echo loop',
+        box.events.length === 1, `${box.events.length} events in the mailbox`);
+      check('but it still renders locally by that device\'s own routing',
+        b.got.screen.join() === 'ping');
+    }
+    {
+      // History: an append-only stream still holds last week's alerts.
+      const box = mailbox();
+      await box.fromElsewhere({ from: 'old-phone', verb: 'alert', text: 'ancient news', sentAt: 1000, ttlMs: 20000 });
+      await box.fromElsewhere({ from: 'old-phone', verb: 'alert', text: 'also old', sentAt: 1000, ttlMs: 20000 });
+      const fresh = device(box, { name: 'fresh', routing: { alert: ['screen'] } });
+      await fresh.receiver.start();
+      check('opening a screen does not recite the backlog',
+        fresh.got.screen.length === 0, JSON.stringify(fresh.got.screen));
+      check('but it knows where it started', fresh.receiver.seenUpTo() === 2);
+
+      await box.fromElsewhere({ from: 'old-phone', verb: 'alert', text: 'this just happened', sentAt: 1000, ttlMs: 20000 });
+      await flush(); await flush();
+      check('and anything after that does arrive', fresh.got.screen.join() === 'this just happened');
+    }
+    {
+      // Waking to a backlog.
+      const box = mailbox();
+      let t = 1000;
+      const woke = device(box, { name: 'woke', routing: { alert: ['screen'] }, now: () => t });
+      await woke.receiver.start();
+      await box.fromElsewhere({ from: 'x', verb: 'alert', text: 'sent while asleep', sentAt: 1000, ttlMs: 20000 }, false);
+      t = 1000 + 5 * 60 * 1000;                     // five minutes later, and only now does it look
+      woke.receiver.sweep();
+      await flush();
+      check('a message that arrives long after the moment is not announced late',
+        woke.got.screen.length === 0, JSON.stringify(woke.got.screen));
+      check('and the skip is reported rather than silent',
+        woke.received.some((r) => r.skipped === 'stale'));
+    }
+
+    // ================= the far end still gets a say =================
+    section('the receiving device is still in charge');
+    {
+      const box = mailbox();
+      const a = device(box, { name: 'a', routing: { alert: ['remote'] } });
+      const b = device(box, { name: 'b', routing: { alert: ['sound'] } });
+      await a.receiver.start(); await b.receiver.start();
+      b.output.setMuted('sound', true);
+
+      a.output.alert('quietly please');
+      await flush(); await flush();
+      check('a muted device drops it, and says why',
+        b.got.sound.length === 0 && b.dropped('muted').length === 1);
+    }
+    {
+      const box = mailbox();
+      const a = device(box, { name: 'a', routing: { notify: ['remote'] } });
+      const b = device(box, { name: 'b', routing: { notify: [] } });
+      await a.receiver.start(); await b.receiver.start();
+      a.output.notify('nowhere to land');
+      await flush(); await flush();
+      check('a device that routes the verb nowhere records that, rather than losing it quietly',
+        b.dropped('no-channel').length === 1);
+    }
+    {
+      // A remaining life, not a fresh one — otherwise a stale alert gets a second wind.
+      const box = mailbox();
+      let t = 1000;
+      const b = device(box, { name: 'b', routing: { alert: ['screen'] }, now: () => t });
+      await b.receiver.start();
+      await box.fromElsewhere({ from: 'x', verb: 'alert', text: 'half-spent', sentAt: 1000, ttlMs: 10000 }, false);
+      t = 1000 + 8000;
+      b.receiver.sweep();
+      await flush();
+      check('it arrives with the time it has LEFT, not a full fresh ttl',
+        b.got.screen.join() === 'half-spent');
+    }
+
+    // ================= failure =================
+    section('when the network is not there');
+    {
+      const box = mailbox();
+      const events = box.handle();
+      events.append = async () => { throw new Error('offline'); };
+      const log = [];
+      const output = createOutputBus({
+        channels: { remote: createRemoteChannel({ events, from: 'a' }) },
+        routing: { alert: ['remote'] }, onDelivery: (r) => log.push(r),
+      });
+      output.alert('will not send');
+      await flush(); await flush();
+      check('a failed send is recorded — "I never got it on my phone" needs an answer',
+        log.some((r) => r.reason === 'failed'), JSON.stringify(log));
+    }
+    {
+      const output = createOutputBus({ channels: {}, routing: { alert: ['remote'] } });
+      const log = [];
+      const o2 = createOutputBus({ channels: {}, routing: { alert: ['remote'] }, onDelivery: (r) => log.push(r) });
+      o2.alert('signed out');
+      check('signed out, the channel is absent and says so rather than swallowing the message',
+        log.length === 1 && log[0].reason === 'no-adapter');
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

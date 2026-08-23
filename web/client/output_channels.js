@@ -22,6 +22,7 @@
 // short stack, so a screen is 3.
 
 import { speak, cancel as cancelSpeech } from './voice.js';
+import { createRemoteChannel } from './output_remote.js';
 
 // ---------------------------------------------------------------------------------
 // SPEECH - the one that must be exclusive.
@@ -159,8 +160,12 @@ export function createSoundChannel({ context = null, gain = 0.12 } = {}) {
 // Everything this device can actually do. A channel whose adapter reports unavailable is
 // left out entirely, so output.js drops to `no-adapter` and SAYS SO in the log, rather
 // than a message vanishing into a channel that was never going to work.
-export function defaultChannels({ mount = null, pref = () => ({}) } = {}) {
+export function defaultChannels({ mount = null, pref = () => ({}), events = null } = {}) {
   const out = {};
+  // Signed out there is no account, so there are no "other devices" and no mailbox.
+  // The channel is absent rather than present-and-broken, which is what makes
+  // output.js report `no-adapter` instead of a message vanishing.
+  if (events) out.remote = createRemoteChannel({ events });
   const speech = createSpeechChannel({ pref });
   if (speech.available()) out.speech = speech;
   const sound = createSoundChannel();
