@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>output bus — route, arbitrate, log</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #stage{position:absolute;left:-9999px;width:600px}
+</style>
+</head>
+<body>
+<h1>output bus — route, arbitrate, log</h1>
+<p>The mirror of the input bus. A module emits a VERB; the person's settings decide which
+channels it reaches; arbitration decides what happens when two things want the same pair of
+ears. Every message that did NOT arrive is recorded with the reason — the output-side twin of
+a false activation. Fake clock, fake channels, no speaking out loud.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stage"></div>
+
+<script type="module">
+import { createOutputBus, VERBS, CHANNELS, DROPS, DEFAULT_ROUTING, priorityOf, DELIVERY_TOPIC } from '../output.js';
+import { createScreenChannel, createSpeechChannel, createSoundChannel, defaultChannels } from '../output_channels.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+function fakeClock(start = 100000) {
+  let t = start, seq = 0;
+  const pending = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: t + ms }); return id; },
+    clearTimer: (id) => pending.delete(id),
+    advance(ms) {
+      const target = t + ms;
+      for (;;) {
+        let next = null;
+        for (const [id, x] of pending) if (x.at <= target && (!next || x.at < next[1].at)) next = [id, x];
+        if (!next) break;
+        pending.delete(next[0]); t = next[1].at; next[1].fn();
+      }
+      t = target;
+    },
+    count: () => pending.size,
+  };
+}
+
+// A channel you drive by hand: nothing finishes until the test says so, which is how
+// arbitration becomes testable at all.
+function manual(name, concurrency = 1) {
+  const live = [];
+  return {
+    name, concurrency,
+    available: () => true,
+    present(item, { done }) {
+      const run = { item, done, cancelled: false };
+      live.push(run);
+      return () => { run.cancelled = true; };
+    },
+    live,
+    // Finish the oldest thing in flight.
+    finish() {
+      const run = live.find((r) => !r.cancelled && !r.finished);
+      if (!run) return false;
+      run.finished = true;
+      run.done();
+      return true;
+    },
+    speaking: () => live.filter((r) => !r.cancelled && !r.finished).map((r) => r.item.text),
+    cancelled: () => live.filter((r) => r.cancelled).map((r) => r.item.text),
+  };
+}
+
+function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
+  const clock = fakeClock();
+  const bus = createBus();
+  const log = [];
+  const chans = channels || { speech: manual('speech', 1), screen: manual('screen', 3), sound: manual('sound', 2) };
+  const output = createOutputBus({
+    bus, channels: chans, routing,
+    now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    onDelivery: (r) => log.push(r),
+    ...rest,
+  });
+  return { clock, bus, output, log, chans,
+    dropped: (reason) => log.filter((r) => r.reason === reason),
+    delivered: () => log.filter((r) => r.delivered) };
+}
+
+(async () => {
+  try {
+    // ================= the vocabulary =================
+    section('the vocabulary');
+    check('verbs are ordered by urgency, and the order IS the priority',
+      priorityOf('alert') > priorityOf('notify')
+      && priorityOf('notify') > priorityOf('say')
+      && priorityOf('say') > priorityOf('status'));
+    check('a screen with no settings still works — nothing routes nowhere',
+      VERBS.every((v) => DEFAULT_ROUTING[v] && DEFAULT_ROUTING[v].length));
+    check('speech is where "say" goes by default', DEFAULT_ROUTING.say.includes('speech'));
+    check('an alert uses everything it can — this is the one that must not be missed',
+      DEFAULT_ROUTING.alert.length >= 3);
+    check('remote is in the vocabulary before it has an adapter', CHANNELS.includes('remote'));
+
+    // ================= routing =================
+    section('routing — a property of the person, not the app');
+    {
+      const r = rig();
+      r.output.say('hello');
+      check('a verb reaches the channel the person routed it to',
+        r.chans.speech.speaking().join() === 'hello', r.chans.speech.speaking().join());
+      check('and not the ones they did not', r.chans.screen.speaking().length === 0);
+
+      r.output.alert('the chair needs service');
+      check('one message can reach several channels at once',
+        r.chans.screen.speaking().length === 1 && r.chans.sound.speaking().length === 1);
+
+      // Their study: notification preference scattered across call/text/email, and most
+      // did not want family notified. "How you tell me" belongs to the user.
+      r.output.setRouting({ status: [], say: ['screen'], notify: ['screen'], alert: ['screen', 'sound'] });
+      r.chans.screen.live.length = 0;
+      r.output.say('hello again');
+      check('changing the routing changes where it goes, with no module involved',
+        r.chans.screen.speaking().join() === 'hello again');
+
+      r.output.status('quietly ignored');
+      check('a verb routed NOWHERE is a recorded decision, not a silent hole',
+        r.dropped('no-channel').length === 1);
+
+      r.output.setRouting({ say: ['telepathy', 'screen'] });
+      check('a channel that is not real is dropped from the routing, not stored',
+        r.output.getRouting().say.join() === 'screen');
+    }
+    {
+      const r = rig({ routing: { notify: ['light'] } });
+      r.output.notify('over here');
+      check('routing to a channel this DEVICE does not have says so',
+        r.dropped('no-adapter').length === 1);
+    }
+
+    // ================= arbitration =================
+    section('arbitration — there is one pair of ears');
+    {
+      const r = rig();
+      r.output.say('first sentence');
+      r.output.say('second sentence');
+      check('speech does one thing at a time', r.chans.speech.speaking().length === 1);
+      check('the second waits rather than talking over the first', r.output.pending('speech') === 1);
+      r.chans.speech.finish();
+      check('and starts when the first finishes',
+        r.chans.speech.speaking().join() === 'second sentence');
+      r.chans.speech.finish();
+      check('both were delivered', r.delivered().filter((x) => x.channel === 'speech').length === 2);
+    }
+    {
+      const r = rig({ routing: { say: ['speech'], alert: ['speech'] } });
+      r.output.say('a long rambling sentence');
+      r.output.alert('your brakes are gone');
+      check('an alert takes the channel from a lower-priority sentence',
+        r.chans.speech.speaking().join() === 'your brakes are gone',
+        r.chans.speech.speaking().join());
+      check('the interrupted one was actually cancelled, not left running',
+        r.chans.speech.cancelled().join() === 'a long rambling sentence');
+      check('being interrupted is not the same as being unwanted — it is requeued',
+        r.output.pending('speech') === 1);
+      check('and the interruption is logged', r.dropped('preempted').length === 1);
+      r.chans.speech.finish();
+      check('it gets said once the urgent thing is done',
+        r.chans.speech.speaking().join() === 'a long rambling sentence');
+    }
+    {
+      // A message that keeps losing the channel goes stale. Saying it late is worse.
+      const r = rig({ routing: { say: ['speech'], alert: ['speech'] }, maxPreemptions: 2 });
+      r.output.say('poor thing');
+      for (let i = 0; i < 3; i++) { r.output.alert(`urgent ${i}`); r.chans.speech.finish(); }
+      check('after too many interruptions it is dropped rather than said long after',
+        r.output.pending('speech') === 0 && r.dropped('preempted').length === 3,
+        `pending ${r.output.pending('speech')}, preempted ${r.dropped('preempted').length}`);
+    }
+    {
+      const r = rig();
+      r.output.notify('one'); r.output.notify('two'); r.output.notify('three');
+      check('a channel that can stack, stacks — eyes are not ears',
+        r.chans.screen.speaking().length === 3);
+      r.output.notify('four');
+      check('but only up to its own limit', r.output.pending('screen') === 1);
+    }
+    {
+      const r = rig({ routing: { status: ['speech'], alert: ['speech'] } });
+      r.output.status('ambient');
+      r.output.alert('urgent');
+      check('an equal-or-lower priority cannot take the channel',
+        r.chans.speech.speaking().join() === 'urgent');
+      const before = r.chans.speech.speaking().join();
+      r.output.status('another ambient');
+      check('...and does not disturb what is running', r.chans.speech.speaking().join() === before);
+    }
+
+    // ================= expiry =================
+    section('everything expires — late is its own kind of wrong');
+    {
+      const r = rig({ routing: { say: ['speech'] }, defaultTtlMs: 5000 });
+      r.output.say('holding the channel');
+      r.output.say('waiting its turn');
+      r.clock.advance(6000);
+      r.chans.speech.finish();
+      check('a message that waited longer than it was worth is not delivered late',
+        r.chans.speech.speaking().length === 0, r.chans.speech.speaking().join());
+      check('and the staleness is recorded', r.dropped('expired').length === 1);
+    }
+    {
+      const r = rig({ routing: { alert: ['speech'] } });
+      r.output.alert('holds');
+      r.output.alert('urgent things get longer to live', { ttlMs: 60000 });
+      r.clock.advance(30000);
+      r.chans.speech.finish();
+      check('a per-message ttl overrides the default',
+        r.chans.speech.speaking().join() === 'urgent things get longer to live');
+    }
+
+    // ================= saturation and mute =================
+    section('saturation, mute, and the panic button');
+    {
+      const r = rig({ routing: { say: ['speech'], alert: ['speech'] }, queueLimit: 3 });
+      r.output.alert('running');
+      for (let i = 0; i < 3; i++) r.output.say(`queued ${i}`);
+      check('the queue fills', r.output.pending('speech') === 3);
+      r.output.say('one too many');
+      check('a saturated channel sheds the least urgent thing rather than everything',
+        r.dropped('queue-full').length === 1);
+      check('and it is still at its limit, not over', r.output.pending('speech') === 3);
+    }
+    {
+      const r = rig();
+      r.output.setMuted('sound', true);
+      r.output.alert('brakes');
+      check('a muted channel is skipped', r.chans.sound.speaking().length === 0);
+      check('and says so — someone will ask why it was quiet', r.dropped('muted').length === 1);
+      check('the other channels still fire — muting one is not muting all',
+        r.chans.screen.speaking().length === 1 && r.chans.speech.speaking().length === 1);
+      check('mute is reversible', r.output.setMuted('sound', false).length === 0);
+    }
+    {
+      const r = rig({ routing: { say: ['speech'] } });
+      r.output.say('one'); r.output.say('two'); r.output.say('three');
+      r.output.silence();
+      check('silence stops what is speaking', r.chans.speech.cancelled().length === 1);
+      check('and empties what was waiting', r.output.pending('speech') === 0);
+      check('the whole channel is idle', r.output.active('speech') === 0);
+    }
+
+    // ================= the log =================
+    section('the log — an undelivered message is data');
+    {
+      const r = rig();
+      const seen = [];
+      r.bus.subscribe(DELIVERY_TOPIC, (rec) => seen.push(rec));
+      r.output.say('spoken');
+      r.chans.speech.finish();
+      r.output.setMuted('sound', true);
+      r.output.alert('loud');
+
+      check('every outcome is on the bus for a live view', seen.length === r.log.length);
+      check('a delivery records how long it waited',
+        r.delivered().every((x) => Number.isFinite(x.waitedMs)));
+      check('a drop names a reason from the closed set',
+        r.log.filter((x) => !x.delivered).every((x) => DROPS.includes(x.reason)),
+        JSON.stringify(r.log.filter((x) => !x.delivered).map((x) => x.reason)));
+      check('records carry the verb and the channel, so you can see which is oversubscribed',
+        r.log.every((x) => VERBS.includes(x.verb)));
+      check('a message can name its source module', (() => {
+        r.output.notify('from photos', { source: 'photos' });
+        return r.log[r.log.length - 1].source === 'photos';
+      })());
+    }
+    {
+      const r = rig({ channels: { speech: { name: 'speech', concurrency: 1, present() { throw new Error('boom'); } } },
+        routing: { say: ['speech'] } });
+      r.output.say('will not work');
+      check('an adapter that throws does not take the bus down with it',
+        r.dropped('failed').length === 1);
+      r.output.say('and the channel still works afterwards');
+      check('the channel is not left permanently blocked by the failure',
+        r.log.length === 2, String(r.log.length));
+    }
+
+    // ================= the real adapters =================
+    section('the real channels');
+    {
+      const stage = document.getElementById('stage');
+      stage.innerHTML = '';
+      const clock = fakeClock();
+      const screen = createScreenChannel({ mount: stage, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      const output = createOutputBus({
+        channels: { screen }, routing: { notify: ['screen'], status: ['screen'], alert: ['screen'] },
+        now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      });
+
+      output.notify('a banner');
+      check('a banner appears', stage.querySelectorAll('.out-msg').length === 1);
+      check('and is tagged with its verb, so it can look urgent',
+        !!stage.querySelector('.out-notify'));
+      clock.advance(6000);
+      check('and goes away on its own', stage.querySelectorAll('.out-msg').length === 0);
+
+      output.alert('this one stays longer');
+      clock.advance(6000);
+      check('an alert holds the screen longer than a notification',
+        stage.querySelectorAll('.out-msg').length === 1);
+      check('and is announced assertively to a screen reader',
+        stage.querySelector('.out-msg').getAttribute('role') === 'alert');
+      clock.advance(7000);
+
+      output.status('battery low');
+      output.status('battery critical');
+      check('status is ambient — it REPLACES rather than stacking',
+        stage.querySelectorAll('.out-status').length === 1
+        && stage.querySelector('.out-status').textContent === 'battery critical',
+        String(stage.querySelectorAll('.out-status').length));
+      check('and it does not time out, because it is a state and not an event',
+        (clock.advance(60000), stage.querySelectorAll('.out-status').length === 1));
+    }
+    {
+      // The speech adapter against a fake engine — no talking, and the watchdog is
+      // testable. speechSynthesis does not always fire onend, and a channel that thinks
+      // it is still speaking never says anything again.
+      const clock = fakeClock();
+      const spoken = [];
+      let live = null;
+      const fakeSynth = { speak: (u) => { live = u; spoken.push(u.text); }, cancel: () => { live = null; }, getVoices: () => [] };
+      function FakeUtterance(text) { this.text = text; }
+      const speech = createSpeechChannel({
+        synth: fakeSynth, Utterance: FakeUtterance, maxMs: 5000,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      });
+      const output = createOutputBus({
+        channels: { speech }, routing: { say: ['speech'] },
+        now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      });
+
+      output.say('hello there');
+      check('it reaches the engine', spoken.join() === 'hello there');
+      check('the channel is busy while it speaks', output.active('speech') === 1);
+      live.onend();
+      check('and frees up when the voice stops', output.active('speech') === 0);
+
+      output.say('an utterance that never ends');
+      clock.advance(5000);
+      check('a voice that never reports finishing is released by the watchdog — otherwise the channel is dead forever',
+        output.active('speech') === 0);
+
+      output.say('queued behind nothing');
+      check('and the channel works again after the watchdog fired', spoken.length === 3);
+    }
+    {
+      const chans = defaultChannels({ mount: document.getElementById('stage') });
+      check('the device only advertises channels it can actually do',
+        Object.keys(chans).every((k) => CHANNELS.includes(k)) && !!chans.screen,
+        Object.keys(chans).join(','));
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
