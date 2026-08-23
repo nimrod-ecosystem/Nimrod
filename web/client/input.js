@@ -217,6 +217,38 @@ export function createInputBus({
     return report({ ...base, accepted: true });
   }
 
+  // ---- capture: "press the thing you want to bind" -----------------------------
+  //
+  // Overwatch's binding gesture, and it has to live HERE rather than in the binder UI
+  // for one reason: while you are choosing a control, NOTHING may act. If capture
+  // listened alongside the normal path, pressing the switch you are about to bind would
+  // also fire whatever it is currently bound to - so binding a control would set off the
+  // old action every time, which for a caregiver reassigning a live screen is chaos.
+  // Sitting in front of the binding lookup makes "nothing acts while binding" structural
+  // rather than something every device adapter has to remember.
+  //
+  // A capture also MEASURES. onDone reports how long the control was actually held, so
+  // the binder can offer "you held that 340ms - set the minimum hold to 250ms?" instead
+  // of asking someone to guess a number in milliseconds for a hand they do not have.
+  //
+  // It always times out. A capture left armed by a dialog nobody closed is a screen with
+  // dead inputs, which at a bedside is the worst failure this file can produce.
+  let capture = null;   // {onCandidate, onDone, onTimeout, started:Set, timer}
+
+  function beginCapture({ onCandidate = null, onDone = null, onTimeout = null, timeoutMs = 15000 } = {}) {
+    cancelCapture();
+    const c = { onCandidate, onDone, started: new Set(), timer: null };
+    c.timer = setTimer(() => { cancelCapture(); onTimeout?.(); }, num(timeoutMs, 15000));
+    capture = c;
+    return () => { if (capture === c) cancelCapture(); };
+  }
+
+  function cancelCapture() {
+    if (!capture) return;
+    clearTimer(capture.timer);
+    capture = null;
+  }
+
   // ---- raw device edges (device adapters call these) ---------------------------
 
   function down(device, control) {
@@ -229,6 +261,15 @@ export function createInputBus({
     // anything is bound to it, and a stuck unbound switch must still clear.
     h.maxTimer = setTimer(() => up(device, control, { auto: true }), hold);
     held.set(key, h);
+
+    // Before the binding lookup, and before the log: a press made while choosing a
+    // control is configuration, not an activation. Recording it would inflate the
+    // false-activation rate with the caregiver's own setup fiddling.
+    if (capture) {
+      capture.started.add(key);
+      capture.onCandidate?.({ device, control });
+      return;
+    }
 
     const prevDown = lastDown.get(key);
     lastDown.set(key, at);
@@ -275,6 +316,17 @@ export function createInputBus({
     const heldMs = at - h.at;
     const ctx = { at, device, control, downAt: h.at, heldMs };
 
+    if (capture) {
+      // Only a control whose press BEGAN during the capture resolves it. Letting go of
+      // something already held when the dialog opened is not a choice.
+      if (capture.started.has(key)) {
+        const done = capture.onDone;
+        cancelCapture();
+        done?.({ device, control, heldMs });
+      }
+      return;
+    }
+
     for (const b of bindingsFor(device, control)) {
       const base = {
         at, device, control, actionId: b.actionId, bindingId: b.id,
@@ -306,6 +358,7 @@ export function createInputBus({
   const offGate = bus.subscribe(ROLE_CYCLE_TOPIC, () => cycleGate());
 
   function destroy() {
+    cancelCapture();
     releaseAll();
     offGate();
     bindings.clear();
@@ -315,6 +368,10 @@ export function createInputBus({
 
   return {
     addBinding, removeBinding, setBindings, listBindings, hasBinding,
+    // What is already on this control, so the binder can say "that is Next photo -
+    // replace it?" rather than silently stacking a second action onto one switch.
+    bindingsAt: (device, control) => bindingsFor(device, control).map((b) => ({ ...b })),
+    beginCapture, cancelCapture, isCapturing: () => !!capture,
     down, up, releaseAll,
     setGate, cycleGate, getGate: () => currentGate, permitted,
     setMaxHold: (ms) => { const v = num(ms, 0); if (v > 0) hold = v; return hold; },

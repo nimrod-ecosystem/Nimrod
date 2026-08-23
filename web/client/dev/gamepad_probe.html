@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gamepad probe — does this device see the controller?</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:20px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem;margin:0 0 4px} h2{font-size:.95rem;margin:20px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.75}
+  p{margin:4px 0 12px;max-width:70ch}
+  .yes{color:#2c6e49;font-weight:700}.no{color:#a4243b;font-weight:700}
+  table{border-collapse:collapse;font-size:13px}
+  td,th{padding:3px 12px 3px 0;text-align:left;vertical-align:top}
+  code,#log{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+  .controls{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 14px}
+  .c{padding:3px 8px;border-radius:5px;background:#e6e2bd;border:1px solid #cfcaa3;font:12px ui-monospace,Menlo,Consolas,monospace}
+  .c.on{background:#2c6e49;color:#fff;border-color:#2c6e49}
+  .card{background:#fffdf0;border:1px solid #ddd8b4;border-radius:10px;padding:12px 14px;margin:0 0 12px;max-width:900px}
+  button{font:inherit;padding:6px 14px;border-radius:8px;border:1px solid #0A3323;background:#0A3323;color:#F7F4D5;cursor:pointer}
+  button:disabled{opacity:.45;cursor:default}
+  #log{white-space:pre-wrap;max-height:260px;overflow:auto;background:#fffdf0;border:1px solid #ddd8b4;border-radius:10px;padding:10px 12px;max-width:900px}
+  .rej{color:#a4243b}.acc{color:#2c6e49}
+  .empty{opacity:.6;font-style:italic}
+</style>
+</head>
+<body>
+<h1>gamepad probe</h1>
+<p>Plug a controller in and <strong>press something on it</strong> — a browser hides gamepads until
+the first input arrives, so nothing shows up until you do. An Xbox Adaptive Controller counts, and
+so does any switch plugged into one of its jacks. This runs the real <code>input_gamepad.js</code>
+and <code>input.js</code>, not a demo copy, so whatever it shows here is what the binder will see.</p>
+
+<h2>this browser</h2>
+<div class="card"><table id="support"></table></div>
+
+<h2>controllers it can see</h2>
+<div id="devices"><p class="empty">None yet — press a button on the controller.</p></div>
+
+<h2>capture — "press the thing you want to bind"</h2>
+<div class="card">
+  <p style="margin-top:0">The binding gesture. While it is armed nothing acts, so pressing a control
+  that is already bound will not set its action off. It also measures how long you held it.</p>
+  <button id="cap">Capture a control</button>
+  <span id="capout" style="margin-left:12px"></span>
+</div>
+
+<h2>activations</h2>
+<p>Every decision the input bus made, <em>including</em> the ones it threw away and why.
+Two demo bindings are pre-loaded: <code>button:0</code> and <code>axis:0+</code>.</p>
+<div id="log" class="empty">nothing yet</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createActionRegistry, SYSTEM_ACTIONS } from '../actions.js';
+import { createInputBus } from '../input.js';
+import { createAccessLog } from '../access.js';
+import { createGamepads, controlLabel } from '../input_gamepad.js';
+
+// ---- support ----------------------------------------------------------------
+const support = [
+  ['Gamepad API', typeof navigator.getGamepads === 'function', 'the XAC and every switch behind it'],
+  ['gamepadconnected event', 'ongamepadconnected' in window, ''],
+  ['secure context', window.isSecureContext, 'the Gamepad API needs https or localhost'],
+  ['WebHID', !!navigator.hid, 'needs a chooser dialog every reload'],
+  ['WebSerial', !!navigator.serial, 'needs a chooser dialog every reload'],
+  ['Web Bluetooth', !!navigator.bluetooth, 'absent on the Pi kiosk — do not depend on it'],
+];
+document.getElementById('support').innerHTML = support.map(([name, on, note]) =>
+  `<tr><td>${name}</td><td class="${on ? 'yes' : 'no'}">${on ? 'yes' : 'no'}</td><td style="opacity:.65">${note}</td></tr>`).join('');
+
+// ---- the real stack ---------------------------------------------------------
+const bus = createBus();
+const actions = createActionRegistry();
+actions.registerAll(SYSTEM_ACTIONS);
+actions.register({ id: 'probe/one', label: 'Demo action one', topic: 'probe/one', group: 'Probe' });
+actions.register({ id: 'probe/two', label: 'Demo action two', topic: 'probe/two', group: 'Probe' });
+
+const log = createAccessLog({ bus });
+const input = createInputBus({ bus, actions, onActivation: (rec) => { render(rec); } });
+const pads = createGamepads({
+  input,
+  onConnect: (s) => { seed(s.device); paint(); },
+  onDisconnect: paint,
+});
+
+// Bindings are seeded against whatever actually connects, because the device name is
+// derived from the controller's vendor and product — there is nothing sensible to
+// hardcode here.
+function seed(device) {
+  input.addBinding({ id: `${device}/one`, actionId: 'probe/one', device, control: 'button:0' });
+  input.addBinding({ id: `${device}/two`, actionId: 'probe/two', device, control: 'axis:0+' });
+}
+
+// ---- live device view -------------------------------------------------------
+const devicesEl = document.getElementById('devices');
+let cells = new Map();
+
+function paint() {
+  const list = pads.list();
+  if (!list.length) {
+    devicesEl.innerHTML = '<p class="empty">None yet — press a button on the controller.</p>';
+    cells = new Map();
+    return;
+  }
+  cells = new Map();
+  devicesEl.innerHTML = '';
+  for (const s of list) {
+    const raw = [...(navigator.getGamepads() || [])].find((g) => g && g.index === s.index);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <table>
+        <tr><td>bindings use</td><td><code>${s.device}</code></td></tr>
+        <tr><td>reported id</td><td style="opacity:.7">${s.id}</td></tr>
+        <tr><td>mapping</td><td>${s.mapping || '(non-standard)'} &nbsp;·&nbsp; slot ${s.index}</td></tr>
+      </table>
+      <div class="controls"></div>`;
+    const row = card.querySelector('.controls');
+    const add = (control) => {
+      const el = document.createElement('span');
+      el.className = 'c';
+      el.textContent = `${control}  ${controlLabel(control, { mapping: s.mapping })}`;
+      row.append(el);
+      cells.set(`${s.device} ${control}`, el);
+    };
+    for (let b = 0; b < (raw?.buttons.length || 0); b++) add(`button:${b}`);
+    for (let a = 0; a < (raw?.axes.length || 0); a++) { add(`axis:${a}+`); add(`axis:${a}-`); }
+    devicesEl.append(card);
+  }
+}
+
+// The lit state comes from the input bus's own held set, so what lights up is exactly
+// what the bus believes is down — including anything the max-hold watchdog released.
+function lights() {
+  const on = new Set(input.heldControls().map(([d, c]) => `${d} ${c}`));
+  for (const [key, el] of cells) el.classList.toggle('on', on.has(key));
+  requestAnimationFrame(lights);
+}
+
+// ---- capture ----------------------------------------------------------------
+const capBtn = document.getElementById('cap');
+const capOut = document.getElementById('capout');
+capBtn.addEventListener('click', () => {
+  capBtn.disabled = true;
+  capOut.textContent = 'press a control…';
+  input.beginCapture({
+    onCandidate: ({ device, control }) => { capOut.textContent = `${device} ${control} — hold, then let go`; },
+    onDone: ({ device, control, heldMs }) => {
+      const existing = input.bindingsAt(device, control);
+      const already = existing.length ? ` · already bound to ${existing.map((b) => b.actionId).join(', ')}` : ' · free';
+      capOut.innerHTML = `<span class="acc">${device} <code>${control}</code></span> — held ${heldMs}ms${already}`;
+      capBtn.disabled = false;
+    },
+    onTimeout: () => { capOut.textContent = 'timed out — inputs are live again'; capBtn.disabled = false; },
+  });
+});
+
+// ---- the activation log -----------------------------------------------------
+const logEl = document.getElementById('log');
+const lines = [];
+function render(rec) {
+  logEl.classList.remove('empty');
+  const verdict = rec.accepted ? 'FIRED   ' : `refused ${rec.reason}`;
+  lines.unshift(`<span class="${rec.accepted ? 'acc' : 'rej'}">${verdict.padEnd(22)}</span>` +
+    `${rec.device} ${rec.control}` +
+    `${rec.actionId ? '  ->  ' + rec.actionId : ''}` +
+    `${rec.heldMs ? '   held ' + rec.heldMs + 'ms' : ''}`);
+  lines.length = Math.min(lines.length, 60);
+  logEl.innerHTML = lines.join('\n');
+}
+
+pads.start();
+paint();
+requestAnimationFrame(lights);
+// A pad can appear at any moment, and only its first input reveals it.
+window.addEventListener('gamepadconnected', paint);
+window.addEventListener('gamepaddisconnected', paint);
+// ...and the connect event does not fire in every browser/kiosk combination, so the
+// device list is also reconciled on a slow tick. Cheap, and it means "I plugged it in
+// and nothing happened" is never this page's fault.
+let lastCount = -1;
+setInterval(() => {
+  const n = pads.list().length;
+  if (n !== lastCount) { lastCount = n; paint(); }
+}, 500);
+</script>
+</body>
+</html>

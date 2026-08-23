@@ -27,6 +27,7 @@ import { createActionRegistry, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION } from '../acti
 import { createInputBus, ACTIVATION_TOPIC, deviceClass, REJECTIONS } from '../input.js';
 import { createAccessLog, toOutbound, toOutboundBatch, summarize, byReason } from '../access.js';
 import { attachKeyboard, keyControl, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from '../input_keyboard.js';
+import { createGamepads, gamepadKey, controlLabel } from '../input_gamepad.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -498,6 +499,211 @@ const last = (a) => a[a.length - 1];
       detach();
       key('keydown', { key: 'ArrowRight' });
       check('detaching stops it cleanly', r.fired.length === beforeTyping);
+    }
+
+    // ================= capture =================
+    section('capture — "press the thing you want to bind"');
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'x', actionId: 'photos/next', device: 'switch:1', control: 'a' });
+
+      const candidates = [], done = [];
+      r.input.beginCapture({ onCandidate: (c) => candidates.push(c), onDone: (d) => done.push(d) });
+      check('capture is armed', r.input.isCapturing());
+
+      r.input.down('switch:1', 'a');
+      check('the control you press is offered as the candidate',
+        candidates.length === 1 && candidates[0].control === 'a');
+      check('but it does NOT fire what it is currently bound to — that is the whole point',
+        r.fired.length === 0);
+      check('and it is not logged as an activation — configuring is not activating',
+        r.recs().length === 0, JSON.stringify(r.recs()));
+
+      r.clock.advance(340);
+      r.input.up('switch:1', 'a');
+      check('letting go completes the capture', done.length === 1 && done[0].control === 'a');
+      check('and it measures the real hold, so the binder can suggest a threshold',
+        done[0].heldMs === 340, String(done[0].heldMs));
+      check('capture disarms itself once it has an answer', !r.input.isCapturing());
+
+      r.input.down('switch:1', 'a');
+      check('normal service resumes immediately afterwards', r.fired.length === 1);
+      r.input.up('switch:1', 'a');
+      check('the binder can see what is already on a control, to offer "replace?"',
+        r.input.bindingsAt('switch:1', 'a')[0].actionId === 'photos/next');
+      check('and nothing is on an unbound one', r.input.bindingsAt('switch:1', 'zz').length === 0);
+    }
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'x', actionId: 'photos/next', device: 'switch:1', control: 'a' });
+      let timedOut = false;
+      r.input.beginCapture({ onTimeout: () => { timedOut = true; }, timeoutMs: 5000 });
+      r.clock.advance(4999);
+      check('capture waits for its full window', r.input.isCapturing() && !timedOut);
+      r.clock.advance(1);
+      check('then gives up — a dialog nobody closed must not leave the inputs dead',
+        timedOut && !r.input.isCapturing());
+      r.input.down('switch:1', 'a');
+      check('and the control works again', r.fired.length === 1);
+    }
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'x', actionId: 'photos/next', device: 'switch:1', control: 'a' });
+      const cancel = r.input.beginCapture({ onDone: () => {} });
+      cancel();
+      check('capture can be cancelled', !r.input.isCapturing());
+      r.input.down('switch:1', 'a');
+      check('cancelling restores normal behaviour', r.fired.length === 1);
+
+      // Already holding something when the dialog opens: letting go of it is not a choice.
+      const done = [];
+      r.input.down('switch:1', 'b');
+      r.input.beginCapture({ onDone: (d) => done.push(d) });
+      r.input.up('switch:1', 'b');
+      check('releasing a control held from BEFORE the capture does not resolve it',
+        done.length === 0 && r.input.isCapturing());
+      r.input.down('switch:1', 'c'); r.input.up('switch:1', 'c');
+      check('a press made during the capture does', done.length === 1 && done[0].control === 'c');
+    }
+
+    // ================= the gamepad adapter =================
+    section('the gamepad adapter — the XAC path');
+    {
+      const XAC = 'Xbox Adaptive Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b0a)';
+      check('a device name comes from vendor+product, not the slot it landed in',
+        gamepadKey(XAC) === 'gamepad:045e0b0a', gamepadKey(XAC));
+      check('the Firefox id format resolves to the SAME name',
+        gamepadKey('045e-0b0a-Xbox Adaptive Controller') === 'gamepad:045e0b0a');
+      check('an id with no vendor/product still gets a stable slug',
+        gamepadKey('Generic USB Switch Box') === 'gamepad:generic-usb-switch-box');
+      check('standard mapping gives the binder a human control name', controlLabel('button:0') === 'A');
+      check('an exotic pad degrades to a number rather than lying',
+        controlLabel('button:0', { mapping: '' }) === 'Button 0');
+      check('axes name their direction', controlLabel('axis:1-') === 'Left stick Y -');
+    }
+    {
+      const XAC = 'Xbox Adaptive Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b0a)';
+      const pads = [];
+      const nav = { getGamepads: () => pads };
+      const plug = (index, { id = XAC, buttons = 4, axes = 2, mapping = 'standard' } = {}) => {
+        pads[index] = {
+          id, mapping, connected: true,
+          buttons: Array.from({ length: buttons }, () => ({ pressed: false, value: 0 })),
+          axes: new Array(axes).fill(0),
+        };
+        return pads[index];
+      };
+
+      const r = rig();
+      const gp = createGamepads({ input: r.input, nav });
+      r.input.setBindings([
+        { id: 'g1', actionId: 'photos/next', device: 'gamepad:045e0b0a', control: 'button:0' },
+        { id: 'g2', actionId: 'photos/prev', device: 'gamepad:045e0b0a', control: 'axis:0+' },
+      ]);
+
+      const pad = plug(0);
+      gp.poll();
+      check('a connected pad is enumerated under its stable name',
+        gp.list().length === 1 && gp.list()[0].device === 'gamepad:045e0b0a', JSON.stringify(gp.list()));
+      check('nothing fires from merely being plugged in', r.fired.length === 0);
+
+      pad.buttons[0].pressed = true;
+      gp.poll();
+      check('a button press reaches the action', r.fired.length === 1 && r.fired[0][0] === 'photos/next');
+      gp.poll();
+      check('holding it across frames is not a second press — poll is diffed, not counted', r.fired.length === 1);
+      pad.buttons[0].pressed = false;
+      gp.poll();
+      check('and the release clears it', r.input.heldControls().length === 0);
+
+      // The reboot case: same controller, different slot. Bindings must survive.
+      pads[0] = null;
+      gp.poll();
+      check('unplugging removes it', gp.list().length === 0);
+      const again = plug(3);
+      again.buttons[0].pressed = true;
+      gp.poll();
+      check('the same controller in a DIFFERENT slot keeps its name, so the profile survives a reboot',
+        r.fired.length === 2 && gp.list()[0].device === 'gamepad:045e0b0a');
+      check('and the press that revealed it was not swallowed — one switch, one press, after every restart',
+        r.fired.length === 2);
+    }
+    {
+      // Axis hysteresis, and the disconnect-is-not-a-release rule.
+      const XAC = 'Xbox Adaptive Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b0a)';
+      const pads = [];
+      const nav = { getGamepads: () => pads };
+      pads[0] = {
+        id: XAC, mapping: 'standard', connected: true,
+        buttons: [{ pressed: false }], axes: [0, 0],
+      };
+      const r = rig();
+      const gp = createGamepads({ input: r.input, nav });
+      r.input.setBindings([
+        { id: 'a', actionId: 'photos/next', device: 'gamepad:045e0b0a', control: 'axis:0+' },
+        { id: 'b', actionId: 'photos/prev', device: 'gamepad:045e0b0a', control: 'button:0', edge: 'release' },
+      ]);
+
+      pads[0].axes[0] = 0.06; gp.poll();
+      check('a drifting stick is not a press', r.fired.length === 0);
+      pads[0].axes[0] = 0.44; gp.poll();
+      check('nor is one short of the threshold', r.fired.length === 0);
+      pads[0].axes[0] = 0.62; gp.poll();
+      check('past the threshold it presses', r.fired.length === 1);
+      pads[0].axes[0] = 0.40; gp.poll();
+      check('and it stays pressed in the hysteresis band — no chatter at the line',
+        r.input.heldControls().length === 1);
+      pads[0].axes[0] = 0.20; gp.poll();
+      check('below the exit threshold it releases', r.input.heldControls().length === 0);
+      pads[0].axes[0] = -0.62; gp.poll();
+      check('the opposite direction is a separate control', r.fired.length === 1);
+      pads[0].axes[0] = 0; gp.poll();
+
+      r.fired.length = 0;
+      pads[0].buttons[0].pressed = true; gp.poll();
+      pads[0] = null; gp.poll();
+      check('a yanked cable releases what it held', r.input.heldControls().length === 0);
+      check('but unplugging is not letting go — the release-edge binding must not fire',
+        r.fired.length === 0);
+      check('and it is logged as the false activation it would have been',
+        last(r.log.get()).reason === 'auto-release', JSON.stringify(last(r.log.get())));
+    }
+    {
+      const pads = [];
+      const nav = { getGamepads: () => pads };
+      const mk = () => ({ id: 'Pad (Vendor: 1234 Product: 5678)', mapping: 'standard', connected: true, buttons: [], axes: [] });
+      pads[0] = mk(); pads[1] = mk();
+      const r = rig();
+      const gp = createGamepads({ input: r.input, nav });
+      gp.poll();
+      check('two IDENTICAL controllers are disambiguated by connection order',
+        gp.list().map((s) => s.device).join(',') === 'gamepad:12345678,gamepad:12345678#2',
+        gp.list().map((s) => s.device).join(','));
+
+      const bare = createGamepads({ input: r.input, nav: {} });
+      check('a browser with no Gamepad API reports it rather than throwing', bare.supported() === false);
+      bare.poll();
+      check('and polling it is a no-op', true);
+    }
+    {
+      // The loop itself, against a manual scheduler.
+      const pads = [{ id: 'Pad (Vendor: 1234 Product: 5678)', mapping: 'standard', connected: true, buttons: [{ pressed: false }], axes: [] }];
+      const nav = { getGamepads: () => pads };
+      const r = rig();
+      let queued = null, id = 0;
+      const gp = createGamepads({
+        input: r.input, nav,
+        schedule: (fn) => { queued = fn; return ++id; },
+        unschedule: () => { queued = null; },
+      });
+      r.input.setBindings([{ id: 'g', actionId: 'photos/next', device: 'gamepad:12345678', control: 'button:0' }]);
+      gp.start();
+      check('start runs a polling loop', gp.running());
+      pads[0].buttons[0].pressed = true;
+      queued();
+      check('the loop polls', r.fired.length === 1);
+      gp.stop();
+      check('stop ends it', !gp.running() && queued === null);
     }
 
     document.getElementById('summary').textContent =
