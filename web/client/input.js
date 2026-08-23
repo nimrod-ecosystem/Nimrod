@@ -75,6 +75,32 @@ export function deviceClass(device) {
 const ck = (device, control) => `${device} ${control}`;
 const num = (v, dflt) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : dflt);
 
+// A binding with every field filled in, validated. Exported because the bus is not the
+// only thing that holds bindings: a saved profile and an editor UI hold the same shape,
+// and if THEY carry half-populated objects the bus quietly normalizes its own copy while
+// the stored one keeps rendering `undefined` into a number field. One definition.
+export function normalizeBinding(b = {}, fallbackId = '') {
+  const id = String(b.id || fallbackId);
+  const actionId = String(b.actionId || '');
+  const device = String(b.device || '');
+  const control = String(b.control || '');
+  if (!id) throw new Error('binding: an id is required');
+  if (!actionId) throw new Error('binding: actionId is required');
+  if (!device || !control) throw new Error(`binding "${actionId}": device and control are required`);
+  const edge = b.edge === undefined ? 'press' : String(b.edge);
+  if (!EDGES.includes(edge)) throw new Error(`binding "${actionId}": bad edge "${b.edge}"`);
+  const role = b.role === undefined ? 'universal' : String(b.role);
+  if (!ROLES.includes(role)) throw new Error(`binding "${actionId}": bad role "${b.role}"`);
+  return {
+    id, actionId, device, control, edge, role,
+    holdMs: num(b.holdMs, 0),
+    debounceMs: num(b.debounceMs, 0),
+    lockoutMs: num(b.lockoutMs, 0),
+    payload: b.payload,
+    label: b.label ? String(b.label) : '',
+  };
+}
+
 export function createInputBus({
   bus,
   actions,
@@ -98,29 +124,8 @@ export function createInputBus({
 
   // ---- bindings ----------------------------------------------------------------
 
-  function normalize(b) {
-    const id = String(b.id || `b${++seq}`);
-    const actionId = String(b.actionId || '');
-    const device = String(b.device || '');
-    const control = String(b.control || '');
-    if (!actionId) throw new Error('addBinding: actionId is required');
-    if (!device || !control) throw new Error(`addBinding "${actionId}": device and control are required`);
-    const edge = b.edge === undefined ? 'press' : String(b.edge);
-    if (!EDGES.includes(edge)) throw new Error(`addBinding "${actionId}": bad edge "${b.edge}"`);
-    const role = b.role === undefined ? 'universal' : String(b.role);
-    if (!ROLES.includes(role)) throw new Error(`addBinding "${actionId}": bad role "${b.role}"`);
-    return {
-      id, actionId, device, control, edge, role,
-      holdMs: num(b.holdMs, 0),
-      debounceMs: num(b.debounceMs, 0),
-      lockoutMs: num(b.lockoutMs, 0),
-      payload: b.payload,
-      label: b.label ? String(b.label) : '',
-    };
-  }
-
   function addBinding(b) {
-    const binding = normalize(b || {});
+    const binding = normalizeBinding(b || {}, `b${++seq}`);
     bindings.set(binding.id, binding);
     return binding.id;
   }

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>inputs panel — the binder</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:1000px}
+</style>
+</head>
+<body>
+<h1>inputs panel — the binder</h1>
+<p>The surface an OT actually touches: pick an action, press the control, tune the timing,
+watch whether presses land. Driven with no hardware and no server — fake profiles, fake state,
+fake gamepads, and a fake clock so a measured hold is arithmetic.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountInputs, INPUTS_KEY, suggestHold } from '../inputs.js';
+import { createInputBus } from '../input.js';
+import { ROLE_CYCLE_ACTION } from '../actions.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+function fakeClock(start = 500000) {
+  let t = start, seq = 0;
+  const pending = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: t + ms }); return id; },
+    clearTimer: (id) => pending.delete(id),
+    advance(ms) {
+      const target = t + ms;
+      for (;;) {
+        let next = null;
+        for (const [id, x] of pending) if (x.at <= target && (!next || x.at < next[1].at)) next = [id, x];
+        if (!next) break;
+        pending.delete(next[0]); t = next[1].at; next[1].fn();
+      }
+      t = target;
+    },
+  };
+}
+
+function rig() {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const store = {};                       // stateKey -> saved object
+  const clock = fakeClock();              // the input bus's clock (measured holds)
+  const saveClock = fakeClock();          // the panel's autosave debounce
+  const profiles = { list: async () => [{ id: 'p1', name: 'Living room' }, { id: 'p2', name: 'Bedroom' }] };
+  const padList = [];
+
+  const panel = mountInputs(host, {
+    profiles,
+    makeState: (key) => {
+      const data = store[key] || (store[key] = {});
+      return {
+        load: async () => {}, get: () => data,
+        set: (patch) => Object.assign(data, patch),
+        startPolling() {}, subscribe: () => () => {}, destroy() {},
+      };
+    },
+    makeInput: (opts) => createInputBus({ ...opts, now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer }),
+    makeGamepads: () => ({
+      start() {}, stop() {}, poll() {}, supported: () => true, running: () => false,
+      list: () => padList, destroy() {},
+    }),
+    attachKeys: () => () => {},           // the panel's keyboard adapter would fight the test harness
+    setTimer: saveClock.setTimer, clearTimer: saveClock.clearTimer,
+  });
+
+  const q = (sel) => host.querySelector(sel);
+  const qa = (sel) => [...host.querySelectorAll(sel)];
+  // The device-adapter entry point — exactly what a gamepad or a switch calls.
+  const press = (device, control, ms = 0) => {
+    panel.input().down(device, control);
+    clock.advance(ms);
+    panel.input().up(device, control);
+  };
+  const saved = () => store[`${INPUTS_KEY}:${panel.current().id}`]?.[INPUTS_KEY];
+  return { host, panel, store, clock, saveClock, q, qa, press, saved, padList };
+}
+
+const XAC = 'gamepad:045e0b0a';
+
+(async () => {
+  try {
+    // ================= arithmetic =================
+    section('turning a measured hold into a threshold');
+    check('a tap suggests nothing — there is no threshold worth setting', suggestHold(90) === 0);
+    check('a real hold suggests comfortably under it', suggestHold(340) === 200, String(suggestHold(340)));
+    check('and it lands on a number a person would type', suggestHold(1234) % 50 === 0);
+    check('a long hold scales', suggestHold(2000) === 1400, String(suggestHold(2000)));
+
+    // ================= first load =================
+    section('a screen nobody has configured');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      check('it lists the screens', r.qa('[data-who-id]').length === 2);
+      check('and opens the first', r.panel.current().id === 'p1');
+      check('a fresh screen SHIPS the default — bindable never means arrives unconfigured',
+        r.panel.bindings().length === 1 && r.panel.bindings()[0].actionId === ROLE_CYCLE_ACTION,
+        JSON.stringify(r.panel.bindings()));
+      check('the default is loaded into the live bus, not just the record',
+        r.panel.input().listBindings().length === 1);
+      check('the gate starts open', r.panel.gate() === 'both');
+      check('the catalogue offers real module actions to bind',
+        r.qa('[data-new-action] option').some((o) => o.value === 'photos/next'));
+      check('grouped, so the list is readable', r.qa('[data-new-action] optgroup').length > 3);
+      check('no controller is not an error state',
+        /plug one in/.test(r.q('[data-devices]').textContent));
+      // The shipped default carries no timing fields; if they are not filled in on the
+      // way in, the number inputs render the string "undefined".
+      check('every timing field shows a real number, never "undefined"',
+        r.qa('.i-tab input[type=number]').every((i) => /^\d+$/.test(i.value)),
+        r.qa('.i-tab input[type=number]').map((i) => i.value).join(','));
+      check('and the record itself is fully populated, not half-built',
+        r.panel.bindings().every((b) => Number.isFinite(b.holdMs) && Number.isFinite(b.debounceMs)));
+
+      // home.js remounts panels onto the SAME element, so a panel that leaves its
+      // listeners behind accumulates one dead handler per visit to the tab.
+      const before = r.panel.input();
+      r.panel.destroy();
+      check('destroy releases the bus', before && !r.panel.input());
+      let threw = null;
+      window.addEventListener('error', (e) => { threw = e.message; }, { once: true });
+      r.q('[data-add]')?.click();
+      check('and clicking the corpse does nothing rather than throwing', !threw, String(threw));
+    }
+
+    // ================= binding something =================
+    section('binding a control');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-add]').click();
+      check('it asks for the control', r.panel.input().isCapturing());
+      check('and says so', /press the control/i.test(r.q('[data-addmsg]').textContent));
+
+      r.press(XAC, 'button:0', 340);
+      const b = r.panel.bindings().find((x) => x.actionId === 'photos/next');
+      check('the pressed control becomes the binding', !!b && b.control === 'button:0' && b.device === XAC,
+        JSON.stringify(r.panel.bindings()));
+      check('with sensible defaults, not blanks', b.edge === 'press' && b.role === 'universal' && b.holdMs === 0);
+      check('it reaches the live bus immediately', r.panel.input().bindingsAt(XAC, 'button:0').length === 1);
+      check('a row appears for it', r.qa('.i-tab tbody tr').length === 2);
+
+      check('it offers the hold it measured, in one click',
+        /Held 340ms/.test(r.q('[data-addmsg]').innerHTML) && !!r.q('[data-usehold]'));
+      r.q('[data-usehold]').click();
+      check('taking the offer sets the threshold',
+        r.panel.bindings().find((x) => x.actionId === 'photos/next').holdMs === 200);
+      check('and pushes it to the live bus',
+        r.panel.input().bindingsAt(XAC, 'button:0')[0].holdMs === 200);
+      r.panel.destroy();
+    }
+
+    // ================= capture does not act =================
+    section('capture must not set off what it is rebinding');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0', 100);
+      const logBefore = r.q('[data-log]').textContent;
+
+      // button:0 is now bound. Rebinding it must not fire Next photo.
+      r.qa('[data-repress]')[1].click();
+      check('re-press arms a capture', r.panel.input().isCapturing());
+      r.press(XAC, 'button:0', 120);
+      check('pressing the already-bound control did not fire it',
+        r.q('[data-log]').textContent === logBefore, r.q('[data-log]').textContent);
+      check('but it did rebind', r.panel.bindings().find((x) => x.actionId === 'photos/next').control === 'button:0');
+      r.panel.destroy();
+    }
+
+    // ================= tuning =================
+    section('tuning — the numbers nobody thinks in');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      const row = r.qa('.i-tab tbody tr').find((tr) => tr.querySelector('[data-f="actionId"]')?.value === 'photos/next');
+      const set = (f, v) => {
+        const el = row.querySelector(`[data-f="${f}"]`);
+        el.value = v;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+
+      set('edge', 'release');
+      check('the edge is per binding, set right here',
+        r.panel.input().bindingsAt(XAC, 'button:0')[0].edge === 'release');
+      set('debounceMs', '150');
+      set('lockoutMs', '600');
+      const live = () => r.panel.input().bindingsAt(XAC, 'button:0')[0];
+      check('debounce and lockout write straight through to the live bus',
+        live().debounceMs === 150 && live().lockoutMs === 600, JSON.stringify(live()));
+      set('holdMs', '-40');
+      check('a negative time is clamped, not accepted', live().holdMs === 0);
+      set('role', 'patient');
+      check('a binding can belong to one role', live().role === 'patient');
+      set('actionId', 'photos/prev');
+      check('and can be re-pointed at another action without re-pressing anything',
+        live().actionId === 'photos/prev');
+      r.panel.destroy();
+    }
+
+    // ================= the gate =================
+    section('the gate, from the panel');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      const row = r.qa('.i-tab tbody tr').find((tr) => tr.querySelector('[data-f="actionId"]')?.value === 'photos/next');
+      const roleSel = row.querySelector('[data-f="role"]');
+      roleSel.value = 'patient';
+      roleSel.dispatchEvent(new Event('change', { bubbles: true }));
+
+      r.qa('[data-gate] [data-gate]').find((b) => b.dataset.gate === 'moderator').click();
+      check('the gate closes from the panel', r.panel.gate() === 'moderator');
+      check('and the live bus agrees', r.panel.input().getGate() === 'moderator');
+
+      r.press(XAC, 'button:0');
+      check('the gated control is refused',
+        /not their turn/.test(r.q('[data-log]').textContent), r.q('[data-log]').textContent);
+      r.qa('[data-gate] [data-gate]').find((b) => b.dataset.gate === 'both').click();
+      r.press(XAC, 'button:0');
+      check('and works again when the gate reopens',
+        /went through/.test(r.q('[data-log]').textContent));
+      r.panel.destroy();
+    }
+
+    // ================= the live strip =================
+    section('the live strip — why a press did not land');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+
+      r.press(XAC, 'button:9');
+      check('an unbound control is reported in plain language, not silence',
+        /nothing is bound/.test(r.q('[data-log]').textContent));
+
+      const row = r.qa('.i-tab tbody tr').find((tr) => tr.querySelector('[data-f="actionId"]')?.value === 'photos/next');
+      const hold = row.querySelector('[data-f="holdMs"]');
+      hold.value = '400'; hold.dispatchEvent(new Event('change', { bubbles: true }));
+      r.press(XAC, 'button:0', 120);
+      check('a hold released too early says so, in words a clinician can act on',
+        /let go too early/.test(r.q('[data-log]').textContent), r.q('[data-log]').textContent);
+      r.press(XAC, 'button:0', 500);
+      check('and holding long enough goes through', /went through/.test(r.q('[data-log]').textContent));
+      r.panel.destroy();
+    }
+
+    // ================= persistence =================
+    section('persistence — no save button');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      check('nothing is written on the keystroke itself', r.saved() === undefined);
+      r.saveClock.advance(350);
+      check('it autosaves shortly after', !!r.saved() && r.saved().bindings.length === 2);
+      check('the record is versioned, so the per-user tuning split can migrate later',
+        r.saved().v === 1);
+
+      // The composer's lesson: leaving must not lose the last edit.
+      const del = r.qa('[data-del]')[1];
+      del.click();
+      check('a pending write exists', r.panel.bindings().length === 1);
+      r.panel.destroy();
+      check('destroying flushes it instead of dropping it', r.saved().bindings.length === 1,
+        JSON.stringify(r.saved()));
+    }
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      r.saveClock.advance(350);
+
+      await r.panel.select('p2');
+      check('another screen has its own bindings, not the first one\'s',
+        r.panel.bindings().length === 1 && r.panel.bindings()[0].actionId === ROLE_CYCLE_ACTION);
+      await r.panel.select('p1');
+      check('and coming back reloads what was saved',
+        r.panel.bindings().some((b) => b.actionId === 'photos/next'), JSON.stringify(r.panel.bindings()));
+      check('the reloaded bindings are live, not just displayed',
+        r.panel.input().bindingsAt(XAC, 'button:0').length === 1);
+      r.panel.destroy();
+    }
+
+    // ================= a stale profile =================
+    section('a binding whose action no longer exists');
+    {
+      const r = rig();
+      r.store[`${INPUTS_KEY}:p1`] = {
+        [INPUTS_KEY]: {
+          v: 1, gate: 'both',
+          bindings: [{ id: 'old', actionId: 'retired/thing', device: XAC, control: 'button:0',
+            edge: 'press', role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0 }],
+        },
+      };
+      await r.panel.refresh();
+      check('the row survives and is flagged rather than silently dropped',
+        r.qa('.i-stale').length === 1 && /no longer exists/.test(r.host.textContent));
+      r.press(XAC, 'button:0');
+      check('and pressing it explains itself instead of doing nothing',
+        /no longer exists/.test(r.q('[data-log]').textContent), r.q('[data-log]').textContent);
+      r.panel.destroy();
+    }
+    {
+      // A hand-edited or future-version record must not cost someone every OTHER binding.
+      const r = rig();
+      r.store[`${INPUTS_KEY}:p1`] = {
+        [INPUTS_KEY]: {
+          v: 1, gate: 'both',
+          bindings: [
+            { id: 'broken', actionId: 'photos/next', device: '', control: '' },
+            { id: 'fine', actionId: 'photos/prev', device: XAC, control: 'button:1' },
+          ],
+        },
+      };
+      await r.panel.refresh();
+      check('an unusable binding is dropped, and the rest of the screen survives',
+        r.panel.bindings().length === 1 && r.panel.bindings()[0].id === 'fine',
+        JSON.stringify(r.panel.bindings()));
+      r.panel.destroy();
+    }
+
+    // ================= devices =================
+    section('the connected list');
+    {
+      const r = rig();
+      r.padList.push({ device: XAC, id: 'Xbox Adaptive Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b0a)', mapping: 'standard', index: 0 });
+      await r.panel.refresh();
+      check('a connected controller is named the way its box is',
+        /Xbox Adaptive Controller/.test(r.q('[data-devices]').textContent));
+      check('and shows the id bindings are actually saved against',
+        r.q('[data-devices]').textContent.includes(XAC));
+      check('the keyboard is always there', /Keyboard/.test(r.q('[data-devices]').textContent));
+
+      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      check('a bound control reads as a control, not a number',
+        /Xbox Adaptive Controller: A/.test(r.host.textContent), r.q('.i-ctl')?.textContent);
+      r.panel.destroy();
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
