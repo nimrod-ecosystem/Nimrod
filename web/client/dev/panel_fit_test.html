@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>panel fit — modules in the box they were given</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* The kiosk grid cell, reproduced exactly — same classes, same overflow rules, so what
+     is measured here is what the kiosk does. See .k-stage.k-grid in kiosk.html. */
+  .cells{display:flex;flex-wrap:wrap;gap:14px;margin-top:18px}
+  .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden;
+    background:var(--card,#fffdf0);border:1px solid #ddd8b4;border-radius:10px}
+  .k-cell .k-mod{flex:1;min-width:0;display:flex;overflow:auto}
+  .k-cell .k-mod > *{flex:1;min-width:0}
+  .cap{font-size:11px;color:#6b7a70;font-family:ui-monospace,monospace}
+</style>
+</head>
+<body>
+<h1>panel fit — modules in the box they were given</h1>
+<p>Modules were written in <code>rem</code>, which is a fact about the root font and not about
+the panel they land in. In a short cell the algebra keypad simply overflowed and grew a
+scrollbar, and the clock ran to the edges. This mounts the REAL modules in real kiosk cells at
+several sizes and measures whether they fit.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div class="cells" id="cells"></div>
+
+<script type="module">
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/algebra.js';
+import '../modules/clock.js';
+
+const USER = 'fit-' + Math.floor(Math.random() * 1e6);
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const px = (el, prop) => parseFloat(getComputedStyle(el)[prop]) || 0;
+
+// The cell sizes that matter. The first is roughly a quadrant of the 1920x1080 kiosk in
+// Mike's screenshot — the one that actually overflowed.
+const SIZES = [
+  { w: 620, h: 420, label: 'quadrant of a 1080p kiosk' },
+  { w: 460, h: 300, label: 'four-up on a small screen' },
+  { w: 380, h: 240, label: 'cramped' },
+  { w: 900, h: 700, label: 'roomy — must look untouched' },
+];
+
+function cell(w, h, label) {
+  const wrap = document.createElement('div');
+  const cap = document.createElement('div');
+  cap.className = 'cap';
+  cap.textContent = `${w}x${h} — ${label}`;
+  const c = document.createElement('div');
+  // `mod-box` is the opt-in that lets a module size itself against this box.
+  c.className = 'k-cell mod-box';
+  c.style.width = `${w}px`;
+  c.style.height = `${h}px`;
+  const host = document.createElement('div');
+  host.className = 'k-mod';
+  c.append(host);
+  wrap.append(cap, c);
+  document.getElementById('cells').append(wrap);
+  return { cell: c, host };
+}
+
+(async () => {
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-fit');
+    const makeState = (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o });
+    const makeEvents = (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o });
+    const bus = createBus();
+
+    async function mount(type, host, tweak = null) {
+      const mod = await profiles.addModule(profile.id, type);
+      const st = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+      await st.load();
+      if (tweak) { st.set(tweak); await st.flush(); }
+      const inst = mountModule(type, {
+        mount: host, bus, state: st,
+        events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+        user: USER, profileId: profile.id, makeState, makeEvents,
+      });
+      inst.init();
+      return inst;
+    }
+
+    // ================= algebra =================
+    section('algebra — the keypad has to fit the panel');
+    const algebraCells = [];
+    for (const s of SIZES) {
+      const c = cell(s.w, s.h, s.label);
+      await mount('algebra', c.host, { pool: 'warm' });
+      algebraCells.push({ ...c, ...s });
+    }
+    await sleep(900);
+
+    for (const c of algebraCells) {
+      const overflow = c.host.scrollHeight - c.host.clientHeight;
+      check(`it fits a ${c.w}x${c.h} cell (${c.label})`, overflow <= 1,
+        `overflows by ${overflow}px`);
+      const sideways = c.host.scrollWidth - c.host.clientWidth;
+      check(`  ...and does not run off sideways at ${c.w}x${c.h}`, sideways <= 1,
+        `overflows by ${sideways}px`);
+    }
+
+    const tight = algebraCells[2];
+    const roomy = algebraCells[3];
+    const key = (c) => c.host.querySelector('.al-key');
+    check('a cramped cell shrinks the keys rather than clipping them',
+      px(key(tight), 'paddingTop') < px(key(roomy), 'paddingTop'),
+      `${px(key(tight), 'paddingTop')} vs ${px(key(roomy), 'paddingTop')}`);
+    check('a roomy cell is left exactly as it was — the old 11px padding',
+      Math.round(px(key(roomy), 'paddingTop')) === 11, String(px(key(roomy), 'paddingTop')));
+    check('and its prompt keeps the old 1.5rem',
+      Math.round(px(roomy.host.querySelector('.al-prompt'), 'fontSize')) === 24,
+      String(px(roomy.host.querySelector('.al-prompt'), 'fontSize')));
+    // Shrinking only the keys would just move the overflow to the prompt above them.
+    check('the prompt shrinks WITH the keypad, not independently of it',
+      px(tight.host.querySelector('.al-prompt'), 'fontSize')
+        < px(roomy.host.querySelector('.al-prompt'), 'fontSize'));
+    check('but never below legibility — a key nobody can hit is worse than a scrollbar',
+      px(tight.host.querySelector('.al-key'), 'fontSize') >= 11,
+      String(px(tight.host.querySelector('.al-key'), 'fontSize')));
+    // Below ~300px the decoration goes instead of the keys shrinking further.
+    check('a cramped cell drops the points-and-streak line rather than the keypad',
+      getComputedStyle(tight.host.querySelector('.al-top')).display === 'none');
+    check('but keeps everything a person actually uses',
+      ['.al-prompt', '.al-pad', '.al-submit', '.al-idk'].every((sel) =>
+        getComputedStyle(tight.host.querySelector(sel)).display !== 'none'));
+    check('and a roomy cell still shows the score', 
+      getComputedStyle(roomy.host.querySelector('.al-top')).display !== 'none');
+
+    // ================= clock =================
+    section('clock — big enough to read from a bed, not bigger than the cell');
+    const clockCells = [];
+    for (const s of [...SIZES, { w: 700, h: 150, label: 'wide and short — the shape that broke it' }]) {
+      const c = cell(s.w, s.h, s.label);
+      await mount('clock', c.host);
+      clockCells.push({ ...c, ...s });
+    }
+    await sleep(500);
+
+    for (const c of clockCells) {
+      const over = c.host.scrollHeight - c.host.clientHeight;
+      const side = c.host.scrollWidth - c.host.clientWidth;
+      check(`it fits a ${c.w}x${c.h} cell (${c.label})`, over <= 1 && side <= 1,
+        `${over}px down, ${side}px across`);
+      const time = c.host.querySelector('.time');
+      check(`  ...and the time stays inside the cell at ${c.w}x${c.h}`,
+        time.getBoundingClientRect().width <= c.cell.getBoundingClientRect().width,
+        `${Math.round(time.getBoundingClientRect().width)} > ${Math.round(c.cell.getBoundingClientRect().width)}`);
+    }
+    const short = clockCells[4];
+    check('a wide short cell is limited by its HEIGHT, not stretched to its width',
+      px(short.host.querySelector('.time'), 'fontSize') < px(clockCells[3].host.querySelector('.time'), 'fontSize'),
+      `${px(short.host.querySelector('.time'), 'fontSize')} vs ${px(clockCells[3].host.querySelector('.time'), 'fontSize')}`);
+    check('and it is still readable from across a room',
+      px(short.host.querySelector('.time'), 'fontSize') >= 22,
+      String(px(short.host.querySelector('.time'), 'fontSize')));
+    check('a big cell gives a big clock', px(clockCells[3].host.querySelector('.time'), 'fontSize') >= 60,
+      String(px(clockCells[3].host.querySelector('.time'), 'fontSize')));
+
+    // ================= no box, no change =================
+    section('a host that does not opt in is untouched');
+    {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:620px;height:420px;display:flex;overflow:hidden;border:1px dashed #bbb';
+      const host = document.createElement('div');
+      host.className = 'k-mod';
+      wrap.append(host);
+      document.getElementById('cells').append(wrap);
+      await mount('algebra', host, { pool: 'warm' });
+      await sleep(700);
+      check('without `mod-box` the module keeps its original fixed sizes',
+        Math.round(px(host.querySelector('.al-key'), 'paddingTop')) === 11,
+        String(px(host.querySelector('.al-key'), 'paddingTop')));
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

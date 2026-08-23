@@ -1,3 +1,15 @@
+/* A host that hands a module a fixed box adds `mod-box`, and the module can then size
+   itself against that box with container-query units (1cqh = 1% of the box's height).
+   Without it, cq units fall back to the viewport, which is why nothing breaks in the
+   composer preview or a test page that forgets to opt in.
+
+   THE BUG THIS FIXES: modules were written in rem, which is a fact about the ROOT FONT,
+   not about the panel they landed in. Put the algebra keypad in a short cell and it
+   simply overflowed and grew a scrollbar; put the clock in a wide short one and the time
+   ran to the edges. Neither is a bug in the module — both are a module with no way to
+   know how much room it has. */
+.mod-box{container-type:size;container-name:cell}
+
 /* modules.css — shared component styles for module internals + the theme palette
    variables. Linked by kiosk.html (the product surface). index.html (the dev
    harness) still carries its own inline copy; consolidating it onto this file is a
@@ -20,6 +32,17 @@
 .clock[data-size="l"] .time{font-size:4.4rem}
 .clock .when{font-size:1rem;color:var(--midnight);font-weight:600;text-transform:capitalize}
 .clock .date{font-size:.9rem;color:var(--muted)}
+/* In a sized box, ignore data-size and scale to the room available. Bounded on BOTH ends:
+   a clock nobody can read from a bed is useless, and one that runs off the edge is worse.
+   Width is in the min() too — "10:38 PM" in a wide, short cell would otherwise overflow
+   sideways long before it ran out of height. */
+@container cell (min-height: 1px){
+  /* `[data-size]` is not decoration: without it these lose to the
+     `.clock[data-size="m"] .time` rule above on specificity, and nothing changes. */
+  .clock[data-size] .time{font-size:clamp(1.4rem, min(30cqh, 16cqw), 6rem)}
+  .clock[data-size] .when{font-size:clamp(.7rem, 7cqh, 1.1rem)}
+  .clock[data-size] .date{font-size:clamp(.65rem, 6cqh, 1rem)}
+}
 .clock .gear,.clock .settings{display:none}
 
 /* camera */
@@ -276,3 +299,38 @@
 .algebra .al-how{display:block;margin-top:5px}
 .algebra .al-bonus,.algebra .al-try{display:block;margin-top:4px;font-size:.78rem;color:var(--midnight);font-weight:600}
 .algebra .al-held{font-size:.75rem;color:var(--midnight);min-height:1em}
+/* Fit the keypad to the box instead of overflowing it. Everything vertical shrinks
+   together and in proportion — a keypad whose keys shrink while the prompt above it
+   stays at 1.5rem just moves the overflow around. The upper bounds are the original
+   values, so a roomy panel looks exactly as it did before. */
+@container cell (min-height: 1px){
+  .algebra{gap:clamp(1px, 1.4cqh, 10px)}
+  .algebra .al-top{font-size:clamp(.62rem,2.4cqh,.8rem)}
+  .algebra .al-kind{font-size:clamp(.55rem,2cqh,.7rem)}
+  .algebra .al-prompt{margin:clamp(0px,.6cqh,4px) 0 clamp(2px,1.8cqh,12px);
+    font-size:clamp(.85rem, 5cqh, 1.5rem);line-height:1.15}
+  .algebra .al-display{padding:clamp(2px,1.4cqh,10px) 12px;font-size:clamp(.85rem,4.6cqh,1.5rem);
+    margin-bottom:clamp(2px,1cqh,7px);line-height:1.2}
+  .algebra .al-pad{gap:clamp(2px,.8cqh,5px)}
+  /* line-height is part of a key's height, so leaving it at the inherited 1.5 puts a
+     floor under the keypad that no amount of padding reduction can get past. */
+  .algebra .al-key{padding:clamp(1px,1.9cqh,11px) 0;font-size:clamp(.7rem,3.2cqh,1rem);
+    line-height:clamp(1.05,2.6cqh,1.5)}
+  .algebra .al-submit,.algebra .al-idk{padding:clamp(2px,1.7cqh,11px) 16px;
+    margin-top:clamp(2px,1.2cqh,8px);line-height:1.2}
+  .algebra .al-submit{font-size:clamp(.7rem,3.4cqh,1rem)}
+  .algebra .al-idk{font-size:clamp(.66rem,3cqh,.9rem)}
+  .algebra .al-held{font-size:clamp(.6rem,2.4cqh,.75rem)}
+  /* Feedback is the one thing allowed to scroll — it is prose, it appears after an
+     answer, and clipping an explanation is worse than a short scroll. */
+  .algebra .al-fb{margin-top:clamp(4px,1.6cqh,12px);font-size:clamp(.75rem,3cqh,.9rem);
+    max-height:34cqh;overflow-y:auto}
+}
+/* Below this there is genuinely not room for a five-row keypad, a prompt, a display and
+   two buttons at a size anyone can hit. Rather than shrink the KEYS past legibility —
+   which would trade a scrollbar for a panel nobody can use — the decoration goes: the
+   points-and-streak line and the reserved hold hint. Nothing functional is hidden; the
+   problem, the keypad, Submit and "I don't know" all stay. */
+@container cell (max-height: 300px){
+  .algebra .al-top,.algebra .al-held{display:none}
+}
