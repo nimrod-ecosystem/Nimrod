@@ -50,7 +50,7 @@ export const TABS = [
 export async function mountHome(root, { email = '', profiles, manifests = [], onOpen = null,
                                        makeSettings = null, makeState = null, makeEvents = null,
                                        user = null, bus = null, mountTab = null,
-                                       makeUserState = null,
+                                       makeUserState = null, makeUserEvents = null,
                                        signedIn = null } = {}) {
   const isSignedIn = signedIn == null ? !!email : !!signedIn;
   let active = 'screens';
@@ -89,7 +89,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     }
     if (id === 'output') {
       const { mountOutput } = await import('./output_panel.js');
-      const o = mountOutput(host, { user, makeUserState });
+      const o = mountOutput(host, { user, makeUserState, makeUserEvents });
       await o.refresh();
       return o;
     }

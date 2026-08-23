@@ -26,6 +26,7 @@
 import { createOutputBus, VERBS, CHANNELS, DEFAULT_ROUTING, DELIVERY_TOPIC } from './output.js';
 import { defaultChannels } from './output_channels.js';
 import { createBus } from './bus.js';
+import { createRemoteReceiver, REMOTE_STREAM } from './output_remote.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -61,7 +62,7 @@ const SAMPLE = {
 };
 
 export function mountOutput(root, {
-  user = null, makeUserState = null,
+  user = null, makeUserState = null, makeUserEvents = null,
   // Seams: the test drives the whole panel with no speaking and no server.
   makeOutput = null, channels = null,
   saveDebounceMs = 350,
@@ -70,6 +71,8 @@ export function mountOutput(root, {
 } = {}) {
   let state = null;
   let output = null;
+  let mailbox = null;
+  let receiver = null;
   let saveTimer = null;
   let record = { v: RECORD_VERSION, routing: { ...DEFAULT_ROUTING }, muted: [] };
 
@@ -252,6 +255,8 @@ export function mountOutput(root, {
 
   function teardown() {
     flush();
+    if (receiver) { receiver.destroy(); receiver = null; }
+    mailbox = null;
     if (output) { output.destroy(); output = null; }
     if (state) { state.destroy(); state = null; }
     lines.length = 0;
@@ -280,12 +285,21 @@ export function mountOutput(root, {
 
     body();     // the stage has to exist before the screen channel can mount into it
 
+    // Signed out there is no account and so no other devices; the mailbox is absent and
+    // the remote channel simply is not offered.
+    mailbox = makeUserEvents ? makeUserEvents(REMOTE_STREAM) : null;
     output = (makeOutput || createOutputBus)({
       bus: localBus,
-      channels: channels || defaultChannels({ mount: el('[data-stage]') }),
+      channels: channels || defaultChannels({ mount: el('[data-stage]'), events: mailbox }),
       routing: record.routing,
       onDelivery,
     });
+    // Listening as well as sending, so this tab is itself one of "your other devices" —
+    // which is also the only way to see the round trip while setting it up.
+    if (mailbox) {
+      receiver = createRemoteReceiver({ events: mailbox, output });
+      receiver.start().catch((err) => console.error('remote receiver', err));
+    }
     push();
     localBus.subscribe(DELIVERY_TOPIC, () => {});   // keep the topic live for diagnostics
 

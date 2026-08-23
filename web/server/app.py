@@ -250,6 +250,22 @@ def put_state(pid: str, key: str, body: StatePut, user: str = Depends(current_us
 USER_SCOPE = "_user"
 
 
+# Per-user EVENTS, the sibling of per-user state and the mailbox the `remote` output
+# channel posts into. Append-only like every other event stream, and scoped to the user
+# rather than one of their screens, because "tell me on whatever device I am near" is a
+# statement about the person and not about a screen.
+@app.get("/api/user-events/{stream}")
+def list_user_events(stream: str, limit: int = 50, user: str = Depends(current_user)):
+    _check(stream, ID_RE, "event stream")
+    return store.list_events(user, USER_SCOPE, stream, limit)
+
+
+@app.post("/api/user-events/{stream}")
+def append_user_event(stream: str, body: EventPost, user: str = Depends(current_user)):
+    _check(stream, ID_RE, "event stream")
+    return store.append_event(user, USER_SCOPE, stream, body.kind, body.data)
+
+
 @app.get("/api/user-state/{key}")
 def get_user_state(key: str, user: str = Depends(current_user)):
     _check(key, ID_RE, "state key")

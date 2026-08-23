@@ -300,6 +300,11 @@ function localBanner() {
       makeUserState: signedIn
         ? (key, opts) => createState({ url: profiles.userStateURL(key), user: me.user, ...opts })
         : backend.makeUserState,
+      // The per-user mailbox for the `remote` output channel. Signed out there are no
+      // other devices, so it is null and the channel is simply not offered.
+      makeUserEvents: signedIn
+        ? (stream, opts) => createEvents({ url: profiles.userEventsURL(stream), user: me.user, ...opts })
+        : null,
     });
   } catch (e) {
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +

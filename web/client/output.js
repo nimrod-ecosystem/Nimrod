@@ -226,7 +226,8 @@ export function createOutputBus({
 
   // ---- the front door -------------------------------------------------------------
 
-  function emit({ verb = 'notify', text = '', source = null, data = null, ttlMs = null, priority = null } = {}) {
+  function emit({ verb = 'notify', text = '', source = null, data = null, ttlMs = null,
+                  priority = null, exclude = [] } = {}) {
     const v = VERBS.includes(verb) ? verb : 'notify';
     const item = {
       id: `o${++seq}`,
@@ -239,8 +240,13 @@ export function createOutputBus({
       preemptions: 0,
     };
 
-    const names = route[v];
-    if (!names || !names.length) { report(item, null, { reason: 'no-channel' }); return item.id; }
+    // `exclude` exists for exactly one caller: the remote receiver, re-emitting a
+    // message that ARRIVED from another device. Without it, a person whose routing
+    // includes `remote` would post it straight back out and the two devices would talk
+    // to each other forever. Excluding a channel here still lets the person's own
+    // screen/speech/sound choices apply — it only forbids the bounce.
+    const names = (route[v] || []).filter((c) => !exclude.includes(c));
+    if (!names.length) { report(item, null, { reason: 'no-channel' }); return item.id; }
     // One item, several channels: each gets its own copy, because they succeed and fail
     // independently. Speech being busy must not stop the banner appearing.
     for (const name of names) enqueue(name, { ...item });

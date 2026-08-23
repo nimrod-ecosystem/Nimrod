@@ -56,6 +56,9 @@ export function createProfilesClient({ user, baseURL = '' }) {
     // need to hold it is true everywhere, and re-entering it per screen is exactly the
     // per-device toil this project exists to avoid.
     userStateURL: (key) => `${baseURL}/api/user-state/${key}`,
+    // The per-user mailbox the `remote` output channel posts into, and every other
+    // device of this person's polls. Per user, not per screen, for the same reason.
+    userEventsURL: (stream) => `${baseURL}/api/user-events/${stream}`,
     eventsURL: (pid, stream) => `${baseURL}/api/profiles/${pid}/events/${stream}`,
   };
 }
