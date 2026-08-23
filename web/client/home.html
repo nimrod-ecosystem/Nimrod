@@ -139,6 +139,38 @@
     border-radius:10px;background:var(--card);color:var(--ink)}
   .i-log{display:grid;gap:3px;max-height:230px;overflow:auto;font-size:.85rem;margin-top:6px}
   .i-log>div{padding:3px 8px;border-radius:6px;background:var(--cream-soft)}
+  /* Output routing grid. Verbs down, channels across — the shape of someone's whole
+     setup on one screen, which a card-per-verb layout cannot show. */
+  .o-tab{width:100%;border-collapse:collapse;font-size:.85rem;margin:6px 0 4px}
+  .o-tab th{text-align:left;font-weight:600;padding:0 8px 8px 0;vertical-align:bottom}
+  .o-tab thead th{font-size:.75rem;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.04em;text-align:center;min-width:5.5rem}
+  .o-tab tbody th{border-top:1px solid var(--line);padding:9px 12px 9px 0;font-weight:400}
+  .o-tab tbody th b{display:block;font-weight:700}
+  .o-tab tbody th .h-hint{display:block;line-height:1.35}
+  .o-tab td{border-top:1px solid var(--line);text-align:center;padding:9px 4px}
+  .o-cell{display:inline-flex;padding:6px;cursor:pointer}
+  .o-cell input{width:19px;height:19px;accent-color:var(--moss);cursor:pointer}
+  .o-cell input:disabled{cursor:not-allowed;opacity:.35}
+  .o-tab .o-off{opacity:.45}
+  .o-nowhere{background:rgba(164,36,59,.06)}
+  .o-warn{display:inline-block;margin-top:3px;font-size:.72rem;font-weight:700;color:var(--rosy-deep)}
+  .o-chans{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:7px;font-size:.9rem}
+  .o-chans li{display:flex;align-items:center;gap:10px}
+  .o-chans li b{min-width:9rem}
+  .o-chans .o-off{opacity:.5}
+  .o-stage{display:grid;gap:5px;margin:10px 0}
+  .out-msg{padding:8px 12px;border-radius:9px;background:var(--cream-soft);
+    border-left:3px solid var(--line);font-size:.9rem}
+  .out-alert{border-left-color:var(--rosy-deep);font-weight:700}
+  .out-notify{border-left-color:var(--moss)}
+  .out-status{border-left-color:var(--muted);opacity:.85}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  @media (max-width:760px){
+    .o-tab thead th{min-width:0;font-size:.62rem}
+    .o-tab tbody th{padding-right:6px}
+    .o-cell{padding:3px}
+  }
   .i-ok{border-left:3px solid var(--moss)}
   .i-no{border-left:3px solid var(--rosy-deep);color:var(--ink-soft)}
   @media (max-width:760px){

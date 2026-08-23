@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>output panel — how this person wants to be told</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:1000px}
+</style>
+</head>
+<body>
+<h1>output panel — how this person wants to be told</h1>
+<p>The twin of the Inputs tab, and per-user in the same way: a grid of verbs against channels,
+saved against the person and not the screen. Fake channels, so nothing speaks out loud, and a
+fake clock so the autosave debounce is arithmetic.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountOutput, OUTPUT_KEY, RECORD_VERSION, VERB_ROWS } from '../output_panel.js';
+import { createOutputBus, VERBS, CHANNELS, DEFAULT_ROUTING } from '../output.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+function fakeClock(start = 100000) {
+  let t = start, seq = 0;
+  const pending = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: t + ms }); return id; },
+    clearTimer: (id) => pending.delete(id),
+    advance(ms) {
+      const target = t + ms;
+      for (;;) {
+        let next = null;
+        for (const [id, x] of pending) if (x.at <= target && (!next || x.at < next[1].at)) next = [id, x];
+        if (!next) break;
+        pending.delete(next[0]); t = next[1].at; next[1].fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// Channels that record instead of speaking. `light` is deliberately absent throughout,
+// so "this device cannot do that" is exercised rather than assumed.
+function fakeChannel(name, concurrency = 1) {
+  const got = [];
+  return {
+    name, concurrency, got,
+    available: () => true,
+    present(item, { done }) { got.push(item.text); done(); return null; },
+  };
+}
+
+const userStore = {};
+
+function rig({ seed = null, fresh = true, channels = null } = {}) {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  if (fresh) for (const k of Object.keys(userStore)) delete userStore[k];
+  if (seed) userStore[OUTPUT_KEY] = seed;
+
+  const clock = fakeClock();
+  const chans = channels || {
+    screen: fakeChannel('screen', 3),
+    speech: fakeChannel('speech', 1),
+    sound: fakeChannel('sound', 2),
+  };
+  const panel = mountOutput(host, {
+    makeUserState: () => ({
+      load: async () => {}, get: () => userStore,
+      set: (patch) => Object.assign(userStore, patch),
+      startPolling() {}, subscribe: () => () => {}, destroy() {},
+    }),
+    channels: chans,
+    setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+  });
+
+  const q = (sel) => host.querySelector(sel);
+  const qa = (sel) => [...host.querySelectorAll(sel)];
+  const box = (verb, chan) => q(`[data-verb="${verb}"][data-chan="${chan}"]`);
+  const tick = (verb, chan, on) => {
+    const b = box(verb, chan);
+    b.checked = on;
+    b.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  const fire = (verb) => q(`[data-try="${verb}"]`).click();
+  return { host, panel, clock, chans, q, qa, box, tick, fire, saved: () => userStore[OUTPUT_KEY] };
+}
+
+(async () => {
+  try {
+    // ================= the grid =================
+    section('the grid — the whole setup on one screen');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      check('a row per kind of message, most urgent first',
+        r.qa('.o-tab tbody tr').length === VERB_ROWS.length && VERB_ROWS[0] === 'alert');
+      check('a column per channel, including ones this device lacks',
+        r.qa('.o-tab thead th').length === CHANNELS.length + 1);
+      check('and it starts from the shipped defaults, not blank',
+        r.box('say', 'speech').checked && r.box('alert', 'screen').checked);
+      check('a channel this device cannot do is shown but not tickable',
+        r.box('alert', 'light').disabled && !r.box('alert', 'screen').disabled);
+      check('and marked as absent rather than silently missing',
+        /not here/.test(r.q('.o-tab thead').textContent));
+      check('every crossing is labelled for a screen reader',
+        r.qa('.o-cell .sr-only').length === VERB_ROWS.length * CHANNELS.length);
+      r.panel.destroy();
+    }
+
+    // ================= editing =================
+    section('changing where things go');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.tick('say', 'screen', true);
+      check('ticking a box adds the channel', r.panel.routing().say.includes('screen'));
+      check('and it reaches the live bus, not just the record', (() => {
+        r.fire('say');
+        return r.chans.screen.got.length === 1;
+      })());
+      check('the old channel still works too', r.chans.speech.got.length === 1);
+
+      r.tick('say', 'speech', false);
+      r.fire('say');
+      check('unticking removes it', r.chans.speech.got.length === 1 && r.chans.screen.got.length === 2);
+
+      check('channels keep a stable order however they were ticked',
+        (() => { r.tick('notify', 'speech', true);
+          return r.panel.routing().notify.join() === CHANNELS.filter((c) => r.panel.routing().notify.includes(c)).join(); })());
+
+      // The failure mode a grid exists to make visible.
+      for (const c of CHANNELS) if (!r.box('alert', c).disabled) r.tick('alert', c, false);
+      check('a row with nothing ticked is called out — the whole point of seeing the shape',
+        !!r.q('.o-nowhere') && /goes nowhere/.test(r.host.textContent));
+      r.fire('alert');
+      check('and firing it reports that it went nowhere',
+        /goes nowhere/.test(r.q('[data-log]').textContent), r.q('[data-log]').textContent);
+      r.tick('alert', 'screen', true);
+      check('ticking one back clears the warning', !r.q('.o-nowhere'));
+      r.panel.destroy();
+    }
+
+    // ================= muting =================
+    section('muting — for right now, not forever');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-mute="sound"]').click();
+      check('a channel can be muted', r.panel.muted().includes('sound'));
+      r.fire('notify');
+      check('and nothing goes to it', r.chans.sound.got.length === 0);
+      check('while the others still work', r.chans.screen.got.length === 1);
+      check('the log says WHY it was quiet',
+        /muted/.test(r.q('[data-log]').textContent));
+      check('muting does not change the routing choices',
+        r.panel.routing().notify.includes('sound'));
+      r.q('[data-mute="sound"]').click();
+      r.fire('notify');
+      check('unmuting restores it', r.chans.sound.got.length === 1);
+      r.panel.destroy();
+    }
+
+    // ================= the tester =================
+    section('hearing it');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      check('there is a test button per kind of message',
+        r.qa('[data-try]').length === VERB_ROWS.length);
+      r.fire('alert');
+      check('an urgent one reaches everything at once',
+        r.chans.screen.got.length === 1 && r.chans.speech.got.length === 1 && r.chans.sound.got.length === 1);
+      check('with real words, not lorem ipsum', /chair/.test(r.chans.speech.got[0]));
+      check('and the strip shows each arrival separately',
+        (r.q('[data-log]').textContent.match(/arrived/g) || []).length === 3);
+
+      r.q('[data-silence]').click();
+      check('stop-everything is available to the person setting it up',
+        !!r.q('[data-silence]'));
+      r.panel.destroy();
+    }
+
+    // ================= persistence =================
+    section('per USER, not per screen');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.tick('say', 'screen', true);
+      check('nothing is written on the click itself', r.saved() === undefined);
+      r.clock.advance(350);
+      check('it autosaves shortly after', !!r.saved());
+      check('under ONE key with no screen id in it',
+        Object.keys(userStore).join() === OUTPUT_KEY);
+      check('and it is versioned', r.saved().v === RECORD_VERSION);
+
+      r.q('[data-mute="sound"]').click();
+      r.panel.destroy();
+      check('destroying flushes the pending write instead of dropping it',
+        r.saved().muted.includes('sound'));
+    }
+    {
+      const r = rig({ fresh: false });
+      await r.panel.refresh();
+      check("the person's choices are still theirs on the next visit",
+        r.panel.routing().say.includes('screen') && r.panel.muted().includes('sound'));
+      check('and the mute is applied to the live bus, not just displayed',
+        (() => { r.fire('notify'); return r.chans.sound.got.length === 0; })());
+      r.panel.destroy();
+    }
+    {
+      const r = rig({ seed: { v: RECORD_VERSION, routing: { alert: ['screen', 'telepathy'], say: ['speech'] }, muted: ['nonsense'] } });
+      await r.panel.refresh();
+      check('a channel that does not exist is dropped from a stored record',
+        r.panel.routing().alert.join() === 'screen', r.panel.routing().alert.join());
+      check('and from the mute list', r.panel.muted().length === 0);
+      check('a verb missing from the record falls back to its default, not to silence',
+        r.panel.routing().notify.join() === DEFAULT_ROUTING.notify.join());
+      r.panel.destroy();
+    }
+    {
+      const r = rig({ seed: { v: 99, routing: { alert: [] }, muted: ['screen', 'speech', 'sound'] } });
+      await r.panel.refresh();
+      check('a record from a future version is ignored wholesale — a half-understood routing table could silence an alert',
+        r.panel.routing().alert.join() === DEFAULT_ROUTING.alert.join() && r.panel.muted().length === 0,
+        JSON.stringify(r.panel.routing().alert));
+      r.panel.destroy();
+    }
+
+    // ================= teardown =================
+    section('leaving the tab');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      const bus = r.panel.output();
+      r.panel.destroy();
+      check('the output bus is released', !!bus && !r.panel.output());
+      let threw = null;
+      window.addEventListener('error', (e) => { threw = e.message; }, { once: true });
+      r.q('[data-try="alert"]')?.click();
+      check('and a click on the corpse does nothing rather than throwing', !threw, String(threw));
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
