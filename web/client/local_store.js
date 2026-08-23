@@ -249,6 +249,9 @@ export function createLocalBackend() {
     profiles,
     makeSettings: (pid) => createLocalState(pid, 'settings'),
     makeState: (key, _opts, forPid) => createLocalState(forPid || keyPid(key), key),
+    // Signed out, "per user" is "per device" — there is no account to hang it on. The
+    // reserved pid matches the server's USER_SCOPE so the two halves read the same.
+    makeUserState: (key) => createLocalState('_user', key),
     makeEvents: (key, _opts, forPid) => createLocalEvents(forPid || keyPid(key), key),
   };
 }

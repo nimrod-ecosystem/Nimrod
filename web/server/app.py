@@ -238,6 +238,33 @@ def put_state(pid: str, key: str, body: StatePut, user: str = Depends(current_us
     return result
 
 
+# ------------------------------------------------- per-USER state (not per screen)
+# A reserved profile_id. Real profile ids are uuid4().hex — 32 hex characters — so a
+# value starting with an underscore cannot collide with one, and the state table has no
+# foreign key to profiles. That is the whole trick: per-user state needs no new table.
+#
+# WHY IT EXISTS: input bindings. A binding says "my switch means Primary select", which
+# is a fact about the PERSON and their hardware, not about any one screen. Storing it per
+# screen meant re-tuning the same switch on every screen someone owns — the exact
+# per-device toil this project exists to avoid.
+USER_SCOPE = "_user"
+
+
+@app.get("/api/user-state/{key}")
+def get_user_state(key: str, user: str = Depends(current_user)):
+    _check(key, ID_RE, "state key")
+    return store.get_state(user, USER_SCOPE, key)
+
+
+@app.put("/api/user-state/{key}")
+def put_user_state(key: str, body: StatePut, user: str = Depends(current_user)):
+    _check(key, ID_RE, "state key")
+    status, result = store.put_state(user, USER_SCOPE, key, body.data, body.base_version)
+    if status == "conflict":
+        return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
+    return result
+
+
 # ------------------------------------------------------------ append-only events
 @app.get("/api/profiles/{pid}/events/{stream}")
 def list_events(pid: str, stream: str, limit: int = 50, user: str = Depends(current_user)):

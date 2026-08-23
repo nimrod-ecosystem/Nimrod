@@ -73,7 +73,12 @@ export function attachKeyboard(input, { target = window, device = KEYBOARD_DEVIC
   const onDown = (e) => {
     if (e.repeat || isTyping(e.target)) return;
     const control = keyControl(e);
-    if (!control || !input.hasBinding(device, control)) return;
+    if (!control) return;
+    // WHILE CAPTURING, FORWARD EVERYTHING. The "only bound keys" rule below is what makes
+    // an unbound keystroke keep working normally — but during a capture the whole point is
+    // that the control is NOT bound yet, so that rule silently ate every key and "press a
+    // control" did nothing at all. Capture has to see keys the bus has never heard of.
+    if (!input.isCapturing() && !input.hasBinding(device, control)) return;
     e.preventDefault();
     input.down(device, control);
   };

@@ -49,6 +49,7 @@ export const TABS = [
 export async function mountHome(root, { email = '', profiles, manifests = [], onOpen = null,
                                        makeSettings = null, makeState = null, makeEvents = null,
                                        user = null, bus = null, mountTab = null,
+                                       makeUserState = null,
                                        signedIn = null } = {}) {
   const isSignedIn = signedIn == null ? !!email : !!signedIn;
   let active = 'screens';
@@ -81,7 +82,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     }
     if (id === 'inputs') {
       const { mountInputs } = await import('./inputs.js');
-      const i = mountInputs(host, { profiles, user, makeState });
+      const i = mountInputs(host, { profiles, user, makeUserState });
       await i.refresh();
       return i;
     }

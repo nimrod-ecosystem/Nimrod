@@ -264,6 +264,10 @@ function localBanner() {
         ? (key, opts, forPid) =>
             createEvents({ url: profiles.eventsURL(forPid || keyPid(key), key), user: me.user, ...opts })
         : backend.makeEvents,
+      // Input bindings live here rather than against a screen — see profile.js.
+      makeUserState: signedIn
+        ? (key, opts) => createState({ url: profiles.userStateURL(key), user: me.user, ...opts })
+        : backend.makeUserState,
     });
   } catch (e) {
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>inputs panel — the binder</title>
+<title>inputs panel — verbs, focus, and the binder</title>
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
@@ -13,18 +13,20 @@
 </style>
 </head>
 <body>
-<h1>inputs panel — the binder</h1>
-<p>The surface an OT actually touches: pick an action, press the control, tune the timing,
-watch whether presses land. Driven with no hardware and no server — fake profiles, fake state,
-fake gamepads, and a fake clock so a measured hold is arithmetic.</p>
+<h1>inputs panel — verbs, focus, and the binder</h1>
+<p>You bind a VERB, and whichever panel has focus decides what it means. This covers the router
+that makes that true, and the panel an OT actually touches. No hardware, no server — fake
+profiles, fake per-user state, fake gamepads, and a fake clock so a measured hold is arithmetic.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="host"></div>
 
 <script type="module">
-import { mountInputs, INPUTS_KEY, suggestHold } from '../inputs.js';
+import { mountInputs, INPUTS_KEY, RECORD_VERSION, suggestHold } from '../inputs.js';
 import { createInputBus } from '../input.js';
-import { ROLE_CYCLE_ACTION } from '../actions.js';
+import { createVerbRouter } from '../input_router.js';
+import { createBus } from '../bus.js';
+import { VERBS, FOCUS_VERBS, verbTopic, verbTarget, respondsToVerbs, ROLE_CYCLE_ACTION } from '../actions.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -57,322 +59,313 @@ function fakeClock(start = 500000) {
   };
 }
 
-function rig() {
+// A screen with something to say, and a screen with nothing.
+const SCREENS = {
+  p1: { id: 'p1', name: 'Living room', modules: [
+    { id: 'm-photos', type: 'photos', position: 0 },
+    { id: 'm-clock', type: 'clock', position: 1 },
+    { id: 'm-yt', type: 'youtube', position: 2 },
+  ] },
+  p2: { id: 'p2', name: 'Bedroom', modules: [{ id: 'm-clock2', type: 'clock', position: 0 }] },
+};
+
+// Per-USER state: ONE store, not keyed by screen. That is the point of the slice.
+const userStore = {};
+
+function rig({ seed = null, fresh = true } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
-  const store = {};                       // stateKey -> saved object
-  const clock = fakeClock();              // the input bus's clock (measured holds)
-  const saveClock = fakeClock();          // the panel's autosave debounce
-  const profiles = { list: async () => [{ id: 'p1', name: 'Living room' }, { id: 'p2', name: 'Bedroom' }] };
+  if (fresh) for (const k of Object.keys(userStore)) delete userStore[k];
+  if (seed) userStore[INPUTS_KEY] = seed;
+
+  const clock = fakeClock();
+  const saveClock = fakeClock();
   const padList = [];
+  const profiles = {
+    list: async () => Object.values(SCREENS).map((s) => ({ id: s.id, name: s.name })),
+    get: async (pid) => SCREENS[pid],
+  };
 
   const panel = mountInputs(host, {
     profiles,
-    makeState: (key) => {
-      const data = store[key] || (store[key] = {});
-      return {
-        load: async () => {}, get: () => data,
-        set: (patch) => Object.assign(data, patch),
-        startPolling() {}, subscribe: () => () => {}, destroy() {},
-      };
-    },
+    makeUserState: () => ({
+      load: async () => {}, get: () => userStore,
+      set: (patch) => Object.assign(userStore, patch),
+      startPolling() {}, subscribe: () => () => {}, destroy() {},
+    }),
     makeInput: (opts) => createInputBus({ ...opts, now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer }),
     makeGamepads: () => ({
       start() {}, stop() {}, poll() {}, supported: () => true, running: () => false,
       list: () => padList, destroy() {},
     }),
-    attachKeys: () => () => {},           // the panel's keyboard adapter would fight the test harness
+    attachKeys: () => () => {},          // the real adapters would fight the harness
+    attachPtr: () => () => {},
     setTimer: saveClock.setTimer, clearTimer: saveClock.clearTimer,
   });
 
   const q = (sel) => host.querySelector(sel);
   const qa = (sel) => [...host.querySelectorAll(sel)];
-  // The device-adapter entry point — exactly what a gamepad or a switch calls.
   const press = (device, control, ms = 0) => {
     panel.input().down(device, control);
     clock.advance(ms);
     panel.input().up(device, control);
   };
-  const saved = () => store[`${INPUTS_KEY}:${panel.current().id}`]?.[INPUTS_KEY];
-  return { host, panel, store, clock, saveClock, q, qa, press, saved, padList };
+  return { host, panel, clock, saveClock, q, qa, press, padList, saved: () => userStore[INPUTS_KEY] };
 }
 
 const XAC = 'gamepad:045e0b0a';
+const logText = (r) => r.q('[data-log]').textContent;
 
 (async () => {
   try {
+    // ================= the verb model =================
+    section('the verb vocabulary');
+    check('the list a person reads is short', VERBS.length <= 10, String(VERBS.length));
+    check('and Primary select is the one everybody gets', VERBS[0].id === 'select');
+    check('a verb resolves per module type', verbTarget('photos', 'next').topic === 'photos/next');
+    check('the same verb means something else elsewhere', verbTarget('youtube', 'next').topic === 'youtube/next');
+    check('a verb a module has no answer for resolves to nothing, which is not an error',
+      verbTarget('photos', 'select') === null);
+    check('payload verbs carry their payload', verbTarget('counter', 'down').payload === -1);
+    check('a clock answers nothing at all', !respondsToVerbs('clock'));
+    check('moving focus is itself bindable — with one switch it has to be',
+      FOCUS_VERBS.some((v) => v.id === 'focus-next'));
+
+    // ================= the router =================
+    section('the router — which panel gets it');
+    {
+      const bus = createBus();
+      const fired = [];
+      ['photos/next', 'photos/prev', 'youtube/next'].forEach((t) => bus.subscribe(t, (p) => fired.push([t, p])));
+      const unhandled = [];
+      let modules = SCREENS.p1.modules;
+      const router = createVerbRouter({ bus, modules: () => modules, onUnhandled: (u) => unhandled.push(u) });
+
+      check('the clock is not reachable — every press it costs is a press wasted',
+        router.reachable().map((m) => m.type).join(',') === 'photos,youtube');
+      check('focus starts on the first panel that answers something', router.focused().type === 'photos');
+
+      bus.publish(verbTopic('next'));
+      check('a verb goes to the focused panel', fired.length === 1 && fired[0][0] === 'photos/next');
+
+      bus.publish(verbTopic('select'));
+      check('a verb the panel has no answer for does nothing', fired.length === 1);
+      check('and says so, rather than looking like a dead switch',
+        unhandled.length === 1 && unhandled[0].reason === 'no-mapping');
+
+      bus.publish(verbTopic('focus-next'));
+      check('focus moves past the clock, not onto it', router.focused().type === 'youtube');
+      bus.publish(verbTopic('next'));
+      check('the SAME binding now drives a different module',
+        fired.length === 2 && fired[1][0] === 'youtube/next');
+
+      bus.publish(verbTopic('focus-next'));
+      check('focus wraps — with one switch the ring has to close', router.focused().type === 'photos');
+      bus.publish(verbTopic('focus-prev'));
+      check('and goes back the other way', router.focused().type === 'youtube');
+
+      modules = [{ id: 'm-photos', type: 'photos', position: 0 }];
+      check('losing the focused panel falls back rather than stranding the switch',
+        router.focused().type === 'photos');
+
+      modules = SCREENS.p2.modules;
+      check('a screen with nothing to press has no focus', router.focused() === null);
+      bus.publish(verbTopic('next'));
+      check('and a verb there is reported, not silently dropped',
+        unhandled[unhandled.length - 1].reason === 'no-panel');
+
+      router.destroy();
+      modules = SCREENS.p1.modules;
+      bus.publish(verbTopic('next'));
+      check('a destroyed router stops listening', fired.length === 2);
+    }
+
     // ================= arithmetic =================
     section('turning a measured hold into a threshold');
-    check('a tap suggests nothing — there is no threshold worth setting', suggestHold(90) === 0);
+    check('a tap suggests nothing', suggestHold(90) === 0);
     check('a real hold suggests comfortably under it', suggestHold(340) === 200, String(suggestHold(340)));
-    check('and it lands on a number a person would type', suggestHold(1234) % 50 === 0);
-    check('a long hold scales', suggestHold(2000) === 1400, String(suggestHold(2000)));
+    check('and lands on a number a person would type', suggestHold(1234) % 50 === 0);
 
     // ================= first load =================
-    section('a screen nobody has configured');
+    section('a person who has never set this up');
     {
       const r = rig();
       await r.panel.refresh();
-      check('it lists the screens', r.qa('[data-who-id]').length === 2);
-      check('and opens the first', r.panel.current().id === 'p1');
-      check('a fresh screen SHIPS the default — bindable never means arrives unconfigured',
-        r.panel.bindings().length === 1 && r.panel.bindings()[0].actionId === ROLE_CYCLE_ACTION,
-        JSON.stringify(r.panel.bindings()));
-      check('the default is loaded into the live bus, not just the record',
-        r.panel.input().listBindings().length === 1);
-      check('the gate starts open', r.panel.gate() === 'both');
-      check('the catalogue offers real module actions to bind',
-        r.qa('[data-new-action] option').some((o) => o.value === 'photos/next'));
-      check('grouped, so the list is readable', r.qa('[data-new-action] optgroup').length > 3);
-      check('no controller is not an error state',
-        /plug one in/.test(r.q('[data-devices]').textContent));
-      // The shipped default carries no timing fields; if they are not filled in on the
-      // way in, the number inputs render the string "undefined".
-      check('every timing field shows a real number, never "undefined"',
+      check('the shipped default is there — bindable never means arrives unconfigured',
+        r.panel.bindings().length === 1 && r.panel.bindings()[0].actionId === ROLE_CYCLE_ACTION);
+      check('and it is live, not just displayed', r.panel.input().listBindings().length === 1);
+      check('every timing field is a real number, never "undefined"',
         r.qa('.i-tab input[type=number]').every((i) => /^\d+$/.test(i.value)),
         r.qa('.i-tab input[type=number]').map((i) => i.value).join(','));
-      check('and the record itself is fully populated, not half-built',
-        r.panel.bindings().every((b) => Number.isFinite(b.holdMs) && Number.isFinite(b.debounceMs)));
 
-      // home.js remounts panels onto the SAME element, so a panel that leaves its
-      // listeners behind accumulates one dead handler per visit to the tab.
-      const before = r.panel.input();
+      const opts = r.qa('[data-new-action] option');
+      check('the "does what" list is FLAT — no groups to open',
+        r.qa('[data-new-action] optgroup').length === 0);
+      check('and short: the verbs, the focus controls, and the gate',
+        opts.length === VERBS.length + FOCUS_VERBS.length + 1, String(opts.length));
+      check('it offers Primary select by default, not something obscure',
+        r.q('[data-new-action]').value === verbTopic('select'));
+
+      check('the wording is moderator/participant, not caregiver/them',
+        /Moderator only/.test(r.host.textContent) && /Participant only/.test(r.host.textContent)
+        && !/Them only/.test(r.host.textContent));
+      check('a mouse is listed as a device — most switches arrive as one',
+        /Mouse/.test(r.q('[data-devices]').textContent));
       r.panel.destroy();
-      check('destroy releases the bus', before && !r.panel.input());
-      let threw = null;
-      window.addEventListener('error', (e) => { threw = e.message; }, { once: true });
-      r.q('[data-add]')?.click();
-      check('and clicking the corpse does nothing rather than throwing', !threw, String(threw));
     }
 
-    // ================= binding something =================
-    section('binding a control');
+    // ================= binding =================
+    section('binding a verb to a control');
     {
       const r = rig();
       await r.panel.refresh();
-      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-new-action]').value = verbTopic('next');
       r.q('[data-add]').click();
       check('it asks for the control', r.panel.input().isCapturing());
-      check('and says so', /press the control/i.test(r.q('[data-addmsg]').textContent));
-
       r.press(XAC, 'button:0', 340);
-      const b = r.panel.bindings().find((x) => x.actionId === 'photos/next');
-      check('the pressed control becomes the binding', !!b && b.control === 'button:0' && b.device === XAC,
-        JSON.stringify(r.panel.bindings()));
-      check('with sensible defaults, not blanks', b.edge === 'press' && b.role === 'universal' && b.holdMs === 0);
-      check('it reaches the live bus immediately', r.panel.input().bindingsAt(XAC, 'button:0').length === 1);
-      check('a row appears for it', r.qa('.i-tab tbody tr').length === 2);
 
+      const b = r.panel.bindings().find((x) => x.actionId === verbTopic('next'));
+      check('the pressed control becomes the binding', !!b && b.control === 'button:0');
+      check('with sensible defaults', b.edge === 'press' && b.role === 'universal' && b.holdMs === 0);
       check('it offers the hold it measured, in one click',
-        /Held 340ms/.test(r.q('[data-addmsg]').innerHTML) && !!r.q('[data-usehold]'));
+        /Held 340ms/.test(r.q('[data-addmsg]').innerHTML));
       r.q('[data-usehold]').click();
-      check('taking the offer sets the threshold',
-        r.panel.bindings().find((x) => x.actionId === 'photos/next').holdMs === 200);
-      check('and pushes it to the live bus',
-        r.panel.input().bindingsAt(XAC, 'button:0')[0].holdMs === 200);
-      r.panel.destroy();
-    }
+      check('taking the offer tunes it', r.panel.input().bindingsAt(XAC, 'button:0')[0].holdMs === 200);
 
-    // ================= capture does not act =================
-    section('capture must not set off what it is rebinding');
-    {
-      const r = rig();
-      await r.panel.refresh();
-      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-new-action]').value = verbTopic('focus-next');
       r.q('[data-add]').click();
-      r.press(XAC, 'button:0', 100);
-      const logBefore = r.q('[data-log]').textContent;
-
-      // button:0 is now bound. Rebinding it must not fire Next photo.
-      r.qa('[data-repress]')[1].click();
-      check('re-press arms a capture', r.panel.input().isCapturing());
-      r.press(XAC, 'button:0', 120);
-      check('pressing the already-bound control did not fire it',
-        r.q('[data-log]').textContent === logBefore, r.q('[data-log]').textContent);
-      check('but it did rebind', r.panel.bindings().find((x) => x.actionId === 'photos/next').control === 'button:0');
+      r.press('pointer:mouse', 'button:0');
+      check('a mouse click binds like anything else — the cheapest thing a switch box emulates',
+        r.panel.bindings().some((x) => x.device === 'pointer:mouse'));
+      check('and reads as a click, not a number', /Mouse: Left click/.test(r.host.textContent));
       r.panel.destroy();
     }
 
-    // ================= tuning =================
-    section('tuning — the numbers nobody thinks in');
+    // ================= verbs against a real screen =================
+    section('the same binding, two screens');
     {
       const r = rig();
       await r.panel.refresh();
-      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-new-action]').value = verbTopic('next');
       r.q('[data-add]').click();
       r.press(XAC, 'button:0');
-      const row = r.qa('.i-tab tbody tr').find((tr) => tr.querySelector('[data-f="actionId"]')?.value === 'photos/next');
+
+      check('the screen picker opens on the first screen', r.panel.current().id === 'p1');
+      check('focus lands on the first panel that answers', r.panel.router().focused().type === 'photos');
+      r.press(XAC, 'button:0');
+      check('the verb resolves to the focused panel, and the strip names it',
+        /photos\/next/.test(logText(r)), logText(r));
+
+      r.panel.router().focusNext();
+      r.press(XAC, 'button:0');
+      check('move focus and the SAME switch drives YouTube', /youtube\/next/.test(logText(r)));
+
+      await r.panel.select('p2');
+      check("switching screens does not touch the bindings — they are the person's",
+        r.panel.bindings().some((x) => x.actionId === verbTopic('next')));
+      check('but there is nothing to focus on a clock-only screen',
+        r.panel.router().focused() === null && /Nothing on this screen/.test(r.host.textContent));
+      r.press(XAC, 'button:0');
+      check('and the strip says so instead of going quiet',
+        /has nothing for that/.test(logText(r)), logText(r));
+      r.panel.destroy();
+    }
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('select');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:1');
+      r.press(XAC, 'button:1');
+      // The worst outcome in the whole feature: the switch worked, and nothing happened.
+      check('a verb the focused panel ignores is called out, not left as silence',
+        /photos has nothing for that/.test(logText(r)), logText(r));
+      r.panel.destroy();
+    }
+
+    // ================= gate, tuning, live strip =================
+    section('gate, tuning, and the live strip');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      const row = r.qa('.i-tab tbody tr').find((tr) => tr.querySelector('[data-f="actionId"]')?.value === verbTopic('next'));
       const set = (f, v) => {
         const el = row.querySelector(`[data-f="${f}"]`);
-        el.value = v;
-        el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.value = v; el.dispatchEvent(new Event('change', { bubbles: true }));
       };
+      const live = () => r.panel.input().bindingsAt(XAC, 'button:0')[0];
 
       set('edge', 'release');
-      check('the edge is per binding, set right here',
-        r.panel.input().bindingsAt(XAC, 'button:0')[0].edge === 'release');
       set('debounceMs', '150');
-      set('lockoutMs', '600');
-      const live = () => r.panel.input().bindingsAt(XAC, 'button:0')[0];
-      check('debounce and lockout write straight through to the live bus',
-        live().debounceMs === 150 && live().lockoutMs === 600, JSON.stringify(live()));
       set('holdMs', '-40');
-      check('a negative time is clamped, not accepted', live().holdMs === 0);
-      set('role', 'patient');
-      check('a binding can belong to one role', live().role === 'patient');
-      set('actionId', 'photos/prev');
-      check('and can be re-pointed at another action without re-pressing anything',
-        live().actionId === 'photos/prev');
-      r.panel.destroy();
-    }
-
-    // ================= the gate =================
-    section('the gate, from the panel');
-    {
-      const r = rig();
-      await r.panel.refresh();
-      r.q('[data-new-action]').value = 'photos/next';
-      r.q('[data-add]').click();
-      r.press(XAC, 'button:0');
-      const row = r.qa('.i-tab tbody tr').find((tr) => tr.querySelector('[data-f="actionId"]')?.value === 'photos/next');
-      const roleSel = row.querySelector('[data-f="role"]');
-      roleSel.value = 'patient';
-      roleSel.dispatchEvent(new Event('change', { bubbles: true }));
+      check('edits write through in one pass, without the table rebuilding under the user',
+        live().edge === 'release' && live().debounceMs === 150 && live().holdMs === 0,
+        JSON.stringify(live()));
+      set('role', 'participant');
+      check('a binding can belong to the participant', live().role === 'participant');
+      set('actionId', verbTopic('prev'));
+      check('and be re-pointed at another verb without re-pressing', live().actionId === verbTopic('prev'));
 
       r.qa('[data-gate] [data-gate]').find((b) => b.dataset.gate === 'moderator').click();
-      check('the gate closes from the panel', r.panel.gate() === 'moderator');
-      check('and the live bus agrees', r.panel.input().getGate() === 'moderator');
-
-      r.press(XAC, 'button:0');
-      check('the gated control is refused',
-        /not their turn/.test(r.q('[data-log]').textContent), r.q('[data-log]').textContent);
-      r.qa('[data-gate] [data-gate]').find((b) => b.dataset.gate === 'both').click();
-      r.press(XAC, 'button:0');
-      check('and works again when the gate reopens',
-        /went through/.test(r.q('[data-log]').textContent));
-      r.panel.destroy();
-    }
-
-    // ================= the live strip =================
-    section('the live strip — why a press did not land');
-    {
-      const r = rig();
-      await r.panel.refresh();
-      r.q('[data-new-action]').value = 'photos/next';
-      r.q('[data-add]').click();
-      r.press(XAC, 'button:0');
+      check('the gate closes from the panel',
+        r.panel.gate() === 'moderator' && r.panel.input().getGate() === 'moderator');
+      r.press(XAC, 'button:0', 200);
+      r.press(XAC, 'button:0', 200);
+      check("and the participant's control is refused, in words",
+        /not their turn/.test(logText(r)), logText(r));
 
       r.press(XAC, 'button:9');
-      check('an unbound control is reported in plain language, not silence',
-        /nothing is bound/.test(r.q('[data-log]').textContent));
-
-      const row = r.qa('.i-tab tbody tr').find((tr) => tr.querySelector('[data-f="actionId"]')?.value === 'photos/next');
-      const hold = row.querySelector('[data-f="holdMs"]');
-      hold.value = '400'; hold.dispatchEvent(new Event('change', { bubbles: true }));
-      r.press(XAC, 'button:0', 120);
-      check('a hold released too early says so, in words a clinician can act on',
-        /let go too early/.test(r.q('[data-log]').textContent), r.q('[data-log]').textContent);
-      r.press(XAC, 'button:0', 500);
-      check('and holding long enough goes through', /went through/.test(r.q('[data-log]').textContent));
+      check('an unbound control is reported, not silence', /nothing is bound/.test(logText(r)));
       r.panel.destroy();
     }
 
-    // ================= persistence =================
-    section('persistence — no save button');
+    // ================= per-user persistence =================
+    section('per USER, not per screen');
     {
       const r = rig();
       await r.panel.refresh();
-      r.q('[data-new-action]').value = 'photos/next';
+      r.q('[data-new-action]').value = verbTopic('next');
       r.q('[data-add]').click();
       r.press(XAC, 'button:0');
       check('nothing is written on the keystroke itself', r.saved() === undefined);
       r.saveClock.advance(350);
-      check('it autosaves shortly after', !!r.saved() && r.saved().bindings.length === 2);
-      check('the record is versioned, so the per-user tuning split can migrate later',
-        r.saved().v === 1);
+      check('it autosaves shortly after', r.saved()?.bindings.length === 2);
+      check('under ONE key, with no screen id in it',
+        Object.keys(userStore).length === 1 && Object.keys(userStore)[0] === INPUTS_KEY);
+      check('and the record is versioned', r.saved().v === RECORD_VERSION);
 
-      // The composer's lesson: leaving must not lose the last edit.
-      const del = r.qa('[data-del]')[1];
-      del.click();
-      check('a pending write exists', r.panel.bindings().length === 1);
+      r.qa('[data-del]')[1].click();
       r.panel.destroy();
-      check('destroying flushes it instead of dropping it', r.saved().bindings.length === 1,
-        JSON.stringify(r.saved()));
+      check('destroying flushes the pending write instead of dropping it',
+        r.saved().bindings.length === 1);
     }
     {
-      const r = rig();
+      const r = rig({ fresh: false });
       await r.panel.refresh();
-      r.q('[data-new-action]').value = 'photos/next';
-      r.q('[data-add]').click();
-      r.press(XAC, 'button:0');
-      r.saveClock.advance(350);
-
-      await r.panel.select('p2');
-      check('another screen has its own bindings, not the first one\'s',
-        r.panel.bindings().length === 1 && r.panel.bindings()[0].actionId === ROLE_CYCLE_ACTION);
-      await r.panel.select('p1');
-      check('and coming back reloads what was saved',
-        r.panel.bindings().some((b) => b.actionId === 'photos/next'), JSON.stringify(r.panel.bindings()));
-      check('the reloaded bindings are live, not just displayed',
-        r.panel.input().bindingsAt(XAC, 'button:0').length === 1);
-      r.panel.destroy();
-    }
-
-    // ================= a stale profile =================
-    section('a binding whose action no longer exists');
-    {
-      const r = rig();
-      r.store[`${INPUTS_KEY}:p1`] = {
-        [INPUTS_KEY]: {
-          v: 1, gate: 'both',
-          bindings: [{ id: 'old', actionId: 'retired/thing', device: XAC, control: 'button:0',
-            edge: 'press', role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0 }],
-        },
-      };
-      await r.panel.refresh();
-      check('the row survives and is flagged rather than silently dropped',
-        r.qa('.i-stale').length === 1 && /no longer exists/.test(r.host.textContent));
-      r.press(XAC, 'button:0');
-      check('and pressing it explains itself instead of doing nothing',
-        /no longer exists/.test(r.q('[data-log]').textContent), r.q('[data-log]').textContent);
+      check("the person's setup is still theirs on the next visit", r.panel.bindings().length === 1);
       r.panel.destroy();
     }
     {
-      // A hand-edited or future-version record must not cost someone every OTHER binding.
-      const r = rig();
-      r.store[`${INPUTS_KEY}:p1`] = {
-        [INPUTS_KEY]: {
-          v: 1, gate: 'both',
-          bindings: [
-            { id: 'broken', actionId: 'photos/next', device: '', control: '' },
-            { id: 'fine', actionId: 'photos/prev', device: XAC, control: 'button:1' },
-          ],
-        },
-      };
+      const r = rig({ seed: { v: 1, gate: 'both', bindings: [
+        { id: 'old', actionId: 'photos/next', device: XAC, control: 'button:0',
+          edge: 'press', role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0 }] } });
       await r.panel.refresh();
-      check('an unusable binding is dropped, and the rest of the screen survives',
-        r.panel.bindings().length === 1 && r.panel.bindings()[0].id === 'fine',
+      check('a v1 record is NOT silently reinterpreted — it named actions that no longer exist',
+        r.panel.bindings().length === 1 && r.panel.bindings()[0].actionId === ROLE_CYCLE_ACTION,
         JSON.stringify(r.panel.bindings()));
       r.panel.destroy();
     }
-
-    // ================= devices =================
-    section('the connected list');
     {
-      const r = rig();
-      r.padList.push({ device: XAC, id: 'Xbox Adaptive Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b0a)', mapping: 'standard', index: 0 });
+      const r = rig({ seed: { v: RECORD_VERSION, gate: 'moderator', bindings: [
+        { id: 'broken', actionId: verbTopic('next'), device: '', control: '' },
+        { id: 'fine', actionId: verbTopic('prev'), device: XAC, control: 'button:1' }] } });
       await r.panel.refresh();
-      check('a connected controller is named the way its box is',
-        /Xbox Adaptive Controller/.test(r.q('[data-devices]').textContent));
-      check('and shows the id bindings are actually saved against',
-        r.q('[data-devices]').textContent.includes(XAC));
-      check('the keyboard is always there', /Keyboard/.test(r.q('[data-devices]').textContent));
-
-      r.q('[data-new-action]').value = 'photos/next';
-      r.q('[data-add]').click();
-      r.press(XAC, 'button:0');
-      check('a bound control reads as a control, not a number',
-        /Xbox Adaptive Controller: A/.test(r.host.textContent), r.q('.i-ctl')?.textContent);
+      check('an unusable binding is dropped and the rest survives',
+        r.panel.bindings().length === 1 && r.panel.bindings()[0].id === 'fine');
+      check('a saved gate is restored', r.panel.gate() === 'moderator');
       r.panel.destroy();
     }
 

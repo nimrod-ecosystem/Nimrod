@@ -7,8 +7,8 @@
 //
 //   1. BIND      which control drives which action, captured Overwatch-style
 //                (pick the action, press the thing) - bindings persist by action id.
-//   2. GATE      a live three-way role switch: moderator only / patient only / both.
-//                A caregiver locks the patient's inputs during setup, hands control
+//   2. GATE      a live three-way role switch: moderator only / participant only / both.
+//                A caregiver locks the participant's inputs during setup, hands control
 //                over for a session, or runs both at once.
 //   3. TIME      PER BINDING, not globally: press vs release edge, minimum hold,
 //                debounce, repeat-lockout.
@@ -46,8 +46,8 @@
 
 import { ROLE_CYCLE_ACTION, ROLE_CYCLE_TOPIC } from './actions.js';
 
-export const ROLES = ['moderator', 'patient', 'universal'];  // what a binding IS
-export const GATES = ['both', 'moderator', 'patient'];       // who may act right now
+export const ROLES = ['moderator', 'participant', 'universal'];  // what a binding IS
+export const GATES = ['both', 'moderator', 'participant'];       // who may act right now
 export const EDGES = ['press', 'release'];
 
 // The closed set of reasons an activation was thrown away. Closed on purpose: the
@@ -153,7 +153,7 @@ export function createInputBus({
 
   let currentGate = gate;
 
-  // The gate control is exempt from the gate. Binding role-cycle as `patient` and then
+  // The gate control is exempt from the gate. Binding role-cycle as `participant` and then
   // switching to moderator-only would otherwise strand the gate with no way back - a
   // caregiver locked out of their own lock is worse than no lock at all.
   function permitted(b) {
