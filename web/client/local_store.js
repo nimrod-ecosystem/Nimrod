@@ -25,10 +25,20 @@
 import { listFolderSources, removeFolderSource } from './folder_source.js';
 
 const DB_NAME = 'nimrod-local';
-const DB_VERSION = 1;
+// Bumped for the PEOPLE store. `onupgradeneeded` creates any store that is missing, so an
+// existing visitor's screens and state survive the bump — the new store simply appears,
+// and their orphaned screens are adopted by their first person exactly as the server does
+// it for a legacy account.
+const DB_VERSION = 2;
 const PROFILES = 'profiles';
 const STATE = 'state';
 const EVENTS = 'events';
+const PEOPLE = 'people';
+
+// Mirrors db.person_scope on the server, so per-person rows are addressed the same way on
+// both sides and the two halves cannot drift into disagreeing about where a binding lives.
+export const personScope = (personId) => `_user_${personId}`;
+export const LEGACY_PERSON_SCOPE = '_user';
 
 const nowISO = () => new Date().toISOString();
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `x${Date.now()}${Math.floor(Math.random() * 1e6)}`)
@@ -39,7 +49,7 @@ function openDB() {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      for (const s of [PROFILES, STATE, EVENTS]) {
+      for (const s of [PROFILES, STATE, EVENTS, PEOPLE]) {
         if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'k' });
       }
     };
@@ -74,13 +84,80 @@ const delRow = (store, k) => tx(store, 'readwrite', (s) => { s.delete(k); });
 
 // ---------------------------------------------------------------- profiles
 function createLocalProfilesClient() {
-  const strip = (p) => ({ id: p.id, name: p.name, created_at: p.created_at });
+  const strip = (p) => ({
+    id: p.id, name: p.name, person_id: p.person_id || '', created_at: p.created_at,
+  });
+  const byCreated = (a, b) => String(a.created_at).localeCompare(String(b.created_at));
 
-  async function list() {
-    const rows = await allRows(PROFILES);
-    return rows
+  // ---- people: the same contract the server serves, over IndexedDB --------------
+  // Signed out there is one device and no account, but the CONCEPT still has to exist —
+  // otherwise a visitor evaluating Nimrod for two residents cannot see the thing that
+  // makes it worth having, and the signed-out path drifts from the real one. Same shape,
+  // same adoption of orphans, no version/conflict machinery (see this file's header).
+  async function people() {
+    await ensureDefaultPerson();
+    return (await allRows(PEOPLE)).map((r) => r.v).sort(byCreated);
+  }
+
+  async function ensureDefaultPerson(name = 'Me') {
+    const rows = (await allRows(PEOPLE)).map((r) => r.v).sort(byCreated);
+    if (rows.length) return rows[0].id;
+    const person = { id: newId(), name, created_at: nowISO() };
+    await putRow(PEOPLE, { k: person.id, v: person });
+    // Adopt whatever already existed, exactly as db.ensure_default_person does: screens
+    // with no person, and the legacy per-user state rows that hold the input bindings.
+    for (const row of await allRows(PROFILES)) {
+      if (!row.v.person_id) { row.v.person_id = person.id; await putRow(PROFILES, row); }
+    }
+    for (const row of await allRows(STATE)) {
+      const [pid, key] = String(row.k).split('::');
+      if (pid !== LEGACY_PERSON_SCOPE) continue;
+      await putRow(STATE, { ...row, k: `${personScope(person.id)}::${key}` });
+      await delRow(STATE, row.k);
+    }
+    return person.id;
+  }
+
+  async function addPerson(name) {
+    await ensureDefaultPerson();
+    const person = { id: newId(), name, created_at: nowISO() };
+    await putRow(PEOPLE, { k: person.id, v: person });
+    return person;
+  }
+
+  async function renamePerson(personId, name) {
+    const row = await getRow(PEOPLE, personId);
+    if (!row) throw new Error(`no such person: ${personId}`);
+    row.v.name = name;
+    await putRow(PEOPLE, row);
+    return row.v;
+  }
+
+  // The same two refusals the server makes, and for the same reasons: cascading the
+  // screens would make deleting a name a way to destroy a whole setup, and an account
+  // with nobody on it has no valid state to be in.
+  async function removePerson(personId) {
+    const all = (await allRows(PEOPLE)).map((r) => r.v);
+    if (all.length <= 1) throw new Error('an account needs at least one person');
+    const mine = (await allRows(PROFILES)).filter((r) => r.v.person_id === personId);
+    if (mine.length) {
+      throw new Error(`this person still has ${mine.length} screen${mine.length === 1 ? '' : 's'} `
+        + '- move or delete them first');
+    }
+    for (const row of await allRows(STATE)) {
+      if (String(row.k).split('::')[0] === personScope(personId)) await delRow(STATE, row.k);
+    }
+    await delRow(PEOPLE, personId);
+    return { ok: true };
+  }
+
+  // ---- screens ------------------------------------------------------------------
+  async function list(personId = '') {
+    await ensureDefaultPerson();
+    return (await allRows(PROFILES))
       .map((r) => r.v)
-      .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+      .filter((p) => !personId || (p.person_id || '') === personId)
+      .sort(byCreated)
       .map(strip);
   }
 
@@ -90,10 +167,19 @@ function createLocalProfilesClient() {
     return { ...strip(row.v), modules: [...(row.v.modules || [])] };
   }
 
-  async function create(name) {
-    const p = { id: newId(), name, created_at: nowISO(), modules: [] };
+  async function create(name, personId = '') {
+    const owner = personId || await ensureDefaultPerson();
+    const p = { id: newId(), name, person_id: owner, created_at: nowISO(), modules: [] };
     await putRow(PROFILES, { k: p.id, v: p });
     return strip(p);
+  }
+
+  async function moveToPerson(pid, personId) {
+    const row = await getRow(PROFILES, pid);
+    if (!row) throw new Error(`no such profile: ${pid}`);
+    row.v.person_id = personId;
+    await putRow(PROFILES, row);
+    return strip(row.v);
   }
 
   async function rename(pid, name) {
@@ -139,7 +225,11 @@ function createLocalProfilesClient() {
   const stateURL = (pid, key) => `local:${pid}::${key}`;
   const eventsURL = (pid, stream) => `local:${pid}::${stream}`;
 
-  return { list, get, create, rename, remove, addModule, removeModule, stateURL, eventsURL };
+  return {
+    people, addPerson, renamePerson, removePerson,
+    list, get, create, rename, remove, moveToPerson, addModule, removeModule,
+    stateURL, eventsURL,
+  };
 }
 
 // ---------------------------------------------------------------- state
@@ -249,9 +339,10 @@ export function createLocalBackend() {
     profiles,
     makeSettings: (pid) => createLocalState(pid, 'settings'),
     makeState: (key, _opts, forPid) => createLocalState(forPid || keyPid(key), key),
-    // Signed out, "per user" is "per device" — there is no account to hang it on. The
-    // reserved pid matches the server's USER_SCOPE so the two halves read the same.
-    makeUserState: (key) => createLocalState('_user', key),
+    // Per-PERSON, signed out. The scope string matches db.person_scope on the server so
+    // the two halves address a person's bindings identically and cannot drift.
+    makePersonState: (personId, key) => createLocalState(personScope(personId), key),
+    makePersonEvents: (personId, stream) => createLocalEvents(personScope(personId), stream),
     makeEvents: (key, _opts, forPid) => createLocalEvents(forPid || keyPid(key), key),
   };
 }

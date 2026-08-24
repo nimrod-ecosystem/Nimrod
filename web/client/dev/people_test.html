@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>people — the person layer — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff;padding:12px}
+  .p-chip{padding:5px 13px;border:1px solid #e4e0c2;border-radius:99px;background:#fff;font:inherit}
+  .p-chip.on{background:#105666;color:#fff}
+</style>
+</head>
+<body>
+<h1>people — the person layer</h1>
+<p><b>Account → Person → { Screens, Bindings, Output routing }.</b> Two halves: the picker
+driven against a FAKE profiles client (no server, no network), and the real
+<code>/api/people</code> contract driven against the live dev server. Run the server first:
+<code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountPeople, pickCurrent, readLastPerson, writeLastPerson, LAST_PERSON_KEY } from '../people.js';
+import { createProfilesClient } from '../profile.js';
+
+const ACCOUNT = 'people-test-' + Math.floor(Math.random() * 1e9);
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+// A localStorage stand-in, so several bars in one page cannot fight over one real key.
+function fakeStorage(seed = {}) {
+  const m = new Map(Object.entries(seed));
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) };
+}
+
+// A profiles client with only what the bar touches. Records calls so the test can assert
+// what was ASKED of the server, not merely what ended up on screen.
+function fakePeopleClient(initial = [{ id: 'p1', name: 'Me', created_at: '1' }]) {
+  const calls = [];
+  let people = initial.slice();
+  return {
+    calls,
+    seeThrough: () => people.slice(),
+    people: async () => { calls.push('people'); return people.slice(); },
+    addPerson: async (name) => {
+      calls.push('add:' + name);
+      const p = { id: 'p' + (people.length + 1), name, created_at: String(people.length + 1) };
+      people.push(p);
+      return p;
+    },
+    renamePerson: async (id, name) => {
+      calls.push('rename:' + id);
+      people = people.map((p) => (p.id === id ? { ...p, name } : p));
+      return people.find((p) => p.id === id);
+    },
+    removePerson: async (id) => {
+      calls.push('remove:' + id);
+      if (people.length <= 1) throw new Error('an account needs at least one person');
+      people = people.filter((p) => p.id !== id);
+      return { ok: true };
+    },
+  };
+}
+
+(async () => {
+  try {
+    // ---------- pure ----------
+    section('pure: which person to show');
+    const three = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }];
+    check('an empty account has nobody', pickCurrent([], 'a') === null);
+    check('nothing remembered -> the first person', pickCurrent(three, '').id === 'a');
+    check('a remembered person is honoured', pickCurrent(three, 'b').id === 'b');
+    // The failure this exists to prevent: a stale id leaves the page addressing a person
+    // who no longer exists, and every save 404s with no visible cause.
+    check('a remembered person who no longer exists falls back, not null',
+      pickCurrent(three, 'gone').id === 'a');
+    check('junk in the list is ignored', pickCurrent([null, { name: 'no id' }, ...three], 'c').id === 'c');
+    check('a list of only junk is nobody', pickCurrent([null, {}], 'a') === null);
+
+    const st = fakeStorage();
+    check('nothing remembered yet', readLastPerson(st) === '');
+    writeLastPerson('zz', st);
+    check('remembering round-trips', readLastPerson(st) === 'zz');
+    check('the key is namespaced to nimrod', LAST_PERSON_KEY.startsWith('nimrod:'));
+    const hostile = { getItem() { throw new Error('private mode'); }, setItem() { throw new Error('private mode'); } };
+    check('private-browsing storage does not throw on read', readLastPerson(hostile) === '');
+    let threw = false;
+    try { writeLastPerson('x', hostile); } catch { threw = true; }
+    check('private-browsing storage does not throw on write', !threw);
+
+    // ---------- the bar, no server ----------
+    section('the bar: one person is a sentence, two is a chooser');
+    const one = fakePeopleClient();
+    const changes = [];
+    const bar = mountPeople(host, {
+      profiles: one, storage: fakeStorage(),
+      onChange: (p) => changes.push(p ? p.id : null),
+    });
+    await bar.refresh();
+    check('mounting reports the current person once', changes.join(',') === 'p1', changes.join(','));
+    check('one person renders no chips (nothing to learn)', !host.querySelector('.p-chip'));
+    check('...and says who it is for', /Setting up for/.test(host.textContent));
+    check('the manage control is always there', !!host.querySelector('[data-edit]'));
+
+    host.querySelector('[data-edit]').click();
+    check('manage opens the add form', !!host.querySelector('[data-new]'));
+    check('the last person cannot be removed',
+      host.querySelector('[data-remove]').disabled);
+
+    host.querySelector('[data-name]').value = 'Christine';
+    host.querySelector('[data-new]').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await tick(); await tick(); await tick();
+
+    check('adding a person calls the server', one.calls.includes('add:Christine'), one.calls.join(' '));
+    check('...and switches to them, because adding is step one of setting them up',
+      bar.current().name === 'Christine', String(bar.current() && bar.current().name));
+    check('...which is reported as a change', changes[changes.length - 1] === 'p2', changes.join(','));
+    check('two people now render as chips', host.querySelectorAll('.p-chip').length === 2,
+      String(host.querySelectorAll('.p-chip').length));
+    check('the current person is the marked chip',
+      host.querySelector('.p-chip.on').textContent.trim() === 'Christine');
+
+    const before = changes.length;
+    host.querySelector('.p-chip.on').click();
+    await tick();
+    check('clicking the person already selected changes nothing', changes.length === before);
+
+    const others = [...host.querySelectorAll('.p-chip')].filter((c) => !c.classList.contains('on'));
+    others[0].click();
+    await tick();
+    check('clicking the other chip switches', bar.current().id === 'p1');
+    check('...and reports it', changes[changes.length - 1] === 'p1', changes.join(','));
+
+    // A RENAME MUST NOT REMOUNT. Someone part-way through capturing a switch in the
+    // binder would lose the capture, and the cause would be invisible.
+    // Manage is still open from earlier — the toggle would CLOSE it, so ask rather than
+    // assume. (It closed this test once, which is the only reason the guard is here.)
+    if (!host.querySelector('[data-rename="p1"]')) host.querySelector('[data-edit]').click();
+    const field = host.querySelector('[data-rename="p1"]');
+    const changesBeforeRename = changes.length;
+    field.value = 'Mike';
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    await tick(); await tick(); await tick();
+    check('renaming calls the server', one.calls.includes('rename:p1'), one.calls.join(' '));
+    check('renaming does NOT report a person change (no remount mid-capture)',
+      changes.length === changesBeforeRename, changes.slice(changesBeforeRename).join(','));
+    check('the new name is showing', /Mike/.test(host.textContent));
+
+    // A no-op rename must not hit the network at all.
+    const callsBefore = one.calls.length;
+    const f2 = host.querySelector('[data-rename="p1"]');
+    f2.value = 'Mike';
+    f2.dispatchEvent(new Event('change', { bubbles: true }));
+    await tick();
+    check('renaming to the same name is not a write', one.calls.length === callsBefore);
+
+    bar.destroy();
+    // The listener-leak guard: home.js remounts panels onto the same element, so a
+    // destroyed bar must be deaf. Left in, its handlers would fire on the next bar's DOM.
+    const stale = one.calls.length;
+    host.querySelector('[data-edit]')?.click();
+    await tick();
+    check('a destroyed bar stops listening', one.calls.length === stale);
+    host.innerHTML = '';
+
+    // ---------- the server contract ----------
+    section('server: /api/people');
+    let live = true;
+    try {
+      const r = await fetch('/api/healthz');
+      if (!r.ok) live = false;
+    } catch { live = false; }
+
+    if (!live) {
+      check('dev server reachable (start it, then reload)', false, 'skipping the server half');
+    } else {
+      const api = createProfilesClient({ user: ACCOUNT });
+
+      const people0 = await api.people();
+      check('a brand-new account is given exactly one person', people0.length === 1,
+        JSON.stringify(people0));
+      check('...so nobody meets the concept before they need it', !!people0[0].name);
+      const me = people0[0].id;
+      check('asking twice does not multiply people', (await api.people()).length === 1);
+
+      const chris = await api.addPerson('Christine');
+      check('a person can be added', (await api.people()).length === 2);
+
+      // The whole point: two people, two sets of bindings, no bleed.
+      const bindKey = 'input-bindings';
+      const put = (pid, data, v) => fetch(api.personStateURL(pid, bindKey), {
+        method: 'PUT', headers: { 'X-Dev-User': ACCOUNT, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data, base_version: v }),
+      }).then((r) => r.json());
+      const get = (pid) => fetch(api.personStateURL(pid, bindKey), { headers: { 'X-Dev-User': ACCOUNT } })
+        .then((r) => r.json());
+
+      await put(me, { holdMs: 0 }, 0);
+      await put(chris.id, { holdMs: 400 }, 0);
+      check('one person’s bindings', (await get(me)).data.holdMs === 0);
+      check('the other person’s bindings, unaffected', (await get(chris.id)).data.holdMs === 400);
+
+      // Screens carry their person, which is what lets the kiosk stay dumb.
+      const bedside = await api.create('Bedside', chris.id);
+      const desk = await api.create('Desk', me);
+      check('a created screen names its person', bedside.person_id === chris.id, JSON.stringify(bedside));
+      check('listing by person narrows',
+        (await api.list(chris.id)).map((p) => p.id).join() === bedside.id);
+      check('listing with no person still returns the account', (await api.list()).length === 2);
+      check('a screen fetched by id names its person',
+        (await api.get(desk.id)).person_id === me);
+
+      await api.moveToPerson(desk.id, chris.id);
+      check('a screen can be handed over', (await api.list(chris.id)).length === 2);
+      check('...and leaves the other person', (await api.list(me)).length === 0);
+
+      // The two refusals. Both must be sentences a person can act on.
+      let msg = '';
+      try { await api.removePerson(chris.id); } catch (e) { msg = e.message; }
+      check('removing a person with screens is refused', /screen/.test(msg), msg);
+
+      await api.remove(bedside.id);
+      await api.remove(desk.id);
+      await api.removePerson(chris.id);
+      check('...and allowed once their screens are gone', (await api.people()).length === 1);
+
+      msg = '';
+      try { await api.removePerson(me); } catch (e) { msg = e.message; }
+      check('the last person cannot be removed', /at least one/.test(msg), msg);
+
+      // NEGATIVE CONTROL. Everything above would also pass against a server that ignored
+      // the person id and served one shared blob, so prove the isolation is real.
+      const fresh = await api.addPerson('Nobody');
+      check('a new person inherits no bindings',
+        JSON.stringify((await get(fresh.id)).data) === '{}', JSON.stringify((await get(fresh.id)).data));
+      check('...and no screens', (await api.list(fresh.id)).length === 0);
+
+      // A person belongs to their account and to nobody else.
+      const intruder = createProfilesClient({ user: ACCOUNT + '-other' });
+      const stolen = await fetch(intruder.personStateURL(fresh.id, bindKey), {
+        headers: { 'X-Dev-User': ACCOUNT + '-other' },
+      });
+      check('another account cannot address this account’s person', stolen.status === 404,
+        String(stolen.status));
+
+      // The legacy alias, which is what keeps a kiosk on older cached code alive across
+      // the deploy instead of silently losing its bindings.
+      const legacy = await fetch(`/api/user-state/${bindKey}`, { headers: { 'X-Dev-User': ACCOUNT } })
+        .then((r) => r.json());
+      check('the old /api/user-state route resolves to the default person',
+        legacy.data.holdMs === 0, JSON.stringify(legacy.data));
+    }
+  } catch (e) {
+    check('the suite ran to completion', false, String(e && e.message));
+    console.error(e);
+  }
+
+  const s = document.getElementById('summary');
+  s.textContent = `${passed} passed, ${failed} failed`;
+  s.className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>

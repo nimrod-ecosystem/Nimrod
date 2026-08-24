@@ -31,6 +31,27 @@
   .s-signout{color:var(--midnight)}
   .s-main{padding:22px 26px 64px;max-width:900px}
 
+  /* ---- the person bar: who am I setting this up for? ----
+     Sits above the panel, not inside a tab, because the current person changes what
+     EVERY tab shows. Quiet by design: with one person it is a sentence, and it only
+     becomes a chooser when there are two. */
+  .p-bar{margin-bottom:14px}
+  .p-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .p-lead,.p-one{font-size:.88rem;color:var(--ink-soft)}
+  .p-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .p-chip{padding:5px 13px;border:1px solid var(--line);border-radius:99px;background:var(--card);
+    color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+  .p-chip.on{background:var(--midnight);border-color:var(--midnight);color:#fff}
+  .p-tools{margin-left:auto}
+  .p-small{padding:5px 11px;font-size:.8rem}
+  .p-manage{margin-top:10px;padding:12px 14px;background:var(--cream-soft);
+    border:1px solid var(--line);border-radius:12px}
+  .p-manage .h-hint{margin:0 0 10px;max-width:64ch}
+  .p-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+  .p-list li{display:flex;gap:8px;align-items:center}
+  .p-name{flex:1 1 220px;max-width:320px;padding:7px 10px;border:1px solid var(--line);
+    border-radius:9px;background:var(--card);color:var(--ink);font:inherit;font-size:.9rem}
+
 
   /* ---- adulting ---- */
   .adulting h1{font-size:1.6rem;margin:0 0 .25em;letter-spacing:-.01em}
@@ -304,14 +325,18 @@ function localBanner() {
         ? (key, opts, forPid) =>
             createEvents({ url: profiles.eventsURL(forPid || keyPid(key), key), user: me.user, ...opts })
         : backend.makeEvents,
-      // Input bindings live here rather than against a screen — see profile.js.
-      makeUserState: signedIn
-        ? (key, opts) => createState({ url: profiles.userStateURL(key), user: me.user, ...opts })
-        : backend.makeUserState,
-      // The per-user mailbox for the `remote` output channel. Signed out there are no
-      // other devices, so it is null and the channel is simply not offered.
-      makeUserEvents: signedIn
-        ? (stream, opts) => createEvents({ url: profiles.userEventsURL(stream), user: me.user, ...opts })
+      // PER-PERSON, not per screen and not per account — see people.js. The shell curries
+      // the current person onto these before handing them down, so the panels below still
+      // receive the `makeUserState` / `makeUserEvents` they always did.
+      makePersonState: signedIn
+        ? (personId, key, opts) =>
+            createState({ url: profiles.personStateURL(personId, key), user: me.user, ...opts })
+        : backend.makePersonState,
+      // The per-person mailbox for the `remote` output channel. Signed out there are no
+      // other devices to reach, so it is null and the channel is simply not offered.
+      makePersonEvents: signedIn
+        ? (personId, stream, opts) =>
+            createEvents({ url: profiles.personEventsURL(personId, stream), user: me.user, ...opts })
         : null,
     });
   } catch (e) {

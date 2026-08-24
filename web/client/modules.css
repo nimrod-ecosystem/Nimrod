@@ -334,3 +334,32 @@
 @container cell (max-height: 300px){
   .algebra .al-top,.algebra .al-held{display:none}
 }
+
+/* WIDE PANEL: put the question BESIDE the keypad instead of above it.
+   Stacked vertically, algebra is a column of eight things and the question — the only
+   part anyone is actually thinking about — ends up small and scrolled off the top, which
+   is exactly what it did in the kiosk. Two columns halves the height AND buys the prompt
+   room to be the biggest thing on the panel, which is what it should have been.
+
+   The grid goes on `.al-body`, not `.algebra`: `.al-body` is the element that actually
+   holds the question and the keypad as siblings. Putting it on `.algebra` silently did
+   nothing, because grid only positions DIRECT children and the keypad is a generation
+   further down.
+
+   Explicit grid areas rather than auto-placement: in source order the keypad follows the
+   prompt, so auto-placement would start column two a row late and leave a hole. */
+@container cell (min-width: 520px){
+  .algebra .al-body{display:grid;grid-template-columns:1fr minmax(200px,290px);
+    column-gap:20px;row-gap:clamp(2px,1cqh,8px);align-content:start}
+  .algebra .al-kind{grid-area:1 / 1 / 2 / 2;align-self:end}
+  .algebra .al-prompt{grid-area:2 / 1 / 3 / 2;align-self:start}
+  .algebra .al-fb{grid-area:3 / 1 / 4 / 2;max-width:none;margin-top:0}
+  .algebra .al-calc{grid-area:1 / 2 / 3 / 3;max-width:none}
+  .algebra .al-submit{grid-area:3 / 2 / 4 / 3;max-width:none;margin-top:0}
+  .algebra .al-idk{grid-area:4 / 2 / 5 / 3;max-width:none}
+  /* The question is the point of the panel. Bounded by width as well as height, so a long
+     equation cannot run past the column it lives in. */
+  .algebra .al-prompt{font-size:clamp(1.4rem, min(11cqh, 5.5cqw), 3.2rem);line-height:1.2;
+    margin:0 0 6px}
+}
+

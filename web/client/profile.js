@@ -1,9 +1,27 @@
 // Profiles client — a thin wrapper over the profile/module API.
 //
-// A profile is a named container of module instances belonging to a user. It's
+// A profile is a named container of module instances belonging to a PERSON. It's
 // what makes a setup device-independent: open a profile on any device and the
 // same modules + state come back. This module also vends the per-instance URLs
 // the state/events handles need.
+//
+// THE PERSON LAYER lives here too, because everything below it is addressed through
+// one:  Account -> Person -> { Screens, Bindings, Output routing }.
+//
+//   ACCOUNT   who signs in — a Google account, or a paired device key.
+//   PERSON    who a screen is FOR. Christine is a person; the account is her nephew's.
+//   DEVICE    cross-cutting. Merely where a person is right now, so nothing is keyed
+//             by one.
+//
+// A SCREEN IMPLIES ITS PERSON, which is what keeps the kiosk dumb: it is opened as
+// kiosk.html?profile=<id>, and the screen names its person, so the kiosk needs no
+// person-picking step and a shared device needs no device-side UI at all. The picker
+// exists only on the home side, where a moderator chooses who they are configuring.
+//
+// NAMING: the server's `user_id` column is the ACCOUNT (it predates this layer and
+// renaming it against live data is its own day's work), so `user` below still means the
+// account. The new concept is `person` everywhere — which is also the word the AT field
+// uses, and the word a care setting says out loud in front of the person it describes.
 
 import { authHeaders } from './auth.js';
 
@@ -16,12 +34,50 @@ export function createProfilesClient({ user, baseURL = '' }) {
   const jsonHeaders = () => ({ ...authHeaders(user), 'Content-Type': 'application/json' });
 
   return {
-    list: () =>
-      fetch(`${baseURL}/api/profiles`, { headers: authHeaders(user) }).then(json).then((b) => b.profiles),
+    // ---- people ------------------------------------------------------------
+    // Every account has at least one; the server makes one on first ask rather than
+    // making anybody meet the concept before they need it.
+    people: () =>
+      fetch(`${baseURL}/api/people`, { headers: authHeaders(user) }).then(json).then((b) => b.people),
 
-    create: (name) =>
-      fetch(`${baseURL}/api/profiles`, {
+    addPerson: (name) =>
+      fetch(`${baseURL}/api/people`, {
         method: 'POST', headers: jsonHeaders(), body: JSON.stringify({ name }),
+      }).then(json),
+
+    renamePerson: (personId, name) =>
+      fetch(`${baseURL}/api/people/${personId}`, {
+        method: 'PATCH', headers: jsonHeaders(), body: JSON.stringify({ name }),
+      }).then(json),
+
+    // 409 when they still have screens, or when they are the last person on the
+    // account. Both are refusals with a reason the caller should show, not errors to
+    // swallow — see app.py.
+    removePerson: (personId) =>
+      fetch(`${baseURL}/api/people/${personId}`, {
+        method: 'DELETE', headers: authHeaders(user),
+      }).then(async (res) => {
+        if (res.status === 409) throw new Error((await res.json()).detail || 'cannot remove');
+        return json(res);
+      }),
+
+    // ---- screens -----------------------------------------------------------
+    // `personId` narrows to one person's screens. Omit it and you get the whole
+    // account's, which is what the kiosk's any-screen-will-do fallback wants.
+    list: (personId = '') =>
+      fetch(`${baseURL}/api/profiles${personId ? `?person=${encodeURIComponent(personId)}` : ''}`,
+        { headers: authHeaders(user) }).then(json).then((b) => b.profiles),
+
+    create: (name, personId = '') =>
+      fetch(`${baseURL}/api/profiles`, {
+        method: 'POST', headers: jsonHeaders(), body: JSON.stringify({ name, person_id: personId }),
+      }).then(json),
+
+    // Hand a screen to a different person. It keeps its modules and its own settings;
+    // what changes is whose bindings and whose output routing drive it.
+    moveToPerson: (pid, personId) =>
+      fetch(`${baseURL}/api/profiles/${pid}/person`, {
+        method: 'PUT', headers: jsonHeaders(), body: JSON.stringify({ person_id: personId }),
       }).then(json),
 
     get: (pid) =>
@@ -51,14 +107,15 @@ export function createProfilesClient({ user, baseURL = '' }) {
 
     // Per-instance handle URLs. `key`/`stream` are the module instance id.
     stateURL:  (pid, key) => `${baseURL}/api/profiles/${pid}/state/${key}`,
-    // Per-USER, not per screen. For things that describe the person rather than one of
-    // their screens — input bindings above all: which switch they use and how long they
-    // need to hold it is true everywhere, and re-entering it per screen is exactly the
-    // per-device toil this project exists to avoid.
-    userStateURL: (key) => `${baseURL}/api/user-state/${key}`,
-    // The per-user mailbox the `remote` output channel posts into, and every other
-    // device of this person's polls. Per user, not per screen, for the same reason.
-    userEventsURL: (stream) => `${baseURL}/api/user-events/${stream}`,
     eventsURL: (pid, stream) => `${baseURL}/api/profiles/${pid}/events/${stream}`,
+
+    // Per-PERSON, not per screen. For things that describe a body rather than one of
+    // their screens — input bindings above all: which switch someone uses and how long
+    // they can hold it is true everywhere, and re-entering it per screen is exactly the
+    // per-device toil this project exists to avoid.
+    personStateURL: (personId, key) => `${baseURL}/api/people/${personId}/state/${key}`,
+    // The per-person mailbox the `remote` output channel posts into, and every other
+    // device of theirs polls. Per person, not per screen, for the same reason.
+    personEventsURL: (personId, stream) => `${baseURL}/api/people/${personId}/events/${stream}`,
   };
 }
