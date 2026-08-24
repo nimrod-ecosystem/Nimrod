@@ -37,6 +37,12 @@
    Width is in the min() too — "10:38 PM" in a wide, short cell would otherwise overflow
    sideways long before it ran out of height. */
 @container cell (min-height: 1px){
+  /* CENTRE IT IN THE CELL. `.clock` stretches to the full height of the panel it is given,
+     but its contents packed at the top — a clock sitting against the ceiling of an empty
+     quadrant, which is what "the clock is off centre" was. Scoped to a sized box on
+     purpose: the kiosk's translucent clock HUD is NOT a `.mod-box`, and it deliberately
+     hugs its corner. */
+  .clock{height:100%;justify-content:center}
   /* `[data-size]` is not decoration: without it these lose to the
      `.clock[data-size="m"] .time` rule above on specificity, and nothing changes. */
   .clock[data-size] .time{font-size:clamp(1.4rem, min(30cqh, 16cqw), 6rem)}
@@ -60,11 +66,24 @@
 .photos{width:100%;height:100%;position:relative}
 .photos .stage{position:relative;width:100%;height:100%;background:#0c1a14;border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
-.photos .stage img,.photos .stage video{width:100%;height:100%;object-fit:contain;display:block;background:#0c1a14}
+.photos .stage img,.photos .stage video{position:relative;width:100%;height:100%;object-fit:contain;
+  display:block;background:transparent}
+/* The blurred backdrop behind a `contain` photo. `scale(1.1)` hides the soft, semi
+   transparent edge a large blur radius leaves around the fill. */
+.photos .stage .fill{position:absolute;inset:0;background-position:center;background-size:cover;
+  filter:blur(28px) brightness(.55);transform:scale(1.1)}
 .photos .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
   color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
 .photos .status button{border:1px solid rgba(247,244,213,.5);color:var(--beige);background:transparent;border-radius:8px;padding:6px 10px}
 .photos .nav,.photos .gear,.photos .settings{display:none}
+
+/* A status message over a panel that HAS something to show. The full-bleed version is a
+   72%-opaque sheet, which is right over an empty stage and badly wrong over the photo
+   somebody is looking at — "Loading photos…" fires on every reload. As a chip it says the
+   same thing without taking the picture away. Shared by photos and camera because it is
+   the same rule for the same reason. */
+.photos .status.chip,.camera .status.chip{inset:auto 8px 8px auto;padding:5px 11px;border-radius:99px;
+  font-size:.78rem;background:rgba(10,51,35,.82);max-width:80%}
 
 /* youtube */
 .youtube{width:100%;height:100%;position:relative}

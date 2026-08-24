@@ -301,6 +301,11 @@ class Handler(SimpleHTTPRequestHandler):
         sys.stderr.write("  %s - %s\n" % (self.address_string(), fmt % args))
 
 
+# The platform origin the browser loads Nimrod from. The agent is fetched cross-origin
+# BY that page, so this is the only site that ever needs to be allowed.
+DEFAULT_ORIGIN = "https://nimrod.onrender.com"
+
+
 def main(argv=None):
     global ROOT, ORIGIN
     ap = argparse.ArgumentParser(description="Nimrod local media agent (BYO storage).")
@@ -308,13 +313,21 @@ def main(argv=None):
     # an always-on service (systemd / Windows task) configured from an env file.
     ap.add_argument("--root", default=os.environ.get("NIMROD_MEDIA_ROOT"),
                     help="folder to serve (your photos/videos live here; or set NIMROD_MEDIA_ROOT)")
-    ap.add_argument("--host", default=os.environ.get("NIMROD_MEDIA_HOST", "0.0.0.0"),
-                    help="bind address (default: all interfaces; or NIMROD_MEDIA_HOST)")
+    # CLOSED BY DEFAULT. This used to bind 0.0.0.0 with CORS "*", which on a care
+    # facility's shared wifi meant a resident's entire photo folder was readable by
+    # anything else on the network — no password, no prompt, nothing in the UI saying so.
+    # Serving your own photos to your own screen does not require that, so it is now an
+    # explicit choice: --lan, which prints what it is doing.
+    ap.add_argument("--host", default=os.environ.get("NIMROD_MEDIA_HOST", "127.0.0.1"),
+                    help="bind address (default: 127.0.0.1, this machine only; or NIMROD_MEDIA_HOST)")
+    ap.add_argument("--lan", action="store_true",
+                    help="serve to your whole local network (binds 0.0.0.0). Only for a screen "
+                         "on a DIFFERENT machine, and only on a network you trust.")
     ap.add_argument("--port", type=int, default=int(os.environ.get("NIMROD_MEDIA_PORT", "8770")),
                     help="port (default: 8770; or NIMROD_MEDIA_PORT)")
-    ap.add_argument("--origin", default=os.environ.get("NIMROD_MEDIA_ORIGIN", "*"),
-                    help="CORS Access-Control-Allow-Origin (default '*'; set to your platform origin "
-                         "e.g. https://bedside.example.com to lock it down; or NIMROD_MEDIA_ORIGIN)")
+    ap.add_argument("--origin", default=os.environ.get("NIMROD_MEDIA_ORIGIN", DEFAULT_ORIGIN),
+                    help=f"CORS Access-Control-Allow-Origin (default {DEFAULT_ORIGIN}; use '*' to allow "
+                         "any site, which you should not need; or NIMROD_MEDIA_ORIGIN)")
     args = ap.parse_args(argv)
 
     if not args.root:
@@ -324,17 +337,25 @@ def main(argv=None):
         ap.error(f"--root is not a folder: {root}")
     ROOT = root
     ORIGIN = args.origin
+    host = "0.0.0.0" if args.lan else args.host
 
     # SimpleHTTPRequestHandler serves relative to `directory`; point it at ROOT so
     # the inherited translate_path guard keeps every file request inside it.
     def make_handler(*a, **kw):
         return Handler(*a, directory=str(ROOT.resolve()), **kw)
 
-    httpd = ThreadingHTTPServer((args.host, args.port), make_handler)
+    httpd = ThreadingHTTPServer((host, args.port), make_handler)
     resolved = ROOT.resolve()
     print(f"Nimrod media agent serving:  {resolved}")
-    print(f"  listening on  http://{args.host}:{args.port}  (CORS origin: {ORIGIN})")
+    print(f"  listening on  http://{host}:{args.port}  (CORS origin: {ORIGIN})")
     print(f"  try           http://localhost:{args.port}/list")
+    # Say the exposure out loud, every time. Someone who typed --lan months ago and left
+    # it running in a facility should be reminded what that means whenever they look.
+    if host == "0.0.0.0":
+        print("  NOTE: reachable by ANY device on this network. Everything in the folder "
+              "above is readable by them.")
+    if ORIGIN == "*":
+        print("  NOTE: CORS is open to any website.")
     print("  Ctrl+C to stop.")
     try:
         httpd.serve_forever()

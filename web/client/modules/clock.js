@@ -18,8 +18,20 @@ const ZONES = [
   ['UTC', 'UTC'],
 ];
 
+// THE PRE-DAWN HOURS GET THEIR OWN NAME, and this is not cosmetic. This module's whole
+// job is orienting someone who is disoriented, and at 4:33am it used to read "Monday
+// night" — which to anyone reading it means about ten in the evening. Wrong by twenty
+// hours, on the one panel whose only purpose is being right about this.
+//
+// Saying "Monday early morning" is unambiguous: it is genuinely Monday, and "early"
+// cannot be mistaken for the evening.
+//
+// NOT SHARED WITH daypart.js ON PURPOSE. That file schedules content and its bands are
+// Christine's rhythm (morning starts at 6, sleepytime at 21); these bands are how a person
+// would describe the hour out loud. Same clock, two different questions, and forcing one
+// answer would make one of them wrong.
 function partOfDay(hour) {
-  if (hour < 5) return 'night';
+  if (hour < 5) return 'early morning';
   if (hour < 12) return 'morning';
   if (hour < 17) return 'afternoon';
   if (hour < 21) return 'evening';

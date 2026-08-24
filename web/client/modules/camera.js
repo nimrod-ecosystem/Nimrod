@@ -28,7 +28,14 @@ registerModule(
 
     const video = () => mount.querySelector('[data-video]');
 
+    // Same rule as photos: a notice over a LIVE picture is a corner chip, not a sheet
+    // across the whole mirror. Over a dead camera it stays a full panel, because there is
+    // nothing behind it and the message is the only thing to see.
     function setStatus(text, showRetry = false) {
+      const st = mount.querySelector('.stage');
+      const live = !!(st && st.dataset.showing);
+      const chip = mount.querySelector('[data-status]');
+      if (chip) chip.classList.toggle('chip', live);
       const s = mount.querySelector('[data-status]');
       if (!s) return;
       s.hidden = !text;
@@ -40,6 +47,10 @@ registerModule(
     }
 
     function stopStream() {
+
+      const st = mount.querySelector('.stage');
+
+      if (st) st.dataset.showing = '';
       if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
       const v = video();
       if (v) v.srcObject = null;
@@ -107,12 +118,16 @@ registerModule(
         v.srcObject = stream;
         await v.play().catch(() => {});
         activeSelection = cfg.cameraLabel;
+        // There is now a picture behind any later message, so it draws as a chip.
+        const st = mount.querySelector('.stage');
+        if (st) st.dataset.showing = '1';
         setStatus(null);
         applyTransform();
         await populateCameras();
       } catch (err) {
         stopStream();
         const name = err?.name;
+        // No picture: the message IS the panel now.
         if (name === 'NotAllowedError' || name === 'SecurityError') setStatus('Camera permission needed', true);
         else if (name === 'NotFoundError' || name === 'OverconstrainedError') setStatus('No camera found');
         else setStatus('Camera unavailable', true);

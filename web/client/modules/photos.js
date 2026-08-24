@@ -26,7 +26,13 @@ import { registerModule } from '../module.js';
 import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
 import { pick, statsFromEvents } from '../rng.js';
 
-const DEFAULTS = { sourceId: '', album: '', intervalSec: 8, fit: 'cover' };
+// `fit: contain` — SHOW THE WHOLE PHOTO. It defaulted to `cover`, which crops to fill:
+// a 1200x800 photo in a 775x423 panel lost 18% of its height, off the top and bottom,
+// which is exactly where faces are. For a module whose entire reason for existing is
+// Christine seeing her people, cropping their heads off is not a rendering preference.
+// The letterboxing `contain` would otherwise leave is filled by a blurred copy of the
+// same image (see `render`), so nothing is cropped AND nothing is a black bar.
+const DEFAULTS = { sourceId: '', album: '', intervalSec: 8, fit: 'contain' };
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
@@ -53,10 +59,17 @@ registerModule(
 
     const stage = () => mount.querySelector('[data-stage]');
 
+    // A STATUS MESSAGE MUST NOT BLACK OUT A PHOTO THAT IS ALREADY THERE. It used to be a
+    // full-bleed 72%-opaque scrim in every case, so "Loading photos…" — which fires on
+    // every reload, including the periodic one — dropped a dark green sheet over the
+    // picture Christine was looking at. Over an EMPTY stage a full panel is right; there
+    // is nothing to obscure and something has to explain the emptiness. Over a photo it
+    // becomes a small corner chip.
     function setStatus(text, showRetry = false) {
       const s = mount.querySelector('[data-status]');
       if (!s) return;
       s.hidden = !text;
+      s.classList.toggle('chip', !!stage()?.dataset.showing);
       if (text) {
         s.innerHTML = `<span>${text}</span>` + (showRetry ? ` <button data-retry>Retry</button>` : '');
         s.querySelector('[data-retry]')?.addEventListener('click', () => reload());
@@ -79,6 +92,16 @@ registerModule(
       const st = stage();
       if (!st) return;
       st.innerHTML = '';
+      // The blurred backdrop that makes `contain` bearable on a wide panel: the same
+      // image, scaled to COVER and blurred out, sitting behind the real one. Every photo
+      // frame worth using does this. Skipped for `cover` (nothing to fill) and for video
+      // (a second decoding video to blur is not worth the battery on a Pi).
+      if (cfg.fit === 'contain' && item.kind !== 'video') {
+        const back = document.createElement('div');
+        back.className = 'fill';
+        back.style.backgroundImage = `url("${String(item.url).replace(/"/g, '%22')}")`;
+        st.append(back);
+      }
       let el;
       if (item.kind === 'video') {
         el = document.createElement('video');
@@ -92,7 +115,11 @@ registerModule(
         el.src = item.url; el.alt = item.name || '';
       }
       el.style.objectFit = cfg.fit;
+      el.className = 'shot';
       st.append(el);
+      // Whether the panel has something to look at decides how a status message is drawn
+      // — a corner chip over a photo, a full panel over nothing. See setStatus.
+      st.dataset.showing = '1';
     }
 
     // Show an item by id. `record` distinguishes a forward play (counts, logs a play
@@ -164,6 +191,8 @@ registerModule(
       }
       if (seq !== loadSeq) return;   // a newer reload superseded us
       if (!source) {
+        // Nothing to show from here on, so a later message is a full panel again.
+        if (stage()) stage().dataset.showing = '';
         setStatus('No photo source connected. Add one in Media / Sources.');
         items = ids = []; byId = channels = {};
         return;

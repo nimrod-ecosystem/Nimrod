@@ -12,6 +12,20 @@
 // first did) makes the product look like it requires a Python install to view your own
 // photos, which is not a product.
 //
+// THE FOLDER PICKER IS ALSO THE SHARING STORY, and the panel never said so. Google Drive
+// for Desktop, OneDrive and Dropbox all mount as an ORDINARY FOLDER, so pointing the
+// picker at a synced folder means everyone with access to that folder can put photos in
+// it and they appear on the screen — with nothing installed beyond the sync client the
+// family already has, and nothing typed. That is the answer to "how do I get pictures to
+// Grandma's screen", and it was invisible because the panel only said "on this computer".
+//
+// THE AGENT IS AN IT JOB AND IS NOW LABELLED AS ONE. Download a script, install Python,
+// open a terminal, leave it running, then transcribe a URL back into this box. That is a
+// reasonable ask of whoever sets up a facility's kiosk and an unreasonable one of anybody
+// else, so it says so rather than sitting there looking like the second of two equal
+// choices. (The real fix is a pairing code — the agent shows six digits, you type them
+// here, nobody transcribes a URL. Not built; see pending_flags.)
+//
 // THE MODEL, unchanged by either: the platform NEVER stores media, only a reference to
 // where it lives. Agent sources are per-USER (a base_url, shared across devices); folder
 // sources are per-DEVICE (a handle in IndexedDB that cannot leave the machine — see
@@ -61,6 +75,10 @@ export function mountMedia(root, {
         ${supported
           ? `<p class="h-quiet">Choose a folder and the browser reads it directly. Nothing to
                install. This folder is remembered <b>on this device only</b>.</p>
+             <p class="h-quiet"><b>Sharing photos with the rest of the family?</b> Pick a folder
+               that Google Drive, OneDrive or Dropbox already syncs onto this computer. Anyone
+               you share that folder with can drop photos in from their own phone, and they
+               turn up on the screen. Nothing else to set up.</p>
              <button class="h-btn h-primary" data-pick>Choose a folder…</button>`
           : `<p class="h-quiet">This browser can’t open a folder directly — that needs Chrome,
                Edge, or another Chromium browser. Use the media agent below instead.</p>`}
@@ -70,11 +88,17 @@ export function mountMedia(root, {
       <div class="h-list" data-list><p class="h-loading">Loading…</p></div>
 
       <details class="h-card" data-advanced>
-        <summary><b>Connect a device that serves media</b></summary>
-        <p class="h-quiet">For a screen that runs on its own — a bedside kiosk, a spare
-          tablet, a NAS. Run the media agent there, then give its address. Unlike a folder,
-          this is remembered for <b>your whole account</b>, and
-          <b>${DEFAULT_URL}</b> means “the agent on whatever machine is showing the screen”.</p>
+        <summary><b>Connect a device that serves media</b> <span class="h-tag">advanced</span></summary>
+        <p class="h-quiet"><b>This one is a setup job, not a click.</b> It is for a screen that
+          runs on its own with nobody signed in — a bedside kiosk, a spare tablet, a NAS. On
+          <i>that</i> machine you install Python, download the Nimrod media agent, and leave it
+          running; then you come back here and type the address it is listening on. If that
+          sentence is not something you want to do, use a folder above instead — it does the
+          same job for a screen you are sitting at.</p>
+        <p class="h-quiet">Unlike a folder, this is remembered for <b>your whole account</b>.
+          <b>${DEFAULT_URL}</b> is a special case: it means “whichever machine is showing the
+          screen, ask the agent running on it” — so one entry covers every kiosk that runs its
+          own agent. For one specific machine, give its address on the network instead.</p>
         <form class="h-new" data-new>
           <input type="text" data-label placeholder="Name it (e.g. Christine's bedside)"
                  aria-label="source name" required>

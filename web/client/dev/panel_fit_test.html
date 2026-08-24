@@ -207,6 +207,41 @@ function cell(w, h, label) {
     check('a big cell gives a big clock', px(big.host.querySelector('.time'), 'fontSize') >= 60,
       String(px(big.host.querySelector('.time'), 'fontSize')));
 
+    // CENTRED IN THE CELL. `.clock` stretched to the full height of its panel but its
+    // contents packed at the top, so on a bedside kiosk the clock sat against the ceiling
+    // of an empty quadrant with a void underneath. Mike, looking at the real screen: "the
+    // clock is off center." Measured against the CELL, not the element, because the
+    // element filling the cell was never the problem.
+    for (const c of clockCells) {
+      const box = c.cell.getBoundingClientRect();
+      const first = c.host.querySelector('.time').getBoundingClientRect();
+      const lastEl = c.host.querySelector('.date:not([hidden])') || c.host.querySelector('.when');
+      const last = lastEl.getBoundingClientRect();
+      const contentMid = (first.top + last.bottom) / 2;
+      const cellMid = box.top + box.height / 2;
+      // Two pixels of slack for sub-pixel line boxes; anything real is tens of pixels.
+      check(`  ...and is vertically centred in a ${c.w}x${c.h} cell`,
+        Math.abs(contentMid - cellMid) <= 2, `${Math.round(contentMid - cellMid)}px off`);
+    }
+
+    // THE PART OF DAY HAS TO SURVIVE MIDNIGHT. At 04:33 it read "Monday night", which any
+    // reader takes to mean about ten in the evening — wrong by twenty hours, on the one
+    // panel whose entire job is orienting someone who is disoriented.
+    section('the clock says the right part of the day');
+    {
+      const said = big.host.querySelector('.when').textContent.toLowerCase();
+      const hour = new Date().getHours();
+      const expected = hour < 5 ? 'early morning'
+        : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night';
+      check(`at ${hour}:00 it says "${expected}"`, said.includes(expected), said);
+      // The regression itself, stated as the rule rather than the hour it was found at:
+      // before 5am must never be describable as the evening's "night".
+      check('the small hours are never called plain "night"',
+        !(hour < 5 && said.endsWith(' night')), said);
+      check('it still names the weekday, which is the other half of orienting someone',
+        /monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(said), said);
+    }
+
     // ================= no box, no change =================
     section('a host that does not opt in is untouched');
     {
