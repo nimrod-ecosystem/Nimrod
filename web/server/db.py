@@ -42,6 +42,19 @@ def _new_id() -> str:
     return uuid.uuid4().hex
 
 
+# A PERSON's scope in the state/events tables. Those tables are keyed
+# (user_id, profile_id, key) where user_id is the ACCOUNT; per-person rows reuse the
+# profile_id column with a reserved value. Real profile ids are uuid4().hex - 32 hex
+# characters - so a value starting with an underscore can never collide, and neither
+# table has a foreign key to profiles. That is the whole trick: per-person state needs
+# no new table. 38 characters, so it still satisfies the server's id pattern.
+LEGACY_PERSON_SCOPE = "_user"          # what per-user rows used before people existed
+
+
+def person_scope(person_id: str) -> str:
+    return f"_user_{person_id}"
+
+
 class _Store:
     """Engine-agnostic logic shared by SQLiteStore and PostgresStore."""
 
@@ -71,25 +84,135 @@ class _Store:
             cur.execute("SELECT 1")
             cur.fetchone()
 
-    # ---------------------------------------------------------------- profiles
-    def create_profile(self, user_id: str, name: str) -> dict:
+    # ---------------------------------------------------------------- people
+    # THE PERSON LAYER.  Account -> Person -> { Screens, Bindings, Output routing }.
+    #
+    # An ACCOUNT is who signs in (a Google sub, or a paired device key). A PERSON is who
+    # the screen is FOR. They are not the same and conflating them was costing real
+    # structure: a moderator running two residents' screens had one set of input bindings
+    # between them, and "whose screen is this?" had no answer.
+    #
+    # NAMING, because it will otherwise confuse someone forever: the ``user_id`` column
+    # on every other table is the ACCOUNT. It predates this layer, it is load-bearing on
+    # live data, and renaming it across two engines is a mechanical pass worth doing on
+    # its own day - not smuggled into the change that introduces the concept. So the new
+    # thing is ``person``/``people`` throughout, and ``user_id`` keeps meaning account.
+    # (The handoff calls this a "User"; the UI calls it a person, which is also the word
+    # the AT field uses - Matching Person & Technology.)
+    def create_person(self, account_id: str, name: str) -> dict:
         pid, ts = _new_id(), _now()
         with self._tx() as cur:
-            cur.execute(self._q("INSERT INTO profiles(id, user_id, name, created_at) VALUES(?,?,?,?)"),
-                        (pid, user_id, name, ts))
+            cur.execute(self._q("INSERT INTO people(id, account_id, name, created_at) VALUES(?,?,?,?)"),
+                        (pid, account_id, name, ts))
         return {"id": pid, "name": name, "created_at": ts}
 
-    def list_profiles(self, user_id: str) -> list[dict]:
+    def list_people(self, account_id: str) -> list[dict]:
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id, name, created_at FROM profiles WHERE user_id=? ORDER BY created_at"),
-                        (user_id,))
+            cur.execute(self._q("SELECT id, name, created_at FROM people WHERE account_id=? ORDER BY created_at"),
+                        (account_id,))
             rows = cur.fetchall()
         return [{"id": r[0], "name": r[1], "created_at": r[2]} for r in rows]
+
+    def get_person(self, account_id: str, person_id: str) -> dict | None:
+        """Ownership gate: only the owning account ever sees a person."""
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT id, name, created_at FROM people WHERE account_id=? AND id=?"),
+                        (account_id, person_id))
+            r = cur.fetchone()
+        return None if r is None else {"id": r[0], "name": r[1], "created_at": r[2]}
+
+    def rename_person(self, account_id: str, person_id: str, name: str) -> None:
+        with self._tx() as cur:
+            cur.execute(self._q("UPDATE people SET name=? WHERE id=? AND account_id=?"),
+                        (name, person_id, account_id))
+
+    def count_person_screens(self, account_id: str, person_id: str) -> int:
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT COUNT(*) FROM profiles WHERE user_id=? AND person_id=?"),
+                        (account_id, person_id))
+            return cur.fetchone()[0]
+
+    def delete_person(self, account_id: str, person_id: str) -> None:
+        """Remove a person and their per-person settings (bindings, output routing).
+
+        The CALLER must have refused this if they still have screens - see app.py. A
+        delete that silently took N screens with it is exactly the destructive surprise
+        this project avoids, so the refusal lives at the edge where it can explain
+        itself. Their append-only events are left in place; the trigger forbids deleting
+        them, and that is the point."""
+        scope = person_scope(person_id)
+        with self._tx() as cur:
+            cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"), (account_id, scope))
+            cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (person_id, account_id))
+
+    def ensure_default_person(self, account_id: str, name: str = "Me") -> str:
+        """Return this account's first person, creating one if the account has none.
+
+        LAZY, NOT A BOOT MIGRATION. Every account that predates this layer has data
+        hanging off the account directly, and this is where it gets adopted - on the
+        first request that needs a person, per account, idempotently. That works
+        identically on the SQLite dev file and on the live Postgres without a separate
+        migration script anyone has to remember to run.
+
+        Two adoptions happen here:
+          * every screen with no person becomes this person's;
+          * legacy per-user STATE rows (scope "_user" - input bindings and output
+            routing, the things that actually matter) are re-keyed to this person.
+
+        Legacy per-user EVENTS are deliberately left behind. The append-only trigger
+        forbids updating them, and the only per-user stream is the `remote` output
+        channel's notification mailbox - transient messages, not a record worth
+        contorting the schema to rescue.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT id FROM people WHERE account_id=? ORDER BY created_at LIMIT 1"),
+                        (account_id,))
+            r = cur.fetchone()
+            if r is not None:
+                return r[0]
+            pid, ts = _new_id(), _now()
+            cur.execute(self._q("INSERT INTO people(id, account_id, name, created_at) VALUES(?,?,?,?)"),
+                        (pid, account_id, name, ts))
+            cur.execute(self._q(
+                "UPDATE profiles SET person_id=? WHERE user_id=? AND (person_id IS NULL OR person_id='')"),
+                (pid, account_id))
+            # The target scope is brand new, so this can never collide with an existing
+            # (user_id, profile_id, key) primary key.
+            cur.execute(self._q("UPDATE state SET profile_id=? WHERE user_id=? AND profile_id=?"),
+                        (person_scope(pid), account_id, LEGACY_PERSON_SCOPE))
+        return pid
+
+    # ---------------------------------------------------------------- profiles
+    # A screen BELONGS TO A PERSON, and that is what lets the kiosk stay dumb: it is
+    # opened as kiosk.html?profile=<id>, so if the screen names its person then the kiosk
+    # needs no person-picking step at all. A shared device works with zero device-side UI.
+    def create_profile(self, user_id: str, name: str, person_id: str = "") -> dict:
+        pid, ts = _new_id(), _now()
+        with self._tx() as cur:
+            cur.execute(self._q("INSERT INTO profiles(id, user_id, person_id, name, created_at) VALUES(?,?,?,?,?)"),
+                        (pid, user_id, person_id, name, ts))
+        return {"id": pid, "name": name, "person_id": person_id, "created_at": ts}
+
+    def list_profiles(self, user_id: str, person_id: str | None = None) -> list[dict]:
+        """All the account's screens, or just one person's.
+
+        The filter is OPTIONAL on purpose. The home shell asks per person; anything that
+        legitimately wants the whole account (the kiosk's "any screen will do" fallback)
+        still gets it, and every row names its person either way."""
+        sql = "SELECT id, name, person_id, created_at FROM profiles WHERE user_id=?"
+        params: tuple = (user_id,)
+        if person_id:
+            sql += " AND person_id=?"
+            params = (user_id, person_id)
+        with self._tx() as cur:
+            cur.execute(self._q(sql + " ORDER BY created_at"), params)
+            rows = cur.fetchall()
+        return [{"id": r[0], "name": r[1], "person_id": r[2] or "", "created_at": r[3]} for r in rows]
 
     def get_profile(self, user_id: str, pid: str) -> dict | None:
         """Ownership is enforced here: only the owning user sees a profile."""
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id, name, created_at FROM profiles WHERE user_id=? AND id=?"),
+            cur.execute(self._q("SELECT id, name, person_id, created_at FROM profiles WHERE user_id=? AND id=?"),
                         (user_id, pid))
             r = cur.fetchone()
             if r is None:
@@ -98,7 +221,7 @@ class _Store:
                         (pid,))
             mods = cur.fetchall()
         return {
-            "id": r[0], "name": r[1], "created_at": r[2],
+            "id": r[0], "name": r[1], "person_id": r[2] or "", "created_at": r[3],
             "modules": [{"id": m[0], "type": m[1], "position": m[2]} for m in mods],
         }
 
@@ -106,6 +229,11 @@ class _Store:
         with self._tx() as cur:
             cur.execute(self._q("UPDATE profiles SET name=? WHERE id=? AND user_id=?"),
                         (name, pid, user_id))
+
+    def move_profile(self, user_id: str, pid: str, person_id: str) -> None:
+        with self._tx() as cur:
+            cur.execute(self._q("UPDATE profiles SET person_id=? WHERE id=? AND user_id=?"),
+                        (person_id, pid, user_id))
 
     def delete_profile(self, user_id: str, pid: str) -> None:
         """Delete a profile, its module instances, and their overwrite state.
@@ -259,8 +387,15 @@ class SQLiteStore(_Store):
         with self._lock:
             self._conn.executescript(
                 """
+                CREATE TABLE IF NOT EXISTS people (
+                    id TEXT PRIMARY KEY, account_id TEXT NOT NULL, name TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS ix_people_account ON people(account_id);
+
                 CREATE TABLE IF NOT EXISTS profiles (
-                    id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL, created_at TEXT NOT NULL
+                    id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL,
+                    created_at TEXT NOT NULL, person_id TEXT NOT NULL DEFAULT ''
                 );
                 CREATE INDEX IF NOT EXISTS ix_profiles_user ON profiles(user_id);
 
@@ -294,6 +429,14 @@ class SQLiteStore(_Store):
                     BEGIN SELECT RAISE(ABORT, 'events are append-only'); END;
                 """
             )
+            # A database created before the person layer has `profiles` without the
+            # column. CREATE TABLE IF NOT EXISTS will not add it, so do it here - guarded,
+            # because SQLite has no ADD COLUMN IF NOT EXISTS. This must run BEFORE the
+            # index on that column, which is why the index is not in the script above.
+            cols = {r[1] for r in self._conn.execute("PRAGMA table_info(profiles)")}
+            if "person_id" not in cols:
+                self._conn.execute("ALTER TABLE profiles ADD COLUMN person_id TEXT NOT NULL DEFAULT ''")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS ix_profiles_person ON profiles(person_id)")
             self._conn.commit()
 
 
@@ -335,9 +478,17 @@ class PostgresStore(_Store):
 
     def _migrate(self) -> None:
         stmts = [
-            "CREATE TABLE IF NOT EXISTS profiles (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
+            "CREATE TABLE IF NOT EXISTS people (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, "
             "name TEXT NOT NULL, created_at TEXT NOT NULL)",
+            "CREATE INDEX IF NOT EXISTS ix_people_account ON people(account_id)",
+
+            "CREATE TABLE IF NOT EXISTS profiles (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
+            "name TEXT NOT NULL, created_at TEXT NOT NULL, person_id TEXT NOT NULL DEFAULT '')",
+            # The live database predates the person layer, so the column has to be added
+            # to the existing table. Postgres has the guard built in; SQLite does not.
+            "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS person_id TEXT NOT NULL DEFAULT ''",
             "CREATE INDEX IF NOT EXISTS ix_profiles_user ON profiles(user_id)",
+            "CREATE INDEX IF NOT EXISTS ix_profiles_person ON profiles(person_id)",
 
             "CREATE TABLE IF NOT EXISTS media_sources (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
             "label TEXT NOT NULL, base_url TEXT NOT NULL, kind TEXT NOT NULL, created_at TEXT NOT NULL)",

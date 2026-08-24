@@ -15,6 +15,14 @@
 // Before this page existed, signing in redirected to the kiosk — which auto-seeded a
 // bedside profile and gave you no way to add anything to it. That is why the games were
 // not playable: there was nowhere to put them.
+//
+// THE PERSON BAR sits above the panel rather than inside any one tab, because the current
+// person changes what EVERY tab is showing — Screens lists theirs, Inputs edits theirs,
+// Output routes theirs. A picker that lived in one tab would leave the others silently
+// addressing somebody else, which is the single worst failure this layer could have.
+// Changing person remounts the active panel; see `show()`.
+
+import { mountPeople } from './people.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -47,14 +55,19 @@ export const TABS = [
 // `signedIn` decides the sidebar's way in/out. It defaults to "there is an email", which is
 // true for a Google session, but it is passed explicitly by home.html — a signed-in account
 // with no email on it would otherwise be offered a Sign IN link.
+// `makePersonState` / `makePersonEvents` take the person id FIRST: (personId, key, opts).
+// The shell curries the current person onto them before handing the panels the
+// `makeUserState` / `makeUserEvents` they already expect, so inputs.js and output_panel.js
+// needed no changes at all to become per-person.
 export async function mountHome(root, { email = '', profiles, manifests = [], onOpen = null,
                                        makeSettings = null, makeState = null, makeEvents = null,
                                        user = null, bus = null, mountTab = null,
-                                       makeUserState = null, makeUserEvents = null,
-                                       signedIn = null } = {}) {
+                                       makePersonState = null, makePersonEvents = null,
+                                       signedIn = null, storage = undefined } = {}) {
   const isSignedIn = signedIn == null ? !!email : !!signedIn;
   let active = 'screens';
   let panel = null;
+  let personId = '';
 
   root.innerHTML = `
     <div class="shell">
@@ -70,10 +83,25 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
             : '<a class="s-signout" href="/auth/login">Sign in</a>'}
         </div>
       </nav>
-      <main class="s-main" data-panel></main>
+      <main class="s-main">
+        <div data-people></div>
+        <div data-panel></div>
+      </main>
     </div>`;
 
   const main = root.querySelector('[data-panel]');
+
+  // Curried onto the current person. A panel that asked for per-person state before a
+  // person resolved would address the empty id and 404 every save, so this throws loudly
+  // instead of failing quietly at the bedside.
+  const forPerson = (make) => (make
+    ? (key, opts) => {
+        if (!personId) throw new Error('no person selected yet');
+        return make(personId, key, opts);
+      }
+    : null);
+  const makeUserState = forPerson(makePersonState);
+  const makeUserEvents = forPerson(makePersonEvents);
   const mount = mountTab || (async (id, host) => {
     if (id === 'media') {
       const { mountMedia } = await import('./media.js');
@@ -83,7 +111,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     }
     if (id === 'inputs') {
       const { mountInputs } = await import('./inputs.js');
-      const i = mountInputs(host, { profiles, user, makeUserState });
+      const i = mountInputs(host, { profiles, user, makeUserState, personId });
       await i.refresh();
       return i;
     }
@@ -99,7 +127,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       await a.refresh();
       return a;
     }
-    return mountScreens(host, { profiles, manifests, onOpen, makeSettings });
+    return mountScreens(host, { profiles, manifests, onOpen, makeSettings, personId });
   });
 
   async function show(id) {
@@ -114,19 +142,41 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     b.addEventListener('click', () => { show(b.dataset.tab); });
   }
 
+  // The bar reports the current person once on mount and again on every change. The first
+  // report is what makes `personId` valid before any panel is built, which is why the
+  // first `show()` waits for it below rather than racing it.
+  const people = mountPeople(root.querySelector('[data-people]'), {
+    profiles,
+    storage,
+    onChange: (person) => {
+      personId = (person && person.id) || '';
+      if (panel) show(active);      // whoever is on screen is now showing the wrong person
+    },
+  });
+  await people.refresh({ notify: false });
+  personId = (people.current() || {}).id || '';
+
   const api = {
     show,
     active: () => active,
     panel: () => panel,
-    destroy() { if (panel && panel.destroy) panel.destroy(); },
+    people,
+    person: () => people.current(),
+    destroy() {
+      people.destroy();
+      if (panel && panel.destroy) panel.destroy();
+    },
   };
   await show('screens');
   return api;
 }
 
 // The SCREENS tab: create a screen, fill it with modules, open it.
+// Scoped to ONE person. `personId` is passed rather than read from anywhere global so a
+// test — and, later, a moderator view showing two people side by side — can mount two of
+// these at once without them fighting over a shared "current".
 export async function mountScreens(root, {
-  profiles, manifests = [], onOpen = null, makeSettings = null,
+  profiles, manifests = [], onOpen = null, makeSettings = null, personId = '',
 } = {}) {
   const catalog = moduleCatalog(manifests);
   // The server stores module instances as {id, type} — no human title. Look the title up
@@ -313,7 +363,7 @@ export async function mountScreens(root, {
   }
 
   async function refresh() {
-    const raw = await profiles.list();
+    const raw = await profiles.list(personId);
     // The list endpoint returns profiles without their modules; fetch each so the cards
     // can show what's actually in them.
     list = await Promise.all(raw.map((p) => profiles.get(p.id).catch(() => ({ ...p, modules: [] }))));
@@ -326,7 +376,7 @@ export async function mountScreens(root, {
     const name = input.value.trim();
     if (!name) return;
     guard(async () => {
-      await profiles.create(name);
+      await profiles.create(name, personId);
       input.value = '';
       await refresh();
       say(`Created “${name}”. Add some modules to it.`);

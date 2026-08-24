@@ -58,6 +58,7 @@ const px = (el, prop) => parseFloat(getComputedStyle(el)[prop]) || 0;
 // Mike's screenshot — the one that actually overflowed.
 const SIZES = [
   { w: 620, h: 420, label: 'quadrant of a 1080p kiosk' },
+  { w: 900, h: 380, label: 'wide and short — question belongs beside the keypad' },
   { w: 460, h: 300, label: 'four-up on a small screen' },
   { w: 380, h: 240, label: 'cramped' },
   { w: 900, h: 700, label: 'roomy — must look untouched' },
@@ -122,16 +123,18 @@ function cell(w, h, label) {
         `overflows by ${sideways}px`);
     }
 
-    const tight = algebraCells[2];
-    const roomy = algebraCells[3];
+    // By label, not by index: adding a size to SIZES silently re-points every index.
+    const at = (list, label) => list.find((c) => c.label.startsWith(label));
+    const tight = at(algebraCells, 'cramped');
+    const roomy = at(algebraCells, 'roomy');
     const key = (c) => c.host.querySelector('.al-key');
     check('a cramped cell shrinks the keys rather than clipping them',
       px(key(tight), 'paddingTop') < px(key(roomy), 'paddingTop'),
       `${px(key(tight), 'paddingTop')} vs ${px(key(roomy), 'paddingTop')}`);
     check('a roomy cell is left exactly as it was — the old 11px padding',
       Math.round(px(key(roomy), 'paddingTop')) === 11, String(px(key(roomy), 'paddingTop')));
-    check('and its prompt keeps the old 1.5rem',
-      Math.round(px(roomy.host.querySelector('.al-prompt'), 'fontSize')) === 24,
+    check('and a roomy panel gives the question real size — it was 1.5rem stacked',
+      px(roomy.host.querySelector('.al-prompt'), 'fontSize') > 24,
       String(px(roomy.host.querySelector('.al-prompt'), 'fontSize')));
     // Shrinking only the keys would just move the overflow to the prompt above them.
     check('the prompt shrinks WITH the keypad, not independently of it',
@@ -140,6 +143,30 @@ function cell(w, h, label) {
     check('but never below legibility — a key nobody can hit is worse than a scrollbar',
       px(tight.host.querySelector('.al-key'), 'fontSize') >= 11,
       String(px(tight.host.querySelector('.al-key'), 'fontSize')));
+
+    // The question is the only part anyone is actually thinking about. Stacked, it ends
+    // up small and scrolled off the top -- which is what it did in the real kiosk.
+    section('algebra — the question goes beside the keypad when there is room');
+    const wide = at(algebraCells, 'wide and short');
+    const narrow = at(algebraCells, 'cramped');
+    const box = (c, sel) => c.host.querySelector(sel).getBoundingClientRect();
+    check('in a wide panel the keypad sits BESIDE the question, not under it',
+      box(wide, '.al-calc').left > box(wide, '.al-prompt').right - 2,
+      `calc left ${Math.round(box(wide, '.al-calc').left)} vs prompt right ${Math.round(box(wide, '.al-prompt').right)}`);
+    check('...and they share the same rows rather than stacking',
+      box(wide, '.al-calc').top < box(wide, '.al-prompt').bottom + 2);
+    check('the question is the biggest thing on the panel',
+      px(wide.host.querySelector('.al-prompt'), 'fontSize')
+        > px(wide.host.querySelector('.al-key'), 'fontSize') * 1.8,
+      `${px(wide.host.querySelector('.al-prompt'), 'fontSize')} vs key ${px(wide.host.querySelector('.al-key'), 'fontSize')}`);
+    check('and bigger than it was when stacked',
+      px(wide.host.querySelector('.al-prompt'), 'fontSize')
+        > px(narrow.host.querySelector('.al-prompt'), 'fontSize'));
+    check('a narrow panel still stacks — two columns of 190px would be worse than a scroll',
+      box(narrow, '.al-calc').top >= box(narrow, '.al-prompt').bottom - 2);
+    check('the wide panel does not overflow either',
+      wide.host.scrollHeight - wide.host.clientHeight <= 1,
+      `overflows by ${wide.host.scrollHeight - wide.host.clientHeight}px`);
     // Below ~300px the decoration goes instead of the keys shrinking further.
     check('a cramped cell drops the points-and-streak line rather than the keypad',
       getComputedStyle(tight.host.querySelector('.al-top')).display === 'none');
@@ -169,15 +196,16 @@ function cell(w, h, label) {
         time.getBoundingClientRect().width <= c.cell.getBoundingClientRect().width,
         `${Math.round(time.getBoundingClientRect().width)} > ${Math.round(c.cell.getBoundingClientRect().width)}`);
     }
-    const short = clockCells[4];
+    const short = at(clockCells, 'wide and short — the shape');
+    const big = at(clockCells, 'roomy');
     check('a wide short cell is limited by its HEIGHT, not stretched to its width',
-      px(short.host.querySelector('.time'), 'fontSize') < px(clockCells[3].host.querySelector('.time'), 'fontSize'),
-      `${px(short.host.querySelector('.time'), 'fontSize')} vs ${px(clockCells[3].host.querySelector('.time'), 'fontSize')}`);
+      px(short.host.querySelector('.time'), 'fontSize') < px(big.host.querySelector('.time'), 'fontSize'),
+      `${px(short.host.querySelector('.time'), 'fontSize')} vs ${px(big.host.querySelector('.time'), 'fontSize')}`);
     check('and it is still readable from across a room',
       px(short.host.querySelector('.time'), 'fontSize') >= 22,
       String(px(short.host.querySelector('.time'), 'fontSize')));
-    check('a big cell gives a big clock', px(clockCells[3].host.querySelector('.time'), 'fontSize') >= 60,
-      String(px(clockCells[3].host.querySelector('.time'), 'fontSize')));
+    check('a big cell gives a big clock', px(big.host.querySelector('.time'), 'fontSize') >= 60,
+      String(px(big.host.querySelector('.time'), 'fontSize')));
 
     // ================= no box, no change =================
     section('a host that does not opt in is untouched');

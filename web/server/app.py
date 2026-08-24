@@ -22,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
-from db import PostgresStore, SQLiteStore
+from db import PostgresStore, SQLiteStore, person_scope
 from identity import current_user, optional_user
 
 log = logging.getLogger("nimrod")
@@ -68,6 +68,15 @@ if GOOGLE_OK:
 
 class ProfileCreate(BaseModel):
     name: str
+    person_id: str = ""
+
+
+class ProfileMove(BaseModel):
+    person_id: str
+
+
+class PersonCreate(BaseModel):
+    name: str
 
 
 class ModuleAdd(BaseModel):
@@ -106,6 +115,14 @@ def _clean_base_url(raw: str) -> str:
     return url.rstrip("/")
 
 
+def owned_person(account: str, person_id: str) -> dict:
+    """Fetch a person or 404 - the ownership gate for everything under them."""
+    person = store.get_person(account, person_id)
+    if person is None:
+        raise HTTPException(status_code=404, detail="no such person")
+    return person
+
+
 def owned_profile(user: str, pid: str) -> dict:
     """Fetch a profile or 404 — the ownership gate for everything under it."""
     profile = store.get_profile(user, pid)
@@ -142,14 +159,27 @@ def whoami(user: str = Depends(current_user)):
 
 # ---------------------------------------------------------------- profiles
 @app.get("/api/profiles")
-def list_profiles(user: str = Depends(current_user)):
-    return {"profiles": store.list_profiles(user)}
+def list_profiles(person: str = "", user: str = Depends(current_user)):
+    """`?person=<id>` narrows to one person's screens; without it, the whole account's.
+
+    The default stays "everything" so the kiosk's any-screen-will-do fallback and any
+    older client keep working; every row names its person either way."""
+    store.ensure_default_person(user)
+    if person:
+        _check(person, ID_RE, "person id")
+        owned_person(user, person)
+    return {"profiles": store.list_profiles(user, person or None)}
 
 
 @app.post("/api/profiles")
 def create_profile(body: ProfileCreate, user: str = Depends(current_user)):
     _check(body.name, NAME_RE, "profile name")
-    return store.create_profile(user, body.name)
+    # A screen with no person has no answer to "whose is this?", so one is always
+    # assigned - the caller's choice, or the account's default person.
+    person_id = body.person_id or store.ensure_default_person(user)
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    return store.create_profile(user, body.name, person_id)
 
 
 @app.get("/api/profiles/{pid}")
@@ -163,6 +193,18 @@ def rename_profile(pid: str, body: ProfileCreate, user: str = Depends(current_us
     owned_profile(user, pid)
     _check(body.name, NAME_RE, "profile name")
     store.rename_profile(user, pid, body.name)
+    return store.get_profile(user, pid)
+
+
+@app.put("/api/profiles/{pid}/person")
+def move_profile(pid: str, body: ProfileMove, user: str = Depends(current_user)):
+    """Hand a screen to a different person. The screen keeps its modules and its own
+    settings; what changes is whose bindings and whose output routing drive it."""
+    _check(pid, ID_RE, "profile id")
+    _check(body.person_id, ID_RE, "person id")
+    owned_profile(user, pid)
+    owned_person(user, body.person_id)
+    store.move_profile(user, pid, body.person_id)
     return store.get_profile(user, pid)
 
 
@@ -238,47 +280,145 @@ def put_state(pid: str, key: str, body: StatePut, user: str = Depends(current_us
     return result
 
 
-# ------------------------------------------------- per-USER state (not per screen)
-# A reserved profile_id. Real profile ids are uuid4().hex — 32 hex characters — so a
-# value starting with an underscore cannot collide with one, and the state table has no
-# foreign key to profiles. That is the whole trick: per-user state needs no new table.
+# ------------------------------------------------------- PEOPLE (the person layer)
+# Account -> Person -> { Screens, Bindings, Output routing }.  A DEVICE is cross-cutting:
+# it is merely where a person is right now, which is why nothing here is keyed by one.
 #
-# WHY IT EXISTS: input bindings. A binding says "my switch means Primary select", which
-# is a fact about the PERSON and their hardware, not about any one screen. Storing it per
-# screen meant re-tuning the same switch on every screen someone owns — the exact
-# per-device toil this project exists to avoid.
-USER_SCOPE = "_user"
+# The account is what signs in; the person is who the screen is FOR. Before this, one
+# moderator running two residents' screens shared a single set of input bindings between
+# them, and "whose screen is this?" had no answer at all.
+#
+# THE SIMPLIFICATION THAT MAKES IT CHEAP: a SCREEN IMPLIES ITS PERSON. The kiosk is
+# already opened as kiosk.html?profile=<id>, so a screen that names its person means the
+# kiosk needs no person-selection step - a shared device works with zero device-side UI.
+# The picker is only ever needed on the home side, where a moderator chooses who they are
+# configuring.
+@app.get("/api/people")
+def list_people(user: str = Depends(current_user)):
+    """Every account has at least one person; this is where a legacy account grows one."""
+    store.ensure_default_person(user)
+    return {"people": store.list_people(user)}
 
 
-# Per-user EVENTS, the sibling of per-user state and the mailbox the `remote` output
-# channel posts into. Append-only like every other event stream, and scoped to the user
-# rather than one of their screens, because "tell me on whatever device I am near" is a
-# statement about the person and not about a screen.
-@app.get("/api/user-events/{stream}")
-def list_user_events(stream: str, limit: int = 50, user: str = Depends(current_user)):
+@app.post("/api/people")
+def create_person(body: PersonCreate, user: str = Depends(current_user)):
+    _check(body.name, NAME_RE, "person name")
+    store.ensure_default_person(user)   # never let the second person be the first
+    return store.create_person(user, body.name)
+
+
+@app.patch("/api/people/{person_id}")
+def rename_person(person_id: str, body: PersonCreate, user: str = Depends(current_user)):
+    _check(person_id, ID_RE, "person id")
+    _check(body.name, NAME_RE, "person name")
+    owned_person(user, person_id)
+    store.rename_person(user, person_id, body.name)
+    return store.get_person(user, person_id)
+
+
+@app.delete("/api/people/{person_id}")
+def delete_person(person_id: str, user: str = Depends(current_user)):
+    """Refuses while they still have screens, and refuses the last person.
+
+    Both refusals are deliberate. Cascading the screens would make deleting a name a way
+    to silently destroy someone's whole setup, and an account with no people has no valid
+    state at all - every other endpoint would have to invent one back.
+    """
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    if len(store.list_people(user)) <= 1:
+        raise HTTPException(status_code=409, detail="an account needs at least one person")
+    n = store.count_person_screens(user, person_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail="this person still has %d screen%s - move or delete them first"
+                   % (n, "" if n == 1 else "s"))
+    store.delete_person(user, person_id)
+    return {"ok": True}
+
+
+# ---------------------------------------------- per-PERSON state (not per screen)
+# Stored in the ordinary state/events tables under a reserved profile_id (see
+# db.person_scope). Real profile ids are 32 hex characters, so a value starting with an
+# underscore cannot collide, and neither table has a foreign key to profiles. That is the
+# whole trick: the person layer needs exactly one new table (`people`), not three.
+#
+# WHY IT EXISTS: input bindings above all. "My switch means Primary select, and I need to
+# hold it 300ms" is a fact about a BODY. It does not change between someone's bedside
+# screen and their living-room screen, and re-entering it per screen is precisely the
+# per-device toil this project exists to remove.
+@app.get("/api/people/{person_id}/state/{key}")
+def get_person_state(person_id: str, key: str, user: str = Depends(current_user)):
+    _check(person_id, ID_RE, "person id")
+    _check(key, ID_RE, "state key")
+    owned_person(user, person_id)
+    return store.get_state(user, person_scope(person_id), key)
+
+
+@app.put("/api/people/{person_id}/state/{key}")
+def put_person_state(person_id: str, key: str, body: StatePut, user: str = Depends(current_user)):
+    _check(person_id, ID_RE, "person id")
+    _check(key, ID_RE, "state key")
+    owned_person(user, person_id)
+    status, result = store.put_state(user, person_scope(person_id), key, body.data, body.base_version)
+    if status == "conflict":
+        return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
+    return result
+
+
+# The per-person mailbox the `remote` output channel posts into, and that every other
+# device of theirs polls. Per person, not per screen, because "tell me on whatever device
+# I am near" is a statement about a person and not about a screen.
+@app.get("/api/people/{person_id}/events/{stream}")
+def list_person_events(person_id: str, stream: str, limit: int = 50, user: str = Depends(current_user)):
+    _check(person_id, ID_RE, "person id")
     _check(stream, ID_RE, "event stream")
-    return store.list_events(user, USER_SCOPE, stream, limit)
+    owned_person(user, person_id)
+    return store.list_events(user, person_scope(person_id), stream, max(1, min(limit, 500)))
 
 
-@app.post("/api/user-events/{stream}")
-def append_user_event(stream: str, body: EventPost, user: str = Depends(current_user)):
+@app.post("/api/people/{person_id}/events/{stream}")
+def append_person_event(person_id: str, stream: str, body: EventPost, user: str = Depends(current_user)):
+    _check(person_id, ID_RE, "person id")
     _check(stream, ID_RE, "event stream")
-    return store.append_event(user, USER_SCOPE, stream, body.kind, body.data)
+    _check(body.kind, ID_RE, "event kind")
+    owned_person(user, person_id)
+    return store.append_event(user, person_scope(person_id), stream, body.kind, body.data)
 
 
+# ------------------------------------------------------- legacy per-USER aliases
+# What /api/user-state and /api/user-events meant before people existed. They now resolve
+# to the account's DEFAULT person, so a kiosk still running older cached code keeps
+# working across the deploy instead of silently losing its bindings until someone
+# refreshes it. Delete them once nothing in the wild calls them.
 @app.get("/api/user-state/{key}")
 def get_user_state(key: str, user: str = Depends(current_user)):
     _check(key, ID_RE, "state key")
-    return store.get_state(user, USER_SCOPE, key)
+    return store.get_state(user, person_scope(store.ensure_default_person(user)), key)
 
 
 @app.put("/api/user-state/{key}")
 def put_user_state(key: str, body: StatePut, user: str = Depends(current_user)):
     _check(key, ID_RE, "state key")
-    status, result = store.put_state(user, USER_SCOPE, key, body.data, body.base_version)
+    scope = person_scope(store.ensure_default_person(user))
+    status, result = store.put_state(user, scope, key, body.data, body.base_version)
     if status == "conflict":
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
     return result
+
+
+@app.get("/api/user-events/{stream}")
+def list_user_events(stream: str, limit: int = 50, user: str = Depends(current_user)):
+    _check(stream, ID_RE, "event stream")
+    return store.list_events(user, person_scope(store.ensure_default_person(user)), stream, limit)
+
+
+@app.post("/api/user-events/{stream}")
+def append_user_event(stream: str, body: EventPost, user: str = Depends(current_user)):
+    _check(stream, ID_RE, "event stream")
+    return store.append_event(user, person_scope(store.ensure_default_person(user)),
+                              stream, body.kind, body.data)
 
 
 # ------------------------------------------------------------ append-only events
