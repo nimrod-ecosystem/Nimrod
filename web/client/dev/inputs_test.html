@@ -27,6 +27,7 @@ import { createInputBus } from '../input.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
 import { VERBS, FOCUS_VERBS, verbTopic, verbTarget, respondsToVerbs, ROLE_CYCLE_ACTION } from '../actions.js';
+import { DEFAULT_BINDINGS } from '../input_keyboard.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -191,9 +192,17 @@ const logText = (r) => r.q('[data-log]').textContent;
     {
       const r = rig();
       await r.panel.refresh();
-      check('the shipped default is there — bindable never means arrives unconfigured',
-        r.panel.bindings().length === 1 && r.panel.bindings()[0].actionId === ROLE_CYCLE_ACTION);
-      check('and it is live, not just displayed', r.panel.input().listBindings().length === 1);
+      check('the shipped defaults are there — bindable never means arrives unconfigured',
+        r.panel.bindings().length === DEFAULT_BINDINGS.length);
+      check('including the gate toggle',
+        r.panel.bindings().some((b) => b.actionId === ROLE_CYCLE_ACTION));
+      check('and a TV-remote set, so the page is driveable before anything is configured',
+        ['next', 'prev', 'select', 'focus-next', 'focus-prev']
+          .every((v) => r.panel.bindings().some((b) => b.actionId === verbTopic(v))));
+      check('Escape is left free for the settings menu',
+        !r.panel.bindings().some((b) => b.control === 'key:escape'));
+      check('and they are live, not just displayed',
+        r.panel.input().listBindings().length === DEFAULT_BINDINGS.length);
       check('every timing field is a real number, never "undefined"',
         r.qa('.i-tab input[type=number]').every((i) => /^\d+$/.test(i.value)),
         r.qa('.i-tab input[type=number]').map((i) => i.value).join(','));
@@ -224,8 +233,9 @@ const logText = (r) => r.q('[data-log]').textContent;
       check('it asks for the control', r.panel.input().isCapturing());
       r.press(XAC, 'button:0', 340);
 
-      const b = r.panel.bindings().find((x) => x.actionId === verbTopic('next'));
-      check('the pressed control becomes the binding', !!b && b.control === 'button:0');
+      const b = r.panel.bindings().find((x) => x.device === XAC);
+      check('the pressed control becomes the binding',
+        !!b && b.control === 'button:0' && b.actionId === verbTopic('next'));
       check('with sensible defaults', b.edge === 'press' && b.role === 'universal' && b.holdMs === 0);
       check('it offers the hold it measured, in one click',
         /Held 340ms/.test(r.q('[data-addmsg]').innerHTML));
@@ -251,7 +261,10 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.press(XAC, 'button:0');
 
       check('the screen picker opens on the first screen', r.panel.current().id === 'p1');
-      check('focus lands on the first panel that answers', r.panel.router().focused().type === 'photos');
+      check('focus starts on the binder — the page you are standing on',
+        r.panel.router().focused().id === 'binder');
+      r.panel.router().focusNext();
+      check('and moves to the screen from there', r.panel.router().focused().type === 'photos');
       r.press(XAC, 'button:0');
       check('the verb resolves to the focused panel, and the strip names it',
         /photos\/next/.test(logText(r)), logText(r));
@@ -263,11 +276,11 @@ const logText = (r) => r.q('[data-log]').textContent;
       await r.panel.select('p2');
       check("switching screens does not touch the bindings — they are the person's",
         r.panel.bindings().some((x) => x.actionId === verbTopic('next')));
-      check('but there is nothing to focus on a clock-only screen',
-        r.panel.router().focused() === null && /Nothing on this screen/.test(r.host.textContent));
-      r.press(XAC, 'button:0');
-      check('and the strip says so instead of going quiet',
-        /has nothing for that/.test(logText(r)), logText(r));
+      check('a clock-only screen still leaves the binder itself focusable',
+        r.panel.router().focused().id === 'binder');
+      r.panel.router().focusNext();
+      check('and there is nowhere else to go — the ring is just this page',
+        r.panel.router().focused().id === 'binder');
       r.panel.destroy();
     }
     {
@@ -275,11 +288,66 @@ const logText = (r) => r.q('[data-log]').textContent;
       await r.panel.refresh();
       r.q('[data-new-action]').value = verbTopic('select');
       r.q('[data-add]').click();
+      r.panel.router().focusNext();                       // off the binder, onto photos
       r.press(XAC, 'button:1');
       r.press(XAC, 'button:1');
       // The worst outcome in the whole feature: the switch worked, and nothing happened.
       check('a verb the focused panel ignores is called out, not left as silence',
         /photos has nothing for that/.test(logText(r)), logText(r));
+      r.panel.destroy();
+    }
+
+    // ================= driving the binder with the thing being bound =============
+    section('the binder is a panel too — the switch drives its own setup');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+
+      check('the binder is in the focus ring, first',
+        r.panel.router().reachable()[0].id === 'binder');
+      check('and is named in words a person reads, not "binder"',
+        /This page/.test(r.host.textContent));
+      check('nothing is highlighted yet', r.panel.cursor() === -1);
+
+      r.press(XAC, 'button:0');
+      check('Next moves onto the first row', r.panel.cursor() === 0);
+      check('and the row is visibly marked', r.qa('.i-tab tr.i-cursor').length === 1);
+      r.press(XAC, 'button:0');
+      check('and on down the list', r.panel.cursor() === 1);
+
+      // Wraps: with one switch there is only one direction, so a dead end at the bottom
+      // of the list means reaching for a mouse.
+      const n = r.panel.bindings().length;
+      for (let i = 0; i < n; i++) r.press(XAC, 'button:0');
+      check('the list wraps rather than stopping at the bottom', r.panel.cursor() === 1);
+
+      check('the page shows that it has focus', !!r.q('.home.i-has-focus'));
+      r.panel.router().focusNext();
+      check('and stops showing it when focus leaves', !r.q('.home.i-has-focus'));
+      r.panel.destroy();
+    }
+    {
+      const r = rig();
+      await r.panel.refresh();
+      // Primary select re-presses the highlighted row -- and the control that triggered
+      // it is the one capture then takes, which IS the gesture.
+      r.panel.input().setBindings([
+        ...r.panel.bindings(),
+        { id: 'sel', actionId: verbTopic('select'), device: XAC, control: 'button:3' },
+        { id: 'nxt', actionId: verbTopic('next'), device: XAC, control: 'button:4' },
+      ]);
+      r.press(XAC, 'button:4');
+      check('a row is highlighted', r.panel.cursor() === 0);
+      const target = r.panel.bindings()[0].id;
+      r.press(XAC, 'button:3');
+      check('select arms a capture on that row', r.panel.input().isCapturing());
+      r.press(XAC, 'button:7', 120);
+      const after = r.panel.bindings().find((b) => b.id === target);
+      check('and the next press becomes that row new control',
+        after.control === 'button:7', JSON.stringify(after));
       r.panel.destroy();
     }
 
@@ -291,7 +359,9 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.q('[data-new-action]').value = verbTopic('next');
       r.q('[data-add]').click();
       r.press(XAC, 'button:0');
-      const row = r.qa('.i-tab tbody tr').find((tr) => tr.querySelector('[data-f="actionId"]')?.value === verbTopic('next'));
+      // By device, not by verb: ArrowDown is also bound to Next by default.
+      const bid = r.panel.bindings().find((x) => x.device === XAC).id;
+      const row = r.q(`[data-bid="${bid}"]`);
       const set = (f, v) => {
         const el = row.querySelector(`[data-f="${f}"]`);
         el.value = v; el.dispatchEvent(new Event('change', { bubbles: true }));
@@ -332,20 +402,23 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.press(XAC, 'button:0');
       check('nothing is written on the keystroke itself', r.saved() === undefined);
       r.saveClock.advance(350);
-      check('it autosaves shortly after', r.saved()?.bindings.length === 2);
+      check('it autosaves shortly after',
+        r.saved()?.bindings.length === DEFAULT_BINDINGS.length + 1);
       check('under ONE key, with no screen id in it',
         Object.keys(userStore).length === 1 && Object.keys(userStore)[0] === INPUTS_KEY);
       check('and the record is versioned', r.saved().v === RECORD_VERSION);
 
+      const wasThere = r.panel.bindings().length;
       r.qa('[data-del]')[1].click();
       r.panel.destroy();
       check('destroying flushes the pending write instead of dropping it',
-        r.saved().bindings.length === 1);
+        r.saved().bindings.length === wasThere - 1);
     }
     {
       const r = rig({ fresh: false });
       await r.panel.refresh();
-      check("the person's setup is still theirs on the next visit", r.panel.bindings().length === 1);
+      check("the person's setup is still theirs on the next visit",
+        r.panel.bindings().length === DEFAULT_BINDINGS.length);
       r.panel.destroy();
     }
     {
@@ -354,8 +427,8 @@ const logText = (r) => r.q('[data-log]').textContent;
           edge: 'press', role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0 }] } });
       await r.panel.refresh();
       check('a v1 record is NOT silently reinterpreted — it named actions that no longer exist',
-        r.panel.bindings().length === 1 && r.panel.bindings()[0].actionId === ROLE_CYCLE_ACTION,
-        JSON.stringify(r.panel.bindings()));
+        r.panel.bindings().length === DEFAULT_BINDINGS.length,
+        JSON.stringify(r.panel.bindings().map((b) => b.actionId)));
       r.panel.destroy();
     }
     {

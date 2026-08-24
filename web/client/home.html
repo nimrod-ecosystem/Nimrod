@@ -133,6 +133,14 @@
   .i-tab input[type=number]{width:7ch}
   .i-ctl{padding:4px 9px;font-size:.8rem;white-space:nowrap}
   .i-stale{background:rgba(164,36,59,.06)}
+  /* The row the VERBS are pointed at. Has to be readable from across a room, because the
+     person driving it may be several feet from the screen and using one switch. */
+  .i-tab tr.i-cursor{background:rgba(44,110,73,.13);outline:2px solid var(--moss);
+    outline-offset:-2px}
+  /* "Your control is driving this page right now." */
+  .home.i-has-focus{position:relative}
+  .home.i-has-focus::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
+    box-shadow:inset 0 0 0 3px var(--moss);border-radius:6px;opacity:.55}
   .i-warn{color:var(--rosy-deep);font-size:.8rem}
   .i-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
   .i-add select{font:inherit;font-size:.9rem;padding:8px 10px;border:1px solid var(--line);

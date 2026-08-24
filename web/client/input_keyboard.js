@@ -26,7 +26,7 @@
 // TYPING IS NOT INPUT. Keystrokes inside a text field belong to the field. The adapter
 // stands down whenever the focus is somewhere a person is writing.
 
-import { ROLE_CYCLE_ACTION } from './actions.js';
+import { ROLE_CYCLE_ACTION, verbTopic } from './actions.js';
 
 export const KEYBOARD_DEVICE = 'keyboard';
 
@@ -49,22 +49,32 @@ function isTyping(target) {
   return EDITABLE.includes(tag) || target.isContentEditable === true;
 }
 
-// The shipped default. Ctrl+Shift+E rather than the F1 in the original spec: F1 is
-// browser-reserved (Help), and this project's rule is that the dashboard must behave
-// the SAME in desktop dev as in the Pi kiosk - a key the browser eats fails that on one
-// side only. It follows the Ctrl+Shift+L precedent Cici already set for its edit toggle.
-// It is an ordinary binding, so a caregiver can rebind it, or put it on a switch, and
-// the keyboard default simply stops being the only way in.
+// THE SHIPPED DEFAULTS. Arrows, Enter, and left/right to change panel - a TV remote,
+// because that is the interaction model a scanning or single-switch user already lives
+// in, and because it means a screen (and the binder itself) can be DRIVEN before anyone
+// has configured anything.
+//
+// The gate toggle is Ctrl+Shift+E, not the F1 the original spec asked for: F1 is
+// browser-reserved (Help), and this project's rule is that the dashboard behaves the same
+// in desktop dev as in the Pi kiosk - a key the browser eats fails that on one side only.
+// It follows the Ctrl+Shift+L precedent Cici set for its edit toggle.
+//
+// ESCAPE IS DELIBERATELY LEFT FREE for the universal settings menu.
+//
+// All of these are ordinary bindings: rebind them, or move them onto a switch, and the
+// keyboard simply stops being the only way in.
+const kb = (id, control, actionId, label) => ({
+  id, actionId, device: KEYBOARD_DEVICE, control,
+  edge: 'press', role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0, label,
+});
+
 export const DEFAULT_BINDINGS = [
-  {
-    id: 'default/role-cycle',
-    actionId: ROLE_CYCLE_ACTION,
-    device: KEYBOARD_DEVICE,
-    control: 'key:ctrl+shift+e',
-    edge: 'press',
-    role: 'universal',
-    label: 'Cycle who may act',
-  },
+  kb('default/role-cycle', 'key:ctrl+shift+e', ROLE_CYCLE_ACTION, 'Cycle who may act'),
+  kb('default/next', 'key:arrowdown', verbTopic('next'), 'Next'),
+  kb('default/prev', 'key:arrowup', verbTopic('prev'), 'Previous'),
+  kb('default/select', 'key:enter', verbTopic('select'), 'Primary select'),
+  kb('default/focus-next', 'key:arrowright', verbTopic('focus-next'), 'Next panel'),
+  kb('default/focus-prev', 'key:arrowleft', verbTopic('focus-prev'), 'Previous panel'),
 ];
 
 export function attachKeyboard(input, { target = window, device = KEYBOARD_DEVICE } = {}) {
