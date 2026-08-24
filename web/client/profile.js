@@ -61,6 +61,25 @@ export function createProfilesClient({ user, baseURL = '' }) {
         return json(res);
       }),
 
+    // ---- pairing -----------------------------------------------------------
+    // Consumes a code and hands back {label, base_urls, agent_id}. Deliberately does NOT
+    // create the media source: which address works is something only this browser can
+    // find out, so the caller probes and then creates the source itself.
+    //
+    // The refusals are three different problems for the person standing there — a code
+    // that was already used, one that expired, one that was mistyped — and each sends them
+    // somewhere different, so the server's sentence is carried through rather than
+    // flattened into "that didn't work".
+    claimPairing: (code) =>
+      fetch(`${baseURL}/api/pair/claim`, {
+        method: 'POST', headers: jsonHeaders(), body: JSON.stringify({ code }),
+      }).then(async (res) => {
+        if (res.ok) return res.json();
+        let detail = '';
+        try { detail = (await res.json()).detail; } catch { /* not json */ }
+        throw new Error(detail || `pairing failed (${res.status})`);
+      }),
+
     // ---- screens -----------------------------------------------------------
     // `personId` narrows to one person's screens. Omit it and you get the whole
     // account's, which is what the kiosk's any-screen-will-do fallback wants.

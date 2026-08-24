@@ -122,3 +122,60 @@ export async function sourceHealth(source, { fetchImpl = fetch } = {}) {
     return { ok: false, error: String(e) };
   }
 }
+
+// ---------------------------------------------------------------------- pairing
+// SIX CHARACTERS INSTEAD OF AN IP ADDRESS.
+//
+// Connecting a device used to mean reading its address off one machine and typing it into
+// a browser on another. That is an administrator's task, and it is why the media agent was
+// unusable by the people it exists for.
+//
+// THE HALF THAT LIVES HERE IS THE INTERESTING HALF. The agent cannot know which of its
+// addresses this browser can reach - `localhost` only works when they are the same
+// machine, a LAN address only from the same network - so it offers CANDIDATES and we find
+// out, by asking each one. That is why claiming a code does not create a source on the
+// server: the server would have to guess, and it would be wrong at a bedside.
+
+export const PAIR_CODE_LEN = 6;
+
+// Case and punctuation are how people write a code down off a screen. Nothing is
+// substituted: the alphabet contains no ambiguous glyph (no 0/O, 1/I/L, U), so a typed O
+// is a genuine misreading with no correct character to map it to, and quietly changing it
+// would pair the wrong device. Mirrors normalize_code() on the server.
+export function normalizeCode(raw) {
+  return String(raw || '').toUpperCase().replace(/[\s-]/g, '').slice(0, 32);
+}
+
+// Ask an agent who it is. Short timeout because this runs against several addresses in a
+// row and most of them are expected to fail — an unreachable LAN address would otherwise
+// hang the whole thing on one browser's connect timeout.
+async function probeAgent(baseURL, { fetchImpl = fetch, timeoutMs = 2500 } = {}) {
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+  try {
+    const res = await fetchImpl(`${baseURL}/health`, ctl ? { signal: ctl.signal } : undefined);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+// The first candidate that answers AND is the agent we just paired with, in order.
+//
+// THE IDENTITY CHECK IS NOT DECORATION. Candidates include LAN addresses, and a machine
+// that took the same DHCP lease — or any other agent someone runs on 8770 — would answer
+// happily. Without matching the id, "it responded" is enough to make a stranger's folder
+// somebody's photo source. When the agent reports no id at all (an older build), reaching
+// it is all we can check, and that is stated rather than pretended.
+export async function findReachable(baseURLs, agentId, opts = {}) {
+  for (const url of baseURLs || []) {
+    const health = await probeAgent(url, opts);
+    if (!health || health.ok !== true) continue;
+    if (agentId && health.agent_id && health.agent_id !== agentId) continue;
+    return { base_url: url, agent_id: health.agent_id || '', verified: !!(agentId && health.agent_id) };
+  }
+  return null;
+}
