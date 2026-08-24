@@ -46,6 +46,7 @@ import { createVerbRouter } from './input_router.js';
 import { attachKeyboard, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from './input_keyboard.js';
 import { attachPointer, pointerLabel, POINTER_DEVICE } from './input_pointer.js';
 import { createGamepads, controlLabel } from './input_gamepad.js';
+import { speak } from './voice.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -90,6 +91,9 @@ export function mountInputs(root, {
   // Seams: the test drives the whole panel with no hardware and no server.
   makeInput = null, makeGamepads = null, makeRouter = null,
   attachKeys = attachKeyboard, attachPtr = attachPointer,
+  // Injected so the test can assert what WOULD have been said without a speech engine,
+  // and so a browser with no synthesis is simply quiet rather than broken.
+  say = speak,
   saveDebounceMs = 350,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
@@ -105,7 +109,7 @@ export function mountInputs(root, {
   let saveTimer = null;
   let cursor = -1;                 // which binding row the VERBS are pointed at
   let binderOffs = [];
-  let record = { v: RECORD_VERSION, gate: 'both', bindings: [] };
+  let record = { v: RECORD_VERSION, gate: 'both', speak: false, bindings: [] };
 
   const localBus = createBus();
   const actions = createDefaultRegistry();
@@ -275,6 +279,8 @@ export function mountInputs(root, {
     if (!host) return;
     host.innerHTML = GATES.map((g) =>
       `<button class="h-btn${g === record.gate ? ' h-primary' : ''}" data-gate="${g}">${GATE_LABEL[g]}</button>`).join('');
+    const sp = el('[data-speak]');
+    if (sp) sp.checked = !!record.speak;
   }
 
   function body() {
@@ -285,6 +291,13 @@ export function mountInputs(root, {
           back. This is itself bindable — put it on a switch and you never need the keyboard.
           Default: <code>Ctrl+Shift+E</code>.</p>
         <div class="i-gate" data-gate></div>
+      </div>
+
+      <div class="h-card">
+        <div class="h-card-head"><h2>Say what I press</h2></div>
+        <p class="h-hint">Speaks the control and what it now means, out loud, each time you
+          bind one. For anyone setting this up without being able to watch the screen.</p>
+        <label class="i-speak"><input type="checkbox" data-speak> Speak it</label>
       </div>
 
       <div class="h-card">
@@ -384,7 +397,7 @@ export function mountInputs(root, {
     capture(({ device, control, heldMs }) => {
       edit(b.id, { device, control });
       renderBindings();
-      offerHold(b.id, heldMs);
+      confirmBound(b.id, device, control, heldMs);
     });
   }
 
@@ -395,22 +408,63 @@ export function mountInputs(root, {
 
   // ---- capture -----------------------------------------------------------------
 
+  // CAPTURE ALWAYS CONFIRMS. It used to clear the message on success and then leave it
+  // blank unless the hold was long enough to be worth suggesting a threshold for — so a
+  // quick tap, which is most of them, bound the control and said NOTHING. The row changed
+  // somewhere in a dense table and that was the entire feedback. Mike's words: "it's not
+  // very obvious that a setting was ever made."
+  //
+  // Silence is the worst possible answer here, because the person doing this often cannot
+  // see the table and the whole question they are asking is "did that work?".
   function capture(onPicked) {
     const msg = el('[data-addmsg]');
     const say = (t) => { if (msg) msg.textContent = t; };
     say('press the control now…');
     input.beginCapture({
       onCandidate: ({ device, control }) => say(`${deviceName(device)}: ${controlName(device, control)} — now let go`),
-      onDone: ({ device, control, heldMs }) => { say(''); onPicked({ device, control, heldMs }); },
+      onDone: ({ device, control, heldMs }) => { onPicked({ device, control, heldMs }); },
       onTimeout: () => say('nothing pressed — try again'),
     });
   }
 
-  function offerHold(bid, heldMs) {
-    const suggested = suggestHold(heldMs);
+  // Said after every capture, hold offer or not. `bid` names the row so the confirmation
+  // can repeat what the control now MEANS — "Left click → Next" is the fact being
+  // checked; "Left click" alone only proves the press was heard.
+  function confirmBound(bid, device, control, heldMs) {
     const msg = el('[data-addmsg]');
-    if (!msg || !suggested) return;
-    msg.innerHTML = `Held ${heldMs}ms. <button class="h-btn" data-usehold="${esc(bid)}" data-ms="${suggested}">Require ${suggested}ms</button>`;
+    if (!msg) return;
+    const b = record.bindings.find((x) => x.id === bid);
+    const verb = b ? verbOf(b.actionId) : '';
+    const meaning = verb ? (VERB_LABEL[verb] || verb) : (actions.get(b?.actionId)?.label || '');
+    const what = `${deviceName(device)}: ${controlName(device, control)}${meaning ? ` → ${meaning}` : ''}`;
+    const suggested = suggestHold(heldMs);
+    msg.innerHTML = `<b>Bound.</b> ${esc(what)}`
+      + (heldMs ? ` · held ${heldMs}ms` : '')
+      + (suggested
+        ? ` <button class="h-btn" data-usehold="${esc(bid)}" data-ms="${suggested}">Require ${suggested}ms</button>`
+        : '');
+    speakPress(what);
+    // And a flash on the row itself, because someone watching the TABLE rather than the
+    // message line needs to be told too, and an animation is the only thing that draws an
+    // eye to one row of many.
+    const row = el(`[data-bid="${CSS.escape(bid)}"]`);
+    if (row) {
+      row.classList.remove('i-just-bound');
+      void row.offsetWidth;                       // restart the animation, not queue it
+      row.classList.add('i-just-bound');
+    }
+  }
+
+  // SPEAK WHAT YOU PRESSED — the input bus feeding the output bus, which is the point of
+  // having built both. Off by default and remembered per person: a clinician in a shared
+  // room does not want a laptop announcing every press, and someone who cannot see the
+  // screen needs exactly that. `voice.js` is best-effort everywhere else too, so a browser
+  // with no speech simply stays quiet rather than erroring.
+  function speakPress(text) {
+    if (!record.speak) return;
+    // speak() already cancels anything in flight, which is what we want: the last press
+    // is the one worth hearing, not a queue of them.
+    try { say(text); } catch (e) { console.error('inputs: speak', e); }
   }
 
   // ---- wiring ------------------------------------------------------------------
@@ -451,7 +505,7 @@ export function mountInputs(root, {
       capture(({ device, control, heldMs }) => {
         edit(bid, { device, control });
         renderBindings();
-        offerHold(bid, heldMs);
+        confirmBound(bid, device, control, heldMs);
       });
       return;
     }
@@ -470,12 +524,15 @@ export function mountInputs(root, {
         const id = `b${record.bindings.length + 1}-${device}-${control}`.replace(/[^a-zA-Z0-9:#+_-]/g, '_');
         record.bindings.push(normalizeBinding({ id, actionId, device, control }));
         push(); save(); renderBindings();
-        offerHold(id, heldMs);
+        confirmBound(id, device, control, heldMs);
       });
     }
   });
 
   on('change', (e) => {
+    const sp = e.target.closest('[data-speak]');
+    if (sp) { record.speak = sp.checked; save(); if (sp.checked) speakPress('Speaking is on'); return; }
+
     const field = e.target.closest('[data-f]');
     if (!field) return;
     const bid = field.closest('[data-bid]').dataset.bid;
@@ -538,6 +595,10 @@ export function mountInputs(root, {
     record = {
       v: RECORD_VERSION,
       gate: GATES.includes(saved?.gate) ? saved.gate : 'both',
+      // Off by default. A laptop announcing every press in a shared room is worse than
+      // silence; for someone who cannot see the screen it is the only feedback there is.
+      // Per person, like everything else here.
+      speak: saved?.speak === true,
       bindings: source.map((b, i) => {
         try { return normalizeBinding(b, `b${i + 1}`); } catch (err) { console.error('dropped a binding', b, err); return null; }
       }).filter(Boolean),

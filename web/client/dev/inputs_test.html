@@ -82,6 +82,7 @@ function rig({ seed = null, fresh = true } = {}) {
   const clock = fakeClock();
   const saveClock = fakeClock();
   const padList = [];
+  const spoken = [];
   const profiles = {
     list: async () => Object.values(SCREENS).map((s) => ({ id: s.id, name: s.name })),
     get: async (pid) => SCREENS[pid],
@@ -101,6 +102,7 @@ function rig({ seed = null, fresh = true } = {}) {
     }),
     attachKeys: () => () => {},          // the real adapters would fight the harness
     attachPtr: () => () => {},
+    say: (text) => spoken.push(text),    // no speech engine in a test runner
     setTimer: saveClock.setTimer, clearTimer: saveClock.clearTimer,
   });
 
@@ -111,7 +113,8 @@ function rig({ seed = null, fresh = true } = {}) {
     clock.advance(ms);
     panel.input().up(device, control);
   };
-  return { host, panel, clock, saveClock, q, qa, press, padList, saved: () => userStore[INPUTS_KEY] };
+  return { host, panel, clock, saveClock, q, qa, press, padList, spoken,
+    saved: () => userStore[INPUTS_KEY] };
 }
 
 const XAC = 'gamepad:045e0b0a';
@@ -237,10 +240,44 @@ const logText = (r) => r.q('[data-log]').textContent;
       check('the pressed control becomes the binding',
         !!b && b.control === 'button:0' && b.actionId === verbTopic('next'));
       check('with sensible defaults', b.edge === 'press' && b.role === 'universal' && b.holdMs === 0);
+      // CAPTURE MUST SAY SOMETHING. It used to clear the line on success and only speak up
+      // when the hold was long enough to suggest a threshold — so a quick tap bound the
+      // control in silence. Mike: "it's not very obvious that a setting was ever made."
+      const confirmed = r.q('[data-addmsg]').innerHTML;
+      check('it confirms the binding was made', /Bound\./.test(confirmed), confirmed);
+      check('...naming the control', /button:0|Button 0|A /i.test(confirmed), confirmed);
+      check('...and what it now MEANS, which is the fact being checked',
+        /Next/i.test(confirmed), confirmed);
+      check('...and flashes the row, for someone watching the table not the caption',
+        !!r.q('tr.i-just-bound'));
       check('it offers the hold it measured, in one click',
-        /Held 340ms/.test(r.q('[data-addmsg]').innerHTML));
+        /held 340ms/i.test(confirmed), confirmed);
       r.q('[data-usehold]').click();
       check('taking the offer tunes it', r.panel.input().bindingsAt(XAC, 'button:0')[0].holdMs === 200);
+
+      // THE ACTUAL REPORTED BUG: a tap too short to be worth a hold suggestion.
+      r.q('[data-new-action]').value = verbTopic('prev');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:1', 40);
+      const quick = r.q('[data-addmsg]').innerHTML;
+      check('a QUICK TAP still confirms — the case that used to say nothing at all',
+        /Bound\./.test(quick), quick);
+      check('...and does not offer a meaningless hold', !r.q('[data-usehold]'), quick);
+
+      // Speaking is off unless asked for. A laptop announcing every press in a shared
+      // room is worse than silence.
+      check('nothing was spoken by default', r.spoken.length === 0, r.spoken.join(' | '));
+      r.q('[data-speak]').checked = true;
+      r.q('[data-speak]').dispatchEvent(new Event('change', { bubbles: true }));
+      r.q('[data-new-action]').value = verbTopic('back');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:2', 60);
+      check('with it on, the binding is spoken aloud',
+        r.spoken.some((t) => /Bound|→|button:2|B /i.test(t)) && r.spoken.length > 0,
+        r.spoken.join(' | '));
+      r.saveClock.advance(400);            // saves are debounced; flush it
+      check('the setting is saved with the person, not the session',
+        r.saved() && r.saved().speak === true, JSON.stringify(r.saved()));
 
       r.q('[data-new-action]').value = verbTopic('focus-next');
       r.q('[data-add]').click();

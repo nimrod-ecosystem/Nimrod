@@ -140,6 +140,10 @@
     cursor:pointer;padding:0 5px;border-radius:99px}
   .h-x:hover{color:var(--rosy-deep);background:rgba(0,0,0,.05)}
   .h-none,.h-hint{font-size:.8rem;color:var(--muted)}
+  /* "This is the IT one." Says so on the fold, so nobody opens it expecting a button. */
+  .h-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;
+    background:var(--cream-soft);border:1px solid var(--line);color:var(--muted);
+    font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
   /* Inputs panel. The table is dense on purpose: a clinician comparing four bindings
      wants them on one screen, not in four expanding cards. */
   .i-gate{display:flex;gap:8px;flex-wrap:wrap}
@@ -163,6 +167,17 @@
   .home.i-has-focus::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
     box-shadow:inset 0 0 0 3px var(--moss);border-radius:6px;opacity:.55}
   .i-warn{color:var(--rosy-deep);font-size:.8rem}
+  .i-speak{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600}
+  .i-speak input{width:18px;height:18px;accent-color:var(--moss)}
+  /* "That press landed on THIS row." The message line alone is not enough — someone
+     watching the table has no reason to look at a caption, and one changed cell in a dense
+     table is invisible. Respects reduced-motion: the colour still lands, it just does not
+     animate. */
+  @keyframes i-bound{from{background:rgba(131,153,88,.55)}to{background:transparent}}
+  .i-tab tr.i-just-bound td{animation:i-bound 1.2s ease-out}
+  @media (prefers-reduced-motion:reduce){
+    .i-tab tr.i-just-bound td{animation:none;background:rgba(131,153,88,.28)}
+  }
   .i-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
   .i-add select{font:inherit;font-size:.9rem;padding:8px 10px;border:1px solid var(--line);
     border-radius:10px;background:var(--card);color:var(--ink)}
