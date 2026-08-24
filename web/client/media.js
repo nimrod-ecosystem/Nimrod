@@ -19,12 +19,20 @@
 // family already has, and nothing typed. That is the answer to "how do I get pictures to
 // Grandma's screen", and it was invisible because the panel only said "on this computer".
 //
-// THE AGENT IS AN IT JOB AND IS NOW LABELLED AS ONE. Download a script, install Python,
-// open a terminal, leave it running, then transcribe a URL back into this box. That is a
-// reasonable ask of whoever sets up a facility's kiosk and an unreasonable one of anybody
-// else, so it says so rather than sitting there looking like the second of two equal
-// choices. (The real fix is a pairing code — the agent shows six digits, you type them
-// here, nobody transcribes a URL. Not built; see pending_flags.)
+// THE AGENT NO LONGER NEEDS ANYONE TO TRANSCRIBE A URL. Run it with --pair, it prints six
+// characters, you type them here. That is the whole flow, and it is the same one Plex,
+// Chromecast and Tailscale use — none of which ask you for an IP address.
+//
+// The address the source ends up with is worked out HERE and not on the server, because
+// the agent genuinely cannot know which of its addresses this browser can reach:
+// `localhost` only when they are the same machine, a LAN address only from the same
+// network. So claiming a code hands back CANDIDATES, `findReachable` asks each one who it
+// is, and the first that answers with the right agent id becomes the source. The question
+// "which address do I type" no longer exists.
+//
+// Installing the agent is still an IT job — Python, a terminal, something left running —
+// so that section stays labelled `advanced` and says so plainly. Pairing removes the part
+// that was needlessly hard, not the part that is inherently a setup task.
 //
 // THE MODEL, unchanged by either: the platform NEVER stores media, only a reference to
 // where it lives. Agent sources are per-USER (a base_url, shared across devices); folder
@@ -32,7 +40,10 @@
 // folder_source.js). The panel labels which is which, because "why don't my photos show
 // up on the other screen?" is otherwise a genuinely confusing afternoon.
 
-import { createMediaSourcesClient, resolveListing } from './media_sources.js';
+import {
+  createMediaSourcesClient, resolveListing, findReachable, normalizeCode, PAIR_CODE_LEN,
+} from './media_sources.js';
+import { createProfilesClient } from './profile.js';
 import {
   isFolderPickerSupported, pickFolder, folderPermission, requestFolderAccess,
 } from './folder_source.js';
@@ -49,8 +60,13 @@ export function mountMedia(root, {
   client = null,
   resolve = resolveListing,
   folders = null,
+  // `pairs` and `fetchAgent` are injectable for the same reason everything else here is:
+  // the test drives a full pairing — claim, probe, save — with no server and no agent.
+  pairs = null,
+  fetchAgent = (...a) => fetch(...a),
 } = {}) {
   const sources = client || createMediaSourcesClient({ user });
+  const pairClient = pairs || createProfilesClient({ user });
   const fs = folders || {
     isSupported: isFolderPickerSupported,
     pick: pickFolder,
@@ -87,14 +103,29 @@ export function mountMedia(root, {
       <div class="h-msg" data-msg></div>
       <div class="h-list" data-list><p class="h-loading">Loading…</p></div>
 
+      <div class="h-card">
+        <div class="h-card-head"><b>Connect a screen or another machine</b></div>
+        <p class="h-quiet">If someone has set up the Nimrod media agent on another machine —
+          a bedside screen, a spare tablet, a computer with the photos on it — it shows a
+          <b>six-character code</b>. Type it here and the two find each other. You never need
+          to know its address.</p>
+        <form class="h-new" data-pair>
+          <input type="text" data-code placeholder="Pairing code (e.g. 7KJ4QW)"
+                 aria-label="pairing code" maxlength="12" autocomplete="off"
+                 spellcheck="false" class="m-code" required>
+          <button type="submit" class="h-btn h-primary">Connect</button>
+        </form>
+        <div class="h-msg" data-pairmsg></div>
+      </div>
+
       <details class="h-card" data-advanced>
-        <summary><b>Connect a device that serves media</b> <span class="h-tag">advanced</span></summary>
-        <p class="h-quiet"><b>This one is a setup job, not a click.</b> It is for a screen that
-          runs on its own with nobody signed in — a bedside kiosk, a spare tablet, a NAS. On
-          <i>that</i> machine you install Python, download the Nimrod media agent, and leave it
-          running; then you come back here and type the address it is listening on. If that
-          sentence is not something you want to do, use a folder above instead — it does the
-          same job for a screen you are sitting at.</p>
+        <summary><b>Type an address instead</b> <span class="h-tag">advanced</span></summary>
+        <p class="h-quiet"><b>Only if pairing will not do.</b> Pairing above is the same thing
+          without needing an address, so this is here for an agent that cannot reach the
+          internet to get a code, or one behind a fixed address you already know.</p>
+        <p class="h-quiet">Setting the agent up on that machine is a job in itself: install
+          Python, download the Nimrod media agent, and leave it running. Then either run it
+          once with <code>--pair</code> and use the box above, or type its address here.</p>
         <p class="h-quiet">Unlike a folder, this is remembered for <b>your whole account</b>.
           <b>${DEFAULT_URL}</b> is a special case: it means “whichever machine is showing the
           screen, ask the agent running on it” — so one entry covers every kiosk that runs its
@@ -239,6 +270,41 @@ export function mountMedia(root, {
     } finally { busy = false; }
   }
 
+  // Type a code -> claim it -> find the address that answers -> save the source.
+  //
+  // The two failures are told apart on purpose. A code that will not claim is a problem
+  // with the CODE (mistyped, used, expired) and the server's sentence says which. A code
+  // that claims but whose agent cannot be reached is a problem with the NETWORK, and
+  // sending someone back to retype six characters they got right would waste their
+  // evening — so it says that instead, and names what to check.
+  async function claim(rawCode) {
+    if (busy) return;
+    busy = true;
+    const pm = el('[data-pairmsg]');
+    const tell = (t, bad = false) => { pm.textContent = t; pm.classList.toggle('bad', !!bad); };
+    tell('Connecting…');
+    try {
+      const pairing = await pairClient.claimPairing(normalizeCode(rawCode));
+      tell('Found it. Checking how to reach it…');
+      const hit = await findReachable(pairing.base_urls, pairing.agent_id, { fetchImpl: fetchAgent });
+      if (!hit) {
+        // The code was spent by the claim, so say so — otherwise they retype it and get
+        // "already used", which reads as a bug on top of a failure.
+        tell(`Paired with “${pairing.label}”, but this browser cannot reach it. `
+          + 'Both machines need to be on the same network, and the agent has to be running. '
+          + 'Restart the agent for a fresh code and try again.', true);
+        return;
+      }
+      await sources.add({ label: pairing.label, base_url: hit.base_url, kind: 'agent' });
+      el('[data-code]').value = '';
+      await refresh();
+      tell(`Connected “${pairing.label}”.`);
+    } catch (err) {
+      console.error(err);
+      tell(err.message || 'That code did not work.', true);
+    } finally { busy = false; }
+  }
+
   async function remove(id) {
     if (busy) return;
     busy = true;
@@ -251,6 +317,18 @@ export function mountMedia(root, {
       say('That didn’t disconnect — try again.', true);
     } finally { busy = false; }
   }
+
+  el('[data-pair]').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = normalizeCode(el('[data-code]').value);
+    const pm = el('[data-pairmsg]');
+    if (code.length !== PAIR_CODE_LEN) {
+      pm.textContent = `A pairing code is ${PAIR_CODE_LEN} characters.`;
+      pm.classList.add('bad');
+      return;
+    }
+    claim(code);
+  });
 
   if (supported) el('[data-pick]').addEventListener('click', choose);
 

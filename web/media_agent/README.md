@@ -12,21 +12,78 @@ listening) and an optional album (a subfolder name). Neither is ever committed.
 
 Zero dependencies — just Python 3.8+. No `pip install`, no venv.
 
+**The first time**, pair it with your Nimrod account:
+
+```bash
+python agent.py --root "D:/Christine/photos" --pair --name "Christine's bedside"
+```
+
+It prints a six-character code:
+
+```
+=======================
+     K K G J F T
+=======================
+
+  Type that code into Nimrod:  https://nimrod.onrender.com/home.html  ->  Media
+```
+
+Type those six characters into **Media** on the Nimrod site, signed in. That is the whole
+setup — **you never need to know this machine's address.** The agent offers the addresses
+it might be reachable at, and your browser works out which one actually answers, because
+it is the only thing that can: `localhost` only works if it is the same machine, a LAN
+address only from the same network, and the agent has no way to test either from here.
+
+**Every time after that**, just run it:
+
 ```bash
 python agent.py --root "D:/Christine/photos"
 ```
 
-Options:
+Leave it running. On a machine that should serve media unattended, make it a service
+(systemd, a Windows scheduled task) and set `NIMROD_MEDIA_ROOT` instead of passing `--root`.
+
+## Options
 
 | flag | default | meaning |
 | --- | --- | --- |
 | `--root` | *(required)* | the folder whose media you want to serve |
-| `--host` | `0.0.0.0` | bind address (all interfaces; use `127.0.0.1` for local-only) |
+| `--pair` | off | show a pairing code and wait for someone to type it in. Do this once. |
+| `--name` | `Media device` | what this device is called in Nimrod |
+| `--platform` | `https://nimrod.onrender.com` | where Nimrod is running (a self-hosted one goes here) |
+| `--host` | `127.0.0.1` | bind address. **This machine only, by default.** |
+| `--lan` | off | serve to your whole local network. Needed only when the screen is a *different* machine. |
 | `--port` | `8770` | port to listen on |
-| `--origin` | `*` | CORS `Access-Control-Allow-Origin`; set to your platform origin (e.g. `http://localhost:8000`) to lock it down |
+| `--origin` | *(same as `--platform`)* | CORS `Access-Control-Allow-Origin` |
 
-Then point a photos source at `http://<this-machine>:8770` as its `base_url`
-(localhost on the kiosk itself; a LAN IP or Tailscale name from another device).
+Each also has an environment variable (`NIMROD_MEDIA_ROOT`, `NIMROD_MEDIA_HOST`,
+`NIMROD_MEDIA_PORT`, `NIMROD_MEDIA_ORIGIN`, `NIMROD_MEDIA_NAME`, `NIMROD_PLATFORM`) so it
+can run as a service configured from an env file.
+
+### About those defaults
+
+**It listens on this machine only unless you say otherwise.** It used to bind every
+interface with CORS open to any site, which on a care facility's shared wifi meant a
+resident's photo folder was readable by anything else on the network — no password, no
+prompt, and nothing anywhere saying so. Serving your own photos to your own screen does
+not need that. Pass `--lan` when the screen really is a different machine, and the agent
+prints what it is exposing every time it starts.
+
+**`--origin` follows `--platform`.** The only site that ever needs to be allowed is the
+one your browser loads Nimrod from, and `--platform` already names it. Point `--platform`
+at a self-hosted Nimrod and CORS follows automatically.
+
+### The pairing code, and what it is worth
+
+A code lasts fifteen minutes, works once, and is worthless on its own — it grants nothing
+until somebody signed in claims it. Six characters from a 30-character alphabet with no
+ambiguous glyphs in it (no `0`/`O`, no `1`/`I`/`L`, no `U`), so nothing you can misread
+off a console is ever generated. Type it in any case, with or without spaces or dashes.
+
+The agent writes a small `.nimrod-agent-id` file in the folder it serves. That is how your
+browser tells *this* agent apart from any other one answering on the same address later —
+without it, a machine that inherits the same DHCP lease silently becomes your photo source.
+It is not listed as media and contains nothing but a random id.
 
 ## What it exposes
 

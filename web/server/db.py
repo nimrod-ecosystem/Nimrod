@@ -28,14 +28,51 @@ from __future__ import annotations
 
 import contextlib
 import json
+import secrets
 import sqlite3
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _later(seconds: int) -> str:
+    return (datetime.now(timezone.utc) + timedelta(seconds=seconds)).isoformat()
+
+
+# THE PAIRING CODE ALPHABET. Six characters, and not six DIGITS — the same typing burden
+# for a person, seven hundred times the search space (30^6 = 729 million against 10^6 = a
+# single million). That matters because a guessed code attaches somebody ELSE's media
+# agent to the guesser's account and hands them the contents of that folder, so the size
+# of this space is a security parameter and not a style choice.
+#
+# EVERY AMBIGUOUS GLYPH IS SIMPLY ABSENT: no 0 or O, no 1 or I or L, no U (it is read as
+# V in several common console fonts). The alternative — generating them and "helpfully"
+# mapping O to 0 on the way in — is what Crockford base-32 does, and it is wrong here:
+# it only works if one of each confusable pair is in the alphabet, and it still leaves a
+# person staring at a character they cannot identify. If a glyph can be misread it is not
+# generated, so there is nothing to correct and no wrong guess to make. The reader is
+# someone squinting at a console in a care home.
+PAIR_ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ"     # 30 characters
+PAIR_CODE_LEN = 6
+PAIR_TTL_SECONDS = 15 * 60      # long enough to walk to another room, short enough to matter
+
+
+def _pair_code() -> str:
+    return "".join(secrets.choice(PAIR_ALPHABET) for _ in range(PAIR_CODE_LEN))
+
+
+def normalize_code(raw: str) -> str:
+    """What a person typed, turned into what was generated.
+
+    Case is irrelevant, and spaces and dashes are how people write a code down off a
+    screen. Nothing is SUBSTITUTED — see the alphabet above: no ambiguous glyph is ever
+    generated, so a typed O or 1 is a real misreading with no correct answer to map it to,
+    and silently turning it into some other character would pair the wrong thing."""
+    return "".join(str(raw or "").upper().split()).replace("-", "")[:32]
 
 
 def _new_id() -> str:
@@ -268,6 +305,94 @@ class _Store:
             cur.execute(self._q("DELETE FROM profile_modules WHERE id=? AND profile_id=?"), (mid, pid))
             cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=? AND key=?"), (user_id, pid, mid))
 
+    # ------------------------------------------------------------- pairing
+    # HOW A DEVICE JOINS AN ACCOUNT WITHOUT ANYONE TRANSCRIBING A URL.
+    #
+    # The old flow asked a person to read an IP address off one machine and type it into a
+    # browser on another. That is an IT task wearing the clothes of a product, and it is
+    # the reason the media agent was unusable by the people it exists for.
+    #
+    # Instead, the SIX-CHARACTER CODE, which is how Plex, Chromecast and Tailscale all do
+    # this and why nobody transcribes a URL to use them:
+    #
+    #   1. the agent asks the platform for a code (unauthenticated - it has no account);
+    #   2. it prints the code, and the addresses it thinks it can be reached at;
+    #   3. the person types the code into the Media panel, signed in;
+    #   4. the browser probes the addresses and keeps the one that answers.
+    #
+    # STEP 4 IS THE POINT. The agent does not know which of its addresses the browser can
+    # actually reach - localhost only works when they are the same machine, a LAN address
+    # only from the same network - and it has no way to find out. The BROWSER knows,
+    # because it is the thing doing the reaching. So the agent offers candidates and the
+    # browser decides, and the question "which address do I type" stops existing.
+    #
+    # A code is SINGLE USE and expires. Claiming requires a signed-in account, so the
+    # attack to care about is guessing someone else's live code and attaching their agent
+    # to your own account - which is why the alphabet is 32 characters wide, the window is
+    # fifteen minutes, and app.py rate-limits wrong guesses per account.
+    def create_pairing(self, agent_id: str, label: str, base_urls: list[str]) -> dict:
+        code, ts = _pair_code(), _now()
+        expires = _later(PAIR_TTL_SECONDS)
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "INSERT INTO pairings(code, agent_id, label, base_urls, created_at, expires_at, "
+                "claimed_by, claimed_at) VALUES(?,?,?,?,?,?,?,?)"),
+                (code, agent_id, label, json.dumps(base_urls), ts, expires, None, None))
+        return {"code": code, "expires_at": expires}
+
+    def get_pairing(self, code: str) -> dict | None:
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT code, agent_id, label, base_urls, created_at, expires_at, claimed_by, claimed_at "
+                "FROM pairings WHERE code=?"), (code,))
+            r = cur.fetchone()
+        if r is None:
+            return None
+        return {"code": r[0], "agent_id": r[1], "label": r[2], "base_urls": json.loads(r[3]),
+                "created_at": r[4], "expires_at": r[5], "claimed_by": r[6], "claimed_at": r[7]}
+
+    def claim_pairing(self, code: str, account_id: str) -> tuple[str, dict | None]:
+        """Consume a code for an account. Returns (status, pairing).
+
+        Statuses: ok / unknown / expired / claimed. They are DISTINCT on purpose, because
+        "that code has already been used" and "no such code" are different problems for
+        the person standing there, and telling them the wrong one sends them to reinstall
+        something that was working. The claim is a conditional UPDATE, so two browsers
+        racing the same code cannot both win."""
+        now = _now()
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT agent_id, label, base_urls, expires_at, claimed_by FROM pairings WHERE code=?"),
+                (code,))
+            r = cur.fetchone()
+            if r is None:
+                return ("unknown", None)
+            if r[4]:
+                return ("claimed", None)
+            if now > r[3]:
+                return ("expired", None)
+            cur.execute(self._q(
+                "UPDATE pairings SET claimed_by=?, claimed_at=? WHERE code=? AND claimed_by IS NULL"),
+                (account_id, now, code))
+            if cur.rowcount != 1:
+                return ("claimed", None)      # somebody else took it between the read and the write
+        return ("ok", {"agent_id": r[0], "label": r[1], "base_urls": json.loads(r[2])})
+
+    def sweep_pairings(self) -> int:
+        """Drop codes that are spent or long past. /api/pair/request is unauthenticated -
+        anyone can create rows - so something has to bound the table, and a sweep on write
+        is cheaper than a scheduled job on a server that may sleep. Claimed rows are kept
+        for a while so a second attempt can still say "already used" rather than the much
+        more confusing "no such code"."""
+        cutoff = _later(-24 * 3600)
+        with self._tx() as cur:
+            cur.execute(self._q("DELETE FROM pairings WHERE expires_at < ? AND claimed_by IS NULL"),
+                        (_now(),))
+            n = cur.rowcount
+            cur.execute(self._q("DELETE FROM pairings WHERE claimed_at IS NOT NULL AND claimed_at < ?"),
+                        (cutoff,))
+        return n
+
     # ---------------------------------------------------------- media sources
     # Per-user registry of connected media folders. The `base_url` points at a
     # user-run media agent; the platform stores only this reference and never the
@@ -399,6 +524,13 @@ class SQLiteStore(_Store):
                 );
                 CREATE INDEX IF NOT EXISTS ix_profiles_user ON profiles(user_id);
 
+                CREATE TABLE IF NOT EXISTS pairings (
+                    code TEXT PRIMARY KEY, agent_id TEXT NOT NULL, label TEXT NOT NULL,
+                    base_urls TEXT NOT NULL, created_at TEXT NOT NULL, expires_at TEXT NOT NULL,
+                    claimed_by TEXT, claimed_at TEXT
+                );
+                CREATE INDEX IF NOT EXISTS ix_pairings_expiry ON pairings(expires_at);
+
                 CREATE TABLE IF NOT EXISTS media_sources (
                     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, label TEXT NOT NULL,
                     base_url TEXT NOT NULL, kind TEXT NOT NULL, created_at TEXT NOT NULL
@@ -489,6 +621,11 @@ class PostgresStore(_Store):
             "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS person_id TEXT NOT NULL DEFAULT ''",
             "CREATE INDEX IF NOT EXISTS ix_profiles_user ON profiles(user_id)",
             "CREATE INDEX IF NOT EXISTS ix_profiles_person ON profiles(person_id)",
+
+            "CREATE TABLE IF NOT EXISTS pairings (code TEXT PRIMARY KEY, agent_id TEXT NOT NULL, "
+            "label TEXT NOT NULL, base_urls TEXT NOT NULL, created_at TEXT NOT NULL, "
+            "expires_at TEXT NOT NULL, claimed_by TEXT, claimed_at TEXT)",
+            "CREATE INDEX IF NOT EXISTS ix_pairings_expiry ON pairings(expires_at)",
 
             "CREATE TABLE IF NOT EXISTS media_sources (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
             "label TEXT NOT NULL, base_url TEXT NOT NULL, kind TEXT NOT NULL, created_at TEXT NOT NULL)",

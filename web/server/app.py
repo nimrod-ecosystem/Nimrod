@@ -12,6 +12,8 @@ from __future__ import annotations
 import logging
 import os
 import re
+import time
+from collections import defaultdict, deque
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -22,13 +24,18 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
-from db import PostgresStore, SQLiteStore, person_scope
+from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
 from identity import current_user, optional_user
 
 log = logging.getLogger("nimrod")
 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")      # ids, module types, state keys, streams
-NAME_RE = re.compile(r"^[\w .\-]{1,64}$")          # human profile names + source labels
+# Human names: screens, people, devices. \w is Unicode-aware in Python, so accented
+# names already worked; APOSTROPHES DID NOT, which meant this panel's own placeholder
+# ("Christine's bedside") was a name the server refused. Both the typed ' and the curly
+# ’ that every phone and word processor substitutes for it are allowed now, plus the
+# comma people put in "Bedside, upstairs". Still no <, >, & or quotes.
+NAME_RE = re.compile(r"^[\w .,'’\-]{1,64}$")     # human profile names + source labels
 SOURCE_KINDS = {"agent"}                            # media-source adapters (extensible)
 
 CLIENT_DIR = Path(__file__).resolve().parent.parent / "client"
@@ -97,6 +104,55 @@ class SourceCreate(BaseModel):
     label: str
     base_url: str
     kind: str = "agent"
+
+
+class PairRequest(BaseModel):
+    label: str = "Media device"
+    base_urls: list[str] = []
+    agent_id: str = ""
+
+
+class PairClaim(BaseModel):
+    code: str
+
+
+# THE ONE PIECE OF SECURITY THAT MAKES A SIX-CHARACTER CODE ACCEPTABLE.
+#
+# The code space is 30^6 = 729 million, which is only large enough if guessing is slow.
+# The attack is not theoretical: a wrong guess that lands on somebody else's live code
+# attaches THEIR media agent to the guesser's account, and that agent serves a folder of
+# a person's photographs. So wrong guesses are counted and cut off. Right guesses are not
+# counted - somebody pairing five devices in a row is not an attacker.
+#
+# THE ACCOUNT IS THE REAL LIMIT, AND THE IP IS DELIBERATELY LOOSE. Claiming requires a
+# signed-in account, so the account is the identity an attacker must actually hold, and it
+# is throttled hard. The per-IP limit is a crude second wall against one host grinding
+# through codes, and it has to stay generous because EVERY DEVICE IN A CARE FACILITY SHARES
+# ONE NAT ADDRESS - a tight IP limit means eight fat-fingered codes from anyone in the
+# building locks pairing for everybody else in it. That is a denial of service against the
+# exact users this feature exists for, done by our own defence, and it is the sort of thing
+# that only shows up when somebody is standing in the building.
+#
+# HONEST LIMIT, WRITE IT DOWN: this lives in the process. It resets when Render restarts
+# the dyno and it does not span workers. It raises the cost of a brute force by orders of
+# magnitude, which is what it is for; it is not a distributed rate limiter, and if this
+# ever runs multi-worker it belongs in the database.
+PAIR_MAX_MISSES = 8              # per ACCOUNT - the identity an attacker must hold
+PAIR_MAX_MISSES_IP = 60          # per address - a shared facility NAT must not lock out
+PAIR_MISS_WINDOW = 10 * 60
+_pair_misses: dict[str, deque] = defaultdict(deque)
+
+
+def _pair_throttled(key: str, limit: int = PAIR_MAX_MISSES) -> bool:
+    hits = _pair_misses[key]
+    cutoff = time.monotonic() - PAIR_MISS_WINDOW
+    while hits and hits[0] < cutoff:
+        hits.popleft()
+    return len(hits) >= limit
+
+
+def _pair_miss(key: str) -> None:
+    _pair_misses[key].append(time.monotonic())
 
 
 def _check(value: str, rx: re.Pattern, what: str) -> None:
@@ -231,6 +287,92 @@ def remove_module(pid: str, mid: str, user: str = Depends(current_user)):
     owned_profile(user, pid)
     store.remove_module(user, pid, mid)
     return {"ok": True}
+
+
+# ------------------------------------------------------------------- pairing
+# HOW A DEVICE JOINS AN ACCOUNT WITHOUT ANYBODY TRANSCRIBING A URL.
+#
+# Before this, connecting a bedside kiosk meant reading an IP address off one machine and
+# typing it into a browser on another - an IT task wearing the clothes of a product, and
+# the reason the media agent was unusable by the people it exists for. Mike's question was
+# "walk me through what someone's grandma has to do", and there was no acceptable answer.
+#
+# Now: the agent prints six characters, the person types them in, done. Same shape as
+# Plex, Chromecast and Tailscale, and none of those make anyone transcribe an address.
+#
+# THE ADDRESS PROBLEM, AND WHERE IT IS SOLVED. The agent cannot know which of its
+# addresses the browser can reach - `localhost` works only when they are the same machine,
+# a LAN address only from the same network, and it has no way to test either. The BROWSER
+# knows, because it is the thing doing the reaching. So the agent offers CANDIDATES here,
+# and the client probes them and keeps the one that answers (see media.js). The server
+# never guesses, and "which address do I type" stops existing as a question.
+@app.post("/api/pair/request")
+def pair_request(body: PairRequest, request: Request):
+    """UNAUTHENTICATED, and it has to be: the agent has no account. That is the whole
+    problem it is solving.
+
+    What it can do is therefore deliberately tiny - mint a short-lived code that is
+    worthless until a signed-in person claims it. It grants nothing, reveals nothing, and
+    reaches nothing."""
+    _check(body.label, NAME_RE, "device label")
+    if body.agent_id:
+        _check(body.agent_id, ID_RE, "agent id")
+    # Validated here rather than at claim time, so a mistyped --platform or a bad
+    # interface guess fails on the machine where somebody can still see the console.
+    urls = [_clean_base_url(u) for u in (body.base_urls or [])][:8]
+    if not urls:
+        raise HTTPException(status_code=400, detail="at least one base_url is required")
+    store.sweep_pairings()
+    pairing = store.create_pairing(body.agent_id or "", body.label, urls)
+    log.info("pairing requested for %r from %s", body.label, request.client.host if request.client else "?")
+    return pairing
+
+
+@app.get("/api/pair/status/{code}")
+def pair_status(code: str):
+    """The agent polls this to know when to stop showing the code.
+
+    It answers ONE BIT - claimed or not - and never who claimed it. The agent has no
+    account and is not entitled to learn whose it just joined; it only needs to know it
+    can stop printing six characters at a wall."""
+    pairing = store.get_pairing(normalize_code(code))
+    if pairing is None:
+        return {"claimed": False, "known": False}
+    return {"claimed": bool(pairing["claimed_by"]), "known": True}
+
+
+@app.post("/api/pair/claim")
+def pair_claim(body: PairClaim, request: Request, user: str = Depends(current_user)):
+    """Signed in, someone types the six characters. This consumes the code and hands back
+    the candidate addresses for the CLIENT to probe.
+
+    It deliberately does NOT create the media source. The winning address is whichever one
+    the browser can actually reach, the browser is the only thing that can find that out,
+    and it already has an endpoint for creating a source. A server that guessed here would
+    save a round trip and be wrong at a bedside."""
+    code = normalize_code(body.code)
+    client_ip = request.client.host if request.client else "?"
+    if _pair_throttled(user) or _pair_throttled(f"ip:{client_ip}", PAIR_MAX_MISSES_IP):
+        raise HTTPException(status_code=429, detail="too many wrong codes - wait a few minutes")
+    if len(code) != PAIR_CODE_LEN:
+        raise HTTPException(status_code=400, detail=f"a pairing code is {PAIR_CODE_LEN} characters")
+
+    status, pairing = store.claim_pairing(code, user)
+    if status != "ok":
+        _pair_miss(user)
+        _pair_miss(f"ip:{client_ip}")
+        # Three distinct messages, because they send a person to three different places.
+        # "Already used" tells them to look for a code that is working; "expired" tells
+        # them to restart the agent; "no such code" tells them to check what they typed.
+        # Collapsing these into one polite failure is how someone ends up reinstalling
+        # something that was never broken.
+        detail = {
+            "unknown": "we don't have that code - check the characters and try again",
+            "expired": "that code has expired - restart the agent to get a new one",
+            "claimed": "that code has already been used",
+        }[status]
+        raise HTTPException(status_code=404 if status == "unknown" else 409, detail=detail)
+    return pairing
 
 
 # ------------------------------------------------------------- media sources

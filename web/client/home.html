@@ -141,6 +141,11 @@
   .h-x:hover{color:var(--rosy-deep);background:rgba(0,0,0,.05)}
   .h-none,.h-hint{font-size:.8rem;color:var(--muted)}
   /* "This is the IT one." Says so on the fold, so nobody opens it expecting a button. */
+  /* A pairing code is read one character at a time off another screen, so it is set in a
+     monospace face at a size that survives a care-home console and bad light, and spaced
+     out so nobody loses their place mid-code. */
+  .m-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.25rem;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;max-width:11ch}
   .h-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;
     background:var(--cream-soft);border:1px solid var(--line);color:var(--muted);
     font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}

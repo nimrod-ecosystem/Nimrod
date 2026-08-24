@@ -45,7 +45,13 @@ import argparse
 import json
 import os
 import posixpath
+import socket
 import sys
+import threading
+import time
+import urllib.error
+import urllib.request
+import uuid
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -146,10 +152,17 @@ class Handler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_OPTIONS(self):  # CORS preflight
+        # PRIVATE NETWORK ACCESS. Chrome treats a request from a public page (the Nimrod
+        # site) to a private address (this agent, on a LAN IP or localhost) as something
+        # that needs explicit consent, and sends this preflight to ask for it. Without the
+        # header below, pairing works perfectly right up until the browser silently
+        # refuses to fetch a single photo - which looks exactly like a broken agent.
         self.send_response(HTTPStatus.NO_CONTENT)
         self.send_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Range, Content-Type")
         self.send_header("Access-Control-Max-Age", "600")
+        if self.headers.get("Access-Control-Request-Private-Network") == "true":
+            self.send_header("Access-Control-Allow-Private-Network", "true")
         self.end_headers()
 
     # --- Routing ---------------------------------------------------------------
@@ -159,7 +172,12 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self._route()
         if path == "/health":
-            return self._json({"ok": True, "root": str(ROOT.resolve()), "origin": ORIGIN})
+            # AGENT_ID is what lets the client tell "something is answering on this
+            # address" apart from "the thing I just paired with is answering". Without it a
+            # different agent on the same port, on a machine that took the same DHCP lease,
+            # silently becomes somebody's photo source.
+            return self._json({"ok": True, "root": str(ROOT.resolve()), "origin": ORIGIN,
+                               "agent_id": AGENT_ID})
         if path == "/list":
             qs = parse_qs(urlparse(self.path).query)
             album = (qs.get("album", [""])[0] or "").strip("/")
@@ -304,10 +322,156 @@ class Handler(SimpleHTTPRequestHandler):
 # The platform origin the browser loads Nimrod from. The agent is fetched cross-origin
 # BY that page, so this is the only site that ever needs to be allowed.
 DEFAULT_ORIGIN = "https://nimrod.onrender.com"
+AGENT_ID = ""
+
+
+# ---------------------------------------------------------------------- pairing
+# SIX CHARACTERS INSTEAD OF AN IP ADDRESS.
+#
+# The old instructions were: find this machine's address on the network, then go to
+# another machine and type it into a box. That is a thing a systems administrator does. It
+# is not a thing you ask of somebody setting up a screen for their mother, and it was the
+# reason this agent was, in practice, unusable by the people it exists for.
+#
+# So the agent introduces ITSELF to the platform, gets a short code back, and prints it.
+# Somebody signed in types those six characters and the two ends are joined. Nobody reads
+# an address out loud. Plex, Chromecast and Tailscale all work this way.
+#
+# WHY IT OFFERS A LIST OF ADDRESSES AND DOES NOT PICK ONE. This agent genuinely cannot
+# know which of its addresses the browser will be able to reach: `localhost` works only
+# when they are the same machine, a LAN address only from the same network, and it has no
+# way to test either from here. The browser is the thing doing the reaching, so it is the
+# thing that gets to decide - the agent offers candidates and the client keeps whichever
+# one answers.
+AGENT_ID_FILE = ".nimrod-agent-id"
+
+
+def agent_id(root: Path) -> str:
+    """A stable id for this agent, kept beside the media it serves.
+
+    Beside the media on purpose: it identifies THIS FOLDER ON THIS MACHINE, which is what
+    a media source actually is. Move the folder to a new machine and the id should travel
+    with it; serve a different folder and it should not."""
+    f = root / AGENT_ID_FILE
+    try:
+        existing = f.read_text(encoding="utf-8").strip()
+        if existing:
+            return existing[:32]
+    except OSError:
+        pass
+    new = uuid.uuid4().hex
+    try:
+        f.write_text(new, encoding="utf-8")
+    except OSError:
+        # A read-only folder is a fine thing to serve; it just means the id is per-run.
+        pass
+    return new
+
+
+def local_addresses(port: int) -> list:
+    """Every address this agent might be reachable at, best first.
+
+    localhost leads because the commonest case by far is the kiosk serving itself. The
+    LAN addresses follow for the case where the screen is a different machine. Nothing
+    here is a guess about which one WORKS - that is the client's job."""
+    urls = [f"http://localhost:{port}"]
+    seen = {"127.0.0.1", "localhost"}
+    try:
+        # Does not send anything; asking the routing table which interface would be used
+        # to reach the internet is how you find the address other machines can see, rather
+        # than the loopback that gethostbyname often returns.
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            probe.connect(("8.8.8.8", 80))
+            ip = probe.getsockname()[0]
+        finally:
+            probe.close()
+        if ip and ip not in seen:
+            seen.add(ip)
+            urls.append(f"http://{ip}:{port}")
+    except OSError:
+        pass
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            ip = info[4][0]
+            if ip not in seen and not ip.startswith("127."):
+                seen.add(ip)
+                urls.append(f"http://{ip}:{port}")
+    except OSError:
+        pass
+    return urls[:8]
+
+
+def _post_json(url: str, payload: dict, timeout: float = 15.0) -> dict:
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, method="POST",
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def _get_json(url: str, timeout: float = 15.0) -> dict:
+    with urllib.request.urlopen(url, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def show_code(code: str, platform: str) -> None:
+    """Big, spaced, and surrounded by whitespace. Somebody is going to read this off a
+    console in a room with bad light and carry it to another machine.
+
+    FLUSHED, because Python buffers stdout the moment it is not a terminal — and this
+    agent is run as a service, from a shortcut, or piped to a log file at least as often
+    as it is run in a console. An unflushed pairing code is an empty log and a person
+    waiting for a number that already arrived."""
+    spaced = " ".join(code)
+    line = "=" * (len(spaced) + 12)
+    print(f"\n{line}\n     {spaced}\n{line}", flush=True)
+    print(f"\n  Type that code into Nimrod:  {platform}/home.html  ->  Media", flush=True)
+    print("  Waiting... (Ctrl+C to stop)\n", flush=True)
+
+
+def pair(platform: str, label: str, aid: str, urls: list, poll_seconds: float = 3.0,
+         get_json=_get_json, post_json=_post_json, sleep=time.sleep) -> bool:
+    """Ask for a code, print it, and wait until somebody claims it.
+
+    Returns True when claimed. The network calls and the sleep are injectable so the test
+    can run the whole handshake without a server and without waiting."""
+    try:
+        got = post_json(f"{platform}/api/pair/request",
+                        {"label": label, "base_urls": urls, "agent_id": aid})
+    except urllib.error.HTTPError as e:
+        print(f"could not get a pairing code: {e.code} {e.reason}")
+        return False
+    except OSError as e:
+        print(f"could not reach {platform}: {e}")
+        return False
+
+    code = got.get("code", "")
+    if not code:
+        print("the platform did not return a code")
+        return False
+    show_code(code, platform)
+
+    while True:
+        try:
+            st = get_json(f"{platform}/api/pair/status/{code}")
+        except OSError:
+            # A dropped connection mid-wait is not a failed pairing. The code is still
+            # good on the server; keep asking rather than sending someone back to the
+            # start of a setup they already finished half of.
+            sleep(poll_seconds)
+            continue
+        if st.get("claimed"):
+            print(f'  Paired. This folder is now connected as "{label}".\n', flush=True)
+            return True
+        if not st.get("known"):
+            print("  That code expired before anyone used it. Restart to get a new one.\n", flush=True)
+            return False
+        sleep(poll_seconds)
 
 
 def main(argv=None):
-    global ROOT, ORIGIN
+    global ROOT, ORIGIN, AGENT_ID
     ap = argparse.ArgumentParser(description="Nimrod local media agent (BYO storage).")
     # CLI args take precedence; each falls back to an env var so the agent can run as
     # an always-on service (systemd / Windows task) configured from an env file.
@@ -325,9 +489,23 @@ def main(argv=None):
                          "on a DIFFERENT machine, and only on a network you trust.")
     ap.add_argument("--port", type=int, default=int(os.environ.get("NIMROD_MEDIA_PORT", "8770")),
                     help="port (default: 8770; or NIMROD_MEDIA_PORT)")
-    ap.add_argument("--origin", default=os.environ.get("NIMROD_MEDIA_ORIGIN", DEFAULT_ORIGIN),
-                    help=f"CORS Access-Control-Allow-Origin (default {DEFAULT_ORIGIN}; use '*' to allow "
-                         "any site, which you should not need; or NIMROD_MEDIA_ORIGIN)")
+    # DEFAULTS TO --platform, and that is the fix for a bug this would otherwise ship
+    # with. The origin that needs to be allowed is exactly the site the browser loads
+    # Nimrod from, which is what --platform already names. Pinning it to the hosted
+    # instance instead meant a self-hosted Nimrod, or a local one, paired successfully and
+    # then could not fetch a single photo — the browser blocking on CORS looks identical to
+    # a broken agent, and there is nothing on either console to say otherwise.
+    ap.add_argument("--origin", default=os.environ.get("NIMROD_MEDIA_ORIGIN", ""),
+                    help="CORS Access-Control-Allow-Origin (defaults to --platform, which is the "
+                         "site the browser loads Nimrod from; use '*' to allow any site, which you "
+                         "should not need; or NIMROD_MEDIA_ORIGIN)")
+    ap.add_argument("--pair", action="store_true",
+                    help="show a pairing code and wait for someone to type it into Nimrod. "
+                         "Do this once; afterwards just run the agent.")
+    ap.add_argument("--platform", default=os.environ.get("NIMROD_PLATFORM", DEFAULT_ORIGIN),
+                    help=f"where Nimrod is running (default {DEFAULT_ORIGIN}; or NIMROD_PLATFORM)")
+    ap.add_argument("--name", default=os.environ.get("NIMROD_MEDIA_NAME", "Media device"),
+                    help="what to call this device in Nimrod (e.g. \"Christine's bedside\")")
     args = ap.parse_args(argv)
 
     if not args.root:
@@ -336,7 +514,8 @@ def main(argv=None):
     if not root.is_dir():
         ap.error(f"--root is not a folder: {root}")
     ROOT = root
-    ORIGIN = args.origin
+    ORIGIN = args.origin or args.platform.rstrip("/")
+    AGENT_ID = agent_id(root)
     host = "0.0.0.0" if args.lan else args.host
 
     # SimpleHTTPRequestHandler serves relative to `directory`; point it at ROOT so
@@ -345,6 +524,15 @@ def main(argv=None):
         return Handler(*a, directory=str(ROOT.resolve()), **kw)
 
     httpd = ThreadingHTTPServer((host, args.port), make_handler)
+
+    # PAIR WHILE SERVING, NOT BEFORE IT. The browser probes the candidate addresses the
+    # moment the code is claimed, so the agent has to be answering /health by then. Pair
+    # first and every probe fails against a socket that is not listening yet.
+    if args.pair:
+        aid = agent_id(ROOT)
+        urls = local_addresses(args.port)
+        threading.Thread(target=pair, args=(args.platform.rstrip("/"), args.name, aid, urls),
+                         daemon=True).start()
     resolved = ROOT.resolve()
     print(f"Nimrod media agent serving:  {resolved}")
     print(f"  listening on  http://{host}:{args.port}  (CORS origin: {ORIGIN})")
