@@ -22,9 +22,16 @@
 // screen you are TESTING against, because focus moves among that screen's panels. The
 // bindings do not change when you switch screens; what they resolve to does.
 //
-// WHY IT RUNS ON ITS OWN PRIVATE BUS. Pressing a switch here exercises the same code the
-// screen will, on a bus with nothing mounted on it. A caregiver checking whether a
-// headrest switch registers must not be skipping photos on a screen someone is watching.
+// WHY IT RUNS ON ITS OWN PRIVATE BUS - and what that does NOT mean. Pressing a switch
+// here must not reach a screen someone ELSE is watching in another room, so the bus is
+// private to this page. But the page itself is fair game, and an earlier version of this
+// comment got that wrong: THE BINDER IS A PANEL LIKE ANY OTHER AND THE SWITCH BEING BOUND
+// CAN DRIVE IT. If you cannot operate the binder with the control you are binding, you do
+// not actually know it works - you only know a log line appeared.
+//
+// So the binder registers a verb map for itself and joins the focus ring in front of the
+// selected screen's panels. Next and Previous walk the binding rows; Primary select
+// re-captures the highlighted row's control. The input bus configuring itself with itself.
 //
 // NO SAVE BUTTON. Edits autosave; both exits flush. The composer already learned this.
 //
@@ -33,7 +40,7 @@
 // WHY a press was refused in plain words. A person tunes by watching.
 
 import { createBus } from './bus.js';
-import { createDefaultRegistry, VERBS, FOCUS_VERBS, verbTopic } from './actions.js';
+import { createDefaultRegistry, VERBS, FOCUS_VERBS, verbTopic, MODULE_VERBS } from './actions.js';
 import { createInputBus, normalizeBinding, GATES, ROLES, EDGES } from './input.js';
 import { createVerbRouter } from './input_router.js';
 import { attachKeyboard, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from './input_keyboard.js';
@@ -55,6 +62,21 @@ const EDGE_LABEL = { press: 'on press', release: 'on release' };
 
 const VERB_LABEL = Object.fromEntries([...VERBS, ...FOCUS_VERBS].map((v) => [v.id, v.label]));
 const isFocusVerb = (verb) => FOCUS_VERBS.some((v) => v.id === verb);
+
+// This page, as a focus target. Not a module type — it never appears on a screen — so it
+// is added to the router's map rather than to MODULE_VERBS, which stays the table of what
+// real modules answer to.
+export const BINDER_ID = 'binder';
+const BINDER_TYPE = 'binder';
+const BINDER_VERBS = {
+  [BINDER_TYPE]: {
+    next: 'binder/next',
+    prev: 'binder/prev',
+    select: 'binder/select',
+    back: 'binder/back',
+  },
+};
+const ROUTER_MAPS = { ...MODULE_VERBS, ...BINDER_VERBS };
 
 // A measured hold turned into a threshold worth suggesting: comfortably under what they
 // managed, rounded to something a person would type, never so low it is meaningless.
@@ -81,6 +103,8 @@ export function mountInputs(root, {
   let pads = null;
   let detach = [];
   let saveTimer = null;
+  let cursor = -1;                 // which binding row the VERBS are pointed at
+  let binderOffs = [];
   let record = { v: RECORD_VERSION, gate: 'both', bindings: [] };
 
   const localBus = createBus();
@@ -174,9 +198,23 @@ export function mountInputs(root, {
     const targets = router.targets();
     const answers = VERBS.filter((v) => targets[v.id]);
     const silent = VERBS.filter((v) => !targets[v.id]);
+    const onBinder = m.id === BINDER_ID;
+    root.querySelector('.home')?.classList.toggle('i-has-focus', onBinder);
+    if (onBinder) {
+      host.innerHTML = `
+        <div class="i-focus">${reach.map((x) =>
+          `<button class="h-chip${x.id === m.id ? ' on' : ''}" data-focus-id="${esc(x.id)}">${
+            x.id === BINDER_ID ? 'This page' : esc(x.type)}</button>`).join('')}</div>
+        <p class="h-hint"><b>This page</b> has focus — your control drives the bindings table
+          itself. <code>Next</code> and <code>Previous</code> move down the rows,
+          <code>Primary select</code> re-presses the highlighted one.
+          <code>${esc(VERB_LABEL['focus-next'])}</code> hands focus to the screen.</p>`;
+      return;
+    }
     host.innerHTML = `
       <div class="i-focus">${reach.map((x) =>
-        `<button class="h-chip${x.id === m.id ? ' on' : ''}" data-focus-id="${esc(x.id)}">${esc(x.type)}</button>`).join('')}</div>
+        `<button class="h-chip${x.id === m.id ? ' on' : ''}" data-focus-id="${esc(x.id)}">${
+          x.id === BINDER_ID ? 'This page' : esc(x.type)}</button>`).join('')}</div>
       <p class="h-hint"><b>${esc(m.type)}</b> answers:
         ${answers.map((v) => `<code>${esc(v.label)}</code>`).join(' ') || '<i>nothing</i>'}
         ${silent.length ? `<br>Does nothing here: ${silent.map((v) => esc(v.label)).join(', ')}.` : ''}</p>`;
@@ -215,8 +253,8 @@ export function mountInputs(root, {
           <th title="After it fires, refuse a repeat for this long">Lockout</th>
           <th>Who</th><th></th>
         </tr></thead>
-        <tbody>${record.bindings.map((b) => `
-          <tr data-bid="${esc(b.id)}">
+        <tbody>${record.bindings.map((b, i) => `
+          <tr data-bid="${esc(b.id)}"${i === cursor ? ' class="i-cursor"' : ''}>
             <td><select data-f="actionId">${verbOptions(b.actionId)}</select></td>
             <td><button class="h-btn i-ctl" data-repress title="Press a different control">
                   ${esc(deviceName(b.device))}: ${esc(controlName(b.device, b.control))}</button></td>
@@ -322,6 +360,39 @@ export function mountInputs(root, {
     if (verb && isFocusVerb(verb)) renderFocus();
   }
 
+  // ---- driving the binder with the control being bound --------------------------
+
+  function moveCursor(delta) {
+    const n = record.bindings.length;
+    if (!n) { cursor = -1; return; }
+    // Wraps, because with one switch there is only one direction and a dead end at the
+    // bottom of the list means reaching for a mouse.
+    cursor = cursor < 0 ? (delta > 0 ? 0 : n - 1) : (cursor + delta + n) % n;
+    renderBindings();
+    el(`[data-bid="${CSS.escape(record.bindings[cursor].id)}"]`)
+      ?.scrollIntoView({ block: 'nearest' });
+  }
+
+  function selectCursor() {
+    const b = record.bindings[cursor];
+    if (!b) { moveCursor(1); return; }
+    // Re-press the highlighted row. Note what happens next and why it is right: capture
+    // blocks every binding, so the very control that just triggered this is now the one
+    // being captured. That IS the gesture - "this row, that control" - and capture's
+    // timeout is the way out if the person changes their mind, since their switch cannot
+    // cancel it while capture owns the bus.
+    capture(({ device, control, heldMs }) => {
+      edit(b.id, { device, control });
+      renderBindings();
+      offerHold(b.id, heldMs);
+    });
+  }
+
+  function clearCursor() {
+    cursor = -1;
+    renderBindings();
+  }
+
   // ---- capture -----------------------------------------------------------------
 
   function capture(onPicked) {
@@ -376,6 +447,7 @@ export function mountInputs(root, {
     const repress = e.target.closest('[data-repress]');
     if (repress) {
       const bid = repress.closest('[data-bid]').dataset.bid;
+      cursor = record.bindings.findIndex((b) => b.id === bid);   // mouse and switch agree
       capture(({ device, control, heldMs }) => {
         edit(bid, { device, control });
         renderBindings();
@@ -419,6 +491,9 @@ export function mountInputs(root, {
 
   function teardown() {
     flush();
+    binderOffs.forEach((off) => off());
+    binderOffs = [];
+    cursor = -1;
     detach.forEach((off) => off());
     detach = [];
     if (router) { router.destroy(); router = null; }
@@ -472,9 +547,18 @@ export function mountInputs(root, {
     push();
     router = (makeRouter || createVerbRouter)({
       bus: localBus,
-      modules: () => screenModules,
+      // The binder goes FIRST in the ring, so a fresh page is already driveable before
+      // focus has been moved anywhere.
+      modules: () => [{ id: BINDER_ID, type: BINDER_TYPE, position: -1 }, ...screenModules],
+      maps: ROUTER_MAPS,
       onChange: () => renderFocus(),
     });
+    binderOffs = [
+      localBus.subscribe('binder/next', () => moveCursor(1)),
+      localBus.subscribe('binder/prev', () => moveCursor(-1)),
+      localBus.subscribe('binder/select', () => selectCursor()),
+      localBus.subscribe('binder/back', () => clearCursor()),
+    ];
     pads = (makeGamepads || createGamepads)({
       input, onConnect: renderDevices, onDisconnect: renderDevices,
     });
@@ -493,6 +577,7 @@ export function mountInputs(root, {
     refresh, select,
     current: () => current,
     bindings: () => record.bindings.map((b) => ({ ...b })),
+    cursor: () => cursor,
     gate: () => record.gate,
     input: () => input,
     router: () => router,
