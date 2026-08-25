@@ -31,6 +31,8 @@ import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
+import { readConfig, writeConfig, writePosition, bootPlan, markHopped, hasHopped,
+         restartItems } from './restart.js';
 import { takePreviewLayout } from './preview.js';
 import { applyTheme } from './theme.js';
 import { cachedFetch } from './cache.js';
@@ -60,8 +62,15 @@ const wrap = (i, n) => ((i % n) + n) % n;
 // Default to the server-backed handles so every existing caller is unchanged.
 export async function mountKiosk(root, {
   user, profileId, profiles, bus, makeState = null, makeEvents = null, sources = null,
+  // Seams for the restart behaviour: the test needs its own storage and must never be
+  // navigated away from mid-run.
+  storage = undefined, session = undefined,
+  navigate = (url) => { if (typeof location !== 'undefined') location.replace(url); },
 } = {}) {
   bus = bus || createBus();
+  // Read before anything else renders: if this screen is not where the device is meant to
+  // come back to, the cheapest possible outcome is to leave before mounting a whole kiosk.
+  let restart = readConfig(user, storage);
   profiles = profiles || createProfilesClient({ user });
 
   root.innerHTML = `
@@ -219,6 +228,9 @@ export async function mountKiosk(root, {
     // Keep the focus ring in step when the stage was changed by a number key or a dot,
     // or the next switch press would resume from wherever focus was last left.
     runtime?.router.setFocus(stageDefs[primary].id);
+    // Where she is, remembered on the device. Written whatever the restart mode is, so
+    // turning "pick up where she left off" on later does not start by forgetting.
+    writePosition(user, profileId, primary, storage);
     renderMods();
   }
   function renderMods() {
@@ -308,6 +320,19 @@ export async function mountKiosk(root, {
       : { type: stageRec.type, title: stageRec.title || stageRec.type }),
     fullscreenTarget: root,
     onHome: goHome,
+    // THE MENU'S FIRST REAL CONTENT. Until the declarative per-module schema lands, the
+    // host contributes items through `extras` — which is what that hook was for.
+    extras: () => restartItems(restart, {
+      screenName: profile?.name ? `“${profile.name}”` : 'this screen',
+      onChange: ({ mode }) => {
+        // Choosing "always come back here" names THE SCREEN YOU ARE STANDING ON. That is
+        // the gesture: walk to the one that works, and say come back here.
+        restart = writeConfig(user, mode === 'screen'
+          ? { mode, screenId: profileId }
+          : { mode }, storage);
+        menu.refresh();
+      },
+    }),
     // Still ungated at the bedside, deliberately. The three-way switch in input.js gates
     // which BINDINGS fire; it does not answer "is a moderator standing here", and inventing
     // that mapping would be guessing at semantics nobody has decided. Open, and recorded as
@@ -407,7 +432,21 @@ export async function mountKiosk(root, {
   };
   window.addEventListener('keydown', onKey);
 
-  if (layout) await mountLayout(); else await showPrimary(0);
+  // ---- WHERE A COLD BOOT LANDS -------------------------------------------
+  // `stageDefs.length` clamps a remembered position: a screen can lose modules between
+  // boots, and restoring slot 4 of a two-module screen is a blank stage.
+  const plan = bootPlan({
+    config: restart,
+    currentProfileId: profileId,
+    stageCount: stageDefs.length,
+    hopped: hasHopped(session),
+  });
+  if (plan.redirectTo) {
+    markHopped(session);
+    navigate(`kiosk.html?profile=${encodeURIComponent(plan.redirectTo)}`);
+  }
+
+  if (layout) await mountLayout(); else await showPrimary(plan.stageIndex);
 
   return {
     stageCount: () => stageDefs.length,
@@ -425,6 +464,7 @@ export async function mountKiosk(root, {
     showPrimary,
     menu,
     runtime,
+    restart: () => ({ ...restart }),
     next: nextInPrimary,
     toggleMirrorFull,
     setMirror: patchMirror,

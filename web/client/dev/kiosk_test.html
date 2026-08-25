@@ -187,6 +187,48 @@ const ds = () => root.querySelector('.kiosk').dataset;
     await press('c', 40);
     check('C toggles back', kiosk.mirrorFull() === false);
 
+    // ---- WHERE A COLD BOOT LANDS ----
+    // The menu grew its first real content, and it is a setting somebody actually needs.
+    await press('Escape');
+    const labels = kiosk.menu.items().map((i) => i.label);
+    check('the menu offers the restart choices',
+      labels.some((l) => l.includes('Pick up where she left off'))
+      && labels.some((l) => l.includes('Start this screen from the top'))
+      && labels.some((l) => l.includes('Always come back to')), JSON.stringify(labels));
+    check('and it names THIS screen, so there is no list to scan',
+      labels.some((l) => l.includes('TEST-bedside')), JSON.stringify(labels));
+    check('today’s behaviour is the one ticked by default',
+      labels.some((l) => l === '✓ Start this screen from the top'), JSON.stringify(labels));
+    await press('Escape');
+
+    // Remount the SAME screen with a device that remembers module 2 and is set to resume.
+    const fakeStore = (seed) => { const m = new Map(Object.entries(seed));
+      return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) }; };
+    const store = fakeStore({ 'nimrod.restart': JSON.stringify({
+      [USER]: { mode: 'resume', screenId: '', positions: { [p.id]: 1 } } }) });
+
+    kiosk.destroy();
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), storage: store });
+    await sleep(200);
+    check('a cold boot with "resume" comes back to the module she was on',
+      kiosk.primaryType() === 'youtube', `primary=${kiosk.primaryType()}`);
+
+    // And the escape hatch: this device is set to come back to another screen entirely.
+    const other = await profiles.create('TEST-safe');
+    await profiles.addModule(other.id, 'photos');
+    const store2 = fakeStore({ 'nimrod.restart': JSON.stringify({
+      [USER]: { mode: 'screen', screenId: other.id, positions: {} } }) });
+    const sess = fakeStore({});
+    let went = null;
+    kiosk.destroy();
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(),
+      storage: store2, session: sess, navigate: (u) => { went = u; } });
+    await sleep(200);
+    check('landing on the wrong screen sends the device to the good one',
+      went === `kiosk.html?profile=${encodeURIComponent(other.id)}`, String(went));
+    check('and it marks the hop, so two screens naming each other cannot ping-pong',
+      sess.getItem('nimrod.restart.hopped') === '1');
+
     kiosk.destroy();
     check('destroy() tears everything down without error', true);
     check('stage + HUD are empty after destroy', !stageHas('.photos') && !mirrorHas('.camera') && !clockHas('.clock'));
