@@ -1,8 +1,10 @@
 // NimrodLink implementation. See NimrodLink.h for why any of this is shaped as it is.
 //
-// NOT COMPILED — there was no Arduino toolchain on the machine this was written on. The
-// wire format is tested independently (tools/test_nano_protocol.py) and the host-side
-// probe (tools/nano_probe.py) speaks it, so the PROTOCOL is verified; this C++ is not.
+// Compiles clean for arduino:mbed_nano:nano33ble, and CI rebuilds it on every push. The
+// wire format is tested independently (tools/test_nano_protocol.py) and the host-side probe
+// (tools/nano_probe.py) speaks it. What is still unproven is BEHAVIOUR ON HARDWARE — above
+// all what ArduinoBLE actually manages for throughput, which is the number the whole design
+// hangs on and is deliberately not guessed at anywhere in this repository.
 
 #include "NimrodLink.h"
 

@@ -38,13 +38,25 @@
 // still holds. That is what makes the box disposable — if it dies with data on it that
 // never reached a server, a replacement asks for an older offset and nothing is lost.
 //
-// THIS FILE HAS NOT BEEN COMPILED. There is no Arduino toolchain on the machine it was
-// written on, so treat the C++ as a first draft until it builds on real hardware.
+// IT COMPILES, and CI keeps it that way. arduino:mbed_nano 4.6.0 with ArduinoBLE:
 //
-// THE PROTOCOL IT IMPLEMENTS *IS* TESTED, and separately: tools/nano_protocol.py is the
-// authoritative wire format and tools/test_nano_protocol.py exercises it — 41 checks,
-// including dropped packets, resumption, a wrapped ring buffer, and a negative control.
-// That suite found two real design bugs before any hardware existed:
+//     Sketch uses 327352 bytes (33%) of program storage. Maximum is 983040.
+//     Global variables use 69688 bytes (26%) of dynamic memory, leaving 192456 free.
+//
+// Those numbers are for the example sketch, which includes a fake logger; the library's own
+// share is small. Worth writing down for one reason beyond tidiness: **a 327 KB image in a
+// 983 KB space leaves room for a dual-bank OTA update**, which is what makes a failed
+// firmware push recoverable rather than a bricked board in somebody's living room. It does
+// not prove OTA works — the stock bootloader is USB/serial, not BLE DFU — but it removes the
+// objection that there is no room to try.
+//
+// IT HAS NOT RUN ON HARDWARE YET. Compiling is not working; the throughput number and the
+// behaviour of ArduinoBLE under a real central are still unmeasured.
+//
+// THE PROTOCOL IS TESTED SEPARATELY: tools/nano_protocol.py is the authoritative wire
+// format and tools/test_nano_protocol.py exercises it — 41 checks, including dropped
+// packets, resumption, a wrapped ring buffer, and a negative control. That suite found two
+// real design bugs before any hardware existed:
 //
 //   1. a dropped FINAL chunk is indistinguishable from a completed transfer, so
 //      completion must be decided by comparing against `total`, never by silence;
