@@ -101,3 +101,22 @@
 @media (prefers-reduced-motion: no-preference) {
   .st-item { transition: background 120ms ease, color 120ms ease; }
 }
+
+/* The remote-drive notice. Deliberately NOT a subtle corner dot: somebody sitting in front
+ * of this screen has a right to know it is being operated from somewhere else, and a
+ * notice you have to hunt for is not a notice. It sits above the content and below the
+ * settings menu, so it cannot be hidden by a panel and cannot hide the menu. */
+.k-remote {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  z-index: 8000;
+  margin: clamp(6px, 1.2vmin, 14px);
+  padding: clamp(6px, 1.1vmin, 12px) clamp(12px, 2vmin, 22px);
+  border-radius: 999px;
+  font: 600 clamp(0.85rem, 1.7vmin, 1.1rem)/1.2 var(--font, system-ui, sans-serif);
+  background: var(--midnight, #105666);
+  color: var(--bg, #F7F4D5);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.3);
+}
+.k-remote[hidden] { display: none; }

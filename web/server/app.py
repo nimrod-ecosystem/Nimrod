@@ -18,13 +18,14 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from authlib.integrations.starlette_client import OAuth
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
+from drive import ROLES, Rooms, Tickets, parse_message
 from identity import current_user, optional_user
 
 log = logging.getLogger("nimrod")
@@ -579,6 +580,79 @@ def append_event(pid: str, stream: str, body: EventPost, user: str = Depends(cur
     _check(body.kind, ID_RE, "event kind")
     owned_profile(user, pid)
     return store.append_event(user, pid, stream, body.kind, body.data)
+
+
+# ------------------------------------------------------------- remote drive
+# One person's screen, driven from another machine. See drive.py for why this is a relay
+# and not WebRTC, and why the socket is opened with a ticket rather than a device key.
+_tickets = Tickets()
+_rooms = Rooms()
+
+
+@app.post("/api/drive/ticket/{person_id}")
+def drive_ticket(person_id: str, user: str = Depends(current_user)):
+    """Trade ordinary HTTP auth for something a browser CAN put on a socket."""
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    return {"ticket": _tickets.issue(user, person_id), "expires_in": 30}
+
+
+async def _tell(conns, payload):
+    """Send to everyone in a list, dropping any socket that has gone away."""
+    dead = []
+    for c in list(conns):
+        try:
+            await c.send_json(payload)
+        except Exception:
+            dead.append(c)
+    return dead
+
+
+@app.websocket("/api/drive/{person_id}")
+async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "driver"):
+    if not ID_RE.match(person_id or "") or role not in ROLES:
+        await ws.close(code=4400)
+        return
+    user = _tickets.redeem(t, person_id)
+    if not user:
+        # 4401 rather than a generic close, so the client can tell "your ticket went stale,
+        # get another" from "the network died" and retry the right one.
+        await ws.close(code=4401)
+        return
+
+    await ws.accept()
+    _rooms.join(user, person_id, role, ws)
+
+    async def announce():
+        counts = _rooms.counts(user, person_id)
+        room = _rooms.get(user, person_id)
+        if room:
+            await _tell(room.screens + room.drivers, {"type": "presence", **counts})
+
+    await announce()
+    try:
+        while True:
+            raw = await ws.receive_json()
+            msg = parse_message(raw)
+            if msg is None:
+                continue                       # unknown verb or shape: dropped, not relayed
+            if msg["type"] == "pong":
+                await ws.send_json(msg)
+                continue
+            room = _rooms.get(user, person_id)
+            if not room:
+                continue
+            # A driver drives screens. A screen never drives anything - it only reports -
+            # so there is no path by which one bedside screen could press another's buttons.
+            if role == "driver":
+                await _tell(room.screens, msg)
+    except WebSocketDisconnect:
+        pass
+    except Exception as exc:                   # a malformed frame must not kill the room
+        log.info("drive socket ended: %s", exc)
+    finally:
+        _rooms.leave(user, person_id, role, ws)
+        await announce()
 
 
 # Serve the client app from the same origin. Registered LAST so /api/* wins.
