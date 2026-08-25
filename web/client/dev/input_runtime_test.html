@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>input runtime — the input stack with no UI — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>input runtime — the input stack with no UI</h1>
+<p>The half that was missing from the kiosk: device → verb → module, with no binder and no
+DOM of its own. No server — the person's state handle is faked, which is also how the
+<b>clinician edits while the patient is using it</b> claim gets proven without two machines.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mountInputRuntime, normalizeRecord, INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
+import { createBus } from '../bus.js';
+import { verbTopic, MODULE_VERBS, verbTarget } from '../actions.js';
+import { DEFAULT_BINDINGS, KEYBOARD_DEVICE } from '../input_keyboard.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A state handle with only what the runtime touches, plus a way to shove a change in from
+// "the other machine".
+function fakeState(initial = {}) {
+  let data = { ...initial };
+  const subs = new Set();
+  let polling = false;
+  return {
+    polling: () => polling,
+    load: async () => data,
+    get: () => data,
+    subscribe(fn) { subs.add(fn); fn(data); return () => subs.delete(fn); },
+    startPolling() { polling = true; },
+    destroy() { polling = false; subs.clear(); },
+    // what a poll would deliver after somebody else saved
+    serverSaid(next) { data = { ...next }; subs.forEach((f) => f(data)); },
+  };
+}
+const kb = (control, actionId) => ({
+  id: 'x-' + control, actionId, device: KEYBOARD_DEVICE, control, edge: 'press',
+  role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0, label: '',
+});
+const rec = (bindings, extra = {}) => ({ v: RECORD_VERSION, gate: 'both', speak: false, bindings, ...extra });
+
+// =====================================================================
+section('normalizeRecord — the ONE definition, shared with the binder');
+
+{
+  const r = normalizeRecord(null, [kb('key:a', verbTopic('next'))]);
+  check('nothing saved falls back to the shipped defaults', r.bindings.length === 1);
+  check('and the fallback is normalized, not passed through raw', r.bindings[0].holdMs === 0);
+  check('gate defaults to everyone', r.gate === 'both');
+  check('speech is off unless explicitly true', r.speak === false);
+}
+{
+  const r = normalizeRecord({ v: 1, bindings: [kb('key:z', 'photos/next')] }, []);
+  check('a v1 record is NOT migrated — those actions no longer exist', r.bindings.length === 0);
+}
+{
+  const r = normalizeRecord(rec([kb('key:a', verbTopic('next'))], { gate: 'nonsense' }), []);
+  check('a bad gate falls back rather than throwing', r.gate === 'both');
+}
+{
+  const r = normalizeRecord(rec([
+    kb('key:a', verbTopic('next')),
+    { id: 'broken', actionId: verbTopic('next') },     // no device, no control
+    kb('key:b', verbTopic('prev')),
+  ]), []);
+  check('ONE bad binding is dropped, and does not take the others with it',
+    r.bindings.length === 2, `${r.bindings.length}`);
+}
+{
+  const r = normalizeRecord(rec([], { speak: true }), []);
+  check('speech on survives', r.speak === true);
+}
+
+// =====================================================================
+section('the runtime — up before any network');
+
+{
+  const bus = createBus();
+  const rt = mountInputRuntime({ bus, fallback: DEFAULT_BINDINGS, attachDevices: false, modules: () => [] });
+  await rt.load();
+  check('the shipped defaults are LIVE without a state handle at all',
+    rt.input.listBindings().length === DEFAULT_BINDINGS.length,
+    `${rt.input.listBindings().length}`);
+  check('a screen is driveable at boot, not after a fetch', rt.record().bindings.length > 0);
+  rt.destroy();
+}
+
+// =====================================================================
+section('device → verb → module, with no UI in the middle');
+
+{
+  const bus = createBus();
+  let nexts = 0;
+  bus.subscribe('photos/next', () => { nexts += 1; });
+  const rt = mountInputRuntime({
+    bus, attachDevices: false,
+    fallback: [kb('key:a', verbTopic('next'))],
+    modules: () => [{ id: 'p1', type: 'photos' }],
+  });
+  await rt.load();
+  rt.input.down(KEYBOARD_DEVICE, 'key:a');
+  rt.input.up(KEYBOARD_DEVICE, 'key:a');
+  check('a press on a bound control reaches the focused module', nexts === 1, `${nexts}`);
+
+  rt.input.down(KEYBOARD_DEVICE, 'key:q');            // nothing bound to it
+  check('an unbound control does nothing', nexts === 1);
+  rt.destroy();
+}
+{
+  const bus = createBus();
+  const seen = [];
+  const rt = mountInputRuntime({
+    bus, attachDevices: false,
+    fallback: [kb('key:a', verbTopic('focus-next'))],
+    modules: () => [{ id: 'a', type: 'photos' }, { id: 'b', type: 'youtube' }],
+    onFocus: (m) => seen.push(m.id),
+  });
+  await rt.load();
+  rt.input.down(KEYBOARD_DEVICE, 'key:a'); rt.input.up(KEYBOARD_DEVICE, 'key:a');
+  check('one switch can move focus between panels', seen.at(-1) === 'b', seen.join(','));
+  rt.input.down(KEYBOARD_DEVICE, 'key:a'); rt.input.up(KEYBOARD_DEVICE, 'key:a');
+  check('and it wraps, so the last panel is not a dead end', seen.at(-1) === 'a', seen.join(','));
+  rt.destroy();
+}
+
+// =====================================================================
+section('THE DIRECTOR — on her actual screen, and it answered nothing');
+
+{
+  check('the director is in the verb table at all', !!MODULE_VERBS.director);
+  const t = verbTarget('director', 'next');
+  check('its "next" is the segment skip', t?.topic === 'segment/done', JSON.stringify(t));
+  check('and it says the segment was SKIPPED, not that it finished',
+    t?.payload?.reason === 'skipped', JSON.stringify(t));
+
+  const bus = createBus();
+  let done = null;
+  bus.subscribe('segment/done', (p) => { done = p; });
+  const rt = mountInputRuntime({
+    bus, attachDevices: false,
+    fallback: [kb('key:a', verbTopic('next'))],
+    modules: () => [{ id: 'd1', type: 'director' }],
+  });
+  await rt.load();
+  rt.input.down(KEYBOARD_DEVICE, 'key:a'); rt.input.up(KEYBOARD_DEVICE, 'key:a');
+  check('a switch can skip a segment on the starter Bedside screen',
+    done?.reason === 'skipped', JSON.stringify(done));
+  rt.destroy();
+}
+
+// =====================================================================
+section('THE CLINICAL SCENARIO — one person configuring while another uses it');
+
+{
+  const bus = createBus();
+  let nexts = 0, prevs = 0;
+  bus.subscribe('photos/next', () => { nexts += 1; });
+  bus.subscribe('photos/prev', () => { prevs += 1; });
+
+  const state = fakeState({ [INPUTS_KEY]: rec([kb('key:a', verbTopic('next'))]) });
+  const rt = mountInputRuntime({
+    bus, attachDevices: false, fallback: DEFAULT_BINDINGS,
+    modules: () => [{ id: 'p1', type: 'photos' }],
+  });
+  await rt.load();
+  check('CONTROL: before the person resolves, the defaults are in force',
+    rt.input.listBindings().length === DEFAULT_BINDINGS.length);
+
+  await rt.useState(state);
+  check('the person’s own record replaces them', rt.input.listBindings().length === 1);
+  check('and the handle was told to start polling', state.polling() === true);
+
+  rt.input.down(KEYBOARD_DEVICE, 'key:a'); rt.input.up(KEYBOARD_DEVICE, 'key:a');
+  check('her switch does what she has bound', nexts === 1 && prevs === 0);
+
+  // THE WHOLE POINT: a clinician on another machine saves a change. No reload here.
+  state.serverSaid({ [INPUTS_KEY]: rec([kb('key:a', verbTopic('prev'))]) });
+  rt.input.down(KEYBOARD_DEVICE, 'key:a'); rt.input.up(KEYBOARD_DEVICE, 'key:a');
+  check('an edit made ELSEWHERE lands here with nobody reloading anything',
+    prevs === 1, `next=${nexts} prev=${prevs}`);
+  check('and the old meaning is gone, not stacked on top of the new one', nexts === 1);
+
+  // The gate is part of the record too, so it travels the same way.
+  state.serverSaid({ [INPUTS_KEY]: rec([kb('key:a', verbTopic('prev'))], { gate: 'moderator' }) });
+  check('a gate change travels with it', rt.gate() === 'moderator');
+  rt.input.down(KEYBOARD_DEVICE, 'key:a'); rt.input.up(KEYBOARD_DEVICE, 'key:a');
+  check('and it BITES: a universal binding still passes a moderator gate', prevs === 2);
+
+  rt.destroy();
+  const before = prevs;
+  state.serverSaid({ [INPUTS_KEY]: rec([kb('key:a', verbTopic('next'))]) });
+  check('after destroy, a late server change is ignored', prevs === before);
+}
+{
+  // Switching person must not tear down the bus, and must not leave the old one listening.
+  const bus = createBus();
+  const a = fakeState({ [INPUTS_KEY]: rec([kb('key:a', verbTopic('next'))]) });
+  const b = fakeState({ [INPUTS_KEY]: rec([kb('key:b', verbTopic('next')), kb('key:c', verbTopic('prev'))]) });
+  const rt = mountInputRuntime({ bus, attachDevices: false, modules: () => [{ id: 'p', type: 'photos' }] });
+  await rt.load();
+  await rt.useState(a);
+  check('person A has one binding', rt.input.listBindings().length === 1);
+  await rt.useState(b);
+  check('person B replaces it wholesale', rt.input.listBindings().length === 2);
+  a.serverSaid({ [INPUTS_KEY]: rec([kb('key:z', verbTopic('next'))]) });
+  check('and person A’s screen no longer speaks for person B',
+    rt.input.listBindings().length === 2, `${rt.input.listBindings().length}`);
+  rt.destroy();
+}
+
+// =====================================================================
+section('offline, and other ways the world is unkind');
+
+{
+  const bus = createBus();
+  const broken = {
+    load: async () => { throw new Error('network down'); },
+    get: () => null,
+    subscribe: null, startPolling: null, destroy: null,
+  };
+  const rt = mountInputRuntime({ bus, attachDevices: false, fallback: DEFAULT_BINDINGS, modules: () => [] });
+  await rt.load();
+  let threw = false;
+  try { await rt.useState(broken); } catch { threw = true; }
+  check('a state handle that cannot load does not throw', !threw);
+  check('and the defaults still drive the screen',
+    rt.input.listBindings().length === DEFAULT_BINDINGS.length,
+    `${rt.input.listBindings().length}`);
+  rt.destroy();
+}
+{
+  const bus = createBus();
+  const rt = mountInputRuntime({ bus, attachDevices: false, modules: () => [] });
+  await rt.load();
+  let threw = false;
+  try { rt.destroy(); rt.destroy(); } catch { threw = true; }
+  check('destroying twice is not an error', !threw);
+}
+{
+  let threw = false;
+  try { mountInputRuntime({}); } catch { threw = true; }
+  check('a runtime with no bus refuses to exist rather than half-working', threw);
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
