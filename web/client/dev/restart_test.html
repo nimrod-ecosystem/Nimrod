@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>restart — where a cold boot lands — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>restart — where a cold boot lands</h1>
+<p>Power-cycling is the universal repair, and it used to land you back in whatever was
+wonky. Three modes: <b>resume</b>, <b>top</b> (today's behaviour, still the default), and
+<b>screen</b> — come back to a named one. Storage is faked, so nothing here touches the
+real browser and every case runs in isolation.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  MODES, DEFAULT_MODE, readConfig, writeConfig, readPosition, writePosition,
+  bootPlan, markHopped, hasHopped, restartItems,
+} from '../restart.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+function fakeStore(seed = {}) {
+  const m = new Map(Object.entries(seed));
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => m.set(k, String(v)),
+    raw: m,
+  };
+}
+// A store that refuses to write, the way Safari private mode does.
+const hostileStore = {
+  getItem: () => { throw new Error('nope'); },
+  setItem: () => { throw new Error('nope'); },
+};
+
+// =====================================================================
+section('the default is TODAY’S behaviour, on purpose');
+
+{
+  const st = fakeStore();
+  const cfg = readConfig('u1', st);
+  check('a device nobody has configured starts on "top"', cfg.mode === 'top');
+  check('which is the documented default', DEFAULT_MODE === 'top');
+  check('no screen is named yet', cfg.screenId === '');
+  check('and no positions are remembered', Object.keys(cfg.positions).length === 0);
+  const plan = bootPlan({ config: cfg, currentProfileId: 'p1', stageCount: 3 });
+  check('so a cold boot behaves exactly as it did before this file existed',
+    plan.redirectTo === null && plan.stageIndex === 0);
+}
+{
+  const st = fakeStore({ 'nimrod.restart': '{{{ not json' });
+  check('a corrupt row falls back rather than throwing', readConfig('u1', st).mode === 'top');
+}
+{
+  const st = fakeStore();
+  writeConfig('u1', { mode: 'nonsense' }, st);
+  check('an unknown mode is refused on the way in', readConfig('u1', st).mode === 'top');
+  check('MODES is the whole vocabulary', MODES.join(',') === 'resume,top,screen');
+}
+{
+  let threw = false;
+  try { writeConfig('u1', { mode: 'resume' }, hostileStore); } catch { threw = true; }
+  check('a storage that refuses to write does not take the screen down with it', !threw);
+}
+
+// =====================================================================
+section('accounts do not read each other’s settings');
+
+{
+  const st = fakeStore();
+  writeConfig('mike', { mode: 'resume' }, st);
+  writeConfig('other', { mode: 'screen', screenId: 'zzz' }, st);
+  check('one account’s mode is its own', readConfig('mike', st).mode === 'resume');
+  check('and so is the other’s', readConfig('other', st).screenId === 'zzz');
+  check('setting the second did not clobber the first', readConfig('mike', st).mode === 'resume');
+}
+
+// =====================================================================
+section('RESUME — where she was');
+
+{
+  const st = fakeStore();
+  writeConfig('u1', { mode: 'resume' }, st);
+  writePosition('u1', 'p1', 2, st);
+  check('the position is remembered', readPosition('u1', 'p1', st) === 2);
+  check('a screen never visited is position 0', readPosition('u1', 'other', st) === 0);
+
+  const plan = bootPlan({ config: readConfig('u1', st), currentProfileId: 'p1', stageCount: 4 });
+  check('a cold boot comes back to the module she was on', plan.stageIndex === 2);
+
+  // THE CASE THAT WOULD OTHERWISE BE A BLANK SCREEN: modules were removed since.
+  const shrunk = bootPlan({ config: readConfig('u1', st), currentProfileId: 'p1', stageCount: 2 });
+  check('a remembered position past the end is clamped, not a blank stage',
+    shrunk.stageIndex === 1, `${shrunk.stageIndex}`);
+  const gone = bootPlan({ config: readConfig('u1', st), currentProfileId: 'p1', stageCount: 0 });
+  check('a screen with no stage modules at all is still 0', gone.stageIndex === 0);
+}
+{
+  const st = fakeStore();
+  // Written under "top" — so switching to resume later does not begin by forgetting.
+  writePosition('u1', 'p1', 3, st);
+  check('CONTROL: under "top" the remembered position is ignored',
+    bootPlan({ config: readConfig('u1', st), currentProfileId: 'p1', stageCount: 5 }).stageIndex === 0);
+  writeConfig('u1', { mode: 'resume' }, st);
+  check('…but it was still being written, so turning resume on works immediately',
+    bootPlan({ config: readConfig('u1', st), currentProfileId: 'p1', stageCount: 5 }).stageIndex === 3);
+}
+{
+  const st = fakeStore();
+  writePosition('u1', 'p1', -1, st);
+  writePosition('u1', 'p2', 1.5, st);
+  check('a nonsense position is not stored', readPosition('u1', 'p1', st) === 0);
+  check('nor a fractional one', readPosition('u1', 'p2', st) === 0);
+}
+
+// =====================================================================
+section('SCREEN — the cold-boot escape hatch');
+
+{
+  const st = fakeStore();
+  writeConfig('u1', { mode: 'screen', screenId: 'good' }, st);
+  const cfg = readConfig('u1', st);
+
+  const away = bootPlan({ config: cfg, currentProfileId: 'wonky', stageCount: 3 });
+  check('landing on the wrong screen redirects to the good one', away.redirectTo === 'good');
+  check('and arrives at the top of it', away.stageIndex === 0);
+
+  const there = bootPlan({ config: cfg, currentProfileId: 'good', stageCount: 3 });
+  check('already on the right screen: no redirect', there.redirectTo === null);
+
+  // THE LOOP GUARD. Two screens each naming the other would ping-pong forever, and a
+  // redirect loop on a bedside screen is a black screen nobody can explain.
+  const second = bootPlan({ config: cfg, currentProfileId: 'wonky', stageCount: 3, hopped: true });
+  check('a page that has already bounced does NOT bounce again', second.redirectTo === null);
+  check('it stays put and shows something', second.stageIndex === 0);
+}
+{
+  const st = fakeStore();
+  writeConfig('u1', { mode: 'screen', screenId: '' }, st);
+  check('mode "screen" with nothing named does not redirect into the void',
+    bootPlan({ config: readConfig('u1', st), currentProfileId: 'p1' }).redirectTo === null);
+}
+{
+  const ss = fakeStore();
+  check('the hop flag starts clear', hasHopped(ss) === false);
+  markHopped(ss);
+  check('and sets', hasHopped(ss) === true);
+  check('a hostile session store reports "not hopped" rather than throwing',
+    hasHopped(hostileStore) === false);
+}
+
+// =====================================================================
+section('what the menu shows');
+
+{
+  const cfg = { mode: 'top', screenId: '', positions: {} };
+  const items = restartItems(cfg, { screenName: '“Bedside”', onChange: () => {} });
+  check('a heading plus exactly three choices',
+    items.filter((i) => i.kind === 'item').length === 3 && items[0].kind === 'heading');
+  check('the current choice is ticked',
+    items.find((i) => i.id === 'restart-top').label.startsWith('✓'));
+  check('and the others are not',
+    !items.find((i) => i.id === 'restart-resume').label.startsWith('✓'));
+  check('the third option NAMES the screen you are standing on — no picker to scan',
+    items.find((i) => i.id === 'restart-screen').label.includes('“Bedside”'),
+    items.find((i) => i.id === 'restart-screen').label);
+  check('every choice is actionable',
+    items.filter((i) => i.kind === 'item').every((i) => typeof i.run === 'function'));
+}
+{
+  let got = null;
+  const items = restartItems({ mode: 'top', screenId: '', positions: {} },
+    { onChange: (p) => { got = p; } });
+  items.find((i) => i.id === 'restart-resume').run();
+  check('choosing resume reports it', got?.mode === 'resume');
+  items.find((i) => i.id === 'restart-screen').run();
+  check('choosing "come back here" reports the mode; the caller supplies WHICH screen',
+    got?.mode === 'screen');
+}
+{
+  const items = restartItems({ mode: 'screen', screenId: 'p1', positions: {} }, { onChange: () => {} });
+  check('when a screen is set, that row is the ticked one',
+    items.find((i) => i.id === 'restart-screen').label.startsWith('✓'));
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
