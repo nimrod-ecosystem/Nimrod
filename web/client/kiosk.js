@@ -31,6 +31,7 @@ import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
+import { attachDriveToBus } from './drive.js';
 import { readConfig, writeConfig, writePosition, bootPlan, markHopped, hasHopped,
          restartItems } from './restart.js';
 import { takePreviewLayout } from './preview.js';
@@ -88,6 +89,7 @@ export async function mountKiosk(root, {
           <button data-act="fs" title="fullscreen (F)">⛶</button>
         </div>
       </div>
+      <div class="k-remote" data-remote hidden>Someone is helping from another screen</div>
       <div data-settings></div>
     </div>`;
   const kioskEl = root.querySelector('.kiosk');
@@ -95,6 +97,7 @@ export async function mountKiosk(root, {
   const mirrorEl = root.querySelector('[data-mirror]');
   const clockEl = root.querySelector('[data-clock]');
   const controlsEl = root.querySelector('[data-controls]');
+  const remoteEl = root.querySelector('[data-remote]');
   const modsEl = root.querySelector('[data-mods]');
 
   const ck = (key) => `${user}:${profileId}:${key}`;   // resilience cache key per handle
@@ -349,6 +352,7 @@ export async function mountKiosk(root, {
   // so the defaults simply stand rather than the runtime chasing an endpoint that is not
   // there.
   let personOff = null;
+  let drive = null;
   (async () => {
     try {
       const p = await profiles.get(profileId);
@@ -356,6 +360,24 @@ export async function mountKiosk(root, {
       if (profiles.people) {
         const who = (await profiles.people()).find((x) => x.id === p.person_id);
         if (who) { whoName = who.name; menu.refresh(); }
+      }
+      // REMOTE DRIVE. A verb arriving on the wire is published onto this screen's own
+      // bus, so the router, the settings menu and every module answer it exactly as they
+      // answer a switch in the room. Remote drive is not a second control path - it is the
+      // same one with a longer wire, which is only possible because the input bus got here.
+      //
+      // AND THE SCREEN SAYS SO. Someone driving this screen from elsewhere is visible to
+      // whoever is sitting in front of it. Not negotiable and not a setting: a person who
+      // cannot tell whether the thing in front of them is being operated by somebody else
+      // has been made a passenger in their own room.
+      if (!makeState && profiles.personStateURL) {
+        drive = attachDriveToBus(bus, {
+          personId: p.person_id,
+          user,
+          onPresence: ({ drivers }) => {
+            remoteEl.hidden = !(drivers > 0);
+          },
+        });
       }
       if (makeState || !profiles.personStateURL) return;
       personOff = await runtime.useState(createState({
@@ -465,6 +487,7 @@ export async function mountKiosk(root, {
     menu,
     runtime,
     restart: () => ({ ...restart }),
+    drive: () => drive,
     next: nextInPrimary,
     toggleMirrorFull,
     setMirror: patchMirror,
@@ -477,6 +500,7 @@ export async function mountKiosk(root, {
       settings.destroy();
       menu.destroy();
       try { personOff?.(); } catch { /* already gone */ }
+      try { drive?.close(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },

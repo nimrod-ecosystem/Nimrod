@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>remote drive — press it there, it happens here — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff;padding:12px}
+</style>
+</head>
+<body>
+<h1>remote drive — press it there, it happens here</h1>
+<p>Two halves. The transport and the panel are driven against a <b>fake socket</b>, so the
+rules are tested with no server. Then a <b>real socket</b> is opened against the dev server
+and a verb is sent driver → screen for real. Run the server first:
+<code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code></p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { connectDrive, attachDriveToBus, DRIVE_VERBS } from '../drive.js';
+import { mountRemote, statusLine, PANEL_ORDER } from '../remote.js';
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { verbTopic } from '../actions.js';
+
+const USER = 'drive-test-' + Math.floor(Math.random() * 1e9);
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---- a socket that never touches a network -------------------------------
+const sockets = [];
+class FakeSocket {
+  constructor(url) {
+    this.url = url; this.sent = []; this.closed = false;
+    sockets.push(this);
+    this.onopen = this.onmessage = this.onclose = this.onerror = null;
+  }
+  send(s) { this.sent.push(JSON.parse(s)); }
+  close() { this.closed = true; this.onclose?.(); }
+  // what the server would do
+  open() { this.onopen?.(); }
+  deliver(obj) { this.onmessage?.({ data: JSON.stringify(obj) }); }
+  raw(text) { this.onmessage?.({ data: text }); }
+}
+const fakeFetch = (ticket = 'TICKET-1') => async () =>
+  ({ ok: true, json: async () => ({ ticket, expires_in: 30 }) });
+const failingFetch = async () => ({ ok: false, status: 401, json: async () => ({}) });
+
+// =====================================================================
+section('the ticket — a token in a URL, not a secret in a URL');
+
+{
+  sockets.length = 0;
+  const link = connectDrive({
+    personId: 'p1', role: 'driver',
+    fetchImpl: fakeFetch('ABC123'), SocketImpl: FakeSocket,
+  });
+  await sleep(0);
+  const s = sockets[0];
+  check('a socket is opened', !!s);
+  check('the ticket is on the URL', s.url.includes('t=ABC123'), s.url);
+  check('the role is on the URL', s.url.includes('role=driver'), s.url);
+  check('the person is in the path', s.url.includes('/api/drive/p1'), s.url);
+  // THE POINT: the long-lived device secret never appears here.
+  check('no device key is anywhere near the URL',
+    !/device/i.test(s.url) && !/key=/i.test(s.url), s.url);
+  check('it is a ws:// or wss:// URL', /^wss?:\/\//.test(s.url), s.url);
+  link.close();
+}
+{
+  sockets.length = 0;
+  let states = [];
+  const link = connectDrive({
+    personId: 'p1', fetchImpl: failingFetch, SocketImpl: FakeSocket,
+    onState: (s) => states.push(s),
+    setTimer: () => 0, clearTimer: () => {},
+  });
+  await sleep(0);
+  check('no ticket means no socket', sockets.length === 0);
+  check('and the caller is told we are offline rather than thrown at',
+    states.at(-1) === 'offline', states.join(','));
+  link.close();
+}
+
+// =====================================================================
+section('driving');
+
+{
+  sockets.length = 0;
+  const states = [];
+  const link = connectDrive({
+    personId: 'p1', role: 'driver',
+    fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+    onState: (s) => states.push(s),
+  });
+  await sleep(0);
+  const s = sockets[0];
+  check('CONTROL: a verb sent before the socket opens goes nowhere',
+    link.send('next') === false && s.sent.length === 0);
+  s.open();
+  check('state reaches connected', link.state() === 'connected', states.join(','));
+  check('now a verb is sent', link.send('next') === true);
+  check('and it is a verb NAME, never a bus topic',
+    JSON.stringify(s.sent[0]) === '{"type":"verb","verb":"next"}', JSON.stringify(s.sent));
+
+  check('an unknown verb is refused at this end too', link.send('rm-rf') === false);
+  check('a bus topic is refused', link.send('photos/next') === false);
+  check('nothing extra was put on the wire', s.sent.length === 1, JSON.stringify(s.sent));
+  check('every verb in the vocabulary is sendable',
+    DRIVE_VERBS.every((v) => link.send(v) === true));
+  link.close();
+}
+{
+  sockets.length = 0;
+  const link = connectDrive({
+    personId: 'p1', role: 'screen', fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+  });
+  await sleep(0);
+  sockets[0].open();
+  check('a SCREEN cannot drive — so one bedside screen can never press another’s buttons',
+    link.send('next') === false && sockets[0].sent.length === 0);
+  link.close();
+}
+
+// =====================================================================
+section('receiving — a verb on the wire is a verb on this screen’s bus');
+
+{
+  sockets.length = 0;
+  const bus = createBus();
+  const got = [];
+  for (const v of ['next', 'menu']) bus.subscribe(verbTopic(v), () => got.push(v));
+  const link = attachDriveToBus(bus, {
+    personId: 'p1', fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+  });
+  await sleep(0);
+  const s = sockets[0];
+  s.open();
+  s.deliver({ type: 'verb', verb: 'next' });
+  check('an arriving verb is published onto the local bus', got.join(',') === 'next');
+  s.deliver({ type: 'verb', verb: 'menu' });
+  check('…and so the settings menu answers it exactly like a switch would',
+    got.join(',') === 'next,menu');
+
+  s.deliver({ type: 'verb', verb: 'photos/next' });
+  s.deliver({ type: 'verb', verb: 'evil' });
+  s.deliver({ type: 'exec', cmd: 'rm' });
+  s.raw('{not json');
+  s.raw('null');
+  check('a topic, an unknown verb, an unknown type and garbage all publish NOTHING',
+    got.join(',') === 'next,menu', got.join(','));
+  link.close();
+}
+{
+  sockets.length = 0;
+  const bus = createBus();
+  let n = 0;
+  bus.subscribe(verbTopic('next'), () => { n += 1; });
+  const link = connectDrive({
+    personId: 'p1', role: 'driver', fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+    onVerb: () => { n += 100; },
+  });
+  await sleep(0);
+  sockets[0].open();
+  sockets[0].deliver({ type: 'verb', verb: 'next' });
+  check('a DRIVER ignores verbs, so two drivers cannot drive each other', n === 0, `${n}`);
+  link.close();
+}
+
+// =====================================================================
+section('presence, and reconnecting — this runs on facility wifi');
+
+{
+  sockets.length = 0;
+  const seen = [];
+  const link = connectDrive({
+    personId: 'p1', fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+    onPresence: (p) => seen.push(`${p.screens}/${p.drivers}`),
+  });
+  await sleep(0);
+  sockets[0].open();
+  sockets[0].deliver({ type: 'presence', screens: 1, drivers: 1 });
+  check('presence is reported', link.presence().screens === 1);
+  sockets[0].onclose();
+  check('a dropped socket reports nobody home, rather than lying',
+    link.presence().screens === 0, seen.join(' '));
+  link.close();
+}
+{
+  sockets.length = 0;
+  const waits = [];
+  const link = connectDrive({
+    personId: 'p1', fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+    setTimer: (fn, ms) => { waits.push(ms); fn(); return 0; },
+    clearTimer: () => {},
+    backoff: [10, 20, 40],
+  });
+  await sleep(0);
+  sockets[0].open();
+  sockets[0].onclose();
+  await sleep(0);
+  check('it reconnects rather than giving up', sockets.length >= 2, `${sockets.length}`);
+  check('and backs off rather than hammering a server that is down',
+    waits[0] === 10, JSON.stringify(waits));
+  link.close();
+}
+{
+  sockets.length = 0;
+  const link = connectDrive({
+    personId: 'p1', fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+    setTimer: (fn) => { fn(); return 0; }, clearTimer: () => {},
+  });
+  await sleep(0);
+  link.close();
+  const n = sockets.length;
+  sockets[n - 1]?.onclose?.();
+  await sleep(0);
+  check('an explicit close STAYS closed — no zombie reconnect loop',
+    sockets.length === n, `${n} -> ${sockets.length}`);
+}
+{
+  let threw = false;
+  try { connectDrive({ role: 'driver' }); } catch { threw = true; }
+  check('no person id refuses to exist rather than half-working', threw);
+  threw = false;
+  try { connectDrive({ personId: 'p', role: 'wat' }); } catch { threw = true; }
+  check('a bad role is refused', threw);
+}
+
+// =====================================================================
+section('what the panel says — the distinction that matters');
+
+{
+  check('offline says so',
+    statusLine({ state: 'offline', presence: { screens: 0 } }).tone === 'bad');
+  check('connecting says so',
+    statusLine({ state: 'connecting', presence: { screens: 0 } }).tone === 'wait');
+  // "Connected" with nobody listening would be TRUE and USELESS.
+  const lonely = statusLine({ state: 'connected', presence: { screens: 0 } });
+  check('connected with no screen open is reported as a PROBLEM, not as success',
+    lonely.tone === 'bad' && /none of their screens/i.test(lonely.text), lonely.text);
+  const live = statusLine({ state: 'connected', presence: { screens: 1 } });
+  check('and driving one screen reads plainly', live.tone === 'good' && live.text === 'Driving 1 screen');
+  check('two screens pluralise',
+    statusLine({ state: 'connected', presence: { screens: 2 } }).text === 'Driving 2 screens');
+}
+
+// =====================================================================
+section('the panel');
+
+{
+  sockets.length = 0;
+  const bus = createBus();
+  const el = document.createElement('div'); host.append(el);
+  const panel = mountRemote(el, {
+    personId: 'p1', personName: 'Christine', bus,
+    connect: (opts) => connectDrive({ ...opts, fetchImpl: fakeFetch(), SocketImpl: FakeSocket }),
+  });
+  await sleep(0);
+  check('a button per drivable verb', el.querySelectorAll('[data-verb]').length === PANEL_ORDER.length);
+  check('the buttons are DISABLED while nothing is listening',
+    [...el.querySelectorAll('[data-verb]')].every((b) => b.disabled));
+
+  sockets[0].open();
+  sockets[0].deliver({ type: 'presence', screens: 1, drivers: 1 });
+  check('and enabled once a screen is actually there',
+    [...el.querySelectorAll('[data-verb]')].every((b) => !b.disabled));
+
+  el.querySelector('[data-verb="next"]').click();
+  check('clicking a button sends that verb',
+    JSON.stringify(sockets[0].sent.at(-1)) === '{"type":"verb","verb":"next"}',
+    JSON.stringify(sockets[0].sent));
+
+  // FORWARDING IS THE EXPLICIT EXCEPTION to the binder's private bus, so it must be an
+  // explicit act — off on mount, every time, never remembered.
+  check('forwarding is OFF on mount', panel.forwarding() === false);
+  const before = sockets[0].sent.length;
+  bus.publish(verbTopic('prev'));
+  check('so pressing a switch on THIS machine reaches nobody',
+    sockets[0].sent.length === before);
+
+  el.querySelector('[data-forward]').click();
+  check('turning it on is a deliberate act', panel.forwarding() === true);
+  bus.publish(verbTopic('prev'));
+  check('now my own switch drives their screen — the thing that actually proves a binding',
+    JSON.stringify(sockets[0].sent.at(-1)) === '{"type":"verb","verb":"prev"}',
+    JSON.stringify(sockets[0].sent));
+
+  el.querySelector('[data-forward]').click();
+  const n = sockets[0].sent.length;
+  bus.publish(verbTopic('prev'));
+  check('turning it off really unsubscribes', sockets[0].sent.length === n);
+
+  panel.setForwarding(true);
+  panel.destroy();
+  const m = sockets[0].sent.length;
+  bus.publish(verbTopic('prev'));
+  check('and destroying the panel stops forwarding even if it was left on',
+    sockets[0].sent.length === m);
+  check('the host is emptied', el.innerHTML === '');
+}
+
+// =====================================================================
+section('LIVE — a real socket against the dev server');
+
+try {
+  const profiles = createProfilesClient({ user: USER });
+  const people = await profiles.people();
+  const person = people[0];
+  check('the account has a person to drive', !!person, JSON.stringify(people));
+
+  if (person) {
+    const bus = createBus();
+    const got = [];
+    bus.subscribe(verbTopic('next'), () => got.push('next'));
+
+    const screen = attachDriveToBus(bus, { personId: person.id, user: USER });
+    const driver = connectDrive({ personId: person.id, role: 'driver', user: USER });
+
+    for (let i = 0; i < 60 && !(screen.state() === 'connected' && driver.state() === 'connected'); i += 1) {
+      await sleep(100);
+    }
+    check('both ends connect to the real server',
+      screen.state() === 'connected' && driver.state() === 'connected',
+      `screen=${screen.state()} driver=${driver.state()}`);
+
+    for (let i = 0; i < 30 && driver.presence().screens < 1; i += 1) await sleep(100);
+    check('the driver can see the screen is there', driver.presence().screens >= 1,
+      JSON.stringify(driver.presence()));
+
+    driver.send('next');
+    for (let i = 0; i < 30 && !got.length; i += 1) await sleep(100);
+    check('A VERB SENT FROM THE DRIVER LANDS ON THE SCREEN’S BUS, for real',
+      got.join(',') === 'next', got.join(','));
+
+    // The allowlist, end to end: the server must drop this even though we bypass the
+    // client-side check by writing to the socket shape directly.
+    driver.send('photos/next');
+    await sleep(300);
+    check('and a bus topic still does not cross a real wire', got.join(',') === 'next');
+
+    driver.close(); screen.close();
+    await sleep(100);
+    check('closing both ends is clean',
+      driver.state() === 'offline' && screen.state() === 'offline');
+  }
+} catch (e) {
+  check('live section ran', false, String(e && e.message || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

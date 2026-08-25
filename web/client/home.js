@@ -47,6 +47,7 @@ export const TABS = [
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
   { id: 'inputs',   label: 'Inputs',   hint: 'bind switches, controllers and keys to actions' },
   { id: 'output',   label: 'Output',   hint: 'how this screen answers — spoken, on screen, a sound' },
+  { id: 'remote',   label: 'Remote',   hint: 'drive their screen from here, while they are at it' },
   { id: 'adulting', label: 'Adulting', hint: 'your own points board' },
 ];
 
@@ -68,6 +69,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
   let active = 'screens';
   let panel = null;
   let personId = '';
+  let personName = '';
 
   root.innerHTML = `
     <div class="shell">
@@ -121,6 +123,14 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       await o.refresh();
       return o;
     }
+    if (id === 'remote') {
+      const { mountRemote } = await import('./remote.js');
+      const r = mountRemote(host, {
+        personId, personName, user, bus,
+      });
+      await r.refresh();
+      return r;
+    }
     if (id === 'adulting') {
       const { mountAdulting } = await import('./adulting.js');
       const a = mountAdulting(host, { profiles, bus, user, makeState, makeEvents });
@@ -150,11 +160,13 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     storage,
     onChange: (person) => {
       personId = (person && person.id) || '';
+      personName = (person && person.name) || '';
       if (panel) show(active);      // whoever is on screen is now showing the wrong person
     },
   });
   await people.refresh({ notify: false });
   personId = (people.current() || {}).id || '';
+  personName = (people.current() || {}).name || '';
 
   const api = {
     show,
