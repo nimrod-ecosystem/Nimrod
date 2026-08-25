@@ -40,6 +40,12 @@ export function createVerbRouter({
 
   let focusId = null;
   const offs = [];
+  // PAUSED means "something in front is taking the verbs" — today, an open settings menu.
+  // It is a flag here rather than a subscription the menu outbids, because bus delivery
+  // order is not a contract and "whoever subscribed first wins" is not a rule anyone
+  // should have to know. Paused, the router still tracks focus; it simply stops acting,
+  // so closing the menu returns to the panel the person was already on.
+  let paused = false;
 
   // Only panels that answer at least one verb. Anything else is not worth a press.
   const reachable = () => (modules() || []).filter((m) => respondsToVerbs(m.type, maps));
@@ -60,6 +66,7 @@ export function createVerbRouter({
   }
 
   function step(delta) {
+    if (paused) return focused();
     const list = reachable();
     if (!list.length) return null;
     const at = Math.max(0, list.findIndex((m) => m.id === focused()?.id));
@@ -85,6 +92,7 @@ export function createVerbRouter({
   }
 
   function dispatch(verb) {
+    if (paused) return null;
     const m = focused();
     if (!m) return onUnhandled?.({ verb, reason: 'no-panel' }) ?? null;
     const target = verbTarget(m.type, verb, maps);
@@ -101,6 +109,8 @@ export function createVerbRouter({
 
   return {
     focused, setFocus, targets, dispatch,
+    setPaused: (v) => { paused = !!v; },
+    isPaused: () => paused,
     focusNext: () => step(1),
     focusPrev: () => step(-1),
     reachable,

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>settings — the universal menu shell — test</title>
+<link rel="stylesheet" href="../settings.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#live{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff;padding:12px}
+  #live{position:relative;min-height:120px}
+</style>
+</head>
+<body>
+<h1>settings — the universal menu shell (slice 1)</h1>
+<p>No server, no network. The cursor rules are asserted <b>pure</b>; the shell is driven
+through the same imperative moves the kiosk's key handler uses, because the kiosk has no
+input bus. A fake bus covers the path a host <i>with</i> one would take.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<h2>live, to look at</h2>
+<div id="live"></div>
+
+<script type="module">
+import { createNav, buildItems, mountSettings, MENU_TOPIC } from '../settings.js';
+import { createVerbRouter } from '../input_router.js';
+import { createBus } from '../bus.js';
+import { verbTopic } from '../actions.js';
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+function makeHost() { const d = document.createElement('div'); host.append(d); return d; }
+const ids = (m) => m.items().filter((i) => i.kind === 'item').map((i) => i.id);
+
+// =====================================================================
+section('the cursor — pure, and the part that has to be right for one switch');
+
+{
+  const items = [
+    { kind: 'heading', id: 'h1', label: 'A' },
+    { kind: 'item', id: 'one', label: 'one' },
+    { kind: 'item', id: 'dead', label: 'dead', disabled: true },
+    { kind: 'heading', id: 'h2', label: 'B' },
+    { kind: 'item', id: 'two', label: 'two' },
+  ];
+  const nav = createNav(items);
+  check('only enabled items are stops', nav.count() === 2, `count=${nav.count()}`);
+  check('starts on the first stop', nav.current()?.id === 'one');
+  check('next skips the disabled item AND the heading', nav.next()?.id === 'two');
+  check('next WRAPS — with one switch a list with ends is a dead end', nav.next()?.id === 'one');
+  check('prev wraps the other way', nav.prev()?.id === 'two');
+  check('index() is the position in the FULL list, not among stops', nav.index() === 4, `${nav.index()}`);
+  check('setIndex to a heading is refused', nav.setIndex(0)?.id === 'two');
+  check('setIndex to a disabled item is refused', nav.setIndex(2)?.id === 'two');
+  check('setIndex to a real stop works', nav.setIndex(1)?.id === 'one');
+}
+{
+  const nav = createNav([{ kind: 'heading', id: 'h', label: 'nothing here' }]);
+  check('a list with no stops does not crash', nav.count() === 0 && nav.current() === null);
+  check('next on an empty list returns null, not undefined', nav.next() === null);
+  check('index of an empty list is -1', nav.index() === -1);
+}
+
+// =====================================================================
+section('what the menu contains');
+
+{
+  const items = buildItems({ person: { name: 'Christine' }, subject: { type: 'photos', title: 'Photos' } });
+  const labels = items.map((i) => i.label);
+  check('names the person it is about to configure', labels[0] === 'Setting up for Christine', labels[0]);
+  check('names the SUBJECT panel — "settings" alone is ambiguous with nine panels',
+    labels.some((l) => l === 'This panel — Photos'), JSON.stringify(labels));
+  check('Home is ALWAYS present', items.some((i) => i.id === 'home'));
+  check('Close is present', items.some((i) => i.id === 'close'));
+  check('module settings are shown as a DISABLED placeholder, not hidden',
+    items.find((i) => i.id === 'panel-settings')?.disabled === true);
+  check('no fullscreen item when the surface cannot go fullscreen',
+    !items.some((i) => i.id === 'fullscreen'));
+}
+{
+  const items = buildItems({ canFullscreen: true });
+  check('fullscreen item appears when the host offers a target',
+    items.some((i) => i.id === 'fullscreen'));
+  check('a missing person renders a placeholder, so the menu does not change height',
+    items[0].label === 'Setting up for …', items[0].label);
+  check('a missing subject says so rather than guessing at one',
+    items[1].label === 'No panel selected', items[1].label);
+}
+{
+  const items = buildItems({ extras: [{ id: 'controls', label: 'Set up controls' }] });
+  const e = items.find((i) => i.id === 'controls');
+  check('a host extra is spliced in as a real item', e && e.kind === 'item');
+  check('and lands ABOVE Home, not after the way out',
+    items.indexOf(e) < items.findIndex((i) => i.id === 'home'));
+}
+
+// =====================================================================
+section('the shell — opening, leaving, and not leaking');
+
+{
+  const m = mountSettings(makeHost(), { person: () => ({ name: 'Christine' }) });
+  check('starts closed', m.isOpen() === false);
+  check('moves are inert while closed — a stray switch press cannot scroll a hidden menu',
+    m.next() === null && m.select() === null);
+  m.open();
+  check('opens', m.isOpen() === true);
+  check('the scrim is visible when open', !document.querySelector('#host .st-scrim').hidden);
+  check('the cursor starts on the first REAL item', m.focusId() === 'home', String(m.focusId()));
+  m.next();
+  check('next moves', m.focusId() === 'close');
+  m.next();
+  check('and wraps back to the top', m.focusId() === 'home');
+  m.back();
+  check('back closes', m.isOpen() === false);
+  check('the scrim hides again', document.querySelector('#host .st-scrim').hidden === true);
+  m.destroy();
+}
+{
+  let homes = 0;
+  const m = mountSettings(makeHost(), { onHome: () => { homes += 1; } });
+  m.open();
+  m.select();                    // cursor is on Home
+  check('Home runs the host handler rather than navigating this test away', homes === 1);
+  check('and closes the menu on the way out', m.isOpen() === false);
+  m.destroy();
+}
+{
+  const m = mountSettings(makeHost(), {});
+  m.open(); m.next();            // -> close
+  check('cursor is on Close', m.focusId() === 'close');
+  m.select();
+  check('Close closes', m.isOpen() === false);
+  m.destroy();
+}
+{
+  // The disabled placeholder must not be reachable — a cursor that can land on a dead
+  // row is a switch press that appears to do nothing, which reads as broken hardware.
+  const m = mountSettings(makeHost(), { subject: () => ({ type: 'photos', title: 'Photos' }) });
+  m.open();
+  const seen = new Set();
+  for (let i = 0; i < 8; i += 1) { seen.add(m.focusId()); m.next(); }
+  check('the "arriving next" placeholder is never a stop', !seen.has('panel-settings'),
+    [...seen].join(','));
+  m.destroy();
+}
+
+// =====================================================================
+section('the gate — moderator by default, and it says so rather than going silent');
+
+{
+  let refused = 0;
+  const m = mountSettings(makeHost(), { isModerator: () => false, onRefused: () => { refused += 1; } });
+  check('a participant cannot open it', m.open() === false && m.isOpen() === false);
+  check('and the host is TOLD — a silent refusal reads as a broken switch', refused === 1);
+  m.destroy();
+}
+{
+  const m = mountSettings(makeHost(), { isModerator: () => false, gated: false });
+  check('gated:false turns the gate off — by default, not by law', m.open() === true);
+  m.destroy();
+}
+
+// =====================================================================
+section('driving from a verb bus, where a host has one');
+
+{
+  const bus = createBus();
+  const m = mountSettings(makeHost(), {});
+  m.attachBus(bus);
+  bus.publish(MENU_TOPIC);
+  check('verb/menu opens it', m.isOpen() === true);
+  bus.publish(verbTopic('next'));
+  check('verb/next moves the cursor', m.focusId() === 'close');
+  bus.publish(verbTopic('back'));
+  check('verb/back closes', m.isOpen() === false);
+  bus.publish(MENU_TOPIC);
+  check('verb/menu TOGGLES — one switch has to both open and close it', m.isOpen() === true);
+  bus.publish(MENU_TOPIC);
+  check('…and back again', m.isOpen() === false);
+  m.destroy();
+}
+{
+  // THE NEGATIVE CONTROL. This is the bug worth catching: a press that moves the menu
+  // cursor AND advances her photos behind it. Without the router pause, the same
+  // verb/next lands twice.
+  const bus = createBus();
+  let photoNexts = 0;
+  bus.subscribe('photos/next', () => { photoNexts += 1; });
+  const router = createVerbRouter({ bus, modules: () => [{ id: 'p1', type: 'photos', position: 0 }] });
+  const m = mountSettings(makeHost(), {});
+  m.attachBus(bus, router);
+
+  bus.publish(verbTopic('next'));
+  check('CONTROL: with the menu closed, next reaches the panel', photoNexts === 1, `${photoNexts}`);
+
+  m.open();
+  bus.publish(verbTopic('next'));
+  check('menu open: the cursor moved', m.focusId() === 'close');
+  check('menu open: the panel behind it did NOT advance', photoNexts === 1, `${photoNexts}`);
+  check('the router reports itself paused', router.isPaused() === true);
+
+  m.close();
+  bus.publish(verbTopic('next'));
+  check('closing hands the verbs back to the panel', photoNexts === 2, `${photoNexts}`);
+  check('and the router is unpaused', router.isPaused() === false);
+
+  m.destroy(); router.destroy();
+}
+{
+  // Focus must survive the round trip: a paused router still TRACKS, it just stops acting.
+  const bus = createBus();
+  const router = createVerbRouter({
+    bus,
+    modules: () => [{ id: 'a', type: 'photos', position: 0 }, { id: 'b', type: 'youtube', position: 1 }],
+  });
+  router.setFocus('b');
+  const m = mountSettings(makeHost(), {});
+  m.attachBus(bus, router);
+  m.open();
+  bus.publish(verbTopic('focus-next'));
+  check('a paused router does not move focus either', router.focused().id === 'b');
+  m.close();
+  check('and the person comes back to the panel they were on', router.focused().id === 'b');
+  m.destroy(); router.destroy();
+}
+{
+  const bus = createBus();
+  const m = mountSettings(makeHost(), {});
+  const off = m.attachBus(bus);
+  off();
+  bus.publish(MENU_TOPIC);
+  check('detaching the bus really unsubscribes', m.isOpen() === false);
+  m.destroy();
+}
+
+// =====================================================================
+section('rebuilding under someone’s hand');
+
+{
+  let who = null;
+  const m = mountSettings(makeHost(), { person: () => who });
+  m.open();
+  m.next();                                  // -> close
+  check('cursor parked on Close', m.focusId() === 'close');
+  who = { name: 'Christine' };
+  m.refresh();                               // the name arrived from the server
+  check('a refresh keeps the cursor where the person left it', m.focusId() === 'close',
+    String(m.focusId()));
+  check('and the new name is rendered', m.items()[0].label === 'Setting up for Christine');
+  m.destroy();
+}
+
+// =====================================================================
+section('mouse, focus and teardown');
+
+{
+  const h = makeHost();
+  const m = mountSettings(h, { subject: () => ({ type: 'photos', title: 'Photos' }) });
+  m.open();
+  const btns = [...h.querySelectorAll('.st-item')];
+  check('every item renders as a real button', btns.length === ids(m).length);
+  const placeholder = [...h.querySelectorAll('.st-item')]
+    .find((b) => b.textContent.includes('Settings for Photos'));
+  check('the "arriving next" placeholder is really disabled in the DOM, not just skipped',
+    !!placeholder && placeholder.disabled === true);
+  check('exactly one row carries the cursor',
+    h.querySelectorAll('.st-item.on').length === 1);
+  check('the cursor row is marked for a screen reader too',
+    h.querySelector('.st-item.on').getAttribute('aria-current') === 'true');
+  check('the panel is a modal dialog to assistive tech',
+    h.querySelector('.st-panel').getAttribute('aria-modal') === 'true');
+  btns[btns.length - 1].click();             // Close
+  check('clicking still works — most caregivers will use the mouse', m.isOpen() === false);
+  m.destroy();
+  check('destroy empties the host', h.innerHTML === '');
+}
+{
+  const h = makeHost();
+  const m = mountSettings(h, {});
+  m.open();
+  m.destroy();
+  check('destroying an OPEN menu leaves nothing behind', h.querySelector('.st-scrim') === null);
+}
+
+// =====================================================================
+// A live one to look at, themed by the same tokens the bedside uses.
+//
+// NOT auto-opened: the scrim is `position: fixed` and covers the viewport, so an
+// always-open demo hides the results above it. Open it, look at it, close it.
+{
+  const live = document.getElementById('live');
+  const bar = document.createElement('div');
+  bar.innerHTML = `<button id="demo-open">Open the menu</button>
+    <button id="demo-dusk">Toggle Dusk (the bedside night theme)</button>
+    <span id="demo-note" style="margin-left:8px;color:#5d7064"></span>
+    <div id="demo-mount"></div>`;
+  live.append(bar);
+  const m = mountSettings(document.getElementById('demo-mount'), {
+    person: () => ({ name: 'Christine' }),
+    subject: () => ({ type: 'photos', title: 'Photos' }),
+    extras: () => [{ id: 'controls', label: 'Set up controls', hint: 'switches, dials' }],
+    onHome: () => { document.getElementById('demo-note').textContent = 'Home (demo — not navigating)'; },
+  });
+  document.getElementById('demo-open').addEventListener('click', () => m.open());
+  document.getElementById('demo-dusk').addEventListener('click', async () => {
+    const { applyTheme } = await import('../theme.js');
+    const dusk = document.documentElement.dataset.demoTheme !== 'dusk';
+    applyTheme(document.documentElement, dusk ? 'dusk' : 'default');
+    document.documentElement.dataset.demoTheme = dusk ? 'dusk' : 'default';
+  });
+  window.__menu = m;
+}
+
+await tick();
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

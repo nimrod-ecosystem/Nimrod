@@ -1,0 +1,103 @@
+/* settings.css — the universal settings menu.
+ *
+ * Every colour is a theme token, so the menu follows Dusk at the bedside without a second
+ * stylesheet and without knowing a theme exists.
+ *
+ * SIZING IS THE REQUIREMENT, not decoration: this has to be legible on a 900x700 kiosk
+ * cell and on a laptop, so the panel is a clamp() of the viewport and the rows scale with
+ * it. Nothing here is a fixed pixel height, because a fixed height is what put Cici's
+ * clock 272px off centre.
+ */
+
+.st-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Dark enough to say "the screen is busy", light enough that she can still see her
+   * photo behind it — a full blackout reads as the screen having died. */
+  background: rgba(10, 26, 20, 0.55);
+  padding: 3vmin;
+}
+.st-scrim[hidden] { display: none; }
+
+.st-panel {
+  width: min(560px, 92vw);
+  max-height: min(84vh, 780px);
+  overflow: hidden auto;
+  background: var(--card, #fff);
+  color: var(--ink, #0A3323);
+  border: 1px solid var(--line, #e4e0c2);
+  border-radius: clamp(12px, 2vmin, 22px);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+  padding: clamp(10px, 2vmin, 20px);
+  font-family: var(--font, system-ui, sans-serif);
+}
+.st-panel:focus { outline: none; }
+
+.st-list { display: flex; flex-direction: column; gap: clamp(4px, 0.7vmin, 8px); }
+
+.st-head {
+  font-size: clamp(0.78rem, 1.5vmin, 0.95rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted, #5d7064);
+  padding: clamp(8px, 1.4vmin, 14px) clamp(6px, 1vmin, 10px) clamp(2px, 0.4vmin, 5px);
+}
+.st-head:first-child { padding-top: 0; }
+
+.st-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  /* Big. This is pressed by someone with a tremor, or by a caregiver in a hurry, and a
+   * 32px row is a row that gets missed. */
+  font-size: clamp(1rem, 2.2vmin, 1.35rem);
+  padding: clamp(10px, 1.8vmin, 18px) clamp(10px, 1.6vmin, 16px);
+  border: 1px solid transparent;
+  border-radius: clamp(8px, 1.4vmin, 14px);
+  background: var(--cream-soft, #FBF9E9);
+  color: inherit;
+  cursor: pointer;
+}
+.st-item:hover:not(:disabled) { border-color: var(--line, #e4e0c2); }
+
+/* THE CURSOR. Not a hover tint — a person driving with one switch has no pointer, so
+ * where they are has to be unmistakable across a room. Colour AND a bar, because colour
+ * alone fails for anyone with a colour deficit.
+ *
+ * THE TEXT COLOUR IS `--bg`, NOT `--beige`, and that is a correctness fix rather than a
+ * preference. `--beige` is a LIGHT value in every theme, while `--midnight` is a dark
+ * accent in the light themes and a LIGHT one in Dusk (it has to be, to sit on a dark
+ * page). Pairing them gave near-white on pale blue at the bedside at night — about 1.8:1,
+ * unreadable. `--bg` is the page ground, so it is always the opposite lightness from the
+ * accent by construction, and the pair holds in all four themes. */
+.st-item.on {
+  background: var(--midnight, #105666);
+  color: var(--bg, #F7F4D5);
+  /* Bold is the cursor's third signal, after colour and the bar — and at kiosk sizes it
+   * also lifts the row into WCAG's large-text threshold, which matters for the themes
+   * whose accent is a mid-tone (Forge measures 3.98:1 at laptop size). */
+  font-weight: 700;
+  border-color: var(--midnight, #105666);
+  box-shadow: inset clamp(4px, 0.8vmin, 7px) 0 0 var(--moss, #839958);
+}
+
+.st-item:disabled { opacity: 0.5; cursor: default; }
+
+.st-hint {
+  font-size: clamp(0.72rem, 1.4vmin, 0.9rem);
+  color: var(--muted, #5d7064);
+  flex: none;
+}
+.st-item.on .st-hint { color: var(--bg, #F7F4D5); opacity: 0.8; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .st-item { transition: background 120ms ease, color 120ms ease; }
+}
