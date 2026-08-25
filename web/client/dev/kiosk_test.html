@@ -116,6 +116,41 @@ const ds = () => root.querySelector('.kiosk').dataset;
     try { kiosk.next(); } catch { threw = true; }
     check('next() drives the current module without error', !threw);
 
+    // ---- the universal settings menu, driven the way a key press drives it ----
+    // The kiosk has NO input bus, so this is the ONLY path the menu has at the bedside.
+    // Testing it through the real keydown handler rather than the handle is the point:
+    // a menu wired only in a unit test is a menu nobody can open.
+    check('the menu starts closed', kiosk.menu.isOpen() === false);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
+    await sleep(30);
+    check('"S" opens the settings menu', kiosk.menu.isOpen() === true);
+    check('it names the panel it is about to change', kiosk.menu.items()
+      .some((i) => i.label === 'This panel — Photos'),
+      JSON.stringify(kiosk.menu.items().map((i) => i.label)));
+
+    const before = kiosk.primaryType();
+    const startedOn = kiosk.menu.focusId();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    await sleep(30);
+    check('an arrow moves the menu cursor', kiosk.menu.focusId() !== startedOn);
+    // THE NEGATIVE CONTROL, at the bedside: the same press must not ALSO drive the stage.
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    await sleep(30);
+    check('…and the stage behind it did NOT change', kiosk.primaryType() === before,
+      `${before} -> ${kiosk.primaryType()}`);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
+    await sleep(30);
+    check('a key the menu does not use is swallowed, not passed to mirror mode',
+      kiosk.mirrorFull() === false);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await sleep(30);
+    check('Escape closes the menu', kiosk.menu.isOpen() === false);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    await sleep(30);
+    check('CONTROL: with the menu closed, the same arrow DOES drive the stage',
+      kiosk.primaryType() !== before, `still ${kiosk.primaryType()}`);
+
     kiosk.destroy();
     check('destroy() tears everything down without error', true);
     check('stage + HUD are empty after destroy', !stageHas('.photos') && !mirrorHas('.camera') && !clockHas('.clock'));

@@ -28,6 +28,7 @@ import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
+import { mountSettings } from './settings.js';
 import { takePreviewLayout } from './preview.js';
 import { applyTheme } from './theme.js';
 import { cachedFetch } from './cache.js';
@@ -72,9 +73,11 @@ export async function mountKiosk(root, {
           <button data-act="home" title="back to your screens (H)">⌂ Screens</button>
           <button data-act="next" title="next (→ / space)">Next ▸</button>
           <button data-act="mirror" title="mirror mode (M) — camera full screen">Mirror</button>
+          <button data-act="settings" title="settings (S)">⚙</button>
           <button data-act="fs" title="fullscreen (F)">⛶</button>
         </div>
       </div>
+      <div data-settings></div>
     </div>`;
   const kioskEl = root.querySelector('.kiosk');
   const stageEl = root.querySelector('[data-stage]');
@@ -277,12 +280,64 @@ export async function mountKiosk(root, {
   controlsEl.querySelector('[data-act="mirror"]').addEventListener('click', toggleMirrorFull);
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
+  // ---- the universal settings menu ----------------------------------------
+  //
+  // The kiosk has NO input bus (it lives in the Inputs panel on the home side), so the
+  // menu is driven straight from this file's key handler. That is the whole reason the
+  // shell exposes imperative moves instead of only listening for verbs — see settings.js.
+  //
+  // The person's NAME is resolved in the background and never blocks the boot: a screen
+  // that will not come up because a name lookup failed is strictly worse than a screen
+  // that says "…" where a name goes.
+  let whoName = null;
+  const menu = mountSettings(root.querySelector('[data-settings]'), {
+    person: () => (whoName ? { name: whoName } : null),
+    // In a laid-out screen every panel is visible at once and the kiosk has no focus
+    // concept yet, so there is no single subject and the menu says so rather than
+    // guessing at one.
+    subject: () => (layout || !stageRec
+      ? null
+      // mountInstance flattens the manifest: the record carries `title`, NOT `manifest`.
+      // Reading `manifest.title` silently fell back to the raw type, so the menu said
+      // "This panel — photos" instead of "Photos".
+      : { type: stageRec.type, title: stageRec.title || stageRec.type }),
+    fullscreenTarget: root,
+    onHome: goHome,
+    // Not gated here YET: the gate is the three-way role switch in input.js, which the
+    // kiosk does not run. Claiming to gate while having nothing to gate with would be a
+    // lie in the code. It arrives with the input bus.
+    gated: false,
+  });
+  controlsEl.querySelector('[data-act="settings"]').addEventListener('click', () => menu.toggle());
+  (async () => {
+    try {
+      const p = await profiles.get(profileId);
+      if (!p?.person_id || !profiles.people) return;
+      const who = (await profiles.people()).find((x) => x.id === p.person_id);
+      if (who) { whoName = who.name; menu.refresh(); }
+    } catch { /* offline, or signed out: the menu simply does not name anyone */ }
+  })();
+
   // auto-hide the control bar
   let hideT = null;
   function poke() { controlsEl.classList.remove('hidden'); clearTimeout(hideT); hideT = setTimeout(() => controlsEl.classList.add('hidden'), 3000); }
   root.addEventListener('mousemove', poke); poke();
 
   const onKey = (e) => {
+    // THE MENU EATS EVERYTHING WHILE IT IS OPEN. Without this, an arrow press would both
+    // move the menu cursor and change her photo behind it — the same "two things happened"
+    // bug the router's pause flag prevents where a bus exists.
+    if (menu.isOpen()) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') menu.next();
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') menu.prev();
+      else if (e.key === 'Enter' || e.key === ' ') menu.select();
+      else if (e.key === 'Escape' || e.key.toLowerCase() === 's') menu.close();
+      else return;
+      e.preventDefault();
+      poke();
+      return;
+    }
+    if (e.key.toLowerCase() === 's') { menu.open(); poke(); return; }
     if (e.key >= '1' && e.key <= '9') { const i = Number(e.key) - 1; if (i < stageDefs.length) showPrimary(i); else return; }
     else if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextInPrimary(); }
     else if (e.key === 'ArrowLeft') showPrimary(primary - 1);
@@ -314,6 +369,7 @@ export async function mountKiosk(root, {
     mirrorFull: () => mirrorFull,
     layout: () => ({ mirrorSize: kioskEl.dataset.mirrorSize, mirrorCorner: kioskEl.dataset.mirrorCorner, clockCorner: kioskEl.dataset.clockCorner }),
     showPrimary,
+    menu,
     next: nextInPrimary,
     toggleMirrorFull,
     setMirror: patchMirror,
@@ -324,6 +380,7 @@ export async function mountKiosk(root, {
       destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec);
       while (slotRecs.length) destroyRec(slotRecs.pop());
       settings.destroy();
+      menu.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },
   };
