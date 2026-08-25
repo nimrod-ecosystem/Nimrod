@@ -317,6 +317,90 @@ section('the panel');
 }
 
 // =====================================================================
+section('grants — who may drive, and whose screens I may drive');
+
+{
+  // A fake profiles client, so the panel's two grant halves are testable with no server.
+  const calls = [];
+  const fakeProfiles = (grants = [], shared = []) => ({
+    calls,
+    driveGrants: async () => { calls.push('list'); return grants; },
+    grantDrive: async (pid, subject, opts) => { calls.push(['grant', pid, subject, opts]); return {}; },
+    revokeDrive: async (pid, gid) => { calls.push(['revoke', pid, gid]); return {}; },
+    sharedWithMe: async () => { calls.push('shared'); return shared; },
+  });
+
+  sockets.length = 0;
+  const el = document.createElement('div'); host.append(el);
+  const profiles = fakeProfiles(
+    [{ id: 'g1', subject_id: 'ot@x.com', subject_kind: 'account', label: 'Day room',
+       expires_at: '2026-09-25T12:00:00+00:00' }],
+    [{ person_id: 'p9', name: 'Someone Else', owner_id: 'other', grant_id: 'g9', expires_at: null }],
+  );
+  const panel = mountRemote(el, { personId: 'p1', personName: 'Christine', profiles,
+    connect: (o) => connectDrive({ ...o, fetchImpl: fakeFetch(), SocketImpl: FakeSocket }) });
+  await panel.refresh();
+  await sleep(0);
+
+  check('the owner sees who may drive', /ot@x\.com/.test(el.textContent), el.textContent.slice(0, 200));
+  check('an expiry is shown, not hidden', /until 2026-09-25/.test(el.textContent));
+  check('the default offered is bounded, not forever',
+    el.querySelector('[data-days]').value === '30', el.querySelector('[data-days]').value);
+  check('"until I revoke it" is available as a deliberate choice',
+    [...el.querySelectorAll('[data-days] option')].some((o) => o.value === '0'));
+
+  el.querySelector('[data-subject]').value = 'new@x.com';
+  el.querySelector('[data-label]').value = 'therapy';
+  el.querySelector('[data-grant-form]').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  await sleep(0);
+  const made = calls.find((c) => Array.isArray(c) && c[0] === 'grant');
+  check('granting posts the subject, note and duration',
+    made && made[2] === 'new@x.com' && made[3].label === 'therapy' && made[3].days === 30,
+    JSON.stringify(made));
+
+  el.querySelector('[data-revoke]').click();
+  await sleep(0);
+  check('revoking names the grant', calls.some((c) => Array.isArray(c) && c[0] === 'revoke' && c[2] === 'g1'));
+
+  // The grantee half.
+  check('a person shared with me is offered', /Someone Else/.test(el.textContent));
+  check('my own person is offered too', /Christine/.test(el.textContent));
+  check('and mine is the one selected to start', panel.target().id === 'p1');
+
+  const n = sockets.length;
+  await panel.retarget('p9');
+  await sleep(0);
+  check('switching subject opens a socket for the NEW person',
+    sockets.length === n + 1 && sockets.at(-1).url.includes('/api/drive/p9'), sockets.at(-1)?.url);
+  // The worst bug this panel could have: a press meant for one person landing on another.
+  check('and the old socket is closed, so a press cannot land on the wrong screen',
+    sockets[n - 1].closed === true);
+  check('the grant editor hides for a person I do not own',
+    !/Who may drive/.test(el.textContent), el.textContent.slice(0, 300));
+
+  panel.setForwarding(true);
+  await panel.retarget('p1');
+  check('changing subject also drops forwarding — it does not follow you to someone else',
+    panel.forwarding() === false);
+
+  panel.destroy();
+}
+{
+  sockets.length = 0;
+  const el = document.createElement('div'); host.append(el);
+  const panel = mountRemote(el, { personId: 'p1', personName: 'Christine',
+    profiles: { driveGrants: async () => [], grantDrive: async () => ({}),
+                revokeDrive: async () => ({}), sharedWithMe: async () => [] },
+    connect: (o) => connectDrive({ ...o, fetchImpl: fakeFetch(), SocketImpl: FakeSocket }) });
+  await panel.refresh();
+  check('with nothing shared, nobody meets the concept — no chip row at all',
+    !/Driving for/.test(el.textContent), el.textContent.slice(0, 200));
+  check('but the owner still sees the empty who-may-drive list',
+    /Nobody yet/.test(el.textContent));
+  panel.destroy();
+}
+
+// =====================================================================
 section('LIVE — a real socket against the dev server');
 
 try {
@@ -362,6 +446,68 @@ try {
   }
 } catch (e) {
   check('live section ran', false, String(e && e.message || e));
+}
+
+// =====================================================================
+section('LIVE — a grant across TWO accounts, through the real server');
+
+try {
+  const OWNER = USER;
+  const OT = USER + '-ot';
+  const ownerApi = createProfilesClient({ user: OWNER });
+  const otApi = createProfilesClient({ user: OT });
+  const person = (await ownerApi.people())[0];
+
+  // CONTROL FIRST. Before any grant exists, the OT must be refused. Without this the
+  // test below could pass because everyone is allowed, which is the bug it exists to catch.
+  let refused = false;
+  try {
+    await fetch(`/api/drive/ticket/${person.id}`, { method: 'POST', headers: { 'X-Dev-User': OT } })
+      .then((r) => { refused = r.status === 403; });
+  } catch { /* handled by the flag */ }
+  check('CONTROL: with no grant, another account is REFUSED a ticket', refused);
+
+  const g = await ownerApi.grantDrive(person.id, OT, { label: 'day room', days: 7 });
+  check('the owner can grant', !!g.id);
+
+  const mine = await otApi.sharedWithMe();
+  check('and the grantee can now SEE whose screens they may drive',
+    mine.some((p) => p.person_id === person.id), JSON.stringify(mine));
+  check('the listing carries the person’s name, not just an id',
+    mine[0] && mine[0].name === person.name, JSON.stringify(mine[0]));
+
+  const bus = createBus();
+  const got = [];
+  bus.subscribe(verbTopic('next'), () => got.push('next'));
+  const screen = attachDriveToBus(bus, { personId: person.id, user: OWNER });
+  const driver = connectDrive({ personId: person.id, role: 'driver', user: OT });
+
+  for (let i = 0; i < 60 && !(screen.state() === 'connected' && driver.state() === 'connected'); i += 1) {
+    await sleep(100);
+  }
+  check('a GRANTED account connects to somebody else’s screen',
+    driver.state() === 'connected', `driver=${driver.state()} screen=${screen.state()}`);
+
+  // The room is keyed by the OWNER, so the two must find each other.
+  for (let i = 0; i < 30 && driver.presence().screens < 1; i += 1) await sleep(100);
+  check('and lands in the SAME room as the owner’s screen',
+    driver.presence().screens >= 1, JSON.stringify(driver.presence()));
+
+  driver.send('next');
+  for (let i = 0; i < 30 && !got.length; i += 1) await sleep(100);
+  check('A CLINICIAN ON THEIR OWN LOGIN DRIVES THE SCREEN, for real', got.join(',') === 'next');
+
+  // Revocation, and it has to bite immediately.
+  await otApi.revokeDrive(person.id, g.id);
+  let after = false;
+  await fetch(`/api/drive/ticket/${person.id}`, { method: 'POST', headers: { 'X-Dev-User': OT } })
+    .then((r) => { after = r.status === 403; });
+  check('the GRANTEE can hand the grant back', after);
+  check('and is refused a new ticket the moment it is gone', after);
+
+  driver.close(); screen.close();
+} catch (e) {
+  check('live grant section ran', false, String(e && e.message || e));
 }
 
 const s = document.getElementById('summary');
