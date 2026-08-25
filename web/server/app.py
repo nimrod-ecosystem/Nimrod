@@ -13,6 +13,7 @@ import logging
 import os
 import re
 import time
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict, deque
 from pathlib import Path
 from urllib.parse import urlparse
@@ -26,6 +27,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
 from drive import ROLES, Rooms, Tickets, parse_message
+from grants import DEFAULT_TTL_DAYS, MAX_TTL_DAYS, may_drive, normalize_kind
 from identity import current_user, optional_user
 
 log = logging.getLogger("nimrod")
@@ -170,6 +172,18 @@ def _clean_base_url(raw: str) -> str:
     if p.scheme not in ("http", "https") or not p.netloc:
         raise HTTPException(status_code=400, detail="invalid base_url (must be http(s)://host)")
     return url.rstrip("/")
+
+
+# Timestamps here MUST match the format db.py writes (`_now()`): UTC, ISO-8601, with the
+# same offset suffix. grants.py compares expiry as STRINGS, which is only correct while
+# every writer agrees on the format - so both live in one place rather than being spelled
+# out at each call site.
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _iso_in_days(days: int) -> str:
+    return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
 
 
 def owned_person(account: str, person_id: str) -> dict:
@@ -589,11 +603,108 @@ _tickets = Tickets()
 _rooms = Rooms()
 
 
+def _person_owner(person_id: str) -> str | None:
+    """Which account owns this person, or None. Deliberately NOT scoped to the caller -
+    a grantee has to be able to reach a person they do not own."""
+    return store.person_owner(person_id)
+
+
+def _may_drive(user: str, person_id: str) -> bool:
+    return may_drive(
+        person_id,
+        account=user,
+        owner=_person_owner(person_id),
+        grants=store.grants_on_person(person_id),
+        now_iso=_now_iso(),
+    )
+
+
+class GrantCreate(BaseModel):
+    subject_id: str
+    subject_kind: str = "account"
+    label: str = ""
+    days: int | None = None          # None -> DEFAULT_TTL_DAYS. 0 -> never expires.
+
+
+@app.get("/api/people/{person_id}/drive-grants")
+def list_drive_grants(person_id: str, user: str = Depends(current_user)):
+    """The owner's view: who may drive this person's screens."""
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    return {"grants": store.list_grants(user, person_id)}
+
+
+@app.post("/api/people/{person_id}/drive-grants")
+def create_drive_grant(person_id: str, body: GrantCreate, user: str = Depends(current_user)):
+    """Only the OWNER may hand out access to a person's screens."""
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    subject = (body.subject_id or "").strip()
+    if not subject:
+        raise HTTPException(status_code=400, detail="who is this for?")
+    try:
+        kind = normalize_kind(body.subject_kind)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    # Granting to yourself is not an error worth a stack trace, but it IS a mistake worth
+    # naming: it does nothing, and a row that does nothing in a permissions table is a
+    # future reader's wasted hour.
+    if kind == "account" and subject == user:
+        raise HTTPException(status_code=400, detail="you already own these screens")
+
+    days = DEFAULT_TTL_DAYS if body.days is None else int(body.days)
+    if days < 0 or days > MAX_TTL_DAYS:
+        raise HTTPException(status_code=400, detail=f"days must be 0..{MAX_TTL_DAYS}")
+    expires = None if days == 0 else _iso_in_days(days)
+    return store.add_grant(user, person_id, kind, subject,
+                           label=(body.label or "").strip()[:120], expires_at=expires)
+
+
+@app.delete("/api/people/{person_id}/drive-grants/{grant_id}")
+def revoke_drive_grant(person_id: str, grant_id: str, user: str = Depends(current_user)):
+    """EITHER side may end it - the owner takes it back, the grantee hands it back."""
+    _check(person_id, ID_RE, "person id")
+    _check(grant_id, ID_RE, "grant id")
+    gone = store.delete_grant(grant_id, owner_id=user)
+    if not gone:
+        gone = store.delete_grant(grant_id, subject_id=user)
+    if not gone:
+        raise HTTPException(status_code=404, detail="no such grant")
+    return {"ok": True}
+
+
+@app.get("/api/drive/shared")
+def shared_with_me(user: str = Depends(current_user)):
+    """The grantee's view: whose screens may I drive?
+
+    Without this the feature is unusable by the person it was built for - they would have
+    to be told a person id out of band. Expired rows are filtered here rather than shown
+    greyed out: a list of things that will not work is not a useful list.
+    """
+    now = _now_iso()
+    out = []
+    for g in store.grants_for_subject("account", user):
+        if g.get("expires_at") and str(g["expires_at"]) <= now:
+            continue
+        person = store.get_person(g["owner_id"], g["person_id"])
+        if not person:
+            continue                      # the person was deleted; the row is a tombstone
+        out.append({
+            "grant_id": g["id"], "person_id": g["person_id"], "name": person["name"],
+            "owner_id": g["owner_id"], "label": g["label"], "expires_at": g["expires_at"],
+        })
+    return {"people": out}
+
+
 @app.post("/api/drive/ticket/{person_id}")
 def drive_ticket(person_id: str, user: str = Depends(current_user)):
     """Trade ordinary HTTP auth for something a browser CAN put on a socket."""
     _check(person_id, ID_RE, "person id")
-    owned_person(user, person_id)
+    # NO LONGER `owned_person`. Owning the person is now one of two ways in; the other is
+    # holding a live grant. 403 either way, and the SAME 403 for "no such person" - or this
+    # endpoint becomes a way to find out which person ids are real.
+    if not _may_drive(user, person_id):
+        raise HTTPException(status_code=403, detail="not allowed to drive this person's screens")
     return {"ticket": _tickets.issue(user, person_id), "expires_in": 30}
 
 
@@ -614,18 +725,28 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         await ws.close(code=4400)
         return
     user = _tickets.redeem(t, person_id)
+    if user and not _may_drive(user, person_id):
+        # Revoked between buying the ticket and using it. Thirty seconds is a small window
+        # and it is not zero, so it is closed here too.
+        await ws.close(code=4403)
+        return
     if not user:
         # 4401 rather than a generic close, so the client can tell "your ticket went stale,
         # get another" from "the network died" and retry the right one.
         await ws.close(code=4401)
         return
 
+    # THE ROOM IS KEYED BY THE OWNER, NOT BY WHOEVER CONNECTED. An owner's kiosk and a
+    # granted clinician's laptop must land in the same room or they will never see each
+    # other - which was the entire point of grants.
+    room_key = _person_owner(person_id) or user
+
     await ws.accept()
-    _rooms.join(user, person_id, role, ws)
+    _rooms.join(room_key, person_id, role, ws)
 
     async def announce():
-        counts = _rooms.counts(user, person_id)
-        room = _rooms.get(user, person_id)
+        counts = _rooms.counts(room_key, person_id)
+        room = _rooms.get(room_key, person_id)
         if room:
             await _tell(room.screens + room.drivers, {"type": "presence", **counts})
 
@@ -639,7 +760,7 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             if msg["type"] == "pong":
                 await ws.send_json(msg)
                 continue
-            room = _rooms.get(user, person_id)
+            room = _rooms.get(room_key, person_id)
             if not room:
                 continue
             # A driver drives screens. A screen never drives anything - it only reports -
@@ -651,7 +772,7 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
     except Exception as exc:                   # a malformed frame must not kill the room
         log.info("drive socket ended: %s", exc)
     finally:
-        _rooms.leave(user, person_id, role, ws)
+        _rooms.leave(room_key, person_id, role, ws)
         await announce()
 
 

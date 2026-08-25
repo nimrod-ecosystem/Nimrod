@@ -133,6 +133,27 @@ export function createProfilesClient({ user, baseURL = '' }) {
     // they can hold it is true everywhere, and re-entering it per screen is exactly the
     // per-device toil this project exists to avoid.
     personStateURL: (personId, key) => `${baseURL}/api/people/${personId}/state/${key}`,
+
+    // ---- who may drive whose screens -------------------------------------
+    // The OWNER's view of one person's grants.
+    driveGrants: (personId) =>
+      fetch(`${baseURL}/api/people/${personId}/drive-grants`, { headers: jsonHeaders() })
+        .then(json).then((r) => r.grants),
+    grantDrive: (personId, subjectId, { kind = 'account', label = '', days = null } = {}) =>
+      fetch(`${baseURL}/api/people/${personId}/drive-grants`, {
+        method: 'POST', headers: jsonHeaders(),
+        body: JSON.stringify({ subject_id: subjectId, subject_kind: kind, label, days }),
+      }).then(json),
+    revokeDrive: (personId, grantId) =>
+      fetch(`${baseURL}/api/people/${personId}/drive-grants/${grantId}`, {
+        method: 'DELETE', headers: jsonHeaders(),
+      }).then(json),
+
+    // The GRANTEE's view. Without this the whole feature is unusable by the person it was
+    // built for: they would have to be told a person id out of band.
+    sharedWithMe: () =>
+      fetch(`${baseURL}/api/drive/shared`, { headers: jsonHeaders() })
+        .then(json).then((r) => r.people),
     // The per-person mailbox the `remote` output channel posts into, and every other
     // device of theirs polls. Per person, not per screen, for the same reason.
     personEventsURL: (personId, stream) => `${baseURL}/api/people/${personId}/events/${stream}`,

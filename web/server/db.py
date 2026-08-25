@@ -163,6 +163,89 @@ class _Store:
             cur.execute(self._q("UPDATE people SET name=? WHERE id=? AND account_id=?"),
                         (name, person_id, account_id))
 
+    def person_owner(self, person_id: str) -> str | None:
+        """Which account owns this person - NOT scoped to the caller, on purpose.
+
+        Every other person lookup here is ownership-gated, which is right. This one cannot
+        be: a grantee has to be able to reach a person they do not own, and the room a
+        socket joins is keyed by the OWNER. Callers must not treat a non-None answer as
+        permission - grants.py decides that.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT account_id FROM people WHERE id=?"), (person_id,))
+            r = cur.fetchone()
+        return None if r is None else r[0]
+
+    # ---------------------------------------------------------------- drive grants
+    #
+    # Read grants.py first: the RULES live there, pure and tested on their own. This is
+    # only storage. Nothing here decides whether somebody may drive - it hands rows to the
+    # rule and the rule answers.
+
+    def add_grant(self, owner_id: str, person_id: str, subject_kind: str, subject_id: str,
+                  label: str = "", expires_at: str | None = None) -> dict:
+        gid, ts = _new_id(), _now()
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "INSERT INTO drive_grants(id, owner_id, person_id, subject_kind, subject_id, "
+                "label, expires_at, created_at) VALUES(?,?,?,?,?,?,?,?)"),
+                (gid, owner_id, person_id, subject_kind, subject_id, label, expires_at, ts))
+        return {"id": gid, "person_id": person_id, "subject_kind": subject_kind,
+                "subject_id": subject_id, "label": label, "expires_at": expires_at,
+                "created_at": ts}
+
+    def list_grants(self, owner_id: str, person_id: str) -> list[dict]:
+        """Every grant on one person's screens - the owner's view of who may drive."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at "
+                "FROM drive_grants WHERE owner_id=? AND person_id=? ORDER BY created_at"),
+                (owner_id, person_id))
+            rows = cur.fetchall()
+        return [self._grant_row(r) for r in rows]
+
+    def grants_for_subject(self, subject_kind: str, subject_id: str) -> list[dict]:
+        """Everything this subject has been granted - the grantee's view.
+
+        Carries `owner_id` too, because the grantee needs it: person state and screens are
+        keyed by the OWNING account, not by whoever is driving.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at, owner_id "
+                "FROM drive_grants WHERE subject_kind=? AND subject_id=? ORDER BY created_at"),
+                (subject_kind, subject_id))
+            rows = cur.fetchall()
+        return [dict(self._grant_row(r), owner_id=r[7]) for r in rows]
+
+    def grants_on_person(self, person_id: str) -> list[dict]:
+        """Every grant on this person, whoever made it. What the auth check reads."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at, owner_id "
+                "FROM drive_grants WHERE person_id=?"), (person_id,))
+            rows = cur.fetchall()
+        return [dict(self._grant_row(r), owner_id=r[7]) for r in rows]
+
+    def delete_grant(self, grant_id: str, *, owner_id: str = "", subject_id: str = "") -> int:
+        """Revoke. EITHER side may end it: the owner takes it back, the grantee hands it
+        back. Returns how many rows went, so the caller can 404 rather than pretend."""
+        if not owner_id and not subject_id:
+            return 0
+        with self._tx() as cur:
+            if owner_id:
+                cur.execute(self._q("DELETE FROM drive_grants WHERE id=? AND owner_id=?"),
+                            (grant_id, owner_id))
+            else:
+                cur.execute(self._q("DELETE FROM drive_grants WHERE id=? AND subject_id=?"),
+                            (grant_id, subject_id))
+            return cur.rowcount if cur.rowcount is not None and cur.rowcount >= 0 else 0
+
+    @staticmethod
+    def _grant_row(r) -> dict:
+        return {"id": r[0], "person_id": r[1], "subject_kind": r[2], "subject_id": r[3],
+                "label": r[4], "expires_at": r[5], "created_at": r[6]}
+
     def count_person_screens(self, account_id: str, person_id: str) -> int:
         with self._tx() as cur:
             cur.execute(self._q("SELECT COUNT(*) FROM profiles WHERE user_id=? AND person_id=?"),
@@ -518,6 +601,23 @@ class SQLiteStore(_Store):
                 );
                 CREATE INDEX IF NOT EXISTS ix_people_account ON people(account_id);
 
+                -- WHO MAY DRIVE SOMEBODY ELSE'S SCREEN. `subject_kind` is polymorphic on
+                -- purpose (account / group / tag) even though only 'account' resolves
+                -- today: a permissions table is the worst kind to migrate later. See
+                -- grants.py for why an unresolved kind must fail closed.
+                CREATE TABLE IF NOT EXISTS drive_grants (
+                    id TEXT PRIMARY KEY,
+                    owner_id TEXT NOT NULL,
+                    person_id TEXT NOT NULL,
+                    subject_kind TEXT NOT NULL,
+                    subject_id TEXT NOT NULL,
+                    label TEXT NOT NULL DEFAULT '',
+                    expires_at TEXT,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS ix_grants_person ON drive_grants(owner_id, person_id);
+                CREATE INDEX IF NOT EXISTS ix_grants_subject ON drive_grants(subject_kind, subject_id);
+
                 CREATE TABLE IF NOT EXISTS profiles (
                     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL,
                     created_at TEXT NOT NULL, person_id TEXT NOT NULL DEFAULT ''
@@ -610,6 +710,12 @@ class PostgresStore(_Store):
 
     def _migrate(self) -> None:
         stmts = [
+            "CREATE TABLE IF NOT EXISTS drive_grants (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, "
+            "person_id TEXT NOT NULL, subject_kind TEXT NOT NULL, subject_id TEXT NOT NULL, "
+            "label TEXT NOT NULL DEFAULT '', expires_at TEXT, created_at TEXT NOT NULL)",
+            "CREATE INDEX IF NOT EXISTS ix_grants_person ON drive_grants(owner_id, person_id)",
+            "CREATE INDEX IF NOT EXISTS ix_grants_subject ON drive_grants(subject_kind, subject_id)",
+
             "CREATE TABLE IF NOT EXISTS people (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, "
             "name TEXT NOT NULL, created_at TEXT NOT NULL)",
             "CREATE INDEX IF NOT EXISTS ix_people_account ON people(account_id)",

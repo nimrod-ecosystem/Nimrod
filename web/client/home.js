@@ -126,7 +126,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     if (id === 'remote') {
       const { mountRemote } = await import('./remote.js');
       const r = mountRemote(host, {
-        personId, personName, user, bus,
+        personId, personName, user, bus, profiles,
       });
       await r.refresh();
       return r;
