@@ -59,7 +59,23 @@ function isTyping(target) {
 // in desktop dev as in the Pi kiosk - a key the browser eats fails that on one side only.
 // It follows the Ctrl+Shift+L precedent Cici set for its edit toggle.
 //
-// ESCAPE IS DELIBERATELY LEFT FREE for the universal settings menu.
+// THE MENU IS ESCAPE **AND** M, and the reason for two is worth writing down because the
+// obvious objection to Escape turns out to be narrower than it looks.
+//
+// Escape is the universal convention for "open the menu / get me out", and Mike reaches
+// for it by habit, which is the strongest argument any key has. The browser only eats it
+// in ONE situation: while a page is in ELEMENT fullscreen, the kind a page requests
+// itself (the kiosk's F). Chromium launched with --kiosk is fullscreen at the BROWSER
+// level and does not exit on Escape, and a windowed dev browser never did. So Escape is
+// free on the Pi, free on a desktop, and taken only in the mode a person opted into.
+//
+// `M` is bound to the same verb so there is always a key that cannot be eaten. Two
+// bindings on one action is ordinary here - the record is a list - and it costs nothing.
+// The kiosk's mirror moved off M to C, which was the better mnemonic anyway (it is the
+// CAMERA mirror).
+//
+// SPACE is Next as well as ArrowDown. It is the most-used key at the bedside and losing it
+// to a refactor would be felt immediately.
 //
 // All of these are ordinary bindings: rebind them, or move them onto a switch, and the
 // keyboard simply stops being the only way in.
@@ -75,6 +91,9 @@ export const DEFAULT_BINDINGS = [
   kb('default/select', 'key:enter', verbTopic('select'), 'Primary select'),
   kb('default/focus-next', 'key:arrowright', verbTopic('focus-next'), 'Next panel'),
   kb('default/focus-prev', 'key:arrowleft', verbTopic('focus-prev'), 'Previous panel'),
+  kb('default/next-space', 'key: ', verbTopic('next'), 'Next'),
+  kb('default/menu', 'key:escape', verbTopic('menu'), 'Menu'),
+  kb('default/menu-m', 'key:m', verbTopic('menu'), 'Menu'),
 ];
 
 export function attachKeyboard(input, { target = window, device = KEYBOARD_DEVICE } = {}) {

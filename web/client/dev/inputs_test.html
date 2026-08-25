@@ -202,8 +202,13 @@ const logText = (r) => r.q('[data-log]').textContent;
       check('and a TV-remote set, so the page is driveable before anything is configured',
         ['next', 'prev', 'select', 'focus-next', 'focus-prev']
           .every((v) => r.panel.bindings().some((b) => b.actionId === verbTopic(v))));
-      check('Escape is left free for the settings menu',
-        !r.panel.bindings().some((b) => b.control === 'key:escape'));
+      // REVERSED DELIBERATELY. Escape used to be held free FOR the settings menu; it is now
+      // bound TO it. The browser only eats Escape in element fullscreen, so it is free on a
+      // --kiosk Pi and in a windowed dev browser, and it is the key people reach for.
+      check('Escape opens the settings menu',
+        r.panel.bindings().some((b) => b.control === 'key:escape' && b.actionId === verbTopic('menu')));
+      check('and so does M, which no browser can ever eat',
+        r.panel.bindings().some((b) => b.control === 'key:m' && b.actionId === verbTopic('menu')));
       check('and they are live, not just displayed',
         r.panel.input().listBindings().length === DEFAULT_BINDINGS.length);
       check('every timing field is a real number, never "undefined"',

@@ -42,6 +42,7 @@
 import { createBus } from './bus.js';
 import { createDefaultRegistry, VERBS, FOCUS_VERBS, verbTopic, MODULE_VERBS } from './actions.js';
 import { createInputBus, normalizeBinding, GATES, ROLES, EDGES } from './input.js';
+import { normalizeRecord, INPUTS_KEY, RECORD_VERSION } from './input_runtime.js';
 import { createVerbRouter } from './input_router.js';
 import { attachKeyboard, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from './input_keyboard.js';
 import { attachPointer, pointerLabel, POINTER_DEVICE } from './input_pointer.js';
@@ -51,8 +52,9 @@ import { speak } from './voice.js';
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-export const INPUTS_KEY = 'input-bindings';
-export const RECORD_VERSION = 2;      // 1 was per-screen, bound to module-specific actions
+// Re-exported so every existing importer keeps working; the definitions now live with the
+// headless runtime that the kiosk also uses.
+export { INPUTS_KEY, RECORD_VERSION } from './input_runtime.js';
 
 // Mike's wording, and he is right that it carries weight: these words get said out loud
 // in front of the person they describe. "Them only" and "patient" both put someone in
@@ -585,24 +587,11 @@ export function mountInputs(root, {
     // Normalized on the way IN, so the table never renders `undefined` into a number
     // field. A binding that will not normalize is dropped rather than taking every other
     // binding on the person's account down with it.
-    const source = saved && Array.isArray(saved.bindings) && saved.v === RECORD_VERSION
-      ? saved.bindings
-      // Nobody has set this up yet, so the shipped default comes with it. Bindable never
-      // means arrives unconfigured. A v1 record (per-screen, module-specific actions) is
-      // deliberately NOT migrated: those bindings named actions that no longer exist, and
-      // silently reinterpreting someone's switch setup is worse than asking them again.
-      : DEFAULT_BINDINGS;
-    record = {
-      v: RECORD_VERSION,
-      gate: GATES.includes(saved?.gate) ? saved.gate : 'both',
-      // Off by default. A laptop announcing every press in a shared room is worse than
-      // silence; for someone who cannot see the screen it is the only feedback there is.
-      // Per person, like everything else here.
-      speak: saved?.speak === true,
-      bindings: source.map((b, i) => {
-        try { return normalizeBinding(b, `b${i + 1}`); } catch (err) { console.error('dropped a binding', b, err); return null; }
-      }).filter(Boolean),
-    };
+    //
+    // THE DEFINITION LIVES IN `input_runtime.js`, NOT HERE. The kiosk reads the same rows
+    // through the same function, because a record that means one thing in the binder and
+    // another at the bedside is a switch that works in the clinic and not at the bed.
+    record = normalizeRecord(saved, DEFAULT_BINDINGS);
 
     input = (makeInput || createInputBus)({ bus: localBus, actions, onActivation });
     push();

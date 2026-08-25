@@ -102,6 +102,14 @@ export const MODULE_VERBS = {
   personal:      { next: 'personal/next', prev: 'personal/prev' },
   educational:   { next: 'educational/next', prev: 'educational/prev', back: 'educational/skip' },
   youtube:       { next: 'youtube/next', prev: 'youtube/prev' },
+  // THE DIRECTOR WAS MISSING, and it is on Christine's actual screen — the starter
+  // "Bedside" profile is photos + camera + clock + director. Absent from this table it is
+  // never focusable and answers no verb, so a switch could not skip a segment on the one
+  // screen that ships by default. Its "next" is the SEGMENT skip: the director advances by
+  // being told the segment ended, and `reason` is what separates "she skipped it" from
+  // "it finished" downstream.
+  director:      { next: { topic: 'segment/done', payload: { reason: 'skipped' } },
+                   select: { topic: 'segment/done', payload: { reason: 'skipped' } } },
   interstitials: { next: 'interstitial/next', prev: 'interstitial/prev', back: 'interstitial/skip' },
   wordforge:     { next: 'wordforge/next', select: 'wordforge/next' },
   algebra:       { select: 'algebra/submit' },

@@ -42,6 +42,14 @@ function check(name, cond, detail = '') {
   out.append(line);
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// A real press is down AND up. Without the release the input bus still considers the
+// control HELD and ignores the next press of the same key — which is correct behaviour and
+// made three assertions here fail until the test started letting go of the key.
+const press = async (key, ms = 60) => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key }));
+  window.dispatchEvent(new KeyboardEvent('keyup', { key }));
+  await sleep(ms);
+};
 const stageHas = (sel) => !!root.querySelector('.k-stage ' + sel);
 const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
 const clockHas = (sel) => !!root.querySelector('.k-clock ' + sel);
@@ -90,8 +98,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
     check('the camera + clock HUD survive the switch', mirrorHas('.camera') && clockHas('.clock'));
 
     // keyboard: number key selects a stage module
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: '1' }));
-    await sleep(60);
+    await press('1', 60);
     check('keyboard "1" selects the first stage module (photos)', kiosk.primaryType() === 'photos' && stageHas('.photos'));
 
     // mirror MODE = press M to make the camera full screen
@@ -101,11 +108,9 @@ const ds = () => root.querySelector('.kiosk').dataset;
     check('mirror mode toggles back off', kiosk.mirrorFull() === false && !root.querySelector('.kiosk.mirror-full'));
 
     // live bedside tuning of the mirror, persisted to the profile settings
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: '[' }));
-    await sleep(30);
+    await press('[', 30);
     check('"[" shrinks the mirror (lg -> md) and applies it', kiosk.layout().mirrorSize === 'md' && ds().mirrorSize === 'md', JSON.stringify(kiosk.layout()));
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: '\\' }));
-    await sleep(30);
+    await press('\\', 30);
     check('"\\" cycles the mirror corner (tr -> br)', kiosk.layout().mirrorCorner === 'br' && ds().mirrorCorner === 'br', JSON.stringify(kiosk.layout()));
     kiosk.setMirror({ size: 'sm', corner: 'bl' });
     await sleep(30);
@@ -116,40 +121,71 @@ const ds = () => root.querySelector('.kiosk').dataset;
     try { kiosk.next(); } catch { threw = true; }
     check('next() drives the current module without error', !threw);
 
-    // ---- the universal settings menu, driven the way a key press drives it ----
-    // The kiosk has NO input bus, so this is the ONLY path the menu has at the bedside.
-    // Testing it through the real keydown handler rather than the handle is the point:
-    // a menu wired only in a unit test is a menu nobody can open.
+    // ---- THE INPUT BUS AT THE BEDSIDE, and the menu riding on it ----
+    //
+    // Every key below goes through the real keydown handler into the real input bus, the
+    // same path a switch takes. That is the point of this block: the bindings are the
+    // product, and a binding proven only in a unit test is a binding nobody can press.
+    check('the kiosk mounts an input runtime', !!kiosk.runtime?.input);
+    check('it comes up on the shipped defaults, before any network',
+      kiosk.runtime.record().bindings.length > 0);
+
+    // ARROW DOWN is verb/next -> whatever the focused panel calls next. Photos stays the
+    // stage; only its picture changes, which the bus cannot see from here — so assert the
+    // stage did NOT switch, which is the thing that used to happen.
+    const stageBefore = kiosk.primaryType();
+    await press('ArrowDown', 40);
+    check('ArrowDown drives the panel, not the stage', kiosk.primaryType() === stageBefore);
+
+    // ARROW RIGHT is focus-next. With one module mounted at a time, moving focus IS
+    // changing the stage — that is what lets a single switch reach every module.
+    await press('ArrowRight', 120);
+    check('ArrowRight moves focus, and the stage follows it',
+      kiosk.primaryType() !== stageBefore, `still ${kiosk.primaryType()}`);
+    await press('ArrowLeft', 120);
+    check('ArrowLeft comes back', kiosk.primaryType() === stageBefore, `${kiosk.primaryType()}`);
+
+    // ---- the settings menu, opened by a BINDING ----
     check('the menu starts closed', kiosk.menu.isOpen() === false);
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
-    await sleep(30);
-    check('"S" opens the settings menu', kiosk.menu.isOpen() === true);
+    await press('Escape', 40);
+    check('Escape opens the settings menu — the habit key, and free outside element fullscreen',
+      kiosk.menu.isOpen() === true);
     check('it names the panel it is about to change', kiosk.menu.items()
       .some((i) => i.label === 'This panel — Photos'),
       JSON.stringify(kiosk.menu.items().map((i) => i.label)));
 
-    const before = kiosk.primaryType();
+    const onStage = kiosk.primaryType();
     const startedOn = kiosk.menu.focusId();
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
-    await sleep(30);
+    await press('ArrowDown', 40);
     check('an arrow moves the menu cursor', kiosk.menu.focusId() !== startedOn);
-    // THE NEGATIVE CONTROL, at the bedside: the same press must not ALSO drive the stage.
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-    await sleep(30);
-    check('…and the stage behind it did NOT change', kiosk.primaryType() === before,
-      `${before} -> ${kiosk.primaryType()}`);
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
-    await sleep(30);
-    check('a key the menu does not use is swallowed, not passed to mirror mode',
+    // THE NEGATIVE CONTROL at the bedside: the press must not ALSO reach the screen.
+    await press('ArrowRight', 120);
+    check('…and the stage behind it did NOT move', kiosk.primaryType() === onStage,
+      `${onStage} -> ${kiosk.primaryType()}`);
+    check('the router reports itself paused while the menu is up',
+      kiosk.runtime.router.isPaused() === true);
+    await press('c', 40);
+    check('a caregiver key is swallowed too — no mirror mode from inside the menu',
       kiosk.mirrorFull() === false);
 
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    await sleep(30);
-    check('Escape closes the menu', kiosk.menu.isOpen() === false);
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-    await sleep(30);
-    check('CONTROL: with the menu closed, the same arrow DOES drive the stage',
-      kiosk.primaryType() !== before, `still ${kiosk.primaryType()}`);
+    await press('Escape', 40);
+    check('Escape closes it again', kiosk.menu.isOpen() === false);
+    check('and the router is handed the verbs back', kiosk.runtime.router.isPaused() === false);
+    await press('m', 40);
+    check('M opens it too — a key the browser can never eat', kiosk.menu.isOpen() === true);
+    await press('m', 40);
+    check('and M closes it: one switch has to do both', kiosk.menu.isOpen() === false);
+
+    // CONTROL: the same arrow that was swallowed above works again now.
+    await press('ArrowRight', 120);
+    check('CONTROL: with the menu closed the stage moves again',
+      kiosk.primaryType() !== onStage, `still ${kiosk.primaryType()}`);
+
+    // MIRROR MOVED OFF M.
+    await press('c', 40);
+    check('C is mirror mode now', kiosk.mirrorFull() === true);
+    await press('c', 40);
+    check('C toggles back', kiosk.mirrorFull() === false);
 
     kiosk.destroy();
     check('destroy() tears everything down without error', true);
