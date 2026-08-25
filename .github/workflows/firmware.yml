@@ -1,0 +1,53 @@
+# Compile the firmware on every push, so "it builds" is a fact rather than a hope.
+#
+# WHY THIS EXISTS. NimrodLink was written on a machine with no Arduino toolchain, and
+# shipping uncompiled C++ in a repository somebody might adopt is a liability - "I could not
+# compile it" is a weak thing to say to anyone considering putting it on a device in a
+# stranger's home. This makes the compiler part of the repository instead of part of
+# somebody's desk.
+name: firmware
+
+on:
+  push:
+    paths: ['firmware/**', 'tools/**', '.github/workflows/firmware.yml']
+  pull_request:
+    paths: ['firmware/**', 'tools/**', '.github/workflows/firmware.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      # Do not stop at the first failure - when a change breaks one board it is useful to
+      # know immediately whether it broke the other one too.
+      fail-fast: false
+      matrix:
+        include:
+          - name: Nano 33 BLE
+            fqbn: arduino:mbed_nano:nano33ble
+            platform: arduino:mbed_nano
+            sketch: firmware/nano_link/examples/minimal
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/compile-sketches@v1
+        with:
+          fqbn: ${{ matrix.fqbn }}
+          sketch-paths: |
+            - ${{ matrix.sketch }}
+          libraries: |
+            - name: ArduinoBLE
+            - source-path: ./firmware/nano_link
+          enable-deltas-report: false
+
+  protocol:
+    # The wire format is the thing both ends copy from, so it is checked on every push
+    # regardless of which board changed. No dependencies, no board, about a second.
+    name: protocol conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tools/test_nano_protocol.py
