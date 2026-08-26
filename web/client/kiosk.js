@@ -29,11 +29,12 @@ import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
-import { fieldsFor, fieldItems } from './settings_fields.js';
+import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
 import { createHealthWatch } from './health.js';
-import { nextAction, applied, cleared, rankFallbacks, DEFAULT_POLICY } from './recovery.js';
+import { nextAction, applied, cleared, chooseFallback, DEFAULT_POLICY,
+         RECOVERY_SETTINGS } from './recovery.js';
 import { listManifests } from './module.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
@@ -410,6 +411,19 @@ export async function mountKiosk(root, {
     extras: () => [
       ...(runtime ? CONTROL_ITEMS : []),
       ...CONNECTION_ITEMS,
+      // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used
+      // to mean hand-writing state; now it is one press, which is what "turn it on for the
+      // bench first" has to mean in practice. Written to the same profile settings blob the
+      // engine reads, so there is one source of truth rather than two.
+      { kind: 'heading', id: 'recovery-head', label: 'When something stops working' },
+      ...fieldItems(RECOVERY_SETTINGS.map(normalizeField).filter(Boolean), {
+        values: () => (settings.get() || {}).recovery || {},
+        level: complexity(),
+        onStep: (key, value) => {
+          const cur = (settings.get() || {}).recovery || {};
+          settings.set({ recovery: { ...cur, [key]: value } });
+        },
+      }),
       ...restartItems(restart, {
       screenName: profile?.name ? `“${profile.name}”` : 'this screen',
       onChange: ({ mode }) => {
@@ -561,13 +575,20 @@ export async function mountKiosk(root, {
     return false;
   }
 
-  // What could replace a broken panel. Least exposed first, never the faulty one, and never
-  // something already on this screen - swapping YouTube for the photos she is already looking
-  // at would change nothing and look like the recovery did nothing.
+  // What could replace a broken panel.
+  //
+  // SOMEBODY'S OWN ORDER FIRST (`recovery.fallbacks`), then the automatic ranking. The
+  // ranking sorts by how exposed a module is, which has no idea that this particular person
+  // loves her photos and is bored by the clock - only somebody who knows her does.
+  //
+  // Anything already on this screen is excluded, so a preference list does not have to
+  // enumerate every combination: name two things, and whichever is usable gets used.
+  // Swapping YouTube for the photos she is already looking at would change nothing and look
+  // like the recovery did nothing.
   function fallbackFor(faultType) {
     const onScreen = new Set([stageRec?.type, ...slotRecs.map((r) => r.type)].filter(Boolean));
-    const ranked = rankFallbacks(listManifests(), { exclude: [faultType, ...onScreen] });
-    return ranked[0]?.type || null;
+    return chooseFallback(recoveryCfg().fallbacks, listManifests(),
+                          { exclude: [faultType, ...onScreen] });
   }
 
   function recFor(id) {

@@ -27,7 +27,7 @@ everything before it is an attempt to give her back the thing she was actually w
 import {
   STEPS, DEFAULT_SEQUENCE, URGENCIES, DEPENDS, DEFAULT_POLICY,
   normalizePolicy, isQuietHour, holdsNotice, releaseHour,
-  rankFallbacks, nextAction, applied, cleared,
+  rankFallbacks, chooseFallback, nextAction, applied, cleared,
 } from '../recovery.js';
 
 const out = document.getElementById('results');
@@ -318,6 +318,51 @@ section('rankFallbacks — NOTHING is failure-free, so it ranks by exposure');
   check('network CAN be allowed explicitly, for a caller that knows better',
     rankFallbacks(mans, { allowNetwork: true }).some((r) => r.type === 'youtube'));
   check('nothing at all is survivable', rankFallbacks().length === 0);
+}
+
+// =====================================================================
+section('chooseFallback — somebody’s own order first, and skip what cannot be used');
+
+{
+  // Mike: "the user could set/reorder some fallbacks... if it goes to one that's on the
+  // screen it would skip it and find something new."
+  const mans = [
+    { type: 'youtube', dependsOn: 'network' },
+    { type: 'photos', dependsOn: 'local', importance: 'critical' },
+    { type: 'clock', dependsOn: 'none' },
+    { type: 'pond', dependsOn: 'none', importance: 'optional' },
+  ];
+
+  check('a preference is honoured even when the ranking disagrees — the ranking sorts by how '
+    + 'EXPOSED a module is, which is a good tiebreaker and a poor first choice',
+    chooseFallback(['pond'], mans) === 'pond',
+    `${chooseFallback(['pond'], mans)} vs ranked ${rankFallbacks(mans)[0].type}`);
+  check('the FIRST usable preference wins', chooseFallback(['clock', 'pond'], mans) === 'clock');
+
+  // THE PART THAT MAKES IT USABLE: somebody names two things and never thinks about which
+  // screens already show them.
+  check('A PREFERENCE ALREADY ON THE SCREEN IS SKIPPED, and the next one is used',
+    chooseFallback(['clock', 'pond'], mans, { exclude: ['clock'] }) === 'pond');
+  check('and one that is the BROKEN module is skipped too',
+    chooseFallback(['photos', 'clock'], mans, { exclude: ['photos'] }) === 'clock');
+  check('a preference that needs the NETWORK is skipped, because a chain that ends there has '
+    + 'not terminated', chooseFallback(['youtube', 'clock'], mans) === 'clock');
+  check('a preference that does not exist at all is skipped rather than crashing',
+    chooseFallback(['nonsense', 'clock'], mans) === 'clock');
+
+  check('WHEN THE LIST RUNS OUT IT FALLS THROUGH TO THE RANKING — a preference list that runs '
+    + 'out is the common case, not an error',
+    chooseFallback(['nonsense'], mans) === rankFallbacks(mans)[0].type);
+  check('no preferences at all is just the ranking',
+    chooseFallback([], mans) === rankFallbacks(mans)[0].type);
+  check('and with nothing usable at all it is null, not a guess',
+    chooseFallback(['clock'], mans, { exclude: ['clock', 'pond', 'photos'] }) === null);
+  check('junk in the list is ignored', chooseFallback([null, 42, '', 'clock'], mans) === 'clock');
+
+  check('the policy carries the list, and normalises junk out of it',
+    normalizePolicy({ fallbacks: ['photos', '', null, ' clock '] }).fallbacks.join(',')
+      === 'photos,clock');
+  check('an absent list is empty rather than undefined', normalizePolicy().fallbacks.length === 0);
 }
 
 // =====================================================================
