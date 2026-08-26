@@ -28,6 +28,7 @@ are tunable live, and lazy switching works.</p>
 import { createBus } from '../bus.js';
 import { createProfilesClient } from '../profile.js';
 import { mountKiosk } from '../kiosk.js';
+import { authHeaders } from '../auth.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'kiosk-test-user-' + Math.floor(performance.now());
@@ -371,6 +372,182 @@ const ds = () => root.querySelector('.kiosk').dataset;
       went === `kiosk.html?profile=${encodeURIComponent(other.id)}`, String(went));
     check('and it marks the hop, so two screens naming each other cannot ping-pong',
       sess.getItem('nimrod.restart.hopped') === '1');
+
+    // =====================================================================
+    // RECOVERY — the actuators. OFF BY DEFAULT, which IS the deployment plan.
+    //
+    // The kiosk is served from the platform, so this file reaches every screen the moment it
+    // deploys — including hers, with no bench step in between. That is why it does nothing
+    // until somebody turns it on: the deploy is inert, and the blast radius of a bug here is
+    // exactly the screens that opted in.
+    //
+    // Stepped by hand at a fake clock. Nothing reloads and nothing reboots, because a suite
+    // that reloads the page cannot report its own results.
+    // =====================================================================
+    kiosk.destroy();
+
+    let clock = 5_000_000;
+    let reloaded = 0;
+    const rebooted = [];
+    const acts = [];
+    const rp = await profiles.create('TEST-recovery');
+    await profiles.addModule(rp.id, 'photos');
+    await profiles.addModule(rp.id, 'youtube');
+
+    // Seed the profile settings blob directly — that is where the setting lives, beside
+    // theme and layout, so the test writes it the same way the app would.
+    const seedSettings = async (data) => {
+      const res = await fetch(`/api/profiles/${rp.id}/state/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(USER) },
+        body: JSON.stringify({ data, base_version: 0 }),
+      });
+      return res.ok;
+    };
+
+    const mountRec = async (opts = {}) => mountKiosk(root, {
+      user: USER, profileId: rp.id, profiles, bus: createBus(),
+      recoveryNow: () => clock,
+      recoveryTick: 0,                        // stepped by hand, never on a timer
+      reloadPage: () => { reloaded += 1; },
+      onRecovery: (a) => acts.push(a),
+      ...opts,
+    });
+
+    // ---- OFF ----------------------------------------------------------------
+    kiosk = await mountRec();
+    await sleep(200);
+    check('recovery is OFF unless somebody turned it on', kiosk.recovery.enabled() === false);
+
+    clock += 4 * 60 * 60 * 1000;              // hours of silence from every panel
+    const seen = kiosk.recovery.faults();
+    check('a screen full of stalled panels IS detected even while it is off',
+      seen.length > 0, JSON.stringify(seen.map((f) => `${f.type}:${f.kind}`)));
+    check('BUT NOTHING IS DONE — the whole feature is one line, and it is off',
+      (await kiosk.recovery.step()) === null);
+    check('nothing was reloaded', reloaded === 0);
+    check('and no action was reported', acts.length === 0);
+    check('no history was written either, so turning it on later starts clean',
+      Object.keys(kiosk.recovery.history()).length === 0
+      || (kiosk.recovery.history().reboots || []).length === 0);
+
+    // ---- ON -----------------------------------------------------------------
+    kiosk.destroy();
+    acts.length = 0; reloaded = 0; clock = 5_000_000;
+    check('the setting was seeded', await seedSettings({ recovery: { on: true } }) === true);
+
+    kiosk = await mountRec({ rebootDevice: (d) => rebooted.push(d) });
+    await sleep(200);
+    check('now it is on', kiosk.recovery.enabled() === true);
+
+    check('nothing happens while the panels are fresh — a screen that has just mounted has '
+      + 'not had time to be silent', (await kiosk.recovery.step())?.action === undefined
+      || ['wait', 'done'].includes((await kiosk.recovery.step()).action));
+
+    // Hours pass with nothing published by any panel.
+    clock += 4 * 60 * 60 * 1000;
+    const stalled = kiosk.recovery.faults();
+    check('the panels are now stalled', stalled.length > 0,
+      JSON.stringify(stalled.map((f) => f.type)));
+
+    const before = kiosk.primaryType();
+    const r1 = await kiosk.recovery.step();
+    check('THE FIRST RUNG IS THE REMOUNT — the narrowest remedy there is',
+      r1?.action === 'remount', JSON.stringify(r1?.action));
+    check('and it actually happened', r1.performed === true);
+    check('THE PANEL IS STILL THE SAME MODULE — a remount rebuilds it, it does not replace it',
+      kiosk.primaryType() === before, `${before} -> ${kiosk.primaryType()}`);
+    check('and the stage still renders', stageHas('.photos') || stageHas('.youtube'));
+
+    clock += 40 * 60 * 1000;
+    const r2 = await kiosk.recovery.step();
+    check('the second rung is the RELOAD', r2?.action === 'reload', JSON.stringify(r2?.action));
+    check('and the page really was asked to reload', reloaded === 1);
+
+    clock += 40 * 60 * 1000;
+    const r3 = await kiosk.recovery.step();
+    check('ONLY THEN THE SWAP — it is a concession, and everything before it was an attempt '
+      + 'to give her back what she was watching', r3?.action === 'swap', JSON.stringify(r3?.action));
+    check('and the panel really changed to something else', r3.performed === true
+      && kiosk.primaryType() !== before, `${before} -> ${kiosk.primaryType()}`);
+    check('to something that does not need the network',
+      kiosk.primaryType() !== 'youtube', String(kiosk.primaryType()));
+
+    // A SUCCESSFUL SWAP ENDS THE FAULT, and the ladder stops rather than climbing on. That
+    // is the point of the whole thing: the screen is working again, so nobody is woken.
+    check('once the swap has worked there is no fault left to act on',
+      kiosk.recovery.faults().length === 0, JSON.stringify(kiosk.recovery.faults()));
+    clock += 40 * 60 * 1000;
+    check('and the ladder stops rather than climbing on to a reboot',
+      (await kiosk.recovery.step()) === null);
+    // WHAT IS FORGOTTEN AND WHAT SURVIVES. The per-fault marks go, so a NEW fault starts at
+    // the cheap end again. The TIMESTAMPS stay on purpose - they are what stops a fault that
+    // keeps returning from rebooting the screen every twenty minutes.
+    check('the swap mark is forgotten, so the panel can come back and the ladder restarts',
+      kiosk.recovery.history().swappedAt === undefined,
+      JSON.stringify(kiosk.recovery.history()));
+    check('but the timestamps SURVIVE — that is what rations a remedy across faults that keep '
+      + 'coming back', (kiosk.recovery.history().remounts || []).length > 0,
+      JSON.stringify(kiosk.recovery.history()));
+
+    check('every step was reported to the host, so none of this is invisible',
+      acts.length >= 3, String(acts.length));
+    check('and every report names the fault it was about',
+      acts.every((a) => a.fault && a.fault.module));
+
+    // ---- THE SEAMS THE LADDER IS GIVEN -------------------------------------
+    // The ladder ITSELF is walked exhaustively in recovery_test (86 checks) at a fake clock,
+    // including the rungs past the swap, the reboot loop, quiet hours and a device that
+    // cannot reboot. Re-deriving that here through a real kiosk would test the same rules
+    // through a harder harness. What is worth checking HERE is what this file HANDS it.
+    check('THIS device is told it can reboot, because a helper was supplied',
+      kiosk.recovery.canReboot() === true);
+
+    kiosk.destroy();
+    clock = 5_000_000;
+    kiosk = await mountRec();                 // no rebootDevice: the honest default
+    await sleep(200);
+    check('AND WITHOUT ONE IT IS TOLD IT CANNOT — no browser on any platform can restart the '
+      + 'host OS, so the rung does not exist and the ladder skips it rather than waiting on '
+      + 'something that can never happen', kiosk.recovery.canReboot() === false);
+
+    // An EMPTY panel is a setup state with a HUMAN repair. It still gets the cheap remedies,
+    // but no fallback is offered for it - swapping her photos away because nobody has
+    // connected a source yet would hide the very thing somebody needs to see.
+    const pid0 = kiosk.health.panels()[0].id;
+    kiosk.health.empty(pid0, 'No photo source connected');
+    clock += 4 * 60 * 60 * 1000;
+    const em = kiosk.recovery.faults()[0];
+    check('an empty panel is reported as its own kind, not as an error',
+      em?.kind === 'empty', JSON.stringify(em));
+    check('and it says what a person actually needs to hear',
+      em.why.includes('No photo source'), em.why);
+    const eStep = await kiosk.recovery.step();
+    check('it still gets the cheap remedies first', eStep?.action === 'remount',
+      JSON.stringify(eStep?.action));
+    check('and the remount cleared it, because whether it is still empty is unknown until '
+      + 'the fresh panel says so', kiosk.recovery.faults().length === 0);
+
+    // ---- SOMEBODY IS HERE ---------------------------------------------------
+    kiosk.destroy();
+    clock = 5_000_000;
+    kiosk = await mountRec({ rebootDevice: () => {} });
+    await sleep(200);
+    check('an open settings menu counts as somebody using the screen',
+      (kiosk.menu.open(), kiosk.recovery.inUse() === true));
+    check('and closing it stops counting', (kiosk.menu.close(), kiosk.recovery.inUse() === false));
+
+    // ---- WHAT IT WILL NOT SWAP TO -------------------------------------------
+    const fb = kiosk.recovery.fallbackFor('youtube');
+    check('a fallback is never the broken module itself', fb !== 'youtube', String(fb));
+    check('nor something already on this screen — swapping YouTube for the photos she is '
+      + 'already looking at would look like nothing happened',
+      fb !== kiosk.primaryType(), `${fb} vs ${kiosk.primaryType()}`);
+    check('and it is a module that actually exists', !!fb && typeof fb === 'string');
+
+    kiosk.destroy();
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus() });
+    await sleep(160);
 
     kiosk.destroy();
     check('destroy() tears everything down without error', true);

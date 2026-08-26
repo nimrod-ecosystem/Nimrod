@@ -32,6 +32,9 @@ import { mountSettings } from './settings.js';
 import { fieldsFor, fieldItems } from './settings_fields.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
+import { createHealthWatch } from './health.js';
+import { nextAction, applied, cleared, rankFallbacks, DEFAULT_POLICY } from './recovery.js';
+import { listManifests } from './module.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
@@ -71,6 +74,16 @@ export async function mountKiosk(root, {
   // navigated away from mid-run.
   storage = undefined, session = undefined,
   navigate = (url) => { if (typeof location !== 'undefined') location.replace(url); },
+  // RECOVERY SEAMS. All three exist so the test can walk the whole ladder without anything
+  // actually happening - a suite that reloads the page cannot report its own results, and
+  // one that reboots a machine is not a suite anybody will run twice.
+  reloadPage = () => { if (typeof location !== 'undefined') location.reload(); },
+  // Null means THIS DEVICE CANNOT REBOOT ITSELF, which is the honest default: no browser on
+  // any platform can restart the host OS. A Nimrod appliance with a local helper supplies one.
+  rebootDevice = null,
+  onRecovery = null,               // told about every action taken, for the log and the tests
+  recoveryNow = () => Date.now(),
+  recoveryTick = 60 * 1000,
 } = {}) {
   bus = bus || createBus();
   // Read before anything else renders: if this screen is not where the device is meant to
@@ -229,7 +242,7 @@ export async function mountKiosk(root, {
       if (!def) continue;
       const host = document.createElement('div'); host.className = 'k-mod';
       cell.append(host);
-      slotRecs.push(await mountInstance(def, host));
+      slotRecs.push(watchRec(await mountInstance(def, host)));
     }
   }
 
@@ -243,7 +256,7 @@ export async function mountKiosk(root, {
     stageEl.innerHTML = '';
     const host = document.createElement('div'); host.className = 'k-mod';
     stageEl.append(host);
-    stageRec = await mountInstance(stageDefs[primary], host);
+    stageRec = watchRec(await mountInstance(stageDefs[primary], host));
     // Keep the focus ring in step when the stage was changed by a number key or a dot,
     // or the next switch press would resume from wherever focus was last left.
     runtime?.router.setFocus(stageDefs[primary].id);
@@ -507,6 +520,166 @@ export async function mountKiosk(root, {
   // The menu takes the verbs while it is open and hands them back when it closes.
   menu.attachBus(bus, runtime.router);
 
+  // ---- RECOVERY: watch the panels, and act only if somebody asked --------
+  //
+  // *** OFF BY DEFAULT, AND THAT IS THE WHOLE DEPLOYMENT PLAN. ***
+  //
+  // The kiosk is served from the platform, so this file reaches EVERY screen the moment it
+  // deploys - including hers, with no bench step in between. That is not a reason to keep the
+  // code out; it is a reason for it to do nothing until somebody turns it on. Off by default
+  // means the deploy is inert, the bench Pi can be switched on first, and the blast radius of
+  // a bug here is exactly the screens that opted in.
+  //
+  // THE DECISION LAYER IS ELSEWHERE AND PURE. `health.js` decides whether a panel is broken;
+  // `recovery.js` decides what to do about it. This function is only the hands - it performs
+  // what it is told and reports what it did. Everything frightening about it has already been
+  // walked at a fake clock in two test suites that mount nothing and reboot nothing.
+  const health = createHealthWatch({ bus, now: recoveryNow });
+  let recoveryHistory = {};
+  let recoveryTimer = null;
+  let currentFault = null;
+  const swappedBack = new Map();          // module id -> the def it replaced
+
+  const recoveryCfg = () => ({ on: false, ...DEFAULT_POLICY,
+                               ...((settings.get() || {}).recovery || {}) });
+
+  // A panel is watched from the moment it mounts. Cheap: a heartbeat is any publish on a
+  // topic the module already owns, so nothing was added to any module for this.
+  function watchRec(rec) {
+    if (!rec) return rec;
+    try { health.watch(rec.id, rec.type); } catch { /* a watch must never break a mount */ }
+    return rec;
+  }
+
+  // Is anybody actually here? The reboot rung asks, and getting this wrong means rebooting a
+  // screen somebody is using - the one way this feature could actively hurt.
+  function screenInUse() {
+    if (menu.isOpen()) return true;                       // somebody is standing here, editing
+    if (drive?.presence?.().drivers > 0) return true;     // somebody is driving it from elsewhere
+    const last = runtime?.recentActivity?.().slice(-1)[0];
+    if (last?.at && recoveryNow() - last.at < 10 * 60 * 1000) return true;
+    return false;
+  }
+
+  // What could replace a broken panel. Least exposed first, never the faulty one, and never
+  // something already on this screen - swapping YouTube for the photos she is already looking
+  // at would change nothing and look like the recovery did nothing.
+  function fallbackFor(faultType) {
+    const onScreen = new Set([stageRec?.type, ...slotRecs.map((r) => r.type)].filter(Boolean));
+    const ranked = rankFallbacks(listManifests(), { exclude: [faultType, ...onScreen] });
+    return ranked[0]?.type || null;
+  }
+
+  function recFor(id) {
+    if (stageRec?.id === id) return stageRec;
+    return slotRecs.find((r) => r.id === id) || null;
+  }
+
+  async function remountPanel(id) {
+    const rec = recFor(id);
+    if (!rec) return false;
+    const def = profile.modules.find((m) => m.id === id) || { id, type: rec.type };
+    const host = rec.el;
+    destroyRec(rec);
+    host.innerHTML = '';
+    const fresh = watchRec(await mountInstance(def, host));
+    if (stageRec?.id === id) stageRec = fresh;
+    else {
+      const at = slotRecs.findIndex((r) => r.id === id);
+      if (at >= 0) slotRecs[at] = fresh;
+    }
+    return true;
+  }
+
+  async function swapPanel(id, toType) {
+    const rec = recFor(id);
+    if (!rec || !toType) return false;
+    const host = rec.el;
+    // Remembered so the panel can come BACK. A module that recovers should get its slot
+    // again without anybody driving there, and without this the swap is permanent.
+    swappedBack.set(id, { id, type: rec.type });
+    health.forget(id);
+    destroyRec(rec);
+    host.innerHTML = '';
+    const fresh = watchRec(await mountInstance({ id, type: toType }, host));
+    if (stageRec?.id === id) stageRec = fresh;
+    else {
+      const at = slotRecs.findIndex((r) => r.id === id);
+      if (at >= 0) slotRecs[at] = fresh;
+    }
+    return true;
+  }
+
+  async function recoveryStep() {
+    const cfg = recoveryCfg();
+    if (!cfg.on) return null;                    // the whole feature, in one line
+
+    const faults = health.faults();
+    if (!faults.length) {
+      // Recovered. Forget the per-fault history so the cheap rungs are available again if it
+      // comes back - the windows survive, which is what stops a returning fault rebooting
+      // the screen every twenty minutes.
+      if (currentFault) { recoveryHistory = cleared(recoveryHistory); currentFault = null; }
+      return null;
+    }
+    const f = faults[0];
+    if (currentFault !== f.module) { currentFault = f.module; }
+
+    const decision = nextAction(
+      { module: f.module, since: f.since, kind: f.kind },
+      recoveryHistory,
+      {
+        now: recoveryNow(),
+        hour: new Date(recoveryNow()).getHours(),
+        inUse: screenInUse(),
+        // A fallback is only offered for a panel that is genuinely broken. "Nothing to show"
+        // is a setup state with a human repair, and swapping her photos away because nobody
+        // has connected a source yet would hide the very thing somebody needs to see.
+        fallback: f.kind === 'empty' ? null : fallbackFor(f.type),
+        canReboot: !!rebootDevice,
+        urgency: f.kind === 'errored' ? 'normal' : 'quiet',
+      },
+      cfg,
+    );
+
+    const done = (extra = {}) => {
+      onRecovery?.({ ...decision, fault: f, ...extra });
+      return { ...decision, fault: f, ...extra };
+    };
+
+    if (decision.action === 'remount') {
+      const ok = await remountPanel(f.module);
+      recoveryHistory = applied(recoveryHistory, 'remount', recoveryNow());
+      return done({ performed: ok });
+    }
+    if (decision.action === 'reload') {
+      recoveryHistory = applied(recoveryHistory, 'reload', recoveryNow());
+      const out = done({ performed: true });
+      reloadPage();
+      return out;
+    }
+    if (decision.action === 'swap') {
+      const ok = await swapPanel(f.module, decision.to);
+      recoveryHistory = applied(recoveryHistory, 'swap', recoveryNow());
+      return done({ performed: ok });
+    }
+    if (decision.action === 'reboot') {
+      recoveryHistory = applied(recoveryHistory, 'reboot', recoveryNow());
+      const out = done({ performed: true });
+      try { rebootDevice?.(decision); } catch { /* a helper that is not there is not a crash */ }
+      return out;
+    }
+    if (decision.action === 'notify') {
+      recoveryHistory = applied(recoveryHistory, 'notify', recoveryNow());
+      return done({ performed: true });
+    }
+    return done({ performed: false });     // wait / hold / done - nothing to do yet
+  }
+
+  if (recoveryTick > 0) {
+    recoveryTimer = setInterval(() => { recoveryStep().catch(() => {}); }, recoveryTick);
+  }
+
   // auto-hide the control bar
   let hideT = null;
   function poke() { controlsEl.classList.remove('hidden'); clearTimeout(hideT); hideT = setTimeout(() => controlsEl.classList.add('hidden'), 3000); }
@@ -564,7 +737,12 @@ export async function mountKiosk(root, {
     slotTypes: () => slotRecs.map((r) => r.type),
     hasCamera: () => !!cameraRec,
     hasClock: () => !!clockRec,
-    primaryType: () => stageDefs[primary]?.type ?? null,
+    // WHAT IS ACTUALLY MOUNTED, not what was intended. Those were the same thing until the
+    // recovery swap arrived; reporting the DEF after a panel had been replaced meant this
+    // said "photos" while the screen showed a clock, which is precisely the class of quiet
+    // lie the rest of this project keeps rooting out. `stageDefs` is the plan, `stageRec` is
+    // the truth, and a caller asking what is on the stage wants the truth.
+    primaryType: () => stageRec?.type ?? stageDefs[primary]?.type ?? null,
     // The focused panel's own saved settings. Exposed so a test can assert WHAT LANDED in
     // storage rather than what the menu says it stored - a row can read "8 seconds" while
     // holding the string "8", and the difference only shows up much later, when somebody
@@ -575,6 +753,21 @@ export async function mountKiosk(root, {
     showPrimary,
     menu,
     runtime,
+    // The recovery machinery, exposed so a test can drive it a step at a time rather than
+    // waiting on a timer, and so a diagnostic page can show what it currently thinks.
+    health,
+    recovery: {
+      step: recoveryStep,
+      faults: () => health.faults(),
+      history: () => ({ ...recoveryHistory }),
+      enabled: () => recoveryCfg().on,
+      inUse: screenInUse,
+      fallbackFor,
+      // Whether the reboot rung exists on THIS device. No browser on any platform can restart
+      // the host OS, so it is false unless a Nimrod appliance supplied a local helper - and
+      // the ladder skips the rung rather than waiting on something that can never happen.
+      canReboot: () => !!rebootDevice,
+    },
     restart: () => ({ ...restart }),
     drive: () => drive,
     next: nextInPrimary,
@@ -584,6 +777,8 @@ export async function mountKiosk(root, {
       window.removeEventListener('keydown', onKey);
       root.removeEventListener('mousemove', poke);
       clearTimeout(hideT);
+      clearInterval(recoveryTimer);
+      health.destroy();
       destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec);
       while (slotRecs.length) destroyRec(slotRecs.pop());
       settings.destroy();
