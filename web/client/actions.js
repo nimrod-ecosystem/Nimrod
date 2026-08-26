@@ -116,6 +116,9 @@ export const MODULE_VERBS = {
   sprint:        { select: { topic: 'sprint/control', payload: 'toggle' },
                    next:   { topic: 'sprint/control', payload: 'start' },
                    back:   { topic: 'sprint/control', payload: 'pause' } },
+  // The pond answers a switch, which is the whole reason it was worth porting: cursor and
+  // click meant somebody who cannot reach could only ever watch it.
+  pond:          { select: 'pond/splash', next: 'pond/stir' },
   counter:       { select: { topic: 'counter/delta', payload: 1 },
                    up:     { topic: 'counter/delta', payload: 1 },
                    down:   { topic: 'counter/delta', payload: -1 } },

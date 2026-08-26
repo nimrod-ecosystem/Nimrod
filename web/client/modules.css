@@ -382,3 +382,14 @@
     margin:0 0 6px}
 }
 
+
+/* The pond fills whatever box it is given and clips its own canvas. `position:absolute`
+ * inside a relative mount is what lets it size to a slot without measuring anything. */
+/* RELATIVE, not absolute. `inset:0` would escape to the nearest POSITIONED ancestor, and
+ * a module cannot know whether the host gave it one - the harness does, a grid slot may
+ * not. Filling the mount and positioning the canvas inside works either way.
+ * The min-height is the "mounted somewhere with no height yet" case: a zero-height canvas
+ * renders nothing and looks exactly like a broken module. */
+.pond { position: relative; width: 100%; height: 100%; min-height: 120px;
+        overflow: hidden; border-radius: inherit; }
+.pond canvas { position: absolute; inset: 0; display: block; }

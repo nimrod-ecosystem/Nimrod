@@ -93,7 +93,18 @@ export function mountInputRuntime({
   let state = stateHandle;
   let record = normalizeRecord(null, fallback);
 
-  const input = createInputBus({ bus, actions, onActivation });
+  // A SHORT RING OF WHAT THE BUS DECIDED. The input bus already knows why every press was
+  // accepted or refused; without somewhere to keep it, that knowledge exists only for the
+  // instant it happens and only on a machine somebody is looking at. Twenty is enough to
+  // answer "why did nothing happen just now" and small enough to never be a memory concern.
+  const activity = [];
+  const remember = (rec) => {
+    activity.push(rec);
+    if (activity.length > 20) activity.shift();
+    try { onActivation?.(rec); } catch (err) { console.error('activation sink threw', err); }
+  };
+
+  const input = createInputBus({ bus, actions, onActivation: remember });
   const router = createVerbRouter({ bus, modules, maps, onChange: onFocus, onUnhandled });
 
   function apply(rec) {
@@ -153,6 +164,7 @@ export function mountInputRuntime({
     load,
     useState,
     record: () => ({ ...record, bindings: record.bindings.map((b) => ({ ...b })) }),
+    recentActivity: () => activity.map((r) => ({ ...r })),
     gate: () => record.gate,
     speaks: () => record.speak,
     destroy() {
