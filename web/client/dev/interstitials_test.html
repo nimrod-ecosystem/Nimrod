@@ -82,7 +82,7 @@ const kindOf = Object.fromEntries(ITEMS.map((i) => [i.speak, i.kind]));
     const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
     const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
     await state.load(); await events.load();
-    state.set({ items: ITEMS, autoPlay: false, selfView: false, intervalSec: 3600 });
+    state.set({ items: ITEMS, autoPlay: false, selfView: false, intervalMs: 3600000 });
     await state.flush();
 
     // injected speak recorder — no audio, and it captures the voice pref passed in

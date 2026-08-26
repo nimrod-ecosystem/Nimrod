@@ -425,6 +425,15 @@ export async function mountKiosk(root, {
         drive = attachDriveToBus(bus, {
           personId: p.person_id,
           user,
+          // THE PERSON'S OWN GATE, READ LIVE. This is the whole of Mike's ruling in one
+          // argument: the restrictions a driver is subject to are the ones set in the
+          // person's section, the same ones the switch in the room is subject to. Read
+          // through a function rather than captured, because the gate is flipped mid-session
+          // - that IS the "work while she is fidgeting" gesture - and a captured value would
+          // be whatever it happened to be when the socket opened.
+          gate: () => runtime?.gate() || 'both',
+          driverId: p.person_id,
+          driverLabel: 'someone helping from another screen',
           onPresence: ({ drivers }) => {
             remoteEl.hidden = !(drivers > 0);
           },
@@ -532,6 +541,11 @@ export async function mountKiosk(root, {
     hasCamera: () => !!cameraRec,
     hasClock: () => !!clockRec,
     primaryType: () => stageDefs[primary]?.type ?? null,
+    // The focused panel's own saved settings. Exposed so a test can assert WHAT LANDED in
+    // storage rather than what the menu says it stored - a row can read "8 seconds" while
+    // holding the string "8", and the difference only shows up much later, when somebody
+    // tries to compare or group settings across panels.
+    stageState: () => ({ ...(stageRec?.state.get() || {}) }),
     mirrorFull: () => mirrorFull,
     layout: () => ({ mirrorSize: kioskEl.dataset.mirrorSize, mirrorCorner: kioskEl.dataset.mirrorCorner, clockCorner: kioskEl.dataset.clockCorner }),
     showPrimary,

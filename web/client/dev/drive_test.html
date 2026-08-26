@@ -28,6 +28,9 @@ import { mountRemote, statusLine, PANEL_ORDER } from '../remote.js';
 import { createBus } from '../bus.js';
 import { createProfilesClient } from '../profile.js';
 import { verbTopic } from '../actions.js';
+import { senderOf } from '../sender.js';
+import { ACTIVATION_TOPIC } from '../input.js';
+import { explainActivation } from '../controls_view.js';
 
 const USER = 'drive-test-' + Math.floor(Math.random() * 1e9);
 const out = document.getElementById('results');
@@ -165,6 +168,92 @@ section('receiving — a verb on the wire is a verb on this screen’s bus');
   s.raw('null');
   check('a topic, an unknown verb, an unknown type and garbage all publish NOTHING',
     got.join(',') === 'next,menu', got.join(','));
+  link.close();
+}
+
+// =====================================================================
+section('THE GATE SEES A DRIVER NOW — Mike: the only restrictions are the person’s');
+
+{
+  // Before this, a remote verb went straight onto the bus, DOWNSTREAM of input.js - so the
+  // three-way gate governed every switch in the room and had no opinion at all about
+  // somebody driving from another house. Two rule-sets, one of them invisible.
+  sockets.length = 0;
+  const bus = createBus();
+  const got = [];
+  const log = [];
+  bus.subscribe(verbTopic('next'), (p, t, meta) => got.push(senderOf(meta)));
+  bus.subscribe(ACTIVATION_TOPIC, (rec) => log.push(rec));
+
+  let gate = 'both';
+  const link = attachDriveToBus(bus, {
+    personId: 'p1', fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+    gate: () => gate,
+    driverId: 'ot@example.com', driverLabel: 'Sam',
+  });
+  await sleep(0);
+  const s = sockets[0];
+  s.open();
+
+  s.deliver({ type: 'verb', verb: 'next' });
+  check('an OPEN gate lets a driver through, exactly as before', got.length === 1);
+  check('and the verb now NAMES who sent it',
+    got[0].kind === 'remote' && got[0].id === 'ot@example.com', JSON.stringify(got[0]));
+  check('MIKE’S DEFAULT: a grant confers moderator unless told otherwise',
+    got[0].role === 'moderator', got[0].role);
+
+  // The "take the cursor" gesture, from the other side: the gate closes to moderators.
+  gate = 'moderator';
+  s.deliver({ type: 'verb', verb: 'next' });
+  check('a moderator gate still lets the driver act', got.length === 2);
+
+  // And the case that matters: the gate is set to participant-only, so the moderator
+  // driving from another house is held off by the SAME rule a switch is held off by.
+  gate = 'participant';
+  s.deliver({ type: 'verb', verb: 'next' });
+  check('A PARTICIPANT-ONLY GATE REFUSES THE DRIVER — one rule, applied to everyone',
+    got.length === 2, `${got.length}`);
+
+  // A REFUSAL THAT VANISHES SILENTLY IS THE WORST OUTCOME. A driver whose presses stop
+  // arriving concludes the network is broken and debugs entirely the wrong thing.
+  const refusals = log.filter((r) => !r.accepted);
+  check('the refusal is RECORDED, in the same log a refused switch lands in',
+    refusals.length === 1, `${log.length} records, ${refusals.length} refusals`);
+  check('and it says the gate refused it, not something vague',
+    refusals[0]?.reason === 'role-gated', refusals[0]?.reason);
+  check('it carries the gate that did the refusing, which IS the repair',
+    refusals[0]?.gate === 'participant', refusals[0]?.gate);
+  check('it is marked as coming from a remote device, not from a switch in the room',
+    refusals[0]?.device === 'remote');
+
+  const line = explainActivation(refusals[0]);
+  check('"why nothing happened" names the person and the gate in one sentence',
+    line.text.includes('Sam') && line.text.includes('participant'), line.text);
+  check('and it does NOT talk about bindings — there is no binding, and sending somebody '
+    + 'to hunt for a switch fault is the wrong repair', !line.text.includes('bound'), line.text);
+
+  gate = 'both';
+  s.deliver({ type: 'verb', verb: 'next' });
+  check('reopening the gate lets the driver straight back in — the lock is not sticky',
+    got.length === 3);
+  link.close();
+}
+
+{
+  // BACKWARD COMPATIBILITY, and it is the one that must not break: a host that has not
+  // wired a gate at all behaves exactly as it did before senders existed.
+  sockets.length = 0;
+  const bus = createBus();
+  let n = 0;
+  bus.subscribe(verbTopic('next'), () => { n += 1; });
+  const link = attachDriveToBus(bus, {
+    personId: 'p1', fetchImpl: fakeFetch(), SocketImpl: FakeSocket,
+  });
+  await sleep(0);
+  sockets[0].open();
+  sockets[0].deliver({ type: 'verb', verb: 'next' });
+  check('no gate wired means OPEN, never closed — a screen must not go dead because a host '
+    + 'has not been updated yet', n === 1);
   link.close();
 }
 {

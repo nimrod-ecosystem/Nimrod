@@ -23,6 +23,7 @@
 // module registers once and remembers.
 
 import { registerModule } from '../module.js';
+import { normalizeField, fieldValue } from '../settings_fields.js';
 import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
 import { pick, statsFromEvents } from '../rng.js';
 
@@ -32,13 +33,20 @@ import { pick, statsFromEvents } from '../rng.js';
 // Christine seeing her people, cropping their heads off is not a rendering preference.
 // The letterboxing `contain` would otherwise leave is filled by a blurred copy of the
 // same image (see `render`), so nothing is cropped AND nothing is a black bar.
-const DEFAULTS = { sourceId: '', album: '', intervalSec: 8, fit: 'contain' };
+const DEFAULTS = { sourceId: '', album: '', intervalMs: 8000, fit: 'contain' };
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
 // WHAT THE SETTINGS MENU SHOWS.
 //
-// `intervalSec` IS A CHOICE, NOT A NUMBER, and the reason is presses. With one switch you
+// `intervalMs` IS STORED IN MILLISECONDS and shown in seconds - the house rule for every
+// duration in the product (see settings_fields.js). It used to be `intervalSec`, and the KEY
+// changed rather than the meaning of the old one: an un-migrated `8` under a key that now
+// means milliseconds would advance the slideshow a hundred and twenty five times a second.
+// `legacy` below is the whole migration - old values are read, scaled and shown correctly,
+// and the next thing written is the new key.
+//
+// `intervalMs` IS A CHOICE, NOT A NUMBER, and the reason is presses. With one switch you
 // walk a control one press at a time and can only travel one way, so the number of stops IS
 // the cost of using it: the legal range 2-60 in ones is fifty-eight presses to get back
 // where you started, and even a sensible 4-40 in fours is ten. The five values anybody
@@ -52,14 +60,15 @@ const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 
 // picks one of four hundred albums one press at a time, and a fake affordance is worse than
 // an absent one.
 const SETTINGS = [
-  { key: 'intervalSec', label: 'Change photo every', kind: 'choice', default: 8,
+  { key: 'intervalMs', label: 'Change photo every', kind: 'choice', default: 8000,
     level: 'essential',
+    legacy: { key: 'intervalSec', scale: 1000 },
     options: [
-      { value: 4, label: '4 seconds' },
-      { value: 8, label: '8 seconds' },
-      { value: 15, label: '15 seconds' },
-      { value: 30, label: '30 seconds' },
-      { value: 60, label: '60 seconds' },
+      { value: 4000, label: '4 seconds' },
+      { value: 8000, label: '8 seconds' },
+      { value: 15000, label: '15 seconds' },
+      { value: 30000, label: '30 seconds' },
+      { value: 60000, label: '60 seconds' },
     ] },
   { key: 'fit', label: 'How photos fit', kind: 'choice', default: 'contain', level: 'essential',
     options: [
@@ -71,6 +80,16 @@ const SETTINGS = [
   { key: 'album', label: 'Album', kind: 'text', default: '', level: 'standard',
     placeholder: 'Everything', note: 'set in Media / Sources' },
 ];
+
+// THE DECLARATION IS THE TYPE, and this is the one place that decides it. `intervalSec` is
+// a number; `fit` is a string; a checkbox is a boolean. A DOM control cannot know that - a
+// <select> hands back `"15"` whatever it was given - so anything this module writes goes
+// through the same canonicaliser the settings menu uses, and the two surfaces cannot disagree
+// about what a value IS.
+const FIELDS = Object.fromEntries(
+  SETTINGS.map(normalizeField).filter(Boolean).map((f) => [f.key, f]),
+);
+const canonical = (key, raw) => (FIELDS[key] ? fieldValue(FIELDS[key], { [key]: raw }) : raw);
 
 registerModule(
   { type: 'photos', title: 'Photos', description: 'slideshow over your own media (BYO storage)',
@@ -125,8 +144,11 @@ registerModule(
     function scheduleAdvance(item) {
       clearAdvance();
       if (item.kind === 'video') return;   // videos advance on 'ended' (bound in render)
-      const secs = Math.max(2, Number(cfg.intervalSec) || DEFAULTS.intervalSec);
-      advanceTimer = setTimeout(() => bus.publish('photos/next'), secs * 1000);
+      // A FLOOR, not a clamp to the declared options: a value from before the migration, or
+      // from a group-apply that has not been validated yet, must not turn the slideshow into
+      // a strobe in front of somebody with a brain injury.
+      const ms = Math.max(2000, Number(cfg.intervalMs) || DEFAULTS.intervalMs);
+      advanceTimer = setTimeout(() => bus.publish('photos/next'), ms);
     }
 
     function render(item) {
@@ -285,10 +307,10 @@ registerModule(
                      different options for one setting is the drift the declared-settings
                      slice exists to remove, and it shows up as a gear dropdown that goes
                      blank whenever somebody picks 60 in the menu. -->
-                <select data-opt="intervalSec">
-                  <option value="4">4s</option><option value="8">8s</option>
-                  <option value="15">15s</option><option value="30">30s</option>
-                  <option value="60">60s</option>
+                <select data-opt="intervalMs">
+                  <option value="4000">4s</option><option value="8000">8s</option>
+                  <option value="15000">15s</option><option value="30000">30s</option>
+                  <option value="60000">60s</option>
                 </select>
               </label>
               <label>fit
@@ -315,7 +337,11 @@ registerModule(
         mount.querySelectorAll('[data-opt]').forEach((el) => {
           el.addEventListener('change', () => {
             const key = el.dataset.opt;
-            state.set({ [key]: el.type === 'checkbox' ? el.checked : el.value });
+            // WRITE THE DECLARED TYPE, NOT THE DOM'S. This control wrote `intervalSec` as the
+            // string "15" for as long as photos has existed, which meant storage held one type
+            // and the declaration another - and a setting that cannot be compared cannot be
+            // applied to a GROUP of panels at once, which is where this was heading.
+            state.set({ [key]: canonical(key, el.type === 'checkbox' ? el.checked : el.value) });
           });
         });
 
@@ -325,7 +351,12 @@ registerModule(
         // config: adopt saved settings; reload the listing only when the source ref
         // (sourceId/album) changes — interval/fit are applied without a reload.
         state.subscribe((s) => {
+          // READ EVERY DECLARED FIELD THROUGH ITS DECLARATION. That is what applies the
+          // seconds-to-milliseconds migration, the type coercion and the option matching in
+          // one line - and it is what guarantees the module and the settings menu are looking
+          // at the same number rather than two readings of the same storage.
           cfg = { ...DEFAULTS, ...s };
+          for (const f of Object.values(FIELDS)) cfg[f.key] = fieldValue(f, s || {});
           syncControls();
           const ref = `${cfg.sourceId}|${cfg.album}`;
           if (ref !== lastSourceRef) { lastSourceRef = ref; reload(); }

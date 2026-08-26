@@ -32,7 +32,7 @@ tested end to end — so the resolver gets hammered alone and the wiring gets te
 <script type="module">
 import { createNav, buildItems, mountSettings, MENU_TOPIC } from '../settings.js';
 import { normalizeField, fieldValue, stepValue, displayValue, showsAtLevel,
-         fieldItems, fieldsFor, LEVELS } from '../settings_fields.js';
+         fieldItems, fieldsFor, readWithLegacy, LEVELS } from '../settings_fields.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
 import { verbTopic } from '../actions.js';
@@ -429,6 +429,75 @@ section('fieldValue — what is IN FORCE, which is not always what is stored');
     stepValue(secs, 99) === 4);
   check('a numeric option displays its label',
     displayValue(secs, fieldValue(secs, { intervalSec: '8' })) === '8 seconds');
+}
+
+// =====================================================================
+section('legacy — the seconds-to-milliseconds migration, declared rather than scripted');
+
+{
+  // THE FIELD AS IT NOW SHIPS. Storage is milliseconds, the row reads seconds, and the key
+  // changed rather than the meaning of the old one.
+  const interval = normalizeField({
+    key: 'intervalMs', kind: 'choice', default: 8000,
+    legacy: { key: 'intervalSec', scale: 1000 },
+    options: [{ value: 4000, label: '4 seconds' }, { value: 8000, label: '8 seconds' },
+              { value: 15000, label: '15 seconds' }],
+  });
+
+  check('a value saved under the OLD key is read and scaled',
+    fieldValue(interval, { intervalSec: 15 }) === 15000,
+    JSON.stringify(fieldValue(interval, { intervalSec: 15 })));
+  check('…and it matches a declared option, so the row reads properly rather than "not one '
+    + 'of the choices"', displayValue(interval, fieldValue(interval, { intervalSec: 15 }))
+      === '15 seconds');
+  check('the old key stored as a STRING migrates too — that is exactly the data that is out '
+    + 'there', fieldValue(interval, { intervalSec: '15' }) === 15000);
+
+  check('THE NEW KEY WINS when both are present, so a migrated screen never regresses to the '
+    + 'value it was migrated from',
+    fieldValue(interval, { intervalMs: 4000, intervalSec: 60 }) === 4000);
+  check('neither key present falls back to the default',
+    fieldValue(interval, {}) === 8000);
+
+  // THE FAILURE THE KEY RENAME EXISTS TO PREVENT, stated as a test so nobody undoes it: if
+  // the old key had simply been REINTERPRETED, a stored 8 would now mean eight milliseconds -
+  // a slideshow advancing a hundred and twenty five times a second in front of somebody with
+  // a brain injury. Because the key changed, an un-migrated value is either scaled correctly
+  // or reads as absent. It is never silently absurd.
+  const noLegacy = normalizeField({ key: 'intervalMs', kind: 'choice', default: 8000,
+    options: [{ value: 8000, label: '8 seconds' }] });
+  check('WITHOUT a legacy declaration the old key is ignored entirely — absent, never '
+    + 'reinterpreted', fieldValue(noLegacy, { intervalSec: 8 }) === 8000);
+
+  check('garbage under the old key reads as absent rather than as NaN milliseconds',
+    fieldValue(interval, { intervalSec: 'soon' }) === 8000);
+  check('a legacy with no key is ignored rather than throwing',
+    normalizeField({ key: 'a', legacy: {} }).legacy === null);
+  check('a legacy with no scale defaults to 1 — a rename with no unit change is a real case',
+    normalizeField({ key: 'a', legacy: { key: 'b' } }).legacy.scale === 1);
+  check('a zero scale would erase every migrated value, so it is refused',
+    normalizeField({ key: 'a', legacy: { key: 'b', scale: 0 } }).legacy.scale === 1);
+}
+
+{
+  // readWithLegacy on its own — three modules with no declarations yet call it directly, so
+  // it has to stand up without a field.
+  check('own key wins', readWithLegacy({ a: 1, b: 9 }, 'a', { key: 'b', scale: 1000 }) === 1);
+  check('legacy is scaled', readWithLegacy({ b: 9 }, 'a', { key: 'b', scale: 1000 }) === 9000);
+  check('neither is undefined, not null or zero',
+    readWithLegacy({}, 'a', { key: 'b', scale: 1000 }) === undefined);
+  check('no legacy declared means no fallback', readWithLegacy({ b: 9 }, 'a') === undefined);
+
+  // PRESENCE, NOT TRUTHINESS. A stored 0 is a value somebody chose, and falling back off it
+  // would resurrect a setting they had deliberately turned off.
+  check('a stored ZERO is a real value and does NOT fall through to the legacy key',
+    readWithLegacy({ a: 0, b: 9 }, 'a', { key: 'b', scale: 1000 }) === 0);
+  check('an empty string is a real value too',
+    readWithLegacy({ a: '', b: 9 }, 'a', { key: 'b', scale: 1000 }) === '');
+  check('but null falls through, because null is how an absent value is stored',
+    readWithLegacy({ a: null, b: 9 }, 'a', { key: 'b', scale: 1000 }) === 9000);
+  check('a missing values object is survivable',
+    readWithLegacy(undefined, 'a', { key: 'b', scale: 2 }) === undefined);
 }
 
 // =====================================================================

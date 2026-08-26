@@ -52,6 +52,24 @@
 // they bloat the COMBINATION SPACE, which cannot be tested end to end. So the resolver gets
 // hammered on its own and the wiring gets tested once.
 
+// ---------------------------------------------------------------------------------------
+// THE HOUSE RULE FOR DURATIONS, written where the validator will look for it.
+//
+// EVERY STORED DURATION IS IN MILLISECONDS, and its key ends in `Ms`. The declaration carries
+// the display unit, so a row reads "8 seconds" while storage holds 8000.
+//
+// WHY THE KEY HAS TO CHANGE WHEN THE UNIT DOES, and this is the dangerous part rather than
+// the arithmetic: if `intervalSec` simply started meaning milliseconds, an un-migrated `8`
+// becomes eight MILLISECONDS - a slideshow advancing a hundred and twenty five times a
+// second. Renaming makes the old and new values impossible to confuse, makes the migration
+// detectable, and makes a value nobody migrated read as ABSENT rather than as absurd.
+//
+// WHY IT IS WORTH DOING AT ALL, in Mike's words: *"it honestly would be valuable data to me
+// right now to know what settings someone in Christine's condition might like."* Three "how
+// long between things" settings in two different units cannot be compared, grouped, or set
+// together - so they are not data, they are decoration.
+// ---------------------------------------------------------------------------------------
+
 // Most permissive last. A field shows when its own level is at or below the active one.
 export const LEVELS = ['essential', 'standard', 'advanced'];
 export const KINDS = ['toggle', 'choice', 'number', 'text'];
@@ -67,6 +85,44 @@ function decimalsOf(n) {
   return dot < 0 ? 0 : s.length - dot - 1;
 }
 const round = (n, d) => Number(Math.round(Number(`${n}e${d}`)) + `e-${d}`);
+
+// `legacy: { key, scale }` - the key this setting used to be stored under, and what to
+// multiply the old value by. `{ key: 'intervalSec', scale: 1000 }` is the whole of the
+// seconds-to-milliseconds migration for one field.
+function normalizeLegacy(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const key = typeof raw.key === 'string' ? raw.key.trim() : '';
+  if (!key) return null;
+  const scale = Number(raw.scale);
+  return { key, scale: Number.isFinite(scale) && scale !== 0 ? scale : 1 };
+}
+
+// ---------------------------------------------------------------------------------------
+// readWithLegacy - the raw stored value for a key, falling back to where it used to live.
+//
+// Exported because THREE MODULES STILL HAVE NO DECLARATIONS and need the same fallback. One
+// implementation, two callers, rather than four hand-rolled `?? saved.oldKey * 1000` lines
+// that will disagree with each other within a month.
+//
+// PRESENCE IS WHAT COUNTS, not truthiness. A stored `0` is a real value somebody chose, and
+// falling back off it would resurrect a setting they had turned off.
+// ---------------------------------------------------------------------------------------
+export function readWithLegacy(values, key, legacy = null) {
+  const at = (k) => (values && typeof values === 'object'
+    && Object.prototype.hasOwnProperty.call(values, k)
+    && values[k] !== undefined && values[k] !== null)
+    ? values[k] : undefined;
+
+  const own = at(key);
+  if (own !== undefined) return own;
+  if (!legacy) return undefined;
+  const old = at(legacy.key);
+  if (old === undefined) return undefined;
+  const n = Number(old);
+  // Garbage in the OLD key is not a value worth carrying forward - it reads as absent, so
+  // the default applies, which is the same outcome as never having set it.
+  return Number.isFinite(n) ? n * legacy.scale : undefined;
+}
 
 // Accepts `['a', 'b']` or `[{ value, label }]`, because a module author will write both and
 // being fussy about it buys nothing.
@@ -115,6 +171,11 @@ export function normalizeField(raw = {}) {
     key, label, kind, level,
     default: raw.default,
     note: raw.note ? String(raw.note) : null,
+    // WHERE THIS VALUE USED TO LIVE. A declaration rather than code, so the next unit change
+    // is a line in a manifest instead of a migration script somebody has to remember to run
+    // - and so the module, the settings menu and anything that later groups settings across
+    // panels all read the migrated value through ONE function.
+    legacy: normalizeLegacy(raw.legacy),
     cycleable: false,
     why: null,
   };
@@ -175,12 +236,11 @@ export function normalizeField(raw = {}) {
 // ---------------------------------------------------------------------------------------
 export function fieldValue(field, values = {}) {
   if (!field) return undefined;
-  const has = values && typeof values === 'object'
-    && Object.prototype.hasOwnProperty.call(values, field.key);
-  let raw = has ? values[field.key] : undefined;
-  // Absent, null and undefined inherit the default. AN EMPTY STRING DOES NOT — `sourceId: ''`
-  // is a real saved value meaning "no source chosen", and overwriting it with a default would
-  // undo somebody's clearing of it.
+  // Own key first, then wherever this setting used to live, then the default. Absent, null
+  // and undefined inherit the default. AN EMPTY STRING DOES NOT — `sourceId: ''` is a real
+  // saved value meaning "no source chosen", and overwriting it with a default would undo
+  // somebody's clearing of it.
+  let raw = readWithLegacy(values, field.key, field.legacy);
   if (raw === undefined || raw === null) raw = field.default;
 
   if (field.kind === 'toggle') {

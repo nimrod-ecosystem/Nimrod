@@ -45,9 +45,18 @@
 // Timers and the clock are injectable so the whole file is testable against a fake clock.
 
 import { ROLE_CYCLE_ACTION, ROLE_CYCLE_TOPIC } from './actions.js';
+import { gatePermits, senderMeta, ROLES, GATES } from './sender.js';
 
-export const ROLES = ['moderator', 'participant', 'universal'];  // what a binding IS
-export const GATES = ['both', 'moderator', 'participant'];       // who may act right now
+// IMPORTED, then re-exported. `sender.js` owns these because the pure gate rule needs them
+// and this file needs the pure gate rule; declaring them here made the two files import each
+// other. Everything that already said `import { ROLES, GATES } from './input.js'` keeps
+// working, which is the point of re-exporting rather than moving the import sites.
+//
+// A bare `export { ROLES, GATES } from './sender.js'` was the first attempt and it is a real
+// trap: a re-export creates NO LOCAL BINDING, so this file re-exported names it could not
+// itself see, and `GATES.includes(gate)` twenty lines down threw at construction. Caught by
+// a test that built an input bus, which is the only reason it was not a blank screen.
+export { ROLES, GATES };
 export const EDGES = ['press', 'release'];
 
 // The closed set of reasons an activation was thrown away. Closed on purpose: the
@@ -156,11 +165,14 @@ export function createInputBus({
   // The gate control is exempt from the gate. Binding role-cycle as `participant` and then
   // switching to moderator-only would otherwise strand the gate with no way back - a
   // caregiver locked out of their own lock is worse than no lock at all.
+  // THE RULE MOVED, THE BEHAVIOUR DID NOT. `gatePermits` in sender.js is this function with
+  // its arguments made explicit, and the reason to extract it is Mike's: "the only
+  // restrictions are what's set in the person's section." One place to set them has to mean
+  // ONE RULE, and a rule that lives inside a closure here cannot also judge a driver arriving
+  // over a socket. Both paths now call the same function, and it is testable without
+  // building an input bus.
   function permitted(b) {
-    if (b.actionId === ROLE_CYCLE_ACTION) return true;
-    if (b.role === 'universal') return true;
-    if (currentGate === 'both') return true;
-    return b.role === currentGate;
+    return gatePermits(currentGate, b.role, { exempt: b.actionId === ROLE_CYCLE_ACTION });
   }
 
   function setGate(g) {
@@ -218,7 +230,18 @@ export function createInputBus({
     }
 
     lastFire.set(b.id, at);
-    bus.publish(action.topic, b.payload !== undefined ? b.payload : action.payload);
+    // WHO PRESSED IT, travelling with what happened. A control in the room is a `local`
+    // sender carrying the BINDING's role, so a module - or a second cursor, later - can tell
+    // this apart from the same verb arriving over a wire. Every module ignores it today,
+    // which is the point: it costs them nothing.
+    bus.publish(
+      action.topic,
+      b.payload !== undefined ? b.payload : action.payload,
+      // The label is the RAW control id, deliberately. Making it human is controls_view's
+      // job (it already owns `controlLabel`), and importing that here would point a lower
+      // layer at a higher one for the sake of a prettier string nobody reads at this depth.
+      senderMeta({ kind: 'local', id: `${device}:${control}`, role: b.role }),
+    );
     return report({ ...base, accepted: true });
   }
 

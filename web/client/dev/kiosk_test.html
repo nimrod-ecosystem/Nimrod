@@ -235,9 +235,10 @@ const ds = () => root.querySelector('.kiosk').dataset;
       const rows = kiosk.menu.items().filter((i) => i.kind === 'item');
       const byId = Object.fromEntries(rows.map((r) => [r.id, r]));
       check('the photos panel contributes its declared settings',
-        !!byId['set:intervalSec'] && !!byId['set:fit'], rows.map((r) => r.id).join(','));
-      check('a field row shows its CURRENT value, not just its name',
-        byId['set:intervalSec'].hint === '8 seconds', byId['set:intervalSec'].hint);
+        !!byId['set:intervalMs'] && !!byId['set:fit'], rows.map((r) => r.id).join(','));
+      check('a field row STORES milliseconds and SHOWS seconds — the house rule for every '
+        + 'duration, so one number is comparable and the other is readable',
+        byId['set:intervalMs'].hint === '8 seconds', byId['set:intervalMs'].hint);
       check('a choice row shows the LABEL, never the raw enum key',
         byId['set:fit'].hint === 'Show the whole photo', byId['set:fit'].hint);
 
@@ -255,7 +256,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
       const stops = new Set();
       for (let i = 0; i < 14; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
       check('the cycleable field rows are stops on the one-button walk',
-        stops.has('set:intervalSec') && stops.has('set:fit'), [...stops].join(','));
+        stops.has('set:intervalMs') && stops.has('set:fit'), [...stops].join(','));
       check('the disabled ones are NOT stops',
         !stops.has('set:album') && !stops.has('set:sourceId'), [...stops].join(','));
       check('and Home is still reachable from that same walk — the way out is never hidden',
@@ -277,17 +278,36 @@ const ds = () => root.querySelector('.kiosk').dataset;
       // its end strands anybody who can only travel one way; a control with too many stops
       // is a punishment rather than a control. The slideshow interval is five known-good
       // values, so a full lap is five presses.
-      while (kiosk.menu.focusId() !== 'set:intervalSec') kiosk.menu.next();
+      while (kiosk.menu.focusId() !== 'set:intervalMs') kiosk.menu.next();
       const walk = [];
       for (let i = 0; i < 5; i += 1) {
         kiosk.menu.select();
-        walk.push(kiosk.menu.items().find((i2) => i2.id === 'set:intervalSec').hint);
+        walk.push(kiosk.menu.items().find((i2) => i2.id === 'set:intervalMs').hint);
       }
       check('one lap of the interval is FIVE presses and every value is on it',
         walk.join(',') === '15 seconds,30 seconds,60 seconds,4 seconds,8 seconds',
         walk.join(' | '));
       check('and it comes home, so nobody is stranded past the end',
         walk[walk.length - 1] === '8 seconds', walk.join(' | '));
+
+      // WHAT TYPE ACTUALLY LANDED IN STORAGE. A menu that displays "8 seconds" while storing
+      // the string "8" is a menu that looks right and cannot be compared - and comparing is
+      // the whole point the day somebody wants to set the interval on a GROUP of panels at
+      // once, or ask "which screens are non-default here". The declaration says number, so
+      // the stored value is a number.
+      const stored = kiosk.stageState();
+      check('the value written by the menu is the DECLARED type, not the DOM\u2019s',
+        typeof stored.intervalMs === 'number',
+        `${typeof stored.intervalMs} ${JSON.stringify(stored.intervalMs)}`);
+      check('STORAGE IS MILLISECONDS while the row said "8 seconds" — the whole point of the '
+        + 'unit rule in one assertion', stored.intervalMs === 8000,
+        JSON.stringify(stored.intervalMs));
+      check('and the OLD key is not being written any more — one release from now its read '
+        + 'goes away, and anything still holding it falls back to the default rather than to '
+        + 'a wrong number', stored.intervalSec === undefined,
+        JSON.stringify(stored.intervalSec));
+      check('a string-valued choice is still a string - the declaration decides, not a rule '
+        + 'about numbers', typeof stored.fit === 'string', typeof stored.fit);
     }
     await press('Escape');
 
