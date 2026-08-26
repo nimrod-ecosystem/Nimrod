@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>sender — who pressed it — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>sender — who pressed it (the gate, and the wire that carries a name)</h1>
+<p>No server, no socket. The gate rule is asserted <b>pure</b> — it used to be a closure
+inside <code>input.js</code> and could only be tested by building an input bus, which is
+exactly why it could not also judge a remote driver. The rest drives the <i>real</i> bus and
+the <i>real</i> router, because &ldquo;the meta survives the trip&rdquo; is a claim about
+plumbing and plumbing has to be walked, not inspected.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  normalizeSender, senderMeta, senderOf, gatePermits, describeSender,
+  SENDER_KINDS, ROLES, GATES, UNKNOWN_SENDER, DEFAULT_REMOTE_ROLE,
+} from '../sender.js';
+import { createBus } from '../bus.js';
+import { createVerbRouter } from '../input_router.js';
+import { createInputBus, ACTIVATION_TOPIC } from '../input.js';
+import { verbTopic, createActionRegistry } from '../actions.js';
+import { explainActivation } from '../controls_view.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// =====================================================================
+section('gatePermits — the rule both a switch and a driver are judged by');
+
+{
+  // The three rules, in order, and every combination of gate x role. This is the whole
+  // security-adjacent surface of the feature, and it is nine cases, so all nine are here
+  // rather than a representative sample.
+  const table = [];
+  for (const g of GATES) for (const r of ROLES) table.push([g, r, gatePermits(g, r)]);
+  const show = table.map(([g, r, v]) => `${g}/${r}=${v ? 'y' : 'n'}`).join(' ');
+
+  check('an OPEN gate permits every role', GATES.includes('both')
+    && ROLES.every((r) => gatePermits('both', r)), show);
+  check('a moderator gate permits a moderator', gatePermits('moderator', 'moderator'));
+  check('a moderator gate REFUSES a participant', gatePermits('moderator', 'participant') === false);
+  check('a participant gate REFUSES a moderator', gatePermits('participant', 'moderator') === false);
+  check('a participant gate permits a participant', gatePermits('participant', 'participant'));
+  check('UNIVERSAL is allowed through every gate — it is nobody’s in particular',
+    GATES.every((g) => gatePermits(g, 'universal')), show);
+
+  // The trap the exemption exists for: bind the gate control as `participant`, close the
+  // gate to moderators, and without the exemption the control that would reopen it is on
+  // the wrong side of the door.
+  check('the gate control itself is NEVER gated, or the lock becomes a trap',
+    gatePermits('moderator', 'participant', { exempt: true }) === true);
+  check('and the exemption is the only thing that changes that answer',
+    gatePermits('moderator', 'participant', { exempt: false }) === false);
+
+  // Fail OPEN on nonsense, not closed. This governs whether a switch works; a typo in a
+  // saved gate value must not be able to make a screen unusable.
+  check('an unknown gate is treated as OPEN — a bad value must not lock somebody out',
+    gatePermits('wat', 'participant') === true);
+  check('so is a missing one', gatePermits(undefined, 'moderator') === true);
+  check('an unknown ROLE is still judged against the gate, not waved through',
+    gatePermits('moderator', 'nonsense') === false);
+}
+
+// =====================================================================
+section('normalizeSender — never throws, and the default is "the way it always was"');
+
+{
+  check('nothing at all reads as the unknown local sender',
+    normalizeSender(null).kind === 'local' && normalizeSender(null).role === 'universal');
+  check('and so does a non-object', normalizeSender('driver').role === 'universal');
+  check('THE DEFAULT IS UNIVERSAL ON PURPOSE — every verb published before senders existed '
+    + 'came from the room, and a default that failed the gate would break every screen at once',
+    gatePermits('moderator', normalizeSender(undefined).role) === true);
+
+  const local = normalizeSender({ kind: 'local', id: 'key:arrowdown', role: 'participant' });
+  check('a local sender keeps its id and role', local.id === 'key:arrowdown' && local.role === 'participant');
+  check('the label falls back to the id rather than being blank', local.label === 'key:arrowdown');
+
+  const remote = normalizeSender({ kind: 'remote', id: 'ot@example.com' });
+  check('A REMOTE SENDER WITH NO ROLE DEFAULTS TO MODERATOR — Mike’s call: a grant confers '
+    + 'moderator unless the person’s own settings say otherwise',
+    remote.role === DEFAULT_REMOTE_ROLE && remote.role === 'moderator');
+  check('a local sender with no role does NOT default to moderator',
+    normalizeSender({ kind: 'local', id: 'x' }).role === 'universal');
+  check('a declared role beats the default',
+    normalizeSender({ kind: 'remote', id: 'x', role: 'participant' }).role === 'participant');
+  check('an unknown role falls back rather than travelling as-is',
+    ROLES.includes(normalizeSender({ kind: 'remote', role: 'admin' }).role));
+  check('an unknown kind falls back to local',
+    normalizeSender({ kind: 'satellite' }).kind === 'local');
+  check('a numeric id is stringified rather than travelling as a number',
+    normalizeSender({ id: 7 }).id === '7');
+  check('system is a real kind — "nobody pressed this" is an answer',
+    SENDER_KINDS.includes('system') && normalizeSender({ kind: 'system' }).kind === 'system');
+  check('the shipped default is frozen, so nothing can mutate everyone else’s fallback',
+    Object.isFrozen(UNKNOWN_SENDER));
+  const a = normalizeSender(null); a.role = 'moderator';
+  check('and each caller gets its own copy', normalizeSender(null).role === 'universal');
+}
+
+// =====================================================================
+section('senderMeta / senderOf — the round trip, and what a module written before this sees');
+
+{
+  const meta = senderMeta({ kind: 'remote', id: 'ot@example.com', label: 'Sam' });
+  check('meta puts the sender under `from`, not at the top level', !!meta.from && !meta.kind);
+  check('and it round-trips', senderOf(meta).id === 'ot@example.com');
+  check('reading meta that is not there gives the unknown local sender, so an old module '
+    + 'behaves exactly as it did', senderOf(undefined).kind === 'local');
+  check('and so does garbage', senderOf('nope').role === 'universal');
+  check('a describe names a remote person, because "the gate refused it" and "the gate '
+    + 'refused Sam" are different sentences',
+    describeSender(meta.from).includes('Sam'), describeSender(meta.from));
+  check('the system sender is named as the software, never as a person',
+    describeSender({ kind: 'system' }) === 'the software itself');
+}
+
+// =====================================================================
+section('the bus carries it — a third argument, invisible to everyone who does not ask');
+
+{
+  const bus = createBus();
+  let seen = null, argCount = null, payloadSeen = 'unset';
+  // A handler written before senders existed: two parameters, and it must not change.
+  bus.subscribe('t/one', (payload) => { payloadSeen = payload; });
+  bus.subscribe('t/one', function (p, topic, meta) { argCount = arguments.length; seen = meta; });
+  bus.publish('t/one', { n: 1 }, senderMeta({ kind: 'remote', id: 'sam' }));
+  check('the payload is untouched — meta is NOT merged into it',
+    payloadSeen && payloadSeen.n === 1 && payloadSeen.from === undefined,
+    JSON.stringify(payloadSeen));
+  check('a handler that asks for it gets the meta', senderOf(seen).id === 'sam');
+  check('it arrives as the THIRD argument, after payload and topic', argCount === 3);
+
+  let bare = 'unset';
+  bus.subscribe('t/two', (p, topic, meta) => { bare = meta; });
+  bus.publish('t/two', 1);
+  check('publishing without meta leaves it undefined rather than inventing a sender',
+    bare === undefined);
+  check('…which senderOf still turns into something usable', senderOf(bare).kind === 'local');
+}
+
+{
+  // A source + binding, which is how a module's own buttons reach a topic.
+  const bus = createBus();
+  let got = null;
+  bus.addBinding({ source: 'nav', signal: 'go', topic: 'x/go', transform: (p) => ({ ...p, seen: true }) });
+  bus.subscribe('x/go', (p, t, meta) => { got = { p, meta }; });
+  bus.createSource('nav').emit('go', { a: 1 }, senderMeta({ kind: 'remote', id: 'sam' }));
+  check('a transform reshapes the VALUE and leaves the sender alone — otherwise any binding '
+    + 'could forge one', got.p.seen === true && senderOf(got.meta).id === 'sam');
+}
+
+{
+  const bus = createBus();
+  const scoped = bus.scope();
+  let meta = null;
+  bus.subscribe('s/one', (p, t, m) => { meta = m; });
+  scoped.publish('s/one', null, senderMeta({ kind: 'remote', id: 'sam' }));
+  check('a module scope forwards the sender rather than rewriting it',
+    senderOf(meta).id === 'sam');
+  scoped.dispose();
+}
+
+// =====================================================================
+section('the router forwards it — a verb becomes a panel action WITHOUT losing who sent it');
+
+{
+  const bus = createBus();
+  const router = createVerbRouter({ bus, modules: () => [{ id: 'p1', type: 'photos' }] });
+  let meta = 'unset';
+  bus.subscribe('photos/next', (p, t, m) => { meta = m; });
+  bus.publish(verbTopic('next'), undefined, senderMeta({ kind: 'remote', id: 'sam', role: 'participant' }));
+  check('the sender survives verb -> focused panel',
+    senderOf(meta).id === 'sam', JSON.stringify(meta));
+  check('and its role survives with it — that is what a second cursor will read',
+    senderOf(meta).role === 'participant');
+
+  meta = 'unset';
+  bus.publish(verbTopic('next'));
+  check('a verb published with no sender still reaches the panel, meta undefined',
+    meta === undefined);
+  router.destroy?.();
+}
+
+// =====================================================================
+section('a local press names its own control');
+
+{
+  const bus = createBus();
+  let meta = null;
+  bus.subscribe('verb/select', (p, t, m) => { meta = m; });
+  const actions = createActionRegistry();
+  actions.register({ id: 'verb/select', label: 'Select', topic: 'verb/select' });
+  const ib = createInputBus({ bus, actions });
+  ib.addBinding({ actionId: 'verb/select', device: 'keyboard', control: 'key:enter',
+                  role: 'participant', edge: 'press' });
+  ib.down('keyboard', 'key:enter');
+  ib.up('keyboard', 'key:enter');
+  check('a local press carries a `local` sender', senderOf(meta).kind === 'local');
+  check('it names the control that fired', senderOf(meta).id === 'keyboard:key:enter',
+    senderOf(meta).id);
+  check('AND IT CARRIES THE BINDING’S ROLE, which is what makes the same gate rule apply to '
+    + 'a switch and a driver alike', senderOf(meta).role === 'participant');
+  ib.destroy?.();
+}
+
+// =====================================================================
+section('the gate refusing a REMOTE press explains itself like a local one');
+
+{
+  // The record `attachDriveToBus` writes. Asserted through the real explainer, because the
+  // wording IS the feature: five different repairs look identical at a bedside.
+  const rec = {
+    device: 'remote', deviceClass: 'remote', control: 'Sam', actionId: 'verb/select',
+    role: 'participant', gate: 'moderator', accepted: false, reason: 'role-gated',
+  };
+  const line = explainActivation(rec);
+  check('a refused remote press is not reported as accepted', line.ok === false);
+  check('it names WHO', line.text.includes('Sam'), line.text);
+  check('it names the GATE, which is the repair', line.text.includes('moderator'), line.text);
+  check('it does NOT claim a binding is involved — there is none, and sending somebody to '
+    + 'hunt for a switch fault is the wrong repair',
+    !line.text.includes('bound'), line.text);
+
+  const okLine = explainActivation({ ...rec, accepted: true, reason: null });
+  check('an accepted remote press reads like any other accepted press',
+    okLine.ok === true && okLine.text.includes('Sam'), okLine.text);
+
+  // And the shape is the one the diagnostic already understands.
+  check('the record carries everything the activity log needs',
+    ACTIVATION_TOPIC === 'access/activation'
+    && ['device', 'control', 'gate', 'role', 'accepted', 'reason'].every((k) => k in rec));
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

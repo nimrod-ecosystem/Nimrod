@@ -108,6 +108,24 @@ export function explainActivation(rec = {}) {
   if (!rec || typeof rec !== 'object') return { ok: false, text: 'nothing recorded' };
   const who = controlLabel(rec.device, rec.control);
 
+  // A REMOTE PRESS GETS ITS OWN SENTENCE. Once the gate started judging drivers as well as
+  // switches, refusals from both started landing in this list - and "X is bound, but the
+  // gate is refusing it" is nonsense about somebody driving from another house, because
+  // there is no binding involved. Worse, it would send a caregiver hunting for a switch
+  // fault when the repair is one toggle on this screen. So it names the gate and the role,
+  // which together ARE the repair.
+  if (rec.device === 'remote') {
+    if (rec.accepted) {
+      const verb = String(rec.actionId || '').replace(/^verb\//, '');
+      return { ok: true, text: `${who} → ${VERB_LABEL[verb] || verb || 'an action'}` };
+    }
+    if (rec.reason === 'role-gated') {
+      return { ok: false, text: `${who} was refused — this screen is set to `
+        + `"${rec.gate}" and they are ${rec.role || 'unknown'}` };
+    }
+    return { ok: false, text: `${who} was refused (${rec.reason || 'no reason recorded'})` };
+  }
+
   if (rec.accepted) {
     const verb = String(rec.actionId || '').replace(/^verb\//, '');
     return { ok: true, text: `${who} → ${VERB_LABEL[verb] || verb || 'an action'}` };

@@ -27,6 +27,7 @@
 // director's tests stay deterministic.
 
 import { registerModule } from '../module.js';
+import { readWithLegacy } from '../settings_fields.js';
 import { createState } from '../state.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { speak as speakDefault, cancel as cancelSpeak } from '../voice.js';
@@ -81,7 +82,13 @@ export const DEFAULT_ITEMS = [
   { id: 'word-dog', kind: 'vocab', graphic: { type: 'word', value: 'dog' }, speak: 'Dog. The dog says woof.', enabled: true },
 ];
 
-const DEFAULTS = { items: null, displaySec: 8, autoAdvance: true, directed: false };
+// `displayMs` is milliseconds - the house rule for every stored duration (settings_fields.js).
+// It was `displaySec`; the KEY changed rather than the meaning of the old one, so a value
+// nobody migrated reads as absent instead of as eight milliseconds. Same for the PER-ITEM
+// override, which lives inside saved content rather than in settings and therefore needs the
+// same fallback one level down.
+const DEFAULTS = { items: null, displayMs: 8000, autoAdvance: true, directed: false };
+const LEGACY_DISPLAY = { key: 'displaySec', scale: 1000 };
 const RECENT_CAP = 8;
 
 // The live graphic, drawn from the VALUE (semantic data), styled by the theme's CSS
@@ -139,12 +146,14 @@ registerModule(
     // seam); standalone it also self-advances.
     function scheduleEnd(item) {
       clearEnd();
-      const secs = Math.max(2, Number(item.displaySec) || Number(cfg.displaySec) || DEFAULTS.displaySec);
+      const perItem = readWithLegacy(item, 'displayMs', LEGACY_DISPLAY);
+      const ms = Math.max(2000,
+        Number(perItem) || Number(cfg.displayMs) || DEFAULTS.displayMs);
       endTimer = setTimer(() => {
         endTimer = null;
         bus.publish('segment/done', { provider: 'educational', reason: 'ended' });
         if (cfg.autoAdvance) bus.publish('educational/next');
-      }, secs * 1000);
+      }, ms);
     }
 
     function render(item) {
@@ -219,6 +228,9 @@ registerModule(
 
         state.subscribe((s) => {
           cfg = { ...DEFAULTS, ...s };
+          // The migration, for a module that has no declared settings yet.
+          const ms = readWithLegacy(s || {}, 'displayMs', LEGACY_DISPLAY);
+          if (ms !== undefined) cfg.displayMs = Number(ms);
           indexItems();
           if (!ids.length) return;
           if (!cfg.directed && (!currentId || !byId[currentId])) advance();   // standalone autostart

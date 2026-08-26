@@ -13,9 +13,15 @@
 // Skipping the video only means facing the questions without it.
 
 import { registerModule } from '../module.js';
+import { readWithLegacy } from '../settings_fields.js';
 import { createLessons, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
 
-export const DEFAULTS = { minWatchSec: 30 };
+// `minWatchMs` is milliseconds - the house rule for every stored duration. It was
+// `minWatchSec`; the key changed rather than the meaning of the old one. The countdown a
+// person READS is still in seconds, which is the point of the rule: store one unit, display
+// the one a human thinks in.
+export const DEFAULTS = { minWatchMs: 30000 };
+const LEGACY_MIN_WATCH = { key: 'minWatchSec', scale: 1000 };
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -47,7 +53,7 @@ registerModule(
     const el = (sel) => mount.querySelector(sel);
     const unlocked = () => (lessons ? lessons.unlocked() : new Set());
     const waited = () => Math.max(0, Math.floor((now() - openedAt) / 1000));
-    const remaining = () => Math.max(0, cfg.minWatchSec - waited());
+    const remaining = () => Math.max(0, Math.ceil(cfg.minWatchMs / 1000) - waited());
 
     function card(t) {
       const isOpen = openId === t.id;
@@ -124,7 +130,8 @@ registerModule(
         state.subscribe((s) => {
           const snap = s || {};
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
-          cfg = { minWatchSec: Number(snap.minWatchSec) >= 0 ? Number(snap.minWatchSec) : DEFAULTS.minWatchSec };
+          const saved = readWithLegacy(snap, 'minWatchMs', LEGACY_MIN_WATCH);
+          cfg = { minWatchMs: Number(saved) >= 0 ? Number(saved) : DEFAULTS.minWatchMs };
           render();
         });
 

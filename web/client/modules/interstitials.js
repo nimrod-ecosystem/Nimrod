@@ -36,6 +36,7 @@
 // formalizing via ctx once a second speaking module needs it.
 
 import { registerModule } from '../module.js';
+import { readWithLegacy } from '../settings_fields.js';
 import { createState } from '../state.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { speak as speakDefault, cancel as cancelSpeak } from '../voice.js';
@@ -52,7 +53,12 @@ const DEFAULT_ITEMS = [
   { id: 'word-dog', kind: 'vocab', graphic: { type: 'word', value: 'dog' }, speak: 'Dog. The dog says woof.', enabled: true, weight: 1 },
 ];
 
-const DEFAULTS = { items: null, intervalSec: 20, autoPlay: false, selfView: true, presenter: 'Cici' };
+// `intervalMs` is milliseconds - the house rule for every stored duration. Migrated for
+// consistency even though THIS MODULE IS RETIRED (superseded by the content director,
+// 2026-08-12) and is registered only by the dev harness: leaving one duration in seconds
+// would make the unit rule un-checkable. It is a deletion candidate, not a maintenance one.
+const DEFAULTS = { items: null, intervalMs: 20000, autoPlay: false, selfView: true, presenter: 'Cici' };
+const LEGACY_INTERVAL = { key: 'intervalSec', scale: 1000 };
 const RECENT_CAP = 8;
 
 // The live graphic, drawn from the VALUE (semantic data), styled by the theme's CSS
@@ -150,8 +156,8 @@ registerModule(
     function scheduleNext() {
       clearTimer();
       if (!cfg.autoPlay) return;
-      const secs = Math.max(3, Number(cfg.intervalSec) || DEFAULTS.intervalSec);
-      timer = setTimeout(() => bus.publish('interstitial/next'), secs * 1000);
+      const ms = Math.max(3000, Number(cfg.intervalMs) || DEFAULTS.intervalMs);
+      timer = setTimeout(() => bus.publish('interstitial/next'), ms);
     }
 
     // ---- the invariant self-view camera (TR) --------------------------------
@@ -216,6 +222,8 @@ registerModule(
         // config: content library + scheduler options
         state.subscribe((s) => {
           cfg = { ...DEFAULTS, ...s };
+          const ms = readWithLegacy(s || {}, 'intervalMs', LEGACY_INTERVAL);
+          if (ms !== undefined) cfg.intervalMs = Number(ms);
           indexItems();
           if (!ids.length) return;
           if (!currentId || !byId[currentId]) advance();   // start once we have a pool

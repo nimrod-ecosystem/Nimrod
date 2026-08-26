@@ -91,17 +91,24 @@ export function createVerbRouter({
     return out;
   }
 
-  function dispatch(verb) {
+  // `meta` is carried straight through from the verb to the module topic and never rewritten
+  // here. The router decides WHICH PANEL a verb lands on; it has no business changing who
+  // sent it, and a module asking "who pressed this" must get the same answer the bus was
+  // handed. Undefined stays undefined, so a caller that knows nothing about senders behaves
+  // exactly as it always did.
+  function dispatch(verb, meta) {
     if (paused) return null;
     const m = focused();
     if (!m) return onUnhandled?.({ verb, reason: 'no-panel' }) ?? null;
     const target = verbTarget(m.type, verb, maps);
     if (!target) return onUnhandled?.({ verb, reason: 'no-mapping', module: { ...m } }) ?? null;
-    bus.publish(target.topic, target.payload);
+    bus.publish(target.topic, target.payload, meta);
     return { ...target, module: { ...m } };
   }
 
-  for (const v of VERBS) offs.push(bus.subscribe(verbTopic(v.id), () => dispatch(v.id)));
+  for (const v of VERBS) {
+    offs.push(bus.subscribe(verbTopic(v.id), (_p, _t, meta) => dispatch(v.id, meta)));
+  }
   for (const v of FOCUS_VERBS) {
     const delta = v.id === 'focus-prev' ? -1 : 1;
     offs.push(bus.subscribe(verbTopic(v.id), () => step(delta)));

@@ -30,6 +30,8 @@
 
 import { authHeaders } from './auth.js';
 import { verbTopic } from './actions.js';
+import { ACTIVATION_TOPIC } from './input.js';
+import { gatePermits, senderMeta, DEFAULT_REMOTE_ROLE } from './sender.js';
 
 // Mirrored from actions.js, and mirrored again on the server. Duplicated on purpose: this
 // is a boundary, and a boundary that widens because another file grew an entry is not one.
@@ -168,13 +170,71 @@ export function connectDrive({
 
 // The receiving end, in one call: verbs arriving on the wire become verbs on this screen's
 // bus, which is the whole trick — everything downstream already knows what to do with them.
+//
+// AND THE GATE NOW SEES THEM. Mike's ruling: *"I would expect the driver's input device to
+// act the same as the user's input device. The only restrictions are what's set in the
+// person's section."* Before this, a remote verb was published straight onto the bus, which
+// is DOWNSTREAM of `input.js` — so `GATES = both | moderator | participant` governed every
+// switch in the room and had no opinion at all about somebody driving from another house.
+// Two rule-sets, one of them invisible. Now there is one, and it is the person's.
+//
+// WHERE THE CHECK HAS TO GO, and why it is not simply "reuse input.js". The local path is
+// `control -> binding -> gate -> verb -> bus`; a driver sends a VERB, so it arrives HALFWAY
+// ALONG, with no control and no binding to judge. The gate rule therefore has to be a
+// function of `(gate, role)` rather than a function of a binding — which is exactly what
+// pulling `gatePermits` out into sender.js bought.
+//
+// A REFUSED REMOTE PRESS IS REPORTED THE SAME WAY A REFUSED LOCAL ONE IS. It goes onto
+// `ACTIVATION_TOPIC` with `reason: 'role-gated'`, so "why nothing happened" explains a
+// clinician being held off by the gate in the same sentence, in the same list, as a switch
+// being held off — because from the room they look identical, and a driver whose presses
+// silently vanish will conclude the network is broken and start debugging the wrong thing.
+//
+// `gate` and `role` are FUNCTIONS, not values. The gate can be flipped mid-session (that is
+// the whole "take the cursor" gesture), and a value captured at connect time would be the
+// gate as it was when somebody plugged in.
 export function attachDriveToBus(bus, opts = {}) {
+  const {
+    // Defaults to "open", so a host that has not wired a gate behaves exactly as before.
+    gate = () => 'both',
+    // MIKE'S DEFAULT: a grant confers `moderator` unless the person's own settings say
+    // otherwise. When the grant grows a role column this is where it arrives; until then a
+    // driver is the moderator, which matches both cases Mike named - him driving from home,
+    // and family showing her a video.
+    role = () => DEFAULT_REMOTE_ROLE,
+    driverId = '',
+    driverLabel = '',
+    ...rest
+  } = opts;
+
   return connectDrive({
-    ...opts,
+    ...rest,
     role: 'screen',
     onVerb: (verb) => {
-      bus.publish(verbTopic(verb));
-      opts.onVerb?.(verb);
+      const asRole = role() || DEFAULT_REMOTE_ROLE;
+      const now = gate() || 'both';
+      const from = { kind: 'remote', id: driverId, label: driverLabel || driverId, role: asRole };
+      if (!gatePermits(now, asRole)) {
+        bus.publish(ACTIVATION_TOPIC, {
+          at: Date.now(),
+          device: 'remote',
+          deviceClass: 'remote',
+          control: driverLabel || driverId || 'another screen',
+          actionId: verbTopic(verb),
+          bindingId: null,
+          edge: null,
+          role: asRole,
+          gate: now,
+          accepted: false,
+          reason: 'role-gated',
+          heldMs: null,
+          latencyMs: null,
+        });
+        opts.onRefused?.({ verb, reason: 'role-gated', gate: now, role: asRole });
+        return;
+      }
+      bus.publish(verbTopic(verb), undefined, senderMeta(from));
+      opts.onVerb?.(verb, from);
     },
   });
 }
