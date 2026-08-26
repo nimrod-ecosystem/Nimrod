@@ -33,7 +33,13 @@
 // selected screen's panels. Next and Previous walk the binding rows; Primary select
 // re-captures the highlighted row's control. The input bus configuring itself with itself.
 //
-// NO SAVE BUTTON. Edits autosave; both exits flush. The composer already learned this.
+// SAVING: this panel autosaves, and both exits flush. That was written down once as "NO
+// SAVE BUTTON" full stop, which was wrong and Mike overturned it. The binder is the exact
+// place an explicit save earns its keep: you spend an afternoon dialling in a switch, try
+// six things you dislike, and want the state you had when you opened it back. Autosave has
+// no revert point. So `commit: 'auto' | 'explicit'` is a per-surface DECLARATION (settings
+// slice 2 onward), the binder is the strongest candidate for `explicit`, and the revert
+// point is "how it was when I opened this" - never the shipped defaults.
 //
 // EVERY NUMBER HERE IS IN MILLISECONDS, which nobody thinks in. So capture measures the
 // real hold and offers it back - "held 340ms, require 200?" - and the live strip names

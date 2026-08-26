@@ -216,6 +216,97 @@ const ds = () => root.querySelector('.kiosk').dataset;
     kiosk.menu.back();
     await press('Escape');
 
+    // ---- THE FOCUSED PANEL'S OWN SETTINGS, declared by the module ----
+    //
+    // The rules for stepping a value are pure and hammered in settings_test; THIS is the
+    // wiring test, and the only thing it has to prove is that a press in the menu reaches
+    // the real module's real state handle on the real surface.
+    //
+    // IT SETS ITS OWN STARTING PANEL rather than inheriting one. Earlier sections move the
+    // stage around, and a test that assumes what the last one left behind fails for a reason
+    // that has nothing to do with what it is testing - which is exactly how it failed first
+    // time, reading youtube's (absent) settings and reporting photos as broken.
+    await kiosk.showPrimary(0);
+    await sleep(60);
+    await press('Escape');
+    {
+      check('PRECONDITION: the focused panel really is photos',
+        kiosk.primaryType() === 'photos', kiosk.primaryType());
+      const rows = kiosk.menu.items().filter((i) => i.kind === 'item');
+      const byId = Object.fromEntries(rows.map((r) => [r.id, r]));
+      check('the photos panel contributes its declared settings',
+        !!byId['set:intervalSec'] && !!byId['set:fit'], rows.map((r) => r.id).join(','));
+      check('a field row shows its CURRENT value, not just its name',
+        byId['set:intervalSec'].hint === '8 seconds', byId['set:intervalSec'].hint);
+      check('a choice row shows the LABEL, never the raw enum key',
+        byId['set:fit'].hint === 'Show the whole photo', byId['set:fit'].hint);
+
+      check('the free-text album field is present but DISABLED — a fake affordance is worse '
+        + 'than an absent one', byId['set:album']?.disabled === true);
+      check('and it says where it IS changed, so the row is a signpost not a dead end',
+        (byId['set:album']?.hint || '').includes('Media / Sources'), byId['set:album']?.hint);
+      check('with no media sources connected the source picker is disabled, and says so',
+        byId['set:sourceId']?.disabled === true
+        && (byId['set:sourceId']?.hint || '').includes('nothing to choose from yet'),
+        byId['set:sourceId']?.hint);
+
+      // THE ONE-BUTTON WALK, on the real surface. A cursor that can land on a disabled row
+      // is a switch press that appears to do nothing, which gets debugged as broken hardware.
+      const stops = new Set();
+      for (let i = 0; i < 14; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
+      check('the cycleable field rows are stops on the one-button walk',
+        stops.has('set:intervalSec') && stops.has('set:fit'), [...stops].join(','));
+      check('the disabled ones are NOT stops',
+        !stops.has('set:album') && !stops.has('set:sourceId'), [...stops].join(','));
+      check('and Home is still reachable from that same walk — the way out is never hidden',
+        stops.has('home'));
+
+      // A PRESS IN THE MENU REACHES THE MODULE'S OWN STATE. The hint is re-read from the
+      // instance's state handle on every paint, so a changed hint IS the write landing.
+      while (kiosk.menu.focusId() !== 'set:fit') kiosk.menu.next();
+      kiosk.menu.select();
+      const after = kiosk.menu.items().find((i) => i.id === 'set:fit');
+      check('select steps the value and it reaches the real instance state',
+        after.hint === 'Fill the panel', after.hint);
+      check('the cursor did not move out from under the hand', kiosk.menu.focusId() === 'set:fit');
+      kiosk.menu.select();
+      check('a second press steps on, from the NEW value rather than a stale snapshot',
+        kiosk.menu.items().find((i) => i.id === 'set:fit').hint === 'Show the whole photo');
+
+      // Wrapping, on the real surface: a number that stops at its maximum strands anybody
+      // who can only travel one way.
+      while (kiosk.menu.focusId() !== 'set:intervalSec') kiosk.menu.next();
+      const walk = [];
+      for (let i = 0; i < 10; i += 1) {
+        kiosk.menu.select();
+        walk.push(kiosk.menu.items().find((i2) => i2.id === 'set:intervalSec').hint);
+      }
+      check('a number field wraps back round on the real surface',
+        walk[walk.length - 1] === '8 seconds', walk.join(' | '));
+      check('and its declared maximum is actually reachable on the way',
+        walk.includes('40 seconds'), walk.join(' | '));
+    }
+    await press('Escape');
+
+    // THE FIELDS FOLLOW THE FOCUSED PANEL. Settings belong to the panel the menu names, so
+    // changing which panel is on the stage has to change which settings are offered - or the
+    // menu is quietly editing something other than the thing it says it is editing.
+    await kiosk.showPrimary(1);
+    await sleep(60);
+    await press('Escape');
+    {
+      const ids2 = kiosk.menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
+      check('CONTROL: this panel is not photos', kiosk.primaryType() !== 'photos', kiosk.primaryType());
+      check('photos\u2019 settings are gone once photos is not the focused panel',
+        !ids2.includes('set:intervalSec'), ids2.join(','));
+      check('a module that declares nothing still gets a disabled row rather than silence, '
+        + 'so the heading is not left naming a panel with nothing under it',
+        ids2.includes('panel-settings'), ids2.join(','));
+    }
+    await press('Escape');
+    await kiosk.showPrimary(0);
+    await sleep(60);
+
     // ---- WHERE A COLD BOOT LANDS ----
     // The menu grew its first real content, and it is a setting somebody actually needs.
     await press('Escape');

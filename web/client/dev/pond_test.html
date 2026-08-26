@@ -29,6 +29,7 @@ any it gets — which is why this one was ported first, and why the port had to 
 <script type="module">
 import '../modules/pond.js';
 import { mountModule, getManifest } from '../module.js';
+import { fieldsFor, fieldItems, stepValue, displayValue } from '../settings_fields.js';
 import { createBus } from '../bus.js';
 import { verbTarget, verbsFor } from '../actions.js';
 import { applyTheme } from '../theme.js';
@@ -143,6 +144,50 @@ section('settings, and their defaults');
   check('and stirs every 1500ms by default', cfg.ambientMs === 1500, `${cfg.ambientMs}`);
   check('the pointer disturbs the water by default', cfg.pointer === true);
   check('calm is OFF by default', cfg.calm === false);
+
+  // EVERY DEFAULT IS ALSO A DECLARED SETTING. A knob the module honours but never declares
+  // is a knob nobody at a bedside can reach, which for this product is the same as it not
+  // existing. This is the assertion that keeps the two lists from drifting apart.
+  const declared = fieldsFor(getManifest('pond'), null);
+  const keys = declared.map((f) => f.key).sort().join(',');
+  check('every default the pond honours is declared to the settings menu',
+    keys === 'ambient,ambientMs,calm,pointer', keys);
+  check('and each declared key is one the module actually reads',
+    declared.every((f) => Object.prototype.hasOwnProperty.call(cfg, f.key)), keys);
+  check('the three toggles are one-button operable',
+    declared.filter((f) => f.kind === 'toggle').every((f) => f.cycleable), keys);
+  const ms = declared.find((f) => f.key === 'ambientMs');
+  check('the raw timing is BOUNDED, or a one-button user walks it forever',
+    ms.cycleable === true && ms.min === 500 && ms.max === 6000);
+  check('and it is at `advanced` — milliseconds are not a sentence anybody at a bedside thinks in',
+    ms.level === 'advanced');
+  check('stepping the timing wraps at its maximum', stepValue(ms, 6000) === 500);
+
+  // The rows a caregiver would actually see, at the level a caregiver would actually be on.
+  const rows = fieldItems(declared, { values: cfg, level: 'essential' });
+  check('at `essential` only the two calm-a-screen-down settings are offered',
+    rows.map((r) => r.id).join(',') === 'set:ambient,set:calm', rows.map((r) => r.id).join(','));
+  check('and they read as words, not as booleans',
+    rows[1].hint === 'Normal', rows[1].hint);
+
+  inst.destroy(); host.remove();
+}
+
+{
+  // REDUCED MOTION IS NOT THE SAVED SETTING, and keeping them separate is what stops the
+  // settings row lying. Folding the system request into `cfg.calm` made the menu read
+  // "Normal" while the pond ran calm, and the person changing it saw nothing happen.
+  const host = document.createElement('div');
+  host.style.cssText = 'width:200px;height:120px';
+  document.body.append(host);
+  const inst = mount(host);
+  const p = probe(inst);
+  check('the SAVED value and the EFFECTIVE value are reported separately',
+    'calm' in p && 'reducedMotion' in p && 'calm' in p.cfg, JSON.stringify(Object.keys(p)));
+  check('with no system request they agree', p.reducedMotion === false && p.calm === p.cfg.calm);
+  const calmField = fieldsFor(getManifest('pond'), null).find((f) => f.key === 'calm');
+  check('so the settings row shows what the PERSON chose, not what the machine asked for',
+    displayValue(calmField, p.cfg.calm) === 'Normal');
   inst.destroy(); host.remove();
 }
 {

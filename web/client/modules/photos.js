@@ -36,8 +36,38 @@ const DEFAULTS = { sourceId: '', album: '', intervalSec: 8, fit: 'contain' };
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
+// WHAT THE SETTINGS MENU SHOWS, and the three kinds it proves.
+//
+// `intervalSec` is a NUMBER, and its bounds are chosen for the switch rather than for the
+// range that is technically legal. 2-60 in steps of 1 is fifty-eight presses to get round,
+// which on one button is not a control, it is a punishment; 4-40 in fours is ten stops and
+// covers every interval anybody has ever wanted. THE DECLARED MAXIMUM IS REACHABLE - the
+// stepper lands on a bound before it wraps - so 40 is a real choice and not a number that
+// gets skipped over.
+//
+// `sourceId` is a LIVE choice: the options are this account's media sources, which are data
+// and cannot be written into a manifest. See `settingsChoices` below.
+//
+// `album` is TEXT and therefore not cycleable, and it says so rather than pretending. Nobody
+// picks one of four hundred albums one press at a time, and a fake affordance is worse than
+// an absent one.
+const SETTINGS = [
+  { key: 'intervalSec', label: 'Change photo every', kind: 'number', default: 8,
+    min: 4, max: 40, step: 4, unit: 'seconds', unitOne: 'second', level: 'essential' },
+  { key: 'fit', label: 'How photos fit', kind: 'choice', default: 'contain', level: 'essential',
+    options: [
+      { value: 'contain', label: 'Show the whole photo' },
+      { value: 'cover', label: 'Fill the panel' },
+    ] },
+  { key: 'sourceId', label: 'Photos from', kind: 'choice', default: '', level: 'standard',
+    emptyLabel: 'No source connected' },
+  { key: 'album', label: 'Album', kind: 'text', default: '', level: 'standard',
+    placeholder: 'Everything', note: 'set in Media / Sources' },
+];
+
 registerModule(
-  { type: 'photos', title: 'Photos', description: 'slideshow over your own media (BYO storage)' },
+  { type: 'photos', title: 'Photos', description: 'slideshow over your own media (BYO storage)',
+    settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
     // `ctx.sources` is injectable so a page can supply its own registry — signed out, the
@@ -55,6 +85,10 @@ registerModule(
     let advanceTimer = null;
     let videoEndOff = null;
     let lastSourceRef = null;       // to reload only when sourceId/album change
+    // The account's sources, cached from the listing call `reload` already makes. THE MENU
+    // PAINTS SYNCHRONOUSLY, so `settingsChoices` cannot go to the network: a row that waits
+    // on a facility connection to draw is a row that looks broken.
+    let knownSources = [];
     let loadSeq = 0;                // guards against overlapping reloads (races)
 
     const stage = () => mount.querySelector('[data-stage]');
@@ -160,6 +194,7 @@ registerModule(
 
     async function ensureSource() {
       const sources = await client.list();
+      knownSources = sources;
       if (cfg.sourceId) {
         const found = sources.find((s) => s.id === cfg.sourceId);
         if (found) return found;
@@ -288,6 +323,18 @@ registerModule(
       onResize() {},
       onHide() { state.flush(); },
       destroy() { clearAdvance(); },
+
+      // LIVE OPTIONS for a declared field. The manifest stays static - it is the contract, and
+      // a modules tab will want to read it off a module that is not even running - while the
+      // options that are genuinely DATA come from the mounted instance.
+      //
+      // One source means nothing to choose, and the shell renders that row disabled with the
+      // reason instead of offering a cycle that lands back where it started. That is not a
+      // degraded case; it is the common one, and saying it out loud is how somebody learns
+      // why the picker will not move.
+      settingsChoices: () => ({
+        sourceId: knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id })),
+      }),
     };
   },
 );
