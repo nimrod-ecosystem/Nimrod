@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pond — ported from Cici — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:420px;height:240px;margin-top:12px;border-radius:14px;overflow:hidden}
+  #hidden{display:none;width:200px;height:120px}
+</style>
+</head>
+<body>
+<h1>pond — ported from Cici</h1>
+<p>Christine cannot reach for anything, so a module whose value depends on being played is
+one she never gets to use. A pond is worth having with <b>no</b> interaction, and rewards
+any it gets — which is why this one was ported first, and why the port had to add a
+<b>verb</b>: cursor-and-click meant she could only ever watch it.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at</h2>
+<div id="host"></div>
+<div id="hidden"></div>
+
+<script type="module">
+import '../modules/pond.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { verbTarget, verbsFor } from '../actions.js';
+import { applyTheme } from '../theme.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function mount(host, { bus = createBus(), state = null } = {}) {
+  const inst = mountModule('pond', { mount: host, bus, state, events: null, user: 'u', profileId: 'p' });
+  inst.init();
+  return inst;
+}
+const probe = (inst) => inst.impl.__probe();
+
+// =====================================================================
+section('it is a module like any other');
+
+check('it registers a manifest', !!getManifest('pond'));
+check('with a title a person would read', getManifest('pond').title === 'Pond');
+
+// THE POINT OF THE PORT. Without verbs it is ambient-only for anyone who cannot reach.
+section('it answers a switch — the reason it was worth porting');
+
+check('the pond is in the verb table', verbsFor('pond').length > 0);
+check('primary select makes a splash', verbTarget('pond', 'select').topic === 'pond/splash');
+check('next stirs it', verbTarget('pond', 'next').topic === 'pond/stir');
+
+{
+  const host = document.createElement('div');
+  host.style.cssText = 'width:300px;height:200px';
+  document.body.append(host);
+  const bus = createBus();
+  const inst = mount(host, { bus });
+  const before = probe(inst).ripples;
+
+  bus.publish('pond/splash');
+  const after = probe(inst).ripples;
+  check('a splash really disturbs the water', after > before, `${before} -> ${after}`);
+  check('and a splash is more than one ripple, so it reads as a splash',
+    after - before > 1, `${after - before}`);
+
+  const b2 = probe(inst).ripples;
+  bus.publish('pond/stir');
+  check('a stir adds one', probe(inst).ripples === b2 + 1);
+
+  // A person on a switch has no pointer, so the verb has to land somewhere sensible.
+  check('with no pointer it still worked - it aims at the middle rather than nowhere',
+    probe(inst).ripples > b2);
+
+  inst.destroy();
+  host.remove();
+}
+
+// =====================================================================
+section('it does not animate when nobody can see it');
+
+{
+  const hidden = document.getElementById('hidden');       // display:none
+  const inst = mount(hidden);
+  check('mounted into a hidden panel, it does not run', probe(inst).running === false);
+  inst.destroy();
+}
+{
+  // The TAB being in the background is itself a reason not to animate, and this page may
+  // well be running in one - which is exactly why `visibilityState` is stubbed here rather
+  // than depended on. The rule is being tested, not the room the test happens to run in.
+  const real = Object.getOwnPropertyDescriptor(Document.prototype, 'visibilityState');
+  Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+
+  const host = document.createElement('div');
+  host.style.cssText = 'width:200px;height:120px';
+  document.body.append(host);
+  const inst = mount(host);
+  check('visible and on screen, it runs', probe(inst).running === true);
+  inst.onHide();
+  check('onHide stops it - a canvas behind a hidden panel is heat for nothing',
+    probe(inst).running === false);
+
+  // And the other half of the rule: a backgrounded tab stops it too.
+  const inst2 = mount(host);
+  check('CONTROL: it is running again', probe(inst2).running === true);
+  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  document.dispatchEvent(new Event('visibilitychange'));
+  check('a backgrounded tab stops the animation - a Pi runs this for months',
+    probe(inst2).running === false);
+
+  inst.destroy(); inst2.destroy(); host.remove();
+  delete document.visibilityState;
+  if (real) Object.defineProperty(Document.prototype, 'visibilityState', real);
+}
+
+// =====================================================================
+section('settings, and their defaults');
+
+{
+  const host = document.createElement('div');
+  host.style.cssText = 'width:200px;height:120px';
+  document.body.append(host);
+  const inst = mount(host);
+  const cfg = probe(inst).cfg;
+  check('ambient life is ON by default - the pond has to look alive when nobody is there',
+    cfg.ambient === true);
+  check('and stirs every 1500ms by default', cfg.ambientMs === 1500, `${cfg.ambientMs}`);
+  check('the pointer disturbs the water by default', cfg.pointer === true);
+  check('calm is OFF by default', cfg.calm === false);
+  inst.destroy(); host.remove();
+}
+{
+  const host = document.createElement('div');
+  host.style.cssText = 'width:200px;height:120px';
+  document.body.append(host);
+  const saved = { ambient: false, calm: true, ambientMs: 5000 };
+  const state = { get: () => saved, subscribe: () => () => {} };
+  const inst = mount(host, { state });
+  const cfg = probe(inst).cfg;
+  check('saved settings win over the defaults',
+    cfg.ambient === false && cfg.calm === true && cfg.ambientMs === 5000, JSON.stringify(cfg));
+
+  const bus2 = createBus();
+  inst.destroy();
+
+  // Ambient off really means off - not "slower".
+  const inst2 = mountModule('pond', { mount: host, bus: bus2, state, events: null });
+  inst2.init();
+  const start = probe(inst2).ripples;
+  await sleep(120);
+  check('with ambient off, the pond stays perfectly still until it is touched',
+    probe(inst2).ripples === start, `${start} -> ${probe(inst2).ripples}`);
+  bus2.publish('pond/splash');
+  check('but it still answers a switch', probe(inst2).ripples > start);
+  inst2.destroy(); host.remove();
+}
+
+// =====================================================================
+section('it follows the theme rather than hardcoding Cici teal');
+
+{
+  const host = document.createElement('div');
+  host.style.cssText = 'width:200px;height:120px';
+  document.body.append(host);
+  applyTheme(document.documentElement, 'dusk');
+  const inst = mount(host);
+  await sleep(60);
+  const c = host.querySelector('canvas');
+  check('it renders a canvas sized to its box', c.width > 0 && c.height > 0,
+    `${c.width}x${c.height}`);
+  check('and it sized to the panel it was given, not to the window',
+    probe(inst).W === 200 && probe(inst).H === 120, `${probe(inst).W}x${probe(inst).H}`);
+  applyTheme(document.documentElement, 'default');
+  inst.destroy(); host.remove();
+}
+
+// =====================================================================
+section('teardown - it is on a screen that runs for months');
+
+{
+  const host = document.createElement('div');
+  host.style.cssText = 'width:200px;height:120px';
+  document.body.append(host);
+  const bus = createBus();
+  const inst = mount(host, { bus });
+  inst.destroy();
+  check('destroy empties the mount', host.innerHTML === '');
+  check('and stops the animation', probe(inst).running === false);
+  let threw = false;
+  try { bus.publish('pond/splash'); } catch { threw = true; }
+  check('a verb after destroy does not throw', !threw);
+  // A subscription outliving its module is one dead handler per mount, forever.
+  check('and it does not resurrect ripples in a dead module',
+    probe(inst).running === false);
+  let twice = false;
+  try { inst.destroy(); } catch { twice = true; }
+  check('destroying twice is not an error', !twice);
+  host.remove();
+}
+
+// =====================================================================
+// A live one to look at.
+{
+  const host = document.getElementById('host');
+  const bus = createBus();
+  const inst = mount(host, { bus });
+  window.__pond = { inst, bus, splash: () => bus.publish('pond/splash') };
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

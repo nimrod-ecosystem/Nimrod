@@ -144,10 +144,18 @@ export function buildItems({
 // ---------------------------------------------------------------------------------
 // The shell.
 // ---------------------------------------------------------------------------------
+// A PAGE is the `custom` escape hatch slice 1 promised: the two or three things a
+// declarative schema genuinely cannot express. It renders its own DOM, it always has a way
+// back, and `back` means "return to the list" rather than "close" while one is open - which
+// is what anybody who has ever used a menu expects.
+//
+// Deliberately NOT a stack. One level is enough for everything in front of us, and a menu
+// somebody can get lost three levels down is a menu that fails the person it is for.
 export function mountSettings(root, {
   person = () => null,
   subject = () => null,
   extras = () => [],
+  pages = {},                  // { id: { title, render(el) } }
   onHome = null,
   onSelect = null,             // told about every activation — the host wires the effects
   gated = true,
@@ -160,6 +168,7 @@ export function mountSettings(root, {
   const doc = documentRef;
 
   let open = false;
+  let page = null;             // the open page's id, or null for the list
   let items = [];
   let nav = createNav([]);
   let returnFocus = null;
@@ -170,11 +179,13 @@ export function mountSettings(root, {
     <div class="st-scrim" data-scrim hidden>
       <div class="st-panel" role="dialog" aria-modal="true" aria-label="Settings" tabindex="-1" data-panel>
         <div class="st-list" data-list></div>
+        <div class="st-page" data-page hidden></div>
       </div>
     </div>`;
   const scrim = root.querySelector('[data-scrim]');
   const panel = root.querySelector('[data-panel]');
   const listEl = root.querySelector('[data-list]');
+  const pageEl = root.querySelector('[data-page]');
 
   const isFullscreen = () => !!(doc && doc.fullscreenElement);
 
@@ -215,11 +226,14 @@ export function mountSettings(root, {
   }
 
   // --- the four moves. Everything else in the file exists to serve these. ---
-  function next() { if (!open) return null; const it = nav.next(); paint(); return it; }
-  function prev() { if (!open) return null; const it = nav.prev(); paint(); return it; }
+  // While a page is open the only control is Back, so moving does nothing rather than
+  // scrolling a cursor nobody can see.
+  function next() { if (!open || page) return null; const it = nav.next(); paint(); return it; }
+  function prev() { if (!open || page) return null; const it = nav.prev(); paint(); return it; }
 
   function activate(item) {
     if (!item || item.disabled) return null;
+    if (item.page) { openPage(item.page); return item; }
     if (item.id === 'close') { close(); return item; }
     if (item.id === 'home') {
       close();
@@ -241,8 +255,47 @@ export function mountSettings(root, {
     return item;
   }
 
-  function select() { return open ? activate(nav.current()) : null; }
-  function back() { if (open) close(); }
+  function select() {
+    if (!open) return null;
+    if (page) { closePage(); return { id: 'page-back' }; }
+    return activate(nav.current());
+  }
+
+  // BACK LEAVES THE PAGE BEFORE IT LEAVES THE MENU. Closing the whole thing from inside a
+  // page would throw away where somebody was, and for a person navigating by scanning,
+  // getting back to a place costs real presses.
+  function back() {
+    if (!open) return;
+    if (page) { closePage(); return; }
+    close();
+  }
+
+  function openPage(id) {
+    const def = pages[id];
+    if (!def) return null;
+    page = id;
+    listEl.hidden = true;
+    pageEl.hidden = false;
+    pageEl.innerHTML = `<div class="st-head">${esc(def.title || id)}</div>
+      <div data-page-body></div>
+      <button class="st-item on" type="button" data-page-back>
+        <span class="st-label">Back</span></button>`;
+    try { def.render(pageEl.querySelector('[data-page-body]')); }
+    catch (err) {
+      // A page that throws must not strand somebody inside a broken screen with no Back.
+      pageEl.querySelector('[data-page-body]').textContent = String(err.message || err);
+    }
+    panel.focus?.();
+    return id;
+  }
+
+  function closePage() {
+    page = null;
+    pageEl.hidden = true;
+    pageEl.innerHTML = '';
+    listEl.hidden = false;
+    paint();
+  }
 
   function show() {
     if (open) return true;
@@ -259,6 +312,7 @@ export function mountSettings(root, {
 
   function close() {
     if (!open) return;
+    if (page) closePage();
     open = false;
     scrim.hidden = true;
     router?.setPaused?.(false);
@@ -286,6 +340,10 @@ export function mountSettings(root, {
   // Clicking the scrim closes. A menu you cannot dismiss by clicking away reads as a
   // crash to anyone who did not mean to open it.
   scrim.addEventListener('mousedown', (e) => { if (e.target === scrim) close(); }, sig);
+
+  pageEl.addEventListener('click', (e) => {
+    if (e.target.closest('[data-page-back]')) closePage();
+  }, sig);
 
   // --- keyboard. ONLY the keys nothing else owns. ---
   //
@@ -331,6 +389,9 @@ export function mountSettings(root, {
     isOpen: () => open,
     next, prev, select, back,
     refresh: render,
+    openPage,
+    closePage,
+    page: () => page,
     items: () => items.map((it) => ({ ...it })),
     focusIndex: () => nav.index(),
     focusId: () => nav.current()?.id || null,

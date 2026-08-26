@@ -29,6 +29,7 @@ import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
+import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
@@ -50,6 +51,7 @@ import './modules/progress.js';
 import './modules/wordforge.js';
 import './modules/lessons.js';
 import './modules/algebra.js';
+import './modules/pond.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -310,6 +312,8 @@ export async function mountKiosk(root, {
   // that will not come up because a name lookup failed is strictly worse than a screen
   // that says "…" where a name goes.
   let whoName = null;
+  let runtime = null;
+  const subjectName = () => (layout || !stageRec ? '' : (stageRec.title || stageRec.type));
   const menu = mountSettings(root.querySelector('[data-settings]'), {
     person: () => (whoName ? { name: whoName } : null),
     // In a laid-out screen every panel is visible at once and the kiosk has no focus
@@ -325,7 +329,16 @@ export async function mountKiosk(root, {
     onHome: goHome,
     // THE MENU'S FIRST REAL CONTENT. Until the declarative per-module schema lands, the
     // host contributes items through `extras` — which is what that hook was for.
-    extras: () => restartItems(restart, {
+    // THE TWO DIAGNOSTIC PAGES. Read lazily through `runtime`, because the menu is built
+    // before the input stack is - and because both answer "right now", so a snapshot taken
+    // at mount time would be a lie by the time anybody opened it.
+    pages: {
+      get controls() { return runtime ? controlPages({ runtime, subjectName }).controls : undefined; },
+      get activity() { return runtime ? controlPages({ runtime, subjectName }).activity : undefined; },
+    },
+    extras: () => [
+      ...(runtime ? CONTROL_ITEMS : []),
+      ...restartItems(restart, {
       screenName: profile?.name ? `“${profile.name}”` : 'this screen',
       onChange: ({ mode }) => {
         // Choosing "always come back here" names THE SCREEN YOU ARE STANDING ON. That is
@@ -335,7 +348,7 @@ export async function mountKiosk(root, {
           : { mode }, storage);
         menu.refresh();
       },
-    }),
+    })],
     // Still ungated at the bedside, deliberately. The three-way switch in input.js gates
     // which BINDINGS fire; it does not answer "is a moderator standing here", and inventing
     // that mapping would be guessing at semantics nobody has decided. Open, and recorded as
@@ -409,7 +422,7 @@ export async function mountKiosk(root, {
     ? slotRecs.map((r) => ({ id: r.id, type: r.type }))
     : stageDefs.map((d) => ({ id: d.id, type: d.type })));
 
-  const runtime = mountInputRuntime({
+  runtime = mountInputRuntime({
     bus,
     modules: focusRing,
     fallback: DEFAULT_BINDINGS,

@@ -187,6 +187,35 @@ const ds = () => root.querySelector('.kiosk').dataset;
     await press('c', 40);
     check('C toggles back', kiosk.mirrorFull() === false);
 
+    // ---- THE TWO DIAGNOSTIC PAGES, reachable by switch ----
+    await press('Escape');
+    const menuIds = kiosk.menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
+    check('the menu offers "what can I press right now"', menuIds.includes('controls'), menuIds.join(','));
+    check('and "why nothing happened"', menuIds.includes('activity'));
+
+    kiosk.menu.openPage('controls');
+    await sleep(30);
+    const cText = root.querySelector('[data-page]').textContent;
+    check('the controls page lists real bindings for THIS screen',
+      /Down/.test(cText) && /Next/.test(cText), cText.slice(0, 200));
+    // Derived, not hardcoded: earlier steps moved the stage, and asserting "Photos" here
+    // was asserting where the test USED to be rather than where it is.
+    const panelNow = kiosk.menu.items().find((i) => i.id === 'subject').label.split('— ')[1];
+    check('and names the panel it is actually talking about',
+      panelNow && cText.includes(panelNow), `${panelNow} not in page`);
+    kiosk.menu.back();
+    check('back returns to the list without closing the menu',
+      kiosk.menu.page() === null && kiosk.menu.isOpen());
+
+    kiosk.menu.openPage('activity');
+    await sleep(30);
+    const aText = root.querySelector('[data-page]').textContent;
+    // Presses really happened above, through the real bus, so this is not a synthetic log.
+    check('the activity page shows presses that actually happened on this screen',
+      /→/.test(aText), aText.slice(0, 200));
+    kiosk.menu.back();
+    await press('Escape');
+
     // ---- WHERE A COLD BOOT LANDS ----
     // The menu grew its first real content, and it is a setting somebody actually needs.
     await press('Escape');

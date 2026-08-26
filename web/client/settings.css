@@ -120,3 +120,27 @@
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.3);
 }
 .k-remote[hidden] { display: none; }
+
+/* The diagnostic pages. Read by somebody standing up, in a room, possibly in a hurry. */
+.st-page[hidden] { display: none; }
+.cv-table { width: 100%; border-collapse: collapse; font-size: clamp(.9rem, 1.8vmin, 1.1rem); }
+.cv-table td { padding: clamp(5px, 1vmin, 10px) 8px; border-bottom: 1px solid var(--line, #e4e0c2); vertical-align: baseline; }
+.cv-key { font-weight: 700; white-space: nowrap; }
+.cv-verb { color: var(--ink-soft, #3c5346); white-space: nowrap; }
+.cv-says { color: var(--muted, #5d7064); }
+.cv-hint { opacity: .75; font-size: .85em; }
+/* Rows that will not do anything are dimmed rather than hidden: "it is bound but this
+ * panel ignores it" is an ANSWER, and hiding it would leave somebody hunting for a row
+ * that is not missing. */
+.cv-nothing { opacity: .55; }
+.cv-blocked td { color: var(--rosy-deep, #a85f52); }
+.cv-none { color: var(--muted, #5d7064); }
+
+.cv-verdict { font-weight: 700; padding: clamp(6px, 1.2vmin, 12px) 0; }
+.cv-good { color: #2c6e49; }
+.cv-bad, .cv-no { color: var(--rosy-deep, #a85f52); }
+.cv-mixed { color: var(--ink-soft, #3c5346); }
+.cv-quiet { color: var(--midnight, #105666); }
+.cv-log { list-style: none; padding: 0; margin: 0; font-size: clamp(.85rem, 1.6vmin, 1rem); }
+.cv-log li { padding: clamp(4px, .8vmin, 8px) 0; border-bottom: 1px solid var(--line, #e4e0c2); }
+.cv-ok { color: var(--ink-soft, #3c5346); }

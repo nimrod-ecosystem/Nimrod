@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>controls view — what can I press, and why nothing happened — test</title>
+<link rel="stylesheet" href="../settings.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff;padding:12px}
+</style>
+</head>
+<body>
+<h1>controls view — what can I press, and why nothing happened</h1>
+<p>The wording <b>is</b> the feature here, so it is asserted rather than eyeballed. Five
+different repairs look identical at a bedside — a dead switch, a wrong binding, too high a
+hold threshold, a closed gate, and a panel with nothing to say — and the whole job of these
+two views is to tell them apart.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at</h2>
+<div id="host"></div>
+
+<script type="module">
+import {
+  whatCanIPress, explainActivation, verdict, controlLabel,
+  renderControls, renderActivity, CONTROL_ITEMS,
+} from '../controls_view.js';
+import { mountSettings } from '../settings.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const b = (control, verb, extra = {}) => ({
+  id: 'b-' + control, device: 'keyboard', control, actionId: 'verb/' + verb,
+  role: 'universal', holdMs: 0, ...extra,
+});
+
+// =====================================================================
+section('control names a person can say out loud');
+
+check('a plain key', controlLabel('keyboard', 'key:m') === 'M', controlLabel('keyboard', 'key:m'));
+check('an arrow', controlLabel('keyboard', 'key:arrowdown') === 'Down');
+check('space, which is otherwise invisible', controlLabel('keyboard', 'key: ') === 'Space',
+  JSON.stringify(controlLabel('keyboard', 'key: ')));
+check('escape', controlLabel('keyboard', 'key:escape') === 'Esc');
+check('a chord', controlLabel('keyboard', 'key:ctrl+shift+e') === 'ctrl + shift + E',
+  controlLabel('keyboard', 'key:ctrl+shift+e'));
+check('a mouse button', /Mouse/.test(controlLabel('pointer:mouse', 'pointer:0')));
+check('a controller', /Controller/.test(controlLabel('gamepad:xyz', 'gamepad:button:0')));
+check('something unknown still renders as something', controlLabel('', '') === 'something');
+
+// =====================================================================
+section('what can I press right now');
+
+{
+  const rows = whatCanIPress({
+    bindings: [b('key:arrowdown', 'next'), b('key:enter', 'select'), b('key:arrowright', 'focus-next')],
+    targets: { next: { topic: 'photos/next' } },      // photos answers next, not select
+    subject: 'Photos',
+  });
+  const byVerb = Object.fromEntries(rows.map((r) => [r.verb, r]));
+  check('a bound verb the panel answers is "works"', byVerb.next.status === 'works');
+  check('and it says what it will do, naming the panel',
+    byVerb.next.says === 'Next on Photos', byVerb.next.says);
+
+  // THE DISTINCTION THAT MATTERS MOST: not broken, just not useful here.
+  check('a bound verb the panel ignores is "nothing", NOT an error',
+    byVerb.select.status === 'nothing');
+  check('and it says so plainly rather than looking like a fault',
+    byVerb.select.says === 'nothing on Photos', byVerb.select.says);
+
+  check('moving between panels always works, whatever is focused',
+    byVerb['focus-next'].status === 'works'
+    && byVerb['focus-next'].says === 'moves between panels');
+
+  check('what works is listed FIRST', rows[0].status === 'works');
+}
+{
+  const rows = whatCanIPress({
+    bindings: [b('key:a', 'next', { role: 'participant' }), b('key:b', 'prev')],
+    targets: { next: {}, prev: {} },
+    gate: 'moderator',
+  });
+  const blocked = rows.find((r) => r.control === 'A');
+  check('a binding the gate will refuse is called out', blocked.status === 'blocked');
+  check('and names the gate as the reason, which is the repair',
+    /gate is set to moderator/.test(blocked.says), blocked.says);
+  check('a universal binding still passes a closed gate',
+    rows.find((r) => r.control === 'B').status === 'works');
+}
+{
+  const rows = whatCanIPress({ bindings: [b('key:a', 'select', { holdMs: 300 })], targets: { select: {} } });
+  check('a hold threshold is shown, because it is the invisible reason things fail',
+    rows[0].holdMs === 300);
+}
+check('no bindings is an empty list, not a crash', whatCanIPress({}).length === 0);
+
+// =====================================================================
+section('why nothing happened — five repairs, five sentences');
+
+const say = (rec) => explainActivation(rec).text;
+
+check('an accepted press reads as an arrow to what it did',
+  say({ accepted: true, device: 'keyboard', control: 'key:arrowdown', actionId: 'verb/next' })
+  === 'Down → Next', say({ accepted: true, device: 'keyboard', control: 'key:arrowdown', actionId: 'verb/next' }));
+
+// Each of these is a DIFFERENT repair, which is the entire point.
+check('unbound → nobody has set it up',
+  /not bound to anything yet/.test(say({ control: 'key:x', reason: 'unbound' })));
+check('role-gated → the gate, not the switch',
+  /gate is refusing it/.test(say({ control: 'key:x', reason: 'role-gated' })));
+check('too-short → the hold threshold, and it names the number',
+  /needs 300ms/.test(say({ control: 'key:x', reason: 'too-short', holdMs: 300 })));
+check('debounce → it was treated as a bounce',
+  /bounce/.test(say({ control: 'key:x', reason: 'debounce' })));
+check('lockout → the repeat lockout',
+  /lockout/.test(say({ control: 'key:x', reason: 'lockout' })));
+check('auto-release → a STUCK SWITCH, which is a hardware repair',
+  /stuck switch/.test(say({ control: 'key:x', reason: 'auto-release' })));
+check('unknown-action → the binding points at something gone',
+  /no longer exists/.test(say({ control: 'key:x', reason: 'unknown-action' })));
+check('an unrecognised reason is still shown rather than swallowed',
+  /brand-new-reason/.test(say({ control: 'key:x', reason: 'brand-new-reason' })));
+check('nonsense does not throw', explainActivation(null).ok === false);
+
+// =====================================================================
+section('the verdict — is it the switch, or is it us?');
+
+{
+  const v = verdict([]);
+  // NOT "no errors". Silence is the loudest symptom there is.
+  check('nothing heard at all is reported as the strongest symptom, not as health',
+    v.tone === 'quiet' && /heard nothing at all/.test(v.text), v.text);
+}
+check('all accepted reads as healthy',
+  verdict([{ accepted: true }, { accepted: true }]).tone === 'good');
+{
+  const v = verdict([{ reason: 'too-short' }, { reason: 'too-short' }]);
+  check('everything refused for one reason names that reason',
+    v.tone === 'bad' && /too-short/.test(v.text), v.text);
+}
+check('a mix is reported as a count, not as a failure',
+  verdict([{ accepted: true }, { reason: 'debounce' }]).tone === 'mixed');
+
+// =====================================================================
+section('rendering, and reachability from the menu');
+
+{
+  const el = document.createElement('div');
+  renderControls(el, {
+    bindings: [b('key:arrowdown', 'next'), b('key:enter', 'select')],
+    targets: { next: {} }, subject: 'Photos',
+  });
+  check('every binding gets a row', el.querySelectorAll('tr').length === 2);
+  check('the useless one is marked, not hidden — a missing row sends people hunting',
+    el.querySelectorAll('tr.cv-nothing').length === 1);
+
+  const empty = document.createElement('div');
+  renderControls(empty, { bindings: [], targets: {} });
+  check('nothing bound says where to go and does not look broken',
+    /Inputs page/.test(empty.textContent), empty.textContent);
+}
+{
+  const el = document.createElement('div');
+  renderActivity(el, [{ accepted: true, control: 'key:a', actionId: 'verb/next' },
+                      { control: 'key:b', reason: 'too-short', holdMs: 300 }]);
+  check('the verdict leads', !!el.querySelector('.cv-verdict'));
+  check('the newest press is at the top, because that is the one being asked about',
+    el.querySelector('.cv-log li').textContent.includes('needs 300ms'),
+    el.querySelector('.cv-log li').textContent);
+}
+{
+  // The pages have to be REACHABLE by somebody driving with one switch.
+  const host = document.getElementById('host');
+  let rendered = { controls: 0, activity: 0 };
+  const menu = mountSettings(host, {
+    person: () => ({ name: 'Christine' }),
+    subject: () => ({ type: 'photos', title: 'Photos' }),
+    extras: () => CONTROL_ITEMS,
+    pages: {
+      controls: { title: 'What can I press right now',
+        render: (el) => { rendered.controls += 1;
+          renderControls(el, { bindings: [b('key:arrowdown', 'next'), b('key:enter', 'select')],
+                               targets: { next: {} }, subject: 'Photos' }); } },
+      activity: { title: 'Why nothing happened',
+        render: (el) => { rendered.activity += 1;
+          renderActivity(el, [{ control: 'key:b', reason: 'too-short', holdMs: 300 }]); } },
+    },
+  });
+  menu.open();
+  const ids = menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
+  check('both pages appear in the menu', ids.includes('controls') && ids.includes('activity'),
+    ids.join(','));
+
+  // Walk to it the way a switch would, rather than clicking.
+  let guard = 0;
+  while (menu.focusId() !== 'controls' && guard++ < 12) menu.next();
+  check('the cursor can reach it with next alone', menu.focusId() === 'controls');
+  menu.select();
+  check('selecting opens the page', menu.page() === 'controls' && rendered.controls === 1);
+  check('and the page has a Back that is the cursor', !!host.querySelector('[data-page-back]'));
+
+  menu.next();
+  check('moving inside a page does nothing rather than scrolling an invisible cursor',
+    menu.page() === 'controls');
+  // BACK MUST NOT CLOSE THE MENU. Getting back to a place costs real presses.
+  menu.back();
+  check('back returns to the LIST, not out of the menu',
+    menu.page() === null && menu.isOpen() === true);
+  check('and back again closes, as it always did', (menu.back(), menu.isOpen() === false));
+
+  menu.open();
+  menu.openPage('activity');
+  check('the other page renders too', rendered.activity === 1);
+  menu.select();
+  check('select inside a page is Back, because Back is the only control there',
+    menu.page() === null);
+
+  menu.openPage('nope');
+  check('an unknown page is refused rather than blanking the menu', menu.page() === null);
+
+  const broken = mountSettings(document.createElement('div'), {
+    pages: { boom: { title: 'boom', render: () => { throw new Error('kaboom'); } } },
+  });
+  broken.open();
+  broken.openPage('boom');
+  check('a page that throws still leaves a way out', broken.page() === 'boom');
+  broken.back();
+  check('and Back still works from it', broken.page() === null);
+  broken.destroy();
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
