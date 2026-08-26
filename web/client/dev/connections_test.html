@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>connections — what else this can talk to — test</title>
+<link rel="stylesheet" href="../settings.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:10px}
+  #live{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;background:#fff;padding:14px}
+</style>
+</head>
+<body>
+<h1>connections — hide until connected, without hiding that it exists</h1>
+<p>Hiding a feature until it is set up is right for a first run. <b>Hiding it means nobody
+learns it exists</b> &mdash; and &ldquo;nobody used it&rdquo; then gets diagnosed as a demand
+problem when it was a discovery problem, which is the wayfinder failure exactly. One page
+lists everything, connected or not, so everything else can hide safely.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<h2>live, to look at</h2>
+<div id="live"></div>
+
+<script type="module">
+import {
+  CONNECTIONS, CONNECTION_STATES, CONNECTION_ITEMS, DEFAULT_STATE,
+  connectionById, connectionList, isConnected, normalizeState,
+  visibleAreas, whyHidden, renderConnections, connectionsPage,
+} from '../connections.js';
+import { mountSettings } from '../settings.js';
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// The areas a settings menu would offer. `always` is the exit; the rest are ordinary.
+const AREAS = [
+  { id: 'this-panel', label: 'This panel' },
+  { id: 'screen', label: 'This screen' },
+  { id: 'state-machine', label: 'What plays when', level: 'advanced' },
+  { id: 'home-assistant', label: 'Home Assistant', level: 'advanced', requires: 'home-assistant' },
+  { id: 'ai', label: 'AI', level: 'advanced', requires: 'ai' },
+  { id: 'media', label: 'Your media', requires: 'media-agent' },
+  { id: 'home', label: 'Home', always: true },
+  { id: 'close', label: 'Close menu', always: true },
+];
+const ids = (list) => list.map((a) => a.id).join(',');
+
+// =====================================================================
+section('the catalogue is data');
+
+{
+  check('every connection has an id, a title and something a person can read',
+    CONNECTIONS.every((c) => c.id && c.title && c.blurb && c.blurb.length > 20));
+  check('every one names the area it reveals — that IS the hide-until-connected mechanism',
+    CONNECTIONS.every((c) => !!c.area));
+  check('ids are unique', new Set(CONNECTIONS.map((c) => c.id)).size === CONNECTIONS.length);
+  check('lookup works', connectionById('home-assistant').title === 'Home Assistant');
+  check('and an unknown id is null rather than a throw', connectionById('nope') === null);
+
+  check('THE MEDIA AGENT IS NOT `advanced` — it is the one thing on the list a bedside screen '
+    + 'genuinely needs', connectionById('media-agent').level === 'standard');
+  check('the rest are advanced, because a caregiver should not have to have an opinion',
+    CONNECTIONS.filter((c) => c.id !== 'media-agent').every((c) => c.level === 'advanced'));
+}
+
+// =====================================================================
+section('three states, and the third is a different sentence from the second');
+
+{
+  check('the default is "not set up", never "connected"', DEFAULT_STATE === 'available');
+  check('an unknown state falls back rather than being trusted',
+    normalizeState('great') === 'available' && normalizeState(undefined) === 'available');
+  check('SET UP BUT UNREACHABLE IS ITS OWN STATE — merging it with "not set up" is how '
+    + 'somebody spends an evening re-entering credentials that were already correct',
+    CONNECTION_STATES.includes('unavailable'));
+  check('and unreachable does NOT count as connected',
+    isConnected('ai', { ai: 'unavailable' }) === false);
+  check('connected does', isConnected('ai', { ai: 'connected' }) === true);
+  check('nothing at all is not connected', isConnected('ai') === false);
+
+  const list = connectionList({ ai: 'connected', logger: 'unavailable' });
+  check('the list folds live status into the catalogue',
+    list.find((c) => c.id === 'ai').state === 'connected'
+    && list.find((c) => c.id === 'logger').state === 'unavailable'
+    && list.find((c) => c.id === 'direct').state === 'available');
+  check('and it lists EVERYTHING, connected or not', list.length === CONNECTIONS.length);
+}
+
+// =====================================================================
+section('visibleAreas — hide by level, hide by connection, never hide the way out');
+
+{
+  const std = visibleAreas(AREAS, { level: 'standard', states: {} });
+  check('at standard the advanced areas are gone',
+    !ids(std).includes('state-machine'), ids(std));
+  check('and the unconnected ones are gone', !ids(std).includes('home-assistant'), ids(std));
+  check('an area needing an UNCONNECTED thing hides even at its own level',
+    !visibleAreas(AREAS, { level: 'advanced', states: {} }).some((a) => a.id === 'ai'));
+
+  const adv = visibleAreas(AREAS, { level: 'advanced', states: {} });
+  check('at advanced the level-gated area appears', ids(adv).includes('state-machine'), ids(adv));
+  check('but connection-gated ones still do not — the two rules are independent',
+    !ids(adv).includes('home-assistant'), ids(adv));
+
+  const connected = visibleAreas(AREAS, { level: 'advanced', states: { 'home-assistant': 'connected' } });
+  check('CONNECTING ONE REVEALS ITS AREA', ids(connected).includes('home-assistant'), ids(connected));
+  check('and only its own', !ids(connected).includes('ai'), ids(connected));
+
+  // A `standard`-level area behind a connection: media. Both rules must pass.
+  check('a standard area behind a connection appears once connected',
+    visibleAreas(AREAS, { level: 'standard', states: { 'media-agent': 'connected' } })
+      .some((a) => a.id === 'media'));
+  check('but NOT while it is merely reachable-in-principle',
+    !visibleAreas(AREAS, { level: 'standard', states: { 'media-agent': 'unavailable' } })
+      .some((a) => a.id === 'media'));
+
+  // *** THE SAFETY INVARIANT. This function is the one that could spring the trap. ***
+  for (const level of ['essential', 'standard', 'advanced']) {
+    const v = ids(visibleAreas(AREAS, { level, states: {} }));
+    check(`HOME AND CLOSE SURVIVE AT "${level}", with nothing connected`,
+      v.includes('home') && v.includes('close'), v);
+  }
+  check('and they survive a nonsense level too',
+    ids(visibleAreas(AREAS, { level: 'wizard' })).includes('home'));
+  check('an `always` area is not even asked about its connection',
+    visibleAreas([{ id: 'home', always: true, requires: 'nothing-real' }]).length === 1);
+  check('junk areas are dropped rather than rendered blank',
+    visibleAreas([null, {}, { id: 'ok' }]).length === 1);
+}
+
+// =====================================================================
+section('whyHidden — never a shrug');
+
+{
+  const at = { level: 'standard', states: {} };
+  check('a level-hidden area says which level would show it',
+    whyHidden(AREAS[2], at).includes('advanced'), whyHidden(AREAS[2], at));
+  check('and names the level this screen is on, so the repair is obvious',
+    whyHidden(AREAS[2], at).includes('standard'));
+  check('A CONNECTION-HIDDEN AREA POINTS AT CONNECTIONS — somebody who was told about Home '
+    + 'Assistant and cannot find it must not conclude the product lacks it',
+    whyHidden(AREAS[3], { level: 'advanced', states: {} }).includes('Connections'),
+    whyHidden(AREAS[3], { level: 'advanced', states: {} }));
+  check('and it uses the connection’s human title, not its id',
+    whyHidden(AREAS[3], { level: 'advanced', states: {} }).includes('Home Assistant'));
+  check('a visible area has no reason to give',
+    whyHidden(AREAS[0], at) === null);
+  check('the way out is never hidden and never explains itself',
+    whyHidden(AREAS[6], { level: 'essential' }) === null);
+}
+
+// =====================================================================
+section('the page — and it deliberately filters NOTHING');
+
+{
+  const el = document.createElement('div'); host.append(el);
+  const r = renderConnections(el, { states: { ai: 'connected' }, level: 'essential' });
+  check('every connection is listed', r.rows.length === CONNECTIONS.length);
+  check('EVEN AT `essential`, WHERE ALMOST EVERYTHING ELSE IS HIDDEN — filtering this page '
+    + 'would put the discovery problem straight back', r.rows.length === CONNECTIONS.length);
+  check('the connected count is reported', r.connected === 1);
+  check('an advanced connection is on the page at essential level',
+    el.textContent.includes('Home Assistant'));
+  check('SHAPE PLUS COLOUR — the state has a mark, not only a class',
+    el.querySelector('.cx-connected .cx-mark')?.textContent.trim().length > 0);
+  check('and it says the state in words too',
+    el.textContent.includes('Connected') && el.textContent.includes('Not set up'));
+
+  const none = renderConnections(document.createElement('div'), { states: {} });
+  check('with nothing connected the count is zero', none.connected === 0);
+
+  const p = connectionsPage({ states: () => ({ ai: 'connected' }) });
+  check('it hands the settings menu the shape it expects',
+    p.title === 'Connections' && typeof p.render === 'function');
+}
+
+// =====================================================================
+section('in the real settings menu');
+
+{
+  const h = document.createElement('div'); host.append(h);
+  let states = {};
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'pond', title: 'Pond' }),
+    extras: () => CONNECTION_ITEMS,
+    pages: { connections: connectionsPage({ states: () => states }) },
+  });
+  m.open();
+  const walked = new Set();
+  for (let i = 0; i < 10; i += 1) { walked.add(m.focusId()); m.next(); }
+  check('the Connections row is reachable by one button', walked.has('connections'),
+    [...walked].join(','));
+  check('and the heading above it is not a stop', !walked.has('connections-head'));
+
+  while (m.focusId() !== 'connections') m.next();
+  m.select();
+  check('selecting it opens the page', m.page() === 'connections');
+  check('which lists everything', h.textContent.includes('Home Assistant')
+    && h.textContent.includes('wearable'));
+  m.back();
+  check('and Back returns to the LIST rather than closing the menu',
+    m.page() === null && m.isOpen() === true);
+
+  states = { 'home-assistant': 'connected' };
+  m.select();
+  check('the page reads live state at open time, not at mount time',
+    h.textContent.includes('Connected'));
+  m.destroy();
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+// Live, to look at.
+{
+  const live = document.getElementById('live');
+  renderConnections(live, { states: { 'media-agent': 'connected', logger: 'unavailable' } });
+}
+</script>
+</body>
+</html>

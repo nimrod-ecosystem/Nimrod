@@ -31,6 +31,7 @@ import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
 import { fieldsFor, fieldItems } from './settings_fields.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
+import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
@@ -371,9 +372,19 @@ export async function mountKiosk(root, {
     pages: {
       get controls() { return runtime ? controlPages({ runtime, subjectName }).controls : undefined; },
       get activity() { return runtime ? controlPages({ runtime, subjectName }).activity : undefined; },
+      // WHAT ELSE THIS CAN TALK TO. Always present, at every complexity level, because a page
+      // that is itself hidden until you are advanced enough defeats its own purpose - it
+      // exists so that everything ELSE can hide without becoming a secret.
+      get connections() {
+        return connectionsPage({
+          states: () => (settings.get() || {}).connections || {},
+          level: complexity,
+        });
+      },
     },
     extras: () => [
       ...(runtime ? CONTROL_ITEMS : []),
+      ...CONNECTION_ITEMS,
       ...restartItems(restart, {
       screenName: profile?.name ? `“${profile.name}”` : 'this screen',
       onChange: ({ mode }) => {

@@ -2,7 +2,7 @@
 //
 // The escalation ladder:
 //
-//     notice -> SWAP TO SOMETHING THAT WORKS -> RELOAD -> reboot -> notify
+//     REMOUNT -> RELOAD -> SWAP -> reboot -> notify
 //
 // WHY THE SWAP MATTERS MORE THAN IT SOUNDS. When YouTube fails today, Christine gets a broken
 // panel and stares at it until somebody walks in. With a fallback she gets her photos — which
@@ -69,8 +69,38 @@
 // So: swap (invisible), reload (cheap, universal), reboot (expensive, hardware you own),
 // notify (a person). Each rung is more disruptive and less available than the one before it,
 // which is the right shape for an escalation ladder and was not the shape it had.
-export const STEPS = ['swap', 'reload', 'reboot', 'notify'];
-export const DEFAULT_SEQUENCE = ['swap', 'reload', 'reboot', 'notify'];
+// ---------------------------------------------------------------------------------------
+// THE ORDER CHANGED, and Mike's reason is the right one:
+//
+//   *"Should reload be before swap? The idea being that whatever is already on the kiosk is
+//   what would be preferred for the patient."*
+//
+// YES. THE SWAP IS A CONCESSION - it gives up on the thing she was watching and settles for
+// something else. Every rung before it is an attempt to GIVE HER BACK WHAT SHE WANTED. Putting
+// the swap first meant that whenever it worked, nobody ever found out whether a two-second
+// reload would have fixed the real thing; the screen just quietly settled for less.
+//
+// AND THAT ARGUMENT GOES ONE RUNG FURTHER THAN MIKE TOOK IT. A reload is cheap in TIME but
+// broad in BLAST RADIUS: it takes down every panel on the screen, not just the broken one. So
+// if her photos and her clock are fine and only YouTube is wedged, a reload blinks all three.
+// A REMOUNT - destroy and re-init that ONE module - is narrower than everything else on the
+// ladder, costs milliseconds, and leaves the rest of the screen untouched. The kiosk already
+// does exactly this every time the stage changes, so the mechanism is not new.
+//
+// So each rung now widens in turn:
+//
+//   remount  one panel, milliseconds, nothing else touched
+//   reload   the whole page, two seconds, works on every device that exists
+//   swap     gives up on the content and shows something that works
+//   reboot   the whole machine, a minute, only on hardware you own
+//   notify   spends a person's attention
+//
+// ALL OF IT IS STILL JUST THE DEFAULT. The sequence is data, and Mike is right that it will
+// live behind the power-user level - a caregiver should never have to have an opinion about
+// this, and somebody tuning a screen for one particular person should be able to have a very
+// specific one.
+export const STEPS = ['remount', 'reload', 'swap', 'reboot', 'notify'];
+export const DEFAULT_SEQUENCE = ['remount', 'reload', 'swap', 'reboot', 'notify'];
 
 export const URGENCIES = ['urgent', 'normal', 'quiet'];
 
@@ -91,6 +121,9 @@ export const DEFAULT_POLICY = {
   // A RELOAD LOOP IS AS BAD AS A REBOOT LOOP and arrives faster, because a reload is cheap
   // enough to be tempting. A page that reloads every ten minutes is a page nobody can use.
   reloadWindowMs: 30 * 60 * 1000,
+  // A remount is cheaper still, so it is rationed less - but it IS rationed, because a panel
+  // that re-initialises every few seconds is a strobe and she cannot look away from it.
+  remountWindowMs: 10 * 60 * 1000,
   // How long the screen warns before it reboots itself, so anybody standing there can stop it.
   rebootNoticeMs: 60 * 1000,
   // Local hours, inclusive-exclusive. Null means never hold anything.
@@ -112,6 +145,7 @@ export function normalizePolicy(raw = {}) {
   p.graceMs = num(p.graceMs, DEFAULT_POLICY.graceMs);
   p.rebootWindowMs = num(p.rebootWindowMs, DEFAULT_POLICY.rebootWindowMs);
   p.reloadWindowMs = num(p.reloadWindowMs, DEFAULT_POLICY.reloadWindowMs);
+  p.remountWindowMs = num(p.remountWindowMs, DEFAULT_POLICY.remountWindowMs);
   p.rebootNoticeMs = num(p.rebootNoticeMs, DEFAULT_POLICY.rebootNoticeMs);
   if (!URGENCIES.includes(p.quietBelow)) p.quietBelow = DEFAULT_POLICY.quietBelow;
   if (p.quietHours) {
@@ -245,6 +279,16 @@ export function nextAction(fault, history = {}, ctx = {}, rawPolicy = DEFAULT_PO
       return out('swap', 'a fallback is available and costs her nothing', { to: ctx.fallback });
     }
 
+    if (step === 'remount') {
+      if (spentThisFault(hist.remounts)) continue;
+      if ((hist.remounts || []).some((t) => now - t < policy.remountWindowMs)) continue;
+      // The narrowest possible remedy: nothing outside the broken panel is disturbed, so
+      // there is no notice and nothing to cancel. Somebody looking at the other half of the
+      // screen does not even see it happen.
+      return out('remount', 'the panel can be rebuilt without touching the rest of the screen',
+        { module: fault.module });
+    }
+
     if (step === 'reload') {
       if (spentThisFault(hist.reloads)) continue;
       if ((hist.reloads || []).some((t) => now - t < policy.reloadWindowMs)) continue;
@@ -303,8 +347,9 @@ export function nextAction(fault, history = {}, ctx = {}, rawPolicy = DEFAULT_PO
 // applied — the history a host keeps, updated. Pure, so a test can walk a whole ladder.
 // ---------------------------------------------------------------------------------------
 export function applied(history = {}, action, now = 0) {
-  const h = { reboots: [], reloads: [], ...history };
+  const h = { reboots: [], reloads: [], remounts: [], ...history };
   if (action === 'swap') return { ...h, swappedAt: now };
+  if (action === 'remount') return { ...h, remounts: [...(h.remounts || []), now] };
   if (action === 'reload') return { ...h, reloads: [...(h.reloads || []), now] };
   if (action === 'reboot') return { ...h, reboots: [...(h.reboots || []), now] };
   if (action === 'notify') return { ...h, notifiedAt: now };
@@ -317,5 +362,5 @@ export function applied(history = {}, action, now = 0) {
 // every ten minutes forever.
 export function cleared(history = {}) {
   const { swappedAt, notifiedAt, ...rest } = history || {};
-  return { reboots: [], reloads: [], ...rest };
+  return { reboots: [], reloads: [], remounts: [], ...rest };
 }
