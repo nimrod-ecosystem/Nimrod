@@ -1,8 +1,8 @@
 // recovery.js — WHAT TO DO WHEN A PANEL STOPS WORKING, decided as data.
 //
-// The escalation ladder, and Mike's addition is the middle step:
+// The escalation ladder:
 //
-//     notice -> SWAP TO SOMETHING THAT WORKS -> wait -> re-check -> reboot -> notify
+//     notice -> SWAP TO SOMETHING THAT WORKS -> RELOAD -> reboot -> notify
 //
 // WHY THE SWAP MATTERS MORE THAN IT SOUNDS. When YouTube fails today, Christine gets a broken
 // panel and stares at it until somebody walks in. With a fallback she gets her photos — which
@@ -52,8 +52,25 @@
 // needs a small privileged helper on the device, which is a separate decision with a separate
 // blast radius. This layer decides; something else acts.
 
-export const STEPS = ['swap', 'reboot', 'notify'];
-export const DEFAULT_SEQUENCE = ['swap', 'reboot', 'notify'];
+// ---------------------------------------------------------------------------------------
+// RELOAD IS THE RUNG THAT WAS MISSING, and leaving it out was a real gap. Mike asked whether
+// the reboot is the wrong call, and the honest answer is that it was the wrong FIRST call:
+//
+//   * A REBOOT ONLY WORKS ON HARDWARE YOU OWN. No browser on any platform can restart the
+//     host OS - there is no API for it and that is deliberate. On somebody else's tablet or
+//     laptop the reboot rung simply does not exist, so a ladder that depends on it has no
+//     self-healing step at all for most of the world.
+//   * MOST OF WHAT A REBOOT ACTUALLY FIXES IS THE PAGE, NOT THE MACHINE. A wedged player, a
+//     leaked canvas context, a socket that will not come back, a module stuck mid-render -
+//     every one of those clears on `location.reload()`.
+//   * It costs about two seconds, needs no privilege, no helper, no install, and works
+//     everywhere.
+//
+// So: swap (invisible), reload (cheap, universal), reboot (expensive, hardware you own),
+// notify (a person). Each rung is more disruptive and less available than the one before it,
+// which is the right shape for an escalation ladder and was not the shape it had.
+export const STEPS = ['swap', 'reload', 'reboot', 'notify'];
+export const DEFAULT_SEQUENCE = ['swap', 'reload', 'reboot', 'notify'];
 
 export const URGENCIES = ['urgent', 'normal', 'quiet'];
 
@@ -71,6 +88,9 @@ export const DEFAULT_POLICY = {
   graceMs: 10 * 60 * 1000,
   // One automatic reboot per fault per six hours. Chosen, not measured.
   rebootWindowMs: 6 * 60 * 60 * 1000,
+  // A RELOAD LOOP IS AS BAD AS A REBOOT LOOP and arrives faster, because a reload is cheap
+  // enough to be tempting. A page that reloads every ten minutes is a page nobody can use.
+  reloadWindowMs: 30 * 60 * 1000,
   // How long the screen warns before it reboots itself, so anybody standing there can stop it.
   rebootNoticeMs: 60 * 1000,
   // Local hours, inclusive-exclusive. Null means never hold anything.
@@ -91,6 +111,7 @@ export function normalizePolicy(raw = {}) {
   const num = (v, d) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : d);
   p.graceMs = num(p.graceMs, DEFAULT_POLICY.graceMs);
   p.rebootWindowMs = num(p.rebootWindowMs, DEFAULT_POLICY.rebootWindowMs);
+  p.reloadWindowMs = num(p.reloadWindowMs, DEFAULT_POLICY.reloadWindowMs);
   p.rebootNoticeMs = num(p.rebootNoticeMs, DEFAULT_POLICY.rebootNoticeMs);
   if (!URGENCIES.includes(p.quietBelow)) p.quietBelow = DEFAULT_POLICY.quietBelow;
   if (p.quietHours) {
@@ -191,7 +212,22 @@ export function nextAction(fault, history = {}, ctx = {}, rawPolicy = DEFAULT_PO
 
   if (!fault || !fault.module) return out('done', 'nothing is faulty');
 
-  const age = now - (Number(fault.since) || 0);
+  const since = Number(fault.since) || 0;
+  // TWO DIFFERENT GUARDS, and conflating them was a real modelling bug the tests caught.
+  //
+  //   SPENT THIS FAULT   a remedy that already ran since this fault began does not run again.
+  //                      A fault that SURVIVED a reboot will not be fixed by a second one -
+  //                      that is the whole "move on rather than round" rule, and without this
+  //                      a long-lived fault just cycles remedies forever and NOBODY IS EVER
+  //                      TOLD, which is the failure the ladder exists to prevent.
+  //   THE WINDOW         a remedy is rationed across faults that keep RETURNING. `cleared()`
+  //                      deliberately keeps the timestamps for exactly this, so a screen with
+  //                      a fault that comes back every twenty minutes cannot reboot itself
+  //                      every twenty minutes.
+  //
+  // Both are needed and they answer different questions.
+  const spentThisFault = (list) => (list || []).some((t) => Number(t) >= since);
+  const age = now - since;
   if (age < policy.graceMs) {
     return out('wait', 'the fault is younger than the grace period', {
       readyIn: policy.graceMs - age,
@@ -209,15 +245,30 @@ export function nextAction(fault, history = {}, ctx = {}, rawPolicy = DEFAULT_PO
       return out('swap', 'a fallback is available and costs her nothing', { to: ctx.fallback });
     }
 
+    if (step === 'reload') {
+      if (spentThisFault(hist.reloads)) continue;
+      if ((hist.reloads || []).some((t) => now - t < policy.reloadWindowMs)) continue;
+      // DELIBERATELY NOT GATED ON `inUse`, unlike the reboot. A reload is about two seconds
+      // and the panel is ALREADY broken - making her wait for a working screen because she
+      // is sitting in front of a broken one is the wrong trade. The reboot is a different
+      // matter: it takes the whole screen away for a minute.
+      return out('reload', 'the page can be restarted, which fixes most of what looks like a '
+        + 'dead machine', { noticeMs: Math.min(policy.rebootNoticeMs, 5000), cancellable: true });
+    }
+
     if (step === 'reboot') {
+      // CAN THIS DEVICE EVEN DO IT? A browser cannot restart the host OS on any platform, so
+      // on anything but hardware running a Nimrod helper this rung does not exist. Skipping
+      // it rather than waiting on it is what keeps the ladder working on somebody else's
+      // tablet - and `why` says so, because "nothing happened" needs a reason.
+      if (ctx.canReboot === false) continue;
+      // THE LOOP GUARD, in both of its forms. Checked BEFORE `inUse`, because a reboot that
+      // is not going to happen at all should not make the ladder sit and wait for an empty
+      // room - it should move on to telling somebody.
+      if (spentThisFault(hist.reboots)) continue;
+      if ((hist.reboots || []).some((t) => now - t < policy.rebootWindowMs)) continue;
       if (ctx.inUse) {
         return out('wait', 'somebody is using this screen right now', { blocked: 'in-use' });
-      }
-      const recent = (hist.reboots || []).filter((t) => now - t < policy.rebootWindowMs);
-      if (recent.length) {
-        // THE LOOP GUARD. A second identical fault after a reboot means the reboot is not the
-        // repair, so the ladder must move ON rather than round.
-        continue;
       }
       return out('reboot', 'the fault has persisted and nobody is using the screen', {
         noticeMs: policy.rebootNoticeMs,
@@ -252,8 +303,9 @@ export function nextAction(fault, history = {}, ctx = {}, rawPolicy = DEFAULT_PO
 // applied — the history a host keeps, updated. Pure, so a test can walk a whole ladder.
 // ---------------------------------------------------------------------------------------
 export function applied(history = {}, action, now = 0) {
-  const h = { reboots: [], ...history };
+  const h = { reboots: [], reloads: [], ...history };
   if (action === 'swap') return { ...h, swappedAt: now };
+  if (action === 'reload') return { ...h, reloads: [...(h.reloads || []), now] };
   if (action === 'reboot') return { ...h, reboots: [...(h.reboots || []), now] };
   if (action === 'notify') return { ...h, notifiedAt: now };
   return h;
@@ -265,5 +317,5 @@ export function applied(history = {}, action, now = 0) {
 // every ten minutes forever.
 export function cleared(history = {}) {
   const { swappedAt, notifiedAt, ...rest } = history || {};
-  return { reboots: [], ...rest };
+  return { reboots: [], reloads: [], ...rest };
 }

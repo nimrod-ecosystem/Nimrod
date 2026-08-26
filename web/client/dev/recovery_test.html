@@ -16,6 +16,10 @@
 <p>Pure, at a fake clock. Nothing reboots, nothing mounts &mdash; which is exactly what lets the
 frightening half of the ladder be walked exhaustively. <b>The actuator is deliberately not
 here and cannot be:</b> a browser cannot reboot a Pi. This layer decides; something else acts.</p>
+<p><b>The ladder is swap &rarr; reload &rarr; reboot &rarr; notify.</b> Each rung is more
+disruptive and less available than the one before it: a swap is invisible, a reload costs two
+seconds and works on <i>every</i> device, a reboot needs hardware you own, and notifying
+spends a person's attention.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 
@@ -66,24 +70,33 @@ section('the default ladder — swap first, because it is invisible to her');
     r1.action === 'swap' && r1.to === 'photos', JSON.stringify(r1));
   hist = applied(hist, 'swap', after(20 * MIN));
 
-  const r2 = nextAction(fault, hist, ctx({ now: after(40 * MIN) }));
-  check('with the swap done the ladder moves to the reboot', r2.action === 'reboot', r2.action);
+  const rl = nextAction(fault, hist, ctx({ now: after(40 * MIN) }));
+  check('STEP TWO IS THE RELOAD, not the reboot — most of what looks like a dead machine is a '
+    + 'wedged page, and reloading costs two seconds and works on every device',
+    rl.action === 'reload', rl.action);
+  check('it warns first too, but briefly', rl.cancellable === true && rl.noticeMs <= 5000);
+  hist = applied(hist, 'reload', after(40 * MIN));
+
+  const r2 = nextAction(fault, hist, ctx({ now: after(70 * MIN) }));
+  check('only when the reload did not fix it does the reboot come up', r2.action === 'reboot', r2.action);
+  check('and the reload does NOT come round again on the same fault, however long it has been',
+    nextAction(fault, hist, ctx({ now: after(9 * HOUR) })).action !== 'reload');
   check('THE WARNING GOES ON THE DEVICE THAT IS ABOUT TO REBOOT, so nobody is startled by a '
     + 'screen going black on its own', !!r2.notice && r2.noticeMs > 0, JSON.stringify(r2));
   check('and somebody standing there can stop it', r2.cancellable === true);
-  hist = applied(hist, 'reboot', after(40 * MIN));
+  hist = applied(hist, 'reboot', after(70 * MIN));
 
-  const r3 = nextAction(fault, hist, ctx({ now: after(50 * MIN) }));
+  const r3 = nextAction(fault, hist, ctx({ now: after(80 * MIN) }));
   check('the same fault after a reboot does NOT reboot again — it tells a person',
     r3.action === 'notify', r3.action);
-  hist = applied(hist, 'notify', after(50 * MIN));
+  hist = applied(hist, 'notify', after(80 * MIN));
 
-  const r4 = nextAction(fault, hist, ctx({ now: after(60 * MIN) }));
+  const r4 = nextAction(fault, hist, ctx({ now: after(90 * MIN) }));
   check('once every step is spent the ladder says so rather than looping',
     r4.action === 'done' && r4.exhausted === true, JSON.stringify(r4));
   check('every answer carries a REASON — "in use" and "already rebooted" are different '
     + 'sentences and different repairs',
-    [r1, r2, r3, r4].every((r) => typeof r.why === 'string' && r.why.length > 10));
+    [r1, rl, r2, r3, r4].every((r) => typeof r.why === 'string' && r.why.length > 10));
 }
 
 // =====================================================================
@@ -93,7 +106,7 @@ section('MIKE’S SEQUENCE CHOICE — reboot before swapping in something less i
   // "She already has pictures in her kiosk. I would be selecting something else. If she likes
   // watching youtube, I would consider trying a reboot before swapping in a less interesting
   // module." Not resolvable in general — it depends on how much the fallback costs HER.
-  const p = { sequence: ['reboot', 'swap', 'notify'] };
+  const p = { sequence: ['reboot', 'swap', 'notify'] };   // no reload: his exact ask
   const r1 = nextAction(fault, {}, ctx(), p);
   check('with the order reversed the reboot comes first', r1.action === 'reboot', r1.action);
 
@@ -108,6 +121,8 @@ section('MIKE’S SEQUENCE CHOICE — reboot before swapping in something less i
     { sequence: ['swap', 'notify'] });
   check('…and then it goes straight to telling somebody, never to a reboot',
     noReboot.action === 'notify', noReboot.action);
+  check('the shipped default has four rungs now', DEFAULT_SEQUENCE.length === 4,
+    DEFAULT_SEQUENCE.join(','));
 
   check('a nonsense sequence falls back to the default rather than doing nothing',
     normalizePolicy({ sequence: ['fly', 'swim'] }).sequence.join(',') === DEFAULT_SEQUENCE.join(','));
@@ -123,6 +138,7 @@ section('THE REBOOT LOOP — the guard this whole file exists as a policy engine
   // A screen that reboots every ten minutes is worse than one that is simply broken, because
   // it is broken AND unusable AND looks like it is trying.
   let hist = applied({}, 'swap', T0);
+  hist = applied(hist, 'reload', T0);
   hist = applied(hist, 'reboot', after(30 * MIN));
 
   const soon = nextAction(fault, hist, ctx({ now: after(60 * MIN) }));
@@ -131,9 +147,25 @@ section('THE REBOOT LOOP — the guard this whole file exists as a policy engine
     + 'the reboot is not the repair', soon.action === 'notify', soon.action);
 
   const later = nextAction(fault, hist, ctx({ now: after(30 * MIN + 7 * HOUR) }));
-  check('once the window has passed a reboot is allowed again', later.action === 'reboot', later.action);
+  check('AND WAITING DOES NOT UNLOCK IT — a fault that survived a reboot will not be fixed by '
+    + 'a second one six hours later, so the ladder still moves on',
+    later.action === 'notify', later.action);
 
-  const tight = nextAction(fault, hist, ctx({ now: after(31 * MIN) }), { rebootWindowMs: 0 });
+  // THE WINDOW IS FOR FAULTS THAT COME BACK, which is a different question. `cleared()` keeps
+  // the reboot timestamps deliberately, so a screen with a fault that returns every twenty
+  // minutes cannot reboot itself every twenty minutes.
+  const returned = { module: 'youtube', since: after(2 * HOUR), kind: 'stalled' };
+  const kept = cleared(hist);
+  const again = nextAction(returned, kept, ctx({ now: after(2 * HOUR + 20 * MIN) }));
+  check('a RETURNING fault starts the ladder over at the swap', again.action === 'swap', again.action);
+  const spentAgain = applied(applied(kept, 'swap', after(2 * HOUR)), 'reload', after(2 * HOUR));
+  check('but the reboot is still rationed by the window across faults',
+    nextAction(returned, spentAgain, ctx({ now: after(2 * HOUR + 20 * MIN) })).action === 'notify');
+  check('and once the window really has passed, a returning fault may reboot again',
+    nextAction(returned, spentAgain, ctx({ now: after(9 * HOUR) })).action === 'reboot');
+
+  const tight = nextAction(returned, spentAgain, ctx({ now: after(2 * HOUR + 20 * MIN) }),
+    { rebootWindowMs: 0 });
   check('the window is a setting, and zero means "reboot as often as it takes"',
     tight.action === 'reboot', tight.action);
 }
@@ -142,7 +174,7 @@ section('THE REBOOT LOOP — the guard this whole file exists as a policy engine
 section('never reboot a screen somebody is using');
 
 {
-  const hist = applied({}, 'swap', T0);
+  const hist = applied(applied({}, 'swap', T0), 'reload', T0);
   const r = nextAction(fault, hist, ctx({ now: after(40 * MIN), inUse: true }));
   check('an in-use screen WAITS rather than rebooting', r.action === 'wait', r.action);
   check('and it names the blocker, so nobody debugs the wrong thing', r.blocked === 'in-use');
@@ -183,7 +215,8 @@ section('quiet hours — and an urgent alert that respects them is a bug');
   // reaching the notify step at all. (First version of this test got that wrong and the
   // engine was right - worth leaving the note, because the same mistake is easy to make when
   // reading a report at 3am and wondering why nobody was told.)
-  const spent = applied(applied({}, 'swap', T0), 'reboot', after(7 * HOUR));
+  const spent = applied(applied(applied({}, 'swap', T0), 'reload', T0),
+                        'reboot', after(7 * HOUR));
   const r = nextAction(fault, spent, ctx({ now: after(8 * HOUR), hour: 3, urgency: 'normal' }));
   check('the ladder HOLDS rather than dropping — a held alert is not a dropped alert',
     r.action === 'hold', r.action);
@@ -194,6 +227,42 @@ section('quiet hours — and an urgent alert that respects them is a bug');
   const urgent = nextAction(fault, spent,
     ctx({ now: after(8 * HOUR), hour: 3, urgency: 'urgent' }));
   check('CONTROL: an urgent one fires at 3am anyway', urgent.action === 'notify');
+}
+
+// =====================================================================
+section('THE RELOAD RUNG, and the devices where the reboot rung does not exist');
+
+{
+  // Mike asked whether the reboot is the wrong call. It was the wrong FIRST call: no browser
+  // on any platform can restart the host OS, so on somebody else's tablet a ladder that
+  // depends on it has no self-healing step at all.
+  const hist = applied({}, 'swap', T0);
+  const r = nextAction(fault, hist, ctx({ now: after(40 * MIN) }));
+  check('the reload comes before the reboot', r.action === 'reload', r.action);
+  check('IT IS NOT BLOCKED BY SOMEBODY USING THE SCREEN, unlike the reboot — two seconds, and '
+    + 'the panel is already broken',
+    nextAction(fault, hist, ctx({ now: after(40 * MIN), inUse: true })).action === 'reload');
+
+  // A reload loop is as bad as a reboot loop and arrives faster, because a reload is cheap
+  // enough to be tempting.
+  const spent = applied(hist, 'reload', after(40 * MIN));
+  check('a second reload on the same fault is refused',
+    nextAction(fault, spent, ctx({ now: after(50 * MIN) })).action !== 'reload');
+  check('AND WAITING OUT THE WINDOW DOES NOT UNLOCK IT — otherwise a long-lived fault cycles '
+    + 'remedies forever and nobody is ever told, which is the failure the ladder exists for',
+    nextAction(fault, spent, ctx({ now: after(40 * MIN + 31 * MIN) })).action !== 'reload');
+  check('the reload window is its own setting, shorter than the reboot one',
+    DEFAULT_POLICY.reloadWindowMs < DEFAULT_POLICY.rebootWindowMs);
+
+  // ON A DEVICE THAT CANNOT REBOOT, the rung is SKIPPED rather than waited on - which is what
+  // keeps the ladder working on hardware nobody controls.
+  const noHw = nextAction(fault, spent, ctx({ now: after(60 * MIN), canReboot: false }));
+  check('a device that cannot reboot skips straight to telling somebody',
+    noHw.action === 'notify', noHw.action);
+  check('CONTROL: the same state on hardware that CAN reboot does',
+    nextAction(fault, spent, ctx({ now: after(60 * MIN), canReboot: true })).action === 'reboot');
+  check('and an unstated capability is assumed present, so nothing changes for the Pis',
+    nextAction(fault, spent, ctx({ now: after(60 * MIN) })).action === 'reboot');
 }
 
 // =====================================================================
@@ -236,15 +305,17 @@ section('no fallback declared, and coming back afterwards');
   // fallback, and it is invisible unless the ladder carries on and says something.
   const r = nextAction(fault, {}, ctx({ fallback: null }));
   check('with nothing to swap to the ladder skips ahead rather than stalling',
-    r.action === 'reboot', r.action);
+    r.action === 'reload', r.action);
 
-  const hist = applied(applied(applied({}, 'swap', T0), 'reboot', T0), 'notify', T0);
+  const hist = applied(applied(applied(applied({}, 'swap', T0), 'reload', T0),
+                               'reboot', T0), 'notify', T0);
   const back = cleared(hist);
   check('clearing a fault forgets the swap, so the panel can come BACK on its own',
     back.swappedAt === undefined);
   check('and forgets the notice', back.notifiedAt === undefined);
   check('BUT KEEPS NOTHING TO REBOOT AGAINST — a fault that keeps returning must not reboot '
     + 'the screen every ten minutes forever', Array.isArray(back.reboots));
+  check('and the reload history is reset with it', Array.isArray(back.reloads));
   check('a cleared history starts the ladder over at the swap',
     nextAction(fault, back, ctx()).action === 'swap');
 }
@@ -264,7 +335,7 @@ section('the policy normalises rather than throwing');
   check('an empty policy is the default policy', normalizePolicy().sequence.join(',')
     === DEFAULT_SEQUENCE.join(','));
   check('the vocabularies are exported for whoever renders the settings',
-    STEPS.length === 3 && URGENCIES.length === 3 && DEPENDS.length === 4);
+    STEPS.length === 4 && URGENCIES.length === 3 && DEPENDS.length === 4);
 }
 
 const s = document.getElementById('summary');

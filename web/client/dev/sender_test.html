@@ -29,7 +29,9 @@ import {
 import { createBus } from '../bus.js';
 import { createVerbRouter } from '../input_router.js';
 import { createInputBus, ACTIVATION_TOPIC } from '../input.js';
-import { verbTopic, createActionRegistry } from '../actions.js';
+import { verbTopic, createActionRegistry, VERBS, FOCUS_VERBS,
+         normalizeVerb, mergeVerbs, mergeVerbMaps, verbTarget, MODULE_VERBS } from '../actions.js';
+import { DRIVE_VERBS } from '../drive.js';
 import { explainActivation } from '../controls_view.js';
 
 const out = document.getElementById('results');
@@ -221,6 +223,101 @@ section('a local press names its own control');
   check('AND IT CARRIES THE BINDING’S ROLE, which is what makes the same gate rule apply to '
     + 'a switch and a driver alike', senderOf(meta).role === 'participant');
   ib.destroy?.();
+}
+
+// =====================================================================
+section('CUSTOM VERBS — a verb really is just a name, and here is what that costs');
+
+{
+  // Mike: "a verb is just a variable. You bind something to verb X and then verb X performs
+  // this action in your module." That is exactly what it is - VERBS is a list, verbTopic is
+  // string concatenation, and verbTarget is a lookup in a plain table.
+  const v = normalizeVerb({ id: 'lights-dim', label: 'Dim the lights', group: 'Home' });
+  check('a custom verb normalises', v.id === 'lights-dim' && v.label === 'Dim the lights');
+  check('and is marked as custom, so the binder can group it away from the shipped nine',
+    v.custom === true && v.group === 'Home');
+  check('the label falls back to the id rather than being blank',
+    normalizeVerb({ id: 'call-nurse' }).label === 'call-nurse');
+
+  // A CUSTOM ID MAY NOT SHADOW A BUILT-IN. `select` meaning something else on one screen is
+  // the single worst thing this feature could do: every binding a person owns is keyed to
+  // that name, and they are per-person and follow them between machines.
+  check('A CUSTOM VERB CANNOT SHADOW A SHIPPED ONE', normalizeVerb({ id: 'select' }) === null);
+  check('nor a focus verb', normalizeVerb({ id: 'focus-next' }) === null);
+  check('a malformed id is refused rather than travelling',
+    normalizeVerb({ id: 'Lights Dim!' }) === null && normalizeVerb({}) === null);
+
+  const merged = mergeVerbs([{ id: 'lights-dim', label: 'Dim' }, { id: 'select' }, null]);
+  check('merging keeps every shipped verb', VERBS.every((b) => merged.some((m) => m.id === b.id)));
+  check('THE SHIPPED ONES COME FIRST AND WIN, so adding a verb can never re-point a saved '
+    + 'binding', merged.slice(0, VERBS.length).map((m) => m.id).join(',')
+      === VERBS.map((m) => m.id).join(','));
+  check('the custom one is appended', merged[merged.length - 1].id === 'lights-dim');
+  check('the shadowing attempt and the junk are both dropped',
+    merged.length === VERBS.length + 1, `${merged.length}`);
+  check('merging nothing changes nothing', mergeVerbs().length === VERBS.length);
+
+  // The table is data, so an overlay is a merge.
+  const maps = mergeVerbMaps({ pond: { 'lights-dim': 'ha/service' } });
+  check('an overlay adds a verb to a module type',
+    verbTarget('pond', 'lights-dim', maps).topic === 'ha/service');
+  check('and leaves the shipped mappings alone',
+    verbTarget('pond', 'select', maps).topic === 'pond/splash');
+  check('THE OVERLAY CAN RE-POINT A SHIPPED VERB TOO — "on this screen, select means skip" is '
+    + 'what MODULE_VERBS was always documented as allowing and had no way to express',
+    verbTarget('photos', 'next', mergeVerbMaps({ photos: { next: 'photos/prev' } })).topic
+      === 'photos/prev');
+  check('and the real table is not mutated by any of it',
+    verbTarget('photos', 'next', MODULE_VERBS).topic === 'photos/next');
+}
+
+{
+  // End to end through the REAL router: a custom verb reaches a panel exactly like a shipped
+  // one, carrying its sender.
+  const bus = createBus();
+  const verbs = mergeVerbs([{ id: 'lights-dim', label: 'Dim' }]);
+  const maps = mergeVerbMaps({ pond: { 'lights-dim': 'ha/service' } });
+  const router = createVerbRouter({ bus, verbs, maps,
+    modules: () => [{ id: 'p1', type: 'pond' }] });
+
+  let got = null;
+  bus.subscribe('ha/service', (p, t, meta) => { got = senderOf(meta); });
+  bus.publish(verbTopic('lights-dim'), undefined, senderMeta({ kind: 'local', id: 'switch:1' }));
+  check('A CUSTOM VERB REACHES THE PANEL through the ordinary router', !!got, JSON.stringify(got));
+  check('carrying who sent it, like any other verb', got.id === 'switch:1');
+
+  let shipped = false;
+  bus.subscribe('pond/splash', () => { shipped = true; });
+  bus.publish(verbTopic('select'));
+  check('and the shipped verbs still work alongside it', shipped === true);
+
+  check('the router reports the custom verb among what the panel answers',
+    !!router.targets()['lights-dim']);
+  router.destroy?.();
+}
+
+{
+  // *** THE BOUNDARY. *** drive.js and drive.py each hold their own frozen copy of the eleven
+  // names, deliberately duplicated so a boundary cannot widen because another file grew an
+  // entry. A custom verb is LOCAL BY DEFAULT.
+  const merged = mergeVerbs([{ id: 'lights-dim', label: 'Dim' }]);
+  check('A CUSTOM VERB DOES NOT BECOME REMOTELY DRIVABLE BY EXISTING — the wire allowlist is '
+    + 'frozen and does not read the vocabulary', !DRIVE_VERBS.includes('lights-dim'),
+    DRIVE_VERBS.join(','));
+  check('the wire list is still exactly the eleven it shipped as', DRIVE_VERBS.length === 11,
+    `${DRIVE_VERBS.length}`);
+  check('every name on the wire IS a real verb, so the two lists cannot silently diverge the '
+    + 'other way',
+    DRIVE_VERBS.every((n) => [...VERBS, ...FOCUS_VERBS].some((v) => v.id === n)),
+    DRIVE_VERBS.join(','));
+  // The wire carries the nine verbs AND the two focus verbs; `mergeVerbs` defaults to the
+  // nine, so a length comparison between them means nothing. What matters is that merging
+  // did not reach into the wire list at all.
+  const wireBefore = DRIVE_VERBS.join(',');
+  mergeVerbs([{ id: 'another-one', label: 'x' }]);
+  check('and merging more custom verbs does not touch the wire list at all',
+    DRIVE_VERBS.join(',') === wireBefore && merged.length === VERBS.length + 1,
+    DRIVE_VERBS.join(','));
 }
 
 // =====================================================================
