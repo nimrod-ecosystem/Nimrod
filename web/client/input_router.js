@@ -33,6 +33,10 @@ export function createVerbRouter({
   bus,
   modules = () => [],        // [{id, type, position}] in layout order
   maps = MODULE_VERBS,
+  // THE VOCABULARY IS AN ARGUMENT, not an import. It was already a list and a lookup table;
+  // making it a parameter is the whole of custom-verb support at this layer, because nothing
+  // here ever cared what the nine names were. See `mergeVerbs` in actions.js.
+  verbs = VERBS,
   onChange = null,           // told the focused module whenever it moves
   onUnhandled = null,        // "the focused panel has nothing for that verb" - the UI says so
 } = {}) {
@@ -84,7 +88,7 @@ export function createVerbRouter({
     const m = focused();
     if (!m) return {};
     const out = {};
-    for (const v of VERBS) {
+    for (const v of verbs) {
       const t = verbTarget(m.type, v.id, maps);
       if (t) out[v.id] = t;
     }
@@ -106,7 +110,7 @@ export function createVerbRouter({
     return { ...target, module: { ...m } };
   }
 
-  for (const v of VERBS) {
+  for (const v of verbs) {
     offs.push(bus.subscribe(verbTopic(v.id), (_p, _t, meta) => dispatch(v.id, meta)));
   }
   for (const v of FOCUS_VERBS) {

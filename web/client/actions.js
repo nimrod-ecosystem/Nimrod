@@ -88,6 +88,87 @@ export const FOCUS_VERBS = [
 
 export const verbTopic = (id) => `verb/${id}`;
 
+// ---------------------------------------------------------------------------------------
+// CUSTOM VERBS — Mike: *"a verb is just a variable. You bind something to verb X and then
+// verb X performs this action in your module."*
+//
+// THAT IS EXACTLY WHAT IT IS, and nothing in the machinery ever assumed otherwise. `VERBS` is
+// a list, `verbTopic` is string concatenation, and `verbTarget` is a lookup in a plain table.
+// The nine shipped verbs are a curated DEFAULT, not a closed set - so this adds a registry
+// rather than a mechanism.
+//
+// WHAT IT UNLOCKS, and Mike named both:
+//   * HOME ASSISTANT. A bridge module that answers `verb/lights-dim` turns her switch into a
+//     light switch with NO new input plumbing - same bus, same bindings, same gate, same
+//     diagnostics. Remote drive proved the pattern: it is the same control path with a longer
+//     wire, and so is this.
+//   * THE STATE MACHINE / DIRECTOR. A screen can declare its own vocabulary instead of
+//     borrowing `next` and hoping.
+//
+// AND THE REFRAME THAT MATTERS MOST: for somebody who cannot speak, A CUSTOM VERB IS A
+// SENTENCE SHE CAN SAY WITH A SWITCH. `i-want-music` is not a control, it is an utterance -
+// which puts this much closer to the AAC board than to a keybinding screen.
+//
+// *** THE ONE BOUNDARY IT MUST NOT CROSS, and it is the reason this is a registry and not
+// just a spread operator: THE REMOTE-DRIVE WIRE ALLOWLIST STAYS FROZEN. ***
+// `drive.js` and `drive.py` each hold their own copy of the eleven names deliberately, so
+// that a boundary cannot widen because another file grew an entry. A custom verb is LOCAL BY
+// DEFAULT and does not become remotely drivable by existing - if it ever should, that is an
+// explicit decision on both sides of the wire, not a side effect of somebody adding a row.
+// There is a test.
+//
+// TWO COSTS, both real:
+//   * The binder lists nine things on purpose. Twenty custom verbs would undo that, so they
+//     are grouped separately and belong behind the `advanced` complexity level.
+//   * A custom verb means nothing on a module that has no mapping for it, exactly like a
+//     built-in one. `respondsToVerbs` already handles that and the router already skips
+//     panels with nothing to say.
+
+// A custom id may not shadow a built-in. `select` meaning something else on one screen is the
+// single worst thing this feature could do: every binding a person owns is keyed to that name.
+const BUILT_IN_IDS = new Set([...VERBS, ...FOCUS_VERBS].map((v) => v.id));
+
+export function normalizeVerb(raw) {
+  const id = String(raw?.id || '').trim();
+  if (!ID_RE.test(id)) return null;
+  if (BUILT_IN_IDS.has(id)) return null;      // never shadow a shipped verb
+  return {
+    id,
+    label: String(raw.label || id),
+    hint: String(raw.hint || ''),
+    group: String(raw.group || 'Custom'),
+    custom: true,
+  };
+}
+
+// The effective vocabulary: the shipped nine, plus whatever this screen or person adds.
+// Built-ins always come first and always win, so a saved binding can never be re-pointed by
+// somebody adding a verb.
+export function mergeVerbs(custom = [], base = VERBS) {
+  const out = [...base];
+  const seen = new Set(out.map((v) => v.id));
+  for (const c of Array.isArray(custom) ? custom : []) {
+    const v = normalizeVerb(c);
+    if (!v || seen.has(v.id)) continue;
+    seen.add(v.id);
+    out.push(v);
+  }
+  return out;
+}
+
+// The effective verb table. A per-type overlay merges OVER the shipped defaults, which is
+// what lets a screen say "here, Primary select means Skip" - the thing MODULE_VERBS was
+// always documented as allowing and had no way to express.
+export function mergeVerbMaps(overlay = {}, base = MODULE_VERBS) {
+  const out = {};
+  for (const [type, map] of Object.entries(base)) out[type] = { ...map };
+  for (const [type, map] of Object.entries(overlay || {})) {
+    if (!map || typeof map !== 'object') continue;
+    out[type] = { ...(out[type] || {}), ...map };
+  }
+  return out;
+}
+
 // The DEFAULT meaning of each verb, per module type. Defaults, not rules: the intent is
 // that a module's own settings can re-point them ("on this screen, Primary select should
 // mean Skip"), which is why this is a plain data table and not logic.
