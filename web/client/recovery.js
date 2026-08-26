@@ -126,11 +126,59 @@ export const DEFAULT_POLICY = {
   remountWindowMs: 10 * 60 * 1000,
   // How long the screen warns before it reboots itself, so anybody standing there can stop it.
   rebootNoticeMs: 60 * 1000,
+  // WHAT TO SWAP IN, in the order somebody wants it tried. Empty means "use the automatic
+  // ranking", which is the shipped behaviour and a perfectly good answer for most screens.
+  // Anything on this list that cannot be used right now is skipped rather than failing.
+  fallbacks: [],
   // Local hours, inclusive-exclusive. Null means never hold anything.
   quietHours: { fromHour: 22, toHour: 7 },
   // Below this urgency a notice waits for morning.
   quietBelow: 'normal',
 };
+
+// ---------------------------------------------------------------------------------------
+// WHAT THE SETTINGS MENU SHOWS. Declared as data, so the shell renders it and a cursor can
+// walk it - the same contract every module follows.
+//
+// ONE FIELD IS `standard` AND EVERY OTHER ONE IS `advanced`, deliberately. Mike:
+//
+//   *"the sequences will probably be hidden for anyone but power users."*
+//
+// A caregiver should never have to have an opinion about the order of a recovery ladder.
+// They may well want to know whether the screen is allowed to fix itself, which is one
+// toggle - and that toggle is the whole feature, because it is off until somebody says yes.
+//
+// THE SEQUENCE AND THE FALLBACK ORDER ARE NOT HERE. Both are LISTS to be REORDERED, and
+// reordering is a pointer-friendly, power-user job that the one-button contract explicitly
+// does not cover - trying to make drag-to-reorder switch-operable ships something nobody can
+// use. They belong in an admin surface a clinician drives on a laptop, and until that exists
+// they are edited as data. Said out loud so nobody "fixes" it by cramming them into a row.
+export const RECOVERY_SETTINGS = [
+  { key: 'on', label: 'Let this screen fix itself', default: false, level: 'standard',
+    onLabel: 'Yes', offLabel: 'No',
+    note: 'rebuilds a panel that has stopped, before anybody has to notice' },
+  { key: 'graceMs', label: 'Wait before doing anything', kind: 'choice', default: 10 * 60 * 1000,
+    level: 'advanced',
+    options: [
+      { value: 2 * 60 * 1000, label: '2 minutes' },
+      { value: 5 * 60 * 1000, label: '5 minutes' },
+      { value: 10 * 60 * 1000, label: '10 minutes' },
+      { value: 30 * 60 * 1000, label: '30 minutes' },
+    ] },
+  { key: 'rebootWindowMs', label: 'At most one restart every', kind: 'choice',
+    default: 6 * 60 * 60 * 1000, level: 'advanced',
+    options: [
+      { value: 60 * 60 * 1000, label: 'hour' },
+      { value: 6 * 60 * 60 * 1000, label: '6 hours' },
+      { value: 24 * 60 * 60 * 1000, label: 'day' },
+    ] },
+  { key: 'quietBelow', label: 'Hold overnight anything below', kind: 'choice',
+    default: 'normal', level: 'advanced',
+    options: [
+      { value: 'quiet', label: 'only the quietest notices' },
+      { value: 'normal', label: 'anything not urgent' },
+    ] },
+];
 
 const clampSeq = (seq) => {
   const out = [];
@@ -147,6 +195,9 @@ export function normalizePolicy(raw = {}) {
   p.reloadWindowMs = num(p.reloadWindowMs, DEFAULT_POLICY.reloadWindowMs);
   p.remountWindowMs = num(p.remountWindowMs, DEFAULT_POLICY.remountWindowMs);
   p.rebootNoticeMs = num(p.rebootNoticeMs, DEFAULT_POLICY.rebootNoticeMs);
+  p.fallbacks = (Array.isArray(p.fallbacks) ? p.fallbacks : [])
+    .filter((t) => typeof t === 'string' && t.trim())
+    .map((t) => t.trim());
   if (!URGENCIES.includes(p.quietBelow)) p.quietBelow = DEFAULT_POLICY.quietBelow;
   if (p.quietHours) {
     const h = (v) => Math.min(23, Math.max(0, Math.floor(Number(v)) || 0));
@@ -221,6 +272,41 @@ export function rankFallbacks(manifests = [], { exclude = [], allowNetwork = fal
     .sort((a, b) => (DEPENDS.indexOf(a.dependsOn) - DEPENDS.indexOf(b.dependsOn))
       || ((a.importance === 'critical' ? 0 : 1) - (b.importance === 'critical' ? 0 : 1))
       || a.type.localeCompare(b.type));
+}
+
+// ---------------------------------------------------------------------------------------
+// chooseFallback — WHAT TO SWAP IN, with somebody's own order first.
+//
+// Mike: *"I was thinking the user could set/reorder some fallbacks. We could have some
+// defaults and if it goes to one that's on the screen it would skip it and find something
+// new."*
+//
+// EXACTLY THAT, AND IT IS THE RIGHT SHAPE, because the automatic ranking answers a question
+// nobody actually asked. `rankFallbacks` sorts by how EXPOSED a module is - how many things
+// have to be working for it to work - which is a good tiebreaker and a poor first choice. It
+// has no idea that this particular person loves her photos and is bored by the clock. Only
+// somebody who knows her does.
+//
+// So: walk the preferred list in order, skip anything that is on the screen already or is the
+// broken module itself, and fall through to the automatic ranking when the list runs out.
+// A PREFERENCE LIST THAT RUNS OUT IS NOT AN ERROR - it is the common case, because most
+// people will name one or two things and never think about it again.
+//
+// SKIPPING IS THE PART THAT MAKES IT USABLE. Somebody sets [photos, clock] and does not think
+// about which screens already show photos; the machinery is supposed to work that out, not
+// make them enumerate every combination.
+// ---------------------------------------------------------------------------------------
+export function chooseFallback(preferred = [], manifests = [], opts = {}) {
+  const ranked = rankFallbacks(manifests, opts);
+  const usable = new Map(ranked.map((r) => [r.type, r]));
+  for (const want of Array.isArray(preferred) ? preferred : []) {
+    const type = typeof want === 'string' ? want.trim() : '';
+    // `usable` has already had the excluded and the network-dependent removed, so a name
+    // that is not in it is one that cannot be used here - whether because it is on screen,
+    // because it IS the broken panel, or because it does not exist at all. Skip and carry on.
+    if (type && usable.has(type)) return usable.get(type).type;
+  }
+  return ranked[0]?.type || null;
 }
 
 // ---------------------------------------------------------------------------------------
