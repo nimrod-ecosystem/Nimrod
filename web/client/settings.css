@@ -144,3 +144,23 @@
 .cv-log { list-style: none; padding: 0; margin: 0; font-size: clamp(.85rem, 1.6vmin, 1rem); }
 .cv-log li { padding: clamp(4px, .8vmin, 8px) 0; border-bottom: 1px solid var(--line, #e4e0c2); }
 .cv-ok { color: var(--ink-soft, #3c5346); }
+
+/* ---- connections page ---------------------------------------------------
+   Listed, never filtered. This is the one place somebody sees what the product
+   can do whether or not they have any of it, so it stays plain and complete.
+   SHAPE PLUS COLOUR, NEVER COLOUR ALONE: the mark carries the state as well as
+   the tint, because these rows are small and this screen belongs to somebody
+   with a brain injury. */
+.cx-lead { margin: 0 0 10px; opacity: .85; }
+.cx-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cx { display: flex; gap: 10px; align-items: flex-start;
+      padding: 9px 11px; border-radius: 12px;
+      background: rgba(10, 51, 35, .05); border: 1px solid rgba(10, 51, 35, .12); }
+.cx-mark { font-size: 15px; line-height: 1.5; flex: 0 0 auto; }
+.cx-body { display: grid; gap: 1px; min-width: 0; }
+.cx-title { font-weight: 650; }
+.cx-state { font-size: 12px; opacity: .8; }
+.cx-blurb { font-size: 13px; opacity: .92; }
+.cx-connected { background: rgba(44, 110, 73, .10); border-color: rgba(44, 110, 73, .38); }
+.cx-unavailable { background: rgba(164, 36, 59, .08); border-color: rgba(164, 36, 59, .34); }
+.cx-foot { margin: 12px 0 0; font-size: 12px; opacity: .75; }
