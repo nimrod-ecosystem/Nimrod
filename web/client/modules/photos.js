@@ -36,14 +36,14 @@ const DEFAULTS = { sourceId: '', album: '', intervalSec: 8, fit: 'contain' };
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
-// WHAT THE SETTINGS MENU SHOWS, and the three kinds it proves.
+// WHAT THE SETTINGS MENU SHOWS.
 //
-// `intervalSec` is a NUMBER, and its bounds are chosen for the switch rather than for the
-// range that is technically legal. 2-60 in steps of 1 is fifty-eight presses to get round,
-// which on one button is not a control, it is a punishment; 4-40 in fours is ten stops and
-// covers every interval anybody has ever wanted. THE DECLARED MAXIMUM IS REACHABLE - the
-// stepper lands on a bound before it wraps - so 40 is a real choice and not a number that
-// gets skipped over.
+// `intervalSec` IS A CHOICE, NOT A NUMBER, and the reason is presses. With one switch you
+// walk a control one press at a time and can only travel one way, so the number of stops IS
+// the cost of using it: the legal range 2-60 in ones is fifty-eight presses to get back
+// where you started, and even a sensible 4-40 in fours is ten. The five values anybody
+// actually wants are five presses. A number is the right kind for a real range - pond`s
+// ambientMs is one - and the wrong kind for a short list of known-good values.
 //
 // `sourceId` is a LIVE choice: the options are this account's media sources, which are data
 // and cannot be written into a manifest. See `settingsChoices` below.
@@ -52,8 +52,15 @@ const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 
 // picks one of four hundred albums one press at a time, and a fake affordance is worse than
 // an absent one.
 const SETTINGS = [
-  { key: 'intervalSec', label: 'Change photo every', kind: 'number', default: 8,
-    min: 4, max: 40, step: 4, unit: 'seconds', unitOne: 'second', level: 'essential' },
+  { key: 'intervalSec', label: 'Change photo every', kind: 'choice', default: 8,
+    level: 'essential',
+    options: [
+      { value: 4, label: '4 seconds' },
+      { value: 8, label: '8 seconds' },
+      { value: 15, label: '15 seconds' },
+      { value: 30, label: '30 seconds' },
+      { value: 60, label: '60 seconds' },
+    ] },
   { key: 'fit', label: 'How photos fit', kind: 'choice', default: 'contain', level: 'essential',
     options: [
       { value: 'contain', label: 'Show the whole photo' },
@@ -274,9 +281,14 @@ registerModule(
             <button class="gear" data-gear aria-label="photo settings">⚙</button>
             <div class="settings" data-settings hidden>
               <label>every
+                <!-- THE SAME FIVE VALUES THE SETTINGS MENU OFFERS. Two surfaces offering
+                     different options for one setting is the drift the declared-settings
+                     slice exists to remove, and it shows up as a gear dropdown that goes
+                     blank whenever somebody picks 60 in the menu. -->
                 <select data-opt="intervalSec">
                   <option value="4">4s</option><option value="8">8s</option>
                   <option value="15">15s</option><option value="30">30s</option>
+                  <option value="60">60s</option>
                 </select>
               </label>
               <label>fit

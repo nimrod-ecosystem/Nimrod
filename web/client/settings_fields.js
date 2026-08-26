@@ -187,6 +187,20 @@ export function fieldValue(field, values = {}) {
     if (typeof raw === 'string') return raw !== '' && raw !== 'false' && raw !== '0';
     return !!raw;
   }
+  if (field.kind === 'choice') {
+    // MATCHED LOOSELY, RETURNED CANONICALLY. Option values are whatever the module declared -
+    // numbers for an interval, strings for an id - while storage has been through JSON and a
+    // <select>, which writes strings. Comparing strictly meant a stored "15" matched no
+    // numeric option, so a perfectly good saved value looked like a DEAD one and a single
+    // press would "recover" it to the first option - silently changing a setting somebody
+    // had chosen. Match on the string form, then hand back the DECLARED value, so everything
+    // downstream compares strictly against one canonical type.
+    const opts = field.options || [];
+    const hit = opts.find((o) => o.value === raw)
+      || opts.find((o) => String(o.value) === String(raw));
+    if (hit) return hit.value;
+    return raw === undefined ? '' : raw;
+  }
   if (field.kind === 'number') {
     const n = Number(raw);
     if (!Number.isFinite(n)) return field.default;

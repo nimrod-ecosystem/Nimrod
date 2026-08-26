@@ -410,6 +410,25 @@ section('fieldValue — what is IN FORCE, which is not always what is stored');
   check('a stored value not in the option list is reported as stored, not silently swapped',
     fieldValue(ch, { sourceId: 'deleted-source' }) === 'deleted-source');
   check('a missing values object is survivable', fieldValue(ch, undefined) === '');
+
+  // A CHOICE WHOSE VALUES ARE NUMBERS. This is not hypothetical: `intervalSec` has been
+  // written to storage as a STRING by the module's own <select> since photos shipped, and
+  // its options are declared as numbers. Comparing strictly made a perfectly good saved
+  // value look DEAD, so one press would "recover" it to the first option - silently
+  // changing a setting somebody had chosen.
+  const secs = normalizeField({ key: 'intervalSec', kind: 'choice', default: 8,
+    options: [{ value: 4, label: '4 seconds' }, { value: 8, label: '8 seconds' },
+              { value: 15, label: '15 seconds' }] });
+  check('a stored STRING matches a numeric option instead of reading as dead',
+    fieldValue(secs, { intervalSec: '15' }) === 15, JSON.stringify(fieldValue(secs, { intervalSec: '15' })));
+  check('and it comes back as the DECLARED type, so everything downstream compares strictly',
+    typeof fieldValue(secs, { intervalSec: '15' }) === 'number');
+  check('so stepping it advances rather than jumping to the first option',
+    stepValue(secs, fieldValue(secs, { intervalSec: '15' })) === 4, 'wraps 15 -> 4');
+  check('CONTROL: stepping from a genuinely dead value DOES go to the first option',
+    stepValue(secs, 99) === 4);
+  check('a numeric option displays its label',
+    displayValue(secs, fieldValue(secs, { intervalSec: '8' })) === '8 seconds');
 }
 
 // =====================================================================
