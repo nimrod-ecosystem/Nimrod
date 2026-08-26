@@ -379,6 +379,21 @@ section('normalizeField — a declaration in, a usable field out, or nothing');
   const noted = normalizeField({ key: 'x', kind: 'text', note: 'set in Media / Sources' });
   check('a note replaces the generic reason with the actual repair',
     noted.why === 'set in Media / Sources');
+
+  // WHAT A SETTING NEEDS IN ORDER TO WORK, marked where it is SET rather than only where it
+  // fails. Mike: "It should also be clearly marked wherever it can be set up." Nobody should
+  // be able to enable something at home that quietly will not work at the facility.
+  const vpn = normalizeField({ key: 'p2p', label: 'Direct video', default: false,
+    requires: 'direct' });
+  check('a requirement is carried on the field', vpn.requires === 'direct');
+  check('AND IT SHOWS ON THE ROW, in words rather than as a code',
+    fieldItems([vpn], { values: {} })[0].hint.includes('VPN'),
+    fieldItems([vpn], { values: {} })[0].hint);
+  check('a field with no requirement says nothing extra',
+    fieldItems([normalizeField({ key: 'q', default: true })], { values: {} })[0].hint === 'On');
+  check('an arbitrary requirement is passed through rather than swallowed',
+    fieldItems([normalizeField({ key: 'r', default: true, requires: 'a camera' })],
+      { values: {} })[0].hint.includes('a camera'));
 }
 
 // =====================================================================

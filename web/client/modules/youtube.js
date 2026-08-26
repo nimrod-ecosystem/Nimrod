@@ -160,7 +160,11 @@ function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onPlaylist }) {
 }
 
 registerModule(
-  { type: 'youtube', title: 'YouTube', description: 'weighted-shuffle player over your own playlist (public videos)' },
+  // FALLBACK EXPOSURE: the whole point of this module is off-device, so it is never offered
+  // as a fallback for anything. A fallback chain that ends in something network-dependent has
+  // not terminated.
+  { dependsOn: 'network',
+    type: 'youtube', title: 'YouTube', description: 'weighted-shuffle player over your own playlist (public videos)' },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
     const makePlayer = ctx.playerFactory || createYtPlayer;

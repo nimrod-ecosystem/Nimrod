@@ -54,7 +54,12 @@ function fmt(cfg, now) {
 }
 
 registerModule(
-  { type: 'clock', title: 'Clock', description: 'orientation — time, weekday & date' },
+  // FALLBACK EXPOSURE. A clock needs nothing but the browser - but Mike's point stands:
+  // *"even clock can have a fail state if the time/date isn't right."* There is no safe
+  // module, only a least-exposed one, which is why the vocabulary is `dependsOn` rather than
+  // `cannotFail`. This makes it a good LAST RESORT, not a guarantee.
+  { dependsOn: 'none',
+    type: 'clock', title: 'Clock', description: 'orientation — time, weekday & date' },
   (ctx) => {
     const { mount, state } = ctx;
     let cfg = { ...DEFAULTS };
