@@ -18,8 +18,9 @@
 //    moves from `verb/*`. The day the input bus reaches the kiosk, this menu is already
 //    switch-operable with no rewrite.
 //
-// 2. THE SHELL RENDERS EVERY CONTROL. Modules will declare their settings as DATA (slice
-//    2), not as DOM they render themselves. This is not tidiness. If a module hands over
+// 2. THE SHELL RENDERS EVERY CONTROL. Modules declare their settings as DATA (see
+//    `settings_fields.js`), not as DOM they render themselves. This is not tidiness. If a
+//    module hands over
 //    its own markup, the shell does not know what the controls ARE, so it cannot move a
 //    cursor through them, so the menu is unreachable by anyone driving with one switch —
 //    who is exactly the person this product exists for. Declared settings are the only
@@ -34,8 +35,11 @@
 //    because a settings menu one press away from someone who navigates by scanning is a
 //    settings menu that gets opened by accident all day.
 //
-// WHAT IS DELIBERATELY NOT HERE: module settings (slice 2), the default key binding
-// (slice 3, `S` — `M` and `F` are already taken by the kiosk's mirror and fullscreen).
+// WHAT IS DELIBERATELY NOT HERE: the default key binding (slice 3, `S` — `M` and `F` are
+// already taken by the kiosk's mirror and fullscreen). Module settings ARRIVED in slice 2 and
+// live in `settings_fields.js`, which is pure and knows nothing about this shell: it turns a
+// declaration into an ordinary `{ kind:'item', label, hint, run }`, which is exactly what
+// `extras` already produced, so the cursor walks them with no special case here.
 // The person PICKER is not here either: a screen implies its person, so at the bedside
 // there is nothing to pick and the menu states who it is for. The picker belongs on the
 // home side, where a moderator chooses; `extras` is how that host adds it.
@@ -92,6 +96,11 @@ export function buildItems({
   person = null,
   subject = null,
   extras = [],
+  // The focused panel's own settings, already built into items by `fieldItems`. They arrive
+  // as ITEMS rather than as declarations so this file never has to learn what a field is -
+  // the rules that matter for one button (wrapping, stepping, what is not cycleable) are
+  // pure and live next door, where they can be hammered without a browser.
+  fields = [],
   canFullscreen = false,
   isFullscreen = false,
 } = {}) {
@@ -110,13 +119,21 @@ export function buildItems({
     id: 'subject',
     label: subject ? `This panel — ${subject.title || subject.type}` : 'No panel selected',
   });
-  out.push({
-    kind: 'item',
-    id: 'panel-settings',
-    label: subject ? `Settings for ${subject.title || subject.type}` : 'Settings for this panel',
-    hint: 'arriving next',
-    disabled: true,
-  });
+  if (subject && fields.length) {
+    out.push(...fields);
+  } else if (subject) {
+    // A PANEL WITH NOTHING TO CHANGE STILL GETS A ROW. Dropping it would leave the heading
+    // naming a panel and then nothing underneath, which reads as a menu that failed to load;
+    // the sentence is short and it is the truth.
+    out.push({
+      kind: 'item',
+      id: 'panel-settings',
+      label: `Nothing to change in ${subject.title || subject.type}`,
+      disabled: true,
+    });
+  }
+  // With no subject the heading above already says "No panel selected", and repeating it
+  // costs a row on a screen where rows are presses.
 
   // Whatever the host has that this shell should not know about — the person picker on
   // home, "Set up controls", anything later.
@@ -133,8 +150,12 @@ export function buildItems({
       label: isFullscreen ? 'Leave full screen' : 'Full screen',
     });
   }
-  // ALWAYS a Home button. Non-negotiable: it is the way out of anywhere, and the person
-  // who needs it most is the one who cannot find any other way back.
+  // ALWAYS a Home button. THIS ONE IS A SAFETY INVARIANT, which is the only category of
+  // rule in this project allowed to be absolute - Home, Close, and anything else that is
+  // the way OUT are never hidden, at any complexity level, by any host. A stripped-down
+  // mode that hides the exit is a trap, and the person who needs the exit most is the one
+  // who cannot find any other way back. (Everything else in this file is a design
+  // preference and is argued, not asserted.)
   out.push({ kind: 'item', id: 'home', label: 'Home' });
   out.push({ kind: 'item', id: 'close', label: 'Close menu' });
 
@@ -149,12 +170,19 @@ export function buildItems({
 // back, and `back` means "return to the list" rather than "close" while one is open - which
 // is what anybody who has ever used a menu expects.
 //
-// Deliberately NOT a stack. One level is enough for everything in front of us, and a menu
-// somebody can get lost three levels down is a menu that fails the person it is for.
+// One level, not a stack - and that is a PREFERENCE, not a law. The argument for it is
+// real: a menu somebody can get lost three levels down fails the person it is for, and
+// every page in front of us today fits. The argument against it has not been hunted yet -
+// per-module settings that themselves contain a list (pick a source, then pick an album
+// inside it) are the obvious shape that would want depth. Revisit when one turns up rather
+// than bending a page into a shape it does not fit.
 export function mountSettings(root, {
   person = () => null,
   subject = () => null,
   extras = () => [],
+  // Read at every paint, never cached. A field row shows its CURRENT value, so a snapshot
+  // taken at mount time would show yesterday's number to somebody standing at the screen.
+  fields = () => [],
   pages = {},                  // { id: { title, render(el) } }
   onHome = null,
   onSelect = null,             // told about every activation — the host wires the effects
@@ -194,6 +222,13 @@ export function mountSettings(root, {
       person: person(),
       subject: subject(),
       extras: extras(),
+      // A module that throws while the menu is opening must not take the menu with it - the
+      // menu is the tool for repairing the broken thing.
+      // ...and it SAYS SO on the console rather than swallowing it. A menu that silently
+      // shows no settings for a panel that has some is indistinguishable from a panel that
+      // declares none, which is a bug nobody can find.
+      fields: (() => { try { return fields() || []; }
+        catch (err) { console.warn('settings: fields() threw', err); return []; } })(),
       canFullscreen: !!fullscreenTarget,
       isFullscreen: isFullscreen(),
     });
@@ -252,6 +287,11 @@ export function mountSettings(root, {
     }
     if (typeof item.run === 'function') item.run();
     onSelect?.(item);
+    // REPAINT AFTER EVERY ACTIVATION. A field row's whole job is to show what it is set to,
+    // and stepping it without redrawing leaves the old value on screen - which from a switch
+    // reads as the press having been dropped, and the repair for that looks like a hardware
+    // fault. `render()` keeps the cursor on the row it was on, so nothing moves under a hand.
+    if (open && !page) render();
     return item;
   }
 

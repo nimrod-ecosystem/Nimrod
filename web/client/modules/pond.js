@@ -61,11 +61,32 @@ function rgba(hex, alpha) {
   return `rgba(${n[0] || 0},${n[1] || 0},${n[2] || 0},${alpha})`;
 }
 
+// WHAT THE SETTINGS MENU SHOWS. The shell renders these; this module renders none of it,
+// which is the point - a declaration can be walked with one switch, a hand-rolled panel
+// cannot. `ambientMs` sits at `advanced` because raw timings are what that level is FOR, and
+// because "1500 ms" is not a sentence anybody at a bedside thinks in.
+const SETTINGS = [
+  { key: 'ambient', label: 'Ripples on its own', default: true, level: 'essential',
+    onLabel: 'Yes', offLabel: 'Still water' },
+  { key: 'calm', label: 'Motion', default: false, level: 'essential',
+    onLabel: 'Calm - less movement', offLabel: 'Normal' },
+  { key: 'pointer', label: 'A mouse disturbs the water', default: true, level: 'standard' },
+  { key: 'ambientMs', label: 'A ripple every', kind: 'number', default: 1500,
+    min: 500, max: 6000, step: 500, unit: 'ms', level: 'advanced' },
+];
+
 registerModule(
-  { type: 'pond', title: 'Pond', description: 'calm water that ripples when it is touched' },
+  { type: 'pond', title: 'Pond', description: 'calm water that ripples when it is touched',
+    settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     let cfg = { ...DEFAULTS };
+    // KEPT SEPARATE FROM `cfg.calm` ON PURPOSE. Folding the system's reduced-motion request
+    // into the saved setting made the settings row lie: it would read "Normal" while the pond
+    // was running calm, and the person changing it would see nothing happen. The saved value
+    // is what the person chose; this is what the machine asked for; the pond obeys either.
+    let reducedMotion = false;
+    const calm = () => cfg.calm || reducedMotion;
 
     let canvas = null;
     let c2d = null;
@@ -85,16 +106,16 @@ registerModule(
     function spawn(x, y, strength) {
       ripples.push({
         x, y, r: 6, max: 1.0 + 0.5 * strength, life: 0,
-        dur: (1600 + 900 * strength) * (cfg.calm ? 1.4 : 1),
+        dur: (1600 + 900 * strength) * (calm() ? 1.4 : 1),
         strength,
       });
-      const cap = cfg.calm ? MAX_RIPPLES / 2 : MAX_RIPPLES;
+      const cap = calm() ? MAX_RIPPLES / 2 : MAX_RIPPLES;
       if (ripples.length > cap) ripples.splice(0, ripples.length - cap);
     }
 
     function splash(x, y) {
       spawn(x, y, 1.4);
-      const n = cfg.calm ? 2 : 5;
+      const n = calm() ? 2 : 5;
       for (let i = 0; i < n; i += 1) {
         const a = Math.random() * Math.PI * 2;
         const d = 14 + Math.random() * 26;
@@ -125,7 +146,7 @@ registerModule(
       c2d.fillStyle = g;
       c2d.fillRect(0, 0, W, H);
 
-      const speed = cfg.calm ? 0.5 : 1;
+      const speed = calm() ? 0.5 : 1;
       c2d.globalCompositeOperation = 'lighter';
       for (let i = 0; i < 5; i += 1) {
         const px = W * (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(ts * 0.00013 * speed + i * 1.7)));
@@ -202,24 +223,29 @@ registerModule(
         c2d = canvas.getContext('2d');
 
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };
-        // A person who has asked their system for less motion has asked this panel too.
-        if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) cfg.calm = true;
+        // A person who has asked their system for less motion has asked this panel too - but
+        // that is recorded beside the setting, never written into it. See `reducedMotion`.
+        reducedMotion = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
         resize();
         applyActive();
 
-        if (cfg.pointer) {
-          mount.addEventListener('pointermove', (e) => {
-            const r = canvas.getBoundingClientRect();
-            cx = e.clientX - r.left;
-            cy = e.clientY - r.top;
-            spawn(cx, cy, 0.25);
-          });
-          mount.addEventListener('pointerdown', (e) => {
-            const r = canvas.getBoundingClientRect();
-            splash(e.clientX - r.left, e.clientY - r.top);
-          });
-        }
+        // BOUND ONCE AND GATED INSIDE, not attached conditionally. Deciding at init meant
+        // turning the setting off in the menu did nothing until the panel was remounted, and
+        // a setting that silently does not apply is the support call this whole slice exists
+        // to prevent.
+        mount.addEventListener('pointermove', (e) => {
+          if (!cfg.pointer) return;
+          const r = canvas.getBoundingClientRect();
+          cx = e.clientX - r.left;
+          cy = e.clientY - r.top;
+          spawn(cx, cy, 0.25);
+        });
+        mount.addEventListener('pointerdown', (e) => {
+          if (!cfg.pointer) return;
+          const r = canvas.getBoundingClientRect();
+          splash(e.clientX - r.left, e.clientY - r.top);
+        });
 
         // THE PORT'S REAL ADDITION. Cursor-and-click meant Christine could never make
         // anything happen here; a verb means one switch can.
@@ -250,9 +276,11 @@ registerModule(
 
       // Exposed for the test: the pond is a canvas, so there is nothing in the DOM to
       // assert against and the state has to be readable some other way.
-      __probe: () => ({ ripples: ripples.length, running, W, H, cfg: { ...cfg } }),
+      __probe: () => ({ ripples: ripples.length, running, W, H, cfg: { ...cfg },
+                        reducedMotion, calm: calm() }),
     };
   },
 );
 
 export const POND_DEFAULTS = DEFAULTS;
+export const POND_SETTINGS = SETTINGS;

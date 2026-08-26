@@ -15,10 +15,14 @@
 </style>
 </head>
 <body>
-<h1>settings — the universal menu shell (slice 1)</h1>
+<h1>settings — the universal menu shell + declared fields (slices 1 &amp; 2)</h1>
 <p>No server, no network. The cursor rules are asserted <b>pure</b>; the shell is driven
 through the same imperative moves the kiosk's key handler uses, because the kiosk has no
 input bus. A fake bus covers the path a host <i>with</i> one would take.</p>
+<p><b>Slice 2 adds <code>settings_fields.js</code></b>, and the bulk of what is below is
+<code>stepValue</code> hammered on its own. That is deliberate: it is the entire one-button
+contract in one pure function, and the combination space of a big options surface cannot be
+tested end to end — so the resolver gets hammered alone and the wiring gets tested once.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="host"></div>
@@ -27,6 +31,8 @@ input bus. A fake bus covers the path a host <i>with</i> one would take.</p>
 
 <script type="module">
 import { createNav, buildItems, mountSettings, MENU_TOPIC } from '../settings.js';
+import { normalizeField, fieldValue, stepValue, displayValue, showsAtLevel,
+         fieldItems, fieldsFor, LEVELS } from '../settings_fields.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
 import { verbTopic } from '../actions.js';
@@ -87,7 +93,7 @@ section('what the menu contains');
     labels.some((l) => l === 'This panel — Photos'), JSON.stringify(labels));
   check('Home is ALWAYS present', items.some((i) => i.id === 'home'));
   check('Close is present', items.some((i) => i.id === 'close'));
-  check('module settings are shown as a DISABLED placeholder, not hidden',
+  check('a panel with no declared settings still gets a DISABLED row, not silence',
     items.find((i) => i.id === 'panel-settings')?.disabled === true);
   check('no fullscreen item when the surface cannot go fullscreen',
     !items.some((i) => i.id === 'fullscreen'));
@@ -154,7 +160,7 @@ section('the shell — opening, leaving, and not leaking');
   m.open();
   const seen = new Set();
   for (let i = 0; i < 8; i += 1) { seen.add(m.focusId()); m.next(); }
-  check('the "arriving next" placeholder is never a stop', !seen.has('panel-settings'),
+  check('the disabled placeholder is never a stop', !seen.has('panel-settings'),
     [...seen].join(','));
   m.destroy();
 }
@@ -275,8 +281,8 @@ section('mouse, focus and teardown');
   const btns = [...h.querySelectorAll('.st-item')];
   check('every item renders as a real button', btns.length === ids(m).length);
   const placeholder = [...h.querySelectorAll('.st-item')]
-    .find((b) => b.textContent.includes('Settings for Photos'));
-  check('the "arriving next" placeholder is really disabled in the DOM, not just skipped',
+    .find((b) => b.textContent.includes('Nothing to change in Photos'));
+  check('the disabled placeholder is really disabled in the DOM, not just skipped',
     !!placeholder && placeholder.disabled === true);
   check('exactly one row carries the cursor',
     h.querySelectorAll('.st-item.on').length === 1);
@@ -297,6 +303,438 @@ section('mouse, focus and teardown');
   check('destroying an OPEN menu leaves nothing behind', h.querySelector('.st-scrim') === null);
 }
 
+
+// =====================================================================
+section('normalizeField — a declaration in, a usable field out, or nothing');
+
+{
+  check('no key is dropped, never thrown — one bad field must not stop the menu opening',
+    normalizeField({ label: 'x' }) === null);
+  check('an empty key is dropped too', normalizeField({ key: '   ' }) === null);
+
+  check('kind is inferred from a boolean default',
+    normalizeField({ key: 'a', default: true }).kind === 'toggle');
+  check('kind is inferred from a number default',
+    normalizeField({ key: 'a', default: 3, min: 0, max: 9 }).kind === 'number');
+  check('kind is inferred from the presence of options',
+    normalizeField({ key: 'a', options: ['x', 'y'] }).kind === 'choice');
+  check('anything else infers text', normalizeField({ key: 'a' }).kind === 'text');
+  check('a declared kind beats inference',
+    normalizeField({ key: 'a', kind: 'text', default: 5 }).kind === 'text');
+
+  check('level defaults to standard', normalizeField({ key: 'a' }).level === 'standard');
+  check('an unknown level falls back to standard rather than vanishing',
+    normalizeField({ key: 'a', level: 'wizard' }).level === 'standard');
+  check('label falls back to the key so a row is never blank',
+    normalizeField({ key: 'calm' }).label === 'calm');
+
+  const bare = normalizeField({ key: 'a', options: ['x', 'y'] });
+  check('bare string options become {value,label}',
+    bare.options[0].value === 'x' && bare.options[0].label === 'x');
+  const dup = normalizeField({ key: 'a', options: ['x', 'x', 'y'] });
+  check('a DUPLICATE option value is dropped — findIndex would make the list stick',
+    dup.options.length === 2, JSON.stringify(dup.options));
+  const holes = normalizeField({ key: 'a', kind: 'choice', options: ['x', null, undefined, 'y'] });
+  check('null and undefined options are dropped', holes.options.length === 2);
+}
+
+{
+  section('normalizeField — what is NOT cycleable, and why it still gets a row');
+
+  const text = normalizeField({ key: 'album', kind: 'text' });
+  check('text is never cycleable', text.cycleable === false);
+  check('and it says why, in words', text.why === 'needs a keyboard');
+
+  const none = normalizeField({ key: 'src', kind: 'choice', options: [] });
+  check('a choice with NOTHING to choose is not cycleable', none.cycleable === false);
+  check('an empty choice names the real state, which is a state real screens sit in',
+    none.why === 'nothing to choose from yet');
+  const one = normalizeField({ key: 'src', kind: 'choice', options: ['only'] });
+  check('a choice with ONE option is not cycleable — a cycle back to itself reads as broken',
+    one.cycleable === false && one.why === 'only one to choose from');
+  const two = normalizeField({ key: 'src', kind: 'choice', options: ['a', 'b'] });
+  check('two options IS cycleable', two.cycleable === true);
+
+  const unbounded = normalizeField({ key: 'n', kind: 'number', default: 5 });
+  check('AN UNBOUNDED NUMBER CANNOT WRAP, so it is not cycleable', unbounded.cycleable === false);
+  check('and it is honest about needing a keyboard', unbounded.why === 'needs a keyboard');
+  check('a number with only a min is still unbounded',
+    normalizeField({ key: 'n', kind: 'number', min: 0 }).cycleable === false);
+  check('min === max is not a control',
+    normalizeField({ key: 'n', kind: 'number', min: 4, max: 4 }).cycleable === false);
+  const swapped = normalizeField({ key: 'n', kind: 'number', min: 9, max: 2 });
+  check('min > max is SWAPPED rather than dropped — a field that vanishes is harder to debug',
+    swapped.min === 2 && swapped.max === 9 && swapped.cycleable === true);
+
+  check('a zero step would never move, so it becomes 1',
+    normalizeField({ key: 'n', kind: 'number', min: 0, max: 9, step: 0 }).step === 1);
+  check('a negative step is taken as its magnitude — direction is stepValue\u2019s job, not the declaration\u2019s',
+    normalizeField({ key: 'n', kind: 'number', min: 0, max: 9, step: -2 }).step === 2);
+  check('decimals are derived from the step',
+    normalizeField({ key: 'n', kind: 'number', min: 0, max: 1, step: 0.25 }).decimals === 2);
+
+  const ro = normalizeField({ key: 'x', kind: 'toggle', default: true, readOnly: true });
+  check('readOnly beats everything — a value reported here but owned elsewhere',
+    ro.cycleable === false && !!ro.why);
+  const noted = normalizeField({ key: 'x', kind: 'text', note: 'set in Media / Sources' });
+  check('a note replaces the generic reason with the actual repair',
+    noted.why === 'set in Media / Sources');
+}
+
+// =====================================================================
+section('fieldValue — what is IN FORCE, which is not always what is stored');
+
+{
+  const num = normalizeField({ key: 'intervalSec', kind: 'number', default: 8, min: 4, max: 40, step: 4 });
+  check('an absent key inherits the default', fieldValue(num, {}) === 8);
+  check('null inherits the default too', fieldValue(num, { intervalSec: null }) === 8);
+  check('A STRING FROM A <select> IS COERCED — "15" + 4 would otherwise be "154"',
+    fieldValue(num, { intervalSec: '15' }) === 15);
+  check('garbage falls back to the default rather than to NaN',
+    fieldValue(num, { intervalSec: 'soon' }) === 8);
+  check('a stored value above max is clamped, because nothing is obeying 200',
+    fieldValue(num, { intervalSec: 200 }) === 40);
+  check('and below min', fieldValue(num, { intervalSec: -3 }) === 4);
+
+  const tog = normalizeField({ key: 'calm', default: false });
+  check('a toggle stored as the STRING "false" is false, not truthy',
+    fieldValue(tog, { calm: 'false' }) === false);
+  check('"0" is false as well', fieldValue(tog, { calm: '0' }) === false);
+  check('an empty string is false', fieldValue(tog, { calm: '' }) === false);
+  check('"true" is true', fieldValue(tog, { calm: 'true' }) === true);
+  check('a real boolean survives', fieldValue(tog, { calm: true }) === true);
+
+  const ch = normalizeField({ key: 'sourceId', kind: 'choice', default: '', options: ['a', 'b'] });
+  check('AN EMPTY STRING IS A REAL VALUE and does NOT inherit the default — somebody cleared it',
+    fieldValue(ch, { sourceId: '' }) === '');
+  check('a stored value not in the option list is reported as stored, not silently swapped',
+    fieldValue(ch, { sourceId: 'deleted-source' }) === 'deleted-source');
+  check('a missing values object is survivable', fieldValue(ch, undefined) === '');
+}
+
+// =====================================================================
+section('stepValue — THE ONE-BUTTON CONTRACT, hammered');
+
+{
+  const tog = normalizeField({ key: 'calm', default: false });
+  check('a toggle flips', stepValue(tog, false) === true);
+  check('and flips back', stepValue(tog, true) === false);
+  check('backwards is the SAME flip — with two states there is no other place to be',
+    stepValue(tog, true, -1) === false);
+}
+
+{
+  const ch = normalizeField({ key: 'fit', kind: 'choice', default: 'a', options: ['a', 'b', 'c'] });
+  check('a choice advances', stepValue(ch, 'a') === 'b');
+  check('and again', stepValue(ch, 'b') === 'c');
+  check('AND WRAPS — with one switch you only travel one way', stepValue(ch, 'c') === 'a');
+  check('backwards wraps the other way', stepValue(ch, 'a', -1) === 'c');
+  check('backwards otherwise steps back', stepValue(ch, 'c', -1) === 'b');
+  check('A DEAD STORED VALUE TAKES ONE PRESS TO BECOME VALID — a deleted media source',
+    stepValue(ch, 'deleted-source') === 'a');
+  check('a dead value recovers going backwards too, to the same place',
+    stepValue(ch, 'deleted-source', -1) === 'a');
+
+  // A full lap must visit every option exactly once and come home.
+  const seen = [];
+  let v = 'a';
+  for (let i = 0; i < 3; i += 1) { seen.push(v); v = stepValue(ch, v); }
+  check('one lap visits every option exactly once', seen.join(',') === 'a,b,c', seen.join(','));
+  check('and lands back where it started', v === 'a');
+}
+
+{
+  const n = normalizeField({ key: 'n', kind: 'number', default: 2, min: 2, max: 8, step: 2 });
+  check('a number steps up', stepValue(n, 2) === 4);
+  check('to the maximum', stepValue(n, 6) === 8);
+  check('AND WRAPS at the maximum back to the minimum', stepValue(n, 8) === 2);
+  check('down from the minimum wraps to the maximum', stepValue(n, 2, -1) === 8);
+  check('down otherwise steps down', stepValue(n, 4, -1) === 2);
+
+  // A full lap, the property that matters most: every declared stop is reachable and the
+  // walk terminates. A stepper that misses its own maximum has a bound that is a lie.
+  const stops = [];
+  let v = 2;
+  for (let i = 0; i < 4; i += 1) { stops.push(v); v = stepValue(n, v); }
+  check('one lap of a number visits every stop', stops.join(',') === '2,4,6,8', stops.join(','));
+  check('and comes home', v === 2);
+}
+
+{
+  // THE OFF-GRID CASE. min 2, max 9, step 2: the naive stepper goes 8 -> 10 -> wrap -> 2 and
+  // NINE IS NEVER REACHABLE, so a declared maximum silently is not one.
+  const n = normalizeField({ key: 'n', kind: 'number', default: 2, min: 2, max: 9, step: 2 });
+  check('overshoot lands ON the bound first', stepValue(n, 8) === 9);
+  check('THEN wraps from the bound', stepValue(n, 9) === 2);
+  check('the same going down: it lands on min before wrapping', stepValue(n, 3, -1) === 2);
+  check('and then wraps to max', stepValue(n, 2, -1) === 9);
+  const stops = [];
+  let v = 2;
+  for (let i = 0; i < 5; i += 1) { stops.push(v); v = stepValue(n, v); }
+  check('an off-grid range still reaches its own maximum in one lap',
+    stops.join(',') === '2,4,6,8,9', stops.join(','));
+  check('and still comes home', v === 2);
+}
+
+{
+  // Floats. 0.5 added to itself enough times becomes 9.999999999999998 on a row somebody
+  // is reading, which is not a number anybody wants to see beside "Volume".
+  const f = normalizeField({ key: 'v', kind: 'number', default: 0, min: 0, max: 1, step: 0.1 });
+  let v = 0;
+  const walk = [];
+  for (let i = 0; i < 10; i += 1) { v = stepValue(f, v); walk.push(v); }
+  check('a float walk is exact, not 0.30000000000000004',
+    walk.join(',') === '0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1', walk.join(','));
+  check('and it wraps back to the minimum', stepValue(f, 1) === 0);
+}
+
+{
+  const text = normalizeField({ key: 'album', kind: 'text' });
+  check('text does not move — it is not cycleable and stepping is a no-op',
+    stepValue(text, 'holidays') === 'holidays');
+  const none = normalizeField({ key: 'src', kind: 'choice', options: [] });
+  check('an empty choice does not move either', stepValue(none, 'x') === 'x');
+  const unb = normalizeField({ key: 'n', kind: 'number', default: 5 });
+  check('an unbounded number does not move', stepValue(unb, 5) === 5);
+  check('stepping nothing at all is survivable', stepValue(null, 3) === 3);
+
+  const n = normalizeField({ key: 'n', kind: 'number', default: 2, min: 2, max: 8, step: 2 });
+  check('a non-numeric current value recovers to the minimum in one press',
+    stepValue(n, 'wat') === 2);
+  check('a direction of 0 is treated as forwards, not as a stuck control',
+    stepValue(n, 2, 0) === 4);
+}
+
+// =====================================================================
+section('displayValue — the words on the row, read by somebody standing up');
+
+{
+  const tog = normalizeField({ key: 'calm', default: false, onLabel: 'Calm', offLabel: 'Normal' });
+  check('a toggle shows its own words, not true/false',
+    displayValue(tog, true) === 'Calm' && displayValue(tog, false) === 'Normal');
+  check('with no words given it falls back to On/Off',
+    displayValue(normalizeField({ key: 'a', default: true }), true) === 'On');
+
+  const ch = normalizeField({ key: 'fit', kind: 'choice', default: 'contain', options: [
+    { value: 'contain', label: 'Show the whole photo' }, { value: 'cover', label: 'Fill the panel' }] });
+  check('a choice shows the LABEL, never the raw enum key',
+    displayValue(ch, 'cover') === 'Fill the panel');
+  check('A DEAD VALUE IS NAMED AS DEAD — this is what a deleted source looks like at a bedside',
+    displayValue(ch, 'gone').includes('not one of the choices'), displayValue(ch, 'gone'));
+  const empty = normalizeField({ key: 's', kind: 'choice', default: '', options: ['a', 'b'],
+    emptyLabel: 'No source connected' });
+  check('an empty choice value says what empty MEANS here',
+    displayValue(empty, '') === 'No source connected');
+
+  const n = normalizeField({ key: 'i', kind: 'number', default: 8, min: 1, max: 40, step: 1,
+    unit: 'seconds', unitOne: 'second' });
+  check('a number carries its unit', displayValue(n, 8) === '8 seconds');
+  check('and it is not "1 seconds"', displayValue(n, 1) === '1 second');
+  check('no unit means no trailing space',
+    displayValue(normalizeField({ key: 'i', kind: 'number', default: 1, min: 0, max: 9 }), 5) === '5');
+
+  const t = normalizeField({ key: 'album', kind: 'text', placeholder: 'Everything' });
+  check('empty text shows its placeholder rather than a blank row',
+    displayValue(t, '') === 'Everything');
+  check('and real text shows itself', displayValue(t, 'holidays') === 'holidays');
+}
+
+// =====================================================================
+section('complexity levels — and the trap in them');
+
+{
+  const ess = normalizeField({ key: 'a', level: 'essential' });
+  const std = normalizeField({ key: 'b', level: 'standard' });
+  const adv = normalizeField({ key: 'c', level: 'advanced' });
+  check('essential shows only essential', showsAtLevel(ess, 'essential')
+    && !showsAtLevel(std, 'essential') && !showsAtLevel(adv, 'essential'));
+  check('standard shows essential and standard', showsAtLevel(ess, 'standard')
+    && showsAtLevel(std, 'standard') && !showsAtLevel(adv, 'standard'));
+  check('advanced shows everything', showsAtLevel(ess, 'advanced')
+    && showsAtLevel(std, 'advanced') && showsAtLevel(adv, 'advanced'));
+  check('an unknown level behaves as standard rather than hiding everything',
+    showsAtLevel(std, 'wizard') === true && showsAtLevel(adv, 'wizard') === false);
+  check('the levels are ordered least-permissive first', LEVELS.join(',') === 'essential,standard,advanced');
+
+  // THE SAFETY INVARIANT. A stripped-down mode that hides the exit is a trap, so the level
+  // filter must never be able to touch the way out. Home and Close are built in settings.js
+  // and this test is what says so out loud.
+  const items = buildItems({ subject: { type: 'pond', title: 'Pond' }, fields: [] });
+  check('HOME SURVIVES AT EVERY LEVEL — it is built outside the filter entirely',
+    items.some((i) => i.id === 'home' && !i.disabled));
+  check('so does Close', items.some((i) => i.id === 'close' && !i.disabled));
+}
+
+// =====================================================================
+section('fieldItems — declarations become ordinary menu rows');
+
+{
+  const fields = [
+    normalizeField({ key: 'calm', label: 'Motion', default: false, onLabel: 'Calm', offLabel: 'Normal' }),
+    normalizeField({ key: 'album', label: 'Album', kind: 'text', note: 'set in Media / Sources' }),
+    normalizeField({ key: 'ms', label: 'A ripple every', kind: 'number', default: 1500,
+      min: 500, max: 3000, step: 500, unit: 'ms', level: 'advanced' }),
+  ];
+  const values = { calm: false, album: '', ms: 1500 };
+  const rows = fieldItems(fields, { values, level: 'standard' });
+  check('advanced fields are filtered out at standard', rows.length === 2, `${rows.length}`);
+  check('they come back at advanced', fieldItems(fields, { values, level: 'advanced' }).length === 3);
+  check('rows are ORDINARY items — the shell needs no special case',
+    rows.every((r) => r.kind === 'item' && typeof r.id === 'string'));
+  check('THE CURRENT VALUE IS THE HINT — a row that does not say what it is set to makes '
+    + 'somebody press it to find out', rows[0].hint === 'Normal', rows[0].hint);
+  check('a non-cycleable row is disabled', rows[1].disabled === true);
+  check('and its hint carries the reason, so it is not just dead',
+    rows[1].hint.includes('set in Media / Sources'), rows[1].hint);
+  check('a cycleable row is not disabled', rows[0].disabled === false);
+  check('ids are namespaced so they cannot collide with the shell\u2019s own',
+    rows[0].id === 'set:calm');
+
+  // The step is REPORTED, never written. Only the host knows which of the six scopes a
+  // value lives in, so this layer computing a destination would have to be unpicked.
+  const seen = [];
+  const live = { ...values };
+  const wired = fieldItems(fields, {
+    values: () => live, level: 'advanced',
+    onStep: (k, v) => { seen.push([k, v]); live[k] = v; },
+  });
+  wired[0].run();
+  check('run() reports (key, nextValue) and writes nothing itself',
+    seen.length === 1 && seen[0][0] === 'calm' && seen[0][1] === true, JSON.stringify(seen));
+  check('a disabled row\u2019s run() does nothing at all', (wired[1].run(), seen.length === 1));
+
+  // The footgun a function-valued `values` exists to close.
+  wired[0].run();
+  check('VALUES AS A FUNCTION IS READ AT PRESS TIME — two presses without a repaint do not '
+    + 'step from the same stale value twice',
+    seen.length === 2 && seen[1][1] === false, JSON.stringify(seen));
+
+  const snap = fieldItems(fields, { values: { calm: false }, level: 'standard',
+    onStep: () => {} });
+  check('a plain object still works — it is just the snapshot version',
+    snap[0].value === false);
+  check('fieldItems on nothing is an empty list, not a throw', fieldItems().length === 0);
+}
+
+// =====================================================================
+section('fieldsFor — a manifest, plus the options that are genuinely data');
+
+{
+  const manifest = { type: 'photos', settings: [
+    { key: 'fit', kind: 'choice', default: 'contain', options: ['contain', 'cover'] },
+    { key: 'sourceId', kind: 'choice', default: '' },
+    { key: 'broken' },                       // no kind, no options: becomes text
+    { nope: 1 },                             // no key at all: dropped
+  ] };
+
+  const bare = fieldsFor(manifest, null);
+  check('a field with no key is dropped and the rest survive', bare.length === 3, `${bare.length}`);
+  check('a declared choice keeps its declared options', bare[0].options.length === 2);
+  check('a choice with no options yet is not cycleable', bare[1].cycleable === false);
+
+  const inst = { impl: { settingsChoices: () => ({ sourceId: [
+    { value: 's1', label: 'Home NAS' }, { value: 's2', label: 'Phone' }] }) } };
+  const live = fieldsFor(manifest, inst);
+  check('LIVE OPTIONS from the mounted instance replace the declared ones for that key',
+    live[1].options.length === 2 && live[1].options[0].label === 'Home NAS');
+  check('and that key becomes cycleable', live[1].cycleable === true);
+  check('other keys are untouched by the live merge', live[0].options.length === 2);
+
+  check('the raw factory result works as well as the mount record',
+    fieldsFor(manifest, { settingsChoices: () => ({ sourceId: ['a', 'b'] }) })[1].cycleable === true);
+
+  const thrower = { impl: { settingsChoices: () => { throw new Error('boom'); } } };
+  check('A MODULE THAT THROWS DOES NOT TAKE THE MENU WITH IT — the menu is how you repair it',
+    fieldsFor(manifest, thrower).length === 3);
+
+  check('a manifest with no settings key yields nothing, quietly',
+    fieldsFor({ type: 'clock' }, null).length === 0);
+  check('settings may be a FUNCTION, for a module whose fields depend on something',
+    fieldsFor({ settings: () => [{ key: 'a', default: true }] }, null)[0].kind === 'toggle');
+  check('a settings function that throws yields nothing rather than breaking the menu',
+    fieldsFor({ settings: () => { throw new Error('boom'); } }, null).length === 0);
+  check('no manifest at all is survivable', fieldsFor(null, null).length === 0);
+}
+
+// =====================================================================
+section('the shell, with fields spliced in — walked with one button');
+
+{
+  const fields = [
+    normalizeField({ key: 'calm', label: 'Motion', default: false, onLabel: 'Calm', offLabel: 'Normal' }),
+    normalizeField({ key: 'album', label: 'Album', kind: 'text', note: 'needs a keyboard' }),
+  ];
+  const live = { calm: false };
+  const rows = () => fieldItems(fields, {
+    values: () => live,
+    onStep: (k, v) => { live[k] = v; },
+  });
+
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'pond', title: 'Pond' }),
+    fields: rows,
+  });
+  m.open();
+
+  check('the field rows are in the menu', ids(m).includes('set:calm'));
+  check('and the placeholder is gone now that there is something to show',
+    !ids(m).includes('panel-settings'));
+  check('a field row sits under the panel heading, not at the bottom with Home',
+    m.items().findIndex((i) => i.id === 'set:calm')
+      < m.items().findIndex((i) => i.id === 'home'));
+
+  // The one-button walk: the disabled text row must be skipped, exactly like the old
+  // placeholder was, or a press lands somewhere that does nothing and reads as broken.
+  const stops = new Set();
+  for (let i = 0; i < 8; i += 1) { stops.add(m.focusId()); m.next(); }
+  check('the cycleable field row IS a stop', stops.has('set:calm'));
+  check('THE NON-CYCLEABLE ROW IS NOT A STOP — a cursor landing on a dead row is a press '
+    + 'that appears to do nothing', !stops.has('set:album'), [...stops].join(','));
+  check('Home is still reachable from the same walk', stops.has('home'));
+
+  // Selecting a field row steps it, and the row REPAINTS. Not repainting leaves the old
+  // value on screen, which from a switch reads as the press having been dropped.
+  while (m.focusId() !== 'set:calm') m.next();
+  const before = h.querySelector('.st-item.on').textContent;
+  m.select();
+  check('select steps the value', live.calm === true, JSON.stringify(live));
+  check('THE ROW REPAINTS — the new value is on screen without closing the menu',
+    h.querySelector('.st-item.on').textContent.includes('Calm'),
+    h.querySelector('.st-item.on').textContent.trim());
+  check('and it really changed', h.querySelector('.st-item.on').textContent !== before);
+  check('the cursor did not move out from under the hand', m.focusId() === 'set:calm');
+
+  m.select();
+  check('a second press steps it back — no stale snapshot in between', live.calm === false);
+
+  m.destroy();
+}
+
+{
+  // A host whose fields() throws must still get a menu. This is the same rule as the page
+  // that throws: the menu is the tool for repairing the broken thing.
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'pond', title: 'Pond' }),
+    fields: () => { throw new Error('boom'); },
+  });
+  const opened = m.open();
+  check('a fields() that throws still opens a working menu', opened === true);
+  check('and Home is still there', ids(m).includes('home'));
+  m.destroy();
+}
+
+{
+  // No subject means no panel settings, and no second "No panel selected" row either.
+  const items = buildItems({ fields: [{ kind: 'item', id: 'set:x', label: 'x' }] });
+  check('fields are not shown when there is no subject to attach them to',
+    !items.some((i) => i.id === 'set:x'));
+  check('and the row is not duplicated by a placeholder — the heading already said it',
+    !items.some((i) => i.id === 'panel-settings'));
+  check('Home survives that too', items.some((i) => i.id === 'home'));
+}
+
 // =====================================================================
 // A live one to look at, themed by the same tokens the bedside uses.
 //
@@ -310,9 +748,26 @@ section('mouse, focus and teardown');
     <span id="demo-note" style="margin-left:8px;color:#5d7064"></span>
     <div id="demo-mount"></div>`;
   live.append(bar);
+  const demoValues = { intervalSec: 8, fit: 'contain', sourceId: '', album: '' };
+  const demoFields = [
+    { key: 'intervalSec', label: 'Change photo every', kind: 'number', default: 8,
+      min: 4, max: 40, step: 4, unit: 'seconds', unitOne: 'second' },
+    { key: 'fit', label: 'How photos fit', kind: 'choice', default: 'contain', options: [
+      { value: 'contain', label: 'Show the whole photo' },
+      { value: 'cover', label: 'Fill the panel' }] },
+    { key: 'sourceId', label: 'Photos from', kind: 'choice', default: '',
+      emptyLabel: 'No source connected' },
+    { key: 'album', label: 'Album', kind: 'text', placeholder: 'Everything',
+      note: 'set in Media / Sources' },
+  ].map(normalizeField);
   const m = mountSettings(document.getElementById('demo-mount'), {
     person: () => ({ name: 'Christine' }),
     subject: () => ({ type: 'photos', title: 'Photos' }),
+    fields: () => fieldItems(demoFields, {
+      values: () => demoValues,
+      level: 'advanced',
+      onStep: (k, v) => { demoValues[k] = v; },
+    }),
     extras: () => [{ id: 'controls', label: 'Set up controls', hint: 'switches, dials' }],
     onHome: () => { document.getElementById('demo-note').textContent = 'Home (demo — not navigating)'; },
   });

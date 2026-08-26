@@ -29,6 +29,7 @@ import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
+import { fieldsFor, fieldItems } from './settings_fields.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
@@ -313,6 +314,17 @@ export async function mountKiosk(root, {
   // that says "…" where a name goes.
   let whoName = null;
   let runtime = null;
+  // COMPLEXITY LEVEL — essential / standard / advanced. It lives in the profile settings blob
+  // for now, which is the `screen` level of the chain; when the chain arrives it becomes an
+  // ordinary inherited setting like anything else, and Mike's point stands that a patient's
+  // screen may run `essential` while the clinician's laptop runs `advanced` on one account.
+  //
+  // THERE IS NO WAY TO SET IT FROM HERE YET, ON PURPOSE. A level that hides settings can hide
+  // the setting that changes the level, and that door only locks once somebody can close it.
+  // The escape gets built in the same commit as the switch, never after. What is safe today:
+  // Home, Close and every other way out are built unconditionally in `settings.js` and this
+  // filter never sees them.
+  const complexity = () => (settings.get() || {}).complexity || 'standard';
   const subjectName = () => (layout || !stageRec ? '' : (stageRec.title || stageRec.type));
   const menu = mountSettings(root.querySelector('[data-settings]'), {
     person: () => (whoName ? { name: whoName } : null),
@@ -327,8 +339,32 @@ export async function mountKiosk(root, {
       : { type: stageRec.type, title: stageRec.title || stageRec.type }),
     fullscreenTarget: root,
     onHome: goHome,
-    // THE MENU'S FIRST REAL CONTENT. Until the declarative per-module schema lands, the
-    // host contributes items through `extras` — which is what that hook was for.
+    // THE FOCUSED PANEL'S OWN SETTINGS, declared by the module and rendered by the shell.
+    //
+    // THE HOST DOES THE WRITING, and that is the whole seam. `settings_fields.js` computes
+    // the next value and hands back `(key, value)`; where that value LIVES is a question only
+    // this file can answer, because a setting has six possible homes (instance, module,
+    // screen, device, person, account) that form an inheritance chain. Slice 2 writes to the
+    // instance, which is the most specific level and therefore correct under any chain order
+    // that ever gets built. The day the chain lands, this callback grows a destination —
+    // nothing in the pure layer moves.
+    //
+    // In a laid-out screen every panel is visible at once and there is no single focused
+    // subject, so there are no panel settings to show rather than a guess at whose.
+    fields: () => {
+      const rec = layout ? null : stageRec;
+      if (!rec) return [];
+      return fieldItems(fieldsFor(rec.instance.manifest, rec.instance), {
+        // A FUNCTION, not a snapshot: two presses without a repaint in between would
+        // otherwise step from the same stale value twice, and the second press would look
+        // dropped — which somebody debugs as a broken switch.
+        values: () => rec.state.get() || {},
+        level: complexity(),
+        onStep: (key, value) => { rec.state.set({ [key]: value }); },
+      });
+    },
+    // THE MENU'S OTHER CONTENT: things the shell should not know about, contributed by the
+    // host through `extras` — which is what that hook was for.
     // THE TWO DIAGNOSTIC PAGES. Read lazily through `runtime`, because the menu is built
     // before the input stack is - and because both answer "right now", so a snapshot taken
     // at mount time would be a lie by the time anybody opened it.
@@ -380,9 +416,11 @@ export async function mountKiosk(root, {
       // same one with a longer wire, which is only possible because the input bus got here.
       //
       // AND THE SCREEN SAYS SO. Someone driving this screen from elsewhere is visible to
-      // whoever is sitting in front of it. Not negotiable and not a setting: a person who
-      // cannot tell whether the thing in front of them is being operated by somebody else
-      // has been made a passenger in their own room.
+      // whoever is sitting in front of it: a person who cannot tell whether the thing in
+      // front of them is being operated by somebody else has been made a passenger in their
+      // own room. This is claimed as a SAFETY/consent invariant rather than a preference,
+      // which is the only reason it is allowed to be absolute - and it is flagged for Mike
+      // to confirm as one, because if he calls it a preference it has to be argued instead.
       if (!makeState && profiles.personStateURL) {
         drive = attachDriveToBus(bus, {
           personId: p.person_id,
