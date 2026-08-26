@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>settings audit — how many presses, and what is inconsistent — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #report{margin-top:20px;border-top:2px solid #d8d3ab;padding-top:14px}
+  table{border-collapse:collapse;font-size:13px;margin:6px 0 14px}
+  th,td{border:1px solid #e4e0c2;padding:3px 8px;text-align:left}
+  th{background:#efe9c6}
+  td.n{text-align:right;font-variant-numeric:tabular-nums}
+  .sev-error{color:#a4243b;font-weight:700}
+  .sev-warn{color:#9a6b00}
+  .sev-info{color:#5d7064}
+  .good{color:#2c6e49;font-weight:700}
+</style>
+</head>
+<body>
+<h1>settings audit — the check nobody else would write</h1>
+<p>Two halves. <b>Above:</b> the audit checked against fixtures with faults planted in them, because
+a checker that cannot go red is not a checker. <b>Below:</b> the same functions run over
+<i>this build's real manifests</i> &mdash; so the page is both a test and the report.</p>
+<p><b>Presses are the unit</b>, not seconds, because a press is what the person spends.
+Multiply by a scan dwell where there is one: Cici's yes/no board runs a <b>15&nbsp;second</b>
+dwell, so twelve presses there is three minutes.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="report"></div>
+
+<script type="module">
+import {
+  pressesToWalk, walkCosts, suggestOrder, auditFields, auditAcross, auditValues,
+  auditManifests, normalizeField, SEVERITY, WALK_WARN, WALK_BAD,
+} from '../settings_audit.js';
+import { listManifests } from '../module.js';
+
+// Load every module the product ships, so the report below is the real build.
+import '../modules/clock.js';
+import '../modules/camera.js';
+import '../modules/photos.js';
+import '../modules/youtube.js';
+import '../modules/personal.js';
+import '../modules/educational.js';
+import '../modules/director.js';
+import '../modules/sprint.js';
+import '../modules/quests.js';
+import '../modules/progress.js';
+import '../modules/wordforge.js';
+import '../modules/lessons.js';
+import '../modules/algebra.js';
+import '../modules/pond.js';
+import '../modules/counter.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const nf = (f) => normalizeField(f);
+const codes = (list) => list.map((f) => f.code).sort().join(',');
+
+// =====================================================================
+section('pressesToWalk — a LAP, because with one switch you can only go one way');
+
+{
+  check('a toggle is two presses to get back where you started',
+    pressesToWalk(nf({ key: 'a', default: false })) === 2);
+  check('a choice is one press per option',
+    pressesToWalk(nf({ key: 'a', options: ['x', 'y', 'z'] })) === 3);
+  check('a five-option choice is five — which is why the slideshow interval became one',
+    pressesToWalk(nf({ key: 'a', options: [1, 2, 3, 4, 5] })) === 5);
+
+  // 2..8 step 2 is 2,4,6,8 -> four stops, four presses to return.
+  check('an ON-GRID number is one press per stop',
+    pressesToWalk(nf({ key: 'n', kind: 'number', min: 2, max: 8, step: 2 })) === 4,
+    `${pressesToWalk(nf({ key: 'n', kind: 'number', min: 2, max: 8, step: 2 }))}`);
+  // 2..9 step 2 is 2,4,6,8,9 -> the stepper lands ON the bound before wrapping, and that
+  // extra press is the only reason a declared maximum is reachable at all.
+  check('an OFF-GRID number costs one more, and that press is what makes max reachable',
+    pressesToWalk(nf({ key: 'n', kind: 'number', min: 2, max: 9, step: 2 })) === 5,
+    `${pressesToWalk(nf({ key: 'n', kind: 'number', min: 2, max: 9, step: 2 }))}`);
+  check('pond’s ambient timing is twelve stops',
+    pressesToWalk(nf({ key: 'ambientMs', kind: 'number', min: 500, max: 6000, step: 500 })) === 12,
+    `${pressesToWalk(nf({ key: 'ambientMs', kind: 'number', min: 500, max: 6000, step: 500 }))}`);
+
+  check('anything not cycleable costs ZERO, because it cannot be driven at all',
+    pressesToWalk(nf({ key: 'a', kind: 'text' })) === 0
+    && pressesToWalk(nf({ key: 'n', kind: 'number' })) === 0);
+  check('and nothing at all is survivable', pressesToWalk(null) === 0);
+
+  // THE NUMBER THAT KILLED THE ORIGINAL DECLARATION, kept as a test so nobody re-adds it.
+  check('2-60 in ones is 59 presses — the thing that is not a control',
+    pressesToWalk(nf({ key: 'n', kind: 'number', min: 2, max: 60, step: 1 })) === 59);
+}
+
+// =====================================================================
+section('walkCosts — reach + lap, and the disabled rows that cost nothing to pass');
+
+{
+  const fields = [
+    nf({ key: 'a', default: false }),                       // toggle, 2
+    nf({ key: 'b', kind: 'text' }),                          // not a stop at all
+    nf({ key: 'c', options: ['x', 'y', 'z'] }),              // choice, 3
+    nf({ key: 'd', kind: 'number', min: 0, max: 10, step: 5, level: 'advanced' }),
+  ];
+  const c = walkCosts(fields, { level: 'standard' });
+  check('advanced fields are not counted at standard', c.rows.length === 2, `${c.rows.length}`);
+  check('the first stop costs nothing to reach', c.rows[0].reach === 0);
+  check('A DISABLED ROW COSTS NOTHING TO PASS — the cursor skips it, which is exactly why it '
+    + 'is rendered disabled rather than hidden', c.rows[1].reach === 1, `${c.rows[1].reach}`);
+  check('total is reach + a full lap', c.rows[1].total === 1 + 3, `${c.rows[1].total}`);
+  check('the non-cycleable field is listed as unreachable, with the reason',
+    c.unreachable.length === 1 && c.unreachable[0].key === 'b' && !!c.unreachable[0].why);
+  check('the worst row is named', c.worst.key === 'c');
+  check('with no usage data there is no weighted total — "we do not know" is not zero',
+    c.weighted === null);
+
+  const adv = walkCosts(fields, { level: 'advanced' });
+  check('at advanced the extra field joins and costs more to reach',
+    adv.rows.length === 3 && adv.rows[2].reach === 2);
+}
+
+// =====================================================================
+section('cost per use — MIKE’S NUMBER, and the reordering it implies');
+
+{
+  const fields = [
+    nf({ key: 'rare', options: ['a', 'b', 'c', 'd', 'e', 'f'] }),   // 6, first
+    nf({ key: 'common', default: false }),                          // 2, second
+  ];
+  const usage = { rare: 1, common: 40 };
+  const c = walkCosts(fields, { usage });
+
+  check('cost per use is total / uses', c.rows[1].costPerUse === (1 + 2) / 40);
+  check('THE EXPENSIVE ONE IS THE ONE SHE USES MOST — invisible by looking at the screen',
+    c.rows[1].uses > c.rows[0].uses && c.rows[1].reach > c.rows[0].reach);
+  check('the weighted total is what a session actually costs her',
+    c.weighted === 1 * 6 + 40 * 3, `${c.weighted}`);
+
+  const s = suggestOrder(fields, { usage });
+  check('a reordering is suggested', !!s);
+  check('and it puts the most-used control first', s.order[0] === 'common', s.order.join(','));
+  check('the saving is stated as a number, not as an opinion',
+    s.after === 40 * 2 + 1 * 7 && s.saved === s.before - s.after,
+    `${s.before} -> ${s.after}`);
+
+  // SILENCE IS THE RIGHT OUTPUT FOR "NO CHANGE NEEDED". A tool that recommends what you
+  // already do teaches people to ignore it.
+  check('an already-optimal order suggests nothing',
+    suggestOrder([nf({ key: 'common', default: false }), nf({ key: 'rare', options: ['a', 'b', 'c'] })],
+      { usage: { common: 40, rare: 1 } }) === null);
+  check('and no usage data suggests nothing rather than guessing',
+    suggestOrder(fields) === null);
+  check('zero uses is not the same as no data — it does not become an infinite cost',
+    walkCosts(fields, { usage: { rare: 0, common: 4 } }).rows[0].costPerUse === null);
+}
+
+// =====================================================================
+section('auditFields — the faults are planted, so the checker can go red');
+
+{
+  const found = auditFields([
+    nf({ key: 'n', kind: 'number', default: 5 }),                 // no bounds
+    nf({ key: 'intervalSec', kind: 'choice', options: [1, 2] }),  // seconds key
+    nf({ key: 'holdTime', kind: 'number', min: 0, max: 9 }),      // duration, no Ms
+    nf({ key: 'plain', default: true }),                          // label === key
+    nf({ key: 'one', options: ['only'] }),                        // single option
+  ], { type: 'fixture', declared: [{ key: 'n' }, { nokey: 1 }] });
+  const c = codes(found);
+
+  check('an unbounded number is an ERROR — nobody on one switch can reach it',
+    found.some((f) => f.code === 'unbounded-number' && f.severity === 'error'), c);
+  check('A SECONDS KEY IS AN ERROR, because the fix is a rename and never a reinterpretation',
+    found.some((f) => f.code === 'seconds-key' && f.severity === 'error'), c);
+  check('a duration-shaped key without Ms is a warning',
+    found.some((f) => f.code === 'duration-key'), c);
+  check('a single-option choice is a warning', found.some((f) => f.code === 'single-choice'), c);
+  check('a missing label is info, not an error',
+    found.some((f) => f.code === 'unlabelled' && f.severity === 'info'), c);
+  check('A DECLARATION THAT normalizeField SILENTLY DROPPED IS REPORTED — this is the only '
+    + 'place a module author ever finds out', found.some((f) => f.code === 'no-key'), c);
+  check('no `essential` field is flagged: a patient screen would show nothing',
+    found.some((f) => f.code === 'no-essential'), c);
+  check('every finding names where it is', found.every((f) => 'module' in f || 'key' in f));
+
+  const dup = auditFields([nf({ key: 'x', default: true }), nf({ key: 'x', default: false })],
+    { type: 'f' });
+  check('a duplicate key is an error — the second one is unreachable',
+    dup.some((f) => f.code === 'duplicate-key' && f.severity === 'error'));
+
+  // CONTROL: a clean module produces nothing. A checker that fires on good input is noise,
+  // and noise is how a checker gets turned off.
+  const clean = auditFields([
+    nf({ key: 'intervalMs', label: 'Every', kind: 'choice', level: 'essential',
+         options: [{ value: 1000, label: '1s' }, { value: 2000, label: '2s' }] }),
+  ], { type: 'ok', declared: [{ key: 'intervalMs' }] });
+  check('CONTROL: a clean declaration produces NO findings', clean.length === 0,
+    JSON.stringify(clean));
+}
+
+// =====================================================================
+section('auditAcross — the fault nobody can see from inside one file');
+
+{
+  // The real one, as it existed this morning: two durations, two units, both fine alone.
+  const across = auditAcross({
+    photos: [nf({ key: 'intervalSec', kind: 'choice', options: [1, 2] })],
+    pond: [nf({ key: 'intervalMs', kind: 'number', min: 0, max: 9 })],
+  });
+  check('THE SAME CONCEPT UNDER TWO UNITS IS CAUGHT — this is the drift the migration unpicked',
+    across.some((f) => f.code === 'unit-conflict' && f.severity === 'error'),
+    JSON.stringify(across));
+
+  const conflict = auditAcross({
+    a: [nf({ key: 'mode', options: ['x', 'y'] })],
+    b: [nf({ key: 'mode', kind: 'number', min: 0, max: 5 })],
+  });
+  check('one key declared as two different types is an error',
+    conflict.some((f) => f.code === 'type-conflict' && f.severity === 'error'));
+
+  check('CONTROL: two modules agreeing produce nothing', auditAcross({
+    a: [nf({ key: 'intervalMs', kind: 'number', min: 0, max: 9 })],
+    b: [nf({ key: 'intervalMs', kind: 'number', min: 0, max: 99 })],
+  }).length === 0);
+  check('and different settings that merely rhyme are left alone', auditAcross({
+    a: [nf({ key: 'fit', options: ['x', 'y'] })],
+    b: [nf({ key: 'theme', options: ['p', 'q'] })],
+  }).length === 0);
+}
+
+// =====================================================================
+section('auditValues — did the migration actually finish?');
+
+{
+  const f = [nf({ key: 'intervalMs', kind: 'choice', default: 8000,
+    legacy: { key: 'intervalSec', scale: 1000 },
+    options: [{ value: 4000, label: '4s' }, { value: 8000, label: '8s' }] })];
+
+  const notYet = auditValues(f, { intervalSec: 8 }, { type: 'photos' });
+  check('a screen still reading the OLD key is a warning — it breaks when the legacy read goes',
+    notYet.some((v) => v.code === 'legacy-value' && v.severity === 'warn'), codes(notYet));
+
+  const done = auditValues(f, { intervalMs: 8000, intervalSec: 8 }, { type: 'photos' });
+  check('once the new key is written the old one is only INFO — shadowed, safe to delete',
+    done.some((v) => v.code === 'legacy-value' && v.severity === 'info'), codes(done));
+
+  const str = auditValues(f, { intervalMs: '8000' }, { type: 'photos' });
+  check('A VALUE THAT MATCHES ONLY LOOSELY IS AN ERROR — it displays correctly and cannot be '
+    + 'compared, which is the whole failure this work exists to stop',
+    str.some((v) => v.code === 'type-mismatch'), codes(str));
+
+  const orphan = auditValues(f, { intervalMs: 12345 }, { type: 'photos' });
+  check('a value that is not an option at all is a warning — a deleted source looks like this',
+    orphan.some((v) => v.code === 'orphan-value'), codes(orphan));
+
+  const tog = [nf({ key: 'calm', default: false })];
+  check('a boolean stored as a string is an error',
+    auditValues(tog, { calm: 'false' }).some((v) => v.code === 'type-mismatch'));
+
+  check('CONTROL: clean storage produces nothing',
+    auditValues(f, { intervalMs: 4000 }).length === 0);
+}
+
+// =====================================================================
+section('auditManifests — the one call, over fixtures');
+
+{
+  const r = auditManifests([
+    { type: 'good', settings: [
+      { key: 'a', label: 'A', default: true, level: 'essential' },
+      { key: 'b', label: 'B', options: [{ value: 1, label: 'one' }, { value: 2, label: 'two' }] },
+    ] },
+    { type: 'bad', settings: [
+      { key: 'wideOpen', label: 'Wide', kind: 'number', min: 0, max: 200, step: 1, level: 'essential' },
+    ] },
+    { type: 'nothing' },
+  ]);
+  check('a module with no settings is skipped rather than flagged',
+    !r.findings.some((f) => f.module === 'nothing'));
+  check('A 201-STOP CONTROL IS AN ERROR, and the finding says what it costs in MINUTES',
+    r.findings.some((f) => f.code === 'unreachable-cost' && /minutes/.test(f.text)),
+    JSON.stringify(r.findings.map((f) => f.code)));
+  check('costs are reported per module', !!r.costs.good && !!r.costs.bad);
+  check('findings are sorted worst-first', SEVERITY.indexOf(r.findings[0].severity)
+    <= SEVERITY.indexOf(r.findings[r.findings.length - 1].severity));
+  check('counts are broken out by severity', typeof r.counts.error === 'number');
+  check('the thresholds are exported so a caller can disagree with them',
+    WALK_WARN === 12 && WALK_BAD === 24);
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+// =====================================================================
+// THE REAL REPORT — the same functions, over this build.
+// =====================================================================
+{
+  const rep = document.getElementById('report');
+  const esc = (x) => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const level = 'advanced';                 // audit everything, not just what a caregiver sees
+  const r = auditManifests(listManifests(), { level });
+  window.__audit = r;
+
+  const rows = Object.entries(r.costs)
+    .flatMap(([type, c]) => c.rows.map((x) => ({ type, ...x })))
+    .sort((a, b) => b.total - a.total);
+
+  rep.innerHTML = `<h2>this build — ${Object.keys(r.costs).length} modules with declared settings</h2>
+    <p class="${r.counts.error ? 'sev-error' : 'good'}">
+      ${r.counts.error} error · ${r.counts.warn} warn · ${r.counts.info} info</p>
+    ${r.findings.length ? `<ul>${r.findings.map((f) => `<li class="sev-${f.severity}">
+      <b>${esc(f.severity)}</b> ${esc(f.code)} —
+      ${esc([f.module, f.key].filter(Boolean).join('.'))}: ${esc(f.text)}</li>`).join('')}</ul>`
+      : '<p class="good">Nothing to report.</p>'}
+    <h2>what every setting costs, in presses (level: ${level})</h2>
+    <table><tr><th>module</th><th>setting</th><th>kind</th><th>level</th>
+      <th>reach</th><th>lap</th><th>total</th><th>on a 15s dwell</th></tr>
+      ${rows.map((x) => `<tr>
+        <td>${esc(x.type)}</td><td>${esc(x.label)}</td><td>${esc(x.kind)}</td>
+        <td>${esc(x.level)}</td>
+        <td class="n">${x.reach}</td><td class="n">${x.walk}</td>
+        <td class="n ${x.total > 12 ? 'sev-warn' : ''}">${x.total}</td>
+        <td class="n">${(x.total * 15 / 60).toFixed(1)} min</td></tr>`).join('')}
+    </table>
+    <p><i>Usage data is not wired in yet, so there is no cost-per-use column. The engine takes
+    it (<code>walkCosts(fields, { usage })</code>) and <code>suggestOrder</code> returns a
+    reordering with the saving stated as a number — what is missing is the per-person press
+    log, not the arithmetic.</i></p>`;
+}
+</script>
+</body>
+</html>
