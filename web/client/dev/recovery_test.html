@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>recovery — swap, reboot, notify — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>recovery — what to do when a panel stops working</h1>
+<p>Pure, at a fake clock. Nothing reboots, nothing mounts &mdash; which is exactly what lets the
+frightening half of the ladder be walked exhaustively. <b>The actuator is deliberately not
+here and cannot be:</b> a browser cannot reboot a Pi. This layer decides; something else acts.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  STEPS, DEFAULT_SEQUENCE, URGENCIES, DEPENDS, DEFAULT_POLICY,
+  normalizePolicy, isQuietHour, holdsNotice, releaseHour,
+  rankFallbacks, nextAction, applied, cleared,
+} from '../recovery.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const MIN = 60 * 1000, HOUR = 60 * MIN;
+const T0 = 1_000_000_000;
+const fault = { module: 'youtube', since: T0, kind: 'stalled' };
+const after = (ms) => T0 + ms;
+const ctx = (o = {}) => ({ now: after(20 * MIN), hour: 14, inUse: false, fallback: 'photos', ...o });
+
+// =====================================================================
+section('the grace period — most things that look broken for twenty seconds are a slow network');
+
+{
+  const r = nextAction(fault, {}, ctx({ now: after(1 * MIN) }));
+  check('nothing happens inside the grace period', r.action === 'wait', r.action);
+  check('and it says how long until it would', r.readyIn === 9 * MIN, `${r.readyIn}`);
+  check('past the grace period the ladder starts',
+    nextAction(fault, {}, ctx()).action === 'swap');
+  check('no fault at all is done, not waiting',
+    nextAction(null, {}, ctx()).action === 'done');
+}
+
+// =====================================================================
+section('the default ladder — swap first, because it is invisible to her');
+
+{
+  let hist = {};
+  const r1 = nextAction(fault, hist, ctx());
+  check('step one is the SWAP — instant, and it never takes the whole screen away',
+    r1.action === 'swap' && r1.to === 'photos', JSON.stringify(r1));
+  hist = applied(hist, 'swap', after(20 * MIN));
+
+  const r2 = nextAction(fault, hist, ctx({ now: after(40 * MIN) }));
+  check('with the swap done the ladder moves to the reboot', r2.action === 'reboot', r2.action);
+  check('THE WARNING GOES ON THE DEVICE THAT IS ABOUT TO REBOOT, so nobody is startled by a '
+    + 'screen going black on its own', !!r2.notice && r2.noticeMs > 0, JSON.stringify(r2));
+  check('and somebody standing there can stop it', r2.cancellable === true);
+  hist = applied(hist, 'reboot', after(40 * MIN));
+
+  const r3 = nextAction(fault, hist, ctx({ now: after(50 * MIN) }));
+  check('the same fault after a reboot does NOT reboot again — it tells a person',
+    r3.action === 'notify', r3.action);
+  hist = applied(hist, 'notify', after(50 * MIN));
+
+  const r4 = nextAction(fault, hist, ctx({ now: after(60 * MIN) }));
+  check('once every step is spent the ladder says so rather than looping',
+    r4.action === 'done' && r4.exhausted === true, JSON.stringify(r4));
+  check('every answer carries a REASON — "in use" and "already rebooted" are different '
+    + 'sentences and different repairs',
+    [r1, r2, r3, r4].every((r) => typeof r.why === 'string' && r.why.length > 10));
+}
+
+// =====================================================================
+section('MIKE’S SEQUENCE CHOICE — reboot before swapping in something less interesting');
+
+{
+  // "She already has pictures in her kiosk. I would be selecting something else. If she likes
+  // watching youtube, I would consider trying a reboot before swapping in a less interesting
+  // module." Not resolvable in general — it depends on how much the fallback costs HER.
+  const p = { sequence: ['reboot', 'swap', 'notify'] };
+  const r1 = nextAction(fault, {}, ctx(), p);
+  check('with the order reversed the reboot comes first', r1.action === 'reboot', r1.action);
+
+  const hist = applied({}, 'reboot', after(20 * MIN));
+  const r2 = nextAction(fault, hist, ctx({ now: after(30 * MIN) }), p);
+  check('and the swap is what happens when the reboot did not fix it',
+    r2.action === 'swap' && r2.to === 'photos', JSON.stringify(r2));
+
+  check('a sequence can drop a step entirely — "never reboot this screen" is a real answer',
+    nextAction(fault, {}, ctx(), { sequence: ['swap', 'notify'] }).action === 'swap');
+  const noReboot = nextAction(fault, applied({}, 'swap', T0), ctx({ now: after(40 * MIN) }),
+    { sequence: ['swap', 'notify'] });
+  check('…and then it goes straight to telling somebody, never to a reboot',
+    noReboot.action === 'notify', noReboot.action);
+
+  check('a nonsense sequence falls back to the default rather than doing nothing',
+    normalizePolicy({ sequence: ['fly', 'swim'] }).sequence.join(',') === DEFAULT_SEQUENCE.join(','));
+  check('duplicates in a sequence are collapsed',
+    normalizePolicy({ sequence: ['swap', 'swap', 'notify'] }).sequence.join(',') === 'swap,notify');
+  check('the shipped default is swap-first', DEFAULT_SEQUENCE[0] === 'swap');
+}
+
+// =====================================================================
+section('THE REBOOT LOOP — the guard this whole file exists as a policy engine for');
+
+{
+  // A screen that reboots every ten minutes is worse than one that is simply broken, because
+  // it is broken AND unusable AND looks like it is trying.
+  let hist = applied({}, 'swap', T0);
+  hist = applied(hist, 'reboot', after(30 * MIN));
+
+  const soon = nextAction(fault, hist, ctx({ now: after(60 * MIN) }));
+  check('a second reboot inside the window is REFUSED', soon.action !== 'reboot', soon.action);
+  check('and the ladder moves ON rather than round — a fault that survives a reboot means '
+    + 'the reboot is not the repair', soon.action === 'notify', soon.action);
+
+  const later = nextAction(fault, hist, ctx({ now: after(30 * MIN + 7 * HOUR) }));
+  check('once the window has passed a reboot is allowed again', later.action === 'reboot', later.action);
+
+  const tight = nextAction(fault, hist, ctx({ now: after(31 * MIN) }), { rebootWindowMs: 0 });
+  check('the window is a setting, and zero means "reboot as often as it takes"',
+    tight.action === 'reboot', tight.action);
+}
+
+// =====================================================================
+section('never reboot a screen somebody is using');
+
+{
+  const hist = applied({}, 'swap', T0);
+  const r = nextAction(fault, hist, ctx({ now: after(40 * MIN), inUse: true }));
+  check('an in-use screen WAITS rather than rebooting', r.action === 'wait', r.action);
+  check('and it names the blocker, so nobody debugs the wrong thing', r.blocked === 'in-use');
+  check('IT DOES NOT SKIP AHEAD TO NOTIFYING EITHER — being used is a reason to wait, not a '
+    + 'reason to give up', r.action !== 'notify');
+
+  const free = nextAction(fault, hist, ctx({ now: after(40 * MIN), inUse: false }));
+  check('CONTROL: the same state with nobody there reboots', free.action === 'reboot');
+}
+
+// =====================================================================
+section('quiet hours — and an urgent alert that respects them is a bug');
+
+{
+  check('a normal window holds inside it', isQuietHour(3, { fromHour: 1, toHour: 6 }));
+  check('and not outside', !isQuietHour(9, { fromHour: 1, toHour: 6 }));
+
+  // THE CASE THE NAIVE VERSION GETS WRONG: 22:00-07:00 wraps midnight, and `h >= from &&
+  // h < to` holds NOTHING for exactly the window anybody would actually set.
+  const night = { fromHour: 22, toHour: 7 };
+  check('A WINDOW THAT WRAPS MIDNIGHT HOLDS AT 23:00', isQuietHour(23, night));
+  check('…and at 02:00', isQuietHour(2, night));
+  check('…and at 06:00', isQuietHour(6, night));
+  check('…and NOT at 07:00, the moment it ends', !isQuietHour(7, night));
+  check('…and not at midday', !isQuietHour(12, night));
+  check('no quiet hours holds nothing', !isQuietHour(3, null));
+
+  check('URGENT IS NEVER HELD — the urgency is the author’s, or every alert becomes urgent to '
+    + 'be sure it is seen, which is how an alert system dies',
+    holdsNotice('urgent', 3, DEFAULT_POLICY) === false);
+  check('a normal notice is held at 3am', holdsNotice('normal', 3, DEFAULT_POLICY) === true);
+  check('and delivered at 3pm', holdsNotice('normal', 15, DEFAULT_POLICY) === false);
+  check('a quiet-class notice is held too', holdsNotice('quiet', 3, DEFAULT_POLICY) === true);
+  check('an unknown urgency is treated as normal, never as urgent',
+    holdsNotice('whatever', 3, DEFAULT_POLICY) === true);
+
+  // The reboot has to be INSIDE the window, or the ladder correctly reboots again instead of
+  // reaching the notify step at all. (First version of this test got that wrong and the
+  // engine was right - worth leaving the note, because the same mistake is easy to make when
+  // reading a report at 3am and wondering why nobody was told.)
+  const spent = applied(applied({}, 'swap', T0), 'reboot', after(7 * HOUR));
+  const r = nextAction(fault, spent, ctx({ now: after(8 * HOUR), hour: 3, urgency: 'normal' }));
+  check('the ladder HOLDS rather than dropping — a held alert is not a dropped alert',
+    r.action === 'hold', r.action);
+  check('and it says when it will come out, because a person believes something is watching',
+    r.releaseHour === 7, `${r.releaseHour}`);
+  check('the release hour is the end of the window', releaseHour(DEFAULT_POLICY) === 7);
+
+  const urgent = nextAction(fault, spent,
+    ctx({ now: after(8 * HOUR), hour: 3, urgency: 'urgent' }));
+  check('CONTROL: an urgent one fires at 3am anyway', urgent.action === 'notify');
+}
+
+// =====================================================================
+section('rankFallbacks — NOTHING is failure-free, so it ranks by exposure');
+
+{
+  // Mike: "even clock can have a fail state if the time/date isn't right. Maybe least likely
+  // to fail if there aren't any without a fail state of some sort."
+  const mans = [
+    { type: 'youtube', title: 'YouTube', dependsOn: 'network' },
+    { type: 'photos', title: 'Photos', dependsOn: 'local', importance: 'critical' },
+    { type: 'clock', title: 'Clock', dependsOn: 'none' },
+    { type: 'pond', title: 'Pond', dependsOn: 'none', importance: 'optional' },
+    { type: 'personal', title: 'Personal', dependsOn: 'server' },
+  ];
+  const ranked = rankFallbacks(mans, { exclude: ['youtube'] });
+  const order = ranked.map((r) => r.type).join(',');
+
+  check('the least exposed come first', ranked[0].dependsOn === 'none', order);
+  check('A NETWORK MODULE IS NOT OFFERED AS A FALLBACK AT ALL — a chain that ends in something '
+    + 'network-dependent has not terminated', !order.includes('youtube'), order);
+  check('local beats server', order.indexOf('photos') < order.indexOf('personal'), order);
+  check('the faulty module is excluded from replacing itself', !order.startsWith('youtube'));
+  check('among equally exposed modules the one that matters to her wins',
+    rankFallbacks([{ type: 'pond', dependsOn: 'none', importance: 'optional' },
+                   { type: 'home', dependsOn: 'none', importance: 'critical' }])[0].type === 'home');
+  check('an undeclared dependency is assumed to be `server` — pessimistic, because a fallback '
+    + 'that turns out to need the network is the one failure this must not have',
+    rankFallbacks([{ type: 'x' }])[0].dependsOn === 'server');
+  check('network CAN be allowed explicitly, for a caller that knows better',
+    rankFallbacks(mans, { allowNetwork: true }).some((r) => r.type === 'youtube'));
+  check('nothing at all is survivable', rankFallbacks().length === 0);
+}
+
+// =====================================================================
+section('no fallback declared, and coming back afterwards');
+
+{
+  // "There was nothing to swap to" must not stall the ladder — the repair is to declare a
+  // fallback, and it is invisible unless the ladder carries on and says something.
+  const r = nextAction(fault, {}, ctx({ fallback: null }));
+  check('with nothing to swap to the ladder skips ahead rather than stalling',
+    r.action === 'reboot', r.action);
+
+  const hist = applied(applied(applied({}, 'swap', T0), 'reboot', T0), 'notify', T0);
+  const back = cleared(hist);
+  check('clearing a fault forgets the swap, so the panel can come BACK on its own',
+    back.swappedAt === undefined);
+  check('and forgets the notice', back.notifiedAt === undefined);
+  check('BUT KEEPS NOTHING TO REBOOT AGAINST — a fault that keeps returning must not reboot '
+    + 'the screen every ten minutes forever', Array.isArray(back.reboots));
+  check('a cleared history starts the ladder over at the swap',
+    nextAction(fault, back, ctx()).action === 'swap');
+}
+
+// =====================================================================
+section('the policy normalises rather than throwing');
+
+{
+  const p = normalizePolicy({ graceMs: -5, rebootWindowMs: 'soon', quietBelow: 'panic' });
+  check('a negative grace falls back to the default', p.graceMs === DEFAULT_POLICY.graceMs);
+  check('garbage in a duration falls back too', p.rebootWindowMs === DEFAULT_POLICY.rebootWindowMs);
+  check('an unknown urgency threshold falls back', p.quietBelow === DEFAULT_POLICY.quietBelow);
+  check('a zero-length quiet window becomes NO quiet hours rather than a setting that '
+    + 'silently does nothing', normalizePolicy({ quietHours: { fromHour: 5, toHour: 5 } }).quietHours === null);
+  check('hours out of range are clamped',
+    normalizePolicy({ quietHours: { fromHour: 99, toHour: -3 } }).quietHours.fromHour === 23);
+  check('an empty policy is the default policy', normalizePolicy().sequence.join(',')
+    === DEFAULT_SEQUENCE.join(','));
+  check('the vocabularies are exported for whoever renders the settings',
+    STEPS.length === 3 && URGENCIES.length === 3 && DEPENDS.length === 4);
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

@@ -11,7 +11,8 @@ import sys
 import db
 from grants import (
     DEFAULT_TTL_DAYS, MAX_TTL_DAYS, RESOLVED_KINDS, SUBJECT_KINDS,
-    grant_allows, is_expired, may_drive, normalize_kind,
+    GRANT_ROLES, DEFAULT_GRANT_ROLE,
+    grant_allows, is_expired, may_drive, normalize_kind, normalize_role, role_for,
 )
 
 passed = failed = 0
@@ -169,6 +170,61 @@ check("a GROUP grant stores happily...", len(store.grants_on_person(me["id"])) =
 check("...and still does not let anybody in",
       not may_drive(me["id"], account="ot-team", owner="me",
                     grants=store.grants_on_person(me["id"]), now_iso=NOW))
+
+# ---------------------------------------------------------------------------------------
+section("THE ROLE A GRANT CONFERS - Mike: moderator by default, the person tab wins")
+# ---------------------------------------------------------------------------------------
+# This arrived because the input gate started judging remote drivers by the same rules it
+# judges a switch by. A driver has to HAVE a role or the gate cannot apply to them.
+
+check("an absent role is moderator - a grant that could do less than a caregiver is one "
+      "nobody would issue", role_for({}) == "moderator")
+check("and so is a missing grant entirely", role_for(None) == "moderator")
+check("a declared role is honoured", role_for({"role": "participant"}) == "participant")
+check("case and padding do not matter", role_for({"role": "  PARTICIPANT "}) == "participant")
+
+# A ROLE IS NOT AN AUTHORISATION. Rule 1 fails CLOSED on an unresolved subject KIND, because
+# that decides whether somebody gets in at all. A role only narrows what an already-authorised
+# person may do, so a typo there must not lock out a clinician for no safety gain.
+check("AN UNKNOWN ROLE FALLS BACK rather than failing the grant - it is not an authorisation, "
+      "it is what somebody already authorised gets to be", role_for({"role": "admin"}) == "moderator")
+check("normalize_role agrees on its own", normalize_role("nonsense") == "moderator")
+check("the vocabulary is exactly two", set(GRANT_ROLES) == {"moderator", "participant"})
+check("and the default is named rather than spelled out twice", DEFAULT_GRANT_ROLE == "moderator")
+
+# MIKE'S RULE: "...if a role isn't already set in their person tabs."
+check("THE PERSON'S OWN SETTING BEATS THE GRANT - it is the more specific statement about "
+      "THIS screen", role_for({"role": "moderator"}, person_default="participant") == "participant")
+check("a person default of nonsense is ignored, and the grant still decides",
+      role_for({"role": "participant"}, person_default="wizard") == "participant")
+check("no person default leaves the grant in charge",
+      role_for({"role": "participant"}, person_default=None) == "participant")
+
+# The role must not be able to leak into whether somebody gets in AT ALL.
+check("CONTROL: a role does not make an unresolved subject kind resolve",
+      not grant_allows({"subject_kind": "group", "subject_id": "ot", "role": "moderator"},
+                       account="ot", now_iso=NOW))
+check("CONTROL: a role does not revive an expired grant",
+      not grant_allows({"subject_kind": "account", "subject_id": "ot",
+                        "role": "moderator", "expires_at": PAST},
+                       account="ot", now_iso=NOW))
+
+# ---------------------------------------------------------------------------------------
+section("the role survives storage")
+# ---------------------------------------------------------------------------------------
+store2 = db.SQLiteStore(":memory:")
+p2 = store2.create_person("me2", "Christine")
+gr = store2.add_grant("me2", p2["id"], "account", "ot", role="participant")
+check("a stored grant carries its role back", gr.get("role") == "participant", gr)
+rows2 = store2.grants_on_person(p2["id"])
+check("and the auth read sees it too", rows2 and rows2[0].get("role") == "participant", rows2)
+check("role_for reads it straight off the stored row", role_for(rows2[0]) == "participant")
+
+dflt = store2.add_grant("me2", p2["id"], "account", "ot3")
+check("a grant created without a role stores the default rather than an empty string",
+      dflt.get("role") == "moderator", dflt)
+check("a garbage role is normalised on the way IN, so storage never holds one",
+      store2.add_grant("me2", p2["id"], "account", "ot4", role="wizard").get("role") == "moderator")
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

@@ -7,7 +7,9 @@
 import { registerModule } from '../module.js';
 
 registerModule(
-  { type: 'counter', title: 'Counter', description: 'overwrite state — last-write-wins + version' },
+  // FALLBACK EXPOSURE: nothing outside the page has to be working.
+  { dependsOn: 'none',
+    type: 'counter', title: 'Counter', description: 'overwrite state — last-write-wins + version' },
   (ctx) => {
     const { mount, bus, state } = ctx;
 

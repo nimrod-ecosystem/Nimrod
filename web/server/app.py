@@ -27,7 +27,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
 from drive import ROLES, Rooms, Tickets, parse_message
-from grants import DEFAULT_TTL_DAYS, MAX_TTL_DAYS, may_drive, normalize_kind
+from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
+                    normalize_kind, normalize_role)
 from identity import current_user, optional_user
 
 log = logging.getLogger("nimrod")
@@ -624,6 +625,19 @@ class GrantCreate(BaseModel):
     subject_kind: str = "account"
     label: str = ""
     days: int | None = None          # None -> DEFAULT_TTL_DAYS. 0 -> never expires.
+    # WHAT THE GRANT LETS THEM BE, not whether it lets them in. `moderator` by default
+    # (Mike), which matches both real cases: somebody helping from another house, and family
+    # showing her a video. `participant` is what two people sharing one screen would want.
+    # An unknown value normalises rather than 400s - see grants.normalize_role for why a role
+    # is treated differently from a subject KIND, which fails closed.
+    role: str | None = None
+
+
+@app.get("/api/drive-roles")
+def drive_roles():
+    """What a grant may confer. Served so a client renders the choices rather than
+    hardcoding them - the same reason the verb vocabulary is not duplicated by hand."""
+    return {"roles": list(GRANT_ROLES), "default": normalize_role(None)}
 
 
 @app.get("/api/people/{person_id}/drive-grants")
@@ -657,7 +671,8 @@ def create_drive_grant(person_id: str, body: GrantCreate, user: str = Depends(cu
         raise HTTPException(status_code=400, detail=f"days must be 0..{MAX_TTL_DAYS}")
     expires = None if days == 0 else _iso_in_days(days)
     return store.add_grant(user, person_id, kind, subject,
-                           label=(body.label or "").strip()[:120], expires_at=expires)
+                           label=(body.label or "").strip()[:120], expires_at=expires,
+                           role=normalize_role(body.role))
 
 
 @app.delete("/api/people/{person_id}/drive-grants/{grant_id}")

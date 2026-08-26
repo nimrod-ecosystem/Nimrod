@@ -46,6 +46,52 @@ RESOLVED_KINDS = frozenset({"account"})
 DEFAULT_TTL_DAYS = 30
 MAX_TTL_DAYS = 3650
 
+# WHAT A GRANT LETS SOMEBODY BE, not just whether it lets them in. Mike:
+#   "Role column and Moderator as default, if a role isn't already set in their person tabs."
+#
+# This is the fifth rule, and it arrived because the input gate started judging remote drivers
+# by the same rules it judges a switch by. A driver has to HAVE a role or the gate cannot
+# apply to them - and hardcoding one was the wrong answer, because the two real cases want
+# different ones: somebody helping needs to be a moderator, and two people playing a game
+# together both need to be participants.
+#
+# MODERATOR IS THE DEFAULT because it matches both cases Mike named - him driving from home,
+# and family showing her a video. A grant that could not do anything a caregiver can do would
+# be a grant nobody would issue.
+#
+# THE PERSON'S OWN SETTINGS WIN, which is Mike's "if a role isn't already set in their person
+# tabs" - so this is a DEFAULT the person layer overrides, not a ceiling. `role_for` is the
+# whole of that rule and it is pure.
+GRANT_ROLES = ("moderator", "participant")
+DEFAULT_GRANT_ROLE = "moderator"
+
+
+def normalize_role(role: str | None) -> str:
+    """An unknown role becomes the default rather than raising.
+
+    A permissions system fails CLOSED on a concept it has not implemented - that is rule 1 -
+    but a ROLE is not an authorisation, it is what somebody already authorised gets to be.
+    Refusing the whole grant over a typo in a field that only narrows what they can do would
+    lock out a clinician for no safety gain.
+    """
+    r = (role or "").strip().lower()
+    return r if r in GRANT_ROLES else DEFAULT_GRANT_ROLE
+
+
+def role_for(grant: dict | None, *, person_default: str | None = None) -> str:
+    """What role does this grant confer? PURE.
+
+    Order: the person's own setting, then the grant, then moderator. Mike's rule in one line -
+    the person tab is where somebody says "anyone driving this screen is a participant", and
+    that has to beat whatever an individual grant happens to say, because it is the more
+    specific statement about THIS person's screen.
+    """
+    if person_default:
+        p = str(person_default).strip().lower()
+        if p in GRANT_ROLES:
+            return p
+    return normalize_role((grant or {}).get("role"))
+
 
 def normalize_kind(kind: str | None) -> str:
     k = (kind or "account").strip().lower()

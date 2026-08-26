@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>press overlay — what was just pressed — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:relative;margin-top:14px;height:1px}
+  #live{position:relative;margin-top:12px;height:180px;border:1px solid #e4e0c2;border-radius:16px;
+        background:#0A3323;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>press overlay — what was just pressed</h1>
+<p>A subscriber to a topic that already carries everything: every press has landed on
+<code>access/activation</code> with the control, the verb, whether it was accepted and why not
+since the diagnostics shipped. <b>The wording is asserted pure</b>, because a line that reads
+wrong at a bedside is worse than no line.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<h2>live, to look at</h2>
+<div id="live"></div>
+
+<script type="module">
+import { pressLine, mountPressOverlay, OVERLAY_DEFAULTS, OVERLAY_SETTINGS, SHOW_MODES }
+  from '../press_overlay.js';
+import { createBus } from '../bus.js';
+import { ACTIVATION_TOPIC } from '../input.js';
+import { normalizeField, fieldItems } from '../settings_fields.js';
+import { pressesToWalk } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const local = { device: 'keyboard', control: 'key:arrowright', actionId: 'verb/next', accepted: true };
+const switchy = { device: 'switch:1', control: 'jack:a', actionId: 'verb/select', accepted: true };
+const remote = { device: 'remote', control: 'Sam', actionId: 'verb/select', accepted: true };
+const refused = { device: 'switch:1', control: 'jack:a', actionId: 'verb/select',
+                  accepted: false, reason: 'role-gated', gate: 'moderator' };
+
+// =====================================================================
+section('pressLine — the wording, pure');
+
+{
+  const b = pressLine(local);
+  check('by default it shows the button AND what it does', b.text.includes('→'), b.text);
+  check('the control is a name a person can read out loud, not "key:arrowright"',
+    b.text.startsWith('Right'), b.text);
+  check('and the verb is its label, not its id', b.text.endsWith('Next'), b.text);
+
+  check('TEACHING wants only the verb', pressLine(local, { show: 'verb' }).text === 'Next');
+  check('RECORDING wants only the control',
+    pressLine(local, { show: 'control' }).text === 'Right');
+  check('the modes are exported so the settings row can offer them',
+    SHOW_MODES.join(',') === 'both,verb,control');
+
+  check('a remote press is marked as remote', pressLine(remote).remote === true);
+  check('a local one is not', pressLine(local).remote === false);
+  check('a switch names itself', pressLine(switchy).text.includes('jack:a'),
+    pressLine(switchy).text);
+
+  const r = pressLine(refused);
+  check('a refused press is not shown as accepted', r.accepted === false);
+  check('A REFUSAL NAMES THE GATE, NOT A BARE CODE — "role-gated" means nothing to somebody '
+    + 'standing at a screen', r.reason.includes('moderator') && !r.reason.includes('role-gated'),
+    r.reason);
+  check('an unknown reason still produces a sentence rather than a blank',
+    pressLine({ ...refused, reason: 'weird' }).reason.includes('weird'));
+  check('an accepted press has no reason to show', pressLine(local).reason === '');
+  check('nothing at all is survivable', pressLine(null) === null);
+}
+
+// =====================================================================
+section('the overlay — off by default, and the one case that overrides that');
+
+{
+  const bus = createBus();
+  const el = document.createElement('div'); host.append(el);
+  let cfg = {};
+  const ov = mountPressOverlay(el, { bus, settings: () => cfg });
+
+  check('SHIPPED OFF — an overlay nobody asked for, on a screen somebody sits at around the '
+    + 'clock, is noise', OVERLAY_DEFAULTS.on === false);
+  bus.publish(ACTIVATION_TOPIC, local);
+  check('so a local press shows nothing', ov.isVisible() === false);
+
+  // CONSENT beats the on/off switch. The screen already says it is being driven; showing WHAT
+  // was pressed is the stronger version of the same promise.
+  bus.publish(ACTIVATION_TOPIC, remote);
+  check('A REMOTE PRESS SHOWS EVEN WITH THE OVERLAY OFF', ov.isVisible() === true);
+  check('and it says the press came from another screen',
+    el.textContent.includes('another screen'), el.textContent);
+  ov.hide();
+
+  cfg = { alwaysWhenDriven: false };
+  bus.publish(ACTIVATION_TOPIC, remote);
+  check('…but that is itself a setting, not a law — somebody may turn it off',
+    ov.isVisible() === false);
+
+  cfg = { on: true };
+  bus.publish(ACTIVATION_TOPIC, local);
+  check('switched on, a local press shows', ov.isVisible() === true);
+  check('and the row carries the words', el.textContent.includes('Next'), el.textContent);
+
+  cfg = { on: true, show: 'verb' };
+  bus.publish(ACTIVATION_TOPIC, local);
+  check('the show mode is read at every press, so a change in the menu lands immediately',
+    el.textContent.trim() === 'Next', el.textContent);
+
+  // Hidden first, because a FILTERED press deliberately leaves whatever is already on screen
+  // alone - a press that is not shown is not a reason to wipe an unrelated one that is.
+  ov.hide();
+  cfg = { on: true, refusals: false };
+  bus.publish(ACTIVATION_TOPIC, refused);
+  check('refusals can be hidden', ov.isVisible() === false);
+  check('and a filtered press does not disturb a row already on screen',
+    (cfg = { on: true }, bus.publish(ACTIVATION_TOPIC, local),
+     cfg = { on: true, refusals: false }, bus.publish(ACTIVATION_TOPIC, refused),
+     el.textContent.includes('Next')), el.textContent);
+  cfg = { on: true, refusals: true };
+  bus.publish(ACTIVATION_TOPIC, refused);
+  check('BUT THEY ARE ON BY DEFAULT, because a refused press is indistinguishable from a dead '
+    + 'switch from the room — which is the exact confusion this ends',
+    OVERLAY_DEFAULTS.refusals === true && ov.isVisible() === true);
+  check('and a refused row is marked as refused rather than looking like a success',
+    el.querySelector('.po-wrap, [data-po]')?.className.includes('po-refused')
+      || el.firstElementChild.className.includes('po-refused'),
+    el.firstElementChild.className);
+
+  ov.destroy();
+  check('destroying leaves nothing behind', el.innerHTML === '');
+  bus.publish(ACTIVATION_TOPIC, local);
+  check('and a press after destroy does not throw', true);
+}
+
+{
+  // It fades on its own, at a fake clock.
+  const bus = createBus();
+  const el = document.createElement('div'); host.append(el);
+  let fire = null;
+  let set = 0, cleared = 0;
+  const ov = mountPressOverlay(el, {
+    bus, settings: () => ({ on: true, holdMs: 1400 }),
+    setTimer: (fn) => { fire = fn; set += 1; return set; },
+    clearTimer: () => { cleared += 1; },
+  });
+  bus.publish(ACTIVATION_TOPIC, local);
+  check('a press schedules its own disappearance', typeof fire === 'function' && set === 1);
+  fire();
+  check('and it goes', ov.isVisible() === false);
+
+  const before = { set, cleared };
+  bus.publish(ACTIVATION_TOPIC, local);
+  bus.publish(ACTIVATION_TOPIC, switchy);
+  // Identity is the wrong comparison here - the callback is the same `hide` every time, so a
+  // test on function identity can never go red. Count the timers instead.
+  check('A SECOND PRESS REPLACES THE FIRST rather than queueing behind it — two quick presses '
+    + 'must not leave the second one waiting to be shown',
+    set === before.set + 2 && cleared > before.cleared, `${set}/${cleared}`);
+  check('and the newest one is what is on screen',
+    el.textContent.includes('jack:a'), el.textContent);
+  ov.destroy();
+}
+
+// =====================================================================
+section('the overlay’s own settings are declared, like a module’s');
+
+{
+  const fields = OVERLAY_SETTINGS.map(normalizeField).filter(Boolean);
+  check('every declared field survives normalisation', fields.length === OVERLAY_SETTINGS.length);
+  check('all of them are one-button operable — this is a bedside surface',
+    fields.every((f) => f.cycleable), fields.filter((f) => !f.cycleable).map((f) => f.key).join(','));
+  check('the everyday ones are at `standard`, the fiddly ones at `advanced`',
+    fields.find((f) => f.key === 'on').level === 'standard'
+    && fields.find((f) => f.key === 'holdMs').level === 'advanced');
+  check('THE HOLD TIME IS STORED IN MILLISECONDS AND SHOWN IN WORDS — the house rule',
+    /Ms$/.test(fields.find((f) => f.key === 'holdMs').key)
+    && fields.find((f) => f.key === 'holdMs').options.every((o) => o.value >= 700));
+
+  // The thing the audit exists to check, applied to a surface as it is written rather than
+  // after somebody complains.
+  const worst = Math.max(...fields.map((f, i) => i + pressesToWalk(f)));
+  check('nothing here is expensive to reach — the worst control is under twelve presses',
+    worst < 12, `${worst}`);
+
+  const rows = fieldItems(fields, { values: {}, level: 'standard' });
+  check('at `standard` a caregiver sees the four everyday rows', rows.length === 4,
+    rows.map((r) => r.id).join(','));
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+// =====================================================================
+// Live, to look at.
+{
+  const live = document.getElementById('live');
+  const bus = createBus();
+  const holder = document.createElement('div');
+  live.append(holder);
+  mountPressOverlay(holder, { bus, settings: () => ({ on: true, corner: 'bl' }) });
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position:absolute;top:8px;left:8px;display:flex;gap:6px;flex-wrap:wrap';
+  const btn = (label, rec) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.addEventListener('click', () => bus.publish(ACTIVATION_TOPIC, rec));
+    return b;
+  };
+  bar.append(btn('a key', local), btn('a switch', switchy),
+    btn('remote', remote), btn('refused', refused));
+  live.append(bar);
+}
+</script>
+</body>
+</html>

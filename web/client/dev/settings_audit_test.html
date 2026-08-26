@@ -36,6 +36,7 @@ dwell, so twelve presses there is three minutes.</p>
 import {
   pressesToWalk, walkCosts, suggestOrder, auditFields, auditAcross, auditValues,
   auditManifests, normalizeField, SEVERITY, WALK_WARN, WALK_BAD,
+  IMPORTANCE, importanceOf,
 } from '../settings_audit.js';
 import { listManifests } from '../module.js';
 
@@ -296,6 +297,48 @@ section('auditManifests — the one call, over fixtures');
   check('counts are broken out by severity', typeof r.counts.error === 'number');
   check('the thresholds are exported so a caller can disagree with them',
     WALK_WARN === 12 && WALK_BAD === 24);
+}
+
+// =====================================================================
+section('importance — THE PART THE FIRST VERSION GOT WRONG, and the pond exposed it');
+
+{
+  // Ranking by COST ALONE named pond.ambientMs the worst control in the product. Mike:
+  // "I am not too concerned about the pond game. We can lose it if we need to." He was right
+  // and the tool was wrong - it pointed at the one module nobody would miss.
+  const settings = [{ key: 'a', label: 'A', kind: 'number', min: 0, max: 15, step: 1,
+                      level: 'essential' }];   // 16 presses: over warn, under bad
+
+  const normal = auditManifests([{ type: 'm', settings }]);
+  check('CONTROL: at normal importance a 16-press control is a warning',
+    normal.findings.some((f) => f.code === 'costly' && f.severity === 'warn'),
+    JSON.stringify(normal.findings.map((f) => f.severity + ':' + f.code)));
+
+  const optional = auditManifests([{ type: 'm', importance: 'optional', settings }]);
+  check('ON AN OPTIONAL MODULE IT SAYS NOTHING AT ALL — which is the lesson: a tool that '
+    + 'ranks by cost alone sends you to fix the one thing its owner would happily delete',
+    optional.findings.length === 0,
+    JSON.stringify(optional.findings.map((f) => f.severity + ':' + f.code)));
+
+  // Far enough over even the doubled threshold and an optional module IS worth a note - the
+  // scaling changes when it speaks, not whether it can.
+  const awful = auditManifests([{ type: 'm', importance: 'optional',
+    settings: [{ key: 'a', label: 'A', kind: 'number', min: 0, max: 29, step: 1, level: 'essential' }] }]);
+  check('but a genuinely absurd control on an optional module is still reported as a note',
+    awful.findings.some((f) => f.code === 'costly' && f.severity === 'info'),
+    JSON.stringify(awful.findings.map((f) => f.severity + ':' + f.code)));
+
+  const critical = auditManifests([{ type: 'm', importance: 'critical', settings }]);
+  check('ON A CRITICAL MODULE IT IS AN ERROR — the same number means something different on '
+    + 'the panel that is the point of the product',
+    critical.findings.some((f) => f.code === 'unreachable-cost' && f.severity === 'error'),
+    JSON.stringify(critical.findings.map((f) => f.severity + ':' + f.code)));
+
+  check('importance is reported alongside the costs', critical.costs.m.importance === 'critical');
+  check('an unknown importance is treated as normal',
+    importanceOf({ importance: 'vital' }) === 'normal' && importanceOf(null) === 'normal');
+  check('and the vocabulary is exported so a manifest author can see it',
+    IMPORTANCE.join(',') === 'critical,normal,optional');
 }
 
 const s = document.getElementById('summary');

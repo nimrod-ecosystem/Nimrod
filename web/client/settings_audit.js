@@ -33,10 +33,34 @@ export const SEVERITY = ['error', 'warn', 'info'];
 
 // Presses at which a control stops being a control. Chosen, not measured, and worth
 // revisiting against a real person rather than defending:
-//   12  a full lap of pond's ambient timing. Fine.
+//   12  about a full lap of a twelve-stop control. Fine.
 //   24  two laps of that. On a 15s dwell it is six minutes to change one setting.
 export const WALK_WARN = 12;
 export const WALK_BAD = 24;
+
+// ---------------------------------------------------------------------------------------
+// IMPORTANCE — THE PART THE FIRST VERSION GOT WRONG, and the pond is what exposed it.
+//
+// The audit's first run named `pond.ambientMs` as the worst control in the product. Mike's
+// reply: *"I'm not too concerned about the pond game. We can lose it if we need to."*
+//
+// HE WAS RIGHT AND THE TOOL WAS WRONG. Ranking by COST ALONE sends you to fix whatever is
+// most expensive, which is not the same as whatever MATTERS — and here it pointed at the one
+// module its owner would happily delete. A finding about a module nobody would miss is not
+// the same finding as one about the module that is the entire point of the product.
+//
+// Cost per use fixes this properly, and it is built — but it needs a per-person press log
+// that does not exist yet. THIS IS THE STANDING SIGNAL IN THE MEANTIME, and it is already a
+// stated fact of the project rather than a guess: CLAUDE.md says *"PHOTOS outrank every
+// game/feature"*, and Christine cannot reach for anything, so a module she must PLAY is one
+// she may never use at all.
+//
+// Thresholds scale with it. Twelve presses on the photos panel is a real problem; twelve on
+// a pond nobody has to touch is a note.
+export const IMPORTANCE = ['critical', 'normal', 'optional'];
+const IMPORTANCE_SCALE = { critical: 0.5, normal: 1, optional: 2 };
+export const importanceOf = (man) =>
+  (IMPORTANCE.includes(man?.importance) ? man.importance : 'normal');
 
 // Words that mean "a length of time". Used only to ask whether a key ends in `Ms`, so a false
 // positive costs one `info` line and a false negative costs a unit mismatch nobody notices.
@@ -307,6 +331,8 @@ export function auditValues(fields = [], values = {}, { type = '' } = {}) {
 // auditManifests — everything, over a list of manifests. The one call a page makes.
 // ---------------------------------------------------------------------------------------
 export function auditManifests(manifests = [], { level = 'standard', values = {}, usage = {} } = {}) {
+  // `importance` is read off each manifest below - see IMPORTANCE above for why the tool
+  // needs it and what happens when it does not have it.
   const byModule = {};
   const findings = [];
   const costs = {};
@@ -324,14 +350,19 @@ export function auditManifests(manifests = [], { level = 'standard', values = {}
     costs[type] = walkCosts(fields, { level, usage: usage[type] || null });
 
     const w = costs[type].worst;
-    if (w && w.total >= WALK_BAD) {
+    const imp = importanceOf(man);
+    const k = IMPORTANCE_SCALE[imp];
+    costs[type].importance = imp;
+    if (w && w.total >= WALK_BAD * k) {
       findings.push(finding('error', 'unreachable-cost',
         `"${w.key}" costs ${w.total} presses to reach and walk — on a 15s scan dwell that is `
         + `${Math.round(w.total * 15 / 60)} minutes to change one setting`,
-        { module: type, key: w.key }));
-    } else if (w && w.total > WALK_WARN) {
-      findings.push(finding('warn', 'costly',
-        `"${w.key}" costs ${w.total} presses to reach and walk`, { module: type, key: w.key }));
+        { module: type, key: w.key, importance: imp }));
+    } else if (w && w.total > WALK_WARN * k) {
+      findings.push(finding(imp === 'optional' ? 'info' : 'warn', 'costly',
+        `"${w.key}" costs ${w.total} presses to reach and walk`
+        + (imp === 'optional' ? ' (this module is marked optional, so it is a note)' : ''),
+        { module: type, key: w.key, importance: imp }));
     }
   }
 

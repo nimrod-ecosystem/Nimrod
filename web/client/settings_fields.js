@@ -203,6 +203,23 @@ export function normalizeField(raw = {}) {
     f.decimals = Math.max(decimalsOf(step), decimalsOf(min ?? 0), decimalsOf(max ?? 0));
     f.unit = raw.unit ? String(raw.unit) : '';
     f.unitOne = raw.unitOne ? String(raw.unitOne) : '';
+    // STORE ONE UNIT, SHOW THE ONE A HUMAN THINKS IN. Mike: *"I'd let the user see things in
+    // seconds wherever relevant."* Storage stays milliseconds so durations are comparable
+    // across modules; `displayScale` is what the ROW divides by. Nothing else in the file
+    // knows about it - stepping, wrapping and bounds all happen in stored units, so the
+    // one-button contract is untouched.
+    //
+    // `inputs.js` already learned the human half of this: *"every number here is in
+    // milliseconds, which nobody thinks in."* This is the fix for that, made declarable.
+    const ds = Number(raw.displayScale);
+    f.displayScale = Number.isFinite(ds) && ds > 0 ? ds : 1;
+    const dd = Number(raw.displayDecimals);
+    f.displayDecimals = Number.isFinite(dd) && dd >= 0
+      ? Math.floor(dd)
+      // Derived from what a single STEP looks like once scaled: a 500ms step shown in
+      // seconds needs one decimal, a 1000ms step needs none. Guessing wrong here shows
+      // somebody "1.5 seconds" as "2 seconds", which makes the control look broken.
+      : Math.min(3, Math.max(0, decimalsOf(round(step / f.displayScale, 6))));
     f.default = isNum(raw.default) ? raw.default : (min ?? 0);
     // AN UNBOUNDED NUMBER CANNOT WRAP, and a one-button user walking a number with no ceiling
     // is walking forever. So bounds are what makes a number cycleable at the bedside; without
@@ -215,6 +232,17 @@ export function normalizeField(raw = {}) {
     f.placeholder = String(raw.placeholder || 'Not set');
     f.why = 'needs a keyboard';
   }
+
+  // WHAT THIS SETTING NEEDS IN ORDER TO WORK AT ALL. Mike: *"It should also be clearly marked
+  // wherever it can be set up."* The earlier version of that rule only covered RUNTIME - say
+  // no in words rather than failing silently - and his addition is better: the requirement
+  // belongs on the ROW, so nobody enables something at home that quietly will not work at the
+  // facility. `direct` means the two devices have to be able to reach each other without
+  // going through the platform, which today means a VPN.
+  //
+  // The shell renders it; nothing here enforces it, because whether a requirement is MET is a
+  // runtime question and this file is pure.
+  f.requires = typeof raw.requires === 'string' && raw.requires.trim() ? raw.requires.trim() : null;
 
   // An explicit `readOnly` beats everything: it is how a field that is REPORTED here but
   // OWNED somewhere else (a source picker, a folder path) gets a row without a fake handle.
@@ -341,8 +369,10 @@ export function displayValue(field, value) {
     return `${value} — not one of the choices`;
   }
   if (field.kind === 'number') {
-    const unit = (value === 1 && field.unitOne) ? field.unitOne : field.unit;
-    return unit ? `${value} ${unit}` : String(value);
+    const scale = field.displayScale || 1;
+    const shown = scale === 1 ? value : round(Number(value) / scale, field.displayDecimals ?? 0);
+    const unit = (shown === 1 && field.unitOne) ? field.unitOne : field.unit;
+    return unit ? `${shown} ${unit}` : String(shown);
   }
   return value === '' || value === undefined || value === null ? field.placeholder : String(value);
 }
@@ -394,7 +424,11 @@ export function fieldItems(fields = [], {
       // The current value IS the hint. A settings row that does not say what it is set to
       // makes somebody press it to find out, which on a one-way cursor means going all the
       // way round to undo the answer.
-      hint: f.cycleable ? shown : `${shown} · ${f.why}`,
+      // The requirement rides in the hint, so it is visible WHERE THE SETTING IS SET rather
+      // than only when it fails.
+      hint: [f.cycleable ? shown : `${shown} · ${f.why}`,
+             f.requires === 'direct' ? 'needs a direct connection (VPN)' : f.requires]
+        .filter(Boolean).join(' · '),
       disabled: !f.cycleable,
       key: f.key,
       field: f,

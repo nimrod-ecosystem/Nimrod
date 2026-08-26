@@ -393,3 +393,31 @@
 .pond { position: relative; width: 100%; height: 100%; min-height: 120px;
         overflow: hidden; border-radius: inherit; }
 .pond canvas { position: absolute; inset: 0; display: block; }
+
+/* ---- press overlay: what was just pressed -------------------------------
+   Deliberately quiet. This sits on a screen somebody looks at all day, so it
+   has to be readable at a glance and impossible to mistake for content.
+   SHAPE PLUS COLOUR, NEVER COLOUR ALONE: a refused press is struck through AND
+   tinted, because two rows differing only in hue are one row to somebody with
+   reduced vision. */
+.po-wrap {
+  position: absolute; z-index: 40; pointer-events: none;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 14px; border-radius: 12px;
+  background: rgba(10, 51, 35, .82); color: #F7F4D5;
+  border: 1px solid rgba(247, 244, 213, .28);
+  font: 600 15px/1.25 system-ui, sans-serif;
+  max-width: 60%;
+}
+.po-wrap[data-corner="bl"] { left: 16px; bottom: 16px; }
+.po-wrap[data-corner="br"] { right: 16px; bottom: 16px; }
+.po-wrap[data-corner="tl"] { left: 16px; top: 16px; }
+.po-wrap[data-corner="tr"] { right: 16px; top: 16px; }
+.po-wrap .po-who,
+.po-wrap .po-why { font-weight: 500; font-size: 12px; opacity: .85; }
+.po-remote { border-color: rgba(211, 150, 140, .8); }
+.po-refused .po-what { text-decoration: line-through; }
+.po-refused { border-color: rgba(211, 150, 140, .8); background: rgba(70, 26, 26, .82); }
+@media (prefers-reduced-motion: no-preference) {
+  .po-wrap { transition: opacity .12s ease; }
+}

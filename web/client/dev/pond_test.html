@@ -157,11 +157,16 @@ section('settings, and their defaults');
   check('the three toggles are one-button operable',
     declared.filter((f) => f.kind === 'toggle').every((f) => f.cycleable), keys);
   const ms = declared.find((f) => f.key === 'ambientMs');
-  check('the raw timing is BOUNDED, or a one-button user walks it forever',
-    ms.cycleable === true && ms.min === 500 && ms.max === 6000);
-  check('and it is at `advanced` — milliseconds are not a sentence anybody at a bedside thinks in',
+  check('the timing is cycleable at all', ms.cycleable === true);
+  check('and it is FIVE STOPS, not twelve — as a 500-6000ms range it was the most expensive '
+    + 'control in the product, four minutes on a fifteen-second dwell',
+    ms.options.length === 5, String(ms.options.length));
+  check('it is at `advanced` — a raw timing is what that level is for',
     ms.level === 'advanced');
-  check('stepping the timing wraps at its maximum', stepValue(ms, 6000) === 500);
+  check('STORED IN MILLISECONDS, SHOWN IN SECONDS — one comparable unit, one readable one',
+    ms.options.every((o) => o.value >= 500) && displayValue(ms, 1500) === '1.5 seconds',
+    displayValue(ms, 1500));
+  check('stepping wraps at the last option', stepValue(ms, 6000) === 500);
 
   // The rows a caregiver would actually see, at the level a caregiver would actually be on.
   const rows = fieldItems(declared, { values: cfg, level: 'essential' });

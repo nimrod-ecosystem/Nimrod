@@ -32,6 +32,9 @@ import secrets
 import sqlite3
 import threading
 import uuid
+
+# Pure rules, no storage - db imports grants and never the other way round.
+import grants
 from datetime import datetime, timedelta, timezone
 
 
@@ -183,22 +186,32 @@ class _Store:
     # rule and the rule answers.
 
     def add_grant(self, owner_id: str, person_id: str, subject_kind: str, subject_id: str,
-                  label: str = "", expires_at: str | None = None) -> dict:
+                  label: str = "", expires_at: str | None = None,
+                  role: str | None = None) -> dict:
+        """`role` is what the grant lets somebody BE once they are in - see grants.py.
+
+        NORMALISED ON THE WAY IN, so storage never holds a role nothing understands. That is
+        deliberately different from `subject_kind`, which is stored unvalidated precisely so a
+        `group` grant can sit there inert until groups exist: a KIND decides whether somebody
+        gets in at all and must fail closed, while a ROLE only narrows what an already
+        authorised person may do.
+        """
         gid, ts = _new_id(), _now()
+        r = grants.normalize_role(role)
         with self._tx() as cur:
             cur.execute(self._q(
                 "INSERT INTO drive_grants(id, owner_id, person_id, subject_kind, subject_id, "
-                "label, expires_at, created_at) VALUES(?,?,?,?,?,?,?,?)"),
-                (gid, owner_id, person_id, subject_kind, subject_id, label, expires_at, ts))
+                "label, expires_at, created_at, role) VALUES(?,?,?,?,?,?,?,?,?)"),
+                (gid, owner_id, person_id, subject_kind, subject_id, label, expires_at, ts, r))
         return {"id": gid, "person_id": person_id, "subject_kind": subject_kind,
                 "subject_id": subject_id, "label": label, "expires_at": expires_at,
-                "created_at": ts}
+                "created_at": ts, "role": r}
 
     def list_grants(self, owner_id: str, person_id: str) -> list[dict]:
         """Every grant on one person's screens - the owner's view of who may drive."""
         with self._tx() as cur:
             cur.execute(self._q(
-                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at "
+                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at, role "
                 "FROM drive_grants WHERE owner_id=? AND person_id=? ORDER BY created_at"),
                 (owner_id, person_id))
             rows = cur.fetchall()
@@ -212,7 +225,7 @@ class _Store:
         """
         with self._tx() as cur:
             cur.execute(self._q(
-                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at, owner_id "
+                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at, owner_id, role "
                 "FROM drive_grants WHERE subject_kind=? AND subject_id=? ORDER BY created_at"),
                 (subject_kind, subject_id))
             rows = cur.fetchall()
@@ -222,7 +235,7 @@ class _Store:
         """Every grant on this person, whoever made it. What the auth check reads."""
         with self._tx() as cur:
             cur.execute(self._q(
-                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at, owner_id "
+                "SELECT id, person_id, subject_kind, subject_id, label, expires_at, created_at, owner_id, role "
                 "FROM drive_grants WHERE person_id=?"), (person_id,))
             rows = cur.fetchall()
         return [dict(self._grant_row(r), owner_id=r[7]) for r in rows]
@@ -243,8 +256,15 @@ class _Store:
 
     @staticmethod
     def _grant_row(r) -> dict:
+        # `role` is read positionally like everything else, but DEFAULTED here as well as in
+        # the schema: a row written before the column existed comes back as NULL, and a NULL
+        # role would make a perfectly good grant confer nothing.
+        # The three selects differ: the owner-facing one ends at role, the two grantee-facing
+        # ones carry owner_id before it. Positional either way, and defaulted below.
+        role = r[8] if len(r) > 8 else (r[7] if len(r) > 7 else None)
         return {"id": r[0], "person_id": r[1], "subject_kind": r[2], "subject_id": r[3],
-                "label": r[4], "expires_at": r[5], "created_at": r[6]}
+                "label": r[4], "expires_at": r[5], "created_at": r[6],
+                "role": grants.normalize_role(role)}
 
     def count_person_screens(self, account_id: str, person_id: str) -> int:
         with self._tx() as cur:
@@ -613,7 +633,8 @@ class SQLiteStore(_Store):
                     subject_id TEXT NOT NULL,
                     label TEXT NOT NULL DEFAULT '',
                     expires_at TEXT,
-                    created_at TEXT NOT NULL
+                    created_at TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'moderator'
                 );
                 CREATE INDEX IF NOT EXISTS ix_grants_person ON drive_grants(owner_id, person_id);
                 CREATE INDEX IF NOT EXISTS ix_grants_subject ON drive_grants(subject_kind, subject_id);
@@ -669,6 +690,13 @@ class SQLiteStore(_Store):
             if "person_id" not in cols:
                 self._conn.execute("ALTER TABLE profiles ADD COLUMN person_id TEXT NOT NULL DEFAULT ''")
             self._conn.execute("CREATE INDEX IF NOT EXISTS ix_profiles_person ON profiles(person_id)")
+            # Same story one table over: grants shipped before they conferred a role, so an
+            # existing table needs the column added. Defaulted to `moderator`, which is what
+            # every grant made before this already effectively was.
+            gcols = {r[1] for r in self._conn.execute("PRAGMA table_info(drive_grants)")}
+            if "role" not in gcols:
+                self._conn.execute(
+                    "ALTER TABLE drive_grants ADD COLUMN role TEXT NOT NULL DEFAULT 'moderator'")
             self._conn.commit()
 
 
@@ -710,6 +738,10 @@ class PostgresStore(_Store):
 
     def _migrate(self) -> None:
         stmts = [
+            # Additive and defaulted, so a live database keeps working while the deploy rolls:
+            # old code writing a row gets `moderator` from the default, new code reading an old
+            # row gets `moderator` too.
+            "ALTER TABLE drive_grants ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'moderator'",
             "CREATE TABLE IF NOT EXISTS drive_grants (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, "
             "person_id TEXT NOT NULL, subject_kind TEXT NOT NULL, subject_id TEXT NOT NULL, "
             "label TEXT NOT NULL DEFAULT '', expires_at TEXT, created_at TEXT NOT NULL)",

@@ -71,13 +71,35 @@ const SETTINGS = [
   { key: 'calm', label: 'Motion', default: false, level: 'essential',
     onLabel: 'Calm - less movement', offLabel: 'Normal' },
   { key: 'pointer', label: 'A mouse disturbs the water', default: true, level: 'standard' },
-  { key: 'ambientMs', label: 'A ripple every', kind: 'number', default: 1500,
-    min: 500, max: 6000, step: 500, unit: 'ms', level: 'advanced' },
+  // FIVE STOPS, NOT TWELVE, and the audit is what said so: as a 500-6000ms range in 500s
+  // this was the most expensive control in the product - twelve presses for a lap plus three
+  // to reach it, which on a fifteen-second scan dwell is nearly four minutes to change one
+  // setting. Five known-good values cover everything anybody wants. Same argument as the
+  // slideshow interval, and the same argument every time: a range is the right kind for a
+  // real continuum and the wrong kind for a short list of good answers.
+  //
+  // STORED IN MILLISECONDS, SHOWN IN SECONDS - the house rule, carried by the labels here.
+  { key: 'ambientMs', label: 'A ripple every', kind: 'choice', default: 1500,
+    level: 'advanced',
+    options: [
+      { value: 500, label: 'half a second' },
+      { value: 1000, label: '1 second' },
+      { value: 1500, label: '1.5 seconds' },
+      { value: 3000, label: '3 seconds' },
+      { value: 6000, label: '6 seconds' },
+    ] },
 ];
 
 registerModule(
+  // OPTIONAL, in Mike's own words: *"I'm not too concerned about the pond game. We can lose it
+  // if we need to."* That is not a criticism of the module - it is the fact the audit needs,
+  // because ranking findings by cost alone pointed at this panel first and it was the one
+  // thing in the build nobody would miss. What the port actually bought was the PATTERN for
+  // bringing a Cici module across; the pond itself is welcome to go.
   { type: 'pond', title: 'Pond', description: 'calm water that ripples when it is touched',
-    settings: SETTINGS },
+    // FALLBACK EXPOSURE: a canvas and nothing else, which makes it a genuinely good last
+    // resort even though it is the module Mike is least attached to.
+    importance: 'optional', dependsOn: 'none', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     let cfg = { ...DEFAULTS };

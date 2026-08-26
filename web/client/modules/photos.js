@@ -92,8 +92,15 @@ const FIELDS = Object.fromEntries(
 const canonical = (key, raw) => (FIELDS[key] ? fieldValue(FIELDS[key], { [key]: raw }) : raw);
 
 registerModule(
+  // CRITICAL, and it is not a compliment - it is the audit's threshold. CLAUDE.md: *"PHOTOS
+  // outrank every game/feature."* Christine is at this screen around the clock and it is her
+  // main window to her people, so a setting on this panel that is expensive to reach is a
+  // real problem at half the presses it would take to be one anywhere else.
+  // FALLBACK EXPOSURE: `local`. The bytes come from the media agent rather than the platform,
+  // so photos survive the platform being down - which is most of why this is the fallback of
+  // choice - but not the drive being unmounted.
   { type: 'photos', title: 'Photos', description: 'slideshow over your own media (BYO storage)',
-    settings: SETTINGS },
+    importance: 'critical', dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
     // `ctx.sources` is injectable so a page can supply its own registry — signed out, the
