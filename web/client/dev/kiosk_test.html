@@ -273,18 +273,21 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('a second press steps on, from the NEW value rather than a stale snapshot',
         kiosk.menu.items().find((i) => i.id === 'set:fit').hint === 'Show the whole photo');
 
-      // Wrapping, on the real surface: a number that stops at its maximum strands anybody
-      // who can only travel one way.
+      // WRAPPING, ON THE REAL SURFACE, and the count is the point. A control that stops at
+      // its end strands anybody who can only travel one way; a control with too many stops
+      // is a punishment rather than a control. The slideshow interval is five known-good
+      // values, so a full lap is five presses.
       while (kiosk.menu.focusId() !== 'set:intervalSec') kiosk.menu.next();
       const walk = [];
-      for (let i = 0; i < 10; i += 1) {
+      for (let i = 0; i < 5; i += 1) {
         kiosk.menu.select();
         walk.push(kiosk.menu.items().find((i2) => i2.id === 'set:intervalSec').hint);
       }
-      check('a number field wraps back round on the real surface',
+      check('one lap of the interval is FIVE presses and every value is on it',
+        walk.join(',') === '15 seconds,30 seconds,60 seconds,4 seconds,8 seconds',
+        walk.join(' | '));
+      check('and it comes home, so nobody is stranded past the end',
         walk[walk.length - 1] === '8 seconds', walk.join(' | '));
-      check('and its declared maximum is actually reachable on the way',
-        walk.includes('40 seconds'), walk.join(' | '));
     }
     await press('Escape');
 

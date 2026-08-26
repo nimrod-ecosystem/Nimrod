@@ -418,9 +418,9 @@ export async function mountKiosk(root, {
       // AND THE SCREEN SAYS SO. Someone driving this screen from elsewhere is visible to
       // whoever is sitting in front of it: a person who cannot tell whether the thing in
       // front of them is being operated by somebody else has been made a passenger in their
-      // own room. This is claimed as a SAFETY/consent invariant rather than a preference,
-      // which is the only reason it is allowed to be absolute - and it is flagged for Mike
-      // to confirm as one, because if he calls it a preference it has to be argued instead.
+      // own room. CONFIRMED BY MIKE 2026-08-26 as a SAFETY/CONSENT INVARIANT, which is the
+      // only category of rule allowed to be absolute here. It is not a setting, it is not
+      // hideable at any complexity level, and it does not bend for a nicer-looking screen.
       if (!makeState && profiles.personStateURL) {
         drive = attachDriveToBus(bus, {
           personId: p.person_id,
