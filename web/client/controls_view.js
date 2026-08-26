@@ -25,6 +25,7 @@
 // assertable without a browser.
 
 import { VERBS, FOCUS_VERBS, verbTopic } from './actions.js';
+import { deviceClass } from './input.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -95,6 +96,109 @@ export function whatCanIPress({ bindings = [], targets = {}, gate = 'both', subj
   const order = { works: 0, nothing: 1, blocked: 2 };
   return rows.sort((a, b) => order[a.status] - order[b.status]
     || a.verbLabel.localeCompare(b.verbLabel));
+}
+
+// ---------------------------------------------------------------------------------
+// "IS IT EVEN PLUGGED IN?" - Mike:
+//
+//   *"There should be a connection status on the input/device screens so people don't waste
+//   time trying to troubleshoot something that's not plugged in."*
+//
+// THIS IS THE SAME LESSON THE VERDICT LINE ALREADY LEARNED, one step further back. "Nothing
+// has been pressed yet" is reported as the STRONGEST symptom rather than as health, because
+// it means the press never reached the software. This asks the question before that one: is
+// the thing she presses connected to this machine at all?
+//
+// Without it, somebody stands at a bedside reading a binding list, checking hold thresholds
+// and cycling the gate, for a switch whose dongle is in a drawer.
+//
+// *** THE DISTINCTION THAT MATTERS IS "GONE" VERSUS "CANNOT TELL". ***
+//   connected  it is here now. A gamepad the browser can see; the keyboard, which IS the page.
+//   missing    IT IS BOUND AND IT IS NOT HERE. This is the finding - the one that ends the
+//              troubleshooting session before it starts.
+//   unknown    a device the browser cannot enumerate. A hard-wired switch on a GPIO pin is
+//              not visible to a web page, so silence from it is NOT evidence of absence.
+//
+// Collapsing `unknown` into `missing` would be worse than not having this at all: it would
+// tell somebody their working switch was unplugged, and they would go and unplug it.
+// ---------------------------------------------------------------------------------------
+
+// The devices a page can actually see, because it IS them.
+const ALWAYS_PRESENT = new Set(['keyboard', 'pointer']);
+
+export function deviceStatus({ bindings = [], devices = [], activity = [],
+                               now = 0, seenMs = 10 * 60 * 1000 } = {}) {
+  const here = new Set((devices || []).map((d) => d.device).filter(Boolean));
+  const heard = new Map();
+  for (const r of activity || []) {
+    if (r && r.device) heard.set(r.device, Math.max(heard.get(r.device) || 0, r.at || 0));
+  }
+
+  const counts = new Map();
+  for (const b of bindings || []) {
+    if (!b || !b.device) continue;
+    counts.set(b.device, (counts.get(b.device) || 0) + 1);
+  }
+
+  const rows = [...counts.entries()].map(([device, bound]) => {
+    const lastAt = heard.get(device) || 0;
+    const recently = lastAt && (now - lastAt) < seenMs;
+    let state = 'unknown';
+    let why = 'this kind of control cannot be detected by the screen, so it may well be fine';
+
+    if (ALWAYS_PRESENT.has(device)) {
+      state = 'connected';
+      why = 'part of the screen itself';
+    } else if (here.has(device)) {
+      state = 'connected';
+      why = 'the screen can see it right now';
+    } else if (deviceClass(device) === 'gamepad') {
+      // A GAMEPAD IS ENUMERABLE, so its absence is real information rather than silence -
+      // and a great many adaptive switches present as one.
+      state = 'missing';
+      why = 'bound, but nothing is plugged in that answers to it';
+    } else if (recently) {
+      state = 'connected';
+      why = 'it was used a moment ago';
+    }
+    return { device, label: controlLabel(device, ''), bound, state, why, lastAt: lastAt || null };
+  });
+
+  const rank = { missing: 0, unknown: 1, connected: 2 };
+  rows.sort((a, b) => (rank[a.state] - rank[b.state]) || a.device.localeCompare(b.device));
+
+  const missing = rows.filter((r) => r.state === 'missing');
+  let verdict = null;
+  if (rows.length && rows.every((r) => r.state === 'missing')) {
+    // THE HEADLINE. Everything she is bound to is absent, so no amount of reading the
+    // binding list will help and somebody should be told that first.
+    verdict = { tone: 'bad', text: 'Nothing she is bound to is connected to this screen' };
+  } else if (missing.length) {
+    verdict = { tone: 'mixed',
+      text: `${missing.length} of ${rows.length} controls are bound but not connected` };
+  } else if (rows.length) {
+    verdict = { tone: 'good', text: 'Everything she is bound to is connected, or cannot be checked' };
+  }
+  return { rows, missing: missing.length, verdict };
+}
+
+export function renderDevices(el, opts = {}) {
+  const s = deviceStatus(opts);
+  if (!s.rows.length) {
+    el.innerHTML = '<p class="cv-none">Nothing is bound yet, so there is nothing to check.</p>';
+    return s;
+  }
+  el.innerHTML = `
+    <p class="cv-verdict cv-${s.verdict.tone}">${esc(s.verdict.text)}</p>
+    <table class="cv-table">${s.rows.map((r) => `
+      <tr class="cv-dev cv-dev-${r.state}">
+        <td class="cv-key">${esc(r.label || r.device)}</td>
+        <td class="cv-verb">${r.state === 'missing' ? 'NOT CONNECTED'
+          : r.state === 'unknown' ? 'cannot check' : 'connected'}</td>
+        <td class="cv-says">${esc(r.why)}
+          <span class="cv-hint">${r.bound} binding${r.bound === 1 ? '' : 's'}</span></td>
+      </tr>`).join('')}</table>`;
+  return s;
 }
 
 // ---------------------------------------------------------------------------------
@@ -173,13 +277,20 @@ export function verdict(records = []) {
 // ---------------------------------------------------------------------------------
 // Rendering. Deliberately plain: this is read by somebody standing up.
 // ---------------------------------------------------------------------------------
-export function renderControls(el, { bindings, targets, gate, subject }) {
+export function renderControls(el, { bindings, targets, gate, subject,
+                                     devices = [], activity = [], now = 0 }) {
+  // CONNECTION STATUS FIRST, ABOVE THE BINDING LIST. This is the page somebody opens when a
+  // switch appears dead, and the first question is not "what is it bound to" - it is whether
+  // the thing is plugged in at all. Answering it second means it gets read second.
+  const head = document.createElement('div');
+  renderDevices(head, { bindings, devices, activity, now });
+
   const rows = whatCanIPress({ bindings, targets, gate, subject });
   if (!rows.length) {
     el.innerHTML = '<p class="cv-none">Nothing is bound yet. Set controls up on the Inputs page.</p>';
     return rows;
   }
-  el.innerHTML = `<table class="cv-table">${rows.map((r) => `
+  el.innerHTML = head.innerHTML + `<table class="cv-table">${rows.map((r) => `
     <tr class="cv-${r.status}">
       <td class="cv-key">${esc(r.control)}</td>
       <td class="cv-verb">${esc(r.verbLabel)}</td>
@@ -208,6 +319,9 @@ export function controlPages({ runtime, subjectName = () => '' }) {
         targets: runtime.router.targets(),
         gate: runtime.gate(),
         subject: subjectName(),
+        devices: runtime.devices?.() || [],
+        activity: runtime.recentActivity(),
+        now: Date.now(),
       }),
     },
     activity: {

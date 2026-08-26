@@ -27,8 +27,7 @@ two views is to tell them apart.</p>
 <script type="module">
 import {
   whatCanIPress, explainActivation, verdict, controlLabel,
-  renderControls, renderActivity, CONTROL_ITEMS,
-} from '../controls_view.js';
+  renderControls, renderActivity, CONTROL_ITEMS, deviceStatus, renderDevices } from '../controls_view.js';
 import { mountSettings } from '../settings.js';
 
 const out = document.getElementById('results');
@@ -163,7 +162,12 @@ section('rendering, and reachability from the menu');
     bindings: [b('key:arrowdown', 'next'), b('key:enter', 'select')],
     targets: { next: {} }, subject: 'Photos',
   });
-  check('every binding gets a row', el.querySelectorAll('tr').length === 2);
+  // The device-status table now sits ABOVE this one, so count the BINDING rows rather than
+  // every row on the page - the connection status is a different table with a different job.
+  check('every binding gets a row', el.querySelectorAll('tr:not(.cv-dev)').length === 2,
+    String(el.querySelectorAll('tr:not(.cv-dev)').length));
+  check('and the connection status sits ABOVE it, because "is it plugged in" is the question '
+    + 'before "what is it bound to"', el.querySelectorAll('tr.cv-dev').length > 0);
   check('the useless one is marked, not hidden — a missing row sends people hunting',
     el.querySelectorAll('tr.cv-nothing').length === 1);
 
@@ -240,6 +244,93 @@ section('rendering, and reachability from the menu');
   broken.back();
   check('and Back still works from it', broken.page() === null);
   broken.destroy();
+}
+
+// =====================================================================
+section('IS IT EVEN PLUGGED IN? — the question before "what is it bound to"');
+
+{
+  // Mike: "There should be a connection status on the input/device screens so people don't
+  // waste time trying to troubleshoot something that's not plugged in." Without this,
+  // somebody stands at a bedside reading a binding list and cycling the gate for a switch
+  // whose dongle is in a drawer.
+  const bindings = [
+    { device: 'keyboard', control: 'key:arrowright', actionId: 'verb/next' },
+    { device: 'gamepad:ablenet', control: 'b0', actionId: 'verb/select' },
+    { device: 'gpio:switch1', control: 'pin:17', actionId: 'verb/select' },
+  ];
+
+  const gone = deviceStatus({ bindings, devices: [], activity: [], now: 1000 });
+  const by = Object.fromEntries(gone.rows.map((r) => [r.device, r]));
+
+  check('the keyboard is always connected — it IS the page',
+    by.keyboard.state === 'connected');
+  check('A BOUND GAMEPAD THAT IS NOT THERE IS REPORTED MISSING — a gamepad is enumerable, so '
+    + 'its absence is real information rather than silence, and most adaptive switches '
+    + 'present as one', by['gamepad:ablenet'].state === 'missing');
+  check('and the row says so in words a person can act on',
+    by['gamepad:ablenet'].why.includes('nothing is plugged in'), by['gamepad:ablenet'].why);
+
+  // THE ONE THAT WOULD BE WORSE THAN NOT HAVING THIS AT ALL.
+  check('A DEVICE THE BROWSER CANNOT ENUMERATE IS "UNKNOWN", NEVER "MISSING" — a hard-wired '
+    + 'switch on a GPIO pin is invisible to a web page, and telling somebody their working '
+    + 'switch was unplugged would send them to go and unplug it',
+    by['gpio:switch1'].state === 'unknown', by['gpio:switch1'].state);
+  check('and it says why it cannot tell, rather than implying a fault',
+    by['gpio:switch1'].why.includes('cannot be detected'), by['gpio:switch1'].why);
+
+  const present = deviceStatus({ bindings, devices: [{ device: 'gamepad:ablenet' }], now: 1000 });
+  check('with it plugged in, the same binding reads as connected',
+    present.rows.find((r) => r.device === 'gamepad:ablenet').state === 'connected');
+
+  // Something unenumerable that was used a moment ago is evidently working.
+  const recent = deviceStatus({ bindings, devices: [],
+    activity: [{ device: 'gpio:switch1', at: 900 }], now: 1000 });
+  check('an unenumerable device that was just used counts as connected',
+    recent.rows.find((r) => r.device === 'gpio:switch1').state === 'connected');
+  const stale = deviceStatus({ bindings, devices: [],
+    activity: [{ device: 'gpio:switch1', at: 0 }], now: 60 * 60 * 1000 });
+  check('but one last used an hour ago goes back to "cannot tell", not to "missing"',
+    stale.rows.find((r) => r.device === 'gpio:switch1').state === 'unknown');
+
+  check('the worst rows come FIRST, so the finding is what gets read',
+    gone.rows[0].state === 'missing', gone.rows.map((r) => r.state).join(','));
+  check('each row says how many bindings it carries, so the cost of it being gone is visible',
+    by['gamepad:ablenet'].bound === 1);
+}
+
+{
+  const bindings = [{ device: 'gamepad:one', control: 'b0', actionId: 'verb/select' },
+                    { device: 'gamepad:two', control: 'b0', actionId: 'verb/next' }];
+  const all = deviceStatus({ bindings, devices: [], now: 1000 });
+  check('WHEN NOTHING SHE IS BOUND TO IS CONNECTED, THAT IS THE HEADLINE — no amount of '
+    + 'reading the binding list will help', all.verdict.tone === 'bad'
+    && all.verdict.text.includes('Nothing she is bound to'), all.verdict.text);
+
+  const some = deviceStatus({ bindings, devices: [{ device: 'gamepad:one' }], now: 1000 });
+  check('with one of two present it says how many, rather than crying wolf',
+    some.verdict.tone === 'mixed' && some.verdict.text.includes('1 of 2'), some.verdict.text);
+
+  const fine = deviceStatus({ bindings: [{ device: 'keyboard', control: 'key:a' }], now: 1000 });
+  check('and an all-clear is honest about what it could not check',
+    fine.verdict.tone === 'good' && fine.verdict.text.includes('cannot be checked'),
+    fine.verdict.text);
+
+  check('nothing bound at all reports nothing rather than an all-clear',
+    deviceStatus({}).verdict === null);
+}
+
+{
+  const el = document.createElement('div');
+  renderDevices(el, { bindings: [{ device: 'gamepad:gone', control: 'b0' }],
+                      devices: [], now: 1000 });
+  check('the rendered row SHOUTS the disconnection, because it is the finding',
+    el.textContent.includes('NOT CONNECTED'), el.textContent.slice(0, 90));
+
+  const empty = document.createElement('div');
+  renderDevices(empty, { bindings: [] });
+  check('with nothing bound it says so plainly instead of rendering an empty table',
+    empty.textContent.includes('nothing to check'), empty.textContent);
 }
 
 const s = document.getElementById('summary');

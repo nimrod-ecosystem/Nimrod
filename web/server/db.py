@@ -516,9 +516,21 @@ class _Store:
     # onto whichever person happened to be first - would have silently taken media
     # away from screens that were showing it.
     #
-    # THE PRIVACY POINT IS THE REAL ONE. A person's screen is also their private life,
-    # and "everyone in the account sees everything" stops being acceptable the moment
-    # an account holds more than one person who did not choose each other.
+    # WHAT THIS IS ACTUALLY FOR, corrected after Mike pushed back on an earlier version
+    # of this comment that led with privacy:
+    #
+    #   1. ORGANISATION, and this is the honest primary. The right albums on the right
+    #      screen. An account with several people needs Christine's photos to be what
+    #      SHE sees rather than a merged pile of four residents' families.
+    #   2. A boundary between UNRELATED ACCOUNTS - a facility whose residents did not
+    #      choose each other. That is the case where the word privacy still applies, and
+    #      it is enforced ACROSS accounts by user_id, which predates this column.
+    #   3. Somewhere for permissions to hang later. "Who may see whose media" belongs on
+    #      the grants table beside "who may drive", not as a column here.
+    #
+    # IT IS NOT MUCH OF A PRIVACY FEATURE WITHIN ONE ACCOUNT, and saying so kept the
+    # reasoning honest: anyone standing in the room already sees the screen. Visual
+    # privacy there was never something software could give back.
     def create_source(self, user_id: str, label: str, base_url: str, kind: str,
                       person_id: str | None = None) -> dict:
         sid, ts = _new_id(), _now()

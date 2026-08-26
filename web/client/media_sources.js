@@ -39,8 +39,15 @@ export function mediaUrl(baseUrl, path) {
 //
 // WHY IT MATTERS ON A SCREEN RATHER THAN IN AN ADMIN PANEL: an account with one person never
 // notices this exists. An account with several - a family, a facility, a clinician with a
-// caseload - needs Christine's albums to be HERS, not on the resident next door's screen and
-// not browsable by their family. A person's screen is also their private life.
+// caseload - needs Christine's albums to be HERS rather than a merged pile of four residents'
+// families.
+//
+// THAT IS AN ORGANISATION WIN, NOT A SECRECY ONE, and the distinction is worth keeping: the
+// therapists in her room already see whatever is on her screen, so nothing here is protecting
+// her from them. What it protects is the SCREEN being about the right person. The real
+// boundary between people who did not choose each other is across ACCOUNTS, which `user_id`
+// already enforced, and any finer-grained "who may see whose media" belongs on the grants
+// table beside "who may drive" rather than in a column here.
 export function createMediaSourcesClient({ user, base = '', cache = false, personId = null } = {}) {
   const scope = personId ? `?person_id=${encodeURIComponent(personId)}` : '';
   async function fetchList() {
