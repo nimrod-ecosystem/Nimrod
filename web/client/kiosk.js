@@ -104,6 +104,13 @@ export async function mountKiosk(root, {
   const remoteEl = root.querySelector('[data-remote]');
   const modsEl = root.querySelector('[data-mods]');
 
+  // WHOSE SCREEN THIS IS. Declared UP HERE rather than beside the lookup that fills it,
+  // because `childCtx` exposes it as a getter and the first module mounts before that
+  // lookup has even started - a `let` further down the file is still in its temporal dead
+  // zone at that moment, which threw. Null until the background resolve lands, which every
+  // consumer already has to handle anyway.
+  let personId = null;
+
   const ck = (key) => `${user}:${profileId}:${key}`;   // resilience cache key per handle
 
   const stateFor = (key, opts = {}) => (makeState
@@ -115,6 +122,11 @@ export async function mountKiosk(root, {
 
   const childCtx = (mod) => ({
     bus, user, profileId,
+    // WHOSE SCREEN THIS IS. Resolved in the background below, so it is a FUNCTION rather
+    // than a value - a module mounted before the lookup returns would otherwise capture
+    // null forever. Bindings have been per-person since the input runtime landed; this is
+    // media catching up to the same idea.
+    get personId() { return personId; },
     rootBus: bus, instanceId: mod.id,
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
@@ -417,6 +429,7 @@ export async function mountKiosk(root, {
     try {
       const p = await profiles.get(profileId);
       if (!p?.person_id) return;
+      personId = p.person_id;
       if (profiles.people) {
         const who = (await profiles.people()).find((x) => x.id === p.person_id);
         if (who) { whoName = who.name; menu.refresh(); }
