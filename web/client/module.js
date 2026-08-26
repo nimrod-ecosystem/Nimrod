@@ -2,7 +2,19 @@
 // instance of a module inside a profile.
 //
 // A module registers a manifest plus a factory:
-//   registerModule({ type, title, description }, (ctx) => ({ init, onResize, onHide, destroy }))
+//   registerModule(manifest, (ctx) => ({ init, onResize, onHide, destroy }))
+//
+// The manifest grew, and every field on it exists so the host can reason about a module
+// WITHOUT MOUNTING IT - which is what a modules browser, the recovery ladder and the
+// reachability audit all need. Full contract: docs/module-input-spec.md
+//
+//   type          stable, machine-safe, never changes. Bindings and saved screens key off it.
+//   title         human. Shown in menus.
+//   description   human.
+//   settings      declared as DATA, so the shell can render them and a cursor can walk them.
+//   dependsOn     none | local | server | network - how exposed it is, for picking a fallback.
+//                 Assumed `server` if absent, which is the pessimistic answer on purpose.
+//   importance    critical | normal | optional - how loudly the audit complains about it.
 //
 //   ctx.mount     the DOM element this instance owns
 //   ctx.bus       a SCOPED bus (sinks/bindings/sources auto-released on destroy)
