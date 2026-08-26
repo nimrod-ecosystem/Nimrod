@@ -33,9 +33,18 @@ export function mediaUrl(baseUrl, path) {
 }
 
 // --- Registry client (platform API) ----------------------------------------
-export function createMediaSourcesClient({ user, base = '', cache = false } = {}) {
+// `personId` SCOPES THE REGISTRY TO ONE PERSON'S SCREENS: their own sources plus the
+// account-wide ones. Absent, the client sees everything the account owns, which is the
+// management view - and which is what every existing caller gets, unchanged.
+//
+// WHY IT MATTERS ON A SCREEN RATHER THAN IN AN ADMIN PANEL: an account with one person never
+// notices this exists. An account with several - a family, a facility, a clinician with a
+// caseload - needs Christine's albums to be HERS, not on the resident next door's screen and
+// not browsable by their family. A person's screen is also their private life.
+export function createMediaSourcesClient({ user, base = '', cache = false, personId = null } = {}) {
+  const scope = personId ? `?person_id=${encodeURIComponent(personId)}` : '';
   async function fetchList() {
-    const res = await fetch(`${base}/api/media-sources`, { headers: authHeaders(user) });
+    const res = await fetch(`${base}/api/media-sources${scope}`, { headers: authHeaders(user) });
     if (!res.ok) throw new Error(`GET /api/media-sources -> ${res.status}`);
     return (await res.json()).sources;
   }
@@ -58,7 +67,11 @@ export function createMediaSourcesClient({ user, base = '', cache = false } = {}
     let remote = [];
     try {
       remote = (cache
-        ? await cachedFetch(`media-sources:${user || 'anon'}`, fetchList)
+        // THE CACHE KEY CARRIES THE PERSON. Without it, two people's screens on one machine
+        // would share one offline mirror, and whichever loaded first would decide what the
+        // other saw the next time the server was unreachable - which is the privacy bug this
+        // whole column exists to prevent, arriving through the back door.
+        ? await cachedFetch(`media-sources:${user || 'anon'}:${personId || 'all'}`, fetchList)
         : await fetchList()) || [];
     } catch (err) {
       console.warn('media-sources: registry unavailable, using device-local folders only', err);
@@ -66,13 +79,29 @@ export function createMediaSourcesClient({ user, base = '', cache = false } = {}
     const local = await listFolderSources();
     return [...remote, ...local];
   }
-  async function add({ label, base_url, kind = 'agent' }) {
+  // Adding from a person's screen files the source under that person by default, which is
+  // what somebody standing at a bedside means. Pass `person_id: null` explicitly to make one
+  // account-wide from such a screen.
+  async function add({ label, base_url, kind = 'agent', person_id = personId }) {
     const res = await fetch(`${base}/api/media-sources`, {
       method: 'POST',
       headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ label, base_url, kind }),
+      body: JSON.stringify({ label, base_url, kind, person_id: person_id || null }),
     });
     if (!res.ok) throw new Error(`POST /api/media-sources -> ${res.status}`);
+    return res.json();
+  }
+
+  // Move a source between "the account's" and "one person's". BOTH DIRECTIONS: narrowing is
+  // the privacy fix, widening is the commoner mistake - a family folder set up on one screen
+  // that everybody then wants, and which without this is stuck there.
+  async function moveTo(id, person_id) {
+    const res = await fetch(`${base}/api/media-sources/${id}`, {
+      method: 'PATCH',
+      headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ person_id: person_id || null }),
+    });
+    if (!res.ok) throw new Error(`PATCH /api/media-sources/${id} -> ${res.status}`);
     return res.json();
   }
   // A folder source only exists on this device, so it is removed from IndexedDB — asking
@@ -86,7 +115,7 @@ export function createMediaSourcesClient({ user, base = '', cache = false } = {}
     if (!res.ok) throw new Error(`DELETE /api/media-sources/${id} -> ${res.status}`);
     return res.json();
   }
-  return { list, add, remove };
+  return { list, add, remove, moveTo, personId: () => personId || null };
 }
 
 // --- Resolver (talks to the user's media agent, NOT the platform) ----------

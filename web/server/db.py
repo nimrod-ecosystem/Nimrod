@@ -497,31 +497,87 @@ class _Store:
         return n
 
     # ---------------------------------------------------------- media sources
-    # Per-user registry of connected media folders. The `base_url` points at a
+    # Per-account registry of connected media folders. The `base_url` points at a
     # user-run media agent; the platform stores only this reference and never the
     # bytes. Ownership is enforced by user_id on every read/write.
-    def create_source(self, user_id: str, label: str, base_url: str, kind: str) -> dict:
+    #
+    # `person_id` IS NULLABLE, AND NULL IS THE INTERESTING VALUE. An account with one
+    # person - which is most of them - never sets it, and every source is simply the
+    # account's. An account with several (a family, a facility, a clinician with a
+    # caseload) needs Christine's photos to be HERS: on her screen, and not on
+    # somebody else's, and not something another resident's family can browse.
+    #
+    #   NULL          the account's own. Visible to every person in it.
+    #   a person id   that person's. Visible on their screens and nowhere else.
+    #
+    # NULL MEANS SHARED RATHER THAN ORPHANED, which is why the column could be added
+    # without touching a single existing row: every source that existed before this
+    # keeps behaving exactly as it did. The alternative - backfilling every source
+    # onto whichever person happened to be first - would have silently taken media
+    # away from screens that were showing it.
+    #
+    # THE PRIVACY POINT IS THE REAL ONE. A person's screen is also their private life,
+    # and "everyone in the account sees everything" stops being acceptable the moment
+    # an account holds more than one person who did not choose each other.
+    def create_source(self, user_id: str, label: str, base_url: str, kind: str,
+                      person_id: str | None = None) -> dict:
         sid, ts = _new_id(), _now()
+        pid = person_id or None            # "" and None are the same thing: the account's
         with self._tx() as cur:
-            cur.execute(self._q("INSERT INTO media_sources(id, user_id, label, base_url, kind, created_at) VALUES(?,?,?,?,?,?)"),
-                        (sid, user_id, label, base_url, kind, ts))
-        return {"id": sid, "label": label, "base_url": base_url, "kind": kind, "created_at": ts}
+            cur.execute(self._q("INSERT INTO media_sources(id, user_id, label, base_url, kind, created_at, person_id) VALUES(?,?,?,?,?,?,?)"),
+                        (sid, user_id, label, base_url, kind, ts, pid))
+        return {"id": sid, "label": label, "base_url": base_url, "kind": kind,
+                "created_at": ts, "person_id": pid}
 
-    def list_sources(self, user_id: str) -> list[dict]:
+    def list_sources(self, user_id: str, person_id: str | None = None,
+                     shared_only: bool = False) -> list[dict]:
+        """Every source this account owns, or the ones a given person's screen may use.
+
+        `person_id` given  -> that person's sources PLUS the account-wide ones. That is
+                              the union a screen wants: her own albums and the family
+                              ones, with no way to reach another resident's.
+        `person_id` None   -> everything the account owns, which is the management view.
+        `shared_only`      -> just the account-wide ones.
+        """
+        sql = ("SELECT id, label, base_url, kind, created_at, person_id "
+               "FROM media_sources WHERE user_id=?")
+        args: list = [user_id]
+        if shared_only:
+            sql += " AND person_id IS NULL"
+        elif person_id:
+            sql += " AND (person_id IS NULL OR person_id=?)"
+            args.append(person_id)
+        sql += " ORDER BY created_at"
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id, label, base_url, kind, created_at FROM media_sources WHERE user_id=? ORDER BY created_at"),
-                        (user_id,))
+            cur.execute(self._q(sql), tuple(args))
             rows = cur.fetchall()
-        return [{"id": r[0], "label": r[1], "base_url": r[2], "kind": r[3], "created_at": r[4]} for r in rows]
+        return [self._source_row(r) for r in rows]
+
+    @staticmethod
+    def _source_row(r) -> dict:
+        return {"id": r[0], "label": r[1], "base_url": r[2], "kind": r[3],
+                "created_at": r[4], "person_id": (r[5] if len(r) > 5 else None) or None}
 
     def get_source(self, user_id: str, sid: str) -> dict | None:
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id, label, base_url, kind, created_at FROM media_sources WHERE user_id=? AND id=?"),
+            cur.execute(self._q("SELECT id, label, base_url, kind, created_at, person_id FROM media_sources WHERE user_id=? AND id=?"),
                         (user_id, sid))
             r = cur.fetchone()
         if r is None:
             return None
-        return {"id": r[0], "label": r[1], "base_url": r[2], "kind": r[3], "created_at": r[4]}
+        return self._source_row(r)
+
+    def set_source_person(self, user_id: str, sid: str, person_id: str | None) -> bool:
+        """Move a source between "the account's" and "one person's".
+
+        Both directions matter. Narrowing is the privacy fix; WIDENING is how a family
+        photo folder that was set up on one person's screen becomes available on all of
+        them, which is the commoner mistake and the more annoying one to be stuck with.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q("UPDATE media_sources SET person_id=? WHERE user_id=? AND id=?"),
+                        (person_id or None, user_id, sid))
+            return cur.rowcount == 1
 
     def remove_source(self, user_id: str, sid: str) -> bool:
         with self._tx() as cur:
@@ -652,6 +708,9 @@ class SQLiteStore(_Store):
                 );
                 CREATE INDEX IF NOT EXISTS ix_pairings_expiry ON pairings(expires_at);
 
+                -- `person_id` is NULLABLE and NULL means "the whole account's", never
+                -- "orphaned" - see create_source. That is what let the column be added
+                -- without rewriting a single existing row.
                 CREATE TABLE IF NOT EXISTS media_sources (
                     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, label TEXT NOT NULL,
                     base_url TEXT NOT NULL, kind TEXT NOT NULL, created_at TEXT NOT NULL
@@ -697,6 +756,13 @@ class SQLiteStore(_Store):
             if "role" not in gcols:
                 self._conn.execute(
                     "ALTER TABLE drive_grants ADD COLUMN role TEXT NOT NULL DEFAULT 'moderator'")
+            # Media sources predate the person layer entirely. NULLABLE with NO default, so
+            # every existing row means "the account's" - which is exactly what they were.
+            mcols = {r[1] for r in self._conn.execute("PRAGMA table_info(media_sources)")}
+            if "person_id" not in mcols:
+                self._conn.execute("ALTER TABLE media_sources ADD COLUMN person_id TEXT")
+            self._conn.execute(
+                "CREATE INDEX IF NOT EXISTS ix_media_sources_person ON media_sources(person_id)")
             self._conn.commit()
 
 
@@ -766,8 +832,15 @@ class PostgresStore(_Store):
             "CREATE INDEX IF NOT EXISTS ix_pairings_expiry ON pairings(expires_at)",
 
             "CREATE TABLE IF NOT EXISTS media_sources (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
-            "label TEXT NOT NULL, base_url TEXT NOT NULL, kind TEXT NOT NULL, created_at TEXT NOT NULL)",
+            "label TEXT NOT NULL, base_url TEXT NOT NULL, kind TEXT NOT NULL, created_at TEXT NOT NULL, "
+            "person_id TEXT)",
+            # Nullable and undefaulted on purpose: every row that existed before this means
+            # "the account's", which is what it already was. Nothing is backfilled, because
+            # backfilling onto whichever person happened to be first would silently take
+            # media away from screens that were showing it.
+            "ALTER TABLE media_sources ADD COLUMN IF NOT EXISTS person_id TEXT",
             "CREATE INDEX IF NOT EXISTS ix_media_sources_user ON media_sources(user_id)",
+            "CREATE INDEX IF NOT EXISTS ix_media_sources_person ON media_sources(person_id)",
 
             "CREATE TABLE IF NOT EXISTS profile_modules (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, "
             "type TEXT NOT NULL, position INTEGER NOT NULL, created_at TEXT NOT NULL)",

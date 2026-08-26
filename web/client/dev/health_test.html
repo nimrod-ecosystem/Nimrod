@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>health — is this panel actually broken — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>health — is this panel actually broken?</h1>
+<p><b>The hard part is not errors, it is silence.</b> A module that throws is easy and rare.
+What happens at a bedside is a panel that is up, drawing, apparently fine, and has not changed
+in forty minutes. Nothing threw. From across the room it looks like a working screen.</p>
+<p><b>False positives are the only failure mode that matters.</b> A missed fault costs an
+afternoon of a broken panel. A false one swaps away something she was watching, or reboots a
+screen that was fine &mdash; and destroys trust in every alert after it. Every default here
+under-reports.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  HEALTH_EXPECT, DEFAULT_EXPECT_MS, DEFAULT_SETTLE_MS, FAULT_KINDS,
+  expectFor, judgePanel, judgeScreen, createHealthWatch,
+} from '../health.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const MIN = 60 * 1000, HOUR = 60 * MIN;
+const T0 = 1_000_000;
+
+// =====================================================================
+section('the expectations are DATA, and `idle` is a row rather than a special case');
+
+{
+  check('a known module gets its own bound', expectFor('photos').expectMs === 60 * HOUR / 60,
+    `${expectFor('photos').expectMs}`);
+  check('an unknown module falls back rather than being unmonitored',
+    expectFor('whatever').expectMs === DEFAULT_EXPECT_MS);
+  check('THE CLOCK IS IDLE — it redraws every second and publishes nothing, and calling it '
+    + 'dead would be the tool’s fault rather than the clock’s', expectFor('clock').idle === true);
+  check('so are the games — nobody playing is not a fault',
+    expectFor('wordforge').idle && expectFor('algebra').idle && expectFor('quests').idle);
+  check('the content modules are NOT idle — silence from a slideshow is real',
+    !expectFor('photos').idle && !expectFor('youtube').idle && !expectFor('director').idle);
+  check('the bounds are UPPER BOUNDS ON SILENCE, generously set — a slideshow on its slowest '
+    + 'setting advances once a minute, so an hour of silence is genuinely wrong',
+    expectFor('photos').expectMs >= 30 * MIN);
+}
+
+// =====================================================================
+section('silence — the failure that actually happens');
+
+{
+  const p = { id: 'p1', type: 'photos', mountedAt: T0, lastSeenAt: T0 + 5 * MIN };
+  check('a panel that spoke recently is fine',
+    judgePanel(p, T0 + 10 * MIN).ok === true);
+  check('and one that has been quiet too long is not',
+    judgePanel(p, T0 + 5 * MIN + 61 * MIN).ok === false);
+
+  const v = judgePanel(p, T0 + 5 * MIN + 61 * MIN);
+  check('it is reported as STALLED, not as an error', v.kind === 'stalled', v.kind);
+  check('DATED FROM THE LAST HEARTBEAT, not from now — dating it from the moment somebody '
+    + 'noticed would restart the grace period on every check',
+    v.since === T0 + 5 * MIN, `${v.since}`);
+  check('and it says why in words', v.why.includes('silent'), v.why);
+
+  check('an IDLE module is never judged silent, however long it has been',
+    judgePanel({ id: 'c', type: 'clock', mountedAt: T0 }, T0 + 10 * HOUR).ok === true);
+}
+
+{
+  // A panel that mounted and never said a word at all.
+  const fresh = { id: 'p1', type: 'photos', mountedAt: T0 };
+  check('IT IS GIVEN TIME TO SETTLE — some modules do real work before their first publish, '
+    + 'and judging one at ten seconds would mostly measure the network',
+    judgePanel(fresh, T0 + 30 * 1000).ok === true);
+  check('the settle window is a real length, not a token one', DEFAULT_SETTLE_MS >= 60 * 1000);
+
+  const late = judgePanel(fresh, T0 + 5 * MIN);
+  check('but a panel that mounted and never spoke IS a fault', late.ok === false);
+  check('and the fault is as old as the panel, not as old as the check',
+    late.since === T0, `${late.since}`);
+  check('an idle module that never speaks is still fine',
+    judgePanel({ id: 'c', type: 'clock', mountedAt: T0 }, T0 + 5 * MIN).ok === true);
+}
+
+// =====================================================================
+section('errors and empties — believed at once, and told apart');
+
+{
+  const e = judgePanel({ id: 'p', type: 'photos', mountedAt: T0, lastSeenAt: T0,
+    lastErrorAt: T0 + MIN, errorText: 'source unreachable' }, T0 + 2 * MIN);
+  check('AN ERROR IS BELIEVED IMMEDIATELY — unlike silence it is unambiguous, something said so',
+    e.ok === false && e.kind === 'errored');
+  check('and it carries what was actually said', e.why.includes('unreachable'), e.why);
+  check('an error on an IDLE module still counts — a clock that threw is still broken',
+    judgePanel({ id: 'c', type: 'clock', mountedAt: T0, lastErrorAt: T0 }, T0 + MIN).kind === 'errored');
+
+  // The one that would otherwise be mistaken for broken software.
+  const em = judgePanel({ id: 'p', type: 'photos', mountedAt: T0, lastSeenAt: T0,
+    reportedEmpty: true, emptySince: T0 + MIN, emptyText: 'No photo source connected' },
+    T0 + 2 * MIN);
+  check('"NOTHING TO SHOW" IS ITS OWN KIND, not an error — it is a setup state with a human '
+    + 'repair, and rebooting a screen over it would be absurd', em.kind === 'empty', em.kind);
+  check('and it says what the person needs to hear', em.why.includes('No photo source'), em.why);
+  check('the three kinds are named for whoever renders them',
+    FAULT_KINDS.join(',') === 'stalled,errored,empty');
+}
+
+// =====================================================================
+section('a whole screen — worst first, and certainty is what "worst" means');
+
+{
+  const panels = [
+    { id: 'a', type: 'photos', mountedAt: T0, lastSeenAt: T0 },                 // stalled, old
+    { id: 'b', type: 'clock', mountedAt: T0 },                                  // fine
+    { id: 'c', type: 'youtube', mountedAt: T0, lastSeenAt: T0, lastErrorAt: T0 + MIN },
+    { id: 'd', type: 'personal', mountedAt: T0, lastSeenAt: T0, reportedEmpty: true },
+    { id: 'e', type: 'pond', mountedAt: T0 },                                   // idle, fine
+  ];
+  const f = judgeScreen(panels, T0 + 3 * HOUR);
+  check('only the faults come back', f.length === 3, JSON.stringify(f.map((x) => x.module)));
+  check('the healthy ones are absent', !f.some((x) => x.module === 'b' || x.module === 'e'));
+  check('AN ERROR OUTRANKS SILENCE — it is more certain, and certainty is what should be '
+    + 'acted on first', f[0].kind === 'errored', f.map((x) => x.kind).join(','));
+  check('and "nothing to show" ranks last, because it is the one a machine cannot fix',
+    f[f.length - 1].kind === 'empty', f.map((x) => x.kind).join(','));
+  check('each fault names its module and type, which is what the ladder needs',
+    f.every((x) => x.module && x.type && x.since));
+  check('a screen with nothing wrong reports nothing at all',
+    judgeScreen([{ id: 'b', type: 'clock', mountedAt: T0 }], T0 + 10 * HOUR).length === 0);
+  check('no panels is survivable', judgeScreen().length === 0);
+}
+
+// =====================================================================
+section('the watch — no module had to change');
+
+{
+  const bus = createBus();
+  let t = T0;
+  const w = createHealthWatch({ bus, now: () => t });
+
+  w.watch('p1', 'photos');
+  check('a watched panel is tracked', w.has('p1'));
+  check('and it starts with no heartbeat', w.panels()[0].lastSeenAt === 0);
+
+  t = T0 + 30 * MIN;
+  check('after the settle window with no heartbeat it is a fault', w.faults().length === 1);
+
+  // A MODULE THAT WAS ALREADY TALKING IS ALREADY MONITORED. `photos/next` is what a slideshow
+  // publishes on every advance; nothing was added to the module to make this work.
+  bus.publish('photos/next');
+  check('AN ORDINARY MODULE TOPIC IS A HEARTBEAT — no module had to change',
+    w.panels()[0].lastSeenAt === t);
+  check('and the fault clears', w.faults().length === 0);
+
+  t = T0 + 30 * MIN + 2 * HOUR;
+  check('silence brings it back', w.faults()[0].kind === 'stalled');
+
+  // A heartbeat must clear an error, or one transient blip pins a panel at "faulty" until it
+  // is remounted and the ladder acts on a fault that is no longer there.
+  w.fail('p1', 'blip');
+  check('a reported error is a fault at once', w.faults()[0].kind === 'errored');
+  bus.publish('photos/next');
+  check('A HEARTBEAT CLEARS AN ERROR — a panel that recovered on its own must not stay marked '
+    + 'broken forever', w.faults().length === 0);
+
+  w.empty('p1', 'nothing here');
+  check('an empty report is a fault', w.faults()[0].kind === 'empty');
+  bus.publish('photos/next');
+  check('and a heartbeat clears that too', w.faults().length === 0);
+
+  check('the director’s own topics count as a heartbeat for it',
+    (w.watch('d1', 'director'), bus.publish('segment/done'),
+     w.panels().find((p) => p.id === 'd1').lastSeenAt === t));
+
+  w.forget('p1');
+  check('forgetting a panel stops it being judged', !w.has('p1'));
+  w.destroy();
+  check('destroy releases the subscriptions', (bus.publish('photos/next'), w.panels().length === 0));
+}
+
+{
+  // A heartbeat for a panel nobody is watching must not throw or invent one.
+  const bus = createBus();
+  const w = createHealthWatch({ bus, now: () => T0 });
+  w.beat('ghost'); w.fail('ghost'); w.empty('ghost');
+  check('signals for an unwatched panel are ignored rather than inventing it',
+    w.panels().length === 0);
+  w.destroy();
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

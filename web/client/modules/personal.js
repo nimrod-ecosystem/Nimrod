@@ -32,7 +32,8 @@ registerModule(
   { type: 'personal', title: 'Personal videos', description: 'recorded messages from your people (BYO storage)' },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
-    const client = createMediaSourcesClient({ user, cache: true });   // registry survives a server blip
+    // Scoped to whose screen this is; see photos.js. Registry survives a server blip.
+    const client = createMediaSourcesClient({ user, cache: true, personId: ctx.personId || null });
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {};

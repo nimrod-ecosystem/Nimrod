@@ -64,6 +64,85 @@ def main():
     check("other source untouched", [s["label"] for s in store.list_sources("alice")] == ["NAS"])
     check("deleting a missing id returns False", store.remove_source("alice", "nope") is False)
 
+    # -------------------------------------------------------------------------------
+    # PER-PERSON SOURCES. NULL person_id means "the account's", never "orphaned" - which
+    # is what let this column be added without rewriting a single existing row.
+    # -------------------------------------------------------------------------------
+    store2 = SQLiteStore(str(Path(tmp) / "people.db"))
+    chris = store2.create_person("acct", "Christine")
+    other = store2.create_person("acct", "Ray")
+
+    shared = store2.create_source("acct", "Family", "http://localhost:8770", "agent")
+    hers = store2.create_source("acct", "Her albums", "http://localhost:8771", "agent",
+                                person_id=chris["id"])
+    his = store2.create_source("acct", "His albums", "http://localhost:8772", "agent",
+                               person_id=other["id"])
+
+    check("a source with no person is the ACCOUNT'S, not orphaned", shared["person_id"] is None)
+    check("an empty string is the same as none - not a person called empty",
+          store2.create_source("acct", "Blank", "http://localhost:8773", "agent",
+                               person_id="")["person_id"] is None)
+    check("a source with a person carries it back", hers["person_id"] == chris["id"])
+
+    mine = [x["label"] for x in store2.list_sources("acct", person_id=chris["id"])]
+    check("HER SCREEN SEES HER OWN SOURCES", "Her albums" in mine, mine)
+    check("...AND THE ACCOUNT-WIDE ONES - that union is the whole point, family photos "
+          "plus her own", "Family" in mine, mine)
+    check("...AND NOT ANOTHER RESIDENT'S. A person's screen is also their private life, and "
+          '"everyone in the account sees everything" stops being acceptable the moment an '
+          "account holds people who did not choose each other",
+          "His albums" not in mine, mine)
+
+    everything = [x["label"] for x in store2.list_sources("acct")]
+    check("with no person named, the account sees everything it owns - the management view",
+          set(everything) == {"Family", "Her albums", "His albums", "Blank"}, everything)
+    check("shared_only narrows to the account-wide ones",
+          {x["label"] for x in store2.list_sources("acct", shared_only=True)} == {"Family", "Blank"})
+
+    # A different ACCOUNT still sees nothing, person or no person. The person layer narrows
+    # WITHIN an account; it must never widen ACROSS one.
+    check("another account sees none of it, whichever person it asks about",
+          store2.list_sources("stranger", person_id=chris["id"]) == [])
+
+    # MOVING, IN BOTH DIRECTIONS. Narrowing is the privacy fix; widening is the commoner
+    # mistake - a family folder set up on one screen that everybody then wants.
+    check("a source can be narrowed to one person",
+          store2.set_source_person("acct", shared["id"], chris["id"]) is True)
+    check("...and it leaves the other person's view",
+          "Family" not in [x["label"] for x in store2.list_sources("acct", person_id=other["id"])])
+    check("A NARROWING CAN BE UNDONE - it is not a one-way door",
+          store2.set_source_person("acct", shared["id"], None) is True)
+    check("...and it comes back for everybody",
+          "Family" in [x["label"] for x in store2.list_sources("acct", person_id=other["id"])])
+    check("another account cannot move a source it does not own",
+          store2.set_source_person("stranger", hers["id"], None) is False)
+    check("...and it did not move", store2.get_source("acct", hers["id"])["person_id"] == chris["id"])
+    check("moving a source that does not exist is False, not a crash",
+          store2.set_source_person("acct", "nope", None) is False)
+
+    check("get_source carries the person too", store2.get_source("acct", hers["id"])["person_id"]
+          == chris["id"])
+
+    # THE MIGRATION, against a database written before the column existed.
+    legacy = Path(tmp) / "legacy.db"
+    import sqlite3
+    con = sqlite3.connect(str(legacy))
+    con.executescript(
+        "CREATE TABLE media_sources (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
+        "label TEXT NOT NULL, base_url TEXT NOT NULL, kind TEXT NOT NULL, created_at TEXT NOT NULL);"
+        "INSERT INTO media_sources VALUES ('old1','acct','Old','http://x','agent','2020-01-01');")
+    con.commit()
+    con.close()
+    migrated = SQLiteStore(str(legacy))
+    rows = migrated.list_sources("acct")
+    check("A ROW WRITTEN BEFORE THE COLUMN EXISTED SURVIVES THE MIGRATION",
+          len(rows) == 1 and rows[0]["label"] == "Old", rows)
+    check("...and it reads as the ACCOUNT'S, which is exactly what it already was",
+          rows[0]["person_id"] is None)
+    check("...so it is still visible on a person's screen - nothing was taken away from a "
+          "screen that was showing it",
+          len(migrated.list_sources("acct", person_id="anyone")) == 1)
+
     print(f"\n{passed} passed, {failed} failed")
     sys.exit(1 if failed else 0)
 

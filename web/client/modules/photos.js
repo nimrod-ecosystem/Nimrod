@@ -107,7 +107,12 @@ registerModule(
     // kiosk hands in one holding the bundled sample images, which is how a stranger sees a
     // working screen without being asked for their own photos before they trust the site.
     // Everywhere else this is the real registry, cached so it survives a server blip.
-    const client = ctx.sources || createMediaSourcesClient({ user, cache: true });
+    // `ctx.personId` SCOPES THE REGISTRY TO WHOSE SCREEN THIS IS: her own sources plus the
+    // account-wide ones, and never another resident's. Undefined on any host that has not
+    // wired it - the dev harness, a signed-out demo - which keeps the account-wide view
+    // those surfaces already had.
+    const client = ctx.sources
+      || createMediaSourcesClient({ user, cache: true, personId: ctx.personId || null });
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {}, channels = {};

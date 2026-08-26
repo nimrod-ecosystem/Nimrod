@@ -108,6 +108,15 @@ class SourceCreate(BaseModel):
     label: str
     base_url: str
     kind: str = "agent"
+    # Absent means the ACCOUNT'S, which is what every source was before the person layer.
+    # Most accounts hold one person and will never set this.
+    person_id: str | None = None
+
+
+class SourceMove(BaseModel):
+    # Empty or absent moves a source back to being the account's - it is how you UNDO a
+    # narrowing, so it has to be expressible rather than a one-way door.
+    person_id: str | None = None
 
 
 class PairRequest(BaseModel):
@@ -396,8 +405,19 @@ def pair_claim(body: PairClaim, request: Request, user: str = Depends(current_us
 # server stores only the reference {label, base_url, kind}; the client resolver
 # fetches listings + bytes straight from base_url. The server never sees the bytes.
 @app.get("/api/media-sources")
-def list_sources(user: str = Depends(current_user)):
-    return {"sources": store.list_sources(user)}
+def list_sources(person_id: str | None = None, user: str = Depends(current_user)):
+    """With `person_id`, what THAT PERSON'S screens may use: their own sources plus the
+    account-wide ones. Without it, everything the account owns - the management view.
+
+    THE OWNERSHIP CHECK IS NOT DECORATION. Without it this endpoint would take any person
+    id and answer, which turns a media list into a way of asking whether a person id is
+    real. `owned_person` raises the same 404 for "does not exist" and "not yours", which is
+    what keeps the two indistinguishable from outside.
+    """
+    if person_id:
+        _check(person_id, ID_RE, "person id")
+        owned_person(user, person_id)
+    return {"sources": store.list_sources(user, person_id=person_id)}
 
 
 @app.post("/api/media-sources")
@@ -406,7 +426,30 @@ def create_source(body: SourceCreate, user: str = Depends(current_user)):
     if body.kind not in SOURCE_KINDS:
         raise HTTPException(status_code=400, detail="invalid source kind")
     base_url = _clean_base_url(body.base_url)
-    return store.create_source(user, body.label, base_url, body.kind)
+    # No person means the account's, which is what every source was before this existed.
+    pid = (body.person_id or "").strip()
+    if pid:
+        _check(pid, ID_RE, "person id")
+        owned_person(user, pid)
+    return store.create_source(user, body.label, base_url, body.kind, person_id=pid or None)
+
+
+@app.patch("/api/media-sources/{sid}")
+def move_source(sid: str, body: SourceMove, user: str = Depends(current_user)):
+    """Move a source between "the account's" and "one person's".
+
+    BOTH DIRECTIONS MATTER. Narrowing is the privacy fix - a resident's albums stop being
+    on everybody's screens. WIDENING is the commoner mistake: a family photo folder set up
+    on one person's screen, which everybody then wants, and which without this is stuck.
+    """
+    _check(sid, ID_RE, "source id")
+    pid = (body.person_id or "").strip()
+    if pid:
+        _check(pid, ID_RE, "person id")
+        owned_person(user, pid)
+    if not store.set_source_person(user, sid, pid or None):
+        raise HTTPException(status_code=404, detail="no such source")
+    return store.get_source(user, sid)
 
 
 @app.delete("/api/media-sources/{sid}")
