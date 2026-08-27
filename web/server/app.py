@@ -476,6 +476,26 @@ def screen_pair_claim(body: ScreenPairClaim, user: str = Depends(current_user)):
     raise HTTPException(status_code=404 if state == "unknown" else 409, detail=detail)
 
 
+@app.get("/api/what-we-store")
+def what_we_store():
+    """EVERYTHING THIS SERVER HOLDS, generated from the real schema.
+
+    UNAUTHENTICATED ON PURPOSE. A privacy claim you have to sign in to read is a privacy
+    claim nobody checks, and the whole value of this one is that it is checkable.
+
+    IT IS GENERATED RATHER THAN WRITTEN because the written version had already gone out of
+    date: the landing page said the server holds an email, screen names and a few hundred
+    bytes of settings, "that is all of it", while the database had quietly grown a person's
+    NAME, append-only event streams, media-source addresses and drive grants. A table with
+    no description is reported as undocumented rather than omitted, so this page can only
+    ever drift in the direction of admitting more.
+
+    It describes the SHAPE of the storage - table names and what they are for - and returns
+    nobody's data.
+    """
+    return store.describe_storage()
+
+
 @app.get("/api/screens")
 def list_screens(user: str = Depends(current_user)):
     """The screens this account has adopted. NEVER returns the secrets."""
