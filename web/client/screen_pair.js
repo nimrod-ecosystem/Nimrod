@@ -42,6 +42,22 @@ export const POLL_MS = 3000;
 // that a code read off a screen is not useful an hour later.
 export const CODE_TTL_HINT = '10 minutes';
 
+// WHERE TO TELL SOMEBODY TO GO, taken from where this page is actually being served rather
+// than written down.
+//
+// The first version hardcoded the current hosting provider's URL, which is wrong for three
+// separate reasons and Mike caught it: it breaks the moment there is a custom domain, it is
+// simply false on a self-hosted install, and it is a lie in local development. A screen that
+// tells somebody to go somewhere the screen itself is not is worse than saying nothing -
+// they will go there, sign in to a different install, and the code will not be found.
+//
+// `location.host` is the truth, always, on every deployment, with no configuration.
+export function siteHost(loc = (typeof location !== 'undefined' ? location : null)) {
+  const host = loc && loc.host ? String(loc.host) : '';
+  // Strip the default ports so it reads as an address somebody would type.
+  return host.replace(/:80$|:443$/, '') || 'this site';
+}
+
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -63,20 +79,30 @@ export function groupCode(code) {
 // ---------------------------------------------------------------------------------------
 export const PAIR_STATES = ['asking', 'waiting', 'claimed', 'failed'];
 
-export function pairMessage(state, { code = '', label = '', error = '' } = {}) {
+export function pairMessage(state, { code = '', label = '', error = '',
+                                     host = siteHost() } = {}) {
   if (state === 'asking') return { title: 'Setting this screen up…', body: '', code: '' };
   if (state === 'waiting') {
     return {
       title: 'Add this screen to your account',
       // The instruction names the whole task, because somebody who has never done it before
       // needs to know where they are going before they are given a number to remember.
-      body: `On your phone or computer, open <b>nimrod.onrender.com</b>, sign in, and enter `
+      body: `On your phone or computer, open <b>${esc(host)}</b>, sign in, and enter `
         + `this code. It lasts about ${CODE_TTL_HINT}.`,
       code: groupCode(code),
     };
   }
   if (state === 'claimed') {
-    return { title: 'Done', body: `This screen is now ${esc(label) || 'set up'}. Starting…`, code: '' };
+    return {
+      title: 'Done',
+      // SAY THAT IT IS PERMANENT. The code expiring in ten minutes is the loudest thing on
+      // the previous screen, and somebody who has just read that reasonably wonders whether
+      // the pairing expires too. It does not: the code is a doorbell, the key is a key, and
+      // the key lasts until somebody removes the screen from the account.
+      body: `${esc(label) || 'This screen'} is set up for good. It will come back on its own `
+        + `after a restart. Starting…`,
+      code: '',
+    };
   }
   return {
     title: 'Could not reach the server',
@@ -114,7 +140,7 @@ export function mountScreenPairing(root, {
   const card = root.querySelector('[data-card]');
 
   function paint() {
-    const m = pairMessage(state, { code, label: claimedLabel, error: lastError });
+    const m = pairMessage(state, { code, label: claimedLabel, error: lastError, host: siteHost() });
     card.innerHTML = `<h1 class="sp-title">${esc(m.title)}</h1>`
       + (m.code ? `<div class="sp-code" aria-label="pairing code">${esc(m.code)}</div>` : '')
       + (m.body ? `<p class="sp-body">${m.body}</p>` : '');
