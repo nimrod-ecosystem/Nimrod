@@ -34,7 +34,7 @@ not fine for <i>collecting</i> the key.</p>
 <div id="live"></div>
 
 <script type="module">
-import { mountScreenPairing, pairMessage, groupCode, PAIR_STATES, POLL_MS }
+import { mountScreenPairing, pairMessage, groupCode, siteHost, PAIR_STATES, POLL_MS }
   from '../screen_pair.js';
 import { getDeviceKey, setDeviceKey } from '../auth.js';
 
@@ -96,9 +96,34 @@ section('the words on the screen — somebody is standing in a room with a phone
   const w = pairMessage('waiting', { code: 'AB4XYZ' });
   check('THE INSTRUCTION NAMES THE WHOLE TASK — somebody who has never done this needs to '
     + 'know where they are going before being given a number to remember',
-    w.body.includes('sign in') && w.body.includes('nimrod'), w.body);
+    w.body.includes('sign in') && w.body.includes('open'), w.body);
   check('it says the code does not last forever, so a stale one is not a mystery',
     w.body.includes('minutes'), w.body);
+
+  // *** THE ADDRESS COMES FROM WHERE THE PAGE IS SERVED, never from a constant. ***
+  // The first version hardcoded the hosting provider's URL. That breaks the moment there is
+  // a custom domain, is false on a self-hosted install, and is a lie in development - and a
+  // screen that sends somebody to an install it is not on is worse than saying nothing,
+  // because they will go there, sign in, and the code will not be found.
+  check('the instruction names THIS site, wherever it is served from',
+    w.body.includes(location.host), w.body);
+  check('and it is not the hosting provider written down', !w.body.includes('onrender'), w.body);
+  check('a custom domain would just work',
+    pairMessage('waiting', { code: 'X', host: 'cici.example.org' }).body
+      .includes('cici.example.org'));
+  check('siteHost strips the default ports so it reads as an address somebody would type',
+    siteHost({ host: 'example.org:443' }) === 'example.org');
+  check('and with no location at all it degrades rather than printing "undefined"',
+    siteHost(null) === 'this site');
+
+  // THE PERMANENCE QUESTION, which is the one somebody actually has standing there: the
+  // code expiring in ten minutes is the loudest thing on the previous screen.
+  const done = pairMessage('claimed', { label: 'Bedroom' });
+  check('THE DONE SCREEN SAYS THE PAIRING IS PERMANENT — the code is a doorbell, the key is '
+    + 'a key, and somebody who just read "10 minutes" reasonably wonders which one expires',
+    done.body.includes('for good'), done.body);
+  check('and that it comes back by itself after a restart, which is the whole point',
+    done.body.includes('restart'), done.body);
   check('and the code is the thing on screen', w.code.includes('AB4'), w.code);
 
   check('a code is GROUPED for copying by eye — "AB4 XYZ" is transcribed correctly far more '
