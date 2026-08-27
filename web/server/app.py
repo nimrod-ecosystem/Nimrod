@@ -29,7 +29,7 @@ from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person
 from drive import ROLES, Rooms, Tickets, parse_message
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
-from identity import current_user, optional_user
+from identity import current_user, optional_user, set_device_key_lookup
 
 log = logging.getLogger("nimrod")
 
@@ -49,6 +49,11 @@ DB_PATH = os.environ.get("NIMROD_DB", str(Path(__file__).resolve().parent / "nim
 # SQLite for local dev. Same logic runs on both (db._Store). See docs/deploy.md.
 DATABASE_URL = os.environ.get("DATABASE_URL")
 store = PostgresStore(DATABASE_URL) if DATABASE_URL else SQLiteStore(DB_PATH)
+
+# The database half of X-Device-Key. Installed here rather than imported inside identity.py,
+# because identity must not depend on db - db already depends on the pure rules modules and a
+# cycle through the auth layer is the last place anybody wants one.
+set_device_key_lookup(store.device_key_user)
 app = FastAPI(title="Nimrod platform server", version="0.2.0")
 
 # --- sessions + Google login (OAuth) ---------------------------------------
@@ -117,6 +122,19 @@ class SourceMove(BaseModel):
     # Empty or absent moves a source back to being the account's - it is how you UNDO a
     # narrowing, so it has to be expressible rather than a one-way door.
     person_id: str | None = None
+
+
+class ScreenPairRequest(BaseModel):
+    label: str = "Screen"
+
+
+class ScreenPairPoll(BaseModel):
+    code: str
+    poll_token: str
+
+
+class ScreenPairClaim(BaseModel):
+    code: str
 
 
 class PairRequest(BaseModel):
@@ -398,6 +416,81 @@ def pair_claim(body: PairClaim, request: Request, user: str = Depends(current_us
         }[status]
         raise HTTPException(status_code=404 if status == "unknown" else 409, detail=detail)
     return pairing
+
+
+# ------------------------------------------------------- screen pairing
+# HOW A FAMILY ADOPTS A BEDSIDE SCREEN, without anybody having to email us.
+#
+# A screen that nobody signs into needs a credential of its own - it reboots at 3am and
+# has to come back by itself. Until now those credentials lived only in a server
+# environment variable, so creating one required the hosting dashboard, so the whole
+# unattended-kiosk feature was founder-only.
+#
+# The dance is the media-agent pairing flow's, proven and deliberately copied.
+
+
+@app.post("/api/screen-pair/request")
+def screen_pair_request(body: ScreenPairRequest, request: Request):
+    """UNAUTHENTICATED, and it has to be: the screen has no account yet. That is the whole
+    problem it is solving.
+
+    What it can do is therefore tiny - mint a short-lived code that is worthless until a
+    signed-in person claims it. No key exists at this point; there is nothing in the row
+    to steal."""
+    _check(body.label, NAME_RE, "screen name")
+    store.sweep_screen_pairings()
+    return store.create_screen_pairing(body.label.strip()[:60])
+
+
+@app.post("/api/screen-pair/status")
+def screen_pair_status(body: ScreenPairPoll):
+    """Has somebody claimed it yet, and if so here is the key.
+
+    A POST rather than a GET, because the poll token is a secret and secrets do not belong
+    in a URL - they land in access logs, proxies and browser history. Same reasoning as the
+    drive ticket.
+
+    THE POLL TOKEN IS WHAT MAKES THIS SAFE. The CODE is displayed on a screen in a room, so
+    anybody walking past can read it; that is fine for claiming, which needs a sign-in. It
+    is NOT fine for collecting. Without the token, whoever glimpsed the code could take the
+    key the instant it was minted."""
+    _check(body.code, ID_RE, "code")
+    state, key = store.screen_pairing_status(body.code.strip().upper(), body.poll_token or "")
+    if state == "claimed":
+        return {"state": "claimed", "device_key": key}
+    return {"state": state}
+
+
+@app.post("/api/screen-pair/claim")
+def screen_pair_claim(body: ScreenPairClaim, user: str = Depends(current_user)):
+    """A signed-in person adopts the screen. Requires an account - that IS the security."""
+    _check(body.code, ID_RE, "code")
+    state, info = store.claim_screen_pairing(body.code.strip().upper(), user)
+    if state == "ok":
+        return {"ok": True, **(info or {})}
+    detail = {
+        "unknown": "no such code - check it and try again",
+        "expired": "that code has expired; the screen can show a new one",
+        "claimed": "that code has already been used",
+    }[state]
+    raise HTTPException(status_code=404 if state == "unknown" else 409, detail=detail)
+
+
+@app.get("/api/screens")
+def list_screens(user: str = Depends(current_user)):
+    """The screens this account has adopted. NEVER returns the secrets."""
+    return {"screens": store.list_device_keys(user)}
+
+
+@app.delete("/api/screens/{key_id}")
+def revoke_screen(key_id: str, user: str = Depends(current_user)):
+    """Unadopt a screen. Immediate - the next request it makes is a 401.
+
+    THE ONLY WAY TO TURN A LOST SCREEN OFF, so it matters that it exists before anybody
+    has a screen to lose."""
+    if not store.revoke_device_key(user, key_id):
+        raise HTTPException(status_code=404, detail="no such screen")
+    return {"ok": True}
 
 
 # ------------------------------------------------------------- media sources

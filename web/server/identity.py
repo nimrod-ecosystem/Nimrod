@@ -47,14 +47,54 @@ def _device_keys() -> dict[str, str]:
     return keys
 
 
+# Set by the app at import time so this module can resolve DATABASE-BACKED keys without
+# importing db (which imports this). A callable rather than the store itself, so a test can
+# hand in whatever it likes and the production path stays one line.
+_key_lookup = None
+
+
+def set_device_key_lookup(fn) -> None:
+    """Install "given a key, which account owns it" - the database half of X-Device-Key."""
+    global _key_lookup
+    _key_lookup = fn
+
+
 def _match_device_key(provided: str | None) -> str | None:
-    """Constant-time compare against each configured secret (high-entropy secrets,
-    but compare_digest avoids leaking via timing). Returns the user, or None."""
+    """Which account this device key belongs to, or None.
+
+    TWO SOURCES, AND THE ENVIRONMENT ONE IS THE OLDER OF THEM.
+
+      DEVICE_KEYS env var   the original. Editable only by whoever has the hosting
+                            dashboard, which made unattended screens a founder-only
+                            feature. Kept because it works and because a key that does
+                            not depend on the database is a genuine last resort if the
+                            database is the thing that is broken.
+      the device_keys table minted by the screen-pairing flow, so a family can adopt a
+                            screen without asking anybody for anything.
+
+    The env var is checked FIRST and deliberately: it is the smaller, more privileged set,
+    it needs no query, and it must keep working even if the database is unreachable.
+
+    compare_digest for the env keys because we are iterating over a handful of secrets and
+    timing is free to avoid. The table lookup is an indexed primary-key match on a
+    high-entropy secret, where a timing signal would have to leak a hash comparison inside
+    the database - not a realistic path, and the alternative is loading every key on every
+    request.
+    """
     if not provided:
         return None
     for secret, user in _device_keys().items():
         if hmac.compare_digest(provided, secret):
             return user
+    if _key_lookup is not None:
+        try:
+            return _key_lookup(provided) or None
+        except Exception:
+            # A DATABASE HICCUP MUST NOT LOOK LIKE A REVOKED SCREEN. Returning None here
+            # would 401 a bedside kiosk over a blip; falling through leaves it to the
+            # session/dev paths, which will also fail, so the request errors honestly
+            # rather than telling the screen it is no longer trusted.
+            return None
     return None
 
 
