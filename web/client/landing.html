@@ -25,6 +25,17 @@
     --radius:16px; --max:1080px;
   }
   *{box-sizing:border-box}
+  /* the live storage list */
+  .storebox{margin:12px 0 14px}
+  .storetab{width:100%;border-collapse:collapse;font-size:.92rem}
+  .storetab th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--midnight);border-bottom:1px solid var(--line);padding:4px 8px 6px}
+  .storetab td{border-bottom:1px solid var(--line-soft);padding:7px 8px;vertical-align:top}
+  .storetab td.tag{white-space:nowrap;color:var(--muted);font-size:.8rem;text-align:right}
+  .storetab tr.undoc td{background:rgba(211,150,140,.16)}
+  .undocnote{font-size:.9rem;color:var(--rosy-deep)}
+  .never{font-size:.92rem;margin:.6em 0 0}
+  .muted{color:var(--muted)}
   html{scroll-behavior:smooth}
   body{margin:0;background:var(--bg);color:var(--ink);
     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -323,11 +334,46 @@
       <div class="mgroups">
         <div class="mgroup"><h4>The screen</h4><ul><li><b>Photos</b> — slideshow over your own media</li><li><b>Camera</b> — local self-view / rearview mirror — never leaves the device</li><li><b>Clock</b> — orientation — time, weekday & date</li><li><b>YouTube</b> — weighted-shuffle player over your own playlist</li><li><b>Personal videos</b> — recorded messages from your people</li><li><b>Lineup</b> — rotates videos, personal videos & learning by time of day</li></ul></div>
         <div class="mgroup"><h4>Learning & play</h4><ul><li><b>Word Forge</b> — vocabulary game — wrong answers explain themselves and still count</li><li><b>Algebra</b> — solve for x — with a calculator, because every real job has one</li><li><b>Lessons</b> — watch a lesson to unlock its questions</li><li><b>Educational</b> — generated learning segments — alphabet, counting, vocabulary</li><li><b>Sprint</b> — focus timer — finish a sprint, bank the points</li></ul></div>
+        <div class="mgroup"><h4>Calm &amp; ambient</h4><ul><li><b>Pond</b> — water that ripples on its own, and ripples more when it is touched</li></ul></div>
         <div class="mgroup"><h4>Keeping track</h4><ul><li><b>Quests</b> — points balance, tasks and rewards</li><li><b>Progress</b> — how a game is going over time — accuracy, concepts, reaction time</li></ul></div>
       </div>
 
-      <div class="milestone"><b>Launch milestone met:</b> all four default modules are in the public
-        open-source repository.</div>
+      <div class="milestone"><b>Every module named above is in the public open-source
+        repository.</b> Nothing here is a mockup — the list is generated from what actually
+        ships.</div>
+
+      <div class="val" style="margin-top:26px">
+        <p class="eyebrow">If a person can press one button, they can use all of it</p>
+        <h3>Whatever they can move, bound to whatever they need to do</h3>
+        <p>Most software assumes a mouse. If someone can only press one switch — with a hand, a
+          cheek, a shoulder, and sometimes taking seconds to do it — that assumption is the
+          whole barrier. So the control layer came first, and everything else is built on it.</p>
+        <div class="mgroups">
+          <div class="mgroup"><h4>It fits the person</h4><ul>
+            <li><b>Bind anything to anything.</b> A switch, an adaptive button, a controller, a
+              dial, a keyboard — pointed at what you want it to do.</li>
+            <li><b>Tuned to a body.</b> How long a press must be held, how long before it
+              repeats, and what to ignore as a tremor or a bounce.</li>
+            <li><b>One switch reaches the whole screen</b> — step between panels, then act.</li>
+          </ul></div>
+          <div class="mgroup"><h4>It follows the person</h4><ul>
+            <li><b>The setup belongs to them, not to a machine.</b> Tune it once; it works on
+              any screen they sit at.</li>
+            <li><b>Someone else can help from another screen</b> — a clinician or a relative,
+              with the same controls, and the screen always says when it is happening.</li>
+            <li><b>Switch off who may act</b> while you fix something, then switch it back.</li>
+          </ul></div>
+          <div class="mgroup"><h4>It tells you why nothing happened</h4><ul>
+            <li><b>“What can I press right now?”</b> — because the answer is different for every
+              person, and there is no manual to check.</li>
+            <li><b>“Why did that do nothing?”</b> — a dead switch, a wrong binding, too high a
+              hold, or a panel with nothing to say are four different repairs that look
+              identical. Each gets its own sentence.</li>
+            <li><b>Is it even plugged in?</b> — asked first, so nobody troubleshoots a switch
+              that is in a drawer.</li>
+          </ul></div>
+        </div>
+      </div>
     </div>
 
     <div class="road" style="margin-top:30px">
@@ -337,9 +383,12 @@
         <ul class="feat">
           <li><b>Default dashboard</b> — photos, rearview camera, YouTube, clock</li>
           <li><b>Runs in any modern browser</b> — phone, tablet, PC, Mac, or Raspberry Pi</li>
-          <li><b>Your own media</b>, served locally and able to run offline</li>
+          <li><b>Your own media</b>, served from your machine — and it keeps working through a
+            dropped connection</li>
           <li><b>Accounts &amp; profiles</b> — sign in and every person gets their own screen</li>
           <li><b>Device-independent setups</b> — your layout lives in your account, not on a machine</li>
+          <li><b>Any control, on any screen</b> — a switch, a button, a dial or a keyboard, bound
+            once and working everywhere</li>
         </ul>
       </div>
       <div class="col test">
@@ -347,8 +396,7 @@
         <p class="cap">Proven, not yet default</p>
         <ul class="feat">
           <li><b>Private video calls &amp; silent check-in</b> — the camera stays on her device</li>
-          <li><b>Accessible input</b> — yes/no scanning, switch/tilt, press-to-play</li>
-          <li><b>Hands-free control</b> — camera-based hand &amp; color tracking, already built</li>
+          <li><b>Hands-free control</b> — camera-based hand &amp; colour tracking</li>
           <li><b>Communication &amp; play</b> — AAC board, word / match games, sing-along</li>
           <li><b>Vision Probe</b> — a caregiver-run visual-response check, in early testing</li>
         </ul>
@@ -385,10 +433,13 @@
 
     <div class="val" style="margin-top:18px">
       <h3>Here is everything the server actually holds</h3>
-      <p>Not a promise — a list. Your email address, the names of the screens you made, which
-        modules are on them, and a few hundred bytes of settings and scores. That is all of it.
-        <b>No photos, no video, no camera feeds, no recordings, no location, no browsing history,
-        no advertising identifiers.</b></p>
+      <p>Not a promise — <b>a live list</b>. The table below is generated from the running
+        database, so it cannot quietly go out of date as the project grows. If we add
+        somewhere to put something and forget to explain it, <b>it appears here labelled as
+        undescribed</b> rather than going unmentioned.</p>
+      <div id="store-live" class="storebox">
+        <p class="muted">Loading the list…</p>
+      </div>
       <p>You do not have to take our word for any of it: the whole thing is open source, so you
         can read exactly what is stored and what is sent —
         <a href="https://github.com/nimrod-ecosystem/Nimrod">the code is public</a>.</p>
@@ -452,6 +503,42 @@
     b.textContent = 'Sign-in didn\u2019t complete. Please try again.';
     document.body.prepend(b);
   }
+</script>
+<script>
+// THE LIVE STORAGE LIST. Generated by the server from its own schema, because the written
+// version had already gone out of date: this section used to say the server holds an email,
+// screen names and "a few hundred bytes of settings — that is all of it", while the database
+// had quietly grown a person's NAME, an append-only event log, media-source addresses and
+// sharing grants. The strongest claim on the page had become false, and the page invites
+// people to check it.
+//
+// IF THE FETCH FAILS, SAY SO AND POINT AT THE SOURCE. Silently showing nothing on a privacy
+// section is the worst possible failure mode here.
+(async () => {
+  const box = document.getElementById('store-live');
+  if (!box) return;
+  const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  try {
+    const res = await fetch('/api/what-we-store');
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    box.innerHTML =
+      '<table class="storetab"><tr><th>What</th><th></th></tr>' +
+      d.stores.map((r) => '<tr class="' + (r.documented ? '' : 'undoc') + '">' +
+        '<td>' + esc(r.what) + '</td>' +
+        '<td class="tag">' + (r.personal ? 'about a person' : 'housekeeping') + '</td></tr>'
+      ).join('') + '</table>' +
+      (d.undocumented.length
+        ? '<p class="undocnote"><b>Undescribed:</b> ' + esc(d.undocumented.join(', ')) +
+          '. It exists, so it is listed. Read the source.</p>'
+        : '') +
+      '<p class="never"><b>Never stored:</b> ' + esc(d.never.join('; ')) + '.</p>';
+  } catch (e) {
+    box.innerHTML = '<p class="muted">Could not load the live list just now — ' +
+      '<a href="https://github.com/nimrod-ecosystem/Nimrod/blob/main/web/server/db.py">' +
+      'read it in the source</a> instead.</p>';
+  }
+})();
 </script>
 </body>
 </html>

@@ -192,6 +192,54 @@ def main() -> None:
         store.touch_device_key("nk_not-real")
         check("touching a key that does not exist is a no-op rather than a crash", True)
 
+    # -----------------------------------------------------------------
+    section("*** what we store - generated, so it cannot quietly go out of date ***")
+    # -----------------------------------------------------------------
+    # The written version HAD already gone out of date: the landing page said the server
+    # holds an email, screen names and a few hundred bytes of settings, "that is all of it",
+    # while the database had grown a person's NAME, append-only event streams, media-source
+    # addresses and drive grants. This is the fix, and the fix is the mechanism.
+    d = store.describe_storage()
+    names = {r["table"] for r in d["stores"]}
+
+    check("it lists the REAL tables, read out of the database rather than typed",
+          "people" in names and "events" in names and "drive_grants" in names, str(sorted(names)))
+    check("nothing in this build is undescribed", d["undocumented"] == [], str(d["undocumented"]))
+
+    by = {r["table"]: r for r in d["stores"]}
+    check("A PERSON'S NAME IS DECLARED PERSONAL - it is the most personal thing in the "
+          "database and the old written list did not mention it at all",
+          by["people"]["personal"] is True)
+    check("and the description says so in words a person can read",
+          "NAME" in by["people"]["what"], by["people"]["what"])
+    check("the event log is declared personal AND declared to grow, which the old "
+          "'a few hundred bytes' line hid",
+          by["events"]["personal"] is True and "GROWS" in by["events"]["what"],
+          by["events"]["what"])
+    check("media sources are described as an ADDRESS pointing at your machine, never files",
+          "Never the files" in by["media_sources"]["what"], by["media_sources"]["what"])
+    check("a transient pairing code is NOT flagged personal, so the flag stays meaningful",
+          by["screen_pairings"]["personal"] is False)
+
+    check("it also says what is never stored", len(d["never"]) >= 4)
+    check("and photos are top of that list, because it is the thing people actually fear",
+          "photo" in d["never"][0].lower(), d["never"][0])
+
+    # *** THE ANTI-DRIFT MECHANISM, which is the entire point. ***
+    with store._tx() as cur:
+        cur.execute("CREATE TABLE IF NOT EXISTS secret_new_thing (id TEXT PRIMARY KEY)")
+    d2 = store.describe_storage()
+    by2 = {r["table"]: r for r in d2["stores"]}
+    check("*** A NEW TABLE NOBODY DESCRIBED SHOWS UP AS UNDOCUMENTED *** - adding storage "
+          "without explaining it is not a silent act, it publishes its own omission",
+          "secret_new_thing" in d2["undocumented"], str(d2["undocumented"]))
+    check("it is LISTED rather than omitted, so the page can only drift towards admitting more",
+          "secret_new_thing" in by2)
+    check("and an undescribed table is assumed PERSONAL until somebody says otherwise",
+          by2["secret_new_thing"]["personal"] is True)
+    check("with text that points at the source rather than pretending to explain",
+          "source" in by2["secret_new_thing"]["what"], by2["secret_new_thing"]["what"])
+
     print(f"\n{passed} passed, {failed} failed")
     sys.exit(1 if failed else 0)
 

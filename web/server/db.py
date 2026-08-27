@@ -497,6 +497,85 @@ class _Store:
                         (cutoff,))
         return n
 
+    # ------------------------------------------------- what we actually store
+    # THE PRIVACY PAGE IS GENERATED FROM THIS, NOT WRITTEN BESIDE IT. Mike:
+    #
+    #   "The privacy list should maybe be linked to a live list or something. It could grow
+    #    and we shouldn't act like what we have now is the full list forever."
+    #
+    # He is right, and the reason is a bug that had already happened: the landing page said
+    # the server holds "your email address, the names of the screens you made, which modules
+    # are on them, and a few hundred bytes of settings and scores - THAT IS ALL OF IT", and by
+    # the time anybody re-read it the database also held A PERSON'S NAME, append-only event
+    # streams, media-source URLs and drive grants. **The strongest claim on the page had
+    # quietly become false**, and the page invites people to check.
+    #
+    # *** SO THE ANTI-DRIFT MECHANISM IS THE POINT, NOT THE TEXT. *** `describe_storage`
+    # reads the REAL table list out of the database and joins it to these descriptions. A
+    # table nobody has described comes back flagged as undocumented and SAYS SO ON THE PUBLIC
+    # PAGE. Adding a table without explaining it is therefore not a silent act - it publishes
+    # its own omission.
+    #
+    # That is deliberately uncomfortable. It is meant to be.
+    STORAGE_NOTES = {
+        "profiles":        ("The screens you made, and what you called them.", False),
+        "profile_modules": ("Which modules are on each screen, and in what order.", False),
+        "state":           ("Settings for those modules - a photo interval, a theme, a "
+                            "layout. Small, and yours.", False),
+        "events":          ("An append-only log of what a module did: which photo was shown "
+                            "when, a game result. It GROWS over time. Sensor readings, if you "
+                            "run a logger, arrive here too.", True),
+        "people":          ("The NAME you gave a person, so their screen can say who it is "
+                            "for. This is the most personal thing here.", True),
+        "media_sources":   ("A label and an ADDRESS for the folder your media lives in - a "
+                            "pointer at your own machine. Never the files themselves.", True),
+        "drive_grants":    ("Which other accounts you have allowed to drive a screen, and "
+                            "until when.", True),
+        "device_keys":     ("A credential for each unattended screen you set up, and the name "
+                            "you gave it.", True),
+        "screen_pairings": ("A short-lived code while a screen is being set up. Deleted "
+                            "afterwards.", False),
+        "pairings":        ("A short-lived code while a media folder is being connected. "
+                            "Deleted afterwards.", False),
+        "will":            ("Legacy table, unused.", False),
+    }
+
+    # Said once, on the page, because it is the part that matters and it is still true.
+    NEVER_STORED = [
+        "your photos, videos or recordings - they stay on your machine",
+        "camera feeds - they never leave the device",
+        "your location",
+        "browsing history",
+        "advertising identifiers",
+        "anything a module shows you that you did not save",
+    ]
+
+    def _table_names(self) -> list[str]:
+        raise NotImplementedError
+
+    def describe_storage(self) -> dict:
+        """Every table that actually exists, joined to its description.
+
+        THE UNDOCUMENTED CASE IS THE FEATURE. A table with no entry above comes back with
+        `documented: False`, and the public page prints it as such rather than omitting it -
+        so the page can go out of date in the direction of admitting more, never less.
+        """
+        rows = []
+        for name in sorted(self._table_names()):
+            note = self.STORAGE_NOTES.get(name)
+            rows.append({
+                "table": name,
+                "what": note[0] if note else
+                        "Not yet described. It exists, so it is listed - see the source.",
+                "personal": bool(note[1]) if note else True,   # assume the worse until said
+                "documented": note is not None,
+            })
+        return {
+            "stores": rows,
+            "never": list(self.NEVER_STORED),
+            "undocumented": [r["table"] for r in rows if not r["documented"]],
+        }
+
     # -------------------------------------------------------- screen pairing
     # UNATTENDED SCREENS. A bedside screen reboots at 3am and has to come back on its
     # own; it cannot type a password and there is nobody there to. So it holds a long
@@ -938,6 +1017,12 @@ class SQLiteStore(_Store):
             self._conn.commit()
 
 
+    def _table_names(self) -> list[str]:
+        cur = self._conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+        return [r[0] for r in cur.fetchall()]
+
+
 class PostgresStore(_Store):
     """Deploy engine (Neon / any Postgres). A small pooled connection; the SAME
     ``_Store`` logic runs on top. Its live smoke is the deploy step (docs/deploy.md
@@ -962,6 +1047,11 @@ class PostgresStore(_Store):
         )
         self._pool.wait()
         self._migrate()
+
+    def _table_names(self) -> list[str]:
+        with self._tx() as cur:
+            cur.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+            return [r[0] for r in cur.fetchall()]
 
     @contextlib.contextmanager
     def _tx(self):
