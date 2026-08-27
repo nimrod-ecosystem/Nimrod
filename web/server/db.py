@@ -27,6 +27,7 @@ back (lastrowid vs RETURNING), and the append-only trigger syntax.
 from __future__ import annotations
 
 import contextlib
+import hmac
 import json
 import secrets
 import sqlite3
@@ -496,6 +497,148 @@ class _Store:
                         (cutoff,))
         return n
 
+    # -------------------------------------------------------- screen pairing
+    # UNATTENDED SCREENS. A bedside screen reboots at 3am and has to come back on its
+    # own; it cannot type a password and there is nobody there to. So it holds a long
+    # random DEVICE KEY and sends it as `X-Device-Key`.
+    #
+    # Those keys used to live ONLY in the server's `DEVICE_KEYS` environment variable,
+    # which meant only somebody with the hosting dashboard could create one - so the
+    # whole unattended-kiosk feature was founder-only, and a family wanting a screen for
+    # their own relative could not have one without asking us. This is the fix.
+    #
+    # THE DANCE IS THE ONE THE MEDIA-AGENT PAIRING ALREADY PROVED, and deliberately so:
+    #
+    #   1. the screen, WITH NO ACCOUNT, asks for a code
+    #   2. it shows the code and polls
+    #   3. a signed-in person types the code on their phone
+    #   4. the screen's next poll returns a key that is now bound to that account
+    #
+    # *** THE POLL TOKEN IS THE PART THAT IS NOT OBVIOUS, AND IT IS THE SECURITY OF THE
+    # WHOLE FLOW. *** The CODE is displayed on a screen in a room, so anybody who walks
+    # past can read it - that is fine for CLAIMING, because claiming requires being signed
+    # in. It is NOT fine for COLLECTING: if the code alone were enough to fetch the minted
+    # key, anyone who glimpsed it could take the credential the moment somebody claimed it.
+    # So `request` also returns a secret the screen keeps to itself, and the key is handed
+    # back only to something that can present it.
+    def create_screen_pairing(self, label: str, ttl_s: int = 600) -> dict:
+        """Mint an unclaimed code. Grants nothing until somebody signs in and claims it."""
+        code = _pair_code()
+        poll = secrets.token_urlsafe(32)
+        ts, exp = _now(), _later(ttl_s)
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "INSERT INTO screen_pairings(code, label, poll_token, created_at, expires_at) "
+                "VALUES(?,?,?,?,?)"), (code, label, poll, ts, exp))
+        return {"code": code, "poll_token": poll, "expires_at": exp, "label": label}
+
+    def screen_pairing_status(self, code: str, poll_token: str) -> tuple[str, str | None]:
+        """("pending"|"claimed"|"unknown"|"expired", device_key_or_None).
+
+        A WRONG OR MISSING POLL TOKEN IS "unknown", NOT "forbidden" - the same answer as a
+        code that never existed. Distinguishing them would turn this into an oracle for
+        "is that code real", which is exactly what somebody who read a code off a screen
+        would want to know.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT poll_token, expires_at, claimed_by, device_key FROM screen_pairings "
+                "WHERE code=?"), (code,))
+            r = cur.fetchone()
+        if r is None or not poll_token or not hmac.compare_digest(str(r[0]), str(poll_token)):
+            return ("unknown", None)
+        if r[2]:
+            return ("claimed", r[3])
+        if str(r[1]) <= _now():
+            return ("expired", None)
+        return ("pending", None)
+
+    def claim_screen_pairing(self, code: str, account_id: str) -> tuple[str, dict | None]:
+        """A signed-in person adopts the screen. Mints the key HERE, not at request time -
+        an unclaimed row must never contain a usable credential."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT label, expires_at, claimed_by FROM screen_pairings WHERE code=?"),
+                (code,))
+            r = cur.fetchone()
+            if r is None:
+                return ("unknown", None)
+            if r[2]:
+                return ("claimed", None)
+            if str(r[1]) <= _now():
+                return ("expired", None)
+            key = "nk_" + secrets.token_urlsafe(32)
+            ts = _now()
+            cur.execute(self._q(
+                "INSERT INTO device_keys(key, user_id, label, created_at) VALUES(?,?,?,?)"),
+                (key, account_id, r[0], ts))
+            cur.execute(self._q(
+                "UPDATE screen_pairings SET claimed_by=?, claimed_at=?, device_key=? "
+                "WHERE code=? AND claimed_by IS NULL"), (account_id, ts, key, code))
+            if cur.rowcount != 1:
+                return ("claimed", None)     # somebody claimed it between the read and the write
+        return ("ok", {"label": r[0]})
+
+    def device_key_user(self, key: str) -> str | None:
+        """Which account owns this key, or None. The database half of `X-Device-Key`."""
+        if not key:
+            return None
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT user_id FROM device_keys WHERE key=?"), (key,))
+            r = cur.fetchone()
+        return r[0] if r else None
+
+    def list_device_keys(self, user_id: str) -> list[dict]:
+        """What screens this account has adopted. NEVER returns the secret - a list that
+        hands back credentials is a list that leaks them into logs and screenshots."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT key, label, created_at, last_seen FROM device_keys WHERE user_id=? "
+                "ORDER BY created_at"), (user_id,))
+            rows = cur.fetchall()
+        # An id a person can revoke by, derived from the secret rather than being it.
+        return [{"id": r[0][-8:], "label": r[1], "created_at": r[2], "last_seen": r[3]}
+                for r in rows]
+
+    def revoke_device_key(self, user_id: str, key_id: str) -> bool:
+        """Unadopt a screen. Immediate: the next request it makes is a 401.
+
+        THE SUFFIX MATCH IS DONE IN PYTHON, NOT IN SQL. `substr(key, -8)` is SQLite;
+        Postgres spells it differently, and a dialect difference hiding inside a REVOKE is
+        the kind that gets discovered in production by somebody who could not turn a screen
+        off. Both backends run the same code here.
+        """
+        if not key_id:
+            return False
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT key FROM device_keys WHERE user_id=?"), (user_id,))
+            rows = cur.fetchall()
+            hit = next((r[0] for r in rows if str(r[0])[-8:] == key_id), None)
+            if hit is None:
+                return False
+            cur.execute(self._q("DELETE FROM device_keys WHERE key=? AND user_id=?"),
+                        (hit, user_id))
+            return cur.rowcount > 0
+
+    def touch_device_key(self, key: str) -> None:
+        """Last seen, so a list of screens can say which one has gone quiet."""
+        with self._tx() as cur:
+            cur.execute(self._q("UPDATE device_keys SET last_seen=? WHERE key=?"),
+                        (_now(), key))
+
+    def sweep_screen_pairings(self) -> int:
+        """Unclaimed codes are worthless but they are rows, and /screen-pair/request is
+        unauthenticated - so something has to bound the table."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "DELETE FROM screen_pairings WHERE expires_at < ? AND claimed_by IS NULL"),
+                (_now(),))
+            n = cur.rowcount
+            cur.execute(self._q(
+                "DELETE FROM screen_pairings WHERE claimed_at IS NOT NULL AND claimed_at < ?"),
+                (_later(-24 * 3600),))
+        return n
+
     # ---------------------------------------------------------- media sources
     # Per-account registry of connected media folders. The `base_url` points at a
     # user-run media agent; the platform stores only this reference and never the
@@ -720,6 +863,23 @@ class SQLiteStore(_Store):
                 );
                 CREATE INDEX IF NOT EXISTS ix_pairings_expiry ON pairings(expires_at);
 
+                -- Screen pairing. `device_key` is NULL until somebody claims the code:
+                -- an unclaimed row must never contain a usable credential.
+                CREATE TABLE IF NOT EXISTS screen_pairings (
+                    code TEXT PRIMARY KEY, label TEXT NOT NULL, poll_token TEXT NOT NULL,
+                    created_at TEXT NOT NULL, expires_at TEXT NOT NULL,
+                    claimed_by TEXT, claimed_at TEXT, device_key TEXT
+                );
+                CREATE INDEX IF NOT EXISTS ix_screen_pairings_expiry ON screen_pairings(expires_at);
+
+                -- The keys themselves, so they no longer have to live in an environment
+                -- variable only the person with the hosting dashboard can edit.
+                CREATE TABLE IF NOT EXISTS device_keys (
+                    key TEXT PRIMARY KEY, user_id TEXT NOT NULL, label TEXT NOT NULL,
+                    created_at TEXT NOT NULL, last_seen TEXT
+                );
+                CREATE INDEX IF NOT EXISTS ix_device_keys_user ON device_keys(user_id);
+
                 -- `person_id` is NULLABLE and NULL means "the whole account's", never
                 -- "orphaned" - see create_source. That is what let the column be added
                 -- without rewriting a single existing row.
@@ -842,6 +1002,15 @@ class PostgresStore(_Store):
             "label TEXT NOT NULL, base_urls TEXT NOT NULL, created_at TEXT NOT NULL, "
             "expires_at TEXT NOT NULL, claimed_by TEXT, claimed_at TEXT)",
             "CREATE INDEX IF NOT EXISTS ix_pairings_expiry ON pairings(expires_at)",
+
+            "CREATE TABLE IF NOT EXISTS screen_pairings (code TEXT PRIMARY KEY, label TEXT NOT NULL, "
+            "poll_token TEXT NOT NULL, created_at TEXT NOT NULL, expires_at TEXT NOT NULL, "
+            "claimed_by TEXT, claimed_at TEXT, device_key TEXT)",
+            "CREATE INDEX IF NOT EXISTS ix_screen_pairings_expiry ON screen_pairings(expires_at)",
+
+            "CREATE TABLE IF NOT EXISTS device_keys (key TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
+            "label TEXT NOT NULL, created_at TEXT NOT NULL, last_seen TEXT)",
+            "CREATE INDEX IF NOT EXISTS ix_device_keys_user ON device_keys(user_id)",
 
             "CREATE TABLE IF NOT EXISTS media_sources (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
             "label TEXT NOT NULL, base_url TEXT NOT NULL, kind TEXT NOT NULL, created_at TEXT NOT NULL, "

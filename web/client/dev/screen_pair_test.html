@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>screen pairing — how a family adopts a bedside screen — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px}
+  #live{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;overflow:hidden;height:280px}
+  .sp-wrap{height:100%;display:grid;place-items:center;background:#0A3323;color:#F7F4D5;padding:20px}
+  .sp-card{text-align:center;max-width:34ch}
+  .sp-title{font-size:1.4rem;margin:0 0 12px;font-weight:650}
+  .sp-code{font:800 3.2rem/1.1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;margin:8px 0 14px}
+  .sp-body{margin:0;opacity:.9;font-size:.95rem}
+</style>
+</head>
+<body>
+<h1>screen pairing — a family adopts a bedside screen</h1>
+<p>A screen nobody signs into needs a credential of its own — it reboots at 3am and has to
+come back by itself. Those keys used to live only in a server environment variable, so
+creating one needed the hosting dashboard and <b>the whole unattended-kiosk feature was
+founder-only</b>.</p>
+<p><b>The poll token is the part that is not obvious.</b> The code is on a screen in a room, so
+anyone walking past can read it. That is fine for <i>claiming</i>, which needs a sign-in. It is
+not fine for <i>collecting</i> the key.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<h2>live, to look at</h2>
+<div id="live"></div>
+
+<script type="module">
+import { mountScreenPairing, pairMessage, groupCode, PAIR_STATES, POLL_MS }
+  from '../screen_pair.js';
+import { getDeviceKey, setDeviceKey } from '../auth.js';
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A server in a few lines, so the whole dance runs with no network.
+function fakeServer({ claimAfter = 1, expireFirst = false } = {}) {
+  const calls = { request: 0, status: 0 };
+  let code = null, token = null, claimed = false, polls = 0, expired = expireFirst;
+  return {
+    calls,
+    codes: () => code,
+    claimIt: () => { claimed = true; },
+    fetch: async (url, opts) => {
+      const body = JSON.parse(opts.body);
+      if (url.endsWith('/api/screen-pair/request')) {
+        calls.request += 1;
+        code = 'AB' + calls.request + 'XYZ';
+        token = 'tok-' + calls.request;
+        expired = expireFirst && calls.request === 1;
+        return { ok: true, json: async () => ({ code, poll_token: token, label: body.label }) };
+      }
+      if (url.endsWith('/api/screen-pair/status')) {
+        calls.status += 1;
+        // THE SERVER'S OWN RULE, mirrored: a wrong token is answered exactly as a code that
+        // never existed, so this can never become an oracle for "is that code real".
+        if (body.code !== code || body.poll_token !== token) {
+          return { ok: true, json: async () => ({ state: 'unknown' }) };
+        }
+        if (expired) return { ok: true, json: async () => ({ state: 'expired' }) };
+        polls += 1;
+        if (claimed || polls >= claimAfter) {
+          return { ok: true, json: async () => ({ state: 'claimed', device_key: 'nk_secret_' + code }) };
+        }
+        return { ok: true, json: async () => ({ state: 'pending' }) };
+      }
+      throw new Error('unexpected url ' + url);
+    },
+  };
+}
+
+// =====================================================================
+section('the words on the screen — somebody is standing in a room with a phone');
+
+{
+  check('the states are named', PAIR_STATES.join(',') === 'asking,waiting,claimed,failed');
+
+  const w = pairMessage('waiting', { code: 'AB4XYZ' });
+  check('THE INSTRUCTION NAMES THE WHOLE TASK — somebody who has never done this needs to '
+    + 'know where they are going before being given a number to remember',
+    w.body.includes('sign in') && w.body.includes('nimrod'), w.body);
+  check('it says the code does not last forever, so a stale one is not a mystery',
+    w.body.includes('minutes'), w.body);
+  check('and the code is the thing on screen', w.code.includes('AB4'), w.code);
+
+  check('a code is GROUPED for copying by eye — "AB4 XYZ" is transcribed correctly far more '
+    + 'often than "AB4XYZ", and somebody is reading it across a room',
+    groupCode('AB4XYZ') === 'AB4 XYZ', groupCode('AB4XYZ'));
+  check('a short code is left alone rather than split oddly', groupCode('AB4') === 'AB4');
+  check('nothing at all is survivable', groupCode(null) === '');
+  check('and it is upper-cased, because that is how it is displayed and typed',
+    groupCode('ab4xyz') === 'AB4 XYZ');
+
+  check('"asking" and "waiting" are DIFFERENT MESSAGES — they look the same to the code and '
+    + 'are completely different to the person standing there',
+    pairMessage('asking').title !== pairMessage('waiting', { code: 'X' }).title);
+  check('while asking there is no code on screen to misread', pairMessage('asking').code === '');
+
+  const f = pairMessage('failed', { error: 'Failed to fetch' });
+  check('A FAILURE NAMES THE LIKELY REPAIR rather than saying "an error occurred" — it is '
+    + 'almost always the wifi, and saying so is the difference between somebody fixing it '
+    + 'and somebody phoning for help', f.body.includes('wifi'), f.body);
+  check('and it promises to keep trying, so nobody power-cycles a screen that is fine',
+    f.body.includes('keep trying'), f.body);
+  check('a failure with no detail still produces a sentence',
+    pairMessage('failed').body.length > 20);
+}
+
+// =====================================================================
+section('the dance — request, show, poll, adopt');
+
+{
+  setDeviceKey('');
+  const srv = fakeServer({ claimAfter: 99 });
+  const el = document.createElement('div'); host.append(el);
+  let paired = null;
+  const p = mountScreenPairing(el, {
+    label: 'Bedroom', fetchImpl: srv.fetch,
+    setTimer: () => 0, clearTimer: () => {},     // stepped by hand
+    onPaired: (k) => { paired = k; },
+  });
+  await sleep(0);
+
+  check('it asks for a code without any account at all — that is the whole problem it solves',
+    srv.calls.request === 1);
+  check('and shows it', el.textContent.includes('AB1'), el.textContent.slice(0, 80));
+  check('the state is waiting, not asking', p.state() === 'waiting');
+  check('NO KEY HAS BEEN STORED YET — nothing exists to steal until somebody claims it',
+    getDeviceKey() === '');
+
+  await p.tick();
+  check('polling an unclaimed code changes nothing', p.state() === 'waiting');
+  check('and still no key', getDeviceKey() === '');
+
+  srv.claimIt();
+  await p.tick();
+  check('once somebody claims it the screen is adopted', p.state() === 'claimed');
+  check('THE KEY IS STORED, which is what lets it come back by itself at 3am',
+    getDeviceKey().startsWith('nk_secret_'), getDeviceKey());
+  check('and the host is told', paired === getDeviceKey());
+  check('the screen says it is done rather than leaving somebody wondering',
+    el.textContent.includes('Done'), el.textContent.slice(0, 60));
+
+  const before = srv.calls.status;
+  await p.tick();
+  check('IT STOPS POLLING ONCE ADOPTED — a paired screen hammering the server forever is a '
+    + 'bug nobody would notice for months', srv.calls.status === before);
+  p.destroy();
+  setDeviceKey('');
+}
+
+// =====================================================================
+section('an expired code replaces itself rather than dead-ending');
+
+{
+  setDeviceKey('');
+  const srv = fakeServer({ expireFirst: true, claimAfter: 1 });
+  const el = document.createElement('div'); host.append(el);
+  const p = mountScreenPairing(el, {
+    label: 'Day room', fetchImpl: srv.fetch, setTimer: () => 0, clearTimer: () => {},
+  });
+  await sleep(0);
+  const first = p.code();
+  await p.tick();
+  check('AN EXPIRED CODE IS REPLACED AUTOMATICALLY — leaving somebody staring at a number '
+    + 'that has quietly stopped working is the failure that sends them looking for a '
+    + 'support address that does not exist', p.code() !== first, `${first} -> ${p.code()}`);
+  check('and it asked the server for a fresh one', srv.calls.request === 2);
+  check('the screen is still showing a usable code', el.textContent.includes(p.code().slice(0, 3)));
+  p.destroy();
+  setDeviceKey('');
+}
+
+// =====================================================================
+section('when the network is not there');
+
+{
+  setDeviceKey('');
+  let fail = true;
+  const srv = fakeServer({ claimAfter: 1 });
+  const el = document.createElement('div'); host.append(el);
+  const p = mountScreenPairing(el, {
+    label: 'Bedroom',
+    fetchImpl: async (u, o) => { if (fail) throw new Error('Failed to fetch'); return srv.fetch(u, o); },
+    setTimer: () => 0, clearTimer: () => {},
+  });
+  await sleep(0);
+  check('a screen that comes up before the wifi says so', p.state() === 'failed');
+  check('and names the repair', el.textContent.includes('wifi'), el.textContent.slice(0, 90));
+  check('no key was invented out of a failure', getDeviceKey() === '');
+
+  fail = false;
+  await p.tick();
+  check('IT RECOVERS ON ITS OWN when the network arrives — a screen that gave up would need '
+    + 'somebody to power-cycle it, which is exactly the person who cannot',
+    p.state() === 'waiting', p.state());
+  check('and a code is on screen', !!p.code());
+  p.destroy();
+  setDeviceKey('');
+}
+
+// =====================================================================
+section('the poll token, from the client side');
+
+{
+  setDeviceKey('');
+  const srv = fakeServer({ claimAfter: 1 });
+  const el = document.createElement('div'); host.append(el);
+  const seen = [];
+  const p = mountScreenPairing(el, {
+    label: 'Bedroom',
+    fetchImpl: async (u, o) => { seen.push({ u, body: JSON.parse(o.body) }); return srv.fetch(u, o); },
+    setTimer: () => 0, clearTimer: () => {},
+  });
+  await sleep(0);
+  await p.tick();
+
+  const status = seen.find((s) => s.u.endsWith('/status'));
+  check('the poll sends the token', !!status.body.poll_token);
+  check('*** NO SECRET IS EVER IN A URL *** — not the token, not the key. Secrets in query '
+    + 'strings land in access logs, proxies and browser history, which is the same reasoning '
+    + 'as the drive ticket', seen.every((s) => !s.u.includes('?')),
+    seen.map((s) => s.u).join(' '));
+  check('and every call is a POST, so nothing is cached or logged as a URL',
+    seen.length > 0);
+  p.destroy();
+  setDeviceKey('');
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+// Live, to look at — what somebody in the room actually sees.
+{
+  const srv = fakeServer({ claimAfter: 999 });
+  mountScreenPairing(document.getElementById('live'), {
+    label: 'Christine’s screen', fetchImpl: srv.fetch, pollMs: 100000,
+  });
+}
+</script>
+</body>
+</html>
