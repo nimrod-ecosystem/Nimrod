@@ -132,6 +132,41 @@ function fakeTimers() {
     check('retries:0 gives up immediately, never retrying',
       gaveUp.includes('y') && !retries.includes('nope'), JSON.stringify({ retries, gaveUp }));
 
+    // A RETRY THAT SUCCEEDS SYNCHRONOUSLY. This is the shape of a cached video that plays
+    // the instant it is asked to, or a paused one that resumes: onRetry settles it inside
+    // the callback. `fire` used to re-arm regardless, leaving a timer running against
+    // content that was already playing — so a WORKING video got nudged every stallMs
+    // forever, and the retry budget never advanced because ok() kept clearing it.
+    retries = []; gaveUp = [];
+    const wSync = createWatchdog({
+      setTimer: t.setTimer, clearTimer: t.clearTimer, stallMs: 1000, retries: 1,
+      onRetry: (k) => { retries.push(k); wSync.ok(); },      // it worked, immediately
+      onGiveUp: (k) => gaveUp.push(k),
+    });
+    wSync.arm('sync'); t.advance(1001);
+    check('a retry that succeeds inside the callback leaves NOTHING armed',
+      !wSync.armed(), `armed=${wSync.armed()}`);
+    t.advance(99999);
+    check('...so a working thing is never nudged again',
+      retries.length === 1 && gaveUp.length === 0, JSON.stringify({ retries, gaveUp }));
+
+    // Same shape, but the retry gives up on its own subject and moves to another.
+    retries = []; gaveUp = [];
+    const wMove = createWatchdog({
+      setTimer: t.setTimer, clearTimer: t.clearTimer, stallMs: 1000, retries: 1,
+      onRetry: (k) => { retries.push(k); wMove.arm('next'); },
+      onGiveUp: (k) => gaveUp.push(k),
+    });
+    wMove.arm('first'); t.advance(1001);
+    check('a retry that moves to a new subject watches the NEW one',
+      wMove.armed() && wMove.key() === 'next', String(wMove.key()));
+    t.advance(1001);
+    check('...with one timer, not two', t.count() <= 1, String(t.count()));
+    check('...and the new subject gets its own full budget',
+      retries.length === 2 && retries[1] === 'next' && gaveUp.length === 0,
+      JSON.stringify({ retries, gaveUp }));
+    wMove.disarm();
+
     // an exception in a callback must not kill the watchdog
     const wBoom = createWatchdog({ setTimer: t.setTimer, clearTimer: t.clearTimer, stallMs: 1000,
       retries: 0, onGiveUp: () => { throw new Error('boom'); } });

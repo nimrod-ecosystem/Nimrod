@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — what you can put on a screen</title>
+<meta name="description" content="Every part of Nimrod you can put on a screen, what it does for the person you are setting it up for, and what it needs from you.">
+<style>
+  :root{
+    --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C; --midnight:#105666;
+    --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF; --ink:#0A3323; --ink-soft:#3c5346;
+    --muted:#5d7064; --line:#e4e0c2; --rosy-deep:#a85f52; --radius:16px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--font);
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--midnight)}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+
+  /* ---- top bar ---- */
+  .top{border-bottom:1px solid var(--line);background:var(--cream-soft)}
+  .top .wrap{display:flex;align-items:center;gap:18px;padding-top:14px;padding-bottom:14px;
+    flex-wrap:wrap}
+  .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
+  .brand span{color:var(--rosy-deep)}
+  .top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .top nav a{padding:8px 14px;border-radius:10px;text-decoration:none;font-weight:650;
+    font-size:.92rem}
+  .top nav .ghost{border:1px solid var(--line);color:var(--ink)}
+  .top nav .solid{background:var(--midnight);color:#fff}
+
+  /* ---- header ---- */
+  header.hero{padding:44px 0 8px}
+  .eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 10px}
+  h1{font-size:clamp(1.9rem,4.4vw,2.7rem);line-height:1.12;letter-spacing:-.02em;margin:0 0 .4em}
+  .lede{font-size:1.12rem;color:var(--ink-soft);max-width:62ch;margin:0 0 18px}
+
+  /* ---- the legend: the axis that decides everything for some readers ---- */
+  .legend{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 20px;margin:26px 0 8px}
+  .legend h2{font-size:1.02rem;margin:0 0 6px}
+  .legend p{margin:0 0 14px;color:var(--ink-soft);max-width:70ch;font-size:.97rem}
+  .legend ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .legend li{display:flex;gap:10px;align-items:flex-start;font-size:.93rem}
+  .legend .pill{flex:0 0 auto}
+  .legend .t{color:var(--ink-soft)}
+
+  /* ---- groups ---- */
+  section.group{padding:34px 0 6px}
+  section.group > h2{font-size:1.5rem;letter-spacing:-.01em;margin:0 0 .3em}
+  section.group > p.blurb{margin:0 0 20px;color:var(--ink-soft);max-width:66ch}
+
+  .cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+  article.mod{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;display:flex;flex-direction:column;gap:10px}
+  article.mod h3{margin:0;font-size:1.18rem;letter-spacing:-.01em}
+  article.mod .lead{margin:0;font-weight:650;color:var(--ink)}
+  article.mod .why{margin:0;color:var(--ink-soft);font-size:.97rem}
+  article.mod .note{margin:0;font-size:.87rem;color:var(--moss);font-weight:650}
+  article.mod dl{margin:6px 0 0;padding-top:12px;border-top:1px solid var(--line);
+    display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:.9rem}
+  article.mod dt{color:var(--muted);font-weight:700;white-space:nowrap}
+  article.mod dd{margin:0;color:var(--ink-soft)}
+
+  .pill{display:inline-block;padding:4px 11px;border-radius:99px;font-size:.78rem;
+    font-weight:800;letter-spacing:.02em;white-space:nowrap}
+  .pill.watch{background:#e8efdd;color:#3f5227}
+  .pill.touch{background:#e2eef1;color:#0e4a58}
+  .pill.answer{background:#f7e6e2;color:#8d4438}
+
+  /* ---- the honesty block ---- */
+  .gaps{margin:38px 0 0;padding:18px 20px;border-radius:var(--radius);
+    background:var(--cream-soft);border:1px solid var(--line)}
+  .gaps h2{font-size:1.05rem;margin:0 0 8px}
+  .gaps p{margin:0 0 8px;color:var(--ink-soft);font-size:.95rem;max-width:74ch}
+  .gaps code{background:#fff;border:1px solid var(--line);border-radius:6px;padding:1px 6px;
+    font-size:.88em}
+  .gaps .ok{color:var(--moss);font-weight:700}
+  .gaps .warn{color:var(--rosy-deep);font-weight:700}
+
+  footer{margin:44px 0 60px;padding-top:22px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:.92rem}
+  footer a{font-weight:650}
+
+  @media (max-width:620px){
+    body{font-size:16px}
+    header.hero{padding-top:30px}
+  }
+</style>
+</head>
+<body>
+<!--
+  THE MODULES PAGE.
+
+  Its job is not to list what exists - the home page picker already does that badly. It is to
+  answer the three questions somebody actually has, which were written down nowhere:
+
+    1. what does this DO for the person I am setting it up for
+    2. what does it need from ME
+    3. *** can they use it if they cannot press anything ***
+
+  The third one is the one nobody had surfaced, and for the person this was built for it
+  decides everything. It is the first thing on the page for that reason.
+
+  The copy lives in modules_catalog.js; this page is the rendering of it. The last block on
+  the page reconciles that copy against the LIVE REGISTRY, so a module somebody ships and
+  nobody explains shows up here as undescribed rather than being quietly missed.
+-->
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="/">Nimrod<span>.</span></a>
+    <nav>
+      <a class="ghost" href="/kiosk.html">Try it</a>
+      <a class="solid" href="/auth/login">Sign in</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">What you can put on a screen</p>
+    <h1>Every part, and who it is actually for.</h1>
+    <p class="lede">
+      A Nimrod screen is made of parts you choose. This is all of them — what each one does
+      for the person it is set up for, what it needs from you, and whether they can use it
+      without being able to press anything.
+    </p>
+  </header>
+
+  <div class="legend">
+    <h2>Start here: can they press anything?</h2>
+    <p>
+      This is the question that decides most of the page, and it is worth being blunt about.
+      Nimrod was built for somebody who cannot reach for a screen, and roughly half of what
+      follows needs no input at all. If the person you are setting this up for cannot press a
+      button, the first group below is the whole product, and that is not a compromise — it
+      is what it was made for.
+    </p>
+    <ul id="legend"></ul>
+  </div>
+
+  <main id="groups"></main>
+
+  <div class="gaps">
+    <h2>What this page does not cover</h2>
+    <p id="recon">Checking this page against what is actually installed…</p>
+    <p>
+      This list is generated from the software that is running, not typed out and left to go
+      stale. If a part exists and nobody has written about it here, it is named above as
+      undescribed rather than quietly left out.
+    </p>
+  </div>
+
+  <footer>
+    Nimrod is free and open source. Your photos, video and camera stay on your own hardware —
+    <a href="/api/what-we-store">here is everything the server holds</a>, generated from the
+    real database rather than written down.
+    <br>
+    <a href="/">What Nimrod is</a> · <a href="/kiosk.html">Try a screen</a> ·
+    <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
+  </footer>
+</div>
+
+<script type="module">
+import { listManifests } from './module.js';
+import { GROUPS, USE, groupItems, reconcile, titleFor } from './modules_catalog.js';
+// Importing the modules is what REGISTERS them. This page reads the same registry the home
+// page and the kiosk read, so it cannot describe a build that is not the one running.
+import './modules/algebra.js';
+import './modules/camera.js';
+import './modules/clock.js';
+import './modules/director.js';
+import './modules/educational.js';
+import './modules/lessons.js';
+import './modules/personal.js';
+import './modules/photos.js';
+import './modules/pond.js';
+import './modules/progress.js';
+import './modules/quests.js';
+import './modules/sprint.js';
+import './modules/wordforge.js';
+import './modules/youtube.js';
+
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+const manifests = listManifests();
+
+// ---- the legend -----------------------------------------------------------------------
+document.getElementById('legend').innerHTML = Object.entries(USE).map(([k, v]) => `
+  <li><span class="pill ${k}">${esc(v.label)}</span><span class="t">${esc(v.hint)}</span></li>
+`).join('');
+
+// ---- the groups -----------------------------------------------------------------------
+document.getElementById('groups').innerHTML = GROUPS.map((g) => {
+  const items = groupItems(g.id, manifests);
+  if (!items.length) return '';
+  return `
+    <section class="group">
+      <h2>${esc(g.title)}</h2>
+      <p class="blurb">${esc(g.blurb)}</p>
+      <div class="cards">
+        ${items.map((m) => `
+          <article class="mod">
+            <h3>${esc(titleFor(m, manifests))}</h3>
+            <span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span>
+            <p class="lead">${esc(m.lead)}</p>
+            <p class="why">${esc(m.why)}</p>
+            ${m.note ? `<p class="note">${esc(m.note)}</p>` : ''}
+            <dl>
+              <dt>Needs</dt><dd>${esc(m.needs)}</dd>
+            </dl>
+          </article>`).join('')}
+      </div>
+    </section>`;
+}).join('');
+
+// ---- the reconciliation, which is the point of generating this rather than writing it ---
+const r = reconcile(manifests);
+const bits = [];
+bits.push(`<span class="ok">${r.described.length} parts described</span>`);
+if (r.undescribed.length) {
+  bits.push(`<span class="warn">${r.undescribed.length} installed but not yet described here: `
+    + r.undescribed.map((t) => `<code>${esc(t)}</code>`).join(', ') + '</span>');
+} else {
+  bits.push('<span class="ok">nothing installed is left unexplained</span>');
+}
+if (r.stale.length) {
+  bits.push(`<span class="warn">${r.stale.length} described here but no longer installed: `
+    + r.stale.map((t) => `<code>${esc(t)}</code>`).join(', ') + '</span>');
+}
+if (r.internal.length) {
+  bits.push(`${r.internal.length} development-only panel(s) left out on purpose`);
+}
+document.getElementById('recon').innerHTML = bits.join(' · ');
+</script>
+</body>
+</html>

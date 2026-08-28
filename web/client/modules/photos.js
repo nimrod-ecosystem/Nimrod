@@ -25,6 +25,7 @@
 import { registerModule } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
+import { createWatchdog } from '../watchdog.js';
 import { pick, statsFromEvents } from '../rng.js';
 
 // `fit: contain` — SHOW THE WHOLE PHOTO. It defaulted to `cover`, which crops to fill:
@@ -34,6 +35,11 @@ import { pick, statsFromEvents } from '../rng.js';
 // The letterboxing `contain` would otherwise leave is filled by a blurred copy of the
 // same image (see `render`), so nothing is cropped AND nothing is a black bar.
 const DEFAULTS = { sourceId: '', album: '', intervalMs: 8000, fit: 'contain' };
+// How long a video may go without reporting progress before the slideshow moves on. It is
+// NOT `intervalMs` — that is how long a still photo is shown, and a video is allowed to be
+// much longer than that. Fifteen seconds of a video that is supposedly playing saying
+// nothing at all is a stall by any reading.
+const VIDEO_STALL_MS = 15000;
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
@@ -99,7 +105,7 @@ registerModule(
   // FALLBACK EXPOSURE: `local`. The bytes come from the media agent rather than the platform,
   // so photos survive the platform being down - which is most of why this is the fallback of
   // choice - but not the drive being unmounted.
-  { type: 'photos', title: 'Photos', description: 'slideshow over your own media (BYO storage)',
+  { type: 'photos', title: 'Photos', description: 'Their own photos, on a loop. For most people this is the whole reason to set a screen up.',
     importance: 'critical', dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
@@ -122,6 +128,14 @@ registerModule(
     let currentId = null;
     let advanceTimer = null;
     let videoEndOff = null;
+    let currentVideo = null;
+
+    // Injected by the tests (and available to any host that wants control), exactly as
+    // youtube.js does it. Without this, asserting that a stalled video is skipped means
+    // waiting fifteen real seconds, and a test nobody wants to run is a test nobody runs.
+    const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
+    const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
+    const videoStallMs = () => Number(ctx.videoStallMs ?? VIDEO_STALL_MS);
     let lastSourceRef = null;       // to reload only when sourceId/album change
     // The account's sources, cached from the listing call `reload` already makes. THE MENU
     // PAINTS SYNCHRONOUSLY, so `settingsChoices` cannot go to the network: a row that waits
@@ -148,19 +162,50 @@ registerModule(
       }
     }
 
+    // ------------------------------------------------------------------------------
+    // *** THE VIDEO SAFETY NET (added 2026-08-27) ***
+    //
+    // `scheduleAdvance` deliberately does NOT set a timer for a video, because a video
+    // should run to its own length rather than being cut off after eight seconds. That is
+    // right, and it left the slideshow with exactly ONE way out of a video: the `ended`
+    // event.
+    //
+    // A video that stalls, errors, or is paused by the browser never fires `ended`. So the
+    // slideshow stopped on that frame FOREVER — no timer, no fallback, and nobody in the
+    // room able to press anything. On the module that runs 24/7 and outranks every other
+    // feature, that is the worst version of the bug.
+    //
+    // The fix is the shared watchdog used as a HEARTBEAT rather than a load timer:
+    // `timeupdate` fires several times a second while a video is genuinely playing, and
+    // `beat()` restarts the clock on each one. So a three-hour video is never interrupted,
+    // and a video that goes quiet for `stallMs` is retried once and then skipped.
+    //
+    // beat(), NOT ok(). ok() would silence the watchdog after the first heartbeat and it
+    // would never fire again — see the note in watchdog.js. This distinction is the whole
+    // reason those are two functions.
+    const videoStall = createWatchdog({
+      setTimer, clearTimer,
+      stallMs: videoStallMs,
+      retries: 1,
+      onRetry: () => { try { currentVideo?.play?.().catch(() => {}); } catch { /* gone */ } },
+      onGiveUp: () => { bus.publish('photos/next'); },
+    });
+
     function clearAdvance() {
-      if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+      if (advanceTimer) { clearTimer(advanceTimer); advanceTimer = null; }
       if (videoEndOff) { videoEndOff(); videoEndOff = null; }
+      videoStall.disarm();
+      currentVideo = null;
     }
 
     function scheduleAdvance(item) {
       clearAdvance();
-      if (item.kind === 'video') return;   // videos advance on 'ended' (bound in render)
+      if (item.kind === 'video') return;   // videos advance on 'ended' + the watchdog above
       // A FLOOR, not a clamp to the declared options: a value from before the migration, or
       // from a group-apply that has not been validated yet, must not turn the slideshow into
       // a strobe in front of somebody with a brain injury.
       const ms = Math.max(2000, Number(cfg.intervalMs) || DEFAULTS.intervalMs);
-      advanceTimer = setTimeout(() => bus.publish('photos/next'), ms);
+      advanceTimer = setTimer(() => bus.publish('photos/next'), ms);
     }
 
     function render(item) {
@@ -180,11 +225,28 @@ registerModule(
       let el;
       if (item.kind === 'video') {
         el = document.createElement('video');
+        // MUTED, so the browser's autoplay policy cannot refuse it. A clip in the photo
+        // rotation is wallpaper; `modules/personal.js` is where a voice is the point.
         el.src = item.url; el.muted = true; el.autoplay = true; el.playsInline = true;
-        el.play?.().catch(() => {});
-        const onEnded = () => bus.publish('photos/next');
+        currentVideo = el;
+        const onEnded = () => { videoStall.disarm(); bus.publish('photos/next'); };
+        // An explicit failure needs no waiting out: move on now.
+        const onError = () => { videoStall.disarm(); bus.publish('photos/next'); };
+        const onBeat = () => videoStall.beat();
         el.addEventListener('ended', onEnded);
-        videoEndOff = () => el.removeEventListener('ended', onEnded);
+        el.addEventListener('error', onError);
+        el.addEventListener('timeupdate', onBeat);
+        el.addEventListener('playing', onBeat);
+        videoEndOff = () => {
+          el.removeEventListener('ended', onEnded);
+          el.removeEventListener('error', onError);
+          el.removeEventListener('timeupdate', onBeat);
+          el.removeEventListener('playing', onBeat);
+        };
+        // Armed BEFORE play() is asked for, so a clip that never starts at all is covered
+        // by the same clock as one that stops halfway.
+        videoStall.arm(item.id);
+        el.play?.().catch(() => {});
       } else {
         el = document.createElement('img');
         el.src = item.url; el.alt = item.name || '';
@@ -203,8 +265,12 @@ registerModule(
       const item = byId[id];
       if (!item) return;
       currentId = id;
-      render(item);
+      // ORDER IS LOAD-BEARING. `scheduleAdvance` begins by clearing the PREVIOUS item's
+      // timers and listeners, and `render` arms the video watchdog for the new one. Run
+      // the other way round it tears down what it just set up, and the video safety net
+      // is silently gone.
       scheduleAdvance(item);
+      render(item);
       if (record) {
         recent.push(id);
         if (recent.length > RECENT_CAP) recent.shift();
@@ -376,7 +442,7 @@ registerModule(
         });
       },
       onResize() {},
-      onHide() { state.flush(); },
+      onHide() { videoStall.disarm(); state.flush(); },
       destroy() { clearAdvance(); },
 
       // LIVE OPTIONS for a declared field. The manifest stays static - it is the contract, and

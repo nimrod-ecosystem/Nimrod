@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>modules catalogue — is anything shipped and unexplained — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:76ch}
+</style>
+</head>
+<body>
+<h1>modules catalogue — the page that reports its own gaps</h1>
+
+<div class="note">
+  The point of generating <code>modules.html</code> from the live registry rather than typing
+  it out is that <b>a hand-written list of what software contains goes stale in a week and then
+  quietly lies for a year</b>. These checks are what make that claim true: a module that ships
+  without an explanation has to show up as undescribed, and an explanation for something that
+  no longer exists has to show up as stale.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { listManifests } from '../module.js';
+import { CATALOG, GROUPS, USE, NOT_FOR_CAREGIVERS, reconcile, groupItems, titleFor }
+  from '../modules_catalog.js';
+// The same imports modules.html makes — if this list and that list drift, the reconciliation
+// below is checking a different build from the one the page describes.
+import '../modules/algebra.js';
+import '../modules/camera.js';
+import '../modules/clock.js';
+import '../modules/director.js';
+import '../modules/educational.js';
+import '../modules/lessons.js';
+import '../modules/personal.js';
+import '../modules/photos.js';
+import '../modules/pond.js';
+import '../modules/progress.js';
+import '../modules/quests.js';
+import '../modules/sprint.js';
+import '../modules/wordforge.js';
+import '../modules/youtube.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const manifests = listManifests();
+
+// =====================================================================
+section('*** nothing ships unexplained ***');
+{
+  const r = reconcile(manifests);
+  check('every installed module is either described or declared development-only',
+    r.undescribed.length === 0,
+    `undescribed: ${r.undescribed.join(', ')}`);
+  check('nothing is described that is no longer installed',
+    r.stale.length === 0, `stale: ${r.stale.join(', ')}`);
+  check('the page has something to show', r.described.length >= 10, String(r.described.length));
+}
+
+section('...and the check WORKS — a gap is actually detected');
+{
+  // The assertion above only means something if the mechanism can fail. Hand it a registry
+  // containing something nobody wrote about.
+  const withGhost = [...manifests, { type: 'ghostmodule', title: 'Ghost' }];
+  const r = reconcile(withGhost);
+  check('a module nobody described is REPORTED, not silently skipped',
+    r.undescribed.includes('ghostmodule'), JSON.stringify(r.undescribed));
+  check('...and it does not get rendered into a group as a blank card',
+    !GROUPS.some((g) => groupItems(g.id, withGhost).some((m) => m.type === 'ghostmodule')));
+}
+{
+  // And the other direction: copy left behind for something that has been removed.
+  const missing = manifests.filter((m) => m.type !== 'pond');
+  const r = reconcile(missing);
+  check('an entry for a module that is gone is reported as stale',
+    r.stale.includes('pond'), JSON.stringify(r.stale));
+  check('...and it is NOT rendered, so nobody is sent looking for it',
+    !groupItems('comfort', missing).some((m) => m.type === 'pond'));
+}
+
+section('development panels are left out ON PURPOSE, and say so');
+{
+  check('the internal list is not empty — it is a decision, not an oversight',
+    Object.keys(NOT_FOR_CAREGIVERS).length > 0);
+  check('each one has a reason written next to it',
+    Object.values(NOT_FOR_CAREGIVERS).every((v) => typeof v === 'string' && v.length > 4),
+    JSON.stringify(NOT_FOR_CAREGIVERS));
+  check('an internal module is never reported as an unexplained gap', (() => {
+    const withDev = [...manifests, { type: 'counter', title: 'Counter' }];
+    return !reconcile(withDev).undescribed.includes('counter');
+  })());
+}
+
+// =====================================================================
+section('every entry answers the three questions somebody actually has');
+{
+  const bad = [];
+  for (const c of CATALOG) {
+    if (!c.type) bad.push('(no type)');
+    else if (!c.lead) bad.push(`${c.type}: no lead`);
+    else if (!c.needs) bad.push(`${c.type}: does not say what it NEEDS`);
+    else if (!c.why) bad.push(`${c.type}: does not say what it does for the person`);
+    else if (!USE[c.use]) bad.push(`${c.type}: use="${c.use}" is not one of ${Object.keys(USE)}`);
+    else if (!GROUPS.some((g) => g.id === c.group)) bad.push(`${c.type}: group "${c.group}" does not exist`);
+  }
+  check('*** all three questions answered for every part ***', bad.length === 0, bad.join(' | '));
+
+  const dupes = CATALOG.map((c) => c.type).filter((t, i, a) => a.indexOf(t) !== i);
+  check('no module is described twice', dupes.length === 0, dupes.join(','));
+}
+
+section('the “can they press anything?” axis, which is the reason the page exists');
+{
+  const byUse = {};
+  for (const c of CATALOG) byUse[c.use] = (byUse[c.use] || 0) + 1;
+  check('*** there is a real answer for somebody who cannot press anything ***',
+    (byUse.watch || 0) >= 5, JSON.stringify(byUse));
+  check('...and it is not the whole list either, or the axis would be meaningless',
+    (byUse.answer || 0) >= 3, JSON.stringify(byUse));
+
+  // The claim on the page is that the FIRST group needs no input at all. If a module that
+  // asks questions is ever filed under it, the page starts lying to the person who most
+  // needs it to be true.
+  const comfort = CATALOG.filter((c) => c.group === 'comfort');
+  check('*** nothing in “Something to look at” asks for an answer *** — the page promises '
+    + 'exactly this to the reader who cannot give one',
+    comfort.every((c) => c.use !== 'answer'),
+    comfort.filter((c) => c.use === 'answer').map((c) => c.type).join(','));
+  check('every use kind on the page has a plain-language label and hint',
+    Object.values(USE).every((u) => u.label && u.hint), JSON.stringify(USE));
+}
+
+section('the words themselves');
+{
+  // A "lead" that repeats the title tells nobody anything.
+  const lazy = CATALOG.filter((c) => (c.lead || '').toLowerCase() === titleFor(c, manifests).toLowerCase());
+  check('no entry just restates its own name', lazy.length === 0, lazy.map((c) => c.type).join(','));
+  // "Nothing" is a real and important answer to "what does it need".
+  const needsNothing = CATALOG.filter((c) => /^nothing/i.test(c.needs));
+  check('several parts genuinely need nothing set up, and say so plainly',
+    needsNothing.length >= 4, String(needsNothing.length));
+  // The privacy line belongs on the ones that touch a camera or personal files, and only there.
+  const sensitive = ['photos', 'personal', 'camera'];
+  check('*** every part that touches a camera or private files carries the privacy line ***',
+    sensitive.every((t) => (CATALOG.find((c) => c.type === t) || {}).note),
+    sensitive.filter((t) => !(CATALOG.find((c) => c.type === t) || {}).note).join(','));
+
+  const longWhy = CATALOG.filter((c) => c.why.length > 40);
+  check('the explanations are actual sentences, not labels', longWhy.length === CATALOG.length,
+    CATALOG.filter((c) => c.why.length <= 40).map((c) => c.type).join(','));
+}
+
+section('titles');
+{
+  check('a catalogue title overrides the manifest, so “director” can read as “Lineup”',
+    titleFor({ type: 'director', title: 'Lineup' }, manifests) === 'Lineup');
+  check('...and without an override it uses the module’s own title',
+    titleFor({ type: 'photos' }, manifests) === (manifests.find((m) => m.type === 'photos') || {}).title);
+  check('...falling back to the type rather than to "undefined"',
+    titleFor({ type: 'nope' }, manifests) === 'nope');
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

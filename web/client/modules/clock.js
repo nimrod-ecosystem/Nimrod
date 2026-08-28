@@ -59,7 +59,7 @@ registerModule(
   // module, only a least-exposed one, which is why the vocabulary is `dependsOn` rather than
   // `cannotFail`. This makes it a good LAST RESORT, not a guarantee.
   { dependsOn: 'none',
-    type: 'clock', title: 'Clock', description: 'orientation — time, weekday & date' },
+    type: 'clock', title: 'Clock', description: 'The time, the day and the date — for somebody who has lost track of all three' },
   (ctx) => {
     const { mount, state } = ctx;
     let cfg = { ...DEFAULTS };

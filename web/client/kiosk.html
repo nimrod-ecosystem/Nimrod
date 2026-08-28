@@ -11,6 +11,7 @@
     font:16px/1.5 var(--font);overflow:hidden;transition:background .25s ease}
   #boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     color:#cfe0d6;font-size:1.1rem;text-align:center;padding:24px}
+
   .kiosk{position:fixed;inset:0}
   .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex}
   .k-stage.k-grid{display:grid;gap:2vmin}
@@ -84,6 +85,8 @@ import { mountKiosk } from './kiosk.js';
 import {
   createLocalBackend, createLocalMediaSources, seedStarterScreen,
 } from './local_store.js';
+import { pickFolder, listFolderSources, isFolderPickerSupported } from './folder_source.js';
+import { mountDemoStrip } from './demo_strip.js';
 
 const params = new URLSearchParams(location.search);
 // one-time device-key pairing (unattended-kiosk fallback): launch once with
@@ -161,6 +164,22 @@ async function bootLocal() {
     sources: createLocalMediaSources(),
   });
   boot.remove();
+
+  // THE ONLY PLACE THAT DECIDES A STRANGER IS LOOKING. `mountDemoStrip` renders when asked
+  // and never decides for itself, so this branch — signed out, no device key — is the whole
+  // guard. Christine's paired screen never reaches it.
+  //
+  // Reloading after a folder is picked is blunt, and it is the honest move: `photos`
+  // auto-selects its source at mount, so the new folder has to exist before it mounts.
+  // Re-mounting the kiosk in place would be a second boot path that only this one button
+  // ever exercises, and a second boot path is how two boot paths drift apart.
+  mountDemoStrip(document.body, {
+    listFolders: listFolderSources,
+    pick: pickFolder,
+    supported: isFolderPickerSupported(),
+    signedIn: false,
+    onConnected: () => location.reload(),
+  }).catch((e) => console.warn('demo strip', e));
 }
 
 (async () => {

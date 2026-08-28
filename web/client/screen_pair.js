@@ -34,8 +34,27 @@
 // AND IT NEVER DEAD-ENDS. A code that expires replaces itself automatically rather than
 // leaving somebody staring at a number that has quietly stopped working — the failure that
 // would send them looking for a support address that does not exist.
+//
+// ---------------------------------------------------------------------------------------
+// THE QR CODE, and why the printed code stays next to it.
+//
+// Scanning is the Netflix-TV model and it is plainly better: point a phone at the screen and
+// land on a page with the code already filled in, having typed nothing. So the QR comes
+// first and is the larger of the two.
+//
+// *** BUT THE PRINTED CODE IS NOT A FALLBACK HIDDEN BEHIND A "TROUBLE SCANNING?" LINK. ***
+// A camera that will not focus in a dim room at 3am is not an edge case, it is a Tuesday —
+// and so is a phone too old to scan from the camera app, and a person who does not know
+// that pointing the camera IS the scanner. All three of those people are standing in the
+// room with nobody to ask. So both routes are on screen at the same time, always, and the
+// six characters stay big enough to read from where somebody is actually standing.
+//
+// The QR is generated on this machine (`qr.js`) rather than fetched from an image service.
+// A screen that needs the network to display its own setup code has it backwards: pairing
+// is the moment the network is least likely to be working.
 
 import { setDeviceKey } from './auth.js';
+import { qrSVG } from './qr.js';
 
 export const POLL_MS = 3000;
 // Long enough that a person can walk to a phone, find the page and sign in; short enough
@@ -56,6 +75,18 @@ export function siteHost(loc = (typeof location !== 'undefined' ? location : nul
   const host = loc && loc.host ? String(loc.host) : '';
   // Strip the default ports so it reads as an address somebody would type.
   return host.replace(/:80$|:443$/, '') || 'this site';
+}
+
+// WHERE THE PHONE LANDS. `pair.html` reads `?c=` and fills the box in, so the person who
+// scanned types nothing at all.
+//
+// It is an ABSOLUTE url built from this screen's own origin, for the same reason `siteHost`
+// exists: a relative path is meaningless inside a QR code, and a hardcoded host sends
+// somebody to a different install where their code does not exist.
+export function pairURL(code, loc = (typeof location !== 'undefined' ? location : null)) {
+  const origin = (loc && loc.origin && loc.origin !== 'null') ? loc.origin : '';
+  const path = `/pair.html?c=${encodeURIComponent(String(code || '').toUpperCase())}`;
+  return origin ? origin + path : path;
 }
 
 const esc = (s) => String(s == null ? '' : s)
@@ -87,8 +118,15 @@ export function pairMessage(state, { code = '', label = '', error = '',
       title: 'Add this screen to your account',
       // The instruction names the whole task, because somebody who has never done it before
       // needs to know where they are going before they are given a number to remember.
-      body: `On your phone or computer, open <b>${esc(host)}</b>, sign in, and enter `
-        + `this code. It lasts about ${CODE_TTL_HINT}.`,
+      //
+      // TWO SENTENCES, TWO ROUTES, IN THE ORDER THEY WILL BE TRIED. Scanning first, because
+      // it is the one that asks least of the person; typing second, in the same voice and
+      // the same size, because it is the one that always works. Neither is described as the
+      // fallback — a person reading this in a dim room should not have to work out which
+      // one they are allowed to use.
+      body: `Point your phone's camera at the square above. `
+        + `Or open <b>${esc(host)}</b> on any phone or computer, sign in, and type the code. `
+        + `It lasts about ${CODE_TTL_HINT}.`,
       code: groupCode(code),
     };
   }
@@ -139,9 +177,30 @@ export function mountScreenPairing(root, {
   root.innerHTML = '<div class="sp-wrap"><div class="sp-card" data-card></div></div>';
   const card = root.querySelector('[data-card]');
 
+  // LEVEL Q, not the usual M. This symbol is read off a lit screen at an angle, in a room
+  // with whatever lighting a care facility has at 3am, by a phone that may be held by
+  // somebody with unsteady hands. Q corrects about 25% damage against M's 15%, and the cost
+  // is one version step — a slightly denser square, still enormous at this size. The trade
+  // is worth taking every time here, where a failed scan means a person gives up.
+  function qrHTML() {
+    if (!code) return '';
+    try {
+      return `<div class="sp-qr">${qrSVG(pairURL(code), {
+        level: 'Q', quiet: 4, dark: '#0A3323', light: '#ffffff',
+        title: 'Scan to set this screen up',
+      })}</div>`;
+    } catch (err) {
+      // A QR that will not generate must never take the CODE down with it. The six
+      // characters are the thing that always works; the square is the convenience.
+      console.error('screen pairing: qr', err);
+      return '';
+    }
+  }
+
   function paint() {
     const m = pairMessage(state, { code, label: claimedLabel, error: lastError, host: siteHost() });
     card.innerHTML = `<h1 class="sp-title">${esc(m.title)}</h1>`
+      + (m.code ? qrHTML() : '')
       + (m.code ? `<div class="sp-code" aria-label="pairing code">${esc(m.code)}</div>` : '')
       + (m.body ? `<p class="sp-body">${m.body}</p>` : '');
     card.dataset.state = state;

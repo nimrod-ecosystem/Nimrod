@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pair — the phone end of the QR code — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px}
+  #live{margin-top:12px;display:grid;place-items:center;padding:20px;background:#F7F4D5;
+    border:1px solid #e4e0c2;border-radius:16px}
+  .pc-card{background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:22px;
+    width:100%;max-width:26rem;text-align:center}
+  .pc-title{font-size:1.35rem;margin:0 0 .4em}
+  .pc-body{margin:0 0 18px;color:#3c5346}
+  .pc-label{display:block;font-size:.82rem;font-weight:700;color:#5d7064;
+    text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .pc-input{width:100%;padding:14px 12px;border:2px solid #e4e0c2;border-radius:12px;
+    font:800 1.9rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;
+    text-align:center;text-transform:uppercase}
+  .pc-go{margin-top:14px;width:100%;padding:14px 16px;border:0;border-radius:12px;
+    background:#105666;color:#fff;font:inherit;font-weight:700;font-size:1.05rem;min-height:52px}
+</style>
+</head>
+<body>
+<h1>pair — the phone end of the QR code</h1>
+<p>Somebody has just pointed a phone at a screen in a room. This page turns that into a claimed
+screen with as close to zero typing as possible. Three people arrive here and it has to serve
+all three: <b>scanned and already signed in</b> (one button), <b>scanned and signed out</b>
+(sign in, then come <i>straight back</i> with the code intact), and <b>typed the address by
+hand</b> (an empty box).</p>
+<p><b>The one subtle thing</b> is that the code has to survive an OAuth round trip, which leaves
+this page entirely and returns through a callback that knows nothing about it. Losing it there
+is the failure that sends somebody back down the corridor to squint at the screen again.</p>
+<p>Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>
+(only the live panel needs it; every check below runs against a fake).</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<h2>live, to look at</h2>
+<div id="live"></div>
+
+<script type="module">
+import { mountPairClaim, normalizeCode, codeFromQuery, safeNext, claimMessage } from '../pair.js';
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A server and a browser in a few lines, so nothing here touches the network or navigates.
+function fakeWorld({ signedIn = true, claimResult = 'ok', label = 'Christine’s screen' } = {}) {
+  const seen = { claims: [], me: 0 };
+  const store = new Map();
+  const world = {
+    seen,
+    navigated: null,
+    stash: {
+      getItem: (k) => store.get(k) ?? null,
+      setItem: (k, v) => store.set(k, v),
+      removeItem: (k) => store.delete(k),
+    },
+    loc: { search: '', pathname: '/pair.html', origin: 'http://x', get href() { return world.navigated; },
+           set href(v) { world.navigated = v; } },
+    fetch: async (url, opts = {}) => {
+      if (url.endsWith('/api/me')) {
+        seen.me += 1;
+        return { ok: signedIn, status: signedIn ? 200 : 401, json: async () => ({ user: 'u' }) };
+      }
+      if (url.endsWith('/api/screen-pair/claim')) {
+        seen.claims.push(JSON.parse(opts.body));
+        if (!signedIn) return { ok: false, status: 401, json: async () => ({ detail: 'sign in' }) };
+        if (claimResult === 'ok') return { ok: true, status: 200, json: async () => ({ ok: true, label }) };
+        const detail = {
+          expired: 'that code has expired; the screen can show a new one',
+          claimed: 'that code has already been used',
+          unknown: 'no such code - check it and try again',
+        }[claimResult];
+        return { ok: false, status: claimResult === 'unknown' ? 404 : 409, json: async () => ({ detail }) };
+      }
+      throw new Error('unexpected url ' + url);
+    },
+  };
+  return world;
+}
+
+function mount(world, extra = {}) {
+  const el = document.createElement('div');
+  host.append(el);
+  const inst = mountPairClaim(el, {
+    fetchImpl: world.fetch, loc: world.loc, store: world.stash, base: '', ...extra,
+  });
+  return { el, inst };
+}
+
+(async () => {
+try {
+
+// =====================================================================
+section('reading the code off the URL a camera produced');
+check('a scanned code is taken from ?c=', codeFromQuery('?c=9K42QX') === '9K42QX');
+check('...however the phone cased it', codeFromQuery('?c=9k42qx') === '9K42QX');
+check('...and ?code= works too, because somebody will link it that way',
+  codeFromQuery('?code=9K42QX') === '9K42QX');
+check('no code in the URL is not an error, just an empty box', codeFromQuery('') === '');
+check('other query junk is ignored', codeFromQuery('?utm_source=x&c=ABC123') === 'ABC123');
+
+section('what people actually type');
+// The screen prints the code GROUPED ("9K4 2QX") and people copy the space with it.
+check('*** the space from the grouped code is dropped ***', normalizeCode('9K4 2QX') === '9K42QX');
+check('a dash is dropped too', normalizeCode('9K4-2QX') === '9K42QX');
+check('lower case is lifted', normalizeCode('9k42qx') === '9K42QX');
+check('surrounding whitespace goes', normalizeCode('  9K42QX \n') === '9K42QX');
+check('nothing is nothing rather than a crash', normalizeCode(null) === '');
+check('a paste of the whole world is bounded', normalizeCode('A'.repeat(500)).length === 12);
+
+section('where you come back to after signing in');
+check('a path on this site is kept', safeNext('/pair.html?c=ABC123') === '/pair.html?c=ABC123');
+check('*** a protocol-relative //host is refused *** — it looks like a path and is not',
+  safeNext('//evil.example') === '/');
+check('an absolute URL is refused', safeNext('https://evil.example') === '/');
+check('nothing at all falls back to the front page', safeNext('') === '/');
+
+// =====================================================================
+section('1. scanned, and already signed in — the common case');
+{
+  const w = fakeWorld({ signedIn: true });
+  w.loc.search = '?c=9K42QX';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  check('the code is already in the box, so nothing is typed',
+    el.querySelector('[data-code]')?.value === '9K42QX', el.querySelector('[data-code]')?.value);
+  check('it does NOT ask them to sign in', inst.state() === 'ready', inst.state());
+  check('there is one obvious button', !!el.querySelector('[data-go]'));
+
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('claiming sends the code the camera read', w.seen.claims[0]?.code === '9K42QX',
+    JSON.stringify(w.seen.claims));
+  check('and it lands on done', inst.state() === 'done', inst.state());
+  check('*** the confirmation points at the SCREEN, not at this page *** — the person is '
+    + 'standing next to it and the screen is the convincing proof',
+    /look up/i.test(el.textContent), el.textContent.slice(0, 120));
+  check('...and says the pairing is permanent, since the CODE expiring is the loud thing '
+    + 'they just read on the screen', /restart/i.test(el.textContent));
+}
+
+section('2. scanned, NOT signed in — the code must survive the round trip');
+{
+  const w = fakeWorld({ signedIn: false });
+  w.loc.search = '?c=7T3M9P';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  check('it asks for a sign-in', inst.state() === 'signed-out', inst.state());
+  check('...saying WHY, rather than just demanding it',
+    /proves it should belong to you/i.test(el.textContent), el.textContent.slice(0, 140));
+
+  el.querySelector('[data-signin]').click();
+  await sleep(10);
+  check('*** the code is written down BEFORE leaving the page ***',
+    w.stash.getItem('nimrod:pairCode') === '7T3M9P', String(w.stash.getItem('nimrod:pairCode')));
+  check('...and the login is told to send them back HERE, not to the home page',
+    /\/auth\/login\?next=/.test(w.navigated), String(w.navigated));
+  const next = decodeURIComponent(new URL(w.navigated, 'http://x').searchParams.get('next'));
+  check('...to this page, with the code still attached',
+    next === '/pair.html?c=7T3M9P', next);
+}
+
+section('...and when they come back');
+{
+  // The return trip: signed in now, and the browser landed on the home page instead of here
+  // (a lost `next`). The stash is the belt to that braces.
+  const w = fakeWorld({ signedIn: true });
+  w.stash.setItem('nimrod:pairCode', '7T3M9P');
+  w.loc.search = '';                       // the code did NOT survive in the URL
+  const { el, inst } = mount(w);
+  await sleep(30);
+  check('*** the code is recovered from the stash *** — a lost `next` does not send somebody '
+    + 'back down the corridor to read the screen again',
+    el.querySelector('[data-code]')?.value === '7T3M9P', el.querySelector('[data-code]')?.value);
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('it claims', inst.state() === 'done', inst.state());
+  check('and the spent code is cleared, so it is never offered again',
+    !w.stash.getItem('nimrod:pairCode'), String(w.stash.getItem('nimrod:pairCode')));
+}
+
+section('a NEWLY scanned code beats an old stashed one');
+{
+  const w = fakeWorld({ signedIn: true });
+  w.stash.setItem('nimrod:pairCode', 'OLDONE');
+  w.loc.search = '?c=NEWONE';
+  const { el } = mount(w);
+  await sleep(30);
+  check('the screen they just scanned is the one that gets set up',
+    el.querySelector('[data-code]')?.value === 'NEWONE', el.querySelector('[data-code]')?.value);
+}
+
+section('3. typed the address by hand');
+{
+  const w = fakeWorld({ signedIn: true });
+  const { el, inst } = mount(w);
+  await sleep(30);
+  check('an empty box', el.querySelector('[data-code]')?.value === '');
+  check('...with the instruction changed to match', /type the six/i.test(el.textContent),
+    el.textContent.slice(0, 120));
+
+  const input = el.querySelector('[data-code]');
+  input.value = '9k4 2qx';
+  input.dispatchEvent(new Event('input'));
+  check('*** what they typed is normalised AS THEY TYPE, in the box they can see ***',
+    input.value === '9K42QX', input.value);
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('and it claims cleanly', inst.state() === 'done', inst.state());
+}
+
+section('enter, because a phone keyboard has a big blue one');
+{
+  const w = fakeWorld({ signedIn: true });
+  w.loc.search = '?c=ABC123';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  el.querySelector('[data-code]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+  await sleep(30);
+  check('Enter submits', inst.state() === 'done', inst.state());
+}
+
+// =====================================================================
+section('every way it can fail names what to DO about it');
+for (const [kind, want] of [
+  ['expired', /expired/i],
+  ['claimed', /already been used/i],
+  ['unknown', /check the characters/i],
+]) {
+  const w = fakeWorld({ signedIn: true, claimResult: kind });
+  w.loc.search = '?c=ABC123';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check(`a ${kind} code says so, and says what to do next`,
+    inst.state() === 'failed' && want.test(el.textContent), el.textContent.slice(0, 160));
+  check(`...and the box is still there to try again`, !!el.querySelector('[data-code]'));
+}
+
+{
+  const w = fakeWorld({ signedIn: true });
+  w.fetch = async (url) => {
+    if (url.endsWith('/api/me')) return { ok: true, status: 200, json: async () => ({}) };
+    throw new TypeError('Failed to fetch');
+  };
+  w.loc.search = '?c=ABC123';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('a dead network blames the CONNECTION, not the person',
+    inst.state() === 'failed' && /connection/i.test(el.textContent), el.textContent.slice(0, 140));
+}
+
+{
+  // Signed in when the page loaded, signed out by the time they pressed the button — a
+  // session that expired while somebody walked down a corridor.
+  let signedIn = true;
+  const w = fakeWorld({ signedIn: true });
+  const realFetch = w.fetch;
+  w.fetch = async (url, opts) => {
+    if (url.endsWith('/api/screen-pair/claim') && !signedIn) {
+      return { ok: false, status: 401, json: async () => ({ detail: 'sign in' }) };
+    }
+    return realFetch(url, opts);
+  };
+  w.loc.search = '?c=ABC123';
+  const { el, inst } = mount(w);
+  await sleep(30);
+  signedIn = false;
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('a session that expired mid-task asks for a sign-in rather than reporting an error',
+    inst.state() === 'signed-out', inst.state());
+}
+
+section('nothing on this page ever touches the device key');
+{
+  const w = fakeWorld({ signedIn: true });
+  w.loc.search = '?c=ABC123';
+  const { el } = mount(w);
+  await sleep(30);
+  el.querySelector('[data-go]').click();
+  await sleep(30);
+  check('*** the phone never receives, stores or asks for the screen’s key *** — a phone that '
+    + 'could collect it could impersonate the bedside unit',
+    !/nk_/.test(el.innerHTML) && !localStorage.getItem('nimrod:deviceKey'),
+    String(localStorage.getItem('nimrod:deviceKey')));
+}
+
+section('the words, on their own');
+check('signed-out explains rather than demands',
+  /proves/.test(claimMessage('signed-out').body));
+check('ready with a code asks you to CHECK it, since a mis-scan is possible',
+  /check it matches/i.test(claimMessage('ready', { code: 'ABC123' }).body));
+check('ready without one just asks for it',
+  /type the six/i.test(claimMessage('ready', { code: '' }).body));
+check('done names the screen by the name it chose',
+  claimMessage('done', { label: 'Christine’s screen' }).body.includes('Christine’s screen'));
+check('an unrecognised failure still says something rather than nothing',
+  claimMessage('failed', { error: 'teapot' }).body.length > 0);
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+// Live, to look at — what a phone shows.
+{
+  const w = fakeWorld({ signedIn: true });
+  w.loc.search = '?c=9K42QX';
+  mountPairClaim(document.getElementById('live'), {
+    fetchImpl: w.fetch, loc: w.loc, store: w.stash,
+  });
+}
+
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+  const s = document.getElementById('summary');
+  s.textContent = `${failed} FAILED / ${passed} passed`;
+  s.className = 'fail'; s.dataset.done = 'true'; s.dataset.failed = String(failed);
+}
+})();
+</script>
+</body>
+</html>

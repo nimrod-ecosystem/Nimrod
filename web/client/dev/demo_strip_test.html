@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>demo strip — what a stranger is told — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:900px}
+  /* The live sample below is shown in place rather than fixed to the viewport, so it can be
+     looked at without covering the results. */
+  #live{margin-top:14px;position:relative;background:#0c1a14;border-radius:14px;overflow:hidden;
+    min-height:120px}
+  #live #demo{position:static}
+</style>
+</head>
+<body>
+<h1>demo strip — the only thing on the kiosk aimed at a stranger</h1>
+
+<p>Signed out, <code>kiosk.html</code> <b>is</b> the front door — the landing page's loudest
+button goes straight there. A visitor lands on a working screen full of <i>sample</i> photos, and
+nothing used to say so, or mention that their own photos could be on it in ten seconds with
+nothing installed and nothing uploaded. The folder picker had been built and shipped for weeks
+and was never offered anywhere a first-time visitor would find it.</p>
+
+<p><b>Why this is its own module and not ten lines in kiosk.html:</b> the signed-out branch
+cannot be reached in local development at all — the dev server answers <code>/api/me</code> with
+a stub user, so that code never runs. Without a seam this would have been eyeballed once on
+production and never checked again.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<h2>live, to look at</h2>
+<div id="live"></div>
+
+<script type="module">
+import { mountDemoStrip, shouldShowDemo, DEMO_DISMISSED_KEY } from '../demo_strip.js';
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A storage that is ours, so the real localStorage is never touched and a dismissed strip in
+// one test cannot silence another.
+function fakeStore() {
+  const m = new Map();
+  return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)),
+           removeItem: (k) => m.delete(k), _map: m };
+}
+function fresh() { const el = document.createElement('div'); host.append(el); return el; }
+
+(async () => {
+try {
+
+// =====================================================================
+section('when it is shown at all — the three reasons NOT to are the interesting part');
+check('a signed-out stranger with no folders gets it',
+  await shouldShowDemo({ storage: fakeStore(), listFolders: async () => [], signedIn: false }));
+check('*** somebody who already connected their own folder does NOT ***, because "these are '
+  + 'sample photos" printed over their family is worse than saying nothing',
+  !(await shouldShowDemo({ storage: fakeStore(), listFolders: async () => [{ id: 'f1' }] })));
+check('somebody who dismissed it is not asked again', await (async () => {
+  const st = fakeStore(); st.setItem(DEMO_DISMISSED_KEY, '1');
+  return !(await shouldShowDemo({ storage: st, listFolders: async () => [] }));
+})());
+check('a signed-in person is not a stranger and never sees it',
+  !(await shouldShowDemo({ storage: fakeStore(), listFolders: async () => [], signedIn: true })));
+check('a folder lookup that throws does not suppress it — failing closed here would hide '
+  + 'the strip from the exact people it is for',
+  await shouldShowDemo({ storage: fakeStore(), listFolders: async () => { throw new Error('idb'); } }));
+check('storage that throws (private mode) does not suppress it either',
+  await shouldShowDemo({
+    storage: { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } },
+    listFolders: async () => [],
+  }));
+
+// =====================================================================
+section('what it actually says');
+{
+  const el = fresh();
+  await mountDemoStrip(el, { storage: fakeStore(), listFolders: async () => [], pick: async () => null });
+  const text = el.textContent;
+  check('it says these are SAMPLES — the thing nobody was being told', /sample photos/i.test(text), text.slice(0, 90));
+  check('it says what you can do instead', /folder of your own/i.test(text), text.slice(0, 140));
+  check('*** and that nothing is uploaded ***, which is the objection they have not raised yet',
+    /nothing is uploaded/i.test(text) && /never leave this device/i.test(text), text.slice(0, 220));
+  check('there is one obvious action', !!el.querySelector('[data-pick]'));
+  check('...and a way to sign in without it being the only option',
+    el.querySelector('.d-in')?.getAttribute('href') === '/auth/login');
+  check('...and a way to make it go away', !!el.querySelector('[data-x]'));
+  check('it is announced as a region rather than being an unlabelled bar',
+    el.querySelector('#demo')?.getAttribute('aria-label')?.length > 0);
+}
+
+section('a browser that cannot pick a folder says so instead of offering a dead button');
+{
+  const el = fresh();
+  await mountDemoStrip(el, { storage: fakeStore(), listFolders: async () => [], supported: false });
+  check('no button that would do nothing', !el.querySelector('[data-pick]'));
+  check('*** it names the browsers that work, rather than failing silently ***',
+    /Chrome or Edge/i.test(el.textContent), el.textContent.slice(-160));
+  check('...and still offers signing in, so it is not a dead end',
+    !!el.querySelector('.d-in'));
+}
+
+section('dismissing');
+{
+  const st = fakeStore();
+  const el = fresh();
+  const strip = await mountDemoStrip(el, { storage: st, listFolders: async () => [] });
+  el.querySelector('[data-x]').click();
+  check('it goes away', !strip.shown() && !el.querySelector('#demo'));
+  check('...and is remembered, so it does not nag on the next visit',
+    st.getItem(DEMO_DISMISSED_KEY) === '1');
+  const el2 = fresh();
+  check('...which the next mount honours',
+    (await mountDemoStrip(el2, { storage: st, listFolders: async () => [] })) === null);
+}
+
+section('picking a folder — the whole point of the thing');
+{
+  const el = fresh();
+  let connected = null;
+  await mountDemoStrip(el, {
+    storage: fakeStore(), listFolders: async () => [],
+    pick: async (label) => ({ id: 'folder-1', label, kind: 'folder' }),
+    onConnected: (src) => { connected = src; },
+  });
+  el.querySelector('[data-pick]').click();
+  await new Promise((r) => setTimeout(r, 30));
+  check('*** the folder is handed back to the caller ***', connected?.id === 'folder-1',
+    JSON.stringify(connected));
+  check('...with a label, so it is not "undefined" in the sources list',
+    !!connected?.label, JSON.stringify(connected));
+  check('...and the strip gets out of the way', !el.querySelector('#demo'));
+}
+
+section('a cancelled picker is NOT an error');
+{
+  const el = fresh();
+  let connected = null;
+  await mountDemoStrip(el, {
+    storage: fakeStore(), listFolders: async () => [],
+    pick: async () => null,                       // they opened it and thought better of it
+    onConnected: (src) => { connected = src; },
+  });
+  const btn = el.querySelector('[data-pick]');
+  btn.click();
+  await new Promise((r) => setTimeout(r, 30));
+  check('nothing is reported as connected', connected === null);
+  check('*** the strip is still there and the button still works ***',
+    !!el.querySelector('#demo') && !btn.disabled, `disabled=${btn.disabled}`);
+  check('...reading as it did before, not stuck on "Choosing…"',
+    btn.textContent === 'Use my own photos', btn.textContent);
+}
+
+section('a picker that throws is handled the same way');
+{
+  const el = fresh();
+  await mountDemoStrip(el, {
+    storage: fakeStore(), listFolders: async () => [],
+    pick: async () => { throw new DOMException('The user aborted a request.', 'AbortError'); },
+  });
+  const btn = el.querySelector('[data-pick]');
+  btn.click();
+  await new Promise((r) => setTimeout(r, 30));
+  check('the strip survives and the button recovers',
+    !!el.querySelector('#demo') && !btn.disabled && btn.textContent === 'Use my own photos',
+    `${btn.disabled} / ${btn.textContent}`);
+}
+
+section('it never renders itself uninvited');
+check('no root, no strip', (await mountDemoStrip(null, {})) === null);
+check('*** signed in means nothing is rendered *** — Christine’s paired screen runs the '
+  + 'signed-IN path and must never show a marketing bar',
+  (await mountDemoStrip(fresh(), { storage: fakeStore(), listFolders: async () => [], signedIn: true })) === null);
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+// Live, to look at.
+await mountDemoStrip(document.getElementById('live'), {
+  storage: fakeStore(), listFolders: async () => [], pick: async () => null,
+});
+
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+  const s = document.getElementById('summary');
+  s.textContent = `${failed} FAILED / ${passed} passed`;
+  s.className = 'fail'; s.dataset.done = 'true'; s.dataset.failed = String(failed);
+}
+})();
+</script>
+</body>
+</html>

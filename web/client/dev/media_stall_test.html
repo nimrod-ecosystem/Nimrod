@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>a video that stops — photos + personal — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;
+    max-width:76ch}
+  #host{position:absolute;left:-9999px;width:640px;height:400px}
+</style>
+</head>
+<body>
+<h1>a video that stops, in the two modules that matter most</h1>
+
+<div class="warn">
+  NOTHING MAY REQUIRE AN INPUT IN ORDER TO KEEP DOING WHAT IT IS ALREADY DOING.<br>
+  Starting can need a press. Continuing must not. Christine cannot press anything.
+</div>
+
+<p>The same hole was found in three modules on 2026-08-27. <code>youtube.js</code> ignored
+<code>PAUSED</code> entirely. <code>personal.js</code> listened only for <code>ended</code> and
+swallowed a rejected <code>play()</code> — the rejection a browser's <b>autoplay policy</b>
+produces for a video with sound, which is exactly what her family's recorded messages are.
+<code>photos.js</code> turned OFF its own advance timer for a video and relied on
+<code>ended</code> alone, so a stalled clip stopped the 24/7 slideshow permanently.</p>
+
+<p>These drive the <b>real modules</b> against a <b>real media agent</b>, with a fake clock, and
+then stop the video the way a browser does — by dispatching the events a browser dispatches.
+<code>play()</code> is stubbed to reject the way a blocked autoplay rejects.</p>
+
+<p>Run first: the server (<code>uvicorn app:app --port 8000</code>) and two agents —
+<code>python agent.py --root &lt;photos&gt; --port 8770</code> and
+<code>python agent.py --root &lt;Oscar&gt; --port 8771</code>.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { createMediaSourcesClient } from '../media_sources.js';
+import { mountModule } from '../module.js';
+import '../modules/photos.js';
+import '../modules/personal.js';
+
+const params = new URLSearchParams(location.search);
+const PHOTOS_AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
+const OSCAR_AGENT = (params.get('oscar') || 'http://127.0.0.1:8771').replace(/\/+$/, '');
+const USER = params.get('user') || ('stall-' + Math.floor(Math.random() * 1e6));
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeTimers() {
+  let now = 0, seq = 0;
+  const pending = new Map();
+  return {
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + ms }); return id; },
+    clearTimer: (id) => pending.delete(id),
+    advance(ms) {
+      now += ms;
+      for (const [id, t] of [...pending.entries()]) if (t.at <= now) { pending.delete(id); t.fn(); }
+    },
+    count: () => pending.size,
+  };
+}
+
+// THE BROWSER, STUBBED AT ITS ONE INTERESTING POINT. A real <video> in a headless-ish test
+// tab will not decode these fixture files anyway, so `play()` is replaced wholesale: the
+// test decides whether it resolves (plays), rejects with NotAllowedError (autoplay policy),
+// or resolves-but-never-progresses (the stall). Everything else — the events, the element,
+// the module — is real.
+// AND AT ITS OTHER INTERESTING POINT: the src. The fixture files are valid CONTAINERS with
+// no decodable frames in them, so a real browser fires a genuine `error` on every one the
+// moment it tries to load. That is correct behaviour by both the browser and the module --
+// and it makes every other scenario here unreachable, because the segment ends before the
+// test can do anything. So `src` is stored and read back without ever reaching the element
+// as an attribute: nothing is fetched, nothing is decoded, `el.src` still reads back as the
+// module set it, and the test decides when an error happens by dispatching one.
+const srcStore = new WeakMap();
+const realSrc = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'src');
+Object.defineProperty(HTMLMediaElement.prototype, 'src', {
+  configurable: true,
+  get() { return srcStore.get(this) || ''; },
+  set(v) { srcStore.set(this, String(v)); },
+});
+
+const realPlay = HTMLMediaElement.prototype.play;
+let playMode = 'ok';                 // 'ok' | 'blocked' | 'silent'
+const playCalls = [];
+HTMLMediaElement.prototype.play = function stubbedPlay() {
+  playCalls.push({ muted: this.muted, src: this.src });
+  if (playMode === 'blocked') {
+    const err = new Error('play() failed because the user didn’t interact with the document first');
+    err.name = 'NotAllowedError';
+    return Promise.reject(err);
+  }
+  if (playMode === 'ok') {
+    // A real browser fires `playing` asynchronously once it starts.
+    setTimeout(() => this.dispatchEvent(new Event('playing')), 0);
+  }
+  return Promise.resolve();          // 'silent': resolves, and then nothing ever happens
+};
+
+// ACTIVITY IS DECIDED BY THE TEST, not sniffed. The real tracker listens to DOM events and
+// to navigator.userActivation, either of which could be true by accident depending on what
+// the runner happened to touch -- and it is the input to every decision below, so it must
+// not be an accident.
+function fakeActivity(active = false) {
+  return {
+    note() { active = true; },
+    lastAt: () => (active ? 1 : 0),
+    sinceMs: () => (active ? 0 : Infinity),
+    recent: () => active,
+    arrive() { active = true; },
+    leave() { active = false; },
+    destroy() {},
+  };
+}
+
+const video = () => host.querySelector('video');
+const heldShown = () => !host.querySelector('[data-held]')?.hidden;
+const fire = (name) => { const v = video(); if (v) v.dispatchEvent(new Event(name)); return !!v; };
+
+async function freshProfile(type, extra = {}) {
+  const profiles = createProfilesClient({ user: USER });
+  const profile = await profiles.create('TEST-stall-' + type);
+  const mod = await profiles.addModule(profile.id, type);
+  const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+  const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+  await state.load(); await events.load();
+  state.set(extra);
+  await state.flush();
+  return { profiles, profile, state, events };
+}
+
+(async () => {
+try {
+  const ms = createMediaSourcesClient({ user: USER });
+  for (const s of await ms.list()) if (s.label.startsWith('STALL-')) await ms.remove(s.id);
+  const photoSrc = await ms.add({ label: 'STALL-photos', base_url: PHOTOS_AGENT, kind: 'agent' });
+  const oscarSrc = await ms.add({ label: 'STALL-oscar', base_url: OSCAR_AGENT, kind: 'agent' });
+
+  // =====================================================================
+  // PHOTOS — a video in the slideshow that stops
+  // =====================================================================
+  section('photos: the slideshow must not stop on a video');
+  {
+    const timers = fakeTimers();
+    const { profiles, profile, state, events } =
+      await freshProfile('photos', { sourceId: photoSrc.id, intervalMs: 8000 });
+    const bus = createBus();
+    const nexts = [];
+    bus.subscribe('photos/next', () => nexts.push(1));
+    host.innerHTML = '';
+    playMode = 'silent';
+    const inst = mountModule('photos', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer, videoStallMs: 15000,
+    });
+    inst.init();
+    await sleep(700);
+
+    // The fixture root is images, so first prove the ordinary path still works: a photo is
+    // advanced by the slideshow interval, on the injected clock.
+    check('a photo is on screen', !!host.querySelector('img'), host.innerHTML.slice(0, 60));
+    check('...and the slideshow timer is running on the injected clock', timers.count() >= 1,
+      String(timers.count()));
+    timers.advance(8001);
+    check('...and it advances on its own', nexts.length >= 1, String(nexts.length));
+    inst.destroy();
+    await sleep(50);
+  }
+
+  // Now the video case, driven directly: mount photos against the OSCAR agent, whose
+  // items are all videos, so the slideshow is guaranteed to be showing one.
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } =
+      await freshProfile('photos', { sourceId: oscarSrc.id, intervalMs: 8000 });
+    const bus = createBus();
+    const nexts = [];
+    bus.subscribe('photos/next', () => nexts.push(1));
+    host.innerHTML = '';
+    playMode = 'silent';                 // resolves, then never progresses — the stall
+    const inst = mountModule('photos', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer, videoStallMs: 15000,
+    });
+    inst.init();
+    await sleep(700);
+
+    check('a video is on screen', !!video(), host.innerHTML.slice(0, 80));
+    check('*** and something is armed for it *** — the slideshow timer is deliberately OFF '
+      + 'for a video, so this is the only thing standing between her and a frozen frame',
+      timers.count() >= 1, String(timers.count()));
+
+    const before = nexts.length;
+    timers.advance(14000);
+    check('a video is NOT cut off early', nexts.length === before, String(nexts.length - before));
+    timers.advance(2000);                // past 15s of silence -> retry
+    check('...the stall retries first rather than abandoning the clip',
+      nexts.length === before, String(nexts.length - before));
+    timers.advance(16000);               // still nothing -> give up
+    check('*** a video that never progresses moves the slideshow on ***',
+      nexts.length > before, `${nexts.length - before} advances`);
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('photos: a video that IS playing is never interrupted');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } =
+      await freshProfile('photos', { sourceId: oscarSrc.id, intervalMs: 8000 });
+    const bus = createBus();
+    const nexts = [];
+    bus.subscribe('photos/next', () => nexts.push(1));
+    host.innerHTML = '';
+    playMode = 'ok';
+    const inst = mountModule('photos', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer, videoStallMs: 15000,
+    });
+    inst.init();
+    await sleep(700);
+    const before = nexts.length;
+
+    // A long video: heartbeats every few seconds for two solid minutes.
+    for (let t = 0; t < 120000; t += 5000) { timers.advance(5000); fire('timeupdate'); }
+    check('*** two minutes of a playing video, never interrupted *** — beat() not ok(), or '
+      + 'the watchdog would have gone quiet after the first heartbeat',
+      nexts.length === before, `${nexts.length - before} advances`);
+
+    fire('ended');
+    check('...and it advances when it actually finishes', nexts.length === before + 1,
+      String(nexts.length - before));
+    timers.advance(120000);
+    check('...exactly once — no stale timer behind it', nexts.length === before + 1,
+      String(nexts.length - before));
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('photos: a video that errors does not wait out the clock');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } =
+      await freshProfile('photos', { sourceId: oscarSrc.id, intervalMs: 8000 });
+    const bus = createBus();
+    const nexts = [];
+    bus.subscribe('photos/next', () => nexts.push(1));
+    host.innerHTML = '';
+    playMode = 'silent';
+    const inst = mountModule('photos', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer, videoStallMs: 15000,
+    });
+    inst.init();
+    await sleep(700);
+    const before = nexts.length;
+    fire('error');
+    check('an explicit failure moves on immediately', nexts.length === before + 1,
+      String(nexts.length - before));
+    timers.advance(120000);
+    check('...and the watchdog does not then fire a second time',
+      nexts.length === before + 1, String(nexts.length - before));
+    inst.destroy();
+    await sleep(50);
+  }
+
+  // =====================================================================
+  // PERSONAL — her family's recorded messages
+  // =====================================================================
+  section('personal: an autoplay policy must not freeze her family');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } = await freshProfile('personal', {
+      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      stallMs: 20000,
+    });
+    const bus = createBus();
+    const done = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    host.innerHTML = '';
+    playMode = 'blocked';               // the browser refuses a video with sound
+    playCalls.length = 0;
+    const inst = mountModule('personal', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+      activity: fakeActivity(false),
+    });
+    inst.init();
+    await sleep(900);
+
+    check('a clip is on screen', !!video(), host.innerHTML.slice(0, 80));
+    check('the first attempt was WITH sound — every clip gets a fair try',
+      playCalls[0] && playCalls[0].muted === false, JSON.stringify(playCalls[0] || null));
+    check('*** a refused autoplay falls back to MUTED rather than freezing ***',
+      playCalls.some((c) => c.muted === true), JSON.stringify(playCalls.map((c) => c.muted)));
+    check('...and the screen SAYS the sound is off, rather than degrading in silence',
+      /sound is off/i.test(host.textContent), host.textContent.slice(0, 140));
+    check('...without giving up on the segment', done.length === 0, JSON.stringify(done));
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('personal: a clip that never starts at all');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } = await freshProfile('personal', {
+      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      stallMs: 20000,
+    });
+    const bus = createBus();
+    const done = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    host.innerHTML = '';
+    playMode = 'silent';               // resolves, and then nothing
+    const inst = mountModule('personal', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+      activity: fakeActivity(false),
+    });
+    inst.init();
+    await sleep(900);
+    check('the watchdog is armed while it loads', timers.count() >= 1, String(timers.count()));
+    timers.advance(19000);
+    check('a slow clip on facility wifi is not cut off', done.length === 0, JSON.stringify(done));
+    timers.advance(2000);
+    check('...it retries first', done.length === 0, JSON.stringify(done));
+    timers.advance(21000);
+    check('*** and then hands the slot back, so a director can move on ***',
+      done.length === 1 && done[0].reason === 'timeout', JSON.stringify(done));
+    check('...saying so on screen rather than sitting blank',
+      /moving on/i.test(host.textContent), host.textContent.slice(0, 140));
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('personal: a clip that pauses after playing');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } = await freshProfile('personal', {
+      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      stallMs: 20000,
+    });
+    const bus = createBus();
+    const done = [];
+    const progress = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    bus.subscribe('segment/progress', (p) => progress.push(p));
+    host.innerHTML = '';
+    playMode = 'ok';
+    const inst = mountModule('personal', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+      activity: fakeActivity(false),
+    });
+    inst.init();
+    await sleep(900);
+
+    check('playing disarms the watchdog', timers.count() === 0, String(timers.count()));
+    check('...and reports a heartbeat, so the director’s backstop knows it is alive',
+      progress.length >= 1, String(progress.length));
+    fire('pause');
+    check('*** a pause RE-ARMS it *** — nothing in the room can press play',
+      timers.count() >= 1, String(timers.count()));
+    timers.advance(19000);
+    check('a brief pause is forgiven', done.length === 0, JSON.stringify(done));
+    timers.advance(2000); timers.advance(21000);
+    check('a pause that persists ends the segment',
+      done.length === 1 && done[0].reason === 'timeout', JSON.stringify(done));
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('personal: an explicit error');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } = await freshProfile('personal', {
+      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      stallMs: 20000,
+    });
+    const bus = createBus();
+    const done = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    host.innerHTML = '';
+    playMode = 'ok';
+    const inst = mountModule('personal', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+      activity: fakeActivity(false),
+    });
+    inst.init();
+    await sleep(900);
+    fire('error');
+    check('a missing or undecodable clip ends the segment at once',
+      done.length === 1 && done[0].reason === 'error', JSON.stringify(done));
+    timers.advance(120000);
+    check('...and the watchdog does not fire a second done for it',
+      done.length === 1, JSON.stringify(done));
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('personal: a HIDDEN provider is allowed to sit paused');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } = await freshProfile('personal', {
+      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      stallMs: 20000,
+    });
+    const bus = createBus();
+    const done = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    host.innerHTML = '';
+    playMode = 'ok';
+    const inst = mountModule('personal', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+      activity: fakeActivity(false),
+    });
+    inst.init();
+    await sleep(900);
+    bus.publish('personal/deactivate');       // the director moved to another provider
+    check('deactivating disarms whatever was armed', timers.count() === 0, String(timers.count()));
+    fire('pause');
+    check('a hidden clip pausing arms nothing', timers.count() === 0, String(timers.count()));
+    timers.advance(200000);
+    check('*** so it cannot end the segment that is actually on screen ***',
+      done.length === 0, JSON.stringify(done));
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('personal: a pause is a FAULT here, because there is no pause button');
+  {
+    // *** THE DIFFERENCE FROM youtube.js, AND IT IS DELIBERATE. ***
+    // This module renders <video> with NO controls. Nobody standing in the room has any way
+    // to pause it, so a `pause` event is the system - an OS audio-focus change, a screen
+    // lock - and it takes the SHORT clock. youtube.js embeds the real player chrome, so a
+    // pause there is a person and is held for hours. The rule follows what each module
+    // actually puts on screen, rather than a guess.
+    const timers = fakeTimers();
+    const { profile, state, events } = await freshProfile('personal', {
+      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      stallMs: 20000, heldPauseMs: 14400000,
+    });
+    const bus = createBus();
+    const done = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    host.innerHTML = '';
+    playMode = 'ok';
+    const inst = mountModule('personal', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+      activity: fakeActivity(false),          // nobody in the room
+    });
+    inst.init();
+    await sleep(900);
+    fire('pause');
+    check('with nobody there, a pause takes the SHORT clock even though the hold is 4h',
+      (() => { timers.advance(21000); timers.advance(21000); return done.length === 1; })(),
+      JSON.stringify(done));
+    check('...and it was never marked as a deliberate pause', !heldShown());
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('personal: ...unless somebody actually did something');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } = await freshProfile('personal', {
+      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      stallMs: 20000, heldPauseMs: 14400000,
+    });
+    const bus = createBus();
+    const done = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    host.innerHTML = '';
+    playMode = 'ok';
+    const inst = mountModule('personal', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+      activity: fakeActivity(true),           // somebody just did something
+    });
+    inst.init();
+    await sleep(900);
+    fire('pause');
+    check('*** an observed gesture upgrades it to a HELD pause ***', heldShown());
+    timers.advance(3600000);                  // an hour
+    check('...and an hour later her family are still not being interrupted',
+      done.length === 0, JSON.stringify(done));
+    timers.advance(14400000);                 // the room finally empties
+    check('...but once it goes quiet for the full hold, the screen carries on',
+      done.length >= 0 && !heldShown(), `held=${heldShown()}`);
+    inst.destroy();
+    await sleep(50);
+  }
+
+  section('personal: a visit keeps the hold alive');
+  {
+    const timers = fakeTimers();
+    const { profile, state, events } = await freshProfile('personal', {
+      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      stallMs: 20000, heldPauseMs: 14400000,
+    });
+    const bus = createBus();
+    const done = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    host.innerHTML = '';
+    playMode = 'ok';
+    const inst = mountModule('personal', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      setTimer: timers.setTimer, clearTimer: timers.clearTimer,
+      activity: fakeActivity(true),
+    });
+    inst.init();
+    await sleep(900);
+    fire('pause');
+    for (let i = 0; i < 6; i++) { timers.advance(3600000); bus.publish('input/device', { kind: 'press' }); }
+    check('*** six hours of visiting, and it never resumed under them ***',
+      done.length === 0 && heldShown(), `${done.length} done, held=${heldShown()}`);
+    inst.destroy();
+    await sleep(50);
+  }
+
+  HTMLMediaElement.prototype.play = realPlay;
+  if (realSrc) Object.defineProperty(HTMLMediaElement.prototype, 'src', realSrc);
+  const s = document.getElementById('summary');
+  s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  s.className = failed ? 'fail' : 'pass';
+  s.dataset.done = 'true'; s.dataset.failed = String(failed);
+
+} catch (err) {
+  HTMLMediaElement.prototype.play = realPlay;
+  if (realSrc) Object.defineProperty(HTMLMediaElement.prototype, 'src', realSrc);
+  check('unexpected error', false, String((err && err.stack) || err));
+  const s = document.getElementById('summary');
+  s.textContent = `${failed} FAILED / ${passed} passed`;
+  s.className = 'fail'; s.dataset.done = 'true'; s.dataset.failed = String(failed);
+}
+})();
+</script>
+</body>
+</html>

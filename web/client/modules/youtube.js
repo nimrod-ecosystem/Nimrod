@@ -26,11 +26,16 @@
 
 import { registerModule } from '../module.js';
 import { createWatchdog } from '../watchdog.js';
+import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
 
-// `stallMs` is the STUCK-LOADING WATCHDOG (see the header). 20s is long enough that a
+// `stallMs` is the STOPPED-VIDEO WATCHDOG (see the header). 20s is long enough that a
 // slow-but-working load on facility wifi isn't cut off, short enough that nobody sits in
 // front of a frozen screen for long.
+//
+// ONE NUMBER COVERS BOTH LOADING FAILURES — a load that never starts and a video that stops
+// without anybody touching it. `heldPauseMs` is the separate, and very different, question
+// below.
 const DEFAULTS = {
   playlist: [],            // explicit video refs {id, channel, title, durationSec}
   playlistId: '',          // a YouTube playlist to draw from instead of / as well as the above
@@ -40,8 +45,48 @@ const DEFAULTS = {
   autoAdvance: true,
   directed: false,
   stallMs: 20000,
+  // *** SOMEBODY PRESSED PAUSE. DO WE EVER RESTART IT BY OURSELVES? ***
+  //
+  // 0 = NO, and that is the default. See the SETTINGS declaration below for why.
+  heldPauseMs: 0,
 };
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
+
+// *** OFF BY DEFAULT (Mike, 2026-08-27). ***
+//
+// This started at four hours and he called it: *"This seems like something that could cause
+// more problems than it solves."* He is right, and the reason is the one directly above it in
+// `activity.js` — THE SOFTWARE CANNOT TELL WHETHER ANYBODY IS IN THE ROOM. A click inside the
+// YouTube player is invisible to this page, so an auto-resume is a GUESS, and a guess that
+// fires during a visit interrupts the family it was written to protect.
+//
+// So the default is now: **a pause stays a pause.** Somebody paused it; it waits for them.
+// The screen says PAUSED so nobody mistakes it for a crash, and that marker is what makes
+// this safe to default to — the state is visible rather than a mystery.
+//
+// *** THE COST, AND IT IS REAL: *** a pause that nobody meant — a phone call grabbing audio
+// focus on a shared tablet, an OS media interruption — now sits until a person comes back.
+// That is the failure the watchdog was originally written for, and turning this off gives up
+// covering it. Mike's call, made knowing that, because the interruption he described happens
+// to real visitors and this one is rare.
+//
+// Anyone who wants the old behaviour turns it on and picks a duration.
+//
+// Declared as data so the shell can render it and a one-button cursor can reach it — see
+// settings_fields.js for why markup would not do. A CHOICE, NOT A NUMBER, for the reason
+// photos' interval is: with one switch you travel one way, one press at a time, so the number
+// of stops IS the cost.
+export const SETTINGS = [
+  { key: 'heldPauseMs', label: 'If someone pauses it, start it again', kind: 'choice',
+    default: 0, level: 'standard',
+    options: [
+      { value: 0, label: 'never — leave it paused' },
+      { value: 900000, label: 'after 15 minutes' },
+      { value: 3600000, label: 'after 1 hour' },
+      { value: 14400000, label: 'after 4 hours' },
+      { value: 43200000, label: 'after 12 hours' },
+    ] },
+];
 
 // Parse a YouTube video id from a URL or a bare id. Accepts youtu.be/<id>,
 // watch?v=<id>, /embed/<id>, /shorts/<id>, or an 11-char id on its own.
@@ -110,12 +155,25 @@ function loadIframeApi() {
   return _apiPromise;
 }
 
-// The player reports THREE things upward, and the third is the one that was missing:
+// The player reports FOUR things upward, and the last two are the ones that were missing.
+//
 // `onPlaying`. Without it there is no way to tell "loading" from "loaded and stuck", and a
 // video that never starts fires neither onEnded nor onError — a hung network request is not
 // a player error. That silence is what left Christine's screen frozen on a loading spinner
 // with the director politely waiting for a `segment/done` that was never coming.
-function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onPlaylist }) {
+//
+// `onIdle` — PAUSED and BUFFERING — is the SAME failure arriving through a different door,
+// and it was open until 2026-08-27. The state handler covered ENDED, PLAYING and CUED; a
+// video that paused fired nothing at all, and PLAYING had already disarmed the watchdog. So
+// the screen sat on a paused video with no `segment/done` ever reaching the director, and
+// the one person in front of it cannot press play. That violates the invariant this whole
+// product is built around: NOTHING MAY REQUIRE AN INPUT IN ORDER TO KEEP DOING WHAT IT IS
+// ALREADY DOING. Starting can need a press; continuing must not.
+//
+// BUFFERING is included deliberately. It is the honest version of the same hang — a video
+// that buffers forever after having played once is indistinguishable, from the chair, from
+// one that paused. Both mean "stopped, and not coming back on its own".
+function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }) {
   let player = null, ready = false, pending = null, pendingList = null, destroyed = false;
   const host = document.createElement('div');
   mountEl.append(host);
@@ -135,6 +193,10 @@ function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onPlaylist }) {
         onStateChange: (e) => {
           if (e.data === YT.PlayerState.ENDED) onEnded?.();
           else if (e.data === YT.PlayerState.PLAYING) onPlaying?.();   // disarms the watchdog
+          // PAUSED / BUFFERING: stopped, and nothing in the product can press play. Hand it
+          // up so the module can re-arm the watchdog it disarmed when this started playing.
+          else if (e.data === YT.PlayerState.PAUSED) onIdle?.('paused');
+          else if (e.data === YT.PlayerState.BUFFERING) onIdle?.('buffering');
           // CUED is how a cued PLAYLIST announces itself: getPlaylist() is empty until now.
           // We only ever want the ids — the weighted picker chooses what actually plays, so
           // the playlist is a SOURCE of videos, not the running order.
@@ -154,6 +216,9 @@ function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onPlaylist }) {
       if (ready && player) player.cuePlaylist({ list: listId, listType: 'playlist' });
       else { pendingList = listId; pending = null; }
     },
+    // The cheap first move when a video has stopped on its own: ask it to carry on from
+    // where it is, rather than reloading and losing the place. `load` remains the fallback.
+    resume() { if (destroyed) return; try { player?.playVideo?.(); } catch { /* not ready */ } },
     stop() { pending = null; try { player?.stopVideo?.(); } catch { /* not ready */ } },
     destroy() { destroyed = true; pending = null; try { player?.destroy?.(); } catch { /* noop */ } host.remove(); },
   };
@@ -164,7 +229,8 @@ registerModule(
   // as a fallback for anything. A fallback chain that ends in something network-dependent has
   // not terminated.
   { dependsOn: 'network',
-    type: 'youtube', title: 'YouTube', description: 'weighted-shuffle player over your own playlist (public videos)' },
+    type: 'youtube', title: 'YouTube', description: 'Your own YouTube playlist, shuffled so it does not repeat itself',
+    settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
     const makePlayer = ctx.playerFactory || createYtPlayer;
@@ -202,11 +268,68 @@ registerModule(
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
     let stall = null;
 
-    function clearStall() { stall?.disarm(); }
-    function armStall(id) { stall?.arm(id); }
+    // WHY the reason is tracked: the recovery for "never started loading" and the recovery
+    // for "stopped after playing" are not the same move. A load that hung wants reloading;
+    // a video that paused wants RESUMING, because reloading throws away the place she was
+    // at. Same watchdog, same ladder, different first rung.
+    // 'loading' | 'buffering' | 'paused' | 'held'.
+    //   paused  — it stopped and nobody appears to be here. Short clock, normal ladder.
+    //   held    — it stopped and somebody IS here. Long clock, reset by any further activity.
+    let stallReason = 'loading';
+    const activity = ctx.activity || pageActivity();
+    // Whether this instance is the one on screen. A director leaves every provider mounted
+    // and hides all but one, and a hidden player is ALLOWED to sit paused — re-arming for it
+    // would end the segment that is actually playing.
+    let active = true;
+
+    function clearStall() { stall?.disarm(); setHeld(false); }
+    function armStall(id, reason = 'loading') { stallReason = reason; stall?.arm(id); }
+
+    // A HELD PAUSE HAS TO BE VISIBLE. An aide walking into the room needs to tell "paused"
+    // from "broken" without asking anybody, and a silent hold looks exactly like a crash.
+    function setHeld(on) {
+      const el = mount.querySelector('[data-held]');
+      if (el) el.hidden = !on;
+    }
+
+    // The video stopped. Re-arm the clock that PLAYING disarmed — but WHICH clock depends
+    // entirely on whether anybody is here, which is the whole argument in presence.js.
+    function onIdle(reason = 'paused') {
+      if (!active || !currentId) return;
+      // Already counting for this video — don't restart the clock, or a player that flaps
+      // between BUFFERING and PAUSED could hold it open forever.
+      if (stall?.armed()) return;
+
+      // *** BUFFERING IS NEVER A PERSON. *** It is the network, whoever is in the room, so it
+      // takes the short clock unconditionally. Only a PAUSE can be somebody's doing.
+      if (reason !== 'paused') { armStall(currentId, reason); return; }
+
+      // *** THIS MODULE EMBEDS THE REAL YOUTUBE PLAYER, WITH ITS CHROME, AND THAT FACT IS
+      // WHAT DOES THE WORK HERE — not any attempt to detect a person. ***
+      //
+      // Somebody standing in the room can reach in and press pause; that is Mike's
+      // parents-visiting case. The click lands inside a cross-origin iframe, so this page
+      // CANNOT SEE IT (see activity.js). Trying to measure it would fail silently, so the
+      // decision is made from what the module puts on screen instead: this one has a pause
+      // button, therefore a PAUSE here is somebody's doing, and it is held.
+      //
+      // `activity.recent()` can only ever say yes on top of that. It never has to.
+      const held = pauseIsReachable || activity.recent(RECENT_MS);
+      if (!held) { armStall(currentId, 'paused'); return; }
+
+      if (!heldMs()) { setHeld(true); return; }   // 'never' — no clock at all
+      armStall(currentId, 'held');
+      setHeld(true);
+    }
+
+    // The player's own controls are on screen, so a visitor has a pause button to press.
+    const pauseIsReachable = true;
+    const heldMs = () => Math.max(0, Number(cfg.heldPauseMs) || 0);
 
     function onPlaying() {
       stall?.ok();
+      stallReason = 'loading';
+      setHeld(false);
       setStatus('');
       // Heartbeat for a container's slower backstop: this segment is alive. A provider
       // that never sends one is exactly what the backstop is there to catch.
@@ -251,8 +374,9 @@ registerModule(
     function show(id, record = true) {
       if (!byId[id] || !player) return;
       currentId = id;
+      active = true;                 // something asked for a video: this instance is on screen
       player.load(id);
-      armStall(id);
+      armStall(id, 'loading');
       updateLabel();
       if (record) {
         recent.push(id);
@@ -444,6 +568,7 @@ registerModule(
         mount.innerHTML = `
           <div class="youtube">
             <div class="stage" data-stage></div>
+            <div class="held" data-held hidden>Paused</div>
             <div class="status" data-status hidden></div>
             <div class="nav">
               <button class="ybtn" data-prev aria-label="previous video">‹</button>
@@ -475,15 +600,38 @@ registerModule(
         // instance it seeds autoAdvance=false, so only segment/done fires — the director
         // advances, not youtube itself.
         stall = createWatchdog({
-          // A GETTER, not a snapshot: cfg is filled in by the state subscription, which may
-          // not have arrived yet when this is constructed.
-          setTimer, clearTimer, stallMs: () => cfg.stallMs, retries: 1,
+          // A GETTER, not a snapshot, for two reasons now: cfg arrives with the state
+          // subscription, and the interval itself DEPENDS ON WHY we are waiting. A held
+          // pause runs on `heldPauseMs` (hours); everything else runs on `stallMs` (seconds).
+          // One watchdog instance, two clocks, because only one thing is ever being waited on.
+          setTimer, clearTimer, retries: 1,
+          stallMs: () => (stallReason === 'held' ? heldMs() : cfg.stallMs),
           onRetry: (id) => {
+            // THE HOLD EXPIRED: four hours of complete stillness, so the room is empty and
+            // she is the one left in front of a stopped screen. Drop to the ordinary ladder —
+            // resume now, and if that does not take, `onGiveUp` moves on at the SHORT
+            // interval rather than after another four hours.
+            if (stallReason === 'held') {
+              stallReason = 'paused';
+              setHeld(false);
+              player?.resume?.();
+              return;
+            }
+            // A paused/buffering video is already loaded — ask it to carry on before
+            // resorting to a reload, which would restart it from the beginning.
+            if (stallReason !== 'loading' && player?.resume) {
+              setStatus('');
+              player.resume();
+              return;
+            }
             setStatus('Still loading — trying again…');
             player?.load(id);
           },
           onGiveUp: (id) => {
-            setStatus('That video wouldn’t load. Moving on.');
+            setHeld(false);
+            setStatus(stallReason === 'loading'
+              ? 'That video wouldn’t load. Moving on.'
+              : 'That video stopped. Moving on.');
             // `timeout` is the director's existing vocabulary for "this segment is over",
             // alongside ended | skipped.
             bus.publish('segment/done', { provider: 'youtube', reason: 'timeout', id });
@@ -494,7 +642,7 @@ registerModule(
         // HIDDEN MEANS DISARMED. A container shows one provider at a time and leaves the
         // rest mounted; without this, a hidden player's stall would fire `segment/done`
         // and cut short whatever is actually on screen.
-        bus.subscribe('youtube/deactivate', () => clearStall());
+        bus.subscribe('youtube/deactivate', () => { active = false; clearStall(); });
 
         player = makePlayer(stage(), {
           // A cued playlist hands over its ids here. They join the pool and the weighted
@@ -519,7 +667,26 @@ registerModule(
           // so it can't fire a second `segment/done` for the same video.
           onError: () => { clearStall(); bus.publish('segment/done', { provider: 'youtube', reason: 'error' }); if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next'); },
           onPlaying,
+          onIdle,
         });
+
+        // ANY SIGN OF A PERSON RESTARTS THE HOLD. This is what makes four hours the right
+        // number rather than an absurd one: it is four hours of COMPLETE STILLNESS, not four
+        // hours from the moment somebody pressed pause. A visit of any length keeps
+        // re-arming it, and the clock only runs down once the room has actually emptied.
+        // Extends a hold that is already running. *** THIS IS A BONUS, NOT THE MECHANISM. ***
+        // It fires for input on THIS page — the module's own buttons, a switch, a keypress —
+        // and is blind to a click inside the YouTube iframe, which is the most likely thing
+        // a visitor actually touches. So a very long visit can still see one resume at the
+        // `heldPauseMs` mark. The answer to that is a longer setting, not a cleverer guess.
+        const heldBeat = () => {
+          activity.note();
+          if (stallReason === 'held' && stall?.armed()) stall.beat();
+        };
+        for (const topic of ['input/device', 'youtube/next', 'youtube/prev']) {
+          bus.subscribe(topic, heldBeat);
+        }
+        mount.addEventListener('pointerdown', heldBeat, { passive: true });
 
         // the module's two sinks — any source pointed at these topics drives it
         bus.subscribe('youtube/next', () => advance());
@@ -565,7 +732,7 @@ registerModule(
 
       },
       onResize() {},
-      onHide() { clearStall(); state.flush(); },
+      onHide() { active = false; clearStall(); state.flush(); },
       destroy() {
         clearTimer(tickTimer); tickTimer = null;
         clearTimer(graceTimer); graceTimer = null;

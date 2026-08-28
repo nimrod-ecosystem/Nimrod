@@ -38,7 +38,7 @@ export function videoHTML(video) {
 }
 
 registerModule(
-  { type: 'lessons', title: 'Lessons', description: 'watch a lesson to unlock its questions' },
+  { type: 'lessons', title: 'Lessons', description: 'Watch a short lesson, then answer questions about it' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now = ctx.now || (() => Date.now());

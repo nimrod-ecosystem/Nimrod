@@ -21,7 +21,7 @@ registerModule(
   // FALLBACK EXPOSURE: a camera device has to be present AND permitted, and a denied
   // permission looks exactly like a broken camera from the room.
   { dependsOn: 'local',
-    type: 'camera', title: 'Camera', description: 'local self-view / rearview mirror (never leaves the device)' },
+    type: 'camera', title: 'Camera', description: 'A rearview mirror, so they can see who is behind them. The picture never leaves the device.' },
   (ctx) => {
     const { mount, state } = ctx;
     let cfg = { ...DEFAULTS };

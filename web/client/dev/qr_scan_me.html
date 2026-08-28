@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Point a phone at these — the QR acceptance test</title>
+<style>
+  body{margin:0;background:#F7F4D5;color:#0A3323;
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:28px}
+  h1{font-size:1.5rem;margin:0 0 .3em}
+  h2{font-size:1rem;margin:32px 0 6px}
+  p.lead{max-width:64ch;color:#3c5346}
+  .grid{display:flex;flex-wrap:wrap;gap:24px;margin-top:20px}
+  figure{margin:0;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:14px;
+    text-align:center;width:300px}
+  figure svg{width:262px;height:262px;display:block;margin:0 auto}
+  figcaption{margin-top:10px;font-size:.85rem;font-weight:700}
+  figcaption small{display:block;font-weight:400;color:#5d7064;word-break:break-all;margin-top:4px}
+  .verdict{margin-top:8px;padding:12px 14px;border-left:4px solid #839958;background:#fff;
+    max-width:64ch}
+  .sizes figure{width:auto}
+  .sizes svg{margin:0}
+</style>
+</head>
+<body>
+<h1>Point a phone at these</h1>
+<p class="lead">
+  Everything in <code>qr_test.html</code> proves these are correct QR codes — the bytes are
+  right, the symbol reads back as the string that went in. <b>None of it proves a camera can
+  see one.</b> Contrast, module size, screen glare and focus live outside any test that runs
+  in a browser.
+</p>
+<p class="lead">
+  So: open your phone's camera and point it at each square. It should offer to open the URL
+  printed underneath. <b>You do not have to tap it</b> — the right URL appearing is the whole
+  test.
+</p>
+<div class="verdict">
+  <b>Level Q is what the pairing screen uses</b>, at roughly this size. M and H are here to
+  compare against. If Q reads instantly and the others hesitate, that is worth knowing before
+  a screen goes to a facility.
+</div>
+
+<h2>The real thing, and two neighbours</h2>
+<div class="grid" id="grid"></div>
+
+<h2>How small is too small?</h2>
+<p class="lead">
+  The pairing screen sizes its QR between 220 and 380 px. This row walks down past that floor
+  on purpose: find the point where your phone stops reading, and check the floor is
+  comfortably above it. A phone held by somebody with unsteady hands needs more margin than
+  one on a desk.
+</p>
+<div class="grid sizes" id="sizes"></div>
+
+<script type="module">
+import { qrSVG, qrMatrix } from '../qr.js';
+
+const PROD = 'https://nimrod.onrender.com/pair.html?c=9K42QX';
+const samples = [
+  ['What the screen shows', PROD, { level: 'Q' }],
+  ['Level M — less correction, smaller symbol', PROD, { level: 'M' }],
+  ['Level H — most correction, densest', PROD, { level: 'H' }],
+  ['A long self-hosted host name', 'https://screens.some-care-facility-example.org/pair.html?c=7T3M9P', { level: 'Q' }],
+  ['Plain text, no URL', 'NIMROD PAIRING CODE 9K42QX', { level: 'Q' }],
+];
+
+const grid = document.getElementById('grid');
+for (const [label, text, opts] of samples) {
+  const v = qrMatrix(text, opts).version;
+  const fig = document.createElement('figure');
+  fig.innerHTML = qrSVG(text, { ...opts, title: label })
+    + `<figcaption>${label}<small>version ${v} · level ${opts.level} · ${17 + v * 4} modules`
+    + `<br>${text}</small></figcaption>`;
+  grid.append(fig);
+}
+
+const sizes = document.getElementById('sizes');
+for (const px of [380, 300, 220, 170, 130, 100]) {
+  const fig = document.createElement('figure');
+  fig.innerHTML = qrSVG(PROD, { level: 'Q', title: `${px}px` })
+    + `<figcaption>${px} px</figcaption>`;
+  const svg = fig.querySelector('svg');
+  svg.style.width = `${px}px`;
+  svg.style.height = `${px}px`;
+  sizes.append(fig);
+}
+</script>
+</body>
+</html>

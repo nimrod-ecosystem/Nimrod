@@ -86,8 +86,21 @@ const threw = async (fn) => { try { await fn(); return false; } catch { return t
     const cachedSources = await mediaDead.list();
     check('media registry serves the cached source when the server is down', cachedSources.length === live.length, `cached=${cachedSources.length}`);
 
+    // STALE EXPECTATION, corrected 2026-08-27. This used to assert that an uncached client
+    // THROWS on a dead server. It no longer does, on purpose: `list()` swallows a registry
+    // failure so that device-local folder sources — which live in IndexedDB on this machine
+    // and need no server at all — are still usable when the coordination server is
+    // unreachable, and on the demo page where /api/media-sources is a 401 by design.
+    // Throwing there would hide photos that are sitting on the disk in front of her.
+    // The contract now is: a dead registry degrades to the device-local list, never an error.
     const mediaNoCache = createMediaSourcesClient({ user: USER, cache: false, base: DEAD });
-    check('a non-cached media client still fails on a dead server', await threw(() => mediaNoCache.list()));
+    let noCacheThrew = false, noCacheList = null;
+    try { noCacheList = await mediaNoCache.list(); } catch { noCacheThrew = true; }
+    check('an uncached media client DEGRADES rather than throwing on a dead server',
+      !noCacheThrew && Array.isArray(noCacheList), `threw=${noCacheThrew}`);
+    check('...to the device-local folder sources only — nothing invented from the server',
+      noCacheList && noCacheList.every((x) => x && x.kind === 'folder'),
+      JSON.stringify(noCacheList));
 
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));

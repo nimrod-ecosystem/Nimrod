@@ -29,7 +29,7 @@ import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
 import { listManifests } from '../module.js';
-import { mountHome, TABS, mountScreens } from '../home.js';
+import { mountHome, TABS, VISIBLE_TABS, mountScreens } from '../home.js';
 import { mountComposer } from '../composer.js';
 import { mountKiosk } from '../kiosk.js';
 import {
@@ -93,9 +93,18 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       email: 'mike@example.com', profiles, manifests: listManifests(), makeSettings,
       mountTab: async (id, el) => { mounted.push(id); el.textContent = `panel:${id}`; return { id, destroy() {} }; },
     });
-    check('the sidebar lists every tab',
-      [...host.querySelectorAll('[data-tab]')].map((b) => b.dataset.tab).join() === TABS.map((t) => t.id).join(),
+    check('the sidebar lists every VISIBLE tab',
+      [...host.querySelectorAll('[data-tab]')].map((b) => b.dataset.tab).join() === VISIBLE_TABS.map((t) => t.id).join(),
       [...host.querySelectorAll('[data-tab]')].map((b) => b.dataset.tab).join());
+    // HIDDEN IS NOT DELETED, and the difference matters: somebody with a bookmark or a saved
+    // tab must land on the thing they asked for, not be bounced to Screens with no
+    // explanation. Adulting was hidden on 2026-08-27 because it is unconnected to anything
+    // else here and every new visitor was paying to read it.
+    const hiddenTabs = TABS.filter((t) => t.hidden).map((t) => t.id);
+    check('...and a hidden tab is NOT in the sidebar',
+      hiddenTabs.length > 0
+      && !hiddenTabs.some((id) => host.querySelector(`[data-tab="${id}"]`)),
+      JSON.stringify(hiddenTabs));
     check('it opens on Screens', shell.active() === 'screens' && mounted[0] === 'screens');
     check('the active tab is marked', host.querySelector('[data-tab="screens"]').classList.contains('on'));
     check('the signed-in identity and a way out live in the sidebar',
@@ -110,7 +119,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     host.querySelector('[data-tab="media"]').click();
     await sleep(200);
     check('clicking a tab switches the panel', shell.active() === 'media' && mounted[1] === 'media');
-    check('...and only ONE panel is mounted at a time', host.querySelector('.s-main').textContent === 'panel:media');
+    // AGAINST [data-panel], NOT .s-main. This used to read the whole main column, which
+    // was the same thing until the person bar moved in above the panel - after which the
+    // check was failing on the words 'Setting up for Me' rather than on anything about
+    // panels. `mounted` is the other half of the claim: exactly two mounts, in order.
+    check('...and only ONE panel is mounted at a time',
+      host.querySelector('[data-panel]').textContent === 'panel:media' &&
+      mounted.join() === 'screens,media',
+      JSON.stringify({ panel: host.querySelector('[data-panel]').textContent, mounted }));
     check('the marker moved with it',
       host.querySelector('[data-tab="media"]').classList.contains('on') &&
       !host.querySelector('[data-tab="screens"]').classList.contains('on'));

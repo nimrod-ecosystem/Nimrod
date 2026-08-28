@@ -207,7 +207,7 @@ const esc = (s) => String(s == null ? '' : s)
 // ---------- the module ----------
 
 registerModule(
-  { type: 'algebra', title: 'Algebra', description: 'solve for x — with a calculator, because every real job has one' },
+  { type: 'algebra', title: 'Algebra', description: 'Algebra practice, with a calculator on screen — the point is the method, not the arithmetic' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const rand = ctx.rand || Math.random;

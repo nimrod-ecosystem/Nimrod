@@ -112,7 +112,7 @@ export function graphicHTML(g) {
 }
 
 registerModule(
-  { type: 'educational', title: 'Educational', description: 'generated learning segments (alphabet / counting / vocab)' },
+  { type: 'educational', title: 'Educational', description: 'Gentle alphabet, counting and vocabulary, spoken aloud' },
   (ctx) => {
     const { mount, bus, state, events, user, profileId } = ctx;
     const speak = ctx.speak || speakDefault;                       // injectable (no audio in tests)

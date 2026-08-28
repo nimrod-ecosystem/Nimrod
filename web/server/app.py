@@ -956,10 +956,43 @@ def api_me(request: Request, user: str = Depends(current_user)):
     return {"user": user, "email": request.session.get("email"), "google": GOOGLE_OK}
 
 
+def _safe_next(path: str | None) -> str | None:
+    """Where to land after signing in, if the caller asked for somewhere specific.
+
+    THIS IS AN OPEN-REDIRECT CHECK and it is the whole reason this is a function. The value
+    arrives in a query string and ends up in a Location header, so anything that is not a
+    path on THIS site is a way to bounce a freshly signed-in person somewhere else. A
+    protocol-relative "//evil.example" is the one that catches people out: it starts with a
+    slash and is not a path at all.
+
+    Anything suspicious is dropped rather than rejected — a bad `next` should still sign you
+    in, just to the default page."""
+    if not path or not path.startswith("/") or path.startswith("//"):
+        return None
+    # A backslash is treated as a slash by some browsers when parsing authority components.
+    if any(c in path for c in ("\\", "\n", "\r")):
+        return None
+    return path[:300]
+
+
 @app.get("/auth/login")
-async def auth_login(request: Request):
+async def auth_login(request: Request, next: str | None = None):
     if not GOOGLE_OK:
         raise HTTPException(status_code=503, detail="Google login is not configured")
+    # WHERE THE PERSON WAS GOING, remembered across the round trip.
+    #
+    # Google sends the browser back to /auth/callback, which knows nothing about what the
+    # person was in the middle of. Before this, everybody landed on /home.html — fine for
+    # somebody who came to sign in, wrong for somebody who scanned a QR code on a bedside
+    # screen and was carrying a pairing code: the code was silently dropped and they had to
+    # walk back and read it off the screen again.
+    #
+    # The session is the right place for it (not the OAuth `state`, which authlib owns).
+    dest = _safe_next(next)
+    if dest:
+        request.session["after_login"] = dest
+    else:
+        request.session.pop("after_login", None)
     # OAUTH_REDIRECT_URI is an escape hatch if the proxy-built URL is ever wrong;
     # otherwise build it from the request (needs uvicorn --proxy-headers behind TLS).
     redirect_uri = os.environ.get("OAUTH_REDIRECT_URI") or str(request.url_for("auth_callback"))
@@ -978,9 +1011,14 @@ async def auth_callback(request: Request):
         return RedirectResponse(url="/?login=failed")
     request.session["user"] = f"google:{sub}"   # stable per-Google-account id
     request.session["email"] = info.get("email")
-    # Land on HOME: a person who just signed in needs their screens, not a
+    # Back to whatever they were doing, if they were doing something (see /auth/login).
+    # Re-checked here rather than trusted from the session: the check is cheap and a value
+    # that only gets validated on the way in is a value somebody will eventually set some
+    # other way.
+    dest = _safe_next(request.session.pop("after_login", None))
+    # Otherwise land on HOME: a person who just signed in needs their screens, not a
     # full-screen kiosk they have no way to compose.
-    return RedirectResponse(url="/home.html")
+    return RedirectResponse(url=dest or "/home.html")
 
 
 @app.get("/auth/logout")

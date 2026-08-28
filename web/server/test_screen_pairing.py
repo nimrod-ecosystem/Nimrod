@@ -240,6 +240,34 @@ def main() -> None:
     check("with text that points at the source rather than pretending to explain",
           "source" in by2["secret_new_thing"]["what"], by2["secret_new_thing"]["what"])
 
+    # ------------------------------------------------------------------ the return trip
+    # THE OPEN-REDIRECT CHECK behind `/auth/login?next=`. It exists because scanning a QR
+    # code on a bedside screen sends somebody here mid-task: they arrive at /pair.html
+    # carrying a code, discover they are not signed in, and must come back to the SAME page
+    # afterwards or the code is lost and they have to walk back and read it off the screen.
+    #
+    # Anything that is not a path on this site is dropped rather than followed, because the
+    # value ends up in a Location header. Imported here rather than driven through HTTP so
+    # the check itself is pinned, independently of how the route happens to call it.
+    section("where you land after signing in")
+    from app import _safe_next  # noqa: E402  (imported here: app.py pulls in the whole server)
+
+    check("a normal path is kept", _safe_next("/pair.html?c=9K42QX") == "/pair.html?c=9K42QX")
+    check("no next at all falls through to the default", _safe_next(None) is None)
+    check("an empty next falls through", _safe_next("") is None)
+    check("*** a protocol-relative //host is REFUSED *** - it looks like a path and is not",
+          _safe_next("//evil.example/steal") is None)
+    check("an absolute URL is refused", _safe_next("https://evil.example") is None)
+    check("...including one dressed up as a path", _safe_next("http://evil.example/x") is None)
+    check("a backslash is refused - some browsers read it as a slash in the authority",
+          _safe_next("/\\\\evil.example") is None)
+    check("a header-splitting newline is refused", _safe_next("/pair\\nLocation: /x") is None)
+    check("a carriage return is refused", _safe_next("/pair\\rLocation: /x") is None)
+    check("a relative path with no leading slash is refused", _safe_next("pair.html") is None)
+    check("a javascript: url is refused", _safe_next("javascript:alert(1)") is None)
+    check("a very long next is truncated rather than passed through whole",
+          len(_safe_next("/" + "a" * 5000)) == 300)
+
     print(f"\n{passed} passed, {failed} failed")
     sys.exit(1 if failed else 0)
 

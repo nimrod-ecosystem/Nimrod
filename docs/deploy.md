@@ -120,8 +120,25 @@ Now `https://bedside.nimrodecosystem.com` serves the app, cached + HTTPS.
    auto-auths as her from then on. (A prod server returns 401 to any request without a valid key, so an
    un-paired first launch would just fail — pair first.)
 5. 👉 **Set it to launch on boot in kiosk mode, WITHOUT the key** (it's stored now). E.g. Chromium:
-   `chromium-browser --kiosk --noerrdialogs --disable-session-crashed-bubble https://bedside.nimrodecosystem.com/kiosk.html`,
+
+   ```
+   chromium-browser --kiosk --noerrdialogs --disable-session-crashed-bubble \
+     --autoplay-policy=no-user-gesture-required \
+     https://bedside.nimrodecosystem.com/kiosk.html
+   ```
+
    added to the device's autostart.
+
+   ⚠️ **`--autoplay-policy=no-user-gesture-required` is not optional on a bedside screen.**
+   Without it Chromium refuses to start a video that has sound until somebody clicks the page.
+   The person this screen is for cannot click anything, so the first personal video would sit
+   on its first frame indefinitely — which is precisely the failure the invariant *nothing may
+   require an input in order to keep doing what it is already doing* exists to rule out.
+
+   The flag is the fix; it is not the only defence. `modules/personal.js` also watches for a
+   refused start and falls back to playing the clip **muted**, saying so on screen, rather than
+   freezing — because a flag can be dropped from an autostart line by anyone, and a screen in a
+   care facility should not depend on remembering it.
 
 ## Part E — verify
 

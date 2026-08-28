@@ -94,6 +94,31 @@
   color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
 .youtube .nav,.youtube .gear,.youtube .settings{display:none}
 
+/* PAUSED, ON PURPOSE, BY SOMEBODY IN THE ROOM.
+ *
+ * A held pause has to be visibly different from a broken screen. Somebody walking in — an
+ * aide, a relative, the person who paused it and came back — needs to tell "this is waiting
+ * for you" from "this has crashed" without asking anybody, because the one person who is
+ * always there cannot answer.
+ *
+ * So it is a QUIET CORNER MARKER, not the full-panel scrim `.status` uses. The video is
+ * still on screen, still the thing to look at; the marker only says why it is not moving.
+ * A full overlay would hide the frame her family is in the middle of. */
+.youtube .held,.personal .held{
+  position:absolute;top:10px;left:10px;z-index:3;
+  padding:5px 12px;border-radius:99px;
+  background:rgba(10,51,35,.82);color:var(--beige);
+  font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  pointer-events:none;
+}
+.youtube .held::before,.personal .held::before{content:"⏸ "}
+@media (prefers-reduced-motion: no-preference){
+  /* A slow breath, not a blink. It marks the screen as alive without becoming something that
+     pulls at the eye of somebody who cannot look away from it. */
+  .youtube .held,.personal .held{animation:heldbreath 4s ease-in-out infinite}
+}
+@keyframes heldbreath{0%,100%{opacity:.95}50%{opacity:.6}}
+
 /* personal videos */
 .personal{width:100%;height:100%;position:relative;display:flex;flex-direction:column}
 .personal .stage{position:relative;flex:1;min-height:0;background:#0c1a14;border-radius:10px;
@@ -421,3 +446,33 @@
 @media (prefers-reduced-motion: no-preference) {
   .po-wrap { transition: opacity .12s ease; }
 }
+
+/* ---- THE DEMO STRIP: the only thing on this page aimed at a STRANGER ----
+   *
+   * Signed out, this page is the front door. A visitor lands on a working screen showing
+   * SAMPLE photos, and until now nothing said so, and nothing offered the one action worth
+   * taking. They watched somebody else's stock images rotate and left.
+   *
+   * The whole conversion is: *these could be your mother's photos, in ten seconds, without
+   * installing anything.* The browser folder picker already existed and was never surfaced.
+   *
+   * It is a STRIP, not a modal: a modal over a demo is a thing to close, and closing it is
+   * the last interaction most people would have. This sits above the screen, says what the
+   * screen is, offers one action, and gets out of the way when dismissed.
+   *
+   * IT NEVER APPEARS ON A REAL BEDSIDE SCREEN. It is inside the signed-out branch only —
+   * a paired kiosk has a device key and never reaches this code. */
+  #demo{position:fixed;top:0;left:0;right:0;z-index:20;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:11px 16px;background:rgba(10,51,35,.94);color:#F7F4D5;
+    font-size:.95rem;box-shadow:0 2px 14px rgba(0,0,0,.35)}
+  #demo b{color:#fff}
+  #demo .d-text{flex:1 1 22ch;min-width:0}
+  #demo .d-sub{display:block;opacity:.8;font-size:.85rem;margin-top:2px}
+  #demo button,#demo a{font:inherit;font-weight:700;border:0;border-radius:9px;
+    padding:9px 15px;cursor:pointer;text-decoration:none;white-space:nowrap}
+  #demo .d-go{background:#839958;color:#fff}
+  #demo .d-in{background:transparent;color:#F7F4D5;border:1px solid rgba(247,244,213,.45)}
+  #demo .d-x{background:transparent;color:#F7F4D5;opacity:.7;padding:9px 11px}
+  #demo .d-note{flex:1 1 100%;opacity:.85;font-size:.85rem}
+  @media (max-width:560px){ #demo{font-size:.9rem;padding:9px 11px;gap:9px} }

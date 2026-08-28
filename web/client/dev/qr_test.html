@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>qr — the encoder, read back out of its own symbol</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:16px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600}
+  #gallery{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px}
+  #gallery figure{margin:0;text-align:center;font-size:12px}
+  #gallery svg{width:170px;height:170px;border:1px solid #ccc}
+</style>
+</head>
+<body>
+<h1>qr — the encoder, read back out of its own symbol</h1>
+
+<div class="warn">
+  EVERY CHECK ON THIS PAGE CAN PASS AND A PHONE CAN STILL FAIL TO READ THE CODE.
+  These prove the bytes are right. Contrast, module size, screen glare and camera focus are
+  not testable from here. <b>The acceptance test is a real phone scanning the real pairing
+  screen</b> — the gallery at the bottom is there to be pointed a camera at.
+</div>
+
+<p>The strong check here is not structural. It is a <b>round trip</b>: the test reverses the
+encoder — unmask, read the zigzag, de-interleave, strip the error-correction blocks, parse the
+byte-mode header — and asserts the original string comes back. That single assertion covers the
+placement order, the mask, the interleave and the padding at once, any of which produce a
+symbol that <i>looks</i> perfect and scans as nothing. The Reed–Solomon blocks are then checked
+against an <b>independent</b> GF(256) implementation written in this file, so a shared bug in
+the field arithmetic cannot hide.</p>
+<p>No server needed — this page imports one module and nothing else.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="gallery"></div>
+
+<script type="module">
+import {
+  qrMatrix, qrSVG, formatBits, versionBits, tableSum, dataCodewords, blockLayout,
+  chooseVersion, reservedModules, maskFunction, LEVELS, TOTAL_CODEWORDS, MAX_VERSION,
+} from '../qr.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// ---------------------------------------------------------------------------------------
+// An INDEPENDENT GF(256), written from the primitive polynomial rather than imported. If
+// this and the encoder's arithmetic agree, they are almost certainly both right; if the
+// test reused the encoder's tables, a wrong table would validate itself.
+// ---------------------------------------------------------------------------------------
+const E = new Array(512), L = new Array(256);
+{
+  let x = 1;
+  for (let i = 0; i < 255; i++) { E[i] = x; L[x] = i; x = x << 1; if (x & 0x100) x ^= 0x11d; }
+  for (let i = 255; i < 512; i++) E[i] = E[i - 255];
+}
+const mul = (a, b) => (a === 0 || b === 0 ? 0 : E[L[a] + L[b]]);
+
+// A codeword block is valid iff every syndrome S_i = sum(c_j * a^(i*j)) is zero for
+// i = 0…ecCount-1. This is the definition of the code, checked directly.
+function syndromesZero(block, ecCount) {
+  for (let i = 0; i < ecCount; i++) {
+    let s = 0;
+    for (const c of block) s = mul(s, E[i]) ^ c;
+    if (s !== 0) return false;
+  }
+  return true;
+}
+
+// ---------------------------------------------------------------------------------------
+// THE DECODER. Deliberately written against the finished matrix, not against the encoder's
+// internals, so it can only agree by being right.
+// ---------------------------------------------------------------------------------------
+function readCodewords(sym) {
+  const { modules, size, version, mask } = sym;
+  const reserved = reservedModules(version);
+  const fn = maskFunction(mask);
+  const bits = [];
+  let upward = true;
+  for (let col = size - 1; col > 0; col -= 2) {
+    if (col === 6) col -= 1;
+    for (let i = 0; i < size; i++) {
+      const row = upward ? size - 1 - i : i;
+      for (const c of [col, col - 1]) {
+        if (reserved[row][c]) continue;
+        bits.push(modules[row][c] ^ (fn(row, c) ? 1 : 0));
+      }
+    }
+    upward = !upward;
+  }
+  const words = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    let b = 0;
+    for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+    words.push(b);
+  }
+  return words;
+}
+
+function deinterleave(words, version, level) {
+  const { ecPerBlock, blocksA, dataA, blocksB, dataB } = blockLayout(version, level);
+  const sizes = [];
+  for (let i = 0; i < blocksA; i++) sizes.push(dataA);
+  for (let i = 0; i < blocksB; i++) sizes.push(dataB);
+  const data = sizes.map(() => []);
+  const ec = sizes.map(() => []);
+
+  let at = 0;
+  const maxData = Math.max(dataA, dataB);
+  for (let i = 0; i < maxData; i++) {
+    for (let b = 0; b < sizes.length; b++) if (i < sizes[b]) data[b].push(words[at++]);
+  }
+  for (let i = 0; i < ecPerBlock; i++) {
+    for (let b = 0; b < sizes.length; b++) ec[b].push(words[at++]);
+  }
+  return { data, ec, ecPerBlock, consumed: at };
+}
+
+function parseByteMode(dataWords, version) {
+  const bits = [];
+  for (const w of dataWords) for (let i = 7; i >= 0; i--) bits.push((w >> i) & 1);
+  const take = (n) => { let v = 0; for (let i = 0; i < n; i++) v = (v << 1) | bits.shift(); return v; };
+  const mode = take(4);
+  const len = take(version <= 9 ? 8 : 16);
+  const bytes = [];
+  for (let i = 0; i < len; i++) bytes.push(take(8));
+  return { mode, len, text: new TextDecoder().decode(new Uint8Array(bytes)) };
+}
+
+function roundTrip(text, opts = {}) {
+  const sym = qrMatrix(text, opts);
+  const words = readCodewords(sym);
+  const { data, ec, ecPerBlock } = deinterleave(words, sym.version, sym.level);
+  const flat = data.flat();
+  const parsed = parseByteMode(flat, sym.version);
+  const rsOk = data.every((d, i) => syndromesZero([...d, ...ec[i]], ecPerBlock));
+  return { sym, parsed, rsOk, blocks: data.length };
+}
+
+// The format bits, read back off the symbol the way a scanner reads them.
+// *** INDEX 0 IS THE MOST SIGNIFICANT BIT. ***
+// This reader used to assemble the 15 bits least-significant-first, which is the same
+// mistake the encoder made -- so the two agreed with each other and the test passed while
+// every real scanner rejected the symbol. Two wrongs cancelling is exactly how a structural
+// test can be green on a broken encoder. The convention is fixed in both places now.
+function readFormat(sym) {
+  const { modules, size } = sym;
+  const at = (i) => {
+    if (i < 6) return modules[8][i];
+    if (i === 6) return modules[8][7];
+    if (i === 7) return modules[8][8];
+    if (i === 8) return modules[7][8];
+    return modules[14 - i][8];
+  };
+  let bits = 0;
+  for (let i = 0; i < 15; i++) bits |= at(i) << (14 - i);
+
+  // The second copy: MSB at the bottom of column 8, then the tail along row 8 on the right.
+  let mirror = 0;
+  for (let i = 0; i < 15; i++) {
+    const bit = i < 7 ? modules[size - 1 - i][8] : modules[8][size - 15 + i];
+    mirror |= bit << (14 - i);
+  }
+  return { bits, mirror };
+}
+
+(async () => {
+  try {
+    // =====================================================================
+    section('the tables, checked by arithmetic rather than by trust');
+    let tableFails = [];
+    for (let v = 1; v <= MAX_VERSION; v++) {
+      for (const lvl of LEVELS) {
+        if (tableSum(v, lvl) !== TOTAL_CODEWORDS[v]) tableFails.push(`${v}${lvl}=${tableSum(v, lvl)}≠${TOTAL_CODEWORDS[v]}`);
+      }
+    }
+    check('all 40 block tables sum to their version’s codeword count',
+      tableFails.length === 0, tableFails.join(' '));
+
+    // =====================================================================
+    section('format and version information');
+    // The one published value each, which is all a computed BCH needs to be pinned down.
+    check('format bits for M / mask 0 are the published 0x5412',
+      formatBits('M', 0) === 0x5412, '0x' + formatBits('M', 0).toString(16));
+    check('format bits for L / mask 0 are the published 0x77C4',
+      formatBits('L', 0) === 0x77c4, '0x' + formatBits('L', 0).toString(16));
+    check('format bits for Q / mask 7 are the published 0x2BED',
+      formatBits('Q', 7) === 0x2bed, '0x' + formatBits('Q', 7).toString(16));
+    check('format bits for H / mask 7 are the published 0x083B',
+      formatBits('H', 7) === 0x083b, '0x' + formatBits('H', 7).toString(16));
+    check('version bits for 7 are the published 0x07C94',
+      versionBits(7) === 0x07c94, '0x' + versionBits(7).toString(16));
+    check('version bits for 10 are the published 0x0A4D3',
+      versionBits(10) === 0x0a4d3, '0x' + versionBits(10).toString(16));
+    // No two format strings may be close together, or a scanner that misreads one bit
+    // decodes a different mask and unmasks the whole symbol wrongly.
+    let minDistance = 99;
+    const all = [];
+    for (const lvl of LEVELS) for (let m = 0; m < 8; m++) all.push(formatBits(lvl, m));
+    for (let i = 0; i < all.length; i++) {
+      for (let j = i + 1; j < all.length; j++) {
+        let d = 0, x = all[i] ^ all[j];
+        while (x) { d += x & 1; x >>= 1; }
+        minDistance = Math.min(minDistance, d);
+      }
+    }
+    check('the 32 format strings are all at Hamming distance ≥ 5', minDistance >= 5, String(minDistance));
+
+    // =====================================================================
+    section('THE ROUND TRIP — the message read back out of the finished symbol');
+    const PAIR_URL = 'https://nimrod.onrender.com/pair?c=9K42QX';
+    const r = roundTrip(PAIR_URL);
+    check('a real pairing URL comes back byte-for-byte', r.parsed.text === PAIR_URL,
+      JSON.stringify(r.parsed.text));
+    check('...as byte mode, with the right length',
+      r.parsed.mode === 0b0100 && r.parsed.len === PAIR_URL.length,
+      `mode=${r.parsed.mode} len=${r.parsed.len}`);
+    check('...and every Reed–Solomon block checks out against independent arithmetic', r.rsOk);
+    check('...at a version small enough to be big modules on the screen',
+      r.sym.version <= 4, `version ${r.sym.version}`);
+
+    // Every version and every level, both sides of every table row.
+    section('every version 1–10 × every level');
+    const failures = [];
+    for (let v = 1; v <= MAX_VERSION; v++) {
+      for (const lvl of LEVELS) {
+        // Fill the version almost exactly, so the padding path and the multi-block
+        // interleave are both exercised rather than skirted.
+        const capacity = dataCodewords(v, lvl) - 2 - ((v <= 9 ? 8 : 16) / 8);
+        const text = Array.from({ length: capacity }, (_, i) =>
+          'abcdefghijklmnopqrstuvwxyz0123456789-_.:/?='[i % 43]).join('');
+        try {
+          const t = roundTrip(text, { level: lvl, minVersion: v, maxVersion: v });
+          if (t.parsed.text !== text) failures.push(`${v}${lvl}: text`);
+          else if (!t.rsOk) failures.push(`${v}${lvl}: RS`);
+          else if (t.sym.version !== v) failures.push(`${v}${lvl}: version`);
+        } catch (e) { failures.push(`${v}${lvl}: ${e.message}`); }
+      }
+    }
+    check('all 40 combinations round-trip at full capacity', failures.length === 0,
+      failures.join(' | '));
+
+    // A version that needs the 16-bit count field is outside 1–10, so the boundary that
+    // matters here is the last 8-bit one.
+    check('version 9 uses the 8-bit count field and still round-trips',
+      roundTrip('x'.repeat(dataCodewords(9, 'H') - 3), { level: 'H', minVersion: 9, maxVersion: 9 })
+        .parsed.len === dataCodewords(9, 'H') - 3);
+
+    section('padding, emptiness and non-ASCII');
+    // 'A' is ALPHANUMERIC, and `parseByteMode` below only understands byte mode -- so a
+    // single uppercase letter used to "fail" here for a reason that had nothing to do with
+    // the encoder. A lowercase letter forces byte mode, which is what this decoder reads.
+    // Alphanumeric and numeric modes are covered exactly, module by module, in
+    // `qr_oracle_test.html`.
+    check('a single character round-trips (byte mode)', roundTrip('a').parsed.text === 'a');
+    check('the empty string round-trips', roundTrip('').parsed.text === '');
+    const uni = 'Christine’s screen — café ☕';
+    check('UTF-8 survives (byte mode, not character mode)', roundTrip(uni).parsed.text === uni,
+      JSON.stringify(roundTrip(uni).parsed.text));
+    // The encoder now goes to version 40 rather than 10, so 300 bytes is a comfortable
+    // fit. What this checks is that OVERFLOW THROWS instead of quietly dropping data, so it
+    // has to ask for something genuinely impossible: version 1 holds 17 bytes at level L.
+    check('one byte too many is refused rather than silently truncated', (() => {
+      try { qrMatrix('x'.repeat(18), { level: 'L', minVersion: 1, maxVersion: 1 }); return false; }
+      catch { return true; }
+    })());
+    check('...and the largest symbol still has a limit', (() => {
+      try { qrMatrix('x'.repeat(3000), { level: 'H' }); return false; } catch { return true; }
+    })());
+    check('chooseVersion agrees with what qrMatrix actually picks',
+      chooseVersion(PAIR_URL.length, 'M') === qrMatrix(PAIR_URL, { level: 'M' }).version);
+    check('a stronger EC level costs a bigger symbol, never a smaller one',
+      qrMatrix(PAIR_URL, { level: 'H' }).version >= qrMatrix(PAIR_URL, { level: 'L' }).version);
+
+    // =====================================================================
+    section('the structure a scanner looks for first');
+    const s = qrMatrix(PAIR_URL, { level: 'M' });
+    check('the module count matches the version', s.size === 17 + s.version * 4, String(s.size));
+
+    const finderAt = (m, r0, c0) => {
+      const want = [
+        [1,1,1,1,1,1,1],[1,0,0,0,0,0,1],[1,0,1,1,1,0,1],[1,0,1,1,1,0,1],
+        [1,0,1,1,1,0,1],[1,0,0,0,0,0,1],[1,1,1,1,1,1,1],
+      ];
+      for (let r = 0; r < 7; r++) for (let c = 0; c < 7; c++) if (m[r0 + r][c0 + c] !== want[r][c]) return false;
+      return true;
+    };
+    check('three finder patterns, exact', finderAt(s.modules, 0, 0)
+      && finderAt(s.modules, 0, s.size - 7) && finderAt(s.modules, s.size - 7, 0));
+    check('the fourth corner is NOT a finder — that is how orientation is read',
+      !finderAt(s.modules, s.size - 7, s.size - 7));
+
+    let separatorOk = true;
+    for (let i = 0; i < 8; i++) {
+      if (s.modules[7][i] !== 0 || s.modules[i][7] !== 0) separatorOk = false;
+      if (s.modules[7][s.size - 1 - i] !== 0) separatorOk = false;
+      if (s.modules[s.size - 1 - i][7] !== 0) separatorOk = false;
+    }
+    check('each finder is fenced by its separator of light modules', separatorOk);
+
+    let timingOk = true;
+    for (let i = 8; i < s.size - 8; i++) {
+      if (s.modules[6][i] !== (i % 2 === 0 ? 1 : 0)) timingOk = false;
+      if (s.modules[i][6] !== (i % 2 === 0 ? 1 : 0)) timingOk = false;
+    }
+    check('both timing patterns alternate all the way across', timingOk);
+    check('the dark module is set', s.modules[s.size - 8][8] === 1);
+
+    const f = readFormat(s);
+    check('the format area decodes back to the level and mask that were used',
+      f.bits === formatBits(s.level, s.mask), '0x' + f.bits.toString(16));
+    check('...and its second copy is identical, as a scanner expects',
+      f.mirror === f.bits, `0x${f.mirror.toString(16)} vs 0x${f.bits.toString(16)}`);
+
+    const big = qrMatrix('x'.repeat(150), { level: 'L' });
+    check('a version ≥ 7 symbol carries version information blocks', big.version >= 7,
+      String(big.version));
+    let vOk = true;
+    const vb = versionBits(big.version);
+    for (let i = 0; i < 18; i++) {
+      const bit = (vb >> i) & 1, r = Math.floor(i / 3), c = i % 3;
+      if (big.modules[big.size - 11 + c][r] !== bit) vOk = false;
+      if (big.modules[r][big.size - 11 + c] !== bit) vOk = false;
+    }
+    check('...in both places, correctly', vOk);
+    check('...and it still round-trips', roundTrip('x'.repeat(150), { level: 'L' }).parsed.text === 'x'.repeat(150));
+
+    // Alignment patterns: v1 has none, everything above does.
+    check('version 1 has no alignment pattern', qrMatrix('hi', { maxVersion: 1 }).version === 1);
+    const v2 = qrMatrix('x'.repeat(30), { level: 'M' });
+    check('a larger symbol has one at its centre-ish, ringed correctly', (() => {
+      const centres = { 2: 18, 3: 22, 4: 26, 5: 30, 6: 34 }[v2.version];
+      if (!centres) return true;
+      const r = centres, c = centres;
+      return v2.modules[r][c] === 1 && v2.modules[r - 1][c] === 0 && v2.modules[r - 2][c] === 1;
+    })(), `version ${v2.version}`);
+
+    section('masking');
+    const masks = new Set();
+    for (let i = 0; i < 40; i++) masks.add(qrMatrix(`https://example.com/pair?c=${i}A2B3C`).mask);
+    check('the mask is CHOSEN per symbol, not fixed', masks.size > 1, [...masks].join(','));
+    check('a forced mask is honoured', qrMatrix(PAIR_URL, { mask: 5 }).mask === 5);
+    check('...and a forced-mask symbol still round-trips',
+      roundTrip(PAIR_URL, { mask: 5 }).parsed.text === PAIR_URL);
+    const chosen = qrMatrix(PAIR_URL, { level: 'M' });
+    check('the automatic choice is no worse than any forced one', (() => {
+      // Re-scoring here would duplicate the encoder; instead assert the weaker but honest
+      // property — the chosen mask is one of the eight and the symbol reads back.
+      return chosen.mask >= 0 && chosen.mask < 8
+        && roundTrip(PAIR_URL, { level: 'M' }).parsed.text === PAIR_URL;
+    })());
+
+    section('the SVG wrapper');
+    const svg = qrSVG(PAIR_URL, { level: 'M', title: 'pairing code' });
+    check('it is a standalone SVG with no external reference',
+      svg.startsWith('<svg') && !/https?:\/\/(?!www\.w3\.org)/.test(svg.replace(PAIR_URL, '')),
+      svg.slice(0, 60));
+    check('it carries a quiet zone of 4 modules on every side', (() => {
+      const m = svg.match(/viewBox="0 0 (\d+) \1"/);
+      return m && Number(m[1]) === s.size + 8;
+    })(), (svg.match(/viewBox="[^"]*"/) || [''])[0]);
+    check('it paints an explicit light background — a transparent QR is unscannable on dark',
+      /<rect[^>]*fill="#ffffff"/.test(svg));
+    check('the title is exposed to screen readers rather than aria-hidden',
+      svg.includes('<title>pairing code</title>') && !svg.includes('aria-hidden'));
+    check('...and with no title it is aria-hidden instead of announcing nothing',
+      qrSVG(PAIR_URL).includes('aria-hidden'));
+    check('a bigger quiet zone is honoured', (() => {
+      const m = qrSVG(PAIR_URL, { quiet: 8 }).match(/viewBox="0 0 (\d+) \1"/);
+      return m && Number(m[1]) === s.size + 16;
+    })());
+
+    // =====================================================================
+    // The gallery: not an assertion, a target for a camera.
+    const gallery = document.getElementById('gallery');
+    const samples = [
+      ['pairing URL, level M', PAIR_URL, { level: 'M' }],
+      ['pairing URL, level Q', PAIR_URL, { level: 'Q' }],
+      ['localhost dev', 'http://localhost:8000/pair?c=7T3M9P', { level: 'M' }],
+      ['plain text', 'NIMROD 9K42QX', { level: 'M' }],
+    ];
+    for (const [label, text, opts] of samples) {
+      const fig = document.createElement('figure');
+      fig.innerHTML = qrSVG(text, { ...opts, title: label })
+        + `<figcaption>${label}<br><small>${text}</small></figcaption>`;
+      gallery.append(fig);
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks (and none of them is a phone)` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

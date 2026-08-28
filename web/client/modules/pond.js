@@ -96,7 +96,7 @@ registerModule(
   // because ranking findings by cost alone pointed at this panel first and it was the one
   // thing in the build nobody would miss. What the port actually bought was the PATTERN for
   // bringing a Cici module across; the pond itself is welcome to go.
-  { type: 'pond', title: 'Pond', description: 'calm water that ripples when it is touched',
+  { type: 'pond', title: 'Pond', description: 'Calm water that ripples when it is touched — something to watch, with nothing to get wrong',
     // FALLBACK EXPOSURE: a canvas and nothing else, which makes it a genuinely good last
     // resort even though it is the module Mike is least attached to.
     importance: 'optional', dependsOn: 'none', settings: SETTINGS },
