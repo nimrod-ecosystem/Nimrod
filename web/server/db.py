@@ -34,8 +34,9 @@ import sqlite3
 import threading
 import uuid
 
-# Pure rules, no storage - db imports grants and never the other way round.
+# Pure rules, no storage - db imports grants/links and never the other way round.
 import grants
+import links
 from datetime import datetime, timedelta, timezone
 
 
@@ -266,6 +267,322 @@ class _Store:
         return {"id": r[0], "person_id": r[1], "subject_kind": r[2], "subject_id": r[3],
                 "label": r[4], "expires_at": r[5], "created_at": r[6],
                 "role": grants.normalize_role(role)}
+
+    # ---- CONNECTIONS -----------------------------------------------------
+    # Read links.py first: the RULES live there, pure and tested on their own. This is
+    # only storage. Nothing here decides whether somebody may do anything - it hands
+    # rows to the rule and the rule answers.
+
+    def create_link(self, a: str, b: str, created_by: str) -> dict:
+        """Connect two accounts. Idempotent on the pair.
+
+        A pair that was linked, broken, and is being linked again REUSES THE SAME ROW -
+        the UNIQUE index on (account_lo, account_hi) means there is nowhere else to put
+        it. Reviving clears `broken_at`, and because breaking DELETED the permissions
+        (see `break_link`), the revived link starts with none. That is the safe direction:
+        somebody who was cut off and later re-invited has to be re-granted, rather than
+        silently getting back everything they had before the fallout.
+        """
+        lo, hi = links.canonical_pair(a, b)
+        ts = _now()
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, account_lo, account_hi, created_by, created_at, broken_at, broken_by "
+                "FROM links WHERE account_lo=? AND account_hi=?"), (lo, hi))
+            row = cur.fetchone()
+            if row:
+                if row[5]:
+                    cur.execute(self._q(
+                        "UPDATE links SET broken_at=NULL, broken_by=NULL, created_by=?, created_at=? "
+                        "WHERE id=?"), (created_by, ts, row[0]))
+                    return {"id": row[0], "account_lo": lo, "account_hi": hi,
+                            "created_by": created_by, "created_at": ts,
+                            "broken_at": None, "broken_by": None, "revived": True}
+                return self._link_row(row)
+            lid = _new_id()
+            cur.execute(self._q(
+                "INSERT INTO links(id, account_lo, account_hi, created_by, created_at, "
+                "broken_at, broken_by) VALUES(?,?,?,?,?,NULL,NULL)"), (lid, lo, hi, created_by, ts))
+        return {"id": lid, "account_lo": lo, "account_hi": hi, "created_by": created_by,
+                "created_at": ts, "broken_at": None, "broken_by": None}
+
+    def get_link(self, a: str, b: str) -> dict | None:
+        """The one row for this pair, broken or not. Callers ask links.link_is_active."""
+        try:
+            lo, hi = links.canonical_pair(a, b)
+        except ValueError:
+            return None
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, account_lo, account_hi, created_by, created_at, broken_at, broken_by "
+                "FROM links WHERE account_lo=? AND account_hi=?"), (lo, hi))
+            row = cur.fetchone()
+        return self._link_row(row) if row else None
+
+    def list_links(self, account: str) -> list[dict]:
+        """This account's friends list. ACTIVE links only - a broken one is not a friend.
+
+        Each row carries `other`, the account at the far end, because the caller should
+        never have to work out which of lo/hi is the one it is looking at.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, account_lo, account_hi, created_by, created_at, broken_at, broken_by "
+                "FROM links WHERE (account_lo=? OR account_hi=?) AND broken_at IS NULL "
+                "ORDER BY created_at"), (account, account))
+            rows = cur.fetchall()
+        out = []
+        for r in rows:
+            d = self._link_row(r)
+            d["other"] = d["account_hi"] if d["account_lo"] == account else d["account_lo"]
+            out.append(d)
+        return out
+
+    def break_link(self, a: str, b: str, broken_by: str) -> int:
+        """End the relationship. THE PERMISSIONS GO WITH IT.
+
+        The design says removing a link takes every permission with it, and this deletes
+        the rows rather than leaving them inert behind a failing link check. Inert rows
+        would come back to life on any future re-link, which is the one moment somebody
+        would least expect it.
+
+        WHAT THIS DOES NOT TOUCH IS MESSAGE HISTORY, and that is a safeguarding decision,
+        not a storage detail. Mike: *"In a case of harassment, you don't want someone to
+        just be able to torch the evidence."* Breaking a link stops future messages; each
+        side keeps its own copy of what was already said, and can never reach the other's.
+        """
+        try:
+            lo, hi = links.canonical_pair(a, b)
+        except ValueError:
+            return 0
+        ts = _now()
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id FROM links WHERE account_lo=? AND account_hi=? AND broken_at IS NULL"),
+                (lo, hi))
+            row = cur.fetchone()
+            if not row:
+                return 0
+            cur.execute(self._q("DELETE FROM link_permissions WHERE link_id=?"), (row[0],))
+            cur.execute(self._q("UPDATE links SET broken_at=?, broken_by=? WHERE id=?"),
+                        (ts, broken_by, row[0]))
+            return 1
+
+    @staticmethod
+    def _link_row(r) -> dict:
+        return {"id": r[0], "account_lo": r[1], "account_hi": r[2], "created_by": r[3],
+                "created_at": r[4], "broken_at": r[5], "broken_by": r[6]}
+
+    # ---- the switches on a friend ----------------------------------------
+
+    def add_link_permission(self, link_id: str, person_id: str, capability: str,
+                            subject_id: str, subject_kind: str = "account",
+                            expires_at: str | None = None) -> dict:
+        """Turn one switch on. Idempotent per (link, person, capability, subject).
+
+        `capability` is VALIDATED and raises on anything unrecognised - unlike
+        `subject_kind`, which is stored unvalidated so a `group` row can sit there inert
+        until groups exist. A kind decides whether somebody gets in at all and fails
+        closed; a capability that nothing understands must never reach storage at all.
+
+        `drive_screen` is refused here: it lives in drive_grants. See links.DELEGATED.
+        """
+        cap = links.normalize_capability(capability)
+        if links.delegates(cap):
+            raise links.UnknownCapability(
+                f"{cap!r} is stored as a drive_grant, not a link permission")
+        pid, ts = _new_id(), _now()
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id FROM link_permissions WHERE link_id=? AND person_id=? AND "
+                "capability=? AND subject_kind=? AND subject_id=?"),
+                (link_id, person_id, cap, subject_kind, subject_id))
+            row = cur.fetchone()
+            if row:
+                cur.execute(self._q("UPDATE link_permissions SET expires_at=? WHERE id=?"),
+                            (expires_at, row[0]))
+                pid = row[0]
+            else:
+                cur.execute(self._q(
+                    "INSERT INTO link_permissions(id, link_id, person_id, capability, "
+                    "subject_kind, subject_id, expires_at, created_at) VALUES(?,?,?,?,?,?,?,?)"),
+                    (pid, link_id, person_id, cap, subject_kind, subject_id, expires_at, ts))
+        return {"id": pid, "link_id": link_id, "person_id": person_id, "capability": cap,
+                "subject_kind": subject_kind, "subject_id": subject_id,
+                "expires_at": expires_at, "created_at": ts}
+
+    def list_link_permissions(self, link_id: str, person_id: str | None = None) -> list[dict]:
+        """Every switch set on this link - what the settings-on-a-friend screen renders."""
+        with self._tx() as cur:
+            if person_id is None:
+                cur.execute(self._q(
+                    "SELECT id, link_id, person_id, capability, subject_kind, subject_id, "
+                    "expires_at, created_at FROM link_permissions WHERE link_id=? "
+                    "ORDER BY created_at"), (link_id,))
+            else:
+                cur.execute(self._q(
+                    "SELECT id, link_id, person_id, capability, subject_kind, subject_id, "
+                    "expires_at, created_at FROM link_permissions WHERE link_id=? AND person_id=? "
+                    "ORDER BY created_at"), (link_id, person_id))
+            rows = cur.fetchall()
+        return [self._perm_row(r) for r in rows]
+
+    def permissions_on_person(self, person_id: str) -> list[dict]:
+        """Every permission on this person, whoever set it. What the auth check reads."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, link_id, person_id, capability, subject_kind, subject_id, "
+                "expires_at, created_at FROM link_permissions WHERE person_id=?"), (person_id,))
+            rows = cur.fetchall()
+        return [self._perm_row(r) for r in rows]
+
+    def delete_link_permission(self, perm_id: str, *, link_id: str = "") -> int:
+        """Turn one switch off. Scoped by link_id so a caller cannot revoke across links."""
+        with self._tx() as cur:
+            if link_id:
+                cur.execute(self._q("DELETE FROM link_permissions WHERE id=? AND link_id=?"),
+                            (perm_id, link_id))
+            else:
+                cur.execute(self._q("DELETE FROM link_permissions WHERE id=?"), (perm_id,))
+            return cur.rowcount if cur.rowcount is not None and cur.rowcount >= 0 else 0
+
+    @staticmethod
+    def _perm_row(r) -> dict:
+        return {"id": r[0], "link_id": r[1], "person_id": r[2], "capability": r[3],
+                "subject_kind": r[4], "subject_id": r[5], "expires_at": r[6], "created_at": r[7]}
+
+    def may_capability(self, capability: str, *, actor: str, person_id: str) -> bool:
+        """The whole question, rows loaded and handed to the pure rule.
+
+        Loads the person's owner, the link between actor and owner, and the permissions on
+        the person - then `links.may` decides. Kept here so no endpoint has to remember
+        which three things to fetch.
+        """
+        owner = self.person_owner(person_id)
+        link = self.get_link(actor, owner) if owner and owner != actor else None
+        return links.may(capability, actor=actor, person_id=person_id, owner=owner,
+                         link=link, permissions=self.permissions_on_person(person_id),
+                         now_iso=_now())
+
+    # ---- guardian ---------------------------------------------------------
+    # "May act as this account", not "may do X to this screen". BOTH ends must accept.
+
+    def offer_guardianship(self, guardian_account: str, guarded_account: str,
+                           accepted_by: str) -> dict:
+        """Create or update the offer, recording which SIDE has accepted.
+
+        One row per pair. `accepted_by` is the account doing the accepting, and it must be
+        one of the two - a third account accepting on somebody's behalf is exactly the
+        unauthenticated claim this model refuses.
+
+        In practice Mike will click both ends for Christine. That is administration, not
+        consent, and the interface must say so rather than imply a consent that did not
+        happen - see links.py. The data records who clicked, which is what makes the
+        honest version possible.
+        """
+        if guardian_account == guarded_account:
+            raise ValueError("an account cannot be its own guardian")
+        if accepted_by not in (guardian_account, guarded_account):
+            raise ValueError("only the two accounts involved may accept a guardianship")
+        ts = _now()
+        col = ("accepted_by_guardian" if accepted_by == guardian_account
+               else "accepted_by_guarded")
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id FROM guardianships WHERE guardian_account=? AND guarded_account=?"),
+                (guardian_account, guarded_account))
+            row = cur.fetchone()
+            if row:
+                # Re-offering after a revocation clears the revocation, but ONLY the side
+                # doing the accepting is set - the other end has to say yes again.
+                cur.execute(self._q(
+                    f"UPDATE guardianships SET {col}=?, revoked_at=NULL, revoked_by=NULL "
+                    "WHERE id=?"), (ts, row[0]))
+                gid = row[0]
+            else:
+                gid = _new_id()
+                vals = (gid, guardian_account, guarded_account,
+                        ts if col == "accepted_by_guardian" else None,
+                        ts if col == "accepted_by_guarded" else None, accepted_by, ts)
+                cur.execute(self._q(
+                    "INSERT INTO guardianships(id, guardian_account, guarded_account, "
+                    "accepted_by_guardian, accepted_by_guarded, created_by, created_at, "
+                    "revoked_at, revoked_by) VALUES(?,?,?,?,?,?,?,NULL,NULL)"), vals)
+        return self.get_guardianship(guardian_account, guarded_account) or {}
+
+    def get_guardianship(self, guardian_account: str, guarded_account: str) -> dict | None:
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, guardian_account, guarded_account, accepted_by_guardian, "
+                "accepted_by_guarded, created_by, created_at, revoked_at, revoked_by "
+                "FROM guardianships WHERE guardian_account=? AND guarded_account=?"),
+                (guardian_account, guarded_account))
+            row = cur.fetchone()
+        return self._guardianship_row(row) if row else None
+
+    def guardianships_of(self, guarded_account: str) -> list[dict]:
+        """Everyone who may act as this account - offers included, so the screen can show
+        a pending one. `links.guardianship_active` is what separates them."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, guardian_account, guarded_account, accepted_by_guardian, "
+                "accepted_by_guarded, created_by, created_at, revoked_at, revoked_by "
+                "FROM guardianships WHERE guarded_account=? ORDER BY created_at"),
+                (guarded_account,))
+            rows = cur.fetchall()
+        return [self._guardianship_row(r) for r in rows]
+
+    def guardianships_held_by(self, guardian_account: str) -> list[dict]:
+        """The accounts this one may switch into - what the account switcher renders."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, guardian_account, guarded_account, accepted_by_guardian, "
+                "accepted_by_guarded, created_by, created_at, revoked_at, revoked_by "
+                "FROM guardianships WHERE guardian_account=? ORDER BY created_at"),
+                (guardian_account,))
+            rows = cur.fetchall()
+        return [self._guardianship_row(r) for r in rows]
+
+    def revoke_guardianship(self, guardian_account: str, guarded_account: str,
+                            revoked_by: str) -> int:
+        """End it. THE CALLER MUST ALREADY BE INSIDE THE GUARDED ACCOUNT.
+
+        `revoked_by` is checked against `links.may_manage_guardians`, which is exactly
+        `may_act_as` and deliberately nothing more: the account itself, or one of its
+        existing guardians. There is no external route, so there is no external route to
+        have a hole in. One guardian can remove another - named as residual risk in the
+        design, mitigated by acting-as being logged and visible on both accounts, and not
+        solved harder because the product must not arbitrate a family dispute.
+        """
+        if not links.may_manage_guardians(revoked_by, guarded_account,
+                                          self.guardianships_of(guarded_account)):
+            return 0
+        ts = _now()
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id FROM guardianships WHERE guardian_account=? AND guarded_account=? "
+                "AND revoked_at IS NULL"), (guardian_account, guarded_account))
+            row = cur.fetchone()
+            if not row:
+                return 0
+            # *** BOTH ACCEPTANCES ARE CLEARED, NOT JUST THE REVOCATION FLAG. ***
+            # Caught by test_links: leaving the other side's acceptance stamped meant a
+            # revoked guardianship could be reinstated by ONE side re-offering, since the
+            # far end still looked like it had said yes - months ago, before the thing that
+            # caused the revocation. Revocation resets consent; coming back needs both ends
+            # again, which is the same bar as the first time.
+            cur.execute(self._q(
+                "UPDATE guardianships SET revoked_at=?, revoked_by=?, "
+                "accepted_by_guardian=NULL, accepted_by_guarded=NULL WHERE id=?"),
+                (ts, revoked_by, row[0]))
+            return 1
+
+    @staticmethod
+    def _guardianship_row(r) -> dict:
+        return {"id": r[0], "guardian_account": r[1], "guarded_account": r[2],
+                "accepted_by_guardian": r[3], "accepted_by_guarded": r[4],
+                "created_by": r[5], "created_at": r[6],
+                "revoked_at": r[7], "revoked_by": r[8]}
 
     def count_person_screens(self, account_id: str, person_id: str) -> int:
         with self._tx() as cur:
@@ -533,6 +850,15 @@ class _Store:
                             "until when.", True),
         "device_keys":     ("A credential for each unattended screen you set up, and the name "
                             "you gave it.", True),
+        "links":           ("Who you are connected to - one entry for each pair of people. "
+                            "It is a relationship, not a permission: it lasts until one of "
+                            "you ends it.", True),
+        "link_permissions": ("What each connection is allowed to do - send messages, call, "
+                            "watch a screen, add photos. Each one can be switched off on its "
+                            "own, and ending the connection removes them all.", True),
+        "guardianships":   ("Who may sign in as your account, and whose account you may sign "
+                            "in as. Both people have to agree, it is shown on both accounts, "
+                            "and anything done this way is recorded as done by them.", True),
         "screen_pairings": ("A short-lived code while a screen is being set up. Deleted "
                             "afterwards.", False),
         "pairings":        ("A short-lived code while a media folder is being connected. "
@@ -929,6 +1255,67 @@ class SQLiteStore(_Store):
                 CREATE INDEX IF NOT EXISTS ix_grants_person ON drive_grants(owner_id, person_id);
                 CREATE INDEX IF NOT EXISTS ix_grants_subject ON drive_grants(subject_kind, subject_id);
 
+                -- CONNECTIONS. Two layers, and the split is the whole design: a LINK is
+                -- permanent until somebody breaks it, and PERMISSIONS hang off it. See
+                -- links.py. `account_lo`/`account_hi` are canonically ordered so a pair has
+                -- exactly one row and the UNIQUE index can say so - two half-links could be
+                -- broken independently, and then "are these two connected" would depend on
+                -- who asked.
+                CREATE TABLE IF NOT EXISTS links (
+                    id TEXT PRIMARY KEY,
+                    account_lo TEXT NOT NULL,
+                    account_hi TEXT NOT NULL,
+                    created_by TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    broken_at TEXT,
+                    broken_by TEXT
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS ux_links_pair ON links(account_lo, account_hi);
+                CREATE INDEX IF NOT EXISTS ix_links_lo ON links(account_lo);
+                CREATE INDEX IF NOT EXISTS ix_links_hi ON links(account_hi);
+
+                -- The switches on a friend. `subject_kind` is polymorphic (account/group/tag)
+                -- exactly as drive_grants is, and for the same reason - only 'account'
+                -- resolves, and links.permission_allows fails closed on the others.
+                -- NOTE `drive_screen` is NOT stored here: it already lives in drive_grants,
+                -- and one switch with two sources of truth is worse than the duplication
+                -- looks. links.DELEGATED is that rule.
+                CREATE TABLE IF NOT EXISTS link_permissions (
+                    id TEXT PRIMARY KEY,
+                    link_id TEXT NOT NULL,
+                    person_id TEXT NOT NULL,
+                    capability TEXT NOT NULL,
+                    subject_kind TEXT NOT NULL,
+                    subject_id TEXT NOT NULL,
+                    expires_at TEXT,
+                    created_at TEXT NOT NULL
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS ux_link_perm ON link_permissions(
+                    link_id, person_id, capability, subject_kind, subject_id);
+                CREATE INDEX IF NOT EXISTS ix_link_perm_person ON link_permissions(person_id);
+                CREATE INDEX IF NOT EXISTS ix_link_perm_link ON link_permissions(link_id);
+
+                -- GUARDIAN - "may act as this account", not "may do X to this screen".
+                -- BOTH accepted_* flags must be set: it cannot be claimed unilaterally.
+                -- Revocation is managed from inside the guarded account and by no other
+                -- route - see links.may_manage_guardians for why an external path would be
+                -- a hostile-takeover mechanism.
+                CREATE TABLE IF NOT EXISTS guardianships (
+                    id TEXT PRIMARY KEY,
+                    guardian_account TEXT NOT NULL,
+                    guarded_account TEXT NOT NULL,
+                    accepted_by_guardian TEXT,
+                    accepted_by_guarded TEXT,
+                    created_by TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    revoked_at TEXT,
+                    revoked_by TEXT
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS ux_guardianship ON guardianships(
+                    guardian_account, guarded_account);
+                CREATE INDEX IF NOT EXISTS ix_guardianship_guarded ON guardianships(guarded_account);
+                CREATE INDEX IF NOT EXISTS ix_guardianship_guardian ON guardianships(guardian_account);
+
                 CREATE TABLE IF NOT EXISTS profiles (
                     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL,
                     created_at TEXT NOT NULL, person_id TEXT NOT NULL DEFAULT ''
@@ -1075,6 +1462,32 @@ class PostgresStore(_Store):
             "label TEXT NOT NULL DEFAULT '', expires_at TEXT, created_at TEXT NOT NULL)",
             "CREATE INDEX IF NOT EXISTS ix_grants_person ON drive_grants(owner_id, person_id)",
             "CREATE INDEX IF NOT EXISTS ix_grants_subject ON drive_grants(subject_kind, subject_id)",
+
+            # Connections - see links.py and the SQLite block above for why the pair is
+            # canonically ordered and why drive_screen is absent from link_permissions.
+            "CREATE TABLE IF NOT EXISTS links (id TEXT PRIMARY KEY, account_lo TEXT NOT NULL, "
+            "account_hi TEXT NOT NULL, created_by TEXT NOT NULL, created_at TEXT NOT NULL, "
+            "broken_at TEXT, broken_by TEXT)",
+            "CREATE UNIQUE INDEX IF NOT EXISTS ux_links_pair ON links(account_lo, account_hi)",
+            "CREATE INDEX IF NOT EXISTS ix_links_lo ON links(account_lo)",
+            "CREATE INDEX IF NOT EXISTS ix_links_hi ON links(account_hi)",
+
+            "CREATE TABLE IF NOT EXISTS link_permissions (id TEXT PRIMARY KEY, link_id TEXT NOT NULL, "
+            "person_id TEXT NOT NULL, capability TEXT NOT NULL, subject_kind TEXT NOT NULL, "
+            "subject_id TEXT NOT NULL, expires_at TEXT, created_at TEXT NOT NULL)",
+            "CREATE UNIQUE INDEX IF NOT EXISTS ux_link_perm ON link_permissions("
+            "link_id, person_id, capability, subject_kind, subject_id)",
+            "CREATE INDEX IF NOT EXISTS ix_link_perm_person ON link_permissions(person_id)",
+            "CREATE INDEX IF NOT EXISTS ix_link_perm_link ON link_permissions(link_id)",
+
+            "CREATE TABLE IF NOT EXISTS guardianships (id TEXT PRIMARY KEY, "
+            "guardian_account TEXT NOT NULL, guarded_account TEXT NOT NULL, "
+            "accepted_by_guardian TEXT, accepted_by_guarded TEXT, created_by TEXT NOT NULL, "
+            "created_at TEXT NOT NULL, revoked_at TEXT, revoked_by TEXT)",
+            "CREATE UNIQUE INDEX IF NOT EXISTS ux_guardianship ON guardianships("
+            "guardian_account, guarded_account)",
+            "CREATE INDEX IF NOT EXISTS ix_guardianship_guarded ON guardianships(guarded_account)",
+            "CREATE INDEX IF NOT EXISTS ix_guardianship_guardian ON guardianships(guardian_account)",
 
             "CREATE TABLE IF NOT EXISTS people (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, "
             "name TEXT NOT NULL, created_at TEXT NOT NULL)",

@@ -19,9 +19,9 @@ thing, remember this:
 >
 > Starting something can need a press. **Being stranded must not be possible.**
 
-That is a safety invariant, not a preference. It is why a paused video shows a marker, why a
-call countdown connects on its own, and why a stalled video moves on by itself. It has caught
-real bugs.
+That is a safety invariant, not a preference — **edge cases hunted, and signed off by Mike on
+2026-08-28.** It is why a paused video shows a marker, why a call countdown connects on its
+own, and why a stalled video moves on by itself. It has caught real bugs.
 
 **It used to be phrased as *"nothing may require an input in order to keep doing what it is
 already doing"*, and that was too strong.** Two counterexamples killed it:
@@ -34,12 +34,14 @@ already doing"*, and that was too strong.** Two counterexamples killed it:
 **So the two questions to ask, in this order:**
 
 1. **Is the input the content itself, or a gate on content that was already running?** The
-   windmill is content. *"Press OK to keep watching"* is a gate. **Gates are the problem.**
-2. **Can the person in front of this screen actually give it, and if not, is there another way
-   out?** A countdown that expires, a watchdog that moves on, somebody else in the room.
+   windmill is content. *"Press OK to keep watching"* is a gate.
+2. **Can this gate be dismissed by whoever is in front of it — and if not, does anything else
+   open it?** A countdown that expires, a watchdog that moves on, somebody else in the room.
 
-If it is a gate, and they cannot pass it, and nothing else opens it — **that is the failure
-this product exists to prevent.** Everything else is a setting.
+***A GATE IS NOT THE PROBLEM. AN UNDISMISSABLE GATE IS.*** Somebody who wants an "are you still
+watching?" check for themselves should have it — that is a preference, and it is theirs to make.
+The failure this product exists to prevent is narrower and worse: **a gate in front of somebody
+who cannot dismiss it, with nothing else that will.** Everything else is a setting.
 
 ---
 
@@ -137,8 +139,7 @@ with each other, and ours was right.
   is treated as a feature.
 - **The BEDSIDE kiosk is deliberately sparse** — it may sit unattended in a care facility for
   days, so it is not also a management UI, and configuration lives in `home.html`. **This is a
-  property of that use, not a law about kiosks.** Busier screens for people who can drive them
-  are expected later; do not read the current sparseness as a ceiling.
+  property of that use, not a law about kiosks.**
 - **The signed-out path cannot be exercised in local development** — the dev server answers
   `/api/me` with a stub user. Anything built for signed-out visitors needs an injectable seam
   and its own test, or it will rot unnoticed. `demo_strip.js` is the worked example.
