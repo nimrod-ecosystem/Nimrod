@@ -46,6 +46,17 @@ export function createWatchdog({
   let timer = null;
   let key = null;
   let used = 0;          // retries spent on the CURRENT key
+  // A RETRY THAT SUCCEEDS IMMEDIATELY used to leave a timer armed behind it. `fire` calls
+  // `onRetry` and then re-arms for the next attempt — but a retry can settle synchronously
+  // (a cached video that plays the instant it is asked to, a paused one that resumes), and
+  // that calls `ok()` from inside the callback. `ok()` cleared the timer; `fire` then armed
+  // a fresh one anyway, against content that was already playing. The result was a working
+  // video being nudged every stallMs forever.
+  //
+  // `epoch` is how `fire` finds out. Anything that changes what is being watched bumps it;
+  // if it moved while `onRetry` was running, the callback already decided the outcome and
+  // `fire` must not overrule it.
+  let epoch = 0;
 
   const ms = () => {
     const v = typeof stallMs === 'function' ? Number(stallMs()) : Number(stallMs);
@@ -55,6 +66,7 @@ export function createWatchdog({
   function disarm() {
     if (timer != null) { clearTimer(timer); timer = null; }
     key = null;
+    epoch += 1;
   }
 
   function arm(k = null) {
@@ -63,6 +75,7 @@ export function createWatchdog({
     if (k !== key) used = 0;
     if (timer != null) { clearTimer(timer); timer = null; }
     key = k;
+    epoch += 1;
     const wait = ms();
     if (!wait) return;               // 0 disables the watchdog entirely
     timer = setTimer(fire, wait);
@@ -73,6 +86,7 @@ export function createWatchdog({
   function ok() {
     if (timer != null) { clearTimer(timer); timer = null; }
     used = 0;
+    epoch += 1;
   }
 
   // Still alive. Restarts the clock on the SAME subject and clears the retry budget. A
@@ -81,6 +95,7 @@ export function createWatchdog({
   function beat() {
     if (key === null) return;
     used = 0;
+    epoch += 1;
     if (timer != null) { clearTimer(timer); timer = null; }
     const wait = ms();
     if (!wait) return;
@@ -92,8 +107,12 @@ export function createWatchdog({
     const k = key;
     if (used < retries) {
       used += 1;
+      const before = epoch;
       try { onRetry?.(k, used); } catch (err) { console.error('watchdog onRetry', err); }
-      // The caller re-asks for the same thing; re-arm for it, budget intact.
+      // If the retry already settled it — ok(), disarm(), or a move to something else —
+      // leave it alone. Re-arming here would watch content that is already playing.
+      if (epoch !== before) return;
+      // Otherwise the caller has re-asked for the same thing; re-arm for it, budget intact.
       const wait = ms();
       if (!wait) return;
       timer = setTimer(fire, wait);

@@ -42,14 +42,30 @@ export function kioskURL(profileId) {
 // The tabs in the sidebar. Adding one means adding a `mount` here — the shell doesn't
 // need to know anything else about it. (An "Audio hub" tab belongs here when it exists;
 // an empty tab is worse than no tab, so it isn't stubbed.)
+// `hidden: true` takes a tab out of the sidebar WITHOUT removing it. It stays in TABS, it
+// stays mountable, and `show('<id>')` still reaches it — so a bookmark, a saved tab, or
+// somebody who was using it is never met with a dead end.
+//
+// *** WHY ADULTING IS HIDDEN (2026-08-27, Mike). *** It is a personal points board for a
+// carer, and it is not connected to anything else on this page: not to a screen, not to a
+// person, not to the patient. Somebody arriving here for the first time reads six tabs
+// trying to work out what this product does, and one of them is about THEIR OWN chores.
+// That is a real cost paid by every new visitor for a feature nobody is using.
+//
+// It is hidden rather than deleted because the code is fine and the idea may come back
+// attached to something — a carer's own board alongside the person they look after would
+// make sense. Deleting it would mean rewriting it to find out.
 export const TABS = [
   { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
   { id: 'inputs',   label: 'Inputs',   hint: 'bind switches, controllers and keys to actions' },
   { id: 'output',   label: 'Output',   hint: 'how this screen answers — spoken, on screen, a sound' },
   { id: 'remote',   label: 'Remote',   hint: 'drive their screen from here, while they are at it' },
-  { id: 'adulting', label: 'Adulting', hint: 'your own points board' },
+  { id: 'adulting', label: 'Adulting', hint: 'your own points board', hidden: true },
 ];
+
+// What the sidebar actually draws.
+export const VISIBLE_TABS = TABS.filter((t) => !t.hidden);
 
 // The shell: sidebar + one mounted panel. `mountTab` is injectable so a test can drive
 // the navigation without the real panels.
@@ -76,7 +92,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       <nav class="s-side">
         <div class="s-brand">Nimrod<span>.</span></div>
         <ul class="s-nav">
-          ${TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}
+          ${VISIBLE_TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}
         </ul>
         <div class="s-foot">
           ${email ? `<div class="s-email">${esc(email)}</div>` : ''}
@@ -245,11 +261,17 @@ export async function mountScreens(root, {
         <div class="h-chips">${chips}</div>
         <div class="h-add">
           <select data-pick="${esc(p.id)}" aria-label="module to add">
-            ${catalog.map((m) => `<option value="${esc(m.type)}">${esc(m.title || m.type)}</option>`).join('')}
+            ${catalog.map((m) => `<option value="${esc(m.type)}" title="${esc(m.description || '')}">${esc(m.title || m.type)}</option>`).join('')}
           </select>
           <button class="h-btn" data-add="${esc(p.id)}">Add module</button>
           ${mods.length ? '' : '<span class="h-hint">a screen needs at least one module to open</span>'}
         </div>
+        <!-- WHAT THE THING YOU ARE ABOUT TO ADD ACTUALLY DOES.
+             The picker was fourteen bare words - "Pond", "Sprint", "Quests", "Lineup" - and
+             none of them mean anything to somebody deciding whether this helps their mother.
+             The descriptions were already declared in every module manifest and were read by
+             NOTHING. This is that data, on screen, next to the decision it informs. -->
+        <p class="h-modwhat" data-modwhat="${esc(p.id)}">${esc(catalog[0]?.description || '')}</p>
         ${mods.length && makeSettings ? `
         <div class="h-arrange">
           <button class="h-btn h-quiet" data-arrange="${esc(p.id)}" aria-expanded="false">Arrange layout</button>
@@ -257,6 +279,20 @@ export async function mountScreens(root, {
         </div>` : ''}
       </section>`;
   }
+
+  // Keep the description in step with the picker. Delegated from the list root so it keeps
+  // working across every re-render, of which there are many.
+  function syncModuleWhat(sel) {
+    const id = sel.dataset.pick;
+    const what = listEl.querySelector(`[data-modwhat="${CSS.escape(id)}"]`);
+    if (!what) return;
+    const m = catalog.find((x) => x.type === sel.value);
+    what.textContent = (m && m.description) || '';
+  }
+  listEl.addEventListener('change', (e) => {
+    const sel = e.target.closest('[data-pick]');
+    if (sel) syncModuleWhat(sel);
+  });
 
   const arrangers = new Map();          // profileId -> mounted composer
 

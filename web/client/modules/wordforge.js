@@ -237,7 +237,7 @@ const esc = (s) => String(s == null ? '' : s)
 // ---------- the module ----------
 
 registerModule(
-  { type: 'wordforge', title: 'Word Forge', description: 'vocabulary game — wrong answers explain themselves and still count' },
+  { type: 'wordforge', title: 'Word Forge', description: 'A word game. A wrong answer explains itself and still counts for something.' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const rand = ctx.rand || Math.random;

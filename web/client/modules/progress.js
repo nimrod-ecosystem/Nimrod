@@ -83,7 +83,7 @@ export function sessionChart(sessions) {
 }
 
 registerModule(
-  { type: 'progress', title: 'Progress', description: 'how a game is going over time — accuracy, concepts, reaction time' },
+  { type: 'progress', title: 'Progress', description: 'How they are doing over time — accuracy, concepts, how quickly they answer' },
   (ctx) => {
     const { mount, bus } = ctx;
     const now = ctx.now || (() => Date.now());

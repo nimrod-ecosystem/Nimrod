@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — add a screen</title>
+<style>
+  :root{
+    --bg:#F7F4D5; --card:#FFFFFF; --ink:#0A3323; --ink-soft:#3c5346; --muted:#5d7064;
+    --line:#e4e0c2; --moss:#839958; --rosy-deep:#a85f52; --midnight:#105666;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--font);
+    display:grid;place-items:center;min-height:100vh;padding:24px}
+  /* A PHONE, HELD ONE-HANDED, POSSIBLY IN A CORRIDOR. One column, big targets, nothing
+     that needs a second hand or a steady one. The single input is the only thing on the
+     page that can be got wrong, so it is the biggest thing on it. */
+  .pc-card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:22px;width:100%;max-width:26rem;text-align:center}
+  .pc-title{font-size:1.35rem;margin:0 0 .4em;letter-spacing:-.01em}
+  .pc-body{margin:0 0 18px;color:var(--ink-soft)}
+  .pc-label{display:block;font-size:.82rem;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .pc-input{width:100%;padding:14px 12px;border:2px solid var(--line);border-radius:12px;
+    background:#fff;color:var(--ink);
+    font:800 1.9rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;
+    text-align:center;text-transform:uppercase}
+  .pc-input:focus{outline:none;border-color:var(--moss)}
+  /* 48px+ tall: a thumb, not a mouse. */
+  .pc-go{margin-top:14px;width:100%;padding:14px 16px;border:0;border-radius:12px;
+    background:var(--midnight);color:#fff;font:inherit;font-weight:700;font-size:1.05rem;
+    cursor:pointer;min-height:52px}
+  .pc-go:hover{filter:brightness(1.08)}
+  .pc-wait{color:var(--muted)}
+  .pc-card[data-state="done"] .pc-title{color:var(--moss)}
+  .pc-card[data-state="failed"] .pc-title{color:var(--rosy-deep)}
+  .pc-foot{margin-top:16px;font-size:.82rem;color:var(--muted);text-align:center}
+  .pc-foot a{color:var(--midnight)}
+</style>
+</head>
+<body>
+<!--
+  THE PHONE END OF THE PAIRING FLOW. Reached by scanning the QR on a bedside screen, which
+  puts the code in the query string, or by typing the site address and coming here by hand.
+
+  It is deliberately its own page rather than a tab inside home.html: somebody arriving from
+  a camera has one task, is standing next to the thing they are setting up, and should not
+  have to find a settings menu to finish it.
+-->
+<main id="root"></main>
+<p class="pc-foot">
+  Adding a screen lets it show what you put on it. It does not give the screen access to
+  anything else in your account. <a href="/home.html">Your screens</a>
+</p>
+<script type="module">
+  import { mountPairClaim } from './pair.js';
+  mountPairClaim(document.getElementById('root'), {
+    // Once a screen is claimed, the useful next place is the list of screens — the person
+    // will want to put something on the one they just added. A pause first, because the
+    // confirmation is worth reading and the actual proof is the screen across the room.
+    onDone: () => setTimeout(() => { location.href = '/home.html'; }, 4000),
+  });
+</script>
+</body>
+</html>

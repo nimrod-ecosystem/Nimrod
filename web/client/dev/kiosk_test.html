@@ -315,19 +315,38 @@ const ds = () => root.querySelector('.kiosk').dataset;
     // THE FIELDS FOLLOW THE FOCUSED PANEL. Settings belong to the panel the menu names, so
     // changing which panel is on the stage has to change which settings are offered - or the
     // menu is quietly editing something other than the thing it says it is editing.
-    await kiosk.showPrimary(1);
-    await sleep(60);
+    // *** AN ASSERTION THAT MOVED, RATHER THAN ONE THAT WAS DELETED. ***
+    //
+    // This used to check that a module declaring NO settings still gets a disabled
+    // "nothing to change here" row, and it used YOUTUBE as its example of such a module.
+    // On 2026-08-27 youtube gained its first declared setting (`heldPauseMs`), the premise
+    // stopped being true, and the check began failing on a change that was entirely correct.
+    //
+    // The property is real and is still tested - `settings_test` owns it, against a stub
+    // module with no declarations, which is a better home for it than a screen whose panels
+    // can grow settings at any time. This screen's stage is photos + youtube and its module
+    // list is asserted elsewhere, so there is no settings-free panel here to point at.
+    //
+    // What is checked here instead is the part that is genuinely about the KIOSK, and it is
+    // new: that a freshly declared setting is REACHABLE FROM THE BEDSIDE MENU. A setting
+    // that exists only in a manifest is a setting the person at the bedside does not have.
+    let ytAt = -1;
+    for (let i = 0; i < 4; i++) {
+      await kiosk.showPrimary(i);
+      await sleep(60);
+      if (kiosk.primaryType() === 'youtube') { ytAt = i; break; }
+    }
+    check('CONTROL: youtube is a stage panel on this screen', ytAt >= 0, String(ytAt));
     await press('Escape');
     {
       const ids2 = kiosk.menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
       check('CONTROL: this panel is not photos', kiosk.primaryType() !== 'photos', kiosk.primaryType());
-      check('photos\u2019 settings are gone once photos is not the focused panel',
+      check('photos’ settings are gone once photos is not the focused panel',
         !ids2.includes('set:intervalSec'), ids2.join(','));
-      check('a module that declares nothing still gets a disabled row rather than silence, '
-        + 'so the heading is not left naming a panel with nothing under it',
-        ids2.includes('panel-settings'), ids2.join(','));
+      check('*** the held-pause setting is reachable from the bedside menu *** - how long a '
+        + 'pause by somebody in the room is held before the screen carries on by itself',
+        ids2.includes('set:heldPauseMs'), ids2.join(','));
     }
-    await press('Escape');
     await kiosk.showPrimary(0);
     await sleep(60);
 

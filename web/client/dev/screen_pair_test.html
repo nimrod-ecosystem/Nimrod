@@ -10,13 +10,14 @@
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   #host{position:absolute;left:-9999px}
-  #live{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;overflow:hidden;height:280px}
-  .sp-wrap{height:100%;display:grid;place-items:center;background:#0A3323;color:#F7F4D5;padding:20px}
-  .sp-card{text-align:center;max-width:34ch}
-  .sp-title{font-size:1.4rem;margin:0 0 12px;font-weight:650}
-  .sp-code{font:800 3.2rem/1.1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;margin:8px 0 14px}
-  .sp-body{margin:0;opacity:.9;font-size:.95rem}
+  /* THE LIVE PANEL USES THE REAL STYLESHEET (linked below), not a copy. The private copy
+     that used to live here meant the only place the pairing screen had ever been styled
+     was a page nobody at a bedside will ever open. */
+  #live{margin-top:12px;border:1px solid #e4e0c2;border-radius:16px;overflow:hidden;
+    min-height:520px}
+  #live .sp-wrap{min-height:520px}
 </style>
+<link rel="stylesheet" href="../screen_pair.css">
 </head>
 <body>
 <h1>screen pairing — a family adopts a bedside screen</h1>
@@ -30,11 +31,15 @@ not fine for <i>collecting</i> the key.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="host"></div>
-<h2>live, to look at</h2>
+<h2>live — POINT A PHONE AT THIS</h2>
+<p>This is the real stylesheet and the real encoder. The QR carries
+<code>/pair.html?c=&lt;code&gt;</code> on this origin, so a phone on the same network lands on the
+claim page with the code already filled in. <b>A scan is the acceptance test; nothing above
+this line is.</b></p>
 <div id="live"></div>
 
 <script type="module">
-import { mountScreenPairing, pairMessage, groupCode, siteHost, PAIR_STATES, POLL_MS }
+import { mountScreenPairing, pairMessage, groupCode, siteHost, pairURL, PAIR_STATES, POLL_MS }
   from '../screen_pair.js';
 import { getDeviceKey, setDeviceKey } from '../auth.js';
 
@@ -52,7 +57,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // A server in a few lines, so the whole dance runs with no network.
-function fakeServer({ claimAfter = 1, expireFirst = false } = {}) {
+function fakeServer({ claimAfter = 1, expireFirst = false, longCode = null } = {}) {
   const calls = { request: 0, status: 0 };
   let code = null, token = null, claimed = false, polls = 0, expired = expireFirst;
   return {
@@ -63,7 +68,7 @@ function fakeServer({ claimAfter = 1, expireFirst = false } = {}) {
       const body = JSON.parse(opts.body);
       if (url.endsWith('/api/screen-pair/request')) {
         calls.request += 1;
-        code = 'AB' + calls.request + 'XYZ';
+        code = longCode || ('AB' + calls.request + 'XYZ');
         token = 'tok-' + calls.request;
         expired = expireFirst && calls.request === 1;
         return { ok: true, json: async () => ({ code, poll_token: token, label: body.label }) };
@@ -270,12 +275,89 @@ section('the poll token, from the client side');
   setDeviceKey('');
 }
 
+// ================= THE QR CODE =================
+// Scanning is the route that asks least of the person standing in the room. What these
+// checks CANNOT establish is whether a phone reads it - see the note at the top of qr.js.
+// The live panel at the bottom of this page is the thing to point a camera at.
+section('the QR code, and the printed code beside it');
+{
+  const srv = fakeServer({ claimAfter: 999 });
+  const el = document.createElement('div');
+  host.append(el);
+  const p = mountScreenPairing(el, { label: 'QR screen', fetchImpl: srv.fetch, pollMs: 100000 });
+  await sleep(80);
+
+  const code = p.code();
+  check('a code was minted', !!code, String(code));
+  check('the screen shows a QR', !!el.querySelector('.sp-qr svg'));
+  check('*** THE PRINTED CODE IS STILL THERE, not behind a trouble-scanning link ***',
+    !!el.querySelector('.sp-code'), el.querySelector('.sp-code')?.textContent || '(missing)');
+  check('...and it is the code, grouped for reading aloud',
+    el.querySelector('.sp-code')?.textContent.replace(/ /g, '') === code,
+    el.querySelector('.sp-code')?.textContent);
+
+  const svg = el.querySelector('.sp-qr svg');
+  check('the QR is drawn here - no <img>, nothing fetched',
+    !el.querySelector('.sp-qr img') && !/<image|xlink:href/.test(svg.innerHTML),
+    svg.outerHTML.slice(0, 80));
+  check('it is announced to a screen reader rather than left an unlabelled square',
+    !!svg.querySelector('title'), svg.querySelector('title')?.textContent);
+  check('the QR sits on its own light panel - an inverted QR does not scan',
+    getComputedStyle(el.querySelector('.sp-qr')).backgroundColor === 'rgb(255, 255, 255)',
+    getComputedStyle(el.querySelector('.sp-qr')).backgroundColor);
+
+  const url = pairURL(code);
+  check('the QR URL is absolute - a relative path inside a QR means nothing',
+    url.startsWith(location.origin + '/'), url);
+  check('...it lands on the claim page', url.includes('/pair.html'), url);
+  check('...with the code already in it, so nobody types anything',
+    new URL(url).searchParams.get('c') === code, url);
+
+  const body = el.querySelector('.sp-body')?.textContent || '';
+  check('the instruction tells you to point the camera', /camera/i.test(body), body);
+  check('...AND where to type it instead', /sign in/i.test(body) && /type/i.test(body), body);
+  check('...naming this site rather than a hardcoded one', body.includes(siteHost()), body);
+
+  p.destroy();
+}
+
+section('the QR must never take the code down with it');
+{
+  // A code the encoder cannot represent must still leave readable characters on the screen.
+  // The square is the convenience; the printed code is the thing that always works.
+  // 400 characters USED to be un-encodable, back when the encoder stopped at version 10.
+  // The rewritten one goes to version 40 and swallows that comfortably, so the assertion had
+  // to be given something genuinely impossible or it was testing nothing. The largest QR
+  // holds roughly 1,600 bytes at this error level; 5,000 fits nowhere.
+  const srv = fakeServer({ claimAfter: 999, longCode: 'X'.repeat(5000) });
+  const el = document.createElement('div');
+  host.append(el);
+  const p = mountScreenPairing(el, { label: 'huge', fetchImpl: srv.fetch, pollMs: 100000 });
+  await sleep(80);
+  check('an un-encodable code produces no QR', !el.querySelector('.sp-qr svg'));
+  check('*** but the code is still on screen ***', !!el.querySelector('.sp-code'));
+  check('...and so is the instruction', !!el.querySelector('.sp-body'));
+  p.destroy();
+}
+
+section('pairURL on its own');
+check('it upper-cases whatever it is handed', pairURL('9k42qx').includes('c=9K42QX'),
+  pairURL('9k42qx'));
+check('it percent-encodes rather than concatenating blindly',
+  pairURL('A B').endsWith('c=A%20B'), pairURL('A B'));
+check('with no origin available it degrades to a path rather than throwing',
+  pairURL('ABC123', { origin: 'null' }).startsWith('/pair.html'),
+  pairURL('ABC123', { origin: 'null' }));
+
 const s = document.getElementById('summary');
 s.textContent = `${passed} passed, ${failed} failed`;
 s.className = failed ? 'fail' : 'pass';
 s.dataset.done = 'true'; s.dataset.failed = String(failed);
 
-// Live, to look at — what somebody in the room actually sees.
+// ***** THE ACCEPTANCE TEST IS BELOW THIS LINE AND IT IS NOT AUTOMATED. *****
+// Everything above proves the bytes are right. Point a real phone at this panel: it should
+// open the claim page with the code already filled in. If it does not, nothing above has
+// told you anything about whether this works.
 {
   const srv = fakeServer({ claimAfter: 999 });
   mountScreenPairing(document.getElementById('live'), {

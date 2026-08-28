@@ -134,7 +134,7 @@ const esc = (s) => String(s == null ? '' : s)
 // ---------- the module ----------
 
 registerModule(
-  { type: 'quests', title: 'Quests', description: 'points balance, tasks, rewards — reads the shared ledger' },
+  { type: 'quests', title: 'Quests', description: 'Points, tasks and rewards' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now = ctx.now || (() => Date.now());

@@ -106,7 +106,7 @@ export function nextPhase(phase, cycle = 0, cyclesBeforeLong = DEFAULTS.cyclesBe
 // ---------- the module ----------
 
 registerModule(
-  { type: 'sprint', title: 'Sprint', description: 'focus timer — finish a sprint, bank the points' },
+  { type: 'sprint', title: 'Sprint', description: 'A focus timer — finish a sprint, bank the points' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now         = ctx.now || (() => Date.now());

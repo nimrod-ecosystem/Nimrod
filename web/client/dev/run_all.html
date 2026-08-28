@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>run every client suite</title>
+<style>
+  body{font:15px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem;margin:0 0 .3em}
+  p{max-width:70ch;color:#3c5346}
+  table{border-collapse:collapse;margin-top:14px;font-size:13px;
+    font-family:ui-monospace,Menlo,Consolas,monospace}
+  td,th{padding:3px 12px 3px 0;text-align:left;vertical-align:top}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.skip{color:#5d7064}
+  #summary{margin-top:16px;font-weight:700;font-size:1.05rem}
+  iframe{width:1100px;height:700px;border:0;position:absolute;left:-99999px}
+</style>
+</head>
+<body>
+<h1>every client suite, one page</h1>
+<p>Each suite runs in its own iframe, in small parallel batches, and reports the number it
+printed for itself. <b>This does not re-judge anything</b> — a suite that lies to itself lies
+here too. It exists so a change to a shared primitive can be checked against everything that
+uses it without forty navigations.</p>
+<p>Needs the server: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.
+Suites listed as <span class="skip">no summary</span> did not finish inside the timeout, which
+is usually a real hang and worth opening on its own.</p>
+<div id="out"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+// Every *_test.html in this folder, minus the pages that are targets rather than suites.
+const SUITES = [
+  'adulting', 'algebra', 'composer', 'connections', 'controls_view', 'demo_strip',
+  'director', 'drive',
+  'educational', 'health', 'home', 'input', 'input_runtime', 'inputs', 'interstitials',
+  'kiosk', 'lessons', 'local_store', 'media', 'media_sources', 'media_stall',
+  'modules_catalog', 'output',
+  'output_panel',
+  'output_remote', 'pair', 'pairing', 'panel_fit', 'people', 'personal', 'photos', 'pond',
+  'press_overlay', 'preview', 'progress', 'qr', 'quests', 'recovery', 'resilience',
+  'restart', 'rng', 'screen_pair', 'sender', 'settings', 'settings_audit', 'sprint',
+  'statemachine', 'theme', 'voice', 'watchdog', 'wordforge', 'youtube', 'youtube_watchdog',
+];
+
+// GENEROUS ON PURPOSE. These suites are full of `await sleep(500)` between real server
+// round-trips, and a browser tab that is not on screen throttles its timers hard — so a
+// suite that takes 20 seconds in front of you can take three minutes in a background tab.
+// A timeout tuned to the fast case reports healthy suites as hangs, which is worse than
+// waiting: it trains you to ignore the runner.
+const TIMEOUT_MS = 180000;
+const BATCH = 4;                  // enough parallelism to be quick, few enough to stay honest
+
+const out = document.getElementById('out');
+const table = document.createElement('table');
+table.innerHTML = '<tr><th>suite</th><th>result</th></tr>';
+out.append(table);
+
+// A suite reports itself in one of two shapes — "N passed, M failed" or "ALL PASS — N checks".
+// Both are parsed rather than one being imposed, because rewriting forty suites to agree on a
+// format is a bigger change than reading two formats.
+// Two suites (rng, statemachine) predate the #summary element entirely and report through
+// window.__results plus the document title. Read that shape too rather than rewriting them:
+// the point of this page is to run what exists, not to require everything to be reshaped
+// first. A suite reporting nothing at all is still shown as 'no summary'.
+function parseResultsObject(win) {
+  const r = win && win.__results;
+  if (!r || typeof r.pass !== 'number') return null;
+  return { passed: r.pass, failed: r.fail || 0 };
+}
+
+function parseSummary(text) {
+  if (!text) return null;
+  let m = text.match(/(\d+)\s+passed,\s+(\d+)\s+failed/i);
+  if (m) return { passed: +m[1], failed: +m[2] };
+  m = text.match(/(\d+)\s+FAILED\s*\/\s*(\d+)\s+passed/i);
+  if (m) return { passed: +m[2], failed: +m[1] };
+  m = text.match(/ALL PASS\s*[—-]\s*(\d+)/i);
+  if (m) return { passed: +m[1], failed: 0 };
+  return null;
+}
+
+function runOne(name) {
+  return new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.src = `${name}_test.html?user=runall-${name}-${Math.floor(Math.random() * 1e6)}`;
+    document.body.append(frame);
+    const started = Date.now();
+    const poll = setInterval(() => {
+      let text = null, parsed = null;
+      try {
+        text = frame.contentDocument?.getElementById('summary')?.textContent || null;
+        parsed = parseSummary(text) || parseResultsObject(frame.contentWindow);
+      } catch { /* still loading */ }
+      // "running…" parses as nothing, which is what keeps this from reading a half-finished
+      // suite as a pass.
+      if (parsed) { clearInterval(poll); frame.remove(); resolve({ name, ...parsed }); return; }
+      if (Date.now() - started > TIMEOUT_MS) {
+        clearInterval(poll); frame.remove();
+        resolve({ name, timedOut: true, last: (text || '').slice(0, 40) });
+      }
+    }, 250);
+  });
+}
+
+(async () => {
+  const results = [];
+  for (let i = 0; i < SUITES.length; i += BATCH) {
+    const batch = await Promise.all(SUITES.slice(i, i + BATCH).map(runOne));
+    for (const r of batch) {
+      results.push(r);
+      const row = table.insertRow();
+      row.insertCell().textContent = r.name;
+      const cell = row.insertCell();
+      if (r.timedOut) { cell.className = 'skip'; cell.textContent = `no summary (${r.last || 'blank'})`; }
+      else if (r.failed) { cell.className = 'fail'; cell.textContent = `${r.failed} FAILED / ${r.passed} passed`; }
+      else { cell.className = 'pass'; cell.textContent = `${r.passed} passed`; }
+    }
+  }
+  const failed = results.filter((r) => r.failed).length;
+  const stalled = results.filter((r) => r.timedOut).length;
+  const checks = results.reduce((n, r) => n + (r.passed || 0), 0);
+  const s = document.getElementById('summary');
+  s.textContent = (failed || stalled)
+    ? `${failed} suite(s) failing, ${stalled} without a summary — ${checks} checks ran`
+    : `ALL PASS — ${results.length} suites, ${checks} checks`;
+  s.className = (failed || stalled) ? 'fail' : 'pass';
+  s.dataset.done = 'true';
+})();
+</script>
+</body>
+</html>

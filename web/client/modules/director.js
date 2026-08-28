@@ -58,7 +58,7 @@ export const DIRECTOR_CONFIG = {
 };
 
 registerModule(
-  { type: 'director', title: 'Lineup', description: 'rotates videos, personal videos & learning by time of day' },
+  { type: 'director', title: 'Lineup', description: 'Rotates videos, personal messages and learning by time of day, so the screen changes on its own' },
   (ctx) => {
     const { mount, bus, state, user, profileId } = ctx;
     const rootBus = ctx.rootBus || bus;                 // children mount here (re-scoped per child)
