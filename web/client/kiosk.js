@@ -297,7 +297,7 @@ export async function mountKiosk(root, {
     else bus.publish(`${stageRec.type}/next`);
   }
 
-  // MIRROR MODE (M): make the camera fill the whole screen (the mirror element
+  // MIRROR MODE (C): make the camera fill the whole screen (the mirror element
   // expands over the stage; press again to return). The camera stream stays mounted.
   let mirrorFull = false;
   function toggleMirrorFull() {
