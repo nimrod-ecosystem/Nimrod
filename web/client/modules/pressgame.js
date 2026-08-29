@@ -70,6 +70,8 @@
 
 import { registerModule } from '../module.js';
 import { EDGE_TOPIC } from '../input.js';
+import { createGameMusic } from '../game_music.js';
+import { createMediaSourcesClient } from '../media_sources.js';
 
 // *** BUMP THIS WHENEVER A RECORDED FIELD IS ADDED OR CHANGES MEANING. ***
 // It rides on every row as `producer_version`, and it is what lets a reader in two years tell
@@ -88,6 +90,12 @@ const DEFAULTS = {
   adaptiveWait: true,   // challenge only: faster after a clean wait, slower after a press
   stopQuietMs: 3000,    // STOP ends after this long with no press
   sound: true,
+  // AMBIENT BY DEFAULT, so a game has music on a machine nobody has configured. Point it at
+  // a linked folder for real tracks; see game_music.js for why falling back is not failing.
+  music: 'ambient',     // 'ambient' | 'folder' | 'off'
+  musicSourceId: '',
+  musicAlbum: '',
+  musicVolume: 0.3,
   speak: true,          // say the cues aloud, through the person's own output routing
   rewardWord: 'Well done',
   calm: false,          // motion budget
@@ -97,6 +105,28 @@ const DEFAULTS = {
 // carried the same rule (`cueVoiceMinMs`) and the reason is not politeness: a cue that is
 // still being said when the phase it announces has ended is actively misleading.
 const CUE_MIN_MS = 1200;
+
+// *** THE GENTLE LINES, WHILE SHE IS MASHING. *** Cici's original plays one of these at
+// random when she presses during the wait, and again during the stop phase once the first
+// "you can stop" has been said.
+//
+// READ THEM: not one of them tells her she is wrong. "Not yet" and "almost" are about the
+// TASK; "relax" and "loosen your grip" are about her hand. A go/no-go task punishes early
+// presses by definition, and the voice is where that could easily have become scolding
+// somebody for a movement they did not choose. It does not, and that is deliberate.
+const REMINDERS = [
+  'Relax',
+  'Loosen your grip',
+  'Not yet',
+  'Easy now',
+  'Almost',
+];
+
+// A press can re-trigger a line after a couple of seconds, and no sooner. Cici's
+// `reminderMinMs`, and the reason is the whole design of the stop phase: somebody
+// perseverating presses FAST, and a line per press would be a voice talking over itself at
+// the exact moment she is least able to act on it.
+const REMINDER_MIN_MS = 2500;
 
 const WAIT_SPEED = 0.85;      // a clean wait shortens by ~15%; a press lengthens by the same
 const SAFETY_FLOOR_MS = 1500; // photosensitivity: full-screen cycling stays well under flash rates
@@ -119,6 +149,23 @@ const SETTINGS = [
     onLabel: 'Spoken — "Wait", "Go"', offLabel: 'On screen only' },
   { key: 'rewardWord', label: 'What it says when they get it', kind: 'text', default: 'Well done',
     level: 'standard' },
+  { key: 'music', label: 'Music', kind: 'choice', default: 'ambient', level: 'essential',
+    options: [
+      { value: 'ambient', label: 'A quiet hum — needs nothing' },
+      { value: 'folder', label: 'From a folder of music' },
+      { value: 'off', label: 'No music' },
+    ] },
+  { key: 'musicSourceId', label: 'Music from', kind: 'choice', default: '', level: 'standard',
+    emptyLabel: 'No source connected' },
+  { key: 'musicAlbum', label: 'Music folder', kind: 'text', default: '', level: 'standard',
+    placeholder: 'Everything', note: 'set in Media / Sources' },
+  { key: 'musicVolume', label: 'How loud the music is', kind: 'choice', default: 0.3,
+    level: 'standard',
+    options: [
+      { value: 0.15, label: 'Very quiet' },
+      { value: 0.3, label: 'Quiet' },
+      { value: 0.55, label: 'Present' },
+    ] },
   { key: 'calm', label: 'Motion', default: false, level: 'standard',
     onLabel: 'Calm — less movement', offLabel: 'Normal' },
   { key: 'stopQuietMs', label: 'After a win, wait for stillness', kind: 'choice', default: 3000,
@@ -153,7 +200,7 @@ registerModule(
     // signed-out preview) still gets the whole game with its on-screen text; it just does not
     // speak. A module that threw without one would be a module that needs a whole subsystem
     // to draw a circle.
-    const { mount, bus, state, events, output = null } = ctx;
+    const { mount, bus, state, events, output = null, audio = null } = ctx;
     let cfg = { ...DEFAULTS };
 
     // Kept apart from cfg.calm for the same reason the comet keeps them apart: folding the
@@ -166,6 +213,7 @@ registerModule(
     let W = 1, H = 1, DPR = 1;
     let theme = null, observer = null, visible = true;
     let ac = null, sfx = null;
+    let music = null;
     const offs = [];
 
     // ---- the simulation clock, deliberately not the wall clock -----------------------
@@ -183,6 +231,9 @@ registerModule(
     let payoffDone = false;
     let lastPressAt = 0;             // simT of the last press, for the STOP quiet meter
     let echoes = 0;
+    let lastReminderAt = -1e9;       // simT of the last gentle line
+    let lastStopCueAt = -1e9;
+    let saidStop = false;            // has "you can stop" been said this round
     let sparks = [];
     let trialSeq = 0;
 
@@ -323,6 +374,27 @@ registerModule(
       try { output.say(String(text)); } catch (err) { console.error('pressgame cue', err); }
     }
 
+    // A gentle line while she is pressing during the wait. Throttled, random, never scolding.
+    function maybeRemind() {
+      if (simT - lastReminderAt < REMINDER_MIN_MS) return;
+      lastReminderAt = simT;
+      cue(REMINDERS[Math.floor(Math.random() * REMINDERS.length)]);
+    }
+
+    // The stop-phase voice. THREE RULES, all of them Cici's and all of them worth keeping:
+    //   * SILENT DURING THE CELEBRATION. She just won; talking over the payoff to tell her to
+    //     stop turns the reward into a correction.
+    //   * The first line is "you can stop pressing now", ONCE per round.
+    //   * After that it is the same gentle lines the wait uses - because by then repeating
+    //     the instruction is not adding information, and she has already heard it.
+    function maybeStopCue() {
+      if (elapsed() < CELEBRATION_MS) return;
+      if (simT - lastStopCueAt < REMINDER_MIN_MS) return;
+      lastStopCueAt = simT;
+      if (!saidStop) { saidStop = true; cue('You can stop pressing now'); return; }
+      cue(REMINDERS[Math.floor(Math.random() * REMINDERS.length)]);
+    }
+
     // ---- phases -----------------------------------------------------------------------
     const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
     const elapsed = () => simT - phaseStart;
@@ -336,6 +408,7 @@ registerModule(
     function enterWait() {
       phase = 'wait'; phaseStart = simT; payoffDone = false; echoes = 0;
       frozenCharge = 0; goPaintedAt = null; frameMaxMs = 0; frameCount = 0; frameSumMs = 0;
+      saidStop = false;                 // "you can stop" is once per ROUND, not once per session
       setText('Wait', '');
       // Only if the wait is long enough that the word is still true when it finishes.
       cue('Wait', { minPhaseMs: curWaitMs });
@@ -377,11 +450,15 @@ registerModule(
     // ---- what a press does (the GAMEPLAY channel) -------------------------------------
     function press(source) {
       audioInit();
+      // The first press is the gesture browsers require before any audio may start. Cici's
+      // did exactly this, and for the same reason.
+      try { music?.play(); } catch { /* a bed is not worth an exception */ }
       lastPressAt = simT;
       if (phase === 'wait') {
         // Never punished. A press here is a commission in the record and a bloom on screen.
         bloom(0.45);
         tone(320, 120, 'triangle');
+        maybeRemind();
         record('commission', { charge: +liveCharge().toFixed(3), mode: mode(), src: source });
         phaseStart = simT;                              // a press restarts the wait
         if (waitAdapts()) curWaitMs = Math.min(cfg.waitMs, curWaitMs / WAIT_SPEED);
@@ -409,9 +486,7 @@ registerModule(
         // counting them as commissions would describe a different thing entirely.
         echoes++;
         bloom(0.3);
-        // ONLY ON THE FIRST ECHO. Cici's original said this once per round on purpose - a
-        // voice repeating "you can stop" at somebody who cannot stop is not help.
-        if (echoes === 1) cue('You can stop pressing now');
+        maybeStopCue();
         record('perseveration', { n: echoes, msSinceHit: Math.round(elapsed()), src: source });
         return;
       }
@@ -577,6 +652,7 @@ registerModule(
         payoffDone, echoes, curWaitMs, sparks: sparks.length, running,
         rows: sessionRows.length, sessionId, calm: calm(), cfg: { ...cfg },
         goPaintedAt, machine: machine(),
+        music: music ? music.state() : null,
       }),
       __rows: () => sessionRows.slice(),
       __evidence: () => evidenceRecord(),
@@ -615,6 +691,27 @@ registerModule(
         offs.push(() => mq?.removeEventListener?.('change', onMq));
 
         resize();
+
+        // THE BED. Built even when set to 'off' so the setting can be changed without a
+        // remount; `off()` simply keeps it quiet.
+        music = createGameMusic({
+          sources: ctx.sources
+            || (ctx.user ? createMediaSourcesClient({ user: ctx.user, personId: ctx.personId }) : null),
+          volume: cfg.musicVolume,
+          // THE ARBITER. Without it this bed plays over a spoken cue and alongside a video.
+          // The id carries the instance so two pressgames are two sources, and the newest
+          // one takes the music slot rather than both playing.
+          audio,
+          audioId: `pressgame-music:${ctx.instanceId || 'pg'}`,
+        });
+        if (cfg.music === 'off') music.off();
+        else if (cfg.music === 'folder') {
+          // Async, and deliberately not awaited: a game must not wait on a folder listing
+          // before it will draw. It falls back to ambient on its own if the folder is
+          // unreachable or has no music in it.
+          music.useFolder(cfg.musicSourceId, cfg.musicAlbum).catch(() => {});
+        } else music.useAmbient();
+
         enterWait();
         record('session_start', { mode: mode(), waitMs: Math.round(curWaitMs) });
 
@@ -633,7 +730,8 @@ registerModule(
         if (typeof IntersectionObserver === 'function') {
           observer = new IntersectionObserver((entries) => {
             visible = entries.some((en) => en.isIntersecting);
-            if (visible) start(); else stopLoop();
+            if (visible) start();
+            else { stopLoop(); try { music?.pause(); } catch { /* already quiet */ } }
           });
           observer.observe(root);
         }
@@ -641,7 +739,9 @@ registerModule(
       },
 
       onResize() { resize(); },
-      onHide() { stopLoop(); },
+      // A hidden panel humming to itself is battery and heat on a machine that is on 24/7,
+      // for music nobody is in the room for.
+      onHide() { stopLoop(); try { music?.pause(); } catch { /* already quiet */ } },
 
       destroy() {
         stopLoop();
@@ -652,6 +752,8 @@ registerModule(
           events?.append?.('session_evidence_record', ev, { sessionId, producerVersion: PRODUCER })
             ?.catch?.(() => {});
         } catch { /* a failed summary must not block teardown */ }
+        try { music?.destroy(); } catch { /* already gone */ }
+        music = null;
         observer?.disconnect(); observer = null;
         offs.forEach((off) => { try { off(); } catch { /* already gone */ } });
         offs.length = 0;

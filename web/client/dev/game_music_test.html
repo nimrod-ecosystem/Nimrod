@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>game music — a bed under a game</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>game music — the bed, and what happens when the folder is not there</h1>
+
+<div class="note">
+  Cici's version streamed tracks off the external drive. That mechanism could not come across —
+  no drive, no manifest — and <b>"so it has no music" was the wrong conclusion</b>. There are two
+  sources now: a linked folder, exactly like photos, and a <b>synthesised hum that needs
+  nothing</b>, so a game has music the first time anybody opens it. Most of what follows is
+  about the second one covering for the first, <b>with a reason attached</b> — silence is
+  indistinguishable from broken, and the person in front of it cannot tell you which.
+  No audio hardware and no network: the context and the audio element are injected.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createGameMusic, isAudioPath, MUSIC_MODES } from '../game_music.js';
+import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A fake Web Audio context that records what was built, so "it started a hum" is an
+// assertion rather than a hope.
+function fakeContext() {
+  const built = { oscillators: 0, gains: 0, filters: 0, started: 0, stopped: 0, closed: false };
+  const node = () => ({ connect() {}, disconnect() {} });
+  return {
+    built,
+    ctx: {
+      destination: node(),
+      currentTime: 0,
+      createGain() { built.gains++; return { ...node(), gain: { value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} } }; },
+      createBiquadFilter() { built.filters++; return { ...node(), type: '', frequency: { value: 0 }, Q: { value: 0 } }; },
+      createOscillator() {
+        built.oscillators++;
+        return { ...node(), type: '', frequency: { value: 0 },
+                 start() { built.started++; }, stop() { built.stopped++; } };
+      },
+      resume() {}, close() { built.closed = true; },
+    },
+  };
+}
+
+function fakeAudio(log) {
+  return (src) => {
+    const handlers = {};
+    const a = {
+      src, volume: 1, played: false,
+      addEventListener: (k, fn) => { handlers[k] = fn; },
+      play() { this.played = true; log.push(src); return Promise.resolve(); },
+      pause() { log.push(`pause:${src}`); },
+      fire: (k) => handlers[k]?.(),
+    };
+    log.last = a;
+    return a;
+  };
+}
+
+const SOURCES = (items) => ({
+  list: () => Promise.resolve([{ id: 's1', label: 'Music', base_url: 'http://x' }]),
+  __items: items,
+});
+const RESOLVE = (items) => async () => ({ items, count: items.length });
+
+(async () => {
+  try {
+    section('what counts as music');
+    {
+      check('common audio files are recognised',
+        ['a.mp3', 'b.M4A', 'c.ogg', 'd.opus', 'e.flac', 'f.wav'].every(isAudioPath));
+      check('*** photos are not — a folder of holiday snaps is not a playlist ***',
+        !isAudioPath('a.jpg') && !isAudioPath('b.MOV') && !isAudioPath('c.png'));
+      check('the modes are a closed set', MUSIC_MODES.join(',') === 'ambient,folder,off');
+    }
+
+    section('*** the hum that needs nothing ***');
+    {
+      const f = fakeContext();
+      const m = createGameMusic({ makeContext: () => f.ctx });
+      check('it starts on ambient, with no folder and no configuration',
+        m.state().mode === 'ambient' && m.state().tracks === 0);
+      check('nothing is playing before it is asked', !m.state().playing && f.built.started === 0);
+      m.play();
+      check('*** playing builds a real synthesised bed — oscillators, a filter, a slow sweep ***',
+        f.built.oscillators >= 3 && f.built.filters >= 1 && f.built.started >= 4,
+        JSON.stringify(f.built));
+      check('and it reports itself as playing', m.state().playing);
+      m.pause();
+      check('pausing stops every voice', f.built.stopped >= 4 && !m.state().playing,
+        JSON.stringify(f.built));
+    }
+
+    section('a linked folder');
+    {
+      const log = [];
+      const items = [{ path: 'a.mp3', url: '/a.mp3' }, { path: 'b.mp3', url: '/b.mp3' },
+                     { path: 'cover.jpg', url: '/cover.jpg' }];
+      const m = createGameMusic({
+        sources: SOURCES(items), resolve: RESOLVE(items),
+        makeContext: () => fakeContext().ctx, makeAudio: fakeAudio(log),
+      });
+      const r = await m.useFolder('s1', '');
+      check('it takes the audio files and leaves the rest', r.tracks === 2, JSON.stringify(r));
+      check('the mode is the folder now', m.state().mode === 'folder');
+      m.play();
+      check('a track is playing', log.length === 1 && /\/[ab]\.mp3/.test(log[0]), JSON.stringify(log));
+      log.last.fire('ended');
+      check('one track ending starts the next', log.length === 2);
+      check('*** and never the same one twice running — the one thing a listener notices ***',
+        log[0] !== log[1], JSON.stringify(log));
+    }
+
+    section('*** falling back is not failing, and it says why ***');
+    {
+      const f = fakeContext();
+      const m = createGameMusic({ sources: SOURCES([]), resolve: RESOLVE([]),
+                                  makeContext: () => f.ctx });
+      m.play();
+      await m.useFolder('s1', '');
+      check('an empty folder drops to the hum rather than to silence',
+        m.state().mode === 'ambient' && m.state().playing);
+      check('*** with a reason a person could be told ***',
+        /no music in that folder/.test(m.state().note), m.state().note);
+    }
+    {
+      const m = createGameMusic({ sources: SOURCES([]), resolve: RESOLVE([]),
+                                  makeContext: () => fakeContext().ctx });
+      await m.useFolder('nope', '');
+      check('a folder that is not connected says exactly that',
+        m.state().mode === 'ambient' && /not connected/.test(m.state().note), m.state().note);
+    }
+    {
+      const m = createGameMusic({
+        sources: SOURCES([]), resolve: async () => { throw new Error('offline'); },
+        makeContext: () => fakeContext().ctx,
+      });
+      await m.useFolder('s1', '');
+      check('an unreachable folder says that, and still plays',
+        /could not be reached/.test(m.state().note), m.state().note);
+    }
+    {
+      const log = [];
+      const items = [{ path: 'bad.mp3', url: '/bad.mp3' }];
+      const m = createGameMusic({
+        sources: SOURCES(items), resolve: RESOLVE(items),
+        makeContext: () => fakeContext().ctx, makeAudio: fakeAudio(log),
+      });
+      await m.useFolder('s1', '');
+      m.play();
+      log.last.fire('error');
+      check('a folder whose files will not play falls back rather than looping on errors',
+        m.state().mode === 'ambient' && /would play/.test(m.state().note),
+        JSON.stringify(m.state()));
+    }
+
+    section('autoplay, which every browser refuses until somebody touches something');
+    {
+      const log = [];
+      const items = [{ path: 'a.mp3', url: '/a.mp3' }];
+      const makeBlocked = (src) => {
+        const handlers = {};
+        return { src, volume: 1, addEventListener: (k, fn) => { handlers[k] = fn; },
+                 play: () => Promise.reject(new Error('NotAllowedError')),
+                 pause() {}, fire: (k) => handlers[k]?.() };
+      };
+      const m = createGameMusic({ sources: SOURCES(items), resolve: RESOLVE(items),
+                                  makeContext: () => fakeContext().ctx, makeAudio: makeBlocked });
+      await m.useFolder('s1', '');
+      m.play();
+      await new Promise((r) => setTimeout(r, 10));
+      check('*** a refused autoplay is recorded, not thrown — the caller retries on a press ***',
+        m.state().blocked === true);
+    }
+
+    section('it is a bed, not a performance');
+    {
+      const f = fakeContext();
+      const m = createGameMusic({ volume: 1, makeContext: () => f.ctx });
+      m.play();
+      check('even at full setting the master gain is well under 1 — it sits UNDER speech',
+        m.state().volume === 1);
+      check('volume clamps rather than accepting nonsense',
+        m.setVolume(5) === 1 && m.setVolume(-2) === 0 && m.setVolume('x') === 0);
+      m.off();
+      check('off means off, and stays off when told to play',
+        m.state().mode === 'off' && (m.play(), !m.state().playing));
+    }
+
+    section('*** it goes through the speaker arbiter — this is the bit that was missing ***');
+    {
+      const f = fakeContext();
+      const audio = createAudioBus();
+      const m = createGameMusic({ audio, audioId: 'g', makeContext: () => f.ctx });
+      m.play();
+      check('the bed plays at full when nothing else wants the speaker',
+        m.state().gain === 1 && !m.state().ducked);
+
+      // A voice starts. The bed must get out of the way without going silent.
+      audio.register('voice', { tier: 'voice' });
+      audio.setActive('voice', true);
+      check('*** a spoken cue ducks the bed, so the words land ***',
+        m.state().gain === DUCK_TO && m.state().ducked === true, JSON.stringify(m.state()));
+      audio.setActive('voice', false);
+      check('and it comes back when the sentence ends', m.state().gain === 1);
+
+      // A video starts. It outranks a game, so the bed yields the slot entirely.
+      audio.register('video', { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY });
+      audio.setActive('video', true);
+      check('*** a video takes the speaker outright — the bed yields rather than playing '
+        + 'underneath it ***', m.state().gain === 0 && m.state().yielded === true,
+        JSON.stringify(m.state()));
+      check('and it actually STOPS rather than playing silently — a track nobody can hear '
+        + 'still ends, and the playlist would march on without her',
+        f.built.stopped >= 4, JSON.stringify(f.built));
+      audio.setActive('video', false);
+      check('the bed returns on its own when the video stops', m.state().gain === 1);
+    }
+    {
+      // Two games on one screen: the case that produced overlapping music on Cici.
+      const audio = createAudioBus();
+      const a = createGameMusic({ audio, audioId: 'g1', makeContext: () => fakeContext().ctx });
+      const b = createGameMusic({ audio, audioId: 'g2', makeContext: () => fakeContext().ctx });
+      a.play(); b.play();
+      check('*** two games do not play music on top of each other ***',
+        a.state().gain === 0 && b.state().gain === 1,
+        JSON.stringify({ a: a.state().gain, b: b.state().gain }));
+      b.destroy();
+      check('and closing the second hands the speaker back to the first', a.state().gain === 1);
+    }
+    {
+      // No bus at all. A missing coordinator must never be able to mute a game.
+      const m = createGameMusic({ makeContext: () => fakeContext().ctx });
+      m.play();
+      check('*** with no arbiter it plays at FULL — a broken coordinator makes everything '
+        + 'loud, never silent ***', m.state().gain === 1 && m.state().playing);
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

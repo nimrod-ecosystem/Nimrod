@@ -41,6 +41,10 @@
       <b>Two channels from one key.</b> SPACE is bound to <code>pressgame/press</code>, so it
       drives the game — and the same physical press also appears as <code>edge_down</code> /
       <code>edge_up</code> with its real hold, which the game itself does not react to.
+      <br><br><b>It talks and hums.</b> "Wait", "Go", a reward word, and gentle lines if you
+      mash during the wait — spoken through the output bus, so the person's own routing decides
+      how. The hum underneath is synthesised, so it needs no music folder — and it
+      <b>ducks under every cue</b>, because a screen has one pair of ears.
       <br><br><b>Hold the key down</b> to see <code>heldMs</code> grow while
       <code>requiredHoldMs</code> stays 0 — that is the difference between "could not let go"
       and "was asked to hold".
@@ -60,6 +64,9 @@ import { createInputBus } from '../input.js';
 import { createActionRegistry } from '../actions.js';
 import { attachKeyboard } from '../input_keyboard.js';
 import { mountModule } from '../module.js';
+import { createOutputBus } from '../output.js';
+import { defaultChannels } from '../output_channels.js';
+import { createAudioBus } from '../audio_bus.js';
 import '../modules/pressgame.js';
 
 const bus = createBus();
@@ -96,8 +103,13 @@ bus.subscribe('pressgame/trial', show);
 // exactly what WOULD be appended, meta and all.
 const events = { append: () => Promise.resolve(), destroy() {} };
 
+// The speaker arbiter and the output bus, exactly as the kiosk builds them — so the hum
+// ducks under each spoken cue instead of burying it.
+const audio = createAudioBus();
+const output = createOutputBus({ bus, channels: defaultChannels({ audio }) });
+
 const inst = mountModule('pressgame', {
-  mount: document.getElementById('stage'), bus, events,
+  mount: document.getElementById('stage'), bus, events, output, audio,
   state: { get: () => ({ waitMs: 10000, stopQuietMs: 3000 }), destroy() {} },
   user: 'bench', profileId: 'bench',
 });

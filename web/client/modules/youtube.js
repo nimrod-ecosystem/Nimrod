@@ -25,6 +25,7 @@
 // rendering. It also leaves room for other back-ends (local video, Vimeo) later.
 
 import { registerModule } from '../module.js';
+import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
@@ -219,6 +220,13 @@ function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlayli
     // The cheap first move when a video has stopped on its own: ask it to carry on from
     // where it is, rather than reloading and losing the place. `load` remains the fallback.
     resume() { if (destroyed) return; try { player?.playVideo?.(); } catch { /* not ready */ } },
+    // 0..1, for the speaker arbiter. The iframe API takes 0-100. Never throws: a duck that
+    // fails is a video that stays loud, which is the right failure for a coordinator.
+    setGain(level) {
+      if (destroyed) return;
+      try { player?.setVolume?.(Math.round(Math.max(0, Math.min(1, level)) * 100)); }
+      catch { /* not ready */ }
+    },
     stop() { pending = null; try { player?.stopVideo?.(); } catch { /* not ready */ } },
     destroy() { destroyed = true; pending = null; try { player?.destroy?.(); } catch { /* noop */ } host.remove(); },
   };
@@ -232,7 +240,12 @@ registerModule(
     type: 'youtube', title: 'YouTube', description: 'Your own YouTube playlist, shuffled so it does not repeat itself',
     settings: SETTINGS },
   (ctx) => {
-    const { mount, bus, state, events, user } = ctx;
+    const { mount, bus, state, events, user, audio = null } = ctx;
+    // THE SPEAKER ARBITER. A video is the loudest thing on the screen, so it joins the music
+    // group at VIDEO priority - it wins the slot over any game's music (Mike, 2026-07-26) -
+    // on the `media` tier, so a spoken cue still ducks it. Optional, as everywhere: no bus
+    // means a video that plays at full volume, never a video that will not play.
+    const AUDIO_ID = `youtube:${ctx.instanceId || 'yt'}`;
     const makePlayer = ctx.playerFactory || createYtPlayer;
 
     let cfg = { ...DEFAULTS };
@@ -295,6 +308,9 @@ registerModule(
     // The video stopped. Re-arm the clock that PLAYING disarmed — but WHICH clock depends
     // entirely on whether anybody is here, which is the whole argument in presence.js.
     function onIdle(reason = 'paused') {
+      // Not making sound any more, whatever the reason - so release the slot and let a
+      // game's music come back up. BUFFERING counts: a stalled video is silence.
+      audio?.setActive?.(AUDIO_ID, false);
       if (!active || !currentId) return;
       // Already counting for this video — don't restart the clock, or a player that flaps
       // between BUFFERING and PAUSED could hold it open forever.
@@ -327,6 +343,7 @@ registerModule(
     const heldMs = () => Math.max(0, Number(cfg.heldPauseMs) || 0);
 
     function onPlaying() {
+      audio?.setActive?.(AUDIO_ID, true);
       stall?.ok();
       stallReason = 'loading';
       setHeld(false);
@@ -670,6 +687,13 @@ registerModule(
           onIdle,
         });
 
+        // Join the music group once the player exists to enact a level on. VIDEO PRIORITY, so
+        // it takes the slot from a game's music; `media` tier, so a spoken cue still ducks it.
+        audio?.register?.(AUDIO_ID, {
+          tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY,
+          onGain: (level) => { try { player?.setGain?.(level); } catch { /* not ready */ } },
+        });
+
         // ANY SIGN OF A PERSON RESTARTS THE HOLD. This is what makes four hours the right
         // number rather than an absurd one: it is four hours of COMPLETE STILLNESS, not four
         // hours from the moment somebody pressed pause. A visit of any length keeps
@@ -736,7 +760,9 @@ registerModule(
       destroy() {
         clearTimer(tickTimer); tickTimer = null;
         clearTimer(graceTimer); graceTimer = null;
-        clearStall(); try { player?.destroy(); } catch { /* noop */ } player = null; },
+        clearStall();
+        try { audio?.unregister?.(AUDIO_ID); } catch { /* already gone */ }
+        try { player?.destroy(); } catch { /* noop */ } player = null; },
     };
   },
 );

@@ -28,6 +28,7 @@ import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { createOutputBus } from './output.js';
+import { createAudioBus } from './audio_bus.js';
 import { defaultChannels } from './output_channels.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
@@ -136,6 +137,13 @@ export async function mountKiosk(root, {
   // Channels are whatever this device actually has. `defaultChannels` omits a channel it
   // cannot provide rather than shipping a broken one, so output.js reports `no-adapter`
   // instead of a message vanishing.
+  // *** THE SPEAKER ARBITER, ABOVE THE OUTPUT BUS AND ABOVE EVERY MODULE. ***
+  // There is one pair of ears on this screen. A video, a game's music bed and a spoken cue
+  // all reach it at once unless something coordinates them, and the coordination has to live
+  // above all three - a module cannot know what else is making noise. Built before the output
+  // bus because the speech channel registers with it.
+  const audio = createAudioBus();
+
   let output = null;
   try {
     // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
@@ -144,7 +152,7 @@ export async function mountKiosk(root, {
     // reported as `no-adapter` rather than vanishing, which is the honest failure. Add it
     // when there is a designated place for a banner and a test that it does not cover
     // anything.
-    output = createOutputBus({ bus, channels: defaultChannels({}) });
+    output = createOutputBus({ bus, channels: defaultChannels({ audio }) });
   } catch (err) {
     // A screen that cannot speak is still a screen. Modules treat `output` as optional.
     console.error('kiosk: no output bus', err);
@@ -176,6 +184,9 @@ export async function mountKiosk(root, {
     // A getter for the same reason personId is: it is built lazily below, and a module
     // mounted first would otherwise capture undefined forever.
     get output() { return output; },
+    // The arbiter itself, for a module that MAKES continuous sound - a music bed, a video.
+    // A module that only speaks wants `output`; this is for the things that keep playing.
+    audio,
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
@@ -843,6 +854,7 @@ export async function mountKiosk(root, {
       // Silences anything mid-sentence as well as clearing the queue. A screen that is being
       // torn down must not keep talking.
       try { output?.destroy(); } catch { /* already gone */ }
+      try { audio?.destroy(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },
