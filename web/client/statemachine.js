@@ -39,7 +39,13 @@
 //     },
 //   }
 //   <transition> = { when?: '<guardName>', do?: {publish,payload},
-//                    to: '<stateId>'  |  pick: { from:[<stateId>...], gate? } }
+//                    to: '<stateId>' | '$back'  |  pick: { from:[<stateId>...], gate? } }
+//
+// `to: '$back'` returns to whatever state was interrupted — which is what an INCOMING CALL
+// needs and what a fixed target cannot express, because the config cannot know at authoring
+// time what it will be interrupting. Global `on` transitions already fire from any state, and
+// state-local ones are tried FIRST, so "any state → call, then back" is config rather than
+// engine work, and a state that must not be interrupted can override it.
 //
 // Transitions are an ORDERED list — first one whose guard passes and whose target
 // resolves wins. `to` is a fixed target; `pick` weighted-draws one target from
@@ -49,6 +55,9 @@
 
 import { daypartAt, DEFAULT_DAYPARTS } from './daypart.js';
 import { pick } from './rng.js';
+
+// The one reserved target name. A state may not be called this.
+export const BACK = '$back';
 
 export function createMachine(config, io = {}) {
   const bus       = io.bus;                                   // { subscribe, publish }
@@ -60,6 +69,16 @@ export function createMachine(config, io = {}) {
   const dayparts  = config.daypart?.dayparts || DEFAULT_DAYPARTS;
 
   let current = null;      // current state id
+  // WHERE TO GO BACK TO. An interrupt - an incoming call, a caregiver switching to something
+  // for a minute - has to be able to hand the screen back to whatever was on it, and a fixed
+  // `to` cannot express that: the machine does not know at authoring time what it will be
+  // interrupting.
+  //
+  // *** ONE LEVEL, DELIBERATELY. *** A stack would let A -> B -> A -> B grow without bound and
+  // would make "back" mean something nobody can predict from reading the config. One level
+  // answers the case this exists for - go there, come back - and anything deeper is a
+  // different feature that should be asked for on its own.
+  let previous = null;
   let timer = null;        // armed `after` timer handle
   let started = false, stopped = false;
   const offs = [];         // bus unsubscribes, released on stop()
@@ -100,6 +119,13 @@ export function createMachine(config, io = {}) {
       if (!cands.length) return null;
       return pick(cands, stats, { now: now(), rand, recent });
     }
+    // `$back` — return to whatever we interrupted. Falls back to `initial` rather than to
+    // null, because an interrupt that arrives before the first transition still has to end
+    // somewhere, and a machine stuck in a call state is worse than one that starts over.
+    if (tr.to === BACK) {
+      const target = previous ?? config.initial;
+      return (target != null && config.states[target]) ? target : null;
+    }
     return tr.to != null ? tr.to : null;
   }
 
@@ -126,6 +152,10 @@ export function createMachine(config, io = {}) {
 
   function enter(stateId) {
     if (timer != null) { clearTimer(timer); timer = null; }
+    // Recorded BEFORE the move, and never onto itself - a self-transition (which is how the
+    // weighted rotation works) must not make "back" mean "here", or a call would return to
+    // the call.
+    if (current != null && current !== stateId) previous = current;
     current = stateId;
     recent.push(stateId);
     if (recent.length > 24) recent.shift();
@@ -168,6 +198,7 @@ export function createMachine(config, io = {}) {
     stop,
     fire,                                   // exposed for tests / manual drive
     get state() { return current; },
+    get previous() { return previous; },
     daypart: curDaypart,
     statsOf: () => JSON.parse(JSON.stringify(stats)),
   };
