@@ -52,6 +52,16 @@
 // input can leave. Only CHALLENGE mode closes the window, and there a missed press is an
 // omission — which is a thing somebody opted into.
 //
+// THE SPOKEN CUES ARE THE INSTRUCTION, NOT DECORATION. Cici's original says "Wait", "Go!",
+// "You can stop pressing now" and a reward word in a recorded voice, and the first port of
+// this module dropped all of it while reporting only that the MUSIC loader had gone. Those
+// are not the same thing: the music was atmosphere, the cues are how somebody who is not
+// reading the screen knows what is being asked. They are back, and they go through the
+// OUTPUT BUS — this module says WHAT, and the person's own routing decides HOW. That
+// matters here specifically, because Cici's version was recording-only (her own voice or
+// silence, never browser TTS) and that is a real preference about a real person's screen.
+// It is a routing decision, so it lives in their output settings and not in this file.
+//
 // WHAT THE PORT DROPPED, and why: Cici's meditation-music loader (no drive, no manifest, no
 // audio bus here — a module that fetches a missing file on every mount logs errors forever),
 // the localStorage player roster (people are the platform's job now, and the session roster
@@ -78,8 +88,15 @@ const DEFAULTS = {
   adaptiveWait: true,   // challenge only: faster after a clean wait, slower after a press
   stopQuietMs: 3000,    // STOP ends after this long with no press
   sound: true,
+  speak: true,          // say the cues aloud, through the person's own output routing
+  rewardWord: 'Well done',
   calm: false,          // motion budget
 };
+
+// Only speak a cue if the phase it belongs to lasts long enough to hear it. Cici's original
+// carried the same rule (`cueVoiceMinMs`) and the reason is not politeness: a cue that is
+// still being said when the phase it announces has ended is actively misleading.
+const CUE_MIN_MS = 1200;
 
 const WAIT_SPEED = 0.85;      // a clean wait shortens by ~15%; a press lengthens by the same
 const SAFETY_FLOOR_MS = 1500; // photosensitivity: full-screen cycling stays well under flash rates
@@ -98,6 +115,10 @@ const SETTINGS = [
     onLabel: 'Challenge — the invite can time out', offLabel: 'Calm — the invite waits for her' },
   { key: 'sound', label: 'Sound', default: true, level: 'essential',
     onLabel: 'Tones on', offLabel: 'Silent' },
+  { key: 'speak', label: 'Say the cues out loud', default: true, level: 'essential',
+    onLabel: 'Spoken — "Wait", "Go"', offLabel: 'On screen only' },
+  { key: 'rewardWord', label: 'What it says when they get it', kind: 'text', default: 'Well done',
+    level: 'standard' },
   { key: 'calm', label: 'Motion', default: false, level: 'standard',
     onLabel: 'Calm — less movement', offLabel: 'Normal' },
   { key: 'stopQuietMs', label: 'After a win, wait for stillness', kind: 'choice', default: 3000,
@@ -128,7 +149,11 @@ registerModule(
     // want somewhere to go. It still RUNS with no server — it just stops being evidence.
     importance: 'optional', dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
-    const { mount, bus, state, events } = ctx;
+    // `output` is OPTIONAL. A surface that has not mounted an output bus (a test rig, the
+    // signed-out preview) still gets the whole game with its on-screen text; it just does not
+    // speak. A module that threw without one would be a module that needs a whole subsystem
+    // to draw a circle.
+    const { mount, bus, state, events, output = null } = ctx;
     let cfg = { ...DEFAULTS };
 
     // Kept apart from cfg.calm for the same reason the comet keeps them apart: folding the
@@ -274,6 +299,30 @@ registerModule(
       } catch { /* audio is a nicety */ }
     }
 
+    // ---- the spoken cue ----------------------------------------------------------------
+    //
+    // *** THE MODULE SAYS WHAT; THE PERSON'S SETTINGS DECIDE HOW. *** It emits a `say` on the
+    // output bus and never learns whether that became a synthesised voice, a recording, a
+    // banner or nothing at all. That matters here specifically: Cici's original was
+    // RECORDING-ONLY - her own voice or silence, never browser TTS - and that is a real
+    // preference somebody holds about their own screen. It is a ROUTING decision, so it
+    // belongs to the person's output settings and not to this file. Hard-coding either
+    // answer here would take the choice away from whoever holds the opposite one.
+    //
+    // `say` rather than `alert`: this is the content, not an interruption, and giving a game
+    // cue alert priority would let it preempt something that actually mattered.
+    // NOTE: the minPhaseMs guard is currently UNREACHABLE for the wait, because the
+    // photosensitivity floor (2500ms) is already above CUE_MIN_MS - no wait can be too short
+    // to announce. It is kept because the floor is a setting away from moving and a silently
+    // missing guard is worse than an idle one, but nothing tests it, and a guard no test can
+    // reach is a guard nobody knows still works. Say so rather than writing a test that
+    // cannot fail.
+    function cue(text, { minPhaseMs = 0 } = {}) {
+      if (!cfg.speak || !text || !output) return;
+      if (minPhaseMs && minPhaseMs < CUE_MIN_MS) return;
+      try { output.say(String(text)); } catch (err) { console.error('pressgame cue', err); }
+    }
+
     // ---- phases -----------------------------------------------------------------------
     const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
     const elapsed = () => simT - phaseStart;
@@ -288,6 +337,8 @@ registerModule(
       phase = 'wait'; phaseStart = simT; payoffDone = false; echoes = 0;
       frozenCharge = 0; goPaintedAt = null; frameMaxMs = 0; frameCount = 0; frameSumMs = 0;
       setText('Wait', '');
+      // Only if the wait is long enough that the word is still true when it finishes.
+      cue('Wait', { minPhaseMs: curWaitMs });
     }
 
     // Opening the invite. `scheduledAt` is when we DECIDED; the paint stamp comes later.
@@ -298,12 +349,16 @@ registerModule(
       frameMaxMs = 0; frameCount = 0; frameSumMs = 0;
       setText('Go', 'go');
       tone(660, 220);
+      // ALWAYS SPOKEN, no minimum: in calm mode the invite has no length to be shorter than,
+      // and "Go" is the one word the whole module exists to deliver.
+      cue('Go');
       record('go_shown', { charge: +frozenCharge.toFixed(3), mode: mode() });
     }
 
     function enterStop() {
       phase = 'stop'; phaseStart = simT; lastPressAt = simT; echoes = 0;
       setText('Stop', 'stop');
+      cue(cfg.rewardWord);
     }
 
     const mode = () => (cfg.challenge ? 'challenge' : 'calm');
@@ -354,6 +409,9 @@ registerModule(
         // counting them as commissions would describe a different thing entirely.
         echoes++;
         bloom(0.3);
+        // ONLY ON THE FIRST ECHO. Cici's original said this once per round on purpose - a
+        // voice repeating "you can stop" at somebody who cannot stop is not help.
+        if (echoes === 1) cue('You can stop pressing now');
         record('perseveration', { n: echoes, msSinceHit: Math.round(elapsed()), src: source });
         return;
       }

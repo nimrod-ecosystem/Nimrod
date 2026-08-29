@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>records — the review surface and the attest button</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host{position:fixed;left:0;top:0;width:900px;height:600px;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>records — what a module wrote down, and vouching for it</h1>
+
+<div class="note">
+  The review surface lives on <b>home</b>, never on the kiosk: a table of somebody's
+  performance has no business on the screen they cannot walk away from. These checks are
+  mostly about framing — that there is no score anywhere, that a hold is never shown without
+  what was asked of it, that unattested is drawn as silence rather than a warning, and that
+  the attest button sends nothing about who is clicking it.
+</div>
+
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mountRecords, describe, groupBySession, attestersOf, RECORDING_TYPES } from '../records.js';
+import { TABS } from '../home.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const EVENTS = [
+  { id: 1, kind: 'trial', created_at: '2026-08-29T10:00:00Z', session_id: 'sess-a',
+    data: { kind: 'session_start' } },
+  { id: 2, kind: 'trial', created_at: '2026-08-29T10:00:10Z', session_id: 'sess-a',
+    data: { kind: 'hit', latencyMs: 420, machine: { goDelayMs: 18 } } },
+  { id: 3, kind: 'trial', created_at: '2026-08-29T10:00:11Z', session_id: 'sess-a',
+    data: { kind: 'edge_up', heldMs: 900, requiredHoldMs: 0, auto: false } },
+  { id: 4, kind: 'trial', created_at: '2026-08-29T10:00:12Z', session_id: 'sess-a',
+    data: { kind: 'edge_up', heldMs: 900, requiredHoldMs: 800, auto: false } },
+  { id: 5, kind: 'session_evidence_record', created_at: '2026-08-29T10:01:00Z', session_id: 'sess-a',
+    data: { counts: { hits: 1, omissions: 0, commissions: 2, perseverationPresses: 3 },
+            latency: { n: 1, meanMs: 420, minMs: 420, maxMs: 420 } } },
+  { id: 6, kind: 'attestation', created_at: '2026-08-29T11:00:00Z', session_id: 'sess-a',
+    attested_by: 'dr-smith', data: { attests: 2 } },
+  // A different sitting, so grouping has something to do.
+  { id: 7, kind: 'trial', created_at: '2026-08-30T09:00:00Z', session_id: 'sess-b',
+    data: { kind: 'omission' } },
+  // Not evidence, and must not be shown as if it were.
+  { id: 8, kind: 'press', created_at: '2026-08-30T09:00:01Z', data: { via: 'button' } },
+];
+
+function rig() {
+  const host = document.createElement('div');
+  document.getElementById('host').append(host);
+  const attested = [];
+  const handle = {
+    load: () => Promise.resolve(),
+    get: () => ({ events: EVENTS.slice(), total: EVENTS.length }),
+    attest: (id, opts) => { attested.push({ id, opts }); return Promise.resolve(true); },
+    destroy() {},
+  };
+  const profiles = {
+    list: () => Promise.resolve([
+      { id: 'p1', name: 'Her screen', modules: [
+        { id: 'm1', type: 'pressgame' },
+        { id: 'm2', type: 'photos' },      // not a recording type
+      ] },
+    ]),
+    eventsURL: (pid, s) => `/api/profiles/${pid}/events/${s}`,
+  };
+  const panel = mountRecords(host, { profiles, user: 'u', makeEvents: () => handle });
+  return { host, panel, attested };
+}
+
+(async () => {
+  try {
+    section('where it lives');
+    {
+      check('*** Records is a HOME tab — a review UI has no business on the kiosk ***',
+        TABS.some((t) => t.id === 'records' && t.label === 'Records'),
+        JSON.stringify(TABS.map((t) => t.id)));
+      check('only modules that actually write clinical rows are reviewed',
+        RECORDING_TYPES.has('pressgame') && !RECORDING_TYPES.has('presslog'));
+    }
+
+    section('grouping and what is shown');
+    {
+      const g = groupBySession(EVENTS);
+      check('rows are grouped by the sitting they happened in',
+        g.size === 2 && g.has('sess-a') && g.has('sess-b'), String(g.size));
+      check('an unrelated event stream is not shown as evidence',
+        ![...g.values()].flat().some((e) => e.kind === 'press'));
+    }
+
+    section('*** the framing, which is the whole point ***');
+    {
+      const { host, panel } = rig();
+      await panel.refresh();
+      const text = host.textContent;
+
+      check('the caveat is on the page, not in a footnote',
+        /not proof/i.test(text) && /Nothing on this page is a rating/i.test(text));
+      check('*** there is no score, total or rating anywhere ***',
+        !/\bscore\b/i.test(text) && !/\btotal\b/i.test(text));
+      check('the mean latency is never shown bare — it carries n and the spread',
+        /mean 420ms across 1 \(420–420ms\)/.test(text), text.slice(0, 400));
+      check('a hit says what the machine contributed, so a slow trial is not read as a slow person',
+        /pressed after 420ms \(18ms of that was the screen\)/.test(text));
+
+      check('*** a hold is NEVER shown without what was asked of it ***',
+        /held 900ms — nothing asked for a hold/.test(text) &&
+        /held 900ms \(800ms was asked for\)/.test(text), text.slice(0, 800));
+      check('both sittings are listed', /sess-a/.test(text) && /sess-b/.test(text));
+      check('*** no raw machine names are shown at a person reading a clinical record ***',
+        !/session_evidence_record|edge_up|edge_down|stop_done/.test(text) &&
+        /the record for this sitting/.test(text), text.slice(0, 500));
+      check('who vouched is shown, read from the attestation rows',
+        /vouched for by dr-smith/.test(text));
+      check('unattested rows say nothing at all — silence, not a warning',
+        !/unattested|not attested|missing/i.test(text));
+    }
+
+    section('the attest button');
+    {
+      const { host, panel, attested } = rig();
+      await panel.refresh();
+      const btn = host.querySelector('[data-attest]');
+      check('every row offers one', !!btn && host.querySelectorAll('[data-attest]').length >= 5);
+      btn.click();
+      await new Promise((r) => setTimeout(r, 20));
+      check('clicking it attests that row', attested.length === 1 && !!attested[0].id);
+      check('*** and it sends NOTHING about who is clicking — the server takes that from the '
+        + 'session, which is the only reason an attestation is worth reading ***',
+        Object.keys(attested[0].opts || {}).join(',') === 'note' &&
+        attested[0].opts.note === '',
+        JSON.stringify(attested[0].opts));
+    }
+
+    section('reading who vouched');
+    {
+      check('attesters come from the attestation rows, never a flag on the trial',
+        attestersOf(EVENTS, 2).join(',') === 'dr-smith');
+      check('a row nobody vouched for returns an empty list, not false',
+        Array.isArray(attestersOf(EVENTS, 7)) && attestersOf(EVENTS, 7).length === 0);
+    }
+
+    section('describing a row in words');
+    {
+      check('an omission is described as what happened, not as a failure',
+        describe({ data: { kind: 'omission' } }) === 'the invite closed with no press');
+      check('perseveration is named as itself',
+        /kept pressing/.test(describe({ data: { kind: 'perseveration', n: 2, msSinceHit: 300 } })));
+      check('a watchdog release says nobody let go',
+        /not by them/.test(describe({ data: { kind: 'edge_up', heldMs: 12000, requiredHoldMs: 0, auto: true } })));
+      check('an unbound press is still described as a press somebody made',
+        /bound to nothing/.test(describe({ data: { kind: 'edge_down', bound: false } })));
+    }
+
+    section('nothing yet');
+    {
+      const host = document.createElement('div');
+      document.getElementById('host').append(host);
+      const panel = mountRecords(host, {
+        profiles: { list: () => Promise.resolve([{ id: 'p', name: 'x', modules: [] }]),
+                    eventsURL: () => '' },
+        user: 'u',
+      });
+      await panel.refresh();
+      check('an empty state that says what to do rather than showing an empty table',
+        /Nothing has written a record yet/.test(host.textContent) &&
+        /Wait and Go/.test(host.textContent));
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
