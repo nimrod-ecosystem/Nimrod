@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>pressgame — bench demo</title>
+<style>
+  html,body{margin:0;height:100%;background:#05070f;color:#dce8ff;
+    font:14px/1.45 ui-monospace,Menlo,Consolas,monospace;overflow:hidden}
+  #wrap{position:fixed;inset:0;display:grid;grid-template-columns:1fr 340px}
+  #stage{position:relative;overflow:hidden}
+  #side{border-left:1px solid #1c2740;padding:10px 12px;overflow:auto;background:#080b16}
+  h2{margin:0 0 2px;font:600 13px/1.3 system-ui,sans-serif;color:#ffd36e;letter-spacing:.04em}
+  .sub{margin:0 0 10px;font-size:11px;color:#7f8fb0}
+  .badge{position:fixed;left:10px;top:8px;z-index:9;background:#6a2bbf;color:#fff;
+    font:700 11px system-ui,sans-serif;padding:3px 8px;border-radius:6px;letter-spacing:.06em}
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  th{text-align:left;color:#7f8fb0;font-weight:600;padding:2px 4px;border-bottom:1px solid #1c2740}
+  td{padding:2px 4px;border-bottom:1px solid #101828;vertical-align:top}
+  .k-hit{color:#8fe0a8}.k-commission{color:#ffc98a}.k-perseveration{color:#ff9db0}
+  .k-omission{color:#ff8a8a}.k-edge_down,.k-edge_up{color:#8fb8ff}
+  .k-go_shown{color:#ffd36e}.k-stop_done{color:#cfe0d9}
+  .hint{margin-top:12px;padding:8px 10px;background:#0e1626;border:1px solid #22314c;
+    border-radius:8px;font-size:11.5px;color:#a9bcd8}
+  b{color:#fff3d9}
+</style>
+</head>
+<body>
+<div class="badge">BENCH DEMO — not the product</div>
+<div id="wrap">
+  <div id="stage"></div>
+  <div id="side">
+    <h2>WHAT IT IS WRITING DOWN</h2>
+    <p class="sub">newest first · <b>press SPACE</b> or tap the field</p>
+    <table><thead><tr><th>at</th><th>row</th><th>detail</th></tr></thead><tbody id="rows"></tbody></table>
+    <div class="hint" id="machine" style="display:none">
+      <b>MACHINE HEALTH — measured on THIS box</b>
+      <div id="machinebody" style="margin-top:6px"></div>
+    </div>
+    <div class="hint">
+      <b>Two channels from one key.</b> SPACE is bound to <code>pressgame/press</code>, so it
+      drives the game — and the same physical press also appears as <code>edge_down</code> /
+      <code>edge_up</code> with its real hold, which the game itself does not react to.
+      <br><br><b>Hold the key down</b> to see <code>heldMs</code> grow while
+      <code>requiredHoldMs</code> stays 0 — that is the difference between "could not let go"
+      and "was asked to hold".
+    </div>
+    <div class="hint" id="scripted" style="display:none;border-color:#6a2bbf">
+      <b>SCRIPTED INPUT</b> — this box has no Wayland input-injection tool, so the presses
+      below were dispatched as real <code>keydown</code>/<code>keyup</code> events through the
+      real keyboard adapter rather than made by a finger. Everything downstream of the adapter
+      — bindings, edges, timing, the frame numbers above — is genuine.
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createInputBus } from '../input.js';
+import { createActionRegistry } from '../actions.js';
+import { attachKeyboard } from '../input_keyboard.js';
+import { mountModule } from '../module.js';
+import '../modules/pressgame.js';
+
+const bus = createBus();
+const actions = createActionRegistry();
+actions.register({ id: 'pressgame/press', label: 'Press', topic: 'pressgame/press' });
+
+// A real input bus with a real keyboard adapter: SPACE is a genuine binding, so the press
+// travels the same path it would at a bedside — and produces the same edge records.
+const input = createInputBus({ bus, actions });
+input.setBindings([{ id: 'space', actionId: 'pressgame/press',
+                     device: 'keyboard', control: 'key: ', edge: 'press' }]);
+attachKeyboard(input, { target: window });
+
+const tbody = document.getElementById('rows');
+const t0 = Date.now();
+function show(row) {
+  const tr = document.createElement('tr');
+  const secs = ((Date.now() - t0) / 1000).toFixed(1).padStart(5);
+  let detail = '';
+  if (row.kind === 'hit') detail = `latency ${row.latencyMs}ms · stall ${row.machine?.goDelayMs ?? '-'}ms`;
+  else if (row.kind === 'edge_up') detail = `held ${row.heldMs}ms · asked ${row.requiredHoldMs}ms${row.auto ? ' · AUTO' : ''}`;
+  else if (row.kind === 'edge_down') detail = `bound ${row.bound} · concurrent ${row.concurrent}`;
+  else if (row.kind === 'commission') detail = `charge ${row.charge}`;
+  else if (row.kind === 'perseveration') detail = `#${row.n} · +${row.msSinceHit}ms`;
+  else if (row.kind === 'stop_done') detail = `${row.echoes} echoes`;
+  else if (row.kind === 'go_shown') detail = `charge ${row.charge}`;
+  tr.innerHTML = `<td>${secs}s</td><td class="k-${row.kind}">${row.kind}</td><td>${detail}</td>`;
+  tbody.prepend(tr);
+  while (tbody.children.length > 24) tbody.lastChild.remove();
+}
+bus.subscribe('pressgame/trial', show);
+
+// No server on the bench: the events sink is a stub, so nothing is stored. The rows are
+// exactly what WOULD be appended, meta and all.
+const events = { append: () => Promise.resolve(), destroy() {} };
+
+const inst = mountModule('pressgame', {
+  mount: document.getElementById('stage'), bus, events,
+  state: { get: () => ({ waitMs: 10000, stopQuietMs: 3000 }), destroy() {} },
+  user: 'bench', profileId: 'bench',
+});
+inst.init();
+window.addEventListener('resize', () => inst.onResize());
+
+// The machine-health panel, filled from the hit row — the numbers that say whether a slow
+// trial was her or the box.
+bus.subscribe('pressgame/trial', (row) => {
+  if (row.kind !== 'hit' || !row.machine) return;
+  document.getElementById('machine').style.display = '';
+  document.getElementById('machinebody').innerHTML =
+    `stall before the invite painted: <b>${row.machine.goDelayMs}ms</b><br>`
+  + `worst frame while she responded: <b>${row.machine.frameMaxMs}ms</b><br>`
+  + `mean frame: <b>${row.machine.frameMeanMs}ms</b> over ${row.machine.frames} frames<br>`
+  + `her latency (from paint): <b>${row.latencyMs}ms</b><br>`
+  + `total from the decision: <b>${row.latencyFromScheduleMs}ms</b>`;
+});
+
+// ?auto — for capturing a screenshot on a box with no input-injection tool. Real keyboard
+// events through the real adapter; nothing about the data path is faked.
+if (new URLSearchParams(location.search).has('auto')) {
+  document.getElementById('scripted').style.display = '';
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const tap = async (holdMs) => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    await sleep(holdMs);
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
+  };
+  (async () => {
+    await sleep(3000);
+    await tap(380);                                  // a commission, during the wait
+    // Wait for the invite, then respond.
+    while (inst.impl.__probe().phase !== 'go') await sleep(120);
+    await sleep(500);
+    await tap(420);                                  // the hit
+    await sleep(400); await tap(120);                // two echoes -> perseveration
+    await sleep(300); await tap(120);
+  })();
+}
+</script>
+</body>
+</html>

@@ -265,8 +265,16 @@ export function createInputBus({
       // The excess is DELIBERATELY NOT STORED. A reader subtracts. A derived column drifts
       // from its inputs, and this repo already learned to let the reader derive.
       requiredHoldMs: rec.requiredHoldMs,
-      // How many OTHER controls were down at this instant. Non-zero is the chord / modifier /
-      // two-switch case, where a hold may be structural rather than either of the above.
+      // How many OTHER controls were down at this instant. Non-zero means two separate
+      // physical controls were held together - two switches, a two-handed grip, a chorded AAC
+      // device - where a hold may be structural rather than either of the above.
+      //
+      // *** IT IS NOT THE CTRL+S CASE, AND THAT IS WORTH SAYING BECAUSE IT LOOKS LIKE IT IS. ***
+      // `input_keyboard.js` bakes modifiers INTO the control name - ctrl+s is the single
+      // control "key:ctrl+s", with one down and one up - and `keyControl` returns null for a
+      // bare modifier, so a held Ctrl is never a control at all. `concurrent` reads 0 for that
+      // whole family. It needs no disentangling either: the heldMs of "key:ctrl+s" is how long
+      // S was held, which is an honest number with nothing folded into it.
       concurrent: rec.concurrent,
     };
     bus.publish(EDGE_TOPIC, out);
