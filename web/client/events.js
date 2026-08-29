@@ -54,6 +54,21 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
     await refresh();        // pull the authoritative list back
   }
 
+  // Vouch for one row. NOTE THERE IS NO "who" PARAMETER: the attester is whoever is signed
+  // in, decided by the server from the session and never sent from here. That is what stops
+  // an attestation being a claim anybody can type. It appends a new event citing the
+  // original, which is untouched - the log has no update.
+  async function attest(eventId, { note = '' } = {}) {
+    const res = await fetch(`${url}/${encodeURIComponent(eventId)}/attest`, {
+      method: 'POST',
+      headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note }),
+    });
+    if (!res.ok) throw new Error(`attest ${eventId} -> ${res.status}`);
+    await refresh();
+    return true;
+  }
+
   function startPolling() {
     if (pollTimer) return;
     pollTimer = setInterval(() => { refresh().catch(() => {}); }, pollMs);
@@ -69,5 +84,5 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
     clearInterval(pollTimer); pollTimer = null;
   }
 
-  return { load: refresh, append, get: () => cache, subscribe, startPolling, destroy };
+  return { load: refresh, append, attest, get: () => cache, subscribe, startPolling, destroy };
 }

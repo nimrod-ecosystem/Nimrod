@@ -222,6 +222,91 @@ def merge_extra(core: dict, extra: dict | None) -> dict:
     return out
 
 
+# ---------------------------------------------------------------------------------------
+# ATTESTATION - somebody looked at a row and vouched for it.
+#
+# *** PRESENCE IS NOT ATTESTATION, AND THIS IS THE DISTINCTION THE FIELD EXISTS TO KEEP. ***
+# A clinician moderating a session was IN THE ROOM. Attesting means they LOOKED AT THIS
+# OBSERVATION AND VOUCHED FOR IT. If the second is generated from the first, `attested_by`
+# empties out: every row a clinician was near carries their name whether they reviewed it or
+# not, and nobody downstream can tell a vouched row from a merely-witnessed one. The roster
+# already records who was in the room (ROSTER_ROLES), truthfully and for free - that is the
+# fact worth having, and it costs nobody a claim they did not make.
+#
+# *** AN ATTESTATION IS ITS OWN APPEND-ONLY EVENT THAT CITES A TARGET. NOT A FIELD ON IT. ***
+# Three things fall out, and none of them needed a new trust model:
+#
+#   1. THE ATTESTER IS THE AUTHENTICATED USER. You may only attest AS YOURSELF, so the server
+#      never has to evaluate a claim about a third party. `attested_by` is stamped from the
+#      session, NEVER read from the request body - which is the whole reason the four
+#      attestation columns were left unpostable in the first place.
+#   2. `attested_at` IS REAL. It is when the attestation row was written, which is genuinely
+#      when somebody looked. The spec's own words: "attesting from memory months later is
+#      recollection, not attestation, and the gap between event time and attest time is what
+#      shows that." An auto-stamp at trial time would destroy exactly that gap.
+#   3. APPEND-ONLY IS INTACT. Events cannot be updated, so attestation could never have been a
+#      mutation of the trial row. This is the only shape that was ever going to work.
+#
+# TWO PEOPLE MAY ATTEST THE SAME ROW, and the same person may attest it again later - a second
+# look months on is a real event and the timestamps say so. Neither is deduplicated, because
+# collapsing them would throw away the thing that makes attestation worth recording.
+# ---------------------------------------------------------------------------------------
+
+ATTESTATION_KIND = "attestation"
+
+
+def attestation_problem(target: dict | None, attester: str | None) -> str | None:
+    """What is wrong with attesting this row, in a person's words, or None. PURE."""
+    if not attester:
+        return "an attestation needs somebody making it"
+    if not target:
+        return "there is nothing here to attest"
+    # NOT A NESTING TREE. Vouching for a vouching is not a claim about the observation, and
+    # allowing it invites a chain nobody can summarise. Attest the trial.
+    if target.get("kind") == ATTESTATION_KIND:
+        return "an attestation cannot itself be attested - attest the row it cites"
+    if not target.get("id"):
+        return "the row being attested has no id to cite"
+    return None
+
+
+def attestation_row(*, target_id, attester: str, note: str = "") -> dict:
+    """The event body for an attestation. PURE - storage stamps the columns.
+
+    The citation lives in `data.attests` rather than in a column because it is a reference
+    between two rows of the SAME table, and the provenance columns are about who produced a
+    row rather than what it points at.
+    """
+    body = {"attests": target_id, "attested_by": attester}
+    if note:
+        # Free text, and deliberately not on any allowlist - it never leaves the machine
+        # through the research payload, which carries no attestation fields at all.
+        body["note"] = str(note)[:2000]
+    return body
+
+
+def attestations_for(events: list[dict] | None, target_id) -> list[dict]:
+    """Every attestation citing this row, oldest first. PURE."""
+    return [e for e in (events or [])
+            if e.get("kind") == ATTESTATION_KIND
+            and (e.get("data") or {}).get("attests") == target_id]
+
+
+def attesters_of(events: list[dict] | None, target_id) -> list[str]:
+    """WHO vouched for this row - distinct, in the order they first did. PURE.
+
+    A LIST, NOT A BOOLEAN, for the same reason `attested_by` is a principal reference: "a
+    clinician attested this" and "her brother did" are the whole point, and an is_attested()
+    flag would flatten exactly the distinction the CRS-R work turns on.
+    """
+    seen: list[str] = []
+    for e in attestations_for(events, target_id):
+        who = e.get("attested_by") or (e.get("data") or {}).get("attested_by")
+        if who and who not in seen:
+            seen.append(who)
+    return seen
+
+
 def roster_problem(roster: list[dict] | None) -> str | None:
     """What is wrong with this roster, in a person's words, or None. PURE.
 
