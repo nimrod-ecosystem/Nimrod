@@ -546,3 +546,214 @@ generated-content renderer, content-as-meaning — ARE built and were shaped for
 ## Context (not public-site items)
 - Patient is transferring facility-to-facility (not home soon) — caregiver-pay income path
   stays gated; tracked in the private repo / project, not here.
+
+## Public site — review of 2026-08-27
+
+Full reasoning in `docs/landing-page.md`. Annotated mockup:
+<https://claude.ai/code/artifact/b4594e8e-a415-4291-8d1b-a66ac042d765>
+
+- **Headline is the benefit, then the definition.** "A better quality of life for your loved
+  ones — and for you," then one plain sentence: *a device and media hub designed for people with
+  accessibility needs.* The old headline could have sat on any hospital brochure; a stranger
+  could not tell from it what the thing was. (2026-08-27)
+- **The signed-out demo is the primary call to action everywhere.** Letting a stranger touch the
+  real product before making an account is rare in this category and was styled as the quieter
+  button. (2026-08-27)
+- **Poster image with a play affordance, swapping in the live kiosk on tap** — the page still
+  works when the kiosk doesn't, and a cold start never blocks first paint. (2026-08-27)
+- **Demo layout is 2×2, clockwise from top left:** pictures, live view, clock, Word Forge with
+  AAC terms. **A public zoo cam stands in for the room camera**, muted — which removes the
+  camera permission prompt, the worst thing that can happen on arrival at a privacy-pitched
+  page. (2026-08-27)
+- **Privacy headline narrows to "your photos, video, and files never leave your machine."** The
+  old wording ("your personal data never leaves your machine") was disproved by the live
+  `/api/what-we-store` table directly beneath it, which lists a person's name, the event log,
+  media addresses and sharing grants. (2026-08-27)
+- **The live table gains an on/off column per account**, so "every one of these is opt in" is
+  visible rather than asserted. (2026-08-27)
+- **Site voice is first person.** "The line I don't cross," not "we." One person building for one
+  person is the trust asset, and the corporate voice appeared exactly where trust is asked for.
+  (2026-08-27)
+- **Christine's name comes out of the public copy** — "my fiancée" and "her" throughout. Same
+  reasoning as the existing rule about clips and images: she cannot consent, and the written
+  account is the same category as a picture in every respect except medium. (2026-08-27)
+- **OAuth scope drops to `openid`.** The live redirect requests `openid email profile`; the
+  subject ID alone is all the account system needs, since the name a screen displays is typed in
+  by the user. Supports a much stronger claim: *Google tells me you are the same person who
+  signed in last time, and nothing else.* (2026-08-27)
+- **Blocked on Mike's own words, must not be invented:** what setup actually takes, and the
+  facilities/clinician track. Both are stubbed in the mockup. _(open)_
+- **Home Assistant stays out of present tense on the site until it ships.** _(open)_
+- **The name.** In American English "nimrod" colloquially means idiot, and that is the first
+  meaning most people under sixty carry — it matters because the site spreads by being forwarded
+  and said aloud. Raised, not decided. _(open)_
+
+### Bugs the demo promotion makes urgent
+- `kiosk.html` line 76 shows **"Loading her dashboard…"** to every signed-out stranger.
+- **No visible way out of the fullscreen kiosk.** This is an instance of the AGENTS.md safety
+  invariant, not just a UX gap. Needs a persistent affordance on the signed-out path only —
+  and per AGENTS.md, that path needs an injectable seam and its own test or it will rot.
+
+## Word lookup — added 2026-08-27
+
+Full spec in `docs/lookup-panel.md`.
+
+- **Two users want opposite things.** A patient looking up *cold* needs a short plain sentence;
+  a family member looking up *vasospasm* needs accuracy about a term a clinician just used. One
+  dictionary cannot serve both, so the panel takes several sources. (2026-08-27)
+- **Sources are folders the user points at**, exactly like media sources — a label and an address
+  on their own machine. No registry, no install flow. This is what `docs/module-input-spec.md`
+  already anticipates under *Distribution*. (2026-08-27)
+- **Simple English Wiktionary as the on-device default, Open English WordNet as fallback,
+  Wikipedia's REST summary for medical terms.** Verified: OEWN returns **zero senses** for
+  `vasospasm` and `subarachnoid`, defines *water* as "binary compound that occurs at room
+  temperature…", and returns the **songbird** sense of *swallow* ahead of the verb. Never
+  display `synsets(word)[0]`. (2026-08-27)
+- **MedlinePlus is a link-out, not a definition source** — 0 results for `vasospasm`, no CORS
+  header (would need a server proxy, putting families' medical searches through our server), and
+  its terms say not to copy its pages. (2026-08-27)
+- **Sources are a filter, not a picker** — check as many as you want, results stacked with a
+  heading per source, **never merged**. A blended definition from a dictionary and a language
+  model is unattributable, which in a medical context is the one thing it cannot be. (2026-08-27)
+- **In-game lookup costs 10% of the question**, four choices, wrong answer floors at 50%. The
+  invariant to preserve if the numbers are ever tuned: **reading never scores worse than
+  guessing** (four lookups = 60%). Deduct from the question, never the running total.
+  (2026-08-27)
+- **After answering, show all four terms with definitions on one page.** Distractors are the
+  underrated half of multiple choice — the player has just weighed four words and is most primed
+  to absorb the three they didn't pick. (2026-08-27)
+- **Add-to-word-list toggle sits under the search bar, off by default, remembers state. No
+  caregiver review queue** — a patient who knows their lookups land on a list a caregiver reads
+  stops looking things up, and the feature exists to serve curiosity. (2026-08-27)
+- **Word difficulty feeds `web/client/rng.js`**, not Word Forge's private state, so any module
+  drawing from a pool inherits it. **Default weight 1.0 must leave photos and youtube drawing
+  exactly as they do today.** Borrow a published spaced-repetition curve rather than inventing
+  one; cap any single word and interleave known words, or the session fills with failures.
+  (2026-08-27)
+- **AAC vocabulary does not flow into the practice list by default** — a setting, default off.
+  Needing a card for "cold" says nothing about whether the person knows the word. (2026-08-27)
+- **Fuzzy matching is required** — someone who *heard* "vasospasm" types "vaso spasm". This
+  decides storage: SQLite FTS rather than a JSON map. _(open: FTS in the browser means a wasm
+  dependency, which conflicts with the no-build-step rule — the dictionary may belong in the
+  media agent or the server instead. Needs a call.)_
+
+## Module wiring — added 2026-08-27
+
+Longer notes: <https://claude.ai/code/artifact/67b24b84-c8fe-4d2b-90b3-7204bba8a56a>
+
+- **Module-to-module wiring extends the existing manifest; it does not replace input routing.**
+  The eleven verbs and person-owned bindings in `docs/module-input-spec.md` already solve
+  input→module. What is genuinely new is module→module data: `vocab.term`, `media.item`,
+  `event.result`, declared as `emits` / `accepts` alongside `dependsOn` and `importance`.
+  (2026-08-27)
+- **Compatibility is type-matching.** A connect button greys out because nothing on the screen
+  accepts what this module emits — not because of a hand-written list of pairs. (2026-08-27)
+- **Connect flow is arm-then-target**, two deliberate presses with an unambiguous cancel.
+  **No flashing for the armed state** — photosensitivity risk, suppressed under
+  `prefers-reduced-motion`, and meaningless to a screen reader. Border style, changed label, and
+  a banner instead. (2026-08-27)
+- **Bidirectional pairs are two links, each switchable.** AAC → Word Forge ("cards become
+  practice words") is a different feature from Word Forge → AAC ("learned words become cards").
+  (2026-08-27)
+- **Auto-connect for pairs with one obvious meaning**, severable, and the severance is
+  remembered. **It announces itself once** — "why did *that* happen" is the exact mirror of "why
+  did nothing happen," and harder to diagnose because nothing obvious is there to inspect.
+  (2026-08-27)
+- **Latent connection hinting:** where a link is possible but unmade, the connect button lights
+  when an input fires in the module that could have been sending. Discovery at the moment of
+  intent, with no manual. Extend to unbound inputs and to bindings shadowed by a more specific
+  one. Give it a decay so it never nags. (2026-08-27)
+- **Keyboard module** with QWERTY, alphabetical, frequency-ordered and **scanning** variants.
+  Scanning is what makes lookup exist at all for a single-switch user. (2026-08-27)
+- **Every new failure mode gets its own sentence, written with the code that causes it.** Wiring
+  manufactures new ways for nothing to happen — an unconnected port, a link switched off, a
+  shadowed binding, a module on a device that went offline. Shipping it without extending the
+  diagnostics erodes the feature that makes the rest usable. (2026-08-27)
+- **Home integration is protocol-first: MQTT, then Matter — not per-platform.** Homey Pro speaks
+  Matter and Thread natively, as do Home Assistant, SmartThings and Hubitat. Five bespoke
+  integrations is five things to maintain and five APIs changing underneath. Refines the existing
+  *Integrations (planned)* entry. (2026-08-27)
+- **Outage mode is a dead-man's switch** — something on mains reports every few seconds, and the
+  absence of that report, observed by something on battery, is the alarm. It works precisely
+  because the thing that would have sent an alert is the thing that lost power. Distinguish
+  power-out from internet-out from one-device-crashed; they look identical and need opposite
+  responses. **The real feature is telling the person in the bed**: a battery-backed screen
+  saying *"The power is out. You are safe. Someone has been told."* Read the UPS through Home
+  Assistant's NUT integration rather than rebuilding it. (2026-08-27)
+- **Patch bay** — the same graph as a matrix, for advanced users. Build after ports are real.
+  The two routes worth building first: a **door sensor making the mirror full-screen** (the
+  founding use case, automated) and **a photo becoming an AAC card** (`media.item → vocab.term` —
+  the faces they know instead of a stranger's line drawing). _(open)_
+- **Shared surface ("telepathy mode")** — one person's AAC selection appearing live on a
+  companion screen. **Distinct from messaging:** messaging is addressed, stored and
+  asynchronous; this is live, co-present and unstored. Latency is the requirement; persistence is
+  a liability. The strong case is public — a board on someone's lap that the person at the
+  counter cannot see. _(open)_
+
+## Data & consent — settled 2026-08-27
+
+Full reasoning: <https://claude.ai/code/artifact/04c97b2b-287d-4da7-9c73-cfba39397d86>
+
+- **Nimrod does nothing with anyone's data.** No research handling, no repository, no instance to
+  run, no telemetry, no aggregation. Not smaller versions of those — none of them. (2026-08-27)
+- **Store only what a preference needs in order to be a preference.** A screen layout has to
+  persist or it isn't a saved layout. That is the whole justification and the test every future
+  row must pass. (2026-08-27)
+- **Opting out is always available and the consequence is exactly proportional: that preference
+  isn't saved.** Nothing else degrades, no feature is withheld. Someone who opts out of
+  everything still gets the whole product; they set it up again each time. (2026-08-27)
+- **Anything added later arrives switched off** and needs its own separate opt-in. Nothing rides
+  in on a permission given for something else. (2026-08-27)
+- **Deletion works from the screen and is a hard delete** — profile, contents, account, OAuth
+  link, no tombstones. A right that requires emailing the developer is not a right anyone can
+  use. **Consent revocation is separate from deletion**: someone may want processing stopped
+  while keeping their setup. (2026-08-27)
+- **The append-only event log conflicts with erasure and the conflict is resolved by
+  partitioning** — events partitioned by account so deletion drops a partition rather than
+  editing an append-only structure. (2026-08-27)
+- **Device recommendations come from voluntarily published setups, never usage telemetry.**
+  Publishing is its own consent; it works for sparse populations where aggregation cannot; and a
+  person writing "mounted on the left armrest at 30° because that is the only reach that doesn't
+  trigger a spasm" tells the next family something no aggregate ever would. (2026-08-27)
+- **If studies ever come up**, the shape is an optional module where someone enters name, age and
+  condition themselves, for a study someone else runs and is responsible for. Not a pipeline, not
+  a dataset. REDCap already serves 8,404 institutions in 166 countries for free and is what
+  ethics boards expect; the most we would ever ship is a CSV export and a matching data
+  dictionary. _(open, and deliberately not a plan)_
+
+## Reopened by the 2026-08-27 review — need a call
+
+- **Email.** `AGENTS.md` records "we do not send email — no pipeline, no address book, no
+  unsubscribe," treated as a feature. The review had proposed an optional address for outage
+  notices; **that is withdrawn.** The remaining question is narrow: with notifications and the
+  inbox both opt-in, someone can end up unreachable, and the one thing worth reaching them about
+  is a bedside screen that stopped working. **The answer is the screen itself** — the same place
+  as "is it even plugged in?" — which keeps the no-email rule intact and is a better channel
+  anyway. Recorded so the no-email decision is not quietly eroded later. _(resolved in favour of
+  the existing rule)_
+- **AAC symbols.** *Accounts & assets* records that symbols are AI-generated, with no third-party
+  licence to honour. Worth one reconsideration, not an override: **an AAC symbol set is a learned
+  visual grammar, not a set of pictures** — users learn that a verb, a person, or a place is drawn
+  a particular way, and consistency across the whole set is what makes a board readable at speed.
+  That internal consistency is the thing generation is worst at. If the AI-generated route stands,
+  the risk to watch is drift across the set rather than quality of any single symbol.
+  Free, adult-oriented alternatives exist if it ever matters: **Mulberry** (~3,000, CC BY-SA, and
+  deliberately drawn for adults where most sets are drawn for children); Global Symbols and
+  OpenMoji also CC BY-SA; ARASAAC (~13,000) and Sclera (~11,000) are larger but **non-commercial**,
+  which would stop anyone reusing Nimrod in a paid care setting. Whichever route: **symbol style
+  should be a per-profile setting**, because special-needs children are squarely in the audience
+  and child-oriented drawing is right for them. _(open — Mike's call)_
+- **Microcontrollers.** *Scope & focus* pauses the 3D-printing / physical hardware line, but
+  `firmware/` and `tools/` already ship microcontroller input devices, and that is a different
+  thing: **software support for hardware someone else builds**, not a product line. Worth stating
+  plainly on the site, which currently says nothing about it — an AbleNet Jelly Bean is $75 wired
+  and $145 wireless for a single button, against roughly $15 for a microcontroller, an arcade
+  button and a printed enclosure. **USB HID (gamepad or keyboard) is the connection method that
+  needs no drivers** and works in every browser through the Gamepad API. _(open: how much to say
+  on the site without reopening the paused hardware line)_
+- **"Bring your own AI" in the lookup panel should be Cici, not a parallel concept.** The two
+  data planes already map onto it exactly: anything about a patient goes to **Companion Cici**
+  (local, offline); a general "what does this word mean" may use **Helper Cici**. Any AI answer
+  is labelled as AI-generated wherever it appears, and AI is not the default source for medical
+  terms — in a care context an invented definition is a harm, not a bad search result.
+  (2026-08-27)

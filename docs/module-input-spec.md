@@ -201,8 +201,8 @@ You do not have to think about any of this, and **you should not reimplement it*
 
 - **Which physical control was pressed**, and what it is bound to. Bindings belong to the
   person and follow them between machines.
-- **How long it was held**, whether it was a bounce, whether it was inside a repeat lockout,
-  and whether a watchdog released a stuck switch.
+- **Whether the press cleared the minimum hold**, whether it was a bounce, whether it was
+  inside a repeat lockout, and whether a watchdog released a stuck switch.
 - **Whether the person is currently allowed to act** — there is a three-way gate
   (moderator / participant / both) and it applies to remote drivers identically.
 - **Which panel is focused**, including scanning between panels with one switch.
@@ -212,6 +212,48 @@ You do not have to think about any of this, and **you should not reimplement it*
 
 **By the time `onNimrodVerb('select')` runs, all of that has happened.** Your job is the last
 inch.
+
+---
+
+## If you are measuring, not just reacting
+
+Most modules want a verb and nothing else. Some — an assessment, a calibration tool, an input
+trainer — need to know what the person's hand actually did, **including the presses that
+changed nothing on screen.** For those there is a second, opt-in stream.
+
+```js
+bus.subscribe('access/edge', (e) => {
+  // e.phase   'down' | 'up'
+  // e.heldMs  null on a down; on an up, HOW LONG IT WAS ACTUALLY HELD
+  // e.auto    true = the watchdog or a window blur synthesized this release
+  // e.bound   was anything bound to this control at the time
+  // e.pressId joins the down, the up, and every activation from the same press
+});
+```
+
+**Three things about it are the whole reason it exists.**
+
+**1. It reports what happened, not what was configured.** `heldMs` on the *activation* stream
+(`access/activation`) is the binding's own threshold echoed back: a binding set to 250ms, held
+for 900ms, reports 250. `access/edge` reports 900. If you are measuring a person, read the edge
+stream; the other number is the caregiver's setup.
+
+**2. The release is a measurement in its own right.** A press-edge binding decides on the way
+down and produces no second record, so how long someone held a switch — and how long it took
+them to let go — was not observable anywhere. It matters: somebody who has to commit hard to
+close a switch may struggle to open it, and that difficulty is data, not noise.
+
+**3. You may measure what you do not react to.** An unbound press is on this stream with full
+timing. So is an echo press 200ms after your game already paid out — it changes no pixels and
+is *perseveration* in the record.
+
+**What it deliberately does not include:** presses made while a caregiver is binding a control.
+That is somebody configuring hardware, not the person using the screen, and a channel that
+cannot tell those apart is worse than one that misses the setup.
+
+**Where it goes is yours.** The platform does not put this on the wire — the opt-in research
+payload has its own allowlist and this is not on it. If you are keeping clinical data, it goes
+where the person storing it chose to put it.
 
 ---
 

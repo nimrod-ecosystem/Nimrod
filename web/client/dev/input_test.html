@@ -24,7 +24,7 @@ No server needed; runs entirely against a fake clock.</p>
 <script type="module">
 import { createBus } from '../bus.js';
 import { createActionRegistry, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION } from '../actions.js';
-import { createInputBus, ACTIVATION_TOPIC, deviceClass, REJECTIONS } from '../input.js';
+import { createInputBus, ACTIVATION_TOPIC, EDGE_TOPIC, PHASES, deviceClass, REJECTIONS } from '../input.js';
 import { createAccessLog, toOutbound, toOutboundBatch, summarize, byReason } from '../access.js';
 import { attachKeyboard, keyControl, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from '../input_keyboard.js';
 import { createGamepads, gamepadKey, controlLabel } from '../input_gamepad.js';
@@ -82,12 +82,17 @@ function rig({ gate = 'both', maxHoldMs = 12000 } = {}) {
   const fired = [];
   ['photos/next', 'photos/prev', 'sprint/control'].forEach((t) => bus.subscribe(t, (p) => fired.push([t, p])));
 
+  // The measurement channel, collected exactly the way a module would collect it: by
+  // subscribing to a bus topic. Nothing privileged about the test's access.
+  const edges = [];
+  bus.subscribe(EDGE_TOPIC, (e) => edges.push(e));
+
   const input = createInputBus({
     bus, actions, gate, maxHoldMs,
     now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
     onActivation: log.record,
   });
-  return { clock, bus, actions, input, log, fired, recs: () => log.get() };
+  return { clock, bus, actions, input, log, fired, edges, recs: () => log.get() };
 }
 const last = (a) => a[a.length - 1];
 
@@ -714,6 +719,130 @@ const last = (a) => a[a.length - 1];
       check('the loop polls', r.fired.length === 1);
       gp.stop();
       check('stop ends it', !gp.running() && queued === null);
+    }
+
+    // ================= the measurement channel =================
+    //
+    // What the HAND did, as distinct from what the bus DECIDED. These two streams are
+    // separate on purpose; the tests below are mostly about the difference.
+    section('the measurement channel — what the hand did, not what the bus decided');
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'b1', actionId: 'photos/next', device: 'switch:1', control: 'jack:a' });
+
+      r.input.down('switch:1', 'jack:a');
+      check('a press publishes a down edge', r.edges.length === 1 && r.edges[0].phase === 'down');
+      check('a down carries no hold — it does not have a duration yet, and 0 would be a lie',
+        r.edges[0].heldMs === null, JSON.stringify(r.edges[0].heldMs));
+      check('the down knows something was bound to it', r.edges[0].bound === true);
+
+      r.clock.advance(420);
+      r.input.up('switch:1', 'jack:a');
+      check('and a release publishes an up edge — the row the activation stream never had',
+        r.edges.length === 2 && r.edges[1].phase === 'up');
+      check('the up carries the hold she actually produced', r.edges[1].heldMs === 420, String(r.edges[1].heldMs));
+      check('a real release is not marked auto', r.edges[1].auto === false);
+      check('the activation stream still fired exactly once, on the way down',
+        r.recs().length === 1 && r.recs()[0].edge === 'press');
+      check('pressId joins the two edges and the activation to ONE physical press',
+        r.edges[0].pressId === r.edges[1].pressId && r.recs()[0].pressId === r.edges[0].pressId,
+        JSON.stringify([r.edges[0].pressId, r.edges[1].pressId, r.recs()[0].pressId]));
+    }
+
+    // THE CASE THAT MOTIVATED THE WHOLE CHANNEL. `heldMs` on an activation is the binding's
+    // CONFIGURED THRESHOLD, not a measurement - so a study filtering on it reads the
+    // caregiver's setup back to itself. The edge stream reports what actually happened.
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'b1', actionId: 'photos/next', device: 'switch:1', control: 'jack:a', holdMs: 250 });
+      r.input.down('switch:1', 'jack:a');
+      r.clock.advance(250);                 // threshold met, action fires
+      r.clock.advance(650);                 // she keeps holding — total 900ms
+      r.input.up('switch:1', 'jack:a');
+
+      check('the activation reports the THRESHOLD (250), which is configuration, not behaviour',
+        r.recs()[0].heldMs === 250, String(r.recs()[0].heldMs));
+      check('the edge reports the MEASUREMENT (900) — 650ms the other stream cannot see',
+        last(r.edges).heldMs === 900, String(last(r.edges).heldMs));
+      check('and they are the same press, so the two numbers are joinable rather than rival',
+        last(r.edges).pressId === r.recs()[0].pressId);
+    }
+
+    // A MODULE MAY MEASURE WHAT IT DOES NOT REACT TO.
+    {
+      const r = rig();
+      r.input.down('switch:1', 'jack:z');
+      r.clock.advance(310);
+      r.input.up('switch:1', 'jack:z');
+      check('an UNBOUND press is fully measured — both edges, with real timing',
+        r.edges.length === 2 && r.edges[1].heldMs === 310, JSON.stringify(r.edges.map((e) => e.phase)));
+      check('and it is marked unbound, so nothing has to infer it from a missing activation',
+        r.edges[0].bound === false && r.edges[1].bound === false);
+      check('the action never fired — measured is not the same as acted on', r.fired.length === 0);
+    }
+
+    // A SYNTHESIZED RELEASE IS NOT A RELEASE. Nobody let go, so a consumer averaging release
+    // latency has to throw this row out - which it can only do if the row says so.
+    {
+      const r = rig({ maxHoldMs: 3000 });
+      r.input.addBinding({ id: 'b1', actionId: 'photos/next', device: 'switch:1', control: 'jack:a' });
+      r.input.down('switch:1', 'jack:a');
+      r.clock.advance(3000);
+      check('the watchdog produced an up edge', last(r.edges).phase === 'up');
+      check('marked auto — nobody let go, so this hold is a stuck switch, not a measurement',
+        last(r.edges).auto === true, JSON.stringify(last(r.edges)));
+    }
+
+    // Two controls held at overlapping times: the case a timestamp join gets wrong.
+    {
+      const r = rig();
+      r.input.down('switch:1', 'jack:a');
+      r.input.down('switch:2', 'jack:a');          // same instant, different device
+      r.clock.advance(100);
+      r.input.up('switch:2', 'jack:a');
+      r.clock.advance(500);
+      r.input.up('switch:1', 'jack:a');
+      const byId = (id) => r.edges.filter((e) => e.pressId === id);
+      const ids = [...new Set(r.edges.map((e) => e.pressId))];
+      check('two overlapping presses get two ids', ids.length === 2, JSON.stringify(ids));
+      check('each id pairs exactly one down with one up',
+        ids.every((id) => byId(id).length === 2 && byId(id)[0].phase === 'down' && byId(id)[1].phase === 'up'));
+      check('and the holds are not swapped — 100 and 600, matched to their own presses',
+        byId(ids[0]).find((e) => e.phase === 'up').heldMs === 600 &&
+        byId(ids[1]).find((e) => e.phase === 'up').heldMs === 100,
+        JSON.stringify(r.edges.filter((e) => e.phase === 'up').map((e) => e.heldMs)));
+    }
+
+    // Binding a switch is the caregiver fiddling with hardware, not the person using the
+    // screen. It is excluded from BOTH streams for the same reason.
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'b1', actionId: 'photos/next', device: 'switch:1', control: 'jack:a' });
+      r.input.beginCapture({});
+      r.input.down('switch:1', 'jack:a');
+      r.clock.advance(200);
+      r.input.up('switch:1', 'jack:a');
+      check('a press made while binding appears on neither stream',
+        r.edges.length === 0 && r.recs().length === 0,
+        JSON.stringify({ edges: r.edges.length, recs: r.recs().length }));
+    }
+
+    // The two vocabularies are disjoint on purpose - see EDGE_TOPIC's note. If they ever
+    // overlap, a record fed to the wrong reader stops failing loudly.
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'b1', actionId: 'photos/next', device: 'switch:1', control: 'jack:a' });
+      r.input.down('switch:1', 'jack:a');
+      r.input.up('switch:1', 'jack:a');
+      // The length checks are not padding: `[].every()` is true, so without them these two
+      // assertions would pass on a channel that published nothing at all.
+      check('a physical edge is down|up; a binding edge is press|release, and they never collide',
+        r.edges.length === 2 && r.recs().length === 1 &&
+        r.edges.every((e) => PHASES.includes(e.phase) && !['press', 'release'].includes(e.phase)) &&
+        r.recs().every((x) => ['press', 'release'].includes(x.edge)));
+      check('an edge record carries no verdict — "accepted" belongs to the other stream',
+        r.edges.length === 2 &&
+        r.edges.every((e) => e.accepted === undefined && e.reason === undefined));
     }
 
     document.getElementById('summary').textContent =

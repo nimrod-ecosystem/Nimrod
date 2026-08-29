@@ -171,10 +171,6 @@ export function mountInputRuntime({
     // themselves, so this is the difference between "her switch is unbound" and "her switch
     // is not connected to anything" - two sentences with completely different repairs.
     devices: () => (pads?.list?.() || []).map((p) => ({ ...p })),
-    // WHAT IS PLUGGED IN RIGHT NOW. A gamepad is how most adaptive switches present
-    // themselves, so this is the difference between "her switch is unbound" and "her switch
-    // is not connected to anything" - two sentences with completely different repairs.
-    devices: () => (pads?.list?.() || []).map((p) => ({ ...p })),
     destroy() {
       try { unsubscribe?.(); } catch { /* already gone */ }
       detach.forEach((off) => { try { off(); } catch { /* already gone */ } });
