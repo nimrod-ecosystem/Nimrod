@@ -89,6 +89,53 @@ ROSTER_ROLES = (
 #: that ran away, not a therapy session. Players only; observers are not capped.
 MAX_PLAYERS = 8
 
+# ---------------------------------------------------------------------------
+# *** IS THIS ROSTER EVERYBODY? - three states, not two ***
+# ---------------------------------------------------------------------------
+# Mike, 2026-08-28, inverting an argument I had backwards: unassisted SOLO play is the MAIN
+# use case and the CLEANEST data the system produces, because *you know for sure nobody
+# assisted them*. The single biggest confound in every measurement here is the person in the
+# room - it is what cue_level, prompt_delivered_by and moderator-comparison-off-by-default all
+# exist to manage. A solo session deletes that confound at the source instead of modelling it.
+#
+# So "she played alone" has to be a POSITIVE ASSERTION, not an inference from a short list.
+# Fifth appearance of the four-non-answers lesson:
+#
+#   None   nobody said whether this is everybody          <- absent, NOT "solo"
+#   True   confirmed: this is everybody who was here
+#   False  known to be incomplete - somebody was here and is not listed
+#
+# A one-row roster with `roster_complete=None` is NOT solo. It is one person we know about.
+ROSTER_COMPLETE_STATES = (None, True, False)
+
+
+def is_solo(roster: list[dict] | None, roster_complete: bool | None = None,
+            max_players: int | None = None) -> bool:
+    """Did exactly one person play, with nobody helping, ATTESTED? PURE.
+
+    *** MIKE'S POINT ABOUT max_players, AND IT IS THE GOOD HALF OF THE ANSWER: ***
+
+        "the max number of players for a module can determine how many player rows"
+
+    A module that DECLARES it takes one player could never have had a second, so solo is
+    STRUCTURAL there rather than a claim somebody has to make - and a structural fact needs no
+    human to attest it. That is why `max_players == 1` alone is enough.
+
+    For anything that COULD have had more, somebody has to say so, because a null slot cannot
+    distinguish "nobody was there" from "nobody wrote it down" - which is the whole reason
+    `roster_complete` exists rather than counting rows.
+    """
+    rows = roster or []
+    players = [r for r in rows if normalize_role(r.get("role")) in ("player", "subject")]
+    helpers = [r for r in rows
+               if normalize_role(r.get("role")) in ("moderator", "clinician", "aide")]
+    if len(players) != 1 or helpers:
+        return False
+    # A single-player module: solo is a property of the module, not a claim about the room.
+    if max_players == 1:
+        return True
+    return roster_complete is True
+
 END_REASONS = ("ended_by_person", "ended_by_inactivity", "ended_by_cap")
 
 # Ordered LEAST to MOST help. The distance between "correct unaided" and "correct after a

@@ -14,7 +14,7 @@ import provenance
 from provenance import (
     CORE_FIELDS, CUE_LEVELS, END_REASONS, MAX_PLAYERS, NON_ANSWERS, PRINCIPAL_TYPES,
     PROVENANCE_FIELDS, ROSTER_ROLES, SchemaCollision,
-    auto_close, cue_rank, merge_extra, normalize_cue, normalize_principal_type,
+    auto_close, cue_rank, is_solo, merge_extra, normalize_cue, normalize_principal_type,
     normalize_role, roster_problem,
 )
 
@@ -220,6 +220,48 @@ store.end_session(s2["id"], "ended_by_inactivity", ended_at="2026-08-28T10:00:00
 got = store.get_session(s2["id"])
 check("*** the backdated end and the detection moment are stored SEPARATELY ***",
       got["ended_at"] != got["detected_at"], got)
+
+section("*** SOLO IS AN ASSERTION, NOT AN INFERENCE FROM A SHORT LIST ***")
+# Mike inverted this one: unassisted solo play is the MAIN use case and the CLEANEST data the
+# system produces, because you know for sure nobody assisted them. It deletes the biggest
+# confound - the person in the room - at the source instead of modelling it.
+SOLO = [{"principal_id": "her", "role": "player"}]
+check("*** one player and NOBODY SAID whether that is everybody is NOT solo - it is one "
+      "person we happen to know about ***", is_solo(SOLO) is False)
+check("confirmed complete makes it solo", is_solo(SOLO, roster_complete=True) is True)
+check("explicitly INCOMPLETE is not solo, and is different from nobody saying",
+      is_solo(SOLO, roster_complete=False) is False)
+check("*** a module that DECLARES one player is structurally solo - it could never have had a "
+      "second, so nobody has to attest it ***", is_solo(SOLO, max_players=1) is True)
+check("a moderator in the room is never solo, however complete the roster",
+      is_solo(SOLO + [{"principal_id": "mike", "role": "moderator"}],
+              roster_complete=True, max_players=1) is False)
+check("a clinician counts as help too",
+      is_solo(SOLO + [{"principal_id": "dr", "role": "clinician"}], roster_complete=True) is False)
+check("an OBSERVER does not - watching is not assisting",
+      is_solo(SOLO + [{"principal_id": "gran", "role": "observer"}],
+              roster_complete=True) is True)
+check("two players is not solo", is_solo(
+    [{"principal_id": "a", "role": "player"}, {"principal_id": "b", "role": "player"}],
+    roster_complete=True) is False)
+check("an empty roster is not solo - absent is not the same as alone", is_solo([], roster_complete=True) is False)
+
+sess3 = store.start_session("u", "p", roster=SOLO, max_players=1)
+check("a single-player module's session reads solo straight out of storage",
+      store.session_is_solo(sess3["id"]) is True)
+sess4 = store.start_session("u", "p", roster=SOLO, max_players=4)
+check("a four-player module's session with nobody attesting is NOT solo",
+      store.session_is_solo(sess4["id"]) is False)
+check("...until somebody says the roster is everybody",
+      store.set_roster_complete(sess4["id"], True) and store.session_is_solo(sess4["id"]) is True)
+check("*** and it is CORRECTABLE, because this is a sessions field rather than an append-only "
+      "one - somebody remembering the aide was there for ten minutes can say so ***",
+      store.set_roster_complete(sess4["id"], False) and store.session_is_solo(sess4["id"]) is False)
+check("the three states survive storage",
+      store.set_roster_complete(sess4["id"], None)
+      and store.get_session(sess4["id"])["roster_complete"] is None)
+check("max_players is stored, so a reader knows what shape the roster COULD have been",
+      store.get_session(sess3["id"])["max_players"] == 1)
 
 section("the privacy page knows about the new tables")
 d = store.describe_storage()

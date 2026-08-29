@@ -1093,7 +1093,8 @@ class _Store:
 
     def start_session(self, user_id: str, pid: str, roster: list[dict] | None = None,
                       label: str = "", expected_min: int | None = None,
-                      producer_version: str | None = None) -> dict:
+                      producer_version: str | None = None, max_players: int | None = None,
+                      roster_complete: bool | None = None) -> dict:
         """Open a session and record who is in the room.
 
         AN EMPTY ROSTER IS ALLOWED AND IS NOT AN ERROR. "Nobody said who was there" is honest;
@@ -1105,12 +1106,15 @@ class _Store:
             raise ValueError(problem)
         sid, ts = _new_id(), _now()
         exp = provenance.DEFAULT_EXPECTED_MIN if expected_min is None else int(expected_min)
+        # NULL stays NULL. Stored as 0/1 rather than a bool so both engines agree, and read
+        # back as None/True/False so callers never see the integer.
+        rc = None if roster_complete is None else (1 if roster_complete else 0)
         with self._tx() as cur:
             cur.execute(self._q(
                 "INSERT INTO sessions(id, user_id, profile_id, label, started_at, expected_min, "
-                "ended_at, end_reason, detected_at, ran_over_ms, producer_version) "
-                "VALUES(?,?,?,?,?,?,NULL,NULL,NULL,NULL,?)"),
-                (sid, user_id, pid, label, ts, exp, producer_version))
+                "ended_at, end_reason, detected_at, ran_over_ms, producer_version, max_players, "
+                "roster_complete) VALUES(?,?,?,?,?,?,NULL,NULL,NULL,NULL,?,?,?)"),
+                (sid, user_id, pid, label, ts, exp, producer_version, max_players, rc))
             for r in roster or []:
                 cur.execute(self._q(
                     "INSERT INTO session_roster(id, session_id, principal_id, role, joined_at, "
@@ -1118,7 +1122,8 @@ class _Store:
                     (_new_id(), sid, r["principal_id"],
                      provenance.normalize_role(r.get("role")), ts))
         return {"id": sid, "user_id": user_id, "profile_id": pid, "label": label,
-                "started_at": ts, "expected_min": exp, "ended_at": None}
+                "started_at": ts, "expected_min": exp, "ended_at": None,
+                "max_players": max_players, "roster_complete": roster_complete}
 
     def amend_roster(self, session_id: str, principal_id: str, role: str | None = None,
                      leaving: bool = False) -> bool:
@@ -1152,11 +1157,34 @@ class _Store:
         return [{"principal_id": r[0], "role": r[1], "joined_at": r[2], "left_at": r[3]}
                 for r in rows]
 
+    def set_roster_complete(self, session_id: str, complete: bool | None) -> bool:
+        """Assert (or un-assert) that the roster is everybody.
+
+        A SESSIONS FIELD, NOT AN APPEND-ONLY ONE, so unlike the provenance columns this is
+        genuinely correctable later - somebody remembering at the end of a session that the
+        aide was there for the first ten minutes should be able to say so.
+        """
+        v = None if complete is None else (1 if complete else 0)
+        with self._tx() as cur:
+            cur.execute(self._q("UPDATE sessions SET roster_complete=? WHERE id=?"),
+                        (v, session_id))
+            return (cur.rowcount or 0) > 0
+
+    def session_is_solo(self, session_id: str) -> bool:
+        """Was this one person, unassisted, ATTESTED? Rows loaded, pure rule decides."""
+        sess = self.get_session(session_id)
+        if not sess:
+            return False
+        return provenance.is_solo(self.session_roster(session_id),
+                                  roster_complete=sess.get("roster_complete"),
+                                  max_players=sess.get("max_players"))
+
     def get_session(self, session_id: str) -> dict | None:
         with self._tx() as cur:
             cur.execute(self._q(
                 "SELECT id, user_id, profile_id, label, started_at, expected_min, ended_at, "
-                "end_reason, detected_at, ran_over_ms, producer_version FROM sessions WHERE id=?"),
+                "end_reason, detected_at, ran_over_ms, producer_version, max_players, "
+                "roster_complete FROM sessions WHERE id=?"),
                 (session_id,))
             r = cur.fetchone()
         if not r:
@@ -1164,7 +1192,8 @@ class _Store:
         return {"id": r[0], "user_id": r[1], "profile_id": r[2], "label": r[3],
                 "started_at": r[4], "expected_min": r[5], "ended_at": r[6],
                 "end_reason": r[7], "detected_at": r[8], "ran_over_ms": r[9],
-                "producer_version": r[10]}
+                "producer_version": r[10], "max_players": r[11],
+                "roster_complete": None if r[12] is None else bool(r[12])}
 
     def end_session(self, session_id: str, reason: str = "ended_by_person",
                     ended_at: str | None = None, detected_at: str | None = None,
@@ -1394,7 +1423,15 @@ class SQLiteStore(_Store):
                     end_reason TEXT,
                     detected_at TEXT,
                     ran_over_ms INTEGER,
-                    producer_version TEXT
+                    producer_version TEXT,
+                    -- How many players the MODULE says it takes. Mike's point: a module that
+                    -- declares one player could never have had two, so solo is structural
+                    -- there rather than something somebody has to assert.
+                    max_players INTEGER,
+                    -- "Is this roster everybody?" THREE STATES: NULL nobody said · 1 yes,
+                    -- confirmed · 0 known incomplete. A one-row roster with NULL here is NOT
+                    -- solo - it is one person we happen to know about.
+                    roster_complete INTEGER
                 );
                 CREATE INDEX IF NOT EXISTS ix_sessions_user ON sessions(user_id, profile_id);
 
@@ -1424,6 +1461,10 @@ class SQLiteStore(_Store):
             # The provenance columns on a database that predates them. SQLite has no
             # ADD COLUMN IF NOT EXISTS, and CREATE TABLE IF NOT EXISTS will not add them to
             # an events table that already exists - which every deployed one does.
+            scols = {r[1] for r in self._conn.execute("PRAGMA table_info(sessions)")}
+            for col in ("max_players", "roster_complete"):
+                if col not in scols:
+                    self._conn.execute(f"ALTER TABLE sessions ADD COLUMN {col} INTEGER")
             ecols = {r[1] for r in self._conn.execute("PRAGMA table_info(events)")}
             for col in ("session_id", "principal_id", "principal_type", "attested_by",
                         "attested_at", "producer_version"):
@@ -1595,7 +1636,9 @@ class PostgresStore(_Store):
             "CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
             "profile_id TEXT NOT NULL, label TEXT NOT NULL DEFAULT '', started_at TEXT NOT NULL, "
             "expected_min INTEGER NOT NULL, ended_at TEXT, end_reason TEXT, detected_at TEXT, "
-            "ran_over_ms BIGINT, producer_version TEXT)",
+            "ran_over_ms BIGINT, producer_version TEXT, max_players INTEGER, roster_complete INTEGER)",
+            "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS max_players INTEGER",
+            "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS roster_complete INTEGER",
             "CREATE INDEX IF NOT EXISTS ix_sessions_user ON sessions(user_id, profile_id)",
 
             "CREATE TABLE IF NOT EXISTS session_roster (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, "
