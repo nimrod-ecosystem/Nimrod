@@ -34,6 +34,10 @@ from identity import current_user, optional_user, set_device_key_lookup
 log = logging.getLogger("nimrod")
 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")      # ids, module types, state keys, streams
+# "pressgame@2.4". Looser than ID_RE only in allowing the @ and dots a version needs, and
+# still a closed shape - this string is read years later to decide whether a missing field
+# predates the field or was simply not captured, so free text in it would be useless.
+PRODUCER_RE = re.compile(r"^[A-Za-z0-9_-]{1,40}@[A-Za-z0-9._-]{1,24}$")
 # Human names: screens, people, devices. \w is Unicode-aware in Python, so accented
 # names already worked; APOSTROPHES DID NOT, which meant this panel's own placeholder
 # ("Christine's bedside") was a name the server refused. Both the typed ' and the curly
@@ -107,6 +111,22 @@ class StatePut(BaseModel):
 class EventPost(BaseModel):
     kind: str
     data: dict = {}
+    # *** THE PROVENANCE COLUMNS SHIPPED WITH NO WAY TO FILL THEM. ***
+    # db.append_event has taken these since the migration, and no caller passed one - so every
+    # event written through the API was unattributed BY CONSTRUCTION rather than by honesty,
+    # which is not what the empty column was supposed to mean.
+    #
+    # ONLY TWO OF THE SIX ARE HERE, AND THE SPLIT IS THE POINT:
+    #   * `session_id` is a join key the client generates. It names a sitting, not a person.
+    #   * `producer_version` is which build wrote the row - a fact about SOFTWARE, and the
+    #     thing that later tells "this row predates the field" from "this row had the field
+    #     and nobody filled it in" (see provenance.py).
+    # `principal_id`, `principal_type`, `attested_by` and `attested_at` are CLAIMS ABOUT
+    # PEOPLE - "a clinician attested this" is exactly the assertion the CRS-R work turns on -
+    # and letting a client post one unchecked would make attestation self-declared. That
+    # needs a decided trust model, not a passthrough, so they stay unreachable for now.
+    session_id: str | None = None
+    producer_version: str | None = None
 
 
 class SourceCreate(BaseModel):
@@ -749,8 +769,15 @@ def append_event(pid: str, stream: str, body: EventPost, user: str = Depends(cur
     _check(pid, ID_RE, "profile id")
     _check(stream, ID_RE, "event stream")
     _check(body.kind, ID_RE, "event kind")
+    if body.session_id is not None:
+        _check(body.session_id, ID_RE, "session id")
+    if body.producer_version is not None:
+        _check(body.producer_version, PRODUCER_RE, "producer version")
     owned_profile(user, pid)
-    return store.append_event(user, pid, stream, body.kind, body.data)
+    return store.append_event(
+        user, pid, stream, body.kind, body.data,
+        session_id=body.session_id, producer_version=body.producer_version,
+    )
 
 
 # ------------------------------------------------------------- remote drive

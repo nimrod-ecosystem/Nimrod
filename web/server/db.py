@@ -1225,8 +1225,15 @@ class _Store:
             cur.execute(self._q("SELECT COUNT(*) FROM events WHERE user_id=? AND profile_id=? AND stream=?"),
                         (user_id, pid, stream))
             total = cur.fetchone()[0]
+        # THE PROVENANCE COLUMNS COME BACK OUT. They were selected here and then dropped on the
+        # floor by the row builder, which made them WRITE-ONLY: a value could be stored and
+        # never read through the normal path. On an append-only clinical log that is worse than
+        # not having the column, because the row looks complete and its producer is
+        # unrecoverable. Null stays null and still means "not captured".
         events = [
-            {"id": r[0], "kind": r[1], "data": json.loads(r[2]), "created_at": r[3]} for r in rows
+            {"id": r[0], "kind": r[1], "data": json.loads(r[2]), "created_at": r[3],
+             "session_id": r[4], "principal_id": r[5], "principal_type": r[6],
+             "attested_by": r[7], "attested_at": r[8], "producer_version": r[9]} for r in rows
         ][::-1]  # chronological (oldest first) for display
         return {"events": events, "total": total}
 

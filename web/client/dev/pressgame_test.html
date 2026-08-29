@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pressgame — the go/no-go loop and what it records</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host{position:fixed;left:0;top:0;width:640px;height:400px;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>pressgame — the go/no-go loop, and what it writes down</h1>
+
+<div class="note">
+  The graphics are a day's work; <b>the data model is the job</b>. Most of what follows is
+  about the record rather than the game: that a hold and the hold that was <i>asked for</i>
+  never collapse into one number, that an echo press after the win is perseveration and not a
+  false alarm, that a stalled frame is recorded as the machine's fault rather than hers, and
+  that nothing here adds up to a score. Driven by a simulation clock, one frame at a time —
+  no <code>requestAnimationFrame</code>, so it runs the same in a hidden pane.
+</div>
+
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { registerModule, mountModule, listManifests } from '../module.js';
+import { createBus } from '../bus.js';
+import { EDGE_TOPIC } from '../input.js';
+import { MODULE_VERBS, verbTarget } from '../actions.js';
+import { CATALOG } from '../modules_catalog.js';
+import '../modules/pressgame.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A rig with a fake events sink, so what the module WOULD store is inspectable without a
+// server. The sink records the meta as well as the row — the provenance columns are the
+// point of half these checks.
+function rig(saved = {}) {
+  const host = document.createElement('div');
+  document.getElementById('host').append(host);
+  const bus = createBus();
+  const appended = [];
+  const events = {
+    append: (kind, data, meta) => { appended.push({ kind, data, meta }); return Promise.resolve(); },
+    destroy() {},
+  };
+  const inst = mountModule('pressgame', {
+    mount: host, bus, events,
+    state: { get: () => saved, destroy() {} },
+    user: 'u', profileId: 'p',
+  });
+  inst.init();
+  return { host, bus, inst, appended, impl: inst.impl || inst };
+}
+const kinds = (a) => a.map((x) => x.kind);
+const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.data);
+
+(async () => {
+  try {
+    // ================= registration =================
+    section('it exists in every place a module has to exist');
+    {
+      check('the manifest is registered', listManifests().some((m) => m.type === 'pressgame'));
+      check('it answers the select verb, and only that one',
+        verbTarget('pressgame', 'select')?.topic === 'pressgame/press' &&
+        Object.keys(MODULE_VERBS.pressgame).length === 1,
+        JSON.stringify(MODULE_VERBS.pressgame));
+      const entry = CATALOG.find((c) => c.type === 'pressgame');
+      check('it is described on the public catalogue page', !!entry);
+      // The comfort group's promise is that nothing in it needs pressing to keep going.
+      check('*** and NOT filed under "something to look at" — calm mode waits on her press '
+        + 'forever, which would make that group\'s promise false ***',
+        entry.group === 'practice' && entry.use === 'answer',
+        `${entry.group}/${entry.use}`);
+      check('the page tells people it writes presses down — it is not a quiet recorder',
+        /press/i.test(entry.why) && /evidence|record/i.test(entry.why));
+    }
+
+    // ================= the loop =================
+    section('the go/no-go loop');
+    {
+      const r = rig({ waitMs: 4000, stopQuietMs: 1000 });
+      check('it opens in the wait', r.impl.__probe().phase === 'wait');
+      r.impl.__step(2000);
+      check('the charge builds as she holds off',
+        Math.abs(r.impl.__probe().charge - 0.5) < 0.02, String(r.impl.__probe().charge));
+      check('and the invite has not opened yet', r.impl.__probe().phase === 'wait');
+      r.impl.__step(2000);
+      check('a full charge opens the invite', r.impl.__probe().phase === 'go');
+      check('the invite is recorded when it is shown', rowsOf(r.appended, 'go_shown').length === 1);
+
+      r.impl.__step(300);                       // a frame paints, then she responds
+      r.impl.__press('verb');
+      const hit = rowsOf(r.appended, 'hit')[0];
+      check('her press is a hit', !!hit);
+      check('with a latency measured from when the invite was PAINTED, not decided',
+        hit.latencyMs === 0 && hit.latencyFromScheduleMs === 300,
+        JSON.stringify({ l: hit.latencyMs, s: hit.latencyFromScheduleMs }));
+      check('and the win moves to the stop phase', r.impl.__probe().phase === 'stop');
+      r.impl.__step(1000);
+      check('stillness ends the stop phase', r.impl.__probe().phase === 'wait');
+      check('and the quiet is recorded', rowsOf(r.appended, 'stop_done').length === 1);
+    }
+
+    // ================= the invariant =================
+    section('*** calm mode never times out — the press IS the content ***');
+    {
+      // 4000, not 1000: the photosensitivity floor holds the wait at 2500ms minimum, so a
+      // shorter setting simply never fills. That floor is the behaviour, not a bug.
+      const r = rig({ waitMs: 4000, challenge: false });
+      r.impl.__step(4000);
+      check('the invite opens', r.impl.__probe().phase === 'go');
+      for (let i = 0; i < 400; i++) r.impl.__step(100);   // 40 seconds of nobody pressing
+      check('*** it is STILL waiting for her forty seconds later — there is no state here '
+        + 'that only an input can leave ***', r.impl.__probe().phase === 'go');
+      check('and nothing was recorded as a miss', rowsOf(r.appended, 'omission').length === 0);
+    }
+    {
+      const r = rig({ waitMs: 4000, challenge: true });
+      r.impl.__step(4000);
+      check('challenge mode opens the same invite', r.impl.__probe().phase === 'go');
+      // The window is curWaitMs, which challenge has just shortened to 3400 on a clean wait.
+      for (let i = 0; i < 40; i++) r.impl.__step(100);
+      check('...and closes it, because that is what somebody opted into',
+        r.impl.__probe().phase === 'wait');
+      check('a missed press in challenge mode is an omission',
+        rowsOf(r.appended, 'omission').length === 1);
+    }
+
+    // ================= perseveration vs commission =================
+    section('an echo after the win is perseveration, not a false alarm');
+    {
+      const r = rig({ waitMs: 4000, stopQuietMs: 5000 });
+      r.impl.__press('verb');                         // during the wait
+      check('a press while waiting is a commission', rowsOf(r.appended, 'commission').length === 1);
+      check('and it is never punished — the wait simply restarts',
+        r.impl.__probe().phase === 'wait' && r.impl.__probe().charge < 0.02);
+
+      r.impl.__step(4000);                            // the wait restarted, so fill it again
+      r.impl.__step(16);
+      r.impl.__press('verb');                         // the hit
+      r.impl.__step(200);
+      r.impl.__press('verb');                         // an echo, 200ms later
+      r.impl.__press('verb');
+      const p = rowsOf(r.appended, 'perseveration');
+      check('*** echoes after the payoff are perseveration ***', p.length === 2, String(p.length));
+      check('...counted, and timed from the win', p[0].n === 1 && p[1].n === 2 && p[0].msSinceHit === 200);
+      check('and NOT logged as commissions — they are a different finding entirely',
+        rowsOf(r.appended, 'commission').length === 1);
+      check('every echo resets the stillness meter', r.impl.__probe().phase === 'stop');
+    }
+
+    // ================= the measurement channel =================
+    section('*** it measures what it does not react to ***');
+    {
+      const r = rig({ waitMs: 100000 });
+      const before = r.impl.__probe();
+      // An edge for a control bound to nothing. The game must not move.
+      r.bus.publish(EDGE_TOPIC, { at: 1, pressId: 1, phase: 'down', deviceClass: 'switch',
+        bound: false, concurrent: 0, requiredHoldMs: 0 });
+      r.bus.publish(EDGE_TOPIC, { at: 2, pressId: 1, phase: 'up', deviceClass: 'switch',
+        bound: false, concurrent: 0, requiredHoldMs: 0, heldMs: 640, auto: false });
+      check('an unbound press is recorded', rowsOf(r.appended, 'edge_down').length === 1);
+      check('so is its release, with the real hold', rowsOf(r.appended, 'edge_up')[0].heldMs === 640);
+      check('*** and the GAME did not move — measuring is not reacting ***',
+        r.impl.__probe().phase === before.phase &&
+        rowsOf(r.appended, 'commission').length === 0);
+      check('the row knows which game phase it happened in, so it can be read in context',
+        rowsOf(r.appended, 'edge_up')[0].gamePhase === 'wait');
+    }
+
+    // *** THE CONFLATION MIKE CAUGHT ***
+    {
+      const r = rig({ waitMs: 100000 });
+      r.bus.publish(EDGE_TOPIC, { at: 1, pressId: 7, phase: 'up', deviceClass: 'switch',
+        bound: true, concurrent: 0, heldMs: 900, requiredHoldMs: 0, auto: false });
+      r.bus.publish(EDGE_TOPIC, { at: 2, pressId: 8, phase: 'up', deviceClass: 'switch',
+        bound: true, concurrent: 0, heldMs: 900, requiredHoldMs: 800, auto: false });
+      const [a, b] = rowsOf(r.appended, 'edge_up');
+      check('two identical 900ms holds are stored', a.heldMs === 900 && b.heldMs === 900);
+      check('*** with what was ASKED of each, so "could not let go" never collapses into '
+        + '"was told to hold" ***', a.requiredHoldMs === 0 && b.requiredHoldMs === 800);
+      check('the module does not classify which was which — that is a judgement about a person',
+        a.intentional === undefined && a.difficulty === undefined);
+    }
+
+    // A synthesized release is not a release.
+    {
+      const r = rig({ waitMs: 100000 });
+      r.bus.publish(EDGE_TOPIC, { at: 1, pressId: 9, phase: 'up', deviceClass: 'switch',
+        bound: true, concurrent: 0, heldMs: 12000, requiredHoldMs: 0, auto: true });
+      check('a watchdog release is marked, so nobody averages it into release timing',
+        rowsOf(r.appended, 'edge_up')[0].auto === true);
+    }
+
+    // ================= the machine as a confound =================
+    section('*** a slow trial and a slow person are different things ***');
+    {
+      const r = rig({ waitMs: 4000 });
+      r.impl.__step(4000);                 // invite decided
+      r.impl.__step(220);                  // ONE long frame before it painted — a stall
+      r.impl.__step(16);
+      r.impl.__press('verb');
+      const hit = rowsOf(r.appended, 'hit')[0];
+      check('the stall before the invite painted is recorded as the machine\'s',
+        hit.machine.goDelayMs === 220, JSON.stringify(hit.machine));
+      check('her latency is measured from the paint, so the stall is not charged to her',
+        hit.latencyMs === 16, String(hit.latencyMs));
+      check('...and the total from the decision is kept too, so nothing is hidden',
+        hit.latencyFromScheduleMs === 236);
+      check('the worst frame in the window is on the row',
+        hit.machine.frameMaxMs >= 220, JSON.stringify(hit.machine));
+    }
+
+    // ================= the record itself =================
+    section('evidence candidates, never scores');
+    {
+      const r = rig({ waitMs: 4000, stopQuietMs: 0 });
+      for (let i = 0; i < 3; i++) { r.impl.__step(4000); r.impl.__step(16); r.impl.__press('verb'); r.impl.__step(1); }
+      const ev = r.impl.__evidence();
+      check('the record is named for what it is', ev.kind === 'session_evidence_record');
+      check('*** it is NOT called a CRS-R export — the subscale is a field inside it ***',
+        !/export/i.test(ev.kind) && ev.crsrSubscale === 'motor' && !!ev.crsrCandidate);
+      check('there is no total, no score and no rating anywhere in it',
+        ev.score === undefined && ev.total === undefined && ev.rating === undefined);
+      check('the mean latency comes with its spread — a mean of three is not a finding',
+        ev.latency.n === 3 && Number.isFinite(ev.latency.meanMs) &&
+        Number.isFinite(ev.latency.minMs) && Number.isFinite(ev.latency.maxMs));
+      check('the honest framing travels IN the record, not in a reader\'s good intentions',
+        /not proof/i.test(ev.caveat) && /engagement/i.test(ev.caveat));
+      check('and it carries the build that made it', ev.producerVersion === 'pressgame@1.0');
+    }
+
+    // ================= provenance on every row =================
+    section('every row knows its sitting and its build');
+    {
+      const r = rig({ waitMs: 4000 });
+      r.impl.__step(4000);
+      const metas = r.appended.map((a) => a.meta);
+      check('a sitting id is generated and shared by every row',
+        metas.every((m) => m && m.sessionId) &&
+        new Set(metas.map((m) => m.sessionId)).size === 1);
+      check('*** and the producer version rides along, which is what later tells "this row '
+        + 'predates the field" from "nobody filled it in" ***',
+        metas.every((m) => m.producerVersion === 'pressgame@1.0'));
+      check('rows go to the append-only trial stream', kinds(r.appended).every((k) => k === 'trial'));
+    }
+
+    // A trial may not redefine a core field — the same rule the server enforces.
+    {
+      const r = rig();
+      const throws = (fn) => { try { fn(); return false; } catch { return true; } };
+      check('a row cannot smuggle in its own `kind` — the core fields are the platform\'s',
+        throws(() => r.impl.__record('trial', { kind: 'sneaky' })));
+      check('...nor its own sitting-relative time',
+        throws(() => r.impl.__record('trial', { sessionMs: 0 })));
+      check('...nor the subscale it bears on, which is not a module\'s to reassign',
+        throws(() => r.impl.__record('trial', { crsrSubscale: 'visual' })));
+      check('*** and it RAISES rather than dropping the key — a module that thinks it recorded '
+        + 'something and did not is worse off than one that failed at write time ***',
+        throws(() => r.impl.__record('trial', { seq: 999 })));
+      check('an ordinary extra is fine',
+        !throws(() => r.impl.__record('trial', { anythingElse: 1 })));
+    }
+
+    // ================= teardown =================
+    section('teardown');
+    {
+      const r = rig({ waitMs: 4000 });
+      r.impl.__step(4000); r.impl.__step(16); r.impl.__press('verb');
+      const host = r.host;
+      r.inst.destroy();
+      check('the sitting is closed with an evidence record, so a partial session is still citable',
+        r.appended.some((a) => a.kind === 'session_evidence_record'));
+      check('and the DOM is given back', host.children.length === 0);
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
