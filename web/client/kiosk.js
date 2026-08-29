@@ -108,6 +108,11 @@ export async function mountKiosk(root, {
           <button data-act="home" title="back to your screens (H)">⌂ Screens</button>
           <button data-act="next" title="next (→ / space)">Next ▸</button>
           <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
+          <!-- HUSH. Not a mute: her voice and any cue still come through, only the media
+               stops. It is for the ordinary moment when somebody walks in to talk to her and
+               the music is in the way. -->
+          <button data-act="hush" data-on="0"
+            title="pause the music and video so you can talk (she is still heard)">Hush</button>
           <button data-act="settings" title="settings (Esc or M)">⚙</button>
           <button data-act="fs" title="fullscreen (F)">⛶</button>
         </div>
@@ -373,6 +378,25 @@ export async function mountKiosk(root, {
   controlsEl.querySelector('[data-act="home"]').addEventListener('click', goHome);
   controlsEl.querySelector('[data-act="next"]').addEventListener('click', nextInPrimary);
   controlsEl.querySelector('[data-act="mirror"]').addEventListener('click', toggleMirrorFull);
+
+  // *** THE HUSH BUTTON. *** Cici has had one; this is its twin.
+  //
+  // IT IS A TOGGLE THAT SAYS WHAT IT IS DOING, and that matters more than it sounds: silence
+  // with no visible cause reads as "the screen broke", and somebody who did not press it -
+  // an aide arriving mid-shift - has to be able to see why there is no sound and undo it.
+  // So the label changes and the button stays lit while it is on.
+  const hushBtn = controlsEl.querySelector('[data-act="hush"]');
+  function renderHush() {
+    const on = !!audio?.isHushed?.();
+    hushBtn.dataset.on = on ? '1' : '0';
+    hushBtn.textContent = on ? 'Sound off' : 'Hush';
+    hushBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    hushBtn.title = on
+      ? 'the music and video are paused — press to bring them back'
+      : 'pause the music and video so you can talk (she is still heard)';
+  }
+  hushBtn.addEventListener('click', () => { audio?.hush?.(!audio.isHushed()); renderHush(); });
+  renderHush();
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
   // ---- the universal settings menu ----------------------------------------
@@ -794,6 +818,9 @@ export async function mountKiosk(root, {
   if (layout) await mountLayout(); else await showPrimary(plan.stageIndex);
 
   return {
+    // The speaker arbiter, so a test (and a future call handler) can reach hush and the
+    // call mode without going through a module.
+    audio: () => audio,
     stageCount: () => stageDefs.length,
     // NOTE: `layout()` was already taken by the mirror/clock HUD positions below. A second
     // `layout:` key in this same object literal is silently shadowed by it — which is

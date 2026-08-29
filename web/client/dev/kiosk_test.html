@@ -81,6 +81,24 @@ const ds = () => root.querySelector('.kiosk').dataset;
     check('the stage renders the photos module', stageHas('.photos'));
     check('only the primary is mounted in the stage (youtube not yet)', !stageHas('.youtube'));
 
+    // ---- the hush button ------------------------------------------------------------
+    // Silence with no visible cause reads as a broken screen, so this is a toggle that says
+    // what it is doing rather than a mute that just happens.
+    {
+      const btn = root.querySelector('[data-act="hush"]');
+      check('the control bar offers a hush', !!btn);
+      check('it starts off, and says so', btn.dataset.on === '0' && /Hush/.test(btn.textContent));
+      btn.click();
+      check('*** pressing it hushes the media ***', kiosk.audio().isHushed() === true);
+      check('and the button stays LIT and relabels, so whoever finds the screen silent can '
+        + 'see why and undo it',
+        btn.dataset.on === '1' && /Sound off/.test(btn.textContent) &&
+        btn.getAttribute('aria-pressed') === 'true', btn.textContent);
+      btn.click();
+      check('pressing again brings the sound back',
+        kiosk.audio().isHushed() === false && btn.dataset.on === '0');
+    }
+
     // default layout from settings: large mirror, top-right; clock bottom-left
     check('default mirror size is large', kiosk.layout().mirrorSize === 'lg' && ds().mirrorSize === 'lg', JSON.stringify(kiosk.layout()));
     check('default mirror corner is top-right', kiosk.layout().mirrorCorner === 'tr' && ds().mirrorCorner === 'tr');
