@@ -31,6 +31,12 @@ export function createSpeechChannel({
   pref = () => ({}),
   synth = null,
   Utterance = null,
+  // *** THE SPEAKER ARBITER. *** Without it a spoken cue lands UNDER whatever music is
+  // already playing, which is the one thing "there is one pair of ears" was about. With it,
+  // speaking marks the `voice` tier active and every media source ducks for the sentence.
+  // Optional: no bus means no ducking, never no speech.
+  audio = null,
+  audioId = 'speech',
   // A hard stop, because speechSynthesis does not always fire `onend` - a cancelled or
   // interrupted utterance can leave the channel believing it is still speaking forever,
   // and then nothing is ever said again. Same disease as the input bus's stuck switch,
@@ -39,6 +45,10 @@ export function createSpeechChannel({
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
+  // The voice tier itself makes no sound of its own - it exists so everything else can hear
+  // that it is talking. No onGain: nothing ducks a voice.
+  audio?.register?.(audioId, { tier: 'voice' });
+
   return {
     name: 'speech',
     concurrency: 1,
@@ -50,9 +60,15 @@ export function createSpeechChannel({
       const u = speak(item.text, pref() || {}, opts);
       if (!u) { done(); return null; }
 
+      // Ducked for the sentence, and released on EVERY exit below - including the watchdog.
+      // A voice tier left active because an utterance never fired `onend` would hold the
+      // music down forever, which is the same stuck-switch disease the input bus has a
+      // watchdog for, pointed at the speaker.
+      audio?.setActive?.(audioId, true);
+
       let finished = false;
-      const guard = setTimer(() => { if (!finished) { finished = true; done(); } }, maxMs);
-      const end = () => { if (finished) return; finished = true; clearTimer(guard); done(); };
+      const guard = setTimer(() => { if (!finished) { finished = true; audio?.setActive?.(audioId, false); done(); } }, maxMs);
+      const end = () => { if (finished) return; finished = true; clearTimer(guard); audio?.setActive?.(audioId, false); done(); };
       u.onend = end;
       u.onerror = end;
 
@@ -60,6 +76,7 @@ export function createSpeechChannel({
         if (finished) return;
         finished = true;
         clearTimer(guard);
+        audio?.setActive?.(audioId, false);
         cancelSpeech(synth || undefined);
       };
     },
@@ -160,13 +177,13 @@ export function createSoundChannel({ context = null, gain = 0.12 } = {}) {
 // Everything this device can actually do. A channel whose adapter reports unavailable is
 // left out entirely, so output.js drops to `no-adapter` and SAYS SO in the log, rather
 // than a message vanishing into a channel that was never going to work.
-export function defaultChannels({ mount = null, pref = () => ({}), events = null } = {}) {
+export function defaultChannels({ mount = null, pref = () => ({}), events = null, audio = null } = {}) {
   const out = {};
   // Signed out there is no account, so there are no "other devices" and no mailbox.
   // The channel is absent rather than present-and-broken, which is what makes
   // output.js report `no-adapter` instead of a message vanishing.
   if (events) out.remote = createRemoteChannel({ events });
-  const speech = createSpeechChannel({ pref });
+  const speech = createSpeechChannel({ pref, audio });
   if (speech.available()) out.speech = speech;
   const sound = createSoundChannel();
   if (sound.available()) out.sound = sound;

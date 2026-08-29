@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>audio bus — one pair of ears</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>audio bus — the speaker arbiter</h1>
+
+<div class="note">
+  There is <b>one pair of ears</b>, and the OS mixer sums every sound at once. Ported from
+  Cici's <code>CiciAudio</code>, which has been running at the bedside since July. Two rules:
+  a higher tier <b>ducks</b> everything below it, and one member of an exclusivity group
+  sounds at a time. Everything here is arithmetic — no audio hardware, no DOM.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY }
+  from '../audio_bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// Every source records the levels it was handed, so "it ducked" is an assertion.
+function rig() {
+  const bus = createAudioBus();
+  const seen = {};
+  const src = (id, spec) => {
+    seen[id] = [];
+    bus.register(id, { ...spec, onGain: (lvl) => seen[id].push(lvl) });
+    return id;
+  };
+  return { bus, seen, src, last: (id) => seen[id][seen[id].length - 1] };
+}
+const game = { tier: 'media', group: MUSIC_GROUP, groupPriority: GAME_MUSIC_PRIORITY };
+const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY };
+
+(async () => {
+  try {
+    section('rule 1 — a voice ducks the music, it does not kill it');
+    {
+      const r = rig();
+      r.src('music', game);
+      r.src('voice', { tier: 'voice' });
+      r.bus.setActive('music', true);
+      check('music alone plays at full', r.last('music') === 1, JSON.stringify(r.seen));
+      r.bus.setActive('voice', true);
+      check('*** speaking ducks the bed to the duck depth ***',
+        r.last('music') === DUCK_TO, String(r.last('music')));
+      check('*** and NOT to zero — a bed UNDER a voice is the point, silence would make every '
+        + 'cue feel like an interruption ***', DUCK_TO > 0 && DUCK_TO < 1, String(DUCK_TO));
+      check('the voice itself is not ducked by anything', r.bus.levelOf('voice') === 1);
+      r.bus.setActive('voice', false);
+      check('and it comes back up when the sentence ends', r.last('music') === 1);
+    }
+
+    section('*** rule 2 — one music at a time, and a video wins ***');
+    {
+      const r = rig();
+      r.src('game', game);
+      r.src('video', video);
+      r.bus.setActive('game', true);
+      check('a game bed plays when nothing else does', r.last('game') === 1);
+      r.bus.setActive('video', true);
+      check('*** a video takes the slot — it outranks game music (Mike, 2026-07-26) ***',
+        r.last('video') === 1 && r.last('game') === 0,
+        JSON.stringify({ video: r.last('video'), game: r.last('game') }));
+      r.bus.setActive('video', false);
+      check('*** and the game comes back on its own when the video stops ***',
+        r.last('game') === 1);
+    }
+    {
+      const r = rig();
+      r.src('g1', game);
+      r.src('g2', game);
+      r.bus.setActive('g1', true);
+      r.bus.setActive('g2', true);
+      check('two games do NOT play on top of each other', r.last('g1') === 0 && r.last('g2') === 1);
+      check('the newest one wins — opening a second game preempts the first',
+        r.last('g2') === 1);
+      r.bus.setActive('g2', false);
+      check('closing it hands the slot back', r.last('g1') === 1);
+    }
+
+    section('both rules together — the real bedside case');
+    {
+      const r = rig();
+      r.src('game', game); r.src('video', video); r.src('voice', { tier: 'voice' });
+      r.bus.setActive('game', true);
+      r.bus.setActive('video', true);
+      r.bus.setActive('voice', true);
+      check('*** a video plays, ducked under the voice, and the game is silent — all three '
+        + 'rules at once ***',
+        r.last('video') === DUCK_TO && r.last('game') === 0 && r.bus.levelOf('voice') === 1,
+        JSON.stringify(r.bus.state()));
+    }
+
+    section('hush — "stop, I am talking to somebody in this room"');
+    {
+      const r = rig();
+      r.src('game', game); r.src('voice', { tier: 'voice' });
+      r.bus.setActive('game', true);
+      r.bus.hush(true);
+      check('hush silences media outright, not to the duck depth', r.last('game') === 0);
+      r.bus.setActive('voice', true);
+      check('*** but she stays audible — hush does not touch the voice tier ***',
+        r.bus.levelOf('voice') === 1);
+      check('it reports itself', r.bus.isHushed() === true);
+      r.bus.hush(false);
+      // The voice is STILL active here, so lifting the hush returns the bed to the DUCKED
+      // level rather than full - the two rules compose, they do not override each other.
+      check('lifting the hush brings the media back, still ducked under the live voice',
+        r.last('game') === DUCK_TO, String(r.last('game')));
+      r.bus.setActive('voice', false);
+      check('...and to full once the voice stops too', r.last('game') === 1);
+      check('hushing twice is idempotent', r.bus.hush(true) === true && r.bus.hush(true) === true);
+    }
+
+    section('the details that were bugs in the original');
+    {
+      // Level starts null, never 1, or the first enact is swallowed by the no-change guard
+      // and a game that wins the slot from idle never actually starts.
+      const r = rig();
+      r.src('game', game);
+      check('a fresh source has no level yet — "never enacted", not "playing at 1"',
+        r.bus.levelOf('game') === null);
+      r.bus.setActive('game', true);
+      check('*** so the FIRST computed level always fires — the music actually starts ***',
+        r.seen.game.length === 1 && r.seen.game[0] === 1, JSON.stringify(r.seen.game));
+    }
+    {
+      // An onGain that toggles activity must not recurse.
+      const bus = createAudioBus();
+      let calls = 0;
+      bus.register('naughty', { tier: 'media', onGain: () => {
+        calls++;
+        if (calls < 5) bus.setActive('naughty', false);   // re-enter from inside the callback
+      } });
+      bus.setActive('naughty', true);
+      check('a source that toggles itself from inside onGain does not recurse forever',
+        calls < 5, String(calls));
+    }
+    {
+      // A throwing source must not take the rest of the screen down with it.
+      const bus = createAudioBus();
+      const heard = [];
+      bus.register('bad', { tier: 'media', onGain: () => { throw new Error('boom'); } });
+      bus.register('good', { tier: 'media', group: MUSIC_GROUP, onGain: (l) => heard.push(l) });
+      bus.setActive('bad', true);
+      bus.setActive('good', true);
+      check('*** one source throwing does not silence the others — a coordinator failing must '
+        + 'never be able to take the sound away ***', heard.length > 0, JSON.stringify(heard));
+    }
+    {
+      const r = rig();
+      r.src('game', game);
+      r.bus.setActive('game', true);
+      const n = r.seen.game.length;
+      r.bus.setActive('game', true);           // already active
+      check('re-announcing the same state changes nothing', r.seen.game.length === n);
+      r.bus.unregister('game');
+      check('unregistering removes it', r.bus.levelOf('game') === null &&
+        !Object.keys(r.bus.state()).includes('game'));
+    }
+    {
+      const r = rig();
+      r.src('game', game);
+      r.bus.setActive('game', true);
+      r.bus.setActive('game', false);
+      check('going quiet drops its own level too, so nothing is left held up',
+        r.last('game') === 0);
+    }
+    {
+      const bus = createAudioBus();
+      bus.setActive('never-registered', true);
+      check('announcing an unknown source is a no-op rather than a crash',
+        bus.levelOf('never-registered') === null);
+      check('registering with no id is refused', bus.register('') === null);
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

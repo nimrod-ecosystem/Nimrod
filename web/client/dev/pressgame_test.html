@@ -295,8 +295,11 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
       r.impl.__step(16);
       r.impl.__press('verb');
       check('a win says the reward word', said.includes('Well done'), JSON.stringify(said));
-      r.impl.__step(200); r.impl.__press('verb');
-      check('the first echo is told they can stop', said.includes('You can stop pressing now'));
+      // Past the celebration first — the port is faithful to Cici's here and stays quiet
+      // while the reward is landing. See the reminder-lines section for that on its own.
+      r.impl.__step(1600); r.impl.__press('verb');
+      check('the first echo past the celebration is told they can stop',
+        said.includes('You can stop pressing now'), JSON.stringify(said));
       r.impl.__step(100); r.impl.__press('verb');
       check('*** but only ONCE — a voice repeating "you can stop" at somebody who cannot '
         + 'stop is not help ***',
@@ -316,6 +319,89 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
       r.impl.__step(4000); r.impl.__step(16); r.impl.__press('verb');
       check('*** with no output bus it does not throw — it just does not speak ***',
         r.impl.__probe().phase === 'stop' && rowsOf(r.appended, 'hit').length === 1);
+    }
+
+    // ================= the gentle lines =================
+    //
+    // Not one of these tells her she is wrong. A go/no-go task punishes early presses by
+    // definition, and the voice is where that could easily have become scolding somebody for
+    // a movement they did not choose.
+    section('*** the reminder lines, and none of them is a telling-off ***');
+    {
+      const said = [];
+      const r = rig({ waitMs: 40000, stopQuietMs: 9000 }, { say: (t) => said.push(t) });
+      said.length = 0;
+      r.impl.__press('verb');
+      check('a press during the wait gets a gentle line',
+        said.length === 1 && /Relax|Loosen|Not yet|Easy now|Almost/.test(said[0]),
+        JSON.stringify(said));
+      r.impl.__step(200);
+      r.impl.__press('verb');
+      check('*** and mashing does NOT produce a line per press — somebody perseverating '
+        + 'presses fast, and a voice talking over itself is the least useful moment for it ***',
+        said.length === 1, JSON.stringify(said));
+      r.impl.__step(2600);
+      r.impl.__press('verb');
+      check('after a couple of seconds another one is allowed', said.length === 2);
+      check('never the same wording as a correction — nothing says wrong, no, or stop it',
+        !said.some((t) => /wrong|no\b|don't|stop it|bad/i.test(t)), JSON.stringify(said));
+    }
+    {
+      // The stop phase: silent during the celebration, then the instruction, then the
+      // same gentle lines.
+      const said = [];
+      const r = rig({ waitMs: 4000, stopQuietMs: 30000 }, { say: (t) => said.push(t) });
+      r.impl.__step(4000); r.impl.__step(16);
+      r.impl.__press('verb');                       // the win
+      said.length = 0;
+      r.impl.__step(300);
+      r.impl.__press('verb');                       // an echo, during the celebration
+      check('*** it stays silent during the celebration — talking over the payoff to say '
+        + '"stop" turns the reward into a correction ***', said.length === 0, JSON.stringify(said));
+      r.impl.__step(1600);                          // past CELEBRATION_MS
+      r.impl.__press('verb');
+      check('then the instruction, once', said.length === 1 && said[0] === 'You can stop pressing now');
+      r.impl.__step(2600);
+      r.impl.__press('verb');
+      check('*** and after that the gentle lines, because repeating the instruction is not '
+        + 'adding information she has not already heard ***',
+        said.length === 2 && said[1] !== 'You can stop pressing now', JSON.stringify(said));
+    }
+    {
+      // "You can stop" is once per ROUND, not once per session.
+      const said = [];
+      // A long stillness window, so the stop phase is still live when the echo lands.
+      const r = rig({ waitMs: 4000, stopQuietMs: 30000 }, { say: (t) => said.push(t) });
+      for (let round = 0; round < 2; round++) {
+        r.impl.__step(4000); r.impl.__step(16);
+        r.impl.__press('verb');
+        r.impl.__step(1600);
+        r.impl.__press('verb');                     // an echo past the celebration
+        // Force the round to end so the next one starts: stillness, then a fresh wait.
+        r.impl.__step(30000);
+      }
+      check('a new round can say it again — it is once per round, not once ever',
+        said.filter((t) => t === 'You can stop pressing now').length === 2, JSON.stringify(said));
+    }
+
+    // ================= music =================
+    section('the bed under it');
+    {
+      const r = rig({ waitMs: 4000 });
+      const st = r.impl.__probe().music;
+      check('a game has music with nothing configured at all',
+        st && st.mode === 'ambient', JSON.stringify(st));
+      check('but it is not playing until somebody presses — autoplay is refused everywhere',
+        st && st.playing === false);
+      r.impl.__press('verb');
+      check('the first press starts it, which is the gesture browsers require',
+        r.impl.__probe().music.playing === true, JSON.stringify(r.impl.__probe().music));
+    }
+    {
+      const r = rig({ waitMs: 4000, music: 'off' });
+      r.impl.__press('verb');
+      check('and off means off', r.impl.__probe().music.playing === false &&
+        r.impl.__probe().music.mode === 'off');
     }
 
     // ================= teardown =================
