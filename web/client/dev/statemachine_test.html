@@ -210,6 +210,106 @@ section('engine — guards, local-before-global, clean teardown');
 
 // ── render ───────────────────────────────────────────────────────────────────
 let pass = 0, fail = 0;
+// ── the incoming-call shape ─────────────────────────────────────────────────
+// A call is an INTERRUPT: it arrives from outside, from any state, and has to hand the
+// screen back to whatever it interrupted. The engine already fires global transitions from
+// anywhere; `$back` is the half that was missing.
+const withCall = {
+  initial: 'photos',
+  on: {
+    'call/incoming': [{ to: 'call' }],          // GLOBAL — from any state
+    'call/ended':    [{ to: '$back' }],         // back to whatever we interrupted
+  },
+  states: {
+    photos:  { enter: { publish: 'stage/show', payload: 'photos' } },
+    youtube: { enter: { publish: 'stage/show', payload: 'youtube' } },
+    call:    { enter: { publish: 'stage/show', payload: 'call' } },
+    // A state that must not be interrupted overrides the global rule with a no-op target.
+    scan:    { enter: { publish: 'stage/show', payload: 'scan' },
+               on: { 'call/incoming': [{ to: 'scan' }] } },
+  },
+};
+
+section('an incoming call — a global interrupt that hands the screen back');
+{
+  const bus = createBus();
+  const shown = [];
+  bus.subscribe('stage/show', (w) => shown.push(w));
+  const m = createMachine(withCall, { bus });
+  m.start();
+  ok(m.state === 'photos', 'starts where it was told to');
+
+  bus.publish('call/incoming');
+  ok(m.state === 'call', 'a call switches the screen from ANY state — a global transition');
+  bus.publish('call/ended');
+  ok(m.state === 'photos', '*** and $back returns to what it interrupted ***', m.state);
+
+  // From somewhere else entirely: $back is not a fixed target.
+  bus.publish('youtube/x');                       // no such transition; still on photos
+  m.fire('call/incoming');
+  ok(m.state === 'call', 'it interrupts again');
+  m.fire('call/ended');
+  ok(m.state === 'photos', 'and returns again');
+  ok(shown.join(',') === 'photos,call,photos,call,photos', 'the stage saw every switch', shown.join(','));
+}
+{
+  // The screen it returns to depends on where it WAS, which is the whole point.
+  const bus = createBus();
+  const m = createMachine({ ...withCall, initial: 'youtube' }, { bus });
+  m.start();
+  m.fire('call/incoming'); m.fire('call/ended');
+  ok(m.state === 'youtube', '$back is not a fixed target — it returns wherever it came FROM');
+}
+{
+  // A state may refuse to be interrupted: state-local transitions are tried first.
+  const bus = createBus();
+  const m = createMachine({ ...withCall, initial: 'scan' }, { bus });
+  m.start();
+  m.fire('call/incoming');
+  ok(m.state === 'scan', '*** a state can override the global rule and refuse the call ***', m.state);
+}
+{
+  // A self-transition must not make "back" mean "here", or a call would return to the call.
+  const bus = createBus();
+  const m = createMachine({
+    initial: 'a',
+    on: { hop: [{ to: 'a' }], call: [{ to: 'c' }], done: [{ to: '$back' }] },
+    states: { a: {}, c: {} },
+  }, { bus });
+  m.start();
+  m.fire('hop');                                   // a -> a, a self-transition
+  m.fire('call');
+  m.fire('done');
+  ok(m.state === 'a', 'a self-transition does not become the thing to go back to', m.state);
+}
+{
+  // A call that arrives before anything has moved still has to end somewhere.
+  const bus = createBus();
+  const m = createMachine({
+    initial: 'home',
+    on: { call: [{ to: 'c' }], done: [{ to: '$back' }] },
+    states: { home: {}, c: {} },
+  }, { bus });
+  m.start();
+  m.fire('call');
+  m.fire('done');
+  ok(m.state === 'home', 'with nothing to go back to it falls back to the initial state — a '
+    + 'machine stuck in a call is worse than one that starts over', m.state);
+}
+{
+  // A $back pointing at a state that no longer exists must not strand the machine.
+  const bus = createBus();
+  const m = createMachine({
+    initial: 'a',
+    on: { call: [{ to: 'c' }], done: [{ to: '$back' }, { to: 'a' }] },
+    states: { a: {}, c: {} },
+  }, { bus });
+  m.start();
+  ok(m.previous === null, 'nothing has been interrupted yet');
+  m.fire('call');
+  ok(m.previous === 'a', 'the machine remembers what it interrupted');
+}
+
 const secEl = document.getElementById('sections');
 for (const s of sections) {
   const h = document.createElement('h2'); h.textContent = s.name; secEl.appendChild(h);
