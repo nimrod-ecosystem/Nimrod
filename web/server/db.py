@@ -464,126 +464,6 @@ class _Store:
                          link=link, permissions=self.permissions_on_person(person_id),
                          now_iso=_now())
 
-    # ---- guardian ---------------------------------------------------------
-    # "May act as this account", not "may do X to this screen". BOTH ends must accept.
-
-    def offer_guardianship(self, guardian_account: str, guarded_account: str,
-                           accepted_by: str) -> dict:
-        """Create or update the offer, recording which SIDE has accepted.
-
-        One row per pair. `accepted_by` is the account doing the accepting, and it must be
-        one of the two - a third account accepting on somebody's behalf is exactly the
-        unauthenticated claim this model refuses.
-
-        In practice Mike will click both ends for Christine. That is administration, not
-        consent, and the interface must say so rather than imply a consent that did not
-        happen - see links.py. The data records who clicked, which is what makes the
-        honest version possible.
-        """
-        if guardian_account == guarded_account:
-            raise ValueError("an account cannot be its own guardian")
-        if accepted_by not in (guardian_account, guarded_account):
-            raise ValueError("only the two accounts involved may accept a guardianship")
-        ts = _now()
-        col = ("accepted_by_guardian" if accepted_by == guardian_account
-               else "accepted_by_guarded")
-        with self._tx() as cur:
-            cur.execute(self._q(
-                "SELECT id FROM guardianships WHERE guardian_account=? AND guarded_account=?"),
-                (guardian_account, guarded_account))
-            row = cur.fetchone()
-            if row:
-                # Re-offering after a revocation clears the revocation, but ONLY the side
-                # doing the accepting is set - the other end has to say yes again.
-                cur.execute(self._q(
-                    f"UPDATE guardianships SET {col}=?, revoked_at=NULL, revoked_by=NULL "
-                    "WHERE id=?"), (ts, row[0]))
-                gid = row[0]
-            else:
-                gid = _new_id()
-                vals = (gid, guardian_account, guarded_account,
-                        ts if col == "accepted_by_guardian" else None,
-                        ts if col == "accepted_by_guarded" else None, accepted_by, ts)
-                cur.execute(self._q(
-                    "INSERT INTO guardianships(id, guardian_account, guarded_account, "
-                    "accepted_by_guardian, accepted_by_guarded, created_by, created_at, "
-                    "revoked_at, revoked_by) VALUES(?,?,?,?,?,?,?,NULL,NULL)"), vals)
-        return self.get_guardianship(guardian_account, guarded_account) or {}
-
-    def get_guardianship(self, guardian_account: str, guarded_account: str) -> dict | None:
-        with self._tx() as cur:
-            cur.execute(self._q(
-                "SELECT id, guardian_account, guarded_account, accepted_by_guardian, "
-                "accepted_by_guarded, created_by, created_at, revoked_at, revoked_by "
-                "FROM guardianships WHERE guardian_account=? AND guarded_account=?"),
-                (guardian_account, guarded_account))
-            row = cur.fetchone()
-        return self._guardianship_row(row) if row else None
-
-    def guardianships_of(self, guarded_account: str) -> list[dict]:
-        """Everyone who may act as this account - offers included, so the screen can show
-        a pending one. `links.guardianship_active` is what separates them."""
-        with self._tx() as cur:
-            cur.execute(self._q(
-                "SELECT id, guardian_account, guarded_account, accepted_by_guardian, "
-                "accepted_by_guarded, created_by, created_at, revoked_at, revoked_by "
-                "FROM guardianships WHERE guarded_account=? ORDER BY created_at"),
-                (guarded_account,))
-            rows = cur.fetchall()
-        return [self._guardianship_row(r) for r in rows]
-
-    def guardianships_held_by(self, guardian_account: str) -> list[dict]:
-        """The accounts this one may switch into - what the account switcher renders."""
-        with self._tx() as cur:
-            cur.execute(self._q(
-                "SELECT id, guardian_account, guarded_account, accepted_by_guardian, "
-                "accepted_by_guarded, created_by, created_at, revoked_at, revoked_by "
-                "FROM guardianships WHERE guardian_account=? ORDER BY created_at"),
-                (guardian_account,))
-            rows = cur.fetchall()
-        return [self._guardianship_row(r) for r in rows]
-
-    def revoke_guardianship(self, guardian_account: str, guarded_account: str,
-                            revoked_by: str) -> int:
-        """End it. THE CALLER MUST ALREADY BE INSIDE THE GUARDED ACCOUNT.
-
-        `revoked_by` is checked against `links.may_manage_guardians`, which is exactly
-        `may_act_as` and deliberately nothing more: the account itself, or one of its
-        existing guardians. There is no external route, so there is no external route to
-        have a hole in. One guardian can remove another - named as residual risk in the
-        design, mitigated by acting-as being logged and visible on both accounts, and not
-        solved harder because the product must not arbitrate a family dispute.
-        """
-        if not links.may_manage_guardians(revoked_by, guarded_account,
-                                          self.guardianships_of(guarded_account)):
-            return 0
-        ts = _now()
-        with self._tx() as cur:
-            cur.execute(self._q(
-                "SELECT id FROM guardianships WHERE guardian_account=? AND guarded_account=? "
-                "AND revoked_at IS NULL"), (guardian_account, guarded_account))
-            row = cur.fetchone()
-            if not row:
-                return 0
-            # *** BOTH ACCEPTANCES ARE CLEARED, NOT JUST THE REVOCATION FLAG. ***
-            # Caught by test_links: leaving the other side's acceptance stamped meant a
-            # revoked guardianship could be reinstated by ONE side re-offering, since the
-            # far end still looked like it had said yes - months ago, before the thing that
-            # caused the revocation. Revocation resets consent; coming back needs both ends
-            # again, which is the same bar as the first time.
-            cur.execute(self._q(
-                "UPDATE guardianships SET revoked_at=?, revoked_by=?, "
-                "accepted_by_guardian=NULL, accepted_by_guarded=NULL WHERE id=?"),
-                (ts, revoked_by, row[0]))
-            return 1
-
-    @staticmethod
-    def _guardianship_row(r) -> dict:
-        return {"id": r[0], "guardian_account": r[1], "guarded_account": r[2],
-                "accepted_by_guardian": r[3], "accepted_by_guarded": r[4],
-                "created_by": r[5], "created_at": r[6],
-                "revoked_at": r[7], "revoked_by": r[8]}
-
     def count_person_screens(self, account_id: str, person_id: str) -> int:
         with self._tx() as cur:
             cur.execute(self._q("SELECT COUNT(*) FROM profiles WHERE user_id=? AND person_id=?"),
@@ -856,9 +736,6 @@ class _Store:
         "link_permissions": ("What each connection is allowed to do - send messages, call, "
                             "watch a screen, add photos. Each one can be switched off on its "
                             "own, and ending the connection removes them all.", True),
-        "guardianships":   ("Who may sign in as your account, and whose account you may sign "
-                            "in as. Both people have to agree, it is shown on both accounts, "
-                            "and anything done this way is recorded as done by them.", True),
         "screen_pairings": ("A short-lived code while a screen is being set up. Deleted "
                             "afterwards.", False),
         "pairings":        ("A short-lived code while a media folder is being connected. "
@@ -1261,6 +1138,14 @@ class SQLiteStore(_Store):
                 -- exactly one row and the UNIQUE index can say so - two half-links could be
                 -- broken independently, and then "are these two connected" would depend on
                 -- who asked.
+                -- REMOVED 2026-08-28. A guardianships table shipped earlier the same day
+                -- and nothing ever wrote to it - there were no endpoints. It is dropped rather
+                -- than left inert because `describe_storage` reads the REAL table list and
+                -- publishes it to users: an empty guardianships table tells somebody we keep a
+                -- guardianship record about them when we do not, and a privacy page that
+                -- over-claims is still a false one. See links.py rule 5 before rebuilding it.
+                DROP TABLE IF EXISTS guardianships;
+
                 CREATE TABLE IF NOT EXISTS links (
                     id TEXT PRIMARY KEY,
                     account_lo TEXT NOT NULL,
@@ -1294,27 +1179,6 @@ class SQLiteStore(_Store):
                     link_id, person_id, capability, subject_kind, subject_id);
                 CREATE INDEX IF NOT EXISTS ix_link_perm_person ON link_permissions(person_id);
                 CREATE INDEX IF NOT EXISTS ix_link_perm_link ON link_permissions(link_id);
-
-                -- GUARDIAN - "may act as this account", not "may do X to this screen".
-                -- BOTH accepted_* flags must be set: it cannot be claimed unilaterally.
-                -- Revocation is managed from inside the guarded account and by no other
-                -- route - see links.may_manage_guardians for why an external path would be
-                -- a hostile-takeover mechanism.
-                CREATE TABLE IF NOT EXISTS guardianships (
-                    id TEXT PRIMARY KEY,
-                    guardian_account TEXT NOT NULL,
-                    guarded_account TEXT NOT NULL,
-                    accepted_by_guardian TEXT,
-                    accepted_by_guarded TEXT,
-                    created_by TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    revoked_at TEXT,
-                    revoked_by TEXT
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS ux_guardianship ON guardianships(
-                    guardian_account, guarded_account);
-                CREATE INDEX IF NOT EXISTS ix_guardianship_guarded ON guardianships(guarded_account);
-                CREATE INDEX IF NOT EXISTS ix_guardianship_guardian ON guardianships(guardian_account);
 
                 CREATE TABLE IF NOT EXISTS profiles (
                     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL,
@@ -1463,6 +1327,10 @@ class PostgresStore(_Store):
             "CREATE INDEX IF NOT EXISTS ix_grants_person ON drive_grants(owner_id, person_id)",
             "CREATE INDEX IF NOT EXISTS ix_grants_subject ON drive_grants(subject_kind, subject_id)",
 
+            # REMOVED 2026-08-28 - see the SQLite block for why it is dropped rather than
+            # left inert. Nothing ever wrote to it; there were no endpoints.
+            "DROP TABLE IF EXISTS guardianships",
+
             # Connections - see links.py and the SQLite block above for why the pair is
             # canonically ordered and why drive_screen is absent from link_permissions.
             "CREATE TABLE IF NOT EXISTS links (id TEXT PRIMARY KEY, account_lo TEXT NOT NULL, "
@@ -1479,15 +1347,6 @@ class PostgresStore(_Store):
             "link_id, person_id, capability, subject_kind, subject_id)",
             "CREATE INDEX IF NOT EXISTS ix_link_perm_person ON link_permissions(person_id)",
             "CREATE INDEX IF NOT EXISTS ix_link_perm_link ON link_permissions(link_id)",
-
-            "CREATE TABLE IF NOT EXISTS guardianships (id TEXT PRIMARY KEY, "
-            "guardian_account TEXT NOT NULL, guarded_account TEXT NOT NULL, "
-            "accepted_by_guardian TEXT, accepted_by_guarded TEXT, created_by TEXT NOT NULL, "
-            "created_at TEXT NOT NULL, revoked_at TEXT, revoked_by TEXT)",
-            "CREATE UNIQUE INDEX IF NOT EXISTS ux_guardianship ON guardianships("
-            "guardian_account, guarded_account)",
-            "CREATE INDEX IF NOT EXISTS ix_guardianship_guarded ON guardianships(guarded_account)",
-            "CREATE INDEX IF NOT EXISTS ix_guardianship_guardian ON guardianships(guardian_account)",
 
             "CREATE TABLE IF NOT EXISTS people (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, "
             "name TEXT NOT NULL, created_at TEXT NOT NULL)",

@@ -45,8 +45,16 @@ FIVE RULES, each here because the alternative rots.
    nothing says yes to them yet, because a migration on a permissions table is the kind
    nobody enjoys.
 
-5. GUARDIANSHIP IS NOT A BIGGER PERMISSION - see below. It is deliberately NOT consulted
-   by `may()`, and that separation is load-bearing.
+5. THERE IS NO GUARDIAN CONCEPT, AND THAT IS A DECISION, NOT AN OMISSION.
+   A guardianships table, its CRUD and ~20 tests were built and then REMOVED on 2026-08-28.
+   Mike: *"Guardian is kind of moot anyway, they'd just be a super user."* An account that
+   may do everything for somebody is a role with every permission switched on - it does not
+   need a second mechanism above the permission model.
+   ***DO NOT REBUILD IT WITHOUT ASKING.*** If "may act as this account" (an account switcher,
+   as opposed to "may do X to this person's screen") is ever genuinely wanted, it is a real
+   and different feature - but it is not a permission, and the last version of it was deleted
+   because nothing used it and `describe_storage` was publishing an empty table to users as
+   something we store about them.
 """
 
 from __future__ import annotations
@@ -264,11 +272,6 @@ def may(capability: str, *, actor: str, person_id: str, owner: str | None,
     rule as `grants.may_drive`, and it has to be the same or the two endpoints leak
     different things about the same id.
 
-    GUARDIANSHIP IS NOT CONSULTED HERE, ON PURPOSE. A guardian does not have a big
-    permission on somebody's screens; a guardian may BECOME the account, and then asks
-    this question AS that account, attributed and logged. Folding it in here would make
-    every acting-as invisible at exactly the layer that decides access.
-
     `drive_screen` is refused rather than answered - see DELEGATED. Returning False would
     be a lie (the grant may well allow it) and returning True would be worse.
     """
@@ -296,83 +299,3 @@ def may(capability: str, *, actor: str, person_id: str, owner: str | None,
         permission_allows(p, actor=actor, person_id=person_id, capability=cap, now_iso=now_iso)
         for p in permissions or []
     )
-
-
-# ---------------------------------------------------------------------------
-# GUARDIAN - a class above the grant model, not a bigger grant
-# ---------------------------------------------------------------------------
-#
-# Mike: *"Let's make a connection class 'Guardian' where it would have to be selected on
-# both our ends and then I could bounce between the accounts."*
-#
-# Every other permission is "may do X to this person's screen". Guardianship is
-# ***"may act as this account"*** - the account switcher in the corner.
-#
-# *** NAMED HONESTLY, BECAUSE THE INTERFACE MUST NOT IMPLY A CONSENT THAT DID NOT HAPPEN ***
-# Christine cannot meaningfully select a guardian, and cannot revoke one. In practice Mike
-# clicks both ends. That is administration, not consent. It is still worth building - somebody
-# has to be able to act for her, and today that is already true informally - but the data and
-# the screen should say what it is. Acting-as is logged and shown on both accounts, because
-# visibility is the only safeguard left when revocation is not available to the person concerned.
-# Guardianship in the world is a LEGAL status; this product neither confers nor verifies one.
-
-def guardianship_active(row: dict | None) -> bool:
-    """Both ends selected it, and nobody has revoked it. PURE.
-
-    BOTH ends is the whole point: it cannot be claimed unilaterally. A row with only one
-    side accepted is a pending offer, and a pending offer authorises nothing.
-    """
-    if not row:
-        return False
-    if row.get("revoked_at"):
-        return False
-    return bool(row.get("accepted_by_guardian")) and bool(row.get("accepted_by_guarded"))
-
-
-def may_act_as(actor: str, account: str, guardianships: list[dict]) -> bool:
-    """May `actor` switch into `account`? PURE.
-
-    Note this answers a different question from `may()` and returns a different KIND of
-    answer: not "may you touch this screen" but "may you become this account". Everything
-    done afterwards is attributed to the actor, not to the account.
-    """
-    if not actor or not account:
-        return False
-    if actor == account:
-        return True
-    return any(
-        guardianship_active(g)
-        and g.get("guardian_account") == actor
-        and g.get("guarded_account") == account
-        for g in guardianships or []
-    )
-
-
-def may_manage_guardians(actor: str, account: str, guardianships: list[dict]) -> bool:
-    """Who may add or remove a guardian on `account`? PURE.
-
-    *** THE RULE: FROM INSIDE THE ACCOUNT, AND BY NO OTHER ROUTE. ***
-
-    Mike closed this one and my proposal had a hole in it. I had suggested "maybe a second
-    guardian can revoke the first" as a safeguard for somebody who cannot act for themselves.
-
-      Mike: *"They would need access to her account to revoke it. Her account can already do
-      that. We can't let just any third party sever someone else's access. How would we know
-      they're a guardian?"*
-
-    ***THAT SUGGESTION WAS A HOSTILE-TAKEOVER MECHANISM WEARING A SAFEGUARD'S CLOTHES.***
-    "A guardian may revoke a guardian" sounds like a check on power, but as an EXTERNAL route
-    it is an unauthenticated claim: the product cannot adjudicate which of two people
-    asserting guardianship is real, so it would hand anyone who asserts it the power to cut
-    off somebody legitimate.
-
-    So this is exactly `may_act_as` and deliberately nothing more - no extra external path
-    exists to have a hole in.
-
-    THE RESIDUAL RISK, NAMED RATHER THAN BADLY SOLVED: one guardian CAN remove another,
-    because both are legitimately inside the account. That is true of every co-administrator
-    system anywhere. The mitigation is the one already chosen - acting-as is logged and
-    visible on both accounts, so it cannot happen quietly. Anything stronger would require
-    the product to arbitrate a family dispute, which it must not attempt.
-    """
-    return may_act_as(actor, account, guardianships)

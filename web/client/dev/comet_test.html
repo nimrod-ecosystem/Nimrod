@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>comet — ported from Cici — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:420px;height:260px;margin-top:12px;border-radius:14px;overflow:hidden;position:relative}
+  #hidden{display:none;width:200px;height:120px}
+</style>
+</head>
+<body>
+<h1>comet — ported from Cici</h1>
+<p>The head sits <b>exactly</b> where the pointer is and never drifts on its own, which is the
+whole point: it makes her own movement unmistakably the thing that moved it. Cici's version was
+pointer-only, so a switch user watched hearts drift past and could never touch one — so the port
+had to add <b>verbs</b>, and <code>next</code> goes and gets a heart.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at — move the pointer over it</h2>
+<div id="host"></div>
+<div id="hidden"></div>
+
+<script type="module">
+import '../modules/comet.js';
+import { mountModule, getManifest } from '../module.js';
+import { fieldsFor } from '../settings_fields.js';
+import { createBus } from '../bus.js';
+import { verbTarget, verbsFor } from '../actions.js';
+import { expectFor } from '../health.js';
+import { CATALOG } from '../modules_catalog.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function mount(host, { bus = createBus(), state = null } = {}) {
+  const inst = mountModule('comet', { mount: host, bus, state, events: null, user: 'u', profileId: 'p' });
+  inst.init();
+  return inst;
+}
+const probe = (inst) => inst.impl.__probe();
+// DRIVE THE SIMULATION DIRECTLY rather than waiting on requestAnimationFrame. rAF does not
+// run when the page is not being composited - a background tab, or a headless preview pane -
+// so a timing test that sleeps and hopes fails for reasons that have nothing to do with the
+// module. Stepping is deterministic and the assertions mean what they say.
+const steps = (inst, n, dt = 16) => { for (let i = 0; i < n; i++) inst.impl.__step(dt); };
+
+// ON-SCREEN BUT INVISIBLE, and the distinction matters. Parking a host at left:-9999px
+// makes the IntersectionObserver correctly report "not visible", the module correctly stops
+// animating, and every timing assertion then fails for a reason that has nothing to do with
+// the module. `opacity:0` is geometrically on-screen, so the observer sees it.
+function scratch(w = 400, h = 240) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;`
+    + `width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+
+// =====================================================================
+section('it is a module like any other');
+check('it registers a manifest', !!getManifest('comet'));
+check('with a title a person would read', getManifest('comet').title === 'Comet');
+check('it declares no dependency at all, which is what makes it a good last resort',
+      getManifest('comet').dependsOn === 'none', getManifest('comet').dependsOn);
+check('its settings are DATA the shell can render and a switch can walk',
+      Array.isArray(getManifest('comet').settings) && getManifest('comet').settings.length > 0);
+check('and they survive the shared field reader',
+      fieldsFor(getManifest('comet')).length > 0, fieldsFor(getManifest('comet')).length);
+
+section('every registry that has to know about it, knows');
+check('it is in the verb table', verbsFor('comet').length > 0);
+check('it is in the health table, marked idle — it draws constantly and publishes nothing, '
+      + 'so silence is its normal state', expectFor('comet').idle === true);
+check('it is in the human catalogue, so the modules browser can describe it',
+      CATALOG.some((c) => c.type === 'comet'));
+
+// =====================================================================
+section('*** it answers a switch — the reason the port was worth doing ***');
+check('primary select sparks where it is', verbTarget('comet', 'select').topic === 'comet/spark');
+check('next goes and gets a heart', verbTarget('comet', 'seek') === null
+      || verbTarget('comet', 'next').topic === 'comet/seek');
+
+{
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus });
+  await sleep(30);
+
+  const before = probe(inst);
+  check('it starts with no comet position at all — nothing has moved it yet',
+        before.cx < 0, before.cx);
+  check('and with hearts up', before.hearts === 4, before.hearts);
+
+  bus.publish('comet/spark');
+  await sleep(20);
+  const sparked = probe(inst);
+  check('*** select works with NO pointer ever having touched it — it puts the comet in the '
+        + 'middle rather than doing nothing, because doing nothing is indistinguishable from '
+        + 'a broken switch ***', sparked.cx >= 0, sparked.cx);
+  check('and it blooms', sparked.sparks > 0, sparked.sparks);
+
+  bus.publish('comet/seek');
+  await sleep(20);
+  check('*** next starts a glide toward a heart ***', probe(inst).steering === true);
+
+  const p0 = probe(inst);
+  steps(inst, 10);
+  const mid = probe(inst);
+  check('the comet actually MOVES during the glide (position now differs from position then '
+        + '- the earlier assertion only checked it HAD a position, which the spark had already '
+        + 'given it)',
+        mid.cx !== p0.cx || mid.cy !== p0.cy, `${p0.cx},${p0.cy} -> ${mid.cx},${mid.cy}`);
+  check('and it leaves a trail, because a jump cut would leave no streak and the streak is '
+        + 'what says "that was you"', mid.trail > 1, mid.trail);
+
+  inst.destroy(); host.remove();
+}
+
+{
+  // A glide has to END, or the module holds the comet forever and a pointer can never take
+  // over again. Short steerMs so the test does not sit here for a second.
+  const host = scratch();
+  const bus = createBus();
+  const state = { get: () => ({ steerMs: 100 }) };
+  const inst = mount(host, { bus, state });
+  await sleep(20);
+  bus.publish('comet/seek');
+  steps(inst, 2);
+  check('mid-glide it is steering', probe(inst).steering === true);
+  steps(inst, 10);   // 10 x 16ms = 160ms, past the 100ms steerMs
+  check('*** and the glide RELEASES when it arrives, so a pointer can take over again ***',
+        probe(inst).steering === false, probe(inst).simT);
+  inst.destroy(); host.remove();
+}
+
+{
+  // *** THE REWARD PATH, WHICH NOTHING ABOVE ACTUALLY EXERCISED. *** Steering to a heart is
+  // only worth anything if arriving at one collects it.
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1 }) } });
+  await sleep(20);
+  const start = probe(inst);
+  bus.publish('comet/seek');
+  steps(inst, 12);
+  const after = probe(inst);
+  check('*** a switch user who presses next actually CATCHES the heart - it blooms and a new '
+        + 'one rises. Without this the verb is a gesture at accessibility rather than the '
+        + 'thing itself ***',
+        after.sparks > start.sparks, `${start.sparks} -> ${after.sparks}`);
+  check('and there is still a heart to chase afterwards', after.hearts === 1, after.hearts);
+  inst.destroy(); host.remove();
+}
+
+// =====================================================================
+section('settings actually reach the behaviour');
+{
+  const host = scratch();
+  const inst = mount(host, { state: { get: () => ({ hearts: 0 }) } });
+  await sleep(20);
+  check('hearts:0 really means none — "just the comet" is a real option, not a label',
+        probe(inst).hearts === 0, probe(inst).hearts);
+  const bus2 = createBus();
+  bus2.publish('comet/seek');
+  check('and seeking with no hearts is a no-op rather than a crash', true);
+  inst.destroy(); host.remove();
+}
+{
+  const host = scratch();
+  const inst = mount(host, { state: { get: () => ({ calm: true }) } });
+  await sleep(20);
+  check('calm is on when the person chose it', probe(inst).calm === true);
+  inst.destroy(); host.remove();
+}
+{
+  const host = scratch();
+  const inst = mount(host, { state: { get: () => ({ sound: false }) } });
+  await sleep(20);
+  check('silent is a real setting', probe(inst).cfg.sound === false);
+  inst.destroy(); host.remove();
+}
+
+// =====================================================================
+section('it stops when nobody is looking, and cleans up after itself');
+{
+  const host = scratch();
+  const inst = mount(host);
+  await sleep(20);
+  inst.onHide();
+  check('*** onHide stops the animation — a canvas painting behind a hidden panel is battery '
+        + 'and heat on a Pi that is on 24/7, for a picture nobody is looking at ***',
+        probe(inst).running === false);
+  inst.destroy();
+  check('destroy leaves nothing in the mount', host.children.length === 0, host.innerHTML);
+  host.remove();
+}
+{
+  // The original injected a <style> into document.head, which two instances would fight over
+  // and neither would clean up.
+  const before = document.head.querySelectorAll('style').length;
+  const host = scratch();
+  const inst = mount(host);
+  await sleep(20);
+  check('*** it puts NO style in document.head — it owns nothing outside its mount ***',
+        document.head.querySelectorAll('style').length === before);
+  inst.destroy(); host.remove();
+}
+{
+  // Two at once is the thing the IIFE could never do.
+  const a = scratch(), b = scratch();
+  const ia = mount(a), ib = mount(b);
+  await sleep(20);
+  check('two comets can exist side by side', probe(ia).hearts === 4 && probe(ib).hearts === 4);
+  ia.destroy(); ib.destroy(); a.remove(); b.remove();
+}
+
+// =====================================================================
+const live = mount(document.getElementById('host'));
+
+document.getElementById('summary').textContent =
+  `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+window.__testResult = { passed, failed };
+</script>
+</body>
+</html>

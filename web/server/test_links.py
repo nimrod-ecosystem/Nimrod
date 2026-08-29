@@ -17,9 +17,8 @@ from links import (
     ALWAYS_OFF_BY_DEFAULT, CAPABILITIES, DELEGATED, MODULE_SCOPED, NO_GROUP_CAPABILITIES,
     RESOLVED_KINDS, STORED_CAPABILITIES,
     SUBJECT_KINDS, UnknownCapability,
-    canonical_pair, delegates, guardianship_active, is_expired, link_is_active, linked,
-    may, may_act_as, may_manage_guardians, normalize_capability, normalize_kind,
-    permission_allows,
+    canonical_pair, delegates, is_expired, link_is_active, linked,
+    may, normalize_capability, normalize_kind, permission_allows,
 )
 
 passed = failed = 0
@@ -205,43 +204,18 @@ check("no person -> no", not may("messages", actor="dolly", person_id="", owner=
                                  link=LINK, permissions=P, now_iso=NOW))
 
 # ---------------------------------------------------------------------------------------
-section("GUARDIAN - a different kind of thing, not a bigger permission")
-# ---------------------------------------------------------------------------------------
-BOTH = {"guardian_account": "mike", "guarded_account": "christine",
-        "accepted_by_guardian": NOW, "accepted_by_guarded": NOW, "revoked_at": None}
-ONE = dict(BOTH, accepted_by_guarded=None)
-
-check("both ends accepted -> active", guardianship_active(BOTH))
-check("*** one end is a pending OFFER and authorises nothing - it cannot be claimed "
-      "unilaterally ***", not guardianship_active(ONE))
-check("neither end -> not active",
-      not guardianship_active(dict(BOTH, accepted_by_guardian=None, accepted_by_guarded=None)))
-check("revoked -> not active", not guardianship_active(dict(BOTH, revoked_at=NOW)))
-
-check("an active guardian may act as the account", may_act_as("mike", "christine", [BOTH]))
-check("a pending one may not", not may_act_as("mike", "christine", [ONE]))
-check("a stranger may not", not may_act_as("stranger", "christine", [BOTH]))
-check("everybody may act as themselves", may_act_as("mike", "mike", []))
-check("*** guardianship is DIRECTIONAL - being her guardian is not her being yours ***",
-      not may_act_as("christine", "mike", [BOTH]))
-
-check("*** may() DOES NOT CONSULT GUARDIANSHIP. A guardian does not hold a big permission "
-      "on her screens; a guardian BECOMES the account, attributed and logged ***",
-      not may("messages", actor="mike", person_id="P9", owner="christine", link=None,
-              permissions=[], now_iso=NOW))
-
-section("...and who may manage guardians")
-check("the account itself may", may_manage_guardians("christine", "christine", [BOTH]))
-check("an existing guardian may - they are legitimately inside the account",
-      may_manage_guardians("mike", "christine", [BOTH]))
-check("*** A THIRD PARTY MAY NOT. 'A guardian may revoke a guardian' as an EXTERNAL route "
-      "is an unauthenticated claim and a hostile takeover wearing a safeguard's clothes ***",
-      not may_manage_guardians("stranger", "christine", [BOTH]))
-check("somebody with only a pending offer may not",
-      not may_manage_guardians("mike", "christine", [ONE]))
-check("managing is exactly acting-as and deliberately nothing more, so there is no extra "
-      "external path to have a hole in",
-      may_manage_guardians("mike", "christine", [BOTH]) == may_act_as("mike", "christine", [BOTH]))
+section("there is no guardian concept, and that is deliberate")
+# A guardianships table, its CRUD and ~20 tests existed for one day (2026-08-28) and were
+# removed. Mike: "Guardian is kind of moot anyway, they'd just be a super user." These
+# assertions are a TOMBSTONE: they fail if somebody reintroduces the concept without reading
+# links.py rule 5, which is exactly the moment to have the conversation again.
+check("*** links.py exposes no guardianship API ***",
+      not any(hasattr(links, n) for n in
+              ("guardianship_active", "may_act_as", "may_manage_guardians")),
+      [n for n in ("guardianship_active", "may_act_as", "may_manage_guardians")
+       if hasattr(links, n)])
+check("and no capability smuggles it back in under another name",
+      not any("guardian" in c for c in CAPABILITIES), CAPABILITIES)
 
 # =======================================================================================
 section("STORAGE - the rules above, through a real database")
@@ -315,49 +289,20 @@ check("and it is active again", store.list_links("mike") != [])
 check("*** but starts with NO permissions - being re-invited is not being restored ***",
       not store.may_capability("messages", actor="dolly", person_id=PID))
 
-section("guardianship, stored")
-store.offer_guardianship("mike", "christine", accepted_by="mike")
-check("one side accepted is not yet active",
-      not links.guardianship_active(store.get_guardianship("mike", "christine")))
-check("...and does not let him act as her",
-      not links.may_act_as("mike", "christine", store.guardianships_of("christine")))
-store.offer_guardianship("mike", "christine", accepted_by="christine")
-g = store.get_guardianship("mike", "christine")
-check("both sides accepted -> active", links.guardianship_active(g), g)
-check("he may now act as her",
-      links.may_act_as("mike", "christine", store.guardianships_of("christine")))
-check("it shows in his account switcher",
-      [x["guarded_account"] for x in store.guardianships_held_by("mike")] == ["christine"])
-check("an account cannot be its own guardian",
-      raises(ValueError, store.offer_guardianship, "mike", "mike", "mike"))
-check("*** a third party cannot accept on somebody's behalf - that is the unauthenticated "
-      "claim the whole model refuses ***",
-      raises(ValueError, store.offer_guardianship, "mike", "christine", "stranger"))
-
-check("*** a stranger cannot revoke it, however loudly they assert guardianship ***",
-      store.revoke_guardianship("mike", "christine", revoked_by="stranger") == 0)
-check("and it is still active after that attempt",
-      links.guardianship_active(store.get_guardianship("mike", "christine")))
-check("the account itself can revoke",
-      store.revoke_guardianship("mike", "christine", revoked_by="christine") == 1)
-check("and then he cannot act as her",
-      not links.may_act_as("mike", "christine", store.guardianships_of("christine")))
-
-section("the residual risk, tested so it is not a surprise")
-store.offer_guardianship("mike", "christine", accepted_by="mike")
-store.offer_guardianship("mike", "christine", accepted_by="christine")
-store.offer_guardianship("sister", "christine", accepted_by="sister")
-store.offer_guardianship("sister", "christine", accepted_by="christine")
-check("two guardians, both active",
-      links.guardianship_active(store.get_guardianship("mike", "christine")) and
-      links.guardianship_active(store.get_guardianship("sister", "christine")))
-check("*** ONE GUARDIAN CAN REMOVE ANOTHER - true of every co-administrator system, named "
-      "as residual risk rather than badly solved. Acting-as is logged and visible on both "
-      "accounts, which is the mitigation; the product must not arbitrate a family dispute ***",
-      store.revoke_guardianship("sister", "christine", revoked_by="mike") == 1)
-check("re-offering after a revocation needs BOTH ends to say yes again",
-      (store.offer_guardianship("sister", "christine", accepted_by="sister") is not None) and
-      not links.guardianship_active(store.get_guardianship("sister", "christine")))
+section("the store exposes no guardianship methods either")
+check("*** every guardianship CRUD method is gone from the store ***",
+      not any(hasattr(store, n) for n in
+              ("offer_guardianship", "get_guardianship", "guardianships_of",
+               "guardianships_held_by", "revoke_guardianship")),
+      [n for n in ("offer_guardianship", "get_guardianship", "guardianships_of",
+                   "guardianships_held_by", "revoke_guardianship") if hasattr(store, n)])
+check("*** and the table itself is gone, so the privacy page cannot list an empty table as "
+      "something we store about somebody ***",
+      "guardianships" not in {r["table"] for r in store.describe_storage()["stores"]},
+      sorted(r["table"] for r in store.describe_storage()["stores"]))
+check("nothing is left undescribed by the removal",
+      store.describe_storage()["undocumented"] == [],
+      store.describe_storage()["undocumented"])
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)
