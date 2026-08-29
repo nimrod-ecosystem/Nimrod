@@ -56,13 +56,57 @@ from __future__ import annotations
 # in this order, which is roughly least to most invasive.
 # ---------------------------------------------------------------------------
 CAPABILITIES = (
-    "messages",      # may send messages through Nimrod
-    "call_audio",    # may call, auto-answers
-    "call_video",    # may call, auto-answers - stricter default than audio
-    "see_screen",    # may watch what is on it
-    "drive_screen",  # may control it - SEE BELOW, this one is not stored here
-    "add_media",     # may put photos and messages on her screens
+    # --- reaching her -------------------------------------------------------
+    "messages",       # may send messages, which JOIN HER ROTATION
+    "call_audio",     # may place an audio call
+    "call_video",     # may place a video call - shows the room, not just a face
+    # --- putting things on her screens --------------------------------------
+    "push_rotation",  # may put photos/messages IN FRONT OF HER, between the photos
+    "push_video",     # may send a recommended video with a note from the sender
+    # --- looking at her screens ---------------------------------------------
+    "see_screen",     # may watch what is on it - SCOPED BY MODULE, see MODULE_SCOPED
+    "see_progress",   # may see therapy scores and game results
+    "drive_screen",   # may control it - NOT STORED HERE, see DELEGATED
+    # --- the two that start OFF for everybody, including the top role -------
+    "read_messages",  # may read her messages
+    "manage_people",  # may add and remove her connections
+    # --- how she appears to other people's networks -------------------------
+    "mutual_visible", # may see her as a connection in common
+    "send_request",   # may introduce her to somebody / send a request on her behalf
 )
+
+# *** `push_rotation` WAS CALLED `add_media`, AND THE RENAME IS THE POINT ***
+#
+# Mike's phrasing, and it is the honest one. "Add photos" sounds like filing something in an
+# album that somebody might later browse. WHAT IT ACTUALLY DOES IS PUT YOUR THING IN FRONT OF
+# HER, between the photos, whether or not she wanted it - because a message that waits to be
+# opened is never seen by somebody who cannot open one. The permission should be named after
+# what the person granting it is actually agreeing to.
+
+# *** THE TWO THAT ARE OFF EVEN FOR THE TOP ROLE ***
+#
+# Mike, on read_messages: "a guardian like me might need it for someone like Christine...
+# Whereas the average parent shouldn't see all of their kids' messages."
+#
+# These are not "high" permissions on a scale that SuperUser sits at the top of. They are
+# ORTHOGONAL to the roles: somebody can legitimately have every ordinary permission and still
+# have no business reading the messages or editing the connection list. Keeping them off by
+# default for every role is what makes "add them to SuperUser" a survivable mistake.
+#
+# `manage_people` is the sharper of the two, because it is the permission that GROWS every
+# other permission - whoever holds it decides who else is in the network at all.
+ALWAYS_OFF_BY_DEFAULT = frozenset({"read_messages", "manage_people"})
+
+# *** see_screen IS SCOPED BY MODULE, NOT ALL-OR-NOTHING (Mike) ***
+#
+# "View screen options could be per module as well, if you just want someone to see your
+# photos, video, game you're playing."
+#
+# All-or-nothing is too blunt to be safe: somebody who may see the photo she is looking at
+# should not thereby see a video call, an AAC board mid-sentence, or a therapy score. The
+# permission carries a module scope; an EMPTY scope means every module, which is the only
+# reading that keeps an un-scoped legacy row meaning what it meant when it was written.
+MODULE_SCOPED = frozenset({"see_screen"})
 
 # *** drive_screen IS NOT STORED IN link_permissions, AND THAT IS DELIBERATE ***
 #
@@ -72,10 +116,10 @@ CAPABILITIES = (
 # the displayed reading would be different things. Rule 1 of grants.py is that migrating
 # a permissions table is the kind nobody enjoys; duplicating one is worse.
 #
-# So: the UI shows six switches on a friend, because that is the right thing for a person
-# to look at. Five of them resolve here. `drive_screen` resolves through `grants.may_drive`
-# and is written through the grant API, which is also where its ROLE comes from - a concept
-# the other five do not have. `delegates(cap)` is the whole of that rule.
+# So: the UI shows drive_screen as one more switch on a friend, because that is the right
+# thing for a person to look at. It resolves through `grants.may_drive` and is written
+# through the grant API, which is also where its ROLE comes from - a concept the others do
+# not have. `delegates(cap)` is the whole of that rule.
 DELEGATED = frozenset({"drive_screen"})
 
 #: Capabilities this module actually stores and resolves.
@@ -87,15 +131,19 @@ STORED_CAPABILITIES = tuple(c for c in CAPABILITIES if c not in DELEGATED)
 SUBJECT_KINDS = ("account", "group", "tag")
 RESOLVED_KINDS = frozenset({"account"})
 
-# WHAT A BRAND-NEW LINK CAN DO BEFORE ANYBODY TOUCHES A SWITCH.
+# *** THERE IS NO LONGER A "DEFAULT CAPABILITY SET" FOR A BARE LINK, AND THAT IS THE FIX ***
 #
-# *** THIS IS A CONSERVATIVE PLACEHOLDER, NOT A DECISION. *** The design says audio calls
-# "auto-answer" and that video is "a stricter default than audio", but it does not say what
-# a link starts with, and Mike has not been asked. Starting at messages-only is the choice
-# that cannot hurt anybody while the question is open: a link that can do too little is a
-# switch somebody flips, and a link that can do too much is a stranger's face on her screen.
-# Raise it the moment Mike says what the defaults should be.
-DEFAULT_CAPABILITIES = ("messages",)
+# This used to be DEFAULT_CAPABILITIES = ("messages",), flagged in the source as a placeholder
+# because the design never said what a brand-new link could do. Mike dissolved the question
+# rather than answering it: *** THE INVITATION CARRIES THE GROUP. *** The sender already knows
+# whether they are inviting a sister or a plumber, so a link is never created blank - it is
+# created IN a group, with that group's permissions, and there is no moment where somebody
+# holds a link that looks broken until they find the switches.
+#
+# A bare link with no group therefore grants NOTHING. That is not a conservative default
+# standing in for a decision; it is the absence of one, and it is now unreachable through the
+# invitation flow.
+NO_GROUP_CAPABILITIES: tuple[str, ...] = ()
 
 
 class UnknownCapability(ValueError):
