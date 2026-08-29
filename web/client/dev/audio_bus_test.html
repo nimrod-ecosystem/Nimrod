@@ -26,7 +26,7 @@
 <div id="summary">running…</div>
 
 <script type="module">
-import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY }
+import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY, CALL_MODES }
   from '../audio_bus.js';
 
 const out = document.getElementById('results');
@@ -133,6 +133,51 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
       r.bus.setActive('voice', false);
       check('...and to full once the voice stops too', r.last('game') === 1);
       check('hushing twice is idempotent', r.bus.hush(true) === true && r.bus.hush(true) === true);
+    }
+
+    section('*** a call PAUSES, it does not duck — auto-answer settles it ***');
+    {
+      const r = rig();
+      r.src('game', game); r.src('video', video); r.src('call', { tier: 'call' });
+      r.bus.setActive('game', true);
+      r.bus.setActive('video', true);
+      check('a video is playing before the call', r.last('video') === 1);
+      r.bus.setActive('call', true);
+      check('*** a call STOPS the media outright rather than leaving it murmuring at half '
+        + 'volume under a conversation ***',
+        r.last('video') === 0 && r.last('game') === 0, JSON.stringify(r.bus.state()));
+      check('the call itself is not ducked by anything', r.bus.levelOf('call') === 1);
+      r.bus.setActive('call', false);
+      check('and it all comes back when the call ends', r.last('video') === 1);
+    }
+    {
+      // Watching something together: the film should keep going, quietly.
+      const r = rig();
+      r.src('video', video); r.src('call', { tier: 'call' });
+      r.bus.setCallMode('duck');
+      r.bus.setActive('video', true);
+      r.bus.setActive('call', true);
+      check('*** set to duck instead, the video keeps going under the call — which is what '
+        + 'watching something together needs ***', r.last('video') === DUCK_TO,
+        String(r.last('video')));
+      check('the mode is reported back', r.bus.callMode() === 'duck');
+      r.bus.setCallMode('pause');
+      check('switching back mid-call takes effect immediately', r.last('video') === 0);
+      check('the modes are a closed set, and nonsense is refused',
+        CALL_MODES.join(',') === 'pause,duck' && r.bus.setCallMode('loud') === 'pause');
+      check('pause is the default', createAudioBus().callMode() === 'pause');
+    }
+    {
+      // A call while somebody is hushing: both say silence, and neither undoes the other.
+      const r = rig();
+      r.src('game', game); r.src('call', { tier: 'call' });
+      r.bus.setActive('game', true);
+      r.bus.hush(true);
+      r.bus.setActive('call', true);
+      r.bus.setActive('call', false);
+      check('ending a call does not lift a hush that somebody else set', r.last('game') === 0);
+      r.bus.hush(false);
+      check('...and lifting the hush is what brings it back', r.last('game') === 1);
     }
 
     section('the details that were bugs in the original');

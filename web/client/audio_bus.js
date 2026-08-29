@@ -28,8 +28,10 @@
 //      `groupPriority` wins — VIDEO OUTRANKS GAME MUSIC (Mike, 2026-07-26) — and ties break
 //      to the most recently activated, so opening a second game preempts the first.
 //
-// Plus HUSH: silence all media so somebody can talk in the room. Deliberately separate from
-// the duck, because a duck is momentary and this is "stop, I am having a conversation".
+// Plus two things that SILENCE rather than duck, because they are conversations and not cues:
+// HUSH (somebody talking in the room, on a button) and a CALL (see CALL_MODES). A duck is
+// right for a sentence and wrong for five minutes — a bed murmuring under a conversation is
+// not a bed, it is a distraction nobody chose.
 //
 // *** IT IS DEFENSIVE BY CONSTRUCTION, AND THAT IS NOT OPTIONAL. *** Every source keeps its
 // own direct playback and treats the bus as advice. A missing or broken arbiter must never be
@@ -49,16 +51,29 @@ export const DUCK_TO = 0.5;
 // change when they arrive — naming them costs nothing.
 export const TIERS = { call: 100, talk: 80, voice: 80, media: 40, sfx: 20 };
 
+// *** A CALL PAUSES EVERYTHING ELSE. IT DOES NOT DUCK IT. *** (Mike, 2026-08-29: "in the case
+// of auto answer I would have anything else playing sound pause, and make that an option for
+// any call.") A duck is right for a cue that lasts a second and wrong for a conversation: a
+// music bed murmuring at half volume under a five-minute call is not a bed, it is a
+// distraction nobody chose. And auto-answer is the case that settles it - if a call can open
+// itself, whatever was playing must get out of the way without anybody being there to do it.
+//
+// AN OPTION, NOT A LAW, because somebody watching a film together over a call may well want
+// the film to keep going quietly - which is exactly the case Cici's own note about
+// watch-together was making.
+export const CALL_MODES = ['pause', 'duck'];
+
 // Video outranks game music inside the `music` group.
 export const MUSIC_GROUP = 'music';
 export const VIDEO_PRIORITY = 10;
 export const GAME_MUSIC_PRIORITY = 0;
 
-export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS } = {}) {
+export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pause' } = {}) {
   const sources = new Map();      // id -> {id, tier, tierP, group, gp, onGain, active, seq, level}
   let seq = 0;
   let hushed = false;
   let inRecompute = false;
+  let onCall = CALL_MODES.includes(callMode) ? callMode : 'pause';
 
   const tierP = (t) => (tiers[t] != null ? tiers[t] : 0);
 
@@ -77,6 +92,7 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS } = {}) {
     try {
       const active = [...sources.values()].filter((s) => s.active);
       const topP = active.reduce((m, s) => Math.max(m, s.tierP), 0);
+      const inCall = active.some((s) => s.tier === 'call');
 
       // One winner per group.
       const winners = new Map();
@@ -91,6 +107,9 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS } = {}) {
         if (s.tierP < topP) level *= duckTo;                                  // 1. duck
         if (s.group && winners.get(s.group)?.id !== s.id) level = 0;          // 2. exclusivity
         if (hushed && s.tier === 'media') level = 0;                          // 3. hush
+        // 4. a call, when set to pause. Same shape as hush and for the same reason: this is
+        // a conversation, not a cue, and half-volume music under it helps nobody.
+        if (inCall && onCall === 'pause' && s.tier === 'media') level = 0;
         apply(s, level);
       }
     } finally {
@@ -148,6 +167,16 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS } = {}) {
       return hushed;
     },
     isHushed: () => hushed,
+
+    // 'pause' (default) or 'duck'. Changeable live, because the right answer differs between
+    // a phone call and watching something together.
+    setCallMode(mode) {
+      if (!CALL_MODES.includes(mode)) return onCall;
+      onCall = mode;
+      recompute();
+      return onCall;
+    },
+    callMode: () => onCall,
 
     isActive: (id) => !!sources.get(id)?.active,
     levelOf: (id) => (sources.has(id) ? sources.get(id).level : null),
