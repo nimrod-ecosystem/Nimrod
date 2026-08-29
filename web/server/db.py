@@ -37,6 +37,7 @@ import uuid
 # Pure rules, no storage - db imports grants/links and never the other way round.
 import grants
 import links
+import provenance
 from datetime import datetime, timedelta, timezone
 
 
@@ -736,6 +737,11 @@ class _Store:
         "link_permissions": ("What each connection is allowed to do - send messages, call, "
                             "watch a screen, add photos. Each one can be switched off on its "
                             "own, and ending the connection removes them all.", True),
+        "sessions":        ("When a play or therapy session started and ended, and how it "
+                            "ended. It is what lets a result say who was in the room, without "
+                            "tagging every single answer.", True),
+        "session_roster":  ("Who was present for a session and in what part - playing, "
+                            "helping, observing - and when they came and went.", True),
         "screen_pairings": ("A short-lived code while a screen is being set up. Deleted "
                             "afterwards.", False),
         "pairings":        ("A short-lived code while a media folder is being connected. "
@@ -1052,18 +1058,138 @@ class _Store:
         return ("ok", {"data": data, "version": new_version})
 
     # ------------------------------------------------------ append-only events
-    def append_event(self, user_id: str, pid: str, stream: str, kind: str, data: dict) -> dict:
+    def append_event(self, user_id: str, pid: str, stream: str, kind: str, data: dict,
+                     *, session_id: str | None = None, principal_id: str | None = None,
+                     principal_type: str | None = None, attested_by: str | None = None,
+                     attested_at: str | None = None,
+                     producer_version: str | None = None) -> dict:
+        """Append one event. The provenance arguments are OPTIONAL and default to null.
+
+        *** NULL MEANS "NOT CAPTURED", AND THAT IS AN HONEST ANSWER. *** Every existing caller
+        keeps working and writes nulls, which is exactly the intended outcome: the founding
+        period is visibly unattributed rather than silently assumed to be human. See
+        provenance.py for why a defaulted guess would be worse than an empty column.
+
+        `principal_type` is normalised on the way in - an unrecognised value becomes NULL
+        rather than a default, because this column is a claim about who made the data and a
+        typo silently written as `human` is a falsehood in a log that has no update.
+        """
         payload, ts = json.dumps(data), _now()
+        ptype = provenance.normalize_principal_type(principal_type)
         with self._tx() as cur:
             eid = self._returning_id(cur, self._q(
-                "INSERT INTO events(user_id, profile_id, stream, kind, data, created_at) VALUES(?,?,?,?,?,?)"),
-                (user_id, pid, stream, kind, payload, ts))
-        return {"id": eid, "kind": kind, "data": data, "created_at": ts}
+                "INSERT INTO events(user_id, profile_id, stream, kind, data, created_at, "
+                "session_id, principal_id, principal_type, attested_by, attested_at, "
+                "producer_version) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"),
+                (user_id, pid, stream, kind, payload, ts, session_id, principal_id, ptype,
+                 attested_by, attested_at, producer_version))
+        return {"id": eid, "kind": kind, "data": data, "created_at": ts,
+                "session_id": session_id, "principal_id": principal_id,
+                "principal_type": ptype, "attested_by": attested_by,
+                "attested_at": attested_at, "producer_version": producer_version}
+
+    # ---- SESSIONS AND THE ROSTER (for_code.md 9g) -------------------------
+    # Read provenance.py first: the rules live there, pure and tested on their own.
+
+    def start_session(self, user_id: str, pid: str, roster: list[dict] | None = None,
+                      label: str = "", expected_min: int | None = None,
+                      producer_version: str | None = None) -> dict:
+        """Open a session and record who is in the room.
+
+        AN EMPTY ROSTER IS ALLOWED AND IS NOT AN ERROR. "Nobody said who was there" is honest;
+        a confidently wrong roster is not, and refusing to start a session because nobody
+        filled in a form would stop a therapy session over paperwork.
+        """
+        problem = provenance.roster_problem(roster)
+        if problem:
+            raise ValueError(problem)
+        sid, ts = _new_id(), _now()
+        exp = provenance.DEFAULT_EXPECTED_MIN if expected_min is None else int(expected_min)
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "INSERT INTO sessions(id, user_id, profile_id, label, started_at, expected_min, "
+                "ended_at, end_reason, detected_at, ran_over_ms, producer_version) "
+                "VALUES(?,?,?,?,?,?,NULL,NULL,NULL,NULL,?)"),
+                (sid, user_id, pid, label, ts, exp, producer_version))
+            for r in roster or []:
+                cur.execute(self._q(
+                    "INSERT INTO session_roster(id, session_id, principal_id, role, joined_at, "
+                    "left_at) VALUES(?,?,?,?,?,NULL)"),
+                    (_new_id(), sid, r["principal_id"],
+                     provenance.normalize_role(r.get("role")), ts))
+        return {"id": sid, "user_id": user_id, "profile_id": pid, "label": label,
+                "started_at": ts, "expected_min": exp, "ended_at": None}
+
+    def amend_roster(self, session_id: str, principal_id: str, role: str | None = None,
+                     leaving: bool = False) -> bool:
+        """Somebody arrived or left mid-session. Timestamped, never overwritten.
+
+        This is why the roster is its own table rather than a blob on the session: "who was in
+        the room WHEN THIS TRIAL HAPPENED" has to stay answerable months later, and a blob
+        that got edited cannot answer it.
+        """
+        ts = _now()
+        with self._tx() as cur:
+            if leaving:
+                cur.execute(self._q(
+                    "UPDATE session_roster SET left_at=? WHERE session_id=? AND principal_id=? "
+                    "AND left_at IS NULL"), (ts, session_id, principal_id))
+                return (cur.rowcount or 0) > 0
+            r = provenance.normalize_role(role)
+            if r is None:
+                raise ValueError(f"unknown role {role!r}")
+            cur.execute(self._q(
+                "INSERT INTO session_roster(id, session_id, principal_id, role, joined_at, "
+                "left_at) VALUES(?,?,?,?,?,NULL)"), (_new_id(), session_id, principal_id, r, ts))
+            return True
+
+    def session_roster(self, session_id: str) -> list[dict]:
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT principal_id, role, joined_at, left_at FROM session_roster "
+                "WHERE session_id=? ORDER BY joined_at"), (session_id,))
+            rows = cur.fetchall()
+        return [{"principal_id": r[0], "role": r[1], "joined_at": r[2], "left_at": r[3]}
+                for r in rows]
+
+    def get_session(self, session_id: str) -> dict | None:
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, user_id, profile_id, label, started_at, expected_min, ended_at, "
+                "end_reason, detected_at, ran_over_ms, producer_version FROM sessions WHERE id=?"),
+                (session_id,))
+            r = cur.fetchone()
+        if not r:
+            return None
+        return {"id": r[0], "user_id": r[1], "profile_id": r[2], "label": r[3],
+                "started_at": r[4], "expected_min": r[5], "ended_at": r[6],
+                "end_reason": r[7], "detected_at": r[8], "ran_over_ms": r[9],
+                "producer_version": r[10]}
+
+    def end_session(self, session_id: str, reason: str = "ended_by_person",
+                    ended_at: str | None = None, detected_at: str | None = None,
+                    ran_over_ms: int | None = None) -> bool:
+        """Close it. `ended_at` may be BACKDATED to the last event - see provenance.auto_close.
+
+        An inactivity close backdated to the timer moment instead of the last event would give
+        every such session fifteen minutes of phantom duration in any length statistic, which
+        is why the two timestamps are separate columns rather than one.
+        """
+        if reason not in provenance.END_REASONS:
+            raise ValueError(f"unknown end reason {reason!r}")
+        ts = ended_at or _now()
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "UPDATE sessions SET ended_at=?, end_reason=?, detected_at=?, ran_over_ms=? "
+                "WHERE id=? AND ended_at IS NULL"),
+                (ts, reason, detected_at or ts, ran_over_ms, session_id))
+            return (cur.rowcount or 0) > 0
 
     def list_events(self, user_id: str, pid: str, stream: str, limit: int = 50) -> dict:
         with self._tx() as cur:
             cur.execute(self._q(
-                "SELECT id, kind, data, created_at FROM events "
+                "SELECT id, kind, data, created_at, session_id, principal_id, principal_type, "
+                "attested_by, attested_at, producer_version FROM events "
                 "WHERE user_id=? AND profile_id=? AND stream=? ORDER BY id DESC LIMIT ?"),
                 (user_id, pid, stream, limit))
             rows = cur.fetchall()
@@ -1231,11 +1357,59 @@ class SQLiteStore(_Store):
                     PRIMARY KEY (user_id, profile_id, key)
                 );
 
+                -- PROVENANCE COLUMNS (for_code.md 9f). Nullable, populated null, NEVER
+                -- mutated after write. They exist BEFORE the first real trial because an
+                -- append-only log has no update: a field absent at write time can never be
+                -- supplied later. A field that exists and is empty is self-describing; a
+                -- field that does not exist yet produces data that LOOKS COMPLETE.
                 CREATE TABLE IF NOT EXISTS events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id TEXT NOT NULL, profile_id TEXT NOT NULL, stream TEXT NOT NULL,
-                    kind TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL
+                    kind TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL,
+                    session_id TEXT,
+                    principal_id TEXT,
+                    principal_type TEXT,
+                    attested_by TEXT,
+                    attested_at TEXT,
+                    producer_version TEXT
                 );
+                -- NOTE: the indexes on session_id / principal_type are NOT here. On a
+                -- database that predates these columns, CREATE TABLE IF NOT EXISTS is a
+                -- no-op, so the columns do not exist yet and indexing them fails the whole
+                -- script. They are created after the guarded ALTERs below - the same trap,
+                -- and the same fix, as profiles.person_id.
+
+                -- A SESSION CARRIES THE ROSTER; trials carry one session_id. Per-trial "who
+                -- was present" is unworkable - people come and go all day and nobody tags
+                -- four hundred trials. Correcting who was there appends a correction to the
+                -- SESSION, which an append-only log can do.
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    profile_id TEXT NOT NULL,
+                    label TEXT NOT NULL DEFAULT '',
+                    started_at TEXT NOT NULL,
+                    expected_min INTEGER NOT NULL,
+                    ended_at TEXT,
+                    end_reason TEXT,
+                    detected_at TEXT,
+                    ran_over_ms INTEGER,
+                    producer_version TEXT
+                );
+                CREATE INDEX IF NOT EXISTS ix_sessions_user ON sessions(user_id, profile_id);
+
+                -- Amendable mid-session: a row is added or closed with a timestamp, so "who
+                -- was in the room WHEN THIS TRIAL HAPPENED" stays answerable afterwards.
+                CREATE TABLE IF NOT EXISTS session_roster (
+                    id TEXT PRIMARY KEY,
+                    session_id TEXT NOT NULL,
+                    principal_id TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    joined_at TEXT NOT NULL,
+                    left_at TEXT
+                );
+                CREATE INDEX IF NOT EXISTS ix_roster_session ON session_roster(session_id);
+
                 CREATE INDEX IF NOT EXISTS ix_events_stream ON events(user_id, profile_id, stream, id);
                 CREATE TRIGGER IF NOT EXISTS events_no_update BEFORE UPDATE ON events
                     BEGIN SELECT RAISE(ABORT, 'events are append-only'); END;
@@ -1247,6 +1421,17 @@ class SQLiteStore(_Store):
             # column. CREATE TABLE IF NOT EXISTS will not add it, so do it here - guarded,
             # because SQLite has no ADD COLUMN IF NOT EXISTS. This must run BEFORE the
             # index on that column, which is why the index is not in the script above.
+            # The provenance columns on a database that predates them. SQLite has no
+            # ADD COLUMN IF NOT EXISTS, and CREATE TABLE IF NOT EXISTS will not add them to
+            # an events table that already exists - which every deployed one does.
+            ecols = {r[1] for r in self._conn.execute("PRAGMA table_info(events)")}
+            for col in ("session_id", "principal_id", "principal_type", "attested_by",
+                        "attested_at", "producer_version"):
+                if col not in ecols:
+                    self._conn.execute(f"ALTER TABLE events ADD COLUMN {col} TEXT")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS ix_events_session ON events(session_id)")
+            self._conn.execute(
+                "CREATE INDEX IF NOT EXISTS ix_events_principal ON events(principal_type)")
             cols = {r[1] for r in self._conn.execute("PRAGMA table_info(profiles)")}
             if "person_id" not in cols:
                 self._conn.execute("ALTER TABLE profiles ADD COLUMN person_id TEXT NOT NULL DEFAULT ''")
@@ -1396,6 +1581,26 @@ class PostgresStore(_Store):
             "CREATE TABLE IF NOT EXISTS events (id BIGSERIAL PRIMARY KEY, user_id TEXT NOT NULL, "
             "profile_id TEXT NOT NULL, stream TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, "
             "created_at TEXT NOT NULL)",
+            # PROVENANCE (for_code.md 9f) - additive, nullable, never mutated. Added as ALTERs
+            # as well as in the CREATE, because the live events table already exists.
+            "ALTER TABLE events ADD COLUMN IF NOT EXISTS session_id TEXT",
+            "ALTER TABLE events ADD COLUMN IF NOT EXISTS principal_id TEXT",
+            "ALTER TABLE events ADD COLUMN IF NOT EXISTS principal_type TEXT",
+            "ALTER TABLE events ADD COLUMN IF NOT EXISTS attested_by TEXT",
+            "ALTER TABLE events ADD COLUMN IF NOT EXISTS attested_at TEXT",
+            "ALTER TABLE events ADD COLUMN IF NOT EXISTS producer_version TEXT",
+            "CREATE INDEX IF NOT EXISTS ix_events_session ON events(session_id)",
+            "CREATE INDEX IF NOT EXISTS ix_events_principal ON events(principal_type)",
+
+            "CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
+            "profile_id TEXT NOT NULL, label TEXT NOT NULL DEFAULT '', started_at TEXT NOT NULL, "
+            "expected_min INTEGER NOT NULL, ended_at TEXT, end_reason TEXT, detected_at TEXT, "
+            "ran_over_ms BIGINT, producer_version TEXT)",
+            "CREATE INDEX IF NOT EXISTS ix_sessions_user ON sessions(user_id, profile_id)",
+
+            "CREATE TABLE IF NOT EXISTS session_roster (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, "
+            "principal_id TEXT NOT NULL, role TEXT NOT NULL, joined_at TEXT NOT NULL, left_at TEXT)",
+            "CREATE INDEX IF NOT EXISTS ix_roster_session ON session_roster(session_id)",
             "CREATE INDEX IF NOT EXISTS ix_events_stream ON events(user_id, profile_id, stream, id)",
 
             # append-only teeth: a trigger function that aborts any UPDATE/DELETE
