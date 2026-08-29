@@ -247,6 +247,27 @@ export function createInputBus({
       // Whether anything was bound to this control at the time. An UNBOUND press is still a
       // real thing a person did, and this channel is the only place it survives with timing.
       bound: rec.bound,
+      // ---- WHAT WAS ASKED OF THIS PRESS ------------------------------------------------
+      //
+      // WITHOUT THESE, `heldMs` CONFLATES TWO OPPOSITE THINGS (Mike, 2026-08-29): held long
+      // because the SYSTEM ASKED for a hold, and held long because LETTING GO WAS HARD. A
+      // long hold is evidence of difficulty only if nothing was demanding it.
+      //
+      // `requiredHoldMs` is the longest holdMs among the bindings on this control AT PRESS
+      // TIME - what the configuration demanded of this particular press. 0 means nothing was
+      // asked, which is the case where a long hold is worth a clinician's attention.
+      //
+      // NOTHING HERE CLASSIFIES THE HOLD, and that is on purpose. "Intentional" vs
+      // "difficulty" is a judgement about a person, and this file has no business making it -
+      // the same reason the export is evidence candidates and not scores. We record what was
+      // asked; somebody who knows her decides what the excess means.
+      //
+      // The excess is DELIBERATELY NOT STORED. A reader subtracts. A derived column drifts
+      // from its inputs, and this repo already learned to let the reader derive.
+      requiredHoldMs: rec.requiredHoldMs,
+      // How many OTHER controls were down at this instant. Non-zero is the chord / modifier /
+      // two-switch case, where a hold may be structural rather than either of the above.
+      concurrent: rec.concurrent,
     };
     bus.publish(EDGE_TOPIC, out);
     return out;
@@ -376,9 +397,16 @@ export function createInputBus({
     lastDown.set(key, at);
 
     const matches = bindingsFor(device, control);
+    // Captured at PRESS time, not release time: bindings hot-swap when a profile changes, and
+    // what matters is what was being asked of her when she pressed.
+    h.requiredHoldMs = matches.reduce((m, b) => Math.max(m, b.holdMs || 0), 0);
     // Emitted before the binding lookup decides anything, so an unbound press is on the
     // measurement channel with the same shape as a bound one.
-    reportEdge({ at, pressId: h.pressId, phase: 'down', device, control, bound: matches.length > 0 });
+    reportEdge({
+      at, pressId: h.pressId, phase: 'down', device, control,
+      bound: matches.length > 0, requiredHoldMs: h.requiredHoldMs,
+      concurrent: held.size - 1,          // this control is already in `held`
+    });
 
     if (!matches.length) {
       report({ at, device, control, pressId: h.pressId, reason: 'unbound', heldMs: 0, latencyMs: 0 });
@@ -436,7 +464,14 @@ export function createInputBus({
     // THE ROW THAT DID NOT EXIST BEFORE. Emitted for every release including one no binding
     // cares about, and it carries the hold she ACTUALLY produced rather than the threshold
     // somebody configured.
-    reportEdge({ at, pressId: h.pressId, phase: 'up', device, control, heldMs, auto, bound: matches.length > 0 });
+    reportEdge({
+      at, pressId: h.pressId, phase: 'up', device, control, heldMs, auto,
+      bound: matches.length > 0,
+      // The value from PRESS time, carried on `h` - so a profile swapped mid-hold cannot
+      // rewrite what was asked of a press that already happened.
+      requiredHoldMs: h.requiredHoldMs ?? 0,
+      concurrent: held.size,              // this control has already been removed
+    });
 
     for (const b of matches) {
       const base = {

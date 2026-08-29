@@ -25,7 +25,7 @@ No server needed; runs entirely against a fake clock.</p>
 import { createBus } from '../bus.js';
 import { createActionRegistry, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION } from '../actions.js';
 import { createInputBus, ACTIVATION_TOPIC, EDGE_TOPIC, PHASES, deviceClass, REJECTIONS } from '../input.js';
-import { createAccessLog, toOutbound, toOutboundBatch, summarize, byReason } from '../access.js';
+import { createAccessLog, toOutbound, toOutboundBatch, toOutboundEdge, summarize, byReason } from '../access.js';
 import { attachKeyboard, keyControl, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from '../input_keyboard.js';
 import { createGamepads, gamepadKey, controlLabel } from '../input_gamepad.js';
 
@@ -768,6 +768,67 @@ const last = (a) => a[a.length - 1];
         last(r.edges).pressId === r.recs()[0].pressId);
     }
 
+    // *** WHAT WAS ASKED OF THE PRESS ***
+    //
+    // The same 900ms hold means opposite things depending on whether anything demanded it.
+    // Without `requiredHoldMs` the two are one number and the difference is unrecoverable.
+    {
+      const r = rig();
+      // Nothing asks for a hold. A long hold here is a person who could not let go.
+      r.input.addBinding({ id: 'easy', actionId: 'photos/next', device: 'switch:1', control: 'jack:a' });
+      r.input.down('switch:1', 'jack:a');
+      r.clock.advance(900);
+      r.input.up('switch:1', 'jack:a');
+      const hard = last(r.edges);
+
+      // Something DOES ask for a hold. The same 900ms is largely compliance.
+      r.input.setBindings([{ id: 'holdy', actionId: 'photos/next', device: 'switch:2', control: 'jack:a', holdMs: 800 }]);
+      r.input.down('switch:2', 'jack:a');
+      r.clock.advance(900);
+      r.input.up('switch:2', 'jack:a');
+      const asked = last(r.edges);
+
+      check('two identical 900ms holds are recorded identically by heldMs alone',
+        hard.heldMs === 900 && asked.heldMs === 900);
+      check('...but what was ASKED of each press separates them — 0 vs 800',
+        hard.requiredHoldMs === 0 && asked.requiredHoldMs === 800,
+        JSON.stringify([hard.requiredHoldMs, asked.requiredHoldMs]));
+      check('the excess is left for the reader to subtract, not stored as a verdict',
+        hard.overheldMs === undefined && hard.intentional === undefined);
+      check('and the down edge carries it too, so it is known before the release arrives',
+        r.edges.find((e) => e.phase === 'down' && e.pressId === asked.pressId).requiredHoldMs === 800);
+    }
+
+    // The value is fixed at PRESS time. A profile swapped mid-hold must not rewrite what was
+    // asked of a press that already happened.
+    {
+      const r = rig();
+      r.input.setBindings([{ id: 'a', actionId: 'photos/next', device: 'switch:1', control: 'jack:a', holdMs: 500 }]);
+      r.input.down('switch:1', 'jack:a');
+      r.clock.advance(100);
+      r.input.setBindings([]);                      // caregiver changes profile mid-hold
+      r.clock.advance(400);
+      r.input.up('switch:1', 'jack:a');
+      check('what was asked is fixed at press time, not re-read at release',
+        last(r.edges).requiredHoldMs === 500, String(last(r.edges).requiredHoldMs));
+    }
+
+    // Concurrency: a hold that overlaps another control is the chord/modifier case, where the
+    // duration may be structural rather than either difficulty or compliance.
+    {
+      const r = rig();
+      r.input.down('switch:1', 'jack:a');
+      check('a lone press has nothing else down', last(r.edges).concurrent === 0);
+      r.input.down('switch:1', 'jack:b');
+      check('a second press sees the first still held', last(r.edges).concurrent === 1);
+      r.clock.advance(50);
+      r.input.up('switch:1', 'jack:b');
+      check('and its release says so too', last(r.edges).concurrent === 1);
+      r.clock.advance(50);
+      r.input.up('switch:1', 'jack:a');
+      check('the last one released is alone again', last(r.edges).concurrent === 0);
+    }
+
     // A MODULE MAY MEASURE WHAT IT DOES NOT REACT TO.
     {
       const r = rig();
@@ -843,6 +904,52 @@ const last = (a) => a[a.length - 1];
       check('an edge record carries no verdict — "accepted" belongs to the other stream',
         r.edges.length === 2 &&
         r.edges.every((e) => e.accepted === undefined && e.reason === undefined));
+    }
+
+    // ================= the edge stream on the wire, and kept apart =================
+    section('the edge payload — tracked, allowlisted, and kept out of the activation metrics');
+    {
+      const r = rig();
+      r.input.addBinding({ id: 'b1', actionId: 'photos/next', device: 'hid:0x1234 Acme Switch Pro', control: 'jack:a' });
+      r.bus.subscribe(EDGE_TOPIC, r.log.recordEdge);
+      r.input.down('hid:0x1234 Acme Switch Pro', 'jack:a');
+      r.clock.advance(700);
+      r.input.up('hid:0x1234 Acme Switch Pro', 'jack:a');
+
+      check('edges land in their own ring', r.log.edges().length === 2 && r.log.get().length === 1);
+      // THE TRAP THIS SEPARATION EXISTS FOR: an edge has no `accepted`, so in the activation
+      // ring every one of them would count as a rejection.
+      check('and they do NOT reach the activation metrics — the false-activation rate is intact',
+        r.log.summarize().falseActivationRate === 0, JSON.stringify(r.log.summarize()));
+
+      const wire = r.log.edgeOutbound();
+      check('both edges survive the allowlist', wire.length === 2, JSON.stringify(wire));
+      check('the hold is on the wire — this is the new thing, and it is opt-in research data',
+        wire[1].heldMs === 700 && wire[1].phase === 'up');
+      check('so is what was asked of it, or the number means two different things',
+        wire[1].requiredHoldMs === 0);
+      check('the DEVICE INSTANCE never goes — it can carry a product string',
+        wire.every((w) => w.device === undefined && w.deviceClass === 'hid'));
+      check('nor the control — on a keyboard that is which key',
+        wire.every((w) => w.control === undefined));
+      check('nor an absolute timestamp — a coarse daypart goes instead',
+        wire.every((w) => w.at === undefined && typeof w.daypart === 'string'));
+    }
+
+    // Fail closed, exactly like the activation payload: present-and-wrong kills the row.
+    {
+      const base = { at: Date.now(), deviceClass: 'switch', phase: 'up', heldMs: 100, auto: false, bound: true };
+      const good = toOutboundEdge(base, { session: 'abcdef01-2345-6789-abcd-ef0123456789', seq: 0 });
+      check('a well-formed edge builds a row', !!good, JSON.stringify(good));
+      check('an impossible hold kills the whole row rather than being dropped from it',
+        toOutboundEdge({ ...base, heldMs: -5 }, { session: 'abcdef01-2345-6789-abcd-ef0123456789', seq: 0 }) === null);
+      check('a phase outside the closed set kills it',
+        toOutboundEdge({ ...base, phase: 'press' }, { session: 'abcdef01-2345-6789-abcd-ef0123456789', seq: 0 }) === null);
+      check('a missing required field kills it',
+        toOutboundEdge({ ...base, auto: undefined }, { session: 'abcdef01-2345-6789-abcd-ef0123456789', seq: 0 }) === null);
+      check('an unknown field cannot ride along — the payload is built by name, not copied',
+        good.secret === undefined &&
+        toOutboundEdge({ ...base, secret: 'x' }, { session: 'abcdef01-2345-6789-abcd-ef0123456789', seq: 0 }).secret === undefined);
     }
 
     document.getElementById('summary').textContent =

@@ -40,7 +40,7 @@
 // time - it buffers in memory (where the live metrics read from) and flushes in batches.
 
 import { daypartAt, DEFAULT_DAYPARTS } from './daypart.js';
-import { REJECTIONS } from './input.js';
+import { REJECTIONS, PHASES } from './input.js';
 
 export const ACCESS_STREAM  = 'access';             // well-known shared stream key
 export const ACCESS_TOPIC   = 'access/logged';      // bus topic - live nudge, NOT the record
@@ -119,6 +119,78 @@ export function toOutboundBatch(records, { session, dayparts = DEFAULT_DAYPARTS 
 }
 
 // ---------------------------------------------------------------------------------
+// THE EDGE STREAM - what the hand did, kept in its own ring with its own allowlist.
+//
+// WHY NOT THE SAME RING. `summarize` and `falseActivationRate` read `accepted`, and an edge
+// record does not have one - so `isRejected` would be true for every edge and the false
+// activation rate, the one metric nobody else in this field collects, would silently become
+// nonsense. Two kinds of record in one list is how that happens quietly.
+//
+// SAME THREE EXCLUSIONS AS THE ACTIVATION PAYLOAD, for the same reasons: no `control` (on a
+// keyboard that is which key), no `device` instance (it can carry a product string), no
+// absolute `at` (quasi-identifying once joined with anything else - `daypart` goes instead).
+//
+// WHAT IS NEW ON THE WIRE, and it is a real privacy decision made loudly: how long a person
+// held a control, and whether they let go on their own. Mike, 2026-08-29: "yes, it should be
+// tracked." It is still the OPT-IN research payload - nothing leaves a machine because this
+// list exists, only because somebody turned the payload on.
+// ---------------------------------------------------------------------------------
+
+export const EDGE_KIND = 'edge';
+
+export const EDGE_OUTBOUND_FIELDS = {
+  session:     { required: true,  check: (v) => typeof v === 'string' && SESSION_RE.test(v) },
+  seq:         { required: true,  check: (v) => Number.isInteger(v) && v >= 0 },
+  deviceClass: { required: true,  check: inSet(['gamepad', 'keyboard', 'switch', 'hid', 'serial', 'bluetooth', 'pointer', 'other']) },
+  phase:       { required: true,  check: inSet(PHASES) },
+  // Absent on a down by design; present and impossible kills the row.
+  heldMs:      { required: false, check: ms(600000) },
+  // What the configuration demanded. Without it `heldMs` conflates "held because it was asked
+  // for" with "held because letting go was hard", which are opposite findings.
+  requiredHoldMs: { required: false, check: ms(600000) },
+  auto:        { required: true,  check: (v) => typeof v === 'boolean' },
+  bound:       { required: true,  check: (v) => typeof v === 'boolean' },
+  concurrent:  { required: false, check: (v) => Number.isInteger(v) && v >= 0 && v <= 32 },
+  daypart:     { required: true,  check: inSet(DAYPARTS) },
+};
+
+export function toOutboundEdge(rec, { session, seq, dayparts = DEFAULT_DAYPARTS } = {}) {
+  if (!rec || typeof rec !== 'object') return null;
+  const source = {
+    session,
+    seq,
+    deviceClass: rec.deviceClass,
+    phase: rec.phase,
+    heldMs: ok(rec.heldMs) ? Number(rec.heldMs) : undefined,
+    requiredHoldMs: ok(rec.requiredHoldMs) ? Number(rec.requiredHoldMs) : undefined,
+    auto: rec.auto,
+    bound: rec.bound,
+    concurrent: ok(rec.concurrent) ? Number(rec.concurrent) : undefined,
+    daypart: Number.isFinite(rec.at) ? daypartAt(rec.at, dayparts) : undefined,
+  };
+  const out = {};
+  for (const [field, spec] of Object.entries(EDGE_OUTBOUND_FIELDS)) {
+    const v = source[field];
+    if (v === undefined) {
+      if (spec.required) return null;
+      continue;
+    }
+    if (!spec.check(v)) return null;
+    out[field] = v;
+  }
+  return out;
+}
+
+export function toOutboundEdgeBatch(records, { session, dayparts = DEFAULT_DAYPARTS } = {}) {
+  const out = [];
+  (records || []).forEach((rec, i) => {
+    const row = toOutboundEdge(rec, { session, seq: i, dayparts });
+    if (row) out.push(row);
+  });
+  return out;
+}
+
+// ---------------------------------------------------------------------------------
 // Metrics, derived from the local records. Same posture as telemetry.js: nothing here
 // is a stored total, everything derives from the stream.
 // ---------------------------------------------------------------------------------
@@ -190,7 +262,11 @@ export function createAccessLog({
 } = {}) {
   const id = String(session || newSession());
   const ring = [];
+  // Its OWN ring. See the EDGE STREAM note above - an edge record has no `accepted`, so one
+  // shared list would make every edge read as a rejection and quietly wreck the metric.
+  const edgeRing = [];
   let pending = [];
+  let edgePending = [];
   const stream = makeEvents ? makeEvents(ACCESS_STREAM, { limit: cap }) : null;
 
   function record(rec) {
@@ -205,6 +281,20 @@ export function createAccessLog({
     return rec;
   }
 
+  // Hand this to `bus.subscribe(EDGE_TOPIC, log.recordEdge)`. It is a SUBSCRIPTION, not a
+  // constructor option, because the edge stream is opt-in per surface: a screen that is not
+  // measuring anybody should not be accumulating how long they held things.
+  function recordEdge(rec) {
+    if (!rec) return null;
+    edgeRing.push(rec);
+    if (edgeRing.length > cap) edgeRing.splice(0, edgeRing.length - cap);
+    if (stream) {
+      edgePending.push(rec);
+      if (edgePending.length >= batchSize) flushEdges();
+    }
+    return rec;
+  }
+
   function flush() {
     if (!stream || !pending.length) return Promise.resolve(null);
     const batch = pending;
@@ -212,20 +302,31 @@ export function createAccessLog({
     return stream.append(ACTIVATION_KIND, { session: id, count: batch.length, rows: batch });
   }
 
+  function flushEdges() {
+    if (!stream || !edgePending.length) return Promise.resolve(null);
+    const batch = edgePending;
+    edgePending = [];
+    return stream.append(EDGE_KIND, { session: id, count: batch.length, rows: batch });
+  }
+
   return {
     session: id,
     // Hand this straight to createInputBus({ onActivation }).
     record,
+    recordEdge,
     get: () => [...ring],
-    clear: () => { ring.length = 0; },
+    edges: () => [...edgeRing],
+    clear: () => { ring.length = 0; edgeRing.length = 0; },
     flush,
+    flushEdges,
     summarize: () => summarize(ring),
     byReason: () => byReason(ring),
     byDevice: () => byDevice(ring),
     byAction: () => byAction(ring),
     // The opt-in payload, built fresh from the allowlist every time it is asked for.
     outbound: (dayparts = DEFAULT_DAYPARTS) => toOutboundBatch(ring, { session: id, dayparts }),
-    destroy: () => { flush(); stream?.destroy?.(); ring.length = 0; },
+    edgeOutbound: (dayparts = DEFAULT_DAYPARTS) => toOutboundEdgeBatch(edgeRing, { session: id, dayparts }),
+    destroy: () => { flush(); flushEdges(); stream?.destroy?.(); ring.length = 0; edgeRing.length = 0; },
   };
 }
 

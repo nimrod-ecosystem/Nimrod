@@ -270,5 +270,35 @@ check("sessions and session_roster exist", {"sessions", "session_roster"} <= nam
 check("*** and nothing is undescribed - adding a table without explaining it publishes its own "
       "omission on the public page ***", d["undocumented"] == [], d["undocumented"])
 
+section("*** the columns are REACHABLE over HTTP - they shipped without a way to fill them ***")
+# db.append_event took these from the migration onward and NOBODY PASSED ONE, so every event
+# written through the API was unattributed by construction rather than by honesty. That is not
+# what an empty column was supposed to mean.
+import app  # noqa: E402
+
+check("a producer version is a closed shape, not free text",
+      bool(app.PRODUCER_RE.match("pressgame@2.4")) and not app.PRODUCER_RE.match("whatever I like"))
+check("...and it must name a version, not just a module",
+      not app.PRODUCER_RE.match("pressgame"))
+
+store.append_event("u", "p", "clinical", "trial", {"hit": True},
+                   session_id="sess-abc", producer_version="pressgame@2.4")
+row = store.list_events("u", "p", "clinical")["events"][-1]
+check("a trial can be written WITH the sitting it belongs to and the build that made it",
+      row.get("session_id") == "sess-abc" and row.get("producer_version") == "pressgame@2.4",
+      str({k: row.get(k) for k in ("session_id", "producer_version")}))
+
+store.append_event("u", "p", "clinical", "trial", {"hit": False})
+plain = store.list_events("u", "p", "clinical")["events"][-1]
+check("*** and omitting them still writes NULL rather than a guess - every existing caller is "
+      "unchanged and its rows stay visibly unattributed ***",
+      plain.get("session_id") is None and plain.get("producer_version") is None)
+
+# The four that are NOT reachable, and it is deliberate: they are claims about PEOPLE.
+check("attestation is NOT postable - 'a clinician attested this' cannot be self-declared",
+      not any(f in app.EventPost.model_fields
+              for f in ("principal_id", "principal_type", "attested_by", "attested_at")),
+      str(list(app.EventPost.model_fields)))
+
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

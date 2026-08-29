@@ -34,11 +34,21 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
     return cache;
   }
 
-  async function append(kind, data = {}) {
+  // `meta` carries the provenance COLUMNS - `session_id` (which sitting) and
+  // `producer_version` (which build wrote it). They are a third argument rather than keys in
+  // `data` for the same reason the bus keeps meta out of the payload: `data` belongs to
+  // whoever declared the kind, and these are the platform's. Omit it and nothing changes -
+  // the columns take null, which honestly says "not captured".
+  async function append(kind, data = {}, meta = null) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind, data }),
+      body: JSON.stringify({
+        kind,
+        data,
+        ...(meta?.sessionId ? { session_id: meta.sessionId } : {}),
+        ...(meta?.producerVersion ? { producer_version: meta.producerVersion } : {}),
+      }),
     });
     if (!res.ok) throw new Error(`POST ${url} -> ${res.status}`);
     await refresh();        // pull the authoritative list back

@@ -204,6 +204,10 @@ export const MODULE_VERBS = {
   // with a pointer, so a switch user watched hearts drift past and could never touch one.
   // `next` steers the comet to the nearest heart; `select` blooms where it already is.
   comet:         { select: 'comet/spark', next: 'comet/seek' },
+  // ONE VERB, AND THAT IS THE WHOLE GAME. Press. Everything clinical about this module
+  // - latency, commissions, perseveration - is WHEN that one verb arrives relative to
+  // the invite, so a second verb would be a second thing to get wrong for no gain.
+  pressgame:     { select: 'pressgame/press' },
   counter:       { select: { topic: 'counter/delta', payload: 1 },
                    up:     { topic: 'counter/delta', payload: 1 },
                    down:   { topic: 'counter/delta', payload: -1 } },
