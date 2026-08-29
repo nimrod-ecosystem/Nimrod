@@ -14,7 +14,8 @@ import sys
 import db
 import links
 from links import (
-    CAPABILITIES, DELEGATED, DEFAULT_CAPABILITIES, RESOLVED_KINDS, STORED_CAPABILITIES,
+    ALWAYS_OFF_BY_DEFAULT, CAPABILITIES, DELEGATED, MODULE_SCOPED, NO_GROUP_CAPABILITIES,
+    RESOLVED_KINDS, STORED_CAPABILITIES,
     SUBJECT_KINDS, UnknownCapability,
     canonical_pair, delegates, guardianship_active, is_expired, link_is_active, linked,
     may, may_act_as, may_manage_guardians, normalize_capability, normalize_kind,
@@ -65,24 +66,55 @@ def perm(**kw):
 # ---------------------------------------------------------------------------------------
 section("the capability set is frozen and fails closed")
 # ---------------------------------------------------------------------------------------
-check("the six switches are the design's six",
-      CAPABILITIES == ("messages", "call_audio", "call_video", "see_screen",
-                       "drive_screen", "add_media"), CAPABILITIES)
+check("the capability set is exactly the agreed list, in order",
+      CAPABILITIES == ("messages", "call_audio", "call_video",
+                       "push_rotation", "push_video",
+                       "see_screen", "see_progress", "drive_screen",
+                       "read_messages", "manage_people",
+                       "mutual_visible", "send_request"), CAPABILITIES)
+check("*** 'add_media' IS GONE - renamed push_rotation, because 'add photos' sounded like "
+      "filing something in an album and what it does is put your thing in FRONT of her ***",
+      "add_media" not in CAPABILITIES and "push_rotation" in CAPABILITIES)
+check("the old name is refused outright, so a stale caller fails loudly rather than silently "
+      "writing a permission nothing reads",
+      raises(UnknownCapability, normalize_capability, "add_media"))
 check("normalize_capability accepts a known one", normalize_capability("Call_Audio") == "call_audio")
 check("*** an unknown capability RAISES rather than defaulting ***",
       raises(UnknownCapability, normalize_capability, "call_everyone"))
 check("empty raises too", raises(UnknownCapability, normalize_capability, ""))
 check("drive_screen is delegated, the rest are stored", DELEGATED == {"drive_screen"})
 check("STORED_CAPABILITIES is the set minus the delegated one",
-      STORED_CAPABILITIES == ("messages", "call_audio", "call_video", "see_screen", "add_media"),
+      STORED_CAPABILITIES == tuple(c for c in CAPABILITIES if c != "drive_screen"),
       STORED_CAPABILITIES)
+check("and drive_screen is the only thing missing from it",
+      set(CAPABILITIES) - set(STORED_CAPABILITIES) == {"drive_screen"})
 check("delegates() answers for one", delegates("drive_screen") and not delegates("messages"))
 check("*** may() REFUSES drive_screen rather than answering it - a False here would be a lie "
       "and a True would be worse ***",
       raises(UnknownCapability, may, "drive_screen", actor="dolly", person_id="P1",
              owner="mike", link=LINK, permissions=[], now_iso=NOW))
-check("a brand-new link starts at messages only (conservative placeholder, not a decision)",
-      DEFAULT_CAPABILITIES == ("messages",), DEFAULT_CAPABILITIES)
+check("*** A BARE LINK WITH NO GROUP GRANTS NOTHING. The old messages-only default was a "
+      "placeholder for a question Mike dissolved rather than answered: the INVITATION CARRIES "
+      "THE GROUP, so a link is never created blank ***",
+      NO_GROUP_CAPABILITIES == (), NO_GROUP_CAPABILITIES)
+
+section("the two that stay off even for the top role")
+check("read_messages and manage_people are the always-off pair",
+      ALWAYS_OFF_BY_DEFAULT == {"read_messages", "manage_people"}, ALWAYS_OFF_BY_DEFAULT)
+check("both are real capabilities, not just names in a set",
+      all(c in CAPABILITIES for c in ALWAYS_OFF_BY_DEFAULT))
+check("*** they are ORTHOGONAL to the roles, not the top of a scale - which is what makes "
+      "'add them to SuperUser' a survivable mistake ***",
+      ALWAYS_OFF_BY_DEFAULT.isdisjoint(DELEGATED))
+check("neither is granted by a bare link either",
+      not set(NO_GROUP_CAPABILITIES) & ALWAYS_OFF_BY_DEFAULT)
+
+section("see_screen is scoped by module, not all-or-nothing")
+check("see_screen is the module-scoped one", MODULE_SCOPED == {"see_screen"}, MODULE_SCOPED)
+check("and it is a real capability", all(c in CAPABILITIES for c in MODULE_SCOPED))
+check("see_progress is SEPARATE from see_screen - a friend who may watch the photos has no "
+      "business seeing a therapy score",
+      "see_progress" in CAPABILITIES and "see_progress" not in MODULE_SCOPED)
 
 # ---------------------------------------------------------------------------------------
 section("the subject is polymorphic and only 'account' resolves")
