@@ -262,8 +262,14 @@ today its states/transitions are JSON.
   its own validated slice: (2) the container module wrapper + child-mount seam + wiring youtube to emit
   `segment/done` on ended **and** skip; (3) Personal videos; (4) Educational; (5) Today card (+ iCal,
   then Google Calendar). **Deferred:** agency/check-in (comfort/yes-no), on-this-day/memories.
-- **Still true:** non-blocking, skippable, never requires input; photos-#1 and the calm dayparts always
-  dominate low-energy times; short segments (fatigue).
+- **Still true, RE-STATED 2026-08-28:** non-blocking, skippable; photos-#1 and the calm dayparts
+  dominate low-energy times; short segments (fatigue). ***THE OLD WORDING WAS "never requires
+  input", WHICH IS THE ABSOLUTE MIKE KILLED*** - it died to a game where you blow into a straw to
+  keep a windmill turning (the input IS the content) and to somebody who WANTS an "are you still
+  watching" prompt. The signed-off form: **a screen must never enter a state that only an input can
+  leave, when the person in front of it cannot give that input.** A gate is not the problem; an
+  UNDISMISSABLE gate is. Also note "the calm dayparts always dominate" is a DEFAULT, not a law -
+  somebody who wants their evenings loud is entitled to that.
 
 ## Points ledger — one shared record for every point source (2026-08-17, built + validated)
 A points game (finish a work sprint, answer a question right, do a chore) only works if every
