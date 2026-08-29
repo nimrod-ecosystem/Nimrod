@@ -27,6 +27,8 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
+import { createOutputBus } from './output.js';
+import { defaultChannels } from './output_channels.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
@@ -127,6 +129,27 @@ export async function mountKiosk(root, {
   // consumer already has to handle anyway.
   let personId = null;
 
+  // The output bus for this surface. Built once, shared by every module on the screen -
+  // which is the whole point of it: there is ONE pair of ears, so arbitration has to happen
+  // above the modules or two of them talk over each other and produce nothing.
+  //
+  // Channels are whatever this device actually has. `defaultChannels` omits a channel it
+  // cannot provide rather than shipping a broken one, so output.js reports `no-adapter`
+  // instead of a message vanishing.
+  let output = null;
+  try {
+    // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
+    // kiosk root has never been tried on this surface and could land on top of her photos.
+    // `say` routes to speech anyway (DEFAULT_ROUTING), and anything routed to `screen` is
+    // reported as `no-adapter` rather than vanishing, which is the honest failure. Add it
+    // when there is a designated place for a banner and a test that it does not cover
+    // anything.
+    output = createOutputBus({ bus, channels: defaultChannels({}) });
+  } catch (err) {
+    // A screen that cannot speak is still a screen. Modules treat `output` as optional.
+    console.error('kiosk: no output bus', err);
+  }
+
   const ck = (key) => `${user}:${profileId}:${key}`;   // resilience cache key per handle
 
   const stateFor = (key, opts = {}) => (makeState
@@ -144,6 +167,15 @@ export async function mountKiosk(root, {
     // media catching up to the same idea.
     get personId() { return personId; },
     rootBus: bus, instanceId: mod.id,
+    // *** THE OUTPUT BUS, WHICH THE KIOSK DID NOT HAVE. *** Exactly the gap input_runtime.js
+    // closed on the other side: the whole output layer was constructed inside the Output TAB,
+    // so "how you want to be told things" was configurable where a clinician sets up and
+    // silent where the person actually lives. A module that wants to SAY something had
+    // nowhere to say it.
+    //
+    // A getter for the same reason personId is: it is built lazily below, and a module
+    // mounted first would otherwise capture undefined forever.
+    get output() { return output; },
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
@@ -808,6 +840,9 @@ export async function mountKiosk(root, {
       menu.destroy();
       try { personOff?.(); } catch { /* already gone */ }
       try { drive?.close(); } catch { /* already gone */ }
+      // Silences anything mid-sentence as well as clearing the queue. A screen that is being
+      // torn down must not keep talking.
+      try { output?.destroy(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },

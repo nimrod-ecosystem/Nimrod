@@ -64,6 +64,10 @@ export const TABS = [
   { id: 'inputs',   label: 'Devices',  hint: 'the switches, controllers and keys you use — and what each one does' },
   { id: 'output',   label: 'Output',   hint: 'how this screen answers — spoken, on screen, a sound' },
   { id: 'remote',   label: 'Remote',   hint: 'drive their screen from here, while they are at it' },
+  // ON HOME, NOT ON THE KIOSK. Reviewing what a module recorded is a different job in a
+  // different room, and a table of somebody's performance has no business on the screen
+  // they cannot walk away from.
+  { id: 'records',  label: 'Records',  hint: 'what a module wrote down, and vouching for it' },
   { id: 'adulting', label: 'Adulting', hint: 'your own points board', hidden: true },
 ];
 
@@ -141,6 +145,12 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const o = mountOutput(host, { user, makeUserState, makeUserEvents });
       await o.refresh();
       return o;
+    }
+    if (id === 'records') {
+      const { mountRecords } = await import('./records.js');
+      const rec = mountRecords(host, { profiles, user, makeEvents });
+      await rec.refresh();
+      return rec;
     }
     if (id === 'remote') {
       const { mountRemote } = await import('./remote.js');

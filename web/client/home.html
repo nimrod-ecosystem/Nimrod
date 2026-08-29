@@ -153,6 +153,30 @@
   .h-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;
     background:var(--cream-soft);border:1px solid var(--line);color:var(--muted);
     font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  /* Records panel. Deliberately plain: this is somebody's clinical record, and a
+     dashboard aesthetic would make counts look like a score. */
+  .rec{max-width:900px}
+  .rec h1{margin:0 0 6px}
+  .rec-caveat{margin:0 0 18px;padding:10px 12px;border-left:4px solid var(--moss,#839958);
+    background:var(--card,#fff);font-size:.93rem;line-height:1.45}
+  .rec-stream{margin:0 0 26px}
+  .rec-stream h2{margin:0 0 4px;font-size:1.02rem}
+  .rec-stream h2 small{font-weight:400;opacity:.6;margin-left:6px}
+  .rec-session{margin:0 0 14px;padding:10px 12px;border:1px solid var(--line,#ddd);border-radius:10px}
+  .rec-session h3{margin:0 0 2px;font-size:.94rem}
+  .rec-session h3 small{font-weight:400;opacity:.6;margin-left:6px}
+  .rec-counts{margin:0 0 8px;font-size:.88rem;opacity:.85}
+  .rec-rows{list-style:none;margin:0;padding:0;font-size:.88rem}
+  .rec-rows li{display:grid;grid-template-columns:160px 1fr auto auto;gap:8px;align-items:center;
+    padding:3px 0;border-top:1px solid var(--line,#eee)}
+  .rec-when{opacity:.6;font-variant-numeric:tabular-nums}
+  /* Unattested is the NORMAL state of honest data, so it is silence rather than a warning.
+     A UI that nags teaches people to click the button to clear the nag. */
+  .rec-att{opacity:.75;font-size:.85rem}
+  .rec-btn{padding:2px 10px;border-radius:8px;border:1px solid var(--line,#ccc);
+    background:var(--card,#fff);cursor:pointer;font:inherit;font-size:.82rem}
+  .rec-btn:disabled{opacity:.5;cursor:default}
+  .rec-empty,.rec-loading{opacity:.7}
   /* Inputs panel. The table is dense on purpose: a clinician comparing four bindings
      wants them on one screen, not in four expanding cards. */
   .i-gate{display:flex;gap:8px;flex-wrap:wrap}

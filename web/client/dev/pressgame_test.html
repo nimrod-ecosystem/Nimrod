@@ -51,7 +51,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 // A rig with a fake events sink, so what the module WOULD store is inspectable without a
 // server. The sink records the meta as well as the row — the provenance columns are the
 // point of half these checks.
-function rig(saved = {}) {
+function rig(saved = {}, output = null) {
   const host = document.createElement('div');
   document.getElementById('host').append(host);
   const bus = createBus();
@@ -61,7 +61,7 @@ function rig(saved = {}) {
     destroy() {},
   };
   const inst = mountModule('pressgame', {
-    mount: host, bus, events,
+    mount: host, bus, events, output,
     state: { get: () => saved, destroy() {} },
     user: 'u', profileId: 'p',
   });
@@ -277,6 +277,45 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
         throws(() => r.impl.__record('trial', { seq: 999 })));
       check('an ordinary extra is fine',
         !throws(() => r.impl.__record('trial', { anythingElse: 1 })));
+    }
+
+    // ================= the spoken cues =================
+    //
+    // The first port dropped these entirely while reporting only that the MUSIC had gone.
+    // They are not decoration - they are how somebody who is not reading the screen knows
+    // what is being asked of them.
+    section('*** it says the cues out loud — "Wait", "Go" ***');
+    {
+      const said = [];
+      const r = rig({ waitMs: 4000, stopQuietMs: 5000 }, { say: (t) => said.push(t) });
+      check('the wait is announced', said.includes('Wait'), JSON.stringify(said));
+      r.impl.__step(4000);
+      check('*** and so is the invite — the one word the module exists to deliver ***',
+        said.includes('Go'), JSON.stringify(said));
+      r.impl.__step(16);
+      r.impl.__press('verb');
+      check('a win says the reward word', said.includes('Well done'), JSON.stringify(said));
+      r.impl.__step(200); r.impl.__press('verb');
+      check('the first echo is told they can stop', said.includes('You can stop pressing now'));
+      r.impl.__step(100); r.impl.__press('verb');
+      check('*** but only ONCE — a voice repeating "you can stop" at somebody who cannot '
+        + 'stop is not help ***',
+        said.filter((t) => t === 'You can stop pressing now').length === 1, JSON.stringify(said));
+    }
+    {
+      const said = [];
+      const r = rig({ waitMs: 4000, speak: false }, { say: (t) => said.push(t) });
+      r.impl.__step(4000); r.impl.__step(16); r.impl.__press('verb');
+      check('turning the voice off silences it completely, and the game still runs',
+        said.length === 0 && r.impl.__probe().phase === 'stop', JSON.stringify(said));
+    }
+    {
+      // No output bus at all - a test rig, the signed-out preview, a surface that never
+      // mounted one. The module must still be a whole game.
+      const r = rig({ waitMs: 4000 });      // rig() passes no output by default
+      r.impl.__step(4000); r.impl.__step(16); r.impl.__press('verb');
+      check('*** with no output bus it does not throw — it just does not speak ***',
+        r.impl.__probe().phase === 'stop' && rowsOf(r.appended, 'hit').length === 1);
     }
 
     // ================= teardown =================
