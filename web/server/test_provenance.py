@@ -300,5 +300,84 @@ check("attestation is NOT postable - 'a clinician attested this' cannot be self-
               for f in ("principal_id", "principal_type", "attested_by", "attested_at")),
       str(list(app.EventPost.model_fields)))
 
+section("*** ATTESTATION - somebody looked and vouched, as their own append-only row ***")
+
+# The trial being vouched for.
+trial = store.append_event("u", "p", "clinical", "trial", {"hit": True},
+                           session_id="sess-att", producer_version="pressgame@1.0")
+check("the trial starts unattested, and that is honest rather than a gap",
+      trial.get("attested_by") is None)
+
+att = store.attest_event("u", "p", "clinical", trial["id"], attester="dr-smith",
+                         note="reviewed on the ward round")
+check("attesting appends a NEW row rather than touching the trial",
+      att["id"] != trial["id"] and att["kind"] == "attestation")
+check("*** and the attester is stamped from the caller, never from a body ***",
+      att["attested_by"] == "dr-smith" and att["principal_id"] == "dr-smith")
+check("the attestation is a human claim, typed as one", att["principal_type"] == "human")
+check("attested_at is when the ROW was written - when somebody actually looked",
+      bool(att["attested_at"]) and att["attested_at"] >= trial["created_at"])
+check("it cites the row it vouches for", att["data"]["attests"] == trial["id"])
+check("it inherits the sitting, so an attestation is findable with its trial",
+      att["session_id"] == "sess-att")
+
+after = store.list_events("u", "p", "clinical")["events"]
+target = [e for e in after if e["id"] == trial["id"]][0]
+check("*** THE TRIAL ROW IS UNCHANGED - append-only survived being vouched for ***",
+      target["attested_by"] is None and target["data"] == {"hit": True})
+check("who vouched is derived by reading, not by a flag on the trial",
+      provenance.attesters_of(after, trial["id"]) == ["dr-smith"])
+
+# Two people, and the same person twice.
+store.attest_event("u", "p", "clinical", trial["id"], attester="brother-tom")
+after = store.list_events("u", "p", "clinical")["events"]
+check("*** two people can vouch, and WHO is a list rather than a boolean - 'a clinician "
+      "attested this' and 'her brother did' are the whole point ***",
+      provenance.attesters_of(after, trial["id"]) == ["dr-smith", "brother-tom"],
+      str(provenance.attesters_of(after, trial["id"])))
+store.attest_event("u", "p", "clinical", trial["id"], attester="dr-smith")
+after = store.list_events("u", "p", "clinical")["events"]
+check("a second look months later is its own row, not deduplicated away",
+      len(provenance.attestations_for(after, trial["id"])) == 3)
+check("...while WHO stays distinct", provenance.attesters_of(after, trial["id"]) == ["dr-smith", "brother-tom"])
+
+# What it refuses.
+def raises(fn):
+    try:
+        fn()
+        return False
+    except ValueError:
+        return True
+
+check("attesting a row that is not there is refused",
+      raises(lambda: store.attest_event("u", "p", "clinical", 99999, attester="dr-smith")))
+check("*** an attestation cannot be attested - vouching for a vouching is not a claim about "
+      "the observation ***",
+      raises(lambda: store.attest_event("u", "p", "clinical", att["id"], attester="dr-smith")))
+check("attesting needs somebody making it",
+      raises(lambda: store.attest_event("u", "p", "clinical", trial["id"], attester="")))
+check("*** and another account cannot vouch for a row it cannot even read ***",
+      raises(lambda: store.attest_event("someone-else", "p", "clinical", trial["id"],
+                                        attester="someone-else")))
+
+# Presence is not attestation - the roster answers the other question, and separately.
+sess_att = store.start_session("u", "p", roster=[
+    {"principal_id": "christine", "role": "subject"},
+    {"principal_id": "dr-smith", "role": "clinician"},
+])
+check("a clinician in the room is recorded by the ROSTER, truthfully and for free",
+      any(r["role"] == "clinician" for r in store.session_roster(sess_att["id"])))
+solo_trial = store.append_event("u", "p", "clinical", "trial", {"hit": True},
+                                session_id=sess_att["id"])
+rows = store.list_events("u", "p", "clinical")["events"]
+check("*** but that does NOT attest their trials - presence is not vouching, and auto-filling "
+      "it would empty the field ***",
+      provenance.attesters_of(rows, solo_trial["id"]) == [])
+
+# The endpoint shape.
+check("the attest endpoint takes no attested_by - there is nothing to forge",
+      "attested_by" not in app.AttestPost.model_fields,
+      str(list(app.AttestPost.model_fields)))
+
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

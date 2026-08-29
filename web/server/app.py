@@ -780,6 +780,25 @@ def append_event(pid: str, stream: str, body: EventPost, user: str = Depends(cur
     )
 
 
+class AttestPost(BaseModel):
+    # NOTE WHAT IS NOT HERE: there is no `attested_by`. The attester is the signed-in user and
+    # nothing else, which is what makes an attestation worth anything - see provenance.py.
+    note: str = ""
+
+
+@app.post("/api/profiles/{pid}/events/{stream}/{event_id}/attest")
+def attest_event(pid: str, stream: str, event_id: int, body: AttestPost = AttestPost(),
+                 user: str = Depends(current_user)):
+    """Vouch for one row. Appends a NEW event citing it; the original is never touched."""
+    _check(pid, ID_RE, "profile id")
+    _check(stream, ID_RE, "event stream")
+    owned_profile(user, pid)
+    try:
+        return store.attest_event(user, pid, stream, event_id, attester=user, note=body.note)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # ------------------------------------------------------------- remote drive
 # One person's screen, driven from another machine. See drive.py for why this is a relay
 # and not WebRTC, and why the socket is opened with a ticket rather than a device key.

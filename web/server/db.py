@@ -1214,6 +1214,52 @@ class _Store:
                 (ts, reason, detected_at or ts, ran_over_ms, session_id))
             return (cur.rowcount or 0) > 0
 
+    def get_event(self, user_id: str, pid: str, stream: str, event_id) -> dict | None:
+        """One event, scoped to its owner. None if it is not there or not theirs.
+
+        SCOPED ON PURPOSE: this is what attestation uses to check a target exists, and an
+        unscoped lookup would let somebody attest a row in another account's stream - which
+        would write their name onto data they cannot even read.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT id, kind, data, created_at, session_id, principal_id, principal_type, "
+                "attested_by, attested_at, producer_version FROM events "
+                "WHERE user_id=? AND profile_id=? AND stream=? AND id=?"),
+                (user_id, pid, stream, event_id))
+            r = cur.fetchone()
+        if not r:
+            return None
+        return {"id": r[0], "kind": r[1], "data": json.loads(r[2]), "created_at": r[3],
+                "session_id": r[4], "principal_id": r[5], "principal_type": r[6],
+                "attested_by": r[7], "attested_at": r[8], "producer_version": r[9]}
+
+    def attest_event(self, user_id: str, pid: str, stream: str, event_id,
+                     *, attester: str, note: str = "") -> dict:
+        """Vouch for one row, as a NEW append-only event that cites it.
+
+        *** `attester` COMES FROM THE AUTHENTICATED SESSION, NEVER FROM A REQUEST BODY. ***
+        That is the entire trust model and the reason the four attestation columns are not
+        postable: you may only attest as yourself, so the server never evaluates a claim about
+        a third party. See provenance.py's ATTESTATION block.
+
+        The trial row is NOT touched - it could not be, the triggers forbid it - so what makes
+        a row attested is the existence of another row pointing at it.
+        """
+        target = self.get_event(user_id, pid, stream, event_id)
+        problem = provenance.attestation_problem(target, attester)
+        if problem:
+            raise ValueError(problem)
+        return self.append_event(
+            user_id, pid, stream, provenance.ATTESTATION_KIND,
+            provenance.attestation_row(target_id=target["id"], attester=attester, note=note),
+            # The attestation row's own provenance. `attested_at` is when THIS row was
+            # written, which is genuinely when somebody looked - not when the trial happened.
+            session_id=target.get("session_id"),
+            principal_id=attester, principal_type="human",
+            attested_by=attester, attested_at=_now(),
+        )
+
     def list_events(self, user_id: str, pid: str, stream: str, limit: int = 50) -> dict:
         with self._tx() as cur:
             cur.execute(self._q(
