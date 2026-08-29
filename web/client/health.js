@@ -72,6 +72,7 @@ export const HEALTH_EXPECT = {
   clock:       { idle: true },
   camera:      { idle: true },
   pond:        { idle: true },
+  comet:       { idle: true },
   counter:     { idle: true },
   // Games only move when somebody plays them, and nobody playing is not a fault.
   wordforge:   { idle: true },

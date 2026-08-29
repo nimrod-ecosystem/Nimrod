@@ -200,6 +200,10 @@ export const MODULE_VERBS = {
   // The pond answers a switch, which is the whole reason it was worth porting: cursor and
   // click meant somebody who cannot reach could only ever watch it.
   pond:          { select: 'pond/splash', next: 'pond/stir' },
+  // THE COMET'S VERBS ARE THE REASON IT WAS WORTH PORTING AT ALL. Cici's version moved only
+  // with a pointer, so a switch user watched hearts drift past and could never touch one.
+  // `next` steers the comet to the nearest heart; `select` blooms where it already is.
+  comet:         { select: 'comet/spark', next: 'comet/seek' },
   counter:       { select: { topic: 'counter/delta', payload: 1 },
                    up:     { topic: 'counter/delta', payload: 1 },
                    down:   { topic: 'counter/delta', payload: -1 } },

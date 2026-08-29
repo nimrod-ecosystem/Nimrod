@@ -153,6 +153,18 @@ export const CATALOG = [
       + 'or who has been failing at things all day in therapy, a screen that simply responds '
       + 'and never judges is worth more than another exercise.',
   },
+  {
+    type: 'comet',
+    group: 'comfort',
+    use: 'touch',
+    lead: 'A comet that follows your movement, with hearts to catch.',
+    needs: 'Nothing.',
+    why: 'The head sits exactly where the pointer is and never drifts on its own, which is '
+      + 'the whole point: it makes your own movement unmistakably the thing that moved it. '
+      + 'For somebody re-learning that they can affect anything at all, that is the question '
+      + 'worth answering. It can also be driven with a single switch, which goes and gets a '
+      + 'heart for you.',
+  },
 
   // ------------------------------------------------------------------ practice
   {
