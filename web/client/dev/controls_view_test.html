@@ -174,7 +174,7 @@ section('rendering, and reachability from the menu');
   const empty = document.createElement('div');
   renderControls(empty, { bindings: [], targets: {} });
   check('nothing bound says where to go and does not look broken',
-    /Inputs page/.test(empty.textContent), empty.textContent);
+    /Devices page/.test(empty.textContent), empty.textContent);
 }
 {
   const el = document.createElement('div');

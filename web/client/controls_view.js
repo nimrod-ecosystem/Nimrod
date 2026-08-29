@@ -287,7 +287,7 @@ export function renderControls(el, { bindings, targets, gate, subject,
 
   const rows = whatCanIPress({ bindings, targets, gate, subject });
   if (!rows.length) {
-    el.innerHTML = '<p class="cv-none">Nothing is bound yet. Set controls up on the Inputs page.</p>';
+    el.innerHTML = '<p class="cv-none">Nothing is bound yet. Set controls up on the Devices page.</p>';
     return rows;
   }
   el.innerHTML = head.innerHTML + `<table class="cv-table">${rows.map((r) => `

@@ -1,6 +1,6 @@
 // output_panel.js - the OUTPUT tab: how this person wants to be told things.
 //
-// The twin of the Inputs tab. That one asks "what can you press"; this one asks "how
+// The twin of the Devices tab. That one asks "what can you press"; this one asks "how
 // should we answer". Both are per-USER and both follow the person to every screen they
 // own, because both describe a body and a preference rather than a machine.
 //

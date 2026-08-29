@@ -129,7 +129,7 @@ export function mountInputs(root, {
   root.innerHTML = `
     <div class="home">
       <div class="h-intro">
-        <h1>Inputs</h1>
+        <h1>Devices</h1>
         <p>Bind a switch, a controller button, a key or a click to what someone needs to do.
           You bind the <em>verb</em> — Primary select, Next — and whichever panel they are on
           decides what that means. Set it up once; it follows you to every screen.</p>

@@ -17,7 +17,7 @@
 // not playable: there was nowhere to put them.
 //
 // THE PERSON BAR sits above the panel rather than inside any one tab, because the current
-// person changes what EVERY tab is showing — Screens lists theirs, Inputs edits theirs,
+// person changes what EVERY tab is showing — Screens lists theirs, Devices edits theirs,
 // Output routes theirs. A picker that lived in one tab would leave the others silently
 // addressing somebody else, which is the single worst failure this layer could have.
 // Changing person remounts the active panel; see `show()`.
@@ -58,7 +58,10 @@ export function kioskURL(profileId) {
 export const TABS = [
   { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
-  { id: 'inputs',   label: 'Inputs',   hint: 'bind switches, controllers and keys to actions' },
+  // The ID STAYS `inputs`. A tab id is a stable identifier - it is in URLs, in tests and in
+  // `INPUTS_KEY` on the server - and renaming it is a migration, not a label change. Only the
+  // word a person reads moved to Devices.
+  { id: 'inputs',   label: 'Devices',  hint: 'the switches, controllers and keys you use — and what each one does' },
   { id: 'output',   label: 'Output',   hint: 'how this screen answers — spoken, on screen, a sound' },
   { id: 'remote',   label: 'Remote',   hint: 'drive their screen from here, while they are at it' },
   { id: 'adulting', label: 'Adulting', hint: 'your own points board', hidden: true },
