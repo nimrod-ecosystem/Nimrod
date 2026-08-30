@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>rules — the state machine in sentences</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host{position:fixed;left:0;top:0;width:900px;height:600px;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>rules — what a screen does on its own, in sentences</h1>
+
+<div class="note">
+  The engine has always been authorable — the director already reads its machine config from
+  per-screen state. What was missing is that <b>nobody could read it</b>: it is a nested object
+  with <code>on</code>, <code>pick</code>, <code>gate</code> and <code>$back</code> in it, and
+  the person who needs to change it is a caregiver deciding a call should interrupt the photos.
+  Most of these checks are about the two things that make a reader trustworthy: it shows what
+  it does <i>not</i> understand, and turning a switch on does not rewrite anything else.
+</div>
+
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { describeConfig, hasCallRule, withCallRule, withoutCallRule, mountRules,
+         MACHINE_TYPES, CALL_TOPIC, CALL_ENDED_TOPIC, CALL_STATE } from '../rules.js';
+import { DIRECTOR_CONFIG } from '../modules/director.js';
+import { createMachine, BACK } from '../statemachine.js';
+import { createBus } from '../bus.js';
+import { TABS } from '../home.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sentences = (c) => describeConfig(c).map((r) => `${r.when} → ${r.then}`);
+
+(async () => {
+  try {
+    section('where it lives');
+    {
+      check('Rules is a home tab', TABS.some((t) => t.id === 'rules' && t.label === 'Rules'));
+      check('only modules whose settings ARE a machine are listed',
+        MACHINE_TYPES.has('director') && !MACHINE_TYPES.has('photos'));
+    }
+
+    section('the real director config, read back as sentences');
+    {
+      const s = sentences(DIRECTOR_CONFIG);
+      check('the starting screen is a rule somebody can read',
+        s.some((x) => /when the screen starts → show Video/.test(x)), JSON.stringify(s.slice(0, 2)));
+      check('the rotation says what it draws from and that the clock gates it',
+        s.some((x) => /when one finishes, from any screen → pick another one from Video, Personal video/.test(x)
+                   && /time of day allows/.test(x)), JSON.stringify(s));
+      check('*** the daypart gate is listed too — it is the rule people most want to read, '
+        + 'and it is not a transition ***',
+        s.some((x) => /during morning → only Video may play/.test(x)) &&
+        s.some((x) => /during sleepytime → only Video may play/.test(x)), JSON.stringify(s));
+      check('provider ids are shown as their human labels, never raw',
+        !s.some((x) => /youtube|singalong|educational/.test(x)), JSON.stringify(s));
+    }
+
+    section('*** it shows what it does not understand ***');
+    {
+      // A transition with neither `to` nor `pick` resolves to nothing. Dropping it would tell
+      // somebody their screen has fewer rules than it has.
+      const odd = { initial: 'a', on: { 'weird/topic': [{ when: 'someGuard' }] }, states: { a: {} } };
+      const rows = describeConfig(odd);
+      const unknown = rows.filter((r) => r.kind === 'unknown');
+      check('a rule with no wording is still listed', unknown.length === 1, JSON.stringify(rows));
+      check('...as itself, rather than quietly dropped', /someGuard/.test(unknown[0].then));
+      check('an unrecognised topic keeps its raw name rather than being dressed up',
+        /weird\/topic/.test(unknown[0].when), unknown[0].when);
+      check('a guard is surfaced, because it changes when the rule applies',
+        /only if someGuard/.test(unknown[0].when), unknown[0].when);
+    }
+    {
+      const timed = { initial: 'a', states: { a: { after: { ms: 8000, to: 'b' } }, b: {} } };
+      check('a timer reads as a timer', /after 8 seconds of a → show b/.test(sentences(timed)[1]),
+        JSON.stringify(sentences(timed)));
+    }
+    {
+      check('a missing or junk config is an empty list, not a crash',
+        describeConfig(null).length === 0 && describeConfig('nope').length === 0);
+    }
+
+    section('*** the call switch — and what it must not disturb ***');
+    {
+      check('the stock config has no call rule', hasCallRule(DIRECTOR_CONFIG) === false);
+      const on = withCallRule(DIRECTOR_CONFIG);
+      check('turning it on adds one', hasCallRule(on) === true);
+      check('*** and the original is untouched — a config a person wrote is theirs ***',
+        hasCallRule(DIRECTOR_CONFIG) === false &&
+        JSON.stringify(DIRECTOR_CONFIG.on) === JSON.stringify({ 'segment/done': [{ pick: { from: ['youtube','personal','educational','wordgame','trivia','singalong'] } }] }),
+        JSON.stringify(DIRECTOR_CONFIG.on));
+      check('the rotation rule survives the edit byte for byte',
+        JSON.stringify(on.on['segment/done']) === JSON.stringify(DIRECTOR_CONFIG.on['segment/done']));
+      check('the daypart gate survives too',
+        JSON.stringify(on.daypart) === JSON.stringify(DIRECTOR_CONFIG.daypart));
+
+      check('*** the call STATE is created, or the transition would resolve to nothing and '
+        + 'the call would go nowhere ***', !!on.states[CALL_STATE]);
+      check('*** and it is NOT added to any pick list — the screen must not decide to show a '
+        + 'call because it felt like it ***',
+        !JSON.stringify(on.on['segment/done']).includes(CALL_STATE) &&
+        !Object.values(on.daypart.enabled).some((l) => l.includes(CALL_STATE)),
+        JSON.stringify(on.daypart.enabled));
+
+      const s = sentences(on);
+      check('and it reads as one sentence a caregiver could check',
+        s.some((x) => /when a call comes in, from any screen → show Call/.test(x)) &&
+        s.some((x) => /when the call ends, from any screen → go back to whatever was on before/.test(x)),
+        JSON.stringify(s.filter((x) => /call/.test(x))));
+
+      // Only the TARGET side: "when the call ends" is ordinary English, but a target
+      // reading "show call" is a raw state id leaking into a sentence.
+      const targets = describeConfig(on).map((r) => r.then);
+      check('*** no raw state id leaks into a target — not even for a state that is not '
+        + 'a content provider ***',
+        targets.includes('show Call') && !targets.includes('show call'),
+        JSON.stringify(targets));
+
+      const off = withoutCallRule(on);
+      check('turning it off removes it', hasCallRule(off) === false);
+      check('...and leaves the rest exactly as it was',
+        JSON.stringify(off.on['segment/done']) === JSON.stringify(DIRECTOR_CONFIG.on['segment/done']));
+      check('the call state is LEFT behind on purpose — removing it would throw away anything '
+        + 'configured on it, and an unreachable state costs nothing', !!off.states[CALL_STATE]);
+      check('turning it on twice does not duplicate the rule',
+        withCallRule(on).on[CALL_TOPIC].length === 1, JSON.stringify(withCallRule(on).on[CALL_TOPIC]));
+    }
+
+    section('*** and the rule it writes actually RUNS — same engine, not a description ***');
+    {
+      const bus = createBus();
+      const shown = [];
+      const cfg = withCallRule({
+        initial: 'photos',
+        on: {},
+        states: { photos: { enter: { publish: 'x', payload: 'photos' } },
+                  call:   { enter: { publish: 'x', payload: 'call' } } },
+      });
+      bus.subscribe('x', (w) => shown.push(w));
+      const m = createMachine(cfg, { bus });
+      m.start();
+      bus.publish(CALL_TOPIC);
+      check('a call switches the screen', m.state === CALL_STATE, m.state);
+      bus.publish(CALL_ENDED_TOPIC);
+      check('*** and hands it back — the switch wrote a rule the engine honours ***',
+        m.state === 'photos', m.state);
+    }
+
+    section('the panel');
+    {
+      const host = document.createElement('div');
+      document.getElementById('host').append(host);
+      const saved = {};
+      const handle = {
+        load: () => Promise.resolve(), get: () => saved,
+        set: (patch) => { Object.assign(saved, patch); return Promise.resolve(); },
+      };
+      const profiles = { list: () => Promise.resolve([
+        { id: 'p1', name: 'Her screen', modules: [{ id: 'd1', type: 'director' }, { id: 'ph', type: 'photos' }] },
+      ]) };
+      const panel = mountRules(host, { profiles, user: 'u', makeState: () => handle });
+      await panel.refresh();
+      const text = host.textContent;
+      check('the screen is listed with its rules', /Her screen/.test(text) && /when the screen starts/.test(text));
+      check('a non-machine module is not', panel.screens().length === 1);
+      check('the call switch is offered and starts off',
+        !!host.querySelector('[data-call]') && !host.querySelector('[data-call]').checked);
+
+      host.querySelector('[data-call]').checked = true;
+      host.querySelector('[data-call]').dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 20));
+      check('*** ticking it saves a config, as a PATCH rather than the whole blob ***',
+        !!saved.config && hasCallRule(saved.config) &&
+        Object.keys(saved).join(',') === 'config', JSON.stringify(Object.keys(saved)));
+      check('and the list re-renders to include it',
+        /when a call comes in/.test(host.textContent));
+    }
+    {
+      const host = document.createElement('div');
+      document.getElementById('host').append(host);
+      const panel = mountRules(host, {
+        profiles: { list: () => Promise.resolve([{ id: 'p', name: 'x', modules: [] }]) }, user: 'u' });
+      await panel.refresh();
+      check('an empty state that says what to add rather than showing nothing',
+        /No screen is running a Lineup yet/.test(host.textContent) && /Lineup/.test(host.textContent));
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

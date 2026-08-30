@@ -154,6 +154,19 @@ export const CATALOG = [
       + 'and never judges is worth more than another exercise.',
   },
   {
+    type: 'call',
+    // NOT 'comfort'. A call needs answering, and that group promises the opposite.
+    group: 'practice',
+    use: 'answer',
+    lead: 'Whoever is calling, full screen.',
+    needs: 'A network, and somebody to call them.',
+    why: 'The caller fills the screen and the small picture-in-picture keeps showing this '
+       + 'room, which is the layout people already know from every video call. An audio call '
+       + 'shows their name instead of a black rectangle. It does NOT answer by itself unless '
+       + 'you turn that on for people you have chosen - a screen that answers on its own is a '
+       + 'microphone in the room.',
+  },
+  {
     type: 'pressgame',
     // NOT 'comfort'. That group's promise on the page is that nothing in it needs pressing to
     // keep going, and in calm mode this waits on her press for as long as it takes - which is

@@ -24,6 +24,12 @@ registerModule(
     type: 'camera', title: 'Camera', description: 'A rearview mirror, so they can see who is behind them. The picture never leaves the device.' },
   (ctx) => {
     const { mount, state } = ctx;
+    // THE CAMERA ARBITER, when the surface has one. Optional, exactly like `output` and
+    // `audio`: a surface without one still gets a working self-view, it just opens the
+    // device itself. WITH one, an incoming call can share this capture as a track clone
+    // instead of opening its own - which is what stops a call darkening her mirror.
+    const cameraOwner = ctx.cameraOwner || null;
+    const CAM_ID = `camera:${ctx.instanceId || 'mirror'}`;
     let cfg = { ...DEFAULTS };
     let stream = null;
     let activeSelection;   // the cameraLabel we last started with ('' = default)
@@ -54,7 +60,14 @@ registerModule(
       const st = mount.querySelector('.stage');
 
       if (st) st.dataset.showing = '';
-      if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
+      // RELEASE rather than stop when the arbiter owns the device: stopping it directly
+      // would kill the capture out from under any other consumer - a call, a tracker - that
+      // is legitimately sharing it.
+      if (stream) {
+        if (cameraOwner) cameraOwner.release(CAM_ID);
+        else stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+      }
       const v = video();
       if (v) v.srcObject = null;
     }
@@ -102,7 +115,13 @@ registerModule(
         const constraints = wantedId
           ? { video: { deviceId: { exact: wantedId } }, audio: false }
           : { video: true, audio: false };
-        let s = await navigator.mediaDevices.getUserMedia(constraints);
+        // Through the arbiter if there is one, so this is a REFERENCE on a shared device
+        // rather than an exclusive open. On Linux a second open of the same webcam fails
+        // outright, so "who opened it first" is the difference between a picture and a
+        // black rectangle.
+        let s = cameraOwner
+          ? await cameraOwner.acquire(CAM_ID, wantedId ? { deviceId: wantedId } : undefined)
+          : await navigator.mediaDevices.getUserMedia(constraints);
 
         // If we only just got permission, labels were empty before; a preferred
         // label may now resolve to a different device — re-acquire once.
@@ -110,8 +129,15 @@ registerModule(
           const id2 = await resolveDeviceId(cfg.cameraLabel);
           const activeId = s.getVideoTracks()[0]?.getSettings?.().deviceId;
           if (id2 && id2 !== activeId) {
-            s.getTracks().forEach((t) => t.stop());
-            s = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id2 } }, audio: false });
+            if (cameraOwner) {
+              // Let go, re-configure, take it again - the arbiter reopens with the new device
+              // once the last reference drops.
+              cameraOwner.release(CAM_ID, true);
+              s = await cameraOwner.acquire(CAM_ID, { deviceId: id2 });
+            } else {
+              s.getTracks().forEach((t) => t.stop());
+              s = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: id2 } }, audio: false });
+            }
           }
         }
 

@@ -153,6 +153,27 @@
   .h-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;
     background:var(--cream-soft);border:1px solid var(--line);color:var(--muted);
     font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  /* Rules panel. A list of sentences, not a diagram - the diagram is the eventual thing. */
+  .rul{max-width:900px}
+  .rul h1{margin:0 0 6px}
+  .rul-intro{margin:0 0 18px;opacity:.85;font-size:.93rem;max-width:70ch}
+  .rul-screen{margin:0 0 24px;padding:12px 14px;border:1px solid var(--line,#ddd);border-radius:10px}
+  .rul-screen h2{margin:0 0 10px;font-size:1.02rem}
+  .rul-switch{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:10px 12px;
+    background:var(--card,#fff);border-radius:9px;font-size:.9rem;line-height:1.45;cursor:pointer}
+  .rul-switch input{margin-top:3px;flex:none}
+  .rul-list{list-style:none;margin:0;padding:0;font-size:.9rem}
+  .rul-list li{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:baseline;
+    padding:5px 0;border-top:1px solid var(--line,#eee)}
+  .rul-when{opacity:.85}
+  .rul-arrow{opacity:.45}
+  .rul-then{font-weight:600}
+  /* An unrecognised rule is SHOWN, marked, never hidden - a short list that looks complete
+     is worse than a long one that admits a gap. */
+  .rul-unknown{background:rgba(255,211,110,.18)}
+  .rul-note{display:block;grid-column:1/-1;font-size:.8rem;opacity:.7}
+  .rul-daypart .rul-then{font-weight:500}
+  .rul-empty,.rul-loading{opacity:.7}
   /* Records panel. Deliberately plain: this is somebody's clinical record, and a
      dashboard aesthetic would make counts look like a score. */
   .rec{max-width:900px}

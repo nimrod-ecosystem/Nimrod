@@ -208,6 +208,10 @@ export const MODULE_VERBS = {
   // - latency, commissions, perseveration - is WHEN that one verb arrives relative to
   // the invite, so a second verb would be a second thing to get wrong for no gain.
   pressgame:     { select: 'pressgame/press' },
+  // ANSWER and HANG UP, and nothing else. A call is not a thing to browse: `next` on a
+  // call has no meaning, and a verb that does nothing is a press somebody spent effort on
+  // for no result.
+  call:          { select: 'call/answer', back: 'call/hangup' },
   counter:       { select: { topic: 'counter/delta', payload: 1 },
                    up:     { topic: 'counter/delta', payload: 1 },
                    down:   { topic: 'counter/delta', payload: -1 } },

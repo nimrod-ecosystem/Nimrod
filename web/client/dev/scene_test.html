@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>scene — an arrangement of modules, as a module</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host{position:fixed;left:0;top:0;width:800px;height:520px;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>scene — the thing the kiosk should have been made of</h1>
+
+<div class="note">
+  A scene is <b>an arrangement of modules, as a module</b> — the same pattern
+  <code>director.js</code> already uses one level down. It matters because it turns swapping
+  what is on a screen from a bespoke function into <b>destroy one, mount another</b>, using
+  lifecycle the runtime already has. And because a scene owns its own chrome, a swapped-in
+  arrangement brings its own camera corner with it <b>by construction</b> rather than
+  inheriting whatever was mounted before.
+</div>
+
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mountModule, registerModule } from '../module.js';
+import { createBus } from '../bus.js';
+import { partition, OVERLAY_TYPES, SCENE_DEFAULTS } from '../modules/scene.js';
+import '../modules/scene.js';
+import '../modules/photos.js';
+import '../modules/clock.js';
+import '../modules/camera.js';
+import '../modules/wordforge.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A stub state handle per (id, sceneId), so a scene's children and settings can be seeded
+// per arrangement — which is the whole point of the keying.
+function makeStores(seed = {}) {
+  const seen = [];
+  const makeState = (key, opts, forPid) => {
+    seen.push(`${forPid}:${key}`);
+    const data = (seed[forPid] || {})[key] || {};
+    return { load: () => Promise.resolve(), get: () => data, set: () => Promise.resolve(),
+             subscribe: () => () => {}, startPolling() {}, destroy() {} };
+  };
+  const makeEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }),
+                              append: () => Promise.resolve(), subscribe: () => () => {},
+                              startPolling() {}, destroy() {} });
+  return { makeState, makeEvents, seen };
+}
+
+function mountScene(sceneId, arrangement, { seed = {}, bus = createBus() } = {}) {
+  const host = document.createElement('div');
+  document.getElementById('host').append(host);
+  const stores = makeStores(seed);
+  const inst = mountModule('scene', {
+    mount: host, bus, rootBus: bus, sceneId, arrangement, user: 'u',
+    makeState: stores.makeState, makeEvents: stores.makeEvents,
+    state: { get: () => ({}), set: () => Promise.resolve(), subscribe: () => () => {},
+             load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+  });
+  return { host, inst, impl: inst.impl || inst, bus, stores };
+}
+
+const GRID = {
+  id: 'call', modules: [
+    { id: 'm-cam', type: 'camera' },
+    { id: 'm-word', type: 'wordforge' },
+    { id: 'm-clock', type: 'clock' },
+  ],
+};
+const PLAIN = {
+  id: 'home', modules: [
+    { id: 'h-photos', type: 'photos' },
+    { id: 'h-cam', type: 'camera' },
+    { id: 'h-clock', type: 'clock' },
+  ],
+};
+
+(async () => {
+  try {
+    section('the partition — one place decides where things go');
+    {
+      const p = partition(PLAIN.modules, null);
+      check('a camera becomes the picture-in-picture overlay', p.overlays.mirror?.id === 'h-cam');
+      check('a clock becomes the clock overlay', p.overlays.clock?.id === 'h-clock');
+      check('everything else is stage', p.stage.map((m) => m.type).join(',') === 'photos');
+      check('overlay types are data, not an if — the next one is the same shape',
+        OVERLAY_TYPES.camera === 'mirror' && OVERLAY_TYPES.clock === 'clock');
+    }
+    {
+      // A module placed in a slot stays in its slot, even if it is a camera.
+      const layout = { preset: 'quad', slots: ['h-cam', 'h-photos', null, null] };
+      const p = partition(PLAIN.modules, layout);
+      check('*** a camera PLACED in a slot is not stolen into the overlay ***',
+        !p.overlays.mirror, JSON.stringify(Object.keys(p.overlays)));
+      check('and an unplaced clock still becomes an overlay', p.overlays.clock?.id === 'h-clock');
+      check('with a layout, nothing falls back to the one-at-a-time stage', p.stage.length === 0);
+    }
+
+    section('a scene mounts an arrangement');
+    {
+      const r = mountScene('home', PLAIN);
+      r.inst.init();
+      await sleep(300);
+      const pr = r.impl.__probe();
+      check('it loaded', pr.ready === true);
+      check('the stage module is mounted', !!r.host.querySelector('.k-stage .photos'),
+        r.host.querySelector('.k-stage')?.innerHTML.slice(0, 60));
+      check('the camera is in the picture-in-picture, not the stage',
+        !!r.host.querySelector('.k-mirror .camera') && !r.host.querySelector('.k-stage .camera'));
+      check('the clock is in its own overlay', !!r.host.querySelector('.k-clock .clock'));
+      check('and the overlays are shown rather than left hidden',
+        r.host.querySelector('.k-mirror').hidden === false);
+      r.inst.destroy();
+      check('destroying it gives the DOM back', r.host.children.length === 0);
+    }
+
+    section('*** a scene brings its OWN chrome — the gap the bespoke swap had ***');
+    {
+      // The same arrangement, with the picture-in-picture set small and bottom-left.
+      const r = mountScene('call', GRID, {
+        seed: { call: { settings: { kiosk: { mirror: { size: 'sm', corner: 'bl' } } } } },
+      });
+      r.inst.init();
+      await sleep(300);
+      const c = r.impl.__probe().chrome;
+      check('*** the scene renders its own camera position, not a default and not somebody '
+        + "else's ***", c.mirrorSize === 'sm' && c.mirrorCorner === 'bl', JSON.stringify(c));
+      r.inst.destroy();
+    }
+    {
+      const r = mountScene('home', PLAIN);
+      r.inst.init();
+      await sleep(300);
+      const c = r.impl.__probe().chrome;
+      check('an arrangement that never set one falls back to the shipped default',
+        c.mirrorSize === SCENE_DEFAULTS.mirror.size &&
+        c.mirrorCorner === SCENE_DEFAULTS.mirror.corner, JSON.stringify(c));
+      r.inst.destroy();
+    }
+
+    section('a laid-out scene');
+    {
+      const r = mountScene('call', GRID, {
+        seed: { call: { settings: { kiosk: {
+          layout: { preset: 'quad', slots: ['m-word', 'm-cam', null, null] } } } } },
+      });
+      r.inst.init();
+      await sleep(300);
+      check('it uses the grid', r.impl.__probe().hasLayout === true);
+      check('both placed modules are mounted, at once',
+        !!r.host.querySelector('.wordforge') && !!r.host.querySelector('.k-stage .camera'));
+      check('*** the AAC board and her camera are on the SAME scene — which is the whole '
+        + 'reason a call scene has to be an arrangement belonging to a person ***',
+        r.impl.__probe().slots.sort().join(',') === 'camera,wordforge',
+        JSON.stringify(r.impl.__probe().slots));
+      check('an empty slot is allowed rather than an error',
+        r.host.querySelectorAll('.k-cell').length === 4);
+      r.inst.destroy();
+    }
+
+    section('*** children are keyed to THIS scene, not to whatever mounted it ***');
+    {
+      const r = mountScene('call', GRID);
+      r.inst.init();
+      await sleep(300);
+      check('every child handle is scoped to the scene it belongs to',
+        r.stores.seen.every((k) => k.startsWith('call:')), JSON.stringify(r.stores.seen));
+      check('...including its settings, which is how the chrome travels',
+        r.stores.seen.includes('call:settings'), JSON.stringify(r.stores.seen));
+      check('and each module gets its own', r.stores.seen.includes('call:m-word'));
+      r.inst.destroy();
+    }
+
+    section('*** swapping is now destroy-one-mount-another ***');
+    {
+      // The thing the whole refactor is for: no bespoke path, no page load.
+      const bus = createBus();
+      const a = mountScene('home', PLAIN, { bus });
+      a.inst.init();
+      await sleep(300);
+      check('scene one is up', !!a.host.querySelector('.photos'));
+      a.inst.destroy();
+
+      const b = mountScene('call', GRID, { bus,
+        seed: { call: { settings: { kiosk: { mirror: { corner: 'bl' } } } } } });
+      b.inst.init();
+      await sleep(300);
+      check('scene two is up, using ordinary module lifecycle', !!b.host.querySelector('.wordforge'));
+      check('and it brought its own camera corner with it',
+        b.impl.__probe().chrome.mirrorCorner === 'bl');
+      check('nothing of scene one is left behind', !a.host.querySelector('.photos'));
+      b.inst.destroy();
+    }
+
+    section('a scene that cannot load');
+    {
+      const host = document.createElement('div');
+      document.getElementById('host').append(host);
+      const inst = mountModule('scene', {
+        mount: host, bus: createBus(), sceneId: 'nope', user: 'u',
+        profiles: { get: () => Promise.reject(new Error('404')) },
+        state: { get: () => ({}), subscribe: () => () => {}, load: () => Promise.resolve(),
+                 startPolling() {}, destroy() {} },
+      });
+      inst.init();
+      await sleep(200);
+      check('*** it SAYS it could not load — a blank region on a screen somebody is sitting '
+        + 'at is indistinguishable from a crash ***',
+        /could not be loaded/i.test(host.textContent), host.textContent.slice(0, 80));
+      inst.destroy();
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>call — the stage half of an incoming call</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host{position:fixed;left:0;top:0;width:640px;height:400px;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>call — the stage, the speaker and the camera. Not the transport.</h1>
+
+<div class="note">
+  The call kiosk is the kiosk we already have: the caller takes the stage and her camera stays
+  in the picture-in-picture it was already in. <b>There is one webcam and one place to show
+  it</b>, so this module renders no second view of her — what it needs from the camera is the
+  outgoing track, which is not on this screen at all. The transport is injected and absent;
+  everything around it is what has to be right before a call ever connects.
+</div>
+
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+import { createAudioBus, MUSIC_GROUP, GAME_MUSIC_PRIORITY } from '../audio_bus.js';
+import { CALL_INCOMING, CALL_ENDED, CALL_ANSWER, CALL_HANGUP, CALL_DECLINE }
+  from '../modules/call.js';
+import { createMachine } from '../statemachine.js';
+import { withCallRule } from '../rules.js';
+import '../modules/call.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A hand-driven clock, so the countdown is arithmetic rather than a real wait. Hidden tabs
+// throttle timers, which is what made the first version of this flaky.
+function fakeClock() {
+  let seq = 0; let timers = new Map(); let ticks = new Map();
+  return {
+    io: {
+      setTimer: (fn, ms) => { const id = ++seq; timers.set(id, { fn, ms }); return id; },
+      clearTimer: (id) => timers.delete(id),
+      setTick: (fn, ms) => { const id = ++seq; ticks.set(id, { fn, ms }); return id; },
+      clearTick: (id) => ticks.delete(id),
+    },
+    tick: (n = 1) => { for (let i = 0; i < n; i++) [...ticks.values()].forEach((t) => t.fn()); },
+    fireTimers: () => { const due = [...timers.values()]; timers.clear(); due.forEach((t) => t.fn()); },
+    pendingTimers: () => timers.size,
+  };
+}
+
+function rig(saved = {}, { withCamera = true, withAudio = true } = {}) {
+  const clock = fakeClock();
+  const host = document.createElement('div');
+  document.getElementById('host').append(host);
+  const bus = createBus();
+  const audio = withAudio ? createAudioBus() : null;
+  const camLog = [];
+  const track = { stopped: false, stop() { this.stopped = true; } };
+  const cameraOwner = withCamera ? {
+    acquire: (id) => { camLog.push(['acquire', id]); return Promise.resolve({}); },
+    acquireTrack: (id) => { camLog.push(['acquireTrack', id]); return Promise.resolve(track); },
+    release: (id) => { camLog.push(['release', id]); },
+    configure() {}, isLive: () => true, consumers: () => [],
+  } : null;
+  const said = [];
+  const output = { alert: (t) => said.push(t), say: (t) => said.push(t),
+                   notify() {}, status() {}, destroy() {} };
+  const published = [];
+  [CALL_INCOMING, CALL_ENDED].forEach((t) => bus.subscribe(t, (p) => published.push([t, p])));
+  const inst = mountModule('call', {
+    mount: host, bus, audio, cameraOwner, output, instanceId: 'c1', callIO: clock.io,
+    state: { get: () => saved, set: () => Promise.resolve(), subscribe: () => () => {},
+             load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+  });
+  inst.init();
+  return { host, bus, audio, inst, impl: inst.impl || inst, camLog, track, published, said,
+           clock };
+}
+
+(async () => {
+  try {
+    section('*** one camera, one place on screen ***');
+    {
+      const r = rig({ declineSeconds: 0 });
+      await r.impl.__incoming({ name: 'Mike', video: true });
+      await sleep(20);
+      check('it takes the camera as a CLONE, for the outgoing track',
+        r.camLog.some((c) => c[0] === 'acquireTrack'), JSON.stringify(r.camLog));
+      check('*** and never a second one — it does not render another view of her ***',
+        !r.camLog.some((c) => c[0] === 'acquire'),
+        JSON.stringify(r.camLog));
+      check('the stage has exactly one video element, for the CALLER',
+        r.host.querySelectorAll('video').length === 1 &&
+        r.host.querySelector('video').classList.contains('call-remote'));
+      check('showing a second self view is off by default — the PiP already shows it',
+        r.impl.__probe().cfg.showSelf === false);
+
+      r.impl.__end();
+      await sleep(10);
+      check('hanging up stops the outgoing track', r.track.stopped === true);
+      check('*** and STILL releases the reference — the clone and the ref count are separate, '
+        + 'and a leaked ref pins the camera on ***',
+        r.camLog.some((c) => c[0] === 'release'), JSON.stringify(r.camLog));
+    }
+
+    section('*** a call pauses the media rather than ducking it ***');
+    {
+      const r = rig({ declineSeconds: 0 });
+      const heard = [];
+      r.audio.register('music', { tier: 'media', group: MUSIC_GROUP,
+                                  groupPriority: GAME_MUSIC_PRIORITY, onGain: (l) => heard.push(l) });
+      r.audio.setActive('music', true);
+      check('music plays before the call', heard[heard.length - 1] === 1);
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(20);
+      check('*** the call takes the call tier and the music stops outright ***',
+        heard[heard.length - 1] === 0, JSON.stringify(heard));
+      r.impl.__end();
+      await sleep(10);
+      check('and it comes back when the call ends', heard[heard.length - 1] === 1);
+    }
+
+    section('what it shows');
+    {
+      const r = rig({ declineSeconds: 0 });
+      await r.impl.__incoming({ name: 'Mike', video: false });
+      await sleep(20);
+      check('*** an audio call shows WHO, not a black rectangle — she cannot read a status '
+        + 'line ***',
+        /Mike/.test(r.host.textContent) && r.host.querySelectorAll('video').length === 0,
+        r.host.textContent.slice(0, 80));
+      check('with an initial that reads across a room', /^M/.test(
+        r.host.querySelector('.call-avatar')?.textContent || ''));
+    }
+    {
+      const r = rig({ declineSeconds: null });   // wait for a person
+      await r.impl.__incoming({ name: 'Mike' });
+      check('a ringing call names the caller', /Mike is calling/.test(r.host.textContent),
+        r.host.textContent.slice(0, 80));
+      check('and it has NOT answered', r.impl.__probe().phase === 'ringing');
+    }
+
+    section('*** the decline window — announced, counted down, refusable ***');
+    {
+      const r = rig({ declineSeconds: 10 });
+      await r.impl.__incoming({ name: 'Mike' });
+      check('it does not answer immediately', r.impl.__probe().phase === 'ringing');
+      check('the countdown is running', r.impl.__probe().counting === true &&
+        r.impl.__probe().remaining === 10, JSON.stringify(r.impl.__probe().remaining));
+      check('*** it SAYS who is calling and that the call can be refused — the person who can '
+        + 'act is often not the person the call is for ***',
+        /Incoming call from Mike/.test(r.said[0] || '') && /decline/i.test(r.said[0] || ''),
+        JSON.stringify(r.said));
+      check('and the way out is on the screen too, for whoever missed the words',
+        /Say .decline. to refuse/.test(r.host.textContent), r.host.textContent.slice(0, 120));
+      check('the seconds are shown', /10/.test(r.host.textContent));
+      check('no camera is taken while it is only ringing',
+        !r.camLog.some((c) => c[0] === 'acquireTrack'), JSON.stringify(r.camLog));
+    }
+    {
+      const r = rig({ declineSeconds: 2 });
+      await r.impl.__incoming({ name: 'Mike' });
+      r.clock.tick(2);                       // two seconds, deterministically
+      await sleep(20);
+      check('*** when nobody acts, it CONNECTS — a missed call from her people costs more '
+        + 'than an unwanted one ***', r.impl.__probe().phase === 'connected',
+        r.impl.__probe().phase);
+      check('and only the last few seconds are spoken, not every one — a machine counting '
+        + 'all the way down is talking over a room',
+        r.said.filter((t) => /^\d+$/.test(t)).length <= 3, JSON.stringify(r.said));
+    }
+    {
+      const r = rig({ declineSeconds: 10 });
+      await r.impl.__incoming({ name: 'Mike' });
+      r.bus.publish(CALL_DECLINE);
+      await sleep(20);
+      check('anybody in the room can refuse it', r.impl.__probe().phase === 'idle');
+      check('and it says so, so the room knows it worked',
+        r.said.some((t) => /declined/i.test(t)), JSON.stringify(r.said));
+      check('*** declined is its own reason, not "hung up" — refusing before it connects and '
+        + 'ending a running call are different things ***',
+        r.published.some(([t, p]) => t === CALL_ENDED && p.reason === 'declined'),
+        JSON.stringify(r.published));
+      check('the countdown stops dead', r.impl.__probe().counting === false);
+    }
+    {
+      const r = rig({ declineSeconds: 0 });
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(20);
+      check('set to answer straight away, it does', r.impl.__probe().phase === 'connected');
+    }
+    {
+      const r = rig({ declineSeconds: null, ringSeconds: 45 });
+      await r.impl.__incoming({ name: 'Mike' });
+      check('set to wait for a person, it waits', r.impl.__probe().phase === 'ringing' &&
+        r.impl.__probe().counting === false);
+      r.clock.fireTimers();                  // the give-up timer comes due
+      await sleep(20);
+      check('*** but it still gives up — a ringing card nobody can dismiss is the '
+        + 'undismissable gate wearing a phone icon ***', r.impl.__probe().phase === 'idle');
+      check('recorded as unanswered rather than declined',
+        r.published.some(([t, p]) => t === CALL_ENDED && p.reason === 'unanswered'),
+        JSON.stringify(r.published));
+    }
+    {
+      const r = rig({ declineSeconds: 10, announce: false });
+      await r.impl.__incoming({ name: 'Mike' });
+      check('announcing can be turned off', r.said.length === 0, JSON.stringify(r.said));
+      check('...and the on-screen way out remains, so it is never silent AND hidden',
+        /decline/i.test(r.host.textContent));
+    }
+    {
+      const r = rig({ declineSeconds: 10 });
+      await r.impl.__incoming({ name: 'Mike' });
+      r.bus.publish(CALL_ANSWER);
+      await sleep(20);
+      check('somebody answering early skips the rest of the countdown',
+        r.impl.__probe().phase === 'connected' && r.impl.__probe().counting === false);
+    }
+
+    section('*** the module, the topic and the rule all agree ***');
+    {
+      const r = rig({ declineSeconds: 0 });
+      await r.impl.__incoming({ name: 'Mike' });
+      check('an incoming call publishes the topic the state machine listens for',
+        r.published.some(([t]) => t === CALL_INCOMING));
+      r.impl.__end();
+      await sleep(10);
+      check('and ending publishes the one $back is written against',
+        r.published.some(([t]) => t === CALL_ENDED));
+    }
+    {
+      // The rule the Rules tab writes, the machine that runs it, and this module's topics -
+      // driven end to end, so a rename in one place cannot quietly break the other two.
+      const bus = createBus();
+      const shown = [];
+      const cfg = withCallRule({
+        initial: 'photos', on: {},
+        states: { photos: { enter: { publish: 'x', payload: 'photos' } },
+                  call: { enter: { publish: 'x', payload: 'call' } } },
+      });
+      bus.subscribe('x', (w) => shown.push(w));
+      const m = createMachine(cfg, { bus });
+      m.start();
+      bus.publish(CALL_INCOMING, { from: { name: 'Mike' } });
+      check('*** the module’s own topic drives the switch the Rules tab wrote ***',
+        m.state === 'call', m.state);
+      bus.publish(CALL_ENDED, { reason: 'ended' });
+      check('and its ended topic hands the screen back', m.state === 'photos', m.state);
+    }
+
+    section('degrading without the parts it does not own');
+    {
+      const r = rig({ declineSeconds: 0 }, { withCamera: false, withAudio: false });
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(20);
+      check('*** no camera and no audio bus: the call still connects rather than throwing ***',
+        r.impl.__probe().phase === 'connected');
+      r.impl.__end();
+      check('and still ends cleanly', r.impl.__probe().phase === 'idle');
+    }
+    {
+      const r = rig({ declineSeconds: 0 });
+      r.impl.__end();
+      check('ending a call that was never running publishes nothing',
+        r.published.length === 0, JSON.stringify(r.published));
+    }
+
+    section('teardown');
+    {
+      const r = rig({ declineSeconds: 0 });
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(20);
+      const host = r.host;
+      r.inst.destroy();
+      check('destroy releases the camera and gives the DOM back',
+        r.camLog.some((c) => c[0] === 'release') && host.children.length === 0);
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

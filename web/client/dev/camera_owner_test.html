@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>camera owner — one device, many consumers</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>camera owner — the arbiter for a device that cannot be shared</h1>
+
+<div class="note">
+  The speaker can be summed, so the audio bus ducks. <b>A camera cannot</b> — on Linux a
+  second <code>getUserMedia</code> on the same webcam fails or steals it. So this is a strict
+  single owner. The two things wanting that one capture are <b>a screen and a network</b>, not
+  two panels: during a call the mirror <i>is</i> the self-view, and the outgoing track is what
+  the caller sees. So the clone exists so the peer connection can stop its track at hangup
+  without stopping the capture the picture-in-picture is still showing. No camera and no clock
+  — both are injected.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createCameraOwner, GRACE_MS } from '../camera_owner.js';
+import { mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+import '../modules/camera.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A fake device. Counts opens, so "it only opened once" is an assertion rather than a hope.
+function fakeCam() {
+  const st = { opens: 0, stopped: 0, cloned: 0 };
+  const track = () => {
+    const t = { kind: 'video', readyState: 'live',
+                stop() { t.readyState = 'ended'; st.stopped++; },
+                clone() { st.cloned++; return { ...track(), __clone: true }; } };
+    return t;
+  };
+  const open = () => { st.opens++; const t = track();
+    return Promise.resolve({ getTracks: () => [t], getVideoTracks: () => [t], __t: t }); };
+  return { st, open };
+}
+function fakeTimers() {
+  let seq = 0; let armed = [];
+  return {
+    setTimer: (fn) => { const id = ++seq; armed.push({ id, fn }); return id; },
+    clearTimer: (id) => { armed = armed.filter((t) => t.id !== id); },
+    fire: () => { const due = armed; armed = []; due.forEach((t) => t.fn()); },
+    pending: () => armed.length,
+  };
+}
+
+(async () => {
+  try {
+    section('one device, however many want it');
+    {
+      const cam = fakeCam(); const t = fakeTimers();
+      const o = createCameraOwner({ open: cam.open, ...t });
+      const a = await o.acquire('mirror');
+      const b = await o.acquire('tracker');
+      check('*** the device is opened exactly ONCE for two consumers ***', cam.st.opens === 1,
+        String(cam.st.opens));
+      check('and they get the same stream — several <video> on one capture is the point', a === b);
+      check('it reports who is using it', o.consumers().sort().join(',') === 'mirror,tracker');
+      check('it is live', o.isLive() === true);
+    }
+
+    section('it stops only when the LAST one lets go');
+    {
+      const cam = fakeCam(); const t = fakeTimers();
+      const o = createCameraOwner({ open: cam.open, ...t });
+      await o.acquire('mirror'); await o.acquire('call');
+      o.release('call');
+      check('one releasing does not stop the device', o.isLive() && cam.st.stopped === 0);
+      check('and no grace timer is armed while somebody still holds it', t.pending() === 0);
+      o.release('mirror');
+      check('the last release arms the grace period rather than stopping now',
+        o.isLive() === true && t.pending() === 1);
+      t.fire();
+      check('and then it stops', o.isLive() === false && cam.st.stopped === 1);
+    }
+    {
+      // A panel destroyed and immediately rebuilt is ordinary — a hidden tab's DOM is
+      // detached. Without the grace window that is a visible camera flash every time.
+      const cam = fakeCam(); const t = fakeTimers();
+      const o = createCameraOwner({ open: cam.open, ...t });
+      await o.acquire('mirror');
+      o.release('mirror');
+      await o.acquire('mirror');            // remount inside the grace window
+      t.fire();
+      check('*** a remount inside the grace window never reopens the device — no flash ***',
+        cam.st.opens === 1 && o.isLive(), JSON.stringify(cam.st));
+    }
+
+    section('*** the PiP keeps its picture while the call sends its own track ***');
+    {
+      const cam = fakeCam(); const t = fakeTimers();
+      const o = createCameraOwner({ open: cam.open, ...t });
+      const shared = await o.acquire('mirror');          // her self-view, mounted
+      const clone = await o.acquireTrack('call');        // a call arrives
+      check('the call did NOT open a second device', cam.st.opens === 1, String(cam.st.opens));
+      check('it got a clone rather than the shared track', !!clone && clone.__clone === true);
+
+      clone.stop();                                       // hang up
+      o.release('call');
+      check('*** stopping the outgoing track at hangup leaves the capture the PiP is showing '
+        + 'LIVE — the picture does not blink ***',
+        shared.getVideoTracks()[0].readyState === 'live' && o.isLive(),
+        shared.getVideoTracks()[0].readyState);
+      check('and the mirror still holds it, so no grace timer is running',
+        o.consumers().join(',') === 'mirror' && t.pending() === 0);
+    }
+
+    section('failures that would otherwise pin the camera on forever');
+    {
+      const t = fakeTimers();
+      const o = createCameraOwner({ open: () => Promise.reject(new Error('busy')), ...t });
+      let threw = false;
+      try { await o.acquire('mirror'); } catch { threw = true; }
+      check('a failed open is reported to the caller', threw);
+      check('*** and does NOT leak its ref — a leaked ref means the device can never be '
+        + 'released on a machine that is on 24/7 ***', o.consumers().length === 0,
+        JSON.stringify(o.consumers()));
+    }
+    {
+      // Everyone let go while getUserMedia was still in flight.
+      const cam = fakeCam(); const t = fakeTimers();
+      let resolveOpen;
+      const o = createCameraOwner({ open: () => new Promise((r) => { resolveOpen = () => r(cam.open()); }), ...t });
+      const p = o.acquire('mirror').catch(() => 'released');
+      o.release('mirror', true);
+      resolveOpen();
+      check('a stream that arrives after everybody left is stopped rather than leaked',
+        (await p) === 'released');
+    }
+    {
+      const cam = fakeCam(); const t = fakeTimers();
+      const o = createCameraOwner({ open: cam.open, ...t });
+      const [x, y] = await Promise.all([o.acquire('a'), o.acquire('b')]);
+      check('*** two acquires racing dedupe onto ONE getUserMedia ***',
+        cam.st.opens === 1 && x === y, String(cam.st.opens));
+    }
+    {
+      const o = createCameraOwner({ open: fakeCam().open, ...fakeTimers() });
+      let threw = false;
+      try { await o.acquire(''); } catch { threw = true; }
+      check('acquiring without a consumer id is refused — an anonymous ref can never be freed',
+        threw);
+    }
+
+    section('teardown');
+    {
+      const cam = fakeCam(); const t = fakeTimers();
+      const o = createCameraOwner({ open: cam.open, ...t });
+      await o.acquire('mirror');
+      o.destroy();
+      check('destroy stops the device immediately, whoever still held it',
+        cam.st.stopped === 1 && o.consumers().length === 0 && !o.isLive());
+    }
+
+    section('*** the camera module actually goes through it ***');
+    {
+      // Without this the arbiter is a file nobody calls - which is exactly how the game
+      // music shipped outside the audio bus. So: mount the REAL camera module against a
+      // fake owner and watch what it asks for.
+      const asked = [];
+      const cam = fakeCam();
+      const owner = {
+        acquire: (id, seed) => { asked.push(['acquire', id, seed]); return cam.open(); },
+        acquireTrack: (id) => { asked.push(['acquireTrack', id]); return Promise.resolve({}); },
+        release: (id, now) => { asked.push(['release', id, !!now]); },
+        configure() {}, isLive: () => true, consumers: () => [],
+      };
+      let directOpens = 0;
+      const md = navigator.mediaDevices;
+      const realGUM = md && md.getUserMedia;
+      if (md) md.getUserMedia = () => { directOpens++; return cam.open(); };
+
+      const host = document.createElement('div');
+      host.style.cssText = 'position:fixed;left:0;top:0;width:320px;height:240px;visibility:hidden';
+      document.body.append(host);
+      const inst = mountModule('camera', {
+        mount: host, bus: createBus(), cameraOwner: owner, instanceId: 'mirror',
+        state: { get: () => ({}), set: () => Promise.resolve(),
+                 subscribe: () => () => {}, load: () => Promise.resolve(),
+                 startPolling() {}, destroy() {} },
+      });
+      inst.init();
+      await new Promise((r) => setTimeout(r, 300));
+
+      const acquires = asked.filter((a) => a[0] === 'acquire');
+      check('*** the camera module acquires THROUGH the arbiter ***', acquires.length >= 1,
+        JSON.stringify(asked));
+      check('...and never opens the device itself when one is provided', directOpens === 0,
+        String(directOpens));
+      check('it acquires under an id carrying its instance, so two mirrors are two consumers',
+        /^camera:/.test(acquires[0]?.[1] || ''), String(acquires[0]?.[1]));
+
+      inst.destroy();
+      await new Promise((r) => setTimeout(r, 50));
+      check('*** and RELEASES on destroy rather than stopping - stopping would kill a capture '
+        + 'a call is legitimately sharing ***',
+        asked.some((a) => a[0] === 'release'), JSON.stringify(asked.map((a) => a[0])));
+
+      host.remove();
+      if (md && realGUM) md.getUserMedia = realGUM;
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
