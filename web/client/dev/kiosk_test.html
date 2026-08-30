@@ -27,7 +27,7 @@ are tunable live, and lazy switching works.</p>
 <script type="module">
 import { createBus } from '../bus.js';
 import { createProfilesClient } from '../profile.js';
-import { mountKiosk } from '../kiosk.js';
+import { mountKiosk, SCREEN_SHOW, SCREEN_BACK, SCREEN_SHOWN } from '../kiosk.js';
 import { authHeaders } from '../auth.js';
 
 const params = new URLSearchParams(location.search);
@@ -589,6 +589,83 @@ const ds = () => root.querySelector('.kiosk').dataset;
     kiosk.destroy();
     check('destroy() tears everything down without error', true);
     check('stage + HUD are empty after destroy', !stageHas('.photos') && !mirrorHas('.camera') && !clockHas('.clock'));
+    // ---- swapping the WHOLE screen, in place -----------------------------------------
+    //
+    // A call screen is a PERSON'S screen - somebody who talks through an AAC board needs the
+    // board during the call - so the state machine has to swap the whole module set, not just
+    // the stage. And it must not be a page load: that would take the audio bus, the camera
+    // owner and the input runtime down with it.
+    //
+    // MOUNTS ITS OWN KIOSK ON ITS OWN BUS. The suite reassigns `kiosk` several times above,
+    // so a section that publishes on the outer `bus` is talking to whichever kiosk happened
+    // to be mounted last - which is exactly how this was wrong the first time.
+    {
+      const swapRoot = document.createElement('div');
+      document.body.append(swapRoot);
+      const swapBus = createBus();
+      const home = await profiles.create('TEST-home');
+      await profiles.addModule(home.id, 'photos');
+      await profiles.addModule(home.id, 'clock');
+      const call = await profiles.create('TEST-call');
+      await profiles.addModule(call.id, 'camera');     // her camera, in the PiP
+      await profiles.addModule(call.id, 'wordforge');  // stands in for an AAC board
+
+      const k2 = await mountKiosk(swapRoot, {
+        user: USER, profileId: home.id, profiles, bus: swapBus });
+      await sleep(200);
+
+      const audioBefore = k2.audio();
+      const camBefore = k2.cameraOwner();
+      const shown = [];
+      swapBus.subscribe(SCREEN_SHOWN, (info) => shown.push(info));
+      const stageOf = (sel) => !!swapRoot.querySelector('.k-stage ' + sel);
+
+      check('it starts on her own screen', k2.screenId() === home.id, k2.screenId());
+      swapBus.publish(SCREEN_SHOW, call.id);
+      await sleep(400);
+
+      check('*** the state machine can swap the whole screen with a published topic - no new '
+        + 'engine primitive needed ***', k2.screenId() === call.id, k2.screenId());
+      check('the incoming screen mounted its own modules', stageOf('.wordforge'),
+        swapRoot.querySelector('.k-stage')?.innerHTML.slice(0, 80));
+      check('and it says which screen is showing, so anything else can follow',
+        shown.length === 1 && shown[0].profileId === call.id && shown[0].from === home.id,
+        JSON.stringify(shown));
+
+      check('*** the audio bus SURVIVED the swap - this is the whole reason it is not a page '
+        + 'load ***', k2.audio() === audioBefore);
+      check('...and so did the camera owner', k2.cameraOwner() === camBefore);
+
+      swapBus.publish(SCREEN_BACK);
+      await sleep(400);
+      check('*** and it goes back to the screen she was on ***', k2.screenId() === home.id,
+        k2.screenId());
+      check('her own modules came back', stageOf('.photos'),
+        swapRoot.querySelector('.k-stage')?.innerHTML.slice(0, 80));
+      check('going back does not stack up forever', k2.screenStack().length === 0,
+        JSON.stringify(k2.screenStack()));
+
+      swapBus.publish(SCREEN_BACK);
+      await sleep(200);
+      check('going back with nowhere to go leaves the screen alone',
+        k2.screenId() === home.id && stageOf('.photos'));
+
+      // *** A FAILED SWAP MUST LEAVE HER LOOKING AT SOMETHING. ***
+      const got = await k2.showScreen('no-such-screen');
+      await sleep(200);
+      check('a swap to a screen that does not exist fails quietly', got === null);
+      check('*** and leaves what was already there - a blank screen in a room she cannot '
+        + 'leave is not a recoverable failure ***',
+        k2.screenId() === home.id && stageOf('.photos'), k2.screenId());
+      check('and does not leave a phantom on the back stack',
+        k2.screenStack().length === 0, JSON.stringify(k2.screenStack()));
+      check('swapping to the screen already showing is a no-op',
+        (await k2.showScreen(home.id)) === null);
+
+      k2.destroy();
+      swapRoot.remove();
+    }
+
 
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));

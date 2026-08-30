@@ -74,6 +74,7 @@ export const HEALTH_EXPECT = {
   pond:        { idle: true },
   comet:       { idle: true },
   pressgame:   { idle: true },
+  call:        { idle: true },
   counter:     { idle: true },
   // Games only move when somebody plays them, and nobody playing is not a fault.
   wordforge:   { idle: true },

@@ -29,6 +29,7 @@ import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { createOutputBus } from './output.js';
 import { createAudioBus } from './audio_bus.js';
+import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
@@ -63,11 +64,19 @@ import './modules/algebra.js';
 import './modules/pond.js';
 import './modules/comet.js';
 import './modules/pressgame.js';
+import './modules/call.js';
+import './modules/scene.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
 const KDEF = { mirror: { size: 'lg', corner: 'tr' }, clock: { corner: 'bl' } };
 const wrap = (i, n) => ((i % n) + n) % n;
+
+// Swapping the whole screen. `kiosk/show` takes a screen id (or {profileId}); `kiosk/back`
+// returns to the one before it. A state machine drives these from a state's `enter`.
+export const SCREEN_SHOW = 'kiosk/show';
+export const SCREEN_BACK = 'kiosk/back';
+export const SCREEN_SHOWN = 'kiosk/shown';
 
 // Mount a kiosk for one profile into `root`. Returns a small control handle
 // (also used by the dev test). `profiles`/`bus` are injectable.
@@ -149,6 +158,11 @@ export async function mountKiosk(root, {
   // bus because the speech channel registers with it.
   const audio = createAudioBus();
 
+  // *** THE CAMERA ARBITER. *** One webcam, and on Linux a second open of it FAILS rather
+  // than sharing - so unlike the speaker this is a strict single owner. It exists mainly to
+  // protect one thing: her mirror must not go dark because a call arrived. See camera_owner.js.
+  const cameraOwner = createCameraOwner();
+
   let output = null;
   try {
     // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
@@ -192,6 +206,7 @@ export async function mountKiosk(root, {
     // The arbiter itself, for a module that MAKES continuous sound - a music bed, a video.
     // A module that only speaks wants `output`; this is for the things that keep playing.
     audio,
+    cameraOwner,
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
@@ -237,7 +252,8 @@ export async function mountKiosk(root, {
 
   // ---- partition modules: camera -> mirror, clock -> clock HUD, rest -> stage
   // cached so a server blip at boot still yields the last-known dashboard layout.
-  const profile = makeState
+  // *** `let`, NOT `const`: THE SCREEN CAN BE SWAPPED IN PLACE. *** See `showScreen` below.
+  let profile = makeState
     ? await profiles.get(profileId)        // local backend: it IS the source of truth
     : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
 
@@ -252,20 +268,29 @@ export async function mountKiosk(root, {
   const previewLayout = takePreviewLayout(profileId);
 
   const savedLayout = previewLayout || (settings.get().kiosk || {}).layout;
-  const layout = isArranged(savedLayout)
+  let layout = isArranged(savedLayout)
     ? normalizeLayout(savedLayout, profile.modules.map((m) => m.id))
     : null;
   if (previewLayout && layout) showPreviewBadge();
-  const placedIds = new Set(layout ? layout.slots.filter(Boolean) : []);
 
-  const stageDefs = [];
+  let stageDefs = [];
   let cameraDef = null, clockDef = null;
-  for (const mod of profile.modules) {
-    if (placedIds.has(mod.id)) continue;                      // it lives in a slot
-    if (mod.type === 'camera') cameraDef = mod;
-    else if (mod.type === 'clock') clockDef = mod;
-    else if (!layout) stageDefs.push(mod);                    // no layout: the old stage
+
+  // The partition, as a FUNCTION so a swapped-in screen goes through exactly the same rules
+  // as one mounted at boot. Two code paths deciding where a camera goes is how a swapped
+  // screen ends up subtly different from the same screen opened directly.
+  function partition() {
+    const placedIds = new Set(layout ? layout.slots.filter(Boolean) : []);
+    stageDefs = [];
+    cameraDef = null; clockDef = null;
+    for (const mod of profile.modules) {
+      if (placedIds.has(mod.id)) continue;                    // it lives in a slot
+      if (mod.type === 'camera') cameraDef = mod;
+      else if (mod.type === 'clock') clockDef = mod;
+      else if (!layout) stageDefs.push(mod);                  // no layout: the old stage
+    }
   }
+  partition();
 
   // persistent HUD overlays (mounted once, left running)
   async function mountOverlay(def, el) {
@@ -328,6 +353,101 @@ export async function mountKiosk(root, {
       modsEl.append(b);
     });
   }
+
+  // ---------------------------------------------------------------------------------
+  // *** SWAPPING THE WHOLE SCREEN, IN PLACE. ***
+  //
+  // Mike, 2026-08-29: *"different people's call kiosks will be different. If someone uses an
+  // AAC board, they'll need that to use for the call."* That is the argument that settles it -
+  // a call screen is not one layout, it is a PERSON'S layout, and somebody who talks through a
+  // board needs the board DURING the call. So the state machine has to be able to swap the
+  // whole module set, not just what is on the stage.
+  //
+  // *** WHY IN PLACE AND NOT `navigate('kiosk.html?profile=…')`. *** That path already exists -
+  // `restart.js` uses it - but it is a FULL PAGE LOAD: it destroys the audio bus, the camera
+  // owner, the input runtime and the drive socket and rebuilds them. For a call that is seconds
+  // of black at the worst possible moment, the camera released and re-opened for nothing, and
+  // both arbiters made useless across the boundary. Here, only the modules change.
+  //
+  // WHAT DELIBERATELY DOES NOT CHANGE: input bindings (per PERSON, not per screen), the drive
+  // socket, the health watch, the output and audio buses, the camera owner. A screen swap
+  // changes what is shown - not who she is, nor what she can press.
+  const offsScreen = [];
+  let swapping = false;
+  const screenStack = [];          // where to go back to
+
+  async function applyModules() {
+    // Only the MODULES are torn down. Their state/events handles go with them, which is right:
+    // those are per-instance and the incoming screen has its own.
+    destroyRec(stageRec); stageRec = null;
+    destroyRec(cameraRec); cameraRec = null;
+    destroyRec(clockRec); clockRec = null;
+    while (slotRecs.length) destroyRec(slotRecs.pop());
+    stageEl.innerHTML = ''; stageEl.className = 'k-stage'; stageEl.removeAttribute('style');
+    mirrorEl.innerHTML = ''; mirrorEl.hidden = true;
+    clockEl.innerHTML = ''; clockEl.hidden = true;
+
+    partition();
+    cameraRec = cameraDef ? await mountOverlay(cameraDef, mirrorEl) : null;
+    clockRec = clockDef ? await mountOverlay(clockDef, clockEl) : null;
+    if (layout) await mountLayout(); else await showPrimary(0);
+    renderMods();
+  }
+
+  /** Show another screen here, keeping everything that is not a module.
+   *  `remember: false` on the return leg, so going back does not stack up forever. */
+  async function showScreen(nextId, { remember = true } = {}) {
+    if (!nextId || nextId === profileId || swapping) return null;
+    swapping = true;
+    const from = profileId;
+    try {
+      const next = makeState
+        ? await profiles.get(nextId)
+        : await cachedFetch(`profile:${user}:${nextId}`, () => profiles.get(nextId));
+      if (!next || !Array.isArray(next.modules)) throw new Error('that screen has no modules');
+      if (remember) screenStack.push(from);
+      profileId = nextId;
+      profile = next;
+      // The incoming screen's own arrangement. A PREVIEW layout is a one-shot for the screen
+      // it was handed to and must never follow a swap.
+      const sl = (settings.get().kiosk || {}).layout;
+      layout = isArranged(sl) ? normalizeLayout(sl, profile.modules.map((m) => m.id)) : null;
+      await applyModules();
+      bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
+      return nextId;
+    } catch (err) {
+      // *** A FAILED SWAP MUST LEAVE HER LOOKING AT SOMETHING. *** Put the id back and leave
+      // what is already mounted alone: "the call did not open" is recoverable, a blank screen
+      // in a room she cannot leave is not.
+      console.error('kiosk: could not show screen', nextId, err);
+      profileId = from;
+      if (remember) screenStack.pop();
+      return null;
+    } finally {
+      swapping = false;
+    }
+  }
+
+  /** Back to whatever was showing before the last swap. */
+  async function showPreviousScreen() {
+    const back = screenStack.pop();
+    if (!back) return null;
+    return showScreen(back, { remember: false });
+  }
+
+  // *** THE STATE MACHINE'S HANDLE ON THIS. *** It needs no new engine primitive: a state's
+  // `enter` already publishes a topic with a payload, so `{publish: 'kiosk/show', payload:
+  // '<screen id>'}` IS the verb. And that composes with `$back` for free - returning to the
+  // previous STATE re-runs its enter, which re-publishes its screen.
+  //
+  // NOT ON THE DRIVE ALLOWLIST, and that is deliberate: `drive.py` carries a fixed list of
+  // verbs a remote party may send, and "replace what is on this screen" is not something a
+  // person on the other end of a socket should be able to do unasked.
+  offsScreen.push(bus.subscribe(SCREEN_SHOW, (payload) => {
+    const id = typeof payload === 'string' ? payload : payload?.profileId;
+    showScreen(id).catch(() => {});
+  }));
+  offsScreen.push(bus.subscribe(SCREEN_BACK, () => { showPreviousScreen().catch(() => {}); }));
 
   // "next" within the current stage module — the director advances via segment/done,
   // everything else via <type>/next. Only the visible module is mounted, so this
@@ -821,6 +941,13 @@ export async function mountKiosk(root, {
     // The speaker arbiter, so a test (and a future call handler) can reach hush and the
     // call mode without going through a module.
     audio: () => audio,
+    cameraOwner: () => cameraOwner,
+    // The screen currently showing here, and the swap itself - for a test, and for anything
+    // that wants to drive it without going through the bus.
+    screenId: () => profileId,
+    showScreen,
+    showPreviousScreen,
+    screenStack: () => [...screenStack],
     stageCount: () => stageDefs.length,
     // NOTE: `layout()` was already taken by the mirror/clock HUD positions below. A second
     // `layout:` key in this same object literal is silently shadowed by it — which is
@@ -877,11 +1004,13 @@ export async function mountKiosk(root, {
       settings.destroy();
       menu.destroy();
       try { personOff?.(); } catch { /* already gone */ }
+      offsScreen.forEach((off) => { try { off(); } catch { /* already gone */ } });
       try { drive?.close(); } catch { /* already gone */ }
       // Silences anything mid-sentence as well as clearing the queue. A screen that is being
       // torn down must not keep talking.
       try { output?.destroy(); } catch { /* already gone */ }
       try { audio?.destroy(); } catch { /* already gone */ }
+      try { cameraOwner?.destroy(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },

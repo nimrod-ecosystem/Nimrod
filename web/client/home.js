@@ -68,6 +68,9 @@ export const TABS = [
   // different room, and a table of somebody's performance has no business on the screen
   // they cannot walk away from.
   { id: 'records',  label: 'Records',  hint: 'what a module wrote down, and vouching for it' },
+  // The state machine, in sentences. The engine has always been authorable; what was missing
+  // was that nobody could READ the config. See rules.js.
+  { id: 'rules',    label: 'Rules',    hint: 'what each screen does on its own, and when' },
   { id: 'adulting', label: 'Adulting', hint: 'your own points board', hidden: true },
 ];
 
@@ -145,6 +148,12 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const o = mountOutput(host, { user, makeUserState, makeUserEvents });
       await o.refresh();
       return o;
+    }
+    if (id === 'rules') {
+      const { mountRules } = await import('./rules.js');
+      const r = mountRules(host, { profiles, user, makeState });
+      await r.refresh();
+      return r;
     }
     if (id === 'records') {
       const { mountRecords } = await import('./records.js');
