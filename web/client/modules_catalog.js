@@ -144,6 +144,19 @@ export const CATALOG = [
       + 'question before it is asked.',
   },
   {
+    type: 'wallpaper',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'Something calm on screen, instead of a frozen picture.',
+    needs: 'Nothing. A folder of your own pictures or video is optional.',
+    why: 'It is what shows while a video is paused, so a screen somebody stepped away from '
+      + 'looks like it is waiting rather than broken — a stopped picture of a face reads as a '
+      + 'fault, and this one sits in a room for hours. On its own it is a quiet background '
+      + 'that needs no files and no network. Movement is a setting with a still option, '
+      + 'because a full-screen animation running unattended is where photosensitivity '
+      + 'actually matters.',
+  },
+  {
     type: 'pond',
     group: 'comfort',
     use: 'touch',

@@ -18,10 +18,13 @@
 //    NOBODY CAN SEE THAT BY LOOKING AT IT.
 //
 // PRESSES ARE THE UNIT, not seconds, because a press is what the person spends. Multiply by a
-// scan dwell where there is one — Cici's yes/no board runs a 15 SECOND dwell, with the reason
+// SCAN STEP where there is one — `input_scan.js` runs a 15 SECOND step, with the reason
 // written beside it ("she understands the task but needs time to process the cue"), so twelve
 // presses there is three minutes, not twelve seconds. The multiplier belongs to the surface;
 // the count belongs here.
+//
+// (This used to say "scan dwell". `dwell` now means holding still to click — `input_dwell.js`
+// — and the scanning sense moved to `step` when scanning was extracted. See the glossary.)
 //
 // EVERYTHING IS PURE. It takes manifests and returns findings. It does not read the registry,
 // it does not touch the DOM, and it does not know what a module is — which is what lets the
@@ -34,7 +37,7 @@ export const SEVERITY = ['error', 'warn', 'info'];
 // Presses at which a control stops being a control. Chosen, not measured, and worth
 // revisiting against a real person rather than defending:
 //   12  about a full lap of a twelve-stop control. Fine.
-//   24  two laps of that. On a 15s dwell it is six minutes to change one setting.
+//   24  two laps of that. On a 15s step it is six minutes to change one setting.
 export const WALK_WARN = 12;
 export const WALK_BAD = 24;
 
@@ -355,7 +358,7 @@ export function auditManifests(manifests = [], { level = 'standard', values = {}
     costs[type].importance = imp;
     if (w && w.total >= WALK_BAD * k) {
       findings.push(finding('error', 'unreachable-cost',
-        `"${w.key}" costs ${w.total} presses to reach and walk — on a 15s scan dwell that is `
+        `"${w.key}" costs ${w.total} presses to reach and walk — on a 15s scan step that is `
         + `${Math.round(w.total * 15 / 60)} minutes to change one setting`,
         { module: type, key: w.key, importance: imp }));
     } else if (w && w.total > WALK_WARN * k) {

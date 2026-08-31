@@ -355,6 +355,76 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   it already read its library from per-profile state, so this makes it editable without hand-writing
   JSON. Word Forge 59 checks, progress 54, both green.
 
+- **The live wallpaper — a held screen that looks like it is waiting, not broken** (2026-08-31).
+  Mike, 2026-08-30: build it as a module a container swaps in, not a feature inside the video
+  modules, *"implemented per module it would be written three times and drift."* Three new files:
+  `held.js` (the `held/begin` · `held/end` signal, idempotent, and **it releases on destroy** — a
+  module torn down while held would otherwise strand whatever reacted to it in a state only the
+  destroyed module could have left), `wallpaper.js` (the pure content half) and
+  `modules/wallpaper.js` (a real module, addable to a screen on its own, needing no server and no
+  files). `youtube.js` and `personal.js` now publish the signal from their existing `setHeld()`.
+  `module.js` gained the `onShow` the lifecycle never had opposite `onHide`.
+  **It is an OVERLAY, not a machine state, and that turned out to matter:** the director's
+  `activate()` for a real child is `publish('<id>/next')` — the verb means ADVANCE — so a
+  `wallpaper` state with a `$back` transition would have come back and skipped the clip somebody
+  stepped away from, which is the exact thing a hold exists to prevent. Long note in `director.js`.
+  **The flash-rate floor is checked rather than claimed:** the ambient is a pure function of time,
+  `peakLumRate()` samples a full cycle, and the suite asserts it against `MAX_LUM_RATE` (0.02/s,
+  ~three orders of magnitude under the 3 Hz threshold). The first version of that check measured
+  the frame AVERAGE, which the 120°-apart gradient stops hold constant by construction — it
+  reported 0.0 for every setting and read as perfectly safe while measuring nothing. Only a
+  relational assertion (`calm` must move less than `gentle`) caught it. 67 checks green.
+  **Not covered:** the media path against a live agent, and anything on real hardware.
+  **Not built:** a screen with no director around it still shows its frozen frame — this container
+  is the only thing that can mount a child, and doing it everywhere means the shell owning an
+  overlay per pane.
+
+- **Dwell — holding still is the click** (2026-08-31), `input_dwell.js`, 35 checks green.
+  Found by running the audit against the private tree rather than porting blind: the colour
+  tracker's DETECTION half came across faithfully (same DET_W/H, gain, smooth, hueTol, satMin,
+  valMin, minPx) and its **ACTIVATION half never did**. Nothing in this repo turned `input/aim`
+  into a press, so the public tracker could point at things and never select one — not a stale
+  copy of the private one, an incomplete one, incomplete in exactly the half that decides
+  whether she can do anything.
+  It is a device on the input bus rather than part of the tracker, so it serves any aim
+  producer — marker, head pointer, or a mouse belonging to somebody who can move a pointer but
+  not click. The private build's numbers carried across unchanged: 1800 ms, 70 px, a 1.5× re-arm
+  band.
+  **The safety property is the re-arm** (`mustLeave`): after a press, nothing fires again until
+  the aim has genuinely left. Without it somebody who is still gets a click every 1.8 seconds
+  forever — a screen operated at random by a person who has stopped moving, which for the person
+  this is for is worse than no input at all. Verified by **negative control**: disabling
+  `mustLeave` fails exactly the five checks that guard it and nothing else, so the suite is not
+  vacuous. `down` and `up` are the same instant, so a dwell can never satisfy a `holdMs` binding
+  — said out loud because a binding that silently never fires is miserable to debug.
+  **Not built:** a repeat mode (somebody scrolling by holding a head-pointer still has a real
+  want; it would be its own off-by-default setting). **Not run:** anything with a real camera or
+  a real person — whether 1800 ms and 70 px suit anybody but the one person they were tuned for
+  is a bench question.
+
+- **Scanning extracted into the input layer** (2026-08-31), `input_scan.js`, 39 checks green.
+  It was living inside the private `scan_yesno.js`; a scan loop written inside an AAC board is a
+  scan loop the trivia game, the settings menu and the photo picker each have to write again.
+  This file owns an ordered list, an index and a clock, and knows nothing about cards, speech or
+  the DOM. The board on top of it is Tier 2 and is not written.
+  **The 15-second default is carried, not re-derived** — the reason came across verbatim from
+  the private source (*"she understands the task but needs time to process the cue before
+  signaling"*) because it is a statement about one person's processing that nothing here could
+  reconstruct. `settings_audit.js` already prices it: twelve presses is three minutes.
+  **Hybrid, and neither half is a mode:** the clock advances, and `next()` also advances for
+  anybody who can hit a second switch — a setup that never binds it simply never calls it.
+  `next()` restarts the clock rather than keeping the remainder, because jumping to an option
+  and then getting a third of a second to decide about it is worse than not jumping.
+  **It wraps** (one switch travels one way) and **it never stops on its own** — a scanner that
+  gave up after N laps would take away the one thing the person can operate at exactly the
+  moment they were taking longer than expected. Laps are counted; nothing acts on the count.
+  Verified by **negative control**: shortening the step and disabling the lap count fails 16 of
+  the 39 checks.
+  **`dwell` → `step`.** The glossary had recorded that collision the same day with a plan
+  attached — the scanning sense moves, and it moves inside the extraction rather than as a
+  separate churn. This is that change; `settings_audit.js`'s prose moved with it (59 green), and
+  the collision is now closed rather than open.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and

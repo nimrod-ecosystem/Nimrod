@@ -35,6 +35,10 @@ nothing uses it yet.
 | **marker** | A brightly coloured object somebody wears or holds — a sock, a wristband, a glove — that the camera finds by hue. `input_marker.js`, device `marker:colour`. **Claimed 2026-08-30.** | A landmark, a skeleton joint, or anything a model recognises. The whole point of a marker is that nothing has to recognise it. |
 | **bank** | The content somebody wrote for the games to draw on — words and questions, in one document, per person. `bank.js`. **Claimed 2026-08-31.** | The verb in `algebra.js` (`bank(award)` = to bank points). A second, unrelated sense that happens not to collide; see §4. |
 | **cursor** | The thing drawn on screen at the aim. `cursor.js`. **Claimed 2026-08-30**, which is why `inputs.js`'s row-walking `cursor` was renamed to `highlight` in the same change. | The system mouse pointer, and no longer a row in a list. |
+| **dwell** | Holding still on purpose, as a selection: rest the aim inside a radius for `dwellMs` and it becomes a press. `input_dwell.js`, device `dwell`. **Claimed 2026-08-31** for this sense because it is where the AT field puts the word — eye-gaze and head-pointer software all call this "dwell click". | The time a scanner leaves each option lit. That is **step**. |
+| **step** | How long a scanner leaves each option lit before moving on. `input_scan.js`, `stepMs`, default 15000. **Renamed from `dwell` 2026-08-31**, in the change that extracted scanning — see §4. | A step in a state machine, and not the `stepValue` in `settings_fields.js`, which computes a control's next value. Worth watching; the two never meet. |
+| **held** | A stop that somebody is understood to be present for and coming back from — the subset of "paused" that gets a clock in hours instead of seconds. `held.js`, topics `held/begin` · `held/end`. **Claimed 2026-08-31**, and it was already the word in `youtube.js`, `personal.js` and the `held` event kind, so nothing new was spent. | A pause. Buffering, an OS audio-focus change and a screen lock are pauses and are NOT held — a screen that swapped to a wallpaper every time the network hiccuped would be worse than the frozen frame it replaced. |
+| **wallpaper** | Ambient content shown while a screen is waiting — the built-in generative drift, or a folder the person chose. `wallpaper.js`, `modules/wallpaper.js`. **Claimed 2026-08-31.** The marketing page `wallpapers.html` already used the word in exactly this sense, which is why claiming it costs nothing. | A screensaver. A screensaver replaces what was on screen; this is raised OVER a paused segment that is still mounted and still marked paused, and lowering it returns to exactly where she was. |
 | **capability** | Something a module declares it can do — *contains modules*, *provides a bus*. How a kiosk is a module rather than a special case. | A permission on a link between people. |
 
 ---
@@ -88,6 +92,21 @@ contexts that never touch is far less urgent than one inside a single call path.
    collision. Recorded because the count of them is itself the signal, not because it is urgent.
 6. **`channel`** — three meanings that never touch. Least urgent, still worth fixing.
 7. **`module`** — pervasive, conventional, probably tolerable. Keep out of identifiers.
+
+**Opened and closed the same day, 2026-08-31: `dwell`.** Two senses arrived within hours of each
+other — *hold still to click* (`input_dwell.js`, 1800 ms) and *how long a scanner leaves each
+option lit* (15 SECONDS on Cici's yes/no board). Both are spoken aloud to a caregiver, so the
+`cursor` rule — the word goes to whichever meaning has to be said to a user — did not separate
+them. It was settled on the field's own usage instead: eye-gaze and head-pointer software
+universally say "dwell click", while scanning is more often "scan rate" or "step time". So the
+SCANNING sense moved, to **`step`**, and it moved inside the change that extracted scanning
+(`input_scan.js`) rather than as a separate churn through a module about to be rewritten.
+
+**The reason it is worth recording as a pattern:** the collision was written down *before* the
+rename was possible, with the plan attached and the moment named. The alternative — renaming
+immediately — would have touched `scan_yesno.js` twice, and doing nothing would have left the
+extraction to re-argue it from scratch. `settings_audit.js` still says "scan dwell" in its
+prose; that is the remaining tail and it is one string.
 
 **Closed 2026-08-30: `cursor`.** It was added to this list the same day as an open collision — a
 row in `inputs.js`, a pointer in `comet.js` — and closed a few hours later rather than left,

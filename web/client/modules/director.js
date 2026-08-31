@@ -26,6 +26,8 @@
 import { registerModule, mountModule } from '../module.js';
 import { createMachine } from '../statemachine.js';
 import { createWatchdog } from '../watchdog.js';
+import { HELD_BEGIN, HELD_END } from '../held.js';
+import '../modules/wallpaper.js';   // registers the type this container raises over its stage
 
 // Segment providers the director can rotate through. `real:true` mounts the actual
 // module; `real:false` renders a placeholder until that module exists.
@@ -72,6 +74,8 @@ registerModule(
 
     let machine = null;
     let current = null;
+    let wallpaper = null;      // the held-state overlay (see THE WALLPAPER below)
+    let heldBy = null;         // which provider published the hold we are covering
     let segmentWatch = null;   // the backstop over ANY provider (see below)
     const adapters = {};      // provider id -> { activate, deactivate, destroy, flush, resize }
     const slots = {};         // provider id -> slot element
@@ -180,11 +184,80 @@ registerModule(
       };
     }
 
+    // ------------------------------------------------------------------------------------
+    // *** THE WALLPAPER, AND WHY IT IS AN OVERLAY RATHER THAN A STATE. ***
+    //
+    // Mike's shape was "a module the state machine swaps in", and the argument for it is
+    // right: written per module it would be written three times and drift. But routing it
+    // through the machine the way every other provider goes through it breaks the one thing
+    // the same spec asks for — *"coming back must return to where she was."*
+    //
+    // Here is the mechanism, because it is not obvious from the config:
+    // `showProvider()` deactivates the outgoing adapter, and for a real child `activate()` is
+    // `publish('<id>/next')` — the verb means ADVANCE, not resume. A directed child does not
+    // autostart, so that is the only way it ever shows anything. So a `wallpaper` state with
+    // a `$back` transition would leave the hold correctly, come back to youtube, and then
+    // advance it to the NEXT video: the paused clip somebody stepped away from would be gone,
+    // which is exactly the thing the hold exists to prevent. The bug would look like a
+    // wallpaper bug and live in the activation verb.
+    //
+    // Making `activate()` mean "advance, unless resuming" would put a second meaning inside
+    // the one verb the whole rotation is built on, to serve a case that is not a rotation at
+    // all. A hold is not a segment ending. Nothing finished, nothing should advance.
+    //
+    // So: the wallpaper is a CHILD OF THIS CONTAINER, mounted once, raised OVER the stage
+    // while a hold is on and lowered when it ends. Nothing is deactivated, nothing advances,
+    // and the paused segment is still exactly where she left it — which is also the literal
+    // reading of the spec's own sentence: *"the paused segment is still there and still
+    // marked paused; the wallpaper is what is shown meanwhile."*
+    //
+    // Mike's reason for wanting it in the container is fully served either way: it is written
+    // once, and every provider — including ones not written yet — gets it for free by
+    // publishing `held/begin` from `held.js`.
+    //
+    // *** WHAT THIS DOES NOT COVER, and it is worth a decision rather than a silence. ***
+    // A youtube module mounted DIRECTLY on a screen, with no director around it, still shows
+    // its frozen frame: this container is the only thing here that can mount a child, so it
+    // is the only thing that can raise a wallpaper. Doing it for every screen means the SHELL
+    // owning an overlay per pane, which is a bigger change than this one and touches every
+    // module. Left undone deliberately; noted in `docs/for_chat/`.
+    //
+    // THE INVARIANT. The overlay is raised and lowered by facts on the bus, never by an input.
+    // It comes down when the provider says the hold ended, when the provider is destroyed
+    // (`held.js` releases on the way out), and when this container is torn down. The hold's
+    // own notify clock is untouched underneath — the wallpaper changes what the wait looks
+    // like, not how long it lasts or how it ends.
+    // ------------------------------------------------------------------------------------
+
+    function raiseWallpaper(by) {
+      heldBy = by || null;
+      const el = mount.querySelector('[data-wall]');
+      if (!el || !wallpaper) return;
+      if (!el.hidden) return;                 // already up; a second begin is not a second one
+      el.hidden = false;
+      wallpaper.onShow?.();
+    }
+
+    function lowerWallpaper() {
+      heldBy = null;
+      const el = mount.querySelector('[data-wall]');
+      if (!el || el.hidden || !wallpaper) return;
+      el.hidden = true;
+      // Park its clock rather than leaving an animation running behind a hidden div for the
+      // next six hours.
+      wallpaper.onHide?.();
+    }
+
     return {
+      // The escape hatch documented in module.js: a container's overlay has no markup worth
+      // asserting on from outside, and "is the wallpaper up" is the whole behaviour here.
+      __probe: () => ({ current, heldBy, wallpaperUp: !mount.querySelector('[data-wall]')?.hidden,
+                        wallpaperMounted: !!wallpaper }),
       init() {
         mount.innerHTML = `
           <div class="director">
             <div class="d-stage" data-stage></div>
+            <div class="d-wall" data-wall hidden></div>
             <div class="d-bar">
               <span class="d-label" data-dlabel></span>
               <button class="d-skip" data-skip aria-label="skip this segment">Skip ▸</button>
@@ -235,22 +308,54 @@ registerModule(
 
         const cfg = saved.config || DIRECTOR_CONFIG;
 
+        // The held signal, from whichever provider is on the stage. See THE WALLPAPER above.
+        bus.subscribe(HELD_BEGIN, (d) => raiseWallpaper(d?.source));
+        bus.subscribe(HELD_END, () => lowerWallpaper());
+
         (async () => {
           for (const p of PROVIDERS) {
             if (p.real) { const a = makeChildAdapter(p); await a.mount(slots[p.id]); adapters[p.id] = a; }
             else adapters[p.id] = placeholderAdapter(p, slots[p.id]);
           }
+
+          // The wallpaper is mounted once and kept hidden, not mounted on demand: a hold is
+          // when the screen is already in a state nobody wanted, and that is the worst moment
+          // to be loading a module and fetching a listing. Its own clocks are parked while it
+          // is down, so an idle wallpaper costs nothing but the DOM it is made of.
+          const wState = makeState(`${instanceId}-wallpaper`);
+          const wEvents = makeEvents(`${instanceId}-wallpaper`);
+          await wState.load(); await wEvents.load();
+          wallpaper = mountModule('wallpaper', {
+            mount: mount.querySelector('[data-wall]'), bus: rootBus,
+            state: wState, events: wEvents, user, profileId,
+            setTimer: io.setTimer, clearTimer: io.clearTimer, now: io.now, rand: io.rand,
+            output: ctx.output,
+            get personId() { return ctx.personId; },
+          });
+          wallpaper.init();
+          wallpaper.onHide();          // mounted, down, and not spending a clock
+          wState.startPolling();
+          // A hold that arrived DURING this mount would have found no wallpaper to raise.
+          // `heldBy` records it either way, so the overlay catches up here rather than
+          // waiting for the next hold — a provider that hands back an empty segment
+          // synchronously makes this ordering real, not theoretical.
+          if (heldBy) { const h = heldBy; raiseWallpaper(h); }
           machine = createMachine(cfg, { bus, setTimer, clearTimer, now: io.now, rand: io.rand });
           machine.start();               // enters 'youtube' -> youtube/activate -> showProvider('youtube')
         })().catch((e) => console.error('director init', e));
       },
-      onResize() { for (const id of Object.keys(adapters)) adapters[id].resize?.(); },
-      onHide() { for (const id of Object.keys(adapters)) adapters[id].flush?.(); },
+      onResize() { for (const id of Object.keys(adapters)) adapters[id].resize?.(); wallpaper?.onResize?.(); },
+      onHide() { for (const id of Object.keys(adapters)) adapters[id].flush?.(); wallpaper?.onHide?.(); },
+      // Shown again with a hold still on: the overlay is still up (nothing lowered it), so
+      // its clock has to come back with it or the wallpaper is a still frame for six hours —
+      // the exact thing it was built to replace.
+      onShow() { if (heldBy) wallpaper?.onShow?.(); },
       destroy() {
         segmentWatch?.disarm();
         try { machine?.stop(); } catch { /* noop */ }
         if (phTimer != null) { clearTimer(phTimer); phTimer = null; }
         for (const id of Object.keys(adapters)) { try { adapters[id].destroy?.(); } catch { /* noop */ } }
+        try { wallpaper?.destroy(); } catch { /* noop */ } wallpaper = null; heldBy = null;
       },
     };
   },

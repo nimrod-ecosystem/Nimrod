@@ -31,6 +31,7 @@ import { createOutputBus } from './output.js';
 import { createAudioBus } from './audio_bus.js';
 import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
+import { REMOTE_STREAM } from './output_remote.js';
 import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
@@ -66,6 +67,7 @@ import './modules/bank.js';      // registers 'bank' (the shared questions + wor
 import './modules/lessons.js';
 import './modules/algebra.js';
 import './modules/pond.js';
+import './modules/wallpaper.js';
 import './modules/comet.js';
 import './modules/pressgame.js';
 import './modules/call.js';
@@ -240,7 +242,30 @@ export async function mountKiosk(root, {
     // reported as `no-adapter` rather than vanishing, which is the honest failure. Add it
     // when there is a designated place for a banner and a test that it does not cover
     // anything.
-    output = createOutputBus({ bus, channels: defaultChannels({ audio }) });
+    //
+    // *** THE MAILBOX, WIRED (2026-08-31). *** Without an `events` handle `defaultChannels`
+    // builds no `remote` channel at all, so `output.notify` on this surface had nowhere to go
+    // beyond the room it was already in — which is the wrong answer for the one message this
+    // screen actually sends: "the screen has been paused for a while", six hours after
+    // somebody paused it. That is addressed to a person who is not here.
+    //
+    // The stream is the account's own mailbox, not the profile's: it is how a person's OTHER
+    // DEVICES hear from this one, and which screen was open when the message was written is
+    // beside the point.
+    //
+    // *** SENDING ONLY. THE RECEIVER IS NOT WIRED, AND THAT IS A DECISION RATHER THAN AN
+    // OVERSIGHT. *** `createRemoteReceiver` would let any of the account's devices put text
+    // and speech onto THIS screen — which for a bedside screen somebody sits in front of ~24/7
+    // is a different feature with its own consent question, not a symmetrical half of this
+    // one. The sending half carries no such question: it puts a message in the account's own
+    // mailbox and nothing about this room changes.
+    output = createOutputBus({
+      bus,
+      channels: defaultChannels({
+        audio,
+        events: createEvents({ url: `/api/user-events/${REMOTE_STREAM}`, user }),
+      }),
+    });
   } catch (err) {
     // A screen that cannot speak is still a screen. Modules treat `output` as optional.
     console.error('kiosk: no output bus', err);

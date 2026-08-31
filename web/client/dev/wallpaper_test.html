@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the live wallpaper — the held state, and the flash-rate floor — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:80ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:80ch;font-size:.92rem}
+  .director .d-slot[hidden]{display:none}
+  .director .d-wall[hidden]{display:none}
+  #host,#host2{width:360px;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>the live wallpaper</h1>
+
+<div class="warn">
+  A full-screen animation running unattended for hours, in front of somebody with a brain
+  injury, is where photosensitivity actually bites. The first section is the only one that
+  matters if you only read one.
+</div>
+
+<p>A held screen shows a frozen frame and a ⏸ chip today. A stopped picture of a face reads as
+a broken screen, and this one sits in a room for hours. So: the video modules publish
+<code>held/begin</code>, the container raises a wallpaper over the stage, and the paused
+segment underneath is <b>not touched</b> — which is the assertion this suite exists for
+second, after the flash rate.</p>
+
+<div class="note">
+  <b>Not covered here, deliberately.</b> The media path — a real folder of pictures or video
+  resolved through the media agent — is exercised only through its pure parts
+  (<code>usableItems</code>, <code>nextItem</code>, <code>wallpaperMode</code>). Mounting the
+  module against a live agent is what <code>personal_test</code> and <code>photos_test</code>
+  do for their own modules and it is not repeated here, so <b>a wallpaper actually rendering
+  somebody's video has not been run</b>. Neither has anything on real hardware: what a Pi 400
+  does with a looping video behind a paused one is a bench question, not a browser one.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="host2"></div>
+
+<script type="module">
+import {
+  MOTIONS, MAX_LUM_RATE, ambientFrame, frameToCss, motionOf, peakLumRate,
+  videoAllowed, usableItems, nextItem, wallpaperMode, VIDEO_POLICIES, meanLumRate,
+} from '../wallpaper.js';
+import { createHeldSignal, HELD_BEGIN, HELD_END } from '../held.js';
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { mountModule } from '../module.js';
+import { mulberry32 } from '../rng.js';
+import '../modules/youtube.js';
+import '../modules/personal.js';
+import '../modules/educational.js';
+import '../modules/wallpaper.js';
+import '../modules/director.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'wallpaper-test-user';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Manually-stepped timers, the same shape director_test uses. `fireDue` fires whatever is
+// armed; anything that re-arms itself shows up as a growing `pending()`.
+function fakeTimers() {
+  let seq = 0; let armed = [];
+  return {
+    setTimer: (fn) => { const id = ++seq; armed.push({ id, fn }); return id; },
+    clearTimer: (id) => { armed = armed.filter((t) => t.id !== id); },
+    fireDue: () => { const due = armed; armed = []; due.forEach((t) => t.fn()); },
+    pending: () => armed.length,
+  };
+}
+function makeStubPlayer() {
+  let handlers = {}; const loaded = [];
+  return {
+    loaded,
+    current: () => loaded[loaded.length - 1] ?? null,
+    handlers: () => handlers,
+    factory(el, h) { handlers = h || {}; return { load: (id) => loaded.push(id), stop() {}, destroy() {} }; },
+  };
+}
+const PLAYLIST = [
+  { id: 'vidA000001', channel: 'A', title: 'A-1' }, { id: 'vidA000002', channel: 'A', title: 'A-2' },
+  { id: 'vidB000001', channel: 'B', title: 'B-1' }, { id: 'vidB000002', channel: 'B', title: 'B-2' },
+];
+const atHour = (h) => new Date(2026, 0, 5, h, 0, 0).getTime();
+const curProv = (host) => host.querySelector('.d-slot:not([hidden])')?.dataset.prov ?? null;
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** IT MUST NOT FLASH — the ceiling, checked rather than claimed ***');
+  {
+    // The check is the function, not a comment claiming the function is fine: change a
+    // number in DRIFT and this fails rather than quietly raising the flash rate.
+    for (const m of MOTIONS) {
+      const rate = peakLumRate(m);
+      check(`*** "${m}" stays under ${MAX_LUM_RATE}/s of luminance change ***`,
+        rate <= MAX_LUM_RATE, `peak=${rate.toFixed(5)}/s`);
+    }
+    // A margin, not a threshold: the clinical number people design against is 3 Hz of
+    // substantial change, and gentle should be orders of magnitude below it, not just under.
+    check('...and "gentle" is far under it, not just under it',
+      peakLumRate('gentle') < MAX_LUM_RATE / 3, String(peakLumRate('gentle')));
+    check('"calm" moves less than "gentle"', peakLumRate('calm') < peakLumRate('gentle'));
+    // *** THE CHECK THAT CAUGHT A VACUOUS CHECK. *** The first version measured the frame
+    // AVERAGE, which the 120°-apart stops hold constant by construction — so it reported 0.0
+    // for every setting and read as "perfectly safe" while measuring nothing. Only this
+    // relational line failed (0 < 0), which is the QR lesson again: structure is not
+    // correctness, and a green number is not evidence the number means anything.
+    check('*** the whole screen’s brightness barely moves at all — the 120° spacing ***',
+      meanLumRate('gentle') < 1e-9, String(meanLumRate('gentle')));
+    check('...which is exactly why the flash check measures a STOP, not the average',
+      peakLumRate('gentle') > 0, String(peakLumRate('gentle')));
+    check('*** "still" does not move at all ***', peakLumRate('still') === 0);
+
+    // Pure: a wallpaper whose frame depended on anything but t could not be checked this way.
+    const a = ambientFrame(12345, { motion: 'gentle' });
+    const b = ambientFrame(12345, { motion: 'gentle' });
+    check('a frame is a pure function of time', JSON.stringify(a) === JSON.stringify(b));
+    check('...and "still" is the same frame forever',
+      JSON.stringify(ambientFrame(0, { motion: 'still' }))
+        === JSON.stringify(ambientFrame(9e6, { motion: 'still' })));
+
+    // A wallpaper that went to white or to black would be both ugly and, at the top end,
+    // exactly the luminance excursion the rate check is there to prevent.
+    let lo = 1, hi = 0;
+    for (let t = 0; t <= 300000; t += 500) {
+      const f = ambientFrame(t, { motion: 'gentle' });
+      for (const s of f.stops) { lo = Math.min(lo, s.l); hi = Math.max(hi, s.l); }
+    }
+    check('lightness stays in a calm band — never near black or white',
+      lo > 0.10 && hi < 0.55, `lo=${lo.toFixed(3)} hi=${hi.toFixed(3)}`);
+
+    check('a frame renders as a gradient', /^linear-gradient\(/.test(frameToCss(a)), frameToCss(a));
+    check('...with the theme hue in it',
+      frameToCss(ambientFrame(0, { motion: 'still', hueBase: 158 })).includes('hsl(158'),
+      frameToCss(ambientFrame(0, { motion: 'still', hueBase: 158 })));
+  }
+
+  // =====================================================================================
+  section('motion is the person’s, not the module’s');
+  {
+    check('the saved setting is used', motionOf('calm', false) === 'calm');
+    check('*** the system can only ever ask for LESS motion ***', motionOf('gentle', true) === 'calm');
+    check('...and never for more', motionOf('still', true) === 'still');
+    // Folding the system request into the saved value is what makes a settings row lie —
+    // the same argument comet.js and pond.js already carry.
+    check('a system request does not change what was saved',
+      motionOf('gentle', true) === 'calm' && motionOf('gentle', false) === 'gentle');
+    check('an unknown saved value falls back rather than breaking', motionOf('sparkle', false) === 'gentle');
+  }
+
+  // =====================================================================================
+  section('*** whether to play somebody’s own video — a DEFAULT, with an override ***');
+  {
+    // Nothing in this codebase can see inside a clip somebody supplied, so the motion
+    // setting governs whether one is used at all. That is a default, not a rule.
+    check('auto: video plays at gentle', videoAllowed('auto', 'gentle') === true);
+    check('auto: video does not play at calm', videoAllowed('auto', 'calm') === false);
+    check('auto: video does not play at still', videoAllowed('auto', 'still') === false);
+    // The person this is for: a fireplace or an aquarium, from somebody who turned
+    // reduced-motion on for UI animation and did not mean "never show me moving pictures".
+    check('*** "always" overrides it, because that want is legitimate ***',
+      videoAllowed('always', 'still') === true);
+    check('"never" means never, even at gentle', videoAllowed('never', 'gentle') === false);
+    check('all three policies are reachable', VIDEO_POLICIES.length === 3);
+
+    const ITEMS = [
+      { id: 'p1', kind: 'image' }, { id: 'p2', kind: 'image' },
+      { id: 'v1', kind: 'video' }, { id: 'x1', kind: 'audio' }, { id: 'x2', kind: 'other' },
+    ];
+    check('anything that is not a picture or a video is dropped',
+      usableItems(ITEMS, { policy: 'always', motion: 'gentle' }).length === 3);
+    check('...and the video goes too when the policy says so',
+      usableItems(ITEMS, { policy: 'never', motion: 'gentle' }).map((i) => i.id).join() === 'p1,p2');
+    check('a folder of nothing but video, at still, is an empty pool',
+      usableItems([{ id: 'v', kind: 'video' }], { policy: 'auto', motion: 'still' }).length === 0);
+
+    // *** THE DAY-ONE CASE. *** Nobody has configured a folder, which is why the built-in is
+    // generative rather than a bundled file: a wallpaper that needed content would leave the
+    // frozen frame exactly where it is for everybody who has not set one up.
+    check('*** no usable content means the built-in ambient, never a blank screen ***',
+      wallpaperMode([], {}) === 'ambient');
+    check('...and the same when the policy emptied the pool',
+      wallpaperMode([{ id: 'v', kind: 'video' }], { policy: 'never' }) === 'ambient');
+    check('content means content', wallpaperMode(ITEMS, { policy: 'auto', motion: 'gentle' }) === 'media');
+  }
+
+  // =====================================================================================
+  section('the picker — six hours of the same four pictures is its own frozen frame');
+  {
+    const items = ['a', 'b', 'c', 'd', 'e'].map((id) => ({ id, kind: 'image' }));
+    const rand = mulberry32(7);
+    let recent = [];
+    let repeats = 0;
+    for (let i = 0; i < 40; i++) {
+      const it = nextItem(items, { recent, rand });
+      if (recent.length && it.id === recent[recent.length - 1]) repeats += 1;
+      recent = [...recent, it.id].slice(-12);
+    }
+    check('it never shows the same picture twice in a row', repeats === 0, `repeats=${repeats}`);
+    check('an empty folder returns nothing rather than throwing', nextItem([], {}) === null);
+    check('one picture is still that picture', nextItem([{ id: 'only' }], {})?.id === 'only');
+  }
+
+  // =====================================================================================
+  section('*** the held signal — and the rule that keeps it honest ***');
+  {
+    const sent = [];
+    const sig = createHeldSignal(null, 'youtube', { publish: (t, p) => sent.push([t, p]) });
+
+    check('a hold begins once', sig.begin({ id: 'v1' }) === true && sent.length === 1);
+    // setHeld(true) is called from four places in youtube.js and only one of them is a state
+    // change; a topic firing on every one makes a listener count holds rather than see one.
+    check('*** ...and only once, however many times it is asked ***',
+      sig.begin() === false && sig.begin() === false && sent.length === 1, JSON.stringify(sent));
+    check('it names who is holding', sent[0][1].source === 'youtube', JSON.stringify(sent[0][1]));
+    check('...and carries the detail through', sent[0][1].id === 'v1');
+    check('it knows it is held', sig.isHeld() === true);
+
+    check('ending publishes an end', sig.end() === true && sent[1][0] === HELD_END);
+    // clearStall() calls setHeld(false) on every ordinary path in personal.js.
+    check('*** ...and an end for a hold that never began publishes nothing ***',
+      sig.end() === false && sent.length === 2, JSON.stringify(sent));
+    check('the begin topic is the one the container listens on', sent[0][0] === HELD_BEGIN);
+
+    // THE ONE THAT MATTERS. A module torn down while held, with no release, leaves whatever
+    // reacted to the hold in a state only the destroyed module could have left — the safety
+    // invariant arriving through a lifecycle bug.
+    const sent2 = [];
+    const sig2 = createHeldSignal(null, 'personal', { publish: (t, p) => sent2.push([t, p]) });
+    sig2.begin();
+    check('*** destroyed while held: the release publishes the end ***',
+      sig2.release() === true && sent2[1][0] === HELD_END, JSON.stringify(sent2));
+    check('...and releasing twice is silent', sig2.release() === false && sent2.length === 2);
+    check('releasing something never held is silent too',
+      createHeldSignal(null, 'x', { publish: () => { throw new Error('published'); } }).release() === false);
+  }
+
+  // =====================================================================================
+  section('*** the module: a wallpaper reports nothing and asks for nothing ***');
+  {
+    const host = document.getElementById('host');
+    const T = fakeTimers();
+    const bus = createBus();
+    let t = 0;
+    const inst = mountModule('wallpaper', {
+      mount: host, bus,
+      state: { get: () => ({}), set: () => {}, subscribe: () => {} },
+      events: null, user: USER,
+      setTimer: T.setTimer, clearTimer: T.clearTimer, now: () => t,
+    });
+    inst.init();
+    await sleep(60);                       // the (failing, unconfigured) source lookup settles
+    const p = () => inst.impl.__probe();
+
+    check('it mounts', !!host.querySelector('.wp'));
+    check('with no folder configured it shows the built-in ambient', p().mode === 'ambient', p().mode);
+    // A wallpaper is what is shown when something else stopped. Putting "source unreachable"
+    // in front of somebody who never asked for a wallpaper turns a calm screen into a fault
+    // report — so the unconfigured/unreachable path is silent by design.
+    check('*** an unreachable source is silent — no error text anywhere ***',
+      !/error|unreachable|could not/i.test(host.textContent), JSON.stringify(host.textContent.slice(0, 120)));
+    check('...and it has drawn something', /linear-gradient/.test(p().css), p().css);
+    check('nothing in it is focusable', host.querySelectorAll('button,input,a,[tabindex]').length === 0);
+
+    check('it is running a clock', p().ticking === true);
+    const before = p().css;
+    t = 30000; T.fireDue(); await sleep(0);
+    check('...and the picture changes over time', p().css !== before);
+
+    inst.onHide();
+    check('*** hidden, it parks its clock rather than animating behind a hidden div ***',
+      p().ticking === false);
+    inst.onShow();          // the lifecycle entry added for exactly this
+    check('shown again, the clock comes back', p().ticking === true);
+
+    inst.destroy();
+    check('destroy leaves nothing behind', host.innerHTML === '');
+  }
+
+  // =====================================================================================
+  section('*** the container: raised OVER the paused segment, never instead of it ***');
+  {
+    const host = document.getElementById('host2');
+    const T = fakeTimers();
+    const stub = makeStubPlayer();
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-wallpaper');
+    const mod = await profiles.addModule(profile.id, 'director');
+    const seedYt = createState({ url: profiles.stateURL(profile.id, `${mod.id}-youtube`), user: USER });
+    await seedYt.load(); seedYt.set({ playlist: PLAYLIST }); await seedYt.flush();
+
+    const bus = createBus();
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+    const dir = mountModule('director', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      rootBus: bus, instanceId: mod.id,
+      makeState: (key) => createState({ url: profiles.stateURL(profile.id, key), user: USER }),
+      makeEvents: (key) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER }),
+      playerFactory: stub.factory,
+      speak: () => {},
+      machineIO: { now: () => atHour(12), rand: mulberry32(3), setTimer: T.setTimer, clearTimer: T.clearTimer },
+      autoFinishMs: 1000,
+    });
+    dir.init();
+    await sleep(250);
+    const d = () => dir.impl.__probe();
+
+    check('the container mounted a wallpaper', d().wallpaperMounted === true);
+    check('*** and it is DOWN while something is playing ***', d().wallpaperUp === false);
+    check('the stage is on a provider', curProv(host) !== null, String(curProv(host)));
+
+    const playing = curProv(host);
+    const loadedBefore = stub.loaded.length;
+
+    bus.publish(HELD_BEGIN, { source: 'youtube', id: 'vidA000001' });
+    await sleep(30);
+    check('*** a hold raises the wallpaper ***', d().wallpaperUp === true);
+    check('...and records who is holding', d().heldBy === 'youtube', String(d().heldBy));
+
+    // THE ASSERTION THIS WHOLE SECTION EXISTS FOR. Routed through the state machine, leaving
+    // the hold would have called the provider's `activate()` — which means ADVANCE, not
+    // resume — and the clip somebody stepped away from would be gone. See the long note in
+    // director.js.
+    check('*** the paused segment is STILL THERE — nothing was swapped out ***',
+      curProv(host) === playing, `${curProv(host)} vs ${playing}`);
+    check('*** ...and nothing advanced ***', stub.loaded.length === loadedBefore,
+      `${stub.loaded.length} vs ${loadedBefore}`);
+
+    // A second begin (setHeld is called from several places) must not double anything.
+    bus.publish(HELD_BEGIN, { source: 'youtube' });
+    await sleep(10);
+    check('a second hold is still one wallpaper', d().wallpaperUp === true && curProv(host) === playing);
+
+    bus.publish(HELD_END, { source: 'youtube' });
+    await sleep(30);
+    check('*** the hold ending lowers it ***', d().wallpaperUp === false);
+    check('...and she is back on exactly what she left',
+      curProv(host) === playing && stub.loaded.length === loadedBefore);
+    check('nothing is holding any more', d().heldBy === null);
+
+    // The invariant, stated as a test: the wallpaper is never a state only an input can
+    // leave. Nothing in this section pressed anything.
+    check('*** nothing here needed an input to leave the wallpaper ***', d().wallpaperUp === false);
+
+    dir.destroy();
+    check('destroy tears the wallpaper down with the container', dir.impl.__probe().wallpaperMounted === false);
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
