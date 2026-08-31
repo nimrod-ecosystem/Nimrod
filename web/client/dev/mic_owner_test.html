@@ -342,6 +342,89 @@ try {
     owner.destroy();
   }
 
+  // =====================================================================================
+  section('*** TWO MICROPHONES AT ONCE — the close one for WHAT she said, the far one for '
+    + 'what it SOUNDS LIKE through the device she uses daily ***');
+  {
+    // Mike's, 2026-08-31, and it is a better reason than the one I had. To make a recogniser
+    // work on the FAR microphone you need labelled far-microphone audio, and labelling it is
+    // hard precisely because it is hard to hear. The CLOSE microphone supplies the label, the
+    // far one supplies the input, and being the same utterance at the same moment aligns them
+    // for free.
+    const clock = fakeClock();
+    const mic = fakeMic();
+    const owner = createMicOwner({ open: mic.open, ...clock, enumerate: () => [] });
+
+    const close = await owner.acquire('label', PROFILES.raw, 'phone-1');
+    const far = await owner.acquire('daily', PROFILES.raw, 'webcam-1');
+    check('two DIFFERENT devices open, because the Linux limit is per-device and never was global',
+      mic.log.opens.length === 2, String(mic.log.opens.length));
+    check('...each opened as the device it was asked for',
+      mic.log.opens[0].deviceId === 'phone-1' && mic.log.opens[1].deviceId === 'webcam-1',
+      JSON.stringify(mic.log.opens));
+    check('...and they are genuinely separate streams, not the same one handed out twice',
+      close !== far);
+    check('both are reported open', owner.openDevices().sort().join(',') === 'phone-1,webcam-1',
+      JSON.stringify(owner.openDevices()));
+    check('...and "is anything listening" is a question about the ROOM, so it is still one answer',
+      owner.listening() === true);
+    check('the per-device view names who is on each',
+      owner.status().streams.length === 2
+        && owner.status().streams.every((st) => st.consumers.length === 1),
+      JSON.stringify(owner.status().streams));
+
+    // Releasing one must not take the other down with it — the whole point of a paired
+    // recording is that both run for the same stretch of time.
+    owner.release('label', true);
+    check('*** releasing one leaves the other running ***',
+      owner.openDevices().join(',') === 'webcam-1' && owner.listening() === true,
+      JSON.stringify(owner.openDevices()));
+    check('...and the one that was released really stopped',
+      mic.log.streams[0].track.stopped === true && mic.log.streams[1].track.stopped === false);
+    owner.release('daily', true);
+    check('...and the last one closes the room down', owner.listening() === false);
+    owner.destroy();
+  }
+
+  section('the same device asked for twice is still ONE open — the limit that IS real');
+  {
+    const clock = fakeClock();
+    const mic = fakeMic();
+    const owner = createMicOwner({ open: mic.open, ...clock, enumerate: () => [] });
+    const a = await owner.acquire('one', null, 'usb-1');
+    const b = await owner.acquire('two', null, 'usb-1');
+    check('*** a second getUserMedia on the SAME device is what fails on Linux, and does not '
+      + 'happen here ***', mic.log.opens.length === 1, String(mic.log.opens.length));
+    check('...both consumers share the one stream', a === b);
+    owner.release('one', true);
+    check('one of two releasing keeps it open', owner.listening() === true);
+    owner.release('two', true);
+    check('...the second closes it', owner.listening() === false);
+    owner.destroy();
+  }
+
+  section('a named device is unaffected by the fallback ladder');
+  {
+    // The ladder answers "which microphone should the ordinary consumer use". A recording that
+    // has been told to use the phone by the pillow must not be quietly moved to the webcam
+    // because the ladder changed its mind — that would silently swap the LABEL channel for the
+    // INPUT channel and make the whole corpus wrong in a way nothing would notice.
+    const clock = fakeClock();
+    const mic = fakeMic();
+    let devices = [{ kind: 'audioinput', deviceId: 'usb-1', label: 'USB' }];
+    const owner = createMicOwner({
+      open: mic.open, ...clock, enumerate: () => devices,
+      preferred: () => ['usb-1'], target: () => null,
+    });
+    await owner.choose();
+    await owner.acquire('recorder', PROFILES.raw, 'phone-1');
+    check('the named device is what was opened, not the ladder pick',
+      mic.log.opens[0].deviceId === 'phone-1', JSON.stringify(mic.log.opens[0]));
+    check('...and the ladder still reports its own separate answer',
+      owner.chosen().id === 'usb-1', JSON.stringify(owner.chosen()));
+    owner.destroy();
+  }
+
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

@@ -123,43 +123,86 @@ export function createMicOwner({
   // fell into once with `enumerate`.
   target = () => (typeof navigator !== 'undefined' ? navigator.mediaDevices : null),
 } = {}) {
-  let stream = null;
-  let opening = null;
-  let closeTimer = null;
-  let liveOpts = null;            // the constraints the live stream was actually opened with
-  const refs = new Map();         // consumer id -> what that consumer asked for
+  // ---------------------------------------------------------------------------------------
+  // *** ONE OWNER PER DEVICE — SEVERAL DEVICES ALLOWED (widened 2026-08-31). ***
+  //
+  // This file opened one microphone, full stop, for two reasons. Only one of them was ever
+  // about a limit:
+  //
+  //   * A second `getUserMedia` on the SAME device fails outright on Linux. That is real, and
+  //     it is per-device — it was never an argument against opening two DIFFERENT ones.
+  //   * Two things holding a live microphone is a privacy cost. Mike, 2026-08-31: *"Privacy is
+  //     only an issue for people that opted to use an online AI, and many of us are already
+  //     used to having an Alexa or something in the house."* He is right and I had overweighted
+  //     it: in a local-only design a second open microphone sends nothing anywhere, and
+  //     treating it as a serious cost is out of step with what people actually accept.
+  //
+  // So the correct model is one owner PER DEVICE, which keeps the constraint that is real and
+  // drops the one that was not.
+  //
+  // WHAT THIS UNLOCKS, and it is Mike's, not mine:
+  //
+  //   *"It hears what she says more clearly in the phone by the pillow to determine WHAT she
+  //    said, and it hears it farther away in the webcam mic to know what it SOUNDS LIKE through
+  //    the device she'll be using daily."*
+  //
+  // That is a paired corpus, and it solves the problem that otherwise blocks everything: to
+  // make a recogniser work on the far microphone you need labelled far-microphone audio, and
+  // labelling it is the hard part precisely BECAUSE it is hard to hear. The close microphone
+  // supplies the label, the far one supplies the input, and because it is the same utterance at
+  // the same moment the two are aligned for free. It also answers, by measurement rather than
+  // guesswork, whether the webcam microphone is good enough for her at all.
+  // ---------------------------------------------------------------------------------------
+  const devices = new Map();      // deviceId ('' = whichever the ladder chose) -> entry
+  const held = new Map();         // consumer id -> { key, want }
   let opts = { deviceId: null, ...PROFILES.raw };
 
-  const live = () => !!stream;
+  // `''` means "whatever `choose()` settled on" — the ordinary case, and the one every existing
+  // caller uses. A caller that names a device gets that device and nothing else.
+  const keyFor = (deviceId) => (deviceId == null || deviceId === '' ? '' : String(deviceId));
+
+  function entry(key) {
+    let e = devices.get(key);
+    if (!e) { e = { stream: null, opening: null, opts: null, refs: new Set(), closeTimer: null }; devices.set(key, e); }
+    return e;
+  }
+
+  const live = () => [...devices.values()].some((e) => !!e.stream);
   const announce = () => { try { onChange?.(api.status()); } catch (err) { console.error('mic onChange', err); } };
 
-  function cancelClose() { if (closeTimer != null) { clearTimer(closeTimer); closeTimer = null; } }
+  function cancelClose(e) { if (e.closeTimer != null) { clearTimer(e.closeTimer); e.closeTimer = null; } }
 
-  function closeNow() {
-    closeTimer = null;
-    if (refs.size) return;                       // somebody re-acquired inside the grace window
-    if (stream) {
-      for (const t of stream.getTracks()) { try { t.stop(); } catch { /* already stopped */ } }
+  function closeNow(key) {
+    const e = devices.get(key);
+    if (!e) return;
+    e.closeTimer = null;
+    if (e.refs.size) return;                     // somebody re-acquired inside the grace window
+    if (e.stream) {
+      for (const t of e.stream.getTracks()) { try { t.stop(); } catch { /* already stopped */ } }
     }
-    stream = null; liveOpts = null;
+    e.stream = null; e.opts = null;
+    devices.delete(key);
     announce();
   }
 
-  function ensure() {
-    if (stream) return Promise.resolve(stream);
-    if (opening) return opening;
-    const asked = { ...opts };
-    opening = Promise.resolve(open(asked)).then((s) => {
-      opening = null;
-      if (!refs.size) {                          // released while it was opening
-        for (const t of s.getTracks()) { try { t.stop(); } catch { /* noop */ } }
+  function ensure(key) {
+    const e = entry(key);
+    if (e.stream) return Promise.resolve(e.stream);
+    if (e.opening) return e.opening;
+    // A named device overrides the ladder's choice; an unnamed one takes it.
+    const asked = { ...opts, ...(key ? { deviceId: key } : {}) };
+    e.opening = Promise.resolve(open(asked)).then((st) => {
+      e.opening = null;
+      if (!e.refs.size) {                        // released while it was opening
+        for (const t of st.getTracks()) { try { t.stop(); } catch { /* noop */ } }
+        devices.delete(key);
         throw new Error('microphone released during open');
       }
-      stream = s; liveOpts = asked;
+      e.stream = st; e.opts = asked;
       announce();
-      return s;
-    }).catch((err) => { opening = null; throw err; });
-    return opening;
+      return st;
+    }).catch((err) => { e.opening = null; throw err; });
+    return e.opening;
   }
 
   let watcher = null;
@@ -215,47 +258,69 @@ export function createMicOwner({
      *  way; `api.status().mismatch` says whether it is the audio this consumer asked for, so a
      *  recogniser handed a noise-suppressed stream can SAY SO rather than quietly doing badly.
      */
-    acquire(id, want = null) {
+    acquire(id, want = null, deviceId = null) {
       if (!id) return Promise.reject(new Error('mic acquire needs a consumer id'));
-      if (want && !live() && !opening) api.configure(want);
-      refs.set(id, want ? { ...want } : null);
-      cancelClose();
+      const key = keyFor(deviceId);
+      const e = entry(key);
+      // Constraints are decided by whoever opens a device first; a later consumer of the SAME
+      // device gets what is already running, and is told about it via `status().mismatch`.
+      if (want && !e.stream && !e.opening && !key) api.configure(want);
+      e.refs.add(id);
+      held.set(id, { key, want: want ? { ...want } : null });
+      cancelClose(e);
       announce();
-      return ensure().catch((err) => {
-        // Drop the ref before re-throwing. A leaked ref pins the microphone on, which on this
-        // device is not merely wasteful.
-        refs.delete(id);
+      return ensure(key).catch((err) => {
+        // Drop the ref before re-throwing. A leaked ref pins the microphone on.
+        e.refs.delete(id);
+        held.delete(id);
         announce();
         throw err;
       });
     },
 
     release(id, immediate = false) {
-      if (!refs.delete(id)) return;
+      const h = held.get(id);
+      if (!h) return;
+      held.delete(id);
+      const e = devices.get(h.key);
+      if (!e) return;
+      e.refs.delete(id);
       announce();
-      if (refs.size) return;
-      cancelClose();
-      // A grace window, so swapping one consumer for another does not blink the device — and,
-      // more importantly here, does not flash the browser's recording indicator off and on in
-      // a way that makes it impossible to tell what is happening.
-      if (immediate || !graceMs) closeNow();
-      else closeTimer = setTimer(closeNow, graceMs);
+      if (e.refs.size) return;
+      cancelClose(e);
+      // A grace window, so swapping one consumer for another does not blink the device — and
+      // does not flash the browser's recording indicator off and on in a way that makes it
+      // impossible to tell what is actually happening.
+      if (immediate || !graceMs) closeNow(h.key);
+      else e.closeTimer = setTimer(() => closeNow(h.key), graceMs);
     },
 
-    /** *** THE QUESTION A ROOM DESERVES AN ANSWER TO. *** Computed, never assumed. */
+    /** *** THE QUESTION A ROOM DESERVES AN ANSWER TO. *** Computed, never assumed.
+     *  True if ANY device is open — because "is anything listening" is a question about the
+     *  room, not about one device. */
     listening: () => live(),
 
+    /** Which devices are open right now. `''` is the one the ladder chose. */
+    openDevices: () => [...devices.entries()].filter(([, e]) => e.stream).map(([k]) => k),
+
     status() {
-      const consumers = [...refs.keys()];
+      const consumers = [...held.keys()];
       const worst = [];
-      for (const [id, want] of refs) {
-        const bad = mismatch(want, liveOpts);
-        if (bad.length) worst.push({ id, wanted: want, missing: bad });
+      for (const [id, h] of held) {
+        const e = devices.get(h.key);
+        const bad = mismatch(h.want, e?.opts);
+        if (bad.length) worst.push({ id, wanted: h.want, missing: bad });
       }
+      // `opened` stays the SHAPE it always was — the constraints of the ladder-chosen device —
+      // so nothing that read it before has to change. `streams` is the per-device view.
+      const chosenEntry = devices.get('');
       return {
         listening: live(),
         consumers,
-        opened: liveOpts ? { ...liveOpts } : null,
+        opened: chosenEntry?.opts ? { ...chosenEntry.opts } : null,
+        streams: [...devices.entries()]
+          .filter(([, e]) => e.stream)
+          .map(([k, e]) => ({ device: k, opts: { ...e.opts }, consumers: [...e.refs] })),
         mismatch: worst,
       };
     },
@@ -282,7 +347,11 @@ export function createMicOwner({
       return list.length > 0 && list.every((d) => !!d.label);
     },
 
-    destroy() { cancelClose(); refs.clear(); closeNow(); watcher?.stop?.(); watcher = null; },
+    destroy() {
+      for (const [key, e] of [...devices.entries()]) { cancelClose(e); e.refs.clear(); closeNow(key); }
+      held.clear();
+      watcher?.stop?.(); watcher = null;
+    },
   };
 
   return api;
