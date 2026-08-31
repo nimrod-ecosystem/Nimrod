@@ -70,6 +70,7 @@
 import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
+import { triviaPool } from '../bank.js';
 
 export const GAME = 'trivia';
 
@@ -79,14 +80,22 @@ export const DEFAULTS = {
   tryingPoints: 1,        // for reading the answer after getting it wrong — the correction is
                           // the point of a learning game, so the correction is what pays
   choices: 4,
+  // *** DRAW ON THE WORD BANK TOO (Mike, 2026-08-31: "I could see word forge and trivia drawing
+  // from the same pool for a lot of people"). *** A vocabulary row already contains everything a
+  // multiple-choice question needs, so somebody who wrote sixty words does not have to write
+  // sixty questions as well. Written questions still come first — see `bank.js`.
+  includeWords: true,
   // RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON. A game that quietly opened a microphone
   // because it might be useful later would be exactly the thing this project does not do.
   record: false,
 };
 
 // `question | answer | wrong | wrong | wrong | topic?`
-// Exported and pure, so a bank can be checked without mounting anything — and so the settings
-// screen and the game cannot disagree about what a line means.
+//
+// *** SUPERSEDED BY `bank.js` AS THE READER, AND KEPT AS THE FORMAT'S DEFINITION. *** The shared
+// bank now parses both shapes out of one document, because Word Forge and Trivia turned out to
+// want the same content. This stays exported because it is the smallest possible statement of
+// what a question row IS, and because anything already calling it keeps working.
 export function parseBank(text) {
   return String(text || '').split('\n').map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#') && l.includes('|'))
@@ -302,8 +311,12 @@ registerModule(
 
         state?.subscribe?.((s) => {
           cfg = { ...DEFAULTS, ...(s || {}) };
+          // ONE DOCUMENT, TWO GAMES. `bankText` is the shared bank — Word Forge reads the
+          // word rows out of it, this reads the question rows AND may derive questions from the
+          // words. An array form is still accepted for anything generating content.
           const next = Array.isArray(cfg.bank) ? cfg.bank
-                     : parseBank(cfg.bankText != null ? cfg.bankText : SEED);
+                     : triviaPool(cfg.bankText != null ? cfg.bankText : SEED,
+                                  { includeWords: cfg.includeWords !== false, choices: cfg.choices });
           const changed = next.length !== bank.length;
           bank = next;
           if (!deck.length || changed) newRound();
@@ -314,7 +327,7 @@ registerModule(
         // mine, silently, every time the module mounted. The seed is for a profile that has
         // never had a bank, which is `bankText` being ABSENT, not `bankText` parsing to nothing.
         // Caught by a test that set the bank to a single comment line.
-        if (!state?.subscribe) { bank = parseBank(SEED); newRound(); }
+        if (!state?.subscribe) { bank = triviaPool(SEED); newRound(); }
       },
       onResize() {},
       onHide() { state?.flush?.(); },

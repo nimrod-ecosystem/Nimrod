@@ -658,3 +658,32 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-said { margin: 14px 0 8px; font-size: 1.05rem; }
 .tv-next { min-height: 48px; padding: 10px 20px; font-size: 1rem; }
 .tv-empty { color: var(--muted, #5d7064); max-width: 60ch; }
+
+/* ---- THE BANK EDITOR (Questions tab) ----
+ * A textarea, deliberately, not a row editor — see bank_panel.js. A syllabus arrives from
+ * somewhere else and is edited in bulk, and paste is the whole workflow.
+ */
+.bk h3 { margin: 0 0 4px; font-size: 1.05rem; }
+.bk .bk-lede { margin: 0 0 10px; color: var(--ink-soft, #3c5346); max-width: 68ch; }
+.bk-help { margin: 0 0 12px; max-width: 68ch; }
+.bk-help summary { cursor: pointer; font-weight: 600; }
+.bk-help pre { background: var(--cream-soft, #FBF9E9); border: 1px solid var(--line, #e4e0c2);
+  border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-size: .85rem; }
+.bk-text {
+  width: 100%; max-width: 900px; min-height: 300px;
+  font: 14px/1.55 ui-monospace, Menlo, Consolas, monospace;
+  padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line, #e4e0c2);
+  /* NO SPELLCHECK SQUIGGLES over a vocabulary list — every unusual word is the point, and a
+     screen full of red underlines reads as a screen full of mistakes. */
+  background: #fff; color: var(--ink, #0A3323); resize: vertical;
+}
+.bk-sum { margin: 8px 0 4px; font-weight: 650; max-width: 68ch; }
+.bk-sum[data-bad="1"] { color: #a4243b; }
+.bk-problems { max-width: 900px; }
+/* An error names a line and shows it, so it can be found in a long document. */
+.bk-prob { padding: 6px 10px; margin-bottom: 4px; border-radius: 8px;
+  background: #fbeff1; border: 1px solid rgba(164,36,59,.25); font-size: .9rem; }
+.bk-prob.bk-note { background: var(--cream-soft, #FBF9E9); border-color: var(--line, #e4e0c2); }
+.bk-line { display: block; font: 13px ui-monospace, Menlo, Consolas, monospace;
+  color: var(--muted, #5d7064); margin-top: 2px; }
+.bk-derived { margin: 10px 0; color: var(--ink-soft, #3c5346); max-width: 68ch; }
