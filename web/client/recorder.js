@@ -183,7 +183,16 @@ export function buildManifest({
     })),
     // WHAT WAS ASKED FOR, AND WHEN. The labels come from whatever ran the session, never from
     // listening to the audio — see the header on why there is no voice activity detection here.
-    marks: marks.map((m) => ({ atMs: Number(m.atMs) || 0, label: String(m.label || '') })),
+    // Extra fields a session attached are carried through — see `mark` for the one thing they
+    // may never contain.
+    marks: marks.map((m) => {
+      const o = { atMs: Number(m.atMs) || 0, label: String(m.label || '') };
+      for (const [k, v] of Object.entries(m || {})) {
+        if (k === 'atMs' || k === 'label') continue;
+        if (v == null || ['string', 'number', 'boolean'].includes(typeof v)) o[k] = v;
+      }
+      return o;
+    }),
     // WHEN THIS SHOULD BE GONE, as an absolute time rather than a duration — because a duration
     // is meaningless to anything reading the folder later without also knowing the write time,
     // and because an absolute date is something a person can read and act on themselves.
@@ -258,9 +267,26 @@ export function createPairedRecorder({
   // WHAT WAS ASKED FOR, AT THIS MOMENT. Called by whatever is running the session — a game that
   // has just asked a question knows the answer it is expecting, which is a far better label than
   // anything that could be inferred from the audio.
-  function mark(label) {
+  //
+  // *** AND WHAT A MARK MAY AND MAY NOT CLAIM. ***
+  // `extra` carries whatever the session knows — for a trivia game, the question, which option
+  // was chosen, whether it was right. It must NOT carry an assertion about what the person
+  // SAID. A game knows what it asked and what button was pressed; it does not know whether
+  // anybody spoke, or what words came out if they did. Writing "said: paris" into a corpus
+  // because somebody pressed the Paris button would be a fabricated label, and a fabricated
+  // label in training data is worse than no label — it is confidently wrong, forever, in a file
+  // nobody will re-check.
+  function mark(label, extra = null) {
     if (!running) return null;
     const m = { atMs: now() - startedAt, label: String(label || '') };
+    if (extra && typeof extra === 'object') {
+      for (const [k, v] of Object.entries(extra)) {
+        if (k === 'atMs' || k === 'label') continue;
+        // Primitives only. A mark is a fact in a file that outlives this program, so it holds
+        // things that survive JSON without surprises.
+        if (v == null || ['string', 'number', 'boolean'].includes(typeof v)) m[k] = v;
+      }
+    }
     marks.push(m);
     return { ...m };
   }

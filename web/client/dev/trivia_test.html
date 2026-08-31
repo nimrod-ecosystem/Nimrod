@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>trivia — a quiz over a bank somebody wrote — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+  #host{position:absolute;left:-9999px;width:600px}
+</style>
+</head>
+<body>
+<h1>trivia</h1>
+
+<div class="warn">
+  The score is about knowing things. It is never about how clearly somebody speaks.
+</div>
+
+<p>This started as a speech-therapy game — say the word, be told how well you said it — and Mike
+killed it: put the score on the trivia instead, and you still know what word you were expecting.
+Better on both axes. <b>Ethically</b>, getting a trivia answer wrong is ordinary; being told your
+pronunciation was unclear is a verdict about your body on a screen you cannot walk away from.
+<b>Technically</b>, four choices is a four-way classification rather than open recognition, which
+is far easier and far more robust to atypical speech.</p>
+
+<p>There is no recogniser yet and this does not pretend otherwise. What it does is <b>mark the
+audio with what was asked and what was pressed</b> — never with a claim about what was said
+aloud.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { parseBank, buildDeck, makeQuestion, shuffle, DEFAULTS } from '../modules/trivia.js';
+import '../modules/trivia.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A deterministic "random", so a deck is an assertion rather than a probability.
+function seq(...vals) { let i = 0; return () => vals[i++ % vals.length]; }
+
+const BANK_TEXT = `# a syllabus somebody wrote
+What is the capital of France? | Paris | London | Rome | Madrid
+Which planet is closest to the Sun? | Mercury | Venus | Mars | Earth
+How many legs does a spider have? | Eight | Six | Ten | Four`;
+
+function rig({ bankText = BANK_TEXT, recorder = null, rand = () => 0 } = {}) {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const bus = createBus();
+  const events = [];
+  let stored = { bankText };
+  let sub = null;
+  const inst = mountModule('trivia', {
+    mount: host, bus, rand, recorder,
+    state: { get: () => stored, set: () => {}, flush: () => {},
+             subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } },
+    makeEvents: (name) => ({ name, append: async (k, d) => { events.push([k, d, name]); },
+                             load: async () => {}, flush: async () => {},
+                             get: () => ({ events: [] }), subscribe: () => () => {},
+                             startPolling() {}, destroy() {} }),
+  });
+  inst.init();
+  return { inst, host, bus, events, probe: () => inst.impl.__probe() };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the bank is somebody else’s — the same shape as Word Forge ***');
+  {
+    const bank = parseBank(BANK_TEXT);
+    check('it reads the documented line format', bank.length === 3, JSON.stringify(bank.length));
+    check('...question and answer', bank[0].question === 'What is the capital of France?'
+      && bank[0].answer === 'Paris', JSON.stringify(bank[0]));
+    check('...and the wrong answers somebody chose deliberately',
+      bank[0].wrong.join(',') === 'London,Rome,Madrid', JSON.stringify(bank[0].wrong));
+    // A syllabus is a document somebody maintains, so it has to be annotatable.
+    check('# lines are comments, so a bank can be organised', !bank.some((b) => b.question.startsWith('#')));
+    check('blank lines and junk are skipped, not turned into questions',
+      parseBank(`
+
+   
+no pipe here
+`).length === 0);
+    check('a two-column line still works — an answer with no distractors is a valid row',
+      parseBank('Q | A').length === 1);
+  }
+
+  section('the deck');
+  {
+    const bank = parseBank(BANK_TEXT);
+    check('a round is capped at roundLength', buildDeck(bank, { roundLength: 2, rand: () => 0 }).length === 2);
+    check('...and never longer than the bank', buildDeck(bank, { roundLength: 50, rand: () => 0 }).length === 3);
+    check('an empty bank is an empty deck, not a crash', buildDeck([], {}).length === 0);
+    check('rows with no answer are dropped rather than asked',
+      buildDeck([{ question: 'q' }, { question: 'q2', answer: 'a' }], { rand: () => 0 }).length === 1);
+  }
+
+  section('*** the options — and the one ratified absolute in the project ***');
+  {
+    const bank = parseBank(BANK_TEXT);
+    const q = makeQuestion(bank[0], bank, { choices: 4, rand: () => 0 });
+    check('there are four of them', q.options.length === 4, JSON.stringify(q.options));
+    check('the right answer is among them', q.options.includes('Paris'));
+    check('...and the module knows which one it is', q.options[q.correctIndex] === 'Paris');
+    // The bank's own wrong answers are better than anything drawn at random — somebody writing
+    // a syllabus chooses distractors that teach.
+    check('*** the distractors are the ones the AUTHOR wrote, not ones picked at random ***',
+      ['London', 'Rome', 'Madrid'].every((w) => q.options.includes(w)), JSON.stringify(q.options));
+    check('no option appears twice', new Set(q.options).size === q.options.length);
+
+    // PRINCIPLES.md §2, the only ratified absolute: if a module probes judgment, being wrong
+    // must not be degrading. NOTHING here generates an option — every one was written by a
+    // person for this bank — which keeps that true by construction rather than by filtering.
+    const authored = new Set(bank.flatMap((b) => [b.answer, ...b.wrong]));
+    check('*** every option shown was written by a person — nothing is generated ***',
+      q.options.every((o) => authored.has(o)), JSON.stringify(q.options));
+
+    // A row with no distractors has to borrow, or there is no question to ask.
+    const thin = [{ question: 'q', answer: 'a', wrong: [] }, { question: 'q2', answer: 'b', wrong: [] },
+                  { question: 'q3', answer: 'c', wrong: [] }, { question: 'q4', answer: 'd', wrong: [] }];
+    const q2 = makeQuestion(thin[0], thin, { choices: 4, rand: () => 0 });
+    check('a row with no wrong answers borrows other answers from the bank',
+      q2.options.length === 4 && q2.options.includes('a'), JSON.stringify(q2.options));
+    check('...and never borrows its own answer twice', new Set(q2.options).size === 4);
+  }
+
+  // =====================================================================================
+  section('*** one switch, walked in one direction, WRAPPING ***');
+  {
+    const r = rig();
+    check('a question is up', !!r.probe().question, JSON.stringify(r.probe().question));
+    check('the highlight starts at the first option', r.probe().highlight === 0);
+    r.bus.publish('trivia/next'); r.bus.publish('trivia/next');
+    check('next walks it along', r.probe().highlight === 2, String(r.probe().highlight));
+    r.bus.publish('trivia/next'); r.bus.publish('trivia/next');
+    // A highlight that stopped at the last option would strand somebody there — the rule from
+    // module-input-spec, and the reason a quiz is reachable with one button at all.
+    check('*** ...and WRAPS rather than stopping at the end ***', r.probe().highlight === 0,
+      String(r.probe().highlight));
+    r.bus.publish('trivia/prev');
+    check('and back the other way for anybody who has two', r.probe().highlight === 3);
+    r.inst.destroy();
+  }
+
+  section('answering');
+  {
+    const r = rig();
+    const q = r.probe().question;
+    r.bus.publish('trivia/select');          // choose whatever is highlighted (index 0)
+    const p = r.probe();
+    check('it is answered', p.answered === 0, String(p.answered));
+    check('...and the right answer is shown either way',
+      /answer was|Correct/.test(r.host.textContent), r.host.textContent.slice(0, 120));
+    // *** THE ANSWER CANNOT BE TAKEN BACK. *** A second press moves ON rather than changing
+    // what was recorded — which matters because the trial and the corpus mark are already
+    // written, and letting somebody silently overwrite an answer would make both of them lie.
+    const before = r.probe().at;
+    r.bus.publish('trivia/select');
+    check('a second press advances rather than changing the answer already recorded',
+      r.probe().at !== before || r.probe().answered === null,
+      JSON.stringify({ before, after: r.probe().at, answered: r.probe().answered }));
+    r.inst.destroy();
+  }
+  {
+    const r = rig();
+    const q = r.probe().question;
+    // Walk to the correct one and take it, so the correct path is exercised too.
+    while (r.probe().highlight !== q.correctIndex) r.bus.publish('trivia/next');
+    r.bus.publish('trivia/select');
+    check('getting it right says so', /Correct/.test(r.host.textContent), r.host.textContent.slice(0, 80));
+    check('...and it advances on the next press',
+      (() => { const before = r.probe().at; r.bus.publish('trivia/select'); return r.probe().at !== before; })());
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the marks — what a corpus may and may not be told ***');
+  {
+    const marks = [];
+    const recorder = { mark: (label, extra) => { marks.push({ label, ...extra }); return {}; } };
+    const r = rig({ recorder });
+
+    const asked = marks.find((m) => m.event === 'asked');
+    check('the question being ASKED is marked, because the audio that matters is what happens '
+      + 'between the question and the answer', !!asked, JSON.stringify(marks));
+    check('...labelled with the expected answer', asked.label === r.probe().question.answer,
+      JSON.stringify(asked));
+
+    const q = r.probe().question;
+    r.bus.publish('trivia/select');
+    const ans = marks.find((m) => m.event === 'answered');
+    check('answering is marked too', !!ans, JSON.stringify(marks));
+    check('...with what was ASKED', ans.question === q.question, JSON.stringify(ans));
+    check('...and what was PRESSED', ans.chose === q.options[0], JSON.stringify(ans));
+    check('...and whether it was right', typeof ans.correct === 'boolean');
+
+    // *** THE THING THAT MUST NOT BE THERE. *** A game knows what it asked and what button was
+    // pressed. It does not know whether anybody spoke, or what words came out if they did.
+    // Writing "said: Paris" because somebody pressed the Paris button would be a fabricated
+    // label — confidently wrong, forever, in a file nobody re-checks.
+    check('*** no mark claims what anybody SAID OUT LOUD ***',
+      marks.every((m) => !('said' in m) && !('spoken' in m) && !('transcript' in m)),
+      JSON.stringify(marks));
+    r.inst.destroy();
+  }
+
+  section('no recorder is the ordinary case, and nothing breaks');
+  {
+    // Recording is off unless somebody turned it on. A game that quietly opened a microphone
+    // because it might be useful later would be exactly what this project does not do.
+    const r = rig({ recorder: null });
+    check('recording is off by default', DEFAULTS.record === false);
+    r.bus.publish('trivia/select');
+    check('...and the game plays perfectly well without one', r.probe().answered === 0);
+    r.inst.destroy();
+  }
+
+  section('an empty bank says what to do rather than showing nothing');
+  {
+    const r = rig({ bankText: '# nothing here yet' });
+    check('no question is shown', r.probe().question === null);
+    check('*** and it explains the format instead of being blank ***',
+      /question \| answer/.test(r.host.textContent), r.host.textContent.slice(0, 140));
+    r.inst.destroy();
+  }
+
+  section('it writes to the measurement stream, like Word Forge');
+  {
+    const r = rig();
+    const q = r.probe().question;
+    r.bus.publish('trivia/select');
+    await sleep(20);
+    // `concept` is the ANSWER, so "which things does she know" is a question the existing
+    // progress dashboard can already answer with no wiring.
+    const trial = r.events.find(([k]) => k === 'trial');
+    check('a trial was recorded', !!trial, JSON.stringify(r.events.map(([k]) => k)));
+    if (trial) {
+      check('...keyed on the ANSWER as the concept', trial[1].concept === q.answer, JSON.stringify(trial[1]));
+      check('...and says whether it was right', typeof trial[1].correct === 'boolean');
+    }
+    r.inst.destroy();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+section('not covered here');
+check('NOTE: there is no recogniser, so nothing here tests answering by voice. The rule for '
+  + 'when one arrives is written in the module header: a recognition failure is never scored '
+  + 'as a wrong answer', true);
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

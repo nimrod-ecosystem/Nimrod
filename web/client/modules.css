@@ -633,3 +633,28 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .rp-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 7px 10px; border: 1px solid var(--line, #e4e0c2); border-radius: 8px;
   margin-bottom: 5px; background: #fff; max-width: 560px; }
+
+/* ---- TRIVIA ----
+ * Four choices, big, with a walking highlight — because the whole game has to be answerable
+ * with one button. See modules/trivia.js.
+ */
+.tv { padding: 14px 16px; }
+.tv-count { margin: 0 0 4px; font-size: .82rem; color: var(--muted, #5d7064); }
+.tv-q { margin: 0 0 14px; font-size: 1.35rem; line-height: 1.25; }
+.tv-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tv-opt {
+  width: 100%; min-height: 58px; font-size: 1.1rem; text-align: left;
+  padding: 12px 16px; border-radius: 12px; border: 2px solid var(--line, #e4e0c2);
+  background: #fff; color: var(--ink, #0A3323); cursor: pointer;
+}
+/* THE HIGHLIGHT IS A BORDER AND AN ARROW, never colour alone — module-input-spec, and it is
+   also what makes it visible to somebody scanning from across a room. */
+.tv-opt[data-on="1"] { border-color: var(--midnight, #105666); box-shadow: 0 0 0 3px rgba(16,86,102,.18); }
+.tv-opt[data-on="1"]::before { content: "\25B8\00a0"; }
+.tv-opt[data-right="1"] { border-color: #2c6e49; background: #eef6f0; }
+.tv-opt[data-right="1"]::after { content: "\00a0\2713"; color: #2c6e49; font-weight: 700; }
+.tv-opt[data-wrong="1"] { border-color: #a4243b; background: #fbeff1; }
+.tv-opt:disabled { cursor: default; }
+.tv-said { margin: 14px 0 8px; font-size: 1.05rem; }
+.tv-next { min-height: 48px; padding: 10px 20px; font-size: 1rem; }
+.tv-empty { color: var(--muted, #5d7064); max-width: 60ch; }

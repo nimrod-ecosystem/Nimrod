@@ -207,6 +207,18 @@ export const CATALOG = [
       + 'possible yet but hearing language still matters.',
   },
   {
+    type: 'trivia',
+    group: 'practice',
+    use: 'answer',
+    lead: 'A quiz built from questions you write yourself.',
+    needs: 'Nothing. Add your own questions in settings.',
+    why: 'The score is about knowing things, never about how clearly somebody speaks — so it '
+      + 'can be played out loud by somebody whose speech is hard to understand without ever '
+      + 'being marked down for it. Four choices and one button, so a switch is enough.',
+    note: 'It can also record the room while it is played, which is how a computer learns to '
+      + 'understand one particular person later. That is off unless you turn it on.',
+  },
+  {
     type: 'wordforge',
     group: 'practice',
     use: 'answer',
