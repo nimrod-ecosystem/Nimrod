@@ -610,3 +610,26 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .dv-now[data-state="none"]::before { content: "\2717\00a0"; color: #a4243b; }
 .dv-now[data-state="none"] { color: #a4243b; }
 .dv-empty { color: var(--muted, #5d7064); }
+
+/* ---- RECORD A SESSION (Devices tab, under the microphone chooser) ---- */
+.rp h3 { margin: 20px 0 4px; font-size: 1rem; }
+.rp .rp-lede { margin: 0 0 10px; color: var(--ink-soft, #3c5346); max-width: 62ch; }
+.rp-folder, .rp-roles { margin: 6px 0; max-width: 62ch; }
+.rp-roles { font-weight: 600; }
+.rp-go { display: flex; align-items: center; gap: 14px; margin: 14px 0 8px; }
+/* Big, and unmistakable when it is live. This is pressed by somebody holding a phone in the
+   other hand, and "am I recording?" should never need a second look. */
+.rp-rec { min-width: 130px; min-height: 52px; font-size: 1.05rem; font-weight: 700; }
+.rp-rec[data-on="1"] { background: #a4243b; color: #fff; }
+.rp-rec[data-on="1"]::before { content: "\25CF\00a0"; }
+.rp-rec:disabled { opacity: .5; }
+.rp-elapsed { font: 700 1.2rem ui-monospace, Menlo, Consolas, monospace; }
+.rp-mark { display: flex; gap: 8px; margin: 8px 0; max-width: 560px; }
+.rp-mark input { flex: 1 1 auto; min-height: 40px; }
+.rp-mark button { min-height: 40px; }
+.rp-marks, .rp-said { margin: 6px 0; max-width: 62ch; }
+.rp-said { font-weight: 650; }
+.rp-note { margin: 12px 0 6px; font-size: .87rem; color: var(--muted, #5d7064); }
+.rp-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 7px 10px; border: 1px solid var(--line, #e4e0c2); border-radius: 8px;
+  margin-bottom: 5px; background: #fff; max-width: 560px; }

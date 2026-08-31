@@ -31,6 +31,16 @@
 //   3. **Say which files are over their date but still here**, so somebody can see the gap
 //      rather than assume there is none.
 //
+// *** AND MIKE'S RULING, 2026-08-31: "if deleting the files is on the user, that's fine for
+// now." *** So that is the shape, and it settles what this file is FOR: the expiry date and the
+// sweep are a CONVENIENCE, not a promise. Nothing nags, nothing counts down on screen, and the
+// honest sentence is "these are your files, in your folder, and there is a Delete button".
+//
+// Which is also why nothing here escalates. A version of this that started warning somebody
+// weekly about recordings they had chosen to keep would be the product deciding it knows better
+// than the person whose folder it is — and that is exactly the move `PRINCIPLES.md` §1.2 is
+// about. The information is available; the pressure is not applied.
+//
 // ---------------------------------------------------------------------------------------
 // A SESSION IS A FOLDER, AND IT IS DELETED WHOLE
 // ---------------------------------------------------------------------------------------

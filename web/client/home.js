@@ -146,6 +146,11 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     const owner = createMicOwner({
       preferred: () => (state.get() || {}).microphonePreferred || [],
     });
+    // RECORDING SITS DIRECTLY BENEATH THE CHOOSER, and that placement is the point: the first
+    // thing anybody should do after picking microphones is record ten seconds and find out
+    // whether it worked. A setup screen that cannot be tested from itself sends people away to
+    // discover the problem somewhere less forgiving.
+    const recHost = document.createElement('div');
     const panel = mountDevicePanel(host, {
       owner,
       settings: () => state.get() || {},
@@ -157,9 +162,27 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       },
     });
     await panel.refresh();
+
+    host.append(recHost);
+    const [{ mountRecordPanel }, { createPairedRecorder, webAudioCapture }, fsSink] =
+      await Promise.all([
+        import('./record_panel.js'), import('./recorder.js'), import('./fs_sink.js'),
+      ]);
+    const record = mountRecordPanel(recHost, {
+      micOwner: owner,
+      makeRecorder: ({ producer, keepDays }) => createPairedRecorder({
+        capture: webAudioCapture({ micOwner: owner }), producer, keepDays,
+      }),
+      fs: fsSink,
+      settings: () => state.get() || {},
+      save: async (patch) => { state.set(patch); await state.flush?.(); },
+    });
+    await record.refresh();
+
     return {
-      async refresh() { await panel.refresh(); return this; },
+      async refresh() { await panel.refresh(); await record.refresh(); return this; },
       destroy() {
+        try { record.destroy(); } catch (e) { console.error(e); }
         try { panel.destroy(); } catch (e) { console.error(e); }
         try { owner.destroy(); } catch (e) { console.error(e); }
         try { state.destroy?.(); } catch (e) { console.error(e); }
