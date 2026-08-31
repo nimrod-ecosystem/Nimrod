@@ -9,8 +9,8 @@
 //   event (append-only) ; the picker's stats DERIVE from those.
 //
 // The bytes come straight from the user's media agent (BYO storage) — the platform
-// server never sees them. Christine's first clips are Oscar's messages in
-// `…/Voice messages/Oscar`.
+// server never sees them. The first clips on the bedside screen are recorded messages from
+// one family member, read from a folder like `…/Voice messages/personal`.
 //
 // DIRECTOR-READY (like youtube): a clip ENDING is a `segment/done` on the bus — the
 // uniform seam the content director advances on. Standalone it also auto-advances to
@@ -60,6 +60,7 @@ import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
 import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
+import { createHeldSignal } from '../held.js';
 
 // `stallMs` matches youtube's for the same reason: long enough that a big clip loading off
 // a media agent over facility wifi is not cut off, short enough that nobody sits in front
@@ -138,6 +139,9 @@ registerModule(
     let destroyed = false;
     const activity = ctx.activity || pageActivity();
     const holdNotifyMs = () => Math.max(0, Number(cfg.heldNotifyMs) || 0);
+    // THE HELD SIGNAL — the same one youtube publishes, so a container reacts to a hold
+    // without knowing which provider is on the stage. See `held.js`.
+    const heldSignal = createHeldSignal(bus, 'personal');
     let mutedFallback = false;      // this clip is playing without sound, and says so
     let active = true;              // false while a director has another provider on screen
     let lastSourceRef = null;
@@ -176,6 +180,10 @@ registerModule(
     function setHeld(on) {
       const el = mount.querySelector('[data-held]');
       if (el) el.hidden = !on;
+      // ...and on the bus. `clearStall()` calls this on every ordinary path, which is exactly
+      // why `held.js` refuses to publish an end for a hold that never began.
+      if (on) heldSignal.begin({ id: currentId, afterMs: holdNotifyMs() });
+      else heldSignal.end();
     }
 
     // ------------------------------------------------------------------------------------
@@ -522,6 +530,8 @@ registerModule(
         destroyed = true;
         clearTimer(pollTimer); pollTimer = null;
         active = false; clearStall(); clearVideoEnd(); currentVideo = null;
+        // Destroyed while held: publish the end on the way out — `held.js` rule 3.
+        heldSignal.release();
       },
     };
   },

@@ -103,11 +103,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('a fresh account sees an empty state, not a blank page', !!q('.h-empty'), txt('.h-list'));
 
     // create
-    q('[data-name]').value = 'Oscar';
+    // Two screens are made below, and they must have DIFFERENT names — the isolation check
+    // finds the second one by its heading.
+    q('[data-name]').value = 'Living room';
     q('[data-new]').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     await sleep(700);
     check('creating a screen adds a card', cards().length === 1, String(cards().length));
-    check('the card is named what you typed', txt('.h-card h2') === 'Oscar', txt('.h-card h2'));
+    check('the card is named what you typed', txt('.h-card h2') === 'Living room', txt('.h-card h2'));
     check('an EMPTY screen cannot be opened', q('[data-open]').disabled);
     check('...and it says why', /at least one module/.test(txt('.h-add') || ''), txt('.h-add'));
 

@@ -67,18 +67,18 @@ def main():
     # --- the personal-video agent (:8771) ----------------------------------------------
     # personal_test asserts EXACTLY TWO video clips and that non-video files are skipped, so
     # the .amr and the extensionless file are part of the fixture, not clutter. The agent's
-    # root is the Oscar folder itself: the suite's URL check is /files/Oscar..., which the
-    # file names satisfy on their own.
-    oscar = os.path.join(BASE, 'oscar')
-    write(os.path.join(oscar, 'Oscar Counting To 100.mp4'), MP4)
-    write(os.path.join(oscar, 'Oscar singing ABC.mp4'), MP4)
-    write(os.path.join(oscar, 'Oscar mumbling.amr'), b'#!AMR\n')
-    write(os.path.join(oscar, 'notes'), b'not media at all')
+    # root is the personal-messages folder itself: the suite's URL check is /files/message-...,
+    # which the file names satisfy on their own.
+    personal = os.path.join(BASE, 'personal')
+    write(os.path.join(personal, 'message-01.mp4'), MP4)
+    write(os.path.join(personal, 'message-02.mp4'), MP4)
+    write(os.path.join(personal, 'message-03.amr'), b'#!AMR\n')
+    write(os.path.join(personal, 'notes'), b'not media at all')
 
     print('fixtures written under %s\n' % BASE)
     print('Now run BOTH agents (each in its own terminal), then open the suites:\n')
     print('  python agent.py --root "%s" --port 8770 --origin http://localhost:8000' % photos)
-    print('  python agent.py --root "%s" --port 8771 --origin http://localhost:8000' % oscar)
+    print('  python agent.py --root "%s" --port 8771 --origin http://localhost:8000' % personal)
     print('\n  http://localhost:8000/dev/photos_test.html')
     print('  http://localhost:8000/dev/personal_test.html')
     print('  http://localhost:8000/dev/media_sources_test.html')

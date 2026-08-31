@@ -393,7 +393,7 @@ export async function mountScreens(root, {
       </div>
 
       <form class="h-new" data-new>
-        <input type="text" data-name placeholder="Name a new screen (e.g. Bedside, Oscar)" aria-label="new screen name" required>
+        <input type="text" data-name placeholder="Name a new screen (e.g. Bedside, Living room)" aria-label="new screen name" required>
         <button type="submit" class="h-btn h-primary">Create</button>
       </form>
 

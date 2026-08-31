@@ -77,7 +77,7 @@ const seeded = (seed) => { let x = seed >>> 0; return () => { x = (x * 1664525 +
     section('a board of your own, outside any screen');
     const profiles = createProfilesClient({ user: USER });
     const mike = await profiles.create('Mike');
-    const oscar = await profiles.create('Oscar');
+    const profileB = await profiles.create('Profile B');
 
     const makeState = (key, opts, forPid) =>
       createState({ url: profiles.stateURL(forPid || String(key).split(':')[1], key), user: USER, ...opts });
@@ -110,33 +110,33 @@ const seeded = (seed) => { let x = seed >>> 0; return () => { x = (x * 1664525 +
     check('a cigarette costs real points', bal() === 20 - 60, String(bal()));
 
     // isolation: the other profile's board is untouched
-    host.querySelector(`[data-who-id="${oscar.id}"]`).click();
+    host.querySelector(`[data-who-id="${profileB.id}"]`).click();
     await sleep(800);
-    check('switching profile switches boards', board.current().id === oscar.id);
+    check('switching profile switches boards', board.current().id === profileB.id);
     check('...and the other person’s points are not on it', bal() === 0, String(bal()));
 
     const mikeLedger = createPointsLedger({ makeEvents: (k, o) => makeEvents(k, o, mike.id) });
     await mikeLedger.load();
     check('the board writes to the PROFILE’s shared points ledger',
       mikeLedger.total() === -40, String(mikeLedger.total()));
-    const oscarLedger = createPointsLedger({ makeEvents: (k, o) => makeEvents(k, o, oscar.id) });
-    await oscarLedger.load();
-    check('...and the two ledgers are entirely separate', oscarLedger.total() === 0, String(oscarLedger.total()));
-    mikeLedger.destroy(); oscarLedger.destroy();
+    const profileBLedger = createPointsLedger({ makeEvents: (k, o) => makeEvents(k, o, profileB.id) });
+    await profileBLedger.load();
+    check('...and the two ledgers are entirely separate', profileBLedger.total() === 0, String(profileBLedger.total()));
+    mikeLedger.destroy(); profileBLedger.destroy();
     board.destroy();
 
     // ================= "I don't know" =================
     section('“I don’t know” reaches the explanation honestly');
     const wfHost = document.getElementById('wf');
-    const wmod = await profiles.addModule(oscar.id, 'wordforge');
-    const wst = createState({ url: profiles.stateURL(oscar.id, wmod.id), user: USER });
+    const wmod = await profiles.addModule(profileB.id, 'wordforge');
+    const wst = createState({ url: profiles.stateURL(profileB.id, wmod.id), user: USER });
     await wst.load();
     const wf = mountModule('wordforge', {
       mount: wfHost, bus: createBus(), state: wst,
-      events: createEvents({ url: profiles.eventsURL(oscar.id, wmod.id), user: USER }),
-      user: USER, profileId: oscar.id,
-      makeState: (k, o) => makeState(k, o, oscar.id),
-      makeEvents: (k, o) => makeEvents(k, o, oscar.id),
+      events: createEvents({ url: profiles.eventsURL(profileB.id, wmod.id), user: USER }),
+      user: USER, profileId: profileB.id,
+      makeState: (k, o) => makeState(k, o, profileB.id),
+      makeEvents: (k, o) => makeEvents(k, o, profileB.id),
       rand: seeded(4242),
     });
     wf.init();
@@ -146,8 +146,8 @@ const seeded = (seed) => { let x = seed >>> 0; return () => { x = (x * 1664525 +
     check('the button is offered before answering', !!q('[data-idk]'), 'no I-don’t-know button');
     check('it says what it does', /show me/i.test(q('[data-idk]').textContent), q('[data-idk]').textContent);
 
-    const before = oscarLedger ? 0 : 0;
-    const led = createPointsLedger({ makeEvents: (k, o) => makeEvents(k, o, oscar.id) });
+    const before = profileBLedger ? 0 : 0;
+    const led = createPointsLedger({ makeEvents: (k, o) => makeEvents(k, o, profileB.id) });
     await led.load();
     const start = led.total();
 
@@ -172,7 +172,7 @@ const seeded = (seed) => { let x = seed >>> 0; return () => { x = (x * 1664525 +
       scoreFor({ correct: false }).total === DEFAULTS.tryPoints);
 
     // the recording is what makes it different
-    const tel = createTelemetry({ makeEvents: (k, o) => makeEvents(k, o, oscar.id) });
+    const tel = createTelemetry({ makeEvents: (k, o) => makeEvents(k, o, profileB.id) });
     await tel.load();
     const trials = tel.trials();
     check('the attempt was recorded', trials.length === 1, String(trials.length));

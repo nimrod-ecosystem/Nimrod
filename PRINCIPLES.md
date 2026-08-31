@@ -251,6 +251,28 @@ Mike says so, with a date and a scope, and it leaves it only by being explicitly
 | # | the rule, verbatim | scope | declared by | date | what it costs |
 |---|---|---|---|---|---|
 | 1 | **If a module probes judgment, being wrong must not be degrading.** | `project` | Mike | 2026-08-30 | The sharpest tests. A wrong option that is absurd or unpleasant separates judgment from command-following more cleanly than one where both choices are dignified. This trades some discriminating power for not humiliating anyone, and that trade is accepted. |
+### An absolute 2 was recorded here and then WITHDRAWN — 2026-08-31
+
+*"Being wrong must not be invisible"* was entered in this table on the strength of Mike saying
+*"that sounds good"* to a phrasing. He then read it back and said he was not clear what it was or
+whether it was necessary — **which settles it.** An absolute nobody can restate cannot be checked
+against, and §0 says only Mike declares one. "That sounds good" to a sentence is not a declaration.
+Withdrawn, and the entry number is not reused.
+
+**On the merits it also failed the test**, which is worth recording so it is not re-proposed
+unchanged: a reasonable module could want a wrong input to pass quietly, so a case against it exists.
+That makes it **a good default, not an absolute** — which is this project's own standing rule about
+what belongs in a register at all.
+
+**The substance survives as a decision, where it belongs**, in the *Acknowledgement is not
+communication* entry in `DECISIONS.md`: an unmapped input does nothing, a mapped-but-wrong input
+still gets a response, and the reason is that for someone learning what a button is, the mistimed
+press *is* the learning event.
+
+**The lesson for whoever maintains this file.** The register's failure mode is not that a bad rule
+gets in. It is that a **plausible** one does, on an agreeable noise rather than a decision, and then
+gets quoted back at people. That happened here within one day of the register existing, and it was
+caught only because Mike read his own entry and said he did not understand it.
 
 ### Notes on absolute 1
 

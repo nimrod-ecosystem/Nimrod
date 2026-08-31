@@ -116,6 +116,24 @@ registerModule(
     const childState = (id) => (makeState ? makeState(id, {}, viewId) : null);
     const childEvents = (id) => (makeEvents ? makeEvents(id, {}, viewId) : null);
 
+    // *** AND THE SAME SCOPE FOR A CHILD THAT MAKES ITS OWN HANDLE (fixed 2026-08-31). ***
+    //
+    // `mountChild` spreads `...ctx`, so a child asking for a SHARED row by name — the way
+    // `modules/bank.js` reaches one syllabus that Trivia and Word Forge both read — was
+    // getting the HOST's `makeState`, whose third argument is the profile. Called with two
+    // arguments from inside a module it resolved to `undefined`, and the key came out as
+    // `undefined:bank`: not scoped to this view, not scoped to anything, and rejected
+    // outright by the server's key rule the moment it tried to save.
+    //
+    // Caught by `view_test`'s "every child handle is scoped to the view it belongs to" — a
+    // check written for the per-child handles above, which happened to also be the only thing
+    // watching this. Worth noting for what it says about the seam rather than the bug: a
+    // container that hands its own ctx down hands down the host's idea of scope with it.
+    const childMakes = {
+      ...(makeState ? { makeState: (key, opts = {}) => makeState(key, opts, viewId) } : {}),
+      ...(makeEvents ? { makeEvents: (key, opts = {}) => makeEvents(key, opts, viewId) } : {}),
+    };
+
     function destroyRec(rec) {
       if (!rec) return;
       try { rec.instance.destroy(); } catch { /* noop */ }
@@ -127,7 +145,7 @@ registerModule(
       const state = childState(def.id);
       const events = childEvents(def.id);
       const instance = mountModule(def.type, {
-        ...ctx, mount: host, bus: rootBus, state, events,
+        ...ctx, ...childMakes, mount: host, bus: rootBus, state, events,
         profileId: viewId, instanceId: def.id,
       });
       await state?.load?.().catch(() => {});

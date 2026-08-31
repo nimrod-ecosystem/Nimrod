@@ -16,8 +16,8 @@
 </head>
 <body>
 <h1>personal videos — integration test</h1>
-<p>Mounts the real <code>personal</code> module against the live server + the Oscar media agent
-(<code>…/Voice messages/Oscar</code> on :8771). Autoplay off so the big clips aren't buffered; the
+<p>Mounts the real <code>personal</code> module against the live server + the personal-messages agent
+(<code>…/Voice messages/personal</code> on :8771). Autoplay off so the big clips aren't buffered; the
 "ended" handoff is fired by hand. Requires the agent running on port 8771.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
@@ -53,14 +53,14 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
   try {
     const profiles = createProfilesClient({ user: USER });
     const media = createMediaSourcesClient({ user: USER });
-    const src = await media.add({ label: 'Oscar', base_url: AGENT, kind: 'agent' });
+    const src = await media.add({ label: 'personal', base_url: AGENT, kind: 'agent' });
 
     const profile = await profiles.create('TEST-personal');
     const mod = await profiles.addModule(profile.id, 'personal');
     const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
     const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
     await state.load(); await events.load();
-    state.set({ sourceId: src.id, subjectName: 'Oscar', autoplay: false, autoAdvance: true });
+    state.set({ sourceId: src.id, subjectName: 'Profile B', autoplay: false, autoAdvance: true });
     await state.flush();
 
     const bus = createBus();
@@ -71,14 +71,14 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     instance.init();
     await sleep(250);   // async source resolve + listing
 
-    // 1. lists Oscar's two video clips (the .amr / extensionless files are skipped)
-    check('lists exactly Oscar\'s 2 video clips', host.querySelector('[data-source-label]')?.textContent.includes('2 clip'),
+    // 1. lists both video clips (the .amr / extensionless files are skipped)
+    check('lists exactly 2 video clips', host.querySelector('[data-source-label]')?.textContent.includes('2 clip'),
       `label="${host.querySelector('[data-source-label]')?.textContent}"`);
     // 2. renders a <video> straight from the agent (bytes never touch the platform server)
-    check('renders a <video> from the agent', /\/files\/Oscar/.test(vidSrc(host) || ''), `src=${vidSrc(host)}`);
-    check('clip is one of Oscar\'s mp4s', /Oscar%20(Counting%20To%20100|singing%20ABC)/.test(vidSrc(host) || ''), `src=${vidSrc(host)}`);
+    check('renders a <video> from the agent', /\/files\/message-/.test(vidSrc(host) || ''), `src=${vidSrc(host)}`);
+    check('clip is one of the source mp4s', /message-0[12]\.mp4/.test(vidSrc(host) || ''), `src=${vidSrc(host)}`);
     // 3. shows the subject name
-    check('caption shows the speaker name', (host.querySelector('[data-name]')?.textContent || '').includes('Oscar'),
+    check('caption shows the speaker name', (host.querySelector('[data-name]')?.textContent || '').includes('Profile B'),
       `caption="${host.querySelector('[data-name]')?.textContent}"`);
     // 4. play logged (append-only)
     await events.load();
@@ -88,7 +88,7 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     // 5. advancing covers BOTH clips (only 2 items -> the picker weights by recency)
     const seen = new Set([vidSrc(host)]);
     for (let i = 0; i < 8; i++) { bus.publish('personal/next'); await sleep(20); seen.add(vidSrc(host)); }
-    check('advancing surfaces both of Oscar\'s clips', seen.size === 2, `seen=${seen.size}`);
+    check('advancing surfaces both clips', seen.size === 2, `seen=${seen.size}`);
 
     // 6. a clip ENDING is a segment/done (director seam) AND, standalone, auto-advances
     const before = vidSrc(host);

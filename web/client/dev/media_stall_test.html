@@ -35,7 +35,7 @@ then stop the video the way a browser does — by dispatching the events a brows
 
 <p>Run first: the server (<code>uvicorn app:app --port 8000</code>) and two agents —
 <code>python agent.py --root &lt;photos&gt; --port 8770</code> and
-<code>python agent.py --root &lt;Oscar&gt; --port 8771</code>.</p>
+<code>python agent.py --root &lt;personal&gt; --port 8771</code>.</p>
 
 <div id="results"></div>
 <div id="summary">running…</div>
@@ -53,7 +53,7 @@ import '../modules/personal.js';
 
 const params = new URLSearchParams(location.search);
 const PHOTOS_AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
-const OSCAR_AGENT = (params.get('oscar') || 'http://127.0.0.1:8771').replace(/\/+$/, '');
+const PERSONAL_AGENT = (params.get('personal') || 'http://127.0.0.1:8771').replace(/\/+$/, '');
 const USER = params.get('user') || ('stall-' + Math.floor(Math.random() * 1e6));
 
 const out = document.getElementById('results');
@@ -178,7 +178,7 @@ try {
   const ms = createMediaSourcesClient({ user: USER });
   for (const s of await ms.list()) if (s.label.startsWith('STALL-')) await ms.remove(s.id);
   const photoSrc = await ms.add({ label: 'STALL-photos', base_url: PHOTOS_AGENT, kind: 'agent' });
-  const oscarSrc = await ms.add({ label: 'STALL-oscar', base_url: OSCAR_AGENT, kind: 'agent' });
+  const personalSrc = await ms.add({ label: 'STALL-personal', base_url: PERSONAL_AGENT, kind: 'agent' });
 
   // =====================================================================
   // PHOTOS — a video in the slideshow that stops
@@ -211,12 +211,12 @@ try {
     await sleep(50);
   }
 
-  // Now the video case, driven directly: mount photos against the OSCAR agent, whose
+  // Now the video case, driven directly: mount photos against the PERSONAL agent, whose
   // items are all videos, so the slideshow is guaranteed to be showing one.
   {
     const timers = fakeTimers();
     const { profile, state, events } =
-      await freshProfile('photos', { sourceId: oscarSrc.id, intervalMs: 8000 });
+      await freshProfile('photos', { sourceId: personalSrc.id, intervalMs: 8000 });
     const bus = createBus();
     const nexts = [];
     bus.subscribe('photos/next', () => nexts.push(1));
@@ -251,7 +251,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } =
-      await freshProfile('photos', { sourceId: oscarSrc.id, intervalMs: 8000 });
+      await freshProfile('photos', { sourceId: personalSrc.id, intervalMs: 8000 });
     const bus = createBus();
     const nexts = [];
     bus.subscribe('photos/next', () => nexts.push(1));
@@ -290,7 +290,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } =
-      await freshProfile('photos', { sourceId: oscarSrc.id, intervalMs: 8000 });
+      await freshProfile('photos', { sourceId: personalSrc.id, intervalMs: 8000 });
     const bus = createBus();
     const nexts = [];
     bus.subscribe('photos/next', () => nexts.push(1));
@@ -320,7 +320,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
-      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      sourceId: personalSrc.id, subjectName: 'Profile B', autoplay: true, autoAdvance: false,
       stallMs: 20000,
     });
     const bus = createBus();
@@ -353,7 +353,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
-      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      sourceId: personalSrc.id, subjectName: 'Profile B', autoplay: true, autoAdvance: false,
       stallMs: 20000,
     });
     const bus = createBus();
@@ -386,7 +386,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
-      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      sourceId: personalSrc.id, subjectName: 'Profile B', autoplay: true, autoAdvance: false,
       stallMs: 20000,
     });
     const bus = createBus();
@@ -429,7 +429,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
-      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      sourceId: personalSrc.id, subjectName: 'Profile B', autoplay: true, autoAdvance: false,
       stallMs: 20000,
     });
     const bus = createBus();
@@ -458,7 +458,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
-      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      sourceId: personalSrc.id, subjectName: 'Profile B', autoplay: true, autoAdvance: false,
       stallMs: 20000,
     });
     const bus = createBus();
@@ -494,7 +494,7 @@ try {
     // actually puts on screen, rather than a guess.
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
-      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      sourceId: personalSrc.id, subjectName: 'Profile B', autoplay: true, autoAdvance: false,
       stallMs: 20000, heldNotifyMs: 21600000,
     });
     const bus = createBus();
@@ -522,7 +522,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
-      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      sourceId: personalSrc.id, subjectName: 'Profile B', autoplay: true, autoAdvance: false,
       stallMs: 20000, heldNotifyMs: 21600000,
     });
     const bus = createBus();
@@ -563,7 +563,7 @@ try {
   {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
-      sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
+      sourceId: personalSrc.id, subjectName: 'Profile B', autoplay: true, autoAdvance: false,
       stallMs: 20000, heldNotifyMs: 21600000,
     });
     const bus = createBus();

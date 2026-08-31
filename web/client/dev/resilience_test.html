@@ -78,7 +78,7 @@ const threw = async (fn) => { try { await fn(); return false; } catch { return t
 
     // ── media-source registry resilience ─────────────────────────────────────
     const media = createMediaSourcesClient({ user: USER, cache: true });
-    await media.add({ label: 'Oscar', base_url: 'http://127.0.0.1:8771', kind: 'agent' });
+    await media.add({ label: 'personal', base_url: 'http://127.0.0.1:8771', kind: 'agent' });
     const live = await media.list();
     check('media registry lists the connected source (and caches it)', live.length >= 1, `n=${live.length}`);
 

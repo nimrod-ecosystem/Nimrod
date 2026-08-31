@@ -29,6 +29,7 @@ import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
+import { createHeldSignal } from '../held.js';
 
 // `stallMs` is the STOPPED-VIDEO WATCHDOG (see the header). 20s is long enough that a
 // slow-but-working load on facility wifi isn't cut off, short enough that nobody sits in
@@ -285,6 +286,9 @@ registerModule(
     // means a video that plays at full volume, never a video that will not play.
     const AUDIO_ID = `youtube:${ctx.instanceId || 'yt'}`;
     const makePlayer = ctx.playerFactory || createYtPlayer;
+    // THE HELD SIGNAL. Until this existed a hold was invisible outside the module, which is
+    // the whole reason a held screen could only ever show a frozen frame — see `held.js`.
+    const heldSignal = createHeldSignal(bus, 'youtube');
 
     let cfg = { ...DEFAULTS };
     let ids = [], byId = {}, channels = {}, durations = {};
@@ -437,6 +441,11 @@ registerModule(
     function setHeld(on) {
       const el = mount.querySelector('[data-held]');
       if (el) el.hidden = !on;
+      // ...and say so on the bus, so a container can put a wallpaper up instead of leaving a
+      // frozen frame. Idempotent in `held.js`, which matters because this is called from four
+      // places and only one of them is a state CHANGE.
+      if (on) heldSignal.begin({ id: currentId, afterMs: holdNotifyMs() });
+      else heldSignal.end();
     }
 
     // The video stopped. Re-arm the clock that PLAYING disarmed — but WHICH clock depends
@@ -926,6 +935,9 @@ registerModule(
         clearTimer(graceTimer); graceTimer = null;
         clearStall();
         try { audio?.unregister?.(AUDIO_ID); } catch { /* already gone */ }
+        // A module torn down while held must publish its end, or whatever reacted to the hold
+        // is stuck in a state only the destroyed module could have left. See `held.js` rule 3.
+        heldSignal.release();
         try { player?.destroy(); } catch { /* noop */ } player = null; },
     };
   },

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>dwell — holding still is the click — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:80ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:80ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>dwell — holding still is the click</h1>
+
+<div class="warn">
+  Without the re-arm rule, somebody who is still gets a click every 1.8 seconds forever — a
+  screen operated at random by a person who has stopped moving. That is the section marked
+  with stars, and it is the reason this file exists.
+</div>
+
+<p>Found by auditing the private <code>cici_color.js</code> against this repo's
+<code>input_marker.js</code>. The detection half had ported faithfully; the ACTIVATION half had
+not come across at all, so the public colour tracker could point at things and never select
+one. These are the private build's own numbers — 1800&nbsp;ms, 70&nbsp;px, a 1.5× re-arm — not
+fresh guesses.</p>
+
+<div class="note">
+  <b>Not covered here.</b> Anything with a real camera or a real person: whether 1800&nbsp;ms is
+  right for anybody but the one person it was tuned for, and whether 70&nbsp;px of wander
+  matches what a colour marker on a foot actually produces on a Pi 400. Those are bench
+  questions. This suite is the state machine and the wiring.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { stepDwell, distance, createDwell, DWELL_DEFAULTS, DWELL_DEVICE, DWELL_CONTROL } from '../input_dwell.js';
+import { createBus } from '../bus.js';
+import { AIM_TOPIC } from '../aim.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A clock and a timer queue that are stepped by hand. A dwell is defined by TIME PASSING WITH
+// NOTHING HAPPENING, so a real clock would mean a suite that takes a minute and gets skipped.
+function fakeClock() {
+  let t = 0; let seq = 0; let armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      // Fire in time order, re-entrantly, so a repeating timer keeps repeating.
+      for (let guard = 0; guard < 10000; guard++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at;
+        due.fn();
+      }
+      t = target;
+    },
+  };
+}
+function fakeInput() {
+  const edges = [];
+  return { edges, down: (d, c) => edges.push(['down', d, c]), up: (d, c) => edges.push(['up', d, c]) };
+}
+const P = (x, y) => ({ x, y });
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the state machine — resting, wandering, and the clock');
+  {
+    const C = { ...DWELL_DEFAULTS };
+    let s = null;
+    let r = stepDwell(s, P(100, 100), 0, C);
+    check('the first sighting anchors and starts the clock',
+      r.state.anchor.x === 100 && r.state.t0 === 0 && r.fire === false);
+
+    r = stepDwell(r.state, P(120, 110), 900, C);
+    check('a small wander stays inside the radius', r.state.anchor.x === 100, JSON.stringify(r.state.anchor));
+    check('...and reports how far through it is', Math.abs(r.progress - 0.5) < 0.01, String(r.progress));
+
+    r = stepDwell(r.state, P(400, 400), 1000, C);
+    check('*** a real move re-anchors AND restarts the clock ***',
+      r.state.anchor.x === 400 && r.state.t0 === 1000 && r.progress === 0, JSON.stringify(r.state));
+
+    r = stepDwell(r.state, P(400, 400), 2799, C);
+    check('one millisecond short is not a press', r.fire === false, String(r.progress));
+    r = stepDwell(r.state, P(400, 400), 2800, C);
+    check('*** holding still for the dwell time IS the press ***', r.fire === true);
+  }
+
+  // =====================================================================================
+  section('*** and then it will not fire again until the aim has LEFT ***');
+  {
+    const C = { ...DWELL_DEFAULTS };
+    let r = stepDwell(null, P(0, 0), 0, C);
+    r = stepDwell(r.state, P(0, 0), 1800, C);
+    check('a press was fired', r.fire === true);
+    check('...and the anchor became an exclusion zone', !!r.state.mustLeave && r.state.anchor === null,
+      JSON.stringify(r.state));
+
+    // THE ONE THAT MATTERS. Somebody who cannot move on demand is exactly the person this is
+    // for, and a screen clicking itself every 1.8 seconds under them is worse than no input.
+    let fires = 0;
+    let st = r.state;
+    for (let t = 1900; t <= 60000; t += 100) {
+      const step = stepDwell(st, P(0, 0), t, C);
+      st = step.state;
+      if (step.fire) fires += 1;
+    }
+    check('*** a minute of PERFECT STILLNESS after a press fires nothing at all ***',
+      fires === 0, `fires=${fires}`);
+    check('...and it reports no progress while it waits, so no ring creeps round',
+      stepDwell(st, P(0, 0), 61000, C).progress === 0);
+
+    // Hysteresis: the re-arm distance is radius * leaveFactor, not radius, so a detector
+    // shivering on the boundary cannot chatter the two states against each other.
+    const justOutsideRadius = P(C.radius + 5, 0);
+    check('leaving the radius is NOT enough to re-arm — the band is wider',
+      stepDwell(st, justOutsideRadius, 62000, C).state.mustLeave !== null,
+      JSON.stringify(stepDwell(st, justOutsideRadius, 62000, C).state));
+    const wellOutside = P(C.radius * C.leaveFactor + 5, 0);
+    const re = stepDwell(st, wellOutside, 63000, C);
+    check('*** going properly away re-arms it ***', re.state.mustLeave === null && re.state.anchor !== null);
+    const again = stepDwell(re.state, wellOutside, 63000 + C.dwellMs, C);
+    check('...and then a rest fires again, so it is not a one-shot', again.fire === true);
+
+    // Somebody drifting slowly would otherwise carry the exclusion zone along with them and
+    // never leave it — the zone is the ANCHOR, not wherever the aim happens to be.
+    check('the exclusion zone is the anchor, not the moving point',
+      r.state.mustLeave.x === 0 && r.state.mustLeave.y === 0, JSON.stringify(r.state.mustLeave));
+  }
+
+  // =====================================================================================
+  section('*** losing the marker is not holding still ***');
+  {
+    const C = { ...DWELL_DEFAULTS };
+    let r = stepDwell(null, P(50, 50), 0, C);
+    r = stepDwell(r.state, null, 500, C);
+    check('no aim clears the anchor', r.state.anchor === null);
+    check('...and the ring goes back to zero', r.progress === 0);
+    // A marker that vanished for two seconds and came back on the same spot has NOT been held
+    // there. Freezing the clock instead would fire a press nobody made.
+    r = stepDwell(r.state, P(50, 50), 2500, C);
+    check('*** it reappearing on the same spot starts over, it does not fire ***',
+      r.fire === false && r.state.t0 === 2500, JSON.stringify(r.state));
+  }
+
+  // =====================================================================================
+  section('the adapter — an aim on the bus becomes a press on the input bus');
+  {
+    const clock = fakeClock();
+    const bus = createBus();
+    const input = fakeInput();
+    let progress = [];
+    const d = createDwell({
+      input, bus, settings: () => ({}), onProgress: (p) => progress.push(p),
+      now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      viewport: () => ({ w: 1000, h: 1000 }),
+    });
+
+    bus.publish(AIM_TOPIC, { x: 0.5, y: 0.5 });
+    clock.advance(500);
+    check('a normalised aim is converted into pixels', d.state().anchor?.x === 500,
+      JSON.stringify(d.state().anchor));
+    check('nothing has fired yet', input.edges.length === 0);
+    check('...but the ring is moving', progress.some((p) => p > 0 && p < 1), JSON.stringify(progress));
+
+    clock.advance(1500);
+    check('*** the dwell became a real press on the input bus ***',
+      input.edges.length === 2, JSON.stringify(input.edges));
+    check('...down then up', input.edges[0][0] === 'down' && input.edges[1][0] === 'up');
+    check('...on the dwell device', input.edges[0][1] === DWELL_DEVICE && input.edges[0][2] === DWELL_CONTROL,
+      JSON.stringify(input.edges[0]));
+    // A dwell has no hold: there is no long-press by holding still, because holding still is
+    // already the gesture. Said out loud because a binding that never fires is miserable.
+    check('*** down and up are the same instant, so a holdMs binding can never match ***',
+      input.edges.length === 2);
+
+    const after = input.edges.length;
+    clock.advance(20000);
+    check('*** twenty more seconds of stillness adds nothing ***', input.edges.length === after,
+      JSON.stringify(input.edges));
+
+    // An aim that stops arriving is not an aim that stayed put — the bus only ticks on change.
+    bus.publish(AIM_TOPIC, { x: 0.9, y: 0.9 });
+    clock.advance(1900);
+    check('moving away and resting fires again', input.edges.length === after + 2);
+
+    d.destroy();
+    const final = input.edges.length;
+    bus.publish(AIM_TOPIC, { x: 0.1, y: 0.1 });
+    clock.advance(5000);
+    check('destroy stops it dead', input.edges.length === final);
+  }
+
+  // =====================================================================================
+  section('suppression is a COUNT, not a flag');
+  {
+    const clock = fakeClock();
+    const input = fakeInput();
+    const d = createDwell({
+      input, settings: () => ({}),
+      now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    });
+    d.feed(P(10, 10));
+    // Two things can each have a reason to hold it off — an open settings menu AND a
+    // calibration preview — and a boolean lets whichever finishes first re-enable it
+    // underneath the other.
+    d.suppress(true); d.suppress(true);
+    clock.advance(5000);
+    check('*** suppressed, a rest fires nothing ***', input.edges.length === 0);
+    d.suppress(false);
+    clock.advance(5000);
+    check('*** ...and one of two suppressors releasing is not enough ***',
+      input.edges.length === 0 && d.isSuppressed() === true);
+    d.suppress(false);
+    clock.advance(2000);
+    check('both released, and it works again', input.edges.length === 2, JSON.stringify(input.edges));
+    check('releasing more than was taken does not go negative', (d.suppress(false), d.isSuppressed()) === false);
+    d.destroy();
+  }
+
+  // =====================================================================================
+  section('turned off, and other ordinary things');
+  {
+    const clock = fakeClock();
+    const input = fakeInput();
+    const d = createDwell({
+      input, settings: () => ({ enabled: false }),
+      now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    });
+    d.feed(P(1, 1));
+    clock.advance(10000);
+    check('switched off, it does nothing', input.edges.length === 0);
+    d.destroy();
+
+    check('distance handles a missing point rather than returning NaN',
+      distance(null, P(0, 0)) === Infinity && distance(P(0, 0), null) === Infinity);
+    // Without an input bus it still reports progress — which is what a calibration panel wants
+    // when it is showing somebody what dwelling feels like without wiring it to anything.
+    const c2 = fakeClock();
+    let seen = 0;
+    const d2 = createDwell({ settings: () => ({}), onProgress: () => { seen += 1; },
+                             now: c2.now, setTimer: c2.setTimer, clearTimer: c2.clearTimer });
+    d2.feed(P(5, 5));
+    c2.advance(2000);
+    check('it runs with no input bus at all, for a preview', seen > 0, String(seen));
+    d2.destroy();
+
+    check('the private build’s numbers came across unchanged',
+      DWELL_DEFAULTS.dwellMs === 1800 && DWELL_DEFAULTS.radius === 70,
+      JSON.stringify(DWELL_DEFAULTS));
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

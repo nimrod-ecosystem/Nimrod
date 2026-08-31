@@ -58,6 +58,12 @@ export function mountModule(type, ctx) {
     init:     () => instance.init?.(),
     onResize: () => instance.onResize?.(),
     onHide:   () => instance.onHide?.(),
+    // The counterpart `onHide` never had. A host that hides a child and later shows it again
+    // had no way to say so through the contract, so the only route back was `impl`, which is
+    // documented above as the TEST escape hatch. Added when `director.js` needed to park a
+    // wallpaper's clock while it was covered up; optional like the rest of the lifecycle, so
+    // every existing module is unaffected.
+    onShow:   () => instance.onShow?.(),
     destroy:  () => {
       try { instance.destroy?.(); }
       finally { scoped.dispose(); ctx.state?.destroy?.(); ctx.events?.destroy?.(); }

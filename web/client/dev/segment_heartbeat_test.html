@@ -61,7 +61,7 @@ import '../modules/director.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || ('beat-' + Math.floor(Math.random() * 1e6));
-const OSCAR_AGENT = (params.get('oscar') || 'http://127.0.0.1:8771').replace(/\/+$/, '');
+const PERSONAL_AGENT = (params.get('personal') || 'http://127.0.0.1:8771').replace(/\/+$/, '');
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0, skipped = 0;
@@ -369,16 +369,16 @@ try {
   section('personal: timeupdate is the heartbeat');
   let agentUp = false;
   try {
-    const r = await fetch(`${OSCAR_AGENT}/list`, { cache: 'no-store' });
+    const r = await fetch(`${PERSONAL_AGENT}/list`, { cache: 'no-store' });
     agentUp = r.ok;
   } catch { agentUp = false; }
 
   if (!agentUp) {
-    skip('personal: timeupdate is the heartbeat', `no media agent at ${OSCAR_AGENT}`);
-    skip('personal: silence after playing is caught', `no media agent at ${OSCAR_AGENT}`);
+    skip('personal: timeupdate is the heartbeat', `no media agent at ${PERSONAL_AGENT}`);
+    skip('personal: silence after playing is caught', `no media agent at ${PERSONAL_AGENT}`);
   } else {
     const ms = createMediaSourcesClient({ user: USER });
-    const src = await ms.add({ label: 'BEAT-oscar', base_url: OSCAR_AGENT, kind: 'agent' });
+    const src = await ms.add({ label: 'BEAT-personal', base_url: PERSONAL_AGENT, kind: 'agent' });
 
     // COUNT play() RATHER THAN INFERRING IT. The first draft of the freeze section asserted
     // "not handed back yet", which passes just as happily when NOTHING is watching at all —

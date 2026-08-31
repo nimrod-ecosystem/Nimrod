@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>scanning — the loop, extracted — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:80ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:80ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>scanning — the loop, extracted</h1>
+
+<div class="warn">
+  Fifteen seconds is not a UI default. It is her number, with her reason, carried across
+  verbatim: <i>"she understands the task but needs time to process the cue before signaling."</i>
+  A suite that let it drift would be letting the whole point drift.
+</div>
+
+<p>The scan loop lifted out of the private <code>scan_yesno.js</code> so a board is not the
+only thing that can have one. It owns an ordered list, an index and a clock, and knows nothing
+about cards, speech or the DOM. The interval is now <code>stepMs</code> rather than
+<code>dwellMs</code> — the glossary recorded that collision with a plan to move the scanning
+sense when scanning was extracted, and this is that moment.</p>
+
+<div class="note">
+  <b>Not covered here.</b> The board on top of this — cards, speech, the AAC emit — is Tier 2
+  and is not written. Neither is anything about whether 15 seconds is right for a second
+  person; that is a bench and clinic question, and the number is carried rather than justified.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createScan, SCAN_DEFAULTS, RESTARTS } from '../input_scan.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// Hand-stepped time. With a 15-SECOND default, a suite on a real clock would take minutes per
+// assertion and would simply not be run — which is the failure mode a slow test actually has.
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    pending: () => armed.length,
+    advance(ms) {
+      const target = t + ms;
+      for (let guard = 0; guard < 100000; guard++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at;
+        due.fn();
+      }
+      t = target;
+    },
+  };
+}
+const YESNO = ['Yes', 'No', 'Other'];
+function mk(opts = {}) {
+  const clock = fakeClock();
+  const steps = [], picks = [];
+  const scan = createScan({
+    items: opts.items || YESNO,
+    settings: opts.settings || (() => ({})),
+    onStep: (it, i) => steps.push([it, i]),
+    onSelect: (it, i) => picks.push([it, i]),
+    setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+  });
+  return { clock, scan, steps, picks };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** her number, carried and not re-derived ***');
+  {
+    check('*** the step is 15000 ms ***', SCAN_DEFAULTS.stepMs === 15000, String(SCAN_DEFAULTS.stepMs));
+    check('...and the hold after a choice is 1200 ms', SCAN_DEFAULTS.pauseMs === 1200);
+    // If this ever fails, the reason to read is the block comment at the top of input_scan.js,
+    // not this file: the number is a statement about one person's processing time.
+    const { clock, scan, steps } = mk();
+    scan.start();
+    clock.advance(14999);
+    check('one millisecond short and it has not moved', scan.index() === 0, String(scan.index()));
+    clock.advance(1);
+    check('at fifteen seconds it moves on', scan.index() === 1);
+    check('...and says so, so a board can speak it', steps.length >= 2 && steps[1][0] === 'No',
+      JSON.stringify(steps));
+    scan.destroy();
+  }
+
+  // =====================================================================================
+  section('*** it wraps, because one switch travels one way ***');
+  {
+    const { clock, scan } = mk();
+    scan.start();
+    clock.advance(15000 * 2);
+    check('it reaches the end', scan.current() === 'Other', String(scan.current()));
+    clock.advance(15000);
+    check('*** and comes back to the top rather than stranding somebody there ***',
+      scan.current() === 'Yes', String(scan.current()));
+    check('a lap is counted on the wrap, not on every step', scan.laps() === 1, String(scan.laps()));
+    clock.advance(15000 * 3);
+    check('...and it keeps counting', scan.laps() === 2, String(scan.laps()));
+    scan.destroy();
+  }
+
+  // =====================================================================================
+  section('*** it never stops on its own, and that is deliberate ***');
+  {
+    // A scanner that gave up after N laps would take away the one thing the person can operate,
+    // at exactly the moment they were taking longer than expected. That is the safety invariant
+    // wearing a helpful face.
+    const { clock, scan } = mk();
+    scan.start();
+    clock.advance(15000 * 3 * 40);       // two hours of nobody answering
+    check('*** two hours unanswered and it is still offering the choices ***',
+      scan.isRunning() === true && scan.laps() === 40, `laps=${scan.laps()}`);
+    check('...and nothing was selected on its own', scan.index() === 0);
+    scan.destroy();
+  }
+
+  // =====================================================================================
+  section('*** hybrid: the clock advances it, and so can a press ***');
+  {
+    const { clock, scan, steps } = mk();
+    scan.start();
+    clock.advance(5000);
+    check('a press jumps ahead without waiting', scan.next() === 'No' && scan.index() === 1);
+    // Jumping to an option and then getting a third of a second to decide about it is worse
+    // than not jumping at all.
+    clock.advance(10001);
+    check('*** ...and the clock RESTARTS rather than running out the remainder ***',
+      scan.index() === 1, String(scan.index()));
+    clock.advance(4999);
+    check('a full step from the jump, then it moves', scan.index() === 2, String(scan.index()));
+
+    // A single-switch setup binds only `select`, never calls `next`, and the timer does all
+    // the advancing. Nothing here is a mode.
+    const solo = mk();
+    solo.scan.start();
+    solo.clock.advance(15000 * 2);
+    check('a setup that never presses next is driven entirely by the clock',
+      solo.scan.index() === 2, String(solo.scan.index()));
+    solo.scan.destroy();
+    scan.destroy();
+  }
+
+  // =====================================================================================
+  section('choosing, and the beat afterwards');
+  {
+    const { clock, scan, picks, steps } = mk();
+    scan.start();
+    clock.advance(15000);
+    const chosen = scan.select();
+    check('it returns what was lit', chosen === 'No', String(chosen));
+    check('...and reports it, with the index', picks.length === 1 && picks[0][1] === 1,
+      JSON.stringify(picks));
+
+    const before = steps.length;
+    clock.advance(1199);
+    check('*** it holds after a choice so the choice registers ***', steps.length === before);
+    clock.advance(1);
+    check('...then it says where it restarted, because after a silence you have to be told',
+      steps.length === before + 1 && steps[steps.length - 1][0] === 'Yes',
+      JSON.stringify(steps.slice(-1)));
+    // A Yes/No board should always offer Yes first; somebody who has just answered should not
+    // have to sit through a lap to reach it again.
+    check('*** the next round starts at the top by default ***', scan.index() === 0);
+    clock.advance(15000);
+    check('and then it carries on normally', scan.index() === 1);
+    scan.destroy();
+  }
+  {
+    // The other choice exists for a list somebody is working THROUGH rather than answering.
+    const { clock, scan } = mk({ settings: () => ({ restart: 'here' }) });
+    scan.start();
+    clock.advance(15000);
+    scan.select();
+    clock.advance(1200);
+    check('"here" carries on from what was chosen instead', scan.index() === 1, String(scan.index()));
+    check('both restart modes are reachable', RESTARTS.length === 2);
+    scan.destroy();
+  }
+
+  // =====================================================================================
+  section('suppression is a COUNT, not a flag');
+  {
+    const { clock, scan } = mk();
+    scan.start();
+    scan.suppress(true); scan.suppress(true);
+    clock.advance(15000 * 5);
+    check('*** suppressed, the loop does not move under an open menu ***', scan.index() === 0);
+    scan.suppress(false);
+    clock.advance(15000 * 2);
+    check('*** one of two suppressors releasing is not enough ***',
+      scan.index() === 0 && scan.isSuppressed() === true, String(scan.index()));
+    scan.suppress(false);
+    check('both released and it announces where it is, before moving',
+      scan.isSuppressed() === false && scan.index() === 0);
+    clock.advance(15000);
+    check('...and then it moves again', scan.index() === 1);
+    scan.destroy();
+  }
+
+  // =====================================================================================
+  section('ordinary things that would otherwise be found in a room');
+  {
+    const { clock, scan, steps } = mk({ items: [] });
+    scan.start();
+    clock.advance(15000 * 4);
+    check('an empty list does not spin or throw', scan.current() === null && steps.length === 0);
+    check('selecting nothing returns nothing', scan.select() === null);
+    scan.destroy();
+
+    const one = mk({ items: ['Yes'] });
+    one.scan.start();
+    one.clock.advance(15000 * 4);
+    check('*** a single option does not scan — there is nothing to scan between ***',
+      one.scan.index() === 0 && one.clock.pending() === 0, String(one.clock.pending()));
+    check('...but it can still be chosen', one.scan.select() === 'Yes');
+    one.scan.destroy();
+
+    // A new set of choices is a new question. Resuming three items in would offer somebody an
+    // option they were never shown moving to.
+    const s = mk();
+    s.scan.start();
+    s.clock.advance(15000 * 2);
+    check('mid-list before the swap', s.scan.index() === 2);
+    s.scan.setItems(['A', 'B']);
+    check('*** new options start from the top ***', s.scan.index() === 0 && s.scan.current() === 'A');
+    check('...and the lap count starts over with them', s.scan.laps() === 0);
+    s.clock.advance(15000);
+    check('and it is running on the new list', s.scan.current() === 'B');
+
+    s.scan.stop();
+    const at = s.scan.index();
+    s.clock.advance(15000 * 3);
+    check('stopped means stopped', s.scan.index() === at);
+    s.scan.start();
+    s.clock.advance(15000);
+    check('and it can be started again', s.scan.index() !== at);
+
+    s.scan.destroy();
+    const after = s.scan.index();
+    s.clock.advance(15000 * 3);
+    check('destroy stops it dead', s.scan.index() === after && s.clock.pending() === 0);
+
+    // Somebody typing 0 into an operator menu should not get a loop spinning as fast as the
+    // event queue allows.
+    const bad = mk({ settings: () => ({ stepMs: 0 }) });
+    bad.scan.start();
+    bad.clock.advance(15000);
+    check('a zero step falls back rather than free-running', bad.scan.index() === 1, String(bad.scan.index()));
+    bad.scan.destroy();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
