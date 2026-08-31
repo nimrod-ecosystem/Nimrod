@@ -861,3 +861,36 @@ saying it out loud in front of the subject. Consequences:
 - This is the same principle as the rest of the project — *the person on the screen can see what is
   happening* — and it cuts the other way here: some things should be recorded without being
   broadcast to the room.
+
+
+### One storage root, set up once — decided 2026-08-30
+
+Mike's call, and it generalises a pattern the project had been solving one place at a time.
+
+- **The user is given an empty folder tree and chooses where it lives. Everything else defaults to
+  its own folder inside that tree.** One setup step, once. Photos, media, model files, the inbox,
+  notes, exports — each gets a subfolder rather than its own separate "choose a folder" prompt.
+  (2026-08-30)
+- **This supersedes the emerging per-feature folder pickers.** The media agent asked for a folder;
+  the MediaPipe model files were about to ask for another; the message inbox would have asked for a
+  third. Three prompts for one idea is how a first run becomes a chore. **One parent, a standard
+  subtree, sensible defaults inside it.** (2026-08-30)
+- **The inbox lives on the user's device**, in that tree, like everything else. It is the durable
+  half of notification: `output_remote.js` drops anything older than two minutes, which is useless
+  for a six-hour pause notice sent to a sleeping phone. A file on their own machine has no such
+  limit and no server holds it. (2026-08-30)
+
+**Why this is more than tidiness.** It makes the project's data position *operable* rather than
+merely stated:
+
+- **Backup is copying one folder.** No export feature required.
+- **Moving to a new machine is pointing at the folder.** No migration, no account recovery.
+- **Deleting everything is deleting one folder**, and the person can see it happen with their own
+  file manager. A deletion promise that can be verified by looking is worth more than any policy
+  page — and it is exactly what *"users may do whatever they want with their own data"* has to mean
+  in practice.
+- The platform never holds it, so there is nothing to breach, subpoena, or be a custodian of.
+
+**Open, for whoever builds it:** what the tree looks like on first run — created empty with named
+subfolders and a short README in each, or created lazily as features are used. Empty-with-names is
+probably right: a person can see what the software will do before it does any of it.

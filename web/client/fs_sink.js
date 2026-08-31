@@ -75,6 +75,127 @@ export async function pickFolder({ view = (typeof window !== 'undefined' ? windo
   return view.showDirectoryPicker({ id: 'nimrod-recordings', mode: 'readwrite' });
 }
 
+// ---------------------------------------------------------------------------------------
+// *** REMEMBERING THE FOLDER ACROSS A RELOAD — and the two halves have different answers ***
+// ---------------------------------------------------------------------------------------
+//
+// This decides whether "tidied up whenever this is opened" is true or wishful, so it was probed
+// rather than assumed (`dev/fs_handle_probe.html`).
+//
+// **VERIFIED on Chromium 148, 2026-08-31 — the HANDLE survives.** A `FileSystemDirectoryHandle`
+// is structured-cloneable, stores in IndexedDB, and reads back as a working handle;
+// `isSameEntry` confirms it is the same directory. That half is exactly what Mike expected.
+//
+// **The PERMISSION is the other half, and it is the one that bites.** After a reload,
+// `queryPermission` on a recalled handle normally reads `prompt`, not `granted` — and
+// `requestPermission` may only prompt from a USER GESTURE. So a page cannot silently reach into
+// somebody's folder on load, which is correct behaviour by the browser and an inconvenience for
+// a sweeper.
+//
+// *(That half needs a folder a human actually picked, so it is the button in the probe rather
+// than something I could verify myself. Chrome can also be told "allow on every visit" per site,
+// which would make it `granted` — but that is a choice a person makes, never something the page
+// may assume.)*
+//
+// **So the design is: recall silently, sweep silently IF permission survived, and otherwise put
+// a button in front of somebody rather than pretending.** `recallFolder` reports which of those
+// it is instead of quietly returning a handle that cannot be used.
+
+const DB_NAME = 'nimrod-files';
+const STORE = 'handles';
+const FOLDER_KEY = 'recordings';
+
+function openDb(idb) {
+  return new Promise((res, rej) => {
+    const r = idb.open(DB_NAME, 1);
+    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE); };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+
+function txDo(db, mode, fn) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, mode);
+    const rq = fn(tx.objectStore(STORE));
+    tx.oncomplete = () => res(rq ? rq.result : true);
+    tx.onerror = () => rej(tx.error);
+    tx.onabort = () => rej(tx.error);
+  });
+}
+
+/** Keep the folder somebody chose, so they are not asked to find it again every session. */
+export async function rememberFolder(handle, { idb = (typeof indexedDB !== 'undefined' ? indexedDB : null), key = FOLDER_KEY } = {}) {
+  if (!idb || !handle) return false;
+  try {
+    const db = await openDb(idb);
+    await txDo(db, 'readwrite', (st) => st.put(handle, key));
+    return true;
+  } catch { return false; }        // a browser in private mode, or storage refused. Not fatal.
+}
+
+/**
+ * Get it back, WITH an honest reading of whether it can actually be used.
+ *
+ * `permission` is `granted` (sweep away), `prompt` (a person has to press something), `denied`,
+ * or `unknown`. Returning a handle without saying which of those it is would be the same shape
+ * of lie as the retention promise this file exists to avoid.
+ */
+export async function recallFolder({ idb = (typeof indexedDB !== 'undefined' ? indexedDB : null), key = FOLDER_KEY } = {}) {
+  if (!idb) return { handle: null, permission: 'unknown' };
+  let handle = null;
+  try {
+    const db = await openDb(idb);
+    handle = await txDo(db, 'readonly', (st) => st.get(key));
+  } catch { return { handle: null, permission: 'unknown' }; }
+  if (!handle) return { handle: null, permission: 'unknown' };
+  let permission = 'unknown';
+  try { permission = await handle.queryPermission?.({ mode: 'readwrite' }) || 'unknown'; }
+  catch { permission = 'unknown'; }
+  return { handle, permission };
+}
+
+/**
+ * Ask for it back. *** MUST BE CALLED FROM A USER GESTURE *** — the browser will refuse to
+ * prompt otherwise, and the refusal looks like a denial, which is a confusing thing to debug.
+ */
+export async function ensurePermission(handle) {
+  if (!handle?.requestPermission) return 'unknown';
+  try {
+    if (await handle.queryPermission({ mode: 'readwrite' }) === 'granted') return 'granted';
+    return await handle.requestPermission({ mode: 'readwrite' });
+  } catch { return 'denied'; }
+}
+
+export async function forgetFolder({ idb = (typeof indexedDB !== 'undefined' ? indexedDB : null), key = FOLDER_KEY } = {}) {
+  if (!idb) return false;
+  try {
+    const db = await openDb(idb);
+    await txDo(db, 'readwrite', (st) => st.delete(key));
+    return true;
+  } catch { return false; }
+}
+
+/**
+ * The whole open-the-app story in one call: get the folder back, and sweep it IF that is
+ * possible without interrupting anybody.
+ *
+ * *** IT NEVER PROMPTS. *** A page that asked for filesystem permission the moment it loaded
+ * would train people to refuse — the same reasoning as the microphone permission in
+ * `device_panel.js`, and the same answer: a button that says what it will do.
+ *
+ * `needsPermission: true` is the caller's cue to show that button.
+ */
+export async function openAndSweep({ isExpired, now = Date.now(), idb, key } = {}) {
+  const { handle, permission } = await recallFolder({ idb, key });
+  if (!handle) return { handle: null, permission, needsPermission: false, swept: [], overdue: [], kept: 0 };
+  if (permission !== 'granted') {
+    return { handle, permission, needsPermission: true, swept: [], overdue: [], kept: 0 };
+  }
+  const res = await sweep(handle, { now, isExpired });
+  return { handle, permission, needsPermission: false, ...res };
+}
+
 async function writeFile(dir, name, data) {
   const fh = await dir.getFileHandle(name, { create: true });
   const w = await fh.createWritable();

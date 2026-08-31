@@ -35,7 +35,7 @@ somebody's recordings</em> should be tested.</p>
 <script type="module">
 import {
   sessionName, available, saveSession, listSessions, sweep, deleteSession, describeSweep,
-  MANIFEST_FILE,
+  MANIFEST_FILE, rememberFolder, recallFolder, forgetFolder, ensurePermission, openAndSweep,
 } from '../fs_sink.js';
 import { buildManifest, isExpired, encodeWav, DEFAULT_KEEP_DAYS } from '../recorder.js';
 
@@ -285,6 +285,84 @@ try {
     try { await saveSession(null, fakeSession(T0, 30)); } catch (e) { threw = e; }
     check('*** no folder means no write, and an error rather than a silent nothing ***',
       !!threw && /no folder/i.test(threw.message), String(threw));
+  }
+
+  // =====================================================================================
+  section('*** remembering the folder across a reload ***');
+  {
+    // VERIFIED EMPIRICALLY on Chromium 148 (dev/fs_handle_probe.html): a directory handle IS
+    // structured-cloneable, DOES store in IndexedDB, and comes back a working handle. So the
+    // handle half is not in question. What this suite pins is the part the code decides: that
+    // a handle which came back UNUSABLE is reported as such rather than handed over as if fine.
+    const store = new Map();
+    const fakeIdb = {
+      open() {
+        const req = {};
+        setTimeout(() => {
+          req.result = {
+            objectStoreNames: { contains: () => true },
+            transaction() {
+              const tx = {};
+              const st = {
+                put(v, k) { store.set(k, v); setTimeout(() => tx.oncomplete?.(), 0); return {}; },
+                get(k) { const r = { result: store.get(k) || null }; setTimeout(() => tx.oncomplete?.(), 0); return r; },
+                delete(k) { store.delete(k); setTimeout(() => tx.oncomplete?.(), 0); return {}; },
+              };
+              tx.objectStore = () => st;
+              return tx;
+            },
+          };
+          req.onsuccess?.();
+        }, 0);
+        return req;
+      },
+    };
+    const handleWith = (perm) => {
+      const d = fakeDir('picked');
+      d.queryPermission = async () => perm;
+      d.requestPermission = async () => 'granted';
+      return d;
+    };
+
+    const granted = handleWith('granted');
+    check('a folder can be remembered', await rememberFolder(granted, { idb: fakeIdb }) === true);
+    const back = await recallFolder({ idb: fakeIdb });
+    check('...and comes back', back.handle === granted, String(!!back.handle));
+    check('*** ...with an honest reading of whether it can be USED ***',
+      back.permission === 'granted', back.permission);
+
+    // *** THE CASE THAT DECIDES THE FEATURE. *** The handle survived; the permission did not.
+    // Handing that back as if it were fine would be exactly the shape of lie this file was
+    // written to avoid.
+    await rememberFolder(handleWith('prompt'), { idb: fakeIdb });
+    const lapsed = await recallFolder({ idb: fakeIdb });
+    check('*** a handle whose permission lapsed says so, rather than looking fine ***',
+      !!lapsed.handle && lapsed.permission === 'prompt', JSON.stringify(lapsed.permission));
+
+    // Opening the app must NEVER prompt — a page that asked for filesystem permission on load
+    // would train people to refuse, which is the same argument as the microphone.
+    const res = await openAndSweep({ isExpired, now: T0, idb: fakeIdb });
+    check('*** opening never prompts — it asks for a button instead ***',
+      res.needsPermission === true && res.swept.length === 0, JSON.stringify(res));
+
+    // And with permission intact it just gets on with it.
+    const ok = handleWith('granted');
+    await saveSession(ok, fakeSession(T0 - 60 * DAY, 30), { now: () => T0 });
+    await rememberFolder(ok, { idb: fakeIdb });
+    const res2 = await openAndSweep({ isExpired, now: T0, idb: fakeIdb });
+    check('*** with permission intact, opening tidies up silently ***',
+      res2.needsPermission === false && res2.swept.length === 1, JSON.stringify(res2));
+
+    check('asking again is allowed to succeed, from a gesture',
+      await ensurePermission(handleWith('prompt')) === 'granted');
+    check('...and a handle that cannot be asked degrades rather than throwing',
+      await ensurePermission({}) === 'unknown');
+
+    check('forgetting works', await forgetFolder({ idb: fakeIdb }) === true
+      && (await recallFolder({ idb: fakeIdb })).handle === null);
+    // Private mode, or storage refused: not fatal, just no memory.
+    check('no IndexedDB at all is not an error', await rememberFolder(granted, { idb: null }) === false
+      && (await recallFolder({ idb: null })).handle === null);
   }
 
 } catch (e) {

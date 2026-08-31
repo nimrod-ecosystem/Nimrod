@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>does a directory handle survive a reload? — probe</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.note{color:#5d7064}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700}
+  button{padding:10px 16px;font-size:1rem;margin:6px 6px 6px 0}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>does a directory handle survive a page reload?</h1>
+
+<div class="warn">
+  <b>This is a PROBE, not a suite.</b> It answers a question about the browser, not about Nimrod,
+  and the answer decides whether "tidied up whenever this is opened" is true or wishful.
+</div>
+
+<p>Two halves, and they have different answers:</p>
+<ol>
+  <li><b>Does the handle itself survive?</b> Testable here with no picker and no prompt, because
+    <code>navigator.storage.getDirectory()</code> hands over a real
+    <code>FileSystemDirectoryHandle</code> for free.</li>
+  <li><b>Does the PERMISSION survive?</b> Only answerable with a folder somebody actually picked,
+    because the origin-private one needs no permission at all. That is the button below, and it
+    needs a human — reload the page afterwards and press <i>Check remembered folder</i>.</li>
+</ol>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<p>
+  <button id="pick">Pick a real folder (needs you)</button>
+  <button id="check">Check remembered folder</button>
+  <button id="forget">Forget it</button>
+</p>
+
+<script type="module">
+const out = document.getElementById('results');
+function line(cls, text) {
+  const d = document.createElement('div');
+  d.className = cls; d.textContent = text; out.append(d);
+}
+const yes = (t) => line('pass', 'YES   ' + t);
+const no = (t) => line('fail', 'NO    ' + t);
+const note = (t) => line('note', '      ' + t);
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// The smallest possible IndexedDB store, because that is the only place a handle can be kept.
+const DB = 'nimrod-probe', STORE = 'handles';
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function put(key, val) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(val, key);
+    tx.oncomplete = () => res(true); tx.onerror = () => rej(tx.error);
+  });
+}
+async function get(key) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const rq = tx.objectStore(STORE).get(key);
+    rq.onsuccess = () => res(rq.result || null); rq.onerror = () => rej(rq.error);
+  });
+}
+
+(async () => {
+  section('1. what this browser has at all');
+  line(window.showDirectoryPicker ? 'pass' : 'fail',
+       `${window.showDirectoryPicker ? 'YES  ' : 'NO   '} showDirectoryPicker`);
+  line(navigator.storage?.getDirectory ? 'pass' : 'fail',
+       `${navigator.storage?.getDirectory ? 'YES  ' : 'NO   '} navigator.storage.getDirectory (origin-private)`);
+  note(navigator.userAgent);
+
+  section('2. can a handle be STORED and read back? (no picker, no prompt)');
+  let opfs = null;
+  try {
+    opfs = await navigator.storage.getDirectory();
+    yes('got a real FileSystemDirectoryHandle from the origin-private file system');
+  } catch (e) { no('could not get one: ' + e.message); }
+
+  if (opfs) {
+    // A handle is only useful across a reload if it is STRUCTURED-CLONEABLE. This is the part
+    // people assume and it is worth watching fail rather than assuming it cannot.
+    try {
+      structuredClone(opfs);
+      yes('a directory handle is structured-cloneable');
+    } catch (e) { no('NOT structured-cloneable: ' + e.message); }
+
+    try {
+      await put('probe', opfs);
+      const back = await get('probe');
+      if (back && typeof back.getFileHandle === 'function') {
+        yes('stored in IndexedDB and read back as a working handle');
+        const same = await opfs.isSameEntry?.(back);
+        line(same ? 'pass' : 'note', `${same ? 'YES  ' : '?    '} isSameEntry says it is the same directory`);
+      } else no('came back as something that is not a handle');
+    } catch (e) { no('IndexedDB round trip failed: ' + e.message); }
+
+    // Whether the API for asking about permission even exists on a handle.
+    line(typeof opfs.queryPermission === 'function' ? 'pass' : 'note',
+         `${typeof opfs.queryPermission === 'function' ? 'YES  ' : '?    '} handle.queryPermission exists`);
+    line(typeof opfs.requestPermission === 'function' ? 'pass' : 'note',
+         `${typeof opfs.requestPermission === 'function' ? 'YES  ' : '?    '} handle.requestPermission exists`);
+    if (opfs.queryPermission) {
+      try { note('origin-private handle permission reads: ' + await opfs.queryPermission({ mode: 'readwrite' })); }
+      catch (e) { note('queryPermission threw: ' + e.message); }
+    }
+    note('NOTE: the origin-private file system needs no permission, so the reading above says '
+       + 'nothing about a folder somebody picked. That is what the buttons are for.');
+  }
+
+  section('3. a folder somebody PICKED — needs a human');
+  const saved = await get('picked').catch(() => null);
+  if (!saved) {
+    note('Nothing remembered yet. Press "Pick a real folder", then RELOAD, then press "Check".');
+  } else {
+    yes('a picked folder was remembered across a reload: ' + (saved.name || '(unnamed)'));
+    try {
+      const q = await saved.queryPermission({ mode: 'readwrite' });
+      line(q === 'granted' ? 'pass' : 'fail', `${q === 'granted' ? 'YES  ' : 'NO   '} permission WITHOUT asking again: ${q}`);
+      if (q !== 'granted') {
+        note('*** THIS IS THE ANSWER THAT MATTERS. *** The handle survived; the permission did');
+        note('not. So a sweep cannot happen silently on load — it needs a click, because');
+        note('requestPermission requires a user gesture. Chrome can be told "allow on every');
+        note('visit" per site, which would change this reading; that is a per-user setting,');
+        note('not something the page can assume.');
+      }
+    } catch (e) { no('queryPermission threw: ' + e.message); }
+  }
+
+  document.getElementById('summary').textContent = 'probe finished — read section 3';
+})();
+
+document.getElementById('pick').addEventListener('click', async () => {
+  try {
+    const dir = await window.showDirectoryPicker({ id: 'nimrod-probe', mode: 'readwrite' });
+    await put('picked', dir);
+    line('pass', 'YES   picked and remembered: ' + dir.name + ' — now RELOAD this page');
+  } catch (e) { line('note', '      picker cancelled or failed: ' + e.message); }
+});
+
+document.getElementById('check').addEventListener('click', async () => {
+  const saved = await get('picked');
+  if (!saved) return line('note', '      nothing remembered');
+  const q = await saved.queryPermission({ mode: 'readwrite' });
+  line(q === 'granted' ? 'pass' : 'note', `      queryPermission before asking: ${q}`);
+  // From a click, so `requestPermission` is allowed to prompt.
+  const r = await saved.requestPermission({ mode: 'readwrite' });
+  line(r === 'granted' ? 'pass' : 'fail', `      after requestPermission (from a click): ${r}`);
+  if (r === 'granted') {
+    let n = 0;
+    for await (const _ of saved.values()) n += 1;
+    line('pass', `YES   the folder is readable again — ${n} entries`);
+  }
+});
+
+document.getElementById('forget').addEventListener('click', async () => {
+  await put('picked', null);
+  line('note', '      forgotten');
+});
+</script>
+</body>
+</html>
