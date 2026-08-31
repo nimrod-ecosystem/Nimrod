@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the paired recorder — two microphones, one utterance — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>the paired recorder</h1>
+
+<div class="warn">
+  A wrong WAV header has exactly the same structure as a right one.
+</div>
+
+<p>That is the QR lesson from <code>AGENTS.md</code> wearing a different hat, so the WAV writer is
+not checked against my reading of the spec — it is <b>decoded back by the browser's own
+<code>decodeAudioData</code></b>, which is a genuinely independent implementation, and the samples
+are compared to what went in. A header that passes a field-by-field check and produces a file
+nothing can open is exactly the failure that suite was written about.</p>
+
+<p>Everything else runs with <b>no microphone and no audio</b>: capture and the clock are
+injected, so the sequencing, the alignment and the manifest are exercised as arithmetic.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createPairedRecorder, encodeWav, buildManifest,
+  PRODUCERS, ROLES, MANIFEST_VERSION,
+} from '../recorder.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A clock the test drives by hand, so "the second microphone opened 40ms late" is a decision
+// rather than an accident of how fast the runner happens to be.
+function fakeClock(start = 1_700_000_000_000) {
+  let t = start;
+  return { now: () => t, advance: (ms) => { t += ms; } };
+}
+
+// A microphone that never was. `feed` pushes blocks the way the audio thread would.
+// *** THE DELAY HAPPENS AFTER AN AWAIT, AND THAT MATTERS. *** The first version advanced the
+// clock at call time, so both captures were invoked before either continuation ran and both
+// recorded the same offset — the fake was not modelling the thing the assertion was about. Two
+// opens completing at different moments is the whole point.
+// *** DELAYS ARE MICROTASK HOPS, NOT A NUMBER ADVANCED AT CALL TIME. ***
+// Two earlier versions of this fake could not produce two different offsets, and both times the
+// reason was the same: with `Promise.all` over parallel opens and a clock that only moves when
+// something tells it to, EVERY continuation lands after EVERY advance, so both channels honestly
+// read the same instant. That is correct behaviour being mismeasured, not a bug in the code.
+// Hopping the microtask queue a different number of times per device is what actually staggers
+// the resolutions, which is what a real pair of `getUserMedia` calls does.
+function fakeCapture(log, { sampleRate = 48000, delays = {}, openDelayMs = 0, clock = null } = {}) {
+  return async function capture(deviceId) {
+    const hops = delays[deviceId] != null ? delays[deviceId] : openDelayMs;
+    for (let i = 0; i < hops; i++) await Promise.resolve();
+    if (hops && clock) clock.advance(hops);
+    let cb = null;
+    const rec = {
+      deviceId, stopped: false,
+      feed: (arr) => cb && cb(Float32Array.from(arr)),
+      sampleRate,
+      onData(fn) { cb = fn; },
+      stop() { this.stopped = true; cb = null; },
+    };
+    log.push(rec);
+    return rec;
+  };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the WAV, judged by a decoder rather than by me ***');
+  {
+    // A short ramp plus some extremes, so clipping and sign are both exercised.
+    const n = 480;
+    const src = new Float32Array(n);
+    for (let i = 0; i < n; i++) src[i] = Math.sin((i / n) * Math.PI * 8) * 0.8;
+    src[0] = 0; src[1] = 1; src[2] = -1;
+
+    const buf = encodeWav(src, 48000);
+    check('it produced something the right size', buf.byteLength === 44 + n * 2,
+      String(buf.byteLength));
+
+    const AC = window.AudioContext || window.webkitAudioContext;
+    let decoded = null, err = null;
+    try {
+      const ctx = new AC();
+      decoded = await ctx.decodeAudioData(buf.slice(0));
+      ctx.close?.();
+    } catch (e) { err = e; }
+
+    check('*** the browser can actually decode it — the check that matters ***',
+      !!decoded, String(err && err.message));
+    if (decoded) {
+      check('...with the right number of samples', decoded.length === n, String(decoded.length));
+      check('...at the right rate', decoded.sampleRate === 48000, String(decoded.sampleRate));
+      check('...and one channel, because a microphone is one thing',
+        decoded.numberOfChannels === 1, String(decoded.numberOfChannels));
+      const got = decoded.getChannelData(0);
+      // 16-bit quantisation, so exact equality is the wrong test; 1/32768 is the floor.
+      let worst = 0;
+      for (let i = 0; i < n; i++) worst = Math.max(worst, Math.abs(got[i] - src[i]));
+      check('*** and the samples that come back are the samples that went in ***',
+        worst < 0.0001, `worst error ${worst}`);
+      check('...including the extremes, which is where an unclamped conversion WRAPS and turns '
+        + 'a loud sample into a loud one of the opposite sign',
+        Math.abs(got[1] - 1) < 0.001 && Math.abs(got[2] + 1) < 0.001,
+        `${got[1]}, ${got[2]}`);
+    }
+  }
+  {
+    // Values outside -1..1 are normal from Web Audio and MUST clamp rather than wrap.
+    const buf = encodeWav(Float32Array.from([2, -2, 0]), 8000);
+    const v = new DataView(buf);
+    check('a sample above 1 clamps to full scale, not to a negative',
+      v.getInt16(44, true) === 0x7FFF, String(v.getInt16(44, true)));
+    check('...and below -1 likewise', v.getInt16(46, true) === -0x8000, String(v.getInt16(46, true)));
+  }
+
+  // =====================================================================================
+  section('*** the manifest — this is the first file Nimrod writes into somebody folder ***');
+  {
+    // DECISIONS.md left exactly one thing open about writing into a user's folder: a field
+    // absent at write time cannot be supplied afterwards, so the producer field is decided
+    // before the first file, not after. This is that first file.
+    const m = buildManifest({ producer: 'human', tracks: [{ role: 'label' }, { role: 'input' }] });
+    check('*** it carries a producer from the first byte ***', m.producer === 'human', m.producer);
+    check('...a version, so a later format can be told apart from this one',
+      m.v === MANIFEST_VERSION);
+    check('an unrecognised producer becomes `unknown` rather than being written through',
+      buildManifest({ producer: 'wildly-made-up' }).producer === 'unknown');
+    // "We did not record it" and "nobody said" are different facts. Collapsing them corrupts
+    // any count built on top — the same argument as the four distinct non-answers.
+    check('...and `unknown` is a VALUE, not an absence', 'producer' in buildManifest({}));
+    check('every producer it will write is in the closed set',
+      PRODUCERS.includes(buildManifest({}).producer));
+
+    check('*** each track says what it was FOR, which is the whole point of a pair ***',
+      m.tracks[0].role === 'label' && m.tracks[1].role === 'input', JSON.stringify(m.tracks));
+    check('an unrecognised role degrades rather than being written through',
+      buildManifest({ tracks: [{ role: 'nonsense' }] }).tracks[0].role === 'other');
+    check('marks are numbers and strings, whatever they arrived as',
+      buildManifest({ marks: [{ atMs: '12', label: 7 }] }).marks[0].atMs === 12);
+  }
+
+  // =====================================================================================
+  section('recording a session with two microphones');
+  {
+    const clock = fakeClock();
+    const log = [];
+    const rec = createPairedRecorder({
+      capture: fakeCapture(log, { clock, delays: { 'phone-1': 2, 'webcam-1': 9 } }),
+      now: clock.now,
+      producer: 'human',
+    });
+
+    await rec.start([
+      { role: 'label', deviceId: 'phone-1', label: 'Phone by the pillow' },
+      { role: 'input', deviceId: 'webcam-1', label: 'Webcam microphone' },
+    ]);
+    check('both microphones are recording', log.length === 2 && rec.isRunning());
+
+    // *** THE OFFSET IS RECORDED, NOT ASSUMED TO BE ZERO. *** Two microphones never start at
+    // the same instant, and a corpus that assumed they did would be misaligned by however long
+    // the slower open took — silently, and by a different amount every session.
+    const chans = rec.channels();
+    const byRole = Object.fromEntries(chans.map((c) => [c.role, c]));
+    check('*** each channel records HOW LATE it actually started, rather than assuming zero ***',
+      byRole.label.offsetMs > 0 && byRole.input.offsetMs > 0, JSON.stringify(chans));
+    check('...and the one that took longer to open says so — which is exactly the misalignment '
+      + 'a corpus would otherwise carry, silently and differently every session',
+      byRole.input.offsetMs > byRole.label.offsetMs, JSON.stringify(chans));
+    const started = byRole.input.offsetMs;   // the clock has moved this far by the time we record
+
+    // The session drives the labels. A trivia game knows it just asked for `paris`; nothing
+    // here listens to the audio to work that out. See the header on why there is no VAD.
+    clock.advance(1000);
+    log[0].feed([0.1, 0.2]); log[1].feed([0.01, 0.02]);
+    rec.mark('paris');
+    clock.advance(500);
+    log[0].feed([0.3]); log[1].feed([0.03]);
+    rec.mark('rome');
+    clock.advance(500);
+
+    const { manifest, tracks } = rec.stop({ note: 'trivia session' });
+    check('it stopped', !rec.isRunning());
+    check('both captures were released', log.every((c) => c.stopped));
+
+    check('*** the labels came from the SESSION, not from listening ***',
+      manifest.marks.map((m) => m.label).join(',') === 'paris,rome', JSON.stringify(manifest.marks));
+    check('...at the right moments, in ONE shared clock so both files agree',
+      manifest.marks[0].atMs === started + 1000 && manifest.marks[1].atMs === started + 1500,
+      JSON.stringify(manifest.marks));
+    check('the duration is the whole session', manifest.durationMs === started + 2000,
+      String(manifest.durationMs));
+
+    check('two tracks came out', tracks.length === 2);
+    check('...named by ROLE, so they survive being moved and looked at a year later',
+      tracks[0].file === 'label.wav' && tracks[1].file === 'input.wav',
+      tracks.map((t) => t.file).join(','));
+    // Float32, so exact equality against float64 literals is the wrong test — it fails for a
+    // reason that has nothing to do with the code, which is its own small version of a test
+    // that passes or fails for an adjacent reason.
+    const want = [0.1, 0.2, 0.3];
+    check('...the blocks were joined, in order',
+      tracks[0].samples.length === 3
+        && want.every((v, i) => Math.abs(tracks[0].samples[i] - v) < 1e-6),
+      Array.from(tracks[0].samples).join(','));
+    check('...and each carries real WAV bytes', tracks.every((t) => t.wav.byteLength === 44 + t.samples.length * 2));
+    check('the manifest names the device each track came from, which cannot be recovered later',
+      manifest.tracks[0].deviceId === 'phone-1' && manifest.tracks[1].deviceId === 'webcam-1',
+      JSON.stringify(manifest.tracks));
+    check('...and carries the per-track offsets through to the file, which is where a later '
+      + 'reader needs them',
+      manifest.tracks.find((t) => t.role === 'input').offsetMs === started
+        && manifest.tracks.find((t) => t.role === 'label').offsetMs === byRole.label.offsetMs,
+      JSON.stringify(manifest.tracks));
+  }
+
+  section('the awkward cases');
+  {
+    const clock = fakeClock();
+    const log = [];
+    const rec = createPairedRecorder({ capture: fakeCapture(log, { clock }), now: clock.now });
+
+    let threw = null;
+    try { await rec.start([]); } catch (e) { threw = e; }
+    check('recording nothing is an error, not an empty file', !!threw, String(threw));
+
+    await rec.start([{ role: 'label', deviceId: 'a' }]);
+    threw = null;
+    try { await rec.start([{ role: 'input', deviceId: 'b' }]); } catch (e) { threw = e; }
+    check('starting twice is refused rather than quietly abandoning the first recording', !!threw);
+
+    // A mark before anything is running would be a label with nothing to attach to.
+    rec.stop();
+    check('a mark outside a session is ignored rather than stored against nothing',
+      rec.mark('x') === null);
+    check('stopping twice returns nothing rather than a second empty session', rec.stop() === null);
+  }
+
+  section('one microphone is still a valid recording');
+  {
+    // The pair is the point, but somebody with one microphone should not be refused — they get
+    // a corpus with no `input` channel, which is a smaller thing and an honest one.
+    const clock = fakeClock();
+    const log = [];
+    const rec = createPairedRecorder({ capture: fakeCapture(log, { clock }), now: clock.now });
+    await rec.start([{ role: 'label', deviceId: 'only-1' }]);
+    log[0].feed([0.5]);
+    const { manifest, tracks } = rec.stop();
+    check('it records', tracks.length === 1 && manifest.tracks.length === 1);
+    check('...and the manifest says which role is present, so a later reader is not left '
+      + 'guessing whether a file went missing', manifest.tracks[0].role === 'label');
+  }
+
+  section('an agent playing the same game is recorded as an agent');
+  {
+    // DECISIONS.md, 2026-08-30: an agent acts as itself, and its work is separable from a
+    // person's. That separation has to exist in the FILE, because nothing downstream can add it.
+    const clock = fakeClock();
+    const log = [];
+    const rec = createPairedRecorder({
+      capture: fakeCapture(log, { clock }), now: clock.now, producer: 'agent',
+    });
+    await rec.start([{ role: 'label', deviceId: 'a' }]);
+    const { manifest } = rec.stop();
+    check('*** the corpus can be filtered by who produced it, forever ***',
+      manifest.producer === 'agent', manifest.producer);
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+section('not covered here');
+check('NOTE: no microphone, no Web Audio, no dropped blocks. Whether a ScriptProcessor keeps up '
+  + 'on a Pi while a game is drawing is a bench question, and the answer may be "move to an '
+  + 'AudioWorklet"', true);
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
