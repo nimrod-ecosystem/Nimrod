@@ -131,6 +131,42 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     : null);
   const makeUserState = forPerson(makePersonState);
   const makeUserEvents = forPerson(makePersonEvents);
+  // ---- which microphone, and what to fall back to ------------------------------------
+  //
+  // NOTHING IS OPENED HERE. The panel lists devices and writes a preference; the microphone is
+  // only ever opened by whatever acquires it, which on this page is nothing at all. A settings
+  // page that turned the microphone on to show you a settings page would be its own bug.
+  async function mountDeviceTab(host, { makeUserState: makeState2 }) {
+    const [{ createMicOwner }, { mountDevicePanel, DEVICE_KEY }] = await Promise.all([
+      import('./mic_owner.js'), import('./device_panel.js'),
+    ]);
+    if (!makeState2) return null;
+    const state = makeState2(DEVICE_KEY);
+    await state.load().catch(() => {});
+    const owner = createMicOwner({
+      preferred: () => (state.get() || {}).microphonePreferred || [],
+    });
+    const panel = mountDevicePanel(host, {
+      owner,
+      settings: () => state.get() || {},
+      save: async (patch) => { state.set(patch); await state.flush?.(); },
+      // The ONLY place a prompt happens, and only from the button that says so.
+      requestPermission: async () => {
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+        for (const t of s.getTracks()) t.stop();     // we wanted the permission, not the audio
+      },
+    });
+    await panel.refresh();
+    return {
+      async refresh() { await panel.refresh(); return this; },
+      destroy() {
+        try { panel.destroy(); } catch (e) { console.error(e); }
+        try { owner.destroy(); } catch (e) { console.error(e); }
+        try { state.destroy?.(); } catch (e) { console.error(e); }
+      },
+    };
+  }
+
   // ---- the marker tracker's calibration, mounted under Devices ----------------------
   //
   // Assembled here rather than inside `marker_panel.js` because the panel is deliberately
@@ -194,6 +230,18 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const i = mountInputs(host, { profiles, user, makeUserState, personId });
       await i.refresh();
 
+      // WHICH MICROPHONE, and what to fall back to. Above the marker panel because it needs no
+      // camera and no calibration — somebody can set it in ten seconds and leave.
+      const micHost = document.createElement('div');
+      host.append(micHost);
+      let mics = null;
+      try {
+        mics = await mountDeviceTab(micHost, { makeUserState });
+      } catch (err) {
+        console.error('home: device panel', err);
+        micHost.remove();
+      }
+
       const markerHost = document.createElement('div');
       host.append(markerHost);
       let marker = null;
@@ -206,9 +254,15 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         markerHost.remove();
       }
       return {
-        async refresh() { await i.refresh(); await marker?.refresh?.(); return this; },
+        async refresh() {
+          await i.refresh();
+          await mics?.refresh?.();
+          await marker?.refresh?.();
+          return this;
+        },
         destroy() {
           try { marker?.destroy?.(); } catch (e) { console.error(e); }
+          try { mics?.destroy?.(); } catch (e) { console.error(e); }
           try { i.destroy?.(); } catch (e) { console.error(e); }
         },
       };

@@ -34,6 +34,7 @@ and it <b>never confuses a device going away with a person going quiet</b>.</p>
 
 <script type="module">
 import { pickDevice, pickChanged, describePick, watchDevices, PICKS } from '../device_pick.js';
+import { mountDevicePanel, moveEntry, buildRows } from '../device_panel.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -228,17 +229,144 @@ try {
     // stopped talking would be a machine deciding that a person who went quiet must be broken —
     // and for somebody who is slow to speak, that is exactly backwards.
     //
-    // This is asserted structurally: nothing in this file's inputs carries signal, level, or
-    // any measure of whether anybody is speaking. It cannot make that mistake because it is
-    // never told enough to.
+    // *** THE RULE WAS TOO STRONG AND MIKE KILLED IT (2026-08-30). *** It used to read "nothing
+    // here ever looks at signal". A phone that LOCKS does not stop being present, so a rule that
+    // only watches presence is blind to the quietest and most likely failure. The corrected
+    // version: never infer from signal whether a PERSON is doing anything; signal MAY tell you
+    // whether the CHANNEL is alive — because a working microphone in a real room is never
+    // digitally silent, so a quiet person still produces room tone and a dead channel does not.
+    //
+    // What is asserted here is therefore a SCOPE, not a prohibition: this file answers "which
+    // device", it is never handed a level, and liveness belongs to whatever holds the stream.
     const src = await fetch('../device_pick.js').then((r) => r.text());
-    const forbidden = /\b(volume|amplitude|rms|loudness|silence|speaking|signalLevel)\b/i;
-    check('*** nothing here looks at signal — only at what is PRESENT ***',
-      !forbidden.test(src.replace(/\/\/.*$/gm, '')),
+    const forbidden = /\b(volume|amplitude|rms|loudness|speaking|signalLevel)\b/i;
+    check('*** this file is never told about signal — it answers "which device", and liveness '
+      + 'is somebody else’s job ***',
+      !forbidden.test(src.replace(/^\s*\/\/.*$/gm, '')),
       'a signal-shaped term appeared in the code');
     const quiet = pickDevice(WANT, [PHONE]);
     check('a person saying nothing at all does not change the device',
       quiet.id === PHONE.id && quiet.pick === 'preferred');
+  }
+
+  // =====================================================================================
+  section('the panel — a list in order, not a dropdown');
+  {
+    check('moving an entry up swaps it with the one above',
+      moveEntry(['a', 'b', 'c'], 1, -1).join(',') === 'b,a,c');
+    check('...and down, with the one below',
+      moveEntry(['a', 'b', 'c'], 1, 1).join(',') === 'a,c,b');
+    // *** CLAMPS, DOES NOT WRAP. *** The opposite of the rule for a scanning cursor, and
+    // deliberately: a cursor that stops at the end strands somebody, but a list that wraps from
+    // top to bottom on one press too many has silently made their last choice their first.
+    check('*** pressing up at the top does nothing, rather than wrapping to the bottom ***',
+      moveEntry(['a', 'b', 'c'], 0, -1).join(',') === 'a,b,c');
+    check('...and down at the bottom likewise',
+      moveEntry(['a', 'b', 'c'], 2, 1).join(',') === 'a,b,c');
+    check('a nonsense index changes nothing', moveEntry(['a'], 9, -1).join(',') === 'a');
+    check('it does not mutate what it was given',
+      (() => { const src = ['a', 'b']; moveEntry(src, 0, 1); return src.join(',') === 'a,b'; })());
+  }
+
+  section('*** a device that has left the room stays in the list ***');
+  {
+    const { rows, extra } = buildRows([PHONE.id, USB.id], [USB, STRANGER]);
+    check('both chosen devices are listed, in the order chosen',
+      rows.length === 2 && rows[0].id === PHONE.id && rows[1].id === USB.id, JSON.stringify(rows));
+    // If the panel only listed what is PRESENT, a phone that had left would vanish from the
+    // settings that mention it — so somebody would "fix" it by removing the entry, and lose the
+    // fallback the moment it came back.
+    check('*** the one that is not here is still shown, marked as not connected ***',
+      rows[0].present === false && rows[1].present === true, JSON.stringify(rows));
+    check('and something plugged in but unchosen is offered separately',
+      extra.length === 1 && extra[0].id === STRANGER.id, JSON.stringify(extra));
+    check('nothing chosen yet still offers everything that is here',
+      buildRows([], [USB, STRANGER]).extra.length === 2);
+  }
+
+  section('the panel, driven');
+  {
+    let stored = { microphonePreferred: [USB.id, WEBCAM.id] };
+    let devices = [USB, WEBCAM, STRANGER];
+    let chosen = null;
+    const owner = {
+      list: async () => devices,
+      labelled: async () => devices.every((d) => !!d.label),
+      choose: async () => { chosen = pickDevice(stored.microphonePreferred, devices); return chosen; },
+      chosen: () => chosen,
+    };
+    const host = document.createElement('div');
+    document.body.append(host);
+    const panel = mountDevicePanel(host, {
+      owner,
+      settings: () => stored,
+      save: async (patch) => { stored = { ...stored, ...patch }; },
+    });
+    await panel.refresh();
+
+    check('it lists the chosen devices in order', panel.rows().rows.map((r) => r.id).join(',')
+      === `${USB.id},${WEBCAM.id}`, JSON.stringify(panel.rows().rows));
+    check('...and says which one is actually in use', /USB Microphone/.test(host.querySelector('[data-now]').textContent)
+      || host.querySelector('[data-now]').textContent === '', host.querySelector('[data-now]').textContent);
+
+    // NO DRAG AND DROP: the arrows are the reorder, and they work with a switch.
+    host.querySelector('[data-down="0"]').click();
+    await sleep(5);
+    check('*** the down arrow reorders the preference, and it is saved ***',
+      stored.microphonePreferred.join(',') === `${WEBCAM.id},${USB.id}`,
+      JSON.stringify(stored.microphonePreferred));
+    check('...and the choice was recomputed rather than left stale',
+      chosen.id === WEBCAM.id, JSON.stringify(chosen));
+    check('the top row cannot be moved up', host.querySelector('[data-up="0"]').disabled === true);
+
+    host.querySelector(`[data-add="${STRANGER.id}"]`).click();
+    await sleep(5);
+    check('a connected but unchosen device can be added to the end',
+      stored.microphonePreferred.length === 3
+        && stored.microphonePreferred[2] === STRANGER.id,
+      JSON.stringify(stored.microphonePreferred));
+
+    host.querySelector('[data-remove="0"]').click();
+    await sleep(5);
+    check('and removed again', stored.microphonePreferred.join(',') === `${USB.id},${STRANGER.id}`,
+      JSON.stringify(stored.microphonePreferred));
+
+    panel.destroy();
+    check('destroy puts the root back', host.innerHTML === '');
+    host.remove();
+  }
+
+  section('*** it does not ask for the microphone the moment somebody opens the page ***');
+  {
+    let asked = 0;
+    let devices = [{ id: 'blank-1', label: '' }, { id: 'blank-2', label: '' }];
+    const owner = {
+      list: async () => devices,
+      labelled: async () => devices.every((d) => !!d.label),
+      choose: async () => null, chosen: () => null,
+    };
+    const host = document.createElement('div');
+    document.body.append(host);
+    const panel = mountDevicePanel(host, {
+      owner, settings: () => ({}), save: async () => {},
+      requestPermission: async () => { asked += 1; devices = [USB, WEBCAM]; },
+    });
+    await panel.refresh();
+    check('opening the panel asks for nothing', asked === 0);
+    // A settings page that prompts on open teaches people to click Block, and then the feature
+    // is dead for reasons nobody remembers.
+    check('*** ...it shows a button that says what it will do ***',
+      host.querySelector('[data-permission]').hidden === false
+        && /permission/i.test(host.textContent), host.textContent.slice(0, 90));
+    check('...and the unusable blank-label list is NOT rendered as if it were a chooser',
+      !/Microphone 1|blank-1/.test(host.querySelector('[data-list]').textContent),
+      host.querySelector('[data-list]').textContent);
+    host.querySelector('[data-grant]').click();
+    await sleep(10);
+    check('pressing it asks once, and the names arrive', asked === 1
+      && host.querySelector('[data-permission]').hidden === true, String(asked));
+    panel.destroy();
+    host.remove();
   }
 
 } catch (e) {
