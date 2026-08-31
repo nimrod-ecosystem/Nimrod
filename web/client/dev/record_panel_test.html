@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pressing record — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+  #host{position:absolute;left:-9999px;width:600px}
+</style>
+</head>
+<body>
+<h1>pressing record</h1>
+
+<div class="warn">
+  Getting the two channels the wrong way round would silently invert the whole corpus.
+</div>
+
+<p>The chain existed and nothing could reach it. This is the button — and the two things worth
+testing hardest are the ones that fail <em>quietly</em>: which microphone is the near one, and
+what happens to a finished recording when the folder has gone away.</p>
+
+<p><b>No microphone, no folder, no clock.</b></p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountRecordPanel, assignRoles, describeRoles } from '../record_panel.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const PHONE = { id: 'phone-1', label: 'Phone by the pillow' };
+const CAM = { id: 'cam-1', label: 'Webcam microphone' };
+
+function rig({ devices = [PHONE, CAM], preferredIds = [PHONE.id, CAM.id],
+               folderFails = false, hasFolder = true, recallPermission = 'granted' } = {}) {
+  let stored = { microphonePreferred: preferredIds, swapRoles: false, keepDays: 30 };
+  const saved = [];
+  const started = [];
+  let t = 1000;
+  const fakeFolder = { name: 'Recordings' };
+
+  const stub = {
+    _running: false, _marks: [], _started: [],
+    async start(rs) { this._started.push(rs); this._running = true; },
+    mark(l) { if (!this._running) return null; const m = { atMs: 0, label: l }; this._marks.push(m); return m; },
+    stop() { if (!this._running) return null; this._running = false;
+             return { manifest: { startedAt: t }, tracks: [{ role: 'label', wav: new ArrayBuffer(44) }] }; },
+    isRunning() { return this._running; },
+    marks() { return this._marks.slice(); },
+  };
+
+  const fs = {
+    available: () => true,
+    pickFolder: async () => fakeFolder,
+    rememberFolder: async () => true,
+    recallFolder: async () => (hasFolder ? { handle: fakeFolder, permission: recallPermission } : { handle: null, permission: 'unknown' }),
+    ensurePermission: async () => 'granted',
+    listSessions: async () => saved.map((s) => ({ folder: s.folder, manifest: {} })),
+    deleteSession: async (dir, f) => { const i = saved.findIndex((s) => s.folder === f); if (i >= 0) saved.splice(i, 1); return i >= 0; },
+    saveSession: async () => {
+      if (folderFails) throw new Error('folder gone');
+      const rec = { folder: `nimrod-${saved.length}`, files: ['label.wav', 'manifest.json'] };
+      saved.push(rec);
+      return rec;
+    },
+  };
+
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const panel = mountRecordPanel(host, {
+    micOwner: { list: async () => devices },
+    makeRecorder: () => stub,
+    fs,
+    settings: () => stored,
+    save: async (p) => { stored = { ...stored, ...p }; },
+    now: () => (t += 1000),
+    setTimer: () => 1, clearTimer: () => {},
+  });
+  return { panel, host, stub, fs, saved, get stored() { return stored; } };
+}
+
+const el = (host, s) => host.querySelector(s);
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** which microphone is which — get this backwards and the corpus is inverted ***');
+  {
+    const rs = assignRoles([PHONE.id, CAM.id], [PHONE, CAM]);
+    check('the one they put FIRST is the near one — the label channel',
+      rs[0].role === 'label' && rs[0].deviceId === PHONE.id, JSON.stringify(rs));
+    check('...and the second is what the everyday screen hears',
+      rs[1].role === 'input' && rs[1].deviceId === CAM.id, JSON.stringify(rs));
+
+    // A default nobody can see is a guess, so it is said in words a caregiver can check.
+    check('*** it is stated in plain words, not as an arrow between two device names ***',
+      /Phone by the pillow → what was said/.test(describeRoles(rs)), describeRoles(rs));
+
+    const sw = assignRoles([PHONE.id, CAM.id], [PHONE, CAM], { swap: true });
+    check('...and it can be swapped when the default is wrong for that room',
+      sw[0].deviceId === CAM.id && sw[0].role === 'label', JSON.stringify(sw));
+
+    // A preference naming a device that has left the room must not create a phantom channel.
+    const gone = assignRoles([PHONE.id, CAM.id], [CAM]);
+    check('a preferred device that is not connected is skipped, not recorded as silence',
+      gone.length === 1 && gone[0].deviceId === CAM.id, JSON.stringify(gone));
+    check('...and nothing chosen at all still uses what is plugged in',
+      assignRoles([], [CAM]).length === 1);
+    check('no microphone is an empty list, and says so',
+      assignRoles([], []).length === 0 && /No microphone/.test(describeRoles([])));
+  }
+
+  section('one microphone is not an error');
+  {
+    const rs = assignRoles([PHONE.id], [PHONE]);
+    check('it records the one there is', rs.length === 1 && rs[0].role === 'label');
+    // Refusing to record because the second microphone is missing would be the worse failure —
+    // the same reasoning as the fallback ladder.
+    check('*** ...and says the pair is not available rather than refusing ***',
+      /nothing to compare it with/i.test(describeRoles(rs)), describeRoles(rs));
+  }
+
+  // =====================================================================================
+  section('recording');
+  {
+    const r = rig();
+    await r.panel.refresh();
+    check('the remembered folder came back and is in use', /Recordings/.test(el(r.host, '[data-folder]').textContent),
+      el(r.host, '[data-folder]').textContent);
+    check('Record is available', el(r.host, '[data-rec]').disabled === false);
+
+    el(r.host, '[data-rec]').click();
+    await sleep(10);
+    check('*** it records BOTH microphones ***', r.stub._started[0].length === 2,
+      JSON.stringify(r.stub._started[0]));
+    check('...as label and input', r.stub._started[0].map((x) => x.role).join(',') === 'label,input');
+    check('the button became Stop', el(r.host, '[data-rec]').textContent === 'Stop');
+    check('...and marking only appears while it is running',
+      el(r.host, '[data-markrow]').hidden === false);
+
+    // The session supplies the label. A trivia game would call this with the expected answer.
+    el(r.host, '[data-marktext]').value = 'paris';
+    el(r.host, '[data-mark]').click();
+    await sleep(5);
+    check('a mark is recorded, with the word that was expected',
+      r.stub._marks[0].label === 'paris', JSON.stringify(r.stub._marks));
+    check('...and shown back, so somebody can see it registered',
+      /paris/.test(el(r.host, '[data-marks]').textContent), el(r.host, '[data-marks]').textContent);
+
+    el(r.host, '[data-rec]').click();
+    await sleep(10);
+    check('stopping saves it', r.saved.length === 1, JSON.stringify(r.saved));
+    check('...and says where it went', /Saved 2 files/.test(el(r.host, '[data-said]').textContent),
+      el(r.host, '[data-said]').textContent);
+    check('...and it appears in the list', /nimrod-0/.test(el(r.host, '[data-list]').textContent));
+    r.panel.destroy();
+  }
+
+  section('*** no folder means no recording — said, rather than discovered at the end ***');
+  {
+    const r = rig({ hasFolder: false });
+    await r.panel.refresh();
+    // Recording into nothing and losing it at the end is the version of this that wastes
+    // somebody's session, so the button is simply not available.
+    check('Record is unavailable until there is somewhere to put it',
+      el(r.host, '[data-rec]').disabled === true);
+    check('...and the reason is on screen', /nothing can be saved/i.test(el(r.host, '[data-folder]').textContent),
+      el(r.host, '[data-folder]').textContent);
+    el(r.host, '[data-pick]').click();
+    await sleep(10);
+    check('choosing one makes it available', el(r.host, '[data-rec]').disabled === false);
+    r.panel.destroy();
+  }
+
+  section('a remembered folder whose permission lapsed asks, rather than failing silently');
+  {
+    const r = rig({ recallPermission: 'prompt' });
+    await r.panel.refresh();
+    check('it does not silently use a folder it cannot write to',
+      el(r.host, '[data-rec]').disabled === true);
+    check('*** ...it offers the button, because a prompt needs a click ***',
+      el(r.host, '[data-grant]').hidden === false);
+    el(r.host, '[data-grant]').click();
+    await sleep(10);
+    check('pressing it gets the folder back', el(r.host, '[data-rec]').disabled === false);
+    r.panel.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a save that fails must not throw the recording away ***');
+  {
+    const r = rig({ folderFails: true });
+    await r.panel.refresh();
+    el(r.host, '[data-rec]').click(); await sleep(10);
+    el(r.host, '[data-rec]').click(); await sleep(10);
+    check('it says the save failed', /could not be saved/i.test(el(r.host, '[data-said]').textContent),
+      el(r.host, '[data-said]').textContent);
+    // Somebody just spent a session on this. Losing it because a write failed, silently, is the
+    // worst thing this panel could do.
+    const retry = [...r.host.querySelectorAll('button')].find((b) => b.textContent === 'Save again');
+    check('*** ...and offers to save it again, keeping the audio ***', !!retry);
+    r.fs.saveSession = async () => { const rec = { folder: 'recovered', files: ['label.wav'] }; r.saved.push(rec); return rec; };
+    retry.click();
+    await sleep(10);
+    check('...which works once the folder is back', r.saved.length === 1
+      && /recovered/.test(el(r.host, '[data-said]').textContent), el(r.host, '[data-said]').textContent);
+    r.panel.destroy();
+  }
+
+  section('a microphone that refuses is not a recording');
+  {
+    const r = rig();
+    await r.panel.refresh();
+    r.stub.start = async () => { throw new Error('permission denied'); };
+    el(r.host, '[data-rec]').click();
+    await sleep(10);
+    check('it does not sit there looking like it is recording',
+      r.panel.isRecording() === false && el(r.host, '[data-rec]').textContent === 'Record');
+    check('...and says what happened', /could not start/i.test(el(r.host, '[data-said]').textContent),
+      el(r.host, '[data-said]').textContent);
+    r.panel.destroy();
+  }
+
+  section('deleting is on the user, and it is one press');
+  {
+    const r = rig();
+    await r.panel.refresh();
+    el(r.host, '[data-rec]').click(); await sleep(10);
+    el(r.host, '[data-rec]').click(); await sleep(10);
+    check('CONTROL: there is one recording', r.saved.length === 1);
+    r.host.querySelector('[data-del]').click();
+    await sleep(10);
+    check('*** and it can be removed from here ***', r.saved.length === 0,
+      JSON.stringify(r.saved));
+    r.panel.destroy();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
