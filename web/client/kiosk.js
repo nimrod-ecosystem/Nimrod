@@ -61,6 +61,7 @@ import './modules/sprint.js';
 import './modules/quests.js';
 import './modules/progress.js';
 import './modules/wordforge.js';
+import './modules/trivia.js';    // registers 'trivia'
 import './modules/lessons.js';
 import './modules/algebra.js';
 import './modules/pond.js';

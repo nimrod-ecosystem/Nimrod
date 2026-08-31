@@ -193,6 +193,11 @@ export const MODULE_VERBS = {
                    select: { topic: 'segment/done', payload: { reason: 'skipped' } } },
   interstitials: { next: 'interstitial/next', prev: 'interstitial/prev', back: 'interstitial/skip' },
   wordforge:     { next: 'wordforge/next', select: 'wordforge/next' },
+  // TRIVIA IS ANSWERABLE WITH ONE BUTTON, which is the whole reason it is shaped as four
+  // choices with a walking highlight rather than as free recall. `next` moves the highlight and
+  // wraps; `select` takes whatever it is on. `back` skips a question somebody does not want.
+  trivia:        { next: 'trivia/next', prev: 'trivia/prev', select: 'trivia/select',
+                   back: 'trivia/skip' },
   algebra:       { select: 'algebra/submit' },
   sprint:        { select: { topic: 'sprint/control', payload: 'toggle' },
                    next:   { topic: 'sprint/control', payload: 'start' },
