@@ -66,6 +66,35 @@
 
 export const MANIFEST_VERSION = 1;
 
+// ---------------------------------------------------------------------------------------
+// *** HOW LONG IT IS KEPT — Mike, 2026-08-31: "how long the files are kept is an issue." ***
+//
+// He is right, and it is sharper here than for most data, for three reasons that all point the
+// same way: this is INTELLIGIBLE SPEECH, recorded in a room that is not private (a care facility
+// has staff and other visitors in it — `docs/modules/interstitials.md` already says recordings
+// can include staff), belonging to somebody who cannot consent to keeping it. And it is
+// VALUABLE, which is the pressure that erodes every retention limit ever written.
+//
+// *** THE EXPIRY IS WRITTEN INTO THE FILE, NOT ONLY INTO A SETTING. ***
+// Same argument as `producer` directly below: a setting changed next month cannot reach a file
+// written today. A recording that does not carry its own expiry has no expiry, whatever a
+// settings row says — so every session states, in its own manifest, when it should be gone.
+// Then any tool that can read the folder can act on it: this app, a later version of it, a
+// script, or a person with a file manager.
+//
+// *** AND THE THING NIMROD MUST NOT CLAIM. ***
+// It CANNOT promise "deleted after thirty days". The files live in a folder the user picked, on
+// their machine, and this software is not running on day thirty. What it can honestly say is
+// "cleaned up whenever this is opened", and that is what `fs_sink.js` does. Claiming the
+// stronger thing would be a promise enforced by nothing — the same species of mistake as a test
+// that passes for an adjacent reason, applied to a policy instead of to code.
+//
+// 0 = keep until somebody deletes it. A DEFAULT, not a rule: for a corpus somebody is actively
+// training on, deleting it on a timer would destroy the work. The proposal is a short default
+// with keeping being the deliberate choice, and the number is Mike's to set.
+export const DEFAULT_KEEP_DAYS = 30;
+export const KEEP_OPTIONS = [7, 30, 90, 0];
+
 // Who or what produced this audio. A CLOSED set, for the same reason `input.js`'s rejection
 // list is closed: something downstream will filter on it, and free text cannot be filtered.
 export const PRODUCERS = ['human', 'agent', 'synthetic', 'unknown'];
@@ -128,6 +157,7 @@ export function buildManifest({
   tracks = [],
   marks = [],
   note = '',
+  keepDays = DEFAULT_KEEP_DAYS,
 } = {}) {
   return {
     v: MANIFEST_VERSION,
@@ -154,8 +184,26 @@ export function buildManifest({
     // WHAT WAS ASKED FOR, AND WHEN. The labels come from whatever ran the session, never from
     // listening to the audio — see the header on why there is no voice activity detection here.
     marks: marks.map((m) => ({ atMs: Number(m.atMs) || 0, label: String(m.label || '') })),
+    // WHEN THIS SHOULD BE GONE, as an absolute time rather than a duration — because a duration
+    // is meaningless to anything reading the folder later without also knowing the write time,
+    // and because an absolute date is something a person can read and act on themselves.
+    // `keepDays: 0` means keep, and `keepUntil: null` says so explicitly rather than by omission.
+    keepDays: Math.max(0, Number(keepDays) || 0),
+    keepUntil: (Number(keepDays) > 0 && startedAt)
+      ? startedAt + Math.max(0, Number(keepDays)) * 86400000
+      : null,
     note: String(note || ''),
   };
+}
+
+// Should this recording be gone by now? Pure and exported so the rule lives in one place and a
+// sweeper, a diagnostic and a settings preview cannot disagree about it.
+//
+// A manifest with NO expiry is kept. That is the safe direction: deleting somebody's recording
+// because a field was missing is not recoverable, and keeping one that should have gone is.
+export function isExpired(manifest, now = Date.now()) {
+  const until = manifest && manifest.keepUntil;
+  return typeof until === 'number' && until > 0 && now >= until;
 }
 
 /**
@@ -169,6 +217,7 @@ export function createPairedRecorder({
   capture,                       // async (deviceId) => { sampleRate, onData(cb), stop() }
   now = () => Date.now(),
   producer = 'human',
+  keepDays = DEFAULT_KEEP_DAYS,
 } = {}) {
   if (typeof capture !== 'function') throw new Error('createPairedRecorder: capture is required');
 
@@ -247,6 +296,7 @@ export function createPairedRecorder({
       tracks: out,
       marks,
       note,
+      keepDays,
     });
     chans = [];
     return { manifest, tracks: out };

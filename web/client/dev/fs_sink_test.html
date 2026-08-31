@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>writing into a folder you picked, and cleaning up after it — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>writing into a folder you picked</h1>
+
+<div class="warn">
+  Nimrod cannot promise "deleted after thirty days". It is not running on day thirty.
+</div>
+
+<p>The files live in a folder on somebody's machine — that is the whole point, and it is what
+lets the platform server never see a byte. It is also why a retention policy enforced by a page
+that has to be <em>open</em> to enforce it would be a promise enforced by nothing. So the expiry
+is written into every recording, the sweep is <b>opportunistic and described as such</b>, and what
+could not be removed is reported rather than assumed away.</p>
+
+<p><b>Nothing here touches a real disk.</b> A <code>FileSystemDirectoryHandle</code> is a small,
+well-defined interface, so it is faked — which is the only way anything that <em>deletes
+somebody's recordings</em> should be tested.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  sessionName, available, saveSession, listSessions, sweep, deleteSession, describeSweep,
+  MANIFEST_FILE,
+} from '../fs_sink.js';
+import { buildManifest, isExpired, encodeWav, DEFAULT_KEEP_DAYS } from '../recorder.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// ---------------------------------------------------------------------------------------
+// A folder that never was. Small enough to read, which is the point — anything that deletes
+// people's recordings should be exercised against something whose behaviour is obvious.
+// ---------------------------------------------------------------------------------------
+function fakeDir(name = 'root', { failRemove = [] } = {}) {
+  const files = new Map();     // name -> string|ArrayBuffer
+  const dirs = new Map();      // name -> fakeDir
+  const log = [];
+  const self = {
+    kind: 'directory', name, files, dirs, log,
+    async getDirectoryHandle(n, { create = false } = {}) {
+      if (!dirs.has(n)) {
+        if (!create) throw new Error('not found');
+        dirs.set(n, fakeDir(n, { failRemove }));
+      }
+      return dirs.get(n);
+    },
+    async getFileHandle(n, { create = false } = {}) {
+      if (!files.has(n) && !create) throw new Error('not found');
+      return {
+        kind: 'file', name: n,
+        async createWritable() {
+          let data = null;
+          return { async write(d) { data = d; }, async close() { files.set(n, data); log.push(['write', n]); } };
+        },
+        async getFile() {
+          const d = files.get(n);
+          return { async text() { return typeof d === 'string' ? d : new TextDecoder().decode(d); },
+                   size: typeof d === 'string' ? d.length : (d?.byteLength || 0) };
+        },
+      };
+    },
+    async removeEntry(n, opts) {
+      if (failRemove.includes(n)) throw new Error('permission lapsed');
+      // THROWS ON A MISSING ENTRY, because the real API does (NotFoundError). The first version
+      // of this fake quietly succeeded, so `deleteSession` reported that it had removed
+      // something that was never there — a fake that is kinder than the thing it stands in for
+      // makes the code look better than it is, which is the whole failure mode AGENTS.md warns
+      // about with the QR oracle.
+      if (!dirs.has(n) && !files.has(n)) {
+        const e = new Error('not found'); e.name = 'NotFoundError'; throw e;
+      }
+      log.push(['remove', n, opts?.recursive ? 'recursive' : 'shallow']);
+      dirs.delete(n); files.delete(n);
+    },
+    async *values() { for (const d of dirs.values()) yield d; for (const [k] of files) yield { kind: 'file', name: k }; },
+  };
+  return self;
+}
+
+const DAY = 86400000;
+const T0 = Date.parse('2026-08-31T10:30:00Z');
+
+function fakeSession(startedAt, keepDays, { producer = 'human' } = {}) {
+  const samples = Float32Array.from([0.1, -0.1, 0.2]);
+  const tracks = [
+    { role: 'label', file: 'label.wav', wav: encodeWav(samples, 48000), samples },
+    { role: 'input', file: 'input.wav', wav: encodeWav(samples, 48000), samples },
+  ];
+  const manifest = buildManifest({ producer, startedAt, durationMs: 1000, tracks, keepDays });
+  return { manifest, tracks };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the folder name');
+  {
+    const n = sessionName(Date.parse('2026-08-31T14:05:09'));
+    check('it is sortable and readable, so a file manager shows sessions in order',
+      /^nimrod-20260831-140509$/.test(n), n);
+    check('...rather than a timestamp nobody can read', !/^\d{10,}$/.test(n));
+  }
+
+  section('what this browser can do');
+  {
+    check('it says so honestly when the API is missing',
+      available({}) === false && available({ showDirectoryPicker: () => {} }) === true);
+  }
+
+  // =====================================================================================
+  section('saving a session');
+  {
+    const dir = fakeDir();
+    const s = fakeSession(T0, 30);
+    const res = await saveSession(dir, s, { now: () => T0 });
+
+    check('it made one folder for the session', dir.dirs.size === 1, [...dir.dirs.keys()].join(','));
+    const sub = dir.dirs.get(res.folder);
+    check('...with both channels in it',
+      sub.files.has('label.wav') && sub.files.has('input.wav'), [...sub.files.keys()].join(','));
+    check('...and the manifest', sub.files.has(MANIFEST_FILE));
+
+    // *** THE MANIFEST IS WRITTEN LAST. *** An interrupted write then leaves audio with NO
+    // manifest — which `listSessions` reports as incomplete and a person can see is unfinished.
+    // The other order would leave a manifest promising channels that are not there, which reads
+    // as complete and is not. Neither outcome is good; only one of them lies.
+    const order = sub.log.filter(([k]) => k === 'write').map(([, n]) => n);
+    check('*** the manifest is written LAST, so an interrupted save cannot leave a file that '
+      + 'lies about what is in the folder ***',
+      order[order.length - 1] === MANIFEST_FILE, order.join(','));
+
+    const back = JSON.parse(sub.files.get(MANIFEST_FILE));
+    check('the manifest reads back as JSON', back.v === 1);
+    check('...carrying the producer, which cannot be added later', back.producer === 'human');
+    check('...and both roles', back.tracks.map((t) => t.role).join(',') === 'label,input');
+  }
+
+  section('reading a folder back');
+  {
+    const dir = fakeDir();
+    await saveSession(dir, fakeSession(T0, 30), { now: () => T0 });
+    await saveSession(dir, fakeSession(T0 + DAY, 30), { now: () => T0 });
+    const list = await listSessions(dir);
+    check('both sessions come back', list.length === 2, JSON.stringify(list.map((l) => l.folder)));
+    check('...in order', list[0].folder < list[1].folder, list.map((l) => l.folder).join(' | '));
+
+    // A folder of audio with no manifest — what an interrupted save leaves behind.
+    await dir.getDirectoryHandle('nimrod-broken', { create: true });
+    const list2 = await listSessions(dir);
+    const broken = list2.find((l) => l.folder === 'nimrod-broken');
+    check('*** a session with no manifest is reported as INCOMPLETE, not dropped silently ***',
+      broken && broken.incomplete === true && broken.manifest === null, JSON.stringify(broken));
+  }
+
+  // =====================================================================================
+  section('*** the sweep — and what it must not claim ***');
+  {
+    const dir = fakeDir();
+    await saveSession(dir, fakeSession(T0 - 60 * DAY, 30), { now: () => T0 });   // long overdue
+    await saveSession(dir, fakeSession(T0 - 1 * DAY, 30), { now: () => T0 });    // still fresh
+    await saveSession(dir, fakeSession(T0 - 90 * DAY, 0), { now: () => T0 });    // keep forever
+
+    const dry = await sweep(dir, { now: T0, isExpired, dryRun: true });
+    check('a dry run removes nothing', dir.dirs.size === 3 && dry.swept.length === 0);
+    check('...but names what is over its date', dry.overdue.length === 1, JSON.stringify(dry));
+
+    const res = await sweep(dir, { now: T0, isExpired });
+    check('*** the overdue session is gone ***', res.swept.length === 1, JSON.stringify(res));
+    check('...the fresh one is untouched', dir.dirs.size === 2, [...dir.dirs.keys()].join(','));
+    // *** KEEP-FOREVER MUST SURVIVE A SWEEP. *** Deleting somebody's corpus because they chose
+    // to keep it would be unrecoverable, and it is the exact mistake a "tidy up" feature makes.
+    check('*** and a session set to keep forever is still there ***',
+      (await listSessions(dir)).some((s) => s.manifest && s.manifest.keepUntil === null),
+      JSON.stringify((await listSessions(dir)).map((s) => s.manifest?.keepUntil)));
+
+    // The whole folder, never a file out of a pair.
+    const removals = dir.log.filter(([k]) => k === 'remove');
+    check('...removed RECURSIVELY — a half-deleted pair is worse than either half',
+      removals.every(([, , mode]) => mode === 'recursive'), JSON.stringify(removals));
+  }
+
+  section('a session with no expiry at all is KEPT');
+  {
+    // The safe direction, and it is not symmetric: deleting a recording because a field was
+    // missing cannot be undone, and keeping one a week too long can.
+    const dir = fakeDir();
+    const s = fakeSession(T0 - 400 * DAY, 30);
+    delete s.manifest.keepUntil;
+    await saveSession(dir, s, { now: () => T0 });
+    const res = await sweep(dir, { now: T0, isExpired });
+    check('*** no expiry means keep, not delete ***', res.swept.length === 0 && dir.dirs.size === 1,
+      JSON.stringify(res));
+  }
+
+  section('what could not be removed is REPORTED, not assumed away');
+  {
+    const dir = fakeDir('root', { failRemove: [] });
+    await saveSession(dir, fakeSession(T0 - 60 * DAY, 30), { now: () => T0 });
+    const stuck = [...dir.dirs.keys()][0];
+    const dir2 = fakeDir('root', { failRemove: [stuck] });
+    dir2.dirs.set(stuck, dir.dirs.get(stuck));
+    const res = await sweep(dir2, { now: T0, isExpired });
+    check('a folder that will not delete is not counted as swept', res.swept.length === 0);
+    check('*** ...it is listed as still here, so the gap is visible rather than assumed ***',
+      res.overdue.length === 1, JSON.stringify(res));
+    check('...and it is not retried into a loop — a lapsed permission wants a person',
+      dir2.dirs.size === 1);
+  }
+
+  section('deleting because somebody asked is its own path');
+  {
+    // DECISIONS.md: deletion works from the screen and is a hard delete. A person's explicit
+    // "remove that" must not be routed through machinery whose job is expiry, where a missing
+    // date would quietly turn it into a no-op.
+    const dir = fakeDir();
+    const s = fakeSession(T0, 0);                  // keep forever
+    const { folder } = await saveSession(dir, s, { now: () => T0 });
+    const swept = await sweep(dir, { now: T0 + 999 * DAY, isExpired });
+    check('CONTROL: the sweep will never touch it', swept.swept.length === 0 && dir.dirs.size === 1);
+    check('*** but asking removes it ***', await deleteSession(dir, folder) === true
+      && dir.dirs.size === 0);
+    check('...and removing something that is not there is false, not a throw',
+      await deleteSession(dir, 'nope') === false);
+  }
+
+  // =====================================================================================
+  section('*** the wording — because this is where overclaiming would happen ***');
+  {
+    const said = describeSweep({ swept: ['a'], overdue: [], kept: 2 }, { keepDays: 30 });
+    check('it says what it removed', /Removed 1 recording/.test(said), said);
+    // *** NEVER "deleted after 30 days". *** This software is not running on day thirty, and
+    // saying so would be a promise enforced by nothing.
+    check('*** it never claims recordings are deleted on a schedule ***',
+      !/deleted after|automatically deleted|will be deleted/i.test(said), said);
+    check('...it says when they are actually tidied up, which is the true version',
+      /whenever this page is opened/i.test(said), said);
+    check('keep-forever is described honestly too',
+      /until somebody removes them/i.test(describeSweep({ swept: [], overdue: [], kept: 1 }, { keepDays: 0 })));
+    check('a folder with nothing due says so rather than staying silent',
+      /Nothing was due/.test(describeSweep({ swept: [], overdue: [], kept: 3 }, { keepDays: 7 })));
+    check('and what could not be removed is in the sentence',
+      /could not be removed/.test(describeSweep({ swept: [], overdue: ['x'], kept: 0 }, {})));
+  }
+
+  section('the expiry rule itself');
+  {
+    check('a fresh recording is not expired',
+      isExpired(buildManifest({ startedAt: T0, keepDays: 30 }), T0 + DAY) === false);
+    check('one past its date is', isExpired(buildManifest({ startedAt: T0, keepDays: 30 }), T0 + 31 * DAY));
+    check('exactly on the boundary counts as expired, so a date means that day',
+      isExpired(buildManifest({ startedAt: T0, keepDays: 1 }), T0 + DAY));
+    check('keepDays 0 never expires',
+      buildManifest({ startedAt: T0, keepDays: 0 }).keepUntil === null
+        && isExpired(buildManifest({ startedAt: T0, keepDays: 0 }), T0 + 9999 * DAY) === false);
+    check('a manifest from somewhere else with no expiry field is kept', isExpired({}, T0) === false);
+    check('the default is stated in one place', DEFAULT_KEEP_DAYS === 30);
+  }
+
+  section('nothing is written anywhere until somebody picks a folder');
+  {
+    let threw = null;
+    try { await saveSession(null, fakeSession(T0, 30)); } catch (e) { threw = e; }
+    check('*** no folder means no write, and an error rather than a silent nothing ***',
+      !!threw && /no folder/i.test(threw.message), String(threw));
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+section('not covered here');
+check('NOTE: no real disk, no picker, no permission prompt. Whether a directory handle survives '
+  + 'a page reload — which is what would let a sweep happen without somebody re-picking the '
+  + 'folder every time — is untested and is the next real question', true);
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
