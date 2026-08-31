@@ -71,6 +71,7 @@ import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
 import { triviaPool } from '../bank.js';
+import { BANK_STATE, BANK_TOPIC } from './bank.js';
 
 export const GAME = 'trivia';
 
@@ -188,13 +189,22 @@ registerModule(
     let streak = 0;
     let ledger = null, telemetry = null, session = null;
     let recorder = ctx.recorder || null;
+    let sharedBank = null;
 
     const el = (s) => mount.querySelector(s);
 
     function render() {
       if (!q) {
-        mount.innerHTML = `<div class="tv"><p class="tv-empty">No questions yet. Add some in
-          settings — one per line: <code>question | answer | wrong | wrong | wrong</code></p></div>`;
+        // *** THE LINK BACK. *** A tab is discoverable by existing; a module is not, and this
+        // is where that cost is paid. When there is nothing to ask, the game says exactly where
+        // questions come from and what to add — loudest at the moment somebody most needs it.
+        mount.innerHTML = `<div class="tv"><div class="tv-empty">
+          <p><b>No questions yet.</b></p>
+          <p>These come from your bank — the <b>Questions</b> module. Add it to this screen and
+            write some, and anything you write there shows up here.</p>
+          <p class="tv-fmt">One per line:
+            <code>question | answer | wrong | wrong | wrong</code></p>
+        </div></div>`;
         return;
       }
       const done = answered !== null;
@@ -270,6 +280,21 @@ registerModule(
       render();
     }
 
+    // ONE DOCUMENT, TWO GAMES. The bank text comes from this instance's own state if somebody
+    // set it there, otherwise from the shared row the Questions module edits. Word Forge reads
+    // the word rows out of the same document; this reads the question rows AND may derive
+    // questions from the words. An array form is still accepted for anything generating content.
+    function readBank() {
+      const own = cfg.bankText;
+      const share = (sharedBank?.get?.() || {}).bankText;
+      const text = own != null ? own : (share != null ? share : SEED);
+      const next = Array.isArray(cfg.bank) ? cfg.bank
+                 : triviaPool(text, { includeWords: cfg.includeWords !== false, choices: cfg.choices });
+      const changed = next.length !== bank.length;
+      bank = next;
+      if (!deck.length || changed) newRound();
+    }
+
     function advance() {
       if (at + 1 < deck.length) show(at + 1);
       else newRound();
@@ -309,17 +334,23 @@ registerModule(
           return undefined;
         });
 
+        // THE SHARED ROW, opened by name — the same document the Questions module edits and
+        // Word Forge reads. A game's own state still wins where somebody set it, so nothing
+        // written before this changes meaning.
+        try {
+          sharedBank = ctx.makeState ? ctx.makeState(BANK_STATE) : null;
+          if (sharedBank) {
+            sharedBank.load().catch(() => {}).then(() => { readBank(); sharedBank.startPolling?.(); });
+            sharedBank.subscribe?.(() => readBank());
+          }
+        } catch (err) { sharedBank = null; console.error('trivia: no shared bank', err); }
+        // An edit on the same screen lands without a remount, so somebody can write questions
+        // beside somebody else playing them.
+        bus.subscribe(BANK_TOPIC, () => { sharedBank?.load?.().catch(() => {}).then(readBank); });
+
         state?.subscribe?.((s) => {
           cfg = { ...DEFAULTS, ...(s || {}) };
-          // ONE DOCUMENT, TWO GAMES. `bankText` is the shared bank — Word Forge reads the
-          // word rows out of it, this reads the question rows AND may derive questions from the
-          // words. An array form is still accepted for anything generating content.
-          const next = Array.isArray(cfg.bank) ? cfg.bank
-                     : triviaPool(cfg.bankText != null ? cfg.bankText : SEED,
-                                  { includeWords: cfg.includeWords !== false, choices: cfg.choices });
-          const changed = next.length !== bank.length;
-          bank = next;
-          if (!deck.length || changed) newRound();
+          readBank();
         });
         // *** AN EMPTIED BANK STAYS EMPTIED. ***
         // This used to re-seed whenever the bank came out empty, which meant somebody who had

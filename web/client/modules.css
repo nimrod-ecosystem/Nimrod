@@ -687,3 +687,10 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .bk-line { display: block; font: 13px ui-monospace, Menlo, Consolas, monospace;
   color: var(--muted, #5d7064); margin-top: 2px; }
 .bk-derived { margin: 10px 0; color: var(--ink-soft, #3c5346); max-width: 68ch; }
+
+/* The bank editor rendered as a MODULE rather than a full tab — it may be a quarter of a
+   screen beside the game it feeds, so it has to be usable small. */
+.m-bank-host .bk-text, .tv-empty .tv-fmt { max-width: 100%; }
+.tv-empty { max-width: 46ch; }
+.tv-empty p { margin: 0 0 8px; }
+.tv-empty .tv-fmt { font-size: .88rem; color: var(--muted, #5d7064); }

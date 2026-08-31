@@ -923,3 +923,56 @@ Three things found in `pending_flags.md` during an audit, and approved by Mike t
   alert is not a dropped alert"* and *"the urgency is the author's, not the user's"*; and one state
   alert nobody could argue with, noting that *"'normal' here is mostly a timeout"*. Quiet hours
   belongs with the notifications inbox. (2026-08-30)
+
+
+### Link capabilities — the sender chooses, decided 2026-08-30
+
+Resolves `DEFAULT_CAPABILITIES = ("messages",)`, which shipped labelled in its own source as
+*"a conservative placeholder, NOT a decision."* It was the first thing every new contact met, and
+nobody had chosen it.
+
+- **The sender picks a class before the invitation goes out, and the class is a starting point they
+  can modify.** Mike's call. Classes along the lines of super user / personal / medical — named
+  bundles that make the common cases one click, with every capability still individually adjustable
+  before sending. (2026-08-30)
+- **This is the project's standing pattern rather than a new mechanism:** a sensible default that is
+  a *starting point*, chosen by the person who has the context, never a fixed set imposed by the
+  code. A class is a shortcut through a decision, not a substitute for one. (2026-08-30)
+- **The decision belongs to the inviter because the inviter is the only one who knows the
+  relationship.** The software cannot tell an aunt from an agency nurse, and guessing wrong in
+  either direction is a real cost — too little and accepting an invitation appears to do nothing, so
+  people disengage; too much and somebody granted access they never considered. (2026-08-30)
+
+### Acknowledgement is not communication — decided 2026-08-30
+
+Resolves the tension in *"every press plays a message, no exceptions"*: the rule exists so a person
+knows their press registered, but as speech it is a constant noise in a room somebody lives in, and
+turning the volume down removes the very feedback the rule existed to give.
+
+- **They are two outputs, not one.** **Acknowledgement** is for the person pressing and confirms the
+  press registered. The **utterance** is for the room and says the thing. Both are channels on the
+  output bus, and routing is already a property of the person rather than the device. (2026-08-30)
+- **The no-exceptions rule survives, and stops being a rule about speech.** Every press is
+  acknowledged. Whether it is *spoken* is separately configurable — which is what makes repeat
+  suppression and quiet hours possible without ever letting a press vanish into nothing.
+  (2026-08-30)
+- **The default is the module's own method.** Mike's call, correcting two chat-side proposals in a
+  row — first "at least one channel must always be live", then "default to as many channels as
+  possible". Both were overbuilt. A game acknowledges with its animation, an AAC card by lighting, a
+  scan by the highlight moving. **There is usually already something there when you hit the right
+  button**, and the job is to not remove it rather than to add a layer. Per-module default, with a
+  per-person override through the usual cascade — **not a single global switch.** (2026-08-30)
+- **A press with nothing mapped to it does nothing.** No acknowledgement is owed where no event
+  occurred. This is not silence as a response; it is the absence of anything to respond to.
+  (2026-08-30)
+- **But a press that is mapped and simply WRONG still gets a response, and this is the whole
+  point.** Mike's rule, and it settles an older one that had been slipped into the docs and never
+  ruled on: a chat-side draft wanted the press game's button to do nothing when pressed at the wrong
+  time. **Mike overrode it, because the press game is for a person learning what a button is.** For
+  that person the mistimed press *is* the learning event, and suppressing the response removes the
+  only information in it. A wrong press that produces nothing is indistinguishable from a broken
+  switch — and the conclusion a person draws is not "I mistimed it" but "this does not work", or
+  worse, "I cannot do this." (2026-08-30)
+- **The distinction the older rule collapsed: *unmapped* and *wrong* are not the same thing.** One
+  has no event. The other has an event with the wrong timing or target. Treating them alike is what
+  produced a rule that punished a learner for learning. (2026-08-30)
