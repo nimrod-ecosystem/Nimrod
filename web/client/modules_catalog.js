@@ -207,6 +207,22 @@ export const CATALOG = [
       + 'possible yet but hearing language still matters.',
   },
   {
+    type: 'bank',
+    group: 'practice',
+    // `touch`, not a new value. The catalogue's `use` set is CLOSED and it caught `setup` the
+    // moment it was invented — which is the set doing its job, so the fix is to fit rather than
+    // to widen it. Typing into an editor is a thing you do with your hands, which is what
+    // `touch` already means here.
+    use: 'touch',
+    lead: 'Where your questions and words live.',
+    needs: 'Nothing. Type them, or paste a list in.',
+    why: 'Trivia and Word Forge both read this, so a word written once can be practised in one '
+      + 'and asked as a question in the other. Put it on a screen with either of them and you '
+      + 'can edit while somebody plays.',
+    note: 'It tells you which lines it could not read, and on which line — the usual way a '
+      + 'hand-written list quietly loses half of itself.',
+  },
+  {
     type: 'trivia',
     group: 'practice',
     use: 'answer',

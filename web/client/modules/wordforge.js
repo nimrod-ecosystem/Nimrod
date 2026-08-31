@@ -50,6 +50,7 @@ import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
 import { parseBank as sharedBank } from '../bank.js';
+import { BANK_STATE, BANK_TOPIC } from './bank.js';
 
 export const GAME = 'wordforge';
 
@@ -244,6 +245,8 @@ registerModule(
     const rand = ctx.rand || Math.random;
 
     let ledger = null;
+    let sharedRow = null;                 // the shared bank row Trivia reads too
+    let applyState = () => {};            // named so a shared-bank change re-runs it
     let tel = null;
     let lessons = null;
     let topics = DEFAULT_TOPICS;
@@ -444,6 +447,16 @@ registerModule(
             <div class="wf-held" data-held></div>
           </div>`;
 
+        try {
+          sharedRow = ctx.makeState ? ctx.makeState(BANK_STATE) : null;
+          if (sharedRow) {
+            sharedRow.load().catch(() => {}).then(() => sharedRow.startPolling?.());
+            sharedRow.subscribe?.(() => state?.get && applyState(state.get()));
+          }
+        } catch (err) { sharedRow = null; console.error('wordforge: no shared bank', err); }
+        bus.subscribe(BANK_TOPIC, () => {
+          sharedRow?.load?.().catch(() => {}).then(() => state?.get && applyState(state.get()));
+        });
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });
         tel = createTelemetry({ makeEvents: ctx.makeEvents, bus });
         lessons = createLessons({ makeEvents: ctx.makeEvents, bus });
@@ -465,13 +478,19 @@ registerModule(
         bus.subscribe('wordforge/answer', (i) => answer(i === null || i === 'idk' ? null : Number(i)));
         bus.subscribe('wordforge/next', () => advance());
 
-        state.subscribe((s) => {
+        // NAMED rather than inline, so a change to the SHARED bank row can re-run exactly the
+        // same interpretation. Two code paths that both decide what a bank means is how they
+        // end up disagreeing.
+        applyState = (s) => {
           const snap = s || {};
-          // *** ALSO READS THE SHARED BANK (2026-08-31). *** `bankText` is one document that
-          // Trivia reads too, so a syllabus is written once. `wordsText` still wins where it
-          // exists, so nothing anybody already wrote changes meaning — see bank.js on why that
-          // matters more than tidiness.
-          const shared = snap.bankText ? sharedBank(snap.bankText, { defaultKind: 'words' }).words : null;
+          // *** ALSO READS THE SHARED BANK (2026-08-31). *** One document that Trivia reads
+          // too, so a syllabus is written once. It comes from this instance's own state where
+          // somebody set it, otherwise from the shared row the Questions module edits.
+          // `wordsText` still wins where it exists, so nothing anybody already wrote changes
+          // meaning — see bank.js on why that matters more than tidiness.
+          const bankText = snap.bankText != null ? snap.bankText
+                         : (sharedRow?.get?.() || {}).bankText;
+          const shared = bankText ? sharedBank(bankText, { defaultKind: 'words' }).words : null;
           const w = Array.isArray(snap.words) ? snap.words
                   : (snap.wordsText ? parseWords(snap.wordsText) : (shared && shared.length ? shared : null));
           const p = Array.isArray(snap.pairs) ? snap.pairs : (snap.pairsText ? parsePairs(snap.pairsText) : null);
@@ -487,7 +506,8 @@ registerModule(
             dailyCap: Number(snap.dailyCap) >= 0 ? Number(snap.dailyCap) : DEFAULTS.dailyCap,
             subject: typeof snap.subject === 'string' && snap.subject ? snap.subject : DEFAULTS.subject,
           };
-        });
+        };
+        state.subscribe(applyState);
 
       },
 

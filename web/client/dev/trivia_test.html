@@ -61,15 +61,21 @@ What is the capital of France? | Paris | London | Rome | Madrid
 Which planet is closest to the Sun? | Mercury | Venus | Mars | Earth
 How many legs does a spider have? | Eight | Six | Ten | Four`;
 
-function rig({ bankText = BANK_TEXT, recorder = null, rand = () => 0 } = {}) {
+function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = () => 0 } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
   const events = [];
-  let stored = { bankText };
+  let stored = bankText == null ? {} : { bankText };
   let sub = null;
+  const sharedRow = {
+    get: () => (sharedText == null ? {} : { bankText: sharedText }),
+    set: () => {}, flush: async () => {}, load: async () => {},
+    startPolling() {}, subscribe: () => () => {}, destroy() {},
+  };
   const inst = mountModule('trivia', {
     mount: host, bus, rand, recorder,
+    makeState: () => sharedRow,
     state: { get: () => stored, set: () => {}, flush: () => {},
              subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } },
     makeEvents: (name) => ({ name, append: async (k, d) => { events.push([k, d, name]); },
@@ -234,12 +240,37 @@ no pipe here
     r.inst.destroy();
   }
 
-  section('an empty bank says what to do rather than showing nothing');
+  section('*** an empty bank points at where questions come from ***');
   {
     const r = rig({ bankText: '# nothing here yet' });
     check('no question is shown', r.probe().question === null);
-    check('*** and it explains the format instead of being blank ***',
-      /question \| answer/.test(r.host.textContent), r.host.textContent.slice(0, 140));
+    // A tab is discoverable by existing; a module is not, and this is where that cost is paid.
+    // The game names the module that feeds it, at the moment somebody most needs to know.
+    check('*** it names the Questions module rather than just being blank ***',
+      /Questions/.test(r.host.textContent), r.host.textContent.slice(0, 200));
+    check('...and still shows the format', /question \| answer/.test(r.host.textContent),
+      r.host.textContent.slice(0, 220));
+    r.inst.destroy();
+  }
+
+  section('the shared row — one document, both games');
+  {
+    // The bank module edits a SHARED per-profile row. A game's own state still wins where
+    // somebody set it, so nothing written before this changes meaning.
+    const shared = { bankText: `## questions
+Shared Q | Shared A | X | Y` };
+    const r = rig({ bankText: null, sharedText: shared.bankText });
+    check('a game with no bank of its own reads the shared row',
+      r.probe().question && /Shared Q/.test(r.probe().question.question),
+      JSON.stringify(r.probe().question));
+    r.inst.destroy();
+  }
+  {
+    const r = rig({ bankText: 'Own Q | Own A | X | Y',
+                    sharedText: `## questions
+Shared Q | Shared A` });
+    check('*** a bank set on the game itself still wins, so nothing already written changes ***',
+      /Own Q/.test(r.probe().question.question), JSON.stringify(r.probe().question));
     r.inst.destroy();
   }
 
