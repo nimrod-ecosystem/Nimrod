@@ -64,6 +64,11 @@
 
 import { registerModule } from '../module.js';
 import { MUSIC_GROUP } from '../audio_bus.js';
+import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
+
+// What a CALL wants from the microphone, as opposed to what a recogniser wants. Named here so
+// the intent is readable at the acquire site rather than being three booleans.
+const MIC_PROFILE = MIC_PROFILES.call;
 
 export const CALL_INCOMING = 'call/incoming';
 export const CALL_ENDED = 'call/ended';
@@ -131,7 +136,7 @@ registerModule(
                + 'showing this room',
     importance: 'critical', dependsOn: 'network', settings: SETTINGS },
   (ctx) => {
-    const { mount, bus, state, audio = null, cameraOwner = null, output = null } = ctx;
+    const { mount, bus, state, audio = null, cameraOwner = null, micOwner = null, output = null } = ctx;
     // The transport is injected. Absent, everything else still works and the stage says so —
     // which is what makes the rest of this testable before any of it exists.
     const transport = ctx.callTransport || null;
@@ -157,6 +162,7 @@ registerModule(
 
     const AUDIO_ID = `call:${ctx.instanceId || 'call'}`;
     const CAM_ID = `call:${ctx.instanceId || 'call'}`;
+    const MIC_ID = `call:${ctx.instanceId || 'call'}`;
 
     const el = (sel) => root?.querySelector(sel);
 
@@ -195,6 +201,8 @@ registerModule(
     }
 
     // ---- the camera: a CLONE, never a second open ------------------------------------
+    let micStream = null;
+
     async function takeCamera() {
       if (!cameraOwner || outgoing) return null;
       try {
@@ -207,6 +215,47 @@ registerModule(
         return null;
       }
     }
+    // ---- the microphone: the same arbiter discipline as the camera -------------------
+    //
+    // *** A CALL WITH NO PICTURE IS STILL A CALL. A CALL WITH NO SOUND IS NOT. ***
+    // That asymmetry decides how the two failures are handled: losing the camera is logged and
+    // the call carries on (see `takeCamera`), while losing the microphone is worth saying out
+    // loud, because the person at this end will be talking to somebody who cannot hear them and
+    // nothing on screen would otherwise say why.
+    //
+    // It asks for the `call` profile — echo cancellation, noise suppression, gain — which is
+    // what stops a room echoing. If something else got there first and opened the microphone
+    // RAW (a recogniser wants raw; see mic_owner.js), the call still gets the stream and the
+    // arbiter reports the mismatch rather than pretending. A slightly echoey call is a working
+    // call; a silent one is not.
+    async function takeMic() {
+      if (!micOwner || micStream) return null;
+      try {
+        micStream = await micOwner.acquire(MIC_ID, MIC_PROFILE);
+        const bad = micOwner.status?.().mismatch?.find((m) => m.id === MIC_ID);
+        if (bad) {
+          console.warn('call: microphone is not configured for a call', bad.missing.join(', '));
+        }
+        return micStream;
+      } catch (err) {
+        console.error('call: no microphone', err);
+        micStream = null;
+        // The one failure in this module worth telling the room about. `alert`, not `say`:
+        // somebody talking to a screen that cannot hear them needs to know NOW, and the
+        // person's own routing decides whether that is spoken, shown or a tone.
+        try { output?.alert?.('This call has no microphone — they will not hear you.', { source: 'call' }); }
+        catch { /* an output bus is optional everywhere */ }
+        return null;
+      }
+    }
+
+    function dropMic() {
+      micStream = null;
+      // ALWAYS release, even if the acquire failed — see camera_owner: a leaked ref pins the
+      // device on, and on a microphone that is not merely wasteful.
+      try { micOwner?.release(MIC_ID); } catch { /* already gone */ }
+    }
+
     function dropCamera() {
       try { outgoing?.stop?.(); } catch { /* already stopped */ }
       outgoing = null;
@@ -280,7 +329,9 @@ registerModule(
       clearRing();
       phase = 'connected';
       takeSpeaker(true);
-      const track = await takeCamera();
+      // BOTH, and in parallel: two sequential permission-gated opens is two round trips
+      // before anybody can speak, on a screen where the caller is already waiting.
+      const [track] = await Promise.all([takeCamera(), takeMic()]);
       render();
       const v = el('.call-remote');
       try { await transport?.answer?.({ from: who, outgoing: track, remoteVideo: v }); }
@@ -301,6 +352,7 @@ registerModule(
       phase = 'idle';
       who = null;
       dropCamera();
+      dropMic();
       takeSpeaker(false);
       render();
       try { transport?.hangup?.(reason); } catch { /* already down */ }
@@ -363,6 +415,7 @@ registerModule(
       destroy() {
         clearRing();
         dropCamera();
+        dropMic();
         takeSpeaker(false);
         try { audio?.unregister?.(AUDIO_ID); } catch { /* already gone */ }
         try { transport?.destroy?.(); } catch { /* already gone */ }

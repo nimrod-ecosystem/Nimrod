@@ -69,17 +69,38 @@ function check(name, cond, detail = '') {
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// *** REPLACED 2026-08-30, BECAUSE THE OLD ONE FIRED TIMERS THAT HAD BEEN CLEARED. ***
+// It snapshotted the pending list, jumped `now` forward by the whole step, and fired
+// everything that had been due — never re-checking whether a callback earlier in the same
+// step had cleared one. That is invisible while only one timer is ever armed, and wrong the
+// moment a heartbeat exists, since a heartbeat's whole job is to clear a timer that is
+// already due. A proper discrete-event clock instead: earliest first, `now` moved to its
+// deadline, and look again after every callback.
 function fakeTimers() {
   let now = 0, seq = 0;
   const pending = new Map();
   return {
-    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + ms }); return id; },
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + Math.max(0, Number(ms) || 0) }); return id; },
     clearTimer: (id) => pending.delete(id),
     advance(ms) {
-      now += ms;
-      for (const [id, t] of [...pending.entries()]) if (t.at <= now) { pending.delete(id); t.fn(); }
+      const target = now + ms;
+      for (let guard = 0; guard < 20000; guard++) {
+        let pickId = null, pickAt = Infinity;
+        for (const [id, t] of pending) if (t.at <= target && t.at < pickAt) { pickId = id; pickAt = t.at; }
+        if (pickId === null) break;
+        const t = pending.get(pickId);
+        pending.delete(pickId);
+        now = Math.max(now, t.at);
+        t.fn();
+      }
+      now = target;
     },
     count: () => pending.size,
+    // *** COUNT THE TIMERS THAT ARE WATCHING FOR A FAULT, NOT ALL OF THEM. ***
+    // `personal` keeps exactly one self-rescheduling timer alive for its whole life: the
+    // window that rate-limits the published heartbeat. It is not watching for anything, so
+    // counting it would make every "is something armed?" assertion read one too high.
+    watching: () => Math.max(0, pending.size - 1),
   };
 }
 
@@ -253,7 +274,12 @@ try {
     fire('ended');
     check('...and it advances when it actually finishes', nexts.length === before + 1,
       String(nexts.length - before));
-    timers.advance(120000);
+    // A SHORT step, not two minutes. `videoStallMs` here is 15s and the clip that has just
+    // been shown never reports playing inside a synchronous clock step (the stubbed play()
+    // resolves on a real microtask), so a long step would legitimately walk the watchdog
+    // through several videos — and this assertion is about a STALE timer from the video that
+    // ended, which can only show up inside one stall window.
+    timers.advance(14000);
     check('...exactly once — no stale timer behind it', nexts.length === before + 1,
       String(nexts.length - before));
     inst.destroy();
@@ -280,7 +306,7 @@ try {
     fire('error');
     check('an explicit failure moves on immediately', nexts.length === before + 1,
       String(nexts.length - before));
-    timers.advance(120000);
+    timers.advance(14000);      // inside one stall window, for the reason given above
     check('...and the watchdog does not then fire a second time',
       nexts.length === before + 1, String(nexts.length - before));
     inst.destroy();
@@ -378,12 +404,18 @@ try {
     inst.init();
     await sleep(900);
 
-    check('playing disarms the watchdog', timers.count() === 0, String(timers.count()));
+    // *** THIS CHANGED ON 2026-08-30, AND THE CHANGE IS THE POINT. ***
+    // It used to assert that playing DISARMED the watchdog, which is what left a clip that
+    // froze AFTER starting watched by nothing at all. Playing now keeps a clock running and
+    // `timeupdate` beats it, so silence is once again the alarm — the pattern photos.js has
+    // used since the day this file was written.
+    check('playing keeps a clock running rather than standing everything down',
+      timers.watching() === 1, String(timers.watching()));
     check('...and reports a heartbeat, so the director’s backstop knows it is alive',
       progress.length >= 1, String(progress.length));
     fire('pause');
-    check('*** a pause RE-ARMS it *** — nothing in the room can press play',
-      timers.count() >= 1, String(timers.count()));
+    check('*** a pause is still counted *** — nothing in the room can press play',
+      timers.watching() === 1, String(timers.watching()));
     timers.advance(19000);
     check('a brief pause is forgiven', done.length === 0, JSON.stringify(done));
     timers.advance(2000); timers.advance(21000);
@@ -442,9 +474,9 @@ try {
     inst.init();
     await sleep(900);
     bus.publish('personal/deactivate');       // the director moved to another provider
-    check('deactivating disarms whatever was armed', timers.count() === 0, String(timers.count()));
+    check('deactivating disarms whatever was armed', timers.watching() === 0, String(timers.watching()));
     fire('pause');
-    check('a hidden clip pausing arms nothing', timers.count() === 0, String(timers.count()));
+    check('a hidden clip pausing arms nothing', timers.watching() === 0, String(timers.watching()));
     timers.advance(200000);
     check('*** so it cannot end the segment that is actually on screen ***',
       done.length === 0, JSON.stringify(done));
@@ -463,7 +495,7 @@ try {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
       sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
-      stallMs: 20000, heldPauseMs: 14400000,
+      stallMs: 20000, heldNotifyMs: 21600000,
     });
     const bus = createBus();
     const done = [];
@@ -491,10 +523,11 @@ try {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
       sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
-      stallMs: 20000, heldPauseMs: 14400000,
+      stallMs: 20000, heldNotifyMs: 21600000,
     });
     const bus = createBus();
     const done = [];
+    const notices = [];
     bus.subscribe('segment/done', (p) => done.push(p));
     host.innerHTML = '';
     playMode = 'ok';
@@ -502,17 +535,26 @@ try {
       mount: host, bus, state, events, user: USER, profileId: profile.id,
       setTimer: timers.setTimer, clearTimer: timers.clearTimer,
       activity: fakeActivity(true),           // somebody just did something
+      output: { notify: (text, o) => notices.push({ text, ...o }) },
     });
     inst.init();
     await sleep(900);
+    const playsAtPause = playCalls.length;
     fire('pause');
     check('*** an observed gesture upgrades it to a HELD pause ***', heldShown());
     timers.advance(3600000);                  // an hour
     check('...and an hour later her family are still not being interrupted',
-      done.length === 0, JSON.stringify(done));
-    timers.advance(14400000);                 // the room finally empties
-    check('...but once it goes quiet for the full hold, the screen carries on',
-      done.length >= 0 && !heldShown(), `held=${heldShown()}`);
+      done.length === 0 && notices.length === 0, JSON.stringify(done));
+    // *** WHAT HAPPENS AT THE END OF A HOLD CHANGED ON 2026-08-30 (Mike). ***
+    // It used to carry on by itself. It does not: somebody stopped it, and a screen that
+    // restarts under them is the interruption the hold exists to prevent. Somebody is TOLD
+    // instead, and the clip stays where it was left, still marked.
+    timers.advance(21600000);                 // the room finally empties, for the full hold
+    check('...and when the hold runs out somebody is told rather than the clip restarting',
+      notices.length === 1 && playCalls.length === playsAtPause,
+      `${notices.length} notices / ${playCalls.length - playsAtPause} play() calls`);
+    check('...and it is still visibly paused, not blank and not advanced past',
+      heldShown() && done.length === 0, `held=${heldShown()} done=${done.length}`);
     inst.destroy();
     await sleep(50);
   }
@@ -522,7 +564,7 @@ try {
     const timers = fakeTimers();
     const { profile, state, events } = await freshProfile('personal', {
       sourceId: oscarSrc.id, subjectName: 'Oscar', autoplay: true, autoAdvance: false,
-      stallMs: 20000, heldPauseMs: 14400000,
+      stallMs: 20000, heldNotifyMs: 21600000,
     });
     const bus = createBus();
     const done = [];
@@ -537,8 +579,8 @@ try {
     inst.init();
     await sleep(900);
     fire('pause');
-    for (let i = 0; i < 6; i++) { timers.advance(3600000); bus.publish('input/device', { kind: 'press' }); }
-    check('*** six hours of visiting, and it never resumed under them ***',
+    for (let i = 0; i < 8; i++) { timers.advance(3600000); bus.publish('input/device', { kind: 'press' }); }
+    check('*** eight hours of visiting, and nobody was bothered about it ***',
       done.length === 0 && heldShown(), `${done.length} done, held=${heldShown()}`);
     inst.destroy();
     await sleep(50);

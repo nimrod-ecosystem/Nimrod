@@ -95,10 +95,16 @@ registerModule(
       current = id;
       for (const pid of Object.keys(slots)) slots[pid].hidden = (pid !== id);
       setLabel(id);
-      adapters[id]?.activate?.();
-      // Restart the backstop for the new segment. A provider that reports progress keeps
-      // it at bay; one that goes silent gets moved past.
+      // *** ARM BEFORE ACTIVATING, AND THE ORDER IS LOAD-BEARING (fixed 2026-08-30). ***
+      // `activate()` can hand straight back: an unconfigured provider publishes
+      // `segment/done {reason:'empty'}` SYNCHRONOUSLY, which is deliberate — see
+      // `makeChildAdapter` — and that re-enters this function for the next provider, which
+      // arms the backstop for itself. Arming after the call then overwrote that fresh, correct
+      // arm with one keyed to a provider no longer on screen, and the timeout it eventually
+      // published named the wrong one. Found by `watchdog_test` once its clock was accurate
+      // enough to run the rotation properly. The same order as the re-pick branch above.
       segmentWatch?.arm(id);
+      adapters[id]?.activate?.();
     }
 
     // A not-yet-built provider: a themed card that auto-finishes after a beat, so the
@@ -143,6 +149,20 @@ registerModule(
             playerFactory: ctx.playerFactory,      // youtube uses it; others ignore it
             speak: ctx.speak,                      // educational uses it (real TTS in app; stub in tests)
             setTimer: io.setTimer, clearTimer: io.clearTimer,  // educational's display timer (fake in tests)
+            // *** WHAT A CONTAINER OWES ITS CHILDREN. ***
+            // A provider mounted here is the SAME module as one mounted directly on a screen,
+            // and it has the same needs. Anything the host put on ctx that a child could use
+            // has to be handed down or the child silently loses the feature — which is not a
+            // crash, just a capability that is present on one surface and absent on the other.
+            // `output` is here because a provider whose segment has stopped needs somewhere to
+            // say so; `personId` because media is per-person.
+            // *** STILL MISSING, DELIBERATELY, AND WRITTEN DOWN RATHER THAN QUIETLY ADDED:
+            // `audio` and `cameraOwner`. A video mounted under the director never joins the
+            // speaker arbiter, so a game's music plays over it and a spoken cue cannot duck
+            // it. That is a real defect and a one-line fix, but it changes what the bedside
+            // SOUNDS like, so it wants its own bench test rather than riding in on this one.
+            output: ctx.output,
+            get personId() { return ctx.personId; },
           });
           child.init();
           cState.startPolling(); cEvents.startPolling();

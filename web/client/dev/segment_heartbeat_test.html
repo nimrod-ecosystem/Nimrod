@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>segment heartbeat — the director must not cut a healthy video</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.skip{color:#7a6f3a}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+  .director .d-ph{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;
+    background:#FBF9E9;border:1px dashed #e4e0c2;border-radius:10px}
+  .director .d-slot[hidden]{display:none}
+  #host,#host2,#host3{position:absolute;left:-9999px;width:480px;height:270px}
+</style>
+</head>
+<body>
+<h1>the segment heartbeat</h1>
+
+<div class="warn">
+  A 40-minute video was being cut off at 00:03:00, and nothing said so.
+</div>
+
+<p>The director arms a slow backstop over whatever provider is on screen — 3 minutes of silence
+and it moves on — and the only thing that quiets it is <code>segment/progress</code>. Before this
+suite existed, exactly two lines in the client published that topic, both inside
+<code>onPlaying</code>. So each clip sent <b>one</b> beat, at the moment it started, and then went
+silent for as long as it played. The backstop could not tell a 40-minute video from a frozen one,
+and it treated both the same way.</p>
+
+<p>The fix is the pattern <code>photos.js</code> already used: <b>beat on a repeating signal,
+never satisfy on first play.</b> An HTML5 <code>&lt;video&gt;</code> has <code>timeupdate</code>.
+The YouTube IFrame API has no such event, so the module polls <code>getCurrentTime()</code> and
+beats only when the clock has actually moved — which also makes a frozen-but-PLAYING video
+visible for the first time.</p>
+
+<p>Run the server first
+(<code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>). The
+<code>personal</code> sections additionally need the fixture agent on
+<code>:8771</code> (<code>web/media_agent/make_test_fixtures.py</code> prints the command); they
+report themselves as NOT RUN rather than failing if it is absent.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div><div id="host2"></div><div id="host3"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient } from '../profile.js';
+import { createMediaSourcesClient } from '../media_sources.js';
+import { mountModule } from '../module.js';
+import { mulberry32 } from '../rng.js';
+import '../modules/youtube.js';
+import '../modules/personal.js';
+import '../modules/educational.js';
+import '../modules/director.js';
+
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || ('beat-' + Math.floor(Math.random() * 1e6));
+const OSCAR_AGENT = (params.get('oscar') || 'http://127.0.0.1:8771').replace(/\/+$/, '');
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0, skipped = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+// "not run" is a fine report; "assumed green" is not. A skipped section says so in the
+// summary line, so a green run with a missing agent cannot be mistaken for a full one.
+function skip(name, why) {
+  skipped++;
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.textContent = `NOT RUN  ${name}   ${why}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---------------------------------------------------------------------------------------
+// *** THE FAKE CLOCK, AND WHY THIS ONE IS DIFFERENT FROM THE OTHER SUITES' ***
+//
+// The clock in `youtube_watchdog_test.html` and `media_stall_test.html` snapshots the pending
+// list, jumps `now` forward by the whole step, then fires everything that was due — WITHOUT
+// re-checking whether a timer is still pending. That is fine while only one timer is ever
+// armed. It stops being fine the moment a heartbeat exists, because a heartbeat's whole job
+// is to CLEAR another timer that is already due in the same step: the cleared timer fires
+// anyway, and the suite reports a stall that the real code would never have had.
+//
+// So this one is a proper discrete-event clock: fire the EARLIEST due timer, advance `now`
+// to its deadline, run it, and look again — so a callback that clears or re-arms something
+// is respected, and timers armed mid-step are honoured in order.
+// ---------------------------------------------------------------------------------------
+function fakeClock() {
+  let now = 0, seq = 0;
+  const pending = new Map();
+  return {
+    now: () => now,
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + Math.max(0, Number(ms) || 0) }); return id; },
+    clearTimer: (id) => { pending.delete(id); },
+    advance(ms) {
+      const target = now + ms;
+      // A bound on the number of callbacks, not on time: a heartbeat re-arms itself every
+      // step, so "keep going until nothing is due" needs a guard against a zero-delay loop.
+      for (let guard = 0; guard < 20000; guard++) {
+        let pickId = null, pickAt = Infinity;
+        for (const [id, t] of pending) if (t.at <= target && t.at < pickAt) { pickId = id; pickAt = t.at; }
+        if (pickId === null) break;
+        const t = pending.get(pickId);
+        pending.delete(pickId);
+        now = Math.max(now, t.at);
+        t.fn();
+      }
+      now = target;
+    },
+    armed: () => pending.size,
+  };
+}
+
+// A stub YouTube player adapter. `withCurrentTime` decides whether it can report where the
+// video is — the real IFrame adapter can (getCurrentTime), a hand-written one might not, and
+// the two paths are deliberately different in the module.
+function stubPlayer(log, { withCurrentTime = false } = {}) {
+  return (mountEl, h) => {
+    const api = {
+      load(id) { log.loads.push(id); log.t = 0; },
+      resume() { log.resumes.push(1); },
+      stop() {}, destroy() {}, setGain() {},
+      playNow: () => h.onPlaying?.(),
+      pauseNow: () => h.onIdle?.('paused'),
+      bufferNow: () => h.onIdle?.('buffering'),
+      endNow: () => h.onEnded?.(),
+    };
+    if (withCurrentTime) api.currentTime = () => log.t;
+    log.player = api;
+    return api;
+  };
+}
+
+function fakeActivity(active = false) {
+  return { note() { active = true; }, lastAt: () => (active ? 1 : 0),
+           sinceMs: () => (active ? 0 : Infinity), recent: () => active,
+           arrive() { active = true; }, leave() { active = false; }, destroy() {} };
+}
+
+const PLAYLIST = [
+  { id: 'aaaaaaaaaaa', channel: 'a' }, { id: 'bbbbbbbbbbb', channel: 'b' },
+  { id: 'ccccccccccc', channel: 'c' },
+];
+
+async function mountYT({ host, clock, log, cfg = {}, withCurrentTime = false }) {
+  const profiles = createProfilesClient({ user: USER });
+  const profile = await profiles.create('TEST-beat-yt-' + Math.floor(Math.random() * 1e5));
+  const mod = await profiles.addModule(profile.id, 'youtube');
+  const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+  await state.load();
+  state.set({ playlist: PLAYLIST, autoAdvance: true, stallMs: 20000, ...cfg });
+  await state.flush();
+
+  const bus = createBus();
+  const done = [], progress = [];
+  bus.subscribe('segment/done', (p) => done.push(p));
+  bus.subscribe('segment/progress', (p) => progress.push(p));
+
+  host.innerHTML = '';
+  const inst = mountModule('youtube', {
+    mount: host, bus, state,
+    events: createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER }),
+    user: USER, profileId: profile.id,
+    playerFactory: stubPlayer(log, { withCurrentTime }),
+    setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    activity: fakeActivity(false),
+  });
+  inst.init();
+  await sleep(400);
+  return { inst, bus, done, progress, host, held: () => !host.querySelector('[data-held]')?.hidden };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** A1 — the director must not cut a video that is still playing ***');
+  // The whole failure, end to end, through the REAL director and the REAL youtube module.
+  // Nothing is stubbed except the player itself and the clock.
+  {
+    const clock = fakeClock();
+    const log = { loads: [], resumes: [], t: 0, player: null };
+    const host = document.getElementById('host');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-beat-director');
+    const mod = await profiles.addModule(profile.id, 'director');
+    const seedYt = createState({ url: profiles.stateURL(profile.id, `${mod.id}-youtube`), user: USER });
+    await seedYt.load(); seedYt.set({ playlist: PLAYLIST }); await seedYt.flush();
+
+    const bus = createBus();
+    const done = [], progress = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    bus.subscribe('segment/progress', (p) => progress.push(p));
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+
+    const inst = mountModule('director', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      rootBus: bus, instanceId: mod.id,
+      makeState: (key) => createState({ url: profiles.stateURL(profile.id, key), user: USER }),
+      makeEvents: (key) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER }),
+      playerFactory: stubPlayer(log, { withCurrentTime: true }),
+      speak: () => {},
+      machineIO: { now: () => new Date(2026, 0, 5, 12, 0, 0).getTime(), rand: mulberry32(7),
+                   setTimer: clock.setTimer, clearTimer: clock.clearTimer },
+      autoFinishMs: 8000,
+    });
+    inst.init();
+    await sleep(400);
+
+    check('the director handed the window to youtube', !!log.player, 'no player was built');
+    log.player?.playNow();
+    await sleep(20);
+    check('the video reported that it started', progress.length >= 1, `${progress.length} progress`);
+
+    // FORTY MINUTES OF A VIDEO THAT IS PLAYING PERFECTLY. The player never ends, never
+    // errors, never pauses; its clock advances the way a playing video's does.
+    const doneBefore = done.length;
+    for (let i = 0; i < 240; i++) { log.t += 10; clock.advance(10000); }   // 2400s = 40 min
+
+    const cut = done.filter((d, i) => i >= doneBefore && d?.reason === 'timeout');
+    check('*** 40 minutes in, a healthy video has NOT been cut off ***',
+      cut.length === 0, `${cut.length} timeouts: ${JSON.stringify(cut.slice(0, 2))}`);
+    check('...because the segment kept reporting progress, not because nothing was watching',
+      progress.length >= 40, `${progress.length} heartbeats in 40 minutes`);
+    check('...and the video was never reloaded underneath the viewer',
+      log.loads.length === 1, `${log.loads.length} loads`);
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('the backstop still catches a provider that goes genuinely silent');
+  // The other half, and the reason this is not just "turn the backstop off": a provider
+  // that stops reporting IS moved past. Same director, same clock, a player that plays
+  // once and then freezes.
+  {
+    const clock = fakeClock();
+    const log = { loads: [], resumes: [], t: 0, player: null };
+    const host = document.getElementById('host2');
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-beat-frozen');
+    const mod = await profiles.addModule(profile.id, 'director');
+    const seedYt = createState({ url: profiles.stateURL(profile.id, `${mod.id}-youtube`), user: USER });
+    await seedYt.load();
+    // stallMs 0 disables the MODULE's own watchdog, so the only thing left watching is the
+    // director's backstop — which is exactly what this section is about.
+    seedYt.set({ playlist: PLAYLIST, stallMs: 0 }); await seedYt.flush();
+
+    const bus = createBus();
+    const done = [];
+    bus.subscribe('segment/done', (p) => done.push(p));
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+
+    const inst = mountModule('director', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      rootBus: bus, instanceId: mod.id,
+      makeState: (key) => createState({ url: profiles.stateURL(profile.id, key), user: USER }),
+      makeEvents: (key) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER }),
+      playerFactory: stubPlayer(log, { withCurrentTime: true }),
+      speak: () => {},
+      machineIO: { now: () => new Date(2026, 0, 5, 12, 0, 0).getTime(), rand: mulberry32(11),
+                   setTimer: clock.setTimer, clearTimer: clock.clearTimer },
+      autoFinishMs: 8000,
+    });
+    inst.init();
+    await sleep(400);
+    log.player?.playNow();
+    await sleep(20);
+
+    // The player still says PLAYING. Its clock has stopped. That is the freeze that used to
+    // be invisible on this path.
+    for (let i = 0; i < 25; i++) clock.advance(10000);      // 250s, no time advance
+    check('a frozen-but-"playing" video is moved past within the backstop window',
+      done.some((d) => d?.reason === 'timeout'), JSON.stringify(done.slice(0, 3)));
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('youtube on its own: the poll is the heartbeat');
+  {
+    const clock = fakeClock();
+    const log = { loads: [], resumes: [], t: 0, player: null };
+    const y = await mountYT({ host: document.getElementById('host3'), clock, log, withCurrentTime: true });
+    log.player.playNow();
+    await sleep(20);
+    const p0 = y.progress.length;
+    for (let i = 0; i < 120; i++) { log.t += 5; clock.advance(5000); }    // 10 minutes
+    check('ten minutes of play produced a stream of heartbeats, not one',
+      y.progress.length - p0 >= 30, `${y.progress.length - p0} beats after the first`);
+    check('...and the segment was never declared done', y.done.length === 0, JSON.stringify(y.done));
+    check('...and nothing was reloaded or resumed',
+      log.loads.length === 1 && log.resumes.length === 0,
+      `${log.loads.length} loads / ${log.resumes.length} resumes`);
+    y.inst.destroy();
+  }
+
+  section('youtube on its own: PLAYING with a frozen clock is a stall');
+  {
+    const clock = fakeClock();
+    const log = { loads: [], resumes: [], t: 0, player: null };
+    const y = await mountYT({ host: document.getElementById('host3'), clock, log, withCurrentTime: true });
+    log.player.playNow();
+    await sleep(20);
+    // Twelve seconds of genuinely playing first, so the freeze that follows is a CHANGE
+    // rather than the opening state. Skipping this was a bug in the first draft of the
+    // section: jumping straight to a frozen clock let the very first poll see 0 -> 12 and
+    // read it, correctly, as progress.
+    for (let i = 0; i < 3; i++) { log.t += 4; clock.advance(4000); }
+    check('twelve seconds of real play is not a fault',
+      log.resumes.length === 0 && y.done.length === 0,
+      `${log.resumes.length} resumes / ${y.done.length} done`);
+    // ...and now it stops dead, with the player still reporting PLAYING.
+    clock.advance(6000);
+    check('six seconds of a frozen clock is not yet a fault',
+      log.resumes.length === 0 && y.done.length === 0,
+      `${log.resumes.length} resumes / ${y.done.length} done`);
+    // Past `stallMs` from the last honest beat. STEP IN STAGES, not one long jump: a single
+    // advance past the give-up would move on to the NEXT video, and the load it asks for
+    // then belongs to that one. Counting it here is how a test quietly measures the wrong
+    // thing and reports it as a failure of the code.
+    clock.advance(20000);
+    check('a video whose clock stops is RESUMED once, without a reload',
+      log.resumes.length === 1 && log.loads.length === 1,
+      `${log.resumes.length} resumes / ${log.loads.length} loads`);
+    clock.advance(21000);
+    check('...and if that does not take, the segment is handed back',
+      y.done.some((d) => d?.reason === 'timeout'), JSON.stringify(y.done));
+    y.inst.destroy();
+  }
+
+  section('an adapter that cannot report a position degrades to the player’s own state');
+  {
+    const clock = fakeClock();
+    const log = { loads: [], resumes: [], t: 0, player: null };
+    const y = await mountYT({ host: document.getElementById('host3'), clock, log, withCurrentTime: false });
+    log.player.playNow();
+    await sleep(20);
+    const p0 = y.progress.length;
+    clock.advance(600000);            // ten minutes
+    check('it still reports progress while the player says it is playing',
+      y.progress.length - p0 >= 30, `${y.progress.length - p0} beats`);
+    check('...so a container does not cut it off', y.done.length === 0, JSON.stringify(y.done));
+    // And the honest limit of that: once the player says PAUSED, the beats stop. This is
+    // the weaker claim, and it is the reason the real adapter reports getCurrentTime().
+    log.player.pauseNow();
+    const p1 = y.progress.length;
+    clock.advance(600000);
+    check('...and once it says PAUSED the beats stop, rather than lying on its behalf',
+      y.progress.length === p1, `${y.progress.length - p1} beats after the pause`);
+    y.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('personal: timeupdate is the heartbeat');
+  let agentUp = false;
+  try {
+    const r = await fetch(`${OSCAR_AGENT}/list`, { cache: 'no-store' });
+    agentUp = r.ok;
+  } catch { agentUp = false; }
+
+  if (!agentUp) {
+    skip('personal: timeupdate is the heartbeat', `no media agent at ${OSCAR_AGENT}`);
+    skip('personal: silence after playing is caught', `no media agent at ${OSCAR_AGENT}`);
+  } else {
+    const ms = createMediaSourcesClient({ user: USER });
+    const src = await ms.add({ label: 'BEAT-oscar', base_url: OSCAR_AGENT, kind: 'agent' });
+
+    // COUNT play() RATHER THAN INFERRING IT. The first draft of the freeze section asserted
+    // "not handed back yet", which passes just as happily when NOTHING is watching at all —
+    // an adjacent-reason test, and the exact shape AGENTS.md warns about. The recovery is a
+    // `play()` call, so that is what gets counted. Stubbed to resolve because the fixture
+    // clips are containers with nothing decodable in them.
+    const playCalls = [];
+    const realPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function stubbedPlay() { playCalls.push(1); return Promise.resolve(); };
+
+    async function mountPersonal(clock, extra = {}, ctxExtra = {}) {
+      const profiles = createProfilesClient({ user: USER });
+      const profile = await profiles.create('TEST-beat-personal-' + Math.floor(Math.random() * 1e5));
+      const mod = await profiles.addModule(profile.id, 'personal');
+      const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+      const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+      await state.load(); await events.load();
+      // autoplay off: the fixture clips are containers with nothing decodable in them, so a
+      // real play() would error. The test dispatches the events a browser would dispatch.
+      state.set({ sourceId: src.id, autoplay: false, stallMs: 20000, ...extra });
+      await state.flush();
+      const bus = createBus();
+      const done = [], progress = [];
+      bus.subscribe('segment/done', (p) => done.push(p));
+      bus.subscribe('segment/progress', (p) => progress.push(p));
+      const host = document.getElementById('host3');
+      host.innerHTML = '';
+      const inst = mountModule('personal', {
+        mount: host, bus, state, events, user: USER, profileId: profile.id,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer, activity: fakeActivity(false),
+        ...ctxExtra,
+      });
+      inst.init();
+      await sleep(500);
+      return { inst, bus, done, progress, host, video: () => host.querySelector('video') };
+    }
+
+    {
+      const clock = fakeClock();
+      const p = await mountPersonal(clock);
+      const v = p.video();
+      check('a clip is on the stage', !!v, p.host.innerHTML.slice(0, 80));
+      v?.dispatchEvent(new Event('playing'));
+      await sleep(20);
+      const p0 = p.progress.length;
+      // Forty minutes of a clip that plays. A real <video> fires timeupdate several times a
+      // second; four per second for forty minutes is 9600 events, so this fires one per
+      // simulated second, which is the conservative direction.
+      for (let i = 0; i < 2400; i++) { v.dispatchEvent(new Event('timeupdate')); clock.advance(1000); }
+      check('*** 40 minutes of a personal message is never cut short ***',
+        p.done.length === 0, JSON.stringify(p.done.slice(0, 2)));
+      check('...and it reported progress throughout', p.progress.length - p0 >= 40,
+        `${p.progress.length - p0} beats`);
+      p.inst.destroy();
+    }
+
+    {
+      const clock = fakeClock();
+      const p = await mountPersonal(clock);
+      const v = p.video();
+      v?.dispatchEvent(new Event('playing'));
+      await sleep(20);
+      for (let i = 0; i < 5; i++) { v.dispatchEvent(new Event('timeupdate')); clock.advance(1000); }
+      // Now it freezes. No `pause`, no `error`, no `stalled` — the silent freeze, which on
+      // this path used to be invisible because `playing` had satisfied the watchdog for good.
+      const playsBefore = playCalls.length;
+      clock.advance(21000);
+      check('a clip that goes silent after playing is asked to carry on',
+        playCalls.length > playsBefore && p.done.length === 0,
+        `${playCalls.length - playsBefore} play() calls / ${p.done.length} done`);
+      clock.advance(21000);
+      check('...and then handed back rather than left frozen',
+        p.done.some((d) => d?.reason === 'timeout'), JSON.stringify(p.done));
+      p.inst.destroy();
+    }
+
+    // =====================================================================================
+    section('personal: a held pause is not resumed — it tells somebody instead');
+    {
+      const clock = fakeClock();
+      const notices = [];
+      // The output bus is the seam a module says WHAT through; the person's routing decides
+      // HOW. A stub records what was said without caring where it would have landed.
+      const p = await mountPersonal(clock, { heldNotifyMs: 3600000 },
+        { output: { notify: (text, o) => notices.push({ text, ...o }) }, activity: fakeActivity(true) });
+      const v = p.video();
+      v?.dispatchEvent(new Event('playing'));
+      await sleep(20);
+      v?.dispatchEvent(new Event('pause'));
+      const playsAtPause = playCalls.length;
+      clock.advance(3000000);          // fifty minutes: inside the hold
+      check('inside the hold nothing happens and it stays marked as paused',
+        notices.length === 0 && playCalls.length === playsAtPause
+          && !p.host.querySelector('[data-held]')?.hidden,
+        `${notices.length} notices / ${playCalls.length - playsAtPause} play() calls`);
+      clock.advance(700000);           // past the hour
+      check('*** when the hold runs out somebody is told ***', notices.length === 1,
+        JSON.stringify(notices));
+      check('...and it is NOT started again underneath them',
+        playCalls.length === playsAtPause, `${playCalls.length - playsAtPause} play() calls`);
+      check('...and it is still visibly paused rather than blank',
+        !p.host.querySelector('[data-held]')?.hidden);
+      clock.advance(86400000);         // a whole day more
+      check('...and it says it once, not every hour forever', notices.length === 1,
+        `${notices.length} notices after a further day`);
+      check('...and the segment is not quietly advanced past either', p.done.length === 0,
+        JSON.stringify(p.done));
+      p.inst.destroy();
+    }
+
+    HTMLMediaElement.prototype.play = realPlay;
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0
+  ? `ALL PASS — ${passed} checks${skipped ? `, ${skipped} NOT RUN` : ''}`
+  : `${failed} FAILED / ${passed} passed${skipped ? `, ${skipped} NOT RUN` : ''}`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed); sum.dataset.skipped = String(skipped);
+})();
+</script>
+</body>
+</html>

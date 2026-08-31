@@ -2,9 +2,24 @@
 //
 // WHAT IT IS FOR, and it is not "a game". The head sits EXACTLY on the cursor — 1:1, never
 // drifting on its own — with a luminous trail behind it. That precision is the entire point:
-// it makes her own movement unmistakably the thing that moved it. On the bedside screen the
-// cursor is driven by hand or colour tracking, so this is the module that answers *"did I do
-// that?"* — which is a question worth answering for somebody re-learning that she can.
+// it makes her own movement unmistakably the thing that moved it. This is the module that
+// answers *"did I do that?"* — a question worth answering for somebody re-learning that she
+// can.
+//
+// *** WHAT IT FOLLOWS IS THE AIM, AND THAT IS THE ONLY REASON IT CAN EVER WORK FOR HER. ***
+//
+// This module is why `aim.js` exists. It read `pointermove` off its own canvas, which means it
+// followed a mouse and nothing else — and the person it was written for cannot hold a mouse.
+// A hand in front of a camera produces no DOM pointer events at all, so on the screen this was
+// built for, the comet simply never moved.
+//
+// It now subscribes to `input/aim`: one normalised (x, y) from whatever is driving the screen,
+// and this module cannot tell a mouse from a hand from a coloured marker on a foot. That is the
+// point of the seam, and it is what makes "did I do that?" answerable by the person asking it.
+//
+// Still true, and still worth knowing: a TRACKER that produces those aims is not in this
+// codebase yet (see the README's Planned list). What is here is the path it will plug into,
+// and a mouse proving that path works today.
 //
 // Heart balloons rise through the stars. Touch one with the comet and it blooms and chimes.
 //
@@ -27,6 +42,7 @@
 //     heat on a Pi that is on 24/7, for a picture nobody is looking at.
 
 import { registerModule } from '../module.js';
+import { AIM_TOPIC, aimIn } from '../aim.js';
 
 const DEFAULTS = {
   hearts: 4,        // how many balloons are up at once
@@ -466,15 +482,27 @@ registerModule(
         initStars();
         buildHearts();
 
-        const onMove = (e) => {
+        // *** THE AIM, FROM THE BUS — which is what makes this module work for the person it
+        // was written for. *** It used to read `pointermove` off its own canvas, so it followed
+        // a mouse and nothing else; a hand in front of a camera moved nothing, because a
+        // tracker produces no DOM pointer events. Now every producer of an aim reaches it
+        // through one door, and this module cannot tell them apart — which is the whole point.
+        //
+        // `inside: false`, so the comet keeps following an aim that has wandered off this
+        // panel rather than freezing at the last edge pixel. Somebody whose movement
+        // overshoots should not have to hunt their way back onto a rectangle.
+        const onAim = (a) => {
           if (!cfg.pointer) return;
-          const r = canvas.getBoundingClientRect();
-          steer = null;                       // a real pointer always wins over a glide
+          const p = aimIn(a, canvas, { inside: false });
+          if (!p) return;
+          steer = null;                       // a real aim always wins over a glide
           audioInit();
-          moveTo(e.clientX - r.left, e.clientY - r.top, true);
+          moveTo(p.x, p.y, true);
         };
-        canvas.addEventListener('pointermove', onMove);
-        offs.push(() => canvas.removeEventListener('pointermove', onMove));
+        offs.push(bus.subscribe(AIM_TOPIC, onAim));
+        // Place it on whatever the last aim was, so a comet mounted mid-session starts under
+        // her hand rather than waiting for a movement she may take a while to make.
+        if (ctx.aim?.latest?.()) onAim(ctx.aim.latest());
 
         // Verbs. `select` blooms where the comet is; `next` goes and gets a heart.
         offs.push(bus.subscribe('comet/spark', () => {

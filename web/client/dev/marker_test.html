@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>marker tracking — a coloured sock as an input — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>a coloured marker, as an input</h1>
+
+<div class="warn">
+  A pose model could not find her foot. A brightly coloured sock is found by arithmetic.
+</div>
+
+<p>MediaPipe Pose was tried first on the bedside build and failed in the room: drop foot gives
+atypical geometry, BlazePose's foot landmarks are its weakest, and a pale foot on a white sheet has
+almost no contrast. The fix was not a better model — it was <b>put a marker on the person</b>. That
+turns recognition into a per-pixel threshold and a centroid: about <b>30 fps on a Pi 400 against
+roughly 6</b> for hand landmarks, and <b>no model file to ship, download or point at a folder</b>.</p>
+
+<p><b>No camera is used anywhere in this suite.</b> Every frame below is built by hand as an array,
+which is what makes the detector testable at all — and it is also the seam a calibration panel and a
+future landmark detector plug into. What is <em>not</em> covered here is therefore stated plainly at
+the bottom: real optics, real lighting, and a real sock.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createAim, AIM_TOPIC } from '../aim.js';
+import {
+  rgbToHsv, hueDistance, findMarker, markerAim, createMarkerTracker,
+  MARKER_DEVICE, MARKER_DEFAULTS, DET_W, DET_H, shouldTrack,
+} from '../input_marker.js';
+import { mountMarkerPanel, adviceFor, swatchCss } from '../marker_panel.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// ---------------------------------------------------------------------------------------
+// A frame, built by hand. `bg` fills it; `rect` paints a block of colour somewhere in it.
+// This is the whole camera as far as the detector is concerned.
+// ---------------------------------------------------------------------------------------
+function frame({ w = DET_W, h = DET_H, bg = [240, 240, 235], rect = null } = {}) {
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = bg[0]; data[i + 1] = bg[1]; data[i + 2] = bg[2]; data[i + 3] = 255;
+  }
+  if (rect) {
+    const { x, y, w: rw, h: rh, colour } = rect;
+    for (let yy = y; yy < y + rh; yy++) {
+      for (let xx = x; xx < x + rw; xx++) {
+        if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+        const i = (yy * w + xx) * 4;
+        data[i] = colour[0]; data[i + 1] = colour[1]; data[i + 2] = colour[2]; data[i + 3] = 255;
+      }
+    }
+  }
+  return { data, width: w, height: h };
+}
+
+const GREEN = [40, 200, 70];       // a bright saturated sock
+const PINK  = [230, 40, 150];      // the other colour that works well
+const SHEET = [240, 240, 235];     // a white hospital sheet
+const SKIN  = [222, 184, 160];     // pale skin: has a hue, but nothing like enough saturation
+
+(async () => {
+try {
+  // =====================================================================================
+  section('colour maths');
+  {
+    const g = rgbToHsv(...GREEN);
+    check('a bright green reads as green', g.h > 100 && g.h < 160, JSON.stringify(g));
+    check('...and as saturated, which is what lets it be found at all', g.s > 0.6, String(g.s));
+    const sheet = rgbToHsv(...SHEET);
+    check('a white sheet has almost no saturation — this is the whole mechanism',
+      sheet.s < 0.05, String(sheet.s));
+    const skin = rgbToHsv(...SKIN);
+    check('pale skin is below the saturation floor too', skin.s < MARKER_DEFAULTS.satMin,
+      String(skin.s));
+    check('black has no meaningful hue and is rejected by value', rgbToHsv(4, 4, 4).v < MARKER_DEFAULTS.valMin);
+
+    // *** HUE IS A CIRCLE. *** Getting this wrong makes red the one colour that never matches
+    // itself, which would be an infuriating bug to find in a room with a sock in it.
+    check('*** 350° and 10° are twenty degrees apart, not three hundred and forty ***',
+      hueDistance(350, 10) === 20, String(hueDistance(350, 10)));
+    check('...in both directions', hueDistance(10, 350) === 20);
+    check('...and a hue matches itself', hueDistance(120, 120) === 0);
+  }
+
+  // =====================================================================================
+  section('finding the marker in a frame');
+  {
+    const target = rgbToHsv(...GREEN);
+    const f = frame({ rect: { x: 20, y: 30, w: 10, h: 10, colour: GREEN } });
+    const found = findMarker(f, target);
+    check('it finds the sock', found.count === 100, JSON.stringify(found));
+    // The centroid of a 10x10 block at (20,30) is (24.5, 34.5) in frame pixels.
+    check('...at its centre, normalised to the frame',
+      Math.abs(found.x - 24.5 / DET_W) < 0.005 && Math.abs(found.y - 34.5 / DET_H) < 0.005,
+      JSON.stringify(found));
+
+    check('an empty room finds nothing', findMarker(frame({}), target).count === 0);
+    check('a room with only skin in it finds nothing',
+      findMarker(frame({ rect: { x: 0, y: 0, w: 40, h: 40, colour: SKIN } }), target).count === 0);
+    check('*** and a DIFFERENT bright colour is not the sock ***',
+      findMarker(frame({ rect: { x: 0, y: 0, w: 40, h: 40, colour: PINK } }), target).count === 0,
+      'pink matched a green target');
+    check('an uncalibrated tracker finds nothing rather than guessing',
+      findMarker(f, null).count === 0);
+  }
+
+  // =====================================================================================
+  section('frame to screen: the mirror, the rest point, and the gain');
+  {
+    // *** THE MIRROR. *** A camera pointed at somebody is a mirror: she moves her foot to HER
+    // left and it travels RIGHT across the frame. If x were not un-mirrored, the cursor would
+    // go the opposite way to the push, which for somebody re-learning cause and effect is
+    // worse than no cursor at all.
+    const left = markerAim({ count: 99, x: 0.25, y: 0.5 }, { gain: 1 });
+    check('*** the marker moving one way sends the aim the other — x is un-mirrored ***',
+      left.x > 0.5, JSON.stringify(left));
+    const down = markerAim({ count: 99, x: 0.5, y: 0.75 }, { gain: 1 });
+    check('...but down is still down — y is NOT mirrored', down.y > 0.5, JSON.stringify(down));
+
+    check('at rest it aims at the middle of the screen',
+      (() => { const a = markerAim({ count: 9, x: 0.5, y: 0.5 }, { gain: 3 }); return a.x === 0.5 && a.y === 0.5; })());
+
+    // THE REST POINT is what makes a small range of movement reach a whole screen.
+    const off = markerAim({ count: 9, x: 0.2, y: 0.2 }, { centre: { x: 0.2, y: 0.2 }, gain: 3 });
+    check('*** movement is measured from HER rest point, not the middle of the frame ***',
+      off.x === 0.5 && off.y === 0.5, JSON.stringify(off));
+
+    const small = markerAim({ count: 9, x: 0.45, y: 0.5 }, { gain: 1 });
+    const big = markerAim({ count: 9, x: 0.45, y: 0.5 }, { gain: 5 });
+    check('gain multiplies a small movement into a large one', big.x > small.x,
+      `${small.x} vs ${big.x}`);
+    check('...and it cannot be pushed off the screen', markerAim({ count: 9, x: 0, y: 1 }, { gain: 9 }).x === 1);
+    check('nothing seen means no aim at all', markerAim({ count: 0 }, {}) === null);
+  }
+
+  // =====================================================================================
+  section('the tracker drives the aim');
+  {
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const aim = createAim({ bus });
+
+    let cfg = { colour: rgbToHsv(...GREEN), smooth: 1 };   // smooth:1 = snap, so the mapping is visible
+    let current = frame({ rect: { x: 70, y: 50, w: 12, h: 12, colour: GREEN } });
+    const tracker = createMarkerTracker({ aim, settings: () => cfg, frames: () => current });
+
+    tracker.step(current);
+    check('a visible sock reports an aim', seen.length === 1, JSON.stringify(seen));
+    check('...as the marker device, so the cursor knows the OS is not drawing this one',
+      seen[0]?.device === MARKER_DEVICE, JSON.stringify(seen[0]));
+
+    // *** NOT CALIBRATED MEANS SILENT. *** Guessing a hue would put the cursor on whatever
+    // happened to be orange in the room, which is worse than no cursor.
+    cfg = { colour: null };
+    tracker.step(current);
+    check('*** an uncalibrated tracker reports nothing rather than guessing ***',
+      seen.length === 1, JSON.stringify(seen));
+
+    // TOO FEW PIXELS IS NOISE, and reporting noise as an aim makes the cursor twitch across
+    // the room — which looks exactly like a fault and is impossible to dwell with.
+    cfg = { colour: rgbToHsv(...GREEN), minPx: 18, smooth: 1 };
+    tracker.step(frame({ rect: { x: 5, y: 5, w: 2, h: 2, colour: GREEN } }));   // 4 pixels
+    check('a handful of stray pixels is not a sock', seen.length === 1, JSON.stringify(seen));
+    check('...but the count is still reported honestly, so a caregiver can aim the camera',
+      tracker.found().count === 4, JSON.stringify(tracker.found()));
+    tracker.step(current);
+    check('...and a real sock still reports', seen.length === 2);
+    tracker.destroy();
+  }
+
+  section('smoothing — because a threshold centroid shivers');
+  {
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const aim = createAim({ bus });
+    const cfg = { colour: rgbToHsv(...GREEN), smooth: 0.25, gain: 1 };
+    const tracker = createMarkerTracker({ aim, settings: () => cfg, frames: () => null });
+
+    // The FIRST sighting snaps: there is nothing to smooth from, and easing in from a
+    // meaningless starting point would send the cursor sailing across the screen on contact.
+    const a = frame({ rect: { x: 74, y: 54, w: 12, h: 12, colour: GREEN } });     // ~ middle
+    const first = tracker.step(a);
+    check('*** the first sighting snaps rather than gliding in from nowhere ***',
+      Math.abs(first.x - 0.5) < 0.06, JSON.stringify(first));
+
+    // Then it eases. Jump the sock right across the frame and watch it take several frames.
+    const b = frame({ rect: { x: 10, y: 54, w: 12, h: 12, colour: GREEN } });
+    const one = tracker.step(b);
+    check('one frame after a jump it has only moved part of the way',
+      one.x > first.x && one.x < 0.9, JSON.stringify(one));
+    let last = one;
+    for (let i = 0; i < 40; i++) last = tracker.step(b) || last;
+    check('...and it converges rather than oscillating', last.x > one.x, JSON.stringify(last));
+    tracker.destroy();
+  }
+
+  section('sampling the colour — the caregiver clicking the sock');
+  {
+    const aim = createAim({ bus: createBus() });
+    const tracker = createMarkerTracker({ aim, settings: () => ({}), frames: () => null });
+    const f = frame({ rect: { x: 60, y: 40, w: 40, h: 40, colour: GREEN } });
+    const sampled = tracker.sampleAt(f, 80 / DET_W, 60 / DET_H);
+    check('clicking the sock samples its hue', Math.abs(sampled.h - rgbToHsv(...GREEN).h) < 3,
+      JSON.stringify(sampled));
+    // AVERAGED OVER A PATCH, not one pixel: one pixel of a compressed webcam frame is a lie,
+    // and JPEG artefacts alone can move a hue by ten degrees.
+    const noisy = frame({ rect: { x: 60, y: 40, w: 40, h: 40, colour: GREEN } });
+    const i = ((60 * DET_W) + 80) * 4;
+    noisy.data[i] = 255; noisy.data[i + 1] = 0; noisy.data[i + 2] = 0;     // one rogue red pixel
+    const robust = tracker.sampleAt(noisy, 80 / DET_W, 60 / DET_H);
+    check('*** one rogue pixel does not decide the calibration ***',
+      Math.abs(robust.h - rgbToHsv(...GREEN).h) < 8, JSON.stringify(robust));
+
+    // And the sampled colour then works as a target, which is the round trip that matters.
+    const found = findMarker(f, sampled);
+    check('a sampled colour finds the thing it was sampled from', found.count === 1600,
+      JSON.stringify(found));
+    tracker.destroy();
+  }
+
+  section('it never opens the camera itself');
+  {
+    // A second getUserMedia on the same webcam FAILS on Linux, and her mirror going dark
+    // because a tracker started is exactly the failure the arbiter exists to prevent.
+    const aim = createAim({ bus: createBus() });
+    const t = createMarkerTracker({ aim, settings: () => ({}) });
+    let threw = null;
+    try { await t.start(); } catch (e) { threw = e; }
+    check('*** with no camera arbiter it refuses to start rather than opening one ***',
+      !!threw && /cameraOwner/.test(String(threw.message)), String(threw && threw.message));
+    t.destroy();
+  }
+  {
+    const aim = createAim({ bus: createBus() });
+    const calls = [];
+    const fakeOwner = {
+      acquire: (id) => { calls.push(['acquire', id]); return Promise.reject(new Error('no camera here')); },
+      release: (id) => calls.push(['release', id]),
+    };
+    const t = createMarkerTracker({ aim, cameraOwner: fakeOwner, settings: () => ({}) });
+    let threw = null;
+    try { await t.start(); } catch (e) { threw = e; }
+    check('it asks the ARBITER for the camera, by a named consumer id',
+      calls.length >= 1 && calls[0][0] === 'acquire' && /tracker:/.test(calls[0][1]),
+      JSON.stringify(calls));
+    check('...and a camera that will not open is an error, not a silent dead input', !!threw);
+    t.destroy();
+  }
+
+  // =====================================================================================
+  section('whether the camera comes on at all');
+  {
+    // This decides whether a webcam lights up in somebody's room, which is why it is a pure
+    // exported function rather than a condition buried in the kiosk where nothing could test it.
+    check('off by default — a fresh screen opens no camera', shouldTrack({}) === false);
+    check('...and neither does an empty record', shouldTrack(null) === false);
+    check('turned on and calibrated: yes',
+      shouldTrack({ enabled: true, colour: { h: 120, s: 1, v: 1 } }) === true);
+    // *** THE COMBINATION THAT IS EASY TO MISS. *** An enabled but uncalibrated tracker can
+    // never report anything — it has no colour to look for — so starting it would open the
+    // camera to do nothing at all, forever: all of the intrusion and none of the function.
+    check('*** turned on but never calibrated: NO — that is a camera on for nothing ***',
+      shouldTrack({ enabled: true }) === false);
+    check('calibrated but switched off: no',
+      shouldTrack({ colour: { h: 120, s: 1, v: 1 } }) === false);
+  }
+
+  // =====================================================================================
+  section('the calibration panel — without it, none of the above is reachable');
+  {
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const aim = createAim({ bus });
+
+    let stored = { enabled: false };
+    const saves = [];
+    const tracker = createMarkerTracker({
+      aim, settings: () => stored, frames: () => null,
+      onFrame: (f, found, mask) => panel.draw(f, found, mask),
+    });
+    const host = document.createElement('div');
+    document.body.append(host);
+    const panel = mountMarkerPanel(host, {
+      tracker, aim,
+      settings: () => stored,
+      save: async (patch) => { saves.push(patch); stored = { ...stored, ...patch }; },
+    });
+
+    // Before anything is sampled, the panel has to say the ONE thing that gets somebody
+    // unstuck — because a detector calibrated by clicking does nothing until it is clicked.
+    check('*** it starts by telling you to click the marker ***',
+      panel.advice().state === 'unsampled' && /click the marker/i.test(panel.advice().text),
+      JSON.stringify(panel.advice()));
+
+    // Drive a frame through the tracker the way the camera loop would.
+    const withSock = frame({ rect: { x: 70, y: 50, w: 14, h: 14, colour: GREEN } });
+    tracker.step(withSock);
+    check('the preview draws even with nothing sampled — which is when you need it most to '
+      + 'point the camera', !!host.querySelector('[data-view]'));
+
+    // CLICK THE SOCK. The preview is mirrored, so the click is at the MIRRORED position and
+    // the panel has to un-mirror it. Sampling the wrong side is invisible until nothing
+    // matches, which is the worst kind of bug to leave in a calibration tool.
+    const view = host.querySelector('[data-view]');
+    view.getBoundingClientRect = () => ({ left: 0, top: 0, width: DET_W, height: DET_H });
+    const sockCx = 77, sockCy = 57;
+    view.dispatchEvent(Object.assign(new Event('click'), {
+      clientX: DET_W - sockCx, clientY: sockCy,          // mirrored, as a real click would be
+    }));
+    await new Promise((r) => setTimeout(r, 0));
+    check('*** clicking the marker samples its colour, un-mirroring the preview ***',
+      !!stored.colour && Math.abs(stored.colour.h - rgbToHsv(...GREEN).h) < 6,
+      JSON.stringify(stored.colour));
+    check('...and it was persisted, not just held in the page', saves.some((p) => 'colour' in p),
+      JSON.stringify(saves));
+
+    tracker.step(withSock);
+    check('...and now it says it is tracking', panel.advice().state === 'seen',
+      JSON.stringify(panel.advice()));
+
+    // *** THE PREVIEW MUST NOT DRIVE THE CURSOR. *** Setting this up is a two-person job and
+    // the person moving is using the screen. This is the assertion the whole panel design
+    // exists to satisfy.
+    check('*** with tracking off, a visible marker moves nothing on screen ***',
+      seen.length === 0, JSON.stringify(seen));
+
+    // The advice has to distinguish "a bit of it" from "none of it" — they want opposite
+    // repairs, and merging them sends somebody re-sampling a colour that was already right.
+    tracker.step(frame({ rect: { x: 5, y: 5, w: 2, h: 2, colour: GREEN } }));
+    check('a marker that is only just visible says so, with the numbers',
+      panel.advice().state === 'faint' && /closer|bigger/i.test(panel.advice().text),
+      JSON.stringify(panel.advice()));
+    tracker.step(frame({}));
+    check('...and one that is gone entirely says something different',
+      panel.advice().state === 'lost', JSON.stringify(panel.advice()));
+
+    // THE RESTING POSITION, taken from where the marker actually is, because nobody knows
+    // their own rest point as a number.
+    tracker.step(frame({ rect: { x: 20, y: 80, w: 14, h: 14, colour: GREEN } }));
+    host.querySelector('[data-rest]').click();
+    await new Promise((r) => setTimeout(r, 0));
+    check('"set the resting position" records where the marker is now',
+      !!stored.centre && stored.centre.x < 0.4 && stored.centre.y > 0.6,
+      JSON.stringify(stored.centre));
+
+    // And now switch it on.
+    const toggle = host.querySelector('[data-opt="enabled"]');
+    toggle.checked = true;
+    toggle.dispatchEvent(new Event('change'));
+    await new Promise((r) => setTimeout(r, 0));
+    check('turning it on is saved', stored.enabled === true, JSON.stringify(saves.slice(-1)));
+    tracker.step(frame({ rect: { x: 70, y: 50, w: 14, h: 14, colour: GREEN } }));
+    check('*** and NOW the marker moves the cursor ***', seen.length > 0, JSON.stringify(seen));
+
+    panel.destroy();
+    check('destroy puts the root back', host.innerHTML === '');
+    host.remove();
+    tracker.destroy();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+// *** WHAT THIS SUITE CANNOT TELL YOU. *** Every frame here was an array built in this file.
+// Real optics, real lighting, motion blur on a moving foot, webcam auto-exposure hunting when
+// a bright sock enters the frame, and whether 30 fps actually holds on the Pi are all outside
+// it. Those are a bench test with a real sock, and nothing here should be read as covering them.
+section('not covered here — say it out loud rather than let the number imply it');
+check('NOTE: no camera, no optics, no real sock — bench test still required', true);
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

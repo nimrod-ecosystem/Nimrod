@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>choosing a device, and falling back — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>choosing a device, and falling back</h1>
+
+<div class="warn">
+  For most software a microphone disappearing is a degraded experience.<br>
+  For somebody whose only route to being understood runs through it, it is being cut off.
+</div>
+
+<p>The case: a good microphone that is only there <b>sometimes</b> — a phone a visitor brings into
+the room hears far better than a webcam across it, and it leaves when they do. Both facts are
+normal and neither should need anybody to change a setting.</p>
+
+<p>This mirrors <code>voice.js</code>'s <code>resolveVoice</code> deliberately, because that file
+already solved the same problem for voices: store a <b>preference</b> rather than an id, degrade,
+never strand. It adds two things a voice did not need — it <b>says which rung it landed on</b>,
+and it <b>never confuses a device going away with a person going quiet</b>.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { pickDevice, pickChanged, describePick, watchDevices, PICKS } from '../device_pick.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const PHONE = { id: 'phone-1', label: "Mike's phone" };
+const USB   = { id: 'usb-1',   label: 'USB Microphone' };
+const WEBCAM = { id: 'cam-1',  label: 'Webcam microphone' };
+const STRANGER = { id: 'x-9',  label: 'Some headset' };
+// Best first, which is the shape a person's setting takes.
+const WANT = [PHONE.id, USB.id, WEBCAM.id];
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the ladder');
+  {
+    const all = pickDevice(WANT, [PHONE, USB, WEBCAM]);
+    check('with everything plugged in, it uses the best one', all.id === PHONE.id, JSON.stringify(all));
+    check('...and says there is nothing to report', all.pick === 'preferred', all.pick);
+
+    // THE CASE THIS EXISTS FOR: the visitor left and took the good microphone with them.
+    const gone = pickDevice(WANT, [USB, WEBCAM]);
+    check('*** the good microphone leaves and it drops to the next one, by itself ***',
+      gone.id === USB.id, JSON.stringify(gone));
+    check('...and marks it as a FALLBACK, not as normal', gone.pick === 'fallback', gone.pick);
+    check('...and remembers what it wanted, so it can name what is missing rather than only '
+      + 'what it got', gone.wanted === PHONE.id, gone.wanted);
+    check('...and reports how far down the list it fell', gone.rank === 1, String(gone.rank));
+
+    const last = pickDevice(WANT, [WEBCAM]);
+    check('down to the last one on the list', last.id === WEBCAM.id && last.rank === 2,
+      JSON.stringify(last));
+  }
+
+  section('nothing they chose is here');
+  {
+    // Using an unchosen device beats using none — a screen that refuses to listen because the
+    // preferred microphone is missing has picked the worse of the two failures.
+    const odd = pickDevice(WANT, [STRANGER]);
+    check('it uses what IS there rather than refusing', odd.id === STRANGER.id, JSON.stringify(odd));
+    // ...but it is `unlisted`, not `fallback`. "The one below your first choice" and "a device
+    // nobody chose" are different sentences and want different wording.
+    check('*** ...but calls it unlisted, not a fallback — a different sentence ***',
+      odd.pick === 'unlisted', odd.pick);
+    check('...and rank says it was not on the list at all', odd.rank === -1, String(odd.rank));
+  }
+
+  section('nothing at all');
+  {
+    const none = pickDevice(WANT, []);
+    check('no device is `none`, not a crash', none.pick === 'none' && none.id === null,
+      JSON.stringify(none));
+    check('...and it still knows what was wanted', none.wanted === PHONE.id);
+    check('an empty preference with a device present still picks something',
+      pickDevice([], [WEBCAM]).id === WEBCAM.id);
+    check('no preference and no devices is still `none`', pickDevice(null, null).pick === 'none');
+    check('every pick it can return is in the closed set',
+      [pickDevice(WANT, [PHONE]), pickDevice(WANT, [USB]), pickDevice(WANT, [STRANGER]),
+       pickDevice(WANT, [])].every((r) => PICKS.includes(r.pick)));
+  }
+
+  // =====================================================================================
+  section('*** saying so — because a silent downgrade is the worst failure here ***');
+  {
+    check('using the preferred device says NOTHING — no chatter',
+      describePick(pickDevice(WANT, [PHONE, USB])) === null);
+
+    const d = describePick(pickDevice(WANT, [USB, WEBCAM]));
+    check('falling back says so, and NAMES the device so somebody can act on it',
+      /USB Microphone/.test(d.text), JSON.stringify(d));
+    check('...and says the usual one is missing, which is the actionable half',
+      /not connected/i.test(d.text), d.text);
+    check('...as a notify — worth knowing, not an emergency', d.level === 'notify', d.level);
+
+    const u = describePick(pickDevice(WANT, [STRANGER]));
+    check('an unlisted device gets its own wording', /none of the chosen/i.test(u.text), u.text);
+
+    const n = describePick(pickDevice(WANT, []));
+    check('*** no microphone at all is an ALERT — somebody may be talking to nothing ***',
+      n.level === 'alert' && /no microphone/i.test(n.text), JSON.stringify(n));
+
+    check('it can talk about cameras too, in the same words',
+      /camera/.test(describePick(pickDevice(WANT, []), { kind: 'camera' }).text));
+  }
+
+  section('it only speaks when something actually changed');
+  {
+    const a = pickDevice(WANT, [USB]);
+    const b = pickDevice(WANT, [USB]);
+    check('re-picking the same device is not news', pickChanged(a, b) === false);
+    check('a change of device is news', pickChanged(a, pickDevice(WANT, [PHONE])) === true);
+    check('the FIRST pick is news only if it is not the preferred one',
+      pickChanged(null, pickDevice(WANT, [USB])) === true
+        && pickChanged(null, pickDevice(WANT, [PHONE])) === false);
+    // *** AND THE TRAP THAT CAUGHT ME. *** "Not news" does NOT mean "nothing to do": the very
+    // first pick of the preferred device is not a change, and an earlier version used that to
+    // decide whether to APPLY the device as well as whether to announce it — so it opened the
+    // default microphone while reporting it had chosen another. A control only applied on
+    // change is not applied.
+    check('...which is about SPEAKING, never about applying', true);
+  }
+
+  // =====================================================================================
+  section('watching the hardware — including the good device COMING BACK');
+  {
+    let devices = [USB, WEBCAM];
+    const events = [];
+    const fakeTarget = {
+      handlers: [],
+      addEventListener(_, fn) { this.handlers.push(fn); },
+      removeEventListener(_, fn) { this.handlers = this.handlers.filter((h) => h !== fn); },
+      fire() { this.handlers.forEach((h) => h()); },
+    };
+    const w = watchDevices({
+      list: async () => devices,
+      preferred: () => WANT,
+      onPick: (res, before, changed) => events.push([before?.id || null, res.id, res.pick, changed]),
+      target: () => fakeTarget,
+    });
+
+    await w.repick();
+    check('it starts on the best AVAILABLE device', w.current().id === USB.id, JSON.stringify(w.current()));
+    check('...and flagged it as news, because it is a fallback',
+      events.length === 1 && events[0][2] === 'fallback' && events[0][3] === true,
+      JSON.stringify(events));
+
+    // *** THE VISITOR ARRIVES. *** Coming back UP the list matters as much as falling down it:
+    // nobody should have to open a settings page because they walked into the room.
+    devices = [PHONE, USB, WEBCAM];
+    fakeTarget.fire();
+    await sleep(5);
+    check('*** the good microphone reappearing is picked up automatically ***',
+      w.current().id === PHONE.id, JSON.stringify(w.current()));
+    check('...and reported as a change', events.length === 2 && events[1][1] === PHONE.id,
+      JSON.stringify(events));
+    check('...as `preferred` — back to normal, and the caller can then stay quiet',
+      events[1][2] === 'preferred');
+
+    // And leaving again.
+    devices = [USB, WEBCAM];
+    fakeTarget.fire();
+    await sleep(5);
+    check('the visitor leaving drops it back down', w.current().id === USB.id);
+
+    // *** APPLY ALWAYS, SPEAK ON CHANGE. *** Unchanged hardware still reports, so a caller can
+    // re-apply the device every time — the first pick is not a "change" and an earlier version
+    // therefore never applied it at all — but it is flagged as NOT news, so nothing chatters.
+    const n = events.length;
+    fakeTarget.fire(); await sleep(5);
+    fakeTarget.fire(); await sleep(5);
+    check('it still reports on every re-pick, so the device can be applied every time',
+      events.length === n + 2, JSON.stringify(events.slice(n)));
+    check('*** ...but flags them as NOT news, so nothing chatters ***',
+      events.slice(n).every((e) => e[3] === false), JSON.stringify(events.slice(n)));
+
+    w.stop();
+    devices = [PHONE];
+    fakeTarget.fire();
+    await sleep(5);
+    check('stopping really stops it', w.current().id === USB.id, JSON.stringify(w.current()));
+  }
+
+  section('a machine that cannot enumerate at all');
+  {
+    // Insecure origin: `navigator.mediaDevices` does not exist. Reading it eagerly throws, which
+    // is the mistake mic_owner.js already made once — so `target` is a GETTER here, and a
+    // listing that fails degrades to "no devices" rather than taking the page down.
+    const w = watchDevices({
+      list: async () => { throw new TypeError('no mediaDevices'); },
+      preferred: () => WANT,
+      target: () => { throw new TypeError('no mediaDevices'); },
+    });
+    const res = await w.repick();
+    check('it reports `none` rather than throwing', res.pick === 'none', JSON.stringify(res));
+    w.stop();
+    check('...and stopping is safe too', true);
+  }
+
+  // =====================================================================================
+  section('*** the distinction that must never be blurred ***');
+  {
+    // Falling back because a microphone was UNPLUGGED is correct. Falling back because somebody
+    // stopped talking would be a machine deciding that a person who went quiet must be broken —
+    // and for somebody who is slow to speak, that is exactly backwards.
+    //
+    // This is asserted structurally: nothing in this file's inputs carries signal, level, or
+    // any measure of whether anybody is speaking. It cannot make that mistake because it is
+    // never told enough to.
+    const src = await fetch('../device_pick.js').then((r) => r.text());
+    const forbidden = /\b(volume|amplitude|rms|loudness|silence|speaking|signalLevel)\b/i;
+    check('*** nothing here looks at signal — only at what is PRESENT ***',
+      !forbidden.test(src.replace(/\/\/.*$/gm, '')),
+      'a signal-shaped term appeared in the code');
+    const quiet = pickDevice(WANT, [PHONE]);
+    check('a person saying nothing at all does not change the device',
+      quiet.id === PHONE.id && quiet.pick === 'preferred');
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+section('not covered here');
+check('NOTE: no real hardware. Whether a given webcam actually raises `devicechange` when it is '
+  + 'unplugged, and how fast, is a bench question', true);
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

@@ -476,3 +476,98 @@
   #demo .d-x{background:transparent;color:#F7F4D5;opacity:.7;padding:9px 11px}
   #demo .d-note{flex:1 1 100%;opacity:.85;font-size:.85rem}
   @media (max-width:560px){ #demo{font-size:.9rem;padding:9px 11px;gap:9px} }
+
+/* ---- THE CURSOR: where the aim is, drawn by us rather than by the operating system ----
+ *
+ * See cursor.js for why this is not the system pointer. The short version: an OS arrow is
+ * 12px of thin grey, cannot be themed, and does not exist at all for a hand in front of a
+ * camera. Position is set inline from a normalised aim; everything about how it LOOKS is
+ * here, driven by data attributes and two custom properties the module writes.
+ *
+ * z-index sits ABOVE the press overlay (40): if both are on screen, the thing being pointed
+ * with should not be covered by a caption about a button.
+ *
+ * pointer-events:none is load-bearing rather than tidy — without it the cursor would sit
+ * under the real mouse and swallow every click on the screen it is meant to be pointing at.
+ */
+.cur {
+  position: fixed; z-index: 60; pointer-events: none;
+  left: 0; top: 0;
+  --cur-colour: #F7C948;
+  --cur-ring: 4px;
+}
+/* A DARK OUTLINE UNDER EVERY STYLE, so the cursor reads against a white hospital sheet and a
+   night sky without anybody having to change the colour. */
+.cur[data-style="ring"] {
+  border-radius: 50%;
+  border: var(--cur-ring) solid var(--cur-colour);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.55);
+}
+.cur[data-style="dot"] {
+  border-radius: 50%;
+  background: var(--cur-colour);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.55);
+}
+/* Two bars rather than a border, so the middle stays empty and whatever is being pointed at
+   is still visible through it. */
+.cur[data-style="crosshair"] { background: none; }
+.cur[data-style="crosshair"]::before,
+.cur[data-style="crosshair"]::after {
+  content: ""; position: absolute; background: var(--cur-colour);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.55);
+}
+.cur[data-style="crosshair"]::before {
+  left: 50%; top: 0; width: var(--cur-ring); height: 100%; margin-left: calc(var(--cur-ring) / -2);
+}
+.cur[data-style="crosshair"]::after {
+  top: 50%; left: 0; height: var(--cur-ring); width: 100%; margin-top: calc(var(--cur-ring) / -2);
+}
+/* NO TRANSITION ON POSITION, EVER, and this is not a stylistic choice. `comet.js` puts the
+   comet's head exactly on the aim because the precision is what answers "did I do that?" for
+   somebody re-learning that she can. A CSS transition is smoothing by another name, applied
+   in the one place the person is most likely to notice it. */
+@media (prefers-reduced-motion: no-preference) {
+  .cur { transition: width .12s ease, height .12s ease; }
+}
+/* The system pointer, taken away only when the setting asks for it — kiosk yes, desktop no. */
+body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor: none !important; }
+
+/* ---- THE MARKER CALIBRATION PANEL (Devices tab) ----
+ * Two columns: the live picture, and the readouts that tell somebody what to do about it.
+ * Stacks on a narrow screen, because a caregiver may well be setting this up on a phone in
+ * one hand while the other holds the camera.
+ */
+.mk h3 { margin: 18px 0 4px; font-size: 1rem; }
+.mk .mk-lede { margin: 0 0 10px; color: var(--ink-soft, #3c5346); max-width: 62ch; }
+.mk-live { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+/* Pixelated: this is a 160x120 detection frame blown up, and smoothing it would show a
+   cleaner picture than the thing actually being scanned. The caregiver should see what the
+   DETECTOR sees, not a prettier version of it. */
+.mk-view {
+  width: 320px; height: 240px; image-rendering: pixelated;
+  border-radius: 10px; background: #0c1a14; cursor: crosshair;
+  border: 1px solid var(--line, #e4e0c2);
+}
+.mk-side { flex: 1 1 240px; min-width: 220px; }
+.mk-advice { margin: 0 0 8px; font-weight: 650; }
+/* Shape as well as colour, per module-input-spec: never carry meaning by colour alone. */
+.mk-advice[data-state="seen"]::before { content: "\2713\00a0"; color: #2c6e49; }
+.mk-advice[data-state="faint"]::before { content: "\26A0\00a0"; }
+.mk-advice[data-state="lost"]::before,
+.mk-advice[data-state="unsampled"]::before { content: "\2192\00a0"; }
+.mk-advice[data-state="seen"] { color: #2c6e49; }
+.mk-advice[data-state="lost"] { color: #a4243b; }
+.mk-swatch-row { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.mk-swatch {
+  width: 26px; height: 26px; border-radius: 6px; display: inline-block;
+  border: 1px solid rgba(0,0,0,.3); background-image:
+    linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%),
+    linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%);
+  background-size: 10px 10px; background-position: 0 0, 5px 5px;   /* nothing sampled = checks */
+}
+.mk-chk { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; font-weight: 600; }
+.mk-note { margin: 0 0 10px; font-size: .87rem; color: var(--muted, #5d7064); max-width: 62ch; }
+.mk-rows { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-width: 460px; }
+.mk-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mk-row select { flex: 0 1 220px; }
+@media (max-width: 560px) { .mk-view { width: 100%; height: auto; aspect-ratio: 4 / 3; } }

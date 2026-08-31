@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the microphone arbiter — one mic, one owner — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>the microphone arbiter</h1>
+
+<div class="warn">
+  Two consumers of a live microphone is a privacy event, not a resource conflict.
+</div>
+
+<p>The twin of <code>camera_owner.js</code> — one device, ref-counted, one owner — with a problem
+the camera never had: <b>the settings that make a call sound good are the wrong ones for
+recognition.</b> A call wants echo cancellation and noise suppression on; a recogniser wants them
+off, because suppression is tuned to keep confident typical speech and discard the rest, which is
+a fair description of exactly the articulation it most needs to hear.</p>
+
+<p>One stream has one set of constraints, so both cannot be satisfied. This opens <b>raw</b> and
+<b>tells a consumer when the live stream is not what it asked for</b> — because you can always
+degrade a clean signal and you can never restore a processed one, and because silence is the one
+answer that is never right here.</p>
+
+<p><b>No microphone is used anywhere in this suite.</b> <code>getUserMedia</code> and
+<code>enumerateDevices</code> are both injected.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createMicOwner, mismatch, PROFILES, PROCESSING, GRACE_MS } from '../mic_owner.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+function fakeClock() {
+  let now = 0, seq = 0;
+  const pending = new Map();
+  return {
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + ms }); return id; },
+    clearTimer: (id) => { pending.delete(id); },
+    advance(ms) {
+      const target = now + ms;
+      for (let g = 0; g < 5000; g++) {
+        let pickId = null, pickAt = Infinity;
+        for (const [id, t] of pending) if (t.at <= target && t.at < pickAt) { pickId = id; pickAt = t.at; }
+        if (pickId === null) break;
+        const t = pending.get(pickId); pending.delete(pickId);
+        now = Math.max(now, t.at); t.fn();
+      }
+      now = target;
+    },
+  };
+}
+
+// A microphone that never was. `stopped` is what proves the device actually let go.
+function fakeMic() {
+  const log = { opens: [], streams: [] };
+  const open = (opts) => {
+    log.opens.push({ ...opts });
+    const track = { kind: 'audio', stopped: false, stop() { this.stopped = true; } };
+    const s = { getTracks: () => [track], track };
+    log.streams.push(s);
+    return Promise.resolve(s);
+  };
+  return { log, open };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('one microphone, however many things want it');
+  {
+    const clock = fakeClock();
+    const mic = fakeMic();
+    const owner = createMicOwner({ open: mic.open, ...clock, graceMs: GRACE_MS });
+
+    check('nothing is listening before anybody asks', owner.listening() === false);
+    const a = await owner.acquire('call', PROFILES.raw);
+    check('acquiring opens it once', mic.log.opens.length === 1, String(mic.log.opens.length));
+    check('...and it says so', owner.listening() === true);
+
+    const b = await owner.acquire('listener', PROFILES.raw);
+    check('*** a second consumer does NOT open a second stream ***',
+      mic.log.opens.length === 1, String(mic.log.opens.length));
+    check('...it gets the same one', a === b);
+    check('...and both are named, so "what is listening" is answerable',
+      owner.status().consumers.join(',') === 'call,listener', JSON.stringify(owner.status().consumers));
+
+    owner.release('call');
+    check('one of two releasing keeps it open — the other is still using it',
+      owner.listening() === true, JSON.stringify(owner.status()));
+    owner.release('listener');
+    check('the last release does not close it INSTANTLY — there is a grace window, so swapping '
+      + 'one consumer for another does not flash the recording indicator',
+      owner.listening() === true);
+    clock.advance(GRACE_MS + 10);
+    check('*** ...and then it really does close ***', owner.listening() === false);
+    check('...and the track was actually stopped, not merely dereferenced',
+      mic.log.streams[0].track.stopped === true);
+    owner.destroy();
+  }
+
+  section('re-acquiring inside the grace window keeps the same stream');
+  {
+    const clock = fakeClock();
+    const mic = fakeMic();
+    const owner = createMicOwner({ open: mic.open, ...clock });
+    await owner.acquire('call');
+    owner.release('call');
+    await owner.acquire('listener');
+    clock.advance(5000);
+    check('it never closed, and never re-opened', mic.log.opens.length === 1 && owner.listening(),
+      `${mic.log.opens.length} opens`);
+    check('...and the stream survived the handover', mic.log.streams[0].track.stopped === false);
+    owner.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the conflict the camera arbiter never had ***');
+  {
+    check('a call and a recogniser want opposite things', (() => {
+      return PROFILES.call.noiseSuppression === true && PROFILES.raw.noiseSuppression === false;
+    })());
+
+    // The pure rule, so a warning has one wording and one home.
+    check('no mismatch when they agree', mismatch(PROFILES.raw, PROFILES.raw).length === 0);
+    check('a raw consumer on a processed stream is a mismatch, named switch by switch',
+      mismatch(PROFILES.raw, PROFILES.call).sort().join(',') === PROCESSING.slice().sort().join(','),
+      JSON.stringify(mismatch(PROFILES.raw, PROFILES.call)));
+    check('...and it is symmetric', mismatch(PROFILES.call, PROFILES.raw).length === 3);
+    check('a consumer that did not ask is never mismatched', mismatch(null, PROFILES.call).length === 0);
+    check('...nor is one asking about a switch the stream does not report',
+      mismatch({ noiseSuppression: false }, { echoCancellation: true }).length === 0);
+  }
+
+  section('opened RAW by default — you can degrade a clean signal, never restore a processed one');
+  {
+    const clock = fakeClock();
+    const mic = fakeMic();
+    const owner = createMicOwner({ open: mic.open, ...clock });
+    await owner.acquire('listener');
+    check('*** nothing is switched on that a recogniser would have to fight ***',
+      mic.log.opens[0].noiseSuppression === false && mic.log.opens[0].echoCancellation === false
+        && mic.log.opens[0].autoGainControl === false,
+      JSON.stringify(mic.log.opens[0]));
+    owner.destroy();
+  }
+
+  section('a consumer that does NOT get what it asked for is TOLD, not left guessing');
+  {
+    const clock = fakeClock();
+    const mic = fakeMic();
+    const owner = createMicOwner({ open: mic.open, ...clock });
+
+    // The call gets in first and opens a processed stream.
+    await owner.acquire('call', PROFILES.call);
+    check('CONTROL: the first acquirer decided the constraints',
+      mic.log.opens[0].noiseSuppression === true, JSON.stringify(mic.log.opens[0]));
+
+    // Now a recogniser arrives and wants raw. It still gets audio — refusing would be worse —
+    // but the mismatch is REPORTED so it can say why it is doing badly instead of just doing
+    // badly. Silence is the one answer that is never right here.
+    const s = await owner.acquire('listener', PROFILES.raw);
+    check('it still gets the stream rather than being refused', !!s);
+    check('*** and the mismatch is reported, by name ***', (() => {
+      const bad = owner.status().mismatch;
+      return bad.length === 1 && bad[0].id === 'listener' && bad[0].missing.includes('noiseSuppression');
+    })(), JSON.stringify(owner.status().mismatch));
+    check('...while the consumer that got what it wanted is not flagged',
+      !owner.status().mismatch.some((m) => m.id === 'call'), JSON.stringify(owner.status().mismatch));
+
+    // And re-opening under a live call is NOT the answer: it would drop the audio mid-call.
+    check('a second consumer does not re-open the device underneath the first',
+      mic.log.opens.length === 1, String(mic.log.opens.length));
+    owner.destroy();
+  }
+
+  // =====================================================================================
+  section('a microphone is a device like any other device');
+  {
+    // Mike, 2026-08-30: whatever microphone somebody wants. This file knows nothing about
+    // phones, webcams or headsets — only about a list.
+    const devices = [
+      { kind: 'audioinput', deviceId: 'default', label: 'Default — Webcam mic' },
+      { kind: 'audioinput', deviceId: 'usb-1', label: 'USB Microphone' },
+      { kind: 'videoinput', deviceId: 'cam-1', label: 'Webcam' },
+      { kind: 'audiooutput', deviceId: 'spk-1', label: 'Speakers' },
+    ];
+    const owner = createMicOwner({ open: fakeMic().open, enumerate: () => devices });
+    const list = await owner.list();
+    check('it lists the microphones', list.length === 2, JSON.stringify(list));
+    check('...and only the microphones — not the camera, not the speakers',
+      list.every((d) => /mic/i.test(d.label)), JSON.stringify(list));
+    check('...with their real names, so a chooser is usable',
+      list[1].label === 'USB Microphone', JSON.stringify(list[1]));
+    check('labels are reported as real', await owner.labelled() === true);
+    owner.destroy();
+  }
+
+  section('empty labels mean permission has never been granted — and that is worth knowing');
+  {
+    // *** THE TRAP. *** Every browser returns audioinput entries with BLANK labels until
+    // permission has been granted once. A chooser that renders those shows "Microphone 1,
+    // Microphone 2, Microphone 3", which is not a chooser. A caller has to be able to tell
+    // this state apart from "this machine has two microphones called nothing".
+    const owner = createMicOwner({
+      open: fakeMic().open,
+      enumerate: () => [
+        { kind: 'audioinput', deviceId: '', label: '' },
+        { kind: 'audioinput', deviceId: '', label: '' },
+      ],
+    });
+    check('the devices are still listed', (await owner.list()).length === 2);
+    check('*** ...but it says the labels are not real yet, so a chooser can ask for permission '
+      + 'first instead of showing "Microphone 1, Microphone 2" ***',
+      await owner.labelled() === false);
+    owner.destroy();
+  }
+  {
+    // *** SYNCHRONOUS FAILURE, AND IT IS NOT HYPOTHETICAL. *** On an INSECURE ORIGIN there is
+    // no `navigator.mediaDevices` at all, so this throws a TypeError before it ever returns a
+    // promise — and plain http on a LAN is exactly how somebody first tries a device like this.
+    // The first version caught only the rejected-promise shape and this test brought the whole
+    // suite down, which is the right way to find out.
+    const owner = createMicOwner({ open: fakeMic().open, enumerate: () => { throw new TypeError('no mediaDevices'); } });
+    check('*** a machine with no mediaDevices at all reports none, rather than throwing ***',
+      (await owner.list()).length === 0);
+    check('...and does not then claim the labels are fine', await owner.labelled() === false);
+    owner.destroy();
+  }
+  {
+    const owner = createMicOwner({ open: fakeMic().open, enumerate: () => Promise.reject(new Error('denied')) });
+    check('a REJECTED enumerate is handled too — the other of the two shapes',
+      (await owner.list()).length === 0);
+    owner.destroy();
+  }
+
+  // =====================================================================================
+  section('failure, and the ref that must not leak');
+  {
+    const clock = fakeClock();
+    let threw = null;
+    const owner = createMicOwner({
+      open: () => Promise.reject(new Error('permission denied')), ...clock,
+    });
+    try { await owner.acquire('call'); } catch (e) { threw = e; }
+    check('a refused microphone is an error, not a silent nothing', !!threw, String(threw));
+    // *** A LEAKED REF PINS THE DEVICE ON. *** On a microphone that is not merely wasteful.
+    check('*** ...and the failed consumer does not stay counted as listening ***',
+      owner.status().consumers.length === 0 && owner.listening() === false,
+      JSON.stringify(owner.status()));
+    owner.destroy();
+  }
+
+  section('the room can be told what is happening');
+  {
+    const clock = fakeClock();
+    const mic = fakeMic();
+    const seen = [];
+    const owner = createMicOwner({ open: mic.open, ...clock, onChange: (s) => seen.push(s.listening) });
+    await owner.acquire('call');
+    owner.release('call');
+    clock.advance(GRACE_MS + 10);
+    check('every start and stop is announced, so an indicator can be driven from one place',
+      seen.includes(true) && seen[seen.length - 1] === false, JSON.stringify(seen));
+    owner.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the fallback ladder — the good microphone is often the one that is not always there ***');
+  {
+    const PHONE = { kind: 'audioinput', deviceId: 'phone-1', label: "A visitor's phone" };
+    const USB = { kind: 'audioinput', deviceId: 'usb-1', label: 'USB Microphone' };
+    let devices = [PHONE, USB];
+    const said = [];
+    const mic = fakeMic();
+    const clock = fakeClock();
+    const owner = createMicOwner({
+      open: mic.open, ...clock,
+      enumerate: () => devices,
+      preferred: () => ['phone-1', 'usb-1'],
+      onFallback: (msg, res) => said.push([msg.level, msg.text, res.pick]),
+      target: () => null,
+    });
+
+    await owner.choose();
+    check('it settles on the best one that is present', owner.chosen().id === 'phone-1',
+      JSON.stringify(owner.chosen()));
+    check('...and says nothing, because that is the normal case', said.length === 0,
+      JSON.stringify(said));
+    await owner.acquire('call');
+    check('...and that is the device actually opened', mic.log.opens[0].deviceId === 'phone-1',
+      JSON.stringify(mic.log.opens[0]));
+
+    // *** THE VISITOR LEAVES AND TAKES THE GOOD MICROPHONE WITH THEM. ***
+    devices = [USB];
+    await owner.choose();
+    check('*** it drops to the next microphone on the list, by itself ***',
+      owner.chosen().id === 'usb-1', JSON.stringify(owner.chosen()));
+    check('*** ...and SAYS SO, naming it — a silent downgrade is the worst failure here ***',
+      said.length === 1 && /USB Microphone/.test(said[0][1]), JSON.stringify(said));
+
+    // *** AND IT DOES NOT SWAP THE DEVICE OUT FROM UNDER A LIVE CALL. *** Cutting somebody off
+    // mid-sentence to "improve" their microphone is the exact harm the ladder exists to prevent.
+    check('the call that is already running was NOT re-opened underneath it',
+      mic.log.opens.length === 1, String(mic.log.opens.length));
+    owner.release('call', true);
+    await owner.acquire('call2');
+    check('...the better choice takes effect on the NEXT open',
+      mic.log.opens[1].deviceId === 'usb-1', JSON.stringify(mic.log.opens[1]));
+
+    // Coming back UP the ladder matters as much as falling down it.
+    devices = [PHONE, USB];
+    await owner.choose();
+    check('the visitor returning restores the better microphone with nobody touching a setting',
+      owner.chosen().id === 'phone-1');
+    check('...and going back to normal is not announced as a problem',
+      said.length === 1, JSON.stringify(said));
+
+    devices = [];
+    await owner.choose();
+    check('*** no microphone at all is an ALERT, because somebody may be talking to nothing ***',
+      said.length === 2 && said[1][0] === 'alert', JSON.stringify(said));
+    owner.destroy();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+section('not covered here');
+check('NOTE: no real microphone, no permission prompt, no browser processing — the mismatch '
+  + 'rule is arithmetic here, and what a real noise suppressor does to real impaired speech '
+  + 'is a bench question, not a test one', true);
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

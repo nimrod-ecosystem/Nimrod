@@ -55,11 +55,10 @@ Thumbs.db
 .vscode/
 *.swp
 
-# Homeschool curriculum kit + the household points tracker: a minor's personal
-# material (age, grade, city, family context). Keep it OUT of this public repo —
-# move it to the private repo if it needs versioning. See docs/points-sheet.md for
-# the non-personal parts (the sheet LAYOUT) that are safe to publish.
-oscar-build-kit/
+# Local personal household material. Keep it OUT of this public repo — move it to
+# the private repo if it ever needs versioning. See docs/points-sheet.md for the
+# non-personal parts (the sheet LAYOUT) that are safe to publish.
+household-kit/
 *.xlsx
 
 # Working notes live in the PRIVATE monorepo (Nimrod_Ecosystem), never here.

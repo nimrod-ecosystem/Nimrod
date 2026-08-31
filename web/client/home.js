@@ -23,6 +23,7 @@
 // Changing person remounts the active panel; see `show()`.
 
 import { mountPeople } from './people.js';
+import { createBus } from './bus.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -130,6 +131,53 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     : null);
   const makeUserState = forPerson(makePersonState);
   const makeUserEvents = forPerson(makePersonEvents);
+  // ---- the marker tracker's calibration, mounted under Devices ----------------------
+  //
+  // Assembled here rather than inside `marker_panel.js` because the panel is deliberately
+  // ignorant of where its camera and its storage come from — which is what lets the whole
+  // thing be tested against frames built in an array.
+  //
+  // THE AIM ON THIS PAGE DRIVES NOTHING, and that is correct rather than a shortcut. Home has
+  // no cursor and no kiosk; what a caregiver is doing here is producing NUMBERS — a colour, a
+  // rest point, a gain — which the kiosk then uses. The live picture is the feedback, and the
+  // "let this move the cursor" switch is a statement about the screen, not about this page.
+  async function mountMarkerTab(host, { makeUserState: makeState2 }) {
+    const [{ createAim }, { createCameraOwner }, { createMarkerTracker },
+           { mountMarkerPanel, MARKER_KEY }] = await Promise.all([
+      import('./aim.js'), import('./camera_owner.js'),
+      import('./input_marker.js'), import('./marker_panel.js'),
+    ]);
+    if (!makeState2) return null;                 // no person resolved yet: nothing to save into
+    const state = makeState2(MARKER_KEY);
+    await state.load().catch(() => {});           // offline is not a reason to have no panel
+    const localBus = bus || createBus();
+    const aim = createAim({ bus: localBus });
+    const owner = createCameraOwner();
+    let panelRef = null;
+    const tracker = createMarkerTracker({
+      aim, cameraOwner: owner,
+      settings: () => state.get() || {},
+      onFrame: (f, found, mask) => panelRef?.draw(f, found, mask),
+    });
+    panelRef = mountMarkerPanel(host, {
+      tracker, aim,
+      settings: () => state.get() || {},
+      save: async (patch) => { state.set(patch); await state.flush?.(); },
+    });
+    // The camera only opens when somebody is looking at this tab, and closes when they leave.
+    // A calibration panel that left the webcam on after the tab was closed would be the single
+    // worst thing in this repo.
+    await tracker.start().catch((err) => { console.error('marker: camera', err); });
+    return {
+      async refresh() { await panelRef.refresh(); return this; },
+      destroy() {
+        try { tracker.destroy(); } catch (e) { console.error(e); }
+        try { panelRef.destroy(); } catch (e) { console.error(e); }
+        try { state.destroy?.(); } catch (e) { console.error(e); }
+      },
+    };
+  }
+
   const mount = mountTab || (async (id, host) => {
     if (id === 'media') {
       const { mountMedia } = await import('./media.js');
@@ -138,10 +186,32 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       return m;
     }
     if (id === 'inputs') {
+      // TWO PANELS IN ONE TAB, and it is the right tab: a marker tracker is a DEVICE, sitting
+      // with the switches and controllers rather than in a category of its own. Composed here
+      // rather than by nesting one panel inside the other, so neither file has to know about
+      // the other's internals and either can be mounted alone by a test.
       const { mountInputs } = await import('./inputs.js');
       const i = mountInputs(host, { profiles, user, makeUserState, personId });
       await i.refresh();
-      return i;
+
+      const markerHost = document.createElement('div');
+      host.append(markerHost);
+      let marker = null;
+      try {
+        marker = await mountMarkerTab(markerHost, { makeUserState });
+      } catch (err) {
+        // A camera that will not open, or a browser with none, must not take the whole
+        // Devices tab down with it — somebody came here to bind a switch.
+        console.error('home: marker panel', err);
+        markerHost.remove();
+      }
+      return {
+        async refresh() { await i.refresh(); await marker?.refresh?.(); return this; },
+        destroy() {
+          try { marker?.destroy?.(); } catch (e) { console.error(e); }
+          try { i.destroy?.(); } catch (e) { console.error(e); }
+        },
+      };
     }
     if (id === 'output') {
       const { mountOutput } = await import('./output_panel.js');

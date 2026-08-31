@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the aim — one position, whatever is doing the pointing — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
+  /* ON SCREEN, AND AT A KNOWN PLACE. The first draft parked this at left:-9999px like the
+     other suites do, and the 1:1 assertion below then measured nothing: an aim is NORMALISED
+     to the viewport, so an element outside the viewport makes every coordinate clamp to an
+     edge and the check passed or failed for reasons that had nothing to do with the comet.
+     A module that is about where things are on screen has to be tested on screen. */
+  #host{position:fixed;right:14px;bottom:14px;width:320px;height:240px;border-radius:10px;
+    overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.25)}
+  #curhost{position:absolute;left:-9999px;top:-9999px}
+</style>
+</head>
+<body>
+<h1>the aim</h1>
+
+<div class="warn">
+  She cannot hold a mouse. If a position can only arrive as a mouse event, the module built to
+  answer <em>“did I do that?”</em> can never answer it for her.
+</div>
+
+<p><code>comet.js</code> read <code>pointermove</code> off its own canvas, and <code>pond.js</code>
+did the same and called its copy <code>aim()</code>, and <code>module-input-spec.md</code> told
+module authors not to assume a pointer exists at all. Three private copies of one idea.
+<code>aim.js</code> owns it now: a normalised (x, y) from whatever is driving the screen, with a
+mouse as the first producer and a camera tracker as a later one that nothing downstream can tell
+apart.</p>
+
+<p>These are pure-unit where they can be — <code>aim.js</code> and <code>cursor.js</code> need no
+server — and the comet section mounts the real module. Needs the server only for the module
+registry's sake: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div><div id="curhost"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createAim, viewportAim, aimIn, AIM_TOPIC } from '../aim.js';
+import { mountCursor, CURSOR_DEFAULTS } from '../cursor.js';
+import { attachPointer, POINTER_DEVICE } from '../input_pointer.js';
+import { mountModule } from '../module.js';
+import '../modules/comet.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A viewport of a known size, so "normalised" can be asserted as arithmetic rather than
+// against whatever the runner's window happens to be.
+const VIEW = { innerWidth: 1000, innerHeight: 500 };
+
+function fakeClock() {
+  let now = 0, seq = 0;
+  const pending = new Map();
+  return {
+    now: () => now,
+    tick: (ms) => { now += ms; },
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + ms }); return id; },
+    clearTimer: (id) => { pending.delete(id); },
+    advance(ms) {
+      const target = now + ms;
+      for (let g = 0; g < 5000; g++) {
+        let pickId = null, pickAt = Infinity;
+        for (const [id, t] of pending) if (t.at <= target && t.at < pickAt) { pickId = id; pickAt = t.at; }
+        if (pickId === null) break;
+        const t = pending.get(pickId); pending.delete(pickId);
+        now = Math.max(now, t.at); t.fn();
+      }
+      now = target;
+    },
+    armed: () => pending.size,
+  };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('normalising — the thing a camera can actually produce');
+  {
+    const a = viewportAim(500, 250, VIEW);
+    check('the middle of the viewport is 0.5, 0.5', a.x === 0.5 && a.y === 0.5, JSON.stringify(a));
+    check('the top-left corner is 0, 0', (() => { const p = viewportAim(0, 0, VIEW); return p.x === 0 && p.y === 0; })());
+    // OFF-SCREEN IS CLAMPED, NOT DROPPED. A tracker whose subject drifts past the edge of the
+    // frame should pin the cursor to the edge, not make it vanish — a cursor that disappears
+    // when somebody overshoots is a cursor they cannot find their way back to.
+    const off = viewportAim(-40, 900, VIEW);
+    check('past the edge clamps rather than disappearing', off.x === 0 && off.y === 1, JSON.stringify(off));
+    check('a viewport with no size reports nothing rather than dividing by zero',
+      viewportAim(10, 10, { innerWidth: 0, innerHeight: 0 }) === null);
+  }
+
+  section('an aim is reported, and the last producer wins');
+  {
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const clock = fakeClock();
+    const aim = createAim({ bus, now: clock.now });
+
+    aim.report('pointer:mouse', 0.25, 0.75);
+    check('it lands on the bus', seen.length === 1 && seen[0].x === 0.25 && seen[0].y === 0.75,
+      JSON.stringify(seen));
+    check('...carrying WHICH DEVICE, so a cursor can tell a mouse from a tracker',
+      seen[0].device === 'pointer:mouse', JSON.stringify(seen[0]));
+    check('...and latest() remembers it for anything mounted afterwards',
+      aim.latest().x === 0.25, JSON.stringify(aim.latest()));
+
+    // ONE CURSOR, ONE PERSON. Picking up the mouse mid-session takes over immediately, with
+    // no mode to switch — which is what a caregiver walking up to the screen will do.
+    aim.report('tracker:hand', 0.9, 0.1);
+    check('*** the most recent producer is the aim — no modes, no priority table ***',
+      aim.latest().device === 'tracker:hand' && aim.latest().x === 0.9, JSON.stringify(aim.latest()));
+
+    check('values are clamped on the way in too',
+      (() => { const a = aim.report('x', 5, -5); return a.x === 1 && a.y === 0; })());
+  }
+
+  section('a device can be switched off — the control a tracker actually needs');
+  {
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const aim = createAim({ bus });
+    aim.setEnabled('tracker:hand', false);
+    aim.report('tracker:hand', 0.5, 0.5);
+    check('a disabled device reports nothing', seen.length === 0, JSON.stringify(seen));
+    aim.report('pointer:mouse', 0.2, 0.2);
+    check('...and does not switch off anything else', seen.length === 1, JSON.stringify(seen));
+    aim.setEnabled('tracker:hand', true);
+    aim.report('tracker:hand', 0.5, 0.5);
+    check('...and can be switched back on', seen.length === 2);
+  }
+
+  section('rate limiting drops a SAMPLE, never the state');
+  {
+    // The distinction that matters: a throttle that returned a stale position would leave the
+    // cursor behind the person, which is the one thing this whole path exists to avoid.
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const clock = fakeClock();
+    const aim = createAim({ bus, now: clock.now, rateMs: 50 });
+    aim.report('d', 0.1, 0.1);
+    clock.tick(10); aim.report('d', 0.2, 0.2);
+    clock.tick(10); aim.report('d', 0.3, 0.3);
+    check('only the first sample was published', seen.length === 1, JSON.stringify(seen));
+    check('*** but latest() is the NEWEST position, not the last published one ***',
+      aim.latest().x === 0.3, JSON.stringify(aim.latest()));
+    clock.tick(40); aim.report('d', 0.4, 0.4);
+    check('...and the next one through carries the current position', seen.length === 2 && seen[1].x === 0.4,
+      JSON.stringify(seen));
+  }
+
+  section('converting an aim into one element');
+  {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:100px;top:50px;width:200px;height:100px';
+    document.body.append(el);
+    const vw = window.innerWidth, vh = window.innerHeight;
+    // Aim exactly at the element's centre, expressed in this window's real coordinates.
+    const centre = { x: (100 + 100) / vw, y: (50 + 50) / vh };
+    const p = aimIn(centre, el);
+    check('an aim inside an element converts to its local pixels',
+      p && Math.abs(p.x - 100) < 2 && Math.abs(p.y - 50) < 2, JSON.stringify(p));
+    // NULL, NOT {0,0}: a module has to be able to tell "not pointing at me" from "pointing at
+    // my top-left corner", and a coordinate cannot express that.
+    check('*** an aim outside it is null, not a corner ***', aimIn({ x: 0.99, y: 0.99 }, el) === null);
+    check('...unless the caller asks to keep tracking past the edge',
+      !!aimIn({ x: 0.99, y: 0.99 }, el, { inside: false }));
+    el.remove();
+  }
+
+  // =====================================================================================
+  section('the mouse is a producer, through the same door as its buttons');
+  {
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const aim = createAim({ bus });
+    const target = document.createElement('div');
+    // A stub input bus: this section is about the POSITION half, and the button half already
+    // has a suite of its own.
+    const input = { isCapturing: () => false, hasBinding: () => false, down() {}, up() {}, heldControls: () => [] };
+    const off = attachPointer(input, { target, aim });
+    target.dispatchEvent(Object.assign(new Event('mousemove'), { clientX: 10, clientY: 10 }));
+    check('a mouse move reports an aim', seen.length === 1, JSON.stringify(seen));
+    check('...as the mouse device, so the cursor knows the OS is already drawing one',
+      seen[0]?.device === POINTER_DEVICE, JSON.stringify(seen[0]));
+    off();
+    target.dispatchEvent(Object.assign(new Event('mousemove'), { clientX: 20, clientY: 20 }));
+    check('detaching stops it', seen.length === 1, JSON.stringify(seen));
+  }
+  {
+    // The opt-in half: anything constructing the adapter without an aim behaves exactly as it
+    // did before this existed.
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(AIM_TOPIC, (a) => seen.push(a));
+    const target = document.createElement('div');
+    const input = { isCapturing: () => false, hasBinding: () => false, down() {}, up() {}, heldControls: () => [] };
+    const off = attachPointer(input, { target });
+    target.dispatchEvent(Object.assign(new Event('mousemove'), { clientX: 10, clientY: 10 }));
+    check('no aim handle means no reporting, and no error', seen.length === 0);
+    off();
+  }
+
+  // =====================================================================================
+  section('the cursor: drawn by us, because the system draws nothing for a hand');
+  {
+    const bus = createBus();
+    const aim = createAim({ bus });
+    const root = document.getElementById('curhost');
+    let cfg = { show: 'always' };
+    const clock = fakeClock();
+    const cur = mountCursor(root, { bus, aim, settings: () => cfg,
+                                    setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+
+    check('nothing is drawn before anybody points', !cur.isVisible());
+    aim.report('tracker:hand', 0.5, 0.5);
+    check('an aim draws it', cur.isVisible());
+    check('...at the aim', (() => {
+      const el = root.querySelector('[data-cur]');
+      return el.style.left === `${0.5 * window.innerWidth}px`;
+    })(), root.querySelector('[data-cur]')?.style.left);
+
+    cfg = { show: 'always', size: 110, style: 'crosshair', colour: '#4CC9F0' };
+    cur.refresh();
+    check('*** appearance is a setting and takes effect without moving again ***', (() => {
+      const el = root.querySelector('[data-cur]');
+      return el.style.width === '110px' && el.dataset.style === 'crosshair'
+        && el.style.getPropertyValue('--cur-colour') === '#4CC9F0';
+    })(), root.querySelector('[data-cur]')?.style.cssText);
+
+    cfg = { show: 'never' };
+    cur.refresh();
+    check('...including off', !cur.isVisible());
+
+    // THE TWO-CURSORS PROBLEM, which is the whole reason the default is not a boolean.
+    cfg = { show: 'tracking' };
+    aim.report('pointer:mouse', 0.3, 0.3);
+    check('*** on the default it stays out of the way of a real mouse ***', !cur.isVisible());
+    aim.report('tracker:hand', 0.3, 0.3);
+    check('*** ...and appears the moment something the OS cannot draw takes over ***',
+      cur.isVisible());
+
+    // It must never eat a click on the screen it is pointing at.
+    check('it cannot be clicked', getComputedStyle(root.querySelector('[data-cur]')).pointerEvents === 'none');
+
+    cfg = { show: 'always', idleMs: 5000 };
+    aim.report('tracker:hand', 0.4, 0.4);
+    check('it is on screen', cur.isVisible());
+    clock.advance(6000);
+    check('...and fades after the idle time, so it is not a bright shape parked on a 24/7 panel',
+      !cur.isVisible());
+
+    cur.destroy();
+    check('destroy puts the root back', root.innerHTML === '');
+  }
+
+  section('the cursor picks up an aim that already happened');
+  {
+    // Somebody whose movement is slow and effortful should not have to move AGAIN because a
+    // panel was swapped underneath them.
+    const bus = createBus();
+    const aim = createAim({ bus });
+    aim.report('tracker:hand', 0.6, 0.6);
+    const root = document.getElementById('curhost');
+    const cur = mountCursor(root, { bus, aim, settings: () => ({ show: 'always' }) });
+    check('*** it starts where she was already pointing, not blank ***', cur.isVisible()
+      && Math.abs(cur.at().x - 0.6) < 1e-9, JSON.stringify(cur.at()));
+    cur.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the comet follows the aim — the module this was all for ***');
+  {
+    const bus = createBus();
+    const aim = createAim({ bus });
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const inst = mountModule('comet', {
+      mount: host, bus, state: { get: () => ({}) }, events: null, user: 'u', profileId: 'p', aim,
+    });
+    inst.init();
+    await sleep(60);
+    const probe = () => inst.impl.__probe();
+
+    check('CONTROL: nothing has moved it yet', probe().cx < 0, String(probe().cx));
+
+    // A HAND, not a mouse. No DOM pointer event is dispatched anywhere in this section — which
+    // is the entire point, because a camera tracker dispatches none either.
+    const canvas = host.querySelector('canvas');
+    const r = canvas.getBoundingClientRect();
+    const target = { x: (r.left + r.width * 0.25) / window.innerWidth,
+                     y: (r.top + r.height * 0.5) / window.innerHeight };
+    aim.report('tracker:hand', target.x, target.y);
+    await sleep(20);
+    check('*** a hand tracker moves the comet, with no pointer event anywhere ***',
+      probe().cx >= 0, JSON.stringify({ cx: probe().cx, cy: probe().cy }));
+    check('...to where it was aimed, 1:1 — the precision IS the feature',
+      Math.abs(probe().cx - r.width * 0.25) < 3, `${probe().cx} vs ${r.width * 0.25}`);
+
+    // A real aim always wins over a glide, so a `next` cannot trap the comet away from her.
+    bus.publish('comet/seek');
+    await sleep(10);
+    check('CONTROL: a seek starts a glide', probe().steering === true);
+    aim.report('tracker:hand', target.x, target.y);
+    check('*** and pointing takes it straight back off her ***', probe().steering === false);
+
+    inst.destroy();
+  }
+
+  section('the comet ignores the aim when the person turned that off');
+  {
+    const bus = createBus();
+    const aim = createAim({ bus });
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const inst = mountModule('comet', {
+      mount: host, bus, state: { get: () => ({ pointer: false }) }, events: null,
+      user: 'u', profileId: 'p', aim,
+    });
+    inst.init();
+    await sleep(60);
+    aim.report('tracker:hand', 0.5, 0.5);
+    await sleep(10);
+    check('the existing "a pointer moves the comet" setting still governs it',
+      inst.impl.__probe().cx < 0, String(inst.impl.__probe().cx));
+    inst.destroy();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

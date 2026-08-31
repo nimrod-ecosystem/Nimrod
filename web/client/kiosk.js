@@ -41,6 +41,8 @@ import { nextAction, applied, cleared, chooseFallback, DEFAULT_POLICY,
          RECOVERY_SETTINGS } from './recovery.js';
 import { listManifests } from './module.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
+import { mountCursor } from './cursor.js';
+import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
 import { readConfig, writeConfig, writePosition, bootPlan, markHopped, hasHopped,
@@ -163,7 +165,72 @@ export async function mountKiosk(root, {
   // protect one thing: her mirror must not go dark because a call arrived. See camera_owner.js.
   const cameraOwner = createCameraOwner();
 
+  // *** THE MICROPHONE ARBITER. *** Same discipline as the camera and one extra reason for it:
+  // two things holding a live microphone is a privacy event, not a resource conflict, and a
+  // single owner is the only thing that can honestly answer "is anything listening?". Nothing
+  // opens it here — it is opened by whatever acquires it, which today is a call and nothing
+  // else. See mic_owner.js for why a call and a recogniser want opposite processing.
+  const micOwner = createMicOwner();
+
   let output = null;
+  // *** DECLARED HERE, NOT WHERE THEY ARE BUILT, AND THAT IS NOT TIDINESS. ***
+  // `childCtx` below hands modules a GETTER for the aim, because the input runtime is built
+  // much further down and a module mounted first would otherwise capture null forever — the
+  // same reason `output` and `personId` are getters. But a getter still needs its variable to
+  // be IN SCOPE when it runs: with `let runtime` declared next to where it is assigned, the
+  // first overlay to mount hit the temporal dead zone and the whole kiosk failed to boot with
+  // "Cannot access 'runtime' before initialization". Caught by kiosk_test going from 133
+  // passing to zero, which is the useful kind of failure.
+  let runtime = null;
+  let cursor = null;
+  let markerTracker = null;
+  let markerState = null;
+
+  // ---- MARKER TRACKING AT THE BEDSIDE -------------------------------------------------
+  //
+  // OFF UNLESS SOMEBODY TURNED IT ON. Not "started and idle": a screen that opens the webcam
+  // because a feature exists is a screen with a camera light on in somebody's room for no
+  // reason. The camera is opened only when the setting says to, and released the moment it
+  // stops.
+  //
+  // The calibration is stored PER PERSON, in the same place the input bindings are, and it is
+  // POLLED for the same reason: a caregiver can set the sock up on a laptop on the Devices tab
+  // and it reaches the bedside within a poll or two, with nobody reloading anything on the
+  // screen the person is using. That is the clinical scenario — one person configuring while
+  // another is using it — and it needed no new transport, because per-person state already
+  // does exactly this for switches.
+  //
+  // *** THERE IS NO CALIBRATION UI HERE, DELIBERATELY. *** Clicking the sock happens on home.
+  // This surface only consumes the numbers — the same split `input_runtime.js` makes, where the
+  // runtime consumes bindings and the binder stays on the other side.
+  async function startMarkerTracking(personId2) {
+    if (markerTracker || !personId2 || !profiles.personStateURL) return;
+    const [{ createMarkerTracker, shouldTrack }, { MARKER_KEY }] = await Promise.all([
+      import('./input_marker.js'), import('./marker_panel.js'),
+    ]);
+    markerState = createState({
+      url: profiles.personStateURL(personId2, MARKER_KEY),
+      user,
+      cacheKey: `person:${user}:${personId2}:${MARKER_KEY}`,
+    });
+    await markerState.load().catch(() => {});     // offline: the shipped default is OFF anyway
+    markerTracker = createMarkerTracker({
+      aim: runtime.aim,
+      cameraOwner,
+      settings: () => markerState.get() || {},
+    });
+    const sync = (saved) => {
+      const on = shouldTrack(saved);
+      if (on && !markerTracker.isRunning()) {
+        markerTracker.start().catch((err) => console.error('kiosk: marker camera', err));
+      } else if (!on && markerTracker.isRunning()) {
+        markerTracker.stop();
+      }
+    };
+    sync(markerState.get());
+    markerState.subscribe?.(sync);
+    markerState.startPolling?.();
+  }
   try {
     // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
     // kiosk root has never been tried on this surface and could land on top of her photos.
@@ -206,6 +273,13 @@ export async function mountKiosk(root, {
     // The arbiter itself, for a module that MAKES continuous sound - a music bed, a video.
     // A module that only speaks wants `output`; this is for the things that keep playing.
     audio,
+    micOwner,
+    // WHERE SOMEBODY IS POINTING, for a module that wants a position rather than a verb -
+    // `comet.js` is the reason it exists. A getter for the same reason `output` is: the input
+    // runtime is built further down, and a module mounted before it would capture undefined
+    // forever. Modules read the aim off the BUS; this handle is only for `latest()`, so a
+    // panel mounted mid-session can start under her hand instead of blank.
+    get aim() { return runtime?.aim || null; },
     cameraOwner,
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
@@ -529,7 +603,6 @@ export async function mountKiosk(root, {
   // that will not come up because a name lookup failed is strictly worse than a screen
   // that says "…" where a name goes.
   let whoName = null;
-  let runtime = null;
   // COMPLEXITY LEVEL — essential / standard / advanced. It lives in the profile settings blob
   // for now, which is the `screen` level of the chain; when the chain arrives it becomes an
   // ordinary inherited setting like anything else, and Mike's point stands that a patient's
@@ -685,6 +758,7 @@ export async function mountKiosk(root, {
         user,
         cacheKey: `person:${user}:${p.person_id}:${INPUTS_KEY}`,
       }));
+      await startMarkerTracking(p.person_id);
     } catch { /* offline or signed out: the shipped defaults still drive the screen */ }
   })();
 
@@ -722,6 +796,24 @@ export async function mountKiosk(root, {
   await runtime.load();
   // The menu takes the verbs while it is open and hands them back when it closes.
   menu.attachBus(bus, runtime.router);
+
+  // ---- THE CURSOR -------------------------------------------------------------------
+  // Shell-level rather than a module, because it draws on top of whichever module is under
+  // it and a module that could draw outside its own mount would break the one rule that lets
+  // two copies of anything share a screen. See cursor.js.
+  //
+  // DEFAULTS TO 'tracking': with a mouse the operating system already draws a pointer, and a
+  // second one on top would look like a bug to every desktop visitor. A hand tracker moves
+  // nothing the OS knows about, so on that screen this is the only pointer there is.
+  const cursorRoot = document.createElement('div');
+  kioskEl.append(cursorRoot);
+  cursor = mountCursor(cursorRoot, {
+    bus,
+    aim: runtime.aim,
+    settings: () => (settings.get() || {}).cursor || {},
+  });
+  // A settings edit should move the cursor now, not the next time somebody points.
+  settings.subscribe?.(() => { try { cursor?.refresh(); } catch { /* never fatal */ } });
 
   // ---- RECOVERY: watch the panels, and act only if somebody asked --------
   //
@@ -1011,6 +1103,10 @@ export async function mountKiosk(root, {
       try { output?.destroy(); } catch { /* already gone */ }
       try { audio?.destroy(); } catch { /* already gone */ }
       try { cameraOwner?.destroy(); } catch { /* already gone */ }
+      try { cursor?.destroy(); } catch { /* already gone */ }
+      try { markerTracker?.destroy(); } catch { /* already gone */ }
+      try { micOwner.destroy(); } catch { /* already gone */ }
+      try { markerState?.destroy?.(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },

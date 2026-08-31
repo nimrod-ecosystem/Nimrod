@@ -64,9 +64,19 @@ import { pick, statsFromEvents } from '../rng.js';
 // `stallMs` matches youtube's for the same reason: long enough that a big clip loading off
 // a media agent over facility wifi is not cut off, short enough that nobody sits in front
 // of a frozen frame for long. 0 disables it.
+// `heldNotifyMs` was `heldPauseMs`, and it now means the opposite thing — how long a held
+// pause runs before somebody is told, rather than how long before it starts itself again.
+// The key is renamed for the reason AGENTS.md renames a key whose unit changed: a changed
+// MEANING under an unchanged key silently reinterprets a choice somebody already made. Six
+// hours, and it is not resumed — Mike, 2026-08-30. Full reasoning in `youtube.js`.
 const DEFAULTS = { sourceId: '', album: '', subjectName: '', autoAdvance: true, autoplay: true,
-                   directed: false, fit: 'contain', stallMs: 20000, heldPauseMs: 0 };
+                   directed: false, fit: 'contain', stallMs: 20000, heldNotifyMs: 21600000 };
 const RECENT_CAP = 12;
+
+// How often a playing clip reports progress on the bus. `timeupdate` fires several times a
+// second, which is the right rate for the module's own clock and far too fast for a bus
+// topic, so the local beat is every event and the published one is windowed to this.
+const PROGRESS_MS = 5000;
 
 // *** THIS MODULE RENDERS <video> WITH NO CONTROLS. ***
 //
@@ -79,37 +89,25 @@ const RECENT_CAP = 12;
 // switch or a remote. See activity.js — and note what that file CANNOT see.
 const PAUSE_IS_REACHABLE = false;
 
-// *** OFF BY DEFAULT (Mike, 2026-08-27). ***
+// *** A PAUSE STAYS A PAUSE; THE ONLY QUESTION IS WHEN SOMEBODY IS TOLD. ***
+// Mike, 2026-08-30. The long version, including how this sits with the safety invariant and
+// what is NOT built about the notification, is in `youtube.js` beside the same setting.
 //
-// This started at four hours and he called it: *"This seems like something that could cause
-// more problems than it solves."* He is right, and the reason is the one directly above it in
-// `activity.js` — THE SOFTWARE CANNOT TELL WHETHER ANYBODY IS IN THE ROOM. A click inside the
-// YouTube player is invisible to this page, so an auto-resume is a GUESS, and a guess that
-// fires during a visit interrupts the family it was written to protect.
+// Note that on THIS module a `pause` event is rarely a person at all — there is no pause
+// button on screen (see PAUSE_IS_REACHABLE above), so a pause here is usually the system and
+// takes the short clock and the ordinary recovery. This setting only governs the case where
+// input on the page says somebody is here.
 //
-// So the default is now: **a pause stays a pause.** Somebody paused it; it waits for them.
-// The screen says PAUSED so nobody mistakes it for a crash, and that marker is what makes
-// this safe to default to — the state is visible rather than a mystery.
-//
-// *** THE COST, AND IT IS REAL: *** a pause that nobody meant — a phone call grabbing audio
-// focus on a shared tablet, an OS media interruption — now sits until a person comes back.
-// That is the failure the watchdog was originally written for, and turning this off gives up
-// covering it. Mike's call, made knowing that, because the interruption he described happens
-// to real visitors and this one is rare.
-//
-// Anyone who wants the old behaviour turns it on and picks a duration.
-//
-// The same five stops as youtube's, deliberately: this is one question about one room, and a
+// The same stops as youtube's, deliberately: this is one question about one room, and a
 // family who sets it in one place and finds a different answer in the other has been given a
 // puzzle rather than a setting.
 export const SETTINGS = [
-  { key: 'heldPauseMs', label: 'If someone pauses it, start it again', kind: 'choice',
-    default: 0, level: 'standard',
+  { key: 'heldNotifyMs', label: 'If someone pauses it, let people know after', kind: 'choice',
+    default: 21600000, level: 'standard',
     options: [
-      { value: 0, label: 'never — leave it paused' },
-      { value: 900000, label: 'after 15 minutes' },
+      { value: 0, label: 'never — just leave it paused' },
       { value: 3600000, label: 'after 1 hour' },
-      { value: 14400000, label: 'after 4 hours' },
+      { value: 21600000, label: 'after 6 hours' },
       { value: 43200000, label: 'after 12 hours' },
     ] },
 ];
@@ -131,10 +129,15 @@ registerModule(
     let currentId = null;
     let videoEndOff = null;
     let currentVideo = null;
-    // 'loading' | 'blocked' | 'paused' | 'held' — see presence.js for what 'held' means.
+    // 'loading' | 'playing' | 'blocked' | 'paused' | 'held'.
+    //   playing — alive, and the heartbeat below keeps restarting the clock.
+    //   held    — somebody stopped it and somebody is here. Long clock, and it is not resumed.
     let stallReason = 'loading';
+    let beatWindow = true;          // a progress publish is due (see heartbeat)
+    let pollTimer = null;
+    let destroyed = false;
     const activity = ctx.activity || pageActivity();
-    const heldMs = () => Math.max(0, Number(cfg.heldPauseMs) || 0);
+    const holdNotifyMs = () => Math.max(0, Number(cfg.heldNotifyMs) || 0);
     let mutedFallback = false;      // this clip is playing without sound, and says so
     let active = true;              // false while a director has another provider on screen
     let lastSourceRef = null;
@@ -159,6 +162,7 @@ registerModule(
     }
 
     function clearVideoEnd() { if (videoEndOff) { videoEndOff(); videoEndOff = null; } }
+    const onBeat = () => heartbeat();
 
     // Injectable so the tests drive this against a fake clock, exactly as youtube's does.
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
@@ -174,21 +178,73 @@ registerModule(
       if (el) el.hidden = !on;
     }
 
-    // It is playing. Stand the clock down and tell any container that this segment is
-    // alive — a provider that never sends a heartbeat is exactly what the director's
-    // slower backstop exists to catch.
-    function onPlaying() {
-      stall?.ok();
-      setHeld(false);
+    // ------------------------------------------------------------------------------------
+    // *** THE HEARTBEAT (added 2026-08-30), and why `ok()` was the wrong verb here. ***
+    //
+    // `onPlaying` used to call `stall.ok()`, which STOPS the clock. That is right for a load
+    // that finished and wrong for a clip that is still running, and it cost two things:
+    //
+    //   1. A CLIP THAT FROZE AFTER STARTING WAS WATCHED BY NOTHING. From then on this module
+    //      depended entirely on the element firing `pause`, `stalled` or `waiting`. A picture
+    //      that simply stops advancing fires none of them.
+    //   2. THE DIRECTOR CUT HEALTHY CLIPS OFF AT THREE MINUTES, because `segment/progress`
+    //      was published in the same place — once per clip — so a long message looked exactly
+    //      like a frozen one to the container's backstop.
+    //
+    // `photos.js` already had the answer and said so at length: beat on a repeating signal,
+    // never satisfy on first play. `timeupdate` is that signal, and it is why a three-hour
+    // video in the slideshow is never interrupted while a frozen one is caught in `stallMs`.
+    //
+    // ONE HEARTBEAT, ONE MEANING: the same evidence feeds this module's clock and the
+    // container's. The local beat runs on every `timeupdate`; the BUS publish is windowed by
+    // `progressTick`, because four messages a second is not a heartbeat, it is a leak.
+    // ------------------------------------------------------------------------------------
+    const progressMs = Number(ctx.progressMs) > 0 ? Number(ctx.progressMs) : PROGRESS_MS;
+
+    function watchAgain() {
+      if (!stall || !currentId) return;
+      if (stall.key() === null) stall.arm(currentId); else stall.beat();
+    }
+
+    function heartbeat() {
+      if (!active || !currentId) return;
+      watchAgain();
+      if (!beatWindow) return;
+      beatWindow = false;
       bus.publish('segment/progress', { provider: 'personal', id: currentId });
+    }
+
+    function progressTick() {
+      beatWindow = true;
+      pollTimer = destroyed ? null : setTimer(progressTick, progressMs);
+    }
+
+    // The hold ran out and it is still paused. Tell somebody — see `youtube.js` for what
+    // that reaches today, which is less than it sounds.
+    function notifyHeld() {
+      try { ctx.output?.notify?.('The screen has been paused for a while.', { source: 'personal' }); }
+      catch (e) { console.error('personal: notify', e); }
+      events.append('held', { at: Date.now(), id: currentId, afterMs: holdNotifyMs() })
+        .catch((e) => console.error('personal: held log', e));
+    }
+
+    // It is playing. Keep the clock running rather than standing it down, and tell any
+    // container that this segment is alive.
+    function onPlaying() {
+      stallReason = 'playing';
+      setHeld(false);
+      heartbeat();
       if (!mutedFallback) setStatus(null);
     }
 
     // It stopped and nobody here can press play. A pause of a second or two is forgiven
-    // silently (the next `playing` calls ok()); one that persists goes up the ladder.
+    // silently (the next `timeupdate` beats again); one that persists goes up the ladder.
     function onIdle(reason) {
       if (!active || !currentId) return;
-      if (stall?.armed()) return;      // already counting for this clip
+      // Already counting a STOP for this clip. A heartbeat is not a stop, so an armed clock
+      // whose reason is 'playing' must not block this — that test is what the heartbeat made
+      // necessary, since the watchdog is now armed for the whole of a healthy clip.
+      if (stallReason !== 'playing' && stall?.armed()) return;
 
       // Only a PAUSE can be a person's doing. A stalled or waiting clip is the network.
       if (reason !== 'paused') { armStall(currentId, reason); return; }
@@ -196,7 +252,9 @@ registerModule(
       const held = PAUSE_IS_REACHABLE || activity.recent(RECENT_MS);
       if (!held) { armStall(currentId, 'paused'); return; }
 
-      if (!heldMs()) { setHeld(true); return; }     // 'never' — no clock at all
+      // 'never' — no clock at all. Disarmed rather than simply left, or the heartbeat's own
+      // clock would run out and resume a clip somebody deliberately stopped.
+      if (!holdNotifyMs()) { stallReason = 'held'; stall?.disarm(); setHeld(true); return; }
       armStall(currentId, 'held');
       setHeld(true);
     }
@@ -229,6 +287,11 @@ registerModule(
       // used to leave the screen frozen.
       el.addEventListener('ended', onClipEnded);
       el.addEventListener('playing', onPlaying);
+      // *** THE HEARTBEAT. *** `timeupdate` fires several times a second while a clip is
+      // genuinely advancing, and stops the instant the picture does — including for a freeze
+      // that fires no other event at all. It is the difference between a long message and a
+      // dead one, and nothing else on this element can tell them apart.
+      el.addEventListener('timeupdate', onBeat);
       el.addEventListener('pause', () => onIdle('paused'));
       el.addEventListener('stalled', () => onIdle('loading'));
       el.addEventListener('waiting', () => onIdle('loading'));
@@ -238,6 +301,7 @@ registerModule(
       videoEndOff = () => {
         el.removeEventListener('ended', onClipEnded);
         el.removeEventListener('playing', onPlaying);
+        el.removeEventListener('timeupdate', onBeat);
         el.removeEventListener('error', onClipError);
         try { el.pause(); } catch { /* already gone */ }
         el.removeAttribute('src');
@@ -278,6 +342,7 @@ registerModule(
       if (!item) return;
       currentId = id;
       active = true;                // something asked for a clip: this instance is on screen
+      beatWindow = true;            // a new clip announces itself on its first beat
       mutedFallback = false;        // every new clip gets a fair try WITH its sound
       render(item);
       setName();
@@ -376,19 +441,23 @@ registerModule(
           // A GETTER, not a snapshot: cfg arrives with the state subscription, which may
           // not have landed when this is built.
           setTimer, clearTimer, retries: 1,
-          // Two clocks, one instance: hours when a person paused it, seconds otherwise.
-          stallMs: () => (stallReason === 'held' ? heldMs() : cfg.stallMs),
+          // Two clocks, one instance: hours when a person stopped it, seconds otherwise.
+          stallMs: () => (stallReason === 'held' ? holdNotifyMs() : cfg.stallMs),
           onRetry: (id) => {
-            const item = byId[id];
-            if (!item) return;
-            // The hold expired — the room has been still for hours, so carry on, and fall
-            // back to the SHORT clock so a failure from here does not cost another four.
+            // *** THE HOLD RAN OUT, AND IT IS NOT RESUMED. Mike, 2026-08-30. ***
+            // Somebody stopped it; a screen that restarts under them is the interruption the
+            // hold exists to prevent. Tell somebody once — `disarm` bumps the epoch so `fire`
+            // does not re-arm behind this — and leave the clip where it was left, marked.
+            // Checked before `byId`, because a message worth sending does not depend on the
+            // clip still being in the listing.
             if (stallReason === 'held') {
-              stallReason = 'paused';
-              setHeld(false);
-              currentVideo?.play?.().catch(() => {});
+              notifyHeld();
+              stall?.disarm();
+              setHeld(true);
               return;
             }
+            const item = byId[id];
+            if (!item) return;
             // A blocked autoplay will be blocked again in twenty seconds' time, so the
             // retry that has any chance of working is the muted one.
             if (stallReason === 'blocked') { playMuted(item); return; }
@@ -410,8 +479,13 @@ registerModule(
 
         // HIDDEN MEANS DISARMED. A director shows one provider at a time and leaves the
         // rest mounted; without this a hidden clip's stall would end the segment that is
-        // actually on screen.
+        // actually on screen. `heartbeat` returns on `!active` for the same reason — a
+        // hidden provider quieting the backstop for the visible one is the same bug wearing
+        // the opposite sign.
         bus.subscribe('personal/deactivate', () => { active = false; clearStall(); });
+
+        // The window that rate-limits the published heartbeat, on the injected clock.
+        pollTimer = setTimer(progressTick, progressMs);
 
         // Any sign of a person restarts the hold, so four hours means four hours of
         // stillness rather than four hours from the press.
@@ -444,7 +518,11 @@ registerModule(
       },
       onResize() {},
       onHide() { active = false; clearStall(); state.flush(); },
-      destroy() { active = false; clearStall(); clearVideoEnd(); currentVideo = null; },
+      destroy() {
+        destroyed = true;
+        clearTimer(pollTimer); pollTimer = null;
+        active = false; clearStall(); clearVideoEnd(); currentVideo = null;
+      },
     };
   },
 );

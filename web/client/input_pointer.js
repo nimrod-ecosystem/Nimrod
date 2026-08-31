@@ -11,10 +11,21 @@
 // which matters more than it sounds: a person evaluating this product on a laptop should
 // not have to buy hardware to find out whether it works.
 //
-// POSITION IS NOT AN INPUT HERE. Only buttons. Pointer position belongs to whatever the
-// person is pointing AT, and a bus that turned mouse movement into actions would fight
-// the page for control of the cursor. `axis`-style pointer movement is a separate feature
-// (head-pointer dwell selection) and deliberately not this one.
+// POSITION IS NOT AN ACTION HERE, AND STILL IS NOT. Only buttons are bound. A bus that turned
+// mouse movement into actions would fight the page for control of the cursor, and nothing
+// below does that.
+//
+// *** WHAT CHANGED, 2026-08-30. *** This note used to read "POSITION IS NOT AN INPUT HERE",
+// and it was too strong by one word. A position is not an ACTION, but it is plainly an input —
+// two modules had already invented it privately (`comet.js`, and `pond.js`, which named its
+// local copy `aim()`) because there was nowhere to get it from. `aim.js` now owns the concept,
+// as a SIBLING of the input bus rather than a part of it, and this adapter is its first
+// producer: the mouse reports WHERE as well as WHICH BUTTON, so a hand tracker added later is
+// not on a separate path from a mouse. Read `aim.js` before adding a second producer — why it
+// carries no binding, no debounce and no smoothing is all written down there.
+//
+// Reporting is OPT-IN at the call site (`attachPointer(input, { aim })`) and absent otherwise,
+// so anything constructing this adapter without one behaves exactly as it did.
 //
 // THE SAME RULE AS THE KEYBOARD, for the same reason: a click is only intercepted when
 // something is bound to it, or while a capture is running. Otherwise the adapter would
@@ -37,10 +48,18 @@ export function pointerLabel(control) {
   return BUTTON_LABELS[Number(m[1])] || `Button ${m[1]}`;
 }
 
-export function attachPointer(input, { target = window, device = POINTER_DEVICE } = {}) {
+export function attachPointer(input, { target = window, device = POINTER_DEVICE, aim = null } = {}) {
   if (!input) throw new Error('attachPointer: an input bus is required');
 
   const wanted = (control) => input.isCapturing() || input.hasBinding(device, control);
+
+  // WHERE, as well as which button. Passive and never preventDefault'd: unlike a bound click,
+  // a mouse moving is not something this adapter has any business intercepting — the page
+  // still gets every move, hover still works, and text still selects.
+  //
+  // `mousemove` rather than `pointermove` to match the button listeners below, so a device
+  // that reports as a mouse reports its position through the same door as its clicks.
+  const onMove = aim ? (e) => { aim.reportEvent(device, e); } : null;
 
   const onDown = (e) => {
     const control = pointerControl(e.button);
@@ -72,6 +91,7 @@ export function attachPointer(input, { target = window, device = POINTER_DEVICE 
   target.addEventListener('contextmenu', onMenu);
   target.addEventListener('mouseleave', onLeave);
   target.addEventListener('blur', onLeave);
+  if (onMove) target.addEventListener('mousemove', onMove, { passive: true });
 
   return () => {
     target.removeEventListener('mousedown', onDown);
@@ -79,5 +99,6 @@ export function attachPointer(input, { target = window, device = POINTER_DEVICE 
     target.removeEventListener('contextmenu', onMenu);
     target.removeEventListener('mouseleave', onLeave);
     target.removeEventListener('blur', onLeave);
+    if (onMove) target.removeEventListener('mousemove', onMove);
   };
 }
