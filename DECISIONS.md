@@ -894,3 +894,32 @@ merely stated:
 **Open, for whoever builds it:** what the tree looks like on first run — created empty with named
 subfolders and a short README in each, or created lazily as features are used. Empty-with-names is
 probably right: a person can see what the software will do before it does any of it.
+
+
+### Recovered from the flags and approved — 2026-08-30
+
+Three things found in `pending_flags.md` during an audit, and approved by Mike the same evening.
+
+- **Data links are a third bus: module → value → module.** Approved. The project already has
+  *input bus: person → verbs → the focused module* and *output bus: module → verbs → the person's
+  channels*. This is the missing third, and it was named in the flags and never built. It is what
+  makes a calculator and an on-screen keyboard **value sources** and the word games **sinks**, and
+  it is the honest home for everything that has been described loosely as "module wiring".
+  `bus.js` is already the substrate. **Name it in the glossary and in `architecture.md` before
+  another wiring feature is designed on top of an unnamed layer.** (2026-08-30)
+- **A data link carries a timestamp from the source, not from arrival.** A rhythm game cares *when*,
+  not only *what*, and a sink using arrival time cannot recover the source's timing afterwards. Same
+  one-way retrofit property as the provenance fields: cheap now, impossible later. (2026-08-30)
+- **The hold ladder is to be built.** Mike: *"That needs to be a thing."* One switch, resolving on
+  release, with tiers — the flags record *">0s = yes, >5s = no, >10s = loop"* — and the output bus
+  announcing each tier as it is crossed so the person knows where they are. **For someone with one
+  reliable movement, this is an AAC vocabulary with no board at all.** (2026-08-30)
+  - **Blocking collision to settle first:** `holdMs` currently means a *tremor filter* — a minimum
+    duration before a press counts — and hold-tier 0 is a *maximum*. Same name, opposite meanings,
+    in the feature that governs somebody's only input. Glossary §4 entry; rename before building.
+- **Fallback kiosk modules, quiet hours, and a first state alert are all approved.** Mike: *"Yup."*
+  Three cheap pieces, mostly built already: swap to a working module before rebooting and **make the
+  swap visible**, with a last-resort fallback that cannot itself fail; quiet hours where *"a held
+  alert is not a dropped alert"* and *"the urgency is the author's, not the user's"*; and one state
+  alert nobody could argue with, noting that *"'normal' here is mostly a timeout"*. Quiet hours
+  belongs with the notifications inbox. (2026-08-30)

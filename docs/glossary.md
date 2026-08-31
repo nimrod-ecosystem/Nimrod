@@ -33,6 +33,7 @@ nothing uses it yet.
 | **the small bang** | The one thing that is not a module: whatever boots and mounts the first module, and hands out the bus. Kept as small as possible. | The bus, the kiosk, or the shell's features — all of those are modules. |
 | **aim** | Where on the screen somebody is pointing, normalised 0..1 of the viewport, from whatever is driving it — a mouse, a head pointer, a hand in front of a camera. `aim.js`, topic `input/aim`. **Claimed 2026-08-30.** | An action. It carries no binding, no timing and no role gate; what somebody DOES at that spot is a press and still goes through `input.js`. |
 | **marker** | A brightly coloured object somebody wears or holds — a sock, a wristband, a glove — that the camera finds by hue. `input_marker.js`, device `marker:colour`. **Claimed 2026-08-30.** | A landmark, a skeleton joint, or anything a model recognises. The whole point of a marker is that nothing has to recognise it. |
+| **bank** | The content somebody wrote for the games to draw on — words and questions, in one document, per person. `bank.js`. **Claimed 2026-08-31.** | The verb in `algebra.js` (`bank(award)` = to bank points). A second, unrelated sense that happens not to collide; see §4. |
 | **cursor** | The thing drawn on screen at the aim. `cursor.js`. **Claimed 2026-08-30**, which is why `inputs.js`'s row-walking `cursor` was renamed to `highlight` in the same change. | The system mouse pointer, and no longer a row in a list. |
 | **capability** | Something a module declares it can do — *contains modules*, *provides a bus*. How a kiosk is a module rather than a special case. | A permission on a link between people. |
 
@@ -81,8 +82,12 @@ contexts that never touch is far less urgent than one inside a single call path.
    health's kind in that file. Nothing is wrong today; the words are.
 3. **`board`** — AAC board and leaderboard argue past each other four lines apart in `PRINCIPLES.md`.
 4. **`state`** — storage and machine-state meet in `kiosk.js` and `rules.js`.
-5. **`channel`** — three meanings that never touch. Least urgent, still worth fixing.
-6. **`module`** — pervasive, conventional, probably tolerable. Keep out of identifiers.
+5. **`bank`** — **added 2026-08-31.** A noun in `bank.js`, `wordforge.js` and `trivia.js` (the
+   content somebody wrote), and a verb in `algebra.js` (`bank(award)` — to bank points). They
+   never meet in one file and the parts of speech differ, so this is the least dangerous kind of
+   collision. Recorded because the count of them is itself the signal, not because it is urgent.
+6. **`channel`** — three meanings that never touch. Least urgent, still worth fixing.
+7. **`module`** — pervasive, conventional, probably tolerable. Keep out of identifiers.
 
 **Closed 2026-08-30: `cursor`.** It was added to this list the same day as an open collision — a
 row in `inputs.js`, a pointer in `comet.js` — and closed a few hours later rather than left,

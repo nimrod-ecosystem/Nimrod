@@ -68,6 +68,19 @@ export const TABS = [
   // ON HOME, NOT ON THE KIOSK. Reviewing what a module recorded is a different job in a
   // different room, and a table of somebody's performance has no business on the screen
   // they cannot walk away from.
+  // *** A NEW TAB, WHICH IS A COST, AND HERE IS THE ARGUMENT FOR PAYING IT. ***
+  // Mike hid `adulting` because a first-time visitor reading six tabs to work out what this
+  // product does is a real price paid by everybody. So a seventh needs justifying.
+  //
+  // The bank is CONTENT SHARED BY TWO MODULES. It cannot live in one module's settings without
+  // implying it belongs to that module, and burying it there would make it undiscoverable —
+  // which is precisely the failure the editor was built to fix, since until now the bank was
+  // reachable only by knowing where per-profile state is kept.
+  //
+  // It is also a thing somebody will go LOOKING for by name: "where do I put my questions".
+  // If this turns out to be wrong, `hidden: true` takes it out of the sidebar without removing
+  // it, and `show('bank')` still reaches it — see the note above.
+  { id: 'bank',     label: 'Questions', hint: 'the words and questions your games ask — write your own' },
   { id: 'records',  label: 'Records',  hint: 'what a module wrote down, and vouching for it' },
   // The state machine, in sentences. The engine has always been authorable; what was missing
   // was that nobody could READ the config. See rules.js.
@@ -301,6 +314,27 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const r = mountRules(host, { profiles, user, makeState });
       await r.refresh();
       return r;
+    }
+    if (id === 'bank') {
+      const { mountBankPanel, BANK_KEY } = await import('./bank_panel.js');
+      if (!makeUserState) return null;
+      // PER PERSON, in the same place their input bindings live — because a syllabus belongs to
+      // the person learning from it, not to one screen, and it should follow them the way their
+      // switch setup already does.
+      const st = makeUserState(BANK_KEY);
+      await st.load().catch(() => {});
+      const b = mountBankPanel(host, {
+        settings: () => st.get() || {},
+        save: async (patch) => { st.set(patch); await st.flush?.(); },
+      });
+      await b.refresh();
+      return {
+        async refresh() { await b.refresh(); return this; },
+        destroy() {
+          try { b.destroy(); } catch (e) { console.error(e); }
+          try { st.destroy?.(); } catch (e) { console.error(e); }
+        },
+      };
     }
     if (id === 'records') {
       const { mountRecords } = await import('./records.js');

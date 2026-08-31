@@ -49,6 +49,7 @@ import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
+import { parseBank as sharedBank } from '../bank.js';
 
 export const GAME = 'wordforge';
 
@@ -466,7 +467,13 @@ registerModule(
 
         state.subscribe((s) => {
           const snap = s || {};
-          const w = Array.isArray(snap.words) ? snap.words : (snap.wordsText ? parseWords(snap.wordsText) : null);
+          // *** ALSO READS THE SHARED BANK (2026-08-31). *** `bankText` is one document that
+          // Trivia reads too, so a syllabus is written once. `wordsText` still wins where it
+          // exists, so nothing anybody already wrote changes meaning — see bank.js on why that
+          // matters more than tidiness.
+          const shared = snap.bankText ? sharedBank(snap.bankText, { defaultKind: 'words' }).words : null;
+          const w = Array.isArray(snap.words) ? snap.words
+                  : (snap.wordsText ? parseWords(snap.wordsText) : (shared && shared.length ? shared : null));
           const p = Array.isArray(snap.pairs) ? snap.pairs : (snap.pairsText ? parsePairs(snap.pairsText) : null);
           words = (w && w.length >= 4) ? w : DEFAULT_WORDS;   // need 4 for a 4-way choice
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
