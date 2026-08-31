@@ -115,7 +115,11 @@ export function mountInputs(root, {
   let pads = null;
   let detach = [];
   let saveTimer = null;
-  let cursor = -1;                 // which binding row the VERBS are pointed at
+  // *** RENAMED FROM `cursor` ON 2026-08-30. *** The word now means one thing in this
+  // project — the pointer on screen, drawn by `cursor.js` — and this was the other meaning:
+  // which ROW in a list a one-switch user has walked to. Two senses that never met in one
+  // file, right up until something started driving a real pointer. See docs/glossary.md.
+  let highlight = -1;              // which binding row the VERBS are pointed at
   let binderOffs = [];
   let record = { v: RECORD_VERSION, gate: 'both', speak: false, bindings: [] };
 
@@ -266,7 +270,7 @@ export function mountInputs(root, {
           <th>Who</th><th></th>
         </tr></thead>
         <tbody>${record.bindings.map((b, i) => `
-          <tr data-bid="${esc(b.id)}"${i === cursor ? ' class="i-cursor"' : ''}>
+          <tr data-bid="${esc(b.id)}"${i === highlight ? ' class="i-highlight"' : ''}>
             <td><select data-f="actionId">${verbOptions(b.actionId)}</select></td>
             <td><button class="h-btn i-ctl" data-repress title="Press a different control">
                   ${esc(deviceName(b.device))}: ${esc(controlName(b.device, b.control))}</button></td>
@@ -383,20 +387,20 @@ export function mountInputs(root, {
 
   // ---- driving the binder with the control being bound --------------------------
 
-  function moveCursor(delta) {
+  function moveHighlight(delta) {
     const n = record.bindings.length;
-    if (!n) { cursor = -1; return; }
+    if (!n) { highlight = -1; return; }
     // Wraps, because with one switch there is only one direction and a dead end at the
     // bottom of the list means reaching for a mouse.
-    cursor = cursor < 0 ? (delta > 0 ? 0 : n - 1) : (cursor + delta + n) % n;
+    highlight = highlight < 0 ? (delta > 0 ? 0 : n - 1) : (highlight + delta + n) % n;
     renderBindings();
-    el(`[data-bid="${CSS.escape(record.bindings[cursor].id)}"]`)
+    el(`[data-bid="${CSS.escape(record.bindings[highlight].id)}"]`)
       ?.scrollIntoView({ block: 'nearest' });
   }
 
-  function selectCursor() {
-    const b = record.bindings[cursor];
-    if (!b) { moveCursor(1); return; }
+  function selectHighlight() {
+    const b = record.bindings[highlight];
+    if (!b) { moveHighlight(1); return; }
     // Re-press the highlighted row. Note what happens next and why it is right: capture
     // blocks every binding, so the very control that just triggered this is now the one
     // being captured. That IS the gesture - "this row, that control" - and capture's
@@ -409,8 +413,8 @@ export function mountInputs(root, {
     });
   }
 
-  function clearCursor() {
-    cursor = -1;
+  function clearHighlight() {
+    highlight = -1;
     renderBindings();
   }
 
@@ -509,7 +513,7 @@ export function mountInputs(root, {
     const repress = e.target.closest('[data-repress]');
     if (repress) {
       const bid = repress.closest('[data-bid]').dataset.bid;
-      cursor = record.bindings.findIndex((b) => b.id === bid);   // mouse and switch agree
+      highlight = record.bindings.findIndex((b) => b.id === bid);   // mouse and switch agree
       capture(({ device, control, heldMs }) => {
         edit(bid, { device, control });
         renderBindings();
@@ -558,7 +562,7 @@ export function mountInputs(root, {
     flush();
     binderOffs.forEach((off) => off());
     binderOffs = [];
-    cursor = -1;
+    highlight = -1;
     detach.forEach((off) => off());
     detach = [];
     if (router) { router.destroy(); router = null; }
@@ -610,10 +614,10 @@ export function mountInputs(root, {
       onChange: () => renderFocus(),
     });
     binderOffs = [
-      localBus.subscribe('binder/next', () => moveCursor(1)),
-      localBus.subscribe('binder/prev', () => moveCursor(-1)),
-      localBus.subscribe('binder/select', () => selectCursor()),
-      localBus.subscribe('binder/back', () => clearCursor()),
+      localBus.subscribe('binder/next', () => moveHighlight(1)),
+      localBus.subscribe('binder/prev', () => moveHighlight(-1)),
+      localBus.subscribe('binder/select', () => selectHighlight()),
+      localBus.subscribe('binder/back', () => clearHighlight()),
     ];
     pads = (makeGamepads || createGamepads)({
       input, onConnect: renderDevices, onDisconnect: renderDevices,
@@ -633,7 +637,9 @@ export function mountInputs(root, {
     refresh, select,
     current: () => current,
     bindings: () => record.bindings.map((b) => ({ ...b })),
-    cursor: () => cursor,
+    highlight: () => highlight,
+    // Kept so nothing outside breaks on the rename; `highlight` is the name to use.
+    cursor: () => highlight,
     gate: () => record.gate,
     input: () => input,
     router: () => router,

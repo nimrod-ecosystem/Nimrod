@@ -7,6 +7,8 @@
 // slice 1 still live here — untouched module, proving the bus seam holds.
 
 import { createBus } from './bus.js';
+import { createAim } from './aim.js';
+import { POINTER_DEVICE } from './input_pointer.js';
 import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
@@ -34,6 +36,17 @@ const params = new URLSearchParams(location.search);
 const user = params.get('user') || 'dev-user';
 
 const bus = createBus();
+
+// THE AIM, on this surface too. `comet.js` and anything else that wants a position read it
+// off the bus rather than off their own element, so without a producer here a comet mounted
+// on this page would sit still — which is a worse bug than the one that change fixed.
+//
+// This page has no input runtime (the verb layer lives in `input_runtime.js` and is mounted
+// by the kiosk), so the mouse is wired straight to the aim rather than through
+// `attachPointer`. Passive: a page that authors modules must not have its own scrolling and
+// selecting interfered with by a listener that only wants to know where the pointer is.
+const aim = createAim({ bus });
+window.addEventListener('mousemove', (e) => aim.reportEvent(POINTER_DEVICE, e), { passive: true });
 const profiles = createProfilesClient({ user });
 
 const dashEl = document.getElementById('dashboard');
@@ -166,6 +179,7 @@ async function openProfile(pid) {
       mount: body, bus, state, events, user, profileId: pid,
       rootBus: bus,
       instanceId: mod.id,
+      aim,
       makeState: (key, opts) => createState({ url: profiles.stateURL(pid, key), user, ...opts }),
       makeEvents: (key, opts) => createEvents({ url: profiles.eventsURL(pid, key), user, ...opts }),
     });

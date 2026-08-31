@@ -22,7 +22,13 @@ Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app -
 <p><strong>And the second door, found 2026-08-27:</strong> a video that <em>PAUSES</em> after playing
 fired nothing at all, and <code>PLAYING</code> had already disarmed the watchdog — so the screen sat
 on a paused video forever and the one person in front of it cannot press play. The invariant:
-<em>nothing may require an input in order to keep doing what it is already doing.</em></p>
+<em>a screen must never enter a state that only an input can leave, when the person in front of it
+cannot give that input.</em></p>
+<p><strong>And the third, found 2026-08-30:</strong> <code>PLAYING</code> disarmed the watchdog
+<em>permanently</em>, so a video that froze <em>after</em> starting was watched by nothing at all —
+and the one <code>segment/progress</code> it sent at the start meant a container could not tell a
+40-minute video from a dead one. See <code>segment_heartbeat_test.html</code>, which is where that
+half lives; the sections here assert what the change did to the ladder in <em>this</em> module.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="host"></div>
@@ -48,18 +54,41 @@ function check(name, cond, detail = '') {
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// A fake clock: timers only fire when the test advances time.
+// ---------------------------------------------------------------------------------------
+// *** THE CLOCK WAS REPLACED ON 2026-08-30, AND THE OLD ONE WAS WRONG. ***
+//
+// It used to snapshot the pending timers, jump `now` forward by the whole step, and then
+// fire everything that had been due at the start — WITHOUT re-checking whether a timer was
+// still pending. While only one timer was ever armed that is indistinguishable from a real
+// clock. It stops being so the moment a heartbeat exists, because a heartbeat's entire job
+// is to CLEAR a timer that is already due: the cleared timer fired anyway, and the suite
+// reported stalls and double-fires that the real code never had. Two of the "regressions"
+// found when the heartbeat landed were this, not the module.
+//
+// So: a proper discrete-event clock. Fire the EARLIEST due timer, move `now` to its
+// deadline, run it, and look again — so a callback that clears or re-arms something is
+// respected, and timers armed mid-step run in order.
+// ---------------------------------------------------------------------------------------
 function fakeTimers() {
   let now = 0, seq = 0;
   const pending = new Map();
   return {
-    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + ms }); return id; },
-    clearTimer: (id) => pending.delete(id),
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + Math.max(0, Number(ms) || 0) }); return id; },
+    clearTimer: (id) => { pending.delete(id); },
     advance(ms) {
-      now += ms;
-      for (const [id, t] of [...pending.entries()]) {
-        if (t.at <= now) { pending.delete(id); t.fn(); }
+      const target = now + ms;
+      // Bounded by callbacks rather than by time: the heartbeat re-arms itself every step,
+      // so "until nothing is due" needs a guard against a zero-delay loop.
+      for (let guard = 0; guard < 20000; guard++) {
+        let pickId = null, pickAt = Infinity;
+        for (const [id, t] of pending) if (t.at <= target && t.at < pickAt) { pickId = id; pickAt = t.at; }
+        if (pickId === null) break;
+        const t = pending.get(pickId);
+        pending.delete(pickId);
+        now = Math.max(now, t.at);
+        t.fn();
       }
+      now = target;
     },
     armed: () => pending.size,
   };
@@ -69,6 +98,12 @@ function fakeTimers() {
 // `resume` is the adapter method the real one uses for playVideo(); the test records it so
 // a pause recovery can be told apart from a reload recovery, which is the whole point of
 // separating the two: a reload throws away where she was.
+//
+// IT DELIBERATELY DOES NOT IMPLEMENT `currentTime`. That is the weaker of the module's two
+// heartbeat paths — "the player says PLAYING and has not said otherwise" — and it is the one
+// worth exercising HERE, because every assertion below is about what happens when the player
+// itself reports a state change. The stronger path, where a moving clock is the evidence,
+// is exercised in `segment_heartbeat_test.html` with an adapter that has one.
 function stuckPlayerFactory(log) {
   return (mountEl, { onEnded, onError, onPlaying, onIdle }) => {
     const api = {
@@ -110,17 +145,17 @@ function fakeActivity(startsActive = false) {
 }
 
 async function mountYT({ stallMs = 20000, autoAdvance = true,
-                         heldPauseMs = 14400000, activity = null } = {}) {
+                         heldNotifyMs = 21600000, activity = null } = {}) {
   const profiles = createProfilesClient({ user: USER });
   const profile = await profiles.create('TEST-yt-' + Math.floor(Math.random() * 1e5));
   const mod = await profiles.addModule(profile.id, 'youtube');
   const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
   await state.load();
-  state.set({ playlist: PLAYLIST, autoAdvance, stallMs, heldPauseMs });
+  state.set({ playlist: PLAYLIST, autoAdvance, stallMs, heldNotifyMs });
   await state.flush();
 
   const bus = createBus();
-  const done = [], nexts = [];
+  const done = [], nexts = [], notices = [];
   bus.subscribe('segment/done', (p) => done.push(p));
   bus.subscribe('youtube/next', () => nexts.push(1));
 
@@ -137,11 +172,19 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     playerFactory: stuckPlayerFactory(log),
     setTimer: timers.setTimer, clearTimer: timers.clearTimer,
     activity: activity || fakeActivity(false),
+    // The output bus is how a module says WHAT; the person's routing decides HOW. Stubbed
+    // so a held pause running out can be observed without caring where it would land.
+    output: { notify: (text, o) => notices.push({ text, ...o }) },
   });
   inst.init();
   await sleep(500);
   const held = () => !host.querySelector('[data-held]')?.hidden;
-  return { inst, bus, done, nexts, timers, log, host, held };
+  // *** COUNT THE TIMERS THAT ARE WATCHING SOMETHING, NOT ALL OF THEM. ***
+  // Since the heartbeat landed, exactly one timer is ALWAYS armed: the progress poll, which
+  // re-arms itself for the life of the module. It is not watching for a fault, so counting
+  // it would make every assertion below read one higher and mean nothing.
+  const watching = () => Math.max(0, timers.armed() - 1);
+  return { inst, bus, done, nexts, notices, timers, watching, log, host, held };
 }
 
 (async () => {
@@ -150,7 +193,7 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     section('a video that never starts');
     const a = await mountYT({ stallMs: 20000 });
     check('a video was asked for', a.log.loads.length === 1, JSON.stringify(a.log.loads));
-    check('the watchdog is armed while it loads', a.timers.armed() === 1, String(a.timers.armed()));
+    check('the watchdog is armed while it loads', a.watching() === 1, String(a.watching()));
     check('nothing has been declared done yet', a.done.length === 0);
 
     a.timers.advance(19000);
@@ -161,7 +204,7 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     check('after the stall it RETRIES the same video first',
       a.log.loads.length === 2 && a.log.loads[1] === a.log.loads[0], JSON.stringify(a.log.loads));
     check('...and still hasn’t abandoned the segment', a.done.length === 0, JSON.stringify(a.done));
-    check('...with the watchdog re-armed', a.timers.armed() === 1);
+    check('...with the watchdog re-armed', a.watching() === 1);
 
     a.timers.advance(21000);         // the retry stalls too
     check('a second stall ENDS the segment', a.done.length === 1, JSON.stringify(a.done));
@@ -172,11 +215,17 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
       /wouldn.t load|moving on/i.test(a.host.textContent), a.host.textContent.slice(0, 80));
     a.inst.destroy();
 
-    // ================= the happy path is untouched =================
+    // ================= the happy path =================
     section('a video that plays');
+    // *** THIS SECTION CHANGED ON 2026-08-30 AND THE CHANGE IS THE POINT. ***
+    // It used to assert that playing DISARMED the watchdog. That was the bug: nothing was
+    // watching for the rest of the video, so a freeze after the first frame was invisible.
+    // Playing now keeps a clock running and beats it, which is what makes a long video safe
+    // for the right reason rather than by accident.
     const b = await mountYT();
     b.log.player.playNow();
-    check('playing disarms the watchdog', b.timers.armed() === 0, String(b.timers.armed()));
+    check('playing keeps a heartbeat running rather than standing everything down',
+      b.watching() === 1, String(b.watching()));
     b.timers.advance(60000);
     check('...so a long video is never interrupted', b.done.length === 0, JSON.stringify(b.done));
     check('...and it is not reloaded underneath the viewer', b.log.loads.length === 1);
@@ -185,12 +234,18 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     check('a normal ending still ends the segment',
       b.done.length === 1 && b.done[0].reason === 'ended', JSON.stringify(b.done));
     b.timers.advance(60000);
-    check('...exactly once — the watchdog cannot double-fire', b.done.length === 1, JSON.stringify(b.done));
+    check('...exactly once for THAT video — the watchdog cannot double-fire behind it',
+      b.done.filter((d) => d.reason === 'ended').length === 1, JSON.stringify(b.done));
+    // autoAdvance moved on to the next video, which this stub never plays. A timeout for
+    // THAT one is correct; a second report about the video that ended cleanly would not be.
+    check('...and anything after it is about the NEXT video, not the one that ended',
+      b.done.slice(1).every((d) => d.reason === 'timeout' && d.id && d.id !== b.done[0].id),
+      JSON.stringify(b.done));
     b.inst.destroy();
 
     // ================= an explicit error =================
     section('an explicit player error');
-    const c = await mountYT();
+    const c = await mountYT({ autoAdvance: false });
     c.log.player.errorNow();
     check('an error ends the segment', c.done.length === 1 && c.done[0].reason === 'error',
       JSON.stringify(c.done));
@@ -208,7 +263,8 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     // the module advanced; simulate the next one actually playing
     await sleep(200);
     d.log.player.playNow();
-    check('a later video that works clears the state', d.timers.armed() === 0);
+    check('a later video that works is watched by a heartbeat rather than by nothing',
+      d.watching() === 1, String(d.watching()));
     d.timers.advance(60000);
     check('...and no stale timeout arrives afterwards', d.done.length === 1, JSON.stringify(d.done));
     d.inst.destroy();
@@ -217,116 +273,122 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     // The original bug: PLAYING disarms the watchdog, the video pauses, and NOTHING re-arms
     // it. No segment/done ever reaches the director. She cannot press play.
     //
-    // *** WHAT CHANGED, AND WHY THESE TESTS LOOK DIFFERENT FROM THE STALL ONES. ***
-    // A pause is not automatically a fault. On THIS module the real YouTube player chrome is
-    // on screen, so a pause is somebody in the room pressing pause — Mike's parents visiting
-    // for an afternoon. So a pause runs on `heldPauseMs` (four hours by default), not on
-    // `stallMs`. These sections use a deliberately tiny hold so the LADDER after the hold —
-    // resume once, then hand the slot back — can still be exercised without waiting.
-    section('a video that pauses, once the hold has run out');
-    const p1 = await mountYT({ stallMs: 20000, heldPauseMs: 20000 });
+    // *** AND WHAT A HELD PAUSE DOES AT THE END CHANGED ON 2026-08-30 (Mike). ***
+    // It used to carry on by itself. It does not any more: somebody paused it, and a screen
+    // that restarts under the person who paused it is the interruption the hold exists to
+    // prevent — and this page cannot see a click inside the YouTube iframe, so it cannot
+    // tell an empty room from a busy one. When the hold runs out somebody is TOLD, once,
+    // and the video stays where it was left, still marked.
+    section('a video that pauses: the hold runs, and then somebody is told');
+    const p1 = await mountYT({ stallMs: 20000, heldNotifyMs: 20000 });
     p1.log.player.playNow();
-    check('playing disarmed the watchdog, as before', p1.timers.armed() === 0, String(p1.timers.armed()));
+    check('playing is being watched by the heartbeat', p1.watching() === 1, String(p1.watching()));
     p1.log.player.pauseNow();
-    check('*** a pause RE-ARMS the watchdog ***', p1.timers.armed() === 1, String(p1.timers.armed()));
+    check('*** a pause puts a clock on it ***', p1.watching() === 1, String(p1.watching()));
     check('...and marks the screen as paused rather than leaving it a mystery', p1.held());
     p1.timers.advance(19000);
-    check('a pause of a few seconds is not yet touched',
-      p1.log.resumes.length === 0 && p1.done.length === 0,
-      `${p1.log.resumes.length} resumes / ${p1.done.length} done`);
+    check('a pause of a few seconds tells nobody anything',
+      p1.notices.length === 0 && p1.done.length === 0,
+      `${p1.notices.length} notices / ${p1.done.length} done`);
     p1.timers.advance(2000);          // the hold expires
-    check('once the hold expires it is RESUMED, not reloaded',
-      p1.log.resumes.length === 1 && p1.log.loads.length === 1,
+    check('*** once the hold expires somebody is told ***', p1.notices.length === 1,
+      JSON.stringify(p1.notices));
+    check('...and it is NOT resumed or reloaded underneath them',
+      p1.log.resumes.length === 0 && p1.log.loads.length === 1,
       `${p1.log.resumes.length} resumes / ${p1.log.loads.length} loads`);
-    check('...and the segment is not abandoned on the first try', p1.done.length === 0, JSON.stringify(p1.done));
-    p1.timers.advance(21000);         // the resume did not take either
-    check('a pause that will not resume ENDS the segment',
-      p1.done.length === 1 && p1.done[0].reason === 'timeout', JSON.stringify(p1.done));
-    check('...and it moves on to something else', p1.nexts.length === 1, String(p1.nexts.length));
-    check('the screen says it stopped, not that it would not load',
-      /stopped/i.test(p1.host.textContent) && !/wouldn.t load/i.test(p1.host.textContent),
-      p1.host.textContent.slice(0, 90));
+    check('...and it is still visibly paused', p1.held());
+    p1.timers.advance(86400000);      // a whole day more
+    check('...and it is said ONCE, not every twenty seconds forever',
+      p1.notices.length === 1, `${p1.notices.length} notices after a further day`);
+    check('...and the segment is not quietly advanced past either',
+      p1.done.length === 0 && p1.nexts.length === 0, JSON.stringify(p1.done));
     p1.inst.destroy();
 
     section('a brief pause is forgiven silently');
-    const p2 = await mountYT({ stallMs: 20000, heldPauseMs: 20000 });
+    const p2 = await mountYT({ stallMs: 20000, heldNotifyMs: 20000 });
     p2.log.player.playNow();
     p2.log.player.pauseNow();
     p2.timers.advance(5000);
     p2.log.player.playNow();          // it carried on by itself, or somebody pressed play
-    check('playing again disarms it', p2.timers.armed() === 0, String(p2.timers.armed()));
+    check('playing again puts it back on the heartbeat', p2.watching() === 1, String(p2.watching()));
     check('...and takes the paused marker down', !p2.held());
     p2.timers.advance(120000);
-    check('...and nothing is resumed, reloaded or ended',
-      p2.log.resumes.length === 0 && p2.log.loads.length === 1 && p2.done.length === 0,
-      `${p2.log.resumes.length}/${p2.log.loads.length}/${p2.done.length}`);
+    check('...and nothing is resumed, reloaded, ended or reported',
+      p2.log.resumes.length === 0 && p2.log.loads.length === 1
+        && p2.done.length === 0 && p2.notices.length === 0,
+      `${p2.log.resumes.length}/${p2.log.loads.length}/${p2.done.length}/${p2.notices.length}`);
     p2.inst.destroy();
-
-    section('a resume that works');
-    const p3 = await mountYT({ stallMs: 20000, heldPauseMs: 20000 });
-    p3.log.player.playNow();
-    p3.log.player.playOnResume = true;
-    p3.log.player.pauseNow();
-    p3.timers.advance(21000);
-    check('the resume took, and the watchdog stood down',
-      p3.log.resumes.length === 1 && p3.timers.armed() === 0,
-      `${p3.log.resumes.length} resumes / armed ${p3.timers.armed()}`);
-    p3.timers.advance(120000);
-    check('...so the segment is never cut short', p3.done.length === 0, JSON.stringify(p3.done));
-    p3.inst.destroy();
 
     section('buffering forever is a FAULT, not a pause');
     // The distinction that matters: buffering is the network, whoever is in the room, so it
-    // runs on the short clock and is never treated as somebody's deliberate pause.
-    const p4 = await mountYT({ stallMs: 20000, heldPauseMs: 14400000 });
+    // runs on the short clock, is never treated as somebody's deliberate pause, and IS
+    // recovered from — the no-auto-resume rule is about a person's pause, not about a
+    // network hiccup nobody chose.
+    const p4 = await mountYT({ stallMs: 20000, heldNotifyMs: 21600000 });
     p4.log.player.playNow();
     p4.log.player.bufferNow();
-    check('buffering re-arms the watchdog too', p4.timers.armed() === 1, String(p4.timers.armed()));
+    check('buffering puts a clock on it too', p4.watching() === 1, String(p4.watching()));
     check('...and is NOT marked as a deliberate pause', !p4.held());
     p4.timers.advance(21000);
-    check('...on the SHORT clock, even though the hold is four hours',
+    check('...on the SHORT clock, even though the hold is six hours',
       p4.log.resumes.length === 1, `${p4.log.resumes.length} resumes`);
     p4.timers.advance(21000);
     check('...then it gives the slot up', p4.done.length === 1 && p4.done[0].reason === 'timeout',
       JSON.stringify(p4.done));
+    check('...and nobody was told, because nobody paused it', p4.notices.length === 0,
+      JSON.stringify(p4.notices));
     p4.inst.destroy();
 
     section('flapping between paused and buffering cannot hold the clock open');
-    const p5 = await mountYT({ stallMs: 20000, heldPauseMs: 20000 });
+    const p5 = await mountYT({ stallMs: 20000, heldNotifyMs: 20000 });
     p5.log.player.playNow();
     p5.log.player.pauseNow();
     for (let i = 0; i < 10; i++) { p5.timers.advance(1500); p5.log.player.bufferNow(); p5.log.player.pauseNow(); }
     check('15s of flapping did NOT reset the clock — it is still one wait',
-      p5.log.resumes.length === 0, `${p5.log.resumes.length} resumes at 15s`);
+      p5.notices.length === 0, `${p5.notices.length} notices at 15s`);
     p5.timers.advance(6000);
-    check('...and it fires on schedule', p5.log.resumes.length === 1,
-      `${p5.log.resumes.length} resumes`);
+    check('...and it fires on schedule', p5.notices.length === 1,
+      `${p5.notices.length} notices`);
     p5.inst.destroy();
 
     section('a HIDDEN provider is allowed to sit paused');
-    const p6 = await mountYT({ stallMs: 20000, heldPauseMs: 20000 });
+    const p6 = await mountYT({ stallMs: 20000, heldNotifyMs: 20000 });
     p6.log.player.playNow();
     p6.bus.publish('youtube/deactivate');      // the director moved to another provider
     p6.log.player.pauseNow();
-    check('a hidden player does not arm anything', p6.timers.armed() === 0, String(p6.timers.armed()));
+    check('a hidden player is watching nothing', p6.watching() === 0, String(p6.watching()));
     check('...and does not claim to be paused on a panel nobody can see', !p6.held());
     p6.timers.advance(120000);
     check('...so it cannot end the segment that is actually on screen',
       p6.done.length === 0, JSON.stringify(p6.done));
+    check('...and does not tell anybody about a pause nobody can see',
+      p6.notices.length === 0, JSON.stringify(p6.notices));
+    // *** AND THE OPPOSITE SIGN OF THE SAME BUG. *** A hidden player can still report
+    // PLAYING — a buffer that completes after the director moved on. If that re-armed its
+    // watchdog, or published a heartbeat, it would be quieting the container's backstop on
+    // behalf of the provider that is actually on screen.
+    const p6progress = [];
+    p6.bus.subscribe('segment/progress', (x) => p6progress.push(x));
+    p6.log.player.playNow();
+    check('a hidden player reporting PLAYING arms nothing', p6.watching() === 0, String(p6.watching()));
+    check('...and sends no heartbeat on somebody else’s behalf', p6progress.length === 0,
+      JSON.stringify(p6progress));
+    p6.timers.advance(120000);
+    check('...and still ends nothing', p6.done.length === 0, JSON.stringify(p6.done));
+
     p6.bus.publish('youtube/next');            // the director brings it back
     await sleep(50);
-    p6.log.player.playNow();                   // ...and it plays, which disarms the load watch
-    check('...and it is watching a fresh load again', p6.timers.armed() === 0, String(p6.timers.armed()));
+    p6.log.player.playNow();                   // ...and it plays
+    check('...and it is watching again once it is back', p6.watching() === 1, String(p6.watching()));
     p6.log.player.pauseNow();
-    check('...but once it is back on screen a pause counts again', p6.timers.armed() === 1,
-      String(p6.timers.armed()));
+    check('...and a pause counts again', p6.watching() === 1 && p6.held(), String(p6.watching()));
     p6.inst.destroy();
 
     section('the pause watchdog respects the escape hatch');
-    const p7 = await mountYT({ stallMs: 0, heldPauseMs: 0 });
+    const p7 = await mountYT({ stallMs: 0, heldNotifyMs: 0 });
     p7.log.player.playNow();
     p7.log.player.pauseNow();
-    check('nothing is armed', p7.timers.armed() === 0, String(p7.timers.armed()));
+    check('nothing is armed', p7.watching() === 0, String(p7.watching()));
     p7.timers.advance(300000);
     check('...and nothing times out', p7.done.length === 0, JSON.stringify(p7.done));
     p7.inst.destroy();
@@ -339,7 +401,7 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     // youtube.js embeds the real player WITH ITS CHROME, so a pause here is a person's doing
     // by default — see activity.js.
     section('a pause by somebody in the room is HELD, not stalled');
-    const h1 = await mountYT({ stallMs: 20000, heldPauseMs: 14400000 });
+    const h1 = await mountYT({ stallMs: 20000, heldNotifyMs: 21600000 });
     h1.log.player.playNow();
     h1.log.player.pauseNow();
     check('it does NOT resume after the ordinary stall', (() => {
@@ -348,21 +410,18 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     })(), `${h1.log.resumes.length} resumes / ${h1.done.length} done`);
     check('*** and an hour later it is still exactly where they left it ***', (() => {
       h1.timers.advance(3600000);
-      return h1.log.resumes.length === 0 && h1.done.length === 0;
-    })(), `${h1.log.resumes.length} resumes`);
+      return h1.log.resumes.length === 0 && h1.notices.length === 0;
+    })(), `${h1.log.resumes.length} resumes / ${h1.notices.length} notices`);
     check('the screen SAYS it is paused, so it cannot be mistaken for a crash', h1.held(),
       h1.host.textContent.slice(0, 60));
 
-    check('after the full four hours of stillness it carries on by itself', (() => {
-      h1.timers.advance(14400000);
-      return h1.log.resumes.length === 1;
-    })(), `${h1.log.resumes.length} resumes`);
-    check('...and the marker comes down with it', !h1.held());
-    check('...and it does NOT then wait another four hours to give up — it drops to the '
-      + 'short clock, because by now the room is empty', (() => {
-      h1.timers.advance(21000);
-      return h1.done.length === 1 && h1.done[0].reason === 'timeout';
-    })(), JSON.stringify(h1.done));
+    check('after the full six hours of stillness, somebody is told', (() => {
+      h1.timers.advance(21600000);
+      return h1.notices.length === 1;
+    })(), `${h1.notices.length} notices`);
+    check('...and it is STILL where they left it — the escape from a held pause is a person, '
+      + 'not a timer', h1.log.resumes.length === 0 && h1.done.length === 0 && h1.held(),
+      `${h1.log.resumes.length} resumes / ${h1.done.length} done / held=${h1.held()}`);
     h1.inst.destroy();
 
     // *** READ THIS BEFORE TRUSTING THE NEXT SECTION. ***
@@ -379,49 +438,51 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     //
     // Both are now asserted separately, and the second one is the honest limitation.
     section('input on the page extends a hold — the mechanism');
-    const h2 = await mountYT({ stallMs: 20000, heldPauseMs: 14400000 });
+    const h2 = await mountYT({ stallMs: 20000, heldNotifyMs: 21600000 });
     h2.log.player.playNow();
     h2.log.player.pauseNow();
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       h2.timers.advance(3600000);
       h2.bus.publish('input/device', { kind: 'press' });   // one of HER switches
     }
-    check('six hours of input the page CAN see, and it never resumed underneath it',
-      h2.log.resumes.length === 0 && h2.done.length === 0,
-      `${h2.log.resumes.length} resumes / ${h2.done.length} done after 6h`);
+    check('eight hours of input the page CAN see, and nobody was bothered about it',
+      h2.notices.length === 0 && h2.log.resumes.length === 0,
+      `${h2.notices.length} notices / ${h2.log.resumes.length} resumes after 8h`);
     check('...still marked as paused', h2.held());
-    h2.timers.advance(14400000);         // it finally goes quiet
-    check('...and once the input stops for a full hold, it resumes', h2.log.resumes.length === 1,
-      `${h2.log.resumes.length} resumes`);
+    h2.timers.advance(21600000);         // it finally goes quiet
+    check('...and once the input stops for a full hold, somebody is told',
+      h2.notices.length === 1, `${h2.notices.length} notices`);
     h2.inst.destroy();
 
-    section('*** AND THE LIMITATION: a visit the page cannot see DOES resume once ***');
-    const h2b = await mountYT({ stallMs: 20000, heldPauseMs: 14400000 });
+    section('*** AND THE LIMITATION: a visit the page cannot see is reported mid-visit ***');
+    const h2b = await mountYT({ stallMs: 20000, heldNotifyMs: 21600000 });
     h2b.log.player.playNow();
     h2b.log.player.pauseNow();
-    // Six hours of a real visit where the only thing anybody touches is the YouTube player
+    // Eight hours of a real visit where the only thing anybody touches is the YouTube player
     // itself. No bus event, no DOM event — nothing reaches this page. So: no beats.
-    h2b.timers.advance(21600000);
-    check('*** it resumes at the four-hour mark, in the middle of the visit *** — this is a '
-      + 'KNOWN LIMITATION, not a passing detail: the fix is a longer setting, not a cleverer '
-      + 'guess at who is in the room',
-      h2b.log.resumes.length >= 1, `${h2b.log.resumes.length} resumes`);
+    h2b.timers.advance(28800000);
+    check('*** somebody is told at the six-hour mark, in the middle of the visit ***',
+      h2b.notices.length === 1, `${h2b.notices.length} notices`);
+    check('...but this is now a message somebody can ignore rather than a video restarting '
+      + 'under them, which is why the same limitation costs much less than it used to',
+      h2b.log.resumes.length === 0 && h2b.done.length === 0,
+      `${h2b.log.resumes.length} resumes / ${h2b.done.length} done`);
     h2b.inst.destroy();
 
-    section('...which is exactly what the longer settings are for');
-    const h2c = await mountYT({ stallMs: 20000, heldPauseMs: 43200000 });   // 12 hours
+    section('...and a longer setting still avoids it entirely');
+    const h2c = await mountYT({ stallMs: 20000, heldNotifyMs: 43200000 });   // 12 hours
     h2c.log.player.playNow();
     h2c.log.player.pauseNow();
-    h2c.timers.advance(21600000);        // the same unseen six-hour visit
-    check('on the 12-hour setting the same visit is never interrupted',
-      h2c.log.resumes.length === 0 && h2c.done.length === 0,
-      `${h2c.log.resumes.length} resumes`);
+    h2c.timers.advance(28800000);        // the same unseen eight-hour visit
+    check('on the 12-hour setting the same visit is never remarked on',
+      h2c.notices.length === 0 && h2c.done.length === 0,
+      `${h2c.notices.length} notices`);
     check('...and it is still visibly paused, so nobody thinks it broke', h2c.held());
     h2c.inst.destroy();
 
     section('a pause with nobody there is still a stall');
     // BUFFERING is never a person, whoever is in the room.
-    const h3 = await mountYT({ stallMs: 20000, heldPauseMs: 14400000 });
+    const h3 = await mountYT({ stallMs: 20000, heldNotifyMs: 21600000 });
     h3.log.player.playNow();
     h3.log.player.bufferNow();
     check('buffering takes the SHORT clock even with somebody present',
@@ -430,49 +491,36 @@ async function mountYT({ stallMs = 20000, autoAdvance = true,
     check('...and is not marked as a deliberate pause', !h3.held());
     h3.inst.destroy();
 
-    section('"never" leaves it paused, and says so');
-    const h4 = await mountYT({ stallMs: 20000, heldPauseMs: 0 });
+    section('"never" leaves it paused and tells nobody, and says so on the screen');
+    const h4 = await mountYT({ stallMs: 20000, heldNotifyMs: 0 });
     h4.log.player.playNow();
     h4.log.player.pauseNow();
     h4.timers.advance(86400000);          // a full day
-    check('a whole day later it has not resumed itself',
-      h4.log.resumes.length === 0 && h4.done.length === 0,
-      `${h4.log.resumes.length} resumes / ${h4.done.length} done`);
+    check('a whole day later it has not resumed itself or told anybody',
+      h4.log.resumes.length === 0 && h4.done.length === 0 && h4.notices.length === 0,
+      `${h4.log.resumes.length} resumes / ${h4.done.length} done / ${h4.notices.length} notices`);
     check('...and nothing is armed, rather than a timer running forever',
-      h4.timers.armed() === 0, String(h4.timers.armed()));
+      h4.watching() === 0, String(h4.watching()));
     check('...but the screen still says PAUSED, which is the whole reason this is safe to '
       + 'offer — the state is visible rather than a mystery', h4.held());
     h4.inst.destroy();
 
-    section('a shorter hold, for a family who wants one');
-    const h5 = await mountYT({ stallMs: 20000, heldPauseMs: 900000 });
+    section('a shorter hold, for a family who wants to hear about it sooner');
+    const h5 = await mountYT({ stallMs: 20000, heldNotifyMs: 3600000 });
     h5.log.player.playNow();
     h5.log.player.pauseNow();
-    h5.timers.advance(840000);            // 14 minutes
-    check('14 minutes in, still held', h5.log.resumes.length === 0, String(h5.log.resumes.length));
-    h5.timers.advance(120000);            // past 15
-    check('...and at 15 minutes it carries on', h5.log.resumes.length === 1,
-      String(h5.log.resumes.length));
+    h5.timers.advance(3540000);           // 59 minutes
+    check('59 minutes in, still held and still quiet', h5.notices.length === 0,
+      String(h5.notices.length));
+    h5.timers.advance(120000);            // past the hour
+    check('...and at an hour somebody is told', h5.notices.length === 1,
+      String(h5.notices.length));
     h5.inst.destroy();
-
-    section('resuming from a hold, when it works');
-    const h6 = await mountYT({ stallMs: 20000, heldPauseMs: 900000 });
-    h6.log.player.playNow();
-    h6.log.player.playOnResume = true;
-    h6.log.player.pauseNow();
-    h6.timers.advance(900001);
-    check('the resume took', h6.log.resumes.length === 1, String(h6.log.resumes.length));
-    check('...the marker is gone', !h6.held());
-    check('...and nothing is left armed against a playing video', h6.timers.armed() === 0,
-      String(h6.timers.armed()));
-    h6.timers.advance(86400000);
-    check('...so it is never cut short afterwards', h6.done.length === 0, JSON.stringify(h6.done));
-    h6.inst.destroy();
 
     // ================= the escape hatch =================
     section('the watchdog can be turned off');
     const e = await mountYT({ stallMs: 0 });
-    check('stallMs=0 arms nothing', e.timers.armed() === 0, String(e.timers.armed()));
+    check('stallMs=0 arms nothing', e.watching() === 0, String(e.watching()));
     e.timers.advance(120000);
     check('...and nothing times out', e.done.length === 0, JSON.stringify(e.done));
     e.inst.destroy();

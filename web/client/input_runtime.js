@@ -34,6 +34,7 @@ import { createInputBus, normalizeBinding, GATES } from './input.js';
 import { createVerbRouter } from './input_router.js';
 import { attachKeyboard } from './input_keyboard.js';
 import { attachPointer } from './input_pointer.js';
+import { createAim } from './aim.js';
 import { createGamepads } from './input_gamepad.js';
 import { createDefaultRegistry, MODULE_VERBS } from './actions.js';
 
@@ -105,6 +106,13 @@ export function mountInputRuntime({
   };
 
   const input = createInputBus({ bus, actions, onActivation: remember });
+  // THE AIM, alongside the input bus rather than inside it. A position is not an action and
+  // does not go through bind/gate/time/log — see aim.js for why that is a decision and not an
+  // omission. Constructed here so every surface that has an input stack also has an aim,
+  // which is the mistake this whole file exists to stop repeating: the verb layer used to be
+  // built inside a panel on the home page, so it worked where a clinician configures and not
+  // where a person lives.
+  const aim = createAim({ bus });
   const router = createVerbRouter({ bus, modules, maps, onChange: onFocus, onUnhandled });
 
   function apply(rec) {
@@ -118,7 +126,9 @@ export function mountInputRuntime({
   let pads = null;
   if (attachDevices && target) {
     detach.push(attachKeyboard(input, { target }));
-    detach.push(attachPointer(input, { target }));
+    // The mouse reports WHERE as well as which button, so a tracker added later is a second
+    // producer of the same thing rather than a second path.
+    detach.push(attachPointer(input, { target, aim }));
     // A gamepad is how a great many adaptive switches present themselves — no driver, no
     // permission prompt, no chooser. Starting the poll here is what makes a switch work at
     // the bedside without anybody plugging anything into a laptop first.
@@ -159,6 +169,7 @@ export function mountInputRuntime({
 
   return {
     input,
+    aim,
     router,
     actions,
     load,
@@ -176,6 +187,7 @@ export function mountInputRuntime({
       detach.forEach((off) => { try { off(); } catch { /* already gone */ } });
       pads?.stop?.();
       router.destroy();
+      aim.destroy?.();
       input.destroy?.();
       state?.destroy?.();
     },

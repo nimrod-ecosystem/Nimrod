@@ -67,7 +67,8 @@ function fakeClock() {
   };
 }
 
-function rig(saved = {}, { withCamera = true, withAudio = true } = {}) {
+function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
+                          micFails = false, micMismatch = false } = {}) {
   const clock = fakeClock();
   const host = document.createElement('div');
   document.getElementById('host').append(host);
@@ -81,19 +82,32 @@ function rig(saved = {}, { withCamera = true, withAudio = true } = {}) {
     release: (id) => { camLog.push(['release', id]); },
     configure() {}, isLive: () => true, consumers: () => [],
   } : null;
+  // A microphone that never was. `micLog` is what proves a call actually takes and RELEASES it —
+  // a leaked ref pins a live microphone on, which on this device is not merely wasteful.
+  const micLog = [];
+  const micOwner = withMic ? {
+    acquire: (id, want) => {
+      micLog.push(['acquire', id, want]);
+      return micFails ? Promise.reject(new Error('permission denied'))
+                      : Promise.resolve({ id: 'mic-stream' });
+    },
+    release: (id) => { micLog.push(['release', id]); },
+    status: () => ({ listening: true, consumers: [], opened: null,
+                     mismatch: micMismatch ? [{ id: 'call:c1', wanted: {}, missing: ['noiseSuppression'] }] : [] }),
+  } : null;
   const said = [];
   const output = { alert: (t) => said.push(t), say: (t) => said.push(t),
                    notify() {}, status() {}, destroy() {} };
   const published = [];
   [CALL_INCOMING, CALL_ENDED].forEach((t) => bus.subscribe(t, (p) => published.push([t, p])));
   const inst = mountModule('call', {
-    mount: host, bus, audio, cameraOwner, output, instanceId: 'c1', callIO: clock.io,
+    mount: host, bus, audio, cameraOwner, micOwner, output, instanceId: 'c1', callIO: clock.io,
     state: { get: () => saved, set: () => Promise.resolve(), subscribe: () => () => {},
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
   });
   inst.init();
-  return { host, bus, audio, inst, impl: inst.impl || inst, camLog, track, published, said,
-           clock };
+  return { host, bus, audio, inst, impl: inst.impl || inst, camLog, micLog, track, published,
+           said, clock };
 }
 
 (async () => {
@@ -294,6 +308,66 @@ function rig(saved = {}, { withCamera = true, withAudio = true } = {}) {
       r.inst.destroy();
       check('destroy releases the camera and gives the DOM back',
         r.camLog.some((c) => c[0] === 'release') && host.children.length === 0);
+    }
+
+    // =====================================================================================
+    section('*** the microphone: a call with no picture is still a call, one with no sound is not ***');
+    {
+      const r = rig({ declineSeconds: 0 });
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(20);
+      check('CONTROL: it connected', r.impl.__probe().phase === 'connected');
+      check('answering takes the microphone', r.micLog.some(([a]) => a === 'acquire'),
+        JSON.stringify(r.micLog));
+      check('...through the ARBITER, by a named consumer, not by opening its own',
+        r.micLog[0][1] === 'call:c1', JSON.stringify(r.micLog[0]));
+      // A call wants the room cleaned up; a recogniser wants it raw. Asking for the wrong one
+      // here would make every call echo.
+      check('...asking for CALL processing, not raw',
+        r.micLog[0][2] && r.micLog[0][2].echoCancellation === true
+          && r.micLog[0][2].noiseSuppression === true, JSON.stringify(r.micLog[0][2]));
+
+      r.impl.__end('hangup');
+      await sleep(20);
+      check('*** hanging up RELEASES it — a leaked ref pins a live microphone on ***',
+        r.micLog.some(([a]) => a === 'release'), JSON.stringify(r.micLog));
+    }
+    {
+      // The camera and the microphone are NOT symmetrical, and this is the assertion that says
+      // so: a call with no picture carries on, a call with no sound tells the room.
+      const r = rig({ declineSeconds: 0 }, { micFails: true });
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(30);
+      check('a refused microphone does not stop the call connecting',
+        r.impl.__probe().phase === 'connected', r.impl.__probe().phase);
+      check('*** ...but it SAYS SO — somebody talking to a screen that cannot hear them '
+        + 'needs to know now ***',
+        r.said.some((t) => /microphone/i.test(t) && /hear/i.test(t)), JSON.stringify(r.said));
+      r.inst.destroy();
+      check('...and the ref is still released after a failed acquire',
+        r.micLog.some(([a]) => a === 'release'), JSON.stringify(r.micLog));
+    }
+    {
+      // Something else got there first and opened it raw. The call still gets audio — refusing
+      // would be worse — and the mismatch is reported rather than silently endured.
+      const r = rig({ declineSeconds: 0 }, { micMismatch: true });
+      const warns = [];
+      const realWarn = console.warn;
+      console.warn = (...a) => warns.push(a.join(' '));
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(30);
+      console.warn = realWarn;
+      check('a call on a stream configured for something else still connects',
+        r.impl.__probe().phase === 'connected');
+      check('...and the mismatch is reported rather than silently endured',
+        warns.some((w) => /microphone/i.test(w) && /noiseSuppression/.test(w)), JSON.stringify(warns));
+    }
+    {
+      const r = rig({ declineSeconds: 0 }, { withMic: false });
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(30);
+      check('a screen with no microphone arbiter at all still connects, quietly',
+        r.impl.__probe().phase === 'connected', r.impl.__probe().phase);
     }
 
     document.getElementById('summary').textContent =

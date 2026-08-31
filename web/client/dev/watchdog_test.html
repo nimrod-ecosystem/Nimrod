@@ -47,15 +47,46 @@ function check(name, cond, detail = '') {
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// *** REPLACED 2026-08-30. THE OLD CLOCK FIRED TIMERS THAT HAD ALREADY BEEN CLEARED, AND
+// THAT IS HOW THIS FILE MANUFACTURED A BUG IN THE THING IT IS TESTING. ***
+//
+// It snapshotted the pending map, jumped `now` forward by the whole step, and then fired
+// every entry that had been due — without re-checking whether an earlier callback in the
+// same step had cleared it. Walk that through the director's backstop and it produces a
+// failure that cannot happen in a browser:
+//
+//   arm(X) clears T1 and stores T2.  T1 was in the snapshot and still fires.  Its `fire()`
+//   sets the watchdog's `timer` to null — CLOBBERING the only reference to T2 — and then
+//   re-arms as T3.  T2 is now pending and unreachable, so `disarm()` cannot clear it, and it
+//   fires long after `destroy()` with `key` already nulled: `segment/done {provider: null}`.
+//
+// Every step of that depends on a cleared timer firing, which `clearTimeout` does not do.
+// The module was never wrong. Confirmed on 2026-08-30 by disabling the progress heartbeat
+// entirely and watching the same check fail unchanged — so it was latent here long before
+// the heartbeat existed, and only surfaced once there was enough traffic to hit it.
+//
+// A proper discrete-event clock: fire the EARLIEST due timer, move `now` to its deadline,
+// run it, and look again — so clears and re-arms inside a callback are both honoured.
 function fakeTimers() {
   let now = 0, seq = 0;
   const pending = new Map();
   return {
-    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + ms }); return id; },
+    setTimer: (fn, ms) => { const id = ++seq; pending.set(id, { fn, at: now + Math.max(0, Number(ms) || 0) }); return id; },
     clearTimer: (id) => pending.delete(id),
     advance(ms) {
-      now += ms;
-      for (const [id, t] of [...pending.entries()]) if (t.at <= now) { pending.delete(id); t.fn(); }
+      const target = now + ms;
+      // Bounded by callbacks, not by time: a self-rescheduling heartbeat would otherwise
+      // make "until nothing is due" unbounded.
+      for (let guard = 0; guard < 20000; guard++) {
+        let pickId = null, pickAt = Infinity;
+        for (const [id, t] of pending) if (t.at <= target && t.at < pickAt) { pickId = id; pickAt = t.at; }
+        if (pickId === null) break;
+        const t = pending.get(pickId);
+        pending.delete(pickId);
+        now = Math.max(now, t.at);
+        t.fn();
+      }
+      now = target;
     },
     count: () => pending.size,
   };
@@ -248,11 +279,33 @@ function fakeTimers() {
     check('switching providers tells the old one it is hidden', deactivated.includes('youtube'),
       JSON.stringify(deactivated));
     const beforeCross = done.length;
-    // the hidden youtube child would have had a stall armed; it must have stood down
-    dt.advance(120000);
-    const spurious = done.slice(beforeCross).filter((d) => d.reason === 'timeout' && d.provider === 'youtube');
-    check('a hidden youtube fires no stray timeout', spurious.length <= 1,
-      JSON.stringify(done.slice(beforeCross)));
+    // *** REWRITTEN 2026-08-30, BECAUSE THE OLD SHAPE STOPPED TESTING CROSS-TALK. ***
+    // It used to advance two minutes in one jump and then count youtube timeouts, allowing
+    // at most one. That worked only because the old clock advanced the rotation by a single
+    // timer per call. With an accurate clock, two minutes at a five-second backstop is about
+    // twenty-four segments, the weighted pick returns to youtube several times, and every one
+    // of those timeouts is CORRECT — youtube was on screen and its stub player never plays.
+    // Counting them measured the rotation rate, not cross-talk.
+    //
+    // The property actually worth pinning is: whenever a timeout arrives, it names the
+    // provider that was ON SCREEN. A hidden provider ending somebody else's segment would
+    // show up as a timeout naming somebody other than the visible slot.
+    const shownProvider = () => host.querySelector('.d-slot:not([hidden])')?.dataset.prov ?? null;
+    const crossTalk = [];
+    for (let i = 0; i < 20; i++) {
+      const onScreen = shownProvider();
+      const n = done.length;
+      dt.advance(5100);                 // one backstop window
+      for (const d of done.slice(n)) {
+        if (d.reason === 'timeout' && d.provider && d.provider !== onScreen) {
+          crossTalk.push({ onScreen, got: d });
+        }
+      }
+    }
+    check('every timeout names the provider that was on screen — a hidden one never ends '
+      + 'somebody else’s segment', crossTalk.length === 0, JSON.stringify(crossTalk.slice(0, 3)));
+    check('CONTROL: the rotation really was running, so the check above had something to '
+      + 'be true about', done.length > beforeCross + 10, String(done.length - beforeCross));
 
     const beforeDestroy = done.length;
     inst.destroy();

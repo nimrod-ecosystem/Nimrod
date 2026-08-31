@@ -337,7 +337,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
     //
     // This used to check that a module declaring NO settings still gets a disabled
     // "nothing to change here" row, and it used YOUTUBE as its example of such a module.
-    // On 2026-08-27 youtube gained its first declared setting (`heldPauseMs`), the premise
+    // On 2026-08-27 youtube gained its first declared setting (renamed `heldNotifyMs` on
+    // 2026-08-30, when what it governs changed), the premise
     // stopped being true, and the check began failing on a change that was entirely correct.
     //
     // The property is real and is still tested - `settings_test` owns it, against a stub
@@ -362,8 +363,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('photos’ settings are gone once photos is not the focused panel',
         !ids2.includes('set:intervalSec'), ids2.join(','));
       check('*** the held-pause setting is reachable from the bedside menu *** - how long a '
-        + 'pause by somebody in the room is held before the screen carries on by itself',
-        ids2.includes('set:heldPauseMs'), ids2.join(','));
+        + 'pause by somebody in the room is held before anybody is told about it',
+        ids2.includes('set:heldNotifyMs'), ids2.join(','));
     }
     await kiosk.showPrimary(0);
     await sleep(60);

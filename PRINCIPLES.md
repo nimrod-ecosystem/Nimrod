@@ -245,14 +245,43 @@ built precedent — the platform server never receives the bytes.
 
 ## §2 — THE REGISTER OF ABSOLUTES
 
-**Currently empty. Nothing has been ratified.**
-
 This is the only place in the project where a hard rule lives. An absolute enters this table when
 Mike says so, with a date and a scope, and it leaves it only by being explicitly retired here.
 
 | # | the rule, verbatim | scope | declared by | date | what it costs |
 |---|---|---|---|---|---|
-| — | _(none ratified yet)_ | | | | |
+| 1 | **If a module probes judgment, being wrong must not be degrading.** | `project` | Mike | 2026-08-30 | The sharpest tests. A wrong option that is absurd or unpleasant separates judgment from command-following more cleanly than one where both choices are dignified. This trades some discriminating power for not humiliating anyone, and that trade is accepted. |
+
+### Notes on absolute 1
+
+**Where it came from.** Mike's example, offered as a hypothetical: testing whether someone at the
+command-following stage has judgment by giving them something they ought to refuse — food that is
+obviously not food. **Correction, 2026-08-30: an earlier version of this note said the example was
+drawn from a real practice. That was not established, and it should not have been written down as
+fact.** No such practice has been verified. The example stands on its own as an illustration, and
+the rule does not depend on it having happened.
+
+What *is* documented, and is the nearest real thing, is that standardised assessment of disorders
+of consciousness includes deliberately noxious stimulation — the CRS-R and the Glasgow Coma Scale
+both score response to pain, and there is an active clinical literature on pain and nociception in
+this population. That is a genuine ethical tension in the field, but it is not the same thing as
+degradation, and conflating them would weaken the rule rather than support it.
+
+The underlying clinical question is legitimate and already recorded in this project as *command
+following is not comprehension*.
+Distinguishing "does what it is told" from "has judgment" genuinely matters. **The degradation is
+not required by the question.** Offer the empty cup and the full one, the shoe and the sandwich —
+the person who reaches wrong has told you the same thing, and nobody was humiliated to find out.
+
+**The applicability test**, so this is checkable rather than decorative. For any path where a person
+can be wrong, ask: *would someone who chose it feel foolish, exposed, or diminished — in front of
+whoever is in the room?* Degradation is social, not private, which is why the room matters and why
+the session roster is the right place to reason about it. A reviewer can walk every wrong-answer
+path and answer that question.
+
+**It extends to agent principals.** Baiting an agent into refusing by constructing a task it ought
+to refuse is the same shape: using something as an instrument in a way it cannot decline. See the
+2026-08-30 entry in `DECISIONS.md`.
 
 **Candidates awaiting a ruling.** A sweep of the existing documents on 2026-08-29 found roughly 320
 statements written in absolute form across the design docs and decision logs. They are being

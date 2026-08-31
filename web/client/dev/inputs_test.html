@@ -356,7 +356,7 @@ const logText = (r) => r.q('[data-log]').textContent;
 
       r.press(XAC, 'button:0');
       check('Next moves onto the first row', r.panel.cursor() === 0);
-      check('and the row is visibly marked', r.qa('.i-tab tr.i-cursor').length === 1);
+      check('and the row is visibly marked', r.qa('.i-tab tr.i-highlight').length === 1);
       r.press(XAC, 'button:0');
       check('and on down the list', r.panel.cursor() === 1);
 

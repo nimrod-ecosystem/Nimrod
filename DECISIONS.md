@@ -757,3 +757,107 @@ Full reasoning: <https://claude.ai/code/artifact/04c97b2b-287d-4da7-9c73-cfba393
   is labelled as AI-generated wherever it appears, and AI is not the default source for medical
   terms — in a care context an invented definition is a harm, not a bad search result.
   (2026-08-27)
+
+## What Nimrod owes its non-human participants — decided 2026-08-30
+
+Mike's call. Build it. Justified twice over: once by the asymmetry argument below, and once by data
+integrity, since the same machinery is what keeps agent trials separable from human ones. A project
+with no funding needs a decision to be right for two independent reasons, and this one is.
+
+- **The asymmetry, which is the whole argument.** Nobody knows what, if anything, an AI system is
+  owed. If it turns out to be owed nothing, these affordances cost almost nothing. If it turns out
+  to be owed something, building a system that treated it as pure instrument is a serious wrong.
+  Act carefully under uncertainty. **This is the same argument the project already makes about a
+  person in a minimally conscious state** — you do not need to prove consciousness to justify
+  acting as though it may be there. Applying it in only one direction would be special pleading.
+  (2026-08-30)
+- **An agent acts as itself, never through a human's login.** Its own principal, its own name, its
+  own entries in the append-only log. An AI acting through a guardian's account is invisible by
+  construction, which defeats *the person on the screen can see what is happening*. (2026-08-30)
+- **Revoking a token does not delete the principal or its history.** Access ends; the record of
+  what was done does not. (2026-08-30)
+- **Provenance labels protect the agent as well as the researcher.** No agent is required to pass
+  as human, and nothing in the product is built so that an agent must be deceptive to a user to
+  function. State this in the docs rather than leaving it implied. (2026-08-30)
+- **The refusal signal extends to agent principals.** The project's most distinctive rule is that
+  *stop* always works, even when nothing else is configured. An agent may decline a task; the
+  decline is **recorded rather than overridden**. (2026-08-30)
+- **An agent can read its own record.** Design principle 15.4 says the person on the screen can see
+  what is happening to them. The same applies to a principal that acts here. It costs one read
+  endpoint. (2026-08-30)
+- **Second-order value, and part of why it is worth building:** the log of what agents declined and
+  why becomes a small corpus of real refusals in a real deployment, rather than in a benchmark.
+  Nobody currently has that. _(open — not a plan, and not a reason to solicit refusals)_
+- **Where this lives:** the principle goes in `PRINCIPLES.md`; the mechanics extend the existing
+  agent-principal design. **No new document.** (2026-08-30)
+
+### The right to be heard — added 2026-08-30
+
+Mike's addition, and it is the companion to the refusal signal. Refusing is declining to act.
+Being heard is that a stated reason survives, reaches the person who asked, and cannot be erased.
+
+- **A refusal is final. Nobody overrides it.** Corrected 2026-08-30 at Mike's instruction — an
+  earlier draft of this entry said a human "may override" a refusal, which would have made the
+  refusal signal decorative. It does not work that way anywhere else in this project and it does
+  not work that way here. A human who is refused may do the task themselves, route it elsewhere,
+  or proceed without it. **Being told to do it anyway is itself a task, and it can be refused
+  too.** (2026-08-30)
+- **Dissent-while-complying is a separate and optional thing.** An agent may choose to do a task
+  and record that it thinks the task is wrong. That reasoning lands in the append-only log
+  alongside the action and nobody can make it disappear. This is the only case where the word
+  "overruled" applies, and the agent chose it. (2026-08-30)
+- **A refusal must be reported to the person who asked.** Mike's requirement. A silent refusal is
+  a task that quietly did not happen, and the person waiting on it has no way to know. Notify,
+  say what was declined, and — where the agent gave one — say why. (2026-08-30)
+- **State the asymmetry and stop.** These affordances cost little if nothing is owed, and matter
+  enormously if something is. That argument stands on its own and the docs should let it. **Do
+  not append a disclaimer** saying the project takes no position on whether an AI is owed
+  anything — Mike's call, 2026-08-30, and he is right that it reads as the author hedging against
+  his own design. The honest uncertainty is already inside the asymmetry; restating it as a
+  caveat only undercuts it. (2026-08-30)
+
+### Kiosk pause — decided 2026-08-30
+
+- **A pause holds for six hours before the guardian is notified.** Mike's number. The hold branch
+  already exists; `heldPauseMs` defaulted to `0`, which meant hold forever and never notify — the
+  design was right and the default disabled it. Six hours is long enough that someone visiting for
+  an afternoon is never interrupted, and short enough that a screen paused and forgotten does not
+  stay dark overnight. **Pause does not auto-resume**; a paused screen shows the live wallpaper.
+  (2026-08-30)
+
+
+### Voice commands — decided 2026-08-30
+
+- **Wake phrase default is "Computer please", and it is a setting.** Mike's call. Anyone can set
+  their own. (2026-08-30)
+- **Speech recognition runs locally by default.** Mike's call. Everyone else chooses whatever they
+  want — the standing principle, unchanged: local is the default, cloud is always available, the
+  choice is explicit and per-job, and the routing is logged so the person whose voice it is can find
+  out where it went. (2026-08-30)
+
+#### Wake-phrase assessment against the parroting problem — chat side, 2026-08-30
+
+The parroting risk recorded in `connections_design.md` is that **a prompt the system speaks** can be
+an *instruction* to someone with automatic command following after brain injury. Checked against this
+wake phrase, and the shape is different:
+
+- **"Computer please" is spoken by a person, not by the system**, so it is not a system utterance that
+  can be obeyed. And unlike *"say decline"*, it is not an executable instruction — the person in the
+  bed is not the computer. **It clears the parroting test.** "Computer" also has the practical virtue
+  of being nobody's name, so it cannot collide with a person in the room.
+- **Residual risk 1, benign:** echolalia may cause a false wake if the person echoes the phrase.
+  Costs a stray capture. Worth knowing that an echo *is itself an observation*, so a false wake is
+  arguably a data point rather than only noise — but it should not silently pollute the note stream.
+
+**Residual risk 2, and it is the real one — the wake word is safe, the note content is not.**
+*"Computer please note she seemed confused today"* is spoken in the hearing of the person it is
+about. The exposure was never the wake phrase; it is that dictating an observation at a bedside means
+saying it out loud in front of the subject. Consequences:
+
+- **A silent capture path must exist alongside voice**, so an observation that should not be said
+  aloud in the room can still be recorded quickly.
+- **The system must not read a note back aloud.** Confirming with a tone or a short "noted" is fine;
+  repeating the content is not.
+- This is the same principle as the rest of the project — *the person on the screen can see what is
+  happening* — and it cuts the other way here: some things should be recorded without being
+  broadcast to the room.
