@@ -8,7 +8,8 @@ standing anything up.
 """
 import sys
 
-from drive import DRIVE_VERBS, ROLES, Rooms, Tickets, parse_message
+from drive import (DRIVE_VERBS, MAX_SIGNAL_BYTES, ROLES, SIGNAL_KINDS, Rooms,
+                   Tickets, parse_message)
 
 passed = failed = 0
 
@@ -135,6 +136,63 @@ check("but other rooms survive", rooms.get("acct", "p2") is not None)
 
 rooms.leave("acct", "nope", "screen", s1)
 check("leaving a room that never existed is not an error", True)
+
+# =====================================================================================
+# SIGNALLING - the one message on this socket that travels BOTH ways.
+#
+# A call cannot be set up peer-to-peer, because the peers cannot reach each other yet; the
+# offer and the answer have to be carried. That makes signalling bidirectional, and the rule
+# that keeps this file safe is that a screen never drives anything. These checks are the seam
+# between those two facts.
+section("signalling: the message that goes both ways")
+
+check("*** an offer is relayed ***",
+      parse_message({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0"}})
+      == {"type": "signal", "signal": {"kind": "offer", "sdp": "v=0"}})
+check("...and an answer, which is the half that has to travel BACK",
+      parse_message({"type": "signal", "signal": {"kind": "answer", "sdp": "v=0"}}) is not None)
+check("...and a bye, so the far end is not left watching a frozen frame",
+      parse_message({"type": "signal", "signal": {"kind": "bye"}}) is not None)
+
+# `kind` is a name from a fixed list, exactly like the verbs. Same discipline, same reason.
+check("*** an unknown signal kind is DROPPED, not relayed ***",
+      parse_message({"type": "signal", "signal": {"kind": "whatever", "sdp": "x"}}) is None)
+check("a signal with no kind at all is dropped",
+      parse_message({"type": "signal", "signal": {"sdp": "x"}}) is None)
+check("a signal that is not an object is dropped",
+      parse_message({"type": "signal", "signal": "offer"}) is None)
+check("and the kinds are a closed set", SIGNAL_KINDS == {"offer", "answer", "bye", "ice"})
+
+# *** A SIGNAL CAN NEVER BECOME A VERB. *** This is the whole security argument for letting
+# signals travel both ways: the two message types share a socket and nothing else.
+sig = parse_message({"type": "signal", "signal": {"kind": "offer", "verb": "select"}})
+check("*** a signal carrying a verb is still only a signal ***",
+      sig["type"] == "signal" and "verb" not in sig, str(sig))
+check("...and a verb cannot smuggle a signal either",
+      parse_message({"type": "verb", "verb": "select", "signal": {"kind": "offer"}})
+      == {"type": "verb", "verb": "select"})
+
+# THE SIZE CAP. Without it the relay is a free broadcast pipe, and the room fans it out to
+# every member. A real SDP with plenty of candidates is a few kilobytes.
+check("a realistic SDP is comfortably within the cap",
+      parse_message({"type": "signal",
+                     "signal": {"kind": "offer", "sdp": "a=candidate:x\r\n" * 500}}) is not None)
+check("*** an oversized blob is refused ***",
+      parse_message({"type": "signal",
+                     "signal": {"kind": "offer", "sdp": "x" * (MAX_SIGNAL_BYTES + 1)}}) is None)
+check("...and the cap is a real bound rather than a comment",
+      MAX_SIGNAL_BYTES == 64 * 1024, str(MAX_SIGNAL_BYTES))
+
+
+# Something unserialisable cannot be relayed, and finding that out HERE is better than an
+# exception part-way through the room's fan-out, with some members already sent to.
+class _Unserialisable:
+    pass
+
+
+check("something unserialisable is dropped rather than thrown",
+      parse_message({"type": "signal",
+                     "signal": {"kind": "offer", "sdp": _Unserialisable()}}) is None)
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

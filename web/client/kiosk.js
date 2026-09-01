@@ -46,6 +46,7 @@ import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
+import { createCallTransport } from './call_transport.js';
 import { readConfig, writeConfig, writePosition, bootPlan, markHopped, hasHopped,
          restartItems } from './restart.js';
 import { takePreviewLayout } from './preview.js';
@@ -187,6 +188,20 @@ export async function mountKiosk(root, {
   // "Cannot access 'runtime' before initialization". Caught by kiosk_test going from 133
   // passing to zero, which is the useful kind of failure.
   let runtime = null;
+  // *** DECLARED HERE, NOT WHERE THEY ARE ASSIGNED, AND THIS IS THE SECOND TIME. ***
+  //
+  // `childCtx` hands modules a `get callTransport()` that reads both of these. A getter runs
+  // whenever a module is mounted, and the first mount happens well before the async person
+  // lookup further down builds them — so with `let` sitting beside the assignment, the getter
+  // hit the temporal dead zone and threw `Cannot access 'callTransport' before initialization`
+  // on the very first mount. Not a null, not a warning: the whole kiosk failed to start.
+  //
+  // `let runtime` above did exactly this once already (the kiosk suite went 133 to 0). The
+  // pattern to keep: ANYTHING A GETTER ON `childCtx` READS IS DECLARED IN THIS BLOCK. The
+  // laziness is the point — a module mounted early must see the value when it arrives, not
+  // capture null forever — and that only works if the binding exists from the start.
+  let drive = null;
+  let callTransport = null;
   let cursor = null;
   let markerTracker = null;
   let markerState = null;
@@ -298,6 +313,33 @@ export async function mountKiosk(root, {
     // A getter for the same reason personId is: it is built lazily below, and a module
     // mounted first would otherwise capture undefined forever.
     get output() { return output; },
+    // *** THE CALL TRANSPORT — the reason the Call panel could never ring. ***
+    //
+    // `modules/call.js` has always read `ctx.callTransport` and nothing ever supplied one,
+    // so the panel mounted, showed its idle state and waited forever. It is built LAZILY
+    // from the drive socket, because that socket is opened during the async person lookup
+    // below and a module mounted before it resolved would otherwise capture null for good —
+    // the same reason `personId` and `output` are getters.
+    //
+    // ONE SOCKET, NOT TWO. Signalling rides the connection this screen already has: it is
+    // already authenticated, it already knows which two devices belong to one person, and
+    // it already reconnects on facility wifi. A second socket would be a second thing to
+    // get all three of those right.
+    get callTransport() {
+      if (!callTransport && drive) {
+        callTransport = createCallTransport({
+          link: drive,
+          role: 'screen',              // a bedside screen answers; it never places a call
+          // ICE comes from the person's own settings when they have any, and falls back to
+          // public STUN. NO TURN RELAY IS CONFIGURED and there is no UI to add one yet —
+          // so a call works wherever a direct path exists and fails honestly where it does
+          // not. See call_transport.js for why that is the right default rather than a gap.
+          config: (settings.get() || {}).call || {},
+          onLog: (...a) => console.debug('call:', ...a),
+        });
+      }
+      return callTransport;
+    },
     // The arbiter itself, for a module that MAKES continuous sound - a music bed, a video.
     // A module that only speaks wants `output`; this is for the things that keep playing.
     audio,
@@ -741,7 +783,8 @@ export async function mountKiosk(root, {
   // so the defaults simply stand rather than the runtime chasing an endpoint that is not
   // there.
   let personOff = null;
-  let drive = null;
+  // `drive` and `callTransport` are declared UP TOP with the rest of the early state, and
+  // the reason is a bug this file has now had twice — see there.
   (async () => {
     try {
       const p = await profiles.get(profileId);
@@ -1125,6 +1168,8 @@ export async function mountKiosk(root, {
       menu.destroy();
       try { personOff?.(); } catch { /* already gone */ }
       offsScreen.forEach((off) => { try { off(); } catch { /* already gone */ } });
+      // Before the socket, so the far end is told rather than left watching a frozen frame.
+      try { callTransport?.destroy(); } catch { /* already gone */ } callTransport = null;
       try { drive?.close(); } catch { /* already gone */ }
       // Silences anything mid-sentence as well as clearing the queue. A screen that is being
       // torn down must not keep talking.

@@ -455,6 +455,33 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   not need them; the `care` set ships as one person's example with its origin attached, not as
   a default anybody inherits.
 
+- **A call that does not need a VPN** (2026-09-01). `call_transport.js` + signalling on the
+  existing drive socket. **46 client checks, 49 server checks**, both green; negative-control
+  verified.
+  **What was actually VPN-only was one line.** The validated private call is
+  `new RTCPeerConnection({ iceServers: [] })` — host candidates only, which works on a
+  Tailscale mesh and nowhere else. That was a shortcut to prove the media path, not a design
+  decision, and `DECISIONS.md` (2026-08-09) already said the opposite. Filling the array with
+  public STUN is most of the fix.
+  **Signalling rides the socket that already exists** rather than opening a second one: the
+  drive relay already authenticates, already knows which two devices belong to one person, and
+  already reconnects on facility wifi. The relay's rule was *a driver drives screens, a screen
+  drives nothing*; signalling has to be bidirectional (the answer must get home), so it is a
+  SEPARATE message type that is never turned into a verb or a bus topic at either end, with a
+  fixed set of kinds and a 64 KB cap. The invariant is now two sentences: **verbs go one way,
+  signals go both ways, and a signal can never become a verb.**
+  **No TURN relay is configured, deliberately.** A relayed call is roughly a gigabyte an hour
+  of somebody's bandwidth; a public default would mean this project paying for strangers'
+  video. Calls work wherever a direct path exists and fail honestly where one does not.
+  **`direct` mode is still there** — the Tailscale path, named in DECISIONS as "max privacy",
+  where not even a STUN lookup leaves the machine.
+  **The kiosk now supplies the transport**, so the Call panel can finally ring. Found a TDZ
+  bug doing it — the second in this file: anything a `childCtx` getter reads must be declared
+  with the early state, or the first mount throws before the async lookup has built it.
+  **Not run:** anything on a real network. No real `RTCPeerConnection`, no NAT, no relay. The
+  suite proves the state machine and the signalling rules; **whether two real devices connect
+  is a bench test with two machines and it has not been done.**
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and
