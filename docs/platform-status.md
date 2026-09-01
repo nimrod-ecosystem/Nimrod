@@ -160,7 +160,7 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   `segment/done{provider:'personal'}` (standalone it also auto-advances); an **empty/unconfigured**
   source hands back with `segment/done{empty}` instead of freezing. A **`directed`** flag (seeded by
   the container) suppresses autostart so a hidden child never fires a spurious segment/done — the
-  director drives every activation. Taylor's first clips are **Jamie's messages** (`…/Voice
+  director drives every activation. The first clips are **Jamie's messages** (`…/Voice
   messages/Jamie`). Validated by an **11-check** browser test (`dev/personal_test.html`, live server +
   the Jamie agent): lists exactly Jamie's two mp4s (the .amr / extensionless files skipped), renders a
   `<video>` from the agent, name caption, append-only play log, coverage over advances, ENDED →
@@ -501,7 +501,7 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
 1. **Personal videos — enhancements.** Base provider ✓ (above). Add **audio-only** messages (the .amr /
    voice notes), a **still + name** fallback when there's no video, an optional **TTS lead-in** ("A
    message from Jamie") in the profile voice, and **`R`-key capture** with local-STT intent cues
-   ("message for Taylor" tags + becomes the lead-in; "restart please"; "never mind delete that").
+   ("message for <name>" tags + becomes the lead-in; "restart please"; "never mind delete that").
    Recordings **local-only/private** (may include staff → consent-based).
 2. **★ Minimal usable bedside dashboard.** Kiosk layout ✓ · kiosk resilience ✓ (above). Remaining for
    "she's using it": (a) **deploy** — static client on **Cloudflare Pages** (free CDN) + the thin FastAPI
