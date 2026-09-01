@@ -377,6 +377,26 @@ function localBanner() {
   let me = null;
   let signedIn = false;
   try {
+    // SETUP TIMING — see setup_timing.js. Null unless `?instrument=setup`, so every mark
+    // below is a no-op by default and nothing needs guarding.
+    const { attachSetupLog } = await import('./setup_timing.js');
+    const setupLog = attachSetupLog();
+    setupLog?.mark('signin-done');
+    // Delegated, so it survives the list re-rendering after every add.
+    document.addEventListener('click', (e) => {
+      const t = e.target.closest?.('[data-add],[data-open],[data-pick]');
+      if (!t) return;
+      if (t.hasAttribute('data-add')) setupLog?.mark('module-first');
+      if (t.hasAttribute('data-pick')) setupLog?.mark('media-start');
+      if (t.hasAttribute('data-open')) { setupLog?.mark('module-done'); setupLog?.mark('kiosk-open'); }
+    }, true);
+    document.addEventListener('submit', (e) => {
+      if (e.target.matches?.('[data-new]')) setupLog?.mark('screen-made');
+    }, true);
+    document.addEventListener('input', (e) => {
+      if (e.target.matches?.('[data-name]')) setupLog?.mark('screen-named');
+    }, true);
+
     const r = await fetch('/api/me', { headers: authHeaders(new URLSearchParams(location.search).get('user')) });
     if (r.status === 401) { me = null; }
     else if (!r.ok) throw new Error(`/api/me -> ${r.status}`);
