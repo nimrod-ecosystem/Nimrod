@@ -49,20 +49,15 @@
 // *** THE VOCABULARY BELOW IS ONE PERSON'S, AND THAT IS THE POINT RATHER THAN A CAVEAT ***
 // ---------------------------------------------------------------------------------------
 //
-// The `care` set is carried across from the private build, where its own file says:
+// The `care` set came from a real bedside board, and it has **no eat / drink / hungry /
+// thirsty cards.** That is not an oversight — the person it was built for had no use for them,
+// and a card somebody can never press is worse than an empty slot.
 //
-//   > *"Christine has a trach and cannot eat or drink, so this list deliberately has NO eat /
-//   > drink / hungry / thirsty cards — those would be somewhere between useless and cruel."*
-//
-// That is exactly right for her and would be a bad default for the product. Somebody in a care
-// facility who CAN eat needs those cards more than almost anything else on this board, and
-// shipping her omission as everybody's starter set would hand them a communication board that
-// cannot say "I'm thirsty".
-//
-// So the set is included as a NAMED EXAMPLE with its origin attached, not as the default a new
-// board inherits, and the general fact it demonstrates is the one worth taking: **a vocabulary
-// is per-person data.** Every board is somebody's, and the software's job is to make editing it
-// easy rather than to guess well.
+// Which is the general point rather than a caveat: **a vocabulary belongs to one person.** A
+// good board omits what does not apply to them, and somebody in a care facility who CAN eat
+// needs those cards more than almost anything else here. So this ships as a NAMED EXAMPLE, not
+// as the default a new board inherits, and the software's job is to make a vocabulary easy to
+// edit rather than to guess well.
 //
 // **Known gap, stated rather than hidden:** there are no eat / drink / hungry / thirsty symbols
 // in `aac_symbols.js`, because the set was drawn for a board that did not need them. Adding
@@ -330,14 +325,15 @@ export const YESNO = {
  * The care set — ONE PERSON'S BOARD, included as an example with its origin attached.
  *
  * Read the header before treating this as a default. It has no eat / drink / hungry / thirsty
- * cards because the person it was built for has a trach; for anybody else that is a hole in the
- * middle of their vocabulary rather than a considered omission.
+ * cards because they did not apply to the person it was built for; for anybody else that is a
+ * hole in the middle of their vocabulary rather than a considered omission.
  *
  * Ordered for a 4-across grid, and the order is load-bearing — see the top of the file.
- * "Keyboard" replaced "Suction" at Mike's request: it SPEAKS "Keyboard" like any other card, a
- * request for somebody to switch her to the typing module. There is no auto-navigation, so she
- * cannot be stranded on a screen with no way back. Suction is trach-critical vocabulary; if it
- * should be reachable again, put it back and drop a less critical card.
+ * "Keyboard" replaced "Suction" here: it SPEAKS "Keyboard" like any other card, a request for
+ * somebody to switch this screen to the typing module. There is no auto-navigation, so nobody
+ * can be stranded on a screen with no way back. **Suction is a card its owner may urgently
+ * need**, so that swap is a real trade: if it should be reachable again, put it back and drop
+ * something less critical.
  */
 export const CARE = {
   version: VOCAB_VERSION,

@@ -110,7 +110,8 @@ export const SYMBOLS = {
     tired: d('<path d="M63 24 A28 28 0 1 0 63 76 A21 21 0 1 1 63 24 Z" fill="currentColor"/>' +
       '<path d="M64 32 L74 32 L64 43 L74 43" stroke="currentColor" stroke-width="4" fill="none"/>'),
 
-    // rephrase - "say that a different way" (she mixes up words). A speech
+    // rephrase - "say that a different way", for anybody whose words come out in the
+    // wrong order. A speech
     // bubble with a reword/refresh arrow inside. First draft; design-pass later.
     rephrase: d('<path d="M26 28 H74 A9 9 0 0 1 83 37 V57 A9 9 0 0 1 74 66 H44 L30 78 V66 H26 A9 9 0 0 1 17 57 V37 A9 9 0 0 1 26 28 Z" stroke="currentColor" stroke-width="6"/>' +
       '<path d="M60 42 A12 12 0 1 0 62 54" stroke="currentColor" stroke-width="5"/>' +

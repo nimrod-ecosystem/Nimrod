@@ -7,7 +7,7 @@
 // press: the marker moves a cursor and there it stops.
 //
 // Which means the public colour tracker was not a stale copy of the private one. It was an
-// incomplete one, and incomplete in the half that decides whether Christine can SELECT
+// incomplete one, and incomplete in the half that decides whether the person driving it can SELECT
 // anything or only point at it. A tracker that cannot click is a demo.
 //
 // ---------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@
 // `aim.js` reports 0..1 of the viewport, which is the right unit for a POSITION: it survives
 // a resize and a different screen. A dwell radius is not a position. It is a statement about
 // how steady somebody's hand or head is, which is physical, and 70px is the number that was
-// tuned in her room on her screen. Stored in pixels and converted from the normalised aim on
+// tuned on a real screen at a real bedside. Stored in pixels and converted from the aim on
 // the way in, so the same setting means the same steadiness on a bigger display.
 //
 // ---------------------------------------------------------------------------------------

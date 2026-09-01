@@ -44,10 +44,10 @@
 // `recorder.js`.
 //
 // **The rule for when a recogniser DOES arrive**, written down now so it is not discovered late:
-// a recognition failure must never be scored as a wrong answer. She knows the answer is Paris,
-// says Paris, the recogniser is unsure — marking that wrong tells her she does not know
-// something she does, *because of her speech*, which is the judgment the trivia framing was
-// chosen to avoid. It comes straight back in through the side door, harder to see because the
+// a recognition failure must never be scored as a wrong answer. Somebody knows the answer is
+// Paris, says Paris, and the recogniser is unsure — marking that wrong tells them they do not
+// know something they do, *because of how they sound*, which is exactly the judgment the trivia
+// framing was chosen to avoid. It comes straight back in through the side door, harder to see because the
 // score now looks like it is about knowledge. When no candidate is clearly ahead: say it was not
 // caught, and offer the question again. Not right, not wrong, not scored.
 //

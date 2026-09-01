@@ -11,14 +11,12 @@
 // *** FIFTEEN SECONDS, AND IT IS NOT A UI DEFAULT ***
 // ---------------------------------------------------------------------------------------
 //
-// The number and its reason come across verbatim from the private source, because the reason
-// is a statement about one person's processing and nothing here could re-derive it:
+// The number is carried from a real bedside build rather than chosen here, and so is the
+// reason, which is worth more than the number: **the step is set by how long a response takes,
+// not by how long understanding takes.** Somebody can follow the question perfectly and still
+// need fifteen seconds to signal an answer.
 //
-//   > *"(>=15s: she understands the task but needs time to process the cue before
-//   > signaling)"*
-//
-// Carried, not re-derived. Read that sentence before anyone "tunes" it: it separates
-// understanding from response time, which is the distinction almost every scanning default in
+// Read that before anyone "tunes" it. It is the distinction almost every scanning default in
 // the field gets wrong in the other direction. A rate that is comfortable for the person
 // setting it up is usually far too fast for the person using it, and the failure looks
 // identical to not understanding the question.
@@ -66,7 +64,7 @@
 // it. A scanner that runs all afternoon and is never answered is behaving correctly.
 
 export const SCAN_DEFAULTS = {
-  // See the header. This is her number, with her reason, and it is not a UI default.
+  // See the header. Carried from a real deployment, and it is not a UI default.
   stepMs: 15000,
   // A beat after a choice so it registers before the loop starts moving again. Also from the
   // private build.

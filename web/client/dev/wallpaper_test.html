@@ -370,6 +370,136 @@ try {
     check('destroy tears the wallpaper down with the container', dir.impl.__probe().wallpaperMounted === false);
   }
 
+  // =====================================================================================
+  section('*** the backstop stands down while held — and this was shipping untested ***');
+  {
+    // WHY THIS SECTION EXISTS. The director arms a 3-minute backstop over whatever provider
+    // is on the stage. It kept running THROUGH a hold, timed out, published
+    // `segment/done{timeout}` and rotated the paused clip away — the exact loss the hold
+    // exists to prevent. Worse, it made `heldNotifyMs` unreachable on any directed screen:
+    // the pause could never last the six hours the setting promises, because the backstop
+    // ended it after three minutes.
+    //
+    // Mike: "it's not supposed to be doing anything when it's paused, so the heartbeat's
+    // kind of useless there."
+    //
+    // The fix came from another session and landed in `main` under a commit message about
+    // something else, with no test of its own. The three suites it touches all passed —
+    // which proved it broke nothing and proved nothing about whether it works. That gap is
+    // what this section closes.
+    const host = document.getElementById('host2');
+    const T = fakeTimers();
+    const stub = makeStubPlayer();
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-backstop');
+    const mod = await profiles.addModule(profile.id, 'director');
+    const seedYt = createState({ url: profiles.stateURL(profile.id, `${mod.id}-youtube`), user: USER });
+    await seedYt.load(); seedYt.set({ playlist: PLAYLIST }); await seedYt.flush();
+
+    const bus = createBus();
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+    // A short backstop so the fake clock can reach it; the real one is three minutes.
+    state.set({ segmentSilenceMs: 60000 }); await state.flush();
+
+    // *** TWO WATCHDOGS PUBLISH THE SAME TOPIC WITH THE SAME REASON, AND THE FIRST VERSION OF
+    // THIS TEST COULD NOT TELL THEM APART. *** The director's backstop sends
+    // `{provider, reason:'timeout'}`; youtube's OWN stall watchdog sends the same thing plus
+    // an `id`. Firing every armed timer fires both, so the test failed and blamed the fix.
+    //
+    // It is a real trap rather than a test artefact: `glossary.md` already lists `heartbeat`
+    // as an open collision for the same reason — two layers watching the same panel, speaking
+    // the same words. The `id` is the only thing that distinguishes them on the wire.
+    //
+    // (In this test youtube is not genuinely paused — the hold is published straight onto the
+    // bus — so its own watchdog is legitimately still armed for a playing video. That is why
+    // discriminating is the right fix here and silencing it would not be.)
+    const dones = [];
+    const backstopTimeouts = () => dones.filter((d) => d && d.reason === 'timeout' && d.id === undefined);
+    bus.subscribe('segment/done', (d) => dones.push(d));
+
+    const dir = mountModule('director', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      rootBus: bus, instanceId: mod.id,
+      makeState: (key) => createState({ url: profiles.stateURL(profile.id, key), user: USER }),
+      makeEvents: (key) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER }),
+      playerFactory: stub.factory,
+      speak: () => {},
+      machineIO: { now: () => atHour(12), rand: mulberry32(11), setTimer: T.setTimer, clearTimer: T.clearTimer },
+      autoFinishMs: 1000,
+    });
+    dir.init();
+    await sleep(250);
+    const playing = curProv(host);
+    dones.length = 0;
+
+    bus.publish(HELD_BEGIN, { source: 'youtube', id: 'vidA000001' });
+    await sleep(20);
+    // THE ASSERTION THE WHOLE SECTION IS FOR. Firing every armed timer is the fake clock's
+    // way of saying "three minutes of silence went by". Before the fix, that produced a
+    // `segment/done{timeout}` and the paused clip was gone.
+    T.fireDue(); T.fireDue();
+    await sleep(20);
+    check('*** a held segment is NOT timed out by the backstop ***',
+      backstopTimeouts().length === 0, JSON.stringify(dones));
+    check('...and the wallpaper is still what is showing',
+      dir.impl.__probe().wallpaperUp === true);
+
+    // The other half: standing the backstop down must not stand it down for good. A provider
+    // that freezes AFTER a hold ends is exactly what it is there to catch.
+    bus.publish(HELD_END, { source: 'youtube' });
+    await sleep(20);
+    check('the hold ended and the wallpaper came down', dir.impl.__probe().wallpaperUp === false);
+    T.fireDue(); T.fireDue();
+    await sleep(20);
+    check('*** ...and the backstop is WATCHING AGAIN, not switched off for good ***',
+      backstopTimeouts().length > 0, JSON.stringify(dones));
+
+    dir.destroy();
+  }
+
+  // =====================================================================================
+  section('*** torn down WHILE held — the guard that stops a leaked timer ***');
+  {
+    // `destroy()` disarms the backstop first and destroys the adapters after, and `held.js`
+    // releases a live hold on the way out — so teardown publishes HELD_END *after* the
+    // disarm. Without the `torn` guard the HELD_END handler re-arms, starting a three-minute
+    // timer on a director that no longer exists: a screen watched by something that has been
+    // told it is fine, which is the failure `health.js` and this backstop both exist to stop.
+    const host = document.getElementById('host2');
+    const T = fakeTimers();
+    const stub = makeStubPlayer();
+    const profiles = createProfilesClient({ user: USER });
+    const profile = await profiles.create('TEST-torn');
+    const mod = await profiles.addModule(profile.id, 'director');
+    const bus = createBus();
+    const state = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const events = createEvents({ url: profiles.eventsURL(profile.id, mod.id), user: USER });
+    await state.load(); await events.load();
+
+    const dir = mountModule('director', {
+      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      rootBus: bus, instanceId: mod.id,
+      makeState: (key) => createState({ url: profiles.stateURL(profile.id, key), user: USER }),
+      makeEvents: (key) => createEvents({ url: profiles.eventsURL(profile.id, key), user: USER }),
+      playerFactory: stub.factory, speak: () => {},
+      machineIO: { now: () => atHour(12), rand: mulberry32(5), setTimer: T.setTimer, clearTimer: T.clearTimer },
+      autoFinishMs: 1000,
+    });
+    dir.init();
+    await sleep(250);
+
+    bus.publish(HELD_BEGIN, { source: 'youtube' });
+    await sleep(20);
+    dir.destroy();
+    // The order is the whole point: the release arrives after the disarm.
+    bus.publish(HELD_END, { source: 'youtube' });
+    await sleep(20);
+    check('*** a hold released during teardown does not re-arm anything ***',
+      T.pending() === 0, `${T.pending()} timer(s) left running`);
+  }
+
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }
