@@ -23,7 +23,7 @@
 // reaches `remote`, which is another device in the house. The verb is the boundary.
 //
 // ---------------------------------------------------------------------------------------
-// IT MEASURES, AND IT SHOWS HER NOTHING ABOUT IT
+// IT MEASURES, AND IT SHOWS THE PERSON NOTHING ABOUT IT
 // ---------------------------------------------------------------------------------------
 //
 // Selections are appended to an event stream, because that is how anybody ever finds out
@@ -31,8 +31,8 @@
 // helped. `PRINCIPLES.md` §4 retires the claim that the board *"doesn't measure at all"* as
 // simply wrong: it measures plenty, and the question was only ever what gets shown to whom.
 //
-// So nothing on this screen tells her how long she took, how many laps went by, or how she is
-// doing. Mike, correcting a rule that had been written too broadly:
+// So nothing on this screen tells the person how long they took, how many laps went by, or how
+// they are doing. Mike, correcting a rule that had been written too broadly:
 //
 //   > *"a person shouldn't feel judged about how long it takes them to make a selection on an
 //   > AAC board in regular use."*
