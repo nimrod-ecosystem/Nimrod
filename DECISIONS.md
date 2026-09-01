@@ -976,3 +976,74 @@ turning the volume down removes the very feedback the rule existed to give.
 - **The distinction the older rule collapsed: *unmapped* and *wrong* are not the same thing.** One
   has no event. The other has an event with the wrong timing or target. Treating them alike is what
   produced a rule that punished a learner for learning. (2026-08-30)
+
+
+### The tremor filter and the hold ladder are both per-person settings — decided 2026-08-31
+
+Mike's call, resolving the collision `docs/glossary.md` §4 recorded as blocking the hold ladder:
+`holdMs` currently means a **tremor filter** — a minimum duration before a press counts — while
+tier 0 of the hold ladder is a **maximum**. Same name, opposite meanings, in the feature that
+governs somebody's only input.
+
+- **Both are settings belonging to the person, not numbers the code picks.** Mike: *"These should
+  be user settings. Like if it's held for X amount, that just counts as a tremor for that person."*
+  How long a contact has to last before it stops being a tremor is a fact about that person's
+  movement, so it belongs with dwell and scan rate — configured once for them and following them
+  across every board and game rather than being set per surface. (2026-08-31)
+- **The hold-tier boundaries depend on what is being scanned.** Mike: *"Hold tier max would really
+  depend on how many things they're scanning through."* A tier boundary is therefore not a constant
+  that can be declared once in the ladder: with more items in the cycle a person needs longer before
+  a hold should mean *the next tier*, so the boundaries are derived from the surface in use.
+  (2026-08-31)
+- **What this settles, and what it does not.** It removes the question of which meaning of `holdMs`
+  wins — neither does, because they are two different per-person settings that happen to share an
+  identifier. The naming collision itself stands: the glossary §4 entry is still open and the rename
+  is still owed before the ladder is built. *(Chat-side note, not part of Mike's ruling.)*
+  (2026-08-31)
+
+
+### A hold suspends the segment backstop — decided 2026-08-31
+
+Mike's call, and it corrects a defect rather than changing a design: the director's segment backstop
+was ending held pauses at three minutes, so the six-hour `heldNotifyMs` setting was unreachable on
+any directed screen and the paused clip was rotated away — the exact loss the hold exists to prevent.
+
+- **A paused provider is not a stalled one, and the backstop stops watching it.** Mike: *"It doesn't
+  need to be watching for YouTube if we know YouTube is paused … it's not supposed to be doing
+  anything when it's paused, so the heartbeat's kind of useless there."* A held provider stops
+  publishing `segment/progress` by design; the backstop could not tell that apart from a frozen
+  video, and treated the silence as a fault. The clock now stops on `held/begin` and restarts on
+  `held/end`. (2026-08-31)
+- **Nothing is given up by suspending it.** A held segment is by definition not advancing, so there
+  is no stall left to detect. The remaining case — a provider that dies while held — keeps its
+  existing exits: the provider's own destroy releases the hold, and the container's teardown lowers
+  it. (2026-08-31)
+- **The rejected alternative, recorded so it is not re-proposed:** lengthening `segmentSilenceMs`
+  to cover a six-hour pause. That is the wrong lever. The backstop exists to move past a genuinely
+  dead video, so stretching it to six hours would mean a frozen screen stays frozen for six hours —
+  trading away the fix for cut-off videos in order to fix held pauses. The two problems needed
+  separating, not averaging. (2026-08-31)
+- **What the pause length is now:** the per-person `heldNotifyMs` setting, which is what the code's
+  own comments already claimed. Its never / 1 h / 6 h / 12 h choices become real for the first time.
+  (2026-08-31)
+- **Owed, and not yet written:** a regression test that advances the director's own clock past
+  `segmentSilenceMs` while held. The existing suite appeared to prove this worked because it waited
+  in real time while the director's timers sat on a fake clock that was never advanced — a check
+  that was true only for a stopped clock. (2026-08-31)
+
+### The replacement token in the public repo is `Profile B` — decided 2026-08-31
+
+Executes the 2026-08-27 entry recording that a family member's name comes out of the public copy.
+That decision was made and not carried out; a 2026-08-31 audit found the name still present across
+dozens of tracked files, including the landing page.
+
+- **`Profile B` wherever a person is named**, `personal` for folder paths and source labels,
+  `Bedside` for the live-UI placeholder. Mike confirmed the token on 2026-08-31, settling a
+  disagreement between two working documents about whether it had been chosen. (2026-08-31)
+- **Substitution is not enough where the name is doing explanatory work.** A handful of comments
+  describe a real household's routine, curriculum and design conventions; those get rewritten to
+  state the design fact, because `AGENTS.md` asks that reasoning be preserved and a bare token would
+  leave sentences that read as a persona in a spec. Drafted for review rather than applied blind.
+  (2026-08-31)
+- **Re-run the search after each pass rather than trusting a recorded count.** Every stored figure
+  for this task has been wrong at least once. (2026-08-31)

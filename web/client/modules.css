@@ -150,6 +150,55 @@
 .director .d-slot{width:100%;height:100%}
 .director .d-bar{display:none}   /* the kiosk provides its own controls */
 
+/* THE COMMUNICATION BOARD. Big targets, high contrast, and a lit card that is unmistakable
+   from a bed at one to two metres — the distance the symbols were drawn for. */
+.aboard{position:absolute;inset:0;padding:calc(var(--u,1px) * 3);box-sizing:border-box}
+.ab-grid{width:100%;height:100%;display:grid;gap:calc(var(--u,1px) * 4)}
+.ab-card{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;overflow:hidden;
+  gap:calc(var(--u,1px) * 3);padding:calc(var(--u,1px) * 4);box-sizing:border-box;cursor:pointer;
+  background:var(--card,#fff);color:var(--darkgreen,#0A3323);
+  border:max(1px,calc(var(--u,1px) * 2.5)) solid var(--line,#e4e0c2);
+  border-radius:calc(var(--u,1px) * 8);
+  font:inherit;transition:transform .12s ease,box-shadow .12s ease}
+/* --u is ONE HUNDREDTH OF A CARD, set by the module from the container and the tier (see
+   `setUnit` in modules/board.js). NOT vmin: a board can be one quadrant of a dashboard, and
+   viewport units would size a card in a small panel as if it filled the screen. Ported from
+   the private build, which learned this the same way. */
+.ab-card .ab-sym{display:block;width:calc(var(--u,1px) * 44);height:calc(var(--u,1px) * 44);
+  line-height:0;flex:0 0 auto}
+.ab-card .ab-sym svg{width:100%;height:100%;display:block}
+.ab-card .ab-word{font-size:clamp(11px,calc(var(--u,1px) * 22),96px);font-weight:800;
+  line-height:1.05;text-align:center;overflow-wrap:anywhere}
+/* Word-only cards get the room the missing symbol would have taken. A card with no picture is
+   a normal card, not a broken one. */
+.ab-card:not(:has(.ab-sym)) .ab-word{font-size:clamp(12px,calc(var(--u,1px) * 30),120px)}
+/* *** A CARD TOO SMALL FOR BOTH DROPS THE PICTURE, NEVER THE WORD. ***
+   The same rule as colour: the symbol SUPPORTS meaning, the word CARRIES it. A board squeezed
+   into a corner of a dashboard is still readable; a board that shrank the word to fit a picture
+   in would be neither. Set by `setUnit` in modules/board.js, which knows the card's real size. */
+.ab-grid.ab-tight .ab-sym{display:none}
+.ab-grid.ab-tight .ab-word{font-size:clamp(11px,calc(var(--u,1px) * 26),120px)}
+/* An empty slot is DRAWN, faintly. A hole has to look like a hole: the cards after it did not
+   move, and a gap that rendered as nothing would look like the board had rearranged. */
+.ab-card.ab-empty{background:transparent;border-style:dashed;opacity:.28;cursor:default}
+/* The scan highlight. Thick and bright rather than a subtle tint - it is the only thing telling
+   somebody which card their next press will choose. */
+.ab-card.ab-lit{border-color:var(--moss,#839958);box-shadow:0 0 0 .8vmin rgba(131,153,88,.45);
+  transform:scale(1.02)}
+.ab-card.ab-press{transform:scale(.97);box-shadow:0 0 0 .8vmin rgba(131,153,88,.75)}
+/* 'one at a time': the others are gone, not dimmed. Half-visible cards are worse than none. */
+.ab-card.ab-away{visibility:hidden}
+/* Colour SUPPORTS meaning; the word carries it. Nothing here is the only cue for anything. */
+.ab-yes .ab-word{color:#2c6e49}
+.ab-no .ab-word{color:#a4243b}
+.ab-need .ab-word{color:#8a6212}
+.ab-social .ab-word{color:#105666}
+.ab-nav .ab-word{color:#5b6b39}
+.ab-hot .ab-word{color:#a8552a}
+.ab-cold .ab-word{color:#1d6b7d}
+.ab-love .ab-word{color:#a8425c}
+
 /* THE HELD-STATE WALLPAPER. It covers the stage rather than replacing it: the paused
    segment is still mounted underneath and comes back untouched. Structural properties are
    here AND set nowhere else, so nothing depends on a second rule to be positioned. */
