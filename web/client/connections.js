@@ -35,7 +35,7 @@
 // second settings system. A connection answers "is this thing reachable"; everything you might
 // then CONFIGURE about it lives in that integration's own area, hidden until it is.
 //
-// EVERYTHING HERE IS PURE. The catalogue is data, the rules are functions of their arguments,
+// EVERYTHING HERE IS PURE. The catalog is data, the rules are functions of their arguments,
 // and the page renders whatever it is handed. Nothing probes anything - a host supplies the
 // live status, because "can I reach Home Assistant right now" is a runtime question with a
 // network in it.
@@ -49,7 +49,7 @@ export const CONNECTION_STATES = ['connected', 'available', 'unavailable'];
 //               evening re-entering credentials that were already correct.
 export const DEFAULT_STATE = 'available';
 
-// THE CATALOGUE. Data, so a new integration is a row rather than a screen. `area` is the id
+// THE CATALOG. Data, so a new integration is a row rather than a screen. `area` is the id
 // of the settings area it reveals, which is the whole hide-until-connected mechanism.
 export const CONNECTIONS = [
   {
@@ -102,7 +102,7 @@ export function normalizeState(s) {
   return CONNECTION_STATES.includes(s) ? s : DEFAULT_STATE;
 }
 
-// The catalogue with live status folded in. `states` is `{ id: state }` from the host.
+// The catalog with live status folded in. `states` is `{ id: state }` from the host.
 export function connectionList(states = {}) {
   return CONNECTIONS.map((c) => ({
     ...c,
@@ -155,7 +155,7 @@ const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const STATE_WORD = {
-  // SHAPE PLUS COLOUR, NEVER COLOUR ALONE — the mark carries it as well as the tint, because
+  // SHAPE PLUS COLOR, NEVER COLOR ALONE — the mark carries it as well as the tint, because
   // these are small and this screen belongs to somebody with a brain injury.
   connected: { mark: '●', word: 'Connected' },
   available: { mark: '○', word: 'Not set up' },

@@ -37,7 +37,7 @@ export function createSpeechChannel({
   // Optional: no bus means no ducking, never no speech.
   audio = null,
   audioId = 'speech',
-  // A hard stop, because speechSynthesis does not always fire `onend` - a cancelled or
+  // A hard stop, because speechSynthesis does not always fire `onend` - a canceled or
   // interrupted utterance can leave the channel believing it is still speaking forever,
   // and then nothing is ever said again. Same disease as the input bus's stuck switch,
   // same cure: a watchdog with a generous ceiling.

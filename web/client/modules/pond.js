@@ -15,7 +15,7 @@
 //     ambient-only. `select` drops a splash wherever the last disturbance was, so a single
 //     switch can make something happen — which is the whole cause-and-effect point, and it
 //     was unreachable before.
-//   * COLOURS COME FROM THE THEME, not from constants. Cici's pond is hardcoded teal; here
+//   * COLORS COME FROM THE THEME, not from constants. Cici's pond is hardcoded teal; here
 //     it reads `--midnight`, `--moss`, `--rosy` and `--beige`, so it follows Dusk at night
 //     like everything else on the screen.
 //   * IT STOPS WHEN IT IS NOT VISIBLE. A canvas animating behind a hidden panel is battery

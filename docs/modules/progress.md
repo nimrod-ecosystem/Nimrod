@@ -39,7 +39,7 @@ where the number informs). They share a substrate and nothing else.
   tab teaches nothing. This is explicitly *not* a percentile or a national comparison —
   those need a normed instrument with a sampled population behind them, and inventing one
   would be fabricating a number about a child's education that someone might act on. It
-  says only what it knows: how they did on material this content labelled that hard.
+  says only what it knows: how they did on material this content labeled that hard.
 - **Sessions tab** — one row per sitting: when, which game, trials, right, wrong, missed,
   accuracy, avg response, length.
 - **Export CSV** — the current filter's trials, for handing a teacher or clinician a file.

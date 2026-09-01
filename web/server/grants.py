@@ -137,7 +137,7 @@ def may_drive(person_id: str, *, account: str, owner: str | None,
     if not person_id or not account:
         return False
     # NO OWNER MEANS NO PERSON. Deleting a person can leave grant rows behind as
-    # tombstones, and honouring one would let somebody hold a socket in the room of
+    # tombstones, and honoring one would let somebody hold a socket in the room of
     # somebody who no longer exists. It also keeps "does not exist" and "not allowed"
     # indistinguishable from outside, which is what stops this being an id oracle.
     if not owner:

@@ -99,7 +99,7 @@ is local synthesis (Web Speech now, Piper later).
 **Tested.** `client/dev/sprint_test.html` — 54 checks against a live dev server with an
 injected clock: the pure phase/points math, the ledger (append, live nudge, shared-stream
 visibility, no double-write to the instance stream), the full phase machine over the bus,
-pause/resume, skip-earns-nothing, the multiplier, and remount behaviour (resume mid-sprint,
+pause/resume, skip-earns-nothing, the multiplier, and remount behavior (resume mid-sprint,
 grace-window payout, stale expiry). Live-verified in the dev harness with real time: the
 countdown ticks, a full page reload resumes mid-sprint with the task label intact, and the
 `forge` theme re-skins it with no module change.

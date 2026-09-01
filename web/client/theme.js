@@ -43,7 +43,7 @@ const BASE = {
   '--rosy-deep': '#a85f52',
   '--font': SYSTEM_FONT,
   // The hue the live wallpaper drifts around, so scenery and palette agree instead of
-  // arguing. A NUMBER rather than a colour because the wallpaper varies lightness and
+  // arguing. A NUMBER rather than a color because the wallpaper varies lightness and
   // saturation itself; a theme that wants a different mood changes this one line.
   '--wallpaper-hue': '158',      // the green the rest of this palette is built on
 };

@@ -31,7 +31,7 @@ parses exactly as it did</b>, which is the assertion this suite cares about most
 
 <script type="module">
 import { parseBank, questionsFromWords, triviaPool, checkBank, KINDS } from '../bank.js';
-import { mountBankPanel, summarise, BANK_KEY } from '../bank_panel.js';
+import { mountBankPanel, summarize, BANK_KEY } from '../bank_panel.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -163,11 +163,11 @@ last | one | here`;
       thin.problems.length === 1 && thin.problems[0].severity === 'note', JSON.stringify(thin.problems));
     check('...and it still counts as a usable question', thin.questions === 1);
 
-    check('the summary says what is there', /3 words/.test(summarise(checkBank(OLD_WORDS, {}))),
-      summarise(checkBank(OLD_WORDS, {})));
+    check('the summary says what is there', /3 words/.test(summarize(checkBank(OLD_WORDS, {}))),
+      summarize(checkBank(OLD_WORDS, {})));
     check('...and how many lines failed', /1 line could not be read/.test(
-      summarise(checkBank('a | b\nbroken', {}))), summarise(checkBank('a | b\nbroken', {})));
-    check('nothing at all says so plainly', summarise(checkBank('', {})) === 'Nothing here yet.');
+      summarize(checkBank('a | b\nbroken', {}))), summarize(checkBank('a | b\nbroken', {})));
+    check('nothing at all says so plainly', summarize(checkBank('', {})) === 'Nothing here yet.');
   }
 
   // =====================================================================================

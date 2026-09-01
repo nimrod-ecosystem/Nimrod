@@ -47,7 +47,7 @@ matter more than anything else here.</p>
 
 <script type="module">
 import {
-  TIERS, KINDS, tierOf, tierFor, cellPosition, slotCentre,
+  TIERS, KINDS, tierOf, tierFor, cellPosition, slotCenter,
   normalizeBoard, checkBoard, addWord, removeWord, firstFree, promote,
   YESNO, CARE, BUILTIN_BOARDS,
 } from '../aac_vocab.js';
@@ -159,7 +159,7 @@ try {
     // Going up more than one step should not scramble anything either — but the property to
     // assert is the DIRECTION, not a slot number, and my first version of this check got that
     // wrong. A 2-cell board carries no vertical information at all: "Yes" is not top-left, it
-    // is just LEFT. Promoting it to a 4x4 correctly lands it on the left, VERTICALLY CENTRED,
+    // is just LEFT. Promoting it to a 4x4 correctly lands it on the left, VERTICALLY CENTERD,
     // rather than in the top-left corner — inventing an "up" the original never had would be
     // the failure, not the fix.
     const sixteen = promote(two, 16).board;
@@ -232,8 +232,8 @@ try {
       JSON.stringify(SYMBOL_NAMES.filter((n) => !/<\/svg>$/.test(SYMBOLS[n]))));
     check('...on the 100x100 grid the design rules specify',
       SYMBOL_NAMES.every((n) => SYMBOLS[n].includes('viewBox="0 0 100 100"')));
-    // Colour supports meaning; it never carries it alone. Neutral shapes take the card's colour.
-    check('most of the set tints with the card rather than fixing its own colour',
+    // Color supports meaning; it never carries it alone. Neutral shapes take the card's color.
+    check('most of the set tints with the card rather than fixing its own color',
       SYMBOL_NAMES.filter((n) => SYMBOLS[n].includes('currentColor')).length >= 15,
       String(SYMBOL_NAMES.filter((n) => SYMBOLS[n].includes('currentColor')).length));
     check('a missing symbol is empty, never a broken box', symbolSvg('nope') === '' && symbolSvg(null) === '');

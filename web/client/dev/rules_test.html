@@ -83,7 +83,7 @@ const sentences = (c) => describeConfig(c).map((r) => `${r.when} → ${r.then}`)
       const unknown = rows.filter((r) => r.kind === 'unknown');
       check('a rule with no wording is still listed', unknown.length === 1, JSON.stringify(rows));
       check('...as itself, rather than quietly dropped', /someGuard/.test(unknown[0].then));
-      check('an unrecognised topic keeps its raw name rather than being dressed up',
+      check('an unrecognized topic keeps its raw name rather than being dressed up',
         /weird\/topic/.test(unknown[0].when), unknown[0].when);
       check('a guard is surfaced, because it changes when the rule applies',
         /only if someGuard/.test(unknown[0].when), unknown[0].when);
@@ -160,7 +160,7 @@ const sentences = (c) => describeConfig(c).map((r) => `${r.when} → ${r.then}`)
       bus.publish(CALL_TOPIC);
       check('a call switches the screen', m.state === CALL_STATE, m.state);
       bus.publish(CALL_ENDED_TOPIC);
-      check('*** and hands it back — the switch wrote a rule the engine honours ***',
+      check('*** and hands it back — the switch wrote a rule the engine honors ***',
         m.state === 'photos', m.state);
     }
 

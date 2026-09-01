@@ -224,7 +224,7 @@ export function auditFields(fields = [], { type = '', declared = null } = {}) {
     }
 
     if (f.label === f.key) {
-      out.push(finding('info', 'unlabelled',
+      out.push(finding('info', 'unlabeled',
         `"${f.key}" has no label, so the row shows the raw key`, at(f.key)));
     }
   }

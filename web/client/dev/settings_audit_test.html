@@ -187,7 +187,7 @@ section('auditFields — the faults are planted, so the checker can go red');
     found.some((f) => f.code === 'duration-key'), c);
   check('a single-option choice is a warning', found.some((f) => f.code === 'single-choice'), c);
   check('a missing label is info, not an error',
-    found.some((f) => f.code === 'unlabelled' && f.severity === 'info'), c);
+    found.some((f) => f.code === 'unlabeled' && f.severity === 'info'), c);
   check('A DECLARATION THAT normalizeField SILENTLY DROPPED IS REPORTED — this is the only '
     + 'place a module author ever finds out', found.some((f) => f.code === 'no-key'), c);
   check('no `essential` field is flagged: a patient screen would show nothing',

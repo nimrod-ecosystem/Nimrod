@@ -206,7 +206,7 @@ export function createInputBus({
   // The gate control is exempt from the gate. Binding role-cycle as `participant` and then
   // switching to moderator-only would otherwise strand the gate with no way back - a
   // caregiver locked out of their own lock is worse than no lock at all.
-  // THE RULE MOVED, THE BEHAVIOUR DID NOT. `gatePermits` in sender.js is this function with
+  // THE RULE MOVED, THE BEHAVIOR DID NOT. `gatePermits` in sender.js is this function with
   // its arguments made explicit, and the reason to extract it is Mike's: "the only
   // restrictions are what's set in the person's section." One place to set them has to mean
   // ONE RULE, and a rule that lives inside a closure here cannot also judge a driver arriving

@@ -220,7 +220,7 @@ section('3. typed the address by hand');
   const input = el.querySelector('[data-code]');
   input.value = '9k4 2qx';
   input.dispatchEvent(new Event('input'));
-  check('*** what they typed is normalised AS THEY TYPE, in the box they can see ***',
+  check('*** what they typed is normalized AS THEY TYPE, in the box they can see ***',
     input.value === '9K42QX', input.value);
   el.querySelector('[data-go]').click();
   await sleep(30);
@@ -316,7 +316,7 @@ check('ready without one just asks for it',
   /type the six/i.test(claimMessage('ready', { code: '' }).body));
 check('done names the screen by the name it chose',
   claimMessage('done', { label: 'Robin’s screen' }).body.includes('Robin’s screen'));
-check('an unrecognised failure still says something rather than nothing',
+check('an unrecognized failure still says something rather than nothing',
   claimMessage('failed', { error: 'teapot' }).body.length > 0);
 
 const s = document.getElementById('summary');

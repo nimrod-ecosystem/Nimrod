@@ -7,7 +7,7 @@
 // version chosen was consistently one size too large. Error correction repairs a dirty lens;
 // it cannot repair an encoder.
 //
-// THE THREE ROOT CAUSES, kept here because each one is a trap worth recognising again:
+// THE THREE ROOT CAUSES, kept here because each one is a trap worth recognizing again:
 //
 //   1. `chooseVersion` computed capacity as `dataCodewords - 2 - countBits/8` — a fudge for
 //      "mode indicator plus terminator" that is not a whole number of codewords and is not
@@ -70,7 +70,7 @@ const EC_BLOCKS = {
       25, 34, 30, 32, 35, 37, 40, 42, 45, 48, 51, 54, 57, 60, 63, 66, 70, 74, 77, 81],
 };
 
-// Alignment-pattern centre coordinates, indexed by version. Version 1 has none.
+// Alignment-pattern center coordinates, indexed by version. Version 1 has none.
 const ALIGN = [null, [],
   [6, 18], [6, 22], [6, 26], [6, 30], [6, 34],
   [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50], [6, 30, 54], [6, 32, 58], [6, 34, 62],
@@ -374,9 +374,9 @@ function reservedMap(version, size) {
   // timing
   for (let i = 0; i < size; i++) { mark(6, i); mark(i, 6); }
   // alignment
-  const centres = ALIGN[version] || [];
-  for (const a of centres) {
-    for (const b of centres) {
+  const centers = ALIGN[version] || [];
+  for (const a of centers) {
+    for (const b of centers) {
       // Not where the finders are.
       if ((a === 6 && b === 6) || (a === 6 && b === size - 7) || (a === size - 7 && b === 6)) continue;
       for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) mark(a + i, b + j);
@@ -409,9 +409,9 @@ function placePatterns(m, version) {
     m[i][6] = v;
   }
 
-  const centres = ALIGN[version] || [];
-  for (const a of centres) {
-    for (const b of centres) {
+  const centers = ALIGN[version] || [];
+  for (const a of centers) {
+    for (const b of centers) {
       if ((a === 6 && b === 6) || (a === 6 && b === size - 7) || (a === size - 7 && b === 6)) continue;
       for (let i = -2; i <= 2; i++) {
         for (let j = -2; j <= 2; j++) {
@@ -531,7 +531,7 @@ function penalty(m) {
   const n = m.length;
   let score = 0;
 
-  // Rule 1: runs of five or more of the same colour, in every row and every column.
+  // Rule 1: runs of five or more of the same color, in every row and every column.
   const runs = (get) => {
     for (let a = 0; a < n; a++) {
       let run = 1;
@@ -545,7 +545,7 @@ function penalty(m) {
   runs((a, b) => m[a][b]);
   runs((a, b) => m[b][a]);
 
-  // Rule 2: every 2x2 block of one colour.
+  // Rule 2: every 2x2 block of one color.
   for (let r = 0; r < n - 1; r++) {
     for (let c = 0; c < n - 1; c++) {
       const v = m[r][c];

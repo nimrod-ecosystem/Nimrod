@@ -153,7 +153,7 @@ function roundTrip(text, opts = {}) {
 // *** INDEX 0 IS THE MOST SIGNIFICANT BIT. ***
 // This reader used to assemble the 15 bits least-significant-first, which is the same
 // mistake the encoder made -- so the two agreed with each other and the test passed while
-// every real scanner rejected the symbol. Two wrongs cancelling is exactly how a structural
+// every real scanner rejected the symbol. Two wrongs canceling is exactly how a structural
 // test can be green on a broken encoder. The convention is fixed in both places now.
 function readFormat(sym) {
   const { modules, size } = sym;
@@ -340,10 +340,10 @@ function readFormat(sym) {
     // Alignment patterns: v1 has none, everything above does.
     check('version 1 has no alignment pattern', qrMatrix('hi', { maxVersion: 1 }).version === 1);
     const v2 = qrMatrix('x'.repeat(30), { level: 'M' });
-    check('a larger symbol has one at its centre-ish, ringed correctly', (() => {
-      const centres = { 2: 18, 3: 22, 4: 26, 5: 30, 6: 34 }[v2.version];
-      if (!centres) return true;
-      const r = centres, c = centres;
+    check('a larger symbol has one at its center-ish, ringed correctly', (() => {
+      const centers = { 2: 18, 3: 22, 4: 26, 5: 30, 6: 34 }[v2.version];
+      if (!centers) return true;
+      const r = centers, c = centers;
       return v2.modules[r][c] === 1 && v2.modules[r - 1][c] === 0 && v2.modules[r - 2][c] === 1;
     })(), `version ${v2.version}`);
 
@@ -351,7 +351,7 @@ function readFormat(sym) {
     const masks = new Set();
     for (let i = 0; i < 40; i++) masks.add(qrMatrix(`https://example.com/pair?c=${i}A2B3C`).mask);
     check('the mask is CHOSEN per symbol, not fixed', masks.size > 1, [...masks].join(','));
-    check('a forced mask is honoured', qrMatrix(PAIR_URL, { mask: 5 }).mask === 5);
+    check('a forced mask is honored', qrMatrix(PAIR_URL, { mask: 5 }).mask === 5);
     check('...and a forced-mask symbol still round-trips',
       roundTrip(PAIR_URL, { mask: 5 }).parsed.text === PAIR_URL);
     const chosen = qrMatrix(PAIR_URL, { level: 'M' });
@@ -377,7 +377,7 @@ function readFormat(sym) {
       svg.includes('<title>pairing code</title>') && !svg.includes('aria-hidden'));
     check('...and with no title it is aria-hidden instead of announcing nothing',
       qrSVG(PAIR_URL).includes('aria-hidden'));
-    check('a bigger quiet zone is honoured', (() => {
+    check('a bigger quiet zone is honored', (() => {
       const m = qrSVG(PAIR_URL, { quiet: 8 }).match(/viewBox="0 0 (\d+) \1"/);
       return m && Number(m[1]) === s.size + 16;
     })());

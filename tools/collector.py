@@ -13,7 +13,7 @@ record's meaning belongs to whoever built the logger, and a pipe that insisted o
 understanding the payload would be dead on arrival with any manufacturer who already has a
 format — and they all already have one.
 
-    logger  --BLE-->  THIS  --HTTPS-->  a server  ------>  whoever is analysing it
+    logger  --BLE-->  THIS  --HTTPS-->  a server  ------>  whoever is analyzing it
                        |
                        +-- a spool file on local disk, which is the whole trick
 
@@ -469,7 +469,7 @@ class Uploader:
             self.backoff = 0.0
             return True, f"sent {len(payload)} bytes at {offset}"
         # A REJECTION AND AN OUTAGE ARE DIFFERENT PROBLEMS. Retrying a 400 forever is a
-        # loop; retrying a 503 is the correct behaviour. Only the second backs off and
+        # loop; retrying a 503 is the correct behavior. Only the second backs off and
         # keeps trying.
         self.backoff = min(max(self.backoff * 2, 5.0), self.s.max_backoff_seconds)
         if 400 <= code < 500 and code not in (408, 429):

@@ -66,7 +66,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // the heartbeat existed, and only surfaced once there was enough traffic to hit it.
 //
 // A proper discrete-event clock: fire the EARLIEST due timer, move `now` to its deadline,
-// run it, and look again — so clears and re-arms inside a callback are both honoured.
+// run it, and look again — so clears and re-arms inside a callback are both honored.
 function fakeTimers() {
   let now = 0, seq = 0;
   const pending = new Map();
@@ -245,7 +245,7 @@ function fakeTimers() {
     await sleep(900);
 
     // Asserted through the BUS rather than an internal probe: mountModule deliberately
-    // exposes only init/onResize/onHide/destroy, and behaviour is the better thing to pin.
+    // exposes only init/onResize/onHide/destroy, and behavior is the better thing to pin.
     check('a segment is running', !!inst, 'director mounted');
 
     const beforeSilence = done.length;

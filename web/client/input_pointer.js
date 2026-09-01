@@ -35,7 +35,7 @@
 export const POINTER_DEVICE = 'pointer:mouse';
 
 // Named rather than numbered: "button 3" means nothing to a person, and a switch box
-// wired to the middle button should read as something they can recognise.
+// wired to the middle button should read as something they can recognize.
 export const BUTTON_LABELS = ['Left click', 'Middle click', 'Right click', 'Back', 'Forward'];
 
 export function pointerControl(button) {

@@ -182,7 +182,7 @@ section('the overlay’s own settings are declared, like a module’s');
 
 {
   const fields = OVERLAY_SETTINGS.map(normalizeField).filter(Boolean);
-  check('every declared field survives normalisation', fields.length === OVERLAY_SETTINGS.length);
+  check('every declared field survives normalization', fields.length === OVERLAY_SETTINGS.length);
   check('all of them are one-button operable — this is a bedside surface',
     fields.every((f) => f.cycleable), fields.filter((f) => !f.cycleable).map((f) => f.key).join(','));
   check('the everyday ones are at `standard`, the fiddly ones at `advanced`',

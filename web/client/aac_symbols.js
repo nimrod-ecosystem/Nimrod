@@ -8,14 +8,14 @@
 // WHY WE DRAW OUR OWN INSTEAD OF USING A STANDARD SET
 // ---------------------------------------------------------------------------------------
 //
-// Every established AAC symbol library is licence-encumbered: ARASAAC is CC BY-NC-SA (no
+// Every established AAC symbol library is license-encumbered: ARASAAC is CC BY-NC-SA (no
 // commercial use), PCS and SymbolStix are proprietary. These are original drawings authored
 // in-repo, so they can go wherever this project goes with no strings — which for a free
 // accessibility platform is not a nicety, it is the difference between shipping and not.
 //
 // PROVENANCE (2026-07-05): the sixteen care-board symbols came from a design session,
 // direction 1C "Slate". They stay theme-agnostic — `currentColor` for neutral shapes so the
-// card tints them, explicit hex only where colour CARRIES meaning rather than decorating it.
+// card tints them, explicit hex only where color CARRIES meaning rather than decorating it.
 // The five game-only symbols (more, all_done, music, mom, dad) are earlier in-repo drawings
 // still awaiting a design pass.
 //
@@ -30,9 +30,9 @@
 //
 //   * viewBox 0 0 100 100, stroke-based, ~7px strokes, round caps and joins
 //   * `currentColor` for neutral shapes; explicit hex ONLY for meaning-bearing accents —
-//     colour supports meaning, it never carries it alone. Somebody who cannot distinguish the
+//     color supports meaning, it never carries it alone. Somebody who cannot distinguish the
 //     hues must lose nothing, which is why every card also carries its word.
-//   * big simple silhouettes: it has to read at a glance, from a bed, at one to two metres
+//   * big simple silhouettes: it has to read at a glance, from a bed, at one to two meters
 //
 // A symbol here is a NAME, not a file. `aac_vocab.js` cells reference these by name, so a
 // vocabulary is portable text and a renderer is free to draw it differently — which is also

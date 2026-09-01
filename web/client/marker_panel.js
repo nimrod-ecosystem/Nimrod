@@ -50,7 +50,7 @@ export const MARKER_KEY = 'marker-tracking';
 // inherently visual — you cannot click a sock in a list — but the VALUES live here so nothing
 // else has to guess at them.
 export const SETTINGS = [
-  { key: 'enabled', label: 'Track a coloured marker', kind: 'toggle', default: false, level: 'standard' },
+  { key: 'enabled', label: 'Track a colored marker', kind: 'toggle', default: false, level: 'standard' },
   { key: 'gain', label: 'How far a small movement goes', kind: 'choice', default: 3.0, level: 'standard',
     options: [
       { value: 1.5, label: 'a long way to travel' },
@@ -70,9 +70,9 @@ const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-// An approximate swatch of a sampled colour, so somebody can see WHAT they clicked rather than
+// An approximate swatch of a sampled color, so somebody can see WHAT they clicked rather than
 // only that they clicked. `v * 50%` because HSV value and HSL lightness are not the same thing
-// and this only has to be recognisable, not correct.
+// and this only has to be recognizable, not correct.
 export function swatchCss(c) {
   if (!c) return 'transparent';
   return `hsl(${Math.round(c.h)}, ${Math.round(c.s * 100)}%, ${Math.round(c.v * 50)}%)`;
@@ -83,18 +83,18 @@ export function swatchCss(c) {
 // wrong and a caregiver is staring at a picture with no idea why nothing is happening.
 //
 // The order matters. Each line answers the FIRST question that is still unanswered.
-export function adviceFor({ colour = null, count = 0, minPx = MARKER_DEFAULTS.minPx } = {}) {
-  if (!colour) {
+export function adviceFor({ color = null, count = 0, minPx = MARKER_DEFAULTS.minPx } = {}) {
+  if (!color) {
     return { state: 'unsampled',
-             text: 'Click the marker in the picture to tell it what colour to look for.' };
+             text: 'Click the marker in the picture to tell it what color to look for.' };
   }
   if (count === 0) {
     return { state: 'lost',
-             text: 'Cannot see that colour at all. Move the camera, improve the light, or click the marker again.' };
+             text: 'Cannot see that color at all. Move the camera, improve the light, or click the marker again.' };
   }
   if (count < minPx) {
     // THE MOST IMPORTANT LINE HERE. "A bit of it" and "none of it" want opposite advice, and a
-    // panel that showed both as "not found" would send somebody re-sampling a colour that was
+    // panel that showed both as "not found" would send somebody re-sampling a color that was
     // already right when the real problem is that the marker is too far away.
     return { state: 'faint',
              text: `Only just visible (${count} of ${minPx} needed). Move the camera closer, or use a bigger marker.` };
@@ -124,9 +124,9 @@ export function mountMarkerPanel(root, {
 
   root.innerHTML = `
     <div class="mk">
-      <h3>A coloured marker</h3>
-      <p class="mk-lede">A brightly coloured sock, wristband or glove, anywhere they can move it.
-        The camera finds the colour — it is not trying to recognise a hand or a foot, which is
+      <h3>A colored marker</h3>
+      <p class="mk-lede">A brightly colored sock, wristband or glove, anywhere they can move it.
+        The camera finds the color — it is not trying to recognize a hand or a foot, which is
         why it works with an unusual posture and in poor light.</p>
 
       <div class="mk-live">
@@ -153,7 +153,7 @@ export function mountMarkerPanel(root, {
 
       <div class="mk-rows" data-rows></div>
       <p class="mk-note mk-hint">Green and hot pink work best. Avoid red (too close to skin) and
-        anything white, grey or pale — there is no colour there to lock onto.</p>
+        anything white, gray or pale — there is no color there to lock onto.</p>
     </div>`;
 
   const el = (sel) => root.querySelector(sel);
@@ -173,13 +173,13 @@ export function mountMarkerPanel(root, {
     if (destroyed) return;
     const c = cfg();
     const found = tracker.found();
-    const advice = adviceFor({ colour: c.colour, count: found.count, minPx: c.minPx });
+    const advice = adviceFor({ color: c.color, count: found.count, minPx: c.minPx });
     const a = el('[data-advice]');
     a.textContent = advice.text;
     a.dataset.state = advice.state;
-    el('[data-swatch]').style.background = swatchCss(c.colour);
-    el('[data-clear]').hidden = !c.colour;
-    el('[data-restnote]').textContent = c.centre
+    el('[data-swatch]').style.background = swatchCss(c.color);
+    el('[data-clear]').hidden = !c.color;
+    el('[data-restnote]').textContent = c.center
       ? 'Movement is measured from the position you set.'
       : 'Not set — movement is measured from the middle of the picture.';
     const chk = el('[data-opt="enabled"]');
@@ -255,17 +255,17 @@ export function mountMarkerPanel(root, {
     const nx = 1 - (e.clientX - r.left) / r.width;
     const ny = (e.clientY - r.top) / r.height;
     const sampled = tracker.sampleAt(lastFrame, nx, ny);
-    if (sampled) set('colour', sampled);
+    if (sampled) set('color', sampled);
   });
 
-  el('[data-clear]').addEventListener('click', () => set('colour', null));
+  el('[data-clear]').addEventListener('click', () => set('color', null));
 
   // THE RESTING POSITION. Movement is measured from wherever they naturally hold still, which
   // is what lets a small range of movement reach a whole screen. Taken from where the marker
   // IS right now rather than typed in, because nobody knows their own rest point as a number.
   el('[data-rest]').addEventListener('click', () => {
     const found = tracker.found();
-    if (found && found.count) set('centre', { x: found.x, y: found.y });
+    if (found && found.count) set('center', { x: found.x, y: found.y });
   });
 
   el('[data-opt="enabled"]').addEventListener('change', (e) => set('enabled', e.target.checked));
@@ -282,7 +282,7 @@ export function mountMarkerPanel(root, {
     // The tracker calls this every tick.
     draw,
     render,
-    advice: () => adviceFor({ colour: cfg().colour, count: tracker.found().count, minPx: cfg().minPx }),
+    advice: () => adviceFor({ color: cfg().color, count: tracker.found().count, minPx: cfg().minPx }),
     async refresh() { syncEnabled(); render(); return this; },
     destroy() {
       destroyed = true;

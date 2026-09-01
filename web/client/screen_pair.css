@@ -47,7 +47,7 @@
   display: block;
 }
 
-/* NOT smaller than the QR's caption, and not greyed out. This is the route that works when
+/* NOT smaller than the QR's caption, and not grayed out. This is the route that works when
    the camera does not, and the person using it is the one with the least help available. */
 .sp-code {
   font: 800 3.2rem/1.1 ui-monospace, Menlo, Consolas, monospace;

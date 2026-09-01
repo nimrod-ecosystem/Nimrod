@@ -1,7 +1,7 @@
 // aac_vocab.js — A BOARD IS A VOCABULARY A SCREEN RENDERS, NOT A SCREEN.
 //
 // The schema half of the AAC work. `modules/board.js` renders what this describes; nothing
-// about layout, colour or scanning lives here.
+// about layout, color or scanning lives here.
 //
 // ---------------------------------------------------------------------------------------
 // *** POSITION IS SACRED, AND THE INDEX IS THE POSITION ***
@@ -39,7 +39,7 @@
 // person.
 //
 // *** AND MOVING UP PRESERVES DIRECTION. *** `promote` places each existing cell at the slot
-// whose centre points the same way from the middle of the board. If "Yes" was up-and-left in
+// whose center points the same way from the middle of the board. If "Yes" was up-and-left in
 // the 2-cell board it is up-and-left in the 8-cell one: the half becomes a quadrant, the
 // quadrant a sub-quadrant. Absolute size changes; direction does not. Motor memory is
 // substantially directional, so this turns a full relearn into a refinement — which is what
@@ -83,7 +83,7 @@ import { SYMBOLS } from './aac_symbols.js';
 
 export const VOCAB_VERSION = 1;
 
-// Colour cue classes. Colour SUPPORTS meaning; the word carries it. Somebody who cannot
+// Color cue classes. Color SUPPORTS meaning; the word carries it. Somebody who cannot
 // distinguish these loses nothing.
 export const KINDS = ['plain', 'yes', 'no', 'social', 'need', 'hot', 'cold', 'love', 'nav'];
 
@@ -116,8 +116,8 @@ export function cellPosition(i, tier) {
   return { col: i % t.cols, row: Math.floor(i / t.cols) };
 }
 
-/** A slot's centre in 0..1 of the board, which is what direction is measured from. */
-export function slotCentre(i, tier) {
+/** A slot's center in 0..1 of the board, which is what direction is measured from. */
+export function slotCenter(i, tier) {
   const t = tierOf(tier) || TIERS[0];
   const { col, row } = cellPosition(i, tier);
   return { x: (col + 0.5) / t.cols, y: (row + 0.5) / t.rows };
@@ -242,7 +242,7 @@ export function firstFree(board) {
 /**
  * Move a board to a different size class, preserving DIRECTION.
  *
- * Each existing cell claims the free slot in the new grid whose centre points the same way from
+ * Each existing cell claims the free slot in the new grid whose center points the same way from
  * the middle of the board. Ties — and there are many, because a 2-cell board says nothing about
  * rows — go to the slot that is FURTHER in the same direction, because the thing being
  * preserved is a reach, not a coordinate. Up-and-left stays up-and-left.
@@ -263,12 +263,12 @@ export function promote(board, toTier) {
 
   b.cells.forEach((cell, i) => {
     if (cell == null) return;
-    const src = slotCentre(i, from.cells);
+    const src = slotCenter(i, from.cells);
     const want = { x: src.x - 0.5, y: src.y - 0.5 };
     let best = -1, bestD = Infinity, bestDot = -Infinity;
     for (let j = 0; j < to.cells; j++) {
       if (taken.has(j)) continue;
-      const c = slotCentre(j, to.cells);
+      const c = slotCenter(j, to.cells);
       const dx = c.x - src.x, dy = c.y - src.y;
       const dist = Math.hypot(dx, dy);
       // The tie-break IS the design: further in the same direction wins.

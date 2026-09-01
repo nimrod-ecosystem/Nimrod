@@ -98,8 +98,8 @@ const last = (a) => a[a.length - 1];
 
 (async () => {
   try {
-    // ================= the action catalogue =================
-    section('the action catalogue');
+    // ================= the action catalog =================
+    section('the action catalog');
     {
       const a = createActionRegistry();
       check('an action needs a machine-safe id', threw(() => a.register({ id: 'Photos Next!', label: 'x', topic: 't' })));
@@ -566,9 +566,9 @@ const last = (a) => a[a.length - 1];
       r.input.addBinding({ id: 'x', actionId: 'photos/next', device: 'switch:1', control: 'a' });
       const cancel = r.input.beginCapture({ onDone: () => {} });
       cancel();
-      check('capture can be cancelled', !r.input.isCapturing());
+      check('capture can be canceled', !r.input.isCapturing());
       r.input.down('switch:1', 'a');
-      check('cancelling restores normal behaviour', r.fired.length === 1);
+      check('canceling restores normal behavior', r.fired.length === 1);
 
       // Already holding something when the dialog opens: letting go of it is not a choice.
       const done = [];
@@ -760,7 +760,7 @@ const last = (a) => a[a.length - 1];
       r.clock.advance(650);                 // she keeps holding — total 900ms
       r.input.up('switch:1', 'jack:a');
 
-      check('the activation reports the THRESHOLD (250), which is configuration, not behaviour',
+      check('the activation reports the THRESHOLD (250), which is configuration, not behavior',
         r.recs()[0].heldMs === 250, String(r.recs()[0].heldMs));
       check('the edge reports the MEASUREMENT (900) — 650ms the other stream cannot see',
         last(r.edges).heldMs === 900, String(last(r.edges).heldMs));

@@ -96,7 +96,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 //
 // So this one is a proper discrete-event clock: fire the EARLIEST due timer, advance `now`
 // to its deadline, run it, and look again — so a callback that clears or re-arms something
-// is respected, and timers armed mid-step are honoured in order.
+// is respected, and timers armed mid-step are honored in order.
 // ---------------------------------------------------------------------------------------
 function fakeClock() {
   let now = 0, seq = 0;

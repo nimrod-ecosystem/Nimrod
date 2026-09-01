@@ -79,7 +79,7 @@ export function normalizeSender(raw) {
 // somebody else's data.
 export function senderMeta(raw) { return { from: normalizeSender(raw) }; }
 
-// Read it back off whatever a sink was handed. Anything unrecognised reads as the unknown
+// Read it back off whatever a sink was handed. Anything unrecognized reads as the unknown
 // local sender, so a module written before senders existed behaves exactly as it did.
 export function senderOf(meta) {
   return normalizeSender(meta && typeof meta === 'object' ? meta.from : null);

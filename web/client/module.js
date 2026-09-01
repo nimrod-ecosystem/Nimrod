@@ -53,7 +53,7 @@ export function mountModule(type, ctx) {
     // The raw factory result. The lifecycle above is the CONTRACT and a host should use
     // nothing else; this is the escape hatch for a test that has to look at a module with
     // no DOM to assert against - a canvas module has no markup to inspect, so without this
-    // its behaviour can only be eyeballed, which is not a test.
+    // its behavior can only be eyeballed, which is not a test.
     impl:     instance,
     init:     () => instance.init?.(),
     onResize: () => instance.onResize?.(),

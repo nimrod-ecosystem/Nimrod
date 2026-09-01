@@ -21,7 +21,7 @@
 
 <p>The twin of <code>camera_owner.js</code> — one device, ref-counted, one owner — with a problem
 the camera never had: <b>the settings that make a call sound good are the wrong ones for
-recognition.</b> A call wants echo cancellation and noise suppression on; a recogniser wants them
+recognition.</b> A call wants echo cancellation and noise suppression on; a recognizer wants them
 off, because suppression is tuned to keep confident typical speech and discard the rest, which is
 a fair description of exactly the articulation it most needs to hear.</p>
 
@@ -136,7 +136,7 @@ try {
   // =====================================================================================
   section('*** the conflict the camera arbiter never had ***');
   {
-    check('a call and a recogniser want opposite things', (() => {
+    check('a call and a recognizer want opposite things', (() => {
       return PROFILES.call.noiseSuppression === true && PROFILES.raw.noiseSuppression === false;
     })());
 
@@ -157,7 +157,7 @@ try {
     const mic = fakeMic();
     const owner = createMicOwner({ open: mic.open, ...clock });
     await owner.acquire('listener');
-    check('*** nothing is switched on that a recogniser would have to fight ***',
+    check('*** nothing is switched on that a recognizer would have to fight ***',
       mic.log.opens[0].noiseSuppression === false && mic.log.opens[0].echoCancellation === false
         && mic.log.opens[0].autoGainControl === false,
       JSON.stringify(mic.log.opens[0]));
@@ -175,7 +175,7 @@ try {
     check('CONTROL: the first acquirer decided the constraints',
       mic.log.opens[0].noiseSuppression === true, JSON.stringify(mic.log.opens[0]));
 
-    // Now a recogniser arrives and wants raw. It still gets audio — refusing would be worse —
+    // Now a recognizer arrives and wants raw. It still gets audio — refusing would be worse —
     // but the mismatch is REPORTED so it can say why it is doing badly instead of just doing
     // badly. Silence is the one answer that is never right here.
     const s = await owner.acquire('listener', PROFILES.raw);
@@ -211,7 +211,7 @@ try {
       list.every((d) => /mic/i.test(d.label)), JSON.stringify(list));
     check('...with their real names, so a chooser is usable',
       list[1].label === 'USB Microphone', JSON.stringify(list[1]));
-    check('labels are reported as real', await owner.labelled() === true);
+    check('labels are reported as real', await owner.labeled() === true);
     owner.destroy();
   }
 
@@ -231,7 +231,7 @@ try {
     check('the devices are still listed', (await owner.list()).length === 2);
     check('*** ...but it says the labels are not real yet, so a chooser can ask for permission '
       + 'first instead of showing "Microphone 1, Microphone 2" ***',
-      await owner.labelled() === false);
+      await owner.labeled() === false);
     owner.destroy();
   }
   {
@@ -243,7 +243,7 @@ try {
     const owner = createMicOwner({ open: fakeMic().open, enumerate: () => { throw new TypeError('no mediaDevices'); } });
     check('*** a machine with no mediaDevices at all reports none, rather than throwing ***',
       (await owner.list()).length === 0);
-    check('...and does not then claim the labels are fine', await owner.labelled() === false);
+    check('...and does not then claim the labels are fine', await owner.labeled() === false);
     owner.destroy();
   }
   {
@@ -346,8 +346,8 @@ try {
   section('*** TWO MICROPHONES AT ONCE — the close one for WHAT she said, the far one for '
     + 'what it SOUNDS LIKE through the device she uses daily ***');
   {
-    // Mike's, 2026-08-31, and it is a better reason than the one I had. To make a recogniser
-    // work on the FAR microphone you need labelled far-microphone audio, and labelling it is
+    // Mike's, 2026-08-31, and it is a better reason than the one I had. To make a recognizer
+    // work on the FAR microphone you need labeled far-microphone audio, and labeling it is
     // hard precisely because it is hard to hear. The CLOSE microphone supplies the label, the
     // far one supplies the input, and being the same utterance at the same moment aligns them
     // for free.

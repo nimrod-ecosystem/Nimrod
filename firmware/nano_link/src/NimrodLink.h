@@ -51,7 +51,7 @@
 // objection that there is no room to try.
 //
 // IT HAS NOT RUN ON HARDWARE YET. Compiling is not working; the throughput number and the
-// behaviour of ArduinoBLE under a real central are still unmeasured.
+// behavior of ArduinoBLE under a real central are still unmeasured.
 //
 // THE PROTOCOL IS TESTED SEPARATELY: tools/nano_protocol.py is the authoritative wire
 // format and tools/test_nano_protocol.py exercises it — 41 checks, including dropped
@@ -76,7 +76,7 @@
 // fails loudly instead of misreading a struct.
 #define NIMROD_LINK_PROTO 1
 
-// UUIDs. Fixed, and derived from the ASCII of "NimrodLink" so they are recognisable in a
+// UUIDs. Fixed, and derived from the ASCII of "NimrodLink" so they are recognizable in a
 // scanner rather than being one more random blob to look up.
 #define NIMROD_LINK_SERVICE_UUID "4e696d72-6f64-4c69-6e6b-000000000001"
 #define NIMROD_LINK_STATUS_UUID  "4e696d72-6f64-4c69-6e6b-000000000002"

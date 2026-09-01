@@ -177,7 +177,7 @@ registerModule(
     // Deliberately NOT a percentile or a national comparison. Those need a normed
     // instrument with a sampled population; inventing one would be fabricating a number
     // about a child's education that someone might act on. This says only what it knows:
-    // how they did on the material THIS bank labelled that hard.
+    // how they did on the material THIS bank labeled that hard.
     function renderBands() {
       const list = byBand(shown());
       if (!list.length) {
@@ -194,7 +194,7 @@ registerModule(
             <div class="g-cpct">${fmtPct(b.accuracy)}<span>${b.trials}</span></div>
           </div>`;
       }).join('');
-      return `<p class="g-note">how they did on material the content labelled this hard —
+      return `<p class="g-note">how they did on material the content labeled this hard —
         the bank's own labels, not a national comparison</p>${rows}`;
     }
 

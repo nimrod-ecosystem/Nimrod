@@ -26,7 +26,7 @@
 // ONE MICROPHONE IS NOT AN ERROR
 // ---------------------------------------------------------------------------------------
 //
-// Somebody with a single microphone gets a single-channel recording, labelled `label`, and a
+// Somebody with a single microphone gets a single-channel recording, labeled `label`, and a
 // line saying the pair is not available. That is a smaller thing and an honest one — refusing to
 // record at all because the second microphone is missing would be the worse failure, and it is
 // the same reasoning as the fallback ladder.
@@ -264,7 +264,7 @@ export function mountRecordPanel(root, {
         await fs.rememberFolder(folder);
         say('');
         await refreshSessions();
-      } catch { /* the picker was cancelled, which is not an error */ }
+      } catch { /* the picker was canceled, which is not an error */ }
       return render();
     }
     if (t.hasAttribute('data-grant')) {

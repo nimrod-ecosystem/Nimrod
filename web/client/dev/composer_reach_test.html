@@ -88,7 +88,7 @@ try {
       `described but not addable: ${unreachable.join(', ')}`);
 
     const undescribedOnPage = [...cat].filter((t) => !described.includes(t) && !NOT_FOR_CAREGIVERS[t]);
-    check('...and the catalogue page does not import anything it cannot describe',
+    check('...and the catalog page does not import anything it cannot describe',
       undescribedOnPage.length === 0, undescribedOnPage.join(', '));
 
     const notShown = described.filter((t) => !cat.has(t));
@@ -118,10 +118,10 @@ try {
     // assertion above would still pass while checking nothing.
     check('the parser actually found imports rather than returning nothing',
       home.size > 0 && cat.size > 0 && kiosk.size > 0,
-      `home=${home.size} catalogue=${cat.size} kiosk=${kiosk.size}`);
+      `home=${home.size} catalog=${cat.size} kiosk=${kiosk.size}`);
     check('a module NOT imported is correctly seen as missing',
       !home.has('definitely-not-a-module'));
-    check('the catalogue has something in it', described.length >= 15, String(described.length));
+    check('the catalog has something in it', described.length >= 15, String(described.length));
   }
 
 } catch (e) {

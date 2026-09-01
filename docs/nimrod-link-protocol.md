@@ -1,7 +1,7 @@
 # NimrodLink protocol, version 1
 
 **Status:** draft, implemented, tested. Version 1.
-**Licence:** MIT, same as the rest of this repository. Use it, change it, ship it, fork it.
+**License:** MIT, same as the rest of this repository. Use it, change it, ship it, fork it.
 **Reference implementation:** [`tools/nano_protocol.py`](../tools/nano_protocol.py) ·
 **Conformance tests:** [`tools/test_nano_protocol.py`](../tools/test_nano_protocol.py) (41 checks)
 
@@ -93,7 +93,7 @@ right device by what it can do, not by two people having typed matching strings.
 | **control** | `4e696d72-6f64-4c69-6e6b-000000000003` | write, write-without-response |
 | **data** | `4e696d72-6f64-4c69-6e6b-000000000004` | notify |
 
-The UUIDs are the ASCII of `NimrodLink` so they are recognisable in a scanner rather than
+The UUIDs are the ASCII of `NimrodLink` so they are recognizable in a scanner rather than
 being one more random blob to look up.
 
 **Data uses NOTIFY, not INDICATE.** Indications are acknowledged one at a time and would
@@ -126,7 +126,7 @@ reading status is the first thing every collector does.
 A collector **MUST** read status before anything else, and **MUST** refuse to proceed if
 `proto` is not a version it implements. *Failing loudly matters more than it looks: a
 collector that misread a struct would forward plausible nonsense for weeks, and nobody
-would notice until somebody analysed it.*
+would notice until somebody analyzed it.*
 
 A collector **MUST NOT** assume `chunk`. It is a property of the logger and its negotiated
 MTU, and it is read, never guessed.
@@ -255,7 +255,7 @@ be sent as zero.
 
 Stated rather than buried.
 
-- **`total` is 32 bits** — about 4 GB per stream. Ample for summarised sensor data, not for
+- **`total` is 32 bits** — about 4 GB per stream. Ample for summarized sensor data, not for
   raw high-rate audio or video. A future version would widen it.
 - **No authentication or encryption at this layer.** Anything in radio range that speaks
   this protocol can read the stream. Use BLE pairing, or do not put anything sensitive in

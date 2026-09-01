@@ -19,7 +19,7 @@ is built yet. Mockup of the restructured page, with every change annotated in pl
    event log, media addresses, sharing grants, and device credentials.
 3. **Zero images** on a page whose thesis is "real, running software — not a mockup."
 4. **No meta description, no OG tags, no favicon, no canonical.** Shared into a caregiver group
-   or a text message, the link renders as a bare grey URL. This is the project's main
+   or a text message, the link renders as a bare gray URL. This is the project's main
    distribution channel.
 
 ## Settled
@@ -38,7 +38,7 @@ is built yet. Mockup of the restructured page, with every change annotated in pl
   webcam-as-rearview-mirror line is the most concrete thing on the page and was 1,500 words down.
 - **Voice is first person throughout.** "The line I don't cross," not "we." One person building
   for one person is the trust asset; the corporate voice appeared exactly where trust is asked for.
-- Four British spellings out: `colour`, `centre`, `analysed`, `labelled`.
+- Four British spellings out: `color`, `center`, `analyzed`, `labeled`.
 - **Maker block added** — plug in an ESP32, wire it to anything on the screen. A commercial
   adaptive switch is $75; a button, a microcontroller and a printed enclosure is about $15.
 
@@ -62,7 +62,7 @@ is built yet. Mockup of the restructured page, with every change annotated in pl
 ### Accessibility — the page scored worst on the thing the product is about
 Counted in the served HTML: zero `aria-*` attributes, zero `<main>`, no skip link, no `:focus`
 rule anywhere in the stylesheet, and `scroll-behavior: smooth` with no `prefers-reduced-motion`
-guard. Decorative emoji are unlabelled, so a screen reader announces "sun behind small cloud"
+guard. Decorative emoji are unlabeled, so a screen reader announces "sun behind small cloud"
 before each heading.
 
 Fixes: `<main>`, skip link, visible focus ring that clears the sticky nav, `aria-hidden="true"`

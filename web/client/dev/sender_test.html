@@ -233,7 +233,7 @@ section('CUSTOM VERBS — a verb really is just a name, and here is what that co
   // this action in your module." That is exactly what it is - VERBS is a list, verbTopic is
   // string concatenation, and verbTarget is a lookup in a plain table.
   const v = normalizeVerb({ id: 'lights-dim', label: 'Dim the lights', group: 'Home' });
-  check('a custom verb normalises', v.id === 'lights-dim' && v.label === 'Dim the lights');
+  check('a custom verb normalizes', v.id === 'lights-dim' && v.label === 'Dim the lights');
   check('and is marked as custom, so the binder can group it away from the shipped nine',
     v.custom === true && v.group === 'Home');
   check('the label falls back to the id rather than being blank',

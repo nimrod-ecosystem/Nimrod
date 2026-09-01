@@ -300,7 +300,7 @@ section('the QR code, and the printed code beside it');
   check('the QR is drawn here - no <img>, nothing fetched',
     !el.querySelector('.sp-qr img') && !/<image|xlink:href/.test(svg.innerHTML),
     svg.outerHTML.slice(0, 80));
-  check('it is announced to a screen reader rather than left an unlabelled square',
+  check('it is announced to a screen reader rather than left an unlabeled square',
     !!svg.querySelector('title'), svg.querySelector('title')?.textContent);
   check('the QR sits on its own light panel - an inverted QR does not scan',
     getComputedStyle(el.querySelector('.sp-qr')).backgroundColor === 'rgb(255, 255, 255)',

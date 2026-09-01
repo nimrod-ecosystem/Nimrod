@@ -7,8 +7,8 @@
 //    device she'll be using daily."*
 //
 // That is a PAIRED CORPUS, and it is the thing that unblocks everything else. To make a
-// recogniser work on the far microphone — the one that will actually be there every day — you
-// need labelled far-microphone audio, and labelling it is hard for exactly the reason the far
+// recognizer work on the far microphone — the one that will actually be there every day — you
+// need labeled far-microphone audio, and labeling it is hard for exactly the reason the far
 // microphone is a problem in the first place: you cannot hear it well enough to know what was
 // said. The close microphone supplies the label, the far one supplies the input, and being the
 // same utterance at the same moment aligns them for free.
@@ -24,7 +24,7 @@
 // corpus is for.
 //
 // So there is no VAD here at all. Instead: **one continuous recording per device, plus a
-// manifest of labelled MARKS.** Whatever is running the session already knows what it asked for
+// manifest of labeled MARKS.** Whatever is running the session already knows what it asked for
 // — a trivia game knows it just asked for `paris`, a therapy session knows the target word — so
 // it calls `mark('paris')` and the label is exact rather than inferred. Cutting the audio can
 // happen later, offline, on a machine with time to spare.

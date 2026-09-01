@@ -67,21 +67,21 @@ function manual(name, concurrency = 1) {
     name, concurrency,
     available: () => true,
     present(item, { done }) {
-      const run = { item, done, cancelled: false };
+      const run = { item, done, canceled: false };
       live.push(run);
-      return () => { run.cancelled = true; };
+      return () => { run.canceled = true; };
     },
     live,
     // Finish the oldest thing in flight.
     finish() {
-      const run = live.find((r) => !r.cancelled && !r.finished);
+      const run = live.find((r) => !r.canceled && !r.finished);
       if (!run) return false;
       run.finished = true;
       run.done();
       return true;
     },
-    speaking: () => live.filter((r) => !r.cancelled && !r.finished).map((r) => r.item.text),
-    cancelled: () => live.filter((r) => r.cancelled).map((r) => r.item.text),
+    speaking: () => live.filter((r) => !r.canceled && !r.finished).map((r) => r.item.text),
+    canceled: () => live.filter((r) => r.canceled).map((r) => r.item.text),
   };
 }
 
@@ -173,8 +173,8 @@ function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
       check('an alert takes the channel from a lower-priority sentence',
         r.chans.speech.speaking().join() === 'your brakes are gone',
         r.chans.speech.speaking().join());
-      check('the interrupted one was actually cancelled, not left running',
-        r.chans.speech.cancelled().join() === 'a long rambling sentence');
+      check('the interrupted one was actually canceled, not left running',
+        r.chans.speech.canceled().join() === 'a long rambling sentence');
       check('being interrupted is not the same as being unwanted — it is requeued',
         r.output.pending('speech') === 1);
       check('and the interruption is logged', r.dropped('preempted').length === 1);
@@ -258,7 +258,7 @@ function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
       const r = rig({ routing: { say: ['speech'] } });
       r.output.say('one'); r.output.say('two'); r.output.say('three');
       r.output.silence();
-      check('silence stops what is speaking', r.chans.speech.cancelled().length === 1);
+      check('silence stops what is speaking', r.chans.speech.canceled().length === 1);
       check('and empties what was waiting', r.output.pending('speech') === 0);
       check('the whole channel is idle', r.output.active('speech') === 0);
     }

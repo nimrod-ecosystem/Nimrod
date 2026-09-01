@@ -22,7 +22,7 @@
 //
 // CONTENT-AS-MEANING. The task catalog and the reward store are DATA in per-profile
 // state, not code — seeded below from the spreadsheet, editable per profile, and a learner
-// modding them is itself part of the curriculum. Colour and voice come from the theme.
+// modding them is itself part of the curriculum. Color and voice come from the theme.
 //
 // NAMING. This is `quests`, not `progress`. `progress` already means something else in
 // this ecosystem — the Cici game-stats dashboard (accuracy, reaction time, omissions per

@@ -13,8 +13,8 @@
 // A hand in front of a camera produces no DOM pointer events at all, so on the screen this was
 // built for, the comet simply never moved.
 //
-// It now subscribes to `input/aim`: one normalised (x, y) from whatever is driving the screen,
-// and this module cannot tell a mouse from a hand from a coloured marker on a foot. That is the
+// It now subscribes to `input/aim`: one normalized (x, y) from whatever is driving the screen,
+// and this module cannot tell a mouse from a hand from a colored marker on a foot. That is the
 // point of the seam, and it is what makes "did I do that?" answerable by the person asking it.
 //
 // Still true, and still worth knowing: a TRACKER that produces those aims is not in this
@@ -35,7 +35,7 @@
 //     the speaker arbiter. There is no drive, no `meditation.json` and no audio bus here, and
 //     a module that fetches a missing manifest on every mount is a module that logs errors
 //     forever. The SYNTHESISED tones stay — they are Web Audio, they need no files.
-//   * COLOURS COME FROM THE THEME where the sky allows it. The night sky itself stays dark by
+//   * COLORS COME FROM THE THEME where the sky allows it. The night sky itself stays dark by
 //     construction (a comet needs somewhere dark to be bright), but the warm palette reads
 //     `--beige`, `--rosy`, `--moss` so it follows Dusk with everything else.
 //   * IT STOPS WHEN IT IS NOT VISIBLE. A canvas animating behind a hidden panel is battery and
@@ -124,7 +124,7 @@ registerModule(
     let steer = null;
     // *** THE SIMULATION CLOCK, AND IT IS DELIBERATELY NOT THE WALL CLOCK. *** Everything that
     // MOVES advances by the dt handed to `step`, so the module can be driven a frame at a time
-    // with no requestAnimationFrame at all. That is what makes the behaviour testable: rAF does
+    // with no requestAnimationFrame at all. That is what makes the behavior testable: rAF does
     // not run when a page is not being composited (a background tab, a headless pane), and a
     // test that depends on it fails for reasons that have nothing to do with the module.
     let simT = 0;
@@ -222,7 +222,7 @@ registerModule(
     }
 
     // ---- hearts ----------------------------------------------------------
-    // Positions are NORMALISED (0..1), which is what makes them survive a resize instead of
+    // Positions are NORMALIZED (0..1), which is what makes them survive a resize instead of
     // piling into the top-left corner the first time the panel changes size.
     function spawnHeart(initial) {
       const h = {
@@ -443,7 +443,7 @@ registerModule(
     }
 
     return {
-      // A canvas module has no markup to assert against, so without this its behaviour can
+      // A canvas module has no markup to assert against, so without this its behavior can
       // only be eyeballed - which is not a test. Same escape hatch the pond exposes, and it
       // is reached only through `impl`, never through the lifecycle contract.
       // Drive the simulation a frame at a time, for a test with no compositor. Advances

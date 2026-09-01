@@ -19,7 +19,7 @@
 // node graph; today they are JSON.
 //
 // PURE-ISH + INJECTABLE: `now`, `rand`, and the timer functions are all injected,
-// so a machine's behaviour is deterministic and testable without a wall clock or
+// so a machine's behavior is deterministic and testable without a wall clock or
 // real setTimeout. It talks to the world ONLY through the bus (subscribe to
 // trigger topics, publish enter/transition actions) — never the DOM. The MODULE
 // wrapper that drops it into a window and mounts child providers into its own

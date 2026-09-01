@@ -67,7 +67,7 @@ tells them the thing.
 from a dictionary and a language model is unattributable, and in a medical context that is the
 one property it cannot lack.
 
-**AI answers are labelled as AI-generated wherever they appear**, and AI is not the default for
+**AI answers are labeled as AI-generated wherever they appear**, and AI is not the default for
 medical terms. In a care context an invented definition is a real harm, not a bad search result.
 Both are defaults, not rules — anyone who wants it first can set that.
 

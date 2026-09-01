@@ -11,7 +11,7 @@
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
   /* ON SCREEN, AND AT A KNOWN PLACE. The first draft parked this at left:-9999px like the
-     other suites do, and the 1:1 assertion below then measured nothing: an aim is NORMALISED
+     other suites do, and the 1:1 assertion below then measured nothing: an aim is NORMALIZED
      to the viewport, so an element outside the viewport makes every coordinate clamp to an
      edge and the check passed or failed for reasons that had nothing to do with the comet.
      A module that is about where things are on screen has to be tested on screen. */
@@ -31,7 +31,7 @@
 <p><code>comet.js</code> read <code>pointermove</code> off its own canvas, and <code>pond.js</code>
 did the same and called its copy <code>aim()</code>, and <code>module-input-spec.md</code> told
 module authors not to assume a pointer exists at all. Three private copies of one idea.
-<code>aim.js</code> owns it now: a normalised (x, y) from whatever is driving the screen, with a
+<code>aim.js</code> owns it now: a normalized (x, y) from whatever is driving the screen, with a
 mouse as the first producer and a camera tracker as a later one that nothing downstream can tell
 apart.</p>
 
@@ -63,7 +63,7 @@ function check(name, cond, detail = '') {
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// A viewport of a known size, so "normalised" can be asserted as arithmetic rather than
+// A viewport of a known size, so "normalized" can be asserted as arithmetic rather than
 // against whatever the runner's window happens to be.
 const VIEW = { innerWidth: 1000, innerHeight: 500 };
 
@@ -93,7 +93,7 @@ function fakeClock() {
 (async () => {
 try {
   // =====================================================================================
-  section('normalising — the thing a camera can actually produce');
+  section('normalizing — the thing a camera can actually produce');
   {
     const a = viewportAim(500, 250, VIEW);
     check('the middle of the viewport is 0.5, 0.5', a.x === 0.5 && a.y === 0.5, JSON.stringify(a));
@@ -175,9 +175,9 @@ try {
     el.style.cssText = 'position:fixed;left:100px;top:50px;width:200px;height:100px';
     document.body.append(el);
     const vw = window.innerWidth, vh = window.innerHeight;
-    // Aim exactly at the element's centre, expressed in this window's real coordinates.
-    const centre = { x: (100 + 100) / vw, y: (50 + 50) / vh };
-    const p = aimIn(centre, el);
+    // Aim exactly at the element's center, expressed in this window's real coordinates.
+    const center = { x: (100 + 100) / vw, y: (50 + 50) / vh };
+    const p = aimIn(center, el);
     check('an aim inside an element converts to its local pixels',
       p && Math.abs(p.x - 100) < 2 && Math.abs(p.y - 50) < 2, JSON.stringify(p));
     // NULL, NOT {0,0}: a module has to be able to tell "not pointing at me" from "pointing at
@@ -241,12 +241,12 @@ try {
       return el.style.left === `${0.5 * window.innerWidth}px`;
     })(), root.querySelector('[data-cur]')?.style.left);
 
-    cfg = { show: 'always', size: 110, style: 'crosshair', colour: '#4CC9F0' };
+    cfg = { show: 'always', size: 110, style: 'crosshair', color: '#4CC9F0' };
     cur.refresh();
     check('*** appearance is a setting and takes effect without moving again ***', (() => {
       const el = root.querySelector('[data-cur]');
       return el.style.width === '110px' && el.dataset.style === 'crosshair'
-        && el.style.getPropertyValue('--cur-colour') === '#4CC9F0';
+        && el.style.getPropertyValue('--cur-color') === '#4CC9F0';
     })(), root.querySelector('[data-cur]')?.style.cssText);
 
     cfg = { show: 'never' };

@@ -130,7 +130,7 @@ check('auto-release → a STUCK SWITCH, which is a hardware repair',
   /stuck switch/.test(say({ control: 'key:x', reason: 'auto-release' })));
 check('unknown-action → the binding points at something gone',
   /no longer exists/.test(say({ control: 'key:x', reason: 'unknown-action' })));
-check('an unrecognised reason is still shown rather than swallowed',
+check('an unrecognized reason is still shown rather than swallowed',
   /brand-new-reason/.test(say({ control: 'key:x', reason: 'brand-new-reason' })));
 check('nonsense does not throw', explainActivation(null).ok === false);
 

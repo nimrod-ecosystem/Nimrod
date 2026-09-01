@@ -111,7 +111,7 @@ function fakeTimers() {
 // the module — is real.
 // AND AT ITS OTHER INTERESTING POINT: the src. The fixture files are valid CONTAINERS with
 // no decodable frames in them, so a real browser fires a genuine `error` on every one the
-// moment it tries to load. That is correct behaviour by both the browser and the module --
+// moment it tries to load. That is correct behavior by both the browser and the module --
 // and it makes every other scenario here unreachable, because the segment ends before the
 // test can do anything. So `src` is stored and read back without ever reaching the element
 // as an attribute: nothing is fetched, nothing is decoded, `el.src` still reads back as the

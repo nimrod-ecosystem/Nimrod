@@ -152,7 +152,7 @@ def main():
     check("MORE is clear when caught up", not p.parse_status(p.build_status(50, 50, 16)).more)
 
     # A version mismatch has to be loud. An old box misreading a new struct would post
-    # plausible nonsense for weeks before anyone analysed it.
+    # plausible nonsense for weeks before anyone analyzed it.
     bad = bytearray(raw)
     bad[0] = 99
     threw = False

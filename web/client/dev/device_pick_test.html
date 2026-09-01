@@ -291,7 +291,7 @@ try {
     let chosen = null;
     const owner = {
       list: async () => devices,
-      labelled: async () => devices.every((d) => !!d.label),
+      labeled: async () => devices.every((d) => !!d.label),
       choose: async () => { chosen = pickDevice(stored.microphonePreferred, devices); return chosen; },
       chosen: () => chosen,
     };
@@ -342,7 +342,7 @@ try {
     let devices = [{ id: 'blank-1', label: '' }, { id: 'blank-2', label: '' }];
     const owner = {
       list: async () => devices,
-      labelled: async () => devices.every((d) => !!d.label),
+      labeled: async () => devices.every((d) => !!d.label),
       choose: async () => null, chosen: () => null,
     };
     const host = document.createElement('div');

@@ -34,7 +34,7 @@
 // first version of this measured the average, reported zero for every setting, and looked
 // green while checking nothing.
 //
-// *** WHAT THIS CANNOT CHECK, said plainly. *** A stop's `l` is a lightness in a CSS colour.
+// *** WHAT THIS CANNOT CHECK, said plainly. *** A stop's `l` is a lightness in a CSS color.
 // It is not a photometric measurement, it knows nothing about the display, and it
 // says nothing whatever about a VIDEO the person supplied — a user's own clip can flash
 // however it likes and no code here can see it. That is the actual reason the motion ladder

@@ -174,7 +174,7 @@ check("...and a verb cannot smuggle a signal either",
 
 # THE SIZE CAP. Without it the relay is a free broadcast pipe, and the room fans it out to
 # every member. A real SDP with plenty of candidates is a few kilobytes.
-check("a realistic SDP is comfortably within the cap",
+check("a realiztic SDP is comfortably within the cap",
       parse_message({"type": "signal",
                      "signal": {"kind": "offer", "sdp": "a=candidate:x\r\n" * 500}}) is not None)
 check("*** an oversized blob is refused ***",

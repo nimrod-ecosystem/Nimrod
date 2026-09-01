@@ -36,7 +36,7 @@ from __future__ import annotations
 # THE FIVE PROVENANCE COLUMNS - section 9f's minimum set
 # ---------------------------------------------------------------------------
 #   principal_id      which principal produced the event
-#   principal_type    denormalised ON PURPOSE - it is the filter every consumer actually
+#   principal_type    denormalized ON PURPOSE - it is the filter every consumer actually
 #                     uses, and it has to survive the principal being renamed or deleted
 #   attested_by       A PRINCIPAL REFERENCE, NOT A BOOLEAN. This is what makes "a clinician
 #                     attested this" and "her brother observed it" different values in one
@@ -262,7 +262,7 @@ def attestation_problem(target: dict | None, attester: str | None) -> str | None
     if not target:
         return "there is nothing here to attest"
     # NOT A NESTING TREE. Vouching for a vouching is not a claim about the observation, and
-    # allowing it invites a chain nobody can summarise. Attest the trial.
+    # allowing it invites a chain nobody can summarize. Attest the trial.
     if target.get("kind") == ATTESTATION_KIND:
         return "an attestation cannot itself be attested - attest the row it cites"
     if not target.get("id"):

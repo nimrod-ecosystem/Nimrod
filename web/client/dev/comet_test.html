@@ -86,7 +86,7 @@ section('every registry that has to know about it, knows');
 check('it is in the verb table', verbsFor('comet').length > 0);
 check('it is in the health table, marked idle — it draws constantly and publishes nothing, '
       + 'so silence is its normal state', expectFor('comet').idle === true);
-check('it is in the human catalogue, so the modules browser can describe it',
+check('it is in the human catalog, so the modules browser can describe it',
       CATALOG.some((c) => c.type === 'comet'));
 
 // =====================================================================
@@ -168,7 +168,7 @@ check('next goes and gets a heart', verbTarget('comet', 'seek') === null
 }
 
 // =====================================================================
-section('settings actually reach the behaviour');
+section('settings actually reach the behavior');
 {
   const host = scratch();
   const inst = mount(host, { state: { get: () => ({ hearts: 0 }) } });

@@ -66,7 +66,7 @@ import { registerModule } from '../module.js';
 import { MUSIC_GROUP } from '../audio_bus.js';
 import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
 
-// What a CALL wants from the microphone, as opposed to what a recogniser wants. Named here so
+// What a CALL wants from the microphone, as opposed to what a recognizer wants. Named here so
 // the intent is readable at the acquire site rather than being three booleans.
 const MIC_PROFILE = MIC_PROFILES.call;
 
@@ -225,7 +225,7 @@ registerModule(
     //
     // It asks for the `call` profile — echo cancellation, noise suppression, gain — which is
     // what stops a room echoing. If something else got there first and opened the microphone
-    // RAW (a recogniser wants raw; see mic_owner.js), the call still gets the stream and the
+    // RAW (a recognizer wants raw; see mic_owner.js), the call still gets the stream and the
     // arbiter reports the mismatch rather than pretending. A slightly echoey call is a working
     // call; a silent one is not.
     async function takeMic() {

@@ -120,7 +120,7 @@ function rig({ seed = null, fresh = true, channels = null } = {}) {
         r.box('alert', 'light').disabled && !r.box('alert', 'screen').disabled);
       check('and marked as absent rather than silently missing',
         /not here/.test(r.q('.o-tab thead').textContent));
-      check('every crossing is labelled for a screen reader',
+      check('every crossing is labeled for a screen reader',
         r.qa('.o-cell .sr-only').length === VERB_ROWS.length * CHANNELS.length);
       r.panel.destroy();
     }

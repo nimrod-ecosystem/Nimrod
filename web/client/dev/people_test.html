@@ -84,7 +84,7 @@ function fakePeopleClient(initial = [{ id: 'p1', name: 'Me', created_at: '1' }])
     const three = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }];
     check('an empty account has nobody', pickCurrent([], 'a') === null);
     check('nothing remembered -> the first person', pickCurrent(three, '').id === 'a');
-    check('a remembered person is honoured', pickCurrent(three, 'b').id === 'b');
+    check('a remembered person is honored', pickCurrent(three, 'b').id === 'b');
     // The failure this exists to prevent: a stale id leaves the page addressing a person
     // who no longer exists, and every save 404s with no visible cause.
     check('a remembered person who no longer exists falls back, not null',

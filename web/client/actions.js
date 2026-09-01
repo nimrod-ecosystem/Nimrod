@@ -1,4 +1,4 @@
-// actions.js — the ACTION CATALOGUE: the list of things an input can be bound TO.
+// actions.js — the ACTION CATALOG: the list of things an input can be bound TO.
 //
 // bus.js already makes inputs interchangeable: any source can feed any topic through a
 // binding, with zero change downstream. What it does NOT have is a way to ASK what is
@@ -7,7 +7,7 @@
 // for a person: an Overwatch-style binder needs a list of actions with human labels
 // before it can say "press the thing you want to use for THIS".
 //
-// So this is the catalogue. A declaration is:
+// So this is the catalog. A declaration is:
 //
 //   { id, label, topic, payload?, group? }
 //     id       stable, machine-safe, and the thing BINDINGS PERSIST AGAINST.
@@ -22,7 +22,7 @@
 // every saved binding follows automatically.
 //
 // WHAT A PERSON ACTUALLY BINDS is not one of these directly — it is a VERB, see below.
-// The catalogue machinery stays because a verb IS an action ("Primary select" published
+// The catalog machinery stays because a verb IS an action ("Primary select" published
 // on `verb/select`); the verb layer just means the list a person reads is nine items
 // long instead of one entry per module feature.
 
@@ -222,7 +222,7 @@ export const MODULE_VERBS = {
                    down:   { topic: 'counter/delta', payload: -1 } },
 };
 
-// What a verb does on a given module type, normalised to {topic, payload}.
+// What a verb does on a given module type, normalized to {topic, payload}.
 export function verbTarget(type, verb, maps = MODULE_VERBS) {
   const hit = maps[type]?.[verb];
   if (!hit) return null;

@@ -110,7 +110,7 @@ export async function mountDemoStrip(root, {
     btn.textContent = 'Choosing…';
     try {
       const src = await pick('My photos');
-      // *** A CANCELLED PICKER IS NOT AN ERROR *** and must not look like one. Somebody who
+      // *** A CANCELED PICKER IS NOT AN ERROR *** and must not look like one. Somebody who
       // opened the dialog to see what it wanted and thought better of it has done nothing
       // wrong, and should find the button exactly as they left it.
       if (!src) { btn.disabled = false; btn.textContent = 'Use my own photos'; return; }

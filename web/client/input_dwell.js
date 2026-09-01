@@ -6,7 +6,7 @@
 // ACTIVATION half did not come across at all.** Nothing in this repo turns `input/aim` into a
 // press: the marker moves a cursor and there it stops.
 //
-// Which means the public colour tracker was not a stale copy of the private one. It was an
+// Which means the public color tracker was not a stale copy of the private one. It was an
 // incomplete one, and incomplete in the half that decides whether the person driving it can SELECT
 // anything or only point at it. A tracker that cannot click is a demo.
 //
@@ -32,7 +32,7 @@
 // be a separate setting, off by default, with its own decision — not a relaxation of this.
 //
 // ---------------------------------------------------------------------------------------
-// PIXELS, NOT NORMALISED UNITS — and it is deliberate
+// PIXELS, NOT NORMALIZED UNITS — and it is deliberate
 // ---------------------------------------------------------------------------------------
 //
 // `aim.js` reports 0..1 of the viewport, which is the right unit for a POSITION: it survives
@@ -45,7 +45,7 @@
 // WHY IT IS A DEVICE ON THE INPUT BUS AND NOT PART OF THE TRACKER
 // ---------------------------------------------------------------------------------------
 //
-// It listens to `input/aim`, so it works for ANY producer — the colour marker, a head
+// It listens to `input/aim`, so it works for ANY producer — the color marker, a head
 // pointer, a mouse belonging to somebody who can move a pointer but cannot click. Building it
 // inside `input_marker.js` would have made "can this person select things" a property of
 // which camera trick they use, which is exactly the coupling the aim bus was created to
@@ -131,7 +131,7 @@ export function createDwell({
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
-  // The aim arrives normalised; this turns it into the pixels the radius is expressed in.
+  // The aim arrives normalized; this turns it into the pixels the radius is expressed in.
   viewport = () => ({
     w: (typeof window !== 'undefined' ? window.innerWidth : 1920) || 1920,
     h: (typeof window !== 'undefined' ? window.innerHeight : 1080) || 1080,

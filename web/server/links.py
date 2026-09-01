@@ -36,7 +36,7 @@ FIVE RULES, each here because the alternative rots.
    taught bindings, one level up.
 
 3. THE CAPABILITY SET IS FROZEN AND FAILS CLOSED.
-   An unrecognised capability is not stored and never resolves. A permissions system that
+   An unrecognized capability is not stored and never resolves. A permissions system that
    fails OPEN on a concept it has not implemented is not a permissions system.
 
 4. THE SUBJECT IS POLYMORPHIC FROM DAY ONE, AND ONLY ONE KIND RESOLVES TODAY.
@@ -155,7 +155,7 @@ NO_GROUP_CAPABILITIES: tuple[str, ...] = ()
 
 
 class UnknownCapability(ValueError):
-    """Raised on the way IN. Nothing unrecognised reaches storage."""
+    """Raised on the way IN. Nothing unrecognized reaches storage."""
 
 
 def normalize_capability(cap: str | None) -> str:
@@ -282,7 +282,7 @@ def may(capability: str, *, actor: str, person_id: str, owner: str | None,
     if not actor or not person_id:
         return False
     # NO OWNER MEANS NO PERSON. Deleting a person can leave permission rows behind as
-    # tombstones, and honouring one would let somebody reach the screens of a person who
+    # tombstones, and honoring one would let somebody reach the screens of a person who
     # no longer exists.
     if not owner:
         return False

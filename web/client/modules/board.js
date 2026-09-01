@@ -118,7 +118,7 @@ registerModule(
     // `normal`, not `critical` — and the distinction is not modesty. `importance` feeds the
     // recovery ladder's fallback RANKING (`recovery.js`), so `critical` does not mean "matters
     // a lot", it means "swap to this when something breaks". A board is a tool somebody uses on
-    // purpose, not something to look at, which is the same reason it is in the catalogue's
+    // purpose, not something to look at, which is the same reason it is in the catalog's
     // 'practice' group rather than 'comfort'.
     dependsOn: 'none', importance: 'normal', settings: SETTINGS },
   (ctx) => {
@@ -168,10 +168,10 @@ registerModule(
       if (!w || !h) return;                     // not laid out yet; onResize will come back
       const u = Math.min(w / t.cols, h / t.rows) / 100;
       g.style.setProperty('--u', `${u}px`);
-      // *** TOO SMALL FOR BOTH? DROP THE PICTURE, NEVER THE WORD. *** Same rule as colour: the
+      // *** TOO SMALL FOR BOTH? DROP THE PICTURE, NEVER THE WORD. *** Same rule as color: the
       // symbol supports meaning, the word carries it. A board squeezed into a corner of a
       // dashboard stays readable; one that shrank the word to keep a picture would be neither
-      // readable nor recognisable. The threshold is the card's short side in px.
+      // readable nor recognizable. The threshold is the card's short side in px.
       g.classList.toggle('ab-tight', Math.min(w / t.cols, h / t.rows) < TIGHT_PX);
     }
 

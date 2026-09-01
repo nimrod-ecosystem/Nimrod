@@ -7,7 +7,7 @@
 //
 // THREE HONEST OPTIONS, and no fourth:
 //   resume  — where she was, module and all. Best when nothing is wrong.
-//   top     — this screen, from the first module. Today's behaviour, and the default,
+//   top     — this screen, from the first module. Today's behavior, and the default,
 //             because changing what existing screens do on reboot without being asked is
 //             not a change anybody consented to.
 //   screen  — a NAMED screen, whatever the URL happens to say. The escape hatch.
@@ -124,7 +124,7 @@ export function hasHopped(storage = undefined) {
 }
 
 // What the settings menu shows. Kept next to the rules rather than in the kiosk, so the
-// wording and the behaviour cannot drift apart.
+// wording and the behavior cannot drift apart.
 export function restartItems(cfg, { screenName = 'this screen', onChange } = {}) {
   const tick = (m) => (cfg.mode === m ? '✓ ' : '');
   return [

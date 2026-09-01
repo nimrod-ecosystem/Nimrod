@@ -23,7 +23,7 @@ assumption.**
   do — the way a game lets you remap controls. Most of it is plug and play. That includes the 3.5 mm
   adaptive switch jack the Xbox Adaptive Controller made standard, so the DIY switch ecosystem works
   here too. Adding a new input method means adding a source; nothing downstream changes.
-  **Planned:** hand and colour tracking, and voice as an input. Neither is in this codebase yet, so
+  **Planned:** hand and color tracking, and voice as an input. Neither is in this codebase yet, so
   they are listed here the way the table below lists everything else rather than in the sentence
   above it.
 - **One session, many screens.** A phone, a TV, and a bedside tablet are clients on the same session,

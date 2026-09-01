@@ -32,10 +32,10 @@
 // WHAT IT DOES TODAY, AND WHAT IT IS FOR LATER
 // ---------------------------------------------------------------------------------------
 //
-// **There is no recogniser yet, and this does not pretend otherwise.** Today it is answered by
+// **There is no recognizer yet, and this does not pretend otherwise.** Today it is answered by
 // pointer or by switch. What it also does — when a recorder is handed to it — is MARK the audio
-// at every question with what was asked and what was chosen. So the labelled corpus builds
-// itself while somebody plays a game they wanted to play, and the recogniser that needs it can
+// at every question with what was asked and what was chosen. So the labeled corpus builds
+// itself while somebody plays a game they wanted to play, and the recognizer that needs it can
 // arrive afterwards to find the data already there.
 //
 // *** AND THE ONE THING A MARK MUST NOT SAY. *** It records the question and the button. It does
@@ -43,9 +43,9 @@
 // data is worse than no label, because it is confidently wrong in a file nobody re-checks. See
 // `recorder.js`.
 //
-// **The rule for when a recogniser DOES arrive**, written down now so it is not discovered late:
+// **The rule for when a recognizer DOES arrive**, written down now so it is not discovered late:
 // a recognition failure must never be scored as a wrong answer. Somebody knows the answer is
-// Paris, says Paris, and the recogniser is unsure — marking that wrong tells them they do not
+// Paris, says Paris, and the recognizer is unsure — marking that wrong tells them they do not
 // know something they do, *because of how they sound*, which is exactly the judgment the trivia
 // framing was chosen to avoid. It comes straight back in through the side door, harder to see because the
 // score now looks like it is about knowledge. When no candidate is clearly ahead: say it was not
@@ -65,7 +65,7 @@
 //
 //     question | answer | wrong | wrong | wrong | topic?
 //
-// Lines beginning `#` are comments, so a bank can be organised and annotated by whoever owns it.
+// Lines beginning `#` are comments, so a bank can be organized and annotated by whoever owns it.
 
 import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
@@ -168,7 +168,7 @@ const SEED = `# question | answer | wrong | wrong | wrong
 What is the capital of France? | Paris | London | Rome | Madrid
 Which planet is closest to the Sun? | Mercury | Venus | Mars | Earth
 How many legs does a spider have? | Eight | Six | Ten | Four
-What colour do you get mixing blue and yellow? | Green | Purple | Orange | Brown
+What color do you get mixing blue and yellow? | Green | Purple | Orange | Brown
 Which ocean is the largest? | Pacific | Atlantic | Indian | Arctic`;
 
 registerModule(

@@ -11,8 +11,8 @@ Two mechanisms:
   bedside auth — one secret per device, revocable independently, sent over HTTPS.
   Google OAuth for visitors/caregivers plugs in here later, alongside.
 
-- **Dev override**: so multi-user behaviour is testable before real auth, dev mode
-  (``NIMROD_ENV`` != ``prod``) honours an ``X-Dev-User`` header or ``?user=`` query.
+- **Dev override**: so multi-user behavior is testable before real auth, dev mode
+  (``NIMROD_ENV`` != ``prod``) honors an ``X-Dev-User`` header or ``?user=`` query.
 
 FAIL CLOSED in prod: with ``NIMROD_ENV=prod``, ONLY a valid device key is accepted —
 no override, and no shared default user. A request without a valid key gets 401. A
@@ -78,7 +78,7 @@ def _match_device_key(provided: str | None) -> str | None:
     compare_digest for the env keys because we are iterating over a handful of secrets and
     timing is free to avoid. The table lookup is an indexed primary-key match on a
     high-entropy secret, where a timing signal would have to leak a hash comparison inside
-    the database - not a realistic path, and the alternative is loading every key on every
+    the database - not a realiztic path, and the alternative is loading every key on every
     request.
     """
     if not provided:

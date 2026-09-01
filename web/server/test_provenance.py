@@ -55,8 +55,8 @@ check("the minimum set is the one section 9f specified",
                             "producer_version"), PROVENANCE_FIELDS)
 check("three principal types", PRINCIPAL_TYPES == ("human", "local_model", "cloud_service"))
 
-check("a known type normalises", normalize_principal_type("Human") == "human")
-check("*** AN UNRECOGNISED TYPE BECOMES NULL, NOT A DEFAULT. This column is a claim about who "
+check("a known type normalizes", normalize_principal_type("Human") == "human")
+check("*** AN UNRECOGNIZED TYPE BECOMES NULL, NOT A DEFAULT. This column is a claim about who "
       "made the data, and a typo silently written as 'human' is a falsehood in a log that has "
       "no update ***", normalize_principal_type("robot") is None)
 check("and None stays None - 'not captured' is an honest answer",
@@ -80,7 +80,7 @@ check("*** 'player' is a role, not just 'subject' - most people in a game are no
 check("and the clinical roles are separate from family, which is what makes the CRS-R "
       "weighting question answerable at all",
       "clinician" in ROSTER_ROLES and "family" in ROSTER_ROLES)
-check("an unknown role does not normalise", normalize_role("wizard") is None)
+check("an unknown role does not normalize", normalize_role("wizard") is None)
 check("eight players", MAX_PLAYERS == 8)
 
 check("an EMPTY roster is fine - 'nobody said who was there' is honest, and refusing to start "

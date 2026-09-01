@@ -321,7 +321,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         JSON.stringify(r.micLog));
       check('...through the ARBITER, by a named consumer, not by opening its own',
         r.micLog[0][1] === 'call:c1', JSON.stringify(r.micLog[0]));
-      // A call wants the room cleaned up; a recogniser wants it raw. Asking for the wrong one
+      // A call wants the room cleaned up; a recognizer wants it raw. Asking for the wrong one
       // here would make every call echo.
       check('...asking for CALL processing, not raw',
         r.micLog[0][2] && r.micLog[0][2].echoCancellation === true

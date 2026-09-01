@@ -37,9 +37,9 @@
    Width is in the min() too — "10:38 PM" in a wide, short cell would otherwise overflow
    sideways long before it ran out of height. */
 @container cell (min-height: 1px){
-  /* CENTRE IT IN THE CELL. `.clock` stretches to the full height of the panel it is given,
+  /* CENTER IT IN THE CELL. `.clock` stretches to the full height of the panel it is given,
      but its contents packed at the top — a clock sitting against the ceiling of an empty
-     quadrant, which is what "the clock is off centre" was. Scoped to a sized box on
+     quadrant, which is what "the clock is off center" was. Scoped to a sized box on
      purpose: the kiosk's translucent clock HUD is NOT a `.mod-box`, and it deliberately
      hugs its corner. */
   .clock{height:100%;justify-content:center}
@@ -151,7 +151,7 @@
 .director .d-bar{display:none}   /* the kiosk provides its own controls */
 
 /* THE COMMUNICATION BOARD. Big targets, high contrast, and a lit card that is unmistakable
-   from a bed at one to two metres — the distance the symbols were drawn for. */
+   from a bed at one to two meters — the distance the symbols were drawn for. */
 .aboard{position:absolute;inset:0;padding:calc(var(--u,1px) * 3);box-sizing:border-box}
 .ab-grid{width:100%;height:100%;display:grid;gap:calc(var(--u,1px) * 4)}
 .ab-card{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;
@@ -174,7 +174,7 @@
    a normal card, not a broken one. */
 .ab-card:not(:has(.ab-sym)) .ab-word{font-size:clamp(12px,calc(var(--u,1px) * 30),120px)}
 /* *** A CARD TOO SMALL FOR BOTH DROPS THE PICTURE, NEVER THE WORD. ***
-   The same rule as colour: the symbol SUPPORTS meaning, the word CARRIES it. A board squeezed
+   The same rule as color: the symbol SUPPORTS meaning, the word CARRIES it. A board squeezed
    into a corner of a dashboard is still readable; a board that shrank the word to fit a picture
    in would be neither. Set by `setUnit` in modules/board.js, which knows the card's real size. */
 .ab-grid.ab-tight .ab-sym{display:none}
@@ -189,7 +189,7 @@
 .ab-card.ab-press{transform:scale(.97);box-shadow:0 0 0 .8vmin rgba(131,153,88,.75)}
 /* 'one at a time': the others are gone, not dimmed. Half-visible cards are worse than none. */
 .ab-card.ab-away{visibility:hidden}
-/* Colour SUPPORTS meaning; the word carries it. Nothing here is the only cue for anything. */
+/* Color SUPPORTS meaning; the word carries it. Nothing here is the only cue for anything. */
 .ab-yes .ab-word{color:#2c6e49}
 .ab-no .ab-word{color:#a4243b}
 .ab-need .ab-word{color:#8a6212}
@@ -485,7 +485,7 @@
 /* ---- press overlay: what was just pressed -------------------------------
    Deliberately quiet. This sits on a screen somebody looks at all day, so it
    has to be readable at a glance and impossible to mistake for content.
-   SHAPE PLUS COLOUR, NEVER COLOUR ALONE: a refused press is struck through AND
+   SHAPE PLUS COLOR, NEVER COLOR ALONE: a refused press is struck through AND
    tinted, because two rows differing only in hue are one row to somebody with
    reduced vision. */
 .po-wrap {
@@ -543,8 +543,8 @@
 /* ---- THE CURSOR: where the aim is, drawn by us rather than by the operating system ----
  *
  * See cursor.js for why this is not the system pointer. The short version: an OS arrow is
- * 12px of thin grey, cannot be themed, and does not exist at all for a hand in front of a
- * camera. Position is set inline from a normalised aim; everything about how it LOOKS is
+ * 12px of thin gray, cannot be themed, and does not exist at all for a hand in front of a
+ * camera. Position is set inline from a normalized aim; everything about how it LOOKS is
  * here, driven by data attributes and two custom properties the module writes.
  *
  * z-index sits ABOVE the press overlay (40): if both are on screen, the thing being pointed
@@ -556,19 +556,19 @@
 .cur {
   position: fixed; z-index: 60; pointer-events: none;
   left: 0; top: 0;
-  --cur-colour: #F7C948;
+  --cur-color: #F7C948;
   --cur-ring: 4px;
 }
 /* A DARK OUTLINE UNDER EVERY STYLE, so the cursor reads against a white hospital sheet and a
-   night sky without anybody having to change the colour. */
+   night sky without anybody having to change the color. */
 .cur[data-style="ring"] {
   border-radius: 50%;
-  border: var(--cur-ring) solid var(--cur-colour);
+  border: var(--cur-ring) solid var(--cur-color);
   box-shadow: 0 0 0 1px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.55);
 }
 .cur[data-style="dot"] {
   border-radius: 50%;
-  background: var(--cur-colour);
+  background: var(--cur-color);
   box-shadow: 0 0 0 2px rgba(0,0,0,.55);
 }
 /* Two bars rather than a border, so the middle stays empty and whatever is being pointed at
@@ -576,7 +576,7 @@
 .cur[data-style="crosshair"] { background: none; }
 .cur[data-style="crosshair"]::before,
 .cur[data-style="crosshair"]::after {
-  content: ""; position: absolute; background: var(--cur-colour);
+  content: ""; position: absolute; background: var(--cur-color);
   box-shadow: 0 0 0 1px rgba(0,0,0,.55);
 }
 .cur[data-style="crosshair"]::before {
@@ -613,7 +613,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 }
 .mk-side { flex: 1 1 240px; min-width: 220px; }
 .mk-advice { margin: 0 0 8px; font-weight: 650; }
-/* Shape as well as colour, per module-input-spec: never carry meaning by colour alone. */
+/* Shape as well as color, per module-input-spec: never carry meaning by color alone. */
 .mk-advice[data-state="seen"]::before { content: "\2713\00a0"; color: #2c6e49; }
 .mk-advice[data-state="faint"]::before { content: "\26A0\00a0"; }
 .mk-advice[data-state="lost"]::before,
@@ -666,7 +666,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .dv-add { display: inline-block; margin: 0 6px 6px 0; }
 .dv-note { margin: 10px 0 6px; font-size: .87rem; color: var(--muted, #5d7064); }
 .dv-now { margin: 8px 0 0; font-weight: 650; max-width: 62ch; }
-/* Shape as well as colour — module-input-spec, "do not use colour alone". */
+/* Shape as well as color — module-input-spec, "do not use color alone". */
 .dv-now[data-state="preferred"]::before { content: "\2713\00a0"; color: #2c6e49; }
 .dv-now[data-state="fallback"]::before,
 .dv-now[data-state="unlisted"]::before { content: "\26A0\00a0"; }
@@ -710,7 +710,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
   padding: 12px 16px; border-radius: 12px; border: 2px solid var(--line, #e4e0c2);
   background: #fff; color: var(--ink, #0A3323); cursor: pointer;
 }
-/* THE HIGHLIGHT IS A BORDER AND AN ARROW, never colour alone — module-input-spec, and it is
+/* THE HIGHLIGHT IS A BORDER AND AN ARROW, never color alone — module-input-spec, and it is
    also what makes it visible to somebody scanning from across a room. */
 .tv-opt[data-on="1"] { border-color: var(--midnight, #105666); box-shadow: 0 0 0 3px rgba(16,86,102,.18); }
 .tv-opt[data-on="1"]::before { content: "\25B8\00a0"; }

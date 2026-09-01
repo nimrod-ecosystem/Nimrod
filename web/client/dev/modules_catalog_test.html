@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>modules catalogue — is anything shipped and unexplained — test</title>
+<title>modules catalog — is anything shipped and unexplained — test</title>
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
@@ -13,7 +13,7 @@
 </style>
 </head>
 <body>
-<h1>modules catalogue — the page that reports its own gaps</h1>
+<h1>modules catalog — the page that reports its own gaps</h1>
 
 <div class="note">
   The point of generating <code>modules.html</code> from the live registry rather than typing
@@ -197,7 +197,7 @@ section('the words themselves');
 
 section('titles');
 {
-  check('a catalogue title overrides the manifest, so “director” can read as “Lineup”',
+  check('a catalog title overrides the manifest, so “director” can read as “Lineup”',
     titleFor({ type: 'director', title: 'Lineup' }, manifests) === 'Lineup');
   check('...and without an override it uses the module’s own title',
     titleFor({ type: 'photos' }, manifests) === (manifests.find((m) => m.type === 'photos') || {}).title);

@@ -24,14 +24,14 @@
 
 <p>Found by auditing the private <code>cici_color.js</code> against this repo's
 <code>input_marker.js</code>. The detection half had ported faithfully; the ACTIVATION half had
-not come across at all, so the public colour tracker could point at things and never select
+not come across at all, so the public color tracker could point at things and never select
 one. These are the private build's own numbers — 1800&nbsp;ms, 70&nbsp;px, a 1.5× re-arm — not
 fresh guesses.</p>
 
 <div class="note">
   <b>Not covered here.</b> Anything with a real camera or a real person: whether 1800&nbsp;ms is
   right for anybody but the one person it was tuned for, and whether 70&nbsp;px of wander
-  matches what a colour marker on a foot actually produces on a Pi 400. Those are bench
+  matches what a color marker on a foot actually produces on a Pi 400. Those are bench
   questions. This suite is the state machine and the wiring.
 </div>
 
@@ -179,7 +179,7 @@ try {
 
     bus.publish(AIM_TOPIC, { x: 0.5, y: 0.5 });
     clock.advance(500);
-    check('a normalised aim is converted into pixels', d.state().anchor?.x === 500,
+    check('a normalized aim is converted into pixels', d.state().anchor?.x === 500,
       JSON.stringify(d.state().anchor));
     check('nothing has fired yet', input.edges.length === 0);
     check('...but the ring is moving', progress.some((p) => p > 0 && p < 1), JSON.stringify(progress));

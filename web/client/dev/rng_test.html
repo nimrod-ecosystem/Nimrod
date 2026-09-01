@@ -190,7 +190,7 @@ section('statsFromEvents & record');
   ok(statsFromEvents(undefined) && Object.keys(statsFromEvents(undefined)).length === 0, 'undefined log tolerated');
   // custom keys
   const st2 = statsFromEvents([{ vid: 'q', ts: 9 }], { idKey: 'vid', atKey: 'ts' });
-  ok(st2.q.n === 1 && st2.q.last === 9, 'honours custom idKey/atKey');
+  ok(st2.q.n === 1 && st2.q.last === 9, 'honors custom idKey/atKey');
   // record is non-mutating
   const base = { x: { n: 1, last: 10 } };
   const next = record(base, 'x', 20);
