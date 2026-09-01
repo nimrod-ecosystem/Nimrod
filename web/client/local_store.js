@@ -398,15 +398,23 @@ export async function seedStarterScreen(profilesClient = createLocalProfilesClie
 
   // 'quad' is a plain 2x2 filled in DOM order, so its slots are TL, TR, BL, BR. Clockwise
   // from the top left is therefore slots 0, 1, 3, 2 — not 0,1,2,3.
+  //
+  // *** THE ORDER IS THE ONE THE LANDING PAGE'S POSTER PROMISES. *** Decided 2026-08-27:
+  // clockwise from the top left, pictures · live view · clock · word game. The poster on the
+  // landing page draws that arrangement, and one tap loads THIS screen inside it — so if the
+  // two disagree, the page has lied to somebody in the first five seconds of meeting it.
+  // Change one and change the other.
   const photos = await profilesClient.addModule(p.id, 'photos');
+  const tube = await profilesClient.addModule(p.id, 'youtube');
   const word = await profilesClient.addModule(p.id, 'wordforge');
   const clock = await profilesClient.addModule(p.id, 'clock');
-  const tube = await profilesClient.addModule(p.id, 'youtube');
 
   const settings = makeSettings(p.id);
   await settings.load();
   settings.set({
-    kiosk: { layout: { preset: 'quad', slots: [photos.id, word.id, tube.id, clock.id] } },
+    // [TL, TR, BL, BR] — pictures, live view, word game, clock. Clockwise that reads
+    // pictures → live view → clock → word game, which is the decided order.
+    kiosk: { layout: { preset: 'quad', slots: [photos.id, tube.id, word.id, clock.id] } },
   });
   await settings.flush();
   settings.destroy();

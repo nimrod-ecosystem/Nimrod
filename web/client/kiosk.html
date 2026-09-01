@@ -78,7 +78,11 @@
 </style>
 </head>
 <body>
-<div id="boot">Loading her dashboard…</div>
+<!-- NEUTRAL, AND IT HAS TO BE. This is painted before `whoami()` has answered, so it is
+     the first thing a signed-out stranger sees after clicking "Try it" on the landing page —
+     and "her dashboard" told them the screen belonged to somebody else before it had
+     finished loading. There is nobody to be possessive about yet. -->
+<div id="boot">Starting Nimrod…</div>
 <div id="root"></div>
 
 <script type="module">
@@ -90,7 +94,7 @@ import {
   createLocalBackend, createLocalMediaSources, seedStarterScreen,
 } from './local_store.js';
 import { pickFolder, listFolderSources, isFolderPickerSupported } from './folder_source.js';
-import { mountDemoStrip } from './demo_strip.js';
+import { mountDemoStrip, mountWayOut } from './demo_strip.js';
 
 const params = new URLSearchParams(location.search);
 // one-time device-key pairing (unattended-kiosk fallback): launch once with
@@ -184,6 +188,23 @@ async function bootLocal() {
     signedIn: false,
     onConnected: () => location.reload(),
   }).catch((e) => console.warn('demo strip', e));
+
+  // *** AND A WAY OUT, WHICH THE STRIP IS NOT. ***
+  //
+  // The kiosk fills the screen and has no chrome. Signed out it is reached by a stranger
+  // clicking "Try it", and the only exit used to be the "Sign in to keep this" link inside
+  // the demo strip — which has a dismiss button. Dismiss it and the visitor is in a
+  // full-screen app with nothing to press and no way back to the page they came from.
+  //
+  // That is the AGENTS.md safety invariant, not a UX gap: A SCREEN MUST NEVER ENTER A STATE
+  // THAT ONLY AN INPUT CAN LEAVE, WHEN THE PERSON IN FRONT OF IT CANNOT GIVE THAT INPUT.
+  // Here the person can press things and there was simply nothing to press.
+  //
+  // It is mounted from THIS branch, beside the strip, for the same reason the strip is: this
+  // is the one place that knows a stranger is looking. A paired bedside screen never reaches
+  // it, and must not — a permanent "leave" link on a real bedside screen is the failure
+  // pointed the other way.
+  mountWayOut(document.body);
 }
 
 (async () => {

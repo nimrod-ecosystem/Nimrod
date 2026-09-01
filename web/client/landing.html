@@ -4,6 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nimrod — free, private technology for patient care &amp; recovery</title>
+
+<!-- THE LINK IS THE DISTRIBUTION CHANNEL. This page spreads by being forwarded in a text
+     message or pasted into a support group, and until now it arrived there as a bare grey
+     URL: no title, no description, no picture. Everything in this block exists for the
+     moment somebody shares it with a stranger who is having a bad week. -->
+<meta name="description" content="A free, private system that helps people with brain injury, stroke and other serious conditions use a screen — photos, video, communication boards and games — and helps their families stay close. Runs on hardware you already own.">
+<link rel="canonical" href="https://nimrodecosystem.com/">
+<meta name="theme-color" content="#0A3323">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nimrod">
+<meta property="og:url" content="https://nimrodecosystem.com/">
+<meta property="og:title" content="Nimrod — free, private technology for care and recovery">
+<meta property="og:description" content="Photos, video, communication boards and games for people with brain injury or stroke — on hardware you already own. Free, open source, and your files never leave your machine.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Nimrod — free, private technology for care and recovery">
+<meta name="twitter:description" content="Photos, video, communication boards and games for people with brain injury or stroke — on hardware you already own.">
+
+<!-- NO og:image YET, DELIBERATELY. A share card wants a real screenshot of the running
+     product, and those come from the seeded demo account the walkthrough will use. A stock
+     placeholder or a logo card would be exactly the mockup this page's thesis argues
+     against. Add og:image and twitter:image in the same change that adds the screenshots. -->
+
+<!-- Inline SVG favicon: no extra request, no file to lose, and it scales. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A3323'/%3E%3Cpath d='M9 23V9l14 14V9' stroke='%23F7F4D5' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root{
     /* palette from the reference swatches — color values are free to use */
@@ -21,7 +46,9 @@
     --muted:#5d7064;
     --line:#e4e0c2;
     --line-soft:#ece8cf;
-    --rosy-deep:#a85f52;   /* accessible rosy for small text/links */
+    --rosy-deep:#9e5449;   /* 4.94 on cream. Was #a85f52 at 4.26 — under AA, and used
+                              for small text, links and the milestone box. */
+    --pill-accent:#E8BDB4; /* hero pills measured 3.34 against the gradient’s teal end */
     --radius:16px; --max:1080px;
   }
   *{box-sizing:border-box}
@@ -34,14 +61,39 @@
   .storetab td.tag{white-space:nowrap;color:var(--muted);font-size:.8rem;text-align:right}
   .storetab tr.undoc td{background:rgba(211,150,140,.16)}
   .undocnote{font-size:.9rem;color:var(--rosy-deep)}
+  .storetab .when{color:var(--ink-soft);font-size:.86rem;white-space:nowrap}
+  @media (max-width:640px){ .storetab .when{white-space:normal} }
+  .foot-links{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    font-size:.92rem}
+  .foot-legal{margin:14px 0 0;font-size:.86rem;opacity:.75;max-width:64ch}
   .never{font-size:.92rem;margin:.6em 0 0}
   .muted{color:var(--muted)}
-  html{scroll-behavior:smooth}
+  /* SMOOTH SCROLLING IS A MOTION EFFECT, and this page is for people who may be
+     vestibular-sensitive or newly brain-injured. Honour the system request. */
+  @media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth} }
   body{margin:0;background:var(--bg);color:var(--ink);
     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     -webkit-font-smoothing:antialiased}
   a{color:var(--midnight)}
   a:hover{color:var(--rosy-deep)}
+
+  /* *** A VISIBLE FOCUS RING. There was no :focus rule anywhere in this stylesheet, so a
+     keyboard user could not see where they were on a page about accessibility. ***
+     focus-visible so a mouse click does not leave a ring behind. */
+  a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{
+    outline:3px solid var(--midnight);outline-offset:3px;border-radius:4px}
+  /* On the dark hero the midnight ring disappears; go light there. */
+  .hero a:focus-visible,nav a:focus-visible{outline-color:#F7F4D5}
+
+  /* THE NAV IS STICKY, so an anchor jump lands the target underneath it and the focus ring
+     is hidden behind the bar. scroll-margin is what makes a skip link and every nav anchor
+     actually land somewhere you can see. */
+  :target,section[id],main{scroll-margin-top:84px}
+
+  .skip{position:absolute;left:-9999px;top:0;z-index:100;
+    background:var(--darkgreen);color:#F7F4D5;padding:12px 18px;border-radius:0 0 8px 0;
+    font-weight:700;text-decoration:none}
+  .skip:focus{left:0}
   .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
   h1,h2,h3{line-height:1.18;letter-spacing:-.01em;color:var(--ink)}
   h2{font-size:1.7rem;margin:0 0 .45em}
@@ -59,6 +111,31 @@
   nav .wrap{display:flex;align-items:center;gap:16px;height:64px}
   .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;color:var(--darkgreen)}
   .brand span{color:var(--rosy-deep)}
+  .demo{background:var(--cream-soft);border-block:1px solid var(--line)}
+  .demo-lede{max-width:62ch;color:var(--ink-soft)}
+  .demo-frame{margin-top:22px;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+    background:var(--darkgreen);aspect-ratio:16/10;position:relative}
+  .demo-poster{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;
+    background:linear-gradient(140deg,#0A3323,#105666);cursor:pointer;display:block}
+  .demo-quad{position:absolute;inset:7%;display:grid;grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr;gap:2.2%}
+  .dq{background:rgba(247,244,213,.07);border:1px solid rgba(247,244,213,.20);border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35em;
+    color:#e8f0ea;text-align:center;padding:6px}
+  .dq b{font-size:clamp(.8rem,1.7vw,1.05rem)}
+  .dq i{font-style:normal;font-size:clamp(.62rem,1.15vw,.82rem);opacity:.72;max-width:22ch}
+  .demo-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:82px;height:82px;border-radius:50%;background:rgba(247,244,213,.94);color:#0A3323;
+    display:flex;align-items:center;justify-content:center;font-size:34px;padding-left:6px}
+  .demo-poster:hover .demo-play{background:#fff}
+  .demo-cap{position:absolute;left:0;right:0;bottom:14px;color:#e8f0ea;font-weight:600;
+    font-size:.92rem}
+  .demo-live,.demo-live iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .demo-note{margin-top:12px;font-size:.92rem;color:var(--ink-soft);max-width:62ch}
+  .navlinks{display:flex;gap:18px;margin-left:26px;font-size:.92rem}
+  .navlinks a{color:var(--ink-soft);text-decoration:none;font-weight:600}
+  .navlinks a:hover{color:var(--rosy-deep)}
+  @media (max-width:860px){ .navlinks{display:none} }
   .freetag{font-size:.72rem;font-weight:600;color:var(--midnight);
     border:1px solid var(--line);background:var(--cream-soft);
     padding:4px 10px;border-radius:999px;white-space:nowrap}
@@ -86,7 +163,7 @@
   .pills{display:flex;gap:9px;flex-wrap:wrap;margin-top:30px}
   .pill{font-size:.8rem;color:#dbe3cf;border:1px solid rgba(247,244,213,.28);
     border-radius:999px;padding:6px 13px}
-  .pill b{color:var(--rosy);font-weight:600}
+  .pill b{color:var(--pill-accent);font-weight:600}
 
   /* SECTIONS */
   section{padding:64px 0;border-top:1px solid var(--line)}
@@ -191,17 +268,32 @@
   ============================================================
 -->
 
+<!-- FIRST FOCUSABLE THING ON THE PAGE. Without it, reaching the content by keyboard
+     means tabbing through the whole nav on every single page load. -->
+<a class="skip" href="#main">Skip to content</a>
+
 <nav>
   <div class="wrap">
     <div class="brand">Nimrod<span>.</span></div>
     <span class="freetag">Free &amp; private</span>
+    <!-- The five section ids have existed since the page was written and nothing linked
+         to them. Hidden below the pill breakpoint rather than wrapped, because a nav that
+         wraps to two lines on a phone pushes the content off the first screen. -->
+    <div class="navlinks">
+      <a href="#intention">What it’s for</a>
+      <a href="#demo">Try it</a>
+      <a href="#backstory">Story</a>
+      <a href="#progress">Progress</a>
+      <a href="#involve">Get involved</a>
+    </div>
     <div class="right">
       <a href="/auth/login" class="btn outline">Sign in</a>
-      <a href="/kiosk.html" class="btn">Try it</a>
-      <a href="/auth/login" class="btn primary">Get started</a>
+      <a href="#demo" class="btn primary">Try it now</a>
     </div>
   </div>
 </nav>
+
+<main id="main">
 
 <header class="hero">
   <div class="wrap">
@@ -212,7 +304,7 @@
       communicate, advocate, and stay close. Private, modular, and able to run on equipment you
       probably already own.</p>
     <div class="cta">
-      <a href="/kiosk.html" class="btn ondark">Try it now — no account</a>
+      <a href="#demo" class="btn ondark">Try it now — no account, nothing to install</a>
       <a href="/auth/login" class="btn ondark ghost">Get started — it’s free</a>
     </div>
     <div class="pills">
@@ -224,6 +316,50 @@
   </div>
 </header>
 
+<!-- 0 · DEMO — the primary call to action.
+     POSTER FIRST, LIVE ON TAP. The kiosk is a real application on a free hosting tier, so a
+     cold start can take seconds; first paint must never wait on it. Everybody sees the
+     picture instantly, the page still works when the kiosk does not, and one tap swaps in
+     the real thing.
+     THE PREVIEW IS DRAWN, NOT PHOTOGRAPHED. A stock screenshot would be the mockup this
+     page’s whole thesis argues against, and there are no real screenshots yet — they come
+     from the seeded demo account the walkthrough will use. So the poster is an honest
+     diagram of the layout, clearly a diagram, and it is replaced by a real screenshot in the
+     same change that adds the images. -->
+<section id="demo" class="demo">
+  <div class="wrap">
+    <p class="eyebrow">Try it</p>
+    <h2>This is the actual software. Press play.</h2>
+    <p class="demo-lede">No account, no install, nothing to uninstall afterwards. It runs the
+      same code a bedside screen runs — the only difference is that these are sample photos
+      and the settings live in this browser instead of an account.</p>
+
+    <div class="demo-frame">
+      <button class="demo-poster" data-play aria-label="Start the live demo">
+        <span class="demo-quad" aria-hidden="true">
+          <span class="dq"><b>Pictures</b><i>their own photos, on a loop</i></span>
+          <span class="dq"><b>Live view</b><i>video, on a schedule by time of day</i></span>
+          <span class="dq"><b>Word Forge</b><i>practice, at their level</i></span>
+          <span class="dq"><b>Clock</b><i>the day, in words</i></span>
+        </span>
+        <span class="demo-play" aria-hidden="true">▶</span>
+        <span class="demo-cap">Press to load the live screen</span>
+      </button>
+      <div class="demo-live" data-live hidden></div>
+    </div>
+
+    <!-- THE ZOO CAM IS STILL TO COME. The 2026-08-27 decision puts a public zoo camera in
+         the live-view quadrant, because it shows what that panel does without ever asking a
+         visitor for their own camera. It needs a stream id verified as live and embeddable,
+         and shipping an unverified one would mean a stranger's first look at the product is
+         a YouTube error. Until then that panel runs the curated starter playlist, and this
+         copy says what is actually on screen. -->
+    <p class="demo-note"><b>Nothing here asks for your camera.</b> On a real bedside screen
+      that panel can be a rear-view mirror of the room — for somebody who cannot turn their
+      head, it is the whole point — and the picture never leaves the device.</p>
+  </div>
+</section>
+
 <!-- 1 · INTENTION -->
 <section id="intention">
   <div class="wrap">
@@ -233,25 +369,25 @@
       patient recover and live better — and to give the people caring for them real tools.</p>
     <div class="grid">
       <div class="val">
-        <div class="ic">🌤️</div>
+        <div class="ic" aria-hidden="true">🌤️</div>
         <h3>Improve quality of life</h3>
         <p>Give a disoriented patient something familiar and calming: their own photos, music, faces,
           and a clear window on the room around them.</p>
       </div>
       <div class="val">
-        <div class="ic">🌱</div>
+        <div class="ic" aria-hidden="true">🌱</div>
         <h3>Support recovery</h3>
         <p>Activities and exercises that learn from the patient and gently teach them to use the
           system — meeting them wherever their abilities are today, and growing with them.</p>
       </div>
       <div class="val">
-        <div class="ic">🤝</div>
+        <div class="ic" aria-hidden="true">🤝</div>
         <h3>Communication &amp; advocacy</h3>
         <p>Help families communicate with and advocate for TBI, stroke, and other patients — a way to
           reach them, to give them a voice, and to keep a clear record of how they're doing.</p>
       </div>
       <div class="val">
-        <div class="ic">🔒</div>
+        <div class="ic" aria-hidden="true">🔒</div>
         <h3>Free, private, and yours</h3>
         <p>Open source and free. Private by design — your cameras, files, and data stay on your own
           hardware. A modular ecosystem to fit your needs, and it runs on equipment you probably
@@ -320,10 +456,10 @@
       <h3>The default dashboard — live today</h3>
       <p>One calm, fullscreen surface that hosts everything as arrangeable modules.</p>
       <div class="mods">
-        <div class="mod"><div class="mi">🖼️</div><div class="mn">Photos</div><div class="md">a familiar window</div></div>
-        <div class="mod"><div class="mi">📷</div><div class="mn">Camera</div><div class="md">rearview mirror</div></div>
-        <div class="mod"><div class="mi">▶️</div><div class="mn">YouTube</div><div class="md">videos &amp; music</div></div>
-        <div class="mod"><div class="mi">🕐</div><div class="mn">Clock</div><div class="md">orientation</div></div>
+        <div class="mod"><div class="mi" aria-hidden="true">🖼️</div><div class="mn">Photos</div><div class="md">a familiar window</div></div>
+        <div class="mod"><div class="mi" aria-hidden="true">📷</div><div class="mn">Camera</div><div class="md">rearview mirror</div></div>
+        <div class="mod"><div class="mi" aria-hidden="true">▶️</div><div class="mn">YouTube</div><div class="md">videos &amp; music</div></div>
+        <div class="mod"><div class="mi" aria-hidden="true">🕐</div><div class="mn">Clock</div><div class="md">orientation</div></div>
       </div>
       <div class="device-note"><b>Runs on what you already have.</b> It's a web app — open it in a
         browser on a phone, tablet, computer, or an inexpensive Raspberry Pi and monitor. No special
@@ -416,17 +552,22 @@
 <!-- privacy reinforcement -->
 <section class="strip">
   <div class="wrap">
-    <p class="eyebrow">The line we don't cross</p>
-    <h2>Your personal data never leaves your machine.</h2>
+    <p class="eyebrow">The line I don’t cross</p>
+    <!-- NARROWED, 2026-08-27. It used to read "your personal data never leaves your machine",
+         which the live table directly beneath it disproved: the server holds a person’s name,
+         an event log, media addresses and sharing grants. The strongest claim on the page had
+         become false, on the one section that invites people to check it. This is the version
+         the table supports. -->
+    <h2>Your photos, video, and files never leave your machine.</h2>
     <div class="grid3">
-      <div class="val"><div class="ic">🎥</div><h3>Video stays between you</h3>
+      <div class="val"><div class="ic" aria-hidden="true">🎥</div><h3>Video stays between you</h3>
         <p>Calls and camera feeds flow directly between your own devices. The site relays a tiny
-          "let's connect" handshake and nothing else.</p></div>
-      <div class="val"><div class="ic">🧠</div><h3>Any intelligence runs on your machine</h3>
+          “let’s connect” handshake and nothing else.</p></div>
+      <div class="val"><div class="ic" aria-hidden="true">🧠</div><h3>Any intelligence runs on your machine</h3>
         <p>Where Nimrod uses AI, it runs on the computer in front of you — not in someone's data
           centre, and not on your files sitting in someone else's cloud. No warehouse of servers
           burning power to look at your family photos, and nothing sent away to be analysed.</p></div>
-      <div class="val"><div class="ic">🗂️</div><h3>You keep your files</h3>
+      <div class="val"><div class="ic" aria-hidden="true">🗂️</div><h3>You keep your files</h3>
         <p>Photos and recordings live in a folder you own. The system points to them; it never hosts
           them or locks them away.</p></div>
     </div>
@@ -434,13 +575,16 @@
     <div class="val" style="margin-top:18px">
       <h3>Here is everything the server actually holds</h3>
       <p>Not a promise — <b>a live list</b>. The table below is generated from the running
-        database, so it cannot quietly go out of date as the project grows. If we add
+        database, so it cannot quietly go out of date as the project grows. If I add
         somewhere to put something and forget to explain it, <b>it appears here labelled as
         undescribed</b> rather than going unmentioned.</p>
       <div id="store-live" class="storebox">
         <p class="muted">Loading the list…</p>
       </div>
-      <p>You do not have to take our word for any of it: the whole thing is open source, so you
+      <p><b>Nothing here is collected because somebody made an account.</b> Every row exists
+        because of something you did — the third column says what. Turn a thing off and it stops.
+        Anything I add later arrives switched off and needs its own separate yes.</p>
+      <p>You do not have to take my word for any of it: the whole thing is open source, so you
         can read exactly what is stored and what is sent —
         <a href="https://github.com/nimrod-ecosystem/Nimrod">the code is public</a>.</p>
     </div>
@@ -470,6 +614,69 @@
 </section>
 
 <!-- GET INVOLVED -->
+<!-- MAKERS. Framed as software support for hardware somebody else builds — not a product
+     line, nothing sold, no kit. Mike’s ruling 2026-09-01. -->
+<!-- WHAT IT RUNS ON, and what is deliberately NOT here.
+     ==========================================================================================
+     *** THE SETUP-TIME SECTION IS NOT WRITTEN, ON PURPOSE. ***
+     Mike, 2026-09-01: "WRITE NOTHING. I have not done a setup end to end yet, so nobody knows
+     the real number and the page must not guess one." A caregiver deciding whether they have
+     the evening for this is exactly the reader an invented estimate would betray, and "about
+     twenty minutes" from somebody who has never done it is a lie that costs somebody their
+     Saturday.
+     The first real end-to-end setup is the demo account for the walkthrough video, and it will
+     be INSTRUMENTED: every step, and how long each one actually took. That log becomes this
+     section’s copy. Until then there is no honest sentence to write, so there is no section.
+     Same for "where people get stuck" — it comes out of the same run.
+     ========================================================================================== -->
+<section id="hardware">
+  <div class="wrap">
+    <p class="eyebrow">What it runs on</p>
+    <h2>Probably something you already own.</h2>
+    <p>The cheapest machine I have run it on is a <b>Raspberry Pi 400</b> — the little computer
+      built into a keyboard, about the price of a night out. It also runs on any laptop or
+      desktop you already have, and the screen can be a monitor or a television.</p>
+    <p><b>There is no single minimum spec, and I am not going to invent one.</b> What it needs
+      depends entirely on which modules you run: photos and a clock ask almost nothing, while
+      video calls and camera tracking ask a good deal more. Start with what you have. If it is
+      too slow you will know within a minute, and nothing has been spent.</p>
+    <p class="muted">How long a first setup takes, and where people get stuck, are questions I
+      cannot answer honestly yet — nobody has done one end to end and timed it. When somebody
+      has, the real numbers go here.</p>
+  </div>
+</section>
+
+<!-- FACILITIES. Free, and the answer is hand them the link. Paid help and program-funded
+     installs are possible and are NOT advertised as a product — Mike, 2026-09-01. -->
+<section id="facilities">
+  <div class="wrap">
+    <p class="eyebrow">For care facilities and clinicians</p>
+    <h2>It is free. There is nothing to procure.</h2>
+    <p>No licence, no contract, no purchase order, no vendor to onboard. If a resident’s family
+      wants this, the whole answer is: <b>send them the link</b>. It runs on a machine somebody
+      already owns, and nothing about it touches facility systems or facility networks beyond
+      ordinary internet access.</p>
+    <p>If you work with people who might benefit and want to talk it through — or you have found
+      something that does not work for your residents — write to
+      <a href="mailto:nimrodecosystem@gmail.com">nimrodecosystem@gmail.com</a>.</p>
+  </div>
+</section>
+
+<section id="makers">
+  <div class="wrap">
+    <p class="eyebrow">If you build things</p>
+    <h2>Your switch, your button, your enclosure.</h2>
+    <p>A commercial adaptive switch runs roughly <b>$75 wired</b> or <b>$145 wireless</b>. An
+      arcade button, a microcontroller and a printed enclosure come to about <b>$15</b> — and a
+      microcontroller flashed as a USB keyboard or gamepad <b>needs no driver in any browser</b>.
+      Plug it in and bind it to anything on the screen.</p>
+    <p>Nimrod does not sell hardware and has none to sell. This is software support for what you
+      or a maker near you can build: the input layer takes switches, buttons, dials and
+      controllers as ordinary devices, and what each one does is set per person rather than
+      per device.</p>
+  </div>
+</section>
+
 <section id="involve" class="involve">
   <div class="wrap">
     <p class="eyebrow">Join in</p>
@@ -485,16 +692,52 @@
   </div>
 </section>
 
+</main>
+
 <footer>
   <div class="wrap">
     <div>Nimrod — free &amp; open source. Built to last, designed to evolve.</div>
     <div>Private by design · Local-first · No tracking</div>
+    <!-- THE LICENCE IS NAMED. The page says "open source" seven times and named the licence
+         zero, which is the difference between a value and a promise somebody can rely on. -->
+    <div class="foot-links">
+      <a href="mailto:nimrodecosystem@gmail.com">nimrodecosystem@gmail.com</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/nimrod-ecosystem/Nimrod/issues">Report a problem or ask for something</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/nimrod-ecosystem/Nimrod/blob/main/LICENSE">MIT licence</a>
+    </div>
+    <!-- Written once and matched wherever it appears. It also stands as a candidate absolute
+         in PRINCIPLES.md §2, so the wording here and there must not drift apart. -->
+    <p class="foot-legal">Nimrod is not a medical device and is not intended to diagnose, treat,
+      cure, or prevent any condition.</p>
   </div>
 </footer>
 
 <script>
   // /auth/callback sends failures back here as ?login=failed. Saying so beats
   // silently re-showing the landing page as though nothing happened.
+  // THE DEMO: one tap swaps the poster for the real kiosk. Deliberately NOT autoplaying on
+  // scroll — a page that starts loading an application because somebody scrolled past it is
+  // spending their data and their battery on a decision they did not make.
+  (() => {
+    const play = document.querySelector('[data-play]');
+    const live = document.querySelector('[data-live]');
+    if (!play || !live) return;
+    play.addEventListener('click', () => {
+      const f = document.createElement('iframe');
+      f.src = '/kiosk.html';
+      f.title = 'Nimrod, running \u2014 a live demo';
+      // No camera or microphone in the allow list: this embed must never be able to ask.
+      // That is the whole reason the live panel is a public zoo camera.
+      f.setAttribute('allow', 'autoplay; fullscreen');
+      f.setAttribute('loading', 'lazy');
+      live.append(f);
+      live.hidden = false;
+      play.remove();
+    }, { once: true });
+  })();
+
   if (new URLSearchParams(location.search).get('login') === 'failed') {
     const b = document.createElement('div');
     b.setAttribute('role', 'alert');
@@ -523,9 +766,16 @@
     if (!res.ok) throw new Error(res.status);
     const d = await res.json();
     box.innerHTML =
-      '<table class="storetab"><tr><th>What</th><th></th></tr>' +
+      // THE THIRD COLUMN SAYS WHAT TURNS EACH ROW ON. The review asked for an on/off
+      // column so that "every one of these is opt in" would be visible rather than
+      // asserted — but a true/false toggle would have overclaimed in exactly the way the
+      // old headline did: `profiles` is not opt-in, it IS the product. What is true, and
+      // stronger, is that nothing exists because somebody made an account: every row is
+      // caused by a specific act, and naming the act is checkable in a way a tick is not.
+      '<table class="storetab"><tr><th>What</th><th>Kept when</th><th></th></tr>' +
       d.stores.map((r) => '<tr class="' + (r.documented ? '' : 'undoc') + '">' +
         '<td>' + esc(r.what) + '</td>' +
+        '<td class="when">' + esc(r.when || 'not yet described') + '</td>' +
         '<td class="tag">' + (r.personal ? 'about a person' : 'housekeeping') + '</td></tr>'
       ).join('') + '</table>' +
       (d.undocumented.length

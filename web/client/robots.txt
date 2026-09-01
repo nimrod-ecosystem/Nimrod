@@ -1,0 +1,16 @@
+# nimrodecosystem.com
+#
+# Everything public is meant to be found: the whole point of the landing page is that somebody
+# searching for help at 2am can find it. The kiosk and the app surfaces are excluded because
+# they are an application, not content - a crawler indexing /kiosk.html gets a screen with no
+# text and burns a cold start doing it.
+User-agent: *
+Allow: /$
+Disallow: /kiosk.html
+Disallow: /home.html
+Disallow: /modules.html
+Disallow: /pair.html
+Disallow: /dev/
+Disallow: /api/
+
+Sitemap: https://nimrodecosystem.com/sitemap.xml

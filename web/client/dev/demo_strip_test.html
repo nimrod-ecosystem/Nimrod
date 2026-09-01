@@ -39,7 +39,7 @@ production and never checked again.</p>
 <div id="live"></div>
 
 <script type="module">
-import { mountDemoStrip, shouldShowDemo, DEMO_DISMISSED_KEY } from '../demo_strip.js';
+import { mountDemoStrip, mountWayOut, shouldShowDemo, DEMO_DISMISSED_KEY } from '../demo_strip.js';
 
 const out = document.getElementById('results');
 const host = document.getElementById('host');
@@ -187,6 +187,67 @@ check('no root, no strip', (await mountDemoStrip(null, {})) === null);
 check('*** signed in means nothing is rendered *** — a paired bedside screen runs the '
   + 'signed-IN path and must never show a marketing bar',
   (await mountDemoStrip(fresh(), { storage: fakeStore(), listFolders: async () => [], signedIn: true })) === null);
+
+// =====================================================================================
+// *** THE WAY OUT — a safety fix, and the one thing on this surface that cannot be put away.
+// =====================================================================================
+//
+// The kiosk fills the screen and has no chrome. Signed out it is the landing page's loudest
+// button, so a stranger arrives inside a full-screen app — and the only exit was the "Sign in
+// to keep this" link in the strip, which has a dismiss button beside it. Dismiss the strip and
+// there was nothing left to press. Browser back works until it does not: on a tablet in kiosk
+// mode, or a phone in standalone display mode, that chrome is absent.
+//
+// AGENTS.md: a screen must never enter a state that only an input can leave, when the person
+// in front of it cannot give that input. Here they COULD press something and there was nothing
+// to press, which is the same rule with the other half missing.
+section('*** the way out ***');
+{
+  const host = document.createElement('div');
+  document.body.append(host);
+
+  const w = mountWayOut(host);
+  check('it mounts', !!w && w.shown() === true);
+  const link = host.querySelector('[data-way-out]');
+  check('it is a real link somebody can follow', link && link.tagName === 'A' && !!link.href,
+        link && link.tagName);
+  check('...that goes back to the page they came from', link.getAttribute('href') === '/',
+        link.getAttribute('href'));
+  check('it says what it does', /leave/i.test(link.textContent), link.textContent);
+
+  // *** THE ASSERTION THIS SECTION EXISTS FOR. *** Everything else on this surface can be put
+  // away. This cannot, because "I put the exit away" is exactly the state it prevents.
+  check('*** there is NO dismiss control on it ***',
+        !link.querySelector('button') && !host.querySelector('[data-way-out] [data-x]'));
+
+  // It has to survive the strip being dismissed — that is the case that stranded people.
+  const strip = await mountDemoStrip(host, {
+    storage: fakeStore(), listFolders: async () => [], pick: async () => null,
+  });
+  strip.dismiss();
+  check('*** dismissing the demo strip leaves the way out standing ***',
+        w.shown() === true && !strip.shown(), `strip=${strip.shown()} out=${w.shown()}`);
+
+  // Mounting twice must not stack two exits on top of each other.
+  const again = mountWayOut(host);
+  check('a second call reuses the one that is there', again.el === link
+        && host.querySelectorAll('[data-way-out]').length === 1,
+        String(host.querySelectorAll('[data-way-out]').length));
+
+  // It renders even with no stylesheet, because that is when somebody most needs to get out.
+  check('it is styled inline, so a missing stylesheet cannot hide it',
+        /position:\s*fixed/.test(link.getAttribute('style') || ''), link.getAttribute('style'));
+  check('...and it sits above the kiosk chrome', Number(link.style.zIndex) > 1000, link.style.zIndex);
+
+  // SIGNED-OUT ONLY, and the guard is the caller's — same discipline as mountDemoStrip. This
+  // function renders when asked and never decides for itself, so the test for "never on a real
+  // bedside screen" is that the one branch in kiosk.html is the only caller.
+  const label = mountWayOut(document.createElement('div'), { label: 'Back to the site', href: '/x' });
+  check('the label and destination are the caller\u2019s to set',
+        /Back to the site/.test(label.el.textContent) && label.el.getAttribute('href') === '/x');
+
+  host.remove();
+}
 
 const s = document.getElementById('summary');
 s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;

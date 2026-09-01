@@ -179,10 +179,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       await st.load();
       const layout = (st.get().kiosk || {}).layout;
       check('it comes arranged four-up', layout && layout.preset === 'quad', JSON.stringify(layout));
+      // *** THE ORDER IS A CONTRACT WITH THE LANDING PAGE. *** Decided 2026-08-27: clockwise
+      // from the top left, pictures - live view - clock - word game. The landing page's demo
+      // poster DRAWS that arrangement, and one tap loads this very screen inside it. If the
+      // two disagree, the page has lied to a stranger in the first five seconds of meeting
+      // it — which is why this is asserted here rather than left to whoever edits the seed.
       check('top left is photos', typeOf(layout.slots[0]) === 'photos', typeOf(layout.slots[0]));
-      check('top right is the word game', typeOf(layout.slots[1]) === 'wordforge', typeOf(layout.slots[1]));
+      check('*** top right is the live view, as the poster promises ***',
+        typeOf(layout.slots[1]) === 'youtube', typeOf(layout.slots[1]));
       check('bottom right is the clock', typeOf(layout.slots[3]) === 'clock', typeOf(layout.slots[3]));
-      check('bottom left is YouTube', typeOf(layout.slots[2]) === 'youtube', typeOf(layout.slots[2]));
+      check('bottom left is the word game', typeOf(layout.slots[2]) === 'wordforge', typeOf(layout.slots[2]));
       check('every slot is filled', layout.slots.every(Boolean));
       st.destroy();
     }
