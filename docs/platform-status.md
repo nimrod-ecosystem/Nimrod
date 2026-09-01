@@ -425,6 +425,36 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   separate churn. This is that change; `settings_audit.js`'s prose moved with it (59 green), and
   the collision is now closed rather than open.
 
+- **The communication board — the first real AAC surface in the public repo** (2026-08-31),
+  `aac_symbols.js` + `aac_vocab.js` + `modules/board.js`, **72 checks green**. Ported from the
+  private `aac_board.js` / `scan_yesno.js` / `aac_vocab.js` / `aac_symbols.js` after a
+  check-first audit found the public repo had nothing AAC at all.
+  **Symbols** came across programmatically rather than retyped — 23 original SVGs, in-repo and
+  unencumbered, which is the whole reason they exist (ARASAAC is CC BY-NC-SA, PCS and
+  SymbolStix are proprietary).
+  **Position is sacred, and it is structural rather than promised.** The cell index IS the grid
+  position; `addWord` appends or fills a hole and there is no code path that splices or sorts;
+  a full board reports `needsTier` rather than growing itself. `promote` is the only thing that
+  moves a card, it is explicit, and it **returns the moves** so a deliberate rearrangement has a
+  before and an after. Moving up a tier **preserves direction**: a corner of a 2×2 lands in the
+  matching corner of a 4×4, so a reach up-and-left stays up-and-left.
+  **`say`, never `notify`** — the verb is the boundary between a talking aid and a nurse call,
+  and the suite asserts nothing reaches the `remote` channel.
+  **It measures and shows her nothing**: selections are appended with enough to tell later
+  whether the board works; no timing, lap count or score is rendered.
+  **Two bugs found and fixed in the writing.** `normalizeBoard` FILTERED empty cells out, which
+  silently closed every hole `removeWord` had deliberately left — the exact reflow the file
+  exists to prevent, committed by the safe-looking function. And the card sizing was in `vmin`,
+  so a board in a dashboard quadrant overflowed; the private build's container-derived `--u`
+  came across with it, including the hidden-card-measures-zero bug its own comment records.
+  A card with no room for both now drops the PICTURE, never the word.
+  **Not built:** recorded audio clips. The private build speaks every card from a `.wav`
+  because **a Pi often has no TTS voice installed at all** — this board would be silent on the
+  one machine it most needs to work on. That is the largest open gap.
+  **Not built:** eat / drink / hungry / thirsty symbols. The set was drawn for a board that did
+  not need them; the `care` set ships as one person's example with its origin attached, not as
+  a default anybody inherits.
+
 ## Decided (see DECISIONS.md)
 - **Server = the store of record.** FastAPI + SQLite (Postgres-swappable) on a small always-on host
   (~$5/mo) or self-host; dev runs it locally. GitHub Pages only serves the static landing page and

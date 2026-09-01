@@ -35,6 +35,9 @@ nothing uses it yet.
 | **marker** | A brightly coloured object somebody wears or holds — a sock, a wristband, a glove — that the camera finds by hue. `input_marker.js`, device `marker:colour`. **Claimed 2026-08-30.** | A landmark, a skeleton joint, or anything a model recognises. The whole point of a marker is that nothing has to recognise it. |
 | **bank** | The content somebody wrote for the games to draw on — words and questions, in one document, per person. `bank.js`. **Claimed 2026-08-31.** | The verb in `algebra.js` (`bank(award)` = to bank points). A second, unrelated sense that happens not to collide; see §4. |
 | **cursor** | The thing drawn on screen at the aim. `cursor.js`. **Claimed 2026-08-30**, which is why `inputs.js`'s row-walking `cursor` was renamed to `highlight` in the same change. | The system mouse pointer, and no longer a row in a list. |
+| **cell** | One slot on a board. Its INDEX is its position, which is why nothing reorders a cell array: AAC users build motor plans and a silent reflow takes them away. A cell may be `null` — a hole, left deliberately by a removal so the cells after it do not shift. `aac_vocab.js`. **Claimed 2026-08-31.** | A table cell, and not a spreadsheet sense. Watch `layout.js`, which has `.k-cell` for a kiosk pane — a second sense that has not collided yet; see §4. |
+| **tier** | A board's SIZE CLASS: 2, 3, 4, 6, 8, 12 or 16 cells. Growth means moving up a tier, which is a deliberate milestone with a before and an after, never something that happens as vocabulary grows. `aac_vocab.js`, `TIERS`. **Claimed 2026-08-31.** | A subscription tier, a service level, or anything about what somebody has paid for. Nothing in this project is paid for. |
+| **symbol** | An AAC pictogram, referenced by NAME rather than by file, so a vocabulary is portable text. `aac_symbols.js`. **Claimed 2026-08-31.** | A JS `Symbol`. Never use it in an identifier where that could be read. |
 | **dwell** | Holding still on purpose, as a selection: rest the aim inside a radius for `dwellMs` and it becomes a press. `input_dwell.js`, device `dwell`. **Claimed 2026-08-31** for this sense because it is where the AT field puts the word — eye-gaze and head-pointer software all call this "dwell click". | The time a scanner leaves each option lit. That is **step**. |
 | **step** | How long a scanner leaves each option lit before moving on. `input_scan.js`, `stepMs`, default 15000. **Renamed from `dwell` 2026-08-31**, in the change that extracted scanning — see §4. | A step in a state machine, and not the `stepValue` in `settings_fields.js`, which computes a control's next value. Worth watching; the two never meet. |
 | **held** | A stop that somebody is understood to be present for and coming back from — the subset of "paused" that gets a clock in hours instead of seconds. `held.js`, topics `held/begin` · `held/end`. **Claimed 2026-08-31**, and it was already the word in `youtube.js`, `personal.js` and the `held` event kind, so nothing new was spent. | A pause. Buffering, an OS audio-focus change and a screen lock are pauses and are NOT held — a screen that swapped to a wallpaper every time the network hiccuped would be worse than the frozen frame it replaced. |
@@ -90,8 +93,12 @@ contexts that never touch is far less urgent than one inside a single call path.
    content somebody wrote), and a verb in `algebra.js` (`bank(award)` — to bank points). They
    never meet in one file and the parts of speech differ, so this is the least dangerous kind of
    collision. Recorded because the count of them is itself the signal, not because it is urgent.
-6. **`channel`** — three meanings that never touch. Least urgent, still worth fixing.
-7. **`module`** — pervasive, conventional, probably tolerable. Keep out of identifiers.
+6. **`cell`** — **added 2026-08-31.** A slot on an AAC board (`aac_vocab.js`) and a kiosk pane
+   (`layout.js`, CSS class `k-cell`). They never meet in one file and the CSS one is a class
+   rather than an identifier, so this is the mildest kind. Recorded because the count is the
+   signal, not because it is urgent.
+7. **`channel`** — three meanings that never touch. Least urgent, still worth fixing.
+8. **`module`** — pervasive, conventional, probably tolerable. Keep out of identifiers.
 
 **Opened and closed the same day, 2026-08-31: `dwell`.** Two senses arrived within hours of each
 other — *hold still to click* (`input_dwell.js`, 1800 ms) and *how long a scanner leaves each

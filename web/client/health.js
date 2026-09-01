@@ -79,6 +79,26 @@ export const HEALTH_EXPECT = {
   // Games only move when somebody plays them, and nobody playing is not a fault.
   wordforge:   { idle: true },
   algebra:     { idle: true },
+  trivia:      { idle: true },
+  // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
+  //
+  // `trivia`, `bank`, `wallpaper` and `board` shipped without rows, so they fell to the
+  // 15-minute default and were judged STALLED for doing exactly what they are supposed to do.
+  // A board nobody has touched for twenty minutes is a board. A wallpaper publishes nothing at
+  // all — it is the `clock` case precisely. An editor with nobody typing at it is an editor.
+  //
+  // The consequence was not cosmetic: a false fault feeds the recovery ladder, and the ladder
+  // SWAPS THE PANEL AWAY. So a quiet communication board would have been replaced under
+  // somebody who was about to use it — which is the false positive this file's own header calls
+  // the only failure mode that matters, arriving through a missing table row rather than
+  // through a bad judgement.
+  //
+  // Found because the board happened to become the chosen fallback in `kiosk_test`, so the
+  // fault never cleared and the ladder climbed on. Nothing was watching for the general case,
+  // which is why `modules_catalog_test` now fails if a registered module has no row here.
+  bank:        { idle: true },
+  wallpaper:   { idle: true },
+  board:       { idle: true },
   quests:      { idle: true },
   sprint:      { idle: true },
   progress:    { idle: true },

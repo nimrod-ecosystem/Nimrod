@@ -51,6 +51,14 @@ import '../modules/trivia.js';
 import '../modules/bank.js';      // registers 'bank' (the shared questions + words)
 import '../modules/wordforge.js';
 import '../modules/youtube.js';
+// `wallpaper` was already reaching the registry, but only because `director.js` imports it —
+// a transitive registration this suite would lose the moment the director stopped mounting an
+// overlay. Both are listed explicitly now. Worth noting what that says about the check itself:
+// it can only call a description STALE for modules this file happens to import, so the honest
+// reading of a green run is "nothing stale among these", not "nothing stale".
+import '../modules/wallpaper.js';
+import '../modules/board.js';
+import { HEALTH_EXPECT } from '../health.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -75,6 +83,23 @@ section('*** nothing ships unexplained ***');
   check('nothing is described that is no longer installed',
     r.stale.length === 0, `stale: ${r.stale.join(', ')}`);
   check('the page has something to show', r.described.length >= 10, String(r.described.length));
+
+  // *** AND NOTHING SHIPS WITHOUT A HEALTH EXPECTATION EITHER. ***
+  //
+  // Added 2026-08-31 after FOUR modules — trivia, bank, wallpaper, board — turned out to have
+  // shipped with no row in HEALTH_EXPECT. They fell to the 15-minute default and were judged
+  // STALLED for being quiet, which is what they are for. That is not cosmetic: a false fault
+  // feeds the recovery ladder and the ladder SWAPS THE PANEL AWAY, so a communication board
+  // nobody had touched for twenty minutes would be replaced under the person about to use it.
+  //
+  // It was found by accident, in `kiosk_test`, because the board happened to be the module the
+  // ladder swapped TO. Nothing was watching for the general case. This is that watch: adding a
+  // module now forces a decision about how long its silence means something, in the same shape
+  // as the description check above — the answer may well be `idle: true`, but it has to be an
+  // answer.
+  const noHealth = manifests.map((m) => m.type).filter((t) => !HEALTH_EXPECT[t]);
+  check('*** every installed module has decided what its silence means ***',
+    noHealth.length === 0, `no HEALTH_EXPECT row: ${noHealth.join(', ')}`);
 }
 
 section('...and the check WORKS — a gap is actually detected');

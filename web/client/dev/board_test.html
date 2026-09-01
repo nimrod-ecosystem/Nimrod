@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the communication board — position is sacred — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:80ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:80ch;font-size:.92rem}
+  #host{position:relative;width:420px;height:200px;margin-top:12px;border:1px solid #e4e0c2}
+  #look{position:relative;width:600px;height:440px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>the communication board</h1>
+
+<div class="warn">
+  A board must never be the thing someone uses to summon help. Selections go out as
+  <code>say</code>, which stays in the room — never as <code>notify</code>, which reaches
+  another device. The verb is the boundary, and this suite asserts it.
+</div>
+
+<p>AAC users build motor plans: <i>Yes</i> is <b>there</b>, reached without looking. Software
+that silently reflows a layout as vocabulary grows takes that away, and it is the most common
+way well-meaning AAC software fails. So the first two sections are about position, and they
+matter more than anything else here.</p>
+
+<div class="note">
+  <b>Not covered here.</b> Recorded audio clips — the private build speaks every card from a
+  <code>.wav</code> because <b>the Pi often has no TTS voice installed at all</b>, which would
+  make this board silent on the one machine it most needs to work on. That is a real
+  deployment gap, not a test gap, and it is flagged in the report rather than papered over.
+  Also not covered: any judgement about whether these sixteen words are the right sixteen for
+  anybody but the person they were assembled for.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<p style="margin-top:18px;font-size:.9rem;color:#5d7064">A live board, for looking at:</p>
+<div id="look"></div>
+
+<script type="module">
+import {
+  TIERS, KINDS, tierOf, tierFor, cellPosition, slotCentre,
+  normalizeBoard, checkBoard, addWord, removeWord, firstFree, promote,
+  YESNO, CARE, BUILTIN_BOARDS,
+} from '../aac_vocab.js';
+import { SYMBOLS, SYMBOL_NAMES, symbolSvg } from '../aac_symbols.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { BOARD_TOPIC, SELECT_KIND } from '../modules/board.js';
+import '../modules/board.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+function fakeState(v) {
+  let val = { ...v };
+  const subs = [];
+  return { get: () => val, set: (p) => { val = { ...val, ...p }; subs.forEach((f) => f()); },
+           subscribe: (f) => { subs.push(f); }, flush: () => {}, };
+}
+function fakeEvents() {
+  const rows = [];
+  return { rows, append: (kind, data) => { rows.push({ kind, data }); return Promise.resolve(); } };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the index IS the position, and nothing in this file can reorder ***');
+  {
+    const b = normalizeBoard(YESNO);
+    check('a board keeps the order it arrived in',
+      b.cells.map((c) => c.word).join() === 'Yes,No,Other', JSON.stringify(b.cells.map((c) => c.word)));
+
+    const grown = addWord(b, { word: 'Maybe' });
+    check('a full board does NOT quietly grow', grown.added === null, JSON.stringify(grown.added));
+    // Growing the board is a decision somebody makes, with a before and an after. Auto-promoting
+    // here would move every card under a person who had learned where they were.
+    check('*** ...it reports which size WOULD hold it and stops ***', grown.needsTier === 4,
+      String(grown.needsTier));
+
+    const four = normalizeBoard({ ...b, tier: 4 });
+    const added = addWord(four, { word: 'Maybe', kind: 'social' });
+    check('with room, a word goes on the END', added.board.cells[3].word === 'Maybe');
+    check('*** ...and the words already there did not move ***',
+      added.board.cells.slice(0, 3).map((c) => c.word).join() === 'Yes,No,Other',
+      JSON.stringify(added.board.cells.map((c) => c.word)));
+
+    // Deleting cell 1 of 4 would shift 2 and 3 back by one, which is the silent reflow the
+    // whole file forbids. So it leaves a hole.
+    const holed = removeWord(added.board, 1);
+    check('*** removing a word leaves a HOLE rather than shifting everything back ***',
+      holed.cells[1] === null && holed.cells[2].word === 'Other', JSON.stringify(holed.cells.map((c) => c && c.word)));
+    check('...and the next add fills the hole rather than appending past it',
+      firstFree(holed) === 1, String(firstFree(holed)));
+    // A hole at the END is not a hole, it is just a shorter board.
+    const trailing = removeWord(added.board, 3);
+    check('a trailing hole is just a shorter board', trailing.cells.length === 3);
+  }
+
+  // =====================================================================================
+  section('*** moving up a tier preserves DIRECTION, not coordinates ***');
+  {
+    // "If yes was top-left in the 2-cell board, it is top-left in the 8-cell one — the half
+    // becomes a quadrant." Motor memory is directional: up-and-left stays up-and-left.
+    const two = normalizeBoard({ id: 'two', tier: 2, cells: [
+      { id: 'y', word: 'Yes' }, { id: 'n', word: 'No' },
+    ] });
+    const { board: eight, moves } = promote(two, 8);
+    const at = (i) => eight.cells[i] && eight.cells[i].word;
+    check('the new board is the new size', eight.tier === 8);
+    check('*** "Yes" was the left half and is now TOP-LEFT ***', at(0) === 'Yes',
+      JSON.stringify(eight.cells.map((c) => c && c.word)));
+    check('*** "No" was the right half and is now TOP-RIGHT ***', at(3) === 'No',
+      JSON.stringify(eight.cells.map((c) => c && c.word)));
+    check('...so a reach up-and-left is still a reach up-and-left',
+      cellPosition(0, 8).col === 0 && cellPosition(0, 8).row === 0);
+    // A deliberate rearrangement is a versioned event with a before and an after. The after is
+    // only meaningful if somebody can see what changed.
+    check('*** it returns the moves, so the change has a before and an after ***',
+      moves.length === 1 && moves[0].word === 'No' && moves[0].from === 1 && moves[0].to === 3,
+      JSON.stringify(moves));
+
+    // Going up more than one step should not scramble anything either — but the property to
+    // assert is the DIRECTION, not a slot number, and my first version of this check got that
+    // wrong. A 2-cell board carries no vertical information at all: "Yes" is not top-left, it
+    // is just LEFT. Promoting it to a 4x4 correctly lands it on the left, VERTICALLY CENTRED,
+    // rather than in the top-left corner — inventing an "up" the original never had would be
+    // the failure, not the fix.
+    const sixteen = promote(two, 16).board;
+    const where = (w) => {
+      const i = sixteen.cells.findIndex((c) => c && c.word === w);
+      return { i, ...cellPosition(i, 16) };
+    };
+    check('two straight to sixteen keeps "Yes" on the LEFT', where('Yes').col <= 1,
+      JSON.stringify(where('Yes')));
+    check('...and "No" on the RIGHT', where('No').col >= 2, JSON.stringify(where('No')));
+    check('*** ...and neither invents a vertical position the 2-cell board never had ***',
+      where('Yes').row === where('No').row && where('Yes').row > 0,
+      `${where('Yes').row} / ${where('No').row}`);
+
+    // Four to sixteen: the quadrant becomes a sub-quadrant, corner for corner.
+    const four = normalizeBoard({ tier: 4, cells: [
+      { word: 'TL' }, { word: 'TR' }, { word: 'BL' }, { word: 'BR' },
+    ] });
+    const big = promote(four, 16).board;
+    check('*** each corner of a 2x2 lands in the matching corner of a 4x4 ***',
+      big.cells[0].word === 'TL' && big.cells[3].word === 'TR'
+      && big.cells[12].word === 'BL' && big.cells[15].word === 'BR',
+      JSON.stringify(big.cells.map((c) => c && c.word)));
+    check('nothing shares a slot', new Set(big.cells.filter(Boolean).map((c) => c.word)).size === 4);
+
+    // Not moving is not a move.
+    check('promoting to the same tier moves nothing', promote(four, 4).moves.length === 0);
+    check('an unknown tier is refused rather than guessed', promote(four, 5).board.tier === 4);
+  }
+
+  // =====================================================================================
+  section('the sets that ship');
+  {
+    // A yes/no board with no third option is a FORCED CHOICE: somebody who was asked the wrong
+    // question has only two wrong answers available, and whichever they pick is acted on.
+    check('*** yes/no ships with a way out — three cards, not two ***',
+      YESNO.cells.length === 3 && YESNO.cells[2].word === 'Other',
+      JSON.stringify(YESNO.cells.map((c) => c.word)));
+    check('...and it is the default board', BUILTIN_BOARDS.yesno === YESNO);
+    // Shipping the escape without a drawing beats shipping a forced choice with one.
+    check('the third card has no symbol yet and renders word-only',
+      YESNO.cells[2].symbol == null && symbolSvg(YESNO.cells[2].symbol) === '');
+
+    const c = checkBoard(CARE);
+    check('the care set fills its tier exactly', c.cells === 16 && c.capacity === 16 && c.free === 0,
+      JSON.stringify(c));
+    check('every care card has a symbol that exists',
+      CARE.cells.every((x) => !!SYMBOLS[x.symbol]),
+      JSON.stringify(CARE.cells.filter((x) => !SYMBOLS[x.symbol]).map((x) => x.word)));
+    // The vocabulary rule that is really a statement about whose board it is.
+    check('*** it has no eat/drink cards — one person\'s board, and the header says why ***',
+      !CARE.cells.some((x) => /eat|drink|hungry|thirsty/i.test(x.word)));
+    check('a card with an unknown symbol name loses the picture, not the word',
+      normalizeBoard({ cells: [{ word: 'Hm', symbol: 'nope' }] }).cells[0].symbol === null);
+    check('a card can say something other than what it shows',
+      normalizeBoard({ cells: [{ word: 'Bedpan', say: 'I need the bathroom' }] }).cells[0].say
+        === 'I need the bathroom');
+    check('an unknown kind falls back rather than emitting a broken class',
+      normalizeBoard({ cells: [{ word: 'x', kind: 'sparkle' }] }).cells[0].kind === 'plain');
+    check('every kind used by a shipped board is a known kind',
+      CARE.cells.every((x) => KINDS.includes(x.kind)));
+  }
+
+  // =====================================================================================
+  section('the symbols');
+  {
+    check('the whole set came across', SYMBOL_NAMES.length === 23, String(SYMBOL_NAMES.length));
+    check('every one is a complete svg',
+      SYMBOL_NAMES.every((n) => /^<svg/.test(SYMBOLS[n]) && /<\/svg>$/.test(SYMBOLS[n])),
+      JSON.stringify(SYMBOL_NAMES.filter((n) => !/<\/svg>$/.test(SYMBOLS[n]))));
+    check('...on the 100x100 grid the design rules specify',
+      SYMBOL_NAMES.every((n) => SYMBOLS[n].includes('viewBox="0 0 100 100"')));
+    // Colour supports meaning; it never carries it alone. Neutral shapes take the card's colour.
+    check('most of the set tints with the card rather than fixing its own colour',
+      SYMBOL_NAMES.filter((n) => SYMBOLS[n].includes('currentColor')).length >= 15,
+      String(SYMBOL_NAMES.filter((n) => SYMBOLS[n].includes('currentColor')).length));
+    check('a missing symbol is empty, never a broken box', symbolSvg('nope') === '' && symbolSvg(null) === '');
+  }
+
+  // =====================================================================================
+  section('*** the module: it speaks in the room, and only in the room ***');
+  {
+    const host = document.getElementById('host');
+    const clock = fakeClock();
+    const bus = createBus();
+    const events = fakeEvents();
+    const said = [], notified = [], spoken = [];
+    const heard = [];
+    bus.subscribe(BOARD_TOPIC, (d) => heard.push(d));
+
+    const inst = mountModule('board', {
+      mount: host, bus, events,
+      state: fakeState({ boardId: 'yesno' }),
+      speak: (t) => spoken.push(t),
+      output: {
+        say: (t) => said.push(t),
+        notify: (t) => notified.push(t),
+        alert: (t) => notified.push(t),
+      },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+    });
+    inst.init();
+    await sleep(20);
+    const p = () => inst.impl.__probe();
+
+    check('it mounts the default board', p().boardId === 'yesno' && p().cells === 3);
+    check('every slot in the tier is drawn', host.querySelectorAll('.ab-card').length === 3);
+    check('the cards say what they say', /Yes/.test(host.textContent) && /Other/.test(host.textContent));
+    check('a card with a symbol draws it', !!host.querySelector('.ab-card .ab-sym svg'));
+    check('scanning is OFF by default', p().scanning === false);
+
+    host.querySelectorAll('.ab-card')[1].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await sleep(10);
+    check('touching a card speaks it', said.join() === 'No', JSON.stringify(said));
+    // THE ASSERTION THIS SECTION EXISTS FOR.
+    check('*** it went out as `say` and NOT as notify or alert ***', notified.length === 0,
+      JSON.stringify(notified));
+    check('...so nothing left this room', said.length === 1 && notified.length === 0);
+    check('anything on the same screen hears it', heard.length === 1 && heard[0].word === 'No');
+
+    // It measures plenty; the question was only ever what gets shown to whom.
+    check('the choice is recorded, append-only',
+      events.rows.length === 1 && events.rows[0].kind === SELECT_KIND, JSON.stringify(events.rows));
+    check('...with enough to tell later whether the board is working',
+      events.rows[0].data.word === 'No' && events.rows[0].data.index === 1
+      && events.rows[0].data.via === 'touch', JSON.stringify(events.rows[0].data));
+    // Mike: "a person shouldn't feel judged about how long it takes them to make a selection."
+    check('*** and NOTHING on screen tells her how she did ***',
+      !/\d+\s*(ms|sec|second|lap|score|%)/i.test(host.textContent), JSON.stringify(host.textContent));
+
+    inst.destroy();
+    check('destroy leaves nothing behind', host.innerHTML === '');
+  }
+
+  // =====================================================================================
+  section('*** scanning it with one switch ***');
+  {
+    const host = document.getElementById('host');
+    const clock = fakeClock();
+    const bus = createBus();
+    const events = fakeEvents();
+    const said = [];
+    const st = fakeState({ boardId: 'yesno', scan: true, stepMs: 15000 });
+    const inst = mountModule('board', {
+      mount: host, bus, events, state: st,
+      output: { say: (t) => said.push(t), notify: () => { throw new Error('notify'); } },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+    });
+    inst.init();
+    await sleep(20);
+    const p = () => inst.impl.__probe();
+
+    check('it is scanning', p().scanning === true);
+    check('it starts on the first card', p().lit === 0);
+    clock.advance(15000);
+    check('*** her fifteen seconds per card ***', p().lit === 1, String(p().lit));
+    check('all the cards are still on screen by default', p().shown === 3, String(p().shown));
+
+    // The board never names its input: a switch, a key, a dwell or a phone all drive it.
+    bus.publish('board/next');
+    check('anything can advance it', p().lit === 2);
+    bus.publish('board/select');
+    await sleep(10);
+    check('*** ...and anything can choose what is lit ***', said.join() === 'Other', JSON.stringify(said));
+    check('the record knows it came from the scanner',
+      events.rows[0].data.via === 'scan', JSON.stringify(events.rows[0].data));
+
+    clock.advance(1200);
+    check('after the beat it starts a fresh pass from the top', p().lit === 0, String(p().lit));
+
+    // One card at a time — what the private bedside build does, available to anybody.
+    st.set({ reveal: 'one' });
+    await sleep(10);
+    check('*** "one at a time" hides the others rather than dimming them ***',
+      p().shown === 1, String(p().shown));
+    check('...and it is the LIT one that stays',
+      !host.querySelectorAll('.ab-card')[p().lit].classList.contains('ab-away'));
+
+    inst.onHide();
+    check('hidden, it stops scanning rather than walking cards at nobody', p().scanning === false);
+    inst.impl.onShow();
+    check('shown again, it scans again', p().scanning === true);
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('holes, and a board somebody built themselves');
+  {
+    const host = document.getElementById('host');
+    const clock = fakeClock();
+    const custom = removeWord(normalizeBoard({ id: 'mine', name: 'Mine', tier: 4, cells: [
+      { word: 'A' }, { word: 'B' }, { word: 'C' }, { word: 'D' },
+    ] }), 1);
+    const said = [];
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(),
+      state: fakeState({ board: custom }),
+      output: { say: (t) => said.push(t) },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+    });
+    inst.init();
+    await sleep(20);
+    check('a board somebody built is used instead of a built-in',
+      inst.impl.__probe().boardId === 'mine');
+    check('*** the hole is DRAWN, so the cards after it are visibly where they were ***',
+      host.querySelectorAll('.ab-card.ab-empty').length === 1
+      && host.querySelectorAll('.ab-card').length === 4);
+    check('...and the empty slot cannot be chosen',
+      host.querySelectorAll('.ab-card')[1].disabled === true);
+    host.querySelectorAll('.ab-card')[1].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await sleep(10);
+    check('...nor by tapping it', said.length === 0, JSON.stringify(said));
+    host.querySelectorAll('.ab-card')[2].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await sleep(10);
+    check('the card after the hole is still itself', said.join() === 'C', JSON.stringify(said));
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** it has to FIT, at whatever size the panel is ***');
+  {
+    // Found by looking at it rather than by a check: the first version sized the symbol and the
+    // word in `vmin`, so a 16-card board in a 420x260 panel rendered a 30px word and a 34px
+    // symbol into a 94x54 card and overflowed. A board is not always full-screen — it can be
+    // one quadrant of a dashboard — so the unit comes from the CARD, not the viewport.
+    const host = document.getElementById('host');
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(),
+      state: fakeState({ boardId: 'care' }), output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(20);
+
+    const fits = () => {
+      const cards = [...host.querySelectorAll('.ab-card')];
+      return cards.every((c) => c.scrollHeight <= c.clientHeight + 1
+                             && c.scrollWidth <= c.clientWidth + 1);
+    };
+    const wordPx = () => parseFloat(getComputedStyle(host.querySelector('.ab-word')).fontSize);
+
+    check('a full care board fits a small panel', fits(), 'sixteen cards in 420x200');
+    // A word too small to read is the other way to fail this, and it fails silently.
+    check('...and the word is still big enough to be a word', wordPx() >= 11, String(wordPx()));
+
+    const big = { w: host.style.width, h: host.style.height };
+    host.style.width = '1200px'; host.style.height = '700px';
+    inst.onResize();
+    await sleep(20);
+    check('*** it grows with the panel rather than staying tiny ***', wordPx() > 30, String(wordPx()));
+    check('...and still fits', fits());
+    // And the other half of the tight rule: with room, the picture comes BACK. Without this
+    // check "always tight" would pass every other assertion here while quietly shipping a
+    // symbol set nobody ever sees.
+    const symShown = () => getComputedStyle(host.querySelector('.ab-sym')).display !== 'none';
+    check('*** ...and with room the symbol is shown, not permanently dropped ***', symShown(),
+      getComputedStyle(host.querySelector('.ab-sym')).display);
+
+    host.style.width = '260px'; host.style.height = '120px';
+    inst.onResize();
+    await sleep(20);
+    check('*** and shrinks to something cramped without spilling ***', fits(), String(wordPx()));
+    // The bug the private build's own comment records: measuring a HIDDEN card gives zero, and
+    // `--u: 0` collapses the word and the borders to nothing.
+    host.style.display = 'none';
+    inst.onResize();
+    host.style.display = '';
+    await sleep(10);
+    check('*** measuring while hidden does not collapse the unit to zero ***',
+      parseFloat(host.querySelector('.ab-grid').style.getPropertyValue('--u')) > 0,
+      host.querySelector('.ab-grid').style.getPropertyValue('--u'));
+
+    host.style.width = big.w; host.style.height = big.h;
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  // A live one to look at. Not asserted on — it is here because a board is a thing you have to
+  // SEE to judge, and a suite that only reports numbers about it would be hiding the product.
+  {
+    const clock = fakeClock();
+    const inst = mountModule('board', {
+      mount: document.getElementById('look'), bus: createBus(), events: fakeEvents(),
+      state: fakeState({ boardId: 'care' }),
+      output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(20);
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

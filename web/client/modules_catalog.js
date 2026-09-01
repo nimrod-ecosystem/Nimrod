@@ -144,6 +144,19 @@ export const CATALOG = [
       + 'question before it is asked.',
   },
   {
+    type: 'board',
+    // NOT 'comfort'. A board is a tool somebody uses on purpose, and that group promises
+    // something to look at.
+    group: 'practice',
+    use: 'answer',
+    lead: 'Big cards that say the word out loud when they are chosen.',
+    needs: 'Nothing. A speaker, if you want it heard.',
+    why: 'It is a way to say something when speaking is hard — yes, no, "something else", or a '
+      + 'set of care words. It can be touched, or it can walk the cards one at a time so '
+      + 'somebody with a single switch can answer. It says the word in the room and nowhere '
+      + 'else: it is not a nurse call and does not reach anybody who is not there.',
+  },
+  {
     type: 'wallpaper',
     group: 'comfort',
     use: 'watch',

@@ -80,6 +80,7 @@ registerModule(
     const adapters = {};      // provider id -> { activate, deactivate, destroy, flush, resize }
     const slots = {};         // provider id -> slot element
     let phTimer = null;       // the active placeholder's auto-finish timer
+    let torn = false;         // set first thing in destroy(); see the HELD_END handler
 
     const stage = () => mount.querySelector('[data-stage]');
     function setLabel(id) {
@@ -309,8 +310,48 @@ registerModule(
         const cfg = saved.config || DIRECTOR_CONFIG;
 
         // The held signal, from whichever provider is on the stage. See THE WALLPAPER above.
-        bus.subscribe(HELD_BEGIN, (d) => raiseWallpaper(d?.source));
-        bus.subscribe(HELD_END, () => lowerWallpaper());
+        //
+        // *** A HOLD SUSPENDS THE BACKSTOP. Mike's call, 2026-08-31. ***
+        // A held provider stops publishing `segment/progress` — deliberately, because it is
+        // paused and there is nothing advancing to report. The backstop cannot tell that
+        // apart from a video that has frozen, so before this it timed out `segmentSilenceMs`
+        // (3 min) into a hold, published `segment/done{timeout}`, and rotated the paused clip
+        // away. That is the exact loss the hold exists to prevent, and it made the six-hour
+        // `heldNotifyMs` setting unreachable on any directed screen: the pause never lasted
+        // long enough to notify anybody.
+        //
+        // Mike: "it doesn't need to be watching for YouTube if we know YouTube is paused …
+        // it's not supposed to be doing anything when it's paused, so the heartbeat's kind of
+        // useless there." So the clock STOPS while held and restarts on release, and the
+        // hold's own notify clock is what governs the length of a pause — which is what the
+        // note above always claimed happened.
+        //
+        // Nothing is lost by suspending it: a held segment is by definition not advancing, so
+        // there is no stall left for the backstop to detect. What it stops watching for is a
+        // provider that dies WHILE held, and the exits from that are unchanged — the provider's
+        // own destroy releases the hold (`held.js`), and this container's teardown lowers it.
+        //
+        // *** THE `torn` GUARD IS NOT DEFENSIVE PADDING — WITHOUT IT THIS LEAKS A TIMER. ***
+        // `destroy()` disarms the backstop FIRST and destroys the adapters after, and
+        // `held.js` releases a live hold on the way out. So a container torn down while held
+        // publishes HELD_END after the disarm, and an unguarded re-arm here would start a
+        // three-minute timer on a director that no longer exists — a screen watched by
+        // something that has been told it is fine, which is the failure `health.js` and this
+        // backstop both exist to prevent.
+        //
+        // The guard is a flag this file owns rather than a `reason` field off the payload,
+        // deliberately: `held.js` says payloads are data for a listener and nothing downstream
+        // should branch on a field it does not document. Reading our own teardown state needs
+        // no such permission and cannot be broken by a change over there.
+        //
+        // A hold ending during a normal rotation is harmless: `showProvider()` re-arms for the
+        // incoming provider a few lines later and overwrites whatever this sets.
+        bus.subscribe(HELD_BEGIN, (d) => { raiseWallpaper(d?.source); segmentWatch?.disarm(); });
+        bus.subscribe(HELD_END, () => {
+          const wasHeld = !!heldBy;
+          lowerWallpaper();
+          if (wasHeld && current && !torn) segmentWatch?.arm(current);
+        });
 
         (async () => {
           for (const p of PROVIDERS) {
@@ -351,6 +392,7 @@ registerModule(
       // the exact thing it was built to replace.
       onShow() { if (heldBy) wallpaper?.onShow?.(); },
       destroy() {
+        torn = true;                 // before anything else — see the HELD_END handler
         segmentWatch?.disarm();
         try { machine?.stop(); } catch { /* noop */ }
         if (phTimer != null) { clearTimer(phTimer); phTimer = null; }
