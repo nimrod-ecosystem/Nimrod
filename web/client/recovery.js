@@ -28,6 +28,24 @@
 // answer for a module somebody actually wants.
 //
 // ---------------------------------------------------------------------------------------
+// TWO THINGS ON THE ROADMAP THAT BELONG TO THIS LADDER. Mike, 2026-09-01, asked for both to
+// be flagged here rather than put on the public site, because neither is built:
+//
+//   * A COLD BOOT OPTION. The `reboot` rung is a warm restart, and the failure it cannot
+//     reach is the one where the machine is wedged badly enough that a warm restart does
+//     nothing. A cold boot needs something outside the machine — a smart plug is the usual
+//     answer — which makes it a hardware dependency rather than a rung, and that is exactly
+//     why it wants deciding rather than assuming.
+//   * TRIGGERING A BOOT REMOTELY, which he called the better of the two. The ladder today
+//     can only act on a screen that is still running enough to be watched; a screen that has
+//     gone completely dark is invisible to it, and that is the case where somebody is most
+//     likely to be sitting in front of nothing. `drive.py` already knows which screens are
+//     connected and when one stops answering, so the presence half exists; what does not is
+//     any way to reach a machine that is no longer running the software.
+//
+// Neither is copy for the public site and neither should be implied there.
+//
+// ---------------------------------------------------------------------------------------
 // THREE GUARDS, and the first one is the reason this is a policy engine rather than an if.
 //
 // 1. THE REBOOT LOOP. If the fault SURVIVES the reboot, a naive ladder reboots again in ten

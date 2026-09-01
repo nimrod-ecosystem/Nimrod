@@ -715,37 +715,63 @@ class _Store:
     # its own omission.
     #
     # That is deliberately uncomfortable. It is meant to be.
+    # (description, is_personal, WHAT TURNS IT ON)
+    #
+    # *** THE THIRD ELEMENT SAYS WHAT ACT CREATES THE ROW, and it is not a boolean. *** The
+    # review asked for an "on/off column per account" so that "every one of these is opt in"
+    # would be visible rather than asserted. A true/false toggle would have overclaimed in
+    # exactly the way the old privacy headline did: `profiles` is not opt-in, it IS the
+    # product — you cannot have a screen and not have a row saying you made one.
+    #
+    # What is actually true, and stronger, is that NOTHING HERE EXISTS BECAUSE SOMEBODY MADE
+    # AN ACCOUNT. Every row is caused by a specific thing the person did, and naming that act
+    # is checkable in a way a green tick is not. Same correction as the headline: claim the
+    # thing the data supports.
     STORAGE_NOTES = {
-        "profiles":        ("The screens you made, and what you called them.", False),
-        "profile_modules": ("Which modules are on each screen, and in what order.", False),
+        "profiles":        ("The screens you made, and what you called them.", False,
+                            "when you make a screen"),
+        "profile_modules": ("Which modules are on each screen, and in what order.", False,
+                            "when you add a module to a screen"),
         "state":           ("Settings for those modules - a photo interval, a theme, a "
-                            "layout. Small, and yours.", False),
+                            "layout. Small, and yours.", False,
+                            "when you change a setting"),
         "events":          ("An append-only log of what a module did: which photo was shown "
                             "when, a game result. It GROWS over time. Sensor readings, if you "
-                            "run a logger, arrive here too.", True),
+                            "run a logger, arrive here too.", True,
+                            "when a module you added writes one"),
         "people":          ("The NAME you gave a person, so their screen can say who it is "
-                            "for. This is the most personal thing here.", True),
+                            "for. This is the most personal thing here.", True,
+                            "when you add a person"),
         "media_sources":   ("A label and an ADDRESS for the folder your media lives in - a "
-                            "pointer at your own machine. Never the files themselves.", True),
+                            "pointer at your own machine. Never the files themselves.", True,
+                            "when you connect a folder"),
         "drive_grants":    ("Which other accounts you have allowed to drive a screen, and "
-                            "until when.", True),
+                            "until when.", True,
+                            "when you let somebody drive a screen"),
         "device_keys":     ("A credential for each unattended screen you set up, and the name "
-                            "you gave it.", True),
+                            "you gave it.", True,
+                            "when you adopt an unattended screen"),
         "links":           ("Who you are connected to - one entry for each pair of people. "
                             "It is a relationship, not a permission: it lasts until one of "
-                            "you ends it.", True),
+                            "you ends it.", True,
+                            "when you connect to somebody"),
         "link_permissions": ("What each connection is allowed to do - send messages, call, "
                             "watch a screen, add photos. Each one can be switched off on its "
-                            "own, and ending the connection removes them all.", True),
+                            "own, and ending the connection removes them all.", True,
+                            "when you allow a connection to do something"),
         "sessions":        ("When a play or therapy session started and ended, and how it "
                             "ended. It is what lets a result say who was in the room, without "
-                            "tagging every single answer.", True),
+                            "tagging every single answer.", True,
+                            "when a session is recorded"),
         "session_roster":  ("Who was present for a session and in what part - playing, "
-                            "helping, observing - and when they came and went.", True),
+                            "helping, observing - and when they came and went.", True,
+                            "when a session is recorded"),
         "screen_pairings": ("A short-lived code while a screen is being set up. Deleted "
-                            "afterwards.", False),
+                            "afterwards.", False,
+                            "only while a screen is being set up"),
         "pairings":        ("A short-lived code while a media folder is being connected. "
-                            "Deleted afterwards.", False),
+                            "Deleted afterwards.", False,
+                            "only while a folder is being connected"),
         "will":            ("Legacy table, unused.", False),
     }
 
@@ -777,6 +803,9 @@ class _Store:
                 "what": note[0] if note else
                         "Not yet described. It exists, so it is listed - see the source.",
                 "personal": bool(note[1]) if note else True,   # assume the worse until said
+                # What the person did to cause this row. Unknown for an undescribed table, and
+                # saying so is better than guessing on a privacy page.
+                "when": (note[2] if note and len(note) > 2 else None),
                 "documented": note is not None,
             })
         return {

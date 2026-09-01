@@ -82,7 +82,20 @@ if GOOGLE_OK:
         client_id=os.environ["GOOGLE_CLIENT_ID"],
         client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
         server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-        client_kwargs={"scope": "openid email profile"},
+        # *** `openid` ALONE. Decided 2026-08-27. ***
+        #
+        # The subject id is the whole of what the account system needs: it says "this is the
+        # same person who signed in last time" and nothing else. The name a screen displays is
+        # typed in by whoever set it up, and the email was never read for anything.
+        #
+        # Asking for less is the point rather than a side effect. It is what supports the
+        # strongest sentence on the public page — *Google tells me you are the same person who
+        # signed in last time, and nothing else* — and a claim like that is only worth making
+        # if the consent screen agrees with it.
+        #
+        # `request.session["email"]` therefore goes empty for new sign-ins. Nothing reads it
+        # except `/api/me`, which reports it for display and already tolerates None.
+        client_kwargs={"scope": "openid"},
     )
 
 
