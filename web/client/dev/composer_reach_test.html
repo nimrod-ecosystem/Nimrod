@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>can you actually ADD the things we describe — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>can you actually add the things we describe?</h1>
+
+<div class="warn">
+  Four modules were described to caregivers, ran fine in the kiosk, and could not be added from
+  the page where you add modules. There was no error and nothing said they were missing.
+</div>
+
+<p>Three files each carry their own list of which modules exist — <code>kiosk.js</code> runs
+them, <code>modules.html</code> describes them, <code>home.html</code> lets you add them — and
+the composer's picker is built from whatever happens to have been imported into that page. So a
+module is addable if and only if somebody remembered an import line. On 2026-08-31
+<b>comet</b> (the module the whole aim / cursor / dwell chain exists to drive), <b>call</b> (the
+video call), <b>pressgame</b> and <b>trivia</b> were all missing.</p>
+
+<p>This is the same reconcile trick <code>modules_catalog.js</code> already does for
+descriptions, pointed at reachability instead: <b>anything a caregiver can read about must be
+something a caregiver can add.</b></p>
+
+<div class="note">
+  <b>It reads the real files.</b> Importing a module list here would only test this page's own
+  imports, which is the bug wearing a disguise — so it fetches <code>home.html</code> and
+  <code>modules.html</code> as text and reads their import lines. Grubby, and it is the only
+  version that actually catches what happened.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { CATALOG, NOT_FOR_CAREGIVERS } from '../modules_catalog.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// `import './modules/photos.js';` -> photos. Comments are stripped first so a commented-out
+// import does not count as a live one — which is exactly how this would rot back.
+async function importedModules(page) {
+  const res = await fetch(page, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`${page} -> ${res.status}`);
+  const src = (await res.text())
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
+  const names = new Set();
+  for (const m of src.matchAll(/import\s+['"]\.\/modules\/([A-Za-z0-9_-]+)\.js['"]/g)) {
+    names.add(m[1]);
+  }
+  return names;
+}
+
+(async () => {
+try {
+  const described = CATALOG.map((c) => c.type).filter((t) => !NOT_FOR_CAREGIVERS[t]);
+
+  const home = await importedModules('/home.html');
+  const cat  = await importedModules('/modules.html');
+  const kiosk = await importedModules('/kiosk.js');
+
+  section('*** anything a caregiver can READ about, a caregiver can ADD ***');
+  {
+    // The whole finding, as one line. A description is a promise; this is the promise being kept.
+    const unreachable = described.filter((t) => !home.has(t));
+    check('*** every described module can be added from the composer ***',
+      unreachable.length === 0,
+      `described but not addable: ${unreachable.join(', ')}`);
+
+    const undescribedOnPage = [...cat].filter((t) => !described.includes(t) && !NOT_FOR_CAREGIVERS[t]);
+    check('...and the catalogue page does not import anything it cannot describe',
+      undescribedOnPage.length === 0, undescribedOnPage.join(', '));
+
+    const notShown = described.filter((t) => !cat.has(t));
+    check('*** every described module is actually rendered on the page that describes them ***',
+      notShown.length === 0, `described but absent from modules.html: ${notShown.join(', ')}`);
+  }
+
+  section('the three lists agree');
+  {
+    // The kiosk is the superset by definition: it has to be able to RUN anything either
+    // caregiver-facing page offers. A module the composer can add and the kiosk cannot mount
+    // would be the same bug pointed the other way, and much louder.
+    const composableButUnrunnable = [...home].filter((t) => !kiosk.has(t));
+    check('*** the kiosk can run everything the composer can add ***',
+      composableButUnrunnable.length === 0, composableButUnrunnable.join(', '));
+
+    check('and the composer offers something worth offering', home.size >= 15, String(home.size));
+    check('the four that were missing on 2026-08-31 are all back',
+      ['comet', 'call', 'pressgame', 'trivia'].every((t) => home.has(t)),
+      ['comet', 'call', 'pressgame', 'trivia'].filter((t) => !home.has(t)).join(', '));
+  }
+
+  section('...and the check WORKS — it is not just agreeing with itself');
+  {
+    // The QR lesson: a green check is not evidence until you have watched it go red. If the
+    // parser silently returned an empty set — a renamed file, a changed import style — every
+    // assertion above would still pass while checking nothing.
+    check('the parser actually found imports rather than returning nothing',
+      home.size > 0 && cat.size > 0 && kiosk.size > 0,
+      `home=${home.size} catalogue=${cat.size} kiosk=${kiosk.size}`);
+    check('a module NOT imported is correctly seen as missing',
+      !home.has('definitely-not-a-module'));
+    check('the catalogue has something in it', described.length >= 15, String(described.length));
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
