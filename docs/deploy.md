@@ -98,6 +98,42 @@ the runbook below is executable end to end:
 
 Now `https://bedside.nimrodecosystem.com` serves the app, cached + HTTPS.
 
+> **Checked 2026-09-01: `bedside.nimrodecosystem.com` does NOT currently resolve.** The apex
+> `nimrodecosystem.com` serves the app and so does `nimrod.onrender.com`. Either the subdomain
+> step above was never finished or it has been retired — worth settling, because the steps below
+> and the media-agent install lines both tell you to point devices at the subdomain.
+
+## Optional — a TURN relay, and whether you need one
+
+Calls are peer-to-peer. The client ships with public **STUN**, which is enough for most
+home-to-home pairs and costs nothing. **TURN** is a relay for the pairs where no direct path
+exists, and it is the only part of a call that costs money — roughly **a gigabyte an hour** of
+whoever's bandwidth it lands on.
+
+None is configured, deliberately: a public default would mean this project paying for every
+stranger's video. Calls simply work where a direct path exists and fail where one does not.
+
+**You probably do need one, and here is the uncomfortable reason.** Institutional guest wifi —
+a care facility — is exactly the network where a direct connection fails: symmetric NAT,
+sometimes client isolation, often UDP blocked so the relay has to run on **TCP/443** to get out
+at all. So the deployment that matters most is the most likely to need it.
+
+Three ways, cheapest first:
+
+1. **Nothing.** Fine for a family on two home networks. Also fine as a starting point — it tells
+   you how often you actually need a relay before you pay for one.
+2. **Tailscale** (`mode: 'direct'` in the call settings). Free tier covers a family, no STUN, no
+   TURN, nothing about the call leaves your machines. This is the path the private build already
+   validated. It needs installing on both ends, which is the whole cost.
+3. **Your own `coturn`** on a cheap VPS with a large transfer allowance, or managed credentials
+   from a provider. A €4–5/month box with ~20 TB covers on the order of fifteen thousand relayed
+   call-hours a month, so this is small money — the reason it is not the default is that it must
+   be somebody's *deliberate* bill, not silently ours.
+
+There is **no UI for this yet.** The setting is read from the person's `call` settings row
+(`{ mode, stun, turn }`), and nothing writes it. Adding a relay today means writing that row by
+hand.
+
 ## Part D — her bedside device
 
 1. 👉 Put her media in **one folder** on the device (or attach her drive), e.g. everything under

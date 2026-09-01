@@ -37,6 +37,7 @@ the fix then is Redis pub/sub between instances, not a bigger dict.
 
 from __future__ import annotations
 
+import json
 import secrets
 import time
 from dataclasses import dataclass, field
@@ -50,6 +51,37 @@ DRIVE_VERBS = frozenset({
 })
 
 ROLES = frozenset({"screen", "driver"})
+
+# ---------------------------------------------------------------------------------------
+# SIGNALLING - added 2026-09-01, and it is the one thing on this socket that goes BOTH WAYS.
+#
+# The header above says a peer-to-peer call "can reuse this socket to signal itself later".
+# This is that. A WebRTC call needs the two ends to swap an offer and an answer before any
+# media flows, and the server has to carry those - it is the one part of a call that cannot
+# be peer-to-peer, because the peers cannot reach each other yet.
+#
+# *** WHY THIS DOES NOT WIDEN THE VERB BOUNDARY. ***
+#
+# The rule that makes this file safe is that a driver drives screens and a screen drives
+# nothing - so no bedside screen can ever press another's buttons. Signalling has to be
+# bidirectional (the callee's ANSWER must get back to the caller), so it would break that
+# rule if it were carried as a verb. It is not:
+#
+#   * a signal is a SEPARATE message type with its own path, and it is never turned into a
+#     verb, a bus topic, or anything the receiving screen acts on. The client hands it
+#     straight to the call transport and nowhere else.
+#   * `kind` is a name from a fixed list, the same discipline the verbs use. An unknown
+#     kind is dropped rather than relayed.
+#   * the SDP itself is OPAQUE and this file never parses it. It is a bounded blob.
+#
+# So the invariant is now two sentences instead of one: verbs go one way, signals go both
+# ways, and a signal can never become a verb.
+#
+# THE SIZE CAP IS THE PART THAT IS EASY TO FORGET. An SDP with a lot of candidates is a few
+# kilobytes; nothing legitimate is anywhere near this. Without a cap the relay is a free
+# broadcast pipe for anybody holding a socket, and the room fans it out to every member.
+SIGNAL_KINDS = frozenset({"offer", "answer", "bye", "ice"})
+MAX_SIGNAL_BYTES = 64 * 1024
 
 TICKET_TTL_S = 30
 MAX_TICKETS = 2000          # a bound, so a loop cannot grow this without limit
@@ -168,6 +200,21 @@ def parse_message(raw: dict) -> dict | None:
         if not isinstance(verb, str) or verb not in DRIVE_VERBS:
             return None
         return {"type": "verb", "verb": verb}
+    if kind == "signal":
+        sig = raw.get("signal")
+        if not isinstance(sig, dict):
+            return None
+        if sig.get("kind") not in SIGNAL_KINDS:
+            return None
+        # Bounded, and measured on the SERIALISED form because that is what actually
+        # crosses the wire and what the room has to fan out.
+        try:
+            size = len(json.dumps(sig))
+        except (TypeError, ValueError):
+            return None                     # not JSON-serialisable: not ours to relay
+        if size > MAX_SIGNAL_BYTES:
+            return None
+        return {"type": "signal", "signal": sig}
     if kind == "ping":
         return {"type": "pong"}
     return None

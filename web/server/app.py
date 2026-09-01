@@ -982,7 +982,16 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                 continue
             # A driver drives screens. A screen never drives anything - it only reports -
             # so there is no path by which one bedside screen could press another's buttons.
-            if role == "driver":
+            #
+            # A SIGNAL IS THE EXCEPTION, AND IT IS A DELIBERATE ONE. Setting up a call means
+            # the callee's ANSWER has to reach the caller, so signalling is the one message
+            # that travels both ways. It is safe because it is never turned into a verb or a
+            # bus topic at either end - `drive.py` explains the whole argument. It goes to
+            # THE OTHER ROLE only: two screens cannot signal each other, and neither can two
+            # drivers, so this adds no path between bedside screens.
+            if msg["type"] == "signal":
+                await _tell(room.drivers if role == "screen" else room.screens, msg)
+            elif role == "driver":
                 await _tell(room.screens, msg)
     except WebSocketDisconnect:
         pass

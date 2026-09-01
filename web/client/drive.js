@@ -42,6 +42,16 @@ export const DRIVE_VERBS = [
 
 export const STATES = ['offline', 'connecting', 'connected'];
 
+// Mirrored from drive.py, same reason as the verbs. A signal is how the two ends of a call
+// swap an offer and an answer before any media can flow — the one part of a call that
+// cannot be peer-to-peer, because the peers cannot reach each other yet.
+//
+// *** A SIGNAL IS NEVER PUBLISHED ONTO THE BUS. *** A verb arrives and becomes a press,
+// which is the whole design; a signal arrives and goes to the call transport and nowhere
+// else. If a signal could reach the bus, this socket would be a way to publish arbitrary
+// payloads onto a bedside screen, which is exactly what the verb allowlist exists to stop.
+export const SIGNAL_KINDS = ['offer', 'answer', 'bye', 'ice'];
+
 const wsURL = (base, personId, ticket, role) => {
   const origin = base
     || (typeof location !== 'undefined' ? `${location.protocol}//${location.host}` : '');
@@ -57,6 +67,8 @@ export function connectDrive({
   user = null,
   base = '',
   onVerb = null,          // screens: a verb arrived
+  onSignal = null,        // both: a call signal arrived — goes to the transport, never the bus
+                          //   (a convenience; `link.onSignal(cb)` is the general form)
   onPresence = null,      // both: how many screens / drivers are in the room
   onState = null,         // both: offline | connecting | connected
   // Seams, so the test needs no server and no real socket.
@@ -77,6 +89,19 @@ export function connectDrive({
   let attempt = 0;
   let timer = null;
   let presence = { screens: 0, drivers: 0 };
+
+  // SIGNALS ARE SUBSCRIBED TO, NOT HANDED IN ONCE. The kiosk opens this socket at boot and
+  // the call transport is built later (and rebuilt, if the panel is torn down and remounted),
+  // so a single constructor callback would either be null when the socket opens or stale
+  // afterwards. Verbs do not have this problem — the host that mounts the screen owns them
+  // for the whole session — which is why only this one is a set.
+  const signalSubs = new Set();
+  if (onSignal) signalSubs.add(onSignal);
+  const fanSignal = (sig) => {
+    for (const fn of [...signalSubs]) {
+      try { fn(sig); } catch (err) { console.error('drive: signal subscriber', err); }
+    }
+  };
 
   const setState = (s) => { if (s !== state) { state = s; onState?.(s); } };
 
@@ -134,6 +159,11 @@ export function connectDrive({
       if (msg.type === 'verb' && role === 'screen' && DRIVE_VERBS.includes(msg.verb)) {
         onVerb?.(msg.verb);
       }
+      // BOTH roles accept signals — a call is a conversation and the answer has to get
+      // home. Handed to the caller's callback and never to the bus; see SIGNAL_KINDS.
+      if (msg.type === 'signal' && msg.signal && SIGNAL_KINDS.includes(msg.signal.kind)) {
+        fanSignal(msg.signal);
+      }
     };
     sock.onclose = () => {
       sock = null;
@@ -152,14 +182,31 @@ export function connectDrive({
     try { sock.send(JSON.stringify({ type: 'verb', verb })); return true; } catch { return false; }
   }
 
+  // A signal, from either role. Deliberately NOT `send`: a caller that muddled the two
+  // would be sending an SDP where a press was meant, and the two have completely different
+  // rules about who may originate them.
+  function sendSignal(signal) {
+    if (!signal || !SIGNAL_KINDS.includes(signal.kind)) return false;
+    if (!sock || state !== 'connected') return false;
+    try { sock.send(JSON.stringify({ type: 'signal', signal })); return true; } catch { return false; }
+  }
+
   open();
 
   return {
     send,
+    sendSignal,
+    /** Listen for call signals. Returns an unsubscribe, like every other listener here. */
+    onSignal(cb) {
+      if (typeof cb !== 'function') return () => {};
+      signalSubs.add(cb);
+      return () => signalSubs.delete(cb);
+    },
     state: () => state,
     presence: () => ({ ...presence }),
     close() {
       closed = true;
+      signalSubs.clear();
       clearTimer(timer);
       try { sock?.close(); } catch { /* already gone */ }
       sock = null;

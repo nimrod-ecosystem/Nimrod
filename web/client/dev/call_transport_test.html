@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the call transport — a call on any network — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>the call transport</h1>
+
+<div class="warn">
+  A screen must never be stuck showing a dead call — she cannot dismiss it. Every path out
+  of a call is asserted here, including the ones nobody chose.
+</div>
+
+<p>The validated call was <code>iceServers: []</code> — Tailscale host candidates and nothing
+else, which is why it only worked over a VPN. That was a shortcut to prove the media path,
+not a design decision. This fills the array, and rides the signalling on the drive socket
+that already exists rather than opening a second one.</p>
+
+<div class="note">
+  <b>Not covered here, and it is the important half.</b> No real <code>RTCPeerConnection</code>,
+  no real network, no NAT. This suite proves the STATE MACHINE and the signalling rules — who
+  may send what, what happens when a call drops, what happens when nobody hangs up. Whether
+  two real devices on real networks actually connect is a bench test with two machines, and
+  <b>it has not been run</b>. Neither has anything through a TURN relay, because none is
+  configured.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createCallTransport, iceServers, gatheringDone, hasRelay,
+  DEFAULT_STUN, GATHER_TIMEOUT_MS, STALL_MS, MODES,
+} from '../call_transport.js';
+import { SIGNAL_KINDS, DRIVE_VERBS } from '../drive.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    pending: () => armed.length,
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// A drive link with no socket behind it. `deliver` is the far end talking to us.
+function fakeLink() {
+  const sent = [];
+  const subs = new Set();
+  return {
+    sent,
+    sendSignal: (s) => { sent.push(s); return true; },
+    send: () => false,
+    onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+    deliver(sig) { for (const cb of [...subs]) cb(sig); },
+    subs: () => subs.size,
+  };
+}
+
+// A peer connection that behaves like the real one's state machine without a network.
+function fakePeer() {
+  const made = [];
+  class PC {
+    constructor(cfg) {
+      this.cfg = cfg; this.senders = []; this.closed = false;
+      this.iceGatheringState = 'complete';     // gather instantly unless a test says otherwise
+      this.connectionState = 'new';
+      this.localDescription = null; this.remote = null;
+      this.listeners = {};
+      made.push(this);
+    }
+    addTrack(t, stream) { this.senders.push({ track: t, stream }); return {}; }
+    getSenders() { return this.senders; }
+    addEventListener(k, fn) { (this.listeners[k] = this.listeners[k] || []).push(fn); }
+    async setRemoteDescription(d) { this.remote = d; }
+    async createAnswer() { return { type: 'answer', sdp: 'ANSWER-SDP' }; }
+    async createOffer() { return { type: 'offer', sdp: 'OFFER-SDP' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    close() { this.closed = true; }
+    // test helpers
+    fire(state) { this.connectionState = state; this.onconnectionstatechange?.(); }
+    fireTrack(track, streams) { this.ontrack?.({ track, streams }); }
+  }
+  return { PC, made, last: () => made[made.length - 1] };
+}
+class FakeStream {
+  constructor() { this.tracks = []; }
+  addTrack(t) { this.tracks.push(t); }
+  getTracks() { return this.tracks; }
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the empty array, filled — this is the whole VPN question ***');
+  {
+    // The validated private call is `iceServers: []`: host candidates only, which works on a
+    // Tailscale mesh and nowhere else. That was a shortcut to prove the media path.
+    check('*** by default there are STUN servers, so a call is not VPN-only ***',
+      iceServers({}).length >= 2, JSON.stringify(iceServers({})));
+    check('...from two different operators, so one being down is not no calls',
+      new Set(DEFAULT_STUN.map((s) => s.urls.split(':')[1])).size === 2,
+      JSON.stringify(DEFAULT_STUN));
+    check('...and they are STUN, not TURN — a lookup, never a pipe',
+      iceServers({}).every((s) => /^stun:/.test(s.urls)), JSON.stringify(iceServers({})));
+
+    // The zero-cloud mode DECISIONS.md calls "max privacy": not a fallback, a choice.
+    check('*** "direct" is the Tailscale mode, and it is still supported ***',
+      iceServers({ mode: 'direct' }).length === 0);
+    check('both modes are reachable', MODES.length === 2);
+
+    // TURN is the only piece that costs money — roughly a gigabyte an hour of somebody's
+    // bandwidth. A public default would mean this project paying for strangers' video.
+    check('*** no TURN relay is configured by default ***', hasRelay({}) === false);
+    check('...and somebody who has one can say so',
+      hasRelay({ turn: [{ urls: 'turn:example', username: 'u', credential: 'c' }] }) === true);
+    const withTurn = iceServers({ turn: [{ urls: 'turn:example' }] });
+    check('a configured relay is used ALONGSIDE stun, not instead of it',
+      withTurn.length === 3 && /^turn:/.test(withTurn[2].urls), JSON.stringify(withTurn));
+  }
+
+  // =====================================================================================
+  section('*** gathering: send the description, but never hang waiting for it ***');
+  {
+    const { PC } = fakePeer();
+    const pc = new PC({});
+    check('a connection that has already gathered resolves at once',
+      (await gatheringDone(pc)) === 'complete');
+
+    // Non-trickle means one description is sent AFTER gathering. A network that never
+    // reports `complete` would otherwise hang the call forever — so there is a timeout, and
+    // the number came from the private build rather than from me.
+    const slow = new PC({});
+    slow.iceGatheringState = 'gathering';
+    const clock = fakeClock();
+    const p = gatheringDone(slow, { setTimer: clock.setTimer });
+    let done = false; p.then(() => { done = true; });
+    await sleep(0);
+    check('a slow network does not resolve early', done === false);
+    clock.advance(GATHER_TIMEOUT_MS);
+    check('*** ...but it sends anyway rather than hanging the call ***',
+      (await p) === 'timeout');
+    check('the timeout is the private build’s number', GATHER_TIMEOUT_MS === 3000);
+  }
+
+  // =====================================================================================
+  section('answering a call');
+  {
+    const { PC, last } = fakePeer();
+    const link = fakeLink();
+    const clock = fakeClock();
+    const incoming = [], ended = [];
+    const t = createCallTransport({
+      link, role: 'screen', PeerConnection: PC, Stream: FakeStream,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    });
+    t.onIncoming((from) => incoming.push(from));
+    t.onEnded((r) => ended.push(r));
+
+    check('it listens on the link it was given', link.subs() === 1);
+    check('nothing is live before anybody calls', t.__probe().live === false);
+
+    link.deliver({ kind: 'offer', sdp: 'OFFER-1', from: 'Mike' });
+    check('*** an offer rings, and names who is calling ***',
+      incoming.length === 1 && incoming[0] === 'Mike', JSON.stringify(incoming));
+    // It does NOT answer by itself. A screen that auto-answers is a microphone in a room.
+    check('*** ...and it does NOT answer on its own ***',
+      t.__probe().hasPc === false && link.sent.length === 0, JSON.stringify(link.sent));
+    check('the offer is held, waiting', t.__probe().pendingOffer === true);
+
+    const track = { kind: 'video' };
+    const video = {};
+    const ok = await t.answer({ from: 'Mike', outgoing: track, remoteVideo: video });
+    check('answering succeeds', ok === true);
+    check('*** the answer goes back over the socket ***',
+      link.sent.length === 1 && link.sent[0].kind === 'answer' && link.sent[0].sdp === 'ANSWER-SDP',
+      JSON.stringify(link.sent));
+    check('the call is live', t.__probe().live === true);
+    check('the STUN servers were actually handed to the connection',
+      last().cfg.iceServers.length >= 2, JSON.stringify(last().cfg));
+
+    // A bare addTrack sends with no stream association, and a peer rendering streams[0]
+    // gets undefined and shows BLACK while frames arrive. The private build hit this.
+    check('*** the outgoing track is sent UNDER a stream, or the far end shows black ***',
+      last().senders[0].stream instanceof FakeStream, JSON.stringify(!!last().senders[0].stream));
+
+    last().fireTrack({ kind: 'video' }, [new FakeStream()]);
+    check('a remote track is attached to the video element the module handed over',
+      !!video.srcObject);
+
+    check('answering with no offer waiting does nothing',
+      (await t.answer({ outgoing: track })) === false);
+    t.destroy();
+  }
+
+  // =====================================================================================
+  section('*** every way out of a call, including the ones nobody chose ***');
+  {
+    // She cannot dismiss anything. Each of these has to release the screen by itself.
+    const mk = () => {
+      const { PC, last } = fakePeer();
+      const link = fakeLink(); const clock = fakeClock(); const ended = [];
+      const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      t.onEnded((r) => ended.push(r));
+      return { t, link, clock, ended, last };
+    };
+
+    // 1. the far end hangs up
+    {
+      const { t, link, ended } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      link.deliver({ kind: 'bye' });
+      check('*** the caller hanging up ends it here ***',
+        ended.join() === 'remote' && t.__probe().live === false, JSON.stringify(ended));
+    }
+
+    // 2. this end hangs up
+    {
+      const { t, link, ended } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      t.hangup('done');
+      // Without this the far end sits watching a frozen frame until its own stall fires —
+      // thirty seconds of looking at somebody who has already gone.
+      check('*** hanging up TELLS the other end before tearing down ***',
+        link.sent.some((s) => s.kind === 'bye'), JSON.stringify(link.sent));
+      check('...and ends locally too', ended.length === 1 && t.__probe().live === false);
+    }
+
+    // 3. THE ONE THAT MATTERS: the caller vanishes without saying anything.
+    {
+      const { t, link, clock, ended, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      last().fire('failed');
+      check('a dropped connection does NOT end the call immediately — the caller re-offers',
+        ended.length === 0 && t.__probe().stalling === true);
+      clock.advance(STALL_MS - 1);
+      check('...it waits', ended.length === 0);
+      clock.advance(1);
+      check('*** ...and then releases the screen rather than leaving her on a dead call ***',
+        ended.join() === 'stalled' && t.__probe().live === false, JSON.stringify(ended));
+      check('the stall window is the private build’s number', STALL_MS === 30000);
+    }
+
+    // 4. a reconnect: a fresh offer while live must not ring at her a second time.
+    {
+      const { t, link, clock, last } = mk();
+      const rings = [];
+      t.onIncoming((f) => rings.push(f));
+      link.deliver({ kind: 'offer', sdp: 'O1' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      last().fire('failed');
+      check('a drop armed the stall', t.__probe().stalling === true);
+      link.deliver({ kind: 'offer', sdp: 'O2' });
+      await sleep(5);
+      check('*** a reconnect is answered, not rung ***', rings.length === 1, JSON.stringify(rings));
+      check('...and it cleared the stall it was racing', t.__probe().stalling === false);
+      check('...with a fresh answer sent', link.sent.filter((s) => s.kind === 'answer').length === 2,
+        JSON.stringify(link.sent.map((s) => s.kind)));
+      clock.advance(STALL_MS * 2);
+      check('and the recovered call is not killed by the old timer', t.__probe().live === true);
+    }
+
+    // 5. torn down mid-call
+    {
+      const { t, link, ended, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      const pc = last();
+      t.destroy();
+      check('destroy closes the peer connection rather than leaking it', pc.closed === true);
+      check('...tells whoever was listening', ended.join() === 'destroyed');
+      check('...and stops listening to the link', link.subs() === 0);
+      link.deliver({ kind: 'offer', sdp: 'AFTER' });
+      check('a signal after destroy does nothing at all', t.__probe().live === false);
+    }
+  }
+
+  // =====================================================================================
+  section('*** the two ends cannot be confused for each other ***');
+  {
+    const { PC } = fakePeer();
+    const link = fakeLink();
+    const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream });
+    // A bedside screen never places a call. Somebody has to be at the other end deciding to.
+    check('*** a screen cannot place a call ***', (await t.call({ tracks: [] })) === false);
+    // ...and it ignores an answer, which is a message meant for a caller.
+    link.deliver({ kind: 'answer', sdp: 'A' });
+    check('a screen ignores an answer — that message is not for it', t.__probe().live === false);
+    t.destroy();
+
+    const link2 = fakeLink();
+    const d = createCallTransport({ link: link2, role: 'driver', PeerConnection: PC, Stream: FakeStream });
+    const rings = [];
+    d.onIncoming((f) => rings.push(f));
+    await d.call({ tracks: [{ kind: 'video' }], from: 'Mike' });
+    check('a driver places one', link2.sent[0]?.kind === 'offer' && link2.sent[0].sdp === 'OFFER-SDP',
+      JSON.stringify(link2.sent));
+    link2.deliver({ kind: 'offer', sdp: 'X' });
+    check('*** and a driver does not RING — two drivers cannot call each other ***',
+      rings.length === 0);
+    d.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a signal is not a verb, and can never become one ***');
+  {
+    // The whole reason signals may travel both ways on a socket where verbs may not.
+    check('the two vocabularies do not overlap',
+      SIGNAL_KINDS.every((k) => !DRIVE_VERBS.includes(k)),
+      JSON.stringify(SIGNAL_KINDS.filter((k) => DRIVE_VERBS.includes(k))));
+    const link = fakeLink();
+    const { PC } = fakePeer();
+    const t = createCallTransport({ link, role: 'driver', PeerConnection: PC, Stream: FakeStream });
+    // Only the four kinds go out. Anything else is refused at this end too, because a client
+    // that sends rubbish should find out at the client.
+    check('the transport only ever sends known kinds',
+      link.sent.every((s) => SIGNAL_KINDS.includes(s.kind)));
+    t.destroy();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
