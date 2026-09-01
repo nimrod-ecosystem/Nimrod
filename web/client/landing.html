@@ -717,6 +717,20 @@
 <script>
   // /auth/callback sends failures back here as ?login=failed. Saying so beats
   // silently re-showing the landing page as though nothing happened.
+  // SETUP TIMING, off unless `?instrument=setup` is in the URL. See setup_timing.js for why
+  // this is query-string-only, local-only, and records step names and clock times and nothing
+  // else. The landing page has a hole where "how long does setup take" belongs, and this is
+  // what fills it with a measurement instead of a guess.
+  (async () => {
+    const { attachSetupLog } = await import('./setup_timing.js');
+    const log = attachSetupLog();
+    if (!log) return;
+    log.mark('arrive');
+    for (const a of document.querySelectorAll('a[href^="/auth/login"]')) {
+      a.addEventListener('click', () => log.mark('signin-start'));
+    }
+  })().catch(() => { /* instrumentation must never break the page it measures */ });
+
   // THE DEMO: one tap swaps the poster for the real kiosk. Deliberately NOT autoplaying on
   // scroll — a page that starts loading an application because somebody scrolled past it is
   // spending their data and their battery on a decision they did not make.

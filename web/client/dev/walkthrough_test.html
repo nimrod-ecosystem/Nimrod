@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the walkthrough — one step list, five consumers — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #script{white-space:pre-wrap;background:#fff;border:1px solid #e4e0c2;border-radius:10px;
+    padding:14px 16px;margin-top:16px;max-width:80ch;font-size:.95rem}
+</style>
+</head>
+<body>
+<h1>the walkthrough</h1>
+
+<div class="warn">
+  A recording of a real bedside instance would put somebody's photographs, voice clips and name
+  on a public landing page. The data gate is the first section, and it is the only one that
+  cannot be fixed after the fact.
+</div>
+
+<p>One list, five consumers: the recorder performs it, Piper narrates it, the captions and the
+transcript are made of it, and the guided tour walks a person through it instead of doing it for
+them. The recorder <b>executes</b> the list, so a stale selector fails the recording — which
+makes the video run a test of the tour.</p>
+
+<div class="note">
+  <b>Not covered here.</b> No recorder exists yet — the spec says write the step list first and
+  get it reviewed as text, because it is the part that gets revised most. So nothing below
+  drives a browser, and <b>no selector has been proven against the live pages by this suite</b>;
+  they were checked by hand on 2026-09-01. The recorder is what will keep them honest.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>The script, as it would be narrated</h2>
+<div id="script"></div>
+
+<script type="module">
+import { STEPS, SCENES, ACTIONS, tourSteps, narration, transcript, wordBudget, demoSeed }
+  from '../steps.js';
+import { MILESTONES, STORAGE_KEY, createSetupLog, instrumentRequested, attachSetupLog }
+  from '../setup_timing.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function fakeStore() {
+  const m = new Map();
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)),
+           removeItem: (k) => m.delete(k) };
+}
+
+try {
+  // =====================================================================================
+  section('*** THE DATA GATE — nothing real is ever in frame ***');
+  {
+    const seed = demoSeed();
+    // A recording of a real instance is a far worse exposure than anything the source scrub
+    // was about, and it cannot be taken back once it is on a landing page.
+    check('*** the demo seed is the whole of what gets filmed ***',
+      !!seed.screenName && Array.isArray(seed.modules) && seed.modules.length > 0,
+      JSON.stringify(seed));
+    check('...and its media is generated, not somebody’s folder',
+      /demo/i.test(seed.mediaLabel), seed.mediaLabel);
+    // The scrub is done, and this is the check that keeps it done for anything the video says.
+    const everything = JSON.stringify(STEPS) + JSON.stringify(seed);
+    check('*** no real name appears anywhere in the script or the seed ***',
+      !/christine|oscar/i.test(everything));
+    check('...and no absolute path from anybody’s machine',
+      !/[A-Za-z]:[\\/]|\/home\/|\/Users\//.test(everything));
+  }
+
+  // =====================================================================================
+  section('*** under three minutes, counted rather than assumed ***');
+  {
+    const b = wordBudget();
+    // A landing-page video that runs long is one nobody finishes, and narration grows a
+    // sentence at a time. Counting it is the only thing that stops that.
+    check('*** the script fits the three-minute cap ***', b.overBudget === false,
+      `${b.words} words → ~${b.estimateSeconds}s of ${b.capSeconds}s`);
+    check('...and it is not so short it says nothing', b.words > 200, String(b.words));
+    check('the estimate is the honest one — narration runs DURING the holds, not after',
+      b.estimateSeconds === Math.max(b.speechSeconds, b.settleSeconds),
+      `speech=${b.speechSeconds} settle=${b.settleSeconds} est=${b.estimateSeconds}`);
+    check('every scene has something to say',
+      SCENES.every((sc) => STEPS.some((s) => s.scene === sc.id && s.say)),
+      SCENES.filter((sc) => !STEPS.some((s) => s.scene === sc.id && s.say)).map((s) => s.id).join());
+    // The room beat is argument rather than demonstration, so it is the shortest.
+    const words = (id) => STEPS.filter((s) => s.scene === id && s.say)
+      .reduce((n, s) => n + s.say.split(/\s+/).length, 0);
+    check('the argument beat is shorter than the demonstration',
+      words('room') < words('kiosk'), `room=${words('room')} kiosk=${words('kiosk')}`);
+  }
+
+  // =====================================================================================
+  section('one list, five consumers, and they cannot disagree');
+  {
+    check('every step has a stable id', STEPS.every((s) => s.id) &&
+      new Set(STEPS.map((s) => s.id)).size === STEPS.length);
+    check('every step belongs to a real scene',
+      STEPS.every((s) => SCENES.some((sc) => sc.id === s.scene)),
+      STEPS.filter((s) => !SCENES.some((sc) => sc.id === s.scene)).map((s) => s.id).join());
+    check('every action is one the recorder knows',
+      STEPS.every((s) => ACTIONS.includes(s.action)),
+      STEPS.filter((s) => !ACTIONS.includes(s.action)).map((s) => s.action).join());
+    check('a step that acts on something names what',
+      STEPS.filter((s) => ['click', 'type', 'press'].includes(s.action)).every((s) => s.target),
+      STEPS.filter((s) => ['click', 'type', 'press'].includes(s.action) && !s.target).map((s) => s.id).join());
+    check('a typing step has something to type',
+      STEPS.filter((s) => s.action === 'type').every((s) => s.value));
+
+    // THE TOUR IS SHORTER THAN THE RECORDING, and that is the point: plumbing clicks are not
+    // stops on a tour, and a tour with dead stops is one people abandon.
+    check('*** the tour skips the recorder’s plumbing ***',
+      tourSteps().length < STEPS.length && tourSteps().every((s) => s.say),
+      `${tourSteps().length} of ${STEPS.length}`);
+    check('narration is exactly the steps that say something',
+      narration().length === STEPS.filter((s) => s.say).length);
+    check('the transcript is grouped by scene and drops the empty ones',
+      transcript().every((sc) => sc.lines.length > 0));
+    check('...and it carries every spoken line, so it is a real alternative to watching',
+      transcript().reduce((n, sc) => n + sc.lines.length, 0) === narration().length);
+  }
+
+  // =====================================================================================
+  section('every beat the spec asked for is present');
+  {
+    const want = ['room', 'compose', 'kiosk', 'inputs', 'hold', 'do', 'cost'];
+    check('all seven, in order', SCENES.map((s) => s.id).join() === want.join(),
+      SCENES.map((s) => s.id).join());
+    const said = STEPS.filter((s) => s.say).map((s) => s.say).join(' ').toLowerCase();
+    // The spec names these specifically as the things to SHOW rather than describe.
+    check('the mirror is in it', /mirror/.test(said));
+    check('the hold — pause, and the film is still there', /pause/.test(said) && /where you left it/.test(said));
+    check('interchangeable inputs, not one device',
+      /switch/.test(said) && /key/.test(said) && /webcam|sock/.test(said));
+    check('measured, and not shown back to them',
+      /measured/.test(said) && /never see a score/.test(said));
+    check('free, open source, files stay put',
+      /free/.test(said) && /open source/.test(said) && /never leave your machine/.test(said));
+  }
+
+  // =====================================================================================
+  section('*** the setup instrument is OFF unless somebody asks ***');
+  {
+    // It measures a person using the product. On this project that makes "quietly on" the
+    // wrong default by a wide margin.
+    check('*** no query flag, no instrument ***', instrumentRequested('') === false
+      && instrumentRequested('?a=b') === false);
+    check('...and a near miss does not count', instrumentRequested('?instrument=1') === false);
+    check('the exact flag turns it on', instrumentRequested('?instrument=setup') === true);
+    check('*** attach returns NULL when it was not asked for, so every call site is a no-op ***',
+      attachSetupLog({ search: '' }) === null);
+
+    // A duration cannot identify anybody; the content of a setup can.
+    const log = createSetupLog({ storage: fakeStore(), now: () => 1000 });
+    check('*** an unknown step is refused, so nothing free-text can be logged ***',
+      log.mark('whatever-i-typed') === null);
+    check('...and the known ones are a closed list', MILESTONES.length >= 8
+      && MILESTONES.every((m) => m.id && m.label));
+  }
+
+  // =====================================================================================
+  section('what it measures, and what it refuses to');
+  {
+    let t = 0;
+    const log = createSetupLog({ storage: fakeStore(), now: () => t, pauseMs: 60000 });
+    t = 0;      log.mark('arrive');
+    t = 10000;  log.mark('signin-start');
+    // The longest gap somebody actually sat through: signing in took the better part of a
+    // minute. THIS is the number that answers "where do people get stuck".
+    t = 60000;  log.mark('signin-done');
+    t = 65000;  log.mark('screen-named');
+    // And a long absence: they went to find where their photos actually live, via lunch.
+    t = 435000; log.mark('screen-made');
+    t = 445000; log.mark('module-first');
+    t = 465000; log.mark('module-done');
+    t = 475000; log.mark('kiosk-open');
+    t = 485000; log.mark('kiosk-working');
+
+    const r = log.report();
+    check('it records each step once', r.steps === 9);
+    check('a run that hit every required milestone is complete', r.complete === true,
+      JSON.stringify(r.missing));
+    // "It took an hour, forty minutes of which was lunch" and "it took twenty minutes" are
+    // different sentences and only one of them is honest on its own.
+    check('*** a long absence is counted separately, not folded into the total ***',
+      r.elapsedMs === 485000 && r.pausedMs === 370000 && r.activeMs === 115000,
+      JSON.stringify({ e: r.elapsedMs, p: r.pausedMs, a: r.activeMs }));
+    check('...and it is not silently dropped either',
+      log.entries().some((e) => e.paused === true));
+
+    // THE OTHER QUESTION THE LANDING PAGE CANNOT ANSWER YET.
+    check('*** the longest real gap is reported — that is "where people get stuck" ***',
+      r.longestStep && r.longestStep.id === 'signin-done', JSON.stringify(r.longestStep));
+
+    // A page that re-mounts, or a person going back and forth, must not turn one milestone
+    // into three and make every gap meaningless.
+    t = 495000;
+    check('marking the same milestone twice does nothing', log.mark('arrive') === null
+      && log.report().steps === 9);
+
+    const text = log.export();
+    check('it exports something a person can paste', /FIRST SETUP/.test(text) && /hands-on/.test(text));
+    check('...naming the longest step in words', /longest step/.test(text), text.slice(0, 60));
+    check('an empty log says so rather than pretending',
+      createSetupLog({ storage: fakeStore() }).export() === 'No setup recorded.');
+
+    const partial = createSetupLog({ storage: fakeStore(), now: () => 1 });
+    partial.mark('arrive'); partial.mark('signin-start');
+    check('*** an abandoned setup reports INCOMPLETE and names what was never reached ***',
+      partial.report().complete === false && partial.report().missing.includes('kiosk-working'),
+      JSON.stringify(partial.report().missing));
+    check('...and optional steps do not make a run incomplete',
+      !partial.report().missing.includes('media-done'));
+  }
+
+  // The script, for reading. It is the artefact that gets revised most, so it should be easy
+  // to read in one place rather than reconstructed from a data structure.
+  document.getElementById('script').textContent = transcript()
+    .map((sc) => `${sc.title.toUpperCase()}\n${sc.lines.map((l) => '  ' + l).join('\n\n')}`)
+    .join('\n\n');
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+</script>
+</body>
+</html>
