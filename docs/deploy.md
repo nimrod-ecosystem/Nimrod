@@ -171,7 +171,7 @@ hand.
    on its first frame indefinitely — which is precisely the failure the invariant *nothing may
    require an input in order to keep doing what it is already doing* exists to rule out.
 
-   The flag is the fix; it is not the only defence. `modules/personal.js` also watches for a
+   The flag is the fix; it is not the only defense. `modules/personal.js` also watches for a
    refused start and falls back to playing the clip **muted**, saying so on screen, rather than
    freezing — because a flag can be dropped from an autostart line by anyone, and a screen in a
    care facility should not depend on remembering it.

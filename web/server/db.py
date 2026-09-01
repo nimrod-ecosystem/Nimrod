@@ -193,7 +193,7 @@ class _Store:
                   role: str | None = None) -> dict:
         """`role` is what the grant lets somebody BE once they are in - see grants.py.
 
-        NORMALISED ON THE WAY IN, so storage never holds a role nothing understands. That is
+        NORMALIZED ON THE WAY IN, so storage never holds a role nothing understands. That is
         deliberately different from `subject_kind`, which is stored unvalidated precisely so a
         `group` grant can sit there inert until groups exist: a KIND decides whether somebody
         gets in at all and must fail closed, while a ROLE only narrows what an already
@@ -381,7 +381,7 @@ class _Store:
                             expires_at: str | None = None) -> dict:
         """Turn one switch on. Idempotent per (link, person, capability, subject).
 
-        `capability` is VALIDATED and raises on anything unrecognised - unlike
+        `capability` is VALIDATED and raises on anything unrecognized - unlike
         `subject_kind`, which is stored unvalidated so a `group` row can sit there inert
         until groups exist. A kind decides whether somebody gets in at all and fails
         closed; a capability that nothing understands must never reach storage at all.
@@ -979,7 +979,7 @@ class _Store:
     # WHAT THIS IS ACTUALLY FOR, corrected after Mike pushed back on an earlier version
     # of this comment that led with privacy:
     #
-    #   1. ORGANISATION, and this is the honest primary. The right albums on the right
+    #   1. ORGANIZATION, and this is the honest primary. The right albums on the right
     #      screen. An account with several people needs one person's photos to be what
     #      SHE sees rather than a merged pile of four residents' families.
     #   2. A boundary between UNRELATED ACCOUNTS - a facility whose residents did not
@@ -1099,7 +1099,7 @@ class _Store:
         period is visibly unattributed rather than silently assumed to be human. See
         provenance.py for why a defaulted guess would be worse than an empty column.
 
-        `principal_type` is normalised on the way in - an unrecognised value becomes NULL
+        `principal_type` is normalized on the way in - an unrecognized value becomes NULL
         rather than a default, because this column is a claim about who made the data and a
         typo silently written as `human` is a falsehood in a log that has no update.
         """

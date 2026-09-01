@@ -8,7 +8,7 @@
 // WHY THE SYSTEM CURSOR IS NOT ENOUGH, which is the obvious first objection
 // ---------------------------------------------------------------------------------------
 //
-// A mouse pointer is about 12 px of thin grey arrow, drawn by the operating system, and:
+// A mouse pointer is about 12 px of thin gray arrow, drawn by the operating system, and:
 //
 //   * it is TOO SMALL for somebody with a brain injury looking at a screen across a room.
 //     Every AAC and low-vision product on the market ships a large high-contrast pointer for
@@ -70,7 +70,7 @@ export const CURSOR_DEFAULTS = {
   show: 'tracking',
   size: 44,             // px across. Big, because the person this is for is looking from a bed.
   style: 'ring',        // 'ring' | 'dot' | 'crosshair'
-  colour: '#F7C948',    // amber, the bedside build's colour, and readable on photos and video
+  color: '#F7C948',    // amber, the bedside build's color, and readable on photos and video
   hideSystem: false,    // take the OS pointer away as well (kiosk: reasonable; desktop: rude)
   // A cursor that stays on screen forever after somebody stopped pointing is clutter, and on
   // a 24/7 panel it is also a static bright shape sitting in one spot. 0 = never fade.
@@ -81,7 +81,7 @@ export const STYLES = ['ring', 'dot', 'crosshair'];
 export const SHOW_MODES = ['tracking', 'always', 'never'];
 
 // Devices the operating system already draws a pointer for. A device NOT in this list — a hand
-// tracker, a coloured marker, a head pointer reporting through the aim rather than as a mouse —
+// tracker, a colored marker, a head pointer reporting through the aim rather than as a mouse —
 // has nothing on screen unless this file draws it.
 export const SYSTEM_DRAWN = ['pointer:mouse'];
 
@@ -109,7 +109,7 @@ export const SETTINGS = [
       { value: 'dot', label: 'dot' },
       { value: 'crosshair', label: 'crosshair' },
     ] },
-  { key: 'colour', label: 'Cursor colour', kind: 'choice', default: '#F7C948', level: 'standard',
+  { key: 'color', label: 'Cursor color', kind: 'choice', default: '#F7C948', level: 'standard',
     options: [
       { value: '#F7C948', label: 'amber' },
       { value: '#4CC9F0', label: 'blue' },
@@ -121,19 +121,19 @@ export const SETTINGS = [
 
 // A ring is drawn as a ring rather than a filled circle on purpose: it does not hide what it is
 // pointing at, which matters when the thing under it is a photograph of somebody's family.
-// Every style carries a dark outline as well as its colour, so it reads against a white sheet
-// and a night sky without the person having to change it — the "do not use colour alone" rule
+// Every style carries a dark outline as well as its color, so it reads against a white sheet
+// and a night sky without the person having to change it — the "do not use color alone" rule
 // in module-input-spec, applied to contrast rather than meaning.
 function paint(el, cfg) {
   const size = Math.max(8, Number(cfg.size) || CURSOR_DEFAULTS.size);
-  const colour = String(cfg.colour || CURSOR_DEFAULTS.colour);
+  const color = String(cfg.color || CURSOR_DEFAULTS.color);
   const style = STYLES.includes(cfg.style) ? cfg.style : 'ring';
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
   el.style.marginLeft = `${-size / 2}px`;
   el.style.marginTop = `${-size / 2}px`;
   el.dataset.style = style;
-  el.style.setProperty('--cur-colour', colour);
+  el.style.setProperty('--cur-color', color);
   el.style.setProperty('--cur-ring', `${Math.max(2, Math.round(size / 11))}px`);
 }
 

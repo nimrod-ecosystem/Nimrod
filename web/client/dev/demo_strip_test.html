@@ -101,7 +101,7 @@ section('what it actually says');
   check('...and a way to sign in without it being the only option',
     el.querySelector('.d-in')?.getAttribute('href') === '/auth/login');
   check('...and a way to make it go away', !!el.querySelector('[data-x]'));
-  check('it is announced as a region rather than being an unlabelled bar',
+  check('it is announced as a region rather than being an unlabeled bar',
     el.querySelector('#demo')?.getAttribute('aria-label')?.length > 0);
 }
 
@@ -126,7 +126,7 @@ section('dismissing');
   check('...and is remembered, so it does not nag on the next visit',
     st.getItem(DEMO_DISMISSED_KEY) === '1');
   const el2 = fresh();
-  check('...which the next mount honours',
+  check('...which the next mount honors',
     (await mountDemoStrip(el2, { storage: st, listFolders: async () => [] })) === null);
 }
 
@@ -148,7 +148,7 @@ section('picking a folder — the whole point of the thing');
   check('...and the strip gets out of the way', !el.querySelector('#demo'));
 }
 
-section('a cancelled picker is NOT an error');
+section('a canceled picker is NOT an error');
 {
   const el = fresh();
   let connected = null;

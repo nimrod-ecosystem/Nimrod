@@ -21,7 +21,7 @@ or "No camera found") instead of failing silently. Display-only; no bus input.
 **Overwrite kind** (settings): `{ cameraLabel, mirror, rotation, fit }`, server-side, keyed to
 `(user, profile, instance)`, versioned. The chosen camera is stored by **label**, not `deviceId`
 — a concrete device id differs per screen, so the preference stays portable and falls back to the
-default camera when the labelled one isn't present. In-memory mirror only — **no
+default camera when the labeled one isn't present. In-memory mirror only — **no
 `localStorage`/IndexedDB**.
 
 ## Privacy notes

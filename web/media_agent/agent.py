@@ -57,7 +57,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlparse, parse_qs
 
-# Media we recognise. Lower-cased comparison, so .JPG / .Jpg / .jpg all match.
+# Media we recognize. Lower-cased comparison, so .JPG / .Jpg / .jpg all match.
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".heic", ".heif", ".avif"}
 VIDEO_EXTS = {".mp4", ".mov", ".webm", ".m4v", ".ogv"}
 MEDIA_EXTS = IMAGE_EXTS | VIDEO_EXTS
@@ -205,7 +205,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     # --- Range-aware file serving ---------------------------------------------
-    # stdlib SimpleHTTPRequestHandler does NOT honour Range, but <video> seeking
+    # stdlib SimpleHTTPRequestHandler does NOT honor Range, but <video> seeking
     # (and Safari playback at all) needs 206 partial responses, so we serve media
     # ourselves. translate_path (below) still does the traversal guard.
     def _serve_file(self, head: bool):

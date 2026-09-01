@@ -106,7 +106,7 @@ export const CATALOG = [
     use: 'watch',
     lead: 'A playlist of your own, shuffled.',
     needs: 'A YouTube playlist, and a working internet connection.',
-    why: 'Their music, their programmes, the church service, the football. It shuffles with '
+    why: 'Their music, their programs, the church service, the football. It shuffles with '
       + 'a bias against repeating itself, and you can set different playlists for different '
       + 'times of day so mornings and evenings are not the same.',
   },
@@ -235,14 +235,14 @@ export const CATALOG = [
   {
     type: 'bank',
     group: 'practice',
-    // `touch`, not a new value. The catalogue's `use` set is CLOSED and it caught `setup` the
+    // `touch`, not a new value. The catalog's `use` set is CLOSED and it caught `setup` the
     // moment it was invented — which is the set doing its job, so the fix is to fit rather than
     // to widen it. Typing into an editor is a thing you do with your hands, which is what
     // `touch` already means here.
     use: 'touch',
     lead: 'Where your questions and words live.',
     needs: 'Nothing. Type them, or paste a list in.',
-    why: 'Trivia and Word Forge both read this, so a word written once can be practised in one '
+    why: 'Trivia and Word Forge both read this, so a word written once can be practiced in one '
       + 'and asked as a question in the other. Put it on a screen with either of them and you '
       + 'can edit while somebody plays.',
     note: 'It tells you which lines it could not read, and on which line — the usual way a '
@@ -332,7 +332,7 @@ export const NOT_FOR_CAREGIVERS = {
 };
 
 /**
- * Compare this catalogue against the live registry.
+ * Compare this catalog against the live registry.
  *
  * Returns `{ described, undescribed, stale, internal }`. `undescribed` is the one that
  * matters: a module somebody shipped and nobody explained.
@@ -353,13 +353,13 @@ export function reconcile(manifests = []) {
   };
 }
 
-/** The catalogue entries for one group, in declared order. */
+/** The catalog entries for one group, in declared order. */
 export function groupItems(groupId, manifests = []) {
   const registered = new Set(manifests.map((m) => m && m.type).filter(Boolean));
   return CATALOG.filter((c) => c.group === groupId && registered.has(c.type));
 }
 
-/** The display name: the catalogue's override, else the manifest's title, else the type. */
+/** The display name: the catalog's override, else the manifest's title, else the type. */
 export function titleFor(entry, manifests = []) {
   if (entry.title) return entry.title;
   const m = manifests.find((x) => x && x.type === entry.type);

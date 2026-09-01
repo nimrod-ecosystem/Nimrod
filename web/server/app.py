@@ -194,7 +194,7 @@ class PairClaim(BaseModel):
 # through codes, and it has to stay generous because EVERY DEVICE IN A CARE FACILITY SHARES
 # ONE NAT ADDRESS - a tight IP limit means eight fat-fingered codes from anyone in the
 # building locks pairing for everybody else in it. That is a denial of service against the
-# exact users this feature exists for, done by our own defence, and it is the sort of thing
+# exact users this feature exists for, done by our own defense, and it is the sort of thing
 # that only shows up when somebody is standing in the building.
 #
 # HONEST LIMIT, WRITE IT DOWN: this lives in the process. It resets when Render restarts
@@ -843,7 +843,7 @@ class GrantCreate(BaseModel):
     # WHAT THE GRANT LETS THEM BE, not whether it lets them in. `moderator` by default
     # (Mike), which matches both real cases: somebody helping from another house, and family
     # showing her a video. `participant` is what two people sharing one screen would want.
-    # An unknown value normalises rather than 400s - see grants.normalize_role for why a role
+    # An unknown value normalizes rather than 400s - see grants.normalize_role for why a role
     # is treated differently from a subject KIND, which fails closed.
     role: str | None = None
 
@@ -909,7 +909,7 @@ def shared_with_me(user: str = Depends(current_user)):
 
     Without this the feature is unusable by the person it was built for - they would have
     to be told a person id out of band. Expired rows are filtered here rather than shown
-    greyed out: a list of things that will not work is not a useful list.
+    grayed out: a list of things that will not work is not a useful list.
     """
     now = _now_iso()
     out = []

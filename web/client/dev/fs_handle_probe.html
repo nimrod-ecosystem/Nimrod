@@ -150,7 +150,7 @@ document.getElementById('pick').addEventListener('click', async () => {
     const dir = await window.showDirectoryPicker({ id: 'nimrod-probe', mode: 'readwrite' });
     await put('picked', dir);
     line('pass', 'YES   picked and remembered: ' + dir.name + ' — now RELOAD this page');
-  } catch (e) { line('note', '      picker cancelled or failed: ' + e.message); }
+  } catch (e) { line('note', '      picker canceled or failed: ' + e.message); }
 });
 
 document.getElementById('check').addEventListener('click', async () => {

@@ -31,7 +31,7 @@
 // "which address do I type" no longer exists.
 //
 // Installing the agent is still an IT job — Python, a terminal, something left running —
-// so that section stays labelled `advanced` and says so plainly. Pairing removes the part
+// so that section stays labeled `advanced` and says so plainly. Pairing removes the part
 // that was needlessly hard, not the part that is inherently a setup task.
 //
 // THE MODEL, unchanged by either: the platform NEVER stores media, only a reference to

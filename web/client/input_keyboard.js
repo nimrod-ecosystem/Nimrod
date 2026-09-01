@@ -16,7 +16,7 @@
 // THREE THINGS THAT LOOK LIKE DETAIL AND ARE NOT:
 //   * `e.repeat` is ignored. A held key auto-repeats at the OS level; forwarding that
 //     would fake a machine-gun of presses the person never made and poison the
-//     false-activation numbers with the platform's own behaviour.
+//     false-activation numbers with the platform's own behavior.
 //   * `blur` releases everything. Hold a key, alt-tab, let go - the keyup lands in
 //     another window and never arrives here. That is a stuck key by any other name, and
 //     the max-hold watchdog would eventually paper over it 12 seconds later.

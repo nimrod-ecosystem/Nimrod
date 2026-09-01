@@ -5,7 +5,7 @@
 // jacks on the back, and whatever assistive switch someone already owns plugs into one.
 // To the browser the whole assembly is an ordinary standard-mapping gamepad. So this one
 // adapter - no permission prompt, no chooser dialog, no driver - is how a person's
-// existing switches reach every action in the catalogue.
+// existing switches reach every action in the catalog.
 //
 // It is also the adapter with the fewest ways to fail at a bedside, which is why it comes
 // before WebHID and WebSerial: those need a user gesture and a device-picker dialog EVERY

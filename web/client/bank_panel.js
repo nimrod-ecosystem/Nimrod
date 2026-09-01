@@ -43,7 +43,7 @@ const esc = (s) => String(s == null ? '' : s)
   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 // What to say about a document, in one line. Pure, so the wording is testable.
-export function summarise(check) {
+export function summarize(check) {
   if (!check) return '';
   const bits = [];
   if (check.words) bits.push(`${check.words} word${check.words === 1 ? '' : 's'}`);
@@ -76,7 +76,7 @@ export function mountBankPanel(root, {
     <div class="bk">
       <h3>Questions and words</h3>
       <p class="bk-lede">One item per line, parts separated by <code>|</code>. Both games read
-        this, so a word written once can be practised in Word Forge <em>and</em> asked as a
+        this, so a word written once can be practiced in Word Forge <em>and</em> asked as a
         question in Trivia.</p>
 
       <details class="bk-help">
@@ -107,7 +107,7 @@ What is the capital of France? | Paris | London | Rome | Madrid</pre>
     if (destroyed) return;
     const t = area.value;
     const check = checkBank(t, { defaultKind: 'words' });
-    el('[data-sum]').textContent = summarise(check);
+    el('[data-sum]').textContent = summarize(check);
     el('[data-sum]').dataset.bad = check.problems.some((p) => p.severity !== 'note') ? '1' : '';
 
     // *** LINE NUMBERS, AND THE LINE ITSELF. *** "3 lines could not be read" without saying

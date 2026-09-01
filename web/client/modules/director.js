@@ -8,7 +8,7 @@
 //   * config = the content-director machine (weighted daypart-gated rotation over
 //     segment providers). Overridable from state.config; defaults baked below.
 //   * it MOUNTS child provider modules into its own slots and shows one at a time.
-//     The only real provider today is `youtube`; the rest render as labelled
+//     The only real provider today is `youtube`; the rest render as labeled
 //     placeholders until their modules land (Personal videos, Educational, …) —
 //     the same "stub the not-yet-built half" pattern youtube used for its player.
 //   * the engine subscribes to `segment/done` and, on it, weighted-picks the next
@@ -251,7 +251,7 @@ registerModule(
 
     return {
       // The escape hatch documented in module.js: a container's overlay has no markup worth
-      // asserting on from outside, and "is the wallpaper up" is the whole behaviour here.
+      // asserting on from outside, and "is the wallpaper up" is the whole behavior here.
       __probe: () => ({ current, heldBy, wallpaperUp: !mount.querySelector('[data-wall]')?.hidden,
                         wallpaperMounted: !!wallpaper }),
       init() {

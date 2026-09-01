@@ -136,11 +136,11 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   **one segment provider at a time** (Mike: "drop the state machine into the window… it hands its
   inner region to one child provider"). It mounts the real **youtube** module as a child in its own
   slot and renders the not-yet-built providers (personal / educational / word-game / trivia /
-  sing-along) as **labelled placeholders** — the same "stub the missing half" pattern youtube used for
+  sing-along) as **labeled placeholders** — the same "stub the missing half" pattern youtube used for
   its player. The engine picks on `segment/done`; the container shows that provider's slot. **Big Skip
   button skips the whole segment** (`segment/done{skipped}`); within-segment controls stay in the
   child. **youtube wiring:** youtube now emits `segment/done` on ENDED (and error) alongside its
-  existing behaviour — harmless standalone (no subscriber), and when directed it's seeded
+  existing behavior — harmless standalone (no subscriber), and when directed it's seeded
   `autoAdvance=false` so the director advances it. **Child-mount seam:** the app passes container ctx
   (`rootBus`, `instanceId`, `makeState`/`makeEvents`); child storage lives under `<instanceId>-youtube`
   (server key rule `[A-Za-z0-9_-]{1,64}`; a 32-hex instanceId + dash can't collide with a sibling id or
@@ -167,7 +167,7 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   segment/done + auto-advance, `prev()` replay-no-log, empty provider hands back, clean destroy.
   Live-verified in the app (added Personal videos with the Oscar source → "Oscar singing ABC's.mp4"
   playing, caption "From Oscar"). It's now a **real provider in the director** (youtube's placeholder
-  neighbour is gone); the director's 15-check test still green with two real providers.
+  neighbor is gone); the director's 15-check test still green with two real providers.
 
 - **Educational — the generated provider** (`web/client/modules/educational.js`). The nimrod_95
   interstitials *generated* flow re-homed as its own module and reworked from the retired 2×2 layout to
@@ -380,7 +380,7 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   overlay per pane.
 
 - **Dwell — holding still is the click** (2026-08-31), `input_dwell.js`, 35 checks green.
-  Found by running the audit against the private tree rather than porting blind: the colour
+  Found by running the audit against the private tree rather than porting blind: the color
   tracker's DETECTION half came across faithfully (same DET_W/H, gain, smooth, hueTol, satMin,
   valMin, minPx) and its **ACTIVATION half never did**. Nothing in this repo turned `input/aim`
   into a press, so the public tracker could point at things and never select one — not a stale

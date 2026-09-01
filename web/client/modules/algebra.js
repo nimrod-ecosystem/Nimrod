@@ -139,7 +139,7 @@ export function scoreFor({ correct, points = 1, streak = 0, cfg = DEFAULTS }) {
 }
 
 // ---------- the calculator ----------
-// A tiny four-function machine. Pure, so its behaviour is testable without the DOM — and
+// A tiny four-function machine. Pure, so its behavior is testable without the DOM — and
 // so the one place that decides what "7 + 3 =" means can't drift from what's on screen.
 export const CALC_KEYS = ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '±', '+'];
 

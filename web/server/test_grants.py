@@ -99,13 +99,13 @@ check("a person that does not exist is refused, not crashed",
       not may_drive("p1", account="me", owner=None, grants=[], now_iso=NOW))
 check("no account is refused", not may_drive("p1", account="", owner="me", grants=[], now_iso=NOW))
 check("no person id is refused", not may_drive("", account="me", owner="me", grants=[], now_iso=NOW))
-# A grant row can outlive the person it names. Honouring one would put somebody in the
+# A grant row can outlive the person it names. Honoring one would put somebody in the
 # room of a person who no longer exists.
 check("owner=None with a live grant STILL refuses - no orphan back door",
       not may_drive("p1", account="ot", owner=None, grants=[grant()], now_iso=NOW))
 
 # ---------------------------------------------------------------- kinds
-section("kind normalisation")
+section("kind normalization")
 
 check("default is account", normalize_kind(None) == "account")
 check("case and whitespace are forgiven", normalize_kind("  Group ") == "group")
@@ -180,7 +180,7 @@ section("THE ROLE A GRANT CONFERS - Mike: moderator by default, the person tab w
 check("an absent role is moderator - a grant that could do less than a caregiver is one "
       "nobody would issue", role_for({}) == "moderator")
 check("and so is a missing grant entirely", role_for(None) == "moderator")
-check("a declared role is honoured", role_for({"role": "participant"}) == "participant")
+check("a declared role is honored", role_for({"role": "participant"}) == "participant")
 check("case and padding do not matter", role_for({"role": "  PARTICIPANT "}) == "participant")
 
 # A ROLE IS NOT AN AUTHORISATION. Rule 1 fails CLOSED on an unresolved subject KIND, because
@@ -223,7 +223,7 @@ check("role_for reads it straight off the stored row", role_for(rows2[0]) == "pa
 dflt = store2.add_grant("me2", p2["id"], "account", "ot3")
 check("a grant created without a role stores the default rather than an empty string",
       dflt.get("role") == "moderator", dflt)
-check("a garbage role is normalised on the way IN, so storage never holds one",
+check("a garbage role is normalized on the way IN, so storage never holds one",
       store2.add_grant("me2", p2["id"], "account", "ot4", role="wizard").get("role") == "moderator")
 
 print(f"\n{passed} passed, {failed} failed")

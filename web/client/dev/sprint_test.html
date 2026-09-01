@@ -79,7 +79,7 @@ const MIN = 60000;
     check('formatClock rounds up partial second', formatClock(1500) === '00:02', formatClock(1500));
     check('formatClock clamps negative', formatClock(-5000) === '00:00', formatClock(-5000));
     check('phaseMs work default', phaseMs('work', {}) === 25 * MIN);
-    check('phaseMs honours config', phaseMs('break', { breakMin: 7 }) === 7 * MIN);
+    check('phaseMs honors config', phaseMs('break', { breakMin: 7 }) === 7 * MIN);
     check('phaseMs idle is 0', phaseMs('idle', {}) === 0);
     check('sprintPoints = minutes x per-minute', sprintPoints({ workMin: 25, pointsPerMin: 1 }) === 25);
     check('sprintPoints scales', sprintPoints({ workMin: 20, pointsPerMin: 2 }) === 40);

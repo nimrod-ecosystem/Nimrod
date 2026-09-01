@@ -1,7 +1,7 @@
-// input_marker.js — A BRIGHTLY COLOURED MARKER, WATCHED BY THE CAMERA, as a device on the aim.
+// input_marker.js — A BRIGHTLY COLORED MARKER, WATCHED BY THE CAMERA, as a device on the aim.
 //
 // The sibling of `input_pointer.js`: that file is a mouse or a head pointer, this one is a
-// coloured object somebody can move. Both end at the same place — `aim.js` — and nothing
+// colored object somebody can move. Both end at the same place — `aim.js` — and nothing
 // downstream can tell them apart, which is the entire point of that seam.
 //
 // ---------------------------------------------------------------------------------------
@@ -17,7 +17,7 @@
 //   * BlazePose's foot landmarks are its least reliable ones to begin with.
 //   * A pale foot against a white hospital sheet has almost no contrast for anything to find.
 //
-// Mike's fix was not a better model. It was: **have her wear a brightly coloured sock.** Put a
+// Mike's fix was not a better model. It was: **have her wear a brightly colored sock.** Put a
 // marker on the person and the problem stops being recognition and becomes arithmetic — find
 // the saturated green pixels, take their centroid. And the consequences are large:
 //
@@ -44,14 +44,14 @@
 // guessing a hue would mean the cursor chasing whatever happened to be orange in the room.
 //
 // Bright and SATURATED works; green and hot pink work best. Red is close to skin and white,
-// grey and pastels have no hue to lock onto — which is what `satMin` is rejecting.
+// gray and pastels have no hue to lock onto — which is what `satMin` is rejecting.
 //
 // ---------------------------------------------------------------------------------------
 // OFF BY DEFAULT, AND STORED PER PERSON
 // ---------------------------------------------------------------------------------------
 //
 // The bedside build stores these per DEVICE, in localStorage, and its reasoning is good: gain,
-// rest point and colour sample are properties of one room and one chair rather than of an
+// rest point and color sample are properties of one room and one chair rather than of an
 // account. This project stores them PER PERSON anyway, next to their input bindings, and the
 // deciding fact is local — the two Pis get physically swapped, so per-device storage would lose
 // the calibration on every swap and somebody would redo the sock in the room with her waiting.
@@ -60,7 +60,7 @@
 
 import { viewportAim } from './aim.js';
 
-export const MARKER_DEVICE = 'marker:colour';
+export const MARKER_DEVICE = 'marker:color';
 
 // Detection runs on a DOWNSCALED frame. 160x120 is 19,200 pixels a tick instead of 307,200 at
 // 640x480 — sixteen times less work for a centroid that is just as accurate, because a sock is
@@ -78,8 +78,8 @@ export const MARKER_DEFAULTS = {
   valMin: 0.25,     // reject near-black, which has an unstable hue
   minPx: 18,        // matched pixels needed before we believe it. Below this it is noise, and
                     // reporting noise as an aim would make the cursor twitch across the room.
-  colour: null,     // the sampled target {h, s, v}. null = not calibrated; report nothing.
-  centre: null,     // the calibrated REST point in frame coords; null = the middle of the frame
+  color: null,     // the sampled target {h, s, v}. null = not calibrated; report nothing.
+  center: null,     // the calibrated REST point in frame coords; null = the middle of the frame
 };
 
 // *** SHOULD THE CAMERA BE ON? *** Extracted from the kiosk and exported, because the answer
@@ -88,15 +88,15 @@ export const MARKER_DEFAULTS = {
 //
 // TWO conditions, and the second is the one that is easy to forget: `enabled` alone is not
 // enough, because an ENABLED BUT UNCALIBRATED tracker can never report anything — it has no
-// colour to look for — so starting it would open the camera to do nothing at all, forever. That
+// color to look for — so starting it would open the camera to do nothing at all, forever. That
 // is the worst combination available: all of the intrusion, none of the function.
 export function shouldTrack(saved) {
   const s = saved || {};
-  return !!s.enabled && !!s.colour;
+  return !!s.enabled && !!s.color;
 }
 
 // ---------------------------------------------------------------------------------------
-// Pure colour maths. Exported because they are the part worth testing directly, and because
+// Pure color maths. Exported because they are the part worth testing directly, and because
 // the settings panel needs the same conversion to draw a swatch of what was sampled.
 // ---------------------------------------------------------------------------------------
 
@@ -115,7 +115,7 @@ export function rgbToHsv(r, g, b) {
 }
 
 // Hue is a circle, so 350° and 10° are twenty degrees apart, not three hundred and forty.
-// Getting this wrong makes red the one colour that never matches itself.
+// Getting this wrong makes red the one color that never matches itself.
 export function hueDistance(a, b) {
   const d = Math.abs(a - b) % 360;
   return d > 180 ? 360 - d : d;
@@ -124,7 +124,7 @@ export function hueDistance(a, b) {
 // Find the marker in one frame. `frame` is anything shaped like ImageData — {data, width,
 // height} — so a test can hand it an array it built by hand and no camera is involved.
 //
-// Returns { count, x, y } with x and y NORMALISED to the frame (0..1), or { count: 0 } when
+// Returns { count, x, y } with x and y NORMALIZED to the frame (0..1), or { count: 0 } when
 // there is nothing convincing. The caller decides what "convincing" means via `minPx`; this
 // reports the count either way, because "I can see 3 pixels of it" and "I can see none" are
 // different sentences for whoever is trying to get the camera pointed right.
@@ -158,14 +158,14 @@ export function findMarker(frame, target, {
 // is what makes the cursor go the way she pushed. Up is up in both, so y is left alone.
 //
 // Movement is measured from a REST POINT rather than from the frame's middle, so the useful
-// range is centred on wherever she actually holds still — which for somebody with limited
+// range is centerd on wherever she actually holds still — which for somebody with limited
 // range is the difference between reaching the whole screen and reaching a corner of it.
 export function markerAim(found, {
-  centre = null,
+  center = null,
   gain = MARKER_DEFAULTS.gain,
 } = {}) {
   if (!found || !found.count) return null;
-  const c = centre || { x: 0.5, y: 0.5 };
+  const c = center || { x: 0.5, y: 0.5 };
   return {
     x: Math.min(1, Math.max(0, 0.5 + (c.x - found.x) * gain)),
     y: Math.min(1, Math.max(0, 0.5 + (found.y - c.y) * gain)),
@@ -216,16 +216,16 @@ export function createMarkerTracker({
   // than racing a frame loop.
   function step(frame) {
     const c = cfg();
-    if (!c.colour) {
+    if (!c.color) {
       lastFound = { count: 0 };
-      // The preview still runs with no colour sampled — that is the state a caregiver is in
+      // The preview still runs with no color sampled — that is the state a caregiver is in
       // BEFORE they have clicked the sock, and it is the moment they most need to see the
       // picture in order to point the camera at all.
       if (onFrame) { try { onFrame(frame, lastFound, null); } catch { /* never fatal */ } }
       return null;
     }
     const mask = onFrame ? new Uint8ClampedArray(frame.data.length) : null;
-    const found = findMarker(frame, c.colour, {
+    const found = findMarker(frame, c.color, {
       hueTol: c.hueTol, satMin: c.satMin, valMin: c.valMin,
       onPixel: mask ? (i) => { mask[i] = 57; mask[i + 1] = 211; mask[i + 2] = 83; mask[i + 3] = 200; } : null,
     });
@@ -233,7 +233,7 @@ export function createMarkerTracker({
     if (onFrame) { try { onFrame(frame, found, mask); } catch { /* never fatal */ } }
     if (found.count < c.minPx) return null;      // seen, but not convincingly. Say nothing.
 
-    const target = markerAim(found, { centre: c.centre, gain: c.gain });
+    const target = markerAim(found, { center: c.center, gain: c.gain });
     if (!target) return null;
 
     // SMOOTHING LIVES HERE. `aim.js` deliberately has none, because a mouse does not want any
@@ -249,7 +249,7 @@ export function createMarkerTracker({
     return { ...smoothed };
   }
 
-  // Sample the colour under a point, given as 0..1 of the frame. This is the caregiver
+  // Sample the color under a point, given as 0..1 of the frame. This is the caregiver
   // clicking the sock. Averaged over a small patch rather than one pixel, because one pixel of
   // a compressed webcam frame is a lie — JPEG artefacts alone can move a hue by ten degrees.
   function sampleAt(frame, nx, ny, { radius = 3 } = {}) {
@@ -332,7 +332,7 @@ export function createMarkerTracker({
     isRunning: () => running,
     // WHAT IT CAN SEE RIGHT NOW, for the calibration panel. `count` is the honest number even
     // when it is below `minPx`, because "I can see a bit of it" and "I can see none of it" want
-    // completely different advice: move the camera, versus sample the colour again.
+    // completely different advice: move the camera, versus sample the color again.
     found: () => ({ ...lastFound }),
     at: () => (smoothed ? { ...smoothed } : null),
     destroy() { destroyed = true; stop(); },

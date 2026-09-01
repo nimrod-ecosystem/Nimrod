@@ -46,7 +46,7 @@
 // A slow trial can then be told from a slow person. THIS IS THE SAME CLASS OF ERROR AS THE
 // `heldMs` TAUTOLOGY: a number that looks like it is about her and is partly about the setup.
 //
-// CALM MODE'S INVITE NEVER TIMES OUT, AND THAT IS THE CORRECT BEHAVIOUR. It waits for her
+// CALM MODE'S INVITE NEVER TIMES OUT, AND THAT IS THE CORRECT BEHAVIOR. It waits for her
 // press however long that takes. This is the windmill case from the invariant: the press IS
 // the content, not a gate on content already running, so there is no state here that only an
 // input can leave. Only CHALLENGE mode closes the window, and there a missed press is an
@@ -639,7 +639,7 @@ registerModule(
 
     return {
       // Test hooks. A canvas module has no markup to assert against, so without these its
-      // behaviour can only be eyeballed — which is not a test. Reached only through `impl`.
+      // behavior can only be eyeballed — which is not a test. Reached only through `impl`.
       __step: (dt = 16) => step(dt),
       __press: (src = 'test') => press(src),
       __edge: (e) => onEdge(e),

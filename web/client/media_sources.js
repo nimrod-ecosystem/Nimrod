@@ -42,7 +42,7 @@ export function mediaUrl(baseUrl, path) {
 // caseload - needs each resident's albums to be THEIRS rather than a merged pile of four
 // families.
 //
-// THAT IS AN ORGANISATION WIN, NOT A SECRECY ONE, and the distinction is worth keeping: the
+// THAT IS AN ORGANIZATION WIN, NOT A SECRECY ONE, and the distinction is worth keeping: the
 // therapists in her room already see whatever is on her screen, so nothing here is protecting
 // her from them. What it protects is the SCREEN being about the right person. The real
 // boundary between people who did not choose each other is across ACCOUNTS, which `user_id`

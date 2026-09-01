@@ -48,7 +48,7 @@ First slice built + validated in `web/`. Settles what `architecture.md` had left
   (`web/server/db.py`). One row per `(user_id, module)`; `data` is an opaque JSON blob.
 - **Per-user state API:** `GET/PUT /api/state/:module`, keyed to the account. Client keeps an
   in-memory mirror only — **no localStorage/IndexedDB as the store of record** (verified).
-- **Identity is a stub with a seam:** `current_user()` returns `dev-user` today, honours an
+- **Identity is a stub with a seam:** `current_user()` returns `dev-user` today, honors an
   `X-Dev-User`/`?user=` override in dev; Google OAuth / kiosk tokens plug in there later with
   no downstream change.
 - **Bus** (`web/client/bus.js`) is sources → bindings → sinks; new input methods are new
@@ -646,7 +646,7 @@ Longer notes: <https://claude.ai/code/artifact/67b24b84-c8fe-4d2b-90b3-7204bba8a
   input→module. What is genuinely new is module→module data: `vocab.term`, `media.item`,
   `event.result`, declared as `emits` / `accepts` alongside `dependsOn` and `importance`.
   (2026-08-27)
-- **Compatibility is type-matching.** A connect button greys out because nothing on the screen
+- **Compatibility is type-matching.** A connect button grays out because nothing on the screen
   accepts what this module emits — not because of a hand-written list of pairs. (2026-08-27)
 - **Connect flow is arm-then-target**, two deliberate presses with an unambiguous cancel.
   **No flashing for the armed state** — photosensitivity risk, suppressed under
@@ -732,7 +732,7 @@ Full reasoning: <https://claude.ai/code/artifact/04c97b2b-287d-4da7-9c73-cfba393
   anyway. Recorded so the no-email decision is not quietly eroded later. _(resolved in favour of
   the existing rule)_
 - **AAC symbols.** *Accounts & assets* records that symbols are AI-generated, with no third-party
-  licence to honour. Worth one reconsideration, not an override: **an AAC symbol set is a learned
+  license to honor. Worth one reconsideration, not an override: **an AAC symbol set is a learned
   visual grammar, not a set of pictures** — users learn that a verb, a person, or a place is drawn
   a particular way, and consistency across the whole set is what makes a board readable at speed.
   That internal consistency is the thing generation is worst at. If the AI-generated route stands,
@@ -754,7 +754,7 @@ Full reasoning: <https://claude.ai/code/artifact/04c97b2b-287d-4da7-9c73-cfba393
 - **"Bring your own AI" in the lookup panel should be Cici, not a parallel concept.** The two
   data planes already map onto it exactly: anything about a patient goes to **Companion Cici**
   (local, offline); a general "what does this word mean" may use **Helper Cici**. Any AI answer
-  is labelled as AI-generated wherever it appears, and AI is not the default source for medical
+  is labeled as AI-generated wherever it appears, and AI is not the default source for medical
   terms — in a care context an invented definition is a harm, not a bad search result.
   (2026-08-27)
 
@@ -927,7 +927,7 @@ Three things found in `pending_flags.md` during an audit, and approved by Mike t
 
 ### Link capabilities — the sender chooses, decided 2026-08-30
 
-Resolves `DEFAULT_CAPABILITIES = ("messages",)`, which shipped labelled in its own source as
+Resolves `DEFAULT_CAPABILITIES = ("messages",)`, which shipped labeled in its own source as
 *"a conservative placeholder, NOT a decision."* It was the first thing every new contact met, and
 nobody had chosen it.
 

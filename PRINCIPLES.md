@@ -89,7 +89,7 @@ So this is product safety, not prudence. Proposed wording:
 > *The software must not injure the person using it, and must not steer them — including through a
 > defect that looks harmless to everyone except the person it harms.*
 
-**Why this population makes it sharper than it sounds.** The ordinary defence against a defect like
+**Why this population makes it sharper than it sounds.** The ordinary defense against a defect like
 that is that users report it. Here, many of them structurally cannot. Somebody who cannot press a
 button also cannot tell you the screen is hurting them, and a caregiver watching from across the room
 sees nothing. **Absence of complaint is not evidence of absence of harm**, which means the checks have

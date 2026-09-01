@@ -145,12 +145,12 @@ section('settings, and their defaults');
   check('the pointer disturbs the water by default', cfg.pointer === true);
   check('calm is OFF by default', cfg.calm === false);
 
-  // EVERY DEFAULT IS ALSO A DECLARED SETTING. A knob the module honours but never declares
+  // EVERY DEFAULT IS ALSO A DECLARED SETTING. A knob the module honors but never declares
   // is a knob nobody at a bedside can reach, which for this product is the same as it not
   // existing. This is the assertion that keeps the two lists from drifting apart.
   const declared = fieldsFor(getManifest('pond'), null);
   const keys = declared.map((f) => f.key).sort().join(',');
-  check('every default the pond honours is declared to the settings menu',
+  check('every default the pond honors is declared to the settings menu',
     keys === 'ambient,ambientMs,calm,pointer', keys);
   check('and each declared key is one the module actually reads',
     declared.every((f) => Object.prototype.hasOwnProperty.call(cfg, f.key)), keys);

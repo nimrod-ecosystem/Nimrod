@@ -22,7 +22,7 @@
 // He is right, and it is the same mistake this project has made before: taking the case of the
 // person it was built for and promoting it to the shape of the product. **The general feature is
 // "choose your microphone."** A webcam's built-in mic, a USB mic on the desk, a headset, and
-// later a paired phone are all just entries in a list, and none of them is the centre.
+// later a paired phone are all just entries in a list, and none of them is the center.
 //
 // So: this file enumerates whatever the machine has, remembers which one was chosen, and knows
 // nothing at all about phones.
@@ -37,9 +37,9 @@
 // RECOGNITION**:
 //
 //   * A call wants all three ON. That is what stops a room echoing and a fan roaring.
-//   * A recogniser wants them OFF, and noise suppression especially. Suppression is tuned to
+//   * A recognizer wants them OFF, and noise suppression especially. Suppression is tuned to
 //     keep confident, typical speech and discard the rest — which is a fair description of
-//     exactly the quiet, effortful, atypical articulation a recogniser most needs to hear.
+//     exactly the quiet, effortful, atypical articulation a recognizer most needs to hear.
 //
 // One `MediaStream` has one set of constraints, so these cannot both be satisfied from a single
 // open. Three options, and the choice is deliberate:
@@ -53,7 +53,7 @@
 //
 // Raw is the right default because the damage is one-directional: a call can apply its own
 // echo cancellation downstream (WebRTC does), and a bit of room noise on a call is survivable —
-// whereas a recogniser cannot recover articulation that noise suppression has already removed.
+// whereas a recognizer cannot recover articulation that noise suppression has already removed.
 // **You can always degrade a clean signal; you cannot restore a processed one.**
 //
 // And when a consumer's needs are not met, `acquire` still returns the stream but reports the
@@ -70,7 +70,7 @@ export const PROCESSING = ['echoCancellation', 'noiseSuppression', 'autoGainCont
 // What each kind of consumer wants. Exported as DATA so a diagnostic can explain a mismatch in
 // words rather than in constraint objects.
 export const PROFILES = {
-  // Untouched audio. Anything that is going to ANALYSE speech wants this.
+  // Untouched audio. Anything that is going to ANALYZE speech wants this.
   raw: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
   // Cleaned up for a human ear at the other end of a call.
   call: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
@@ -98,7 +98,7 @@ export function createMicOwner({
   // Enumerating is separate from opening because on every browser it returns EMPTY LABELS until
   // permission has been granted at least once. A chooser that shows "Microphone 1, Microphone 2,
   // Microphone 3" is not a chooser, so a caller needs to know to ask for permission first —
-  // `labelled()` below is how it finds out, rather than by guessing.
+  // `labeled()` below is how it finds out, rather than by guessing.
   enumerate = () => navigator.mediaDevices.enumerateDevices(),
   graceMs = GRACE_MS,
   setTimer = (fn, ms) => setTimeout(fn, ms),
@@ -147,8 +147,8 @@ export function createMicOwner({
   //    the device she'll be using daily."*
   //
   // That is a paired corpus, and it solves the problem that otherwise blocks everything: to
-  // make a recogniser work on the far microphone you need labelled far-microphone audio, and
-  // labelling it is the hard part precisely BECAUSE it is hard to hear. The close microphone
+  // make a recognizer work on the far microphone you need labeled far-microphone audio, and
+  // labeling it is the hard part precisely BECAUSE it is hard to hear. The close microphone
   // supplies the label, the far one supplies the input, and because it is the same utterance at
   // the same moment the two are aligned for free. It also answers, by measurement rather than
   // guesswork, whether the webcam microphone is good enough for her at all.
@@ -256,7 +256,7 @@ export function createMicOwner({
      *
      *  `want` is a PROFILES entry (or any subset of the switches). The stream comes back either
      *  way; `api.status().mismatch` says whether it is the audio this consumer asked for, so a
-     *  recogniser handed a noise-suppressed stream can SAY SO rather than quietly doing badly.
+     *  recognizer handed a noise-suppressed stream can SAY SO rather than quietly doing badly.
      */
     acquire(id, want = null, deviceId = null) {
       if (!id) return Promise.reject(new Error('mic acquire needs a consumer id'));
@@ -342,7 +342,7 @@ export function createMicOwner({
 
     /** Whether the labels are real yet. Empty labels mean permission has never been granted,
      *  and a chooser showing "Microphone 1, Microphone 2" is worse than no chooser at all. */
-    async labelled() {
+    async labeled() {
       const list = await api.list();
       return list.length > 0 && list.every((d) => !!d.label);
     },

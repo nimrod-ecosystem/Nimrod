@@ -54,7 +54,7 @@ def setenv(**kw):
 
 
 def main():
-    # --- dev, no keys: the existing stub behaviour is unchanged --------------
+    # --- dev, no keys: the existing stub behavior is unchanged --------------
     setenv()
     check("dev: X-Dev-User override", user_of({"X-Dev-User": "alice"}) == "alice")
     check("dev: ?user= override", user_of(query={"user": "bob"}) == "bob")

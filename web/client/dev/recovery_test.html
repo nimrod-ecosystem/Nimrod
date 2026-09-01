@@ -266,7 +266,7 @@ section('THE RELOAD RUNG, and the devices where the reboot rung does not exist')
   // enough to be tempting.
   const spent = applied(hist, 'reload', after(40 * MIN));
   check('a REMOUNT is rationed too, but on a shorter leash than the reload — a panel that '
-    + 're-initialises every few seconds is a strobe she cannot look away from',
+    + 're-initializes every few seconds is a strobe she cannot look away from',
     DEFAULT_POLICY.remountWindowMs < DEFAULT_POLICY.reloadWindowMs);
   check('a second reload on the same fault is refused',
     nextAction(fault, spent, ctx({ now: after(50 * MIN) })).action !== 'reload');
@@ -333,7 +333,7 @@ section('chooseFallback — somebody’s own order first, and skip what cannot b
     { type: 'pond', dependsOn: 'none', importance: 'optional' },
   ];
 
-  check('a preference is honoured even when the ranking disagrees — the ranking sorts by how '
+  check('a preference is honored even when the ranking disagrees — the ranking sorts by how '
     + 'EXPOSED a module is, which is a good tiebreaker and a poor first choice',
     chooseFallback(['pond'], mans) === 'pond',
     `${chooseFallback(['pond'], mans)} vs ranked ${rankFallbacks(mans)[0].type}`);
@@ -359,7 +359,7 @@ section('chooseFallback — somebody’s own order first, and skip what cannot b
     chooseFallback(['clock'], mans, { exclude: ['clock', 'pond', 'photos'] }) === null);
   check('junk in the list is ignored', chooseFallback([null, 42, '', 'clock'], mans) === 'clock');
 
-  check('the policy carries the list, and normalises junk out of it',
+  check('the policy carries the list, and normalizes junk out of it',
     normalizePolicy({ fallbacks: ['photos', '', null, ' clock '] }).fallbacks.join(',')
       === 'photos,clock');
   check('an absent list is empty rather than undefined', normalizePolicy().fallbacks.length === 0);
@@ -395,7 +395,7 @@ section('no fallback declared, and coming back afterwards');
 }
 
 // =====================================================================
-section('the policy normalises rather than throwing');
+section('the policy normalizes rather than throwing');
 
 {
   const p = normalizePolicy({ graceMs: -5, rebootWindowMs: 'soon', quietBelow: 'panic' });

@@ -64,7 +64,7 @@ function fakeClock(start = 1_700_000_000_000) {
 // Two earlier versions of this fake could not produce two different offsets, and both times the
 // reason was the same: with `Promise.all` over parallel opens and a clock that only moves when
 // something tells it to, EVERY continuation lands after EVERY advance, so both channels honestly
-// read the same instant. That is correct behaviour being mismeasured, not a bug in the code.
+// read the same instant. That is correct behavior being mismeasured, not a bug in the code.
 // Hopping the microtask queue a different number of times per device is what actually staggers
 // the resolutions, which is what a real pair of `getUserMedia` calls does.
 function fakeCapture(log, { sampleRate = 48000, delays = {}, openDelayMs = 0, clock = null } = {}) {
@@ -146,7 +146,7 @@ try {
     check('*** it carries a producer from the first byte ***', m.producer === 'human', m.producer);
     check('...a version, so a later format can be told apart from this one',
       m.v === MANIFEST_VERSION);
-    check('an unrecognised producer becomes `unknown` rather than being written through',
+    check('an unrecognized producer becomes `unknown` rather than being written through',
       buildManifest({ producer: 'wildly-made-up' }).producer === 'unknown');
     // "We did not record it" and "nobody said" are different facts. Collapsing them corrupts
     // any count built on top — the same argument as the four distinct non-answers.
@@ -156,7 +156,7 @@ try {
 
     check('*** each track says what it was FOR, which is the whole point of a pair ***',
       m.tracks[0].role === 'label' && m.tracks[1].role === 'input', JSON.stringify(m.tracks));
-    check('an unrecognised role degrades rather than being written through',
+    check('an unrecognized role degrades rather than being written through',
       buildManifest({ tracks: [{ role: 'nonsense' }] }).tracks[0].role === 'other');
     check('marks are numbers and strings, whatever they arrived as',
       buildManifest({ marks: [{ atMs: '12', label: 7 }] }).marks[0].atMs === 12);

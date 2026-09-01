@@ -150,7 +150,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
     // A name that would be dangerous if it ever reached the DOM raw. The SERVER refuses
     // it outright (NAME_RE), so it never gets that far — and the page has to say so
-    // rather than appearing to succeed. (home.js escapes as well, for defence in depth.)
+    // rather than appearing to succeed. (home.js escapes as well, for defense in depth.)
     const before = cards().length;
     q('[data-name]').value = 'X <img src=x onerror=alert(1)>';
     q('[data-new]').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
@@ -172,10 +172,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       cards().map((c) => c.querySelector('h2').textContent).join(' | '));
 
     const countBeforeNoop = cards().length;
-    window.prompt = () => '';                                  // cancelled / emptied
+    window.prompt = () => '';                                  // canceled / emptied
     bedside().querySelector('[data-rename]').click();
     await sleep(500);
-    check('cancelling a rename changes nothing', cards().length === countBeforeNoop &&
+    check('canceling a rename changes nothing', cards().length === countBeforeNoop &&
       !!cards().find((c) => c.querySelector('h2').textContent === 'Bunk room'));
 
     // delete must ASK, and must not act when refused

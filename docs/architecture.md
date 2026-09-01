@@ -67,8 +67,8 @@ The first slice (`web/`) is built and validated. What it locks in:
   The client keeps only an in-memory mirror (`web/client/state.js`): loads the server copy on
   open, writes back debounced. **No `localStorage`/IndexedDB store of record** — verified.
 - **Identity seam:** one dependency, `current_user()` (`web/server/identity.py`), returns a
-  stubbed `dev-user` today and honours an `X-Dev-User`/`?user=` override in dev so multi-user
-  behaviour is testable now. Google OAuth / kiosk tokens plug in *here* later; nothing
+  stubbed `dev-user` today and honors an `X-Dev-User`/`?user=` override in dev so multi-user
+  behavior is testable now. Google OAuth / kiosk tokens plug in *here* later; nothing
   downstream changes.
 - **Bus:** implemented in `web/client/bus.js` exactly as described above — sources emit,
   bindings route+reshape onto a topic, modules open sinks. Adding an input method is adding a

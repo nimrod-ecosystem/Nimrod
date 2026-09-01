@@ -52,7 +52,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 
 // ---------------------------------------------------------------------------------------
 // A folder that never was. Small enough to read, which is the point — anything that deletes
-// people's recordings should be exercised against something whose behaviour is obvious.
+// people's recordings should be exercised against something whose behavior is obvious.
 // ---------------------------------------------------------------------------------------
 function fakeDir(name = 'root', { failRemove = [] } = {}) {
   const files = new Map();     // name -> string|ArrayBuffer

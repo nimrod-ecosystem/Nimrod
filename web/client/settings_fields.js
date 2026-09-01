@@ -12,7 +12,7 @@
 // THE ONE ABSOLUTE IN THIS FILE, stated plainly because the rule is that they get stated:
 // *a control that cannot be reached by the only input somebody has is not a control.* That
 // is the SAFETY reading of the one-button rule and it is why a field that cannot be cycled
-// renders DISABLED AND LABELLED rather than absent — a missing row sends people hunting for
+// renders DISABLED AND LABELED rather than absent — a missing row sends people hunting for
 // something that was never there.
 //
 // AND IT IS NARROWED, deliberately: it binds WHAT THE PERSON AT THE BEDSIDE USES. It does

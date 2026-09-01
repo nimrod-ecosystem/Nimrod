@@ -140,12 +140,12 @@ export const DEFAULT_POLICY = {
   // enough to be tempting. A page that reloads every ten minutes is a page nobody can use.
   reloadWindowMs: 30 * 60 * 1000,
   // A remount is cheaper still, so it is rationed less - but it IS rationed, because a panel
-  // that re-initialises every few seconds is a strobe and she cannot look away from it.
+  // that re-initializes every few seconds is a strobe and she cannot look away from it.
   remountWindowMs: 10 * 60 * 1000,
   // How long the screen warns before it reboots itself, so anybody standing there can stop it.
   rebootNoticeMs: 60 * 1000,
   // WHAT TO SWAP IN, in the order somebody wants it tried. Empty means "use the automatic
-  // ranking", which is the shipped behaviour and a perfectly good answer for most screens.
+  // ranking", which is the shipped behavior and a perfectly good answer for most screens.
   // Anything on this list that cannot be used right now is skipped rather than failing.
   fallbacks: [],
   // Local hours, inclusive-exclusive. Null means never hold anything.

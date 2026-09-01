@@ -44,7 +44,7 @@ const esc = (s) => String(s == null ? '' : s)
   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 // Move an entry within an ordered list. Pure, and exported, because "did the arrows do the right
-// thing" is the whole behaviour of this panel and it should not need a DOM to check.
+// thing" is the whole behavior of this panel and it should not need a DOM to check.
 //
 // It CLAMPS rather than wrapping, which is the opposite of the rule for a scanning cursor — and
 // deliberately. A cursor that stops at the end strands somebody; a list item that wraps from top
@@ -83,7 +83,7 @@ export function buildRows(preferred, available) {
 }
 
 export function mountDevicePanel(root, {
-  owner,                                  // a mic owner (or any owner with list/labelled/choose)
+  owner,                                  // a mic owner (or any owner with list/labeled/choose)
   kind = 'microphone',
   settings = () => ({}),
   save = async () => {},
@@ -102,7 +102,7 @@ export function mountDevicePanel(root, {
   };
 
   let available = [];
-  let labelled = true;
+  let labeled = true;
   let destroyed = false;
 
   root.innerHTML = `
@@ -127,7 +127,7 @@ export function mountDevicePanel(root, {
   function render() {
     if (destroyed) return;
     const { rows, extra } = buildRows(preferred(), available);
-    el('[data-permission]').hidden = labelled || available.length === 0;
+    el('[data-permission]').hidden = labeled || available.length === 0;
     el('[data-empty]').hidden = available.length > 0 || rows.length > 0;
 
     el('[data-list]').innerHTML = rows.map((r, i) => `
@@ -162,7 +162,7 @@ export function mountDevicePanel(root, {
   async function refresh() {
     if (destroyed) return;
     available = await owner.list();
-    labelled = await owner.labelled();
+    labeled = await owner.labeled();
     await owner.choose?.();
     render();
   }

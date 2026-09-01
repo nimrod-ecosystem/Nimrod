@@ -27,7 +27,7 @@ pronunciation was unclear is a verdict about your body on a screen you cannot wa
 <b>Technically</b>, four choices is a four-way classification rather than open recognition, which
 is far easier and far more robust to atypical speech.</p>
 
-<p>There is no recogniser yet and this does not pretend otherwise. What it does is <b>mark the
+<p>There is no recognizer yet and this does not pretend otherwise. What it does is <b>mark the
 audio with what was asked and what was pressed</b> — never with a claim about what was said
 aloud.</p>
 
@@ -99,7 +99,7 @@ try {
     check('...and the wrong answers somebody chose deliberately',
       bank[0].wrong.join(',') === 'London,Rome,Madrid', JSON.stringify(bank[0].wrong));
     // A syllabus is a document somebody maintains, so it has to be annotatable.
-    check('# lines are comments, so a bank can be organised', !bank.some((b) => b.question.startsWith('#')));
+    check('# lines are comments, so a bank can be organized', !bank.some((b) => b.question.startsWith('#')));
     check('blank lines and junk are skipped, not turned into questions',
       parseBank(`
 
@@ -208,7 +208,7 @@ no pipe here
     const asked = marks.find((m) => m.event === 'asked');
     check('the question being ASKED is marked, because the audio that matters is what happens '
       + 'between the question and the answer', !!asked, JSON.stringify(marks));
-    check('...labelled with the expected answer', asked.label === r.probe().question.answer,
+    check('...labeled with the expected answer', asked.label === r.probe().question.answer,
       JSON.stringify(asked));
 
     const q = r.probe().question;
@@ -296,7 +296,7 @@ Shared Q | Shared A` });
 }
 
 section('not covered here');
-check('NOTE: there is no recogniser, so nothing here tests answering by voice. The rule for '
+check('NOTE: there is no recognizer, so nothing here tests answering by voice. The rule for '
   + 'when one arrives is written in the module header: a recognition failure is never scored '
   + 'as a wrong answer', true);
 

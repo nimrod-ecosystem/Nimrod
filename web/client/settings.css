@@ -1,12 +1,12 @@
 /* settings.css — the universal settings menu.
  *
- * Every colour is a theme token, so the menu follows Dusk at the bedside without a second
+ * Every color is a theme token, so the menu follows Dusk at the bedside without a second
  * stylesheet and without knowing a theme exists.
  *
  * SIZING IS THE REQUIREMENT, not decoration: this has to be legible on a 900x700 kiosk
  * cell and on a laptop, so the panel is a clamp() of the viewport and the rows scale with
  * it. Nothing here is a fixed pixel height, because a fixed height is what put Cici's
- * clock 272px off centre.
+ * clock 272px off center.
  */
 
 .st-scrim {
@@ -69,10 +69,10 @@
 .st-item:hover:not(:disabled) { border-color: var(--line, #e4e0c2); }
 
 /* THE CURSOR. Not a hover tint — a person driving with one switch has no pointer, so
- * where they are has to be unmistakable across a room. Colour AND a bar, because colour
- * alone fails for anyone with a colour deficit.
+ * where they are has to be unmistakable across a room. Color AND a bar, because color
+ * alone fails for anyone with a color deficit.
  *
- * THE TEXT COLOUR IS `--bg`, NOT `--beige`, and that is a correctness fix rather than a
+ * THE TEXT COLOR IS `--bg`, NOT `--beige`, and that is a correctness fix rather than a
  * preference. `--beige` is a LIGHT value in every theme, while `--midnight` is a dark
  * accent in the light themes and a LIGHT one in Dusk (it has to be, to sit on a dark
  * page). Pairing them gave near-white on pale blue at the bedside at night — about 1.8:1,
@@ -81,7 +81,7 @@
 .st-item.on {
   background: var(--midnight, #105666);
   color: var(--bg, #F7F4D5);
-  /* Bold is the cursor's third signal, after colour and the bar — and at kiosk sizes it
+  /* Bold is the cursor's third signal, after color and the bar — and at kiosk sizes it
    * also lifts the row into WCAG's large-text threshold, which matters for the themes
    * whose accent is a mid-tone (Forge measures 3.98:1 at laptop size). */
   font-weight: 700;
@@ -148,7 +148,7 @@
 /* ---- connections page ---------------------------------------------------
    Listed, never filtered. This is the one place somebody sees what the product
    can do whether or not they have any of it, so it stays plain and complete.
-   SHAPE PLUS COLOUR, NEVER COLOUR ALONE: the mark carries the state as well as
+   SHAPE PLUS COLOR, NEVER COLOR ALONE: the mark carries the state as well as
    the tint, because these rows are small and this screen belongs to somebody
    with a brain injury. */
 .cx-lead { margin: 0 0 10px; opacity: .85; }

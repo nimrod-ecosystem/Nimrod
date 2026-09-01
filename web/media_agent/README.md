@@ -113,7 +113,7 @@ relative, so the agent never needs to know its own public address — the client
 `base_url` config decides that. `id` equals `path` and is stable, so it's what the
 shared picker (`../client/rng.js`) keys play-stats on.
 
-## Recognised media
+## Recognized media
 
 Case-**insensitive** extension match (a past bug hid hundreds of `.JPG` files behind
 a case-sensitive filter — fixed here by design):

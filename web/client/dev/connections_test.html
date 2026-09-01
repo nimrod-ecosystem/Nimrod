@@ -60,7 +60,7 @@ const AREAS = [
 const ids = (list) => list.map((a) => a.id).join(',');
 
 // =====================================================================
-section('the catalogue is data');
+section('the catalog is data');
 
 {
   check('every connection has an id, a title and something a person can read',
@@ -93,7 +93,7 @@ section('three states, and the third is a different sentence from the second');
   check('nothing at all is not connected', isConnected('ai') === false);
 
   const list = connectionList({ ai: 'connected', logger: 'unavailable' });
-  check('the list folds live status into the catalogue',
+  check('the list folds live status into the catalog',
     list.find((c) => c.id === 'ai').state === 'connected'
     && list.find((c) => c.id === 'logger').state === 'unavailable'
     && list.find((c) => c.id === 'direct').state === 'available');
@@ -175,7 +175,7 @@ section('the page — and it deliberately filters NOTHING');
   check('the connected count is reported', r.connected === 1);
   check('an advanced connection is on the page at essential level',
     el.textContent.includes('Home Assistant'));
-  check('SHAPE PLUS COLOUR — the state has a mark, not only a class',
+  check('SHAPE PLUS COLOR — the state has a mark, not only a class',
     el.querySelector('.cx-connected .cx-mark')?.textContent.trim().length > 0);
   check('and it says the state in words too',
     el.textContent.includes('Connected') && el.textContent.includes('Not set up'));

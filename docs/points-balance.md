@@ -12,7 +12,7 @@ a cap.
 
 ## The table
 
-| Source | Pays | Realistic rate | Notes |
+| Source | Pays | Realiztic rate | Notes |
 | --- | --- | --- | --- |
 | `sprint` (focus timer) | `workMin × 1` | **1.0 / min** | The reference. A 25-min sprint = 25 points. Paid once, on completion. |
 | Task Menu — mow the lawn | 60 | **1.0 / min** | ~1 hour |

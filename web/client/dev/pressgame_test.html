@@ -82,7 +82,7 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
         Object.keys(MODULE_VERBS.pressgame).length === 1,
         JSON.stringify(MODULE_VERBS.pressgame));
       const entry = CATALOG.find((c) => c.type === 'pressgame');
-      check('it is described on the public catalogue page', !!entry);
+      check('it is described on the public catalog page', !!entry);
       // The comfort group's promise is that nothing in it needs pressing to keep going.
       check('*** and NOT filed under "something to look at" — calm mode waits on her press '
         + 'forever, which would make that group\'s promise false ***',
@@ -122,7 +122,7 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
     section('*** calm mode never times out — the press IS the content ***');
     {
       // 4000, not 1000: the photosensitivity floor holds the wait at 2500ms minimum, so a
-      // shorter setting simply never fills. That floor is the behaviour, not a bug.
+      // shorter setting simply never fills. That floor is the behavior, not a bug.
       const r = rig({ waitMs: 4000, challenge: false });
       r.impl.__step(4000);
       check('the invite opens', r.impl.__probe().phase === 'go');

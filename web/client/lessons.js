@@ -22,7 +22,7 @@ export const WATCHED_KIND = 'watched';
 export const RELOCKED_KIND = 'relocked';
 
 // Seed topics. Videos are per-profile data; these carry no video until someone points them
-// at one, and a topic with no video unlocks on the honour button alone.
+// at one, and a topic with no video unlocks on the honor button alone.
 export const DEFAULT_TOPICS = [
   { id: 'roots',      label: 'Word roots & origins', subject: 'English language arts',
     blurb: 'Where words come from, and how knowing that lets you guess a new one.' },

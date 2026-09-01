@@ -207,7 +207,7 @@ function cell(w, h, label) {
     check('a big cell gives a big clock', px(big.host.querySelector('.time'), 'fontSize') >= 60,
       String(px(big.host.querySelector('.time'), 'fontSize')));
 
-    // CENTRED IN THE CELL. `.clock` stretched to the full height of its panel but its
+    // CENTERD IN THE CELL. `.clock` stretched to the full height of its panel but its
     // contents packed at the top, so on a bedside kiosk the clock sat against the ceiling
     // of an empty quadrant with a void underneath. Mike, looking at the real screen: "the
     // clock is off center." Measured against the CELL, not the element, because the
@@ -220,7 +220,7 @@ function cell(w, h, label) {
       const contentMid = (first.top + last.bottom) / 2;
       const cellMid = box.top + box.height / 2;
       // Two pixels of slack for sub-pixel line boxes; anything real is tens of pixels.
-      check(`  ...and is vertically centred in a ${c.w}x${c.h} cell`,
+      check(`  ...and is vertically centerd in a ${c.w}x${c.h} cell`,
         Math.abs(contentMid - cellMid) <= 2, `${Math.round(contentMid - cellMid)}px off`);
     }
 

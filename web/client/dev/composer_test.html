@@ -223,7 +223,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       document.querySelectorAll('#kioskHost .k-dot').length === 0);
     check('a PLACED clock is in its slot, not the HUD overlay', !kiosk.hasClock());
 
-    // clearing it returns the screen to the old one-at-a-time behaviour
+    // clearing it returns the screen to the old one-at-a-time behavior
     const s2 = makeSettings(profile.id);
     await s2.load();
     s2.set({ kiosk: { ...(s2.get().kiosk || {}), layout: null } });

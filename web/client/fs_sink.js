@@ -59,7 +59,7 @@
 // exercised against a fake one — no picker, no permission prompt, no files. Which is the only
 // way anything that DELETES somebody's recordings should be tested.
 
-// A recognisable, sortable, human-readable folder name. Sortable matters: somebody looking at
+// A recognizable, sortable, human-readable folder name. Sortable matters: somebody looking at
 // this folder in a file manager a year from now should see sessions in order without opening
 // anything, and `1756598400000` does not do that.
 export function sessionName(startedAt, { now = () => Date.now() } = {}) {
@@ -99,7 +99,7 @@ export async function pickFolder({ view = (typeof window !== 'undefined' ? windo
 // **The PERMISSION is the other half, and it is the one that bites.** After a reload,
 // `queryPermission` on a recalled handle normally reads `prompt`, not `granted` — and
 // `requestPermission` may only prompt from a USER GESTURE. So a page cannot silently reach into
-// somebody's folder on load, which is correct behaviour by the browser and an inconvenience for
+// somebody's folder on load, which is correct behavior by the browser and an inconvenience for
 // a sweeper.
 //
 // *(That half needs a folder a human actually picked, so it is the button in the probe rather

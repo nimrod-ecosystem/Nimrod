@@ -12,9 +12,9 @@
 // version of the same idea; this is the part that makes the call configurable now.
 //
 // *** IT SHOWS WHAT IT DOES NOT UNDERSTAND, RATHER THAN HIDING IT. *** A config can contain a
-// guard or a shape this file has no sentence for. Rendering only the parts it recognises would
+// guard or a shape this file has no sentence for. Rendering only the parts it recognizes would
 // tell somebody their screen has three rules when it has five, and they would then make a
-// decision on a list that is quietly wrong. An unrecognised rule is shown as itself.
+// decision on a list that is quietly wrong. An unrecognized rule is shown as itself.
 //
 // AND IT NEVER SILENTLY REWRITES. Turning a switch on edits one branch of the config and
 // leaves everything else byte-for-byte, because a config a person hand-wrote is theirs.
@@ -26,7 +26,7 @@ import { BACK } from './statemachine.js';
 export const MACHINE_TYPES = new Set(['director']);
 
 // The topics a call arrives and departs on. One place, so the rule the switch writes and the
-// rule the reader recognises can never drift apart.
+// rule the reader recognizes can never drift apart.
 export const CALL_TOPIC = 'call/incoming';
 export const CALL_ENDED_TOPIC = 'call/ended';
 export const CALL_STATE = 'call';

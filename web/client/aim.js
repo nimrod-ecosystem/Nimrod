@@ -1,6 +1,6 @@
 // aim.js — THE AIM: where on the screen somebody is pointing, whatever is doing the pointing.
 //
-// A mouse, a trackball, a head pointer, a hand in front of a camera, a brightly coloured sock
+// A mouse, a trackball, a head pointer, a hand in front of a camera, a brightly colored sock
 // on a foot. Downstream, none of them are distinguishable and none of them should be.
 //
 // ---------------------------------------------------------------------------------------
@@ -45,7 +45,7 @@
 //   for a position, and 60 rows a second would drown the stream that does matter.
 //
 // ---------------------------------------------------------------------------------------
-// NORMALISED, NOT PIXELS — and this is what makes a tracker possible at all
+// NORMALIZED, NOT PIXELS — and this is what makes a tracker possible at all
 // ---------------------------------------------------------------------------------------
 //
 // `x` and `y` are 0..1 of the VIEWPORT. A camera-based tracker has no idea how big anything on
@@ -54,7 +54,7 @@
 // panel, none of which a pixel would.
 //
 // LAST PRODUCER WINS. If a mouse and a tracker both report, whichever reported most recently is
-// the aim. That is the honest behaviour — there is one cursor and one person — and it means
+// the aim. That is the honest behavior — there is one cursor and one person — and it means
 // picking up the mouse during a session takes over immediately, with no mode to switch.
 //
 // ---------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@
 //
 // `input.js` has a three-way role gate so a caregiver can lock the participant's inputs during
 // setup. It is tempting to apply it here. It is not applied, because a role in this project is
-// a property of a BINDING, not of a device — and an aim has no binding, so honouring the gate
+// a property of a BINDING, not of a device — and an aim has no binding, so honoring the gate
 // would mean inventing a device-to-role mapping that exists nowhere else. Smuggling a new
 // concept in through a helper file is exactly how the vocabulary got into the state
 // `docs/glossary.md` was opened to fix.

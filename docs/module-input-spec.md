@@ -2,7 +2,7 @@
 
 **Status:** draft. The runtime described here is implemented and tested; the distribution
 story at the end is not.
-**Licence:** MIT, same as the rest of this repository.
+**License:** MIT, same as the rest of this repository.
 **Reference implementations:** [`web/client/modules/pond.js`](../web/client/modules/pond.js)
 (canvas, answers verbs) · [`web/client/modules/photos.js`](../web/client/modules/photos.js)
 (declared settings, live options)
@@ -145,7 +145,7 @@ Unity already has the hook — `SendMessage` exists for exactly this.
 
 ```csharp
 // On a GameObject named "NimrodInput"
-public class NimrodInput : MonoBehaviour {
+public class NimrodInput : MonoBehavior {
     public void OnNimrodVerb(string verb) {
         switch (verb) {
             case "select": Fire();      break;
@@ -350,7 +350,7 @@ unreachable by somebody with one switch.** A declaration can be walked. A `<div>
   behind a hidden panel is heat on a machine that is on twenty-four hours a day.
 - **Do not assume size or aspect.** You may be one ninth of a screen or all of it.
 - **Do not start audio unasked.** If you make sound, make it a declared setting.
-- **Do not use colour alone** to carry meaning. Shape plus colour, always.
+- **Do not use color alone** to carry meaning. Shape plus color, always.
 
 ---
 

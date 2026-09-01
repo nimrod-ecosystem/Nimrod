@@ -87,7 +87,7 @@ def parse_status(raw: bytes) -> Status:
     proto, flags, chunk, total, oldest, confirmed, fw = struct.unpack_from("<BBHIIII", raw, 0)
     if proto != PROTO:
         # Loudly, not quietly. An old box misreading a new struct would post plausible
-        # nonsense to a server for weeks, and nobody would notice until somebody analysed
+        # nonsense to a server for weeks, and nobody would notice until somebody analyzed
         # it. Better to refuse to talk.
         raise ValueError(f"protocol {proto}, this tool speaks {PROTO}")
     return Status(proto, flags, chunk, total, oldest, confirmed, fw)

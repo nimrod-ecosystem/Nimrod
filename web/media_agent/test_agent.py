@@ -145,7 +145,7 @@ def main():
             rbody, rstatus = r.read(), r.status
         except urllib.error.HTTPError as e:
             rbody, rstatus = e.read(), e.code
-        check("Range request honoured (206, partial body)", rstatus == 206 and rbody == b"\x00\x00\x00\x18",
+        check("Range request honored (206, partial body)", rstatus == 206 and rbody == b"\x00\x00\x00\x18",
               detail=f"status={rstatus} body={rbody!r}")
 
         # Path traversal: percent-encoded ../../secret.txt must NOT escape root

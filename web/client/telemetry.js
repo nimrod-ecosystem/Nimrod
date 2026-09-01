@@ -140,7 +140,7 @@ export function byBand(list) {
   const by = new Map();
   for (const t of trials(list)) {
     const b = t.data.band;
-    if (!b) continue;                       // unlabelled content simply doesn't appear
+    if (!b) continue;                       // unlabeled content simply doesn't appear
     if (!by.has(b)) by.set(b, []);
     by.get(b).push(t);
   }
@@ -157,7 +157,7 @@ export function bands(list) {
 export function byConcept(list) {
   const by = new Map();
   for (const t of trials(list)) {
-    const c = t.data.concept || '(unlabelled)';
+    const c = t.data.concept || '(unlabeled)';
     if (!by.has(c)) by.set(c, []);
     by.get(c).push(t);
   }

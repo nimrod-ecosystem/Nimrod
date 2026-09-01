@@ -44,7 +44,7 @@ function check(name, cond, detail = '') {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // A real press is down AND up. Without the release the input bus still considers the
-// control HELD and ignores the next press of the same key — which is correct behaviour and
+// control HELD and ignores the next press of the same key — which is correct behavior and
 // made three assertions here fail until the test started letting go of the key.
 const press = async (key, ms = 60) => {
   window.dispatchEvent(new KeyboardEvent('keydown', { key }));
@@ -379,7 +379,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
       && labels.some((l) => l.includes('Always come back to')), JSON.stringify(labels));
     check('and it names THIS screen, so there is no list to scan',
       labels.some((l) => l.includes('TEST-bedside')), JSON.stringify(labels));
-    check('today’s behaviour is the one ticked by default',
+    check('today’s behavior is the one ticked by default',
       labels.some((l) => l === '✓ Start this screen from the top'), JSON.stringify(labels));
     await press('Escape');
 

@@ -90,7 +90,7 @@ const RESOLVE = (items) => async () => ({ items, count: items.length });
   try {
     section('what counts as music');
     {
-      check('common audio files are recognised',
+      check('common audio files are recognized',
         ['a.mp3', 'b.M4A', 'c.ogg', 'd.opus', 'e.flac', 'f.wav'].every(isAudioPath));
       check('*** photos are not — a folder of holiday snaps is not a playlist ***',
         !isAudioPath('a.jpg') && !isAudioPath('b.MOV') && !isAudioPath('c.png'));

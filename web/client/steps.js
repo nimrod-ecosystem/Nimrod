@@ -97,14 +97,18 @@ export const STEPS = [
     say: 'Someone you love is in a bed, facing a wall, and cannot work a phone. This is a '
        + 'screen that gives them their people back — and gives you a way to reach them.',
     note: 'Concrete before abstract. No product name in the first sentence; the situation is '
-        + 'what the viewer recognises, and it is why they clicked.' },
+        + 'what the viewer recognizes, and it is why they clicked.' },
 
   // ---- 2 · COMPOSE ----------------------------------------------------------------------
   { id: 'compose-1', scene: 'compose', page: '/home.html', target: '[data-name]',
-    action: 'type', value: 'Mum’s room', tour: true, settle: 900,
+    action: 'type', value: 'Demo', tour: true, settle: 900,
     say: 'A screen is a set of panels. Name one — a person, or a room.',
-    note: 'Deliberately a NAME a caregiver would actually type, not "Demo". The first thing '
-        + 'the viewer sees themselves doing should look like their own life.' },
+    note: 'Mike, 2026-09-01: "Demo". An earlier draft typed a relationship word on camera, on '
+        + 'the theory that it would look like the viewer’s own life. Two things wrong with '
+        + 'that: it is the demo account and calling it anything else is a small lie told in '
+        + 'the first ten seconds, and a guessed relationship word is one more thing to get '
+        + 'wrong about somebody. The narration already says "a person, or a room" — the '
+        + 'viewer supplies their own.' },
 
   { id: 'compose-2', scene: 'compose', page: '/home.html', target: '[data-new] button[type=submit]',
     action: 'click', tour: false, settle: 700,
@@ -126,10 +130,12 @@ export const STEPS = [
 
   { id: 'compose-5', scene: 'compose', page: '/home.html', target: '[data-open]',
     action: 'click', tour: true, settle: 2600,
-    say: 'Then open it. That is the whole setup.',
-    note: 'The shortest line in the script and the most load-bearing: the honest claim is that '
-        + 'composing a screen really is this short. What is NOT claimed is how long the '
-        + 'surrounding setup takes — nobody has timed one yet, and the landing page says so.' },
+    say: 'Then open it. That is the screen made.',
+    note: 'WAS "that is the whole setup", and it overclaimed. Composing a screen really is this '
+        + 'short; the SETUP around it — an account, a folder of photos, a machine by the bed — '
+        + 'is longer and nobody has timed one yet. Saying "the whole setup" over a ten-second '
+        + 'clip would set an expectation the first real user finds out is wrong, which is the '
+        + 'same failure the landing page leaves a hole for rather than committing.' },
 
   // ---- 3 · THE KIOSK --------------------------------------------------------------------
   { id: 'kiosk-1', scene: 'kiosk', page: '/kiosk.html', target: '[data-stage]',
@@ -147,7 +153,11 @@ export const STEPS = [
     note: 'The most concrete thing in the whole product and it used to be fifteen hundred words '
         + 'down the landing page. It goes early.' },
 
-  { id: 'kiosk-3', scene: 'kiosk', page: '/kiosk.html', target: '.k-mods',
+  // TARGET WAS `.k-mods` AND THE RECORDER CAUGHT IT ON ITS FIRST RUN. That element holds the
+  // stage-switching dots, which only populate on a stage-based screen — on a laid-out screen
+  // it is present, empty and zero-sized, so the tour would have drawn a ring around nothing.
+  // `[data-controls]` is the row the narration is actually about and it is always there.
+  { id: 'kiosk-3', scene: 'kiosk', page: '/kiosk.html', target: '[data-controls]',
     action: 'press', value: '2', tour: true, settle: 2600,
     say: 'Swap what is on the stage, and the mirror stays. It is not a slideshow with the '
        + 'camera bolted on — the panels are independent.',
@@ -177,7 +187,7 @@ export const STEPS = [
     say: 'When somebody pauses a video to talk to them, the screen does not sit on a frozen '
        + 'face. It goes quiet and calm, and when you come back the film is where you left it.',
     note: 'THE THING NOBODY ELSE DOES. "A frozen face" is the concrete image — anybody who has '
-        + 'sat in a hospital room recognises a stalled screen and reads it as broken.' },
+        + 'sat in a hospital room recognizes a stalled screen and reads it as broken.' },
 
   // ---- 6 · SOMETHING TO DO --------------------------------------------------------------
   { id: 'do-1', scene: 'do', page: '/kiosk.html', target: '[data-stage]',
@@ -206,6 +216,27 @@ export const STEPS = [
 // ---------------------------------------------------------------------------------------
 // HELPERS — small, pure, and shared by all five consumers so they cannot disagree.
 // ---------------------------------------------------------------------------------------
+
+/**
+ * HOW LONG A STEP MUST STAY ON SCREEN.
+ *
+ * *** ADDED AFTER THE FIRST REAL RECORDING, WHICH CAME OUT 39 SECONDS LONG AGAINST 126 SECONDS
+ * OF NARRATION. *** The `settle` values were hand-picked for how long a shot wants to be looked
+ * at, and every one of them was shorter than the line spoken over it — so the film would have
+ * ended while the narrator was still on scene four.
+ *
+ * A hold is therefore the LONGER of the two: how long the picture wants, and how long the words
+ * take. Deriving it means the film cannot fall out of sync with its own script when somebody
+ * edits a sentence, which is the failure that would otherwise be found at mux time.
+ *
+ * The recorder and the caption builder both use this, so they cannot disagree about when a step
+ * ends.
+ */
+export function holdMs(step, { wpm = 145, padMs = 450 } = {}) {
+  const words = step.say ? step.say.trim().split(/\s+/).length : 0;
+  const speech = words ? (words / wpm) * 60000 + padMs : 0;
+  return Math.round(Math.max(step.settle || 0, speech));
+}
 
 /** What the tour walks. Recorder plumbing and silent steps are not stops on a tour. */
 export const tourSteps = (steps = STEPS) => steps.filter((s) => s.tour !== false && s.say);

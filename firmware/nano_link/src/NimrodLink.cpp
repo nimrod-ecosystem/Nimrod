@@ -2,7 +2,7 @@
 //
 // Compiles clean for arduino:mbed_nano:nano33ble, and CI rebuilds it on every push. The
 // wire format is tested independently (tools/test_nano_protocol.py) and the host-side probe
-// (tools/nano_probe.py) speaks it. What is still unproven is BEHAVIOUR ON HARDWARE — above
+// (tools/nano_probe.py) speaks it. What is still unproven is BEHAVIOR ON HARDWARE — above
 // all what ArduinoBLE actually manages for throughput, which is the number the whole design
 // hangs on and is deliberately not guessed at anywhere in this repository.
 

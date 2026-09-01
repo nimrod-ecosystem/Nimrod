@@ -197,7 +197,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
   // thing be tested against frames built in an array.
   //
   // THE AIM ON THIS PAGE DRIVES NOTHING, and that is correct rather than a shortcut. Home has
-  // no cursor and no kiosk; what a caregiver is doing here is producing NUMBERS — a colour, a
+  // no cursor and no kiosk; what a caregiver is doing here is producing NUMBERS — a color, a
   // rest point, a gain — which the kiosk then uses. The live picture is the feedback, and the
   // "let this move the cursor" switch is a statement about the screen, not about this page.
   async function mountMarkerTab(host, { makeUserState: makeState2 }) {

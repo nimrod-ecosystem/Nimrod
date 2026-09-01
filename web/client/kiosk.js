@@ -93,7 +93,7 @@ export const SCREEN_SHOWN = 'kiosk/shown';
 // Default to the server-backed handles so every existing caller is unchanged.
 export async function mountKiosk(root, {
   user, profileId, profiles, bus, makeState = null, makeEvents = null, sources = null,
-  // Seams for the restart behaviour: the test needs its own storage and must never be
+  // Seams for the restart behavior: the test needs its own storage and must never be
   // navigated away from mid-run.
   storage = undefined, session = undefined,
   navigate = (url) => { if (typeof location !== 'undefined') location.replace(url); },
@@ -175,7 +175,7 @@ export async function mountKiosk(root, {
   // two things holding a live microphone is a privacy event, not a resource conflict, and a
   // single owner is the only thing that can honestly answer "is anything listening?". Nothing
   // opens it here — it is opened by whatever acquires it, which today is a call and nothing
-  // else. See mic_owner.js for why a call and a recogniser want opposite processing.
+  // else. See mic_owner.js for why a call and a recognizer want opposite processing.
   const micOwner = createMicOwner();
 
   let output = null;
@@ -408,7 +408,7 @@ export async function mountKiosk(root, {
   // A PREVIEW layout, if the composer sent one. It is a ONE-SHOT handoff in sessionStorage:
   // read once, cleared immediately, never written to the profile. This is what lets someone
   // try an arrangement — or swap to one temporarily — without committing it, which the
-  // composer's save-then-open behaviour otherwise took away.
+  // composer's save-then-open behavior otherwise took away.
   const previewLayout = takePreviewLayout(profileId);
 
   const savedLayout = previewLayout || (settings.get().kiosk || {}).layout;

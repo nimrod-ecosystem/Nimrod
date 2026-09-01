@@ -195,7 +195,7 @@ check("*** a person with no owner does not exist, and must be indistinguishable 
       "you have no permission for - or this is an id oracle ***",
       not may("messages", actor="dolly", person_id="P1", owner=None, link=LINK,
               permissions=P, now_iso=NOW))
-check("a tombstoned permission on a deleted person is not honoured",
+check("a tombstoned permission on a deleted person is not honored",
       not may("messages", actor="dolly", person_id="P1", owner=None, link=LINK,
               permissions=[perm()], now_iso=NOW))
 check("no actor -> no", not may("messages", actor="", person_id="P1", owner="mike",
