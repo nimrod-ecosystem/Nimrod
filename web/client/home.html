@@ -332,6 +332,27 @@ import './modules/progress.js';
 import './modules/wordforge.js';
 import './modules/lessons.js';
 import './modules/algebra.js';
+// *** ADDED 2026-08-31, AND ALL FOUR WERE MISSING. ***
+//
+// Walking the site turned up that the composer's picker is built from whatever happens to have
+// been imported into THIS page — so a module is addable if and only if somebody remembered an
+// import line here. Four were not: `comet` (the module the whole aim/cursor/dwell chain exists
+// to drive), `call` (the video call), `pressgame`, and `trivia` (which shipped that morning).
+//
+// Three of the four are DESCRIBED to caregivers on `modules.html`, so a person could read a page
+// inviting them to want a video call, come to the page where you add modules, and not find it.
+// No error, and nothing said it was missing.
+//
+// `dev/composer_reach_test.html` now fails if a described module cannot be added, which is the
+// same reconcile trick `modules_catalog.js` already does for descriptions.
+import './modules/comet.js';
+import './modules/pressgame.js';
+import './modules/call.js';
+import './modules/trivia.js';
+// A FIFTH, and this one was the more instructive kind: `bank` was already IN the picker, but
+// only because something else imported it transitively. It worked by accident, would have
+// vanished the moment that import moved, and it was on no caregiver-facing page at all.
+import './modules/bank.js';
 
 const root = document.getElementById('root');
 
