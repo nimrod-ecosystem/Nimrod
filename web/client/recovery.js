@@ -4,7 +4,7 @@
 //
 //     REMOUNT -> RELOAD -> SWAP -> reboot -> notify
 //
-// WHY THE SWAP MATTERS MORE THAN IT SOUNDS. When YouTube fails today, Christine gets a broken
+// WHY THE SWAP MATTERS MORE THAN IT SOUNDS. When YouTube fails today, the person gets a broken
 // panel and stares at it until somebody walks in. With a fallback she gets her photos — which
 // outrank every other module anyway — and the failure stops being a ruined afternoon and
 // becomes a thing to fix at leisure. The alert still fires. It just stops being urgent, which

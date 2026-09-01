@@ -196,7 +196,7 @@ earlier plan wrongly targeted the bedside build; leave that build alone). Full s
 - **Voice engine = Piper** (local, OSS, runs on a Pi; doubles as Cici's voice). Web Speech API is
   an interim fallback. Voice is a per-user setting.
 - **Recording via `R` key** (matches the printable sign for staff/visitors), Cici edits takes
-  locally, local STT watches for **three intent cues** — start "message for Christine" (tag+route,
+  locally, local STT watches for **three intent cues** — start "message for <name>" (tag+route,
   becomes the lead-in), "restart please" (redo), "never mind delete that" (discard). **Match intent,
   not exact words.** Recordings stored **local-only/private** (may include staff → confidential,
   consent-based).
@@ -358,7 +358,7 @@ the new points dashboard. Decision: **no — split the modules, share the substr
 **`progress` is NOT a Cici-only module — corrected (2026-08-17).** An earlier draft described it
 as "the Cici game-stats dashboard". Mike: he wants the same instrument for Oscar — graphs of how
 much he is learning, which concepts he is getting and which he is struggling with — "similar to
-what we have for Christine, but tracking progress in school instead of consciousness." And **one
+what we have at the bedside, but tracking progress in school instead of consciousness." And **one
 person may play games from both sets.** So `progress` is the general MEASUREMENT module over one
 `gameplay` stream; what differs between a response game and a learning game is which metrics are
 meaningful, not which module or which person. The stream therefore uses ONE unified trial shape
@@ -366,7 +366,7 @@ meaningful, not which module or which person. The stream therefore uses ONE unif
 
 ## Gameplay telemetry DOES go to the Sheet — corrected (2026-08-17)
 An earlier draft of this file carved gameplay telemetry out of the Sheets sync on the grounds
-that it was health-adjacent data. **Mike (Christine's guardian) corrected that: the game data is
+that it was health-adjacent data. **Mike (her guardian) corrected that: the game data is
 not sensitive health data.** It is game performance — how someone did at a game — not diagnosis,
 medication, or clinical notes. The carve-out is withdrawn; do not re-raise it.
 
@@ -492,7 +492,7 @@ generated-content renderer, content-as-meaning — ARE built and were shaped for
   The highlight pipeline already transcribes room recordings with **local Whisper**; add a **cue pass**
   that scans each transcript for intent cues — "**Cici** …", "**make a note of** …", "**delete this**"
   (video) — matching INTENT, not exact words (same pattern as the interstitial R-capture cues: "message
-  for Christine", "restart please", "never mind delete that"). It's "retroactive" because it's batch over
+  for <name>", "restart please", "never mind delete that"). It's "retroactive" because it's batch over
   recordings, not a live wake word. **Doubles as a review queue + training data:** the same pass surfaces
   the moments Mike would be reviewing anyway (correction/labeling he's meaning to do), so review and
   cue-honoring are one workflow. **Always surfaces detected commands for a human confirm before anything
@@ -574,7 +574,7 @@ Full reasoning in `docs/landing-page.md`. Annotated mockup:
 - **Site voice is first person.** "The line I don't cross," not "we." One person building for one
   person is the trust asset, and the corporate voice appeared exactly where trust is asked for.
   (2026-08-27)
-- **Christine's name comes out of the public copy** — "my fiancée" and "her" throughout. Same
+- **Her name comes out of the public copy** — "my fiancée" and "her" throughout. Same
   reasoning as the existing rule about clips and images: she cannot consent, and the written
   account is the same category as a picture in every respect except medium. (2026-08-27)
 - **OAuth scope drops to `openid`.** The live redirect requests `openid email profile`; the
@@ -1047,3 +1047,50 @@ dozens of tracked files, including the landing page.
   (2026-08-31)
 - **Re-run the search after each pass rather than trusting a recorded count.** Every stored figure
   for this task has been wrong at least once. (2026-08-31)
+
+
+## Reopened items — Mike's rulings, 2026-09-01
+
+Closes three of the four bullets under *Reopened by the 2026-08-27 review*, plus two of the `_(open)_`
+items under *Module wiring*. The Email bullet was already resolved inside its own entry, and the
+"bring your own AI is Cici" bullet was already written as a dated decision — that section's heading
+said "need a call" when two of its four items did not need one. Noted so the heading stops
+manufacturing questions.
+
+- **AAC symbols: we draw our own, and anyone may upload their own set.** Mike's call, and it
+  supersedes the reconsideration proposed on 2026-08-27 rather than accepting it — the suggestion
+  was to adopt an existing CC-licensed set (Mulberry and others were costed). Making the set is the
+  route chosen, with **upload of any set the user prefers** alongside it, which is *build everything,
+  withhold nothing* applied to vocabulary: nobody is locked to our drawings, and a therapist who
+  already uses a particular set with a particular person keeps using it. **Symbol style stays a
+  per-profile setting**, as the earlier entry proposed. (2026-09-01)
+  - **The risk from that entry still stands and is worth watching rather than re-arguing:** a symbol
+    set is a learned visual grammar, and consistency across the whole set is what makes a board
+    readable at speed. The failure mode for a self-drawn set is drift between symbols made months
+    apart, not the quality of any one of them. A style reference — line weight, viewpoint, how a
+    person, a verb and a place are each drawn — is the cheap guard, and it wants writing before the
+    set gets large rather than after. Also worth carrying across from the earlier entry: **never
+    repeat a base silhouette** across icons, and **single-word label, full spoken phrase**.
+- **Microcontroller support is stated on the site, framed as support rather than as a product.**
+  Mike's call. `firmware/` and `tools/` already ship input-device support, and that is software
+  support for hardware somebody else builds — a different thing from the paused physical-product
+  line, which stays paused. The comparison is the most concrete fact available to a caregiver
+  reading that page: a commercial single-button adaptive switch runs roughly $75 wired and $145
+  wireless, against roughly $15 for a microcontroller, an arcade button and a printed enclosure.
+  **USB HID (gamepad or keyboard) is the connection method to lead with** — no drivers, works in
+  every browser through the Gamepad API. (2026-09-01)
+- **The patch bay is built, and it is a module.** Mike's call, resolving the `_(open)_` marker on it
+  under *Module wiring*. Being a module rather than a shell feature is the point rather than an
+  implementation detail: it is the wiring surface for modules, and it is reached, placed and
+  configured exactly like the things it wires. The two routes named in the earlier entry are the
+  ones to make work first — **a door sensor making the mirror full-screen**, and **a photo becoming
+  an AAC card** (`media.item → vocab.term`, the faces they know instead of a stranger's line
+  drawing). It still depends on ports being real: the `emits` / `accepts` manifest extension comes
+  first. (2026-09-01)
+- **The shared surface — one person's AAC selection appearing live on a companion screen — is
+  built.** Mike's call, resolving the other `_(open)_` marker under *Module wiring*. The distinction
+  recorded there is the design and it survives: **this is not messaging.** Messaging is addressed,
+  stored and asynchronous; this is live, co-present and unstored. **Latency is the requirement and
+  persistence is a liability**, so it is not built on the message path and does not acquire a history
+  by convenience. The strong case is public — a board on somebody's lap that the person behind the
+  counter cannot see. (2026-09-01)

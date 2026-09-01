@@ -42,7 +42,7 @@ export const PROVIDERS = [
 const ALL = PROVIDERS.map((p) => p.id);
 
 // The default machine config: a weighted daypart-gated rotation. Morning &
-// sleepytime enable YouTube ONLY (they run their existing playlists — Christine may
+// sleepytime enable YouTube ONLY (they run their existing playlists — the person may
 // be sleeping); daytime and primetime enable everything (Mike: "anything daytime
 // can also be primetime"). Editable per profile via state.config later.
 export const DIRECTOR_CONFIG = {

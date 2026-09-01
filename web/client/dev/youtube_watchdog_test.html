@@ -14,7 +14,7 @@
 </head>
 <body>
 <h1>youtube stopped-video watchdog</h1>
-<p>The failure this fixes: Christine's screen found frozen on a loading spinner. A video that never
+<p>The failure this fixes: a bedside screen found frozen on a loading spinner. A video that never
 starts fires neither <code>onEnded</code> nor <code>onError</code> — a hung request is not a player
 error — so the director waited forever for a <code>segment/done</code> that was never coming.
 Driven with an injected player that simply never plays, and a fake clock, so no network is involved.

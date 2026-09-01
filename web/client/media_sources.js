@@ -39,7 +39,7 @@ export function mediaUrl(baseUrl, path) {
 //
 // WHY IT MATTERS ON A SCREEN RATHER THAN IN AN ADMIN PANEL: an account with one person never
 // notices this exists. An account with several - a family, a facility, a clinician with a
-// caseload - needs Christine's albums to be HERS rather than a merged pile of four residents'
+// caseload - needs each resident's albums to be THEIRS rather than a merged pile of four
 // families.
 //
 // THAT IS AN ORGANISATION WIN, NOT A SECRECY ONE, and the distinction is worth keeping: the

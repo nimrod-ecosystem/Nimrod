@@ -33,7 +33,7 @@ DESIGN CHOICES:
     are path-traversal guarded to the root you chose.
 
 RUN IT:
-    python agent.py --root "D:/Christine/photos"
+    python agent.py --root "D:/Photos"
     python agent.py --root ~/Pictures --port 8770 --origin http://localhost:8000
 
 Then point a Nimrod photos source at  http://<this-machine>:8770  (base_url), and
@@ -505,7 +505,7 @@ def main(argv=None):
     ap.add_argument("--platform", default=os.environ.get("NIMROD_PLATFORM", DEFAULT_ORIGIN),
                     help=f"where Nimrod is running (default {DEFAULT_ORIGIN}; or NIMROD_PLATFORM)")
     ap.add_argument("--name", default=os.environ.get("NIMROD_MEDIA_NAME", "Media device"),
-                    help="what to call this device in Nimrod (e.g. \"Christine's bedside\")")
+                    help="what to call this device in Nimrod (e.g. \"the bedside screen\")")
     args = ap.parse_args(argv)
 
     if not args.root:

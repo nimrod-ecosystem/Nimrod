@@ -40,7 +40,7 @@ ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")      # ids, module types, state key
 PRODUCER_RE = re.compile(r"^[A-Za-z0-9_-]{1,40}@[A-Za-z0-9._-]{1,24}$")
 # Human names: screens, people, devices. \w is Unicode-aware in Python, so accented
 # names already worked; APOSTROPHES DID NOT, which meant this panel's own placeholder
-# ("Christine's bedside") was a name the server refused. Both the typed ' and the curly
+# ("the bedside screen") was a name the server refused. Both the typed ' and the curly
 # ’ that every phone and word processor substitutes for it are allowed now, plus the
 # comma people put in "Bedside, upstairs". Still no <, >, & or quotes.
 NAME_RE = re.compile(r"^[\w .,'’\-]{1,64}$")     # human profile names + source labels

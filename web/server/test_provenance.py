@@ -183,7 +183,7 @@ check("reading events back does not crash on the widened row", rows is not None)
 
 section("sessions and the roster, stored")
 sess = store.start_session("u", "p", roster=[
-    {"principal_id": "christine", "role": "subject"},
+    {"principal_id": "robin", "role": "subject"},
     {"principal_id": "mike", "role": "moderator"},
     {"principal_id": "dr-ruiz", "role": "clinician"},
 ], label="Tuesday PT")
@@ -362,7 +362,7 @@ check("*** and another account cannot vouch for a row it cannot even read ***",
 
 # Presence is not attestation - the roster answers the other question, and separately.
 sess_att = store.start_session("u", "p", roster=[
-    {"principal_id": "christine", "role": "subject"},
+    {"principal_id": "robin", "role": "subject"},
     {"principal_id": "dr-smith", "role": "clinician"},
 ])
 check("a clinician in the room is recorded by the ROSTER, truthfully and for free",

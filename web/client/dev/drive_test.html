@@ -358,7 +358,7 @@ section('the panel');
   const bus = createBus();
   const el = document.createElement('div'); host.append(el);
   const panel = mountRemote(el, {
-    personId: 'p1', personName: 'Christine', bus,
+    personId: 'p1', personName: 'Robin', bus,
     connect: (opts) => connectDrive({ ...opts, fetchImpl: fakeFetch(), SocketImpl: FakeSocket }),
   });
   await sleep(0);
@@ -426,7 +426,7 @@ section('grants — who may drive, and whose screens I may drive');
        expires_at: '2026-09-25T12:00:00+00:00' }],
     [{ person_id: 'p9', name: 'Someone Else', owner_id: 'other', grant_id: 'g9', expires_at: null }],
   );
-  const panel = mountRemote(el, { personId: 'p1', personName: 'Christine', profiles,
+  const panel = mountRemote(el, { personId: 'p1', personName: 'Robin', profiles,
     connect: (o) => connectDrive({ ...o, fetchImpl: fakeFetch(), SocketImpl: FakeSocket }) });
   await panel.refresh();
   await sleep(0);
@@ -453,7 +453,7 @@ section('grants — who may drive, and whose screens I may drive');
 
   // The grantee half.
   check('a person shared with me is offered', /Someone Else/.test(el.textContent));
-  check('my own person is offered too', /Christine/.test(el.textContent));
+  check('my own person is offered too', /Robin/.test(el.textContent));
   check('and mine is the one selected to start', panel.target().id === 'p1');
 
   const n = sockets.length;
@@ -477,7 +477,7 @@ section('grants — who may drive, and whose screens I may drive');
 {
   sockets.length = 0;
   const el = document.createElement('div'); host.append(el);
-  const panel = mountRemote(el, { personId: 'p1', personName: 'Christine',
+  const panel = mountRemote(el, { personId: 'p1', personName: 'Robin',
     profiles: { driveGrants: async () => [], grantDrive: async () => ({}),
                 revokeDrive: async () => ({}), sharedWithMe: async () => [] },
     connect: (o) => connectDrive({ ...o, fetchImpl: fakeFetch(), SocketImpl: FakeSocket }) });

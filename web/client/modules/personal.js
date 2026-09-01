@@ -26,7 +26,7 @@
 // (added 2026-08-27, after the same hole was found in youtube.js)
 //
 // THE INVARIANT: nothing may require an input in order to keep doing what it is already
-// doing. Starting can need a press; continuing must not. Christine cannot press anything.
+// doing. Starting can need a press; continuing must not. Some people cannot press anything.
 //
 // This module used to listen for exactly one event — `ended` — and to call `play()` like
 // this:

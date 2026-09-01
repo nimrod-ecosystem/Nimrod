@@ -403,7 +403,7 @@ const last = (a) => a[a.length - 1];
         Object.keys(row).join(','));
 
       check('a field nobody anticipated is not carried through',
-        !('note' in toOutbound({ ...good, note: 'Christine had a rough night' }, { session: SESSION, seq: 0 })));
+        !('note' in toOutbound({ ...good, note: 'Robin had a rough night' }, { session: SESSION, seq: 0 })));
       check('a reason outside the closed set kills the whole event, it is not scrubbed',
         toOutbound({ ...good, accepted: false, reason: 'nurse said so' }, { session: SESSION, seq: 0 }) === null);
       check('free text smuggled into an id field kills the event',
@@ -411,7 +411,7 @@ const last = (a) => a[a.length - 1];
       check('a missing required field kills the event',
         toOutbound({ ...good, gate: undefined }, { session: SESSION, seq: 0 }) === null);
       check('a non-opaque session id kills the event',
-        toOutbound(good, { session: 'christine@example.com', seq: 0 }) === null);
+        toOutbound(good, { session: 'robin@example.com', seq: 0 }) === null);
       check('an absurd duration kills the event',
         toOutbound({ ...good, heldMs: 9e9 }, { session: SESSION, seq: 0 }) === null);
       check('so does a NaN',

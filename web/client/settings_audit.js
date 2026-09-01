@@ -55,7 +55,7 @@ export const WALK_BAD = 24;
 // Cost per use fixes this properly, and it is built — but it needs a per-person press log
 // that does not exist yet. THIS IS THE STANDING SIGNAL IN THE MEANTIME, and it is already a
 // stated fact of the project rather than a guess: CLAUDE.md says *"PHOTOS outrank every
-// game/feature"*, and Christine cannot reach for anything, so a module she must PLAY is one
+// game/feature"*, and somebody may not be able to reach for anything, so a module they must PLAY is one
 // she may never use at all.
 //
 // Thresholds scale with it. Twelve presses on the photos panel is a real problem; twelve on

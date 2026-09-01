@@ -18,7 +18,7 @@
 //
 //   3. *** CAN THEY USE IT WITHOUT BEING ABLE TO PRESS ANYTHING? ***
 //      This is the axis nobody had surfaced anywhere, and for the person this product was
-//      built for it decides everything. Christine cannot reach for anything. Half of these
+//      built for it decides everything. Some people cannot reach for anything. Half of these
 //      modules run entirely by themselves and half are games that need an answer, and until
 //      now the only way to find out which was which was to try one.
 //

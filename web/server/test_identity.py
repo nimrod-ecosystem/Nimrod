@@ -61,34 +61,34 @@ def main():
     check("dev: no override -> DEV_USER", user_of() == DEV_USER)
 
     # --- DEVICE_KEYS parsing -------------------------------------------------
-    setenv(DEVICE_KEYS="christine:abc, mike:def , bad, :nouser, u:")
-    check("parse maps secret->user, skips malformed", _device_keys() == {"abc": "christine", "def": "mike"})
+    setenv(DEVICE_KEYS="robin:abc, mike:def , bad, :nouser, u:")
+    check("parse maps secret->user, skips malformed", _device_keys() == {"abc": "robin", "def": "mike"})
 
     # --- dev + keys: a valid key wins; an invalid one falls back -------------
-    setenv(DEVICE_KEYS="christine:abc")
-    check("dev: a valid device key resolves to its user", user_of({"X-Device-Key": "abc"}) == "christine")
+    setenv(DEVICE_KEYS="robin:abc")
+    check("dev: a valid device key resolves to its user", user_of({"X-Device-Key": "abc"}) == "robin")
     check("dev: an invalid key falls back to the override",
           user_of({"X-Device-Key": "nope", "X-Dev-User": "alice"}) == "alice")
 
     # --- prod + keys: ONLY a valid device key; everything else 401 -----------
-    setenv(NIMROD_ENV="prod", DEVICE_KEYS="christine:abc,mike:def")
-    check("prod: valid key -> user", user_of({"X-Device-Key": "abc"}) == "christine")
+    setenv(NIMROD_ENV="prod", DEVICE_KEYS="robin:abc,mike:def")
+    check("prod: valid key -> user", user_of({"X-Device-Key": "abc"}) == "robin")
     check("prod: a second valid key -> its user", user_of({"X-Device-Key": "def"}) == "mike")
     check("prod: an invalid key -> 401", raises_401({"X-Device-Key": "wrong"}))
     check("prod: a missing key -> 401", raises_401())
     check("prod: X-Dev-User is ignored (override disabled) -> 401", raises_401({"X-Dev-User": "alice"}))
     check("prod: ?user= is ignored -> 401", raises_401(query={"user": "alice"}))
-    check("prod: one user's key never resolves to another user", user_of({"X-Device-Key": "def"}) != "christine")
+    check("prod: one user's key never resolves to another user", user_of({"X-Device-Key": "def"}) != "robin")
 
     # --- OAuth session: a signed-in user, no device key needed ---------------
     check("prod: a login session resolves to its user", user_of(session={"user": "google:123"}) == "google:123")
     check("prod: session works with no key present", user_of(session={"user": "google:abc"}) == "google:abc")
     check("prod: an empty session still 401s", raises_401(session={}))
     check("prod: a device key takes precedence over the session",
-          user_of({"X-Device-Key": "abc"}, session={"user": "google:zzz"}) == "christine")
+          user_of({"X-Device-Key": "abc"}, session={"user": "google:zzz"}) == "robin")
     setenv()  # dev
     check("dev: a login session resolves to its user", user_of(session={"user": "google:9"}) == "google:9")
-    setenv(NIMROD_ENV="prod", DEVICE_KEYS="christine:abc,mike:def")
+    setenv(NIMROD_ENV="prod", DEVICE_KEYS="robin:abc,mike:def")
 
     # --- prod, no DEVICE_KEYS: deny everything (fail closed) ------------------
     setenv(NIMROD_ENV="prod")

@@ -1,6 +1,6 @@
 // modules/pond.js — a calm pond, ported from Cici.
 //
-// WHY THIS ONE FIRST, of everything Cici grew. Christine cannot reach for anything, so a
+// WHY THIS ONE FIRST, of everything Cici grew. Some people cannot reach for anything, so a
 // module whose value depends on being played is a module she never gets to use. A pond has
 // value with NO interaction at all — it is something to look at that moves and is quiet —
 // and then rewards any interaction it does get. That ordering is the right one for a screen
@@ -11,7 +11,7 @@
 //   * Cici's version was an IIFE registering on a global and injecting a <style> tag into
 //     the document head. Here it is a module: it gets `ctx.mount` and owns nothing outside
 //     it. That is what lets two ponds exist on one screen without fighting.
-//   * IT ANSWERS VERBS. The original was cursor-and-click, which for Christine means it was
+//   * IT ANSWERS VERBS. The original was cursor-and-click, which for such a person meant it was
 //     ambient-only. `select` drops a splash wherever the last disturbance was, so a single
 //     switch can make something happen — which is the whole cause-and-effect point, and it
 //     was unreachable before.
@@ -269,7 +269,7 @@ registerModule(
           splash(e.clientX - r.left, e.clientY - r.top);
         });
 
-        // THE PORT'S REAL ADDITION. Cursor-and-click meant Christine could never make
+        // THE PORT'S REAL ADDITION. Cursor-and-click meant somebody who cannot point could never make
         // anything happen here; a verb means one switch can.
         offs.push(bus.subscribe('pond/splash', () => { const a = aim(); splash(a.x, a.y); }));
         offs.push(bus.subscribe('pond/stir', () => {

@@ -15,7 +15,7 @@
 //
 // PURE + no wall clock of its own: `now` (ms epoch) is passed in, so a schedule
 // is deterministic and unit-testable. Boundaries are DATA (a per-profile setting
-// later), not code — the defaults below are Christine's rough rhythm and are
+// later), not code — the defaults below are one real household’s rough rhythm and are
 // meant to be edited.
 
 // Ordered day boundaries. Each entry starts at `start` (local hour, 0–24) and

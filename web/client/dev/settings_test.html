@@ -86,9 +86,9 @@ section('the cursor — pure, and the part that has to be right for one switch')
 section('what the menu contains');
 
 {
-  const items = buildItems({ person: { name: 'Christine' }, subject: { type: 'photos', title: 'Photos' } });
+  const items = buildItems({ person: { name: 'Robin' }, subject: { type: 'photos', title: 'Photos' } });
   const labels = items.map((i) => i.label);
-  check('names the person it is about to configure', labels[0] === 'Setting up for Christine', labels[0]);
+  check('names the person it is about to configure', labels[0] === 'Setting up for Robin', labels[0]);
   check('names the SUBJECT panel — "settings" alone is ambiguous with nine panels',
     labels.some((l) => l === 'This panel — Photos'), JSON.stringify(labels));
   check('Home is ALWAYS present', items.some((i) => i.id === 'home'));
@@ -119,7 +119,7 @@ section('what the menu contains');
 section('the shell — opening, leaving, and not leaking');
 
 {
-  const m = mountSettings(makeHost(), { person: () => ({ name: 'Christine' }) });
+  const m = mountSettings(makeHost(), { person: () => ({ name: 'Robin' }) });
   check('starts closed', m.isOpen() === false);
   check('moves are inert while closed — a stray switch press cannot scroll a hidden menu',
     m.next() === null && m.select() === null);
@@ -263,11 +263,11 @@ section('rebuilding under someone’s hand');
   m.open();
   m.next();                                  // -> close
   check('cursor parked on Close', m.focusId() === 'close');
-  who = { name: 'Christine' };
+  who = { name: 'Robin' };
   m.refresh();                               // the name arrived from the server
   check('a refresh keeps the cursor where the person left it', m.focusId() === 'close',
     String(m.focusId()));
-  check('and the new name is rendered', m.items()[0].label === 'Setting up for Christine');
+  check('and the new name is rendered', m.items()[0].label === 'Setting up for Robin');
   m.destroy();
 }
 
@@ -864,7 +864,7 @@ section('the shell, with fields spliced in — walked with one button');
       note: 'set in Media / Sources' },
   ].map(normalizeField);
   const m = mountSettings(document.getElementById('demo-mount'), {
-    person: () => ({ name: 'Christine' }),
+    person: () => ({ name: 'Robin' }),
     subject: () => ({ type: 'photos', title: 'Photos' }),
     fields: () => fieldItems(demoFields, {
       values: () => demoValues,

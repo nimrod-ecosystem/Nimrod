@@ -26,7 +26,7 @@
 Short segments that play **between videos**: personal messages (family / friends / staff
 greetings, life memories) and educational bits (alphabet, counting, vocabulary, word games).
 Each uses a **three-quadrant layout**, and the user's **self-view camera stays up** the whole
-time (for Christine that rearview "mirror" is her constant orientation anchor — never cover it).
+time (for somebody who cannot turn their head that rearview "mirror" is a constant orientation anchor — never cover it).
 
 Layout during a segment:
 - **Top-left:** the media — a recorded clip, or the Cici presenter for generated content.
@@ -86,8 +86,8 @@ Reuse assets: AAC art, vision-probe stimuli, word-game content, the user's photo
   matches the printable sign for staff & visitors.
 - **Cici edits the recordings locally**, and watches for spoken cues via the local STT
   (Whisper/Piper) + simple intent matching:
-  - **Start cue "message for Christine"** (and similar) → flag/tag the recording as a personal
-    message for Christine (routing + Layer-2 tag) and treat it as the lead-in. This is the
+  - **Start cue "message for <name>"** (and similar) → flag/tag the recording as a personal
+    message for that person (routing + Layer-2 tag) and treat it as the lead-in. This is the
     consistent opener the printable sign asks recorders to say.
   - **"restart please"** (and similar) → discard and start the take over.
   - **"never mind, delete that"** (and similar) → discard the take entirely, keep nothing.

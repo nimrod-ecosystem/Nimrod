@@ -266,7 +266,7 @@ function readFormat(sym) {
     // `qr_oracle_test.html`.
     check('a single character round-trips (byte mode)', roundTrip('a').parsed.text === 'a');
     check('the empty string round-trips', roundTrip('').parsed.text === '');
-    const uni = 'Christine’s screen — café ☕';
+    const uni = 'Robin’s screen — café ☕';
     check('UTF-8 survives (byte mode, not character mode)', roundTrip(uni).parsed.text === uni,
       JSON.stringify(roundTrip(uni).parsed.text));
     // The encoder now goes to version 40 rather than 10, so 300 bytes is a comfortable

@@ -16,7 +16,7 @@
 //
 // THREE-QUADRANT LAYOUT + THE INVARIANT CAMERA. A 2×2 grid: TL = the Cici presenter
 // (for generated content), TR = the self-view camera which NEVER changes (for
-// Christine that rearview "mirror" is her constant orientation anchor — never
+// somebody who cannot turn their head, that rearview "mirror" is a constant orientation anchor — never
 // cover it), BL = subject photo + name, BR = the live graphic. Only three quadrants
 // carry the changing segment; TR is constant — hence "three-quadrant".
 //

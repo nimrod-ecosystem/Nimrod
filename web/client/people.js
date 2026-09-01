@@ -104,7 +104,7 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
             bindings and their output routing follow them to every device — set them up once,
             ever. The account is who signs in; it can hold as many people as you look after.</p>
           <form class="h-new" data-new>
-            <input type="text" data-name placeholder="Add a person (e.g. Christine)"
+            <input type="text" data-name placeholder="Add a person (e.g. Robin)"
                    aria-label="new person name" maxlength="64" required>
             <button type="submit" class="h-btn h-primary">Add</button>
           </form>

@@ -21,7 +21,7 @@ FOUR RULES, and each one is here because the alternative rots.
 2. EXPIRY IS THE DEFAULT, "FOREVER" IS A CHOICE SOMEBODY MAKES.
    A permission granted for one therapy block and never revoked is how every access-control
    system decays into "everyone can do everything". But forever is a real case too - Mike
-   driving Christine's screen should not need renewing every month - so it is allowed, and
+   driving somebody's screen should not need renewing every month - so it is allowed, and
    it has to be asked for. Absent an expiry, the API picks a bounded one.
 
 3. A GRANT IS NEVER A SECRET FROM THE PEOPLE IT AFFECTS. The owner can list and revoke.

@@ -31,7 +31,7 @@
 // met, release fires on let-go. Anything shorter is rejected as `too-short` and logged.
 //
 // MAX-HOLD AUTO-RELEASE (carried over from Cici's cici_input.js, and the only thing that
-// needed carrying): a press that never sends its release - a stuck switch, or Christine
+// needed carrying): a press that never sends its release - a stuck switch, or somebody
 // not letting go, which is a case that actually happened - leaves a consumer held
 // forever. Every press arms a watchdog; if no release arrives within maxHoldMs we
 // synthesize one. A synthesized release DOES NOT fire release-edge bindings: nobody let

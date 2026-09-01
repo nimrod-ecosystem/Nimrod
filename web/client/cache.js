@@ -2,7 +2,7 @@
 //
 // The coordination server stays the SOURCE OF TRUTH. This is only a last-known-good
 // MIRROR so a brief server outage (or a boot before the network is up) doesn't blank
-// the screen — especially the kiosk at Christine's bedside, where her photos/videos
+// the screen — especially a bedside kiosk, where the photos and videos
 // come from the LOCAL media agent and should keep playing even if the cloud server
 // is unreachable. It is explicitly NOT a store of record (DECISIONS.md): it is
 // written on every SUCCESSFUL read and only READ when the network read fails.

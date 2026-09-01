@@ -188,7 +188,7 @@ function loadIframeApi() {
 //
 // `onPlaying`. Without it there is no way to tell "loading" from "loaded and stuck", and a
 // video that never starts fires neither onEnded nor onError — a hung network request is not
-// a player error. That silence is what left Christine's screen frozen on a loading spinner
+// a player error. That silence is what left a bedside screen frozen on a loading spinner
 // with the director politely waiting for a `segment/done` that was never coming.
 //
 // `onIdle` — PAUSED and BUFFERING — is the SAME failure arriving through a different door,

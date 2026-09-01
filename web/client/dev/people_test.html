@@ -122,18 +122,18 @@ function fakePeopleClient(initial = [{ id: 'p1', name: 'Me', created_at: '1' }])
     check('the last person cannot be removed',
       host.querySelector('[data-remove]').disabled);
 
-    host.querySelector('[data-name]').value = 'Christine';
+    host.querySelector('[data-name]').value = 'Robin';
     host.querySelector('[data-new]').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await tick(); await tick(); await tick();
 
-    check('adding a person calls the server', one.calls.includes('add:Christine'), one.calls.join(' '));
+    check('adding a person calls the server', one.calls.includes('add:Robin'), one.calls.join(' '));
     check('...and switches to them, because adding is step one of setting them up',
-      bar.current().name === 'Christine', String(bar.current() && bar.current().name));
+      bar.current().name === 'Robin', String(bar.current() && bar.current().name));
     check('...which is reported as a change', changes[changes.length - 1] === 'p2', changes.join(','));
     check('two people now render as chips', host.querySelectorAll('.p-chip').length === 2,
       String(host.querySelectorAll('.p-chip').length));
     check('the current person is the marked chip',
-      host.querySelector('.p-chip.on').textContent.trim() === 'Christine');
+      host.querySelector('.p-chip.on').textContent.trim() === 'Robin');
 
     const before = changes.length;
     host.querySelector('.p-chip.on').click();
@@ -198,7 +198,7 @@ function fakePeopleClient(initial = [{ id: 'p1', name: 'Me', created_at: '1' }])
       const me = people0[0].id;
       check('asking twice does not multiply people', (await api.people()).length === 1);
 
-      const chris = await api.addPerson('Christine');
+      const chris = await api.addPerson('Robin');
       check('a person can be added', (await api.people()).length === 2);
 
       // The whole point: two people, two sets of bindings, no bleed.

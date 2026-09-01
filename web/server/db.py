@@ -935,7 +935,7 @@ class _Store:
     # `person_id` IS NULLABLE, AND NULL IS THE INTERESTING VALUE. An account with one
     # person - which is most of them - never sets it, and every source is simply the
     # account's. An account with several (a family, a facility, a clinician with a
-    # caseload) needs Christine's photos to be HERS: on her screen, and not on
+    # caseload) needs each resident's photos to be THEIRS: on their screen, and not on
     # somebody else's, and not something another resident's family can browse.
     #
     #   NULL          the account's own. Visible to every person in it.
@@ -951,7 +951,7 @@ class _Store:
     # of this comment that led with privacy:
     #
     #   1. ORGANISATION, and this is the honest primary. The right albums on the right
-    #      screen. An account with several people needs Christine's photos to be what
+    #      screen. An account with several people needs one person's photos to be what
     #      SHE sees rather than a merged pile of four residents' families.
     #   2. A boundary between UNRELATED ACCOUNTS - a facility whose residents did not
     #      choose each other. That is the case where the word privacy still applies, and

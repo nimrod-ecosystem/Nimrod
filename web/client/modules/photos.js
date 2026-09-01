@@ -31,7 +31,7 @@ import { pick, statsFromEvents } from '../rng.js';
 // `fit: contain` — SHOW THE WHOLE PHOTO. It defaulted to `cover`, which crops to fill:
 // a 1200x800 photo in a 775x423 panel lost 18% of its height, off the top and bottom,
 // which is exactly where faces are. For a module whose entire reason for existing is
-// Christine seeing her people, cropping their heads off is not a rendering preference.
+// somebody seeing their people, cropping their heads off is not a rendering preference.
 // The letterboxing `contain` would otherwise leave is filled by a blurred copy of the
 // same image (see `render`), so nothing is cropped AND nothing is a black bar.
 const DEFAULTS = { sourceId: '', album: '', intervalMs: 8000, fit: 'contain' };
@@ -99,7 +99,7 @@ const canonical = (key, raw) => (FIELDS[key] ? fieldValue(FIELDS[key], { [key]: 
 
 registerModule(
   // CRITICAL, and it is not a compliment - it is the audit's threshold. CLAUDE.md: *"PHOTOS
-  // outrank every game/feature."* Christine is at this screen around the clock and it is her
+  // outrank every game/feature."* Somebody may be at this screen around the clock and it is their
   // main window to her people, so a setting on this panel that is expensive to reach is a
   // real problem at half the presses it would take to be one anywhere else.
   // FALLBACK EXPOSURE: `local`. The bytes come from the media agent rather than the platform,
@@ -148,7 +148,7 @@ registerModule(
     // A STATUS MESSAGE MUST NOT BLACK OUT A PHOTO THAT IS ALREADY THERE. It used to be a
     // full-bleed 72%-opaque scrim in every case, so "Loading photos…" — which fires on
     // every reload, including the periodic one — dropped a dark green sheet over the
-    // picture Christine was looking at. Over an EMPTY stage a full panel is right; there
+    // picture somebody was looking at. Over an EMPTY stage a full panel is right; there
     // is nothing to obscure and something has to explain the emptiness. Over a photo it
     // becomes a small corner chip.
     function setStatus(text, showRetry = false) {

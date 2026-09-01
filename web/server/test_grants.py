@@ -127,7 +127,7 @@ check("and there is a ceiling", MAX_TTL_DAYS >= DEFAULT_TTL_DAYS)
 section("storage")
 
 store = db.SQLiteStore(":memory:")
-me = store.create_person("me", "Christine")
+me = store.create_person("me", "Robin")
 check("a person has an owner", store.person_owner(me["id"]) == "me")
 check("a person that does not exist has no owner", store.person_owner("nope") is None)
 
@@ -213,7 +213,7 @@ check("CONTROL: a role does not revive an expired grant",
 section("the role survives storage")
 # ---------------------------------------------------------------------------------------
 store2 = db.SQLiteStore(":memory:")
-p2 = store2.create_person("me2", "Christine")
+p2 = store2.create_person("me2", "Robin")
 gr = store2.add_grant("me2", p2["id"], "account", "ot", role="participant")
 check("a stored grant carries its role back", gr.get("role") == "participant", gr)
 rows2 = store2.grants_on_person(p2["id"])

@@ -9,7 +9,7 @@
 //
 // It is also the adapter with the fewest ways to fail at a bedside, which is why it comes
 // before WebHID and WebSerial: those need a user gesture and a device-picker dialog EVERY
-// time the page reloads, and nobody is standing in Christine's room after a power cut.
+// time the page reloads, and nobody is standing in the room after a power cut.
 //
 // FOUR THINGS THE GAMEPAD API MAKES YOU DEAL WITH:
 //

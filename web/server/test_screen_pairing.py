@@ -49,7 +49,7 @@ def main() -> None:
         # -----------------------------------------------------------------
         section("the request — unauthenticated, and worth nothing on its own")
         # -----------------------------------------------------------------
-        p = store.create_screen_pairing("Christine's screen")
+        p = store.create_screen_pairing("Robin's screen")
         check("a code is minted", bool(p["code"]))
         check("and a poll token with it", bool(p["poll_token"]) and len(p["poll_token"]) > 20)
         check("the code is short enough to read off a screen and type on a phone",
@@ -84,7 +84,7 @@ def main() -> None:
         st, info = store.claim_screen_pairing(p["code"], "family@example.com")
         check("claiming works", st == "ok", st)
         check("and it remembers what the screen called itself",
-              info["label"] == "Christine's screen", str(info))
+              info["label"] == "Robin's screen", str(info))
 
         state, key = store.screen_pairing_status(p["code"], p["poll_token"])
         check("the screen's next poll says CLAIMED", state == "claimed", state)
@@ -125,7 +125,7 @@ def main() -> None:
         # -----------------------------------------------------------------
         screens = store.list_device_keys("family@example.com")
         check("the account can see the screen it adopted", len(screens) == 1, str(screens))
-        check("with the name it chose", screens[0]["label"] == "Christine's screen")
+        check("with the name it chose", screens[0]["label"] == "Robin's screen")
         check("*** THE SECRET IS NOT IN THE LIST *** — a list that hands back credentials "
               "is a list that leaks them into logs and screenshots",
               "key" not in screens[0] and key not in str(screens))

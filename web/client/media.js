@@ -131,7 +131,7 @@ export function mountMedia(root, {
           screen, ask the agent running on it” — so one entry covers every kiosk that runs its
           own agent. For one specific machine, give its address on the network instead.</p>
         <form class="h-new" data-new>
-          <input type="text" data-label placeholder="Name it (e.g. Christine's bedside)"
+          <input type="text" data-label placeholder="Name it (e.g. the bedside screen)"
                  aria-label="source name" required>
           <input type="text" data-url placeholder="${DEFAULT_URL}" value="${DEFAULT_URL}"
                  aria-label="agent address" required>

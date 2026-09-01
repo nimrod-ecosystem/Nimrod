@@ -24,7 +24,7 @@ services:
         value: "3.12.7"
       - key: DATABASE_URL               # Neon Postgres connection string
         sync: false                     # secret — set in the Render dashboard, not in git
-      - key: DEVICE_KEYS                # "christine:<secret>,..." (unattended-kiosk fallback)
+      - key: DEVICE_KEYS                # "robin:<secret>,..." (unattended-kiosk fallback)
         sync: false                     # secret — set in the Render dashboard, not in git
       - key: SESSION_SECRET             # long random string — signs the login cookie
         sync: false

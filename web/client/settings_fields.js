@@ -65,7 +65,7 @@
 // detectable, and makes a value nobody migrated read as ABSENT rather than as absurd.
 //
 // WHY IT IS WORTH DOING AT ALL, in Mike's words: *"it honestly would be valuable data to me
-// right now to know what settings someone in Christine's condition might like."* Three "how
+// right now to know what settings someone in that situation might like."* Three "how
 // long between things" settings in two different units cannot be compared, grouped, or set
 // together - so they are not data, they are decoration.
 // ---------------------------------------------------------------------------------------

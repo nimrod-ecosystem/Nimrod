@@ -86,7 +86,7 @@ def main():
 
     # ---- claiming ----------------------------------------------------------
     section("claiming")
-    p = s.create_pairing("agent-A", "Christine's bedside", ["http://localhost:8770", "http://10.0.0.5:8770"])
+    p = s.create_pairing("agent-A", "Robin's bedside", ["http://localhost:8770", "http://10.0.0.5:8770"])
     got = s.get_pairing(p["code"])
     check("a fresh code is unclaimed", got["claimed_by"] is None)
     check("it carries every candidate address, in order",
@@ -99,7 +99,7 @@ def main():
     check("...and the agent id, so the client can tell it apart from any other agent",
           claimed["agent_id"] == "agent-A")
     check("...and the label the device chose for itself",
-          claimed["label"] == "Christine's bedside")
+          claimed["label"] == "Robin's bedside")
 
     # SINGLE USE. Without this a code left on a screen is a permanent key to that folder.
     status2, _ = s.claim_pairing(p["code"], "bob")

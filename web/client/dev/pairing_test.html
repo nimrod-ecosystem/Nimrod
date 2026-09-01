@@ -118,7 +118,7 @@ function fakeFetch(answers) {
       const api = createProfilesClient({ user: ACCOUNT });
 
       // An agent has no account. If this needed auth the whole feature would be impossible.
-      const got = await askForCode('Christine’s bedside',
+      const got = await askForCode('Robin’s bedside',
         ['http://localhost:8770', 'http://10.0.0.5:8770'], 'agent-xyz');
       check('an UNAUTHENTICATED agent can get a code — it has no account, that is the point',
         typeof got.code === 'string' && got.code.length === PAIR_CODE_LEN, JSON.stringify(got));
@@ -137,7 +137,7 @@ function fakeFetch(answers) {
       check('...and gets the candidates back to probe',
         claimed.base_urls.length === 2, JSON.stringify(claimed.base_urls));
       check('...and the label the device gave itself',
-        claimed.label === 'Christine’s bedside', claimed.label);
+        claimed.label === 'Robin’s bedside', claimed.label);
 
       const after = await (await fetch(`/api/pair/status/${got.code}`)).json();
       check('the agent can now see it was claimed, and stop showing the code',

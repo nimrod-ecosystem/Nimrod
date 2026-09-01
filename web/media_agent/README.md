@@ -15,7 +15,7 @@ Zero dependencies — just Python 3.8+. No `pip install`, no venv.
 **The first time**, pair it with your Nimrod account:
 
 ```bash
-python agent.py --root "D:/Christine/photos" --pair --name "Christine's bedside"
+python agent.py --root "D:/Photos" --pair --name "Robin's bedside"
 ```
 
 It prints a six-character code:
@@ -37,7 +37,7 @@ address only from the same network, and the agent has no way to test either from
 **Every time after that**, just run it:
 
 ```bash
-python agent.py --root "D:/Christine/photos"
+python agent.py --root "D:/Photos"
 ```
 
 Leave it running. On a machine that should serve media unattended, make it a service

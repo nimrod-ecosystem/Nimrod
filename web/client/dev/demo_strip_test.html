@@ -184,7 +184,7 @@ section('a picker that throws is handled the same way');
 
 section('it never renders itself uninvited');
 check('no root, no strip', (await mountDemoStrip(null, {})) === null);
-check('*** signed in means nothing is rendered *** — Christine’s paired screen runs the '
+check('*** signed in means nothing is rendered *** — a paired bedside screen runs the '
   + 'signed-IN path and must never show a marketing bar',
   (await mountDemoStrip(fresh(), { storage: fakeStore(), listFolders: async () => [], signedIn: true })) === null);
 

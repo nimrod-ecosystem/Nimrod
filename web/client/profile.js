@@ -9,7 +9,7 @@
 // one:  Account -> Person -> { Screens, Bindings, Output routing }.
 //
 //   ACCOUNT   who signs in — a Google account, or a paired device key.
-//   PERSON    who a screen is FOR. Christine is a person; the account is her nephew's.
+//   PERSON    who a screen is FOR. The person at the bedside is a PERSON; the ACCOUNT may be a relative's.
 //   DEVICE    cross-cutting. Merely where a person is right now, so nothing is keyed
 //             by one.
 //

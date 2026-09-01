@@ -216,7 +216,7 @@ voiceRateEl.addEventListener('change', () => {
   profileSettings?.set({ voice: { ...currentVoicePref(), rate: Number(voiceRateEl.value) } });
 });
 voiceTestEl.addEventListener('click', () => {
-  speak('Hi Christine. This is how your voice sounds.', currentVoicePref());
+  speak('Hello. This is how your voice sounds.', currentVoicePref());
 });
 addBtnEl.addEventListener('click', async () => {
   if (!activeProfileId) return;

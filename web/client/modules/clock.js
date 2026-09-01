@@ -27,7 +27,7 @@ const ZONES = [
 // cannot be mistaken for the evening.
 //
 // NOT SHARED WITH daypart.js ON PURPOSE. That file schedules content and its bands are
-// Christine's rhythm (morning starts at 6, sleepytime at 21); these bands are how a person
+// one real household’s rhythm (morning starts at 6, sleepytime at 21); these bands are how a person
 // would describe the hour out loud. Same clock, two different questions, and forcing one
 // answer would make one of them wrong.
 function partOfDay(hour) {

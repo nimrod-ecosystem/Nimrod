@@ -221,7 +221,7 @@ check("and no capability smuggles it back in under another name",
 section("STORAGE - the rules above, through a real database")
 # =======================================================================================
 store = db.SQLiteStore(":memory:")
-person = store.create_person("mike", "Christine")
+person = store.create_person("mike", "Robin")
 PID = person["id"]
 
 lk = store.create_link("mike", "dolly", created_by="mike")

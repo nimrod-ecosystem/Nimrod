@@ -75,7 +75,7 @@ the runbook below is executable end to end:
    commands, the health check, `NIMROD_ENV=prod`, and the always-on Starter plan (~$7/mo).
 2. 👉 It prompts for the two **secrets** (they live in the dashboard, never in git):
    - `DATABASE_URL` = the Neon string from Part A
-   - `DEVICE_KEYS` = `christine:<a-long-random-secret>` (generate a random string — her device's key;
+   - `DEVICE_KEYS` = `robin:<a-long-random-secret>` (generate a random string — her device's key;
      add more `,user:secret` pairs later for other devices/people)
 3. 👉 Apply. When it's live you get a URL like `https://nimrod-xxxx.onrender.com`. Open it — you should
    see the app (HTTPS, so the camera will work). Redeploys are automatic on push to the tracked branch.
@@ -195,7 +195,7 @@ it, someone opens the site → **Sign in with Google** → they're in, with a de
 1. 👉 **Google Cloud Console** → create/select a project (the dedicated project account that anchors
    YouTube/Drive is ideal) → **APIs & Services → OAuth consent screen**: External, app name "Nimrod",
    your support email, scopes `openid` + `email` + `profile`. In **Testing** mode add yourself (and
-   Christine's account) as **test users** — that's enough for a handful of people; "publish" later for
+   the bedside account) as **test users** — that's enough for a handful of people; "publish" later for
    the public.
 2. 👉 **Credentials → Create credentials → OAuth client ID → Web application.** Under **Authorized
    redirect URIs** add exactly: `https://nimrod.onrender.com/auth/callback` (add the `bedside.` one too

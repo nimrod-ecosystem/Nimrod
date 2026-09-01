@@ -19,15 +19,15 @@ valuable part.
 
 v1 of the design made a relationship out of a grant, which gave relationships an expiry.
 Mike: *"I would expect a connection to a relative to be permanent."* **Aunt Dolly does not
-stop being Christine's aunt in thirty days.** So: revoking `call_video` does not un-relate
+stop being somebody’s aunt in thirty days.** So: revoking `call_video` does not un-relate
 two people, and removing the link takes every permission with it.
 
 FIVE RULES, each here because the alternative rots.
 
 1. THE LINK IS UNDIRECTED; THE PERMISSIONS ARE DIRECTED.
    One row per pair, canonically ordered, so "are these two connected?" has exactly one
-   answer and cannot drift between two half-rows. But *"Dolly may call Christine"* is not
-   *"Christine may call Dolly"*, so every permission names its actor and its subject.
+   answer and cannot drift between two half-rows. But *"Dolly may call Robin"* is not
+   *"Robin may call Dolly"*, so every permission names its actor and its subject.
 
 2. THE PERSON IS THE HUB, NOT THE ACCOUNT.
    A link is account-to-account, but a permission is always ABOUT A PERSON - because the
@@ -93,7 +93,7 @@ CAPABILITIES = (
 
 # *** THE TWO THAT ARE OFF EVEN FOR THE TOP ROLE ***
 #
-# Mike, on read_messages: "a guardian like me might need it for someone like Christine...
+# Mike, on read_messages: "a guardian like me might need it for someone in that situation...
 # Whereas the average parent shouldn't see all of their kids' messages."
 #
 # These are not "high" permissions on a scale that SuperUser sits at the top of. They are

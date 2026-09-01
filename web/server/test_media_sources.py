@@ -69,7 +69,7 @@ def main():
     # is what let this column be added without rewriting a single existing row.
     # -------------------------------------------------------------------------------
     store2 = SQLiteStore(str(Path(tmp) / "people.db"))
-    chris = store2.create_person("acct", "Christine")
+    chris = store2.create_person("acct", "Robin")
     other = store2.create_person("acct", "Ray")
 
     shared = store2.create_source("acct", "Family", "http://localhost:8770", "agent")

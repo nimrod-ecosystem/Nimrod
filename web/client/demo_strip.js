@@ -21,7 +21,7 @@
 // still there in peripheral vision thirty seconds later when the photos have made the point
 // the words could not.
 //
-// *** AND IT MUST NEVER APPEAR ON A REAL BEDSIDE SCREEN. *** Christine's screen is paired
+// *** AND IT MUST NEVER APPEAR ON A REAL BEDSIDE SCREEN. *** A real bedside screen is paired
 // with a device key and never runs the signed-out branch — but that is a property of the
 // CALLER, so `mountDemoStrip` is deliberately dumb: it renders when asked and never decides
 // for itself. The one place that decides is the signed-out boot path in kiosk.html.

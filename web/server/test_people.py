@@ -65,7 +65,7 @@ def main():
     check("the default person is named something a human can rename",
           s.get_person("alice", a1)["name"] == "Me")
 
-    chris = s.create_person("alice", "Christine")
+    chris = s.create_person("alice", "Robin")
     check("a second person is added, not swapped", len(s.list_people("alice")) == 2)
     check("people come back oldest first",
           [p["id"] for p in s.list_people("alice")] == [a1, chris["id"]])

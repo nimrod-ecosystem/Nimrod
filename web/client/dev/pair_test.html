@@ -61,7 +61,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // A server and a browser in a few lines, so nothing here touches the network or navigates.
-function fakeWorld({ signedIn = true, claimResult = 'ok', label = 'Christine’s screen' } = {}) {
+function fakeWorld({ signedIn = true, claimResult = 'ok', label = 'Robin’s screen' } = {}) {
   const seen = { claims: [], me: 0 };
   const store = new Map();
   const world = {
@@ -315,7 +315,7 @@ check('ready with a code asks you to CHECK it, since a mis-scan is possible',
 check('ready without one just asks for it',
   /type the six/i.test(claimMessage('ready', { code: '' }).body));
 check('done names the screen by the name it chose',
-  claimMessage('done', { label: 'Christine’s screen' }).body.includes('Christine’s screen'));
+  claimMessage('done', { label: 'Robin’s screen' }).body.includes('Robin’s screen'));
 check('an unrecognised failure still says something rather than nothing',
   claimMessage('failed', { error: 'teapot' }).body.length > 0);
 
