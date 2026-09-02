@@ -124,13 +124,32 @@ The answer, in order of preference:
 
 ---
 
-## What is not built
+## The guided tour
 
-**The guided tour itself.** `steps.js` carries `tour: true/false` and the constraints are
-written down — one button, one direction, wrapping; dismissable from step one; never a gate;
-reduced motion governs any highlight — but nothing renders it yet. It is a candidate **module**
-rather than a shell feature, and a tour that explains modules while being one is the sort of
-recursion worth raising before it is built as a special case.
+`web/client/tour.js`, driven by the same `STEPS`. `mountTour(root, { steps, path })` and nothing
+else; it returns `null` on a page the walk is not currently on, so a host can call it
+unconditionally. `web/client/dev/tour_test.html` is the suite.
+
+**It is shell-level, not a module,** and the reason is capability rather than taste: it rings the
+composer's own controls and the kiosk's chrome, and it walks across three pages. A module lives
+in one panel of one screen and cannot draw around the shell containing it. A `tour` *module*
+scoped to a single panel is still worth having later and would wrap this same renderer.
+
+**It is never a gate.** No scrim; `pointer-events: none` on everything but its own two buttons,
+so the page underneath stays usable. Skip works from step one. And the property that matters for
+a one-switch user is stronger than "the tour wraps": **from any state, pressing Next enough times
+ends it** — nothing is ever disabled and nothing sits there refusing. Both are pinned with
+negative controls.
+
+**`/` is visited twice** — the opening line and the closing card, with the whole product in
+between. Position is therefore an index into the *whole* walk kept in `localStorage`, not a
+per-page one. Filtering `STEPS` by page is the obvious implementation and it silently produces a
+two-step tour; the suite has a section for exactly that.
+
+Not wired into any page yet — `landing.html` needs a "take the tour" control, and `kiosk.html`
+and `home.html` need the unconditional `mountTour` call.
+
+## What is not built
 
 **The demo account.** `NimrodEcosystem@gmail.com` is the intended one. Until it exists, the
 signed-out kiosk's seeded screen is what gets filmed, which is safe and is what a visitor sees

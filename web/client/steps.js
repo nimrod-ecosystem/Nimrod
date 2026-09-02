@@ -284,7 +284,12 @@ export function wordBudget(steps = STEPS, { wpm = 145, capSeconds = 180 } = {}) 
  * by reading one list rather than by watching the film again.
  */
 export const demoSeed = () => ({
-  screenName: 'Mum’s room',
+  // MISSED IN THE FIRST PASS. `compose-1` was changed to type "Demo" — Mike: *"'Mum's room', not
+  // 'Demo' — change to demo, and watch out for the British. I'm American and wouldn't call her
+  // mum."* — and this line, which names the same screen, was left behind. Two names for one
+  // screen is also a defect on its own terms: the recorder seeds this and then films somebody
+  // typing something else. The suite now asserts they agree so it cannot drift again.
+  screenName: 'Demo',
   modules: ['photos', 'clock', 'board'],
   // Generated fixtures, never real media. `make_test_fixtures.py` is the existing precedent.
   mediaLabel: 'demo photos',
