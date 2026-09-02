@@ -23,6 +23,7 @@
 //     indistinguishable from the bug we just spent a night removing.
 
 import { listFolderSources, removeFolderSource } from './folder_source.js';
+import { STARTER_MODULES } from './modules_catalog.js';
 
 const DB_NAME = 'nimrod-local';
 // Bumped for the PEOPLE store. `onupgradeneeded` creates any store that is missing, so an
@@ -404,10 +405,13 @@ export async function seedStarterScreen(profilesClient = createLocalProfilesClie
   // landing page draws that arrangement, and one tap loads THIS screen inside it — so if the
   // two disagree, the page has lied to somebody in the first five seconds of meeting it.
   // Change one and change the other.
-  const photos = await profilesClient.addModule(p.id, 'photos');
-  const tube = await profilesClient.addModule(p.id, 'youtube');
-  const word = await profilesClient.addModule(p.id, 'wordforge');
-  const clock = await profilesClient.addModule(p.id, 'clock');
+  // From `modules_catalog.js`, so the landing page's "default dashboard" and this cannot drift.
+  // They already had: the page advertised camera as a default long after it stopped being one.
+  const [pPhotos, pTube, pWord, pClock] = STARTER_MODULES;
+  const photos = await profilesClient.addModule(p.id, pPhotos);
+  const tube = await profilesClient.addModule(p.id, pTube);
+  const word = await profilesClient.addModule(p.id, pWord);
+  const clock = await profilesClient.addModule(p.id, pClock);
 
   const settings = makeSettings(p.id);
   await settings.load();

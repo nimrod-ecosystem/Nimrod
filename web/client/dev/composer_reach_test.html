@@ -43,7 +43,8 @@ something a caregiver can add.</b></p>
 <div id="summary">running…</div>
 
 <script type="module">
-import { CATALOG, NOT_FOR_CAREGIVERS } from '../modules_catalog.js';
+import { CATALOG, NOT_FOR_CAREGIVERS, STARTER_MODULES } from '../modules_catalog.js';
+import { listManifests } from '../module.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -126,6 +127,44 @@ try {
 
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
+}
+
+// =====================================================================================
+section('*** THE CATALOG\u2019S NAMES ARE THE MODULES\u2019 NAMES ***');
+{
+  // The landing page renders its module list straight from CATALOG, because importing
+  // twenty-one module implementations to print twenty-one names would be a heavy price on the
+  // page most likely to be opened on a phone on bad hospital wifi. Six entries therefore carry
+  // an explicit `title` duplicating the manifest \u2014 and a duplicate that nobody checks is how
+  // that list went stale in the first place. It advertised **camera** as a default module for
+  // weeks after it stopped being one, and Mike found it by reading his own site.
+  // Actually load them — `importedModules()` above only PARSES a page's import lines, so the
+  // registry would be empty and every check below would pass on nothing. Module files are named
+  // for their type, so this needs no list to maintain.
+  const loaded = await Promise.all(CATALOG.map(
+    (c) => import(`../modules/${c.type}.js`).then(() => c.type, () => null)));
+  check('every catalog entry has a module file to load', loaded.every(Boolean),
+    CATALOG.map((c) => c.type).filter((t, i) => !loaded[i]).join(', '));
+  const man = listManifests();
+  check('...and loading them populated the registry (or nothing below means anything)',
+    man.length >= CATALOG.length, `${man.length} registered vs ${CATALOG.length} described`);
+  const byType = new Map(man.map((m) => [m.type, m.title]));
+  const named = CATALOG.filter((c) => c.title);
+  check('some entries carry an explicit title (the landing page needs them)', named.length > 0,
+    `${named.length} of ${CATALOG.length}`);
+  const wrong = named
+    .filter((c) => byType.has(c.type) && byType.get(c.type) !== c.title)
+    .map((c) => `${c.type}: catalog "${c.title}" vs module "${byType.get(c.type)}"`);
+  check('*** every catalog title still matches the module it names ***',
+    wrong.length === 0, wrong.join(' ~ '));
+
+  // And the other duplicate: what the seeded starter screen mounts. `local_store.js` imports
+  // this constant now, so the only way these disagree is if a type is renamed.
+  const missing = STARTER_MODULES.filter((t) => !byType.has(t));
+  check('*** every module in the default screen actually exists ***',
+    missing.length === 0, missing.join(', '));
+  check('...and the default screen does NOT include the camera',
+    !STARTER_MODULES.includes('camera'), STARTER_MODULES.join(', '));
 }
 
 const sum = document.getElementById('summary');
