@@ -356,8 +356,8 @@ the new points dashboard. Decision: **no — split the modules, share the substr
   heads; and `quests` avoids colliding with the `points.js` ledger library.
 
 **`progress` is NOT a Cici-only module — corrected (2026-08-17).** An earlier draft described it
-as "the Cici game-stats dashboard". Mike: he wants the same instrument for Oscar — graphs of how
-much he is learning, which concepts he is getting and which he is struggling with — "similar to
+as "the Cici game-stats dashboard". Mike: he wants the same instrument for a school-age learner —
+graphs of how much is going in, which concepts are landing and which are not — "similar to
 what we have at the bedside, but tracking progress in school instead of consciousness." And **one
 person may play games from both sets.** So `progress` is the general MEASUREMENT module over one
 `gameplay` stream; what differs between a response game and a learning game is which metrics are
@@ -1113,13 +1113,20 @@ their reach, and everything else on the screen still re-themes for free.
 - **Pinning the symbols means pinning the surface, and that was the non-obvious half.** The symbols
   were already static: all three AAC palettes are hard-coded and none of them ever followed the
   theme. What follows the theme is the **card underneath them**. A fixed symbol on a moving
-  background is the failing case rather than the fix, so `.aboard` carries its own `--bg` /
-  `--card` / `--ink`. (2026-09-02)
-- **The pinned surface is dark, and the choice is arithmetic rather than taste.** Every
-  meaning-bearing hex in `aac_symbols.js` is a light value drawn for a dark dashboard: measured
-  against each theme's own `--card`, they clear the 3:1 graphical floor comfortably on a dark card
-  (6.4–8.2) and fall well under it on a light one (1.9–2.5), while the card-word colours in
-  `modules.css` do the reverse. Pinning dark leaves all 23 symbols untouched and repaints eight word
+  background is the failing case rather than the fix, so **`.aboard` must carry its own** `--bg` /
+  `--card` / `--ink`. **Not built.** As of 2026-09-02 `.aboard` in `modules.css` sets only position,
+  inset, padding and box-sizing, and `.ab-card` still reads `var(--card)` / `var(--darkgreen)` — the
+  board still follows the theme. Written in the present tense in the first draft of this entry, which
+  was wrong; this is a decision, not a description. (2026-09-02)
+- **The pinned surface is dark, and the choice is arithmetic rather than taste.** **Corrected
+  2026-09-02** — the ranges first written here (6.4–8.2 and 1.9–2.5) were wrong, and an entry that
+  called itself arithmetic had better carry the real numbers. All six meaning-bearing hexes in
+  `aac_symbols.js`, against the dark `--card` `#1b2429` and the light `--card` `#FFFFFF`:
+  `#6abf69` 6.97 / 2.27 · `#D3968C` 6.40 / 2.47 · `#e2b45a` 8.20 / 1.93 · `#7fc6d8` 8.25 / 1.91 ·
+  `#d98a5f` 5.83 / 2.71 · `#cf6f86` 4.71 / **3.35**. **Note the last one: `#cf6f86` (love, thanks)
+  already clears the 3:1 floor on a white card**, so "they all fail on light" was false. Five of six
+  fail on light, one passes. The case for pinning dark stands on those five and on the card-word
+  colours in `modules.css`, which do the reverse — but it is five of six, not six of six. Pinning dark leaves all 23 symbols untouched and repaints eight word
   colours; pinning light would mean redrawing every coloured symbol. One palette then serves both
   the symbol and its word, which also ends the three-disagreeing-palettes problem the style
   reference found. **Neutral shapes stay `currentColor`** — no longer so a theme can tint them, but
@@ -1443,8 +1450,11 @@ Correcting a chat-side misreading: an earlier note said "escape card" in a way t
   - **`Other` is vocabulary** — a semantic escape meaning *not one of these*, whose reading is the
     moderator's job. It exists so a yes/no board is not a forced choice, and it belongs wherever a
     forced choice would otherwise exist. It says something.
-  - **`Menu` is navigation** — geometric symbol, `--sym-nav`, reserved position, takes you somewhere.
-    It says nothing.
+  - **`Menu` is navigation** — geometric symbol, reserved position, takes you somewhere. It says
+    nothing. *(It would carry the `--sym-nav` token from the style reference's proposed palette.
+    **That token does not exist in the code** — a search of `web/client` returns zero matches. It is
+    proposed, not a convention, and the first draft of this entry named it as though it already
+    were.)*
   - **Conflating them would have been a real defect rather than an untidy name.** Somebody pressing
     *Other* to mean "neither of those, you asked me the wrong question" would have been navigated
     away instead of understood — the software answering a different question than the one asked,
@@ -1464,6 +1474,54 @@ Correcting a chat-side misreading: an earlier note said "escape card" in a way t
   leave. (2026-09-02)
 
 
+## Four AAC questions closed — Mike's rulings, 2026-09-02 (late)
+
+- **Feelings get faces.** Mike's call, taking the narrowing proposed after "no face, ever" was
+  retracted: **no expressions on person symbols** (nurse, mom, friend), **faces allowed on feeling
+  symbols**. A feeling card is a picture of a feeling, not a picture of a person. This unblocks the
+  ten-symbol feelings group in the standard set. (2026-09-02)
+- **Safety and violence vocabulary is NOT in the default set.** Mike's call. It gets built — the
+  earlier ruling that a board with no words for harm has made a decision on somebody's behalf stands
+  — but a profile opts into it rather than receiving it. (2026-09-02)
+- **The semantic escape stays worded `Other`.** Mike's call, closing the question `aac_vocab.js` has
+  carried since it was written ("Other" versus "Something else"). `Other` is the vocabulary card;
+  `Menu` is the navigation card; they are separate and both keep their names. (2026-09-02)
+- **Asking a therapist which symbol set she already uses is not a blocker and is dropped.** Mike:
+  *"That's irrelevant. It would be a download."* He is right and it supersedes a question this log
+  and the style reference have both been carrying as an open risk since 2026-08-27. **Once sets are
+  uploadable and downloadable, whichever set somebody already knows is a file they fetch, not a
+  reason to change what we draw.** The three-tier shipping decision had already dissolved the
+  question; nobody noticed. (2026-09-02)
+- **Still open from the same group, and it is a design question rather than a ruling:** the fifth
+  treatment for abstract core words. Mike has asked for it to be explained further before he rules.
+  (2026-09-02)
+
+
+## Corrections to entries written earlier today — 2026-09-02
+
+Logged rather than edited, because entries are not rewritten here. A provenance audit run this
+evening checked 21 self-referential claims across these documents; 16 held, 5 did not, 3 more were
+stale. The five failures are corrected in place above where the entry allowed it, and listed here so
+the pattern is visible rather than buried.
+
+- **"The Adulting tab is deleted" was written in the past tense before it was done.** As of this
+  audit `home.js` still carries `{ id: 'adulting', … hidden: true }`, and `adulting.js` and
+  `dev/adulting_test.html` still exist. The ruling stands; the work does not. A decision written as
+  a description is how a to-do disappears. (2026-09-02)
+- **The pattern across all five failures is one habit:** writing a decision in the present tense, as
+  though deciding it had built it. `.aboard` "carries" its own colours, `--sym-nav` named as a
+  convention, the tab "is deleted", a contrast range stated rather than recomputed, a name search
+  reported as an audit. Each one reads, later, as a fact about the code. **Decisions go in the
+  imperative or the future; only things read from the file go in the present tense.** (2026-09-02)
+- **`docs/platform-status.md` is wrong about Word Forge and should be fixed before it is cited
+  again.** It records `tryPoints` as "3 vs 10", a streak bonus of "+5", and a `dailyCap` of 40, and
+  contradicts itself fourteen lines later with "repriced to 2/1/+3". The live file has
+  `correctPoints: 2, tryPoints: 1, streakBonus: 3, dailyCap: 0`. Three of those five figures are
+  wrong in the document this log cites as the record of what is built — which also means the
+  2026-09-02 ruling to remove the cap was ruling on a cap that had already been set to 0.
+  (2026-09-02)
+
+
 ## What belongs in the public repo — Mike's ruling, 2026-09-02
 
 - **The public repo carries what somebody needs in order to use, build on or understand the software.
@@ -1481,13 +1539,24 @@ Correcting a chat-side misreading: an earlier note said "escape card" in a way t
   because a learned appearance should not move when a theme changes" is complete; the household it
   came up in is not part of the argument. Several entries written on 2026-09-02 failed this and were
   corrected the same day. (2026-09-02)
-- **Audit owed, and it is small but not empty.** A search on 2026-09-02 for names and relationship
-  markers across the public repo returned six hits in four files: one first name still present in a
-  tracked test file — which the 2026-08-30 removal decision already covers and which was not carried
-  out — and five uses of a relationship marker, three incidental to design reasoning and two in the
-  landing page's first-person backstory. **The backstory is deliberate and is Mike's to keep**; it
-  carries no name. The rest is incidental and comes out. The test file is a straightforward fix and
-  is still owed. (2026-09-02)
+- **Audit owed. The first attempt at it was wrong and the correction is the point.** A chat-side
+  search on 2026-09-02 reported **six hits in four files** and was presented as the answer to "how bad
+  is it." **A re-run the same day found 19 hits in 9 files.** The first search looked for one adult's
+  first name and some relationship markers, and **did not search for the second name at all — a
+  minor's — which appears 12 times across five tracked files**: `web/client/theme.js`,
+  `web/client/points.js`, `web/client/modules/sprint.js`, and `docs/platform-status.md`. A minor is
+  the one category in the guard with no threshold, and the search that was supposed to find it did
+  not look. (2026-09-02)
+- **What the corrected audit shows.** One adult first name in `web/client/dev/walkthrough_test.html`
+  (covered by the 2026-08-30 removal decision, never carried out). Twelve instances of a child's
+  name across four files, none of them previously reported. Five uses of a relationship marker —
+  three incidental to design reasoning, which come out, and two in the landing page's first-person
+  backstory, which are deliberate, carry no name and are Mike's to keep. **All of it is still owed as
+  work.** (2026-09-02)
+- **And the lesson, which the entry two sections up already stated and which was ignored anyway:**
+  *"Re-run the search after each pass rather than trusting a recorded count. Every stored figure for
+  this task has been wrong at least once."* It was wrong again, by a factor of three, in the
+  direction that matters. A count is not an audit; the search terms are the audit. (2026-09-02)
 - **The clinical detail in the backstory stays — Mike's ruling, closing the question.** He was asked
   whether the coma, the strokes and how she was positioned should come out the way the name did:
   *"That's all relevant. Unfortunately, I can't just leave everything out."* **The line that makes

@@ -119,9 +119,9 @@ export const THEMES = {
     },
   },
 
-  // Teal + amber, the look Oscar's game contract specifies for his learning tools.
-  // It lives here rather than in his modules so the games stay content-as-meaning:
-  // any profile can wear it, and his modules re-skin with every other theme for free.
+  // Teal + amber, the look the learning-tool modules were specified in. It lives here
+  // rather than inside those modules so the games stay content-as-meaning: any profile
+  // can wear it, and those modules re-skin with every other theme for free.
   forge: {
     label: 'Forge (teal + amber)',
     vars: {

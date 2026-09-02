@@ -160,13 +160,14 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   `segment/done{provider:'personal'}` (standalone it also auto-advances); an **empty/unconfigured**
   source hands back with `segment/done{empty}` instead of freezing. A **`directed`** flag (seeded by
   the container) suppresses autostart so a hidden child never fires a spurious segment/done — the
-  director drives every activation. The first clips are **Oscar's messages** (`…/Voice
-  messages/Oscar`). Validated by an **11-check** browser test (`dev/personal_test.html`, live server +
-  the Oscar agent): lists exactly Oscar's two mp4s (the .amr / extensionless files skipped), renders a
+  director drives every activation. The first clips are **voice-message videos from one family
+  member** (`…/Voice messages/<person>`). Validated by an **11-check** browser test
+  (`dev/personal_test.html`, live server + a real media agent): lists exactly that folder's two mp4s
+  (the .amr / extensionless files skipped), renders a
   `<video>` from the agent, name caption, append-only play log, coverage over advances, ENDED →
   segment/done + auto-advance, `prev()` replay-no-log, empty provider hands back, clean destroy.
-  Live-verified in the app (added Personal videos with the Oscar source → "Oscar singing ABC's.mp4"
-  playing, caption "From Oscar"). It's now a **real provider in the director** (youtube's placeholder
+  Live-verified in the app (added Personal videos with that source → a real clip playing, with the
+  sender's name as the caption). It's now a **real provider in the director** (youtube's placeholder
   neighbor is gone); the director's 15-check test still green with two real providers.
 
 - **Educational — the generated provider** (`web/client/modules/educational.js`). The nimrod_95
@@ -325,9 +326,12 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   A vocabulary game over the word bank (define / fill-the-blank / which-sentence-is-better), content
   as editable data in the documented line formats. **A wrong answer explains itself and still pays**:
   it reveals the right answer with the reason (the meaning + a real sentence, or the actual *why* for
-  a sentence pair) and awards `tryPoints` (3 vs 10) — **banked on "Got it", not on being wrong**, so
+  a sentence pair) and awards `tryPoints` (**1 vs 2**) — **banked on "Got it", not on being wrong**, so
   the reward attaches to taking the correction in, and each item appears once per round so there is
-  no farm. Streak bonus +5 every 5, never on a miss. It writes an award to `points` (source
+  no farm. Streak bonus **+3 every 5**, never on a miss. *(Corrected 2026-09-02: this bullet said
+  "3 vs 10" and "+5 every 5" — the pre-repricing numbers — while the very next bullet said "repriced
+  to 2/1/+3". The live values in `modules/wordforge.js DEFAULTS` are `correctPoints: 2`,
+  `tryPoints: 1`, `streakEvery: 5`, `streakBonus: 3`.)* It writes an award to `points` (source
   `wordforge`) AND a trial to `gameplay` with `concept` = the WORD, so the quest board's balance and
   the progress dashboard's per-concept ranking both update with **no wiring**. Validated by a
   **47-check** test that mounts the real `quests` and `progress` modules on the same profile and
@@ -342,11 +346,18 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
   correct answer was paying **30-40 points per MINUTE** against an economy that runs at ~1/min.
   Repriced to 2/1/+3, anchored on the Task Menu's own price for "look up a word's meaning" (2), and
   the rates for every source are now tracked in **`docs/points-balance.md`** with the rule: estimate
-  the minutes, divide, and cap anything repeatable. Added a **`dailyCap` (40)** — Mike's use case is
-  a game parked on a second monitor between other things, which is a good way to learn and a
+  the minutes, divide, and cap anything repeatable. Added a `dailyCap`, originally 40 — Mike's use
+  case is a game parked on a second monitor between other things, which is a good way to learn and a
   terrible way to price an economy. Past the cap the game keeps playing and **keeps recording
   trials**; only the currency stops (capping the currency must not cap the measurement).
   `points.js` gained `todayFrom(source)`.
+  **THE CAP IS NOW OFF BY DEFAULT — `dailyCap: 0` (2026-09-02, Mike).** The knob stays; only the
+  default changed. The 40 was aimed at a game left open printing points, and the repricing had
+  already removed that: the game pays **nothing for time**, only for correct answers, so an idle
+  window earns zero however long it sits there. And because a point is also a minute of subject
+  credit, capping the points caps the ability to demonstrate understanding — the opposite of the
+  point. *(Verified 2026-09-02 against `modules/wordforge.js DEFAULTS`, which already read
+  `dailyCap: 0`; this document was the thing still saying 40.)*
   **Grade bands:** word-bank entries carry a `grade`, telemetry gained an optional `band` field and
   `byBand()`, and `progress` has a **Bands tab** that appears only when the data has bands. It is
   the content's OWN label, never a percentile or national comparison — deriving one needs a normed
@@ -500,7 +511,7 @@ A resume-point for the `web/` platform rebuild. What's built, what's decided, wh
 ## Next
 1. **Personal videos — enhancements.** Base provider ✓ (above). Add **audio-only** messages (the .amr /
    voice notes), a **still + name** fallback when there's no video, an optional **TTS lead-in** ("A
-   message from Oscar") in the profile voice, and **`R`-key capture** with local-STT intent cues
+   message from <name>") in the profile voice, and **`R`-key capture** with local-STT intent cues
    ("message for <name>" tags + becomes the lead-in; "restart please"; "never mind delete that").
    Recordings **local-only/private** (may include staff → consent-based).
 2. **★ Minimal usable bedside dashboard.** Kiosk layout ✓ · kiosk resilience ✓ (above). Remaining for

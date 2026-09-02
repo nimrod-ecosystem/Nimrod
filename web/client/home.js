@@ -47,15 +47,13 @@ export function kioskURL(profileId) {
 // stays mountable, and `show('<id>')` still reaches it — so a bookmark, a saved tab, or
 // somebody who was using it is never met with a dead end.
 //
-// *** WHY ADULTING IS HIDDEN (2026-08-27, Mike). *** It is a personal points board for a
-// carer, and it is not connected to anything else on this page: not to a screen, not to a
-// person, not to the patient. Somebody arriving here for the first time reads six tabs
-// trying to work out what this product does, and one of them is about THEIR OWN chores.
-// That is a real cost paid by every new visitor for a feature nobody is using.
-//
-// It is hidden rather than deleted because the code is fine and the idea may come back
-// attached to something — a carer's own board alongside the person they look after would
-// make sense. Deleting it would mean rewriting it to find out.
+// *** ADULTING IS GONE (hidden 2026-08-27, removed 2026-09-02, Mike). *** It was a personal
+// points board for a carer, connected to nothing else on this page — not to a screen, not to
+// a person, not to the patient — so every first-time visitor paid to read a tab about THEIR
+// OWN chores while working out what the product is. It was kept hidden on the theory that the
+// idea might come back attached to something. It did, and the thing it came back as already
+// exists: a carer who wants their own board makes a screen and puts a quest board on it. So
+// there is nothing left for this tab to be, and it is out of TABS rather than hidden in it.
 export const TABS = [
   { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
@@ -72,7 +70,6 @@ export const TABS = [
   // The state machine, in sentences. The engine has always been authorable; what was missing
   // was that nobody could READ the config. See rules.js.
   { id: 'rules',    label: 'Rules',    hint: 'what each screen does on its own, and when' },
-  { id: 'adulting', label: 'Adulting', hint: 'your own points board', hidden: true },
 ];
 
 // What the sidebar actually draws.
@@ -315,12 +312,6 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       });
       await r.refresh();
       return r;
-    }
-    if (id === 'adulting') {
-      const { mountAdulting } = await import('./adulting.js');
-      const a = mountAdulting(host, { profiles, bus, user, makeState, makeEvents });
-      await a.refresh();
-      return a;
     }
     return mountScreens(host, { profiles, manifests, onOpen, makeSettings, personId });
   });

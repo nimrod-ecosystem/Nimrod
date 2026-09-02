@@ -1,8 +1,8 @@
 // points.js — the POINTS LEDGER: the one place a "you earned N points" fact lives.
 //
-// Oscar's whole curriculum is a points game: a finished sprint, a correct answer in
-// a learning game, a chore, a photo tagged for Mom — all of them award points, and a
-// dashboard shows the totals. That only works if every source speaks ONE language
+// A whole curriculum can be run as one points game: a finished sprint, a correct answer
+// in a learning game, a chore, a photo tagged for somebody — all of them award points,
+// and a dashboard shows the totals. That only works if every source speaks ONE language
 // into ONE record. This file is that language.
 //
 // TWO SEAMS, DELIBERATELY DIFFERENT:
@@ -142,7 +142,7 @@ export function sumBySource(events) {
   return out;
 }
 
-// LOCAL calendar day of a server ISO timestamp — "today" means Oscar's today, not UTC's.
+// LOCAL calendar day of a server ISO timestamp — "today" means the player's today, not UTC's.
 export function dayKey(iso) {
   const d = iso ? new Date(iso) : null;
   if (!d || Number.isNaN(d.getTime())) return null;

@@ -1,4 +1,4 @@
-// sprint.js — the SPRINT (Pomodoro) timer: Oscar's school-day work clock, and the
+// sprint.js — the SPRINT (Pomodoro) timer: a school-day work clock, and the
 // first thing that feeds the points ledger.
 //
 // A sprint is a fixed block of focused work followed by a break. Finish the WORK
@@ -9,12 +9,12 @@
 // CONTENT-AS-MEANING. Nothing here is styled or voiced in the module. It draws with
 // the theme's CSS variables (theme.js) and announces phase changes through the
 // profile's VOICE (voice.js). Change the profile's theme or voice and the timer
-// re-renders / re-speaks for free. The teal+amber "Forge" look Oscar's game contract
-// asks for is therefore a THEME (`forge` in theme.js), not code in this file.
+// re-renders / re-speaks for free. The teal+amber "Forge" look the learning tools were
+// specified in is therefore a THEME (`forge` in theme.js), not code in this file.
 //
 // THE BUS. The module never names its input. It opens ONE sink on `sprint/control`
 // and its own buttons are just one source bound to that topic — so a keyboard, a
-// physical button, a switch, or his companion can drive the timer with no change
+// physical button, a switch, or a companion app can drive the timer with no change
 // here. It emits `sprint/done` for anything that wants to react, and awards points
 // through the ledger (which appends the durable record AND publishes `points/award`).
 //
@@ -36,7 +36,7 @@ import { createPointsLedger } from '../points.js';
 
 export const SOURCE = 'sprint';
 
-// Defaults are the classic Pomodoro, with the points atom from Oscar's conventions:
+// Defaults are the classic Pomodoro, with the points atom the curriculum uses:
 // one point ~= one minute of focused work, so a 25-minute sprint banks 25.
 export const DEFAULTS = {
   workMin: 25,

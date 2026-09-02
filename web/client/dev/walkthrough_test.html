@@ -6,7 +6,7 @@
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
-  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.skip{color:#8a6d1f;font-weight:700}
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
@@ -50,12 +50,21 @@ import { createLocalBackend, seedStarterScreen, clearLocalData }
   from '../local_store.js';
 
 const out = document.getElementById('results');
-let passed = 0, failed = 0;
+let passed = 0, failed = 0, skipped = 0;
 function check(name, cond, detail = '') {
   const ok = !!cond; ok ? passed++ : failed++;
   const d = document.createElement('div');
   d.className = ok ? 'pass' : 'fail';
   d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+// A check that could not run. It is NOT a pass — it is counted and shown separately, so a
+// run that skipped its safety check can never be read as a clean one.
+function skip(name, why) {
+  skipped++;
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.textContent = `SKIP  ${name}   ${why}`;
   out.append(d);
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
@@ -79,8 +88,29 @@ try {
       /demo/i.test(seed.mediaLabel), seed.mediaLabel);
     // The scrub is done, and this is the check that keeps it done for anything the video says.
     const everything = JSON.stringify(STEPS) + JSON.stringify(seed);
-    check('*** no real name appears anywhere in the script or the seed ***',
-      !/christine|oscar/i.test(everything));
+
+    // *** THIS GATE CANNOT NAME THE PEOPLE IT PROTECTS. ***
+    // It used to hold a literal list of two real first names. That is self-defeating in a
+    // public file: the blocklist publishes exactly what it exists to keep out, and it reads
+    // as a signpost — "these are the names, go look for them." It was also weak on its own
+    // terms, because a two-name list only ever catches the two names somebody thought of.
+    // So the list is supplied AT RUN TIME and the committed file names nobody:
+    //     walkthrough_test.html?names=first,second
+    // With no list the check reports SKIP rather than PASS. An empty run must not look green.
+    const wanted = (new URLSearchParams(location.search).get('names') || '')
+      .split(',').map((s) => s.trim()).filter(Boolean);
+    if (wanted.length) {
+      const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const hits = wanted.filter((n) => new RegExp(esc(n), 'i').test(everything));
+      check('*** no real name appears anywhere in the script or the seed ***',
+        hits.length === 0, `${hits.length} of ${wanted.length} supplied names appear`);
+    } else {
+      skip('no real name appears anywhere in the script or the seed',
+        'no ?names= list supplied — run it with the real list before recording');
+    }
+
+    // Name-free and always on. This one never depended on knowing a name, and it is the
+    // reason the gate is not empty when no list is supplied.
     check('...and no absolute path from anybody’s machine',
       !/[A-Za-z]:[\\/]|\/home\/|\/Users\//.test(everything));
   }
@@ -283,9 +313,15 @@ section('*** THE SEED IS MEASURED, NOT DESCRIBED ***');
 }
 
 const sum = document.getElementById('summary');
-sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
-sum.className = failed ? 'fail' : 'pass';
+// A skip is reported in the headline. The name gate skips unless a ?names= list is supplied,
+// and a run that did not check for names should not be describable as "all pass".
+const tail = skipped ? `, ${skipped} SKIPPED` : '';
+sum.textContent = failed === 0
+  ? `${skipped ? 'PASS WITH SKIPS' : 'ALL PASS'} — ${passed} checks${tail}`
+  : `${failed} FAILED / ${passed} passed${tail}`;
+sum.className = failed ? 'fail' : (skipped ? 'skip' : 'pass');
 sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+sum.dataset.skipped = String(skipped);
 </script>
 </body>
 </html>
