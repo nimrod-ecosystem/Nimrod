@@ -261,6 +261,7 @@ registerModule(
     let q = null;
     let streak = 0;
     let earned = 0;
+    let highlight = 0;      // which option a scanning switch is pointed at
     let answered = null;      // null = unanswered; else {picked, correct, award}
     let capped = false;       // today's payout for this game is spent
     let askedAt = 0;
@@ -281,6 +282,7 @@ registerModule(
 
     function next() {
       answered = null;
+      highlight = 0;
       if (at >= deck.length) { q = null; render(); return; }
       q = makeQuestion(deck[at], words, rand);
       askedAt = Date.now();
@@ -389,13 +391,24 @@ registerModule(
         return;
       }
 
+      // *** `data-on` IS THE SWITCH CURSOR, AND IT IS WHY THIS GAME IS PLAYABLE AT ALL. ***
+      // Until 2026-09-02 there was no cursor: `actions.js` pointed BOTH `next` and `select` at
+      // `wordforge/next`, which skips to another question, and nothing reached
+      // `wordforge/answer`. Somebody driving this with one switch could skip questions forever
+      // and never answer one — in a game whose whole premise is that a wrong answer teaches you
+      // something. Mike found it by trying to play it.
+      //
+      // Copied from `trivia.js` rather than invented: same `data-on="1"` attribute, same
+      // wrap-around stepping, same "next advances once you have answered". Two quizzes that
+      // behaved differently under the same switch would be a defect of its own.
       const opts = q.options.map((o, i) => {
         let cls = 'wf-opt';
         if (answered) {
           if (i === q.answer) cls += ' is-right';
           else if (i === answered.picked) cls += ' is-wrong';
         }
-        return `<button class="${cls}" data-opt="${i}" ${answered ? 'disabled' : ''}>${esc(o)}</button>`;
+        const on = !answered && i === highlight ? ' data-on="1"' : '';
+        return `<button class="${cls}" data-opt="${i}"${on} ${answered ? 'disabled' : ''}>${esc(o)}</button>`;
       }).join('');
 
       let feedback = '';
@@ -432,6 +445,15 @@ registerModule(
       if (nx) nx.addEventListener('click', advance);
       const idk = host.querySelector('[data-idk]');
       if (idk) idk.addEventListener('click', () => answer(null));
+    }
+
+    // Wraps, because a cursor that stops at the last option strands somebody on it.
+    function moveHighlight(delta) {
+      if (!q || answered) return;
+      const n = q.options.length;
+      if (!n) return;
+      highlight = ((highlight + delta) % n + n) % n;
+      render();
     }
 
     return {
@@ -476,7 +498,14 @@ registerModule(
 
         // Anything on the bus can answer — a keypad, a switch, a companion.
         bus.subscribe('wordforge/answer', (i) => answer(i === null || i === 'idk' ? null : Number(i)));
-        bus.subscribe('wordforge/next', () => advance());
+        // `next` steps the options while a question is open and moves on once it is answered —
+        // trivia's shape, so one switch behaves the same way in both games.
+        bus.subscribe('wordforge/next', () => (answered ? advance() : moveHighlight(1)));
+        bus.subscribe('wordforge/prev', () => moveHighlight(-1));
+        bus.subscribe('wordforge/select', () => (answered ? advance() : answer(highlight)));
+        // Skipping outright still has a home, so the old behaviour is not lost — it is just no
+        // longer the only thing a switch can do.
+        bus.subscribe('wordforge/skip', () => advance());
 
         // NAMED rather than inline, so a change to the SHARED bank row can re-run exactly the
         // same interpretation. Two code paths that both decide what a bank means is how they

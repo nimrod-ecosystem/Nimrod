@@ -192,7 +192,13 @@ export const MODULE_VERBS = {
   director:      { next: { topic: 'segment/done', payload: { reason: 'skipped' } },
                    select: { topic: 'segment/done', payload: { reason: 'skipped' } } },
   interstitials: { next: 'interstitial/next', prev: 'interstitial/prev', back: 'interstitial/skip' },
-  wordforge:     { next: 'wordforge/next', select: 'wordforge/next' },
+  // *** BOTH OF THESE USED TO SAY `wordforge/next`, WHICH SKIPS THE QUESTION. ***
+  // Nothing reached `wordforge/answer`, so a one-switch player could skip forever and never
+  // answer — the game was unplayable by exactly the person it is for. Now the same shape as
+  // `trivia` on the line below: step the options, select the one you are on, and skip is its
+  // own verb rather than the only one.
+  wordforge:     { next: 'wordforge/next', prev: 'wordforge/prev',
+                   select: 'wordforge/select', back: 'wordforge/skip' },
   // TRIVIA IS ANSWERABLE WITH ONE BUTTON, which is the whole reason it is shaped as four
   // choices with a walking highlight rather than as free recall. `next` moves the highlight and
   // wraps; `select` takes whatever it is on. `back` skips a question somebody does not want.
