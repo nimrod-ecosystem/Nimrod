@@ -757,7 +757,10 @@
     if (!play || !live) return;
     play.addEventListener('click', () => {
       const f = document.createElement('iframe');
-      f.src = '/kiosk.html';
+      // `demo=1`, so this is the seeded demo screen for everybody. Without it the frame took
+      // the signed-in path and showed the viewer their own first screen — which for Mike, on
+      // his own landing page, was a black rectangle.
+      f.src = '/kiosk.html?demo=1';
       f.title = 'Nimrod, running \u2014 a live demo';
       // No camera or microphone in the allow list: this embed must never be able to ask.
       // That is the whole reason the live panel is a public zoo camera.

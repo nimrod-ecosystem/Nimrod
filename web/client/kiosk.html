@@ -236,6 +236,29 @@ function offerTour() {
   // A FAILED sign-in still gets the login screen — someone who just tried to sign in needs
   // to be told it did not work, not quietly handed a local screen instead.
   if (who.state === 'anon' && params.get('login') === 'failed') { showLogin(true); return; }
+
+  // *** `?demo=1` MEANS THE DEMO, NOT YOUR ACCOUNT. ***
+  //
+  // The landing page says "This is the actual software. Press play… these are sample photos and
+  // the settings live in this browser instead of an account." That was true for a signed-out
+  // stranger and false for everybody else: the frame loaded `/kiosk.html`, which took the
+  // signed-in path and mounted whatever the account's first screen happened to be.
+  //
+  // Mike pressed play on his own landing page and got a black rectangle, because the first
+  // screen on his account had had its modules removed. The marketing demo was showing him his
+  // own half-built work and calling it the product.
+  //
+  // So the frame asks for the demo explicitly and gets the seeded starter screen over bundled
+  // sample media — the same thing a stranger sees, which is the only thing that page should
+  // ever be showing.
+  if (params.get('demo') === '1') {
+    try { await bootLocal(); } catch (e) {
+      console.error('demo kiosk boot failed', e);
+      boot.textContent = 'The demo could not start.';
+    }
+    return;
+  }
+
   if (who.state === 'anon') {
     try { await bootLocal(); } catch (e) {
       console.error('local kiosk boot failed', e);

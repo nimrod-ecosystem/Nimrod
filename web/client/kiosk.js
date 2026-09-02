@@ -473,6 +473,38 @@ export async function mountKiosk(root, {
       cell.append(host);
       slotRecs.push(watchRec(await mountInstance(def, host)));
     }
+
+    // *** A SCREEN WITH NOTHING ON IT MUST SAY SO. ***
+    //
+    // Mike, 2026-09-02: *"Pressing play on the landing page kiosk literally shows nothing."*
+    // A saved layout keeps the IDS of the modules that were in its slots. Remove those modules
+    // in the composer and the layout still names three slots, so this loop built three cells,
+    // found no module for any of them, skipped each one — and produced a perfectly black
+    // full-screen page with a control bar at the bottom and no explanation anywhere.
+    //
+    // Nothing was broken in a way any log would show. Every `continue` above was correct. The
+    // defect is that the correct behavior for one slot, repeated for all of them, adds up to a
+    // screen that looks like a crash.
+    //
+    // The composer already guards this — it greys out Open with "a screen needs at least one
+    // module to open" — but the kiosk is reachable directly, and the landing page's demo frame
+    // reaches it that way. A guard on one door is not a guard.
+    //
+    // Deliberately NOT a modal and NOT a gate: it is text in the middle of the screen, the
+    // control bar stays live, and Screens still gets you out. This can appear in front of a
+    // patient, so it says what to do rather than reporting a fault, and it never blocks.
+    if (!slotRecs.length) {
+      const empty = document.createElement('div');
+      empty.setAttribute('data-empty', '');
+      empty.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
+        + 'justify-content:center;text-align:center;padding:8vmin;'
+        + 'font:500 clamp(18px,2.6vmin,28px)/1.5 -apple-system,BlinkMacSystemFont,'
+        + 'Segoe UI,Roboto,sans-serif;color:#cfe0d6';
+      empty.textContent = layout.slots.length
+        ? 'This screen’s panels were removed. Open Screens to add some again.'
+        : 'Nothing has been added to this screen yet. Open Screens to add something.';
+      stageEl.append(empty);
+    }
   }
 
   // ---- the stage: one module at a time, mounted lazily --------------------
