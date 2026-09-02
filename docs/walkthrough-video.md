@@ -157,10 +157,20 @@ two-step tour; the suite has a section for exactly that.
 `startTour` has run in that browser — which is what keeps it off a paired bedside screen, and is
 why `kiosk.html` calls it from *both* boot paths rather than only the signed-out one.
 
-**Two targets are wrong on the demo screen and are not fixed here.** `[data-mirror]` and
-`[data-settings]` are both `hidden` on the seeded starter screen, so `kiosk-2` and `inputs-2`
-narrate with nothing highlighted. `--check` reports them. Both fixes are decisions rather than
-edits — see `docs/for_chat/`.
+**`kiosk-2` now points at the live-view corner** (`[data-kind="youtube"]`) instead of
+`[data-mirror]`, which is `hidden` unless a camera panel is configured — Mike's call, 2026-09-02.
+The line changed with it: *"the corner **is** a rear-view mirror of the room"* narrated over a
+public camera is a lie told in the first minute, so it now says what that corner is *for* on a
+bedside screen. `local_store_test.html` already pins that corner to `youtube` as a contract with
+the landing page's poster, and `walkthrough_test.html` now pins the tour to the same module.
+
+`[data-kind]` and `[data-slot]` are new attributes on the kiosk's layout cells. The alternative
+was `.k-cell:nth-child(2)`, which names a *position*: reorder the layout and it keeps resolving
+while ringing the wrong quadrant.
+
+**`inputs-2` is still wrong and not fixed.** `[data-settings]` is `hidden`, and it is the kiosk
+options box ("auto-advance when a video ends") rather than the per-person input bindings the line
+is about. `--check` reports it. See `docs/for_chat/`.
 
 ## What is not built
 
