@@ -146,10 +146,33 @@ export const STEPS = [
         + 'caregiver understands. It is the single most important property of the product and '
         + 'it is stated here rather than at the end.' },
 
-  { id: 'kiosk-2', scene: 'kiosk', page: '/kiosk.html', target: '[data-mirror]',
+  // TARGET WAS `[data-mirror]`, WHICH IS `hidden` UNLESS A CAMERA PANEL IS CONFIGURED — and the
+  // demo screen has none, so the most concrete beat in the script narrated over a screen with no
+  // mirror on it. Found by walking the tour in a browser; `--check` had been returning early for
+  // every `action: 'none'` step and never looked.
+  //
+  // *** MIKE, 2026-09-02: "point the mirror beat at the zoo cam quadrant." *** That is the
+  // top-right cell of the seeded quad — `youtube` — per the 2026-08-27 layout decision, and the
+  // same panel the landing page's poster labels "Live view". `[data-kind]` is new markup on the
+  // layout cells (see `kiosk.js`); the alternative was `.k-cell:nth-child(2)`, which points at a
+  // position rather than at that panel and would silently start ringing the wrong quadrant the
+  // day somebody reorders the layout.
+  //
+  // *** AND THE LINE HAD TO CHANGE, BECAUSE IT WOULD NOW BE FALSE. *** "The corner IS a
+  // rear-view mirror of the room" narrated over a zoo camera is a lie told in the first minute —
+  // the same objection that already rewrote `compose-1`. It now says what that corner is FOR on
+  // a bedside screen while describing what is actually on this one, which loses nothing: the
+  // mirror is still the image the viewer takes away.
+  //
+  // Deliberately NOT said: "and the demo never asks for your camera." True, and a good line, but
+  // it would need re-checking the day the zoo-cam stream id lands, and the privacy point already
+  // has its own beat in `cost-1`. THE ZOO CAM IS STILL NOT WIRED — that panel runs the curated
+  // starter schedule today — so this wording is true either way on purpose.
+  { id: 'kiosk-2', scene: 'kiosk', page: '/kiosk.html', target: '[data-kind="youtube"]',
     action: 'none', tour: true, settle: 2600,
-    say: 'The corner is a rear-view mirror of the room. For somebody who cannot turn their '
-       + 'head, it is who just walked in.',
+    say: 'A corner of the screen holds a live view. On a bedside screen that corner is a '
+       + 'rear-view mirror of the room — for somebody who cannot turn their head, it is who '
+       + 'just walked in.',
     note: 'The most concrete thing in the whole product and it used to be fifteen hundred words '
         + 'down the landing page. It goes early.' },
 
@@ -283,6 +306,15 @@ export function wordBudget(steps = STEPS, { wpm = 145, capSeconds = 180 } = {}) 
  * seeds exactly this and nothing else — so "was a real person's photo in frame?" is answered
  * by reading one list rather than by watching the film again.
  */
+// *** IT SAID `['photos', 'clock', 'board']` AND THE DEMO SCREEN HAS NO BOARD. ***
+// `seedStarterScreen` in `local_store.js` builds photos · youtube · wordforge · clock in a quad,
+// and that is the code that actually runs when a stranger opens the kiosk. This list was a
+// hand-written description of it, and descriptions drift — two of the three entries were wrong.
+//
+// That matters more than tidiness, because this list is the DATA GATE's answer: "was anything
+// real in frame?" is meant to be answerable by reading it instead of watching the film again. A
+// stale list answers a safety question with a guess. `walkthrough_test.html` now RUNS the seed
+// and compares, rather than reading this and nodding.
 export const demoSeed = () => ({
   // MISSED IN THE FIRST PASS. `compose-1` was changed to type "Demo" — Mike: *"'Mum's room', not
   // 'Demo' — change to demo, and watch out for the British. I'm American and wouldn't call her
@@ -290,7 +322,7 @@ export const demoSeed = () => ({
   // screen is also a defect on its own terms: the recorder seeds this and then films somebody
   // typing something else. The suite now asserts they agree so it cannot drift again.
   screenName: 'Demo',
-  modules: ['photos', 'clock', 'board'],
+  modules: ['photos', 'youtube', 'wordforge', 'clock'],
   // Generated fixtures, never real media. `make_test_fixtures.py` is the existing precedent.
   mediaLabel: 'demo photos',
 });

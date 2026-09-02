@@ -46,6 +46,8 @@ import { STEPS, SCENES, ACTIONS, tourSteps, narration, transcript, wordBudget, d
   from '../steps.js';
 import { MILESTONES, STORAGE_KEY, createSetupLog, instrumentRequested, attachSetupLog }
   from '../setup_timing.js';
+import { createLocalBackend, seedStarterScreen, clearLocalData }
+  from '../local_store.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -236,6 +238,48 @@ try {
 
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
+}
+
+// =====================================================================================
+section('*** THE SEED IS MEASURED, NOT DESCRIBED ***');
+{
+  // demoSeed() is the data gate's answer to "was anything real in frame?" — the point of it is
+  // that the question can be settled by reading one list instead of watching the film again.
+  // It said `['photos', 'clock', 'board']`. The screen a stranger actually gets is photos,
+  // youtube, wordforge and clock, so TWO OF THE THREE ENTRIES WERE WRONG and the one thing it
+  // named that was not there — a board — is the module the `do` scene talks about.
+  //
+  // A stale list answers a safety question with a guess, so this RUNS the seed and compares.
+  await clearLocalData();
+  const backend = createLocalBackend();
+  const p = await seedStarterScreen(backend.profiles, backend.makeSettings);
+  const mods = (await backend.profiles.get(p.id)).modules;
+  const kinds = mods.map((m) => m.type).sort();
+  const claimed = [...demoSeed().modules].sort();
+  check('*** demoSeed() lists exactly what the seeded screen mounts ***',
+    JSON.stringify(kinds) === JSON.stringify(claimed),
+    `screen ${kinds.join(',')}  vs  seed ${claimed.join(',')}`);
+
+  // And the beat Mike retargeted on 2026-09-02: the mirror line now points at the live-view
+  // corner. `local_store_test.html` already pins that corner to `youtube` as a contract with
+  // the landing page's poster; this pins the TOUR to the same module, so moving one moves both
+  // or turns something red.
+  const st = backend.makeSettings(p.id);
+  await st.load();
+  const layout = (st.get().kiosk || {}).layout;
+  const liveKind = (mods.find((m) => m.id === layout.slots[1]) || {}).type;
+  const mirror = STEPS.find((x) => x.id === 'kiosk-2');
+  check('*** the mirror beat targets the module in the live-view corner ***',
+    mirror.target === `[data-kind="${liveKind}"]`, `${mirror.target} vs live view = ${liveKind}`);
+  check('...and it no longer points at the hidden camera overlay',
+    !/data-mirror/.test(mirror.target), mirror.target);
+  // The line had to change with the target: "the corner IS a rear-view mirror of the room" over
+  // a public camera is a lie told in the first minute. It now says what that corner is FOR.
+  check('...and the line does not claim this screen IS a mirror of the room',
+    !/^The corner is a rear-view mirror/.test(mirror.say), mirror.say.slice(0, 60));
+
+  st.destroy();
+  await clearLocalData();
 }
 
 const sum = document.getElementById('summary');

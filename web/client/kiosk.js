@@ -455,11 +455,20 @@ export async function mountKiosk(root, {
       // `mod-box` lets the module size itself against this cell (see modules.css).
       cell.className = 'k-cell mod-box';
       cell.setAttribute('style', slotStyle(layout.preset, i));
+      // *** NAME THE CELL, so anything that needs to find one does not count children. ***
+      // Added for the guided tour, which has a beat about the live-view corner and had no way
+      // to say so: the only selector available was `.k-cell:nth-child(2)`, which points at a
+      // POSITION rather than at that panel. Move the layout and a positional selector keeps
+      // resolving and starts highlighting the wrong quadrant — silently, which is worse than
+      // highlighting nothing. `data-kind` breaks loudly instead, and `record_walkthrough.py`
+      // is what hears it.
+      cell.setAttribute('data-slot', String(i));
       stageEl.append(cell);
       const id = layout.slots[i];
       if (!id) continue;                                      // an empty slot is allowed
       const def = profile.modules.find((m) => m.id === id);
       if (!def) continue;
+      cell.setAttribute('data-kind', def.type);
       const host = document.createElement('div'); host.className = 'k-mod';
       cell.append(host);
       slotRecs.push(watchRec(await mountInstance(def, host)));
