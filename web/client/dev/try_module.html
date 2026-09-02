@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>try a module — use it, do not read about it</title>
+<style>
+  html,body{height:100%}
+  body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
+    color:#0A3323;background:#F7F4D5;display:flex;flex-direction:column}
+  header{padding:12px 16px 0;border-bottom:1px solid #e4e0c2;background:#FBF9E9}
+  h1{font-size:1.05rem;margin:0 0 2px}
+  .sub{font-size:.86rem;color:#5d7064;margin:0 0 10px;max-width:90ch}
+  .picker{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:10px}
+  .pick{border:1px solid #d8d3ae;background:#fff;border-radius:99px;padding:6px 13px;
+    font:inherit;font-size:.88rem;cursor:pointer;color:#0A3323}
+  .pick:hover{border-color:#105666}
+  .pick.on{background:#0A3323;color:#F7F4D5;border-color:#0A3323;font-weight:700}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:0 0 10px;
+    font-size:.86rem;color:#3c5346}
+  .bar b{color:#0A3323}
+  .btn{border:1px solid #d8d3ae;background:#fff;border-radius:8px;padding:5px 11px;
+    font:inherit;font-size:.85rem;cursor:pointer}
+  #stage{flex:1;position:relative;background:#0A3323;overflow:hidden;min-height:0}
+  #stage > div{position:absolute;inset:0}
+  #hint{padding:8px 16px;font-size:.82rem;color:#5d7064;background:#FBF9E9;
+    border-top:1px solid #e4e0c2}
+  .err{color:#8d2a1c;font-family:ui-monospace,Consolas,monospace;font-size:.82rem;
+    padding:16px;white-space:pre-wrap}
+  kbd{background:#fff;border:1px solid #d8d3ae;border-bottom-width:2px;border-radius:4px;
+    padding:1px 5px;font:inherit;font-size:.8em}
+</style>
+</head>
+<body>
+<header>
+  <h1>Try a module</h1>
+  <p class="sub">One module at a time, full size, with the keyboard and switch input wired the
+    way the kiosk wires it. <b>Click things. Play the game. Answer the question.</b> This is the
+    real module with real storage — not a screenshot and not a description.</p>
+  <div class="picker" id="picker"></div>
+  <div class="bar">
+    <span id="what"></span>
+    <button class="btn" id="reset" title="Wipe this module’s saved state and mount it again">Start over</button>
+    <a class="btn" href="./modules_live.html" style="text-decoration:none">All at once</a>
+  </div>
+</header>
+<div id="stage"></div>
+<!-- *** THIS LINE IS GENERATED FROM `DEFAULT_BINDINGS`, NOT TYPED. ***
+     The hand-written version said "Space / Enter select · Tab or → step · 1–9 direct" and was
+     wrong: the real defaults are ArrowDown for next, ArrowUp for previous, Enter to select, and
+     the arrows left/right move between PANELS rather than within one. Somebody following it
+     would have pressed keys that do nothing and concluded the module was broken.
+     A keyboard legend is exactly the kind of small true-sounding text that goes stale silently,
+     so it reads the bindings the page actually mounted. -->
+<div id="hint"><b>Input:</b> <span id="keys">reading the bindings…</span></div>
+
+<script type="module">
+// try_module.html — USE ONE MODULE, FULL SIZE.
+//
+// Mike, 2026-09-02: *"So the modules page is still just a list? I want to actually use the
+// modules to see if they work."*
+//
+// He was right twice over. `modules.html` describes them, and `modules_live.html` — written an
+// hour earlier to answer the same complaint — mounts all twenty-one in 330×240 boxes, which is
+// still a list, only a moving one. You cannot play a word game in a thumbnail. The board's own
+// sizing unit came out at 0.46px in one, which is the clearest possible statement that the
+// container was never big enough to use.
+//
+// So: one module, the whole viewport, and the input actually wired.
+//
+// ---------------------------------------------------------------------------------------
+// THE INPUT IS THE PART THAT MAKES THIS "USING IT" RATHER THAN "CLICKING IT"
+// ---------------------------------------------------------------------------------------
+//
+// Modules do not read the keyboard. They read VERBS off the bus, and it is `input_runtime.js`
+// that turns a key, a switch, a controller or a dwell into one. A page that mounted a module
+// without it would let you click its buttons with a mouse and would tell you nothing about
+// whether somebody with one switch can use it — which for this product is most of the question.
+//
+// So the runtime is mounted here with `DEFAULT_BINDINGS`, exactly as `kiosk.js` does, and the
+// module under test is the only thing in the focus ring.
+import { createBus } from '../bus.js';
+import { mountModule, listManifests } from '../module.js';
+import { createOutputBus } from '../output.js';
+import { defaultChannels } from '../output_channels.js';
+import { createAudioBus } from '../audio_bus.js';
+import { createCameraOwner } from '../camera_owner.js';
+import { createMicOwner } from '../mic_owner.js';
+import { mountInputRuntime } from '../input_runtime.js';
+import { DEFAULT_BINDINGS } from '../input_keyboard.js';
+import { createLocalBackend, createLocalMediaSources, seedStarterScreen, clearLocalData }
+  from '../local_store.js';
+import { CATALOG, USE } from '../modules_catalog.js';
+import { MODULE_VERBS } from '../actions.js';
+
+const types = CATALOG.map((c) => c.type);
+await Promise.all(types.map((t) => import(`../modules/${t}.js`)
+  .catch((e) => console.error('module file failed to load:', t, e))));
+
+const manifests = listManifests();
+const bus = createBus();
+const audio = createAudioBus();
+const cameraOwner = createCameraOwner();
+const micOwner = createMicOwner();
+const sources = createLocalMediaSources();
+
+// Signed out, on browser storage, seeded so photos and youtube have something to show. Real
+// storage on purpose: a module that saves your progress should still have it when you come
+// back, and "Start over" is the way to get a clean one rather than the default.
+const backend = createLocalBackend();
+await seedStarterScreen(backend.profiles, backend.makeSettings, backend.makeState);
+const list = await backend.profiles.list();
+const profileId = (list[0] || {}).id || 'try';
+const output = createOutputBus({
+  channels: defaultChannels({ mount: document.createElement('div'),
+                              events: backend.makeEvents('output', {}, profileId) }),
+});
+
+const stage = document.getElementById('stage');
+const picker = document.getElementById('picker');
+const what = document.getElementById('what');
+const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const entryFor = (t) => CATALOG.find((c) => c.type === t) || {};
+const titleFor = (t) => entryFor(t).title
+  || (manifests.find((m) => m.type === t) || {}).title || t;
+
+let current = null;     // { type, inst, runtime }
+
+function teardown() {
+  if (!current) return;
+  try { current.runtime?.destroy?.(); } catch (e) { console.warn('runtime teardown', e); }
+  try { current.inst?.destroy?.(); } catch (e) { console.warn('module teardown', e); }
+  stage.innerHTML = '';
+  current = null;
+}
+
+async function open(type) {
+  teardown();
+  for (const b of picker.children) b.classList.toggle('on', b.dataset.type === type);
+  location.hash = type;
+
+  const e = entryFor(type);
+
+  // *** WHAT A SWITCH ACTUALLY DOES TO THIS MODULE, SHOWN RATHER THAN DISCOVERED. ***
+  //
+  // This line exists because of what happened the first time this page was used. Word Forge
+  // looked fine — a real question, four real options — and pressing the documented keys
+  // changed the question, which read as playing it. It was not. `actions.js` says:
+  //
+  //     wordforge: { next: 'wordforge/next', select: 'wordforge/next' }
+  //
+  // Both verbs mean "skip to another question", nothing maps to `wordforge/answer`, and the
+  // score sat at 0 while the questions cycled. **A one-switch user can skip Word Forge
+  // forever and never answer it.** That is the single most important fact about the module for
+  // the person this product is for, and it was invisible until somebody read the table.
+  //
+  // So the table is on screen. A module with no `select` row, or with `select` pointing at the
+  // same topic as `next`, cannot be answered by the input it claims to support.
+  const verbs = MODULE_VERBS[type] || {};
+  const verbList = Object.entries(verbs);
+  const duplicated = verbList.length > 1
+    && new Set(verbList.map(([, v]) => v)).size < verbList.length;
+  const verbLine = verbList.length
+    ? verbList.map(([k, v]) => `${esc(k)} → <code>${esc(v)}</code>`).join(' · ')
+    : '<i>no verbs — this module answers nothing an input can send</i>';
+
+  what.innerHTML = `<b>${esc(titleFor(type))}</b> — ${esc(e.lead || '')}`
+    + (USE[e.use] ? ` <span style="opacity:.7">(${esc(USE[e.use].label)})</span>` : '')
+    + (e.needs ? `<br><span style="opacity:.75">Needs: ${esc(e.needs)}</span>` : '')
+    + `<br><span style="opacity:.85">Switch verbs: ${verbLine}</span>`
+    + (duplicated
+      ? '<br><b style="color:#8d2a1c">Two verbs point at the same topic — pressing either does '
+        + 'the same thing, so this module cannot be fully driven by an input.</b>'
+      : '')
+    + (!verbs.select && e.use === 'answer'
+      ? '<br><b style="color:#8d2a1c">This module asks for an answer but has no select verb.</b>'
+      : '');
+
+  const host = document.createElement('div');
+  stage.append(host);
+
+  const instanceId = `try-${type}`;
+  try {
+    const inst = mountModule(type, {
+      mount: host, bus, rootBus: bus, user: null, profileId, personId: null, instanceId,
+      state: backend.makeState(instanceId, {}, profileId),
+      events: backend.makeEvents(instanceId, {}, profileId),
+      makeState: (key, opts) => backend.makeState(key, opts, profileId),
+      makeEvents: (key, opts) => backend.makeEvents(key, opts, profileId),
+      makePersonState: backend.makePersonState,
+      output, audio, micOwner, cameraOwner, sources,
+      // No drive socket on this page, so no call transport. `call` will mount and sit idle,
+      // which is the truth about it here rather than a fault in it.
+      callTransport: null, aim: null,
+    });
+    inst.init();
+
+    // The verbs. Without this you are clicking with a mouse and learning nothing about whether
+    // one switch can drive it.
+    const runtime = mountInputRuntime({
+      bus,
+      modules: () => [{ id: instanceId, type }],
+      fallback: DEFAULT_BINDINGS,
+    });
+    await runtime.load?.();
+    runtime.router?.setFocus?.(instanceId);
+
+    current = { type, inst, runtime };
+    // Modules size themselves against their container; this one just changed size.
+    requestAnimationFrame(() => { try { inst.onResize?.(); } catch { /* optional */ } });
+  } catch (err) {
+    stage.innerHTML = `<div class="err">${esc(type)} threw while mounting:\n\n`
+      + `${esc(err && err.stack || err)}</div>`;
+    console.error(`[${type}] threw`, err);
+  }
+}
+
+for (const t of types) {
+  const b = document.createElement('button');
+  b.className = 'pick';
+  b.dataset.type = t;
+  b.textContent = titleFor(t);
+  // *** BLUR AFTER PICKING, OR THE KEYS NEVER REACH THE MODULE. ***
+  // The picker button keeps focus after a click, so the browser hands it the next Space or
+  // Enter and activates the button instead. Pressing the documented keys did nothing and the
+  // module looked dead — which on a page built to answer "does this actually work" is the
+  // worst possible bug to have.
+  b.addEventListener('click', () => { open(t); b.blur(); });
+  picker.append(b);
+}
+
+// The keyboard legend, read off the bindings that were actually mounted.
+const KEY_LABEL = { arrowdown: '↓', arrowup: '↑', arrowleft: '←', arrowright: '→',
+                    enter: 'Enter', space: 'Space', escape: 'Esc' };
+document.getElementById('keys').innerHTML = DEFAULT_BINDINGS
+  .filter((b) => b.device === 'keyboard' && b.role === 'universal'
+    && !/^system\//.test(b.actionId))
+  .map((b) => {
+    const k = String(b.control).replace(/^key:/, '');
+    return `<kbd>${esc(KEY_LABEL[k] || k)}</kbd> ${esc(b.label || b.actionId)}`;
+  }).join(' · ')
+  + ' — the default bindings a switch would be mapped to, so this is roughly what somebody '
+  + 'driving it with one button gets.';
+
+// "Start over" wipes only this page's storage, then remounts. It is the honest way to see a
+// module's FIRST run, which is the one a stranger gets and the one nobody ever looks at twice.
+document.getElementById('reset').addEventListener('click', async () => {
+  const type = current?.type;
+  teardown();
+  await clearLocalData();
+  await seedStarterScreen(backend.profiles, backend.makeSettings, backend.makeState);
+  if (type) open(type);
+});
+
+window.addEventListener('resize', () => {
+  try { current?.inst?.onResize?.(); } catch { /* optional */ }
+});
+
+const wanted = decodeURIComponent(location.hash.slice(1));
+open(types.includes(wanted) ? wanted : 'wordforge');
+</script>
+</body>
+</html>
