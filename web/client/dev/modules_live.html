@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>every module, actually running</title>
+
+<!-- The module stylesheets. Omitting them made this page mount every module with no CSS, which
+     is not "running them" — it is showing somebody unstyled HTML and calling it the product. -->
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../settings.css">
 <style>
   body{font:15px/1.55 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
     margin:0;padding:24px;color:#0A3323;background:#F7F4D5}
