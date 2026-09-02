@@ -119,8 +119,16 @@ with each other, and ours was right.
 - **Modules declare their settings as DATA** (`settings_fields.js`), never as markup. The shell
   renders them, which is the only way a cursor driven by one switch can reach them. *A control
   that cannot be reached by the only input somebody has is not a control.*
-- **Modules must not assume a pointer.** Everything reachable by one button, walked in one
-  direction, and **wrapping** — a control that stops at its maximum strands somebody there.
+- **Modules must not assume a pointer.** On the **bedside screen**, everything reachable by one
+  button, walked in one direction, and **wrapping** — a control that stops at its maximum strands
+  somebody there.
+  **This is a goal for the bedside screen, not a rule for the whole product** (Mike, 2026-09-02:
+  *"It's not a goal. Ideally as much as possible could be done with one button, but there are
+  complicated things that will need to be done in the background that will need more than one
+  button."*). It was previously stated flatly, and flatly it was false — the composer, the
+  bindings editor and the guided tour all need a keyboard and a pointer, and the landing page was
+  claiming otherwise to the one audience that would check. Build the person's own screen so one
+  switch reaches it. Do not contort the caregiver's tooling to the same bar, and do not claim it.
 - **Verbs are local by default.** Anything arriving over the network is checked against a
   frozen allowlist. Adding a verb does **not** put it on the wire; that stays deliberate.
   A remote driver is judged by the same gate as a switch in the room.
