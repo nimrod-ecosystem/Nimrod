@@ -206,8 +206,13 @@ const esc = (s) => String(s == null ? '' : s)
 
 // ---------- the module ----------
 
+// LABEL "Math", IDENTIFIER `algebra`. Mike, 2026-09-02: the game is called Math. The `type`
+// deliberately does NOT change with it — `algebra` is written into every telemetry row and
+// into the points ledger's `source`, so renaming the identifier orphans the history already
+// recorded under it. A label is what a person reads; a type is what the data is keyed by,
+// and they are allowed to differ.
 registerModule(
-  { type: 'algebra', title: 'Algebra', description: 'Algebra practice, with a calculator on screen — the point is the method, not the arithmetic' },
+  { type: 'algebra', title: 'Math', description: 'Solve for x, with a calculator on screen — the point is the method, not the arithmetic' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const rand = ctx.rand || Math.random;

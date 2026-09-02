@@ -98,12 +98,20 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       [...host.querySelectorAll('[data-tab]')].map((b) => b.dataset.tab).join());
     // HIDDEN IS NOT DELETED, and the difference matters: somebody with a bookmark or a saved
     // tab must land on the thing they asked for, not be bounced to Screens with no
-    // explanation. Adulting was hidden on 2026-08-27 because it is unconnected to anything
-    // else here and every new visitor was paying to read it.
+    // explanation. Adulting was hidden on 2026-08-27 for that reason and REMOVED on
+    // 2026-09-02 — the job it did is now "make a screen and put a quest board on it" — so
+    // there is currently no hidden tab at all.
+    //
+    // THIS USED TO ASSERT `hiddenTabs.length > 0`, which turned removing the last hidden tab
+    // into a red suite for no defect. It is now stated as a PROPERTY of the split instead, so
+    // it is neither vacuous while the list is empty nor in the way when a tab is next hidden.
     const hiddenTabs = TABS.filter((t) => t.hidden).map((t) => t.id);
-    check('...and a hidden tab is NOT in the sidebar',
-      hiddenTabs.length > 0
-      && !hiddenTabs.some((id) => host.querySelector(`[data-tab="${id}"]`)),
+    check('VISIBLE_TABS is exactly TABS minus the hidden ones',
+      VISIBLE_TABS.length === TABS.length - hiddenTabs.length
+      && !VISIBLE_TABS.some((t) => t.hidden),
+      `${TABS.length} tabs, ${hiddenTabs.length} hidden: ${JSON.stringify(hiddenTabs)}`);
+    check('...and no hidden tab is drawn in the sidebar',
+      !hiddenTabs.some((id) => host.querySelector(`[data-tab="${id}"]`)),
       JSON.stringify(hiddenTabs));
     check('it opens on Screens', shell.active() === 'screens' && mounted[0] === 'screens');
     check('the active tab is marked', host.querySelector('[data-tab="screens"]').classList.contains('on'));
