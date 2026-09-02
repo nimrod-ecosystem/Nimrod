@@ -1094,3 +1094,199 @@ manufacturing questions.
   persistence is a liability**, so it is not built on the message path and does not acquire a history
   by convenience. The strong case is public — a board on somebody's lap that the person behind the
   counter cannot see. (2026-09-01)
+
+
+## The AAC board's appearance, and how symbol sets ship — Mike's rulings, 2026-09-02
+
+Extends the 2026-09-01 AAC-symbols entry. Nothing here reverses *Themes are per-PROFILE*
+(2026-08-10) — themes keep working exactly as they do; the communication board is carved out of
+their reach, and everything else on the screen still re-themes for free.
+
+- **The communication board does not follow the profile theme.** Mike's call, in his words: *"The
+  cards should be a static colour no matter what theme. You don't want to change it and then all of
+  a sudden have all your symbols switch."* The reasoning generalises past this feature: **a symbol
+  set is something a person learns**, and a theme picker exists so a room can be made calmer or
+  warmer. Decoration should not reach into a learned vocabulary. It is the same rule `aac_vocab.js`
+  already enforces one level up — the software does not silently reflow a layout somebody has
+  learned — extended to colour. *Scope: module. Flagged as a `PRINCIPLES.md` §2 candidate: it is
+  phrased as an absolute, and only Mike puts one in the register.* (2026-09-02)
+- **Pinning the symbols means pinning the surface, and that was the non-obvious half.** The symbols
+  were already static: all three AAC palettes are hard-coded and none of them ever followed the
+  theme. What follows the theme is the **card underneath them**. A fixed symbol on a moving
+  background is the failing case rather than the fix, so `.aboard` carries its own `--bg` /
+  `--card` / `--ink`. (2026-09-02)
+- **The pinned surface is dark, and the choice is arithmetic rather than taste.** Every
+  meaning-bearing hex in `aac_symbols.js` is a light value drawn for a dark dashboard: measured
+  against each theme's own `--card`, they clear the 3:1 graphical floor comfortably on a dark card
+  (6.4–8.2) and fall well under it on a light one (1.9–2.5), while the card-word colours in
+  `modules.css` do the reverse. Pinning dark leaves all 23 symbols untouched and repaints eight word
+  colours; pinning light would mean redrawing every coloured symbol. One palette then serves both
+  the symbol and its word, which also ends the three-disagreeing-palettes problem the style
+  reference found. **Neutral shapes stay `currentColor`** — no longer so a theme can tint them, but
+  so a symbol exported, printed or handed to another renderer degrades to a monochrome drawing that
+  still reads rather than to a colour chosen for a background that is not there. (2026-09-02)
+- **High contrast becomes a switch on the board rather than an inherited theme.** Mike's call. A
+  pinned board stops inheriting the `contrast` theme, and somebody with low vision needs black on
+  white; refusing that to protect a colour convention would be the wrong trade. So the board carries
+  its own: deliberate, per profile, set once by a person who needed it, dropping colour entirely
+  (all eight roles to `--ink`). The rule above survives because appearance still never changes
+  underneath somebody as a side effect of something else — the same shape as moving up a layout
+  tier, a milestone rather than a slider. (2026-09-02)
+- **Symbol sets ship in three tiers.** Mike's call, extending *we draw our own, and anyone may
+  upload their own set* (2026-09-01): a **standard starter set ships** with the product; a **larger
+  pre-made set is available as a download**; and **any set a person prefers can be uploaded**,
+  replacing ours or sitting beside it. **Adding your own must be as easy as we can make it** — his
+  emphasis, and it is the differentiator, because building your own on top of a licensed set is not
+  something those licences permit at all. **Say all of this on the site.** (2026-09-02)
+  - *Chat-side note, not part of the ruling:* `aac_vocab.js` cells reference a symbol **by name**,
+    so a set is a name→image map and a person can override a single symbol — a photo of their own
+    mug in place of the drawn one — without replacing the set. Worth confirming that survives the
+    upload path, since it is most of what "as easy as possible" means in practice.
+- **The site says plainly that this is not only for people with disabilities.** Mike's call: *"We
+  made it as useful for caregivers and everyone else."* The claim is already built rather than
+  aspirational — the points ledger, the quest board, the focus timer, Word Forge and the math game
+  are the same platform serving a homeschooling household, and a carer's own board is a screen like
+  any other. (2026-09-02)
+
+
+## Naming and the tab-to-module direction — Mike's rulings, 2026-09-02
+
+- **The math game is called Math.** Mike's call: *"Math should probably just be called math instead
+  of algebra."* (2026-09-02)
+  - *Chat-side engineering constraint, NOT part of his ruling:* do it as a **label** change and
+    leave the identifier `algebra` alone. `GAME` is written into every telemetry row and into the
+    points ledger's `source` column, so renaming it orphans existing history — the same rule
+    `home.js` already records for the `inputs` → "Devices" tab: *"a tab id is a stable identifier —
+    it is in URLs, in tests and in `INPUTS_KEY` on the server — and renaming it is a migration, not
+    a label change."* `DEFAULTS.subject` is already `'Math'`. If Mike wants the identifier changed
+    as well, that is a migration to plan rather than a rename to do, and it is his call.
+- **The Adulting tab is deleted, and a carer's own board is a module.** Mike's call, finishing what
+  he started on 2026-08-27 when he hid the tab for the reason recorded in `home.js` — a personal
+  points board for a carer, connected to nothing else on the page, read by every new visitor trying
+  to work out what the product does. The module that does the job already exists: a carer who wants
+  their own board makes a screen and puts a **quest board** on it. Nothing needs writing. (2026-09-02)
+- **More of the tabs should become modules.** Mike's direction, applying his standing ask that
+  everything ultimately be a module. Not audited yet, and the candidates below are a chat-side
+  reading rather than his position: `records` overlaps the existing `progress` module; `rules` is a
+  module that describes modules, which is the recursion he has asked to be watched for; `media`,
+  `inputs`/Devices and `output` are configuration surfaces that could be placed on a screen like
+  anything else; `screens` is the one that still looks like shell. **The payoff worth naming before
+  the work starts:** he has said he likes *the AAC board driving the settings UI because settings
+  are declared as data*, and that only becomes possible once the configuration surfaces are modules
+  with declared settings. Tabs-to-modules is the precondition for somebody configuring their own
+  system with the same board they talk with. (2026-09-02)
+
+
+## The learning cap — reopened by Mike, 2026-09-02, not settled
+
+Mike: *"I thought I pushed back against the cap. I don't want to limit the amount of learning he can
+do in a day. The cap should be on how much counts towards hours. We'll have to discuss this."*
+
+- **Correction to a chat-side summary that misdescribed the cap.** The `dailyCap` does **not** limit
+  learning. As built and as recorded in `platform-status.md`, past the cap the game keeps playing and
+  **keeps recording trials**; only the currency stops, under the stated rule that *capping the
+  currency must not cap the measurement*. Learning and measurement are already uncapped.
+  (2026-09-02)
+- **No record of the earlier pushback exists.** Neither this file nor `platform-status.md` carries
+  one; what is recorded is Mike catching the pricing — Word Forge at 10 points a correct answer was
+  paying 30–40 points per minute against an economy that runs at about 1/min — and the repricing to
+  2/1/+3 alongside the cap. If a pushback happened it was never logged. Noted rather than resolved.
+  (2026-09-02)
+- **The distinction he is drawing, recorded so the discussion starts from it:** hours have an
+  *external* meaning — a homeschooling requirement somebody may have to account for — so hours-credit
+  per source is the thing that should be capped, because eight hours of school cannot honestly come
+  out of a word game. Points are an *internal* economy, regulated by pricing and by what the reward
+  store charges. On that reading the points cap comes off and a per-source daily **minutes** cap goes
+  on. **The risk to weigh before dropping it:** without a points cap, a game parked on a second
+  monitor still mints currency, which was the original catch; the repricing did most of that work
+  already, so the open question is whether pricing alone holds. `docs/points-balance.md` is where the
+  answer belongs either way. _(open — Mike's call)_ (2026-09-02)
+
+
+## The points cap comes off — Mike's ruling, 2026-09-02
+
+Settles the section immediately above, same day, and **supersedes the `dailyCap` (40) added on
+2026-08-17**. That entry is not edited; this is what replaces it.
+
+- **No points cap on the games, because the games do not pay per minute.** Mike's call: *"The games
+  shouldn't be giving points per minute, so there shouldn't need to be a points cap."* The reasoning
+  is that the cap was treating a symptom. What went wrong on 2026-08-17 was **pricing** — Word Forge
+  at 10 points a correct answer paid 30–40 points per minute against an economy running at about
+  1/min — and the reprice to 2/1/+3 fixed the actual fault. A cap on top of correct pricing only
+  limits somebody who is doing a lot of the right thing. **Remove `dailyCap` from Word Forge.**
+  (2026-09-02)
+- **If a source ever does pay per minute, cap that source then.** Mike: *"If something eventually has
+  a points per minute we can add it then."* The cap is a remedy for a specific defect, applied when
+  the defect exists, rather than a standing tax on every game in case one of them is mispriced. The
+  check that finds it is already written down: `docs/points-balance.md`'s rule is estimate the
+  minutes, divide, and cap anything repeatable — the *divide* is the part that matters, and it stays.
+  (2026-09-02)
+- **A points cap remains available as a per-profile setting, defaulting off.** Mike: *"A points cap
+  in general could be an option for other users."* Somebody running this for a household with
+  different rules, or for a person for whom an uncapped economy is not helpful, can turn one on. This
+  is the project's standing preference operating — a setting with a sensible default rather than a
+  rule — and it means removing the cap costs nobody the behaviour they wanted. (2026-09-02)
+- **What this does not change:** hours-credit is still the thing with an external meaning, and the
+  question of capping *minutes counted toward school hours* per source is untouched by this ruling
+  and still open from the entry above. Points and hours are separate ledgers and it is worth keeping
+  them separate in the discussion — this decision is about points. (2026-09-02)
+
+
+## The board's appearance, paging, and image format — Mike's rulings, 2026-09-02 (second pass)
+
+Narrows one entry made earlier the same day and settles two open questions from the standard-set
+proposal. The earlier entries are not edited; these supersede them where they overlap.
+
+- **Theme-following on the communication board is a SETTING, defaulting to pinned.** Mike's call,
+  narrowing his own absolute from earlier today. The default board does not follow the profile theme
+  — the protection is unchanged, because nothing moves unless a person deliberately changes it — but
+  a profile can turn theme-following on. **His reason, and it is the general one:** *"Just because
+  someone can't speak doesn't mean they have vision problems."* Pinning the board protects a person
+  who has learned it; it is not a finding that everyone using AAC needs the careful treatment, and
+  building the software as though it were is its own small insult. The retired absolute is recorded
+  in `PRINCIPLES.md` §4. (2026-09-02)
+- **Paging is built, rather than adding bigger tiers.** Mike's call, resolving the finding that the
+  tier ladder stops at 16 cells while the core vocabulary the standard set is built on runs to 36 —
+  so the core board could not be shown on any board `aac_vocab.js` can currently build. Paging is
+  what every commercial system does and it is the larger job; the alternative was a 36-cell grid,
+  which buys the vocabulary by shrinking every target, and target size is the binding constraint for
+  this population. The `back` and `categories` nav symbols in the standard set only mean anything
+  once this exists. (2026-09-02)
+  - *Chat-side, not part of the ruling:* paging introduces a navigation model the file has none of,
+    and the existing boundary applies to it — **a person must never be able to get stranded on a page
+    with no way back.** That is the `AGENTS.md` invariant (a screen must never enter a state that
+    only an input can leave, when the person in front of it cannot give that input) landing directly
+    on this feature. Worth writing into the paging design before it is built rather than after.
+- **The tier ladder is presets, not a constraint.** Mike: *"Why a tier ladder? Can't they make their
+  own boards?"* They can, and should be able to build any grid they like. What the ladder is for is
+  narrower than it has been reading: it is the set of sizes the direction-preserving `promote` knows
+  how to move between, plus the shipped starting points. The parts worth keeping are the promote
+  behaviour (a corner of a 2×2 lands in the matching corner of a 4×4, so a reach up-and-left stays
+  up-and-left) and the rule that a layout never changes under somebody without a decision. Neither
+  requires a fixed list of seven sizes. (2026-09-02)
+- **Symbols are vector, and card size is derived from the board.** Mike's call. Ours already are —
+  every symbol is an inline SVG on a `0 0 100 100` viewBox with no fixed pixel size, and
+  `modules.css` already derives card size from the container and the number of buttons through
+  `--u`. Stated as a rule so it holds for what gets added later. **Where it bites is uploads:**
+  somebody's PNG set will not scale the same way, so the upload path accepts raster but should say
+  plainly what it costs — a raster symbol drawn for a 12-button board will be soft on a 4-button one.
+  (2026-09-02)
+
+
+## "No face. Ever." — retracted 2026-09-02
+
+Mike asked why the symbol style reference contained an absolute. It should not have.
+
+- **Retracted by its author, not by Mike.** The rule was written into the style reference during the
+  2026-09-01 drafting session by the person drafting it — in the same session that read
+  `PRINCIPLES.md` §0, which exists precisely to stop that. The risk it was reasoning about is real
+  and the wording stays as a **strong default**: a drawn expression makes an adult's board look like
+  a nursery, pins a mood onto a card that gets pressed in every mood, and is the first thing to smear
+  at 60 px. None of that justifies the word "ever". Recorded in `PRINCIPLES.md` §4. (2026-09-02)
+- **What the absolute would have cost, concretely:** ten feeling symbols are in the standard set, and
+  the obvious way to draw a feeling is a face. An unratified rule in a design doc would have sent
+  somebody looking for a worse answer to a problem that did not need one. (2026-09-02)
+- **Still open, and Mike's:** whether feelings get faces. The proposal on the table is to narrow
+  rather than abandon — no expressions on *person* symbols (nurse, mom, friend), faces allowed on
+  *feeling* symbols, on the grounds that a feeling card is a picture of a feeling rather than a
+  picture of a person. _(open — Mike's call)_ (2026-09-02)
