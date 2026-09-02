@@ -1496,3 +1496,21 @@ Correcting a chat-side misreading: an earlier note said "escape card" in a way t
   argument for why the software exists at all — a room where somebody could only see the exterior
   wall is the whole design brief. Removing it would leave a product with no reason and protect
   nobody. **Do not "clean" the backstory.** (2026-09-02)
+
+- **The clock says the weekday ONCE.** It read `1:30 AM / Wednesday Early Morning / Wednesday,
+  September 2, 2026` - three short lines with the same word opening two of them. Mike, taking the
+  guided tour and clearly not for the first time: *"How many times have I said to lose the
+  wednesday morning?!? There's only a few words there and 2 of them are the day of the week."*
+  **This is written down here because it was not written down the previous times, which is why it
+  kept coming back.** The part-of-day line now reads just `early morning` when the date line is
+  showing, and keeps the weekday only when `showDate` is off - because with the date hidden,
+  nothing else on the panel names the day, and this module exists to orient somebody who does not
+  know it. The pre-dawn reasoning in `clock.js` is untouched and still load-bearing: "early
+  morning" is there so 4:33am cannot read as the evening. (2026-09-02)
+- **The recorder cleans up the screen it creates.** `compose-2` clicks Create, so every run -
+  `--check` included - left a screen behind. Nine had accumulated before anybody looked, and what
+  made them visible was Mike taking the tour: *"there are a lot of blank demo screens."* The
+  composer he was judging was mostly the script's own litter. It was also a correctness problem,
+  not only an untidy one: `compose-5` clicks the first `[data-open]`, so which kiosk the later
+  steps ran against depended on how many leftovers sat above it. Cleanup is scoped to ids that did
+  not exist before the run AND named exactly what `compose-1` types. (2026-09-02)

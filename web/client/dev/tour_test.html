@@ -251,10 +251,22 @@ section('it spans three pages, so the position survives navigation');
   b?.destroy();
 
   // Somebody who never started the tour and opens the kiosk directly gets no overlay at all.
+  // *** THIS CHECK USED TO ASSERT `=== null`, AND IT WAS PINNING THE BUG IN PLACE. ***
+  // Mike, taking the tour: "I selected clock and opened. Also, the tour goes away and there's
+  // no obvious way to go back." Two steps in, on the composer, doing the one thing the composer
+  // is for. The tour was on a /home.html step, the kiosk did not match, and it rendered nothing
+  // — with no affordance on any page to pick it up again.
+  //
+  // A walk in progress is now ALWAYS visible, in the holding state, wherever you wander.
   const fresh = fakeStore();
   startTour(STEPS, fresh);
   const c = mountTour(host(), { steps: STEPS, storage: fresh, path: P_KIOSK });
-  check('a page the walk has not reached mounts nothing', c === null);
+  check('*** wandering off does not make the tour disappear ***', !!c && c.shown());
+  check('...it holds, and says where the walk actually is', c?.waiting());
+  check('...with a link back to that page',
+    c?.el.querySelector('[data-tour-go]')?.getAttribute('href') === TOUR[0].page,
+    c?.el.querySelector('[data-tour-go]')?.getAttribute('href'));
+  check('...and it is still leaveable from there', (() => { c.skip(); return !c.shown(); })());
 
   // And a second Next while holding ends it, so the holding state is not a dead end either.
   const store2 = fakeStore();
@@ -480,6 +492,42 @@ section('at a page boundary it holds the door — it does not walk through it');
   check('...while a step that is on this page has no such link',
     !mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, start: true })
        .el.querySelector('[data-tour-go]'));
+  t.destroy();
+}
+
+// =====================================================================================
+section('*** THE PANEL DOES NOT SIT ON WHAT IT IS POINTING AT ***');
+{
+  // Mike: "The tour is covering the buttons it's asking you to use on the kiosk." The panel was
+  // pinned bottom-centre and the kiosk's control bar is bottom-centre, so the two beats about
+  // those controls ringed a row of buttons and parked a card on top of them.
+  const mk = (top, height) => {
+    const el = document.createElement('div');
+    el.id = 'tour-seat';
+    el.style.cssText = `position:fixed;left:40px;top:${top}px;width:300px;height:${height}px`;
+    document.body.append(el);
+    const t = mountTour(host(), {
+      steps: [{ id: 'x', page: P_LAND, target: '#tour-seat', say: 'x', settle: 0 }],
+      storage: fakeStore(), path: P_LAND, start: true });
+    const p = t.el.querySelector('[data-tour-panel]');
+    const seat = { top: p.style.top, bottom: p.style.bottom };
+    t.destroy(); el.remove();
+    return seat;
+  };
+
+  const low = mk(Math.max(0, innerHeight - 90), 70);   // down where the control bar lives
+  check('*** a target at the bottom pushes the panel to the top ***',
+    low.top === '22px' && !low.bottom, JSON.stringify(low));
+
+  // NEGATIVE CONTROL: it does not just always sit at the top now.
+  const high = mk(40, 70);
+  check('NEGATIVE CONTROL: a target up top leaves the panel at the bottom',
+    high.bottom === '22px' && !high.top, JSON.stringify(high));
+
+  // And with no ring there is nothing to avoid, so it stays put.
+  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, start: true });
+  const p = t.el.querySelector('[data-tour-panel]');
+  check('no ring, no reseat', p.style.bottom === '22px' && !p.style.top);
   t.destroy();
 }
 

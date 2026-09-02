@@ -128,6 +128,29 @@ export const STEPS = [
     note: 'Plumbing × 3 in the recorder — photos, clock, board. Kept as one step because '
         + 'three identical clicks on film is dead air.' },
 
+  // MOVED HERE FROM THE KIOSK RUN, 2026-09-02, at Mike's instruction to "point at the input
+  // bindings". They are not on the kiosk. `[data-settings]` was the kiosk's own options box
+  // ("auto-advance when a video ends"), hidden by default, and even unhidden it would have
+  // ringed the wrong thing while the line talked about per-person bindings.
+  //
+  // The bindings live on the composer's **Devices** tab, whose own tooltip in `home.js` reads
+  // "the switches, controllers and keys you use — and what each one does" — which is this beat's
+  // sentence, written by somebody else, in the UI. That is where it points.
+  //
+  // *** AND IT SITS IN THE HOME RUN NOW, WHICH SPLITS SCENE 4 ACROSS TWO PAGES. *** `inputs-1`
+  // is still on the kiosk. That is a wrinkle in the script rather than in the code — the tour
+  // walks `STEPS` order and reads fine, but `transcript()` groups by scene and will now show
+  // these two out of sequence. Not smoothed over here, because the script needs Mike's pass
+  // anyway: *"almost everyone will have left after the first 2 slides."*
+  { id: 'inputs-2', scene: 'inputs', page: '/home.html', target: '[data-tab="inputs"]',
+    action: 'none', tour: true, settle: 2400,
+    say: 'What a switch or a key actually does is set here, for the person rather than for the '
+       + 'device. Change it once and every screen they use follows.',
+    note: 'Per-person bindings are a real differentiator and invisible on a screen recording, '
+        + 'so this beat exists to say it while something relevant is on screen. Reworded when '
+        + 'it moved: it used to open with "And what each one does", which only parsed if '
+        + 'inputs-1 had just been said — and inputs-1 now comes after it.' },
+
   { id: 'compose-5', scene: 'compose', page: '/home.html', target: '[data-open]',
     action: 'click', tour: true, settle: 2600,
     say: 'Then open it. That is the screen made.',
@@ -196,13 +219,6 @@ export const STEPS = [
     note: 'THE POINT IS INTERCHANGEABILITY, not any one device. The sock is the honest detail '
         + 'that makes it land: it is what actually works for the person this was built for, '
         + 'and it costs nothing.' },
-
-  { id: 'inputs-2', scene: 'inputs', page: '/kiosk.html', target: '[data-settings]',
-    action: 'none', tour: true, settle: 2400,
-    say: 'And what each one does belongs to the person, not the device. Change it once and '
-       + 'every screen they use follows.',
-    note: 'Per-person bindings are a real differentiator and invisible on a screen recording, '
-        + 'so this beat exists to say it while something relevant is on screen.' },
 
   // ---- 5 · A HOLD -----------------------------------------------------------------------
   { id: 'hold-1', scene: 'hold', page: '/kiosk.html', target: '[data-stage]',
