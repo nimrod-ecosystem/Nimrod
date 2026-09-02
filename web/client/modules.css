@@ -55,7 +55,12 @@
 .camera{width:100%;height:100%;position:relative}
 .camera .stage{position:relative;width:100%;height:100%;background:#0c1a14;border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
-.camera video{width:100%;height:100%;object-fit:cover;display:block;background:#0c1a14}
+/* CONTAIN, NOT COVER. Mike, 2026-09-02: *"You made the camera fit the screen and now the top and
+   bottom are cropped off. I want it to fill so you can see everything."* `cover` fills the box by
+   throwing away whatever does not fit, which on a rearview mirror means throwing away part of the
+   room — and the whole point of the panel is seeing who is there. Letterboxing is the cheaper
+   price. The background colour is what the bars are made of. */
+.camera video{width:100%;height:100%;object-fit:contain;display:block;background:#0c1a14}
 .camera .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
   color:var(--beige);background:rgba(10,51,35,.72);font-size:.85rem;text-align:center;padding:10px}
 .camera .status button{border:1px solid rgba(247,244,213,.5);color:var(--beige);background:transparent;
@@ -336,6 +341,11 @@
   background:var(--card);color:var(--ink);font:inherit;font-size:.95rem;cursor:pointer;line-height:1.4}
 .wordforge .wf-opt:hover:not(:disabled){background:var(--cream-soft);border-color:var(--moss)}
 .wordforge .wf-opt:disabled{cursor:default}
+/* THE SWITCH CURSOR. Same treatment as `.tv-opt[data-on]` on purpose — one switch, two quizzes,
+   one thing to learn. Without this the option a press would choose is invisible. */
+.wordforge .wf-opt[data-on="1"]{border-color:var(--midnight,#105666);
+  box-shadow:0 0 0 3px rgba(16,86,102,.18)}
+.wordforge .wf-opt[data-on="1"]::before{content:"\25B8\00a0"}
 .wordforge .wf-opt.is-right{border-color:var(--moss);background:#f0f4e8;box-shadow:inset 3px 0 0 var(--moss)}
 .wordforge .wf-opt.is-wrong{border-color:var(--rosy);background:#fbecea;box-shadow:inset 3px 0 0 var(--rosy-deep)}
 .wordforge .wf-idk{display:block;width:100%;margin-top:10px;background:transparent;border-style:dashed;color:var(--muted);font-weight:600}

@@ -217,7 +217,17 @@ async function open(type) {
       ? '<br><b style="color:#8d2a1c">This module asks for an answer but has no select verb.</b>'
       : '');
 
+  // *** `mod-box` IS NOT DECORATION — IT IS HOW A MODULE KNOWS HOW BIG IT IS. ***
+  //
+  // `modules.css` sets `container-type:size` on it, and the clock, the board and others size
+  // themselves in `cqh`/`cqw` against that container. Without it those units fall back to the
+  // VIEWPORT and every container query silently does nothing — which is why the clock rendered
+  // small and jammed against the top of an empty stage instead of scaling and centring.
+  //
+  // The stylesheet literally names this mistake: *"nothing breaks in the composer preview or a
+  // test page that forgets to opt in."* This was that test page.
   const host = document.createElement('div');
+  host.className = 'mod-box';
   stage.append(host);
 
   const instanceId = `try-${type}`;
