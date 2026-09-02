@@ -1290,3 +1290,100 @@ Mike asked why the symbol style reference contained an absolute. It should not h
   rather than abandon — no expressions on *person* symbols (nurse, mom, friend), faces allowed on
   *feeling* symbols, on the grounds that a feeling card is a picture of a feeling rather than a
   picture of a person. _(open — Mike's call)_ (2026-09-02)
+
+
+## The escape card, and two new boards — Mike's rulings, 2026-09-02
+
+- **The escape card leads to a MENU, not just a spelling board.** Mike's design, generalising what the
+  first bedside board already reached for: it carried a `Keyboard` card that ideally would have pulled
+  up the keyboard. So `Other` stays the word on the card, and it opens a menu of **other sets and the
+  keyboard**, for anyone with the facility to use them. This is what makes the escape real on a paged
+  board rather than a dead end on page one. (2026-09-02)
+  - *Chat-side:* the OSU boards put `A B C…` / `I will spell` / **`Not on this board`** on **every**
+    page, which is the same idea applied by construction rather than by navigation. On a paged board
+    the escape should be a property of every page, not a card somebody has to find their way back to.
+  - The `AGENTS.md` invariant governs the menu: **nobody can be left on a page with no way back.** A
+    menu that can be entered by a scan but not left by one is the failure mode.
+- **A medical-questions board joins the set.** Mike's call, extending the "I need to tell you"
+  observation: *"What are the side effects? What are my options? Can we consider a different dosage?"*
+  This is a person interrogating their own care rather than requesting things from it, and almost
+  nothing in AAC ships it — the OSU pack is the exception, with tracheostomy question sets like *will
+  I be able to talk again* and *what are my options*. It is principle 2 in vocabulary form: somebody
+  who cannot speak is not thereby somebody with no questions about their own treatment. (2026-09-02)
+- **Positioning vocabulary goes into the care group.** Mike's confirmation. *Pull me up · turn me ·
+  sit up · lie down · reposition · I have a cramp.* It is on the first page of every ICU board looked
+  at, and the existing `care` set has none of it. (2026-09-02)
+
+
+## Selections are the user's to keep or refuse — Mike's ruling, 2026-09-02
+
+Mike, on being told the board appends every selection to a log that cannot be deleted: *"On the users
+machine? They should be able to delete it and choose if it's ever even stored."*
+
+- **What is actually true today, stated first because the summary he was reacting to was incomplete.**
+  Selections go to a profile-scoped **append-only stream on the platform server** — not the user's
+  machine, unless they self-host. Media never touches the server; the events are small text and do.
+  Individual events cannot be edited or deleted (a DB trigger enforces it), which is the
+  tamper-proofing. **Whole-partition deletion already works and was already decided** (2026-08-27):
+  deletion from the screen is a hard delete of profile, contents, account and OAuth link, no
+  tombstones, with the append-only/erasure conflict resolved by partitioning so a deletion drops a
+  partition rather than editing the stream. So "cannot be deleted" was wrong about the account and
+  right only about an individual row. (2026-09-02)
+- **Recording selections becomes optional, and that is new.** Mike's call. There is currently no way
+  to run a board that records nothing; there should be. **Off is a legitimate setting**, and for
+  somebody who does not want their sentences counted it is the only honest answer. (2026-09-02)
+- **The cost of turning it off should be stated at the switch rather than hidden.** *(Chat-side note,
+  not part of the ruling.)* The strongest argument for collecting selections is not clinical
+  reporting — it is that **a region of the board that is never selected may be a vision or reach
+  problem rather than a vocabulary one**, and that is invisible without the data. Somebody switching
+  recording off should be told that is what they are giving up. An informed no is fine; a silent one
+  loses a finding nobody knew was available. (2026-09-02)
+- **Follow-on worth deciding separately:** whether a self-hosted or local-only event store is offered,
+  which would make the answer to *"on the user's machine?"* actually yes. The media agent already
+  proves the pattern. _(open)_ (2026-09-02)
+
+
+## The OSU boards — what they are, and what we may and may not do with them
+
+Context, because it is not obvious from the name: these boards are published by the assistive
+technology centre **the project's first outreach contact belongs to**. The named people and the
+relationship are recorded in the private outreach prep, not here.
+
+- **They are not open source, and neither is their upstream.** Verified 2026-09-02: every page carries
+  *"© The Ohio State University Wexner Medical Center 2025"*, credited as *"Adapted from
+  Patient-Provider Communication Network"*, and that organisation's site carries *"Copyright ©
+  2009-2026 … All Rights Reserved."* Neither publishes a licence, a permission-to-reproduce statement,
+  or any terms of use. **Free to download is not free to redistribute.** So splitting their PDFs into
+  our boards and shipping them — as a default or as a download — is not something to do on the current
+  evidence. (2026-09-02)
+- **The distinction that matters, and it is not a small one:** a vocabulary list is largely facts and
+  short phrases and is weak copyright material; the **selection, arrangement, layout and wording** of
+  a particular board is the authored work. Building Nimrod boards that cover the same clinical
+  territory — positioning, trach and vent, care coordination, questions about treatment — is ordinary
+  practice. Reproducing their pages is not. (2026-09-02)
+- **The better move is to ask, and asking is a warm opener rather than a favour.** *"We built this,
+  your boards are the best thing in the space, may we build a Nimrod set based on them with credit?"*
+  is a specific, flattering, two-sentence question to a clinic that publishes patient education for
+  free — and the outreach prep already says a specific question is the right first contact with this
+  person. A yes gives a credited OSU-derived set; a no costs nothing and the territory is still
+  buildable independently. _(open — needs Mike to send it)_ (2026-09-02)
+
+
+## Safety and violence vocabulary — Mike likes it; default membership open
+
+Mike, on the OSU pack's safety page (*safe · unsafe · afraid · emotional harm · physical harm · life
+threat · neglect · support / hotline · safe place · somebody I know · stranger*): *"This I actually
+like. It would be of great comfort to me knowing it was there and not being used. Don't know if it
+should be in the default set though."*
+
+- **The vocabulary gets built.** Somebody who cannot speak and cannot leave is exactly the person with
+  no way to report harm, and a board that has no words for it has made that decision on their behalf.
+  (2026-09-02)
+- **Two complications to design around, neither of them a reason not to build it.** *(Chat-side.)*
+  First: **a card speaks aloud in the room, and the person it is about may be in the room.** Every
+  other card on the board is improved by being heard; this one may not be. That is a real design
+  question and it is not answered by the existing boundary rule, which says only that the board must
+  not summon anyone. Second: **a recorded selection indicating harm is either evidence or exposure
+  depending entirely on who can read it**, which puts it directly on top of the selections ruling
+  above. (2026-09-02)
+- **Default membership is open.** _(open — Mike's call)_ (2026-09-02)

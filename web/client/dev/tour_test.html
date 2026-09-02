@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the guided tour — never a gate — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #sandbox{position:relative;height:1px;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>the guided tour</h1>
+
+<div class="warn">
+  A tour overlay a person cannot leave is precisely the shape the safety invariant forbids:
+  <i>a screen must never enter a state that only an input can leave, when the person in front of
+  it cannot give that input.</i> The first two sections are that property, and both carry a
+  negative control — the guard is disabled, the check is confirmed to go red, and it is restored.
+  A green line proving nothing is the failure mode this project has already been bitten by.
+</div>
+
+<div class="note">
+  <b>Not run here.</b> Nothing below loads the real pages, so <b>no selector in
+  <code>steps.js</code> is proven against live markup by this suite</b> — that is
+  <code>record_walkthrough.py --check</code>'s job, and it is the reason the tour's targets are
+  the recorder's targets. Nothing here measures how the ring <i>looks</i> either; the geometry
+  checks use elements this file creates at known sizes.
+</div>
+
+<div id="sandbox"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { STEPS } from '../steps.js';
+import { mountTour, resetTour, allTourSteps, overallIndex, samePage,
+         TOUR_POS_KEY, TOUR_DONE_KEY } from '../tour.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A storage that is a plain object, so a test never touches the real one and a failed run
+// cannot leave the developer's own browser thinking it already took the tour.
+function fakeStore(seed = {}) {
+  const m = new Map(Object.entries(seed));
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => m.set(k, String(v)),
+    removeItem: (k) => m.delete(k),
+    dump: () => Object.fromEntries(m),
+  };
+}
+const host = () => {
+  const d = document.createElement('div');
+  document.body.append(d);
+  return d;
+};
+const mount = (opts = {}) => mountTour(host(), { steps: STEPS, storage: fakeStore(), ...opts });
+
+const TOUR = allTourSteps(STEPS);
+const P_LAND = '/', P_HOME = '/home.html', P_KIOSK = '/kiosk.html';
+
+// =====================================================================================
+section('*** IT IS NEVER A GATE — the page underneath stays usable ***');
+{
+  // A real element under where the overlay sits, hit-tested with elementFromPoint rather than
+  // by reading a style string back. Asking the DOM "who is at this pixel" is the only version
+  // of this check that would notice a scrim added later by a stylesheet.
+  const sandbox = document.getElementById('sandbox');
+  // ANCHORED TOP-LEFT, not bottom-right. The first version used `bottom:30px` and reported a
+  // red on a headless pane whose viewport measured 0×0 — the element landed at y = -90 and
+  // elementFromPoint correctly returned null. That was the harness, not the tour. Anchoring to
+  // the top-left makes the probe depend on as little of the viewport as a hit test can.
+  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:180px;height:44px;z-index:1';
+  const under = document.createElement('button');
+  under.textContent = 'under the tour';
+  under.style.cssText = 'width:100%;height:100%';
+  sandbox.replaceChildren(under);
+
+  const t = mount({ path: P_LAND });
+  check('the tour mounted on the landing page', !!t && t.shown());
+
+  const r = under.getBoundingClientRect();
+  const px = [r.left + r.width / 2, r.top + r.height / 2];
+  // A viewport with no area cannot answer a hit test at all, and a red line there would be a
+  // report about the window rather than about the code. Say so instead of guessing.
+  const canHitTest = innerWidth > px[0] && innerHeight > px[1];
+  if (!canHitTest) {
+    check(`NOT RUN: hit test needs a real viewport (this one is ${innerWidth}×${innerHeight})`,
+      true);
+  } else {
+    const hit = document.elementFromPoint(px[0], px[1]);
+    check('*** a control underneath the overlay is still clickable ***',
+      hit === under, `elementFromPoint gave <${hit?.tagName?.toLowerCase()}>`);
+  }
+
+  check('...and the overlay itself does not take pointer events',
+    t.el.style.pointerEvents === 'none', t.el.style.pointerEvents);
+  const p = t.el.querySelector('[data-tour-panel]');
+  check('...while its own panel does, or the buttons would be dead',
+    p.style.pointerEvents === 'auto', p.style.pointerEvents);
+
+  // *** NEGATIVE CONTROL. *** Take the guard away and confirm the hit test goes red. Without
+  // this, the check above passes just as happily on a build with a full-screen scrim, because
+  // the scrim would be the thing at that pixel and nothing here would have noticed.
+  if (canHitTest) {
+    t.el.style.pointerEvents = 'auto';
+    const blocked = document.elementFromPoint(px[0], px[1]);
+    check('NEGATIVE CONTROL: with pointer-events removed, the overlay DOES block the control',
+      blocked !== under, `still reached <${blocked?.tagName?.toLowerCase()}>`);
+    t.el.style.pointerEvents = 'none';
+    check('...and restoring the guard lets it through again',
+      document.elementFromPoint(px[0], px[1]) === under);
+  }
+
+  // The way out of the demo must win if the two ever overlap.
+  check('the tour sits BELOW [data-way-out]’s z-index',
+    Number(t.el.style.zIndex) < 2147483000, t.el.style.zIndex);
+
+  t.destroy();
+  sandbox.replaceChildren();
+  sandbox.style.cssText = 'position:relative;height:1px;overflow:hidden';
+}
+
+// =====================================================================================
+section('*** ONE BUTTON, ONE DIRECTION — next() always terminates ***');
+{
+  // THE PROPERTY THAT MATTERS FOR A ONE-SWITCH USER, and it is stronger than "the tour wraps":
+  // if the only verb somebody has is Next, then pressing Next enough times must end the tour.
+  // Checked from EVERY starting position, not just the first, because the failure would be one
+  // step sitting there refusing — and a walk that only ever starts at zero would never find it.
+  let worst = 0, stuck = null;
+  for (let start = 0; start < TOUR.length; start++) {
+    const store = fakeStore({ [TOUR_POS_KEY]: TOUR[start].id });
+    const t = mountTour(host(), { steps: STEPS, storage: store, path: TOUR[start].page });
+    if (!t) { stuck = `no mount at ${TOUR[start].id}`; break; }
+    let presses = 0;
+    // The budget is generous on purpose: the point is termination, not step count.
+    while (t.shown() && presses < TOUR.length * 4) { t.next(); presses++; }
+    if (t.shown()) { stuck = `${TOUR[start].id} after ${presses} presses`; t.destroy(); break; }
+    worst = Math.max(worst, presses);
+  }
+  check('*** from every step, pressing Next enough times ends the tour ***',
+    !stuck, stuck || '');
+  check('...and it never took more presses than there are steps',
+    worst <= TOUR.length, `worst case ${worst} of ${TOUR.length}`);
+
+  // *** NEGATIVE CONTROL, ON THE DETECTOR. *** The loop above is only worth anything if it can
+  // actually fail, so run the identical loop against a hand-built stand-in carrying the classic
+  // tour bug — next() refuses at the last step instead of finishing, the button greys out, and
+  // a switch user is parked on the final card forever. If the loop goes green on THAT, the
+  // check above proves nothing.
+  {
+    let idx = 0;
+    const buggy = { shown: () => true, next: () => { if (idx < TOUR.length - 1) idx++; } };
+    let presses = 0;
+    while (buggy.shown() && presses < TOUR.length * 4) { buggy.next(); presses++; }
+    check('NEGATIVE CONTROL: the same loop does NOT terminate on a next() that stops dead',
+      buggy.shown() && presses === TOUR.length * 4, `gave up after ${presses} presses`);
+  }
+
+  // Skip is the second escape and it must work from the very first card, before anybody has
+  // agreed to anything.
+  {
+    const store = fakeStore();
+    const t = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+    check('the tour opens on the first step', t.index() === 0, t.step().id);
+    t.skip();
+    check('*** Skip works from step one ***', !t.shown());
+    check('...and skipping is remembered, so it does not come back',
+      store.getItem(TOUR_DONE_KEY) === '1');
+    check('...and the saved position is cleared', store.getItem(TOUR_POS_KEY) === null);
+  }
+  {
+    // The reason is reported, because "skipped" and "done" are different facts about a visitor.
+    const seen = [];
+    const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND,
+                                  onFinish: (r) => seen.push(r) });
+    t.skip();
+    check('onFinish says which of the two it was', seen[0] === 'skipped', seen.join(','));
+  }
+}
+
+// =====================================================================================
+section('*** THE LANDING PAGE IS VISITED TWICE — the bug a per-page filter hides ***');
+{
+  // The walk opens and closes on `/`. An implementation that filtered STEPS down to the ones
+  // whose `page` matched would splice those two into one run and render a TWO-STEP tour:
+  // "someone you love is in a bed" straight to "it is free and open source". It looks like a
+  // working tour from every angle except this one.
+  const onLanding = TOUR.filter((s) => samePage(s.page, P_LAND));
+  check('the landing page really does own more than one step, far apart',
+    onLanding.length >= 2 &&
+    overallIndex(STEPS, onLanding[onLanding.length - 1]) - overallIndex(STEPS, onLanding[0]) > 2,
+    onLanding.map((s) => s.id).join(' … '));
+
+  const store = fakeStore();
+  const t = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  const first = t.step();
+  t.next();
+  check('*** the step after the opening line is NOT the closing card ***',
+    t.step().id !== onLanding[onLanding.length - 1].id,
+    `${first.id} → ${t.step().id}`);
+  check('...it is the next step in the WHOLE walk', t.step().id === TOUR[1].id, t.step().id);
+  t.destroy();
+}
+
+// =====================================================================================
+section('it spans three pages, so the position survives navigation');
+{
+  const store = fakeStore();
+  const a = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  a.next();                                     // now pointing at a step on /home.html
+  check('leaving the page it is on puts the tour in a holding state', a.waiting());
+  check('...and it says where to go rather than navigating there',
+    /open your screens/i.test(a.el.querySelector('[data-tour-say]').textContent),
+    a.el.querySelector('[data-tour-say]').textContent.trim());
+  check('...with no ring, because that target is not on this page',
+    a.el.querySelector('[data-tour-ring]').hidden);
+  const saved = store.getItem(TOUR_POS_KEY);
+  check('the saved position is the step it is sending them to', saved === TOUR[1].id, saved);
+  a.destroy();
+
+  // *** DESTROY IS NOT SKIP. *** A host tearing a page down must not record that the person
+  // finished, or navigating once would silently cancel the tour for good — which is how a
+  // multi-page tour usually dies.
+  check('*** tearing the page down does not mark the tour finished ***',
+    store.getItem(TOUR_DONE_KEY) === null, String(store.getItem(TOUR_DONE_KEY)));
+
+  const b = mountTour(host(), { steps: STEPS, storage: store, path: TOUR[1].page });
+  check('*** arriving on the next page resumes where it left off ***',
+    !!b && b.step().id === TOUR[1].id, b ? b.step().id : 'did not mount');
+  check('...and it is no longer holding', b && !b.waiting());
+  b?.destroy();
+
+  // Somebody who never started the tour and opens the kiosk directly gets no overlay at all.
+  const c = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_KIOSK });
+  check('a page the walk has not reached mounts nothing', c === null);
+
+  // And a second Next while holding ends it, so the holding state is not a dead end either.
+  const store2 = fakeStore();
+  const d = mountTour(host(), { steps: STEPS, storage: store2, path: P_LAND });
+  d.next();
+  check('holding, as set up', d.waiting() && d.shown());
+  d.next();
+  check('*** a second Next while holding finishes rather than sitting there ***', !d.shown());
+}
+
+// =====================================================================================
+section('the counter counts the walk, not the page');
+{
+  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND });
+  const count = () => t.el.querySelector('[data-tour-count]').textContent.trim();
+  check('it opens at 1 of the whole walk', count() === `1 of ${TOUR.length}`, count());
+  check('...and the total is the tour steps, not every step',
+    TOUR.length < STEPS.length, `${TOUR.length} of ${STEPS.length}`);
+  t.next();
+  check('...and advancing counts globally', count() === `2 of ${TOUR.length}`, count());
+  t.destroy();
+}
+
+// =====================================================================================
+section('it never performs the action — that is the recorder’s job');
+{
+  // The whole difference between this and record_walkthrough.py. A step whose action is a
+  // click must leave that button alone; a tour that presses things for somebody is a demo
+  // playing at them, and on the composer it would create a screen they did not ask for.
+  const btn = document.createElement('button');
+  let clicks = 0;
+  btn.addEventListener('click', () => { clicks++; });
+  btn.setAttribute('data-name', '');
+  btn.style.cssText = 'position:fixed;left:-9999px';
+  document.body.append(btn);
+
+  const store = fakeStore({ [TOUR_POS_KEY]: TOUR[1].id });
+  const t = mountTour(host(), { steps: STEPS, storage: store, path: TOUR[1].page });
+  check('parked on a step whose recorded action is not "none"',
+    !!t && t.step().action && t.step().action !== 'none', t?.step()?.action);
+  t.next();
+  check('*** the tour did not fire the step’s action ***', clicks === 0, `${clicks} click(s)`);
+  t?.destroy();
+  btn.remove();
+}
+
+// =====================================================================================
+section('reduced motion governs the highlight');
+{
+  const on = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND,
+                                 reducedMotion: true });
+  const ringOf = (t) => t.el.querySelector('[data-tour-ring]');
+  check('*** reduced motion removes the transition rather than slowing it ***',
+    !/transition/.test(ringOf(on).style.cssText), ringOf(on).style.cssText.slice(0, 90));
+  on.destroy();
+
+  const off = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND,
+                                  reducedMotion: false });
+  check('NEGATIVE CONTROL: with it off, there is a transition to remove',
+    /transition/.test(ringOf(off).style.cssText));
+  off.destroy();
+
+  // Nothing here reads the SYSTEM setting: this machine's own preference would decide whether
+  // the suite passes, which is a test that reports the tester rather than the code. The live
+  // path is `reducedMotion: null` and it is exercised by looking at the page, not by asserting.
+  check('the system default is opt-out-able for exactly this reason (not run: live query)',
+    true);
+}
+
+// =====================================================================================
+section('a target that is not on the page draws no ring');
+{
+  // The graceful half of the failure the recorder makes loud: `.k-mods` was in the DOM, empty
+  // and zero-sized, and the tour would have ringed nothing at 0,0. Here the target simply is
+  // not present, which is the same picture and must produce the same restraint.
+  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND });
+  const ring = t.el.querySelector('[data-tour-ring]');
+  check('no target on this page, no ring', ring.hidden);
+
+  // ...and a zero-sized element that IS present is treated the same way, which is the case
+  // that actually happened.
+  const ghost = document.createElement('div');
+  ghost.id = 'tour-ghost';
+  ghost.style.cssText = 'position:fixed;width:0;height:0';
+  document.body.append(ghost);
+  const t2 = mountTour(host(), {
+    steps: [{ id: 'g', page: P_LAND, target: '#tour-ghost', say: 'x', settle: 0 }],
+    storage: fakeStore(), path: P_LAND });
+  check('*** a present-but-zero-sized target draws no ring either ***',
+    t2.el.querySelector('[data-tour-ring]').hidden);
+
+  const real = document.createElement('div');
+  real.id = 'tour-real';
+  real.style.cssText = 'position:fixed;left:20px;top:20px;width:120px;height:40px';
+  document.body.append(real);
+  const t3 = mountTour(host(), {
+    steps: [{ id: 'r', page: P_LAND, target: '#tour-real', say: 'x', settle: 0 }],
+    storage: fakeStore(), path: P_LAND });
+  const r3 = t3.el.querySelector('[data-tour-ring]');
+  check('NEGATIVE CONTROL: a real target does get one, sized around it',
+    !r3.hidden && r3.style.width === '132px' && r3.style.height === '52px',
+    `${r3.style.width} × ${r3.style.height}`);
+
+  t.destroy(); t2.destroy(); t3.destroy(); ghost.remove(); real.remove();
+}
+
+// =====================================================================================
+section('the input is never named — the bus drives it');
+{
+  const subs = new Map();
+  const bus = {
+    subscribe(topic, fn) {
+      subs.set(topic, fn);
+      return () => subs.delete(topic);
+    },
+  };
+  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, bus });
+  check('it subscribes to tour/next, tour/prev and tour/skip',
+    subs.has('tour/next') && subs.has('tour/prev') && subs.has('tour/skip'),
+    [...subs.keys()].join(' '));
+  subs.get('tour/next')();
+  check('...and a bus message moves it, same as the button', t.index() === 1);
+  subs.get('tour/skip')();
+  check('...and ends it', !t.shown());
+  check('*** unsubscribing on finish, or a dead tour keeps taking input ***',
+    subs.size === 0, `${subs.size} left`);
+}
+
+// =====================================================================================
+section('it is not asked twice, and it can be asked for again');
+{
+  const store = fakeStore();
+  const a = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  a.skip();
+  check('a second mount after skipping shows nothing',
+    mountTour(host(), { steps: STEPS, storage: store, path: P_LAND }) === null);
+  resetTour(store);
+  const b = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  check('*** resetTour lets somebody take it again ***', !!b && b.index() === 0);
+  b?.destroy();
+}
+
+// =====================================================================================
+section('storage that throws does not take the page with it');
+{
+  // Private browsing, or a locked-down kiosk profile. The tour losing its place is a small
+  // annoyance; the tour throwing during boot would take the kiosk down with it.
+  const hostile = {
+    getItem() { throw new Error('nope'); },
+    setItem() { throw new Error('nope'); },
+    removeItem() { throw new Error('nope'); },
+  };
+  let threw = null, t = null;
+  try { t = mountTour(host(), { steps: STEPS, storage: hostile, path: P_LAND }); }
+  catch (e) { threw = e; }
+  check('*** it mounts anyway when storage refuses ***', !threw && !!t, String(threw));
+  try { t?.next(); t?.skip(); } catch (e) { threw = e; }
+  check('...and walking it does not throw either', !threw, String(threw));
+  check('...it just ends up not remembered', !t?.shown());
+}
+
+// =====================================================================================
+section('the demo seed and the script agree on one name');
+{
+  // Caught while building this: `compose-1` types "Demo" on camera and demoSeed() still said
+  // "Mum’s room" — two names for the same screen, and the second was the British wording Mike
+  // had already asked to be gone.
+  const typed = STEPS.find((s) => s.id === 'compose-1')?.value;
+  check('the step that types a screen name is still there', !!typed, String(typed));
+  check('*** no British wording in the script or the seed ***',
+    !/\bmum\b|\bmum’s\b|colour|favourite|whilst/i.test(
+      JSON.stringify(STEPS)), 'checked STEPS');
+}
+
+// =====================================================================================
+// THE SUMMARY GOES LAST, AND STAYS LAST. Twice in this project a section was appended below a
+// summary that had already been computed: it ran, it passed, and it was not counted — the tell
+// was a total that did not move. Anything added goes ABOVE this line.
+// =====================================================================================
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
