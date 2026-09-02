@@ -102,12 +102,45 @@ export function samePage(a, b) {
 // What to say when the next step is somewhere else. Keyed by DESTINATION, because "open the
 // screen" and "go back to the front page" are different instructions and a generic "navigate to
 // continue" is the kind of line that reads as an error message.
+//
+// *** AND IT IS A LINK, NOT A SENTENCE. *** Telling somebody to go and find a page is the tour
+// making its own problem theirs; a link they press is still THEM navigating, which is the line
+// that matters — the tour never performs the step, but it can hold the door. Anybody who would
+// rather get there their own way still can, because the page underneath was never blocked.
 const GO_THERE = {
-  '/': 'Head back to the front page to finish the tour.',
-  '/home.html': 'Open your screens to carry on — the tour picks up where you left it.',
-  '/kiosk.html': 'Open the screen you just made — the tour picks up where you left it.',
+  '/': { say: 'Head back to the front page to finish.', label: 'Front page' },
+  '/home.html': { say: 'Open your screens to carry on — the tour picks up where you left it.',
+                  label: 'Your screens' },
+  '/kiosk.html': { say: 'Open the screen you just made — the tour picks up where you left it.',
+                   label: 'Open the screen' },
 };
-const goThere = (page) => GO_THERE[page] || 'Open the next page to carry on.';
+const goThere = (page) =>
+  GO_THERE[page] || { say: 'Open the next page to carry on.', label: 'Carry on' };
+
+/**
+ * Begin the walk, or begin it again.
+ *
+ * *** THE TOUR NEVER STARTS ITSELF. *** It is offered by a control on the landing page and
+ * nowhere else, and `mountTour` refuses to render until this has been called in this browser.
+ * A tour that appears unbidden over a page somebody came to read is not forbidden here — it is
+ * not a gate, and the page underneath stays live — but it is the thing everybody has learned to
+ * close without reading, and it would ride along to the kiosk, which is a screen a patient may
+ * be looking at. Offered beats sprung.
+ */
+export function startTour(steps, storage = (typeof localStorage !== 'undefined' ? localStorage : null)) {
+  const first = allTourSteps(steps)[0];
+  try {
+    storage?.removeItem(TOUR_DONE_KEY);   // so "take it again" works after finishing
+    if (first) storage?.setItem(TOUR_POS_KEY, first.id);
+  } catch { /* private mode: the tour will run but not survive navigation */ }
+  return first || null;
+}
+
+/** Is a walk in progress in this browser? */
+export const tourStarted = (storage = (typeof localStorage !== 'undefined' ? localStorage : null)) => {
+  try { return !!storage?.getItem(TOUR_POS_KEY) && !storage?.getItem(TOUR_DONE_KEY); }
+  catch { return false; }
+};
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -134,6 +167,8 @@ export function mountTour(root, {
   onStep = null,
   onFinish = null,
   respectDone = true,
+  requireStarted = true,
+  start = false,
 } = {}) {
   if (!root || !doc) return null;
 
@@ -144,11 +179,28 @@ export function mountTour(root, {
   const write = (k, v) => { try { storage?.setItem(k, v); } catch { /* private mode */ } };
   const drop = (k) => { try { storage?.removeItem(k); } catch { /* private mode */ } };
 
-  // Somebody who finished or skipped is not asked again. A tour that reappears on every page
-  // load is the thing people learn to close without reading.
-  if (respectDone && read(TOUR_DONE_KEY)) return null;
+  if (start) startTour(steps, storage);
+
+  // *** BOTH GATES ARE SKIPPED WHEN `start` IS PASSED, AND THAT IS NOT A CONVENIENCE. ***
+  // `start: true` means a person just pressed "Take the guided tour" — the caller has the fact
+  // first-hand and does not need storage to confirm it. In a private window every write below
+  // throws and is swallowed, so a gate that consulted storage here would silently do nothing
+  // when somebody pressed the button. The tour then runs but does not survive navigation, which
+  // is the honest degradation.
+  //
+  // Somebody who finished or skipped is not asked again — a tour that reappears on every page
+  // load is the thing people learn to close without reading — but pressing the button again is
+  // asking again, and it is allowed to work.
+  if (respectDone && !start && read(TOUR_DONE_KEY)) return null;
 
   const savedId = read(TOUR_POS_KEY);
+
+  // *** NOTHING RENDERS UNTIL SOMEBODY ASKED FOR IT. *** This is the guard that keeps the tour
+  // off a bedside kiosk: all three pages call `mountTour` unconditionally, and all three get
+  // null until the button has been pressed in that browser. Without it, wiring the kiosk up
+  // would mean every paired screen renders a tour panel over a patient's photographs.
+  if (requireStarted && !start && !savedId) return null;
+
   let i = Math.max(0, all.findIndex((s) => s.id === savedId));
 
   // *** THE TOUR ONLY EXISTS ON THE PAGE ITS CURRENT STEP IS ON. *** Somebody who has not
@@ -231,18 +283,20 @@ export function mountTour(root, {
     if (done) return;
     const step = current();
     const n = i + 1;
+    const go = waiting ? goThere(step.page) : null;
     const label = waiting ? 'End the tour' : n >= all.length ? 'Done' : 'Next';
-    const say = waiting ? goThere(step.page) : step.say;
+    const primary = 'flex:0 0 auto;background:#F7C948;color:#0A3323;border:0;border-radius:9px;'
+      + 'padding:9px 16px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none';
+    const quiet = 'flex:0 0 auto;background:transparent;color:#cfe0d6;'
+      + 'border:1px solid rgba(255,255,255,.28);border-radius:9px;padding:9px 14px;'
+      + 'font:inherit;cursor:pointer;text-decoration:none';
 
     panel.innerHTML = `
-      <div data-tour-say>${esc(say)}</div>
+      <div data-tour-say>${esc(go ? go.say : step.say)}</div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
-        <button type="button" data-tour-next style="flex:0 0 auto;background:#F7C948;
-          color:#0A3323;border:0;border-radius:9px;padding:9px 16px;font:inherit;
-          font-weight:700;cursor:pointer">${esc(label)}</button>
-        <button type="button" data-tour-skip style="flex:0 0 auto;background:transparent;
-          color:#cfe0d6;border:1px solid rgba(255,255,255,.28);border-radius:9px;
-          padding:9px 14px;font:inherit;cursor:pointer">Skip the tour</button>
+        ${go ? `<a data-tour-go href="${esc(step.page)}" style="${primary}">${esc(go.label)} →</a>` : ''}
+        <button type="button" data-tour-next style="${go ? quiet : primary}">${esc(label)}</button>
+        <button type="button" data-tour-skip style="${quiet}">Skip the tour</button>
         <span data-tour-count style="margin-left:auto;opacity:.6;font-size:.86rem">${n} of ${all.length}</span>
       </div>`;
     panel.querySelector('[data-tour-next]').addEventListener('click', next);

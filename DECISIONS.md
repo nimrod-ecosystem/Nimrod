@@ -1145,8 +1145,8 @@ their reach, and everything else on the screen still re-themes for free.
 - **The site says plainly that this is not only for people with disabilities.** Mike's call: *"We
   made it as useful for caregivers and everyone else."* The claim is already built rather than
   aspirational — the points ledger, the quest board, the focus timer, Word Forge and the math game
-  are the same platform serving a homeschooling household, and a carer's own board is a screen like
-  any other. (2026-09-02)
+  are the same platform doing schoolwork, chores and a household's own scorekeeping, and a carer's
+  own board is a screen like any other. (2026-09-02)
 
 
 ## Naming and the tab-to-module direction — Mike's rulings, 2026-09-02
@@ -1179,8 +1179,8 @@ their reach, and everything else on the screen still re-themes for free.
 
 ## The learning cap — reopened by Mike, 2026-09-02, not settled
 
-Mike: *"I thought I pushed back against the cap. I don't want to limit the amount of learning he can
-do in a day. The cap should be on how much counts towards hours. We'll have to discuss this."*
+Reopened by Mike: he does not want a cap that limits how much learning happens in a day, and says the
+cap belongs on how much counts toward hours instead.
 
 - **Correction to a chat-side summary that misdescribed the cap.** The `dailyCap` does **not** limit
   learning. As built and as recorded in `platform-status.md`, past the cap the game keeps playing and
@@ -1345,9 +1345,7 @@ machine? They should be able to delete it and choose if it's ever even stored."*
 
 ## The OSU boards — what they are, and what we may and may not do with them
 
-Context, because it is not obvious from the name: these boards are published by the assistive
-technology centre **the project's first outreach contact belongs to**. The named people and the
-relationship are recorded in the private outreach prep, not here.
+Recorded because the boards are a useful reference and somebody will reasonably want to reuse them.
 
 - **They are not open source, and neither is their upstream.** Verified 2026-09-02: every page carries
   *"© The Ohio State University Wexner Medical Center 2025"*, credited as *"Adapted from
@@ -1361,12 +1359,10 @@ relationship are recorded in the private outreach prep, not here.
   a particular board is the authored work. Building Nimrod boards that cover the same clinical
   territory — positioning, trach and vent, care coordination, questions about treatment — is ordinary
   practice. Reproducing their pages is not. (2026-09-02)
-- **The better move is to ask, and asking is a warm opener rather than a favour.** *"We built this,
-  your boards are the best thing in the space, may we build a Nimrod set based on them with credit?"*
-  is a specific, flattering, two-sentence question to a clinic that publishes patient education for
-  free — and the outreach prep already says a specific question is the right first contact with this
-  person. A yes gives a credited OSU-derived set; a no costs nothing and the territory is still
-  buildable independently. _(open — needs Mike to send it)_ (2026-09-02)
+- **Permission could be asked for later, and nothing depends on it.** A clinic that publishes patient
+  education for free may well say yes to a credited derived set, but that is a conversation for
+  whenever there is a reason to have one — not a blocker. The territory is buildable independently
+  and that is the route the standard set takes. _(parked)_ (2026-09-02)
 
 
 ## Safety and violence vocabulary — Mike likes it; default membership open
@@ -1387,3 +1383,116 @@ should be in the default set though."*
   depending entirely on who can read it**, which puts it directly on top of the selections ruling
   above. (2026-09-02)
 - **Default membership is open.** _(open — Mike's call)_ (2026-09-02)
+- **The "spoken aloud in a room where the wrong person may be" objection is answered by the existing
+  architecture, not by a new mechanism.** Mike's correction: *"Depending on the module it's wired to.
+  It can be silent when messaging or in telepathy mode."* The output bus already decides where an
+  utterance goes — room speaker, a phone, a live call, or the shared companion surface — so a card
+  can be routed to a screen somebody else is holding without a sound in the room. **Output routing is
+  a per-card property, not a board-wide mode.** That makes the safety vocabulary buildable without
+  inventing anything: it is a routing default on those cards. (2026-09-02)
+
+
+## Local-first storage — Mike's ruling, 2026-09-02
+
+Mike, on being told selections go to a server: *"What server? We should only be keeping what they need
+us to keep to save their preferences. … can't they even save their preferences on their machine? That
+could maybe be something they choose to save with us so it can be reached from any device. … I don't
+have a server. If a lot of people start using the site, I can't save stuff for everyone. It's not just
+privacy, it's what I can afford to store."*
+
+- **The default flips: the user's machine is the store, and the platform is opt-in sync.** Preferences,
+  boards and layout live locally. Saving them with us becomes a **choice somebody makes so their setup
+  follows them between devices**, not the way the product works. (2026-09-02)
+- **Two arguments pointing the same way, and the second one is the harder constraint.** Privacy is the
+  stated selling point and a local default makes the claim true rather than argued. But the binding
+  constraint is **cost**, and it is not hypothetical. (2026-09-02)
+- **The arithmetic, so the decision rests on numbers rather than unease.** At the recorded ~150 B per
+  event, and remembering the log is append-only so it never shrinks: (2026-09-02)
+
+  | | light (200 events/day) | moderate (1,000/day) | heavy (3,000/day) |
+  |---|---|---|---|
+  | one user, one year | 10 MB | 52 MB | 157 MB |
+  | 100 users, one year | 1.0 GB | 5.1 GB | 15.3 GB |
+  | 1,000 users, one year | 10.2 GB | 51.0 GB | 153.0 GB |
+  | 10,000 users, one year | 102 GB | 510 GB | 1.5 TB |
+
+  **Config on its own is nothing:** 10,000 users' preferences, boards and layouts at ~50 KB each is
+  under 500 MB, and it does not grow with use. **So the event log is the entire hosting cost of this
+  project, and it is the only thing in the design that grows without bound.** A free Postgres tier
+  holds the config for everybody more or less forever, and it holds a hundred moderate users' events
+  for about a month. (2026-09-02)
+- **What this does not throw away.** The server work already done — Postgres, device-secret auth,
+  the render blueprint — is what makes opt-in sync possible for whoever wants it. The change is which
+  side is the default, not whether the server exists. **The media agent is the proof the pattern
+  works**: a user-run local process that the browser reads directly, with the platform never touching
+  the bytes. Events can take the same route. (2026-09-02)
+- **Follow-on:** this supersedes the 2026-09-02 entry above that treated a local event store as an
+  open question. It is now the direction. What is still open is the mechanism — browser storage,
+  the media agent extended, or a small local file the user owns — and whether sync is per-profile or
+  per-account. _(open — design, not principle)_ (2026-09-02)
+
+
+## The escape is a CARD in a reserved position — Mike's clarification, 2026-09-02
+
+Correcting a chat-side misreading: an earlier note said "escape card" in a way that read as an escape
+*key*. It is not a key.
+
+- **The card is called `Menu`, not `Other` — Mike caught a collision the same day.** *"Maybe other
+  isn't the right word for it as we're leaving other to be interpreted by the moderator. Maybe
+  Menu?"* He is right, and the two are genuinely different cards doing different jobs:
+  - **`Other` is vocabulary** — a semantic escape meaning *not one of these*, whose reading is the
+    moderator's job. It exists so a yes/no board is not a forced choice, and it belongs wherever a
+    forced choice would otherwise exist. It says something.
+  - **`Menu` is navigation** — geometric symbol, `--sym-nav`, reserved position, takes you somewhere.
+    It says nothing.
+  - **Conflating them would have been a real defect rather than an untidy name.** Somebody pressing
+    *Other* to mean "neither of those, you asked me the wrong question" would have been navigated
+    away instead of understood — the software answering a different question than the one asked,
+    which for this population is indistinguishable from not listening. (2026-09-02)
+  - Consequence: the naming question already open in `aac_vocab.js` — *"Other"* versus *"Something
+    else"* — is now unblocked and narrower, because it is only about the semantic escape.
+- **Bottom-left of every page is `Menu`, and it returns to the menu.** Mike: *"the bottom left card
+  could be other and that takes you back to the menu. That keeps it to whatever they are already
+  using to select the cards."* The point is that the way out uses **the same access method as
+  everything else** — a switch, a dwell, a scan. A way out that needs a keyboard is not a way out for
+  the person this is built for. (2026-09-02)
+- **Reserved position, same cell on every page.** Which is the motor-planning rule applied to
+  navigation: the way back is reached without looking, from the same direction, wherever you are.
+  It costs one vocabulary cell per page and that is the right trade. (2026-09-02)
+- **The menu is where the keyboard lives**, along with other sets — for anyone with the facility to
+  use them. The `AGENTS.md` invariant governs it: nobody can be left somewhere their own input cannot
+  leave. (2026-09-02)
+
+
+## What belongs in the public repo — Mike's ruling, 2026-09-02
+
+- **The public repo carries what somebody needs in order to use, build on or understand the software.
+  Nothing else.** Mike's call, and it is a filter, not a cleanup: *"The public repo should only be
+  things people need."* Outreach plans, who is being contacted, personal circumstances and family
+  detail are not among them. They live in the private working notes. (2026-09-02)
+- **The reason is not squeamishness, it is the product's central claim.** Mike: *"Privacy is a big
+  selling point of this ecosystem and it feels like my personal life is all over the repo. Why should
+  anyone trust me with their information when I can't even protect my own."* A repo that leaks its
+  author's life is an argument against the thing the repo is selling, and a reader will make that
+  connection faster than any privacy page can undo it. (2026-09-02)
+- **What this changes about how decisions get written here, concretely.** A decision entry needs the
+  reasoning so the same wrong idea does not come back — that requirement stands. It does not need the
+  circumstance that prompted it. **Attribute the call, keep the reason impersonal:** "Mike's call,
+  because a learned appearance should not move when a theme changes" is complete; the household it
+  came up in is not part of the argument. Several entries written on 2026-09-02 failed this and were
+  corrected the same day. (2026-09-02)
+- **Audit owed, and it is small but not empty.** A search on 2026-09-02 for names and relationship
+  markers across the public repo returned six hits in four files: one first name still present in a
+  tracked test file — which the 2026-08-30 removal decision already covers and which was not carried
+  out — and five uses of a relationship marker, three incidental to design reasoning and two in the
+  landing page's first-person backstory. **The backstory is deliberate and is Mike's to keep**; it
+  carries no name. The rest is incidental and comes out. The test file is a straightforward fix and
+  is still owed. (2026-09-02)
+- **The clinical detail in the backstory stays — Mike's ruling, closing the question.** He was asked
+  whether the coma, the strokes and how she was positioned should come out the way the name did:
+  *"That's all relevant. Unfortunately, I can't just leave everything out."* **The line that makes
+  this coherent, so nobody re-opens it as a cleanup:** the name came out because it *identifies* a
+  person who cannot consent to being identified. The clinical detail is unnamed, and it is the
+  argument for why the software exists at all — a room where somebody could only see the exterior
+  wall is the whole design brief. Removing it would leave a product with no reason and protect
+  nobody. **Do not "clean" the backstory.** (2026-09-02)

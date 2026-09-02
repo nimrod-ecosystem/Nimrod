@@ -306,6 +306,12 @@
     <div class="cta">
       <a href="#demo" class="btn ondark">Try it now — no account, nothing to install</a>
       <a href="/auth/login" class="btn ondark ghost">Get started — it’s free</a>
+      <!-- THE TOUR IS OFFERED, NEVER SPRUNG. It does not start on page load: it would be the
+           thing everybody has learned to close without reading, and because it follows you
+           across three pages it would ride along to the kiosk, which is a screen a patient may
+           be looking at. `tour.js` will not render until this has been pressed in this
+           browser, which is also what keeps it off a paired bedside screen. -->
+      <a href="?tour=1" class="btn ondark ghost" data-tour-start>Take the guided tour</a>
     </div>
     <div class="pills">
       <span class="pill"><b>Free for everyone</b></span>
@@ -751,6 +757,32 @@
       play.remove();
     }, { once: true });
   })();
+
+  // THE GUIDED TOUR. Same list the walkthrough video is made of — `steps.js` — walked by a
+  // person instead of performed by the recorder.
+  //
+  // `path: '/'` is passed explicitly rather than read from `location.pathname`, because this
+  // file is served both as `/` and as `/landing.html` and the tour's steps say `/`. The page
+  // knows what it is; making `samePage` guess would be inventing a rule for one caller.
+  (async () => {
+    const [{ mountTour, tourStarted }, { STEPS }] =
+      await Promise.all([import('./tour.js'), import('./steps.js')]);
+    let live = null;
+    const show = (start) => {
+      live?.destroy();
+      live = mountTour(document.body, { steps: STEPS, path: '/', start });
+    };
+    // Already walking? Pick it up. This is where the CLOSING card lands — the walk opens and
+    // ends on this page, which is why position is an index into the whole tour rather than
+    // into this page's steps.
+    if (tourStarted()) show(false);
+    for (const b of document.querySelectorAll('[data-tour-start]')) {
+      b.addEventListener('click', (e) => { e.preventDefault(); show(true); });
+    }
+    // `?tour=1` so the link works with JavaScript disabled on the click path, and so a URL can
+    // hand somebody straight into it.
+    if (new URLSearchParams(location.search).get('tour') === '1') show(true);
+  })().catch((e) => console.warn('tour', e));
 
   if (new URLSearchParams(location.search).get('login') === 'failed') {
     const b = document.createElement('div');

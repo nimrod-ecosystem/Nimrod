@@ -172,6 +172,7 @@ async function bootLocal() {
     sources: createLocalMediaSources(),
   });
   boot.remove();
+  offerTour();
 
   // THE ONLY PLACE THAT DECIDES A STRANGER IS LOOKING. `mountDemoStrip` renders when asked
   // and never decides for itself, so this branch — signed out, no device key — is the whole
@@ -207,6 +208,29 @@ async function bootLocal() {
   mountWayOut(document.body);
 }
 
+// THE GUIDED TOUR, if one is in progress in this browser.
+//
+// *** UNLIKE THE DEMO STRIP AND THE WAY OUT, THIS IS CALLED FROM BOTH BOOT PATHS. *** Those two
+// are signed-out-only because they are about a stranger; a tour is about somebody who asked for
+// one, and a caregiver setting up their own account has as much right to be walked through the
+// kiosk as a visitor does.
+//
+// What keeps it off a real bedside screen is not this branch, it is `tour.js` refusing to render
+// until `startTour` has run in that browser — which only happens by pressing a button on the
+// landing page. A paired Pi has never seen that page.
+//
+// THE CASE THAT IS NOT COVERED, said out loud rather than left implicit: somebody takes the tour
+// on the very machine that later becomes a bedside screen, abandons it on a kiosk step, and the
+// panel is still there. It is dismissable, it blocks nothing, and the page underneath stays
+// live — so it is untidy rather than unsafe — but it is real, and the fix if it ever bites is a
+// clear-on-pairing rather than another branch here.
+function offerTour() {
+  import('./tour.js').then(async ({ mountTour }) => {
+    const { STEPS } = await import('./steps.js');
+    mountTour(document.body, { steps: STEPS, path: '/kiosk.html' });
+  }).catch((e) => console.warn('tour', e));
+}
+
 (async () => {
   const who = await whoami();
   // A FAILED sign-in still gets the login screen — someone who just tried to sign in needs
@@ -225,6 +249,7 @@ async function bootLocal() {
     const profileId = await ensureProfile(profiles, who.user);
     await mountKiosk(root, { user: who.user, profileId, profiles });
     boot.remove();
+    offerTour();
   } catch (e) {
     boot.textContent = 'Could not reach the dashboard server. It will retry when the connection returns.';
     console.error('kiosk boot failed', e);
