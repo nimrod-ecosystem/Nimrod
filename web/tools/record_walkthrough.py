@@ -265,6 +265,36 @@ def main():
         else:
             assert_demo_surface(page, args.base, args.allow_account)
 
+        # *** WHAT THIS RUN CREATES, THIS RUN CLEANS UP. ***
+        #
+        # `compose-2` clicks Create, so EVERY run — `--check` included, since it has to click
+        # through to reach the later steps — leaves a screen behind. Nine of them had piled up
+        # in the dev account before anybody noticed, and Mike noticed by taking the tour:
+        # *"there are a lot of blank demo screens. There's really not enough information there
+        # for anyone to know what's going on when it's their first time on the site."* The
+        # composer he was judging was mostly this script's litter.
+        #
+        # It also made `--check` flaky rather than merely untidy: `compose-5` clicks the first
+        # `[data-open]` on the page, so which kiosk the later steps run against depended on how
+        # many leftovers were sitting above it.
+        #
+        # Scoped hard on purpose — only ids that did not exist before this run, and only ones
+        # named exactly what `compose-1` types. This deletes somebody's screens if it is wrong,
+        # so it is allowed to be wrong about nothing.
+        def profile_ids():
+            try:
+                return page.evaluate("""async () => {
+                    const r = await fetch('/api/profiles');
+                    if (!r.ok) return null;
+                    const d = await r.json();
+                    return (d.profiles || d).map((p) => [p.id, p.name]);
+                }""") or []
+            except Exception:
+                return []
+
+        before = {pid for pid, _ in profile_ids()}
+        demo_name = (data.get('seed') or {}).get('screenName')
+
         timings, failures = [], []
         t0 = time.time()
         for i, step in enumerate(steps, 1):
@@ -294,6 +324,18 @@ def main():
                 'say': step.get('say'),
             })
             print(f'  {i:2}. ok    {step["id"]:12} {detail}')
+
+        # Sweep up, whatever happened above. A failed run leaves the same litter as a good one.
+        if demo_name:
+            made = [(pid, name) for pid, name in profile_ids()
+                    if pid not in before and name == demo_name]
+            for pid, _ in made:
+                try:
+                    page.evaluate("(id) => fetch('/api/profiles/' + id, {method: 'DELETE'})", pid)
+                except Exception as exc:
+                    print(f'  !! could not remove the screen this run made ({pid}): {exc}')
+            if made:
+                print(f'  cleaned up {len(made)} screen(s) this run created.')
 
         # The timings this run actually measured. The caption file is built from these rather
         # than from word counts, so a slow page load cannot put the captions out of sync.

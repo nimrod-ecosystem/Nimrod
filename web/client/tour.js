@@ -203,13 +203,26 @@ export function mountTour(root, {
 
   let i = Math.max(0, all.findIndex((s) => s.id === savedId));
 
-  // *** THE TOUR ONLY EXISTS ON THE PAGE ITS CURRENT STEP IS ON. *** Somebody who has not
-  // started it and opens the kiosk directly gets no overlay; somebody mid-walk who arrives at
-  // the page the walk was heading for picks it straight back up. Returning null here rather
-  // than mounting-and-hiding means a host can call this unconditionally on all three pages.
-  if (!samePage(all[i].page, path)) return null;
-
-  let waiting = false;     // at a page boundary, holding for the person to navigate
+  // *** THIS USED TO `return null` WHEN THE CURRENT STEP WAS ON ANOTHER PAGE, AND THAT WAS THE
+  // WORST BUG IN THE FEATURE. ***
+  //
+  // Mike, 2026-09-02, taking the tour: *"I selected clock and opened. Also, the tour goes away
+  // and there's no obvious way to go back."* He was two steps in, on the composer, and did the
+  // one thing the composer is for. The tour was pointing at a `/home.html` step, the kiosk did
+  // not match, and it silently rendered nothing — with no affordance anywhere to pick it up
+  // again, on any page.
+  //
+  // It is exactly the failure this file's own header claims to prevent, arriving by the one
+  // route the header did not consider: not a state you cannot LEAVE, but a state you cannot
+  // GET BACK TO. Stranding somebody outside the thing is the same harm as stranding them
+  // inside it, and it is worse here because nothing on screen even admits the tour still
+  // exists.
+  //
+  // So a walk in progress is ALWAYS visible. On the wrong page it opens in the holding state,
+  // which already knows how to say where the walk is and offer a link to it. `waiting` was
+  // built for page boundaries the tour created; this is the same state reached by the person
+  // wandering off, and it needs no new machinery.
+  let waiting = !samePage(all[i].page, path);
   let done = false;
   let off = [];
 
@@ -263,6 +276,30 @@ export function mountTour(root, {
   // ------------------------------------------------------------------------------------
   const current = () => all[i];
 
+  // *** THE PANEL MUST NOT SIT ON THE THING IT IS POINTING AT. ***
+  //
+  // Mike, 2026-09-02: *"The tour is covering the buttons it's asking you to use on the kiosk."*
+  // The panel was pinned to the bottom centre and the kiosk's control bar is at the bottom
+  // centre, so the two beats about those controls — `kiosk-3` and `inputs-1` — drew a ring
+  // around a row of buttons and then parked a card on top of it. A tour that hides its own
+  // subject is worse than one that says nothing.
+  //
+  // Deliberately crude: bottom unless the ring is DOWN THERE, in which case top. No collision
+  // solver, no flipping every frame as the ring animates — a panel that moves around while
+  // somebody is reading it is its own problem, and this population least needs it.
+  function reseat() {
+    const r = ring.hidden ? null : {
+      top: parseFloat(ring.style.top) || 0,
+      bottom: (parseFloat(ring.style.top) || 0) + (parseFloat(ring.style.height) || 0),
+    };
+    const vh = (typeof window !== 'undefined' && window.innerHeight) || 0;
+    const panelH = panel.getBoundingClientRect().height || 120;
+    // The band the panel occupies, plus a margin so they do not merely touch.
+    const clash = !!r && vh > 0 && r.bottom > vh - panelH - 46 && r.top < vh - 12;
+    panel.style.top = clash ? '22px' : '';
+    panel.style.bottom = clash ? '' : '22px';
+  }
+
   function place() {
     const sel = current()?.target;
     const el = sel ? doc.querySelector(sel) : null;
@@ -271,12 +308,13 @@ export function mountTour(root, {
     // one at 0,0 around nothing would be worse than drawing none, and it is what `.k-mods`
     // would have produced before the recorder caught it.
     const r = el?.getBoundingClientRect?.();
-    if (!r || (!r.width && !r.height)) { ring.hidden = true; return; }
+    if (!r || (!r.width && !r.height)) { ring.hidden = true; reseat(); return; }
     ring.hidden = false;
     ring.style.left = `${r.left - 6}px`;
     ring.style.top = `${r.top - 6}px`;
     ring.style.width = `${r.width + 12}px`;
     ring.style.height = `${r.height + 12}px`;
+    reseat();
   }
 
   function render() {

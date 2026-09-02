@@ -50,7 +50,26 @@ function fmt(cfg, now) {
   // 0–23 hour in the chosen zone, for part-of-day.
   const h = parseInt(new Intl.DateTimeFormat('en-US',
     { hour: 'numeric', hour12: false, ...zone }).format(now), 10) % 24;
-  return { time, when: `${weekday} ${partOfDay(h)}`, date };
+  // *** THE WEEKDAY IS SAID ONCE, NOT TWICE. ***
+  //
+  // Mike, 2026-09-02: *"How many times have I said to lose the wednesday morning?!? There's only
+  // a few words there and 2 of them are the day of the week."* On screen it read
+  //
+  //     1:30 AM  /  Wednesday Early Morning  /  Wednesday, September 2, 2026
+  //
+  // — three lines, and the same word opening two of them. On the one panel whose entire job is
+  // orienting somebody, half the words were spent repeating themselves.
+  //
+  // This is a REPEAT correction. It was not written down the previous times, which is why it
+  // came back; it is in `DECISIONS.md` now.
+  //
+  // The pre-dawn argument above is untouched and still load-bearing: "early morning" is here so
+  // that 4:33am cannot read as the evening. What goes is the duplicated weekday — and only when
+  // the date line is actually showing it. With `showDate` off there is nothing else naming the
+  // day, so this line keeps it rather than leaving a disoriented person with "early morning" and
+  // no idea which one.
+  const when = cfg.showDate ? partOfDay(h) : `${weekday} ${partOfDay(h)}`;
+  return { time, when, date };
 }
 
 registerModule(
