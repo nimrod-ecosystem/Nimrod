@@ -51,6 +51,17 @@ export const USE = {
   answer: { label: 'Asks for an answer', hint: 'Needs somebody who can reply — a touch, a switch, a key.' },
 };
 
+// *** WHAT THE SEEDED STARTER SCREEN MOUNTS, IN SLOT ORDER (TL, TR, BL, BR). ***
+//
+// It lives here, in the data-only file, because THREE places need to agree about it and two of
+// them were already wrong. `local_store.js` builds the screen; the landing page tells strangers
+// what the default dashboard is; `steps.js` claims it as the data gate's answer to "was anything
+// real in frame?". The landing page was hand-written HTML and still advertised **camera** as one
+// of the four defaults months after Mike removed it — he found that by reading his own site.
+//
+// A list in a comment is a promise. A list everybody imports is a fact.
+export const STARTER_MODULES = ['photos', 'youtube', 'wordforge', 'clock'];
+
 export const GROUPS = [
   {
     id: 'comfort',
@@ -75,6 +86,17 @@ export const GROUPS = [
 
 // `needs` is deliberately in plain words rather than a technical dependency. "A folder of
 // photos on this computer" is a thing somebody can go and get; `dependsOn: 'local'` is not.
+// *** THE SIX NAMES BELOW THAT CARRY AN EXPLICIT `title`. ***
+//
+// `titleFor()` falls back to the module manifest, which is right for the composer — it has the
+// manifests loaded. The LANDING PAGE does not: importing twenty-one module implementations to
+// print twenty-one names would be a heavy price on the one page most likely to be opened on a
+// phone, in a hospital corridor, on bad wifi.
+//
+// So a name that title-casing the type would get wrong is written here. That is a duplicate of
+// the manifest, and duplicates drift — which is the whole defect this file was just used to fix.
+// `composer_reach_test.html` therefore asserts every one of them still equals its manifest's
+// title. The duplicate is allowed to exist because it cannot go quietly wrong.
 export const CATALOG = [
   // ------------------------------------------------------------------ comfort
   {
@@ -91,6 +113,7 @@ export const CATALOG = [
   },
   {
     type: 'personal',
+    title: 'Personal videos',
     group: 'comfort',
     use: 'watch',
     lead: 'Recorded messages from their people.',
@@ -102,6 +125,7 @@ export const CATALOG = [
   },
   {
     type: 'youtube',
+    title: 'YouTube',
     group: 'comfort',
     use: 'watch',
     lead: 'A playlist of your own, shuffled.',
@@ -145,6 +169,7 @@ export const CATALOG = [
   },
   {
     type: 'board',
+    title: 'Talk',
     // NOT 'comfort'. A board is a tool somebody uses on purpose, and that group promises
     // something to look at.
     group: 'practice',
@@ -194,6 +219,7 @@ export const CATALOG = [
   },
   {
     type: 'pressgame',
+    title: 'Wait and Go',
     // NOT 'comfort'. That group's promise on the page is that nothing in it needs pressing to
     // keep going, and in calm mode this waits on her press for as long as it takes - which is
     // the point of it, and would make the promise false.
@@ -234,6 +260,7 @@ export const CATALOG = [
   },
   {
     type: 'bank',
+    title: 'Questions',
     group: 'practice',
     // `touch`, not a new value. The catalog's `use` set is CLOSED and it caught `setup` the
     // moment it was invented — which is the set doing its job, so the fix is to fit rather than
@@ -262,6 +289,7 @@ export const CATALOG = [
   },
   {
     type: 'wordforge',
+    title: 'Word Forge',
     group: 'practice',
     use: 'answer',
     lead: 'A word game where a wrong answer explains itself.',

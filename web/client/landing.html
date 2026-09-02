@@ -461,28 +461,26 @@
     <div class="dash">
       <h3>The default dashboard — live today</h3>
       <p>One calm, fullscreen surface that hosts everything as arrangeable modules.</p>
-      <div class="mods">
-        <div class="mod"><div class="mi" aria-hidden="true">🖼️</div><div class="mn">Photos</div><div class="md">a familiar window</div></div>
-        <div class="mod"><div class="mi" aria-hidden="true">📷</div><div class="mn">Camera</div><div class="md">rearview mirror</div></div>
-        <div class="mod"><div class="mi" aria-hidden="true">▶️</div><div class="mn">YouTube</div><div class="md">videos &amp; music</div></div>
-        <div class="mod"><div class="mi" aria-hidden="true">🕐</div><div class="mn">Clock</div><div class="md">orientation</div></div>
+      <div class="mods" id="mods-default">
+        <div class="mod"><div class="mn">Loading the live list…</div></div>
       </div>
       <div class="device-note"><b>Runs on what you already have.</b> It's a web app — open it in a
         browser on a phone, tablet, computer, or an inexpensive Raspberry Pi and monitor. No special
         equipment, no vendor hardware.</div>
       <h3 style="margin-top:26px">Every module, today</h3>
-      <p>A screen is built from modules. These are the ones that exist right now — the same
-        list your account offers you.</p>
-      <div class="mgroups">
-        <div class="mgroup"><h4>The screen</h4><ul><li><b>Photos</b> — slideshow over your own media</li><li><b>Camera</b> — local self-view / rearview mirror — never leaves the device</li><li><b>Clock</b> — orientation — time, weekday & date</li><li><b>YouTube</b> — weighted-shuffle player over your own playlist</li><li><b>Personal videos</b> — recorded messages from your people</li><li><b>Lineup</b> — rotates videos, personal videos & learning by time of day</li></ul></div>
-        <div class="mgroup"><h4>Learning & play</h4><ul><li><b>Word Forge</b> — vocabulary game — wrong answers explain themselves and still count</li><li><b>Algebra</b> — solve for x — with a calculator, because every real job has one</li><li><b>Lessons</b> — watch a lesson to unlock its questions</li><li><b>Educational</b> — generated learning segments — alphabet, counting, vocabulary</li><li><b>Sprint</b> — focus timer — finish a sprint, bank the points</li></ul></div>
-        <div class="mgroup"><h4>Calm &amp; ambient</h4><ul><li><b>Pond</b> — water that ripples on its own, and ripples more when it is touched</li></ul></div>
-        <div class="mgroup"><h4>Keeping track</h4><ul><li><b>Quests</b> — points balance, tasks and rewards</li><li><b>Progress</b> — how a game is going over time — accuracy, concepts, reaction time</li></ul></div>
+      <p>A screen is built from modules. This list is drawn from the same catalog the composer
+        offers you, in the browser, as you read it — so it cannot say something the product
+        does not.</p>
+      <div class="mgroups" id="mods-live">
+        <p class="muted">Loading the live list…</p>
       </div>
 
       <div class="milestone"><b>Every module named above is in the public open-source
-        repository.</b> Nothing here is a mockup — the list is generated from what actually
-        ships.</div>
+        repository.</b> Nothing here is a mockup. <b>This list is not written by hand</b> — it is
+        rendered from <code>modules_catalog.js</code>, the file the composer reads, so a
+        module cannot appear here without existing or disappear from the product while
+        still being advertised here. It used to be hand-written, and it spent weeks
+        advertising a default module that had been removed.</div>
 
       <div class="val" style="margin-top:26px">
         <!-- WAS "If a person can press one button, they can use all of it". Mike, 2026-09-02,
@@ -848,6 +846,60 @@
       'read it in the source</a> instead.</p>';
   }
 })();
+</script>
+<script type="module">
+// THE MODULE LIST, RENDERED FROM THE CATALOG THE COMPOSER READS.
+//
+// It used to be a static block of HTML in this file. It listed fourteen modules when the catalog
+// had twenty-one, and it advertised **camera** as one of the four default-dashboard modules for
+// weeks after that stopped being true. Mike found it by reading his own landing page.
+//
+// This is the same fix the storage table already got, for the same reason and after the same
+// kind of failure: *the page invites people to check it*, so anything on it that can go stale
+// must be read from the thing it describes rather than transcribed from it.
+//
+// `modules_catalog.js` is data only — no module imports — so this costs one small file, not the
+// twenty-one module implementations.
+import { CATALOG, GROUPS, USE, STARTER_MODULES } from './modules_catalog.js';
+
+const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const entry = (type) => CATALOG.find((c) => c.type === type);
+const nameOf = (c) => c.title || (c.type.charAt(0).toUpperCase() + c.type.slice(1));
+
+// The four the seeded starter screen actually mounts, named by the same constant that builds it.
+const def = document.getElementById('mods-default');
+if (def) {
+  def.innerHTML = STARTER_MODULES.map((t) => {
+    const c = entry(t);
+    return '<div class="mod"><div class="mn">' + esc(c ? nameOf(c) : t) + '</div>'
+      + '<div class="md">' + esc(c ? c.lead : '') + '</div></div>';
+  }).join('');
+}
+
+// Everything, grouped the way the composer groups it, with the one fact a caregiver most needs:
+// whether it runs on its own or asks somebody a question.
+const live = document.getElementById('mods-live');
+if (live) {
+  live.innerHTML = GROUPS.map((g) => {
+    const items = CATALOG.filter((c) => c.group === g.id);
+    if (!items.length) return '';
+    return '<div class="mgroup"><h4>' + esc(g.title) + '</h4><ul>'
+      + items.map((c) => '<li><b>' + esc(nameOf(c)) + '</b> — ' + esc(c.lead)
+          + ' <i>(' + esc((USE[c.use] || {}).label || c.use) + ')</i>'
+          + (c.needs ? '<br><span class="muted">Needs: ' + esc(c.needs) + '</span>' : '')
+          + '</li>').join('')
+      + '</ul></div>';
+  }).join('');
+  // A module in the catalog with no group would silently vanish from this page, which is the
+  // failure the hand-written version had. Say so instead.
+  const grouped = new Set(GROUPS.map((g) => g.id));
+  const orphans = CATALOG.filter((c) => !grouped.has(c.group)).map((c) => c.type);
+  if (orphans.length) {
+    live.insertAdjacentHTML('beforeend',
+      '<p class="undocnote"><b>Not grouped, so not described above:</b> '
+      + esc(orphans.join(', ')) + '. It exists, so it is listed.</p>');
+  }
+}
 </script>
 </body>
 </html>
