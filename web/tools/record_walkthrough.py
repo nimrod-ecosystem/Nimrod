@@ -131,11 +131,22 @@ def perform(page, step, base, timeout_ms):
             page.goto(want, wait_until='domcontentloaded')
             page.wait_for_timeout(600)
 
-    if action in (None, 'none', 'wait'):
-        return True, 'no action'
-
+    # *** THE TARGET IS CHECKED FOR EVERY STEP THAT HAS ONE, INCLUDING `none`. ***
+    #
+    # This used to `return True, 'no action'` right here, before looking at the target at all —
+    # and TEN OF THE FIFTEEN STEPS ARE `none`, so `--check` was resolving five selectors while
+    # printing "every selector resolved". The claim that the recording runs a test of the
+    # guided tour rested on a check that skipped two thirds of it.
+    #
+    # Found by walking the tour in a browser: `[data-mirror]` and `[data-settings]` were both
+    # present-but-zero-sized, so the tour narrated the rear-view mirror with nothing ringed —
+    # the exact `.k-mods` failure, in the two steps the old code could not see. A `none` step is
+    # the one kind whose target exists ONLY to be highlighted, which makes it the last thing
+    # that should have been exempt.
     if not target:
-        return False, f'{action} with no target'
+        # No target is legitimate: `room-1` and `cost-1` are argument, not demonstration.
+        return (True, 'no action') if action in (None, 'none', 'wait') \
+            else (False, f'{action} with no target')
 
     try:
         el = page.locator(target).first
@@ -144,11 +155,18 @@ def perform(page, step, base, timeout_ms):
         # wrong, and it produced a failure that read like a stale selector when the element was
         # simply not on screen for this shape of screen. `attached` still catches a target that
         # no longer exists, which is the failure worth catching.
+        #
+        # EVERYTHING ELSE MUST BE VISIBLE, and for a highlight that is the right bar rather than
+        # a strict one: Playwright's `visible` means a non-empty box, which is precisely the
+        # condition `tour.js` uses to decide whether to draw a ring at all.
         el.wait_for(state='attached' if action == 'press' else 'visible', timeout=timeout_ms)
     except Exception as exc:
         # THIS IS THE FAILURE THAT MATTERS. A selector that no longer resolves means the guided
         # tour would point at nothing, and the recording is how we find out.
         return False, f'selector not found: {target}  ({type(exc).__name__})'
+
+    if action in (None, 'none', 'wait'):
+        return True, 'no action'
 
     try:
         if action == 'click':

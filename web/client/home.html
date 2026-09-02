@@ -452,6 +452,17 @@ function localBanner() {
             createEvents({ url: profiles.personEventsURL(personId, stream), user: me.user, ...opts })
         : null,
     });
+
+    // THE GUIDED TOUR, if one is in progress in this browser. Unconditional on purpose:
+    // `mountTour` returns null unless somebody pressed "Take the guided tour" on the landing
+    // page AND the walk is currently on this page, so there is nothing here to guard. Mounted
+    // after `mountHome` so its targets exist — a step whose target is missing still shows its
+    // line, but with no ring, and pointing at the composer with no composer drawn is a poor
+    // first impression rather than a failure.
+    import('./tour.js').then(async ({ mountTour }) => {
+      const { STEPS } = await import('./steps.js');
+      mountTour(document.body, { steps: STEPS, path: '/home.html' });
+    }).catch((e) => console.warn('tour', e));
   } catch (e) {
     root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
       'Signed in, but your screens could not be loaded. Reload to try again.</p>';

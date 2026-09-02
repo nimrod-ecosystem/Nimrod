@@ -36,6 +36,12 @@ python record_walkthrough.py --check          # resolve every selector, record n
 That is the cheap version, it needs no data gate because it films nothing, and it is what to run
 after touching any markup the tour points at.
 
+**It did not always resolve every selector.** Until 2026-09-02 `perform()` returned early for
+`action: 'none'` — ten of the fifteen steps — so `--check` looked at five targets and printed
+"every selector resolved". A `none` step's target exists *only* to be highlighted, which made it
+the last thing that should have been exempt. Found by walking the tour in a browser and seeing
+two beats narrate with nothing ringed; the check now catches both.
+
 ---
 
 ## The data gate
@@ -146,8 +152,15 @@ between. Position is therefore an index into the *whole* walk kept in `localStor
 per-page one. Filtering `STEPS` by page is the obvious implementation and it silently produces a
 two-step tour; the suite has a section for exactly that.
 
-Not wired into any page yet — `landing.html` needs a "take the tour" control, and `kiosk.html`
-and `home.html` need the unconditional `mountTour` call.
+**Offered, never sprung.** "Take the guided tour" is a button in the landing-page hero (or
+`/?tour=1`). All three pages call `mountTour` unconditionally and all three get `null` until
+`startTour` has run in that browser — which is what keeps it off a paired bedside screen, and is
+why `kiosk.html` calls it from *both* boot paths rather than only the signed-out one.
+
+**Two targets are wrong on the demo screen and are not fixed here.** `[data-mirror]` and
+`[data-settings]` are both `hidden` on the seeded starter screen, so `kiosk-2` and `inputs-2`
+narrate with nothing highlighted. `--check` reports them. Both fixes are decisions rather than
+edits — see `docs/for_chat/`.
 
 ## What is not built
 

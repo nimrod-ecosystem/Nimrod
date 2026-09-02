@@ -39,8 +39,8 @@
 
 <script type="module">
 import { STEPS } from '../steps.js';
-import { mountTour, resetTour, allTourSteps, overallIndex, samePage,
-         TOUR_POS_KEY, TOUR_DONE_KEY } from '../tour.js';
+import { mountTour, startTour, tourStarted, resetTour, allTourSteps, overallIndex,
+         samePage, TOUR_POS_KEY, TOUR_DONE_KEY } from '../tour.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -69,7 +69,10 @@ const host = () => {
   document.body.append(d);
   return d;
 };
-const mount = (opts = {}) => mountTour(host(), { steps: STEPS, storage: fakeStore(), ...opts });
+// Every helper mount BEGINS a walk. `start: true` is what the landing-page button passes,
+// and without it mountTour returns null by design — see the start-gate section below.
+const mount = (opts = {}) =>
+  mountTour(host(), { steps: STEPS, storage: fakeStore(), start: true, ...opts });
 
 const TOUR = allTourSteps(STEPS);
 const P_LAND = '/', P_HOME = '/home.html', P_KIOSK = '/kiosk.html';
@@ -177,7 +180,7 @@ section('*** ONE BUTTON, ONE DIRECTION — next() always terminates ***');
   // agreed to anything.
   {
     const store = fakeStore();
-    const t = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+    const t = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND, start: true });
     check('the tour opens on the first step', t.index() === 0, t.step().id);
     t.skip();
     check('*** Skip works from step one ***', !t.shown());
@@ -189,7 +192,7 @@ section('*** ONE BUTTON, ONE DIRECTION — next() always terminates ***');
     // The reason is reported, because "skipped" and "done" are different facts about a visitor.
     const seen = [];
     const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND,
-                                  onFinish: (r) => seen.push(r) });
+                                  start: true, onFinish: (r) => seen.push(r) });
     t.skip();
     check('onFinish says which of the two it was', seen[0] === 'skipped', seen.join(','));
   }
@@ -209,7 +212,7 @@ section('*** THE LANDING PAGE IS VISITED TWICE — the bug a per-page filter hid
     onLanding.map((s) => s.id).join(' … '));
 
   const store = fakeStore();
-  const t = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  const t = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND, start: true });
   const first = t.step();
   t.next();
   check('*** the step after the opening line is NOT the closing card ***',
@@ -223,7 +226,7 @@ section('*** THE LANDING PAGE IS VISITED TWICE — the bug a per-page filter hid
 section('it spans three pages, so the position survives navigation');
 {
   const store = fakeStore();
-  const a = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  const a = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND, start: true });
   a.next();                                     // now pointing at a step on /home.html
   check('leaving the page it is on puts the tour in a holding state', a.waiting());
   check('...and it says where to go rather than navigating there',
@@ -248,12 +251,14 @@ section('it spans three pages, so the position survives navigation');
   b?.destroy();
 
   // Somebody who never started the tour and opens the kiosk directly gets no overlay at all.
-  const c = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_KIOSK });
+  const fresh = fakeStore();
+  startTour(STEPS, fresh);
+  const c = mountTour(host(), { steps: STEPS, storage: fresh, path: P_KIOSK });
   check('a page the walk has not reached mounts nothing', c === null);
 
   // And a second Next while holding ends it, so the holding state is not a dead end either.
   const store2 = fakeStore();
-  const d = mountTour(host(), { steps: STEPS, storage: store2, path: P_LAND });
+  const d = mountTour(host(), { steps: STEPS, storage: store2, path: P_LAND, start: true });
   d.next();
   check('holding, as set up', d.waiting() && d.shown());
   d.next();
@@ -263,7 +268,7 @@ section('it spans three pages, so the position survives navigation');
 // =====================================================================================
 section('the counter counts the walk, not the page');
 {
-  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND });
+  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, start: true });
   const count = () => t.el.querySelector('[data-tour-count]').textContent.trim();
   check('it opens at 1 of the whole walk', count() === `1 of ${TOUR.length}`, count());
   check('...and the total is the tour steps, not every step',
@@ -300,14 +305,14 @@ section('it never performs the action — that is the recorder’s job');
 section('reduced motion governs the highlight');
 {
   const on = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND,
-                                 reducedMotion: true });
+                                 start: true, reducedMotion: true });
   const ringOf = (t) => t.el.querySelector('[data-tour-ring]');
   check('*** reduced motion removes the transition rather than slowing it ***',
     !/transition/.test(ringOf(on).style.cssText), ringOf(on).style.cssText.slice(0, 90));
   on.destroy();
 
   const off = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND,
-                                  reducedMotion: false });
+                                  start: true, reducedMotion: false });
   check('NEGATIVE CONTROL: with it off, there is a transition to remove',
     /transition/.test(ringOf(off).style.cssText));
   off.destroy();
@@ -325,7 +330,7 @@ section('a target that is not on the page draws no ring');
   // The graceful half of the failure the recorder makes loud: `.k-mods` was in the DOM, empty
   // and zero-sized, and the tour would have ringed nothing at 0,0. Here the target simply is
   // not present, which is the same picture and must produce the same restraint.
-  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND });
+  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, start: true });
   const ring = t.el.querySelector('[data-tour-ring]');
   check('no target on this page, no ring', ring.hidden);
 
@@ -337,7 +342,7 @@ section('a target that is not on the page draws no ring');
   document.body.append(ghost);
   const t2 = mountTour(host(), {
     steps: [{ id: 'g', page: P_LAND, target: '#tour-ghost', say: 'x', settle: 0 }],
-    storage: fakeStore(), path: P_LAND });
+    storage: fakeStore(), path: P_LAND, start: true });
   check('*** a present-but-zero-sized target draws no ring either ***',
     t2.el.querySelector('[data-tour-ring]').hidden);
 
@@ -347,7 +352,7 @@ section('a target that is not on the page draws no ring');
   document.body.append(real);
   const t3 = mountTour(host(), {
     steps: [{ id: 'r', page: P_LAND, target: '#tour-real', say: 'x', settle: 0 }],
-    storage: fakeStore(), path: P_LAND });
+    storage: fakeStore(), path: P_LAND, start: true });
   const r3 = t3.el.querySelector('[data-tour-ring]');
   check('NEGATIVE CONTROL: a real target does get one, sized around it',
     !r3.hidden && r3.style.width === '132px' && r3.style.height === '52px',
@@ -366,7 +371,7 @@ section('the input is never named — the bus drives it');
       return () => subs.delete(topic);
     },
   };
-  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, bus });
+  const t = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, start: true, bus });
   check('it subscribes to tour/next, tour/prev and tour/skip',
     subs.has('tour/next') && subs.has('tour/prev') && subs.has('tour/skip'),
     [...subs.keys()].join(' '));
@@ -382,12 +387,12 @@ section('the input is never named — the bus drives it');
 section('it is not asked twice, and it can be asked for again');
 {
   const store = fakeStore();
-  const a = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  const a = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND, start: true });
   a.skip();
   check('a second mount after skipping shows nothing',
     mountTour(host(), { steps: STEPS, storage: store, path: P_LAND }) === null);
   resetTour(store);
-  const b = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  const b = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND, start: true });
   check('*** resetTour lets somebody take it again ***', !!b && b.index() === 0);
   b?.destroy();
 }
@@ -403,7 +408,7 @@ section('storage that throws does not take the page with it');
     removeItem() { throw new Error('nope'); },
   };
   let threw = null, t = null;
-  try { t = mountTour(host(), { steps: STEPS, storage: hostile, path: P_LAND }); }
+  try { t = mountTour(host(), { steps: STEPS, storage: hostile, path: P_LAND, start: true }); }
   catch (e) { threw = e; }
   check('*** it mounts anyway when storage refuses ***', !threw && !!t, String(threw));
   try { t?.next(); t?.skip(); } catch (e) { threw = e; }
@@ -422,6 +427,60 @@ section('the demo seed and the script agree on one name');
   check('*** no British wording in the script or the seed ***',
     !/\bmum\b|\bmum’s\b|colour|favourite|whilst/i.test(
       JSON.stringify(STEPS)), 'checked STEPS');
+}
+
+// =====================================================================================
+section('*** IT IS OFFERED, NEVER SPRUNG — the guard that keeps it off a bedside screen ***');
+{
+  // All three pages call mountTour unconditionally. What stops a paired kiosk rendering a tour
+  // panel over a patient's photographs is not a branch in kiosk.html — it is this: nothing
+  // renders until somebody pressed the button in THIS browser.
+  for (const p of [P_LAND, P_HOME, P_KIOSK]) {
+    check(`nothing mounts on ${p} until the tour is started`,
+      mountTour(host(), { steps: STEPS, storage: fakeStore(), path: p }) === null);
+  }
+  const store = fakeStore();
+  check('...and tourStarted() agrees before it begins', tourStarted(store) === false);
+  startTour(STEPS, store);
+  check('...and after', tourStarted(store) === true);
+  const t = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND });
+  check('*** once started, a bare mountTour picks it up ***', !!t && t.index() === 0);
+  t?.destroy();
+
+  // *** NEGATIVE CONTROL. *** The three checks above pass just as happily on a mountTour that
+  // returns null for some unrelated reason. Prove the gate is what is refusing by lifting only
+  // the gate and confirming the same call now mounts.
+  const ungated = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND,
+                                      requireStarted: false });
+  check('NEGATIVE CONTROL: with requireStarted off, the same call does mount', !!ungated);
+  ungated?.destroy();
+
+  // Finishing it must not make the button dead — "take it again" is a normal thing to want.
+  const done = fakeStore();
+  mountTour(host(), { steps: STEPS, storage: done, path: P_LAND, start: true }).skip();
+  check('a finished tour stays finished on an ordinary page load',
+    mountTour(host(), { steps: STEPS, storage: done, path: P_LAND }) === null);
+  const again = mountTour(host(), { steps: STEPS, storage: done, path: P_LAND, start: true });
+  check('*** ...but pressing the button again starts it over ***', !!again && again.index() === 0);
+  again?.destroy();
+}
+
+// =====================================================================================
+section('at a page boundary it holds the door — it does not walk through it');
+{
+  const store = fakeStore();
+  const t = mountTour(host(), { steps: STEPS, storage: store, path: P_LAND, start: true });
+  t.next();
+  const go = t.el.querySelector('[data-tour-go]');
+  check('holding, with a link to where the walk goes next', !!go, 'no [data-tour-go]');
+  check('*** the link points at the next step’s own page ***',
+    go?.getAttribute('href') === TOUR[1].page, go?.getAttribute('href'));
+  check('...and it is a link, so following it is the person navigating',
+    go?.tagName === 'A');
+  check('...while a step that is on this page has no such link',
+    !mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, start: true })
+       .el.querySelector('[data-tour-go]'));
+  t.destroy();
 }
 
 // =====================================================================================
