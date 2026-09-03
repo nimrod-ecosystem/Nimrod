@@ -39,6 +39,23 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
   // `data` for the same reason the bus keeps meta out of the payload: `data` belongs to
   // whoever declared the kind, and these are the platform's. Omit it and nothing changes -
   // the columns take null, which honestly says "not captured".
+  // *** ONE REQUEST PER APPEND, NOT TWO (Mike, 2026-09-03: "kill the refresh after every
+  // write"). ***
+  //
+  // This used to POST and then immediately GET the whole list back, so every recorded row cost
+  // two round trips. On a game that writes a row per press — `pressgame` records a press, a
+  // hit, a round ending — that is a few dozen requests a minute over a bedside wifi, and half
+  // of them were fetching data the caller had just supplied.
+  //
+  // IT WAS ALSO UNNECESSARY, which is the part that makes this a straight deletion rather than
+  // a trade. The POST already returns the COMPLETE created row — server id, server
+  // `created_at`, and every provenance column (`db.py append_event`). So the authoritative
+  // record is in the response we were throwing away. Splicing it into the cache is not an
+  // optimistic guess: it is the server's own row, so the rule that the client clock is never
+  // trusted for the record still holds exactly as before.
+  //
+  // Newest first and capped at `limit`, matching what a refresh would have returned, so
+  // nothing downstream can tell the difference except by counting requests.
   async function append(kind, data = {}, meta = null) {
     const res = await fetch(url, {
       method: 'POST',
@@ -51,7 +68,21 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
       }),
     });
     if (!res.ok) throw new Error(`POST ${url} -> ${res.status}`);
-    await refresh();        // pull the authoritative list back
+    const row = await res.json().catch(() => null);
+    if (!row || row.id == null) {
+      // An older server that answers without the row. Fall back to what this used to do
+      // rather than leaving the cache silently behind what is stored.
+      await refresh();
+      return;
+    }
+    const events = [row, ...(cache.events || [])];
+    cache = {
+      ...cache,
+      events: limit ? events.slice(0, limit) : events,
+      total: (cache.total || 0) + 1,
+    };
+    loaded = true;
+    notify();
   }
 
   // Vouch for one row. NOTE THERE IS NO "who" PARAMETER: the attester is whoever is signed

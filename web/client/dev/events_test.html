@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the append-only events handle — one request per write — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>the append-only events handle</h1>
+
+<div class="note">
+  <b>Why this file exists.</b> <code>events.js</code> is used by every module that records
+  anything, and it had no test. It was changed on 2026-09-03 to stop re-fetching the whole list
+  after every write (Mike: <i>"kill the refresh after every write"</i>), which is a change to
+  shared infrastructure — so the thing being claimed, <b>one request per append rather than
+  two</b>, is counted here rather than asserted in a commit message.
+  <br><br>
+  <code>fetch</code> is stubbed, so this runs with no server and no database. That is also what
+  makes it able to COUNT requests, which a real server could not tell us.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createEvents } from '../events.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A stub server that records every call. `postReturns` lets a case model an OLDER server that
+// answers a POST without the created row, which is the fallback path.
+function rig({ existing = [], total = null, postReturns = 'row' } = {}) {
+  const calls = [];
+  let nextId = 1000;
+  const realFetch = window.fetch;
+  window.fetch = async (url, opts = {}) => {
+    const method = (opts.method || 'GET').toUpperCase();
+    calls.push({ method, url: String(url) });
+    if (method === 'POST') {
+      const body = JSON.parse(opts.body);
+      const row = {
+        id: ++nextId, kind: body.kind, data: body.data,
+        created_at: '2026-09-03T00:00:00Z',
+        session_id: body.session_id ?? null,
+        producer_version: body.producer_version ?? null,
+      };
+      existing = [row, ...existing];
+      return { ok: true, json: async () => (postReturns === 'row' ? row : { ok: true }) };
+    }
+    return { ok: true, json: async () => ({ events: existing, total: total ?? existing.length }) };
+  };
+  return {
+    calls,
+    posts: () => calls.filter((c) => c.method === 'POST').length,
+    gets: () => calls.filter((c) => c.method === 'GET').length,
+    restore: () => { window.fetch = realFetch; },
+  };
+}
+
+try {
+  // =====================================================================================
+  section('*** one request per append, not two ***');
+  {
+    const r = rig();
+    const ev = createEvents({ url: '/api/x/events/s', user: 'u' });
+    await ev.load();
+    const getsAfterLoad = r.gets();
+    await ev.append('trial', { n: 1 });
+
+    check('*** the append makes exactly ONE request ***',
+      r.posts() === 1 && r.gets() === getsAfterLoad,
+      `${r.posts()} POST, ${r.gets() - getsAfterLoad} extra GET`);
+    // THE OLD BEHAVIOUR, named so a regression is recognisable rather than just red.
+    check('...and specifically it does NOT re-fetch the list afterwards',
+      r.gets() - getsAfterLoad === 0);
+    r.restore();
+  }
+
+  // =====================================================================================
+  section('the cache is still right afterwards — this is not a trade');
+  {
+    const r = rig();
+    const ev = createEvents({ url: '/api/x/events/s', user: 'u' });
+    await ev.load();
+    await ev.append('trial', { n: 7 }, { sessionId: 'sess-1', producerVersion: 'v9' });
+    const c = ev.get();
+
+    check('the new row is in the cache', c.events.length === 1 && c.events[0].data.n === 7);
+    check('*** newest first, the same order a refresh returned ***',
+      c.events[0].kind === 'trial');
+    // THE POINT: the row in the cache is the SERVER'S row. The client clock is still never
+    // trusted for the record, which is the rule the old refresh was protecting.
+    check('*** it carries the SERVER id and timestamp, not a locally invented one ***',
+      c.events[0].id === 1001 && c.events[0].created_at === '2026-09-03T00:00:00Z',
+      JSON.stringify(c.events[0]));
+    check('the provenance columns survive the round trip',
+      c.events[0].session_id === 'sess-1' && c.events[0].producer_version === 'v9');
+    check('the total goes up', c.total === 1);
+    r.restore();
+  }
+  {
+    const r = rig();
+    const ev = createEvents({ url: '/api/x/events/s', user: 'u' });
+    await ev.load();
+    let seen = 0, last = null;
+    ev.subscribe((c) => { seen++; last = c; });
+    const before = seen;
+    await ev.append('trial', { n: 2 });
+    check('subscribers are still told — a dashboard reacting to a write keeps working',
+      seen > before && last.events[0].data.n === 2);
+    r.restore();
+  }
+
+  // =====================================================================================
+  section('the window stays capped, so an appending game cannot grow its own memory');
+  {
+    const r = rig({ existing: [{ id: 1, kind: 'trial', data: {} }, { id: 2, kind: 'trial', data: {} }] });
+    const ev = createEvents({ url: '/api/x/events/s', user: 'u', limit: 2 });
+    await ev.load();
+    check('it starts at the limit', ev.get().events.length === 2);
+    await ev.append('trial', { n: 3 });
+    check('*** appending past the limit drops the oldest rather than growing forever ***',
+      ev.get().events.length === 2 && ev.get().events[0].data.n === 3,
+      String(ev.get().events.length));
+    check('...and the total still counts what is stored, not what is cached',
+      ev.get().total === 3, String(ev.get().total));
+    r.restore();
+  }
+
+  // =====================================================================================
+  section('an older server that does not answer with the row');
+  {
+    // A deploy where the client is newer than the server. Falling back is the honest
+    // behaviour: a cache silently behind what is stored is worse than one extra request.
+    const r = rig({ postReturns: 'ok' });
+    const ev = createEvents({ url: '/api/x/events/s', user: 'u' });
+    await ev.load();
+    const getsAfterLoad = r.gets();
+    await ev.append('trial', { n: 5 });
+    check('*** it falls back to a refresh rather than leaving the cache behind ***',
+      r.gets() - getsAfterLoad === 1, `${r.gets() - getsAfterLoad} extra GET`);
+    check('...and the row is there either way', ev.get().events[0].data.n === 5);
+    r.restore();
+  }
+
+  // =====================================================================================
+  section('a failed write still throws — a lost row must not look like a stored one');
+  {
+    const realFetch = window.fetch;
+    window.fetch = async () => ({ ok: false, status: 500, json: async () => ({}) });
+    const ev = createEvents({ url: '/api/x/events/s', user: 'u' });
+    let threw = false;
+    try { await ev.append('trial', { n: 1 }); } catch { threw = true; }
+    check('*** a 500 throws, so the caller can know it was not recorded ***', threw);
+    check('...and nothing was added to the cache', ev.get().events.length === 0);
+    window.fetch = realFetch;
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+</script>
+</body>
+</html>

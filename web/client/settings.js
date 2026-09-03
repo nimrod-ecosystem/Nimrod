@@ -150,12 +150,27 @@ export function buildItems({
       label: isFullscreen ? 'Leave full screen' : 'Full screen',
     });
   }
-  // ALWAYS a Home button. THIS ONE IS A SAFETY INVARIANT, which is the only category of
-  // rule in this project allowed to be absolute - Home, Close, and anything else that is
-  // the way OUT are never hidden, at any complexity level, by any host. A stripped-down
-  // mode that hides the exit is a trap, and the person who needs the exit most is the one
-  // who cannot find any other way back. (Everything else in this file is a design
-  // preference and is argued, not asserted.)
+  // A Home button, here, by default.
+  //
+  // *** THIS WAS WRITTEN AS AN ABSOLUTE AND IT WAS NOT MIKE'S. *** The previous comment said
+  // the way out is "never hidden, at any complexity level, by any host", and called itself
+  // the one rule in the project allowed to be absolute. Nobody signed that off: it was put
+  // here by a Claude in 28861e4, it is not in `PRINCIPLES.md`, and only Mike declares an
+  // absolute. Corrected 2026-09-03 when he read it back: *"I don't know if I said to write
+  // that. Home shouldn't always be visible."*
+  //
+  // WHAT HE ACTUALLY WANTS, and it is a better design than the rule was: Home is a
+  // DESTINATION, not a fixture. The site is itself a module, so "home" is going to the home
+  // module — which means a kiosk could put it in a corner panel, or on the coming global
+  // transport bar (the one that selects which module it is driving, or the audio player, or
+  // the kiosk), or leave it here in the menu, or several of those at once. Where it lives
+  // becomes a setting.
+  //
+  // WHAT SURVIVES THE CORRECTION IS SMALLER AND IS A DEFAULT, NOT A RULE: there should be
+  // SOME way out, and the person who needs one most is the one who cannot find another way
+  // back — so this menu offers one unless a host has deliberately put it somewhere else.
+  // "Reachable" was the thing worth protecting; "always visible on this screen" was the
+  // overreach, and it is the difference Mike drew himself.
   out.push({ kind: 'item', id: 'home', label: 'Home' });
   out.push({ kind: 'item', id: 'close', label: 'Close menu' });
 
