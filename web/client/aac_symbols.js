@@ -32,6 +32,15 @@
 //   * `currentColor` for neutral shapes; explicit hex ONLY for meaning-bearing accents —
 //     color supports meaning, it never carries it alone. Somebody who cannot distinguish the
 //     hues must lose nothing, which is why every card also carries its word.
+//     *** `currentColor` STAYS NOW THAT THE BOARD NO LONGER FOLLOWS THE PROFILE THEME
+//     (2026-09-02), and the reason it survives has changed. *** It is no longer about theming:
+//     it is that a symbol EXPORTED OR PRINTED degrades to a monochrome drawing rather than to
+//     a colour picked for a background that is not there. A neutral shape hard-coded to the
+//     board's light ink would come off a printer as pale grey on white paper. The
+//     meaning-bearing hexes are the opposite case — they carry meaning, so they travel with
+//     the drawing on purpose. Those same hexes are now also the board's WORD colours (see the
+//     `.ab-*` rules in modules.css), so the word under a symbol is the accent inside it and
+//     the two cannot drift apart.
 //   * big simple silhouettes: it has to read at a glance, from a bed, at one to two meters
 //
 // A symbol here is a NAME, not a file. `aac_vocab.js` cells reference these by name, so a

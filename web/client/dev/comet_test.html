@@ -47,8 +47,15 @@ function check(name, cond, detail = '') {
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// `openToMenu` DEFAULTS OFF IN THIS HELPER, and it differs from the product default on
+// purpose (2026-09-02). Every check below is about the comet in flight, and starting each of
+// them on a start screen would mean prefixing them all with a press none of them is testing.
+// A caller that passes `openToMenu:true` gets the real default back; the start screen has its
+// own section, which is where that behaviour is asserted.
 function mount(host, { bus = createBus(), state = null } = {}) {
-  const inst = mountModule('comet', { mount: host, bus, state, events: null, user: 'u', profileId: 'p' });
+  const saved = { openToMenu: false, ...(state?.get?.() || {}) };
+  const st = { get: () => saved, destroy() {} };
+  const inst = mountModule('comet', { mount: host, bus, state: st, events: null, user: 'u', profileId: 'p' });
   inst.init();
   return inst;
 }
@@ -164,6 +171,65 @@ check('next goes and gets a heart', verbTarget('comet', 'seek') === null
         + 'thing itself ***',
         after.sparks > start.sparks, `${start.sparks} -> ${after.sparks}`);
   check('and there is still a heart to chase afterwards', after.hearts === 1, after.hearts);
+  inst.destroy(); host.remove();
+}
+
+// =====================================================================
+section('*** the start screen, and the score ***');
+{
+  // Mike, 2026-09-02: "wait and go and comet both need to open to the menu", and "it really
+  // seems a lot like a game… maybe have show score as an option."
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, state: { get: () => ({ openToMenu: true, steerMs: 32, hearts: 1 }) } });
+  await sleep(20);
+  check('*** it opens on the start screen, not mid-flight ***', probe(inst).started === false);
+  check('the start screen is on screen', !!host.querySelector('.cm-menu:not([hidden])'));
+  steps(inst, 60);
+  check('...and time passing does not start it on its own', probe(inst).started === false);
+  check('*** a heart cannot be caught before anybody has started ***', probe(inst).caught === 0);
+
+  // THE INVARIANT: the menu is left by the same verbs the game is played with.
+  bus.publish('comet/seek');
+  check('*** the next verb starts it ***', probe(inst).started === true);
+  check('the start screen is gone', !!host.querySelector('.cm-menu[hidden]'));
+  // And that first press does not ALSO fire into the game, or press one behaves unlike the rest.
+  check('...and starting it is not also a move', probe(inst).steering === false);
+  inst.destroy(); host.remove();
+}
+{
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, state: { get: () => ({ openToMenu: true }) } });
+  await sleep(20);
+  bus.publish('comet/spark');
+  check('the select verb starts it too — not just next', probe(inst).started === true);
+  inst.destroy(); host.remove();
+}
+{
+  // Counted always, shown only if asked.
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1 }) } });
+  await sleep(20);
+  check('*** no score on screen by default ***', !!host.querySelector('.cm-score[hidden]'));
+  bus.publish('comet/seek');
+  steps(inst, 12);
+  check('*** but the catch is still counted, so turning the score on later is not from zero ***',
+        probe(inst).caught === 1, probe(inst).caught);
+  inst.destroy(); host.remove();
+}
+{
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, state: { get: () => ({ showScore: true, steerMs: 32, hearts: 1 }) } });
+  await sleep(20);
+  check('with the setting on, the score is on screen', !!host.querySelector('.cm-score:not([hidden])'));
+  bus.publish('comet/seek');
+  steps(inst, 12);
+  check('and it says what was caught',
+        /1 caught/.test(host.querySelector('.cm-score').textContent),
+        host.querySelector('.cm-score').textContent);
   inst.destroy(); host.remove();
 }
 

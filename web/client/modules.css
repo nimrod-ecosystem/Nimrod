@@ -156,14 +156,67 @@
 .director .d-bar{display:none}   /* the kiosk provides its own controls */
 
 /* THE COMMUNICATION BOARD. Big targets, high contrast, and a lit card that is unmistakable
-   from a bed at one to two meters — the distance the symbols were drawn for. */
-.aboard{position:absolute;inset:0;padding:calc(var(--u,1px) * 3);box-sizing:border-box}
+   from a bed at one to two meters — the distance the symbols were drawn for.
+
+   *** THE BOARD CARRIES ITS OWN SURFACE AND DOES NOT FOLLOW THE PROFILE THEME (2026-09-02). ***
+
+   It used to draw on `--card` / `--darkgreen` / `--line`, so switching a profile to Warm or
+   Forge repainted the one panel somebody uses to SAY THINGS. That is the wrong thing to leave
+   downstream of a decoration setting, and the numbers say the same:
+
+     * every meaning-bearing hex in `aac_symbols.js` is a LIGHT value. Measured 2026-09-02:
+       on this dark card they run 4.71 (love) to 8.24 (cold); on a white card the identical
+       hexes run 1.91 to 3.35 — all eight below the 4.5 floor.
+     * the eight `.ab-*` word colours did the exact reverse: 5.25–8.25 on white, 1.91–3.00 on
+       a dark card. Two palettes pulling opposite ways over one set of cards.
+
+   So the surface is pinned DARK and the words are repainted to the symbol palette. One palette
+   now serves the drawing and the word under it, and a card cannot be lit one way and lettered
+   the other.
+
+   THE CARD BOUNDARY IS THE BORDER, NOT THE FILL, and that is forced rather than chosen: any
+   two dark greys sit around 1.1–1.3:1 apart, so no dark-on-dark fill can reach the 3:1 non-text
+   floor. `--ab-line` is therefore bright enough to clear 3:1 against BOTH the card and the
+   board behind it (measured: 4.91 and 5.57), because an empty slot is drawn as the background
+   showing through and "card" vs "hole" has to be unmistakable. */
+.aboard{
+  position:absolute;inset:0;padding:calc(var(--u,1px) * 3);box-sizing:border-box;
+  --ab-bg:#12181c;      /* the board behind the cards, and what an empty slot shows */
+  --ab-card:#1b2429;    /* the card face */
+  --ab-ink:#e8eef0;     /* the word, and every neutral `currentColor` shape in a symbol */
+  --ab-line:#7d939d;    /* the card edge — 4.91 on the card, 5.57 on the board */
+  --ab-lit:#8fae63;     /* the scan highlight — 6.31 on the card */
+  background:var(--ab-bg);
+}
+/* THEME-FOLLOWING IS A SETTING, DEFAULTING TO PINNED (`followTheme` in modules/board.js).
+   A profile that wants the board to move with everything else can have it — this is a default
+   about which risk is worse, not a claim that nobody should ever want the other thing. The
+   contrast numbers above are only guaranteed for the pinned palette. */
+.aboard.ab-themed{
+  --ab-bg:var(--bg,#12181c);
+  --ab-card:var(--card,#fff);
+  --ab-ink:var(--darkgreen,#0A3323);
+  --ab-line:var(--line,#e4e0c2);
+  --ab-lit:var(--moss,#839958);
+}
+/* THE BOARD'S OWN HIGH-CONTRAST SWITCH. It needs one BECAUSE it no longer inherits the
+   `contrast` theme, and losing that for the one panel somebody talks through would be a
+   straight downgrade. Black on white at 21:1, and every role collapses to the ink — colour
+   was never the only cue for anything here (each card also carries its word), so dropping it
+   costs nothing and buys the highest contrast available. */
+.aboard.ab-hc{
+  --ab-bg:#ffffff;
+  --ab-card:#ffffff;
+  --ab-ink:#000000;
+  --ab-line:#000000;
+  --ab-lit:#000000;
+}
 .ab-grid{width:100%;height:100%;display:grid;gap:calc(var(--u,1px) * 4)}
 .ab-card{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;overflow:hidden;
   gap:calc(var(--u,1px) * 3);padding:calc(var(--u,1px) * 4);box-sizing:border-box;cursor:pointer;
-  background:var(--card,#fff);color:var(--darkgreen,#0A3323);
-  border:max(1px,calc(var(--u,1px) * 2.5)) solid var(--line,#e4e0c2);
+  background:var(--ab-card);color:var(--ab-ink);
+  border:max(1px,calc(var(--u,1px) * 2.5)) solid var(--ab-line);
   border-radius:calc(var(--u,1px) * 8);
   font:inherit;transition:transform .12s ease,box-shadow .12s ease}
 /* --u is ONE HUNDREDTH OF A CARD, set by the module from the container and the tier (see
@@ -189,20 +242,37 @@
 .ab-card.ab-empty{background:transparent;border-style:dashed;opacity:.28;cursor:default}
 /* The scan highlight. Thick and bright rather than a subtle tint - it is the only thing telling
    somebody which card their next press will choose. */
-.ab-card.ab-lit{border-color:var(--moss,#839958);box-shadow:0 0 0 .8vmin rgba(131,153,88,.45);
+.ab-card.ab-lit{border-color:var(--ab-lit);box-shadow:0 0 0 .8vmin rgba(143,174,99,.45);
   transform:scale(1.02)}
-.ab-card.ab-press{transform:scale(.97);box-shadow:0 0 0 .8vmin rgba(131,153,88,.75)}
+.ab-card.ab-press{transform:scale(.97);box-shadow:0 0 0 .8vmin rgba(143,174,99,.75)}
 /* 'one at a time': the others are gone, not dimmed. Half-visible cards are worse than none. */
 .ab-card.ab-away{visibility:hidden}
-/* Color SUPPORTS meaning; the word carries it. Nothing here is the only cue for anything. */
-.ab-yes .ab-word{color:#2c6e49}
-.ab-no .ab-word{color:#a4243b}
-.ab-need .ab-word{color:#8a6212}
-.ab-social .ab-word{color:#105666}
-.ab-nav .ab-word{color:#5b6b39}
-.ab-hot .ab-word{color:#a8552a}
-.ab-cold .ab-word{color:#1d6b7d}
-.ab-love .ab-word{color:#a8425c}
+
+/* THE EIGHT WORD COLOURS ARE THE SYMBOL PALETTE (2026-09-02). Every hex below is lifted from
+   `aac_symbols.js` — the accent already inside the drawing on that card — so the word and the
+   picture above it are the same colour rather than two palettes over one card. Measured on
+   `--ab-card` #1b2429: 4.71 (love, the weakest) to 8.24 (cold), all clear of the 4.5 floor.
+
+   `social` and `nav` take the ink, and that is the rule rather than an omission: their symbols
+   (`okay`, `hi`, `wait`, `keyboard`) are drawn in `currentColor` with no accent of their own,
+   so the word matches what the drawing actually does. The rule generalises — A CARD'S WORD IS
+   ITS SYMBOL'S ACCENT, OR THE INK WHERE THE SYMBOL IS NEUTRAL — which is also why no new hex
+   was invented for either of them. (`thanks` shares love's pink, so borrowing it for `social`
+   would have made two roles one colour and told nobody anything.)
+
+   Colour still SUPPORTS meaning and never carries it: every card also has its word, so
+   somebody who cannot separate these hues loses nothing. That is what lets `.ab-hc` collapse
+   all eight to a single ink without taking information away. */
+.ab-yes .ab-word{color:#6abf69}     /* symbol `yes`             — 6.96 */
+.ab-no .ab-word{color:#d3968c}      /* symbol `no`/`stop`/`pain` — 6.39 */
+.ab-need .ab-word{color:#e2b45a}    /* symbol `help`            — 8.20 */
+.ab-social .ab-word{color:var(--ab-ink)}   /* neutral symbols  — 13.46 */
+.ab-nav .ab-word{color:var(--ab-ink)}      /* neutral symbols  — 13.46 */
+.ab-hot .ab-word{color:#d98a5f}     /* symbol `hot`            — 5.82 */
+.ab-cold .ab-word{color:#7fc6d8}    /* symbol `cold`           — 8.24 */
+.ab-love .ab-word{color:#cf6f86}    /* symbol `love`/`thanks`   — 4.71 */
+/* In high contrast every role is the ink — see `.ab-hc` above for why that loses nothing. */
+.aboard.ab-hc .ab-word{color:var(--ab-ink)}
 
 /* THE HELD-STATE WALLPAPER. It covers the stage rather than replacing it: the paused
    segment is still mounted underneath and comes back untouched. Structural properties are

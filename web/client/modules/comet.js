@@ -50,6 +50,21 @@ const DEFAULTS = {
   calm: false,      // motion budget — fewer sparks, no idle pulse, slower drift
   pointer: true,    // does a pointer move the comet
   steerMs: 900,     // how long a `next` glide to a heart takes
+  // *** SHOW A SCORE — A SETTING, AND OFF BY DEFAULT (Mike, 2026-09-02). ***
+  //
+  // The count of hearts caught is kept whether or not it is shown; only the readout is
+  // optional. Mike: it plainly is a game, and "we'll want to turn it into something people
+  // want to play" — so a score is wanted and this module should have one.
+  //
+  // WHY OFF BY DEFAULT ANYWAY, and it is not a hedge. This same module is the one that
+  // answers "did I do that?" for somebody re-learning that she can move something, and on
+  // that screen a running total turns a yes into a number that can go down. Off by default
+  // changes nothing on her screen and takes nothing from anybody else — it is one switch.
+  // If it should be on for everyone, this one word is the whole change.
+  showScore: false,
+  // Open to a start screen rather than mid-flight. See pressgame.js for the same setting and
+  // the same argument; a bedside panel that is meant to be already running turns it off.
+  openToMenu: true,
 };
 
 const MAX_SPARKS = 320;
@@ -70,6 +85,10 @@ function readTheme(el) {
 }
 
 const SETTINGS = [
+  { key: 'showScore', label: 'Score', default: false, level: 'essential',
+    onLabel: 'Show hearts caught', offLabel: 'No score on screen' },
+  { key: 'openToMenu', label: 'When the panel opens', default: true, level: 'essential',
+    onLabel: 'Show a start screen first', offLabel: 'Start straight away' },
   { key: 'hearts', label: 'Hearts floating up', kind: 'choice', default: 4, level: 'essential',
     options: [
       { value: 0, label: 'None — just the comet' },
@@ -113,7 +132,13 @@ registerModule(
     let reducedMotion = false;
     const calm = () => cfg.calm || reducedMotion;
 
-    let root = null, canvas = null, c2d = null;
+    let root = null, canvas = null, c2d = null, scoreEl = null, menuEl = null;
+    // Hearts caught this sitting. COUNTED ALWAYS, SHOWN ONLY IF ASKED — the readout is the
+    // setting, not the counting, so turning the score on mid-session does not start from zero
+    // and lose what already happened.
+    let caught = 0;
+    // `menu` is the pre-game state: the sky still moves, but nothing is being played yet.
+    let started = false;
     let raf = 0, running = false, last = 0;
     let W = 1, H = 1, DPR = 1;
     let cx = -1, cy = -1, lastMoveT = -9999;
@@ -243,18 +268,49 @@ registerModule(
     }
     const heartX = (h, t) => (h.x + Math.sin(t * h.swayFreq + h.phase) * h.swayAmp) * W;
 
+    // ---- the score, and starting ------------------------------------------------------
+    // DOM rather than canvas: it is text, so it should be text — selectable, readable by a
+    // screen reader, and scaling with the panel instead of with a hand-tuned font size.
+    function paintScore() {
+      if (!scoreEl) return;
+      scoreEl.hidden = !cfg.showScore || !started;
+      scoreEl.textContent = `${caught} caught`;
+    }
+
+    function enterMenu() {
+      started = false;
+      if (menuEl) menuEl.hidden = false;
+      paintScore();
+    }
+
+    // Starting is the same for every source that can start it — the button, a tap, `select`
+    // or `next` — so there is only one place that decides what starting means.
+    function startGame() {
+      if (started) return false;
+      started = true;
+      caught = 0;
+      if (menuEl) menuEl.hidden = true;
+      paintScore();
+      return true;
+    }
+
     function updateHearts(dt) {
       const minD = Math.min(W, H);
       for (let i = 0; i < hearts.length; i++) {
         const h = hearts[i];
         h.y -= h.vy * dt * (calm() ? 0.6 : 1);
         if (h.y < -0.25) { hearts[i] = spawnHeart(false); continue; }
-        if (cx < 0) continue;
+        // Hearts DRIFT on the start screen but cannot be CAUGHT there. Without this an aim
+        // that happened to be over the panel would score before anybody had started, which is
+        // both a wrong number and a heart nobody saw themselves take.
+        if (!started || cx < 0) continue;
         const hx = heartX(h, nowMs()), hy = h.y * H, r = h.size * minD;
         const dx = hx - cx, dy = hy - cy;
         if (dx * dx + dy * dy < r * r) {
           bloom(hx, hy, '#ff7a96');
           chime();
+          caught++;
+          paintScore();
           hearts[i] = spawnHeart(false);
         }
       }
@@ -452,7 +508,7 @@ registerModule(
       __probe: () => ({
         cx, cy, running, steering: !!steer, simT,
         hearts: hearts.length, sparks: sparks.length, trail: trail.length,
-        calm: calm(), cfg: { ...cfg },
+        calm: calm(), cfg: { ...cfg }, caught, started,
       }),
       init() {
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };
@@ -464,10 +520,62 @@ registerModule(
         const style = document.createElement('style');
         style.textContent =
           '.m-comet{position:absolute;inset:0;overflow:hidden;background:#05060f;touch-action:none}' +
-          '.m-comet canvas{position:absolute;inset:0;display:block}';
+          '.m-comet canvas{position:absolute;inset:0;display:block}' +
+          // The score sits in a corner, out of the sky. It is deliberately quiet — this is a
+          // count of nice things that happened, not a leaderboard.
+          '.m-comet .cm-score{position:absolute;top:3%;right:4%;pointer-events:none;' +
+          'font:600 min(3.4cqw,18px)/1 system-ui,sans-serif;color:#e8eef0;opacity:.8;' +
+          'text-shadow:0 2px 10px rgba(0,0,0,.8)}' +
+          '.m-comet .cm-score[hidden]{display:none}' +
+          // The start screen. Translucent, so the sky keeps moving behind it and a panel
+          // waiting to be started still looks alive.
+          '.m-comet .cm-menu{position:absolute;inset:0;display:flex;flex-direction:column;' +
+          'align-items:center;justify-content:center;gap:2.2cqh;text-align:center;padding:6%;' +
+          'background:radial-gradient(ellipse at center,rgba(5,6,15,.66),rgba(5,6,15,.88));' +
+          'font:400 min(3.2cqw,17px)/1.45 system-ui,sans-serif;color:#cfe0d9}' +
+          '.m-comet .cm-menu[hidden]{display:none}' +
+          '.m-comet .cm-menu h2{margin:0;font:700 min(7cqw,40px)/1.1 system-ui,sans-serif;' +
+          'color:#fff3d9;letter-spacing:-.01em}' +
+          '.m-comet .cm-menu p{margin:0;max-width:34ch;opacity:.88}' +
+          '.m-comet .cm-start{margin-top:1cqh;padding:.7em 1.9em;border-radius:999px;' +
+          'border:2px solid rgba(255,243,217,.5);background:rgba(255,243,217,.12);' +
+          'color:#fff3d9;font:700 min(4cqw,20px)/1 system-ui,sans-serif;cursor:pointer}' +
+          '.m-comet .cm-start:focus-visible{outline:3px solid #fff3d9;outline-offset:3px}' +
+          '.m-comet .cm-hint{font-size:.85em;opacity:.66}';
         root.appendChild(style);
         canvas = document.createElement('canvas');
         root.appendChild(canvas);
+
+        scoreEl = document.createElement('div');
+        scoreEl.className = 'cm-score';
+        scoreEl.hidden = true;
+        root.appendChild(scoreEl);
+
+        menuEl = document.createElement('div');
+        menuEl.className = 'cm-menu';
+        menuEl.hidden = true;
+        const h2 = document.createElement('h2');
+        h2.textContent = 'Comet';
+        const p = document.createElement('p');
+        p.textContent = 'Move the comet through the sky and touch the hearts.';
+        const startBtn = document.createElement('button');
+        startBtn.type = 'button';
+        startBtn.className = 'cm-start';
+        startBtn.textContent = 'Start';
+        const hint = document.createElement('div');
+        hint.className = 'cm-hint';
+        hint.textContent = 'A switch, a key, or a tap will start it.';
+        menuEl.append(h2, p, startBtn, hint);
+        root.appendChild(menuEl);
+        const onStart = (e) => { e.preventDefault(); audioInit(); startGame(); };
+        startBtn.addEventListener('click', onStart);
+        offs.push(() => startBtn.removeEventListener('click', onStart));
+        // A tap anywhere on the panel starts it too, so the button is a signpost rather than
+        // the only door — the same reason the canvas is a press source in pressgame.
+        const onDown = () => { audioInit(); startGame(); };
+        canvas.addEventListener('pointerdown', onDown);
+        offs.push(() => canvas.removeEventListener('pointerdown', onDown));
+
         mount.appendChild(root);
         c2d = canvas.getContext('2d');
         warm = readTheme(mount);
@@ -505,13 +613,23 @@ registerModule(
         if (ctx.aim?.latest?.()) onAim(ctx.aim.latest());
 
         // Verbs. `select` blooms where the comet is; `next` goes and gets a heart.
+        //
+        // ON THE START SCREEN EITHER VERB STARTS IT, and then does nothing else that turn.
+        // The menu must be leavable by whatever input the player actually has, and a verb that
+        // both started the game AND fired into it would make the first press behave unlike
+        // every press after it.
         offs.push(bus.subscribe('comet/spark', () => {
           audioInit();
+          if (startGame()) return;
           if (cx < 0) { cx = W / 2; cy = H / 2; }
           bloom(cx, cy);
           chime();
         }));
-        offs.push(bus.subscribe('comet/seek', () => { audioInit(); steerToNearestHeart(); }));
+        offs.push(bus.subscribe('comet/seek', () => {
+          audioInit();
+          if (startGame()) return;
+          steerToNearestHeart();
+        }));
 
         // Only animate while actually on screen — see the header.
         observer = new IntersectionObserver((entries) => {
@@ -519,6 +637,8 @@ registerModule(
           if (vis) start(); else stop();
         }, { threshold: 0.01 });
         observer.observe(mount);
+        // Straight into play, or to the start screen. The sky animates in both cases.
+        if (cfg.openToMenu) enterMenu(); else startGame();
         start();
       },
       onResize() { resize(); },
@@ -531,7 +651,7 @@ registerModule(
         try { ac?.close?.(); } catch { /* already gone */ }
         ac = null; sfx = null;
         root?.remove();
-        root = canvas = c2d = null;
+        root = canvas = c2d = scoreEl = menuEl = null;
         trail = []; sparks = []; stars = []; hearts = [];
       },
     };

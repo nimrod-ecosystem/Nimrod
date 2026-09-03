@@ -1522,6 +1522,29 @@ the pattern is visible rather than buried.
   (2026-09-02)
 
 
+## HARD RULE — `.gridsetx` is never read, parsed or opened. Mike's ruling, 2026-09-02.
+
+**Scope: project. This one is not a default and not a setting.**
+
+- **`.gridsetx` is Grid 3's licence-protected grid set format.** Smartbox's own glossary: *"A
+  licence-protected .gridset file. Opening this is only possible on devices that have the appropriate
+  licence."* It is a technical protection measure tied to a device licence. **[verified — Smartbox Hub
+  glossary]** (2026-09-02)
+- **Reading around it engages anti-circumvention law — UK CDPA s.296ZA and following, US DMCA §1201 —
+  which is a SEPARATE and worse body of law from copyright.** Copyright infringement is a civil
+  matter about who owns what. Circumventing a technical protection measure is its own offence with
+  its own penalties, and "we only wanted the structure" is not a defence to it. (2026-09-02)
+- **Plain `.gridset` is fine.** Smartbox describe those as transferable. The prohibition is specific
+  to the `x`. (2026-09-02)
+- **Mike's words, and they are the reason this is a hard rule rather than guidance:** *"I can't tell a
+  judge that you invented something as my legal defense if that gets screwed up."* Any assistant
+  reading this: **do not write a `.gridsetx` reader, do not add it to an importer's accepted
+  extensions, and do not tell Mike it is probably fine.** If an import path enumerates Grid formats,
+  `.gridsetx` is excluded explicitly and with a comment saying why. (2026-09-02)
+- **Enforcement:** this is a `PRINCIPLES.md` §2 candidate — an absolute Mike declared, with scope. It
+  belongs in the register rather than only in this log. (2026-09-02)
+
+
 ## What belongs in the public repo — Mike's ruling, 2026-09-02
 
 - **The public repo carries what somebody needs in order to use, build on or understand the software.
@@ -1583,3 +1606,37 @@ the pattern is visible rather than buried.
   not only an untidy one: `compose-5` clicks the first `[data-open]`, so which kiosk the later
   steps ran against depended on how many leftovers sat above it. Cleanup is scoped to ids that did
   not exist before the run AND named exactly what `compose-1` types. (2026-09-02)
+## The board's appearance is now BUILT, and what the decision did not anticipate — 2026-09-02
+
+Recorded in the past tense on purpose. The audit above listed `.aboard` carrying its own colours
+as **"Not built"**, and named the habit that produced that: writing a decision as though deciding
+it had built it. This entry is the other half — the work, described only after it was run.
+
+- **`.aboard` now carries its own surface.** `--ab-bg` `#12181c` · `--ab-card` `#1b2429` ·
+  `--ab-ink` `#e8eef0` · `--ab-line` `#7d939d` · `--ab-lit` `#8fae63`, and `.ab-card` draws from
+  those instead of `--card` / `--darkgreen` / `--line`. The eight `.ab-*` word colours are the
+  meaning-bearing hexes out of `aac_symbols.js`, so the word and the drawing above it are one
+  palette. Verified against a rendered card rather than against the config: board `rgb(18,24,28)`,
+  card `rgb(27,36,41)`, border `rgb(125,147,157)`, "Yes" `rgb(106,191,105)`, symbol `rgb(232,238,240)`.
+  `dev/board_test.html`, 79 checks, all passing. (2026-09-02)
+- **`followTheme` and `highContrast` are settings on the module**, defaulting to pinned and off.
+  High contrast wins when both are on: an accessibility choice outranks a decorative one rather
+  than the two fighting over the cascade, and that precedence is asserted rather than left to
+  source order.
+- **THE THING THE DECISION MISSED, and it changed the CSS.** The entry above reasoned entirely
+  about TEXT on the card. But an empty slot is drawn as the background showing through, so a card
+  also has to be distinguishable from the board behind it — and **no two dark tones can do that**:
+  `#1b2429` on `#12181c` is 1.13:1, and taking the background to pure black only reaches 1.33:1,
+  against a 3:1 non-text floor. So the card boundary is carried by the **border**, and `--ab-line`
+  was picked bright enough to clear 3:1 on both sides (4.91 against the card, 5.57 against the
+  board). Had this been left to the fill the board would have passed every text check with
+  invisible card edges. *A contrast decision that only lists text ratios has not finished.*
+- **`social` and `nav` take the ink rather than a hue.** Their symbols (`okay`, `hi`, `wait`,
+  `keyboard`) are drawn in `currentColor` and have no accent to inherit; `thanks` shares `love`'s
+  pink, so borrowing it would have made two roles one colour. The rule that came out of it, and it
+  generalises to cards not drawn yet: **a card's word is its symbol's accent, or the ink where the
+  symbol is neutral.** No hex was invented that does not appear in a drawing.
+- **`currentColor` survives, for a different reason than before.** It was kept for theming; the
+  board no longer themes. It stays because a symbol exported or printed then degrades to a
+  monochrome drawing rather than to a colour chosen for a background that is not there — a neutral
+  shape pinned to the board's light ink would print as pale grey on white. (2026-09-02)

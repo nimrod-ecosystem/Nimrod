@@ -84,6 +84,27 @@ const DEFAULTS = {
   reveal: 'all',
   // A beat on the chosen card so the choice registers before anything else happens.
   pauseMs: SCAN_DEFAULTS.pauseMs,
+
+  // *** THE BOARD IS PINNED TO ITS OWN PALETTE, NOT THE PROFILE'S THEME (2026-09-02). ***
+  //
+  // `false` means pinned. The measurements and the full argument are on `.aboard` in
+  // modules.css; the short version is that the symbol palette is a set of light values and the
+  // old word colours were a set of dark ones, so whichever surface the theme picked, one of the
+  // two was illegible — and this is the panel somebody uses to SAY THINGS. A decoration setting
+  // should not be able to reach it.
+  //
+  // IT IS A DEFAULT, NOT A RULE. Somebody whose whole screen is Warm and who wants the board to
+  // match sets this to true and gets exactly that; the pinned contrast figures simply stop
+  // being guaranteed, which is their business to decide. The counter-case is real — a person
+  // who is not at a bedside, setting up their own screen, and for whom a board that ignores
+  // their theme just looks broken.
+  followTheme: false,
+
+  // The board's OWN high-contrast switch, because pinning the palette also cut it off from the
+  // `contrast` theme. Off by default — the pinned dark palette already clears every floor, and
+  // black-on-white at 21:1 is a different tradeoff (maximum legibility, no colour cue at all)
+  // that should be somebody's choice rather than their starting point.
+  highContrast: false,
 };
 
 export const SETTINGS = [
@@ -110,6 +131,12 @@ export const SETTINGS = [
       { value: 'all', label: 'all the cards, with one lit' },
       { value: 'one', label: 'only the card it is on' },
     ] },
+  // ESSENTIAL, both of them. How readable this board is outranks which board it is showing,
+  // and somebody who cannot read it cannot tell you that.
+  { key: 'highContrast', label: 'High contrast', default: false, level: 'essential',
+    onLabel: 'Black on white', offLabel: 'The board’s own colours' },
+  { key: 'followTheme', label: 'Colours', default: false, level: 'essential',
+    onLabel: 'Follow the screen’s theme', offLabel: 'The board keeps its own' },
 ];
 
 registerModule(
@@ -291,9 +318,24 @@ registerModule(
       scan.start();
     }
 
+    // The two appearance switches are CLASSES ON `.aboard`, not inline styles: the palettes
+    // themselves live in modules.css next to the cards they colour, so the numbers and the
+    // rules they satisfy stay in one place instead of half here and half there.
+    function applyAppearance() {
+      const el = mount.querySelector('.aboard');
+      if (!el) return;
+      el.classList.toggle('ab-themed', !!cfg.followTheme);
+      // High contrast WINS over theme-following when both are on. Somebody who has asked for
+      // maximum legibility has said something about being able to read it, and a theme is a
+      // preference about how it looks; the accessible answer takes precedence over the
+      // decorative one rather than the two fighting over the cascade.
+      el.classList.toggle('ab-hc', !!cfg.highContrast);
+    }
+
     function applyConfig() {
       board = boardFor(cfg.boardId);
       lit = 0;
+      applyAppearance();
       draw();
       startScan();
     }
@@ -304,6 +346,10 @@ registerModule(
         lit, scanning: !!scan, reveal: cfg.reveal,
         words: cardEls.map((b) => b.textContent || ''),
         shown: cardEls.filter((b) => !b.classList.contains('ab-away')).length,
+        // Appearance, so a test can assert the palette actually reaches the cards rather than
+        // that a config key was set.
+        themed: !!mount.querySelector('.aboard.ab-themed'),
+        hc: !!mount.querySelector('.aboard.ab-hc'),
       }),
 
       init() {
