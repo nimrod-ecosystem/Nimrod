@@ -200,6 +200,30 @@ export function createDwell({
     progress: () => Math.max(0, lastProgress),
     state: () => ({ ...state }),
     reset() { state = { anchor: null, t0: 0, mustLeave: null }; report(0); },
+
+    /**
+     * *** SOMETHING ELSE MADE THE SELECTION — ARM THE SAME GUARD A DWELL WOULD HAVE. ***
+     *
+     * `mustLeave` already stops a dwell from firing twice without the aim moving. But a
+     * selection can be made by something OTHER than this dwell while the aim is sitting
+     * still — a tap, a switch, a scan choosing what was under a resting hand — and the dwell
+     * knows nothing about it. Left alone, its clock runs out a moment later and chooses the
+     * same card a second time, which on an AAC board means the word is said twice and logged
+     * twice.
+     *
+     * So a host that hears about a selection tells this, and the aim has to genuinely leave
+     * before anything can fire again. Same rule, same distance, one caller instead of none.
+     * `reset()` is deliberately NOT this: it clears the guard, which is what a calibration
+     * panel wants and exactly what a post-selection host must not do.
+     */
+    holdOff(at = null) {
+      // With no aim at all there is nothing to be held off FROM: whatever arrives next is a
+      // fresh point and gets a fresh clock, which is right. So this degrades to a reset
+      // rather than inventing a coordinate to exclude.
+      const p = at || point || null;
+      state = { anchor: null, t0: 0, mustLeave: p };
+      report(0);
+    },
     destroy() {
       destroyed = true;
       if (timer != null) { clearTimer(timer); timer = null; }
