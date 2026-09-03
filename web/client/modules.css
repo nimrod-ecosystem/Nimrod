@@ -665,6 +665,36 @@
 .cur[data-style="crosshair"]::after {
   top: 50%; left: 0; height: var(--cur-ring); width: 100%; margin-top: calc(var(--cur-ring) / -2);
 }
+/* HALO — the bedside build's cursor, and the default. A ring that says roughly where, plus a
+   solid centre dot that says exactly where. The dot is deliberately small (a fifth of the
+   cursor) so it marks a point without covering the thing being pointed at: on this board that
+   thing is a symbol somebody is reading. */
+.cur[data-style="halo"] {
+  border-radius: 50%;
+  border: var(--cur-ring) solid var(--cur-color);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.55);
+}
+.cur .cur-dot { display: none; }
+.cur[data-style="halo"] .cur-dot {
+  display: block; position: absolute; left: 50%; top: 50%;
+  width: 20%; height: 20%; margin: -10% 0 0 -10%;
+  border-radius: 50%; background: var(--cur-color);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.55);
+}
+/* THE DWELL FILL — how far through "holding still is the click". A conic sweep from twelve
+   o'clock, inside the ring, so the growing thing IS the cursor rather than a second widget
+   somewhere else on the screen. Hidden entirely at zero, so a screen with no dwell running
+   looks exactly like one that never had it.
+
+   `--cur-turn` is set from script every tick; there is no CSS transition on it on purpose —
+   the number already arrives ten times a second, and easing it would make the ring lag the
+   clock it is reporting, which is the one thing this must not do. */
+.cur .cur-fill {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(var(--cur-color) var(--cur-turn, 0turn), transparent 0);
+  opacity: .38;
+}
+.cur .cur-fill[hidden] { display: none; }
 /* NO TRANSITION ON POSITION, EVER, and this is not a stylistic choice. `comet.js` puts the
    comet's head exactly on the aim because the precision is what answers "did I do that?" for
    somebody re-learning that she can. A CSS transition is smoothing by another name, applied
