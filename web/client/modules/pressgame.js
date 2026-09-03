@@ -99,6 +99,19 @@ const DEFAULTS = {
   speak: true,          // say the cues aloud, through the person's own output routing
   rewardWord: 'Well done',
   calm: false,          // motion budget
+  // OPEN TO A MENU RATHER THAN STRAIGHT INTO PLAY (Mike, 2026-09-02).
+  //
+  // The panel used to mount and be mid-round immediately, so somebody looking at it for the
+  // first time was already being measured and had no way to know what it wanted. A start
+  // screen says what the game is before it asks anything of them.
+  //
+  // IT IS A SETTING RATHER THAN A FIXED BEHAVIOUR, and the reason is the bedside. Turning it
+  // off restores the old straight-to-play mount, which is what a screen meant to be already
+  // running wants — one that boots unattended, or that lives in a quadrant nobody walks up
+  // to. Either way the breathing field keeps drawing BEHIND the menu, so the panel is never
+  // a dead rectangle while it waits, and the menu is left by the same press the game itself
+  // is played with — no new input, and nothing here needs a pointer.
+  openToMenu: true,
 };
 
 // Only speak a cue if the phase it belongs to lasts long enough to hear it. Cici's original
@@ -134,6 +147,8 @@ const CELEBRATION_MS = 1500;
 const MAX_SPARKS = 260;
 
 const SETTINGS = [
+  { key: 'openToMenu', label: 'When the panel opens', default: true, level: 'essential',
+    onLabel: 'Show a start screen first', offLabel: 'Start playing straight away' },
   { key: 'waitMs', label: 'How long the wait runs', kind: 'choice', default: 10000, level: 'essential',
     options: [
       { value: 4000, label: 'A few seconds' },
@@ -208,7 +223,7 @@ registerModule(
     let reducedMotion = false;
     const calm = () => cfg.calm || reducedMotion;
 
-    let root = null, canvas = null, c2d = null, textEl = null;
+    let root = null, canvas = null, c2d = null, textEl = null, menuEl = null;
     let raf = 0, running = false, lastFrame = 0;
     let W = 1, H = 1, DPR = 1;
     let theme = null, observer = null, visible = true;
@@ -224,7 +239,10 @@ registerModule(
     let simT = 0;
 
     // ---- game state ------------------------------------------------------------------
-    let phase = 'wait';              // wait | go | stop
+    // `menu` is the pre-game phase: nothing is measured and no session has started. It is a
+    // real phase rather than a flag so `__probe().phase` still answers "what is this panel
+    // doing" with one word, and so step()/press() cannot forget to check it.
+    let phase = 'wait';              // menu | wait | go | stop
     let phaseStart = 0;              // in simT
     let curWaitMs = DEFAULTS.waitMs;
     let frozenCharge = 0;
@@ -405,6 +423,25 @@ registerModule(
     const stopCharge = () => (cfg.stopQuietMs > 0
       ? clamp((simT - lastPressAt) / cfg.stopQuietMs, 0, 1) : 1);
 
+    // ---- the start screen --------------------------------------------------------------
+    // NOTHING IS RECORDED HERE. A session begins when somebody chooses to begin it, so the
+    // trial stream never opens with rows from a panel that was simply on the wall. That also
+    // keeps `session_start` honest as the marker of "somebody sat down to this".
+    function enterMenu() {
+      phase = 'menu'; phaseStart = simT; payoffDone = false; echoes = 0;
+      frozenCharge = 0; goPaintedAt = null;
+      setText('', '');
+      if (menuEl) menuEl.hidden = false;
+    }
+
+    // Leaving the menu IS starting the session — the two cannot drift apart, which is why
+    // init() calls this rather than repeating the pair.
+    function startSession() {
+      if (menuEl) menuEl.hidden = true;
+      enterWait();
+      record('session_start', { mode: mode(), waitMs: Math.round(curWaitMs) });
+    }
+
     function enterWait() {
       phase = 'wait'; phaseStart = simT; payoffDone = false; echoes = 0;
       frozenCharge = 0; goPaintedAt = null; frameMaxMs = 0; frameCount = 0; frameSumMs = 0;
@@ -454,6 +491,11 @@ registerModule(
       // did exactly this, and for the same reason.
       try { music?.play(); } catch { /* a bed is not worth an exception */ }
       lastPressAt = simT;
+      // THE MENU IS LEFT BY THE SAME PRESS THE GAME IS PLAYED WITH. Whoever can play this can
+      // start it — one switch, one key, a tap, or the `select` verb — so the start screen
+      // cannot become a door that needs an input the player does not have. It is checked
+      // FIRST so a press on the menu is never also counted as a commission.
+      if (phase === 'menu') { startSession(); return; }
       if (phase === 'wait') {
         // Never punished. A press here is a commission in the record and a bloom on screen.
         bloom(0.45);
@@ -674,13 +716,53 @@ registerModule(
           + 'text-align:center;pointer-events:none;font:700 min(12vw,130px)/1 system-ui,sans-serif;'
           + 'color:#fff3d9;text-shadow:0 0 30px rgba(255,180,90,.5),0 3px 18px rgba(0,0,0,.7)}'
           + '.m-pressgame .pg-text.go{color:#fff}'
-          + '.m-pressgame .pg-text.stop{color:#cfe0d9}';
+          + '.m-pressgame .pg-text.stop{color:#cfe0d9}'
+          // The start screen. Deliberately NOT a full cover — the field keeps breathing
+          // behind it, so a panel waiting to be started still looks alive rather than broken.
+          + '.m-pressgame .pg-menu{position:absolute;inset:0;display:flex;flex-direction:column;'
+          + 'align-items:center;justify-content:center;gap:2.2cqh;text-align:center;padding:6%;'
+          + 'background:radial-gradient(ellipse at center,rgba(5,7,15,.72),rgba(5,7,15,.9));'
+          + 'font:400 min(3.2cqw,17px)/1.45 system-ui,sans-serif;color:#cfe0d9}'
+          + '.m-pressgame .pg-menu[hidden]{display:none}'
+          + '.m-pressgame .pg-menu h2{margin:0;font:700 min(7cqw,40px)/1.1 system-ui,sans-serif;'
+          + 'color:#fff3d9;letter-spacing:-.01em}'
+          + '.m-pressgame .pg-menu p{margin:0;max-width:34ch;opacity:.88}'
+          + '.m-pressgame .pg-start{margin-top:1cqh;padding:.7em 1.9em;border-radius:999px;'
+          + 'border:2px solid rgba(255,243,217,.5);background:rgba(255,243,217,.12);'
+          + 'color:#fff3d9;font:700 min(4cqw,20px)/1 system-ui,sans-serif;cursor:pointer}'
+          + '.m-pressgame .pg-start:focus-visible{outline:3px solid #fff3d9;outline-offset:3px}'
+          + '.m-pressgame .pg-hint{font-size:.85em;opacity:.66}';
         root.appendChild(style);
         canvas = document.createElement('canvas');
         root.appendChild(canvas);
         textEl = document.createElement('div');
         textEl.className = 'pg-text';
         root.appendChild(textEl);
+
+        // The start screen's markup is built whether or not it will be shown, so turning the
+        // setting on does not need a remount to have something to show.
+        menuEl = document.createElement('div');
+        menuEl.className = 'pg-menu';
+        menuEl.hidden = true;
+        const h = document.createElement('h2');
+        h.textContent = 'Wait and Go';
+        const p = document.createElement('p');
+        p.textContent = 'Hold off while the light builds. When it says Go, press.';
+        const startBtn = document.createElement('button');
+        startBtn.type = 'button';
+        startBtn.className = 'pg-start';
+        startBtn.textContent = 'Start';
+        const hint = document.createElement('div');
+        hint.className = 'pg-hint';
+        hint.textContent = 'Any press starts it — a switch, a key, or a tap.';
+        menuEl.append(h, p, startBtn, hint);
+        root.appendChild(menuEl);
+        // Routed through press() rather than startSession() so the button is exactly one more
+        // press source, like the canvas and the bus — there is no second way to start.
+        const onStart = (e) => { e.preventDefault(); press('pointer'); };
+        startBtn.addEventListener('click', onStart);
+        offs.push(() => startBtn.removeEventListener('click', onStart));
+
         mount.appendChild(root);
 
         theme = readTheme(mount);
@@ -712,8 +794,10 @@ registerModule(
           music.useFolder(cfg.musicSourceId, cfg.musicAlbum).catch(() => {});
         } else music.useAmbient();
 
-        enterWait();
-        record('session_start', { mode: mode(), waitMs: Math.round(curWaitMs) });
+        // Straight to play, or to the start screen. `startSession()` is the only path into
+        // the wait, so the "somebody began a session" record cannot be skipped either way.
+        if (cfg.openToMenu) enterMenu();
+        else startSession();
 
         // A pointer/tap is a press too — the module is device-blind and always was.
         const onDown = () => { press('pointer'); };
@@ -759,7 +843,7 @@ registerModule(
         offs.length = 0;
         try { ac?.close?.(); } catch { /* already closed */ }
         ac = null; sfx = null;
-        root?.remove(); root = null; canvas = null; c2d = null; textEl = null;
+        root?.remove(); root = null; canvas = null; c2d = null; textEl = null; menuEl = null;
         sparks = [];
       },
     };

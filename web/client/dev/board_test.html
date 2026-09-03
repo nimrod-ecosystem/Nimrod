@@ -436,6 +436,69 @@ try {
   }
 
   // =====================================================================================
+  section('*** the board keeps its own colours, and can be made higher contrast ***');
+  {
+    // Decided 2026-09-02. The symbol palette is a set of LIGHT values and the old word colours
+    // were a set of DARK ones, so whichever surface the profile theme picked, one of the two
+    // was illegible. The board is pinned; the numbers are on `.aboard` in modules.css.
+    // A real, laid-out host: these checks read COMPUTED colour off a rendered card, so the
+    // board has to actually be on the page with modules.css applied — asserting on the config
+    // instead would pass even if the palette never reached a card.
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:420px;height:300px';
+    document.body.append(host);
+    const st = fakeState({ boardId: 'care' });
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(), state: st, output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(20);
+    const p = () => inst.impl.__probe();
+
+    check('*** pinned by default — the profile theme does not reach the board ***',
+      p().themed === false && p().hc === false);
+    // THE POINT OF PINNING, asserted against the rendered card rather than the config: the
+    // card must be dark, because every meaning-bearing hex in the symbol set is a light value.
+    {
+      const card = host.querySelector('.ab-card:not(.ab-empty)');
+      const bg = getComputedStyle(card).backgroundColor.match(/\d+/g).map(Number);
+      const light = (bg[0] * 299 + bg[1] * 587 + bg[2] * 114) / 1000;
+      check('*** and the card it actually renders is dark ***', light < 90,
+        `rgb(${bg.join(',')}) → ${Math.round(light)}`);
+    }
+
+    // IT IS A DEFAULT, NOT A RULE. Somebody setting up their own screen can have the board
+    // match it.
+    st.set({ followTheme: true });
+    await sleep(20);
+    check('a profile that wants it themed can turn it back on', p().themed === true);
+
+    st.set({ highContrast: true });
+    await sleep(20);
+    check('*** the board carries its own high-contrast switch, since it no longer inherits '
+      + 'the contrast theme ***', p().hc === true);
+    {
+      const card = host.querySelector('.ab-card:not(.ab-empty)');
+      const bg = getComputedStyle(card).backgroundColor.match(/\d+/g).map(Number);
+      const ink = getComputedStyle(card).color.match(/\d+/g).map(Number);
+      check('high contrast really is black on white on the card',
+        bg[0] > 250 && bg[1] > 250 && bg[2] > 250 && ink[0] < 5 && ink[1] < 5 && ink[2] < 5,
+        `bg rgb(${bg.join(',')}) ink rgb(${ink.join(',')})`);
+      const word = host.querySelector('.ab-word');
+      const wc = getComputedStyle(word).color.match(/\d+/g).map(Number);
+      check('...and every role collapses to the ink — colour was never the only cue',
+        wc[0] < 5 && wc[1] < 5 && wc[2] < 5, `rgb(${wc.join(',')})`);
+    }
+    // Both on at once: the accessible answer beats the decorative one rather than the two
+    // fighting over the cascade.
+    check('*** high contrast wins over theme-following when both are on ***',
+      p().hc === true && p().themed === true
+      && getComputedStyle(host.querySelector('.ab-card')).backgroundColor
+         === 'rgb(255, 255, 255)');
+    inst.destroy(); host.remove();
+  }
+
+  // =====================================================================================
   // A live one to look at. Not asserted on — it is here because a board is a thing you have to
   // SEE to judge, and a suite that only reports numbers about it would be hiding the product.
   {

@@ -60,9 +60,14 @@ function rig(saved = {}, output = null) {
     append: (kind, data, meta) => { appended.push({ kind, data, meta }); return Promise.resolve(); },
     destroy() {},
   };
+  // `openToMenu` DEFAULTS OFF IN THE RIG, and it is a deliberate difference from the product
+  // default (2026-09-02). Every check below this line is about the go/no-go loop, and starting
+  // each of them on a start screen would mean prefixing forty tests with a press that is not
+  // what any of them is testing. A caller that passes `openToMenu:true` gets the real default
+  // back — the start screen has its own section, which is where that behaviour is asserted.
   const inst = mountModule('pressgame', {
     mount: host, bus, events, output,
-    state: { get: () => saved, destroy() {} },
+    state: { get: () => ({ openToMenu: false, ...saved }), destroy() {} },
     user: 'u', profileId: 'p',
   });
   inst.init();
@@ -90,6 +95,46 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
         `${entry.group}/${entry.use}`);
       check('the page tells people it writes presses down — it is not a quiet recorder',
         /press/i.test(entry.why) && /evidence|record/i.test(entry.why));
+    }
+
+    // ================= the start screen =================
+    section('*** it opens to a start screen, and starting it is what begins a session ***');
+    {
+      // Mike, 2026-09-02: "wait and go and comet both need to open to the menu." The panel used
+      // to mount mid-round, so the first thing anybody saw was a game already measuring them.
+      const r = rig({ openToMenu: true, waitMs: 4000 });
+      check('*** it opens on the menu, not mid-round ***', r.impl.__probe().phase === 'menu');
+      check('the start screen is actually on screen', !!r.host.querySelector('.pg-menu:not([hidden])'));
+      // THE POINT OF THE PHASE, not a detail: a panel hanging on a wall must not file trials
+      // for a session nobody sat down to.
+      check('*** nothing is recorded while it sits on the menu ***',
+        r.appended.length === 0, JSON.stringify(kinds(r.appended)));
+      r.impl.__step(9999);
+      check('...and time passing does not start it on its own',
+        r.impl.__probe().phase === 'menu');
+
+      // THE INVARIANT. The menu must be leavable by the same input the game is played with,
+      // or it is a door that needs a key the player does not have.
+      r.impl.__press('verb');
+      check('*** the same press that plays the game leaves the menu ***',
+        r.impl.__probe().phase === 'wait');
+      check('the start screen is gone once it has started',
+        !!r.host.querySelector('.pg-menu[hidden]'));
+      check('and THAT is when the session is recorded',
+        rowsOf(r.appended, 'session_start').length === 1,
+        JSON.stringify(r.appended.map((x) => x.data?.kind)));
+      // A press that opens the menu is not also a false alarm in the trial record.
+      check('*** the starting press is not counted as a commission ***',
+        rowsOf(r.appended, 'commission').length === 0,
+        JSON.stringify(rowsOf(r.appended, 'commission')));
+      r.inst.destroy();
+
+      // The bedside case: a screen meant to be already running when somebody looks at it.
+      const s = rig({ openToMenu: false, waitMs: 4000 });
+      check('turning it off restores the straight-to-play mount',
+        s.impl.__probe().phase === 'wait' && rowsOf(s.appended, 'session_start').length === 1,
+        `${s.impl.__probe().phase} / ${JSON.stringify(s.appended.map((x) => x.data?.kind))}`);
+      s.inst.destroy();
     }
 
     // ================= the loop =================
