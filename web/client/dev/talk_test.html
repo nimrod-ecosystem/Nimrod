@@ -78,6 +78,20 @@ function fakeEvents() {
   const rows = [];
   return { rows, append: (kind, data) => { rows.push({ kind, ...data }); return Promise.resolve(); } };
 }
+// *** HOW MANY COLUMNS THE CARDS ARE ACTUALLY DRAWN IN, measured off the rendered elements. ***
+//
+// Not read from the grid template and not taken from the module's own probe. Both of those
+// were what the first version of this suite asserted, and both passed while every card was in
+// fact stacked full-width down the page — because a 1-column transpose and a stack of blocks
+// that never got a grid template are indistinguishable from the computed value. Counting how
+// many cards share the topmost row is the only version of this question that cannot be
+// answered correctly by a board that is rendering wrongly.
+function drawnCols(host) {
+  const tops = [...host.querySelectorAll('.ab-card')].map((b) => Math.round(b.getBoundingClientRect().top));
+  if (!tops.length) return 0;
+  const first = tops[0];
+  return tops.filter((t) => Math.abs(t - first) <= 1).length;
+}
 // The aim, in the units `input/aim` uses: fractions of the VIEWPORT. Not of the panel — which
 // is exactly the thing that would be wrong if this were computed against the host box.
 function aimAtEl(el) {
@@ -103,6 +117,12 @@ try {
     check('a wide box keeps the tier as declared — 3 across',
       p.grid.cols === 3 && p.grid.rows === 1, JSON.stringify(p.grid));
     check('...and the tier itself never changed', p.tier === 3 && p.cells === 3);
+    // *** AND THE CARDS ARE ACTUALLY DRAWN THAT WAY. *** This is the check that was missing:
+    // the first version asserted the computed tier only, and passed while a first paint with
+    // no measured width had left every card stacked full-width down the page.
+    check('*** ...and the cards are DRAWN three across, not merely computed to be ***',
+      drawnCols(document.getElementById('wide')) === 3,
+      String(drawnCols(document.getElementById('wide'))));
     inst.destroy();
   }
   {
@@ -118,6 +138,9 @@ try {
     check('*** a tall narrow box turns the grid — 1 across, 3 down ***',
       p.grid.cols === 1 && p.grid.rows === 3, JSON.stringify(p.grid));
     check('...it is a TRANSPOSE, so the cell count is untouched', p.cells === 3);
+    check('*** ...and the cards are DRAWN one across ***',
+      drawnCols(document.getElementById('tall')) === 1,
+      String(drawnCols(document.getElementById('tall'))));
     check('...and the words are still in the order they arrived in',
       p.words.join('|').includes('Yes') && p.words[0].includes('Yes') && p.words[2].includes('Other'),
       JSON.stringify(p.words));
@@ -133,6 +156,9 @@ try {
     const p2 = inst2.impl.__probe();
     check('*** turning `fitScreen` off keeps the declared grid even when it is a stripe ***',
       p2.grid.cols === 3 && p2.grid.rows === 1, JSON.stringify(p2.grid));
+    check('...drawn three across in a 220px-wide box, stripes and all',
+      drawnCols(document.getElementById('tall')) === 3,
+      String(drawnCols(document.getElementById('tall'))));
     inst2.destroy();
   }
   {
