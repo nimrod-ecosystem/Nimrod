@@ -630,6 +630,16 @@ registerModule(
           if (startGame()) return;
           steerToNearestHeart();
         }));
+        // THE WAY OUT — the `back` verb by default, and bindable to whatever somebody likes.
+        // It returns this panel to its own start screen; see pressgame.js for why that is the
+        // only meaning of "exit" that holds whether a game is the whole screen or a quarter.
+        //
+        // *** IT DOES NOT SAVE ANYTHING, AND THAT IS NOT AN OVERSIGHT. *** Comet has never
+        // written a score anywhere — `caught` lives in memory and dies with the mount — so
+        // there is nothing here to save yet, and inventing a record for it would be deciding
+        // what Comet's data IS. Mike is settling that separately (2026-09-03). Exit is wired
+        // now because leaving a game should not wait on that.
+        offs.push(bus.subscribe('comet/exit', () => { if (started) enterMenu(); }));
 
         // Only animate while actually on screen — see the header.
         observer = new IntersectionObserver((entries) => {

@@ -214,11 +214,21 @@ export const MODULE_VERBS = {
   // THE COMET'S VERBS ARE THE REASON IT WAS WORTH PORTING AT ALL. Cici's version moved only
   // with a pointer, so a switch user watched hearts drift past and could never touch one.
   // `next` steers the comet to the nearest heart; `select` blooms where it already is.
-  comet:         { select: 'comet/spark', next: 'comet/seek' },
-  // ONE VERB, AND THAT IS THE WHOLE GAME. Press. Everything clinical about this module
-  // - latency, commissions, perseveration - is WHEN that one verb arrives relative to
-  // the invite, so a second verb would be a second thing to get wrong for no gain.
-  pressgame:     { select: 'pressgame/press' },
+  comet:         { select: 'comet/spark', next: 'comet/seek', back: 'comet/exit' },
+  // ONE GAMEPLAY VERB, AND THAT IS THE WHOLE GAME. Press. Everything clinical about this
+  // module - latency, commissions, perseveration - is WHEN that one verb arrives relative
+  // to the invite, so a second GAMEPLAY verb would be a second thing to get wrong for no
+  // gain. That reasoning stands and is unchanged.
+  //
+  // *** `back` IS NOT A SECOND GAMEPLAY VERB — IT IS THE WAY OUT (Mike, 2026-09-03: they
+  // should be able to set whatever they want to exit the game). *** It leaves the sitting and
+  // returns the panel to its own start screen; it is never read as a press and never reaches
+  // the trial record. It is deliberately `back` rather than a tenth verb in the vocabulary:
+  // `back` is already "Back or cancel", it is already bindable to whatever somebody likes,
+  // and `call` already uses it for exactly this shape (`back: 'call/hangup'` — leave the
+  // thing you are in). A tenth verb would grow the binder for every module in the product to
+  // give this one a word it already had.
+  pressgame:     { select: 'pressgame/press', back: 'pressgame/exit' },
   // ANSWER and HANG UP, and nothing else. A call is not a thing to browse: `next` on a
   // call has no meaning, and a verb that does nothing is a press somebody spent effort on
   // for no result.

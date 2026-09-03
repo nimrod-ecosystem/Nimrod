@@ -207,6 +207,22 @@ section('*** the start screen, and the score ***');
   inst.destroy(); host.remove();
 }
 {
+  // The way out. Same shape as pressgame's, same verb.
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1 }) } });
+  await sleep(20);
+  check('it is playing', probe(inst).started === true);
+  bus.publish('comet/exit');
+  check('*** exit returns the panel to its own start screen ***', probe(inst).started === false);
+  check('the start screen is back', !!host.querySelector('.cm-menu:not([hidden])'));
+  // Comet has never written a score anywhere, so exit has nothing to save. That is a real
+  // gap, deliberately left open until Mike settles what Comet's data is (2026-09-03) — this
+  // check exists so the gap is stated rather than discovered later.
+  check('...and it saves nothing, because Comet records nothing yet', true);
+  inst.destroy(); host.remove();
+}
+{
   // Counted always, shown only if asked.
   const host = scratch();
   const bus = createBus();
