@@ -69,7 +69,17 @@ export const CURSOR_DEFAULTS = {
   //   'never'     off
   show: 'tracking',
   size: 44,             // px across. Big, because the person this is for is looking from a bed.
-  style: 'ring',        // 'ring' | 'dot' | 'crosshair'
+  // *** THE DEFAULT SHAPE IS THE BEDSIDE ONE. *** `halo` is `cici_cursor.js`'s cursor: a ring
+  // with a solid dot at its centre. Mike, 2026-09-03: *"default shape modeled on the CC one."*
+  //
+  // It is the default rather than `ring` because the two shapes answer different questions and
+  // only one of them is the hard one. A ring says WHERE — good enough with a mouse, where you
+  // already know roughly where you left it. The dot says EXACTLY WHERE, which is what somebody
+  // has to know before committing a slow, effortful movement to a card. The private build
+  // arrived at ring-plus-dot after living with a ring, and this is that finding carried over
+  // rather than a fresh preference. `ring` is still one setting away for anybody who finds the
+  // dot covers what they are pointing at.
+  style: 'halo',        // 'halo' | 'ring' | 'dot' | 'crosshair'
   color: '#F7C948',    // amber, the bedside build's color, and readable on photos and video
   hideSystem: false,    // take the OS pointer away as well (kiosk: reasonable; desktop: rude)
   // A cursor that stays on screen forever after somebody stopped pointing is clutter, and on
@@ -77,8 +87,14 @@ export const CURSOR_DEFAULTS = {
   idleMs: 0,
 };
 
-export const STYLES = ['ring', 'dot', 'crosshair'];
+export const STYLES = ['halo', 'ring', 'dot', 'crosshair'];
 export const SHOW_MODES = ['tracking', 'always', 'never'];
+
+// The size range, as numbers rather than a handful of stops. See the `size` setting below for
+// why both exist.
+export const SIZE_MIN = 16;
+export const SIZE_MAX = 240;
+export const SIZE_STEP = 2;
 
 // Devices the operating system already draws a pointer for. A device NOT in this list — a hand
 // tracker, a colored marker, a head pointer reporting through the aim rather than as a mouse —
@@ -96,15 +112,25 @@ export const SETTINGS = [
       { value: 'always', label: 'always, including with a mouse' },
       { value: 'never', label: 'never' },
     ] },
-  { key: 'size', label: 'Cursor size', kind: 'choice', default: 44, level: 'standard',
+  // *** A NUMBER, NOT FOUR STOPS — and the paragraph above about "the number of stops is the
+  // cost" is still true, which is why this is worth explaining rather than silently changing.
+  //
+  // Mike, 2026-09-03: *"scalable with fine control."* Four named sizes cannot deliver that.
+  // The right size for a cursor is a function of one person's vision, one screen's size and
+  // how far away they are sitting, and the gap between "large" and "very large" was 38px —
+  // enough to be the difference between findable and covering the card underneath.
+  //
+  // The one-button cost is real and it is PAID rather than dodged: `stepValue` walks a number
+  // field by `step`, so a switch user crossing this range one press at a time faces 112 presses
+  // instead of 3. That is the reason the step is 2px rather than 1, and the reason this field
+  // stays `standard` while the shape above it is the thing most people actually change. A host
+  // that wants coarse jumps for a switch can declare its own larger step; a caregiver with a
+  // finger and a slider gets the fine control that was asked for.
+  { key: 'size', label: 'Cursor size', kind: 'number', default: 44, level: 'standard',
+    min: SIZE_MIN, max: SIZE_MAX, step: SIZE_STEP, unit: 'px' },
+  { key: 'style', label: 'Cursor shape', kind: 'choice', default: 'halo', level: 'standard',
     options: [
-      { value: 28, label: 'small' },
-      { value: 44, label: 'medium' },
-      { value: 72, label: 'large' },
-      { value: 110, label: 'very large' },
-    ] },
-  { key: 'style', label: 'Cursor shape', kind: 'choice', default: 'ring', level: 'standard',
-    options: [
+      { value: 'halo', label: 'ring with a centre dot' },
       { value: 'ring', label: 'ring' },
       { value: 'dot', label: 'dot' },
       { value: 'crosshair', label: 'crosshair' },
@@ -127,7 +153,7 @@ export const SETTINGS = [
 function paint(el, cfg) {
   const size = Math.max(8, Number(cfg.size) || CURSOR_DEFAULTS.size);
   const color = String(cfg.color || CURSOR_DEFAULTS.color);
-  const style = STYLES.includes(cfg.style) ? cfg.style : 'ring';
+  const style = STYLES.includes(cfg.style) ? cfg.style : CURSOR_DEFAULTS.style;
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
   el.style.marginLeft = `${-size / 2}px`;
@@ -154,8 +180,14 @@ export function mountCursor(root, {
   if (!root) throw new Error('mountCursor: a root element is required');
   if (!bus) throw new Error('mountCursor: a bus is required');
 
-  root.innerHTML = '<div class="cur" data-cur hidden aria-hidden="true"></div>';
+  // The dot and the progress arc are CHILDREN rather than pseudo-elements because both have to
+  // be addressed from script — the dot so `halo` can exist without a fourth `::before` fight
+  // with `crosshair`, and the arc so a dwell can drive it every 100ms without touching the
+  // stylesheet.
+  root.innerHTML = '<div class="cur" data-cur hidden aria-hidden="true">'
+    + '<i class="cur-dot"></i><i class="cur-fill" data-fill hidden></i></div>';
   const el = root.querySelector('[data-cur]');
+  const fillEl = root.querySelector('[data-fill]');
 
   // *** STRUCTURE INLINE, APPEARANCE IN CSS — and the split is a safety one. ***
   //
@@ -237,6 +269,29 @@ export function mountCursor(root, {
     hide,
     at: () => (at ? { ...at } : null),
     isVisible: () => !el.hidden,
+
+    /**
+     * *** HOW FAR THROUGH A DWELL, DRAWN ON THE CURSOR ITSELF. ***
+     *
+     * `input_dwell.js` reports progress and nothing in this repo drew it, which made dwell a
+     * feature you had to already trust: hold still, see nothing, get a click at some point.
+     * The whole reason a person can use dwell is that they can see it coming and move away
+     * before it fires — an unindicated dwell is an input somebody has to guess the timing of,
+     * and for the person this is for, guessing is the thing that does not work.
+     *
+     * Drawn as a conic sweep FILLING the ring rather than as a second shape, so the thing
+     * growing is the cursor they are already looking at. `p` is 0..1; anything at or below 0
+     * hides it entirely, so a screen with no dwell running is exactly the cursor it was.
+     */
+    progress(p) {
+      const v = Math.max(0, Math.min(1, Number(p) || 0));
+      if (!fillEl) return v;
+      if (v <= 0) { fillEl.hidden = true; el.dataset.dwelling = ''; return 0; }
+      fillEl.hidden = false;
+      el.dataset.dwelling = '1';
+      fillEl.style.setProperty('--cur-turn', `${v}turn`);
+      return v;
+    },
     // Re-read the settings without waiting for the next movement, so changing the size in a
     // panel shows the new size immediately rather than the next time somebody moves.
     refresh: () => place(at),
