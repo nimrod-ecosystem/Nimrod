@@ -272,13 +272,19 @@ registerModule(
       const t = effectiveTier();
       if (!g || !t) return;
       const w = g.clientWidth, h = g.clientHeight;
-      if (!w || !h) return;                     // not laid out yet; onResize will come back
-      // The TEMPLATE is applied here rather than only in `draw`, because the thing that
-      // changes it is a resize — turning a tablet — and a resize does not redraw the cards. A
-      // rotation that recomputed the unit but left the columns alone would leave the board in
-      // exactly the shape this is supposed to prevent.
+      // *** THE TEMPLATE IS APPLIED BEFORE THE "not laid out yet" BAIL-OUT, AND THAT ORDER IS
+      // THE BUG THIS CARRIES. ***
+      //
+      // It has to be applied HERE and not only in `draw` because the thing that changes it is a
+      // resize — turning a tablet — and a resize does not redraw the cards. But moving it here
+      // and leaving it below the `if (!w || !h) return` put it behind a guard that IS taken on
+      // a first paint: on the very first mount `clientWidth` is still 0, so the function
+      // returned before setting any columns and every card stacked full-width down the page.
+      // The suite did not catch it because it asserted the COMPUTED tier rather than the
+      // rendered grid, and a 1-column transpose and a stack of blocks look identical.
       g.style.gridTemplateColumns = `repeat(${t.cols}, 1fr)`;
       g.style.gridTemplateRows = `repeat(${t.rows}, 1fr)`;
+      if (!w || !h) return;                     // not laid out yet; onResize will come back
       const u = Math.min(w / t.cols, h / t.rows) / 100;
       g.style.setProperty('--u', `${u}px`);
       // *** TOO SMALL FOR BOTH? DROP THE PICTURE, NEVER THE WORD. *** Same rule as color: the
