@@ -82,10 +82,16 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
     section('it exists in every place a module has to exist');
     {
       check('the manifest is registered', listManifests().some((m) => m.type === 'pressgame'));
-      check('it answers the select verb, and only that one',
+      // ONE GAMEPLAY VERB. This used to assert exactly one verb full stop; `back` was added
+      // 2026-09-03 as the way OUT, which is not a way to play. The check is restated so it
+      // still guards the thing that mattered — that nothing but `select` can drive the game —
+      // rather than being loosened to a count that would no longer catch a third gameplay verb.
+      check('it answers the select verb, and that is the only way to PLAY it',
         verbTarget('pressgame', 'select')?.topic === 'pressgame/press' &&
-        Object.keys(MODULE_VERBS.pressgame).length === 1,
+        Object.keys(MODULE_VERBS.pressgame).every((v) => v === 'select' || v === 'back'),
         JSON.stringify(MODULE_VERBS.pressgame));
+      check('...and the way out is a different verb on a different topic',
+        verbTarget('pressgame', 'back')?.topic === 'pressgame/exit');
       const entry = CATALOG.find((c) => c.type === 'pressgame');
       check('it is described on the public catalog page', !!entry);
       // The comfort group's promise is that nothing in it needs pressing to keep going.
@@ -135,6 +141,77 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
         s.impl.__probe().phase === 'wait' && rowsOf(s.appended, 'session_start').length === 1,
         `${s.impl.__probe().phase} / ${JSON.stringify(s.appended.map((x) => x.data?.kind))}`);
       s.inst.destroy();
+    }
+
+    // ================= leaving =================
+    section('*** the way out, and it is bindable ***');
+    {
+      // Mike, 2026-09-03: "They should be able to set whatever they want to exit the game."
+      // It is `back` rather than a tenth verb — `back` is already "Back or cancel", already
+      // bindable, and `call` already uses it to leave the thing you are in.
+      check('*** exit is a bound verb, not a hard-coded key ***',
+        verbTarget('pressgame', 'back')?.topic === 'pressgame/exit',
+        JSON.stringify(MODULE_VERBS.pressgame));
+      check('...and it is a SEPARATE topic from the press, so it can never be read as one',
+        verbTarget('pressgame', 'select')?.topic === 'pressgame/press');
+
+      const r = rig({ waitMs: 4000 });
+      r.impl.__step(16); r.impl.__press('verb');       // play a little, so there is a sitting
+      const before = r.appended.length;
+      // That deliberate press during the wait IS a commission — it is how the sitting was
+      // made. What the exit must not do is add another one.
+      const commissionsBefore = rowsOf(r.appended, 'commission').length;
+      check('a sitting is under way', before > 0 && r.impl.__probe().phase !== 'menu');
+
+      r.impl.__exit();
+      check('*** exit returns the panel to its own start screen ***',
+        r.impl.__probe().phase === 'menu');
+      // WHAT "SAVE" MEANS HERE: every trial was already written as it happened, so what exit
+      // adds is the SUMMARY that makes the sitting citable.
+      check('*** and it writes the session summary — leaving is what saves ***',
+        r.appended.some((x) => x.kind === 'session_evidence_record'),
+        JSON.stringify(r.appended.map((x) => x.kind)));
+      check('*** the exit itself is not recorded as a press ***',
+        rowsOf(r.appended, 'commission').length === commissionsBefore,
+        `${commissionsBefore} before, ${rowsOf(r.appended, 'commission').length} after`);
+      // Two summaries for one sitting would double-count it in anybody's records.
+      r.inst.destroy();
+      check('*** destroying an already-exited panel does not file a second, empty summary ***',
+        r.appended.filter((x) => x.kind === 'session_evidence_record').length === 1,
+        JSON.stringify(r.appended.map((x) => x.kind)));
+    }
+    {
+      // The clinician's option. OFF by default — an extra press is work for somebody whose
+      // only input is one switch.
+      const d = rig({ waitMs: 4000 });
+      check('asking first is OFF by default', d.impl.__probe().cfg.confirmExit === false);
+      d.inst.destroy();
+
+      const r = rig({ waitMs: 4000, confirmExit: true, confirmMs: 5000 });
+      r.impl.__step(16); r.impl.__press('verb');
+      r.impl.__exit();
+      check('with it on, the first exit ASKS rather than leaving',
+        r.impl.__probe().askingExit === true && r.impl.__probe().phase !== 'menu');
+      check('the question is on screen', !!r.host.querySelector('.pg-ask:not([hidden])'));
+      // ONE SWITCH ANSWERS IT. There is no choosing between two buttons — the same input again.
+      r.impl.__exit();
+      check('*** the same input again is what leaves — no second control to find ***',
+        r.impl.__probe().phase === 'menu');
+      r.inst.destroy();
+    }
+    {
+      // *** THE INVARIANT. A confirm must not be a state only an input can leave. ***
+      const r = rig({ waitMs: 4000, confirmExit: true, confirmMs: 5000 });
+      r.impl.__step(16); r.impl.__press('verb');
+      r.impl.__exit();
+      check('it is asking', r.impl.__probe().askingExit === true);
+      for (let i = 0; i < 60; i++) r.impl.__step(100);   // 6 seconds of nobody answering
+      check('*** ignore it and the question goes away — nobody is held on a prompt ***',
+        r.impl.__probe().askingExit === false);
+      check('*** and ignoring it leaves you PLAYING, not exited ***',
+        r.impl.__probe().phase !== 'menu', r.impl.__probe().phase);
+      check('the question is off screen again', !!r.host.querySelector('.pg-ask[hidden]'));
+      r.inst.destroy();
     }
 
     // ================= the loop =================

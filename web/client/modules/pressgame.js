@@ -112,6 +112,21 @@ const DEFAULTS = {
   // a dead rectangle while it waits, and the menu is left by the same press the game itself
   // is played with — no new input, and nothing here needs a pointer.
   openToMenu: true,
+
+  // *** ASK BEFORE LEAVING (Mike, 2026-09-03: "an option for an are you sure you want to exit
+  // without saving popup that defaults to off. Could be a good thing for clinicians"). ***
+  //
+  // OFF BY DEFAULT. A confirm is the right tool for somebody running a session they do not
+  // want to lose by catching a switch; it is the wrong tool for a person whose only input is
+  // that switch, for whom every extra press is work.
+  //
+  // AND IT CANNOT STRAND ANYBODY, which is the part that had to be designed rather than
+  // added. The prompt is answered by REPEATING the same exit input — one switch, no scanning
+  // between two buttons — and if nobody answers it at all it times out and the game simply
+  // carries on. Inaction leaves you playing. That is the difference between a confirm and a
+  // gate: nothing here enters a state that only an input can leave.
+  confirmExit: false,
+  confirmMs: 12000,
 };
 
 // Only speak a cue if the phase it belongs to lasts long enough to hear it. Cici's original
@@ -149,6 +164,8 @@ const MAX_SPARKS = 260;
 const SETTINGS = [
   { key: 'openToMenu', label: 'When the panel opens', default: true, level: 'essential',
     onLabel: 'Show a start screen first', offLabel: 'Start playing straight away' },
+  { key: 'confirmExit', label: 'Leaving a session', default: false, level: 'standard',
+    onLabel: 'Ask before ending it', offLabel: 'Leave straight away' },
   { key: 'waitMs', label: 'How long the wait runs', kind: 'choice', default: 10000, level: 'essential',
     options: [
       { value: 4000, label: 'A few seconds' },
@@ -223,7 +240,10 @@ registerModule(
     let reducedMotion = false;
     const calm = () => cfg.calm || reducedMotion;
 
-    let root = null, canvas = null, c2d = null, textEl = null, menuEl = null;
+    let root = null, canvas = null, c2d = null, textEl = null, menuEl = null, askEl = null;
+    // The exit confirm, when it is switched on. `askAt` is in simT so it times out on the
+    // same clock everything else in this module runs on — a test can drive it with __step.
+    let askingExit = false, askAt = 0;
     let raf = 0, running = false, lastFrame = 0;
     let W = 1, H = 1, DPR = 1;
     let theme = null, observer = null, visible = true;
@@ -430,8 +450,52 @@ registerModule(
     function enterMenu() {
       phase = 'menu'; phaseStart = simT; payoffDone = false; echoes = 0;
       frozenCharge = 0; goPaintedAt = null;
+      askingExit = false;
       setText('', '');
+      if (askEl) askEl.hidden = true;
       if (menuEl) menuEl.hidden = false;
+    }
+
+    // ---- leaving -------------------------------------------------------------------------
+    //
+    // *** EXIT GOES TO THIS PANEL'S OWN START SCREEN, NOT ANYWHERE ELSE ON THE SCREEN. ***
+    // That is what makes it definable at all. On a laid-out kiosk this game is one quadrant of
+    // four, so there is no "back" for it to go to — closing the panel would leave a hole in
+    // somebody's screen, and going Home is already the menu's job and already never hidden.
+    // Ending the sitting and returning to the start screen is the one meaning of "exit" that
+    // is true whether the game is the whole screen or a quarter of it.
+    //
+    // WHAT "SAVE" MEANS HERE, precisely: every trial was already written as it happened, so
+    // nothing is waiting to be saved. What exit writes is the SESSION EVIDENCE RECORD — the
+    // summary that makes a sitting citable rather than a pile of loose rows. `destroy()` has
+    // always written one; now leaving on purpose writes one too, at the moment somebody
+    // decided the sitting was over rather than whenever the panel happened to be torn down.
+    function endSession(reason) {
+      if (!sessionRows.length) return;            // nothing happened; nothing to summarise
+      try {
+        const ev = evidenceRecord();
+        events?.append?.('session_evidence_record', { ...ev, endedBy: reason },
+          { sessionId, producerVersion: PRODUCER })?.catch?.(() => {});
+      } catch { /* a failed summary must not stop somebody leaving */ }
+      sessionRows.length = 0;
+      sessionId = newSessionId();                 // the next sitting is a new one
+      trialSeq = 0;
+    }
+
+    // The exit input. With `confirmExit` off this leaves immediately. With it on, the FIRST
+    // one asks and the SECOND one leaves — the same input twice, so it is answerable by
+    // somebody with exactly one switch and no way to choose between two on-screen buttons.
+    // Ignore it and `confirmMs` later the question goes away and the game carries on.
+    function exitGame() {
+      if (phase === 'menu') return;               // already there; nothing to leave
+      if (cfg.confirmExit && !askingExit) {
+        askingExit = true;
+        askAt = simT;
+        if (askEl) askEl.hidden = false;
+        return;
+      }
+      endSession(askingExit ? 'confirmed' : 'exit');
+      enterMenu();
     }
 
     // Leaving the menu IS starting the session — the two cannot drift apart, which is why
@@ -596,6 +660,14 @@ registerModule(
       if (d > frameMaxMs) frameMaxMs = d;
       frameCount++; frameSumMs += d;
 
+      // THE CONFIRM EXPIRES, and this is the line that keeps it a question rather than a gate.
+      // Nobody answering means the game carries on, so the worst case for somebody who cannot
+      // reach their switch is that they keep playing — never that they are held on a prompt.
+      if (askingExit && simT - askAt >= (cfg.confirmMs || DEFAULTS.confirmMs)) {
+        askingExit = false;
+        if (askEl) askEl.hidden = true;
+      }
+
       if (phase === 'wait' && liveCharge() >= 1) {
         if (waitAdapts()) curWaitMs = Math.max(floorMs(), curWaitMs * WAIT_SPEED);
         enterGo();
@@ -684,6 +756,7 @@ registerModule(
       // behavior can only be eyeballed — which is not a test. Reached only through `impl`.
       __step: (dt = 16) => step(dt),
       __press: (src = 'test') => press(src),
+      __exit: () => exitGame(),
       __edge: (e) => onEdge(e),
       // Exposed so the core-field guard can actually be exercised. Nothing inside this module
       // can currently trip it — onEdge builds its extras by name rather than spreading the
@@ -693,6 +766,7 @@ registerModule(
         phase, simT, charge: phase === 'wait' ? liveCharge() : frozenCharge,
         payoffDone, echoes, curWaitMs, sparks: sparks.length, running,
         rows: sessionRows.length, sessionId, calm: calm(), cfg: { ...cfg },
+        askingExit,
         goPaintedAt, machine: machine(),
         music: music ? music.state() : null,
       }),
@@ -731,7 +805,16 @@ registerModule(
           + 'border:2px solid rgba(255,243,217,.5);background:rgba(255,243,217,.12);'
           + 'color:#fff3d9;font:700 min(4cqw,20px)/1 system-ui,sans-serif;cursor:pointer}'
           + '.m-pressgame .pg-start:focus-visible{outline:3px solid #fff3d9;outline-offset:3px}'
-          + '.m-pressgame .pg-hint{font-size:.85em;opacity:.66}';
+          + '.m-pressgame .pg-hint{font-size:.85em;opacity:.66}'
+          // The exit question. A STRIP along the bottom, not a modal: the game is still
+          // running behind it and still answerable, because the question is "do you want to
+          // stop" and covering the thing being stopped would answer it for them.
+          + '.m-pressgame .pg-ask{position:absolute;left:0;right:0;bottom:0;padding:1.4cqh 4%;'
+          + 'background:rgba(5,7,15,.86);border-top:2px solid rgba(255,243,217,.35);'
+          + 'text-align:center;color:#fff3d9;'
+          + 'font:600 min(3.2cqw,16px)/1.4 system-ui,sans-serif}'
+          + '.m-pressgame .pg-ask[hidden]{display:none}'
+          + '.m-pressgame .pg-ask small{display:block;font-weight:400;opacity:.7}';
         root.appendChild(style);
         canvas = document.createElement('canvas');
         root.appendChild(canvas);
@@ -762,6 +845,13 @@ registerModule(
         const onStart = (e) => { e.preventDefault(); press('pointer'); };
         startBtn.addEventListener('click', onStart);
         offs.push(() => startBtn.removeEventListener('click', onStart));
+
+        askEl = document.createElement('div');
+        askEl.className = 'pg-ask';
+        askEl.hidden = true;
+        askEl.innerHTML = 'End this session?'
+          + '<small>Do it again to end it — or ignore this and keep playing.</small>';
+        root.appendChild(askEl);
 
         mount.appendChild(root);
 
@@ -806,6 +896,10 @@ registerModule(
 
         // GAMEPLAY channel.
         offs.push(bus.subscribe('pressgame/press', () => press('verb')));
+        // THE WAY OUT, on its own topic so it is bindable to whatever somebody likes (the
+        // `back` verb, by default) and can never be mistaken for a press. It deliberately does
+        // NOT go through press(): an exit must not land in the trial record as a commission.
+        offs.push(bus.subscribe('pressgame/exit', () => exitGame()));
         // MEASUREMENT channel — separate subscription, never drives the game.
         offs.push(bus.subscribe(EDGE_TOPIC, onEdge));
 
@@ -830,12 +924,11 @@ registerModule(
       destroy() {
         stopLoop();
         // The sitting ends with a record of what it was, so a partial session is still
-        // citable rather than a pile of loose rows.
-        try {
-          const ev = evidenceRecord();
-          events?.append?.('session_evidence_record', ev, { sessionId, producerVersion: PRODUCER })
-            ?.catch?.(() => {});
-        } catch { /* a failed summary must not block teardown */ }
+        // citable rather than a pile of loose rows. Routed through the SAME function the exit
+        // uses, which is what stops a panel that was already exited from filing a second,
+        // empty summary on its way out — `endSession` returns early when there is nothing to
+        // summarise, and there is exactly one place that decides what "nothing" means.
+        endSession('destroy');
         try { music?.destroy(); } catch { /* already gone */ }
         music = null;
         observer?.disconnect(); observer = null;
