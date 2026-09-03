@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover so the board reaches into a phone's rounded corners and notch area;
+     the safe-area insets below keep the actual cards out of them. NO maximum-scale: pinch
+     zoom stays available, because taking it away from somebody who needs it to read a card is
+     a worse trade than a stray zoom on a kiosk. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12181c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="A communication board. Big cards that say the word out loud when they are chosen.">
+<title>Talk — Nimrod</title>
+<link rel="stylesheet" href="./modules.css">
+<style>
+  /* THE PAGE OWNS ITS OWN SURFACE, and does not read a theme.
+     `kiosk.html` hardcodes a near-black background and pairs it with `--ink`, which is a DARK
+     colour in four of the five themes — the measured contrast failure in MIKE_CHANGE_LIST §B6,
+     worst of all in the theme called "High contrast". This page is a board somebody talks
+     with, so it takes the board's own measured palette and nothing else can reach it. */
+  :root { --tk-bg:#0e1418; --tk-ink:#e8eef0; --tk-line:#7d939d; --tk-card:#1b2429; }
+  html, body {
+    height:100%; margin:0; background:var(--tk-bg); color:var(--tk-ink);
+    font:16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow:hidden; overscroll-behavior:none;
+  }
+  /* Kills the 300ms double-tap-to-zoom delay on a card without disabling pinch on the page,
+     and stops a drag across the board from being read as a text selection or a page pull. */
+  #board, #board * { touch-action:manipulation; -webkit-user-select:none; user-select:none;
+    -webkit-tap-highlight-color:transparent; }
+
+  #board {
+    position:fixed;
+    top:env(safe-area-inset-top,0); right:env(safe-area-inset-right,0);
+    bottom:env(safe-area-inset-bottom,0); left:env(safe-area-inset-left,0);
+  }
+
+  /* THE SPOKEN WORD, WRITTEN. It is `pointer-events:none` and it fades on a timer: it can
+     cover a card for a moment but it can never take a tap, and there is no state here that
+     only an input can leave. */
+  #say {
+    position:fixed; left:0; right:0; top:0; z-index:40; pointer-events:none;
+    padding:calc(env(safe-area-inset-top,0) + 10px) 16px 12px;
+    text-align:center; font-weight:800; letter-spacing:.01em;
+    font-size:clamp(28px, 9vmin, 96px); color:#fff;
+    background:linear-gradient(180deg, rgba(8,12,14,.94), rgba(8,12,14,0));
+    opacity:0; transform:translateY(-8px); transition:opacity .18s ease, transform .18s ease;
+  }
+  #say[data-on="1"] { opacity:1; transform:none; }
+
+  /* What a key just did. Small, bottom-centre, out of the way of the cards. */
+  #toast {
+    position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0) + 14px);
+    transform:translateX(-50%) translateY(6px); z-index:45; pointer-events:none;
+    background:rgba(8,12,14,.92); border:1px solid var(--tk-line); border-radius:12px;
+    padding:10px 16px; font-size:15px; font-weight:600; max-width:90vw;
+    opacity:0; transition:opacity .15s ease, transform .15s ease;
+  }
+  #toast[data-on="1"] { opacity:1; transform:translateX(-50%); }
+
+  /* THE WAY IN, and it is deliberately unrewarding to hit by accident: small, in the corner,
+     and it needs a press and hold rather than a tap. The ring fills while you hold so it is
+     obvious that holding is the gesture. */
+  #open {
+    position:fixed; z-index:46;
+    top:calc(env(safe-area-inset-top,0) + 6px); right:calc(env(safe-area-inset-right,0) + 6px);
+    width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,.22);
+    background:rgba(255,255,255,.07); color:var(--tk-ink); font-size:17px; line-height:1;
+    display:grid; place-items:center; cursor:pointer; opacity:.5; touch-action:none;
+  }
+  #open:hover { opacity:1; }
+  #open::after {
+    content:""; position:absolute; inset:-3px; border-radius:50%;
+    border:3px solid transparent;
+  }
+  #open[data-holding="1"] { opacity:1; }
+  #open[data-holding="1"]::after { border-color:#8fae63; animation:hold .65s linear forwards; }
+  @keyframes hold { from { clip-path:inset(0 0 100% 0); } to { clip-path:inset(0); } }
+
+  /* THE SETTINGS SHEET. Rows are 56px minimum because a finger is not a mouse pointer, and
+     the person adjusting this is often standing next to a bed holding something else. */
+  #sheet {
+    position:fixed; inset:0; z-index:70; background:rgba(4,8,10,.72);
+    display:flex; align-items:flex-end; justify-content:center;
+    -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  }
+  #sheet[hidden] { display:none; }
+  .sheetbox {
+    width:min(640px, 100%); max-height:92vh; overflow:auto; background:#141c21;
+    border:1px solid var(--tk-line); border-radius:18px 18px 0 0;
+    padding:0 14px calc(env(safe-area-inset-bottom,0) + 18px);
+    box-shadow:0 -12px 40px rgba(0,0,0,.5);
+  }
+  .sheethead {
+    position:sticky; top:0; background:#141c21; z-index:2;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 0 10px; border-bottom:1px solid rgba(255,255,255,.10);
+  }
+  .sheethead h2 { margin:0; font-size:1.05rem; font-weight:700; }
+  .close, .btn {
+    min-height:48px; padding:0 18px; border-radius:12px; font-size:15px; font-weight:700;
+    border:1px solid var(--tk-line); background:#22303a; color:var(--tk-ink); cursor:pointer;
+  }
+  .close { background:#8fae63; border-color:#8fae63; color:#10170b; }
+
+  .grp { border-bottom:1px solid rgba(255,255,255,.08); padding:6px 0 12px; }
+  .grp:last-child { border-bottom:0; }
+  details.adv > summary {
+    cursor:pointer; list-style:none; min-height:56px; display:flex; align-items:center;
+    justify-content:space-between; gap:10px; font-weight:700; padding:8px 2px;
+  }
+  details.adv > summary::-webkit-details-marker { display:none; }
+  details.adv > summary::before { content:"▸"; margin-right:8px; color:var(--tk-line); }
+  details.adv[open] > summary::before { content:"▾"; }
+  details.adv > summary span { font-weight:500; color:#a9bcc4; font-size:.9rem; margin-left:auto; }
+
+  .row { display:flex; align-items:center; justify-content:space-between; gap:14px;
+         min-height:56px; padding:6px 2px; }
+  .row.range { display:block; }
+  .lab { font-size:15px; font-weight:600; display:flex; flex-direction:column; }
+  .lab b { font-weight:800; color:#8fae63; }
+  .lab .note, .lab span { font-weight:400; font-size:.85rem; color:#a9bcc4; }
+  .why { margin:8px 2px 2px; font-size:.85rem; line-height:1.5; color:#a9bcc4; }
+  .why b { color:var(--tk-ink); }
+
+  .sw { min-width:96px; min-height:48px; border-radius:999px; cursor:pointer;
+        border:1px solid var(--tk-line); background:#22303a; color:var(--tk-ink);
+        font-weight:700; font-size:15px; }
+  .sw[aria-pressed="true"] { background:#8fae63; border-color:#8fae63; color:#10170b; }
+
+  .seg { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
+  .seg button { min-height:48px; padding:0 14px; border-radius:12px; cursor:pointer;
+    border:1px solid var(--tk-line); background:#22303a; color:var(--tk-ink);
+    font-size:14px; font-weight:600; }
+  .seg button.on { background:#8fae63; border-color:#8fae63; color:#10170b; }
+
+  /* A 44px-tall track and a 34px thumb: the number Mike will be dragging at a bedside has to
+     be draggable with a thumb, not a cursor. */
+  input[type=range] { width:100%; height:44px; margin:2px 0 0; accent-color:#8fae63; }
+
+  .keys { margin:4px 0 0; padding:0 0 0 2px; list-style:none; font-size:14px; color:#c6d3d9; }
+  .keys li { padding:5px 0; }
+  .keys kbd { display:inline-block; min-width:24px; text-align:center; padding:2px 7px;
+    border:1px solid var(--tk-line); border-radius:6px; background:#22303a; font:600 13px/1.4 ui-monospace,Consolas,monospace;
+    margin-right:8px; }
+
+  /* An honest failure if the module never mounts, rather than a black rectangle. */
+  #fallback { position:fixed; inset:0; display:none; place-items:center; padding:28px;
+    text-align:center; color:#c6d3d9; }
+  html[data-failed="1"] #fallback { display:grid; }
+</style>
+</head>
+<body>
+<div id="board"></div>
+<div id="say" hidden aria-live="polite"></div>
+<div id="toast" role="status"></div>
+<button id="open" type="button" aria-label="Board settings — press and hold">⚙</button>
+<div id="sheet" hidden></div>
+<div id="cursorlayer"></div>
+<div id="fallback">
+  <p><b>The board could not start.</b><br>
+  This page needs a browser that supports JavaScript modules — anything from the last few
+  years does. Nothing is wrong with your account; this page does not use one.</p>
+</div>
+
+<script type="module">
+  import { startTalk } from './talk.js';
+  try {
+    window.__talk = startTalk();
+  } catch (err) {
+    console.error('talk: failed to start', err);
+    document.documentElement.dataset.failed = '1';
+  }
+</script>
+</body>
+</html>

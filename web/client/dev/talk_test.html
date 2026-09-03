@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>talk.html — the board on its own — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  /* Two hosts with deliberately opposite shapes, because the whole point of the transpose is
+     that it depends on the box and not on a setting. */
+  #wide{position:relative;width:640px;height:220px;margin-top:12px;border:1px solid #e4e0c2}
+  #tall{position:relative;width:220px;height:640px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>talk.html — the board on its own</h1>
+
+<div class="warn">
+  A board must never be the thing someone uses to summon help. Nothing on this page or in
+  <code>talk.js</code> sends anything anywhere: selections speak in the room, and the log of
+  what was chosen stays in this browser. The last section asserts it.
+</div>
+
+<p>The page at <a href="../talk.html">/talk.html</a> is the communication board with nothing in
+front of it — no sign-in, no profile, no screen to compose first. These checks cover the parts
+that were added to make that work: the grid that turns when the screen shape would make the
+cards into stripes, the aim that lets a dwell or a remote choose a card, and the settings this
+page keeps on the device.</p>
+
+<div class="note">
+  <b>Not covered here.</b> Whether a Fire tablet has a speech voice — that is a property of a
+  device, not of this code, and it is the reason <code>sayBanner</code> defaults on. Also not
+  covered: whether the sixteen words on the care board are the right sixteen for anybody but
+  the person they were assembled for.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="wide"></div>
+<div id="tall"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { tierOf } from '../aac_vocab.js';
+import { fromQuery, normalizeCfg, boardStateFrom, localEvents, DEFAULTS,
+         SCAN_MIN, SCAN_MAX, DWELL_MIN, DWELL_MAX } from '../talk.js';
+import { CURSOR_DEFAULTS, STYLES, SIZE_MIN, SIZE_MAX } from '../cursor.js';
+import { createDwell } from '../input_dwell.js';
+import { BOARD_TOPIC, SELECT_KIND } from '../modules/board.js';
+import '../modules/board.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeState(v) {
+  let val = { ...v };
+  const subs = [];
+  return { get: () => val, set: (p) => { val = { ...val, ...p }; subs.forEach((f) => f()); },
+           subscribe: (f) => { subs.push(f); }, flush: () => {} };
+}
+function fakeEvents() {
+  const rows = [];
+  return { rows, append: (kind, data) => { rows.push({ kind, ...data }); return Promise.resolve(); } };
+}
+// The aim, in the units `input/aim` uses: fractions of the VIEWPORT. Not of the panel — which
+// is exactly the thing that would be wrong if this were computed against the host box.
+function aimAtEl(el) {
+  const r = el.getBoundingClientRect();
+  return { x: (r.left + r.width / 2) / window.innerWidth,
+           y: (r.top + r.height / 2) / window.innerHeight, device: 'tracker:hand' };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the grid turns only when the alternative is stripes ***');
+  {
+    // A 640×220 box: three cards across measures 213×220, which is square enough. Turning it
+    // would give three 640×73 letterbox slots, which is worse.
+    const bus = createBus();
+    const inst = mountModule('board', {
+      mount: document.getElementById('wide'), bus, events: fakeEvents(),
+      state: fakeState({ boardId: 'yesno' }), output: { say: () => {} },
+    });
+    inst.init(); await sleep(20);
+    const p = inst.impl.__probe();
+    check('a wide box keeps the tier as declared — 3 across',
+      p.grid.cols === 3 && p.grid.rows === 1, JSON.stringify(p.grid));
+    check('...and the tier itself never changed', p.tier === 3 && p.cells === 3);
+    inst.destroy();
+  }
+  {
+    // A 220×640 box: three across would be 73×640 — a stripe more than eight times taller
+    // than it is wide. This is the phone-in-portrait case, and it is the one that moves.
+    const bus = createBus();
+    const inst = mountModule('board', {
+      mount: document.getElementById('tall'), bus, events: fakeEvents(),
+      state: fakeState({ boardId: 'yesno' }), output: { say: () => {} },
+    });
+    inst.init(); await sleep(20);
+    const p = inst.impl.__probe();
+    check('*** a tall narrow box turns the grid — 1 across, 3 down ***',
+      p.grid.cols === 1 && p.grid.rows === 3, JSON.stringify(p.grid));
+    check('...it is a TRANSPOSE, so the cell count is untouched', p.cells === 3);
+    check('...and the words are still in the order they arrived in',
+      p.words.join('|').includes('Yes') && p.words[0].includes('Yes') && p.words[2].includes('Other'),
+      JSON.stringify(p.words));
+
+    // The rule this leans on is `aac_vocab.js`'s "a layout never changes under someone
+    // without a decision". Turning it off is the decision, and it must actually work.
+    const st = fakeState({ boardId: 'yesno', fitScreen: false });
+    const inst2 = mountModule('board', {
+      mount: document.getElementById('tall'), bus: createBus(), events: fakeEvents(),
+      state: st, output: { say: () => {} },
+    });
+    inst.destroy(); inst2.init(); await sleep(20);
+    const p2 = inst2.impl.__probe();
+    check('*** turning `fitScreen` off keeps the declared grid even when it is a stripe ***',
+      p2.grid.cols === 3 && p2.grid.rows === 1, JSON.stringify(p2.grid));
+    inst2.destroy();
+  }
+  {
+    // A square grid transposes to itself, so the 4×4 care board can never be disturbed by
+    // this at all — which is what makes the change safe on the board that matters most.
+    const t = tierOf(16);
+    check('CONTROL: the 16-cell tier is square, so a transpose is a no-op',
+      t.cols === t.rows, `${t.cols}x${t.rows}`);
+  }
+
+  // =====================================================================================
+  section('*** aiming: the board hit-tests its OWN cards ***');
+  {
+    const bus = createBus();
+    const events = fakeEvents();
+    const host = document.getElementById('wide');
+    const inst = mountModule('board', {
+      mount: host, bus, events, state: fakeState({ boardId: 'yesno' }), output: { say: () => {} },
+    });
+    inst.init(); await sleep(20);
+    const cards = host.querySelectorAll('.ab-card');
+
+    check('CONTROL: nothing is lit before anything aims at it',
+      inst.impl.__probe().litCount === 0 && inst.impl.__probe().pointed === false);
+
+    bus.publish('board/aim', aimAtEl(cards[1]));
+    let p = inst.impl.__probe();
+    check('an aim on the second card lights the second card',
+      p.pointed === true && p.lit === 1 && p.litCount === 1, JSON.stringify(p));
+
+    bus.publish('board/aim', aimAtEl(cards[2]));
+    p = inst.impl.__probe();
+    check('...and moving the aim moves the light', p.lit === 2, String(p.lit));
+    check('...exactly one card is ever lit', p.litCount === 1, String(p.litCount));
+
+    // Off the cards entirely. The highlight goes; `lit` deliberately does NOT move, so a
+    // suppressed scan resumes where it was rather than jumping back to the top.
+    bus.publish('board/aim', { x: 0.999, y: 0.001, device: 'tracker:hand' });
+    p = inst.impl.__probe();
+    check('an aim off the cards drops the highlight', p.pointed === false && p.litCount === 0);
+    check('...but does not move where the scan had got to', p.lit === 2, String(p.lit));
+
+    // A null aim — the marker was lost, the finger left the glass.
+    bus.publish('board/aim', aimAtEl(cards[0]));
+    bus.publish('board/aim', null);
+    check('a lost aim drops the highlight too', inst.impl.__probe().pointed === false);
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** select, pick, and the gate that used to swallow a switch press ***');
+  {
+    const bus = createBus();
+    const events = fakeEvents();
+    const host = document.getElementById('wide');
+    const inst = mountModule('board', {
+      mount: host, bus, events, state: fakeState({ boardId: 'yesno' }), output: { say: () => {} },
+    });
+    inst.init(); await sleep(20);
+    const cards = host.querySelectorAll('.ab-card');
+
+    // *** THE OLD BEHAVIOUR, AND WHY IT WAS WRONG. *** `board/select` was `if (scan) ...`, so
+    // with scanning off a switch press did nothing at all. What it must still not do is choose
+    // card 0 for somebody who has pointed at nothing.
+    bus.publish('board/select', {});
+    check('*** select with nothing lit chooses nothing — it does not pick card 0 ***',
+      events.rows.length === 0, JSON.stringify(events.rows));
+
+    bus.publish('board/aim', aimAtEl(cards[1]));
+    bus.publish('board/select', {});
+    check('*** select with an aim resting on a card chooses THAT card, with no scan running ***',
+      events.rows.length === 1 && events.rows[0].word === 'No', JSON.stringify(events.rows));
+    check('...and it is recorded as a real selection', events.rows[0].kind === SELECT_KIND);
+
+    // `board/pick` is for something with no position at all — a remote, a test, a bound phrase.
+    bus.publish('board/pick', { index: 2 });
+    check('pick by index chooses that card', events.rows[1]?.word === 'Other', JSON.stringify(events.rows[1]));
+    bus.publish('board/pick', { id: 'yes' });
+    check('pick by the card\'s own id chooses that card', events.rows[2]?.word === 'Yes');
+    bus.publish('board/pick', { index: 99 });
+    bus.publish('board/pick', { id: 'nope' });
+    bus.publish('board/pick', null);
+    check('*** an unknown pick is ignored rather than guessed at ***', events.rows.length === 3,
+      String(events.rows.length));
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** touching a card: on by default, and OFF means off ***');
+  {
+    const host = document.getElementById('wide');
+    const events = fakeEvents();
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events, state: fakeState({ boardId: 'yesno' }),
+      output: { say: () => {} },
+    });
+    inst.init(); await sleep(20);
+    host.querySelectorAll('.ab-card')[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('CONTROL: by default a tap chooses the card', events.rows.length === 1);
+    inst.destroy();
+
+    const events2 = fakeEvents();
+    let bubbled = 0;
+    const inst2 = mountModule('board', {
+      mount: host, bus: createBus(), events: events2,
+      state: fakeState({ boardId: 'yesno', tapSelects: false }), output: { say: () => {} },
+    });
+    inst2.init(); await sleep(20);
+    host.addEventListener('pointerdown', () => { bubbled += 1; });
+    host.querySelectorAll('.ab-card')[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('*** with touch selection off, a tap chooses nothing ***', events2.rows.length === 0);
+    // Off has to mean off all the way up. A tap that fell through to a global pointer binding
+    // would be selected by something else instead, which is worse than not turning it off.
+    check('*** ...and it does not fall through to anything else either ***', bubbled === 0,
+      String(bubbled));
+    inst2.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the dwell cannot fire twice on a hand that never moved ***');
+  {
+    // The scenario: a tap chooses a card, the finger stays exactly where it is, the dwell
+    // clock runs out a moment later and chooses the same card again. The word said twice.
+    let t = 0;
+    const now = () => t;
+    let fires = 0;
+    const d = createDwell({
+      bus: null, settings: () => ({ enabled: true, dwellMs: 1000, radius: 70 }),
+      onFire: () => { fires += 1; }, now,
+      setTimer: () => 1, clearTimer: () => {},   // stepped by hand below
+    });
+    const at = { x: 100, y: 100 };
+    d.feed(at);
+    // Simulate: something ELSE selected, so the host arms the guard.
+    d.holdOff(at);
+    const s = d.state();
+    check('*** holdOff arms the same "must leave" guard a dwell fires with ***',
+      s.mustLeave && s.mustLeave.x === 100 && s.anchor === null, JSON.stringify(s));
+    check('...and it clears the anchor, so no clock is left running', s.t0 === 0);
+    d.destroy();
+    check('CONTROL: nothing fired during a hold-off', fires === 0);
+  }
+
+  // =====================================================================================
+  section('*** the page\'s own settings: a bookmark can be a configuration ***');
+  {
+    check('no query at all changes nothing', Object.keys(fromQuery('')).length === 0);
+    const q = fromQuery('?board=care&scan=1&step=8000&hc=yes&dwellms=900&cursor=90&quiet=1');
+    check('?board=care picks the 4x4', q.boardId === 'care');
+    check('?scan=1 turns scanning on', q.scan === true);
+    check('?step= sets the scan step', q.stepMs === 8000);
+    check('?hc= turns high contrast on', q.highContrast === true);
+    check('?dwellms= sets the dwell', q.dwellMs === 900);
+    check('?cursor= sets the cursor size', q.cursorSize === 90);
+    check('?quiet=1 turns the VOICE off, not the board', q.speakAloud === false && q.scan === true);
+    check('an unknown board falls back rather than rendering nothing',
+      fromQuery('?board=wat').boardId === 'yesno');
+
+    // Everything out of range comes back in range, so nothing downstream has to re-check.
+    const wild = normalizeCfg({ stepMs: 999999, dwellMs: 1, cursorSize: 9999,
+                                cursorStyle: 'sparkle', cursorShow: 'maybe', reveal: 'sideways',
+                                boardId: 'nope', rate: 99, scan: 'yes' });
+    check('an absurd scan step is clamped', wild.stepMs === SCAN_MAX, String(wild.stepMs));
+    check('an absurd dwell is clamped', wild.dwellMs === DWELL_MIN, String(wild.dwellMs));
+    check('an absurd cursor size is clamped', wild.cursorSize === SIZE_MAX, String(wild.cursorSize));
+    check('an unknown cursor shape falls back to the default',
+      wild.cursorStyle === CURSOR_DEFAULTS.style && STYLES.includes(wild.cursorStyle));
+    check('an unknown reveal falls back', wild.reveal === 'all');
+    check('a string where a boolean belongs becomes a boolean', wild.scan === true);
+    check('*** the default board is Yes / No / Other ***', DEFAULTS.boardId === 'yesno');
+    check('*** scanning and dwell both default OFF ***',
+      DEFAULTS.scan === false && DEFAULTS.dwell === false);
+    check('*** the word is written on screen by default, because the voice may not arrive ***',
+      DEFAULTS.sayBanner === true);
+    check('the default cursor is the bedside shape', DEFAULTS.cursorStyle === 'halo');
+    check('the cursor size range is fine-grained, not four stops',
+      SIZE_MAX - SIZE_MIN > 100);
+  }
+  {
+    // The board module is handed a VIEW of the page's settings, so there is one saved object
+    // and no way for two ideas of `highContrast` to drift apart.
+    let cfg = normalizeCfg({ boardId: 'care', highContrast: true, cursorSize: 90 });
+    const st = boardStateFrom(() => cfg, (p) => { cfg = normalizeCfg({ ...cfg, ...p }); });
+    const seen = st.get();
+    check('the board sees the settings that are its own', seen.boardId === 'care' && seen.highContrast === true);
+    check('*** ...and never sees the ones that are not — no cursor size in a board state ***',
+      !('cursorSize' in seen), JSON.stringify(Object.keys(seen)));
+    check('the board is pinned to its own palette on this page', seen.followTheme === false);
+    let told = 0;
+    st.subscribe(() => { told += 1; });
+    st.notify();
+    check('a host change reaches the board', told === 1);
+  }
+
+  // =====================================================================================
+  section('*** nothing leaves the device ***');
+  {
+    let stored = {};
+    const read = (k, d) => (k in stored ? stored[k] : d);
+    const write = (k, v) => { stored[k] = v; return true; };
+    const ev = localEvents(read, write);
+    await ev.append('select', { word: 'Yes', id: 'yes' });
+    await ev.append('select', { word: 'No', id: 'no' });
+    check('a selection is recorded', ev.read().length === 2);
+    check('...with the word, so somebody can find out which cards get used',
+      ev.read()[0].word === 'Yes');
+    check('*** and it is recorded LOCALLY — the only place it is written is the store ***',
+      Object.keys(stored).length === 1 && Object.keys(stored)[0].startsWith('nimrod.talk'),
+      JSON.stringify(Object.keys(stored)));
+
+    // A ring, because this page can be open for weeks on a tablet by a bed. A log that grew
+    // forever would eventually fill the origin's quota — and then the SETTINGS write next to
+    // it starts failing too, which is a board that stops remembering how it was set up.
+    for (let i = 0; i < 600; i++) await ev.append('select', { word: `w${i}` });
+    const rows = ev.read();
+    check('*** the log is a ring and cannot fill the device ***', rows.length === 500,
+      String(rows.length));
+    check('...and it is the OLDEST that goes', rows[rows.length - 1].word === 'w599');
+
+    // Storage that throws must not take the board with it. A private window, a restricted
+    // profile, a tablet with site data blocked — all real, all silent.
+    const angry = () => { throw new Error('storage is off'); };
+    const ev2 = localEvents(angry, angry);
+    let threw = false;
+    try { await ev2.append('select', { word: 'Yes' }); } catch { threw = true; }
+    check('*** a browser that refuses to store does not break the board ***', threw === false);
+    check('...and reading it back simply returns nothing', ev2.read().length === 0);
+  }
+
+} catch (err) {
+  check(`the suite itself threw: ${err && err.message}`, false, String(err && err.stack));
+}
+document.getElementById('summary').textContent =
+  failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>
