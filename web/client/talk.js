@@ -53,7 +53,7 @@ import { createAim, AIM_TOPIC } from './aim.js';
 import { mountCursor, CURSOR_DEFAULTS, STYLES, SIZE_MIN, SIZE_MAX, SIZE_STEP } from './cursor.js';
 import { createDwell, DWELL_DEFAULTS } from './input_dwell.js';
 import { SCAN_DEFAULTS } from './input_scan.js';
-import { speak, waitForVoices, listVoices } from './voice.js';
+import { speak, cancel as cancelSpeech, waitForVoices, listVoices } from './voice.js';
 import { BOARD_TOPIC } from './modules/board.js';
 import './modules/board.js';
 
@@ -107,13 +107,32 @@ export const DEFAULTS = {
   cursorSize: CURSOR_DEFAULTS.size,
   cursorColor: CURSOR_DEFAULTS.color,
 
-  // *** THE WORD, WRITTEN BIG, WHENEVER A CARD IS CHOSEN. DEFAULT ON. ***
+  // *** A RECORDED CLIP FIRST, A SYNTHESISED VOICE SECOND, THE WRITTEN WORD ALWAYS. ***
   //
-  // Because the speech may not arrive. Web Speech voices are per-device, and a Fire tablet or
-  // a Pi can have none installed at all — the private build ships recorded audio for exactly
-  // this reason, and this page has no audio to ship. A board that is silently silent has told
-  // nobody anything. A board that also writes the word across the top has still said it, to
-  // whoever is in the room, which is the entire audience.
+  // Ported from `cici_voice.js`, which resolves a word to `<base>/<slug>.wav` and falls back to
+  // synthesis when the file is not there. That order is not a preference:
+  //
+  //   * A RECORDING IS A PERSON. The words on this board are things somebody says to their
+  //     family, and "Love you" in a real voice and "Love you" from a synthesiser are not the
+  //     same sentence.
+  //   * WEB SPEECH IS PER-DEVICE AND MAY NOT EXIST. A Fire tablet or a Pi can have no voice
+  //     installed at all, which is exactly why the private build recorded these in the first
+  //     place.
+  //
+  // `clipBase` is a URL and a SETTING rather than a constant, so the recordings can live
+  // wherever they are decided to live — in this repo, on a bucket, behind a CDN — without a
+  // code change. `?clips=<url>` overrides it for one visit. An empty base turns clips off.
+  //
+  // **Nothing is shipped in that folder.** Whose voice these recordings are, and whether they
+  // belong in a public repository's permanent history, is not a call to make on somebody's
+  // behalf. See `web/client/aac/audio/README.md`.
+  useClips: true,
+  clipBase: './aac/audio',
+
+  // The word, written big, whenever a card is chosen. **DEFAULT ON, AND IT STAYS ON EVEN WITH
+  // A VOICE**: it is not only a fallback. Somebody across the room, somebody hard of hearing,
+  // somebody in a corridor with a television on — the written word reaches all of them, and a
+  // board that has been heard AND read has not said anything twice.
   //
   // It times out on its own and never takes a tap, so it cannot become something a person has
   // to dismiss.
@@ -121,6 +140,23 @@ export const DEFAULTS = {
   speakAloud: true,
   rate: 1,
 };
+
+/**
+ * A word to the file that says it. Same rule as `cici_voice.js` so one set of recordings
+ * serves both builds: lowercase, every run of anything else becomes one underscore.
+ * "Thank you" -> thank_you, "Change me" -> change_me.
+ */
+export function clipSlug(text) {
+  return String(text == null ? '' : text).toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+/** The URL a word's recording would live at, or null when clips are off. */
+export function clipUrl(text, base) {
+  const b = String(base == null ? '' : base).replace(/\/+$/, '');
+  const s = clipSlug(text);
+  return b && s ? `${b}/${s}.wav` : null;
+}
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const num = (v, dflt) => (Number.isFinite(Number(v)) ? Number(v) : dflt);
@@ -161,6 +197,9 @@ export function fromQuery(search, base = DEFAULTS) {
   if (has('cursor')) out.cursorSize = clamp(num(q.get('cursor'), base.cursorSize), SIZE_MIN, SIZE_MAX);
   if (has('tap')) out.tapSelects = on(q.get('tap'));
   if (has('quiet')) out.speakAloud = !on(q.get('quiet'));
+  // Where the recordings live, for one visit. Deliberately a whole URL and not a flag: it is
+  // how the same page is pointed at a bucket, a CDN or a folder on a Pi without a rebuild.
+  if (q.has('clips')) { out.clipBase = q.get('clips'); out.useClips = q.get('clips') !== ''; }
   return out;
 }
 
@@ -176,7 +215,8 @@ export function normalizeCfg(raw) {
   if (!['tracking', 'always', 'never'].includes(c.cursorShow)) c.cursorShow = 'tracking';
   if (!['all', 'one'].includes(c.reveal)) c.reveal = 'all';
   c.rate = clamp(num(c.rate, 1), 0.5, 2);
-  ['highContrast', 'scan', 'dwell', 'tapSelects', 'sayBanner', 'speakAloud']
+  c.clipBase = String(c.clipBase == null ? '' : c.clipBase);
+  ['highContrast', 'scan', 'dwell', 'tapSelects', 'sayBanner', 'speakAloud', 'useClips']
     .forEach((k) => { c[k] = !!c[k]; });
   return c;
 }
@@ -287,22 +327,69 @@ export function startTalk({
   });
   inst.init();
 
-  // ---- speech, and the visible fallback ---------------------------------------------
+  // ---- speech: a recording, then a synthesiser, and the written word either way -------
+  //
+  // `lastHeard` is what the sheet reports, and it is worth having rather than being tidy: at a
+  // bedside, "why is it not talking" has three completely different answers — the recordings
+  // are not where the page is looking, the device has no synthesised voice, or the sound is
+  // simply turned down — and they are indistinguishable from the outside.
   let bannerTimer = null;
+  let playing = null;
+  let lastHeard = 'nothing said yet';
+
+  function synthesise(word) {
+    if (!cfg.speakAloud) { lastHeard = 'sound is off — the word is on screen'; return; }
+    const voices = listVoices();
+    if (!voices.length) { lastHeard = 'no clip, and this device has no voice'; return; }
+    lastHeard = 'the device voice';
+    try { speak(word, voicePref); } catch (err) { console.error('talk: speak', err); }
+  }
+
   function sayIt(text) {
     const word = String(text == null ? '' : text);
     if (!word) return;
-    if (cfg.speakAloud) {
-      try { speak(word, voicePref); } catch (err) { console.error('talk: speak', err); }
-    }
-    if (cfg.sayBanner && bannerEl) {
-      bannerEl.textContent = word;
-      bannerEl.hidden = false;
-      bannerEl.dataset.on = '1';
-      clearTimeout(bannerTimer);
-      // It goes away by itself. Nothing on this page may need an input in order to stop.
-      bannerTimer = setTimeout(() => { bannerEl.dataset.on = ''; }, 1600);
-    }
+
+    // The written word goes up FIRST and unconditionally, before anything that can fail. A
+    // clip that 404s, a synthesiser that throws, an autoplay policy that refuses — none of
+    // them get to stop the board from having said something.
+    if (cfg.sayBanner && bannerEl) showBanner(word);
+
+    // Whatever was being said is superseded. A board where two words overlap is a board
+    // saying a third thing nobody chose.
+    try { playing?.pause?.(); } catch { /* already stopped */ }
+    playing = null;
+    try { cancelSpeech(); } catch { /* no engine */ }
+
+    if (!cfg.speakAloud) { lastHeard = 'sound is off — the word is on screen'; return; }
+
+    const url = cfg.useClips ? clipUrl(word, cfg.clipBase) : null;
+    if (!url) { synthesise(word); return; }
+
+    // A recording, and the synthesiser only if it is not there. `error` covers a missing file;
+    // the rejected `play()` promise covers an autoplay policy or a format the device will not
+    // decode. Both land in the same place, which is the point — from the room, "the file is
+    // absent" and "the file would not play" are one problem.
+    try {
+      const a = new Audio();
+      let fellBack = false;
+      const fallBack = () => { if (fellBack) return; fellBack = true; playing = null; synthesise(word); };
+      a.addEventListener('error', fallBack);
+      a.addEventListener('ended', () => { playing = null; });
+      a.src = url;
+      playing = a;
+      lastHeard = 'a recording';
+      const p = a.play();
+      if (p && p.catch) p.catch(fallBack);
+    } catch { synthesise(word); }
+  }
+
+  function showBanner(word) {
+    bannerEl.textContent = word;
+    bannerEl.hidden = false;
+    bannerEl.dataset.on = '1';
+    clearTimeout(bannerTimer);
+    // It goes away by itself. Nothing on this page may need an input in order to stop.
+    bannerTimer = setTimeout(() => { bannerEl.dataset.on = ''; }, 1600);
   }
 
   // ---- the cursor -------------------------------------------------------------------
@@ -511,12 +598,24 @@ export function startTalk({
             </div></div>
           ${rowToggle('highContrast', 'High contrast', cfg.highContrast, 'Black on white, 21:1')}
           ${rowToggle('speakAloud', 'Speak out loud', cfg.speakAloud,
-            voices.length ? `${voices.length} voices on this device` : 'no voices found on this device')}
+            `last said with: ${lastHeard}`)}
           ${rowToggle('sayBanner', 'Show the word on screen', cfg.sayBanner,
-            'the board still says something when there is no voice')}
+            'reaches somebody across the room, or hard of hearing — not only a fallback')}
           <div class="row"><div class="lab">Try it</div>
-            <button class="btn" data-test>Say “Hello”</button></div>
+            <button class="btn" data-test>Say “Yes”</button></div>
         </div>
+
+        <details class="grp adv" ${clipReport ? 'open' : ''}>
+          <summary>Recorded voice<span>${cfg.useClips ? (clipReport || 'not checked') : 'off'}</span></summary>
+          ${rowToggle('useClips', 'Use recorded clips when there is one', cfg.useClips,
+            'a real voice beats a synthesised one; it falls back on its own when there is no file')}
+          <div class="row"><div class="lab">Where the recordings are<span class="note">${esc(cfg.clipBase || 'nowhere — clips are off')}</span></div>
+            <button class="btn" data-checkclips>Check</button></div>
+          <p class="why">This device has <b>${voices.length}</b> synthesised
+            ${voices.length === 1 ? 'voice' : 'voices'}${voices.length ? '' : ' — so without recordings this board is silent, and the written word is doing all the work'}.
+            A word becomes a file name the same way it does on the bedside build: lower case,
+            anything else becomes an underscore. <b>Thank you</b> → <code>thank_you.wav</code>.</p>
+        </details>
 
         <details class="grp adv" ${cfg.scan ? 'open' : ''}>
           <summary>Scanning<span>${cfg.scan ? `on · ${secs(cfg.stepMs)} a card` : 'off'}</span></summary>
@@ -573,10 +672,14 @@ export function startTalk({
 
   if (sheetEl) {
     sheetEl.addEventListener('click', (e) => {
-      const t = e.target.closest('[data-close],[data-board],[data-toggle],[data-reveal],[data-cshow],[data-cstyle],[data-test],[data-fs]');
+      const t = e.target.closest('[data-close],[data-board],[data-toggle],[data-reveal],[data-cshow],[data-cstyle],[data-test],[data-fs],[data-checkclips]');
       if (!t) { if (e.target === sheetEl) closeSheet(); return; }
       if (t.hasAttribute('data-close')) return closeSheet();
-      if (t.hasAttribute('data-test')) return sayIt('Hello');
+      // "Yes" and not "Hello", because Yes is a word the board actually has a recording for.
+      // Testing with a word no clip exists for would report the synthesiser as the answer and
+      // send somebody to the bedside believing the recordings are not working.
+      if (t.hasAttribute('data-test')) { sayIt('Yes'); return void setTimeout(renderSheet, 400); }
+      if (t.hasAttribute('data-checkclips')) return checkClips();
       if (t.hasAttribute('data-fs')) return toggleFullscreen();
       if (t.dataset.board) return save({ boardId: t.dataset.board });
       if (t.dataset.reveal) return save({ reveal: t.dataset.reveal });
@@ -599,6 +702,33 @@ export function startTalk({
       const lab = e.target.closest('.row')?.querySelector('.lab b');
       if (lab) lab.textContent = k === 'dwellRadius' || k === 'cursorSize' ? `${v}px` : `${(v / 1000).toFixed(1)}s`;
     });
+  }
+
+  // *** DOES EVERY WORD ON THIS BOARD HAVE A RECORDING? ***
+  //
+  // A HEAD request per card, which is a handful of requests and only when somebody asks. It
+  // exists because the alternative way to find out is to press all sixteen cards at a bedside
+  // and listen, and the failure it catches is the quiet one: a board where fifteen words are
+  // in a real voice and the sixteenth is a robot, or silent, because one file was named
+  // differently. That is not something to discover in front of somebody.
+  let clipReport = '';
+  async function checkClips() {
+    if (!cfg.useClips || !cfg.clipBase) { clipReport = 'clips are off'; renderSheet(); return; }
+    const words = (inst.impl.__probe().words || []).map((w) => String(w).trim()).filter(Boolean);
+    clipReport = 'checking…'; renderSheet();
+    const missing = [];
+    for (const w of words) {
+      const url = clipUrl(w, cfg.clipBase);
+      let ok = false;
+      // `no-store` because a 404 that got cached would keep reporting a file as missing after
+      // it had been put there, which is the most annoying possible way for this to be wrong.
+      try { ok = (await fetch(url, { method: 'HEAD', cache: 'no-store' })).ok; } catch { ok = false; }
+      if (!ok) missing.push(w);
+    }
+    clipReport = missing.length
+      ? `${words.length - missing.length} of ${words.length} — missing: ${missing.join(', ')}`
+      : `all ${words.length} words have a recording`;
+    renderSheet();
   }
 
   function applyShell() {

@@ -1,0 +1,10 @@
+# A real person's voice is not published by accident.
+#
+# The board looks for recordings here, and copy_from_bedside.sh will put them here so it works
+# on this machine. Whether they belong in a PUBLIC repository's permanent history is a decision
+# (README.md sets out the three ways to answer it) — so until that decision is made, git does
+# not see them. Remove this file to publish them.
+*.wav
+*.mp3
+*.ogg
+*.m4a
