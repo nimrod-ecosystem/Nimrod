@@ -50,6 +50,7 @@ import { createBus } from '../bus.js';
 import { mountModule } from '../module.js';
 import { tierOf } from '../aac_vocab.js';
 import { fromQuery, normalizeCfg, boardStateFrom, localEvents, DEFAULTS,
+         clipSlug, clipUrl,
          SCAN_MIN, SCAN_MAX, DWELL_MIN, DWELL_MAX } from '../talk.js';
 import { CURSOR_DEFAULTS, STYLES, SIZE_MIN, SIZE_MAX } from '../cursor.js';
 import { createDwell } from '../input_dwell.js';
@@ -92,12 +93,25 @@ function drawnCols(host) {
   const first = tops[0];
   return tops.filter((t) => Math.abs(t - first) <= 1).length;
 }
-// The aim, in the units `input/aim` uses: fractions of the VIEWPORT. Not of the panel — which
+// *** THE VIEWPORT THE AIM SECTIONS MEASURE AGAINST, AND IT IS INJECTED ON PURPOSE. ***
+//
+// An aim is a fraction of the viewport, so the obvious way to write these checks is to divide
+// by `window.innerWidth`. That made the suite depend on the browser actually having a laid-out
+// window — and a tab in a hidden pane reports `innerWidth === 0`, so every aim became a
+// division by zero and five checks failed for a reason that had nothing to do with the board.
+//
+// A test that passes or fails depending on whether somebody is looking at the window is worse
+// than no test, so the size is a constant and the module is handed the same constant as its
+// `view`. Element rectangles are still real; only the denominator is fixed. Large enough that
+// this page's own hosts always fall inside it.
+const VIEW = { innerWidth: 4000, innerHeight: 20000 };
+
+// The aim, in the units `input/aim` uses: fractions of the viewport. Not of the panel — which
 // is exactly the thing that would be wrong if this were computed against the host box.
 function aimAtEl(el) {
   const r = el.getBoundingClientRect();
-  return { x: (r.left + r.width / 2) / window.innerWidth,
-           y: (r.top + r.height / 2) / window.innerHeight, device: 'tracker:hand' };
+  return { x: (r.left + r.width / 2) / VIEW.innerWidth,
+           y: (r.top + r.height / 2) / VIEW.innerHeight, device: 'tracker:hand' };
 }
 
 (async () => {
@@ -176,7 +190,7 @@ try {
     const events = fakeEvents();
     const host = document.getElementById('wide');
     const inst = mountModule('board', {
-      mount: host, bus, events, state: fakeState({ boardId: 'yesno' }), output: { say: () => {} },
+      mount: host, bus, events, view: VIEW, state: fakeState({ boardId: 'yesno' }), output: { say: () => {} },
     });
     inst.init(); await sleep(20);
     const cards = host.querySelectorAll('.ab-card');
@@ -215,7 +229,7 @@ try {
     const events = fakeEvents();
     const host = document.getElementById('wide');
     const inst = mountModule('board', {
-      mount: host, bus, events, state: fakeState({ boardId: 'yesno' }), output: { say: () => {} },
+      mount: host, bus, events, view: VIEW, state: fakeState({ boardId: 'yesno' }), output: { say: () => {} },
     });
     inst.init(); await sleep(20);
     const cards = host.querySelectorAll('.ab-card');
@@ -351,6 +365,48 @@ try {
     st.subscribe(() => { told += 1; });
     st.notify();
     check('a host change reaches the board', told === 1);
+  }
+
+  // =====================================================================================
+  section('*** a recorded voice first, and the same file names as the bedside build ***');
+  {
+    // One set of recordings has to serve both builds, so the slug rule has to match
+    // `cici_voice.js` exactly. These are the two-word cards, which are the only ones where a
+    // difference could hide.
+    check('Yes -> yes', clipSlug('Yes') === 'yes');
+    check('*** "Thank you" -> thank_you, the same as the bedside build ***',
+      clipSlug('Thank you') === 'thank_you', clipSlug('Thank you'));
+    check('"Change me" -> change_me', clipSlug('Change me') === 'change_me');
+    check('"Love you" -> love_you', clipSlug('Love you') === 'love_you');
+    // Punctuation and spacing collapse rather than producing a file nobody would ever name.
+    check('runs of anything else collapse to one underscore',
+      clipSlug("  I'm  --  fine!  ") === 'i_m_fine', clipSlug("  I'm  --  fine!  "));
+    check('a word that is all punctuation resolves to nothing at all', clipSlug('!!!') === '');
+
+    check('a word becomes a url under the base',
+      clipUrl('Thank you', './aac/audio') === './aac/audio/thank_you.wav',
+      String(clipUrl('Thank you', './aac/audio')));
+    check('a trailing slash on the base does not double up',
+      clipUrl('Yes', 'https://example.test/clips/') === 'https://example.test/clips/yes.wav',
+      String(clipUrl('Yes', 'https://example.test/clips/')));
+    // *** THE RECORDINGS CAN LIVE ANYWHERE. *** This is what makes "where do the assets live"
+    // a decision that can be made later and changed again, rather than a code change.
+    check('*** the base can be an absolute url somewhere else entirely ***',
+      clipUrl('Cold', 'https://cdn.example.test/nimrod/aac') === 'https://cdn.example.test/nimrod/aac/cold.wav');
+    check('*** an empty base means no clip, which is how clips get turned off ***',
+      clipUrl('Yes', '') === null && clipUrl('Yes', null) === null);
+    check('a word with no letters yields no url either', clipUrl('!!!', './aac/audio') === null);
+
+    check('clips are ON by default — a real voice beats a synthesised one',
+      DEFAULTS.useClips === true);
+    check('...and the default base is a folder in this repo', DEFAULTS.clipBase === './aac/audio');
+    // `?clips=` is how a whole configuration becomes a bookmark, including turning it off.
+    check('?clips=<url> repoints the recordings',
+      fromQuery('?clips=https://x.test/a').clipBase === 'https://x.test/a');
+    check('?clips= with nothing after it turns recordings off',
+      fromQuery('?clips=').useClips === false);
+    check('*** the written word is on by default, WITH a voice and not only without one ***',
+      DEFAULTS.sayBanner === true && DEFAULTS.speakAloud === true);
   }
 
   // =====================================================================================
