@@ -1,47 +1,41 @@
-# Recorded voice for the communication board
+# The spoken words on the communication board
 
-This folder is where `/talk.html` looks for a recording of each word: lower-case the word,
-turn every run of anything else into one underscore, add `.wav`.
+Seventeen WAV files — one for every card on the two boards `/talk.html` ships. `talk.js` finds
+them by turning a word into a file name: lower case, every run of anything else becomes one
+underscore, add `.wav`.
 
     Yes        -> yes.wav
     Thank you  -> thank_you.wav
     Change me  -> change_me.wav
 
-Same rule as `cici_voice.js` in the bedside build, so **one set of recordings serves both**.
-The board tries the recording first, a synthesised voice second, and writes the word on screen
-either way. A missing file is not an error — it falls through silently.
+Same rule as `cici_voice.js` in the bedside build, so **one set of recordings serves both**. The
+board plays the file first, falls back to the device's own synthesised voice when there is no
+file, and writes the word on screen either way. A missing file is not an error.
 
-**The folder is empty on purpose, and that is a decision waiting on Mike, not an oversight.**
+## These are a synthesised voice, not a person
 
-## What already exists
+Worth saying because a folder of `yes.wav` and `love_you.wav` next to a communication board reads
+like somebody's family recorded them. They did not. Every clip is **Piper** TTS, model
+`en_US-libritts-high`, **speaker 552** — the same voice the whole bedside build speaks in, so the
+dashboard and the board sound like one person rather than a collection of parts. Licence and full
+attribution: [`ATTRIBUTIONS.md`](../../../ATTRIBUTIONS.md) at the repo root.
 
-51 recordings are in the private repo at
-`Nimrod_Ecosystem/Cici/dashboard_web/assets/aac/audio/` (1.4 MB), and **16 of the 17 words the
-two shipped boards use already have one.** The only one missing is `other.wav` — the escape
-card on the Yes / No / Other board, which is the newest word and was never recorded.
+## Adding a word
 
-## Why they were not copied here
+Generate it **with that tool and that speaker**, in the private repo:
 
-They are a real person's voice, and this is a **public** repository whose history is permanent.
-That is the same class of thing as the two first names that had to be taken out of the working
-tree in F0, and it is not a call to make on somebody's behalf. It is also not obviously wrong —
-they may be exactly what should ship. It is Mike's to say.
+    py -3.13 Cici/tools/gen_aac_voice.py <slug>="Spoken text."
 
-## The three ways to answer it
+then copy the file here. A clip made with a different engine or speaker is worse than no clip:
+the board would speak in two voices, and that mismatch is more jarring than one word falling
+back to the device synthesiser. If you cannot generate it in the right voice, **leave it out** —
+that path is clean and tested.
 
-1. **Commit them here.** ~450 KB for the seventeen words. Simplest, fastest, cached by the CDN,
-   works with no infrastructure. The cost is that a real voice is in public git history forever.
-2. **Host them somewhere else and point at it.** `clipBase` is a setting and `?clips=<url>`
-   overrides it, so no code changes. The host has to allow cross-origin reads.
-3. **Ship synthesised clips instead** — generated once, no real voice, and every device gets a
-   voice whether or not it has a synthesiser. Loses what makes a recording worth having.
+`other.wav` was generated this way on 2026-09-03. It was the one word the bedside build had never
+recorded, because the "something else" escape card is newer than the rest of the set.
 
-Nothing here assumes an answer. Whichever way it goes, the page already works.
+## Pointing the board somewhere else
 
-## To try option 1 locally without deciding anything
-
-Copy the words the board uses out of the private repo. This folder's `.wav` files are ignored
-by git, so nothing is staged and nothing is published — it just makes the recordings work on
-your own machine and on a Pi.
-
-    web/client/aac/audio/copy_from_bedside.sh
+`clipBase` is a setting holding a URL, and `?clips=<url>` overrides it for one visit, so the
+board can read its audio from a bucket or a CDN instead of from here without a code change. An
+empty base turns clips off entirely. Nothing about that has to be decided to use what is here.

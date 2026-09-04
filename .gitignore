@@ -17,6 +17,11 @@
 *.heic
 # Allow intentional, non-sensitive UI/asset images by un-ignoring a known folder:
 !web/assets/ui/**
+# The communication board's spoken words. SAFE UNDER THE RULE ABOVE, and the reason matters:
+# these are a SYNTHESISED voice (Piper, en_US-libritts-high, speaker 552 — see ATTRIBUTIONS.md),
+# not a recording of a person, so nothing here is personal media. Narrowed to this one folder on
+# purpose: `*.wav` above is a privacy safety net and must keep catching everything else.
+!web/client/aac/audio/*.wav
 
 # Secrets & local config
 .env

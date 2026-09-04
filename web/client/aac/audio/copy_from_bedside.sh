@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# Copy the recordings the shipped boards use out of the private bedside build.
+# Re-copy the clips the shipped boards use out of the private bedside build.
 #
-# Nothing here is staged for git: `.wav` in this folder is ignored, deliberately, so running
-# this makes the board speak in a real voice ON THIS MACHINE without publishing anybody's
-# voice to a public repository. Publishing them is a separate decision — see README.md.
+# The clips are COMMITTED here, so this is not needed to make the board talk — it already does.
+# It is for keeping the two copies in step: a word gets regenerated in the bedside build, or a
+# card is added to a board, and this brings the public set back level in one command rather than
+# by remembering which files changed.
+#
+# It only copies the words the boards actually say. The private folder holds 51 clips including
+# ones recorded for games and prompts, and copying words no board can speak would put files on a
+# public server for no reason.
 #
 # Run it from anywhere:  bash web/client/aac/audio/copy_from_bedside.sh
 set -u

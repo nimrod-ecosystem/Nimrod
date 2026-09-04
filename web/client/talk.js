@@ -123,9 +123,12 @@ export const DEFAULTS = {
   // wherever they are decided to live — in this repo, on a bucket, behind a CDN — without a
   // code change. `?clips=<url>` overrides it for one visit. An empty base turns clips off.
   //
-  // **Nothing is shipped in that folder.** Whose voice these recordings are, and whether they
-  // belong in a public repository's permanent history, is not a call to make on somebody's
-  // behalf. See `web/client/aac/audio/README.md`.
+  // **All seventeen words ship in `web/client/aac/audio/`, and they are a SYNTHESISED voice** —
+  // Piper, `en_US-libritts-high`, speaker 552, the same voice the bedside build speaks in. Not
+  // a recording of anybody. That is worth knowing before adding a word: a clip made with a
+  // different engine or speaker would make the board speak in two voices, which is more jarring
+  // than one word falling back to the device synthesiser. See that folder's README and
+  // `ATTRIBUTIONS.md`.
   useClips: true,
   clipBase: './aac/audio',
 
