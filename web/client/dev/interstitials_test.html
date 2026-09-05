@@ -11,6 +11,10 @@
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   #host{width:360px;margin-top:12px}
 </style>
+<!-- REQUIRED, not decoration: the `[hidden]` check below is about a rule in this
+     stylesheet outranking the browser's own, so a page without it would pass while
+     the live screen fails. -->
+<link rel="stylesheet" href="../modules.css">
 </head>
 <body>
 <h1>interstitials module — integration test</h1>
@@ -29,6 +33,7 @@ import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
+import { pressControls } from './press_controls.js';
 import { graphicHTML } from '../modules/interstitials.js';   // registers 'interstitials' + exports the pure graphic
 
 const params = new URLSearchParams(location.search);
@@ -58,6 +63,14 @@ const ITEMS = [
 const kindOf = Object.fromEntries(ITEMS.map((i) => [i.speak, i.kind]));
 
 (async () => {
+  // *** PRESS THE CONTROLS A PERSON TOUCHES. ***
+  // This module's arrows were DEAD on 2026-09-05 and this suite was green, because every
+  // check drove the bus TOPIC and none of them pressed the BUTTON. Runs first, and needs
+  // no server - so it says something even when the API checks below cannot run.
+  await pressControls('interstitials',
+    [{ sel: '[data-skip]', topic: 'interstitial/skip', label: 'the skip button' }],
+    check);
+
   try {
     // --- pure: the live graphic renderer -----------------------------------
     const gNum = graphicHTML({ type: 'number', value: 3 });

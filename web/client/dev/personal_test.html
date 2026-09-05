@@ -13,6 +13,10 @@
   .personal .stage video{width:100%;height:100%}
   #host,#host2{width:340px;margin-top:12px}
 </style>
+<!-- REQUIRED, not decoration: the `[hidden]` check below is about a rule in this
+     stylesheet outranking the browser's own, so a page without it would pass while
+     the live screen fails. -->
+<link rel="stylesheet" href="../modules.css">
 </head>
 <body>
 <h1>personal videos — integration test</h1>
@@ -31,6 +35,7 @@ import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import { mountModule } from '../module.js';
+import { pressControls, checkHiddenHides, pressRetry } from './press_controls.js';
 import '../modules/personal.js';   // registers 'personal'
 
 const params = new URLSearchParams(location.search);
@@ -50,6 +55,20 @@ const vid = (host) => host.querySelector('.personal video');
 const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
 
 (async () => {
+  // *** PRESS THE CONTROLS A PERSON TOUCHES. ***
+  // This module's arrows were DEAD on 2026-09-05 and this suite was green, because every
+  // check drove the bus TOPIC and none of them pressed the BUTTON. Runs first, and needs
+  // no server - so it says something even when the API checks below cannot run.
+  await pressControls('personal',
+    [{ sel: '[data-next]', topic: 'personal/next', label: 'the next arrow' },
+     { sel: '[data-prev]', topic: 'personal/prev', label: 'the prev arrow' }],
+    check);
+  // `.personal .status` sets `display:flex`, which outranks the browser's own
+  // `[hidden]{display:none}`. Without this check, hiding the sheet is a no-op on
+  // screen while the code that hides it looks correct.
+  checkHiddenHides('personal', 'status', check, 'personal’s status sheet');
+  await pressRetry('personal', check);
+
   try {
     const profiles = createProfilesClient({ user: USER });
     const media = createMediaSourcesClient({ user: USER });
