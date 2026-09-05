@@ -21,6 +21,11 @@
 printed for itself. <b>This does not re-judge anything</b> — a suite that lies to itself lies
 here too. It exists so a change to a shared primitive can be checked against everything that
 uses it without forty navigations.</p>
+<p><b>An amber <code>no summary</code> row usually means your browser, not the suite.</b> A hidden
+window throttles every tab to about one timer per second, and suites that mount real modules live
+in short waits. Measured: <code>youtube_test</code> finishes in 2.0s in one iframe and
+<code>soak_test</code> in 23s alongside three others — both report <code>no summary</code> when the
+window is hidden. <b>Check a suite on its own before believing this page about it.</b></p>
 <p>Needs the server: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.
 Suites listed as <span class="skip">no summary</span> did not finish inside the timeout, which
 is usually a real hang and worth opening on its own.</p>
@@ -41,11 +46,37 @@ const SUITES = [
   'audio_bus', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'pressgame', 'records', 'rules',
   'press_overlay', 'preview', 'progress', 'record_panel', 'recorder', 'qr', 'quests', 'recovery', 'resilience',
   'restart', 'rng', 'screen_pair', 'segment_heartbeat', 'sender', 'settings', 'settings_audit',
+  // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
+  'soak',
   'sprint',
   'statemachine', 'talk', 'theme', 'tour', 'trivia', 'voice', 'walkthrough', 'wallpaper', 'watchdog', 'wordforge', 'youtube',
   'youtube_watchdog',
 ];
 
+// *** IF YOU SEE `no summary` HERE, SUSPECT YOUR BROWSER BEFORE YOU SUSPECT THE SUITE. ***
+//
+// `youtube`, `wordforge` and `soak` all reported `no summary` on every run made from an
+// automated, HIDDEN browser pane on 2026-09-06. Two explanations were written here before either
+// was checked — first that IndexedDB contention was hanging them, then that this page "cannot run
+// module-heavy suites" — and BOTH WERE WRONG. The second does not even survive arithmetic:
+// `youtube_test` contains ELEVEN sleep calls, and no throttling turns eleven waits into three
+// minutes.
+//
+// Bisected, on a displayed pane, instead of theorised again:
+//   * `youtube_test` alone, one iframe ............................ finished in  2.0 s
+//   * four suites at once, four iframes ........................... all four in 10.1 s
+//   * `soak_test` with three neighbours, four iframes ............. finished in   23 s
+//
+// Iframes are fine. Four-way parallelism is fine. **The variable is a HIDDEN pane**, which
+// throttles every tab in it to roughly one timer per second no matter which tab is "fronted" —
+// `tabs_select` does not lift it. Those amber rows are an artifact of the measuring environment
+// and not a property of this repo, and the wrong version of this comment would have sent somebody
+// to fix three suites with nothing wrong with them.
+//
+// `soak` was pulled from the list below on the strength of the wrong explanation and is back,
+// because 23 seconds fits the budget with room to spare. **Guessing at a cause is how it got
+// removed, and measuring is how it came back.**
+//
 // GENEROUS ON PURPOSE. These suites are full of `await sleep(500)` between real server
 // round-trips, and a browser tab that is not on screen throttles its timers hard — so a
 // suite that takes 20 seconds in front of you can take three minutes in a background tab.
@@ -108,13 +139,32 @@ function parseSummary(text) {
   return null;
 }
 
+// A suite may ask for longer than the default by putting `data-timeout-ms` on its `#summary`.
+// Written for `soak`, which then turned out not to belong on this page at all (see above) — so
+// **nothing declares one today.** It is kept because it costs four lines and the next
+// legitimately-slow suite should not have to add a hardcoded list to this file: a budget declared
+// on the suite lives next to the thing that decides how long the suite takes, so changing the
+// work and changing the budget are one edit. A list here would go stale silently, and the way you
+// would find out is a healthy suite reported as broken.
+function budgetFor(frame) {
+  try {
+    const n = Number(frame.contentDocument?.getElementById('summary')?.dataset.timeoutMs);
+    if (Number.isFinite(n) && n > 0) return Math.max(TIMEOUT_MS, n);
+  } catch { /* still loading — the default stands until it can be read */ }
+  return TIMEOUT_MS;
+}
+
 function runOne(name) {
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.src = `${name}_test.html?user=runall-${name}-${Math.floor(Math.random() * 1e6)}`;
     document.body.append(frame);
     const started = Date.now();
+    // Re-read every poll rather than once: the element does not exist until the page has
+    // parsed, and reading it once at frame creation would always get the default.
+    let budget = TIMEOUT_MS;
     const poll = setInterval(() => {
+      budget = budgetFor(frame);
       let text = null, parsed = null;
       try {
         const doc = frame.contentDocument;
@@ -124,7 +174,7 @@ function runOne(name) {
       // "running…" parses as nothing, which is what keeps this from reading a half-finished
       // suite as a pass.
       if (parsed) { clearInterval(poll); frame.remove(); resolve({ name, ...parsed }); return; }
-      if (Date.now() - started > TIMEOUT_MS) {
+      if (Date.now() - started > budget) {
         clearInterval(poll); frame.remove();
         resolve({ name, timedOut: true, last: (text || '').slice(0, 40) });
       }
