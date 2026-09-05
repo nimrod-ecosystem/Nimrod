@@ -16,6 +16,10 @@
   .photos .nav{display:flex;justify-content:space-between;margin-top:6px}
   .photos .gear,.photos .settings{display:none}
 </style>
+<!-- The module stylesheet is REQUIRED here, not decoration: the `[hidden]` check below is
+     about a rule in this file outranking the browser's own, so a page without it would
+     pass while the live screen fails. -->
+<link rel="stylesheet" href="../modules.css">
 </head>
 <body>
 <h1>photos module — integration test</h1>
@@ -42,6 +46,7 @@ const USER = params.get('user') || 'photos-test-user';
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
 
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 function check(name, cond, detail = '') {
   const ok = !!cond; ok ? passed++ : failed++;
   const line = document.createElement('div');
@@ -91,6 +96,87 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
       /unreachable/i.test(down.text) && down.retry === true, down.text);
     check('...and so does a failure with no code at all',
       /unreachable/i.test(listingFailure(null, src).text));
+  }
+
+  // *** PRESS THE CONTROLS A PERSON ACTUALLY TOUCHES. ***
+  //
+  // Everything below this file's API section drives `bus.publish('photos/next')` - the TOPIC.
+  // On 2026-09-05 the topic worked perfectly and the ARROW UNDER THE PHOTO did nothing, for
+  // every module with a bare `emit()`, because `bus.route()` dropped payload-less signals.
+  // Nine controls across five modules were dead and the suite was green, because no test
+  // pressed a button. `dev/unpressed_controls.py` lists the rest.
+  //
+  // This runs with NO server and NO agent: it asserts the control is WIRED to its topic,
+  // which is exactly what broke, and needs neither a listing nor a byte of image data.
+  {
+    section('the controls a person touches — pressed, not published');
+    const bus = createBus();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:absolute;left:-9999px;width:600px;height:380px';
+    document.body.append(host);
+
+    const fired = { next: 0, prev: 0 };
+    bus.subscribe('photos/next', () => fired.next++);
+    bus.subscribe('photos/prev', () => fired.prev++);
+
+    let cfg = { sourceId: 'src-1', intervalMs: 3600000, fit: 'contain' };
+    const subs = [];
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+                    subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+    const source = { id: 'src-1', label: 'Test source', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+    const inst = mountModule('photos', {
+      mount: host, bus, state,
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      user: USER, profileId: 'p',
+      sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+    });
+    inst.init();
+    await sleep(120);
+
+    const btn = (sel) => host.querySelector(sel);
+    check('the next arrow exists', !!btn('[data-next]'));
+    check('the prev arrow exists', !!btn('[data-prev]'));
+
+    btn('[data-next]')?.click();
+    await sleep(40);
+    check('*** PRESSING the next arrow reaches photos/next ***', fired.next === 1, `fired=${fired.next}`);
+
+    btn('[data-prev]')?.click();
+    await sleep(40);
+    check('*** PRESSING the prev arrow reaches photos/prev ***', fired.prev === 1, `fired=${fired.prev}`);
+
+    btn('[data-next]')?.click(); btn('[data-next]')?.click();
+    await sleep(40);
+    check('every press counts — they are not debounced away', fired.next === 3, `fired=${fired.next}`);
+
+    // the gear opens the panel's own settings, and an option there writes through to state
+    const gear = btn('[data-gear]'), panel = host.querySelector('[data-settings]');
+    check('the gear exists and its panel starts closed', !!gear && panel?.hidden === true);
+    gear?.click(); await sleep(40);
+    check('pressing the gear opens the settings panel', panel?.hidden === false);
+    gear?.click(); await sleep(40);
+    check('pressing it again closes it', panel?.hidden === true);
+
+    const opt = host.querySelector('[data-opt="fit"]');
+    if (opt) {
+      opt.value = 'cover';
+      opt.dispatchEvent(new Event('change', { bubbles: true }));
+      await sleep(40);
+      check('changing a gear option writes the declared type through to state', cfg.fit === 'cover', JSON.stringify(cfg.fit));
+    }
+
+    // and `hidden` must actually HIDE - four modules set display:flex on .status, which
+    // outranks the browser's own [hidden] rule. That is why a "Loading photos..." sheet sat
+    // over the photos on the live site while the code that hid it was already correct.
+    const st = host.querySelector('[data-status]');
+    if (st) {
+      st.hidden = true; await sleep(20);
+      check('*** [hidden] on .status actually hides it (needs modules.css loaded) ***',
+        getComputedStyle(st).display === 'none', getComputedStyle(st).display);
+    }
+
+    inst.destroy();
+    host.remove();
   }
 
   try {

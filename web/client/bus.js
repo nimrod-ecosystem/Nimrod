@@ -55,9 +55,10 @@ export function createBus() {
       const out = b.transform ? b.transform(payload, signal) : payload;
       // THE "IGNORE THIS SIGNAL" RULE BELONGS TO THE TRANSFORM, AND ONLY TO IT. Applying it
       // to an untransformed signal silently swallowed every BARE emit - `emit('next')` with
-      // no payload - because `undefined` in meant `undefined` out. That killed eleven
-      // on-screen buttons across six modules (photos/youtube/personal/educational next+prev,
-      // director and interstitials skip) and the switch simulator on the landing page. It hid
+      // no payload - because `undefined` in meant `undefined` out. MEASURED: that killed NINE
+      // on-screen buttons across FIVE modules - photos, youtube, personal and educational
+      // next+prev, and interstitials' skip. `director`'s skip and the landing page's switch
+      // survived, because both bindings carry a transform that returns a real value. It hid
       // for so long because the same modules ALSO answer their bus topic directly, so every
       // test that drove `photos/next` passed while the arrow under the photo did nothing.
       // Without a transform there is nobody to have made that decision, so the signal fires.

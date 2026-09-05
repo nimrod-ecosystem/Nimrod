@@ -104,11 +104,14 @@ const last = (a) => a[a.length - 1];
       // REGRESSION, 2026-09-05. `route()` dropped any signal whose payload was undefined,
       // because a transform returning undefined means "ignore this signal". Without a
       // transform there is nobody to have made that decision - so `emit('next')` with no
-      // payload was silently swallowed. That is how ELEVEN on-screen buttons across six
-      // modules did nothing: photos/youtube/personal/educational next+prev, director and
-      // interstitials skip, plus the switch simulator on the landing page. It survived
-      // every test because those modules ALSO answer their bus topic directly, so driving
-      // `photos/next` passed while the arrow under the photo was dead.
+      // payload was silently swallowed. MEASURED by mounting every affected module against a
+      // bus running the OLD rule: NINE on-screen buttons across FIVE modules did nothing -
+      // photos, youtube, personal and educational next+prev, and interstitials' skip.
+      // `director`'s skip and the landing page's switch SURVIVED, because both of those
+      // bindings carry a transform that returns a real value - which is the tell for what the
+      // rule was always meant to cover. It survived every test because those modules ALSO
+      // answer their bus topic directly, so driving `photos/next` passed while the arrow
+      // under the photo was dead.
       const bus = createBus();
       const got = [];
       bus.subscribe('photos/next', (p) => got.push(p === undefined ? '<bare>' : p));
