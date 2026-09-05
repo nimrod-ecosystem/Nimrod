@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""run_suite.py - RUN A dev/*_test.html SUITE FROM A TERMINAL AND PRINT WHAT IT SAID.
+
+*** WHY THIS EXISTS, AND IT IS NOT CONVENIENCE. ***
+
+Every suite in `web/client/dev/` reports into `#summary` on the page, so reading one has always
+meant having a browser pointed at it. The browsers available to an agent working on this repo
+are both HIDDEN - a background tab in an automated pane, or a Chrome window that is not on
+screen - and a hidden document is not a slower browser, it is a different one:
+
+    measured 2026-09-06, in both:  document.hidden === true
+                                   requestAnimationFrame  never fires
+                                   ResizeObserver         never delivers, not even the
+                                                          initial observation
+
+So any suite that measures LAYOUT REACTING TO A CHANGE cannot run there at all. `fit_test`
+is exactly that suite, and its resize section reported three false failures for a fix that
+works - which is the same trap `run_all.html` documents at length for the amber `no summary`
+rows, arrived at from the other direction.
+
+Headless Chrome is not hidden. `document.hidden` is false, rAF runs, ResizeObserver delivers.
+That is the whole trick, and it is why this is a tool and not a workaround.
+
+USAGE, from the repo root, with the server already running:
+
+    web/server/.venv/Scripts/python web/tools/run_suite.py fit
+    web/server/.venv/Scripts/python web/tools/run_suite.py fit panel_fit photos
+
+Each argument is a suite NAME (`fit` -> `dev/fit_test.html`) or a full path/URL. Exit status is
+0 only if every suite finished and reported zero failures, so it is usable from a hook or CI.
+
+    SUITE_BASE   default http://localhost:8000 - point it at the live site to check a deploy
+    SUITE_WAIT   seconds to wait for a summary, default 90
+    SUITE_HEAD   set to anything to watch it happen in a real window instead of headless
+"""
+import asyncio
+import json
+import os
+import re
+import shutil
+import socket
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.request
+
+import websockets
+
+BASE = os.environ.get('SUITE_BASE', 'http://localhost:8000').rstrip('/')
+WAIT = float(os.environ.get('SUITE_WAIT', '90'))
+
+
+def free_port():
+    """*** A FIXED DEBUGGING PORT IS A TRAP, AND IT CAUGHT ME WITHIN THE HOUR. ***
+
+    This started as `PORT = 9224`, chosen to avoid 9222 (a person's own Chrome) and 9223
+    (pi_bench). Then a long run was left in the background while a short one was started in
+    front of it, and the second Chrome could not bind the port, so `/json/list` answered from
+    the FIRST one — and the second run drove the first run's browser. It reported `view` as
+    failing with `fit`'s results, naming a check `view_test.html` does not contain.
+
+    That is worse than a crash: two runs quietly sharing one browser produce results that look
+    ordinary and belong to the wrong page. An ephemeral port per process cannot collide."""
+    with socket.socket() as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
+
+PORT = free_port()
+
+CHROME = next((p for p in [
+    r'C:\Program Files\Google\Chrome\Application\chrome.exe',
+    r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
+    os.path.expanduser(r'~\AppData\Local\Google\Chrome\Application\chrome.exe'),
+    shutil.which('chromium') or '', shutil.which('google-chrome') or '',
+] if p and os.path.exists(p)), None)
+
+
+def http_json(path, tries=60):
+    for _ in range(tries):
+        try:
+            with urllib.request.urlopen(f'http://127.0.0.1:{PORT}{path}', timeout=1) as r:
+                return json.loads(r.read())
+        except Exception:
+            time.sleep(0.5)
+    raise RuntimeError(f'devtools never answered on {PORT}')
+
+
+class CDP:
+    """The three calls this needs, and no framework. Same shape as pi_bench.py's."""
+
+    def __init__(self, ws):
+        self.ws = ws
+        self.n = 0
+
+    async def send(self, method, **params):
+        self.n += 1
+        await self.ws.send(json.dumps({'id': self.n, 'method': method, 'params': params}))
+        while True:
+            msg = json.loads(await self.ws.recv())
+            if msg.get('id') == self.n:
+                if 'error' in msg:
+                    raise RuntimeError(f"{method}: {msg['error']}")
+                return msg.get('result', {})
+
+    async def js(self, expr, timeout=30):
+        r = await asyncio.wait_for(self.send(
+            'Runtime.evaluate', expression=expr, awaitPromise=True,
+            returnByValue=True, allowUnsafeEvalBlockedByCSP=True), timeout)
+        if r.get('exceptionDetails'):
+            return {'__error__': str(r['exceptionDetails'].get('text'))}
+        return r.get('result', {}).get('value')
+
+
+def url_for(name):
+    if name.startswith('http://') or name.startswith('https://'):
+        return name
+    if name.endswith('.html'):
+        return f'{BASE}/{name.lstrip("/")}'
+    return f'{BASE}/dev/{name}_test.html'
+
+
+# THE SUITES PRINT TWO DIFFERENT SHAPES, and reading only one of them is how a green suite gets
+# reported as broken. `12 passed, 3 failed` is the commoner; `ALL PASS — 57 checks` is what
+# `panel_fit`, `trivia`, `wordforge` and `board` print, and the first version of this file called
+# all four of them FAIL. A summary this cannot parse is reported as unfinished, never as a pass:
+# a suite still running says `running…`, which matches neither.
+COUNTS = re.compile(r'(\d+)\s+passed,\s+(\d+)\s+failed')
+ALLPASS = re.compile(r'ALL\s+PASS\D*(\d+)?')
+
+
+def parse_summary(text):
+    m = COUNTS.search(text)
+    if m:
+        return int(m.group(1)), int(m.group(2))
+    m = ALLPASS.search(text)
+    if m:
+        return int(m.group(1) or 0), 0
+    return None
+
+
+async def run_one(cdp, name):
+    url = url_for(name)
+    await cdp.send('Page.navigate', url=url)
+    # *** WAIT FOR THE NEW DOCUMENT BEFORE READING ANY SUMMARY. *** `Page.navigate` returns as
+    # soon as the navigation is ACCEPTED, not when it has committed, so the first poll can still
+    # be looking at the previous suite — whose summary is already there and already matches. The
+    # result is the last suite's numbers printed under this suite's name, and nothing about it
+    # looks wrong.
+    deadline = time.time() + WAIT
+    while time.time() < deadline:
+        here = await cdp.js('location.href') or ''
+        if here.split('?')[0].rstrip('/') == url.split('?')[0].rstrip('/'):
+            break
+        await asyncio.sleep(0.2)
+
+    text = ''
+    parsed = None
+    while time.time() < deadline:
+        text = await cdp.js("(document.getElementById('summary')||{}).textContent || ''") or ''
+        parsed = parse_summary(text)
+        if parsed or text.startswith('threw'):
+            break
+        await asyncio.sleep(0.5)
+    fails = await cdp.js(
+        "JSON.stringify([...document.querySelectorAll('.fail')].map(e=>e.textContent.trim()))")
+    fails = json.loads(fails) if isinstance(fails, str) else []
+    return {'name': name, 'url': url, 'text': text.strip() or '(no summary)',
+            'passed': parsed[0] if parsed else 0,
+            'failed': parsed[1] if parsed else -1,
+            'fails': fails}
+
+
+async def main(names):
+    if not CHROME:
+        print('no chrome found - set one of the paths at the top of this file', file=sys.stderr)
+        return 2
+    profile = tempfile.mkdtemp(prefix='nimrod_suite_')
+    args = [CHROME, f'--remote-debugging-port={PORT}', f'--user-data-dir={profile}',
+            '--no-first-run', '--no-default-browser-check', '--window-size=1440,900',
+            # A suite must not be judged against a permission prompt nobody can answer, and
+            # several of these modules ask for a camera. Fake devices give them a real stream.
+            '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream',
+            'about:blank']
+    if not os.environ.get('SUITE_HEAD'):
+        args.insert(1, '--headless=new')
+    proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        target = next(t for t in http_json('/json/list') if t['type'] == 'page')
+        async with websockets.connect(target['webSocketDebuggerUrl'],
+                                      max_size=32 * 1024 * 1024) as ws:
+            cdp = CDP(ws)
+            await cdp.send('Page.enable')
+            await cdp.send('Runtime.enable')
+            hidden = await cdp.js('document.hidden')
+            print(f'chrome up · document.hidden={hidden} · base={BASE}\n')
+            results = [await run_one(cdp, n) for n in names]
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=10)
+        except Exception:
+            proc.kill()
+        shutil.rmtree(profile, ignore_errors=True)
+
+    bad = 0
+    for r in results:
+        flag = 'ok  ' if r['failed'] == 0 else 'FAIL'
+        if r['failed'] != 0:
+            bad += 1
+        print(f"{flag}  {r['name']:<18} {r['text']}")
+        for f in r['fails']:
+            print(f"        {f}")
+    print(f"\n{len(results) - bad} of {len(results)} suites clean")
+    return 1 if bad else 0
+
+
+if __name__ == '__main__':
+    names = sys.argv[1:] or ['fit']
+    sys.exit(asyncio.run(main(names)))
