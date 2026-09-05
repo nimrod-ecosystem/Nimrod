@@ -243,7 +243,56 @@
 .youtube .stage iframe{width:100%;height:100%;border:0;display:block}
 .youtube .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
   color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
-.youtube .nav,.youtube .gear,.youtube .settings{display:none}
+/* *** YOUTUBE KEEPS ITS OWN CONTROLS. IT IS THE ONLY WAY TO CHOOSE A VIDEO. ***
+ *
+ * G13, Mike off the live site: *"YouTube's overlay covers everything on hover and there is no
+ * obvious way to choose a video from the panel."*
+ *
+ * There was no way at all, obvious or otherwise. This rule was `.youtube .nav,.youtube .gear,
+ * .youtube .settings{display:none}` — the same line photos and camera carry, written when the
+ * universal settings menu took over per-panel settings. For those two that is right: everything
+ * they can be told is declared in their manifest, so the menu reaches all of it.
+ *
+ * YouTube is not like them. Its manifest declares exactly ONE setting (`heldNotifyMs`), while
+ * **adding a video, using a playlist, the schedule, shuffle and auto-advance all live in this
+ * hidden panel** — so the entire content of the module was unreachable from anywhere in the
+ * product. Nothing else edits a playlist; I checked. That is A14's shape: config no UI can set.
+ *
+ * The arrows matter for the second half of what he said. The overlay covering the frame is
+ * YouTube's own player chrome inside a cross-origin iframe and this page cannot restyle a pixel
+ * of it — but it does not have to. A previous/next of our own, OUTSIDE the iframe, is a way to
+ * change the video that does not involve fighting their overlay for a click.
+ *
+ * Small, low-contrast and at the bottom, so a panel somebody is watching is still a panel
+ * somebody is watching. `.settings` stays closed until the gear is pressed — it is `hidden` in
+ * the markup, and `[hidden]` wins.
+ */
+.youtube .nav{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:4;
+  display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:99px;
+  background:rgba(7,18,13,.72);color:#cfe0d6;max-width:calc(100% - 16px)}
+.youtube .nav .yt-label{font-size:.76rem;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;max-width:34ch}
+.youtube .ybtn{min-width:34px;min-height:34px;border-radius:99px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.28);background:transparent;color:#cfe0d6;font-size:1rem}
+.youtube .ybtn:hover{background:rgba(255,255,255,.12)}
+.youtube .gear{position:absolute;top:8px;right:8px;z-index:4;min-width:34px;min-height:34px;
+  border-radius:99px;cursor:pointer;border:1px solid rgba(255,255,255,.28);
+  background:rgba(7,18,13,.72);color:#cfe0d6}
+.youtube .gear:hover{background:rgba(7,18,13,.92)}
+/* The panel itself: a sheet over the video, scrolling inside its own box, because a playlist
+   is a list and a panel can be a quarter of a screen. */
+.youtube .settings{position:absolute;inset:8px;z-index:5;overflow:auto;padding:12px 14px;
+  border-radius:12px;background:rgba(7,18,13,.96);color:#e7efe9;
+  border:1px solid rgba(255,255,255,.16);font-size:.86rem}
+.youtube .settings .chk{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.youtube .settings .addrow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.youtube .settings .addrow input{flex:1 1 140px;min-width:0;padding:7px 9px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.06);color:inherit;
+  font:inherit}
+.youtube .settings .addrow button,.youtube .settings .list button{min-height:34px;padding:6px 12px;
+  border-radius:8px;border:1px solid rgba(255,255,255,.28);background:transparent;color:inherit;
+  cursor:pointer}
+.youtube .settings .list{display:flex;flex-direction:column;gap:5px;margin-top:8px}
 
 /* PAUSED, ON PURPOSE, BY SOMEBODY IN THE ROOM.
  *
