@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>transport bar — every panel on the screen is reachable from it</title>
+<link rel="stylesheet" href="../modules.css">
+<!-- THE KIOSK'S OWN STYLES. Without this the bar measured below is an UNSTYLED row of buttons,
+     and every number about where they land is meaningless — which is exactly what the first run
+     of this suite reported: all nine chips "off the end", of nothing. See kiosk.css's header. -->
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* *** A FIXED, NARROW BOX, AND THAT IS THE WHOLE MEASUREMENT. ***
+     The kiosk is normally `position:fixed` against the window, so anything about the transport
+     bar measured that way is really a fact about the browser window the suite happened to run
+     in — this suite passed at 1440 wide and failed at 800 before the box was pinned. 720x560 is
+     a small screen, and a small screen is where a bar of nine buttons runs out of room. */
+  #root{position:relative;width:720px;height:560px;margin-top:16px;border:1px solid #ddd8b4;
+    border-radius:10px;overflow:hidden}
+  #root .kiosk{position:absolute}
+  p{max-width:86ch}
+</style>
+</head>
+<body>
+<h1>transport bar — every panel on the screen is reachable from it</h1>
+<p><b>G9.</b> Mike, testing the live site 2026-09-06: <i>“I added more than three modules to a
+screen. Only three appear on the bar, Next does not move between them, and there is no overflow or
+scroll. The rest are unreachable.”</i> And separately: <i>“Quests did not appear on the bar at
+all.”</i></p>
+<p>The bar is the only way to a panel that is not on screen, so a panel missing from it is a panel
+nobody can get to. This mounts real kiosks with more modules than fit and measures what the bar
+does.</p>
+<p>Needs the server: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="root"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { stashPreviewLayout } from '../preview.js';
+
+const USER = 'transport-' + Math.floor(Math.random() * 1e6);
+const root = document.getElementById('root');
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const bar = () => root.querySelector('[data-mods]');
+const chips = () => [...root.querySelectorAll('[data-mods] .k-dot')];
+const labels = () => chips().map((b) => b.textContent.trim());
+
+// Reachable means a person can actually get their finger or their scan to it — the same
+// question `fit_test` asks of a module's own controls, asked of the bar. A chip pushed off the
+// end of a bar that does not scroll is drawn and useless.
+//
+// *** MEASURED AGAINST THE SCREEN, NOT AGAINST THE BAR. *** The first version compared each chip
+// to `.k-mods`, and `.k-mods` is a flex row that is exactly as wide as its own contents — so
+// every chip was inside it by definition and the check could not fail. `.kiosk` is the box the
+// person is actually looking at, and a chip outside THAT is a chip nobody can press.
+function unreachableChips() {
+  const sb = root.querySelector('.kiosk').getBoundingClientRect();
+  const out2 = [];
+  for (const c of chips()) {
+    c.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    const r = c.getBoundingClientRect();
+    const ox = Math.min(r.right, sb.right) - Math.max(r.left, sb.left);
+    const oy = Math.min(r.bottom, sb.bottom) - Math.max(r.top, sb.top);
+    if (ox < r.width / 2 || oy < r.height / 2) out2.push(c.textContent.trim());
+  }
+  return out2;
+}
+
+(async () => {
+  const profiles = createProfilesClient({ user: USER });
+  let kiosk = null;
+
+  // =====================================================================================
+  section('*** a screen with no arrangement: the tabbed fallback ***');
+  // Mike asked for this behaviour to be KEPT — "a screen with no arranged layout falls back to
+  // a tabbed set on the transport bar. That is a genuinely good behaviour and it is currently
+  // accidental." So it is asserted here, which is what makes it deliberate.
+  {
+    const p = await profiles.create('T-many');
+    for (const t of ['photos', 'youtube', 'quests', 'trivia', 'wordforge', 'sprint', 'pond',
+                     'algebra', 'board']) {
+      await profiles.addModule(p.id, t);
+    }
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus() });
+    await sleep(300);
+
+    check('every module on the screen has a button on the bar',
+      chips().length === 9, `${chips().length} of 9 — ${labels().join(', ')}`);
+    // Computed ONCE. Calling it twice — once for the condition and once for the message —
+    // reports the state AFTER the first call's scrolling, so a failure can print an empty list
+    // and read as a check that failed for no reason. It did exactly that on the first run.
+    const gone = unreachableChips();
+    check('*** and every one of those buttons can be reached ***', gone.length === 0,
+      `${gone.length} off the end: ${gone.join(', ')}`);
+
+    // *** AND AGAIN ON A GENUINELY SMALL SCREEN. ***
+    //
+    // 720px was not narrow enough to keep this check honest: with the bar-wrapping reverted it
+    // still passed, because `.k-actions` wrapping on its own was enough to squeeze nine buttons
+    // in. A check that only fails at one particular width is a check that will stop failing the
+    // next time a button is renamed. 420px is a small tablet, and nine panel buttons plus seven
+    // controls cannot fit one row at that width by any arrangement of them.
+    root.style.width = '420px';
+    await sleep(150);
+    const tight = unreachableChips();
+    check('*** and on a 420px screen, still every one of them ***', tight.length === 0,
+      `${tight.length} off the end: ${tight.join(', ')}`);
+    root.style.width = '720px';
+    await sleep(150);
+
+    // Pressing the LAST one has to actually put it on the stage. A bar that scrolls to a chip
+    // that does nothing is the same defect wearing a scrollbar.
+    const last = chips()[chips().length - 1];
+    last.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    last.click();
+    await sleep(300);
+    check('pressing the last button puts that module on the stage',
+      kiosk.primaryType() === 'board', `primary=${kiosk.primaryType()}`);
+
+    kiosk.destroy();
+    root.innerHTML = '';
+  }
+
+  // =====================================================================================
+  section('*** a screen with a layout that does not hold everything ***');
+  // This is the case Mike actually hit. A `main` preset has THREE slots; put five modules on
+  // the screen and two of them are in the profile, in nobody's slot, on no stage — because
+  // `partition()` only fills `stageDefs` when there is no layout at all — and therefore on no
+  // button. Not hidden: absent.
+  {
+    const p = await profiles.create('T-overflow');
+    for (const t of ['photos', 'trivia', 'wordforge', 'quests', 'pond']) {
+      await profiles.addModule(p.id, t);
+    }
+    const full = await profiles.get(p.id);
+    const ids = (full.modules || []).map((m) => m.id);
+    // *** THE LAYOUT GOES THROUGH THE COMPOSER'S OWN HANDOFF, NOT THROUGH A MOUNT OPTION. ***
+    //
+    // The first version passed `previewLayout` to `mountKiosk` as though it were an argument.
+    // It is not: the kiosk reads it from `sessionStorage` via `takePreviewLayout`, because the
+    // composer must not import kiosk.js. So the option was ignored, the screen came up
+    // unarranged, and the whole section silently re-tested the tabbed fallback while every
+    // check passed. That is what the "really is a grid" check above exists to catch, and it
+    // caught it on the first run.
+    stashPreviewLayout(p.id, { preset: 'main', slots: [ids[0], ids[1], ids[2]] });
+    kiosk = await mountKiosk(root, {
+      user: USER, profileId: p.id, profiles, bus: createBus(),
+    });
+    await sleep(400);
+
+    // FIRST: is this actually the laid-out case? Everything below is meaningless if the
+    // preview layout did not take — the screen would just be the tabbed fallback again, and
+    // every check would pass by testing the previous section twice.
+    check('the screen really is arranged (a grid stage, not the fallback)',
+      !!root.querySelector('.k-stage.k-grid'),
+      root.querySelector('.k-stage')?.className || 'no stage');
+
+    check('*** every module on the screen is on the bar, placed or not ***',
+      chips().length === 5, `${chips().length} of 5 — ${labels().join(', ')}`);
+    check('...including the ones with no slot in the arrangement',
+      labels().some((l) => /quest/i.test(l)) && labels().some((l) => /pond/i.test(l)),
+      labels().join(', '));
+    const gone2 = unreachableChips();
+    check('...and none of them is off the end of the bar', gone2.length === 0, gone2.join(', '));
+
+    // *** PRESSING AN UNPLACED PANEL HAS TO PUT IT ON THE SCREEN. ***
+    // A button that is drawn, reachable and does nothing is the same defect wearing a label.
+    const quests = chips().find((b) => /quest/i.test(b.textContent));
+    check('the unplaced ones are marked as not being in the arrangement',
+      quests?.classList.contains('k-off'), quests?.className || 'no chip');
+    // Guarded: with the fix reverted there is no chip, and a TypeError here aborts everything
+    // below it — including the bar-wrapping and panel-cycling checks, which are about different
+    // fixes entirely. Proving a check can fail is worth nothing if the proof run skips the rest.
+    quests?.click();
+    await sleep(400);
+    check('*** pressing an unplaced panel brings it onto the screen ***',
+      !!root.querySelector('.k-cell[data-kind="quests"]'),
+      [...root.querySelectorAll('.k-cell')].map((c) => c.dataset.kind || '-').join(', '));
+    // ...and the one it displaced is not lost: it becomes the unplaced one.
+    check('...and the panel it replaced is still on the bar, now marked off',
+      chips().some((b) => b.classList.contains('k-off')),
+      labels().join(', '));
+
+    // *** SOMETHING MOVES BETWEEN PANELS, AND NOTHING USED TO. ***
+    // `router.focusNext()` existed and no key or button in the product called it, so on an
+    // arranged screen the only way to change which panel a switch acts on was a mouse click.
+    const panelBtn = root.querySelector('[data-act="panel"]');
+    check('an arranged screen offers a way to move between panels', panelBtn && !panelBtn.hidden,
+      panelBtn ? `hidden=${panelBtn.hidden}` : 'no button');
+    const before = root.querySelector('.k-cell[data-focused]')?.dataset.kind;
+    panelBtn?.click();
+    await sleep(120);
+    const after = root.querySelector('.k-cell[data-focused]')?.dataset.kind;
+    check('*** pressing it moves the focus ring to another panel ***',
+      before && after && before !== after, `${before} -> ${after}`);
+
+    kiosk.destroy();
+    root.innerHTML = '';
+  }
+
+  document.getElementById('summary').textContent = failed
+    ? `${failed} FAILED / ${passed} passed`
+    : `ALL PASS — ${passed} checks`;
+})().catch((e) => {
+  console.error(e);
+  document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+});
+</script>
+</body>
+</html>
