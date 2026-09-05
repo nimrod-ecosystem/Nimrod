@@ -14,6 +14,24 @@
  * the URL is identical and the browser fetches it once. */
 @import url('./settings.css');
 
+/* *** `hidden` MUST ACTUALLY HIDE. ***
+ *
+ * The browser hides `[hidden]` with `display:none` from its OWN stylesheet, which any rule
+ * of ours outranks. Four modules set `display:flex` on `.status` - photos, camera, youtube,
+ * personal - so `el.hidden = true` set the attribute, changed nothing on screen, and left a
+ * full-panel scrim sitting over the content.
+ *
+ * That is the "photos drawing UNDERNEATH a persistent 'Loading photos...' sheet" reported off
+ * the live site on 2026-09-05. The LOGIC was fixed then - the module does hide the status the
+ * moment a photo draws - and the symptom stayed, because the hiding never took effect. It read
+ * as fixed in the code and broken on the screen, which is the worst combination to debug.
+ *
+ * Four one-off `[hidden]{display:none}` patches already exist further down this file (director,
+ * wallpaper, gprogress, cur). Each one was somebody hitting this same wall and walling off
+ * their own corner. This is that fix made once, for every element.
+ */
+[hidden] { display: none !important; }
+
 /* A host that hands a module a fixed box adds `mod-box`, and the module can then size
    itself against that box with container-query units (1cqh = 1% of the box's height).
    Without it, cq units fall back to the viewport, which is why nothing breaks in the

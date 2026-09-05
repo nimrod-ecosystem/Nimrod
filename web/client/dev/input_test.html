@@ -99,6 +99,54 @@ const last = (a) => a[a.length - 1];
 (async () => {
   try {
     // ================= the action catalog =================
+    section('source -> binding routing: a BARE signal must fire');
+    {
+      // REGRESSION, 2026-09-05. `route()` dropped any signal whose payload was undefined,
+      // because a transform returning undefined means "ignore this signal". Without a
+      // transform there is nobody to have made that decision - so `emit('next')` with no
+      // payload was silently swallowed. That is how ELEVEN on-screen buttons across six
+      // modules did nothing: photos/youtube/personal/educational next+prev, director and
+      // interstitials skip, plus the switch simulator on the landing page. It survived
+      // every test because those modules ALSO answer their bus topic directly, so driving
+      // `photos/next` passed while the arrow under the photo was dead.
+      const bus = createBus();
+      const got = [];
+      bus.subscribe('photos/next', (p) => got.push(p === undefined ? '<bare>' : p));
+      bus.addBinding({ source: 'photos-nav', signal: 'next', topic: 'photos/next' });
+      const nav = bus.createSource('photos-nav');
+
+      nav.emit('next');
+      check('a bare emit() with no payload reaches the topic', got.length === 1, JSON.stringify(got));
+      check('and arrives as undefined rather than being reshaped', got[0] === '<bare>');
+
+      nav.emit('next', { via: 'touch' });
+      check('a signal WITH a payload still carries it', got.length === 2 && got[1].via === 'touch');
+
+      // the rule the guard actually exists for is untouched
+      const dropped = [];
+      bus.subscribe('photos/prev', (p) => dropped.push(p));
+      bus.addBinding({ source: 'photos-nav', signal: 'prev', topic: 'photos/prev',
+                       transform: () => undefined });
+      nav.emit('prev', { real: 1 });
+      check('a transform returning undefined STILL means "ignore this signal"', dropped.length === 0);
+      bus.addBinding({ source: 'photos-nav', signal: 'prev', topic: 'photos/prev',
+                       transform: () => null });
+      nav.emit('prev', { real: 1 });
+      check('and so does a transform returning null', dropped.length === 0);
+      bus.addBinding({ source: 'photos-nav', signal: 'prev', topic: 'photos/prev',
+                       transform: (x) => x });
+      nav.emit('prev', { real: 2 });
+      check('a transform passing the value through delivers it', dropped.length === 1 && dropped[0].real === 2);
+
+      // a bare signal must survive a transform that legitimately builds a value from nothing
+      const built = [];
+      bus.subscribe('t/built', (x) => built.push(x));
+      bus.addBinding({ source: 'photos-nav', signal: 'go', topic: 't/built',
+                       transform: (_p, sig) => ({ sig }) });
+      nav.emit('go');
+      check('a transform can build a payload from a bare signal', built.length === 1 && built[0].sig === 'go');
+    }
+
     section('the action catalog');
     {
       const a = createActionRegistry();

@@ -556,7 +556,15 @@ registerModule(
           syncControls();
           const ref = `${cfg.sourceId}|${cfg.album}`;
           if (ref !== lastSourceRef) { lastSourceRef = ref; reload(); }
-          else if (currentId) { const el = stage()?.firstChild; if (el) el.style.objectFit = cfg.fit; }
+          // FIT CHANGES RE-RENDER THE CURRENT PHOTO, they do not poke a style. This used to
+          // write `objectFit` onto `stage().firstChild`, and in `contain` mode the first child
+          // is the BLURRED BACKDROP, not the photo - so switching contain -> cover set the
+          // property on a div that has no object-fit and did nothing at all. The other
+          // direction "worked" and still looked wrong: it set the image but could not CREATE
+          // the backdrop, leaving bare letterbox bars until the next photo happened to load.
+          // Re-rendering is the only thing that gets both the fit and the backdrop right,
+          // and it is cheap - the bytes are already in cache.
+          else if (currentId && byId[currentId]) render(byId[currentId]);
         });
       },
       onResize() {},
