@@ -167,6 +167,35 @@ def ctx_keys(src):
     return sorted(keys)
 
 
+# *** WHICH ctx KEYS A MODULE WILL THROW WITHOUT. ***
+#
+# `dependsOn` says how EXPOSED a module is - what breaks when the network or the platform is
+# gone. Nothing says what it needs to EXIST AT ALL. Those are different questions and the
+# difference bit hard on 2026-09-05: mounting five modules without `makeEvents` made them throw
+# outright (`createPointsLedger: ctx.makeEvents is required`), and I nearly read that as "these
+# are fragile" and declared the OPPOSITE of the truth for six modules, in the one field where a
+# wrong value is worse than an absent one.
+#
+# A host that omits a required key gets an exception at mount. That is now CAUGHT and shown as
+# "X could not start" in its own slot - but nothing tells the host in advance, and nothing in
+# the manifest declares it. This column is that gap, made countable.
+#
+# It is a source scan: it finds the helpers that assert on a ctx key, not every possible throw.
+CTX_ASSERTS = {
+    'createPointsLedger': 'makeEvents',
+    'createTelemetry': 'makeEvents',
+    'createLessons': 'makeState',
+}
+
+
+def needs_ctx(src):
+    out = set()
+    for fn, key in CTX_ASSERTS.items():
+        if re.search(r'\b%s\s*\(' % re.escape(fn), src):
+            out.add(key)
+    return sorted(out)
+
+
 ROWS = []
 for fn in sorted(os.listdir(MODULES)):
     if not fn.endswith('.js'):
@@ -193,15 +222,16 @@ for fn in sorted(os.listdir(MODULES)):
         # while explaining compositing. A table with one wrong cell is worse than no table:
         # it is the cells you did not check that you then trust.
         'headless': bool(re.search(r'headless\s*:', src)),
+        'needs': needs_ctx(src),
     })
 
 
 def md():
     out = []
-    out.append('| module | depends | importance | settings | topics | verbs a switch can send | renders | container | writes events | holds state | headless |')
+    out.append('| module | depends | importance | settings | topics | verbs a switch can send | renders | container | writes events | holds state | headless | throws without |')
     out.append('|---|---|---|---|---|---|---|---|---|---|')
     for r in ROWS:
-        out.append('| `%s` | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |' % (
+        out.append('| `%s` | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |' % (
             r['type'], r['dependsOn'], r['importance'],
             r['settings'] or '**0**',
             len(r['verbs']) or '-',
@@ -211,6 +241,7 @@ def md():
             'yes' if r['events'] else '-',
             'yes' if r['state'] else '-',
             'yes' if r['headless'] else '**no**',
+            ', '.join('`%s`' % k for k in r['needs']) or '-',
         ))
     return '\n'.join(out)
 
@@ -227,6 +258,10 @@ def holes():
                % (len(no_depends), ', '.join('`%s`' % t for t in no_depends) or 'none'))
     out.append('- **can run headless: 0 of %d.** Nothing in the codebase has the concept (H1).' % len(ROWS))
     out.append('- **live in a `person` scope: 0 of %d.** `module.js` does not contain the word (B9).' % len(ROWS))
+    needy = [r for r in ROWS if r['needs']]
+    out.append('- **throw on mount if the host omits a ctx key (%d), and NO manifest declares it:** %s. '
+               '`dependsOn` says how exposed a module is; nothing says what it needs to exist.'
+               % (len(needy), ', '.join('`%s` (%s)' % (r['type'], ', '.join(r['needs'])) for r in needy) or 'none'))
     return '\n'.join(out)
 
 
