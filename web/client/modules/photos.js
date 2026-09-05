@@ -305,6 +305,24 @@ registerModule(
       // Whether the panel has something to look at decides how a status message is drawn
       // — a corner chip over a photo, a full panel over nothing. See setStatus.
       st.dataset.showing = '1';
+
+      // *** A PHOTO IS ON SCREEN, SO "Loading photos…" IS NO LONGER TRUE. ***
+      //
+      // Reported off the live site 2026-09-05: photos drawing UNDERNEATH a persistent
+      // "Loading photos…" sheet that dimmed them — the feature working and looking broken,
+      // which is worse than either.
+      //
+      // Every path through `reload()` was supposed to clear it and one of them does not: a
+      // reload that is superseded (`seq !== loadSeq`) returns early WITHOUT clearing, and the
+      // module adopting a source writes to state, which triggers a fresh reload, which is
+      // exactly how two of them end up racing on a first load.
+      //
+      // Chasing which path leaks is the wrong fix. **The status is a claim about what the
+      // panel is doing, and here is where that claim stops being true** — so this is where it
+      // is withdrawn, whatever route got here. A loading message cannot outlive the load if
+      // the thing that finishes loading is what clears it.
+      const st2 = mount.querySelector('[data-status]');
+      if (st2 && !st2.hidden && /^Loading/.test(st2.textContent || '')) setStatus(null);
     }
 
     // Show an item by id. `record` distinguishes a forward play (counts, logs a play
