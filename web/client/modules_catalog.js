@@ -309,7 +309,13 @@ export const CATALOG = [
     group: 'practice',
     use: 'answer',
     lead: 'Watch something short, then answer questions about it.',
-    needs: 'Nothing to start — you can add your own later.',
+    // HONEST ABOUT THE HALF THAT IS NOT BUILT (G12). This said "Nothing to start - you can add
+    // your own later", which implies lessons are already there to watch. They are not: the
+    // three shipped topics carry no videos, and nothing on this site can attach one yet. The
+    // module is still real - unlocking a topic puts its questions into the game - so it is
+    // described as what it is rather than dropped from the page.
+    needs: 'Nothing — but no lesson videos are chosen yet, so today it unlocks topics rather '
+      + 'than playing anything.',
     why: 'Attention and recall, in the order they actually get used: take something in, then '
       + 'be asked about it. The questions unlock only after the lesson, so it cannot be '
       + 'guessed through.',

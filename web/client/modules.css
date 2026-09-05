@@ -616,6 +616,11 @@
 /* lessons (watch to unlock) */
 .lessons{display:flex;flex-direction:column;gap:10px;width:100%}
 .lessons .l-top{font-size:.78rem;color:var(--muted);font-weight:600}
+/* "Not finished yet", said once at the top. Cream on the card rather than red, because
+   unfinished is not an error and a warning colour would say it was. */
+.lessons .l-unfinished{margin:0 0 4px;padding:8px 11px;border-radius:10px;
+  background:var(--cream-soft);border:1px solid var(--line);
+  font-size:.84rem;color:var(--ink-soft);max-width:62ch}
 .lessons .l-list{display:flex;flex-direction:column;gap:9px}
 .lessons .l-card{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:12px 14px}
 .lessons .l-card.is-done{border-color:var(--moss);background:var(--cream-soft)}

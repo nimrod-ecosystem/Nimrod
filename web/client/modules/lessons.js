@@ -79,7 +79,8 @@ registerModule(
           </div>
           ${isOpen ? `
             <div class="l-body">
-              ${videoHTML(t.video) || '<p class="l-none">No video attached to this topic yet.</p>'}
+              ${videoHTML(t.video) || `<p class="l-none">No video has been chosen for
+                <b>${esc(t.label)}</b> yet. Unlocking still puts its questions in the game.</p>`}
               <div class="l-actions">
                 <button class="l-btn l-primary" data-watched="${esc(t.id)}" ${remaining() ? 'disabled' : ''}>
                   ${done ? 'Already unlocked' : 'I’ve watched it — unlock the questions'}
@@ -94,9 +95,32 @@ registerModule(
       const host = el('[data-list]');
       if (!host) return;
       const n = unlocked().size;
+      // *** SAY "NOT FINISHED YET" ONCE, AT THE TOP, RATHER THAN "BROKEN" ON EVERY CARD. ***
+      //
+      // G12, Mike off the live site: Lessons *"renders as broken rather than unfinished to
+      // anybody who lands on it."* He is right, and both halves of why were copy:
+      //
+      //   * every opened card said "No video attached to this topic yet", which reads as a
+      //     card that failed to load rather than a card nobody has filled in; and
+      //   * the empty-topics line said "add some in this module's settings" — and this module
+      //     DECLARES NO SETTINGS, so it pointed at a panel that does not exist. That is the
+      //     same shape as A14, and a sentence sending somebody to look for a control that was
+      //     never built is worse than saying nothing.
+      //
+      // What is true, and is now what it says: the topics ship with no videos chosen, and the
+      // cards still do their real job — unlocking a topic puts its questions into the game
+      // whether or not a video was watched, which is stated at the top of this file as a
+      // deliberate design decision rather than a gap.
+      const noVideos = topics.length && topics.every((t) => !(t.video && t.video.value));
+      const note = el('[data-unfinished]');
+      if (note) {
+        note.hidden = !noVideos;
+        note.textContent = 'No lesson videos have been chosen yet. The topics below still '
+          + 'work: unlocking one puts its questions into the game.';
+      }
       el('[data-count]').textContent = topics.length
         ? `${n} of ${topics.length} unlocked`
-        : 'No topics yet — add some in this module’s settings.';
+        : 'No topics on this screen yet.';
       host.innerHTML = topics.map(card).join('');
 
       for (const b of host.querySelectorAll('[data-open]')) {
@@ -125,6 +149,7 @@ registerModule(
         mount.innerHTML = `
           <div class="lessons">
             <div class="l-top"><span data-count></span></div>
+            <p class="l-unfinished" data-unfinished hidden></p>
             <div class="l-list" data-list></div>
           </div>`;
 
