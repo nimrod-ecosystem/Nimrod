@@ -46,12 +46,15 @@
 import { registerModule } from '../module.js';
 import { createMediaSourcesClient, resolveListing, mediaUrl } from '../media_sources.js';
 import {
-  MOTIONS, VIDEO_POLICIES, ambientFrame, frameToCss, motionOf,
+  MOTIONS, SCENES, VIDEO_POLICIES, ambientFrame, frameToCss, motionOf,
   usableItems, nextItem, wallpaperMode,
 } from '../wallpaper.js';
 
 const DEFAULTS = {
   sourceId: '', album: '',
+  // `theme` is the behaviour that existed before scenes — the ambient tinted by the profile's
+  // own hue. Default so nothing anybody already set up looks different (A8).
+  scene: 'theme',
   motion: 'gentle',
   allowVideo: 'auto',
   perItemMs: 60000,        // how long one picture stays before the next
@@ -66,6 +69,11 @@ const FADE_MS = 2500;
 
 // `perItemMs` is a CHOICE and it wraps, because a one-switch cursor can only travel one way.
 export const SETTINGS = [
+  // A8: the module had a renderer and no content — one ambient, tinted by whatever the profile
+  // theme happened to be, which is what "a brown moving hue" was. `theme` is the default and is
+  // the old behaviour exactly, so nobody's screen changes because this arrived.
+  { key: 'scene', label: 'Which wallpaper', kind: 'choice', default: 'theme', level: 'standard',
+    options: SCENES.map((s) => ({ value: s.id, label: s.label })) },
   { key: 'motion', label: 'Movement', kind: 'choice', default: 'gentle', level: 'standard',
     options: [
       { value: 'gentle', label: 'gentle — a slow drift' },
@@ -140,7 +148,9 @@ registerModule(
     function paintAmbient() {
       const box = el('[data-ambient]');
       if (!box) return;
-      box.style.background = frameToCss(ambientFrame(now() - t0, { motion: motion(), hueBase: themeHue() }));
+      box.style.background = frameToCss(ambientFrame(now() - t0, {
+        motion: motion(), hueBase: themeHue(), scene: cfg.scene,
+      }));
     }
 
     function startTick() {
