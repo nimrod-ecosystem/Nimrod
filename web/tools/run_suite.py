@@ -130,20 +130,37 @@ def url_for(name):
     return f'{BASE}/dev/{name}_test.html'
 
 
-# THE SUITES PRINT TWO DIFFERENT SHAPES, and reading only one of them is how a green suite gets
-# reported as broken. `12 passed, 3 failed` is the commoner; `ALL PASS — 57 checks` is what
-# `panel_fit`, `trivia`, `wordforge` and `board` print, and the first version of this file called
-# all four of them FAIL. A summary this cannot parse is reported as unfinished, never as a pass:
-# a suite still running says `running…`, which matches neither.
-COUNTS = re.compile(r'(\d+)\s+passed,\s+(\d+)\s+failed')
-ALLPASS = re.compile(r'ALL\s+PASS\D*(\d+)?')
+# *** THERE ARE FOUR SUMMARY SHAPES IN dev/, AND READING ONLY SOME OF THEM MISREPORTS THE REST. ***
+#
+# Counted across every suite in the folder rather than guessed at:
+#
+#   79x   `${failed} FAILED / ${passed} passed`
+#   49x   `ALL PASS — ${passed} checks`
+#    n    `${passed} passed, ${failed} failed`
+#    1    `PASS WITH SKIPS — ${n} checks, ${k} SKIPPED`
+#
+# The first version of this file read only the third and called `panel_fit`, `trivia`,
+# `wordforge` and `board` FAIL while all four were green. The second added `ALL PASS` and then
+# called `walkthrough` FAIL for saying `PASS WITH SKIPS`. Both times the harness was the thing
+# that was broken, which is the failure mode this whole tool exists to remove.
+#
+# ORDER MATTERS: the failure shapes are tried FIRST, because a summary saying `2 FAILED / 40
+# passed` contains the word `passed` and a looser pattern would happily read a pass out of it.
+# A summary none of these match is reported as UNFINISHED, never as a pass — a suite still
+# running says `running…`, which matches nothing here.
+FAILED_OF = re.compile(r'(\d+)\s+FAILED\s*/\s*(\d+)\s+passed', re.I)
+COUNTS = re.compile(r'(\d+)\s+passed,\s+(\d+)\s+failed', re.I)
+PASSY = re.compile(r'(?:ALL\s+PASS|PASS\s+WITH\s+SKIPS)\D*(\d+)?', re.I)
 
 
 def parse_summary(text):
+    m = FAILED_OF.search(text)
+    if m:
+        return int(m.group(2)), int(m.group(1))
     m = COUNTS.search(text)
     if m:
         return int(m.group(1)), int(m.group(2))
-    m = ALLPASS.search(text)
+    m = PASSY.search(text)
     if m:
         return int(m.group(1) or 0), 0
     return None

@@ -102,6 +102,19 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         <ul class="s-nav">
           ${VISIBLE_TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}
         </ul>
+        <!-- B4: "I don't know where the modules tab is." There ISN'T one, and there should not
+             be - /modules.html is a page, not a panel, and building a second copy of it inside
+             the shell would be two catalogs to keep in step. What was missing is a way to GET
+             there: the page was reachable only from the landing nav, which is hidden below
+             860px, and from the wallpapers page. So it is a link, marked as leaving the shell
+             rather than dressed as a tab it is not.
+             NO BACKTICKS IN THIS COMMENT. It lives inside a template literal, and the first
+             draft of it wrote /modules.html in backticks - which closed the string and made
+             home.js a syntax error, which made home_test hang forever with no summary. -->
+        <ul class="s-nav s-out">
+          <li><a class="s-navb s-link" href="/modules.html"
+            title="what each part does, and a live one to try">What you can add ↗</a></li>
+        </ul>
         <div class="s-foot">
           ${email ? `<div class="s-email">${esc(email)}</div>` : ''}
           ${isSignedIn
@@ -432,6 +445,13 @@ export async function mountScreens(root, {
              The descriptions were already declared in every module manifest and were read by
              NOTHING. This is that data, on screen, next to the decision it informs. -->
         <p class="h-modwhat" data-modwhat="${esc(p.id)}">${esc(catalog[0]?.description || '')}</p>
+        <!-- The description answers "what is this"; it cannot answer "what does it LOOK like",
+             which is the other half of deciding whether it helps your mother. The ?m= parameter
+             opens the parts page on this exact one with a live copy of it running, so the link
+             lands on the answer rather than on a list to search. It tracks the picker - see
+             syncModuleWhat. (No backticks here either; see above.) -->
+        <a class="h-modsee" data-modsee="${esc(p.id)}"
+          href="/modules.html?m=${encodeURIComponent(catalog[0]?.type || '')}">See it running ↗</a>
         ${mods.length && makeSettings ? `
         <div class="h-arrange">
           <button class="h-btn h-quiet" data-arrange="${esc(p.id)}" aria-expanded="false">Arrange layout</button>
@@ -445,6 +465,11 @@ export async function mountScreens(root, {
   function syncModuleWhat(sel) {
     const id = sel.dataset.pick;
     const what = listEl.querySelector(`[data-modwhat="${CSS.escape(id)}"]`);
+    // The "see it running" link points at whatever is selected, so it moves with the picker
+    // too. A link that keeps pointing at the first entry after somebody chooses the fourth is
+    // worse than no link — it answers a question they are no longer asking.
+    const see = listEl.querySelector(`[data-modsee="${CSS.escape(id)}"]`);
+    if (see) see.href = `/modules.html?m=${encodeURIComponent(sel.value)}`;
     if (!what) return;
     const m = catalog.find((x) => x.type === sel.value);
     what.textContent = (m && m.description) || '';
