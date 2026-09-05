@@ -130,8 +130,19 @@ export function mountMarkerPanel(root, {
         why it works with an unusual posture and in poor light.</p>
 
       <div class="mk-live">
+        <!-- THE CAMERA IS OFF UNTIL SOMEBODY ASKS FOR IT. G10 — see startCamera below for the
+             whole story. NO BACKTICKS IN THIS COMMENT: it is inside a template literal, and a
+             backtick here closes the string and makes this file a syntax error. That has now
+             happened TWICE in one session, in two different files, and both times the symptom
+             was a suite hanging with no summary rather than anything naming the file. See
+             dev/imports_test.html, which exists because of it. -->
+        <div class="mk-off" data-off>
+          <p>This uses your camera to follow a colored marker.</p>
+          <button type="button" class="mk-start" data-start>Turn the camera on</button>
+          <p class="mk-note" data-starterr role="status" aria-live="polite"></p>
+        </div>
         <canvas class="mk-view" data-view width="${DET_W}" height="${DET_H}"
-                aria-label="camera preview — click the marker"></canvas>
+                aria-label="camera preview — click the marker" hidden></canvas>
         <div class="mk-side">
           <p class="mk-advice" data-advice role="status" aria-live="polite"></p>
           <p class="mk-swatch-row">Looking for
@@ -159,6 +170,58 @@ export function mountMarkerPanel(root, {
   const el = (sel) => root.querySelector(sel);
   const view = el('[data-view]');
   const v2d = view.getContext('2d');
+
+  /**
+   * *** THE CAMERA IS OFF UNTIL SOMEBODY ASKS FOR IT. ***
+   *
+   * G10, from Mike testing the live site: *"Opening Devices immediately triggers a browser
+   * camera permission prompt. On a public demo that is a bad first impression and it is
+   * unprompted."*
+   *
+   * He is right, and the rule was already written into the MICROPHONE half of the same tab:
+   * *"a settings page that turned the microphone on to show you a settings page would be its
+   * own bug."* The camera half did not follow it — `home.js` called `tracker.start()` while
+   * mounting the tab, so arriving at Devices to bind a SWITCH asked for a webcam.
+   *
+   * The button carries the whole prompt now, so what the browser asks and what the person just
+   * pressed are the same question.
+   *
+   * `silent` is the return visit where the browser has already been told yes.
+   *
+   * `silent` is the second case: `navigator.permissions.query({name:'camera'})` reporting
+   * `granted` means starting the stream shows NO prompt, so making somebody press a button to
+   * re-authorise something they already authorised is friction with nothing on the other side
+   * of it. Wrapped in a try because the query is not universally supported — Firefox has no
+   * `camera` descriptor — and anywhere it is missing or unsure, the answer is the button.
+   */
+  async function startCamera({ silent = false } = {}) {
+    const off = el('[data-off]');
+    const err = el('[data-starterr]');
+    if (err && !silent) err.textContent = '';
+    try {
+      await tracker.start();
+      if (off) off.hidden = true;
+      view.hidden = false;
+      render();
+      return true;
+    } catch (e) {
+      console.error('marker: camera', e);
+      // Said on the panel rather than only in the console: refusing the prompt, or having no
+      // webcam at all, is an ordinary answer and the page has to keep working after it.
+      if (err && !silent) {
+        err.textContent = 'The camera did not open. Check that the browser is allowed to use '
+          + 'it, and that nothing else has it open.';
+      }
+      return false;
+    }
+  }
+
+  async function alreadyAllowed() {
+    try {
+      const p = await navigator.permissions.query({ name: 'camera' });
+      return p && p.state === 'granted';
+    } catch { return false; }        // unsupported or unsure: the button asks
+  }
 
   // The three tuning rows, built from the DATA above rather than written out as markup, so the
   // declaration stays the single source of truth for what is adjustable.
@@ -267,6 +330,11 @@ export function mountMarkerPanel(root, {
     const found = tracker.found();
     if (found && found.count) set('center', { x: found.x, y: found.y });
   });
+
+  el('[data-start]').addEventListener('click', () => { startCamera(); });
+  // A return visit where the answer is already yes. Fires and forgets: nothing on this panel
+  // waits for it, and if it never resolves the button is still sitting there.
+  alreadyAllowed().then((yes) => { if (yes && !destroyed) startCamera({ silent: true }); });
 
   el('[data-opt="enabled"]').addEventListener('change', (e) => set('enabled', e.target.checked));
   for (const f of SETTINGS) {
