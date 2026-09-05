@@ -56,6 +56,19 @@ import urllib.request
 
 import websockets
 
+# *** THE OUTPUT IS UTF-8, BECAUSE THE THING BEING PRINTED IS A WEB PAGE. ***
+#
+# A Windows console defaults to cp1252, and a failing check whose text contains a tick, an arrow
+# or an em dash then kills this tool with a UnicodeEncodeError WHILE IT IS REPORTING A FAILURE.
+# That is the worst possible moment to crash: the run is thrown away and the failure it was in
+# the middle of printing is lost. `errors='replace'` rather than a stricter mode for the same
+# reason — a character that cannot be shown must not be able to hide a result.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 BASE = os.environ.get('SUITE_BASE', 'http://localhost:8000').rstrip('/')
 WAIT = float(os.environ.get('SUITE_WAIT', '90'))
 

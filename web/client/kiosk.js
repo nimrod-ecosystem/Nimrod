@@ -124,6 +124,8 @@ export async function mountKiosk(root, {
         <div class="k-actions">
           <button data-act="home" title="back to your screens (H)">⌂ Screens</button>
           <button data-act="next" title="next (→ / space)">Next ▸</button>
+          <!-- Only on an arranged screen; hidden below when there is no layout. See panelNext. -->
+          <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
           <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
           <!-- HUSH. Not a mute: her voice and any cue still come through, only the media
                stops. It is for the ordinary moment when somebody walks in to talk to her and
@@ -688,7 +690,84 @@ export async function mountKiosk(root, {
   // stage, because on a grid there is nothing to swap. Same button, two meanings, and the
   // difference is a property of the screen rather than of the control — which is what keeps it
   // one bar instead of two.
+  /**
+   * *** THE MODULES ON THE SCREEN THAT NO SLOT IS SHOWING. ***
+   *
+   * G9, from Mike testing the live site: *"I added more than three modules to a screen. Only
+   * three appear on the bar and the rest are unreachable."* Measured in `transport_test`: a
+   * `main` preset has three slots, five modules on the profile, and two of them — Quests and
+   * Pond — appear in NO slot, on NO stage and on NO button. `partition()` fills `stageDefs`
+   * only when there is no layout at all, so an unplaced module on an arranged screen is not
+   * hidden, it is absent. (That is also the whole of *"Quests did not appear on the bar"*:
+   * Quests was one of the unplaced ones. With no layout it gets a button like everything else.)
+   *
+   * Leaving a module unplaced is a legitimate thing to do — the composer treats placed and
+   * unplaced as first-class, and "I am not using that one right now" is a real answer. What is
+   * not legitimate is that there was then no way back to it from the screen itself.
+   */
+  function unplacedDefs() {
+    if (!layout) return [];
+    const placed = new Set(layout.slots.filter(Boolean));
+    return profile.modules.filter((m) => !placed.has(m.id)
+      // The HUD pair are not panels. An unplaced camera is the mirror overlay and an unplaced
+      // clock is the corner clock — both already on screen, neither belonging in a slot.
+      && m.type !== 'camera' && m.type !== 'clock');
+  }
+
+  /**
+   * Put an unplaced module into the slot that has focus, and let the one that was there become
+   * unplaced in its turn. Nothing is saved: this is what the screen is showing NOW, and a
+   * reload comes back to the arrangement somebody actually made.
+   *
+   * Swapping rather than adding a slot, because the arrangement is the person's — growing a
+   * `quad` into a five-panel grid on a button press would rewrite a decision they made in the
+   * composer. Swapping says "show me that one instead", which is what pressing its name means.
+   */
+  async function showUnplaced(def) {
+    if (!layout) return;
+    const focused = focusedRec();
+    let i = focused ? layout.slots.indexOf(focused.id) : -1;
+    if (i < 0) i = layout.slots.findIndex(Boolean);
+    if (i < 0) i = 0;
+    const cell = stageEl.querySelector(`[data-slot="${i}"]`);
+    if (!cell) return;
+
+    const outgoingId = layout.slots[i];
+    const outgoing = slotRecs.find((r) => r.id === outgoingId);
+    if (outgoing) {
+      destroyRec(outgoing);
+      slotRecs.splice(slotRecs.indexOf(outgoing), 1);
+    }
+    cell.innerHTML = '';
+    cell.setAttribute('data-kind', def.type);
+    const host = document.createElement('div');
+    host.className = 'k-mod';
+    cell.append(host);
+    layout.slots[i] = def.id;
+    try {
+      slotRecs.push(watchRec(await mountInstance(def, host)));
+      try { runtime?.router?.setFocus?.(def.id); } catch { /* focus is not load-bearing */ }
+      paintFocus(def.id);
+    } catch (err) {
+      // Same rule as the mount loop: a panel that will not start is one broken rectangle, not
+      // a broken screen — and here somebody pressed a button, so it has to say what happened.
+      console.error(`kiosk: ${def.type} failed to start`, err);
+      const oops = document.createElement('div');
+      oops.setAttribute('data-panel-failed', def.type);
+      oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
+        + 'justify-content:center;text-align:center;padding:4vmin;'
+        + 'font:500 clamp(14px,1.9vmin,20px)/1.5 -apple-system,BlinkMacSystemFont,'
+        + 'Segoe UI,Roboto,sans-serif;color:var(--ink-soft,#5d7064)';
+      oops.textContent = `${instanceTitle(def)} could not start. The rest of this screen is fine.`;
+      cell.append(oops);
+    }
+    renderMods();
+  }
+
   function renderMods() {
+    // The panel button lives or dies with the same facts the bar is drawn from, so it is
+    // refreshed here rather than at each of the four call sites that redraw the bar.
+    try { syncPanelBtn?.(); } catch { /* declared later; harmless before first render */ }
     modsEl.innerHTML = '';
     const focusId = focusedRec()?.id;
 
@@ -715,6 +794,18 @@ export async function mountKiosk(root, {
           paintFocus(rec.id);
           renderMods();
         });
+        modsEl.append(b);
+      }
+      // The ones no slot is showing, after the ones that are — same bar, marked as off-screen,
+      // and pressing one brings it in. Without these, a module on this screen had no button at
+      // all. See `unplacedDefs`.
+      for (const def of unplacedDefs()) {
+        const b = document.createElement('button');
+        b.className = 'k-dot k-off';
+        b.textContent = instanceTitle(def);
+        b.dataset.id = def.id;
+        b.title = 'not in this screen’s arrangement — show it in the panel that has focus';
+        b.addEventListener('click', () => { showUnplaced(def); });
         modsEl.append(b);
       }
       return;
@@ -839,19 +930,37 @@ export async function mountKiosk(root, {
   // "next" within the current stage module — the director advances via segment/done,
   // everything else via <type>/next. Only the visible module is mounted, so this
   // never nudges a hidden one.
+  // *** `Next` ADVANCES THE PANEL THAT HAS FOCUS. IT USED TO ADVANCE THE FIRST ONE. ***
+  //
+  // On a laid-out screen this read `slotRecs[0]` — so with focus on the third panel, pressing
+  // Next skipped the FIRST panel's photo. The button and the ring described different screens,
+  // which is the one thing `paintFocus` exists to prevent.
   function nextInPrimary() {
-    // In a laid-out screen there is no "next": every slot is already on screen. Nudge the
-    // first slot instead, so the button still advances a playlist rather than doing nothing.
-    if (layout) {
-      const rec = slotRecs[0];
-      if (!rec) return;
-      if (rec.type === 'director') bus.publish('segment/done', { reason: 'skipped' });
-      else bus.publish(`${rec.type}/next`);
-      return;
-    }
-    if (!stageRec) return;
-    if (stageRec.type === 'director') bus.publish('segment/done', { reason: 'skipped' });
-    else bus.publish(`${stageRec.type}/next`);
+    const rec = layout ? focusedRec() : stageRec;
+    if (!rec) return;
+    if (rec.type === 'director') bus.publish('segment/done', { reason: 'skipped' });
+    else bus.publish(`${rec.type}/next`);
+  }
+
+  // *** MOVING BETWEEN PANELS, WHICH NOTHING COULD DO. ***
+  //
+  // G9, Mike: *"Next does not move between them."* It does not, and it should not — Next
+  // advances the CONTENT of a panel, which is what somebody wants from it on a photo frame.
+  // Two meanings need two controls.
+  //
+  // What was actually missing is that `router.focusNext()` existed and NOTHING in the product
+  // called it: no key, no button. On an arranged screen the only way to change which panel a
+  // switch acts on was to click its name on the bar with a mouse — and the person this is built
+  // for has no mouse. This is that control.
+  //
+  // Only on an arranged screen. Without a layout there is one panel on the stage, `Next` moves
+  // between the modules already, and a second button would be two names for one thing.
+  function panelNext() {
+    if (!layout) return;
+    try { runtime?.router?.focusNext?.(); } catch { /* focus is not load-bearing */ }
+    const id = focusedRec()?.id;
+    if (id) paintFocus(id);
+    renderMods();
   }
 
   // MIRROR MODE (C): make the camera fill the whole screen (the mirror element
@@ -884,6 +993,14 @@ export async function mountKiosk(root, {
   const goHome = () => { location.href = '/home.html'; };
   controlsEl.querySelector('[data-act="home"]').addEventListener('click', goHome);
   controlsEl.querySelector('[data-act="next"]').addEventListener('click', nextInPrimary);
+  const panelBtn = controlsEl.querySelector('[data-act="panel"]');
+  panelBtn.addEventListener('click', panelNext);
+  // Shown for a laid-out screen only, and only when there is more than one panel to move
+  // between — a button that cycles a set of one is a press somebody spends finding that out.
+  function syncPanelBtn() {
+    const n = (runtime?.router?.reachable?.() || []).length;
+    panelBtn.hidden = !layout || n < 2;
+  }
   controlsEl.querySelector('[data-act="mirror"]').addEventListener('click', toggleMirrorFull);
 
   // *** THE HUSH BUTTON. *** Cici has had one; this is its twin.

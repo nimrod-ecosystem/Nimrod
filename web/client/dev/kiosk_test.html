@@ -52,6 +52,14 @@ const press = async (key, ms = 60) => {
   await sleep(ms);
 };
 const stageHas = (sel) => !!root.querySelector('.k-stage ' + sel);
+// Poll for a condition instead of sleeping a guess at how long it takes. Returns either way;
+// the CHECK that follows is what reports a failure, so a timeout here shows up as the real
+// assertion failing rather than as a mysterious throw from a helper.
+const settled = async (fn, ms = 4000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { if (fn()) return true; await sleep(25); }
+  return false;
+};
 const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
 const clockHas = (sel) => !!root.querySelector('.k-clock ' + sel);
 const ds = () => root.querySelector('.kiosk').dataset;
@@ -158,10 +166,21 @@ const ds = () => root.querySelector('.kiosk').dataset;
 
     // ARROW RIGHT is focus-next. With one module mounted at a time, moving focus IS
     // changing the stage — that is what lets a single switch reach every module.
-    await press('ArrowRight', 120);
+    //
+    // *** WAIT FOR THE PANEL, DO NOT SLEEP FOR IT. ***
+    // These two were `press(key, 120)` and they went red under load: `showPrimary` nulls
+    // `stageRec` and only sets it again after two awaited loads, while `primaryType()` falls
+    // back to the DEFINITION — so the stage could read as switched while nothing was mounted,
+    // and the settings-menu checks below then found no focused panel and reported "No panel
+    // selected". Both failures were about the machine being busy and neither was about the
+    // kiosk. A check that goes red under load teaches everybody to read red as normal, which
+    // is a disease this repo has already had.
+    await press('ArrowRight', 20);
+    await settled(() => stageHas('.youtube'));
     check('ArrowRight moves focus, and the stage follows it',
       kiosk.primaryType() !== stageBefore, `still ${kiosk.primaryType()}`);
-    await press('ArrowLeft', 120);
+    await press('ArrowLeft', 20);
+    await settled(() => stageHas('.photos'));
     check('ArrowLeft comes back', kiosk.primaryType() === stageBefore, `${kiosk.primaryType()}`);
 
     // ---- the settings menu, opened by a BINDING ----
