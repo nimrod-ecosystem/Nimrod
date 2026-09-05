@@ -134,7 +134,13 @@ const esc = (s) => String(s == null ? '' : s)
 // ---------- the module ----------
 
 registerModule(
-  { type: 'quests', title: 'Quests', description: 'Points, tasks and rewards' },
+    // `server`, and this is the same value the absent default already produced - declared so it
+    // is a statement rather than a silence. Measured 2026-09-05 with every handle rejecting:
+    // it mounts and renders, but it renders ZEROS. Its whole job is showing what was recorded,
+    // so without the platform it is running and useless, which is precisely what `server`
+    // means for the recovery ladder.
+  { type: 'quests', title: 'Quests',
+    dependsOn: 'server', description: 'Points, tasks and rewards' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now = ctx.now || (() => Date.now());
