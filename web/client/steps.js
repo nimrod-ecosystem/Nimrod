@@ -246,10 +246,19 @@ export const STEPS = [
   // ---- 7 · WHAT IT COSTS ----------------------------------------------------------------
   { id: 'cost-1', scene: 'cost', page: '/', target: null, action: 'none', tour: true,
     settle: 3600,
-    say: 'It is free, it is open source, and your photographs never leave your machine. There '
-       + 'is nothing to buy and nothing to cancel.',
-    note: 'One card, no music sting. "Nothing to cancel" answers the question the viewer has '
-        + 'actually been holding since the first sentence.' },
+    // "There is nothing to buy and nothing to cancel" was REMOVED 2026-09-05, not reworded.
+    // Mike struck that promise: hosted AI and hosted storage are a paid add-on, so the claim
+    // stops being true. The sentence is deleted rather than replaced because C7 says the tour
+    // script needs Mike's pass and is not to be rewritten alone - taking out something that has
+    // become false is a correction; writing new narration in its place would be a rewrite.
+    //
+    // The note below is kept as written so the reasoning it records is not lost, with the part
+    // that referred to the removed line marked. NEEDS MIKE'S PASS: the beat is now shorter, and
+    // `settle` has not been retimed because how long a card sits is his call, not mine.
+    say: 'It is free, it is open source, and your photographs never leave your machine.',
+    note: 'One card, no music sting. (The old second sentence, "nothing to buy and nothing to '
+        + 'cancel", was removed when that stopped being true — it answered the question the '
+        + 'viewer had been holding, so something still needs to. Mike to write it.)' },
 ];
 
 // ---------------------------------------------------------------------------------------
