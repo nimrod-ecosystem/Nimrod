@@ -112,7 +112,11 @@ export function graphicHTML(g) {
 }
 
 registerModule(
-  { type: 'educational', title: 'Educational', description: 'Gentle alphabet, counting and vocabulary, spoken aloud' },
+    // `server`, MEASURED 2026-09-05 with every handle rejecting: it renders "‹ Learning ›" and an
+    // empty stage. That is A9 ("Educational is blank") seen from the other side - the frame is
+    // local, every piece of content is not.
+  { type: 'educational', title: 'Educational',
+    dependsOn: 'server', description: 'Gentle alphabet, counting and vocabulary, spoken aloud' },
   (ctx) => {
     const { mount, bus, state, events, user, profileId } = ctx;
     const speak = ctx.speak || speakDefault;                       // injectable (no audio in tests)

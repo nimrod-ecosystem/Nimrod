@@ -85,7 +85,10 @@ export function graphicHTML(g) {
 }
 
 registerModule(
-  { type: 'interstitials', title: 'Interstitials', description: 'between-video segments — educational (generated) for now' },
+    // `server`, MEASURED 2026-09-05 with every handle rejecting: chrome only ("camera off",
+    // "Skip"). What it exists to play comes from the platform.
+  { type: 'interstitials', title: 'Interstitials',
+    dependsOn: 'server', description: 'between-video segments — educational (generated) for now' },
   (ctx) => {
     const { mount, bus, state, events, user, profileId } = ctx;
     const speak = ctx.speak || speakDefault;         // injectable for tests (no audio)

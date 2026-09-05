@@ -60,7 +60,11 @@ export const DIRECTOR_CONFIG = {
 };
 
 registerModule(
-  { type: 'director', title: 'Lineup', description: 'Rotates videos, personal messages and learning by time of day, so the screen changes on its own' },
+    // `server`, MEASURED 2026-09-05 with every handle rejecting. It renders its chrome - a
+    // "Skip" control - and NOTHING ELSE. It is a container whose job is running a schedule, and
+    // the schedule comes from the platform, so without it there is nothing to direct.
+  { type: 'director', title: 'Lineup',
+    dependsOn: 'server', description: 'Rotates videos, personal messages and learning by time of day, so the screen changes on its own' },
   (ctx) => {
     const { mount, bus, state, user, profileId } = ctx;
     const rootBus = ctx.rootBus || bus;                 // children mount here (re-scoped per child)

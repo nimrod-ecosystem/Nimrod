@@ -114,7 +114,12 @@ export const SETTINGS = [
 ];
 
 registerModule(
+    // `local`, the same as `photos` and for the same reason: the bytes come from a media source
+    // on the person's own machine, never from the platform. MEASURED 2026-09-05 with every
+    // handle rejecting - it renders "Paused" and its controls, so it survives the platform
+    // being down and does not survive the drive being unmounted.
   { type: 'personal', title: 'Personal videos',
+    dependsOn: 'local',
     description: 'Recorded messages from their people. Plays from your machine — nothing is uploaded.',
     settings: SETTINGS },
   (ctx) => {

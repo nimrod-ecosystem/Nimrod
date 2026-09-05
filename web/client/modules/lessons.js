@@ -38,7 +38,15 @@ export function videoHTML(video) {
 }
 
 registerModule(
-  { type: 'lessons', title: 'Lessons', description: 'Watch a short lesson, then answer questions about it' },
+    // `network`, not `server`, and the distinction is the point of having both. MEASURED
+    // 2026-09-05 with every handle rejecting: it still renders its list, gating and titles from
+    // the built-in defaults - 284 characters of real content, better than any other content
+    // module degraded. **But a lesson IS a video, and the videos are YouTube embeds** (see
+    // `videoEl` above). So the platform being down leaves it useful and the INTERNET being down
+    // leaves it a list of things it cannot play. That is exactly what `network` means, and
+    // calling it `server` would have understated how well it survives a platform outage.
+  { type: 'lessons', title: 'Lessons',
+    dependsOn: 'network', description: 'Watch a short lesson, then answer questions about it' },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now = ctx.now || (() => Date.now());
