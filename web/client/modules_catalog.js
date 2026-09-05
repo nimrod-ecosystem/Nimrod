@@ -169,17 +169,23 @@ export const CATALOG = [
   },
   {
     type: 'board',
-    title: 'Talk',
+    // *** "AAC board", not "Talk". *** Mike, 2026-09-06: people searching for this know the
+    // term AAC and nobody recognises "Talk" as the thing they need. The words `AAC` and
+    // `communication board` are in the copy below for the same reason — this page's search
+    // reads `lead`, `why` and `needs`, so a term that appears nowhere in them is a term that
+    // finds nothing.
+    title: 'AAC board',
     // NOT 'comfort'. A board is a tool somebody uses on purpose, and that group promises
     // something to look at.
     group: 'practice',
     use: 'answer',
-    lead: 'Big cards that say the word out loud when they are chosen.',
+    lead: 'An AAC communication board — big cards that say the word out loud when chosen.',
     needs: 'Nothing. A speaker, if you want it heard.',
-    why: 'It is a way to say something when speaking is hard — yes, no, "something else", or a '
-      + 'set of care words. It can be touched, or it can walk the cards one at a time so '
-      + 'somebody with a single switch can answer. It says the word in the room and nowhere '
-      + 'else: it is not a nurse call and does not reach anybody who is not there.',
+    why: 'It is a way to say something when speaking is hard: a set of care words, or just '
+      + 'yes, no and "something else". It can be touched, or it can walk the cards one at a '
+      + 'time so somebody with a single switch can answer. Switch boards from the row above '
+      + 'the cards. It says the word in the room and nowhere else: it is not a nurse call and '
+      + 'does not reach anybody who is not there.',
   },
   {
     type: 'wallpaper',
