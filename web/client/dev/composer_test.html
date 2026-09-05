@@ -283,8 +283,52 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('a cell exists for every slot of the preset',
       document.querySelectorAll('#kioskHost .k-cell').length === 4,
       String(document.querySelectorAll('#kioskHost .k-cell').length));
-    check('the module-switcher dots are gone — everything is already visible',
-      document.querySelectorAll('#kioskHost .k-dot').length === 0);
+    // *** THIS ASSERTION WAS INVERTED ON PURPOSE, AND THE OLD ONE WAS THE BUG. ***
+    //
+    // It used to read "the module-switcher dots are gone — everything is already visible", and
+    // that reasoning is exactly what G4 overturned: true of SWITCHING, wrong about the bar. On
+    // a grid the buttons still exist and pressing one MOVES FOCUS rather than swapping the
+    // stage — same button, two meanings, the difference being a property of the screen rather
+    // than of the control.
+    //
+    // It had been failing since that shipped, which is its own finding: a red check nobody
+    // acts on trains everybody to read red as normal.
+    const dots = [...document.querySelectorAll('#kioskHost .k-dot')];
+    check('on a grid the bar still names the panels — pressing one moves FOCUS, and there is '
+      + 'no stage to swap', dots.length > 0, String(dots.length));
+    // Placed here: clock, photos, quests. The clock declares no verbs, so the router never
+    // focuses it, so a Clock button would do nothing when pressed — and a control that lies
+    // about what it can do costs somebody with one switch a press to find out.
+    check('...and ONLY the panels the router will actually focus get one — no Clock button',
+      !dots.some((b) => /clock/i.test(b.textContent)), dots.map((b) => b.textContent).join(','));
+    check('exactly one of them is marked as the current subject',
+      dots.filter((b) => b.classList.contains('on')).length === 1,
+      dots.map((b) => `${b.textContent}${b.classList.contains('on') ? '*' : ''}`).join(','));
+    {
+      // Pressing a dot must move the subject and NOT tear the grid down. A bar that reflows
+      // the screen under somebody is worse than no bar.
+      //
+      // ON THIS SCREEN THERE IS ONLY ONE FOCUSABLE PANEL, and that is worth stating rather
+      // than working around: clock and quests declare no verbs the router routes, so photos
+      // is the only thing a switch can be pointed at. So the MOVE is asserted where there is
+      // somewhere to move to, and where there is not, the thing worth checking is that the
+      // single button is not a dead one.
+      const cellsBefore = document.querySelectorAll('#kioskHost .k-cell').length;
+      const other = dots.find((b) => !b.classList.contains('on'));
+      (other || dots[0]).click();
+      await sleep(80);
+      const now = [...document.querySelectorAll('#kioskHost .k-dot')];
+      check(other
+        ? 'pressing another panel moves the mark to it'
+        : 'with one focusable panel, pressing its button leaves it focused rather than '
+          + 'clearing the subject',
+        now.find((b) => b.classList.contains('on'))?.textContent
+          === (other || dots[0]).textContent,
+        now.map((b) => `${b.textContent}${b.classList.contains('on') ? '*' : ''}`).join(','));
+      check('...and the grid did not reflow underneath it — nothing was swapped',
+        document.querySelectorAll('#kioskHost .k-cell').length === cellsBefore
+        && kiosk.slotCount() === 3, String(kiosk.slotCount()));
+    }
     check('a PLACED clock is in its slot, not the HUD overlay', !kiosk.hasClock());
 
     // clearing it returns the screen to the old one-at-a-time behavior

@@ -328,6 +328,91 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('a string-valued choice is still a string - the declaration decides, not a rule '
         + 'about numbers', typeof stored.fit === 'string', typeof stored.fit);
     }
+
+    // ---- THE TWO UNIVERSAL SECTIONS, ON THE REAL SURFACE ----
+    //
+    // Mike's screenshot of the LIVE kiosk, 2026-09-05: "SETTING UP FOR …" with no name after
+    // it, and a SCREEN heading whose only row was "Close menu". `settings_test` proves the
+    // shell renders whatever it is handed; THIS proves the kiosk hands it something.
+    {
+      const rows = kiosk.menu.items();
+      const byId = Object.fromEntries(rows.filter((r) => r.id).map((r) => [r.id, r]));
+
+      // WHO. This harness talks to the real server, so the screen has the account's default
+      // person and the lookup SUCCEEDS — which is the path Mike's screen was not on. The
+      // "nobody" and "still looking" states are pure and are asserted in `settings_test`.
+      check('the who heading names the person, rather than trailing off into "…"',
+        /^Setting up for \S/.test(byId.who.label) && !byId.who.label.endsWith('…'),
+        byId.who.label);
+      check('and there is a way to CHANGE who it is for — Mike’s actual complaint was '
+        + 'that there was none', !!byId['who-pick'], rows.map((r) => r.id).join(','));
+      check('the who row sits under the who heading, not adrift in the middle of the menu',
+        rows.indexOf(byId['who-pick']) === rows.findIndex((r) => r.id === 'who') + 1);
+      check('and it says who it is set to NOW, so nobody presses it to find out',
+        (byId['who-pick']?.hint || '').startsWith('now: '), byId['who-pick']?.hint);
+
+      // IT IS A PAGE, NOT A CYCLING FIELD, and that is a safety property rather than a style
+      // one: handing a screen to a person changes whose bindings drive it, and a `choice`
+      // row cycling past three names to reach the fourth would APPLY each one on the way.
+      kiosk.menu.openPage('who');
+      check('the who row opens a page rather than applying a person per press',
+        kiosk.menu.page() === 'who', String(kiosk.menu.page()));
+      kiosk.menu.back();
+      check('and back returns to the list without closing the menu',
+        kiosk.menu.page() === null && kiosk.menu.isOpen());
+
+      // SCREEN. Two real screen-level settings where there was nothing.
+      check('the screen section carries the per-screen theme',
+        !!byId['set:theme'], rows.map((r) => r.id).join(','));
+      check('and the complexity level — the switch that used to have no control at all',
+        !!byId['set:complexity']);
+      check('both are BEFORE the ways out',
+        rows.indexOf(byId['set:theme']) < rows.findIndex((r) => r.id === 'home')
+        && rows.indexOf(byId['set:complexity']) < rows.findIndex((r) => r.id === 'close'));
+
+      // *** THE ESCAPE HATCH, ASSERTED RATHER THAN ASSUMED. ***
+      // A level that hides settings can hide the setting that changes the level. The row is
+      // declared `essential` so it survives its own most restrictive setting — and that is
+      // the only reason it was safe to build the switch at all, so it is checked here rather
+      // than trusted to a comment.
+      // BOUNDED. An unbounded `while` looking for a row that is not there hangs the whole
+      // suite instead of failing it, and a check that can hang is a check nobody trusts.
+      const walkTo = (id) => {
+        for (let i = 0; i < 60 && kiosk.menu.focusId() !== id; i += 1) kiosk.menu.next();
+        return kiosk.menu.focusId() === id;
+      };
+      check('the complexity row is a stop on the one-button walk', walkTo('set:complexity'));
+      const lap = [];
+      for (let i = 0; i < 3 && kiosk.menu.focusId() === 'set:complexity'; i += 1) {
+        kiosk.menu.select();
+        lap.push(kiosk.menu.items().find((r) => r.id === 'set:complexity')?.hint);
+      }
+      check('the level cycles through all three and wraps home',
+        lap.join(',') === 'Everything,Just the essentials,The usual', lap.join(' | '));
+      check('*** AND IT IS STILL THERE AT ITS OWN MOST RESTRICTIVE SETTING *** — the escape '
+        + 'shipped in the same commit as the switch',
+        (() => {
+          for (let i = 0; i < 4 && kiosk.menu.items().find((r) => r.id === 'set:complexity')?.hint
+                 !== 'Just the essentials'; i += 1) kiosk.menu.select();
+          const at = kiosk.menu.items();
+          return !!at.find((r) => r.id === 'set:complexity')
+            && !!at.find((r) => r.id === 'home') && !!at.find((r) => r.id === 'close');
+        })());
+      // ...and put it back, so the sections below see the menu they expect.
+      for (let i = 0; i < 4 && kiosk.menu.items().find((r) => r.id === 'set:complexity')?.hint
+             !== 'The usual'; i += 1) kiosk.menu.select();
+
+      // A PRESS ON A SCREEN SETTING REACHES THE SCREEN'S OWN STORAGE, and the theme is the
+      // one where you can see it land: `applyTheme` runs off the same subscription.
+      check('the theme row is a stop too', walkTo('set:theme'));
+      const wasTheme = kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint;
+      kiosk.menu.select();
+      check('stepping the theme changes the row',
+        !!wasTheme && kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint !== wasTheme);
+      check('and it reaches the document, not just the menu',
+        document.documentElement.style.getPropertyValue('--bg').trim().length > 0,
+        document.documentElement.style.getPropertyValue('--bg'));
+    }
     await press('Escape');
 
     // THE FIELDS FOLLOW THE FOCUSED PANEL. Settings belong to the panel the menu names, so

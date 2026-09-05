@@ -358,8 +358,24 @@ function cell(w, h, label) {
       // before 5am must never be describable as the evening's "night".
       check('the small hours are never called plain "night"',
         !(hour < 5 && said.endsWith(' night')), said);
-      check('it still names the weekday, which is the other half of orienting someone',
-        /monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(said), said);
+      // *** THE PROPERTY, NOT THE LINE IT USED TO BE ON. ***
+      //
+      // This read `said` — the `.when` line — and had been failing since the clock stopped
+      // repeating the weekday there. That change was correct: with the date line showing,
+      // "Saturday afternoon" over "Saturday, September 5" spent half the panel's words saying
+      // the same thing twice, on the one panel whose entire job is orienting somebody.
+      //
+      // What actually matters is that the PANEL names the day, wherever it says it — so that
+      // is what is checked, and the duplication that prompted the change is checked too. An
+      // assertion pinned to the line rather than the property fails on a correct change, and a
+      // check that fails on correct work is a check people learn to ignore.
+      const panel = big.host.textContent.toLowerCase();
+      const days = () => /monday|tuesday|wednesday|thursday|friday|saturday|sunday/g;
+      check('the panel names the weekday somewhere — the other half of orienting someone',
+        days().test(panel), panel.replace(/\s+/g, ' ').slice(0, 120));
+      check('...and names it ONCE, not on two lines out of three',
+        (panel.match(days()) || []).length === 1,
+        JSON.stringify(panel.match(days())));
     }
 
     // ================= no box, no change =================

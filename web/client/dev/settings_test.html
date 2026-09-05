@@ -116,6 +116,71 @@ section('what the menu contains');
 }
 
 // =====================================================================
+// THE TWO UNIVERSAL SECTIONS — the frame was right and EMPTY.
+//
+// Mike, from a screenshot of the live kiosk 2026-09-05: "SETTING UP FOR …" with no name
+// after it, and a SCREEN heading whose only row was "Close menu". Both of those are this
+// file's markup, so both of these are this file's tests.
+section('the universal sections have content, not just headings');
+
+{
+  // The state that was being told as "still loading". A screen handed to nobody is a
+  // finished answer, and rendering it as "…" says the opposite — forever.
+  const items = buildItems({ person: false });
+  check('a screen with NO person says so, rather than showing a permanent "…"',
+    items[0].label === 'Not set up for anybody yet', items[0].label);
+  const still = buildItems({ person: null });
+  check('and "still looking" is STILL a different sentence — the placeholder keeps its job',
+    still[0].label === 'Setting up for …', still[0].label);
+  const named = buildItems({ person: { name: 'Robin' } });
+  check('a resolved person still wins over both', named[0].label === 'Setting up for Robin');
+}
+{
+  const items = buildItems({
+    person: false,
+    whoItems: [{ id: 'who-pick', label: 'Choose who this screen is for', page: 'who' }],
+  });
+  const w = items.find((i) => i.id === 'who-pick');
+  check('a who row is spliced in as a real item', w && w.kind === 'item');
+  check('and it sits UNDER the who heading — a row about who, anywhere else, is not '
+    + 'answering that heading',
+    items.indexOf(w) === items.findIndex((i) => i.id === 'who') + 1,
+    items.map((i) => i.id).join(','));
+  check('it lands ABOVE the subject heading, so the panel section is not interrupted',
+    items.indexOf(w) < items.findIndex((i) => i.id === 'subject'));
+}
+{
+  const items = buildItems({
+    screenItems: [{ id: 'set:theme', label: 'Colours', hint: 'Dusk' }],
+    canFullscreen: true,
+  });
+  const t = items.find((i) => i.id === 'set:theme');
+  check('a screen setting is spliced in as a real item', t && t.kind === 'item');
+  check('and it lands under the SCREEN heading',
+    items.indexOf(t) > items.findIndex((i) => i.id === 'screen'));
+  // The ways out are the LAST things in the list on purpose. A list whose exits sit in the
+  // middle is a list somebody scans past — and on a one-way cursor, past means all the way
+  // round again.
+  check('screen settings come BEFORE full screen, Home and Close — the ways out stay last',
+    items.indexOf(t) < items.findIndex((i) => i.id === 'fullscreen')
+    && items.indexOf(t) < items.findIndex((i) => i.id === 'home')
+    && items.indexOf(t) < items.findIndex((i) => i.id === 'close'));
+}
+{
+  // The slots are read at every paint like `extras`, so a host that throws while building
+  // one must not take the menu with it — the menu is the tool for repairing the broken thing.
+  const host = document.createElement('div');
+  const m = mountSettings(host, {
+    whoItems: () => { throw new Error('boom'); },
+    screenItems: () => { throw new Error('boom'); },
+  });
+  m.open();
+  check('a whoItems()/screenItems() that throws still opens a working menu', m.isOpen());
+  check('and Home is still there', m.items().some((i) => i.id === 'home'));
+  m.destroy();
+}
+
+// =====================================================================
 section('the shell — opening, leaving, and not leaking');
 
 {

@@ -2,249 +2,28 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>every module, actually running</title>
-
-<!-- The module stylesheets. Omitting them made this page mount every module with no CSS, which
-     is not "running them" — it is showing somebody unstyled HTML and calling it the product. -->
-<link rel="stylesheet" href="../modules.css">
-<link rel="stylesheet" href="../settings.css">
+<title>every module, actually running — moved</title>
+<meta http-equiv="refresh" content="0; url=../modules.html?all=1">
 <style>
-  body{font:15px/1.55 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
-    margin:0;padding:24px;color:#0A3323;background:#F7F4D5}
-  h1{font-size:1.35rem;margin:0 0 .3em}
-  .lede{max-width:76ch;color:#3c5346}
-  .warn{margin:16px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;
-    max-width:76ch}
-  .tally{margin:18px 0;padding:12px 14px;background:#fff;border:1px solid #e4e0c2;
-    border-radius:10px;font-weight:700;max-width:76ch}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px;
-    margin-top:18px}
-  .card{background:#fff;border:1px solid #e4e0c2;border-radius:12px;overflow:hidden;
-    display:flex;flex-direction:column}
-  .head{padding:10px 12px;border-bottom:1px solid #ece8cf;display:flex;gap:8px;
-    align-items:baseline;flex-wrap:wrap}
-  .name{font-weight:700}
-  .type{color:#5d7064;font-size:.8rem;font-family:ui-monospace,Consolas,monospace}
-  .verdict{margin-left:auto;font-size:.74rem;font-weight:700;text-transform:uppercase;
-    letter-spacing:.08em;padding:3px 8px;border-radius:99px}
-  .v-ran{background:#dff0e4;color:#1d5c38}
-  .v-empty{background:#fdf0d5;color:#7a5a12}
-  .v-threw{background:#fbe0dc;color:#8d2a1c}
-  .v-none{background:#eee;color:#555}
-  /* `var(--card)`, not `#0A3323`. That hex is `--ink`'s OWN value in the default theme, so
-     every module on this page was drawing `--ink` text on an `--ink` background — a contrast
-     ratio of exactly 1.00, in all five themes, and it did not move when the theme did.
-     Cosmetic, because this is a dev harness, but actively misleading: some of "the text is
-     hard to read" almost certainly came from looking at this page rather than at a real
-     kiosk. `--card` is the surface modules are drawn against, which is now also what the
-     kiosk gives them, so this harness shows what the product shows. */
-  .stage{height:240px;position:relative;background:var(--card);overflow:hidden}
-  .stage > div{position:absolute;inset:0}
-  .foot{padding:9px 12px;font-size:.85rem;color:#3c5346;border-top:1px solid #ece8cf}
-  .needs{color:#5d7064}
-  .err{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;color:#8d2a1c;
-    white-space:pre-wrap;word-break:break-word}
+  body{font:15px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;margin:40px;
+    color:#0A3323;background:#F7F4D5}
+  p{max-width:72ch}
 </style>
 </head>
 <body>
-<h1>Every module, actually running</h1>
-
-<p class="lede">Not a description. This page <b>mounts every module in the catalog</b>, gives each
-one the same context the kiosk gives it, lets it run, and then reports what happened. Everything
-below is the module itself, live, in a 330&times;240 box. Scroll and look at them.</p>
-
-<div class="warn">
-  <b>What this proves and what it does not.</b> <b>DREW</b> means the module mounted without
-  throwing and put pixels on screen. <b>It does not mean the module is correct, useful, or
-  finished</b> — a clock showing the wrong time would still say DREW, and on the first run of
-  this page <code>educational</code> said it while drawing only its arrows around an empty
-  content stage. The numbers on each card are what was measured; the box above them is the
-  actual evidence. This page replaces "I was told it works" with "I can see it running", which
-  is a lower bar than working and a much higher one than a list.
-  <br><br>
-  It runs <b>signed out</b>, on browser storage, with no account and no server data — the same
-  path a stranger gets. Nothing here touches your screens.
-</div>
-
-<div class="tally" id="tally">mounting…</div>
-<div class="grid" id="grid"></div>
-
-<script type="module">
-// modules_live.html — WHAT ACTUALLY RUNS, DEMONSTRATED RATHER THAN CLAIMED.
-//
-// Mike, 2026-09-02: *"Where is the modules page? I want to see what modules actually do anything
-// correctly."* He asked after being handed, repeatedly, summaries of the project's state that
-// turned out to be wrong — a build described as a year old that was three months, a slice plan
-// quoted as current config, a count of test files reported in a way that read as a count of
-// modules.
-//
-// `modules.html` already exists and describes every module in a caregiver's words. That is the
-// wrong artifact for this question, because a description is exactly the kind of thing that had
-// been wrong. **The only answer worth giving is the modules themselves, running, where he can
-// look at them.**
-//
-// So this page is deliberately not a test suite either. A suite reports a number, and a number
-// is another thing to be taken on trust. This mounts them and shows them.
-//
-// ---------------------------------------------------------------------------------------
-// THE HARNESS HAS TO BE FAIR, OR IT IS JUST A NEW WAY TO BE WRONG
-// ---------------------------------------------------------------------------------------
-//
-// Every module gets the SAME context `kiosk.js` builds in `childCtx` — the output bus, the audio
-// arbiter, the camera and mic owners, media sources, state and events factories. Under-providing
-// would produce modules that "fail" here and work fine in the product, which would be a fresh
-// pile of false claims pointed the other way. Where the kiosk supplies something this page
-// genuinely cannot (a live drive socket, so no `callTransport`), that is stated on the card
-// rather than left to look like a defect.
-import { createBus } from '../bus.js';
-import { mountModule, listManifests } from '../module.js';
-import { createOutputBus } from '../output.js';
-import { defaultChannels } from '../output_channels.js';
-import { createAudioBus } from '../audio_bus.js';
-import { createCameraOwner } from '../camera_owner.js';
-import { createMicOwner } from '../mic_owner.js';
-import { createLocalBackend, createLocalMediaSources, seedStarterScreen, clearLocalData }
-  from '../local_store.js';
-import { CATALOG, USE } from '../modules_catalog.js';
-
-// Every module the catalog describes. Files are named for their type, so this list maintains
-// itself — a module added to the catalog appears here without anybody remembering to add it.
-const types = CATALOG.map((c) => c.type);
-await Promise.all(types.map((t) => import(`../modules/${t}.js`).catch((e) => {
-  console.error('could not load module file', t, e);
-})));
-
-const manifests = listManifests();
-const grid = document.getElementById('grid');
-const bus = createBus();
-const audio = createAudioBus();
-const cameraOwner = createCameraOwner();
-const micOwner = createMicOwner();
-
-// Signed out, on browser storage. Seeded so `photos` has the bundled sample media to show and
-// `youtube` has its starter schedule — otherwise two of the most important modules would report
-// EMPTY for the honest reason "nobody gave it anything", which is true and unhelpful.
-await clearLocalData();
-const backend = createLocalBackend();
-const profile = await seedStarterScreen(backend.profiles, backend.makeSettings, backend.makeState);
-const profileId = profile ? profile.id : 'demo';
-const sources = createLocalMediaSources();
-const events0 = backend.makeEvents('output', {}, profileId);
-const output = createOutputBus({ channels: defaultChannels({ mount: document.createElement('div'),
-                                                             events: events0 }) });
-
-// A fixed sequence, so two runs of this page look the same and a difference means something.
-let seed = 20260902;
-const rand = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-
-const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-const entryFor = (t) => CATALOG.find((c) => c.type === t) || {};
-const titleFor = (t) => entryFor(t).title
-  || (manifests.find((m) => m.type === t) || {}).title || t;
-
-const results = [];
-
-for (const type of types) {
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `
-    <div class="head">
-      <span class="name">${esc(titleFor(type))}</span>
-      <span class="type">${esc(type)}</span>
-      <span class="verdict v-none" data-verdict>…</span>
-    </div>
-    <div class="stage" data-stage></div>
-    <div class="foot" data-foot></div>`;
-  grid.append(card);
-
-  const stage = card.querySelector('[data-stage]');
-  const host = document.createElement('div');
-  stage.append(host);
-  const verdict = card.querySelector('[data-verdict]');
-  const foot = card.querySelector('[data-foot]');
-
-  const e = entryFor(type);
-  const needs = e.needs ? `<span class="needs">Needs: ${esc(e.needs)}</span>` : '';
-  const use = USE[e.use] ? ` · ${esc(USE[e.use].label)}` : '';
-
-  let state = 'threw';
-  let detail = '';
-  try {
-    const inst = mountModule(type, {
-      mount: host, bus, rootBus: bus, user: null, profileId, personId: null,
-      instanceId: `${type}-live`,
-      state: backend.makeState(`${type}-live`, {}, profileId),
-      events: backend.makeEvents(`${type}-live`, {}, profileId),
-      makeState: (key, opts) => backend.makeState(key, opts, profileId),
-      makeEvents: (key, opts) => backend.makeEvents(key, opts, profileId),
-      makePersonState: backend.makePersonState,
-      output, audio, micOwner, cameraOwner, sources, rand,
-      // The kiosk builds this from a live drive socket. There is none here, and saying so on
-      // the card is better than a module reporting a failure it does not have.
-      callTransport: null,
-      aim: null,
-    });
-    inst.init();
-    // Let it do whatever it does on its own before judging it. Several of these render on a
-    // timer rather than at init, and a verdict taken too early would libel them.
-    await new Promise((r) => setTimeout(r, 2200));
-    try { inst.onResize?.(); } catch { /* not every module has one */ }
-
-    // *** MEASURE IT, DO NOT JUST ASK WHETHER IT IS NON-EMPTY. ***
-    //
-    // The first version of this check was `childElementCount > 0 || textContent.length > 0`,
-    // and it returned RAN for all twenty-one — which is exactly the flattering green number
-    // this page exists to replace. It was wrong about at least one: `educational` drew its
-    // previous/next arrows and its "Learning" label around a **completely empty content
-    // stage**. Chrome is not content, and a check that cannot tell them apart is another way
-    // of saying "it works" without looking.
-    //
-    // So the card carries the numbers and the verdict is deliberately weak: DREW means pixels
-    // appeared, nothing more. The boxes above are the actual evidence.
-    const els = host.querySelectorAll('*').length;
-    const chars = (host.textContent || '').trim().length;
-    const canvases = host.querySelectorAll('canvas, video, img, svg').length;
-    const controls = host.querySelectorAll(
-      'button, [role="button"], input, select, [data-cell], [data-key]').length;
-    const painted = els > 0 || chars > 0 || canvases > 0;
-    state = painted ? 'ran' : 'empty';
-    detail = painted
-      ? `${els} elements · ${chars} chars of text · ${canvases} canvas/img · ${controls} controls`
-      : 'Mounted without error, but put nothing on screen at all.';
-  } catch (err) {
-    state = 'threw';
-    detail = `${err && err.name}: ${err && err.message}`;
-    console.error(`[${type}] threw`, err);
-  }
-
-  // "DREW", not "ran" and certainly not "passes". The badge is allowed to say only what was
-  // measured: something appeared. Whether it is the right something is what the box is for.
-  verdict.textContent = state === 'ran' ? 'drew' : state === 'empty' ? 'blank' : 'threw';
-  verdict.className = `verdict v-${state}`;
-  foot.innerHTML = (detail ? `<div class="err">${esc(detail)}</div>` : '')
-    + `<div>${needs}${use}</div>`
-    + (type === 'call' ? '<div class="needs">No drive socket on this page, so no call '
-        + 'transport — the kiosk supplies one.</div>' : '');
-  results.push({ type, state });
-}
-
-const n = (s) => results.filter((r) => r.state === s).length;
-// Worded so it cannot be read as a pass rate. "Drew something" is the whole claim.
-document.getElementById('tally').textContent =
-  `${results.length} modules mounted · ${n('ran')} drew something · `
-  + `${n('empty')} drew nothing · ${n('threw')} threw. `
-  + 'Drawing something is not working — look at the boxes.';
-
-// Named out loud, so the two lists that need looking at are not something you have to scroll for.
-const bad = results.filter((r) => r.state !== 'ran');
-if (bad.length) {
-  const p = document.createElement('div');
-  p.className = 'warn';
-  p.innerHTML = '<b>Worth looking at:</b> '
-    + bad.map((r) => `${esc(r.type)} (${r.state})`).join(', ');
-  document.getElementById('tally').after(p);
-}
-</script>
+<h1>This moved into the modules page.</h1>
+<p><a href="../modules.html?all=1">modules.html?all=1</a> — same run, same judging, on the
+public page in the site's own palette.</p>
+<p><b>Why it moved.</b> This harness mounted every module and reported whether it drew anything.
+<code>modules.html</code> described every module and could mount one. Two pages doing the two
+halves of one job — and the half that PROVED anything was a dev file nothing linked to, while
+the page everybody lands on could only describe. The judging now lives in
+<code>module_audit.js</code>, so there is one implementation instead of two that drift, and the
+run happens where somebody can find it.</p>
+<p>The old hardcoded palette went with it. This page set <code>.stage{background:#0A3323}</code>,
+which is <code>--ink</code>'s own value — every module here was drawing ink-coloured text on an
+ink-coloured background at a contrast ratio of exactly 1.00, in all five themes, and it did not
+move when the theme did. Some of &ldquo;the text is hard to read&rdquo; almost certainly came
+from looking at this page rather than at a real screen.</p>
 </body>
 </html>

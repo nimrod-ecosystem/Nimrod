@@ -50,6 +50,7 @@ import { createMediaSourcesClient } from '../media_sources.js';
 import { mountModule } from '../module.js';
 import '../modules/photos.js';
 import '../modules/personal.js';
+import { agentReachable, reportSkipped } from './press_controls.js';
 
 const params = new URLSearchParams(location.search);
 const PHOTOS_AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
@@ -174,6 +175,22 @@ async function freshProfile(type, extra = {}) {
 }
 
 (async () => {
+// *** PREFLIGHT. SEE `agentReachable` FOR WHY THIS IS NOT OPTIONAL. ***
+// Every check in this file drives a real module against a REAL media agent. With neither agent
+// running it reported 24 FAILED — two dozen assertions about a video failing because there was
+// no video. "Cannot run" and "ran and was wrong" must not print the same, or the red stops
+// meaning anything and the next real regression hides inside it.
+{
+  const [okPhotos, okPersonal] = await Promise.all(
+    [PHOTOS_AGENT, PERSONAL_AGENT].map((u) => agentReachable(u)));
+  if (!okPhotos || !okPersonal) {
+    const missing = [!okPhotos && PHOTOS_AGENT, !okPersonal && PERSONAL_AGENT].filter(Boolean);
+    reportSkipped('the media agent(s) this suite drives', missing);
+    HTMLMediaElement.prototype.play = realPlay;
+    if (realSrc) Object.defineProperty(HTMLMediaElement.prototype, 'src', realSrc);
+    return;
+  }
+}
 try {
   const ms = createMediaSourcesClient({ user: USER });
   for (const s of await ms.list()) if (s.label.startsWith('STALL-')) await ms.remove(s.id);
