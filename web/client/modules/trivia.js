@@ -226,7 +226,14 @@ registerModule(
     let at = 0;
     let q = null;
     let highlight = 0;          // which option a scanning switch is pointed at
-    let answered = null;        // the index chosen, or null
+    let answered = null;        // the index of the CORRECT option, once it has been found
+    // *** THE GUESSES ALREADY SPENT ON THIS QUESTION. ***
+    //
+    // G13, Mike: *"partial credit — full point for a first-guess answer, less for each
+    // subsequent guess, so attempting is still rewarded. Same principle as blind-answer
+    // trivia."* A wrong press no longer ends the question; it marks that option and hands the
+    // question back.
+    let misses = [];
     let streak = 0;
     let ledger = null, telemetry = null, session = null;
     let recorder = ctx.recorder || null;
@@ -256,18 +263,27 @@ registerModule(
           <ol class="tv-opts" data-opts>
             ${q.options.map((o, i) => {
               const right = done && i === q.correctIndex;
-              const wrong = done && i === answered && i !== q.correctIndex;
+              // A wrong one STAYS marked and stays out of play for the rest of the question.
+              // Letting it be pressed again would let somebody spend guesses on the same
+              // mistake, and a scan would keep stopping on it.
+              const wrong = misses.includes(i);
               return `<li>
                 <button type="button" class="tv-opt" data-opt="${i}"
                   ${i === highlight ? 'data-on="1"' : ''}
                   ${right ? 'data-right="1"' : ''}${wrong ? 'data-wrong="1"' : ''}
-                  ${done ? 'disabled' : ''}>${esc(o)}</button></li>`;
+                  ${done || wrong ? 'disabled' : ''}>${esc(o)}</button></li>`;
             }).join('')}
           </ol>
-          ${done ? `<p class="tv-said">${answered === q.correctIndex
-              ? 'Correct.'
-              : `The answer was <b>${esc(q.answer)}</b>.`}</p>
-            <button type="button" class="tv-next" data-next>Next question</button>` : ''}
+          ${done
+            ? `<p class="tv-said">Correct.</p>
+               <button type="button" class="tv-next" data-next>Next question</button>`
+            // NOT "the answer was X", and NO score on screen. The question is still open, so
+            // telling them the answer would end it for them; and the header of this file
+            // records Mike's position that a patient-facing score is the thing to avoid. What
+            // partial credit is worth goes to the ledger, not to the person guessing.
+            : (misses.length
+              ? '<p class="tv-said">Not that one — try again.</p>'
+              : '')}
         </div>`;
     }
 
@@ -275,6 +291,7 @@ registerModule(
       at = Math.max(0, Math.min(deck.length - 1, i));
       q = makeQuestion(deck[at], bank, { choices: cfg.choices, rand });
       answered = null;
+      misses = [];
       highlight = 0;
       render();
       // *** THE MARK GOES IN AT THE MOMENT THE QUESTION APPEARS ***, not when it is answered,
@@ -288,36 +305,80 @@ registerModule(
     function moveHighlight(delta) {
       if (!q || answered !== null) return;
       const n = q.options.length;
-      highlight = ((highlight + delta) % n + n) % n;
+      // SKIP THE ONES ALREADY GUESSED. They are disabled, and a scan that kept stopping on a
+      // dead button would spend a switch user's presses on options that cannot be chosen —
+      // which is the same cost the module-input-spec rule about wrapping exists to avoid.
+      // Bounded by `n` so a question with nothing left to try cannot spin forever.
+      for (let step = 0; step < n; step++) {
+        highlight = ((highlight + delta) % n + n) % n;
+        if (!misses.includes(highlight)) break;
+      }
       render();
+    }
+
+    /**
+     * *** WHAT A RIGHT ANSWER IS WORTH, AFTER N WRONG ONES. ***
+     *
+     * `correctPoints` on the first press, one less for each guess already spent, and never
+     * below `tryingPoints` — so attempting always pays something, which is the whole of what
+     * Mike asked for. On the shipped defaults (2 and 1) that reads: two for a first-guess
+     * answer, one for any answer after that.
+     *
+     * BOTH NUMBERS WERE ALREADY SETTINGS, and this is the first thing that awards
+     * `tryingPoints`. It has been declared, defaulted to 1, and offered to a caregiver as
+     * *"Points for reading the answer after a miss"* since the module was written, and nothing
+     * anywhere ever paid it — a setting somebody can change that changes nothing. Reaching the
+     * last remaining option after missing the others IS reading the answer after a miss, so
+     * the label was true all along and is now true of the behaviour as well.
+     */
+    function worth(spent) {
+      return Math.max(Number(cfg.tryingPoints) || 0,
+                      (Number(cfg.correctPoints) || 0) - spent);
     }
 
     function choose(i) {
       if (!q || answered !== null) return;
-      answered = Number(i);
-      const correct = answered === q.correctIndex;
-      streak = correct ? streak + 1 : 0;
+      const chosen = Number(i);
+      if (misses.includes(chosen)) return;       // already spent; the button is disabled anyway
+      const correct = chosen === q.correctIndex;
 
       // The corpus label: what was ASKED and what was PRESSED. Never a claim about what was
       // said aloud — see the header, and `recorder.js`.
+      //
+      // *** EVERY GUESS IS ITS OWN RECORD, WHICH IS WHY RETRYING DOES NOT BREAK THE OLD RULE.
+      // *** The rule was "the answer cannot be taken back — the trial and the corpus mark are
+      // already written, and letting somebody silently overwrite an answer would make both of
+      // them lie." That reasoning is exactly right and it is preserved: nothing is overwritten
+      // here. A second guess APPENDS a second mark and a second trial. What changed is only
+      // that a wrong press no longer ends the question.
       recorder?.mark?.(q.answer, {
         event: 'answered', question: q.question,
-        chose: q.options[answered], correct,
+        chose: q.options[chosen], correct, attempt: misses.length + 1,
       });
-
-      if (correct) {
-        // `source` is what the totals group by, so it is the game's name and nothing else.
-        Promise.resolve(ledger?.award?.({ amount: cfg.correctPoints, source: GAME,
-                                          note: q.question }))
-          .catch((err) => console.error('trivia: points', err));
-      }
-      // The measurement stream, exactly as wordforge writes it, so the progress dashboard picks
-      // this up with no wiring: `concept` is the ANSWER, so "which things does she know" is a
-      // question the existing dashboard can already answer.
       Promise.resolve(telemetry?.log?.({
         game: GAME, session, mode: 'practice', concept: q.answer,
         responded: true, correct, prompt: q.question,
       })).catch((err) => console.error('trivia: telemetry', err));
+
+      if (!correct) {
+        // The question stays open. A streak is a run of CLEAN answers, so one miss ends it
+        // whether or not the next press is right.
+        misses.push(chosen);
+        streak = 0;
+        // Leave the highlight somewhere pressable, or a switch user's next press lands on the
+        // button they just spent.
+        if (misses.includes(highlight)) moveHighlight(1); else render();
+        return;
+      }
+
+      answered = chosen;
+      // A first-guess answer extends the streak; one found after a miss does not, because
+      // `streak` was already reset above on the press that missed.
+      if (!misses.length) streak += 1;
+      // `source` is what the totals group by, so it is the game's name and nothing else.
+      Promise.resolve(ledger?.award?.({ amount: worth(misses.length), source: GAME,
+                                        note: q.question }))
+        .catch((err) => console.error('trivia: points', err));
       render();
     }
 
@@ -348,7 +409,8 @@ registerModule(
     }
 
     return {
-      __probe: () => ({ at, answered, highlight, streak, deck: deck.length,
+      __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length),
+        highlight, streak, deck: deck.length,
                         question: q ? { ...q } : null, bank: bank.length }),
       init() {
         // Both streams, exactly as `wordforge` opens them — same constructors, same arguments,

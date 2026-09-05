@@ -169,19 +169,65 @@ no pipe here
 
   section('answering');
   {
+    // *** G13: A WRONG PRESS NO LONGER ENDS THE QUESTION. ***
+    //
+    // Mike: "partial credit — full point for a first-guess answer, less for each subsequent
+    // guess, so attempting is still rewarded." So a miss marks that option, takes it out of
+    // play, and hands the question back.
+    //
+    // THE OLD RULE THIS SECTION GUARDED IS NOT GONE, and it is worth being precise about why.
+    // It read: "the answer cannot be taken back — the trial and the corpus mark are already
+    // written, and letting somebody silently overwrite an answer would make both of them lie."
+    // That reasoning still holds and is still enforced below: nothing is overwritten, because
+    // every guess APPENDS its own mark and its own trial. What changed is only that the
+    // question stays open.
     const r = rig();
     const q = r.probe().question;
-    r.bus.publish('trivia/select');          // choose whatever is highlighted (index 0)
-    const p = r.probe();
-    check('it is answered', p.answered === 0, String(p.answered));
-    check('...and the right answer is shown either way',
-      /answer was|Correct/.test(r.host.textContent), r.host.textContent.slice(0, 120));
-    // *** THE ANSWER CANNOT BE TAKEN BACK. *** A second press moves ON rather than changing
-    // what was recorded — which matters because the trial and the corpus mark are already
-    // written, and letting somebody silently overwrite an answer would make both of them lie.
+    const wrongIndex = q.options.findIndex((_, i) => i !== q.correctIndex);
+    while (r.probe().highlight !== wrongIndex) r.bus.publish('trivia/next');
+    r.bus.publish('trivia/select');
+    let p = r.probe();
+    check('a wrong press does not end the question', p.answered === null, String(p.answered));
+    check('...it is recorded as a guess spent', p.misses.includes(wrongIndex),
+      JSON.stringify(p.misses));
+    check('...and the panel says to try again, WITHOUT giving the answer away',
+      /try again/i.test(r.host.textContent) && !/answer was/i.test(r.host.textContent),
+      r.host.textContent.slice(0, 140));
+    check('...and no score is put in front of the person guessing',
+      !/\bpoints?\b/i.test(r.host.textContent), r.host.textContent.slice(0, 140));
+
+    // *** THE SAME WRONG BUTTON CANNOT BE SPENT TWICE, and a scan must not stop on it. ***
+    //
+    // Asserted on the BUTTON, not by publishing `select` again — the first version did that and
+    // failed for the right reason: the highlight had already moved on, so the second press
+    // spent a DIFFERENT wrong option. That is correct behaviour, and it meant the check was
+    // measuring something other than what its own name said.
+    const spentBtn = r.host.querySelectorAll('.tv-opt')[wrongIndex];
+    check('the option that was guessed is marked wrong and taken out of play',
+      spentBtn.disabled === true && spentBtn.dataset.wrong === '1',
+      `disabled=${spentBtn.disabled} wrong=${spentBtn.dataset.wrong}`);
+    check('...and a scan does not stop on it',
+      r.probe().highlight !== wrongIndex, String(r.probe().highlight));
+
+    // Now find the right one. It is worth LESS, and that is the whole point of the change.
+    check('a first-guess answer would have been worth correctPoints',
+      DEFAULTS.correctPoints === 2, String(DEFAULTS.correctPoints));
+    check('*** after a miss it is worth less, and never nothing ***',
+      r.probe().worth === Math.max(DEFAULTS.tryingPoints, DEFAULTS.correctPoints - 1)
+        && r.probe().worth > 0,
+      String(r.probe().worth));
+    while (r.probe().highlight !== q.correctIndex) r.bus.publish('trivia/next');
+    r.bus.publish('trivia/select');
+    p = r.probe();
+    check('getting there in the end still finishes the question', p.answered === q.correctIndex,
+      String(p.answered));
+    check('...and a run of clean answers is broken by the miss', p.streak === 0,
+      String(p.streak));
+
+    // Finished means finished: the old invariant, unchanged.
     const before = r.probe().at;
     r.bus.publish('trivia/select');
-    check('a second press advances rather than changing the answer already recorded',
+    check('a press after the answer advances rather than changing what was recorded',
       r.probe().at !== before || r.probe().answered === null,
       JSON.stringify({ before, after: r.probe().at, answered: r.probe().answered }));
     r.inst.destroy();
@@ -212,12 +258,25 @@ no pipe here
       JSON.stringify(asked));
 
     const q = r.probe().question;
+    const firstPressed = r.probe().highlight;
     r.bus.publish('trivia/select');
     const ans = marks.find((m) => m.event === 'answered');
     check('answering is marked too', !!ans, JSON.stringify(marks));
     check('...with what was ASKED', ans.question === q.question, JSON.stringify(ans));
-    check('...and what was PRESSED', ans.chose === q.options[0], JSON.stringify(ans));
+    check('...and what was PRESSED', ans.chose === q.options[firstPressed], JSON.stringify(ans));
     check('...and whether it was right', typeof ans.correct === 'boolean');
+    // *** EVERY GUESS IS ITS OWN MARK. *** This is what lets a question be retried without
+    // making the corpus lie: a second guess does not edit the first mark, it appends a second
+    // one, and the attempt number says which is which.
+    if (!ans.correct) {
+      while (r.probe().highlight !== q.correctIndex) r.bus.publish('trivia/next');
+      r.bus.publish('trivia/select');
+      const all = marks.filter((m) => m.event === 'answered');
+      check('*** a second guess appends a second mark rather than editing the first ***',
+        all.length === 2 && all[0].attempt === 1 && all[1].attempt === 2
+          && all[0].chose !== all[1].chose,
+        JSON.stringify(all));
+    }
 
     // *** THE THING THAT MUST NOT BE THERE. *** A game knows what it asked and what button was
     // pressed. It does not know whether anybody spoke, or what words came out if they did.
@@ -235,8 +294,14 @@ no pipe here
     // because it might be useful later would be exactly what this project does not do.
     const r = rig({ recorder: null });
     check('recording is off by default', DEFAULTS.record === false);
+    const q = r.probe().question;
+    while (r.probe().highlight !== q.correctIndex) r.bus.publish('trivia/next');
     r.bus.publish('trivia/select');
-    check('...and the game plays perfectly well without one', r.probe().answered === 0);
+    // Walks to the right answer rather than pressing index 0 and asserting it stuck: with
+    // partial credit a wrong press leaves the question open, so "answered === 0" was an
+    // assertion about which option happened to be first, not about the game working.
+    check('...and the game plays perfectly well without one',
+      r.probe().answered === q.correctIndex, String(r.probe().answered));
     r.inst.destroy();
   }
 
