@@ -318,7 +318,31 @@ try {
     check('...to where it was aimed, 1:1 — the precision IS the feature',
       Math.abs(probe().cx - r.width * 0.25) < 3, `${probe().cx} vs ${r.width * 0.25}`);
 
-    // A real aim always wins over a glide, so a `next` cannot trap the comet away from her.
+    // *** THE FIRST `seek` LEAVES THE START MENU. IT DOES NOT GLIDE. ***
+    //
+    // This is where the suite went red and stayed red without anybody noticing. A12 gave Comet
+    // a start screen (*"wait and go and comet… both need to open to the menu"*), and the
+    // handler reads `if (startGame()) return;` — so on a freshly mounted panel the first seek
+    // spends itself starting the game. The old test published one seek and asserted a glide,
+    // which had been true before the menu existed and silently stopped being true after.
+    //
+    // **The module was right and the test was wrong**, so the fix is here. And the behaviour
+    // the menu added is now asserted rather than merely worked around, which is the half the
+    // old test could not have caught either way.
+    // `started`, NOT `running`. `running` is the render loop, and A12 deliberately keeps the
+    // sky moving behind the start screen so a panel waiting to be started is never a dead
+    // rectangle — so `running` is true on the menu and asserting it here would be asserting
+    // the wrong thing. `started` is whether anybody has begun playing.
+    check('CONTROL: the panel opens to its start screen, not into play',
+      probe().started === false, JSON.stringify({ started: probe().started, running: probe().running }));
+    bus.publish('comet/seek');
+    await sleep(10);
+    check('*** the first seek STARTS the game rather than steering ***',
+      probe().started === true && probe().steering === false,
+      JSON.stringify({ started: probe().started, steering: probe().steering }));
+
+    // Now in play, and this is the check the section is actually about: a real aim always wins
+    // over a glide, so a `next` cannot trap the comet away from her.
     bus.publish('comet/seek');
     await sleep(10);
     check('CONTROL: a seek starts a glide', probe().steering === true);
