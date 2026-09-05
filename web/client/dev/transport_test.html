@@ -216,6 +216,64 @@ function unreachableChips() {
     root.innerHTML = '';
   }
 
+  // =====================================================================================
+  section('*** G11: choosing a screen must not unseat you from full screen ***');
+  // Mike: "Pressing Screens from the transport bar drops out of full screen back into the
+  // browser window." It did, and it could not not: the button was `location.href =
+  // '/home.html'`, and every browser exits full screen on a navigation by design. The only fix
+  // is not to navigate — `showScreen` already swaps the module set in place.
+  //
+  // So the check is about NAVIGATION, not about the Fullscreen API: a suite cannot enter full
+  // screen without a user gesture, and asserting on `document.fullscreenElement` here would be
+  // a check that can only ever pass. What CAN be asserted is the thing full screen dies of.
+  {
+    const a = await profiles.create('T-one');
+    await profiles.addModule(a.id, 'photos');
+    const b = await profiles.create('T-two');
+    await profiles.addModule(b.id, 'clock');
+    await profiles.addModule(b.id, 'pond');
+
+    kiosk = await mountKiosk(root, { user: USER, profileId: a.id, profiles, bus: createBus() });
+    await sleep(300);
+
+    const home = root.querySelector('[data-act="home"]');
+    check('the bar still has a Screens button', !!home);
+    check('the picker starts closed', root.querySelector('[data-screens]')?.hidden === true);
+
+    // *** WHAT THIS LOOKS LIKE WHEN IT FAILS, SO NOBODY READS IT AS A MYSTERY. ***
+    // Verified by putting the old `location.href = '/home.html'` back: the suite does not
+    // report a failing check, it reports NO SUMMARY — because the click navigates this very
+    // page away and there is nothing left to run. A page cannot watch itself leave. An amber
+    // `no summary` on THIS suite means the Screens button is navigating again.
+    const href = location.href;
+    home.click();
+    await sleep(300);
+    check('*** pressing it does not navigate ***', location.href === href, location.href);
+    check('...it opens a picker over the screen',
+      root.querySelector('[data-screens]')?.hidden === false);
+    check('...and the panels underneath are still there, still running',
+      !!root.querySelector('.k-stage .photos'),
+      root.querySelector('.k-stage')?.innerHTML.slice(0, 40) || 'empty');
+
+    const rows = [...root.querySelectorAll('.k-scr')].map((x) => x.textContent.trim());
+    check('the picker lists the other screen and a way out to the composer',
+      rows.some((t) => /T-two/.test(t)) && rows.some((t) => /Set up/.test(t)), rows.join(' | '));
+    check('...and the screen you are already on is marked and not pressable',
+      !!root.querySelector('.k-scr.on[disabled]'),
+      root.querySelector('.k-scr.on')?.outerHTML.slice(0, 60) || 'none');
+
+    [...root.querySelectorAll('.k-scr')].find((x) => /T-two/.test(x.textContent)).click();
+    await sleep(600);
+    check('*** choosing one swaps the screen in place, still without navigating ***',
+      location.href === href && !!root.querySelector('.k-clock .clock'),
+      `${location.href === href ? 'no nav' : 'NAVIGATED'} · clock=${!!root.querySelector('.k-clock .clock')}`);
+    check('...and the picker put itself away',
+      root.querySelector('[data-screens]')?.hidden === true);
+
+    kiosk.destroy();
+    root.innerHTML = '';
+  }
+
   document.getElementById('summary').textContent = failed
     ? `${failed} FAILED / ${passed} passed`
     : `ALL PASS — ${passed} checks`;
