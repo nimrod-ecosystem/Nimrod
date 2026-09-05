@@ -135,6 +135,26 @@
     border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px 12px;z-index:8;
     transition:opacity .3s ease}
   .k-controls.hidden{opacity:0;pointer-events:none}
+
+  /* THE SCREEN PICKER — a strip above the bar, never a scrim over the panels. See the long
+     note on `toggleScreens` in kiosk.js for why it is a strip: a modal over her photographs is
+     a state only an input can leave, and she cannot give one. This leaves everything playing
+     and visible, and it puts itself away with the bar. */
+  .k-screens{position:absolute;left:50%;bottom:calc(2.2vmin + 58px);transform:translateX(-50%);
+    display:flex;flex-wrap:wrap;justify-content:center;gap:8px;z-index:8;
+    max-width:calc(100% - 4.4vmin);max-height:34vh;overflow:auto;
+    background:rgba(7,18,13,.9);border:1px solid rgba(255,255,255,.14);
+    border-radius:14px;padding:8px 12px}
+  .k-scr{font-size:.82rem;color:#cfe0d6;background:transparent;
+    border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:8px 14px;cursor:pointer;
+    min-height:44px}
+  .k-scr:hover:not(:disabled){background:rgba(255,255,255,.10)}
+  /* The one you are on, marked and not pressable — pressing it would do nothing, and a control
+     that does nothing costs a switch user a press to find out. */
+  .k-scr.on{background:var(--moss);border-color:var(--moss);color:#fff;font-weight:700;
+    cursor:default}
+  .k-scr-out{border-style:dashed;opacity:.85}
+  .k-scr-note{color:#cfe0d6;font-size:.82rem;opacity:.8;align-self:center;padding:0 4px}
   .k-mods{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-width:0}
   .k-dot{font-size:.82rem;text-transform:capitalize;color:#cfe0d6;background:transparent;
     border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer}

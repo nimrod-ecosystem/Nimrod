@@ -136,6 +136,12 @@ export async function mountKiosk(root, {
           <button data-act="fs" title="fullscreen (F)">⛶</button>
         </div>
       </div>
+      <!-- The screen picker. A STRIP above the transport bar, not a scrim over the screen:
+           whatever is playing keeps playing and stays visible while somebody chooses. See
+           toggleScreens below. NO BACKTICKS: this comment is inside a template literal and one
+           closes the string. dev/imports_test.html caught this within seconds of the mistake,
+           which is the third time in one session and the first time it cost nothing. -->
+      <div class="k-screens" data-screens hidden role="group" aria-label="your screens"></div>
       <div class="k-remote" data-remote hidden>Someone is helping from another screen</div>
       <div data-settings></div>
     </div>`;
@@ -990,8 +996,78 @@ export async function mountKiosk(root, {
   // A way OUT. The browser back button was the only route home, which is fine for a
   // paired bedside screen that never leaves the kiosk and wrong for everyone else.
   // It lives in the auto-hiding chrome, so an unattended screen still shows nothing.
+  /**
+   * *** G11: PRESSING `Screens` USED TO LEAVE FULL SCREEN, AND IT COULD NOT NOT. ***
+   *
+   * Mike, off the live site: *"Pressing Screens from the transport bar drops out of full screen
+   * back into the browser window. If the site is itself a module, navigating home should not
+   * unseat you."*
+   *
+   * He is right, and it was not fixable where it was: this was `location.href = '/home.html'`,
+   * and **every browser exits full screen on a navigation, by design** — a page may not inherit
+   * full screen from another one, and the new page cannot re-enter without its own user
+   * gesture. There is no flag for it. The only fix is not to navigate.
+   *
+   * And there was no need to. `showScreen` already swaps the whole module set IN PLACE, for
+   * exactly this reason — `restart.js`'s own note says a full page load *"destroys the audio
+   * bus, the camera owner, the input runtime and the drive socket and rebuilds them"*, which
+   * for a call is seconds of black at the worst moment. Choosing a screen goes through that
+   * path now, so full screen, the arbiters and the socket all survive it.
+   *
+   * *** IT IS A STRIP, NOT A SCRIM, AND THAT IS THE SAFETY ARGUMENT. *** The invariant in
+   * CLAUDE.md is that a screen must never enter a state only an input can leave when the person
+   * in front of it cannot give that input. A modal over her photographs would be exactly that.
+   * This sits above the control bar; the panels keep playing, stay visible, and are still being
+   * driven. Nobody answering it costs nothing but a row of buttons on screen — and it closes
+   * with the control bar's own auto-hide, with Escape, and by pressing Screens again.
+   *
+   * LEAVING is still possible and still leaves full screen, which is correct: the last row goes
+   * to the composer, and going to another page is going to another page.
+   */
+  const screensEl = root.querySelector('[data-screens]');
   const goHome = () => { location.href = '/home.html'; };
-  controlsEl.querySelector('[data-act="home"]').addEventListener('click', goHome);
+  let screensOpen = false;
+
+  async function drawScreens() {
+    let list = [];
+    try { list = (await profiles.list()) || []; } catch (err) {
+      console.error('kiosk: could not list screens', err);
+    }
+    screensEl.innerHTML = '';
+    if (!list.length) {
+      // Offline, signed out, or a demo kiosk with no account. Saying so beats an empty box,
+      // and the way out is still on the row below.
+      const p = document.createElement('div');
+      p.className = 'k-scr-note';
+      p.textContent = 'No other screens to show from here.';
+      screensEl.append(p);
+    }
+    for (const s2 of list) {
+      const b = document.createElement('button');
+      b.className = 'k-scr' + (s2.id === profileId ? ' on' : '');
+      b.textContent = s2.name || 'Screen';
+      b.disabled = s2.id === profileId;
+      b.addEventListener('click', async () => {
+        toggleScreens(false);
+        await showScreen(s2.id);
+      });
+      screensEl.append(b);
+    }
+    const setup = document.createElement('button');
+    setup.className = 'k-scr k-scr-out';
+    setup.textContent = 'Set up screens ↗';
+    setup.title = 'opens the composer — this does leave full screen, because it leaves the screen';
+    setup.addEventListener('click', goHome);
+    screensEl.append(setup);
+  }
+
+  function toggleScreens(want) {
+    screensOpen = want === undefined ? !screensOpen : !!want;
+    screensEl.hidden = !screensOpen;
+    if (screensOpen) drawScreens();
+  }
+
+  controlsEl.querySelector('[data-act="home"]').addEventListener('click', () => toggleScreens());
   controlsEl.querySelector('[data-act="next"]').addEventListener('click', nextInPrimary);
   const panelBtn = controlsEl.querySelector('[data-act="panel"]');
   panelBtn.addEventListener('click', panelNext);
@@ -1160,7 +1236,9 @@ export async function mountKiosk(root, {
       return r ? { type: r.type, title: r.title || r.type } : null;
     },
     fullscreenTarget: root,
-    onHome: goHome,
+    // The menu's own Home row opens the same picker rather than navigating, so there are not
+    // two controls with the same name doing different things. Leaving is the picker's last row.
+    onHome: () => { try { menu.close?.(); } catch { /* noop */ } toggleScreens(true); },
     // THE FOCUSED PANEL'S OWN SETTINGS, declared by the module and rendered by the shell.
     //
     // THE HOST DOES THE WRITING, and that is the whole seam. `settings_fields.js` computes
@@ -1613,7 +1691,17 @@ export async function mountKiosk(root, {
 
   // auto-hide the control bar
   let hideT = null;
-  function poke() { controlsEl.classList.remove('hidden'); clearTimeout(hideT); hideT = setTimeout(() => controlsEl.classList.add('hidden'), 3000); }
+  function poke() {
+    controlsEl.classList.remove('hidden');
+    clearTimeout(hideT);
+    hideT = setTimeout(() => {
+      controlsEl.classList.add('hidden');
+      // The picker goes with the bar it hangs off. This is the "what if nobody answers"
+      // answer for it: left alone, it puts itself away and the screen is back to what it was
+      // doing, with nothing having been decided on anybody's behalf.
+      toggleScreens(false);
+    }, 3000);
+  }
   root.addEventListener('mousemove', poke); poke();
 
   // WHAT LEFT THIS HANDLER, and what stayed.
@@ -1631,7 +1719,7 @@ export async function mountKiosk(root, {
   const onKey = (e) => {
     if (menu.isOpen()) return;               // the menu is driven by the bus, not from here
     if (e.key >= '1' && e.key <= '9') { const i = Number(e.key) - 1; if (i < stageDefs.length) showPrimary(i); else return; }
-    else if (e.key.toLowerCase() === 'h') { goHome(); return; }
+    else if (e.key.toLowerCase() === 'h') { toggleScreens(); return; }
     else if (e.key.toLowerCase() === 'c') toggleMirrorFull();
     else if (e.key.toLowerCase() === 'f') toggleFs();
     else if (e.key === '[') cycleMirrorSize(-1);
