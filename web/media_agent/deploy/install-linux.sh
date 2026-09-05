@@ -4,7 +4,7 @@
 #
 #   sudo ./install-linux.sh /path/to/media-folder [dashboard-origin]
 #
-# e.g.  sudo ./install-linux.sh /home/unclemikemic/cici-media https://bedside.nimrodecosystem.com
+# e.g.  sudo ./install-linux.sh /home/pi/nimrod-media https://bedside.nimrodecosystem.com
 #
 # BIND ADDRESS — safe by default. The service listens on 127.0.0.1 only, because
 # the usual setup is the agent running ON the kiosk machine, which reaches it at

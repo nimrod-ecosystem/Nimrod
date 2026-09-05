@@ -5,13 +5,19 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-# install-linux.sh generates a copy of this with the paths + user filled in. If you
-# edit it by hand, set the python path, the agent.py path, and the login user below.
+# THIS FILE IS A REFERENCE COPY, NOT THE ONE THAT RUNS. install-linux.sh writes its
+# own unit with the python path, the agent.py path and YOUR login name filled in from
+# `SUDO_USER`, so it never reads this. Only edit this one if you are installing by hand
+# — and if you are, the three values below are the three you must change.
+#
+# `User=` MUST be a login that exists on this machine and can read your media folder.
+# It used to carry one developer's own username, which was both a personal detail in a
+# public repository and a default that could only ever work on one machine.
 EnvironmentFile=/etc/nimrod/agent.env
 ExecStart=/usr/bin/python3 /opt/nimrod/web/media_agent/agent.py
 Restart=always
 RestartSec=3
-User=unclemikemic
+User=CHANGE_ME_TO_YOUR_LOGIN_NAME
 
 [Install]
 WantedBy=multi-user.target
