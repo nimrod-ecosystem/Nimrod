@@ -205,6 +205,18 @@ export async function mountKiosk(root, {
   let cursor = null;
   let markerTracker = null;
   let markerState = null;
+  // *** SET FIRST IN `destroy()`, AND READ AFTER EVERY AWAIT THAT BUILDS SOMETHING. ***
+  //
+  // The kiosk resolves its person in the background so a name lookup cannot stop the screen
+  // coming up. That is right, and it means the two things the lookup builds — the person's
+  // binding state and the marker tracker — are constructed AFTER a `destroy()` may already have
+  // run past the lines that would have torn them down. Both then polled the server every 1500ms
+  // about a screen that was gone, one more pair on every mount.
+  //
+  // Measured, not inferred: cycling `mountKiosk` gave 2, 4, 6 outstanding intervals over three
+  // cycles. It is the same race `director.js` had, and it is a shape worth recognising —
+  // *anything built after an await needs to ask whether it is still wanted.*
+  let torn = false;
 
   // ---- MARKER TRACKING AT THE BEDSIDE -------------------------------------------------
   //
@@ -228,12 +240,16 @@ export async function mountKiosk(root, {
     const [{ createMarkerTracker, shouldTrack }, { MARKER_KEY }] = await Promise.all([
       import('./input_marker.js'), import('./marker_panel.js'),
     ]);
+    if (torn) return;                              // the dynamic import is an await like any other
     markerState = createState({
       url: profiles.personStateURL(personId2, MARKER_KEY),
       user,
       cacheKey: `person:${user}:${personId2}:${MARKER_KEY}`,
     });
     await markerState.load().catch(() => {});     // offline: the shipped default is OFF anyway
+    // Torn down while that loaded. Close the handle rather than leaving it polling for a screen
+    // that no longer exists — `destroy()` has already run past its `markerState?.destroy?.()`.
+    if (torn) { try { markerState.destroy?.(); } catch { /* already gone */ } markerState = null; return; }
     markerTracker = createMarkerTracker({
       aim: runtime.aim,
       cameraOwner,
@@ -1216,11 +1232,16 @@ export async function mountKiosk(root, {
         });
       }
       if (makeState || !profiles.personStateURL) return;
+      if (torn) return;
       personOff = await runtime.useState(createState({
         url: profiles.personStateURL(p.person_id, INPUTS_KEY),
         user,
         cacheKey: `person:${user}:${p.person_id}:${INPUTS_KEY}`,
       }));
+      // `useState` guards itself too (see `input_runtime.js`), so this is belt and braces on
+      // purpose: the unsubscribe it hands back is the thing `destroy()` would have called, and
+      // `destroy()` is already past that line.
+      if (torn) { try { personOff?.(); } catch { /* already gone */ } personOff = null; return; }
       await startMarkerTracking(p.person_id);
     } catch {
       /* offline or signed out: the shipped defaults still drive the screen */
@@ -1577,6 +1598,7 @@ export async function mountKiosk(root, {
     toggleMirrorFull,
     setMirror: patchMirror,
     destroy() {
+      torn = true;                 // before anything else — see the flag's declaration
       window.removeEventListener('keydown', onKey);
       root.removeEventListener('mousemove', poke);
       clearTimeout(hideT);
