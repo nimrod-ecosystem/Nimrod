@@ -125,7 +125,14 @@ registerModule(
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
     // Scoped to whose screen this is; see photos.js. Registry survives a server blip.
-    const client = createMediaSourcesClient({ user, cache: true, personId: ctx.personId || null });
+    // `ctx.sources` is injectable, exactly as in `photos.js`, and for the same two reasons:
+    // a signed-out page can hand in its own registry, and a test can drive the failure paths
+    // without a server. This module built its own client unconditionally, so a host supplying
+    // a registry was ignored and the panel reported "No personal-video source connected" while
+    // holding a perfectly good source - which is also why its Retry button had never been
+    // pressed by any test.
+    const client = ctx.sources
+      || createMediaSourcesClient({ user, cache: true, personId: ctx.personId || null });
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {};

@@ -11,6 +11,10 @@
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   #host{width:340px;margin-top:12px}
 </style>
+<!-- REQUIRED, not decoration: the `[hidden]` check below is about a rule in this
+     stylesheet outranking the browser's own, so a page without it would pass while
+     the live screen fails. -->
+<link rel="stylesheet" href="../modules.css">
 </head>
 <body>
 <h1>educational — integration test</h1>
@@ -27,6 +31,7 @@ import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
+import { pressControls } from './press_controls.js';
 import { graphicHTML } from '../modules/educational.js';   // registers 'educational' + exports the pure renderer
 
 const params = new URLSearchParams(location.search);
@@ -54,6 +59,15 @@ function fakeTimers(){
 }
 
 (async () => {
+  // *** PRESS THE CONTROLS A PERSON TOUCHES. ***
+  // This module's arrows were DEAD on 2026-09-05 and this suite was green, because every
+  // check drove the bus TOPIC and none of them pressed the BUTTON. Runs first, and needs
+  // no server - so it says something even when the API checks below cannot run.
+  await pressControls('educational',
+    [{ sel: '[data-next]', topic: 'educational/next', label: 'the next arrow' },
+     { sel: '[data-prev]', topic: 'educational/prev', label: 'the prev arrow' }],
+    check);
+
   try {
     // ── pure renderer (semantic value -> graphic) ────────────────────────────
     check('graphicHTML: number draws numeral + counting dots', /ig-number.*>3<.*ig-dots/s.test(graphicHTML({ type: 'number', value: 3 })));

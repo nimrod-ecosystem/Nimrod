@@ -35,6 +35,7 @@ import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
+import { pressRetry } from './press_controls.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import '../modules/photos.js';   // registers 'photos'
 import { listingFailure } from '../modules/photos.js';
@@ -178,6 +179,9 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     inst.destroy();
     host.remove();
   }
+
+  // The RECOVERY control - the one somebody reaches for when something is already wrong.
+  await pressRetry('photos', check);
 
   try {
     const profiles = createProfilesClient({ user: USER });
