@@ -33,7 +33,7 @@ import { mountHome, TABS, VISIBLE_TABS, mountScreens } from '../home.js';
 import { mountComposer } from '../composer.js';
 import { mountKiosk } from '../kiosk.js';
 import {
-  PRESETS, preset, slotCount, normalizeLayout, isArranged, gridStyle, slotStyle, placement,
+  PRESETS, preset, slotCount, normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle, placement,
 } from '../layout.js';
 import '../modules/clock.js';
 import '../modules/photos.js';
@@ -57,6 +57,62 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 (async () => {
   try {
     // ================= pure: the layout model =================
+    // =====================================================================================
+    // FIRST, and before anything that touches a server: these are pure and they guard three
+    // bugs reported off the LIVE site in one go.
+    section('*** an orphaned slot must not eat the panel that was in it ***');
+    {
+      const mods = [{ id: 'p1', type: 'photos' }, { id: 'c1', type: 'comet' }];
+
+      // CONTROL: an ordinary saved layout resolves to itself.
+      const ok = resolveLayout({ preset: 'main', slots: ['p1', 'c1', null] }, mods);
+      check('CONTROL: a layout whose modules all exist is unchanged',
+        ok && ok.slots[0] === 'p1' && ok.slots[1] === 'c1', JSON.stringify(ok));
+
+      // THE BUG. A slot holding an id that no longer exists used to be nulled and then
+      // skipped in silence — while the stage that would have rendered the module was switched
+      // off precisely BECAUSE a layout existed. The module rendered nowhere at all.
+      const orphan = resolveLayout({ preset: 'main', slots: ['GONE', 'c1', null] }, mods);
+      check('*** an orphaned slot is refilled from the modules with no home ***',
+        orphan && orphan.slots[0] === 'p1', JSON.stringify(orphan && orphan.slots));
+      check('...and the panels that were fine did not move',
+        orphan && orphan.slots[1] === 'c1', JSON.stringify(orphan && orphan.slots));
+
+      // AN INTENTIONALLY EMPTY SLOT IS NOT AN ORPHAN. "Three panels and a gap" is an
+      // arrangement somebody may have meant, so nothing is dropped into a slot that never
+      // held anything.
+      const gap = resolveLayout({ preset: 'main', slots: ['p1', null, null] }, mods);
+      check('*** a slot that was ALWAYS empty stays empty — intent is not overridden ***',
+        gap && gap.slots[1] === null, JSON.stringify(gap && gap.slots));
+
+      // ALL SLOTS ORPHANED. This is the screen that announced "This screen's panels were
+      // removed" while its panel sat in the profile, un-removed. Returning null hands the
+      // caller back to its own no-layout path, which renders the modules that do exist.
+      // Nothing left to place — every slot orphaned AND no module going spare. Note the
+      // module list is empty on purpose: with a spare module the right answer is to REPAIR
+      // rather than to wipe, which is the next check. Getting this wrong the first time was
+      // instructive — the suite reported the repair as a failure when the repair was correct.
+      const dead = resolveLayout({ preset: 'main', slots: ['GONE', 'ALSO-GONE', null] }, []);
+      check('*** a layout that resolves to nothing is NOT a layout ***',
+        dead === null, JSON.stringify(dead));
+
+      // ...but only when there is genuinely nothing to put there.
+      const rescued = resolveLayout({ preset: 'main', slots: ['GONE', 'ALSO-GONE', null] }, mods);
+      check('...unless there are homeless modules, which is a repair rather than a wipe',
+        rescued && rescued.slots.filter(Boolean).length === 2, JSON.stringify(rescued && rescued.slots));
+
+      // A CAMERA OR CLOCK IS NOT SPARE. Unplaced, they are HUD overlays by design, so pulling
+      // one into an orphaned slot would take the corner clock away to fill a hole.
+      const hud = resolveLayout({ preset: 'main', slots: ['GONE', null, null] },
+        [{ id: 'k1', type: 'clock' }, { id: 'cam', type: 'camera' }]);
+      check('*** an unplaced clock or camera is never used to fill a slot ***',
+        hud === null, JSON.stringify(hud && hud.slots));
+
+      check('no layout at all is still no layout', resolveLayout(null, mods) === null);
+      check('an all-empty saved layout is still no layout',
+        resolveLayout({ preset: 'main', slots: [null, null, null] }, mods) === null);
+    }
+
     section('the layout model');
     check('every preset declares its slot count', PRESETS.every((p) => p.slots >= 1));
     check('an unknown preset falls back rather than blanking the screen', preset('nope').id === 'full');

@@ -70,6 +70,45 @@ export function slotStyle(presetId, i) {
   return p.areas && p.areas[i] ? `grid-area:${p.areas[i]};` : '';
 }
 
+/**
+ * *** RESOLVE A SAVED LAYOUT AGAINST THE MODULES THAT ACTUALLY EXIST — AND REPAIR ORPHANS. ***
+ *
+ * `normalizeLayout` correctly nulls a slot whose module id is gone; it cannot render something
+ * that is not there. What it could not know is that downstream, a null slot is skipped
+ * silently AND the fallback stage is switched off whenever a layout exists at all. So a module
+ * that was still in the profile, but whose slot had been orphaned, rendered NOWHERE — not in
+ * its slot, not on the stage.
+ *
+ * Reported off the live site three ways at once: a Photos panel missing from an arranged
+ * screen, an arrangement "not being what renders", and a screen announcing *"This screen's
+ * panels were removed"* while its panel sat in the profile, un-removed.
+ *
+ * Two repairs, and both are repairs rather than preferences:
+ *
+ *   1. **An orphaned slot gets an unplaced module**, if one is going spare. ONLY slots that
+ *      held something and lost it — an intentionally empty slot stays empty, because "three
+ *      panels and a gap" is an arrangement somebody may have meant. This fixes corruption
+ *      without overriding intent. Camera and clock are never treated as spare: an unplaced one
+ *      of those is a HUD overlay by design, not a panel waiting for a home.
+ *   2. **An arrangement that resolves to nothing is not an arrangement.** Returning null hands
+ *      the caller back to its own no-layout path, which renders the modules that do exist.
+ *
+ * Lives here rather than in the kiosk because two callers already resolve layouts — the kiosk
+ * at boot and again on a screen swap — and a third (`view.js`) renders them. One copy.
+ */
+export function resolveLayout(saved, modules = []) {
+  if (!isArranged(saved)) return null;
+  const l = normalizeLayout(saved, modules.map((m) => m.id));
+  const rawSlots = Array.isArray(saved && saved.slots) ? saved.slots : [];
+  const placed = new Set(l.slots.filter(Boolean));
+  const spare = modules.filter((m) => !placed.has(m.id)
+    && m.type !== 'camera' && m.type !== 'clock');
+  for (let i = 0; i < l.slots.length && spare.length; i++) {
+    if (!l.slots[i] && rawSlots[i]) l.slots[i] = spare.shift().id;
+  }
+  return l.slots.some(Boolean) ? l : null;
+}
+
 // Which modules are placed, and which are left over — the composer shows both.
 export function placement(layout, modules = []) {
   const l = normalizeLayout(layout, modules.map((m) => m.id));

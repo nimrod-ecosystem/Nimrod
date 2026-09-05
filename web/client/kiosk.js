@@ -32,7 +32,7 @@ import { createAudioBus } from './audio_bus.js';
 import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
-import { normalizeLayout, isArranged, gridStyle, slotStyle } from './layout.js';
+import { normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
@@ -40,7 +40,7 @@ import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
 import { createHealthWatch } from './health.js';
 import { nextAction, applied, cleared, chooseFallback, DEFAULT_POLICY,
          RECOVERY_SETTINGS } from './recovery.js';
-import { listManifests } from './module.js';
+import { listManifests, getManifest } from './module.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
@@ -412,9 +412,30 @@ export async function mountKiosk(root, {
   const previewLayout = takePreviewLayout(profileId);
 
   const savedLayout = previewLayout || (settings.get().kiosk || {}).layout;
-  let layout = isArranged(savedLayout)
-    ? normalizeLayout(savedLayout, profile.modules.map((m) => m.id))
-    : null;
+  let layout = null;
+
+  // *** A SLOT WHOSE MODULE NO LONGER EXISTS IS AN ORPHAN, AND ORPHANS USED TO EAT PANELS. ***
+  //
+  // `normalizeLayout` nulls any slot holding an id that is not in the profile — correctly, it
+  // cannot render a module that is gone. But two things downstream then conspired:
+  //
+  //   * `mountLayout` skips a null slot with a bare `continue`, silently; and
+  //   * `partition()` only fills `stageDefs` when there is NO layout at all.
+  //
+  // So a module that exists but whose slot was orphaned renders NOWHERE. Not in its slot, and
+  // not on the stage either, because the stage is switched off whenever a layout is present.
+  // A screen composed of Photos, Comet and Clock came up with no Photos panel anywhere and no
+  // error, and a screen whose ONLY module was Photos came up announcing "This screen's panels
+  // were removed" — while the panel sat in the profile, un-removed and unrendered.
+  //
+  // `isArranged` is checked against the RAW saved layout, which is why an all-orphaned layout
+  // still counted as arranged and switched the stage off on its way to rendering nothing.
+  //
+  // Two repairs, and both are repairs rather than preferences:
+  // The resolve-and-repair lives in layout.js, because the kiosk resolves a layout twice (boot
+  // and screen swap) and view.js renders them too — one copy, or they drift.
+  layout = resolveLayout(savedLayout, profile.modules);
+
   if (previewLayout && layout) showPreviewBadge();
 
   let stageDefs = [];
@@ -437,16 +458,37 @@ export async function mountKiosk(root, {
   partition();
 
   // persistent HUD overlays (mounted once, left running)
+  // The HUD overlays — the mirror and the corner clock. Same rule as the slots below, and here
+  // it is worse if broken: this runs during BOOT, so a camera that throws on a machine with no
+  // webcam used to reject before the stage was ever built and leave the whole kiosk on its
+  // loading screen. An overlay is decoration on top of the screen; it cannot be allowed to
+  // prevent the screen.
   async function mountOverlay(def, el) {
     const host = document.createElement('div'); host.className = 'k-mod';
     el.append(host); el.hidden = false;
-    return mountInstance(def, host);
+    try {
+      return await mountInstance(def, host);
+    } catch (err) {
+      console.error(`kiosk: ${def.type} overlay failed to start`, err);
+      // Put the corner back the way it was. A HUD that cannot draw should leave no trace —
+      // an empty translucent rectangle in the corner of a bedside screen is a thing somebody
+      // has to wonder about, and there is nothing they could do about it.
+      host.remove(); el.hidden = true;
+      return null;
+    }
   }
   let cameraRec = cameraDef ? await mountOverlay(cameraDef, mirrorEl) : null;
   let clockRec = clockDef ? await mountOverlay(clockDef, clockEl) : null;
 
   // ---- a LAID-OUT stage: every slot mounted at once, in its grid position ----
   const slotRecs = [];
+  // Which panels threw on mount, so the empty-screen message below can tell "nothing was ever
+  // put here" apart from "what was put here would not start" — two situations that need
+  // completely different things from the person reading them.
+  const failedSlots = [];
+  // A human name for a module WITHOUT mounting it — the manifest is readable from the registry
+  // for exactly this reason. A panel that failed to start has no instance to ask for a title.
+  const instanceTitle = (def) => getManifest(def.type)?.title || def.type;
   async function mountLayout() {
     stageEl.classList.add('k-grid');
     stageEl.setAttribute('style', gridStyle(layout.preset));
@@ -471,7 +513,38 @@ export async function mountKiosk(root, {
       cell.setAttribute('data-kind', def.type);
       const host = document.createElement('div'); host.className = 'k-mod';
       cell.append(host);
-      slotRecs.push(watchRec(await mountInstance(def, host)));
+      // *** ONE PANEL MUST NOT BE ABLE TO TAKE THE SCREEN DOWN. ***
+      //
+      // This `await` used to be bare, and that single missing try/catch produced three of the
+      // bugs reported off the live site at once. `mountInstance` calls `instance.init()`
+      // unguarded, so ANY module throwing on mount rejected here — which aborted the whole
+      // loop. Everything in a LATER slot was never built, and `slotRecs` stayed empty, so the
+      // check below then announced *"This screen's panels were removed"* on a screen whose
+      // panels had not been removed at all. A screen with one module that failed to start
+      // rendered as a screen with nothing on it and a message blaming the person for it.
+      //
+      // Now: the cell says which panel could not start, in that cell, and every other slot
+      // still mounts. That is the honest failure — a broken panel is one broken rectangle,
+      // not a broken screen — and it is the same rule the Devices tab already follows, where
+      // a camera that will not open must not take the switch bindings down with it.
+      //
+      // Deliberately not a modal, never a gate, and it says what to do rather than reporting a
+      // stack trace: this can appear in front of a patient.
+      try {
+        slotRecs.push(watchRec(await mountInstance(def, host)));
+      } catch (err) {
+        console.error(`kiosk: ${def.type} failed to start`, err);
+        failedSlots.push(def.type);
+        host.remove();
+        const oops = document.createElement('div');
+        oops.setAttribute('data-panel-failed', def.type);
+        oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
+          + 'justify-content:center;text-align:center;padding:4vmin;'
+          + 'font:500 clamp(14px,1.9vmin,20px)/1.5 -apple-system,BlinkMacSystemFont,'
+          + 'Segoe UI,Roboto,sans-serif;color:var(--ink-soft,#5d7064)';
+        oops.textContent = `${instanceTitle(def)} could not start. The rest of this screen is fine.`;
+        cell.append(oops);
+      }
     }
 
     // *** A SCREEN WITH NOTHING ON IT MUST SAY SO. ***
@@ -500,9 +573,15 @@ export async function mountKiosk(root, {
         + 'justify-content:center;text-align:center;padding:8vmin;'
         + 'font:500 clamp(18px,2.6vmin,28px)/1.5 -apple-system,BlinkMacSystemFont,'
         + 'Segoe UI,Roboto,sans-serif;color:#cfe0d6';
-      empty.textContent = layout.slots.length
-        ? 'This screen’s panels were removed. Open Screens to add some again.'
-        : 'Nothing has been added to this screen yet. Open Screens to add something.';
+      // THREE DIFFERENT SITUATIONS, THREE DIFFERENT SENTENCES. They used to be two, and the
+      // "removed" one was being shown for the case where nothing had been removed at all —
+      // every panel had failed to start. Telling somebody their panels were removed when they
+      // were not sends them to fix the wrong thing.
+      empty.textContent = failedSlots.length
+        ? `Nothing on this screen could start (${failedSlots.join(', ')}). Open Screens to check it.`
+        : layout.slots.length
+          ? 'This screen’s panels were removed. Open Screens to add some again.'
+          : 'Nothing has been added to this screen yet. Open Screens to add something.';
       stageEl.append(empty);
     }
   }
@@ -517,7 +596,27 @@ export async function mountKiosk(root, {
     stageEl.innerHTML = '';
     const host = document.createElement('div'); host.className = 'k-mod';
     stageEl.append(host);
-    stageRec = watchRec(await mountInstance(stageDefs[primary], host));
+    // Guarded for the same reason as the slots: `mountInstance` runs `init()` unguarded, so a
+    // module that throws used to reject out of here — leaving a blank stage, no message, and a
+    // rejected promise in whatever called this. On a one-module screen that is the entire
+    // display gone. Now the panel says so and the controls below still work, so somebody can
+    // press Screens and get out.
+    try {
+      stageRec = watchRec(await mountInstance(stageDefs[primary], host));
+    } catch (err) {
+      const def = stageDefs[primary];
+      console.error(`kiosk: ${def.type} failed to start`, err);
+      stageRec = null;
+      host.remove();
+      const oops = document.createElement('div');
+      oops.setAttribute('data-panel-failed', def.type);
+      oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
+        + 'justify-content:center;text-align:center;padding:8vmin;'
+        + 'font:500 clamp(18px,2.6vmin,28px)/1.5 -apple-system,BlinkMacSystemFont,'
+        + 'Segoe UI,Roboto,sans-serif;color:#cfe0d6';
+      oops.textContent = `${instanceTitle(def)} could not start. Open Screens to check this screen.`;
+      stageEl.append(oops);
+    }
     // Keep the focus ring in step when the stage was changed by a number key or a dot,
     // or the next switch press would resume from wherever focus was last left.
     runtime?.router.setFocus(stageDefs[primary].id);
@@ -596,7 +695,7 @@ export async function mountKiosk(root, {
       // The incoming screen's own arrangement. A PREVIEW layout is a one-shot for the screen
       // it was handed to and must never follow a swap.
       const sl = (settings.get().kiosk || {}).layout;
-      layout = isArranged(sl) ? normalizeLayout(sl, profile.modules.map((m) => m.id)) : null;
+      layout = resolveLayout(sl, profile.modules);
       await applyModules();
       bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
       return nextId;
