@@ -33,6 +33,8 @@ import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import '../modules/photos.js';   // registers 'photos'
+import { listingFailure } from '../modules/photos.js';
+import { folderError } from '../folder_source.js';
 
 const params = new URLSearchParams(location.search);
 const AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
@@ -52,6 +54,45 @@ const base = (u) => { try { return new URL(u).pathname.split('/').pop(); } catch
 const curSrc = () => { const el = document.querySelector('#host .stage')?.firstChild; return el ? el.src : null; };
 
 (async () => {
+  // *** FIRST, AND BEFORE ANY NETWORK CALL. ***
+  //
+  // Everything below this needs a running media agent and a live API, so on a static server
+  // the suite dies at the first request and reports "0 passed". Placed after that, these seven
+  // checks would never run at all — which is how §E-fail's "wrong words" sat unfixed and
+  // unnoticed for days. The words are pure; they need no server; so they go here.
+  {
+    const src = { label: 'Family photos' };
+
+    // THE BUG THESE GUARD. Every failure used to say "Source X unreachable", which describes a
+    // media agent that has stopped answering. For a folder on THIS device whose permission has
+    // lapsed it is simply wrong, and it sends whoever reads it to check a network for a problem
+    // that is one click away.
+    const perm = listingFailure(folderError('permission', 'x', 'f1'), src);
+    check('*** a lapsed folder permission does not claim the source is unreachable ***',
+      !/unreachable/i.test(perm.text), perm.text);
+    check('...it says the permission lapsed', /permission/i.test(perm.text), perm.text);
+    // "Retry" is ACTIVELY WRONG here: retrying cannot work, because the browser will not
+    // re-grant access without a user gesture aimed at asking for it. The button is the gesture.
+    check('*** ...and it offers Allow rather than Retry, because retrying cannot work ***',
+      perm.action === 'Allow' && perm.retry === false, JSON.stringify(perm));
+
+    const missing = listingFailure(folderError('missing', 'x', 'f1'), src);
+    check('a folder the device no longer has says so, and offers no button to fix it here',
+      /no longer has/i.test(missing.text) && !missing.action && !missing.retry,
+      JSON.stringify(missing));
+
+    const album = listingFailure(folderError('album', 'x', 'f1'), src, 'Holiday');
+    check('a missing album names the album', /Holiday/.test(album.text), album.text);
+
+    // CONTROL: the original sentence survives where it is TRUE. A fix that made every message
+    // friendlier would have thrown away the one case the old wording was right about.
+    const down = listingFailure(new Error('/list -> 500'), src);
+    check('CONTROL: an agent that really is unreachable still says so',
+      /unreachable/i.test(down.text) && down.retry === true, down.text);
+    check('...and so does a failure with no code at all',
+      /unreachable/i.test(listingFailure(null, src).text));
+  }
+
   try {
     const profiles = createProfilesClient({ user: USER });
     const ms = createMediaSourcesClient({ user: USER });

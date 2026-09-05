@@ -97,6 +97,37 @@ const FIELDS = Object.fromEntries(
 );
 const canonical = (key, raw) => (FIELDS[key] ? fieldValue(FIELDS[key], { [key]: raw }) : raw);
 
+// *** WHAT A FAILED LISTING SHOULD SAY, AS A PURE FUNCTION. ***
+//
+// Exported and separated from the panel because THE WORDS ARE THE PRODUCT here. This module
+// reported *"Source X unreachable"* for every failure, including a folder on this very device
+// whose permission had lapsed — which describes a dead network agent and sends whoever reads it
+// to check their wifi for a problem that is one click away. That was recorded in §E-fail as
+// "the wrong words", and it sat there because the branch was buried in a catch block inside a
+// DOM callback, where nothing could reach it to check.
+//
+// `action` is a button beyond Retry. It exists for the permission case, where "Retry" is
+// actively wrong: retrying cannot work, because the browser will not re-grant access without a
+// user gesture aimed at asking for it.
+export function listingFailure(err, source = {}, album = '') {
+  const code = err && err.code;
+  if (code === 'permission') {
+    return { text: 'These photos need permission again.', retry: false, action: 'Allow' };
+  }
+  if (code === 'missing') {
+    return {
+      text: 'This device no longer has that folder. Reconnect it in Media / Sources.',
+      retry: false, action: null,
+    };
+  }
+  if (code === 'album') {
+    return { text: `No album “${album}” in that folder.`, retry: true, action: null };
+  }
+  // Anything else genuinely is "we could not reach it" — a real agent that stopped answering,
+  // a server that 500ed. The original sentence, now only where it is true.
+  return { text: `Source “${source.label}” unreachable`, retry: true, action: null };
+}
+
 registerModule(
   // CRITICAL, and it is not a compliment - it is the audit's threshold. CLAUDE.md: *"PHOTOS
   // outrank every game/feature."* Somebody may be at this screen around the clock and it is their
@@ -154,15 +185,29 @@ registerModule(
     // picture somebody was looking at. Over an EMPTY stage a full panel is right; there
     // is nothing to obscure and something has to explain the emptiness. Over a photo it
     // becomes a small corner chip.
-    function setStatus(text, showRetry = false) {
+    // `action` adds ONE button beyond Retry: `{ label, run }`. It exists for the folder
+    // permission case, where "Retry" is exactly the wrong word — retrying does nothing, because
+    // the browser will not re-grant access without a gesture aimed at asking for it.
+    function setStatus(text, showRetry = false, action = null) {
       const s = mount.querySelector('[data-status]');
       if (!s) return;
       s.hidden = !text;
       s.classList.toggle('chip', !!stage()?.dataset.showing);
       if (text) {
-        s.innerHTML = `<span>${text}</span>` + (showRetry ? ` <button data-retry>Retry</button>` : '');
+        s.innerHTML = `<span>${text}</span>`
+          + (action ? ` <button data-action>${escapeHtml(action.label)}</button>` : '')
+          + (showRetry ? ` <button data-retry>Retry</button>` : '');
         s.querySelector('[data-retry]')?.addEventListener('click', () => reload());
+        // The click IS the user gesture the permission prompt requires. That is the whole
+        // reason this is a button on the panel rather than something the module retries on a
+        // timer: no amount of retrying can produce a gesture.
+        s.querySelector('[data-action]')?.addEventListener('click', () => action.run());
       }
+    }
+
+    function escapeHtml(t) {
+      return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     // ------------------------------------------------------------------------------
@@ -371,7 +416,34 @@ registerModule(
       try {
         listing = await resolveListing(source, cfg.album);
       } catch (e) {
-        if (seq === loadSeq) setStatus(`Source “${source.label}” unreachable`, true);
+        if (seq !== loadSeq) return;
+        // The words come from `listingFailure` so they can be checked without a browser; this
+        // half is only the wiring. See §E-fail for what they used to be.
+        const f = listingFailure(e, source, cfg.album);
+        if (f.action === 'Allow') {
+          setStatus(f.text, false, {
+            label: 'Allow',
+            run: async () => {
+              setStatus('Asking…');
+              try {
+                const { requestFolderAccess } = await import('../folder_source.js');
+                // The click IS the user gesture the prompt requires — which is the whole
+                // reason this is a button and not a retry on a timer.
+                const res = await requestFolderAccess(source.id);
+                if (res === 'granted') { reload(); return; }
+                // Refused or dismissed. Leave the button there: somebody who clicked the wrong
+                // thing must be able to try again without going to find a menu.
+                setStatus('Permission was not given.', false,
+                  { label: 'Allow', run: () => reload() });
+              } catch (err2) {
+                console.error('photos: requesting folder access', err2);
+                setStatus('That folder could not be opened.', true);
+              }
+            },
+          });
+        } else {
+          setStatus(f.text, f.retry);
+        }
         return;
       }
       if (seq !== loadSeq) return;

@@ -156,21 +156,50 @@ function revokeFor(sourceId) {
 // Returns the SAME shape as media_sources.resolveListing so photos.js cannot tell which
 // kind of source it is holding: {album, albums, items:[{id,name,path,kind,size,mtime,url,
 // sourceId}], count}. `album` is one level deep, matching the agent's ?album=<sub>.
+// *** THE FAILURES CARRY A CODE, NOT JUST A SENTENCE. ***
+//
+// These used to be plain Errors with a message, and the only caller could not tell them apart —
+// so `photos.js` reported every one of them as *"Source X unreachable"*, which describes a dead
+// network agent. A folder needing one click and a media agent that has stopped answering are
+// completely different problems with completely different repairs, and a person reading the
+// wrong one goes and checks their wifi.
+//
+//   'permission'  the handle is there, the grant lapsed. One click fixes it.
+//   'missing'     the handle is gone from storage entirely (site data cleared). Reconnect it.
+//   'album'       the sub-folder named by `album` is not there any more.
+export function folderError(code, message, sourceId) {
+  const err = new Error(message);
+  err.code = code;
+  err.sourceId = sourceId;
+  return err;
+}
+
 export async function resolveFolderListing(source, album = '') {
   const row = await getRow(source.id);
-  if (!row || !row.handle) throw new Error(`folder source "${source.label}": no longer stored`);
+  if (!row || !row.handle) {
+    throw folderError('missing', `folder source "${source.label}": no longer stored`, source.id);
+  }
 
   const perm = await row.handle.queryPermission({ mode: 'read' });
   if (perm !== 'granted') {
     // Deliberately an error, not an empty list: "you need to allow access again" and
     // "this folder is empty" must never look the same to the person setting it up.
-    throw new Error(`folder source "${source.label}": permission is "${perm}"`);
+    throw folderError('permission',
+      `folder source "${source.label}": permission is "${perm}"`, source.id);
   }
 
   let dir = row.handle;
   if (album) {
     for (const part of String(album).split('/').filter(Boolean)) {
-      dir = await dir.getDirectoryHandle(part);       // throws if it is gone — caller reports
+      // CODED like the two above. `getDirectoryHandle` throws a bare NotFoundError, which the
+      // panel would otherwise report as the source being unreachable — sending somebody to
+      // check a network when an album was renamed.
+      try {
+        dir = await dir.getDirectoryHandle(part);
+      } catch {
+        throw folderError('album',
+          `folder source "${source.label}": no album "${album}"`, source.id);
+      }
     }
   }
 
