@@ -32,7 +32,8 @@ import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
-import { mountModule } from '../module.js';
+import { mountModule, getManifest } from '../module.js';
+import { normalizeField } from '../settings_fields.js';
 import { createPointsLedger, sumBySource } from '../points.js';
 import { createTelemetry, byConcept, byBand, bands as bandsOf, summarize } from '../telemetry.js';
 import {
@@ -67,6 +68,58 @@ const fixedRand = seeded(20260817);
 (async () => {
   try {
     // ================= pure =================
+    // FIRST, AND DELIBERATELY SO: this section needs no server, and every section below
+    // it does. Placed at the end it never ran at all on a static test server — the suite
+    // died on `/api/profiles` several sections earlier, so seven checks that were written
+    // to protect a real defect were silently never executed. A check that only runs in the
+    // one environment nobody runs it in is not a check.
+    // =====================================================================================
+    section('*** every knob this module obeys is reachable from the settings menu ***');
+    {
+      // WHY THIS SECTION EXISTS. F4 asked for the daily points cap to be "available as a
+      // per-profile setting defaulting off". `dailyCap: 0` shipped and the row was marked
+      // done — but the manifest passed no `settings` array at all, so nothing could turn a
+      // cap ON from anywhere. A setting that defaults off and cannot be switched on is not a
+      // setting, it is a constant, and nothing in the suite noticed for days.
+      const m = getManifest('wordforge');
+      const declared = (m.settings || []).map(normalizeField).filter(Boolean);
+
+      const undeclared = Object.keys(DEFAULTS).filter((k) => !declared.some((f) => f.key === k));
+      check('*** every key in DEFAULTS is declared, so no live config is unreachable ***',
+        undeclared.length === 0, `unreachable: ${undeclared.join(', ')}`);
+
+      // THE DRIFT THIS CATCHES is quiet and nasty: the menu shows one default, the module
+      // uses another, and the row a caregiver reads is a lie about what is in force until
+      // they touch it.
+      const drift = declared.filter((f) => (f.key in DEFAULTS)
+        && JSON.stringify(f.default) !== JSON.stringify(DEFAULTS[f.key]));
+      check("*** ...and the menu's default for each IS the module's own ***",
+        drift.length === 0,
+        drift.map((f) => `${f.key} menu=${JSON.stringify(f.default)} module=${JSON.stringify(DEFAULTS[f.key])}`).join(' · '));
+
+      const invented = declared.filter((f) => !(f.key in DEFAULTS));
+      check('...and nothing is offered that the module does not read',
+        invented.length === 0, invented.map((f) => f.key).join(', '));
+
+      // The F4 row itself, asserted rather than assumed.
+      const cap = declared.find((f) => f.key === 'dailyCap');
+      check('F4: the daily cap defaults OFF', cap && cap.default === 0, JSON.stringify(cap && cap.default));
+      check('*** F4: ...and it can actually be turned on ***',
+        !!cap && cap.cycleable && (cap.options || []).some((o) => o.value > 0),
+        JSON.stringify(cap && { cycleable: cap.cycleable, options: (cap.options || []).map((o) => o.value) }));
+
+      // `topics` is NOT config — it arrives from the shared bank snapshot. Offering it would
+      // be a control the next bank refresh silently overwrites.
+      check('`topics` is not offered as a setting, because it is not module config',
+        !declared.some((f) => f.key === 'topics'));
+
+      // A control a switch user cannot operate must SAY so rather than pretend, which is the
+      // rule photos.js states for `album`.
+      const subject = declared.find((f) => f.key === 'subject');
+      check('a text field reports that it is not cycleable rather than faking the affordance',
+        !!subject && subject.cycleable === false, JSON.stringify(subject && subject.cycleable));
+    }
+
     section('content format');
     const words = parseWords(`# comment
 obsolete | no longer used | The phone became obsolete.
