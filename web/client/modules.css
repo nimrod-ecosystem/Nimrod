@@ -69,6 +69,70 @@
  * and the next full-bleed module written would have inherited the same bug. */
 .k-mod{position:relative}
 
+/* *** THE FITTING CONTRACT: EVERY ELEMENT A MODULE IS MOUNTED INTO, ON EVERY PAGE. ***
+ *
+ * `mod-host` is added by `mountModule` itself, not written into any page's markup. That is the
+ * point of it: `.k-mod` above fixed containment for the kiosk and `view.js`, and the SAME class
+ * had to be remembered by every other host — so `modules.html`'s try stage, which is where Mike
+ * actually found this, had `overflow:hidden` and no scroll of its own.
+ *
+ * WHAT MIKE FOUND, live, on 2026-09-06, all in one sitting: Comet's Start button below the fold
+ * and unreachable; Trivia's question and answers cut off with no scrollbar; Word Forge's choices
+ * invisible; a maths answer submitted and the result rendering off-screen; Sprint's controls
+ * below the fold. Six modules, one defect — a host that clips.
+ *
+ * *** SCROLLING IS THE FLOOR, NOT THE GOAL. *** A module SHOULD fit; several of them are being
+ * made to. But "fits" is a judgement that depends on the box, the theme, the font size and the
+ * length of the question, and it will be wrong somewhere. What must never depend on a judgement
+ * is whether the Start button can be reached at all. `auto` costs nothing when the module fits —
+ * no scrollbar is drawn — and it is the difference between a cramped panel and a broken one.
+ *
+ * `min-width/min-height:0` because these hosts are almost always flex children, and a flex item
+ * refuses to shrink below its content by default: without it a long question makes the PANEL
+ * grow and push its neighbours off the grid rather than scrolling inside its own box. */
+.mod-host{position:relative;overflow:auto;min-width:0;min-height:0}
+
+/* *** THE FOUR MODULES THAT STILL DID NOT FIT, AND THE ONE SHAPE THEY SHARE. ***
+ *
+ * With the scroll floor above, `fit_test` at 420x300 — a quadrant of a small screen — left four
+ * modules overflowing: `bank` by 210px, `trivia` by 43, `wordforge` by 28, `lessons` by 6.
+ * Reachable, because the panel scrolls; still worse than they need to be.
+ *
+ * They are all built the same way, and it is a good way: a header that says where you are, a
+ * body that is the actual content, and sometimes a footer with the button that moves you on.
+ * When such a panel scrolls AS A WHOLE, scrolling down to the answers takes the QUESTION off
+ * screen, and scrolling to the last answer takes the Next button with it. So the fix is not
+ * "make the text smaller" — it is to scroll the BODY and pin the rest, which is what these
+ * layouts were already describing.
+ *
+ * Scoped to `@container cell`, so it applies only where a host has declared a fixed box
+ * (`mod-box`). On a page that lets a module be as tall as it likes — the composer preview, a
+ * test harness that forgets to opt in — nothing changes and nothing needs to.
+ *
+ * ONE RULE, FOUR SELECTORS, ON PURPOSE. Four bespoke rules would be four things to keep in
+ * step, and the next module with a header and a body would get a fifth. */
+@container cell (min-height: 1px){
+  .tv,.wordforge,.lessons,.bk{height:100%;min-height:0;display:flex;flex-direction:column}
+  /* The body is the only part that scrolls. `min-height:0` is what lets a flex child shrink
+     below its content at all — without it the list simply pushes the footer out of the box,
+     which is the bug rather than the fix. */
+  .tv .tv-opts,.wordforge .wf-body,.lessons .l-list{flex:1 1 auto;min-height:0;overflow:auto}
+  /* `.tv-opts` is a grid, and a grid stretched by `flex:1` stretches its ROWS — four answer
+     buttons in a tall panel would each become a quarter of the panel. The 58px touch target is
+     deliberate (somebody pressing with poor aim) and must not grow into a slab either. */
+  .tv .tv-opts{align-content:start}
+  /* The bank is the same shape wearing different clothes: heading and help at the top, the
+     paste area in the middle, validation output underneath. So the TEXTAREA is its body, and it
+     takes whatever room is left rather than demanding a fixed 300px — which alone overflowed a
+     300px panel before a word of the surrounding copy was drawn.
+     `height`, not only `min-height`, and that is worth writing down: relaxing `min-height`
+     first changed the measured overflow by exactly ZERO, because `<textarea rows="14">` gets
+     its height from the ROW COUNT, and a floor that is no longer binding does not lower a
+     height something else is setting. `resize:vertical` still works, so anybody who wants a
+     bigger editor can drag it. */
+  .bk .bk-text{flex:1 1 auto;min-height:90px;height:auto}
+}
+
 /* modules.css — shared component styles for module internals + the theme palette
    variables. Linked by kiosk.html (the product surface). index.html (the dev
    harness) still carries its own inline copy; consolidating it onto this file is a

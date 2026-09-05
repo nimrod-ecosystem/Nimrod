@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>fit — every module, in the box it was given, and again when the box changes</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* The kiosk's own cell, class for class. Copied from kiosk.html rather than invented, so
+     what is measured here is what a screen does. If those rules change and these do not, this
+     suite starts measuring a layout nobody ships — which is why the copy is called out. */
+  .k-stage{position:relative;display:flex}
+  .k-stage.k-grid{display:grid;gap:8px}
+  .k-stage.k-grid .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden}
+  .k-stage.k-grid .k-cell .k-mod{flex:1;min-width:0;display:flex}
+  .k-stage.k-grid .k-cell .k-mod > *{flex:1;min-width:0}
+  .k-stage .k-mod{flex:1;min-width:0;display:flex;background:var(--card);border-radius:14px}
+  .k-stage .k-mod > *{flex:1;min-width:0}
+  /* NOTE what is NOT here: `overflow`. The kiosk used to set `hidden` on `.k-stage .k-mod` and
+     `auto` on the grid variant; both are gone, and `mod-host` — added by `mountModule` — carries
+     the scroll floor for every host instead. If a copy of `overflow:hidden` ever comes back to a
+     host rule it will outrank `mod-host` on specificity and clip silently, which is why the
+     first check in each group asserts the host actually scrolls. */
+  #pen{margin-top:20px}
+  #pen .k-stage{border:1px solid #ddd8b4;border-radius:10px;margin-bottom:10px}
+  .cap{font-size:11px;color:#6b7a70;font-family:ui-monospace,monospace}
+</style>
+</head>
+<body>
+<h1>fit — every module, in the box it was given, and again when the box changes</h1>
+<p><b>G6.</b> Mike, testing the live site on 2026-09-06: Comet's Start button below the fold and
+unreachable, Trivia's answers cut off with no scrollbar, Word Forge's choices invisible, the maths
+result rendering off-screen, Sprint's controls below the fold. And <i>“the same module does not
+resize when its panel does”</i> — Comet keeps its mount-time field size when a panel goes full
+screen.</p>
+<p>Those are one defect with two halves, and this suite is one section per half:
+<b>nothing a module draws may be unreachable</b>, and <b>a module must re-fit when its box
+changes</b>. Every module in the registry is measured, not a chosen few — the point of a general
+fix is that it is general.</p>
+<p>Needs the server: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="pen"></div>
+
+<script type="module">
+import { listManifests } from '../module.js';
+import { createTryHost } from '../module_try.js';
+import '../modules/algebra.js';
+import '../modules/bank.js';
+import '../modules/board.js';
+import '../modules/call.js';
+import '../modules/camera.js';
+import '../modules/clock.js';
+import '../modules/comet.js';
+import '../modules/counter.js';
+import '../modules/educational.js';
+import '../modules/lessons.js';
+import '../modules/personal.js';
+import '../modules/photos.js';
+import '../modules/pond.js';
+import '../modules/pressgame.js';
+import '../modules/presslog.js';
+import '../modules/progress.js';
+import '../modules/quests.js';
+import '../modules/sprint.js';
+import '../modules/trivia.js';
+import '../modules/wallpaper.js';
+import '../modules/wordforge.js';
+import '../modules/youtube.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// `director` and `view` mount OTHER modules and own their own sub-layout; `interstitials` is
+// retired. Measuring a host as if it were a panel says nothing about either.
+const SKIP = new Set(['director', 'view', 'interstitials']);
+
+function makeCell(w, h) {
+  const stage = document.createElement('div');
+  stage.className = 'k-stage k-grid';
+  stage.style.cssText = `width:${w}px;height:${h}px;grid-template-columns:1fr;grid-template-rows:1fr`;
+  const cell = document.createElement('div');
+  cell.className = 'k-cell mod-box';
+  const host = document.createElement('div');
+  host.className = 'k-mod';
+  cell.append(host); stage.append(cell);
+  const cap = document.createElement('div');
+  cap.className = 'cap';
+  document.getElementById('pen').append(cap, stage);
+  return { stage, cell, host, cap, size(w2, h2) { stage.style.width = `${w2}px`; stage.style.height = `${h2}px`; } };
+}
+
+// How far past the bottom (or right) of its host a module's content reaches. Two pixels of
+// slack because sub-pixel layout rounds, and a one-pixel overhang is not a control somebody
+// cannot press.
+function overflow(host) {
+  return { y: host.scrollHeight - host.clientHeight, x: host.scrollWidth - host.clientWidth };
+}
+function scrolls(host) {
+  const s = getComputedStyle(host);
+  return /auto|scroll|overlay/.test(s.overflowY) || /auto|scroll|overlay/.test(s.overflowX);
+}
+
+// What a module would have to change for it to have noticed its box. A canvas module's backing
+// store is the honest signal; a flow module's is the size of its own root.
+function signature(host) {
+  const cv = host.querySelector('canvas');
+  if (cv) return `canvas:${cv.width}x${cv.height}`;
+  const root = host.firstElementChild;
+  if (!root) return 'empty';
+  const r = root.getBoundingClientRect();
+  return `root:${Math.round(r.width)}x${Math.round(r.height)}`;
+}
+
+(async () => {
+  const host = await createTryHost();
+  const types = listManifests().map((m) => m.type).filter((t) => !SKIP.has(t)).sort();
+
+  // =====================================================================================
+  section('*** nothing a module draws may be unreachable ***');
+  // A cramped panel on purpose: 420x300 is roughly a quadrant of a small screen, and it is the
+  // size at which every module Mike named went wrong. A module is allowed to be bigger than its
+  // box — that is what a long question with six answers IS — but the part that does not fit has
+  // to be reachable, and on the live site it was not, because the host clipped and did not
+  // scroll.
+  const cramped = [];
+  for (const type of types) {
+    const c = makeCell(420, 300);
+    c.cap.textContent = `${type} — 420x300`;
+    try { host.mount(type, c.host); } catch (e) { c.cap.textContent += ` (would not start: ${e.message})`; continue; }
+    cramped.push({ type, c });
+  }
+  await sleep(2500);                     // several draw on a timer; judging early libels them
+  for (const { type, c } of cramped) {
+    const o = overflow(c.host);
+    const over = o.y > 2 || o.x > 2;
+    // TWO CHECKS, NOT ONE, AND THE SPLIT IS THE POINT. The first is the contract — the host
+    // scrolls, so nothing can be unreachable no matter what the module does. The second is
+    // whether this particular module actually needed it. A module that overflows still passes
+    // the contract; it is reported separately so "reachable" is never mistaken for "fits".
+    check(`${type}: its host scrolls, so nothing it draws is unreachable`, scrolls(c.host),
+      `overflow-y is ${getComputedStyle(c.host).overflowY}`);
+    check(`${type}: fits 420x300 without needing the scrollbar`, !over,
+      `overflows by ${o.x}x${o.y}px`);
+  }
+
+  // =====================================================================================
+  section('*** a module re-fits when its box changes ***');
+  // This is the half no host was doing at all. `onResize` is in the module contract and the
+  // kiosk never called it — only `app.js` did, and only on a WINDOW resize. A panel going full
+  // screen does not resize the window, so Comet kept its mount-time field.
+  //
+  // Nothing here calls `onResize` by hand. That is the whole test: the box changes and the
+  // module is expected to have found out on its own.
+  for (const { type, c } of cramped) {
+    const before = signature(c.host);
+    c.size(880, 620);
+    await sleep(400);
+    const after = signature(c.host);
+    const o = overflow(c.host);
+    c.cap.textContent = `${type} — 420x300 -> 880x620 · ${before} -> ${after}`;
+    if (before === 'empty') continue;      // nothing on screen; there is nothing to re-fit
+    // *** NO ESCAPE CLAUSE ON PURPOSE. *** The first version of this read
+    // `before !== after || o.y <= 2`, and that second half made it unfailable for every module
+    // that happened not to overflow — which is most of them. It reported Comet as passing while
+    // Comet was the module the defect was named after. A check that cannot fail is how two
+    // defects survived a previous session in this repo.
+    check(`${type}: notices the box grew`, before !== after,
+      `signature unchanged at ${after} while the box went 420x300 -> 880x620`);
+  }
+
+  document.getElementById('summary').textContent =
+    `${passed} passed, ${failed} failed`;
+})().catch((e) => {
+  console.error(e);
+  document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+});
+</script>
+</body>
+</html>
