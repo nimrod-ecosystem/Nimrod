@@ -118,7 +118,6 @@ registerModule(
     let ripples = [];
     let cx = -1, cy = -1;
     let theme = null;
-    let observer = null;
     const offs = [];
 
     // A person driving with a switch has no pointer, so `select` has to land SOMEWHERE.
@@ -277,10 +276,15 @@ registerModule(
         }));
 
         document.addEventListener('visibilitychange', applyActive);
-        if (typeof ResizeObserver !== 'undefined') {
-          observer = new ResizeObserver(() => { resize(); applyActive(); });
-          observer.observe(mount);
-        }
+        // The private `ResizeObserver` that used to live here is gone. It watched `mount` and
+        // called `onResize`'s body, which is now exactly what `mountModule` does for EVERY
+        // module — two modules had independently walled off the same corner (this one and
+        // `board.js`), which is the tell that the wall belonged in the host. `board.js` keeps
+        // its own because it watches an INNER element for a different reason.
+        //
+        // Proven rather than assumed: with the host observer disabled, `comet` and `pressgame`
+        // fail `fit_test`'s "notices the box grew" and this module still passes — because of
+        // this observer. With the host observer on and this one removed, all three pass.
         state?.subscribe?.((s) => { cfg = { ...DEFAULTS, ...(s || {}) }; });
       },
 
@@ -291,7 +295,6 @@ registerModule(
         stop();
         offs.forEach((off) => { try { off(); } catch { /* already gone */ } });
         offs.length = 0;
-        observer?.disconnect();
         document.removeEventListener('visibilitychange', applyActive);
         mount.innerHTML = '';
       },

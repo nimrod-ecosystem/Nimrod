@@ -44,7 +44,13 @@
    * panels on it, and they already set their own colours against it. Scoped to `.k-stage` so
    * they are untouched. */
   .kiosk{position:fixed;inset:0}
-  .k-stage .k-mod{background:var(--card);color:var(--ink);border-radius:14px;overflow:hidden}
+  /* `overflow` is NOT set here any more. `mountModule` adds `mod-host` to whatever element a
+     module is mounted into, and that class carries `overflow:auto` — the scroll floor that
+     keeps a Start button below the fold reachable instead of clipped. This rule outranked it
+     (two classes to one) on the SINGLE-PANEL stage, which is the full-screen case, so a module
+     too tall for a full-screen panel had nowhere to go. `auto` still clips to the rounded
+     corner, which is all `hidden` was doing here. */
+  .k-stage .k-mod{background:var(--card);color:var(--ink);border-radius:14px}
   /* WHICH PANEL THE NEXT PRESS WILL ACT ON. Drawn on the CELL, outside the panel's own box, so
      it never covers the content — a ring over somebody's photograph would be the wrong trade.
      `outline` rather than `border` because a border would resize the cell and shift the grid
@@ -63,7 +69,8 @@
   .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex}
   .k-stage.k-grid{display:grid;gap:2vmin}
   .k-stage.k-grid .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden}
-  .k-stage.k-grid .k-cell .k-mod{flex:1;min-width:0;display:flex;overflow:auto}
+  /* `overflow:auto` was here and is now on `mod-host`, for every host rather than this one. */
+  .k-stage.k-grid .k-cell .k-mod{flex:1;min-width:0;display:flex}
   .k-stage.k-grid .k-cell .k-mod > *{flex:1;min-width:0}
   .k-stage .k-mod{flex:1;min-width:0;display:flex}
   .k-stage .k-mod > *{flex:1;min-width:0}
