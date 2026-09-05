@@ -41,7 +41,9 @@
 //   * IT STOPS WHEN IT IS NOT VISIBLE. A canvas animating behind a hidden panel is battery and
 //     heat on a Pi that is on 24/7, for a picture nobody is looking at.
 
-import { registerModule } from '../module.js';
+import { registerModule, getManifest } from '../module.js';
+import { mountSettings } from '../settings.js';
+import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
 
 const DEFAULTS = {
@@ -133,6 +135,7 @@ registerModule(
     const calm = () => cfg.calm || reducedMotion;
 
     let root = null, canvas = null, c2d = null, scoreEl = null, menuEl = null;
+    let menu = null;          // the universal settings menu, mounted inside this panel
     // Hearts caught this sitting. COUNTED ALWAYS, SHOWN ONLY IF ASKED — the readout is the
     // setting, not the counting, so turning the score on mid-session does not start from zero
     // and lose what already happened.
@@ -279,7 +282,11 @@ registerModule(
 
     function enterMenu() {
       started = false;
+      // The container carries the darkened sky; the menu inside it carries the rows. Both,
+      // because the scrim's own backdrop is scoped to the panel and the gradient behind it is
+      // what keeps the sky readable through the menu rather than blacked out.
       if (menuEl) menuEl.hidden = false;
+      try { menu?.open?.(); } catch (err) { console.error('comet: menu open', err); }
       paintScore();
     }
 
@@ -289,6 +296,10 @@ registerModule(
       if (started) return false;
       started = true;
       caught = 0;
+      // Close it first, then hide the container. The menu holds a focus trap and key
+      // listeners while it is open, and hiding the box around it would leave those live over
+      // a game somebody is now playing.
+      try { menu?.close?.(); } catch (err) { console.error('comet: menu close', err); }
       if (menuEl) menuEl.hidden = true;
       paintScore();
       return true;
@@ -551,27 +562,61 @@ registerModule(
         scoreEl.hidden = true;
         root.appendChild(scoreEl);
 
+        // *** IT OPENS TO ITS OWN SETTINGS MENU — THE UNIVERSAL ONE. ***
+        //
+        // A12 was built as a bespoke start screen: a title, a line of description and a Start
+        // button. Mike's correction, 2026-09-04: that is not what "open to the menu" meant. A
+        // game should open to ITS SETTINGS, so somebody can set it up before playing rather
+        // than being dropped into a fixed configuration.
+        //
+        // So this is `settings.js` — the same menu, the same one-switch cursor, rendering this
+        // module's own declared `settings` array. Building a second settings panel next to the
+        // universal one is the trap this project has fallen into before; the fix is to use it.
+        //
+        // `inline: true` keeps it inside this panel. Without that it is `position: fixed` and a
+        // game on a grid kiosk would black out the photographs beside it to ask about itself.
+        // `includeHome: false` because from inside one panel, "Home" would mean navigating the
+        // whole kiosk away — not this panel's to offer, and already on the shell's own menu.
+        //
+        // WHAT SURVIVES FROM A12, because it was right: the sky keeps animating behind this,
+        // the way out is the `back` verb, and nothing is recorded until somebody starts.
         menuEl = document.createElement('div');
         menuEl.className = 'cm-menu';
         menuEl.hidden = true;
-        const h2 = document.createElement('h2');
-        h2.textContent = 'Comet';
-        const p = document.createElement('p');
-        p.textContent = 'Move the comet through the sky and touch the hearts.';
-        const startBtn = document.createElement('button');
-        startBtn.type = 'button';
-        startBtn.className = 'cm-start';
-        startBtn.textContent = 'Start';
-        const hint = document.createElement('div');
-        hint.className = 'cm-hint';
-        hint.textContent = 'A switch, a key, or a tap will start it.';
-        menuEl.append(h2, p, startBtn, hint);
         root.appendChild(menuEl);
-        const onStart = (e) => { e.preventDefault(); audioInit(); startGame(); };
-        startBtn.addEventListener('click', onStart);
-        offs.push(() => startBtn.removeEventListener('click', onStart));
-        // A tap anywhere on the panel starts it too, so the button is a signpost rather than
-        // the only door — the same reason the canvas is a press source in pressgame.
+        menu = mountSettings(menuEl, {
+          inline: true,
+          includeHome: false,
+          person: () => null,
+          subject: () => ({ type: 'comet', title: 'Comet' }),
+          // START IS THE FIRST ROW, so the shortest path through this menu is still "press
+          // once and play". Somebody who wants to change nothing pays one press for the
+          // settings being here at all.
+          extras: () => [{ kind: 'item', id: 'cm-start', label: 'Start' }],
+          fields: () => fieldItems(fieldsFor(getManifest('comet'), null), {
+            values: () => state?.get?.() || {},
+            level: 'standard',
+            onStep: (key, value) => { state?.set?.({ [key]: value }); },
+          }),
+          // CLOSING THE MENU IS STARTING THE GAME, however it was closed — the Start row, the
+          // Close row, Escape, `back`, or a tap on the darkened sky. There is exactly one way
+          // out of this panel and it leads into play, so the menu can never become a room with
+          // no door, and the panel can never sit with the menu gone and the game not begun.
+          //
+          // `onSelect` receives the ITEM, not an id — and it never sees `close` at all,
+          // because `activate` handles that and returns first. Both of which is why the close
+          // half is wired through `onClose` rather than guessed at here.
+          onSelect: (item) => { if (item && item.id === 'cm-start') { audioInit(); startGame(); } },
+          onClose: () => { audioInit(); startGame(); },
+        });
+        offs.push(() => { try { menu.destroy(); } catch { /* already gone */ } });
+        // A tap on the SKY starts it, so the menu is a signpost rather than the only door —
+        // the same reason the canvas is a press source in pressgame.
+        //
+        // Deliberately bound to the canvas and not to the panel: the menu covers the canvas
+        // while it is open, so a tap meant for a settings row lands on the menu and cannot
+        // also be read as "start". Bound one level up it would make the settings unusable by
+        // touch — every attempt to change one would start the game instead.
         const onDown = () => { audioInit(); startGame(); };
         canvas.addEventListener('pointerdown', onDown);
         offs.push(() => canvas.removeEventListener('pointerdown', onDown));
