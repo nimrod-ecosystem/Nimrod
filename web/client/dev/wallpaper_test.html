@@ -48,7 +48,8 @@ second, after the flash rate.</p>
 
 <script type="module">
 import {
-  MOTIONS, MAX_LUM_RATE, ambientFrame, frameToCss, motionOf, peakLumRate,
+  MOTIONS, MAX_LUM_RATE, SCENES, SCENE_IDS, sceneOf,
+  ambientFrame, frameToCss, motionOf, peakLumRate,
   videoAllowed, usableItems, nextItem, wallpaperMode, VIDEO_POLICIES, meanLumRate,
 } from '../wallpaper.js';
 import { createHeldSignal, HELD_BEGIN, HELD_END } from '../held.js';
@@ -132,6 +133,48 @@ try {
     check('...which is exactly why the flash check measures a STOP, not the average',
       peakLumRate('gentle') > 0, String(peakLumRate('gentle')));
     check('*** "still" does not move at all ***', peakLumRate('still') === 0);
+
+    // *** AND EVERY SCENE, NOT JUST THE ONE THIS WAS WRITTEN FOR. ***
+    //
+    // A8 added default wallpapers (G13: "the wallpaper module renders a brown moving hue --
+    // it works and has no content"). A scene supplies colour and nothing else -- it cannot
+    // reach `amp` or `cycleMs` in DRIFT, which is what MAX_LUM_RATE is a statement about -- so
+    // in principle every scene inherits the proven rate. THIS IS WHAT TURNS "in principle"
+    // into a number: a future scene that reached for an amplitude would fail here rather than
+    // shipping a faster animation to a room nobody is watching.
+    for (const sc of SCENES) {
+      for (const m of MOTIONS) {
+        const rate = peakLumRate(m, { scene: sc.id });
+        check(`scene "${sc.id}" at "${m}" stays under the ceiling`,
+          rate <= MAX_LUM_RATE, `peak=${rate.toFixed(5)}/s`);
+      }
+    }
+    // The scenes must actually differ, or they are one wallpaper with six names. Compared on
+    // the STOPS at t=0 rather than on the config, so a scene wired up but never reaching the
+    // renderer would fail.
+    const looks = SCENES.map((sc) => JSON.stringify(
+      ambientFrame(0, { motion: 'gentle', hueBase: 210, scene: sc.id }).stops));
+    check('*** the scenes are actually different wallpapers ***',
+      new Set(looks).size === SCENES.length, `${new Set(looks).size} distinct of ${SCENES.length}`);
+    // `theme` has to keep taking the profile's hue, which is the whole reason it stays the
+    // default: no screen anybody already set up changes because scenes arrived.
+    // Prefixed names: this block shares a scope with checks above it, and `a`, `b` and `c`
+    // were already taken — the file would not parse, and `imports_test` named it in seconds.
+    const themeHue90 = ambientFrame(0, { motion: 'gentle', hueBase: 90, scene: 'theme' }).stops[0].h;
+    const themeHue300 = ambientFrame(0, { motion: 'gentle', hueBase: 300, scene: 'theme' }).stops[0].h;
+    check('"theme" still follows the profile hue',
+      Math.round(themeHue90) === 90 && Math.round(themeHue300) === 300,
+      `${themeHue90} / ${themeHue300}`);
+    // ...and a named scene must NOT, or choosing one would do nothing on a themed screen.
+    const seaHue90 = ambientFrame(0, { motion: 'gentle', hueBase: 90, scene: 'sea' }).stops[0].h;
+    const seaHue300 = ambientFrame(0, { motion: 'gentle', hueBase: 300, scene: 'sea' }).stops[0].h;
+    check('...and a named scene does not', seaHue90 === seaHue300, `${seaHue90} / ${seaHue300}`);
+    // An unknown id must fall back rather than blank the screen — a saved scene whose name was
+    // removed is an ordinary thing to find in a state row.
+    check('an unknown scene falls back to the default instead of blanking',
+      sceneOf('no-such-scene').id === SCENES[0].id, sceneOf('no-such-scene').id);
+    check('...and the exported id list matches the scenes',
+      SCENE_IDS.join(',') === SCENES.map((x) => x.id).join(','), SCENE_IDS.join(','));
 
     // Pure: a wallpaper whose frame depended on anything but t could not be checked this way.
     const a = ambientFrame(12345, { motion: 'gentle' });

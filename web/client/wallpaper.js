@@ -95,6 +95,55 @@ const DRIFT = {
   still:  { cycleMs:      0, amp: 0,     spinMs:       0, hueSwing:  0, hueMs:      0 },
 };
 
+/**
+ * *** THE DEFAULT LIVE WALLPAPERS (A8). ***
+ *
+ * Mike, on the module: *"I'm not sure what wallpaper is doing aside from a green wallpaper. It
+ * is supposed to be live wallpapers. I guess we'll need to make some default ones."* And again
+ * on the live site: *"the wallpaper module renders a brown moving hue — it works and has no
+ * content."*
+ *
+ * Both are the same fact. There was exactly ONE ambient, and its hue came from the profile
+ * theme — so what somebody saw was whatever colour their theme happened to be, drifting. That
+ * is a renderer, not content.
+ *
+ * A SCENE CHANGES ONLY COLOUR, NEVER MOTION, AND THAT IS THE WHOLE SAFETY ARGUMENT. This file
+ * exists because a full-screen animation running unattended for hours in front of somebody with
+ * a brain injury is where photosensitivity actually bites, and the property that makes it safe
+ * lives in `DRIFT` — the amplitude and the cycle length, which `MAX_LUM_RATE` is a statement
+ * about, and which `peakLumRate` measures. A scene supplies `hue`, `sat`, `base` and `spread`
+ * and CANNOT reach any of those numbers. So every scene added here inherits the proven rate,
+ * and the suite checks each one rather than trusting that.
+ *
+ * `theme` is first and is the default: it keeps the existing behaviour exactly, so no screen
+ * anybody has already set up changes because this arrived.
+ *
+ *   hue     null means "take the profile theme's hue" — the old behaviour.
+ *   sat     saturation of the stops. Lower reads as haze, higher as colour.
+ *   base    the lightness the drift moves around. Lower is a darker room.
+ *   spread  degrees between the three stops. Wider is a more visible gradient.
+ */
+export const SCENES = [
+  { id: 'theme', label: 'Follows the screen’s colours', hue: null, sat: 0.34, base: 0.32, spread: 12 },
+  // Named for what they look like rather than for their hue, because "210°" means nothing to
+  // anybody choosing one from a menu with a switch.
+  { id: 'dusk',    label: 'Dusk — deep blue', hue: 224, sat: 0.42, base: 0.26, spread: 16 },
+  { id: 'sea',     label: 'Sea — blue-green', hue: 186, sat: 0.38, base: 0.30, spread: 18 },
+  { id: 'forest',  label: 'Forest — green',   hue: 132, sat: 0.30, base: 0.28, spread: 14 },
+  { id: 'sand',    label: 'Sand — warm grey', hue:  38, sat: 0.22, base: 0.34, spread: 10 },
+  // Deliberately the darkest, for a room at night. `base` is low enough that the drift spends
+  // part of its cycle against the 0.06 floor in `ambientFrame`, which flattens the movement
+  // further rather than clipping anything anybody would see.
+  { id: 'ember',   label: 'Ember — low and warm', hue: 14, sat: 0.34, base: 0.16, spread: 12 },
+];
+
+export const SCENE_IDS = SCENES.map((s) => s.id);
+
+/** A scene by id, falling back to `theme` — an unknown id must never blank the screen. */
+export function sceneOf(id) {
+  return SCENES.find((s) => s.id === id) || SCENES[0];
+}
+
 export function motionOf(saved, systemReducedMotion) {
   const m = MOTIONS.includes(saved) ? saved : 'gentle';
   // The machine can only ever ask for LESS motion than the person chose, never more.
@@ -112,13 +161,19 @@ export function motionOf(saved, systemReducedMotion) {
  * stops — the WHOLE SCREEN's brightness, which the 120°-apart phases hold essentially still
  * on purpose. It is NOT the flash-rate check; see `peakLumRate`, which measures each stop.
  */
-export function ambientFrame(tMs = 0, { motion = 'gentle', hueBase = 210, base = 0.32 } = {}) {
+export function ambientFrame(tMs = 0, { motion = 'gentle', hueBase = 210, base = null,
+                                       scene = 'theme' } = {}) {
   const d = DRIFT[MOTIONS.includes(motion) ? motion : 'gentle'];
+  const sc = sceneOf(scene);
   const t = Number.isFinite(tMs) ? tMs : 0;
+  // A scene's hue wins; `theme` declares none, which is how it keeps taking the profile's.
+  // `base` stays overridable by the caller because the suite passes one.
+  const hue0 = sc.hue == null ? hueBase : sc.hue;
+  const baseL = base == null ? sc.base : base;
 
   const hueW = d.hueMs ? Math.sin((2 * Math.PI * t) / d.hueMs) : 0;
   const angleDeg = d.spinMs ? ((t / d.spinMs) * 360) % 360 : 35;
-  const h = (hueBase + hueW * d.hueSwing + 360) % 360;
+  const h = (hue0 + hueW * d.hueSwing + 360) % 360;
 
   // Three stops, a third of a cycle apart. That spacing is the design: the gradient has depth
   // and visibly shifts, while the three lightnesses sum to a constant — so the amount of light
@@ -128,9 +183,11 @@ export function ambientFrame(tMs = 0, { motion = 'gentle', hueBase = 210, base =
     const w = d.cycleMs ? Math.sin((2 * Math.PI * (t / d.cycleMs + phase))) : 0;
     return {
       pos: i / 2,
-      h: (h + i * 12) % 360,
-      s: 0.34,
-      l: Math.min(0.62, Math.max(0.06, base + w * d.amp)),
+      h: (h + i * sc.spread) % 360,
+      s: sc.sat,
+      // `d.amp` and `d.cycleMs` come from DRIFT and from nowhere else. A scene cannot touch
+      // either, which is what makes the flash-rate property true of every scene at once.
+      l: Math.min(0.62, Math.max(0.06, baseL + w * d.amp)),
     };
   });
 
@@ -163,13 +220,14 @@ export function frameToCss(frame) {
  * A person is not looking at the average of the screen. They are looking at a REGION, and a
  * region is one stop. So: the worst rate any single stop reaches.
  */
-export function peakLumRate(motion = 'gentle', { stepMs = 250, spanMs = null } = {}) {
+export function peakLumRate(motion = 'gentle', { stepMs = 250, spanMs = null,
+                                               scene = 'theme' } = {}) {
   const d = DRIFT[MOTIONS.includes(motion) ? motion : 'gentle'];
   const span = spanMs != null ? spanMs : (d.cycleMs || 1000);
   let worst = 0;
-  let prev = ambientFrame(0, { motion }).stops.map((x) => x.l);
+  let prev = ambientFrame(0, { motion, scene }).stops.map((x) => x.l);
   for (let t = stepMs; t <= span; t += stepMs) {
-    const cur = ambientFrame(t, { motion }).stops.map((x) => x.l);
+    const cur = ambientFrame(t, { motion, scene }).stops.map((x) => x.l);
     for (let i = 0; i < cur.length; i++) {
       worst = Math.max(worst, Math.abs(cur[i] - prev[i]) / (stepMs / 1000));
     }
