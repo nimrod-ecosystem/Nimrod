@@ -53,6 +53,7 @@ import {
 } from '../aac_vocab.js';
 import { SYMBOLS, SYMBOL_NAMES, symbolSvg } from '../aac_symbols.js';
 import { createBus } from '../bus.js';
+import { verbTarget, verbsFor, respondsToVerbs } from '../actions.js';
 import { mountModule } from '../module.js';
 import { BOARD_TOPIC, SELECT_KIND } from '../modules/board.js';
 import '../modules/board.js';
@@ -101,6 +102,59 @@ function fakeEvents() {
 (async () => {
 try {
   // =====================================================================================
+  section('*** a switch can reach this board at all ***');
+  {
+    // THE BUG THESE GUARD, and it is the worst one found in this codebase so far.
+    //
+    // `board` was ABSENT from `MODULE_VERBS` in `actions.js`. So `verbTarget('board','select')`
+    // returned nothing and **a switch press reached the board and did nothing** - on the one
+    // module in the product that exists for somebody who cannot speak, and who is therefore
+    // most likely to be using a switch.
+    //
+    // Worse: `input_router.js reachable()` filters by `respondsToVerbs`, so the board could not
+    // be FOCUSED either. On a screen with a board and anything else, focus skipped straight
+    // past it - so it could not be picked on the transport bar and the settings menu could
+    // never be about it.
+    //
+    // **Touch always worked, which is exactly why nobody noticed.** Every look at this module,
+    // and every test of it, used a mouse or a finger.
+    check('*** the board is in the verb map at all ***', respondsToVerbs('board'),
+      JSON.stringify(verbsFor('board')));
+    check('...`select` reaches `board/select`',
+      verbTarget('board', 'select')?.topic === 'board/select',
+      JSON.stringify(verbTarget('board', 'select')));
+    check('...`next` reaches `board/next`',
+      verbTarget('board', 'next')?.topic === 'board/next',
+      JSON.stringify(verbTarget('board', 'next')));
+    // No `back`: leaving is not something a board does, and a verb that does nothing is a
+    // press somebody spent effort on for no result.
+    check('...and there is no verb that does nothing',
+      verbsFor('board').every((v) => !!verbTarget('board', v)),
+      JSON.stringify(verbsFor('board')));
+
+    // END TO END, through the map rather than by publishing the topic directly - which is the
+    // whole point. Publishing `board/select` by hand always worked; that is what hid this.
+    const bus = createBus();
+    const events = fakeEvents();
+    const inst = mountModule('board', {
+      mount: document.getElementById('host'), bus, events,
+      state: fakeState({ boardId: 'yesno', scan: true, stepMs: 60000 }),
+      output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(60);
+    bus.publish(verbTarget('board', 'next').topic);
+    bus.publish(verbTarget('board', 'select').topic);
+    await sleep(40);
+    // `fakeEvents` nests the payload under `.data` - read the right field. The first version
+    // of this check read `.word` off the row and reported [null] while the mechanism was
+    // working perfectly, which is a check failing for a reason that is not the code.
+    check('*** ...so a switch press actually chooses a card ***',
+      events.rows.length === 1 && events.rows[0].data.word === 'No',
+      JSON.stringify(events.rows.map((r) => r.data && r.data.word)));
+    inst.destroy();
+  }
+
   section('*** the index IS the position, and nothing in this file can reorder ***');
   {
     const b = normalizeBoard(YESNO);

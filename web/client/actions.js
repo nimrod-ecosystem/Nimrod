@@ -179,6 +179,29 @@ export function mergeVerbMaps(overlay = {}, base = MODULE_VERBS) {
 //
 // Every topic here is one a shipped module ALREADY subscribes to. Nothing was rewired.
 export const MODULE_VERBS = {
+  // *** THE COMMUNICATION BOARD, AND IT WAS MISSING ENTIRELY. ***
+  //
+  // Found 2026-09-05 by generating the module anatomy table: `board` was absent from this map,
+  // which meant `verbTarget('board', 'select')` returned nothing and a switch press reached
+  // NOTHING. `board.js` subscribes to `board/select` and `board/next` and says in its own
+  // comment that "a single-switch setup binds only `board/select` and lets the clock do the
+  // advancing" - and no verb could ever arrive there.
+  //
+  // WORSE THAN THAT: `input_router.js reachable()` filters by `respondsToVerbs`, so the board
+  // could not be FOCUSED either. On a screen with a board and anything else, focus skipped it
+  // entirely - so it could not be selected on the transport bar, and the settings menu could
+  // never be about it.
+  //
+  // *** THIS IS THE MODULE THAT MATTERS MOST TO SOMEBODY WHO CANNOT SPEAK, AND IT WAS THE ONE
+  // MODULE A SWITCH COULD NOT REACH. *** Touch always worked, which is exactly why it went
+  // unnoticed: every test of it, and every look at it, used a mouse or a finger.
+  //
+  // `next` advances the scan and `select` takes whatever is lit - the two the module already
+  // documents. Deliberately NO `back`: leaving is not a thing a board does, and a verb that
+  // does nothing is a press somebody spent effort on for no result (see `call` below for the
+  // same reasoning). `board/aim` and `board/pick` are not here either - they carry a position
+  // or an index, which is not something a verb can supply.
+  board:         { next: 'board/next', select: 'board/select' },
   photos:        { next: 'photos/next', prev: 'photos/prev' },
   personal:      { next: 'personal/next', prev: 'personal/prev' },
   educational:   { next: 'educational/next', prev: 'educational/prev', back: 'educational/skip' },

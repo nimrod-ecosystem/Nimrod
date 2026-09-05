@@ -76,11 +76,82 @@ def settings_count(src, man):
     return len(re.findall(r'\{\s*key:', man))
 
 
-def verbs(src):
-    """Topics the module opens a sink on - what it ANSWERS."""
-    got = set(re.findall(r"bus\??\.?\.?subscribe\??\.?\(\s*'([^']+)'", src))
-    got |= set(re.findall(r"subscribe\?\.\(\s*'([^']+)'", src))
-    return sorted(t for t in got if '/' in t)
+ACTIONS = os.path.normpath(os.path.join(HERE, '..', 'actions.js'))
+
+
+def verb_map():
+    """MODULE_VERBS from actions.js - THE AUTHORITATIVE ANSWER to "what verbs does this module
+    answer", because it is what `input_router.js` actually consults. A module type absent from
+    it is never focused and no verb reaches it, whatever it subscribes to."""
+    try:
+        src = read(ACTIONS)
+    except OSError:
+        return {}
+    # ANCHOR ON THE DECLARATION, NOT THE NAME. `MODULE_VERBS` first appears in a COMMENT
+    # sixty lines above its definition, so `find('MODULE_VERBS')` landed there and the brace
+    # match started in prose - which reported every module as answering no verbs, including
+    # `call`, whose map is right there in the file. That went into a published table before
+    # I caught it, which is the second wrong column this generator has produced.
+    #
+    # Comments are stripped before brace-matching: a `{` inside prose throws the count off,
+    # and actions.js is heavily commented.
+    src = re.sub(r'//[^\n]*', '', src)
+    m0 = re.search(r'export\s+const\s+MODULE_VERBS\s*=\s*\{', src)
+    if not m0:
+        return {}
+    j = m0.end() - 1
+    depth = 0
+    end = j
+    for k in range(j, len(src)):
+        if src[k] == '{':
+            depth += 1
+        elif src[k] == '}':
+            depth -= 1
+            if depth == 0:
+                end = k
+                break
+    body = src[j:end]
+    out = {}
+    for m in re.finditer(r'^\s*([A-Za-z_$][\w$]*)\s*:\s*\{', body, re.M):
+        name = m.group(1)
+        # the verbs are the keys of that inner object
+        d = 0
+        for k in range(m.end() - 1, len(body)):
+            if body[k] == '{':
+                d += 1
+            elif body[k] == '}':
+                d -= 1
+                if d == 0:
+                    inner = body[m.end():k]
+                    out[name] = sorted(set(re.findall(r'([A-Za-z_$][\w$]*)\s*:', inner))
+                                       - {'topic', 'payload'})
+                    break
+    return out
+
+
+VERB_MAP = verb_map()
+
+
+def verbs(src, type_name):
+    """What the module ANSWERS.
+
+    TWO SOURCES, and the second one is why this function was rewritten. The first version only
+    matched `subscribe('some/topic')` with a STRING LITERAL - so `call.js`, which subscribes to
+    the exported constants `CALL_ANSWER` / `CALL_HANGUP` / `CALL_DECLINE`, came back as
+    answering NOTHING. The table then said the call module could not be driven by a switch,
+    which is false and alarming: `actions.js` maps `select -> call/answer` and
+    `back -> call/hangup`, so a call has always been answerable with one button.
+
+    A table with one wrong cell is worse than no table. This now resolves local constants AND
+    reads `MODULE_VERBS`, which is the map the router actually consults."""
+    got = set(re.findall(r"subscribe\??\.?\(\s*'([^']+)'", src))
+    # `subscribe(SOME_CONST` -> look the constant up in this file.
+    for name in set(re.findall(r'subscribe\??\.?\(\s*([A-Z][A-Z0-9_]*)', src)):
+        m = re.search(r"%s\s*=\s*'([^']+)'" % re.escape(name), src)
+        if m:
+            got.add(m.group(1))
+    topics = sorted(t for t in got if '/' in t)
+    return topics, VERB_MAP.get(type_name, [])
 
 
 def ctx_keys(src):
@@ -110,7 +181,8 @@ for fn in sorted(os.listdir(MODULES)):
         'dependsOn': field(man, 'dependsOn') or '(absent -> server)',
         'importance': field(man, 'importance') or '(absent)',
         'settings': settings_count(src, man),
-        'verbs': verbs(src),
+        'verbs': verbs(src, t)[0],
+        'mapped': verbs(src, t)[1],
         'ctx': ctx_keys(src),
         'canvas': "getContext('2d')" in src,
         'container': 'mountModule' in src,
@@ -126,13 +198,14 @@ for fn in sorted(os.listdir(MODULES)):
 
 def md():
     out = []
-    out.append('| module | depends | importance | settings | verbs | renders | container | writes events | holds state | headless |')
+    out.append('| module | depends | importance | settings | topics | verbs a switch can send | renders | container | writes events | holds state | headless |')
     out.append('|---|---|---|---|---|---|---|---|---|---|')
     for r in ROWS:
-        out.append('| `%s` | %s | %s | %s | %s | %s | %s | %s | %s | %s |' % (
+        out.append('| `%s` | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |' % (
             r['type'], r['dependsOn'], r['importance'],
             r['settings'] or '**0**',
-            len(r['verbs']) or '**0**',
+            len(r['verbs']) or '-',
+            ', '.join(r['mapped']) or '**none**',
             'canvas' if r['canvas'] else 'dom',
             'yes' if r['container'] else '-',
             'yes' if r['events'] else '-',
@@ -145,10 +218,11 @@ def md():
 def holes():
     out = []
     no_settings = [r['type'] for r in ROWS if not r['settings']]
-    no_verbs = [r['type'] for r in ROWS if not r['verbs']]
+    no_verbs = [r['type'] for r in ROWS if not r['mapped']]
     no_depends = [r['type'] for r in ROWS if r['dependsOn'].startswith('(')]
     out.append('- **declare no settings (%d of %d):** %s' % (len(no_settings), len(ROWS), ', '.join('`%s`' % t for t in no_settings) or 'none'))
-    out.append('- **answer no verbs (%d):** %s' % (len(no_verbs), ', '.join('`%s`' % t for t in no_verbs) or 'none'))
+    out.append('- **no verb a switch can send reaches them (%d)** - they are absent from `MODULE_VERBS` in `actions.js`, so the router never focuses them: %s'
+               % (len(no_verbs), ', '.join('`%s`' % t for t in no_verbs) or 'none'))
     out.append('- **do not declare `dependsOn` (%d), so the recovery ladder assumes the pessimistic `server`:** %s'
                % (len(no_depends), ', '.join('`%s`' % t for t in no_depends) or 'none'))
     out.append('- **can run headless: 0 of %d.** Nothing in the codebase has the concept (H1).' % len(ROWS))
