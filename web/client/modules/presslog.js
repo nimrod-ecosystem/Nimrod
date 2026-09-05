@@ -12,7 +12,13 @@
 import { registerModule } from '../module.js';
 
 registerModule(
-  { type: 'presslog', title: 'Press log', description: 'append-only events — never overwritten' },
+    // `server`, and this is the same value the absent default already produced - declared so it
+    // is a statement rather than a silence. Measured 2026-09-05 with every handle rejecting:
+    // it mounts and renders, but it renders ZEROS. Its whole job is showing what was recorded,
+    // so without the platform it is running and useless, which is precisely what `server`
+    // means for the recovery ladder.
+  { type: 'presslog', title: 'Press log',
+    dependsOn: 'server', description: 'append-only events — never overwritten' },
   (ctx) => {
     const { mount, bus, events } = ctx;
 

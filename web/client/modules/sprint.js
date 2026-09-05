@@ -147,7 +147,17 @@ const SETTINGS = [
 ];
 
 registerModule(
-  { type: 'sprint', title: 'Sprint', description: 'A focus timer — finish a sprint, bank the points', settings: SETTINGS },
+    // `local`, MEASURED RATHER THAN GUESSED (2026-09-05). Mounted with every handle rejecting -
+    // a dead platform, with the factories still present the way a real kiosk supplies them -
+    // this module still renders a playable timer. It runs; it just stops being evidence.
+    //
+    // That is exactly `pressgame`'s stated precedent, and the reason this matters is the
+    // RECOVERY LADDER: `dependsOn` feeds its fallback ranking, and an ABSENT value is read as
+    // the pessimistic `server`. So leaving it off made a screen that lost the platform swap
+    // AWAY from a game that would have kept working - which is the opposite of what a fallback
+    // is for.
+  { type: 'sprint', title: 'Sprint', description: 'A focus timer — finish a sprint, bank the points',
+    dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now         = ctx.now || (() => Date.now());

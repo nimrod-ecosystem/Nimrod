@@ -83,7 +83,13 @@ export function sessionChart(sessions) {
 }
 
 registerModule(
-  { type: 'progress', title: 'Progress', description: 'How they are doing over time — accuracy, concepts, how quickly they answer' },
+    // `server`, and this is the same value the absent default already produced - declared so it
+    // is a statement rather than a silence. Measured 2026-09-05 with every handle rejecting:
+    // it mounts and renders, but it renders ZEROS. Its whole job is showing what was recorded,
+    // so without the platform it is running and useless, which is precisely what `server`
+    // means for the recovery ladder.
+  { type: 'progress', title: 'Progress',
+    dependsOn: 'server', description: 'How they are doing over time — accuracy, concepts, how quickly they answer' },
   (ctx) => {
     const { mount, bus } = ctx;
     const now = ctx.now || (() => Date.now());

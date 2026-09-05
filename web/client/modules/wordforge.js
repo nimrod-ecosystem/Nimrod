@@ -318,7 +318,16 @@ registerModule(
     // ladder's fallback RANKING, so guessing at them would change which module a broken screen
     // swaps to — a behaviour change wearing a metadata costume. Absent `dependsOn` is already
     // read as `server`, which is the pessimistic answer and the safe one.
-    settings: SETTINGS },
+    // `local`, MEASURED RATHER THAN GUESSED (2026-09-05). Mounted with every handle rejecting -
+    // a dead platform, with the factories still present the way a real kiosk supplies them -
+    // this module still renders a playable question, from its built-in words. It runs; it just stops being evidence.
+    //
+    // That is exactly `pressgame`'s stated precedent, and the reason this matters is the
+    // RECOVERY LADDER: `dependsOn` feeds its fallback ranking, and an ABSENT value is read as
+    // the pessimistic `server`. So leaving it off made a screen that lost the platform swap
+    // AWAY from a game that would have kept working - which is the opposite of what a fallback
+    // is for.
+    dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const rand = ctx.rand || Math.random;
