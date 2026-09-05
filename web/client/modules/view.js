@@ -62,7 +62,7 @@
 // A view HAS a layout.)
 
 import { registerModule, mountModule } from '../module.js';
-import { normalizeLayout, isArranged, gridStyle, slotStyle } from '../layout.js';
+import { resolveLayout, gridStyle, slotStyle } from '../layout.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -141,6 +141,20 @@ registerModule(
       try { rec.events?.destroy?.(); } catch { /* noop */ }
     }
 
+    // What a slot shows when its module would not start. Deliberately plain and calm: this can
+    // appear in front of a patient, so it names the panel and says the rest of the view is fine
+    // rather than reporting a fault at somebody. Chat is designing a wallpaper-based version of
+    // this (see the inbox); until that lands, saying SOMETHING beats a silent hole.
+    function failedNotice(def) {
+      const el = document.createElement('div');
+      el.setAttribute('data-panel-failed', def.type);
+      el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
+        + 'justify-content:center;text-align:center;padding:4vmin;'
+        + 'font:500 clamp(14px,1.9vmin,20px)/1.5 system-ui,sans-serif;color:var(--ink-soft,#5d7064)';
+      el.textContent = `${def.type} could not start. The rest of this view is fine.`;
+      return el;
+    }
+
     async function mountChild(def, host) {
       const state = childState(def.id);
       const events = childEvents(def.id);
@@ -164,7 +178,11 @@ registerModule(
       const host = document.createElement('div');
       host.className = 'k-mod';
       stageEl.append(host);
-      stageRec = await mountChild(parts.stage[primary], host);
+      stageRec = await mountChild(parts.stage[primary], host).catch((err) => {
+        console.error(`view: ${parts.stage[primary].type} failed to start`, err);
+        return null;
+      });
+      if (!stageRec) { host.remove(); stageEl.append(failedNotice(parts.stage[primary])); }
       rootBus.publish('view/stage', { viewId, moduleId: parts.stage[primary].id, index: primary });
     }
 
@@ -186,7 +204,19 @@ registerModule(
           const host = document.createElement('div');
           host.className = 'k-mod';
           cell.append(host);
-          slotRecs.push(await mountChild(def, host));
+          // *** A PANEL THAT WILL NOT START SAYS SO, IN ITS OWN SLOT. ***
+          //
+          // Mike, 2026-09-05: fix the SILENT part, not the kiosk part — silent failure is not
+          // kiosk-specific, it is how a module HOST reacts to a mount that throws, and that
+          // behaviour survives whatever the container ends up being called. `mountChild` runs
+          // `init()` unguarded, so one module throwing rejected out of this loop: every later
+          // slot was never built, and the view came up missing panels with nothing said.
+          const rec = await mountChild(def, host).catch((err) => {
+            console.error(`view: ${def.type} failed to start`, err);
+            return null;
+          });
+          if (rec) slotRecs.push(rec);
+          else { host.remove(); cell.append(failedNotice(def)); }
         }
       } else {
         await showStage(0);
@@ -198,7 +228,14 @@ registerModule(
         host.className = 'k-mod';
         el.append(host);
         el.hidden = false;
-        overlayRecs[slot] = await mountChild(def, host);
+        // An overlay is decoration ON TOP of the view; it cannot be allowed to prevent one.
+        // A camera on a machine with no webcam is the everyday case.
+        const rec = await mountChild(def, host).catch((err) => {
+          console.error(`view: ${def.type} overlay failed to start`, err);
+          return null;
+        });
+        if (rec) overlayRecs[slot] = rec;
+        else { host.remove(); el.hidden = true; }
       }
     }
 
@@ -257,9 +294,15 @@ registerModule(
         }
 
         const saved = (settings.kiosk || {}).layout;
-        layout = isArranged(saved)
-          ? normalizeLayout(saved, arrangement.modules.map((m) => m.id))
-          : null;
+        // *** THE SAME RESOLVE THE KIOSK USES, AND THIS IS THE POINT OF SHARING IT. ***
+        //
+        // This was `isArranged(saved) ? normalizeLayout(...) : null` — a second copy of what
+        // `kiosk.js` did, which meant it also carried the same defect: a slot whose module id
+        // is gone gets nulled, the cell is skipped in silence, and the module renders NOWHERE,
+        // because the fallback stage only runs when there is no layout at all. That was G1, G2
+        // and G3 on the live site. It was fixed in the kiosk on 2026-09-04 and left broken
+        // here, which is exactly what two implementations of one job produce.
+        layout = resolveLayout(saved, arrangement.modules);
         parts = partition(arrangement.modules, layout);
         await build();
         rootBus.publish('view/ready', { viewId, modules: arrangement.modules.length });
