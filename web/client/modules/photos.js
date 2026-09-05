@@ -141,6 +141,9 @@ registerModule(
     // PAINTS SYNCHRONOUSLY, so `settingsChoices` cannot go to the network: a row that waits
     // on a facility connection to draw is a row that looks broken.
     let knownSources = [];
+    // The sources found when there was more than one and none chosen — so the message can
+    // NAME them instead of saying nothing is connected when several things are.
+    let multiSource = null;
     let loadSeq = 0;                // guards against overlapping reloads (races)
 
     const stage = () => mount.querySelector('[data-stage]');
@@ -317,6 +320,25 @@ registerModule(
         return src;
       }
       if (sources.length === 1) { state.set({ sourceId: sources[0].id }); return sources[0]; }
+      // *** MORE THAN ONE SOURCE USED TO BE A DEAD END, AND IT WAS A LOUD ONE. ***
+      //
+      // This returned null the moment a second source existed, and the panel then said
+      // "No photo source connected. Add one in Media / Sources." — telling somebody to do the
+      // thing they had just done, twice. Recorded in §E-fail and never fixed.
+      //
+      // ADOPTING THE FIRST WOULD BE WORSE, not better: on a bedside screen that is a coin
+      // flip about whose photographs appear, and the person in front of it cannot say "not
+      // those". So the panel still declines to guess — but it now says what is actually true
+      // and names the sources, so the next step is obvious instead of circular.
+      //
+      // `sourceId` is a declared setting ("Photos from"), which is the real way out. On a
+      // GRID kiosk that menu currently shows no panel settings at all (see §F19-audit), so
+      // the message points at the composer, which is somewhere the reader can actually get to.
+      if (sources.length > 1) {
+        multiSource = sources;
+        return null;
+      }
+      multiSource = null;
       return null;
     }
 
@@ -335,7 +357,13 @@ registerModule(
       if (!source) {
         // Nothing to show from here on, so a later message is a full panel again.
         if (stage()) stage().dataset.showing = '';
-        setStatus('No photo source connected. Add one in Media / Sources.');
+        if (multiSource) {
+          const names = multiSource.map((x) => x.label || x.base_url || x.id).join(', ');
+          setStatus(`More than one photo source is connected (${names}). `
+            + 'Pick one for this panel in Screens — this panel’s “Photos from” setting.');
+        } else {
+          setStatus('No photo source connected. Add one in Media / Sources.');
+        }
         items = ids = []; byId = channels = {};
         return;
       }
