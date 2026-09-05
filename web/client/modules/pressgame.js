@@ -68,7 +68,9 @@
 // is a server table), and the document.head stylesheet (scoped to the instance so two can
 // coexist). The synthesised tones stay; they need no files.
 
-import { registerModule } from '../module.js';
+import { registerModule, getManifest } from '../module.js';
+import { mountSettings } from '../settings.js';
+import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { EDGE_TOPIC } from '../input.js';
 import { createGameMusic } from '../game_music.js';
 import { createMediaSourcesClient } from '../media_sources.js';
@@ -269,6 +271,7 @@ registerModule(
     const calm = () => cfg.calm || reducedMotion;
 
     let root = null, canvas = null, c2d = null, textEl = null, menuEl = null, askEl = null;
+    let menu = null;          // the universal settings menu, mounted inside this panel
     // The exit confirm, when it is switched on. `askAt` is in simT so it times out on the
     // same clock everything else in this module runs on — a test can drive it with __step.
     let askingExit = false, askAt = 0;
@@ -482,6 +485,7 @@ registerModule(
       setText('', '');
       if (askEl) askEl.hidden = true;
       if (menuEl) menuEl.hidden = false;
+      try { menu?.open?.(); } catch (err) { console.error('pressgame: menu open', err); }
     }
 
     // ---- leaving -------------------------------------------------------------------------
@@ -530,7 +534,19 @@ registerModule(
     // init() calls this rather than repeating the pair.
     function startSession() {
       if (menuEl) menuEl.hidden = true;
+      // *** enterWait() FIRST, THEN CLOSE THE MENU. THE ORDER IS THE WHOLE THING. ***
+      //
+      // Closing fires `onClose`, which is wired to leaveMenu() so that dismissing the menu any
+      // way at all starts the game. Closed BEFORE `enterWait()`, the phase is still `menu` when
+      // that callback runs, so it starts the session a second time — and the suite caught it
+      // exactly where it should: two `session_start` rows for one person sitting down once.
+      // A duplicated marker in a trial record is worse than a missing one; it is evidence of
+      // something that did not happen.
+      //
+      // `enterWait()` moves the phase to `wait`, so by the time `onClose` runs, leaveMenu's
+      // guard sees a game already in progress and does nothing.
       enterWait();
+      try { menu?.close?.(); } catch (err) { console.error('pressgame: menu close', err); }
       record('session_start', { mode: mode(), waitMs: Math.round(curWaitMs) });
     }
 
@@ -852,27 +868,39 @@ registerModule(
 
         // The start screen's markup is built whether or not it will be shown, so turning the
         // setting on does not need a remount to have something to show.
+        // *** IT OPENS TO ITS OWN SETTINGS MENU — THE UNIVERSAL ONE. *** See comet.js for the
+        // full reasoning; the correction is Mike's, 2026-09-04: "open to the menu" meant the
+        // SETTINGS menu, so a game can be set up before it is played. What survives from A12
+        // is what was right — the field keeps breathing behind this, the way out is `back`,
+        // and nothing is recorded until somebody starts.
         menuEl = document.createElement('div');
         menuEl.className = 'pg-menu';
         menuEl.hidden = true;
-        const h = document.createElement('h2');
-        h.textContent = 'Wait and Go';
-        const p = document.createElement('p');
-        p.textContent = 'Hold off while the light builds. When it says Go, press.';
-        const startBtn = document.createElement('button');
-        startBtn.type = 'button';
-        startBtn.className = 'pg-start';
-        startBtn.textContent = 'Start';
-        const hint = document.createElement('div');
-        hint.className = 'pg-hint';
-        hint.textContent = 'Any press starts it — a switch, a key, or a tap.';
-        menuEl.append(h, p, startBtn, hint);
         root.appendChild(menuEl);
-        // Routed through press() rather than startSession() so the button is exactly one more
-        // press source, like the canvas and the bus — there is no second way to start.
-        const onStart = (e) => { e.preventDefault(); press('pointer'); };
-        startBtn.addEventListener('click', onStart);
-        offs.push(() => startBtn.removeEventListener('click', onStart));
+        // *** ROUTED THROUGH press(), AND PHASE-GUARDED. ***
+        //
+        // Leaving the menu has to be exactly one more press source, like the canvas and the
+        // bus, so there is no second way to start and no second place recording that a session
+        // began. But `press()` only starts the game when the phase is still `menu` — call it
+        // again a moment later and it is a COMMISSION in the trial record, a press during the
+        // wait. The Start row and the close both land here, so without this guard leaving the
+        // menu by the row would file a false press against the player.
+        const leaveMenu = () => { if (phase === 'menu') press('pointer'); };
+        menu = mountSettings(menuEl, {
+          inline: true,
+          includeHome: false,
+          person: () => null,
+          subject: () => ({ type: 'pressgame', title: 'Wait and Go' }),
+          extras: () => [{ kind: 'item', id: 'pg-start', label: 'Start' }],
+          fields: () => fieldItems(fieldsFor(getManifest('pressgame'), null), {
+            values: () => state?.get?.() || {},
+            level: 'standard',
+            onStep: (key, value) => { state?.set?.({ [key]: value }); },
+          }),
+          onSelect: (item) => { if (item && item.id === 'pg-start') leaveMenu(); },
+          onClose: () => leaveMenu(),
+        });
+        offs.push(() => { try { menu.destroy(); } catch { /* already gone */ } });
 
         askEl = document.createElement('div');
         askEl.className = 'pg-ask';
