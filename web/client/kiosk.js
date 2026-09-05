@@ -122,7 +122,12 @@ export async function mountKiosk(root, {
       <div class="k-controls" data-controls>
         <div class="k-mods" data-mods></div>
         <div class="k-actions">
-          <button data-act="home" title="back to your screens (H)">⌂ Screens</button>
+          <!-- *** "Home", NOT "Screens". Mike's call, 2026-09-06. *** His reasoning: people
+               will see "Screens" and ask what screens MEANS, and Home is the familiar exit
+               word. He was given the argument against it — a button called Home that does not
+               take you home reads oddly — and chose Home anyway, which is his to choose.
+               The title says what it actually does, which is where the precision belongs. -->
+          <button data-act="home" title="your screens, and the way out (H)">⌂ Home</button>
           <button data-act="next" title="next (→ / space)">Next ▸</button>
           <!-- Only on an arranged screen; hidden below when there is no layout. See panelNext. -->
           <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
