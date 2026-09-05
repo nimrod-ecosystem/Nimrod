@@ -116,6 +116,30 @@
     border-radius:12px;overflow:hidden;background:var(--card)}
   .trystage[hidden]{display:none}
   .trystage > *{position:absolute;inset:0}
+
+  /* ---- RUN THEM ALL: the dev harness, folded in ----------------------------------------
+   * `dev/modules_live.html` mounted every module and judged whether it drew anything. It was
+   * a second page doing the other half of this one's job, and nothing linked to it. It is now
+   * this mode, on this page, in the site's own palette — the judging moved to
+   * `module_audit.js` so there is one implementation rather than two that drift. */
+  .runall{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:26px 0 0;
+    padding:16px 18px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius)}
+  .runall p{margin:0;font-size:.93rem;color:var(--ink-soft);max-width:56ch}
+  .runall .trybtn{white-space:nowrap}
+  .tally{margin:18px 0 0;padding:14px 18px;background:var(--cream-soft);
+    border:1px solid var(--line);border-radius:var(--radius);font-weight:700}
+  .tally .worth{display:block;margin-top:8px;font-weight:650;color:var(--rosy-deep);
+    font-size:.93rem}
+  .verdict{margin-left:auto;font-size:.72rem;font-weight:800;text-transform:uppercase;
+    letter-spacing:.08em;padding:3px 9px;border-radius:99px}
+  .v-ran{background:#dff0e4;color:#1d5c38}
+  .v-empty{background:#fdf0d5;color:#7a5a12}
+  .v-threw{background:#fbe0dc;color:#8d2a1c}
+  article.mod > h3{display:flex;align-items:baseline;gap:10px;width:100%}
+  .measured{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;color:var(--muted);
+    margin:8px 0 0;word-break:break-word}
+  .measured.bad{color:#8d2a1c}
 </style>
 </head>
 <body>
@@ -168,6 +192,16 @@
     </p>
     <ul id="legend"></ul>
   </div>
+
+  <div class="runall">
+    <button type="button" class="trybtn" id="runall">Run every module at once</button>
+    <p>Mounts all of them here, on this device, and reports what each one actually put on
+      screen. <b>“Drew” is not “works”</b> — a clock showing the wrong time still draws. The
+      boxes are the evidence; the badge is only what was measured. Several of these want the
+      camera, the microphone or the speakers, and there is one of each, so running them
+      together is a fair test of the arbiters and an unfair one of the modules.</p>
+  </div>
+  <div class="tally" id="tally" hidden></div>
 
   <main id="groups"></main>
 
@@ -241,7 +275,7 @@ document.getElementById('groups').innerHTML = GROUPS.map((g) => {
       <div class="cards">
         ${items.map((m) => `
           <article class="mod">
-            <h3>${esc(titleFor(m, manifests))}</h3>
+            <h3>${esc(titleFor(m, manifests))}<span class="verdict" data-verdict hidden></span></h3>
             <span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span>
             <p class="lead">${esc(m.lead)}</p>
             <p class="why">${esc(m.why)}</p>
@@ -254,6 +288,7 @@ document.getElementById('groups').innerHTML = GROUPS.map((g) => {
               <span class="trynote" data-trynote></span>
             </div>
             <div class="trystage mod-box" data-trystage hidden></div>
+            <p class="measured" data-measured hidden></p>
           </article>`).join('')}
       </div>
     </section>`;
@@ -289,6 +324,102 @@ document.getElementById('recon').innerHTML = bits.join(' · ');
 // needed and nothing anybody does in a demo panel reaches a real screen.
 let host = null;
 let openHost = null;             // only one panel at a time — see below
+let auditing = false;
+
+/** Built once, lazily. A visitor who is reading rather than poking pays nothing for it. */
+async function tryHost() {
+  if (!host) {
+    const { createTryHost } = await import('./module_try.js');
+    host = await createTryHost();
+  }
+  return host;
+}
+
+// ---- RUN THEM ALL --------------------------------------------------------------------
+//
+// This is `dev/modules_live.html` folded in. It was a separate page, in a hardcoded palette,
+// that nothing linked to — so the one page that could PROVE the modules run was the one page
+// nobody was pointed at, while the page everybody lands on could only describe them. The
+// judging lives in `module_audit.js` now and both halves read it, so a change to what counts
+// as "drew" cannot land in one place and not the other.
+//
+// IT IS OPT-IN, and that is not timidity. One at a time is the right default for somebody
+// browsing — several of these take the camera or the speakers and the arbiters are per page —
+// so the all-at-once view says what it costs before it runs.
+async function runAll(btn) {
+  if (auditing) return;
+  auditing = true;
+  btn.disabled = true;
+  btn.textContent = 'Mounting…';
+
+  const { auditOne, VERDICT_LABEL, tallyLine, worthLooking } = await import('./module_audit.js');
+  const h = await tryHost();
+
+  // Whatever a visitor had open by hand comes down first: two live copies of one module would
+  // be two modules fighting over the same webcam, and the second one's verdict would be a
+  // libel on the module rather than a fact about it.
+  if (openHost) {
+    h.unmount(openHost);
+    openHost.hidden = true;
+    const pc = openHost.closest('.mod');
+    const pb = pc?.querySelector('[data-try]');
+    if (pb) { pb.setAttribute('aria-pressed', 'false'); pb.textContent = 'Try it'; }
+    openHost = null;
+  }
+
+  const tally = document.getElementById('tally');
+  tally.hidden = false;
+  const cards = [...document.querySelectorAll('article.mod')];
+  const results = [];
+
+  for (const card of cards) {
+    const trybtn = card.querySelector('[data-try]');
+    const type = trybtn?.dataset.try;
+    if (!type) continue;
+    // The card's own button has to agree with what is on the card. After an audit every panel
+    // is live, so every button says "Put it away" — otherwise pressing one reads as "start
+    // this" and does the opposite, which is the kind of control that gets called broken.
+    trybtn.setAttribute('aria-pressed', 'true');
+    trybtn.textContent = 'Put it away';
+    const stage = card.querySelector('[data-trystage]');
+    const badge = card.querySelector('[data-verdict]');
+    const measured = card.querySelector('[data-measured]');
+    stage.hidden = false;
+    badge.hidden = false;
+    badge.textContent = '…';
+    badge.className = 'verdict';
+
+    // Sequential, not parallel. `auditOne` waits for each module to settle before judging it,
+    // and twenty-five modules all waiting at once would judge every one of them at the same
+    // instant — which is the too-early verdict the settle exists to prevent.
+    const r = await auditOne(h, type, stage);
+    results.push({ type, ...r });
+    badge.textContent = VERDICT_LABEL[r.state];
+    badge.className = `verdict v-${r.state}`;
+    measured.hidden = false;
+    measured.textContent = r.detail;
+    measured.className = r.state === 'ran' ? 'measured' : 'measured bad';
+    tally.innerHTML = `${esc(tallyLine(results))} <span class="worth">still running…</span>`;
+  }
+
+  const bad = worthLooking(results);
+  tally.innerHTML = esc(tallyLine(results))
+    + (bad.length
+      ? `<span class="worth">Worth looking at: `
+        + bad.map((r) => `${esc(r.type)} (${esc(VERDICT_LABEL[r.state])})`).join(', ') + '</span>'
+      : '<span class="worth">Every one of them drew something.</span>');
+
+  btn.disabled = false;
+  btn.textContent = 'Run every module at once';
+  auditing = false;
+}
+
+document.getElementById('runall').addEventListener('click', (e) => runAll(e.currentTarget));
+// `?all=1` runs it on load — the address `dev/modules_live.html` now redirects to, so the old
+// harness URL still lands somebody on a page that is already doing what they came for.
+if (new URLSearchParams(location.search).get('all') === '1') {
+  runAll(document.getElementById('runall'));
+}
 
 document.getElementById('groups').addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-try]');
@@ -325,10 +456,7 @@ document.getElementById('groups').addEventListener('click', async (e) => {
 
   btn.textContent = 'Starting…';
   try {
-    if (!host) {
-      const { createTryHost } = await import('./module_try.js');
-      host = await createTryHost();
-    }
+    await tryHost();
     stage.hidden = false;
     host.mount(type, stage);
     btn.setAttribute('aria-pressed', 'true');

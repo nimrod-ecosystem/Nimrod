@@ -72,6 +72,24 @@ function parseResultsObject(win) {
   return { passed: r.pass, failed: r.fail || 0 };
 }
 
+// A THIRD SHAPE: A SUITE THAT COULD NOT RUN AT ALL.
+//
+// `media_stall` and `personal` drive real modules against real media agents on 8770/8771. With
+// those agents down they used to report 24 and 7 FAILED — two dozen assertions about a video
+// failing because there was no video. They now preflight and mark themselves SKIPPED, which the
+// two parsers above cannot read, so a skipped suite would sit here until the 3-minute timeout and
+// then be filed as a hang.
+//
+// *** SKIPPED IS NOT A PASS AND IT IS NOT A FAILURE, AND IT MUST NOT BE FOLDED INTO EITHER. ***
+// Folded into passes it is a green number for work that never happened; folded into failures it
+// is the noise that trains everybody to read red as normal. It gets its own column entry and its
+// own count in the summary, so "could not run" is always visible and never mistaken for either.
+function parseSkip(doc) {
+  const sum = doc && doc.getElementById('summary');
+  if (!sum || sum.dataset.skipped !== 'true') return null;
+  return { skipped: true, why: (sum.textContent || 'skipped').slice(0, 60) };
+}
+
 function parseSummary(text) {
   if (!text) return null;
   let m = text.match(/(\d+)\s+passed,\s+(\d+)\s+failed/i);
@@ -79,6 +97,13 @@ function parseSummary(text) {
   m = text.match(/(\d+)\s+FAILED\s*\/\s*(\d+)\s+passed/i);
   if (m) return { passed: +m[2], failed: +m[1] };
   m = text.match(/ALL PASS\s*[—-]\s*(\d+)/i);
+  if (m) return { passed: +m[1], failed: 0 };
+  // A FOURTH SHAPE, found the same night the third one was: `walkthrough` reports
+  // "PASS WITH SKIPS — 44 checks, 1 SKIPPED". None of the patterns above read it, so a suite
+  // that PASSED sat here for the full three-minute timeout and was then filed as "no summary" —
+  // a healthy suite reported as a hang, which is the exact failure the TIMEOUT_MS comment above
+  // warns about, arriving through the parser instead of the clock.
+  m = text.match(/PASS WITH SKIPS\s*[—-]\s*(\d+)\s+checks/i);
   if (m) return { passed: +m[1], failed: 0 };
   return null;
 }
@@ -92,8 +117,9 @@ function runOne(name) {
     const poll = setInterval(() => {
       let text = null, parsed = null;
       try {
-        text = frame.contentDocument?.getElementById('summary')?.textContent || null;
-        parsed = parseSummary(text) || parseResultsObject(frame.contentWindow);
+        const doc = frame.contentDocument;
+        text = doc?.getElementById('summary')?.textContent || null;
+        parsed = parseSkip(doc) || parseSummary(text) || parseResultsObject(frame.contentWindow);
       } catch { /* still loading */ }
       // "running…" parses as nothing, which is what keeps this from reading a half-finished
       // suite as a pass.
@@ -116,17 +142,25 @@ function runOne(name) {
       row.insertCell().textContent = r.name;
       const cell = row.insertCell();
       if (r.timedOut) { cell.className = 'skip'; cell.textContent = `no summary (${r.last || 'blank'})`; }
+      else if (r.skipped) { cell.className = 'skip'; cell.textContent = r.why; }
       else if (r.failed) { cell.className = 'fail'; cell.textContent = `${r.failed} FAILED / ${r.passed} passed`; }
       else { cell.className = 'pass'; cell.textContent = `${r.passed} passed`; }
     }
   }
   const failed = results.filter((r) => r.failed).length;
   const stalled = results.filter((r) => r.timedOut).length;
+  // COUNTED SEPARATELY AND NAMED. A suite that could not run is not a pass and not a failure,
+  // and it must never disappear into either — the whole reason it says SKIPPED instead of
+  // reporting two dozen assertion failures is so that this line can tell the truth about it.
+  const skipped = results.filter((r) => r.skipped);
   const checks = results.reduce((n, r) => n + (r.passed || 0), 0);
   const s = document.getElementById('summary');
-  s.textContent = (failed || stalled)
+  const skipNote = skipped.length
+    ? ` · ${skipped.length} SKIPPED (${skipped.map((r) => r.name).join(', ')}) — needs something that is not running`
+    : '';
+  s.textContent = ((failed || stalled)
     ? `${failed} suite(s) failing, ${stalled} without a summary — ${checks} checks ran`
-    : `ALL PASS — ${results.length} suites, ${checks} checks`;
+    : `ALL PASS — ${results.length - skipped.length} suites, ${checks} checks`) + skipNote;
   s.className = (failed || stalled) ? 'fail' : 'pass';
   s.dataset.done = 'true';
 })();

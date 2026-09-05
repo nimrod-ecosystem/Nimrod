@@ -40,9 +40,14 @@
 // live in `settings_fields.js`, which is pure and knows nothing about this shell: it turns a
 // declaration into an ordinary `{ kind:'item', label, hint, run }`, which is exactly what
 // `extras` already produced, so the cursor walks them with no special case here.
-// The person PICKER is not here either: a screen implies its person, so at the bedside
-// there is nothing to pick and the menu states who it is for. The picker belongs on the
-// home side, where a moderator chooses; `extras` is how that host adds it.
+// The person PICKER is not built into this file: a screen implies its person, so the shell
+// STATES who it is for and never guesses. What changed on 2026-09-05 is that there is now a
+// named slot for a host to add one — `whoItems`, under the who heading, alongside
+// `screenItems` under the screen heading. The kiosk fills both. The shell still knows nothing
+// about people or profiles; it renders rows somebody else built, which is decision 2 intact.
+//
+// WHY THAT MATTERED: a screen handed to nobody rendered "Setting up for …" forever, and the
+// SCREEN section held nothing but "Close menu". Two universal headings, no universal content.
 
 import { VERBS, verbTopic } from './actions.js';
 
@@ -101,6 +106,21 @@ export function buildItems({
   // the rules that matter for one button (wrapping, stepping, what is not cycleable) are
   // pure and live next door, where they can be hammered without a browser.
   fields = [],
+  // *** THE TWO UNIVERSAL SECTIONS HAD A FRAME AND NO CONTENT. ***
+  //
+  // Mike, from a screenshot of the live kiosk on 2026-09-05: the menu rendered
+  // "SETTING UP FOR …" with no name after it, and a SCREEN heading with nothing under it but
+  // "Close menu". The frame was right and empty, which is arguably worse than absent — it
+  // promises two answers and gives neither.
+  //
+  // These are the slots the host fills. They exist as SEPARATE slots rather than being folded
+  // into `extras` because `extras` lands in the middle, between the panel and the screen, and
+  // a row about WHO belongs under the who heading or it is not answering that heading.
+  //
+  // The shell still knows nothing about people or screens — it renders rows the host built,
+  // which is decision 2 unchanged.
+  whoItems = [],
+  screenItems = [],
   canFullscreen = false,
   isFullscreen = false,
   // See the Home row below. Default true, because "there should be SOME way out" is the
@@ -109,10 +129,29 @@ export function buildItems({
 } = {}) {
   const out = [];
 
-  // WHO. Stated, never picked, on a surface where a screen already implies its person.
-  // Rendering "…" rather than hiding the line keeps the menu the same height while the
-  // person loads, so the cursor does not jump under someone mid-press.
-  out.push({ kind: 'heading', id: 'who', label: `Setting up for ${person?.name || '…'}` });
+  // WHO. Stated here; PICKED by whatever the host puts in `whoItems`.
+  //
+  // THREE STATES, NOT TWO, and the third is the one that was being told as the first:
+  //   { name }   somebody — say their name.
+  //   null       still looking. "…" keeps the menu the same height while the lookup runs, so
+  //              the cursor does not jump under somebody's hand mid-press.
+  //   false      the lookup FINISHED and there is nobody. A screen that has never been handed
+  //              to a person is an ordinary state, not an error — and it is the state that was
+  //              rendering as a permanent "…", i.e. as "still loading, forever".
+  //
+  // Saying "…" for "nobody" is the failure Mike saw: an answer that never arrives is
+  // indistinguishable from a question nobody asked.
+  out.push({
+    kind: 'heading',
+    id: 'who',
+    label: person === false
+      ? 'Not set up for anybody yet'
+      : `Setting up for ${person?.name || '…'}`,
+  });
+  for (const w of whoItems || []) {
+    if (w && w.kind) out.push(w);
+    else if (w) out.push({ kind: 'item', ...w });
+  }
 
   // THE SUBJECT. With nine panels on a screen, "settings" is ambiguous — the same problem
   // the verb vocabulary hit, with the same answer: the focused panel. Naming it here is
@@ -146,6 +185,17 @@ export function buildItems({
   }
 
   out.push({ kind: 'heading', id: 'screen', label: 'Screen' });
+  // SCREEN-LEVEL SETTINGS — the things that belong to this screen rather than to one panel
+  // on it. They come from the host because only the host knows where a screen's settings
+  // live; the shell renders them exactly like a panel's, so the one-switch cursor walks them
+  // with no special case.
+  //
+  // They go ABOVE full screen / Home / Close deliberately: those three are ways OUT, and a
+  // list whose ways out are in the middle is a list somebody scans past.
+  for (const it of screenItems || []) {
+    if (it && it.kind) out.push(it);
+    else if (it) out.push({ kind: 'item', ...it });
+  }
   if (canFullscreen) {
     out.push({
       kind: 'item',
@@ -203,6 +253,10 @@ export function mountSettings(root, {
   person = () => null,
   subject = () => null,
   extras = () => [],
+  // The two universal slots, read at every paint like `extras` and for the same reason: the
+  // person's name arrives after the boot, and a screen setting shows its CURRENT value.
+  whoItems = () => [],
+  screenItems = () => [],
   // Read at every paint, never cached. A field row shows its CURRENT value, so a snapshot
   // taken at mount time would show yesterday's number to somebody standing at the screen.
   fields = () => [],
@@ -278,6 +332,10 @@ export function mountSettings(root, {
       // declares none, which is a bug nobody can find.
       fields: (() => { try { return fields() || []; }
         catch (err) { console.warn('settings: fields() threw', err); return []; } })(),
+      whoItems: (() => { try { return whoItems() || []; }
+        catch (err) { console.warn('settings: whoItems() threw', err); return []; } })(),
+      screenItems: (() => { try { return screenItems() || []; }
+        catch (err) { console.warn('settings: screenItems() threw', err); return []; } })(),
       canFullscreen: !!fullscreenTarget,
       includeHome,
       isFullscreen: isFullscreen(),

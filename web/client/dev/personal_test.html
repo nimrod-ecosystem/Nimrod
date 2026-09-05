@@ -35,7 +35,8 @@ import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import { mountModule } from '../module.js';
-import { pressControls, checkHiddenHides, pressRetry } from './press_controls.js';
+import { pressControls, checkHiddenHides, pressRetry, agentReachable, reportSkipped }
+  from './press_controls.js';
 import '../modules/personal.js';   // registers 'personal'
 
 const params = new URLSearchParams(location.search);
@@ -68,6 +69,16 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
   // screen while the code that hides it looks correct.
   checkHiddenHides('personal', 'status', check, 'personal’s status sheet');
   await pressRetry('personal', check);
+
+  // *** PREFLIGHT: the API half needs an agent, and "cannot run" must not print as "failed". ***
+  // Without this, seven assertions about a real video from a real agent failed on 2026-09-06 for
+  // the single reason that nothing was listening on 8771. The control presses above need no
+  // server, so they still ran and still mean something — which is why the skip happens HERE and
+  // not at the top of the file.
+  if (!(await agentReachable(AGENT))) {
+    reportSkipped('the personal-messages agent', AGENT);
+    return;
+  }
 
   try {
     const profiles = createProfilesClient({ user: USER });

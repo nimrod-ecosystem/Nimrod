@@ -208,3 +208,64 @@ export async function pressRetry(type, check, opts = {}) {
   host.remove();
   return { listCalls };
 }
+
+// ---------------------------------------------------------------------------------------
+// agentReachable — IS THE THING THIS SUITE NEEDS ACTUALLY RUNNING?
+//
+// *** WHY THIS EXISTS, AND IT IS THE SAME DISEASE AS A CHECK THAT CANNOT FAIL. ***
+//
+// `media_stall` reported 24 FAILED and `personal` 7 FAILED on 2026-09-06. Nothing was broken.
+// Both need a media agent (`python agent.py --port 8770` / `8771`) and neither was running, so
+// two dozen assertions about video playback failed for the reason that there was no video.
+//
+// A suite that reports two dozen failures for a missing prerequisite is a suite whose red means
+// nothing — and a red nobody acts on trains everybody to read red as normal, which is exactly how
+// `composer_test` and `panel_fit_test` sat failing for days on top of work that was CORRECT.
+// "Cannot run" and "ran and was wrong" are different facts and must not print the same.
+//
+// It uses a HEAD with a short abort rather than waiting on a connection: a refused connection is
+// instant, but a firewalled port hangs for the OS timeout, and a suite that appears to freeze is
+// worse than one that says it was skipped.
+export async function agentReachable(baseURL, { timeoutMs = 1500 } = {}) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    // `no-cors` so a bare agent with no CORS headers still counts as REACHABLE. The question
+    // here is "is something listening", not "will it answer this request politely" — the suite
+    // itself is what tests the second one.
+    await fetch(`${String(baseURL).replace(/\/+$/, '')}/`, {
+      method: 'GET', mode: 'no-cors', cache: 'no-store', signal: ctl.signal,
+    });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/**
+ * Print the one line a skipped suite should print, and hand back `false` so the caller can stop.
+ * SKIP is deliberately not a pass: a green summary for a suite that never ran is the flattering
+ * number this whole file exists to avoid.
+ */
+export function reportSkipped(what, urls) {
+  const out = document.getElementById('results') || document.body;
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.style.cssText = 'color:#7a5a12;font-weight:700;margin:10px 0;padding:10px 12px;'
+    + 'background:#fdf0d5;border-radius:8px;max-width:76ch';
+  d.textContent = `SKIPPED — ${what} is not running (${[].concat(urls).join(', ')}). `
+    + 'Nothing here failed; nothing here ran either. Start it and reload.';
+  out.append(d);
+  const sum = document.getElementById('summary');
+  if (sum) {
+    sum.textContent = `SKIPPED — ${what} not running`;
+    sum.className = 'skip';
+    sum.style.color = '#7a5a12';
+    sum.dataset.done = 'true';
+    sum.dataset.failed = '0';
+    sum.dataset.skipped = 'true';
+  }
+  return false;
+}

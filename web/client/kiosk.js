@@ -50,7 +50,7 @@ import { createCallTransport } from './call_transport.js';
 import { readConfig, writeConfig, writePosition, bootPlan, markHopped, hasHopped,
          restartItems } from './restart.js';
 import { takePreviewLayout } from './preview.js';
-import { applyTheme } from './theme.js';
+import { applyTheme, listThemes, DEFAULT_THEME } from './theme.js';
 import { cachedFetch } from './cache.js';
 import './modules/clock.js';
 import './modules/camera.js';
@@ -899,17 +899,27 @@ export async function mountKiosk(root, {
   // The person's NAME is resolved in the background and never blocks the boot: a screen
   // that will not come up because a name lookup failed is strictly worse than a screen
   // that says "…" where a name goes.
-  let whoName = null;
+  //
+  // (`whoName` used to live here and was replaced by `whoState` below, which carries the
+  // same name AND the difference between "still looking" and "nobody" — the difference that
+  // made an empty header permanent.)
+  // Escaping for the one page in this file that builds markup from account data. A person's
+  // name is typed by a human and goes straight into innerHTML.
+  const esc = (v) => String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   // COMPLEXITY LEVEL — essential / standard / advanced. It lives in the profile settings blob
   // for now, which is the `screen` level of the chain; when the chain arrives it becomes an
   // ordinary inherited setting like anything else, and Mike's point stands that a patient's
   // screen may run `essential` while the clinician's laptop runs `advanced` on one account.
   //
-  // THERE IS NO WAY TO SET IT FROM HERE YET, ON PURPOSE. A level that hides settings can hide
-  // the setting that changes the level, and that door only locks once somebody can close it.
-  // The escape gets built in the same commit as the switch, never after. What is safe today:
-  // Home, Close and every other way out are built unconditionally in `settings.js` and this
-  // filter never sees them.
+  // *** THERE IS A WAY TO SET IT NOW, AND THE ESCAPE SHIPPED IN THE SAME COMMIT. ***
+  // This used to read "there is no way to set it from here yet, ON PURPOSE" — because a level
+  // that hides settings can hide the setting that changes the level, and that door only locks
+  // once somebody can close it. The condition was never "wait", it was "build the escape with
+  // the switch, never after", and that is met: the row is in `SCREEN_FIELDS` declared at
+  // `essential`, the most permissive level, so it renders at EVERY level including the one
+  // that hides everything else. No setting of it can hide it. Home, Close and every other way
+  // out remain unconditional in `settings.js` and this filter never sees them.
   const complexity = () => (settings.get() || {}).complexity || 'standard';
   // *** THE MENU IS ABOUT THE SAME PANEL THE BAR AND THE RING ARE ABOUT. ***
   //
@@ -923,8 +933,89 @@ export async function mountKiosk(root, {
   // the menu could not show one's settings, a tab model had nothing to call "current" (F15),
   // and a remote had nothing to aim at (F16).
   const subjectName = () => { const r = focusedRec(); return r ? (r.title || r.type) : ''; };
+
+  // ---- the two UNIVERSAL sections, which used to be a frame with nothing in it ----------
+  //
+  // Mike's screenshot of the live kiosk: "SETTING UP FOR …" with no name after it, and a
+  // SCREEN heading whose only row was "Close menu". Both headings are built by `settings.js`;
+  // what fills them can only come from here, because only the kiosk knows which screen it is
+  // and where a screen's settings live.
+
+  // WHO — three states, and the third is the one that was being told as the first.
+  // `null` means the lookup has not finished; `false` means it finished and this screen has
+  // never been handed to a person. Rendering both as "…" is what made a permanent answer look
+  // like a permanent wait.
+  let whoState = null;                 // null = looking · false = nobody · { name } = somebody
+  let peopleList = null;               // the account's people, fetched once the menu asks
+  // A LOCAL BACKEND HAS NO PEOPLE ENDPOINT (the dev harness, `makeState`). There is nothing to
+  // pick from and no way to save a pick, so the row is not offered rather than offered and
+  // broken.
+  const canPickPerson = () => !!(profiles.people && profiles.moveToPerson);
+
+  const SCREEN_FIELDS = () => [
+    // COLOURS. Themes are already per-screen (`theme.js`, DECISIONS.md) and the kiosk already
+    // applies one — there was simply no way to change it from the screen it applies to.
+    // `essential`, because on a bedside screen this is a legibility control, not decoration:
+    // it is the row somebody reaches for when the person in front of it cannot read what is
+    // there.
+    { key: 'theme', label: 'Colours', kind: 'choice', level: 'essential',
+      default: DEFAULT_THEME,
+      options: listThemes().map((t) => ({ value: t.id, label: t.label })) },
+    // *** HOW MUCH THIS MENU SHOWS — the switch, and its escape, in the same commit. ***
+    //
+    // The comment above `complexity` said this had no control ON PURPOSE: "a level that hides
+    // settings can hide the setting that changes the level, and that door only locks once
+    // somebody can close it. The escape gets built in the same commit as the switch, never
+    // after." That constraint is met here rather than waived — the field is declared at
+    // `essential`, the most permissive level, so it shows at EVERY level including the one
+    // that hides everything else. There is no setting of it that can hide it.
+    { key: 'complexity', label: 'How much this menu shows', kind: 'choice', level: 'essential',
+      default: 'standard',
+      options: [
+        { value: 'essential', label: 'Just the essentials' },
+        { value: 'standard', label: 'The usual' },
+        { value: 'advanced', label: 'Everything' },
+      ] },
+  ];
+
   const menu = mountSettings(root.querySelector('[data-settings]'), {
-    person: () => (whoName ? { name: whoName } : null),
+    person: () => whoState,
+    // The row under the who heading. It says what is true and, where the account has people
+    // to choose between, opens the picker.
+    whoItems: () => {
+      if (!canPickPerson()) {
+        // Nothing to pick from and nowhere to save it. Say which, rather than showing a
+        // control that cannot do what it says — the rule `settings_fields.js` states for
+        // fields, applied to a row that is not one.
+        return whoState === false
+          ? [{ kind: 'item', id: 'who-none', disabled: true,
+               label: 'This screen is not linked to a person',
+               hint: 'link it in Screens, on the home page' }]
+          : [];
+      }
+      return [{
+        kind: 'item', id: 'who-pick', page: 'who',
+        label: whoState === false ? 'Choose who this screen is for' : 'Someone else is using this screen',
+        hint: whoState === false
+          ? 'nobody yet — their bindings and voice come with them'
+          : `now: ${whoState?.name || '…'}`,
+      }];
+    },
+    // SCREEN-LEVEL SETTINGS. Written to the profile settings blob, which IS the screen level
+    // of the inheritance chain — the same place the theme, the layout and the recovery policy
+    // already live, so this adds a control over existing storage rather than a new home.
+    screenItems: () => [
+      ...(profile?.name ? [{ kind: 'item', id: 'screen-name', disabled: true,
+          label: `This screen: ${profile.name}`, hint: 'renamed in Screens, on the home page' }] : []),
+      ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
+        values: () => settings.get() || {},
+        // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
+        // active level would change nothing today — but passing `advanced` here would be the
+        // quiet way the escape hatch stops being one the first time somebody adds a row.
+        level: complexity(),
+        onStep: (key, value) => { settings.set({ [key]: value }); },
+      }),
+    ],
     // In a laid-out screen every panel is visible at once and the kiosk has no focus
     // concept yet, so there is no single subject and the menu says so rather than
     // guessing at one.
@@ -978,6 +1069,61 @@ export async function mountKiosk(root, {
           level: complexity,
         });
       },
+      // WHO THIS SCREEN IS FOR — the picker, as a page rather than a cycling field.
+      //
+      // A `choice` field would have been less code and the wrong control: handing a screen to
+      // a different person changes whose bindings drive it, whose voice it speaks with and
+      // whose events it writes, and cycling past three names to reach the fourth would APPLY
+      // each one on the way. A page commits on a press and nothing else.
+      get who() {
+        return {
+          title: 'Who this screen is for',
+          render(el) {
+            el.innerHTML = '<div class="st-hint">Loading…</div>';
+            // The list is fetched here rather than at boot: it is a moderator action nobody
+            // takes at the bedside, and a screen must not wait on it to come up.
+            Promise.resolve(peopleList || profiles.people()).then((list) => {
+              peopleList = list || [];
+              if (!peopleList.length) {
+                el.innerHTML = '<div class="st-hint">No people on this account yet. '
+                  + 'Add one on the home page.</div>';
+                return;
+              }
+              el.innerHTML = peopleList.map((who) => {
+                const on = personId && who.id === personId;
+                return `<button class="st-item" type="button" data-person="${esc(who.id)}">
+                  <span class="st-label">${esc(who.name)}</span>
+                  ${on ? '<span class="st-hint">this screen is theirs</span>' : ''}
+                </button>`;
+              }).join('');
+              el.querySelectorAll('[data-person]').forEach((b) => {
+                b.addEventListener('click', async () => {
+                  const id = b.dataset.person;
+                  if (id === personId) return;
+                  const note = el.querySelector('.st-hint') || el;
+                  try {
+                    await profiles.moveToPerson(profileId, id);
+                    personId = id;
+                    const who = peopleList.find((x) => x.id === id);
+                    whoState = who ? { name: who.name } : false;
+                    // The BINDINGS are the other half of this and they are NOT re-read here.
+                    // Reloading is honest about that: whose switch drives this screen changed,
+                    // and the input runtime, the drive socket and the marker stream were all
+                    // built around the old person at boot. Pretending a live swap happened
+                    // would leave a screen that says one name and answers to another.
+                    location.reload();
+                  } catch (err) {
+                    b.insertAdjacentHTML('afterend',
+                      `<div class="st-hint">could not move it: ${esc(err.message || err)}</div>`);
+                  }
+                });
+              });
+            }).catch((err) => {
+              el.innerHTML = `<div class="st-hint">could not load the list: ${esc(err.message || err)}</div>`;
+            });
+          },
+        };
+      },
     },
     extras: () => [
       ...(runtime ? CONTROL_ITEMS : []),
@@ -1027,11 +1173,18 @@ export async function mountKiosk(root, {
   (async () => {
     try {
       const p = await profiles.get(profileId);
-      if (!p?.person_id) return;
+      // *** A SCREEN WITH NO PERSON IS AN ANSWER, NOT A MISSING ONE. ***
+      // This used to `return` here, which left `whoState` at null forever — and null renders
+      // as "…", i.e. as "still loading". A screen that has never been handed to anybody then
+      // looked like a screen whose lookup had hung. `false` is the finished answer, and the
+      // who row offers to fix it.
+      if (!p?.person_id) { whoState = false; menu.refresh(); return; }
       personId = p.person_id;
       if (profiles.people) {
         const who = (await profiles.people()).find((x) => x.id === p.person_id);
-        if (who) { whoName = who.name; menu.refresh(); }
+        // A person_id pointing at somebody who is gone is ALSO a finished answer.
+        whoState = who ? { name: who.name } : false;
+        menu.refresh();
       }
       // REMOTE DRIVE. A verb arriving on the wire is published onto this screen's own
       // bus, so the router, the settings menu and every module answer it exactly as they
@@ -1069,7 +1222,14 @@ export async function mountKiosk(root, {
         cacheKey: `person:${user}:${p.person_id}:${INPUTS_KEY}`,
       }));
       await startMarkerTracking(p.person_id);
-    } catch { /* offline or signed out: the shipped defaults still drive the screen */ }
+    } catch {
+      /* offline or signed out: the shipped defaults still drive the screen */
+      // ...but the who heading must stop saying "…". A lookup that FAILED is not a lookup
+      // still running, and leaving it mid-sentence is the exact defect this section was
+      // opened for. `false` reads as "not set up for anybody yet", which is what somebody
+      // standing at an offline screen can act on.
+      if (whoState === null) { whoState = false; menu.refresh(); }
+    }
   })();
 
   // ---- THE INPUT BUS, at the bedside ---------------------------------------
