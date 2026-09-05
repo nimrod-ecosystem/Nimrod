@@ -89,8 +89,24 @@
  *
  * `min-width/min-height:0` because these hosts are almost always flex children, and a flex item
  * refuses to shrink below its content by default: without it a long question makes the PANEL
- * grow and push its neighbours off the grid rather than scrolling inside its own box. */
-.mod-host{position:relative;overflow:auto;min-width:0;min-height:0}
+ * grow and push its neighbours off the grid rather than scrolling inside its own box.
+ *
+ * *** `!important` ON THE OVERFLOW, AND ONLY ON THE OVERFLOW. *** Same remedy, for the same
+ * reason, as `[hidden]{display:none !important}` at the top of this file — and arrived at the
+ * same way, by watching one-off patches pile up. A single class loses to any page rule of two,
+ * and it lost TWICE in one session: `.k-stage .k-mod{overflow:hidden}` in `kiosk.html`, then
+ * `.trystage{overflow:hidden}` on `modules.html` — the page whose entire job is showing modules.
+ * Both were removed here; the next rounded corner somebody wants would bring it straight back.
+ *
+ * An attribute was tried first and does NOT work: `[attr]` counts in the same specificity group
+ * as a class, so `.mod-host[data-mod-host]` merely TIES with `.rude .rude-mod` and loses on
+ * source order to any page whose <style> comes after this file. Measured, not assumed — it
+ * failed the check in `fit_test` that exists for exactly this.
+ *
+ * The escape hatch that stays: `position`, `min-width` and `min-height` are ordinary, so a host
+ * with a real reason can still change those. What it cannot do is hide a control somebody needs
+ * to press, which is the one thing this class is for. */
+.mod-host{position:relative;overflow:auto !important;min-width:0;min-height:0}
 
 /* *** THE FOUR MODULES THAT STILL DID NOT FIT, AND THE ONE SHAPE THEY SHARE. ***
  *

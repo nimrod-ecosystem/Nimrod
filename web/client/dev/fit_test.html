@@ -25,6 +25,10 @@
      the scroll floor for every host instead. If a copy of `overflow:hidden` ever comes back to a
      host rule it will outrank `mod-host` on specificity and clip silently, which is why the
      first check in each group asserts the host actually scrolls. */
+  /* A HOSTILE HOST, on purpose. Two classes, so it outranks a single-class rule, and it is
+     exactly the shape that clipped every module twice in one session:
+     `.k-stage .k-mod{overflow:hidden}` and `.trystage{overflow:hidden}`. */
+  .rude .rude-mod{overflow:hidden;display:flex;min-width:0}
   #pen{margin-top:20px}
   #pen .k-stage{border:1px solid #ddd8b4;border-radius:10px;margin-bottom:10px}
   .cap{font-size:11px;color:#6b7a70;font-family:ui-monospace,monospace}
@@ -114,6 +118,52 @@ function scrolls(host) {
   return /auto|scroll|overlay/.test(s.overflowY) || /auto|scroll|overlay/.test(s.overflowX);
 }
 
+/**
+ * *** CAN THIS CONTROL BE BROUGHT INTO VIEW AT ALL? ***
+ *
+ * The overflow check above measures the HOST, and that is not enough — it passed Comet while
+ * Comet's Start button was unreachable, which is the exact defect G6 was named after. Comet's
+ * start screen is the universal settings menu, mounted `position:absolute; inset:0` INSIDE the
+ * module. An overlay like that is always exactly the size of its box, so the host has no
+ * overflow to report, and the content that spills out of the overlay is clipped by it.
+ *
+ * So this asks the question Mike actually asked, of the thing he actually could not press:
+ * TRY TO SCROLL TO IT, then look at where it ended up. `scrollIntoView({block:'nearest'})` does
+ * what a person's finger does — it scrolls every scrollable ancestor as far as each one can go —
+ * and if the control still does not overlap the panel afterwards, there is no way to reach it.
+ *
+ * MEASURED, NOT REASONED ABOUT, and the first version of this check is why that matters. It
+ * compared each control against the HOST's scroll extent only, and reported Trivia's fourth
+ * answer and Word Forge's "I don't know" button as unreachable when both sit inside a nested
+ * scroll region that reaches them perfectly well. Working out reachability from geometry means
+ * re-deriving what the browser already knows; asking the browser cannot be wrong about it.
+ *
+ * Zero-size controls are skipped: a module is allowed to keep a button it is not showing.
+ */
+function unreachable(host) {
+  const out = [];
+  const controls = [...host.querySelectorAll(
+    'button,[role="button"],input,select,textarea,a[href]')];
+  for (const el of controls) {
+    const r0 = el.getBoundingClientRect();
+    if (r0.width < 1 || r0.height < 1) continue;
+    try { el.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch { /* old browser */ }
+    const r = el.getBoundingClientRect();
+    const hb = host.getBoundingClientRect();
+    const overlapY = Math.min(r.bottom, hb.bottom) - Math.max(r.top, hb.top);
+    const overlapX = Math.min(r.right, hb.right) - Math.max(r.left, hb.left);
+    // Half of it, not a sliver: a button showing two pixels of its top edge is not a button
+    // somebody can press, and calling that reachable is how a check stops meaning anything.
+    if (overlapY < r.height / 2 || overlapX < r.width / 2) {
+      out.push(`${el.tagName.toLowerCase()}.${el.className || '?'}`
+        + `"${(el.textContent || el.value || '').trim().slice(0, 22)}"`
+        + ` shows ${Math.max(0, Math.round(overlapY))}/${Math.round(r.height)}px`);
+    }
+  }
+  host.scrollTop = 0;
+  return out;
+}
+
 // What a module would have to change for it to have noticed its box. A canvas module's backing
 // store is the honest signal; a flow module's is the size of its own root.
 function signature(host) {
@@ -155,6 +205,37 @@ function signature(host) {
       `overflow-y is ${getComputedStyle(c.host).overflowY}`);
     check(`${type}: fits 420x300 without needing the scrollbar`, !over,
       `overflows by ${o.x}x${o.y}px`);
+    // The check the two above could not make. See `unreachable`.
+    const gone = unreachable(c.host);
+    check(`${type}: every control it drew can be scrolled to`, !gone.length,
+      `${gone.length} unreachable — ${gone.slice(0, 3).join(' · ')}`);
+  }
+
+  // =====================================================================================
+  section('*** the contract survives a page that says otherwise ***');
+  {
+    // WHY THIS IS A CHECK AND NOT A COMMENT. `mod-host` began as one class, and a single class
+    // loses to any page rule of two — or of one written later in the cascade. That is not a
+    // hypothetical: it clipped every module TWICE in the session that wrote this, first via
+    // `.k-stage .k-mod{overflow:hidden}` in `kiosk.html` and then via `.trystage{overflow:hidden}`
+    // on `modules.html`, the page whose entire job is showing modules. Both were removed; the
+    // next rounded corner somebody wants would have brought it straight back.
+    //
+    // So the rule is `.mod-host[data-mod-host]` — a class AND an attribute — and this mounts a
+    // real module under a deliberately rude host to prove it holds.
+    const wrap = document.createElement('div');
+    wrap.className = 'k-stage k-grid rude';
+    wrap.style.cssText = 'width:420px;height:300px;grid-template-columns:1fr;grid-template-rows:1fr';
+    const cell = document.createElement('div');
+    cell.className = 'k-cell mod-box';
+    const h = document.createElement('div');
+    h.className = 'k-mod rude-mod';
+    cell.append(h); wrap.append(cell);
+    document.getElementById('pen').append(wrap);
+    host.mount('trivia', h);
+    await sleep(600);
+    check('a two-class page rule cannot clip a mounted module', scrolls(h),
+      `overflow-y is ${getComputedStyle(h).overflowY}`);
   }
 
   // =====================================================================================
