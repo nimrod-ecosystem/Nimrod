@@ -45,6 +45,21 @@
    * they are untouched. */
   .kiosk{position:fixed;inset:0}
   .k-stage .k-mod{background:var(--card);color:var(--ink);border-radius:14px;overflow:hidden}
+  /* WHICH PANEL THE NEXT PRESS WILL ACT ON. Drawn on the CELL, outside the panel's own box, so
+     it never covers the content — a ring over somebody's photograph would be the wrong trade.
+     `outline` rather than `border` because a border would resize the cell and shift the grid
+     every time focus moved, which on a bedside screen is the panels twitching under a hand.
+     Only ever visible when there is more than one panel: on a single-panel screen "which one"
+     is not a question anybody has. */
+  .k-stage.k-grid .k-cell[data-focused] .k-mod{
+    outline:3px solid var(--moss,#839958);outline-offset:2px}
+  /* NO TRANSITION ON THE RING, and it is not a style preference. The first version faded
+     `outline-color` in over 150ms, and the ring then rendered in the element's own text colour
+     instead of the moss — because a transition sits at its START value until the page
+     composites, and it had not. A focus indicator that is only correct once an animation has
+     run is a focus indicator that is wrong at the moment it is needed most: the frame it
+     appears. It is also the wrong thing to animate — "which panel will the next press act on"
+     should be true immediately or not shown. */
   .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex}
   .k-stage.k-grid{display:grid;gap:2vmin}
   .k-stage.k-grid .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden}
