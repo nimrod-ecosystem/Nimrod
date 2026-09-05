@@ -171,10 +171,51 @@ How many legs does a spider have? | Eight | Six | Ten | Four
 What color do you get mixing blue and yellow? | Green | Purple | Orange | Brown
 Which ocean is the largest? | Pacific | Atlantic | Indian | Arctic`;
 
+
+// WHAT THE SETTINGS MENU SHOWS.
+//
+// Added 2026-09-05. This module read six config keys and declared NONE of them, so every one was
+// live config that no UI could write - the same defect F4 turned out to be. It matters more than
+// it did last week: the transport bar now makes the settings menu reachable on a grid kiosk, so
+// an undeclared panel is one somebody can select and then find nothing to change.
+//
+// KIND follows the rule `photos.js` states: with one switch you walk a control one press at a
+// time and can only travel one way, so THE NUMBER OF STOPS IS THE COST. Short lists of
+// known-good values are choices; genuine ranges where any value means something are numbers.
+//
+// LEVEL: only what somebody actually changes is `standard`. Everything that prices the economy
+// is `advanced`, so the common case is a short menu rather than a long one.
+const SETTINGS = [
+  { key: 'roundLength', label: 'Questions in a round', kind: 'choice', default: 10,
+    level: 'standard',
+    options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
+              { value: 15, label: '15' }, { value: 20, label: '20' }] },
+  { key: 'choices', label: 'Answers to choose from', kind: 'choice', default: 4,
+    level: 'standard',
+    // FEWER IS EASIER, AND IT IS THE FIRST THING TO REACH FOR. With one switch and a scan,
+    // four options is four times as long to reach the last one as two is.
+    options: [{ value: 2, label: '2' }, { value: 3, label: '3' }, { value: 4, label: '4' }] },
+  { key: 'includeWords', label: 'Also ask about the word bank', default: true,
+    level: 'standard', onLabel: 'Yes', offLabel: 'Only written questions',
+    note: 'a vocabulary row already holds everything a multiple-choice question needs' },
+  // *** RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON, and this row is why it is `standard`
+  // rather than buried. A microphone that a person cannot easily find the switch for is a
+  // microphone they cannot easily turn off. ***
+  { key: 'record', label: 'Record answers aloud', default: false, level: 'standard',
+    onLabel: 'On', offLabel: 'Off',
+    note: 'off unless you turn it on' },
+  { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 2,
+    level: 'advanced', min: 0, max: 10, step: 1 },
+  // Deliberately worth something: the correction is the point of a learning game, so the
+  // correction is what pays. Zero here prices reading the answer at nothing.
+  { key: 'tryingPoints', label: 'Points for reading the answer after a miss', kind: 'number',
+    default: 1, level: 'advanced', min: 0, max: 10, step: 1 },
+];
+
 registerModule(
   { type: 'trivia', title: 'Trivia',
     description: 'A quiz over questions you write yourself. Answerable with one switch.',
-    dependsOn: 'none', importance: 'optional' },
+    dependsOn: 'none', importance: 'optional', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, events } = ctx;
     const rand = ctx.rand || Math.random;

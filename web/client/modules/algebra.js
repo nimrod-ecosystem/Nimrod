@@ -211,8 +211,48 @@ const esc = (s) => String(s == null ? '' : s)
 // into the points ledger's `source`, so renaming the identifier orphans the history already
 // recorded under it. A label is what a person reads; a type is what the data is keyed by,
 // and they are allowed to differ.
+
+// WHAT THE SETTINGS MENU SHOWS.
+//
+// Added 2026-09-05. This module read six config keys and declared NONE of them, so every one was
+// live config that no UI could write - the same defect F4 turned out to be. It matters more than
+// it did last week: the transport bar now makes the settings menu reachable on a grid kiosk, so
+// an undeclared panel is one somebody can select and then find nothing to change.
+//
+// KIND follows the rule `photos.js` states: with one switch you walk a control one press at a
+// time and can only travel one way, so THE NUMBER OF STOPS IS THE COST. Short lists of
+// known-good values are choices; genuine ranges where any value means something are numbers.
+//
+// LEVEL: only what somebody actually changes is `standard`. Everything that prices the economy
+// is `advanced`, so the common case is a short menu rather than a long one.
+const SETTINGS = [
+  { key: 'pool', label: 'Which problems', kind: 'choice', default: 'mixed', level: 'standard',
+    options: [
+      { value: 'warm', label: 'Warm up — one step' },
+      { value: 'mixed', label: 'Mixed' },
+      { value: 'boss', label: 'Hardest only' },
+    ] },
+  { key: 'roundLength', label: 'Problems in a round', kind: 'choice', default: 10,
+    level: 'standard',
+    options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
+              { value: 15, label: '15' }, { value: 20, label: '20' }] },
+  { key: 'tryPoints', label: 'Points for a miss, once the working is read', kind: 'number',
+    default: 1, level: 'advanced', min: 0, max: 10, step: 1 },
+  { key: 'streakEvery', label: 'Streak bonus every', kind: 'choice', default: 5,
+    level: 'advanced',
+    options: [{ value: 0, label: 'No streak bonus' }, { value: 3, label: '3 in a row' },
+              { value: 5, label: '5 in a row' }, { value: 10, label: '10 in a row' }] },
+  { key: 'streakBonus', label: 'Streak bonus points', kind: 'number', default: 3,
+    level: 'advanced', min: 0, max: 20, step: 1 },
+  // TEXT, and therefore not cycleable - it says so rather than pretending, the same way
+  // `photos.js` handles `album`. Nobody types a subject name with one switch.
+  { key: 'subject', label: 'Credit counts toward', kind: 'text', default: 'Math',
+    level: 'advanced', note: 'which subject a point of credit discharges' },
+];
+
 registerModule(
-  { type: 'algebra', title: 'Math', description: 'Solve for x, with a calculator on screen — the point is the method, not the arithmetic' },
+  { type: 'algebra', title: 'Math', description: 'Solve for x, with a calculator on screen — the point is the method, not the arithmetic',
+    settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const rand = ctx.rand || Math.random;

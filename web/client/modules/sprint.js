@@ -105,8 +105,49 @@ export function nextPhase(phase, cycle = 0, cyclesBeforeLong = DEFAULTS.cyclesBe
 
 // ---------- the module ----------
 
+
+// WHAT THE SETTINGS MENU SHOWS.
+//
+// Added 2026-09-05. This module read eight config keys and declared NONE of them, so every one was
+// live config that no UI could write - the same defect F4 turned out to be. It matters more than
+// it did last week: the transport bar now makes the settings menu reachable on a grid kiosk, so
+// an undeclared panel is one somebody can select and then find nothing to change.
+//
+// KIND follows the rule `photos.js` states: with one switch you walk a control one press at a
+// time and can only travel one way, so THE NUMBER OF STOPS IS THE COST. Short lists of
+// known-good values are choices; genuine ranges where any value means something are numbers.
+//
+// LEVEL: only what somebody actually changes is `standard`. Everything that prices the economy
+// is `advanced`, so the common case is a short menu rather than a long one.
+const SETTINGS = [
+  { key: 'workMin', label: 'Sprint length', kind: 'choice', default: 25, level: 'standard',
+    unit: 'minutes',
+    options: [{ value: 10, label: '10 minutes' }, { value: 15, label: '15 minutes' },
+              { value: 25, label: '25 minutes' }, { value: 45, label: '45 minutes' }] },
+  { key: 'breakMin', label: 'Break', kind: 'choice', default: 5, level: 'standard',
+    options: [{ value: 3, label: '3 minutes' }, { value: 5, label: '5 minutes' },
+              { value: 10, label: '10 minutes' }] },
+  { key: 'task', label: 'What this sprint is for', kind: 'text', default: '',
+    level: 'standard', placeholder: 'Anything' },
+  { key: 'mult', label: 'Multiplier', kind: 'choice', default: 1, level: 'standard',
+    options: MULTIPLIERS },
+  { key: 'longBreakMin', label: 'Long break', kind: 'choice', default: 15, level: 'advanced',
+    options: [{ value: 10, label: '10 minutes' }, { value: 15, label: '15 minutes' },
+              { value: 30, label: '30 minutes' }] },
+  { key: 'cyclesBeforeLong', label: 'Sprints before a long break', kind: 'number', default: 4,
+    level: 'advanced', min: 1, max: 12, step: 1 },
+  { key: 'pointsPerMin', label: 'Points a minute', kind: 'number', default: 1,
+    level: 'advanced', min: 0, max: 5, step: 1 },
+  // How long a sprint may be picked back up after the screen was left. Not a preference so
+  // much as a judgement about what counts as the same sitting.
+  { key: 'resumeGraceMin', label: 'Pick a sprint back up within', kind: 'choice', default: 60,
+    level: 'advanced',
+    options: [{ value: 0, label: 'Never — start fresh' }, { value: 15, label: '15 minutes' },
+              { value: 60, label: 'An hour' }, { value: 240, label: 'Four hours' }] },
+];
+
 registerModule(
-  { type: 'sprint', title: 'Sprint', description: 'A focus timer — finish a sprint, bank the points' },
+  { type: 'sprint', title: 'Sprint', description: 'A focus timer — finish a sprint, bank the points', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now         = ctx.now || (() => Date.now());
