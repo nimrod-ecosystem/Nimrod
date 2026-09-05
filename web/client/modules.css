@@ -30,7 +30,14 @@
 .clock[data-size="s"] .time{font-size:2.2rem}
 .clock[data-size="m"] .time{font-size:3.2rem}
 .clock[data-size="l"] .time{font-size:4.4rem}
-.clock .when{font-size:1rem;color:var(--midnight);font-weight:600;text-transform:capitalize}
+/* `--ink-soft`, not `--midnight`, and it is a token fix rather than a colour preference.
+   `--midnight` is an ACCENT: themes are free to make it whatever their accent is, and two of
+   them do — forge sets it to amber `#B5651D` and warm to `#a85a2a`. Measured against the card
+   the clock now sits on, that is 4.34 and 4.86 against a 4.5 floor: one failing outright and
+   the other a rounding error away. `--ink-soft` is the token FOR secondary text and clears
+   8.34 (default), 8.85 (dusk), 9.63 (forge), 8.97 (warm), 18.88 (contrast).
+   "Tuesday morning" is supporting text, not an accent, so it was reading the wrong variable. */
+.clock .when{font-size:1rem;color:var(--ink-soft);font-weight:600;text-transform:capitalize}
 .clock .date{font-size:.9rem;color:var(--muted)}
 /* In a sized box, ignore data-size and scale to the room available. Bounded on BOTH ends:
    a clock nobody can read from a bed is useless, and one that runs off the edge is worse.
