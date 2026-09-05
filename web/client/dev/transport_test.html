@@ -237,7 +237,11 @@ function unreachableChips() {
     await sleep(300);
 
     const home = root.querySelector('[data-act="home"]');
-    check('the bar still has a Screens button', !!home);
+    check('the bar still has the button', !!home);
+    // Mike's call, 2026-09-06: the LABEL is "Home", not "Screens" — people see "Screens" and
+    // ask what screens means. Asserted rather than left to a reading of the source, because a
+    // word somebody chose deliberately is a word that should not drift back.
+    check('...and it is labelled Home', /home/i.test(home.textContent), home.textContent.trim());
     check('the picker starts closed', root.querySelector('[data-screens]')?.hidden === true);
 
     // *** WHAT THIS LOOKS LIKE WHEN IT FAILS, SO NOBODY READS IT AS A MYSTERY. ***

@@ -186,6 +186,16 @@ export const CATALOG = [
       + 'time so somebody with a single switch can answer. Switch boards from the row above '
       + 'the cards. It says the word in the room and nowhere else: it is not a nurse call and '
       + 'does not reach anybody who is not there.',
+    // SAYS WHAT THE SHIPPED BOARD IS, rather than letting somebody assume it is a starter set
+    // (D13). `aac_vocab.js` is explicit that the 16-word board was built for one person and has
+    // no eat / drink / hungry / thirsty cards, "which for anybody else is a hole in the middle
+    // of their vocabulary rather than a considered omission." That warning was true and lived
+    // only in a source comment; the person it needs to reach is the one choosing this module.
+    // The default itself is Mike's call and stands (G8) — this is honesty about it, not a
+    // change to it, and the real answer is a proper starter vocabulary, which is D13.
+    note: 'The 16-word board is one family’s, included as a worked example — it has no food or '
+      + 'drink cards because they did not apply to the person it was made for. Expect to '
+      + 'rewrite it for yours.',
   },
   {
     type: 'wallpaper',
