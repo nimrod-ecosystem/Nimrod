@@ -584,6 +584,23 @@ export async function mountKiosk(root, {
           : 'Nothing has been added to this screen yet. Open Screens to add something.';
       stageEl.append(empty);
     }
+
+    // *** PAINT THE RING, HERE, BECAUSE onFocus ONLY FIRES WHEN FOCUS MOVES. ***
+    //
+    // Focus starts unset and `focused()` falls back to the first panel — so a grid kiosk came
+    // up with a switch already pointed at a panel and no ring anywhere, and the only way to
+    // find out where it pointed was to press something and watch what happened. Naming it up
+    // front is the entire point of naming it.
+    //
+    // It lives at the end of `mountLayout` rather than after the input runtime is built,
+    // because `mountLayout` runs LATER than that — the first version put it there and painted
+    // nothing, since `slotRecs` was still empty. Here it also covers a screen SWAP, which
+    // re-runs this function and would otherwise leave the ring on a cell that no longer exists.
+    if (slotRecs.length) {
+      try { runtime?.router?.setFocus?.(slotRecs[0].id); } catch { /* focus is not load-bearing */ }
+      const cell = slotRecs[0]?.el?.closest?.('.k-cell');
+      if (cell) cell.dataset.focused = '1';
+    }
   }
 
   // ---- the stage: one module at a time, mounted lazily --------------------
@@ -999,7 +1016,29 @@ export async function mountKiosk(root, {
     modules: focusRing,
     fallback: DEFAULT_BINDINGS,
     onFocus: (m) => {
-      if (layout) return;                    // every panel is on screen already
+      // *** ON A GRID, SHOW WHICH PANEL THE NEXT PRESS WILL ACT ON. ***
+      //
+      // This used to `return` here, on the reasoning that every panel is already on screen so
+      // there is nothing to switch to. True, and it left focus INVISIBLE: the router happily
+      // moves focus across the slots (see `focusRing`), so a switch drives a different panel
+      // each time it is cycled — and nothing on screen says which. You press, and something
+      // happens somewhere.
+      //
+      // For somebody using a switch that is not a polish issue, it is the difference between a
+      // multi-panel screen being usable and not: you cannot choose a target you cannot see.
+      //
+      // This is NOT the transport bar (F19/G4/D9) and does not build toward it here. No module
+      // list, no buttons, no switching controls — it marks the panel the EXISTING focus concept
+      // already points at. Nothing new was invented to draw it.
+      if (layout) {
+        for (const cell of stageEl.querySelectorAll('.k-cell')) delete cell.dataset.focused;
+        const rec = slotRecs.find((r) => r.id === m.id);
+        // The record's host is inside the cell; the cell is what gets outlined, so the ring
+        // sits outside the module's own box rather than over the top of its content.
+        const cell = rec?.el?.closest?.('.k-cell');
+        if (cell) cell.dataset.focused = '1';
+        return;
+      }
       const i = stageDefs.findIndex((d) => d.id === m.id);
       if (i >= 0 && i !== primary) showPrimary(i);
     },
