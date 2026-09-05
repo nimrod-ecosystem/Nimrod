@@ -332,12 +332,17 @@ export const CATALOG = [
   },
   {
     type: 'sprint',
+    // Named for the technique, because that is what somebody searching knows (G13). This page's
+    // search reads `lead`, `why` and `needs`, so "Pomodoro" appears in the copy as well as the
+    // title - a term in the title alone would not be found by the box above the list.
+    title: 'Focus timer (Pomodoro)',
     group: 'practice',
     use: 'answer',
-    lead: 'A focus timer — finish a sprint, bank the points.',
+    lead: 'A Pomodoro timer — finish a sprint of focused work, bank the points.',
     needs: 'Nothing.',
-    why: 'A short, bounded stretch of effort with a definite end. Useful when starting is '
-      + 'the hard part, which after a brain injury it very often is.',
+    why: 'A short, bounded stretch of effort with a definite end — the Pomodoro technique, '
+      + 'twenty-five minutes and a break. Useful when starting is the hard part, which after '
+      + 'a brain injury it very often is.',
   },
   {
     type: 'quests',

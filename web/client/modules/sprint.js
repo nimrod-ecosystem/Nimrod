@@ -156,7 +156,17 @@ registerModule(
     // the pessimistic `server`. So leaving it off made a screen that lost the platform swap
     // AWAY from a game that would have kept working - which is the opposite of what a fallback
     // is for.
-  { type: 'sprint', title: 'Sprint', description: 'A focus timer — finish a sprint, bank the points',
+  // *** "Focus timer", NOT "Sprint". *** G13, Mike: it *"should say what kind of timer it is,
+  // since people looking for it will know the name of the technique."* Same reasoning as the
+  // AAC board rename: "Sprint" is what this project calls it, and a name only the people who
+  // built it recognise is a name that finds nobody. Pomodoro is the term somebody would
+  // actually type, so it is in the description here and in the copy on the parts page, where
+  // the search reads it.
+  //
+  // The type stays `sprint`, and so does `SOURCE` above — that string groups every point this
+  // module has ever awarded, and renaming it would orphan the history it is the source of.
+  { type: 'sprint', title: 'Focus timer',
+    description: 'A Pomodoro focus timer — finish a sprint, bank the points',
     dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
