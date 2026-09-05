@@ -135,7 +135,32 @@
   .navlinks{display:flex;gap:18px;margin-left:26px;font-size:.92rem}
   .navlinks a{color:var(--ink-soft);text-decoration:none;font-weight:600}
   .navlinks a:hover{color:var(--rosy-deep)}
-  @media (max-width:860px){ .navlinks{display:none} }
+  /* *** THEY SCROLL NOW; THEY USED TO DISAPPEAR. ***
+   * This was `display:none`, so below 860px the ONLY things in the nav were Sign in and Try it
+   * now — and `/modules.html` is linked from here and almost nowhere else. That is very
+   * probably why Mike could not find the parts page: it was not missing, it was hidden at his
+   * window width, and B4 was reported as "nothing links to it".
+   *
+   * The original reason for hiding them stands and is respected: a nav that WRAPS to two lines
+   * on a phone pushes the content off the first screen. Scrolling sideways does not wrap, so
+   * the nav stays one line tall and every link survives. `-webkit-overflow-scrolling` and the
+   * hidden scrollbar keep it from looking like a broken table. */
+  @media (max-width:860px){
+    .navlinks{margin-left:0;gap:14px;flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;
+      -webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .navlinks::-webkit-scrollbar{display:none}
+    .navlinks a{white-space:nowrap}
+    /* `nav .wrap` is a fixed 64px tall, so nothing here may wrap — and squeezed, the two
+       buttons broke onto three lines each and spilled straight out of the bar. So the row is
+       spent deliberately: the badge is decoration rather than a way to anywhere, and "Try it
+       now" is a duplicate of the `Try it` link beside it AND of the full-width button two
+       hundred pixels below in the hero. `Sign in` stays because nothing else on the page
+       reaches it. */
+    .freetag{display:none}
+    nav .right{flex:0 0 auto}
+    nav .right .btn{white-space:nowrap}
+    nav .right .btn.primary{display:none}
+  }
   .freetag{font-size:.72rem;font-weight:600;color:var(--midnight);
     border:1px solid var(--line);background:var(--cream-soft);
     padding:4px 10px;border-radius:999px;white-space:nowrap}

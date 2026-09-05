@@ -26,6 +26,13 @@
     color:var(--ink-soft);font:inherit;font-size:.93rem;font-weight:600;cursor:pointer}
   .s-navb:hover{background:rgba(0,0,0,.05);color:var(--ink)}
   .s-navb.on{background:var(--moss);color:#fff}
+  /* The one item in the sidebar that LEAVES the shell. Same shape as a tab so it does not
+     look bolted on, quieter than one so it does not read as a fifth place to be. */
+  .s-out{margin-top:10px;padding-top:10px;border-top:1px solid var(--line,#e4e0c2)}
+  .s-link{display:block;text-decoration:none;color:var(--midnight);font-weight:650}
+  .s-link:hover{background:rgba(0,0,0,.05)}
+  .h-modsee{display:inline-block;margin-top:2px;font-size:.85rem;font-weight:650;
+    color:var(--midnight)}
   .s-foot{margin-top:auto;padding:0 8px;font-size:.8rem;display:flex;flex-direction:column;gap:4px}
   .s-email{color:var(--muted);word-break:break-all}
   .s-signout{color:var(--midnight)}
@@ -99,6 +106,9 @@
     .s-side{flex-direction:row;align-items:center;gap:10px;border-right:0;border-bottom:1px solid var(--line);
       padding:10px 14px;flex-wrap:wrap}
     .s-nav{flex-direction:row}
+    /* Side by side with the tabs when the sidebar is a strip along the top. */
+    .s-out{margin-top:0;padding-top:0;border-top:0;border-left:1px solid var(--line,#e4e0c2);
+      margin-left:6px;padding-left:6px}
     .s-foot{margin-top:0;margin-left:auto;flex-direction:row;gap:10px;align-items:center}
     .s-email{display:none}
     .s-main{padding:16px}
