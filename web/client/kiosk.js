@@ -598,8 +598,8 @@ export async function mountKiosk(root, {
     // re-runs this function and would otherwise leave the ring on a cell that no longer exists.
     if (slotRecs.length) {
       try { runtime?.router?.setFocus?.(slotRecs[0].id); } catch { /* focus is not load-bearing */ }
-      const cell = slotRecs[0]?.el?.closest?.('.k-cell');
-      if (cell) cell.dataset.focused = '1';
+      paintFocus(slotRecs[0].id);
+      renderMods();
     }
   }
 
@@ -642,9 +642,68 @@ export async function mountKiosk(root, {
     writePosition(user, profileId, primary, storage);
     renderMods();
   }
+  // *** WHAT THE BAR IS ABOUT: THE FOCUSED INSTANCE. ***
+  //
+  // One function, because the bar, the ring on the panel and the settings menu must never
+  // disagree about which panel they mean. Mike's call, 2026-09-05: input focus and the bar's
+  // subject are ONE concept — *a bar pointing at one panel while the switch drives another is
+  // worse than no bar.* So this reads `router.focused()` rather than keeping a second idea of
+  // it alongside.
+  //
+  // On a laid-out screen every panel is mounted, so focus picks between the slots. On a stage
+  // screen only one panel is mounted at a time, so the focused one IS the mounted one.
+  function focusedRec() {
+    if (!layout) return stageRec;
+    if (!slotRecs.length) return null;
+    const id = runtime?.router?.focused?.()?.id;
+    return slotRecs.find((r) => r.id === id) || slotRecs[0];
+  }
+
+  // *** THE TRANSPORT BAR. ***
+  //
+  // This used to return immediately whenever a layout was present, on the reasoning that there
+  // is "nothing to switch between — it's all visible". That was true of SWITCHING and wrong
+  // about the bar: what Mike saw on the live site was `Screens · Next · Mirror · Hush · ⚙ · ⛶`
+  // with no per-module buttons at all (G4), on exactly the screens where naming a panel matters
+  // most — and it is why the gear could not show panel settings either, since both were reading
+  // the same missing concept.
+  //
+  // So on a grid the buttons still exist; pressing one MOVES FOCUS rather than swapping the
+  // stage, because on a grid there is nothing to swap. Same button, two meanings, and the
+  // difference is a property of the screen rather than of the control — which is what keeps it
+  // one bar instead of two.
   function renderMods() {
     modsEl.innerHTML = '';
-    if (layout) return;                     // nothing to switch between — it's all visible
+    const focusId = focusedRec()?.id;
+
+    if (layout) {
+      // *** ONLY PANELS THE ROUTER WILL ACTUALLY FOCUS GET A BUTTON. ***
+      //
+      // `reachable()` is the router's own list — a module type absent from the verb map is
+      // never focused, which is deliberate and documented there. The CLOCK is the standing
+      // example: it declares no verbs, so nothing can be done to it, so focusing it would
+      // strand a switch on a panel with nothing to press.
+      //
+      // My first version listed every slot and produced a Clock button that did nothing when
+      // pressed — a control that lies about what it can do, which on this bar is worse than a
+      // missing one: somebody with one switch spends a press finding out.
+      const focusable = new Set((runtime?.router?.reachable?.() || []).map((m) => m.id));
+      for (const rec of slotRecs) {
+        if (focusable.size && !focusable.has(rec.id)) continue;
+        const b = document.createElement('button');
+        b.className = 'k-dot' + (rec.id === focusId ? ' on' : '');
+        b.textContent = rec.title || rec.type;
+        b.dataset.id = rec.id;
+        b.addEventListener('click', () => {
+          try { runtime?.router?.setFocus?.(rec.id); } catch { /* focus is not load-bearing */ }
+          paintFocus(rec.id);
+          renderMods();
+        });
+        modsEl.append(b);
+      }
+      return;
+    }
+
     stageDefs.forEach((d, j) => {
       const b = document.createElement('button');
       b.className = 'k-dot' + (j === primary ? ' on' : '');
@@ -653,6 +712,17 @@ export async function mountKiosk(root, {
       b.addEventListener('click', () => showPrimary(j));
       modsEl.append(b);
     });
+  }
+
+  // The ring on the panel. Split out of `onFocus` so the bar can call it too — pressing a
+  // button on the bar and cycling focus with a switch have to leave the screen in the same
+  // state, or the two controls are describing different screens.
+  function paintFocus(id) {
+    if (!layout) return;
+    for (const cell of stageEl.querySelectorAll('.k-cell')) delete cell.dataset.focused;
+    const rec = slotRecs.find((r) => r.id === id);
+    const cell = rec?.el?.closest?.('.k-cell');
+    if (cell) cell.dataset.focused = '1';
   }
 
   // ---------------------------------------------------------------------------------
@@ -841,18 +911,30 @@ export async function mountKiosk(root, {
   // Home, Close and every other way out are built unconditionally in `settings.js` and this
   // filter never sees them.
   const complexity = () => (settings.get() || {}).complexity || 'standard';
-  const subjectName = () => (layout || !stageRec ? '' : (stageRec.title || stageRec.type));
+  // *** THE MENU IS ABOUT THE SAME PANEL THE BAR AND THE RING ARE ABOUT. ***
+  //
+  // These three read `focusedRec()` now. They used to read `layout ? null : stageRec`, which is
+  // why a grid kiosk's settings menu showed NO PANEL SETTINGS AT ALL — and the comment where
+  // the null was said so honestly: *"the kiosk has no focus concept yet, so there is no single
+  // subject and the menu says so rather than guessing at one."* There is one now, so it does
+  // not have to guess.
+  //
+  // That one change closes what four rows were waiting on: the bar could not name a panel (G4),
+  // the menu could not show one's settings, a tab model had nothing to call "current" (F15),
+  // and a remote had nothing to aim at (F16).
+  const subjectName = () => { const r = focusedRec(); return r ? (r.title || r.type) : ''; };
   const menu = mountSettings(root.querySelector('[data-settings]'), {
     person: () => (whoName ? { name: whoName } : null),
     // In a laid-out screen every panel is visible at once and the kiosk has no focus
     // concept yet, so there is no single subject and the menu says so rather than
     // guessing at one.
-    subject: () => (layout || !stageRec
-      ? null
-      // mountInstance flattens the manifest: the record carries `title`, NOT `manifest`.
-      // Reading `manifest.title` silently fell back to the raw type, so the menu said
-      // "This panel — photos" instead of "Photos".
-      : { type: stageRec.type, title: stageRec.title || stageRec.type }),
+    // mountInstance flattens the manifest: the record carries `title`, NOT `manifest`.
+    // Reading `manifest.title` silently fell back to the raw type, so the menu said
+    // "This panel — photos" instead of "Photos".
+    subject: () => {
+      const r = focusedRec();
+      return r ? { type: r.type, title: r.title || r.type } : null;
+    },
     fullscreenTarget: root,
     onHome: goHome,
     // THE FOCUSED PANEL'S OWN SETTINGS, declared by the module and rendered by the shell.
@@ -868,7 +950,7 @@ export async function mountKiosk(root, {
     // In a laid-out screen every panel is visible at once and there is no single focused
     // subject, so there are no panel settings to show rather than a guess at whose.
     fields: () => {
-      const rec = layout ? null : stageRec;
+      const rec = focusedRec();
       if (!rec) return [];
       return fieldItems(fieldsFor(rec.instance.manifest, rec.instance), {
         // A FUNCTION, not a snapshot: two presses without a repaint in between would
@@ -1031,12 +1113,11 @@ export async function mountKiosk(root, {
       // list, no buttons, no switching controls — it marks the panel the EXISTING focus concept
       // already points at. Nothing new was invented to draw it.
       if (layout) {
-        for (const cell of stageEl.querySelectorAll('.k-cell')) delete cell.dataset.focused;
-        const rec = slotRecs.find((r) => r.id === m.id);
-        // The record's host is inside the cell; the cell is what gets outlined, so the ring
-        // sits outside the module's own box rather than over the top of its content.
-        const cell = rec?.el?.closest?.('.k-cell');
-        if (cell) cell.dataset.focused = '1';
+        // `paintFocus` and `renderMods` together, because the ring and the bar are two views of
+        // one fact. Moving focus with a switch has to light the same button a press on the bar
+        // would have lit, or the two controls are describing different screens.
+        paintFocus(m.id);
+        renderMods();
         return;
       }
       const i = stageDefs.findIndex((d) => d.id === m.id);
