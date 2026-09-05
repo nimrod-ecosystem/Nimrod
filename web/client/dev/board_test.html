@@ -54,7 +54,7 @@ import {
 import { SYMBOLS, SYMBOL_NAMES, symbolSvg } from '../aac_symbols.js';
 import { createBus } from '../bus.js';
 import { verbTarget, verbsFor, respondsToVerbs } from '../actions.js';
-import { mountModule } from '../module.js';
+import { mountModule, getManifest } from '../module.js';
 import { BOARD_TOPIC, SELECT_KIND } from '../modules/board.js';
 import '../modules/board.js';
 
@@ -430,6 +430,92 @@ try {
     await sleep(10);
     check('the card after the hole is still itself', said.join() === 'C', JSON.stringify(said));
     inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** which board, and how somebody changes it (G8) ***');
+  {
+    // Mike, off the live site 2026-09-06: the module should be called an AAC board, should
+    // default to the LARGER board rather than yes/no/other, and switching should be visible
+    // rather than menu-only. All three are checked here, and the third one twice — because the
+    // way to get "visible switching" wrong is to add a row of chips that changes nothing, and
+    // that would pass a check that only counted chips.
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:520px;height:420px';
+    document.body.append(host);
+
+    // NO `boardId` IN THE ROW. That is the whole point of this first case: it is a screen that
+    // has never chosen, which is what a new one looks like.
+    const st = fakeState({});
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(), state: st, output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(40);
+
+    check('the module is called "AAC board", not "Talk"',
+      getManifest('board').title === 'AAC board', getManifest('board').title);
+    check('a screen that has chosen nothing opens on the 16-card board',
+      inst.impl.__probe().boardId === 'care', inst.impl.__probe().boardId);
+    check('the switcher is on screen', inst.impl.__probe().boardsShown === true);
+    check('...and it offers both built-in boards',
+      JSON.stringify(inst.impl.__probe().boards) === '["yesno","care"]',
+      JSON.stringify(inst.impl.__probe().boards));
+
+    // *** PRESS IT. *** A chip that is drawn and does nothing is exactly the failure this row
+    // was asked for in order to fix.
+    // Guarded rather than dereferenced: with the switcher removed there is no chip, and a
+    // TypeError here aborts the whole section — including the "somebody's own board still
+    // wins" regression below, which is the check most worth keeping alive. Verified by
+    // removing the switcher and watching this report three failures instead of a stack trace.
+    host.querySelector('[data-board="yesno"]')?.click();
+    await sleep(40);
+    check('*** pressing a chip actually changes the board ***',
+      inst.impl.__probe().boardId === 'yesno', inst.impl.__probe().boardId);
+    check('...and it wrote the choice to the same row the menu writes',
+      st.get().boardId === 'yesno', JSON.stringify(st.get()));
+    inst.destroy();
+
+    // *** NOBODY'S OWN BOARD MOVES. *** The default changed from yesno to care; a screen with a
+    // board somebody BUILT must still show that board, and this is the regression that change
+    // could most easily have caused.
+    const own = { version: 1, id: 'mine', name: 'Mine', tier: 4,
+      cells: [{ id: 'a', word: 'Alpha' }, { id: 'b', word: 'Bravo' },
+              { id: 'c', word: 'Charlie' }, { id: 'd', word: 'Delta' }] };
+    const st2 = fakeState({ board: own });
+    const inst2 = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(), state: st2, output: { say: () => {} },
+    });
+    inst2.init();
+    await sleep(40);
+    check('*** a board somebody built still wins over the new default ***',
+      inst2.impl.__probe().boardId === 'mine', inst2.impl.__probe().boardId);
+    check('...and it is offered in the switcher alongside the built-ins',
+      inst2.impl.__probe().boards.includes('custom'),
+      JSON.stringify(inst2.impl.__probe().boards));
+    inst2.destroy();
+
+    // And a screen that DID choose yes/no keeps yes/no — the other half of "no default reaches
+    // anybody who has already answered".
+    const st3 = fakeState({ boardId: 'yesno' });
+    const inst3 = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(), state: st3, output: { say: () => {} },
+    });
+    inst3.init();
+    await sleep(40);
+    check('a screen that chose Yes / No / Other keeps it',
+      inst3.impl.__probe().boardId === 'yesno', inst3.impl.__probe().boardId);
+
+    // The cards win the room when there is not enough of it. See SWITCHER_MIN_H.
+    host.style.height = '150px';
+    inst3.onResize();
+    await sleep(40);
+    check('*** on a panel too short for both, the switcher goes and the cards stay ***',
+      inst3.impl.__probe().boardsShown === false
+        && inst3.impl.__probe().cells === 3,
+      `shown=${inst3.impl.__probe().boardsShown} cells=${inst3.impl.__probe().cells}`);
+    inst3.destroy();
+    host.remove();
   }
 
   // =====================================================================================

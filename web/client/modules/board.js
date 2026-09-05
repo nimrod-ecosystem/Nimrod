@@ -66,6 +66,15 @@ import { speak as speakDefault } from '../voice.js';
 // than technically non-overlapping.
 const TIGHT_PX = 72;
 
+// *** BELOW THIS, THE SWITCHER GOES AND THE CARDS KEEP THE ROOM. ***
+//
+// A board can be one quadrant of a screen, and the switcher is a caregiver's control on a
+// surface somebody TALKS through. Measured: at 260x120 the chip row costs about 40px of 120,
+// which leaves four rows of twenty — and the words then spill out of their own cards. That is
+// the board failing at its actual job to keep a convenience visible, which is the wrong trade
+// every time. The setting is still in the menu at any size.
+const SWITCHER_MIN_H = 220;
+
 // *** HOW LOPSIDED A CARD MAY GET BEFORE THE GRID IS TURNED. ***
 //
 // A card 2.2× longer than it is wide is still a card. Past that it is a stripe, and on a phone
@@ -78,10 +87,35 @@ const TIGHT_PX = 72;
 const LOPSIDED = 2.2;
 
 export const BOARD_TOPIC = 'board/selected';   // live nudge for anything on the same screen
+
+// The id under which a board somebody BUILT is offered in the switcher. Not a real entry in
+// `BUILTIN_BOARDS` — it means "the one stored on this instance", whatever that is today.
+const CUSTOM_ID = 'custom';
+// The chips say what a caregiver would call these, not what the data calls them: `YESNO.name`
+// is "Yes or no" and `CARE.name` is "Talk", and a switcher reading "Talk" next to a module
+// that no longer is would be the exact confusion this rename removes.
+const BOARD_LABELS = { yesno: 'Yes / No / Other', care: 'Care board' };
 export const SELECT_KIND = 'select';           // the durable record's event kind
 
 const DEFAULTS = {
-  boardId: 'yesno',
+  // *** THE DEFAULT IS THE 16-CARD BOARD, NOT YES / NO / OTHER. ***
+  //
+  // Mike, 2026-09-06: *"Default it to the larger board rather than yes/no/other."* Three cards
+  // is what somebody sees first, and it makes the whole module look like a toy — he built this
+  // and still had to know the system was there to find the bigger board inside it.
+  //
+  // *** AND THERE IS A REAL OBJECTION TO THIS, WRITTEN IN `aac_vocab.js` BY AN EARLIER PASS. ***
+  // The care set is ONE PERSON'S BOARD, and it has no eat / drink / hungry / thirsty cards
+  // because those did not apply to them — *"for anybody else that is a hole in the middle of
+  // their vocabulary rather than a considered omission."* That warning is right and it is not
+  // answered by this change; what answers it is a general starter set, which is vocabulary
+  // design for people with communication needs and is not mine to invent. Recorded as a DECIDE
+  // row rather than quietly shipped as though the hole were not there, and the board says its
+  // own provenance on screen now instead of only in a comment.
+  //
+  // Nobody's existing screen moves: this is a DEFAULT, so it applies only where no board has
+  // been chosen and none has been built. See `boardFor`.
+  boardId: 'care',
   scan: false,
   stepMs: SCAN_DEFAULTS.stepMs,
   // 'all' — every card visible, one highlighted. 'one' — only the lit card on screen.
@@ -155,11 +189,26 @@ const DEFAULTS = {
 };
 
 export const SETTINGS = [
-  { key: 'boardId', label: 'Which board', kind: 'choice', default: 'yesno', level: 'standard',
+  { key: 'boardId', label: 'Which board', kind: 'choice', default: 'care', level: 'standard',
     options: [
-      { value: 'yesno', label: 'Yes / No / Other' },
       { value: 'care',  label: 'Care board (16 words)' },
+      { value: 'yesno', label: 'Yes / No / Other' },
     ] },
+  // *** SWITCHING BOARDS IS ON THE BOARD, NOT ONLY IN THE MENU. ***
+  //
+  // Mike: *"Make switching boards visible rather than buried behind the menu."* The setting
+  // above still exists and still works; what was missing is that somebody looking at a board
+  // had no way to know another one existed.
+  //
+  // ON by default, and the hazard is named rather than defaulted around: a person who rests or
+  // drags a hand across the screen can hit a chip and lose the board they were part-way through
+  // a sentence on. That is the same person `tapSelects` exists for, and the note says so — but
+  // it is a separate switch, because coupling two settings means changing one silently changes
+  // what the other does, which is exactly the kind of thing nobody can debug from a bedside.
+  { key: 'showBoards', label: 'Show the board switcher', kind: 'toggle', default: true,
+    level: 'standard', onLabel: 'Yes — a row of boards above the cards', offLabel: 'No',
+    note: 'Turn this off for somebody who rests or drags a hand across the screen — the same '
+      + 'person you would turn off “touching a card chooses it” for.' },
   { key: 'scan', label: 'Scan the cards automatically', kind: 'toggle', default: false,
     level: 'standard' },
   { key: 'stepMs', label: 'Time on each card', kind: 'choice', default: SCAN_DEFAULTS.stepMs,
@@ -196,8 +245,22 @@ export const SETTINGS = [
 ];
 
 registerModule(
-  { type: 'board', title: 'Talk',
-    description: 'A communication board. Big cards that say the word out loud when they are chosen.',
+  // *** THE NAME IS "AAC BOARD", NOT "TALK", AND IT IS THE HIGHEST-VALUE WORD ON THE PAGE. ***
+  //
+  // Mike, testing the live site 2026-09-06: *"People searching for this know the term AAC.
+  // Nobody recognises 'Talk' as the thing they need"* — and he built it and still had to
+  // already know the system to find the larger board inside it.
+  //
+  // AAC is what the field calls this, what a speech therapist will say, and what somebody types
+  // into a search box at two in the morning. "Talk" is what it DOES; "AAC board" is what it IS,
+  // and a catalog entry has to be findable before it can be understood.
+  //
+  // The `type` stays `board`. A type is a stable identifier — it is in saved screens, in input
+  // bindings and in tests — and renaming it is a migration, not a label change. Same rule the
+  // `inputs` tab followed when it became "Devices".
+  { type: 'board', title: 'AAC board',
+    description: 'An AAC communication board. Big cards that say the word out loud when they '
+      + 'are chosen — touched, or walked one at a time for a single switch.',
     // `normal`, not `critical` — and the distinction is not modesty. `importance` feeds the
     // recovery ladder's fallback RANKING (`recovery.js`), so `critical` does not mean "matters
     // a lot", it means "swap to this when something breaks". A board is a tool somebody uses on
@@ -228,10 +291,58 @@ registerModule(
     const el = (s) => mount.querySelector(s);
     const grid = () => el('[data-grid]');
 
+    /**
+     * *** A BOARD SOMEBODY BUILT STILL WINS, AND THAT IS WHY THIS IS NOT ONE LINE. ***
+     *
+     * It used to be: if a custom board is saved, show it, full stop. That was right, and it
+     * meant `boardId` did nothing at all for anybody with their own board — so a visible
+     * switcher would have been a row of chips that changed nothing.
+     *
+     * The distinction that fixes it without moving anybody's board: was `boardId` ever
+     * CHOSEN? A stored settings row that has no `boardId` key belongs to somebody who never
+     * picked one, and they keep exactly what they see today — their own board, or the default.
+     * Only an explicit choice overrides, which is the only case where somebody has asked.
+     *
+     * So the new `care` default cannot reach a screen that has a board on it, and cannot
+     * reach one where a person deliberately chose Yes / No / Other either.
+     */
     function boardFor(id) {
-      const saved = (state?.get?.() || {}).board;      // a board somebody built themselves
-      if (saved && saved.cells) return normalizeBoard(saved);
-      return normalizeBoard(BUILTIN_BOARDS[id] || YESNO);
+      const row = state?.get?.() || {};
+      const saved = row.board;                          // a board somebody built themselves
+      const chose = Object.prototype.hasOwnProperty.call(row, 'boardId');
+      const own = saved && saved.cells ? normalizeBoard(saved) : null;
+      if (own && (!chose || id === CUSTOM_ID)) return own;
+      return normalizeBoard(BUILTIN_BOARDS[id] || own || YESNO);
+    }
+
+    /** The chips above the cards: every board this screen could show, and which one it is on. */
+    function boardChoices() {
+      const row = state?.get?.() || {};
+      const out = Object.entries(BUILTIN_BOARDS)
+        .map(([id, b]) => ({ id, label: BOARD_LABELS[id] || b.name || id }));
+      if (row.board && row.board.cells) {
+        out.unshift({ id: CUSTOM_ID, label: row.board.name || 'Your board' });
+      }
+      return out;
+    }
+
+    function drawBoards() {
+      const bar = el('[data-boards]');
+      if (!bar) return;
+      const choices = boardChoices();
+      // Three ways this row is not drawn, and only one of them is a setting:
+      //   * somebody turned it off;
+      //   * there is only one board, and a switcher offering one option is chrome over a
+      //     communication surface, which is the one place chrome is least welcome;
+      //   * the panel is too short to spare the height — see SWITCHER_MIN_H.
+      const tooShort = (mount.querySelector('.aboard')?.clientHeight || 0) > 0
+        && mount.querySelector('.aboard').clientHeight < SWITCHER_MIN_H;
+      const show = cfg.showBoards !== false && choices.length > 1 && !tooShort;
+      bar.hidden = !show;
+      if (!show) { bar.innerHTML = ''; return; }
+      bar.innerHTML = choices.map((c) => `<button type="button" class="ab-bchip" `
+        + `data-board="${escapeHtml(c.id)}" aria-pressed="${c.id === board.id}">${escapeHtml(c.label)}</button>`)
+        .join('');
     }
 
     // ------------------------------------------------------------------------------------
@@ -292,6 +403,10 @@ registerModule(
       // dashboard stays readable; one that shrank the word to keep a picture would be neither
       // readable nor recognizable. The threshold is the card's short side in px.
       g.classList.toggle('ab-tight', Math.min(w / t.cols, h / t.rows) < TIGHT_PX);
+      // A resize can cross SWITCHER_MIN_H in either direction, and the switcher is the thing
+      // that has to give way. Called from here rather than only from `applyConfig` because a
+      // resize does not change the config and would otherwise never re-ask.
+      drawBoards();
     }
 
     function draw() {
@@ -484,6 +599,7 @@ registerModule(
 
     function applyConfig() {
       board = boardFor(cfg.boardId);
+      drawBoards();
       lit = 0;
       // A different board is a different set of rectangles. Whatever the aim was resting on
       // is not there any more, so the highlight goes with it rather than sitting on whichever
@@ -497,6 +613,9 @@ registerModule(
     return {
       __probe: () => ({
         boardId: board.id, tier: board.tier, cells: board.cells.length,
+        // The switcher AS DRAWN, so a test asserts the chips rather than the setting.
+        boards: [...mount.querySelectorAll('[data-board]')].map((b) => b.dataset.board),
+        boardsShown: !mount.querySelector('[data-boards]')?.hidden,
         lit, scanning: !!scan, reveal: cfg.reveal,
         pointed, aimHold, tapSelects: cfg.tapSelects !== false,
         // The grid AS DRAWN, so a test can assert the transpose rather than the setting.
@@ -513,6 +632,7 @@ registerModule(
       init() {
         mount.innerHTML = `
           <div class="aboard">
+            <div class="ab-boards" data-boards role="group" aria-label="which board" hidden></div>
             <div class="ab-grid" data-grid role="group" aria-label="communication board"></div>
           </div>`;
 
@@ -526,6 +646,27 @@ registerModule(
           ro = new ResizeObserver(() => setUnit());
           ro.observe(grid());
         }
+
+        // The switcher's own clicks. Delegated from the mount because `drawBoards` replaces
+        // the chips whenever the board changes, and a listener on a chip would go with it.
+        //
+        // It writes `boardId` into the SAME settings row the menu writes, so the two cannot
+        // disagree — a visible control that shadowed the menu would be a second source of
+        // truth about which board somebody is on. `state.set` fires `subscribe` below, which
+        // re-reads and redraws; nothing here applies the change by hand.
+        mount.addEventListener('click', (e) => {
+          const chip = e.target.closest('[data-board]');
+          if (!chip || !mount.contains(chip)) return;
+          const id = chip.dataset.board;
+          if (id === board.id) return;                    // already on it
+          try { state?.set?.({ ...(state.get() || {}), boardId: id }); }
+          catch (err) { console.error('board: could not save the choice', err); }
+          // Offline, or no state handle at all (the try-it page mounts with a throwaway one),
+          // the write may never come back — so the board still changes here rather than
+          // leaving somebody pressing a chip that visibly does nothing.
+          cfg = { ...cfg, boardId: id };
+          applyConfig();
+        });
 
         state?.subscribe?.(() => {
           cfg = { ...DEFAULTS, ...(state.get() || {}) };

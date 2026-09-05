@@ -357,7 +357,33 @@
   --ab-line:#000000;
   --ab-lit:#000000;
 }
-.ab-grid{width:100%;height:100%;display:grid;gap:calc(var(--u,1px) * 4)}
+/* *** THE BOARD SWITCHER — a row of boards above the cards, not a menu item. ***
+ *
+ * Mike: *"Make switching boards visible rather than buried behind the menu."* He built this
+ * module and still had to know the system was there to find the larger board inside it.
+ *
+ * It is deliberately SMALL and deliberately at the top. It is a caregiver's control on a
+ * surface somebody talks through, so it must not compete with the cards for either space or
+ * attention — and it is never part of the scan, because "switch board" is not a thing anybody
+ * should say by accident in the middle of a sentence.
+ *
+ * Sized in `--u` like everything else here, so it shrinks with the board when the board is one
+ * quadrant of a screen rather than the whole of it. */
+.aboard{display:flex;flex-direction:column;gap:calc(var(--u,1px) * 2)}
+.ab-boards{display:flex;flex-wrap:wrap;gap:calc(var(--u,1px) * 2);flex:0 0 auto;
+  justify-content:center}
+.ab-bchip{border:1px solid var(--ab-line);background:transparent;color:var(--ab-ink);
+  border-radius:999px;padding:calc(var(--u,1px) * 1.6) calc(var(--u,1px) * 5);
+  font:600 clamp(11px,calc(var(--u,1px) * 9),18px)/1.2 var(--font,system-ui,sans-serif);
+  cursor:pointer;opacity:.72;min-height:34px}
+.ab-bchip:hover{opacity:1}
+.ab-bchip[aria-pressed="true"]{background:var(--ab-lit);border-color:var(--ab-lit);
+  color:var(--ab-bg);opacity:1}
+.ab-bchip:focus-visible{outline:3px solid var(--ab-lit);outline-offset:2px}
+/* `height:auto` and `flex:1`, not `height:100%`: with a switcher above it, a grid claiming the
+   full height of a flex column overflows by exactly the height of the switcher. */
+.ab-grid{width:100%;height:auto;flex:1 1 auto;min-height:0;display:grid;
+  gap:calc(var(--u,1px) * 4)}
 .ab-card{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;overflow:hidden;
   gap:calc(var(--u,1px) * 3);padding:calc(var(--u,1px) * 4);box-sizing:border-box;cursor:pointer;
@@ -372,8 +398,17 @@
 .ab-card .ab-sym{display:block;width:calc(var(--u,1px) * 44);height:calc(var(--u,1px) * 44);
   line-height:0;flex:0 0 auto}
 .ab-card .ab-sym svg{width:100%;height:100%;display:block}
+/* *** `hyphens:auto` BEFORE `break-word`, AND IT IS NOT TYPOGRAPHY. ***
+ * This was `overflow-wrap:anywhere`, which breaks a word at whatever character the line runs out
+ * at — so the care board's "Keyboard" card rendered as "Keyboar / d". On a page of prose that is
+ * ugly; on a card somebody is trying to READ in order to say a word, it is a card they have to
+ * decode first. `hyphens:auto` gives "Key-board" with the hyphen that says a word is continuing,
+ * and `break-word` stays underneath it as the last resort for a word no hyphenation can save.
+ * (`hyphens:auto` needs a language: every page that mounts a module carries `<html lang="en">`.
+ * Without one it is inert and this degrades to `break-word`, which is still better than
+ * `anywhere`.) */
 .ab-card .ab-word{font-size:clamp(11px,calc(var(--u,1px) * 22),96px);font-weight:800;
-  line-height:1.05;text-align:center;overflow-wrap:anywhere}
+  line-height:1.05;text-align:center;overflow-wrap:break-word;hyphens:auto}
 /* Word-only cards get the room the missing symbol would have taken. A card with no picture is
    a normal card, not a broken one. */
 .ab-card:not(:has(.ab-sym)) .ab-word{font-size:clamp(12px,calc(var(--u,1px) * 30),120px)}
