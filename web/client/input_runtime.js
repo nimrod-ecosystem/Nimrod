@@ -152,11 +152,33 @@ export function mountInputRuntime({
   }
 
   // Returns its own detach, so a caller can change person without tearing down the bus.
+  // *** A RUNTIME THAT HAS BEEN DESTROYED MUST NOT ADOPT A NEW STATE HANDLE. ***
+  //
+  // `useState` is called from the kiosk's background person lookup — after two awaits — and a
+  // screen can be torn down inside that window. When it was, `destroy()` had already run its
+  // `state?.destroy?.()` against a `state` that was still null, and then this function assigned
+  // one and started it polling. The result was a **1500ms poll to the server, forever, about a
+  // screen that no longer exists**: not merely a stray timer, but live network traffic and real
+  // server load per dead screen, and it accumulated one more on every mount.
+  //
+  // Measured on 2026-09-06 by cycling `mountKiosk`: 2, 4, 6 outstanding intervals over three
+  // cycles, half of them from here and half from the kiosk's marker tracker.
+  //
+  // The guard lives HERE rather than only in the kiosk because every caller has the same
+  // exposure, and a rule enforced at the one place that owns the resource cannot be forgotten by
+  // the next caller.
+  let torn = false;
+
   async function useState(handle) {
     if (!handle) return () => {};
+    // Already gone. The handle belongs to nobody, so it is closed rather than left holding a
+    // socket open on behalf of a screen that is not there.
+    if (torn) { try { handle.destroy?.(); } catch { /* already gone */ } return () => {}; }
     try { unsubscribe?.(); } catch { /* already gone */ }
     state = handle;
     await handle.load().catch(() => {});     // offline is not a reason to have no bindings
+    // Torn down DURING the load, which is the window this whole comment is about.
+    if (torn) { try { handle.destroy?.(); } catch { /* already gone */ } state = null; return () => {}; }
     apply(normalizeRecord(handle.get()?.[INPUTS_KEY], fallback));
     // The live half. The handle already polls; this is what turns "the clinician saved it"
     // into "her switch does the new thing", with nobody reloading a page anywhere.
@@ -183,6 +205,7 @@ export function mountInputRuntime({
     // is not connected to anything" - two sentences with completely different repairs.
     devices: () => (pads?.list?.() || []).map((p) => ({ ...p })),
     destroy() {
+      torn = true;                           // before anything else — see `useState` above
       try { unsubscribe?.(); } catch { /* already gone */ }
       detach.forEach((off) => { try { off(); } catch { /* already gone */ } });
       pads?.stop?.();

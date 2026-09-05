@@ -143,11 +143,28 @@ registerModule(
     // `segment/done` when its segment ends.
     function makeChildAdapter(p) {
       let child = null, cState = null, cEvents = null;
+      // *** DESTROYED WHILE STILL MOUNTING IS A REAL SEQUENCE, AND IT USED TO LEAK FOREVER. ***
+      //
+      // `mount` awaits two loads before it has a `child` to speak of. A `destroy()` arriving in
+      // that window found `child === null`, did nothing, and returned — and then the await
+      // resolved, `mountModule` ran, `init()` ran, and a module that nobody owns any more armed
+      // its heartbeat and kept it. Not a stalled timer: `progressTick` RE-ARMS ITSELF, so it
+      // never expires. Every director mount/destroy left two immortal five-second timers behind,
+      // one from youtube and one from personal, each holding a dead module's closure alive.
+      //
+      // Measured, not inferred: six cycles produced 4, 8, 12, 14, 16, 18 outstanding timers.
+      // That is R6's failure exactly — *"the failure mode of a leak is a screen that dies at
+      // 3am"* — and it is the kind of thing no other suite in this repo could see, because they
+      // all mount once and stop.
+      let gone = false;
       return {
         async mount(el) {
           cState = makeState(`${instanceId}-${p.id}`);
           cEvents = makeEvents(`${instanceId}-${p.id}`);
           await cState.load(); await cEvents.load();
+          // The only await point in this function, so one check covers it. Everything after is
+          // synchronous and a later `destroy()` finds a fully built adapter to take down.
+          if (gone) { this.destroy(); return; }
           // directed: the child does NOT autostart or self-advance — the director drives
           // every activation via `<id>/next`, so a hidden child never fires a spurious
           // segment/done, and an unconfigured provider hands straight back.
@@ -185,7 +202,16 @@ registerModule(
         deactivate() { rootBus.publish(`${p.id}/deactivate`); },
         flush() { try { cState?.flush?.(); } catch { /* noop */ } },
         resize() { try { child?.onResize?.(); } catch { /* noop */ } },
-        destroy() { try { child?.destroy(); } catch { /* noop */ } cState?.destroy?.(); cEvents?.destroy?.(); },
+        // Idempotent, and it has to be: it is called BY `mount` when a teardown overtook it,
+        // and again by the director's own destroy over `adapters`.
+        destroy() {
+          gone = true;
+          try { child?.destroy(); } catch { /* noop */ }
+          child = null;
+          try { cState?.destroy?.(); } catch { /* noop */ }
+          try { cEvents?.destroy?.(); } catch { /* noop */ }
+          cState = null; cEvents = null;
+        },
       };
     }
 
@@ -357,11 +383,25 @@ registerModule(
           if (wasHeld && current && !torn) segmentWatch?.arm(current);
         });
 
+        // *** THIS LOOP IS THE OTHER HALF OF THE SAME RACE, AND IT IS THE WORSE HALF. ***
+        //
+        // It used to read `await a.mount(...)` and THEN `adapters[p.id] = a`. So an adapter that
+        // was still mounting was not in `adapters` yet — and `destroy()` tears down by iterating
+        // `adapters`, so it could not have found it even if it wanted to. The adapter was
+        // invisible to the only thing that could have stopped it.
+        //
+        // Registering FIRST is what makes the guard inside `makeChildAdapter` reachable: destroy
+        // now finds the half-built adapter, sets its `gone`, and the mount cleans up after its
+        // own await instead of finishing into a screen that is no longer there.
         (async () => {
           for (const p of PROVIDERS) {
-            if (p.real) { const a = makeChildAdapter(p); await a.mount(slots[p.id]); adapters[p.id] = a; }
+            // Somebody tore this down mid-loop. Building the remaining providers would be
+            // building them for nobody, and each one is a module with its own clocks.
+            if (torn) return;
+            if (p.real) { const a = makeChildAdapter(p); adapters[p.id] = a; await a.mount(slots[p.id]); }
             else adapters[p.id] = placeholderAdapter(p, slots[p.id]);
           }
+          if (torn) return;
 
           // The wallpaper is mounted once and kept hidden, not mounted on demand: a hold is
           // when the screen is already in a state nobody wanted, and that is the worst moment
@@ -370,6 +410,10 @@ registerModule(
           const wState = makeState(`${instanceId}-wallpaper`);
           const wEvents = makeEvents(`${instanceId}-wallpaper`);
           await wState.load(); await wEvents.load();
+          // Same await, same race, same fix. A wallpaper mounted after teardown is a second
+          // module nobody owns — and `destroy()` has already run past `wallpaper?.destroy()`,
+          // so nothing would ever come back for it.
+          if (torn) { try { wState.destroy?.(); wEvents.destroy?.(); } catch { /* noop */ } return; }
           wallpaper = mountModule('wallpaper', {
             mount: mount.querySelector('[data-wall]'), bus: rootBus,
             state: wState, events: wEvents, user, profileId,
@@ -385,6 +429,9 @@ registerModule(
           // waiting for the next hold — a provider that hands back an empty segment
           // synchronously makes this ordering real, not theoretical.
           if (heldBy) { const h = heldBy; raiseWallpaper(h); }
+          // And the machine is the third one. `destroy()` calls `machine?.stop()`; starting a
+          // machine after that ran leaves its clock ticking against a screen that is gone.
+          if (torn) { try { wallpaper?.destroy(); } catch { /* noop */ } wallpaper = null; return; }
           machine = createMachine(cfg, { bus, setTimer, clearTimer, now: io.now, rand: io.rand });
           machine.start();               // enters 'youtube' -> youtube/activate -> showProvider('youtube')
         })().catch((e) => console.error('director init', e));
