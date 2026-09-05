@@ -144,6 +144,39 @@ function fakeTimers(){
     instance.destroy();
     check('destroy() cleans up without error', true);
 
+    // ── G12: A HOST THAT DID NOT PRE-LOAD THE STATE ─────────────────────────
+    //
+    // Mike found this module on the public parts page as "an empty cream box": the arrows and
+    // the "Learning" label around a stage with nothing in it. It ships SEVEN default items and
+    // is fine on a kiosk, so it had been read as a weak module. It was not.
+    //
+    // `state.subscribe` replays the current value only `if (loaded)`, and the module did all
+    // its first-run work from that callback. The kiosk awaits `state.load()` before `init()`;
+    // the parts page and the all-at-once audit did not. Nothing ever fired, `indexItems` never
+    // ran, and a module with seven items believed it had none.
+    //
+    // So this mounts it EXACTLY as an unprepared host would — a state handle that has never
+    // been loaded — and asks for a graphic. Every other check in this suite loads first, which
+    // is why every one of them passed while the public page showed an empty box.
+    {
+      const host2 = document.createElement('div');
+      document.body.append(host2);
+      const raw = createState({ url: profiles.stateURL(profile.id, `${mod.id}-unloaded`), user: USER });
+      const rawEvents = createEvents({ url: profiles.eventsURL(profile.id, `${mod.id}-unloaded`), user: USER });
+      const i2 = mountModule('educational', {
+        mount: host2, bus: createBus(), state: raw, events: rawEvents,
+        user: USER, profileId: profile.id,
+        speak: () => {}, setTimer: () => 0, clearTimer: () => {},
+      });
+      i2.init();
+      await sleep(60);
+      const g2 = host2.querySelector('.educational .stage')?.innerHTML || '';
+      check('*** it draws a graphic even when its host never loaded the state ***',
+        /ig-(number|letters|word)/.test(g2), `stage="${g2.slice(0, 60)}"`);
+      i2.destroy();
+      host2.remove();
+    }
+
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));
   }
