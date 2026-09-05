@@ -164,6 +164,12 @@ def url_for(name):
 FAILED_OF = re.compile(r'(\d+)\s+FAILED\s*/\s*(\d+)\s+passed', re.I)
 COUNTS = re.compile(r'(\d+)\s+passed,\s+(\d+)\s+failed', re.I)
 PASSY = re.compile(r'(?:ALL\s+PASS|PASS\s+WITH\s+SKIPS)\D*(\d+)?', re.I)
+# A WHOLE SUITE THAT COULD NOT RUN. `personal` says `SKIPPED - the personal-messages agent not
+# running`, which is a suite declining to judge rather than a suite failing, and reporting it as
+# FAIL is how a red that means "start a service" becomes a red nobody reads. Anchored at the
+# start so a per-check "1 SKIPPED" inside a PASS line cannot be mistaken for it — which is why
+# PASSY is tried first.
+SKIPPED = re.compile(r'^\s*SKIPPED\b', re.I)
 
 
 def parse_summary(text):
@@ -176,6 +182,8 @@ def parse_summary(text):
     m = PASSY.search(text)
     if m:
         return int(m.group(1) or 0), 0
+    if SKIPPED.match(text):
+        return (0, 0)
     return None
 
 
@@ -274,7 +282,7 @@ async def main(names, shotdir=None):
 
     bad = 0
     for r in results:
-        flag = 'ok  ' if r['failed'] == 0 else 'FAIL'
+        flag = 'skip' if SKIPPED.match(r['text']) else ('ok  ' if r['failed'] == 0 else 'FAIL')
         if r['failed'] != 0:
             bad += 1
         print(f"{flag}  {r['name']:<18} {r['text']}")
