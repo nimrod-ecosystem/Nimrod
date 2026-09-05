@@ -303,6 +303,11 @@ try {
       aim, settings: () => stored, frames: () => null,
       onFrame: (f, found, mask) => panel.draw(f, found, mask),
     });
+    // Wrapped BEFORE the panel is mounted, so the count covers the mount itself — which is the
+    // moment the defect happened at.
+    let startCalls = 0;
+    const realStart = tracker.start.bind(tracker);
+    tracker.start = (...a) => { startCalls++; return realStart(...a); };
     const host = document.createElement('div');
     document.body.append(host);
     const panel = mountMarkerPanel(host, {
@@ -310,6 +315,31 @@ try {
       settings: () => stored,
       save: async (patch) => { saves.push(patch); stored = { ...stored, ...patch }; },
     });
+
+    // *** G10: THE PANEL MUST NOT ASK FOR THE CAMERA JUST BY EXISTING. ***
+    //
+    // Mike, off the live site: opening Devices immediately triggered a browser camera
+    // permission prompt, unprompted, on a public demo. `home.js` was calling `tracker.start()`
+    // while mounting the tab — so arriving to bind a SWITCH asked for a webcam.
+    //
+    // Counted rather than inspected: this wraps the tracker's own `start` and asserts it has
+    // not been called. A check that looked for the button would pass while something else
+    // still opened the camera behind it, which is the failure being fixed.
+    check('*** mounting the panel does not start the camera ***', startCalls === 0,
+      `start() called ${startCalls} time(s) during mount`);
+    check('...and it offers a button that says what it is for',
+      /camera/i.test(host.querySelector('[data-start]')?.textContent || ''),
+      host.querySelector('[data-start]')?.textContent || 'no button');
+    check('...with the preview hidden until it is pressed',
+      host.querySelector('[data-view]')?.hidden === true);
+
+    host.querySelector('[data-start]').click();
+    // No `sleep` helper in this suite — it is synchronous throughout, which is why every frame
+    // is hand-built. One microtask turn is all `startCamera` needs to have called `start`.
+    await Promise.resolve();
+    check('*** pressing it is what opens the camera ***', startCalls === 1,
+      `start() called ${startCalls} time(s)`);
+    check('...and the preview appears', host.querySelector('[data-view]')?.hidden === false);
 
     // Before anything is sampled, the panel has to say the ONE thing that gets somebody
     // unstuck — because a detector calibrated by clicking does nothing until it is clicked.

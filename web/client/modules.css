@@ -902,6 +902,21 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
   border-radius: 10px; background: #0c1a14; cursor: crosshair;
   border: 1px solid var(--line, #e4e0c2);
 }
+/* The camera-off placeholder, in the same footprint as the preview it replaces, so pressing
+   the button does not make the page jump. */
+.mk-off {
+  width: 320px; min-height: 240px; border-radius: 10px;
+  border: 1px dashed var(--line, #e4e0c2); background: var(--cream-soft, #FBF9E9);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 16px; text-align: center;
+}
+.mk-off p { margin: 0; font-size: .9rem; color: var(--ink-soft, #3c5346); max-width: 34ch; }
+.mk-start {
+  min-height: 44px; padding: 10px 18px; border-radius: 10px;
+  border: 1px solid var(--midnight, #105666); background: var(--midnight, #105666);
+  color: #fff; font: 650 .95rem var(--font, system-ui, sans-serif); cursor: pointer;
+}
+.mk-start:hover { filter: brightness(1.1); }
 .mk-side { flex: 1 1 240px; min-width: 220px; }
 .mk-advice { margin: 0 0 8px; font-weight: 650; }
 /* Shape as well as color, per module-input-spec: never carry meaning by color alone. */
@@ -924,7 +939,10 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .mk-rows { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-width: 460px; }
 .mk-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .mk-row select { flex: 0 1 220px; }
-@media (max-width: 560px) { .mk-view { width: 100%; height: auto; aspect-ratio: 4 / 3; } }
+@media (max-width: 560px) {
+  .mk-view { width: 100%; height: auto; aspect-ratio: 4 / 3; }
+  .mk-off { width: 100%; }
+}
 
 /* ---- WHICH MICROPHONE (Devices tab) ----
  * An ordered list, best first, with arrows rather than drag-and-drop — see device_panel.js.

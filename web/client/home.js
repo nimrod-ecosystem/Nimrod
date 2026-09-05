@@ -233,10 +233,22 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       settings: () => state.get() || {},
       save: async (patch) => { state.set(patch); await state.flush?.(); },
     });
-    // The camera only opens when somebody is looking at this tab, and closes when they leave.
-    // A calibration panel that left the webcam on after the tab was closed would be the single
-    // worst thing in this repo.
-    await tracker.start().catch((err) => { console.error('marker: camera', err); });
+    // *** THE CAMERA IS NOT STARTED HERE ANY MORE. *** (G10)
+    //
+    // This line used to read `await tracker.start()`, so ARRIVING at Devices — to bind a
+    // switch, to pick a microphone, to read the page — asked the browser for a webcam.
+    // Mike, off the live site: "On a public demo that is a bad first impression and it is
+    // unprompted."
+    //
+    // The rule was already written twenty lines up, for the microphone: *"a settings page that
+    // turned the microphone on to show you a settings page would be its own bug."* The camera
+    // half simply did not follow it. The panel owns the prompt now, behind the button that
+    // says what it is for — and it still starts with no prompt on a return visit where the
+    // browser has already been told yes.
+    //
+    // The other half of the old comment stands and is unchanged: the camera closes when the
+    // tab is left. `destroy` below still tears the tracker down, and a calibration panel that
+    // left the webcam on after its tab was closed would be the single worst thing in this repo.
     return {
       async refresh() { await panelRef.refresh(); return this; },
       destroy() {
