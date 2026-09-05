@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>does it leak? — the soak</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.55 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;
+    margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.25rem;margin:0 0 .3em} h2{font-size:.95rem;margin:18px 0 4px}
+  p{max-width:78ch}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.note{color:#5d7064}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;
+    max-width:78ch}
+  table{border-collapse:collapse;margin:12px 0;font-size:12.5px;
+    font-family:ui-monospace,Consolas,monospace}
+  td,th{padding:2px 12px 2px 0;text-align:left}
+  th{border-bottom:1px solid #e4e0c2}
+  .bad{color:#a4243b;font-weight:700}
+  /* Off-screen, not hidden: a hidden host makes the browser skip layout, and half of what is
+     being measured only happens once something is laid out. */
+  #host{position:absolute;left:-99999px;top:0;width:640px;height:400px}
+</style>
+</head>
+<body>
+<h1>Does it leak? — mount, destroy, repeat, and watch what does not come back</h1>
+
+<div class="warn">
+  <b>This is R6, and R6 is the only row on that list that does not need a Pi, a switch or a
+  physical swap.</b> <i>"Nothing has run for longer than a few minutes. A bedside screen runs for
+  weeks. Object URLs, the scan loop, the wake lock, the settings poll — none of it has been
+  soaked, and the failure mode of a leak is a screen that dies at 3am."</i>
+  <br><br>
+  You do not have to wait three weeks to find out that something adds a timer every time it is
+  mounted. A leak is <b>growth per cycle</b>, and growth is measurable in under a minute.
+</div>
+
+<p><b>What is measured:</b> outstanding intervals, un-fired timeouts, un-cancelled animation
+frames, un-revoked object URLs, listeners left on <code>window</code>/<code>document</code>, and
+DOM nodes. Nothing is read from a source file — the browser's own registries are wrapped and the
+real modules are run through the real mount/destroy contract. <b>Twice in the previous session a
+count taken by reading source patterns turned out to be wrong.</b></p>
+
+<p><b>A one-time cost is not a leak.</b> A module's first mount legitimately does things it never
+does again. What a leak looks like is a cost that <i>recurs</i> — so the first two cycles are
+thrown away and the slope of the rest is what gets reported.</p>
+
+<div id="results"></div>
+<!-- This IS in `run_all` — it finishes there in about 23 seconds alongside three other suites.
+     It was briefly pulled out on the theory that it was too slow for that page; the theory was
+     wrong and came from measuring in a hidden browser window, which throttles every timer to
+     about one a second. Measuring is what put it back. -->
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { installMeter, soak, growthPerCycle, METRICS, overAWeek } from './soak.js';
+import { reportSkipped } from './press_controls.js';
+import { createTryHost } from '../module_try.js';
+import { CATALOG } from '../modules_catalog.js';
+
+// *** IMPORTING A MODULE FILE IS WHAT REGISTERS IT, AND FORGETTING THIS MADE THIS SUITE LIE. ***
+//
+// The first run of this page reported "NOTHING GROWS PER MOUNT/DESTROY CYCLE, across 0 MODULES"
+// — and printed it in green. Every module had failed to mount with `no module registered`, every
+// one was filed as "not measured", and the verdict over the empty set came out as a pass.
+//
+// That is the exact defect this whole session has been about, arriving inside the suite written
+// to look for it: **a check that cannot fail**. It was caught by reading the output rather than
+// the summary, which is the only reason it is a paragraph and not a green number in a report.
+//
+// Two things came out of it, and the import is the less important one. The other is the
+// `rows.length` gate below: **an empty measurement is now a FAILURE, not a pass.**
+const types = CATALOG.map((c) => c.type);
+await Promise.all(types.map((t) => import(`../modules/${t}.js`)
+  .catch((e) => console.error('could not load module file', t, e))));
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function note(t) { const d = document.createElement('div'); d.className = 'note'; d.textContent = t; out.append(d); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// *** THE THRESHOLDS, AND WHY THEY ARE NOT ZERO. ***
+//
+// Least squares over six samples of an integer counter produces small non-zero slopes from
+// nothing at all — one animation frame in flight when a sample was taken, one garbage collection
+// between two. Demanding exactly 0.0 would make this suite fail at random, and a suite that
+// fails at random is a red nobody reads.
+//
+// So each threshold is set below the smallest REAL leak it has to catch. One un-cleared interval
+// per mount is a slope of 1.0; the gate is 0.25. Nodes are noisier because a module may leave a
+// style element or a template behind on its first few mounts, so that one is looser and is a
+// warning rather than the headline.
+const GATE = { intervals: 0.25, frames: 0.5, objectURLs: 0.5, listeners: 0.25, timeouts: 1.0, nodes: 4 };
+
+// How often a bedside screen actually does the thing being cycled, so a slope can be stated as a
+// sentence about the room rather than a number nobody can weigh.
+const MOUNTS_PER_HOUR = 12;    // a screen switching panels every five minutes
+
+const CYCLES = 6;
+
+let skipped = false;
+const meter = installMeter();
+const host = document.getElementById('host');
+
+const table = (rows, cols) => {
+  const t = document.createElement('table');
+  t.innerHTML = `<tr>${cols.map((c) => `<th>${c}</th>`).join('')}</tr>`
+    + rows.map((r) => `<tr>${r.map((c) => `<td class="${String(c).startsWith('!') ? 'bad' : ''}">${String(c).replace(/^!/, '')}</td>`).join('')}</tr>`).join('');
+  out.append(t);
+};
+
+try {
+  // =====================================================================
+  section('the meter measures itself first — a meter nobody has checked is a number nobody can use');
+  {
+    // *** IF THIS SECTION IS WRONG, EVERY NUMBER BELOW IT IS DECORATION. ***
+    // Written first and deliberately: the whole suite is one instrument, and an instrument that
+    // has not been read against a known quantity is how you produce confident nonsense.
+    const before = meter.read();
+    const id = setInterval(() => {}, 10000);
+    check('an interval nobody cleared is counted', meter.read().intervals === before.intervals + 1,
+      JSON.stringify({ before: before.intervals, after: meter.read().intervals }));
+    clearInterval(id);
+    check('...and stops being counted once it is cleared',
+      meter.read().intervals === before.intervals);
+
+    const t = setTimeout(() => {}, 10000);
+    check('an un-fired timeout is counted', meter.read().timeouts === before.timeouts + 1);
+    clearTimeout(t);
+    check('...and clearing it is enough', meter.read().timeouts === before.timeouts);
+
+    // The one that would quietly ruin everything: a fired one-shot must stop counting on its own,
+    // or every module that has ever used a delay reads as a leak.
+    await new Promise((r) => setTimeout(r, 20));
+    check('*** A TIMEOUT THAT HAS FIRED IS NOT OUTSTANDING *** — otherwise every module that uses '
+      + 'a delay reads as leaking', meter.read().timeouts === before.timeouts,
+      String(meter.read().timeouts - before.timeouts));
+
+    const u = URL.createObjectURL(new Blob(['x']));
+    check('an object URL is counted until it is revoked',
+      meter.read().objectURLs === before.objectURLs + 1);
+    URL.revokeObjectURL(u);
+    check('...and revoking it releases the count', meter.read().objectURLs === before.objectURLs);
+
+    const fn = () => {};
+    window.addEventListener('resize', fn);
+    check('a listener on window is counted', meter.read().listeners === before.listeners + 1);
+    window.removeEventListener('resize', fn);
+    check('...and removing it releases the count', meter.read().listeners === before.listeners);
+
+    // A module's own DOM goes when its host does. Counting those would bury a real finding under
+    // a number so large nobody reads the report twice.
+    const el = document.createElement('div');
+    const n2 = meter.read().listeners;
+    el.addEventListener('click', fn);
+    check('a listener on a module’s OWN element is NOT counted — it dies with the panel',
+      meter.read().listeners === n2, String(meter.read().listeners - n2));
+  }
+
+  // =====================================================================
+  section('growthPerCycle: a one-time cost is not a leak');
+  {
+    // The exact shape of a first mount that is more expensive than the rest. If this reported a
+    // leak, the suite would flag every module that has ever cached anything.
+    check('a step at the start and flat after reads as NO growth',
+      growthPerCycle([0, 9, 9, 9, 9, 9]) === 0, String(growthPerCycle([0, 9, 9, 9, 9, 9])));
+    check('one more per cycle reads as exactly 1.0',
+      growthPerCycle([0, 1, 2, 3, 4, 5]) === 1, String(growthPerCycle([0, 1, 2, 3, 4, 5])));
+    check('something that goes DOWN is not a leak',
+      growthPerCycle([9, 8, 7, 6, 5, 4]) === -1);
+    check('one noisy sample cannot invent a slope on its own — least squares, not last minus first',
+      Math.abs(growthPerCycle([5, 5, 5, 5, 9, 5])) < 0.9,
+      String(growthPerCycle([5, 5, 5, 5, 9, 5])));
+    check('too few samples to have an opinion returns 0 rather than guessing',
+      growthPerCycle([1, 2], 2) === 0);
+  }
+
+  // =====================================================================
+  section(`every module: mount and destroy ${CYCLES} times, and see what does not come back`);
+
+  // *** BUILDING THE HOST CAN HANG, AND A HANG MUST BECOME A SENTENCE. ***
+  //
+  // `createTryHost` opens IndexedDB via `createLocalBackend`, and a blocked database open never
+  // settles — no error, no output, nothing to read. This bounds it, on the same rule the agent
+  // suites got the same night: **"cannot run" and "ran and was wrong" must not print the same.**
+  //
+  // *** AND A CORRECTION, WRITTEN HERE BECAUSE A CONFIDENT WRONG CAUSE IN A COMMENT BECOMES
+  // FOLKLORE. *** This guard was added while chasing a page that appeared to hang inside
+  // `run_all`, and the first version of this comment blamed IndexedDB contention between the four
+  // suites sharing the origin. **That was a guess and it was wrong.** Probed directly in the
+  // stalled frame: timers fired on schedule and `indexedDB.open` returned in milliseconds. The
+  // page was not hung at all — it was CRAWLING, because a background iframe throttles timers to
+  // about one per second, and this suite spends 126 settles getting through 21 modules × 6
+  // cycles. It is slow there by construction, which is what `data-timeout-ms` above is for.
+  //
+  // The guard stays because a blocked open is still a real way for this to hang and a bounded
+  // wait costs nothing. But it is not the explanation for the slowness, and nobody should read
+  // it as one.
+  const tryHost = await Promise.race([
+    createTryHost(),
+    new Promise((r) => setTimeout(() => r(null), 20000)),
+  ]);
+  if (!tryHost) {
+    reportSkipped('the local backend — IndexedDB did not open in 20 seconds', location.pathname);
+    throw new Error('__skipped__');
+  }
+  const leaks = [];
+  const rows = [];
+  const unmeasured = [];
+
+  for (const type of types) {
+    let threw = null;
+    const result = await soak(meter, () => {
+      const box = document.createElement('div');
+      box.className = 'mod-box';
+      box.style.cssText = 'width:640px;height:400px';
+      host.append(box);
+      try { tryHost.mount(type, box); }
+      catch (err) { threw = err; }
+      // The point of the cycle is the DESTROY. A module that mounts cleanly and tears down
+      // dirtily is exactly the shape that kills a screen at 3am, and it is invisible to every
+      // other suite in this folder, because they all mount once and stop.
+      try { tryHost.unmount(box); } catch (err) { threw = threw || err; }
+      box.remove();
+    }, { cycles: CYCLES, settleMs: 140 });
+
+    if (threw) {
+      // A module that will not mount here is NOT a leak finding, and reporting it as one would be
+      // the same wolf-crying this suite is built to avoid. Named, and left out of the verdict.
+      unmeasured.push(`${type} (${threw.name}: ${threw.message})`);
+      continue;
+    }
+
+    const bad = METRICS.filter((m) => result.growth[m] > GATE[m]);
+    rows.push([
+      bad.length ? `!${type}` : type,
+      ...METRICS.map((m) => {
+        const v = result.growth[m];
+        const s = v === 0 ? '0' : v.toFixed(2);
+        return bad.includes(m) ? `!${s}` : s;
+      }),
+    ]);
+    if (bad.length) leaks.push({ type, bad, growth: result.growth, series: result.series });
+  }
+
+  table(rows, ['module', ...METRICS]);
+  note('growth per mount/destroy cycle, first two cycles discarded. 0 is what a clean teardown '
+    + 'looks like.');
+
+  // *** THE EMPTY SET IS A FAILURE, NOT A PASS. ***
+  // "Nothing grows across 0 modules" is true and worthless, and it is what this suite printed in
+  // green on its first run. A verdict over nothing measured must never read as a clean bill of
+  // health — that is how a broken harness becomes evidence.
+  check('PRECONDITION: modules were actually measured — a verdict over an empty set is not a pass',
+    rows.length >= types.length - unmeasured.length && rows.length > 0,
+    `${rows.length} measured, ${unmeasured.length} unmeasured, ${types.length} in the catalog`);
+
+  check(`*** NOTHING GROWS PER MOUNT/DESTROY CYCLE, across ${rows.length} modules ***`,
+    rows.length > 0 && leaks.length === 0,
+    leaks.map((l) => `${l.type}: ${l.bad.map((m) => `${m} +${l.growth[m].toFixed(2)}/cycle `
+      + `(${overAWeek(l.growth[m], MOUNTS_PER_HOUR)})`).join(', ')}`).join(' | '));
+
+  // Each metric on its own, so a report says WHICH thing is accumulating rather than that
+  // something is. On a screen somebody repairs at a distance, that is the whole value.
+  for (const m of METRICS) {
+    const bad = leaks.filter((l) => l.bad.includes(m));
+    check(`no module leaks ${m}`, rows.length > 0 && bad.length === 0,
+      rows.length === 0 ? 'nothing was measured'
+        : bad.map((l) => `${l.type} +${l.growth[m].toFixed(2)}/cycle`).join(', '));
+  }
+
+  if (unmeasured.length) {
+    note(`NOT MEASURED — would not mount on this page: ${unmeasured.join(' · ')}`);
+  }
+
+  // =====================================================================
+  section('the long run: one photos panel, driven the way a bedside screen drives it');
+  {
+    // *** THE SECOND HALF OF R6, AND THE ONE THAT IS ACTUALLY ABOUT HER. ***
+    //
+    // The section above cycles mount and destroy. That is not what her screen does — it mounts
+    // photos ONCE and then advances it for weeks. A module can tear down perfectly and still
+    // accumulate a URL, a node or a listener on every advance, and nothing above would see it.
+    //
+    // Photos, specifically, because R7: *"photos, and being able to CALL her, are what matter."*
+    const box = document.createElement('div');
+    box.className = 'mod-box';
+    box.style.cssText = 'width:640px;height:400px';
+    host.append(box);
+
+    let rec = null;
+    try { rec = tryHost.mount('photos', box); } catch { /* reported below */ }
+    check('PRECONDITION: a photos panel is mounted and running', !!rec);
+
+    if (rec) {
+      await sleep(500);
+      // 240 advances is twenty hours at the default five-minute interval, and it takes about a
+      // minute. That is the whole argument for measuring growth instead of waiting: the failure
+      // this is looking for does not need three weeks to become visible, it needs enough
+      // repetitions to have a slope.
+      const ADVANCES = 240;
+      const SAMPLE_EVERY = 40;
+      const series = Object.fromEntries(METRICS.map((m) => [m, []]));
+      for (let i = 1; i <= ADVANCES; i += 1) {
+        // `publish`, not `emit`. A bus scope exposes publish; `emit` belongs to a named
+        // SOURCE, and calling it here threw — caught by the outer try, reported as
+        // "unexpected error", which is the suite doing its job on its own author.
+        tryHost.bus.publish('photos/next', 1);
+        if (i % SAMPLE_EVERY === 0) {
+          await sleep(60);
+          const s = meter.read();
+          for (const m of METRICS) series[m].push(s[m]);
+        }
+      }
+      const growth = Object.fromEntries(METRICS.map(
+        // warmup 1: the first sample covers the initial listing, which is a one-time cost like
+        // any other first mount.
+        (m) => [m, growthPerCycle(series[m], 1) / SAMPLE_EVERY]));
+
+      table([['photos', ...METRICS.map((m) => {
+        const v = growth[m];
+        const s = v === 0 ? '0' : v.toFixed(4);
+        return Math.abs(v) > 0.02 ? `!${s}` : s;
+      })]], ['module', ...METRICS]);
+      note(`growth per ADVANCE over ${ADVANCES} advances — twenty hours at the shipped `
+        + 'five-minute interval.');
+
+      const perAdvance = ['objectURLs', 'nodes', 'listeners', 'intervals'];
+      const bad = perAdvance.filter((m) => growth[m] > 0.02);
+      check('*** ADVANCING THE SLIDESHOW 240 TIMES ACCUMULATES NOTHING *** — the failure mode of '
+        + 'a leak here is a screen that dies at 3am in a room she cannot leave',
+        bad.length === 0,
+        bad.map((m) => `${m} +${growth[m].toFixed(4)}/advance `
+          + `(${overAWeek(growth[m], 12)})`).join(', '));
+
+      // A panel that is still ON is the other half of the claim. A module that stopped drawing
+      // after fifty advances would also accumulate nothing, and would be a worse bug.
+      const drawing = box.querySelectorAll('img, video, canvas').length > 0
+        || (box.textContent || '').trim().length > 0;
+      check('...and it is still drawing at the end, rather than having quietly stopped', drawing,
+        box.innerHTML.slice(0, 120));
+
+      tryHost.unmount(box);
+    }
+    box.remove();
+  }
+
+  // =====================================================================
+  section('the whole kiosk, mounted and torn down — the settings poll, the health watch, the '
+    + 'input runtime and the cursor, none of which live in a module');
+  {
+    // *** R6 NAMES THINGS THAT ARE NOT IN ANY MODULE, AND THE SECTIONS ABOVE CANNOT SEE THEM. ***
+    //
+    // *"Object URLs, the scan loop, the wake lock, the settings poll."* Only the first of those
+    // belongs to a module. The settings poll, the health watch, the input runtime, the scan loop
+    // and the cursor are all the SHELL's, and the shell is the thing that actually stays up for
+    // weeks — a module gets swapped, the kiosk does not.
+    //
+    // So this cycles `mountKiosk` itself against the real server. It is slower than the module
+    // loop because every mount is a round trip, which is why it runs four times rather than six.
+    const { mountKiosk } = await import('../kiosk.js');
+    const { createProfilesClient } = await import('../profile.js');
+    const { createBus } = await import('../bus.js');
+
+    const USER = `soak-${Math.floor(Math.random() * 1e6)}`;
+    let profile = null;
+    try {
+      const profiles = createProfilesClient({ user: USER });
+      profile = await profiles.create('SOAK-bedside');
+      await profiles.addModule(profile.id, 'photos');
+      await profiles.addModule(profile.id, 'clock');
+    } catch (err) {
+      // No server behind this page is a reason to say nothing, not a reason to report a leak.
+      note(`NOT MEASURED — the kiosk section needs the API and it is not answering: ${err.message}`);
+      profile = null;
+    }
+
+    if (profile) {
+      const profiles = createProfilesClient({ user: USER });
+      const shell = document.createElement('div');
+      host.append(shell);
+      let broke = null;
+
+      const result = await soak(meter, async () => {
+        const box = document.createElement('div');
+        box.style.cssText = 'width:1280px;height:800px';
+        shell.append(box);
+        let k = null;
+        try {
+          k = await mountKiosk(box, { user: USER, profileId: profile.id, profiles, bus: createBus() });
+        } catch (err) { broke = broke || err; }
+        // The point is the teardown, again. A kiosk that comes up cleanly and goes down dirtily
+        // is the shape that matters here, because a screen is torn down and rebuilt every time
+        // somebody switches profiles — and then left up for a fortnight.
+        try { k?.destroy(); } catch (err) { broke = broke || err; }
+        box.remove();
+      }, { cycles: 4, settleMs: 400, warmup: 1 });
+
+      if (broke) {
+        note(`NOT MEASURED — the kiosk would not mount or tear down here: ${broke.message}`);
+      } else {
+        table([['kiosk', ...METRICS.map((m) => {
+          const v = result.growth[m];
+          const str = v === 0 ? '0' : v.toFixed(2);
+          return v > (GATE[m] ?? 1) ? `!${str}` : str;
+        })]], ['surface', ...METRICS]);
+        note('growth per mount/destroy of the WHOLE SHELL, first cycle discarded.');
+
+        // Intervals first and named on their own, because that is what the settings poll and the
+        // health watch actually are — a kiosk that leaves one behind keeps talking to the server
+        // about a screen that is gone.
+        check('*** THE SHELL LEAVES NO INTERVAL RUNNING — the settings poll and the health watch '
+          + 'stop when the screen they belong to does ***',
+          result.growth.intervals <= GATE.intervals,
+          `+${result.growth.intervals.toFixed(2)}/cycle `
+          + `(${overAWeek(result.growth.intervals, 2)}) series=${result.series.intervals.join(',')}`);
+
+        const shellBad = ['objectURLs', 'listeners', 'frames']
+          .filter((m) => result.growth[m] > GATE[m]);
+        check('...and no object URLs, window listeners or animation frames either',
+          shellBad.length === 0,
+          shellBad.map((m) => `${m} +${result.growth[m].toFixed(2)}/cycle`).join(', '));
+      }
+      shell.remove();
+    }
+  }
+
+  // =====================================================================
+  section('and the teardown puts the screen back');
+  {
+    // The last thing a soak should prove: closing everything leaves nothing behind. This is the
+    // shape of a screen being switched from one profile to another, which the kiosk does.
+    const before = meter.read();
+    tryHost.destroy();
+    await sleep(200);
+    const after = meter.read();
+    check('destroying the whole host leaves no outstanding intervals',
+      after.intervals <= before.intervals, `${before.intervals} -> ${after.intervals}`);
+    check('...and no un-revoked object URLs beyond what it started with',
+      after.objectURLs <= before.objectURLs, `${before.objectURLs} -> ${after.objectURLs}`);
+    const detail = meter.listenerDetail();
+    note(`listeners still on window/document at the end: ${JSON.stringify(detail)}`);
+  }
+
+} catch (err) {
+  // A deliberate skip already said its piece and set the summary; re-reporting it as an
+  // unexpected error would turn one honest line into a false failure.
+  if (String(err && err.message) !== '__skipped__') {
+    check('unexpected error', false, String((err && err.stack) || err));
+  } else {
+    skipped = true;
+  }
+} finally {
+  // A meter left installed is its own leak, and this page is not exempt from the thing it tests.
+  meter.uninstall();
+}
+
+if (!skipped) {
+  const s = document.getElementById('summary');
+  s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  s.className = failed ? 'fail' : 'pass';
+  s.dataset.done = 'true'; s.dataset.failed = String(failed);
+}
+</script>
+</body>
+</html>
