@@ -53,10 +53,19 @@ export function createBus() {
       if (b.source !== source) continue;
       if (b.signal !== signal && b.signal !== '*') continue;
       const out = b.transform ? b.transform(payload, signal) : payload;
+      // THE "IGNORE THIS SIGNAL" RULE BELONGS TO THE TRANSFORM, AND ONLY TO IT. Applying it
+      // to an untransformed signal silently swallowed every BARE emit - `emit('next')` with
+      // no payload - because `undefined` in meant `undefined` out. That killed eleven
+      // on-screen buttons across six modules (photos/youtube/personal/educational next+prev,
+      // director and interstitials skip) and the switch simulator on the landing page. It hid
+      // for so long because the same modules ALSO answer their bus topic directly, so every
+      // test that drove `photos/next` passed while the arrow under the photo did nothing.
+      // Without a transform there is nobody to have made that decision, so the signal fires.
+      if (b.transform && (out === undefined || out === null)) continue;
       // Meta rides through untransformed. A `transform` reshapes the VALUE; who sent it is
       // not the transform's to rewrite, and letting it be would make a sender forgeable by
       // any binding rather than only by a publisher.
-      if (out !== undefined && out !== null) publish(b.topic, out, meta);
+      publish(b.topic, out, meta);
     }
   }
 
