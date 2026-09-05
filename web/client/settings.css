@@ -23,6 +23,27 @@
 }
 .st-scrim[hidden] { display: none; }
 
+/* INLINE — the menu scoped to the box it was mounted into, for a MODULE asking about itself.
+ *
+ * `position: absolute` against the panel instead of `fixed` against the viewport, and a
+ * z-index that sits above the module's own canvas without competing with the shell's menu
+ * (9000) or the cursor (60). A game opening its settings darkens its own quarter of a grid
+ * and nothing else; on a full-screen kiosk the panel IS the screen, so it still looks the way
+ * the shell's menu does.
+ *
+ * `aria-modal="true"` on the panel is a small lie in this mode — it is modal to the panel, not
+ * to the page — but the alternative is a game whose settings are not announced as a dialog at
+ * all, and the focus trap inside it is real either way.
+ *
+ * Requires the host to be a positioned ancestor. Every module mount is, via `.mod-box` or the
+ * module's own root; this is stated because a host that forgets would get a menu escaping to
+ * the nearest positioned thing, which is exactly the bug the mode exists to prevent. */
+.st-scrim.st-inline {
+  position: absolute;
+  z-index: 50;
+  padding: 2vmin;
+}
+
 .st-panel {
   width: min(560px, 92vw);
   max-height: min(84vh, 780px);

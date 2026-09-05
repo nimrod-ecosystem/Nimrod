@@ -207,6 +207,34 @@ const SETTINGS = [
       { value: 3000, label: 'A few seconds' },
       { value: 6000, label: 'Longer' },
     ] },
+  // THE LAST THREE, ADDED 2026-09-05. Sixteen keys were read and thirteen declared, so these
+  // three were live config no menu could reach — the same gap F4 turned out to be. All three
+  // are `advanced` because each one TUNES another setting rather than standing on its own:
+  // none of them means anything until the setting above it is on.
+  { key: 'minWaitMs', label: 'Never wait less than', kind: 'choice', default: 2500,
+    level: 'advanced',
+    note: 'the floor the adaptive wait may never go below',
+    options: [
+      { value: 1000, label: '1 second' },
+      { value: 2500, label: '2.5 seconds' },
+      { value: 5000, label: '5 seconds' },
+      { value: 8000, label: '8 seconds' },
+    ] },
+  { key: 'adaptiveWait', label: 'Adjust the wait to how it is going', default: true,
+    level: 'advanced', onLabel: 'Yes — longer after a slip, shorter after a clean wait',
+    offLabel: 'No — always the same wait',
+    note: 'challenge only; a calm wait is not timed against anybody' },
+  { key: 'confirmMs', label: 'How long the “end this session?” ask waits', kind: 'choice',
+    default: 12000, level: 'advanced',
+    // It TIMES OUT BACK INTO PLAY rather than sitting there, which is the invariant that
+    // makes an optional confirm safe at all: nobody can be held on a prompt they cannot
+    // answer. So there is no "wait forever" option here, and there must not be one.
+    note: 'it always times out back into the game — nobody is ever held on it',
+    options: [
+      { value: 6000, label: '6 seconds' },
+      { value: 12000, label: '12 seconds' },
+      { value: 20000, label: '20 seconds' },
+    ] },
 ];
 
 function readTheme(el) {

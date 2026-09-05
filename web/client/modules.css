@@ -1,3 +1,19 @@
+/* THE SETTINGS MENU'S OWN STYLES, PULLED IN HERE ON PURPOSE.
+ *
+ * A module can now open the universal menu about ITSELF (see comet.js), which means the menu
+ * has to be styled wherever a module is mounted — not only on `kiosk.html`, which was the one
+ * page that linked `settings.css`. Sixteen module-hosting pages did not, so a game opening its
+ * settings on any of them would have rendered an unstyled list of rows.
+ *
+ * Importing it here rather than adding a <link> to sixteen files is the difference between
+ * fixing this once and fixing it again for the next module that uses the menu: every host that
+ * can mount a module already loads THIS stylesheet, by definition.
+ *
+ * `@import` must precede every rule, which is why it sits above `.mod-box` rather than next to
+ * the cursor styles it is related to. Pages that also <link> settings.css directly are fine —
+ * the URL is identical and the browser fetches it once. */
+@import url('./settings.css');
+
 /* A host that hands a module a fixed box adds `mod-box`, and the module can then size
    itself against that box with container-query units (1cqh = 1% of the box's height).
    Without it, cq units fall back to the viewport, which is why nothing breaks in the

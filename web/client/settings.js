@@ -103,6 +103,9 @@ export function buildItems({
   fields = [],
   canFullscreen = false,
   isFullscreen = false,
+  // See the Home row below. Default true, because "there should be SOME way out" is the
+  // default that survived F18's correction.
+  includeHome = true,
 } = {}) {
   const out = [];
 
@@ -171,7 +174,12 @@ export function buildItems({
   // back — so this menu offers one unless a host has deliberately put it somewhere else.
   // "Reachable" was the thing worth protecting; "always visible on this screen" was the
   // overreach, and it is the difference Mike drew himself.
-  out.push({ kind: 'item', id: 'home', label: 'Home' });
+  // ...and `includeHome` is how a host says it HAS put one somewhere else, which is exactly
+  // the case F18 left room for. A module opening this menu about ITSELF passes false: from
+  // inside one panel of a screen, "Home" would mean navigating the whole kiosk away, which is
+  // not that panel's to offer and is already on the shell's own menu. A row that cannot
+  // honestly do what it says is worse than an absent one.
+  if (includeHome) out.push({ kind: 'item', id: 'home', label: 'Home' });
   out.push({ kind: 'item', id: 'close', label: 'Close menu' });
 
   return out;
@@ -201,10 +209,36 @@ export function mountSettings(root, {
   pages = {},                  // { id: { title, render(el) } }
   onHome = null,
   onSelect = null,             // told about every activation — the host wires the effects
+  // *** TOLD WHENEVER THE MENU CLOSES, however it closed. ***
+  //
+  // `onSelect` cannot serve this: `activate` handles `close` and returns BEFORE calling it,
+  // and the menu can also be closed by Escape, by the `back` verb, or by clicking the scrim.
+  // A host that needs to know has four paths to miss and no way to catch three of them.
+  //
+  // It exists because a MODULE can now open this menu about itself. When a game opens to its
+  // own settings, closing the menu IS starting the game — and without this the panel would
+  // sit there with the menu gone and the game not begun, which is a dead rectangle somebody
+  // has to guess their way out of.
+  onClose = null,
   gated = true,
   isModerator = () => true,
   onRefused = null,
   fullscreenTarget = null,     // an element, or null for "this surface cannot go fullscreen"
+  // *** WHERE THE MENU IS ALLOWED TO REACH. ***
+  //
+  // The default is the whole viewport, which is right for the SHELL's menu — it is the one a
+  // person opens about the screen, and it is meant to take the screen over while it is up.
+  //
+  // `inline` scopes it to whatever it was mounted into. That exists because a MODULE can now
+  // open this menu about itself, and a module that covered the entire display to ask about
+  // its own settings would be a panel reaching outside its own box — the one thing the module
+  // contract forbids. On a grid kiosk a game asking about itself must darken its own quarter
+  // and nothing else, or setting up Wait-and-Go would blank out the photographs next to it.
+  //
+  // It is a positioning choice and nothing else: the same markup, the same one-switch cursor,
+  // the same rows. Nothing about what the menu CAN do changes with it.
+  inline = false,
+  includeHome = true,
   documentRef = (typeof document !== 'undefined' ? document : null),
 } = {}) {
   if (!root) throw new Error('mountSettings: a root element is required');
@@ -219,7 +253,7 @@ export function mountSettings(root, {
   let router = null;
 
   root.innerHTML = `
-    <div class="st-scrim" data-scrim hidden>
+    <div class="st-scrim${inline ? ' st-inline' : ''}" data-scrim hidden>
       <div class="st-panel" role="dialog" aria-modal="true" aria-label="Settings" tabindex="-1" data-panel>
         <div class="st-list" data-list></div>
         <div class="st-page" data-page hidden></div>
@@ -245,6 +279,7 @@ export function mountSettings(root, {
       fields: (() => { try { return fields() || []; }
         catch (err) { console.warn('settings: fields() threw', err); return []; } })(),
       canFullscreen: !!fullscreenTarget,
+      includeHome,
       isFullscreen: isFullscreen(),
     });
     const keep = nav.current()?.id;
@@ -375,6 +410,9 @@ export function mountSettings(root, {
     // document and a sighted keyboard user is lost.
     try { returnFocus?.focus?.(); } catch { /* it may have been unmounted */ }
     returnFocus = null;
+    // Last, and never allowed to throw the close: a host that fails while reacting must not
+    // leave the menu half-closed, which is the one state nothing can recover from.
+    try { onClose?.(); } catch (err) { console.error('settings: onClose', err); }
   }
 
   function toggle() { return open ? (close(), false) : show(); }
