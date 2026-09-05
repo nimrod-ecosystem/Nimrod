@@ -32,7 +32,14 @@
   .v-empty{background:#fdf0d5;color:#7a5a12}
   .v-threw{background:#fbe0dc;color:#8d2a1c}
   .v-none{background:#eee;color:#555}
-  .stage{height:240px;position:relative;background:#0A3323;overflow:hidden}
+  /* `var(--card)`, not `#0A3323`. That hex is `--ink`'s OWN value in the default theme, so
+     every module on this page was drawing `--ink` text on an `--ink` background — a contrast
+     ratio of exactly 1.00, in all five themes, and it did not move when the theme did.
+     Cosmetic, because this is a dev harness, but actively misleading: some of "the text is
+     hard to read" almost certainly came from looking at this page rather than at a real
+     kiosk. `--card` is the surface modules are drawn against, which is now also what the
+     kiosk gives them, so this harness shows what the product shows. */
+  .stage{height:240px;position:relative;background:var(--card);overflow:hidden}
   .stage > div{position:absolute;inset:0}
   .foot{padding:9px 12px;font-size:.85rem;color:#3c5346;border-top:1px solid #ece8cf}
   .needs{color:#5d7064}
