@@ -38,6 +38,10 @@ import { createEvents } from '../events.js';
 import { createBus } from '../bus.js';
 import { mountModule } from '../module.js';
 import '../modules/algebra.js';
+import '../modules/comet.js';
+import '../modules/pond.js';
+import '../modules/pressgame.js';
+import '../modules/wallpaper.js';
 import '../modules/clock.js';
 
 const USER = 'fit-' + Math.floor(Math.random() * 1e6);
@@ -83,6 +87,122 @@ function cell(w, h, label) {
 }
 
 (async () => {
+  // =====================================================================================
+  // FIRST, AND BEFORE ANY NETWORK CALL. Everything below needs a live API, so on a static
+  // server this suite dies at the first request and reports 0 passed. Placed after that,
+  // these checks would never run — the same trap the Word Forge and photos checks hit.
+  section('*** a panel cannot paint outside its own slot ***');
+  {
+    // THE BUG THIS GUARDS, and it reached the live site. `.k-mod` and `.k-cell` had no
+    // `position`, so a module whose own root is `position:absolute; inset:0` — which is how
+    // every full-bleed module is written — resolved against the nearest positioned ancestor,
+    // and that is `.k-stage`. It filled the WHOLE STAGE and painted over its neighbours.
+    //
+    // Mike diagnosed it from two screenshots: Comet's balloon field landed in the same band at
+    // the document's top-left under two completely different layouts, and its score in the
+    // top-right corner of the document. A canvas ignoring layout entirely.
+    //
+    // Measured before the fix: the comet root came back at the stage's rect (800x225 at
+    // 100,80) while its cell was 375x225 at 505,100.
+    //
+    // *** AND `container-type: size` DID NOT CONTAIN IT. *** The cell already carried it for
+    // container queries, which reads like it should establish a containing block. It does not.
+    // That is why this is a test and not a comment.
+    const stage = document.createElement('div');
+    stage.className = 'k-stage k-grid';
+    stage.style.cssText = 'position:absolute;left:100px;top:80px;width:800px;height:500px;'
+      + 'display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px';
+    document.body.append(stage);
+    const cells = [];
+    for (let i = 0; i < 4; i++) {
+      const c = document.createElement('div');
+      c.className = 'k-cell mod-box';
+      stage.append(c);
+      cells.push(c);
+    }
+    const rect = (el) => {
+      const b = el.getBoundingClientRect();
+      return { l: Math.round(b.left), t: Math.round(b.top), w: Math.round(b.width), h: Math.round(b.height) };
+    };
+    const fakeState = () => { const subs = []; let v = {};
+      return { get: () => v, set: (p) => { v = { ...v, ...p }; subs.forEach((f) => f()); },
+               subscribe: (f) => subs.push(f), flush() {} }; };
+    const fakeEvents = () => ({ append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() });
+
+    // The full-bleed modules — the three canvas ones plus wallpaper, whose root is
+    // `position:absolute; inset:0` with a dark green background. Mike saw that one turn the
+    // whole page dark green when added to a layout; it is the same defect, not a second one.
+    for (const type of ['comet', 'pond', 'pressgame', 'wallpaper']) {
+      const cell = cells[1];                       // deliberately NOT the first cell
+      cell.innerHTML = '';
+      const host = document.createElement('div');
+      host.className = 'k-mod';
+      cell.append(host);
+      let inst = null;
+      try {
+        inst = mountModule(type, { mount: host, bus: createBus(), state: fakeState(),
+                                   events: fakeEvents(), user: 'u', profileId: 'p' });
+        inst.init();
+      } catch (err) {
+        check(`CONTROL: ${type} mounts`, false, String(err && err.message));
+        continue;
+      }
+      await sleep(250);
+      const root = host.firstElementChild;
+      const c = rect(cell);
+      const r = root ? rect(root) : null;
+      check(`*** ${type} draws inside its own cell, not over the stage ***`,
+        !!r && r.l >= c.l - 1 && r.t >= c.t - 1 && r.w <= c.w + 1 && r.h <= c.h + 1,
+        r ? `cell ${JSON.stringify(c)} vs root ${JSON.stringify(r)}` : 'no root element');
+      try { inst.destroy(); } catch { /* already gone */ }
+    }
+
+    // The property that actually does the containing. Asserted directly, because the fix is
+    // one CSS declaration and it is the kind of thing a later tidy-up deletes as redundant.
+    check('*** `.k-mod` is a containing block — this is what makes the above true ***',
+      getComputedStyle(cells[1].querySelector('.k-mod') || cells[1]).position !== 'static'
+        || getComputedStyle(document.createElement('div')).position === 'static',
+      'a module host must not be position:static');
+    const probe = document.createElement('div');
+    probe.className = 'k-mod';
+    cells[0].append(probe);
+    check('...specifically, `.k-mod` is `position: relative`',
+      getComputedStyle(probe).position === 'relative', getComputedStyle(probe).position);
+
+    // *** AND THE SAME, IN A HOST WITH NO `mod-box`. ***
+    //
+    // This case is why `.k-mod` carries `position:relative` as well as `.mod-box`. The grid
+    // gives every cell `mod-box`, so that class alone contains the grid case — which meant the
+    // four checks above still PASSED when `.k-mod` was broken on purpose to test them, and I
+    // nearly shipped a test that could not fail for the reason it claimed.
+    //
+    // The one-module stage is the uncovered path: `kiosk.js showPrimary` appends a bare
+    // `.k-mod` straight into `.k-stage`, with no cell and no `mod-box`. On a single-panel
+    // screen filling the stage looks correct, so the bug hides there — until that screen is
+    // a call view with a picture-in-picture, or anything else that adds a second element.
+    {
+      const bare = document.createElement('div');
+      bare.className = 'k-stage';
+      bare.style.cssText = 'position:absolute;left:0;top:0;width:600px;height:400px';
+      document.body.append(bare);
+      const host = document.createElement('div');
+      host.className = 'k-mod';
+      host.style.cssText = 'width:200px;height:150px;margin-left:300px';
+      bare.append(host);
+      const inner = document.createElement('div');
+      inner.style.cssText = 'position:absolute;inset:0';
+      host.append(inner);
+      const hb = host.getBoundingClientRect();
+      const ib = inner.getBoundingClientRect();
+      check('*** a bare `.k-mod` host contains an absolutely positioned module root too ***',
+        Math.round(ib.width) === Math.round(hb.width) && Math.round(ib.left) === Math.round(hb.left),
+        `host ${Math.round(hb.left)}x${Math.round(hb.width)} vs root ${Math.round(ib.left)}x${Math.round(ib.width)}`);
+      bare.remove();
+    }
+
+    stage.remove();
+  }
+
   try {
     const profiles = createProfilesClient({ user: USER });
     const profile = await profiles.create('TEST-fit');

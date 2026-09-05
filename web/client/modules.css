@@ -24,7 +24,32 @@
    simply overflowed and grew a scrollbar; put the clock in a wide short one and the time
    ran to the edges. Neither is a bug in the module — both are a module with no way to
    know how much room it has. */
-.mod-box{container-type:size;container-name:cell}
+.mod-box{container-type:size;container-name:cell;position:relative}
+
+/* *** A PANEL MUST NOT BE ABLE TO PAINT OUTSIDE ITS OWN SLOT. ***
+ *
+ * `.k-mod` is the element a module is mounted into, by the kiosk and by `view.js` alike. It had
+ * NO `position`, and neither did `.k-cell` — so a module whose own root is
+ * `position:absolute; inset:0` (which is how every full-bleed module is written) resolved
+ * against the nearest positioned ancestor, and that is `.k-stage`. **It filled the entire stage
+ * instead of its cell, and painted over its neighbours.**
+ *
+ * Diagnosed by Mike from two screenshots of the live site: Comet's balloon field landed in the
+ * SAME band at the document's top-left under two completely different layouts, and its score in
+ * the top-right corner of the document. A canvas ignoring layout entirely. Measured here before
+ * fixing: the comet root came back at exactly the stage's rect (800x500 at 100,80) while its
+ * cell was 375x225 at 505,100.
+ *
+ * *** AND `container-type: size` ON `.mod-box` DID NOT CONTAIN IT. *** That is worth writing
+ * down because it is the reasonable assumption and it is wrong: the cell already carried
+ * `container-type:size` for container queries, which reads like it should establish a
+ * containing block, and measurement said otherwise. `position:relative` is what actually does
+ * it.
+ *
+ * Fixed on the HOST rather than in the module, deliberately. Mike: fix containment generally,
+ * not Comet specifically — whatever let one module do this lets all three canvas modules do it,
+ * and the next full-bleed module written would have inherited the same bug. */
+.k-mod{position:relative}
 
 /* modules.css — shared component styles for module internals + the theme palette
    variables. Linked by kiosk.html (the product surface). index.html (the dev
