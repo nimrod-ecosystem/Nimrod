@@ -32,6 +32,15 @@ Each argument is a suite NAME (`fit` -> `dev/fit_test.html`) or a full path/URL.
     SUITE_BASE   default http://localhost:8000 - point it at the live site to check a deploy
     SUITE_WAIT   seconds to wait for a summary, default 90
     SUITE_HEAD   set to anything to watch it happen in a real window instead of headless
+
+AND IT TAKES PICTURES, which is the other half of the same problem. A page can be measured all
+day and still look wrong, and the pane available here is 800x520 no matter what it is asked for -
+so a layout written for a 1400px browser cannot be SEEN in it at all.
+
+    web/tools/run_suite.py --shot out/ modules.html landing.html
+
+`--shot <dir>` captures each page full-height instead of waiting for a summary, at
+SHOT_SIZE (default 1400x900). Any argument ending in `.html` is a page rather than a suite.
 """
 import asyncio
 import json
@@ -172,7 +181,31 @@ async def run_one(cdp, name):
             'fails': fails}
 
 
-async def main(names):
+async def shoot(cdp, name, outdir, w, h):
+    url = url_for(name)
+    await cdp.send('Emulation.setDeviceMetricsOverride',
+                   width=w, height=h, deviceScaleFactor=1, mobile=False)
+    await cdp.send('Page.navigate', url=url)
+    deadline = time.time() + 20
+    while time.time() < deadline:
+        here = await cdp.js('location.href') or ''
+        if here.split('?')[0].rstrip('/') == url.split('?')[0].rstrip('/'):
+            break
+        await asyncio.sleep(0.2)
+    # Settle: several of these pages mount real modules, and a picture taken before they draw
+    # shows an empty box and blames the layout for it.
+    await asyncio.sleep(3.5)
+    shot = await cdp.send('Page.captureScreenshot', format='png', captureBeyondViewport=True)
+    import base64
+    os.makedirs(outdir, exist_ok=True)
+    safe = re.sub(r'[^A-Za-z0-9_.-]', '_', name)
+    path = os.path.join(outdir, f'{safe}.png')
+    with open(path, 'wb') as f:
+        f.write(base64.b64decode(shot['data']))
+    return path
+
+
+async def main(names, shotdir=None):
     if not CHROME:
         print('no chrome found - set one of the paths at the top of this file', file=sys.stderr)
         return 2
@@ -195,6 +228,11 @@ async def main(names):
             await cdp.send('Runtime.enable')
             hidden = await cdp.js('document.hidden')
             print(f'chrome up · document.hidden={hidden} · base={BASE}\n')
+            if shotdir:
+                w, h = (int(x) for x in os.environ.get('SHOT_SIZE', '1400x900').split('x'))
+                for n in names:
+                    print(f'shot  {n:<18} {await shoot(cdp, n, shotdir, w, h)}')
+                return 0
             results = [await run_one(cdp, n) for n in names]
     finally:
         proc.terminate()
@@ -217,5 +255,9 @@ async def main(names):
 
 
 if __name__ == '__main__':
-    names = sys.argv[1:] or ['fit']
-    sys.exit(asyncio.run(main(names)))
+    argv = sys.argv[1:]
+    shotdir = None
+    if argv and argv[0] == '--shot':
+        shotdir = argv[1]
+        argv = argv[2:]
+    sys.exit(asyncio.run(main(argv or ['fit'], shotdir)))
