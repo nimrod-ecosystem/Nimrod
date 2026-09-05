@@ -44,6 +44,27 @@
   padding: 2vmin;
 }
 
+/* *** INLINE, THE PANEL MEASURES AGAINST ITS BOX — NOT AGAINST THE WINDOW. ***
+ *
+ * `.st-panel` below is sized `max-height: min(84vh, 780px)` and `width: min(560px, 92vw)`, which
+ * is right for the SHELL menu because that one is `position: fixed` and the viewport really is
+ * its box. Inline it is a lie: in a 300px-tall panel inside a 900px window, 84vh is 756px, so
+ * the menu is two and a half times its own container. The scrim centres it, so it hangs out of
+ * BOTH ends and `overflow: auto` on the panel never engages — there is nothing to scroll,
+ * because the panel is not the thing that is too small.
+ *
+ * This is what Mike hit on the live site: *"Comet opens to its start screen and the Start button
+ * is below the fold and unreachable."* Comet's start screen IS this menu (A12 replaced its
+ * bespoke one), and `Start` is a row near the bottom of it.
+ *
+ * It is also the same defect as G6 itself, one level down — something measuring against the
+ * wrong box and never asking again. `100%` resolves against the scrim, which is `inset: 0` on
+ * the panel, so the menu is exactly as tall as the room it has and scrolls inside that. */
+.st-scrim.st-inline .st-panel {
+  max-height: 100%;
+  width: min(560px, 100%);
+}
+
 .st-panel {
   width: min(560px, 92vw);
   max-height: min(84vh, 780px);
