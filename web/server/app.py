@@ -1015,6 +1015,35 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         await announce()
 
 
+# --------------------------------------------------------------- dev: what is in web/client
+#
+# *** THE FILE LIST FOR `dev/imports_test.html`, AND IT IS DELIBERATELY NOT HARDCODED THERE. ***
+#
+# That suite imports every client module to prove each one still parses. It exists because the
+# same mistake — a backtick inside an HTML comment inside a template literal — was made twice in
+# one session, and the symptom both times was a DIFFERENT suite hanging with no summary, naming
+# nothing. A parse error should name its own file.
+#
+# The list is walked rather than written down because a stale list's failure mode is the worst
+# one available: the newest file, which is the one somebody is editing and the one most likely to
+# be broken, is the one it would not cover.
+#
+# READ-ONLY, and it exposes only names that are already served publicly from this same directory
+# — every one of these is fetchable at `/<name>` by anybody, so listing them tells nobody
+# anything they could not get from the page source. `.venv`, `__pycache__` and `demo-media` are
+# skipped as noise, not as secrets.
+@app.get("/api/dev/client-modules")
+def api_dev_client_modules():
+    skip = {"__pycache__", "node_modules", ".venv", "demo-media"}
+    out: list[str] = []
+    for path in sorted(CLIENT_DIR.rglob("*.js")):
+        rel = path.relative_to(CLIENT_DIR)
+        if any(part in skip for part in rel.parts):
+            continue
+        out.append(rel.as_posix())
+    return out
+
+
 # Serve the client app from the same origin. Registered LAST so /api/* wins.
 # --------------------------------------------------------------- auth (login)
 # Who am I? The client checks this on boot: 200 -> signed in (mount the dashboard),

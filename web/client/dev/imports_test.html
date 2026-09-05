@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>imports — every module in web/client actually parses</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+</style>
+</head>
+<body>
+<h1>imports — every module in <code>web/client</code> actually parses</h1>
+<p><b>This is the cheapest check in the folder and it exists because the same mistake was made
+twice in one session.</b> An HTML comment written inside a JS template literal must not contain a
+backtick — a backtick there CLOSES the string, and the file becomes a syntax error. It happened in
+<code>home.js</code> and then, an hour later, in <code>marker_panel.js</code>.</p>
+<p><b>What made it expensive both times was not the mistake, it was the symptom.</b> A module that
+will not parse does not announce itself: the suite that imports it simply never runs, so
+<code>#summary</code> stays on <code>running…</code> forever and the runner reports a timeout. Both
+times the file had to be found by hand, by importing candidates one at a time in a console.</p>
+<p>So this imports every <code>.js</code> under <code>web/client</code> and names the ones that
+throw. A parse error is reported <b>with the file that has it</b>, in seconds, instead of as a
+suite that hangs. Nothing here judges behaviour — importing a module runs its top level and
+nothing else, which is exactly the point: it is the check that has to keep working when everything
+else is broken.</p>
+<p>Needs the server: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, ok, detail = '') {
+  ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+
+// *** THE LIST COMES FROM THE SERVER, NOT FROM THIS FILE. ***
+//
+// A hardcoded list is a list that goes stale, and the failure mode of a stale list here is the
+// worst one available: the newest file — the one somebody is editing, which is the one most
+// likely to be broken — is the one it does not cover. `/api/dev/client-modules` walks the
+// directory. If it is not there (a static server, an older build), this says so and reports
+// zero checks rather than quietly passing.
+let files = null;
+try {
+  const r = await fetch('/api/dev/client-modules');
+  if (r.ok) files = await r.json();
+} catch { /* handled below */ }
+
+if (!Array.isArray(files) || !files.length) {
+  document.getElementById('summary').textContent =
+    'no file list — this needs the dev server (GET /api/dev/client-modules)';
+} else {
+  // Sequential rather than Promise.all: a browser will happily import a hundred modules at once,
+  // and the ORDER of the output is what makes a failure readable.
+  for (const f of files) {
+    try {
+      await import(`../${f}`);
+      check(f, true);
+    } catch (e) {
+      // *** A SyntaxError IS A FAILURE. ANYTHING ELSE IS PROOF THE FILE PARSED. ***
+      //
+      // `app.js` is the case that forced this distinction: it is an ENTRY POINT, and its top
+      // level reaches for elements that exist on `index.html` and nowhere else, so importing it
+      // here throws `Cannot read properties of null`. That is not a broken file — the code ran,
+      // which is precisely what this suite is asking. Calling it a failure would put a
+      // permanent red on the one check that has to stay trustworthy when everything else is
+      // broken, and a permanent red is a check nobody reads.
+      //
+      // A stray backtick, by contrast, reports as `SyntaxError: Unexpected identifier 'x'`,
+      // naming the first word after the accidentally-ended string. That is the shape being
+      // hunted, and it cannot be confused with a module wanting a page.
+      //
+      // The ones that only ran are NAMED rather than skipped silently: a file quietly moving
+      // into that category is worth seeing.
+      const syntax = e instanceof SyntaxError;
+      if (syntax) check(f, false, `${e.name}: ${e.message}`);
+      else check(`${f} — parses; its top level wants a page (${e && e.name})`, true);
+    }
+  }
+  document.getElementById('summary').textContent = failed
+    ? `${failed} FAILED / ${passed} passed`
+    : `ALL PASS — ${passed} modules parse`;
+}
+</script>
+</body>
+</html>
