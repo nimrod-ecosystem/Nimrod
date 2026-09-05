@@ -69,12 +69,32 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
      * a failure looks like, because a dev harness wants to report it and a public page wants
      * to quietly say "this one needs a camera".
      */
+    /**
+     * *** THE HANDLES ARE LOADED BEFORE `init()`, THE WAY THE KIOSK DOES IT. ***
+     *
+     * They were not, and the difference is invisible until it is not. `state.subscribe` replays
+     * the current value only `if (loaded)`, so a module that does its first-run work from that
+     * callback — `educational.js` did — never ran it here: the kiosk awaits `state.load()`
+     * before `init()`, and this did not. The result was a module with seven built-in items
+     * rendering an empty box on the one public page whose job is showing modules, and being
+     * read as a weak module rather than a host that skipped a step.
+     *
+     * `load()` is fired and NOT awaited, because `mount` is synchronous and every caller
+     * expects a record back immediately. That is enough: it makes the handle report `loaded`
+     * and replay to subscribers as soon as it resolves, which is all the contract promises.
+     * Modules should not depend on it having happened — `educational.js` now reads
+     * `state.get()` directly for the same reason — but a host should still keep its side.
+     */
     mount(type, host, extra = {}) {
+      const state = backend.makeState(`${type}-try`, {}, profileId);
+      const events = backend.makeEvents(`${type}-try`, {}, profileId);
+      state.load?.().catch(() => {});      // offline is not a reason to have no module
+      events.load?.().catch(() => {});
       const rec = mountModule(type, {
         mount: host, bus, rootBus: bus, user: null, profileId, personId: null,
         instanceId: `${type}-try`,
-        state: backend.makeState(`${type}-try`, {}, profileId),
-        events: backend.makeEvents(`${type}-try`, {}, profileId),
+        state,
+        events,
         makeState: (key, opts) => backend.makeState(key, opts, profileId),
         makeEvents: (key, opts) => backend.makeEvents(key, opts, profileId),
         makePersonState: backend.makePersonState,

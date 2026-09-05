@@ -192,6 +192,18 @@ registerModule(
     function prev() { if (histPos > 0) { histPos -= 1; show(history[histPos], false); } }
     function skip() { try { cancelSpeak(); } catch { /* noop */ } clearEnd(); advance(); }
 
+    // Read a settings row and act on it. Extracted from the state subscription so `init` can
+    // call it too — see the note at the call site.
+    function applyState(s) {
+      cfg = { ...DEFAULTS, ...s };
+      // The migration, for a module that has no declared settings yet.
+      const ms = readWithLegacy(s || {}, 'displayMs', LEGACY_DISPLAY);
+      if (ms !== undefined) cfg.displayMs = Number(ms);
+      indexItems();
+      if (!ids.length) return;
+      if (!cfg.directed && (!currentId || !byId[currentId])) advance();   // standalone autostart
+    }
+
     function deriveStats(cache) {
       const plays = (cache.events || [])
         .filter((e) => e.kind === 'play')
@@ -230,15 +242,26 @@ registerModule(
         settings.subscribe((s) => { voicePref = (s && s.voice) || {}; });
         settings.load().then(() => settings.startPolling()).catch(() => {});
 
-        state.subscribe((s) => {
-          cfg = { ...DEFAULTS, ...s };
-          // The migration, for a module that has no declared settings yet.
-          const ms = readWithLegacy(s || {}, 'displayMs', LEGACY_DISPLAY);
-          if (ms !== undefined) cfg.displayMs = Number(ms);
-          indexItems();
-          if (!ids.length) return;
-          if (!cfg.directed && (!currentId || !byId[currentId])) advance();   // standalone autostart
-        });
+        state.subscribe(applyState);
+        // *** AND ONCE, DIRECTLY, BECAUSE A SUBSCRIPTION IS NOT A GUARANTEE. ***
+        //
+        // G12: Mike found Educational on the public parts page as *"an empty cream box"* — the
+        // previous/next arrows and the "Learning" label drawn around a stage with nothing in
+        // it. `module_audit.js` had already recorded the same thing and it had been read as a
+        // weak module. It is not: it ships SEVEN default items and shows them perfectly well
+        // on a kiosk.
+        //
+        // The whole difference is WHO LOADED THE STATE. `state.subscribe` replays the current
+        // value only `if (loaded)` — so on the kiosk, which awaits `state.load()` before
+        // `init()`, the callback fires immediately and the module starts. On a page whose host
+        // does not (the parts page, the all-at-once audit), nothing ever fired, `indexItems`
+        // never ran, and a module with seven items believed it had none.
+        //
+        // A module must not depend on its host having pre-loaded anything. `state.get()` is the
+        // same data the subscription would have handed over, and a directed child is still safe
+        // because the director WRITES `{directed:true}` into that row before mounting, which
+        // `set` applies to the local snapshot synchronously — so this reads it even offline.
+        applyState(state.get());
       },
       onResize() {},
       onHide() { try { cancelSpeak(); } catch { /* noop */ } state.flush(); },
