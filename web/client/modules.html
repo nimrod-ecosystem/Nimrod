@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nimrod — what you can put on a screen</title>
 <meta name="description" content="Every part of Nimrod you can put on a screen, what it does for the person you are setting it up for, and what it needs from you.">
+<!-- The module stylesheet, because this page now MOUNTS modules and not only
+     describes them. It also @imports settings.css, which the games need to open their own
+     settings menu. Without it every demo panel renders unstyled, which reads as a broken
+     module rather than a page that forgot a stylesheet. -->
+<link rel="stylesheet" href="./modules.css">
 <style>
   :root{
     --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C; --midnight:#105666;
@@ -89,6 +94,28 @@
     body{font-size:16px}
     header.hero{padding-top:30px}
   }
+
+  /* ---- TRY IT: the live panel, on the page that describes it ----------------------------
+   * B4 was "I don't know where the modules tab is". This page existed and could only
+   * DESCRIBE a module — which for a page whose whole job is "should I add this?" is the wrong
+   * half of the answer. dev/modules_live.html could already mount every module for real but
+   * was a developer harness nobody was pointed at. This is the join: the description and the
+   * thing itself, in one place, from one shared scaffold (module_try.js).
+   *
+   * The stage takes `--card`, the page's own surface token, rather than a hardcoded colour.
+   * The dev harness used to hardcode #0A3323, which is `--ink`'s OWN value — every module
+   * drawing ink on ink at a contrast ratio of exactly 1.00, in all five themes. */
+  .try{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .trybtn{border:1px solid var(--line);background:var(--cream-soft);color:var(--ink);
+    border-radius:10px;padding:9px 16px;font:650 .92rem var(--font);cursor:pointer;
+    min-height:44px}
+  .trybtn:hover{background:#fff}
+  .trybtn[aria-pressed="true"]{background:var(--midnight);border-color:var(--midnight);color:#fff}
+  .trynote{font-size:.85rem;color:var(--muted)}
+  .trystage{position:relative;height:260px;margin-top:12px;border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;background:var(--card)}
+  .trystage[hidden]{display:none}
+  .trystage > *{position:absolute;inset:0}
 </style>
 </head>
 <body>
@@ -222,6 +249,11 @@ document.getElementById('groups').innerHTML = GROUPS.map((g) => {
             <dl>
               <dt>Needs</dt><dd>${esc(m.needs)}</dd>
             </dl>
+            <div class="try">
+              <button type="button" class="trybtn" data-try="${esc(m.type)}">Try it</button>
+              <span class="trynote" data-trynote></span>
+            </div>
+            <div class="trystage mod-box" data-trystage hidden></div>
           </article>`).join('')}
       </div>
     </section>`;
@@ -245,6 +277,75 @@ if (r.internal.length) {
   bits.push(`${r.internal.length} development-only panel(s) left out on purpose`);
 }
 document.getElementById('recon').innerHTML = bits.join(' · ');
+
+// ---- TRY IT ------------------------------------------------------------------------------
+//
+// The scaffolding a module needs is real — a bus, an output bus, an audio arbiter, camera and
+// microphone owners, a source registry, state and events — so it is built ONCE, lazily, and
+// only when somebody actually asks to see something. A visitor who is reading rather than
+// poking pays nothing for this.
+//
+// Everything it touches is local and throwaway (`createLocalBackend`), so no account is
+// needed and nothing anybody does in a demo panel reaches a real screen.
+let host = null;
+let openHost = null;             // only one panel at a time — see below
+
+document.getElementById('groups').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-try]');
+  if (!btn) return;
+  const card = btn.closest('.mod');
+  const stage = card.querySelector('[data-trystage]');
+  const note = card.querySelector('[data-trynote]');
+  const type = btn.dataset.try;
+
+  // Pressing it again puts it away. A demo that can only be started is a page that fills up
+  // with running panels as somebody browses it.
+  if (!stage.hidden) {
+    host?.unmount(stage);
+    stage.hidden = true;
+    btn.setAttribute('aria-pressed', 'false');
+    btn.textContent = 'Try it';
+    note.textContent = '';
+    openHost = null;
+    return;
+  }
+
+  // *** ONE AT A TIME, AND IT IS NOT TIDINESS. *** Several of these take the camera, the
+  // microphone or the speakers, and the arbiters that decide who gets them are per-page. Two
+  // live panels would be two modules fighting over one webcam on a page somebody is reading.
+  if (openHost) {
+    const prevCard = openHost.closest('.mod');
+    host?.unmount(openHost);
+    openHost.hidden = true;
+    const pb = prevCard?.querySelector('[data-try]');
+    if (pb) { pb.setAttribute('aria-pressed', 'false'); pb.textContent = 'Try it'; }
+    const pn = prevCard?.querySelector('[data-trynote]');
+    if (pn) pn.textContent = '';
+  }
+
+  btn.textContent = 'Starting…';
+  try {
+    if (!host) {
+      const { createTryHost } = await import('./module_try.js');
+      host = await createTryHost();
+    }
+    stage.hidden = false;
+    host.mount(type, stage);
+    btn.setAttribute('aria-pressed', 'true');
+    btn.textContent = 'Put it away';
+    openHost = stage;
+    note.textContent = 'A demo, on your own device. Nothing here is saved to a screen.';
+  } catch (err) {
+    // A module that will not start here is usually one that wants hardware this browser is
+    // not going to hand a web page — and saying which is more use than a stack trace.
+    console.error(`modules: ${type} would not start`, err);
+    stage.hidden = true;
+    btn.setAttribute('aria-pressed', 'false');
+    btn.textContent = 'Try it';
+    note.textContent = 'This one needs something this browser will not give a demo page — '
+      + 'usually a camera, a microphone, or your own files.';
+  }
+});
 </script>
 </body>
 </html>
