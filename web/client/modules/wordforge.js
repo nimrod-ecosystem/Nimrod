@@ -238,8 +238,87 @@ const esc = (s) => String(s == null ? '' : s)
 
 // ---------- the module ----------
 
+// ---------------------------------------------------------------------------------------
+// WHAT THE SETTINGS MENU SHOWS — and why this was missing rather than deliberately absent
+// ---------------------------------------------------------------------------------------
+//
+// *** F4 ASKED FOR THE DAILY CAP TO BE "AVAILABLE AS A PER-PROFILE SETTING DEFAULTING OFF",
+// AND ONLY HALF OF THAT WAS TRUE. *** `dailyCap: 0` has been the default for a while and the
+// row was marked done — but `registerModule` below passed no `settings` array at all, so the
+// composer's menu had nothing to show and **there was no way to turn a cap on from anywhere**.
+// A setting that defaults off and cannot be switched on is not a setting, it is a constant.
+//
+// The same was true of six other keys this module genuinely reads and acts on: `roundLength`
+// (`buildDeck`), `correctPoints` / `tryPoints` / `streakEvery` / `streakBonus` (`award`), and
+// `subject` (what a point of credit discharges). All of them were live config that no UI could
+// write.
+//
+// **`topics` is NOT in this list, and A14 was slightly wrong to include it.** It is not module
+// config: it arrives from the shared bank snapshot, alongside the words themselves. Putting it
+// here would offer a control that the next bank refresh silently overwrites.
+//
+// KIND, AND THE ONE-SWITCH COST. `photos.js` states the rule and it decides most of the
+// choices below: with one switch you walk a control one press at a time and can only travel
+// one way, so THE NUMBER OF STOPS IS THE COST. `dailyCap` and `roundLength` are real ranges
+// whose useful values are a short list, so they are choices — five presses instead of forty.
+// The three point values are genuine small ranges where any integer is meaningful, so they are
+// numbers, and they sit at `advanced` where a caregiver with a keyboard is the likely reader.
+//
+// LEVELS. Only the two things somebody actually changes are `standard`; everything that prices
+// the economy is `advanced`, so the common case is a two-row menu rather than a nine-row one.
+// Nothing here is `essential` — this is a game somebody chose to play, and none of these
+// numbers is the difference between being able to use the screen and not.
+const SETTINGS = [
+  // The F4 ask, reachable at last. 0 is off, and it is first so that the off state is one
+  // press away from wherever somebody has got to.
+  { key: 'dailyCap', label: 'Daily points cap', kind: 'choice', default: 0, level: 'standard',
+    options: [
+      { value: 0, label: 'No cap' },
+      { value: 20, label: '20 a day' },
+      { value: 40, label: '40 a day' },
+      { value: 60, label: '60 a day' },
+      { value: 100, label: '100 a day' },
+    ],
+    note: 'Off by default: this game pays for correct answers, never for time, so a window left open earns nothing.' },
+  { key: 'roundLength', label: 'Questions in a round', kind: 'choice', default: 10,
+    level: 'standard',
+    options: [
+      { value: 5, label: '5' },
+      { value: 10, label: '10' },
+      { value: 15, label: '15' },
+      { value: 20, label: '20' },
+    ] },
+  { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 2,
+    level: 'advanced', min: 0, max: 10, step: 1 },
+  // Deliberately worth something. A wrong answer that has been read and acknowledged is the
+  // part of this game that teaches, and paying zero for it would price learning at nothing.
+  { key: 'tryPoints', label: 'Points for a wrong answer, once explained', kind: 'number',
+    default: 1, level: 'advanced', min: 0, max: 10, step: 1 },
+  { key: 'streakEvery', label: 'Streak bonus every', kind: 'choice', default: 5,
+    level: 'advanced',
+    options: [
+      { value: 0, label: 'No streak bonus' },
+      { value: 3, label: '3 in a row' },
+      { value: 5, label: '5 in a row' },
+      { value: 10, label: '10 in a row' },
+    ] },
+  { key: 'streakBonus', label: 'Streak bonus points', kind: 'number', default: 3,
+    level: 'advanced', min: 0, max: 20, step: 1 },
+  // TEXT, and therefore not cycleable — it says so rather than pretending, the same way
+  // `photos.js` handles `album`. Nobody types a subject name with one switch, and a fake
+  // affordance is worse than an absent one.
+  { key: 'subject', label: 'Credit counts toward', kind: 'text',
+    default: 'English language arts', level: 'advanced',
+    note: 'which subject a point of credit discharges' },
+];
+
 registerModule(
-  { type: 'wordforge', title: 'Word Forge', description: 'A word game. A wrong answer explains itself and still counts for something.' },
+  { type: 'wordforge', title: 'Word Forge', description: 'A word game. A wrong answer explains itself and still counts for something.',
+    // `dependsOn` and `importance` are deliberately still absent. Both feed the recovery
+    // ladder's fallback RANKING, so guessing at them would change which module a broken screen
+    // swaps to — a behaviour change wearing a metadata costume. Absent `dependsOn` is already
+    // read as `server`, which is the pessimistic answer and the safe one.
+    settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const rand = ctx.rand || Math.random;
