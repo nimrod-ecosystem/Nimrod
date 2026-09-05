@@ -4,19 +4,21 @@
 <meta charset="utf-8">
 <title>panel fit — modules in the box they were given</title>
 <link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
   .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
-  /* The kiosk grid cell, reproduced exactly — same classes, same overflow rules, so what
-     is measured here is what the kiosk does. See .k-stage.k-grid in kiosk.html. */
+  /* *** THE KIOSK'S OWN RULES, LINKED, NOT COPIED. ***
+     This block used to reproduce `.k-cell` and `.k-mod` by hand, with a comment saying the copy
+     had to stay in step with `kiosk.html` — which is a promise no file can keep. Those rules
+     moved to `kiosk.css` (see its header: being un-linkable is how two defects survived), so
+     this page links the real thing and what is measured here is what a screen actually does.
+     The cell needs a background of its own because the kiosk paints one behind it. */
   .cells{display:flex;flex-wrap:wrap;gap:14px;margin-top:18px}
-  .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden;
-    background:var(--card,#fffdf0);border:1px solid #ddd8b4;border-radius:10px}
-  .k-cell .k-mod{flex:1;min-width:0;display:flex;overflow:auto}
-  .k-cell .k-mod > *{flex:1;min-width:0}
+  .k-cell{background:var(--card,#fffdf0);border:1px solid #ddd8b4;border-radius:10px}
   .cap{font-size:11px;color:#6b7a70;font-family:ui-monospace,monospace}
 </style>
 </head>
@@ -68,20 +70,37 @@ const SIZES = [
   { w: 900, h: 700, label: 'roomy — must look untouched' },
 ];
 
+/**
+ * A REAL kiosk cell, inside a REAL kiosk grid.
+ *
+ * The cell used to be built on its own, with `.k-cell` and `.k-mod` rules copied into this
+ * page. Those rules now live in `kiosk.css` and this page links them — but every one of them is
+ * written as `.k-stage.k-grid .k-cell`, because that is what a cell IS on a screen. A bare
+ * `.k-cell` matches none of them, which is exactly what happened when the copy was first
+ * deleted: six checks about the clock being vertically centred failed by 30 to 270 pixels,
+ * because without the stage the cell was not a flex container and the clock never filled it.
+ *
+ * So the stage is built too, and only the two things that make it a PAGE — being absolutely
+ * positioned over everything, and its padding — are overridden inline, which beats the class.
+ * Everything the suite is actually about comes from the shipped stylesheet.
+ */
 function cell(w, h, label) {
   const wrap = document.createElement('div');
   const cap = document.createElement('div');
   cap.className = 'cap';
   cap.textContent = `${w}x${h} — ${label}`;
+  const stage = document.createElement('div');
+  stage.className = 'k-stage k-grid';
+  stage.style.cssText = `position:relative;inset:auto;padding:0;width:${w}px;height:${h}px;`
+    + 'grid-template-columns:1fr;grid-template-rows:1fr;gap:0';
   const c = document.createElement('div');
   // `mod-box` is the opt-in that lets a module size itself against this box.
   c.className = 'k-cell mod-box';
-  c.style.width = `${w}px`;
-  c.style.height = `${h}px`;
   const host = document.createElement('div');
   host.className = 'k-mod';
   c.append(host);
-  wrap.append(cap, c);
+  stage.append(c);
+  wrap.append(cap, stage);
   document.getElementById('cells').append(wrap);
   return { cell: c, host };
 }

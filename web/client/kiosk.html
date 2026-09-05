@@ -6,129 +6,16 @@
 <title>Nimrod — bedside</title>
 <link rel="stylesheet" href="./modules.css">
 <link rel="stylesheet" href="./settings.css">
+<link rel="stylesheet" href="./kiosk.css">
 <style>
+  /* PAGE rules only. Everything that describes the SCREEN — the stage, the cells, the HUD
+     overlays, the transport bar — moved to kiosk.css so the suites that measure it can link
+     the same file instead of copying it. These three cannot: they are about this document
+     being a full-bleed kiosk, and a test page linking them would paint itself black. */
   html,body{height:100%;margin:0;background:#07120d;color:var(--ink);
     font:16px/1.5 var(--font);overflow:hidden;transition:background .25s ease}
   #boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     color:#cfe0d6;font-size:1.1rem;text-align:center;padding:24px}
-
-  /* *** A PANEL SITS ON A CARD, WHICH IS THE SURFACE ITS MODULE WAS DRAWN AGAINST. ***
-   *
-   * THE DEFECT THIS FIXES (measured 2026-09-02, re-measured 2026-09-04 before touching it):
-   * `html,body` below hardcodes a near-black `#07120d` and pairs it with `color:var(--ink)`.
-   * `--ink` is a DARK colour in four of the five themes, so the kiosk was putting dark text on
-   * near-black. 19 of 77 text elements failed WCAG in `default` at worst 1.37:1, 20 in `warm`
-   * at 1.31, 22 in `forge` at 1.34 — and **worst of all 19 in `contrast`, the accessibility
-   * theme, at 1.10:1.** Somebody who turns on High Contrast because they cannot read the screen
-   * made it unreadable. `dusk` was the only clean theme, because it is the only one whose text
-   * vars are light.
-   *
-   * WHY THIS FIX AND NOT THE OTHER TWO. Three were on the table.
-   *
-   *   1. Theme the body (`background:var(--bg)`). Restores the pair, but the kiosk's own chrome
-   *      — the clock HUD, the control bar — is translucent white-on-dark with near-white text,
-   *      and on a light `--bg` all of it disappears. It fixes the panels by breaking the frame.
-   *   2. THIS ONE. Give the panel a `--card` surface. `--card` and `--ink` are defined as a
-   *      matched pair in every theme, and every module was written to be read on a card — it is
-   *      what the composer and `modules.html` already put them on. So each module renders
-   *      exactly as designed, in all five themes, with no per-module colour changes anywhere.
-   *   3. Move stage text to `--beige`. One line, but it only reaches text that INHERITS colour;
-   *      `.clock .time` sets `var(--darkgreen)` itself and would stay unreadable. It treats the
-   *      symptom the measurement happened to catch rather than the cause.
-   *
-   * AND THE FRAME STAYS DARK, which is not incidental. The gaps between panels remain the near
-   * black below, so a screen somebody sleeps next to does not become a lit rectangle — the
-   * panels get legible without the room getting brighter.
-   *
-   * NOT APPLIED TO THE HUD. `.k-clock` and `.k-mirror` are overlays on the dark frame, not
-   * panels on it, and they already set their own colours against it. Scoped to `.k-stage` so
-   * they are untouched. */
-  .kiosk{position:fixed;inset:0}
-  /* `overflow` is NOT set here any more. `mountModule` adds `mod-host` to whatever element a
-     module is mounted into, and that class carries `overflow:auto` — the scroll floor that
-     keeps a Start button below the fold reachable instead of clipped. This rule outranked it
-     (two classes to one) on the SINGLE-PANEL stage, which is the full-screen case, so a module
-     too tall for a full-screen panel had nowhere to go. `auto` still clips to the rounded
-     corner, which is all `hidden` was doing here. */
-  .k-stage .k-mod{background:var(--card);color:var(--ink);border-radius:14px}
-  /* WHICH PANEL THE NEXT PRESS WILL ACT ON. Drawn on the CELL, outside the panel's own box, so
-     it never covers the content — a ring over somebody's photograph would be the wrong trade.
-     `outline` rather than `border` because a border would resize the cell and shift the grid
-     every time focus moved, which on a bedside screen is the panels twitching under a hand.
-     Only ever visible when there is more than one panel: on a single-panel screen "which one"
-     is not a question anybody has. */
-  .k-stage.k-grid .k-cell[data-focused] .k-mod{
-    outline:3px solid var(--moss,#839958);outline-offset:2px}
-  /* NO TRANSITION ON THE RING, and it is not a style preference. The first version faded
-     `outline-color` in over 150ms, and the ring then rendered in the element's own text colour
-     instead of the moss — because a transition sits at its START value until the page
-     composites, and it had not. A focus indicator that is only correct once an animation has
-     run is a focus indicator that is wrong at the moment it is needed most: the frame it
-     appears. It is also the wrong thing to animate — "which panel will the next press act on"
-     should be true immediately or not shown. */
-  .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex}
-  .k-stage.k-grid{display:grid;gap:2vmin}
-  .k-stage.k-grid .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden}
-  /* `overflow:auto` was here and is now on `mod-host`, for every host rather than this one. */
-  .k-stage.k-grid .k-cell .k-mod{flex:1;min-width:0;display:flex}
-  .k-stage.k-grid .k-cell .k-mod > *{flex:1;min-width:0}
-  .k-stage .k-mod{flex:1;min-width:0;display:flex}
-  .k-stage .k-mod > *{flex:1;min-width:0}
-  /* the camera "mirror" — pinned corner, always on top, never covered */
-  /* the camera "mirror" — a HUD overlay; size + corner are per-profile settings */
-  .k-mirror{position:absolute;aspect-ratio:4/3;z-index:5;border-radius:12px;overflow:hidden;
-    box-shadow:0 6px 24px rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.18)}
-  .k-mirror .k-mod{width:100%;height:100%}
-  .kiosk[data-mirror-size="sm"] .k-mirror{width:18vw}
-  .kiosk[data-mirror-size="md"] .k-mirror{width:24vw}
-  .kiosk[data-mirror-size="lg"] .k-mirror{width:32vw}
-  .kiosk[data-mirror-corner="tr"] .k-mirror{top:2.5vmin;right:2.5vmin}
-  .kiosk[data-mirror-corner="tl"] .k-mirror{top:2.5vmin;left:2.5vmin}
-  .kiosk[data-mirror-corner="br"] .k-mirror{bottom:2.5vmin;right:2.5vmin}
-  .kiosk[data-mirror-corner="bl"] .k-mirror{bottom:2.5vmin;left:2.5vmin}
-  /* translucent clock HUD — corner is a per-profile setting (default bottom-left) */
-  .k-clock{position:absolute;z-index:6;padding:9px 15px;border-radius:12px;
-    background:rgba(255,255,255,.14);color:#eef4f0;max-width:34vw}
-  .kiosk[data-clock-corner="bl"] .k-clock{bottom:2.5vmin;left:2.5vmin}
-  .kiosk[data-clock-corner="br"] .k-clock{bottom:2.5vmin;right:2.5vmin}
-  .kiosk[data-clock-corner="tl"] .k-clock{top:2.5vmin;left:2.5vmin}
-  .kiosk[data-clock-corner="tr"] .k-clock{top:2.5vmin;right:2.5vmin}
-  .k-clock .k-mod{width:100%}
-  .k-clock .clock{align-items:flex-start;gap:2px}
-  .k-clock .clock .time{color:#fff;font-size:2.6rem}
-  .k-clock .clock .when{display:none}
-  .k-clock .clock .date{color:#d3e6db;font-size:.95rem}
-  /* MIRROR MODE (M): the camera fills the whole screen */
-  .kiosk.mirror-full .k-mirror{position:fixed;inset:0;width:auto;aspect-ratio:auto;
-    border:0;border-radius:0;box-shadow:none;z-index:30}
-  .kiosk.mirror-full .k-stage,.kiosk.mirror-full .k-clock{visibility:hidden}
-  /* auto-hiding control bar */
-  .k-controls{position:absolute;left:50%;bottom:2.2vmin;transform:translateX(-50%);
-    display:flex;gap:14px;align-items:center;background:rgba(7,18,13,.82);
-    border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px 12px;z-index:8;
-    transition:opacity .3s ease}
-  .k-controls.hidden{opacity:0;pointer-events:none}
-  .k-mods{display:flex;gap:6px}
-  .k-dot{font-size:.82rem;text-transform:capitalize;color:#cfe0d6;background:transparent;
-    border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer}
-  .k-dot.on{background:var(--moss);border-color:var(--moss);color:#fff;font-weight:700}
-  .k-actions{display:flex;gap:8px;border-left:1px solid rgba(255,255,255,.15);padding-left:12px}
-  .k-actions button{font-size:.82rem;color:#cfe0d6;background:transparent;
-    border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer}
-  .k-actions button:hover,.k-dot:hover{background:rgba(255,255,255,.10)}
-  /* Hush, while it is on. LIT, not subtle: silence with no visible cause reads as a broken
-     screen, and whoever finds it that way has to be able to see why and undo it. */
-  .k-actions button[data-on="1"]{background:var(--gold,#ffd36e);border-color:var(--gold,#ffd36e);
-    color:#1a1408;font-weight:700}
-  /* sign-in screen (shown when not authenticated) */
-  #login{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;gap:18px;color:#e8f0ea;text-align:center;padding:24px}
-  #login h1{font-size:1.5rem;font-weight:600;margin:0;letter-spacing:.02em}
-  #login p{color:#9fb3a8;margin:0;max-width:34ch}
-  #login .gbtn{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1f1f1f;
-    border:none;border-radius:10px;padding:12px 22px;font-size:1rem;font-weight:600;cursor:pointer}
-  #login .gbtn:hover{background:#f1f1f1}
-  #login .err{color:#e79; font-size:.9rem}
 </style>
 </head>
 <body>
