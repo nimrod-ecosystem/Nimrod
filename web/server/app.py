@@ -1043,28 +1043,53 @@ DEMO_EXT = {
 }
 
 
-def _demo_name(stem: str) -> str:
-    """`nimrod-on-the-windowsill` -> `Nimrod on the windowsill`. The caption a visitor reads
-    comes from the filename, so naming the file IS captioning the photo and there is no second
-    place to keep in step."""
-    words = stem.replace("_", " ").replace("-", " ").split()
-    if not words:
-        return "Photo"
-    return " ".join([words[0][:1].upper() + words[0][1:]] + words[1:])
+# *** NO CAPTIONS. Mike, 2026-09-06, and he is right. ***
+#
+# This used to turn `nimrod-on-the-windowsill` into "Nimrod on the windowsill", so that naming a
+# file captioned the photo. It was a nice idea and it met reality immediately: the photos he
+# actually had are `20260313_003702.jpg` off a phone, and filename-as-caption would have put
+# "20260313 003702" under a picture of his cat. **His answer was to turn the behaviour off
+# rather than rename his files**, which is the correct trade — a demo should not make somebody
+# do clerical work, and a caption nobody wrote is worse than no caption.
+#
+# `name` is deliberately empty rather than the filename. Nothing on screen renders it today
+# (`photos.js` uses it only for `alt`), and an `alt` of "20260313 003702" is noise read aloud to
+# somebody using a screen reader. `photos.js` falls back to a plain "Photo".
+
+
+# The bundled SVGs. They are the OFFLINE FALLBACK, not the sample set -- Mike left them in place
+# deliberately when he added the photos, and the distinction is the whole of the rule below.
+FALLBACK_EXT = {".svg"}
 
 
 @app.get("/demo-media/list")
 def demo_media_list():
+    """*** PHOTOGRAPHS ARE THE SAMPLES; THE DRAWINGS ARE THE FALLBACK. ***
+
+    Mike put four photographs of Nimrod -- the cat the project is named after -- in this folder,
+    and left the six abstract SVGs beside them on purpose: *"the cat photos are the sample set,
+    the SVGs remain the fallback."*
+
+    So this is not "list everything in the directory". If there is a photograph, the demo shows
+    photographs; the drawings appear only when there is nothing else, which is the case a fresh
+    clone with no media is in. Showing both together would put a cat next to a gradient and make
+    the demo look like a folder rather than somebody's screen -- and *"it explains the name"* is
+    the entire argument for the photographs being there.
+    """
     files_dir = DEMO_MEDIA / "files"
     try:
-        entries = sorted(
+        every = sorted(
             (f for f in files_dir.iterdir()
              if f.is_file() and f.suffix.lower() in DEMO_EXT),
             key=lambda f: f.name,
         )
+        real = [f for f in every if f.suffix.lower() not in FALLBACK_EXT]
+        entries = real or every
         items = [{
             "id": f.name,
-            "name": _demo_name(f.stem),
+            # Empty on purpose -- see the note above `demo_media_list`. No caption is better
+            # than one nobody wrote.
+            "name": "",
             "path": f.name,
             "kind": DEMO_EXT[f.suffix.lower()],
             "size": f.stat().st_size,
