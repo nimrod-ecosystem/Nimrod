@@ -471,31 +471,129 @@ try {
       inst.impl.__probe().boardId === 'yesno', inst.impl.__probe().boardId);
     check('*** and the default board is not one person\u2019s vocabulary ***',
       inst.impl.__probe().boardId !== 'care', inst.impl.__probe().boardId);
-    check('the switcher is on screen', inst.impl.__probe().boardsShown === true);
-    check('...and it offers both built-in boards',
-      JSON.stringify(inst.impl.__probe().boards) === '["yesno","care"]',
-      JSON.stringify(inst.impl.__probe().boards));
+    // *** THE ROW IS OFF BY DEFAULT, AND THIS CHECK CHANGED SIDES TOO. ***
+    //
+    // It shipped ON this morning because switching was invisible. Mike: *"The board row is a
+    // hazard. It sits above the cards where somebody who can only manage yes/no/other can hit
+    // it and lose their board."* The problem was real and the answer was wrong -- it put a
+    // caregiver's control inside the reach of the person the board is for, on the one surface
+    // where an accidental press costs somebody their sentence.
+    check('*** the board row is NOT on the talking surface by default ***',
+      inst.impl.__probe().boardsShown === false);
+    check('...and the settings button is, because switching has to live somewhere',
+      inst.impl.__probe().gearShown === true);
 
-    // *** PRESS IT. *** A chip that is drawn and does nothing is exactly the failure this row
-    // was asked for in order to fix.
-    // Guarded rather than dereferenced: with the switcher removed there is no chip, and a
-    // TypeError here aborts the whole section — including the "somebody's own board still
-    // wins" regression below, which is the check most worth keeping alive. Verified by
-    // removing the switcher and watching this report three failures instead of a stack trace.
-    // Press the OTHER one, now that the default is `yesno` -- pressing the chip a screen is
-    // already on proves nothing about whether a chip works.
-    host.querySelector('[data-board="care"]')?.click();
+    // *** SWITCHING STILL WORKS, FROM THE PANEL. *** Moving a control is only safe if the
+    // control still exists; this is the check that says the hazard fix did not remove the
+    // feature it was protecting.
+    host.querySelector('[data-gear]').click();
+    await sleep(20);
+    check('the gear opens the panel', inst.impl.__probe().panelOpen === true);
+    check('...and the panel offers both built-in boards',
+      JSON.stringify(inst.impl.__probe().panelBoards) === '["yesno","care"]',
+      JSON.stringify(inst.impl.__probe().panelBoards));
+    const sel = host.querySelector('[data-pboard]');
+    sel.value = 'care';
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
     await sleep(40);
-    check('*** pressing a chip actually changes the board ***',
+    check('*** choosing a board in the panel actually changes the board ***',
       inst.impl.__probe().boardId === 'care', inst.impl.__probe().boardId);
     check('...and it wrote the choice to the same row the menu writes',
       st.get().boardId === 'care', JSON.stringify(st.get()));
-    // The example board is LABELLED as one, on the chip somebody actually reads rather than
-    // only in the settings menu most people never open.
-    const careChip = host.querySelector('[data-board="care"]');
-    check('...and the example board says so on its own chip',
-      /example/i.test(careChip?.textContent || ''), careChip?.textContent);
+    // The example board is LABELLED as one, where somebody choosing actually reads it rather
+    // than only in the settings menu most people never open.
+    check('...and the example board says so where it is chosen',
+      /example/i.test([...host.querySelectorAll('[data-pboard] option')]
+        .find((o) => o.value === 'care')?.textContent || ''));
+    // A PANEL, NOT A GATE. Escape closes it, and so does a press anywhere outside it.
+    host.querySelector('[data-panel]').dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await sleep(20);
+    check('*** Escape closes it — it is a panel, not a gate ***',
+      inst.impl.__probe().panelOpen === false);
+    host.querySelector('[data-gear]').click();
+    await sleep(20);
+    host.querySelector('[data-grid]').click();
+    await sleep(20);
+    check('...and so does a press on the board underneath',
+      inst.impl.__probe().panelOpen === false);
+
+    // *** THE ROW IS STILL AVAILABLE TO ANYBODY WHO WANTS IT. *** Off by default is a default;
+    // removing it would have been a decision about somebody else's screen.
+    st.set({ ...st.get(), showBoards: true });
+    await sleep(40);
+    check('somebody who wants the row can still have it',
+      inst.impl.__probe().boardsShown === true);
+    check('...and it offers the same boards the panel does',
+      JSON.stringify(inst.impl.__probe().boards) === '["yesno","care"]',
+      JSON.stringify(inst.impl.__probe().boards));
+    host.querySelector('[data-board="yesno"]')?.click();
+    await sleep(40);
+    check('...and pressing a chip still works', inst.impl.__probe().boardId === 'yesno');
+
+    // *** LOCK. *** What it hides, what it must not touch, and the way back out.
+    st.set({ ...st.get(), showBoards: true, locked: true });
+    await sleep(40);
+    check('*** locked hides the row even though the row is turned ON ***',
+      inst.impl.__probe().boardsShown === false);
+    check('*** ...and the gear with it — half a lock is not a lock ***',
+      inst.impl.__probe().gearShown === false);
+    check('*** ...and does not touch a single card ***',
+      inst.impl.__probe().cells === 3 && inst.impl.__probe().words.join('').length > 0,
+      JSON.stringify(inst.impl.__probe().words));
     inst.destroy();
+
+    // *** A DESTROYED BOARD ANSWERS NOTHING. ***
+    //
+    // This is the check that found it. `destroy` cleared the markup and left every listener on
+    // the host, so a second board mounted on the same element had TWO instances handling each
+    // click -- the dead one first, reaching into the live markup through its own closure and
+    // filling the new board's panel from the old board's saved settings. A shell that reuses a
+    // mount would have shown one person's board list built from another person's row.
+    // ITS OWN HOST, and that is not tidiness. The first version of this check reused the
+    // section's host, which by then carried leaked handlers from four earlier instances -- so
+    // whether the panel ended up open depended on whether that number was odd, and the check
+    // passed WITH THE LEAK IN PLACE. A check whose result depends on how many dead instances
+    // happen to be attached is not measuring anything.
+    const oh = document.createElement('div');
+    oh.style.cssText = 'position:relative;width:420px;height:300px';
+    document.body.append(oh);
+    // The dead instance is given a board the live one does not have, so its fingerprint is
+    // unmistakable: if `custom` appears in the replacement's list, a destroyed board wrote it.
+    const orphan = mountModule('board', {
+      mount: oh, bus: createBus(), events: fakeEvents(),
+      state: fakeState({ board: { id: 'ghost', name: 'Ghost', tier: 2,
+                                  cells: [{ word: 'Boo' }, { word: 'Hoo' }] } }),
+      output: { say: () => {} },
+    });
+    orphan.init();
+    await sleep(20);
+    orphan.destroy();
+    const after = mountModule('board', {
+      mount: oh, bus: createBus(), events: fakeEvents(),
+      state: fakeState({ boardId: 'care' }), output: { say: () => {} },
+    });
+    after.init();
+    await sleep(20);
+    oh.querySelector('[data-gear]').click();
+    await sleep(20);
+    const pb = after.impl.__probe().panelBoards;
+    check('*** a destroyed board does not answer clicks meant for its replacement ***',
+      !pb.includes('custom') && pb.length > 0,
+      `the dead instance filled the new board's list: ${JSON.stringify(pb)}`);
+    after.destroy();
+    oh.remove();
+
+    // *** THE WAY OUT OF THE LOCK IS STRUCTURAL, NOT A PROMISE. ***
+    // "a caregiver locked out of their own lock is worse than no lock at all" (CLAUDE.md).
+    // The lock hides the module's own controls; the shell's settings menu is what it cannot
+    // hide -- so `locked` being a DECLARED setting is the escape hatch, and this asserts it
+    // exists rather than trusting the comment that says so.
+    const declared = (getManifest('board').settings || []).map((f) => f.key);
+    check('*** “locked” is a declared setting, so the shell’s menu can unlock it ***',
+      declared.includes('locked'), JSON.stringify(declared));
+    check('...and so is the row, so neither is only reachable from a board that hid them',
+      declared.includes('showBoards') && declared.includes('boardId'));
 
     // *** NOBODY'S OWN BOARD MOVES. *** The default has now changed twice -- yesno to care and
     // back -- and a screen with a board somebody BUILT must still show that board through both.
@@ -511,14 +609,27 @@ try {
     await sleep(40);
     check('*** a board somebody built still wins over the new default ***',
       inst2.impl.__probe().boardId === 'mine', inst2.impl.__probe().boardId);
-    check('...and it is offered in the switcher alongside the built-ins',
-      inst2.impl.__probe().boards.includes('custom'),
-      JSON.stringify(inst2.impl.__probe().boards));
+    inst2.impl.__probe();
+    host.querySelector('[data-gear]').click();
+    await sleep(20);
+    check('...and it is offered alongside the built-ins where boards are chosen',
+      inst2.impl.__probe().panelBoards.includes('custom'),
+      JSON.stringify(inst2.impl.__probe().panelBoards));
+    // AND IN THE SHELL'S MENU. The declared options are the built-ins -- all a menu can know
+    // about a module that is not running -- so a board somebody BUILT reaches it only through
+    // live options. Without them the menu offers two boards and the panel offers three, and
+    // the missing one is the person's own.
+    check('...and in the shell’s settings menu, via live options',
+      (inst2.impl.settingsChoices?.().boardId || []).some((o) => o.value === 'custom'),
+      JSON.stringify(inst2.impl.settingsChoices?.().boardId));
     inst2.destroy();
 
     // And a screen that DID choose yes/no keeps yes/no — the other half of "no default reaches
     // anybody who has already answered".
-    const st3 = fakeState({ boardId: 'yesno' });
+    // `showBoards:true` explicitly: with the row off by default, a check that the row goes
+    // away on a short panel would pass against a row that was never drawn -- a check that
+    // cannot fail. Verified by reverting the height rule and watching this one report.
+    const st3 = fakeState({ boardId: 'yesno', showBoards: true });
     const inst3 = mountModule('board', {
       mount: host, bus: createBus(), events: fakeEvents(), state: st3, output: { say: () => {} },
     });
