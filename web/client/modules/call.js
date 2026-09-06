@@ -87,6 +87,16 @@ const DEFAULTS = {
                         // surface that has no mirror, not to be used on the bedside kiosk
   ringSeconds: 45,      // give up if it is set to wait and nobody ever comes
   announce: true,       // say it out loud - see the header, this is the safeguard
+  // *** AN EXAMPLE CALL ON THE EMPTY SCREEN. *** Mike, 2026-09-06: the module *"currently
+  // shows 'No call right now' with no way to see what a call looks like."* Which made the one
+  // module nobody can try a dead end -- you cannot evaluate it, demonstrate it to a family, or
+  // check how it will look in a panel without arranging two accounts and a second machine.
+  //
+  // DEFAULT ON, and the counter-case is named rather than defaulted around: on a locked bedside
+  // screen an example call is noise at best, and the person it might confuse is the person the
+  // screen is for. It is one setting, and everything the example draws is labelled as an
+  // example on every frame -- see `demoFrame`.
+  demo: true,
 };
 
 const SETTINGS = [
@@ -109,6 +119,12 @@ const SETTINGS = [
       { value: 45, label: 'About a minute' },
       { value: 120, label: 'A long time' },
     ] },
+  { key: 'demo', label: 'Show an example when there is no call', default: true,
+    level: 'standard',
+    onLabel: 'Yes \u2014 a “what does a call look like?” button',
+    offLabel: 'No \u2014 just say there is no call',
+    note: 'The example never rings anybody, never opens the camera or the microphone, and is '
+        + 'labelled as an example the whole time. Turn it off on a screen somebody lives with.' },
   { key: 'showSelf', label: 'Show a second view of this camera', default: false,
     level: 'advanced',
     note: 'Off, because the picture-in-picture already shows it. Only useful on a screen '
@@ -158,6 +174,18 @@ registerModule(
     let ringTimer = null;
     let tickTimer = null;
     let remaining = 0;           // seconds left in the decline window
+    // *** THE EXAMPLE IS A SEPARATE VARIABLE FROM `phase`, ON PURPOSE. ***
+    //
+    // Making it a fourth `phase` would have put a fake call on the same code path as a real
+    // one, and every guard in this file that asks `phase === 'ringing'` would then be true for
+    // something that is not a call. The failure mode is not cosmetic: `answer()` would open the
+    // camera and the microphone for a demonstration, and `end()` would publish CALL_ENDED,
+    // which the state machine acts on. So the example is its own flag, it is only ever read by
+    // `render`, and NOTHING it does reaches the bus, the transport, the camera or the mic.
+    let demo = '';               // '' | 'ringing' | 'connected'
+    let demoTimer = null;
+    let demoTick = null;
+    let demoLeft = 0;
     const offs = [];
 
     const AUDIO_ID = `call:${ctx.instanceId || 'call'}`;
@@ -170,8 +198,14 @@ registerModule(
       if (!root) return;
       const stage = el('[data-stage]');
       if (!stage) return;
-      if (phase === 'idle') {
-        stage.innerHTML = '<div class="call-idle">No call right now</div>';
+      if (phase === 'idle' && demo) {
+        stage.innerHTML = demoFrame();
+      } else if (phase === 'idle') {
+        stage.innerHTML = '<div class="call-idle">No call right now</div>'
+          + (cfg.demo !== false
+            ? '<button type="button" class="call-demo-btn" data-demo>See what a call looks '
+              + 'like</button>'
+            : '');
       } else if (phase === 'ringing') {
         const counting = remaining > 0;
         stage.innerHTML = personCard({ ...who, note: `${who?.name || 'Someone'} is calling` })
@@ -189,6 +223,56 @@ registerModule(
           : personCard({ ...who, note: 'On a call' });
       }
       root.dataset.phase = phase;
+    }
+
+    // ------------------------------------------------------------------------------------
+    // THE EXAMPLE CALL
+    // ------------------------------------------------------------------------------------
+    //
+    // It draws the two screens a real call draws and does nothing else. No bus topic, no
+    // transport, no camera, no microphone, no speaker tier -- there is deliberately no call to
+    // any of them below this comment, which is what makes "it cannot ring anybody" a property
+    // of the code rather than an intention.
+
+    /** Every frame of the example says it is an example, and carries a way out. A fake call
+     *  that looked exactly like a real one would make a real one impossible to trust. */
+    function demoFrame() {
+      const body = demo === 'ringing'
+        ? personCard({ name: 'Alex', note: 'Alex is calling' })
+          + `<div class="call-count">${demoLeft}</div>`
+          + '<div class="call-hint">On a real call, saying \u201cdecline\u201d refuses it</div>'
+        : personCard({ name: 'Alex', note: 'On a call' })
+          + '<div class="call-hint">A real call shows their video here, and this room stays '
+            + 'in the corner</div>';
+      return '<div class="call-demo-tag">Example \u2014 not a real call</div>'
+        + body
+        + '<button type="button" class="call-demo-stop" data-demo-stop>Stop the example</button>';
+    }
+
+    function stopDemo() {
+      if (demoTimer != null) { clearTimer(demoTimer); demoTimer = null; }
+      if (demoTick != null) { clearTick(demoTick); demoTick = null; }
+      demo = '';
+      if (phase === 'idle') render();
+    }
+
+    function startDemo() {
+      if (phase !== 'idle') return;              // a real call is not interrupted by a mock
+      stopDemo();
+      demo = 'ringing';
+      demoLeft = 5;
+      render();
+      demoTick = setTick(() => {
+        demoLeft -= 1;
+        if (demoLeft > 0) { render(); return; }
+        clearTick(demoTick); demoTick = null;
+        demo = 'connected';
+        render();
+        // *** IT ENDS ITSELF. *** Same rule as everything else on these screens: nothing may
+        // sit on a screen waiting for an input from somebody who cannot give one. An example
+        // call left running would be a stranger's face on her wall until a person came.
+        demoTimer = setTimer(() => { demoTimer = null; stopDemo(); }, 12000);
+      }, 1000);
     }
 
     // ---- the audio bus: a call PAUSES the media, it does not duck it ------------------
@@ -300,6 +384,10 @@ registerModule(
     }
 
     async function incoming(from) {
+      // A REAL CALL TAKES THE SCREEN BACK IMMEDIATELY. Somebody looking at the example when
+      // her daughter rings must see her daughter, not a demonstration with a real call queued
+      // behind it.
+      stopDemo();
       who = from || {};
       phase = 'ringing';
       render();
@@ -364,7 +452,12 @@ registerModule(
 
     return {
       __probe: () => ({ phase, who, hasOutgoing: !!outgoing, ringArmed: !!ringTimer,
-                        counting: !!tickTimer, remaining, cfg: { ...cfg } }),
+                        counting: !!tickTimer, remaining, cfg: { ...cfg },
+                        demo, demoLeft,
+                        demoOffered: !!root?.querySelector('[data-demo]'),
+                        tagged: !!root?.querySelector('.call-demo-tag') }),
+      __demo: () => startDemo(),
+      __demoStop: () => stopDemo(),
       __decline: () => decline(),
       __incoming: (from) => incoming(from),
       __answer: () => answer(),
@@ -376,27 +469,72 @@ registerModule(
         root.className = 'm-call';
         const style = document.createElement('style');
         style.textContent =
-          '.m-call{position:absolute;inset:0;background:#05070f;color:#e8f0ea;overflow:hidden}'
-          + '.m-call [data-stage]{position:absolute;inset:0;display:flex;align-items:center;'
-          + 'justify-content:center;text-align:center}'
-          + '.m-call .call-remote{width:100%;height:100%;object-fit:cover;background:#000}'
-          + '.m-call .call-who{display:flex;flex-direction:column;align-items:center;gap:2vmin}'
-          + '.m-call .call-avatar{width:22vmin;height:22vmin;border-radius:50%;'
+          '.m-call{position:absolute;inset:0;background:#05070f;color:#e8f0ea;'
+          // *** `cqmin`, NOT `vmin`, AND THIS WAS A REAL BUG. ***
+          //
+          // Every size in this module was a viewport unit, so a call in a
+          // DASHBOARD QUADRANT was drawn as though it filled the screen: in a
+          // 520x400 cell the caller's avatar came out at 22% of a 900px viewport,
+          // pushing the countdown off the top and the buttons off the bottom.
+          // `modules/board.js` learned the same lesson and fixed it with `--u`
+          // measured from the card; this is the same fix in CSS, which is
+          // available here because everything in this module is relative to one
+          // box. `overflow:auto` is the floor under it: a panel too small even
+          // for the scaled version scrolls rather than hiding the way out.
+          + 'container-type:size;overflow:auto}'
+          // *** THE PIECES ARE IN FLOW, AND THIS FIXED A BUG IN THE REAL CALL, NOT THE
+          // EXAMPLE. *** The countdown and the hint were both absolutely positioned against
+          // the stage while the caller's card sat centred in it — so in a SHORT PANEL the
+          // countdown printed straight over the caller's initial. Found by looking at the
+          // example in a 520x400 cell, but a real incoming call in a dashboard quadrant did
+          // exactly the same thing: the number that says how long you have to decline, on top
+          // of the letter that says who is calling.
+          //
+          // A column with real gaps cannot overlap. The padding keeps it clear of the top
+          // band, and the video goes back to `absolute` because it is the one thing that
+          // should ignore all of it and fill the panel.
+          + '.m-call [data-stage]{position:absolute;inset:0;display:flex;'
+          + 'flex-direction:column;align-items:center;justify-content:center;gap:2cqmin;'
+          + 'padding:9cqmin 3cqmin;box-sizing:border-box;text-align:center}'
+          + '.m-call .call-remote{position:absolute;inset:0;width:100%;height:100%;'
+          + 'object-fit:cover;background:#000}'
+          + '.m-call .call-who{display:flex;flex-direction:column;align-items:center;gap:2cqmin}'
+          + '.m-call .call-avatar{width:22cqmin;height:22cqmin;border-radius:50%;'
           + 'background:rgba(255,255,255,.10);display:flex;align-items:center;'
-          + 'justify-content:center;font:600 10vmin/1 system-ui,sans-serif;color:#fff3d9}'
-          + '.m-call .call-name{font:600 5vmin/1.1 system-ui,sans-serif}'
-          + '.m-call .call-sub{font:400 2.6vmin/1.2 system-ui,sans-serif;opacity:.7}'
-          + '.m-call .call-count{position:absolute;top:6vmin;font:600 9vmin/1 system-ui,sans-serif;'
+          + 'justify-content:center;font:600 10cqmin/1 system-ui,sans-serif;color:#fff3d9}'
+          + '.m-call .call-name{font:600 5cqmin/1.1 system-ui,sans-serif}'
+          + '.m-call .call-sub{font:400 2.6cqmin/1.2 system-ui,sans-serif;opacity:.7}'
+          + '.m-call .call-count{font:600 9cqmin/1 system-ui,sans-serif;order:-1;'
           + 'color:#fff3d9;opacity:.9;font-variant-numeric:tabular-nums}'
-          + '.m-call .call-hint{position:absolute;bottom:6vmin;opacity:.6;'
-          + 'font:400 2.2vmin system-ui,sans-serif}'
-          + '.m-call .call-idle{opacity:.45;font:400 3vmin system-ui,sans-serif}';
+          + '.m-call .call-hint{opacity:.6;max-width:34ch;'
+          + 'font:400 2.2cqmin/1.35 system-ui,sans-serif}'
+          + '.m-call .call-idle{opacity:.45;font:400 3cqmin system-ui,sans-serif}'
+          // The example's own chrome. The tag is at the TOP, in the reading position, and it
+          // is not subtle: the one thing worse than no example is an example somebody mistakes
+          // for a call from a person who is not there.
+          + '.m-call .call-demo-tag{position:absolute;top:0;left:0;right:0;padding:1.4cqmin;'
+          + 'background:#fff3d9;color:#12181c;font:700 2.2cqmin/1.2 system-ui,sans-serif;'
+          + 'letter-spacing:.02em}'
+          + '.m-call .call-demo-btn{padding:1.4cqmin 2.6cqmin;'
+          + 'min-height:44px;border-radius:2cqmin;cursor:pointer;background:transparent;'
+          + 'color:#e8f0ea;border:1px solid rgba(232,240,234,.4);'
+          + 'font:600 2.2cqmin system-ui,sans-serif}'
+          + '.m-call .call-demo-btn:hover{border-color:#e8f0ea}'
+          + '.m-call .call-demo-stop{padding:1.2cqmin 2.4cqmin;'
+          + 'min-height:44px;border-radius:2cqmin;cursor:pointer;background:#fff3d9;'
+          + 'color:#12181c;border:0;font:600 2.1cqmin system-ui,sans-serif}';
         root.appendChild(style);
         const stage = document.createElement('div');
         stage.setAttribute('data-stage', '');
         root.appendChild(stage);
         mount.appendChild(root);
         render();
+
+        // Delegated, because `render` replaces the stage's markup on every frame.
+        root.addEventListener('click', (e) => {
+          if (e.target.closest('[data-demo]')) { startDemo(); return; }
+          if (e.target.closest('[data-demo-stop]')) stopDemo();
+        });
 
         // Driven by the world, not by this module deciding things.
         offs.push(bus.subscribe(CALL_INCOMING + ':signal', (from) => incoming(from)));
@@ -414,6 +552,7 @@ registerModule(
 
       destroy() {
         clearRing();
+        stopDemo();
         dropCamera();
         dropMic();
         takeSpeaker(false);

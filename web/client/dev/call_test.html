@@ -370,6 +370,150 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         r.impl.__probe().phase === 'connected', r.impl.__probe().phase);
     }
 
+    section('*** it fits the panel it is in, not the screen it is on ***');
+    {
+      // FOUND BY LOOKING, NOT BY A CHECK — which is why there is now a check. Every size in
+      // this module was a VIEWPORT unit, so a call in a dashboard quadrant was drawn as though
+      // it filled the screen: the caller's avatar came out at 22% of the whole window, and the
+      // countdown that says how long you have to decline printed straight over the initial
+      // that says who is calling. The `fit` and `panel_fit` suites both passed throughout —
+      // they check that a module scrolls rather than spills, and this module did neither, it
+      // just drew everything too big and clipped it.
+      const small = document.createElement('div');
+      small.style.cssText = 'position:relative;width:320px;height:240px;overflow:hidden';
+      document.getElementById('host').append(small);
+      const bus2 = createBus();
+      const clock2 = fakeClock();
+      const inst2 = mountModule('call', {
+        mount: small, bus: bus2, audio: null, cameraOwner: null, micOwner: null,
+        output: { alert() {}, say() {}, notify() {}, status() {}, destroy() {} },
+        instanceId: 'small', callIO: clock2.io,
+        state: { get: () => ({ declineSeconds: 20 }), set: () => Promise.resolve(),
+                 subscribe: () => () => {}, load: () => Promise.resolve(),
+                 startPolling() {}, destroy() {} },
+      });
+      inst2.init();
+      await (inst2.impl || inst2).__incoming({ name: 'Ellen' });
+      await sleep(30);
+
+      const stage = small.querySelector('[data-stage]');
+      const avatar = small.querySelector('.call-avatar');
+      const count = small.querySelector('.call-count');
+      check('a ringing call in a small panel draws a caller and a countdown',
+        !!avatar && !!count);
+      // *** THE AVATAR IS SIZED FROM THE PANEL. *** At 22% of the panel's short side that is
+      // ~53px here; at 22% of the window it was ~200px, which is most of a 240px panel.
+      check('*** the caller\u2019s avatar is sized from the PANEL, not the window ***',
+        avatar.getBoundingClientRect().width < 240 * 0.45,
+        `${Math.round(avatar.getBoundingClientRect().width)}px in a 320x240 panel`);
+      // *** AND NOTHING OVERLAPS. *** This is the failure somebody would actually see: the
+      // number printed over the letter.
+      const a = avatar.getBoundingClientRect();
+      const c = count.getBoundingClientRect();
+      check('*** the countdown does not print over the caller\u2019s initial ***',
+        c.bottom <= a.top + 1 || c.top >= a.bottom - 1,
+        JSON.stringify({ count: [Math.round(c.top), Math.round(c.bottom)],
+                         avatar: [Math.round(a.top), Math.round(a.bottom)] }));
+      check('...and the whole thing is inside the panel rather than clipped by it',
+        stage.scrollHeight <= stage.clientHeight + 2,
+        `${stage.scrollHeight} in ${stage.clientHeight}`);
+      inst2.destroy();
+      small.remove();
+    }
+
+    section('*** the example call — and everything it must not touch ***');
+    {
+      // Mike, 2026-09-06: the module "currently shows 'No call right now' with no way to see
+      // what a call looks like." So the empty screen offers an example. THE WHOLE RISK is that
+      // an example is indistinguishable from a call from somebody who is not there, or that it
+      // reaches something real on its way past.
+      const r = rig({});
+      check('the empty screen offers a way to see what a call looks like',
+        r.impl.__probe().demoOffered === true);
+      check('...and says there is no call, which is still the true thing',
+        /No call right now/.test(r.host.textContent), r.host.textContent);
+
+      r.host.querySelector('[data-demo]').click();
+      await sleep(20);
+      check('*** pressing it shows a call ringing ***', r.impl.__probe().demo === 'ringing',
+        r.impl.__probe().demo);
+      check('*** and every frame of it says it is an example ***',
+        r.impl.__probe().tagged === true
+          && /not a real call/i.test(r.host.textContent), r.host.textContent.slice(0, 80));
+
+      // *** THE CHECKS THIS SECTION EXISTS FOR. *** An example that reached the bus would drive
+      // the state machine; one that reached the camera or the microphone would open them for a
+      // demonstration; one that reached the transport would ring a person.
+      check('*** it does not publish a call topic — nothing else on the screen reacts ***',
+        r.published.length === 0, JSON.stringify(r.published));
+      check('*** it does not open the camera ***', r.camLog.length === 0,
+        JSON.stringify(r.camLog));
+      check('*** it does not open the microphone ***', r.micLog.length === 0,
+        JSON.stringify(r.micLog));
+      check('*** it does not say anything out loud — no announced fake caller ***',
+        r.said.length === 0, JSON.stringify(r.said));
+      check('...and the module still reports itself as idle, because it is',
+        r.impl.__probe().phase === 'idle', r.impl.__probe().phase);
+
+      r.clock.tick(5);
+      await sleep(20);
+      check('it goes on to show a connected call', r.impl.__probe().demo === 'connected',
+        r.impl.__probe().demo);
+      check('...still labelled', r.impl.__probe().tagged === true);
+      check('...and still not touching anything real',
+        r.published.length === 0 && r.camLog.length === 0 && r.micLog.length === 0);
+
+      // *** IT ENDS ITSELF. *** Nothing may sit on one of these screens waiting for an input
+      // from somebody who cannot give one. An example left running is a stranger's name on her
+      // wall until a person walks in.
+      check('an example that is running has an end armed', r.clock.pendingTimers() > 0);
+      r.clock.fireTimers();
+      await sleep(20);
+      check('*** left alone, the example puts itself away ***', r.impl.__probe().demo === '',
+        r.impl.__probe().demo);
+      check('...and the empty screen is back', /No call right now/.test(r.host.textContent));
+      r.inst.destroy();
+    }
+    {
+      // A REAL CALL WINS, INSTANTLY. Somebody looking at the example when her daughter rings
+      // must see her daughter.
+      const r = rig({ declineSeconds: 0 });
+      r.impl.__demo();
+      await sleep(20);
+      check('the example is running', r.impl.__probe().demo === 'ringing');
+      await r.impl.__incoming({ name: 'Ellen', video: true });
+      await sleep(30);
+      check('*** a real call takes the screen back from the example at once ***',
+        r.impl.__probe().demo === '' && r.impl.__probe().phase === 'connected',
+        JSON.stringify([r.impl.__probe().demo, r.impl.__probe().phase]));
+      check('...and it is a REAL call, so it did publish and did take the camera',
+        r.published.some(([t]) => t === CALL_INCOMING) && r.camLog.length > 0);
+      check('...with no example label left over the real caller',
+        r.impl.__probe().tagged === false, r.host.textContent.slice(0, 80));
+      r.inst.destroy();
+    }
+    {
+      // AND IT CAN BE TURNED OFF. On a screen somebody lives with, an example call is noise,
+      // and the person it might confuse is the person the screen is for.
+      const r = rig({ demo: false });
+      check('*** a screen that turned it off is not offered the example ***',
+        r.impl.__probe().demoOffered === false, r.host.textContent);
+      check('...and still says there is no call', /No call right now/.test(r.host.textContent));
+      r.inst.destroy();
+    }
+    {
+      // Stopping it by hand, which is what the button on every frame is for.
+      const r = rig({});
+      r.impl.__demo();
+      await sleep(20);
+      r.host.querySelector('[data-demo-stop]').click();
+      await sleep(20);
+      check('the stop button on the example works', r.impl.__probe().demo === '');
+      check('...and leaves no timer running', r.clock.pendingTimers() === 0,
+        String(r.clock.pendingTimers()));
+      r.inst.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
