@@ -455,8 +455,22 @@ try {
 
     check('the module is called "AAC board", not "Talk"',
       getManifest('board').title === 'AAC board', getManifest('board').title);
-    check('a screen that has chosen nothing opens on the 16-card board',
-      inst.impl.__probe().boardId === 'care', inst.impl.__probe().boardId);
+    // *** THE DEFAULT IS `yesno`, AND THIS CHECK CHANGED SIDES ONCE ALREADY. ***
+    //
+    // G8 asked for the larger board as the default and it shipped; this line asserted `care`.
+    // Then the reason it is larger got looked at: the 16-word set is ONE PERSON'S board, with
+    // no eat / drink / hungry / thirsty cards -- a hole exactly where the most-used vocabulary
+    // in AAC normally is. Mike's call was to keep it as a labelled EXAMPLE and default to
+    // Yes / No / Other, which is three cards that are complete for what they are and specific
+    // to nobody.
+    //
+    // Asserted as the id AND as a property of the board, so the next person to move this has to
+    // face the actual reason rather than flipping a string: whatever is default must not be a
+    // board written for one named person.
+    check('a screen that has chosen nothing opens on Yes / No / Other',
+      inst.impl.__probe().boardId === 'yesno', inst.impl.__probe().boardId);
+    check('*** and the default board is not one person\u2019s vocabulary ***',
+      inst.impl.__probe().boardId !== 'care', inst.impl.__probe().boardId);
     check('the switcher is on screen', inst.impl.__probe().boardsShown === true);
     check('...and it offers both built-in boards',
       JSON.stringify(inst.impl.__probe().boards) === '["yesno","care"]',
@@ -468,17 +482,24 @@ try {
     // TypeError here aborts the whole section — including the "somebody's own board still
     // wins" regression below, which is the check most worth keeping alive. Verified by
     // removing the switcher and watching this report three failures instead of a stack trace.
-    host.querySelector('[data-board="yesno"]')?.click();
+    // Press the OTHER one, now that the default is `yesno` -- pressing the chip a screen is
+    // already on proves nothing about whether a chip works.
+    host.querySelector('[data-board="care"]')?.click();
     await sleep(40);
     check('*** pressing a chip actually changes the board ***',
-      inst.impl.__probe().boardId === 'yesno', inst.impl.__probe().boardId);
+      inst.impl.__probe().boardId === 'care', inst.impl.__probe().boardId);
     check('...and it wrote the choice to the same row the menu writes',
-      st.get().boardId === 'yesno', JSON.stringify(st.get()));
+      st.get().boardId === 'care', JSON.stringify(st.get()));
+    // The example board is LABELLED as one, on the chip somebody actually reads rather than
+    // only in the settings menu most people never open.
+    const careChip = host.querySelector('[data-board="care"]');
+    check('...and the example board says so on its own chip',
+      /example/i.test(careChip?.textContent || ''), careChip?.textContent);
     inst.destroy();
 
-    // *** NOBODY'S OWN BOARD MOVES. *** The default changed from yesno to care; a screen with a
-    // board somebody BUILT must still show that board, and this is the regression that change
-    // could most easily have caused.
+    // *** NOBODY'S OWN BOARD MOVES. *** The default has now changed twice -- yesno to care and
+    // back -- and a screen with a board somebody BUILT must still show that board through both.
+    // This is the regression either change could most easily have caused.
     const own = { version: 1, id: 'mine', name: 'Mine', tier: 4,
       cells: [{ id: 'a', word: 'Alpha' }, { id: 'b', word: 'Bravo' },
               { id: 'c', word: 'Charlie' }, { id: 'd', word: 'Delta' }] };
