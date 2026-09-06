@@ -815,6 +815,11 @@
 .wordforge .wf-fb.is-right{background:#f0f4e8;border:1px solid var(--moss)}
 .wordforge .wf-fb.is-wrong{background:var(--cream-soft);border:1px solid var(--line)}
 .wordforge .wf-bonus,.wordforge .wf-try{display:block;margin-top:4px;font-size:.78rem;color:var(--midnight);font-weight:600}
+/* WHAT THE PERSON PICKED, AND WHAT IT ACTUALLY MEANS. Set apart from the explanation above it
+   rather than run together: they are answers to two different questions — “what was right” and
+   “what was I thinking of” — and a reader has to be able to tell which is which. */
+.wordforge .wf-picked{display:block;margin-top:6px;padding-left:9px;
+  border-left:3px solid var(--line);font-size:.82rem;color:var(--ink-soft, var(--midnight))}
 .wordforge .wf-btn{margin-top:10px;padding:10px 18px;border:1px solid var(--line);border-radius:10px;
   background:var(--card);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
 .wordforge .wf-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
