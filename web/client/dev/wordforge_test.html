@@ -168,6 +168,33 @@ a || b || c`);
     check('...and the explanation is the why', qp.explain === DEFAULT_PAIRS[0].why);
     check('pair rounds tag a writing concept, not a word', qp.concept === CONCEPT_PAIRS, qp.concept);
 
+    // *** A WRONG GUESS SAYS WHAT THE THING YOU PICKED ACTUALLY MEANS. ***
+    //
+    // Chat's #11. The difference between being told you are wrong and being told something:
+    // somebody who picked the wrong meaning has a specific wrong idea, and the answer to it is
+    // whose meaning that was -- so a miss teaches a second word instead of repeating the first.
+    const wrongD = qd.options.findIndex((_, i) => i !== qd.answer);
+    check('*** a wrong option on a define round says whose meaning it was ***',
+      !!qd.optionNotes && !!qd.optionNotes[wrongD], JSON.stringify(qd.optionNotes));
+    check('...naming a real word from the deck, not a guess',
+      DEFAULT_WORDS.some((x) => qd.optionNotes[wrongD].includes(x.word)),
+      qd.optionNotes[wrongD]);
+    check('*** and the RIGHT option carries no such note \u2014 there is nothing to correct ***',
+      qd.optionNotes[qd.answer] === null, String(qd.optionNotes[qd.answer]));
+
+    const wrongB = qb.options.findIndex((_, i) => i !== qb.answer);
+    check('a wrong option on a fill-the-blank round says what that word means',
+      !!qb.optionNotes && /means/.test(qb.optionNotes[wrongB] || ''),
+      JSON.stringify(qb.optionNotes));
+    check('...and its own word carries none', qb.optionNotes[qb.answer] === null);
+
+    check('a which-is-better round adds no per-option note \u2014 the why already compares them',
+      qp.optionNotes.every((n) => n === null), JSON.stringify(qp.optionNotes));
+    check('every question has one note per option, so an index can never point at the wrong one',
+      qd.optionNotes.length === qd.options.length
+        && qb.optionNotes.length === qb.options.length
+        && qp.optionNotes.length === qp.options.length);
+
     section('grade bands — the bank’s own labels');
     check('every seeded word carries a grade', DEFAULT_WORDS.every((w) => Number(w.grade) > 0));
     check('a grade becomes a readable band', bandOf(8) === 'grade 8', String(bandOf(8)));

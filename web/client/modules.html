@@ -178,11 +178,9 @@
    * a second page doing the other half of this one's job, and nothing linked to it. It is now
    * this mode, on this page, in the site's own palette — the judging moved to
    * `module_audit.js` so there is one implementation rather than two that drift. */
-  .runall{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:26px 0 0;
-    padding:16px 18px;background:var(--card);border:1px solid var(--line);
-    border-radius:var(--radius)}
-  .runall p{margin:0;font-size:.93rem;color:var(--ink-soft);max-width:56ch}
-  .runall .trybtn{white-space:nowrap}
+  /* `.runall` is gone with the button it styled — the developer tool came off this page and
+     lives at `?all=1`. The `.tally` it writes into stays, hidden, because that is where the
+     run still reports. */
   .tally{margin:18px 0 0;padding:14px 18px;background:var(--cream-soft);
     border:1px solid var(--line);border-radius:var(--radius);font-weight:700}
   .tally .worth{display:block;margin-top:8px;font-weight:650;color:var(--rosy-deep);
@@ -255,13 +253,22 @@
     <div class="detail" id="detail"></div>
   </section>
 
-  <div class="runall">
-    <button type="button" class="trybtn" id="runall">Run every one of them, in turn</button>
-    <p>Mounts every part on this device, one after another in the stage above, and reports what
-      each actually put on screen. <b>“Drew” is not “works”</b> — a clock showing the wrong time
-      still draws. Each one gets a badge in the list, and clicking a badge puts that part back on
-      the stage, because <b>the badge is not the evidence — the box is.</b></p>
-  </div>
+  <!-- THE "run every one of them" BUTTON IS GONE FROM THIS PAGE, and the machinery is not.
+
+       Chat: it "is a developer tool. It belongs in the dev harness." Which is right: a visitor
+       here is deciding whether any of this is for them, and a control that mounts twenty-five
+       modules in a row and prints verdicts about them answers a question they did not ask, in
+       a vocabulary they do not have. "Drew is not works" is a sentence for whoever is building
+       this, not for somebody wondering if it would help their mother.
+
+       It still runs, at `modules.html?all=1` -- which is where `dev/modules_live.html`
+       redirects, so the dev harness reaches it exactly as before and no verdict was lost. The
+       tally it writes stays in the markup, hidden until something asks for it.
+
+       THE CANARY STAYS, in "What this page does not cover" below: a part that exists and that
+       nobody has described is named there rather than quietly missed. That one earns its place
+       on a public page, because it is about this page being honest rather than about the
+       software passing a test. -->
   <div class="tally" id="tally" hidden></div>
 
   <div class="gaps">
@@ -531,7 +538,10 @@ async function runAll(btn) {
   auditing = false;
 }
 
-document.getElementById('runall').addEventListener('click', (e) => runAll(e.currentTarget));
+// No button on the page any more -- see the markup. `?all=1` is the way in, and `runAll` is
+// handed a stand-in so it can go on reporting progress into something rather than growing a
+// branch for "is there a button".
+document.getElementById('runall')?.addEventListener('click', (e) => runAll(e.currentTarget));
 // `?all=1` runs it on load — the address `dev/modules_live.html` now redirects to, so the old
 // harness URL still lands somebody on a page that is already doing what they came for.
 // Something is on the stage from the first paint. An empty stage on a page whose job is showing
@@ -543,7 +553,7 @@ const wanted = new URLSearchParams(location.search).get('m');
 if (ITEMS.length) select(ITEMS.some((m) => m.type === wanted) ? wanted : ITEMS[0].type);
 
 if (new URLSearchParams(location.search).get('all') === '1') {
-  runAll(document.getElementById('runall'));
+  runAll(document.getElementById('runall') || document.createElement('button'));
 }
 </script>
 </body>

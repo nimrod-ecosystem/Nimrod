@@ -167,6 +167,9 @@ export function makeQuestion(item, words, rand = Math.random) {
       concept: CONCEPT_PAIRS,
       band: bandOf(p.grade),
       explain: p.why,
+      // Nothing to add per option here: `why` is already about the comparison, and both
+      // options are the two halves it compares. A note repeating it would be noise.
+      optionNotes: opts.map(() => null),
     };
   }
 
@@ -186,6 +189,20 @@ export function makeQuestion(item, words, rand = Math.random) {
       concept: w.word,
       band,
       explain: `“${w.word}” means ${w.meaning}.`,
+      // *** WHAT THE WORD YOU PICKED ACTUALLY MEANS. ***
+      //
+      // Chat's #11: the "I don't know, show me" option is good and should stay, and a wrong
+      // guess should say what the word you picked actually means. That is the difference
+      // between being told you are wrong and being told something: somebody who chose
+      // "laconic" for a sentence about weather has a specific wrong idea, and the answer to it
+      // is what "laconic" means, not a second reading of the right answer.
+      //
+      // Parallel to `options` by index, so nothing has to search a deck to explain a press.
+      optionNotes: opts.map((o) => {
+        const other = words.find((x) => x.word === o);
+        return other && other.word !== w.word
+          ? `“${other.word}” means ${other.meaning}.` : null;
+      }),
     };
   }
 
@@ -198,6 +215,14 @@ export function makeQuestion(item, words, rand = Math.random) {
     concept: w.word,
     band,
     explain: `“${w.word}” means ${w.meaning}. For example: ${w.sentence}`,
+    // Here the options are MEANINGS, so the useful note is whose meaning it was -- the person
+    // has just learned a second word by getting the first one wrong, which is the best thing a
+    // wrong answer can do.
+    optionNotes: opts.map((o) => {
+      const other = words.find((x) => x.meaning === o);
+      return other && other.word !== w.word
+        ? `That is what “${other.word}” means.` : null;
+    }),
   };
 }
 
@@ -511,8 +536,16 @@ registerModule(
           // A miss is a teaching moment: the explanation, then the points for taking it in.
           // Saying so plainly gets a different opening line from a wrong guess, but the
           // same explanation and the same points.
+          // *** AND WHAT THEY PICKED, WHEN THEY PICKED SOMETHING. ***
+          //
+          // Only on a real guess: somebody who said "I don't know" did not choose a word, and
+          // telling them what the word they did not pick means would be answering a question
+          // they were honest enough not to ask.
+          const note = !answered.declared && answered.picked != null
+            ? (q.optionNotes || [])[answered.picked] : null;
           feedback = `<div class="wf-fb is-wrong">
                <b>${answered.declared ? 'Fair enough — here it is.' : 'Not quite.'}</b> ${esc(q.explain)}
+               ${note ? `<span class="wf-picked">You picked: ${esc(note)}</span>` : ''}
                <span class="wf-try">+${answered.award.total} for ${answered.declared ? 'asking' : 'the try'} — press “Got it” to bank it.</span>
              </div>
              <button class="wf-btn wf-primary" data-next>Got it</button>`;
