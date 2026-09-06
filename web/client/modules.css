@@ -302,6 +302,12 @@
 .youtube .yt-schedadd button{min-height:34px;padding:6px 12px;border-radius:8px;
   border:1px solid rgba(255,255,255,.28);background:transparent;color:inherit;cursor:pointer}
 .youtube .yt-schhead{font-size:.82rem;opacity:.85;margin-bottom:4px}
+/* Search results. Capped and scrolling: ten results in a quarter-screen panel would push the
+   playlist and the schedule out of reach, and `mod-host` scrolling the whole panel to get past
+   them is worse than the list scrolling itself. */
+.youtube .yt-results{margin:4px 0 8px;max-height:34cqh;overflow:auto;
+  display:flex;flex-direction:column;gap:4px;font-size:.84rem}
+.youtube .yt-results:empty{display:none}
 .youtube .ytrow{display:flex;align-items:center;gap:8px;justify-content:space-between;
   font-size:.84rem}
 .youtube .ytrow button{min-height:30px;padding:4px 10px;border-radius:8px;
