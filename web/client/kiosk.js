@@ -820,12 +820,22 @@ export async function mountKiosk(root, {
       // pressed -- a control that lies about what it can do, which on this bar is worse than a
       // missing one: somebody with one switch spends a press finding out.
       //
-      // *** AND THAT RULE HAS A CONSEQUENCE NOBODY HAD SEEN: see DECIDE row D16. *** A module
-      // with no verbs (quests, trivia, word forge...) HAS a chip while it is unplaced, because
-      // pressing it does something real -- it brings the panel on screen. The moment it lands,
-      // it stops being reachable and its chip disappears. So pressing a button can delete that
-      // button, and there is then no way to send the panel back. The order fix below does not
-      // address that; it is a question about what such a chip should DO, which is Mike's.
+      // *** D16, AND IT IS FIXED RATHER THAN ASKED ABOUT. ***
+      //
+      // A module with no verbs (quests, trivia, word forge...) HAD a chip while it was
+      // unplaced, because pressing it did something real -- it brought the panel on screen.
+      // The moment it landed it stopped being `reachable`, and its chip disappeared. **So
+      // pressing a button deleted that button, and there was no way to send the panel back.**
+      //
+      // Chat, and this is the whole of it: *"a control that removes itself when pressed is the
+      // failure mode Nimrod exists to prevent. Somebody using one switch cannot recover from
+      // it, and on a bedside screen nobody is there to undo it... An empty control area is a
+      // correct answer. A vanishing button is not."*
+      //
+      // So the chip STAYS, and `input_router.setFocus` now accepts any panel on the screen
+      // while switch-cycling still visits only panels that answer a verb. What remains is the
+      // honesty problem the original filter existed for -- a button must not lie about what it
+      // can do -- and that is answered by SAYING SO on the chip rather than by removing it.
       const focusable = new Set((runtime?.router?.reachable?.() || []).map((m) => m.id));
       const placedIds = new Set(layout.slots.filter(Boolean));
       for (const def of profile.modules) {
@@ -836,9 +846,16 @@ export async function mountKiosk(root, {
         if (placed) {
           const rec = slotRecs.find((r) => r.id === def.id);
           if (!rec) continue;
-          if (focusable.size && !focusable.has(rec.id)) continue;
+          // NOT `continue` any more -- see D16 above. The chip is drawn either way, and says
+          // which kind of chip it is instead of disappearing.
+          const noControls = focusable.size && !focusable.has(rec.id);
           const b = document.createElement('button');
-          b.className = 'k-dot' + (rec.id === focusId ? ' on' : '');
+          b.className = 'k-dot' + (rec.id === focusId ? ' on' : '')
+            + (noControls ? ' k-nover' : '');
+          if (noControls) {
+            b.title = 'nothing on this panel answers a button \u2014 pressing it puts the '
+              + 'outline here, and the controls stay empty';
+          }
           b.textContent = rec.title || rec.type;
           b.dataset.id = rec.id;
           b.addEventListener('click', () => {

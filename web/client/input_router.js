@@ -54,15 +54,38 @@ export function createVerbRouter({
   // Only panels that answer at least one verb. Anything else is not worth a press.
   const reachable = () => (modules() || []).filter((m) => respondsToVerbs(m.type, maps));
 
+  /**
+   * *** FOCUS IS WHERE SOMEBODY PUT IT. CYCLING ONLY VISITS PANELS THAT CAN DO SOMETHING. ***
+   *
+   * These used to be the same list, and that produced D16 -- a bug on the transport bar that
+   * chat put plainly: **a control that removes itself when pressed is the failure mode Nimrod
+   * exists to prevent.** A panel whose type answers no verbs was not `reachable`, so it could
+   * not be focused, so the bar dropped its button the moment it was placed on screen. Pressing
+   * a button deleted that button, and somebody using one switch cannot undo it.
+   *
+   * The rule that fixes it without breaking what `reachable` is for:
+   *
+   *   * `setFocus` -- a DELIBERATE choice, by name, from the bar -- may land on any panel on
+   *     the screen, including one with nothing to press. **An empty control set is a correct
+   *     answer; a vanishing button is not.**
+   *   * `step` -- what a switch does -- still walks only panels that answer a verb, so a
+   *     single-switch user is never cycled onto a dead panel.
+   *
+   * Nobody is stranded either way: `dispatch` on a verb-less panel already reports
+   * `no-mapping` rather than failing silently, and `focus-next` still moves on, because `step`
+   * walks the reachable list regardless of where focus happens to be sitting.
+   */
+  const onScreen = () => modules() || [];
+
   function focused() {
+    const here = onScreen().find((m) => m.id === focusId);
+    if (here) return here;                    // including one with no verbs, if it was chosen
     const list = reachable();
-    if (!list.length) return null;
-    return list.find((m) => m.id === focusId) || list[0];
+    return list.length ? list[0] : null;
   }
 
   function setFocus(id) {
-    const list = reachable();
-    const hit = list.find((m) => m.id === id);
+    const hit = onScreen().find((m) => m.id === id);
     if (!hit) return focused();
     focusId = hit.id;
     onChange?.({ ...hit });
@@ -73,10 +96,15 @@ export function createVerbRouter({
     if (paused) return focused();
     const list = reachable();
     if (!list.length) return null;
-    const at = Math.max(0, list.findIndex((m) => m.id === focused()?.id));
+    // `-1` when focus is sitting on a panel that answers no verbs -- somebody chose it by name
+    // from the bar. Stepping forward from there has to land on the FIRST reachable panel;
+    // `Math.max(0, ...)` would have started at index 0 and stepped to the SECOND, skipping a
+    // panel that a switch user can then only reach by going all the way round.
+    const at = list.findIndex((m) => m.id === focused()?.id);
     // Wraps. With one switch you can only go one way, so the ring has to close or the
     // last panel is a dead end.
-    const next = list[(at + delta + list.length) % list.length];
+    const from = at < 0 ? (delta > 0 ? -1 : 0) : at;
+    const next = list[(from + delta + list.length) % list.length];
     focusId = next.id;
     onChange?.({ ...next });
     return next;
