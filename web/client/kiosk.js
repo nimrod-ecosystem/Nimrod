@@ -790,41 +790,72 @@ export async function mountKiosk(root, {
     const focusId = focusedRec()?.id;
 
     if (layout) {
+      // *** ONE STABLE ORDER, FROM `profile.modules`, WHETHER A PANEL IS PLACED OR NOT. ***
+      //
+      // PRIORITY.md #3: "panels rearranging when focus changes, which violates the same-position
+      // rule the whole product depends on."
+      //
+      // This used to draw every PLACED panel first and then every unplaced one, so the moment a
+      // panel moved between those two groups the whole bar reshuffled. Measured on a five-panel
+      // screen, pressing one off-screen chip:
+      //
+      //     Photos, Trivia, Word Forge, Quests, Pond  ->  Trivia, Word Forge, Photos, Pond
+      //
+      // Three buttons that had nothing to do with the swap moved under the finger. For somebody
+      // scanning this bar with one switch, a button that moves is a press spent on the wrong
+      // thing -- which is exactly what the same-position rule exists to prevent.
+      //
+      // `profile.modules` is the stable identity order both halves were already derived from,
+      // so ordering by it costs nothing and cannot reshuffle: being placed or unplaced becomes
+      // a STATE the chip carries (`k-off`), not a position it moves to.
+      //
       // *** ONLY PANELS THE ROUTER WILL ACTUALLY FOCUS GET A BUTTON. ***
       //
-      // `reachable()` is the router's own list — a module type absent from the verb map is
+      // `reachable()` is the router's own list -- a module type absent from the verb map is
       // never focused, which is deliberate and documented there. The CLOCK is the standing
       // example: it declares no verbs, so nothing can be done to it, so focusing it would
       // strand a switch on a panel with nothing to press.
       //
       // My first version listed every slot and produced a Clock button that did nothing when
-      // pressed — a control that lies about what it can do, which on this bar is worse than a
+      // pressed -- a control that lies about what it can do, which on this bar is worse than a
       // missing one: somebody with one switch spends a press finding out.
+      //
+      // *** AND THAT RULE HAS A CONSEQUENCE NOBODY HAD SEEN: see DECIDE row D16. *** A module
+      // with no verbs (quests, trivia, word forge...) HAS a chip while it is unplaced, because
+      // pressing it does something real -- it brings the panel on screen. The moment it lands,
+      // it stops being reachable and its chip disappears. So pressing a button can delete that
+      // button, and there is then no way to send the panel back. The order fix below does not
+      // address that; it is a question about what such a chip should DO, which is Mike's.
       const focusable = new Set((runtime?.router?.reachable?.() || []).map((m) => m.id));
-      for (const rec of slotRecs) {
-        if (focusable.size && !focusable.has(rec.id)) continue;
-        const b = document.createElement('button');
-        b.className = 'k-dot' + (rec.id === focusId ? ' on' : '');
-        b.textContent = rec.title || rec.type;
-        b.dataset.id = rec.id;
-        b.addEventListener('click', () => {
-          try { runtime?.router?.setFocus?.(rec.id); } catch { /* focus is not load-bearing */ }
-          paintFocus(rec.id);
-          renderMods();
-        });
-        modsEl.append(b);
-      }
-      // The ones no slot is showing, after the ones that are — same bar, marked as off-screen,
-      // and pressing one brings it in. Without these, a module on this screen had no button at
-      // all. See `unplacedDefs`.
-      for (const def of unplacedDefs()) {
-        const b = document.createElement('button');
-        b.className = 'k-dot k-off';
-        b.textContent = instanceTitle(def);
-        b.dataset.id = def.id;
-        b.title = 'not in this screen’s arrangement — show it in the panel that has focus';
-        b.addEventListener('click', () => { showUnplaced(def); });
-        modsEl.append(b);
+      const placedIds = new Set(layout.slots.filter(Boolean));
+      for (const def of profile.modules) {
+        // The HUD pair are not panels, the same exclusion `unplacedDefs` makes: an unplaced
+        // camera is the mirror overlay and an unplaced clock is the corner clock.
+        if (def.type === 'camera' || def.type === 'clock') continue;
+        const placed = placedIds.has(def.id);
+        if (placed) {
+          const rec = slotRecs.find((r) => r.id === def.id);
+          if (!rec) continue;
+          if (focusable.size && !focusable.has(rec.id)) continue;
+          const b = document.createElement('button');
+          b.className = 'k-dot' + (rec.id === focusId ? ' on' : '');
+          b.textContent = rec.title || rec.type;
+          b.dataset.id = rec.id;
+          b.addEventListener('click', () => {
+            try { runtime?.router?.setFocus?.(rec.id); } catch { /* focus is not load-bearing */ }
+            paintFocus(rec.id);
+            renderMods();
+          });
+          modsEl.append(b);
+        } else {
+          const b = document.createElement('button');
+          b.className = 'k-dot k-off';
+          b.textContent = instanceTitle(def);
+          b.dataset.id = def.id;
+          b.title = 'not in this screen\u2019s arrangement \u2014 show it in the panel that has focus';
+          b.addEventListener('click', () => { showUnplaced(def); });
+          modsEl.append(b);
+        }
       }
       return;
     }
