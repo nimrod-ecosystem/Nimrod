@@ -28,7 +28,10 @@
   .s-navb.on{background:var(--moss);color:#fff}
   /* The one item in the sidebar that LEAVES the shell. Same shape as a tab so it does not
      look bolted on, quieter than one so it does not read as a fifth place to be. */
-  .s-out{margin-top:10px;padding-top:10px;border-top:1px solid var(--line,#e4e0c2)}
+  /* The rule under it, not over it: this list sits ABOVE the tabs now (PRIORITY.md #4 moved
+     it up), so the divider that separates "leaves the shell" from "stays in it" has to move
+     to the other edge with it. */
+  .s-out{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line,#e4e0c2)}
   .s-link{display:block;text-decoration:none;color:var(--midnight);font-weight:650}
   .s-link:hover{background:rgba(0,0,0,.05)}
   .h-modsee{display:inline-block;margin-top:2px;font-size:.85rem;font-weight:650;
@@ -107,8 +110,8 @@
       padding:10px 14px;flex-wrap:wrap}
     .s-nav{flex-direction:row}
     /* Side by side with the tabs when the sidebar is a strip along the top. */
-    .s-out{margin-top:0;padding-top:0;border-top:0;border-left:1px solid var(--line,#e4e0c2);
-      margin-left:6px;padding-left:6px}
+    .s-out{margin-bottom:0;padding-bottom:0;border-bottom:0;
+      border-right:1px solid var(--line,#e4e0c2);margin-right:6px;padding-right:6px}
     .s-foot{margin-top:0;margin-left:auto;flex-direction:row;gap:10px;align-items:center}
     .s-email{display:none}
     .s-main{padding:16px}
