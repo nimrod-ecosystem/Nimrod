@@ -260,7 +260,9 @@ registerModule(
     // the pessimistic `server`. So leaving it off made a screen that lost the platform swap
     // AWAY from a game that would have kept working - which is the opposite of what a fallback
     // is for.
-  { type: 'algebra', title: 'Math', description: 'Solve for x, with a calculator on screen — the point is the method, not the arithmetic',
+  { type: 'algebra', title: 'Math', // Describes rather than justifies (PRIORITY.md #4): "the point is the method, not the
+    // arithmetic" is the reasoning, and it is kept in the catalog's `why`.
+    description: 'Solve for x, one step at a time, with a calculator on screen',
     dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
