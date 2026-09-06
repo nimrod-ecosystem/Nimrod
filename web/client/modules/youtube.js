@@ -156,16 +156,74 @@ export function parsePlaylistId(input) {
 // next one begins, and the last WRAPS PAST MIDNIGHT into the first. That wrap is the whole
 // reason this is a separate, exported function: "before the first start belongs to the last
 // daypart" is the case that gets written wrong and is invisible until 2am.
+/**
+ * *** A SCHEDULE ENTRY MAY NOW SAY WHEN IT ENDS, NOT ONLY WHEN IT STARTS. ***
+ *
+ * Mike: *"a scheduler that can say play this from this time to that time, that from then to
+ * then."* What existed was start-only — each entry ran until the NEXT one began, and the last
+ * wrapped past midnight. That covers a day carved into adjacent slices and cannot express the
+ * thing he asked for, because **it has no way to say "and the rest of the day, nothing"**.
+ * There was always a scheduled playlist; a gap was unrepresentable.
+ *
+ * So `end` is optional, and the two kinds coexist deliberately:
+ *
+ *   * **An entry WITH `end`** is a range: active while the clock is inside [start, end).
+ *     `end` less than `start` wraps past midnight (22 → 6 is the night). Ranges are checked
+ *     first and the first match wins.
+ *   * **An entry WITHOUT `end`** behaves exactly as it always did — it runs until the next
+ *     start-only entry begins, wrapping at the end of the list.
+ *   * **Nothing matching returns null**, and that is the new capability rather than a failure:
+ *     the caller falls back to the ordinary playlist, which is what "and the rest of the day,
+ *     nothing scheduled" means.
+ *
+ * BACKWARD COMPATIBILITY IS NOT AN ACCIDENT HERE. Every schedule saved before this has no
+ * `end` on any entry, so every entry falls into the second bucket and the function returns
+ * exactly what it returned before — including the guarantee that something always matches.
+ * A saved schedule cannot change behaviour by being read by newer code.
+ */
 export function pickDaypart(schedule, date = new Date()) {
-  const parts = (Array.isArray(schedule) ? schedule : [])
+  const all = (Array.isArray(schedule) ? schedule : [])
     .filter((d) => d && d.playlistId && Number.isFinite(Number(d.start)))
-    .map((d) => ({ ...d, start: Number(d.start) }))
+    .map((d) => ({ ...d, start: Number(d.start),
+                   end: Number.isFinite(Number(d.end)) ? Number(d.end) : null }))
     .sort((a, b) => a.start - b.start);
-  if (!parts.length) return null;
+  if (!all.length) return null;
   const h = date.getHours() + date.getMinutes() / 60;
-  let cur = parts[parts.length - 1];           // the wrap: earlier than the first start
-  for (const d of parts) if (h >= d.start) cur = d;
+
+  // Ranges first: they are the specific statement, and somebody who wrote one meant it.
+  for (const d of all) {
+    if (d.end == null) continue;
+    // A range that ends where it starts is a whole day, not an empty one — the alternative
+    // reading makes a plausible typo silently mean "never", which is the worse failure.
+    if (d.end === d.start) return d;
+    const inside = d.end > d.start
+      ? (h >= d.start && h < d.end)
+      : (h >= d.start || h < d.end);          // wraps past midnight
+    if (inside) return d;
+  }
+
+  // Then the old start-only chain, over the start-only entries ONLY. Mixing a range into this
+  // would make the range govern the hours AFTER it too, which is the opposite of saying when
+  // it ends.
+  const open = all.filter((d) => d.end == null);
+  if (!open.length) return null;              // ranges only, and none of them is on right now
+  let cur = open[open.length - 1];            // the wrap: earlier than the first start
+  for (const d of open) if (h >= d.start) cur = d;
   return cur;
+}
+
+/**
+ * Text into a row built with `innerHTML`.
+ *
+ * Added because `renderPlaylist` interpolated `v.title` and `v.channel` straight into markup,
+ * and BOTH come from a free-text field somebody types into this panel. It is only ever your own
+ * screen, so this is self-inflicted rather than an attack anybody else can mount — but a channel
+ * name with an apostrophe and a `<` in it should render, not disappear, and the fix for "renders
+ * wrong" and the fix for "executes" are the same three lines.
+ */
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function loadIframeApi() {
@@ -584,14 +642,46 @@ registerModule(
       return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
     }
 
+    /** `7` -> `07:00`, `17.5` -> `17:30`. Hours are stored as a number so the maths stays
+     *  simple; a person reads a clock. */
+    function hhmm(h) {
+      const n = Math.max(0, Math.min(24, Number(h) || 0));
+      const hh = Math.floor(n);
+      const mm = Math.round((n - hh) * 60);
+      return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+    }
+
     function renderSchedule() {
       const el = mount.querySelector('[data-sched]');
       if (!el) return;
       const parts = Array.isArray(cfg.schedule) ? cfg.schedule.filter((d) => d && d.playlistId) : [];
-      if (!parts.length) { el.textContent = ''; return; }
       const on = pickDaypart(cfg.schedule, nowDate());
-      el.textContent = `Playlists by time of day: ${parts.map((d) => d.name).join(' · ')}`
-        + (on ? ` — playing ${on.name} now` : '');
+      el.innerHTML = '';
+      const head = document.createElement('div');
+      head.className = 'yt-schhead';
+      head.textContent = parts.length
+        ? (on ? `Playing the ${on.name} playlist now` : 'Nothing scheduled right now')
+        : 'No playlists by time of day yet.';
+      el.append(head);
+      for (const d of parts) {
+        const row = document.createElement('div');
+        row.className = 'ytrow';
+        // The RANGE is shown when there is one, and "until the next" when there is not, so a
+        // schedule mixing the two says which each entry is rather than looking inconsistent.
+        const when = Number.isFinite(Number(d.end))
+          ? `${hhmm(d.start)}–${hhmm(d.end)}`
+          : `from ${hhmm(d.start)}`;
+        row.innerHTML = `<span>${esc(d.name || 'unnamed')} · ${esc(when)}`
+          + `${on && on === d ? ' · <b>now</b>' : ''}</span>`;
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.textContent = 'Remove';
+        rm.addEventListener('click', () => {
+          state.set({ schedule: (cfg.schedule || []).filter((x) => x !== d) });
+        });
+        row.append(rm);
+        el.append(row);
+      }
     }
 
     function updateLabel() {
@@ -609,7 +699,7 @@ registerModule(
       for (const v of (cfg.playlist || [])) {
         const row = document.createElement('div');
         row.className = 'ytrow';
-        row.innerHTML = `<span>${v.title || v.id}${v.channel ? ' · ' + v.channel : ''}</span>`;
+        row.innerHTML = `<span>${esc(v.title || v.id)}${v.channel ? ' · ' + esc(v.channel) : ''}</span>`;
         const rm = document.createElement('button');
         rm.textContent = '✕'; rm.title = 'remove';
         rm.addEventListener('click', () => {
@@ -618,6 +708,38 @@ registerModule(
         row.append(rm);
         box.append(row);
       }
+    }
+
+    /** `"07:30"` -> `7.5`. Returns null for an empty or unparseable value. */
+    function hoursFromTime(v) {
+      const m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '').trim());
+      if (!m) return null;
+      const h = Number(m[1]), mi = Number(m[2]);
+      if (!(h >= 0 && h <= 23 && mi >= 0 && mi <= 59)) return null;
+      return h + mi / 60;
+    }
+
+    function addSchedule() {
+      const name = (mount.querySelector('[data-sch-name]')?.value || '').trim();
+      const from = hoursFromTime(mount.querySelector('[data-sch-from]')?.value);
+      const toRaw = mount.querySelector('[data-sch-to]')?.value;
+      const to = hoursFromTime(toRaw);
+      const listId = parsePlaylistId(mount.querySelector('[data-sch-list]')?.value);
+      if (from == null) { setStatus('Give the time it starts.'); return; }
+      if (!listId) { setStatus('That is not a playlist link or id.'); return; }
+      // `end` is OMITTED rather than set to null when the field is blank. `pickDaypart` decides
+      // which kind of entry this is by whether the key holds a finite number, and a stored
+      // `end: null` reads the same as absent — but omitting it keeps the saved row identical in
+      // shape to every row saved before today, which is what makes them impossible to tell
+      // apart later.
+      const entry = { name: name || `from ${hhmm(from)}`, start: from, playlistId: listId };
+      if (to != null) entry.end = to;
+      state.set({ schedule: [...(cfg.schedule || []), entry] });
+      for (const sel of ['[data-sch-name]', '[data-sch-from]', '[data-sch-to]', '[data-sch-list]']) {
+        const n = mount.querySelector(sel);
+        if (n) n.value = '';
+      }
+      setStatus('');
     }
 
     function addFromInput() {
@@ -757,6 +879,24 @@ registerModule(
               <div class="addrow">
                 <input type="text" data-list-url placeholder="playlist link or id (PL…)">
                 <button data-set-list>Use playlist</button>
+              </div>
+              <!-- *** THE SCHEDULE HAD NO EDITOR AT ALL. ***
+                   cfg.schedule has been read since this module was written and nothing could
+                   write it - the panel printed a one-line summary of a setting no UI could set.
+                   That is A14's shape, and it is why Mike's "play this from this time to that
+                   time" read as a missing feature when half of it was already there.
+                   The "to" field is optional: leave it empty and the entry runs until the next
+                   one starts, which is what every schedule saved before today does.
+                   NO BACKTICKS IN THIS COMMENT. It lives inside a template literal, and the
+                   first version used them to quote a field name - which closed the string and
+                   turned the rest of the module into a syntax error. imports_test named the
+                   file in seconds; without it this would have been a blank panel to debug. -->
+              <div class="yt-schedadd">
+                <input type="text" data-sch-name placeholder="name (Morning)">
+                <input type="time" data-sch-from title="from">
+                <input type="time" data-sch-to title="to (optional)">
+                <input type="text" data-sch-list placeholder="playlist link or id (PL…)">
+                <button type="button" data-sch-add>Add</button>
               </div>
               <div class="yt-sched" data-sched></div>
               <div class="list" data-list></div>
@@ -905,6 +1045,7 @@ registerModule(
           el.value = '';
           state.set({ playlistId: id });
         });
+        mount.querySelector('[data-sch-add]').addEventListener('click', () => addSchedule());
         mount.querySelector('[data-add]').addEventListener('click', () => addFromInput());
         mount.querySelector('[data-add-url]').addEventListener('keydown', (e) => { if (e.key === 'Enter') addFromInput(); });
         mount.querySelector('[data-opt="autoAdvance"]').addEventListener('change', (e) => {
