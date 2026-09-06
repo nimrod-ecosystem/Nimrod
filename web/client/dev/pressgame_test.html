@@ -69,19 +69,69 @@ function rig(saved = {}, output = null) {
   // each of them on a start screen would mean prefixing forty tests with a press that is not
   // what any of them is testing. A caller that passes `openToMenu:true` gets the real default
   // back — the start screen has its own section, which is where that behaviour is asserted.
+  // A REAL STATE HANDLE, not a frozen object. It used to be `{ get: () => ({...saved}) }` with
+  // no `subscribe` and no `set` -- which is exactly the shape that let the module go this long
+  // without noticing it never subscribed to its own settings. A stub that cannot change is a
+  // stub that cannot catch a module ignoring changes.
+  const subs = [];
+  let row = { openToMenu: false, ...saved };
+  const st = {
+    get: () => row,
+    set: (patch) => { row = { ...row, ...patch }; subs.forEach((f) => f()); },
+    subscribe: (f) => { subs.push(f); return () => {}; },
+    flush: () => {}, destroy() {},
+  };
   const inst = mountModule('pressgame', {
     mount: host, bus, events, output,
-    state: { get: () => ({ openToMenu: false, ...saved }), destroy() {} },
+    state: st,
     user: 'u', profileId: 'p',
   });
   inst.init();
-  return { host, bus, inst, appended, impl: inst.impl || inst };
+  return { host, bus, inst, appended, impl: inst.impl || inst, st };
 }
 const kinds = (a) => a.map((x) => x.kind);
 const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.data);
 
 (async () => {
   try {
+    // ================= settings that actually do something =================
+    section('*** its settings menu was inert while it was running ***');
+    {
+      // `cfg` was read once at init and never again: this module subscribed to the bus three
+      // times and to its own state NOT AT ALL. Every row in its settings menu did nothing until
+      // somebody remounted the panel. Found while answering chat's "there is no way to hear the
+      // music while setting its volume" -- which is true, and was not about the music: there
+      // was no way to hear or see ANY setting take effect.
+      const r = rig({ calm: false, musicVolume: 0.3 });
+      check('it starts with the settings it was given',
+        r.impl.__probe().cfg.musicVolume === 0.3 && r.impl.__probe().calm === false,
+        JSON.stringify({ v: r.impl.__probe().cfg.musicVolume, calm: r.impl.__probe().calm }));
+
+      r.st.set({ musicVolume: 0.55 });
+      check('*** changing a setting while it runs actually reaches the module ***',
+        r.impl.__probe().cfg.musicVolume === 0.55,
+        String(r.impl.__probe().cfg.musicVolume));
+      r.st.set({ calm: true });
+      check('...including the one about how much it moves',
+        r.impl.__probe().calm === true, String(r.impl.__probe().calm));
+      r.inst.destroy();
+    }
+    {
+      // *** AND THE ONE THAT MUST NOT APPLY AT ONCE. ***
+      //
+      // Changing the wait length mid-wait would move the target under somebody who is holding
+      // off against it -- the same family as a layout reflowing under a learned reach, and
+      // worse here because she is actively counting it. The new length is picked up by the
+      // next wait, which is a decision taking effect at the next honest opportunity.
+      const r = rig({ waitMs: 10000 });
+      const before = r.impl.__probe().curWaitMs;
+      r.st.set({ waitMs: 40000 });
+      check('*** the wait length does NOT change under somebody mid-wait ***',
+        r.impl.__probe().curWaitMs === before,
+        `${before} -> ${r.impl.__probe().curWaitMs}`);
+      r.inst.destroy();
+    }
+
     // ================= registration =================
     section('it exists in every place a module has to exist');
     {
