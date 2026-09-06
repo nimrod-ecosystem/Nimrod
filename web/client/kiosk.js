@@ -1242,7 +1242,7 @@ export async function mountKiosk(root, {
         return whoState === false
           ? [{ kind: 'item', id: 'who-none', disabled: true,
                label: 'This screen is not linked to a person',
-               hint: 'link it in Screens, on the home page' }]
+               hint: 'link it in Dashboards, on the home page' }]
           : [];
       }
       return [{
@@ -1258,7 +1258,7 @@ export async function mountKiosk(root, {
     // already live, so this adds a control over existing storage rather than a new home.
     screenItems: () => [
       ...(profile?.name ? [{ kind: 'item', id: 'screen-name', disabled: true,
-          label: `This screen: ${profile.name}`, hint: 'renamed in Screens, on the home page' }] : []),
+          label: `This screen: ${profile.name}`, hint: 'renamed in Dashboards, on the home page' }] : []),
       ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
         values: () => settings.get() || {},
         // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
