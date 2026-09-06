@@ -61,6 +61,11 @@ import '../modules/camera.js';
 import '../modules/clock.js';
 import '../modules/comet.js';
 import '../modules/counter.js';
+// Imported even though `director` is in SKIP below: SKIP keeps it out of the per-module
+// loop (it hosts other modules and owns its own sub-layout), but the slot check further
+// down mounts one on purpose. Without this import that mount throws "no module
+// registered" -- which the check swallowed, reporting `0 slots` instead of the truth.
+import '../modules/director.js';
 import '../modules/educational.js';
 import '../modules/lessons.js';
 import '../modules/personal.js';
@@ -209,6 +214,60 @@ function signature(host) {
     const gone = unreachable(c.host);
     check(`${type}: every control it drew can be scrolled to`, !gone.length,
       `${gone.length} unreachable — ${gone.slice(0, 3).join(' · ')}`);
+  }
+
+  // =====================================================================================
+  section('*** every host that hands a module a fixed box says so ***');
+  {
+    // `mod-host` is added by `mountModule` and cannot be forgotten. `mod-box` is the OTHER
+    // half, it is opt-in, and being opt-in means it can be left off -- which is what happened
+    // to the director's slots. They were `d-slot` alone: `container-type: normal`,
+    // `position: static`. So a module inside a director could not use container queries at all
+    // (the rules that make trivia, Word Forge, lessons and the bank fit a short panel do
+    // nothing there) and an `inset:0` child resolved against the director rather than its own
+    // slot -- the escape-the-cell bug, in the one module that runs the screen at the bedside.
+    //
+    // *** THIS READS THE REAL ELEMENTS. The first version did not, and it could not fail. ***
+    // It built its own div from the string 'd-slot mod-box' and asserted the computed style --
+    // which tests that the CSS works, not that the DIRECTOR SETS THE CLASS. Proved worthless
+    // the honest way: `mod-box` was removed from director.js and the suite still reported
+    // 95 passed, 0 failed. A check that types out the thing it is checking is checking itself.
+    const dhost = document.createElement('div');
+    dhost.style.cssText = 'position:relative;width:600px;height:400px';
+    document.body.append(dhost);
+    let slots = [];
+    let why = '';
+    try {
+      host.mount('director', dhost);
+      await sleep(400);
+      slots = [...dhost.querySelectorAll('[data-prov]')];
+    } catch (e) { why = String((e && e.message) || e); }
+    // The REASON, not just the count. The first version reported `0 slots` and nothing else,
+    // and the cause was that this file did not import `director.js` at all -- a two-word fix
+    // hidden behind a swallowed exception, which is the same shape as every other defect this
+    // suite exists to catch.
+    check('a director builds slots to mount its children into', slots.length > 0,
+      why ? `threw: ${why}` : `${slots.length} slots`);
+    for (const slot of slots) {
+      const cs = getComputedStyle(slot);
+      check(`director slot "${slot.dataset.prov}" is a size container`,
+        cs.containerType === 'size', `${slot.className} -> ${cs.containerType}`);
+      check(`director slot "${slot.dataset.prov}" is a containing block`,
+        cs.position === 'relative', `${slot.className} -> ${cs.position}`);
+    }
+    // The two hosts that already declared it, read off the classes their own files ship.
+    for (const [what, cls] of [['the kiosk grid cell', 'k-cell mod-box'],
+                               ['the parts page stage', 'trystage mod-box']]) {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.style.cssText = 'width:400px;height:300px';
+      document.body.append(el);
+      const cs = getComputedStyle(el);
+      check(`${what} is a size container`, cs.containerType === 'size', cs.containerType);
+      el.remove();
+    }
+    host.unmount(dhost);
+    dhost.remove();
   }
 
   // =====================================================================================
