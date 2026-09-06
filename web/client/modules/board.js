@@ -99,7 +99,8 @@ const CUSTOM_ID = 'custom';
 // The chips above the cards. `care` says "example" here too: the chip is what somebody choosing
 // a board actually reads, and a word that only appears in the settings menu is a word most
 // people will never see. Kept short — this sits over a communication surface, not a settings page.
-const BOARD_LABELS = { yesno: 'Yes / No / Other', care: 'Care board (example)' };
+const BOARD_LABELS = { yesno: 'Yes / No / Other', core: 'Core words (36)',
+                       care: 'Care board (example)' };
 export const SELECT_KIND = 'select';           // the durable record's event kind
 
 const DEFAULTS = {
@@ -236,6 +237,10 @@ export const SETTINGS = [
 
     options: [
       { value: 'yesno', label: 'Yes / No / Other' },
+      // *** A STARTER SET, WHICH NEITHER OF THE OTHER TWO IS. *** See `UNIVERSAL` in
+      // aac_vocab.js for what is settled about it and what is still a question for somebody
+      // who does the speech-and-language work.
+      { value: 'core',  label: 'Core words — 36 everyday words' },
       // LABELLED AS AN EXAMPLE, in the menu and on the board itself. Mike: it *"doubles as
       // documentation for what a custom board looks like"* — which is a real use, and only
       // works if nobody mistakes it for a starter set built for them.

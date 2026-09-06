@@ -415,4 +415,112 @@ export const CARE = {
   ],
 };
 
-export const BUILTIN_BOARDS = { yesno: YESNO, care: CARE };
+// ---------------------------------------------------------------------------------------
+// *** THE CORE SET — thirty-six words, and the first board here written for NOBODY. ***
+// ---------------------------------------------------------------------------------------
+//
+// This is the answer to the hole named at the top of this file. `CARE` is one person's board
+// and says so; `YESNO` is three cards that are complete for what they are. Neither is a
+// STARTER VOCABULARY — something a person who does not yet have a board can be handed on the
+// first day and actually build language with. That gap has been open since the module shipped
+// and it was, until today, the honest reason the AAC work could not be given to a stranger.
+//
+// *** WHY IT WAS BLOCKED, AND WHY IT IS NOT ANY MORE. ***
+//
+// The set of ~36 high-frequency core words is long-established in AAC practice and appears in
+// several published starter vocabularies. This was parked for weeks over whether using it
+// meant taking somebody else's work. Mike's ruling, 2026-09-06: **individual words cannot be
+// copyrighted and a word list is thin ground for a claim.** What IS somebody else's is their
+// artwork, their labels and their layout, and none of that is here — the drawings are Nimrod's
+// own (`aac_symbols.js`), the labels are written here, and the arrangement below is ours.
+//
+// So: no third-party assets, no licence question, and nothing invented either. The words are
+// the ordinary high-frequency core of English, which is exactly what makes them the right
+// thirty-six.
+//
+// *** WHAT IS STILL UNANSWERED, STATED RATHER THAN HIDDEN. ***
+//
+//   1. THE ARRANGEMENT IS OURS, WHICH MEANS IT IS UNTESTED. Grouped by function — people and
+//      pointing words first, then wanting and doing, then describing, then place, then the
+//      questions — so that a motor plan has some logic to hang on. Published core boards use
+//      other arrangements for reasons somebody has thought about harder than this.
+//   2. THE DRAWINGS ARE FIRST-PASS. See the note in `aac_symbols.js`. Abstract words are hard
+//      to draw and confusability across a set this size is real.
+//   3. IT IS 6x6 AND CORE BOARDS ARE OFTEN WIDER. Wider means smaller targets, and target size
+//      is the binding constraint for the people this project is for (see TIERS above). 6x6 is
+//      a judgement, and `cols`/`rows` mean anybody can change it in the editor.
+//
+// All three are questions for somebody who does the speech-and-language work — the Ace Centre
+// call is the place for them, not another round of guessing in a comment. Recorded as such
+// rather than shipped as though settled.
+//
+// *** IT IS NOT THE DEFAULT. *** `yesno` still is. A thirty-six-cell board in front of somebody
+// on their first day is the opposite of a starter set, and which board a person begins on is a
+// decision for whoever is with them.
+export const UNIVERSAL = {
+  version: VOCAB_VERSION,
+  id: 'core',
+  name: 'Core words',
+  // 36 is not one of the TIERS, and does not need to be: this board states its own grid, which
+  // is the same thing a board somebody builds in the editor does.
+  cols: 6,
+  rows: 6,
+  tier: 16,
+  cells: [
+    // people and pointing — top-left, because they start the most sentences
+    { id: 'i',    word: 'I',     symbol: 'i',    kind: 'plain' },
+    { id: 'you',  word: 'You',   symbol: 'you',  kind: 'plain' },
+    { id: 'my',   word: 'My',    symbol: 'my',   kind: 'plain' },
+    { id: 'it',   word: 'It',    symbol: 'it',   kind: 'plain' },
+    { id: 'that', word: 'That',  symbol: 'that', kind: 'plain' },
+    // `not` is grammar, not refusal. Colouring it like `no` would make "I do not like it" look
+    // like an alarm, and this board has no `no` card for it to be confused with anyway.
+    { id: 'not',  word: 'Not',   symbol: 'not',  kind: 'plain' },
+
+    // wanting and doing
+    { id: 'want', word: 'Want',  symbol: 'want', kind: 'plain' },
+    { id: 'like', word: 'Like',  symbol: 'like', kind: 'plain' },
+    { id: 'go',   word: 'Go',    symbol: 'go',   kind: 'plain' },
+    { id: 'get',  word: 'Get',   symbol: 'get',  kind: 'plain' },
+    { id: 'do',   word: 'Do',    symbol: 'do',   kind: 'plain' },
+    { id: 'make', word: 'Make',  symbol: 'make', kind: 'plain' },
+
+    { id: 'put',  word: 'Put',   symbol: 'put',  kind: 'plain' },
+    { id: 'turn', word: 'Turn',  symbol: 'turn', kind: 'plain' },
+    { id: 'open', word: 'Open',  symbol: 'open', kind: 'plain' },
+    { id: 'look', word: 'Look',  symbol: 'look', kind: 'plain' },
+    // The one card on this board that says something urgent, and it SAYS IT IN THE ROOM. It
+    // does not notify, page or reach the output bus's `remote` channel — see the boundary
+    // note at the top of this file and in `modules/board.js`.
+    { id: 'help', word: 'Help',  symbol: 'help', kind: 'need' },
+    { id: 'stop', word: 'Stop',  symbol: 'stop', kind: 'no' },
+
+    // describing
+    { id: 'more', word: 'More',  symbol: 'more', kind: 'plain' },
+    { id: 'done', word: 'All done', symbol: 'all_done', kind: 'plain' },
+    { id: 'some', word: 'Some',  symbol: 'some', kind: 'plain' },
+    { id: 'diff', word: 'Different', symbol: 'different', kind: 'plain' },
+    { id: 'good', word: 'Good',  symbol: 'good', kind: 'plain' },
+    { id: 'little', word: 'Little', symbol: 'little', kind: 'plain' },
+
+    // direction — `nav`, which is the one place colour is doing real work here: these six are
+    // a group somebody learns as a group, and they are the cards most often reached for in a
+    // hurry.
+    { id: 'up',   word: 'Up',    symbol: 'up',   kind: 'nav' },
+    { id: 'down', word: 'Down',  symbol: 'down', kind: 'nav' },
+    { id: 'in',   word: 'In',    symbol: 'in',   kind: 'nav' },
+    { id: 'out',  word: 'Out',   symbol: 'out',  kind: 'nav' },
+    { id: 'on',   word: 'On',    symbol: 'on',   kind: 'nav' },
+    { id: 'off',  word: 'Off',   symbol: 'off',  kind: 'nav' },
+
+    // place, and the questions
+    { id: 'here', word: 'Here',  symbol: 'here', kind: 'nav' },
+    { id: 'there', word: 'There', symbol: 'there', kind: 'nav' },
+    { id: 'what', word: 'What',  symbol: 'what', kind: 'social' },
+    { id: 'who',  word: 'Who',   symbol: 'who',  kind: 'social' },
+    { id: 'where', word: 'Where', symbol: 'where', kind: 'social' },
+    { id: 'when', word: 'When',  symbol: 'when', kind: 'social' },
+  ],
+};
+
+export const BUILTIN_BOARDS = { yesno: YESNO, core: UNIVERSAL, care: CARE };

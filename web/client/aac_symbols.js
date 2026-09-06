@@ -158,7 +158,153 @@ export const SYMBOLS = {
     // person with short hair
     dad: svg('<circle cx="50" cy="36" r="15" stroke="currentColor" ' + S + '/>' +
       '<path d="M37 28 Q42 18 54 20" stroke="currentColor" ' + S + '/>' +
-      '<path d="M22 84 Q50 58 78 84" stroke="currentColor" ' + S + '/>')
+      '<path d="M22 84 Q50 58 78 84" stroke="currentColor" ' + S + '/>'),
+
+    // -------------------------------------------------------------------------------------
+    // THE CORE VOCABULARY SET (2026-09-06) — thirty-two drawings for the words in
+    // `UNIVERSAL` in aac_vocab.js. Nimrod's own, like everything else in this file.
+    // -------------------------------------------------------------------------------------
+    //
+    // *** THESE ARE FIRST-PASS DRAWINGS AND THEY SAY SO, exactly like the five game-only ones
+    // above. *** They follow the design rules — viewBox 100, ~7px strokes, `currentColor`,
+    // silhouettes that read at a glance from a bed — but they have NOT been through a design
+    // session the way the sixteen care-board symbols were, and core vocabulary is harder to
+    // draw than care vocabulary because most of it is abstract. `Bedpan` is a picture of a
+    // thing; `that` is not.
+    //
+    // WHAT MAKES THAT SHIPPABLE RATHER THAN SLOPPY is the rule this file already states: the
+    // symbol SUPPORTS meaning, the word CARRIES it. Every card renders its word, and the board
+    // drops the picture before it shrinks the word. A first-pass drawing beside a clear word is
+    // a usable card; the same word with no picture at all is a worse one.
+    //
+    // Conventions, so a later pass has something to keep rather than a pile of glyphs:
+    //   * PEOPLE are a head and shoulders. An arrow says which person: into the chest for `i`,
+    //     away from the figure for `you`. `my` is the figure holding something.
+    //   * QUESTIONS all carry the same question mark, with one element saying which question:
+    //     nothing for `what`, a head for `who`, a clock for `when`, a map pin for `where`.
+    //   * PLACE AND DIRECTION are arrows, with a box wherever the word is about the box —
+    //     `in`, `out`, `on`, `off`, `put`.
+    //
+    // *** AND THE HONEST CAVEAT: confusability across a set this size is a real risk and is not
+    // something a suite can measure. `okay` and `yes` were already flagged for it by the
+    // designer. Somebody who reads AAC symbols for a living should look at these — that is a
+    // question for the Ace Centre call, not a thing to keep guessing at in a comment. ***
+
+    // people — head and shoulders, with an arrow saying which person
+    // REDRAWN ONCE, BY LOOKING AT THE BOARD RATHER THAN AT THE CODE. The first version put a
+    // small head over a shallow arc with the arrow crossing it, and at card size the figure
+    // read as a dot and a swoosh with a tick through it. Bigger head, deeper shoulders, and
+    // the arrow kept clear of the body: the person has to be a person before the arrow can say
+    // anything about which person it is.
+    i: svg('<circle cx="38" cy="32" r="16" stroke="currentColor" ' + S + '/>' +
+      '<path d="M8 88 Q38 56 68 88" stroke="currentColor" ' + S + '/>' +
+      '<path d="M92 44 L60 60" stroke="currentColor" ' + S + '/>' +
+      '<path d="M74 46 L58 61 L74 66" stroke="currentColor" ' + S + '/>'),
+    you: svg('<circle cx="30" cy="32" r="16" stroke="currentColor" ' + S + '/>' +
+      '<path d="M2 88 Q30 56 58 88" stroke="currentColor" ' + S + '/>' +
+      '<path d="M62 46 H92" stroke="currentColor" ' + S + '/>' +
+      '<path d="M80 34 L94 46 L80 58" stroke="currentColor" ' + S + '/>'),
+    my: svg('<circle cx="50" cy="26" r="15" stroke="currentColor" ' + S + '/>' +
+      '<path d="M18 88 Q50 58 82 88" stroke="currentColor" ' + S + '/>' +
+      '<rect x="37" y="52" width="26" height="22" rx="4" fill="currentColor"/>'),
+
+    // things — a plain box is a thing; `that` is a thing over there, pointed at
+    it: svg('<rect x="26" y="30" width="48" height="42" rx="7" stroke="currentColor" ' + S + '/>'),
+    that: svg('<rect x="58" y="32" width="34" height="34" rx="6" stroke="currentColor" ' + S + '/>' +
+      '<path d="M8 50 H46" stroke="currentColor" ' + S + '/>' +
+      '<path d="M36 38 L48 50 L36 62" stroke="currentColor" ' + S + '/>'),
+
+    // questions — the same mark every time, with one element saying which question
+    what: svg('<path d="M35 34 Q35 18 50 18 Q66 18 66 33 Q66 46 50 50 V60" stroke="currentColor" ' + S + '/>' +
+      '<circle cx="50" cy="78" r="6" fill="currentColor"/>'),
+    who: svg('<circle cx="50" cy="34" r="21" stroke="currentColor" ' + S + '/>' +
+      '<path d="M18 88 Q50 62 82 88" stroke="currentColor" ' + S + '/>' +
+      '<path d="M43 29 Q43 21 50 21 Q58 21 58 28 Q58 34 50 36" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+      '<circle cx="50" cy="45" r="3" fill="currentColor"/>'),
+    when: svg('<circle cx="44" cy="54" r="28" stroke="currentColor" ' + S + '/>' +
+      '<path d="M44 34 V54 L59 62" stroke="currentColor" ' + S + '/>' +
+      '<path d="M72 22 Q72 12 81 12 Q90 12 90 21 Q90 28 81 30" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+      '<circle cx="81" cy="40" r="3" fill="currentColor"/>'),
+    where: svg('<path d="M42 88 C42 88 20 60 20 44 A22 22 0 0 1 64 44 C64 60 42 88 42 88 Z" stroke="currentColor" ' + S + '/>' +
+      '<circle cx="42" cy="44" r="8" stroke="currentColor" ' + S + '/>' +
+      '<path d="M74 24 Q74 14 83 14 Q92 14 92 23 Q92 30 83 32" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+      '<circle cx="83" cy="42" r="3" fill="currentColor"/>'),
+
+    // negation — the universal one, and the only symbol in the set that needs no explaining
+    not: svg('<circle cx="50" cy="50" r="30" stroke="currentColor" ' + S + '/>' +
+      '<path d="M29 71 L71 29" stroke="currentColor" ' + S + '/>'),
+
+    // doing words
+    go: svg('<path d="M26 50 H74" stroke="currentColor" ' + S + '/>' +
+      '<path d="M60 34 L78 50 L60 66" stroke="currentColor" ' + S + '/>' +
+      '<path d="M8 36 H22 M8 64 H22" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.55"/>'),
+    get: svg('<path d="M50 12 V52" stroke="currentColor" ' + S + '/>' +
+      '<path d="M34 38 L50 54 L66 38" stroke="currentColor" ' + S + '/>' +
+      '<path d="M18 60 Q50 94 82 60" stroke="currentColor" ' + S + '/>'),
+    // an action: something happening, in every direction at once
+    do: svg('<circle cx="50" cy="50" r="11" fill="currentColor"/>' +
+      '<path d="M50 26 V10 M50 90 V74 M26 50 H10 M90 50 H74" stroke="currentColor" ' + S + '/>' +
+      '<path d="M32 32 L21 21 M79 79 L68 68 M68 32 L79 21 M21 79 L32 68" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>'),
+    put: svg('<rect x="22" y="58" width="56" height="30" rx="6" stroke="currentColor" ' + S + '/>' +
+      '<path d="M50 10 V44" stroke="currentColor" ' + S + '/>' +
+      '<path d="M36 32 L50 46 L64 32" stroke="currentColor" ' + S + '/>'),
+    make: svg('<rect x="14" y="58" width="30" height="28" rx="5" stroke="currentColor" ' + S + '/>' +
+      '<rect x="56" y="58" width="30" height="28" rx="5" stroke="currentColor" ' + S + '/>' +
+      '<rect x="35" y="18" width="30" height="28" rx="5" stroke="currentColor" ' + S + '/>'),
+    turn: svg('<path d="M78 50 A28 28 0 1 1 50 22" stroke="currentColor" ' + S + '/>' +
+      '<path d="M38 10 L52 22 L38 34" stroke="currentColor" ' + S + '/>'),
+    open: svg('<path d="M22 54 H70 V86 H22 Z" stroke="currentColor" ' + S + '/>' +
+      '<path d="M22 54 L44 30 H92 L70 54" stroke="currentColor" ' + S + '/>'),
+    // two arrows converging: bring it to me
+    want: svg('<path d="M8 50 H38" stroke="currentColor" ' + S + '/>' +
+      '<path d="M28 38 L40 50 L28 62" stroke="currentColor" ' + S + '/>' +
+      '<path d="M92 50 H62" stroke="currentColor" ' + S + '/>' +
+      '<path d="M72 38 L60 50 L72 62" stroke="currentColor" ' + S + '/>'),
+    like: svg('<path d="M18 44 H36 V86 H18 Z" stroke="currentColor" ' + S + '/>' +
+      '<path d="M36 44 L52 14 Q62 14 60 26 L56 42 H78 Q88 42 86 53 L80 78 Q78 86 70 86 H36" stroke="currentColor" ' + S + '/>'),
+    look: svg('<path d="M8 50 Q50 18 92 50 Q50 82 8 50 Z" stroke="currentColor" ' + S + '/>' +
+      '<circle cx="50" cy="50" r="13" stroke="currentColor" ' + S + '/>' +
+      '<circle cx="50" cy="50" r="4" fill="currentColor"/>'),
+
+    // describing words
+    some: svg('<circle cx="50" cy="50" r="29" stroke="currentColor" ' + S + '/>' +
+      '<path d="M50 21 A29 29 0 0 1 50 79 Z" fill="currentColor"/>'),
+    different: svg('<circle cx="30" cy="50" r="19" stroke="currentColor" ' + S + '/>' +
+      '<rect x="56" y="30" width="38" height="38" rx="5" stroke="currentColor" ' + S + '/>'),
+    good: svg('<path d="M50 14 L61 39 L88 42 L68 61 L74 88 L50 74 L26 88 L32 61 L12 42 L39 39 Z" stroke="currentColor" ' + S + '/>'),
+    little: svg('<rect x="38" y="38" width="24" height="24" rx="4" stroke="currentColor" ' + S + '/>' +
+      '<path d="M12 12 L28 28 M88 12 L72 28 M12 88 L28 72 M88 88 L72 72" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>'),
+
+    // place and direction — arrows, with a box wherever the word is about the box
+    up: svg('<path d="M50 86 V26" stroke="currentColor" ' + S + '/>' +
+      '<path d="M28 48 L50 26 L72 48" stroke="currentColor" ' + S + '/>'),
+    down: svg('<path d="M50 14 V74" stroke="currentColor" ' + S + '/>' +
+      '<path d="M28 52 L50 74 L72 52" stroke="currentColor" ' + S + '/>'),
+    in: svg('<rect x="46" y="24" width="44" height="52" rx="6" stroke="currentColor" ' + S + '/>' +
+      '<path d="M6 50 H62" stroke="currentColor" ' + S + '/>' +
+      '<path d="M50 38 L64 50 L50 62" stroke="currentColor" ' + S + '/>'),
+    out: svg('<rect x="10" y="24" width="44" height="52" rx="6" stroke="currentColor" ' + S + '/>' +
+      '<path d="M38 50 H92" stroke="currentColor" ' + S + '/>' +
+      '<path d="M80 38 L94 50 L80 62" stroke="currentColor" ' + S + '/>'),
+    on: svg('<path d="M10 74 H90" stroke="currentColor" ' + S + '/>' +
+      '<rect x="34" y="40" width="32" height="28" rx="5" stroke="currentColor" ' + S + '/>'),
+    off: svg('<path d="M10 82 H90" stroke="currentColor" ' + S + '/>' +
+      '<rect x="34" y="14" width="32" height="26" rx="5" stroke="currentColor" ' + S + '/>' +
+      '<path d="M50 72 V54" stroke="currentColor" ' + S + '/>' +
+      '<path d="M40 62 L50 52 L60 62" stroke="currentColor" ' + S + '/>'),
+    // *** A PAIR, AND THEY WERE REDRAWN BECAUSE `here` WAS INDISTINGUISHABLE FROM `get`. ***
+    // Both were a down-arrow falling into a curved shape, which on a 44px card is one picture
+    // with two words under it. On a communication board that is not an aesthetic complaint:
+    // somebody reaching by shape reaches for the wrong word. They are now a TARGET, close and
+    // far, so the two of them read as the pair they are and neither reads as anything else.
+    here: svg('<circle cx="50" cy="64" r="21" stroke="currentColor" ' + S + '/>' +
+      '<circle cx="50" cy="64" r="8" fill="currentColor"/>' +
+      '<path d="M50 8 V28" stroke="currentColor" ' + S + '/>' +
+      '<path d="M40 20 L50 32 L60 20" stroke="currentColor" ' + S + '/>'),
+    there: svg('<circle cx="74" cy="56" r="16" stroke="currentColor" ' + S + '/>' +
+      '<circle cx="74" cy="56" r="6" fill="currentColor"/>' +
+      '<path d="M6 56 H44" stroke="currentColor" ' + S + '/>' +
+      '<path d="M36 44 L50 56 L36 68" stroke="currentColor" ' + S + '/>')
 };
 
 /** Every symbol name, for a picker and for the vocabulary validator. */
