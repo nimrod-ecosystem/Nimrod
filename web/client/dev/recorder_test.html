@@ -103,7 +103,17 @@ try {
     const AC = window.AudioContext || window.webkitAudioContext;
     let decoded = null, err = null;
     try {
-      const ctx = new AC();
+      // *** THE CONTEXT IS PINNED TO THE RATE THE FILE WAS ENCODED AT. ***
+      //
+      // `decodeAudioData` resamples to the CONTEXT's rate, and a bare `new AC()` takes its rate
+      // from whatever audio device the machine happens to have. This suite passed for months and
+      // then failed four checks on a machine whose default is 44100: 480 samples came back as
+      // 440, the rate as 44100, and the sample-by-sample comparison as NaN -- with no code
+      // anywhere near the recorder having changed.
+      //
+      // So the checks below were reading the audio hardware, not the encoder. Pinning the rate
+      // is what makes them about the thing they name.
+      const ctx = new AC({ sampleRate: 48000 });
       decoded = await ctx.decodeAudioData(buf.slice(0));
       ctx.close?.();
     } catch (e) { err = e; }
