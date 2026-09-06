@@ -55,13 +55,26 @@ export function kioskURL(profileId) {
 // exists: a carer who wants their own board makes a screen and puts a quest board on it. So
 // there is nothing left for this tab to be, and it is out of TABS rather than hidden in it.
 export const TABS = [
-  { id: 'screens',  label: 'Screens',  hint: 'make and fill your screens' },
+  // *** THE LABEL IS "Dashboards". THE ID STAYS `screens`. *** (PRIORITY.md #4.)
+  //
+  // Same rule the `inputs`/Devices row below already follows: a tab id is a stable
+  // identifier -- it is in URLs, in saved state and in tests -- and renaming it is a
+  // migration, not a label change. Only the word a person reads moves.
+  //
+  // Not to be confused with the transport bar's button, which Mike separately decided is
+  // "Home" -- that one is the way OUT of a running screen and "the familiar exit word"
+  // was his reasoning. This is the place you build them.
+  { id: 'screens',  label: 'Dashboards', hint: 'make and fill your dashboards' },
   { id: 'media',    label: 'Media',    hint: 'connect the folders your photos live in' },
   // The ID STAYS `inputs`. A tab id is a stable identifier - it is in URLs, in tests and in
   // `INPUTS_KEY` on the server - and renaming it is a migration, not a label change. Only the
   // word a person reads moved to Devices.
   { id: 'inputs',   label: 'Devices',  hint: 'the switches, controllers and keys you use — and what each one does' },
-  { id: 'output',   label: 'Output',   hint: 'how this screen answers — spoken, on screen, a sound' },
+  // "Output" is engineering's word for it. What the tab configures is how the screen TELLS
+  // somebody something -- spoken, on screen, a sound -- which is a notification in
+  // everybody else's vocabulary. Id unchanged, for the reason above.
+  { id: 'output',   label: 'Notifications',
+    hint: 'how this dashboard answers — spoken, on screen, a sound' },
   { id: 'remote',   label: 'Remote',   hint: 'drive their screen from here, while they are at it' },
   // ON HOME, NOT ON THE KIOSK. Reviewing what a module recorded is a different job in a
   // different room, and a table of somebody's performance has no business on the screen
@@ -99,21 +112,26 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     <div class="shell">
       <nav class="s-side">
         <div class="s-brand">Nimrod<span>.</span></div>
-        <ul class="s-nav">
-          ${VISIBLE_TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}
-        </ul>
         <!-- B4: "I don't know where the modules tab is." There ISN'T one, and there should not
              be - /modules.html is a page, not a panel, and building a second copy of it inside
              the shell would be two catalogs to keep in step. What was missing is a way to GET
              there: the page was reachable only from the landing nav, which is hidden below
              860px, and from the wallpapers page. So it is a link, marked as leaving the shell
              rather than dressed as a tab it is not.
+             CALLED "Modules", NOT "What you can add" (PRIORITY.md #4). The descriptive
+             phrase was mine and it was the wrong instinct: somebody hunting for the modules
+             page is hunting for the word modules, which is the same argument that renamed
+             Talk to AAC board. It sits ABOVE the tab list now, because it is what a new
+             person needs first and it was underneath everything else.
              NO BACKTICKS IN THIS COMMENT. It lives inside a template literal, and the first
              draft of it wrote /modules.html in backticks - which closed the string and made
              home.js a syntax error, which made home_test hang forever with no summary. -->
         <ul class="s-nav s-out">
           <li><a class="s-navb s-link" href="/modules.html"
-            title="what each part does, and a live one to try">What you can add ↗</a></li>
+            title="what each part does, and a live one to try">Modules ↗</a></li>
+        </ul>
+        <ul class="s-nav">
+          ${VISIBLE_TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}
         </ul>
         <div class="s-foot">
           ${email ? `<div class="s-email">${esc(email)}</div>` : ''}
@@ -403,13 +421,25 @@ export async function mountScreens(root, {
   root.innerHTML = `
     <div class="home">
       <div class="h-intro">
-        <h1>Your screens</h1>
-        <p>A <b>screen</b> is a set of modules — photos, a clock, games, the lineup — that you
+        <!-- *** THE COPY FOLLOWS THE TAB, or the rename makes things worse rather than
+             better. *** PRIORITY.md #4 renames Screens to Dashboards; a sidebar reading
+             Dashboards that opens a page headed "Your screens" is two names for one thing,
+             which is the confusion the rename exists to remove, doubled.
+             The word screen stays in the CODE -- ids, mountScreens, stageEl, the saved
+             screens key -- for the same reason the tab id did: renaming an identifier is a
+             migration, not a wording change.
+             AND NO BACKTICKS IN HERE. This comment is inside a template literal. The warning
+             is already written twenty lines up and I still quoted a field name in backticks
+             and broke the file -- third time this session, caught each time in seconds by
+             imports_test, which is the entire argument for that suite existing. -->
+        <h1>Your dashboards</h1>
+        <p>A <b>dashboard</b> is a set of modules — photos, a clock, games, the lineup — that you
           open full-screen. Make one for each person or place.</p>
       </div>
 
       <form class="h-new" data-new>
-        <input type="text" data-name placeholder="Name a new screen (e.g. Bedside, Living room)" aria-label="new screen name" required>
+        <input type="text" data-name placeholder="Name a new dashboard (e.g. Bedside, Living room)"
+        aria-label="new dashboard name" required>
         <button type="submit" class="h-btn h-primary">Create</button>
       </form>
 
@@ -449,7 +479,7 @@ export async function mountScreens(root, {
             ${catalog.map((m) => `<option value="${esc(m.type)}" title="${esc(m.description || '')}">${esc(m.title || m.type)}</option>`).join('')}
           </select>
           <button class="h-btn" data-add="${esc(p.id)}">Add module</button>
-          ${mods.length ? '' : '<span class="h-hint">a screen needs at least one module to open</span>'}
+          ${mods.length ? '' : '<span class="h-hint">a dashboard needs at least one module to open</span>'}
         </div>
         <!-- WHAT THE THING YOU ARE ABOUT TO ADD ACTUALLY DOES.
              The picker was fourteen bare words - "Pond", "Sprint", "Quests", "Lineup" - and

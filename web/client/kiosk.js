@@ -606,11 +606,18 @@ export async function mountKiosk(root, {
       // "removed" one was being shown for the case where nothing had been removed at all —
       // every panel had failed to start. Telling somebody their panels were removed when they
       // were not sends them to fix the wrong thing.
+      // *** THEY SAY "Home" BECAUSE THAT IS THE BUTTON ON THE BAR IN FRONT OF THEM. ***
+      // All three used to say "Open Screens", and BOTH halves of that went stale in one day:
+      // the bar's button is now `Home` (Mike's call) and the tab it leads to is now
+      // `Dashboards` (PRIORITY.md #4). So the sentence named a control that exists nowhere.
+      // A message that sends somebody to a label they cannot find is worse than no message,
+      // and it is the third piece of stale copy this session -- after Lessons pointing at a
+      // settings panel that was never built, and the catalog claiming lessons to watch.
       empty.textContent = failedSlots.length
-        ? `Nothing on this screen could start (${failedSlots.join(', ')}). Open Screens to check it.`
+        ? `Nothing on this screen could start (${failedSlots.join(', ')}). Press Home to check it.`
         : layout.slots.length
-          ? 'This screen’s panels were removed. Open Screens to add some again.'
-          : 'Nothing has been added to this screen yet. Open Screens to add something.';
+          ? 'This screen’s panels were removed. Press Home to add some again.'
+          : 'Nothing has been added to this screen yet. Press Home to add something.';
       stageEl.append(empty);
     }
 
