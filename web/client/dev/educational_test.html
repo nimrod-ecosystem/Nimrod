@@ -30,7 +30,7 @@ import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
-import { mountModule } from '../module.js';
+import { mountModule, getManifest } from '../module.js';
 import { pressControls } from './press_controls.js';
 import { graphicHTML } from '../modules/educational.js';   // registers 'educational' + exports the pure renderer
 
@@ -175,6 +175,30 @@ function fakeTimers(){
         /ig-(number|letters|word)/.test(g2), `stage="${g2.slice(0, 60)}"`);
       i2.destroy();
       host2.remove();
+    }
+    {
+      // `displayMs`, `autoAdvance` and `directed` have always been read from state and there has
+      // never been a menu that could set any of them -- live config no surface could reach, the
+      // same gap `pressgame`'s last three rows turned out to be. Somebody could change how long a
+      // word stays on screen only by editing storage.
+      const m = getManifest('educational');
+      const keys = (m.settings || []).map((f) => f.key);
+      check('*** the module declares the settings it actually reads ***',
+        keys.includes('displayMs') && keys.includes('autoAdvance'), JSON.stringify(keys));
+      const lv = Object.fromEntries((m.settings || []).map((f) => [f.key, f.level]));
+      check('...and the two about PACE are essential, not buried',
+        lv.displayMs === 'essential' && lv.autoAdvance === 'essential', JSON.stringify(lv));
+      check('...every declared row has a default to fall back to',
+        (m.settings || []).every((f) => f.default !== undefined));
+
+      // *** AND THERE IS NO "level" ROW, WHICH IS THE HONEST ANSWER RATHER THAN A GAP. ***
+      //
+      // Chat, from Mike testing the live site: it "counted to five for somebody who can count to
+      // a hundred, and the level is unsettable." A level dial needs BANDED CONTENT to select
+      // between, and the built-in items are one band -- so the row would be a control with one
+      // position, which is worse than none because it claims the problem is solved.
+      check('*** and no level dial was invented over content that has only one band ***',
+        !keys.includes('level') && !keys.includes('difficulty'), JSON.stringify(keys));
     }
 
   } catch (e) {
