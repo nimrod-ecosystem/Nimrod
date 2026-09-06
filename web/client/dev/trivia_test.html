@@ -61,7 +61,11 @@ What is the capital of France? | Paris | London | Rome | Madrid
 Which planet is closest to the Sun? | Mercury | Venus | Mars | Earth
 How many legs does a spider have? | Eight | Six | Ten | Four`;
 
-function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = () => 0 } = {}) {
+// `now` and `telemetry` are pass-throughs so a check can drive the clock and read the rows the
+// module writes, rather than asserting a wall-clock latency is "more than zero" -- which is
+// the assertion that would have passed the whole time the field did not exist.
+function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = () => 0,
+              now = null, telemetry = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
@@ -75,6 +79,8 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
   };
   const inst = mountModule('trivia', {
     mount: host, bus, rand, recorder,
+    ...(now ? { now } : {}),
+    ...(telemetry ? { telemetry } : {}),
     makeState: () => sharedRow,
     state: { get: () => stored, set: () => {}, flush: () => {},
              subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } },
@@ -245,6 +251,44 @@ no pipe here
   }
 
   // =====================================================================================
+  section('*** how quickly the answer came ***');
+  {
+    // Trivia was the ONLY game logging no `latencyMs` -- wordforge, algebra and pressgame all
+    // stamp one -- so the number chat calls the single most important in the measurement thesis
+    // had a hole exactly where the quiz is.
+    //
+    // Driven on an INJECTED clock, because a latency measured against the wall clock can only be
+    // asserted as "more than zero", which is the assertion that would have passed while the
+    // field did not exist.
+    let clock = 1000;
+    // Read off the rig's own event stream rather than an injected telemetry: trivia builds its
+    // handle with `createTelemetry({ makeEvents })`, so the rows go through the REAL path and
+    // land in `events`. Injecting a fake would have tested the fake -- and did, silently, until
+    // the rows came back empty.
+    const r = rig({ now: () => clock });
+    const trials = () => r.events.filter(([k]) => k === 'trial').map(([, d]) => d);
+    const q = r.probe().question;
+    check('the clock is stamped when the question appears', r.probe().askedAt === 1000,
+      String(r.probe().askedAt));
+
+    clock = 1750;                       // 750ms of thinking
+    const wrongIndex = q.options.findIndex((_, i) => i !== q.correctIndex);
+    while (r.probe().highlight !== wrongIndex) r.bus.publish('trivia/next');
+    r.bus.publish('trivia/select');
+    check('*** a guess records how long it took ***', trials()[0]?.latencyMs === 750,
+      JSON.stringify(trials()[0]));
+
+    clock = 2500;                       // another 750ms before the second guess
+    while (r.probe().highlight !== q.correctIndex) r.bus.publish('trivia/next');
+    r.bus.publish('trivia/select');
+    check('*** and the second guess is measured from the QUESTION, not the last press ***',
+      trials()[1]?.latencyMs === 1500, JSON.stringify(trials()[1]));
+    check('...so a question that took longer reads as longer',
+      (trials()[1]?.latencyMs || 0) > (trials()[0]?.latencyMs || 0),
+      `${trials()[0]?.latencyMs} -> ${trials()[1]?.latencyMs}`);
+    r.inst.destroy();
+  }
+
   section('*** the marks — what a corpus may and may not be told ***');
   {
     const marks = [];

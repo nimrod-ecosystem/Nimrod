@@ -78,7 +78,19 @@ export function summarize(list) {
     hits, falseAlarms, misses, answered,
     accuracy: ts.length ? hits / ts.length : null,
     whenAnswered: answered ? hits / answered : null,
-    meanLatency: mean(ts.filter(isHit).map((t) => Number(t.data.latencyMs))),
+    // *** ZERO IS NOT A REACTION TIME, AND THE RECORD IS FULL OF ZEROS. ***
+    //
+    // Every trial written before the guard above was fixed carries `latencyMs: 0` if its module
+    // did not supply one, and those rows are durable -- they are in the stream for good. Without
+    // this filter every historical average stays wrong for ever, which is worse than the
+    // original bug because the numbers now look repaired.
+    //
+    // Excluding non-positive values is safe on its own terms: nobody answers a question in zero
+    // milliseconds, so a 0 is either that default or a broken clock, and neither belongs in a
+    // mean somebody is going to read as evidence about a person.
+    meanLatency: mean(ts.filter(isHit)
+      .map((t) => Number(t.data.latencyMs))
+      .filter((n) => n > 0)),
     meanWait: mean(ts.map((t) => Number(t.data.waitMs))),
   };
 }
@@ -199,8 +211,24 @@ export function createTelemetry({ makeEvents, bus = null, limit = 1000, pollMs =
     if (mode) data.mode = String(mode);
     if (concept) data.concept = String(concept);
     if (band) data.band = String(band);
-    if (Number.isFinite(Number(latencyMs))) data.latencyMs = Number(latencyMs);
-    if (Number.isFinite(Number(waitMs))) data.waitMs = Number(waitMs);
+    // *** `Number(null)` IS 0, AND `Number.isFinite(0)` IS TRUE. ***
+    //
+    // This read as a validity check and was one of the most damaging lines in the codebase.
+    // `latencyMs` and `waitMs` default to `null`, so EVERY caller that omitted them wrote
+    // `latencyMs: 0` into the durable record -- a fabricated reaction time of zero milliseconds,
+    // indistinguishable afterwards from a measured one.
+    //
+    // That is the "average latency reads 0 ms" Mike found on the deployed site, and it is the
+    // number chat calls the single most important in the measurement thesis. `summarize` averages
+    // every finite value, so one module not supplying a latency dragged the whole mean toward
+    // zero -- and `fmtMs` prints a missing value as an em-dash, which is why the symptom was a
+    // confident 0 rather than an obvious gap.
+    //
+    // `''` and `false` coerce to 0 too, so the guard is "was a value actually given", asked
+    // before any coercion.
+    const given = (v) => v !== null && v !== undefined && v !== '' && typeof v !== 'boolean';
+    if (given(latencyMs) && Number.isFinite(Number(latencyMs))) data.latencyMs = Number(latencyMs);
+    if (given(waitMs) && Number.isFinite(Number(waitMs))) data.waitMs = Number(waitMs);
     if (prompt) data.prompt = String(prompt);
 
     await stream.append(TRIAL_KIND, data);        // 1. the record (durable, first)
