@@ -506,6 +506,81 @@
 .ab-pbtn:hover{border-color:var(--ab-lit)}
 .ab-pbtn:focus-visible{outline:3px solid var(--ab-lit);outline-offset:2px}
 .ab-pdone{background:var(--ab-lit);border-color:var(--ab-lit);color:var(--ab-bg)}
+/* THE FALLBACKS ARE NOT DECORATION. Every colour here comes from the board's palette, which
+   `.aboard` sets -- so mounted anywhere else (a test page, a settings screen later) the editor
+   would render as black text on nothing, with borderless inputs. Fallbacks inside `var()`
+   rather than a redeclaration on `.bedit`: redeclaring would win over the board's own palette
+   and take high-contrast mode with it. */
+/* *** THE BOARD EDITOR — making a board, over the board. ***
+ *
+ * It covers the cards, which is the one thing on this module that has to be justified: the
+ * person the board belongs to cannot talk while it is open. Two things make that acceptable
+ * and both are structural rather than promises — it only opens from the settings panel, which
+ * only a caregiver reaches, and it CLOSES ITSELF after a few idle minutes (see
+ * `board_editor.js`). A form somebody could be left behind is the failure this module could
+ * least afford.
+ *
+ * Sized in px, not `--u`: it is read and typed into by somebody standing at the screen, so it
+ * wants ordinary form text rather than something scaled to a card. */
+.ab-editor{position:absolute;inset:0;z-index:6;overflow:auto;
+  background:var(--ab-bg,#12181c);color:var(--ab-ink,#e8eef0)}
+.bedit{padding:12px 14px 16px;box-sizing:border-box;
+  background:var(--ab-bg,#12181c);color:var(--ab-ink,#e8eef0);min-height:100%;
+  font:14px/1.45 var(--font,system-ui,sans-serif);
+  display:flex;flex-direction:column;gap:10px}
+.be-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  font-size:15px}
+.be-count{opacity:.7;font-size:12.5px;font-weight:600}
+.be-field{display:flex;flex-direction:column;gap:4px}
+.be-field>span{font-weight:600;font-size:12.5px;opacity:.85}
+.be-field>span i{font-weight:400;font-style:normal;opacity:.7}
+.bedit input[type=text],.bedit input[type=number]{min-height:38px;padding:6px 9px;
+  background:var(--ab-card,#1b2429);color:var(--ab-ink,#e8eef0);border:1px solid var(--ab-line,#7d939d);
+  border-radius:8px;font:inherit;min-width:0}
+.be-dims{flex-direction:row;gap:12px}
+.be-dims label{display:flex;flex-direction:column;gap:4px;flex:1 1 0;min-width:0}
+.be-dims label>span{font-weight:600;font-size:12.5px;opacity:.85}
+/* The slots are a MINIATURE OF THE BOARD, in the board's own grid, because "set rows and
+   columns" is a question nobody can answer from two number fields alone. Fixed row height:
+   this is a map of the board, not a preview of how big the cards will be. */
+.be-slots{display:grid;gap:5px;grid-auto-rows:52px}
+.be-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-width:0;overflow:hidden;padding:3px;cursor:pointer;
+  background:var(--ab-card,#1b2429);color:var(--ab-ink,#e8eef0);
+  border:1px solid var(--ab-line,#7d939d);border-radius:7px;
+  font:600 12px/1.15 var(--font,system-ui,sans-serif);text-align:center}
+.be-slot-word{overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.be-slot-pic{font-size:11px;opacity:.7;line-height:1}
+.be-slot-empty{border-style:dashed;opacity:.5;font-weight:400}
+.be-slot-on{border-color:var(--ab-lit,#8fae63);box-shadow:0 0 0 2px var(--ab-lit,#8fae63);opacity:1}
+.be-slot:focus-visible{outline:3px solid var(--ab-lit,#8fae63);outline-offset:2px}
+.be-card{display:flex;flex-direction:column;gap:8px;padding-top:2px}
+.be-picrow{flex-direction:row;align-items:center;gap:8px;flex-wrap:wrap}
+.be-picwrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.be-picpath{font-size:11.5px;opacity:.75;overflow:hidden;text-overflow:ellipsis;max-width:16ch;
+  white-space:nowrap}
+.be-hint{margin:0;font-size:12.5px;line-height:1.4;opacity:.72}
+.be-warn{margin:0;padding:7px 9px;border-radius:7px;font-size:12.5px;line-height:1.4;
+  background:rgba(211,150,140,.16);border:1px solid #d3968c;color:var(--ab-ink,#e8eef0)}
+.be-btn{min-height:38px;padding:7px 12px;cursor:pointer;
+  border:1px solid var(--ab-line,#7d939d);border-radius:8px;
+  background:var(--ab-card,#1b2429);color:var(--ab-ink,#e8eef0);
+  font:600 13px/1.2 var(--font,system-ui,sans-serif)}
+.be-btn:hover{border-color:var(--ab-lit,#8fae63)}
+.be-btn:focus-visible{outline:3px solid var(--ab-lit,#8fae63);outline-offset:2px}
+.be-primary{background:var(--ab-lit,#8fae63);border-color:var(--ab-lit,#8fae63);color:var(--ab-bg,#12181c)}
+.be-picgrid-btns{display:flex;flex-wrap:wrap;gap:7px}
+/* `auto-fill` with a floor, so the thumbnails stay pickable in a dashboard cell and do not
+   become a wall of 30px squares nobody can tell apart. */
+.be-picgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px;
+  max-height:210px;overflow:auto;padding:2px}
+.be-pic{padding:0;border:1px solid var(--ab-line,#7d939d);border-radius:7px;overflow:hidden;
+  cursor:pointer;background:var(--ab-card,#1b2429);aspect-ratio:1;min-height:0}
+.be-pic img{width:100%;height:100%;object-fit:cover;display:block}
+.be-pic:hover,.be-pic:focus-visible{border-color:var(--ab-lit,#8fae63);outline:none}
+.be-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding-top:2px}
+.be-idle{padding-bottom:2px}
 /* `height:auto` and `flex:1`, not `height:100%`: with a switcher above it, a grid claiming the
    full height of a flex column overflows by exactly the height of the switcher. */
 .ab-grid{width:100%;height:auto;flex:1 1 auto;min-height:0;display:grid;

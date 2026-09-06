@@ -897,6 +897,129 @@ try {
   }
 
   // =====================================================================================
+  section('*** making a board, end to end, from the panel to the cards ***');
+  // The blocker: "two boards exist and neither belongs to the person using it". The editor is
+  // checked on its own in board_editor_test; this is the wiring -- that the button reaches it,
+  // that what it makes is what the board then draws, and that it cannot strand anybody.
+  {
+    const clock = fakeClock();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:460px;height:520px';
+    document.body.append(host);
+    const st = fakeState({ boardId: 'yesno' });
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(), state: st,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      mediaSources: { list: async () => [] },
+      output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(30);
+
+    host.querySelector('[data-gear]').click();
+    await sleep(20);
+    check('the panel offers a way to make a board', !!host.querySelector('[data-new]'));
+    host.querySelector('[data-new]').click();
+    await sleep(30);
+    check('*** and it opens the editor ***', inst.impl.__probe().editing === true);
+    // It says which it is doing. "Make a new board" hands the editor a BLANK board rather than
+    // null, so a heading inferred from "is there a board" read "Edit this board" over an empty
+    // grid -- and a caregiver who thinks they are about to overwrite the board somebody is
+    // using does not press Save.
+    check('...saying it is making one, not editing the board in use',
+      /Make a board/.test(host.querySelector('.be-head').textContent),
+      host.querySelector('.be-head').textContent);
+    check('...over the board, so the panel is out of the way',
+      inst.impl.__probe().panelOpen === false);
+
+    // Name it, shape it, give it a word.
+    const name = host.querySelector('[data-name]');
+    name.value = 'Christine\u2019s board';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    host.querySelector('[data-cols]').value = '3';
+    host.querySelector('[data-cols]').dispatchEvent(new Event('change', { bubbles: true }));
+    host.querySelector('[data-rows]').value = '1';
+    host.querySelector('[data-rows]').dispatchEvent(new Event('change', { bubbles: true }));
+    host.querySelector('[data-slot="0"]').click();
+    const w = host.querySelector('[data-word]');
+    w.value = 'Tea';
+    w.dispatchEvent(new Event('input', { bubbles: true }));
+    host.querySelector('[data-save]').click();
+    await sleep(40);
+
+    check('*** saving closes the editor and the board is back ***',
+      inst.impl.__probe().editing === false && !!host.querySelector('[data-grid]'));
+    check('*** the board on screen is the one that was just made ***',
+      inst.impl.__probe().words.join(' ').includes('Tea'),
+      JSON.stringify(inst.impl.__probe().words));
+    // The SAVED shape, not the drawn one: this host is tall, so `fitScreen` turns a 3x1 into a
+    // 1x3, which is the documented transpose and not a lost setting. Asserting the drawn grid
+    // here would have made a correct feature look like a bug -- it did, first time round.
+    check('...in the shape it was given',
+      st.get().board.cols === 3 && st.get().board.rows === 1,
+      JSON.stringify([st.get().board.cols, st.get().board.rows]));
+    check('...and drawn in that shape or its transpose, never at a tier it did not ask for',
+      inst.impl.__probe().grid.cols * inst.impl.__probe().grid.rows === 3,
+      JSON.stringify(inst.impl.__probe().grid));
+    check('...and it was written to the settings row, not just drawn',
+      st.get().board && st.get().board.name === 'Christine\u2019s board',
+      JSON.stringify(st.get().board && st.get().board.name));
+    // SAVING A BOARD AND LEAVING THE SCREEN ON THE OLD ONE READS AS "it did not save".
+    check('*** ...and the screen is switched to it, because that is one decision ***',
+      st.get().boardId === 'custom' && inst.impl.__probe().boardId === 'mine'
+        || st.get().boardId === 'custom',
+      JSON.stringify({ boardId: st.get().boardId, on: inst.impl.__probe().boardId }));
+    check('...and it is offered where boards are chosen',
+      (inst.impl.settingsChoices?.().boardId || []).some((o) => o.value === 'custom'));
+
+    // *** THE ONE THAT MATTERS. *** A caregiver opens the editor and is called away. The
+    // person the board is for cannot cancel a form. `CLAUDE.md`: a screen must never enter a
+    // state that only an input can leave, when the person in front of it cannot give it.
+    host.querySelector('[data-gear]').click();
+    await sleep(20);
+    host.querySelector('[data-edit]').click();
+    await sleep(30);
+    check('the editor is open again', inst.impl.__probe().editing === true);
+    check('...and this time it says it is editing', 
+      /Edit this board/.test(host.querySelector('.be-head').textContent),
+      host.querySelector('.be-head').textContent);
+    const nm = host.querySelector('[data-name]');
+    nm.value = 'Half a rename';
+    nm.dispatchEvent(new Event('input', { bubbles: true }));
+    clock.advance(200000);
+    await sleep(40);
+    check('*** left alone, the editor puts itself away and the board comes back ***',
+      inst.impl.__probe().editing === false
+        && inst.impl.__probe().words.join(' ').includes('Tea'),
+      JSON.stringify(inst.impl.__probe().words));
+    check('*** ...without saving half a rename over the board ***',
+      st.get().board.name === 'Christine\u2019s board', st.get().board.name);
+    check('*** ...and without throwing the work away either \u2014 it is kept as a draft ***',
+      st.get().boardDraft && st.get().boardDraft.name === 'Half a rename',
+      JSON.stringify(st.get().boardDraft && st.get().boardDraft.name));
+
+    // And reopening picks the draft up rather than starting again.
+    host.querySelector('[data-gear]').click();
+    await sleep(20);
+    host.querySelector('[data-edit]').click();
+    await sleep(30);
+    check('...and reopening carries on from it',
+      host.querySelector('[data-name]').value === 'Half a rename',
+      host.querySelector('[data-name]').value);
+
+    // A LOCK CLOSES IT TOO. Locking a board while an editor is open over it would otherwise
+    // leave the form up with the gear gone -- a screen with no way back at all.
+    st.set({ ...st.get(), locked: true });
+    await sleep(40);
+    check('*** locking the board closes the editor rather than trapping it open ***',
+      inst.impl.__probe().editing === false && inst.impl.__probe().gearShown === false);
+    check('...and the cards are there', inst.impl.__probe().words.join(' ').includes('Tea'));
+
+    inst.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
   // A live one to look at. Not asserted on — it is here because a board is a thing you have to
   // SEE to judge, and a suite that only reports numbers about it would be hiding the product.
   {

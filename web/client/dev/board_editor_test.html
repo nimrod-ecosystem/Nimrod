@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>making a board — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:80ch}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:80ch;font-size:.92rem}
+  #host{position:relative;width:420px;height:520px;margin-top:12px;border:1px solid #e4e0c2}
+  #look{position:relative;width:520px;height:560px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>making a board</h1>
+
+<div class="warn">
+  A caregiver opens this over the board and is called into the corridor. The person the board
+  belongs to is then looking at a form they cannot fill in, cannot cancel, and cannot talk
+  through — their voice replaced by somebody else’s settings screen. So the editor
+  <b>closes itself</b> when nothing has been touched for a few minutes, and hands the work back
+  as a draft rather than saving half a board or throwing an afternoon away. That is the check
+  this suite exists for; the rest is about not losing anybody’s words.
+</div>
+
+<div class="note">
+  <b>Nothing is uploaded, and this asserts it rather than saying it.</b> A picture is a
+  <code>{sourceId, path}</code> reference to a file on the person’s own machine. The suite
+  checks that what gets saved is that reference and not the URL the picker displayed — a folder
+  listing revokes its own object URLs, so a stored URL would go blank later with no error
+  anywhere.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<p style="margin-top:18px;font-size:.9rem;color:#5d7064">A live editor, for looking at:</p>
+<div id="look"></div>
+
+<script type="module">
+import { mountBoardEditor, blankBoard, IDLE_MS, MAX_DIM } from '../board_editor.js';
+import { normalizeBoard, gridOf } from '../aac_vocab.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    pending: () => armed.length,
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// A media source that needs no network and no folder permission: `resolve` is injected, so the
+// picker can be driven end to end offline. The items carry a `url` the picker displays and a
+// `path` it must be the one to save.
+const FAKE_ITEMS = [
+  { id: 'kitchen.jpg', name: 'kitchen.jpg', path: 'kitchen.jpg', kind: 'image',
+    url: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' },
+  { id: 'dog.jpg', name: 'dog.jpg', path: 'rooms/dog.jpg', kind: 'image',
+    url: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' },
+  { id: 'clip.mp4', name: 'clip.mp4', path: 'clip.mp4', kind: 'video', url: 'about:blank' },
+];
+const fakeSources = (list) => ({ list: async () => list });
+const fakeResolve = async () => ({ album: '', albums: ['trip'], items: FAKE_ITEMS, count: 3 });
+
+const host = document.getElementById('host');
+const q = (s) => host.querySelector(s);
+
+(async () => {
+try {
+
+  // =====================================================================================
+  section('*** it closes itself, so nobody is left behind a form ***');
+  {
+    // THE CHECK THIS SUITE EXISTS FOR. `CLAUDE.md`: a screen must never enter a state that
+    // only an input can leave, when the person in front of it cannot give that input.
+    const clock = fakeClock();
+    let idled = null, cancelled = 0, saved = null;
+    const ed = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'b', name: 'Mine', cols: 2, rows: 2,
+                              cells: [{ word: 'Yes' }] }),
+      sources: fakeSources([]), resolve: fakeResolve,
+      folders: { isSupported: () => true, pick: async () => ({ id: 'f', label: 'F', kind: 'folder' }) },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onIdle: (b) => { idled = b; }, onCancel: () => { cancelled++; }, onSave: (b) => { saved = b; },
+    });
+    check('it is open', !!q('.bedit'));
+    clock.advance(IDLE_MS - 1000);
+    check('...and still open while somebody might be reading it', idled === null);
+    clock.advance(2000);
+    check('*** it puts itself away when nothing has been touched ***', idled !== null);
+    check('...and hands the work BACK rather than throwing it away',
+      idled && idled.cells.filter(Boolean).length === 1, JSON.stringify(idled && idled.cells));
+    check('*** ...and does NOT save half a board over the real one ***', saved === null);
+
+    // TYPING RESETS IT. An editor that closed under a caregiver mid-word would be a worse
+    // failure than the one it is preventing, and they would blame the save button.
+    ed.destroy();
+  }
+  {
+    const clock = fakeClock();
+    let idled = null;
+    const ed = mountBoardEditor(host, {
+      board: blankBoard({ cols: 2, rows: 2 }),
+      sources: fakeSources([]), resolve: fakeResolve,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onIdle: (b) => { idled = b; },
+    });
+    clock.advance(IDLE_MS - 5000);
+    q('[data-slot="0"]').click();
+    const w = q('[data-word]');
+    w.value = 'Wa';
+    w.dispatchEvent(new Event('input', { bubbles: true }));
+    clock.advance(IDLE_MS - 5000);
+    check('*** typing a word resets the clock — it never closes under somebody ***',
+      idled === null);
+    clock.advance(6000);
+    check('...and once they really have stopped, it closes', idled !== null);
+    check('...carrying the half-typed word with it',
+      idled && idled.cells[0] && idled.cells[0].word === 'Wa', JSON.stringify(idled?.cells));
+    ed.destroy();
+  }
+  {
+    // AND IT LEAVES NOTHING RUNNING. A timer that survives the editor fires into a dead
+    // closure minutes later, on a screen that has moved on.
+    const clock = fakeClock();
+    const ed = mountBoardEditor(host, {
+      board: blankBoard(), sources: fakeSources([]), resolve: fakeResolve,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onIdle: () => {},
+    });
+    ed.destroy();
+    check('a destroyed editor leaves no timer behind', clock.pending() === 0,
+      String(clock.pending()));
+    check('...and takes its markup with it', host.innerHTML === '');
+  }
+
+  // =====================================================================================
+  section('name it, shape it, and do not lose anybody’s words');
+  {
+    const clock = fakeClock();
+    let saved = null;
+    const ed = mountBoardEditor(host, {
+      board: null, sources: fakeSources([]), resolve: fakeResolve,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onSave: (b) => { saved = b; },
+    });
+    check('a new board starts blank and named', ed.__probe().cells === 0 && !!ed.__probe().name);
+
+    const name = q('[data-name]');
+    name.value = 'Christine’s board';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    check('it takes a name', ed.__probe().name === 'Christine’s board', ed.__probe().name);
+
+    q('[data-cols]').value = '4';
+    q('[data-cols]').dispatchEvent(new Event('change', { bubbles: true }));
+    q('[data-rows]').value = '3';
+    q('[data-rows]').dispatchEvent(new Event('change', { bubbles: true }));
+    check('*** it takes rows and columns that are not one of the seven tiers ***',
+      ed.__probe().cols === 4 && ed.__probe().rows === 3,
+      JSON.stringify([ed.__probe().cols, ed.__probe().rows]));
+    check('...and draws a slot for every one of them', ed.__probe().slots === 12,
+      String(ed.__probe().slots));
+
+    q('[data-rows]').value = '99';
+    q('[data-rows]').dispatchEvent(new Event('change', { bubbles: true }));
+    check(`a grid nobody could hit is refused (max ${MAX_DIM})`,
+      ed.__probe().rows === 3, String(ed.__probe().rows));
+
+    // Fill three cards.
+    for (const [i, word] of [[0, 'Yes'], [1, 'No'], [5, 'Water']]) {
+      q(`[data-slot="${i}"]`).click();
+      const el = q('[data-word]');
+      el.value = word;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    check('cards take words', ed.__probe().cells === 3, String(ed.__probe().cells));
+
+    // *** SHRINKING IS REFUSED WHILE THE SLOTS IT WOULD DROP HAVE WORDS IN THEM. ***
+    // The alternative was to truncate and say so, and the cards being dropped are words
+    // somebody chose for somebody who cannot ask for them back.
+    q('[data-cols]').value = '2';
+    q('[data-cols]').dispatchEvent(new Event('change', { bubbles: true }));
+    q('[data-rows]').value = '2';
+    q('[data-rows]').dispatchEvent(new Event('change', { bubbles: true }));
+    // The FIRST of the two changes (4 columns to 2, rows still 3) is six slots and six are in
+    // use, so it fits and is accepted -- and the board visibly reshapes, which is the person
+    // making a decision about their own layout. It is the SECOND, down to four slots, that
+    // would drop "Water", and that is the one refused. The invariant is not "the grid never
+    // shrinks", it is "no word is ever dropped by a grid change".
+    check('*** a smaller grid that would drop a word is refused ***',
+      ed.__probe().cells === 3 && gridOf(ed.draft()).cells >= 6,
+      JSON.stringify(ed.__probe()));
+    check('...and says why, in the editor rather than in a console',
+      /in use/i.test(ed.__probe().note), ed.__probe().note);
+    check('...and the words are all still there',
+      ed.draft().cells.filter(Boolean).map((c) => c.word).join(',') === 'Yes,No,Water',
+      JSON.stringify(ed.draft().cells.filter(Boolean).map((c) => c.word)));
+
+    // Emptying the last card makes room, and then it fits.
+    q('[data-slot="5"]').click();
+    q('[data-clear-slot]').click();
+    q('[data-cols]').value = '2';
+    q('[data-cols]').dispatchEvent(new Event('change', { bubbles: true }));
+    q('[data-rows]').value = '2';
+    q('[data-rows]').dispatchEvent(new Event('change', { bubbles: true }));
+    check('once the card is emptied the smaller grid is accepted',
+      ed.__probe().cols === 2 && ed.__probe().rows === 2, JSON.stringify(ed.__probe()));
+
+    // A hole stays a hole — the rule the whole vocabulary file exists for.
+    q('[data-slot="0"]').click();
+    q('[data-clear-slot]').click();
+    check('*** emptying a card leaves a HOLE — the card after it does not move up ***',
+      ed.draft().cells[0] === null && ed.draft().cells[1].word === 'No',
+      JSON.stringify(ed.draft().cells));
+
+    q('[data-save]').click();
+    check('saving hands back a board with its own grid',
+      saved && saved.cols === 2 && saved.rows === 2, JSON.stringify(saved && [saved.cols, saved.rows]));
+    check('...named as it was typed', saved && saved.name === 'Christine’s board');
+    ed.destroy();
+  }
+  {
+    // An empty board is not a board. Saving one would put a blank grid in front of somebody
+    // and take away whatever they had.
+    const clock = fakeClock();
+    let saved = null;
+    const ed = mountBoardEditor(host, {
+      board: null, sources: fakeSources([]), resolve: fakeResolve,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onSave: (b) => { saved = b; },
+    });
+    q('[data-save]').click();
+    check('*** a board with no words at all is not saved ***', saved === null);
+    check('...and says so', /at least one/i.test(ed.__probe().note), ed.__probe().note);
+    ed.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a picture, from a folder — and no upload path anywhere ***');
+  {
+    const clock = fakeClock();
+    let saved = null;
+    let picked = 0;
+    const ed = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'b', name: 'Mine', cols: 2, rows: 1, cells: [{ word: 'Kitchen' }] }),
+      sources: fakeSources([{ id: 's1', label: 'Photos', kind: 'folder' }]),
+      resolve: fakeResolve,
+      folders: { isSupported: () => true,
+                 pick: async () => { picked++; return { id: 's2', label: 'New', kind: 'folder' }; } },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onSave: (b) => { saved = b; },
+    });
+    q('[data-slot="0"]').click();
+    q('[data-pic]').click();
+    await sleep(20);
+    // ONE SOURCE IS NOT A CHOICE. A picker whose first screen lists one folder is a step that
+    // exists only because the code has a step.
+    check('*** with one folder connected it goes straight to the pictures ***',
+      ed.__probe().picking && ed.__probe().picking.sourceId === 's1',
+      JSON.stringify(ed.__probe().picking));
+    check('...showing the images', host.querySelectorAll('.be-pic').length === 2,
+      String(host.querySelectorAll('.be-pic').length));
+    check('*** ...and NOT the video — a card is a picture ***',
+      ![...host.querySelectorAll('.be-pic')].some((b) => /mp4/.test(b.dataset.path)));
+    check('the folders it can read are offered as folders',
+      host.querySelectorAll('[data-album]').length === 1);
+
+    host.querySelector('[data-path="rooms/dog.jpg"]').click();
+    await sleep(10);
+    check('choosing one puts it on the card', !!ed.draft().cells[0].image);
+    // *** THE SAVED THING IS A REFERENCE, NOT THE URL THE PICKER SHOWED. ***
+    // A folder listing revokes its own object URLs the next time anything lists that folder,
+    // so a stored URL goes blank later with no error anywhere.
+    check('*** what is stored is {sourceId, path}, not the URL it displayed ***',
+      ed.draft().cells[0].image.sourceId === 's1'
+        && ed.draft().cells[0].image.path === 'rooms/dog.jpg'
+        && !('url' in ed.draft().cells[0].image),
+      JSON.stringify(ed.draft().cells[0].image));
+    check('...and the word is untouched by any of it',
+      ed.draft().cells[0].word === 'Kitchen');
+
+    q('[data-pic-clear]').click();
+    check('a picture can be taken off again', ed.draft().cells[0].image === null);
+    check('...without taking the word with it', ed.draft().cells[0].word === 'Kitchen');
+
+    q('[data-save]').click();
+    check('the saved board carries the card', saved && saved.cells[0].word === 'Kitchen');
+    ed.destroy();
+  }
+  {
+    // NO FOLDERS AT ALL — the state everybody starts in. It has to offer the way in, and the
+    // only way in is the browser's own folder picker. There is no upload control to find.
+    const clock = fakeClock();
+    let picks = 0;
+    const ed = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'b', name: 'M', cols: 1, rows: 1, cells: [{ word: 'A' }] }),
+      sources: fakeSources([]), resolve: fakeResolve,
+      folders: { isSupported: () => true,
+                 pick: async () => { picks++; return { id: 'f1', label: 'Pics', kind: 'folder' }; } },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    });
+    q('[data-slot="0"]').click();
+    q('[data-pic]').click();
+    await sleep(20);
+    check('with no folders connected it offers to connect one', !!q('[data-connect]'));
+    check('*** and there is no upload control anywhere in it ***',
+      host.querySelectorAll('input[type=file]').length === 0
+        && !/upload/i.test(host.textContent), host.textContent.slice(0, 120));
+    q('[data-connect]').click();
+    await sleep(20);
+    check('connecting one goes to its pictures', picks === 1
+      && ed.__probe().picking && ed.__probe().picking.sourceId === 'f1',
+      JSON.stringify(ed.__probe().picking));
+    ed.destroy();
+  }
+  {
+    // A BROWSER THAT CANNOT OPEN A FOLDER. Safari and Firefox, which is most phones — it has
+    // to say what to do instead rather than showing a button that does nothing.
+    const clock = fakeClock();
+    const ed = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'b', name: 'M', cols: 1, rows: 1, cells: [{ word: 'A' }] }),
+      sources: fakeSources([]), resolve: fakeResolve,
+      folders: { isSupported: () => false, pick: async () => { throw new Error('never'); } },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    });
+    q('[data-slot="0"]').click();
+    q('[data-pic]').click();
+    await sleep(20);
+    check('a browser that cannot open a folder is not shown the button', !q('[data-connect]'));
+    check('...and is told what will work instead', /Chrome|Edge/.test(host.textContent));
+    ed.destroy();
+  }
+  {
+    // A FOLDER WHOSE PERMISSION LAPSED. One click fixes it, and saying "unreachable" instead
+    // sends somebody to check their wifi.
+    const clock = fakeClock();
+    const err = Object.assign(new Error('permission is "prompt"'), { code: 'permission' });
+    const ed = mountBoardEditor(host, {
+      board: normalizeBoard({ id: 'b', name: 'M', cols: 1, rows: 1, cells: [{ word: 'A' }] }),
+      sources: fakeSources([{ id: 's1', label: 'Photos', kind: 'folder' }]),
+      resolve: async () => { throw err; },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+    });
+    q('[data-slot="0"]').click();
+    q('[data-pic]').click();
+    await sleep(20);
+    check('*** a lapsed folder permission is reported as a permission ***',
+      /permission/i.test(host.textContent), host.textContent.slice(0, 160));
+    check('...and there is a way back out of it', !!q('[data-pic-back]'));
+    ed.destroy();
+  }
+
+  // =====================================================================================
+  section('cancel means cancel');
+  {
+    const clock = fakeClock();
+    let cancelled = 0, saved = null;
+    const original = normalizeBoard({ id: 'b', name: 'Original', cols: 2, rows: 1,
+                                      cells: [{ word: 'Yes' }, { word: 'No' }] });
+    const ed = mountBoardEditor(host, {
+      board: original, sources: fakeSources([]), resolve: fakeResolve,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onCancel: () => { cancelled++; }, onSave: (b) => { saved = b; },
+    });
+    q('[data-slot="0"]').click();
+    const w = q('[data-word]');
+    w.value = 'Changed';
+    w.dispatchEvent(new Event('input', { bubbles: true }));
+    q('[data-cancel]').click();
+    check('cancel calls back', cancelled === 1);
+    check('*** and the board it was given is untouched ***',
+      original.cells[0].word === 'Yes', JSON.stringify(original.cells[0]));
+    check('...nothing was saved', saved === null);
+    ed.destroy();
+  }
+  {
+    const clock = fakeClock();
+    let cancelled = 0;
+    const ed = mountBoardEditor(host, {
+      board: blankBoard(), sources: fakeSources([]), resolve: fakeResolve,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onCancel: () => { cancelled++; },
+    });
+    q('.bedit').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Escape closes it too', cancelled === 1);
+    ed.destroy();
+  }
+
+  // =====================================================================================
+  // A live one to look at. A form is a thing you have to SEE to judge.
+  {
+    mountBoardEditor(document.getElementById('look'), {
+      board: normalizeBoard({ id: 'demo', name: 'Christine’s board', cols: 3, rows: 2,
+        cells: [{ word: 'Yes' }, { word: 'No' }, null,
+                { word: 'Water', image: { sourceId: 's1', path: 'kitchen.jpg' } }] }),
+      sources: fakeSources([{ id: 's1', label: 'Photos', kind: 'folder' }]),
+      resolve: fakeResolve,
+      idleMs: 0,                    // never closes on the look-at page
+    });
+    document.querySelector('#look [data-slot="3"]').click();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
