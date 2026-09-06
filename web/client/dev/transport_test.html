@@ -226,6 +226,40 @@ function unreachableChips() {
       chips().some((b) => b.classList.contains('k-off')),
       labels().join(', '));
 
+    // *** CHANGING FOCUS MOVES NOTHING BUT THE FOCUS. ***
+    //
+    // Chat's #3, from Mike walking the deployed site: "panels rearrange when transport focus
+    // changes. Should change focus only." I could not reproduce it -- on the demo screen,
+    // locally AND on the live site, four focus changes left both the panels and the bar
+    // identical. But that screen has no UNPLACED module, and Mike's does, which is the
+    // configuration this rig has. So it is asserted HERE, on five modules in a four-slot
+    // layout, where a reshuffle would actually have somewhere to go.
+    //
+    // What I DID find and fix is next door: the bar reordered when a panel moved between
+    // placed and unplaced. That is very likely what he saw, since the deployed build still
+    // groups placed-before-unplaced. This check is the other half -- proof that plain focus
+    // movement never disturbs anything.
+    {
+      const panelBtn0 = root.querySelector('[data-act="panel"]');
+      const cellsOf = () => [...root.querySelectorAll('.k-cell')]
+        .map((c) => c.dataset.kind || '-').join(',');
+      const cellsBefore = cellsOf();
+      const barBefore = labels().join(',');
+      const seen = [];
+      for (let i = 0; i < 5; i++) {
+        panelBtn0?.click();
+        await sleep(120);
+        seen.push(root.querySelector('.k-cell[data-focused]')?.dataset.kind || 'none');
+        check(`focus move ${i + 1}: the panels stay where they are`, cellsOf() === cellsBefore,
+          `${cellsBefore}  ->  ${cellsOf()}`);
+        check(`focus move ${i + 1}: the bar stays where it is`, labels().join(',') === barBefore,
+          `${barBefore}  ->  ${labels().join(',')}`);
+      }
+      // ...and it really did move the focus, or the two checks above pass by doing nothing.
+      check('*** and the focus actually moved while nothing else did ***',
+        new Set(seen).size > 1, seen.join(' -> '));
+    }
+
     // *** SOMETHING MOVES BETWEEN PANELS, AND NOTHING USED TO. ***
     // `router.focusNext()` existed and no key or button in the product called it, so on an
     // arranged screen the only way to change which panel a switch acts on was a mouse click.
