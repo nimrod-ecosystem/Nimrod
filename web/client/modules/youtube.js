@@ -107,6 +107,14 @@ const PROGRESS_MS = 5000;
 // photos' interval is: with one switch you travel one way, one press at a time, so the number
 // of stops IS the cost.
 export const SETTINGS = [
+  // ADVANCED, which is exactly where Mike said to put things that would otherwise clutter. It
+  // is also the honest level for it: a Google Cloud API key is not something a caregiver has
+  // lying around, and search is the only thing that uses it — everything else in this module
+  // works without one.
+  { key: 'apiKey', label: 'YouTube API key (for searching)', kind: 'text', default: '',
+    level: 'advanced',
+    note: 'Only needed to search from this panel. Get one from Google Cloud, and restrict it '
+      + 'to this site. Searching sends what you type to Google; nothing else here does.' },
   { key: 'heldNotifyMs', label: 'If someone pauses it, let people know after', kind: 'choice',
     default: 21600000, level: 'standard',
     options: [
@@ -224,6 +232,56 @@ export function pickDaypart(schedule, date = new Date()) {
 function esc(v) {
   return String(v == null ? '' : v)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/**
+ * *** SEARCH YOUTUBE FOR A VIDEO, WITH THE USER'S OWN KEY. ***
+ *
+ * Mike asked for per-video search, and for the principle behind it: *"do not withhold
+ * capability the YouTube API already offers"* because a simpler panel was easier.
+ *
+ * THE PART THAT DECIDES THE SHAPE: search is the Data API, and the Data API needs a key with a
+ * quota attached to somebody's Google account. `CLAUDE.md` is explicit that the default must
+ * cost Mike nothing — *"I can't be paying for everyone's tokens"* — and the answer the project
+ * already settled on for the AI adapter is the answer here: **bring your own key.** Nothing
+ * happens without one, nothing is billed to anybody but the person who typed it, and the panel
+ * says so rather than failing silently.
+ *
+ * IT IS A REAL THIRD-PARTY REQUEST AND THE PANEL SAYS SO. Embedding a video already talks to
+ * Google, but a search sends WHAT SOMEBODY TYPED, which is different in kind on a site whose
+ * pitch is that your media never leaves your machine. That sentence is in the UI, not only here.
+ *
+ * `fetchFn` is injected the same way `playerFactory` and `nowDate` are, so the suite drives this
+ * with no network and no key of anybody's.
+ */
+export async function searchVideos(query, { apiKey, fetchFn = fetch, max = 10 } = {}) {
+  const q = String(query || '').trim();
+  if (!q) return { items: [], error: null };
+  if (!apiKey) return { items: [], error: 'no-key' };
+  const url = 'https://www.googleapis.com/youtube/v3/search'
+    + `?part=snippet&type=video&maxResults=${Math.max(1, Math.min(25, max))}`
+    + `&q=${encodeURIComponent(q)}&key=${encodeURIComponent(apiKey)}`;
+  try {
+    const res = await fetchFn(url);
+    if (!res || !res.ok) {
+      // 403 is overwhelmingly "quota exhausted" or "key not enabled for this API", and both are
+      // things the person can fix — so they are named rather than reported as a number.
+      return { items: [], error: res && res.status === 403 ? 'key-refused' : 'failed' };
+    }
+    const body = await res.json();
+    const items = (body && Array.isArray(body.items) ? body.items : [])
+      .map((it) => ({
+        id: it && it.id && it.id.videoId,
+        title: (it && it.snippet && it.snippet.title) || '',
+        channel: (it && it.snippet && it.snippet.channelTitle) || '',
+      }))
+      .filter((it) => it.id);
+    return { items, error: null };
+  } catch {
+    // Offline, blocked, or a CSP that does not allow googleapis. Not distinguishable from here
+    // and not worth pretending otherwise.
+    return { items: [], error: 'failed' };
+  }
 }
 
 function loadIframeApi() {
@@ -377,6 +435,9 @@ registerModule(
     // It lives in the MODULE rather than the player adapter because the module is what
     // knows about the bus and `autoAdvance`; and because an injected test player then
     // exercises the real recovery path instead of bypassing it.
+    // Injected so the suite can search with no network and nobody's key -- the same seam
+    // `playerFactory` and `nowDate` use.
+    const search = ctx.searchVideos || searchVideos;
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
     let stall = null;
@@ -710,6 +771,50 @@ registerModule(
       }
     }
 
+    // What the panel says when a search cannot happen. Each one names the thing the person can
+    // actually do about it, because "search failed" is the message that wastes somebody's
+    // evening.
+    const SEARCH_MSG = {
+      'no-key': 'Searching needs a YouTube API key. Add one in this panel’s advanced settings, '
+        + 'or paste a video link above.',
+      'key-refused': 'Google refused that key — usually the daily quota, or the key not having '
+        + 'the YouTube Data API enabled.',
+      failed: 'Could not reach YouTube. You can still paste a video link above.',
+    };
+
+    async function runSearch() {
+      const box = mount.querySelector('[data-results]');
+      const q = mount.querySelector('[data-find]')?.value || '';
+      if (!box) return;
+      if (!String(q).trim()) { box.textContent = ''; return; }
+      box.textContent = 'Searching…';
+      const { items, error } = await search(q, { apiKey: (cfg.apiKey || '').trim() });
+      box.innerHTML = '';
+      if (error) { box.textContent = SEARCH_MSG[error] || SEARCH_MSG.failed; return; }
+      if (!items.length) { box.textContent = 'Nothing found.'; return; }
+      for (const it of items) {
+        const row = document.createElement('div');
+        row.className = 'ytrow';
+        row.innerHTML = `<span>${esc(it.title)}${it.channel ? ' · ' + esc(it.channel) : ''}</span>`;
+        const add = document.createElement('button');
+        add.type = 'button';
+        add.textContent = byId[it.id] ? 'Added' : 'Add';
+        add.disabled = !!byId[it.id];
+        add.addEventListener('click', () => {
+          // The SAME entry shape `addFromInput` writes, so a video added from a search and one
+          // pasted in by hand are indistinguishable afterwards -- and the title is the real one
+          // from YouTube rather than the id, which is the actual gain over pasting a link.
+          state.set({ playlist: [...(cfg.playlist || []),
+                                 { id: it.id, title: it.title || it.id,
+                                   channel: it.channel || undefined }] });
+          add.textContent = 'Added';
+          add.disabled = true;
+        });
+        row.append(add);
+        box.append(row);
+      }
+    }
+
     /** `"07:30"` -> `7.5`. Returns null for an empty or unparseable value. */
     function hoursFromTime(v) {
       const m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '').trim());
@@ -876,6 +981,11 @@ registerModule(
                 <input type="text" data-add-channel placeholder="channel (optional)">
                 <button data-add>Add</button>
               </div>
+              <div class="addrow">
+                <input type="text" data-find placeholder="search YouTube for a video">
+                <button type="button" data-find-go>Search</button>
+              </div>
+              <div class="yt-results" data-results></div>
               <div class="addrow">
                 <input type="text" data-list-url placeholder="playlist link or id (PL…)">
                 <button data-set-list>Use playlist</button>
@@ -1046,6 +1156,10 @@ registerModule(
           state.set({ playlistId: id });
         });
         mount.querySelector('[data-sch-add]').addEventListener('click', () => addSchedule());
+        mount.querySelector('[data-find-go]').addEventListener('click', () => runSearch());
+        mount.querySelector('[data-find]').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') runSearch();
+        });
         mount.querySelector('[data-add]').addEventListener('click', () => addFromInput());
         mount.querySelector('[data-add-url]').addEventListener('keydown', (e) => { if (e.key === 'Enter') addFromInput(); });
         mount.querySelector('[data-opt="autoAdvance"]').addEventListener('change', (e) => {

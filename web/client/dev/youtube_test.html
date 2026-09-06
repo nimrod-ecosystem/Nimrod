@@ -38,7 +38,7 @@ import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
 import { pressControls, checkHiddenHides } from './press_controls.js';
-import { parseVideoId, parsePlaylistId, pickDaypart } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
+import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'youtube-test-user';
@@ -458,6 +458,94 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
         /12:00.{0,3}13:30/.test(sched2.textContent) && /from 18:00/.test(sched2.textContent),
         sched2.textContent.slice(0, 160));
       if (panel) panel.hidden = true;
+    }
+
+    // ── SEARCHING FOR A VIDEO ──────────────────────────────────────────────
+    //
+    // Mike wants per-video search, and the principle: do not withhold capability the API
+    // already offers. Search is the Data API, which needs a key with a quota on somebody's
+    // Google account -- so it is BRING YOUR OWN KEY, the answer this project already settled on
+    // for the AI adapter, because the default must cost Mike nothing.
+    //
+    // Driven through an injected `fetch`, so none of this touches the network or anybody's key.
+    {
+      // *** THE NO-KEY PATH FIRST. It is the one almost everybody will hit, and the one most
+      // likely to be left as a silent no-op. *** Nothing must go out over the wire without a
+      // key, so the fetch used here FAILS the check if it is ever called.
+      let called = 0;
+      const noFetch = () => { called += 1; throw new Error('must not be called'); };
+      const r0 = await searchVideos('cats', { apiKey: '', fetchFn: noFetch });
+      check('*** with no key, search does not call out at all ***', called === 0, `called=${called}`);
+      check('...and says so rather than failing silently', r0.error === 'no-key', JSON.stringify(r0));
+      const blank = await searchVideos('   ', { apiKey: 'k', fetchFn: noFetch });
+      check('an empty query does not call out either', called === 0 && blank.error === null,
+        `called=${called} ${JSON.stringify(blank)}`);
+
+      // The happy path, against a canned Data API response.
+      const canned = {
+        ok: true,
+        json: async () => ({ items: [
+          { id: { videoId: 'abc12345678' },
+            snippet: { title: 'A cat', channelTitle: 'Chan' } },
+          { id: { kind: 'youtube#channel' }, snippet: { title: 'not a video' } },
+        ] }),
+      };
+      let seenUrl = '';
+      const r1 = await searchVideos('cats', {
+        apiKey: 'KEY123', fetchFn: async (u) => { seenUrl = u; return canned; },
+      });
+      check('search returns the videos', r1.items.length === 1 && r1.items[0].id === 'abc12345678',
+        JSON.stringify(r1.items));
+      check('...with the real title and channel, which is the gain over pasting a link',
+        r1.items[0].title === 'A cat' && r1.items[0].channel === 'Chan',
+        JSON.stringify(r1.items[0]));
+      check('*** a result that is not a video is dropped rather than added as a broken id ***',
+        r1.items.every((i) => i.id), JSON.stringify(r1.items));
+      check('the query is escaped into the URL', /[?&]q=cats(&|$)/.test(seenUrl), seenUrl);
+      check('...and it asks for videos only', /type=video/.test(seenUrl), seenUrl);
+
+      // A refused key is named, because "search failed" is the message that wastes an evening.
+      const r2 = await searchVideos('cats', {
+        apiKey: 'KEY123', fetchFn: async () => ({ ok: false, status: 403 }),
+      });
+      check('a refused key says it was the key', r2.error === 'key-refused', JSON.stringify(r2));
+      const r3 = await searchVideos('cats', {
+        apiKey: 'KEY123', fetchFn: async () => { throw new Error('offline'); },
+      });
+      check('...and being offline is not reported as a bad key', r3.error === 'failed',
+        JSON.stringify(r3));
+
+      // *** AND THROUGH THE PANEL, because a function nobody can reach is not a feature. ***
+      const host5 = document.createElement('div');
+      host5.style.cssText = 'position:relative;width:420px;height:300px';
+      document.body.append(host5);
+      const st5 = createState({ url: profiles.stateURL(profile.id, mod.id + '-search'), user: USER });
+      const ev5 = createEvents({ url: profiles.eventsURL(profile.id, mod.id + '-search'), user: USER });
+      await st5.load(); await ev5.load();
+      const stub5 = makeStubPlayer();
+      const inst5 = mountModule('youtube', {
+        mount: host5, bus: createBus(), state: st5, events: ev5, user: USER,
+        profileId: profile.id, playerFactory: stub5.factory,
+        searchVideos: async () => ({ items: [{ id: 'zzz11111111', title: 'Found', channel: 'C' }],
+                                     error: null }),
+      });
+      inst5.init();
+      await sleep(60);
+      host5.querySelector('[data-find]').value = 'cats';
+      host5.querySelector('[data-find-go]').click();
+      await sleep(60);
+      const results = host5.querySelector('[data-results]');
+      check('the panel lists what the search found', /Found/.test(results.textContent),
+        results.textContent.slice(0, 120));
+      results.querySelector('button')?.click();
+      await sleep(40);
+      const added = (st5.get().playlist || []).some((v) => v.id === 'zzz11111111');
+      check('*** and a result can be added to the playlist ***', added,
+        JSON.stringify(st5.get().playlist));
+      check('...keeping the title, not just the id',
+        (st5.get().playlist || []).some((v) => v.title === 'Found'),
+        JSON.stringify(st5.get().playlist));
+      inst5.destroy(); st5.destroy(); ev5.destroy(); host5.remove();
     }
 
     // ── G13: THE ONLY WAY TO CHOOSE A VIDEO HAS TO BE ON SCREEN ────────────
