@@ -296,7 +296,23 @@ registerModule(
           </div>`;
         for (const p of PROVIDERS) {
           const slot = document.createElement('div');
-          slot.className = 'd-slot'; slot.hidden = true; slot.dataset.prov = p.id;
+          // *** `mod-box` TOO, and it was the one host in the repo that had forgotten it. ***
+          //
+          // Measured 2026-09-06, across every shape that hands a module a fixed box:
+          // `.k-cell mod-box` and `.trystage mod-box` both report `container-type: size` and
+          // `position: relative`; `.d-slot` reported `normal` and `static`.
+          //
+          // Two consequences, and the second is the one with history. A module inside a
+          // director could not use container queries at all -- so the rules that make trivia,
+          // Word Forge, lessons and the bank fit a short panel, and the ones that scale the
+          // clock, silently did nothing here. And an `inset:0` child resolved against
+          // `.director` rather than against its own slot, which is exactly the escape-the-cell
+          // bug `.k-mod{position:relative}` in modules.css was written to stop; it is harmless
+          // today only because the slot happens to be the same size as the director.
+          //
+          // Harmless-today is the wrong thing to rely on: the director is what runs the screen
+          // at the bedside, and the next provider added here would inherit both problems.
+          slot.className = 'd-slot mod-box'; slot.hidden = true; slot.dataset.prov = p.id;
           stage().append(slot); slots[p.id] = slot;
         }
 
