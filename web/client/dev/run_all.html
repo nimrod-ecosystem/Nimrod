@@ -57,6 +57,10 @@ const SUITES = [
   'restart', 'rng', 'screen_pair', 'segment_heartbeat', 'sender', 'settings', 'settings_audit',
   // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
   'soak',
+  // PRIORITY.md #8's voice-command set. Opens no microphone: the matcher is a pure function
+  // over text and the recogniser is injected, which is the same seam that lets a local engine
+  // replace the browser's one.
+  'speech',
   'sprint',
   'statemachine', 'talk', 'theme', 'tour', 'trivia', 'voice', 'walkthrough', 'wallpaper', 'watchdog', 'wordforge', 'youtube',
   'youtube_watchdog',
