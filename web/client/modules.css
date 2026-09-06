@@ -553,7 +553,7 @@
 .sprint .s-btn{padding:8px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);
   color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
 .sprint .s-btn:hover{background:var(--cream-soft)}
-.sprint .s-primary{background:var(--moss);border-color:var(--moss);color:#fff;min-width:104px}
+.sprint .s-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss);min-width:104px}
 .sprint .s-primary:hover{filter:brightness(.93);background:var(--moss)}
 .sprint .s-mult{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);
   color:var(--ink);font:inherit;font-size:.85rem}
@@ -579,7 +579,7 @@
 .quests .q-tabs{display:flex;gap:6px}
 .quests .q-tab{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);
   color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-.quests .q-tab.on{background:var(--moss);border-color:var(--moss);color:#fff}
+.quests .q-tab.on{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
 .quests .q-panel{max-height:360px;overflow-y:auto}
 .quests .q-toolbar{display:flex;justify-content:flex-end;padding:2px 0 6px}
 .quests .q-toggle{font-size:.8rem;color:var(--ink-soft);display:flex;align-items:center;gap:5px;cursor:pointer}
@@ -611,7 +611,7 @@
 .gprogress .g-flabel{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
 .gprogress .g-fbtn{padding:4px 9px;border:1px solid var(--line);border-radius:99px;background:var(--card);
   color:var(--ink);font:inherit;font-size:.78rem;cursor:pointer}
-.gprogress .g-fbtn.on{background:var(--moss);border-color:var(--moss);color:#fff}
+.gprogress .g-fbtn.on{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
 .gprogress .g-cards{display:flex;flex-wrap:wrap;gap:7px}
 .gprogress .g-card{flex:1 1 84px;border:1px solid var(--line);border-radius:11px;background:var(--cream-soft);padding:8px 10px}
 .gprogress .g-v{font-size:1.35rem;font-weight:800;line-height:1.1;color:var(--darkgreen);font-variant-numeric:tabular-nums}
@@ -626,7 +626,7 @@
 .gprogress .g-tab{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);
   color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
 .gprogress .g-tab[hidden]{display:none}
-.gprogress .g-tab.on{background:var(--moss);border-color:var(--moss);color:#fff}
+.gprogress .g-tab.on{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
 .gprogress .g-ghost{flex:0 0 auto;font-weight:500;color:var(--midnight)}
 .gprogress .g-ghost:disabled{opacity:.4;cursor:not-allowed}
 .gprogress .g-panel{max-height:340px;overflow-y:auto}
@@ -675,7 +675,7 @@
 .wordforge .wf-bonus,.wordforge .wf-try{display:block;margin-top:4px;font-size:.78rem;color:var(--midnight);font-weight:600}
 .wordforge .wf-btn{margin-top:10px;padding:10px 18px;border:1px solid var(--line);border-radius:10px;
   background:var(--card);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
-.wordforge .wf-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+.wordforge .wf-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
 .wordforge .wf-primary:hover{filter:brightness(.93)}
 .wordforge .wf-done{text-align:center;padding:22px 10px}
 .wordforge .wf-done-n{font-size:2.8rem;font-weight:800;color:var(--darkgreen);line-height:1}
@@ -695,11 +695,11 @@
 .lessons .l-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .lessons .l-head h3{margin:0;font-size:1rem}
 .lessons .l-badge{margin-left:7px;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;
-  color:#fff;background:var(--moss);border-radius:99px;padding:2px 7px;vertical-align:middle}
+  color:var(--on-moss);background:var(--moss);border-radius:99px;padding:2px 7px;vertical-align:middle}
 .lessons .l-blurb{margin:3px 0 0;font-size:.82rem;color:var(--muted)}
 .lessons .l-btn{padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:var(--card);
   color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;white-space:nowrap}
-.lessons .l-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+.lessons .l-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
 .lessons .l-btn:disabled{opacity:.45;cursor:not-allowed}
 .lessons .l-body{margin-top:11px}
 .lessons .l-video{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#0c1a14;display:block}
@@ -726,10 +726,10 @@
 .algebra .al-key:hover{background:var(--cream-soft)}
 .algebra .al-key.is-op{background:var(--cream-soft);color:var(--midnight);font-weight:800}
 .algebra .al-key.is-fn{color:var(--muted)}
-.algebra .al-key.is-eq{grid-column:span 2;background:var(--midnight);border-color:var(--midnight);color:#fff}
+.algebra .al-key.is-eq{grid-column:span 2;background:var(--midnight);border-color:var(--midnight);color:var(--on-midnight)}
 .algebra .al-btn{padding:11px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);
   color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
-.algebra .al-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+.algebra .al-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
 .algebra .al-submit{max-width:280px;margin-top:8px;font-size:1rem}
 .algebra .al-submit:disabled{opacity:.45;cursor:not-allowed}
 .algebra .al-idk{max-width:280px;margin-top:7px;background:transparent;border-style:dashed;color:var(--muted);

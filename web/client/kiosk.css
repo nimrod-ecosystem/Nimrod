@@ -151,14 +151,14 @@
   .k-scr:hover:not(:disabled){background:rgba(255,255,255,.10)}
   /* The one you are on, marked and not pressable — pressing it would do nothing, and a control
      that does nothing costs a switch user a press to find out. */
-  .k-scr.on{background:var(--moss);border-color:var(--moss);color:#fff;font-weight:700;
+  .k-scr.on{background:var(--moss);border-color:var(--moss);color:var(--on-moss);font-weight:700;
     cursor:default}
   .k-scr-out{border-style:dashed;opacity:.85}
   .k-scr-note{color:#cfe0d6;font-size:.82rem;opacity:.8;align-self:center;padding:0 4px}
   .k-mods{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-width:0}
   .k-dot{font-size:.82rem;text-transform:capitalize;color:#cfe0d6;background:transparent;
     border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer}
-  .k-dot.on{background:var(--moss);border-color:var(--moss);color:#fff;font-weight:700}
+  .k-dot.on{background:var(--moss);border-color:var(--moss);color:var(--on-moss);font-weight:700}
   /* A PANEL THIS SCREEN IS NOT SHOWING. Quieter than a panel that is, and dashed rather than
      solid, so "on this screen but not in the arrangement" is legible without reading the
      tooltip. Pressing it brings it into the panel that has focus — see `showUnplaced`. */
