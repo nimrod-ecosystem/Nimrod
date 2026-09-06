@@ -652,6 +652,19 @@ registerModule(
           audioInit();
           moveTo(p.x, p.y, true);
         };
+        // *** SETTINGS TAKE EFFECT WHILE IT IS RUNNING. THEY DID NOT. ***
+        //
+        // `cfg` was read once at init and never again -- eight declared settings, all inert
+        // until somebody remounted the panel. Third module found by sweeping every one that
+        // declares settings for one that never subscribes; `pressgame.js` and `call.js` were
+        // the other two.
+        //
+        // Everything here is appearance, sound and how the comet moves, and all of it is
+        // safe to change live: nothing in this game is a deadline somebody is holding off
+        // against, which is the one thing `pressgame` and `call` each had to protect.
+        offs.push(state?.subscribe?.(() => {
+          cfg = { ...DEFAULTS, ...(state.get() || {}) };
+        }) || (() => {}));
         offs.push(bus.subscribe(AIM_TOPIC, onAim));
         // Place it on whatever the last aim was, so a comet mounted mid-session starts under
         // her hand rather than waiting for a movement she may take a while to make.
