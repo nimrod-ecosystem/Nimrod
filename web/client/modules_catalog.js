@@ -345,10 +345,17 @@ export const CATALOG = [
   },
   {
     type: 'sprint',
-    // Named for the technique, because that is what somebody searching knows (G13). This page's
-    // search reads `lead`, `why` and `needs`, so "Pomodoro" appears in the copy as well as the
-    // title - a term in the title alone would not be found by the box above the list.
-    title: 'Focus timer (Pomodoro)',
+    // NO `title` OVERRIDE HERE, and that is deliberate after `composer_reach` caught one.
+    //
+    // A catalog `title` is a DUPLICATE of the module's manifest title, carried so the landing
+    // page can print names without importing twenty-one module implementations on hospital
+    // wifi. The suite asserts the two match, because a duplicate nobody checks is exactly how
+    // that list came to advertise `camera` as a default for weeks after it stopped being one.
+    //
+    // The rename (G13) set the manifest to "Focus timer" and briefly set this to
+    // "Focus timer (Pomodoro)", which broke that invariant to buy nothing: the parts page
+    // searches `lead`, `why` and `needs`, and "Pomodoro" is in all three plus the manifest
+    // description. The word is findable; the second name was not needed.
     group: 'practice',
     use: 'answer',
     lead: 'A Pomodoro timer — finish a sprint of focused work, bank the points.',
