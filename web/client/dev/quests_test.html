@@ -33,7 +33,8 @@ import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
-import { createPointsLedger, POINTS_TOPIC, sumEarned, sumSpent, sumMinutes, weekStart } from '../points.js';
+import { createPointsLedger, POINTS_TOPIC, sumEarned, sumSpent, sumMinutes, weekStart,
+         pointsValue, fmtPoints } from '../points.js';
 import { weeklyTarget, hoursBand, fmtHours, DEFAULT_TASKS, DEFAULT_REWARDS } from '../modules/quests.js';
 import '../modules/sprint.js';
 
@@ -250,6 +251,36 @@ const MIN = 60000;
 
     sinst.destroy();
     inst.destroy();
+
+    // ── *** A QUARTER OF A POINT HAS TO SURVIVE THE LEDGER *** ────────────
+    //
+    // Chat's #5 scores a trivia answer 1 / 0.75 / 0.5 / 0.25 by guess. `pointsValue` used to
+    // round to a whole point, which turns that ladder into 1 / 1 / 1 / 0 -- every guess but the
+    // last worth the same, and the last worth nothing.
+    //
+    // THIS CHECK EXISTS BECAUSE RESTORING THE ROUNDING BROKE NOTHING. The trivia suite asserts
+    // the module's own arithmetic, and nothing asserted that the number reached the record
+    // intact -- so `Math.round` could come back and the quartering would collapse silently with
+    // every suite green.
+    {
+      const ev = (amount, mult = 1) => ({ data: { amount, mult } });
+      check('*** a three-quarter award is worth three quarters, not one ***',
+        pointsValue(ev(0.75)) === 0.75, String(pointsValue(ev(0.75))));
+      check('...and a quarter is worth a quarter, not nothing',
+        pointsValue(ev(0.25)) === 0.25, String(pointsValue(ev(0.25))));
+      check('...and a half is not silently promoted', pointsValue(ev(0.5)) === 0.5,
+        String(pointsValue(ev(0.5))));
+      check('whole points are untouched', pointsValue(ev(3)) === 3 && pointsValue(ev(2, 2)) === 4,
+        `${pointsValue(ev(3))} / ${pointsValue(ev(2, 2))}`);
+
+      // And how it is SHOWN. A balance must never read higher than what can be spent, because
+      // affordability is computed from the true number and the button would disagree with it.
+      check('*** a balance is floored, never rounded up ***', fmtPoints(3.75) === '3',
+        fmtPoints(3.75));
+      check('...a whole balance shows plainly', fmtPoints(4) === '4', fmtPoints(4));
+      check('...and a part-point earning is still visible rather than shown as nothing',
+        fmtPoints(0.75) === '0.75', fmtPoints(0.75));
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;

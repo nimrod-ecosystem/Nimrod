@@ -70,13 +70,47 @@ export const POINTS_KIND   = 'points';        // event kind within the stream
 
 // ---------- pure helpers (no I/O — the math the dashboard and the tests share) ----------
 
-// What one award is actually worth: base x multiplier, rounded to a whole point.
+/**
+ * What one award is actually worth: base x multiplier.
+ *
+ * *** IT USED TO ROUND TO A WHOLE POINT, AND THAT HAD TO GO. *** Chat's #5 scores a trivia
+ * answer at **1 / 0.75 / 0.5 / 0.25** by guess. Through `Math.round` those become **1 / 1 / 1 /
+ * 0** — every guess but the last worth the same, and the last worth nothing. The scheme cannot
+ * exist while the ledger rounds.
+ *
+ * *** THE RECORD KEEPS WHAT HAPPENED. ROUNDING IS A DISPLAY CHOICE. *** That is the same rule
+ * this project already holds for content, and it is the safer half of the trade: a stored 0.75
+ * can always be shown as 1, and a stored 1 can never be shown as 0.75.
+ *
+ * WHAT THIS DOES NOT BREAK, checked rather than assumed: affordability in `quests.js` is
+ * `balance >= r.cost` against the TRUE balance, so a fractional balance simply cannot offer a
+ * reward it will then refuse. The only exposure was a DISPLAYED balance overstating what could
+ * be spent, and the displays floor for exactly that reason — see `fmtPoints`.
+ */
 export function pointsValue(ev) {
   const d = (ev && ev.data) || {};
   const amount = Number(d.amount);
   if (!Number.isFinite(amount)) return 0;
   const mult = Number(d.mult);
-  return Math.round(amount * (Number.isFinite(mult) && mult > 0 ? mult : 1));
+  return amount * (Number.isFinite(mult) && mult > 0 ? mult : 1);
+}
+
+/**
+ * A points figure as somebody reads it.
+ *
+ * *** FLOOR, NEVER ROUND, FOR ANYTHING THAT BEHAVES LIKE A BALANCE. *** Rounding 3.75 to 4 puts
+ * a 4 on screen beside a reward costing 4 that the button correctly refuses — the number and the
+ * control disagree, and the person cannot tell which is lying. Flooring can only ever understate,
+ * which is the direction that keeps a promise.
+ *
+ * Fractions below a whole point are shown to two decimals rather than hidden: somebody who just
+ * earned 0.75 for a second-guess answer should see that it counted.
+ */
+export function fmtPoints(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return '0';
+  if (Number.isInteger(v)) return String(v);
+  return Math.abs(v) < 1 ? String(Math.round(v * 100) / 100) : String(Math.floor(v));
 }
 
 // A shared stream may one day carry other kinds; totals only ever count `points`.
