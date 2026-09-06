@@ -25,7 +25,7 @@ lands. Run the server first:
 <script type="module">
 import { createProfilesClient } from '../profile.js';
 import { listManifests } from '../module.js';
-import { mountScreens, moduleCatalog, kioskURL } from '../home.js';
+import { mountHome, mountScreens, moduleCatalog, kioskURL } from '../home.js';
 import '../modules/clock.js';
 import '../modules/photos.js';
 import '../modules/sprint.js';
@@ -208,6 +208,46 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const orphan = await fetch(`/api/profiles/${doomed.id}/events/points`, { headers: { 'X-Dev-User': USER } });
     check('its recorded points were NOT deleted with it', orphan.status === 404 || orphan.ok,
       String(orphan.status));
+
+    // ── PRIORITY.md #6: SIGN OUT, SWITCH ACCOUNT, GUEST MODE ───────────────
+    //
+    // "Mike cannot test as anybody else, and every test he runs pollutes the record." Only the
+    // first of the three existed.
+    //
+    // SWITCH ACCOUNT is the one genuinely missing: /auth/logout clears OUR session and not
+    // Google's, so signing back in silently picks the same account up again with no prompt.
+    // `?switch=1` is what makes the server ask Google for the account chooser -- so the QUERY
+    // STRING is the feature, and it is asserted rather than just the presence of a link.
+    //
+    // TRY AS A GUEST is not new machinery: `?demo=1` already boots the kiosk on a local
+    // throwaway backend that touches no account. It was reachable only from the landing page's
+    // iframe -- which is to say, not reachable by the person who needed it.
+    {
+      const shell = document.createElement('div');
+      document.body.append(shell);
+      await mountHome(shell, {
+        email: 'someone@example.com',
+        profiles: createProfilesClient({ user: USER }),
+        manifests: listManifests(),
+        user: USER,
+        mountTab: () => {},          // the seam that lets this drive the sidebar, not seven panels
+      });
+      const links = [...shell.querySelectorAll('.s-side a')]
+        .map((a) => ({ t: a.textContent.trim(), h: a.getAttribute('href') || '' }));
+      const find = (re) => links.find((l) => re.test(l.t));
+      const all = JSON.stringify(links);
+      check('signed in, the sidebar offers Sign out', !!find(/sign out/i), all);
+      const sw = find(/switch account/i);
+      check('*** ...and Switch account, which did not exist at all ***', !!sw, all);
+      check('*** ...asking Google for the chooser, which is the whole feature ***',
+        !!sw && /[?&]switch=1\b/.test(sw.h), sw ? sw.h : 'no link');
+      const guest = find(/guest/i);
+      check('*** ...and a way in as a guest, so a test does not touch the record ***',
+        !!guest, all);
+      check('...pointing at the local throwaway kiosk rather than the account one',
+        !!guest && /[?&]demo=1\b/.test(guest.h), guest ? guest.h : 'no link');
+      shell.remove();
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
