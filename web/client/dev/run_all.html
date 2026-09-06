@@ -145,7 +145,24 @@ function parseSummary(text) {
   // warns about, arriving through the parser instead of the clock.
   m = text.match(/PASS WITH SKIPS\s*[—-]\s*(\d+)\s+checks/i);
   if (m) return { passed: +m[1], failed: 0 };
+  // *** A FIFTH SHAPE, AND IT COMES WITH A SECOND ELEMENT ID. ***
+  //
+  // `rng` and `statemachine` report `12/12 passed · all green` into `#tally`, not `#summary`.
+  // Neither this page nor `run_suite.py` looked at that element or that wording, so BOTH SUITES
+  // HAVE ALWAYS SHOWN AS AMBER `no summary` HERE — two healthy suites, filed as hangs, for as
+  // long as this page has existed. Found by running all 86 from the terminal in one go, which
+  // is the first time anybody had a list of every suite's verdict side by side.
+  m = text.match(/(\d+)\s*\/\s*(\d+)\s+passed/i);
+  if (m) return { passed: +m[1], failed: (+m[2]) - (+m[1]) };
   return null;
+}
+
+// WHERE THE VERDICT LIVES. `#summary` is the convention; `#tally` is an older one that two
+// suites still use, and rewriting two working suites to satisfy a harness is the wrong way
+// round — the harness is what should know the repo it is reporting on.
+function verdictText(doc) {
+  const el = doc.getElementById('summary') || doc.getElementById('tally');
+  return el ? el.textContent : null;
 }
 
 // A suite may ask for longer than the default by putting `data-timeout-ms` on its `#summary`.
@@ -177,7 +194,7 @@ function runOne(name) {
       let text = null, parsed = null;
       try {
         const doc = frame.contentDocument;
-        text = doc?.getElementById('summary')?.textContent || null;
+        text = verdictText(doc);
         parsed = parseSkip(doc) || parseSummary(text) || parseResultsObject(frame.contentWindow);
       } catch { /* still loading */ }
       // "running…" parses as nothing, which is what keeps this from reading a half-finished

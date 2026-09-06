@@ -194,6 +194,12 @@ PASSY = re.compile(r'(?:ALL\s+PASS|PASS\s+WITH\s+SKIPS)\D*(\d+)?', re.I)
 # start so a per-check "1 SKIPPED" inside a PASS line cannot be mistaken for it — which is why
 # PASSY is tried first.
 SKIPPED = re.compile(r'^\s*SKIPPED\b', re.I)
+# A FIFTH SHAPE, IN A SECOND ELEMENT. `rng` and `statemachine` write `12/12 passed - all
+# green` into `#tally`, not `#summary`. Neither this tool nor `run_all.html` looked at that
+# element or that wording, so BOTH SUITES HAVE ALWAYS BEEN REPORTED AS UNFINISHED -- two
+# healthy suites filed as hangs for as long as either harness has existed. Found by running
+# all 86 in one go, which is the first time anybody had every verdict side by side.
+SLASHED = re.compile(r'(\d+)\s*/\s*(\d+)\s+passed', re.I)
 
 
 def parse_summary(text):
@@ -208,6 +214,10 @@ def parse_summary(text):
         return int(m.group(1) or 0), 0
     if SKIPPED.match(text):
         return (0, 0)
+    m = SLASHED.search(text)
+    if m:
+        passed, total = int(m.group(1)), int(m.group(2))
+        return passed, max(0, total - passed)
     return None
 
 
@@ -229,7 +239,12 @@ async def run_one(cdp, name):
     text = ''
     parsed = None
     while time.time() < deadline:
-        text = await cdp.js("(document.getElementById('summary')||{}).textContent || ''") or ''
+        # `#summary` is the convention; `#tally` is an older one two suites still use.
+        # The harness should know the repo it reports on, rather than two working suites
+        # being rewritten to satisfy the harness.
+        text = await cdp.js(
+            "((document.getElementById('summary')||document.getElementById('tally'))||{})"
+            ".textContent || ''") or ''
         parsed = parse_summary(text)
         if parsed or text.startswith('threw'):
             break
