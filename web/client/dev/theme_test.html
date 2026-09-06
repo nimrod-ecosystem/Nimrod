@@ -10,6 +10,11 @@
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
 </style>
+<!-- REQUIRED, not decoration: the contrast checks below measure rules that live in
+     THIS stylesheet. Without it every surface has a transparent background, the
+     measurement is of nothing, and it reports ten failures that are about the
+     harness rather than the product. Same note as youtube_test carries. -->
+<link rel="stylesheet" href="../modules.css">
 </head>
 <body>
 <h1>themes — integration test</h1>
@@ -112,6 +117,79 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
 
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  // ── *** EVERY THEME MUST BE READABLE, MEASURED ON REAL ELEMENTS *** ──────
+  //
+  // B6 was "the text is hard to read", and it was fixed by putting the kiosk's panels on
+  // `var(--card)` -- a matched pair with `--ink` in every theme. FOUR RULES WERE MISSED:
+  // `.dv-row`, `.rp-row`, `.bk-text` and `.tv-opt`, each pairing a hardcoded `#fff` with
+  // `color: var(--ink)`.
+  //
+  // That is invisible in four themes and catastrophic in the fifth: `--ink` is a NEAR-WHITE in
+  // dusk, so ink on hardcoded white measured **1.17** against a 4.5 floor. Dusk is "for a
+  // bedside screen at night" -- the theme most likely to be in front of the person this project
+  // is for -- and one of the four was the TRIVIA ANSWER BUTTONS.
+  //
+  // This mounts the real classes under each real theme and measures what a person would see.
+  // Reading the stylesheet for the string `#fff` would not do: the defect is a COMBINATION of
+  // two declarations, and the next one will be written with a different literal.
+  {
+    const lum = (c) => {
+      const m = c.match(/\d+(\.\d+)?/g).map(Number);
+      const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+      return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]);
+    };
+    const ratio = (a, b) => {
+      const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+      return (x + 0.05) / (y + 0.05);
+    };
+    // The surfaces that carry text on a themed background. Grown when a new one appears --
+    // which is the point: a rule added with a literal white lands here, not on a screen.
+    const SURFACES = [
+      ['.tv-opt', 'button', 'trivia answer button'],
+      ['.dv-row', 'div', 'devices row'],
+      ['.rp-row', 'div', 'record panel row'],
+      ['.bk-text', 'textarea', 'the question bank editor'],
+    ];
+    for (const id of Object.keys(THEMES)) {
+      const box = document.createElement('div');
+      // *** THE CONTAINER CARRIES `color: var(--ink)`, BECAUSE THE REAL ONE DOES. ***
+      //
+      // `home.html` sets `body{background:var(--bg);color:var(--ink)}`, so every panel inside
+      // the shell inherits a THEMED text colour. This page's own body hardcodes `#0A3323`, and
+      // without this line the surfaces below inherit that instead -- which reported `.dv-row`
+      // and `.rp-row` as failing at 1.14:1 in dusk when they are fine in the product.
+      //
+      // That is a harness artifact, and fixing the PRODUCT for it would have been the wrong
+      // move twice over: it would have hidden nothing real and added two declarations to carry
+      // for ever. The suite has to reproduce the app, not the app the suite.
+      box.style.color = 'var(--ink)';
+      document.body.append(box);
+      applyTheme(box, id);
+      for (const [cls, tag, what] of SURFACES) {
+        const el = document.createElement(tag);
+        el.className = cls.slice(1);
+        el.textContent = 'Sample';
+        box.append(el);
+        const cs = getComputedStyle(el);
+        // *** A TRANSPARENT BACKGROUND IS UNMEASURABLE, NOT BLACK. *** The first run of this
+        // reported ten failures at 1.51:1 against `rgba(0, 0, 0, 0)`, because the stylesheet was
+        // not linked and every surface had no background at all -- and the arithmetic quietly
+        // treated "transparent" as "black", which passed dusk and failed the other four. A
+        // measurement of nothing that returns a plausible number is worse than an error.
+        const alpha = (cs.backgroundColor.match(/[\d.]+/g) || [])[3];
+        if (alpha !== undefined && Number(alpha) === 0) {
+          check(`${id}: ${what} has a background to measure`, false,
+            `${cs.backgroundColor} - is modules.css linked?`);
+          continue;
+        }
+        const r = ratio(cs.color, cs.backgroundColor);
+        check(`${id}: ${what} is readable (${r.toFixed(2)}:1)`, r >= 4.5,
+          `${cs.color} on ${cs.backgroundColor} = ${r.toFixed(2)}, needs 4.5`);
+      }
+      box.remove();
+    }
   }
 
   const sum = document.getElementById('summary');
