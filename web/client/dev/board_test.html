@@ -49,7 +49,7 @@ matter more than anything else here.</p>
 import {
   TIERS, KINDS, tierOf, tierFor, cellPosition, slotCenter,
   normalizeBoard, checkBoard, addWord, removeWord, firstFree, promote, gridOf,
-  YESNO, CARE, BUILTIN_BOARDS,
+  YESNO, CARE, UNIVERSAL, BUILTIN_BOARDS,
 } from '../aac_vocab.js';
 import { SYMBOLS, SYMBOL_NAMES, symbolSvg } from '../aac_symbols.js';
 import { createBus } from '../bus.js';
@@ -280,7 +280,14 @@ try {
   // =====================================================================================
   section('the symbols');
   {
-    check('the whole set came across', SYMBOL_NAMES.length === 23, String(SYMBOL_NAMES.length));
+    // Not a count for its own sake: 23 was the whole set before the core vocabulary landed, and
+    // a bare number here would have to be edited every time a symbol is drawn. What matters is
+    // that the original set is still intact and the new one arrived whole.
+    check('the original set is all still here',
+      ['yes', 'no', 'okay', 'hi', 'thanks', 'love', 'stop', 'wait', 'pain', 'help', 'hot',
+       'cold', 'suction', 'change', 'bedpan', 'tired', 'rephrase', 'keyboard', 'more',
+       'all_done', 'music', 'mom', 'dad'].every((n) => SYMBOLS[n]),
+      JSON.stringify(SYMBOL_NAMES));
     check('every one is a complete svg',
       SYMBOL_NAMES.every((n) => /^<svg/.test(SYMBOLS[n]) && /<\/svg>$/.test(SYMBOLS[n])),
       JSON.stringify(SYMBOL_NAMES.filter((n) => !/<\/svg>$/.test(SYMBOLS[n]))));
@@ -291,6 +298,73 @@ try {
       SYMBOL_NAMES.filter((n) => SYMBOLS[n].includes('currentColor')).length >= 15,
       String(SYMBOL_NAMES.filter((n) => SYMBOLS[n].includes('currentColor')).length));
     check('a missing symbol is empty, never a broken box', symbolSvg('nope') === '' && symbolSvg(null) === '');
+  }
+
+  // =====================================================================================
+  section('*** the core set \u2014 a starter vocabulary, which neither other board is ***');
+  {
+    // `CARE` is one person's board and says so. `YESNO` is three cards, complete for what they
+    // are. Until this landed there was nothing to hand somebody who does not yet have a board,
+    // and that was the honest reason the AAC module could not be given to a stranger.
+    check('*** there is a board written for nobody in particular ***', !!BUILTIN_BOARDS.core);
+    const core = normalizeBoard(UNIVERSAL);
+    check('it is thirty-six words', core.cells.filter(Boolean).length === 36,
+      String(core.cells.filter(Boolean).length));
+    check('...with no holes in it', core.cells.every(Boolean));
+    check('...laid out 6 by 6, its own grid rather than a tier',
+      gridOf(core).cols === 6 && gridOf(core).rows === 6, JSON.stringify(gridOf(core)));
+    check('...and the grid holds exactly the words, no more and no fewer',
+      gridOf(core).cells === core.cells.length, JSON.stringify([gridOf(core).cells, core.cells.length]));
+
+    // *** EVERY CARD HAS A DRAWING. *** The care board shipped with a known gap - no eat/drink
+    // symbols, so those cards would have rendered word-only - and that gap is written down in
+    // aac_vocab.js as a real limitation. A starter set arriving with the same hole would be
+    // the same mistake with a wider blast radius, since this is the board a stranger meets.
+    const noSymbol = core.cells.filter((c) => !c.symbol).map((c) => c.word);
+    check('*** every one of the thirty-six has a drawing ***', noSymbol.length === 0,
+      JSON.stringify(noSymbol));
+    check('...and no word is on it twice',
+      new Set(core.cells.map((c) => c.word.toLowerCase())).size === 36);
+    check('...and checkBoard is happy with it',
+      !checkBoard(UNIVERSAL).problems.some((x) => x.severity !== 'note'),
+      JSON.stringify(checkBoard(UNIVERSAL).problems));
+    check('every kind it uses is a known kind', core.cells.every((c) => KINDS.includes(c.kind)));
+
+    // *** AND IT IS NOT THE DEFAULT. *** Thirty-six cells in front of somebody on their first
+    // day is the opposite of a starter set. Which board a person begins on is a decision for
+    // whoever is with them, and the default stays the three cards that assume nothing.
+    const st = fakeState({});
+    const h = document.createElement('div');
+    h.style.cssText = 'position:relative;width:460px;height:420px';
+    document.body.append(h);
+    const inst = mountModule('board', {
+      mount: h, bus: createBus(), events: fakeEvents(), state: st, output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(30);
+    check('*** a screen that has chosen nothing does NOT open on thirty-six cards ***',
+      inst.impl.__probe().boardId === 'yesno', inst.impl.__probe().boardId);
+
+    st.set({ boardId: 'core' });
+    await sleep(40);
+    check('choosing it puts all thirty-six on the screen',
+      inst.impl.__probe().cells === 36, String(inst.impl.__probe().cells));
+    check('...drawn in a 6x6 grid, or its transpose, and never at a tier',
+      inst.impl.__probe().grid.cols * inst.impl.__probe().grid.rows === 36,
+      JSON.stringify(inst.impl.__probe().grid));
+    check('...and the words are on the cards',
+      /\bI\b/.test(inst.impl.__probe().words.join(' '))
+        && inst.impl.__probe().words.join(' ').includes('Where'),
+      JSON.stringify(inst.impl.__probe().words.slice(0, 6)));
+    // The boundary this whole module is built around, asserted on the one card that tempts it.
+    let sent = [];
+    const busX = createBus();
+    check('*** the Help card is on it, and it is still a card that only speaks ***',
+      core.cells.some((c) => c.word === 'Help')
+        && !JSON.stringify(UNIVERSAL).includes('notify'),
+      'a board must never be the thing someone uses to summon help');
+    inst.destroy();
+    h.remove();
   }
 
   // =====================================================================================
@@ -489,8 +563,8 @@ try {
     host.querySelector('[data-gear]').click();
     await sleep(20);
     check('the gear opens the panel', inst.impl.__probe().panelOpen === true);
-    check('...and the panel offers both built-in boards',
-      JSON.stringify(inst.impl.__probe().panelBoards) === '["yesno","care"]',
+    check('...and the panel offers every built-in board',
+      JSON.stringify(inst.impl.__probe().panelBoards) === '["yesno","core","care"]',
       JSON.stringify(inst.impl.__probe().panelBoards));
     const sel = host.querySelector('[data-pboard]');
     sel.value = 'care';
@@ -525,7 +599,7 @@ try {
     check('somebody who wants the row can still have it',
       inst.impl.__probe().boardsShown === true);
     check('...and it offers the same boards the panel does',
-      JSON.stringify(inst.impl.__probe().boards) === '["yesno","care"]',
+      JSON.stringify(inst.impl.__probe().boards) === '["yesno","core","care"]',
       JSON.stringify(inst.impl.__probe().boards));
     host.querySelector('[data-board="yesno"]')?.click();
     await sleep(40);
