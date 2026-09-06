@@ -548,6 +548,63 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       inst5.destroy(); st5.destroy(); ev5.destroy(); host5.remove();
     }
 
+    // ── *** A PANEL SOMEBODY CANNOT LEAVE. THE SAFETY ONE. *** ─────────────
+    //
+    // Mike opened this panel on the deployed site, added a playlist, and COULD NOT GET OUT.
+    // Escape did nothing, there was no close button, and the sheet is inset on all four sides
+    // so it covered the gear that opened it. He escaped by navigating to Photos and back.
+    //
+    // On a bedside screen that is somebody stuck in a panel they cannot leave without help --
+    // and it is the undismissable-gate failure `CLAUDE.md` names, arriving through a settings
+    // sheet rather than a modal. It was reachable because I un-hid this panel the same day, so
+    // the check belongs next to the feature that caused it.
+    //
+    // THREE WAYS OUT, and three is not belt-and-braces: the close button is for a pointer, the
+    // gear is for somebody who remembers how they got in, and Escape is for a keyboard. A
+    // switch user has whichever of those is bound.
+    {
+      const panel = () => host.querySelector('.youtube .settings');
+      const gear = host.querySelector('.youtube .gear');
+
+      gear.click();
+      check('the panel opens', panel().hidden === false);
+      const closeBtn = host.querySelector('.youtube [data-close]');
+      check('*** it has a visible way out ***', !!closeBtn && closeBtn.offsetParent !== null,
+        closeBtn ? 'present but not displayed' : 'no close button');
+      closeBtn.click();
+      check('...and pressing it leaves', panel().hidden === true);
+
+      // EACH WAY OUT IS TESTED FROM A KNOWN STATE, set directly rather than by pressing the
+      // previous control. Chained through clicks, a broken Escape left the panel open and the
+      // NEXT line's `gear.click()` closed it -- so the failure surfaced under the neighbour's
+      // name and "Escape leaves" passed. A check that reports somebody else's fault is worth
+      // less than no check.
+      panel().hidden = false;
+      host.querySelector('.youtube').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      check('*** Escape leaves ***', panel().hidden === true);
+
+      panel().hidden = false;
+      // The gear must still be REACHABLE while the panel is open -- it was underneath it, which
+      // is why pressing the thing that opened it did not close it.
+      //
+      // Checked by STACKING ORDER rather than `elementFromPoint`: this suite's host sits outside
+      // the viewport, so hit-testing a coordinate returns null and reports "nothing at that
+      // point" -- a harness limit dressed up as a product failure, which is the fourth time
+      // today one of those has fooled me. z-index is the property that was actually wrong.
+      const gz = Number(getComputedStyle(gear).zIndex);
+      const pz = Number(getComputedStyle(panel()).zIndex);
+      check('*** the gear stacks ABOVE the panel it opened, so it is still pressable ***',
+        Number.isFinite(gz) && Number.isFinite(pz) && gz > pz, `gear ${gz} vs panel ${pz}`);
+      gear.click();
+      check('...so the control that opened it also closes it', panel().hidden === true);
+
+      // Escape with the panel already shut must not do anything surprising elsewhere.
+      host.querySelector('.youtube').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      check('Escape with nothing open is harmless', panel().hidden === true);
+    }
+
     // ── G13: THE ONLY WAY TO CHOOSE A VIDEO HAS TO BE ON SCREEN ────────────
     //
     // Mike, off the live site: "YouTube's overlay covers everything on hover and there is no
