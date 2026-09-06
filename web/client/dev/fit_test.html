@@ -255,15 +255,35 @@ function signature(host) {
       check(`director slot "${slot.dataset.prov}" is a containing block`,
         cs.position === 'relative', `${slot.className} -> ${cs.position}`);
     }
-    // The two hosts that already declared it, read off the classes their own files ship.
-    for (const [what, cls] of [['the kiosk grid cell', 'k-cell mod-box'],
-                               ['the parts page stage', 'trystage mod-box']]) {
+    // *** THE OTHER TWO HOSTS, READ OUT OF THE FILES THAT SHIP THEM. ***
+    //
+    // The director's slots above are checked properly, by mounting one. `kiosk.js` and
+    // `modules.html` cannot be mounted here without most of a signed-in shell, and typing their
+    // class strings into this file would repeat the exact mistake the comment above describes:
+    // a check that spells out the thing it is checking is checking itself.
+    //
+    // So it fetches the source and asserts the class is still there. That is a WEAKER check
+    // than computed style and it is worth saying so — it proves the words are in the file, not
+    // that the element ends up with them. What it does catch is the actual regression: somebody
+    // deleting `mod-box` from a host, which is how the director came to be missing it.
+    for (const [what, file, pattern] of [
+      ['the kiosk grid cell', '../kiosk.js', /k-cell mod-box/],
+      ['the parts page stage', '../modules.html', /trystage mod-box/],
+    ]) {
+      let src = '';
+      try { src = await (await fetch(file)).text(); } catch { /* reported below */ }
+      check(`${what} still declares mod-box`, pattern.test(src),
+        src ? 'class not found in the file' : `could not read ${file}`);
+    }
+    // And that the class does what the two of them are relying on.
+    {
       const el = document.createElement('div');
-      el.className = cls;
+      el.className = 'mod-box';
       el.style.cssText = 'width:400px;height:300px';
       document.body.append(el);
       const cs = getComputedStyle(el);
-      check(`${what} is a size container`, cs.containerType === 'size', cs.containerType);
+      check('mod-box makes a size container', cs.containerType === 'size', cs.containerType);
+      check('...and a containing block', cs.position === 'relative', cs.position);
       el.remove();
     }
     host.unmount(dhost);
