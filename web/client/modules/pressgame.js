@@ -100,7 +100,14 @@ const DEFAULTS = {
   musicVolume: 0.3,
   speak: true,          // say the cues aloud, through the person's own output routing
   rewardWord: 'Well done',
-  calm: false,          // motion budget
+  // *** MOTION DEFAULTS TO CALM (chat, 2026-09-06). ***
+  //
+  // The sparks and the celebration are the fun of this game and they are also the part with a
+  // photosensitivity note attached (see SAFETY_FLOOR_MS). The person most likely to meet this
+  // module first is somebody at a bedside screen, and for them the quieter version is the one
+  // that is safe to be wrong about. It is a DEFAULT, not a rule -- anybody who wants the full
+  // motion turns it on, and nobody who already chose either way is moved.
+  calm: true,           // motion budget
   // OPEN TO A MENU RATHER THAN STRAIGHT INTO PLAY (Mike, 2026-09-02).
   //
   // The panel used to mount and be mid-round immediately, so somebody looking at it for the
@@ -181,8 +188,31 @@ const SETTINGS = [
     onLabel: 'Tones on', offLabel: 'Silent' },
   { key: 'speak', label: 'Say the cues out loud', default: true, level: 'essential',
     onLabel: 'Spoken — "Wait", "Go"', offLabel: 'On screen only' },
-  { key: 'rewardWord', label: 'What it says when they get it', kind: 'text', default: 'Well done',
-    level: 'standard' },
+  // *** IT WAS A TEXT FIELD, AND THE MENU RENDERED IT AS “Well done. Needs a keyboard”. ***
+  //
+  // Chat: that reads as a REQUIREMENT of the game rather than as a note about the control.
+  // `settings_fields.js` marks every text field `needs a keyboard`, correctly -- a one-switch
+  // user cannot type -- but on this row the effect was that the one thing a family would most
+  // want to change was the one thing the bedside menu could not change.
+  //
+  // A choice, so it is cycleable from a switch. Mike's own was *“I love you”*, which is the
+  // whole argument for this row existing: what a screen says to somebody at the moment they
+  // succeed is not a system message.
+  //
+  // THE TRADE, STATED: an arbitrary typed phrase is no longer settable from this menu. That is
+  // a real loss and it is the smaller one -- a list anybody can reach beats a field only a
+  // keyboard can reach, on a module whose whole point is that it works with one switch. Adding
+  // a free-text escape back is a shell change (a choice that also accepts typing), not a
+  // module one.
+  { key: 'rewardWord', label: 'What it says when they get it', kind: 'choice',
+    default: 'Well done', level: 'standard',
+    options: [
+      { value: 'Well done', label: 'Well done' },
+      { value: 'I love you', label: 'I love you' },
+      { value: 'Yes!', label: 'Yes!' },
+      { value: 'Good one', label: 'Good one' },
+      { value: 'That’s it', label: 'That’s it' },
+    ] },
   { key: 'music', label: 'Music', kind: 'choice', default: 'ambient', level: 'essential',
     options: [
       { value: 'ambient', label: 'A quiet hum — needs nothing' },
@@ -200,8 +230,9 @@ const SETTINGS = [
       { value: 0.3, label: 'Quiet' },
       { value: 0.55, label: 'Present' },
     ] },
-  { key: 'calm', label: 'Motion', default: false, level: 'standard',
-    onLabel: 'Calm — less movement', offLabel: 'Normal' },
+  { key: 'calm', label: 'Motion', default: true, level: 'standard',
+    onLabel: 'Calm — less movement', offLabel: 'Normal',
+    note: 'Calm by default. Turn it off for the full sparks and celebration.' },
   { key: 'stopQuietMs', label: 'After a win, wait for stillness', kind: 'choice', default: 3000,
     level: 'advanced',
     options: [
@@ -949,6 +980,48 @@ registerModule(
         const onDown = () => { press('pointer'); };
         canvas.addEventListener('pointerdown', onDown);
         offs.push(() => canvas.removeEventListener('pointerdown', onDown));
+
+        // ------------------------------------------------------------------------------
+        // *** SETTINGS TAKE EFFECT WHILE IT IS RUNNING. THEY DID NOT. ***
+        // ------------------------------------------------------------------------------
+        //
+        // `cfg` was read once at `init` and never again -- this module subscribed to the bus
+        // three times and to its own state NOT AT ALL. So every row in its settings menu was
+        // inert while the panel was on screen: change the wait, the music, the volume, the
+        // motion, and nothing happened until somebody remounted it.
+        //
+        // Found while answering chat's *“there is no way to hear the music while setting its
+        // volume”* -- which is true, and is not really about the music. There was no way to
+        // hear or see ANY setting take effect.
+        //
+        // *** WHAT APPLIES AT ONCE AND WHAT WAITS, AND WHY THE SPLIT IS NOT ARBITRARY. ***
+        //
+        // Appearance and sound apply immediately: that is the point, and a volume you cannot
+        // hear while setting is not a control.
+        //
+        // TIMING DOES NOT. Changing the wait length mid-wait would move the target under
+        // somebody who is holding off against it -- the same family as a layout reflowing
+        // under a learned reach, and worse here because she is actively counting. The new
+        // length is picked up by the NEXT wait, which is a decision somebody made taking
+        // effect at the next honest opportunity.
+        offs.push(state?.subscribe?.(() => {
+          const was = cfg;
+          cfg = { ...DEFAULTS, ...(state.get() || {}) };
+          if (music) {
+            music.setVolume?.(cfg.musicVolume);
+            if (cfg.music !== was.music
+                || cfg.musicSourceId !== was.musicSourceId
+                || cfg.musicAlbum !== was.musicAlbum) {
+              if (cfg.music === 'off') music.off();
+              else if (cfg.music === 'folder') {
+                music.useFolder(cfg.musicSourceId, cfg.musicAlbum).catch(() => {});
+              } else music.useAmbient();
+            }
+          }
+          // The wait length, only when nothing is being timed against it. Outside a wait
+          // there is nobody holding off, so there is nothing to move.
+          if (phase !== 'wait' && phase !== 'go') curWaitMs = Math.max(floorMs(), cfg.waitMs);
+        }) || (() => {}));
 
         // GAMEPLAY channel.
         offs.push(bus.subscribe('pressgame/press', () => press('verb')));
