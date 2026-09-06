@@ -297,7 +297,12 @@ registerModule(
         el.play?.().catch(() => {});
       } else {
         el = document.createElement('img');
-        el.src = item.url; el.alt = item.name || '';
+        // 'Photo' rather than '' when a source supplies no caption, and rather than the
+        // filename. The demo listing deliberately sends no captions now (Mike: do not turn
+        // `20260313_003702.jpg` into a caption), and "20260313 003702" read aloud by a screen
+        // reader is noise. A plain category word is the honest thing to say about a picture
+        // nobody has described.
+        el.src = item.url; el.alt = item.name || 'Photo';
       }
       el.style.objectFit = cfg.fit;
       el.className = 'shot';

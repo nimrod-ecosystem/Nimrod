@@ -23,6 +23,26 @@
 # purpose: `*.wav` above is a privacy safety net and must keep catching everything else.
 !web/client/aac/audio/*.wav
 
+# *** THE DEMO PHOTOS. Same shape as the audio above, and it needed the same narrow exception. ***
+#
+# Mike dropped four photographs of Nimrod -- the cat the project is named after -- into
+# `web/client/demo-media/files/` and reported the job DONE. It was not: `*.jpg` above caught
+# every one of them, so they sat on his disk, never appeared in GitHub Desktop's Changes tab,
+# and would never have deployed. That is the `*.wav` story repeating exactly (see G10), which is
+# why the un-ignore is written the same way: ONE folder, named, with the reason next to it.
+#
+# SAFE UNDER THE RULE AT THE TOP OF THIS FILE: they are photographs of a cat -- checked, one by
+# one, before this line was written. No people, no faces, no documents, nothing identifying. And
+# the copies committed here are re-encoded for the web, which also drops the camera EXIF the
+# originals carry. `**/media/` above does not catch `demo-media`, and the safety net keeps
+# catching everything else.
+!web/client/demo-media/files/*.jpg
+!web/client/demo-media/files/*.jpeg
+!web/client/demo-media/files/*.png
+# NOT the originals folder beside it. Full-size camera files stay local: they are 11 MB against
+# 700 KB, and nothing serves them.
+web/client/demo-media/originals/
+
 # Secrets & local config
 .env
 .env.*

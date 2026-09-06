@@ -3,53 +3,37 @@
   "albums": [],
   "items": [
     {
-      "id": "first-light.svg",
-      "name": "First light",
-      "path": "first-light.svg",
+      "id": "20260227_142535.jpg",
+      "name": "",
+      "path": "20260227_142535.jpg",
       "kind": "image",
-      "size": 979,
+      "size": 179214,
       "mtime": 0
     },
     {
-      "id": "garden.svg",
-      "name": "Garden",
-      "path": "garden.svg",
+      "id": "20260313_003657.jpg",
+      "name": "",
+      "path": "20260313_003657.jpg",
       "kind": "image",
-      "size": 968,
+      "size": 81006,
       "mtime": 0
     },
     {
-      "id": "long-field.svg",
-      "name": "Long field",
-      "path": "long-field.svg",
+      "id": "20260313_003702.jpg",
+      "name": "",
+      "path": "20260313_003702.jpg",
       "kind": "image",
-      "size": 976,
+      "size": 98296,
       "mtime": 0
     },
     {
-      "id": "morning-window.svg",
-      "name": "Morning window",
-      "path": "morning-window.svg",
+      "id": "4743899645659987719.jpg",
+      "name": "",
+      "path": "4743899645659987719.jpg",
       "kind": "image",
-      "size": 984,
-      "mtime": 0
-    },
-    {
-      "id": "quiet-water.svg",
-      "name": "Quiet water",
-      "path": "quiet-water.svg",
-      "kind": "image",
-      "size": 978,
-      "mtime": 0
-    },
-    {
-      "id": "warm-evening.svg",
-      "name": "Warm evening",
-      "path": "warm-evening.svg",
-      "kind": "image",
-      "size": 980,
+      "size": 348955,
       "mtime": 0
     }
   ],
-  "count": 6
+  "count": 4
 }
