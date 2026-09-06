@@ -88,6 +88,46 @@ export const DEFAULT_ITEMS = [
 // override, which lives inside saved content rather than in settings and therefore needs the
 // same fallback one level down.
 const DEFAULTS = { items: null, displayMs: 8000, autoAdvance: true, directed: false };
+
+// ---------------------------------------------------------------------------------------
+// *** IT DECLARED NO SETTINGS AT ALL, AND IT HAS FOUR. ***
+// ---------------------------------------------------------------------------------------
+//
+// `displayMs`, `autoAdvance` and `directed` have always been read from state and there has never
+// been a menu that could set any of them -- the same gap `pressgame`'s last three rows turned out
+// to be, and the same one F4 named: live config that no surface can reach. Somebody could change
+// how long a word stays on screen only by editing storage.
+//
+// *** WHAT IS NOT HERE, AND WHY IT IS NOT A ROW I CAN INVENT. ***
+//
+// Chat, from Mike testing the live site: Educational *"counted to five for somebody who can count
+// to a hundred, and the level is unsettable."* That is the real complaint and this does not fix
+// it. A level dial needs BANDED CONTENT to select between, and the seven built-in items are one
+// band -- so a "level" row would be a control with one position, which is worse than none because
+// it claims the problem is solved. The answer is the shared content source chat keeps arriving at
+// from every direction ("give it a topic or a source, get back vocabulary, questions and lesson
+// material at a set difficulty"), and that is architecture, not a settings row. Recorded rather
+// than papered over with a dial that does nothing.
+const SETTINGS = [
+  // ESSENTIAL. How long a word stays on screen is the whole reading experience for somebody who
+  // needs longer than eight seconds, and they cannot tell you that it is going too fast.
+  { key: 'displayMs', label: 'How long each one stays', kind: 'choice', default: 8000,
+    level: 'essential',
+    options: [
+      { value: 5000,  label: '5 seconds' },
+      { value: 8000,  label: '8 seconds' },
+      { value: 15000, label: '15 seconds' },
+      { value: 30000, label: '30 seconds' },
+      { value: 60000, label: 'A minute' },
+    ] },
+  // ESSENTIAL for the same reason and in the same direction: turning it off means the screen
+  // waits for a person instead of moving on without them.
+  { key: 'autoAdvance', label: 'Move on by itself', default: true, level: 'essential',
+    onLabel: 'Yes — after the time above', offLabel: 'No — wait to be moved on',
+    note: 'Turn this off for somebody who is being shown these by a person.' },
+  { key: 'directed', label: 'Somebody else is driving', default: false, level: 'advanced',
+    onLabel: 'Yes — a person or a rule chooses what shows', offLabel: 'No — it picks its own' },
+];
 const LEGACY_DISPLAY = { key: 'displaySec', scale: 1000 };
 const RECENT_CAP = 8;
 
@@ -116,7 +156,8 @@ registerModule(
     // empty stage. That is A9 ("Educational is blank") seen from the other side - the frame is
     // local, every piece of content is not.
   { type: 'educational', title: 'Educational',
-    dependsOn: 'server', description: 'Gentle alphabet, counting and vocabulary, spoken aloud' },
+    dependsOn: 'server', description: 'Gentle alphabet, counting and vocabulary, spoken aloud',
+    settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, events, user, profileId } = ctx;
     const speak = ctx.speak || speakDefault;                       // injectable (no audio in tests)
