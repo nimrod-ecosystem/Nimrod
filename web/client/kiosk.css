@@ -164,6 +164,14 @@
      tooltip. Pressing it brings it into the panel that has focus — see `showUnplaced`. */
   .k-dot.k-off{opacity:.62;border-style:dashed}
   .k-dot.k-off:hover{opacity:1}
+  /* *** A PANEL WITH NOTHING TO PRESS STILL HAS A BUTTON — see D16 in kiosk.js. ***
+     It used to be REMOVED from the bar the moment it was placed, so pressing a button deleted
+     that button and a switch user could not get the panel back. It is drawn quieter instead:
+     pressing it moves the outline there and the control set is honestly empty. Quieter, never
+     hidden — an empty control area is a correct answer, a vanishing button is not. */
+  .k-dot.k-nover{opacity:.7}
+  .k-dot.k-nover:hover{opacity:1}
+  .k-dot.k-nover.on{opacity:1}
   /* `border-left` only when the actions are on the SAME ROW as the panel buttons. Once the bar
      wraps, a left border on a row that starts at the left edge is a stray vertical line. */
   .k-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}

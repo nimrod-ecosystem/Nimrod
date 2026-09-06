@@ -237,7 +237,19 @@ function fakeTimers() {
       user: USER, profileId: profile.id, rootBus: bus, instanceId: mod.id,
       makeState: (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o }),
       makeEvents: (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o }),
-      machineIO: { setTimer: dt.setTimer, clearTimer: dt.clearTimer },
+      // *** `rand` IS INJECTED, AND WITHOUT IT THIS SUITE WAS FLAKY. ***
+      //
+      // The director weighted-picks its next provider. With no `rand` the machine falls back
+      // to Math.random, so which provider was on screen when the assertions below ran was a
+      // coin toss -- and the checks that follow publish progress as `youtube` and expect a
+      // `timeout`. On the runs where `personal` had been picked they saw `{provider:
+      // "personal", reason: "empty"}` and failed, which was the PRODUCT BEHAVING CORRECTLY:
+      // an empty provider ends as empty.
+      //
+      // Two different failures on two consecutive runs of an untouched tree is what gave it
+      // away. A suite that fails at random defends nothing -- the next person to see it red
+      // reruns it until it is green, which is the same as not having it.
+      machineIO: { setTimer: dt.setTimer, clearTimer: dt.clearTimer, rand: () => 0 },
       setTimer: dt.setTimer, clearTimer: dt.clearTimer,
       playerFactory, speak: () => {},
     });

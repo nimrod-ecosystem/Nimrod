@@ -204,13 +204,29 @@ function unreachableChips() {
       [...root.querySelectorAll('.k-cell')].map((c) => c.dataset.kind || '-').join(', '));
 
     const afterLabels = labels();
-    // NOT asserting the bar holds the same NUMBER of chips, and that is deliberate rather than
-    // a gap. It does not: a module with no verbs has a chip while unplaced (pressing it brings
-    // the panel on) and loses it the moment it lands, because the router will not focus it. So
-    // pressing a button can delete that button. That is real, it is measured, and it is a
-    // question about what such a chip should DO -- recorded as D16 for Mike rather than
-    // answered here. A check that fails on every run until somebody makes a decision trains
-    // everybody to read red as normal, which this repo has already been bitten by.
+    // *** D16, AND THIS CHECK EXISTS NOW BECAUSE THE BUG DOES NOT. ***
+    //
+    // This used to be a paragraph explaining why the count was deliberately NOT asserted: a
+    // module with no verbs had a chip while unplaced (pressing it brought the panel on) and
+    // lost it the moment it landed, because the router would not focus it. **Pressing a button
+    // deleted that button**, and there was then no way to send the panel back.
+    //
+    // Chat reclassified it from a question to a bug, and the reasoning is why it is asserted
+    // rather than negotiated: *"a control that removes itself when pressed is the failure mode
+    // Nimrod exists to prevent. Somebody using one switch cannot recover from it, and on a
+    // bedside screen nobody is there to undo it."*
+    check('*** pressing a panel\u2019s button does not delete that button ***',
+      afterLabels.length === beforeLabels.length,
+      `${beforeLabels.length} chips before, ${afterLabels.length} after: ${afterLabels.join(', ')}`);
+    const questsNow = chips().find((b) => /quest/i.test(b.textContent));
+    check('...the panel that was just placed still has one', !!questsNow, afterLabels.join(', '));
+    // AND IT DOES NOT LIE ABOUT WHAT IT CAN DO, which is what the old filter was protecting.
+    // The honest answer is an empty control set, said on the chip, not a missing button.
+    check('...marked as a panel with nothing to press, rather than removed',
+      questsNow?.classList.contains('k-nover'), questsNow?.className || 'no chip');
+    check('...and it can be pressed again \u2014 focus goes there and nothing is destroyed',
+      (() => { questsNow?.click(); return !!chips().find((b) => /quest/i.test(b.textContent)); })(),
+      labels().join(', '));
     // Every panel that was NOT involved in the swap has to be exactly where it was. The two
     // that swapped trade places with each other; nothing else may move.
     const swapped = new Set();
