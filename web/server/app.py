@@ -1164,7 +1164,7 @@ def _safe_next(path: str | None) -> str | None:
 
 
 @app.get("/auth/login")
-async def auth_login(request: Request, next: str | None = None):
+async def auth_login(request: Request, next: str | None = None, switch: int = 0):
     if not GOOGLE_OK:
         raise HTTPException(status_code=503, detail="Google login is not configured")
     # WHERE THE PERSON WAS GOING, remembered across the round trip.
@@ -1184,7 +1184,19 @@ async def auth_login(request: Request, next: str | None = None):
     # OAUTH_REDIRECT_URI is an escape hatch if the proxy-built URL is ever wrong;
     # otherwise build it from the request (needs uvicorn --proxy-headers behind TLS).
     redirect_uri = os.environ.get("OAUTH_REDIRECT_URI") or str(request.url_for("auth_callback"))
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    # *** `?switch=1` IS THE ONLY WAY TO SIGN IN AS SOMEBODY ELSE. ***
+    #
+    # PRIORITY.md #6: "Mike cannot test as anybody else, and every test he runs pollutes the
+    # record." `/auth/logout` clears OUR session and nothing else -- Google's is untouched -- so
+    # signing in again silently picks the same account back up with no prompt. There was no
+    # account switch anywhere in the product; logging out and back in looked like one and was
+    # not.
+    #
+    # `prompt=select_account` makes Google ask. It is NOT the default, deliberately: forcing an
+    # account chooser on every ordinary sign-in buys nothing and costs a click each time, and
+    # the person who needs it knows they need it. The sidebar link passes it.
+    extra = {"prompt": "select_account"} if switch else {}
+    return await oauth.google.authorize_redirect(request, redirect_uri, **extra)
 
 
 @app.get("/auth/callback", name="auth_callback")

@@ -137,7 +137,22 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
           ${email ? `<div class="s-email">${esc(email)}</div>` : ''}
           ${isSignedIn
             ? '<a class="s-signout" href="/auth/logout">Sign out</a>'
-            : '<a class="s-signout" href="/auth/login">Sign in</a>'}
+              // PRIORITY.md #6, the other two thirds of it. SIGN OUT existed and the other two
+              // did not.
+              //
+              // SWITCH ACCOUNT: /auth/logout clears our session and not Google's, so signing
+              // back in silently picks the same account up again. ?switch=1 asks Google to show
+              // the chooser. Without it there is no way to be anybody else.
+              //
+              // TRY AS A GUEST: this is not new machinery, it is machinery nobody could reach.
+              // ?demo=1 already boots the kiosk on a local throwaway backend with seeded sample
+              // media -- nothing it does touches an account. That is exactly the "every test he
+              // runs pollutes the record" problem, already solved and linked from nowhere but
+              // the landing page's iframe.
+              + '<a class="s-signout" href="/auth/login?switch=1">Switch account</a>'
+              + '<a class="s-signout" href="/kiosk.html?demo=1">Try as a guest</a>'
+            : '<a class="s-signout" href="/auth/login">Sign in</a>'
+              + '<a class="s-signout" href="/kiosk.html?demo=1">Try as a guest</a>'}
         </div>
       </nav>
       <main class="s-main">
