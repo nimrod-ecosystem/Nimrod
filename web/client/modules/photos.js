@@ -136,7 +136,12 @@ registerModule(
   // FALLBACK EXPOSURE: `local`. The bytes come from the media agent rather than the platform,
   // so photos survive the platform being down - which is most of why this is the fallback of
   // choice - but not the drive being unmounted.
-  { type: 'photos', title: 'Photos', description: 'Their own photos, on a loop. For most people this is the whole reason to set a screen up.',
+  { type: 'photos', title: 'Photos', // DESCRIBES, DOES NOT JUSTIFY (PRIORITY.md #4). The second sentence used to read "For most
+    // people this is the whole reason to set a screen up" - true, and an argument rather than a
+    // description. This string is what the Add-module picker shows somebody CHOOSING, where the
+    // question is what the thing does. The argument still exists where it belongs, in the
+    // catalog's `why` on the parts page.
+    description: 'Their own photos, on a loop. Reads them straight off your machine.',
     importance: 'critical', dependsOn: 'local', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
