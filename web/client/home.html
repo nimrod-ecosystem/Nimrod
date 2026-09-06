@@ -34,8 +34,22 @@
   .s-out{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line,#e4e0c2)}
   .s-link{display:block;text-decoration:none;color:var(--midnight);font-weight:650}
   .s-link:hover{background:rgba(0,0,0,.05)}
+  /* A BUTTON NOW, NOT A LINK — it mounts the module here instead of navigating away. Styled
+     like the quiet link it replaced, because it is the same offer in the same place; what
+     changed is that taking it no longer costs somebody the dashboard they were building. */
   .h-modsee{display:inline-block;margin-top:2px;font-size:.85rem;font-weight:650;
-    color:var(--midnight)}
+    color:var(--midnight);background:none;border:0;padding:0;cursor:pointer;
+    font-family:inherit;text-decoration:underline;text-underline-offset:3px}
+  .h-modsee:hover{color:var(--moss,#839958)}
+  .h-modsee:focus-visible{outline:3px solid var(--moss,#839958);outline-offset:3px}
+  /* THE PREVIEW BOX. A fixed height, because a module sizes itself to the box it is given and
+     a box that sizes itself to the module is a page that jumps every time somebody opens one.
+     320px is enough to judge a panel by and small enough to leave the picker on screen — the
+     whole point is that the decision and the evidence are visible at once. */
+  .h-modpreview{margin-top:10px}
+  .h-modstage{position:relative;height:320px;overflow:hidden;
+    border:1px solid var(--line,#e4e0c2);border-radius:var(--radius,10px);
+    background:var(--card,#fff)}
   .s-foot{margin-top:auto;padding:0 8px;font-size:.8rem;display:flex;flex-direction:column;gap:4px}
   .s-email{color:var(--muted);word-break:break-all}
   .s-signout{color:var(--midnight)}

@@ -126,6 +126,76 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       chips().join(',') === 'Quests,Progress', JSON.stringify(chips()));
     check('a filled screen can now be opened', !q('[data-open]').disabled);
 
+    // *** "SEE IT RUNNING" MOUNTS IT HERE. IT USED TO NAVIGATE AWAY. ***
+    //
+    // Chat's #10. The old version was a link to /modules.html?m=<type>: the right answer on the
+    // wrong page. Somebody halfway through building a dashboard was taken off it, and the way
+    // back was the browser's back button. Deciding whether to add a module is a decision made
+    // HERE, next to the picker and the dashboard it would go on, so the evidence belongs here.
+    {
+      const see = q('[data-modsee]');
+      check('*** the offer to see it running is not a link off the page ***',
+        !!see && see.tagName === 'BUTTON' && !see.getAttribute('href'),
+        see ? see.tagName + ' href=' + see.getAttribute('href') : 'missing');
+      q('[data-pick]').value = 'quests';
+      q('[data-pick]').dispatchEvent(new Event('change', { bubbles: true }));
+      see.click();
+      await sleep(1500);
+      const box = q('[data-modpreview]');
+      check('*** pressing it puts a real module on the page ***',
+        !box.hidden && !!box.querySelector('.h-modstage.mod-host'),
+        box.hidden ? 'still hidden' : box.innerHTML.slice(0, 140));
+      check('...in a box that declares itself a container, so the module fits it',
+        !!box.querySelector('.h-modstage.mod-box'));
+      // *** THE BOX HAS TO ACTUALLY BOUND IT. ***
+      //
+      // Found by looking at the render: this page has never linked modules.css -- it had no
+      // reason to until it started mounting modules -- so the first working version drew the
+      // module as raw markup running off the bottom of the document. Every check still passed,
+      // because a module that mounts and answers to `mod-host` is mounted whether or not
+      // anything styled it. Somebody pressing "see it running" would have concluded the module
+      // was broken, which is the exact opposite of what the button is for.
+      const stage = box.querySelector('.h-modstage');
+      check('*** the stylesheet the module needs is loaded, on demand ***',
+        !!document.querySelector('link[data-modules-css]'));
+      // A RANGE, NOT A CEILING. The first version asserted "<= 340" and passed with the fix
+      // reverted -- a box with no height at all collapses to zero, which is under the ceiling
+      // and is not a preview. Both ways of failing have to fail.
+      const stageH = Math.round(stage.getBoundingClientRect().height);
+      check('*** and the preview is BOUNDED — neither running off the page nor collapsed ***',
+        stageH >= 300 && stageH <= 340, stageH + 'px tall');
+      check('...with a definite size, which is what container-type:size needs to contain at all',
+        /\d/.test(stage.style.height), stage.style.height || 'no inline height');
+      check('...and the dashboard being built is still on screen underneath it',
+        cards().length === 1 && !!q('[data-open]'));
+      check('...with the button now offering the way back out',
+        /hide/i.test(see.textContent), see.textContent);
+
+      // A PREVIEW OF THE WRONG MODULE IS WORSE THAN NONE -- it answers a question somebody has
+      // stopped asking, and it answers it convincingly.
+      q('[data-pick]').value = 'progress';
+      q('[data-pick]').dispatchEvent(new Event('change', { bubbles: true }));
+      await sleep(250);
+      check('*** moving the picker takes the old preview down rather than leaving it lying ***',
+        q('[data-modpreview]').hidden === true);
+
+      q('[data-modsee]').click();
+      await sleep(1500);
+      check('and it can be opened again on the new choice',
+        !q('[data-modpreview]').hidden && !!q('[data-modpreview] .mod-host, [data-modpreview] .h-modstage.mod-host'));
+      q('[data-modsee]').click();
+      await sleep(250);
+      check('...and closed', q('[data-modpreview]').hidden === true);
+
+      // LEFT OPEN, TO LOOK AT. Same reason board_test mounts a live board at the bottom: a box
+      // somebody is meant to judge a module in is a thing you have to SEE, and three real bugs
+      // in this session were found by looking at a render rather than by reading a probe.
+      q('[data-pick]').value = 'quests';
+      q('[data-pick]').dispatchEvent(new Event('change', { bubbles: true }));
+      q('[data-modsee]').click();
+      await sleep(1200);
+    }
+
     // the hand-off to the kiosk — the whole point of the page
     const pid = q('[data-open]').dataset.open;
     q('[data-open]').click();
