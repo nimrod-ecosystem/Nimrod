@@ -151,6 +151,59 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       pickDaypart([{ name: 'Empty', start: 8 }, SCHED[0]], at(9)).name === 'Morning');
     check('daypart: no schedule at all is null', pickDaypart([], at(9)) === null);
 
+    // ── FROM THIS TIME TO THAT TIME ─────────────────────────────────────────
+    //
+    // Mike: "a scheduler that can say play this from this time to that time, that from then to
+    // then." Start-only entries cannot express it, because they have no way to say "and the
+    // rest of the day, nothing" — the last one always wraps and something always matches.
+    const RANGE = [
+      { name: 'Lunch',  start: 12, end: 13, playlistId: 'PLlunch' },
+      { name: 'Night',  start: 22, end: 6,  playlistId: 'PLnight' },   // wraps midnight
+    ];
+    check('range: inside it, it plays', pickDaypart(RANGE, at(12, 30))?.name === 'Lunch',
+      JSON.stringify(pickDaypart(RANGE, at(12, 30))));
+    check('range: the start is inside', pickDaypart(RANGE, at(12))?.name === 'Lunch',
+      JSON.stringify(pickDaypart(RANGE, at(12))));
+    check('*** range: the end is NOT inside — [start, end) ***',
+      pickDaypart(RANGE, at(13)) === null, JSON.stringify(pickDaypart(RANGE, at(13))));
+    check('*** range: a gap really is a gap, and that is the new capability ***',
+      pickDaypart(RANGE, at(15)) === null, JSON.stringify(pickDaypart(RANGE, at(15))));
+    // OPTIONAL CHAINING THROUGHOUT, and it is not style. Written with `.name` these six
+    // checks abort the whole suite on the first null -- proved by disabling range support and
+    // watching one "unexpected error: cannot read properties of null" replace every result
+    // after it. `board_test` records the same lesson in its own words. A regression should say
+    // which line broke, not swallow the section.
+    check('range: one that wraps midnight covers the late side',
+      pickDaypart(RANGE, at(23, 30))?.name === 'Night',
+      JSON.stringify(pickDaypart(RANGE, at(23, 30))));
+    check('...and the early side', pickDaypart(RANGE, at(3))?.name === 'Night',
+      JSON.stringify(pickDaypart(RANGE, at(3))));
+    check('...and not the middle of the afternoon', pickDaypart(RANGE, at(16)) === null);
+
+    // *** EVERY SCHEDULE SAVED BEFORE THIS HAS NO `end`, AND MUST BEHAVE EXACTLY AS IT DID. ***
+    // This is the check that makes the feature safe to ship rather than the ones above: the
+    // whole block of start-only assertions further up still passes, and this states the
+    // guarantee out loud so nobody has to infer it from their continued presence.
+    check('*** a start-only schedule is untouched by the new option ***',
+      pickDaypart(SCHED, at(9))?.name === 'Morning'
+        && pickDaypart(SCHED, at(2))?.name === 'Sleepytime'
+        && pickDaypart(SCHED, at(19))?.name === 'Primetime');
+
+    // A range wins over a start-only entry covering the same hour: it is the specific
+    // statement, and somebody who wrote one meant it.
+    const MIXED = [{ name: 'AllDay', start: 0, playlistId: 'PLall' },
+                   { name: 'Lunch', start: 12, end: 13, playlistId: 'PLlunch' }];
+    check('a range beats a start-only entry over the same hour',
+      pickDaypart(MIXED, at(12, 30))?.name === 'Lunch',
+      JSON.stringify(pickDaypart(MIXED, at(12, 30))));
+    check('...and outside the range the start-only entry still covers the day',
+      pickDaypart(MIXED, at(15))?.name === 'AllDay',
+      JSON.stringify(pickDaypart(MIXED, at(15))));
+
+    // A plausible typo must not silently mean "never".
+    check('a zero-length range is read as a whole day, not an empty one',
+      pickDaypart([{ name: 'Odd', start: 9, end: 9, playlistId: 'PLodd' }], at(3))?.name === 'Odd');
+
     const profiles = createProfilesClient({ user: USER });
     const profile = await profiles.create('TEST-youtube');
     const mod = await profiles.addModule(profile.id, 'youtube');
@@ -264,7 +317,7 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
         String(stub2.current()));
       check('the videos came from the playlist, not the running order YouTube would use',
         stub2.loaded.length === 1);
-      check('the panel names the daypart that is on', /playing Morning now/.test(host2.textContent),
+      check('the panel names the daypart that is on', /Morning[\s\S]*now/.test(host2.textContent),
         host2.textContent.slice(0, 160));
 
       inst2.destroy();
@@ -334,42 +387,115 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       inst4.destroy(); st4.destroy(); ev4.destroy(); host4.remove();
     }
 
+
+    // *** THE TWO BLOCKS BELOW USED TO SIT AFTER THIS `catch`, AND ONE OF THEM STOPPED THE
+    // WHOLE SUITE DEAD. ***
+    //
+    // Out there, `state` is not in scope -- it is a `const` declared inside this try -- so the
+    // schedule block threw a ReferenceError OUTSIDE any catch. The async function rejected, the
+    // summary stayed on "running…" forever, and `run_suite` reported the suite as unfinished
+    // with no failing line to point at. That is the worst way for a check to break: it looks
+    // like a hang, not a mistake.
+    //
+    // The G13 block next to it had the same bug and got away with it, which is the part worth
+    // recording: `host` resolves out there ANYWAY, because an element with `id="host"` is
+    // exposed by the browser as `window.host`. It passed for a reason that has nothing to do
+    // with being correct, and would have broken the moment somebody renamed the div.
+    //
+    // Both live inside the try now, where the things they drive are declared.
+    // ── THE SCHEDULE CAN BE WRITTEN, NOT ONLY READ ─────────────────────────
+    //
+    // `cfg.schedule` has been read since this module was written and NOTHING COULD WRITE IT --
+    // the panel printed a one-line summary of a setting no UI could set. Same shape as A14, and
+    // the reason Mike's "play this from this time to that time" read as entirely missing when
+    // half of it was already in the file.
+    //
+    // Driven through the real inputs and the real button, because the point of the row is that a
+    // person can use it; calling `state.set` here would test the state handle.
+    {
+      const panel = host.querySelector('.youtube .settings');
+      const before = (state.get().schedule || []).length;
+      host.querySelector('[data-sch-name]').value = 'Lunch';
+      host.querySelector('[data-sch-from]').value = '12:00';
+      host.querySelector('[data-sch-to]').value = '13:30';
+      host.querySelector('[data-sch-list]').value = 'https://www.youtube.com/playlist?list=PLlunchtime';
+      host.querySelector('[data-sch-add]').click();
+      await sleep(30);
+      const sched = state.get().schedule || [];
+      const row = sched[sched.length - 1];
+      check('*** the panel can add a schedule entry at all ***', sched.length === before + 1,
+        JSON.stringify(sched));
+      check('...with the playlist parsed out of a full URL', row && row.playlistId === 'PLlunchtime',
+        JSON.stringify(row));
+      check('...and the times stored as hours', row && row.start === 12 && row.end === 13.5,
+        JSON.stringify(row));
+
+      // AN EMPTY "to" MUST NOT WRITE AN `end` KEY. `pickDaypart` tells the two kinds of entry
+      // apart by whether that key holds a finite number, and a row saved with `end: undefined`
+      // would be a third thing nobody wrote a rule for.
+      host.querySelector('[data-sch-name]').value = 'Evening';
+      host.querySelector('[data-sch-from]').value = '18:00';
+      host.querySelector('[data-sch-to]').value = '';
+      host.querySelector('[data-sch-list]').value = 'PLevening';
+      host.querySelector('[data-sch-add]').click();
+      await sleep(30);
+      const open = (state.get().schedule || []).slice(-1)[0];
+      check('*** leaving "to" empty writes no end at all, the way older rows are ***',
+        open && !('end' in open), JSON.stringify(open));
+
+      // And it says no to nonsense rather than saving it.
+      const n = (state.get().schedule || []).length;
+      host.querySelector('[data-sch-from]').value = '09:00';
+      host.querySelector('[data-sch-list]').value = 'not a playlist';
+      host.querySelector('[data-sch-add]').click();
+      await sleep(30);
+      check('a bad playlist is refused rather than saved',
+        (state.get().schedule || []).length === n, JSON.stringify(state.get().schedule));
+
+      // The rows render, with the range shown for the one that has an end.
+      const sched2 = host.querySelector('[data-sched]');
+      check('the entries are listed with their times',
+        /12:00.{0,3}13:30/.test(sched2.textContent) && /from 18:00/.test(sched2.textContent),
+        sched2.textContent.slice(0, 160));
+      if (panel) panel.hidden = true;
+    }
+
+    // ── G13: THE ONLY WAY TO CHOOSE A VIDEO HAS TO BE ON SCREEN ────────────
+    //
+    // Mike, off the live site: "YouTube's overlay covers everything on hover and there is no
+    // obvious way to choose a video from the panel." There was no way at all: modules.css
+    // carried `.youtube .nav,.youtube .gear,.youtube .settings{display:none}` — right for
+    // photos and camera, whose every setting is declared in their manifest and therefore
+    // reachable from the universal menu, and wrong for this one, which declares ONE setting
+    // while adding a video, using a playlist, the schedule, shuffle and auto-advance all live
+    // in that hidden panel. Nothing else in the product edits a playlist.
+    //
+    // Asserted as COMPUTED STYLE, not as "the element exists". The elements always existed;
+    // that is exactly why nobody noticed, and why the audit page counted them as controls.
+    {
+      const gear = host.querySelector('.youtube .gear');
+      const nav = host.querySelector('.youtube .nav');
+      check('*** the gear is on screen, not display:none ***',
+        gear && getComputedStyle(gear).display !== 'none',
+        gear ? getComputedStyle(gear).display : 'no gear');
+      check('*** and so are the previous/next arrows ***',
+        nav && getComputedStyle(nav).display !== 'none',
+        nav ? getComputedStyle(nav).display : 'no nav');
+      // Pressing it opens the panel that holds the playlist editor. A visible gear that opens
+      // nothing would pass the two checks above and fix nothing.
+      const panel = host.querySelector('.youtube .settings');
+      const wasHidden = panel.hidden;
+      gear.click();
+      check('*** pressing the gear opens the panel that adds a video ***',
+        wasHidden === true && panel.hidden === false
+          && !!panel.querySelector('[data-add-url]') && !!panel.querySelector('[data-add]'),
+        `hidden ${wasHidden} -> ${panel.hidden}`);
+      gear.click();
+      check('...and pressing it again puts it away', panel.hidden === true);
+    }
+
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));
-  }
-
-  // ── G13: THE ONLY WAY TO CHOOSE A VIDEO HAS TO BE ON SCREEN ────────────
-  //
-  // Mike, off the live site: "YouTube's overlay covers everything on hover and there is no
-  // obvious way to choose a video from the panel." There was no way at all: modules.css
-  // carried `.youtube .nav,.youtube .gear,.youtube .settings{display:none}` — right for
-  // photos and camera, whose every setting is declared in their manifest and therefore
-  // reachable from the universal menu, and wrong for this one, which declares ONE setting
-  // while adding a video, using a playlist, the schedule, shuffle and auto-advance all live
-  // in that hidden panel. Nothing else in the product edits a playlist.
-  //
-  // Asserted as COMPUTED STYLE, not as "the element exists". The elements always existed;
-  // that is exactly why nobody noticed, and why the audit page counted them as controls.
-  {
-    const gear = host.querySelector('.youtube .gear');
-    const nav = host.querySelector('.youtube .nav');
-    check('*** the gear is on screen, not display:none ***',
-      gear && getComputedStyle(gear).display !== 'none',
-      gear ? getComputedStyle(gear).display : 'no gear');
-    check('*** and so are the previous/next arrows ***',
-      nav && getComputedStyle(nav).display !== 'none',
-      nav ? getComputedStyle(nav).display : 'no nav');
-    // Pressing it opens the panel that holds the playlist editor. A visible gear that opens
-    // nothing would pass the two checks above and fix nothing.
-    const panel = host.querySelector('.youtube .settings');
-    const wasHidden = panel.hidden;
-    gear.click();
-    check('*** pressing the gear opens the panel that adds a video ***',
-      wasHidden === true && panel.hidden === false
-        && !!panel.querySelector('[data-add-url]') && !!panel.querySelector('[data-add]'),
-      `hidden ${wasHidden} -> ${panel.hidden}`);
-    gear.click();
-    check('...and pressing it again puts it away', panel.hidden === true);
   }
 
   const sum = document.getElementById('summary');

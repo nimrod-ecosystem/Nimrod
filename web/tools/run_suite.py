@@ -45,6 +45,7 @@ SHOT_SIZE (default 1400x900). Any argument ending in `.html` is a page rather th
 import asyncio
 import json
 import os
+import random
 import re
 import shutil
 import socket
@@ -136,11 +137,34 @@ class CDP:
 
 
 def url_for(name):
+    """The URL for a suite name, a page name, or a URL passed straight through.
+
+    *** A FRESH `?user=` ON EVERY SUITE RUN, AND IT IS NOT COSMETIC. ***
+
+    The suites default to a FIXED server-side user when none is given -- `youtube_test.html`
+    uses `youtube-test-user` -- and several of them count rows they appended: "prev() did NOT
+    log a play" asserts an exact number of play events. Run against the same user twice and
+    those rows accumulate, so the count drifts and the check eventually fails for a reason that
+    has nothing to do with the code.
+
+    That is exactly what happened: `youtube` reported `plays=26 expected=23`, then passed twice
+    in a row on re-run. A suite that fails on the third run and passes on the fourth teaches
+    everybody to re-run until it is green, which is how a real failure gets waved through.
+
+    `run_all.html` already solved this and this file had not copied the solution -- it appends
+    `?user=runall-<name>-<random>` to every iframe. Same fix, same reason.
+    """
     if name.startswith('http://') or name.startswith('https://'):
-        return name
-    if name.endswith('.html'):
-        return f'{BASE}/{name.lstrip("/")}'
-    return f'{BASE}/dev/{name}_test.html'
+        url = name
+    elif name.endswith('.html'):
+        url = f'{BASE}/{name.lstrip("/")}'
+    else:
+        url = f'{BASE}/dev/{name}_test.html'
+    # Only for suites, and only when the caller has not chosen a user themselves.
+    if url.endswith('_test.html') and 'user=' not in url:
+        stem = url.rsplit('/', 1)[-1][:-len('_test.html')]
+        url += f'?user=suite-{stem}-{random.randint(0, 10**6)}'
+    return url
 
 
 # *** THERE ARE FOUR SUMMARY SHAPES IN dev/, AND READING ONLY SOME OF THEM MISREPORTS THE REST. ***

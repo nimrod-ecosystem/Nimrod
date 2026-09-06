@@ -293,6 +293,19 @@
   border-radius:8px;border:1px solid rgba(255,255,255,.28);background:transparent;color:inherit;
   cursor:pointer}
 .youtube .settings .list{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+/* The schedule editor. Wraps rather than scrolls sideways, because a panel can be a quarter of
+   a screen and four fields in a row do not fit one. */
+.youtube .yt-schedadd{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px}
+.youtube .yt-schedadd input[type=text]{flex:1 1 140px;min-width:0}
+.youtube .yt-schedadd input{padding:7px 9px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.06);color:inherit;font:inherit}
+.youtube .yt-schedadd button{min-height:34px;padding:6px 12px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.28);background:transparent;color:inherit;cursor:pointer}
+.youtube .yt-schhead{font-size:.82rem;opacity:.85;margin-bottom:4px}
+.youtube .ytrow{display:flex;align-items:center;gap:8px;justify-content:space-between;
+  font-size:.84rem}
+.youtube .ytrow button{min-height:30px;padding:4px 10px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.28);background:transparent;color:inherit;cursor:pointer}
 
 /* PAUSED, ON PURPOSE, BY SOMEBODY IN THE ROOM.
  *
