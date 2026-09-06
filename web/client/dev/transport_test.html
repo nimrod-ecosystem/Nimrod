@@ -189,11 +189,38 @@ function unreachableChips() {
     // Guarded: with the fix reverted there is no chip, and a TypeError here aborts everything
     // below it — including the bar-wrapping and panel-cycling checks, which are about different
     // fixes entirely. Proving a check can fail is worth nothing if the proof run skips the rest.
+    // *** THE BAR MUST NOT REARRANGE ITSELF UNDER A FINGER. ***
+    //
+    // PRIORITY.md #3: "panels rearranging when focus changes, which violates the same-position
+    // rule the whole product depends on." Recorded here BEFORE the swap so the two orders can
+    // be compared -- for somebody scanning this bar with one switch, a button that moves is a
+    // press spent on the wrong thing.
+    const beforeLabels = labels();
+    const questsAt = beforeLabels.findIndex((l) => /quest/i.test(l));
     quests?.click();
     await sleep(400);
     check('*** pressing an unplaced panel brings it onto the screen ***',
       !!root.querySelector('.k-cell[data-kind="quests"]'),
       [...root.querySelectorAll('.k-cell')].map((c) => c.dataset.kind || '-').join(', '));
+
+    const afterLabels = labels();
+    // NOT asserting the bar holds the same NUMBER of chips, and that is deliberate rather than
+    // a gap. It does not: a module with no verbs has a chip while unplaced (pressing it brings
+    // the panel on) and loses it the moment it lands, because the router will not focus it. So
+    // pressing a button can delete that button. That is real, it is measured, and it is a
+    // question about what such a chip should DO -- recorded as D16 for Mike rather than
+    // answered here. A check that fails on every run until somebody makes a decision trains
+    // everybody to read red as normal, which this repo has already been bitten by.
+    // Every panel that was NOT involved in the swap has to be exactly where it was. The two
+    // that swapped trade places with each other; nothing else may move.
+    const swapped = new Set();
+    const outgoing = beforeLabels.find((l, i) => afterLabels[i] !== l && !/quest/i.test(l));
+    if (outgoing) swapped.add(outgoing);
+    swapped.add(beforeLabels[questsAt]);
+    const moved = beforeLabels.filter((l, i) => !swapped.has(l) && afterLabels.indexOf(l) !== i);
+    check('*** and every panel that was not swapped stayed where it was ***',
+      moved.length === 0,
+      `moved: ${moved.join(', ')}  |  ${beforeLabels.join(', ')}  ->  ${afterLabels.join(', ')}`);
     // ...and the one it displaced is not lost: it becomes the unplaced one.
     check('...and the panel it replaced is still on the bar, now marked off',
       chips().some((b) => b.classList.contains('k-off')),
