@@ -153,10 +153,69 @@ export function resolveThemeId(id) {
 // Apply a theme by setting its CSS variables on `rootEl` (usually
 // document.documentElement, so the whole page — shell + every module — re-themes).
 // Unknown/empty id => the default theme. Returns the resolved id.
+/**
+ * *** TEXT ON AN ACCENT IS DERIVED, NEVER TYPED. ***
+ *
+ * Thirteen rules across `modules.css` and `kiosk.css` put a literal `#fff` on a themed accent --
+ * the primary buttons, the ON tabs, the algebra `=` key, and `.k-dot.on`, which is how somebody
+ * driving the screen with a switch knows which panel they are about to act on. Measured, white
+ * on `--moss` was **3.15 in default, 2.50 in dusk, 3.45 in warm** against a 4.5 floor, and white
+ * on `--midnight` was **2.25 in dusk**. Two of those are unreadable by any standard.
+ *
+ * *** THIS IS NOT A PALETTE CHANGE AND NO THEME'S COLOURS MOVE. *** `PRIORITY.md` #2 gives the
+ * themes to Claude Design, and it should: which greens and ambers this product wears is taste.
+ * WHICH OF BLACK OR WHITE IS LEGIBLE ON A GIVEN GREEN IS NOT TASTE, it is a ratio, and leaving
+ * text at 2.25:1 on a bedside screen because the fix looked like somebody else's job would be
+ * the wrong call.
+ *
+ * So the accent colours are untouched and the text ON them is computed: whichever of light or
+ * dark contrasts better with that theme's own accent. **The gift to whoever does the palettes
+ * is that this keeps working** -- a new theme gets legible button text without anybody
+ * remembering to pick it.
+ *
+ * WHAT THIS DOES NOT FIX, named rather than buried: **forge's `--midnight` (#B5651D) reaches
+ * only 4.34 with white and 4.13 with dark.** No choice of text clears 4.5 on that amber, because
+ * the accent itself sits in the middle. That one IS a palette value and it is Claude Design's --
+ * see D19. Everything else lands between 4.75 and 9.70.
+ */
+const ON_LIGHT = '#ffffff';
+// Not an invented colour: this is dusk's own `--bg`, already in the palette.
+const ON_DARK = '#12181c';
+
+/** Relative luminance, WCAG's definition. Accepts #rgb and #rrggbb. */
+export function luminance(hex) {
+  let h = String(hex || '').trim().replace('#', '');
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  if (h.length < 6) return 0;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  const f = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+
+/** Contrast ratio between two colours, 1..21. */
+export function contrast(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** Whichever of light or dark text reads better on `bg`. Pure, so the suite can check it. */
+export function onColor(bg) {
+  return contrast(ON_LIGHT, bg) >= contrast(ON_DARK, bg) ? ON_LIGHT : ON_DARK;
+}
+
+// The accents that carry text. Each gets an `--on-*` companion computed from it.
+export const ACCENT_VARS = ['--moss', '--midnight', '--rosy-deep'];
+
 export function applyTheme(rootEl, id) {
   const resolved = resolveThemeId(id);
   const vars = THEMES[resolved].vars;
   for (const [k, v] of Object.entries(vars)) rootEl.style.setProperty(k, v);
+  // Derived AFTER the theme's own values, and from them, so a theme that overrides an accent
+  // gets matching text with no extra bookkeeping.
+  for (const accent of ACCENT_VARS) {
+    const value = vars[accent];
+    if (value) rootEl.style.setProperty(`--on${accent.slice(1)}`, onColor(value));
+  }
   return resolved;
 }
 

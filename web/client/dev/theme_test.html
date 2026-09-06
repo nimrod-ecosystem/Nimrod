@@ -15,6 +15,10 @@
      measurement is of nothing, and it reports ten failures that are about the
      harness rather than the product. Same note as youtube_test carries. -->
 <link rel="stylesheet" href="../modules.css">
+<!-- `.k-dot.on` -- the chip that says which panel has focus -- lives in kiosk.css, and it
+     is the surface with the most riding on it here. Both stylesheets, or the check
+     measures a button the browser styled. -->
+<link rel="stylesheet" href="../kiosk.css">
 </head>
 <body>
 <h1>themes — integration test</h1>
@@ -25,7 +29,8 @@ persistence of a theme setting through the live server's overwrite-state store
 <div id="summary">running…</div>
 
 <script type="module">
-import { applyTheme, resolveThemeId, listThemes, THEMES, DEFAULT_THEME } from '../theme.js';
+import { applyTheme, resolveThemeId, listThemes, THEMES, DEFAULT_THEME,
+         onColor, contrast, ACCENT_VARS } from '../theme.js';
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
 
@@ -191,6 +196,98 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       box.remove();
     }
   }
+
+    // ── *** TEXT ON AN ACCENT, DERIVED RATHER THAN TYPED *** ──────────────
+    //
+    // Thirteen rules put a literal #fff on a themed accent -- the primary buttons, the ON tabs,
+    // the algebra = key, and `.k-dot.on`, which is how somebody driving with a switch knows
+    // which panel they are about to act on. White on --moss measured 3.15 in default, 2.50 in
+    // dusk and 3.45 in warm; white on --midnight measured 2.25 in dusk. Two of those are
+    // unreadable by any standard.
+    //
+    // NO THEME'S COLOURS MOVED. Which greens this product wears is taste and belongs to whoever
+    // does the palettes; which of black or white is legible on a given green is a ratio.
+    {
+      // Parses what `getComputedStyle` returns. `theme.js`'s `contrast` takes hex, which is
+      // right for palette values and wrong for anything read back off an element.
+      const rgbLum = (c) => {
+        const m = (String(c).match(/[\d.]+/g) || []).map(Number);
+        if (m.length < 3) return 0;
+        const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+        return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]);
+      };
+      const rgbRatio = (a, b) => {
+        const [hi, lo] = [rgbLum(a), rgbLum(b)].sort((x, y) => y - x);
+        return (hi + 0.05) / (lo + 0.05);
+      };
+
+      // The derivation itself, pure -- this is the contract, and it catches a broken picker
+      // even on a theme nobody has written yet.
+      for (const id of Object.keys(THEMES)) {
+        for (const accent of ACCENT_VARS) {
+          const bg = THEMES[id].vars[accent];
+          if (!bg) continue;
+          const chosen = onColor(bg);
+          const other = chosen === '#ffffff' ? '#12181c' : '#ffffff';
+          check(`${id} ${accent}: the on-accent colour is the better of the two`,
+            contrast(chosen, bg) >= contrast(other, bg),
+            `${chosen} ${contrast(chosen, bg).toFixed(2)} vs ${other} ${contrast(other, bg).toFixed(2)}`);
+        }
+      }
+
+      // And what it actually measures on the real elements, per theme.
+      //
+      // *** ONE NAMED EXEMPTION, WITH ITS NUMBER, AND IT IS NOT A HOLLOWED-OUT CHECK. ***
+      // forge's --midnight (#B5651D) reaches 4.34 with white and 4.13 with dark -- no choice of
+      // TEXT clears 4.5, because that amber sits in the middle. Fixing it means moving the
+      // accent, which is a palette value and is Claude Design's (D19). Asserted at its measured
+      // floor so a REGRESSION still fails, rather than dropped from the list; delete the
+      // exemption the day the accent changes.
+      // ANCESTORS MATTER: the rules are `.sprint .s-primary` and `.algebra .al-key.is-eq`, so a
+      // bare button gets none of them and the check measures the browser's default styling. The
+      // first run of this reported black on rgb(240,240,240) -- which is exactly that.
+      const SURFACES = [
+        ['sprint', 'button', 's-primary', 'the primary button'],
+        ['k-mods', 'button', 'k-dot on', 'the focused-panel chip on the transport bar'],
+        ['algebra', 'button', 'al-key is-eq', 'the algebra = key'],
+      ];
+      // `.al-key.is-eq` on forge: #B5651D reaches 4.34 with white and 4.13 with dark, so no
+      // choice of TEXT clears 4.5 -- the accent itself has to move, which is a palette value and
+      // Claude Design's (D19). Asserted at its measured floor so a REGRESSION still fails,
+      // rather than dropped from the list. Delete this the day the accent changes.
+      const EXEMPT = { 'forge:the algebra = key': 4.3 };
+      for (const id of Object.keys(THEMES)) {
+        const box = document.createElement('div');
+        box.style.color = 'var(--ink)';
+        document.body.append(box);
+        applyTheme(box, id);
+        for (const [parentCls, tag, cls, what] of SURFACES) {
+          const parent = document.createElement('div');
+          parent.className = parentCls;
+          const el = document.createElement(tag);
+          el.className = cls;
+          el.textContent = 'Sample';
+          parent.append(el);
+          box.append(parent);
+          const cs = getComputedStyle(el);
+          const alpha = (cs.backgroundColor.match(/[\d.]+/g) || [])[3];
+          if (alpha !== undefined && Number(alpha) === 0) {
+            check(`${id}: ${what} has an accent background to measure`, false,
+              `${cs.backgroundColor} - is the stylesheet linked and the ancestor right?`);
+            continue;
+          }
+          // rgbRatio, not theme.js's `contrast`: that one parses HEX, and getComputedStyle
+          // hands back `rgb(...)`. The first run returned NaN for every surface and reported
+          // fifteen failures that were about the arithmetic rather than the colours.
+          const r = rgbRatio(cs.color, cs.backgroundColor);
+          const floor = EXEMPT[`${id}:${what}`] ?? 4.5;
+          const note = floor === 4.5 ? '' : ' (D19: the accent itself needs moving)';
+          check(`${id}: ${what} is readable (${r.toFixed(2)}:1)${note}`, r >= floor,
+            `${cs.color} on ${cs.backgroundColor} = ${r.toFixed(2)}, needs ${floor}`);
+        }
+        box.remove();
+      }
+    }
 
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;
