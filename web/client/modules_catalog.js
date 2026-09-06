@@ -193,9 +193,12 @@ export const CATALOG = [
     // only in a source comment; the person it needs to reach is the one choosing this module.
     // The default itself is Mike's call and stands (G8) — this is honesty about it, not a
     // change to it, and the real answer is a proper starter vocabulary, which is D13.
-    note: 'The 16-word board is one family’s, included as a worked example — it has no food or '
-      + 'drink cards because they did not apply to the person it was made for. Expect to '
-      + 'rewrite it for yours.',
+    // It opens on Yes / No / Other. The 16-word board is there as a WORKED EXAMPLE of what a
+    // custom board looks like -- Mike's framing, and it turns the thing that made it a bad
+    // default into the thing that makes it useful (D13).
+    note: 'It opens on Yes / No / Other. The 16-word care board is included as an example of '
+      + 'what a board somebody has written for one person looks like — it has no food or drink '
+      + 'cards, because they did not apply to the person it was made for.',
   },
   {
     type: 'wallpaper',

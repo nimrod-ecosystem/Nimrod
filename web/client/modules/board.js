@@ -94,7 +94,10 @@ const CUSTOM_ID = 'custom';
 // The chips say what a caregiver would call these, not what the data calls them: `YESNO.name`
 // is "Yes or no" and `CARE.name` is "Talk", and a switcher reading "Talk" next to a module
 // that no longer is would be the exact confusion this rename removes.
-const BOARD_LABELS = { yesno: 'Yes / No / Other', care: 'Care board' };
+// The chips above the cards. `care` says "example" here too: the chip is what somebody choosing
+// a board actually reads, and a word that only appears in the settings menu is a word most
+// people will never see. Kept short — this sits over a communication surface, not a settings page.
+const BOARD_LABELS = { yesno: 'Yes / No / Other', care: 'Care board (example)' };
 export const SELECT_KIND = 'select';           // the durable record's event kind
 
 const DEFAULTS = {
@@ -115,7 +118,28 @@ const DEFAULTS = {
   //
   // Nobody's existing screen moves: this is a DEFAULT, so it applies only where no board has
   // been chosen and none has been built. See `boardFor`.
-  boardId: 'care',
+  // *** BACK TO `yesno`, AND THIS REVERSES WHAT G8 ASKED FOR. Mike's call, 2026-09-06. ***
+  //
+  // G8 was *"default it to the larger board rather than yes/no/other"*, and that shipped. Then
+  // the reason the larger board is larger got looked at: **the 16-word set is ONE PERSON'S
+  // board** — see `aac_vocab.js`, which says so and adds that it has no eat / drink / hungry /
+  // thirsty cards, *"which for anybody else is a hole in the middle of their vocabulary rather
+  // than a considered omission."* For somebody new that hole sits exactly where the most-used
+  // vocabulary in AAC normally is.
+  //
+  // Mike's answer: *"keep the care set, but as a labelled EXAMPLE board, not the default. It
+  // doubles as documentation for what a custom board looks like."*
+  //
+  // **`yesno` is not a smaller version of the same mistake.** It is three cards that are
+  // complete for what they are — yes, no, and a way to say "something else" — and nothing in it
+  // is specific to one person. It is a defensible default in a way a stranger's care words are
+  // not.
+  //
+  // THE REAL ANSWER IS STILL UNWRITTEN and is D13: Project Core's Universal Core, 36 words,
+  // designed as a starter vocabulary for somebody who does not have one. Blocked on its licence.
+  // Nothing invented here in the meantime — vocabulary for people with communication needs is
+  // not something to make up inside a default change.
+  boardId: 'yesno',
   scan: false,
   stepMs: SCAN_DEFAULTS.stepMs,
   // 'all' — every card visible, one highlighted. 'one' — only the lit card on screen.
@@ -189,10 +213,13 @@ const DEFAULTS = {
 };
 
 export const SETTINGS = [
-  { key: 'boardId', label: 'Which board', kind: 'choice', default: 'care', level: 'standard',
+  { key: 'boardId', label: 'Which board', kind: 'choice', default: 'yesno', level: 'standard',
     options: [
-      { value: 'care',  label: 'Care board (16 words)' },
       { value: 'yesno', label: 'Yes / No / Other' },
+      // LABELLED AS AN EXAMPLE, in the menu and on the board itself. Mike: it *"doubles as
+      // documentation for what a custom board looks like"* — which is a real use, and only
+      // works if nobody mistakes it for a starter set built for them.
+      { value: 'care',  label: 'Care board — an example (16 words)' },
     ] },
   // *** SWITCHING BOARDS IS ON THE BOARD, NOT ONLY IN THE MENU. ***
   //
@@ -303,8 +330,11 @@ registerModule(
      * picked one, and they keep exactly what they see today — their own board, or the default.
      * Only an explicit choice overrides, which is the only case where somebody has asked.
      *
-     * So the new `care` default cannot reach a screen that has a board on it, and cannot
-     * reach one where a person deliberately chose Yes / No / Other either.
+     * So a change of default cannot reach a screen that has a board on it, and cannot reach
+     * one where a person deliberately chose a board either. That mattered when the default
+     * moved to `care` and it matters again now that it has moved back — **anybody who was
+     * given the care board by the old default and never chose it goes back to Yes / No /
+     * Other**, and anybody who picked one keeps it.
      */
     function boardFor(id) {
       const row = state?.get?.() || {};
