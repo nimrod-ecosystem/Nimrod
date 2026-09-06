@@ -255,6 +255,65 @@ const T = (d, at) => ({ kind: TRIAL_KIND, created_at: at || new Date(17000000000
     writer.destroy();
     inst.destroy();
 
+    // ── *** A LATENCY NOBODY MEASURED MUST NOT BECOME A ZERO *** ───────────
+    //
+    // Mike found "average latency reads 0 ms" on the deployed site -- the number chat calls the
+    // single most important in the measurement thesis. The cause was one line in `telemetry.js`
+    // that read as a validity check:
+    //
+    //     if (Number.isFinite(Number(latencyMs))) data.latencyMs = Number(latencyMs);
+    //
+    // `latencyMs` defaults to `null`, `Number(null)` is 0, and `Number.isFinite(0)` is true. So
+    // EVERY caller that omitted the field wrote a fabricated reaction time of zero into the
+    // durable record, indistinguishable afterwards from a measured one -- and one such module
+    // dragged the whole mean toward zero.
+    //
+    // Found by proving a different check could fail: removing trivia's new `latencyMs` and
+    // expecting the field to VANISH, and watching a 0 come back instead.
+    {
+      const rows = [];
+      const stream = {
+        append: async (kind, data) => { rows.push({ kind, data }); },
+        load: async () => {}, flush: async () => {}, get: () => ({ events: rows }),
+        subscribe: () => () => {}, startPolling() {}, destroy() {},
+      };
+      const tel = createTelemetry({ makeEvents: () => stream });
+
+      await tel.log({ game: 'g', session: 's', correct: true });                 // omitted
+      check('*** a trial with no latency records NO latency, not a zero ***',
+        !('latencyMs' in rows[0].data), JSON.stringify(rows[0].data));
+      check('...and the same for waitMs', !('waitMs' in rows[0].data),
+        JSON.stringify(rows[0].data));
+
+      await tel.log({ game: 'g', session: 's', correct: true, latencyMs: null });
+      check('an explicit null is still not a zero', !('latencyMs' in rows[1].data),
+        JSON.stringify(rows[1].data));
+      await tel.log({ game: 'g', session: 's', correct: true, latencyMs: '' });
+      check("...nor is an empty string, which also coerces to 0",
+        !('latencyMs' in rows[2].data), JSON.stringify(rows[2].data));
+
+      await tel.log({ game: 'g', session: 's', correct: true, latencyMs: 850 });
+      check('a real measurement is kept exactly', rows[4] === undefined
+        ? rows[3].data.latencyMs === 850 : rows[3].data.latencyMs === 850,
+        JSON.stringify(rows[3].data));
+      await tel.log({ game: 'g', session: 's', correct: true, latencyMs: '640' });
+      check('...and a numeric string is accepted', rows[4].data.latencyMs === 640,
+        JSON.stringify(rows[4].data));
+
+      // AND THE HISTORICAL ROWS, which are durable and full of false zeros.
+      const withZeros = [
+        { kind: TRIAL_KIND, data: { game: 'g', session: 's', responded: true, correct: true, latencyMs: 0 } },
+        { kind: TRIAL_KIND, data: { game: 'g', session: 's', responded: true, correct: true, latencyMs: 900 } },
+        { kind: TRIAL_KIND, data: { game: 'g', session: 's', responded: true, correct: true, latencyMs: 0 } },
+      ];
+      const sum = summarize(withZeros);
+      check('*** old rows carrying a fabricated 0 do not drag the average down ***',
+        sum.meanLatency === 900, String(sum.meanLatency));
+      const allZero = summarize([withZeros[0], withZeros[2]]);
+      check('...and a set with nothing but zeros reports NOTHING MEASURED, not 0 ms',
+        allZero.meanLatency === null, String(allZero.meanLatency));
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

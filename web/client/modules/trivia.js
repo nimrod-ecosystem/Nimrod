@@ -219,6 +219,9 @@ registerModule(
   (ctx) => {
     const { mount, bus, state, events } = ctx;
     const rand = ctx.rand || Math.random;
+    // Injectable, like `rand` beside it and like `now` in algebra, pressgame and the
+    // director -- a latency the suite cannot control is a latency the suite cannot check.
+    const now = ctx.now || (() => Date.now());
 
     let cfg = { ...DEFAULTS };
     let bank = [];
@@ -234,6 +237,18 @@ registerModule(
     // trivia."* A wrong press no longer ends the question; it marks that option and hands the
     // question back.
     let misses = [];
+    // *** WHEN THE QUESTION WENT UP. ***
+    //
+    // Trivia was the ONLY game logging no `latencyMs` at all -- wordforge, algebra and
+    // pressgame all stamp one -- so "how quickly answers come", which chat calls the single
+    // most important number in the measurement thesis, had a hole in it exactly where the
+    // quiz is.
+    //
+    // Measured from the QUESTION APPEARING rather than from the previous guess, and that
+    // matters now a question can take several: the second guess legitimately reads longer
+    // than the first, because it did take longer. Time-since-last-press would hide the
+    // thinking, which is the thing being measured.
+    let askedAt = 0;
     let streak = 0;
     let ledger = null, telemetry = null, session = null;
     let recorder = ctx.recorder || null;
@@ -292,6 +307,7 @@ registerModule(
       q = makeQuestion(deck[at], bank, { choices: cfg.choices, rand });
       answered = null;
       misses = [];
+      askedAt = now();
       highlight = 0;
       render();
       // *** THE MARK GOES IN AT THE MOMENT THE QUESTION APPEARS ***, not when it is answered,
@@ -358,6 +374,10 @@ registerModule(
       Promise.resolve(telemetry?.log?.({
         game: GAME, session, mode: 'practice', concept: q.answer,
         responded: true, correct, prompt: q.question,
+        // Guarded, not always sent. `fmtMs` renders a missing value as an em-dash and a zero as
+        // "0 ms" -- one says "not measured" and the other is a claim about somebody's reaction
+        // time. A fabricated zero is the worse of the two.
+        latencyMs: askedAt ? Math.max(0, now() - askedAt) : undefined,
       })).catch((err) => console.error('trivia: telemetry', err));
 
       if (!correct) {
@@ -409,7 +429,7 @@ registerModule(
     }
 
     return {
-      __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length),
+      __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length), askedAt,
         highlight, streak, deck: deck.length,
                         question: q ? { ...q } : null, bank: bank.length }),
       init() {
