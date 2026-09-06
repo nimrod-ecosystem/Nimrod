@@ -58,7 +58,8 @@
 import { registerModule } from '../module.js';
 import { createScan, SCAN_DEFAULTS } from '../input_scan.js';
 import { symbolSvg } from '../aac_symbols.js';
-import { normalizeBoard, tierOf, BUILTIN_BOARDS, YESNO } from '../aac_vocab.js';
+import { normalizeBoard, tierOf, gridOf, BUILTIN_BOARDS, YESNO } from '../aac_vocab.js';
+import { createMediaSourcesClient, resolveItemUrl } from '../media_sources.js';
 import { speak as speakDefault } from '../voice.js';
 
 // A card shorter or narrower than this has no room for a symbol AND a legible word. See
@@ -392,7 +393,9 @@ registerModule(
     // The tier as it will actually be drawn. Always the SAME NUMBER OF CELLS in the SAME
     // ORDER — only the number of columns can change, and only by transposing. See `fitScreen`.
     function effectiveTier() {
-      const t = tierOf(board.tier) || tierOf(3);
+      // `gridOf`, not `tierOf`: a board somebody BUILT states its own cols/rows and that is the
+      // shape it is drawn in. A board without one still gets its tier's grid, unchanged.
+      const t = gridOf(board) || tierOf(3);
       if (cfg.fitScreen === false || !t) return t;
       const g = grid();
       const w = g?.clientWidth || 0, h = g?.clientHeight || 0;
@@ -442,9 +445,10 @@ registerModule(
     function draw() {
       // The CELL COUNT comes from the declared tier and never from the effective one: turning
       // the grid changes how the cells are arranged, never how many there are.
-      const t = tierOf(board.tier) || tierOf(3);
+      const t = gridOf(board) || tierOf(3);
       const g = grid();
       if (!g) return;
+      releaseImages();
       g.innerHTML = '';
       cardEls = [];
       // Every slot in the tier is rendered, including empty ones. A hole is drawn as a hole:
@@ -461,8 +465,16 @@ registerModule(
         } else {
           b.setAttribute('aria-label', cell.word);
           const sym = symbolSvg(cell.symbol);
-          b.innerHTML = (sym ? `<span class="ab-sym">${sym}</span>` : '')
+          // *** THE PICTURE IS OPTIONAL AND ARRIVES LATE; THE WORD IS NEITHER. ***
+          //
+          // A card with an image renders the WORD immediately and an empty picture frame, then
+          // fills the frame when the file has been read. Nothing waits on the file: a board
+          // whose folder permission has lapsed still says every word it says today, which is
+          // the difference between a degraded board and a person with no voice this morning.
+          b.innerHTML = (cell.image ? '<span class="ab-img" data-img></span>'
+                        : sym ? `<span class="ab-sym">${sym}</span>` : '')
             + `<span class="ab-word">${escapeHtml(cell.word)}</span>`;
+          if (cell.image) loadImage(b, cell.image);
           // pointerdown, and it stops there: a tap IS this card, and letting it bubble would
           // let a global pointer binding ALSO fire a generic select — the same card chosen
           // twice, or worse, a different one. The private build hit this and says so.
@@ -480,6 +492,52 @@ registerModule(
       }
       setUnit();
       paint();
+    }
+
+    // ------------------------------------------------------------------------------------
+    // CARD PICTURES — files on the person's own machine, never anything uploaded
+    // ------------------------------------------------------------------------------------
+    //
+    // A card holds `{sourceId, path}` and resolves it through the same media-source registry
+    // `photos` uses. **Nothing is uploaded and there is no code here that could upload
+    // anything** — the platform stores a reference, the bytes stay where they are.
+    //
+    // Each picture takes a URL IT OWNS (`resolveItemUrl`) rather than one off a shared listing,
+    // because a folder listing revokes the previous listing's URLs — so a card reusing one
+    // would go blank the moment a photo panel refreshed the same folder. See `folderFileUrl`.
+    let sourcesP = null;                      // listed once per mount, not once per card
+    let imgReleases = [];
+
+    function releaseImages() {
+      for (const r of imgReleases) { try { r(); } catch { /* already gone */ } }
+      imgReleases = [];
+    }
+
+    async function loadImage(cardEl, ref) {
+      try {
+        if (!sourcesP) {
+          const client = ctx.mediaSources
+            || createMediaSourcesClient({ user: ctx.user, cache: true,
+                                          personId: ctx.personId || null });
+          sourcesP = client.list();
+        }
+        const sources = (await sourcesP) || [];
+        const src = sources.find((x) => x.id === ref.sourceId);
+        if (!src) return;                     // the folder is not connected on this device
+        const got = await resolveItemUrl(src, ref.path);
+        if (!got || destroyed || !cardEl.isConnected) { got?.release?.(); return; }
+        imgReleases.push(got.release);
+        const frame = cardEl.querySelector('[data-img]');
+        if (!frame) { got.release(); return; }
+        const img = document.createElement('img');
+        img.alt = '';                         // the word beside it is the label; this is decoration
+        img.src = got.url;
+        frame.append(img);
+      } catch (err) {
+        // Silent on the CARD, loud in the console. A red error over somebody's word is worse
+        // than a missing picture, and the word is still there and still speaks.
+        console.warn('board: could not load a card picture', err);
+      }
     }
 
     function paint() {
@@ -740,6 +798,7 @@ registerModule(
         stopScan();
         try { ro?.disconnect(); } catch { /* already gone */ } ro = null;
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }
+        releaseImages();
         cardEls = [];
         mount.innerHTML = '';
       },

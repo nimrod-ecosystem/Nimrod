@@ -19,7 +19,8 @@
 
 import { cachedFetch } from './cache.js';
 import { authHeaders } from './auth.js';
-import { listFolderSources, removeFolderSource, resolveFolderListing } from './folder_source.js';
+import { listFolderSources, removeFolderSource, resolveFolderListing,
+         folderFileUrl } from './folder_source.js';
 
 const trimSlash = (u) => String(u || '').replace(/\/+$/, '');
 
@@ -144,6 +145,21 @@ export async function resolveListing(source, album = '', { fetchImpl = fetch } =
     url: mediaUrl(base, it.path),
   }));
   return { album: body.album || album, albums: body.albums || [], items, count: items.length };
+}
+
+/**
+ * ONE item on a source, as a renderable URL — for anything holding a single file rather than
+ * playing a listing. An AAC card is the case that needed it: it keeps one picture for weeks.
+ *
+ * Returns `{url, release}`. `release` is a no-op for an agent source (an https URL owns nothing)
+ * and revokes the object URL for a folder — so a caller can treat both the same and simply call
+ * it when the thing holding the picture goes away. See `folderFileUrl` for why a folder card
+ * cannot just reuse a URL off `resolveListing`.
+ */
+export async function resolveItemUrl(source, path) {
+  if (!source || !path) return null;
+  if (source.kind === 'folder') return folderFileUrl(source.id, path);
+  return { url: mediaUrl(source.base_url, path), release: () => {} };
 }
 
 // Liveness probe for a source — used by a Sources UI to show connected/unreachable.

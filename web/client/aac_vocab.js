@@ -151,24 +151,72 @@ export function normalizeBoard(raw) {
       // something a person would rather have said aloud in a corridor.
       say: c.say != null && c.say !== c.word ? String(c.say) : null,
       symbol: c.symbol && SYMBOLS[c.symbol] ? c.symbol : null,
+      // *** A PICTURE THE PERSON CHOSE, WHICH `symbol` COULD NEVER BE. ***
+      //
+      // `symbol` is deliberately restricted to the drawn set -- an unknown name becomes null, so
+      // a board cannot reference art that does not exist. That is right for the built-ins and it
+      // is exactly why authoring needed a second field: the whole point of a board somebody made
+      // is that the picture can be their own kitchen, their own dog, their own daughter.
+      //
+      // Stored as {sourceId, path}, the same pair `photos` and `wallpaper` already use, so the
+      // image resolves through `mediaUrl` on whatever folder is connected and NOTHING IS
+      // UPLOADED. There is no upload path in this client and there must not be one; a card holds
+      // a reference to a file on the person's own machine, never a copy of it.
+      image: (c.image && c.image.path)
+        ? { sourceId: String(c.image.sourceId || ''), path: String(c.image.path) }
+        : null,
       kind: KINDS.includes(c.kind) ? c.kind : 'plain',
     };
   });
   while (cells.length && cells[cells.length - 1] == null) cells.pop();
   const tier = tierOf(b.tier) ? b.tier : tierFor(cells.length).cells;
+  // *** A BOARD SOMEBODY MADE CHOOSES ITS OWN SHAPE. ***
+  //
+  // `TIERS` is a fixed list of cell counts, each with one grid -- right for the built-ins,
+  // which are designed shapes rather than preferences. But authoring means "set rows and
+  // columns", and 5x3 is not in that list and should not have to be.
+  //
+  // So `cols`/`rows` are OPTIONAL and override the tier when present. Absent, every existing
+  // board behaves exactly as before, which is what keeps this from being a migration. Bounded
+  // at 1..8 because a 12-column board on a bedside screen is a grid of targets nobody can hit,
+  // and the whole file exists to keep targets large.
+  const dim = (v) => {
+    const n = Math.round(Number(v));
+    return Number.isFinite(n) && n >= 1 && n <= 8 ? n : null;
+  };
+  const cols = dim(b.cols);
+  const rows = dim(b.rows);
   return {
     version: Number(b.version) || VOCAB_VERSION,
     id: b.id || 'board',
     name: b.name || 'Talk',
     tier,
+    // Both or neither: half a grid is not a shape, and one of the two would silently pair with
+    // whatever the tier said and produce a board nobody asked for.
+    ...(cols && rows ? { cols, rows } : {}),
     cells,
   };
+}
+
+/**
+ * The grid a board should draw in: its own if it states one, otherwise its tier's.
+ *
+ * One place, because `board.js` needs it to lay out and the editor needs it to know how many
+ * cards to offer, and those two disagreeing is a board that loses a card on save.
+ */
+export function gridOf(board) {
+  const b = board || {};
+  if (b.cols && b.rows) return { cols: b.cols, rows: b.rows, cells: b.cols * b.rows };
+  return tierOf(b.tier) || tierOf(3);
 }
 
 /** What the board has to say about itself. Same shape as `checkBank` and for the same reason. */
 export function checkBoard(raw) {
   const b = normalizeBoard(raw);
-  const t = tierOf(b.tier);
+  // `gridOf`, not `tierOf`: a board that states its own cols/rows holds cols*rows, and asking
+  // its tier would report a 6x6 board of 36 words as an overfull board of 16. Every board
+  // WITHOUT a stated grid still gets its tier, so nothing existing changes.
+  const t = gridOf(b);
   const problems = [];
   const seen = new Set();
   b.cells.forEach((c, i) => {
@@ -202,10 +250,14 @@ export function checkBoard(raw) {
  */
 export function addWord(board, cell) {
   const b = normalizeBoard(board);
-  const t = tierOf(b.tier);
   const slot = firstFree(b);
   if (slot < 0) {
-    return { board: b, added: null, needsTier: tierFor(b.cells.length + 1).cells };
+    // A board with its OWN grid does not have a next tier to move up to -- it grows by somebody
+    // changing its rows and columns, which is a different decision with a different control.
+    // Reporting a tier here would send the editor down a path that does not apply.
+    return { board: b, added: null,
+             needsTier: (b.cols && b.rows) ? null : tierFor(b.cells.length + 1).cells,
+             needsGrid: (b.cols && b.rows) ? { cols: b.cols, rows: b.rows } : null };
   }
   const cells = b.cells.slice();
   cells[slot] = cell;                       // a hole first, the end otherwise
@@ -234,9 +286,8 @@ export function removeWord(board, index) {
 /** The first empty slot an add should fill, or the end. Keeps `addWord`'s promise honest. */
 export function firstFree(board) {
   const b = normalizeBoard(board);
-  const t = tierOf(b.tier);
   for (let i = 0; i < b.cells.length; i++) if (b.cells[i] == null) return i;
-  return b.cells.length < t.cells ? b.cells.length : -1;
+  return b.cells.length < gridOf(b).cells ? b.cells.length : -1;
 }
 
 /**

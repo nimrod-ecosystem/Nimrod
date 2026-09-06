@@ -48,7 +48,7 @@ matter more than anything else here.</p>
 <script type="module">
 import {
   TIERS, KINDS, tierOf, tierFor, cellPosition, slotCenter,
-  normalizeBoard, checkBoard, addWord, removeWord, firstFree, promote,
+  normalizeBoard, checkBoard, addWord, removeWord, firstFree, promote, gridOf,
   YESNO, CARE, BUILTIN_BOARDS,
 } from '../aac_vocab.js';
 import { SYMBOLS, SYMBOL_NAMES, symbolSvg } from '../aac_symbols.js';
@@ -657,6 +657,132 @@ try {
       && getComputedStyle(host.querySelector('.ab-card')).backgroundColor
          === 'rgb(255, 255, 255)');
     inst.destroy(); host.remove();
+  }
+
+  // =====================================================================================
+  section('a board somebody BUILT: its own grid, and pictures that are theirs');
+  // Two things the built-in boards never needed and an authored board cannot do without:
+  // a shape that is not one of the seven tiers, and a picture of the person's own kitchen.
+  {
+    // ---- the grid -------------------------------------------------------------------
+    const wide = normalizeBoard({ id: 'mine', name: 'Mine', cols: 5, rows: 3, cells: [] });
+    check('*** a board may state its own columns and rows ***',
+      wide.cols === 5 && wide.rows === 3, JSON.stringify(wide));
+    check('...and gridOf reports that shape, not the tier\u2019s',
+      gridOf(wide).cols === 5 && gridOf(wide).rows === 3 && gridOf(wide).cells === 15,
+      JSON.stringify(gridOf(wide)));
+    check('a board with NO stated grid still gets its tier\u2019s, unchanged',
+      gridOf(CARE).cols === 4 && gridOf(CARE).rows === 4, JSON.stringify(gridOf(CARE)));
+    check('half a grid is not a shape \u2014 columns without rows is ignored',
+      normalizeBoard({ cols: 5, cells: [] }).cols === undefined);
+    check('...and an absurd width is refused rather than drawn',
+      normalizeBoard({ cols: 40, rows: 2, cells: [] }).cols === undefined);
+    check('...as is a zero', normalizeBoard({ cols: 0, rows: 3, cells: [] }).cols === undefined);
+
+    // *** THE CAPACITY HELPERS HAVE TO FOLLOW THE GRID, or a 36-word board reports itself
+    // overfull and the editor refuses the 36th word. This is the check that catches a
+    // half-applied change: the model accepts the shape but nothing else believes it. ***
+    const many = normalizeBoard({ cols: 6, rows: 6,
+      cells: Array.from({ length: 30 }, (_, i) => ({ word: 'w' + i })) });
+    const rep = checkBoard(many);
+    check('*** a 6x6 board of 30 words is not reported as overfull ***',
+      rep.capacity === 36 && !rep.problems.some((x) => /more words/.test(x.why)),
+      JSON.stringify({ capacity: rep.capacity }));
+    check('...and it has six free slots, not none', rep.free === 6, String(rep.free));
+    check('...so the next word is accepted rather than refused',
+      addWord(many, { word: 'thirty-one' }).added?.word === 'thirty-one');
+    const full = normalizeBoard({ cols: 2, rows: 2,
+      cells: [{ word: 'a' }, { word: 'b' }, { word: 'c' }, { word: 'd' }] });
+    const over = addWord(full, { word: 'e' });
+    check('a FULL custom board still refuses to grow silently', over.added === null);
+    check('...and asks for a bigger grid, not a tier it does not have',
+      over.needsTier === null && over.needsGrid?.cols === 2, JSON.stringify(over.needsGrid));
+
+    // ---- the picture ----------------------------------------------------------------
+    const withPic = normalizeBoard({ cells: [
+      { word: 'Kitchen', image: { sourceId: 's1', path: 'rooms/kitchen.jpg' } },
+      { word: 'No picture' },
+      { word: 'Not a picture', image: { sourceId: 's1' } },
+    ] });
+    check('a card keeps the picture somebody chose',
+      withPic.cells[0].image.path === 'rooms/kitchen.jpg');
+    check('...a card without one says so rather than carrying a broken reference',
+      withPic.cells[1].image === null);
+    check('...and a reference with no path is not a picture',
+      withPic.cells[2].image === null);
+    // The point of the field: `symbol` COULD NOT DO THIS. It is restricted to the drawn set.
+    check('*** the drawn-symbol field still refuses art that does not exist ***',
+      normalizeBoard({ cells: [{ word: 'x', symbol: 'kitchen' }] }).cells[0].symbol === null);
+
+    // ---- and it reaches the screen ---------------------------------------------------
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:420px;height:300px';
+    document.body.append(host);
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(),
+      state: fakeState({ board: {
+        id: 'mine', name: 'My board', cols: 3, rows: 2,
+        cells: [{ word: 'Kitchen', image: { sourceId: 's1', path: 'a b.jpg' } },
+                { word: 'Dog', symbol: 'love' }, { word: 'Plain' }],
+      } }),
+      // Injected rather than fetched: an agent source resolves to a URL with no network at all,
+      // which is what makes this assertable offline.
+      mediaSources: { list: async () => ([{ id: 's1', kind: 'agent', base_url: 'https://x.test' }]) },
+      output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(30);
+    const p = inst.impl.__probe();
+    check('*** an authored 3x2 board is DRAWN 3x2, not at its tier ***',
+      p.grid.cols === 3 && p.grid.rows === 2, JSON.stringify(p.grid));
+    check('...and every slot in that grid is rendered, holes included',
+      host.querySelectorAll('.ab-card').length === 6,
+      String(host.querySelectorAll('.ab-card').length));
+    const img = host.querySelector('.ab-card .ab-img img');
+    check('*** the card with a picture actually has one on screen ***', !!img);
+    check('...resolved through the media source, with the space encoded',
+      img && img.src === 'https://x.test/files/a%20b.jpg', img && img.src);
+    check('*** the word is on the card too \u2014 a picture never replaces it ***',
+      /Kitchen/.test(host.querySelector('.ab-card').textContent));
+    check('a card with a drawn symbol still draws it',
+      !!host.querySelectorAll('.ab-card')[1].querySelector('.ab-sym svg'));
+    check('...and a card with neither is word-only, not broken',
+      host.querySelectorAll('.ab-card')[2].querySelector('.ab-sym,.ab-img') === null);
+    inst.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('a picture that cannot be loaded does not take the word with it');
+  {
+    // THE FAILURE THAT MATTERS. A folder permission lapses overnight, a source is not connected
+    // on this device, the file was renamed. The board is somebody's voice: it must still say
+    // every word it says today. A card that waited on a file would be a person with no voice.
+    const said = [];
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:420px;height:300px';
+    document.body.append(host);
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(),
+      state: fakeState({ board: { id: 'mine', name: 'Mine', cols: 2, rows: 1,
+        cells: [{ word: 'Kitchen', image: { sourceId: 'gone', path: 'k.jpg' } },
+                { word: 'Yes', symbol: 'yes', kind: 'yes' }] } }),
+      mediaSources: { list: async () => { throw new Error('registry unreachable'); } },
+      output: { say: (t) => said.push(t) },
+    });
+    inst.init();
+    await sleep(30);
+    check('*** the words are all on screen even though the pictures failed ***',
+      /Kitchen/.test(host.textContent) && /Yes/.test(host.textContent), host.textContent);
+    check('...and nothing put an error where a picture was meant to be',
+      !/error|failed|unreachable/i.test(host.textContent), host.textContent);
+    host.querySelectorAll('.ab-card')[0].dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true }));
+    await sleep(10);
+    check('*** and a card whose picture never loaded still SAYS ITS WORD ***',
+      said.includes('Kitchen'), JSON.stringify(said));
+    inst.destroy();
+    host.remove();
   }
 
   // =====================================================================================

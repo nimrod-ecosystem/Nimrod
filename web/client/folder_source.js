@@ -174,6 +174,42 @@ export function folderError(code, message, sourceId) {
   return err;
 }
 
+/**
+ * One file out of a folder source, as a URL THE CALLER OWNS AND RELEASES.
+ *
+ * *** WHY THIS EXISTS RATHER THAN "just use the url off the listing". ***
+ *
+ * `resolveFolderListing` calls `revokeFor(source.id)` on every run: the newest listing of a
+ * source invalidates the previous one's object URLs. That is right for a slideshow, which only
+ * ever wants the current listing — and it is fatal for an AAC card, which holds ONE picture for
+ * weeks while other parts of the screen keep listing the same folder. The card's image would go
+ * blank the moment anything else looked at that folder, silently, with no error anywhere.
+ *
+ * A board is somebody's voice. A picture that disappears because a photo panel refreshed is the
+ * kind of failure nobody would ever trace. So a card gets its own URL out of its own read, kept
+ * out of `urlsBySource` entirely, and releases it when the card goes away.
+ */
+export async function folderFileUrl(sourceId, path) {
+  const row = await getRow(sourceId);
+  if (!row || !row.handle) throw folderError('missing', 'that folder is no longer stored', sourceId);
+  const perm = await row.handle.queryPermission({ mode: 'read' });
+  if (perm !== 'granted') {
+    throw folderError('permission', `that folder's permission is "${perm}"`, sourceId);
+  }
+  const parts = String(path || '').split('/').filter(Boolean);
+  const name = parts.pop();
+  let dir = row.handle;
+  for (const part of parts) {
+    try { dir = await dir.getDirectoryHandle(part); }
+    catch { throw folderError('album', `no folder "${part}"`, sourceId); }
+  }
+  let file;
+  try { file = await (await dir.getFileHandle(name)).getFile(); }
+  catch { throw folderError('album', `no file "${path}"`, sourceId); }
+  const url = URL.createObjectURL(file);
+  return { url, release: () => { try { URL.revokeObjectURL(url); } catch { /* gone */ } } };
+}
+
 export async function resolveFolderListing(source, album = '') {
   const row = await getRow(source.id);
   if (!row || !row.handle) {

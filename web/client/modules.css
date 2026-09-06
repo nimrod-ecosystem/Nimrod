@@ -475,6 +475,15 @@
 .ab-card .ab-sym{display:block;width:calc(var(--u,1px) * 44);height:calc(var(--u,1px) * 44);
   line-height:0;flex:0 0 auto}
 .ab-card .ab-sym svg{width:100%;height:100%;display:block}
+/* A PICTURE SOMEBODY CHOSE, in the slot a symbol would have had — same box, same unit, so a
+   board of photographs and a board of drawings are the same shape and a person swapping one
+   card for the other does not get their layout moved. `contain`, never `cover`: a face cropped
+   to a square by the renderer is a card whose picture is no longer of the thing it names. The
+   frame keeps its size while the file loads so nothing jumps when the picture arrives. */
+.ab-card .ab-img{display:block;width:calc(var(--u,1px) * 44);height:calc(var(--u,1px) * 44);
+  line-height:0;flex:0 0 auto}
+.ab-card .ab-img img{width:100%;height:100%;display:block;object-fit:contain;
+  border-radius:calc(var(--u,1px) * 3)}
 /* *** `hyphens:auto` BEFORE `break-word`, AND IT IS NOT TYPOGRAPHY. ***
  * This was `overflow-wrap:anywhere`, which breaks a word at whatever character the line runs out
  * at — so the care board's "Keyboard" card rendered as "Keyboar / d". On a page of prose that is
@@ -488,12 +497,12 @@
   line-height:1.05;text-align:center;overflow-wrap:break-word;hyphens:auto}
 /* Word-only cards get the room the missing symbol would have taken. A card with no picture is
    a normal card, not a broken one. */
-.ab-card:not(:has(.ab-sym)) .ab-word{font-size:clamp(12px,calc(var(--u,1px) * 30),120px)}
+.ab-card:not(:has(.ab-sym)):not(:has(.ab-img)) .ab-word{font-size:clamp(12px,calc(var(--u,1px) * 30),120px)}
 /* *** A CARD TOO SMALL FOR BOTH DROPS THE PICTURE, NEVER THE WORD. ***
    The same rule as color: the symbol SUPPORTS meaning, the word CARRIES it. A board squeezed
    into a corner of a dashboard is still readable; a board that shrank the word to fit a picture
    in would be neither. Set by `setUnit` in modules/board.js, which knows the card's real size. */
-.ab-grid.ab-tight .ab-sym{display:none}
+.ab-grid.ab-tight .ab-sym,.ab-grid.ab-tight .ab-img{display:none}
 .ab-grid.ab-tight .ab-word{font-size:clamp(11px,calc(var(--u,1px) * 26),120px)}
 /* An empty slot is DRAWN, faintly. A hole has to look like a hole: the cards after it did not
    move, and a gap that rendered as nothing would look like the board had rearranged. */
