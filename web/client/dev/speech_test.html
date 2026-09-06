@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>spoken commands — phrase table and the bus</title>
+<style>
+  body{font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.25rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>spoken commands — the phrase table, and what reaches the bus</h1>
+<p><b>PRIORITY.md #8:</b> <i>“a fixed voice-command set for people who will never use Nimrod.
+Browser speech recognition, a phrase table, no AI. Many phrasings → one verb.”</i></p>
+<p><b>No microphone is opened by anything on this page.</b> The matcher is a pure function over
+TEXT, and the recogniser is injected — which is the same seam that lets a local engine replace
+the browser's later. That is not only a testing convenience: Chrome's <code>SpeechRecognition</code>
+streams audio to Google, so being able to swap it is the difference between shipping this and
+not.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  PHRASES, SPEECH_DEVICE, DEFAULT_BINDINGS, normalize, verbFor, duplicatePhrases,
+  phraseControl, attachSpeech,
+} from '../input_speech.js';
+import { VERBS, verbTopic } from '../actions.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+(async () => {
+  // =====================================================================================
+  section('*** many phrasings, one verb ***');
+  check('“next” is next', verbFor('next') === 'next');
+  check('...and so is “move on”', verbFor('move on') === 'next');
+  check('...and “something else”', verbFor('something else') === 'next');
+  check('“go back” is back', verbFor('go back') === 'back');
+  check('“never mind” is back too', verbFor('never mind') === 'back');
+  check('“okay” is select', verbFor('okay') === 'select');
+  check('“open the menu” is menu', verbFor('open the menu') === 'menu');
+
+  section('*** what a recogniser actually hands you ***');
+  // Engines punctuate and capitalise differently, and between releases. A table that only
+  // matched one engine's output would look like a broken microphone.
+  check('capitals do not matter', verbFor('Next') === 'next');
+  check('trailing punctuation does not matter', verbFor('Next.') === 'next');
+  check('...nor does a question mark', verbFor('Go back?') === 'back');
+  check('...nor padding', verbFor('   next   ') === 'next');
+  check('...nor doubled spaces', verbFor('go   back') === 'back');
+  check('normalize strips to letters and single spaces', normalize('Go, BACK!!') === 'go back',
+    normalize('Go, BACK!!'));
+
+  section('*** and the things that must NOT fire ***');
+  check('an empty string does nothing', verbFor('') === null);
+  check('silence does nothing', verbFor('   ') === null);
+  check('an unknown phrase does nothing', verbFor('play the football') === null);
+  // *** THE ONE THAT MATTERS MOST. *** Matching inside a sentence would mean a screen that
+  // jumps because somebody in the room said a word. A person giving a command says the command.
+  check('*** a sentence CONTAINING a command does not fire it ***',
+    verbFor('I do not want to go back') === null, String(verbFor('I do not want to go back')));
+  check('...even at the end', verbFor('and then we can go next') === null);
+  check('...or the start', verbFor('next week she is home') === null);
+  check('null and undefined are safe', verbFor(null) === null && verbFor(undefined) === null);
+
+  section('*** the table itself ***');
+  const dupes = duplicatePhrases();
+  check('*** no phrase means two different verbs ***', dupes.length === 0, dupes.join(' · '));
+  const verbIds = VERBS.map((v) => v.id);
+  const tableIds = Object.keys(PHRASES);
+  check('every verb in the vocabulary can be spoken',
+    verbIds.every((v) => tableIds.includes(v)),
+    verbIds.filter((v) => !tableIds.includes(v)).join(', ') || 'none missing');
+  check('...and the table invents no verb the vocabulary does not have',
+    tableIds.every((v) => verbIds.includes(v)),
+    tableIds.filter((v) => !verbIds.includes(v)).join(', ') || 'none extra');
+  const short = Object.entries(PHRASES)
+    .flatMap(([v, ps]) => ps.filter((p) => normalize(p).replace(/\s/g, '').length < 2)
+      .map((p) => `${v}:"${p}"`));
+  check('no phrase is short enough for a mis-heard syllable to fire it', short.length === 0,
+    short.join(', '));
+
+  section('*** it reaches the bus as an ordinary device ***');
+  {
+    // A FAKE INPUT BUS, so this asserts the two calls an adapter is allowed to make.
+    const calls = [];
+    const input = {
+      down: (d, c) => calls.push(['down', d, c]),
+      up: (d, c) => calls.push(['up', d, c]),
+    };
+    // A FAKE RECOGNISER. No microphone, no network, and the test drives what was "heard".
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; },
+                  running: false };
+    const heard = [];
+    const speech = attachSpeech(input, { recognizer: rec, onHeard: (h) => heard.push(h) });
+
+    check('it does not start on its own', rec.running === false);
+    check('...and says it has an engine available', speech.available() === true);
+    speech.start();
+    check('...and starts when told', rec.running === true && speech.listening === true);
+
+    feed('next');
+    check('*** a phrase presses and releases, like any other control ***',
+      calls.length === 2 && calls[0][0] === 'down' && calls[1][0] === 'up',
+      JSON.stringify(calls));
+    check('...on the speech device', calls[0][1] === SPEECH_DEVICE, calls[0][1]);
+    check('...with a stable control name', calls[0][2] === phraseControl('next'), calls[0][2]);
+
+    calls.length = 0;
+    feed('the weather is nice');
+    check('an unrecognised phrase touches the bus not at all', calls.length === 0,
+      JSON.stringify(calls));
+    check('...but is still reported, so a panel can show what it heard',
+      heard.length === 2 && heard[1].text === 'the weather is nice' && heard[1].verb === null,
+      JSON.stringify(heard));
+
+    speech.stop();
+    check('stopping stops the engine', rec.running === false);
+  }
+
+  section('*** the shipped bindings ***');
+  check('there is one per verb', DEFAULT_BINDINGS.length === Object.keys(PHRASES).length);
+  const nextB = DEFAULT_BINDINGS.find((b) => b.control === phraseControl('next'));
+  check('a spoken verb drives the verb topic of the same name',
+    nextB && nextB.actionId === verbTopic('next'), JSON.stringify(nextB));
+  check('...as an ordinary press binding anybody can rebind',
+    nextB && nextB.edge === 'press' && nextB.device === SPEECH_DEVICE && nextB.role === 'universal',
+    JSON.stringify(nextB));
+  check('every binding has a distinct id',
+    new Set(DEFAULT_BINDINGS.map((b) => b.id)).size === DEFAULT_BINDINGS.length);
+
+  section('*** no engine is not a crash ***');
+  {
+    // Firefox has no SpeechRecognition at all. The adapter has to report that, not throw --
+    // the caller shows "this browser cannot listen", which is a sentence somebody can act on.
+    const input = { down: () => {}, up: () => {} };
+    const speech = attachSpeech(input, { view: {} });
+    check('a browser with no recogniser reports unavailable', speech.available() === false);
+    check('...and starting it is a no-op rather than an error', speech.start() === false);
+    check('...and stopping it is safe', (() => { try { speech.stop(); return true; }
+      catch { return false; } })());
+  }
+
+  document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+})().catch((e) => {
+  console.error(e);
+  document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+});
+</script>
+</body>
+</html>
