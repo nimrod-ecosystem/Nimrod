@@ -216,11 +216,12 @@ no pipe here
       r.probe().highlight !== wrongIndex, String(r.probe().highlight));
 
     // Now find the right one. It is worth LESS, and that is the whole point of the change.
-    check('a first-guess answer would have been worth correctPoints',
-      DEFAULTS.correctPoints === 2, String(DEFAULTS.correctPoints));
-    check('*** after a miss it is worth less, and never nothing ***',
-      r.probe().worth === Math.max(DEFAULTS.tryingPoints, DEFAULTS.correctPoints - 1)
-        && r.probe().worth > 0,
+    // *** ONE POINT, QUARTERED BY GUESS: 1 / 0.75 / 0.5 / 0.25. *** Chat's #5. The calibration
+    // is Mike's atom -- a point is roughly a minute of effort -- and two points for a
+    // four-choice question was paying double that for something that takes seconds.
+    check('a first-guess answer is worth one point', DEFAULTS.correctPoints === 1,
+      String(DEFAULTS.correctPoints));
+    check('*** after one miss it is worth three quarters ***', r.probe().worth === 0.75,
       String(r.probe().worth));
     while (r.probe().highlight !== q.correctIndex) r.bus.publish('trivia/next');
     r.bus.publish('trivia/select');
@@ -229,6 +230,18 @@ no pipe here
       String(p.answered));
     check('...and a run of clean answers is broken by the miss', p.streak === 0,
       String(p.streak));
+
+    // THE WHOLE LADDER, not just the step this run happened to reach -- and asserted through
+    // the module's own `worth`, so it is the arithmetic the ledger will actually be handed.
+    const ladder = [0, 1, 2, 3].map((n) => r.inst.impl.__worth(n));
+    check('*** the ladder is 1 / 0.75 / 0.5 / 0.25 ***',
+      JSON.stringify(ladder) === JSON.stringify([1, 0.75, 0.5, 0.25]), JSON.stringify(ladder));
+
+    // Chat's #5 also says the module shows NO score -- only the log does. A quiz that displays a
+    // running total turns "how much do you know" into "how are you doing", which is the framing
+    // this module's own header argues against.
+    check('*** the module puts no score on screen ***',
+      !/score|points?/i.test(r.host.textContent), r.host.textContent.slice(0, 120));
 
     // Finished means finished: the old invariant, unchanged.
     const before = r.probe().at;

@@ -92,7 +92,13 @@ const MIN = 60000;
     const ev = (amount, mult, source, at) => ({ kind: POINTS_KIND, created_at: at, data: { amount, mult, source } });
     check('pointsValue applies multiplier', pointsValue(ev(25, 2, 'sprint')) === 50);
     check('pointsValue defaults mult to 1', pointsValue({ kind: POINTS_KIND, data: { amount: 25 } }) === 25);
-    check('pointsValue rounds', pointsValue(ev(25, 1.5, 'sprint')) === 38, String(pointsValue(ev(25, 1.5, 'sprint'))));
+    // *** IT NO LONGER ROUNDS, AND THAT IS THE POINT. *** This asserted `Math.round` -- 25 x 1.5
+    // reported as 38 rather than 37.5. Chat's #5 scores a trivia answer 1 / 0.75 / 0.5 / 0.25 by
+    // guess, and through rounding that ladder collapses to 1 / 1 / 1 / 0. The record keeps what
+    // happened; rounding moved to display, where `fmtPoints` FLOORS so a balance can never read
+    // higher than what can actually be spent.
+    check('pointsValue keeps the exact value, so a quarter point survives',
+      pointsValue(ev(25, 1.5, 'sprint')) === 37.5, String(pointsValue(ev(25, 1.5, 'sprint'))));
     check('pointsValue ignores junk', pointsValue({ kind: POINTS_KIND, data: { amount: 'x' } }) === 0);
     const feed = [ev(25, 1, 'sprint'), ev(10, 2, 'wordforge'), { kind: 'other', data: { amount: 999 } }];
     check('sumPoints counts only points events', sumPoints(feed) === 45, String(sumPoints(feed)));

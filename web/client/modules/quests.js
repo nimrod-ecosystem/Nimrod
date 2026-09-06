@@ -35,7 +35,8 @@
 
 import { registerModule } from '../module.js';
 import {
-  createPointsLedger, POINTS_TOPIC, pointsValue, sumEarned, sumSpent, sumMinutes, weekStart,
+  createPointsLedger, POINTS_TOPIC, pointsValue, fmtPoints,
+  sumEarned, sumSpent, sumMinutes, weekStart,
 } from '../points.js';
 
 export const SOURCE = 'quests';
@@ -200,9 +201,11 @@ registerModule(
       const band = hoursBand(hrs, hoursCfg, pointsPerHour);
       const pct = band.target ? Math.min(100, Math.round((hrs / band.target) * 100)) : 0;
 
-      el('[data-balance]').textContent = String(balance);
-      el('[data-earned]').textContent = String(sumEarned(evs));
-      el('[data-spent]').textContent = String(sumSpent(evs));
+      // Floored, not rounded -- see `fmtPoints`. A balance shown as more than can be spent is
+      // a number that disagrees with the button beside it.
+      el('[data-balance]').textContent = fmtPoints(balance);
+      el('[data-earned]').textContent = fmtPoints(sumEarned(evs));
+      el('[data-spent]').textContent = fmtPoints(sumSpent(evs));
       el('[data-hours]').textContent = `${fmtHours(hrs)} / ${band.target}h`;
       el('[data-band]').textContent = band.label;
       el('[data-bar]').style.width = `${pct}%`;
@@ -275,7 +278,7 @@ registerModule(
                 <td>${esc(d.note || d.source || '')}<span class="q-src">${esc(d.source || '')}</span></td>
                 <td>${esc(d.amount)}</td>
                 <td>${esc(d.mult)}</td>
-                <td class="${v < 0 ? 'q-neg' : 'q-pos'}">${v >= 0 ? '+' : ''}${v}</td>
+                <td class="${v < 0 ? 'q-neg' : 'q-pos'}">${v >= 0 ? '+' : ''}${fmtPoints(v)}</td>
               </tr>`;
             }).join('')}
           </tbody>

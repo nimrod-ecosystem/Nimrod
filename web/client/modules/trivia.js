@@ -77,9 +77,16 @@ export const GAME = 'trivia';
 
 export const DEFAULTS = {
   roundLength: 10,
-  correctPoints: 2,
-  tryingPoints: 1,        // for reading the answer after getting it wrong — the correction is
-                          // the point of a learning game, so the correction is what pays
+  // *** ONE POINT, QUARTERED BY GUESS: 1 / 0.75 / 0.5 / 0.25. *** Chat's #5, and the
+  // calibration behind it is Mike's atom -- "a point is roughly a minute of effort", which is
+  // what `points.js` already means by one point. Two points for answering a four-choice
+  // question was paying double the atom for something that takes seconds.
+  correctPoints: 1,
+  // `tryingPoints` is GONE. It existed so that reading the answer after a miss still paid, and
+  // the quartering does that better: the last remaining option is worth a quarter rather than a
+  // separate number nobody could relate to the first one. A saved settings row may still carry
+  // the old key; nothing reads it, so it is inert rather than migrated.
+  quarterFloor: 0.25,     // never worth nothing — attempting always pays something
   choices: 4,
   // *** DRAW ON THE WORD BANK TOO (Mike, 2026-08-31: "I could see word forge and trivia drawing
   // from the same pool for a lot of people"). *** A vocabulary row already contains everything a
@@ -204,12 +211,12 @@ const SETTINGS = [
   { key: 'record', label: 'Record answers aloud', default: false, level: 'standard',
     onLabel: 'On', offLabel: 'Off',
     note: 'off unless you turn it on' },
-  { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 2,
-    level: 'advanced', min: 0, max: 10, step: 1 },
-  // Deliberately worth something: the correction is the point of a learning game, so the
-  // correction is what pays. Zero here prices reading the answer at nothing.
-  { key: 'tryingPoints', label: 'Points for reading the answer after a miss', kind: 'number',
-    default: 1, level: 'advanced', min: 0, max: 10, step: 1 },
+  { key: 'correctPoints', label: 'Points for a first-guess answer', kind: 'number', default: 1,
+    level: 'advanced', min: 0, max: 10, step: 1,
+    note: 'Each further guess is worth a quarter less, down to a quarter of this.' },
+  // The `tryingPoints` row is gone with the value it set -- see DEFAULTS. What it bought is now
+  // the floor of the quartering, which is one number a caregiver can reason about instead of two
+  // that had to be held in the right order.'
 ];
 
 registerModule(
@@ -348,8 +355,13 @@ registerModule(
      * the label was true all along and is now true of the behaviour as well.
      */
     function worth(spent) {
-      return Math.max(Number(cfg.tryingPoints) || 0,
-                      (Number(cfg.correctPoints) || 0) - spent);
+      const full = Number(cfg.correctPoints);
+      const max = Number.isFinite(full) ? full : 1;
+      // A QUARTER OF THE MAXIMUM PER GUESS, floored at a quarter -- so a four-choice question
+      // pays 1, 0.75, 0.5, 0.25 and never nothing. Derived from `max` rather than hardcoded, so
+      // somebody who prices a question at 2 gets 2 / 1.5 / 1 / 0.5 and the same shape.
+      const step = max / 4;
+      return Math.max(step, max - step * spent);
     }
 
     function choose(i) {
@@ -429,6 +441,10 @@ registerModule(
     }
 
     return {
+      // Exposed so the suite can assert the WHOLE ladder rather than the one step a given run
+      // happens to reach. Without it the ladder check had to guard against its own absence,
+      // which made it unfailable -- the fault this session keeps finding in its own work.
+      __worth: (spent) => worth(spent),
       __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length), askedAt,
         highlight, streak, deck: deck.length,
                         question: q ? { ...q } : null, bank: bank.length }),
