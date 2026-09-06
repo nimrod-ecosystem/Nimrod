@@ -503,12 +503,23 @@ export async function mountScreens(root, {
              NOTHING. This is that data, on screen, next to the decision it informs. -->
         <p class="h-modwhat" data-modwhat="${esc(p.id)}">${esc(catalog[0]?.description || '')}</p>
         <!-- The description answers "what is this"; it cannot answer "what does it LOOK like",
-             which is the other half of deciding whether it helps your mother. The ?m= parameter
-             opens the parts page on this exact one with a live copy of it running, so the link
-             lands on the answer rather than on a list to search. It tracks the picker - see
+             which is the other half of deciding whether it helps your mother.
+
+             *** IT MOUNTS THE THING HERE NOW, RATHER THAN NAVIGATING TO IT. ***
+
+             It used to be a link to /modules.html?m=<type>, which showed the right answer on
+             the wrong page: somebody halfway through building a dashboard was taken off it, and
+             the way back was the browser's back button. Chat's #10. Deciding whether to add a
+             module is a decision made HERE, next to the picker and the dashboard it would go
+             on, so the evidence belongs here too.
+
+             The scaffolding is module_try.js, the same host the public parts page uses -
+             everything it touches is a local throwaway backend, so nothing a visitor does while
+             poking at a preview reaches their real dashboard. It tracks the picker: see
              syncModuleWhat. (No backticks here either; see above.) -->
-        <a class="h-modsee" data-modsee="${esc(p.id)}"
-          href="/modules.html?m=${encodeURIComponent(catalog[0]?.type || '')}">See it running ↗</a>
+        <button type="button" class="h-modsee" data-modsee="${esc(p.id)}"
+          aria-expanded="false">See it running</button>
+        <div class="h-modpreview" data-modpreview="${esc(p.id)}" hidden></div>
         ${mods.length && makeSettings ? `
         <div class="h-arrange">
           <button class="h-btn h-quiet" data-arrange="${esc(p.id)}" aria-expanded="false">Arrange layout</button>
@@ -522,11 +533,11 @@ export async function mountScreens(root, {
   function syncModuleWhat(sel) {
     const id = sel.dataset.pick;
     const what = listEl.querySelector(`[data-modwhat="${CSS.escape(id)}"]`);
-    // The "see it running" link points at whatever is selected, so it moves with the picker
-    // too. A link that keeps pointing at the first entry after somebody chooses the fourth is
-    // worse than no link — it answers a question they are no longer asking.
-    const see = listEl.querySelector(`[data-modsee="${CSS.escape(id)}"]`);
-    if (see) see.href = `/modules.html?m=${encodeURIComponent(sel.value)}`;
+    // A preview showing the fourth module after somebody has moved the picker to the seventh
+    // is worse than no preview — it answers a question they are no longer asking, and it
+    // answers it convincingly. So changing the picker takes the old one down; pressing the
+    // button again brings up whatever is selected now.
+    closePreview(id);
     if (!what) return;
     const m = catalog.find((x) => x.type === sel.value);
     what.textContent = (m && m.description) || '';
@@ -535,6 +546,110 @@ export async function mountScreens(root, {
     const sel = e.target.closest('[data-pick]');
     if (sel) syncModuleWhat(sel);
   });
+
+  // ------------------------------------------------------------------------------------
+  // "SEE IT RUNNING" — a real module, here, on the page where the decision is being made
+  // ------------------------------------------------------------------------------------
+  //
+  // One try-host for the whole page, built the first time somebody asks and never before: it
+  // seeds a starter screen and builds a bus, an output bus, an audio arbiter and both device
+  // owners, and nobody who never presses the button should pay for that.
+  let tryHost = null;
+  let tryHostP = null;
+  const previews = new Map();           // profileId -> the element a module is mounted in
+
+  /**
+   * *** A MODULE BRINGS ITS OWN STYLESHEET, BECAUSE THIS PAGE HAS NEVER NEEDED IT. ***
+   *
+   * `home.html` does not link `modules.css` -- it had no reason to, until this page started
+   * mounting modules. Without it a preview renders as raw markup: no card, no grid, no
+   * `.mod-host` scroll box, the whole module running off the bottom of the document. Somebody
+   * pressing "see it running" would conclude the module is broken, which is the exact opposite
+   * of what the button is for.
+   *
+   * Found by LOOKING at the render, not by a check -- the checks all passed, because a module
+   * that mounts and answers to `mod-host` is mounted whether or not anything styled it.
+   *
+   * Loaded ON DEMAND rather than in the page head: most visits here never open a preview, and
+   * a page that pulls the whole module stylesheet to render a list of dashboard names is
+   * paying for something nobody asked for. Awaited, so the first frame is the styled one
+   * instead of a flash of unstyled module.
+   */
+  let cssP = null;
+  function moduleCss() {
+    if (cssP) return cssP;
+    if (document.querySelector('link[data-modules-css]')) { cssP = Promise.resolve(); return cssP; }
+    cssP = new Promise((resolve) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/modules.css';
+      link.dataset.modulesCss = '1';
+      // Resolve either way: a preview with no stylesheet is worse than one with, and much
+      // better than a button that hangs because a stylesheet 404'd.
+      link.addEventListener('load', () => resolve());
+      link.addEventListener('error', () => resolve());
+      document.head.append(link);
+    });
+    return cssP;
+  }
+
+  async function getTryHost() {
+    if (tryHost) return tryHost;
+    if (!tryHostP) {
+      tryHostP = import('./module_try.js')
+        .then((m) => m.createTryHost())
+        .then((h) => { tryHost = h; return h; });
+    }
+    return tryHostP;
+  }
+
+  function closePreview(pid) {
+    const box = listEl.querySelector(`[data-modpreview="${CSS.escape(pid)}"]`);
+    const btn = listEl.querySelector(`[data-modsee="${CSS.escape(pid)}"]`);
+    const el = previews.get(pid);
+    if (el && tryHost) { try { tryHost.unmount(el); } catch (err) { console.error(err); } }
+    previews.delete(pid);
+    if (box) { box.hidden = true; box.innerHTML = ''; }
+    if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.textContent = 'See it running'; }
+  }
+
+  async function togglePreview(btn) {
+    const pid = btn.dataset.modsee;
+    const box = listEl.querySelector(`[data-modpreview="${CSS.escape(pid)}"]`);
+    const sel = listEl.querySelector(`[data-pick="${CSS.escape(pid)}"]`);
+    if (!box || !sel) return;
+    if (!box.hidden) { closePreview(pid); return; }
+
+    const type = sel.value;
+    box.hidden = false;
+    box.innerHTML = '<p class="h-quiet">Starting it up…</p>';
+    btn.setAttribute('aria-expanded', 'true');
+    btn.textContent = 'Hide it';
+    try {
+      const [host] = await Promise.all([getTryHost(), moduleCss()]);
+      // `mod-box` is what makes the module size itself to THIS box rather than to the page —
+      // the container the modules.css container queries are written against. Without it a
+      // module in a 320px-tall preview lays itself out as though it had a screen.
+      // *** THE HEIGHT IS INLINE, AND THAT IS NOT LAZINESS. ***
+      //
+      // `mod-box` is `container-type:size`, which needs a DEFINITE size or it contains
+      // nothing -- and the module then lays itself out against the page and runs off the
+      // bottom of it. The rest of the look (border, corner, background) is in home.html's
+      // stylesheet where it belongs, but the one declaration the containment depends on ships
+      // with the element that declares itself a container. Caught by looking at the preview on
+      // a page that does not load those styles: the module spilled down the whole document.
+      box.innerHTML = '<div class="h-modstage mod-box" style="height:320px"></div>';
+      const stage = box.firstElementChild;
+      host.mount(type, stage);
+      previews.set(pid, stage);
+    } catch (err) {
+      console.error('home: preview failed', err);
+      // A module that will not start is worth saying plainly. It is also not a reason to lose
+      // the dashboard somebody is building, which is the whole point of previewing here.
+      box.innerHTML = '<p class="h-quiet">That one would not start here. It still works on a '
+        + 'dashboard — some modules need a camera or a folder that this preview has not got.</p>';
+    }
+  }
 
   const arrangers = new Map();          // profileId -> mounted composer
 
@@ -572,6 +687,11 @@ export async function mountScreens(root, {
 
   function render() {
     destroyArrangers();
+    // Every card is about to be replaced, so anything mounted inside one has to come down
+    // first. A module left running inside discarded markup keeps its timers, its audio
+    // registration and its camera claim -- which on this page means a preview somebody closed
+    // ten minutes ago still holding the microphone.
+    for (const pid of [...previews.keys()]) closePreview(pid);
     listEl.innerHTML = list.length
       ? list.map(card).join('')
       : `<p class="h-empty">No screens yet. Name one above and hit Create.</p>`;
@@ -581,6 +701,9 @@ export async function mountScreens(root, {
     // settings handle per screen would be a request per card at load.
     for (const b of root.querySelectorAll('[data-arrange]')) {
       b.addEventListener('click', () => toggleArrange(b));
+    }
+    for (const b of root.querySelectorAll('[data-modsee]')) {
+      b.addEventListener('click', () => togglePreview(b));
     }
 
     for (const b of root.querySelectorAll('[data-open]')) {
