@@ -275,7 +275,10 @@
 .youtube .ybtn{min-width:34px;min-height:34px;border-radius:99px;cursor:pointer;
   border:1px solid rgba(255,255,255,.28);background:transparent;color:#cfe0d6;font-size:1rem}
 .youtube .ybtn:hover{background:rgba(255,255,255,.12)}
-.youtube .gear{position:absolute;top:8px;right:8px;z-index:4;min-width:34px;min-height:34px;
+/* z-index 6, ABOVE the settings sheet (5). The panel is `inset:8px` and was covering the gear
+   that opened it, so the one control somebody would reach for to get out was underneath the
+   thing they wanted to leave. */
+.youtube .gear{position:absolute;top:8px;right:8px;z-index:6;min-width:34px;min-height:34px;
   border-radius:99px;cursor:pointer;border:1px solid rgba(255,255,255,.28);
   background:rgba(7,18,13,.72);color:#cfe0d6}
 .youtube .gear:hover{background:rgba(7,18,13,.92)}
@@ -284,6 +287,12 @@
 .youtube .settings{position:absolute;inset:8px;z-index:5;overflow:auto;padding:12px 14px;
   border-radius:12px;background:rgba(7,18,13,.96);color:#e7efe9;
   border:1px solid rgba(255,255,255,.16);font-size:.86rem}
+/* The way out, first thing in the panel and full width -- it is the control somebody wants when
+   they are lost, and hunting for it is the problem. */
+.youtube .yt-close{display:block;width:100%;margin:0 0 10px;min-height:40px;
+  border-radius:8px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
+  color:inherit;font:inherit;cursor:pointer}
+.youtube .yt-close:hover{background:rgba(255,255,255,.16)}
 .youtube .settings .chk{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .youtube .settings .addrow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
 .youtube .settings .addrow input{flex:1 1 140px;min-width:0;padding:7px 9px;border-radius:8px;

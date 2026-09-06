@@ -974,6 +974,15 @@ registerModule(
             </div>
             <button class="gear" data-gear aria-label="youtube settings">⚙</button>
             <div class="settings" data-settings hidden>
+              <!-- *** A PANEL YOU CANNOT LEAVE IS THE WORST THING ON A BEDSIDE SCREEN. ***
+                   Mike opened this, added a playlist, and could not get out: Escape did
+                   nothing, there was no close, and the panel is inset on all four sides so it
+                   covered the gear that opened it. He escaped by navigating to Photos and back.
+                   Three ways out now, because one is not enough for a control somebody
+                   may be using with a switch: this button, the Escape key, and the gear,
+                   which is lifted above the panel so the thing that opened it still
+                   closes it. -->
+              <button type="button" class="yt-close" data-close aria-label="close settings">Close ✕</button>
               <label class="chk"><input type="checkbox" data-opt="autoAdvance"> auto-advance when a video ends</label>
               <label class="chk"><input type="checkbox" data-opt="shuffle"> shuffle (off = play the playlist in order)</label>
               <div class="addrow">
@@ -1154,6 +1163,21 @@ registerModule(
           if (!id) { setStatus('That is not a playlist link — a playlist URL has "list=PL…" in it.'); return; }
           el.value = '';
           state.set({ playlistId: id });
+        });
+        // THE WAY OUT. `closePanel` rather than a toggle, because Escape and Close both mean
+        // "leave", never "come back".
+        const panelEl = () => mount.querySelector('[data-settings]');
+        const closePanel = () => { const el = panelEl(); if (el) el.hidden = true; };
+        mount.querySelector('[data-close]').addEventListener('click', closePanel);
+        // On the MODULE ROOT, not the document: two of these on one screen must not close each
+        // other, and a keydown listener on `window` from a panel is how that happens.
+        mount.addEventListener('keydown', (e) => {
+          if (e.key !== 'Escape') return;
+          const el = panelEl();
+          if (!el || el.hidden) return;
+          e.preventDefault();
+          e.stopPropagation();
+          closePanel();
         });
         mount.querySelector('[data-sch-add]').addEventListener('click', () => addSchedule());
         mount.querySelector('[data-find-go]').addEventListener('click', () => runSearch());
