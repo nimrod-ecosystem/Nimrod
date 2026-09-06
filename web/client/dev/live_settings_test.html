@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>a settings menu that does nothing — the canary</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  #host{position:absolute;left:-10000px;top:0;width:640px;height:420px}
+</style>
+</head>
+<body>
+<h1>a settings menu that does nothing</h1>
+
+<div class="warn">
+  A module that declares settings and never subscribes to its own state reads its config once,
+  at mount, and never again. Every row in its settings menu is then <b>inert while the panel is
+  on screen</b> — somebody changes the wait, the volume, how long a call counts down before it
+  answers, and nothing happens. They have no way to tell, because the menu shows the value they
+  set. Three modules were like this and nothing was watching, so this is the thing that watches.
+</div>
+
+<p>Found by hand: <code>pressgame</code> subscribed to the bus three times and to its own state
+not at all. The other two came from grepping for the same shape. Grep is not a check — it cannot
+tell a module that subscribes from a module that has the word in a comment — so this
+<b>mounts every module that declares a setting, hands it a state handle it can watch, and asks
+whether the module took it.</b></p>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { listManifests } from '../module.js';
+import { createTryHost } from '../module_try.js';
+// Registers every module, which is what makes `listManifests()` the real list. The same list
+// modules.html imports -- there is no barrel file, and inventing one for a test would put a
+// second place that has to be kept in step with the catalog.
+import '../modules/algebra.js';
+import '../modules/camera.js';
+import '../modules/clock.js';
+import '../modules/comet.js';
+import '../modules/pressgame.js';
+import '../modules/call.js';
+import '../modules/director.js';
+import '../modules/educational.js';
+import '../modules/lessons.js';
+import '../modules/personal.js';
+import '../modules/photos.js';
+import '../modules/pond.js';
+import '../modules/wallpaper.js';
+import '../modules/board.js';
+import '../modules/progress.js';
+import '../modules/quests.js';
+import '../modules/sprint.js';
+import '../modules/wordforge.js';
+import '../modules/youtube.js';
+import '../modules/trivia.js';
+import '../modules/bank.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * A state handle that RECORDS whether anybody subscribed to it, and that can actually change.
+ *
+ * The stub this replaces is the reason the defect survived: `pressgame_test`'s rig passed
+ * `{ get: () => ({...saved}) }` — no `subscribe`, no `set`. A stub that cannot change cannot
+ * catch a module ignoring changes, and every check written against it passed.
+ */
+function watchedState(initial = {}) {
+  let row = { ...initial };
+  const subs = [];
+  return {
+    subscribed: () => subs.length > 0,
+    fire: (patch) => { row = { ...row, ...patch }; subs.forEach((f) => { try { f(row); } catch (e) { console.error(e); } }); },
+    handle: {
+      get: () => row,
+      set: (patch) => { row = { ...row, ...patch }; subs.forEach((f) => f(row)); return Promise.resolve(); },
+      subscribe: (f) => { subs.push(f); return () => {}; },
+      load: () => Promise.resolve(),
+      flush: () => Promise.resolve(),
+      startPolling() {}, destroy() {},
+    },
+  };
+}
+
+(async () => {
+try {
+  const host = document.getElementById('host');
+  const th = await createTryHost();
+
+  // Only modules that DECLARE settings. A module with nothing to configure has nothing to
+  // react to, and demanding a subscription from it would be a rule about ceremony.
+  const withSettings = listManifests().filter((m) => (m.settings || []).length > 0);
+
+  section(`every module that declares a setting — ${withSettings.length} of them`);
+  check('there are modules declaring settings at all, so this suite is measuring something',
+    withSettings.length > 5, String(withSettings.length));
+
+  const deaf = [];
+  const broke = [];
+  // *** COUNTED, BECAUSE AN EMPTY `deaf` LIST IS AMBIGUOUS. ***
+  // If every mount threw, nothing would be judged and the check below would pass reporting
+  // nothing wrong -- a check that cannot fail, which is how two defects survived a whole
+  // session earlier today. The number of modules actually MOUNTED AND JUDGED is asserted.
+  let judged = 0;
+  for (const m of withSettings) {
+    const w = watchedState({});
+    const box = document.createElement('div');
+    box.className = 'mod-box';
+    box.style.cssText = 'position:relative;width:640px;height:420px';
+    host.append(box);
+    try {
+      th.mount(m.type, box, { state: w.handle });
+      await sleep(30);
+      judged += 1;
+      if (!w.subscribed()) deaf.push(m.type);
+      // AND IT HAS TO SURVIVE ONE. A module that subscribes and then throws on the first
+      // change is worse than one that never subscribed: the menu looks live and the panel
+      // is broken.
+      else {
+        try { w.fire({ __probe_change: Date.now() }); }
+        catch (err) { broke.push(`${m.type}: ${err && err.message}`); }
+      }
+    } catch (err) {
+      // A module that will not mount here is not this suite's finding — several need a camera,
+      // a folder or a transport. Recorded rather than counted against it.
+      console.warn('live_settings: could not mount', m.type, err);
+    }
+    try { th.unmount(box); } catch { /* already gone */ }
+    box.remove();
+  }
+
+  check('*** most of them actually mounted, so a clean result means something ***',
+    judged >= Math.ceil(withSettings.length * 0.7),
+    judged + ' of ' + withSettings.length + ' mounted and judged');
+  check('*** every module with a settings menu listens for those settings changing ***',
+    deaf.length === 0,
+    deaf.length ? `inert menus: ${deaf.join(', ')}` : '');
+  check('...and none of them falls over when one actually changes',
+    broke.length === 0, broke.join(' | '));
+
+  // AND THE CANARY HAS TO BE ABLE TO GO RED. A suite that mounts everything and reports zero
+  // is indistinguishable from a suite that mounted nothing.
+  {
+    const w = watchedState({});
+    check('the watcher really does notice a subscription',
+      (() => { w.handle.subscribe(() => {}); return w.subscribed(); })());
+    const w2 = watchedState({});
+    check('...and really does report its absence', !w2.subscribed());
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

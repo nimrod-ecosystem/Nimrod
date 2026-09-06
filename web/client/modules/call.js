@@ -536,6 +536,34 @@ registerModule(
           if (e.target.closest('[data-demo-stop]')) stopDemo();
         });
 
+        // *** SETTINGS TAKE EFFECT WHILE IT IS MOUNTED. THEY DID NOT. ***
+        //
+        // `cfg` was read once here and never again -- five declared settings, none of which
+        // did anything until somebody remounted the panel. On a critical module that is worse
+        // than on a game: a caregiver who turns "say it out loud" off, or moves "before it
+        // answers" to never, has every reason to believe they have changed what the screen
+        // will do the next time somebody rings.
+        //
+        // Same defect and the same fix as `pressgame.js`, found by sweeping every module that
+        // declares settings for one that never subscribes. `comet.js` was the third.
+        //
+        // *** WHAT IT REFUSES TO CHANGE MID-RING, AND WHY. *** A countdown that is already
+        // running is a promise to whoever is in the room: this call connects in N seconds
+        // unless somebody says no. Re-reading `declineSeconds` under that would move the
+        // deadline while a person is deciding against it. So a ring in progress keeps the
+        // window it started with, and the new value governs the next call.
+        offs.push(state?.subscribe?.(() => {
+          const next = { ...DEFAULTS, ...(state.get() || {}) };
+          const ringing = phase === 'ringing';
+          cfg = ringing
+            ? { ...next, declineSeconds: cfg.declineSeconds, ringSeconds: cfg.ringSeconds }
+            : next;
+          // The example is a caregiver control on an idle screen; turning it off has to take
+          // it away now rather than at the next mount.
+          if (cfg.demo === false) stopDemo();
+          render();
+        }) || (() => {}));
+
         // Driven by the world, not by this module deciding things.
         offs.push(bus.subscribe(CALL_INCOMING + ':signal', (from) => incoming(from)));
         offs.push(bus.subscribe(CALL_ANSWER, () => answer()));
