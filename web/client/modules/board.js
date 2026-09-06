@@ -60,6 +60,7 @@ import { createScan, SCAN_DEFAULTS } from '../input_scan.js';
 import { symbolSvg } from '../aac_symbols.js';
 import { normalizeBoard, tierOf, gridOf, BUILTIN_BOARDS, YESNO } from '../aac_vocab.js';
 import { createMediaSourcesClient, resolveItemUrl } from '../media_sources.js';
+import { mountBoardEditor, blankBoard } from '../board_editor.js';
 import { speak as speakDefault } from '../voice.js';
 
 // A card shorter or narrower than this has no room for a symbol AND a legible word. See
@@ -779,6 +780,69 @@ registerModule(
       applyConfig();
     }
 
+    // ------------------------------------------------------------------------------------
+    // THE EDITOR
+    // ------------------------------------------------------------------------------------
+    //
+    // It lives in `board_editor.js` — this is only the part that opens it, puts what it made
+    // into the settings row, and gets out of the way.
+    let editor = null;
+
+    /**
+     * Open the editor over the board.
+     *
+     * *** THE DRAFT IS WHY THIS IS NOT THREE LINES. *** The editor closes ITSELF after a few
+     * idle minutes, because a caregiver called into the corridor would otherwise leave the
+     * person the board is for looking at a form they cannot fill in or dismiss — the exact
+     * shape `CLAUDE.md` forbids. What comes back from that is a half-finished board, and it is
+     * neither saved over the real one (a board written on a timer) nor thrown away (somebody's
+     * afternoon). It is kept as `boardDraft` and offered back the next time this opens.
+     */
+    function openEditor(which) {
+      const host = mount.querySelector('[data-editor]');
+      if (!host) return;
+      panelOpen(false);
+      closeEditor();
+      const row = state?.get?.() || {};
+      const base = which === 'new'
+        ? (row.boardDraft && !row.boardDraft.__of ? row.boardDraft : blankBoard())
+        : (row.boardDraft && row.boardDraft.__of === board.id ? row.boardDraft : board);
+      host.hidden = false;
+      editor = mountBoardEditor(host, {
+        board: base,
+        making: which === 'new',
+        sources: ctx.mediaSources
+          || createMediaSourcesClient({ user: ctx.user, cache: true, personId: ctx.personId || null }),
+        setTimer, clearTimer,
+        onCancel: () => closeEditor(),
+        onIdle: (draftBoard) => {
+          // Keep the work, give the board back. Tagged with what it was editing so reopening
+          // "Edit this board" on a DIFFERENT board does not hand somebody the wrong draft.
+          saveSetting('boardDraft', { ...draftBoard, __of: which === 'new' ? null : board.id });
+          closeEditor();
+        },
+        onSave: (made) => {
+          closeEditor();
+          // Two writes in one, because they are one decision: the board somebody just made,
+          // and the choice to be looking at it. Saving a board and leaving the screen on the
+          // old one is the sort of thing that reads as "it did not save".
+          try {
+            state?.set?.({ ...(state.get() || {}), board: made, boardId: CUSTOM_ID,
+                           boardDraft: null });
+          } catch (err) { console.error('board: could not save the board', err); }
+          cfg = { ...cfg, boardId: CUSTOM_ID };
+          applyConfig();
+        },
+      });
+    }
+
+    function closeEditor() {
+      try { editor?.destroy?.(); } catch { /* already gone */ }
+      editor = null;
+      const host = mount.querySelector('[data-editor]');
+      if (host) { host.hidden = true; host.innerHTML = ''; }
+    }
+
     function applyConfig() {
       board = boardFor(cfg.boardId);
       drawBoards();
@@ -786,7 +850,7 @@ registerModule(
       // the communication surface, and hiding one while leaving the other is half a lock.
       const g = gearEl();
       if (g) g.hidden = !!cfg.locked;
-      if (cfg.locked) panelOpen(false);
+      if (cfg.locked) { panelOpen(false); closeEditor(); }
       lit = 0;
       // A different board is a different set of rectangles. Whatever the aim was resting on
       // is not there any more, so the highlight goes with it rather than sitting on whichever
@@ -808,6 +872,8 @@ registerModule(
         panelOpen: !!mount.querySelector('[data-panel]') && !mount.querySelector('[data-panel]').hidden,
         panelBoards: [...mount.querySelectorAll('[data-pboard] option')].map((o) => o.value),
         locked: !!cfg.locked,
+        editing: !!editor,
+        editorProbe: editor ? editor.__probe() : null,
         lit, scanning: !!scan, reveal: cfg.reveal,
         pointed, aimHold, tapSelects: cfg.tapSelects !== false,
         // The grid AS DRAWN, so a test can assert the transpose rather than the setting.
@@ -839,11 +905,16 @@ registerModule(
             <div class="ab-grid" data-grid role="group" aria-label="communication board"></div>
             <button type="button" class="ab-gear" data-gear aria-expanded="false"
                     aria-label="board settings">⚙</button>
+            <div class="ab-editor" data-editor hidden role="dialog" aria-label="edit board"></div>
             <div class="ab-panel" data-panel hidden role="dialog" aria-label="board settings">
               <label class="ab-prow">
                 <span>Board</span>
                 <select data-pboard></select>
               </label>
+              <div class="ab-prow ab-pbtns">
+                <button type="button" class="ab-pbtn" data-edit>Edit this board</button>
+                <button type="button" class="ab-pbtn" data-new>Make a new board…</button>
+              </div>
               <label class="ab-prow ab-pcheck">
                 <input type="checkbox" data-popt="showBoards">
                 <span>Show the row of boards above the cards</span>
@@ -901,6 +972,10 @@ registerModule(
             return;
           }
           if (e.target.closest('[data-pclose]')) { panelOpen(false); return; }
+          if (e.target.closest('[data-edit]')) { openEditor('edit'); return; }
+          if (e.target.closest('[data-new]')) { openEditor('new'); return; }
+          // The editor is a surface of its own. A press inside it is not a press on the board.
+          if (e.target.closest('[data-editor]')) return;
           // A press anywhere outside the panel closes it — including on a card, which is the
           // press somebody actually wanted. `pointerdown` on the cards has already stopped
           // propagating, so this runs on the click that follows and does not eat the word.
@@ -972,6 +1047,7 @@ registerModule(
         try { ro?.disconnect(); } catch { /* already gone */ } ro = null;
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }
         releaseImages();
+        closeEditor();
         gone.abort();                       // every listener this module put on the mount
         cardEls = [];
         mount.innerHTML = '';
