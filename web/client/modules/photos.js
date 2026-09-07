@@ -156,6 +156,17 @@ registerModule(
     const client = ctx.sources
       || createMediaSourcesClient({ user, cache: true, personId: ctx.personId || null });
 
+    // *** A SEAM BESIDE `ctx.sources`, AND IT EARNED ITS PLACE. ***
+    //
+    // The "Allow" button below -- the one that brings her photos back after a folder loses
+    // permission, which happens on an ordinary browser restart -- was one of the 18 controls
+    // `unpressed_controls.py` reports as never pressed by any test. It only appears when the
+    // listing fails in ONE specific way, and with `resolveListing` reached straight through the
+    // module import there was no way to make that happen from outside.
+    //
+    // Production is untouched: with nothing injected this is the same function it always called.
+    const resolveList = ctx.resolveListing || resolveListing;
+
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {}, channels = {};
     let stats = {};                 // derived from play events
@@ -442,7 +453,7 @@ registerModule(
       }
       let listing;
       try {
-        listing = await resolveListing(source, cfg.album);
+        listing = await resolveList(source, cfg.album);
       } catch (e) {
         if (seq !== loadSeq) return;
         // The words come from `listingFailure` so they can be checked without a browser; this

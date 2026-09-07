@@ -298,6 +298,79 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     if (!e || !e.__skipped) check('unexpected error', false, String(e && e.stack || e));
   }
 
+  // =====================================================================================
+  // *** THE "ALLOW" BUTTON: HER PHOTOS COMING BACK, AND NOTHING HAD EVER PRESSED IT. ***
+  //
+  // A folder handle loses permission on an ordinary browser restart. When that happens this
+  // module does NOT offer Retry -- retrying cannot work, because the browser will not re-grant
+  // access without a user gesture aimed at asking for it -- so it offers one button, and that
+  // button is the entire path back to her photographs.
+  //
+  // `unpressed_controls.py` lists `[data-action]` among 18 controls no test has ever pressed.
+  // It only appears when the listing fails in one specific way, which is why it needed a seam
+  // (`ctx.resolveListing`) before it could be reached at all.
+  section('*** the Allow button — the way back from a lost folder permission ***');
+  try {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const state = {
+      get: () => ({ sourceId: 'folder-x', album: '' }), set: () => {}, flush: () => {},
+      subscribe: (fn) => { fn({ sourceId: 'folder-x', album: '' }); return () => {}; },
+    };
+    let asked = 0;
+    const inst = mountModule('photos', {
+      mount: host, bus: createBus(), state,
+      events: { append: async () => {}, load: async () => {}, flush: async () => {},
+                get: () => ({ events: [] }), subscribe: () => () => {}, startPolling() {},
+                destroy() {} },
+      sources: { list: async () => [{ id: 'folder-x', label: 'Her photos', kind: 'folder' }] },
+      // The exact failure the button exists for.
+      resolveListing: async () => {
+        asked++;
+        const e = new Error("that folder's permission is \"prompt\"");
+        e.code = 'permission';
+        throw e;
+      },
+    });
+    inst.init();
+    for (let i = 0; i < 40 && !host.querySelector('[data-action]'); i++) await sleep(50);
+
+    const btn = host.querySelector('[data-action]');
+    check('*** a lost permission offers a button, not a dead panel ***', !!btn,
+      host.textContent.slice(0, 140));
+    check('...and it says what it will do', btn && /allow/i.test(btn.textContent),
+      btn && btn.textContent);
+    // RETRY IS DELIBERATELY ABSENT HERE: it cannot work without a gesture aimed at the prompt,
+    // and offering it would be a button that fails every time somebody presses it.
+    check('*** ...and Retry is NOT offered, because retrying cannot work ***',
+      !host.querySelector('[data-retry]'), host.textContent.slice(0, 140));
+
+    // PRESS IT. The point of this whole section.
+    const before = host.textContent;
+    btn.click();
+    await sleep(60);
+    check('*** pressing it does something ***', host.textContent !== before,
+      `before=${before.slice(0, 60)} after=${host.textContent.slice(0, 60)}`);
+
+    // AND IT DOES NOT LEAVE A DEAD END. In a test browser there is no real folder handle, so
+    // the request fails -- which is the case that matters most: somebody who lands here must
+    // still have a way forward rather than a panel with nothing on it.
+    for (let i = 0; i < 40; i++) {
+      if (!/asking/i.test(host.textContent)) break;
+      await sleep(50);
+    }
+    const stillActionable = !!host.querySelector('[data-action]')
+      || !!host.querySelector('[data-retry]');
+    check('*** ...and a refusal leaves a way forward, never a dead panel ***',
+      stillActionable, host.textContent.slice(0, 160));
+    check('...and it still explains itself', host.textContent.trim().length > 10,
+      host.textContent.slice(0, 120));
+
+    inst.destroy();
+  } catch (e) {
+    check('the Allow button section threw', false, String((e && e.stack) || e));
+  }
+
   const sum = document.getElementById('summary');
   if (skipped && !failed) {
     sum.textContent = `SKIPPED \u2014 the media agent this suite drives is not running `
