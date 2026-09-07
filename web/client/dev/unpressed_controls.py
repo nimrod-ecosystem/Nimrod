@@ -56,6 +56,22 @@ PRESS_DIRECT = re.compile(r"""['"]([^'"]*\[data-[\w-]+[^'"]*|\.[a-z][\w-]*)['"]\
 ASSIGN = re.compile(r"""(?:const|let|var)\s+(\w+)\s*=\s*[^;
 ]*?['"]([^'"]*\[data-[\w-]+[^'"]*)['"]""")
 CLICKED_VAR = re.compile(r"""(\w+)\s*\??\.click\(\)""")
+# A THIRD SHAPE, and missing it did exactly the damage this file warns about.
+#
+#     const buys = () => [...host.querySelectorAll('[data-buy]')];
+#     ...
+#     buys()[treat].click();
+#
+# A HELPER THAT RETURNS A LIST, indexed at the press. `quests_test` has pressed `[data-buy]` and
+# `[data-task]` this way for as long as they have existed, and this script reported both as
+# never pressed -- so the next person to read the list starts writing tests that are already
+# there. The docstring above calls that the worst way for a list like this to be wrong, and it
+# was wrong that way about two of its own eighteen rows.
+#
+# Same binding rule as ASSIGN: the name on the left, the first selector on the right.
+ASSIGN_FN = re.compile(r"""(?:const|let|var)\s+(\w+)\s*=\s*\([^)]*\)\s*=>[^;\n]*?['"]([^'"]*\[data-[\w-]+[^'"]*)['"]""")
+# `buys()[i].click()` / `items()[i].click()` / `rows()[0]?.click()`
+CLICKED_CALL = re.compile(r"""(\w+)\(\)\s*\[[^\]]*\]\s*\??\.click\(\)""")
 DISPATCHED_VAR = re.compile(r"""(\w+)\s*\??\.dispatchEvent\(""")
 
 def read(p):
@@ -94,6 +110,11 @@ def presses_in(src):
         for m in rx.finditer(src):
             if m.group(1) in held:
                 found.add(key(held[m.group(1)]))
+    # The list-returning helper: `const buys = () => [...q('[data-buy]')]` then `buys()[i].click()`.
+    held_fn = {m.group(1): m.group(2) for m in ASSIGN_FN.finditer(src)}
+    for m in CLICKED_CALL.finditer(src):
+        if m.group(1) in held_fn:
+            found.add(key(held_fn[m.group(1)]))
     return found
 
 def main():
