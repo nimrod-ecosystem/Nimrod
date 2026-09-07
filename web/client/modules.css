@@ -1,3 +1,8 @@
+/* THE DEPTH SCALE COMES FIRST. Every z-index below is a band from `layers.css`; no rule
+   in this file invents a number. `@import` must precede every other rule, which is why
+   it is the first line. */
+@import url('./layers.css');
+
 /* THE SETTINGS MENU'S OWN STYLES, PULLED IN HERE ON PURPOSE.
  *
  * A module can now open the universal menu about ITSELF (see comet.js), which means the menu
@@ -267,7 +272,7 @@
  * somebody is watching. `.settings` stays closed until the gear is pressed — it is `hidden` in
  * the markup, and `[hidden]` wins.
  */
-.youtube .nav{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:4;
+.youtube .nav{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:calc(var(--z-panel-contents) + 4);
   display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:99px;
   background:rgba(7,18,13,.72);color:#cfe0d6;max-width:calc(100% - 16px)}
 .youtube .nav .yt-label{font-size:.76rem;overflow:hidden;text-overflow:ellipsis;
@@ -278,13 +283,13 @@
 /* z-index 6, ABOVE the settings sheet (5). The panel is `inset:8px` and was covering the gear
    that opened it, so the one control somebody would reach for to get out was underneath the
    thing they wanted to leave. */
-.youtube .gear{position:absolute;top:8px;right:8px;z-index:6;min-width:34px;min-height:34px;
+.youtube .gear{position:absolute;top:8px;right:8px;z-index:calc(var(--z-panel-contents) + 6);min-width:34px;min-height:34px;
   border-radius:99px;cursor:pointer;border:1px solid rgba(255,255,255,.28);
   background:rgba(7,18,13,.72);color:#cfe0d6}
 .youtube .gear:hover{background:rgba(7,18,13,.92)}
 /* The panel itself: a sheet over the video, scrolling inside its own box, because a playlist
    is a list and a panel can be a quarter of a screen. */
-.youtube .settings{position:absolute;inset:8px;z-index:5;overflow:auto;padding:12px 14px;
+.youtube .settings{position:absolute;inset:8px;z-index:calc(var(--z-panel-contents) + 5);overflow:auto;padding:12px 14px;
   border-radius:12px;background:rgba(7,18,13,.96);color:#e7efe9;
   border:1px solid rgba(255,255,255,.16);font-size:.86rem}
 /* The way out, first thing in the panel and full width -- it is the control somebody wants when
@@ -333,7 +338,7 @@
  * still on screen, still the thing to look at; the marker only says why it is not moving.
  * A full overlay would hide the frame her family is in the middle of. */
 .youtube .held,.personal .held{
-  position:absolute;top:10px;left:10px;z-index:3;
+  position:absolute;top:10px;left:10px;z-index:calc(var(--z-panel-contents) + 3);
   padding:5px 12px;border-radius:99px;
   background:rgba(10,51,35,.82);color:var(--on-dark);
   font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
@@ -470,7 +475,7 @@
  * The panel is a plain surface at a fixed readable size, again not `--u`: it is read by
  * somebody standing at the screen, not by the person the board is for, so it wants ordinary
  * body text rather than something scaled to a card. */
-.ab-gear{position:absolute;top:6px;right:6px;z-index:3;
+.ab-gear{position:absolute;top:6px;right:6px;z-index:calc(var(--z-panel-contents) + 3);
   width:44px;height:44px;border-radius:50%;
   border:1px solid var(--ab-line);background:var(--ab-card);color:var(--ab-ink);
   font-size:19px;line-height:1;cursor:pointer;opacity:.5;
@@ -480,7 +485,7 @@
 /* `max-height` + scroll: this panel grows as the module does, and a panel taller than the
    board would put its own Done button off the bottom of a small dashboard cell — which is a
    surface somebody cannot close, on the one module where that matters most. */
-.ab-panel{position:absolute;top:54px;right:6px;z-index:4;
+.ab-panel{position:absolute;top:54px;right:6px;z-index:calc(var(--z-panel-contents) + 4);
   width:min(320px,calc(100% - 12px));max-height:calc(100% - 64px);overflow:auto;
   box-sizing:border-box;padding:12px 14px;
   background:var(--ab-card);color:var(--ab-ink);
@@ -522,7 +527,7 @@
  *
  * Sized in px, not `--u`: it is read and typed into by somebody standing at the screen, so it
  * wants ordinary form text rather than something scaled to a card. */
-.ab-editor{position:absolute;inset:0;z-index:6;overflow:auto;
+.ab-editor{position:absolute;inset:0;z-index:calc(var(--z-panel-contents) + 6);overflow:auto;
   background:var(--ab-bg,#12181c);color:var(--ab-ink,#e8eef0)}
 .bedit{padding:12px 14px 16px;box-sizing:border-box;
   background:var(--ab-bg,#12181c);color:var(--ab-ink,#e8eef0);min-height:100%;
@@ -677,7 +682,7 @@
 /* THE HELD-STATE WALLPAPER. It covers the stage rather than replacing it: the paused
    segment is still mounted underneath and comes back untouched. Structural properties are
    here AND set nowhere else, so nothing depends on a second rule to be positioned. */
-.director .d-wall{position:absolute;inset:0;z-index:2}
+.director .d-wall{position:absolute;inset:0;z-index:var(--z-world)}
 .director .d-wall[hidden]{display:none}
 
 /* The wallpaper itself. Full-bleed, no chrome, nothing focusable — it is scenery. */
@@ -979,7 +984,7 @@
    tinted, because two rows differing only in hue are one row to somebody with
    reduced vision. */
 .po-wrap {
-  position: absolute; z-index: 40; pointer-events: none;
+  position: absolute; z-index: var(--z-floating); pointer-events: none;
   display: flex; flex-direction: column; gap: 2px;
   padding: 8px 14px; border-radius: 12px;
   background: rgba(10, 51, 35, .82); color: #F7F4D5;
@@ -1015,7 +1020,7 @@
    *
    * IT NEVER APPEARS ON A REAL BEDSIDE SCREEN. It is inside the signed-out branch only —
    * a paired kiosk has a device key and never reaches this code. */
-  #demo{position:fixed;top:0;left:0;right:0;z-index:20;
+  #demo{position:fixed;top:0;left:0;right:0;z-index:var(--z-transport);
     display:flex;align-items:center;gap:14px;flex-wrap:wrap;
     padding:11px 16px;background:rgba(10,51,35,.94);color:#F7F4D5;
     font-size:.95rem;box-shadow:0 2px 14px rgba(0,0,0,.35)}
@@ -1044,7 +1049,7 @@
  * under the real mouse and swallow every click on the screen it is meant to be pointing at.
  */
 .cur {
-  position: fixed; z-index: 60; pointer-events: none;
+  position: fixed; z-index: var(--z-cursor); pointer-events: none;
   left: 0; top: 0;
   --cur-color: #F7C948;
   --cur-ring: 4px;

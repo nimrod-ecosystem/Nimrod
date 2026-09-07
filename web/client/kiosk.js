@@ -34,6 +34,7 @@ import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
 import { normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle } from './layout.js';
 import { mountSettings } from './settings.js';
+import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
@@ -1920,7 +1921,8 @@ function showPreviewBadge() {
   const b = document.createElement('div');
   b.textContent = 'Preview — not saved';
   b.setAttribute('data-preview-badge', '');
-  b.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9999;'
+  b.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);'
+    + `z-index:${LAYERS.menus};`
     + 'padding:6px 14px;border-radius:999px;font:600 13px/1.2 system-ui,sans-serif;'
     + 'background:rgba(10,51,35,.88);color:#F7F4D5;border:1px solid rgba(247,244,213,.35)';
   document.body.appendChild(b);

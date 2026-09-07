@@ -1,3 +1,8 @@
+/* THE DEPTH SCALE COMES FIRST. Every z-index below is a band from `layers.css`; no rule
+   in this file invents a number. `@import` must precede every other rule, which is why
+   it is the first line. */
+@import url('./layers.css');
+
 /* settings.css — the universal settings menu.
  *
  * Every color is a theme token, so the menu follows Dusk at the bedside without a second
@@ -12,7 +17,7 @@
 .st-scrim {
   position: fixed;
   inset: 0;
-  z-index: 9000;
+  z-index: var(--z-menus);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,7 +45,7 @@
  * the nearest positioned thing, which is exactly the bug the mode exists to prevent. */
 .st-scrim.st-inline {
   position: absolute;
-  z-index: 50;
+  z-index: calc(var(--z-panel-contents) + 50);
   padding: 2vmin;
 }
 
@@ -152,7 +157,7 @@
   position: absolute;
   top: 0; left: 50%;
   transform: translateX(-50%);
-  z-index: 8000;
+  z-index: calc(var(--z-menus) - 10);
   margin: clamp(6px, 1.2vmin, 14px);
   padding: clamp(6px, 1.1vmin, 12px) clamp(12px, 2vmin, 22px);
   border-radius: 999px;
