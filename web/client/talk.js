@@ -16,7 +16,7 @@
 //     browser, at a bedside, is not a thing that happens.
 //   * It needs a profile with a screen on it, which means somebody has been to the composer
 //     on a desktop first.
-//   * It hardcodes a near-black page background and pairs it with `--ink`, which is a dark
+//   * It hardcodes a near-black page background and pairs it with `--text`, which is a dark
 //     colour in four of the five themes — the measured contrast defect in `MIKE_CHANGE_LIST`
 //     §B6. A board is the last surface that should inherit that.
 //

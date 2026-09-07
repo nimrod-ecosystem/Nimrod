@@ -150,7 +150,7 @@ registerModule(
       el.setAttribute('data-panel-failed', def.type);
       el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
         + 'justify-content:center;text-align:center;padding:4vmin;'
-        + 'font:500 clamp(14px,1.9vmin,20px)/1.5 system-ui,sans-serif;color:var(--ink-soft,#5d7064)';
+        + 'font:500 clamp(14px,1.9vmin,20px)/1.5 system-ui,sans-serif;color:var(--text-soft,#5d7064)';
       el.textContent = `${def.type} could not start. The rest of this view is fine.`;
       return el;
     }

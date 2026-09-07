@@ -570,7 +570,7 @@ export async function mountKiosk(root, {
         oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
           + 'justify-content:center;text-align:center;padding:4vmin;'
           + 'font:500 clamp(14px,1.9vmin,20px)/1.5 -apple-system,BlinkMacSystemFont,'
-          + 'Segoe UI,Roboto,sans-serif;color:var(--ink-soft,#5d7064)';
+          + 'Segoe UI,Roboto,sans-serif;color:var(--text-soft,#5d7064)';
         oops.textContent = `${instanceTitle(def)} could not start. The rest of this screen is fine.`;
         cell.append(oops);
       }
@@ -775,7 +775,7 @@ export async function mountKiosk(root, {
       oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
         + 'justify-content:center;text-align:center;padding:4vmin;'
         + 'font:500 clamp(14px,1.9vmin,20px)/1.5 -apple-system,BlinkMacSystemFont,'
-        + 'Segoe UI,Roboto,sans-serif;color:var(--ink-soft,#5d7064)';
+        + 'Segoe UI,Roboto,sans-serif;color:var(--text-soft,#5d7064)';
       oops.textContent = `${instanceTitle(def)} could not start. The rest of this screen is fine.`;
       cell.append(oops);
     }

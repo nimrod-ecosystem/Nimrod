@@ -7,58 +7,58 @@
 <meta name="description" content="Open collections of animated backgrounds and calm visuals, and an honest note about what can and cannot be put on a bedside screen today.">
 <style>
   :root{
-    --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C; --midnight:#105666;
-    --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF; --ink:#0A3323; --ink-soft:#3c5346;
-    --muted:#5d7064; --line:#e4e0c2; --rosy-deep:#a85f52; --radius:16px;
+    --text-strong:#0A3323; --accent:#839958; --on-dark:#F7F4D5; --accent-warm:#D3968C; --link:#105666;
+    --bg:#F7F4D5; --surface-alt:#FBF9E9; --surface:#FFFFFF; --text:#0A3323; --text-soft:#3c5346;
+    --text-muted:#5d7064; --border:#e4e0c2; --accent-warm-deep:#a85f52; --radius:16px;
     --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--font);
+  body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 var(--font);
     -webkit-font-smoothing:antialiased}
-  a{color:var(--midnight)}
+  a{color:var(--link)}
   .wrap{max-width:1000px;margin:0 auto;padding:0 22px}
 
-  .top{border-bottom:1px solid var(--line);background:var(--cream-soft)}
+  .top{border-bottom:1px solid var(--border);background:var(--surface-alt)}
   .top .wrap{display:flex;align-items:center;gap:18px;padding:14px 22px;flex-wrap:wrap}
-  .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
-  .brand span{color:var(--rosy-deep)}
+  .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;text-decoration:none;color:var(--text)}
+  .brand span{color:var(--accent-warm-deep)}
   .top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
   .top nav a{padding:8px 14px;border-radius:10px;text-decoration:none;font-weight:650;font-size:.92rem}
-  .top nav .ghost{border:1px solid var(--line);color:var(--ink)}
-  .top nav .solid{background:var(--midnight);color:#fff}
+  .top nav .ghost{border:1px solid var(--border);color:var(--text)}
+  .top nav .solid{background:var(--link);color:#fff}
 
   header.hero{padding:44px 0 4px}
   .eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--muted);margin:0 0 10px}
+    color:var(--text-muted);margin:0 0 10px}
   h1{font-size:clamp(1.9rem,4.4vw,2.6rem);line-height:1.14;letter-spacing:-.02em;margin:0 0 .4em}
-  .lede{font-size:1.1rem;color:var(--ink-soft);max-width:64ch;margin:0 0 8px}
+  .lede{font-size:1.1rem;color:var(--text-soft);max-width:64ch;margin:0 0 8px}
 
   /* The honesty box. It is first, and it is styled to be read rather than skipped, because
      somebody who follows these links and expects a one-click install will otherwise think
      the product is broken. */
   .truth{margin:26px 0 8px;padding:18px 20px;border-radius:var(--radius);
-    background:var(--card);border:1px solid var(--line);border-left:5px solid var(--rosy-deep)}
+    background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--accent-warm-deep)}
   .truth h2{font-size:1.05rem;margin:0 0 8px}
-  .truth p{margin:0 0 10px;color:var(--ink-soft);font-size:.97rem;max-width:72ch}
+  .truth p{margin:0 0 10px;color:var(--text-soft);font-size:.97rem;max-width:72ch}
   .truth p:last-child{margin-bottom:0}
-  .truth b{color:var(--ink)}
+  .truth b{color:var(--text)}
 
   section.pool{padding:30px 0 4px}
   section.pool > h2{font-size:1.45rem;margin:0 0 .3em;letter-spacing:-.01em}
-  section.pool > p.blurb{margin:0 0 18px;color:var(--ink-soft);max-width:66ch}
+  section.pool > p.blurb{margin:0 0 18px;color:var(--text-soft);max-width:66ch}
 
   .cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
-  article.src{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  article.src{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
     padding:19px;display:flex;flex-direction:column;gap:9px}
   article.src h3{margin:0;font-size:1.12rem}
   article.src h3 a{text-decoration:none}
-  article.src p{margin:0;color:var(--ink-soft);font-size:.95rem}
-  article.src .lic{margin-top:auto;padding-top:11px;border-top:1px solid var(--line);
-    font-size:.85rem;color:var(--muted)}
-  article.src .lic b{color:var(--ink-soft)}
+  article.src p{margin:0;color:var(--text-soft);font-size:.95rem}
+  article.src .lic{margin-top:auto;padding-top:11px;border-top:1px solid var(--border);
+    font-size:.85rem;color:var(--text-muted)}
+  article.src .lic b{color:var(--text-soft)}
 
-  footer{margin:44px 0 60px;padding-top:22px;border-top:1px solid var(--line);
-    color:var(--muted);font-size:.92rem}
+  footer{margin:44px 0 60px;padding-top:22px;border-top:1px solid var(--border);
+    color:var(--text-muted);font-size:.92rem}
   @media (max-width:620px){ body{font-size:16px} header.hero{padding-top:30px} }
 </style>
 </head>

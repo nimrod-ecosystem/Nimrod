@@ -6,53 +6,53 @@
 <title>Nimrod — your screens</title>
 <style>
   :root{
-    --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C; --midnight:#105666;
-    --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF; --ink:#0A3323; --ink-soft:#3c5346;
-    --muted:#5d7064; --line:#e4e0c2; --rosy-deep:#a85f52; --radius:16px;
+    --text-strong:#0A3323; --accent:#839958; --on-dark:#F7F4D5; --accent-warm:#D3968C; --link:#105666;
+    --bg:#F7F4D5; --surface-alt:#FBF9E9; --surface:#FFFFFF; --text:#0A3323; --text-soft:#3c5346;
+    --text-muted:#5d7064; --border:#e4e0c2; --accent-warm-deep:#a85f52; --radius:16px;
     --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--font);-webkit-font-smoothing:antialiased}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--font);-webkit-font-smoothing:antialiased}
   .home{max-width:880px}
 
   /* ---- the shell: sidebar + one panel ---- */
   .shell{display:grid;grid-template-columns:212px 1fr;min-height:100vh}
   .s-side{display:flex;flex-direction:column;gap:18px;padding:20px 14px;
-    background:var(--cream-soft);border-right:1px solid var(--line)}
+    background:var(--surface-alt);border-right:1px solid var(--border)}
   .s-brand{font-weight:800;font-size:1.25rem;letter-spacing:-.02em;padding:0 8px}
-  .s-brand span{color:var(--rosy-deep)}
+  .s-brand span{color:var(--accent-warm-deep)}
   .s-nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
   .s-navb{width:100%;text-align:left;padding:9px 11px;border:0;border-radius:9px;background:transparent;
-    color:var(--ink-soft);font:inherit;font-size:.93rem;font-weight:600;cursor:pointer}
-  .s-navb:hover{background:rgba(0,0,0,.05);color:var(--ink)}
-  .s-navb.on{background:var(--moss);color:#fff}
+    color:var(--text-soft);font:inherit;font-size:.93rem;font-weight:600;cursor:pointer}
+  .s-navb:hover{background:rgba(0,0,0,.05);color:var(--text)}
+  .s-navb.on{background:var(--accent);color:#fff}
   /* The one item in the sidebar that LEAVES the shell. Same shape as a tab so it does not
      look bolted on, quieter than one so it does not read as a fifth place to be. */
   /* The rule under it, not over it: this list sits ABOVE the tabs now (PRIORITY.md #4 moved
      it up), so the divider that separates "leaves the shell" from "stays in it" has to move
      to the other edge with it. */
-  .s-out{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line,#e4e0c2)}
-  .s-link{display:block;text-decoration:none;color:var(--midnight);font-weight:650}
+  .s-out{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border,#e4e0c2)}
+  .s-link{display:block;text-decoration:none;color:var(--link);font-weight:650}
   .s-link:hover{background:rgba(0,0,0,.05)}
   /* A BUTTON NOW, NOT A LINK — it mounts the module here instead of navigating away. Styled
      like the quiet link it replaced, because it is the same offer in the same place; what
      changed is that taking it no longer costs somebody the dashboard they were building. */
   .h-modsee{display:inline-block;margin-top:2px;font-size:.85rem;font-weight:650;
-    color:var(--midnight);background:none;border:0;padding:0;cursor:pointer;
+    color:var(--link);background:none;border:0;padding:0;cursor:pointer;
     font-family:inherit;text-decoration:underline;text-underline-offset:3px}
-  .h-modsee:hover{color:var(--moss,#839958)}
-  .h-modsee:focus-visible{outline:3px solid var(--moss,#839958);outline-offset:3px}
+  .h-modsee:hover{color:var(--accent,#839958)}
+  .h-modsee:focus-visible{outline:3px solid var(--accent,#839958);outline-offset:3px}
   /* THE PREVIEW BOX. A fixed height, because a module sizes itself to the box it is given and
      a box that sizes itself to the module is a page that jumps every time somebody opens one.
      320px is enough to judge a panel by and small enough to leave the picker on screen — the
      whole point is that the decision and the evidence are visible at once. */
   .h-modpreview{margin-top:10px}
   .h-modstage{position:relative;height:320px;overflow:hidden;
-    border:1px solid var(--line,#e4e0c2);border-radius:var(--radius,10px);
-    background:var(--card,#fff)}
+    border:1px solid var(--border,#e4e0c2);border-radius:var(--radius,10px);
+    background:var(--surface,#fff)}
   .s-foot{margin-top:auto;padding:0 8px;font-size:.8rem;display:flex;flex-direction:column;gap:4px}
-  .s-email{color:var(--muted);word-break:break-all}
-  .s-signout{color:var(--midnight)}
+  .s-email{color:var(--text-muted);word-break:break-all}
+  .s-signout{color:var(--link)}
   .s-main{padding:22px 26px 64px;max-width:900px}
 
   /* ---- the person bar: who am I setting this up for? ----
@@ -61,71 +61,71 @@
      becomes a chooser when there are two. */
   .p-bar{margin-bottom:14px}
   .p-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .p-lead,.p-one{font-size:.88rem;color:var(--ink-soft)}
+  .p-lead,.p-one{font-size:.88rem;color:var(--text-soft)}
   .p-chips{display:flex;flex-wrap:wrap;gap:6px}
-  .p-chip{padding:5px 13px;border:1px solid var(--line);border-radius:99px;background:var(--card);
-    color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-  .p-chip.on{background:var(--midnight);border-color:var(--midnight);color:#fff}
+  .p-chip{padding:5px 13px;border:1px solid var(--border);border-radius:99px;background:var(--surface);
+    color:var(--text);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+  .p-chip.on{background:var(--link);border-color:var(--link);color:#fff}
   .p-tools{margin-left:auto}
   .p-small{padding:5px 11px;font-size:.8rem}
-  .p-manage{margin-top:10px;padding:12px 14px;background:var(--cream-soft);
-    border:1px solid var(--line);border-radius:12px}
+  .p-manage{margin-top:10px;padding:12px 14px;background:var(--surface-alt);
+    border:1px solid var(--border);border-radius:12px}
   .p-manage .h-hint{margin:0 0 10px;max-width:64ch}
   .p-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
   .p-list li{display:flex;gap:8px;align-items:center}
-  .p-name{flex:1 1 220px;max-width:320px;padding:7px 10px;border:1px solid var(--line);
-    border-radius:9px;background:var(--card);color:var(--ink);font:inherit;font-size:.9rem}
+  .p-name{flex:1 1 220px;max-width:320px;padding:7px 10px;border:1px solid var(--border);
+    border-radius:9px;background:var(--surface);color:var(--text);font:inherit;font-size:.9rem}
 
 
   /* What the module you are about to add actually does. Quiet, but never absent - an empty
      line here would make the row jump every time the picker changed. */
-  .h-modwhat{margin:6px 0 0;font-size:.86rem;color:var(--muted);max-width:60ch;min-height:1.35em}
+  .h-modwhat{margin:6px 0 0;font-size:.86rem;color:var(--text-muted);max-width:60ch;min-height:1.35em}
 
   /* ---- adulting ---- */
   .adulting h1{font-size:1.6rem;margin:0 0 .25em;letter-spacing:-.01em}
-  .adulting .a-lead{margin:0 0 16px;color:var(--ink-soft);max-width:62ch}
+  .adulting .a-lead{margin:0 0 16px;color:var(--text-soft);max-width:62ch}
   .adulting .a-who{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-  .adulting .a-chip{padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--card);
-    color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-  .adulting .a-chip.on{background:var(--moss);border-color:var(--moss);color:#fff}
-  .adulting .a-note{font-size:.85rem;color:var(--muted)}
-  .adulting .a-host{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  .adulting .a-chip{padding:6px 12px;border:1px solid var(--border);border-radius:99px;background:var(--surface);
+    color:var(--text);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+  .adulting .a-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .adulting .a-note{font-size:.85rem;color:var(--text-muted)}
+  .adulting .a-host{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
     padding:16px;max-width:560px}
   /* ---- composer ---- */
   .composer h1{font-size:1.6rem;margin:0 0 .25em;letter-spacing:-.01em}
-  .composer .c-lead{margin:0 0 16px;color:var(--ink-soft);max-width:62ch}
+  .composer .c-lead{margin:0 0 16px;color:var(--text-soft);max-width:62ch}
   .composer .c-screens,.composer .c-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-  .composer .c-chip{padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--card);
-    color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-  .composer .c-chip.on{background:var(--moss);border-color:var(--moss);color:#fff}
-  .composer .c-msg{min-height:1.3em;font-size:.85rem;font-weight:600;color:var(--midnight);margin-bottom:8px}
-  .composer .c-msg.bad{color:var(--rosy-deep)}
+  .composer .c-chip{padding:6px 12px;border:1px solid var(--border);border-radius:99px;background:var(--surface);
+    color:var(--text);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+  .composer .c-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .composer .c-msg{min-height:1.3em;font-size:.85rem;font-weight:600;color:var(--link);margin-bottom:8px}
+  .composer .c-msg.bad{color:var(--accent-warm-deep)}
   .composer .c-grid{gap:8px;aspect-ratio:16/9;width:100%;max-width:620px;margin-bottom:10px;
-    background:var(--cream-soft);border:1px solid var(--line);border-radius:12px;padding:8px}
+    background:var(--surface-alt);border:1px solid var(--border);border-radius:12px;padding:8px}
   .composer .c-slot{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:6px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px;min-width:0}
-  .composer .c-slot-n{position:absolute;top:5px;left:8px;font-size:.66rem;font-weight:800;color:var(--muted)}
+    gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px;min-width:0}
+  .composer .c-slot-n{position:absolute;top:5px;left:8px;font-size:.66rem;font-weight:800;color:var(--text-muted)}
   .composer .c-slot-name{font-size:.85rem;font-weight:700;text-align:center;overflow:hidden;text-overflow:ellipsis;
     white-space:nowrap;max-width:100%}
-  .composer .c-empty{color:var(--muted);font-weight:500}
-  .composer .c-pick{max-width:92%;padding:4px 6px;border:1px solid var(--line);border-radius:7px;
-    background:var(--card);color:var(--ink);font:inherit;font-size:.76rem}
-  .composer .c-note{font-size:.8rem;color:var(--muted);margin:0 0 12px}
+  .composer .c-empty{color:var(--text-muted);font-weight:500}
+  .composer .c-pick{max-width:92%;padding:4px 6px;border:1px solid var(--border);border-radius:7px;
+    background:var(--surface);color:var(--text);font:inherit;font-size:.76rem}
+  .composer .c-note{font-size:.8rem;color:var(--text-muted);margin:0 0 12px}
   .composer .c-actions{display:flex;gap:8px;flex-wrap:wrap}
-  .composer .c-btn{padding:9px 15px;border:1px solid var(--line);border-radius:10px;background:var(--card);
-    color:var(--ink);font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
-  .composer .c-btn:hover:not(:disabled){background:var(--cream-soft)}
+  .composer .c-btn{padding:9px 15px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+    color:var(--text);font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  .composer .c-btn:hover:not(:disabled){background:var(--surface-alt)}
   .composer .c-btn:disabled{opacity:.45;cursor:not-allowed}
-  .composer .c-primary{background:var(--moss);border-color:var(--moss);color:#fff}
+  .composer .c-primary{background:var(--accent);border-color:var(--accent);color:#fff}
 
   @media (max-width:720px){
     .shell{grid-template-columns:1fr}
-    .s-side{flex-direction:row;align-items:center;gap:10px;border-right:0;border-bottom:1px solid var(--line);
+    .s-side{flex-direction:row;align-items:center;gap:10px;border-right:0;border-bottom:1px solid var(--border);
       padding:10px 14px;flex-wrap:wrap}
     .s-nav{flex-direction:row}
     /* Side by side with the tabs when the sidebar is a strip along the top. */
     .s-out{margin-bottom:0;padding-bottom:0;border-bottom:0;
-      border-right:1px solid var(--line,#e4e0c2);margin-right:6px;padding-right:6px}
+      border-right:1px solid var(--border,#e4e0c2);margin-right:6px;padding-right:6px}
     .s-foot{margin-top:0;margin-left:auto;flex-direction:row;gap:10px;align-items:center}
     .s-email{display:none}
     .s-main{padding:16px}
@@ -133,44 +133,44 @@
 
 
   .h-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    padding-bottom:14px;border-bottom:1px solid var(--line)}
+    padding-bottom:14px;border-bottom:1px solid var(--border)}
   .h-brand{font-weight:800;font-size:1.3rem;letter-spacing:-.02em}
-  .h-brand span{color:var(--rosy-deep)}
+  .h-brand span{color:var(--accent-warm-deep)}
   .h-who{display:flex;align-items:center;gap:12px;font-size:.85rem}
-  .h-email{color:var(--muted)}
-  .h-signout{color:var(--midnight)}
+  .h-email{color:var(--text-muted)}
+  .h-signout{color:var(--link)}
 
   .h-intro{margin:26px 0 18px}
   .h-intro h1{font-size:1.8rem;margin:0 0 .3em;letter-spacing:-.01em}
-  .h-intro p{margin:0;color:var(--ink-soft);max-width:60ch}
+  .h-intro p{margin:0;color:var(--text-soft);max-width:60ch}
 
   .h-new{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-  .h-new input{flex:1 1 260px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
-    background:var(--card);color:var(--ink);font:inherit;font-size:.95rem}
-  .h-btn{padding:9px 15px;border:1px solid var(--line);border-radius:10px;background:var(--card);
-    color:var(--ink);font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
-  .h-btn:hover:not(:disabled){background:var(--cream-soft)}
+  .h-new input{flex:1 1 260px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;
+    background:var(--surface);color:var(--text);font:inherit;font-size:.95rem}
+  .h-btn{padding:9px 15px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+    color:var(--text);font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+  .h-btn:hover:not(:disabled){background:var(--surface-alt)}
   .h-btn:disabled{opacity:.45;cursor:not-allowed}
-  .h-primary{background:var(--moss);border-color:var(--moss);color:#fff}
-  .h-primary:hover:not(:disabled){filter:brightness(.93);background:var(--moss)}
+  .h-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .h-primary:hover:not(:disabled){filter:brightness(.93);background:var(--accent)}
 
-  .h-msg{min-height:1.4em;font-size:.85rem;font-weight:600;color:var(--midnight);margin-bottom:10px}
-  .h-msg.bad{color:var(--rosy-deep)}
+  .h-msg{min-height:1.4em;font-size:.85rem;font-weight:600;color:var(--link);margin-bottom:10px}
+  .h-msg.bad{color:var(--accent-warm-deep)}
 
   .h-list{display:flex;flex-direction:column;gap:12px}
-  .h-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+  .h-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
   .h-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .h-card-head h2{font-size:1.15rem;margin:0}
   .h-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-  .h-quiet{font-weight:500;font-size:.82rem;padding:7px 11px;color:var(--ink-soft)}
-  .h-danger:hover:not(:disabled){background:#fbecea;border-color:var(--rosy);color:var(--rosy-deep)}
+  .h-quiet{font-weight:500;font-size:.82rem;padding:7px 11px;color:var(--text-soft)}
+  .h-danger:hover:not(:disabled){background:#fbecea;border-color:var(--accent-warm);color:var(--accent-warm-deep)}
   .h-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
   .h-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 10px;border-radius:99px;
-    background:var(--cream-soft);border:1px solid var(--line);font-size:.8rem;font-weight:600}
-  .h-x{border:0;background:transparent;color:var(--muted);font:inherit;font-size:1rem;line-height:1;
+    background:var(--surface-alt);border:1px solid var(--border);font-size:.8rem;font-weight:600}
+  .h-x{border:0;background:transparent;color:var(--text-muted);font:inherit;font-size:1rem;line-height:1;
     cursor:pointer;padding:0 5px;border-radius:99px}
-  .h-x:hover{color:var(--rosy-deep);background:rgba(0,0,0,.05)}
-  .h-none,.h-hint{font-size:.8rem;color:var(--muted)}
+  .h-x:hover{color:var(--accent-warm-deep);background:rgba(0,0,0,.05)}
+  .h-none,.h-hint{font-size:.8rem;color:var(--text-muted)}
   /* "This is the IT one." Says so on the fold, so nobody opens it expecting a button. */
   /* A pairing code is read one character at a time off another screen, so it is set in a
      monospace face at a size that survives a care-home console and bad light, and spaced
@@ -178,20 +178,20 @@
   .m-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.25rem;font-weight:700;
     letter-spacing:.22em;text-transform:uppercase;max-width:11ch}
   .h-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:99px;
-    background:var(--cream-soft);border:1px solid var(--line);color:var(--muted);
+    background:var(--surface-alt);border:1px solid var(--border);color:var(--text-muted);
     font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
   /* Rules panel. A list of sentences, not a diagram - the diagram is the eventual thing. */
   .rul{max-width:900px}
   .rul h1{margin:0 0 6px}
   .rul-intro{margin:0 0 18px;opacity:.85;font-size:.93rem;max-width:70ch}
-  .rul-screen{margin:0 0 24px;padding:12px 14px;border:1px solid var(--line,#ddd);border-radius:10px}
+  .rul-screen{margin:0 0 24px;padding:12px 14px;border:1px solid var(--border,#ddd);border-radius:10px}
   .rul-screen h2{margin:0 0 10px;font-size:1.02rem}
   .rul-switch{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:10px 12px;
-    background:var(--card,#fff);border-radius:9px;font-size:.9rem;line-height:1.45;cursor:pointer}
+    background:var(--surface,#fff);border-radius:9px;font-size:.9rem;line-height:1.45;cursor:pointer}
   .rul-switch input{margin-top:3px;flex:none}
   .rul-list{list-style:none;margin:0;padding:0;font-size:.9rem}
   .rul-list li{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:baseline;
-    padding:5px 0;border-top:1px solid var(--line,#eee)}
+    padding:5px 0;border-top:1px solid var(--border,#eee)}
   .rul-when{opacity:.85}
   .rul-arrow{opacity:.45}
   .rul-then{font-weight:600}
@@ -205,51 +205,51 @@
      dashboard aesthetic would make counts look like a score. */
   .rec{max-width:900px}
   .rec h1{margin:0 0 6px}
-  .rec-caveat{margin:0 0 18px;padding:10px 12px;border-left:4px solid var(--moss,#839958);
-    background:var(--card,#fff);font-size:.93rem;line-height:1.45}
+  .rec-caveat{margin:0 0 18px;padding:10px 12px;border-left:4px solid var(--accent,#839958);
+    background:var(--surface,#fff);font-size:.93rem;line-height:1.45}
   .rec-stream{margin:0 0 26px}
   .rec-stream h2{margin:0 0 4px;font-size:1.02rem}
   .rec-stream h2 small{font-weight:400;opacity:.6;margin-left:6px}
-  .rec-session{margin:0 0 14px;padding:10px 12px;border:1px solid var(--line,#ddd);border-radius:10px}
+  .rec-session{margin:0 0 14px;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px}
   .rec-session h3{margin:0 0 2px;font-size:.94rem}
   .rec-session h3 small{font-weight:400;opacity:.6;margin-left:6px}
   .rec-counts{margin:0 0 8px;font-size:.88rem;opacity:.85}
   .rec-rows{list-style:none;margin:0;padding:0;font-size:.88rem}
   .rec-rows li{display:grid;grid-template-columns:160px 1fr auto auto;gap:8px;align-items:center;
-    padding:3px 0;border-top:1px solid var(--line,#eee)}
+    padding:3px 0;border-top:1px solid var(--border,#eee)}
   .rec-when{opacity:.6;font-variant-numeric:tabular-nums}
   /* Unattested is the NORMAL state of honest data, so it is silence rather than a warning.
      A UI that nags teaches people to click the button to clear the nag. */
   .rec-att{opacity:.75;font-size:.85rem}
-  .rec-btn{padding:2px 10px;border-radius:8px;border:1px solid var(--line,#ccc);
-    background:var(--card,#fff);cursor:pointer;font:inherit;font-size:.82rem}
+  .rec-btn{padding:2px 10px;border-radius:8px;border:1px solid var(--border,#ccc);
+    background:var(--surface,#fff);cursor:pointer;font:inherit;font-size:.82rem}
   .rec-btn:disabled{opacity:.5;cursor:default}
   .rec-empty,.rec-loading{opacity:.7}
   /* Inputs panel. The table is dense on purpose: a clinician comparing four bindings
      wants them on one screen, not in four expanding cards. */
   .i-gate{display:flex;gap:8px;flex-wrap:wrap}
   .i-devs{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px;font-size:.9rem}
-  .i-devs code{font-size:.8rem;background:var(--cream-soft);padding:1px 5px;border-radius:5px}
+  .i-devs code{font-size:.8rem;background:var(--surface-alt);padding:1px 5px;border-radius:5px}
   .i-tab{width:100%;border-collapse:collapse;font-size:.85rem;margin:4px 0 10px}
-  .i-tab th{text-align:left;font-weight:600;color:var(--muted);font-size:.75rem;
+  .i-tab th{text-align:left;font-weight:600;color:var(--text-muted);font-size:.75rem;
     text-transform:uppercase;letter-spacing:.05em;padding:0 8px 6px 0;white-space:nowrap}
-  .i-tab td{padding:4px 8px 4px 0;vertical-align:middle;border-top:1px solid var(--line)}
-  .i-tab select,.i-tab input{font:inherit;font-size:.85rem;padding:4px 6px;border:1px solid var(--line);
-    border-radius:7px;background:var(--card);color:var(--ink);max-width:15ch}
+  .i-tab td{padding:4px 8px 4px 0;vertical-align:middle;border-top:1px solid var(--border)}
+  .i-tab select,.i-tab input{font:inherit;font-size:.85rem;padding:4px 6px;border:1px solid var(--border);
+    border-radius:7px;background:var(--surface);color:var(--text);max-width:15ch}
   .i-tab input[type=number]{width:7ch}
   .i-ctl{padding:4px 9px;font-size:.8rem;white-space:nowrap}
   .i-stale{background:rgba(164,36,59,.06)}
   /* The row the VERBS are pointed at. Has to be readable from across a room, because the
      person driving it may be several feet from the screen and using one switch. */
-  .i-tab tr.i-highlight{background:rgba(44,110,73,.13);outline:2px solid var(--moss);
+  .i-tab tr.i-highlight{background:rgba(44,110,73,.13);outline:2px solid var(--accent);
     outline-offset:-2px}
   /* "Your control is driving this page right now." */
   .home.i-has-focus{position:relative}
   .home.i-has-focus::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
-    box-shadow:inset 0 0 0 3px var(--moss);border-radius:6px;opacity:.55}
-  .i-warn{color:var(--rosy-deep);font-size:.8rem}
+    box-shadow:inset 0 0 0 3px var(--accent);border-radius:6px;opacity:.55}
+  .i-warn{color:var(--accent-warm-deep);font-size:.8rem}
   .i-speak{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600}
-  .i-speak input{width:18px;height:18px;accent-color:var(--moss)}
+  .i-speak input{width:18px;height:18px;accent-color:var(--accent)}
   /* "That press landed on THIS row." The message line alone is not enough — someone
      watching the table has no reason to look at a caption, and one changed cell in a dense
      table is invisible. Respects reduced-motion: the color still lands, it just does not
@@ -260,53 +260,53 @@
     .i-tab tr.i-just-bound td{animation:none;background:rgba(131,153,88,.28)}
   }
   .i-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
-  .i-add select{font:inherit;font-size:.9rem;padding:8px 10px;border:1px solid var(--line);
-    border-radius:10px;background:var(--card);color:var(--ink)}
+  .i-add select{font:inherit;font-size:.9rem;padding:8px 10px;border:1px solid var(--border);
+    border-radius:10px;background:var(--surface);color:var(--text)}
   .i-log{display:grid;gap:3px;max-height:230px;overflow:auto;font-size:.85rem;margin-top:6px}
-  .i-log>div{padding:3px 8px;border-radius:6px;background:var(--cream-soft)}
+  .i-log>div{padding:3px 8px;border-radius:6px;background:var(--surface-alt)}
   /* Output routing grid. Verbs down, channels across — the shape of someone's whole
      setup on one screen, which a card-per-verb layout cannot show. */
   .o-tab{width:100%;border-collapse:collapse;font-size:.85rem;margin:6px 0 4px}
   .o-tab th{text-align:left;font-weight:600;padding:0 8px 8px 0;vertical-align:bottom}
-  .o-tab thead th{font-size:.75rem;color:var(--muted);text-transform:uppercase;
+  .o-tab thead th{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;
     letter-spacing:.04em;text-align:center;min-width:5.5rem}
-  .o-tab tbody th{border-top:1px solid var(--line);padding:9px 12px 9px 0;font-weight:400}
+  .o-tab tbody th{border-top:1px solid var(--border);padding:9px 12px 9px 0;font-weight:400}
   .o-tab tbody th b{display:block;font-weight:700}
   .o-tab tbody th .h-hint{display:block;line-height:1.35}
-  .o-tab td{border-top:1px solid var(--line);text-align:center;padding:9px 4px}
+  .o-tab td{border-top:1px solid var(--border);text-align:center;padding:9px 4px}
   .o-cell{display:inline-flex;padding:6px;cursor:pointer}
-  .o-cell input{width:19px;height:19px;accent-color:var(--moss);cursor:pointer}
+  .o-cell input{width:19px;height:19px;accent-color:var(--accent);cursor:pointer}
   .o-cell input:disabled{cursor:not-allowed;opacity:.35}
   .o-tab .o-off{opacity:.45}
   .o-nowhere{background:rgba(164,36,59,.06)}
-  .o-warn{display:inline-block;margin-top:3px;font-size:.72rem;font-weight:700;color:var(--rosy-deep)}
+  .o-warn{display:inline-block;margin-top:3px;font-size:.72rem;font-weight:700;color:var(--accent-warm-deep)}
   .o-chans{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:7px;font-size:.9rem}
   .o-chans li{display:flex;align-items:center;gap:10px}
   .o-chans li b{min-width:9rem}
   .o-chans .o-off{opacity:.5}
   .o-stage{display:grid;gap:5px;margin:10px 0}
-  .out-msg{padding:8px 12px;border-radius:9px;background:var(--cream-soft);
-    border-left:3px solid var(--line);font-size:.9rem}
-  .out-alert{border-left-color:var(--rosy-deep);font-weight:700}
-  .out-notify{border-left-color:var(--moss)}
-  .out-status{border-left-color:var(--muted);opacity:.85}
+  .out-msg{padding:8px 12px;border-radius:9px;background:var(--surface-alt);
+    border-left:3px solid var(--border);font-size:.9rem}
+  .out-alert{border-left-color:var(--accent-warm-deep);font-weight:700}
+  .out-notify{border-left-color:var(--accent)}
+  .out-status{border-left-color:var(--text-muted);opacity:.85}
   .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   @media (max-width:760px){
     .o-tab thead th{min-width:0;font-size:.62rem}
     .o-tab tbody th{padding-right:6px}
     .o-cell{padding:3px}
   }
-  .i-ok{border-left:3px solid var(--moss)}
-  .i-no{border-left:3px solid var(--rosy-deep);color:var(--ink-soft)}
+  .i-ok{border-left:3px solid var(--accent)}
+  .i-no{border-left:3px solid var(--accent-warm-deep);color:var(--text-soft)}
   @media (max-width:760px){
     .i-tab,.i-tab tbody,.i-tab tr,.i-tab td{display:block;width:100%}
     .i-tab thead{display:none}
-    .i-tab tr{border-top:1px solid var(--line);padding:8px 0}
+    .i-tab tr{border-top:1px solid var(--border);padding:8px 0}
     .i-tab td{border:0;padding:2px 0}
     .i-tab select,.i-tab input{max-width:none;width:100%}
   }
   .h-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;
-    padding:10px 18px;background:var(--cream-soft);border-bottom:1px solid var(--line);
+    padding:10px 18px;background:var(--surface-alt);border-bottom:1px solid var(--border);
     font-size:.92rem}
   .h-add{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   /* the arranger, folded into the screen it arranges */
@@ -315,10 +315,10 @@
   .h-arrange-body[hidden]{display:none}
   .composer.c-embedded h1{display:none}
   .composer.c-embedded .c-lead{margin-top:0}
-  .h-add select{padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--card);
-    color:var(--ink);font:inherit;font-size:.85rem}
-  .h-empty,.h-loading{color:var(--muted);text-align:center;padding:28px;background:var(--card);
-    border:1px dashed var(--line);border-radius:var(--radius)}
+  .h-add select{padding:7px 9px;border:1px solid var(--border);border-radius:9px;background:var(--surface);
+    color:var(--text);font:inherit;font-size:.85rem}
+  .h-empty,.h-loading{color:var(--text-muted);text-align:center;padding:28px;background:var(--surface);
+    border:1px dashed var(--border);border-radius:var(--radius)}
 
   @media (max-width:520px){
     .h-card-head{flex-direction:column;align-items:stretch}

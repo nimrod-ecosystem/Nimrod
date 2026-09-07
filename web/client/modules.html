@@ -12,51 +12,51 @@
 <link rel="stylesheet" href="./modules.css">
 <style>
   :root{
-    --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C; --midnight:#105666;
-    --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF; --ink:#0A3323; --ink-soft:#3c5346;
-    --muted:#5d7064; --line:#e4e0c2; --rosy-deep:#a85f52; --radius:16px;
+    --text-strong:#0A3323; --accent:#839958; --on-dark:#F7F4D5; --accent-warm:#D3968C; --link:#105666;
+    --bg:#F7F4D5; --surface-alt:#FBF9E9; --surface:#FFFFFF; --text:#0A3323; --text-soft:#3c5346;
+    --text-muted:#5d7064; --border:#e4e0c2; --accent-warm-deep:#a85f52; --radius:16px;
     --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--font);
+  body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 var(--font);
     -webkit-font-smoothing:antialiased}
-  a{color:var(--midnight)}
+  a{color:var(--link)}
   .wrap{max-width:1060px;margin:0 auto;padding:0 22px}
 
   /* ---- top bar ---- */
-  .top{border-bottom:1px solid var(--line);background:var(--cream-soft)}
+  .top{border-bottom:1px solid var(--border);background:var(--surface-alt)}
   .top .wrap{display:flex;align-items:center;gap:18px;padding-top:14px;padding-bottom:14px;
     flex-wrap:wrap}
-  .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
-  .brand span{color:var(--rosy-deep)}
+  .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;text-decoration:none;color:var(--text)}
+  .brand span{color:var(--accent-warm-deep)}
   .top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
   .top nav a{padding:8px 14px;border-radius:10px;text-decoration:none;font-weight:650;
     font-size:.92rem}
-  .top nav .ghost{border:1px solid var(--line);color:var(--ink)}
-  .top nav .solid{background:var(--midnight);color:#fff}
+  .top nav .ghost{border:1px solid var(--border);color:var(--text)}
+  .top nav .solid{background:var(--link);color:#fff}
 
   /* ---- header ---- */
   header.hero{padding:44px 0 8px}
   .eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--muted);margin:0 0 10px}
+    color:var(--text-muted);margin:0 0 10px}
   h1{font-size:clamp(1.9rem,4.4vw,2.7rem);line-height:1.12;letter-spacing:-.02em;margin:0 0 .4em}
-  .lede{font-size:1.12rem;color:var(--ink-soft);max-width:62ch;margin:0 0 18px}
+  .lede{font-size:1.12rem;color:var(--text-soft);max-width:62ch;margin:0 0 18px}
 
   /* ---- the legend: the axis that decides everything for some readers ---- */
-  .legend{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  .legend{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
     padding:18px 20px;margin:26px 0 8px}
   .legend h2{font-size:1.02rem;margin:0 0 6px}
-  .legend p{margin:0 0 14px;color:var(--ink-soft);max-width:70ch;font-size:.97rem}
+  .legend p{margin:0 0 14px;color:var(--text-soft);max-width:70ch;font-size:.97rem}
   .legend ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;
     grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
   .legend li{display:flex;gap:10px;align-items:flex-start;font-size:.93rem}
   .legend .pill{flex:0 0 auto}
-  .legend .t{color:var(--ink-soft)}
+  .legend .t{color:var(--text-soft)}
 
   /* ---- groups ---- */
   section.group{padding:34px 0 6px}
   section.group > h2{font-size:1.5rem;letter-spacing:-.01em;margin:0 0 .3em}
-  section.group > p.blurb{margin:0 0 20px;color:var(--ink-soft);max-width:66ch}
+  section.group > p.blurb{margin:0 0 20px;color:var(--text-soft);max-width:66ch}
 
   /* The card grid that used to be here is gone — see THE BROWSER below. A search field needs a
      label even when the placeholder says the same thing, because a placeholder disappears the
@@ -71,16 +71,16 @@
 
   /* ---- the honesty block ---- */
   .gaps{margin:38px 0 0;padding:18px 20px;border-radius:var(--radius);
-    background:var(--cream-soft);border:1px solid var(--line)}
+    background:var(--surface-alt);border:1px solid var(--border)}
   .gaps h2{font-size:1.05rem;margin:0 0 8px}
-  .gaps p{margin:0 0 8px;color:var(--ink-soft);font-size:.95rem;max-width:74ch}
-  .gaps code{background:#fff;border:1px solid var(--line);border-radius:6px;padding:1px 6px;
+  .gaps p{margin:0 0 8px;color:var(--text-soft);font-size:.95rem;max-width:74ch}
+  .gaps code{background:#fff;border:1px solid var(--border);border-radius:6px;padding:1px 6px;
     font-size:.88em}
-  .gaps .ok{color:var(--moss);font-weight:700}
-  .gaps .warn{color:var(--rosy-deep);font-weight:700}
+  .gaps .ok{color:var(--accent);font-weight:700}
+  .gaps .warn{color:var(--accent-warm-deep);font-weight:700}
 
-  footer{margin:44px 0 60px;padding-top:22px;border-top:1px solid var(--line);
-    color:var(--muted);font-size:.92rem}
+  footer{margin:44px 0 60px;padding-top:22px;border-top:1px solid var(--border);
+    color:var(--text-muted);font-size:.92rem}
   footer a{font-weight:650}
 
   @media (max-width:620px){
@@ -104,21 +104,21 @@
    */
   .browser{display:grid;grid-template-columns:290px 1fr;gap:20px;margin:26px 0 0;
     align-items:start}
-  .pick{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  .pick{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
     padding:12px;position:sticky;top:12px;max-height:calc(100vh - 40px);
     display:flex;flex-direction:column;min-height:0}
-  .pick input[type=search]{width:100%;padding:10px 12px;border:1px solid var(--line);
-    border-radius:10px;font:inherit;font-size:.94rem;background:var(--cream-soft);color:var(--ink);
+  .pick input[type=search]{width:100%;padding:10px 12px;border:1px solid var(--border);
+    border-radius:10px;font:inherit;font-size:.94rem;background:var(--surface-alt);color:var(--text);
     min-height:44px}
   .picklist{overflow:auto;margin-top:10px;min-height:0}
   .pickgroup{margin:0 0 10px}
   .pickgroup h3{margin:6px 4px 6px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--muted)}
+    color:var(--text-muted)}
   .pickrow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
-    border:1px solid transparent;background:none;color:var(--ink);font:inherit;
+    border:1px solid transparent;background:none;color:var(--text);font:inherit;
     border-radius:10px;padding:9px 10px;cursor:pointer;min-height:44px}
-  .pickrow:hover{background:var(--cream-soft)}
-  .pickrow[aria-current="true"]{background:var(--midnight);color:#fff;border-color:var(--midnight)}
+  .pickrow:hover{background:var(--surface-alt)}
+  .pickrow[aria-current="true"]{background:var(--link);color:#fff;border-color:var(--link)}
   .pickrow[aria-current="true"] .dot{background:#fff}
   .pickrow .nm{font-weight:650;font-size:.95rem}
   /* The access answer, kept next to the name rather than only in the detail pane: it is the
@@ -128,18 +128,18 @@
   .dot.watch{background:#5c7a33} .dot.touch{background:#0e4a58} .dot.answer{background:#a85f52}
   .pickrow .vb{margin-left:auto;font-size:.62rem;font-weight:800;text-transform:uppercase;
     letter-spacing:.06em;padding:2px 7px;border-radius:99px}
-  .pickempty{padding:14px 10px;color:var(--muted);font-size:.9rem}
+  .pickempty{padding:14px 10px;color:var(--text-muted);font-size:.9rem}
 
   .detail{min-width:0}
   .detail h2{margin:0 0 6px;font-size:1.6rem;letter-spacing:-.02em;display:flex;
     align-items:baseline;gap:12px;flex-wrap:wrap}
   .detail .lead{margin:0 0 6px;font-weight:650;font-size:1.06rem}
-  .detail .why{margin:0 0 8px;color:var(--ink-soft);max-width:70ch}
-  .detail .note{margin:0 0 8px;color:var(--moss);font-weight:650;font-size:.92rem}
+  .detail .why{margin:0 0 8px;color:var(--text-soft);max-width:70ch}
+  .detail .note{margin:0 0 8px;color:var(--accent);font-weight:650;font-size:.92rem}
   .detail dl{margin:0 0 14px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;
     font-size:.9rem}
-  .detail dt{color:var(--muted);font-weight:700;white-space:nowrap}
-  .detail dd{margin:0;color:var(--ink-soft)}
+  .detail dt{color:var(--text-muted);font-weight:700;white-space:nowrap}
+  .detail dd{margin:0;color:var(--text-soft)}
 
   /* *** THE STAGE IS THE POINT OF THE PAGE, SO IT GETS THE ROOM. ***
    * `min-height` as well as `height` because a short laptop window would otherwise reproduce the
@@ -152,13 +152,13 @@
      here silently wins and clips. Measured on this very page while writing it: the stage
      computed `overflow-y: hidden` with `mod-host` present and correct. */
   .trystage{position:relative;height:min(70vh,760px);min-height:440px;display:flex;
-    border:1px solid var(--line);border-radius:14px;background:var(--card)}
+    border:1px solid var(--border);border-radius:14px;background:var(--surface)}
   .trystage > *{flex:1;min-width:0}
-  .stagenote{margin:8px 0 0;font-size:.85rem;color:var(--muted)}
-  .measured{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;color:var(--muted);
+  .stagenote{margin:8px 0 0;font-size:.85rem;color:var(--text-muted)}
+  .measured{font-family:ui-monospace,Consolas,monospace;font-size:.78rem;color:var(--text-muted);
     margin:6px 0 0;word-break:break-word}
   .measured.bad{color:#8d2a1c}
-  .trybtn{border:1px solid var(--line);background:var(--cream-soft);color:var(--ink);
+  .trybtn{border:1px solid var(--border);background:var(--surface-alt);color:var(--text);
     border-radius:10px;padding:9px 16px;font:650 .92rem var(--font);cursor:pointer;
     min-height:44px}
   .trybtn:hover{background:#fff}
@@ -181,9 +181,9 @@
   /* `.runall` is gone with the button it styled — the developer tool came off this page and
      lives at `?all=1`. The `.tally` it writes into stays, hidden, because that is where the
      run still reports. */
-  .tally{margin:18px 0 0;padding:14px 18px;background:var(--cream-soft);
-    border:1px solid var(--line);border-radius:var(--radius);font-weight:700}
-  .tally .worth{display:block;margin-top:8px;font-weight:650;color:var(--rosy-deep);
+  .tally{margin:18px 0 0;padding:14px 18px;background:var(--surface-alt);
+    border:1px solid var(--border);border-radius:var(--radius);font-weight:700}
+  .tally .worth{display:block;margin-top:8px;font-weight:650;color:var(--accent-warm-deep);
     font-size:.93rem}
   .verdict{font-size:.72rem;font-weight:800;text-transform:uppercase;
     letter-spacing:.08em;padding:3px 9px;border-radius:99px}

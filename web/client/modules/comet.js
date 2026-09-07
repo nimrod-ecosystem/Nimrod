@@ -37,7 +37,7 @@
 //     forever. The SYNTHESISED tones stay — they are Web Audio, they need no files.
 //   * COLORS COME FROM THE THEME where the sky allows it. The night sky itself stays dark by
 //     construction (a comet needs somewhere dark to be bright), but the warm palette reads
-//     `--beige`, `--rosy`, `--moss` so it follows Dusk with everything else.
+//     `--on-dark`, `--accent-warm`, `--accent` so it follows Dusk with everything else.
 //   * IT STOPS WHEN IT IS NOT VISIBLE. A canvas animating behind a hidden panel is battery and
 //     heat on a Pi that is on 24/7, for a picture nobody is looking at.
 
@@ -78,10 +78,10 @@ function readTheme(el) {
   const cs = getComputedStyle(el);
   const v = (name, fallback) => (cs.getPropertyValue(name) || '').trim() || fallback;
   return [
-    v('--beige', '#fff3d9'),
+    v('--on-dark', '#fff3d9'),
     v('--gold', '#ffd36e'),
-    v('--rosy', '#d3968c'),
-    v('--moss', '#9ec7b0'),
+    v('--accent-warm', '#d3968c'),
+    v('--accent', '#9ec7b0'),
     v('--sage', '#cfe0d9'),
   ];
 }
