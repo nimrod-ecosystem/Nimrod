@@ -74,8 +74,8 @@
     background:var(--surface-alt);border:1px solid var(--border)}
   .gaps h2{font-size:1.05rem;margin:0 0 8px}
   .gaps p{margin:0 0 8px;color:var(--text-soft);font-size:.95rem;max-width:74ch}
-  .gaps code{background:#fff;border:1px solid var(--border);border-radius:6px;padding:1px 6px;
-    font-size:.88em}
+  .gaps code{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+    padding:1px 6px;font-size:.88em}
   .gaps .ok{color:var(--accent);font-weight:700}
   .gaps .warn{color:var(--accent-warm-deep);font-weight:700}
 
@@ -118,8 +118,12 @@
     border:1px solid transparent;background:none;color:var(--text);font:inherit;
     border-radius:10px;padding:9px 10px;cursor:pointer;min-height:44px}
   .pickrow:hover{background:var(--surface-alt)}
-  .pickrow[aria-current="true"]{background:var(--link);color:#fff;border-color:var(--link)}
-  .pickrow[aria-current="true"] .dot{background:#fff}
+  /* `--on-link`, not a literal white. `theme.js` DERIVES the on-colours by measuring contrast
+     against each accent, precisely because white is not readable on every accent a theme might
+     choose -- forge's is amber. A hardcoded white here is a guess that happens to be right in
+     the themes that exist today. */
+  .pickrow[aria-current="true"]{background:var(--link);color:var(--on-link);border-color:var(--link)}
+  .pickrow[aria-current="true"] .dot{background:var(--on-link)}
   .pickrow .nm{font-weight:650;font-size:.95rem}
   /* The access answer, kept next to the name rather than only in the detail pane: it is the
      question that decides the page (see the legend) and somebody scanning the list is asking it
@@ -161,7 +165,9 @@
   .trybtn{border:1px solid var(--border);background:var(--surface-alt);color:var(--text);
     border-radius:10px;padding:9px 16px;font:650 .92rem var(--font);cursor:pointer;
     min-height:44px}
-  .trybtn:hover{background:#fff}
+  /* The base rule is `--surface-alt` + `--text`; hovering to a literal white kept the themed
+     text and dropped the themed surface, so in dusk the hover state was near-white on white. */
+  .trybtn:hover{background:var(--surface)}
 
   /* One column when there is not room for two. The list comes FIRST — you choose before you
      look — and stops being sticky, because a sticky list above the thing it controls would

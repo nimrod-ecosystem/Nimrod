@@ -816,12 +816,12 @@
 .wordforge .wf-opt[data-on="1"]{border-color:var(--link,#105666);
   box-shadow:0 0 0 3px rgba(16,86,102,.18)}
 .wordforge .wf-opt[data-on="1"]::before{content:"\25B8\00a0"}
-.wordforge .wf-opt.is-right{border-color:var(--accent);background:#f0f4e8;box-shadow:inset 3px 0 0 var(--accent)}
-.wordforge .wf-opt.is-wrong{border-color:var(--accent-warm);background:#fbecea;box-shadow:inset 3px 0 0 var(--accent-warm-deep)}
+.wordforge .wf-opt.is-right{border-color:var(--accent);background:var(--ok-surface);box-shadow:inset 3px 0 0 var(--accent)}
+.wordforge .wf-opt.is-wrong{border-color:var(--accent-warm);background:var(--bad-surface);box-shadow:inset 3px 0 0 var(--accent-warm-deep)}
 .wordforge .wf-idk{display:block;width:100%;margin-top:10px;background:transparent;border-style:dashed;color:var(--text-muted);font-weight:600}
 .wordforge .wf-idk:hover{background:var(--surface-alt);color:var(--text)}
 .wordforge .wf-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5}
-.wordforge .wf-fb.is-right{background:#f0f4e8;border:1px solid var(--accent)}
+.wordforge .wf-fb.is-right{background:var(--ok-surface);border:1px solid var(--accent)}
 .wordforge .wf-fb.is-wrong{background:var(--surface-alt);border:1px solid var(--border)}
 .wordforge .wf-bonus,.wordforge .wf-try{display:block;margin-top:4px;font-size:.78rem;color:var(--link);font-weight:600}
 /* WHAT THE PERSON PICKED, AND WHAT IT ACTUALLY MEANS. Set apart from the explanation above it
@@ -891,7 +891,7 @@
 .algebra .al-idk{max-width:280px;margin-top:7px;background:transparent;border-style:dashed;color:var(--text-muted);
   font-size:.85rem}
 .algebra .al-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5;max-width:420px}
-.algebra .al-fb.is-right{background:#f0f4e8;border:1px solid var(--accent)}
+.algebra .al-fb.is-right{background:var(--ok-surface);border:1px solid var(--accent)}
 .algebra .al-fb.is-wrong{background:var(--surface-alt);border:1px solid var(--border)}
 .algebra .al-how{display:block;margin-top:5px}
 .algebra .al-bonus,.algebra .al-try{display:block;margin-top:4px;font-size:.78rem;color:var(--link);font-weight:600}
@@ -1271,7 +1271,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-opt[data-on="1"]::before { content: "\25B8\00a0"; }
 .tv-opt[data-right="1"] { border-color: #2c6e49; background: #eef6f0; }
 .tv-opt[data-right="1"]::after { content: "\00a0\2713"; color: #2c6e49; font-weight: 700; }
-.tv-opt[data-wrong="1"] { border-color: #a4243b; background: #fbeff1; }
+.tv-opt[data-wrong="1"] { border-color: #a4243b; background: var(--bad-surface); }
 .tv-opt:disabled { cursor: default; }
 .tv-said { margin: 14px 0 8px; font-size: 1.05rem; }
 .tv-next { min-height: 48px; padding: 10px 20px; font-size: 1rem; }
@@ -1300,7 +1300,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .bk-problems { max-width: 900px; }
 /* An error names a line and shows it, so it can be found in a long document. */
 .bk-prob { padding: 6px 10px; margin-bottom: 4px; border-radius: 8px;
-  background: #fbeff1; border: 1px solid rgba(164,36,59,.25); font-size: .9rem; }
+  background: var(--bad-surface); border: 1px solid rgba(164,36,59,.25); font-size: .9rem; }
 .bk-prob.bk-note { background: var(--surface-alt, #FBF9E9); border-color: var(--border, #e4e0c2); }
 .bk-line { display: block; font: 13px ui-monospace, Menlo, Consolas, monospace;
   color: var(--text-muted, #5d7064); margin-top: 2px; }

@@ -22,8 +22,10 @@
   .pc-body{margin:0 0 18px;color:var(--text-soft)}
   .pc-label{display:block;font-size:.82rem;font-weight:700;color:var(--text-muted);
     text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  /* Matched pair -- see index.html. This one is the pairing code somebody is TYPING, which
+     makes it the worst field on the site to render as white on white. */
   .pc-input{width:100%;padding:14px 12px;border:2px solid var(--border);border-radius:12px;
-    background:#fff;color:var(--text);
+    background:var(--surface);color:var(--text);
     font:800 1.9rem/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;
     text-align:center;text-transform:uppercase}
   .pc-input:focus{outline:none;border-color:var(--accent)}

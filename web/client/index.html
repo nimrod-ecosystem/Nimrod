@@ -9,7 +9,8 @@
     --text-strong:#0A3323; --accent:#839958; --on-dark:#F7F4D5; --accent-warm:#D3968C;
     --link:#105666; --bg:#F7F4D5; --surface-alt:#FBF9E9; --surface:#FFFFFF;
     --text:#0A3323; --text-soft:#3c5346; --text-muted:#5d7064; --border:#e4e0c2;
-    --accent-warm-deep:#a85f52; --highlight:#ffd36e; --radius:16px;
+    --accent-warm-deep:#a85f52; --highlight:#ffd36e;
+    --ok-surface:#f0f4e8; --bad-surface:#fbecea; --radius:16px;
     --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
@@ -36,8 +37,11 @@
   .bar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:18px}
   .field{display:flex;flex-direction:column;gap:4px}
   .field label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted)}
+  /* `var(--surface)`, never a literal white, on anything carrying `var(--text)`. The two are
+     defined as a matched pair in every theme; a hardcoded white breaks the pair, and in dusk
+     `--text` is a NEAR-WHITE -- so every form field on this page was white on white. */
   select,input[type=text]{padding:8px 10px;border:1px solid var(--border);border-radius:9px;
-    background:#fff;color:var(--text);font-size:.95rem}
+    background:var(--surface);color:var(--text);font-size:.95rem}
   button{padding:9px 14px;border-radius:9px;font-weight:600;cursor:pointer;
     border:1.5px solid var(--accent);background:transparent;color:var(--text-strong)}
   button:hover{background:var(--surface-alt)}
@@ -348,12 +352,12 @@
     background:var(--surface);color:var(--text);font:inherit;font-size:.95rem;cursor:pointer;line-height:1.4}
   .wordforge .wf-opt:hover:not(:disabled){background:var(--surface-alt);border-color:var(--accent)}
   .wordforge .wf-opt:disabled{cursor:default}
-  .wordforge .wf-opt.is-right{border-color:var(--accent);background:#f0f4e8;box-shadow:inset 3px 0 0 var(--accent)}
-  .wordforge .wf-opt.is-wrong{border-color:var(--accent-warm);background:#fbecea;box-shadow:inset 3px 0 0 var(--accent-warm-deep)}
+  .wordforge .wf-opt.is-right{border-color:var(--accent);background:var(--ok-surface);box-shadow:inset 3px 0 0 var(--accent)}
+  .wordforge .wf-opt.is-wrong{border-color:var(--accent-warm);background:var(--bad-surface);box-shadow:inset 3px 0 0 var(--accent-warm-deep)}
     .wordforge .wf-idk{display:block;width:100%;margin-top:10px;background:transparent;border-style:dashed;color:var(--text-muted);font-weight:600}
   .wordforge .wf-idk:hover{background:var(--surface-alt);color:var(--text)}
   .wordforge .wf-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5}
-  .wordforge .wf-fb.is-right{background:#f0f4e8;border:1px solid var(--accent)}
+  .wordforge .wf-fb.is-right{background:var(--ok-surface);border:1px solid var(--accent)}
   .wordforge .wf-fb.is-wrong{background:var(--surface-alt);border:1px solid var(--border)}
   .wordforge .wf-bonus,.wordforge .wf-try{display:block;margin-top:4px;font-size:.78rem;color:var(--link);font-weight:600}
   .wordforge .wf-btn{margin-top:10px;padding:10px 18px;border:1px solid var(--border);border-radius:10px;
@@ -411,7 +415,7 @@
   .algebra .al-idk{max-width:280px;margin-top:7px;background:transparent;border-style:dashed;color:var(--text-muted);
     font-size:.85rem}
   .algebra .al-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5;max-width:420px}
-  .algebra .al-fb.is-right{background:#f0f4e8;border:1px solid var(--accent)}
+  .algebra .al-fb.is-right{background:var(--ok-surface);border:1px solid var(--accent)}
   .algebra .al-fb.is-wrong{background:var(--surface-alt);border:1px solid var(--border)}
   .algebra .al-how{display:block;margin-top:5px}
   .algebra .al-bonus,.algebra .al-try{display:block;margin-top:4px;font-size:.78rem;color:var(--link);font-weight:600}
