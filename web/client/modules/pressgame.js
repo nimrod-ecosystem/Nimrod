@@ -413,6 +413,25 @@ registerModule(
         },
         // Mean is offered because a clinician asked for it, WITH the spread, because a mean
         // of three trials is not a finding and a bare number invites being read as one.
+        // *** HOW LONG SHE HELD OFF BEFORE AN EARLY PRESS. ***
+        //
+        // The counterpart to `latency`, and arguably the more interesting of the two in a
+        // go/no-go task: latency says how fast she answered the invite, this says how long she
+        // could withhold before it came. Offered with the spread and the n for the same reason
+        // the latency block is -- a mean of three trials is not a finding.
+        //
+        // Older sessions have commissions with no `heldOffMs`; those are filtered rather than
+        // counted as zero, which is the same rule `telemetry.js` had to learn the hard way.
+        heldOff: (() => {
+          const held = sessionRows
+            .filter((r) => r.kind === 'commission' && Number.isFinite(r.heldOffMs))
+            .map((r) => r.heldOffMs);
+          return held.length
+            ? { n: held.length,
+                meanMs: Math.round(held.reduce((a, b) => a + b, 0) / held.length),
+                minMs: Math.min(...held), maxMs: Math.max(...held) }
+            : { n: 0 };
+        })(),
         latency: lat.length
           ? { n: lat.length, meanMs: Math.round(lat.reduce((a, b) => a + b, 0) / lat.length),
               minMs: Math.min(...lat), maxMs: Math.max(...lat) }
@@ -601,7 +620,11 @@ registerModule(
       // ALWAYS SPOKEN, no minimum: in calm mode the invite has no length to be shorter than,
       // and "Go" is the one word the whole module exists to deliver.
       cue('Go');
-      record('go_shown', { charge: +frozenCharge.toFixed(3), mode: mode() });
+      // `waitMs` for the same reason as `commission`: the wait that was actually served, so the
+      // charge on this row and every latency measured against it can be read back in seconds.
+      record('go_shown', {
+        charge: +frozenCharge.toFixed(3), waitMs: Math.round(curWaitMs), mode: mode(),
+      });
     }
 
     function enterStop() {
@@ -640,7 +663,36 @@ registerModule(
         bloom(0.45);
         tone(320, 120, 'triangle');
         maybeRemind();
-        record('commission', { charge: +liveCharge().toFixed(3), mode: mode(), src: source });
+        // *** `charge` ALONE COULD NOT BE READ BACK, AND THIS IS THE MODULE THAT SAYS THE DATA
+        // MODEL IS THE JOB. ***
+        //
+        // Chat asked for exact durations on this row and was right, for a reason worth stating
+        // precisely: `charge` is a FRACTION OF A WAIT WHOSE LENGTH MOVES. With `adaptiveWait`
+        // on, `curWaitMs` shortens after a clean wait and lengthens after a press, so a
+        // commission at charge 0.62 is 6.2s of holding off in a 10s wait and 4.3s in a 7s one
+        // -- and NO ROW SAID WHICH. `session_start` records the wait only as it was at the
+        // start, before any adaptation. So the clinically interesting number, HOW LONG SHE HELD
+        // OFF BEFORE SHE PRESSED, was not recoverable from the record at all.
+        //
+        // `heldOffMs` is that number, measured the same way every other duration here is: from
+        // phase start, which a previous press resets, so it is genuinely "how long since she
+        // last pressed" rather than "how far into a trial".
+        //
+        // ADDING FIELDS, NEVER CHANGING ONE. `charge` stays exactly as it was. This is an
+        // append-only log, older rows will never have `heldMs`, and a reader that finds it
+        // missing knows it is reading an old row -- which is a fact, where a redefined `charge`
+        // would have been a lie told to every row already written.
+        record('commission', {
+          charge: +liveCharge().toFixed(3),
+          // *** NOT `heldMs`, AND THE NEAR-MISS IS WORTH THE LINE. ***
+          // `edge_up` ALREADY carries `heldMs`: how long the button was physically held DOWN.
+          // This is how long she held OFF from pressing. Opposite meanings, and one name for
+          // both in an append-only log would have been permanent -- every row already written
+          // would have been retroactively ambiguous.
+          heldOffMs: Math.round(elapsed()),
+          waitMs: Math.round(curWaitMs),
+          mode: mode(), src: source,
+        });
         phaseStart = simT;                              // a press restarts the wait
         if (waitAdapts()) curWaitMs = Math.min(cfg.waitMs, curWaitMs / WAIT_SPEED);
         return;
@@ -655,7 +707,8 @@ registerModule(
           // differ, the difference is `goDelayMs` and it belonged to the machine.
           latencyMs,
           latencyFromScheduleMs: Math.round(simT - goScheduledAt),
-          charge: +frozenCharge.toFixed(3), mode: mode(), src: source,
+          charge: +frozenCharge.toFixed(3), waitMs: Math.round(curWaitMs),
+          mode: mode(), src: source,
           machine: machine(),
         });
         if (waitAdapts()) curWaitMs = Math.max(floorMs(), curWaitMs * WAIT_SPEED);
