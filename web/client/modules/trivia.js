@@ -77,6 +77,9 @@ export const GAME = 'trivia';
 
 export const DEFAULTS = {
   roundLength: 10,
+  // *** A SCORE ON SCREEN, OFF BY DEFAULT. See the SETTINGS row, which carries the correction
+  // to what this file used to claim Mike had said. ***
+  showScore: false,
   // *** ONE POINT, QUARTERED BY GUESS: 1 / 0.75 / 0.5 / 0.25. *** Chat's #5, and the
   // calibration behind it is Mike's atom -- "a point is roughly a minute of effort", which is
   // what `points.js` already means by one point. Two points for answering a four-choice
@@ -211,6 +214,31 @@ const SETTINGS = [
   { key: 'record', label: 'Record answers aloud', default: false, level: 'standard',
     onLabel: 'On', offLabel: 'Off',
     note: 'off unless you turn it on' },
+  // *** THIS FILE HAS BEEN CITING MIKE FOR A POSITION HE DID NOT TAKE. ***
+  //
+  // The render used to carry: *"NO score on screen... the header of this file records Mike's
+  // position that a patient-facing score is the thing to avoid."* Read the quote at the top
+  // again — it is about PRONUNCIATION scoring, in the act of killing a speech-therapy game:
+  //
+  //     *"the score is based on the trivia and not the pronunciation"*
+  //
+  // That sentence PROPOSES a trivia score. It moves the score OFF the thing that would be a
+  // verdict about somebody's body and ONTO something anybody can be wrong about, which is the
+  // whole argument the header spends three paragraphs making. And the same paragraph cites
+  // `PRINCIPLES.md` §3.C to say that *choosing to play a quiz is asking* in a way a clarity
+  // score never is. The file talked itself into the opposite of its own reasoning.
+  //
+  // That matters beyond one control: `CLAUDE.md` warns against citing a doc to shut down
+  // reconsideration, and this was worse — citing a quote for something it does not say, in a
+  // comment that reads as settled.
+  //
+  // *** OFF BY DEFAULT ANYWAY, and that is not hedging. *** `comet` already carries exactly
+  // this row with exactly this default, for the same reason: a screen somebody cannot walk away
+  // from should not keep a running tally in front of them unless somebody decided it should.
+  // Matching an existing precedent rather than inventing a second answer to one question.
+  { key: 'showScore', label: 'Score', default: false, level: 'essential',
+    onLabel: 'Show how many are right so far', offLabel: 'No score on screen',
+    note: 'How many trivia answers were right — never anything about how somebody spoke.' },
   { key: 'correctPoints', label: 'Points for a first-guess answer', kind: 'number', default: 1,
     level: 'advanced', min: 0, max: 10, step: 1,
     note: 'Each further guess is worth a quarter less, down to a quarter of this.' },
@@ -244,6 +272,11 @@ registerModule(
     // trivia."* A wrong press no longer ends the question; it marks that option and hands the
     // question back.
     let misses = [];
+    // THE SESSION'S TALLY. Counted here rather than derived from the ledger: the ledger is the
+    // durable record of what happened and it spans days, and "3 of 5" is about the round
+    // somebody is sitting in front of right now.
+    let rightCount = 0;
+    let askedCount = 0;
     // *** WHEN THE QUESTION WENT UP. ***
     //
     // Trivia was the ONLY game logging no `latencyMs` at all -- wordforge, algebra and
@@ -280,7 +313,8 @@ registerModule(
       const done = answered !== null;
       mount.innerHTML = `
         <div class="tv">
-          <p class="tv-count">${at + 1} of ${deck.length}</p>
+          <p class="tv-count">${at + 1} of ${deck.length}${cfg.showScore
+            ? ` <span class="tv-score">· ${rightCount} right</span>` : ''}</p>
           <h3 class="tv-q">${esc(q.question)}</h3>
           <ol class="tv-opts" data-opts>
             ${q.options.map((o, i) => {
@@ -299,10 +333,14 @@ registerModule(
           ${done
             ? `<p class="tv-said">Correct.</p>
                <button type="button" class="tv-next" data-next>Next question</button>`
-            // NOT "the answer was X", and NO score on screen. The question is still open, so
-            // telling them the answer would end it for them; and the header of this file
-            // records Mike's position that a patient-facing score is the thing to avoid. What
-            // partial credit is worth goes to the ledger, not to the person guessing.
+            // NOT "the answer was X". The question is still open, so telling them the answer
+            // would end it for them.
+            //
+            // WHAT A GUESS COST is still not shown, and that part was always right: partial
+            // credit goes to the ledger, not to the person mid-question. "You have already
+            // spent half a point" is a running commentary on somebody's guessing, which is the
+            // judgement `PRINCIPLES.md` §3.C is about — unlike a plain count of right answers,
+            // which is the game's score and is what a quiz is.
             : (misses.length
               ? '<p class="tv-said">Not that one — try again.</p>'
               : '')}
@@ -310,6 +348,10 @@ registerModule(
     }
 
     function show(i) {
+      // Counted when a question GOES UP, not when it is answered: a question somebody walked
+      // away from was still asked, and a tally that only counted finished ones would read
+      // "3 of 3" on a round with two abandoned questions in it.
+      askedCount += 1;
       at = Math.max(0, Math.min(deck.length - 1, i));
       q = makeQuestion(deck[at], bank, { choices: cfg.choices, rand });
       answered = null;
@@ -404,6 +446,7 @@ registerModule(
       }
 
       answered = chosen;
+      rightCount += 1;
       // A first-guess answer extends the streak; one found after a miss does not, because
       // `streak` was already reset above on the press that missed.
       if (!misses.length) streak += 1;
@@ -444,6 +487,7 @@ registerModule(
       // Exposed so the suite can assert the WHOLE ladder rather than the one step a given run
       // happens to reach. Without it the ladder check had to guard against its own absence,
       // which made it unfailable -- the fault this session keeps finding in its own work.
+      __score: () => ({ right: rightCount, asked: askedCount }),
       __worth: (spent) => worth(spent),
       __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length), askedAt,
         highlight, streak, deck: deck.length,

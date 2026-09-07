@@ -37,7 +37,10 @@ aloud.</p>
 
 <script type="module">
 import { createBus } from '../bus.js';
-import { mountModule } from '../module.js';
+import { mountModule, getManifest } from '../module.js';
+// Registered so the check below can compare this row against comet's, which is the precedent
+// it deliberately matches rather than inventing a second answer to one question.
+import '../modules/comet.js';
 import { parseBank, buildDeck, makeQuestion, shuffle, DEFAULTS } from '../modules/trivia.js';
 import '../modules/trivia.js';
 
@@ -65,12 +68,12 @@ How many legs does a spider have? | Eight | Six | Ten | Four`;
 // module writes, rather than asserting a wall-clock latency is "more than zero" -- which is
 // the assertion that would have passed the whole time the field did not exist.
 function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = () => 0,
-              now = null, telemetry = null } = {}) {
+              now = null, telemetry = null, saved = {} } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
   const events = [];
-  let stored = bankText == null ? {} : { bankText };
+  let stored = bankText == null ? { ...saved } : { bankText, ...saved };
   let sub = null;
   const sharedRow = {
     get: () => (sharedText == null ? {} : { bankText: sharedText }),
@@ -95,6 +98,59 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
 
 (async () => {
 try {
+  // =====================================================================================
+  section('*** a score on screen \u2014 and the quote this file was citing against one ***');
+  {
+    // Chat: "the module shows no score at all, only the log does." The render carried a comment
+    // saying a patient-facing score was Mike's position to avoid, citing the quote at the top of
+    // trivia.js. That quote is about PRONUNCIATION scoring, in the act of killing a
+    // speech-therapy game -- *"the score is based on the trivia and not the pronunciation"* --
+    // which PROPOSES a trivia score. The file had talked itself into the opposite of its own
+    // argument, and then cited a person for it.
+    const keys = (getManifest('trivia').settings || []).map((f) => f.key);
+    check('*** a score is at least available now ***', keys.includes('showScore'),
+      JSON.stringify(keys));
+    // OFF BY DEFAULT, matching `comet`, which already carries this exact row for the same
+    // reason. One question should not have two different answers in one codebase.
+    const row = (getManifest('trivia').settings || []).find((f) => f.key === 'showScore');
+    const cometRow = (getManifest('comet').settings || []).find((f) => f.key === 'showScore');
+    check('...off by default, because it is a screen somebody cannot walk away from',
+      row.default === false);
+    check('*** ...and matching comet rather than inventing a second answer ***',
+      !!cometRow && cometRow.default === row.default && cometRow.level === row.level,
+      JSON.stringify({ trivia: [row.default, row.level], comet: [cometRow?.default, cometRow?.level] }));
+
+    const off = rig({});
+    check('with it off, nothing on screen counts anything',
+      !off.host.querySelector('.tv-score'), off.host.textContent.slice(0, 60));
+    off.inst.destroy();
+
+    const on = rig({ saved: { showScore: true } });
+    check('with it on, the score is on screen', !!on.host.querySelector('.tv-score'),
+      on.host.textContent.slice(0, 60));
+    check('...starting at none right', /0 right/.test(on.host.textContent),
+      on.host.querySelector('.tv-score')?.textContent);
+    // Answer one correctly. `rand: () => 0` fixes the deck and the option order.
+    // `correctIndex` lives under `question` on the probe, not at the top level. Reading it
+    // from the top level gave `undefined`, `btns[undefined]?.click()` did nothing, and the
+    // check reported "0 right" as though the counter were broken -- a test bug wearing a
+    // product bug's clothes, which is why the index is asserted before it is used.
+    const right = on.probe().question.correctIndex;
+    check('...(the suite knows which option is right)', Number.isInteger(right), String(right));
+    const btns = [...on.host.querySelectorAll('[data-opt]')];
+    btns[right].click();
+    await sleep(20);
+    check('*** answering right moves it ***', /1 right/.test(on.host.textContent),
+      on.host.querySelector('.tv-score')?.textContent);
+    check('...and the module counts what it was asked, not only what was finished',
+      on.inst.impl.__score().asked >= 1, JSON.stringify(on.inst.impl.__score()));
+    // WHAT IS STILL NOT SHOWN, and that part was always right: what a guess COST. "You have
+    // already spent half a point" is a running commentary on somebody's guessing.
+    check('*** what a wrong guess cost is still not put in front of them ***',
+      !/point|0\.75|0\.5/i.test(on.host.textContent), on.host.textContent.slice(0, 120));
+    on.inst.destroy();
+  }
+
   // =====================================================================================
   section('*** the bank is somebody else’s — the same shape as Word Forge ***');
   {
