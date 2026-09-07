@@ -1196,6 +1196,74 @@ try {
     await sleep(20);
   }
 
+  // ── *** A BOARD IS A SURFACE WITH CARDS OVER IT, NOT 36 SEALED BOXES *** ──────────
+  //
+  // Mike's seam. The grid used to BE the board, so anything wanting to move ACROSS it had
+  // nowhere to live: a balloon going from one card to the next would have had to be re-parented
+  // cell by cell and clipped at every boundary.
+  {
+    const host = document.getElementById('host');
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(),
+      state: fakeState({}), output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(60);
+
+    const surface = host.querySelector('[data-surface]');
+    const flight = host.querySelector('[data-flight]');
+    const grid = host.querySelector('[data-grid]');
+    check('*** there is a live layer UNDER the cards ***', !!surface);
+    check('*** and a flight layer OVER them ***', !!flight);
+
+    // ORDER IS THE POINT. Read the COMPUTED depths, not the markup order: a z-index is what
+    // actually decides, and the two can disagree.
+    const z = (el) => Number(getComputedStyle(el).zIndex) || 0;
+    check('*** the surface is behind the grid ***', z(surface) < z(grid),
+      `surface=${z(surface)} grid=${z(grid)}`);
+    check('*** and the flight layer is in front of it ***', z(flight) > z(grid),
+      `flight=${z(flight)} grid=${z(grid)}`);
+
+    // *** IT MUST SPAN THE WHOLE BOARD, which is what lets an animation cross a cell edge. ***
+    // A layer the size of one cell is the sealed box again wearing a new class name.
+    const boardBox = host.querySelector('.aboard').getBoundingClientRect();
+    const flightBox = flight.getBoundingClientRect();
+    const cardBox = host.querySelector('.ab-card').getBoundingClientRect();
+    check('*** the flight layer spans the whole board, not one cell ***',
+      flightBox.width >= boardBox.width - 2 && flightBox.width > cardBox.width + 1,
+      `flight=${Math.round(flightBox.width)} board=${Math.round(boardBox.width)} `
+      + `card=${Math.round(cardBox.width)}`);
+
+    // *** AND IT MUST NEVER EAT A PRESS. *** It covers every card, and a card is somebody's
+    // voice. This check is what keeps the seam from costing the thing the board is for.
+    check('*** the flight layer takes no pointer events ***',
+      getComputedStyle(flight).pointerEvents === 'none', getComputedStyle(flight).pointerEvents);
+    check('...and neither does the surface',
+      getComputedStyle(surface).pointerEvents === 'none', getComputedStyle(surface).pointerEvents);
+
+    // Proven rather than asserted: what is actually under the middle of a card is the CARD.
+    const mid = document.elementFromPoint(
+      Math.round(cardBox.left + cardBox.width / 2),
+      Math.round(cardBox.top + cardBox.height / 2));
+    check('*** a press in the middle of a card still reaches the card ***',
+      !!mid && !!mid.closest('.ab-card'), mid ? (mid.className || mid.tagName) : 'nothing');
+
+    // THE DEFAULT IS STILL AN OPAQUE CARD. The contrast numbers this module documents were
+    // measured against a solid card; the seam must not quietly re-open them.
+    const alpha = getComputedStyle(host.querySelector('.aboard'))
+      .getPropertyValue('--ab-card-alpha').trim();
+    check('*** the cards are still opaque by default ***', alpha === '' || Number(alpha) === 1,
+      `--ab-card-alpha: ${alpha || '(unset, so 1)'}`);
+
+    // Handed out, not found by selector: a caller querySelecting its way in would make these
+    // class names load-bearing markup nobody could change.
+    const handed = inst.impl.layers();
+    check('the module hands out both layers',
+      handed.surface === surface && handed.flight === flight);
+
+    inst.destroy();
+  }
+
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

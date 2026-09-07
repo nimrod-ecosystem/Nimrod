@@ -204,14 +204,14 @@
 
 /* camera */
 .camera{width:100%;height:100%;position:relative}
-.camera .stage{position:relative;width:100%;height:100%;background:#0c1a14;border-radius:10px;
+.camera .stage{position:relative;width:100%;height:100%;background:var(--letterbox);border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
 /* CONTAIN, NOT COVER. Mike, 2026-09-02: *"You made the camera fit the screen and now the top and
    bottom are cropped off. I want it to fill so you can see everything."* `cover` fills the box by
    throwing away whatever does not fit, which on a rearview mirror means throwing away part of the
    room — and the whole point of the panel is seeing who is there. Letterboxing is the cheaper
    price. The background colour is what the bars are made of. */
-.camera video{width:100%;height:100%;object-fit:contain;display:block;background:#0c1a14}
+.camera video{width:100%;height:100%;object-fit:contain;display:block;background:var(--letterbox)}
 .camera .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
   color:var(--on-dark);background:rgba(10,51,35,.72);font-size:.85rem;text-align:center;padding:10px}
 .camera .status button{border:1px solid rgba(247,244,213,.5);color:var(--on-dark);background:transparent;
@@ -220,7 +220,7 @@
 
 /* photos */
 .photos{width:100%;height:100%;position:relative}
-.photos .stage{position:relative;width:100%;height:100%;background:#0c1a14;border-radius:10px;
+.photos .stage{position:relative;width:100%;height:100%;background:var(--letterbox);border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
 .photos .stage img,.photos .stage video{position:relative;width:100%;height:100%;object-fit:contain;
   display:block;background:transparent}
@@ -243,7 +243,7 @@
 
 /* youtube */
 .youtube{width:100%;height:100%;position:relative}
-.youtube .stage{position:relative;width:100%;height:100%;background:#0c1a14;border-radius:10px;
+.youtube .stage{position:relative;width:100%;height:100%;background:var(--letterbox);border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
 .youtube .stage iframe{width:100%;height:100%;border:0;display:block}
 .youtube .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
@@ -354,9 +354,9 @@
 
 /* personal videos */
 .personal{width:100%;height:100%;position:relative;display:flex;flex-direction:column}
-.personal .stage{position:relative;flex:1;min-height:0;background:#0c1a14;border-radius:10px;
+.personal .stage{position:relative;flex:1;min-height:0;background:var(--letterbox);border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
-.personal .stage video{width:100%;height:100%;object-fit:contain;display:block;background:#0c1a14}
+.personal .stage video{width:100%;height:100%;object-fit:contain;display:block;background:var(--letterbox)}
 .personal .caption{margin-top:8px;text-align:center;font-weight:700;font-size:1.3rem;color:var(--on-dark)}
 .personal .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
   color:var(--on-dark);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
@@ -488,7 +488,13 @@
 .ab-panel{position:absolute;top:54px;right:6px;z-index:calc(var(--z-panel-contents) + 4);
   width:min(320px,calc(100% - 12px));max-height:calc(100% - 64px);overflow:auto;
   box-sizing:border-box;padding:12px 14px;
-  background:var(--ab-card);color:var(--ab-ink);
+  /* *** THE CARD COMPOSITES OVER THE SURFACE, AND BY DEFAULT IT IS STILL OPAQUE. ***
+     `--ab-card-alpha` is 1, so this is the same solid card the contrast numbers at the top of
+     the board's palette were measured against. A board that turns the live surface on turns
+     this down deliberately, and knowingly re-opens those measurements -- which is a choice
+     somebody makes for a screen, not a default that arrives underneath them. */
+  background:color-mix(in srgb, var(--ab-card) calc(var(--ab-card-alpha, 1) * 100%), transparent);
+  color:var(--ab-ink);
   border:1px solid var(--ab-line);border-radius:10px;
   box-shadow:0 10px 30px rgba(0,0,0,.35);
   font:14px/1.45 var(--font,system-ui,sans-serif);
@@ -597,7 +603,31 @@
 .be-idlewarn>span{flex:1 1 14ch;min-width:0}
 /* `height:auto` and `flex:1`, not `height:100%`: with a switcher above it, a grid claiming the
    full height of a flex column overflows by exactly the height of the switcher. */
+/* *** THE THREE LAYERS OF A BOARD. ***
+ *
+ * A board is a SURFACE WITH CARDS OVER IT, not 36 sealed boxes. The depths come from
+ * `layers.css` -- the world band for the live layer, the floating band for things in flight --
+ * so a balloon on this board and a balloon on the dashboard mean the same thing by the same
+ * number.
+ *
+ * `.aboard` is made a stacking context (`isolation`), so these bands are relative to THE BOARD:
+ * a card cannot accidentally out-rank the transport bar three layers up the page.
+ */
+.aboard{isolation:isolate}
+/* UNDER the cards. Empty by default; whatever drifts or breathes goes here, and the cards
+   composite over it. It cannot take a press, and it is `aria-hidden` in the markup -- it is
+   scenery, and a communication board must never hand a screen reader scenery among the words. */
+.ab-surface{position:absolute;inset:0;z-index:var(--z-world);pointer-events:none;
+  border-radius:inherit;overflow:hidden}
+/* OVER the cards, spanning the whole board. THIS IS WHAT LETS AN ANIMATION CROSS A CELL
+   BOUNDARY: a thing in flight lives here and travels in board coordinates, rather than being
+   handed from one cell to the next and clipped at every edge.
+   `pointer-events:none` is load-bearing, not tidiness -- this layer covers every card, and a
+   card is somebody's voice. It must never eat a press. */
+.ab-flight{position:absolute;inset:0;z-index:var(--z-floating);pointer-events:none;
+  overflow:visible}
 .ab-grid{width:100%;height:auto;flex:1 1 auto;min-height:0;display:grid;
+  position:relative;z-index:var(--z-panel-contents);
   gap:calc(var(--u,1px) * 4)}
 .ab-card{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;overflow:hidden;
@@ -863,7 +893,7 @@
 .lessons .l-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .lessons .l-btn:disabled{opacity:.45;cursor:not-allowed}
 .lessons .l-body{margin-top:11px}
-.lessons .l-video{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#0c1a14;display:block}
+.lessons .l-video{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:var(--letterbox);display:block}
 .lessons .l-none{font-size:.85rem;color:var(--text-muted);text-align:center;padding:20px;background:var(--surface-alt);
   border:1px dashed var(--border);border-radius:10px;margin:0}
 .lessons .l-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
@@ -1133,7 +1163,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
    DETECTOR sees, not a prettier version of it. */
 .mk-view {
   width: 320px; height: 240px; image-rendering: pixelated;
-  border-radius: 10px; background: #0c1a14; cursor: crosshair;
+  border-radius: 10px; background: var(--letterbox); cursor: crosshair;
   border: 1px solid var(--border, #e4e0c2);
 }
 /* The camera-off placeholder, in the same footprint as the preview it replaces, so pressing
