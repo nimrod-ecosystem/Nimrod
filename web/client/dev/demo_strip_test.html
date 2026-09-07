@@ -134,15 +134,34 @@ section('picking a folder — the whole point of the thing');
 {
   const el = fresh();
   let connected = null;
+  let asked = null;
   await mountDemoStrip(el, {
     storage: fakeStore(), listFolders: async () => [],
-    pick: async (label) => ({ id: 'folder-1', label, kind: 'folder' }),
+    // *** THE FAKE FALLS BACK THE WAY `pickFolder` DOES, and that is the point of this rig
+    // rather than a convenience. *** The old fake echoed whatever label it was handed, so the
+    // check below it was measuring THE FAKE: pass a label and it comes back, pass none and it
+    // comes back empty. The real picker never returns an empty label -- it uses the folder's
+    // own name -- so a fake that does not model that turns a correct change into a red suite.
+    // `asked` records what the strip actually requested, which is the thing under test.
+    pick: async (label) => { asked = label; return { id: 'folder-1', kind: 'folder',
+                                                     label: (label || '').trim() || 'Holiday 2019' }; },
     onConnected: (src) => { connected = src; },
   });
   el.querySelector('[data-pick]').click();
   await new Promise((r) => setTimeout(r, 30));
   check('*** the folder is handed back to the caller ***', connected?.id === 'folder-1',
     JSON.stringify(connected));
+  // *** IT DOES NOT NAME THE FOLDER FOR THEM. ***
+  //
+  // This passed 'My photos', which OVERRIDES what `pickFolder` would otherwise use --
+  // `handle.name`, the actual folder. So every folder connected from this strip was called
+  // "My photos" whatever it was, and connecting a second one gave two rows with the same name
+  // and no way to tell them apart. Chat's rule: "asking somebody to name a folder before they
+  // have picked it is backwards."
+  check('*** it asks for no label, so the folder keeps its own name ***',
+    !asked, 'label the strip asked for: ' + JSON.stringify(asked));
+  check('...and what comes back is that name, not a blank',
+    connected?.label === 'Holiday 2019', JSON.stringify(connected?.label));
   check('...with a label, so it is not "undefined" in the sources list',
     !!connected?.label, JSON.stringify(connected));
   check('...and the strip gets out of the way', !el.querySelector('#demo'));
