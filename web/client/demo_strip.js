@@ -109,7 +109,17 @@ export async function mountDemoStrip(root, {
     btn.disabled = true;
     btn.textContent = 'Choosing…';
     try {
-      const src = await pick('My photos');
+      // *** THE FOLDER'S OWN NAME, NOT A LABEL WE INVENTED FOR IT. ***
+      //
+      // This passed 'My photos', which OVERRIDES what `pickFolder` would otherwise use --
+      // `handle.name`, the actual folder. So every folder connected from this strip was called
+      // "My photos" whatever it was, and connecting a second one gave you two rows with the
+      // same name and no way to tell them apart.
+      //
+      // Chat put the general rule as "the folder's own name should be the default label -
+      // asking somebody to name a folder before they have picked it is backwards." `media.js`
+      // already passes '' and gets that right; this was the one place still naming it for them.
+      const src = await pick('');
       // *** A CANCELED PICKER IS NOT AN ERROR *** and must not look like one. Somebody who
       // opened the dialog to see what it wanted and thought better of it has done nothing
       // wrong, and should find the button exactly as they left it.
