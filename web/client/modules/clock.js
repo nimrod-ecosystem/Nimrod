@@ -18,6 +18,48 @@ const ZONES = [
   ['UTC', 'UTC'],
 ];
 
+// ---------------------------------------------------------------------------------------
+// *** FIVE LIVE SETTINGS AND NOT ONE ROW IN THE MENU. ***
+// ---------------------------------------------------------------------------------------
+//
+// This module read all five, honoured all five, and drew its own gear panel to write them --
+// and declared none of them. So the only way to change the clock was the gear ON the clock.
+//
+// THAT IS NOT THE SAME AS "it has settings, just somewhere else". `photos.js` already records
+// the case that breaks it: *"on a GRID kiosk that menu currently shows no panel settings at
+// all"*. On a bedside screen where panel chrome is not reachable, a clock stuck in 24-hour or
+// in the wrong timezone could not be fixed by anybody -- and this is the module whose entire
+// job is orienting somebody who is disoriented. Being wrong by an hour matters more here than
+// anywhere else on the screen.
+//
+// Found by an audit rather than by eye: `dev/unread_settings.py`, once it was taught that a
+// one-line DEFAULTS is still a DEFAULTS. It had been blind to exactly this shape.
+//
+// THE GEAR STAYS. Two surfaces for one setting is fine as long as they write the same key,
+// which they do -- both go through `state.set` on these names.
+const SETTINGS = [
+  // ESSENTIAL, all but one, and that is not inflation. Each row is about whether somebody can
+  // READ the clock or whether it is telling them the truth, which is the whole module.
+  { key: 'hour12', label: 'Clock style', default: true, level: 'essential',
+    onLabel: '12-hour (2:30 PM)', offLabel: '24-hour (14:30)' },
+  { key: 'showDate', label: 'Show the date', default: true, level: 'essential',
+    onLabel: 'Yes', offLabel: 'No' },
+  { key: 'size', label: 'Size', kind: 'choice', default: 'm', level: 'essential',
+    options: [
+      { value: 's', label: 'Small' },
+      { value: 'm', label: 'Medium' },
+      { value: 'l', label: 'Large' },
+    ],
+    note: 'Ignored when the panel is small enough that the clock sizes itself to fit.' },
+  { key: 'tz', label: 'Time zone', kind: 'choice', default: '', level: 'essential',
+    options: ZONES.map(([value, label]) => ({ value, label })),
+    note: 'A screen in a care facility is not always in the same zone as whoever set it up.' },
+  // ADVANCED: a ticking seconds field is motion on a screen somebody sleeps beside, and almost
+  // nobody needs it -- but the person who does will go looking for it deliberately.
+  { key: 'seconds', label: 'Show seconds', default: false, level: 'advanced',
+    onLabel: 'Yes', offLabel: 'No' },
+];
+
 // THE PRE-DAWN HOURS GET THEIR OWN NAME, and this is not cosmetic. This module's whole
 // job is orienting someone who is disoriented, and at 4:33am it used to read "Monday
 // night" — which to anyone reading it means about ten in the evening. Wrong by twenty
@@ -30,7 +72,10 @@ const ZONES = [
 // one real household’s rhythm (morning starts at 6, sleepytime at 21); these bands are how a person
 // would describe the hour out loud. Same clock, two different questions, and forcing one
 // answer would make one of them wrong.
-function partOfDay(hour) {
+// EXPORTED so the orientation rules can be tested directly. Both of these carry corrections
+// that came back after being fixed -- the pre-dawn naming and the duplicated weekday -- and a
+// rule that has regressed once will regress again if nothing is watching it.
+export function partOfDay(hour) {
   if (hour < 5) return 'early morning';
   if (hour < 12) return 'morning';
   if (hour < 17) return 'afternoon';
@@ -38,7 +83,7 @@ function partOfDay(hour) {
   return 'night';
 }
 
-function fmt(cfg, now) {
+export function fmt(cfg, now) {
   const zone = cfg.tz ? { timeZone: cfg.tz } : {};
   const time = new Intl.DateTimeFormat(undefined, {
     hour: 'numeric', minute: '2-digit', hour12: cfg.hour12,
@@ -78,7 +123,8 @@ registerModule(
   // module, only a least-exposed one, which is why the vocabulary is `dependsOn` rather than
   // `cannotFail`. This makes it a good LAST RESORT, not a guarantee.
   { dependsOn: 'none',
-    type: 'clock', title: 'Clock', description: 'The time, the day and the date — for somebody who has lost track of all three' },
+    type: 'clock', title: 'Clock', description: 'The time, the day and the date — for somebody who has lost track of all three',
+    settings: SETTINGS },
   (ctx) => {
     const { mount, state } = ctx;
     let cfg = { ...DEFAULTS };
