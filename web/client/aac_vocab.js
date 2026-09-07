@@ -177,12 +177,27 @@ export function normalizeBoard(raw) {
   // columns", and 5x3 is not in that list and should not have to be.
   //
   // So `cols`/`rows` are OPTIONAL and override the tier when present. Absent, every existing
-  // board behaves exactly as before, which is what keeps this from being a migration. Bounded
-  // at 1..8 because a 12-column board on a bedside screen is a grid of targets nobody can hit,
-  // and the whole file exists to keep targets large.
+  // board behaves exactly as before, which is what keeps this from being a migration.
+  //
+  // *** BOUNDED AT 1..12, AND IT WAS 8 UNTIL A MEASUREMENT SHOWED THAT WAS WRONG. ***
+  //
+  // The 8 came with the reasoning *"a 12-column board on a bedside screen is a grid of targets
+  // nobody can hit, and the whole file exists to keep targets large."* That sounds right and it
+  // is false on a 16:9 screen, because COLUMNS ARE NOT THE THING THAT SETS TARGET SIZE -- the
+  // shorter side of the cell is, and a wider board has correspondingly FEWER ROWS.
+  //
+  // Measured, 36 cards on a 1080p screen (see `board_test`):
+  //
+  //     6 x 6  ->  320 x 180 px, short side 180
+  //     9 x 4  ->  213 x 270 px, short side 213   <- 18% BIGGER, and squarer
+  //    12 x 3  ->  160 x 360 px, short side 160
+  //
+  // So the old bound forbade the layout that is both the published standard for a core board
+  // AND the one with the largest targets on the hardware this actually runs on. 12 is where the
+  // cells do start getting narrow, and it is a bound on absurdity rather than a design opinion.
   const dim = (v) => {
     const n = Math.round(Number(v));
-    return Number.isFinite(n) && n >= 1 && n <= 8 ? n : null;
+    return Number.isFinite(n) && n >= 1 && n <= 12 ? n : null;
   };
   const cols = dim(b.cols);
   const rows = dim(b.rows);
@@ -446,13 +461,25 @@ export const CARE = {
 //      other arrangements for reasons somebody has thought about harder than this.
 //   2. THE DRAWINGS ARE FIRST-PASS. See the note in `aac_symbols.js`. Abstract words are hard
 //      to draw and confusability across a set this size is real.
-//   3. IT IS 6x6 AND CORE BOARDS ARE OFTEN WIDER. Wider means smaller targets, and target size
-//      is the binding constraint for the people this project is for (see TIERS above). 6x6 is
-//      a judgement, and `cols`/`rows` mean anybody can change it in the editor.
+//   3. ~~IT IS 6x6 AND CORE BOARDS ARE OFTEN WIDER.~~ **ANSWERED BY MEASURING IT, and the
+//      answer was that I had it backwards.** The original note said *"wider means smaller
+//      targets, and target size is the binding constraint"*. That is false on a 16:9 screen:
+//      columns do not set target size, THE SHORTER SIDE OF THE CELL DOES, and a wider board has
+//      correspondingly fewer rows. Measured on a 1080p screen, 36 cards:
 //
-// All three are questions for somebody who does the speech-and-language work — the Ace Centre
-// call is the place for them, not another round of guessing in a comment. Recorded as such
-// rather than shipped as though settled.
+//          6 x 6  ->  320 x 180 px      9 x 4  ->  213 x 270 px
+//
+//      **9x4 is 18% bigger on the binding dimension and very nearly square** (1.27 vs 1.78), so
+//      it is both the published shape for a core board and the better one here. Changed, with
+//      the numbers kept in `board_test` so nobody has to take this paragraph on trust.
+//
+// 1 and 2 are still questions for somebody who does the speech-and-language work — the Ace
+// Centre call is the place for them, not another round of guessing in a comment.
+//
+// *** AND THE REASON THE SHAPE CHANGED TODAY RATHER THAN AFTER THE CALL. *** This file's first
+// rule is that a layout never changes under somebody without a decision. The core set shipped
+// hours ago and nobody has built a motor plan on it yet, so this is the cheapest moment this
+// change will ever have. The same change in a month is the exact reflow the rule forbids.
 //
 // *** IT IS NOT THE DEFAULT. *** `yesno` still is. A thirty-six-cell board in front of somebody
 // on their first day is the opposite of a starter set, and which board a person begins on is a
@@ -462,64 +489,65 @@ export const UNIVERSAL = {
   id: 'core',
   name: 'Core words',
   // 36 is not one of the TIERS, and does not need to be: this board states its own grid, which
-  // is the same thing a board somebody builds in the editor does.
-  cols: 6,
-  rows: 6,
+  // is the same thing a board somebody builds in the editor does. 9x4 rather than 6x6 because
+  // it measures BIGGER on the binding dimension -- see note 3 in the header.
+  cols: 9,
+  rows: 4,
   tier: 16,
+  // FOUR ROWS OF NINE, and the row breaks are where the meaning changes rather than wherever
+  // nine words happened to run out. The same 36 words as before; only the shape moved.
   cells: [
-    // people and pointing — top-left, because they start the most sentences
+    // ROW 1 — who, what, and every question. The words that start a sentence.
     { id: 'i',    word: 'I',     symbol: 'i',    kind: 'plain' },
     { id: 'you',  word: 'You',   symbol: 'you',  kind: 'plain' },
     { id: 'my',   word: 'My',    symbol: 'my',   kind: 'plain' },
     { id: 'it',   word: 'It',    symbol: 'it',   kind: 'plain' },
     { id: 'that', word: 'That',  symbol: 'that', kind: 'plain' },
-    // `not` is grammar, not refusal. Colouring it like `no` would make "I do not like it" look
-    // like an alarm, and this board has no `no` card for it to be confused with anyway.
-    { id: 'not',  word: 'Not',   symbol: 'not',  kind: 'plain' },
+    { id: 'what', word: 'What',  symbol: 'what', kind: 'social' },
+    { id: 'who',  word: 'Who',   symbol: 'who',  kind: 'social' },
+    { id: 'where', word: 'Where', symbol: 'where', kind: 'social' },
+    { id: 'when', word: 'When',  symbol: 'when', kind: 'social' },
 
-    // wanting and doing
+    // ROW 2 — wanting and doing.
     { id: 'want', word: 'Want',  symbol: 'want', kind: 'plain' },
     { id: 'like', word: 'Like',  symbol: 'like', kind: 'plain' },
     { id: 'go',   word: 'Go',    symbol: 'go',   kind: 'plain' },
     { id: 'get',  word: 'Get',   symbol: 'get',  kind: 'plain' },
     { id: 'do',   word: 'Do',    symbol: 'do',   kind: 'plain' },
     { id: 'make', word: 'Make',  symbol: 'make', kind: 'plain' },
-
     { id: 'put',  word: 'Put',   symbol: 'put',  kind: 'plain' },
     { id: 'turn', word: 'Turn',  symbol: 'turn', kind: 'plain' },
     { id: 'open', word: 'Open',  symbol: 'open', kind: 'plain' },
+
+    // ROW 3 — the rest of the doing words, the two that stop something, and describing.
     { id: 'look', word: 'Look',  symbol: 'look', kind: 'plain' },
     // The one card on this board that says something urgent, and it SAYS IT IN THE ROOM. It
     // does not notify, page or reach the output bus's `remote` channel — see the boundary
     // note at the top of this file and in `modules/board.js`.
     { id: 'help', word: 'Help',  symbol: 'help', kind: 'need' },
     { id: 'stop', word: 'Stop',  symbol: 'stop', kind: 'no' },
-
-    // describing
+    // `not` is grammar, not refusal. Colouring it like `no` would make "I do not like it" look
+    // like an alarm, and this board has no `no` card for it to be confused with anyway. It sits
+    // beside `stop` because that is where somebody looking to say no will look first.
+    { id: 'not',  word: 'Not',   symbol: 'not',  kind: 'plain' },
     { id: 'more', word: 'More',  symbol: 'more', kind: 'plain' },
     { id: 'done', word: 'All done', symbol: 'all_done', kind: 'plain' },
     { id: 'some', word: 'Some',  symbol: 'some', kind: 'plain' },
     { id: 'diff', word: 'Different', symbol: 'different', kind: 'plain' },
     { id: 'good', word: 'Good',  symbol: 'good', kind: 'plain' },
-    { id: 'little', word: 'Little', symbol: 'little', kind: 'plain' },
 
-    // direction — `nav`, which is the one place colour is doing real work here: these six are
-    // a group somebody learns as a group, and they are the cards most often reached for in a
-    // hurry.
+    // ROW 4 — the last describing word, then place and direction. `nav` is the one place
+    // colour is doing real work here: these are a group somebody learns as a group, and they
+    // are the cards most often reached for in a hurry.
+    { id: 'little', word: 'Little', symbol: 'little', kind: 'plain' },
     { id: 'up',   word: 'Up',    symbol: 'up',   kind: 'nav' },
     { id: 'down', word: 'Down',  symbol: 'down', kind: 'nav' },
     { id: 'in',   word: 'In',    symbol: 'in',   kind: 'nav' },
     { id: 'out',  word: 'Out',   symbol: 'out',  kind: 'nav' },
     { id: 'on',   word: 'On',    symbol: 'on',   kind: 'nav' },
     { id: 'off',  word: 'Off',   symbol: 'off',  kind: 'nav' },
-
-    // place, and the questions
     { id: 'here', word: 'Here',  symbol: 'here', kind: 'nav' },
     { id: 'there', word: 'There', symbol: 'there', kind: 'nav' },
-    { id: 'what', word: 'What',  symbol: 'what', kind: 'social' },
-    { id: 'who',  word: 'Who',   symbol: 'who',  kind: 'social' },
-    { id: 'where', word: 'Where', symbol: 'where', kind: 'social' },
-    { id: 'when', word: 'When',  symbol: 'when', kind: 'social' },
   ],
 };
 

@@ -311,8 +311,12 @@ try {
     check('it is thirty-six words', core.cells.filter(Boolean).length === 36,
       String(core.cells.filter(Boolean).length));
     check('...with no holes in it', core.cells.every(Boolean));
-    check('...laid out 6 by 6, its own grid rather than a tier',
-      gridOf(core).cols === 6 && gridOf(core).rows === 6, JSON.stringify(gridOf(core)));
+    // *** 9 x 4, AND THE SHAPE CHANGED BECAUSE OF THE MEASUREMENT BELOW, not a preference. ***
+    // It shipped 6x6 on the reasoning that "wider means smaller targets". That is false on a
+    // 16:9 screen -- columns do not set target size, the shorter side of the cell does, and a
+    // wider board has fewer rows.
+    check('...laid out 9 by 4, its own grid rather than a tier',
+      gridOf(core).cols === 9 && gridOf(core).rows === 4, JSON.stringify(gridOf(core)));
     check('...and the grid holds exactly the words, no more and no fewer',
       gridOf(core).cells === core.cells.length, JSON.stringify([gridOf(core).cells, core.cells.length]));
 
@@ -1097,6 +1101,84 @@ try {
     check('...and the cards are there', inst.impl.__probe().words.join(' ').includes('Tea'));
 
     inst.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('*** D20 measured: is 6x6 too dense on a real screen? ***');
+  {
+    // The open question on the core set is whether 36 cards at 6x6 is too dense, given that
+    // published core boards are often WIDER still. Wider means smaller targets, and target size
+    // is the binding constraint for the people this is for -- so the honest thing is to measure
+    // the target rather than argue about it, and put the number where the next person finds it.
+    //
+    // A Pi 400 at 1080p, full screen, is the case that matters: it is the hardware this runs on
+    // and the size somebody reads it from a bed. The geometry is pure CSS arithmetic
+    // (`--u = min(w/cols, h/rows)/100`), so this measures the same on the Pi as it does here.
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:1920px;height:1080px';
+    document.body.append(host);
+    const inst = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(),
+      state: fakeState({ boardId: 'core' }), output: { say: () => {} },
+    });
+    inst.init();
+    await sleep(60);
+
+    const cards = [...host.querySelectorAll('.ab-card')];
+    const r = cards[0].getBoundingClientRect();
+    const short = Math.min(r.width, r.height);
+    const wordPx = parseFloat(getComputedStyle(cards[0].querySelector('.ab-word')).fontSize);
+    check('the whole core set is on screen at 1080p', cards.length === 36, String(cards.length));
+    // *** THE NUMBER, RECORDED. *** TIGHT_PX (72) is the point below which this module drops
+    // the picture to keep the word legible. A core board whose cards were near that on the
+    // hardware it runs on would be a board that had already given up its symbols.
+    // THE NUMBER GOES IN THE NAME, not the detail: `check` only prints detail on failure, and
+    // a measurement nobody can read unless it fails is not a measurement. Same idiom
+    // settings_audit uses to be both a test and the report.
+    check(`*** MEASURED: a core-set card at 1080p is ${Math.round(r.width)}x${Math.round(r.height)}px `
+      + `(short side ${Math.round(short)}px, floor is ${72}) ***`, short > 72 * 2);
+    check(`...and its word renders at ${Math.round(wordPx)}px`, wordPx >= 24);
+    check('...with the symbol still drawn, not dropped',
+      !!cards[0].querySelector('.ab-sym svg')
+        && !host.querySelector('.ab-grid').classList.contains('ab-tight'));
+
+    // AND THE COMPARISON THAT MAKES THE NUMBER MEAN SOMETHING: the 16-card care board on the
+    // same screen. If 36 cards were the problem, this is the gap that would show it.
+    const st2 = fakeState({ boardId: 'care' });
+    const inst2 = mountModule('board', {
+      mount: host, bus: createBus(), events: fakeEvents(), state: st2,
+      output: { say: () => {} },
+    });
+    inst.destroy();
+    inst2.init();
+    await sleep(60);
+    const c16 = host.querySelector('.ab-card').getBoundingClientRect();
+    check(`...for reference, the 16-card board on the same screen is `
+      + `${Math.round(c16.width)}x${Math.round(c16.height)}px per card`, c16.width > 0);
+
+    // *** THE COMPARISON THAT CHANGED THE BOARD'S SHAPE, kept so nobody has to trust a comment.
+    //
+    // The core set shipped 6x6 on the reasoning that "wider means smaller targets, and target
+    // size is the binding constraint". Measuring it showed that backwards: COLUMNS DO NOT SET
+    // TARGET SIZE, the shorter side of the cell does, and a wider board has correspondingly
+    // fewer rows. Pure geometry, so it is arithmetic rather than a render.
+    const at = (cols, rows) => {
+      const cw = 1920 / cols, ch = 1080 / rows;
+      return { short: Math.min(cw, ch), lop: Math.max(cw / ch, ch / cw) };
+    };
+    const six = at(6, 6), nine = at(9, 4);
+    check(`*** MEASURED: 36 cards at 9x4 give a ${Math.round(nine.short)}px short side against `
+      + `${Math.round(six.short)}px at 6x6 \u2014 wider is BIGGER here ***`,
+      nine.short > six.short);
+    check(`...and squarer with it (${nine.lop.toFixed(2)} against ${six.lop.toFixed(2)}), which `
+      + `is why the grid is not turned`, nine.lop < six.lop);
+    // AND THE BOUND HAD TO MOVE FOR ANY OF IT TO BE EXPRESSIBLE. `dim` refused 9 columns.
+    check('*** and 9 columns is now expressible at all \u2014 the old bound of 8 forbade it ***',
+      normalizeBoard({ cols: 9, rows: 4, cells: [] }).cols === 9);
+    check('...while something absurd is still refused',
+      normalizeBoard({ cols: 40, rows: 1, cells: [] }).cols === undefined);
+    inst2.destroy();
     host.remove();
   }
 
