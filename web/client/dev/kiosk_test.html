@@ -777,6 +777,61 @@ const ds = () => root.querySelector('.kiosk').dataset;
     try { kiosk?.destroy(); } catch { /* noop */ }
   }
 
+  // *** THE CONTROL BAR HAS TO COME BACK ON A TOUCH SCREEN. ***
+  //
+  // Mike, 2026-09-07: *"There is still no way to choose a theme anywhere in the product."* The
+  // theme picker exists, is mounted, and hangs off the gear on this bar. The bar hides itself
+  // after three seconds -- correct, and the safe direction -- and was brought back by
+  // `mousemove` ALONE. A Pi kiosk with a touch screen has no mousemove; nor does a tablet. So
+  // three seconds after boot the bar was gone for good, taking the theme picker, the complexity
+  // switch, every module's declared settings and the way back Home with it.
+  //
+  // Self-contained on purpose: `section` and `profiles` are declared inside the block above, and
+  // the first version of this reached for both. `section` threw a ReferenceError OUTSIDE the try
+  // below, which killed the run before the summary was ever written -- reported by the harness as
+  // "the page loaded but never reported", which is exactly what that message was added for.
+  try {
+    const touchProfiles = createProfilesClient({ user: USER });
+    const tp = await touchProfiles.create('TEST-touch');
+    await touchProfiles.addModule(tp.id, 'clock');
+    const troot = document.createElement('div');
+    document.body.append(troot);
+    const tk = await mountKiosk(troot, {
+      user: USER, profileId: tp.id, profiles: touchProfiles, bus: createBus(),
+    });
+    await sleep(150);
+
+    const bar = troot.querySelector('.k-controls');
+    check('the control bar is there to begin with',
+      !!bar && !bar.classList.contains('hidden'), bar && bar.className);
+
+    // Forced rather than waited out: this is about whether it can come BACK, not how long it
+    // takes to go.
+    bar.classList.add('hidden');
+    check('...and it does put itself away, which is the right behaviour',
+      bar.classList.contains('hidden'), bar.className);
+
+    // *** THE ONE THAT MATTERS: a touch, with no mouse anywhere in the story. ***
+    troot.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await sleep(50);
+    check('*** a TOUCH brings the control bar back ***',
+      !bar.classList.contains('hidden'), bar.className);
+
+    bar.classList.add('hidden');
+    troot.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+    await sleep(50);
+    check('...and so does a key press', !bar.classList.contains('hidden'), bar.className);
+
+    // THE POINT OF THE BAR: the gear that opens the settings menu, where the theme lives.
+    const gear = troot.querySelector('[data-act="settings"]');
+    check('*** and the gear that opens the settings menu is on it ***', !!gear);
+
+    try { tk?.destroy?.(); } catch { /* already gone */ }
+    troot.remove();
+  } catch (e) {
+    check('the touch-bar section threw', false, String((e && e.stack) || e));
+  }
+
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;
   sum.className = failed ? 'fail' : 'pass';

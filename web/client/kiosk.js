@@ -1762,7 +1762,30 @@ export async function mountKiosk(root, {
       toggleScreens(false);
     }, 3000);
   }
-  root.addEventListener('mousemove', poke); poke();
+  // *** `mousemove` ALONE MEANT NO TOUCH SCREEN COULD EVER SEE THIS BAR AGAIN. ***
+  //
+  // Mike, 2026-09-07: *"There is still no way to choose a theme anywhere in the product."* He is
+  // right, and the cause is this line rather than anything about themes. The universal settings
+  // menu is built, mounted and wired to the gear on this bar; the gear is what opens it; and the
+  // bar hides itself after three seconds and was only ever brought back by a MOUSE MOVE.
+  //
+  // A Pi kiosk with a touch screen has no mousemove. Neither does a tablet. So three seconds
+  // after boot the bar left the screen for good, taking with it the theme picker, the complexity
+  // switch, every module's declared settings and the way back Home. Measured on the running
+  // kiosk before the fix: the gear's own bounding box sat at x = -12px, off the left edge,
+  // inside a `.k-controls.hidden` that nothing on a touch device could clear.
+  //
+  // `pointerdown` covers mouse, touch and pen in one event, and `keydown` covers somebody at a
+  // keyboard who never moves the mouse. Passive and non-capturing: this only removes a CSS
+  // class, and it must not interfere with a press the board or a game is about to receive.
+  //
+  // The auto-hide itself stays exactly as it was. A bar that puts itself away is the right
+  // behaviour and it is the safe direction -- left alone, the screen goes back to what it was
+  // doing. What was wrong was that on the most likely device there was no way to bring it back.
+  for (const ev of ['mousemove', 'pointerdown', 'keydown']) {
+    root.addEventListener(ev, poke, { passive: true });
+  }
+  poke();
 
   // WHAT LEFT THIS HANDLER, and what stayed.
   //
