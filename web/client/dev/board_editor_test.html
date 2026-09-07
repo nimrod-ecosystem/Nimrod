@@ -43,7 +43,7 @@
 <div id="look"></div>
 
 <script type="module">
-import { mountBoardEditor, blankBoard, IDLE_MS, MAX_DIM } from '../board_editor.js';
+import { mountBoardEditor, blankBoard, IDLE_MS, WARN_MS, MAX_DIM } from '../board_editor.js';
 import { normalizeBoard, gridOf } from '../aac_vocab.js';
 
 const out = document.getElementById('results');
@@ -146,6 +146,62 @@ try {
     check('...and once they really have stopped, it closes', idled !== null);
     check('...carrying the half-typed word with it',
       idled && idled.cells[0] && idled.cells[0].word === 'Wa', JSON.stringify(idled?.cells));
+    ed.destroy();
+  }
+  {
+    // *** NOBODY SHOULD MEET THIS BY HAVING A FORM VANISH. ***
+    //
+    // Mike asked why the editor closes itself, which was the right question to ask. The rule is
+    // right for a screen somebody talks through and it is friction everywhere else -- and the
+    // part that made it feel arbitrary is that TYPING resets the clock and THINKING DOES NOT.
+    // So the last stretch is visible, with one press to stay.
+    const clock = fakeClock();
+    let idled = null;
+    const ed = mountBoardEditor(host, {
+      board: blankBoard({ cols: 2, rows: 2 }),
+      sources: fakeSources([]), resolve: fakeResolve,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onIdle: (b) => { idled = b; },
+    });
+    check('it does not nag while somebody might still be reading it',
+      ed.__probe().warning === false);
+    clock.advance(IDLE_MS - WARN_MS + 1000);
+    check('*** it says so before it does it ***', ed.__probe().warning === true);
+    check('...on screen, not only in a probe',
+      /still here/i.test(host.textContent), host.textContent.slice(-160));
+    check('...and it has not closed yet', idled === null);
+
+    // ONE PRESS TO STAY, and it has to genuinely reset rather than postpone by a second.
+    // Guarded, not dereferenced: with the warning removed there is no button, and a TypeError
+    // here aborts every check below it -- including the "can be turned off entirely" section,
+    // which is about a different half of the same change. Proving a check can fail is worth
+    // nothing if the proof run skips the rest.
+    host.querySelector('[data-stay]')?.click();
+    check('pressing it takes the warning away', ed.__probe().warning === false);
+    clock.advance(IDLE_MS - WARN_MS - 1000);
+    check('*** and it really is a full reset, not a snooze ***', ed.__probe().warning === false);
+    check('...still open', idled === null);
+    clock.advance(IDLE_MS);
+    check('left alone after that, it still does what it says', idled !== null);
+    ed.destroy();
+  }
+  {
+    // *** AND IT CAN BE TURNED OFF ENTIRELY, because on a laptop nobody is stranded. ***
+    const clock = fakeClock();
+    let idled = null;
+    const ed = mountBoardEditor(host, {
+      board: blankBoard(), sources: fakeSources([]), resolve: fakeResolve,
+      idleMs: 0,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onIdle: (b) => { idled = b; },
+    });
+    clock.advance(IDLE_MS * 10);
+    check('*** an editor told to stay open stays open ***', idled === null);
+    check('...and never warns about something it is not going to do',
+      ed.__probe().warning === false);
+    check('...and says as much rather than staying silent about it',
+      /until you close it/i.test(host.textContent), host.textContent.slice(-140));
+    check('...leaving no timer armed', clock.pending() === 0, String(clock.pending()));
     ed.destroy();
   }
   {

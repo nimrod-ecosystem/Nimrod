@@ -666,6 +666,13 @@ try {
     const declared = (getManifest('board').settings || []).map((f) => f.key);
     check('*** “locked” is a declared setting, so the shell’s menu can unlock it ***',
       declared.includes('locked'), JSON.stringify(declared));
+    // Mike asked why the editor puts itself away. The answer is that it depends whose screen
+    // this is -- so it is a declared setting with a real "never", not a rule.
+    check('*** how long the editor stays open is a setting, including never ***',
+      declared.includes('editorIdleSec'), JSON.stringify(declared));
+    check('...and “never” is genuinely on offer, not a grudging footnote',
+      (getManifest('board').settings || [])
+        .find((f) => f.key === 'editorIdleSec')?.options?.some((o) => o.value === 0));
     check('...and so is the row, so neither is only reachable from a board that hid them',
       declared.includes('showBoards') && declared.includes('boardId'));
 

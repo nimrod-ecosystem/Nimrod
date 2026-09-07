@@ -581,6 +581,15 @@
 .be-pic:hover,.be-pic:focus-visible{border-color:var(--ab-lit,#8fae63);outline:none}
 .be-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding-top:2px}
 .be-idle{padding-bottom:2px}
+/* THE LAST STRETCH, SAID OUT LOUD. A form that vanishes without warning is why this behaviour
+   felt arbitrary; a countdown somebody can see and dismiss is the opposite of the undismissable
+   gate the rule is about — it is the screen saying what it is about to do while there is still
+   time to say no. Warm rather than alarming: nothing is going wrong and nothing is being lost. */
+.be-idlewarn{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:9px 11px;border-radius:8px;
+  background:rgba(255,243,217,.14);border:1px solid var(--ab-lit,#8fae63);
+  font-size:12.5px;line-height:1.4}
+.be-idlewarn>span{flex:1 1 14ch;min-width:0}
 /* `height:auto` and `flex:1`, not `height:100%`: with a switcher above it, a grid claiming the
    full height of a flex column overflows by exactly the height of the switcher. */
 .ab-grid{width:100%;height:auto;flex:1 1 auto;min-height:0;display:grid;

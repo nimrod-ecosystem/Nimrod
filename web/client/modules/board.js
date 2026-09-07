@@ -158,6 +158,8 @@ const DEFAULTS = {
   // Hides the row AND the gear. See the SETTINGS entry for the way back out, which is the only
   // part of a lock worth arguing about.
   locked: false,
+  // *** HOW LONG THE EDITOR STAYS OPEN WITH NOBODY USING IT. See the SETTINGS row. ***
+  editorIdleSec: 180,
   scan: false,
   stepMs: SCAN_DEFAULTS.stepMs,
   // 'all' — every card visible, one highlighted. 'one' — only the lit card on screen.
@@ -277,6 +279,31 @@ export const SETTINGS = [
     offLabel: 'No — leave the settings button on the board',
     note: 'The cards are unaffected. Unlock from this menu — it is the way back in, which is '
       + 'why it is here rather than only on the board.' },
+  // *** THE EDITOR PUTS ITSELF AWAY, AND WHETHER IT SHOULD DEPENDS ENTIRELY ON WHOSE SCREEN
+  // THIS IS. *** Mike asked why it does this at all, which was the right question.
+  //
+  // ON A SCREEN SOMEBODY LIVES WITH it is the rule in `CLAUDE.md`: a caregiver opens the editor
+  // over the board, is called into the corridor, and the person the board belongs to is left
+  // looking at a form they cannot fill in, cannot cancel and cannot talk through — their voice
+  // replaced by somebody else's settings screen until a person walks in.
+  //
+  // ON A LAPTOP, where a family member is building a board for later, NOBODY IS STRANDED and it
+  // is pure friction — and worse than it looks, because typing resets the clock and thinking
+  // does not, and thinking is most of authoring.
+  //
+  // So it is a default rather than a rule, and "stays open" is a real option rather than a
+  // grudging one. The last thirty seconds are visible either way, with one press to stay, so
+  // nobody meets this by having a form vanish without knowing why.
+  { key: 'editorIdleSec', label: 'Put the board editor away if nobody is using it',
+    kind: 'choice', default: 180, level: 'advanced',
+    options: [
+      { value: 180, label: 'After about three minutes' },
+      { value: 600, label: 'After about ten minutes' },
+      { value: 0,   label: 'Never — it stays open until it is closed' },
+    ],
+    note: 'Leave this on for a screen somebody uses to talk: an editor left open over their '
+      + 'board is a form they cannot dismiss. “Never” is the right answer on a machine nobody '
+      + 'depends on.' },
   { key: 'scan', label: 'Scan the cards automatically', kind: 'toggle', default: false,
     level: 'standard' },
   { key: 'stepMs', label: 'Time on each card', kind: 'choice', default: SCAN_DEFAULTS.stepMs,
@@ -816,6 +843,10 @@ registerModule(
       editor = mountBoardEditor(host, {
         board: base,
         making: which === 'new',
+        // 0 means "stays open". `IDLE_MS` is the editor's own default and is only reached if a
+        // stored row has no value at all, which is somebody who has never been asked.
+        idleMs: cfg.editorIdleSec === 0 ? 0
+          : Math.max(0, Number(cfg.editorIdleSec) || 0) * 1000 || undefined,
         sources: ctx.mediaSources
           || createMediaSourcesClient({ user: ctx.user, cache: true, personId: ctx.personId || null }),
         setTimer, clearTimer,

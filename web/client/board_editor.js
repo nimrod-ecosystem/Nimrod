@@ -52,9 +52,25 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // Three minutes. Long enough to think about a word, short enough that somebody who walked away
-// mid-sentence gets their board back before it matters. A caregiver who is still there and
-// still typing never sees it — every keystroke and every press resets the clock.
+// mid-sentence gets their board back before it matters.
+//
+// *** AND THE EDGE CASE I UNDER-HUNTED, WHICH IS THE USUAL ONE: A USER WHO IS NOT CHRISTINE. ***
+//
+// Mike asked why this exists, and the answer above is only half of it. The rule is right for a
+// board mounted on the screen somebody LIVES WITH. On a laptop where a family member is building
+// a board for later, nobody is stranded by an open form, and the timeout is pure friction —
+// worse than it looks, because typing resets the clock and THINKING DOES NOT, and thinking is
+// most of authoring. Four minutes deciding what goes in slot seven and the form puts itself away.
+//
+// So two things changed. It is a DEFAULT rather than a rule (`idleSeconds` on the board, which
+// includes never), and the last stretch of it is VISIBLE with one press to stay — nobody should
+// meet this by having a form vanish and not know why.
 export const IDLE_MS = 180000;
+
+// How much of the end is spent warning. A countdown somebody can see and dismiss is not the
+// undismissable gate the rule is about; it is the opposite — it is the screen saying what it is
+// about to do while there is still time to say no.
+export const WARN_MS = 30000;
 
 // The same 1..8 bound `aac_vocab.js` puts on a stored board, repeated here so the editor
 // refuses a shape rather than offering one the model will silently drop.
@@ -97,6 +113,8 @@ export function mountBoardEditor(root, {
   let picking = null;                   // { sourceId, album, items } while choosing a picture
   let note = '';                        // an inline message; never an alert, never a modal
   let idleId = null;
+  let warnId = null;
+  let warning = false;            // the last stretch, when it says so on screen
   let dead = false;
 
   const gone = new AbortController();
@@ -108,6 +126,17 @@ export function mountBoardEditor(root, {
   function armIdle() {
     if (dead || !idleMs) return;
     if (idleId != null) clearTimer(idleId);
+    if (warnId != null) clearTimer(warnId);
+    // Coming back from the warning is a state change somebody can see, so it redraws.
+    const wasWarning = warning;
+    warning = false;
+    if (wasWarning) render();
+    // The warning only exists if there is room for it. A caller that sets a very short idle
+    // gets no warning rather than a warning that is already the whole timeout.
+    const warnAt = idleMs - WARN_MS;
+    if (warnAt > 0) {
+      warnId = setTimer(() => { warnId = null; warning = true; render(); }, warnAt);
+    }
     idleId = setTimer(() => {
       idleId = null;
       // The draft goes back to the caller INTACT. Not saved over the board — a half-finished
@@ -118,6 +147,8 @@ export function mountBoardEditor(root, {
   }
   function disarmIdle() {
     if (idleId != null) { clearTimer(idleId); idleId = null; }
+    if (warnId != null) { clearTimer(warnId); warnId = null; }
+    warning = false;
   }
 
   // ---------------------------------------------------------------------------------------
@@ -345,8 +376,16 @@ export function mountBoardEditor(root, {
           <button type="button" class="be-btn" data-cancel>Cancel</button>
           <button type="button" class="be-btn be-primary" data-save>Save board</button>
         </div>
-        <p class="be-hint be-idle">This closes itself after a few minutes if nobody is using
-          it, so the board is never left behind a form. Whatever you have typed is kept.</p>
+        ${warning
+          ? `<div class="be-idlewarn" role="status">
+               <span>Putting this away shortly, so the board is not left behind a form.
+                 Nothing is lost.</span>
+               <button type="button" class="be-btn be-primary" data-stay>I’m still here</button>
+             </div>`
+          : `<p class="be-hint be-idle">${idleMs
+              ? 'This closes itself if nobody is using it, so the board is never left behind a '
+                + 'form. Whatever you have typed is kept.'
+              : 'This stays open until you close it.'}</p>`}
       </div>`;
   }
 
@@ -359,6 +398,9 @@ export function mountBoardEditor(root, {
     const t = e.target;
     const slot = t.closest('[data-slot]');
     if (slot) { picked = Number(slot.dataset.slot); picking = null; note = ''; render(); return; }
+    // `armIdle` at the top of this handler has already reset the clock and cleared the warning;
+    // the button exists so somebody who is reading rather than pressing has something to press.
+    if (t.closest('[data-stay]')) return;
     if (t.closest('[data-pic]')) { await openPicker(); return; }
     if (t.closest('[data-pic-back]')) {
       // Back out of the source list rather than out of the picker entirely, when there is a
@@ -425,6 +467,7 @@ export function mountBoardEditor(root, {
       name: draft.name, cols: gridOf(draft).cols, rows: gridOf(draft).rows,
       cells: draft.cells.filter(Boolean).length, picked, note,
       picking: picking ? { sourceId: picking.sourceId, items: picking.items.length } : null,
+      warning,
       slots: [...root.querySelectorAll('[data-slot]')].length,
     }),
     draft: () => current(),
