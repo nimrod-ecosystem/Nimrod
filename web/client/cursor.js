@@ -51,6 +51,8 @@
 //   mouse, taking their pointer away is rude and confusing. On a kiosk it is exactly right.
 //   So it is a setting, and the kiosk is where it gets turned on.
 
+import { LAYERS } from './layers.js';
+
 export const CURSOR_DEFAULTS = {
   // *** THE DEFAULT IS "tracking", AND IT IS THE ANSWER TO THE TWO-CURSORS PROBLEM. ***
   //
@@ -208,7 +210,11 @@ export function mountCursor(root, {
   // them harmlessly.
   el.style.position = 'fixed';
   el.style.pointerEvents = 'none';
-  el.style.zIndex = '60';
+  // THE NUMBER COMES FROM THE SCALE, THE ASSIGNMENT STAYS INLINE. `LAYERS.cursor` is a JS
+  // constant, so this still works on a page whose stylesheet failed to load -- which is the
+  // situation the comment above says this guards against, and `var(--z-cursor)` would resolve
+  // to nothing there and drop the z-index entirely.
+  el.style.zIndex = String(LAYERS.cursor);
   let idleTimer = null;
   let at = null;                 // last aim actually drawn
   let systemHidden = false;

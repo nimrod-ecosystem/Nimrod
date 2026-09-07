@@ -1,0 +1,49 @@
+/* layers.css — THE DEPTH SCALE. One decision, in one file, that every module obeys.
+   ---------------------------------------------------------------------------------------
+   *** NO MODULE INVENTS A Z-INDEX. *** Before this, the client held values from `1` to
+   `2147483000`, each picked locally, and the comments beside them reasoned about each other:
+   "z-index 6, ABOVE the settings sheet (5)", "sits ABOVE the press overlay (40)", "deliberately
+   BELOW [data-way-out]'s 2147483000". That is a stacking order held together by whoever last
+   read all of it at once.
+
+   Mike's scale, 2026-09-07, and the two things it exists to make possible:
+   balloons that drift BEHIND the clock and IN FRONT of the wallpaper, and a card that throws a
+   coin OVER EVERYTHING. Each is one number here and impossible to retrofit without it.
+
+       0  world           the live wallpaper; the back of the screen
+     100  ambient         drifting things, BETWEEN the world and the panels
+     200  panels          a module's own box
+     300  panel contents  what a module draws inside its box
+     400  floating        things in flight IN FRONT of panels
+     500  transport       the control bar
+     600  menus           the settings menu and anything modal
+     700  cursor          the pointer, which must be drawn over what it points at
+
+   *** THE BANDS ARE 100 APART ON PURPOSE. *** Ordering WITHIN a band is a module's own business
+   and needs no new band: `calc(var(--z-panel-contents) + 10)` puts a gear above a settings
+   sheet without either of them knowing what a panel or a menu is worth. A module that finds
+   itself wanting a new BAND is describing a new kind of thing, and that is a conversation, not
+   a number.
+
+   ---------------------------------------------------------------------------------------
+   *** THE ONE DELIBERATE EXCEPTION, AND IT MUST STAY AN EXCEPTION. ***
+
+   `[data-way-out]` in `demo_strip.js` is inline-styled at 2147483000 and does NOT use this
+   scale. Its own comment says why: *"this is the one element on the page that must render even
+   if the kiosk's CSS failed to load, because that is exactly when somebody is most likely to
+   need to get out."* A `var(--z-escape)` that resolves to nothing drops the z-index entirely —
+   so routing the escape hatch through this file would break it in precisely the situation it
+   exists for. `tour.js` sits just below it for the same reason and by the same literal.
+
+   Everything else on the composed screen belongs here. */
+
+:root {
+  --z-world: 0;
+  --z-ambient: 100;
+  --z-panels: 200;
+  --z-panel-contents: 300;
+  --z-floating: 400;
+  --z-transport: 500;
+  --z-menus: 600;
+  --z-cursor: 700;
+}

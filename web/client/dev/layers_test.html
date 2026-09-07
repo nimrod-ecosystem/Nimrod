@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>layers — the depth scale, and that its two copies agree</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>layers</h1>
+<p>One decided depth scale. <code>layers.css</code> is the source for stylesheets;
+<code>layers.js</code> is the same scale for code that sets <code>style.zIndex</code> directly.
+Two copies of one decision is exactly the shape that drifts — these checks are what make the
+duplication safe rather than a second opinion waiting to happen.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { LAYERS, within, zVar } from '../layers.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the two copies of the scale agree ***');
+  {
+    const css = getComputedStyle(document.documentElement);
+    const NAMES = {
+      world: '--z-world', ambient: '--z-ambient', panels: '--z-panels',
+      panelContents: '--z-panel-contents', floating: '--z-floating',
+      transport: '--z-transport', menus: '--z-menus', cursor: '--z-cursor',
+    };
+    for (const [band, cssName] of Object.entries(NAMES)) {
+      const fromCss = Number(css.getPropertyValue(cssName).trim());
+      check(`${cssName} matches LAYERS.${band}`, fromCss === LAYERS[band],
+        `css=${fromCss} js=${LAYERS[band]}`);
+    }
+    check('*** and neither side has a band the other does not ***',
+      Object.keys(NAMES).length === Object.keys(LAYERS).length,
+      `${Object.keys(LAYERS).length} in JS, ${Object.keys(NAMES).length} checked`);
+  }
+
+  // =====================================================================================
+  section('the order is the order Mike decided');
+  {
+    // Written out rather than derived from the object, so a reordering of the source cannot
+    // quietly redefine what "correct" means.
+    const order = ['world', 'ambient', 'panels', 'panelContents', 'floating',
+                   'transport', 'menus', 'cursor'];
+    for (let i = 1; i < order.length; i++) {
+      check(`${order[i - 1]} is behind ${order[i]}`, LAYERS[order[i - 1]] < LAYERS[order[i]],
+        `${LAYERS[order[i - 1]]} vs ${LAYERS[order[i]]}`);
+    }
+    // *** THE TWO THINGS THE SCALE EXISTS FOR. ***
+    check('*** a drifting thing sits BEHIND a panel and IN FRONT of the wallpaper ***',
+      LAYERS.world < LAYERS.ambient && LAYERS.ambient < LAYERS.panels,
+      `${LAYERS.world} < ${LAYERS.ambient} < ${LAYERS.panels}`);
+    check('*** and something thrown can go over everything but the cursor ***',
+      LAYERS.floating > LAYERS.panelContents && LAYERS.cursor > LAYERS.menus,
+      `${LAYERS.floating} > ${LAYERS.panelContents}, ${LAYERS.cursor} > ${LAYERS.menus}`);
+  }
+
+  // =====================================================================================
+  section('*** the bands are 100 apart so nothing needs to invent one ***');
+  {
+    const vals = Object.values(LAYERS).sort((a, b) => a - b);
+    let gapOk = true;
+    for (let i = 1; i < vals.length; i++) if (vals[i] - vals[i - 1] !== 100) gapOk = false;
+    check('every gap is exactly 100', gapOk, JSON.stringify(vals));
+
+    check('within() offsets inside a band', within('panelContents', 10) === 310,
+      String(within('panelContents', 10)));
+    check('within() with no offset is the band itself', within('panels') === LAYERS.panels);
+
+    // *** A MODULE MUST NOT BE ABLE TO SLIDE INTO THE NEXT BAND BY ACCIDENT. *** That is the
+    // failure this whole file exists to prevent, arriving through the back door.
+    let threw = false;
+    try { within('panelContents', 100); } catch { threw = true; }
+    check('*** an offset that would leave the band is refused ***', threw);
+    threw = false;
+    try { within('panelContents', -1); } catch { threw = true; }
+    check('...and so is a negative one', threw);
+    threw = false;
+    try { within('nonesuch', 1); } catch { threw = true; }
+    check('an unknown band is refused rather than silently 0', threw);
+  }
+
+  // =====================================================================================
+  section('zVar names the CSS variable for a band');
+  {
+    check('camelCase becomes kebab-case', zVar('panelContents') === 'var(--z-panel-contents)',
+      zVar('panelContents'));
+    check('a single word is unchanged', zVar('menus') === 'var(--z-menus)', zVar('menus'));
+    // And the name it produces must be one the stylesheet actually defines.
+    const css = getComputedStyle(document.documentElement);
+    check('*** and the name it produces resolves ***',
+      css.getPropertyValue('--z-panel-contents').trim() !== '',
+      css.getPropertyValue('--z-panel-contents'));
+  }
+
+  // =====================================================================================
+  section('the scale is not editable at runtime');
+  {
+    // Frozen because a module that could nudge a band would be inventing a depth again, just
+    // more expensively.
+    let before = LAYERS.panels;
+    try { LAYERS.panels = 999; } catch { /* strict mode throws; either is fine */ }
+    check('LAYERS cannot be rewritten by a module', LAYERS.panels === before,
+      String(LAYERS.panels));
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

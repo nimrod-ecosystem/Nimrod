@@ -41,7 +41,7 @@
      cover a card for a moment but it can never take a tap, and there is no state here that
      only an input can leave. */
   #say {
-    position:fixed; left:0; right:0; top:0; z-index:40; pointer-events:none;
+    position:fixed; left:0; right:0; top:0; z-index:var(--z-floating); pointer-events:none;
     padding:calc(env(safe-area-inset-top,0) + 10px) 16px 12px;
     text-align:center; font-weight:800; letter-spacing:.01em;
     font-size:clamp(28px, 9vmin, 96px); color:#fff;
@@ -53,7 +53,7 @@
   /* What a key just did. Small, bottom-centre, out of the way of the cards. */
   #toast {
     position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0) + 14px);
-    transform:translateX(-50%) translateY(6px); z-index:45; pointer-events:none;
+    transform:translateX(-50%) translateY(6px); z-index:calc(var(--z-floating) + 5); pointer-events:none;
     background:rgba(8,12,14,.92); border:1px solid var(--tk-line); border-radius:12px;
     padding:10px 16px; font-size:15px; font-weight:600; max-width:90vw;
     opacity:0; transition:opacity .15s ease, transform .15s ease;
@@ -64,7 +64,7 @@
      and it needs a press and hold rather than a tap. The ring fills while you hold so it is
      obvious that holding is the gesture. */
   #open {
-    position:fixed; z-index:46;
+    position:fixed; z-index:calc(var(--z-floating) + 6);
     top:calc(env(safe-area-inset-top,0) + 6px); right:calc(env(safe-area-inset-right,0) + 6px);
     width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,.22);
     background:rgba(255,255,255,.07); color:var(--tk-ink); font-size:17px; line-height:1;
@@ -82,7 +82,7 @@
   /* THE SETTINGS SHEET. Rows are 56px minimum because a finger is not a mouse pointer, and
      the person adjusting this is often standing next to a bed holding something else. */
   #sheet {
-    position:fixed; inset:0; z-index:70; background:rgba(4,8,10,.72);
+    position:fixed; inset:0; z-index:var(--z-menus); background:rgba(4,8,10,.72);
     display:flex; align-items:flex-end; justify-content:center;
     -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
   }
@@ -94,7 +94,7 @@
     box-shadow:0 -12px 40px rgba(0,0,0,.5);
   }
   .sheethead {
-    position:sticky; top:0; background:#141c21; z-index:2;
+    position:sticky; top:0; background:#141c21; z-index:calc(var(--z-panel-contents) + 2);
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     padding:14px 0 10px; border-bottom:1px solid rgba(255,255,255,.10);
   }

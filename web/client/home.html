@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nimrod — your screens</title>
-<style>
+<link rel="stylesheet" href="./layers.css">
+  <style>
   :root{
     --text-strong:#0A3323; --accent:#839958; --on-dark:#F7F4D5; --accent-warm:#D3968C; --link:#105666;
     --bg:#F7F4D5; --surface-alt:#FBF9E9; --surface:#FFFFFF; --text:#0A3323; --text-soft:#3c5346;
@@ -245,7 +246,7 @@
     outline-offset:-2px}
   /* "Your control is driving this page right now." */
   .home.i-has-focus{position:relative}
-  .home.i-has-focus::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
+  .home.i-has-focus::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:var(--z-floating);
     box-shadow:inset 0 0 0 3px var(--accent);border-radius:6px;opacity:.55}
   .i-warn{color:var(--accent-warm-deep);font-size:.8rem}
   .i-speak{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600}

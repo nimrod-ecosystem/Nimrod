@@ -29,7 +29,8 @@
 
 <!-- Inline SVG favicon: no extra request, no file to lose, and it scales. -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230A3323'/%3E%3Cpath d='M9 23V9l14 14V9' stroke='%23F7F4D5' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<style>
+<link rel="stylesheet" href="./layers.css">
+  <style>
   :root{
     /* palette from the reference swatches — color values are free to use */
     --text-strong:#0A3323;   /* deepest green — hero, text */
@@ -90,7 +91,7 @@
      actually land somewhere you can see. */
   :target,section[id],main{scroll-margin-top:84px}
 
-  .skip{position:absolute;left:-9999px;top:0;z-index:100;
+  .skip{position:absolute;left:-9999px;top:0;z-index:var(--z-menus);
     background:var(--text-strong);color:#F7F4D5;padding:12px 18px;border-radius:0 0 8px 0;
     font-weight:700;text-decoration:none}
   .skip:focus{left:0}
@@ -106,7 +107,7 @@
   .mgroup li{margin:.3em 0;font-size:.93rem}
 
   /* NAV */
-  nav{position:sticky;top:0;z-index:20;background:rgba(247,244,213,.9);
+  nav{position:sticky;top:0;z-index:var(--z-transport);background:rgba(247,244,213,.9);
     backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
   nav .wrap{display:flex;align-items:center;gap:16px;height:64px}
   .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;color:var(--text-strong)}
