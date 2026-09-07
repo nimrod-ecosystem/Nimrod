@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>clock — orientation rules, and the gear nobody had pressed</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}.skip{color:#b8860b}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:420px;height:220px;border:1px solid #ddd;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>clock</h1>
+<p>The module whose only job is being right about the time, for somebody who has lost track of
+the day. It had <b>no suite at all</b> until now — found when the harness was taught to say
+“no such suite” instead of “no summary”. Its gear was also one of the 18 controls
+<code>unpressed_controls.py</code> reports as never pressed by any test.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountModule } from '../module.js';
+import { partOfDay, fmt } from '../modules/clock.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeState(initial = {}) {
+  let s = { ...initial }; const subs = [];
+  return {
+    get: () => s,
+    set: (p) => { s = { ...s, ...p }; subs.forEach((f) => f(s)); },
+    subscribe: (f) => { subs.push(f); f(s); return () => {}; },
+    flush: () => {}, load: async () => {},
+    __raw: () => s,
+  };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** 4:33am must not read as the evening ***');
+  {
+    // The file records why this exists: at 4:33am it used to say "Monday night", which to
+    // anybody reading it means about ten in the evening. Wrong by twenty hours, on the one
+    // panel whose only purpose is being right about this.
+    check('*** midnight is early morning, not night ***', partOfDay(0) === 'early morning',
+      partOfDay(0));
+    check('*** 4am is early morning ***', partOfDay(4) === 'early morning', partOfDay(4));
+    check('5am has become morning', partOfDay(5) === 'morning', partOfDay(5));
+    check('11am is still morning', partOfDay(11) === 'morning', partOfDay(11));
+    check('noon is afternoon', partOfDay(12) === 'afternoon', partOfDay(12));
+    check('4pm is still afternoon', partOfDay(16) === 'afternoon', partOfDay(16));
+    check('5pm is evening', partOfDay(17) === 'evening', partOfDay(17));
+    check('9pm is night', partOfDay(21) === 'night', partOfDay(21));
+    check('11pm is night', partOfDay(23) === 'night', partOfDay(23));
+    // EVERY hour lands somewhere. A gap here is a blank line on the orientation panel.
+    const named = [...Array(24).keys()].map(partOfDay);
+    check('every one of the 24 hours has a name', named.every((n) => typeof n === 'string' && n),
+      JSON.stringify(named));
+  }
+
+  // =====================================================================================
+  section('*** the weekday is said once, not twice ***');
+  {
+    // Mike, 2026-09-02: *"How many times have I said to lose the wednesday morning?!? There's
+    // only a few words there and 2 of them are the day of the week."* A REPEAT correction --
+    // it came back because it had not been written down, and it has nothing watching it.
+    const noon = new Date('2026-09-02T12:00:00');
+    const withDate = fmt({ hour12: true, showDate: true, seconds: false, tz: '' }, noon);
+    check('*** with the date showing, the middle line does NOT repeat the weekday ***',
+      !/wednesday/i.test(withDate.when), JSON.stringify(withDate));
+    check('...and the date line is where the weekday lives',
+      /wednesday/i.test(withDate.date), withDate.date);
+
+    // THE OTHER HALF, and it is the half that protects a disoriented person: with the date
+    // turned off, nothing else on the panel names the day, so this line keeps it.
+    const noDate = fmt({ hour12: true, showDate: false, seconds: false, tz: '' }, noon);
+    check('*** with the date OFF, the day comes back rather than vanishing ***',
+      /wednesday/i.test(noDate.when), JSON.stringify(noDate));
+    check('...and it still says which part of the day it is',
+      /afternoon/i.test(noDate.when), noDate.when);
+  }
+
+  // =====================================================================================
+  section('the settings actually change what is drawn');
+  {
+    const t = new Date('2026-09-02T14:30:00');
+    const h12 = fmt({ hour12: true, showDate: true, tz: '' }, t);
+    const h24 = fmt({ hour12: false, showDate: true, tz: '' }, t);
+    check('12-hour and 24-hour render differently', h12.time !== h24.time,
+      `${h12.time} vs ${h24.time}`);
+    check('...12-hour says PM', /pm/i.test(h12.time), h12.time);
+    check('...24-hour does not', !/pm/i.test(h24.time), h24.time);
+
+    const noSecs = fmt({ hour12: true, showDate: true, seconds: false, tz: '' }, t);
+    const secs = fmt({ hour12: true, showDate: true, seconds: true, tz: '' }, t);
+    check('seconds are only drawn when asked for', secs.time.length > noSecs.time.length,
+      `${noSecs.time} vs ${secs.time}`);
+
+    // TIME ZONE IS NOT DECORATION: a screen in a care facility is not always in the same zone
+    // as whoever set it up, and a clock an hour out is worse than no clock on this panel.
+    const utc = fmt({ hour12: false, showDate: true, tz: 'UTC' }, t);
+    const la = fmt({ hour12: false, showDate: true, tz: 'America/Los_Angeles' }, t);
+    check('*** the time zone changes the time ***', utc.time !== la.time, `${utc.time} vs ${la.time}`);
+    // And it must reach part-of-day too, not just the digits — otherwise a screen set to
+    // another zone says "afternoon" over a morning clock.
+    const early = new Date('2026-09-02T09:00:00Z');
+    const utcWhen = fmt({ hour12: false, showDate: false, tz: 'UTC' }, early).when;
+    const sydWhen = fmt({ hour12: false, showDate: false, tz: 'Australia/Sydney' }, early).when;
+    check('*** ...and it reaches the part of the day, not only the digits ***',
+      utcWhen !== sydWhen, `${utcWhen} vs ${sydWhen}`);
+  }
+
+  // =====================================================================================
+  section('*** the gear — one of the 18 controls no test had ever pressed ***');
+  {
+    const state = fakeState({});
+    const inst = mountModule('clock', {
+      mount: document.getElementById('host'), bus: createBus(), state,
+      events: { append: async () => {}, load: async () => {}, flush: async () => {},
+                get: () => ({ events: [] }), subscribe: () => () => {}, startPolling() {},
+                destroy() {} },
+    });
+    inst.init();
+    await sleep(30);
+
+    const host = document.getElementById('host');
+    const panel = host.querySelector('[data-settings]');
+    check('the settings panel starts closed', panel.hidden);
+    host.querySelector('[data-gear]').click();
+    check('*** pressing the gear opens it ***', !panel.hidden);
+    host.querySelector('[data-gear]').click();
+    check('...and pressing it again closes it', panel.hidden);
+
+    // EVERY OPTION WRITES ITS OWN KEY. This is the shape that broke in photos.js, where a
+    // control wrote `intervalSec` as the string "15" while the declaration said milliseconds.
+    host.querySelector('[data-gear]').click();
+    const cb = host.querySelector('[data-opt="hour12"]');
+    cb.checked = false;
+    cb.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(20);
+    check('*** a checkbox in the gear reaches state ***', state.__raw().hour12 === false,
+      JSON.stringify(state.__raw()));
+    check('...as a boolean, not the string "false"',
+      typeof state.__raw().hour12 === 'boolean', typeof state.__raw().hour12);
+    check('...and the clock redraws in 24-hour',
+      !/[ap]m/i.test(host.querySelector('[data-time]').textContent),
+      host.querySelector('[data-time]').textContent);
+
+    const sel = host.querySelector('[data-opt="size"]');
+    sel.value = 'l';
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(20);
+    check('a select in the gear reaches state too', state.__raw().size === 'l',
+      JSON.stringify(state.__raw()));
+
+    // AND THE DECLARED SETTINGS AGREE WITH THE GEAR. Two surfaces for one setting is fine
+    // only while they write the same keys; the moment they drift, one of them is lying.
+    const declared = (inst.manifest.settings || []).map((f) => f.key);
+    check('*** the module declares the settings it reads ***',
+      ['hour12', 'seconds', 'showDate', 'size', 'tz'].every((k) => declared.includes(k)),
+      JSON.stringify(declared));
+    const gearKeys = [...host.querySelectorAll('[data-opt]')].map((e) => e.dataset.opt);
+    check('*** every control in the gear has a declared row behind it ***',
+      gearKeys.every((k) => declared.includes(k)),
+      JSON.stringify({ gearKeys, declared }));
+
+    inst.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

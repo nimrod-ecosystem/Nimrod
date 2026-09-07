@@ -71,8 +71,59 @@ def read_keys(src, key):
     return False
 
 
+# `const DEFAULTS = { ... }` -- what the module reads out of its own state row. The keys here
+# are the module's real configuration surface, whether or not anything declares them.
+# *** THE FIRST VERSION OF THIS MISSED EVERY CASE IT WAS WRITTEN FOR. ***
+# It required a multi-line DEFAULTS block and a two-space indent on each key. But `clock`
+# declares its five ON ONE LINE, and clock is one of the three modules that prompted this
+# check at all. So the audit ran clean while the thing it hunts sat in the file it was
+# aimed at. A false negative here is worse than no audit: it is a green light over the
+# exact gap. Verified after the fix by watching it name clock, educational and lessons.
+DEFAULTS_BLOCK = re.compile(r'DEFAULTS\s*=\s*\{(.*?)\}\s*;', re.S)
+DEFAULT_KEY = re.compile(r'[{,]\s*([A-Za-z_$][\w$]*)\s*:')
+
+
+def undeclared(src, declared):
+    """Keys the module READS that no settings row offers.
+
+    *** THE MIRROR OF THE CHECK BELOW, AND THE ONE THAT KEEPS TURNING UP BY HAND. ***
+
+    `educational` declared none and read four. `lessons` declared none and read one -- and had
+    already been caught by its symptom, when its empty state pointed at "this module's settings"
+    and there were none. `clock` declares none, reads five, and puts a gear on the panel that
+    writes all five.
+
+    A key like this is not a dead control, it is a LIVE one with no menu entry: the module
+    honours it perfectly, and the only way to reach it is whatever the module drew itself. On a
+    kiosk grid, where panel chrome may not be reachable at all, that is configuration nobody can
+    get to.
+
+    NOT EVERY KEY BELONGS IN A MENU, which is why this prints a list to read rather than a
+    failure. Some state is genuinely internal -- a saved position, a deck somebody imported, a
+    board somebody built. The question each row asks is "should a person be able to change this
+    from the settings menu", and only a person can answer it.
+    """
+    m = DEFAULTS_BLOCK.search(src)
+    if not m:
+        return []
+    # The capture group starts AFTER the opening brace, so the FIRST key in every DEFAULTS has
+    # no `{` or `,` in front of it and the pattern skipped it -- silently, in every module at
+    # once. `clock` reported four of its five and `hour12` never appeared. Putting the brace
+    # back is the whole fix; finding it took noticing that a list of five printed four.
+    # TOP-LEVEL KEYS ONLY. `view.js` holds { mirror: { size, corner }, clock: { corner } }, and a
+    # flat scan reported `corner` twice as though the object literal had a duplicate key -- a
+    # scary-looking finding that was purely the scanner not understanding nesting. Nested values
+    # are one setting from a menu's point of view anyway.
+    body = re.sub(r'\{[^{}]*\}', 'X', m.group(1))
+    for _ in range(4):
+        body = re.sub(r'\{[^{}]*\}', 'X', body)
+    keys = DEFAULT_KEY.findall('{' + body)
+    return [k for k in keys if k not in declared]
+
+
 def main():
     findings = []
+    reads = []
     checked = 0
     for name in sorted(os.listdir(MODULES)):
         if not name.endswith('.js'):
@@ -90,16 +141,35 @@ def main():
                 keys.append(m.group(1))
         keys = sorted(set(keys))
         if not keys:
+            # NO SETTINGS DECLARED AT ALL -- which is exactly the case that keeps being found by
+            # hand, so it must not be the case this loop skips. `educational`, `lessons` and
+            # `clock` were all here.
+            missing = undeclared(src, set())
+            if missing:
+                reads.append((name, missing))
             continue
         checked += len(keys)
         dead = [k for k in keys if not read_keys(src, k)]
         if dead:
             findings.append((name, dead))
+        missing = undeclared(src, set(keys))
+        if missing:
+            reads.append((name, missing))
 
     print(f'{checked} declared settings across {len(os.listdir(MODULES))} module files\n')
+
+    if reads:
+        print('READ BUT NEVER DECLARED -- live config with no row in the settings menu:\n')
+        for name, missing in reads:
+            print(f'  {name}')
+            print(f'      {", ".join(missing)}')
+        print('\nNot every one of these belongs in a menu -- some state is genuinely internal.')
+        print('The question each asks is whether a person should be able to change it from the')
+        print('settings menu, and only a person can answer that.\n')
+
     if not findings:
         print('No declared setting is unread. Every row in every menu reaches something.')
-        return 0
+        return 1 if reads else 0
     print('DECLARED BUT NEVER READ -- a control somebody can move that changes nothing:\n')
     for name, dead in findings:
         print(f'  {name}')
