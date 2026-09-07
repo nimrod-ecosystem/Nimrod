@@ -69,9 +69,27 @@ CLICKED_VAR = re.compile(r"""(\w+)\s*\??\.click\(\)""")
 # was wrong that way about two of its own eighteen rows.
 #
 # Same binding rule as ASSIGN: the name on the left, the first selector on the right.
-ASSIGN_FN = re.compile(r"""(?:const|let|var)\s+(\w+)\s*=\s*\([^)]*\)\s*=>[^;\n]*?['"]([^'"]*\[data-[\w-]+[^'"]*)['"]""")
+#
+# *** AND IT WAS STILL WRONG, TWICE MORE, BOTH TIMES OVER-REPORTING. ***
+#
+# `algebra_test` has clicked every calculator key since the calculator existed:
+#
+#     const keyBtn = (k) => host.querySelector(`[data-key="${k}"]`);
+#     keyBtn('9').click();
+#
+# Two gaps at once. The selector is in BACKTICKS, which the quote class did not
+# include; and the press is `keyBtn('9').click()` -- a call WITH AN ARGUMENT and no
+# indexing, where the pattern below only knew `buys()[i].click()`. So `[data-key]` was
+# reported untested while 55 checks drove it.
+#
+# Both quote styles and both call shapes now. The lesson is this file's own: an audit
+# that over-reports sends somebody to write tests that already exist, and I had started
+# writing them before I noticed.
+ASSIGN_FN = re.compile(r"""(?:const|let|var)\s+(\w+)\s*=\s*\([^)]*\)\s*=>[^;
+]*?['"`]([^'"`]*\[data-[\w-]+[^'"`]*)['"`]""")
 # `buys()[i].click()` / `items()[i].click()` / `rows()[0]?.click()`
-CLICKED_CALL = re.compile(r"""(\w+)\(\)\s*\[[^\]]*\]\s*\??\.click\(\)""")
+# `buys()[i].click()`, `items()[i].click()`, `keyBtn('9').click()`, `rows()[0]?.click()`
+CLICKED_CALL = re.compile(r"""(\w+)\([^)]*\)\s*(?:\[[^\]]*\])?\s*\??\.click\(\)""")
 DISPATCHED_VAR = re.compile(r"""(\w+)\s*\??\.dispatchEvent\(""")
 
 def read(p):

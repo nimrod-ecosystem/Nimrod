@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>camera — the mirror, its gear, and the retry nobody had pressed</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}.skip{color:#b8860b}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:420px;height:260px;border:1px solid #ddd;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>camera</h1>
+<p>The rearview mirror: a webcam so somebody whose head is turned can see who is coming into
+their room. It had <b>no suite</b>, and all three of its controls were on
+<code>unpressed_controls.py</code>’s never-pressed list — including <code>[data-retry]</code>,
+which is the only way back from a camera that failed to open.</p>
+<p>Runs against Chrome’s fake camera (<code>--use-fake-device-for-media-stream</code>, already in
+<code>run_suite.py</code>), and stubs <code>getUserMedia</code> where a FAILURE is the thing being
+tested.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import '../modules/camera.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0, skipped = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function skip(name, why) {
+  skipped++;
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.textContent = `NOT RUN  ${name}   ${why}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeState(initial = {}) {
+  let s = { ...initial }; const subs = [];
+  return {
+    get: () => s,
+    set: (p) => { s = { ...s, ...p }; subs.forEach((f) => f(s)); },
+    subscribe: (f) => { subs.push(f); f(s); return () => {}; },
+    flush: () => {}, load: async () => {},
+    __raw: () => s,
+  };
+}
+const noEvents = () => ({ append: async () => {}, load: async () => {}, flush: async () => {},
+  get: () => ({ events: [] }), subscribe: () => () => {}, startPolling() {}, destroy() {} });
+
+function mount(state, host) {
+  const inst = mountModule('camera', {
+    mount: host, bus: createBus(), state, events: noEvents(),
+  });
+  inst.init();
+  return inst;
+}
+
+const realGUM = navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the settings it reads are the settings it declares ***');
+  {
+    // Same shape the clock had: four keys read and honoured, a gear drawn to write them, and
+    // nothing declared -- so on a grid kiosk, where panel settings do not show at all, a
+    // mirror stuck upside down could not be turned back by anybody.
+    const declared = (getManifest('camera').settings || []).map((f) => f.key);
+    check('*** the module declares the settings it reads ***',
+      ['cameraLabel', 'mirror', 'rotation', 'fit'].every((k) => declared.includes(k)),
+      JSON.stringify(declared));
+
+    // ROTATION IS A NUMBER. The gear writes it from a <select>, which hands back a string --
+    // the same type drift photos.js had with `intervalSec`.
+    const rot = (getManifest('camera').settings || []).find((f) => f.key === 'rotation');
+    check('...and rotation is declared as a number, not a string',
+      rot.options.every((o) => typeof o.value === 'number'),
+      JSON.stringify(rot.options.map((o) => typeof o.value)));
+  }
+
+  // =====================================================================================
+  section('*** the gear and its options — three controls no test had pressed ***');
+  {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const state = fakeState({});
+    const inst = mount(state, host);
+    await sleep(120);
+
+    const panel = host.querySelector('[data-settings]');
+    check('the settings panel starts closed', panel.hidden);
+    host.querySelector('[data-gear]').click();
+    check('*** pressing the gear opens it ***', !panel.hidden);
+    host.querySelector('[data-gear]').click();
+    check('...and pressing it again closes it', panel.hidden);
+    host.querySelector('[data-gear]').click();
+
+    // MIRROR — a checkbox, and the one setting somebody will actually reach for.
+    const mir = host.querySelector('[data-opt="mirror"]');
+    mir.checked = false;
+    mir.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(30);
+    check('*** unticking mirror reaches state ***', state.__raw().mirror === false,
+      JSON.stringify(state.__raw()));
+    check('...as a boolean', typeof state.__raw().mirror === 'boolean',
+      typeof state.__raw().mirror);
+    check('...and the picture stops being mirrored',
+      !/scaleX\(-1\)/.test(host.querySelector('[data-video]').style.transform),
+      host.querySelector('[data-video]').style.transform || '(none)');
+
+    // ROTATION — the type-drift one.
+    const rotSel = host.querySelector('[data-opt="rotation"]');
+    rotSel.value = '90';
+    rotSel.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(30);
+    check('*** rotating reaches state ***', Number(state.__raw().rotation) === 90,
+      JSON.stringify(state.__raw()));
+    check('*** ...as the NUMBER 90, not the string "90" ***',
+      state.__raw().rotation === 90 && typeof state.__raw().rotation === 'number',
+      `${JSON.stringify(state.__raw().rotation)} (${typeof state.__raw().rotation})`);
+    check('...and the picture actually turns',
+      /rotate\(90deg\)/.test(host.querySelector('[data-video]').style.transform),
+      host.querySelector('[data-video]').style.transform || '(none)');
+
+    // FIT
+    const fitSel = host.querySelector('[data-opt="fit"]');
+    fitSel.value = 'contain';
+    fitSel.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(30);
+    check('fit reaches state', state.__raw().fit === 'contain', JSON.stringify(state.__raw()));
+    check('...and reaches the picture',
+      host.querySelector('[data-video]').style.objectFit === 'contain',
+      host.querySelector('[data-video]').style.objectFit);
+
+    // EVERY CONTROL IN THE GEAR HAS A DECLARED ROW BEHIND IT. Two surfaces for one setting is
+    // fine only while they write the same keys; the moment they drift, one of them is lying.
+    const declared = (getManifest('camera').settings || []).map((f) => f.key);
+    const gearKeys = [...host.querySelectorAll('[data-opt]')].map((e) => e.dataset.opt);
+    check('*** every control in the gear has a declared row behind it ***',
+      gearKeys.every((k) => declared.includes(k)), JSON.stringify({ gearKeys, declared }));
+
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** Retry — the only way back from a camera that would not open ***');
+  {
+    // A denied permission looks exactly like a broken camera from the room, and the module
+    // says so in its own header. This button is the whole recovery path, and nothing had
+    // ever pressed it.
+    if (!navigator.mediaDevices) {
+      skip('the retry path', 'this browser exposes no mediaDevices at all');
+    } else {
+      const host = document.getElementById('host');
+      host.innerHTML = '';
+      let attempts = 0;
+      // Stub the FAILURE rather than adding a product seam: the module reaches
+      // navigator.mediaDevices directly, and that is a global the test owns for the moment.
+      navigator.mediaDevices.getUserMedia = async () => {
+        attempts++;
+        const e = new Error('denied by the test');
+        e.name = 'NotAllowedError';
+        throw e;
+      };
+      const inst = mount(fakeState({}), host);
+      for (let i = 0; i < 40 && !host.querySelector('[data-retry]'); i++) await sleep(50);
+
+      const btn = host.querySelector('[data-retry]');
+      check('*** a camera that will not open offers a way to try again ***', !!btn,
+        host.textContent.slice(0, 140));
+      check('...and says what went wrong rather than going blank',
+        /permission/i.test(host.textContent), host.textContent.slice(0, 120));
+      const tried = attempts;
+      btn.click();
+      await sleep(120);
+      check('*** pressing Retry actually asks the camera again ***', attempts > tried,
+        `attempts ${tried} -> ${attempts}`);
+      check('...and it is still offered after a second failure, not a dead panel',
+        !!host.querySelector('[data-retry]'), host.textContent.slice(0, 140));
+
+      inst.destroy();
+      navigator.mediaDevices.getUserMedia = realGUM;
+    }
+  }
+} catch (e) {
+  if (realGUM && navigator.mediaDevices) navigator.mediaDevices.getUserMedia = realGUM;
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+if (skipped && !failed) {
+  sum.textContent = `PASS WITH SKIPS — ${passed} checks, ${skipped} SKIPPED`;
+  sum.className = 'skip';
+} else {
+  sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  sum.className = failed === 0 ? 'pass' : 'fail';
+}
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
