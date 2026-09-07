@@ -16,7 +16,7 @@
 //     switch can make something happen — which is the whole cause-and-effect point, and it
 //     was unreachable before.
 //   * COLORS COME FROM THE THEME, not from constants. Cici's pond is hardcoded teal; here
-//     it reads `--midnight`, `--moss`, `--rosy` and `--beige`, so it follows Dusk at night
+//     it reads `--link`, `--accent`, `--accent-warm` and `--on-dark`, so it follows Dusk at night
 //     like everything else on the screen.
 //   * IT STOPS WHEN IT IS NOT VISIBLE. A canvas animating behind a hidden panel is battery
 //     and heat on a Pi that is on 24/7, for a picture nobody is looking at.
@@ -44,10 +44,10 @@ function readTheme(el) {
   const cs = getComputedStyle(el);
   const v = (name, fallback) => (cs.getPropertyValue(name) || '').trim() || fallback;
   return {
-    deep: v('--midnight', '#105666'),
-    weed: v('--moss', '#839958'),
-    crest: v('--beige', '#F7F4D5'),
-    catch: v('--rosy', '#D3968C'),
+    deep: v('--link', '#105666'),
+    weed: v('--accent', '#839958'),
+    crest: v('--on-dark', '#F7F4D5'),
+    catch: v('--accent-warm', '#D3968C'),
   };
 }
 

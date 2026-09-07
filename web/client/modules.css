@@ -155,29 +155,29 @@
    later cleanup. theme.js overrides these :root vars per active profile. */
 
 :root{
-  --darkgreen:#0A3323; --moss:#839958; --beige:#F7F4D5; --rosy:#D3968C;
-  --midnight:#105666; --bg:#F7F4D5; --cream-soft:#FBF9E9; --card:#FFFFFF;
-  --ink:#0A3323; --ink-soft:#3c5346; --muted:#5d7064; --line:#e4e0c2;
-  --rosy-deep:#a85f52; --radius:16px;
+  --text-strong:#0A3323; --accent:#839958; --on-dark:#F7F4D5; --accent-warm:#D3968C;
+  --link:#105666; --bg:#F7F4D5; --surface-alt:#FBF9E9; --surface:#FFFFFF;
+  --text:#0A3323; --text-soft:#3c5346; --text-muted:#5d7064; --border:#e4e0c2;
+  --accent-warm-deep:#a85f52; --radius:16px;
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 *{box-sizing:border-box}
 
 /* clock */
 .clock{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;position:relative}
-.clock .time{font-weight:800;color:var(--darkgreen);line-height:1;font-variant-numeric:tabular-nums}
+.clock .time{font-weight:800;color:var(--text-strong);line-height:1;font-variant-numeric:tabular-nums}
 .clock[data-size="s"] .time{font-size:2.2rem}
 .clock[data-size="m"] .time{font-size:3.2rem}
 .clock[data-size="l"] .time{font-size:4.4rem}
-/* `--ink-soft`, not `--midnight`, and it is a token fix rather than a colour preference.
-   `--midnight` is an ACCENT: themes are free to make it whatever their accent is, and two of
+/* `--text-soft`, not `--link`, and it is a token fix rather than a colour preference.
+   `--link` is an ACCENT: themes are free to make it whatever their accent is, and two of
    them do — forge sets it to amber `#B5651D` and warm to `#a85a2a`. Measured against the card
    the clock now sits on, that is 4.34 and 4.86 against a 4.5 floor: one failing outright and
-   the other a rounding error away. `--ink-soft` is the token FOR secondary text and clears
+   the other a rounding error away. `--text-soft` is the token FOR secondary text and clears
    8.34 (default), 8.85 (dusk), 9.63 (forge), 8.97 (warm), 18.88 (contrast).
    "Tuesday morning" is supporting text, not an accent, so it was reading the wrong variable. */
-.clock .when{font-size:1rem;color:var(--ink-soft);font-weight:600;text-transform:capitalize}
-.clock .date{font-size:.9rem;color:var(--muted)}
+.clock .when{font-size:1rem;color:var(--text-soft);font-weight:600;text-transform:capitalize}
+.clock .date{font-size:.9rem;color:var(--text-muted)}
 /* In a sized box, ignore data-size and scale to the room available. Bounded on BOTH ends:
    a clock nobody can read from a bed is useless, and one that runs off the edge is worse.
    Width is in the min() too — "10:38 PM" in a wide, short cell would otherwise overflow
@@ -208,8 +208,8 @@
    price. The background colour is what the bars are made of. */
 .camera video{width:100%;height:100%;object-fit:contain;display:block;background:#0c1a14}
 .camera .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
-  color:var(--beige);background:rgba(10,51,35,.72);font-size:.85rem;text-align:center;padding:10px}
-.camera .status button{border:1px solid rgba(247,244,213,.5);color:var(--beige);background:transparent;
+  color:var(--on-dark);background:rgba(10,51,35,.72);font-size:.85rem;text-align:center;padding:10px}
+.camera .status button{border:1px solid rgba(247,244,213,.5);color:var(--on-dark);background:transparent;
   border-radius:8px;padding:6px 10px;cursor:pointer}
 .camera .gear,.camera .settings{display:none}
 
@@ -224,8 +224,8 @@
 .photos .stage .fill{position:absolute;inset:0;background-position:center;background-size:cover;
   filter:blur(28px) brightness(.55);transform:scale(1.1)}
 .photos .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
-  color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
-.photos .status button{border:1px solid rgba(247,244,213,.5);color:var(--beige);background:transparent;border-radius:8px;padding:6px 10px}
+  color:var(--on-dark);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
+.photos .status button{border:1px solid rgba(247,244,213,.5);color:var(--on-dark);background:transparent;border-radius:8px;padding:6px 10px}
 .photos .nav,.photos .gear,.photos .settings{display:none}
 
 /* A status message over a panel that HAS something to show. The full-bleed version is a
@@ -242,7 +242,7 @@
   overflow:hidden;display:flex;align-items:center;justify-content:center}
 .youtube .stage iframe{width:100%;height:100%;border:0;display:block}
 .youtube .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
-  color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
+  color:var(--on-dark);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
 /* *** YOUTUBE KEEPS ITS OWN CONTROLS. IT IS THE ONLY WAY TO CHOOSE A VIDEO. ***
  *
  * G13, Mike off the live site: *"YouTube's overlay covers everything on hover and there is no
@@ -335,7 +335,7 @@
 .youtube .held,.personal .held{
   position:absolute;top:10px;left:10px;z-index:3;
   padding:5px 12px;border-radius:99px;
-  background:rgba(10,51,35,.82);color:var(--beige);
+  background:rgba(10,51,35,.82);color:var(--on-dark);
   font-size:.85rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
   pointer-events:none;
 }
@@ -352,25 +352,25 @@
 .personal .stage{position:relative;flex:1;min-height:0;background:#0c1a14;border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
 .personal .stage video{width:100%;height:100%;object-fit:contain;display:block;background:#0c1a14}
-.personal .caption{margin-top:8px;text-align:center;font-weight:700;font-size:1.3rem;color:var(--beige)}
+.personal .caption{margin-top:8px;text-align:center;font-weight:700;font-size:1.3rem;color:var(--on-dark)}
 .personal .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
-  color:var(--beige);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
+  color:var(--on-dark);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
 .personal .nav{display:none}
 
 /* educational — a single live graphic, drawn in the profile theme */
 .educational{width:100%;height:100%;display:flex;flex-direction:column;align-items:center}
 .educational .stage{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;background:var(--cream-soft);border:1px solid var(--line);border-radius:10px}
-.educational .caption{margin-top:8px;text-align:center;font-weight:700;color:var(--midnight)}
+  justify-content:center;background:var(--surface-alt);border:1px solid var(--border);border-radius:10px}
+.educational .caption{margin-top:8px;text-align:center;font-weight:700;color:var(--link)}
 .educational .nav{display:none}
-.educational .ig-number{font-size:9rem;font-weight:800;color:var(--darkgreen);line-height:1;font-variant-numeric:tabular-nums}
+.educational .ig-number{font-size:9rem;font-weight:800;color:var(--text-strong);line-height:1;font-variant-numeric:tabular-nums}
 .educational .ig-dots{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px;max-width:70%}
-.educational .ig-dots i{width:22px;height:22px;border-radius:50%;background:var(--moss);display:block}
-.educational .ig-letters{font-size:10rem;font-weight:800;color:var(--midnight);line-height:1}
+.educational .ig-dots i{width:22px;height:22px;border-radius:50%;background:var(--accent);display:block}
+.educational .ig-letters{font-size:10rem;font-weight:800;color:var(--link);line-height:1}
 .educational .ig-word{display:flex;flex-direction:column;align-items:center;gap:10px}
 .educational .ig-spell{display:flex;gap:14px}
-.educational .ig-spell span{font-size:4rem;font-weight:800;color:var(--midnight)}
-.educational .ig-wordfull{font-size:2.4rem;color:var(--darkgreen);font-weight:600}
+.educational .ig-spell span{font-size:4rem;font-weight:800;color:var(--link)}
+.educational .ig-wordfull{font-size:2.4rem;color:var(--text-strong);font-weight:600}
 
 /* director (Lineup) — one provider slot at a time, filling its container */
 .director{width:100%;height:100%;position:relative;display:flex;flex-direction:column}
@@ -383,7 +383,7 @@
 
    *** THE BOARD CARRIES ITS OWN SURFACE AND DOES NOT FOLLOW THE PROFILE THEME (2026-09-02). ***
 
-   It used to draw on `--card` / `--darkgreen` / `--line`, so switching a profile to Warm or
+   It used to draw on `--surface` / `--text-strong` / `--border`, so switching a profile to Warm or
    Forge repainted the one panel somebody uses to SAY THINGS. That is the wrong thing to leave
    downstream of a decoration setting, and the numbers say the same:
 
@@ -417,10 +417,10 @@
    contrast numbers above are only guaranteed for the pinned palette. */
 .aboard.ab-themed{
   --ab-bg:var(--bg,#12181c);
-  --ab-card:var(--card,#fff);
-  --ab-ink:var(--darkgreen,#0A3323);
-  --ab-line:var(--line,#e4e0c2);
-  --ab-lit:var(--moss,#839958);
+  --ab-card:var(--surface,#fff);
+  --ab-ink:var(--text-strong,#0A3323);
+  --ab-line:var(--border,#e4e0c2);
+  --ab-lit:var(--accent,#839958);
 }
 /* THE BOARD'S OWN HIGH-CONTRAST SWITCH. It needs one BECAUSE it no longer inherits the
    `contrast` theme, and losing that for the one panel somebody talks through would be a
@@ -681,221 +681,221 @@
 .director .d-wall[hidden]{display:none}
 
 /* The wallpaper itself. Full-bleed, no chrome, nothing focusable — it is scenery. */
-.wp{position:absolute;inset:0;overflow:hidden;background:var(--darkgreen,#0A3323)}
+.wp{position:absolute;inset:0;overflow:hidden;background:var(--text-strong,#0A3323)}
 .wp-ambient{position:absolute;inset:0}
 .wp-media{position:absolute;inset:0}
 .wp-media[hidden]{display:none}
 .wp-layer{position:absolute;inset:0;opacity:0}
 .wp-layer img,.wp-layer video{width:100%;height:100%;object-fit:cover;display:block}
 .director .d-ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:10px;background:var(--cream-soft);border:1px dashed var(--line);border-radius:10px;text-align:center;padding:16px}
-.director .d-ph-kind{font-size:2rem;font-weight:800;color:var(--darkgreen)}
-.director .d-ph-note{font-size:.9rem;color:var(--muted)}
+  gap:10px;background:var(--surface-alt);border:1px dashed var(--border);border-radius:10px;text-align:center;padding:16px}
+.director .d-ph-kind{font-size:2rem;font-weight:800;color:var(--text-strong)}
+.director .d-ph-note{font-size:.9rem;color:var(--text-muted)}
 
 /* sprint (focus timer) */
 .sprint{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;padding:4px 0}
-.sprint .s-phase{font-size:.95rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--midnight)}
-.sprint[data-phase="work"] .s-phase{color:var(--moss)}
-.sprint .s-clock{font-size:3.6rem;font-weight:800;line-height:1;color:var(--darkgreen);font-variant-numeric:tabular-nums}
-.sprint .s-notice{min-height:1.2em;font-size:.85rem;font-weight:600;color:var(--midnight);text-align:center}
-.sprint .s-task{width:100%;max-width:320px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;
-  background:var(--cream-soft);color:var(--ink);font:inherit;font-size:.95rem;text-align:center}
+.sprint .s-phase{font-size:.95rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--link)}
+.sprint[data-phase="work"] .s-phase{color:var(--accent)}
+.sprint .s-clock{font-size:3.6rem;font-weight:800;line-height:1;color:var(--text-strong);font-variant-numeric:tabular-nums}
+.sprint .s-notice{min-height:1.2em;font-size:.85rem;font-weight:600;color:var(--link);text-align:center}
+.sprint .s-task{width:100%;max-width:320px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface-alt);color:var(--text);font:inherit;font-size:.95rem;text-align:center}
 .sprint .s-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
-.sprint .s-btn{padding:8px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);
-  color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
-.sprint .s-btn:hover{background:var(--cream-soft)}
-.sprint .s-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss);min-width:104px}
-.sprint .s-primary:hover{filter:brightness(.93);background:var(--moss)}
-.sprint .s-mult{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);
-  color:var(--ink);font:inherit;font-size:.85rem}
-.sprint .s-worth{font-size:.85rem;font-weight:700;color:var(--midnight)}
-.sprint .s-foot{font-size:.8rem;color:var(--muted);text-align:center}
+.sprint .s-btn{padding:8px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.sprint .s-btn:hover{background:var(--surface-alt)}
+.sprint .s-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);min-width:104px}
+.sprint .s-primary:hover{filter:brightness(.93);background:var(--accent)}
+.sprint .s-mult{padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:.85rem}
+.sprint .s-worth{font-size:.85rem;font-weight:700;color:var(--link)}
+.sprint .s-foot{font-size:.8rem;color:var(--text-muted);text-align:center}
 
 /* quests (the quest board / points economy) */
 .quests{display:flex;flex-direction:column;gap:8px;width:100%}
 .quests .q-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .quests .q-balance{display:flex;align-items:baseline;gap:6px}
-.quests .q-balance b{font-size:2.6rem;font-weight:800;line-height:1;color:var(--darkgreen);font-variant-numeric:tabular-nums}
-.quests .q-balance span{font-size:.85rem;color:var(--muted)}
-.quests .q-sub{display:flex;gap:12px;font-size:.85rem;color:var(--muted)}
-.quests .q-sub b{color:var(--ink);font-variant-numeric:tabular-nums}
-.quests .q-hours-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--ink-soft)}
-.quests .q-band{font-weight:700;color:var(--midnight)}
-.quests .q-track{height:8px;border-radius:99px;background:var(--cream-soft);border:1px solid var(--line);overflow:hidden;margin-top:3px}
-.quests .q-track i{display:block;height:100%;background:var(--moss);width:0}
-.quests .q-topup{font-size:.76rem;color:var(--midnight);min-height:1em;margin-top:2px}
-.quests .q-subjects{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;font-size:.74rem;color:var(--muted)}
-.quests .q-subj b{color:var(--ink-soft);font-weight:700}
-.quests .q-flash{min-height:1.2em;font-size:.85rem;font-weight:600;color:var(--midnight)}
+.quests .q-balance b{font-size:2.6rem;font-weight:800;line-height:1;color:var(--text-strong);font-variant-numeric:tabular-nums}
+.quests .q-balance span{font-size:.85rem;color:var(--text-muted)}
+.quests .q-sub{display:flex;gap:12px;font-size:.85rem;color:var(--text-muted)}
+.quests .q-sub b{color:var(--text);font-variant-numeric:tabular-nums}
+.quests .q-hours-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-soft)}
+.quests .q-band{font-weight:700;color:var(--link)}
+.quests .q-track{height:8px;border-radius:99px;background:var(--surface-alt);border:1px solid var(--border);overflow:hidden;margin-top:3px}
+.quests .q-track i{display:block;height:100%;background:var(--accent);width:0}
+.quests .q-topup{font-size:.76rem;color:var(--link);min-height:1em;margin-top:2px}
+.quests .q-subjects{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;font-size:.74rem;color:var(--text-muted)}
+.quests .q-subj b{color:var(--text-soft);font-weight:700}
+.quests .q-flash{min-height:1.2em;font-size:.85rem;font-weight:600;color:var(--link)}
 .quests .q-tabs{display:flex;gap:6px}
-.quests .q-tab{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);
-  color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
-.quests .q-tab.on{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
+.quests .q-tab{flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:9px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.quests .q-tab.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .quests .q-panel{max-height:360px;overflow-y:auto}
 .quests .q-toolbar{display:flex;justify-content:flex-end;padding:2px 0 6px}
-.quests .q-toggle{font-size:.8rem;color:var(--ink-soft);display:flex;align-items:center;gap:5px;cursor:pointer}
+.quests .q-toggle{font-size:.8rem;color:var(--text-soft);display:flex;align-items:center;gap:5px;cursor:pointer}
 .quests .q-list{display:flex;flex-direction:column;gap:5px}
 .quests .q-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;
-  padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);
+  padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);
   font:inherit;cursor:pointer}
-.quests .q-item:hover:not(:disabled){background:var(--cream-soft)}
+.quests .q-item:hover:not(:disabled){background:var(--surface-alt)}
 .quests .q-item:disabled{opacity:.45;cursor:not-allowed}
-.quests .q-item[data-kind="Penalty"]{border-color:var(--rosy)}
+.quests .q-item[data-kind="Penalty"]{border-color:var(--accent-warm)}
 .quests .q-item-main{display:flex;flex-direction:column;gap:1px;min-width:0}
 .quests .q-item-name{font-weight:600;font-size:.9rem}
-.quests .q-item-note{font-size:.74rem;color:var(--muted)}
-.quests .q-item-pts{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--midnight)}
-.quests .q-item[data-kind="Penalty"] .q-item-pts{color:var(--rosy-deep)}
-.quests .q-x2{font-style:normal;font-size:.68rem;margin-left:4px;color:var(--muted)}
+.quests .q-item-note{font-size:.74rem;color:var(--text-muted)}
+.quests .q-item-pts{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--link)}
+.quests .q-item[data-kind="Penalty"] .q-item-pts{color:var(--accent-warm-deep)}
+.quests .q-x2{font-style:normal;font-size:.68rem;margin-left:4px;color:var(--text-muted)}
 .quests .q-log{width:100%;border-collapse:collapse;font-size:.78rem}
-.quests .q-log th{text-align:left;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:4px 6px}
-.quests .q-log td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
-.quests .q-log .q-src{display:block;font-size:.68rem;color:var(--muted)}
-.quests .q-log .q-pos{color:var(--moss);font-weight:700;text-align:right}
-.quests .q-log .q-neg{color:var(--rosy-deep);font-weight:700;text-align:right}
-.quests .q-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:14px}
+.quests .q-log th{text-align:left;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);padding:4px 6px}
+.quests .q-log td{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:top}
+.quests .q-log .q-src{display:block;font-size:.68rem;color:var(--text-muted)}
+.quests .q-log .q-pos{color:var(--accent);font-weight:700;text-align:right}
+.quests .q-log .q-neg{color:var(--accent-warm-deep);font-weight:700;text-align:right}
+.quests .q-empty{font-size:.85rem;color:var(--text-muted);text-align:center;padding:14px}
 
 /* progress (gameplay measurement — accuracy, concepts, sessions) */
 .gprogress{display:flex;flex-direction:column;gap:8px;width:100%}
 .gprogress .g-filters{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .gprogress .g-filters:empty{display:none}
-.gprogress .g-flabel{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-right:2px}
-.gprogress .g-fbtn{padding:4px 9px;border:1px solid var(--line);border-radius:99px;background:var(--card);
-  color:var(--ink);font:inherit;font-size:.78rem;cursor:pointer}
-.gprogress .g-fbtn.on{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
+.gprogress .g-flabel{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-right:2px}
+.gprogress .g-fbtn{padding:4px 9px;border:1px solid var(--border);border-radius:99px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:.78rem;cursor:pointer}
+.gprogress .g-fbtn.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .gprogress .g-cards{display:flex;flex-wrap:wrap;gap:7px}
-.gprogress .g-card{flex:1 1 84px;border:1px solid var(--line);border-radius:11px;background:var(--cream-soft);padding:8px 10px}
-.gprogress .g-v{font-size:1.35rem;font-weight:800;line-height:1.1;color:var(--darkgreen);font-variant-numeric:tabular-nums}
-.gprogress .g-k{font-size:.66rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.gprogress .g-h{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:2px}
-.gprogress .g-chart svg{width:100%;height:150px;display:block;background:var(--cream-soft);
-  border:1px solid var(--line);border-radius:11px}
-.gprogress .g-grid{stroke:var(--line)}
-.gprogress .g-axis{fill:var(--muted);font-size:10px}
-.gprogress .g-bar{fill:var(--moss)}
+.gprogress .g-card{flex:1 1 84px;border:1px solid var(--border);border-radius:11px;background:var(--surface-alt);padding:8px 10px}
+.gprogress .g-v{font-size:1.35rem;font-weight:800;line-height:1.1;color:var(--text-strong);font-variant-numeric:tabular-nums}
+.gprogress .g-k{font-size:.66rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted)}
+.gprogress .g-h{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-top:2px}
+.gprogress .g-chart svg{width:100%;height:150px;display:block;background:var(--surface-alt);
+  border:1px solid var(--border);border-radius:11px}
+.gprogress .g-grid{stroke:var(--border)}
+.gprogress .g-axis{fill:var(--text-muted);font-size:10px}
+.gprogress .g-bar{fill:var(--accent)}
 .gprogress .g-tabs{display:flex;gap:6px}
-.gprogress .g-tab{flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--card);
-  color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.gprogress .g-tab{flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:9px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
 .gprogress .g-tab[hidden]{display:none}
-.gprogress .g-tab.on{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
-.gprogress .g-ghost{flex:0 0 auto;font-weight:500;color:var(--midnight)}
+.gprogress .g-tab.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.gprogress .g-ghost{flex:0 0 auto;font-weight:500;color:var(--link)}
 .gprogress .g-ghost:disabled{opacity:.4;cursor:not-allowed}
 .gprogress .g-panel{max-height:340px;overflow-y:auto}
-.gprogress .g-note{font-size:.72rem;color:var(--muted);margin:2px 0 7px}
+.gprogress .g-note{font-size:.72rem;color:var(--text-muted);margin:2px 0 7px}
 .gprogress .g-crow{display:grid;grid-template-columns:minmax(90px,1fr) 2fr auto;gap:8px;align-items:center;margin-bottom:6px}
 .gprogress .g-cname{font-size:.82rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.gprogress .g-cbar{height:9px;border-radius:99px;background:var(--cream-soft);border:1px solid var(--line);overflow:hidden}
-.gprogress .g-cbar i{display:block;height:100%;background:var(--moss)}
+.gprogress .g-cbar{height:9px;border-radius:99px;background:var(--surface-alt);border:1px solid var(--border);overflow:hidden}
+.gprogress .g-cbar i{display:block;height:100%;background:var(--accent)}
 .gprogress .g-cpct{font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;min-width:56px}
-.gprogress .g-cpct span{display:block;font-size:.64rem;font-weight:500;color:var(--muted)}
+.gprogress .g-cpct span{display:block;font-size:.64rem;font-weight:500;color:var(--text-muted)}
 .gprogress .g-trend{font-style:normal;font-size:.7rem;margin-left:5px}
-.gprogress .g-up{color:var(--moss)}
-.gprogress .g-down{color:var(--rosy-deep)}
-.gprogress .g-flat{color:var(--muted)}
+.gprogress .g-up{color:var(--accent)}
+.gprogress .g-down{color:var(--accent-warm-deep)}
+.gprogress .g-flat{color:var(--text-muted)}
 .gprogress .g-table{width:100%;border-collapse:collapse;font-size:.75rem}
-.gprogress .g-table th{text-align:left;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:4px 5px}
-.gprogress .g-table td{padding:4px 5px;border-bottom:1px solid var(--line)}
-.gprogress .g-src{display:block;font-size:.64rem;color:var(--muted)}
-.gprogress .g-empty{font-size:.85rem;color:var(--muted);text-align:center;padding:18px}
+.gprogress .g-table th{text-align:left;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);padding:4px 5px}
+.gprogress .g-table td{padding:4px 5px;border-bottom:1px solid var(--border)}
+.gprogress .g-src{display:block;font-size:.64rem;color:var(--text-muted)}
+.gprogress .g-empty{font-size:.85rem;color:var(--text-muted);text-align:center;padding:18px}
 
 /* wordforge (vocabulary game) */
 .wordforge{display:flex;flex-direction:column;gap:10px;width:100%}
-.wordforge .wf-top{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--muted)}
-.wordforge .wf-score{font-weight:800;color:var(--darkgreen);font-variant-numeric:tabular-nums}
-.wordforge .wf-streak{color:var(--midnight);font-weight:700}
+.wordforge .wf-top{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text-muted)}
+.wordforge .wf-score{font-weight:800;color:var(--text-strong);font-variant-numeric:tabular-nums}
+.wordforge .wf-streak{color:var(--link);font-weight:700}
 .wordforge .wf-progress{margin-left:auto;font-variant-numeric:tabular-nums}
-.wordforge .wf-kind{margin:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.wordforge .wf-kind{margin:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
 .wordforge .wf-prompt{margin:4px 0 12px;font-size:1.15rem;font-weight:600;line-height:1.4}
 .wordforge .wf-opts{display:flex;flex-direction:column;gap:7px}
-.wordforge .wf-opt{text-align:left;padding:11px 13px;border:1px solid var(--line);border-radius:11px;
-  background:var(--card);color:var(--ink);font:inherit;font-size:.95rem;cursor:pointer;line-height:1.4}
-.wordforge .wf-opt:hover:not(:disabled){background:var(--cream-soft);border-color:var(--moss)}
+.wordforge .wf-opt{text-align:left;padding:11px 13px;border:1px solid var(--border);border-radius:11px;
+  background:var(--surface);color:var(--text);font:inherit;font-size:.95rem;cursor:pointer;line-height:1.4}
+.wordforge .wf-opt:hover:not(:disabled){background:var(--surface-alt);border-color:var(--accent)}
 .wordforge .wf-opt:disabled{cursor:default}
 /* THE SWITCH CURSOR. Same treatment as `.tv-opt[data-on]` on purpose — one switch, two quizzes,
    one thing to learn. Without this the option a press would choose is invisible. */
-.wordforge .wf-opt[data-on="1"]{border-color:var(--midnight,#105666);
+.wordforge .wf-opt[data-on="1"]{border-color:var(--link,#105666);
   box-shadow:0 0 0 3px rgba(16,86,102,.18)}
 .wordforge .wf-opt[data-on="1"]::before{content:"\25B8\00a0"}
-.wordforge .wf-opt.is-right{border-color:var(--moss);background:#f0f4e8;box-shadow:inset 3px 0 0 var(--moss)}
-.wordforge .wf-opt.is-wrong{border-color:var(--rosy);background:#fbecea;box-shadow:inset 3px 0 0 var(--rosy-deep)}
-.wordforge .wf-idk{display:block;width:100%;margin-top:10px;background:transparent;border-style:dashed;color:var(--muted);font-weight:600}
-.wordforge .wf-idk:hover{background:var(--cream-soft);color:var(--ink)}
+.wordforge .wf-opt.is-right{border-color:var(--accent);background:#f0f4e8;box-shadow:inset 3px 0 0 var(--accent)}
+.wordforge .wf-opt.is-wrong{border-color:var(--accent-warm);background:#fbecea;box-shadow:inset 3px 0 0 var(--accent-warm-deep)}
+.wordforge .wf-idk{display:block;width:100%;margin-top:10px;background:transparent;border-style:dashed;color:var(--text-muted);font-weight:600}
+.wordforge .wf-idk:hover{background:var(--surface-alt);color:var(--text)}
 .wordforge .wf-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5}
-.wordforge .wf-fb.is-right{background:#f0f4e8;border:1px solid var(--moss)}
-.wordforge .wf-fb.is-wrong{background:var(--cream-soft);border:1px solid var(--line)}
-.wordforge .wf-bonus,.wordforge .wf-try{display:block;margin-top:4px;font-size:.78rem;color:var(--midnight);font-weight:600}
+.wordforge .wf-fb.is-right{background:#f0f4e8;border:1px solid var(--accent)}
+.wordforge .wf-fb.is-wrong{background:var(--surface-alt);border:1px solid var(--border)}
+.wordforge .wf-bonus,.wordforge .wf-try{display:block;margin-top:4px;font-size:.78rem;color:var(--link);font-weight:600}
 /* WHAT THE PERSON PICKED, AND WHAT IT ACTUALLY MEANS. Set apart from the explanation above it
    rather than run together: they are answers to two different questions — “what was right” and
    “what was I thinking of” — and a reader has to be able to tell which is which. */
 .wordforge .wf-picked{display:block;margin-top:6px;padding-left:9px;
-  border-left:3px solid var(--line);font-size:.82rem;color:var(--ink-soft, var(--midnight))}
-.wordforge .wf-btn{margin-top:10px;padding:10px 18px;border:1px solid var(--line);border-radius:10px;
-  background:var(--card);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
-.wordforge .wf-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
+  border-left:3px solid var(--border);font-size:.82rem;color:var(--text-soft, var(--link))}
+.wordforge .wf-btn{margin-top:10px;padding:10px 18px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.wordforge .wf-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .wordforge .wf-primary:hover{filter:brightness(.93)}
 .wordforge .wf-done{text-align:center;padding:22px 10px}
-.wordforge .wf-done-n{font-size:2.8rem;font-weight:800;color:var(--darkgreen);line-height:1}
-.wordforge .wf-done p{margin:2px 0 6px;color:var(--muted);font-size:.9rem}
+.wordforge .wf-done-n{font-size:2.8rem;font-weight:800;color:var(--text-strong);line-height:1}
+.wordforge .wf-done p{margin:2px 0 6px;color:var(--text-muted);font-size:.9rem}
 
 /* lessons (watch to unlock) */
 .lessons{display:flex;flex-direction:column;gap:10px;width:100%}
-.lessons .l-top{font-size:.78rem;color:var(--muted);font-weight:600}
+.lessons .l-top{font-size:.78rem;color:var(--text-muted);font-weight:600}
 /* "Not finished yet", said once at the top. Cream on the card rather than red, because
    unfinished is not an error and a warning colour would say it was. */
 .lessons .l-unfinished{margin:0 0 4px;padding:8px 11px;border-radius:10px;
-  background:var(--cream-soft);border:1px solid var(--line);
-  font-size:.84rem;color:var(--ink-soft);max-width:62ch}
+  background:var(--surface-alt);border:1px solid var(--border);
+  font-size:.84rem;color:var(--text-soft);max-width:62ch}
 .lessons .l-list{display:flex;flex-direction:column;gap:9px}
-.lessons .l-card{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:12px 14px}
-.lessons .l-card.is-done{border-color:var(--moss);background:var(--cream-soft)}
+.lessons .l-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:12px 14px}
+.lessons .l-card.is-done{border-color:var(--accent);background:var(--surface-alt)}
 .lessons .l-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .lessons .l-head h3{margin:0;font-size:1rem}
 .lessons .l-badge{margin-left:7px;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;
-  color:var(--on-moss);background:var(--moss);border-radius:99px;padding:2px 7px;vertical-align:middle}
-.lessons .l-blurb{margin:3px 0 0;font-size:.82rem;color:var(--muted)}
-.lessons .l-btn{padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:var(--card);
-  color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;white-space:nowrap}
-.lessons .l-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
+  color:var(--on-accent);background:var(--accent);border-radius:99px;padding:2px 7px;vertical-align:middle}
+.lessons .l-blurb{margin:3px 0 0;font-size:.82rem;color:var(--text-muted)}
+.lessons .l-btn{padding:8px 13px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.lessons .l-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .lessons .l-btn:disabled{opacity:.45;cursor:not-allowed}
 .lessons .l-body{margin-top:11px}
 .lessons .l-video{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#0c1a14;display:block}
-.lessons .l-none{font-size:.85rem;color:var(--muted);text-align:center;padding:20px;background:var(--cream-soft);
-  border:1px dashed var(--line);border-radius:10px;margin:0}
+.lessons .l-none{font-size:.85rem;color:var(--text-muted);text-align:center;padding:20px;background:var(--surface-alt);
+  border:1px dashed var(--border);border-radius:10px;margin:0}
 .lessons .l-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
-.lessons .l-wait{font-size:.78rem;color:var(--muted)}
-.wordforge .wf-held{font-size:.75rem;color:var(--midnight);text-align:center;min-height:1em}
+.lessons .l-wait{font-size:.78rem;color:var(--text-muted)}
+.wordforge .wf-held{font-size:.75rem;color:var(--link);text-align:center;min-height:1em}
 
 /* algebra (solve for x, with a calculator) */
 .algebra{display:flex;flex-direction:column;gap:10px;width:100%}
-.algebra .al-top{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--muted)}
-.algebra .al-earned{font-weight:800;color:var(--darkgreen);font-variant-numeric:tabular-nums}
-.algebra .al-streak{margin-left:auto;color:var(--midnight);font-weight:700}
-.algebra .al-kind{margin:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.algebra .al-top{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text-muted)}
+.algebra .al-earned{font-weight:800;color:var(--text-strong);font-variant-numeric:tabular-nums}
+.algebra .al-streak{margin-left:auto;color:var(--link);font-weight:700}
+.algebra .al-kind{margin:0;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
 .algebra .al-prompt{margin:4px 0 12px;font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
 .algebra .al-calc{max-width:280px}
-.algebra .al-display{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--cream-soft);
+.algebra .al-display{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt);
   font-size:1.5rem;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px}
 .algebra .al-pad{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.algebra .al-key{padding:11px 0;border:1px solid var(--line);border-radius:9px;background:var(--card);
-  color:var(--ink);font:inherit;font-size:1rem;font-weight:600;cursor:pointer}
-.algebra .al-key:hover{background:var(--cream-soft)}
-.algebra .al-key.is-op{background:var(--cream-soft);color:var(--midnight);font-weight:800}
-.algebra .al-key.is-fn{color:var(--muted)}
-.algebra .al-key.is-eq{grid-column:span 2;background:var(--midnight);border-color:var(--midnight);color:var(--on-midnight)}
-.algebra .al-btn{padding:11px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);
-  color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
-.algebra .al-primary{background:var(--moss);border-color:var(--moss);color:var(--on-moss)}
+.algebra .al-key{padding:11px 0;border:1px solid var(--border);border-radius:9px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:1rem;font-weight:600;cursor:pointer}
+.algebra .al-key:hover{background:var(--surface-alt)}
+.algebra .al-key.is-op{background:var(--surface-alt);color:var(--link);font-weight:800}
+.algebra .al-key.is-fn{color:var(--text-muted)}
+.algebra .al-key.is-eq{grid-column:span 2;background:var(--link);border-color:var(--link);color:var(--on-link)}
+.algebra .al-btn{padding:11px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.algebra .al-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .algebra .al-submit{max-width:280px;margin-top:8px;font-size:1rem}
 .algebra .al-submit:disabled{opacity:.45;cursor:not-allowed}
-.algebra .al-idk{max-width:280px;margin-top:7px;background:transparent;border-style:dashed;color:var(--muted);
+.algebra .al-idk{max-width:280px;margin-top:7px;background:transparent;border-style:dashed;color:var(--text-muted);
   font-size:.85rem}
 .algebra .al-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5;max-width:420px}
-.algebra .al-fb.is-right{background:#f0f4e8;border:1px solid var(--moss)}
-.algebra .al-fb.is-wrong{background:var(--cream-soft);border:1px solid var(--line)}
+.algebra .al-fb.is-right{background:#f0f4e8;border:1px solid var(--accent)}
+.algebra .al-fb.is-wrong{background:var(--surface-alt);border:1px solid var(--border)}
 .algebra .al-how{display:block;margin-top:5px}
-.algebra .al-bonus,.algebra .al-try{display:block;margin-top:4px;font-size:.78rem;color:var(--midnight);font-weight:600}
-.algebra .al-held{font-size:.75rem;color:var(--midnight);min-height:1em}
+.algebra .al-bonus,.algebra .al-try{display:block;margin-top:4px;font-size:.78rem;color:var(--link);font-weight:600}
+.algebra .al-held{font-size:.75rem;color:var(--link);min-height:1em}
 /* Fit the keypad to the box instead of overflowing it. Everything vertical shrinks
    together and in proportion — a keypad whose keys shrink while the prompt above it
    stays at 1.5rem just moves the overflow around. The upper bounds are the original
@@ -1121,7 +1121,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
  * one hand while the other holds the camera.
  */
 .mk h3 { margin: 18px 0 4px; font-size: 1rem; }
-.mk .mk-lede { margin: 0 0 10px; color: var(--ink-soft, #3c5346); max-width: 62ch; }
+.mk .mk-lede { margin: 0 0 10px; color: var(--text-soft, #3c5346); max-width: 62ch; }
 .mk-live { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
 /* Pixelated: this is a 160x120 detection frame blown up, and smoothing it would show a
    cleaner picture than the thing actually being scanned. The caregiver should see what the
@@ -1129,20 +1129,20 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .mk-view {
   width: 320px; height: 240px; image-rendering: pixelated;
   border-radius: 10px; background: #0c1a14; cursor: crosshair;
-  border: 1px solid var(--line, #e4e0c2);
+  border: 1px solid var(--border, #e4e0c2);
 }
 /* The camera-off placeholder, in the same footprint as the preview it replaces, so pressing
    the button does not make the page jump. */
 .mk-off {
   width: 320px; min-height: 240px; border-radius: 10px;
-  border: 1px dashed var(--line, #e4e0c2); background: var(--cream-soft, #FBF9E9);
+  border: 1px dashed var(--border, #e4e0c2); background: var(--surface-alt, #FBF9E9);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; padding: 16px; text-align: center;
 }
-.mk-off p { margin: 0; font-size: .9rem; color: var(--ink-soft, #3c5346); max-width: 34ch; }
+.mk-off p { margin: 0; font-size: .9rem; color: var(--text-soft, #3c5346); max-width: 34ch; }
 .mk-start {
   min-height: 44px; padding: 10px 18px; border-radius: 10px;
-  border: 1px solid var(--midnight, #105666); background: var(--midnight, #105666);
+  border: 1px solid var(--link, #105666); background: var(--link, #105666);
   color: #fff; font: 650 .95rem var(--font, system-ui, sans-serif); cursor: pointer;
 }
 .mk-start:hover { filter: brightness(1.1); }
@@ -1164,7 +1164,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
   background-size: 10px 10px; background-position: 0 0, 5px 5px;   /* nothing sampled = checks */
 }
 .mk-chk { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; font-weight: 600; }
-.mk-note { margin: 0 0 10px; font-size: .87rem; color: var(--muted, #5d7064); max-width: 62ch; }
+.mk-note { margin: 0 0 10px; font-size: .87rem; color: var(--text-muted, #5d7064); max-width: 62ch; }
 .mk-rows { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; max-width: 460px; }
 .mk-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .mk-row select { flex: 0 1 220px; }
@@ -1179,21 +1179,21 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
  * be the person with the tremor.
  */
 .dv h3 { margin: 18px 0 4px; font-size: 1rem; }
-.dv .dv-lede { margin: 0 0 10px; color: var(--ink-soft, #3c5346); max-width: 62ch; }
+.dv .dv-lede { margin: 0 0 10px; color: var(--text-soft, #3c5346); max-width: 62ch; }
 .dv-permission {
   margin: 0 0 12px; padding: 10px 12px; border-radius: 10px;
-  background: var(--cream-soft, #FBF9E9); border: 1px solid var(--line, #e4e0c2);
+  background: var(--surface-alt, #FBF9E9); border: 1px solid var(--border, #e4e0c2);
   max-width: 62ch;
 }
 .dv-permission p { margin: 0 0 8px; }
 .dv-list { list-style: none; margin: 0 0 10px; padding: 0; max-width: 560px; }
 .dv-row {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border: 1px solid var(--line, #e4e0c2); border-radius: 10px;
-  margin-bottom: 6px; background: var(--card, #fff);
+  padding: 8px 10px; border: 1px solid var(--border, #e4e0c2); border-radius: 10px;
+  margin-bottom: 6px; background: var(--surface, #fff);
 }
 .dv-name { flex: 1 1 auto; font-weight: 600; }
-.dv-state { font-size: .82rem; color: var(--muted, #5d7064); white-space: nowrap; }
+.dv-state { font-size: .82rem; color: var(--text-muted, #5d7064); white-space: nowrap; }
 /* NOT CONNECTED IS NOT AN ERROR. A phone that has left the room is the normal case this whole
    list exists for, so it is dimmed rather than marked wrong — and the word says "now", because
    it is expected back. */
@@ -1202,7 +1202,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
    are the controls somebody uses while holding a phone in the other hand. */
 .dv-move button { min-width: 40px; min-height: 40px; font-size: 1rem; }
 .dv-add { display: inline-block; margin: 0 6px 6px 0; }
-.dv-note { margin: 10px 0 6px; font-size: .87rem; color: var(--muted, #5d7064); }
+.dv-note { margin: 10px 0 6px; font-size: .87rem; color: var(--text-muted, #5d7064); }
 .dv-now { margin: 8px 0 0; font-weight: 650; max-width: 62ch; }
 /* Shape as well as color — module-input-spec, "do not use color alone". */
 .dv-now[data-state="preferred"]::before { content: "\2713\00a0"; color: #2c6e49; }
@@ -1210,11 +1210,11 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .dv-now[data-state="unlisted"]::before { content: "\26A0\00a0"; }
 .dv-now[data-state="none"]::before { content: "\2717\00a0"; color: #a4243b; }
 .dv-now[data-state="none"] { color: #a4243b; }
-.dv-empty { color: var(--muted, #5d7064); }
+.dv-empty { color: var(--text-muted, #5d7064); }
 
 /* ---- RECORD A SESSION (Devices tab, under the microphone chooser) ---- */
 .rp h3 { margin: 20px 0 4px; font-size: 1rem; }
-.rp .rp-lede { margin: 0 0 10px; color: var(--ink-soft, #3c5346); max-width: 62ch; }
+.rp .rp-lede { margin: 0 0 10px; color: var(--text-soft, #3c5346); max-width: 62ch; }
 .rp-folder, .rp-roles { margin: 6px 0; max-width: 62ch; }
 .rp-roles { font-weight: 600; }
 .rp-go { display: flex; align-items: center; gap: 14px; margin: 14px 0 8px; }
@@ -1230,30 +1230,30 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .rp-mark button { min-height: 40px; }
 .rp-marks, .rp-said { margin: 6px 0; max-width: 62ch; }
 .rp-said { font-weight: 650; }
-.rp-note { margin: 12px 0 6px; font-size: .87rem; color: var(--muted, #5d7064); }
+.rp-note { margin: 12px 0 6px; font-size: .87rem; color: var(--text-muted, #5d7064); }
 .rp-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 7px 10px; border: 1px solid var(--line, #e4e0c2); border-radius: 8px;
-  margin-bottom: 5px; background: var(--card, #fff); max-width: 560px; }
+  padding: 7px 10px; border: 1px solid var(--border, #e4e0c2); border-radius: 8px;
+  margin-bottom: 5px; background: var(--surface, #fff); max-width: 560px; }
 
 /* ---- TRIVIA ----
  * Four choices, big, with a walking highlight — because the whole game has to be answerable
  * with one button. See modules/trivia.js.
  */
 .tv { padding: 14px 16px; }
-.tv-count { margin: 0 0 4px; font-size: .82rem; color: var(--muted, #5d7064); }
+.tv-count { margin: 0 0 4px; font-size: .82rem; color: var(--text-muted, #5d7064); }
 /* THE SCORE, when somebody has turned it on. Same weight as the question count beside it and
    deliberately not louder: it is a fact about the round, not a verdict about the person, and
    the moment it is the brightest thing on the panel it starts reading as one. */
-.tv-score { font-weight: 700; color: var(--moss, #839958); }
+.tv-score { font-weight: 700; color: var(--accent, #839958); }
 .tv-q { margin: 0 0 14px; font-size: 1.35rem; line-height: 1.25; }
 .tv-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-/* *** `var(--card)`, NEVER A LITERAL WHITE, ON ANYTHING CARRYING `var(--ink)`. ***
+/* *** `var(--surface)`, NEVER A LITERAL WHITE, ON ANYTHING CARRYING `var(--text)`. ***
  *
  * B6 fixed this pattern on the kiosk's panels and FOUR RULES WERE MISSED: `.dv-row`,
- * `.rp-row`, `.bk-text` and this one. Each paired a hardcoded `#fff` with `color: var(--ink)`,
- * and `--ink` is a NEAR-WHITE in dusk.
+ * `.rp-row`, `.bk-text` and this one. Each paired a hardcoded `#fff` with `color: var(--text)`,
+ * and `--text` is a NEAR-WHITE in dusk.
  *
- * Measured, per theme, ink on hardcoded white vs ink on `var(--card)`:
+ * Measured, per theme, ink on hardcoded white vs ink on `var(--surface)`:
  *   default 13.90 / 13.90 · contrast 21.00 / 21.00 · warm 14.54 / 14.00 · forge 14.25 / 14.25
  *   *** dusk 1.17 / 13.46 ***
  *
@@ -1262,12 +1262,12 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
  * looking at it. These are the trivia ANSWER BUTTONS. */
 .tv-opt {
   width: 100%; min-height: 58px; font-size: 1.1rem; text-align: left;
-  padding: 12px 16px; border-radius: 12px; border: 2px solid var(--line, #e4e0c2);
-  background: var(--card, #fff); color: var(--ink, #0A3323); cursor: pointer;
+  padding: 12px 16px; border-radius: 12px; border: 2px solid var(--border, #e4e0c2);
+  background: var(--surface, #fff); color: var(--text, #0A3323); cursor: pointer;
 }
 /* THE HIGHLIGHT IS A BORDER AND AN ARROW, never color alone — module-input-spec, and it is
    also what makes it visible to somebody scanning from across a room. */
-.tv-opt[data-on="1"] { border-color: var(--midnight, #105666); box-shadow: 0 0 0 3px rgba(16,86,102,.18); }
+.tv-opt[data-on="1"] { border-color: var(--link, #105666); box-shadow: 0 0 0 3px rgba(16,86,102,.18); }
 .tv-opt[data-on="1"]::before { content: "\25B8\00a0"; }
 .tv-opt[data-right="1"] { border-color: #2c6e49; background: #eef6f0; }
 .tv-opt[data-right="1"]::after { content: "\00a0\2713"; color: #2c6e49; font-weight: 700; }
@@ -1275,25 +1275,25 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-opt:disabled { cursor: default; }
 .tv-said { margin: 14px 0 8px; font-size: 1.05rem; }
 .tv-next { min-height: 48px; padding: 10px 20px; font-size: 1rem; }
-.tv-empty { color: var(--muted, #5d7064); max-width: 60ch; }
+.tv-empty { color: var(--text-muted, #5d7064); max-width: 60ch; }
 
 /* ---- THE BANK EDITOR (Questions tab) ----
  * A textarea, deliberately, not a row editor — see bank_panel.js. A syllabus arrives from
  * somewhere else and is edited in bulk, and paste is the whole workflow.
  */
 .bk h3 { margin: 0 0 4px; font-size: 1.05rem; }
-.bk .bk-lede { margin: 0 0 10px; color: var(--ink-soft, #3c5346); max-width: 68ch; }
+.bk .bk-lede { margin: 0 0 10px; color: var(--text-soft, #3c5346); max-width: 68ch; }
 .bk-help { margin: 0 0 12px; max-width: 68ch; }
 .bk-help summary { cursor: pointer; font-weight: 600; }
-.bk-help pre { background: var(--cream-soft, #FBF9E9); border: 1px solid var(--line, #e4e0c2);
+.bk-help pre { background: var(--surface-alt, #FBF9E9); border: 1px solid var(--border, #e4e0c2);
   border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-size: .85rem; }
 .bk-text {
   width: 100%; max-width: 900px; min-height: 300px;
   font: 14px/1.55 ui-monospace, Menlo, Consolas, monospace;
-  padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line, #e4e0c2);
+  padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border, #e4e0c2);
   /* NO SPELLCHECK SQUIGGLES over a vocabulary list — every unusual word is the point, and a
      screen full of red underlines reads as a screen full of mistakes. */
-  background: var(--card, #fff); color: var(--ink, #0A3323); resize: vertical;
+  background: var(--surface, #fff); color: var(--text, #0A3323); resize: vertical;
 }
 .bk-sum { margin: 8px 0 4px; font-weight: 650; max-width: 68ch; }
 .bk-sum[data-bad="1"] { color: #a4243b; }
@@ -1301,14 +1301,14 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 /* An error names a line and shows it, so it can be found in a long document. */
 .bk-prob { padding: 6px 10px; margin-bottom: 4px; border-radius: 8px;
   background: #fbeff1; border: 1px solid rgba(164,36,59,.25); font-size: .9rem; }
-.bk-prob.bk-note { background: var(--cream-soft, #FBF9E9); border-color: var(--line, #e4e0c2); }
+.bk-prob.bk-note { background: var(--surface-alt, #FBF9E9); border-color: var(--border, #e4e0c2); }
 .bk-line { display: block; font: 13px ui-monospace, Menlo, Consolas, monospace;
-  color: var(--muted, #5d7064); margin-top: 2px; }
-.bk-derived { margin: 10px 0; color: var(--ink-soft, #3c5346); max-width: 68ch; }
+  color: var(--text-muted, #5d7064); margin-top: 2px; }
+.bk-derived { margin: 10px 0; color: var(--text-soft, #3c5346); max-width: 68ch; }
 
 /* The bank editor rendered as a MODULE rather than a full tab — it may be a quarter of a
    screen beside the game it feeds, so it has to be usable small. */
 .m-bank-host .bk-text, .tv-empty .tv-fmt { max-width: 100%; }
 .tv-empty { max-width: 46ch; }
 .tv-empty p { margin: 0 0 8px; }
-.tv-empty .tv-fmt { font-size: .88rem; color: var(--muted, #5d7064); }
+.tv-empty .tv-fmt { font-size: .88rem; color: var(--text-muted, #5d7064); }

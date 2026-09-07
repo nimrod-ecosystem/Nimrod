@@ -66,7 +66,7 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       scratch.style.getPropertyValue('--bg').trim() === THEMES.dusk.vars['--bg'],
       `got=${scratch.style.getPropertyValue('--bg')}`);
     check('applyTheme sets the light-text var for dark theme',
-      scratch.style.getPropertyValue('--darkgreen').trim() === THEMES.dusk.vars['--darkgreen']);
+      scratch.style.getPropertyValue('--text-strong').trim() === THEMES.dusk.vars['--text-strong']);
 
     // unknown theme falls back to default's palette
     const scratch2 = document.createElement('div');
@@ -127,11 +127,11 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
   // ── *** EVERY THEME MUST BE READABLE, MEASURED ON REAL ELEMENTS *** ──────
   //
   // B6 was "the text is hard to read", and it was fixed by putting the kiosk's panels on
-  // `var(--card)` -- a matched pair with `--ink` in every theme. FOUR RULES WERE MISSED:
+  // `var(--surface)` -- a matched pair with `--text` in every theme. FOUR RULES WERE MISSED:
   // `.dv-row`, `.rp-row`, `.bk-text` and `.tv-opt`, each pairing a hardcoded `#fff` with
-  // `color: var(--ink)`.
+  // `color: var(--text)`.
   //
-  // That is invisible in four themes and catastrophic in the fifth: `--ink` is a NEAR-WHITE in
+  // That is invisible in four themes and catastrophic in the fifth: `--text` is a NEAR-WHITE in
   // dusk, so ink on hardcoded white measured **1.17** against a 4.5 floor. Dusk is "for a
   // bedside screen at night" -- the theme most likely to be in front of the person this project
   // is for -- and one of the four was the TRIVIA ANSWER BUTTONS.
@@ -159,9 +159,9 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     ];
     for (const id of Object.keys(THEMES)) {
       const box = document.createElement('div');
-      // *** THE CONTAINER CARRIES `color: var(--ink)`, BECAUSE THE REAL ONE DOES. ***
+      // *** THE CONTAINER CARRIES `color: var(--text)`, BECAUSE THE REAL ONE DOES. ***
       //
-      // `home.html` sets `body{background:var(--bg);color:var(--ink)}`, so every panel inside
+      // `home.html` sets `body{background:var(--bg);color:var(--text)}`, so every panel inside
       // the shell inherits a THEMED text colour. This page's own body hardcodes `#0A3323`, and
       // without this line the surfaces below inherit that instead -- which reported `.dv-row`
       // and `.rp-row` as failing at 1.14:1 in dusk when they are fine in the product.
@@ -169,7 +169,7 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       // That is a harness artifact, and fixing the PRODUCT for it would have been the wrong
       // move twice over: it would have hidden nothing real and added two declarations to carry
       // for ever. The suite has to reproduce the app, not the app the suite.
-      box.style.color = 'var(--ink)';
+      box.style.color = 'var(--text)';
       document.body.append(box);
       applyTheme(box, id);
       for (const [cls, tag, what] of SURFACES) {
@@ -201,8 +201,8 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     //
     // Thirteen rules put a literal #fff on a themed accent -- the primary buttons, the ON tabs,
     // the algebra = key, and `.k-dot.on`, which is how somebody driving with a switch knows
-    // which panel they are about to act on. White on --moss measured 3.15 in default, 2.50 in
-    // dusk and 3.45 in warm; white on --midnight measured 2.25 in dusk. Two of those are
+    // which panel they are about to act on. White on --accent measured 3.15 in default, 2.50 in
+    // dusk and 3.45 in warm; white on --link measured 2.25 in dusk. Two of those are
     // unreadable by any standard.
     //
     // NO THEME'S COLOURS MOVED. Which greens this product wears is taste and belongs to whoever
@@ -238,7 +238,7 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       // And what it actually measures on the real elements, per theme.
       //
       // *** ONE NAMED EXEMPTION, WITH ITS NUMBER, AND IT IS NOT A HOLLOWED-OUT CHECK. ***
-      // forge's --midnight (#B5651D) reaches 4.34 with white and 4.13 with dark -- no choice of
+      // forge's --link (#B5651D) reaches 4.34 with white and 4.13 with dark -- no choice of
       // TEXT clears 4.5, because that amber sits in the middle. Fixing it means moving the
       // accent, which is a palette value and is Claude Design's (D19). Asserted at its measured
       // floor so a REGRESSION still fails, rather than dropped from the list; delete the
@@ -258,7 +258,7 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       const EXEMPT = { 'forge:the algebra = key': 4.3 };
       for (const id of Object.keys(THEMES)) {
         const box = document.createElement('div');
-        box.style.color = 'var(--ink)';
+        box.style.color = 'var(--text)';
         document.body.append(box);
         applyTheme(box, id);
         for (const [parentCls, tag, cls, what] of SURFACES) {

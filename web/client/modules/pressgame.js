@@ -274,10 +274,10 @@ function readTheme(el) {
   const cs = getComputedStyle(el);
   const v = (name, fallback) => (cs.getPropertyValue(name) || '').trim() || fallback;
   return {
-    beige: v('--beige', '#fff3d9'),
+    beige: v('--on-dark', '#fff3d9'),
     gold: v('--gold', '#ffd36e'),
-    rosy: v('--rosy', '#d3968c'),
-    moss: v('--moss', '#9ec7b0'),
+    rosy: v('--accent-warm', '#d3968c'),
+    moss: v('--accent', '#9ec7b0'),
     sage: v('--sage', '#cfe0d9'),
   };
 }
