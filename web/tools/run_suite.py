@@ -223,7 +223,12 @@ def parse_summary(text):
 
 async def run_one(cdp, name):
     url = url_for(name)
-    await cdp.send('Page.navigate', url=url)
+    # *** THE NAVIGATION RESULT IS THE ONLY RELIABLE WAY TO KNOW THE SERVER IS DOWN. ***
+    # A refused connection still leaves `location.href` set to the target and still puts text
+    # in the body (Chrome's own "site can't be reached" page), so every heuristic read off the
+    # DOM calls it a suite that loaded and stayed quiet. CDP says so plainly in `errorText`.
+    nav = await cdp.send('Page.navigate', url=url)
+    nav_error = nav.get('errorText') or ''
     # *** WAIT FOR THE NEW DOCUMENT BEFORE READING ANY SUMMARY. *** `Page.navigate` returns as
     # soon as the navigation is ACCEPTED, not when it has committed, so the first poll can still
     # be looking at the previous suite — whose summary is already there and already matches. The
@@ -252,7 +257,42 @@ async def run_one(cdp, name):
     fails = await cdp.js(
         "JSON.stringify([...document.querySelectorAll('.fail')].map(e=>e.textContent.trim()))")
     fails = json.loads(fails) if isinstance(fails, str) else []
-    return {'name': name, 'url': url, 'text': text.strip() or '(no summary)',
+
+    # *** "(no summary)" MEANT FOUR DIFFERENT THINGS, AND ONE OF THEM COST AN HOUR. ***
+    #
+    # Every one of these printed the same amber line:
+    #
+    #   * the app server is not running at all   -> every suite fails at once
+    #   * the suite name does not exist          -> a 404 page with no #summary in it
+    #   * the page loaded and threw              -> a real defect, the only one worth chasing
+    #   * the page is genuinely still running     -> the timeout was too short
+    #
+    # On 2026-09-06 the server had died and all 89 suites went amber. The message said nothing
+    # about a server, so the obvious reading was "the change I just made broke everything" --
+    # and the next twenty minutes went on stashing a correct change and instrumenting CDP to
+    # prove a syntax error that was never there. The FIRST failure was `points`, a suite that
+    # does not exist (the ledger is tested inside `quests_test.html`), which sent the hunt off
+    # in a second wrong direction.
+    #
+    # A harness that reports on this repo has to be more honest than the repo. Same rule the
+    # modules are held to: say what actually happened, not the symptom nearest to hand.
+    detail = ''
+    if not parsed and not text.startswith('threw'):
+        title = await cdp.js('document.title') or ''
+        body_len = await cdp.js('(document.body && document.body.textContent || "").length') or 0
+        here = await cdp.js('location.href') or ''
+        if nav_error:
+            detail = (f' - THE SERVER DID NOT ANSWER ({nav_error}). Start the app server at '
+                      + BASE + ' - run_suite does not start one.')
+        elif not here or here == 'about:blank':
+            detail = ' - THE PAGE NEVER LOADED. Is the app server running? ' + BASE
+        elif '404' in title or 'Not Found' in title or int(body_len or 0) < 40:
+            detail = f' - NO SUCH SUITE, or the page is empty ({url}).'
+        else:
+            detail = ' - the page loaded but never reported. It may still be running (raise '\
+                     'SUITE_WAIT), or it threw before writing a summary.'
+    return {'name': name, 'url': url,
+            'text': (text.strip() or '(no summary)') + detail,
             'passed': parsed[0] if parsed else 0,
             'failed': parsed[1] if parsed else -1,
             'fails': fails}
