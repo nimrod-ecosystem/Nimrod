@@ -43,6 +43,7 @@ so a layout written for a 1400px browser cannot be SEEN in it at all.
 SHOT_SIZE (default 1400x900). Any argument ending in `.html` is a page rather than a suite.
 """
 import asyncio
+import glob
 import json
 import os
 import random
@@ -326,6 +327,25 @@ async def main(names, shotdir=None):
     if not CHROME:
         print('no chrome found - set one of the paths at the top of this file', file=sys.stderr)
         return 2
+    # *** SWEEP WHAT EARLIER RUNS COULD NOT. ***
+    #
+    # The `finally` below removes this run's profile, and that is enough when the run ENDS. It
+    # is not enough when the run is KILLED -- a timeout, a Ctrl-C, an agent moving a command to
+    # the background -- because then the finally never executes at all. And on Windows even the
+    # clean path can silently fail: Chrome holds handles under the profile for a moment after
+    # terminate, rmtree raises, and `ignore_errors=True` swallows it.
+    #
+    # Measured on this machine 2026-09-07: four orphaned profiles, 45 MB each, 181 MB total, on
+    # a disk with 10 GB free and a history of filling up. A test harness must not be the thing
+    # that fills the disk it is testing on.
+    #
+    # Age-gated so two concurrent runs cannot delete each other's live profile.
+    for old_dir in glob.glob(os.path.join(tempfile.gettempdir(), 'nimrod_suite_*')):
+        try:
+            if time.time() - os.path.getmtime(old_dir) > 900:
+                shutil.rmtree(old_dir, ignore_errors=True)
+        except OSError:
+            pass
     profile = tempfile.mkdtemp(prefix='nimrod_suite_')
     args = [CHROME, f'--remote-debugging-port={PORT}', f'--user-data-dir={profile}',
             '--no-first-run', '--no-default-browser-check', '--window-size=1440,900',
