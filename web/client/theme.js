@@ -81,6 +81,19 @@ const BASE = {
   // now say otherwise. Named for the role rather than the colour, because "gold" is exactly the
   // kind of name this whole rename existed to remove.
   '--highlight': '#ffd36e',
+  // *** RIGHT AND WRONG ARE SURFACES, AND THEY WERE HARDCODED PALES. ***
+  //
+  // The games mark a correct answer with a pale green wash and a wrong one with a pale pink, and
+  // both were literals. The TEXT on them is inherited from the panel, which is themed -- so in
+  // dusk and contrast, where `--text` is a near-white, every right and wrong answer in Word
+  // Forge, Algebra, Trivia and Bank rendered as near-white on a pale wash. Nobody developing in
+  // the default theme could see it, because there the literal and the themed surface agree.
+  //
+  // Given the values they already had, so nothing moves today; what changes is that a dark theme
+  // can finally say otherwise. Roles, not colours -- "pale green" would be the same mistake this
+  // file spent the morning renaming away from.
+  '--ok-surface': '#f0f4e8',
+  '--bad-surface': '#fbecea',
   '--font': SYSTEM_FONT,
   // The hue the live wallpaper drifts around, so scenery and palette agree instead of
   // arguing. A NUMBER rather than a color because the wallpaper varies lightness and
@@ -106,6 +119,14 @@ export const THEMES = {
       '--text-muted': '#8798a0',
       '--border': '#2a343a',
       '--surface': '#1b2429',
+      // *** THE RIGHT/WRONG WASHES HAVE TO BE DARK HERE, and defining the role was not enough. ***
+      // BASE gives them pale green and pale pink, which is correct wherever the text is dark.
+      // Dusk is the ONLY theme whose text is light (#e8eef0), so it is the only one where a pale
+      // wash puts near-white on near-white -- which is exactly what the screenshot showed after
+      // the roles were introduced. Same hues, moved to the dark end, so "right" still reads as
+      // green and "wrong" still reads as red without anybody having to learn a new signal.
+      '--ok-surface': '#1e2a22',
+      '--bad-surface': '#2c1f22',
       '--surface-alt': '#222c31',
       '--text-strong': '#eef3f4', // primary text -> light
       '--accent': '#8fae63',
