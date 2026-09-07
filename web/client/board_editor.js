@@ -72,9 +72,10 @@ export const IDLE_MS = 180000;
 // about to do while there is still time to say no.
 export const WARN_MS = 30000;
 
-// The same 1..8 bound `aac_vocab.js` puts on a stored board, repeated here so the editor
-// refuses a shape rather than offering one the model will silently drop.
-export const MAX_DIM = 8;
+// The same bound `aac_vocab.js` puts on a stored board, repeated here so the editor refuses a
+// shape rather than offering one the model will silently drop. It was 8 until a measurement
+// showed that columns are not what sets target size -- see the note on `dim` in aac_vocab.js.
+export const MAX_DIM = 12;
 
 const clampDim = (v, fallback) => {
   const n = Math.round(Number(v));
