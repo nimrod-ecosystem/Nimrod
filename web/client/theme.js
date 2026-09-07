@@ -92,6 +92,17 @@ const BASE = {
   // Given the values they already had, so nothing moves today; what changes is that a dark theme
   // can finally say otherwise. Roles, not colours -- "pale green" would be the same mistake this
   // file spent the morning renaming away from.
+  // *** THE LETTERBOX BEHIND A PHOTO OR A VIDEO. ***
+  //
+  // `.photos .stage`, `.camera .stage`, `.youtube .stage` and `.personal .stage` each hardcoded
+  // the same near-black. It is a good colour for the job -- a bright surround competes with the
+  // picture -- but four modules each deciding it privately is the thing Mike's third seam names:
+  // *"no module hardcodes its own background."* A theme could not touch it, and the four could
+  // drift apart with nothing noticing.
+  //
+  // Given the value they already had, so nothing moves. `--on-dark` is already the text role
+  // used over this surface, so the pair is complete.
+  '--letterbox': '#0c1a14',
   '--ok-surface': '#f0f4e8',
   '--bad-surface': '#fbecea',
   '--font': SYSTEM_FONT,

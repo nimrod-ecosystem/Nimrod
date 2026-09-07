@@ -899,8 +899,24 @@ registerModule(
     }
 
     return {
+      /**
+       * The two shared layers, for anything that wants to draw on this board.
+       *
+       * Handed out rather than found with a selector: a caller reaching into `ctx.mount` to
+       * querySelector its way to a layer breaks the module contract by convention instead of by
+       * accident, and it would make these class names load-bearing markup nobody could change.
+       */
+      layers: () => ({
+        surface: mount.querySelector('[data-surface]'),
+        flight: mount.querySelector('[data-flight]'),
+      }),
+
       __probe: () => ({
         boardId: board.id, tier: board.tier, cells: board.cells.length,
+        // The shared layers AS DRAWN, so a test asserts the elements rather than the string
+        // that made them.
+        surface: !!mount.querySelector('[data-surface]'),
+        flight: !!mount.querySelector('[data-flight]'),
         // The switcher AS DRAWN, so a test asserts the chips rather than the setting.
         boards: [...mount.querySelectorAll('[data-board]')].map((b) => b.dataset.board),
         boardsShown: !mount.querySelector('[data-boards]')?.hidden,
@@ -935,10 +951,35 @@ registerModule(
         // It is a PANEL, not a gate. It opens only from the gear, it closes on Escape, on a
         // press outside it and on Done, and nothing on the board waits for it — the cards
         // underneath keep working the moment it is closed. Opening it by accident costs a tap.
+        // *** A BOARD IS A SURFACE WITH CARDS OVER IT, NOT 36 SEALED BOXES. ***
+        //
+        // Mike's seam, 2026-09-07. The grid used to BE the board: every cell an opaque box,
+        // nothing beneath them and nothing above them, so anything wanting to move ACROSS the
+        // board had nowhere to be. A balloon crossing from one card to the next would have had
+        // to be re-parented cell by cell and clipped at every boundary.
+        //
+        // Two shared layers, both spanning the WHOLE board, both `aria-hidden` because neither
+        // is anything to read:
+        //
+        //   `data-surface`  UNDER the grid. The live layer -- whatever drifts, breathes or is
+        //                   drawn behind the cards. The cards composite over it.
+        //   `data-flight`   OVER the grid. Where a thing in flight lives, so it crosses cell
+        //                   boundaries by existing rather than by being handed between cells.
+        //                   It takes no pointer events: it sits over every card, and a card is
+        //                   somebody's voice. It must never eat a press.
+        //
+        // *** BOTH ARE EMPTY BY DEFAULT AND THE CARDS STAY OPAQUE. *** The contrast numbers at
+        // the top of this module's CSS (4.91 on the card, 5.57 on the board, 6.31 for the scan
+        // highlight) are measured against a SOLID card. Compositing a live layer through the
+        // cards changes every one of them, on the one panel somebody talks through. So the seam
+        // is built and the default is untouched: `--ab-card-alpha` is 1, and a board that wants
+        // the live surface turns it down deliberately.
         mount.innerHTML = `
           <div class="aboard">
+            <div class="ab-surface" data-surface aria-hidden="true"></div>
             <div class="ab-boards" data-boards role="group" aria-label="which board" hidden></div>
             <div class="ab-grid" data-grid role="group" aria-label="communication board"></div>
+            <div class="ab-flight" data-flight aria-hidden="true"></div>
             <button type="button" class="ab-gear" data-gear aria-expanded="false"
                     aria-label="board settings">⚙</button>
             <div class="ab-editor" data-editor hidden role="dialog" aria-label="edit board"></div>

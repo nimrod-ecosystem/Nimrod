@@ -32,7 +32,16 @@ HERE   = os.path.dirname(os.path.abspath(__file__))
 CLIENT = os.path.dirname(HERE)
 EXT    = ('.js', '.css', '.html')
 
-# `var(--x)` and `var(--x, something)`
+# `var(--x)` and `var(--x, something)`.
+#
+# *** A NAME BUILT AT RUNTIME IS NOT A USE EITHER. *** `layers.js` composes one:
+#
+#     const zVar = (band) => `var(--z-${band.replace(...)})`
+#
+# and the first version of this read that as a reference to a variable literally called `--z-`.
+# It is the mirror of the computed-DEFINITION case below, and it fails the same way: an entry on
+# a list of "renders as nothing" that is not a thing at all. The lookahead skips any name whose
+# next character opens an interpolation.
 USE = re.compile(r'var\(\s*(--[\w-]+)\s*(,)?')
 # `--x: value` in CSS or in a JS object literal, and `setProperty('--x', ...)`
 # CSS `--x: value` AND the JS object form `'--x': value`, which has a quote between the name
@@ -88,6 +97,11 @@ def main():
         for m in DEF_JS_TEMPLATE.finditer(src):
             computed.add(m.group(1))
         for m in USE.finditer(src):
+            # An interpolation anywhere inside this `var(...)` means the name is composed at
+            # runtime, so there is no literal variable here to resolve. See the note above USE.
+            close = src.find(')', m.start())
+            if close != -1 and '${' in src[m.start():close]:
+                continue
             name, fallback = m.group(1), bool(m.group(2))
             rel = os.path.relpath(path, CLIENT)
             (used_with_fallback if fallback else used).setdefault(name, set()).add(rel)
