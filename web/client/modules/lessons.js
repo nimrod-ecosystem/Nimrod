@@ -23,6 +23,41 @@ import { createLessons, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
 export const DEFAULTS = { minWatchMs: 30000 };
 const LEGACY_MIN_WATCH = { key: 'minWatchSec', scale: 1000 };
 
+// ---------------------------------------------------------------------------------------
+// *** IT DECLARED NO SETTINGS, AND ITS OWN EMPTY-STATE COPY USED TO POINT AT THE MENU. ***
+// ---------------------------------------------------------------------------------------
+//
+// That was G12: the "no topics" line said *"add some in this module's settings"* and this
+// module declares none, so it sent somebody looking for a panel that was never built. The copy
+// was fixed then; the missing panel was not, and `minWatchMs` has been live config that no
+// surface could reach ever since.
+//
+// *** WHAT IS STILL MISSING AND IS NOT A ROW, said here rather than implied. ***
+//
+// Chat: Lessons *"says no video chosen and does not say where to choose one."* Half of that is
+// answered by the honest empty state already on screen. The other half is not, and cannot be a
+// settings row: a topic's video lives in `state.topics[]` as `{kind, value}` PER TOPIC, and a
+// list of objects is not a row. Choosing videos needs a small editor inside the module -- the
+// shape `board_editor.js` now has -- or the shared content source this keeps arriving at from
+// every direction. Declaring a `videoUrl` row that could only ever set the first topic's video
+// would be a control that lies about what it does, which is the thing this file was already
+// caught doing once.
+const SETTINGS = [
+  // ESSENTIAL, and it is the only knob that changes what a person is asked to DO here: how long
+  // the unlock button stays disabled after a lesson is opened. Too long and somebody who
+  // genuinely watched is told to wait; too short and the honour button means nothing.
+  { key: 'minWatchMs', label: 'Wait before the unlock button works', kind: 'choice',
+    default: 30000, level: 'essential',
+    options: [
+      { value: 0,      label: 'No wait \u2014 trust them' },
+      { value: 15000,  label: '15 seconds' },
+      { value: 30000,  label: '30 seconds' },
+      { value: 120000, label: 'Two minutes' },
+    ],
+    note: 'Unlocking a topic puts its questions into the game whether or not a video was '
+      + 'watched, so this is a nudge rather than a gate.' },
+];
+
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -46,7 +81,8 @@ registerModule(
     // leaves it a list of things it cannot play. That is exactly what `network` means, and
     // calling it `server` would have understated how well it survives a platform outage.
   { type: 'lessons', title: 'Lessons',
-    dependsOn: 'network', description: 'Watch a short lesson, then answer questions about it' },
+    dependsOn: 'network', description: 'Watch a short lesson, then answer questions about it',
+    settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now = ctx.now || (() => Date.now());

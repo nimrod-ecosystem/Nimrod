@@ -29,7 +29,7 @@ import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
-import { mountModule } from '../module.js';
+import { mountModule, getManifest } from '../module.js';
 import {
   createLessons, unlockedFrom, unlockLog, gate, lockedTopics,
   DEFAULT_TOPICS, LESSON_TOPIC, WATCHED_KIND,
@@ -217,6 +217,24 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
       wfHost.querySelector('[data-held]').textContent);
 
     les.destroy(); audit.destroy(); wf2.destroy(); linst.destroy();
+
+    // *** IT DECLARED NO SETTINGS, AND ITS OWN COPY ONCE POINTED AT THE MENU IT DOES NOT HAVE.
+    //
+    // G12: the empty-topics line said "add some in this module's settings" and this module
+    // declares none, so it sent somebody looking for a panel that was never built. The copy was
+    // fixed then; the missing panel was not, and `minWatchMs` has been live config no surface
+    // could reach ever since.
+    {
+      const keys = (getManifest('lessons').settings || []).map((f) => f.key);
+      check('*** the module declares the setting it actually reads ***',
+        keys.includes('minWatchMs'), JSON.stringify(keys));
+      // AND NO FAKE ROW FOR THE VIDEOS. A topic's video lives per topic in state.topics[]; a
+      // list of objects is not a settings row, and a `videoUrl` row that could only ever set
+      // the FIRST topic's video would be a control that lies about what it does -- which is
+      // exactly what this module was caught doing once already.
+      check('*** and no video row was invented over a per-topic list ***',
+        !keys.some((k) => /video|url/i.test(k)), JSON.stringify(keys));
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
