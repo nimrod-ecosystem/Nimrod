@@ -8,6 +8,7 @@
   h1{font-size:1.2rem}
   .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .skip{color:#b8860b}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   img{max-width:80px;border:1px solid #ccc;margin-top:8px;display:block}
 </style>
@@ -28,7 +29,31 @@ const params = new URLSearchParams(location.search);
 const AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
 const USER = params.get('user') || 'test-media-user';
 const out = document.getElementById('results');
-let passed = 0, failed = 0;
+let passed = 0, failed = 0, skipped = 0;
+
+// *** A SUITE THAT CANNOT RUN MUST NOT REPORT RED. ***
+//
+// Everything below the registry section drives a REAL media agent on 8770 -- health, listing,
+// CORS, bytes. With no agent running those are not failures, they are assertions about a thing
+// that is not there, and `run_all.html` already says what that costs: *"folded into failures it
+// is the noise that trains everybody to read red as normal."* `media_stall` and `personal`
+// preflight for exactly this reason; these two had been missed.
+//
+// Found when the app server died mid-session and every suite went amber at once. These two came
+// back red rather than skipped, which is a second wrong signal on top of the first.
+function skip(name, why) {
+  skipped++;
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.textContent = `NOT RUN  ${name}   ${why}`;
+  out.append(d);
+}
+async function agentUp(base) {
+  try {
+    const r = await fetch(`${base}/health`, { signal: AbortSignal.timeout(2500) });
+    return r.ok;
+  } catch { return false; }
+}
 
 function check(name, cond, detail = '') {
   const ok = !!cond;
@@ -77,6 +102,11 @@ async function loadsAsImage(url) {
     catch { rejected = true; }
     check('server rejects a non-http base_url', rejected);
 
+    if (!(await agentUp(AGENT))) {
+      skip('everything that needs a media agent', `no agent answering at ${AGENT}`);
+      throw { __skipped: true };
+    }
+
     // Health probe (cross-origin GET to the agent).
     const health = await sourceHealth(source);
     check('sourceHealth reports ok (cross-origin /health)', health.ok === true, JSON.stringify(health));
@@ -116,12 +146,23 @@ async function loadsAsImage(url) {
       !(await client.list()).some((s) => s.id === source.id));
 
   } catch (e) {
-    check('unexpected error', false, String(e));
+    // The skip throw is control flow, not a fault. Anything else still is one.
+    if (!e || !e.__skipped) check('unexpected error', false, String(e));
   }
 
   const sum = document.getElementById('summary');
-  sum.textContent = `${passed} passed, ${failed} failed`;
-  sum.className = failed ? 'fail' : 'pass';
+  // SKIPPED IS NOT A PASS AND IT IS NOT A FAILURE. `run_all.html` reads `data-skipped`, and the
+  // wording matches the other preflighting suites so one parser covers all of them.
+  if (skipped && !failed) {
+    sum.textContent = `SKIPPED \u2014 the media agent this suite drives is not running `
+      + `(${passed} checks that do not need it passed)`;
+    sum.dataset.skipped = 'true';
+    sum.className = 'skip';
+  } else {
+    sum.textContent = `${passed} passed, ${failed} failed`
+      + (skipped ? `, ${skipped} NOT RUN` : '');
+    sum.className = failed ? 'fail' : 'pass';
+  }
   sum.dataset.done = 'true';
   sum.dataset.failed = String(failed);
 })();

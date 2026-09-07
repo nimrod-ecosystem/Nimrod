@@ -8,6 +8,7 @@
   h1{font-size:1.2rem}
   .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  .skip{color:#b8860b}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   #host{width:320px;margin-top:12px}
   .photos .stage{position:relative;width:100%;aspect-ratio:4/3;background:#0c1a14;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
@@ -45,7 +46,29 @@ const params = new URLSearchParams(location.search);
 const AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
 const USER = params.get('user') || 'photos-test-user';
 const out = document.getElementById('results');
-let passed = 0, failed = 0;
+let passed = 0, failed = 0, skipped = 0;
+
+// *** A SUITE THAT CANNOT RUN MUST NOT REPORT RED. ***
+//
+// The section below mounts the real photos module against a REAL media agent on 8770. With no
+// agent running, "module resolves source and renders an image" is not a failing assertion about
+// the module, it is an assertion about a photo that does not exist -- and `run_all.html` already
+// says what that costs: *"folded into failures it is the noise that trains everybody to read red
+// as normal."* `media_stall` and `personal` preflight for this reason; `photos` and
+// `media_sources` had been missed.
+function skip(name, why) {
+  skipped++;
+  const d = document.createElement('div');
+  d.className = 'skip';
+  d.textContent = `NOT RUN  ${name}   ${why}`;
+  out.append(d);
+}
+async function agentUp(base) {
+  try {
+    const r = await fetch(`${base}/health`, { signal: AbortSignal.timeout(2500) });
+    return r.ok;
+  } catch { return false; }
+}
 
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 function check(name, cond, detail = '') {
@@ -187,6 +210,11 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     const profiles = createProfilesClient({ user: USER });
     const ms = createMediaSourcesClient({ user: USER });
 
+    if (!(await agentUp(AGENT))) {
+      skip('everything that needs a media agent', `no agent answering at ${AGENT}`);
+      throw { __skipped: true };
+    }
+
     // fresh source pointing at the running agent
     for (const s of await ms.list()) if (s.label.startsWith('TEST-')) await ms.remove(s.id);
     const source = await ms.add({ label: 'TEST-photos', base_url: AGENT, kind: 'agent' });
@@ -266,12 +294,21 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     check('destroy() cleans up without error', true);
 
   } catch (e) {
-    check('unexpected error', false, String(e && e.stack || e));
+    // The skip throw is control flow, not a fault. Anything else still is one.
+    if (!e || !e.__skipped) check('unexpected error', false, String(e && e.stack || e));
   }
 
   const sum = document.getElementById('summary');
-  sum.textContent = `${passed} passed, ${failed} failed`;
-  sum.className = failed ? 'fail' : 'pass';
+  if (skipped && !failed) {
+    sum.textContent = `SKIPPED \u2014 the media agent this suite drives is not running `
+      + `(${passed} checks that do not need it passed)`;
+    sum.dataset.skipped = 'true';
+    sum.className = 'skip';
+  } else {
+    sum.textContent = `${passed} passed, ${failed} failed`
+      + (skipped ? `, ${skipped} NOT RUN` : '');
+    sum.className = failed ? 'fail' : 'pass';
+  }
   sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
 })();
 </script>
