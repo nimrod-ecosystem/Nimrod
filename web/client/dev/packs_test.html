@@ -192,6 +192,24 @@ try {
     noDecoys.items = [{ word: 'x', definition: 'y' }];
     check('...but decoys are optional entirely -- their absence is fine',
       validatePack(noDecoys).length === 0, JSON.stringify(validatePack(noDecoys)));
+
+    // *** ADDED 2026-09-08 (Mike: "Fix the schema") -- the field Word Forge actually needs. ***
+    // `example`, matching PACK_SCHEMA.md's own worked example (SANGUINE above already carries
+    // one) -- the doc always showed this field, the validator just never checked it. Word
+    // Forge's own internal field is `sentence`, a small rename the module's own pack mapping
+    // will do, the same way Trivia's already renames `correct`/`answers` to `answer`/`wrong`.
+    const withExample = clone(SANGUINE);
+    withExample.items = [{ word: 'x', definition: 'y', example: 'Use x in a sentence.' }];
+    check('an example is accepted', validatePack(withExample).length === 0,
+      JSON.stringify(validatePack(withExample)));
+    const noExample = clone(SANGUINE);
+    noExample.items = [{ word: 'x', definition: 'y' }];
+    check('...and, like decoys, is entirely optional -- a definition with no example is still a word',
+      validatePack(noExample).length === 0, JSON.stringify(validatePack(noExample)));
+    const emptyExample = clone(SANGUINE);
+    emptyExample.items = [{ word: 'x', definition: 'y', example: '   ' }];
+    check('an example present but blank is rejected, same rule as decoys',
+      validatePack(emptyExample).length > 0);
   }
 
   // =====================================================================================
