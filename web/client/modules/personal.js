@@ -163,14 +163,24 @@ registerModule(
     const stage = () => mount.querySelector('[data-stage]');
     const subjectName = () => (cfg.subjectName || sourceLabel || cfg.album || 'Someone');
 
-    function setStatus(text, showRetry = false) {
+    // `action`, added 2026-09-08, matches `photos.js`'s own setStatus exactly — same shape,
+    // same reason: a source-picker prompt needs the click that triggers it to BE a user
+    // gesture, so the button lives in the status line rather than something a timer retries.
+    function setStatus(text, showRetry = false, action = null) {
       const s = mount.querySelector('[data-status]');
       if (!s) return;
       s.hidden = !text;
       if (text) {
-        s.innerHTML = `<span>${text}</span>` + (showRetry ? ` <button data-retry>Retry</button>` : '');
+        s.innerHTML = `<span>${text}</span>`
+          + (action ? ` <button data-action>${escapeHtml(action.label)}</button>` : '')
+          + (showRetry ? ` <button data-retry>Retry</button>` : '');
         s.querySelector('[data-retry]')?.addEventListener('click', () => reload());
+        s.querySelector('[data-action]')?.addEventListener('click', () => action.run());
       }
+    }
+    function escapeHtml(t) {
+      return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
     function setName() {
       const el = mount.querySelector('[data-name]');
@@ -421,7 +431,26 @@ registerModule(
       try { source = await ensureSource(); }
       catch (e) { if (seq === loadSeq) setStatus('Could not reach the platform', true); return; }
       if (seq !== loadSeq) return;
-      if (!source) { setStatus('No personal-video source connected. Add one in Media / Sources.'); items = ids = []; byId = {}; return; }
+      if (!source) {
+        // *** CONNECT FROM HERE, NOT ONLY FROM MEDIA / SOURCES. *** Added 2026-09-08, same fix
+        // and same reasoning as `photos.js`'s own — Mike's "sources structural rule."
+        const { isFolderPickerSupported: canPick } = await import('../folder_source.js');
+        setStatus('No personal-video source connected.', false, canPick() ? {
+          label: 'Connect a folder',
+          run: async () => {
+            setStatus('Choosing…');
+            try {
+              const { pickFolder } = await import('../folder_source.js');
+              await pickFolder();
+              reload();
+            } catch (err2) {
+              setStatus('No personal-video source connected.', false,
+                { label: 'Connect a folder', run: () => reload() });
+            }
+          },
+        } : null);
+        items = ids = []; byId = {}; return;
+      }
       let listing;
       try { listing = await resolveListing(source, cfg.album); }
       catch (e) { if (seq === loadSeq) setStatus(`Source “${source.label}” unreachable`, true); return; }
