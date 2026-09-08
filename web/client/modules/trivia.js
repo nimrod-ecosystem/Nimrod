@@ -72,6 +72,8 @@ import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
+import { loadPack } from '../packs.js';
+import { packsFor, packById } from '../pack_library.js';
 
 export const GAME = 'trivia';
 
@@ -99,6 +101,12 @@ export const DEFAULTS = {
   // RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON. A game that quietly opened a microphone
   // because it might be useful later would be exactly the thing this project does not do.
   record: false,
+  // *** A READY-MADE PACK, NOT JUST A WRITTEN BANK. *** PRIORITY.md #5 / MIKE_CHANGE_LIST D26:
+  // "questions must be hand-authored... which defeats the game, since the author knows the
+  // answers." `bank` (unchanged, still the default) stays what it was; `pack` is additive — a
+  // built-in, pre-written syllabus for somebody who has nobody to write one. See `PACK_LIBRARY`.
+  contentSource: 'bank',
+  packId: packsFor('trivia')[0]?.id || null,
 };
 
 // `question | answer | wrong | wrong | wrong | topic?`
@@ -122,6 +130,20 @@ export function parseBank(text) {
       const item = { question, answer, wrong };
       return item;
     });
+}
+
+// A `nimrod.pack.v1` trivia item is `{question, answers[], correct, difficulty?}`; this bank's
+// shape is `{question, answer, wrong[]}` — same information, different field names, because the
+// pack schema names the CORRECT one out of a set while a bank writes the wrong ones directly.
+// `answers` includes `correct` (packs.js requires it), so `wrong` is everything else in order —
+// which matters for `makeQuestion`'s degrading-option rule below: a pack's distractors are
+// somebody's real, written wrong answers, exactly like a bank's, never generated here.
+export function packToTriviaBank(pack) {
+  return (pack.items || []).map((it) => ({
+    question: it.question,
+    answer: it.correct,
+    wrong: (it.answers || []).filter((a) => a !== it.correct),
+  }));
 }
 
 // Turn a bank into a round. Deterministic under an injected `rand`, the same way `wordforge`
@@ -195,7 +217,38 @@ Which ocean is the largest? | Pacific | Atlantic | Indian | Arctic`;
 //
 // LEVEL: only what somebody actually changes is `standard`. Everything that prices the economy
 // is `advanced`, so the common case is a short menu rather than a long one.
+// A trivia-kind pack, if any exist. Computed once at module load, same as the rest of SETTINGS —
+// if `PACK_LIBRARY` ever ships zero trivia packs, these two rows quietly do not appear rather
+// than offering a picker with nothing in it.
+const TRIVIA_PACKS = packsFor('trivia');
+
+// Shared across every Trivia instance on the page, not per-instance -- two panels both set to
+// the same pack should mean one fetch, not two, and a pack file does not change under a running
+// session the way a hand-edited bank does.
+const packCache = new Map();
+function loadPackCached(id) {
+  if (packCache.has(id)) return packCache.get(id);
+  const entry = packById(id);
+  const p = entry ? loadPack(entry.url) : Promise.reject(new Error(`no such pack: ${id}`));
+  // A failed fetch is not cached — a network blip should not permanently doom every instance
+  // that asked for this pack for the rest of the page's life.
+  p.catch(() => packCache.delete(id));
+  packCache.set(id, p);
+  return p;
+}
+
 const SETTINGS = [
+  ...(TRIVIA_PACKS.length ? [
+    { key: 'contentSource', label: 'Where questions come from', kind: 'choice', default: 'bank',
+      level: 'standard',
+      options: [{ value: 'bank', label: 'Written questions + word bank' },
+                { value: 'pack', label: 'A built-in pack' }],
+      note: 'A pack is ready-made — nobody has to write questions first, and nobody playing '
+        + 'already knows the answers.' },
+    { key: 'packId', label: 'Which pack', kind: 'choice', default: TRIVIA_PACKS[0].id,
+      level: 'standard',
+      options: TRIVIA_PACKS.map((p) => ({ value: p.id, label: p.label })) },
+  ] : []),
   { key: 'roundLength', label: 'Questions in a round', kind: 'choice', default: 10,
     level: 'standard',
     options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
@@ -461,12 +514,33 @@ registerModule(
     // set it there, otherwise from the shared row the Questions module edits. Word Forge reads
     // the word rows out of the same document; this reads the question rows AND may derive
     // questions from the words. An array form is still accepted for anything generating content.
-    function readBank() {
+    // Async now, for the pack path's fetch -- every caller already fires it and moves on
+    // (`.then(readBank)`, a bare `readBank()` inside a subscribe callback), so nothing here
+    // needs to await it. `bankGen` guards against a slow pack response landing after a NEWER
+    // settings change already picked a different source — the stale one must not overwrite it.
+    let bankGen = 0;
+    async function readBank() {
+      const gen = ++bankGen;
+      if (cfg.contentSource === 'pack' && cfg.packId) {
+        try {
+          const pack = await loadPackCached(cfg.packId);
+          if (gen !== bankGen) return;         // superseded while the fetch was in flight
+          applyBank(packToTriviaBank(pack));
+          return;
+        } catch (err) {
+          console.error(`trivia: pack "${cfg.packId}" failed to load, falling back to the bank`, err);
+          // fall through -- an unreachable pack should read as an empty syllabus, not a dead panel
+        }
+      }
       const own = cfg.bankText;
       const share = (sharedBank?.get?.() || {}).bankText;
       const text = own != null ? own : (share != null ? share : SEED);
       const next = Array.isArray(cfg.bank) ? cfg.bank
                  : triviaPool(text, { includeWords: cfg.includeWords !== false, choices: cfg.choices });
+      if (gen === bankGen) applyBank(next);
+    }
+
+    function applyBank(next) {
       const changed = next.length !== bank.length;
       bank = next;
       if (!deck.length || changed) newRound();
