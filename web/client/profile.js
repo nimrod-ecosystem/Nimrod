@@ -24,6 +24,26 @@
 // uses, and the word a care setting says out loud in front of the person it describes.
 
 import { authHeaders } from './auth.js';
+import { cachedFetch } from './cache.js';
+
+// A starter profile so a fresh account "just works": photos, the camera mirror, the
+// clock, and the Lineup director (rotates youtube / personal videos / educational).
+// Shared by kiosk.html and modules.html's live editor -- both need "an account's default
+// screen" resolved the same way, and a second copy of this is exactly the kind of drift
+// module_try.js's own header warns about.
+export async function ensureProfile(profiles, user, wantProfile = null) {
+  let list = await cachedFetch('profiles:' + user, () => profiles.list());
+  if (wantProfile) { const p = list.find((x) => x.id === wantProfile); if (p) return p.id; }
+  if (!list.length) {
+    const p = await profiles.create('Bedside');
+    await profiles.addModule(p.id, 'photos');
+    await profiles.addModule(p.id, 'camera');
+    await profiles.addModule(p.id, 'clock');
+    await profiles.addModule(p.id, 'director');
+    return p.id;
+  }
+  return list[0].id;
+}
 
 export function createProfilesClient({ user, baseURL = '' }) {
 
