@@ -1750,3 +1750,31 @@ text becomes Cici's whole understanding of a page) and over `PyMuPDF`/fitz (best
 AGPL/commercial-licensed) — set aside deliberately even though those obligations do not actually
 bind a local, never-shipped tool, because this project treats a licence choice as worth a real
 look regardless of whether it strictly has to.**
+
+## /modules.html is a real editor of your dashboard when signed in — reopened and corrected, 2026-09-08
+
+**Reopens the original "everything on this page is local and throwaway" design** (`module_try.js`'s
+own header comment, written when the page was still visitor-only). Mike, live, after tracing a
+"my playlists didn't play" report to that exact behavior: *"It's built wrong then. The modules
+page is where you should be able to access the modules without a kiosk. It's not meant to be a
+separate sandbox. It is where you set up your modules."* Correct — a page whose whole visual
+language says "configure your modules" was secretly disconnected from the account for everyone,
+signed in or not, and nothing on it said so.
+
+**Fixed, not just diagnosed.** `createLiveHost()` is `createTryHost`'s signed-in twin: it resolves
+the visitor's real default screen (`ensureProfile`, now shared with `kiosk.html` instead of a
+second copy of the same bootstrap), adds the picked module to that screen if it is not already
+there, and mounts against the exact `/api/profiles/.../state|events` URLs `kiosk.js` itself reads.
+A setting changed on `/modules.html` is now the setting the kiosk sees.
+
+**The throwaway host stays, on purpose, for two cases that still need it**: a signed-out visitor
+has no account to write to, and the page's own "run every one of them" self-audit mounts all ~30
+modules in a row purely to check they render — doing that against a real, signed-in account would
+silently add every module type to somebody's actual dashboard the moment they clicked one button.
+
+**Proved two ways.** A new integration suite (`dev/module_try_test.html`, 16 checks) runs against
+the real local server — idempotent `ensure()`, `mount()` agreeing with the kiosk's own state URL,
+the demo host never touching the real account. Then the same flow was driven through the actual
+rendered UI: typed a real time-of-day schedule into the YouTube panel on `/modules.html`, read it
+back through a fresh handle built the way `kiosk.js` builds one, got the identical JSON. Full
+suite sweep: 95/95 clean.
