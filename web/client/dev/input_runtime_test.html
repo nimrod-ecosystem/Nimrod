@@ -20,7 +20,8 @@ DOM of its own. No server — the person's state handle is faked, which is also 
 <div id="summary">running…</div>
 
 <script type="module">
-import { mountInputRuntime, normalizeRecord, INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
+import { mountInputRuntime, normalizeRecord, INPUTS_KEY, RECORD_VERSION,
+  exportBindings, parseBindingsImport, BINDINGS_EXPORT_SCHEMA } from '../input_runtime.js';
 import { createBus } from '../bus.js';
 import { verbTopic, MODULE_VERBS, verbTarget } from '../actions.js';
 import { DEFAULT_BINDINGS, KEYBOARD_DEVICE } from '../input_keyboard.js';
@@ -117,6 +118,83 @@ section('*** the device bus — normalizeRecord carries devices, same discipline
   const r = normalizeRecord({ v: 1, bindings: [kb('key:z', 'photos/next')],
     devices: [{ device: 'switch:1', holdMs: 400 }] }, []);
   check('devices are not gated on the bindings record version', r.devices.length === 1);
+}
+
+// =====================================================================
+section('*** shareable settings — a diff from default, not a full dump ***');
+
+{
+  // A genuinely bare binding -- nothing set beyond what a fresh capture ever sets -- not
+  // `kb()`, whose explicit `holdMs: 0` etc. mean something different post-device-bus (an
+  // explicit "no hold", not "unset"). `normalizeRecord` is what actually produces these.
+  const bare = normalizeRecord({ v: RECORD_VERSION, bindings: [
+    { id: 'x-key:a', actionId: verbTopic('next'), device: KEYBOARD_DEVICE, control: 'key:a' } ] }, []);
+  const out = exportBindings(bare);
+  check('the schema is stamped', out.schema === BINDINGS_EXPORT_SCHEMA);
+  check('a binding with every field at its default keeps only id/actionId/device/control',
+    Object.keys(out.bindings[0]).sort().join(',') === 'actionId,control,device,id',
+    JSON.stringify(out.bindings[0]));
+}
+{
+  const custom = { id: 'x', actionId: verbTopic('select'), device: 'switch:1', control: 'a',
+    edge: 'release', role: 'participant', holdMs: 400, debounceMs: null, lockoutMs: null, label: 'Right switch' };
+  const out = exportBindings({ gate: 'both', bindings: [custom], devices: [] });
+  check('*** only what actually differs from default survives the export ***',
+    JSON.stringify(out.bindings[0]) === JSON.stringify({
+      id: 'x', actionId: verbTopic('select'), device: 'switch:1', control: 'a',
+      edge: 'release', role: 'participant', holdMs: 400, label: 'Right switch',
+    }), JSON.stringify(out.bindings[0]));
+}
+{
+  const dev = { device: 'switch:1', label: 'Right hand', holdMs: 400, debounceMs: 0, lockoutMs: 0 };
+  const out = exportBindings({ gate: 'both', bindings: [], devices: [dev] });
+  check('a device diff keeps only device/label/holdMs — the two still at default vanish',
+    JSON.stringify(out.devices[0]) === JSON.stringify({ device: 'switch:1', label: 'Right hand', holdMs: 400 }),
+    JSON.stringify(out.devices[0]));
+}
+{
+  // THE ROUND TRIP: export, then import, lands on the exact same normalized record —
+  // proving the diff really does carry everything normalizeBinding needs to rebuild it.
+  const before = normalizeRecord(rec([
+    { id: 'a', actionId: verbTopic('next'), device: 'switch:1', control: 'a', holdMs: 300 },
+    { id: 'b', actionId: verbTopic('prev'), device: KEYBOARD_DEVICE, control: 'key:p' },
+  ], { devices: [{ device: 'switch:1', label: 'Her switch', lockoutMs: 500 }] }), []);
+  const exported = exportBindings(before);
+  const after = parseBindingsImport(JSON.stringify(exported));
+  check('*** export then import round-trips to the identical normalized record ***',
+    JSON.stringify(after.bindings) === JSON.stringify(before.bindings)
+    && JSON.stringify(after.devices) === JSON.stringify(before.devices),
+    JSON.stringify({ before, after }));
+}
+{
+  check('wrong schema is refused with a plain reason',
+    /schema/i.test((() => { try { parseBindingsImport(JSON.stringify({ schema: 'nope', bindings: [] })); return ''; }
+      catch (e) { return e.message; } })()));
+  check('not JSON is refused with a plain reason',
+    /JSON/i.test((() => { try { parseBindingsImport('not json at all'); return ''; }
+      catch (e) { return e.message; } })()));
+}
+{
+  // "SURVIVES NEW VERBS BEING ADDED LATER" — an exported binding names a verb this build has
+  // never heard of. It must still import cleanly; whether the ACTION resolves to anything is
+  // the input bus's problem at bind-time, not the import's to gatekeep.
+  const exported = { schema: BINDINGS_EXPORT_SCHEMA, gate: 'both',
+    bindings: [{ id: 'x', actionId: 'verb/some-future-verb', device: 'switch:1', control: 'a' }], devices: [] };
+  const after = parseBindingsImport(JSON.stringify(exported));
+  check('*** a binding for a verb this build has never heard of still imports ***',
+    after.bindings.length === 1 && after.bindings[0].actionId === 'verb/some-future-verb',
+    JSON.stringify(after.bindings));
+}
+{
+  // A HAND-ME-DOWN SETUP DOES NOT HAVE TO BE PERFECT. One corrupt row is dropped, same
+  // discipline normalizeRecord already applies to anything else it reads.
+  const exported = { schema: BINDINGS_EXPORT_SCHEMA, gate: 'both',
+    bindings: [{ id: 'good', actionId: verbTopic('next'), device: 'switch:1', control: 'a' },
+               { id: 'bad', device: 'switch:1' }],   // no actionId, no control
+    devices: [] };
+  const after = parseBindingsImport(JSON.stringify(exported));
+  check('one bad row in a hand-me-down file is dropped, not a failed import',
+    after.bindings.length === 1 && after.bindings[0].id === 'good', JSON.stringify(after.bindings));
 }
 
 // =====================================================================

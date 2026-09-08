@@ -78,6 +78,57 @@ export function normalizeRecord(saved, fallback = []) {
   };
 }
 
+// *** SHAREABLE SETTINGS — a diff from default, not a full dump. *** Added 2026-09-08.
+// Mike: "Somebody who tuned a great board setup should be able to hand it to someone else."
+// "Diffs from default only, small and readable, survives new verbs being added later."
+//
+// THE MECHANISM IS REUSE, NOT A NEW FORMAT. `exportBindings` strips every field that already
+// equals what `normalizeBinding`/`normalizeDevice` would fill in on their own, so the file is
+// short and a person can actually read it. `importBindings` does not need its own expansion
+// logic to put those fields back — it hands the diff straight to `normalizeRecord`, the same
+// function every saved record already goes through, so an imported file is normalized exactly
+// as strictly as anything ever saved from the binder itself. "Survives new verbs" falls out for
+// free: the diff only ever names an `actionId` STRING, never a fixed list of what exists, so a
+// verb added after the file was exported is still just a string an older file can reference.
+const BINDING_FIELD_DEFAULTS = { edge: 'press', role: 'universal', holdMs: null, debounceMs: null, lockoutMs: null, label: '' };
+const DEVICE_FIELD_DEFAULTS = { label: '', holdMs: 0, debounceMs: 0, lockoutMs: 0 };
+export const BINDINGS_EXPORT_SCHEMA = 'nimrod.bindings.v1';
+
+function diffAgainst(obj, defaults, keep) {
+  const out = {};
+  for (const k of keep) out[k] = obj[k];
+  for (const [k, dflt] of Object.entries(defaults)) if (obj[k] !== dflt) out[k] = obj[k];
+  return out;
+}
+
+export function exportBindings(record) {
+  return {
+    schema: BINDINGS_EXPORT_SCHEMA,
+    gate: record.gate,
+    bindings: (record.bindings || []).map((b) => diffAgainst(b, BINDING_FIELD_DEFAULTS,
+      ['id', 'actionId', 'device', 'control'])),
+    devices: (record.devices || []).map((d) => diffAgainst(d, DEVICE_FIELD_DEFAULTS, ['device'])),
+  };
+}
+
+/**
+ * Parse and validate an exported diff, throwing with a plain-English reason on anything that
+ * is not one — the same "say why" discipline `packs.js`'s `parsePack` already established for
+ * a different kind of shared file.
+ */
+export function parseBindingsImport(text) {
+  let json;
+  try { json = JSON.parse(text); } catch (e) { throw new Error(`not valid JSON: ${e.message}`); }
+  if (!json || typeof json !== 'object') throw new Error('not a JSON object');
+  if (json.schema !== BINDINGS_EXPORT_SCHEMA) {
+    throw new Error(`schema must be "${BINDINGS_EXPORT_SCHEMA}", got ${JSON.stringify(json.schema)}`);
+  }
+  if (!Array.isArray(json.bindings)) throw new Error('bindings must be an array');
+  // Handed to normalizeRecord as if it were freshly saved — the exact same expansion path
+  // every stored record already goes through, so nothing here has to re-implement it.
+  return normalizeRecord({ v: RECORD_VERSION, gate: json.gate, bindings: json.bindings, devices: json.devices }, []);
+}
+
 // Mount the input stack onto a surface.
 //
 //   bus        the surface's module bus — verbs are published here, modules already listen

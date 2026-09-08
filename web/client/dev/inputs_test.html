@@ -487,6 +487,60 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.panel.destroy();
     }
 
+    // ================= hand this setup to someone else =================
+    section('*** export/import — a small diff, not a full dump, and a real round trip ***');
+    {
+      const r = rig({ seed: { v: RECORD_VERSION, gate: 'both',
+        bindings: [{ id: 'a', actionId: verbTopic('next'), device: XAC, control: 'button:0', holdMs: 300 }],
+        devices: [{ device: XAC, label: 'Her switch', holdMs: 300 }] } });
+      await r.panel.refresh();
+      const text = r.q('[data-export-text]')?.value || '';
+      check('the export box shows something as soon as the page has bindings', text.length > 0);
+      const parsed = JSON.parse(text);
+      check('*** it is genuinely small — only what differs from default, not every field ***',
+        Object.keys(parsed.bindings[0]).sort().join(',') === 'actionId,control,device,holdMs,id',
+        JSON.stringify(parsed.bindings[0]));
+      check('the device diff is in there too', parsed.devices[0]?.label === 'Her switch');
+      r.panel.destroy();
+    }
+    {
+      // THE ROUND TRIP, THROUGH THE ACTUAL PAGE — copy what one screen exported, paste it
+      // into a second, empty one, press Import, and the second screen now plays it.
+      const giver = rig({ seed: { v: RECORD_VERSION, gate: 'both',
+        bindings: [{ id: 'a', actionId: verbTopic('next'), device: XAC, control: 'button:0', holdMs: 300 }],
+        devices: [] } });
+      await giver.panel.refresh();
+      const handoff = giver.q('[data-export-text]').value;
+      giver.panel.destroy();
+
+      const receiver = rig({ seed: { v: RECORD_VERSION, gate: 'both', bindings: [] } });
+      await receiver.panel.refresh();
+      check('the receiving screen starts with nothing', receiver.panel.bindings().length === 0);
+      receiver.q('[data-import-text]').value = handoff;
+      receiver.q('[data-import-go]').click();
+      check('*** importing lands the giver’s binding on the receiver, verb and hold intact ***',
+        receiver.panel.bindings().length === 1
+        && receiver.panel.bindings()[0].actionId === verbTopic('next')
+        && receiver.panel.bindings()[0].holdMs === 300,
+        JSON.stringify(receiver.panel.bindings()));
+      receiver.saveClock.advance(400);            // saves are debounced; flush it
+      check('...and it actually saved, not just rendered', receiver.saved()?.bindings?.length === 1,
+        JSON.stringify(receiver.saved()));
+      receiver.panel.destroy();
+    }
+    {
+      const r = rig({ seed: { v: RECORD_VERSION, gate: 'both', bindings: [] } });
+      await r.panel.refresh();
+      r.q('[data-import-text]').value = 'not json at all';
+      r.q('[data-import-go]').click();
+      await new Promise((res) => setTimeout(res, 20));
+      check('a garbage paste says so in plain words rather than silently doing nothing',
+        /didn.t import/i.test(r.q('[data-import-msg]')?.textContent || ''),
+        r.q('[data-import-msg]')?.textContent);
+      check('...and does not touch the existing setup', r.panel.bindings().length === 0);
+      r.panel.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

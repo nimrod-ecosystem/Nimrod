@@ -48,7 +48,8 @@
 import { createBus } from './bus.js';
 import { createDefaultRegistry, VERBS, FOCUS_VERBS, verbTopic, MODULE_VERBS } from './actions.js';
 import { createInputBus, normalizeBinding, GATES, ROLES, EDGES } from './input.js';
-import { normalizeRecord, INPUTS_KEY, RECORD_VERSION } from './input_runtime.js';
+import { normalizeRecord, INPUTS_KEY, RECORD_VERSION,
+  exportBindings, parseBindingsImport } from './input_runtime.js';
 import { createVerbRouter } from './input_router.js';
 import { attachKeyboard, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from './input_keyboard.js';
 import { attachPointer, pointerLabel, POINTER_DEVICE } from './input_pointer.js';
@@ -306,7 +307,13 @@ export function mountInputs(root, {
       </table>`;
   }
 
+  function renderExport() {
+    const ta = el('[data-export-text]');
+    if (ta) ta.value = JSON.stringify(exportBindings(record), null, 2);
+  }
+
   function renderBindings() {
+    renderExport();   // every bindings change is a devices/gate change candidate too
     const host = el('[data-bindings]');
     if (!host) return;
     if (!record.bindings.length) {
@@ -393,6 +400,24 @@ export function mountInputs(root, {
           <select data-new-action>${verbOptions(verbTopic('select'))}</select>
           <button class="h-btn h-primary" data-add>Press a control…</button>
           <span class="h-hint" data-addmsg></span>
+        </div>
+      </div>
+
+      <div class="h-card">
+        <div class="h-card-head"><h2>Hand this setup to someone else</h2></div>
+        <p class="h-hint">A small file — just what you changed from the defaults, not everything
+          declared. Copy it to give someone your setup; paste one in to use theirs. Importing
+          replaces the bindings and devices above; nothing else on the account changes.</p>
+        <textarea data-export-text readonly rows="4" style="width:100%;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace"></textarea>
+        <div class="i-add">
+          <button class="h-btn" data-export-copy>Copy</button>
+          <span class="h-hint" data-export-msg></span>
+        </div>
+        <textarea data-import-text rows="4" placeholder="Paste a setup someone gave you…"
+          style="width:100%;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;margin-top:8px"></textarea>
+        <div class="i-add">
+          <button class="h-btn h-primary" data-import-go>Import</button>
+          <span class="h-hint" data-import-msg></span>
         </div>
       </div>
 
@@ -568,7 +593,40 @@ export function mountInputs(root, {
     const gate = e.target.closest('[data-gate]');
     if (gate && gate.dataset.gate) {
       record.gate = gate.dataset.gate;
-      push(); save(); renderGate();
+      push(); save(); renderGate(); renderExport();
+      return;
+    }
+
+    const exportCopy = e.target.closest('[data-export-copy]');
+    if (exportCopy) {
+      const ta = el('[data-export-text]');
+      const msg = el('[data-export-msg]');
+      ta?.select();
+      navigator.clipboard?.writeText(ta?.value || '')
+        .then(() => { if (msg) msg.textContent = 'Copied.'; })
+        .catch(() => { if (msg) msg.textContent = 'Could not copy — select the text and copy it by hand.'; });
+      return;
+    }
+
+    const importGo = e.target.closest('[data-import-go]');
+    if (importGo) {
+      const ta = el('[data-import-text]');
+      const msg = el('[data-import-msg]');
+      try {
+        const next = parseBindingsImport(ta?.value || '');
+        // A FULL REPLACE, not a merge — "hand someone your setup" means they now HAVE that
+        // setup, the same way opening someone else's saved profile would, not a blend of
+        // theirs and whatever was already here.
+        record.bindings = next.bindings;
+        record.devices = next.devices;
+        record.gate = next.gate;
+        push(); save(); renderGate(); renderDevices(); renderBindings();
+        if (ta) ta.value = '';
+        if (msg) msg.textContent = `Imported ${next.bindings.length} binding${next.bindings.length === 1 ? '' : 's'}`
+          + (next.devices.length ? ` and ${next.devices.length} device${next.devices.length === 1 ? '' : 's'}.` : '.');
+      } catch (err) {
+        if (msg) msg.textContent = `That didn't import: ${err.message}`;
+      }
       return;
     }
 
