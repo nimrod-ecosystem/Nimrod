@@ -122,6 +122,18 @@ export const THEMES = {
   // for eyes on a screen that's up ~24/7. Text vars flip to light values.
   dusk: {
     label: 'Dusk (dark, calm)',
+    // *** `dark: true`, READ BY `applyTheme` BELOW. *** Found live (Mike, 2026-09-08): a native
+    // browser control this codebase's own CSS cannot fully restyle -- `<input type="time">`'s
+    // built-in spinner and clock icon -- was rendering in the BROWSER'S OWN light-mode default,
+    // sitting inside Dusk's dark-styled box, because nothing ever told the browser this page was
+    // dark. `color-scheme` is the actual fix for exactly this: it asks the browser to render its
+    // own native chrome (time/date pickers, scrollbars, the works) to match, not just this one
+    // input. Dusk is the ONLY theme this is true for -- the other four are all light backgrounds
+    // (`default`, `highContrast`, `warm`, `forge` all have a light `--bg`) -- so this is a
+    // per-theme flag, not a global one -- `default`, `contrast`, `warm`, `forge` are all light
+    // backgrounds; setting `color-scheme: dark` unconditionally would have broken the SAME
+    // controls on every one of those instead.
+    dark: true,
     vars: {
       ...BASE,
       '--bg': '#12181c',
@@ -280,7 +292,8 @@ export const ACCENT_VARS = ['--accent', '--link', '--accent-warm-deep'];
 
 export function applyTheme(rootEl, id) {
   const resolved = resolveThemeId(id);
-  const vars = THEMES[resolved].vars;
+  const theme = THEMES[resolved];
+  const vars = theme.vars;
   for (const [k, v] of Object.entries(vars)) rootEl.style.setProperty(k, v);
   // Derived AFTER the theme's own values, and from them, so a theme that overrides an accent
   // gets matching text with no extra bookkeeping.
@@ -288,6 +301,13 @@ export function applyTheme(rootEl, id) {
     const value = vars[accent];
     if (value) rootEl.style.setProperty(`--on${accent.slice(1)}`, onColor(value));
   }
+  // *** `color-scheme`, NOT JUST OUR OWN CSS VARS. *** This is the one thing a theme controls
+  // that our own stylesheet cannot override: the browser's OWN chrome for native form controls
+  // (`<input type="time">`'s spinner and clock icon, scrollbars, and everything else this
+  // codebase does not draw itself). Without it, every one of those renders in the browser's
+  // light-mode default regardless of which theme is active -- which on Dusk looked exactly like
+  // a broken control sitting inside a dark box, because that is what it was.
+  rootEl.style.setProperty('color-scheme', theme.dark ? 'dark' : 'light');
   return resolved;
 }
 
