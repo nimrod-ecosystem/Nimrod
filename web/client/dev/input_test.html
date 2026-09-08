@@ -274,6 +274,106 @@ const last = (a) => a[a.length - 1];
       check('once the lockout expires it acts again', r.fired.length === 2);
     }
 
+    // ================= the device bus =================
+    section('*** the device bus — a switch\'s OWN timing, inherited by every binding on it ***');
+    {
+      // No device default set: a binding with no explicit holdMs behaves exactly like one
+      // explicitly set to 0 — the pre-existing, unconditioned default.
+      const r = rig();
+      r.input.addBinding({ id: 'b', actionId: 'photos/next', device: 'switch:1', control: 'a' });
+      r.input.down('switch:1', 'a');
+      check('with no device configured, an unset holdMs fires immediately, same as 0',
+        r.fired.length === 1);
+    }
+    {
+      const r = rig();
+      r.input.setDevices([{ device: 'switch:1', holdMs: 400 }]);
+      r.input.addBinding({ id: 'b', actionId: 'photos/next', device: 'switch:1', control: 'a' });
+      r.input.down('switch:1', 'a');
+      r.clock.advance(200);
+      check('...but with the DEVICE set to 400ms, a binding that never mentioned holdMs waits for it',
+        r.fired.length === 0);
+      r.clock.advance(250);
+      check('...and fires once the device\'s own threshold is reached', r.fired.length === 1);
+    }
+    {
+      // The whole point: TWO bindings on the SAME switch, for two different verbs, both pick
+      // up the one device setting — nobody typed 400 twice.
+      const r = rig();
+      r.input.setDevices([{ device: 'switch:1', holdMs: 400 }]);
+      r.input.addBinding({ id: 'b1', actionId: 'photos/next', device: 'switch:1', control: 'a' });
+      r.input.addBinding({ id: 'b2', actionId: 'photos/prev', device: 'switch:1', control: 'z' });
+      r.input.down('switch:1', 'a'); r.clock.advance(450);
+      r.input.down('switch:1', 'z'); r.clock.advance(450);
+      check('*** one device setting, two bindings, neither one configured by hand ***',
+        r.fired.length === 2, JSON.stringify(r.fired));
+    }
+    {
+      // A binding's OWN value always wins — the device is a default, not a ceiling.
+      const r = rig();
+      r.input.setDevices([{ device: 'switch:1', holdMs: 400 }]);
+      r.input.addBinding({ id: 'b', actionId: 'photos/next', device: 'switch:1', control: 'a', holdMs: 900 });
+      r.input.down('switch:1', 'a');
+      r.clock.advance(450);
+      check('a binding that sets its own holdMs is not overridden by the device', r.fired.length === 0);
+      r.clock.advance(500);
+      check('...and fires at ITS OWN threshold', r.fired.length === 1);
+    }
+    {
+      // Explicit 0 on a binding also wins — "no hold" is a real, statable choice, not the
+      // same as "did not say," even though both happen to resolve to the same number when
+      // the device itself has no default.
+      const r = rig();
+      r.input.setDevices([{ device: 'switch:1', holdMs: 400 }]);
+      r.input.addBinding({ id: 'b', actionId: 'photos/next', device: 'switch:1', control: 'a', holdMs: 0 });
+      r.input.down('switch:1', 'a');
+      check('an explicit 0 overrides a nonzero device default, immediately', r.fired.length === 1);
+    }
+    {
+      // Debounce and lockout inherit the same way hold does — one mechanism, not three.
+      const r = rig();
+      r.input.setDevices([{ device: 'switch:1', debounceMs: 300, lockoutMs: 500 }]);
+      r.input.addBinding({ id: 'b', actionId: 'photos/next', device: 'switch:1', control: 'a' });
+      r.input.down('switch:1', 'a'); r.input.up('switch:1', 'a');
+      r.clock.advance(100);
+      r.input.down('switch:1', 'a');
+      check('device-level debounce swallows a bounce nobody configured on the binding itself',
+        r.fired.length === 1, JSON.stringify(r.recs().map((x) => x.reason)));
+      r.clock.advance(50); r.input.up('switch:1', 'a');
+      r.clock.advance(200);
+      r.input.down('switch:1', 'a');
+      check('...and device-level lockout does the same', r.fired.length === 1);
+    }
+    {
+      // Unknown/unconfigured devices are not an error -- they resolve as if nothing were set,
+      // the same as before this existed at all.
+      const r = rig();
+      check('a device nobody configured reports zeroed defaults, not a throw',
+        JSON.stringify(r.input.deviceDefaults('switch:9')) ===
+        JSON.stringify({ device: 'switch:9', label: '', holdMs: 0, debounceMs: 0, lockoutMs: 0 }));
+    }
+    {
+      // setDevices is a hot-swap, the same shape setBindings already has.
+      const r = rig();
+      r.input.setDevices([{ device: 'switch:1', holdMs: 500 }]);
+      check('a device is now known', r.input.listDevices().some((d) => d.device === 'switch:1'));
+      r.input.setDevices([{ device: 'switch:2', holdMs: 100 }]);
+      check('...and a fresh setDevices call REPLACES the set, not merges into it',
+        !r.input.listDevices().some((d) => d.device === 'switch:1')
+        && r.input.listDevices().some((d) => d.device === 'switch:2'));
+    }
+    {
+      // effectiveConditioning is what the binder UI reads to show a placeholder — the
+      // resolved number, not the raw (possibly null/inherited) binding field.
+      const r = rig();
+      r.input.setDevices([{ device: 'switch:1', holdMs: 250, debounceMs: 80, lockoutMs: 300 }]);
+      check('an inheriting binding resolves to the device\'s numbers',
+        JSON.stringify(r.input.effectiveConditioning({ device: 'switch:1', holdMs: null, debounceMs: null, lockoutMs: null }))
+        === JSON.stringify({ holdMs: 250, debounceMs: 80, lockoutMs: 300 }));
+      check('an overriding binding keeps its own',
+        r.input.effectiveConditioning({ device: 'switch:1', holdMs: 999, debounceMs: null, lockoutMs: null }).holdMs === 999);
+    }
+
     // ================= the role gate =================
     section('the role gate — moderator / participant / both');
     {

@@ -121,7 +121,7 @@ export function mountInputs(root, {
   // file, right up until something started driving a real pointer. See docs/glossary.md.
   let highlight = -1;              // which binding row the VERBS are pointed at
   let binderOffs = [];
-  let record = { v: RECORD_VERSION, gate: 'both', speak: false, bindings: [] };
+  let record = { v: RECORD_VERSION, gate: 'both', speak: false, bindings: [], devices: [] };
 
   const localBus = createBus();
   const actions = createDefaultRegistry();
@@ -163,7 +163,39 @@ export function mountInputs(root, {
   function push() {
     if (!input) return;
     input.setBindings(record.bindings);
+    input.setDevices(record.devices);
     input.setGate(record.gate);
+  }
+
+  // ---- the device bus ------------------------------------------------------------
+  //
+  // A DEVICE'S OWN ROW, so hold/debounce/lockout live on the SWITCH rather than being
+  // retyped onto every binding made on it. `record.devices` holds only devices somebody has
+  // actually set a default for; `knownDevices()` below is the bigger list — everything that
+  // could show a row — because a device with nothing configured yet is still worth a row
+  // showing "0 (none set)" and an easy way to change that.
+  function deviceRecord(device) {
+    return record.devices.find((d) => d.device === device) || null;
+  }
+
+  function editDevice(device, patch) {
+    const existing = deviceRecord(device);
+    const next = { ...(existing || { device, label: '', holdMs: 0, debounceMs: 0, lockoutMs: 0 }), ...patch };
+    record.devices = [...record.devices.filter((d) => d.device !== device), next];
+    push(); save();
+  }
+
+  // Every device worth showing a row for: everything already bound (so a switch mid-use
+  // always has a row, configured or not), plus keyboard/mouse (always available), plus any
+  // gamepad currently plugged in. NOT everything ever seen — a switch unplugged months ago
+  // and never bound to anything does not deserve a permanent row.
+  function knownDevices() {
+    const set = new Map();
+    const add = (device) => { if (device && !set.has(device)) set.set(device, true); };
+    add(KEYBOARD_DEVICE); add(POINTER_DEVICE);
+    (pads?.list() || []).forEach((p) => add(p.device));
+    record.bindings.forEach((b) => add(b.device));
+    return [...set.keys()];
   }
 
   // ---- naming ------------------------------------------------------------------
@@ -236,21 +268,42 @@ export function mountInputs(root, {
         ${silent.length ? `<br>Does nothing here: ${silent.map((v) => esc(v.label)).join(', ')}.` : ''}</p>`;
   }
 
+  // THE DEVICE BUS'S OWN PANEL. Devices are not first-class the way bindings are — this is
+  // that fixed. Set a switch's hold/debounce/lockout ONCE here and every binding on it that
+  // has not overridden its own uses it, immediately, everywhere that switch is bound —
+  // instead of a caregiver retyping the same number into every row that switch appears in.
   function renderDevices() {
     const host = el('[data-devices]');
     if (!host) return;
-    const rows = [
-      '<li><b>Keyboard</b> <span class="h-hint">always available</span></li>',
-      '<li><b>Mouse</b> <span class="h-hint">a great many switches arrive as a mouse click</span></li>',
-      ...(pads?.list() || []).map((s) =>
-        `<li><b>${esc(s.id.split('(')[0].trim() || s.device)}</b>
-          <span class="h-hint">${esc(s.mapping || 'non-standard')} · saved as <code>${esc(s.device)}</code></span></li>`),
-    ];
-    if (!(pads?.list() || []).length) {
-      rows.push(`<li class="h-hint">No controller seen yet — plug one in and press a button on it.
-        Browsers hide a controller until it is used.</li>`);
+    const known = knownDevices();
+    if (!known.length) {
+      host.innerHTML = '<p class="h-hint">No controller seen yet — plug one in and press a '
+        + 'button on it. Browsers hide a controller until it is used.</p>';
+      return;
     }
-    host.innerHTML = rows.join('');
+    host.innerHTML = `
+      <table class="i-tab">
+        <thead><tr>
+          <th>Device</th><th>Label</th>
+          <th title="Every binding on this device uses this hold time, unless the binding sets its own">Hold</th>
+          <th title="Every binding on this device uses this debounce, unless the binding sets its own">Debounce</th>
+          <th title="Every binding on this device uses this lockout, unless the binding sets its own">Lockout</th>
+        </tr></thead>
+        <tbody>${known.map((device) => {
+          const d = deviceRecord(device) || { label: '', holdMs: 0, debounceMs: 0, lockoutMs: 0 };
+          const numField = (f) => `<input type="number" data-df="${f}" min="0" step="50" value="${d[f]}">`;
+          return `
+          <tr data-device="${esc(device)}">
+            <td>${esc(deviceName(device))}
+              <span class="h-hint">${device === KEYBOARD_DEVICE || device === POINTER_DEVICE ? '' : `saved as <code>${esc(device)}</code>`}</span></td>
+            <td><input type="text" data-df="label" placeholder="${esc(deviceName(device))}"
+              value="${esc(d.label)}"></td>
+            <td>${numField('holdMs')}</td>
+            <td>${numField('debounceMs')}</td>
+            <td>${numField('lockoutMs')}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
   }
 
   function renderBindings() {
@@ -269,21 +322,36 @@ export function mountInputs(root, {
           <th title="After it fires, refuse a repeat for this long">Lockout</th>
           <th>Who</th><th></th>
         </tr></thead>
-        <tbody>${record.bindings.map((b, i) => `
+        <tbody>${record.bindings.map((b, i) => {
+          // BLANK MEANS "USES THE DEVICE'S OWN SETTING" — the placeholder shows what that
+          // currently resolves to, so leaving a field blank is a visible choice, not a
+          // mystery zero. Typing a number here overrides this one binding only; clearing the
+          // field back to empty (an empty string reaches `edit()` as 0 today via the existing
+          // number-field coercion, so this is a display convenience, not yet a way to CLEAR an
+          // override back to "inherit" from the table — see the Devices panel to change the
+          // device itself instead).
+          const dd = input?.deviceDefaults?.(b.device) || { holdMs: 0, debounceMs: 0, lockoutMs: 0 };
+          const numField = (f) => `<input type="number" data-f="${f}" min="0" step="50"
+            value="${b[f] == null ? '' : b[f]}" placeholder="${dd[f]}">`;
+          return `
           <tr data-bid="${esc(b.id)}"${i === highlight ? ' class="i-highlight"' : ''}>
             <td><select data-f="actionId">${verbOptions(b.actionId)}</select></td>
             <td><button class="h-btn i-ctl" data-repress title="Press a different control">
                   ${esc(deviceName(b.device))}: ${esc(controlName(b.device, b.control))}</button></td>
             <td><select data-f="edge">${EDGES.map((e) =>
               `<option value="${e}"${e === b.edge ? ' selected' : ''}>${EDGE_LABEL[e]}</option>`).join('')}</select></td>
-            <td><input type="number" data-f="holdMs" min="0" step="50" value="${b.holdMs}"></td>
-            <td><input type="number" data-f="debounceMs" min="0" step="50" value="${b.debounceMs}"></td>
-            <td><input type="number" data-f="lockoutMs" min="0" step="50" value="${b.lockoutMs}"></td>
+            <td>${numField('holdMs')}</td>
+            <td>${numField('debounceMs')}</td>
+            <td>${numField('lockoutMs')}</td>
             <td><select data-f="role">${ROLES.map((r) =>
               `<option value="${r}"${r === b.role ? ' selected' : ''}>${ROLE_LABEL[r]}</option>`).join('')}</select></td>
             <td><button class="h-x" data-del title="Remove">×</button></td>
-          </tr>`).join('')}</tbody>
-      </table>`;
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      <p class="h-hint">A blank Hold/Debounce/Lockout box uses that switch's own setting — see
+        <b>Devices</b> below to set it once for every binding on that switch, instead of typing
+        it into each row.</p>`;
   }
 
   function renderGate() {
@@ -313,8 +381,9 @@ export function mountInputs(root, {
       </div>
 
       <div class="h-card">
-        <div class="h-card-head"><h2>Connected</h2></div>
-        <ul class="i-devs" data-devices></ul>
+        <div class="h-card-head"><h2>Devices</h2><span class="h-hint">set a switch's timing once,
+          for every binding on it</span></div>
+        <div class="i-devs" data-devices></div>
       </div>
 
       <div class="h-card">
@@ -545,15 +614,33 @@ export function mountInputs(root, {
     const sp = e.target.closest('[data-speak]');
     if (sp) { record.speak = sp.checked; save(); if (sp.checked) speakPress('Speaking is on'); return; }
 
+    const devField = e.target.closest('[data-df]');
+    if (devField) {
+      const device = devField.closest('[data-device]').dataset.device;
+      const key = devField.dataset.df;
+      // A device has no tier above it to inherit from, so unlike a binding's fields, blank
+      // here just means zero -- there is nothing left to fall back to.
+      const value = devField.type === 'number' ? Math.max(0, Number(devField.value) || 0) : devField.value;
+      editDevice(device, { [key]: value });
+      renderBindings();   // placeholders on any binding using this device just changed
+      return;
+    }
+
     const field = e.target.closest('[data-f]');
     if (!field) return;
     const bid = field.closest('[data-bid]').dataset.bid;
     const key = field.dataset.f;
-    const value = field.type === 'number' ? Math.max(0, Number(field.value) || 0) : field.value;
+    // EMPTY MEANS INHERIT FROM THE DEVICE, not zero -- only for the three conditioning
+    // fields, which are the only ones that have a device to fall back to. Every other
+    // `data-f` field (actionId, edge, role) is untouched by this.
+    const inheritable = key === 'holdMs' || key === 'debounceMs' || key === 'lockoutMs';
+    const value = field.type !== 'number' ? field.value
+      : (inheritable && field.value.trim() === '') ? null
+      : Math.max(0, Number(field.value) || 0);
     edit(bid, { [key]: value });
     // Deliberately NOT re-rendering: the control already shows its own new value, and
     // rebuilding the table under someone mid-edit throws away their focus and their place.
-    if (field.type === 'number') field.value = String(value);
+    if (field.type === 'number') field.value = value == null ? '' : String(value);
   });
 
   // ---- lifecycle ---------------------------------------------------------------

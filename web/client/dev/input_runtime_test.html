@@ -92,6 +92,34 @@ section('normalizeRecord — the ONE definition, shared with the binder');
 }
 
 // =====================================================================
+section('*** the device bus — normalizeRecord carries devices, same discipline as bindings ***');
+
+{
+  const r = normalizeRecord(null, [kb('key:a', verbTopic('next'))]);
+  check('an account with nothing saved has no known devices — a true fact, not papered over',
+    Array.isArray(r.devices) && r.devices.length === 0);
+}
+{
+  const r = normalizeRecord(rec([], { devices: [{ device: 'switch:1', holdMs: 400, label: 'Right hand' }] }), []);
+  check('a saved device round-trips', r.devices.length === 1 && r.devices[0].holdMs === 400
+    && r.devices[0].label === 'Right hand');
+}
+{
+  const r = normalizeRecord(rec([], {
+    devices: [{ device: 'switch:1', holdMs: 400 }, { device: '', holdMs: 200 }],
+  }), []);
+  check('ONE bad device (no device id) is dropped, same as a bad binding — does not take the rest with it',
+    r.devices.length === 1 && r.devices[0].device === 'switch:1', JSON.stringify(r.devices));
+}
+{
+  // Devices are read regardless of the bindings' v1/v2 gate -- there is no legacy device
+  // shape to migrate away from, so there is nothing to guard against.
+  const r = normalizeRecord({ v: 1, bindings: [kb('key:z', 'photos/next')],
+    devices: [{ device: 'switch:1', holdMs: 400 }] }, []);
+  check('devices are not gated on the bindings record version', r.devices.length === 1);
+}
+
+// =====================================================================
 section('the runtime — up before any network');
 
 {
@@ -124,6 +152,20 @@ section('device → verb → module, with no UI in the middle');
 
   rt.input.down(KEYBOARD_DEVICE, 'key:q');            // nothing bound to it
   check('an unbound control does nothing', nexts === 1);
+  rt.destroy();
+}
+{
+  // THE FULL ROUND TRIP: a person's saved device default actually reaches the live input
+  // bus through the real state-loading path -- not just normalizeRecord in isolation.
+  const bus = createBus();
+  const state = fakeState({ [INPUTS_KEY]: rec([kb('key:a', verbTopic('next'))],
+    { devices: [{ device: KEYBOARD_DEVICE, holdMs: 350, label: 'Her key' }] }) });
+  const rt = mountInputRuntime({ bus, attachDevices: false, state, modules: () => [] });
+  await rt.load();
+  check('a device default saved on the person\'s record is live on the runtime\'s input bus',
+    rt.input.deviceDefaults(KEYBOARD_DEVICE).holdMs === 350
+    && rt.input.deviceDefaults(KEYBOARD_DEVICE).label === 'Her key',
+    JSON.stringify(rt.input.deviceDefaults(KEYBOARD_DEVICE)));
   rt.destroy();
 }
 {
