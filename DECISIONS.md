@@ -1640,3 +1640,113 @@ it had built it. This entry is the other half — the work, described only after
   board no longer themes. It stays because a symbol exported or printed then degrades to a
   monochrome drawing rather than to a colour chosen for a background that is not there — a neutral
   shape pinned to the board's light ink would print as pale grey on white. (2026-09-02)
+
+
+## Transcribed from MIKE_CHANGE_LIST.md, 2026-09-03 through 2026-09-08 — six days of settled rulings that had not reached this file
+
+This log stopped at 2026-09-02. Six days of decisions accumulated in the working list and nowhere
+else, which is exactly the condition that lets the same ground get re-litigated later — a
+reconciliation pass on 2026-09-08 found `PRIORITY.md` (written 2026-09-07) listing several of
+these as still-open a day after they were settled. What follows is not everything from that
+window — `MIKE_CHANGE_LIST.md` remains the exhaustive record — only the entries that are genuine
+decisions rather than routine bug fixes.
+
+## The global transport bar is a focus problem, not a missing bar — 2026-09-03
+
+Audited before being built, and the audit changed what got built. The ask (F19) sounded like a
+new component: a bar that picks which module it drives, with an easy way to swap modules and a
+Home button. **Four of the five pieces it needs already existed and were simply not
+connected** — the bar itself (`kiosk.js`'s `renderMods()`), a universal settings menu built for
+one-switch navigation (`settings.js`), module settings as declared data (already true for most
+manifests), and a way out (`goHome()`). The audio arbiter (`audio_bus.js`) already knew what was
+making sound and who outranked whom.
+
+**The one missing piece was never the bar — it was the concept of "which module am I talking
+about."** There was already a per-input version of this (`runtime.router.setFocus`) that nothing
+else read. That is the seam this work actually needed, and it turned out to be smaller than any
+of the four pieces waiting on it. Resolved into `panelNext()` / `focusedRec()` in `kiosk.js`.
+
+## The AAC priority block — five items, all landed — 2026-09-06
+
+**Board authoring is done.** `board_editor.js`: name a board, set columns and rows, give each
+card a word, an optional different thing to say, and a picture. Nothing is uploaded and there is
+no code path that could — pictures come from a folder connected through the same registry
+`photos` already uses, and what is stored on a card is a `{sourceId, path}` reference, not a URL
+(a folder listing revokes its own object URLs whenever it is listed again, so a stored URL would
+go blank later with no error). A board may now declare its own `cols`/`rows` rather than being
+limited to the seven fixed tiers, which is what made a 6×6 core set possible.
+
+**The core 36-word set is done, and it sidesteps the licence question entirely.** Individual
+words cannot be copyrighted, so the set ships with **Nimrod's own drawings (32 new symbols), our
+own labels, our own arrangement** — no third-party assets, nothing to clear. **It is deliberately
+NOT the default** — 36 cells in front of somebody on day one is the opposite of a starter set.
+`yesno` stays the default, and there is a check enforcing that.
+
+**The board gained a settings panel for the first time, and the board row that switches between
+boards defaults OFF.** A person who rests or drags a hand across the screen can hit a chip and
+lose the board they were on — the row is off by default, and still available to anyone who turns
+it on. Lock hides both the row and the settings gear together; half a lock is not a lock, and
+it touches no card content at all.
+
+**The Call module got a real demo state.** "See what a call looks like": a ringing card, then a
+connected view, labelled *Example — not a real call* on every frame, ending itself on its own.
+It reaches nothing real — not the bus, the transport, the camera, the microphone, or the
+speaker, each checked directly — and a real incoming call takes the screen back from it
+instantly.
+
+**Two bugs found by looking at the rendered thing, not by a check** — worth recording as a
+pattern, not just a fix: a destroyed board left every listener on its host (two boards mounted on
+one element both answered every click, the dead one first, filling the new board's switcher from
+the previous screen's saved settings — every listener now hangs off one `AbortController`); and
+the Call module drew everything at viewport scale rather than container scale, so a caller's
+avatar in a 320×240 panel rendered at 165px against a 240px-tall stage, clipping the countdown and
+overlapping two labels — `fit` and `panel_fit` both passed throughout, because both check that a
+module's overflow scrolls rather than spills, and this defect did neither.
+
+**Three questions from this block were explicitly left open, on purpose, for people who do this
+work rather than decided here**: whether the core set's arrangement (people/pointing,
+wanting/doing, describing, direction, questions) is right; whether the 32 new drawings are legible
+and distinguishable at this set's size (one collision — `here` and `get` drawn the same — was
+caught by eye, and no automated check can measure this); and whether 6×6 is the right board width
+at all, given wider boards mean smaller, harder targets. Recorded in `aac_vocab.js` as open, not
+shipped as settled.
+
+## Christine's transcripts are in scope for retrieval; her medical records archive is a separate, unresolved question — 2026-09-08
+
+Chat's roadmap named "Christine's transcripts" as a retrieval source without saying which of two
+very different things on disk that meant. The literal `Christine_Medical/Cici/highlight_work/transcripts/`
+folder held the answer chat actually intended: **~222 Whisper transcripts of recordings OF HER,
+the output of the highlight-reel pipeline — her own speech, transcribed.** What sits one level up
+is a different thing entirely: her full medical records archive, 18 GB, real clinical notes with
+real staff names, lab results, raw MyChart exports.
+
+**Christine's own words are indexed. The medical archive is not, and that is a deliberate,
+separate hold, not an oversight.** The distinction was named plainly: her own speech is what would
+let an assistant help with aphasia patterns or recall what she said last month; the medical
+archive is a different question with real PHI in it, and it gets its own deliberate decision
+later rather than one that rides along on an ambiguous word from a roadmap message. Built:
+indexed the 70 `.labelled.txt` transcripts (the readable, speaker-labelled format; the raw
+`.json`/`.diar.json`/`.christine.json` siblings for the same recordings were left out — machine
+output with no natural chunk boundaries, and indexing all four per recording would quadruple
+citations for one source with three of them unreadable if actually opened).
+
+## Cici has a name; corpus desk's document reader generalises the file picker — 2026-09-08
+
+**The local assistant is named Cici** — in the UI, the window title, and her three
+persona-bearing system prompts (Reply mode, and both restraint-dial variants of Live's
+commentary). The Clean-up prompt stays unnamed on purpose: it is a text-tidying utility, not a
+persona talking to Mike, and naming it would blur that line.
+
+**The file picker became a general document reader, on the reasoning that the second ask
+subsumes the first** — one endpoint (`GET /api/open?path=...`) returns a directory listing or a
+document depending on what it is pointed at, rather than two separate features. `Browse…` opens
+on the corpus by default. Proved end to end rather than only unit-tested: a synthetic PDF with a
+marker number buried in its text, opened through the real UI, and asked about through `/api/reply` —
+Cici answered correctly with a number that exists nowhere except inside that PDF's own extracted
+text.
+
+**PDF extraction: `pdfplumber`, chosen over `pypdf` (weaker layout fidelity, and the extracted
+text becomes Cici's whole understanding of a page) and over `PyMuPDF`/fitz (best quality, but
+AGPL/commercial-licensed) — set aside deliberately even though those obligations do not actually
+bind a local, never-shipped tool, because this project treats a licence choice as worth a real
+look regardless of whether it strictly has to.**

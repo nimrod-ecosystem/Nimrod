@@ -771,6 +771,76 @@ const ds = () => root.querySelector('.kiosk').dataset;
       swapRoot.remove();
     }
 
+    // ---- THE BACK BUTTON: the reverse of Next, proven on the real wiring -----------------
+    //
+    // `photos` — the module the rest of this suite mounts — needs a connected media source
+    // before it has more than one photo to move between, and this suite runs with none (see
+    // "with no media sources connected the source picker is disabled" above). `wordforge`
+    // needs neither a network nor a source: its highlight cursor moves entirely offline and
+    // is observable in the DOM (`data-on="1"` on the current option), which makes it the
+    // right surface to prove the TRANSPORT BAR's wiring on, independent of how many options
+    // any given question happens to have.
+    //
+    // WHAT THIS PROVES, and why each half is needed: subscribing to the bus shows Back
+    // publishes a genuinely DIFFERENT topic than Next (`wordforge/prev`, not a second
+    // `wordforge/next`) — ruling out the bug this would look identical to from the outside,
+    // a Back button quietly wired to the same handler as Next. Reading the highlight back out
+    // of the real DOM shows that topic actually reached the mounted module and reversed it,
+    // not merely that something was published into the void.
+    {
+      const backRoot = document.createElement('div');
+      document.body.append(backRoot);
+      const backBus = createBus();
+      const wf = await profiles.create('TEST-back');
+      await profiles.addModule(wf.id, 'wordforge');
+      const k3 = await mountKiosk(backRoot, { user: USER, profileId: wf.id, profiles, bus: backBus });
+      await sleep(200);
+
+      const backBtn = backRoot.querySelector('[data-act="back"]');
+      const nextBtnEl = backRoot.querySelector('[data-act="next"]');
+      check('the transport bar offers a Back control', !!backBtn);
+      const highlightIdx = () => {
+        const on = backRoot.querySelector('.wordforge [data-on="1"]');
+        return on ? Number(on.dataset.opt) : null;
+      };
+      check('PRECONDITION: wordforge is showing a question with a highlighted option',
+        highlightIdx() !== null, String(highlightIdx()));
+
+      const published = [];
+      backBus.subscribe('wordforge/next', () => published.push('next'));
+      backBus.subscribe('wordforge/prev', () => published.push('prev'));
+
+      const idx0 = highlightIdx();
+      nextBtnEl.click();
+      await sleep(60);
+      const idx1 = highlightIdx();
+      check('the Next button publishes wordforge/next — reaching the real module',
+        published.join(',') === 'next', published.join(','));
+      check('*** and it actually moved the highlight — not a no-op ***', idx1 !== idx0,
+        `${idx0} -> ${idx1}`);
+
+      backBtn.click();
+      await sleep(60);
+      const idx2 = highlightIdx();
+      check('*** the Back button publishes wordforge/prev — a DIFFERENT topic than Next, not '
+        + 'Next relabeled ***', published.join(',') === 'next,prev', published.join(','));
+      check('*** Back actually moves backward: Next then Back returns to the exact option it '
+        + 'started on ***', idx2 === idx0, `${idx0} -> ${idx1} -> ${idx2}`);
+
+      // And the reverse order, so this is not merely "the last press wins by coincidence":
+      // Back first, then Next, must also cancel out.
+      backBtn.click();
+      await sleep(60);
+      const idx3 = highlightIdx();
+      nextBtnEl.click();
+      await sleep(60);
+      const idx4 = highlightIdx();
+      check('*** and it holds in the other order too: Back then Next also returns home ***',
+        idx4 === idx2, `${idx2} -> ${idx3} -> ${idx4}`);
+
+      k3.destroy();
+      backRoot.remove();
+    }
 
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));

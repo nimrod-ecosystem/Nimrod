@@ -72,7 +72,13 @@ function fakeTimers(){
     // ── pure renderer (semantic value -> graphic) ────────────────────────────
     check('graphicHTML: number draws numeral + counting dots', /ig-number.*>3<.*ig-dots/s.test(graphicHTML({ type: 'number', value: 3 })));
     check('graphicHTML: letters upcases', /ig-letters">A</.test(graphicHTML({ type: 'letters', value: 'a' })));
-    check('graphicHTML: word spells then whole', /ig-spell.*>C<.*>U<.*>P<.*ig-wordfull">cup/s.test(graphicHTML({ type: 'word', value: 'cup' })));
+    // *** SHOWN ONCE, NOT TWICE (fixed 2026-09-08). *** Used to also letter-spell the word above
+    // it -- the exact treatment `type: 'letters'` already exists for -- which read as the same
+    // word in two different fonts. This is the regression test for that fix.
+    check('*** graphicHTML: word shows the word once, not spelled out AND whole ***',
+      /ig-wordfull">cup/.test(graphicHTML({ type: 'word', value: 'cup' }))
+      && !/ig-spell/.test(graphicHTML({ type: 'word', value: 'cup' })),
+      graphicHTML({ type: 'word', value: 'cup' }));
     check('graphicHTML: none/empty renders nothing', graphicHTML({ type: 'none' }) === '' && graphicHTML(null) === '');
 
     // ── mount (directed, so WE drive advances) ───────────────────────────────

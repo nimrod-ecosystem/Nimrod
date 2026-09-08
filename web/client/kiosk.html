@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="./modules.css">
 <link rel="stylesheet" href="./settings.css">
 <link rel="stylesheet" href="./kiosk.css">
+<link rel="stylesheet" href="./screen_pair.css">
 <style>
   /* PAGE rules only. Everything that describes the SCREEN — the stage, the cells, the HUD
      overlays, the transport bar — moved to kiosk.css so the suites that measure it can link
@@ -36,6 +37,7 @@ import {
 } from './local_store.js';
 import { pickFolder, listFolderSources, isFolderPickerSupported } from './folder_source.js';
 import { mountDemoStrip, mountWayOut } from './demo_strip.js';
+import { mountScreenPairing } from './screen_pair.js';
 
 const params = new URLSearchParams(location.search);
 // one-time device-key pairing (unattended-kiosk fallback): launch once with
@@ -197,6 +199,24 @@ function offerTour() {
       console.error('demo kiosk boot failed', e);
       boot.textContent = 'The demo could not start.';
     }
+    return;
+  }
+
+  // *** `?pair=1` — HOW A BEDSIDE SCREEN THAT IS NOT SIGNED IN AND NOT A STRANGER GETS SET UP.
+  // *** `screen_pair.js` (the QR/code flow — "how a family adopts a bedside screen") was built
+  // and tested but never actually reachable from a real page; a fresh screen with no device key
+  // fell into `bootLocal()` below and got the STRANGER/demo experience instead, which is wrong
+  // for a screen somebody is deliberately setting up. Explicit `?pair=1`, not automatic on every
+  // anon visit, on purpose — the landing page's "Try it" button (no `pair` param) must keep
+  // getting exactly the demo it already gets; this is a second, deliberate entry point, not a
+  // replacement for the first one. Reloads (dropping the param) once paired, so the normal
+  // signed-in boot path below picks up the freshly stored device key on its own.
+  if (params.get('pair') === '1' && who.state !== 'in') {
+    boot.remove();
+    mountScreenPairing(root, {
+      label: 'This screen',
+      onPaired: () => { location.href = location.pathname; },
+    });
     return;
   }
 

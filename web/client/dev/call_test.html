@@ -514,6 +514,50 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       r.inst.destroy();
     }
 
+    section('*** a failed or unanswered call says so on screen, not just to the console ***');
+    {
+      // Found answering an open question: does a failed connection fail silently, or with a
+      // message? It failed silently -- every exit reverted to the plain "No call right now"
+      // regardless of why. This is the actual regression test for that fix.
+      const r = rig({});
+      await r.impl.__incoming({ name: 'Mike' });
+      r.impl.__end('failed');
+      check('*** a failed connection says so, not just "No call right now" ***',
+        /could not connect/i.test(r.host.textContent), r.host.textContent);
+      r.inst.destroy();
+    }
+    {
+      const r = rig({ declineSeconds: null, ringSeconds: 45 });
+      await r.impl.__incoming({ name: 'Mike' });
+      r.clock.fireTimers();   // the give-up timer -- nobody answered
+      check('*** unanswered says "No answer", not just the blank idle view ***',
+        /no answer/i.test(r.host.textContent), r.host.textContent);
+      r.inst.destroy();
+    }
+    {
+      // A normal decline is an outcome somebody chose, not a failure -- it must NOT get the
+      // same on-screen treatment, or a routine "no thanks" would read as something going wrong.
+      const r = rig({ declineSeconds: null, ringSeconds: 45 });
+      await r.impl.__incoming({ name: 'Mike' });
+      r.impl.__decline();
+      check('a normal decline does NOT show a failure message',
+        !/could not connect|no answer/i.test(r.host.textContent), r.host.textContent);
+      r.inst.destroy();
+    }
+    {
+      // The message does not linger forever -- it clears on its own after a while, same as any
+      // other transient status, so it cannot go stale on a screen nobody is looking at.
+      const r = rig({});
+      await r.impl.__incoming({ name: 'Mike' });
+      r.impl.__end('failed');
+      check('the failure message is showing right after the call ends',
+        /could not connect/i.test(r.host.textContent));
+      r.clock.fireTimers();
+      check('*** ...and clears on its own after the timeout, rather than staying forever ***',
+        !/could not connect/i.test(r.host.textContent), r.host.textContent);
+      r.inst.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
