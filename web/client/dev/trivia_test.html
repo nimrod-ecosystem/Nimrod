@@ -41,7 +41,7 @@ import { mountModule, getManifest } from '../module.js';
 // Registered so the check below can compare this row against comet's, which is the precedent
 // it deliberately matches rather than inventing a second answer to one question.
 import '../modules/comet.js';
-import { parseBank, buildDeck, makeQuestion, shuffle, DEFAULTS } from '../modules/trivia.js';
+import { parseBank, buildDeck, makeQuestion, shuffle, DEFAULTS, packToTriviaBank } from '../modules/trivia.js';
 import '../modules/trivia.js';
 
 const out = document.getElementById('results');
@@ -449,6 +449,47 @@ Shared Q | Shared A | X | Y` };
 Shared Q | Shared A` });
     check('*** a bank set on the game itself still wins, so nothing already written changes ***',
       /Own Q/.test(r.probe().question.question), JSON.stringify(r.probe().question));
+    r.inst.destroy();
+  }
+
+  section('*** a ready-made pack, not just a written bank — PRIORITY.md #5 / D26 ***');
+  {
+    // packToTriviaBank is pure — no fetch, no module — so its mapping is checked directly first.
+    const mapped = packToTriviaBank({ items: [
+      { question: '2 + 2', answers: ['3', '4', '5', '6'], correct: '4' },
+    ] });
+    check('correct becomes answer', mapped[0].answer === '4', JSON.stringify(mapped[0]));
+    check('everything else becomes wrong, in order, correct excluded',
+      JSON.stringify(mapped[0].wrong) === JSON.stringify(['3', '5', '6']), JSON.stringify(mapped[0]));
+
+    // The real, shipped pack — fetched for real against this suite's own server, the same way
+    // the module itself will. Not mocked: if the URL, the schema, or the mapping is wrong, this
+    // fails the way a caregiver's screen would.
+    const r = rig({ bankText: null, saved: { contentSource: 'pack', packId: 'maths_basic' } });
+    await sleep(120);          // the pack fetch is real and async; let it land
+    const q = r.probe().question;
+    check('*** the real maths pack loaded — a genuine arithmetic question is on screen ***',
+      !!q && /\d/.test(q.question), JSON.stringify(q));
+    check('bank size matches the shipped pack (300 items), not a five-item seed',
+      r.probe().bank === 300, String(r.probe().bank));
+    r.inst.destroy();
+  }
+  {
+    // A pack id that does not exist must not leave the panel dead — it reads as an empty
+    // syllabus and falls back, the same as an unreachable network resource anywhere else here.
+    const r = rig({ bankText: 'Own Q | Own A | X | Y',
+                     saved: { contentSource: 'pack', packId: 'no-such-pack' } });
+    await sleep(80);
+    check('*** an unresolvable pack id falls back to the bank rather than showing nothing ***',
+      /Own Q/.test(r.probe().question?.question || ''), JSON.stringify(r.probe().question));
+    r.inst.destroy();
+  }
+  {
+    // The default stays "bank" — an existing profile with saved settings that predate this
+    // feature must see exactly the syllabus it always has, not silently switch to a pack.
+    const r = rig({ bankText: 'Own Q | Own A | X | Y', saved: {} });
+    check('*** with nothing saved for contentSource, the written bank still wins ***',
+      /Own Q/.test(r.probe().question?.question || ''), JSON.stringify(r.probe().question));
     r.inst.destroy();
   }
 
