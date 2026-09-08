@@ -325,6 +325,26 @@ import './modules/youtube.js';
 // morning and was visible only inside the running kiosk.
 import './modules/trivia.js';
 import './modules/bank.js';
+import { authHeaders } from './auth.js';
+
+// *** THE BRAND LINK WENT TO "/", NOT BACK TO YOUR OWN DASHBOARDS. *** Mike, live, 2026-09-08:
+// "I hit the Nimrod up top to go back to the home page and it took me to the landing page
+// signed out." It didn't actually sign him out -- `/` (the marketing landing page) has no idea
+// whether anyone is signed in at all, so a signed-in person landing there just looks logged out,
+// same trap as this page's own header always showing "Sign in" / "Try it" regardless of whether
+// that is even true. This page never checked `/api/me` before; the brand link (and the
+// otherwise-permanently-wrong "Sign in" CTA) needed to, the same way home.html and kiosk.html
+// already do.
+(async () => {
+  try {
+    const r = await fetch('/api/me', { headers: authHeaders(new URLSearchParams(location.search).get('user')) });
+    if (!r.ok) return;   // 401 or offline -- leave the signed-out header exactly as it was
+    const brand = document.querySelector('.top a.brand');
+    const signIn = document.querySelector('.top nav a.solid');
+    if (brand) brand.href = '/home.html';
+    if (signIn) { signIn.textContent = 'My dashboards'; signIn.href = '/home.html'; }
+  } catch { /* offline or blocked -- the signed-out header is still correct in that case */ }
+})();
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
