@@ -111,6 +111,19 @@ function checkWordsItem(it) {
     if (!Array.isArray(it.decoys) || it.decoys.length === 0) bad.push('decoys, if present, must be a non-empty array');
     else if (it.decoys.some((d) => typeof d !== 'string' || !d.trim())) bad.push('a decoy is empty');
   }
+  // *** ADDED 2026-09-08 — Mike: "Fix the schema." *** Word Forge's own word rows have always
+  // carried an example sentence, and the pack schema never did — the gap this file's own header
+  // used to leave for "a per-module decision" turned out to be a genuine schema hole, not a
+  // wiring choice. NAMED `example`, NOT `sentence` — `PACK_SCHEMA.md`'s own worked example
+  // already used `example` (it predates this fix), so that is the published contract; Word
+  // Forge's internal field is `sentence` and stays that name internally, the same small rename
+  // Trivia's own pack mapping already does (`answer`/`wrong` vs. the pack's `correct`/`answers`).
+  // Optional, like `decoys`: a definition without an example is still a usable word, the same
+  // way `checkLessonItem` treats a video as genuinely optional below. NOT A BREAKING CHANGE —
+  // zero `words`-kind packs exist yet (the one shipped pack is `trivia`), so nothing to migrate.
+  if (it.example !== undefined && (typeof it.example !== 'string' || !it.example.trim())) {
+    bad.push('example, if present, must be a non-empty string');
+  }
   if (it.difficulty && !['easy', 'medium', 'hard'].includes(it.difficulty)) {
     bad.push(`difficulty must be easy/medium/hard, got ${JSON.stringify(it.difficulty)}`);
   }
