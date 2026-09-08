@@ -244,7 +244,10 @@ const logText = (r) => r.q('[data-log]').textContent;
       const b = r.panel.bindings().find((x) => x.device === XAC);
       check('the pressed control becomes the binding',
         !!b && b.control === 'button:0' && b.actionId === verbTopic('next'));
-      check('with sensible defaults', b.edge === 'press' && b.role === 'universal' && b.holdMs === 0);
+      // holdMs is null, not 0, for a freshly-captured binding -- 2026-09-08, the device bus:
+      // `null` means "inherits this device's own hold time," which resolves to 0 here only
+      // because this rig's device has no default set. See the device-bus section below.
+      check('with sensible defaults', b.edge === 'press' && b.role === 'universal' && b.holdMs === null);
       // CAPTURE MUST SAY SOMETHING. It used to clear the line on success and only speak up
       // when the hold was long enough to suggest a threshold — so a quick tap bound the
       // control in silence. Mike: "it's not very obvious that a setting was ever made."

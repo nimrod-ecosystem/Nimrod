@@ -30,7 +30,7 @@
 // WHAT IT DELIBERATELY DOES NOT DO: no binding EDITOR. Capturing a control, naming it and
 // saving it is the binder's job and stays on the home side. This runtime only consumes.
 
-import { createInputBus, normalizeBinding, GATES } from './input.js';
+import { createInputBus, normalizeBinding, normalizeDevice, GATES } from './input.js';
 import { createVerbRouter } from './input_router.js';
 import { attachKeyboard } from './input_keyboard.js';
 import { attachPointer } from './input_pointer.js';
@@ -61,6 +61,17 @@ export function normalizeRecord(saved, fallback = []) {
     bindings: (source || []).map((b, i) => {
       try { return normalizeBinding(b, `b${i + 1}`); } catch (err) {
         console.error('dropped a binding', b, err);
+        return null;
+      }
+    }).filter(Boolean),
+    // THE DEVICE BUS. A device's own defaults (hold/debounce/lockout a binding on it inherits
+    // when it does not set its own) plus a caregiver-given label. Same discard-on-corruption
+    // shape as bindings: a device row that fails to normalize is dropped and logged, not left
+    // to crash the whole record. No `fallback` for devices — an account with nothing saved yet
+    // has no known devices, which is a true fact, not a gap to paper over.
+    devices: (Array.isArray(saved?.devices) ? saved.devices : []).map((d) => {
+      try { return normalizeDevice(d); } catch (err) {
+        console.error('dropped a device', d, err);
         return null;
       }
     }).filter(Boolean),
@@ -118,6 +129,7 @@ export function mountInputRuntime({
   function apply(rec) {
     record = rec;
     input.setBindings(record.bindings);
+    input.setDevices(record.devices);
     input.setGate(record.gate);
   }
   apply(record);

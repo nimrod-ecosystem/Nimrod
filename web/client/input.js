@@ -120,6 +120,22 @@ export function deviceClass(device) {
 const ck = (device, control) => `${device} ${control}`;
 const num = (v, dflt) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : dflt);
 
+// *** THE DEVICE BUS. *** Added 2026-09-08 -- top of the backlog, Mike's own words: "Devices
+// still aren't first-class objects — verbs bind to keys, not devices, so every conditioning
+// setting is global to that key." Confirmed by reading the binder (`inputs.js`): holdMs /
+// debounceMs / lockoutMs live ONLY on a binding, one row per verb. A switch bound to `select` in
+// one game and `next` in another has to have its hold time typed in twice, and a caregiver who
+// later learns the switch needs a longer hold has to find and edit every binding on it, not the
+// switch once.
+//
+// `numOrInherit` is the whole mechanism. `undefined`/`null` means "not set on this binding — use
+// the device's default"; anything else is the same safe coercion `num()` already does (an
+// invalid or negative value becomes an explicit 0, never silently reinterpreted as "inherit" --
+// the UI already clamps typed input to a real number before it reaches here, so this only
+// matters for a binding built by hand). A binding that DOES specify a value, including an
+// explicit 0, always wins over the device — the device is a DEFAULT, not an override.
+const numOrInherit = (v) => (v === undefined || v === null ? null : num(v, 0));
+
 // A binding with every field filled in, validated. Exported because the bus is not the
 // only thing that holds bindings: a saved profile and an editor UI hold the same shape,
 // and if THEY carry half-populated objects the bus quietly normalizes its own copy while
@@ -138,11 +154,30 @@ export function normalizeBinding(b = {}, fallbackId = '') {
   if (!ROLES.includes(role)) throw new Error(`binding "${actionId}": bad role "${b.role}"`);
   return {
     id, actionId, device, control, edge, role,
-    holdMs: num(b.holdMs, 0),
-    debounceMs: num(b.debounceMs, 0),
-    lockoutMs: num(b.lockoutMs, 0),
+    // `null` here means "inherit from the device" -- see `numOrInherit` above. Every binding
+    // saved before this existed already carries an explicit number (the UI always wrote one),
+    // so nothing already stored changes meaning; only a binding that never had a number at all
+    // starts resolving through the device instead of silently meaning zero.
+    holdMs: numOrInherit(b.holdMs),
+    debounceMs: numOrInherit(b.debounceMs),
+    lockoutMs: numOrInherit(b.lockoutMs),
     payload: b.payload,
     label: b.label ? String(b.label) : '',
+  };
+}
+
+// A device's OWN defaults -- what `numOrInherit(null)` on a binding resolves through. Devices
+// have no further tier above them, so their three numbers are ordinary, always-concrete
+// defaults via `num()`, the same way a binding's used to be.
+export function normalizeDevice(d = {}, fallbackDevice = '') {
+  const device = String(d.device || fallbackDevice);
+  if (!device) throw new Error('device: a device id is required');
+  return {
+    device,
+    label: d.label ? String(d.label) : '',
+    holdMs: num(d.holdMs, 0),
+    debounceMs: num(d.debounceMs, 0),
+    lockoutMs: num(d.lockoutMs, 0),
   };
 }
 
@@ -155,10 +190,28 @@ export function createInputBus({
   onActivation = null,       // the log sink - receives every decision, accepted or not
   maxHoldMs = 12000,
   gate = 'both',
+  devices = [],
 } = {}) {
   if (!bus) throw new Error('createInputBus: bus is required');
   if (!actions) throw new Error('createInputBus: an action registry is required');
   if (!GATES.includes(gate)) throw new Error(`createInputBus: bad gate "${gate}"`);
+
+  const deviceDefaults = new Map();   // device -> normalized device
+  function setDevices(list) {
+    deviceDefaults.clear();
+    (list || []).forEach((d) => { const nd = normalizeDevice(d); deviceDefaults.set(nd.device, nd); });
+  }
+  setDevices(devices);
+
+  // THE ONE PLACE A BINDING'S EFFECTIVE CONDITIONING IS RESOLVED. Everywhere below that used to
+  // read `b.holdMs` etc. directly now calls this, so "binding value, else the device's, else
+  // zero" is stated once rather than reimplemented at every call site — the same reasoning
+  // `permitted()` and `attempt()` already apply to the gate and the log.
+  function effective(b, field) {
+    const own = b[field];
+    if (own !== null) return own;
+    return deviceDefaults.get(b.device)?.[field] ?? 0;
+  }
 
   const bindings = new Map();   // bindingId -> binding
   const held = new Map();       // controlKey -> {at, decided:Set, timers:[], maxTimer}
@@ -322,7 +375,8 @@ export function createInputBus({
     if (!action) return report({ ...base, reason: 'unknown-action' });
 
     const last = lastFire.get(b.id);
-    if (b.lockoutMs > 0 && last != null && at - last < b.lockoutMs) {
+    const lockoutMs = effective(b, 'lockoutMs');
+    if (lockoutMs > 0 && last != null && at - last < lockoutMs) {
       return report({ ...base, reason: 'lockout' });
     }
 
@@ -406,8 +460,9 @@ export function createInputBus({
 
     const matches = bindingsFor(device, control);
     // Captured at PRESS time, not release time: bindings hot-swap when a profile changes, and
-    // what matters is what was being asked of her when she pressed.
-    h.requiredHoldMs = matches.reduce((m, b) => Math.max(m, b.holdMs || 0), 0);
+    // what matters is what was being asked of her when she pressed. `effective()`, not `b.holdMs`
+    // directly -- a binding inheriting the device's hold time still asked for one.
+    h.requiredHoldMs = matches.reduce((m, b) => Math.max(m, effective(b, 'holdMs')), 0);
     // Emitted before the binding lookup decides anything, so an unbound press is on the
     // measurement channel with the same shape as a bound one.
     reportEdge({
@@ -424,7 +479,8 @@ export function createInputBus({
     for (const b of matches) {
       // Debounce is judged on the physical edge, before anything is armed - a bounce
       // must not start a hold timer.
-      if (b.debounceMs > 0 && prevDown != null && at - prevDown < b.debounceMs) {
+      const debounceMs = effective(b, 'debounceMs');
+      if (debounceMs > 0 && prevDown != null && at - prevDown < debounceMs) {
         h.decided.add(b.id);
         report({
           at, device, control, pressId: h.pressId, actionId: b.actionId, bindingId: b.id,
@@ -433,11 +489,12 @@ export function createInputBus({
         continue;
       }
       if (b.edge === 'release') continue;               // decided on the way up
-      if (b.holdMs > 0) {
+      const holdMs = effective(b, 'holdMs');
+      if (holdMs > 0) {
         h.timers.push(setTimer(() => {
           h.decided.add(b.id);
-          attempt(b, { at: now(), device, control, downAt: at, heldMs: b.holdMs, pressId: h.pressId });
-        }, b.holdMs));
+          attempt(b, { at: now(), device, control, downAt: at, heldMs: holdMs, pressId: h.pressId });
+        }, holdMs));
         continue;
       }
       h.decided.add(b.id);
@@ -486,15 +543,16 @@ export function createInputBus({
         at, device, control, pressId: h.pressId, actionId: b.actionId, bindingId: b.id,
         edge: b.edge, role: b.role, heldMs, latencyMs: heldMs,
       };
+      const holdMs = effective(b, 'holdMs');
       if (b.edge === 'press') {
         // Only a hold-to-activate that never got there is news; anything already
         // decided on the way down already has its log line.
-        if (b.holdMs > 0 && !h.decided.has(b.id)) report({ ...base, reason: 'too-short' });
+        if (holdMs > 0 && !h.decided.has(b.id)) report({ ...base, reason: 'too-short' });
         continue;
       }
       // release edge
       if (auto) { report({ ...base, reason: 'auto-release' }); continue; }
-      if (b.holdMs > 0 && heldMs < b.holdMs) { report({ ...base, reason: 'too-short' }); continue; }
+      if (holdMs > 0 && heldMs < holdMs) { report({ ...base, reason: 'too-short' }); continue; }
       attempt(b, ctx);
     }
   }
@@ -518,6 +576,7 @@ export function createInputBus({
     bindings.clear();
     lastDown.clear();
     lastFire.clear();
+    deviceDefaults.clear();
   }
 
   return {
@@ -525,6 +584,17 @@ export function createInputBus({
     // What is already on this control, so the binder can say "that is Next photo -
     // replace it?" rather than silently stacking a second action onto one switch.
     bindingsAt: (device, control) => bindingsFor(device, control).map((b) => ({ ...b })),
+    // THE DEVICE REGISTRY. `setDevices` replaces the whole set, the same hot-swap shape
+    // `setBindings` already has (a profile switch is one call, not a diff). `deviceDefaults`
+    // reads back what a device's own settings are — `{}` shape via `normalizeDevice` — for a
+    // device nobody has configured, so the binder can show "0 (none set)" rather than nothing.
+    setDevices, listDevices: () => [...deviceDefaults.values()].map((d) => ({ ...d })),
+    deviceDefaults: (device) => deviceDefaults.get(device) || normalizeDevice({ device }),
+    // The value a binding will actually run with right now — its own, or the device's.
+    effectiveConditioning: (b) => ({
+      holdMs: effective(b, 'holdMs'), debounceMs: effective(b, 'debounceMs'),
+      lockoutMs: effective(b, 'lockoutMs'),
+    }),
     beginCapture, cancelCapture, isCapturing: () => !!capture,
     down, up, releaseAll,
     setGate, cycleGate, getGate: () => currentGate, permitted,
