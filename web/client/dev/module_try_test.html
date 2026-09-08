@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>module_try — the modules-page hosts — integration test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:76ch}
+  #host{margin-top:12px;width:460px}
+</style>
+</head>
+<body>
+<h1>module_try — <code>createTryHost</code> stays throwaway, <code>createLiveHost</code> is real</h1>
+<div class="note">
+  <code>/modules.html</code> mounted every module against a throwaway local backend regardless of
+  whether the visitor was signed in — a signed-in person configuring a real schedule there was
+  writing to a sandbox no kiosk could ever read (Mike, 2026-09-08, live: "The modules page ...
+  is where you set up your modules."). <code>createLiveHost</code> is the fix: signed in, picking
+  a module edits the visitor's REAL default screen, through the same <code>/api/profiles/...</code>
+  URLs the kiosk itself reads. This proves that end to end against the real server, not mocked —
+  run it: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { createTryHost, createLiveHost } from '../module_try.js';
+import '../modules/youtube.js';
+import '../modules/clock.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('try-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const host = document.getElementById('host');
+
+(async () => {
+  try {
+    // ================= createTryHost is unchanged =================
+    section('createTryHost — still throwaway, still works (regression)');
+    {
+      const t = await createTryHost();
+      check('reports itself local, not live', t.backend?.local === true && !t.live);
+      const rec = t.mount('clock', host);
+      check('mounts a module synchronously, no await needed', !!rec && host.children.length > 0);
+      t.unmount(host);
+      check('unmount clears the stage', host.children.length === 0);
+      t.destroy();
+    }
+
+    // ================= createLiveHost resolves a real, persisted profile =================
+    section('createLiveHost — resolves the visitor’s REAL default screen');
+    let live;
+    {
+      live = await createLiveHost({ user: USER });
+      check('reports itself live', live.live === true);
+      check('has a real profileId', typeof live.profileId === 'string' && live.profileId.length > 0);
+
+      const profiles = createProfilesClient({ user: USER });
+      const list = await profiles.list();
+      check('that profile actually exists on the server, not just in memory',
+        list.some((p) => p.id === live.profileId), JSON.stringify(list.map((p) => p.id)));
+
+      // A fresh account's default screen is the same starter kiosk.html would have made —
+      // this is `ensureProfile`, shared rather than a second copy of the bootstrap logic.
+      check('a brand-new account gets a starter screen, same as the kiosk would build',
+        live.profile.modules.some((m) => m.type === 'photos')
+        && live.profile.modules.some((m) => m.type === 'clock'),
+        JSON.stringify(live.profile.modules.map((m) => m.type)));
+    }
+
+    // ================= ensure() adds the real instance, idempotently =================
+    section('ensure(type) — adds the module to the real screen, once');
+    let ytModId;
+    {
+      check('this account has no YouTube instance yet',
+        !live.profile.modules.some((m) => m.type === 'youtube'));
+      const mod1 = await live.ensure('youtube');
+      ytModId = mod1.id;
+      check('ensure() adds a real instance and returns it', !!mod1.id);
+      check('...and the in-memory profile now lists it too',
+        live.profile.modules.some((m) => m.id === ytModId));
+
+      const mod2 = await live.ensure('youtube');
+      check('ensuring the same type again returns the SAME instance, not a duplicate',
+        mod2.id === ytModId, `${mod2.id} vs ${ytModId}`);
+
+      const profiles = createProfilesClient({ user: USER });
+      const serverProfile = await profiles.get(live.profileId);
+      const ytCount = serverProfile.modules.filter((m) => m.type === 'youtube').length;
+      check('...confirmed server-side: exactly one youtube instance, not two', ytCount === 1, String(ytCount));
+    }
+
+    // ================= mount() writes to the SAME state the kiosk would read =================
+    section('mount() — a setting changed here is the setting the kiosk reads');
+    {
+      const rec = live.mount('youtube', host);
+      check('mounts into the stage', host.children.length > 0);
+      live.unmount(host);
+
+      // A fresh handle at the same URL `mount()` built internally — not the module's own
+      // state object, which the host does not hand back. This is what "the modules page
+      // saves it" and "the kiosk reads it" actually share: not a JS reference, the URL.
+      const profiles = createProfilesClient({ user: USER });
+      const writeState = createState({ url: profiles.stateURL(live.profileId, ytModId), user: USER });
+      await writeState.load();
+      writeState.set({ schedule: [{ name: 'Test', start: 5, playlistId: 'PLtest123' }] });
+      await writeState.flush();
+
+      // Independent read, the way kiosk.js's own `stateFor` builds a handle — same URL
+      // shape, a third fresh object, nothing shared with either handle above. If this sees
+      // the write, the kiosk would too.
+      const check_state = createState({ url: profiles.stateURL(live.profileId, ytModId), user: USER });
+      await check_state.load();
+      const saved = check_state.get();
+      check('the kiosk’s own read path sees the schedule this page saved',
+        saved?.schedule?.[0]?.playlistId === 'PLtest123', JSON.stringify(saved));
+    }
+
+    // ================= the throwaway host never touches the account =================
+    section('the two hosts do not leak into each other');
+    {
+      const t = await createTryHost();
+      const rec = t.mount('youtube', host);
+      check('the demo host mounts fine even though the account has a real youtube instance',
+        !!rec);
+      t.unmount(host); t.destroy();
+
+      const profiles = createProfilesClient({ user: USER });
+      const serverProfile = await profiles.get(live.profileId);
+      const ytCount = serverProfile.modules.filter((m) => m.type === 'youtube').length;
+      check('...and still exactly one real youtube instance — the demo host added nothing',
+        ytCount === 1, String(ytCount));
+    }
+
+    live.destroy();
+  } catch (err) {
+    check('*** the run itself did not throw ***', false, String(err?.stack || err));
+    console.error(err);
+  }
+
+  const s = document.getElementById('summary');
+  s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  s.className = failed ? 'fail' : 'pass';
+  s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

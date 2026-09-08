@@ -27,6 +27,9 @@ import { createAudioBus } from './audio_bus.js';
 import { createCameraOwner } from './camera_owner.js';
 import { createMicOwner } from './mic_owner.js';
 import { createLocalBackend, createLocalMediaSources, seedStarterScreen } from './local_store.js';
+import { createProfilesClient, ensureProfile } from './profile.js';
+import { createState } from './state.js';
+import { createEvents } from './events.js';
 
 /**
  * Build the world a module needs, once, and hand back something that can mount one into any
@@ -120,6 +123,95 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
     },
 
     /** Everything, for a page teardown. */
+    destroy() {
+      for (const host of [...live.keys()]) this.unmount(host);
+    },
+  };
+}
+
+/**
+ * `createTryHost`'s signed-in twin. `/modules.html` mounted every module against a
+ * throwaway local backend regardless of whether the visitor had an account -- which meant
+ * a signed-in person configuring a YouTube schedule there was writing to a sandbox no
+ * kiosk could ever read, and the real kiosk correctly showed nothing (Mike, 2026-09-08,
+ * live: "The modules page is where you should be able to access the modules without a
+ * kiosk. It's not meant to be a separate sandbox. It is where you set up your modules.").
+ * That was the actual bug -- the page's whole visual language says "configure your
+ * modules here," and for a signed-in visitor it should mean that literally.
+ *
+ * This mounts against the visitor's REAL default screen (the same one `ensureProfile`
+ * hands the kiosk), using the same `createState`/`createEvents` + `/api/profiles/...`
+ * URLs kiosk.js's own `stateFor`/`eventsFor` use -- so a setting changed here is the same
+ * setting the kiosk reads, not a parallel copy of it.
+ *
+ * Deliberately NOT the full kiosk world: no call transport, no live drive socket, no
+ * person-aim tracking. Those are what makes a screen a KIOSK rather than a settings editor
+ * for one module at a time, and this page was never meant to grow into a second kiosk --
+ * see the "one at a time, in the big stage" note in modules.html for why.
+ */
+export async function createLiveHost({ user }) {
+  const bus = createBus();
+  const profiles = createProfilesClient({ user });
+  const profileId = await ensureProfile(profiles, user);
+  const profile = await profiles.get(profileId);   // profile.modules cached + mutated below
+  const sources = createLocalMediaSources();        // per-DEVICE folder sources; real either way
+  const output = createOutputBus({ channels: defaultChannels({}) });
+  const audio = createAudioBus();
+  const cameraOwner = createCameraOwner();
+  const micOwner = createMicOwner();
+  const rand = Math.random;
+
+  const live = new Map();
+
+  /** Find this profile's instance of `type`, adding one for real if it has none yet --
+   *  picking a module here is how you add it to your dashboard, same as the composer. */
+  async function ensureInstance(type) {
+    let mod = profile.modules.find((m) => m.type === type);
+    if (mod) return mod;
+    mod = await profiles.addModule(profileId, type);
+    profile.modules.push(mod);
+    return mod;
+  }
+
+  return {
+    bus, output, audio, profileId, profile, sources, live: true,
+
+    /** MUST be awaited before `mount(type, ...)` — resolving/creating the real instance
+     *  is a network call, unlike the throwaway host's synthetic per-type key. */
+    ensure: ensureInstance,
+
+    mount(type, host, extra = {}) {
+      const mod = profile.modules.find((m) => m.type === type);
+      if (!mod) throw new Error(`module_try: ${type} was not ensured before mount`);
+      const state = createState({ url: profiles.stateURL(profileId, mod.id), user });
+      const events = createEvents({ url: profiles.eventsURL(profileId, mod.id), user });
+      state.load?.().catch(() => {});
+      events.load?.().catch(() => {});
+      const rec = mountModule(type, {
+        mount: host, bus, rootBus: bus, user, profileId, personId: null,
+        instanceId: mod.id,
+        state,
+        events,
+        makeState: (key, opts) => createState({ url: profiles.stateURL(profileId, key), user, ...opts }),
+        makeEvents: (key, opts) => createEvents({ url: profiles.eventsURL(profileId, key), user, ...opts }),
+        output, audio, micOwner, cameraOwner, sources, rand,
+        callTransport: null,
+        aim: null,
+        ...extra,
+      });
+      rec.init();
+      live.set(host, rec);
+      return rec;
+    },
+
+    unmount(host) {
+      const rec = live.get(host);
+      if (!rec) return;
+      live.delete(host);
+      try { rec.destroy(); } catch (err) { console.error('module_try: destroy', err); }
+      host.innerHTML = '';
+    },
+
     destroy() {
       for (const host of [...live.keys()]) this.unmount(host);
     },

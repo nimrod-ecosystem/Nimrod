@@ -28,7 +28,7 @@
 <div id="root"></div>
 
 <script type="module">
-import { createProfilesClient } from './profile.js';
+import { createProfilesClient, ensureProfile } from './profile.js';
 import { cachedFetch } from './cache.js';
 import { setDeviceKey, authHeaders } from './auth.js';
 import { mountKiosk } from './kiosk.js';
@@ -75,22 +75,6 @@ function showLogin(failed) {
     (failed ? '<div class="err">Sign-in didn’t complete. Please try again.</div>' : '') +
     '</div>';
   document.getElementById('gsi').addEventListener('click', () => { location.href = '/auth/login'; });
-}
-
-// A starter profile so a fresh account "just works": photos, the camera mirror, the
-// clock, and the Lineup director (rotates youtube / personal videos / educational).
-async function ensureProfile(profiles, user) {
-  let list = await cachedFetch('profiles:' + user, () => profiles.list());
-  if (wantProfile) { const p = list.find((x) => x.id === wantProfile); if (p) return p.id; }
-  if (!list.length) {
-    const p = await profiles.create('Bedside');
-    await profiles.addModule(p.id, 'photos');
-    await profiles.addModule(p.id, 'camera');
-    await profiles.addModule(p.id, 'clock');
-    await profiles.addModule(p.id, 'director');
-    return p.id;
-  }
-  return list[0].id;
 }
 
 // Signed out, the kiosk runs against browser storage instead of refusing to open. This is
@@ -230,7 +214,7 @@ function offerTour() {
   if (who.state === 'error') { boot.textContent = 'Connecting…'; setTimeout(() => location.reload(), 6000); return; }
   try {
     const profiles = createProfilesClient({ user: who.user });
-    const profileId = await ensureProfile(profiles, who.user);
+    const profileId = await ensureProfile(profiles, who.user, wantProfile);
     await mountKiosk(root, { user: who.user, profileId, profiles });
     boot.remove();
     offerTour();

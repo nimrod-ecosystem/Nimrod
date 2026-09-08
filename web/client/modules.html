@@ -335,10 +335,17 @@ import { authHeaders } from './auth.js';
 // that is even true. This page never checked `/api/me` before; the brand link (and the
 // otherwise-permanently-wrong "Sign in" CTA) needed to, the same way home.html and kiosk.html
 // already do.
+// SIGNED-IN USER, hoisted so `select()` below can tell whether picking a module should edit
+// the visitor's real dashboard or just demo it -- see `liveHost()` and the `§three-live-
+// findings, item 3` writeup in MIKE_CHANGE_LIST.md for why this stopped being optional.
+let currentUser = null;
+
 (async () => {
   try {
     const r = await fetch('/api/me', { headers: authHeaders(new URLSearchParams(location.search).get('user')) });
     if (!r.ok) return;   // 401 or offline -- leave the signed-out header exactly as it was
+    const me = await r.json();
+    currentUser = me.user;
     const brand = document.querySelector('.top a.brand');
     const signIn = document.querySelector('.top nav a.solid');
     if (brand) brand.href = '/home.html';
@@ -409,7 +416,7 @@ function renderList() {
 // rather than importing a dev harness for a visitor who is only reading.
 let VERDICTS = { ran: 'drew', empty: 'blank', threw: 'threw' };
 
-function renderDetail(m) {
+function renderDetail(m, isLive) {
   detailEl.innerHTML = `
     <h2>${esc(titleFor(m, manifests))}
       <span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span></h2>
@@ -418,26 +425,33 @@ function renderDetail(m) {
     ${m.note ? `<p class="note">${esc(m.note)}</p>` : ''}
     <dl><dt>Needs</dt><dd>${esc(m.needs)}</dd></dl>
     <div class="trystage mod-box" id="stage"></div>
-    <p class="stagenote" id="stagenote">A demo, on your own device. Nothing here is saved to a
-      screen.</p>
+    <p class="stagenote" id="stagenote">${isLive
+      ? 'This is live — changes here save straight to your dashboard, the same as opening it '
+        + 'from <a href="/home.html">My dashboards</a>.'
+      : 'A demo, on your own device. Nothing here is saved to a screen.'}</p>
     <p class="measured" id="measured" hidden></p>`;
   return document.getElementById('stage');
 }
 
-/** Show one module: its copy, then the module itself, large. */
-async function select(type) {
+/** Show one module: its copy, then the module itself, large. Signed in, this edits the
+ *  visitor's own real dashboard (adding the module to it if it is not already there);
+ *  signed out, or when `forceDemo` is set (the "run every one of them" audit — see below),
+ *  it stays the throwaway demo it always was. */
+async function select(type, { forceDemo = false } = {}) {
   const m = ITEMS.find((x) => x.type === type);
   if (!m) return;
+  const isLive = !forceDemo && !!currentUser;
   // Take down whatever is up first. Several of these want the camera, the microphone or the
   // speakers, and the arbiters that decide who gets them are per page — two live panels would
   // be two modules fighting over one webcam.
   if (openStage) { host?.unmount(openStage); openStage = null; }
   selected = type;
   renderList();
-  const stage = renderDetail(m);
+  const stage = renderDetail(m, isLive);
   const note = document.getElementById('stagenote');
   try {
-    await tryHost();
+    host = isLive ? await liveHost() : await tryHost();
+    await host.ensure?.(type);
     host.mount(type, stage);
     openStage = stage;
   } catch (err) {
@@ -482,18 +496,35 @@ document.getElementById('recon').innerHTML = bits.join(' · ');
 // microphone owners, a source registry, state and events — so it is built ONCE, lazily, and
 // only when somebody actually asks to see something.
 //
-// Everything it touches is local and throwaway (`createLocalBackend`), so no account is
-// needed and nothing anybody does in a demo panel reaches a real screen.
+// TWO hosts, not one, since 2026-09-08 (Mike, live: "The modules page is where you should
+// be able to access the modules without a kiosk. It's not meant to be a separate sandbox.
+// It is where you set up your modules."):
+//   * `tryHost()`  — throwaway (`createLocalBackend`), for a signed-out visitor and for the
+//     self-audit below, which mounts every module in a row purely to check it renders and
+//     must never touch anyone's real account just because they clicked one button.
+//   * `liveHost()` — real (`createLiveHost`), for a signed-in visitor. Picking a module here
+//     adds it to their actual dashboard if it is not already there, and every setting is the
+//     same one the kiosk reads — see module_try.js for the shared machinery.
 let host = null;
+let demoHost = null;
+let liveHostPromise = null;
 let openStage = null;            // only one module at a time — see `select` above
 let auditing = false;
 
 async function tryHost() {
-  if (!host) {
+  if (!demoHost) {
     const { createTryHost } = await import('./module_try.js');
-    host = await createTryHost();
+    demoHost = await createTryHost();
   }
-  return host;
+  return demoHost;
+}
+
+async function liveHost() {
+  if (!liveHostPromise) {
+    liveHostPromise = import('./module_try.js')
+      .then(({ createLiveHost }) => createLiveHost({ user: currentUser }));
+  }
+  return liveHostPromise;
 }
 
 // ---- RUN THEM ALL --------------------------------------------------------------------
@@ -526,7 +557,9 @@ async function runAll(btn) {
   for (const m of ITEMS) {
     // `select` renders the copy and mounts it, so the audit watches exactly what a visitor
     // would see rather than a second, quieter code path that could disagree with it.
-    await select(m.type);
+    // `forceDemo` — this iterates every module in a row purely to check it renders; run
+    // signed in it would otherwise add all of them to the visitor's real dashboard.
+    await select(m.type, { forceDemo: true });
     const stage = document.getElementById('stage');
     // `select` has already mounted it, so this JUDGES rather than mounts — `auditOne` would
     // mount a second copy of the same module into the same element. The settle is not
