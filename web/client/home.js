@@ -118,17 +118,19 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
              there: the page was reachable only from the landing nav, which is hidden below
              860px, and from the wallpapers page. So it is a link, marked as leaving the shell
              rather than dressed as a tab it is not.
-             CALLED "Modules", NOT "What you can add" (PRIORITY.md #4). The descriptive
-             phrase was mine and it was the wrong instinct: somebody hunting for the modules
-             page is hunting for the word modules, which is the same argument that renamed
-             Talk to AAC board. It sits ABOVE the tab list now, because it is what a new
-             person needs first and it was underneath everything else.
+             RENAMED "Modules" TO "What you can add" (Mike, 2026-09-08, reopening PRIORITY.md
+             #4). The earlier call here was the opposite - "somebody hunting for the modules
+             page is hunting for the word modules" - and that reasoning is not wrong, it was
+             just overridden, not disproven. Recorded rather than silently swapped so the
+             earlier argument stays visible if this gets reopened again. It sits ABOVE the tab
+             list, because it is what a new person needs first and it was underneath everything
+             else.
              NO BACKTICKS IN THIS COMMENT. It lives inside a template literal, and the first
              draft of it wrote /modules.html in backticks - which closed the string and made
              home.js a syntax error, which made home_test hang forever with no summary. -->
         <ul class="s-nav s-out">
           <li><a class="s-navb s-link" href="/modules.html"
-            title="what each part does, and a live one to try">Modules ↗</a></li>
+            title="what each part does, and a live one to try">What you can add ↗</a></li>
         </ul>
         <ul class="s-nav">
           ${VISIBLE_TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}

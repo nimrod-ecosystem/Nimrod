@@ -24,7 +24,7 @@ the day. It had <b>no suite at all</b> until now — found when the harness was 
 
 <script type="module">
 import { mountModule } from '../module.js';
-import { partOfDay, fmt } from '../modules/clock.js';
+import { partOfDay, fmt, fmtDuration } from '../modules/clock.js';
 import { createBus } from '../bus.js';
 
 const out = document.getElementById('results');
@@ -48,6 +48,44 @@ function fakeState(initial = {}) {
     flush: () => {}, load: async () => {},
     __raw: () => s,
   };
+}
+
+// A hand-driven clock, same convention as `dev/call_test.html`'s `fakeClock` — the countdown
+// is arithmetic rather than a real wait, so a test proves the math rather than hoping a
+// `setTimeout` fires close enough to on time. `advance(ms)` moves the clock forward and fires
+// the registered tick once, the same way `paint`'s real `setInterval(…, 1000)` would after
+// that much wall time passed.
+function fakeClock(startMs = 1_000_000) {
+  let t = startMs;
+  let seq = 0;
+  const ticks = new Map();
+  return {
+    io: {
+      now: () => t,
+      setTick: (fn, ms) => { const id = ++seq; ticks.set(id, fn); return id; },
+      clearTick: (id) => ticks.delete(id),
+    },
+    advance(ms) { t += ms; [...ticks.values()].forEach((fn) => fn()); },
+    now: () => t,
+  };
+}
+
+const clockEvents = () => ({
+  append: async () => {}, load: async () => {}, flush: async () => {},
+  get: () => ({ events: [] }), subscribe: () => () => {}, startPolling() {}, destroy() {},
+});
+
+// Mounts the real module against a fake clock and a fake state — the same rig shape as the
+// gear section below, plus `clockIO` so the timer/stopwatch/pomodoro math runs off a clock
+// the test controls rather than the real one.
+function mountClock(clock, saved = {}) {
+  const host = document.getElementById('host');
+  const state = fakeState(saved);
+  const inst = mountModule('clock', {
+    mount: host, bus: createBus(), state, clockIO: clock.io, events: clockEvents(),
+  });
+  inst.init();
+  return { host, state, inst };
 }
 
 (async () => {
@@ -127,6 +165,20 @@ try {
   }
 
   // =====================================================================================
+  section('duration formatting — the shared readout for timer / stopwatch / pomodoro');
+  {
+    check('zero is 00:00', fmtDuration(0) === '00:00', fmtDuration(0));
+    check('a value under a minute pads the seconds', fmtDuration(5000) === '00:05', fmtDuration(5000));
+    check('minutes and seconds', fmtDuration(65000) === '01:05', fmtDuration(65000));
+    check('past an hour, the hour shows and is NOT padded to two digits',
+      fmtDuration(3661000) === '1:01:01', fmtDuration(3661000));
+    check('rounds to the nearest second rather than floors — see the comment on why',
+      fmtDuration(1500) === '00:02', fmtDuration(1500));
+    check('never goes negative, however it is fed a negative number',
+      fmtDuration(-4000) === '00:00', fmtDuration(-4000));
+  }
+
+  // =====================================================================================
   section('*** the gear — one of the 18 controls no test had ever pressed ***');
   {
     const state = fakeState({});
@@ -179,6 +231,184 @@ try {
     check('*** every control in the gear has a declared row behind it ***',
       gearKeys.every((k) => declared.includes(k)),
       JSON.stringify({ gearKeys, declared }));
+
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** timer mode — counts down and alerts once at zero ***');
+  {
+    const clock = fakeClock();
+    const { host, inst } = mountClock(clock, { mode: 'timer', timerMs: 5000 });
+
+    check('the countdown shows and the clock face is hidden',
+      !host.querySelector('[data-cd]').hidden && host.querySelector('[data-time]').hidden === true);
+    check('it starts at the configured length',
+      host.querySelector('[data-cd-value]').textContent === '00:05',
+      host.querySelector('[data-cd-value]').textContent);
+
+    host.querySelector('[data-cd-toggle]').click();              // Start
+    check('pressing Start begins the countdown',
+      host.querySelector('[data-cd-toggle]').textContent === 'Pause');
+
+    clock.advance(1000);
+    check('*** one second later it reads 4 seconds left ***',
+      host.querySelector('[data-cd-value]').textContent === '00:04',
+      host.querySelector('[data-cd-value]').textContent);
+    clock.advance(1000);
+    check('...and two seconds in, 3', host.querySelector('[data-cd-value]').textContent === '00:03');
+
+    host.querySelector('[data-cd-toggle]').click();              // Pause
+    check('Pause stops it', host.querySelector('[data-cd-toggle]').textContent === 'Start');
+    clock.advance(3000);
+    check('*** it really is paused — three more seconds pass with the value unchanged ***',
+      host.querySelector('[data-cd-value]').textContent === '00:03',
+      host.querySelector('[data-cd-value]').textContent);
+
+    host.querySelector('[data-cd-toggle]').click();              // Resume
+    clock.advance(1000);
+    check('resuming continues from where it paused, not from the top',
+      host.querySelector('[data-cd-value]').textContent === '00:02',
+      host.querySelector('[data-cd-value]').textContent);
+
+    clock.advance(1000);
+    clock.advance(1000);
+    check('*** it reaches zero ***', host.querySelector('[data-cd-value]').textContent === '00:00',
+      host.querySelector('[data-cd-value]').textContent);
+    check('*** and the alert fires — a real, observable state, not a silent stop ***',
+      host.querySelector('.clock').dataset.alerted === '1');
+    check("...with a visible status line", host.querySelector('[data-cd-status]').textContent === "Time's up",
+      host.querySelector('[data-cd-status]').textContent);
+    check('a finished timer disables Start rather than silently refilling itself',
+      host.querySelector('[data-cd-toggle]').disabled === true);
+
+    // NO UNDISMISSABLE GATE — the CLAUDE.md invariant, in one small control: the alert has
+    // to clear on its own, because nobody may be there to press anything.
+    clock.advance(5000);
+    check('*** the alert clears itself after a few seconds — nobody has to dismiss it ***',
+      host.querySelector('.clock').dataset.alerted === '0');
+
+    host.querySelector('[data-cd-reset]').click();
+    check('Reset returns it to the full configured length',
+      host.querySelector('[data-cd-value]').textContent === '00:05');
+    check('...and re-enables Start', host.querySelector('[data-cd-toggle]').disabled === false);
+
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** stopwatch mode — counts up; pause and reset both do what they say ***');
+  {
+    const clock = fakeClock();
+    const { host, inst } = mountClock(clock, { mode: 'stopwatch' });
+
+    check('starts at zero', host.querySelector('[data-cd-value]').textContent === '00:00');
+
+    host.querySelector('[data-cd-toggle]').click();              // Start
+    clock.advance(1000);
+    check('*** counts up ***', host.querySelector('[data-cd-value]').textContent === '00:01');
+    clock.advance(1000);
+    clock.advance(1000);
+    check('...and keeps counting', host.querySelector('[data-cd-value]').textContent === '00:03');
+
+    host.querySelector('[data-cd-toggle]').click();              // Pause
+    clock.advance(4000);
+    check('*** Pause really stops it — four more seconds pass with the value unchanged ***',
+      host.querySelector('[data-cd-value]').textContent === '00:03',
+      host.querySelector('[data-cd-value]').textContent);
+
+    host.querySelector('[data-cd-toggle]').click();              // Resume
+    clock.advance(2000);
+    check('resuming continues from where it paused, not from zero',
+      host.querySelector('[data-cd-value]').textContent === '00:05',
+      host.querySelector('[data-cd-value]').textContent);
+
+    host.querySelector('[data-cd-reset]').click();
+    check('*** Reset returns it to zero and stops it ***',
+      host.querySelector('[data-cd-value]').textContent === '00:00'
+      && host.querySelector('[data-cd-toggle]').textContent === 'Start');
+    clock.advance(3000);
+    check('...and it stays at zero — reset actually stopped it, not just redrew it once',
+      host.querySelector('[data-cd-value]').textContent === '00:00');
+
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** pomodoro mode — alternates work/break and does not drift ***');
+  {
+    const clock = fakeClock();
+    // Short phases so the test does not simulate a real 25/5 split second by second.
+    const { host, inst } = mountClock(clock, { mode: 'pomodoro', pomodoroWorkMs: 4000, pomodoroBreakMs: 3000 });
+
+    check('*** starts on the work phase, at its full length ***',
+      /work/i.test(host.querySelector('[data-cd-label]').textContent)
+      && host.querySelector('[data-cd-value]').textContent === '00:04',
+      host.querySelector('[data-cd-label]').textContent);
+
+    host.querySelector('[data-cd-toggle]').click();              // Start
+    clock.advance(1000);
+    check('counts down during work', host.querySelector('[data-cd-value]').textContent === '00:03');
+
+    // Cross the work/break boundary in ONE jump bigger than the work time actually left (3000ms
+    // left, jumped by 4000ms) — proving the guarded loop in `pomoAdvance` lands correctly on a
+    // big jump, not only when a boundary happens to fall on an exact tick.
+    clock.advance(4000);
+    check('*** it switched to the break phase on its own — no press needed, same as a real Pomodoro ***',
+      /break/i.test(host.querySelector('[data-cd-label]').textContent),
+      host.querySelector('[data-cd-label]').textContent);
+    // Total elapsed since Start: 1000 + 4000 = 5000ms. Work took the first 4000 of that, so
+    // break has been running for 1000ms of its 3000 — remaining should be exactly 2000ms.
+    // *** THIS IS THE DRIFT CHECK. *** A version that started the break as `now() + breakMs`
+    // at the moment the crossing was NOTICED (rather than anchoring to when work was
+    // SCHEDULED to end) would show 00:03 here instead — the break would silently run 1
+    // second long every single cycle, and a screen left running for a whole afternoon would
+    // end up meaningfully off from the schedule it claims to be keeping.
+    check('*** and landed at the exact right point in the break, not restarted fresh ***',
+      host.querySelector('[data-cd-value]').textContent === '00:02',
+      host.querySelector('[data-cd-value]').textContent);
+
+    clock.advance(2000);
+    check('*** and it switches back to work on its own too, at a fresh full length ***',
+      /work/i.test(host.querySelector('[data-cd-label]').textContent)
+      && host.querySelector('[data-cd-value]').textContent === '00:04',
+      `${host.querySelector('[data-cd-label]').textContent} ${host.querySelector('[data-cd-value]').textContent}`);
+
+    // Pause and Reset work the same as the other two modes.
+    host.querySelector('[data-cd-toggle]').click();              // Pause
+    clock.advance(3000);
+    check('Pause stops it here too', host.querySelector('[data-cd-value]').textContent === '00:04');
+
+    host.querySelector('[data-cd-toggle]').click();              // Resume
+    clock.advance(1000);
+    host.querySelector('[data-cd-reset]').click();
+    check('*** Reset returns it to the work phase, at full length ***',
+      /work/i.test(host.querySelector('[data-cd-label]').textContent)
+      && host.querySelector('[data-cd-value]').textContent === '00:04');
+
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('switching modes starts the new mode clean');
+  {
+    const clock = fakeClock();
+    const { host, state, inst } = mountClock(clock, { mode: 'timer', timerMs: 5000 });
+    host.querySelector('[data-cd-toggle]').click();
+    clock.advance(2000);
+    check('PRECONDITION: the timer is mid-count', host.querySelector('[data-cd-value]').textContent === '00:03');
+
+    state.set({ mode: 'stopwatch' });
+    check('*** switching to stopwatch starts it at zero, not wherever the timer left off ***',
+      host.querySelector('[data-cd-value]').textContent === '00:00'
+      && /stopwatch/i.test(host.querySelector('[data-cd-label]').textContent),
+      host.querySelector('[data-cd-value]').textContent);
+
+    state.set({ mode: 'timer' });
+    check('...and switching back to timer starts a fresh one rather than resuming the old count',
+      host.querySelector('[data-cd-value]').textContent === '00:05'
+      && host.querySelector('[data-cd-toggle]').textContent === 'Start',
+      host.querySelector('[data-cd-value]').textContent);
 
     inst.destroy();
   }

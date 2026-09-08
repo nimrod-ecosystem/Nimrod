@@ -144,9 +144,12 @@ export function graphicHTML(g) {
     return `<div class="ig-letters">${String(g.value ?? '').toUpperCase()}</div>`;
   }
   if (g.type === 'word') {
+    // *** SHOWN ONCE, NOT TWICE. *** This used to also render a letter-spelled version above
+    // the word -- the exact treatment `type: 'letters'` already exists for (see the alphabet
+    // entries above, e.g. `letter-a`). A vocab word ('cup', 'dog') doesn't need that; showing
+    // both read as the same word in two different fonts, which is what it was.
     const w = String(g.value ?? '');
-    const spelled = w.split('').map((c) => `<span>${c.toUpperCase()}</span>`).join('');
-    return `<div class="ig-word"><div class="ig-spell">${spelled}</div><div class="ig-wordfull">${w}</div></div>`;
+    return `<div class="ig-word"><div class="ig-wordfull">${w}</div></div>`;
   }
   return '';
 }

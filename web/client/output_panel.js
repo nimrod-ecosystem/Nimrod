@@ -83,7 +83,7 @@ export function mountOutput(root, {
   root.innerHTML = `
     <div class="home">
       <div class="h-intro">
-        <h1>Output</h1>
+        <h1>Notifications</h1>
         <p>How this screen answers. You choose what kind of message reaches which way —
           spoken, on screen, a sound — and it follows you to every screen you own.
           The buttons below really speak, because that is the only way to pick.</p>

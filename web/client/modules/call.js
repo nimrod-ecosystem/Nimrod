@@ -171,6 +171,14 @@ registerModule(
     let phase = 'idle';          // idle | ringing | connected
     let who = null;
     let outgoing = null;         // the cloned track we send; NOT the one the PiP shows
+    // *** ON-SCREEN, NOT JUST console.error. *** Found answering an open question: "does a
+    // failed connection fail silently, or with a message?" It failed silently -- `end()` always
+    // reverted straight to the plain idle view regardless of why, so a real failure and a normal
+    // hangup looked identical to the person on screen. `lastEndReason` carries the reason through
+    // to `render()`'s idle branch (see below); cleared on a timeout or the next call attempt so
+    // it never lingers as a stale message.
+    let lastEndReason = null;
+    let lastEndTimer = null;
     let ringTimer = null;
     let tickTimer = null;
     let remaining = 0;           // seconds left in the decline window
@@ -202,6 +210,9 @@ registerModule(
         stage.innerHTML = demoFrame();
       } else if (phase === 'idle') {
         stage.innerHTML = '<div class="call-idle">No call right now</div>'
+          + (lastEndReason
+            ? `<div class="call-endmsg">${esc(END_MESSAGES[lastEndReason])}</div>`
+            : '')
           + (cfg.demo !== false
             ? '<button type="button" class="call-demo-btn" data-demo>See what a call looks '
               + 'like</button>'
@@ -434,6 +445,14 @@ registerModule(
       end('declined');
     }
 
+    // Reasons worth a word on screen, and what to say. Declined/hangup/ended are outcomes
+    // somebody chose or expected - no message needed, the idle view already says "no call right
+    // now". These two are the ones a person watching would otherwise have no way to explain.
+    const END_MESSAGES = {
+      failed: 'The call could not connect.',
+      unanswered: 'No answer.',
+    };
+
     function end(reason = 'ended') {
       clearRing();
       const was = phase;
@@ -442,6 +461,12 @@ registerModule(
       dropCamera();
       dropMic();
       takeSpeaker(false);
+      if (lastEndTimer != null) { clearTimer(lastEndTimer); lastEndTimer = null; }
+      lastEndReason = END_MESSAGES[reason] ? reason : null;
+      if (lastEndReason) {
+        lastEndTimer = setTimer(() => { lastEndReason = null; lastEndTimer = null; render(); },
+          8000);
+      }
       render();
       try { transport?.hangup?.(reason); } catch { /* already down */ }
       // Published on EVERY exit, including the ones nobody chose - unanswered, failed. The
@@ -509,6 +534,12 @@ registerModule(
           + '.m-call .call-hint{opacity:.6;max-width:34ch;'
           + 'font:400 2.2cqmin/1.35 system-ui,sans-serif}'
           + '.m-call .call-idle{opacity:.45;font:400 3cqmin system-ui,sans-serif}'
+          // Distinct from `.call-idle` on purpose -- higher opacity, its own line -- because
+          // this is information ("no answer", "could not connect"), not the ambient dimness of
+          // nothing happening. Same warm tone as the demo tag rather than an alarm red; a failed
+          // call is not an emergency.
+          + '.m-call .call-endmsg{opacity:.85;color:#fff3d9;'
+          + 'font:600 2.4cqmin/1.3 system-ui,sans-serif;margin-top:.6cqmin}'
           // The example's own chrome. The tag is at the TOP, in the reading position, and it
           // is not subtle: the one thing worse than no example is an example somebody mistakes
           // for a call from a person who is not there.

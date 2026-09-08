@@ -129,10 +129,48 @@ export async function mountKiosk(root, {
                take you home reads oddly — and chose Home anyway, which is his to choose.
                The title says what it actually does, which is where the precision belongs. -->
           <button data-act="home" title="your screens, and the way out (H)">⌂ Home</button>
+          <!-- BACK. The reverse of Next, and until now there was nothing here — see
+               prevInPrimary below for why this waited on nothing new: photos, personal,
+               educational, youtube, wordforge, trivia and interstitials already
+               answer a type/prev topic (MODULE_VERBS in actions.js), because the
+               keyboard's ArrowUp has driven it all along. The button was the only thing
+               missing.
+               NO BACKTICKS IN THIS COMMENT. It lives inside a template literal, same trap
+               documented in home.js — a backtick here closes the template string early and
+               turns the next word into a bare JS identifier, which is exactly what broke
+               here (SyntaxError: Unexpected identifier 'prevInPrimary'). -->
+          <button data-act="back" title="back — the one before this (↑)">◂ Back</button>
           <button data-act="next" title="next (→ / space)">Next ▸</button>
           <!-- Only on an arranged screen; hidden below when there is no layout. See panelNext. -->
           <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
           <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
+          <!-- *** PLAY/PAUSE WAS INVESTIGATED AND DELIBERATELY LEFT OUT. ***
+               NO BACKTICKS IN THIS COMMENT — same trap as the one above: this lives inside
+               the root.innerHTML template literal and a backtick here closes that string
+               early, exactly the bug that had to be fixed in the BACK comment just above.
+               There is no cross-module "is this panel playing" concept to put a button on top
+               of. audio_bus.js (the Hush button, just below) arbitrates VOLUME LEVELS, not
+               playback state — its own header says a source "enacts [a level] however it
+               likes … or a pause", which means the bus cannot answer "is this paused" even
+               for the sources that do pause on a duck. module.js's instance contract is
+               init/onResize/onHide/onShow/destroy and nothing else; there is no
+               togglePlay/isPlaying convention any module implements. The two modules that
+               DO have a real running/paused state are shaped differently ON PURPOSE:
+               sprint.js exposes it as its OWN verb (sprint/control: start/pause/toggle,
+               already reachable through Select/Next/Back once it has focus — see
+               MODULE_VERBS in actions.js), and youtube.js leaves pause to the PLAYER'S OWN
+               ON-SCREEN CONTROLS deliberately (pauseIsReachable = true, so "a visitor has a
+               pause button to press"). A single bar button can reach neither without either
+               reinventing a name every module would have to adopt, or special-casing two
+               module types by hand and silently doing nothing on every other panel — and a
+               control that looks live and is not is worse than no control (see the D16 note
+               in input_router.js: "a control that removes itself when pressed is the
+               failure mode Nimrod exists to prevent" — a control that LOOKS pressable and
+               ISN'T is that same failure from the other direction). Building the real thing
+               means giving every playable module a shared capability, which is a change to
+               every module in modules/ and out of scope for this task (kiosk.js/clock.js
+               only). Left out rather than shipped cosmetic — Hush remains the one real,
+               working "make the noise stop" control on this bar. -->
           <!-- HUSH. Not a mute: her voice and any cue still come through, only the media
                stops. It is for the ordinary moment when somebody walks in to talk to her and
                the music is in the way. -->
@@ -1009,6 +1047,34 @@ export async function mountKiosk(root, {
     else bus.publish(`${rec.type}/next`);
   }
 
+  // *** BACK: THE REVERSE OF `Next`, AND UNTIL NOW THERE WAS NO WAY TO GO BACKWARD AT ALL. ***
+  //
+  // `nextInPrimary` advances the CONTENT of the focused panel — the next photo, the next
+  // video, the next question. Overshoot one and the only way back was cycling all the way
+  // round through `next` again, which for someone pressing a single switch is a real cost
+  // and not a shrug.
+  //
+  // Mirrors `nextInPrimary` exactly, on the same `rec`, the same `<type>/…` topic convention.
+  // NOTHING NEW HAD TO BE BUILT for it to work: `MODULE_VERBS` in actions.js already lists a
+  // `prev` target for `photos`, `personal`, `educational`, `youtube`, `wordforge`, `trivia`
+  // and `interstitials` — because the keyboard's ArrowUp (`verb/prev`) has driven exactly
+  // this the whole time, through the router. Those modules already answer `<type>/prev`; the
+  // transport bar simply never asked them to.
+  //
+  // THE DIRECTOR IS THE ONE DELIBERATE GAP, same as it is for `nextInPrimary`'s special case.
+  // It is a WEIGHTED-PICK state machine (see director.js), not a fixed sequence, so there is
+  // no segment "before" the current one to return to — only ones that might get picked again.
+  // `nextInPrimary` special-cases it to `segment/done` (a forward skip, with no backward
+  // counterpart); this leaves it alone rather than publishing a topic nothing on the other
+  // end can honor. A press that does nothing is the exact failure `respondsToVerbs` exists to
+  // prevent elsewhere in the product — the way to honor that here, without touching
+  // director.js, is to not make the press at all.
+  function prevInPrimary() {
+    const rec = layout ? focusedRec() : stageRec;
+    if (!rec || rec.type === 'director') return;
+    bus.publish(`${rec.type}/prev`);
+  }
+
   // *** MOVING BETWEEN PANELS, WHICH NOTHING COULD DO. ***
   //
   // G9, Mike: *"Next does not move between them."* It does not, and it should not — Next
@@ -1129,6 +1195,7 @@ export async function mountKiosk(root, {
   }
 
   controlsEl.querySelector('[data-act="home"]').addEventListener('click', () => toggleScreens());
+  controlsEl.querySelector('[data-act="back"]').addEventListener('click', prevInPrimary);
   controlsEl.querySelector('[data-act="next"]').addEventListener('click', nextInPrimary);
   const panelBtn = controlsEl.querySelector('[data-act="panel"]');
   panelBtn.addEventListener('click', panelNext);
@@ -1884,6 +1951,7 @@ export async function mountKiosk(root, {
     restart: () => ({ ...restart }),
     drive: () => drive,
     next: nextInPrimary,
+    prev: prevInPrimary,
     toggleMirrorFull,
     setMirror: patchMirror,
     destroy() {
