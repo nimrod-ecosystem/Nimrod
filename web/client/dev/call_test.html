@@ -68,7 +68,7 @@ function fakeClock() {
 }
 
 function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
-                          micFails = false, micMismatch = false } = {}) {
+                          micFails = false, micMismatch = false, callTransport = null } = {}) {
   const clock = fakeClock();
   const host = document.createElement('div');
   document.getElementById('host').append(host);
@@ -102,6 +102,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
   [CALL_INCOMING, CALL_ENDED].forEach((t) => bus.subscribe(t, (p) => published.push([t, p])));
   const inst = mountModule('call', {
     mount: host, bus, audio, cameraOwner, micOwner, output, instanceId: 'c1', callIO: clock.io,
+    callTransport,
     state: { get: () => saved, set: () => Promise.resolve(), subscribe: () => () => {},
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
   });
@@ -555,6 +556,41 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       r.clock.fireTimers();
       check('*** ...and clears on its own after the timeout, rather than staying forever ***',
         !/could not connect/i.test(r.host.textContent), r.host.textContent);
+      r.inst.destroy();
+    }
+
+    section('*** the TRANSPORT\'S OWN reason for ending, not a hardcoded one ***');
+    {
+      // Found reading call_transport.js directly: `onEnded` was wired `() => end('remote')`,
+      // discarding whatever reason the transport actually reported. A stalled connection
+      // (ICE failed, the 30s watchdog) looked exactly like an ordinary hangup on screen.
+      let endedCb = null;
+      const fakeTransport = {
+        onIncoming(cb) { this._incoming = cb; },
+        onEnded(cb) { endedCb = cb; },
+        answer: async () => true,
+        hangup() {},
+      };
+      const r = rig({}, { callTransport: fakeTransport });
+      await r.impl.__incoming({ name: 'Mike' });
+      endedCb('stalled');       // the transport itself reporting a stall, not the module
+      check('*** a transport-reported stall says "connection was lost", not silence ***',
+        /connection was lost/i.test(r.host.textContent), r.host.textContent);
+      r.inst.destroy();
+    }
+    {
+      let endedCb = null;
+      const fakeTransport = {
+        onIncoming(cb) { this._incoming = cb; },
+        onEnded(cb) { endedCb = cb; },
+        answer: async () => true,
+        hangup() {},
+      };
+      const r = rig({}, { callTransport: fakeTransport });
+      await r.impl.__incoming({ name: 'Mike' });
+      endedCb('remote');        // an actual `bye` -- the other person hung up, on purpose
+      check('...but a genuine remote hangup still shows nothing, same as before this fix',
+        !/connection was lost|could not connect/i.test(r.host.textContent), r.host.textContent);
       r.inst.destroy();
     }
 

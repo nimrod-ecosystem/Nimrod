@@ -451,6 +451,14 @@ registerModule(
     const END_MESSAGES = {
       failed: 'The call could not connect.',
       unanswered: 'No answer.',
+      // *** ADDED 2026-09-08. *** `call_transport.js`'s own `onEnded` was wired to always report
+      // `'remote'` regardless of why it actually ended — so a connection that STALLED (its own
+      // `armStall()`, fired from ICE going `failed`, whether that happens before the call ever
+      // connects or after a previously-good connection drops) looked identical on screen to the
+      // other person hanging up normally. Mike's own ruling on this feature — no relay server,
+      // ever, "say so honestly" when a direct connection can't be made — applies exactly as much
+      // to a connection that dies mid-call as to one that never starts.
+      'connection-lost': 'The connection was lost.',
     };
 
     function end(reason = 'ended') {
@@ -601,7 +609,13 @@ registerModule(
         offs.push(bus.subscribe(CALL_HANGUP, () => end('hangup')));
         offs.push(bus.subscribe(CALL_DECLINE, () => decline()));
         transport?.onIncoming?.((from) => incoming(from));
-        transport?.onEnded?.(() => end('remote'));
+        // THE TRANSPORT'S OWN REASON, NOT A HARDCODED ONE. It was `() => end('remote')`,
+        // discarding whatever `call_transport.js`'s `finish(reason)` actually reported — so a
+        // stalled/dropped connection was indistinguishable from an ordinary hangup. `'remote'`
+        // (a real `bye`) and `'destroyed'` (this end tearing itself down) stay silent, same as
+        // before; `'stalled'`/`'failed'` now say so.
+        transport?.onEnded?.((reason) =>
+          end(reason === 'stalled' || reason === 'failed' ? 'connection-lost' : 'remote'));
       },
 
       onResize() {},
