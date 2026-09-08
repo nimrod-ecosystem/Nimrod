@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>content packs — the rule that makes them safe, enforced not trusted</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>content packs</h1>
+<p>docs/PACK_SCHEMA.md, private repo: <i>"A pack is built FROM A SOURCE. It is never recalled from
+memory... A pack without one does not load."</i> This file is where that sentence stops being
+documentation and starts being enforced — <code>validatePack</code> refuses a pack with no
+<code>source</code>, the same way every other safety rule in this codebase is a check rather than
+a promise.</p>
+<p>This suite validates the loader and its checker. It does not wire any module to consume a
+pack — Trivia, Word Forge and Lessons each have their own existing content model and their own
+answer for how a loaded pack should merge with what they already have, and that is a per-module
+decision for the next pass, not a guess made here.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { validatePack, parsePack, loadPack, PACK_SCHEMA_VERSION, PACK_KINDS }
+  from '../packs.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// The trivia example straight from PACK_SCHEMA.md, so this suite is checked against the exact
+// text a person reads before building a pack — if the doc and the checker ever disagree, this
+// is where that would show up.
+const GATSBY = {
+  schema: 'nimrod.pack.v1', kind: 'trivia', name: 'The Great Gatsby',
+  description: "Questions about Fitzgerald's novel.",
+  source: { name: 'The Great Gatsby, F. Scott Fitzgerald, 1925',
+            url: 'https://www.gutenberg.org/ebooks/64317', licence: 'Public domain',
+            attribution: 'Text from Project Gutenberg.' },
+  generated: '2026-09-08',
+  items: [{ question: "What colour is the light at the end of Daisy's dock?",
+            answers: ['Blue', 'Green', 'Red', 'White'], correct: 'Green', difficulty: 'easy',
+            category: 'Literature', explain: 'Gatsby watches it across the bay from his lawn.' }],
+};
+
+const SANGUINE = {
+  schema: 'nimrod.pack.v1', kind: 'words', name: 'Hard words',
+  source: { name: 'Merriam-Webster', url: 'https://www.merriam-webster.com', licence: 'fair use' },
+  items: [{ word: 'sanguine', definition: 'Cheerful and optimistic, especially in a bad situation.',
+            example: 'She stayed sanguine about the delay.',
+            decoys: ['Relating to a city and the duties of its citizens',
+                     'To clean and repair something so it works like new'],
+            difficulty: 'hard' }],
+};
+
+const LESSON = {
+  schema: 'nimrod.pack.v1', kind: 'lesson', name: 'Roots',
+  source: { name: 'Etymonline', url: 'https://www.etymonline.com' },
+  items: [{ topic: 'Roots and origins', video: 'https://www.youtube.com/watch?v=xyz',
+            questions: [{ question: 'Which prefix means "under"?', answers: ['sub', 'super', 'ex', 'in'],
+                          correct: 'sub' }] }],
+};
+
+const clone = (o) => JSON.parse(JSON.stringify(o));
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** the three worked examples straight from PACK_SCHEMA.md all pass ***');
+  {
+    check('the Gatsby trivia example validates clean', validatePack(GATSBY).length === 0,
+      JSON.stringify(validatePack(GATSBY)));
+    check('the sanguine words example validates clean', validatePack(SANGUINE).length === 0,
+      JSON.stringify(validatePack(SANGUINE)));
+    check('the roots lesson example validates clean', validatePack(LESSON).length === 0,
+      JSON.stringify(validatePack(LESSON)));
+  }
+
+  // =====================================================================================
+  section('*** THE RULE ITSELF: no source, no load ***');
+  {
+    const noSource = clone(GATSBY); delete noSource.source;
+    check('a pack with no source at all is rejected', validatePack(noSource).length > 0);
+    check('...and the complaint actually mentions source',
+      validatePack(noSource).some((m) => m.includes('source')), JSON.stringify(validatePack(noSource)));
+
+    const emptySource = clone(GATSBY); emptySource.source = {};
+    check('a source object with no name is rejected too — {} is not honesty, it is nothing',
+      validatePack(emptySource).length > 0);
+
+    const memoryPack = clone(GATSBY);
+    memoryPack.source = { name: 'Claude, from memory', confidence: 'low — not verified against text' };
+    check('*** ...but a pack that HONESTLY says it came from memory still loads ***',
+      validatePack(memoryPack).length === 0, JSON.stringify(validatePack(memoryPack)));
+    // The schema is explicit about this: "If it was authored from memory rather than extracted,
+    // say so in source.name and add a confidence field." The rule is not "prove extraction", it
+    // is "do not hide the provenance" — a pack that admits the weaker source is not the failure
+    // mode this file exists to catch; a pack that hides it is.
+  }
+
+  // =====================================================================================
+  section('the top-level shape');
+  {
+    check('not an object at all', validatePack('just a string').length > 0);
+    check('not an object — an array', validatePack([GATSBY]).length > 0);
+    check('null', validatePack(null).length > 0);
+    check('undefined', validatePack(undefined).length > 0);
+
+    const wrongSchema = clone(GATSBY); wrongSchema.schema = 'nimrod.pack.v2';
+    check('*** a schema version this file does not know is rejected, not guessed at ***',
+      validatePack(wrongSchema).length > 0);
+
+    const noKind = clone(GATSBY); delete noKind.kind;
+    check('missing kind', validatePack(noKind).length > 0);
+    const badKind = clone(GATSBY); badKind.kind = 'facts';
+    check('a kind that is not trivia/words/lesson', validatePack(badKind).length > 0);
+    check('PACK_KINDS names exactly the three the schema doc defines',
+      JSON.stringify(PACK_KINDS.slice().sort()) === JSON.stringify(['lesson', 'trivia', 'words']));
+
+    const noName = clone(GATSBY); delete noName.name;
+    check('missing the pack name', validatePack(noName).length > 0);
+
+    const noItems = clone(GATSBY); noItems.items = [];
+    check('*** an empty items array is rejected — a pack with nothing in it is not a pack ***',
+      validatePack(noItems).length > 0);
+    const notArray = clone(GATSBY); notArray.items = 'lots';
+    check('items that is not even an array', validatePack(notArray).length > 0);
+  }
+
+  // =====================================================================================
+  section('trivia items');
+  {
+    const dup = clone(GATSBY);
+    dup.items = [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'Z' }];
+    check('*** correct must be one of the offered answers, or the question is unwinnable ***',
+      validatePack(dup).some((m) => /correct/i.test(m)), JSON.stringify(validatePack(dup)));
+
+    const twoAnswers = clone(GATSBY);
+    twoAnswers.items = [{ question: 'x?', answers: ['A', 'B'], correct: 'A' }];
+    check('fewer than three answers is rejected', validatePack(twoAnswers).length > 0);
+
+    const emptyAnswer = clone(GATSBY);
+    emptyAnswer.items = [{ question: 'x?', answers: ['A', '', 'C'], correct: 'A' }];
+    check('a blank answer among real ones', validatePack(emptyAnswer).length > 0);
+
+    const noQuestion = clone(GATSBY);
+    noQuestion.items = [{ answers: ['A', 'B', 'C'], correct: 'A' }];
+    check('a trivia item with no question text', validatePack(noQuestion).length > 0);
+
+    const badDiff = clone(GATSBY);
+    badDiff.items = [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A', difficulty: 'nightmare' }];
+    check('an invalid difficulty level', validatePack(badDiff).length > 0);
+    const okDiff = clone(GATSBY);
+    okDiff.items = [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A' }];   // no difficulty at all
+    check('...but difficulty is OPTIONAL — its absence is fine', validatePack(okDiff).length === 0,
+      JSON.stringify(validatePack(okDiff)));
+
+    // The problems list NAMES the item, which matters the moment a pack has more than one.
+    const two = clone(GATSBY);
+    two.items = [
+      { question: 'fine?', answers: ['A', 'B', 'C'], correct: 'A' },
+      { question: 'broken?', answers: ['A', 'B'], correct: 'A' },
+    ];
+    const probs = validatePack(two);
+    check('*** the complaint says WHICH item, not just "something is wrong somewhere" ***',
+      probs.some((m) => m.startsWith('item 1:')), JSON.stringify(probs));
+  }
+
+  // =====================================================================================
+  section('word items');
+  {
+    const noWord = clone(SANGUINE); noWord.items = [{ definition: 'x' }];
+    check('a words item with no word', validatePack(noWord).length > 0);
+    const noDef = clone(SANGUINE); noDef.items = [{ word: 'x' }];
+    check('a words item with no definition', validatePack(noDef).length > 0);
+    const emptyDecoys = clone(SANGUINE);
+    emptyDecoys.items = [{ word: 'x', definition: 'y', decoys: [] }];
+    check('decoys present but empty is rejected -- present must mean something',
+      validatePack(emptyDecoys).length > 0);
+    const noDecoys = clone(SANGUINE);
+    noDecoys.items = [{ word: 'x', definition: 'y' }];
+    check('...but decoys are optional entirely -- their absence is fine',
+      validatePack(noDecoys).length === 0, JSON.stringify(validatePack(noDecoys)));
+  }
+
+  // =====================================================================================
+  section('lesson items');
+  {
+    const noTopic = clone(LESSON); noTopic.items = [{ video: 'x' }];
+    check('a lesson with no topic', validatePack(noTopic).length > 0);
+    const noVideo = clone(LESSON); noVideo.items = [{ topic: 'x' }];
+    check('*** a lesson with no video is still a lesson -- the schema says so explicitly ***',
+      validatePack(noVideo).length === 0, JSON.stringify(validatePack(noVideo)));
+    const badVideo = clone(LESSON); badVideo.items = [{ topic: 'x', video: 12345 }];
+    check('a video field that is not a string', validatePack(badVideo).length > 0);
+    const badNestedQ = clone(LESSON);
+    badNestedQ.items = [{ topic: 'x', questions: [{ answers: ['A', 'B'], correct: 'A' }] }];
+    check('*** a lesson’s embedded questions are checked with the SAME trivia rules ***',
+      badNestedQ && validatePack(badNestedQ).some((m) => m.includes('questions[0]')),
+      JSON.stringify(validatePack(badNestedQ)));
+  }
+
+  // =====================================================================================
+  section('parsePack — text in, a thrown error with EVERY problem, or the object back');
+  {
+    check('valid JSON, valid pack -> the object, unchanged',
+      parsePack(JSON.stringify(GATSBY)).name === GATSBY.name);
+
+    let threw = null;
+    try { parsePack('{not json'); } catch (e) { threw = e; }
+    check('*** broken JSON throws rather than returning null/undefined for a caller to miss ***',
+      threw && /not valid JSON/.test(threw.message), String(threw));
+
+    threw = null;
+    const noSource = clone(GATSBY); delete noSource.source;
+    try { parsePack(JSON.stringify(noSource)); } catch (e) { threw = e; }
+    check('an invalid pack throws too', !!threw);
+    check('...and the thrown message names the actual problem, not just "invalid"',
+      threw && /source/.test(threw.message), String(threw));
+
+    // Multiple problems at once must all reach the thrown message -- a caller fixing one and
+    // re-running to discover the next is exactly the debugging-by-bisection this project has
+    // repeatedly found and removed elsewhere (unread_settings.py, check_item in make_maths.py).
+    const multi = { schema: 'wrong', kind: 'nonsense' };
+    threw = null;
+    try { parsePack(JSON.stringify(multi)); } catch (e) { threw = e; }
+    check('*** several problems in one pack all show up in one thrown message ***',
+      threw && /schema/.test(threw.message) && /kind/.test(threw.message)
+      && /name/.test(threw.message) && /source/.test(threw.message) && /items/.test(threw.message),
+      String(threw));
+  }
+
+  // =====================================================================================
+  section('loadPack — fetch, then the same validation, with the URL in any error');
+  {
+    const fakeFetchOk = async (url) => ({
+      ok: true, text: async () => JSON.stringify(GATSBY),
+    });
+    const got = await loadPack('packs/gatsby.json', { fetchImpl: fakeFetchOk });
+    check('a good fetch of a good pack returns the parsed object', got.name === GATSBY.name);
+
+    const fakeFetch404 = async () => ({ ok: false, status: 404 });
+    let threw = null;
+    try { await loadPack('packs/missing.json', { fetchImpl: fakeFetch404 }); } catch (e) { threw = e; }
+    check('*** a 404 throws rather than silently returning nothing ***',
+      threw && /404/.test(threw.message), String(threw));
+
+    const fakeFetchBad = async () => ({ ok: true, text: async () => JSON.stringify({ schema: 'x' }) });
+    threw = null;
+    try { await loadPack('packs/broken.json', { fetchImpl: fakeFetchBad }); } catch (e) { threw = e; }
+    check('*** an invalid pack from a successful fetch still throws, with the URL in the message ***',
+      threw && threw.message.startsWith('packs/broken.json:'), String(threw));
+  }
+
+  // =====================================================================================
+  section('*** validatePack cannot be trivially satisfied ***');
+  {
+    // The check that keeps this whole file honest: proving each rule can actually FAIL is what
+    // separates a real gate from a validator that returns [] no matter what it is given.
+    check('an entirely empty object fails on several fronts at once', validatePack({}).length >= 4,
+      JSON.stringify(validatePack({})));
+    check('PACK_SCHEMA_VERSION is the literal string the doc specifies',
+      PACK_SCHEMA_VERSION === 'nimrod.pack.v1');
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
