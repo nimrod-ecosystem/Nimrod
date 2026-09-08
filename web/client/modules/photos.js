@@ -446,7 +446,30 @@ registerModule(
           setStatus(`More than one photo source is connected (${names}). `
             + 'Pick one for this panel in Screens — this panel’s “Photos from” setting.');
         } else {
-          setStatus('No photo source connected. Add one in Media / Sources.');
+          // *** CONNECT FROM HERE, NOT ONLY FROM MEDIA / SOURCES. *** Added 2026-09-08 —
+          // Mike's "sources structural rule": a module that consumes a source should let you
+          // connect one from inside the module itself, not dead-end to a separate tab. This is
+          // exactly `media.js`'s own `pick: pickFolder` wiring, called from here instead —
+          // same function, same IndexedDB-backed folder handle, same one-user-gesture rule.
+          // Browsers that cannot show a directory picker at all (`isFolderPickerSupported()`
+          // false — iOS Safari, Firefox) still get the words with no dead button.
+          const { isFolderPickerSupported: canPick } = await import('../folder_source.js');
+          setStatus('No photo source connected.', false, canPick() ? {
+            label: 'Connect a folder',
+            run: async () => {
+              setStatus('Choosing…');
+              try {
+                const { pickFolder } = await import('../folder_source.js');
+                await pickFolder();
+                reload();
+              } catch (err2) {
+                // A cancelled picker throws too -- not an error worth alarming over, just
+                // back to the same offer.
+                setStatus('No photo source connected.', false,
+                  { label: 'Connect a folder', run: () => reload() });
+              }
+            },
+          } : null);
         }
         items = ids = []; byId = channels = {};
         return;

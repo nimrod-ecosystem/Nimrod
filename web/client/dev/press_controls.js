@@ -248,19 +248,29 @@ export async function agentReachable(baseURL, { timeoutMs = 1500 } = {}) {
  * Print the one line a skipped suite should print, and hand back `false` so the caller can stop.
  * SKIP is deliberately not a pass: a green summary for a suite that never ran is the flattering
  * number this whole file exists to avoid.
+ *
+ * `passedSoFar`, optional: checks that ran and passed BEFORE the agent-gated section this call
+ * is bailing out of. Added 2026-09-08 — `personal_test.html` already runs real, agent-independent
+ * checks first (button presses, the recovery control, the new connect-a-folder offer), and this
+ * used to overwrite that with a bare "not running", the exact flattering-number problem this
+ * function's own comment warns about, just pointed the other direction: not a false pass, a false
+ * "nothing happened" over checks that genuinely did. `photos_test.html` already writes its own
+ * count for the same reason; this brings the shared helper to the same honesty rather than
+ * leaving it as the one place still hiding real, already-green results.
  */
-export function reportSkipped(what, urls) {
+export function reportSkipped(what, urls, passedSoFar = null) {
   const out = document.getElementById('results') || document.body;
   const d = document.createElement('div');
   d.className = 'skip';
   d.style.cssText = 'color:#7a5a12;font-weight:700;margin:10px 0;padding:10px 12px;'
     + 'background:#fdf0d5;border-radius:8px;max-width:76ch';
-  d.textContent = `SKIPPED — ${what} is not running (${[].concat(urls).join(', ')}). `
-    + 'Nothing here failed; nothing here ran either. Start it and reload.';
+  const suffix = passedSoFar != null ? ` (${passedSoFar} checks that do not need it passed)` : '';
+  d.textContent = `SKIPPED — ${what} is not running (${[].concat(urls).join(', ')}).${suffix} `
+    + 'Nothing else here ran. Start it and reload.';
   out.append(d);
   const sum = document.getElementById('summary');
   if (sum) {
-    sum.textContent = `SKIPPED — ${what} not running`;
+    sum.textContent = `SKIPPED — ${what} not running${suffix}`;
     sum.className = 'skip';
     sum.style.color = '#7a5a12';
     sum.dataset.done = 'true';

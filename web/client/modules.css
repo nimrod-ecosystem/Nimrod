@@ -360,6 +360,10 @@
 .personal .caption{margin-top:8px;text-align:center;font-weight:700;font-size:1.3rem;color:var(--on-dark)}
 .personal .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
   color:var(--on-dark);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
+/* Matches `.photos .status button` — both status lines can now offer an action
+   (Retry, or "Connect a folder"), same visual treatment either way. */
+.personal .status button{border:1px solid rgba(247,244,213,.5);color:var(--on-dark);
+  background:transparent;border-radius:8px;padding:6px 10px;cursor:pointer}
 .personal .nav{display:none}
 
 /* educational — a single live graphic, drawn in the profile theme */

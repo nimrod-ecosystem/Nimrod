@@ -70,13 +70,44 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
   checkHiddenHides('personal', 'status', check, 'personal’s status sheet');
   await pressRetry('personal', check);
 
+  // *** CONNECT FROM HERE, NOT ONLY FROM MEDIA / SOURCES. *** 2026-09-08, Mike's "sources
+  // structural rule," same fix as photos.js. Self-contained (a fake `sources` client), so it
+  // needs no agent -- like the checks above, it says something even when :8771 is not running.
+  // Completing a real folder picker cannot be driven headlessly (needs a real OS dialog and a
+  // real user gesture); this checks the offer appears, the same boundary the Allow button
+  // already drew elsewhere.
+  {
+    const host = document.createElement('div');
+    document.body.append(host);
+    let cfg = {};
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; },
+                    subscribe: (f) => { f(cfg); return () => {}; }, flush() {} };
+    const inst = mountModule('personal', {
+      mount: host, bus: createBus(), state,
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      user: 'personal-test-nosrc', profileId: 'p',
+      sources: { list: async () => [], add: async () => { throw new Error('no picker in test'); }, remove: async () => {} },
+    });
+    inst.init();
+    await new Promise((r) => setTimeout(r, 120));
+    const status = host.querySelector('[data-status]');
+    check('no source connected is a real status message',
+      !status?.hidden && /no personal-video source connected/i.test(status?.textContent || ''),
+      status?.textContent);
+    const btn = host.querySelector('[data-status] [data-action]');
+    check('*** and it offers to connect one right here, not just "see Media / Sources" ***',
+      !!btn && /connect a folder/i.test(btn.textContent), status?.innerHTML);
+    inst.destroy();
+    host.remove();
+  }
+
   // *** PREFLIGHT: the API half needs an agent, and "cannot run" must not print as "failed". ***
   // Without this, seven assertions about a real video from a real agent failed on 2026-09-06 for
   // the single reason that nothing was listening on 8771. The control presses above need no
   // server, so they still ran and still mean something — which is why the skip happens HERE and
   // not at the top of the file.
   if (!(await agentReachable(AGENT))) {
-    reportSkipped('the personal-messages agent', AGENT);
+    reportSkipped('the personal-messages agent', AGENT, passed);
     return;
   }
 

@@ -203,6 +203,39 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     host.remove();
   }
 
+  // *** CONNECT FROM HERE, NOT ONLY FROM MEDIA / SOURCES. *** 2026-09-08, Mike's "sources
+  // structural rule" -- no source at all now offers a real "Connect a folder" button, not just
+  // words pointing at a separate tab. Like the existing Allow button, actually clicking THROUGH
+  // a real folder picker cannot be driven headlessly (it needs a real OS dialog and a real user
+  // gesture) -- this checks the button appears with the right offer, which is the same
+  // established boundary `§controls-photos-allow` already drew.
+  {
+    const host = document.createElement('div');
+    document.body.append(host);
+    let cfg = { sourceId: null };
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; },
+                    subscribe: (f) => { f(cfg); return () => {}; }, flush() {} };
+    const inst = mountModule('photos', {
+      mount: host, bus: createBus(), state,
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      user: USER, profileId: 'p',
+      sources: { list: async () => [], add: async () => { throw new Error('no picker in test'); }, remove: async () => {} },
+    });
+    inst.init();
+    await sleep(120);
+    const status = host.querySelector('[data-status]');
+    check('no source connected is a real status message, not a blank panel',
+      !status?.hidden && /no photo source connected/i.test(status?.textContent || ''),
+      status?.textContent);
+    // `showDirectoryPicker` exists in the real Chrome this suite runs in, so the offer should
+    // be there -- the button existing is what's under test, not completing the OS dialog.
+    const btn = host.querySelector('[data-status] [data-action]');
+    check('*** and it offers to connect one right here, not just "see Media / Sources" ***',
+      !!btn && /connect a folder/i.test(btn.textContent), status?.innerHTML);
+    inst.destroy();
+    host.remove();
+  }
+
   // The RECOVERY control - the one somebody reaches for when something is already wrong.
   await pressRetry('photos', check);
 
