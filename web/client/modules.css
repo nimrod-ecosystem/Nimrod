@@ -268,15 +268,31 @@
  * of it — but it does not have to. A previous/next of our own, OUTSIDE the iframe, is a way to
  * change the video that does not involve fighting their overlay for a click.
  *
- * Small, low-contrast and at the bottom, so a panel somebody is watching is still a panel
+ * Small, low-contrast and at an edge, so a panel somebody is watching is still a panel
  * somebody is watching. `.settings` stays closed until the gear is pressed — it is `hidden` in
  * the markup, and `[hidden]` wins.
+ *
+ * *** MOVED FROM THE BOTTOM TO THE TOP, 2.7. *** It used to sit at `bottom:8px`, and the
+ * kiosk's OWN transport bar (`.k-controls` in kiosk.css) floats at `bottom:2.2vmin` over
+ * whatever is on the stage, with no margin reserved for it. When a youtube panel fills the
+ * stage the two are in the same few pixels — proved geometrically in `transport_test.html`,
+ * not eyeballed: `.youtube .nav`'s own rect landed fully inside `.k-controls`'s rect, and the
+ * bar's z-index (500) sits above the nav's (304), so the bar was drawn OVER the arrows, not
+ * beside them. Removing the arrows was considered and rejected — G13, above, is Mike's own
+ * reason they exist as a SECOND way to change videos outside the iframe, not a redundant one,
+ * and the kiosk's global Back/Next reaching the same `youtube/prev`/`next` topics does not make
+ * this copy dead: the bar auto-hides after 3s and the arrows do not. A FIXED bottom offset big
+ * enough to clear the bar was rejected too — the bar wraps to a second row once enough panels
+ * are on screen (kiosk.css's own header measured a wrapped bar at 130px tall in one test, well
+ * past a single-row guess), so any hardcoded clearance is one crowded screen away from being
+ * wrong again. The top edge is not bottom-anchored by anything, ever, so pairing the arrows
+ * with the gear there removes the collision by construction instead of by measurement.
  */
-.youtube .nav{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:calc(var(--z-panel-contents) + 4);
+.youtube .nav{position:absolute;left:8px;top:8px;z-index:calc(var(--z-panel-contents) + 4);
   display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:99px;
-  background:rgba(7,18,13,.72);color:#cfe0d6;max-width:calc(100% - 16px)}
+  background:rgba(7,18,13,.72);color:#cfe0d6;max-width:calc(100% - 60px)}
 .youtube .nav .yt-label{font-size:.76rem;overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap;max-width:34ch}
+  white-space:nowrap;max-width:26ch}
 .youtube .ybtn{min-width:34px;min-height:34px;border-radius:99px;cursor:pointer;
   border:1px solid rgba(255,255,255,.28);background:transparent;color:#cfe0d6;font-size:1rem}
 .youtube .ybtn:hover{background:rgba(255,255,255,.12)}
