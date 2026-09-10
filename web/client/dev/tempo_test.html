@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>tempo — a value, never a tick</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>tempo — a value, never a tick</h1>
+<p>No server needed. Proves §1.2 item 3 of <code>bus_and_generator_20260910.md</code>:
+tempo publishes <code>{bpm, origin, meter}</code> once on change, and every subscriber
+computes its own beat position from wall-clock time — including, directly, that a bus
+subscribed for a whole bar at a fast tempo receives exactly ONE message, not one per beat.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import {
+  TEMPO_TOPIC, normalizeTempo, createTempoSender, beatsSince, barPosition, nextBeatAt,
+} from '../tempo.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+try {
+  // ================= normalizeTempo =================
+  section('normalizeTempo — never throws, drops what it cannot use');
+  {
+    const t = normalizeTempo({ bpm: 120, origin: 1000, meter: 4 });
+    check('a well-formed tempo normalizes', !!t && t.bpm === 120 && t.origin === 1000 && t.meter === 4);
+    check('bpm 0 is refused — nonsense, not "very slow"', normalizeTempo({ bpm: 0 }) === null);
+    check('a negative bpm is refused', normalizeTempo({ bpm: -10 }) === null);
+    check('a non-numeric bpm is refused', normalizeTempo({ bpm: 'fast' }) === null);
+    check('meter defaults to 4 when absent', normalizeTempo({ bpm: 100 }).meter === 4);
+    check('meter is rounded to a whole number', normalizeTempo({ bpm: 100, meter: 3.7 }).meter === 4);
+    check('an invalid meter falls back to 4', normalizeTempo({ bpm: 100, meter: -1 }).meter === 4);
+    check('origin defaults to roughly now when absent',
+      Math.abs(normalizeTempo({ bpm: 100 }).origin - Date.now()) < 1000);
+    check('nothing at all is refused, not thrown', normalizeTempo(undefined) === null);
+  }
+
+  // ================= createTempoSender: publish on change only =================
+  section('*** createTempoSender publishes ONLY on change — never a tick ***');
+  {
+    const bus = createBus();
+    const seen = [];
+    bus.subscribe(TEMPO_TOPIC, (t) => seen.push(t));
+    const sender = createTempoSender(bus);
+
+    check('the first tempo set publishes', sender.set({ bpm: 120, origin: 1000, meter: 4 }) === true);
+    check('and it is on the bus', seen.length === 1 && seen[0].bpm === 120, JSON.stringify(seen));
+
+    check('setting the IDENTICAL tempo again does not publish',
+      sender.set({ bpm: 120, origin: 1000, meter: 4 }) === false);
+    check('so the topic still shows exactly one message', seen.length === 1);
+
+    check('a genuinely different bpm DOES publish', sender.set({ bpm: 140, origin: 1000, meter: 4 }) === true);
+    check('...and now there are two', seen.length === 2 && seen[1].bpm === 140);
+
+    check('a malformed tempo is refused and never reaches the bus',
+      sender.set({ bpm: 0 }) === false && seen.length === 2);
+
+    // *** THE ACTUAL FLOOD TEST: a fast tempo, a whole bar's worth of real time, one message. ***
+    // At 240 bpm (4 beats/sec) a 4-beat bar is one second; if this were ticking per beat that
+    // would already be 4 messages. It is one, because nothing here ticks at all.
+    const busFlood = createBus();
+    const seenFlood = [];
+    busFlood.subscribe(TEMPO_TOPIC, (t) => seenFlood.push(t));
+    const fastSender = createTempoSender(busFlood);
+    fastSender.set({ bpm: 240, origin: Date.now(), meter: 4 });
+    check('*** setting a fast tempo once produces exactly one bus message, never one per beat ***',
+      seenFlood.length === 1, String(seenFlood.length));
+  }
+
+  // ================= beatsSince =================
+  section('beatsSince — the one division everything else is built from');
+  {
+    const t = normalizeTempo({ bpm: 120, origin: 1000, meter: 4 });   // 500ms per beat
+    check('at origin, zero beats have elapsed', beatsSince(t, 1000) === 0);
+    check('one beat (500ms) later, exactly 1', beatsSince(t, 1500) === 1);
+    check('half a beat later, 0.5', beatsSince(t, 1250) === 0.5);
+    check('four beats (one full bar at 4/4) later, exactly 4', beatsSince(t, 3000) === 4);
+    check('*** BEFORE origin clamps to 0, never a negative beat count ***',
+      beatsSince(t, 500) === 0);
+  }
+
+  // ================= barPosition =================
+  section('barPosition — {bar, beat, fraction}, what a visual reads to place itself');
+  {
+    const t = normalizeTempo({ bpm: 120, origin: 1000, meter: 4 });   // 500ms/beat, 4/4
+    check('at origin: bar 0, beat 0, fraction 0',
+      JSON.stringify(barPosition(t, 1000)) === JSON.stringify({ bar: 0, beat: 0, fraction: 0 }));
+    check('a quarter of the way into beat 0: still beat 0, fraction 0.25',
+      JSON.stringify(barPosition(t, 1125)) === JSON.stringify({ bar: 0, beat: 0, fraction: 0.25 }),
+      JSON.stringify(barPosition(t, 1125)));
+    check('on beat 2 exactly (1000ms in): bar 0, beat 2, fraction 0',
+      JSON.stringify(barPosition(t, 2000)) === JSON.stringify({ bar: 0, beat: 2, fraction: 0 }));
+    check('*** one full bar later (2000ms, 4 beats at 4/4): bar 1, beat 0 ***',
+      JSON.stringify(barPosition(t, 3000)) === JSON.stringify({ bar: 1, beat: 0, fraction: 0 }),
+      JSON.stringify(barPosition(t, 3000)));
+    check('a 3/4 meter rolls over at 3 beats, not 4',
+      barPosition(normalizeTempo({ bpm: 120, origin: 1000, meter: 3 }), 2500).bar === 1,
+      JSON.stringify(barPosition(normalizeTempo({ bpm: 120, origin: 1000, meter: 3 }), 2500)));
+  }
+
+  // ================= nextBeatAt =================
+  section('nextBeatAt — a real timer target, not a poll loop');
+  {
+    const t = normalizeTempo({ bpm: 120, origin: 1000, meter: 4 });   // 500ms/beat
+    check('right at origin, the next beat is 500ms away', nextBeatAt(t, 1000) === 1500);
+    check('mid-beat, the next beat is the NEXT one, not the one already passed',
+      nextBeatAt(t, 1200) === 1500);
+    check('*** exactly ON a beat, "next" is strictly after it, not the same instant ***',
+      nextBeatAt(t, 1500) === 2000, String(nextBeatAt(t, 1500)));
+    check('before origin, the next beat is still beat 1 at the origin+one-beat mark',
+      nextBeatAt(t, 500) === 1500);
+  }
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>
