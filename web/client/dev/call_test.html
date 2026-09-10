@@ -32,7 +32,7 @@
 import { mountModule } from '../module.js';
 import { createBus } from '../bus.js';
 import { createAudioBus, MUSIC_GROUP, GAME_MUSIC_PRIORITY } from '../audio_bus.js';
-import { CALL_INCOMING, CALL_ENDED, CALL_ANSWER, CALL_HANGUP, CALL_DECLINE }
+import { CALL_INCOMING, CALL_ENDED, CALL_ANSWER, CALL_HANGUP, CALL_DECLINE, ANSWER_KIND }
   from '../modules/call.js';
 import { createMachine } from '../statemachine.js';
 import { withCallRule } from '../rules.js';
@@ -67,8 +67,21 @@ function fakeClock() {
   };
 }
 
+// A durable-record double, same shape board_test.html's own `fakeEvents` uses — `.rows` is
+// what a test reads back, `{kind, data}` per append, nesting the payload under `.data`.
+function fakeEvents() {
+  const rows = [];
+  return { rows, append: (kind, data) => { rows.push({ kind, data }); return Promise.resolve(); } };
+}
+
 function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
-                          micFails = false, micMismatch = false, callTransport = null } = {}) {
+                          micFails = false, micMismatch = false, callTransport = null,
+                          // A separate, independently-advanceable wall clock from `fakeClock`'s
+                          // own timer QUEUE (which has no concept of elapsed time at all — it
+                          // only fires callbacks on request). `nowRef.t` is mutable so a test
+                          // can move time forward between `incoming()` and `answer()` without
+                          // touching the ring/countdown timer mock at all.
+                          nowRef = { t: 1000 }, events = fakeEvents() } = {}) {
   const clock = fakeClock();
   const host = document.createElement('div');
   document.getElementById('host').append(host);
@@ -102,13 +115,13 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
   [CALL_INCOMING, CALL_ENDED].forEach((t) => bus.subscribe(t, (p) => published.push([t, p])));
   const inst = mountModule('call', {
     mount: host, bus, audio, cameraOwner, micOwner, output, instanceId: 'c1', callIO: clock.io,
-    callTransport,
+    callTransport, events, now: () => nowRef.t,
     state: { get: () => saved, set: () => Promise.resolve(), subscribe: () => () => {},
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
   });
   inst.init();
   return { host, bus, audio, inst, impl: inst.impl || inst, camLog, micLog, track, published,
-           said, clock };
+           said, clock, events, nowRef };
 }
 
 (async () => {
@@ -591,6 +604,79 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       endedCb('remote');        // an actual `bye` -- the other person hung up, on purpose
       check('...but a genuine remote hangup still shows nothing, same as before this fix',
         !/connection was lost|could not connect/i.test(r.host.textContent), r.host.textContent);
+      r.inst.destroy();
+    }
+
+    // =====================================================================================
+    section('*** latencyMs — ring-to-answer, the mechanism this file had none of at all ***');
+    {
+      // MIKE_CHANGE_LIST.md §0a item 6: call was one of five "answer" modules with NO
+      // latency mechanism — worse than board.js's case, this file had no durable event
+      // record of any kind. "CALL SECOND since you found it already tracks ring/answer
+      // state informally and just never stamps the transition."
+      const r = rig({ declineSeconds: null, ringSeconds: 0 });   // wait for a real answer() call
+      await r.impl.__incoming({ name: 'Mike' });
+      check('the ring started', r.impl.__probe().phase === 'ringing');
+
+      r.nowRef.t += 6200;      // a real 6.2 real seconds pass before she answers
+      await r.impl.__answer();
+      await sleep(20);
+      check('*** a genuine 6200ms ring-to-answer wait is recorded, not rounded or dropped ***',
+        r.events.rows.length === 1 && r.events.rows[0].kind === ANSWER_KIND
+        && r.events.rows[0].data.latencyMs === 6200, JSON.stringify(r.events.rows));
+      r.inst.destroy();
+    }
+    {
+      // The straight-through case (declineSeconds: 0) auto-answers in the same call as
+      // incoming() — a genuinely near-instant answer should measure as near-instant, not be
+      // skipped just because nothing manual happened.
+      const r = rig({ declineSeconds: 0 });
+      await r.impl.__incoming({ name: 'Mike' });
+      await sleep(20);
+      check('*** an auto-answered call still gets a real (near-zero) latencyMs, not a missing one ***',
+        r.events.rows.length === 1 && Number.isFinite(r.events.rows[0].data.latencyMs)
+        && r.events.rows[0].data.latencyMs < 1000, JSON.stringify(r.events.rows));
+      r.inst.destroy();
+    }
+    {
+      // A call that is DECLINED, never answered, gets no latencyMs — there is no answer
+      // moment to measure, and a fabricated one would say she answered a call she refused.
+      const r = rig({ declineSeconds: null });
+      await r.impl.__incoming({ name: 'Mike' });
+      r.nowRef.t += 4000;
+      r.impl.__decline();
+      await sleep(20);
+      check('*** a declined call is recorded nowhere in the answer log — no fabricated latency ***',
+        r.events.rows.length === 0, JSON.stringify(r.events.rows));
+      r.inst.destroy();
+    }
+    {
+      // And a ring that simply goes unanswered until the ring timer gives up.
+      const r = rig({ declineSeconds: null, ringSeconds: 30 });
+      await r.impl.__incoming({ name: 'Mike' });
+      r.clock.fireTimers();      // the ring-timeout timer
+      await sleep(20);
+      check('the call ended unanswered', r.impl.__probe().phase === 'idle');
+      check('*** an unanswered ring is recorded nowhere in the answer log either ***',
+        r.events.rows.length === 0, JSON.stringify(r.events.rows));
+      r.inst.destroy();
+    }
+    {
+      // Two calls back to back — the second's answer must not be measured against the
+      // FIRST call's ring, which is exactly what a stale `ringingAt` would produce.
+      const r = rig({ declineSeconds: null, ringSeconds: 0 });
+      await r.impl.__incoming({ name: 'Mike' });
+      r.nowRef.t += 9000;
+      r.impl.__decline();                              // call 1: declined, no record
+      await sleep(10);
+      r.nowRef.t += 500;
+      await r.impl.__incoming({ name: 'Sam' });         // call 2: a fresh ring
+      r.nowRef.t += 800;
+      await r.impl.__answer();
+      await sleep(20);
+      check('*** call 2’s latency is measured from call 2’s own ring, not call 1’s stale one ***',
+        r.events.rows.length === 1 && r.events.rows[0].data.latencyMs === 800,
+        JSON.stringify(r.events.rows));
       r.inst.destroy();
     }
 
