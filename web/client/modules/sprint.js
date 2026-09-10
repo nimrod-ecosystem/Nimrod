@@ -35,6 +35,33 @@ import { speak as speakDefault, cancel as cancelSpeak } from '../voice.js';
 import { createPointsLedger } from '../points.js';
 
 export const SOURCE = 'sprint';
+// MIKE_CHANGE_LIST.md §0a item 6, sprint fourth in priority order.
+//
+// *** HONEST ABOUT WHAT THIS IS AND IS NOT. *** Sprint has no external stimulus the way
+// board's scan-highlight or call's ring does: `complete()` below auto-advances straight into
+// the next phase with nobody waited on, so there is no "she was asked, how fast did she
+// answer" moment anywhere in a normal run. The one real, measurable gap is self-initiated on
+// BOTH ends — she chooses when to pause and when to resume — so what this records is PAUSE
+// DURATION, the "held" shape (`held.js`'s own sense: a stop somebody is understood to be
+// present for and coming back from), not a reaction time. Recorded as that, not dressed up
+// as the other thing.
+//
+// *** ITS OWN STREAM, NOT `ctx.events`, AND NOT `telemetry.js` EITHER — both checked, both
+// wrong for this. *** `ctx.events` is this INSTANCE's own private stream, and an existing
+// test asserts it stays empty on purpose (`sprint_test.html`: "nothing was double-written to
+// the instance stream") — every durable record sprint makes already goes through the SHARED
+// points ledger instead, and this must not quietly break that. `telemetry.js`'s `session/
+// trial` — the mechanism trivia/wordforge/algebra/pressgame all correctly use for their own
+// latency — was tried first and rejected: its `log()` treats every trial as right-or-wrong
+// (`correct: responded ? (correct === true) : null` — there is no way to pass "no such
+// concept" through it), and a pause has no correct answer. Forcing it through would have
+// written a fabricated `correct: false` — the exact "never a fabricated number" rule this
+// whole audit exists to enforce, just aimed at a different field. A dedicated, named,
+// NOT-per-instance stream (`ctx.makeEvents`, the same seam `lessons.js`'s own `LESSONS_
+// STREAM` and `wordforge.js`'s shared bank both already use for "somewhere real that is not
+// this instance's own storage") says exactly what it is and nothing more.
+export const RESUME_STREAM = 'sprint-resume';
+export const RESUME_KIND = 'resumed';
 
 // Defaults are the classic Pomodoro, with the points atom the curriculum uses:
 // one point ~= one minute of focused work, so a 25-minute sprint banks 25.
@@ -171,6 +198,10 @@ registerModule(
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now         = ctx.now || (() => Date.now());
+    // Its own stream, deliberately not `ctx.events` — see RESUME_STREAM's own comment above
+    // for exactly why. Built lazily so a module mounted without `ctx.makeEvents` (an older
+    // test harness, say) degrades to "no resume record" rather than crashing on mount.
+    const resumeStream = ctx.makeEvents ? ctx.makeEvents(RESUME_STREAM) : null;
     const setTicker   = ctx.setTicker || ((fn, ms) => setInterval(fn, ms));
     const clearTicker = ctx.clearTicker || ((id) => clearInterval(id));
     const speak       = ctx.speak || speakDefault;
@@ -184,6 +215,11 @@ registerModule(
     let run = { phase: 'idle', endsAt: null, remainMs: null, cycle: 0 };
     let notice = '';          // transient line under the clock
     let completing = false;   // guards against a tick firing complete() twice
+    // WHEN THE CURRENT PAUSE STARTED — in-memory only, on purpose. Reloading mid-pause loses
+    // it the same way `notice` and `completing` above already do; a pause left over a reload
+    // could span hours or days for reasons that have nothing to do with how quickly she
+    // resumes, and that is a different question from the one this measures.
+    let pausedAt = null;
 
     const el = (sel) => mount.querySelector(sel);
     function num(v, dflt) { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : dflt; }
@@ -226,13 +262,28 @@ registerModule(
 
     function start() {
       notice = '';
-      if (isPaused()) { persist({ endsAt: now() + run.remainMs, remainMs: null }); render(); return; }
+      if (isPaused()) {
+        // The pause is over — record how long it lasted BEFORE anything else changes, the
+        // same "capture first, mutate state after" order board.js and call.js both use for
+        // their own latency.
+        const latencyMs = pausedAt != null ? Math.max(0, now() - pausedAt) : null;
+        pausedAt = null;
+        if (latencyMs != null) {
+          try {
+            resumeStream?.append?.(RESUME_KIND, {
+              at: now(), phase: run.phase, latencyMs,
+            })?.catch?.((err) => console.error('sprint: log', err));
+          } catch (err) { console.error('sprint: log', err); }
+        }
+        persist({ endsAt: now() + run.remainMs, remainMs: null }); render(); return;
+      }
       if (isRunning()) return;
       startPhase(run.phase === 'idle' ? 'work' : run.phase);
     }
 
     function pause() {
       if (!isRunning()) return;
+      pausedAt = now();
       persist({ remainMs: Math.max(0, run.endsAt - now()), endsAt: null });
       render();
     }
@@ -255,6 +306,11 @@ registerModule(
       cancelSpeak();
       persist({ phase: 'idle', endsAt: null, remainMs: null, cycle: 0 });
       notice = '';
+      // A pause that ends in a reset rather than a resume was never really "resumed" — no
+      // record is made for it (an abandoned pause is a different fact than a fast one, the
+      // same reasoning as a declined call getting no answer-latency record), and the
+      // timestamp itself must not survive to be misread against whatever starts next.
+      pausedAt = null;
       render();
     }
 
@@ -437,6 +493,7 @@ registerModule(
         cancelSpeak();
         if (ledger) { ledger.destroy(); ledger = null; }
         if (settings) { settings.destroy(); settings = null; }
+        resumeStream?.destroy?.();
       },
     };
   },
