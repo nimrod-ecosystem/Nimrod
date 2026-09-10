@@ -76,6 +76,98 @@ const threw = async (fn) => { try { await fn(); return false; } catch { return t
     const s3 = createState({ url: `${DEAD}/state`, user: USER });
     check('a non-cached handle still fails on a dead server', await threw(() => s3.load()));
 
+    // ── LOCAL-FIRST, NOT LOCAL-AS-FALLBACK (2026-09-10) ──────────────────────
+    //
+    // `load()` used to await the network no matter what, so a SLOW server read exactly like a
+    // dead one to anyone waiting on it. This proves the fix at the level that actually matters:
+    // a real race between a warm cache and an artificially slow — but eventually SUCCESSFUL —
+    // fetch, not just the already-covered dead-server case above.
+    {
+      const mod2 = await profiles.addModule(profile.id, 'counter');
+      const CK2 = `${USER}:${profile.id}:${mod2.id}:localfirst`;
+      const url2 = profiles.stateURL(profile.id, mod2.id);
+
+      const seed = createState({ url: url2, user: USER, cacheKey: CK2 });
+      await seed.load();
+      seed.set({ v: 'seeded' });
+      await seed.flush();
+      await seed.load();                    // warms the cache with {v:'seeded'}
+
+      // Move the SERVER on without touching the cache, so the background correction below
+      // has something real to disagree with.
+      seed.set({ v: 'server-now-says-this' });
+      await seed.flush();
+
+      const realFetch = window.fetch;
+      let sawSlowFetch = false;
+      window.fetch = (...args) => {
+        if (String(args[0]).includes(url2)) {
+          sawSlowFetch = true;
+          return new Promise((resolve) => setTimeout(() => resolve(realFetch(...args)), 400));
+        }
+        return realFetch(...args);
+      };
+      try {
+        const notified = [];
+        const s = createState({ url: url2, user: USER, cacheKey: CK2 });
+        s.subscribe((snap) => notified.push(snap.v));
+
+        const t0 = performance.now();
+        const snap0 = await s.load();
+        const elapsed = performance.now() - t0;
+        check('*** load() renders from the cache, not the artificially slow network ***',
+          snap0.v === 'seeded' && elapsed < 200, `v=${snap0.v} elapsed=${elapsed.toFixed(0)}ms`);
+        check('...and the slow fetch really was attempted (a real race, not a skipped one)',
+          sawSlowFetch);
+
+        await new Promise((r) => setTimeout(r, 700));   // past the artificial 400ms delay
+        check('the background fetch corrects it once the slow network actually answers',
+          s.get().v === 'server-now-says-this', JSON.stringify(s.get()));
+        check('the subscriber saw BOTH the instant cached value and the corrected one, in order',
+          notified[0] === 'seeded' && notified[notified.length - 1] === 'server-now-says-this',
+          JSON.stringify(notified));
+
+        s.destroy();
+      } finally {
+        window.fetch = realFetch;
+      }
+    }
+
+    // ── stale()/staleSinceMs(): serving old data silently is the dangerous failure ───────────
+    {
+      const modS = await profiles.addModule(profile.id, 'counter');
+      const CKs = `${USER}:${profile.id}:${modS.id}:stale`;
+      const urlS = profiles.stateURL(profile.id, modS.id);
+      const seedS = createState({ url: urlS, user: USER, cacheKey: CKs });
+      await seedS.load();
+      seedS.set({ ok: true });
+      await seedS.flush();
+      await seedS.load();                   // warm cache, real confirmed contact
+
+      check('freshly loaded and confirmed by the server -> not stale',
+        seedS.stale() === false && seedS.staleSinceMs() === null);
+
+      // Same cached data, but THIS handle's own url is dead — it renders instantly from the
+      // shared cache and then never manages to confirm anything, ever.
+      const deadStale = createState({ url: `${DEAD}/state`, user: USER, cacheKey: CKs, staleAfterMs: 30 });
+      const snapD = await deadStale.load();
+      check('renders from cache even though its OWN url is dead', snapD.ok === true);
+      check('not stale immediately after rendering — nothing has had time to go unconfirmed yet',
+        deadStale.stale() === false);
+      await new Promise((r) => setTimeout(r, 60));
+      check('...but IS stale once staleAfterMs has passed with no confirmed server contact',
+        deadStale.stale() === true);
+      check('staleSinceMs reports a real, plausible elapsed time once stale',
+        Number.isFinite(deadStale.staleSinceMs()) && deadStale.staleSinceMs() >= 30,
+        String(deadStale.staleSinceMs()));
+
+      const noCacheHandle = createState({ url: `${DEAD}/state`, user: USER });
+      check('a handle with no cacheKey is never "stale" — nothing it could be silently serving',
+        noCacheHandle.stale() === false && noCacheHandle.staleSinceMs() === null);
+
+      deadStale.destroy(); seedS.destroy(); noCacheHandle.destroy();
+    }
+
     // ── media-source registry resilience ─────────────────────────────────────
     const media = createMediaSourcesClient({ user: USER, cache: true });
     await media.add({ label: 'personal', base_url: 'http://127.0.0.1:8771', kind: 'agent' });
