@@ -74,19 +74,49 @@ export function createBus() {
     return { name, emit: (signal, payload, meta) => route(name, signal, payload, meta) };
   }
 
+  // INSTANCE ADDRESSING (the third-bus work, 2026-09-10 — glossary "data link", "port").
+  //
+  // Verbs have always resolved to the focused module BY TYPE: `input_router.js` looks up
+  // `photos/next` in a type-keyed table and publishes that bare string, so on a screen with
+  // two photos panels BOTH hear every "next" — there is no way to say which one. A data link
+  // needs the opposite: it addresses one instance's port specifically. Those two could not
+  // coexist as bare topic strings, so this gives any topic a second, INSTANCE-SCOPED address
+  // that means "this one instance, and only this one" without touching what the bare topic
+  // already means to everyone else.
+  //
+  // `#` is the delimiter because nothing in this codebase uses one in a topic string (checked)
+  // and `input_gamepad.js` already reaches for the same character for the same idea — a second
+  // controller of one kind gets a "#2" suffix. Same convention, same reason: distinguish one of
+  // several without renaming what they all are.
+  function instanceTopic(instanceId, topic) {
+    return instanceId ? `${topic}#${instanceId}` : topic;
+  }
+
   // A scoped view for a module: everything it opens is tracked and released on
   // dispose(), so a destroyed module cannot leak sinks or bindings.
-  function scope() {
+  //
+  // `instanceId`, new: when given, every subscription ALSO answers on this instance's own
+  // scoped alias — in ADDITION to the bare topic, never instead of it, so anything that
+  // already publishes to the bare topic (a module's own on-screen button, an existing test)
+  // keeps reaching every instance exactly as it always has. What changes is that something
+  // which KNOWS an instance id — the verb router, a future data link — can now address this
+  // one instance without that broadcast, which is the collision item 2 exists to fix.
+  function scope(instanceId = null) {
     const offs = [];
     const track = (off) => { offs.push(off); return off; };
     return {
-      subscribe: (topic, handler) => track(subscribe(topic, handler)),
+      subscribe: (topic, handler) => {
+        const un = [track(subscribe(topic, handler))];
+        if (instanceId) un.push(track(subscribe(instanceTopic(instanceId, topic), handler)));
+        return () => un.forEach((off) => off());
+      },
       addBinding: (binding) => track(addBinding(binding)),
       createSource,
       publish,          // (topic, payload, meta) - a scope does not rewrite who sent a thing
+      instanceId,
       dispose: () => { while (offs.length) offs.pop()(); },
     };
   }
 
-  return { subscribe, publish, addBinding, createSource, scope };
+  return { subscribe, publish, addBinding, createSource, scope, instanceTopic };
 }

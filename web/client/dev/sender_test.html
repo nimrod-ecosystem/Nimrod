@@ -189,7 +189,10 @@ section('the router forwards it — a verb becomes a panel action WITHOUT losing
   const bus = createBus();
   const router = createVerbRouter({ bus, modules: () => [{ id: 'p1', type: 'photos' }] });
   let meta = 'unset';
-  bus.subscribe('photos/next', (p, t, m) => { meta = m; });
+  // INSTANCE ADDRESSING (2026-09-10): the router publishes to the focused instance's own
+  // scoped topic — see input_router.js `dispatch` and bus.js `instanceTopic`. Subscribing on
+  // the same scoped address `id: 'p1'` above resolves to, not the bare topic.
+  bus.subscribe(bus.instanceTopic('p1', 'photos/next'), (p, t, m) => { meta = m; });
   bus.publish(verbTopic('next'), undefined, senderMeta({ kind: 'remote', id: 'sam', role: 'participant' }));
   check('the sender survives verb -> focused panel',
     senderOf(meta).id === 'sam', JSON.stringify(meta));
@@ -281,13 +284,14 @@ section('CUSTOM VERBS — a verb really is just a name, and here is what that co
     modules: () => [{ id: 'p1', type: 'pond' }] });
 
   let got = null;
-  bus.subscribe('ha/service', (p, t, meta) => { got = senderOf(meta); });
+  // Both instance-scoped, matching the router's own dispatch — see the note above.
+  bus.subscribe(bus.instanceTopic('p1', 'ha/service'), (p, t, meta) => { got = senderOf(meta); });
   bus.publish(verbTopic('lights-dim'), undefined, senderMeta({ kind: 'local', id: 'switch:1' }));
   check('A CUSTOM VERB REACHES THE PANEL through the ordinary router', !!got, JSON.stringify(got));
   check('carrying who sent it, like any other verb', got.id === 'switch:1');
 
   let shipped = false;
-  bus.subscribe('pond/splash', () => { shipped = true; });
+  bus.subscribe(bus.instanceTopic('p1', 'pond/splash'), () => { shipped = true; });
   bus.publish(verbTopic('select'));
   check('and the shipped verbs still work alongside it', shipped === true);
 

@@ -758,11 +758,21 @@ export function mountInputs(root, {
       maps: ROUTER_MAPS,
       onChange: () => renderFocus(),
     });
+    // INSTANCE ADDRESSING (2026-09-10): the router now publishes a verb to the FOCUSED
+    // instance's own scoped topic (`bus.instanceTopic(m.id, topic)`), not the bare type-keyed
+    // one — see input_router.js `dispatch`. The binder is a real target in that same ring
+    // (`BINDER_ID`, above), so it needs the same scoped subscription a `mountModule`-mounted
+    // panel gets automatically via `ctx.bus.scope(instanceId)`. This page never goes through
+    // `mountModule` — it is not a module type, see the comment on `BINDER_ID` — so it asks
+    // `localBus` for that same scoping directly rather than duplicating what `scope` already
+    // does. `binderScope.subscribe` answers on both the bare topic and `binder/…#binder`, so
+    // nothing that already published the bare topic (an older test, say) stops working either.
+    const binderScope = localBus.scope(BINDER_ID);
     binderOffs = [
-      localBus.subscribe('binder/next', () => moveHighlight(1)),
-      localBus.subscribe('binder/prev', () => moveHighlight(-1)),
-      localBus.subscribe('binder/select', () => selectHighlight()),
-      localBus.subscribe('binder/back', () => clearHighlight()),
+      binderScope.subscribe('binder/next', () => moveHighlight(1)),
+      binderScope.subscribe('binder/prev', () => moveHighlight(-1)),
+      binderScope.subscribe('binder/select', () => selectHighlight()),
+      binderScope.subscribe('binder/back', () => clearHighlight()),
     ];
     pads = (makeGamepads || createGamepads)({
       input, onConnect: renderDevices, onDisconnect: renderDevices,
