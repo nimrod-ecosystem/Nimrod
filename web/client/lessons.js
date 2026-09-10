@@ -97,9 +97,18 @@ export function createLessons({ makeEvents, bus = null, limit = 500, pollMs = 40
   const stream = makeEvents(LESSONS_STREAM, { limit, pollMs });
 
   // Watching again is harmless — the log keeps both, the unlocked set is a set.
-  async function watch(topic, { label = '', subject = '' } = {}) {
+  //
+  // `latencyMs` is OPTIONAL, and the only caller that has one to give is `modules/lessons.js`
+  // — how long a card stayed open, from opening it to pressing "I've watched it" (MIKE_CHANGE_
+  // LIST.md §0a item 6). Never written as `0` or `null` when absent — genuinely missing, the
+  // same "never a fabricated 0" rule as every other latency in this codebase, because `watch`
+  // is a shared function and a caller that never measured anything must not silently start
+  // reporting a number that means something specific to one of its callers and nothing to
+  // the others.
+  async function watch(topic, { label = '', subject = '', latencyMs = null } = {}) {
     if (!topic) return null;
     const data = { topic: String(topic), label: String(label || ''), subject: String(subject || '') };
+    if (Number.isFinite(latencyMs) && latencyMs >= 0) data.latencyMs = latencyMs;
     await stream.append(WATCHED_KIND, data);
     if (bus) bus.publish(LESSON_TOPIC, data);
     return data;

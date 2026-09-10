@@ -111,6 +111,32 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     check('a plain url becomes a video element', /<video/.test(videoHTML({ kind: 'url', value: '/a.mp4' })));
     check('no video is not an error', videoHTML(null) === '');
 
+    // ================= watch()'s new, optional latencyMs — deterministic, no server timing =====
+    section('watch() — latencyMs is real when given, never fabricated when not');
+    {
+      const rows = [];
+      const fakeStream = { append: (kind, data) => { rows.push({ kind, data }); return Promise.resolve(); },
+        load: () => Promise.resolve(), startPolling() {}, subscribe: () => () => {},
+        get: () => ({ events: rows.map((r) => ({ kind: r.kind, data: r.data })) }), destroy() {} };
+      const les = createLessons({ makeEvents: () => fakeStream });
+
+      await les.watch('roots', { label: 'Word roots', subject: 'ELA', latencyMs: 4200 });
+      check('*** a real latencyMs is carried through exactly ***',
+        rows[0].data.latencyMs === 4200, JSON.stringify(rows[0].data));
+
+      await les.watch('concision', { label: 'Concision', subject: 'ELA' });
+      check('*** no latencyMs given means no latencyMs field at all — not 0, not null ***',
+        !('latencyMs' in rows[1].data), JSON.stringify(rows[1].data));
+
+      await les.watch('punctuation', { label: 'Punctuation', subject: 'ELA', latencyMs: -50 });
+      check('a negative latencyMs (a clock oddity) is refused rather than stored as nonsense',
+        !('latencyMs' in rows[2].data), JSON.stringify(rows[2].data));
+
+      await les.watch('roots', { label: 'Word roots', subject: 'ELA', latencyMs: NaN });
+      check('a non-finite latencyMs is refused the same way', !('latencyMs' in rows[3].data),
+        JSON.stringify(rows[3].data));
+    }
+
     // ================= the module =================
     section('the lessons module');
     const profiles = createProfilesClient({ user: USER });
@@ -163,6 +189,19 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     check('the unlock is in the append-only log', audit.unlocked().has('roots'));
     check('...and carries the human label for a transcript',
       audit.get().events.some((e) => e.data.label === 'Word roots & origins'));
+
+    // *** MIKE_CHANGE_LIST.md §0a item 6, lessons third in priority order: it carries a real
+    // latencyMs now — how long the card stayed open before the unlock button was pressed
+    // (roughly the 200ms + 700ms of real sleep between the open click at line 145 and the
+    // watch click above, not pinned exactly since this is real wall-clock time, not a fake
+    // clock — this file uses none). ***
+    const rootsRow = audit.get().events.find((e) => e.data.topic === 'roots');
+    check('*** the unlock carries a real latencyMs, not a fabricated one or a missing field ***',
+      Number.isFinite(rootsRow?.data.latencyMs) && rootsRow.data.latencyMs >= 0,
+      JSON.stringify(rootsRow?.data));
+    check('...and it is in the right ballpark for the real delay this test actually waited',
+      rootsRow.data.latencyMs >= 150 && rootsRow.data.latencyMs < 5000,
+      String(rootsRow.data.latencyMs));
 
     // ================= the game respects it =================
     section('the game plays what was unlocked');
