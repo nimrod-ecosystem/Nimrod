@@ -138,9 +138,15 @@ const logText = (r) => r.q('[data-log]').textContent;
     // ================= the router =================
     section('the router — which panel gets it');
     {
+      // INSTANCE ADDRESSING (2026-09-10): the router publishes to the FOCUSED INSTANCE's own
+      // scoped topic now, not the bare type-keyed one — see input_router.js's `dispatch` and
+      // bus.js's `instanceTopic`/`scope`. A raw subscriber (this test) has to listen on the
+      // same scoped address a real mounted module would, via `bus.instanceTopic(id, topic)`,
+      // matching the id each fixture module already carries in SCREENS.p1.modules above.
       const bus = createBus();
       const fired = [];
-      ['photos/next', 'photos/prev', 'youtube/next'].forEach((t) => bus.subscribe(t, (p) => fired.push([t, p])));
+      [['m-photos', 'photos/next'], ['m-photos', 'photos/prev'], ['m-yt', 'youtube/next']]
+        .forEach(([id, t]) => bus.subscribe(bus.instanceTopic(id, t), (p) => fired.push([t, p])));
       const unhandled = [];
       let modules = SCREENS.p1.modules;
       const router = createVerbRouter({ bus, modules: () => modules, onUnhandled: (u) => unhandled.push(u) });
@@ -182,6 +188,56 @@ const logText = (r) => r.q('[data-log]').textContent;
       modules = SCREENS.p1.modules;
       bus.publish(verbTopic('next'));
       check('a destroyed router stops listening', fired.length === 2);
+    }
+
+    // ================= instance addressing =================
+    //
+    // *** THE COLLISION ITEM 2 OF bus_and_generator_20260910.md EXISTS TO FIX. ***
+    //
+    // "Verbs currently resolve to the focused module BY TYPE, so every photos instance hears
+    // photos/next." Proved directly: TWO instances of the SAME type on one screen, focus one,
+    // dispatch a verb, and check the OTHER one never heard it. Before this fix this section
+    // would have failed — both bare-topic subscribers fired on every dispatch, because the
+    // router published the bare `photos/next` string and both instances listened on nothing
+    // else. See bus.js `scope`/`instanceTopic` and input_router.js `dispatch`.
+    section('instance addressing — two of the same type, only the focused one hears it');
+    {
+      const bus = createBus();
+      // Two REAL instances, addressed the way `mountModule` addresses them: each gets its own
+      // scoped bus via `bus.scope(instanceId)`, exactly what `module.js` does for every module
+      // on every real kiosk screen — not a shortcut invented for this test.
+      const heardA = []; const heardB = [];
+      const scopedA = bus.scope('photo-a');
+      const scopedB = bus.scope('photo-b');
+      scopedA.subscribe('photos/next', () => heardA.push(1));
+      scopedB.subscribe('photos/next', () => heardB.push(1));
+
+      const twoPhotos = [
+        { id: 'photo-a', type: 'photos', position: 0 },
+        { id: 'photo-b', type: 'photos', position: 1 },
+      ];
+      const router2 = createVerbRouter({ bus, modules: () => twoPhotos });
+
+      router2.setFocus('photo-a');
+      bus.publish(verbTopic('next'));
+      check('*** the focused instance hears it ***', heardA.length === 1, JSON.stringify(heardA));
+      check('*** and the OTHER instance of the identical type does not ***',
+        heardB.length === 0, JSON.stringify(heardB));
+
+      router2.setFocus('photo-b');
+      bus.publish(verbTopic('next'));
+      check('moving focus moves who hears it, not just who is marked focused',
+        heardA.length === 1 && heardB.length === 1, `A=${heardA.length} B=${heardB.length}`);
+
+      // The bare topic still means what it always meant — anything that publishes it directly
+      // (a module's own on-screen button, unrelated to the router) still reaches every
+      // instance of that type. Instance addressing is a SECOND channel, not a replacement of
+      // the first — see bus.js's own comment on `scope`.
+      bus.publish('photos/next');
+      check('*** the BARE topic is unchanged: still broadcasts to every instance of the type ***',
+        heardA.length === 2 && heardB.length === 2, `A=${heardA.length} B=${heardB.length}`);
+
+      router2.destroy(); scopedA.dispose(); scopedB.dispose();
     }
 
     // ================= arithmetic =================

@@ -128,13 +128,28 @@ export function createVerbRouter({
   // sent it, and a module asking "who pressed this" must get the same answer the bus was
   // handed. Undefined stays undefined, so a caller that knows nothing about senders behaves
   // exactly as it always did.
+  //
+  // *** INSTANCE ADDRESSING, NOT THE BARE TYPE TOPIC. ***
+  //
+  // Until now this published `target.topic` bare — `photos/next` — which is a TYPE-keyed
+  // string, so on a screen with two photos panels BOTH would hear it. `focused()` already
+  // knows WHICH ONE (`m.id`), and has always thrown that away at the last step. `bus.js`'s
+  // `scope(instanceId)` already gives every mounted instance a second, instance-scoped alias
+  // of every topic it subscribes to (see `module.js`); publishing to that alias here — instead
+  // of the bare topic — is the other half, and it is the whole fix: the focused instance's own
+  // subscription still fires (it is registered on both), and no unfocused sibling instance of
+  // the same type hears a verb meant for the one somebody is actually looking at.
+  //
+  // `bus.instanceTopic` may be absent on a bus that predates this (a hand-built fake in an
+  // older test) — falls back to the bare topic, which is exactly what publishing always did.
   function dispatch(verb, meta) {
     if (paused) return null;
     const m = focused();
     if (!m) return onUnhandled?.({ verb, reason: 'no-panel' }) ?? null;
     const target = verbTarget(m.type, verb, maps);
     if (!target) return onUnhandled?.({ verb, reason: 'no-mapping', module: { ...m } }) ?? null;
-    bus.publish(target.topic, target.payload, meta);
+    const topic = bus.instanceTopic ? bus.instanceTopic(m.id, target.topic) : target.topic;
+    bus.publish(topic, target.payload, meta);
     return { ...target, module: { ...m } };
   }
 

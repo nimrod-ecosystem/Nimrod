@@ -112,7 +112,12 @@ export function mountModule(type, ctx) {
   const entry = registry.get(type);
   if (!entry) throw new Error(`no module registered: "${type}"`);
 
-  const scoped = ctx.bus.scope();
+  // INSTANCE ADDRESSING: `ctx.instanceId` already reaches here from every real mounting path
+  // (kiosk.js's `childCtx`, module_try.js's demo and live hosts) — it was threaded through for
+  // per-instance state/events and simply never used for the bus. Passing it to `scope` gives
+  // every subscription this module makes a second, instance-scoped alias for free, with no
+  // change to this module's own topic strings. See bus.js `scope`/`instanceTopic`.
+  const scoped = ctx.bus.scope(ctx.instanceId || null);
   const instance = entry.factory({ ...ctx, bus: scoped });
 
   // The fitting contract, applied by the host rather than asked of the module. `mod-host` is

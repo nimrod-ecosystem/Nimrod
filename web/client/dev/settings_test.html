@@ -271,7 +271,9 @@ section('driving from a verb bus, where a host has one');
   // verb/next lands twice.
   const bus = createBus();
   let photoNexts = 0;
-  bus.subscribe('photos/next', () => { photoNexts += 1; });
+  // INSTANCE ADDRESSING (2026-09-10): the router publishes to the focused instance's own
+  // scoped topic now — see input_router.js `dispatch` / bus.js `instanceTopic`.
+  bus.subscribe(bus.instanceTopic('p1', 'photos/next'), () => { photoNexts += 1; });
   const router = createVerbRouter({ bus, modules: () => [{ id: 'p1', type: 'photos', position: 0 }] });
   const m = mountSettings(makeHost(), {});
   m.attachBus(bus, router);
