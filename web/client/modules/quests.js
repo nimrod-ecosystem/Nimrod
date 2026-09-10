@@ -154,6 +154,7 @@ registerModule(
     let tab = 'tasks';
     let doubling = false;         // the x2 toggle, only offered on double-eligible tasks
     let pendingBuy = null;        // index of a reward awaiting its confirm tap
+    let pendingBuyAt = null;      // when it was armed — MIKE_CHANGE_LIST.md §0a item 6
     let flash = '';
 
     const el = (sel) => mount.querySelector(sel);
@@ -180,14 +181,23 @@ registerModule(
       render();
     }
 
-    // Two taps to buy: one misclick should not cost 800 points.
+    // Two taps to buy: one misclick should not cost 800 points. The gap between them is
+    // the one place this module shows something and times the response — see points.js's
+    // header on `latencyMs`. Only the CONFIRMING tap carries it: the first tap is what
+    // starts the clock, not an answer to anything yet.
     async function buy(i) {
       const r = rewards[i];
       if (!r) return;
-      if (pendingBuy !== i) { pendingBuy = i; flash = `Tap again to confirm — ${r.reward}`; render(); return; }
-      pendingBuy = null;
-      const res = await ledger.spend({ amount: r.cost, source: SOURCE, tags: ['reward'], note: r.reward })
-        .catch((err) => { console.error('quests: buy failed', err); return null; });
+      if (pendingBuy !== i) {
+        pendingBuy = i; pendingBuyAt = now();
+        flash = `Tap again to confirm — ${r.reward}`; render(); return;
+      }
+      const latencyMs = pendingBuyAt != null ? Math.max(0, now() - pendingBuyAt) : null;
+      pendingBuy = null; pendingBuyAt = null;
+      const res = await ledger.spend({
+        amount: r.cost, source: SOURCE, tags: ['reward'], note: r.reward,
+        ...(latencyMs != null ? { latencyMs } : {}),
+      }).catch((err) => { console.error('quests: buy failed', err); return null; });
       flash = res ? `Bought ${r.reward} — ${r.cost} points` : 'Could not save that — try again.';
       render();
     }
@@ -336,7 +346,7 @@ registerModule(
           </div>`;
 
         for (const b of mount.querySelectorAll('[data-tab]')) {
-          b.addEventListener('click', () => { tab = b.dataset.tab; pendingBuy = null; flash = ''; render(); });
+          b.addEventListener('click', () => { tab = b.dataset.tab; pendingBuy = null; pendingBuyAt = null; flash = ''; render(); });
         }
 
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });

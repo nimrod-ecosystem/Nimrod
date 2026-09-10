@@ -22,7 +22,7 @@
 // truth and listen on the bus for immediacy. `award()` below does both halves once.
 //
 // EVENT SHAPE — kind `points`, data:
-//   { amount, mult, type, source, tags, note, minutes? }
+//   { amount, mult, type, source, tags, note, minutes?, latencyMs? }
 //     amount  base points (the "atom" ~= one small win ~= ~1 minute of focused work).
 //             NEGATIVE is legal and meaningful: a penalty, or spending points on a reward.
 //     mult    multiplier (1 default; 1.5 stretch hours; 2 alongside family/for-Mom)
@@ -33,6 +33,15 @@
 //     note    human note (the sprint's task label, the reward bought)
 //     minutes optional — focused MINUTES this event represents. Only school-time events
 //             carry it, and it is what the weekly hours engine counts (see below).
+//     latencyMs optional — MIKE_CHANGE_LIST.md §0a item 6, quests fifth and last. Most
+//             awards have no real stimulus to time (tapping a task you already finished is
+//             self-initiated, like sprint's phase advances — see sprint.js's own header on
+//             why THAT module doesn't time it either). The one place quests.js shows something
+//             and times the response is confirm-to-buy: the reward store's two-tap purchase
+//             (see quests.js's `buy()`) shows "tap again to confirm" and the second tap answers it,
+//             which is a real shown-then-answered gap the same shape as call's ring-to-answer.
+//             Only that caller ever sets it. Never fabricated as 0 or null when absent — the
+//             same rule as every other latency field in this codebase.
 //   The server stamps `id` and `created_at`; the client clock is never the record.
 //
 // EARNING vs SPENDING. One stream carries both, separated by `type`: a `Reward` event is
@@ -219,7 +228,7 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
   const stream = makeEvents(POINTS_STREAM, { limit, pollMs });
 
   async function award({ amount, source, mult = 1, type = 'Bonus', tags = [], note = '',
-                         minutes = null, subject = null } = {}) {
+                         minutes = null, subject = null, latencyMs = null } = {}) {
     const n = Number(amount);
     if (!Number.isFinite(n) || n === 0) return null;           // nothing earned, nothing recorded
     const m = Number(mult);
@@ -233,6 +242,7 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
     };
     if (Number.isFinite(Number(minutes)) && Number(minutes) > 0) data.minutes = Number(minutes);
     if (subject) data.subject = String(subject);
+    if (Number.isFinite(latencyMs) && latencyMs >= 0) data.latencyMs = latencyMs;
     await stream.append(POINTS_KIND, data);                    // 1. the record (durable, first)
     const value = Math.round(data.amount * data.mult);
     if (bus) bus.publish(POINTS_TOPIC, { ...data, value });    // 2. the nudge (live)
@@ -241,9 +251,10 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
 
   // Spending is an award with the sign flipped and the Reward type — one stream, one
   // append path, so a purchase can no more be silently edited away than a point earned.
-  const spend = ({ amount, note = '', source = 'quests', tags = [] } = {}) => {
+  const spend = ({ amount, note = '', source = 'quests', tags = [], latencyMs = null } = {}) => {
     const n = Math.abs(Number(amount) || 0);
-    return n ? award({ amount: -n, mult: 1, type: REWARD_TYPE, source, tags, note }) : Promise.resolve(null);
+    return n ? award({ amount: -n, mult: 1, type: REWARD_TYPE, source, tags, note, latencyMs })
+             : Promise.resolve(null);
   };
 
   return {
