@@ -355,6 +355,41 @@ function unreachableChips() {
     root.innerHTML = '';
   }
 
+  // =====================================================================================
+  section('*** 2.7: YouTube’s own arrows must not collide with this bar ***');
+  // MIKE_CHANGE_LIST.md 2.7: "YouTube's own nav/gear sit inside its own panel; the kiosk's
+  // transport bar floats over stage content with no reserved margin, and auto-re-shows on any
+  // pointer movement including toward YouTube's own controls. No CSS rule or test exempts this
+  // pairing." Both bars are real, Mike-motivated controls — this bar (G9) and YouTube's own
+  // arrows OUTSIDE the iframe (G13, because fighting the iframe's own overlay for a click does
+  // not work) — so the fix is not to remove either one, it is to make sure they never physically
+  // share the same pixels. Measured with real geometry, not eyeballed: this is exactly the
+  // scenario the row describes, a single youtube panel filling the stage with the bar visible
+  // (freshly mounted, before the 3s auto-hide).
+  {
+    const p = await profiles.create('T-youtube-collision');
+    await profiles.addModule(p.id, 'youtube');
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus() });
+    await sleep(300);
+
+    const nav = root.querySelector('.youtube .nav');
+    const controls = root.querySelector('[data-controls]');
+    check('the panel has its own nav and the bar is both on screen',
+      !!nav && !!controls, `nav=${!!nav} controls=${!!controls}`);
+    if (nav && controls) {
+      const nr = nav.getBoundingClientRect();
+      const cr = controls.getBoundingClientRect();
+      const ox = Math.min(nr.right, cr.right) - Math.max(nr.left, cr.left);
+      const oy = Math.min(nr.bottom, cr.bottom) - Math.max(nr.top, cr.top);
+      const overlaps = ox > 0 && oy > 0;
+      check('*** YouTube’s own arrows do not sit under the transport bar ***',
+        !overlaps, `nav ${JSON.stringify(nr)} vs bar ${JSON.stringify(cr)}`);
+    }
+
+    kiosk.destroy();
+    root.innerHTML = '';
+  }
+
   document.getElementById('summary').textContent = failed
     ? `${failed} FAILED / ${passed} passed`
     : `ALL PASS — ${passed} checks`;
