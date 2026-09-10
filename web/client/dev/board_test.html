@@ -458,6 +458,11 @@ try {
     check('*** ...and anything can choose what is lit ***', said.join() === 'Other', JSON.stringify(said));
     check('the record knows it came from the scanner',
       events.rows[0].data.via === 'scan', JSON.stringify(events.rows[0].data));
+    // `board/next` and `board/select` fired at the same clock tick above (nothing advanced
+    // the fake clock between them) — a real, valid 0ms, not a fabricated one; a genuinely
+    // instant response measures as instant.
+    check('*** the scan-driven select carries a real latencyMs — measuring, at last ***',
+      events.rows[0].data.latencyMs === 0, JSON.stringify(events.rows[0].data));
 
     clock.advance(1200);
     check('after the beat it starts a fresh pass from the top', p().lit === 0, String(p().lit));
@@ -474,6 +479,83 @@ try {
     check('hidden, it stops scanning rather than walking cards at nobody', p().scanning === false);
     inst.impl.onShow();
     check('shown again, it scans again', p().scanning === true);
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** latencyMs — a real gap measures as a real gap, and only the scanner’s own '
+    + 'prompt counts as one ***');
+  {
+    const host = document.getElementById('host');
+    const clock = fakeClock();
+    const bus = createBus();
+    const events = fakeEvents();
+    const st = fakeState({ boardId: 'yesno', scan: true, stepMs: 15000 });
+    const inst = mountModule('board', {
+      mount: host, bus, events, state: st,
+      output: { say: () => {} },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+    });
+    inst.init();
+    await sleep(20);
+
+    // A genuine wait between the prompt (the scan landing on a cell) and the answer.
+    clock.advance(15000);            // lit -> 1, litAt -> 15000
+    clock.advance(3400);             // 3.4 real seconds pass before she presses
+    bus.publish('board/select');
+    await sleep(10);
+    check('*** a real 3400ms wait is recorded as 3400ms, not rounded away or dropped ***',
+      events.rows[0].data.latencyMs === 3400, JSON.stringify(events.rows[0].data));
+
+    events.rows.length = 0;
+    // A touch has no external "you were asked" moment — no latencyMs at all, never a
+    // fabricated one computed against an unrelated scan step.
+    host.querySelectorAll('.ab-card')[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await sleep(10);
+    check('*** a direct tap carries NO latencyMs field, not a zero or a null ***',
+      events.rows.length === 1 && !('latencyMs' in events.rows[0].data),
+      JSON.stringify(events.rows[0].data));
+
+    inst.destroy();
+  }
+  {
+    // The rarer combination the comment on the `board/select` subscriber names: scanning is
+    // on, but an aim is resting on a DIFFERENT card than the one the scanner lit. That
+    // selection has no scan-step prompt of its own — the scanner announced a different cell.
+    const host = document.getElementById('host');
+    const clock = fakeClock();
+    const bus = createBus();
+    const events = fakeEvents();
+    const st = fakeState({ boardId: 'yesno', scan: true, stepMs: 15000 });
+    const inst = mountModule('board', {
+      mount: host, bus, events, state: st,
+      output: { say: () => {} },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+    });
+    inst.init();
+    await sleep(20);
+    const p = () => inst.impl.__probe();
+    check('scanning started on cell 0', p().lit === 0);
+
+    // Aim at a card the scanner has not reached — the board listens on `board/aim`, viewport
+    // fractions, the same units `input/aim` uses (see `aimAt`'s own comment in board.js).
+    const card = host.querySelectorAll('.ab-card')[2];
+    const r = card.getBoundingClientRect();
+    bus.publish('board/aim', {
+      x: (r.left + r.width / 2) / window.innerWidth,
+      y: (r.top + r.height / 2) / window.innerHeight,
+    });
+    check('the aim moved the highlight onto the card it is resting on, ahead of the scanner',
+      p().lit === 2, String(p().lit));
+
+    bus.publish('board/select');
+    await sleep(10);
+    check('*** the choice still lands on the AIMED card, not the scanner’s ***',
+      events.rows[0]?.data.index === 2, JSON.stringify(events.rows[0]?.data));
+    check('*** and it carries no latencyMs — the scanner never announced this card, so '
+      + 'there is no honest prompt time to measure against ***',
+      !('latencyMs' in (events.rows[0]?.data || {})), JSON.stringify(events.rows[0]?.data));
+
     inst.destroy();
   }
 

@@ -374,6 +374,16 @@ registerModule(
     let scan = null;
     let cardEls = [];
     let lit = 0;
+    // *** WHEN THE CURRENTLY-LIT CELL BECAME LIT, VIA THE SCANNER'S OWN STEP. ***
+    //
+    // The one timestamp this file was missing — "the AAC board reporting 0ms means the
+    // measurement work has a hole exactly where the evidence would come from" (Mike,
+    // 2026-09-10). For someone who scans, the scanner announcing a new cell IS the prompt —
+    // the same shape as Wait-and-Go's own charge-then-press reaction time, already an
+    // accepted measurement in this codebase. Set only by the scanner's `onStep`, below,
+    // never by a touch — a tap has no external "you were asked" moment to measure latency
+    // from, so a touch-driven choice gets no latencyMs at all rather than a fabricated one.
+    let litAt = null;
     let destroyed = false;
     // *** EVERY LISTENER ON `mount` IS TIED TO ONE SIGNAL, AND `destroy` ABORTS IT. ***
     //
@@ -684,9 +694,14 @@ registerModule(
     // CHOOSING
     // ------------------------------------------------------------------------------------
 
-    function choose(i) {
+    function choose(i, { fromScanStep = false } = {}) {
       const cell = board.cells[i];
       if (!cell || destroyed) return;
+      // Read BEFORE `lit`/`litAt` change below — the prompt is "when did THIS cell, the one
+      // being chosen, become lit", and only when the caller confirms it came from the
+      // scanner's own step (not a tap that happens to land on whatever is currently lit).
+      const latencyMs = (fromScanStep && litAt != null && i === lit)
+        ? Math.max(0, now() - litAt) : null;
       lit = i;
       paint();
       flash(i);
@@ -710,6 +725,10 @@ registerModule(
         events?.append?.(SELECT_KIND, {
           at: now(), word: cell.word, id: cell.id, board: board.id,
           index: i, tier: board.tier, via: scan ? 'scan' : 'touch',
+          // Never a fabricated 0 — absent (not a number) when there is no real prompt to
+          // measure from, the same write-side rule `telemetry.js` already enforces for
+          // every other game's latency (2.3, this change list).
+          ...(latencyMs != null ? { latencyMs } : {}),
         })?.catch?.((err) => console.error('board: log', err));
       } catch (err) { console.error('board: log', err); }
 
@@ -737,6 +756,9 @@ registerModule(
       // The hold belonged to a scanner that no longer exists. Leaving it set would make the
       // NEXT scanner start life suppressed by a finger that left the screen minutes ago.
       aimHold = false;
+      // Same reasoning: a highlight timestamp from a scanner that no longer exists must not
+      // outlive it — a later touch-only choice must never inherit a stale prompt.
+      litAt = null;
       paint();
     }
 
@@ -749,7 +771,7 @@ registerModule(
       scan = createScan({
         items: idxs,
         settings: () => ({ stepMs: cfg.stepMs, pauseMs: cfg.pauseMs, restart: 'first' }),
-        onStep: (i) => { lit = i; paint(); },
+        onStep: (i) => { lit = i; litAt = now(); paint(); },
         setTimer, clearTimer,
       });
       scan.start();
@@ -1089,7 +1111,13 @@ registerModule(
         // who did not want the scan clock had no way to choose anything. What it must NOT do
         // is choose card 0 for somebody who has pointed at nothing, so the gate is now "is
         // anything actually lit": either the scanner put it there or an aim is resting on it.
-        bus?.subscribe?.('board/select', () => { if (scan || pointed) choose(lit); });
+        // `fromScanStep` is true only when the scanner is genuinely what put this cell in
+        // front of her — scanning on AND no aim currently overriding it. An aim resting on a
+        // different card while scanning happens to be on is a real, if rare, combination
+        // (see `aimAt`), and it has no scan-step prompt of its own to measure against.
+        bus?.subscribe?.('board/select', () => {
+          if (scan || pointed) choose(lit, { fromScanStep: !!scan && !pointed });
+        });
         // Where the aim is. See `aimAt` — fractions of the viewport, the same units
         // `input/aim` uses, because one aim has to mean one thing across a whole screen.
         bus?.subscribe?.('board/aim', (a) => aimAt(a));
