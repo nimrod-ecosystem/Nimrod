@@ -1,0 +1,21 @@
+[Unit]
+Description=Nimrod kiosk — the dashboard, always on screen
+# graphical-session.target, not network-online.target: this needs the Wayland compositor
+# (labwc) already up, WAYLAND_DISPLAY and XDG_RUNTIME_DIR already set. kiosk-launch.sh does
+# its own network wait once it starts.
+After=graphical-session.target
+
+[Service]
+Type=simple
+# THIS FILE IS A REFERENCE COPY, NOT THE ONE THAT RUNS. install-linux.sh writes its own unit
+# with the real dashboard URL and the real path to kiosk-launch.sh filled in, into
+# ~/.config/systemd/user/ — a USER unit, not a system one, because this needs the graphical
+# session the media agent's system-wide service never does. Only edit this one if you are
+# installing by hand, and if you are, CHANGE_ME below is the one value you must set.
+Environment=NIMROD_KIOSK_URL=CHANGE_ME_TO_YOUR_DASHBOARD_URL
+ExecStart=/usr/bin/env CHANGE_ME_TO_KIOSK_LAUNCH_SH_PATH
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
