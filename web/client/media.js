@@ -5,12 +5,25 @@
 // registry API (/api/media-sources) and its client have existed since the start;
 // the only missing piece was somewhere for a person to say where their photos are.
 //
-// TWO WAYS IN, and the order matters. Picking a folder in the browser is FIRST because
-// it needs nothing installed — that is the path a person should ever see. Running the
-// media agent is second, and it is for a DEVICE: a bedside kiosk that boots unattended
-// and must serve files with nobody logged in. Leading with the agent (as this panel
-// first did) makes the product look like it requires a Python install to view your own
-// photos, which is not a product.
+// TWO WAYS IN, and which one is RIGHT depends on a question, not on which is easier to
+// set up — so the panel now leads with that question, the same pattern modules.html uses
+// ("Start here: can they press anything?"): is this the screen you're on right now, or a
+// screen somewhere else nobody sits at to answer a permission prompt? Both cards stay
+// visible either way — this isn't a hard fork that hides one path, just a reordering of
+// which one gets described first and which risk gets named up front.
+//
+// WHY THE QUESTION MATTERS AND ISN'T JUST FRAMING: tested directly (2026-09-10, see
+// MIKE_CHANGE_LIST.md §3b-update) that a folder-picker grant does NOT survive a Chromium
+// restart on a bare `--kiosk` launch — queryPermission() came back "prompt", not "granted",
+// after a real kill-and-relaunch. So "this screen, right now" genuinely means someone is
+// there to re-grant it when that lapses, and "somewhere else" genuinely means the agent is
+// the only one of the two that survives unattended. The real test underneath the copy is
+// "will a person be there to tap Allow again", not "which device" — but "which screen" is
+// the readable proxy a caregiver can actually answer, so that's what the copy asks.
+//
+// The folder picker still needs nothing installed, so it still gets top billing in ITS
+// OWN card — the fork doesn't invert that. It just stops implying the agent path is a
+// worse, more advanced fallback, when for an unattended screen it's the only one that works.
 //
 // THE FOLDER PICKER IS ALSO THE SHARING STORY, and the panel never said so. Google Drive
 // for Desktop, OneDrive and Dropbox all mount as an ORDINARY FOLDER, so pointing the
@@ -86,11 +99,25 @@ export function mountMedia(root, {
           <b>where</b> they are. Nothing is uploaded.</p>
       </div>
 
+      <div class="h-card h-fork">
+        <div class="h-card-head"><b>Start here: is this the screen you're using right now?</b></div>
+        <p class="h-quiet">Or is it somewhere else — a bedside kiosk, a spare tablet, any
+          screen nobody sits at to tap a permission prompt? That's the question that decides
+          which option below actually holds up, more than which one is easier to set up.</p>
+        <p class="h-quiet">Really, the test underneath it is narrower still: <b>will someone be
+          there to tap Allow again if the connection ever lapses?</b> Your own laptop, closed for
+          a month, hits the same lapse a bedside screen does — you're just there to clear it in
+          one click. "Which screen" is just the readable way to tell those two cases apart.</p>
+      </div>
+
       <div class="h-card">
-        <div class="h-card-head"><b>Photos on this computer</b></div>
+        <div class="h-card-head"><b>This screen, right now</b> <span class="h-tag">no install</span></div>
         ${supported
           ? `<p class="h-quiet">Choose a folder and the browser reads it directly. Nothing to
-               install. This folder is remembered <b>on this device only</b>.</p>
+               install. This folder is remembered <b>on this device only</b> — and only for as
+               long as this browser keeps the permission, which a restart can clear. Fine if
+               you're sitting here to grant it again; not the right choice for a screen nobody
+               watches.</p>
              <p class="h-quiet"><b>Sharing photos with the rest of the family?</b> Pick a folder
                that Google Drive, OneDrive or Dropbox already syncs onto this computer. Anyone
                you share that folder with can drop photos in from their own phone, and they
@@ -104,11 +131,15 @@ export function mountMedia(root, {
       <div class="h-list" data-list><p class="h-loading">Loading…</p></div>
 
       <div class="h-card">
-        <div class="h-card-head"><b>Connect a screen or another machine</b></div>
-        <p class="h-quiet">If someone has set up the Nimrod media agent on another machine —
-          a bedside screen, a spare tablet, a computer with the photos on it — it shows a
-          <b>six-character code</b>. Type it here and the two find each other. You never need
-          to know its address.</p>
+        <div class="h-card-head"><b>A screen somewhere else</b> <span class="h-tag">survives a restart</span></div>
+        <p class="h-quiet">This is the one for a bedside kiosk or any screen that boots up with
+          nobody there to answer a prompt: once connected, it keeps working through a reboot or
+          a power cut, with nothing to re-click. It does need something installed on that
+          machine — a real setup step, not hidden here, just worth it for a screen that has to
+          run unattended.</p>
+        <p class="h-quiet">If someone has already set up the Nimrod media agent on that
+          machine, it shows a <b>six-character code</b>. Type it here and the two find each
+          other. You never need to know its address.</p>
         <form class="h-new" data-pair>
           <input type="text" data-code placeholder="Pairing code (e.g. 7KJ4QW)"
                  aria-label="pairing code" maxlength="12" autocomplete="off"
