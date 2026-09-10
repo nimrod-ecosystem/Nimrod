@@ -172,7 +172,17 @@ registerModule(
           const t = topics.find((x) => x.id === b.dataset.watched);
           if (!t) return;
           b.disabled = true;
-          await lessons.watch(t.id, { label: t.label, subject: t.subject })
+          // How long the card stayed open before she pressed it — `openedAt` is stamped the
+          // moment the card opens, above, already, for the countdown. This was the missing
+          // half: the number existed on screen (`remaining()`'s countdown reads off it) and
+          // was never carried into the durable record. See lessons.js's own note on why this
+          // is NOT a reaction-time test the way board's or call's latency is — the minimum
+          // wait is a stated nudge, not a gate — recorded anyway as real engagement time, the
+          // same spirit as board.js's own header: it measures, and shows her nothing about it.
+          // This button only ever exists in the DOM for the currently-open card (see `card`
+          // above), so `openId === t.id` is already guaranteed here, not re-checked.
+          const latencyMs = Math.max(0, now() - openedAt);
+          await lessons.watch(t.id, { label: t.label, subject: t.subject, latencyMs })
             .catch((e) => console.error('lessons: watch', e));
           openId = null;
           render();
