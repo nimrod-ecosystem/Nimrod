@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>links — the data-link message format</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>links — the data-link message format</h1>
+<p>No server needed — <code>links.js</code> and <code>bus.js</code> are both pure/in-memory.
+Proves the primitives from <code>bus_and_generator_20260910.md</code> §1.3-1.5: ports, link
+records, the type hint/gate rule, the value envelope, and — end to end — that a link's value
+actually rides instance-addressed topics (item 2), reaching one instance and not its sibling.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import {
+  PORT_TYPES, PORT_CLASSES, normalizePort, portsFor, normalizeLink, linkTopic,
+  classifyPatch, mapRange, wrapValue, appendProvenance, createSequencer,
+} from '../links.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+try {
+  // ================= normalizePort =================
+  section('normalizePort — one declaration in, one usable port out, or null');
+  {
+    const p = normalizePort({ id: 'value', label: 'Current value', direction: 'out',
+      class: 'continuous', type: 'number', range: [0, 1] });
+    check('a well-formed continuous number port normalizes', !!p, JSON.stringify(p));
+    check('range comes through as a pair', p.range[0] === 0 && p.range[1] === 1);
+
+    check('missing range on a continuous number port is DROPPED, not defaulted',
+      normalizePort({ id: 'x', direction: 'out', class: 'continuous', type: 'number' }) === null);
+    check('a bad type is dropped',
+      normalizePort({ id: 'x', direction: 'out', class: 'continuous', type: 'sound', range: [0, 1] }) === null);
+    check('a bad class is dropped',
+      normalizePort({ id: 'x', direction: 'out', class: 'wobble', type: 'text' }) === null);
+    check('a bad direction is dropped',
+      normalizePort({ id: 'x', direction: 'sideways', class: 'event', type: 'text' }) === null);
+    check('a bad id is dropped',
+      normalizePort({ id: 'Not An Id!', direction: 'in', class: 'event', type: 'text' }) === null);
+    check('nothing at all is dropped, not thrown', normalizePort(undefined) === null);
+
+    // A range is meaningless off a non-number or event-class port, and none is required.
+    const ev = normalizePort({ id: 'pressed', direction: 'out', class: 'event', type: 'number' });
+    check('an event-class number port needs no range', !!ev && ev.range === null, JSON.stringify(ev));
+    const txt = normalizePort({ id: 'label', direction: 'out', class: 'continuous', type: 'text' });
+    check('a continuous TEXT port needs no range either — range is only for number',
+      !!txt && txt.range === null, JSON.stringify(txt));
+
+    check('the label falls back to the id', normalizePort({ id: 'x', direction: 'in', class: 'event', type: 'time' }).label === 'x');
+  }
+
+  // ================= portsFor =================
+  section('portsFor — a manifest’s declared ports, bad rows dropped silently');
+  {
+    const manifest = { ports: [
+      { id: 'value', direction: 'out', class: 'continuous', type: 'number', range: [0, 1] },
+      { id: 'bad', direction: 'nowhere', class: 'event', type: 'text' },
+      { id: 'value', direction: 'out', class: 'event', type: 'text' },   // duplicate id
+    ] };
+    const ports = portsFor(manifest);
+    check('the good port survives', ports.some((p) => p.id === 'value'));
+    check('the malformed one does not', ports.length === 1, JSON.stringify(ports));
+    check('a manifest with no ports at all yields an empty list, not a crash',
+      Array.isArray(portsFor({})) && portsFor({}).length === 0);
+  }
+
+  // ================= normalizeLink =================
+  section('normalizeLink — structural, no value field, ever');
+  {
+    const l = normalizeLink({ from: { instance: 'calc-1', port: 'result' },
+                               to: { instance: 'wallpaper-1', port: 'hue' } });
+    check('a well-formed link normalizes', !!l, JSON.stringify(l));
+    check('it carries exactly from/to and nothing else',
+      Object.keys(l).sort().join(',') === 'from,to', Object.keys(l).join(','));
+    check('missing an endpoint is dropped',
+      normalizeLink({ from: { instance: 'a', port: 'x' } }) === null);
+    check('a blank instance or port is dropped',
+      normalizeLink({ from: { instance: '', port: 'x' }, to: { instance: 'b', port: 'y' } }) === null);
+    check('*** A LINK FROM A PORT TO ITSELF IS REFUSED, NOT ACCEPTED AS A ONE-NODE CYCLE ***',
+      normalizeLink({ from: { instance: 'a', port: 'x' }, to: { instance: 'a', port: 'x' } }) === null);
+  }
+
+  // ================= linkTopic =================
+  section('linkTopic — reuses instance addressing (item 2), does not invent a second scheme');
+  {
+    const bus = createBus();
+    const t1 = linkTopic(bus, { instance: 'calc-1', port: 'result' });
+    check('the topic is instance-scoped', t1 === bus.instanceTopic('calc-1', 'link/result'), t1);
+    check('and prefixed so it can never collide with a verb topic on the same instance',
+      t1.startsWith('link/'));
+    const t2 = linkTopic(bus, { instance: 'calc-2', port: 'result' });
+    check('two different instances of the same port name get two different topics', t1 !== t2);
+  }
+
+  // ================= classifyPatch =================
+  section('classifyPatch — type as hint or gate, §1.4');
+  {
+    const numA = { type: 'number', class: 'continuous', range: [0, 1] };
+    const numB = { type: 'number', class: 'continuous', range: [1, 5] };
+    const numSame = { type: 'number', class: 'continuous', range: [0, 1] };
+    const txt = { type: 'text', class: 'continuous' };
+    const img = { type: 'image', class: 'continuous' };
+    const evt = { type: 'number', class: 'event' };
+
+    check('number -> number with matching ranges: identity, always ok',
+      classifyPatch(numA, numSame).ok === true && classifyPatch(numA, numSame).transform === 'identity');
+    check('*** number -> number with DIFFERENT ranges is STILL ok — always meaningful, the unit is shared ***',
+      classifyPatch(numA, numB).ok === true && classifyPatch(numA, numB).transform === 'linear-range',
+      JSON.stringify(classifyPatch(numA, numB)));
+    check('same non-number type is a free pass-through', classifyPatch(txt, txt).ok === true);
+    check('*** mismatched non-number types have no default — needs a converter, not silently allowed ***',
+      classifyPatch(txt, img).ok === false && classifyPatch(txt, img).reason === 'needs-converter');
+    check('*** THE SAFETY GATE: continuous -> event needs a declared edge node ***',
+      classifyPatch(numA, evt).ok === false && classifyPatch(numA, evt).reason === 'needs-edge-node');
+    check('*** and event -> continuous needs a declared hold-or-latch node, the mirror image ***',
+      classifyPatch(evt, numA).ok === false && classifyPatch(evt, numA).reason === 'needs-hold-node');
+    check('a malformed pair reads as needing a converter, never throws',
+      classifyPatch(null, numA).ok === false && classifyPatch(undefined, undefined).ok === false);
+  }
+
+  // ================= mapRange =================
+  section('mapRange — the one default transform, clamped');
+  {
+    check('midpoint maps to midpoint', mapRange(0.5, [0, 1], [1, 5]) === 3);
+    check('the low end maps to the low end', mapRange(0, [0, 1], [1, 5]) === 1);
+    check('the high end maps to the high end', mapRange(1, [0, 1], [1, 5]) === 5);
+    check('*** a value outside its declared range is CLAMPED, not extrapolated ***',
+      mapRange(2, [0, 1], [1, 5]) === 5 && mapRange(-1, [0, 1], [1, 5]) === 1);
+    check('a degenerate source range (lo===hi) does not divide by zero',
+      mapRange(0.5, [1, 1], [0, 10]) === 0);
+  }
+
+  // ================= wrapValue / appendProvenance / createSequencer =================
+  section('the value envelope — §1.3 items 2, 5-8');
+  {
+    const v = wrapValue({ value: 42, class: 'continuous', timestamp: 1000 });
+    check('carries value, timestamp, class, an empty provenance path',
+      v.value === 42 && v.timestamp === 1000 && v.class === 'continuous'
+      && Array.isArray(v.provenance) && v.provenance.length === 0, JSON.stringify(v));
+    check('an unrecognized class defaults to continuous rather than throwing',
+      wrapValue({ value: 1, class: 'nonsense' }).class === 'continuous');
+    check('timestamp defaults to now when the caller supplies none',
+      Math.abs(wrapValue({ value: 1, class: 'event' }).timestamp - Date.now()) < 1000);
+
+    const e = wrapValue({ value: 1, class: 'event', edge: 'press', seq: 7 });
+    check('event class carries edge and seq when given', e.edge === 'press' && e.seq === 7);
+    const c = wrapValue({ value: 1, class: 'continuous', edge: 'press', seq: 7 });
+    check('*** edge/seq are EVENT-ONLY — a continuous value never carries them, even if asked ***',
+      c.edge === undefined && c.seq === undefined, JSON.stringify(c));
+
+    const p0 = [];
+    const p1 = appendProvenance(p0, { source: 'calc-1:result', transform: 'identity' });
+    check('appendProvenance adds a hop', p1.length === 1 && p1[0].source === 'calc-1:result');
+    check('*** and never mutates the array it was handed ***', p0.length === 0);
+    const p2 = appendProvenance(p1, { source: 'range-map', transform: 'linear-range' });
+    check('a second hop APPENDS, the first is never overwritten',
+      p2.length === 2 && p2[0].source === 'calc-1:result' && p2[1].source === 'range-map',
+      JSON.stringify(p2));
+
+    const seq = createSequencer();
+    check('a fresh source starts at 1', seq.next('board-1') === 1);
+    check('the same source increments', seq.next('board-1') === 2);
+    check('a different source has its own counter, unaffected by the first',
+      seq.next('board-2') === 1);
+    check('...and the first source is unaffected by the second', seq.next('board-1') === 3);
+  }
+
+  // ================= end to end =================
+  //
+  // *** TYING ITEM 2 AND ITEM 3 TOGETHER: A DATA LINK ACTUALLY DELIVERS, SCOPED. ***
+  //
+  // Two instances of the SAME type — the exact collision item 2 fixed for verbs — each with a
+  // declared `value` port. Publish a value onto ONE instance's link topic; only that
+  // instance's own subscription (via `bus.scope`, the same mechanism a real mounted module
+  // gets automatically) hears it, not the other's, even though both ports share the same id.
+  section('*** end to end: a link value reaches the addressed instance, not its identical sibling ***');
+  {
+    const bus = createBus();
+    const port = normalizePort({ id: 'value', direction: 'out', class: 'continuous', type: 'number', range: [0, 1] });
+    const link = normalizeLink({ from: { instance: 'calc-1', port: 'value' },
+                                  to: { instance: 'wallpaper-1', port: 'hue' } });
+    check('the port and link both normalized', !!port && !!link);
+
+    const heardWallpaper1 = [];
+    const heardWallpaper2 = [];
+    // Two "mounted" sinks, the way module.js actually scopes them — see module.js's own use
+    // of `ctx.bus.scope(ctx.instanceId)`.
+    // Each subscribes on the BARE port topic through its OWN scope, exactly like a real
+    // mounted module would — `scope(instanceId)` is what turns that into "this instance
+    // only", not the caller pre-computing somebody else's scoped string.
+    const scopedW1 = bus.scope('wallpaper-1');
+    const scopedW2 = bus.scope('wallpaper-2');
+    scopedW1.subscribe('link/hue', (msg) => heardWallpaper1.push(msg));
+    scopedW2.subscribe('link/hue', (msg) => heardWallpaper2.push(msg));
+
+    const mapped = mapRange(0.5, port.range, [0, 360]);
+    const value = wrapValue({
+      value: mapped, class: 'continuous',
+      provenance: appendProvenance([], { source: 'calc-1:value', transform: 'linear-range' }),
+    });
+    bus.publish(linkTopic(bus, link.to), value);
+
+    check('*** the addressed instance receives the value ***', heardWallpaper1.length === 1,
+      JSON.stringify(heardWallpaper1));
+    check('the mapped value and its provenance both arrived intact',
+      heardWallpaper1[0].value === 180 && heardWallpaper1[0].provenance[0].source === 'calc-1:value',
+      JSON.stringify(heardWallpaper1[0]));
+    check('*** and a DIFFERENT instance subscribed on the identical port id hears nothing ***',
+      heardWallpaper2.length === 0);
+
+    scopedW1.dispose(); scopedW2.dispose();
+  }
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>
