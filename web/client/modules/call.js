@@ -78,6 +78,15 @@ export const CALL_HANGUP = 'call/hangup';
 // ending one that is running are different things to a person and different rows in a log.
 export const CALL_DECLINE = 'call/decline';
 
+// The durable record's event kind, same convention as `board.js`'s `SELECT_KIND` — this file
+// had NO event recording of any kind before this (checked; the latency gap named in
+// MIKE_CHANGE_LIST.md §0a item 6 was really "no record at all", not just a missing field).
+// Recorded on ANSWER only, carrying ring-to-answer `latencyMs` — the phase transition this
+// file already tracks informally (`phase: 'idle'|'ringing'|'connected'`) just never stamped
+// or published. Declined/unanswered/failed calls are not recorded here — narrower than a full
+// call-outcome log, matching what was actually asked for.
+export const ANSWER_KIND = 'answer';
+
 // press-to-answer is deliberately absent from the default: see the header.
 const DEFAULTS = {
   // Seconds of announced countdown before it answers. 0 connects at once; `null` never
@@ -152,7 +161,11 @@ registerModule(
                + 'showing this room',
     importance: 'critical', dependsOn: 'network', settings: SETTINGS },
   (ctx) => {
-    const { mount, bus, state, audio = null, cameraOwner = null, micOwner = null, output = null } = ctx;
+    const {
+      mount, bus, state, events = null, audio = null, cameraOwner = null, micOwner = null,
+      output = null,
+    } = ctx;
+    const now = ctx.now || (() => Date.now());
     // The transport is injected. Absent, everything else still works and the stage says so —
     // which is what makes the rest of this testable before any of it exists.
     const transport = ctx.callTransport || null;
@@ -170,6 +183,12 @@ registerModule(
     let root = null;
     let phase = 'idle';          // idle | ringing | connected
     let who = null;
+    // WHEN THE RING STARTED — the prompt half of "how long did it take her to answer",
+    // stamped the moment `phase` becomes 'ringing' below. `null` whenever there is no live
+    // ring to measure from (idle, or a ring that has already resolved), so a later answer()
+    // — there should not be one, but the check is cheap — never computes a latency against a
+    // stale ring from a previous call.
+    let ringingAt = null;
     let outgoing = null;         // the cloned track we send; NOT the one the PiP shows
     // *** ON-SCREEN, NOT JUST console.error. *** Found answering an open question: "does a
     // failed connection fail silently, or with a message?" It failed silently -- `end()` always
@@ -401,6 +420,7 @@ registerModule(
       stopDemo();
       who = from || {};
       phase = 'ringing';
+      ringingAt = now();
       render();
       // *** THE STATE MACHINE HEARS THIS, NOT THIS MODULE. *** Publishing the topic is what
       // makes the screen switch, and it is the same topic the Rules tab writes a transition
@@ -426,6 +446,19 @@ registerModule(
     async function answer() {
       if (phase === 'idle') return;
       clearRing();
+      // *** CAPTURED HERE, BEFORE THE CAMERA/MIC OPEN BELOW. *** What is being measured is
+      // "how long from the ring to her pressing answer" — the camera and mic permission opens
+      // that follow are a real, variable system delay that has nothing to do with how fast she
+      // responded, and computing latency after them would quietly blame her for a slow
+      // permission dialog. Never a fabricated 0 — `null`, not a number, when there was no
+      // live ring to measure from (the same guard `board.js`'s own latency uses).
+      const latencyMs = ringingAt != null ? Math.max(0, now() - ringingAt) : null;
+      ringingAt = null;
+      try {
+        events?.append?.(ANSWER_KIND, {
+          at: now(), ...(latencyMs != null ? { latencyMs } : {}),
+        })?.catch?.((err) => console.error('call: log', err));
+      } catch (err) { console.error('call: log', err); }
       phase = 'connected';
       takeSpeaker(true);
       // BOTH, and in parallel: two sequential permission-gated opens is two round trips
@@ -466,6 +499,10 @@ registerModule(
       const was = phase;
       phase = 'idle';
       who = null;
+      // A ring that ended without being answered (declined, unanswered, failed) must not
+      // leave its start time lying around for a LATER, unrelated call's answer() to measure
+      // against — the same reasoning as board.js's own litAt reset when scanning stops.
+      ringingAt = null;
       dropCamera();
       dropMic();
       takeSpeaker(false);
