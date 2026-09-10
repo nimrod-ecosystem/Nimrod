@@ -58,6 +58,22 @@
    * panels on it, and they already set their own colours against it. Scoped to `.k-stage` so
    * they are untouched. */
   .kiosk{position:fixed;inset:0}
+  /* BURN-IN PROTECTION (2.18), off by default — see the field's own comment in kiosk.js for
+   * why there are only two modes. NEITHER moves one control relative to another: `dim` only
+   * darkens (nothing's position changes, so motor memory is untouched); `drift` transforms
+   * the WHOLE kiosk root as a single piece, so every control keeps its exact position
+   * relative to every other control — only the entire picture nudges a few pixels. The
+   * `scale(1.015)` gives a ~1.5% oversize buffer so the drift never exposes an edge outside
+   * the kiosk (well past the few px of actual movement at any real screen size). */
+  .kiosk.burn-dim{filter:brightness(.72);transition:filter 4s ease}
+  .kiosk.burn-drift{animation:nimrod-burn-drift 240s ease-in-out infinite}
+  @keyframes nimrod-burn-drift{
+    0%{transform:scale(1.015) translate(0,0)}
+    25%{transform:scale(1.015) translate(6px,-4px)}
+    50%{transform:scale(1.015) translate(-5px,5px)}
+    75%{transform:scale(1.015) translate(4px,6px)}
+    100%{transform:scale(1.015) translate(0,0)}
+  }
   /* `overflow` is NOT set here any more. `mountModule` adds `mod-host` to whatever element a
      module is mounted into, and that class carries `overflow:auto` — the scroll floor that
      keeps a Start button below the fold reachable instead of clipped. This rule outranked it

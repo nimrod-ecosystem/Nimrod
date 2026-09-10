@@ -291,8 +291,11 @@ const ds = () => root.querySelector('.kiosk').dataset;
 
       // THE ONE-BUTTON WALK, on the real surface. A cursor that can land on a disabled row
       // is a switch press that appears to do nothing, which gets debugged as broken hardware.
+      // 16, not 14 — the burn-in field (2.18) added one more screen-level row ahead of Home in
+      // this same walk. Bumped with a little margin rather than the exact new count, so the
+      // next row added here doesn't silently fail this same way again.
       const stops = new Set();
-      for (let i = 0; i < 14; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
+      for (let i = 0; i < 16; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
       check('the cycleable field rows are stops on the one-button walk',
         stops.has('set:intervalMs') && stops.has('set:fit'), [...stops].join(','));
       check('the disabled ones are NOT stops',
@@ -431,6 +434,22 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('and it reaches the document, not just the menu',
         document.documentElement.style.getPropertyValue('--bg').trim().length > 0,
         document.documentElement.style.getPropertyValue('--bg'));
+
+      // 2.18 — BURN-IN PROTECTION, reachable from the bedside menu, off by default, and only
+      // ever two real modes (no content-hiding screensaver — see kiosk.js's own comment).
+      check('the burn-in field is a screen setting too', !!byId['set:burnIn'], rows.map((r) => r.id).join(','));
+      check('and it is off by default, not opted into on anyone’s behalf',
+        kiosk.menu.items().find((r) => r.id === 'set:burnIn')?.hint === 'Off',
+        kiosk.menu.items().find((r) => r.id === 'set:burnIn')?.hint);
+      check('the burn-in row is a stop on the one-button walk', walkTo('set:burnIn'));
+      const burnLap = [];
+      for (let i = 0; i < 3 && kiosk.menu.focusId() === 'set:burnIn'; i += 1) {
+        kiosk.menu.select();
+        burnLap.push(kiosk.menu.items().find((r) => r.id === 'set:burnIn')?.hint);
+      }
+      check('it cycles through all three and wraps home',
+        burnLap.join(',') === 'Dim after 10 minutes idle,Slowly shift the picture when idle,Off',
+        burnLap.join(' | '));
     }
     await press('Escape');
 
@@ -900,6 +919,73 @@ const ds = () => root.querySelector('.kiosk').dataset;
     troot.remove();
   } catch (e) {
     check('the touch-bar section threw', false, String((e && e.stack) || e));
+  }
+
+  // ============================================================================================
+  // 2.18 — BURN-IN PROTECTION: off by default, never moves a control, activity clears it.
+  //
+  // `burnInIdleMs` is a seam for exactly this reason — nobody runs a suite that waits ten real
+  // minutes to prove a class gets added. Self-contained, same shape as the touch-bar section
+  // above: its own root, its own tiny profile, torn down at the end.
+  try {
+    const bProfiles = createProfilesClient({ user: USER });
+    const bp = await bProfiles.create('TEST-burnin');
+    await bProfiles.addModule(bp.id, 'clock');
+    const broot = document.createElement('div');
+    document.body.append(broot);
+    const bk = await mountKiosk(broot, {
+      user: USER, profileId: bp.id, profiles: bProfiles, bus: createBus(),
+      burnInIdleMs: 80,
+    });
+    await sleep(120);
+
+    const kioskEl = broot.querySelector('.kiosk');
+    check('off by default: idling past the wait adds no class',
+      await (async () => { await sleep(200); return !kioskEl.className.includes('burn'); })(),
+      kioskEl.className);
+
+    // Turn it on the same way a person would — through the real menu, not by poking state.
+    bk.menu.open();
+    const walkToB = (id) => {
+      for (let i = 0; i < 60 && bk.menu.focusId() !== id; i += 1) bk.menu.next();
+      return bk.menu.focusId() === id;
+    };
+    check('found the burn-in row', walkToB('set:burnIn'));
+    bk.menu.select();   // off -> dim
+    check('set to dim', bk.menu.items().find((r) => r.id === 'set:burnIn')?.hint,
+      bk.menu.items().find((r) => r.id === 'set:burnIn')?.hint);
+
+    check('*** idling past the wait dims the screen ***',
+      await settled(() => kioskEl.classList.contains('burn-dim')),
+      kioskEl.className);
+
+    // *** THE ONE THAT MATTERS: it never hides content, and activity clears it. ***
+    check('...and the panels underneath are still there — dim never removes anything',
+      !!broot.querySelector('.k-clock .clock'));
+    broot.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await sleep(30);
+    check('*** and any activity clears it immediately ***',
+      !kioskEl.classList.contains('burn-dim'), kioskEl.className);
+
+    // Switching to drift and back off, both through the menu, both taking effect at once —
+    // not waiting for the next activity event to notice the setting changed.
+    walkToB('set:burnIn');
+    bk.menu.select();   // dim -> drift
+    check('set to drift', bk.menu.items().find((r) => r.id === 'set:burnIn')?.hint === 'Slowly shift the picture when idle',
+      bk.menu.items().find((r) => r.id === 'set:burnIn')?.hint);
+    check('*** idling past the wait drifts the screen instead of dimming it ***',
+      await settled(() => kioskEl.classList.contains('burn-drift') && !kioskEl.classList.contains('burn-dim')),
+      kioskEl.className);
+    walkToB('set:burnIn');
+    bk.menu.select();   // drift -> off
+    check('*** turning it off clears an already-drifting screen right away, not on the next touch ***',
+      !kioskEl.classList.contains('burn-drift') && !kioskEl.classList.contains('burn-dim'),
+      kioskEl.className);
+
+    try { bk?.destroy?.(); } catch { /* already gone */ }
+    broot.remove();
+  } catch (e) {
+    check('the burn-in section threw', false, String((e && e.stack) || e));
   }
 
   const sum = document.getElementById('summary');

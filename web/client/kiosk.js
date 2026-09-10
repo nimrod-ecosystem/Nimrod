@@ -108,6 +108,10 @@ export async function mountKiosk(root, {
   onRecovery = null,               // told about every action taken, for the log and the tests
   recoveryNow = () => Date.now(),
   recoveryTick = 60 * 1000,
+  // Burn-in protection's own idle wait (2.18) — real default below, ten minutes. A test that
+  // actually waited that long to prove the dim/drift class appears would be a test nobody
+  // runs; this seam lets it use milliseconds instead, the same reason `recoveryTick` is one.
+  burnInIdleMs = 10 * 60 * 1000,
 } = {}) {
   bus = bus || createBus();
   // Read before anything else renders: if this screen is not where the device is meant to
@@ -453,7 +457,17 @@ export async function mountKiosk(root, {
   await settings.load().catch(() => {});
   applyTheme(document.documentElement, settings.get().theme);
   applyLayout(settings.get());
-  settings.subscribe((s) => { applyTheme(document.documentElement, s.theme); applyLayout(s); });
+  settings.subscribe((s) => {
+    applyTheme(document.documentElement, s.theme);
+    applyLayout(s);
+    // A change made through the menu (turning burn-in protection on, off, or switching mode)
+    // takes effect immediately — re-arming rather than waiting for the next activity event,
+    // so switching it off actually clears an already-dimmed/drifting screen right away.
+    // `pokeBurnIn` is a function DECLARATION defined further down in this same scope, hoisted
+    // above this subscribe call — safe to reference here because this callback only ever RUNS
+    // later, once a setting actually changes, by which point it exists.
+    pokeBurnIn();
+  });
   settings.startPolling();
 
   // persist a mirror change into the profile settings (merges with theme/voice/clock)
@@ -1313,6 +1327,25 @@ export async function mountKiosk(root, {
         { value: 'standard', label: 'The usual' },
         { value: 'advanced', label: 'Everything' },
       ] },
+    // BURN-IN PROTECTION (MIKE_CHANGE_LIST.md 2.18), off by default. Always-on dashboards
+    // burn in on OLED — most tablets and phones, not the LCD this has mostly been tested on,
+    // which is exactly why it was invisible so far. `standard`, not `essential`: unlike theme
+    // and complexity this is not a legibility or escape-hatch control, it is a preference, and
+    // it should not crowd the row somebody reaches for on a screen they cannot read.
+    //
+    // Deliberately two options, not three. A third, content-HIDING screensaver was considered
+    // and left out on purpose — hiding everything is a state only an input can leave, and
+    // Christine cannot give one. `dim` and `drift` both keep every pixel of content on screen
+    // the whole time, so neither is a gate anybody could get stuck behind. See the DECIDE row
+    // for whether a hide mode is ever wanted, for a screen where someone genuinely can dismiss
+    // it themselves.
+    { key: 'burnIn', label: 'Screen burn-in protection', kind: 'choice', level: 'standard',
+      default: 'off',
+      options: [
+        { value: 'off', label: 'Off' },
+        { value: 'dim', label: 'Dim after 10 minutes idle' },
+        { value: 'drift', label: 'Slowly shift the picture when idle' },
+      ] },
   ];
 
   const menu = mountSettings(root.querySelector('[data-settings]'), {
@@ -1850,6 +1883,32 @@ export async function mountKiosk(root, {
   // The auto-hide itself stays exactly as it was. A bar that puts itself away is the right
   // behaviour and it is the safe direction -- left alone, the screen goes back to what it was
   // doing. What was wrong was that on the most likely device there was no way to bring it back.
+  // BURN-IN PROTECTION (2.18) — its own idle timer, deliberately separate from the bar's
+  // 3-second one above. The bar hiding is about giving the screen back to what it was
+  // showing; this is about the screen having been showing the SAME PIXELS too long. Ten
+  // minutes by real default, not three seconds — dimming or drifting the picture every time
+  // somebody's finger left the screen would be its own kind of distracting.
+  let burnInT = null;
+  function clearBurnIn() {
+    clearTimeout(burnInT);
+    kioskEl.classList.remove('burn-dim', 'burn-drift');
+  }
+  function armBurnIn() {
+    const mode = (settings.get() || {}).burnIn || 'off';
+    if (mode === 'off') return;
+    burnInT = setTimeout(() => {
+      kioskEl.classList.add(mode === 'dim' ? 'burn-dim' : 'burn-drift');
+    }, burnInIdleMs);
+  }
+  // Any activity clears it immediately and restarts the wait — same events as the bar's own
+  // poke, for the same reason: pointerdown covers touch, keydown covers a keyboard with no
+  // mouse ever moving.
+  function pokeBurnIn() { clearBurnIn(); armBurnIn(); }
+  for (const ev of ['mousemove', 'pointerdown', 'keydown']) {
+    root.addEventListener(ev, pokeBurnIn, { passive: true });
+  }
+  pokeBurnIn();
+
   for (const ev of ['mousemove', 'pointerdown', 'keydown']) {
     root.addEventListener(ev, poke, { passive: true });
   }
