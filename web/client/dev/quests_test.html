@@ -191,6 +191,42 @@ const MIN = 60000;
     check('the purchase shows as negative', host.querySelector('.q-log .q-neg')?.textContent.trim() === '-50',
       host.querySelector('.q-log .q-neg')?.textContent);
 
+    // ---- *** THE FIFTH AND LAST MODULE ON THE LIST: quests' confirm-to-buy latency *** ----
+    //
+    // Most of this module is self-initiated (tapping a task you already finished has no
+    // stimulus, same as sprint's auto-advancing phases — see sprint.js's own header on
+    // why that module doesn't time it either). The one real shown-then-answered gap here
+    // is confirm-to-buy: the first tap shows "tap again to confirm", the second answers it.
+    // Real elapsed time, no fake clock — this module never took a `now` override in this
+    // test (only sprint's instance above does), so the gap is genuinely slept through.
+    section('confirm-to-buy latency (§0a item 6, fifth and last)');
+    tabBtn('rewards').click();
+    await sleep(120);
+    const movie = DEFAULT_REWARDS.findIndex((r) => r.cost === 40);
+    buys()[movie].click();                       // arm — starts the clock, answers nothing yet
+    await sleep(400);
+    buys()[movie].click();                       // confirm — the real, measured gap
+    await sleep(300);
+
+    const auditLatency = createPointsLedger({ makeEvents });
+    await auditLatency.load();
+    const movieBuy = [...auditLatency.events()].reverse()
+      .find((e) => e.data && e.data.note === 'Movie night — you pick' && e.data.type === 'Reward');
+    check('*** a real ~400ms confirm gap is recorded as a real latencyMs ***',
+      !!movieBuy && movieBuy.data.latencyMs >= 300 && movieBuy.data.latencyMs <= 5000,
+      JSON.stringify(movieBuy && movieBuy.data));
+    check('...on the shared points record itself, not a side channel',
+      movieBuy && movieBuy.data.source === 'quests', JSON.stringify(movieBuy && movieBuy.data));
+
+    // A self-initiated task log — no prompt was ever shown, so nothing is honestly
+    // measurable, and the field must be genuinely ABSENT rather than a fabricated 0.
+    const anyTaskHasLatency = auditLatency.events()
+      .some((e) => e.data && e.data.type !== 'Reward' && e.data.source === 'quests'
+        && Object.prototype.hasOwnProperty.call(e.data, 'latencyMs'));
+    check('...and a plain task log (no shown prompt) never fabricates one',
+      !anyTaskHasLatency, String(anyTaskHasLatency));
+    auditLatency.destroy();
+
     // ---- THE SEAM: a different module's points show up here ----
     section('cross-module: a sprint feeds the dashboard');
     const clock = fakeClock(weekStart(Date.now()) + 36 * 3600 * 1000);   // mid-week, this week
