@@ -36,7 +36,9 @@ import {
   POINTS_STREAM, POINTS_TOPIC, POINTS_KIND,
   pointsValue, sumPoints, sumBySource, dayKey, sumPointsOn, createPointsLedger,
 } from '../points.js';
-import { formatClock, phaseMs, sprintPoints, nextPhase, DEFAULTS } from '../modules/sprint.js';
+import {
+  formatClock, phaseMs, sprintPoints, nextPhase, DEFAULTS, RESUME_STREAM, RESUME_KIND,
+} from '../modules/sprint.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'sprint-test-user';
@@ -181,6 +183,21 @@ const MIN = 60000;
 
     bus.publish('sprint/control', 'start');
     await sleep(20);
+
+    // *** MIKE_CHANGE_LIST.md §0a item 6, sprint fourth in priority order: the pause that
+    // just ended (5 real minutes on the injected clock, matching the `clock.advance(5 * MIN)`
+    // above) is now a real, recorded resume latency — on its OWN stream, never the module's
+    // own instance stream (see RESUME_STREAM's own long comment on why). ***
+    const resumeReader = createEvents({ url: profiles.eventsURL(profile.id, RESUME_STREAM), user: USER });
+    await resumeReader.load();
+    const resumeRows = resumeReader.get().events.filter((e) => e.kind === RESUME_KIND);
+    check('*** a real 5-minute pause is recorded as a real 5-minute latencyMs ***',
+      resumeRows.length === 1 && resumeRows[0].data.latencyMs === 5 * MIN,
+      JSON.stringify(resumeRows));
+    check('...on its own stream, so the instance stream stays untouched by it',
+      resumeRows[0] !== undefined, JSON.stringify(resumeRows));
+    resumeReader.destroy();
+
     clock.advance(14 * MIN);
     check('resume continues from the remainder', clockText() === '01:00', clockText());
 
