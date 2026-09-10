@@ -51,6 +51,8 @@ import { createTelemetry } from '../telemetry.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
 import { parseBank as sharedBank } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
+import { loadPack } from '../packs.js';
+import { packsFor, packById } from '../pack_library.js';
 
 export const GAME = 'wordforge';
 
@@ -83,6 +85,36 @@ export function bandOf(grade) {
   return Number.isFinite(n) && n > 0 ? `grade ${n}` : null;
 }
 
+// A `nimrod.pack.v1` words item is `{word, definition, decoys?, example?, difficulty?}` — see
+// `checkWordsItem` in packs.js. Mapped to this module's own row shape, the same small rename
+// Trivia's own `packToTriviaBank` does against ITS pack (`question`/`answers` -> `q`/`wrong`):
+// `definition` -> `meaning`, `example` -> `sentence` (this file's internal name predates the
+// pack schema and stays that name internally, per packs.js's own comment on the choice).
+//
+// `decoys` IS NOT USED HERE, on purpose. `makeQuestion` already builds its wrong options by
+// sampling OTHER words from the same deck (`words.filter(x => x.word !== w.word)`) — a
+// mechanism that already works, is already tested, and needs at least 4 words in the deck to
+// produce a 4-way choice, not per-word authored decoys. A pack that includes `decoys` anyway
+// is still valid (the schema allows it) — they are just not read by this path. If a future pack
+// kind ever needs per-word decoys specifically, that is a real reason to change this, not a gap
+// to quietly work around here.
+//
+// `difficulty` (easy/medium/hard) -> a grade NUMBER, because `bandOf` and the progress
+// dashboard both key off a number, not a three-way enum, and `DEFAULT_WORDS`' own numbers run
+// roughly 6-9. Picked to land in that same range rather than invent a second scale: easy=6,
+// medium=8, hard=10. A pack with no `difficulty` gets `medium` (8) — most useful default for
+// content nobody has graded, since it neither locks a word away from an average learner nor
+// pretends it is trivial.
+const DIFFICULTY_GRADE = { easy: 6, medium: 8, hard: 10 };
+export function packToWordBank(pack) {
+  return (pack.items || []).map((it) => ({
+    word: it.word,
+    meaning: it.definition,
+    sentence: it.example || `${it.word}.`,
+    grade: DIFFICULTY_GRADE[it.difficulty] || DIFFICULTY_GRADE.medium,
+  }));
+}
+
 export const DEFAULT_PAIRS = [
   ['Refurbished laptops give low-income families affordable computers.',
    "Refurbished laptops are a thing families who don't have much money can use to get computers that don't cost a lot.",
@@ -111,6 +143,11 @@ export const DEFAULT_PAIRS = [
 // not the floor. The original 10/3 worked out near 30-40 points per minute: a module that
 // simply sprays points and devalues every other way of earning them.
 export const DEFAULTS = {
+  // A READY-MADE PACK, NOT JUST A WRITTEN/SHARED BANK — same additive shape Trivia's own
+  // `contentSource` already ships (2026-09-08 MIKE_CHANGE_LIST §3). `bank` (unchanged) stays
+  // the default; `pack` is for somebody with nobody to write a word list for them.
+  contentSource: 'bank',
+  packId: packsFor('words')[0]?.id || null,
   correctPoints: 2,    // a right answer — the Task Menu's price for looking a word up
   tryPoints: 1,        // a wrong answer, once the explanation is acknowledged
   streakEvery: 5,      // a bonus every N correct in a row
@@ -293,7 +330,38 @@ const esc = (s) => String(s == null ? '' : s)
 // the economy is `advanced`, so the common case is a two-row menu rather than a nine-row one.
 // Nothing here is `essential` — this is a game somebody chose to play, and none of these
 // numbers is the difference between being able to use the screen and not.
+// A words-kind pack, if any exist. Computed once at module load, same guard Trivia's own
+// TRIVIA_PACKS uses — if PACK_LIBRARY ever ships zero words packs, these two rows quietly do
+// not appear rather than offering a picker with nothing in it.
+const WORD_PACKS = packsFor('words');
+
+// Shared across every Word Forge instance on the page, not per-instance — two panels both set
+// to the same pack should mean one fetch, not two. Its own cache, not Trivia's: two different
+// modules, two different in-memory Maps, same reasoning as everything else that is duplicated
+// rather than coupled across these files.
+const packCache = new Map();
+function loadPackCached(id) {
+  if (packCache.has(id)) return packCache.get(id);
+  const entry = packById(id);
+  const p = entry ? loadPack(entry.url) : Promise.reject(new Error(`no such pack: ${id}`));
+  // A failed fetch is not cached — a network blip should not permanently doom every instance
+  // that asked for this pack for the rest of the page's life.
+  p.catch(() => packCache.delete(id));
+  packCache.set(id, p);
+  return p;
+}
+
 const SETTINGS = [
+  ...(WORD_PACKS.length ? [
+    { key: 'contentSource', label: 'Where words come from', kind: 'choice', default: 'bank',
+      level: 'standard',
+      options: [{ value: 'bank', label: 'Written words + shared bank' },
+                { value: 'pack', label: 'A built-in pack' }],
+      note: 'A pack is ready-made — nobody has to write a word list first.' },
+    { key: 'packId', label: 'Which pack', kind: 'choice', default: WORD_PACKS[0].id,
+      level: 'standard',
+      options: WORD_PACKS.map((p) => ({ value: p.id, label: p.label })) },
+  ] : []),
   // The F4 ask, reachable at last. 0 is off, and it is first so that the off state is one
   // press away from wherever somebody has got to.
   { key: 'dailyCap', label: 'Daily points cap', kind: 'choice', default: 0, level: 'standard',
@@ -631,8 +699,14 @@ registerModule(
         // NAMED rather than inline, so a change to the SHARED bank row can re-run exactly the
         // same interpretation. Two code paths that both decide what a bank means is how they
         // end up disagreeing.
-        applyState = (s) => {
-          const snap = s || {};
+        //
+        // *** THE PACK PATH IS ASYNC; EVERYTHING ELSE HERE STAYS SYNC. *** Same split Trivia's
+        // own `readBank` makes, for the same reason: a pack is a network fetch, and `cfg` (plus
+        // `topics`/`pairs`) must not wait on it. `wordGen` guards against a slow pack response
+        // landing after a NEWER settings change already picked a different source — the stale
+        // one must not overwrite it, exactly `bankGen`'s job in trivia.js.
+        let wordGen = 0;
+        function resolveNonPackWords(snap) {
           // *** ALSO READS THE SHARED BANK (2026-08-31). *** One document that Trivia reads
           // too, so a syllabus is written once. It comes from this instance's own state where
           // somebody set it, otherwise from the shared row the Questions module edits.
@@ -643,11 +717,48 @@ registerModule(
           const shared = bankText ? sharedBank(bankText, { defaultKind: 'words' }).words : null;
           const w = Array.isArray(snap.words) ? snap.words
                   : (snap.wordsText ? parseWords(snap.wordsText) : (shared && shared.length ? shared : null));
+          return (w && w.length >= 4) ? w : DEFAULT_WORDS;   // need 4 for a 4-way choice
+        }
+        async function resolveWords(snap) {
+          const gen = ++wordGen;
+          if (cfg.contentSource === 'pack' && cfg.packId) {
+            try {
+              const pack = await loadPackCached(cfg.packId);
+              if (gen !== wordGen) return;         // superseded while the fetch was in flight
+              const fromPack = packToWordBank(pack);
+              const next = fromPack.length >= 4 ? fromPack : DEFAULT_WORDS;
+              // LENGTH, not reference — `resolveNonPackWords` below builds a fresh array on
+              // every call even when nothing meaningful changed, and comparing references would
+              // redeal the round on an unrelated settings tweak (roundLength, say). Trivia's own
+              // `applyBank` makes the identical tradeoff (`next.length !== bank.length`) for the
+              // identical reason.
+              const changed = next.length !== words.length;
+              words = next;
+              // A pack switch should take effect promptly, matching Trivia's own `applyBank` —
+              // otherwise "which pack" reads as applied while the round in progress keeps
+              // dealing from whatever was there before.
+              if (changed) newRound();
+              return;
+            } catch (err) {
+              console.error(`wordforge: pack "${cfg.packId}" failed to load, falling back to the bank`, err);
+              // fall through — an unreachable pack should read as an empty syllabus, not a
+              // dead panel; resolveNonPackWords still needs `snap` sourced correctly below.
+            }
+          }
+          const next = resolveNonPackWords(snap);
+          if (gen !== wordGen) return;
+          const changed = next.length !== words.length;
+          words = next;
+          if (changed) newRound();
+        }
+        applyState = (s) => {
+          const snap = s || {};
           const p = Array.isArray(snap.pairs) ? snap.pairs : (snap.pairsText ? parsePairs(snap.pairsText) : null);
-          words = (w && w.length >= 4) ? w : DEFAULT_WORDS;   // need 4 for a 4-way choice
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
           pairs = (p && p.length) ? p : DEFAULT_PAIRS;
           cfg = {
+            contentSource: snap.contentSource === 'pack' ? 'pack' : DEFAULTS.contentSource,
+            packId: typeof snap.packId === 'string' && snap.packId ? snap.packId : DEFAULTS.packId,
             correctPoints: Number(snap.correctPoints) > 0 ? Number(snap.correctPoints) : DEFAULTS.correctPoints,
             tryPoints: Number(snap.tryPoints) >= 0 ? Number(snap.tryPoints) : DEFAULTS.tryPoints,
             streakEvery: Number(snap.streakEvery) >= 0 ? Number(snap.streakEvery) : DEFAULTS.streakEvery,
@@ -656,6 +767,9 @@ registerModule(
             dailyCap: Number(snap.dailyCap) >= 0 ? Number(snap.dailyCap) : DEFAULTS.dailyCap,
             subject: typeof snap.subject === 'string' && snap.subject ? snap.subject : DEFAULTS.subject,
           };
+          // Fire-and-forget, same as Trivia's bare `readBank()` inside its own subscribe
+          // callback — nothing here needs to await a network fetch.
+          resolveWords(snap).catch(() => {});
         };
         state.subscribe(applyState);
 

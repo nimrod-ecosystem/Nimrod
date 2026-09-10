@@ -38,7 +38,7 @@ import { createPointsLedger, sumBySource } from '../points.js';
 import { createTelemetry, byConcept, byBand, bands as bandsOf, summarize } from '../telemetry.js';
 import {
   GAME, DEFAULTS, DEFAULT_WORDS, DEFAULT_PAIRS, CONCEPT_PAIRS,
-  shuffle, buildDeck, makeQuestion, scoreFor, parseWords, parsePairs, bandOf,
+  shuffle, buildDeck, makeQuestion, scoreFor, parseWords, parsePairs, bandOf, packToWordBank,
 } from '../modules/wordforge.js';
 import '../modules/quests.js';
 import '../modules/progress.js';
@@ -201,6 +201,25 @@ a || b || c`);
     check('a missing grade yields NO band rather than a fake one', bandOf(undefined) === null && bandOf(0) === null);
     const qBand = makeQuestion({ kind: 'define', word: DEFAULT_WORDS[0] }, DEFAULT_WORDS, fixedRand);
     check('a question carries its band', qBand.band === bandOf(DEFAULT_WORDS[0].grade), String(qBand.band));
+
+    // packToWordBank is pure — no fetch, no module — so its mapping is checked directly first,
+    // the same discipline trivia_test.html uses for packToTriviaBank.
+    section('*** a ready-made pack, not just a written/shared bank — MIKE_CHANGE_LIST §3 ***');
+    {
+      const mapped = packToWordBank({ items: [
+        { word: 'candid', definition: 'honest and direct', example: 'A candid reply.', difficulty: 'easy' },
+        { word: 'terse', definition: 'brief to the point of curtness' },   // no example, no difficulty
+      ] });
+      check('definition becomes meaning, example becomes sentence',
+        mapped[0].meaning === 'honest and direct' && mapped[0].sentence === 'A candid reply.',
+        JSON.stringify(mapped[0]));
+      check('difficulty maps to a grade number in DEFAULT_WORDS’ own range (easy=6)',
+        mapped[0].grade === 6, String(mapped[0].grade));
+      check('a missing example does not crash the mapping — it gets a usable placeholder sentence',
+        typeof mapped[1].sentence === 'string' && mapped[1].sentence.length > 0, JSON.stringify(mapped[1]));
+      check('a missing difficulty defaults to medium (8), not undefined',
+        mapped[1].grade === 8, String(mapped[1].grade));
+    }
 
     // ================= the module, server-backed =================
     section('playing — one game, BOTH streams');
@@ -388,6 +407,99 @@ a || b || c`);
       String([...pHost.querySelectorAll('.g-crow')].length));
 
     qInst.destroy(); pInst.destroy(); inst.destroy(); ledger.destroy(); tel.destroy();
+
+    // ============================================================================================
+    // THE REAL FETCH — against this suite's own server, the same shipped pack the module itself
+    // reads. Not mocked: if the URL, the schema, or the mapping is wrong, this fails the way a
+    // caregiver's screen would. Self-contained, its own profile/mount, torn down at the end.
+    {
+      const packProfiles = createProfilesClient({ user: USER });
+      const pp = await packProfiles.create('TEST-wordforge-pack');
+      const pmod = await packProfiles.addModule(pp.id, 'wordforge');
+      const pst = createState({ url: packProfiles.stateURL(pp.id, pmod.id), user: USER });
+      await pst.load();
+      await pst.set({ contentSource: 'pack', packId: 'vocab_starter' });
+      const phost = document.createElement('div');
+      document.body.append(phost);
+      const pbus = createBus();
+      const pinst = mountModule('wordforge', {
+        mount: phost, bus: pbus, state: pst,
+        events: createEvents({ url: packProfiles.eventsURL(pp.id, pmod.id), user: USER }),
+        user: USER, profileId: pp.id,
+        makeState: (key, opts) => createState({ url: packProfiles.stateURL(pp.id, key), user: USER, ...opts }),
+        makeEvents: (key, opts) => createEvents({ url: packProfiles.eventsURL(pp.id, key), user: USER, ...opts }),
+        rand: fixedRand,
+      });
+      pinst.init();
+      await sleep(400);
+
+      const popts = () => [...phost.querySelectorAll('[data-opt]')];
+      check('*** the real vocab pack loaded — a genuine question is on screen, not the 12-word default ***',
+        popts().length >= 2, String(popts().length));
+      // The shipped pack's own 20 words are entirely disjoint from DEFAULT_WORDS (checked once
+      // here, by name, rather than trusted) — so any option matching one of them is proof this
+      // round dealt from the pack, not from the built-in bank it would otherwise have fallen to.
+      const packWords = new Set(['candid', 'meticulous', 'ambiguous', 'resilient', 'arbitrary',
+        'coherent', 'diligent', 'skeptical', 'redundant', 'plausible', 'adjacent', 'impartial',
+        'tangible', 'innate', 'verbose', 'feasible', 'inevitable', 'credible', 'subtle', 'consensus']);
+      check('none of DEFAULT_WORDS collides with the shipped pack (so the next check is meaningful)',
+        DEFAULT_WORDS.every((w) => !packWords.has(w.word)), DEFAULT_WORDS.map((w) => w.word).join(','));
+      // A round mixes WORD questions (define/blank, from the pack) with SENTENCE-PAIR questions
+      // ('better', still from DEFAULT_PAIRS — the pack supplies words, not pairs), shuffled
+      // together. So the very first question dealt is not guaranteed to be a word one. Skip
+      // forward (the bus topic a switch or keypad would use, same as `advance()` internally)
+      // until a pack word turns up or a real round's worth of questions has been checked — a
+      // round that NEVER shows one in that many tries is the actual failure, not bad luck.
+      //
+      // Either question kind puts a pack word somewhere on screen: 'define' puts it in the
+      // PROMPT ("What does 'candid' mean?"); 'blank' blanks it out of the prompt but puts it
+      // (and three others) in the OPTIONS instead. Reading the whole panel's text catches both.
+      let foundPackWord = false;
+      for (let i = 0; i < 10; i += 1) {
+        const shown = (phost.textContent || '').toLowerCase();
+        if ([...packWords].some((w) => shown.includes(w))) { foundPackWord = true; break; }
+        pbus.publish('wordforge/skip');
+        await sleep(150);
+      }
+      check('*** the on-screen question is actually built from the pack’s own words ***',
+        foundPackWord, (phost.textContent || '').slice(0, 300));
+
+      pinst.destroy();
+      phost.remove();
+    }
+    {
+      // A pack id that does not exist must not leave the panel dead — falls back to the built-in
+      // bank, the same as an unreachable network resource anywhere else in this file.
+      const badProfiles = createProfilesClient({ user: USER });
+      const bp = await badProfiles.create('TEST-wordforge-badpack');
+      const bmod = await badProfiles.addModule(bp.id, 'wordforge');
+      const bst = createState({ url: badProfiles.stateURL(bp.id, bmod.id), user: USER });
+      await bst.load();
+      await bst.set({ contentSource: 'pack', packId: 'no-such-pack' });
+      const bhost = document.createElement('div');
+      document.body.append(bhost);
+      const binst = mountModule('wordforge', {
+        mount: bhost, bus: createBus(), state: bst,
+        events: createEvents({ url: badProfiles.eventsURL(bp.id, bmod.id), user: USER }),
+        user: USER, profileId: bp.id,
+        makeState: (key, opts) => createState({ url: badProfiles.stateURL(bp.id, key), user: USER, ...opts }),
+        makeEvents: (key, opts) => createEvents({ url: badProfiles.eventsURL(bp.id, key), user: USER, ...opts }),
+        rand: fixedRand,
+      });
+      binst.init();
+      await sleep(400);
+      check('*** an unresolvable pack id falls back to a real question rather than showing nothing ***',
+        [...bhost.querySelectorAll('[data-opt]')].length >= 2,
+        String([...bhost.querySelectorAll('[data-opt]')].length));
+      binst.destroy();
+      bhost.remove();
+    }
+    {
+      // The default stays "bank" — an existing profile with saved settings that predate this
+      // feature must see exactly the syllabus it always has, not silently switch to a pack.
+      check('*** DEFAULTS.contentSource is still "bank", unaffected by adding the pack path ***',
+        DEFAULTS.contentSource === 'bank', String(DEFAULTS.contentSource));
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;

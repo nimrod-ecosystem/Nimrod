@@ -17,6 +17,8 @@ export const PACK_LIBRARY = [
   // against whichever one happened to load it.
   { id: 'maths_basic', kind: 'trivia', label: 'Maths — basic arithmetic',
     url: '/packs/maths_basic.json' },
+  { id: 'vocab_starter', kind: 'words', label: 'Vocabulary — starter set',
+    url: '/packs/vocab_starter.json' },
 ];
 
 export const packsFor = (kind) => PACK_LIBRARY.filter((p) => p.kind === kind);
