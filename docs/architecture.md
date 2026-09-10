@@ -50,6 +50,24 @@ outputs are *sinks*). New input methods (switch, scan, gaze, voice, hand/color t
 become additional sources with nothing downstream changing. Device control (lights,
 thermostat) plugs in as sinks/integrations on the same bus.
 
+**One transport, three binding vocabularies — input, output, data link — named 2026-09-10.**
+Approved 2026-08-30 and left unnamed until `bus_and_generator_20260910.md` §1 forced the
+question: *input bus* is person → verbs → the focused module; *output bus* is module → verbs
+→ the person's channels; the missing third is **data link** — module → value → module,
+continuous, the spreadsheet-cell-reference sense (`=B2` shows B2's value and keeps showing
+it — see `docs/glossary.md`). `bus.js` is the one substrate under all three; they differ only
+in their binding record's shape (see `bus.js`'s own comment and `input.js` `normalizeBinding`
+for the other two). A data link is structural — `{from: (instance, port), to: (instance,
+port)}`, no value — and enters the composition fingerprint the way a prefab override does;
+the VALUE that flows over it carries a source timestamp (decided 2026-08-30: "a rhythm game
+cares *when*, not only *what*, and a sink using arrival time cannot recover the source's
+timing afterwards"), a provenance path, and whether it is event or continuous. Instance
+addressing (`bus.js` `scope`/`instanceTopic`, 2026-09-10) is what makes an (instance, port)
+pair a real, addressable thing rather than a type-wide broadcast — built first because data
+links could not exist without it. Core primitives (ports, link records, the value envelope,
+the type hint/gate rule) are in `links.js`; wiring every module's manifest with real ports and
+a patch-bay UI are later, separate work, not blocked on anything here.
+
 ## Server + per-user state — settled 2026-08-10
 
 The first slice (`web/`) is built and validated. What it locks in:
