@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>conditioning — the wire-transform family, by class</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>conditioning — the wire-transform family, by class</h1>
+<p>No server needed — pure, in-memory. Proves §1.2 item 2 of
+<code>bus_and_generator_20260910.md</code>: debounce/hold/lockout are the event-class family,
+matched against <code>input.js</code>'s own timing rules and rejection reasons so the same
+word never means two different waits; the unchanged-value guard and rate limiting are the
+continuous-class family.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createEventConditioner, createContinuousConditioner, shallowEqualValue, conditionerFamily,
+} from '../conditioning.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+try {
+  // ================= event: debounce =================
+  section('event class — debounce, judged on the raw edge before anything else');
+  {
+    const c = createEventConditioner({ debounceMs: 100 });
+    check('the first down is never a bounce', c.down(1000) === null);
+    check('*** a second down inside the window is rejected as a bounce ***',
+      c.down(1050)?.reason === 'debounce', JSON.stringify(c.down(1050)));
+    const c2 = createEventConditioner({ debounceMs: 100 });
+    c2.down(1000);
+    check('a down OUTSIDE the window is not a bounce', c2.down(1200) === null);
+    const c3 = createEventConditioner();   // debounceMs: 0 — off by default
+    c3.down(1000);
+    check('debounceMs 0 means no debounce at all — two downs 1ms apart both pass',
+      c3.down(1001) === null);
+  }
+
+  // ================= event: hold =================
+  section('event class — minimum hold, "too-short" is input.js’s own reason');
+  {
+    const c = createEventConditioner({ holdMs: 250 });
+    c.down(1000);
+    check('*** released before holdMs is too-short, not accepted ***',
+      c.up(1000, 1100).reason === 'too-short', JSON.stringify(c.up(1000, 1100)));
+    const c2 = createEventConditioner({ holdMs: 250 });
+    c2.down(1000);
+    const v = c2.up(1000, 1300);
+    check('held past holdMs is accepted', v.accepted === true, JSON.stringify(v));
+    check('...and reports the actual heldMs, not the threshold', v.heldMs === 300, String(v.heldMs));
+    const c3 = createEventConditioner();   // holdMs: 0 — instantaneous, no minimum
+    check('holdMs 0 accepts an instantaneous event (up === down)',
+      c3.up(1000, 1000).accepted === true);
+  }
+
+  // ================= event: lockout =================
+  section('event class — repeat lockout, judged against the last ACCEPTED fire');
+  {
+    const c = createEventConditioner({ lockoutMs: 500 });
+    c.down(1000);
+    check('the first fire is accepted', c.up(1000, 1000).accepted === true);
+    c.down(1100);
+    check('*** a second fire inside the lockout window is rejected ***',
+      c.up(1100, 1100).reason === 'lockout', JSON.stringify(c.up(1100, 1100)));
+    c.down(1600);
+    check('...and a fire AFTER the window is accepted again',
+      c.up(1600, 1600).accepted === true);
+    const c2 = createEventConditioner({ holdMs: 250, lockoutMs: 500 });
+    c2.down(1000);
+    check('*** lockout is judged AFTER hold — a too-short press never even reaches the lockout check, and does not itself start counting the window ***',
+      c2.up(1000, 1100).reason === 'too-short');
+  }
+
+  // ================= event: combined =================
+  section('event class — all three composing in one timeline, not just in isolation');
+  {
+    const c = createEventConditioner({ debounceMs: 50, holdMs: 200, lockoutMs: 300 });
+    check('down 1 proceeds', c.down(1000) === null);
+    const u1 = c.up(1000, 1250);
+    check('up 1: held 250ms past a 200ms threshold, accepted', u1.accepted === true, JSON.stringify(u1));
+
+    // A bounce is a DOWN-to-DOWN spacing, not down-to-release — the real physical case a
+    // switch's contact chatter produces: a second down only 20ms after the FIRST down.
+    check('*** down 2, 20ms after down 1, is a bounce, judged on the raw edge ***',
+      c.down(1020)?.reason === 'debounce');
+
+    // A genuine second press, well clear of debounce against down 1 (1000) and of the
+    // 300ms lockout against fire 1 (1250).
+    check('down 3 at 2000 clears debounce', c.down(2000) === null);
+    const u3 = c.up(2000, 2100);
+    check('*** up 3 released after only 100ms — under the 200ms hold — is too-short, '
+      + 'never even reaching the lockout check ***',
+      u3.reason === 'too-short', JSON.stringify(u3));
+
+    // The SAME control pressed again, long enough after down 3 to clear debounce, and held
+    // long enough to clear the hold threshold.
+    check('down 4 at 2500 clears debounce against down 3', c.down(2500) === null);
+    const u4 = c.up(2500, 2750);
+    check('up 4: 250ms held, clears hold; 1500ms since fire 1 — well past the 300ms lockout — accepted',
+      u4.accepted === true, JSON.stringify(u4));
+  }
+
+  // ================= continuous: unchanged =================
+  section('continuous class — the unchanged-value guard, checked first');
+  {
+    const c = createContinuousConditioner();
+    check('the first value is always accepted (nothing to compare against yet)',
+      c.next(5).accepted === true);
+    check('*** the identical value again is dropped ***', c.next(5).reason === 'unchanged');
+    check('a genuinely different value is accepted', c.next(6).accepted === true);
+    check('back to the earlier value counts as "different from the LAST one", not "seen before"',
+      c.next(5).accepted === true);
+
+    const co = createContinuousConditioner();
+    co.next({ x: 0.5, y: 0.5 });
+    check('shallowEqualValue treats an identical {x,y} object as unchanged',
+      co.next({ x: 0.5, y: 0.5 }).reason === 'unchanged');
+    check('and a genuinely moved {x,y} as changed',
+      co.next({ x: 0.6, y: 0.5 }).accepted === true);
+  }
+
+  // ================= continuous: rate limiting =================
+  section('continuous class — rate limiting, checked after the unchanged guard');
+  {
+    const c = createContinuousConditioner({ minIntervalMs: 100 });
+    check('the first value goes through', c.next(1, 1000).accepted === true);
+    check('*** a DIFFERENT value arriving too soon is rate-limited, not sent ***',
+      c.next(2, 1030).reason === 'rate-limited', JSON.stringify(c.next(2, 1030)));
+    check('...but the SAME value arriving too soon is "unchanged", not "rate-limited" — '
+      + 'the more specific reason wins',
+      c.next(1, 1030).reason === 'unchanged');
+    check('a different value AFTER the interval is accepted',
+      c.next(2, 1150).accepted === true);
+    const c2 = createContinuousConditioner();   // minIntervalMs: 0 — off by default
+    c2.next(1, 1000);
+    check('minIntervalMs 0 means no rate limit at all', c2.next(2, 1000).accepted === true);
+  }
+
+  // ================= shallowEqualValue =================
+  section('shallowEqualValue — the default comparator');
+  {
+    check('primitives compare by ===', shallowEqualValue(5, 5) === true && shallowEqualValue(5, 6) === false);
+    check('null/undefined never equal an object', shallowEqualValue(null, {}) === false);
+    check('different key counts are unequal', shallowEqualValue({ x: 1 }, { x: 1, y: 2 }) === false);
+    check('same keys, same values, is equal', shallowEqualValue({ x: 1, y: 2 }, { x: 1, y: 2 }) === true);
+    check('same keys, one different value, is unequal', shallowEqualValue({ x: 1, y: 2 }, { x: 1, y: 3 }) === false);
+  }
+
+  // ================= conditionerFamily =================
+  section('conditionerFamily — the one lookup, so nothing hardcodes the mapping twice');
+  {
+    check('event class maps to event', conditionerFamily('event') === 'event');
+    check('continuous class maps to continuous', conditionerFamily('continuous') === 'continuous');
+    check('anything unrecognized defaults to continuous — the safer, quieter default',
+      conditionerFamily('nonsense') === 'continuous' && conditionerFamily(undefined) === 'continuous');
+  }
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

@@ -8,6 +8,12 @@
 // is the primitives it argues for, nothing more — no patch-bay UI, no module wired with real
 // ports yet. Those are later, separate work, not blocked on anything here.
 //
+// CONDITIONING IS A SEPARATE FILE, `conditioning.js` — the wire-transform family (debounce/
+// hold/lockout for event-class, the unchanged-value guard/rate-limiting for continuous), kept
+// apart from the message shapes here the same way `input.js`'s conditioning is kept apart
+// from `bus.js`'s own transport. A sender applies the class-appropriate conditioner before
+// calling `wrapValue`/`linkTopic` below; neither file needs to import the other to do that.
+//
 // THE SPLIT THAT MATTERS MOST: a LINK is structural, a VALUE is runtime.
 //
 //   link   {from: {instance, port}, to: {instance, port}}   — WHAT is wired to what.
