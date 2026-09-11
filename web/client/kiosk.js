@@ -446,6 +446,18 @@ export async function mountKiosk(root, {
 
   // ---- per-profile settings: theme + the kiosk LAYOUT (data-driven) --------
   const settings = stateFor('settings');
+  // Declared here, ahead of `settings.subscribe` below, rather than down with the rest of the
+  // burn-in code. `subscribe` calls its callback IMMEDIATELY if settings are already loaded
+  // (state.js's `subscribe`: `if (loaded) fn(snapshot())`), and `settings.load()` a few lines
+  // down is awaited before that subscribe call — so on every real boot the callback runs
+  // synchronously, inside this same tick, long before execution would otherwise reach the
+  // `let burnInT` that used to sit next to `armBurnIn`/`clearBurnIn`. A `let` is not
+  // initialized until its own line runs, so `pokeBurnIn()` → `clearBurnIn()` →
+  // `clearTimeout(burnInT)` hit `burnInT` in its temporal dead zone and threw
+  // "Cannot access 'burnInT' before initialization" on every load, live included — a comment
+  // beside the subscribe call argued this callback "only ever runs later", which is true for a
+  // setting a person actually changes but not for the immediate replay `subscribe` performs.
+  let burnInT = null;
   function applyLayout(s) {
     const k = (s && s.kiosk) || {};
     const m = { ...KDEF.mirror, ...(k.mirror || {}) };
@@ -1888,7 +1900,7 @@ export async function mountKiosk(root, {
   // showing; this is about the screen having been showing the SAME PIXELS too long. Ten
   // minutes by real default, not three seconds — dimming or drifting the picture every time
   // somebody's finger left the screen would be its own kind of distracting.
-  let burnInT = null;
+  // (`burnInT` itself is declared earlier, beside `settings.subscribe` — see the comment there.)
   function clearBurnIn() {
     clearTimeout(burnInT);
     kioskEl.classList.remove('burn-dim', 'burn-drift');
