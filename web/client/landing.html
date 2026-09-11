@@ -818,99 +818,27 @@
   // scroll — a page that starts loading an application because somebody scrolled past it is
   // spending their data and their battery on a decision they did not make.
   //
-  // 0.2 — THE DEMO NEVER SHOWS A RAW 502. The server this embeds can be cold (a free/starter
-  // Render tier sleeping or restarting) and the raw failure is Render's own error page inside
-  // the frame — the worst possible thing for a stranger's first look at the product. So:
-  // probe `/api/healthz` (the lightest real endpoint the server has) before ever creating the
-  // iframe. Warm case (almost every visit) adds one quick round trip nobody notices. Cold case
-  // shows an honest wait with a retry, never the platform's own error page.
-  (() => {
+  // 0.2 — THE DEMO NEVER SHOWS A RAW 502. Shared with the /learn/ sample site's own demo
+  // embed (same failure mode, same fix) via demo_health_gate.js rather than a second copy of
+  // this logic that could drift from it.
+  (async () => {
     const play = document.querySelector('[data-play]');
     const live = document.querySelector('[data-live]');
     const frame = document.querySelector('.demo-frame');
     if (!play || !live || !frame) return;
-
-    const MAX_WAIT_MS = 45000;   // the copy below promises "about 30 seconds"; leave margin
-    const RETRY_GAP_MS = 2500;
-
-    function probeOnce(timeoutMs) {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), timeoutMs);
-      return fetch('/api/healthz', { signal: ctrl.signal, cache: 'no-store' })
-        .then((r) => r.ok)
-        .catch(() => false)
-        .finally(() => clearTimeout(t));
-    }
-
-    function loadKiosk() {
-      document.querySelector('.demo-waking')?.remove();
-      const f = document.createElement('iframe');
+    const { mountHealthGate } = await import('./demo_health_gate.js');
+    mountHealthGate({
+      playEl: play,
+      liveEl: live,
+      frameEl: frame,
+      src: '/kiosk.html?demo=1',
       // `demo=1`, so this is the seeded demo screen for everybody. Without it the frame took
       // the signed-in path and showed the viewer their own first screen — which for Mike, on
       // his own landing page, was a black rectangle.
-      f.src = '/kiosk.html?demo=1';
-      f.title = 'Nimrod, running \u2014 a live demo';
-      // No camera or microphone in the allow list: this embed must never be able to ask.
-      // That is the whole reason the live panel is a public zoo camera.
-      f.setAttribute('allow', 'autoplay; fullscreen');
-      f.setAttribute('loading', 'lazy');
-      live.append(f);
-      live.hidden = false;
-      play.remove();
-    }
-
-    function panel(html) {
-      document.querySelector('.demo-waking')?.remove();
-      const el = document.createElement('div');
-      el.className = 'demo-waking';
-      el.setAttribute('role', 'status');
-      el.innerHTML = html;
-      frame.appendChild(el);
-      el.querySelector('[data-retry]')?.addEventListener('click', () => attempt());
-      return el;
-    }
-
-    function showWaking() {
-      play.hidden = true;
-      panel(
-        '<div class="demo-waking-inner"><div class="demo-spin" aria-hidden="true"></div>' +
-        '<p><b>The demo is waking up</b> — about 30 seconds. It sleeps when nobody’s ' +
-        'looked at it for a while, to keep it free to run. It will load on its own.</p>' +
-        '<button type="button" class="btn ondark ghost" data-retry>Try again now</button></div>'
-      );
-    }
-
-    function showFailed() {
-      play.hidden = true;
-      panel(
-        '<div class="demo-waking-inner">' +
-        '<p><b>The demo isn’t answering right now.</b> Try again in a minute, or ' +
-        '<a href="https://github.com/nimrod-ecosystem/Nimrod">read the code</a> instead.</p>' +
-        '<button type="button" class="btn ondark ghost" data-retry>Try again</button></div>'
-      );
-    }
-
-    let running = false;
-    async function attempt() {
-      if (running) return;
-      running = true;
-      document.querySelector('.demo-waking')?.remove();
-      const fast = await probeOnce(3000);
-      if (fast) { running = false; loadKiosk(); return; }
-      showWaking();
-      const start = Date.now();
-      let ok = false;
-      while (Date.now() - start < MAX_WAIT_MS) {
-        await new Promise((r) => setTimeout(r, RETRY_GAP_MS));
-        ok = await probeOnce(4000);
-        if (ok) break;
-      }
-      running = false;
-      if (ok) loadKiosk(); else showFailed();
-    }
-
-    play.addEventListener('click', attempt);
-  })();
+      title: 'Nimrod, running — a live demo',
+      btnClass: 'btn ondark ghost',
+    });
+  })().catch((e) => console.warn('demo health gate', e));
 
   // THE GUIDED TOUR. Same list the walkthrough video is made of — `steps.js` — walked by a
   // person instead of performed by the recorder.
