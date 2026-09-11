@@ -1,7 +1,19 @@
 {
-  "note": "A content pack, not a hand-written page. Updating the program listing is editing this file — the same shape a teacher would use to update a games pack. Nothing below has run yet; this is the proposed calendar, in TechCentral's own session formats (My Digital Life = 60-minute standalone for adults, Maker Monday = 90 minutes, Makerlab = 60-90 for kids/teens, Tech Help 1-on-1 = 2-hour blocks).",
+  "note": "A content pack, not a hand-written page. Updating the program listing is editing this file — the same shape a teacher would use to update a games pack. Nothing below has run yet; this is the proposed calendar, in TechCentral's own session formats (My Digital Life = 60-minute standalone for adults, Maker Monday = 90 minutes, Makerlab = 60-90 for kids/teens, Tech Help 1-on-1 = 2-hour blocks). This sample site does not replace the library's own calendar — every entry links to the real public LibCal calendar, since none of these sessions has a scheduled date or its own event page yet.",
   "generated": "2026-09-11",
+  "libcal_base": "https://events.cpl.org/",
   "sessions": [
+    {
+      "id": "upcycle-101",
+      "title": "Upcycle Your Old Device",
+      "format": "My Digital Life",
+      "duration_min": 60,
+      "audience": "Adults & children",
+      "cadence": "Monthly, standalone",
+      "status": "proposed",
+      "course": "upcycle-device",
+      "summary": "Turn a phone or tablet headed for a drawer into a small library dashboard — a clock, a rotating quote and fact, one tap into a learning game."
+    },
     {
       "id": "aac-101",
       "title": "AAC Boards 101: Set Up and Use a Communication Board",

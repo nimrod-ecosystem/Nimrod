@@ -6,15 +6,23 @@
 //   <div data-calendar data-course="aac-board"></div>  — only that course's sessions
 const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
-function row(s) {
+function row(s, libcalBase) {
   const soon = s.status === 'coming';
+  // THIS SAMPLE SITE DOES NOT REPLACE LIBCAL. Every entry links to the library's real public
+  // calendar rather than pretending this listing is where someone registers — these are
+  // proposed sessions with no scheduled date yet, so the honest link is the general calendar,
+  // not a fabricated per-event page.
+  const libcal = libcalBase
+    ? '<a class="cal-libcal" href="' + esc(libcalBase) + '" target="_blank" rel="noopener">' +
+      'Once scheduled, register on LibCal ↗</a>'
+    : '';
   return (
     '<div class="cal-row' + (soon ? ' soon' : '') + '">' +
     '<div class="when">' + esc(s.format) +
     '<span class="date">' + esc(s.cadence) + '</span></div>' +
     '<div><h4>' + esc(s.title) +
     (soon ? ' <span class="tag soon">Coming</span>' : '') + '</h4>' +
-    '<p>' + esc(s.summary) + '</p></div>' +
+    '<p>' + esc(s.summary) + '</p>' + libcal + '</div>' +
     '<div class="fmt">' + esc(s.duration_min) + ' min' +
     '<br>' + esc(s.audience) + '</div>' +
     '</div>'
@@ -46,6 +54,7 @@ export async function renderCalendars(root = document) {
       el.innerHTML = '<p class="muted">Nothing listed here yet.</p>';
       return;
     }
-    el.innerHTML = '<div class="cal-list">' + rows.map(row).join('') + '</div>';
+    el.innerHTML = '<div class="cal-list">' +
+      rows.map((s) => row(s, data.libcal_base)).join('') + '</div>';
   });
 }

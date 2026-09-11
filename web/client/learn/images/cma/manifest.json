@@ -1,0 +1,187 @@
+{
+  "note": "Cleveland Museum of Art Open Access images, all CC0, downloaded and stored locally (not hotlinked) so the demo works offline and isn't dependent on a third party's CDN, CORS policy, or rate limits. Verified per-image via the API's own share_license_status field at download time, 2026-09-11.",
+  "source_api": "https://openaccess-api.clevelandart.org/",
+  "generated": "2026-09-11",
+  "images": [
+    {
+      "file": "1915_534.jpg",
+      "accession_number": "1915.534",
+      "title": "Nathaniel Hurd",
+      "artist": "John Singleton Copley (American, born The Thirteen Colonies, 1738\u20131815)",
+      "date": "c. 1765",
+      "credit_line": "Gift of the John Huntington Art and Polytechnic Trust",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1915.534"
+    },
+    {
+      "file": "1921_1239.jpg",
+      "accession_number": "1921.1239",
+      "title": "Portrait of Dora Wheeler",
+      "artist": "William Merritt Chase (American, 1849\u20131916)",
+      "date": "1882\u201383",
+      "credit_line": "Gift of Mrs. Boudinot Keith in memory of  Mr. and Mrs. J. H. Wade",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1921.1239"
+    },
+    {
+      "file": "1922_1133.jpg",
+      "accession_number": "1922.1133",
+      "title": "Stag at Sharkey's",
+      "artist": "George Bellows (American, 1882\u20131925)",
+      "date": "1909",
+      "credit_line": "Hinman B. Hurlbut Collection",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1922.1133"
+    },
+    {
+      "file": "1927_1984.jpg",
+      "accession_number": "1927.1984",
+      "title": "The Biglin Brothers Turning the Stake",
+      "artist": "Thomas Eakins (American, 1844\u20131916)",
+      "date": "1873",
+      "credit_line": "Hinman B. Hurlbut Collection",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1927.1984"
+    },
+    {
+      "file": "1928_8.jpg",
+      "accession_number": "1928.8",
+      "title": "The Race Track (Death on a Pale Horse)",
+      "artist": "Albert Pinkham Ryder (American, 1847\u20131917)",
+      "date": "c. 1896\u20131908",
+      "credit_line": "Purchase from the J. H. Wade Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1928.8"
+    },
+    {
+      "file": "1962_2.jpg",
+      "accession_number": "1962.2",
+      "title": "Mme L . . . (Laure Borreau)",
+      "artist": "Gustave Courbet (French, 1819\u20131877)",
+      "date": "1863",
+      "credit_line": "Leonard C. Hanna Jr. Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1962.2"
+    },
+    {
+      "file": "1965_233.jpg",
+      "accession_number": "1965.233",
+      "title": "Twilight in the Wilderness",
+      "artist": "Frederic Edwin Church (American, 1826\u20131900)",
+      "date": "1860",
+      "credit_line": "Mr. and Mrs. William H. Marlatt Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1965.233"
+    },
+    {
+      "file": "1977_43.jpg",
+      "accession_number": "1977.43",
+      "title": "Church Street El",
+      "artist": "Charles Sheeler (American, 1883\u20131965)",
+      "date": "1920",
+      "credit_line": "Mr. and Mrs. William H. Marlatt Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1977.43"
+    },
+    {
+      "file": "1958_31.jpg",
+      "accession_number": "1958.31",
+      "title": "Adeline Ravoux",
+      "artist": "Vincent van Gogh (Dutch, 1853\u20131890)",
+      "date": "1890",
+      "credit_line": "Bequest of Leonard C. Hanna Jr.",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1958.31"
+    },
+    {
+      "file": "1917_1335.jpg",
+      "accession_number": "1917.1335",
+      "title": "View of Schroon Mountain, Essex County, New York, After a Storm",
+      "artist": "Thomas Cole (American, born England,1801\u20131848)",
+      "date": "1838",
+      "credit_line": "Hinman B. Hurlbut Collection",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1917.1335"
+    },
+    {
+      "file": "1958_39.jpg",
+      "accession_number": "1958.39",
+      "title": "The Red Kerchief",
+      "artist": "Claude Monet (French, 1840\u20131926)",
+      "date": "c. 1868\u201373",
+      "credit_line": "Bequest of Leonard C. Hanna Jr.",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1958.39"
+    },
+    {
+      "file": "1951_355.jpg",
+      "accession_number": "1951.355",
+      "title": "Portrait of a Family Playing Music",
+      "artist": "Pieter de Hooch (Dutch, 1629\u20131684)",
+      "date": "1663",
+      "credit_line": "Gift of the Hanna Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1951.355"
+    },
+    {
+      "file": "1964_160.jpg",
+      "accession_number": "1964.160",
+      "title": "A Woman's Work",
+      "artist": "John Sloan (American, 1871\u20131951)",
+      "date": "1912",
+      "credit_line": "Gift of Amelia Elizabeth White",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1964.160"
+    },
+    {
+      "file": "1946_83.jpg",
+      "accession_number": "1946.83",
+      "title": "Frieze of Dancers",
+      "artist": "Edgar Degas (French, 1834\u20131917)",
+      "date": "c. 1895",
+      "credit_line": "Gift of the Hanna Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1946.83"
+    },
+    {
+      "file": "1962_37.jpg",
+      "accession_number": "1962.37",
+      "title": "Cupid and Psyche",
+      "artist": "Jacques-Louis David (French, 1748\u20131825)",
+      "date": "1817",
+      "credit_line": "Leonard C. Hanna Jr. Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1962.37"
+    },
+    {
+      "file": "1950_250.jpg",
+      "accession_number": "1950.250",
+      "title": "Portrait of a Man, Possibly Girolamo Rosati",
+      "artist": "Lorenzo Lotto (Italian, 1480\u20131556)",
+      "date": "1533\u201334",
+      "credit_line": "Gift of the Hanna Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1950.250"
+    },
+    {
+      "file": "1927_393.jpg",
+      "accession_number": "1927.393",
+      "title": "Elizabeth Shewell West and Her Son, Raphael",
+      "artist": "Benjamin West (American, born The Thirteen Colonies, 1738\u20131820)",
+      "date": "c. 1770",
+      "credit_line": "The Charles W. Harkness Gift",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1927.393"
+    },
+    {
+      "file": "1999_173.jpg",
+      "accession_number": "1999.173",
+      "title": "Portrait of Tieleman Roosterman",
+      "artist": "Frans Hals (Dutch, c. 1581\u20131666)",
+      "date": "1634",
+      "credit_line": "Leonard C. Hanna Jr. Fund",
+      "license": "CC0",
+      "source_url": "https://www.clevelandart.org/art/1999.173"
+    }
+  ]
+}
