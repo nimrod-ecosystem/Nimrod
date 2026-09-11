@@ -137,6 +137,17 @@
           guided equation practice. Both accept the same switch, gamepad, or keyboard input as
           Course C's games — no separate setup.</p>
       </div>
+      <div class="card">
+        <h3>Input options, honestly</h3>
+        <p>All three games accept scanning and pointer input the same way the rest of the site
+          does. <b>Voice control exists in the codebase</b> — nine fixed spoken phrases mapped to
+          actions, no AI involved — but it is <b>deliberately not switched on in the product
+          today.</b> The reason is privacy, not readiness: a browser's built-in speech
+          recognizer sends audio to Google's (or Apple's) servers to be transcribed, which is a
+          real consideration on a shared library kiosk, not just in someone's home. If a future
+          class demos it, the page and the kiosk itself should say so plainly, in those words —
+          the same rule that already applies to any camera on this site.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -148,6 +159,68 @@
       <a class="btn primary" href="/modules.html?m=trivia">Try Trivia →</a>
       <a class="btn outline" href="/modules.html?m=wordforge">Try Word Forge →</a>
       <a class="btn outline" href="/modules.html?m=algebra">Try Algebra →</a>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <p class="eyebrow">Make your own pack</p>
+    <h2>A content pack is a JSON file. Any AI can write one with you.</h2>
+    <p class="lead-sub">Three sample packs on this site were built this way, from real sources
+      rather than an AI's memory: <a href="/packs/cma_art_trivia.json">Cleveland Museum of Art —
+      who painted it?</a>, <a href="/packs/literary_quotes_trivia.json">Who wrote it? — famous
+      opening lines</a>, and <a href="/packs/cleveland_library_facts.json">Cleveland Public
+      Library — history facts</a>. Try one now from the games above — they're in the same pack
+      picker as every built-in set.</p>
+    <div class="card" style="margin-top:18px">
+      <h3>The rule that keeps a pack honest</h3>
+      <p>A pack is built <b>from a source</b>, never recalled from memory. An AI asked "give me
+        trivia about the Great Gatsby" is remembering, which is where invented facts come from.
+        An AI <b>given the actual text</b> and asked to extract questions is a different, much
+        safer job. Every pack records where its content came from — a question nobody can trace
+        is a question nobody should trust.</p>
+      <p style="margin-top:12px">Paste this into any AI, along with a source (a book, an
+        article, a fact sheet):</p>
+      <pre style="background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;
+        padding:14px;overflow-x:auto;font-size:.82rem;white-space:pre-wrap">Make me a Nimrod trivia pack from the source below.
+
+Rules:
+  - Every question must be answerable FROM THE SOURCE. Do not use anything you
+    already know. If it is not in the text, it is not a question.
+  - Four answers each, one correct, three plausible and wrong.
+  - Mark difficulty easy / medium / hard.
+  - Add a one-line "explain" for each, so a wrong answer teaches something.
+  - Return ONLY valid JSON in the shape below, no commentary.
+
+{ "schema": "nimrod.pack.v1", "kind": "trivia", "name": "...",
+  "description": "...",
+  "source": { "name": "...", "url": "...", "licence": "...",
+              "attribution": "..." },
+  "generated": "YYYY-MM-DD",
+  "items": [ { "question": "...", "answers": ["...","...","...","..."],
+               "correct": "...", "difficulty": "easy",
+               "category": "...", "explain": "..." } ] }
+
+SOURCE:
+[paste the text, or the link, here]</pre>
+      <p class="muted" style="margin-top:10px">Drop the resulting file in the pack folder and it
+        appears in the game's own settings — no code, no rebuild.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Related resources</p>
+    <div class="card">
+      <h3>Benny's Hub — switchedgames.org</h3>
+      <p>Free one- and two-switch browser games from the NARBE Foundation (Ari, Nancy, and Ben),
+        built with Ben as the core tester. They accept custom levels and full custom games
+        through their own developer guide — worth pointing a class toward alongside what's
+        built here.</p>
+      <a class="btn outline small" href="https://switchedgames.org" target="_blank" rel="noopener">
+        Visit switchedgames.org →</a>
     </div>
   </div>
 </section>

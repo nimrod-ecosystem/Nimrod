@@ -1,0 +1,62 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Who wrote it? — famous opening lines",
+  "description": "Match a famous opening line to its public-domain novel. Every line is a verbatim excerpt (not a paraphrase or a widely-circulated 'quote about reading', which are frequently misattributed) — the same lines used on the /learn sample site's library dashboard.",
+  "source": {
+    "name": "Public-domain novels (Austen 1813, Melville 1851, Dickens 1850/1859, Tolstoy 1878, Shakespeare c. 1599) — text verified against the works themselves.",
+    "licence": "Public domain",
+    "attribution": "None required."
+  },
+  "generated": "2026-09-11",
+  "items": [
+    {
+      "question": "\"It is a truth universally acknowledged, that a single man in possession of a good fortune must be in want of a wife.\" — who wrote this opening line?",
+      "answers": ["Jane Austen", "Charles Dickens", "Leo Tolstoy", "William Shakespeare"],
+      "correct": "Jane Austen",
+      "difficulty": "easy",
+      "category": "Literature",
+      "explain": "It's the opening line of Pride and Prejudice (1813)."
+    },
+    {
+      "question": "\"Call me Ishmael.\" is the famous opening of which novel?",
+      "answers": ["Moby-Dick", "A Tale of Two Cities", "Anna Karenina", "David Copperfield"],
+      "correct": "Moby-Dick",
+      "difficulty": "easy",
+      "category": "Literature",
+      "explain": "Herman Melville published Moby-Dick in 1851."
+    },
+    {
+      "question": "\"It was the best of times, it was the worst of times...\" opens which novel?",
+      "answers": ["A Tale of Two Cities", "David Copperfield", "Moby-Dick", "Pride and Prejudice"],
+      "correct": "A Tale of Two Cities",
+      "difficulty": "medium",
+      "category": "Literature",
+      "explain": "Charles Dickens published A Tale of Two Cities in 1859."
+    },
+    {
+      "question": "\"All happy families are alike; each unhappy family is unhappy in its own way.\" opens which novel?",
+      "answers": ["Anna Karenina", "Moby-Dick", "A Tale of Two Cities", "As You Like It"],
+      "correct": "Anna Karenina",
+      "difficulty": "medium",
+      "category": "Literature",
+      "explain": "Leo Tolstoy published Anna Karenina in 1878."
+    },
+    {
+      "question": "Which author wrote: \"All the world's a stage, and all the men and women merely players\"?",
+      "answers": ["William Shakespeare", "Jane Austen", "Charles Dickens", "Herman Melville"],
+      "correct": "William Shakespeare",
+      "difficulty": "easy",
+      "category": "Literature",
+      "explain": "The line is from Shakespeare's As You Like It, spoken by the character Jaques."
+    },
+    {
+      "question": "\"Whether I shall turn out to be the hero of my own life... these pages must show.\" opens which Dickens novel?",
+      "answers": ["David Copperfield", "A Tale of Two Cities", "Anna Karenina", "Moby-Dick"],
+      "correct": "David Copperfield",
+      "difficulty": "hard",
+      "category": "Literature",
+      "explain": "Charles Dickens published David Copperfield in 1850, earlier than A Tale of Two Cities."
+    }
+  ]
+}

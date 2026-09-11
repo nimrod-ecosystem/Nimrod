@@ -1,0 +1,95 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Cleveland Museum of Art — who painted it?",
+  "description": "Ten paintings from the Cleveland Museum of Art's Open Access collection, matching the same images used on the /learn sample site's library dashboard. Every question is built from the museum's own catalog data, not recalled from memory.",
+  "source": {
+    "name": "Cleveland Museum of Art Open Access API",
+    "url": "https://openaccess-api.clevelandart.org/",
+    "licence": "CC0",
+    "attribution": "Cleveland Museum of Art, Open Access"
+  },
+  "generated": "2026-09-11",
+  "items": [
+    {
+      "question": "Who painted \"Nathaniel Hurd\" (c. 1765), in the Cleveland Museum of Art?",
+      "answers": ["John Singleton Copley", "Benjamin West", "Charles Sheeler", "Thomas Cole"],
+      "correct": "John Singleton Copley",
+      "difficulty": "medium",
+      "category": "Art",
+      "explain": "Copley painted it around 1765, while still working in colonial Boston."
+    },
+    {
+      "question": "\"Stag at Sharkey's\" (1909), a scene of two boxers, is by which American painter?",
+      "answers": ["George Bellows", "John Sloan", "Thomas Eakins", "Charles Sheeler"],
+      "correct": "George Bellows",
+      "difficulty": "easy",
+      "category": "Art",
+      "explain": "Bellows was known for gritty, energetic scenes of early-1900s New York life."
+    },
+    {
+      "question": "\"Adeline Ravoux\" (1890) was painted by which artist in the last months of his life?",
+      "answers": ["Vincent van Gogh", "Gustave Courbet", "Claude Monet", "Edgar Degas"],
+      "correct": "Vincent van Gogh",
+      "difficulty": "easy",
+      "category": "Art",
+      "explain": "Van Gogh painted this portrait in Auvers-sur-Oise in 1890, shortly before his death."
+    },
+    {
+      "question": "\"Twilight in the Wilderness\" (1860) is a landscape by which American painter?",
+      "answers": ["Frederic Edwin Church", "Thomas Cole", "Albert Pinkham Ryder", "John Sloan"],
+      "correct": "Frederic Edwin Church",
+      "difficulty": "medium",
+      "category": "Art",
+      "explain": "Church was a leading member of the Hudson River School of landscape painting."
+    },
+    {
+      "question": "Who painted \"The Red Kerchief\" (c. 1868-73), a portrait believed to show his wife?",
+      "answers": ["Claude Monet", "Gustave Courbet", "Pieter de Hooch", "Jacques-Louis David"],
+      "correct": "Claude Monet",
+      "difficulty": "medium",
+      "category": "Art",
+      "explain": "The sitter is thought to be Camille Monet, seen through a snow-frosted window."
+    },
+    {
+      "question": "\"Frieze of Dancers\" (c. 1895) is by which French Impressionist, famous for depicting ballet dancers?",
+      "answers": ["Edgar Degas", "Claude Monet", "Gustave Courbet", "Jacques-Louis David"],
+      "correct": "Edgar Degas",
+      "difficulty": "easy",
+      "category": "Art",
+      "explain": "Degas painted and sculpted ballet dancers more than almost any other subject."
+    },
+    {
+      "question": "\"Portrait of Tieleman Roosterman\" (1634) was painted by which Dutch Golden Age artist?",
+      "answers": ["Frans Hals", "Pieter de Hooch", "Lorenzo Lotto", "Gustave Courbet"],
+      "correct": "Frans Hals",
+      "difficulty": "hard",
+      "category": "Art",
+      "explain": "Hals was celebrated for lively, loose brushwork unusual for formal portraits of his time."
+    },
+    {
+      "question": "\"The Biglin Brothers Turning the Stake\" (1873), a rowing scene, is by which American realist?",
+      "answers": ["Thomas Eakins", "George Bellows", "Charles Sheeler", "John Sloan"],
+      "correct": "Thomas Eakins",
+      "difficulty": "hard",
+      "category": "Art",
+      "explain": "Eakins painted several works of competitive rowing on Philadelphia's Schuylkill River."
+    },
+    {
+      "question": "\"Cupid and Psyche\" (1817) is a Neoclassical work by which French painter?",
+      "answers": ["Jacques-Louis David", "Claude Monet", "Edgar Degas", "Benjamin West"],
+      "correct": "Jacques-Louis David",
+      "difficulty": "hard",
+      "category": "Art",
+      "explain": "David was a leading Neoclassical painter and a major figure of the French Revolution era."
+    },
+    {
+      "question": "\"Church Street El\" (1920), a painting of an elevated train, is by which American Precisionist?",
+      "answers": ["Charles Sheeler", "John Sloan", "George Bellows", "Thomas Cole"],
+      "correct": "Charles Sheeler",
+      "difficulty": "hard",
+      "category": "Art",
+      "explain": "Sheeler was a leading figure of Precisionism, known for crisp depictions of industry and architecture."
+    }
+  ]
+}
