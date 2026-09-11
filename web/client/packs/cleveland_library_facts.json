@@ -1,0 +1,55 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Cleveland Public Library — history facts",
+  "description": "Five questions built from Cleveland Public Library's own published history, matching the sourced facts used on the /learn sample site's library dashboard. Each fact was checked against a source before being turned into a question, not recalled from memory.",
+  "source": {
+    "name": "cpl.org (\"From Humble Beginnings\", Special Collections) and the Encyclopedia of Cleveland History, case.edu",
+    "url": "https://cpl.org/from-humble-beginnings/",
+    "licence": "Facts restated in original wording; not a copy of the source text.",
+    "attribution": "Cleveland Public Library, cpl.org"
+  },
+  "generated": "2026-09-11",
+  "items": [
+    {
+      "question": "In what year did Cleveland Public Library first open?",
+      "answers": ["1869", "1859", "1889", "1925"],
+      "correct": "1869",
+      "difficulty": "medium",
+      "category": "Cleveland",
+      "explain": "It opened February 17, 1869, with about 5,800 books."
+    },
+    {
+      "question": "What nickname did Cleveland Public Library earn for being one of the first large libraries to let patrons pick their own books off the shelf?",
+      "answers": ["The People's University", "The Open Shelf", "The Book Bank", "The Reading Hall"],
+      "correct": "The People's University",
+      "difficulty": "hard",
+      "category": "Cleveland",
+      "explain": "The open-shelf system, under librarian William Howard Brett, became a model for other libraries nationally."
+    },
+    {
+      "question": "The firm Walker & Weeks designed Main Library's current building, which opened in what year?",
+      "answers": ["1925", "1901", "1950", "1869"],
+      "correct": "1925",
+      "difficulty": "medium",
+      "category": "Cleveland",
+      "explain": "The building has since been joined by the newer Louis Stokes Wing, home to TechCentral."
+    },
+    {
+      "question": "The John G. White Collection at Cleveland Public Library began in 1884 with a donation of how many maps?",
+      "answers": ["122", "12", "1,200", "12,000"],
+      "correct": "122",
+      "difficulty": "hard",
+      "category": "Cleveland",
+      "explain": "The collection has since grown to more than 161,000 maps and atlases."
+    },
+    {
+      "question": "Besides Main Library, how many branch libraries does Cleveland Public Library operate?",
+      "answers": ["27", "12", "40", "5"],
+      "correct": "27",
+      "difficulty": "medium",
+      "category": "Cleveland",
+      "explain": "The system also includes the Ohio Library for the Blind and Print Disabled."
+    }
+  ]
+}

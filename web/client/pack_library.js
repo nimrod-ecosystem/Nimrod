@@ -19,6 +19,15 @@ export const PACK_LIBRARY = [
     url: '/packs/maths_basic.json' },
   { id: 'vocab_starter', kind: 'words', label: 'Vocabulary — starter set',
     url: '/packs/vocab_starter.json' },
+  // Built for the CPL sample site (/learn/) as a worked example of "make your own pack" —
+  // real, shippable content (MIT-clean per docs/PACK_SCHEMA.md's packs/ vs packs_local/ split),
+  // not decoration limited to that one page.
+  { id: 'cma_art_trivia', kind: 'trivia', label: 'Cleveland Museum of Art — who painted it?',
+    url: '/packs/cma_art_trivia.json' },
+  { id: 'literary_quotes_trivia', kind: 'trivia', label: 'Who wrote it? — famous opening lines',
+    url: '/packs/literary_quotes_trivia.json' },
+  { id: 'cleveland_library_facts', kind: 'trivia', label: 'Cleveland Public Library — history facts',
+    url: '/packs/cleveland_library_facts.json' },
 ];
 
 export const packsFor = (kind) => PACK_LIBRARY.filter((p) => p.kind === kind);
