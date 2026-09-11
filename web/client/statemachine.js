@@ -203,3 +203,73 @@ export function createMachine(config, io = {}) {
     statsOf: () => JSON.parse(JSON.stringify(stats)),
   };
 }
+
+// ── escapeGaps — THE SAFETY CHECK, RUN ON THE CONFIG ITSELF, NOT ON A LIVE MACHINE ──────────
+//
+// "No state a person cannot leave with the verbs available to them" (`PRINCIPLES.md`'s safety
+// rule) is checkable over this engine's own config without running anything: `states` and every
+// `on`/`after`/global transition already ARE a graph's nodes and edges. The method is the
+// standard one — reverse every edge, breadth-first search from `home`, and anything the search
+// never reaches is a state nothing can get back from.
+//
+// GUARDS ARE IGNORED ON PURPOSE. A transition gated by `when` or a daypart might not fire on any
+// given day, but "verbs available to them" means what could ever apply, not what applies right
+// now — a state escapable only in daytime is still escapable, and a check that only ran the
+// gates open right now would pass today and silently start failing at sleepytime.
+//
+// `$back` IS TREATED AS AN EDGE TO `initial`, never to the live `previous` — `previous` is
+// runtime state this function never sees, and the engine's own `resolveTarget` already falls
+// back to `initial` when there is nothing to return to (see above). That is the guaranteed
+// floor, so it is also the sound one for a static proof: anything reachable via `$back` is AT
+// LEAST reachable via initial, and initial's own reachability to `home` is checked like any
+// other state's.
+//
+// A `pick` is treated as an edge to EVERY state in its `from` list, gate or no gate — same
+// reasoning as guards above: which candidate wins depends on daypart and recency, and a proof
+// that only counted today's likely winner would not be a proof.
+//
+// AN UNGUARDED LOCAL ENTRY SHADOWS THE GLOBAL ONES FOR THAT TOPIC, AND THIS DOES HAVE TO BE
+// MODELLED — not an approximation to skip. `candidates()` builds `[...local, ...global]` and
+// `fire()` takes the FIRST entry whose guard passes; a local entry with no `when` always
+// passes, so it always wins and the global entries for that topic can never fire from that
+// state at all. Counting them anyway would report a state as escapable through a door that is
+// permanently nailed shut — the opposite of what a safety check is for.
+export function escapeGaps(config, { home = config?.initial } = {}) {
+  const stateIds = Object.keys(config?.states || {});
+  const reverse = new Map(stateIds.map((id) => [id, new Set()]));
+
+  function addEdge(from, to) {
+    if (reverse.has(to)) reverse.get(to).add(from);
+  }
+  function addTransition(from, tr) {
+    if (!tr) return;
+    if (tr.to === BACK) { addEdge(from, config.initial); return; }
+    if (tr.to != null) { addEdge(from, tr.to); return; }
+    if (tr.pick) { for (const target of tr.pick.from || []) addEdge(from, target); }
+  }
+
+  for (const id of stateIds) {
+    const st = config.states[id] || {};
+    for (const list of Object.values(st.on || {})) for (const tr of list) addTransition(id, tr);
+    if (st.after) addTransition(id, st.after);
+  }
+  // Global transitions apply to every state EXCEPT one whose own local rule for the same topic
+  // is unguarded — see above for why that state can never actually reach these.
+  for (const [topic, list] of Object.entries(config?.on || {})) {
+    for (const id of stateIds) {
+      const localList = (config.states[id]?.on || {})[topic] || [];
+      if (localList.some((tr) => !tr.when)) continue;      // shadowed — always wins, dead code
+      for (const tr of list) addTransition(id, tr);
+    }
+  }
+
+  const visited = new Set(home != null ? [home] : []);
+  const queue = [...visited];
+  while (queue.length) {
+    const cur = queue.pop();
+    for (const src of reverse.get(cur) || []) {
+      if (!visited.has(src)) { visited.add(src); queue.push(src); }
+    }
+  }
+  return stateIds.filter((id) => !visited.has(id));   // every state nothing can get back from
+}
