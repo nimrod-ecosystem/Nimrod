@@ -2,6 +2,14 @@
 #  PRIVACY FIRST — never commit patient data or personal media
 #  (These patterns are a safety net, not a substitute for care.)
 # ============================================================
+# The Claude desktop app saves every file card it sends into a folder of this
+# name under the FIRST connected folder. On 2026-09-09 that was this repo, and
+# five private architecture documents ended up staged for commit here. Nothing
+# was pushed. This line makes that impossible rather than merely unlikely.
+# Chat-side output belongs in Nimrod_Ecosystem/docs/from_chat/, never here.
+Claude outputs/
+**/Claude outputs/
+
 # Patient / personal media and data
 **/photos/
 **/media/
