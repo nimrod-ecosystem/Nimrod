@@ -133,6 +133,19 @@
     font-size:.92rem}
   .demo-live,.demo-live iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
   .demo-note{margin-top:12px;font-size:.92rem;color:var(--text-soft);max-width:62ch}
+  /* 0.2 — THE DEMO NEVER SHOWS A RAW 502. A free/starter Render instance can be cold or
+     mid-restart; this covers the gap between "pressed play" and "the app answered" so a
+     visitor sees an honest wait instead of the platform's own error page. */
+  .demo-waking{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(140deg,#0A3323,#105666);padding:24px;text-align:center}
+  .demo-waking-inner{max-width:46ch;color:#e8f0ea}
+  .demo-waking-inner p{margin:14px 0 18px;font-size:.96rem;line-height:1.5}
+  .demo-waking-inner b{color:var(--on-dark)}
+  .demo-spin{width:34px;height:34px;margin:0 auto;border-radius:50%;
+    border:3px solid rgba(247,244,213,.25);border-top-color:var(--on-dark);
+    animation:demo-spin .9s linear infinite}
+  @media (prefers-reduced-motion: reduce){ .demo-spin{animation:none;border-top-color:rgba(247,244,213,.6)} }
+  @keyframes demo-spin{to{transform:rotate(360deg)}}
   .navlinks{display:flex;gap:18px;margin-left:26px;font-size:.92rem}
   .navlinks a{color:var(--text-soft);text-decoration:none;font-weight:600}
   .navlinks a:hover{color:var(--accent-warm-deep)}
@@ -344,6 +357,11 @@
            browser, which is also what keeps it off a paired bedside screen. -->
       <a href="?tour=1" class="btn ondark ghost" data-tour-start>Take the guided tour</a>
     </div>
+    <!-- 0.3 — both CTAs used to drop straight into Google OAuth with no warning. One plain
+         sentence, not a modal: says what "Get started" does before it does it. -->
+    <p style="margin:14px 0 0;font-size:.86rem;color:#c7d3c4;max-width:56ch">“Get started” signs
+      you in with Google, just to save your setup to an account — no password to create, and
+      “Try it now” needs no account at all.</p>
     <div class="pills">
       <span class="pill"><b>Free for everyone</b></span>
       <span class="pill"><b>Private</b> &nbsp;nothing personal leaves your device</span>
@@ -752,6 +770,8 @@
       <a href="/auth/login" class="btn ondark ghost">Sign in</a>
       <a href="https://github.com/nimrod-ecosystem/Nimrod" class="btn ondark ghost">View the code</a>
     </div>
+    <p style="margin:12px 0 0;font-size:.84rem;color:#c7d3c4">Both buttons use Google to sign
+      in — no password to create.</p>
   </div>
 </section>
 
@@ -797,11 +817,33 @@
   // THE DEMO: one tap swaps the poster for the real kiosk. Deliberately NOT autoplaying on
   // scroll — a page that starts loading an application because somebody scrolled past it is
   // spending their data and their battery on a decision they did not make.
+  //
+  // 0.2 — THE DEMO NEVER SHOWS A RAW 502. The server this embeds can be cold (a free/starter
+  // Render tier sleeping or restarting) and the raw failure is Render's own error page inside
+  // the frame — the worst possible thing for a stranger's first look at the product. So:
+  // probe `/api/healthz` (the lightest real endpoint the server has) before ever creating the
+  // iframe. Warm case (almost every visit) adds one quick round trip nobody notices. Cold case
+  // shows an honest wait with a retry, never the platform's own error page.
   (() => {
     const play = document.querySelector('[data-play]');
     const live = document.querySelector('[data-live]');
-    if (!play || !live) return;
-    play.addEventListener('click', () => {
+    const frame = document.querySelector('.demo-frame');
+    if (!play || !live || !frame) return;
+
+    const MAX_WAIT_MS = 45000;   // the copy below promises "about 30 seconds"; leave margin
+    const RETRY_GAP_MS = 2500;
+
+    function probeOnce(timeoutMs) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), timeoutMs);
+      return fetch('/api/healthz', { signal: ctrl.signal, cache: 'no-store' })
+        .then((r) => r.ok)
+        .catch(() => false)
+        .finally(() => clearTimeout(t));
+    }
+
+    function loadKiosk() {
+      document.querySelector('.demo-waking')?.remove();
       const f = document.createElement('iframe');
       // `demo=1`, so this is the seeded demo screen for everybody. Without it the frame took
       // the signed-in path and showed the viewer their own first screen — which for Mike, on
@@ -815,7 +857,59 @@
       live.append(f);
       live.hidden = false;
       play.remove();
-    }, { once: true });
+    }
+
+    function panel(html) {
+      document.querySelector('.demo-waking')?.remove();
+      const el = document.createElement('div');
+      el.className = 'demo-waking';
+      el.setAttribute('role', 'status');
+      el.innerHTML = html;
+      frame.appendChild(el);
+      el.querySelector('[data-retry]')?.addEventListener('click', () => attempt());
+      return el;
+    }
+
+    function showWaking() {
+      play.hidden = true;
+      panel(
+        '<div class="demo-waking-inner"><div class="demo-spin" aria-hidden="true"></div>' +
+        '<p><b>The demo is waking up</b> — about 30 seconds. It sleeps when nobody’s ' +
+        'looked at it for a while, to keep it free to run. It will load on its own.</p>' +
+        '<button type="button" class="btn ondark ghost" data-retry>Try again now</button></div>'
+      );
+    }
+
+    function showFailed() {
+      play.hidden = true;
+      panel(
+        '<div class="demo-waking-inner">' +
+        '<p><b>The demo isn’t answering right now.</b> Try again in a minute, or ' +
+        '<a href="https://github.com/nimrod-ecosystem/Nimrod">read the code</a> instead.</p>' +
+        '<button type="button" class="btn ondark ghost" data-retry>Try again</button></div>'
+      );
+    }
+
+    let running = false;
+    async function attempt() {
+      if (running) return;
+      running = true;
+      document.querySelector('.demo-waking')?.remove();
+      const fast = await probeOnce(3000);
+      if (fast) { running = false; loadKiosk(); return; }
+      showWaking();
+      const start = Date.now();
+      let ok = false;
+      while (Date.now() - start < MAX_WAIT_MS) {
+        await new Promise((r) => setTimeout(r, RETRY_GAP_MS));
+        ok = await probeOnce(4000);
+        if (ok) break;
+      }
+      running = false;
+      if (ok) loadKiosk(); else showFailed();
+    }
+
+    play.addEventListener('click', attempt);
   })();
 
   // THE GUIDED TOUR. Same list the walkthrough video is made of — `steps.js` — walked by a
