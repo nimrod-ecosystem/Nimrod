@@ -147,6 +147,7 @@ section.alt{background:var(--surface-alt)}
 .cal-row .when .date{display:block;color:var(--text-muted);font-weight:500;font-size:.8rem}
 .cal-row h4{margin:0 0 .3em;font-size:1rem}
 .cal-row p{margin:0;color:var(--text-muted);font-size:.9rem}
+.cal-libcal{display:inline-block;margin-top:6px;font-size:.82rem;font-weight:600}
 .cal-row .fmt{align-self:center;text-align:right;font-size:.82rem;color:var(--text-muted);
   white-space:nowrap}
 @media (max-width:700px){

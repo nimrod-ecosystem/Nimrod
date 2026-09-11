@@ -51,6 +51,18 @@ Claude outputs/
 # 700 KB, and nothing serves them.
 web/client/demo-media/originals/
 
+# *** THE CPL SAMPLE SITE'S MUSEUM IMAGES. Same shape as the two exceptions above. ***
+#
+# SAFE UNDER THE RULE AT THE TOP OF THIS FILE: Cleveland Museum of Art Open Access artworks,
+# each individually checked for `share_license_status: "CC0"` in the museum's own API response
+# before download (not assumed from the collection being "open access" generally) -- public
+# domain paintings, no people photographed, no patient or personal media of any kind. Downloaded
+# rather than hotlinked so the /learn/ demo works offline and doesn't depend on a third party's
+# CDN. `manifest.json` beside them carries the accession number, artist, and credit line per
+# image. ONE folder, named, with the reason next to it -- same convention as demo-media above.
+!web/client/learn/images/cma/*.jpg
+!web/client/learn/images/cma/manifest.json
+
 # Secrets & local config
 .env
 .env.*

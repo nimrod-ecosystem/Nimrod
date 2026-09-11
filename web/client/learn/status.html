@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status</title>
+<meta name="description" content="What's built, what's planned, and what's hoped for on this proposal site — plus how it was made.">
+<link rel="canonical" href="https://nimrodecosystem.com/learn/status.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d2f34'/%3E%3Cpath d='M9 23V9l14 14V9' stroke='%23f2f6f6' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./learn.css">
+<style>
+  .status-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:22px}
+  .status-col h3{display:flex;align-items:center;gap:8px;margin:0 0 14px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .status-col.built .dot{background:var(--accent)}
+  .status-col.planned .dot{background:var(--link)}
+  .status-col.hoped .dot{background:var(--accent-warm)}
+  .status-col ul{margin:0;padding-left:1.1em}
+  .status-col li{margin:.5em 0;font-size:.94rem}
+</style>
+</head>
+<body>
+<div class="proposal-banner">A proposal for Cleveland Public Library's TechCentral, built by
+  <b>Mike Raglow</b> on the open-source Nimrod platform. Not an official CPL page.</div>
+<a class="skip" href="#main">Skip to content</a>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/learn/">Nimrod<span> · Learn</span></a>
+    <div class="navlinks">
+      <a href="/learn/status.html">Status</a>
+      <a href="/learn/#courses">Courses</a>
+      <a href="/learn/#calendar">Calendar</a>
+      <a href="/learn/#try">Try it</a>
+      <a href="/learn/homeschool.html">Homeschool</a>
+      <a href="/learn/print.html">Print your own</a>
+      <a href="/learn/about.html">About</a>
+    </div>
+    <div class="right"><a href="/" class="btn ghost small">Main Nimrod site</a></div>
+  </div>
+</nav>
+
+<main id="main">
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Honest, on purpose</p>
+    <h1>Built. Planned. Hoped.</h1>
+    <p class="lead">Every claim on this site fits one of three buckets, and this page says
+      which. "Built" means you can click it right now. "Planned" is real work that isn't done.
+      "Hoped" is an idea nobody has committed to yet.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="grid grid-3">
+      <div class="status-col built">
+        <h3><span class="dot"></span>Built</h3>
+        <ul>
+          <li>Five course pages, each with a short and long outline, documentation, and a live
+            "try it" link into the real software.</li>
+          <li>A proposed program calendar as an editable content pack.</li>
+          <li>The library dashboard: a real page you can set as an old device's home screen —
+            clock, rotating quote and fact, one-tap games.</li>
+          <li>Cleveland Museum of Art Open Access images, downloaded and verified CC0, stored
+            locally so the demo works offline.</li>
+          <li>A sample kiosk demo (Pictures, live view, Word Forge, Clock) that never shows a
+            raw server error — it waits and retries instead.</li>
+          <li>Homeschool and Print Your Own pages (the latter's actual parts are still in
+            design — see below).</li>
+        </ul>
+      </div>
+      <div class="status-col planned">
+        <h3><span class="dot"></span>Planned</h3>
+        <ul>
+          <li>AAC courses beyond the introductory one — deeper vocabulary-building sessions.</li>
+          <li>An opt-in group chat tied to class events.</li>
+          <li>Upload-your-own AAC boards, and using a board to control other things in the
+            room.</li>
+          <li>Scan-and-select bingo, played entirely by switch-scanning.</li>
+          <li>A real Programs module reading the library's own calendar feed, replacing the
+            hand-edited listing.</li>
+          <li>The three physical parts on Print Your Own (bookends, bookshelf, book-carrying
+            case) — designed, not yet built.</li>
+        </ul>
+      </div>
+      <div class="status-col hoped">
+        <h3><span class="dot"></span>Hoped</h3>
+        <ul>
+          <li>A private, local AI running on the machine in front of you — Course D's whole
+            premise, not yet real.</li>
+          <li>A resources page of vetted 3D-printing and open-source AAC/AT links.</li>
+          <li>Calibration that reads a switch's own timing data back into a suggested setting,
+            instead of hand-tuning.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <p class="eyebrow">How this was made</p>
+    <h2>AI-assisted, with a person making every decision.</h2>
+    <p class="lead-sub">This site — and the Nimrod platform it's built on — was built with AI
+      assistance (Claude), with Mike making the design decisions and the reasons behind them,
+      not the AI. He is also building a local, private AI of his own, which is exactly what
+      Course D on this site describes.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>A proposal for Cleveland Public Library's TechCentral — built by Mike Raglow.</div>
+    <div class="foot-links">
+      <a href="mailto:nimrodecosystem@gmail.com">nimrodecosystem@gmail.com</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/nimrod-ecosystem/Nimrod/blob/main/LICENSE">MIT license</a>
+      <span aria-hidden="true">·</span>
+      <a href="/">Built on Nimrod, the main site →</a>
+    </div>
+    <p class="foot-legal">This page is an independent proposal built on Nimrod, an open-source
+      project. It is not an official Cleveland Public Library page and is not affiliated with
+      or endorsed by the library.</p>
+  </div>
+</footer>
+</body>
+</html>

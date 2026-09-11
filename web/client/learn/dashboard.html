@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Library Dashboard</title>
+<meta name="description" content="A TechCentral demo dashboard: the screen an upcycled phone or tablet is set to — a clock, the library's proposed schedule, literary quotes, and sourced facts, with one tap into Word Forge, Trivia, or Math.">
+<link rel="canonical" href="https://nimrodecosystem.com/learn/dashboard.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d2f34'/%3E%3Cpath d='M9 23V9l14 14V9' stroke='%23f2f6f6' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./learn.css">
+<style>
+  /* THIS PAGE IS THE DEMO ITSELF, not a description of one. Course A's whole pitch is: point
+     an old device's browser at this URL and set it as the home page. So this page runs full
+     screen, dark, calm — it is meant to sit on a shelf, not be read as a document. */
+  body{background:#0d2f34;color:#f2f6f6}
+  .db-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:32px;text-align:center;gap:26px}
+  .db-clock{font-size:clamp(3.2rem,12vw,7rem);font-weight:800;letter-spacing:-.02em;
+    line-height:1}
+  .db-date{font-size:clamp(1rem,2.6vw,1.4rem);color:#bcd6d3}
+  .db-rotator{max-width:64ch;min-height:5.5em;display:flex;align-items:center;
+    justify-content:center}
+  .db-card{font-size:clamp(1.05rem,2.6vw,1.35rem);line-height:1.55}
+  .db-card .tag{display:block;margin-top:.6em;font-size:.7em;letter-spacing:.06em;
+    text-transform:uppercase;color:#8fb8b3}
+  .db-nav{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+  .db-nav a{display:inline-block;padding:11px 20px;border-radius:10px;font-weight:700;
+    text-decoration:none;color:#0d2f34;background:#d9a05b}
+  .db-nav a:hover{background:#c98a4b}
+  .db-nav a.ghost{background:transparent;color:#f2f6f6;border:1.5px solid rgba(242,246,246,.4)}
+  .db-nav a.ghost:hover{border-color:#f2f6f6}
+  .db-gallery{display:flex;gap:8px;margin-top:8px}
+  .db-gallery img{width:44px;height:44px;object-fit:cover;border-radius:8px;opacity:.55;
+    filter:grayscale(.2)}
+  .db-note{position:fixed;left:0;right:0;bottom:10px;font-size:.72rem;color:#6f938e}
+  .db-note a{color:#9fc7c2}
+  @media (prefers-reduced-motion: reduce){ .db-card{transition:none} }
+  .db-card{transition:opacity .5s ease}
+  .db-card.fade{opacity:0}
+</style>
+</head>
+<body>
+<div class="db-wrap">
+  <div>
+    <div class="db-clock" id="clock">--:--</div>
+    <div class="db-date" id="date"></div>
+  </div>
+
+  <div class="db-rotator">
+    <div class="db-card" id="card">Loading…</div>
+  </div>
+
+  <div class="db-gallery" id="gallery" aria-hidden="true"></div>
+
+  <nav class="db-nav" aria-label="Open a game">
+    <a href="/modules.html?m=wordforge">Word Forge</a>
+    <a href="/modules.html?m=trivia">Trivia</a>
+    <a href="/modules.html?m=algebra">Math</a>
+    <a href="/learn/courses/upcycle-device.html" class="ghost">About this dashboard</a>
+  </nav>
+</div>
+
+<p class="db-note">A proposal for Cleveland Public Library's TechCentral, by Mike Raglow — not
+  an official CPL page. <a href="/learn/">nimrodecosystem.com/learn</a></p>
+
+<script type="module">
+// THE ROTATOR. Cycles: next proposed session (from calendar.json) -> a literary quote -> a
+// sourced fact -> repeat. Content comes from calendar.json and dashboard_content.json so
+// updating what rotates is editing a file, not this page.
+const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const card = document.getElementById('card');
+
+function clockTick() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  document.getElementById('date').textContent =
+    now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+}
+clockTick();
+setInterval(clockTick, 15000);
+
+async function loadContent() {
+  const [calRes, contentRes] = await Promise.all([
+    fetch('/learn/calendar.json').then((r) => r.json()).catch(() => null),
+    fetch('/learn/dashboard_content.json').then((r) => r.json()).catch(() => null),
+  ]);
+
+  const slides = [];
+  if (calRes) {
+    for (const s of calRes.sessions.filter((s) => s.status === 'proposed').slice(0, 3)) {
+      slides.push({
+        html: '<b>' + esc(s.title) + '</b><span class="tag">Proposed session &middot; ' +
+          esc(s.format) + '</span>',
+      });
+    }
+  }
+  if (contentRes) {
+    for (const q of contentRes.quotes) {
+      slides.push({
+        html: '&ldquo;' + esc(q.text) + '&rdquo;<span class="tag">' +
+          esc(q.work) + ', ' + esc(q.author) + ' (' + esc(q.year) + ')</span>',
+      });
+    }
+    for (const f of contentRes.facts) {
+      slides.push({
+        html: esc(f.text) + '<span class="tag">Source: ' + esc(f.source) + '</span>',
+      });
+    }
+  }
+  return slides;
+}
+
+// THE PICTURES SLOT. Cleveland Museum of Art Open Access images (CC0, downloaded and stored
+// locally — see images/cma/manifest.json) as small thumbnails, quietly present rather than a
+// full rotating panel: this page's job is the clock and the rotator, not a photo viewer.
+async function loadGallery() {
+  const gallery = document.getElementById('gallery');
+  try {
+    const res = await fetch('/learn/images/cma/manifest.json');
+    if (!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+    const pick = data.images.slice(0, 6);
+    gallery.innerHTML = pick.map((im) =>
+      '<img src="/learn/images/cma/' + esc(im.file) + '" alt="' + esc(im.title) +
+      ', ' + esc(im.artist) + '" loading="lazy">'
+    ).join('');
+  } catch (e) {
+    gallery.remove();
+  }
+}
+
+(async () => {
+  const slides = await loadContent();
+  if (!slides.length) { card.textContent = 'Nothing to show yet.'; return; }
+  let i = 0;
+  const show = (n) => { card.innerHTML = slides[n].html; };
+  show(0);
+  setInterval(() => {
+    card.classList.add('fade');
+    setTimeout(() => {
+      i = (i + 1) % slides.length;
+      show(i);
+      card.classList.remove('fade');
+    }, 500);
+  }, 9000);
+})();
+
+loadGallery();
+</script>
+</body>
+</html>
