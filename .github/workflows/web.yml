@@ -1,0 +1,79 @@
+# Run the whole web/client/dev suite on every push, so a rule that was only ever a test file
+# somebody had to remember to run becomes a rule that actually gets checked.
+#
+# WHY THIS EXISTS. `docs/for_chat/MIKE_CHANGE_LIST.md`'s "rules you cannot enforce become
+# suggestions" finding, stated plainly: "Nimrod has no second party" — no retailer rejecting a
+# bad barcode, no assessor who visits, nobody for whom breaking a rule here is immediately
+# painful. A dev/*_test.html suite that only runs when a human remembers to run it is a rule
+# written in a document with extra steps. `web/tools/run_suite.py` already does everything a CI
+# job needs (real headless Chrome via CDP, an exit code, "usable from a hook or CI" in its own
+# header) — it was just never wired to anything that runs it automatically. This is that wiring.
+#
+# WHAT THIS DOES NOT DO. It doesn't add new checks - `run_suite.py` was already exercising
+# every one of these suites when run by hand. It makes the existing suites (the escape-
+# reachability proof, the port-cardinality checks, every module's own latency-recording tests,
+# all of them) into something that actually runs on every commit instead of something that ran
+# the last time somebody happened to type the command.
+#
+# EXPECT THIS TO START RED, AND THAT IS CORRECT, NOT BROKEN. Two suites currently fail for real,
+# pre-existing reasons already recorded in `docs/for_chat/MIKE_CHANGE_LIST.md` (§0b, §0c) —
+# lessons/wordforge's deck-gating bug and an input_runtime suite testing a fake state double.
+# Neither was caused by wiring this workflow up; a CI check that only shows green because it
+# quietly excludes the two things that are actually broken would be exactly the "rule nobody
+# checks" problem this exists to fix.
+#
+# NOT YET VERIFIED ON A REAL RUNNER. Written from `run_suite.py`'s own documented contract
+# ("usable from a hook or CI") since pushing is Mike's step, not this session's — the first real
+# run on GitHub's infrastructure is the actual proof, not this comment.
+name: web
+
+on:
+  push:
+    paths: ['web/**', '.github/workflows/web.yml']
+  pull_request:
+    paths: ['web/**', '.github/workflows/web.yml']
+  workflow_dispatch:
+
+jobs:
+  suites:
+    name: web/client/dev suites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Explicit rather than relying on whatever happens to be on the runner image —
+      # `run_suite.py`'s own detection already covers several binary names, but the image
+      # itself has drifted before and this removes the dependency on it entirely.
+      - uses: browser-actions/setup-chrome@v1
+        id: setup-chrome
+
+      - name: Install server + suite-runner dependencies
+        run: |
+          pip install -r web/server/requirements.txt
+          pip install websockets
+
+      - name: Start the app server (SQLite, no secrets needed for dev)
+        working-directory: web/server
+        run: |
+          nohup python -m uvicorn app:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/ > /dev/null && break
+            sleep 1
+          done
+
+      - name: Run every dev/*_test.html suite
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: |
+          names=$(ls web/client/dev/*_test.html | sed 's#.*/##; s/_test\.html$//')
+          py_status=0
+          python web/tools/run_suite.py $names || py_status=$?
+          exit $py_status
+
+      - name: Server log (only reached on failure)
+        if: failure()
+        run: cat web/server/server.log || true

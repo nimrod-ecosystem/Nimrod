@@ -94,10 +94,14 @@ def free_port():
 PORT = free_port()
 
 CHROME = next((p for p in [
+    os.environ.get('CHROME_PATH', ''),   # explicit override, e.g. a CI step that installs one
     r'C:\Program Files\Google\Chrome\Application\chrome.exe',
     r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
     os.path.expanduser(r'~\AppData\Local\Google\Chrome\Application\chrome.exe'),
+    # A GitHub Actions ubuntu runner's pre-installed browser goes by one of these names
+    # depending on the image; `chromium`/`google-chrome` already covered the common cases.
     shutil.which('chromium') or '', shutil.which('google-chrome') or '',
+    shutil.which('google-chrome-stable') or '', shutil.which('chromium-browser') or '',
 ] if p and os.path.exists(p)), None)
 
 
