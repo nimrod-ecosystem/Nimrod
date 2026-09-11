@@ -23,7 +23,7 @@ actually rides instance-addressed topics (item 2), reaching one instance and not
 <script type="module">
 import { createBus } from '../bus.js';
 import {
-  PORT_TYPES, PORT_CLASSES, normalizePort, portsFor, normalizeLink, linkTopic,
+  PORT_TYPES, PORT_CLASSES, PORT_CARDINALITIES, normalizePort, portsFor, normalizeLink, linkTopic,
   classifyPatch, mapRange, wrapValue, appendProvenance, createSequencer,
 } from '../links.js';
 
@@ -67,6 +67,16 @@ try {
       !!txt && txt.range === null, JSON.stringify(txt));
 
     check('the label falls back to the id', normalizePort({ id: 'x', direction: 'in', class: 'event', type: 'time' }).label === 'x');
+
+    // *** CARDINALITY — the gap the convergent-structure research named: shape 4 declared kind
+    // and direction but not how many links may attach. ***
+    check('unspecified cardinality defaults to \'one\' — never a silent \'many\'',
+      normalizePort({ id: 'x', direction: 'in', class: 'event', type: 'text' }).cardinality === 'one');
+    check('an explicit \'many\' comes through', normalizePort({ id: 'x', direction: 'in',
+      class: 'event', type: 'text', cardinality: 'many' }).cardinality === 'many');
+    check('a bogus cardinality value falls back to the conservative default, not dropped',
+      normalizePort({ id: 'x', direction: 'in', class: 'event', type: 'text', cardinality: 'lots' }).cardinality === 'one');
+    check('PORT_CARDINALITIES is exactly one/many', JSON.stringify(PORT_CARDINALITIES) === JSON.stringify(['one', 'many']));
   }
 
   // ================= portsFor =================

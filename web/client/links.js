@@ -41,6 +41,15 @@ const ID_RE = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 export const PORT_TYPES = ['number', 'text', 'image', 'time'];
 export const PORT_CLASSES = ['event', 'continuous'];
 export const PORT_DIRECTIONS = ['in', 'out'];
+// How many links may terminate on a port — the gap the convergent-structure research named:
+// shape 4 (kind + direction) said nothing about cardinality, which chemistry's valence and
+// every wiring standard treat as load-bearing. 'one' (the conservative default — a single
+// source of truth, the common case) or 'many' (fan-in, which needs a declared combine rule to
+// mean anything — summing, last-write-wins, whatever a future merge node states explicitly).
+// DECLARED ONLY, NOT ENFORCED HERE — no module is wired with real ports yet (see the file
+// header), so there is nothing yet that would refuse a second link to a 'one' port. That
+// enforcement is the same "later, separate work" the header already names for the patch bay.
+export const PORT_CARDINALITIES = ['one', 'many'];
 
 // ---------------------------------------------------------------------------------------
 // normalizePort — one declaration in, one usable port out (or null).
@@ -70,6 +79,9 @@ export function normalizePort(raw) {
     if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return null;
     range = [lo, hi];
   }
+  // Unspecified means 'one' — the conservative reading, matching "off by default, available
+  // to anybody who declares otherwise" — never a silent 'many' nobody asked for.
+  const cardinality = PORT_CARDINALITIES.includes(raw?.cardinality) ? raw.cardinality : 'one';
   return {
     id,
     label: String(raw.label || id),
@@ -77,6 +89,7 @@ export function normalizePort(raw) {
     class: raw.class,
     type: raw.type,
     range,
+    cardinality,
   };
 }
 
