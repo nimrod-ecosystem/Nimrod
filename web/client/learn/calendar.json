@@ -1,0 +1,94 @@
+{
+  "note": "A content pack, not a hand-written page. Updating the program listing is editing this file — the same shape a teacher would use to update a games pack. Nothing below has run yet; this is the proposed calendar, in TechCentral's own session formats (My Digital Life = 60-minute standalone for adults, Maker Monday = 90 minutes, Makerlab = 60-90 for kids/teens, Tech Help 1-on-1 = 2-hour blocks).",
+  "generated": "2026-09-11",
+  "sessions": [
+    {
+      "id": "aac-101",
+      "title": "AAC Boards 101: Set Up and Use a Communication Board",
+      "format": "My Digital Life",
+      "duration_min": 60,
+      "audience": "Adults",
+      "cadence": "Monthly, standalone — no signup series required",
+      "status": "proposed",
+      "course": "aac-board",
+      "summary": "Build a real communication board from scratch, in the browser, on a library computer. Leave with something you or a family member could use the same day."
+    },
+    {
+      "id": "aac-makerlab",
+      "title": "Makerlab: Design Your Own AAC Board (Kids & Teens)",
+      "format": "Makerlab",
+      "duration_min": 90,
+      "audience": "Kids & teens",
+      "cadence": "Monthly",
+      "status": "proposed",
+      "course": "aac-board",
+      "summary": "The same board editor, aimed younger: pick symbols, arrange a board around a hobby or a favorite game, and try it with a switch or a game controller instead of a mouse."
+    },
+    {
+      "id": "switch-101",
+      "title": "Connect a Switch: Device Setup & Calibration",
+      "format": "My Digital Life",
+      "duration_min": 60,
+      "audience": "Adults",
+      "cadence": "Monthly",
+      "status": "proposed",
+      "course": "device-setup",
+      "summary": "What a switch actually is, how it plugs into a browser with no special drivers, and how to tune hold time and repeat so it fits a specific hand, cheek, or head movement."
+    },
+    {
+      "id": "maker-monday-enclosure",
+      "title": "Maker Monday: 3D-Print an Adaptive Switch Enclosure",
+      "format": "Maker Monday",
+      "duration_min": 90,
+      "audience": "Adults",
+      "cadence": "Quarterly — needs the makerspace's printers booked",
+      "status": "proposed",
+      "course": "print",
+      "summary": "Design and print an enclosure for an arcade button and a microcontroller — a roughly $15 DIY adaptive switch, using the makerspace's own printers. The design is not built yet; this session is where it gets designed."
+    },
+    {
+      "id": "tech-help-personalize",
+      "title": "Tech Help 1-on-1: Personalize a Communication Board",
+      "format": "Tech Help 1-on-1",
+      "duration_min": 120,
+      "audience": "Adults, by appointment",
+      "cadence": "Weekly slot, booked individually",
+      "status": "proposed",
+      "course": "aac-board",
+      "summary": "One patron, one board, one hour and a half to two hours: real vocabulary for their own life, their own switch or pointing method, and enough troubleshooting to leave confident."
+    },
+    {
+      "id": "classroom-games",
+      "title": "Games for the Classroom: Trivia, Word Forge & Algebra",
+      "format": "Makerlab",
+      "duration_min": 75,
+      "audience": "Kids & teens (educators welcome)",
+      "cadence": "Monthly",
+      "status": "proposed",
+      "course": "games",
+      "summary": "Three accessible learning games a teacher or homeschool parent can reconfigure on the spot — different word lists, different difficulty, different subject — without touching any code."
+    },
+    {
+      "id": "local-ai-preview",
+      "title": "Build Your Own Local AI: What's Coming",
+      "format": "My Digital Life",
+      "duration_min": 60,
+      "audience": "Adults",
+      "cadence": "One-time preview, once the module ships",
+      "status": "coming",
+      "course": "local-ai",
+      "summary": "A syllabus-only preview of a course that doesn't exist yet: running a small AI model on your own machine so nothing about how you communicate ever has to leave it."
+    },
+    {
+      "id": "bingo-scan-select",
+      "title": "Learn to Play Scan-and-Select Bingo",
+      "format": "Makerlab",
+      "duration_min": 60,
+      "audience": "Kids & teens, adults welcome",
+      "cadence": "One-time, once the game ships",
+      "status": "coming",
+      "course": "games",
+      "summary": "A bingo game played entirely by switch-scanning — highlight, wait, select — the same input pattern behind the communication boards, taught through play. Not built yet; listed here as what's next."
+    }
+  ]
+}

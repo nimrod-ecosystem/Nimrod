@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course B: Connect a Switch — Device Setup &amp; Calibration</title>
+<meta name="description" content="A TechCentral course proposal: how a switch plugs into a browser with no drivers, and how to tune it to a specific body, using Wait-and-Go and Comet as calibration tools.">
+<link rel="canonical" href="https://nimrodecosystem.com/learn/courses/device-setup.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d2f34'/%3E%3Cpath d='M9 23V9l14 14V9' stroke='%23f2f6f6' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../learn.css">
+<style>
+  .doc-nav{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 0}
+  .outline{margin:0;padding-left:1.2em}
+  .outline li{margin:.4em 0}
+  .need-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0;padding:0;
+    list-style:none}
+  .need-list li{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;font-size:.92rem}
+  @media (max-width:640px){ .need-list{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="proposal-banner">A proposal for Cleveland Public Library's TechCentral, built by
+  <b>Mike Raglow</b> on the open-source Nimrod platform. Not an official CPL page.</div>
+<a class="skip" href="#main">Skip to content</a>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/learn/">Nimrod<span> · Learn</span></a>
+    <div class="navlinks">
+      <a href="/learn/#courses">Courses</a>
+      <a href="/learn/#calendar">Calendar</a>
+      <a href="/learn/#try">Try it</a>
+      <a href="/learn/homeschool.html">Homeschool</a>
+      <a href="/learn/print.html">Print your own</a>
+      <a href="/learn/about.html">About</a>
+    </div>
+    <div class="right"><a href="/" class="btn ghost small">Main Nimrod site</a></div>
+  </div>
+</nav>
+
+<main id="main">
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Course B</p>
+    <h1>Connect a Switch: Device Setup &amp; Calibration</h1>
+    <p class="lead">What a switch actually is, how it plugs into a browser with no special
+      drivers, and how to tune hold time, repeat, and bounce rejection so it fits one specific
+      hand, cheek, or head movement — taught using two games built to make the numbers visible.</p>
+    <div class="cta">
+      <a href="/modules.html?m=pressgame" class="btn ondark">Try Wait and Go →</a>
+      <a href="/modules.html?m=comet" class="btn ondark ghost">Try Comet →</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="tag">Adults</span>
+    <span class="tag">60 min short · 90 min long</span>
+    <span class="tag">A switch or a gamepad recommended</span>
+    <h2 style="margin-top:18px">What you need</h2>
+    <ul class="need-list">
+      <li>A computer with a browser — nothing to install.</li>
+      <li>Ideally: one USB adaptive switch, or a USB/Bluetooth gamepad — the library's own
+        equipment, or a patron's, works the same way.</li>
+      <li>Without one: a keyboard's space bar is a working substitute for the class.</li>
+      <li>No account needed for the try-it links above.</li>
+    </ul>
+
+    <div class="doc-nav">
+      <a class="btn outline small" href="#short">Short version</a>
+      <a class="btn outline small" href="#long">Longer version</a>
+      <a class="btn outline small" href="#doc">Documentation</a>
+    </div>
+  </div>
+</section>
+
+<section id="short" class="alt">
+  <div class="wrap">
+    <p class="eyebrow">Short version — about 60 minutes</p>
+    <h2>Plug something in, see it work, tune one number.</h2>
+    <ol class="outline">
+      <li><b>0:00–0:10</b> — What a "switch" is: anything that sends one signal — a button, a
+        head switch, a sip-and-puff tube wired to a microcontroller. To a browser, it looks
+        like a keypress or a gamepad button. No driver, no install.</li>
+      <li><b>0:10–0:30</b> — Plug it in and open <a href="/modules.html?m=pressgame">Wait and
+        Go</a>: hold off while a charge builds, press when the invite opens. This makes timing
+        visible — how long a press takes, how consistent it is.</li>
+      <li><b>0:30–0:50</b> — Open <a href="/modules.html?m=comet">Comet</a> and drive it with
+        the same switch — steer toward a heart, press to catch it. A second, different feel for
+        the same input.</li>
+      <li><b>0:50–1:00</b> — Talk through what felt hard: too sensitive, too slow to register,
+        tiring to hold. That conversation is the actual point of the hour.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="long">
+  <div class="wrap">
+    <p class="eyebrow">Longer version — about 90 minutes</p>
+    <h2>Tune a switch to a specific person.</h2>
+    <ol class="outline">
+      <li><b>0:00–0:15</b> — Recap, then a broader look at input types: switches, gamepads,
+        eye-gaze-to-keypress bridges like Ace Centre's EyeCommander, and plain keyboards.</li>
+      <li><b>0:15–0:45</b> — Both games, played twice each: once with default timing, once
+        after adjusting hold time and repeat delay by hand in the settings. Compare how the
+        second pass feels.</li>
+      <li><b>0:45–1:05</b> — Bounce rejection and stuck-switch handling: what they're for, and
+        why a switch that "sometimes double-fires" or "sometimes doesn't register" is almost
+        always a timing setting, not a broken switch.</li>
+      <li><b>1:05–1:20</b> — Group discussion: for a specific access need described by the
+        class, which of the two games' feel matched it best, and why.</li>
+      <li><b>1:20–1:30</b> — Where this connects to Course A: the exact same switch drives the
+        AAC board's scanning mode.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="doc" class="alt">
+  <div class="wrap">
+    <p class="eyebrow">Documentation</p>
+    <h2>What this course is built on, plainly.</h2>
+    <div class="grid grid-2" style="margin-top:20px">
+      <div class="card">
+        <h3>The device bus</h3>
+        <p>One shared layer that any switch, button, dial, or controller plugs into. Whatever
+          it is, the browser sees a keypress or a gamepad input, and the bus turns that into a
+          named action — <code>next</code>, <code>select</code> — that any module can bind to.
+          Set it up once; it works the same on every screen.</p>
+      </div>
+      <div class="card">
+        <h3>Wait and Go</h3>
+        <p>A go/no-go timing task: hold off while a charge builds, press when the invite opens.
+          It records every press and release with real timing — including presses the game
+          itself ignored — as a measurement, not just a score.</p>
+      </div>
+      <div class="card">
+        <h3>Comet</h3>
+        <p>A comet that follows the switch's steering exactly, with hearts to catch by
+          pressing. Movement maps one-to-one to input, so cause and effect are unmistakable —
+          useful both for teaching and for a caregiver watching whether a person can reliably
+          affect something on screen.</p>
+      </div>
+      <div class="card">
+        <h3>An honest limit</h3>
+        <p><b>Calibration doesn't read the numbers back yet.</b> Wait and Go and Comet both
+          produce real timing data, but nothing in the product turns that data into a
+          suggested hold-time or scan-speed setting automatically — an instructor tunes those
+          settings by hand, watching the same numbers a patron just produced. That's a real
+          gap, not a course simplification, and this class teaches the hand-tuning skill that
+          fills it today.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Try it</p>
+    <h2>Open the same games this course teaches with.</h2>
+    <div class="cta">
+      <a class="btn primary" href="/modules.html?m=pressgame">Try Wait and Go →</a>
+      <a class="btn outline" href="/modules.html?m=comet">Try Comet →</a>
+    </div>
+    <p class="muted" style="margin-top:14px">The full Devices tab — where a real setup lives —
+      is reachable from a signed-in account's <a href="/home.html">home screen</a>. It's not
+      this course's centerpiece: Mike's own look at it turned up about as much wrong as right,
+      and it's getting a pass separately.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>A proposal for Cleveland Public Library's TechCentral — built by Mike Raglow.</div>
+    <div class="foot-links">
+      <a href="mailto:nimrodecosystem@gmail.com">nimrodecosystem@gmail.com</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/nimrod-ecosystem/Nimrod/blob/main/LICENSE">MIT license</a>
+      <span aria-hidden="true">·</span>
+      <a href="/">Built on Nimrod, the main site →</a>
+    </div>
+    <p class="foot-legal">This page is an independent proposal built on Nimrod, an open-source
+      project. It is not an official Cleveland Public Library page and is not affiliated with
+      or endorsed by the library.</p>
+  </div>
+</footer>
+</body>
+</html>

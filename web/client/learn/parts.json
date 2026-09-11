@@ -1,0 +1,42 @@
+{
+  "note": "Print Your Own's parts list, as a content pack — the same shape calendar.json uses. Every entry here is Mike's own design; nothing is fabricated placeholder geometry. Status is honest: most of these are in design, not yet printable.",
+  "generated": "2026-09-11",
+  "parts": [
+    {
+      "id": "bookends",
+      "title": "Modular Bookends",
+      "status": "designing",
+      "summary": "A pair of bookends built from the Nimrod brick connector system, sized to sit flush on a standard library shelf.",
+      "stl": null,
+      "source": null,
+      "photo": null
+    },
+    {
+      "id": "bookshelf",
+      "title": "Modular Bookshelf",
+      "status": "designing",
+      "summary": "A small shelf unit assembled from the same connector parts as the bookends and the carrying case — one system, three uses.",
+      "stl": null,
+      "source": null,
+      "photo": null
+    },
+    {
+      "id": "book-case",
+      "title": "Book-Carrying Case",
+      "status": "designing",
+      "summary": "A case for carrying a small stack of books between a classroom and a makerspace table, built from the same parts.",
+      "stl": null,
+      "source": null,
+      "photo": null
+    },
+    {
+      "id": "switch-enclosure",
+      "title": "Adaptive Switch Enclosure",
+      "status": "designing",
+      "summary": "The enclosure referenced in Course B and the Maker Monday session: houses an arcade button and a microcontroller as a low-cost adaptive switch. Not designed yet — checked against the repo before writing this, and no build123d source exists for it today.",
+      "stl": null,
+      "source": null,
+      "photo": null
+    }
+  ]
+}

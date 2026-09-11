@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course A: Set Up and Use an AAC Board</title>
+<meta name="description" content="A TechCentral course proposal: build a real AAC communication board in the browser, with scanning, dwell, and a keyboard or gamepad as the switch. Short and long versions, plus documentation.">
+<link rel="canonical" href="https://nimrodecosystem.com/learn/courses/aac-board.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d2f34'/%3E%3Cpath d='M9 23V9l14 14V9' stroke='%23f2f6f6' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../learn.css">
+<style>
+  .doc-nav{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 0}
+  .doc-nav a{font-size:.86rem}
+  .outline{margin:0;padding-left:1.2em}
+  .outline li{margin:.4em 0}
+  .need-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0;padding:0;
+    list-style:none}
+  .need-list li{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;font-size:.92rem}
+  @media (max-width:640px){ .need-list{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="proposal-banner">A proposal for Cleveland Public Library's TechCentral, built by
+  <b>Mike Raglow</b> on the open-source Nimrod platform. Not an official CPL page.</div>
+<a class="skip" href="#main">Skip to content</a>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/learn/">Nimrod<span> · Learn</span></a>
+    <div class="navlinks">
+      <a href="/learn/#courses">Courses</a>
+      <a href="/learn/#calendar">Calendar</a>
+      <a href="/learn/#try">Try it</a>
+      <a href="/learn/homeschool.html">Homeschool</a>
+      <a href="/learn/print.html">Print your own</a>
+      <a href="/learn/about.html">About</a>
+    </div>
+    <div class="right"><a href="/" class="btn ghost small">Main Nimrod site</a></div>
+  </div>
+</nav>
+
+<main id="main">
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Course A · Flagship</p>
+    <h1>Set Up and Use an AAC Board</h1>
+    <p class="lead">Build a real augmentative-and-alternative-communication board — symbols,
+      categories, and a voice — in a browser, on a library computer, with nothing to install.
+      Leave with a board you or a family member could use the same day.</p>
+    <div class="cta">
+      <a href="/talk.html" class="btn ondark">Try the AAC board now →</a>
+      <a href="#doc" class="btn ondark ghost">Read the documentation</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="tag">Adults &amp; children</span>
+    <span class="tag">60 min short · 90 min long</span>
+    <span class="tag">Nothing to install</span>
+    <h2 style="margin-top:18px">What you need</h2>
+    <ul class="need-list">
+      <li>A computer with a browser — Chrome, Edge, or Firefox, any from the last few years.</li>
+      <li>Nothing to sign in with. The board runs with no account.</li>
+      <li>Optional: a USB switch, or any USB/Bluetooth gamepad, to try scanning instead of a
+        mouse or touchscreen.</li>
+      <li>A quiet-ish room. This is a listening-and-talking course.</li>
+    </ul>
+
+    <div class="doc-nav">
+      <a class="btn outline small" href="#short">Short version</a>
+      <a class="btn outline small" href="#long">Longer version</a>
+      <a class="btn outline small" href="#doc">Documentation</a>
+    </div>
+  </div>
+</section>
+
+<section id="short" class="alt">
+  <div class="wrap">
+    <p class="eyebrow">Short version — about 60 minutes</p>
+    <h2>A working board by the end of the hour.</h2>
+    <p class="lead-sub">For a first exposure, or a single library visit — My Digital Life's
+      standalone 60-minute format. No homework, no second session required.</p>
+    <ol class="outline">
+      <li><b>0:00–0:10</b> — What AAC is, in one sentence, and why "communication board" is a
+        better search term than any product name. Open <a href="/talk.html">the AAC board</a>
+        together.</li>
+      <li><b>0:10–0:25</b> — Tour the default board: categories, the core-word set, and how a
+        tap speaks the word out loud. Everyone tries a few taps.</li>
+      <li><b>0:25–0:45</b> — Personalize: add or edit a few cards for something real to the
+        person building it — a name, a food, a activity. Change the board size if the default
+        feels too small or too dense.</li>
+      <li><b>0:45–0:55</b> — Try switch scanning: turn on scanning, and drive the board with the
+        space bar or a plugged-in switch instead of touching cards directly.</li>
+      <li><b>0:55–1:00</b> — Where to go next: the longer course, and the handout below.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="long">
+  <div class="wrap">
+    <p class="eyebrow">Longer version — about 90 minutes</p>
+    <h2>A board built for one specific person.</h2>
+    <p class="lead-sub">A Maker-Monday-length session for a patron (or a caregiver, or a
+      classroom) who wants to leave with a board that actually fits somebody's life,
+      vocabulary, and physical access needs.</p>
+    <ol class="outline">
+      <li><b>0:00–0:15</b> — Recap of the short version's ideas for anyone new, then straight
+        into <a href="/talk.html">the board</a>.</li>
+      <li><b>0:15–0:40</b> — Vocabulary: work from the core 36-word set outward. Build a
+        category around the person's actual routine — meals, people, a specific hobby —
+        instead of the shipped example set, which is one family's board and says so on its own
+        card.</li>
+      <li><b>0:40–1:00</b> — Access method: try touch, then mouse, then switch scanning with
+        real timing. Tune hold time and scan speed instead of accepting the defaults — this is
+        the part a 60-minute session has to skip.</li>
+      <li><b>1:00–1:15</b> — Dwell selection as a second option for someone who can point but
+        not press reliably; compare it against scanning for the same person.</li>
+      <li><b>1:15–1:30</b> — Save, review, and talk through what to change next time. Handout
+        and documentation link below.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="doc" class="alt">
+  <div class="wrap">
+    <p class="eyebrow">Documentation</p>
+    <h2>What this course is built on, plainly.</h2>
+    <div class="grid grid-2" style="margin-top:20px">
+      <div class="card">
+        <h3>The board</h3>
+        <p>A grid of cards, each with a symbol and a word. Tapping a card speaks it aloud and
+          can add it to a sentence strip. Boards are editable: add, remove, or re-theme cards,
+          resize the grid, and switch between a starter board and one built from scratch.</p>
+      </div>
+      <div class="card">
+        <h3>The core word set</h3>
+        <p>A default 36-word starter vocabulary, built as one family's worked example — it has
+          no food or drink cards by design, and the module says so on its own settings card so
+          whoever picks it knows to expect a rewrite for a different life.</p>
+      </div>
+      <div class="card">
+        <h3>Scanning &amp; dwell</h3>
+        <p>Two access methods for someone who can't reliably tap: <b>scanning</b> highlights
+          cards one at a time and a single press selects whichever is lit; <b>dwell</b> selects
+          whatever a pointer or gaze rests on for a set time. Both are tunable — hold time,
+          scan speed, repeat behavior — per person, not per device.</p>
+      </div>
+      <div class="card">
+        <h3>The switch</h3>
+        <p>Anything that sends a keypress or a gamepad button works as a switch — a $75
+          commercial adaptive switch, or an arcade button wired to a microcontroller for about
+          $15. Nothing needs a custom driver; the browser sees a keyboard or a gamepad either
+          way.</p>
+      </div>
+    </div>
+    <p class="placeholder-note" style="margin-top:20px">Handout: a printable one-page version of
+      this documentation is planned but not built yet. Until then, this page is the handout —
+      link or print it directly.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Try it</p>
+    <h2>Open the same board this course teaches.</h2>
+    <a class="btn primary" href="/talk.html">Try the AAC board →</a>
+    <p class="muted" style="margin-top:14px">Prefer to see it inside a full sample screen with
+      photos and a clock alongside it? <a href="/learn/#try">The sample kiosk</a> on the main
+      Learn page has one panel that swaps to this same board.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>A proposal for Cleveland Public Library's TechCentral — built by Mike Raglow.</div>
+    <div class="foot-links">
+      <a href="mailto:nimrodecosystem@gmail.com">nimrodecosystem@gmail.com</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/nimrod-ecosystem/Nimrod/blob/main/LICENSE">MIT license</a>
+      <span aria-hidden="true">·</span>
+      <a href="/">Built on Nimrod, the main site →</a>
+    </div>
+    <p class="foot-legal">This page is an independent proposal built on Nimrod, an open-source
+      project. It is not an official Cleveland Public Library page and is not affiliated with
+      or endorsed by the library.</p>
+  </div>
+</footer>
+</body>
+</html>

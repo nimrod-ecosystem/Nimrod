@@ -1,0 +1,163 @@
+/* learn.css — shared styles for the /learn/ sample site (the CPL TechCentral proposal).
+   ============================================================================
+   PLACEHOLDER THEME. These variables are copied from theme.js's "forge" entry
+   (teal + amber — the look the learning-tool modules were already specified in) so this
+   page has a real, coherent look today without a bespoke palette invented for one proposal
+   site. A design session is producing alternate themes for this section; when one lands,
+   swap the values in :root below — nothing else on any /learn/ page should need to change.
+   Do not treat this palette as final, and do not extend it by eye — ask for the real one.
+   ============================================================================ */
+:root{
+  --bg:#f2f6f6;
+  --surface:#ffffff;
+  --surface-alt:#e8f1f1;
+  --text:#0d2f34;
+  --text-soft:#274a50;
+  --text-muted:#5c777c;
+  --text-strong:#0d2f34;
+  --border:#cfe0e1;
+  --accent:#14636A;
+  --link:#B5651D;
+  --on-dark:#f2f6f6;
+  --accent-warm:#d9a05b;
+  --accent-warm-deep:#8c4a12;
+  --radius:14px;
+  --max:1080px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+@media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth} }
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font);
+  -webkit-font-smoothing:antialiased}
+a{color:var(--link)}
+a:hover{color:var(--accent-warm-deep)}
+a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{
+  outline:3px solid var(--accent);outline-offset:3px;border-radius:4px}
+:target,section[id],main{scroll-margin-top:76px}
+.skip{position:absolute;left:-9999px;top:0;z-index:500;background:var(--text-strong);
+  color:#fff;padding:12px 18px;border-radius:0 0 8px 0;font-weight:700;text-decoration:none}
+.skip:focus{left:0}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+h1,h2,h3{line-height:1.2;letter-spacing:-.01em;color:var(--text)}
+h2{font-size:1.6rem;margin:0 0 .5em}
+h3{font-size:1.12rem;margin:0 0 .35em}
+p{margin:0 0 1em}
+.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;font-weight:700;
+  color:var(--link);margin:0 0 .7em}
+.lead-sub{color:var(--text-soft);max-width:66ch;font-size:1.04rem}
+.muted{color:var(--text-muted)}
+
+/* proposal banner — the two hard lines, made structural rather than a promise in prose */
+.proposal-banner{background:var(--text-strong);color:var(--on-dark);font-size:.86rem;
+  text-align:center;padding:8px 16px}
+.proposal-banner b{color:var(--accent-warm)}
+
+nav{position:sticky;top:0;z-index:400;background:rgba(242,246,246,.92);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+nav .wrap{display:flex;align-items:center;gap:16px;height:60px}
+.brand{font-weight:800;font-size:1.1rem;letter-spacing:-.02em;color:var(--text-strong);
+  text-decoration:none}
+.brand span{color:var(--link)}
+.navlinks{display:flex;gap:16px;margin-left:22px;font-size:.9rem;flex:1 1 auto;min-width:0;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{color:var(--text-soft);text-decoration:none;font-weight:600;white-space:nowrap}
+.navlinks a:hover{color:var(--accent-warm-deep)}
+nav .right{margin-left:auto;flex:0 0 auto}
+
+.btn{display:inline-block;padding:9px 17px;border-radius:10px;font-weight:600;font-size:.92rem;
+  border:1.5px solid transparent;cursor:pointer;text-decoration:none;background:none;
+  font-family:inherit}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:#0f4d53}
+.btn.outline{background:transparent;color:var(--text-strong);border-color:var(--accent)}
+.btn.outline:hover{border-color:var(--text-strong);background:var(--surface-alt)}
+.btn.ghost{background:transparent;color:var(--text-strong);border-color:var(--border)}
+.btn.ghost:hover{border-color:var(--accent)}
+.btn.ondark{background:var(--accent-warm);color:#3a1f0a;border-color:var(--accent-warm)}
+.btn.ondark:hover{background:#c98a4b}
+.btn.ondark.ghost{background:transparent;color:var(--on-dark);border-color:rgba(242,246,246,.5)}
+.btn.ondark.ghost:hover{border-color:var(--on-dark);background:rgba(242,246,246,.1)}
+.btn.small{padding:6px 12px;font-size:.82rem}
+
+header.hero{color:var(--on-dark);background:linear-gradient(160deg,#0d2f34 0%,#14636A 130%)}
+header.hero .wrap{padding:56px 24px 52px}
+header.hero .eyebrow{color:var(--accent-warm)}
+header.hero h1{color:var(--on-dark);font-size:clamp(1.9rem,4.2vw,2.9rem);margin:.15em 0 .4em;
+  max-width:22ch}
+header.hero p.lead{font-size:1.1rem;color:#dcece9;max-width:64ch;margin:0 0 1.5em}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+
+section{padding:52px 0;border-top:1px solid var(--border)}
+section.alt{background:var(--surface-alt)}
+
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){ .grid-3,.grid-4{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:640px){ .grid-2,.grid-3,.grid-4{grid-template-columns:1fr} }
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px}
+.card h3{margin-top:0}
+.card p:last-child{margin-bottom:0}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--link);background:var(--surface-alt);
+  border:1px solid var(--border);border-radius:999px;padding:3px 10px;margin:0 6px 6px 0}
+.tag.soon{color:var(--text-muted)}
+
+/* the demo embed — same markup contract demo_health_gate.js expects, same visual language
+   as the main landing page's version so the "waking up" panel doesn't look like a second
+   product bolted on */
+.demo-frame{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);
+  background:var(--text-strong);aspect-ratio:16/10;position:relative}
+.demo-poster{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;
+  background:linear-gradient(140deg,#0d2f34,#14636A);cursor:pointer;display:block}
+.demo-quad{position:absolute;inset:7%;display:grid;grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;gap:2.2%}
+.dq{background:rgba(242,246,246,.08);border:1px solid rgba(242,246,246,.22);border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3em;
+  color:#e8f0ee;text-align:center;padding:6px}
+.dq b{font-size:clamp(.78rem,1.6vw,1rem)}
+.dq i{font-style:normal;font-size:clamp(.6rem,1.1vw,.8rem);opacity:.72;max-width:22ch}
+.demo-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;
+  height:76px;border-radius:50%;background:rgba(242,246,246,.94);color:#0d2f34;display:flex;
+  align-items:center;justify-content:center;font-size:32px;padding-left:5px}
+.demo-poster:hover .demo-play{background:#fff}
+.demo-cap{position:absolute;left:0;right:0;bottom:12px;color:#e8f0ee;font-weight:600;
+  font-size:.9rem}
+.demo-live,.demo-live iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.demo-waking{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(140deg,#0d2f34,#14636A);padding:24px;text-align:center}
+.demo-waking-inner{max-width:46ch;color:#e8f0ee}
+.demo-waking-inner p{margin:14px 0 18px;font-size:.94rem;line-height:1.5}
+.demo-waking-inner b{color:var(--on-dark)}
+.demo-spin{width:32px;height:32px;margin:0 auto;border-radius:50%;
+  border:3px solid rgba(242,246,246,.25);border-top-color:var(--on-dark);
+  animation:demo-spin .9s linear infinite}
+@media (prefers-reduced-motion: reduce){ .demo-spin{animation:none;border-top-color:rgba(242,246,246,.6)} }
+@keyframes demo-spin{to{transform:rotate(360deg)}}
+
+/* calendar */
+.cal-list{display:flex;flex-direction:column;gap:12px}
+.cal-row{display:grid;grid-template-columns:130px 1fr auto;gap:14px;align-items:start;
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.cal-row .when{font-weight:700;color:var(--text-strong);font-size:.92rem}
+.cal-row .when .date{display:block;color:var(--text-muted);font-weight:500;font-size:.8rem}
+.cal-row h4{margin:0 0 .3em;font-size:1rem}
+.cal-row p{margin:0;color:var(--text-muted);font-size:.9rem}
+.cal-row .fmt{align-self:center;text-align:right;font-size:.82rem;color:var(--text-muted);
+  white-space:nowrap}
+@media (max-width:700px){
+  .cal-row{grid-template-columns:1fr}
+  .cal-row .fmt{text-align:left}
+}
+
+footer{border-top:1px solid var(--border);padding:30px 0;color:var(--text-muted);
+  font-size:.85rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}
+.foot-legal{margin:12px 0 0;font-size:.84rem;opacity:.8;max-width:64ch}
+
+.placeholder-note{background:rgba(181,101,29,.1);border:1px dashed var(--link);
+  border-radius:10px;padding:12px 16px;font-size:.88rem;color:var(--text-soft)}
