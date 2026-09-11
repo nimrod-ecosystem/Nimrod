@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Print Your Own</title>
+<meta name="description" content="Download STLs and build123d source for a modular parts library built from Nimrod's brick connector system, with build instructions for a makerspace.">
+<link rel="canonical" href="https://nimrodecosystem.com/learn/print.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d2f34'/%3E%3Cpath d='M9 23V9l14 14V9' stroke='%23f2f6f6' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./learn.css">
+<style>
+  .part-card .status{float:right}
+</style>
+</head>
+<body>
+<div class="proposal-banner">A proposal for Cleveland Public Library's TechCentral, built by
+  <b>Mike Raglow</b> on the open-source Nimrod platform. Not an official CPL page.</div>
+<a class="skip" href="#main">Skip to content</a>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/learn/">Nimrod<span> · Learn</span></a>
+    <div class="navlinks">
+      <a href="/learn/#courses">Courses</a>
+      <a href="/learn/#calendar">Calendar</a>
+      <a href="/learn/#try">Try it</a>
+      <a href="/learn/homeschool.html">Homeschool</a>
+      <a href="/learn/print.html">Print your own</a>
+      <a href="/learn/about.html">About</a>
+    </div>
+    <div class="right"><a href="/" class="btn ghost small">Main Nimrod site</a></div>
+  </div>
+</nav>
+
+<main id="main">
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Makerspace &amp; fabrication</p>
+    <h1>Print Your Own</h1>
+    <p class="lead">A modular parts library built from Nimrod's brick connector system —
+      bookends, a small bookshelf, and a book-carrying case, all one system of interchangeable
+      parts. Every part ships with its build123d source beside the STL: the parametric script
+      that generated it, which is what a makerspace actually needs to change a design rather
+      than just reprint it.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">Status, honestly</p>
+    <p class="placeholder-note">This page is the template — layout, download flow, and
+      instructions format — built ahead of the parts themselves. The bookends, bookshelf, and
+      book-carrying case are in design now; nothing below is downloadable yet, and this page
+      says so per part rather than showing an empty gallery. Parts appear here the moment
+      they're ready, by updating <a href="/learn/parts.json">parts.json</a> — no page rewrite.</p>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <p class="eyebrow">The parts</p>
+    <h2>One connector system, several uses.</h2>
+    <div class="grid grid-2" id="parts-grid" style="margin-top:22px">
+      <p class="muted">Loading the parts list…</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">What "preferred format" means here</p>
+    <h2>The STL is the output. The build123d script is the design.</h2>
+    <p class="lead-sub">An STL is a mesh — good for printing, useless for changing a dimension
+      or adding a feature. Every part here is generated from a <a href="https://build123d.readthedocs.io/">
+      build123d</a> Python script, published beside its STL, so resizing a shelf or widening a
+      bookend for a different book size is editing a number, not re-modeling a shape from
+      scratch.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>A proposal for Cleveland Public Library's TechCentral — built by Mike Raglow.</div>
+    <div class="foot-links">
+      <a href="mailto:nimrodecosystem@gmail.com">nimrodecosystem@gmail.com</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/nimrod-ecosystem/Nimrod/blob/main/LICENSE">MIT license</a>
+      <span aria-hidden="true">·</span>
+      <a href="/">Built on Nimrod, the main site →</a>
+    </div>
+    <p class="foot-legal">This page is an independent proposal built on Nimrod, an open-source
+      project. It is not an official Cleveland Public Library page and is not affiliated with
+      or endorsed by the library. The physical parts' license is not yet finalized; the
+      software on this site is MIT, same as the rest of Nimrod.</p>
+  </div>
+</footer>
+
+<script type="module">
+const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const grid = document.getElementById('parts-grid');
+try {
+  const res = await fetch('/learn/parts.json');
+  if (!res.ok) throw new Error(String(res.status));
+  const data = await res.json();
+  grid.innerHTML = data.parts.map((p) => {
+    const ready = p.status === 'available' && p.stl;
+    return '<div class="card part-card">' +
+      '<span class="tag' + (ready ? '' : ' soon') + ' status">' +
+      esc(ready ? 'Available' : 'In design') + '</span>' +
+      '<h3>' + esc(p.title) + '</h3>' +
+      '<p>' + esc(p.summary) + '</p>' +
+      (ready
+        ? '<a class="btn outline small" href="' + esc(p.stl) + '">Download STL</a> ' +
+          (p.source ? '<a class="btn ghost small" href="' + esc(p.source) + '">build123d source</a>' : '')
+        : '<p class="muted" style="margin:0">Not downloadable yet.</p>') +
+      '</div>';
+  }).join('');
+} catch (e) {
+  grid.innerHTML = '<p class="muted">Could not load the parts list just now.</p>';
+  console.warn('parts', e);
+}
+</script>
+</body>
+</html>
