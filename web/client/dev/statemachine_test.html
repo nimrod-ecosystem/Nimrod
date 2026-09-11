@@ -33,9 +33,10 @@
 
 <script type="module">
 import { createBus } from '../bus.js';
-import { createMachine } from '../statemachine.js';
+import { createMachine, escapeGaps } from '../statemachine.js';
 import { daypartForHour, daypartAt, DEFAULT_DAYPARTS } from '../daypart.js';
 import { mulberry32 } from '../rng.js';
+import { DIRECTOR_CONFIG } from '../modules/director.js';
 
 const sections = [];
 let cur = null;
@@ -308,6 +309,83 @@ section('an incoming call — a global interrupt that hands the screen back');
   ok(m.previous === null, 'nothing has been interrupted yet');
   m.fire('call');
   ok(m.previous === 'a', 'the machine remembers what it interrupted');
+}
+
+// ── escapeGaps — THE SAFETY CHECK: no state a person cannot get back from ────────────────────
+section('escapeGaps — reversed-edge BFS from home, over the config alone');
+{
+  // *** THE REAL PRODUCT CONFIG, NOT ONLY A FIXTURE. *** A synthetic-only test can pass forever
+  // while the actual director config drifts into a trap; this is the whole reason the check
+  // exists at all.
+  ok(escapeGaps(DIRECTOR_CONFIG).length === 0,
+    'the real content-director config has no escape gaps', JSON.stringify(escapeGaps(DIRECTOR_CONFIG)));
+
+  ok(escapeGaps(today, { home: 'clock' }).length === 0,
+    'the today-card cycle can always get back to clock', JSON.stringify(escapeGaps(today, { home: 'clock' })));
+
+  // *** A GENUINE TRAP, CAUGHT. *** `dead` has no `on`, no `after`, and nothing else points a
+  // way out of it — exactly the defect this check exists to catch before somebody meets it live.
+  const trapped = {
+    initial: 'home',
+    on: { go: [{ to: 'dead' }] },
+    states: { home: {}, dead: {} },
+  };
+  ok(JSON.stringify(escapeGaps(trapped)) === JSON.stringify(['dead']),
+    '*** a state with no way back is caught, named, and nothing else is falsely flagged ***',
+    JSON.stringify(escapeGaps(trapped)));
+
+  // *** AN UNGUARDED LOCAL OVERRIDE SHADOWS THE GLOBAL ROUTE, AND THE CHECK KNOWS IT. ***
+  // `locked` refuses the one global `back` topic unconditionally and declares nothing else —
+  // so the global `back`→home edge every OTHER state gets is permanently dead code from
+  // `locked`, and it really is a trap. `open` declares no override at all, so the same global
+  // edge is real for it. (Not `withCall` above: its `scan` state only shadows `call/incoming`
+  // and still has a live route home through the OTHER global topic, `call/ended`→`$back` — a
+  // real fixture, not built to isolate this one case, which is exactly why a dedicated one
+  // belongs here instead of assumptions about a fixture built for something else.)
+  const shadowed = {
+    initial: 'home',
+    on: { back: [{ to: 'home' }] },
+    states: {
+      home: {},
+      open: {},
+      locked: { on: { back: [{ to: 'locked' }] } },
+    },
+  };
+  const gaps = escapeGaps(shadowed);
+  ok(JSON.stringify(gaps) === JSON.stringify(['locked']),
+    'a state whose local override shadows the only route back is flagged, not waved through',
+    JSON.stringify(gaps));
+
+  // A guarded local entry does NOT shadow the global one — the guard could fail, so the global
+  // route stays real for the safety check even though it's not what fires on any given day.
+  const guardedLocal = {
+    initial: 'a',
+    on: { go: [{ to: 'home' }] },
+    states: {
+      a: { on: { go: [{ to: 'stuck', when: 'sometimes' }] } },
+      home: {}, stuck: {},
+    },
+  };
+  ok(escapeGaps(guardedLocal, { home: 'home' }).length === 0,
+    'a GUARDED local override does not shadow the global route — the guard might not pass',
+    JSON.stringify(escapeGaps(guardedLocal, { home: 'home' })));
+
+  // $back is treated as a real edge to `initial`, matching the engine's own documented fallback.
+  const viaBack = {
+    initial: 'home',
+    on: { call: [{ to: 'call' }], done: [{ to: '$back' }] },
+    states: { home: {}, call: {} },
+  };
+  ok(escapeGaps(viaBack).length === 0,
+    '$back counts as an edge to initial, the engine\'s own guaranteed floor',
+    JSON.stringify(escapeGaps(viaBack)));
+
+  // No transitions declared anywhere — home is trivially "reachable" from itself (nothing to
+  // escape FROM there), but every OTHER state, with no edges at all, is honestly flagged.
+  const noHome = { initial: 'a', states: { a: {}, b: {} } };
+  ok(JSON.stringify(escapeGaps(noHome)) === JSON.stringify(['b']),
+    'with no declared way back to anything, every non-home state is honestly reported as a gap',
+    JSON.stringify(escapeGaps(noHome)));
 }
 
 const secEl = document.getElementById('sections');
