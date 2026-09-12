@@ -508,6 +508,39 @@ export async function mountKiosk(root, {
   const savedLayout = previewLayout || (settings.get().kiosk || {}).layout;
   let layout = null;
 
+  // *** STALE-CACHE CORRECTION FOR THE ARRANGEMENT. ***
+  //
+  // `settings` can be LOCAL-FIRST (state.js's `load()`, when this handle carries a
+  // `cacheKey` — true for every signed-in kiosk): it renders a CACHED snapshot instantly
+  // and corrects against the server in the background via `notify()`. Every other setting
+  // reacts to that correction (`applyLayout`, above, re-runs on every `subscribe` fire) —
+  // the SLOT ARRANGEMENT never did, because `savedLayout` above is read exactly once,
+  // before boot, and nothing downstream re-resolves it later.
+  //
+  // Reported live, signed in (2026-09-12): the composer showed one arrangement (AAC board /
+  // Word Forge / Quests, Main + two) and the kiosk rendered a different one — and Word Forge
+  // "did not respond" to a tap, because the slot a tap landed in and the slot the input
+  // system thought that module lived in had quietly diverged. Both are the same bug: a
+  // kiosk that boots from a stale cached layout goes on showing it forever, because nothing
+  // ever told the stage to re-mount.
+  //
+  // Fixed the general way rather than patching the symptom: if the CORRECTED layout ever
+  // differs from the one already mounted, the screen was already wrong the moment it
+  // painted, and the one guaranteed-correct recovery — same one this file already uses
+  // elsewhere for "the world changed under us" (a newly picked media folder) — is to reload.
+  // Guarded to fire at most once, and skipped entirely for a one-shot PREVIEW layout, which
+  // is deliberately never written back to the profile and has nothing server-side to
+  // "correct" against.
+  if (!previewLayout) {
+    const bootLayoutSig = JSON.stringify(savedLayout || null);
+    let reloadedForLayout = false;
+    settings.subscribe((s) => {
+      if (reloadedForLayout) return;
+      const nowSig = JSON.stringify((s.kiosk || {}).layout || null);
+      if (nowSig !== bootLayoutSig) { reloadedForLayout = true; location.reload(); }
+    });
+  }
+
   // *** A SLOT WHOSE MODULE NO LONGER EXISTS IS AN ORPHAN, AND ORPHANS USED TO EAT PANELS. ***
   //
   // `normalizeLayout` nulls any slot holding an id that is not in the profile — correctly, it
