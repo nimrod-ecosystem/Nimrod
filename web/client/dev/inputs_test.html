@@ -480,9 +480,21 @@ const logText = (r) => r.q('[data-log]').textContent;
       set('actionId', verbTopic('prev'));
       check('and be re-pointed at another verb without re-pressing', live().actionId === verbTopic('prev'));
 
-      r.qa('[data-gate] [data-gate]').find((b) => b.dataset.gate === 'moderator').click();
-      check('the gate closes from the panel',
-        r.panel.gate() === 'moderator' && r.panel.input().getGate() === 'moderator');
+      // *** THE PANEL'S GATE BUTTONS ARE DISABLED, 2026-09-12 *** — greyed out with "Coming
+      // with the people tab" (Mike's own call, reading this tab: "who may act" needs a real
+      // person on the other end, which the people tab is what will supply). The underlying
+      // mechanism is untouched — set it directly, the way the people tab eventually will,
+      // rather than through a panel control that is intentionally inert right now.
+      const gateButtons = r.qa('[data-gate] [data-gate]');
+      check('the panel\'s gate buttons are disabled, not wired up, until the people tab exists',
+        gateButtons.length > 0 && gateButtons.every((b) => b.disabled));
+      gateButtons.find((b) => b.dataset.gate === 'moderator').click();
+      check('and clicking one does nothing — the gate does not move from a disabled button',
+        r.panel.input().getGate() !== 'moderator');
+
+      r.panel.input().setGate('moderator');
+      check('the underlying gate mechanism itself still works, set directly',
+        r.panel.input().getGate() === 'moderator');
       r.press(XAC, 'button:0', 200);
       r.press(XAC, 'button:0', 200);
       check("and the participant's control is refused, in words",
