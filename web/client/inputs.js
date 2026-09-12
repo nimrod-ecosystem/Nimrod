@@ -364,20 +364,29 @@ export function mountInputs(root, {
   function renderGate() {
     const host = el('[data-gate]');
     if (!host) return;
+    // Disabled, not removed: shows the shape of what is coming rather than an empty box,
+    // and nothing has to change here again when the people tab makes it real — just this
+    // `disabled` attribute (and the card's greyed-out styling) comes off.
     host.innerHTML = GATES.map((g) =>
-      `<button class="h-btn${g === record.gate ? ' h-primary' : ''}" data-gate="${g}">${GATE_LABEL[g]}</button>`).join('');
+      `<button class="h-btn${g === record.gate ? ' h-primary' : ''}" data-gate="${g}" disabled>${GATE_LABEL[g]}</button>`).join('');
     const sp = el('[data-speak]');
     if (sp) sp.checked = !!record.speak;
   }
 
   function body() {
     el('[data-body]').innerHTML = `
-      <div class="h-card">
+      <div class="h-card i-gate-pending">
         <div class="h-card-head"><h2>Who may act right now</h2></div>
-        <p class="h-hint">Lock the other person's controls while you set things up, then hand them
-          back. This is itself bindable — put it on a switch and you never need the keyboard.
-          Default: <code>Ctrl+Shift+E</code>.</p>
-        <div class="i-gate" data-gate></div>
+        <!-- GREYED OUT, 2026-09-12 — Mike's own instruction, reading this tab: this is about
+             which PERSON may act, and that question does not have an honest answer until the
+             people tab (cross-account calls/communication/permissions — see
+             connections_design.md, groups_and_permissions_v1.csv, session_model_and_people.md
+             in docs/from_chat/) exists to say who the other person even is. The underlying
+             gate mechanism (GATES, record.gate, gatePermits) is untouched — only this settings
+             card is disabled, so nothing here regresses when the people tab lands; it just
+             stops offering a control that currently has nobody real behind it. -->
+        <p class="h-hint">Coming with the people tab.</p>
+        <div class="i-gate" data-gate aria-disabled="true"></div>
       </div>
 
       <div class="h-card">
