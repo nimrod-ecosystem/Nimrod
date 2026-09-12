@@ -52,7 +52,7 @@ import { normalizeRecord, INPUTS_KEY, RECORD_VERSION,
   exportBindings, parseBindingsImport } from './input_runtime.js';
 import { createVerbRouter } from './input_router.js';
 import { attachKeyboard, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from './input_keyboard.js';
-import { attachPointer, pointerLabel, POINTER_DEVICE } from './input_pointer.js';
+import { attachPointer, pointerLabel, POINTER_DEVICE, TOUCH_DEVICE } from './input_pointer.js';
 import { createGamepads, controlLabel } from './input_gamepad.js';
 import { speak } from './voice.js';
 
@@ -187,13 +187,16 @@ export function mountInputs(root, {
   }
 
   // Every device worth showing a row for: everything already bound (so a switch mid-use
-  // always has a row, configured or not), plus keyboard/mouse (always available), plus any
-  // gamepad currently plugged in. NOT everything ever seen — a switch unplugged months ago
-  // and never bound to anything does not deserve a permanent row.
+  // always has a row, configured or not), plus keyboard/mouse/touch (always available —
+  // touch joins them 2026-09-12, since unlike a gamepad the browser never hides it behind a
+  // "used at least once" gate, so there's nothing stopping it from being offered up front the
+  // same way mouse always is), plus any gamepad currently plugged in. NOT everything ever
+  // seen — a switch unplugged months ago and never bound to anything does not deserve a
+  // permanent row.
   function knownDevices() {
     const set = new Map();
     const add = (device) => { if (device && !set.has(device)) set.set(device, true); };
-    add(KEYBOARD_DEVICE); add(POINTER_DEVICE);
+    add(KEYBOARD_DEVICE); add(POINTER_DEVICE); add(TOUCH_DEVICE);
     (pads?.list() || []).forEach((p) => add(p.device));
     record.bindings.forEach((b) => add(b.device));
     return [...set.keys()];
@@ -204,13 +207,17 @@ export function mountInputs(root, {
   function deviceName(device) {
     if (device === KEYBOARD_DEVICE) return 'Keyboard';
     if (device === POINTER_DEVICE) return 'Mouse';
+    // "Touch" rather than "iPad" — the device is whatever has a touchscreen (a phone, a
+    // tablet, a touch monitor), and `pointerType` cannot say which one; naming it after one
+    // product would be a guess this file has no way to back up.
+    if (device === TOUCH_DEVICE) return 'Touch';
     const pad = (pads?.list() || []).find((s) => s.device === device);
     return pad ? (pad.id.split('(')[0].trim() || pad.device) : device;
   }
 
   function controlName(device, control) {
     if (device === KEYBOARD_DEVICE) return control.replace(/^key:/, '').toUpperCase();
-    if (device === POINTER_DEVICE) return pointerLabel(control);
+    if (device === POINTER_DEVICE || device === TOUCH_DEVICE) return pointerLabel(control);
     const pad = (pads?.list() || []).find((s) => s.device === device);
     return controlLabel(control, { mapping: pad?.mapping || '' });
   }

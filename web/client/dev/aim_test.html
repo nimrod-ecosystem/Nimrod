@@ -200,12 +200,12 @@ try {
     // has a suite of its own.
     const input = { isCapturing: () => false, hasBinding: () => false, down() {}, up() {}, heldControls: () => [] };
     const off = attachPointer(input, { target, aim });
-    target.dispatchEvent(Object.assign(new Event('mousemove'), { clientX: 10, clientY: 10 }));
+    target.dispatchEvent(Object.assign(new Event('pointermove'), { clientX: 10, clientY: 10 }));
     check('a mouse move reports an aim', seen.length === 1, JSON.stringify(seen));
     check('...as the mouse device, so the cursor knows the OS is already drawing one',
       seen[0]?.device === POINTER_DEVICE, JSON.stringify(seen[0]));
     off();
-    target.dispatchEvent(Object.assign(new Event('mousemove'), { clientX: 20, clientY: 20 }));
+    target.dispatchEvent(Object.assign(new Event('pointermove'), { clientX: 20, clientY: 20 }));
     check('detaching stops it', seen.length === 1, JSON.stringify(seen));
   }
   {
@@ -217,7 +217,7 @@ try {
     const target = document.createElement('div');
     const input = { isCapturing: () => false, hasBinding: () => false, down() {}, up() {}, heldControls: () => [] };
     const off = attachPointer(input, { target });
-    target.dispatchEvent(Object.assign(new Event('mousemove'), { clientX: 10, clientY: 10 }));
+    target.dispatchEvent(Object.assign(new Event('pointermove'), { clientX: 10, clientY: 10 }));
     check('no aim handle means no reporting, and no error', seen.length === 0);
     off();
   }
