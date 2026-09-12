@@ -650,7 +650,7 @@ try {
     await sleep(20);
     check('the gear opens the panel', inst.impl.__probe().panelOpen === true);
     check('...and the panel offers every built-in board',
-      JSON.stringify(inst.impl.__probe().panelBoards) === '["yesno","core","care"]',
+      JSON.stringify(inst.impl.__probe().panelBoards) === '["yesno","core","care","library"]',
       JSON.stringify(inst.impl.__probe().panelBoards));
     const sel = host.querySelector('[data-pboard]');
     sel.value = 'care';
@@ -685,7 +685,7 @@ try {
     check('somebody who wants the row can still have it',
       inst.impl.__probe().boardsShown === true);
     check('...and it offers the same boards the panel does',
-      JSON.stringify(inst.impl.__probe().boards) === '["yesno","core","care"]',
+      JSON.stringify(inst.impl.__probe().boards) === '["yesno","core","care","library"]',
       JSON.stringify(inst.impl.__probe().boards));
     host.querySelector('[data-board="yesno"]')?.click();
     await sleep(40);
