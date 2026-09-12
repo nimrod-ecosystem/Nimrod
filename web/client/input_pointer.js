@@ -34,6 +34,16 @@
 
 export const POINTER_DEVICE = 'pointer:mouse';
 
+// *** TOUCH IS ITS OWN FIRST-CLASS DEVICE, NOT "MOUSE." *** Added 2026-09-12 — Mike's own
+// example of a device that should be first-class was "keyboard, mouse, pointer, iPad." A
+// touchscreen is not a mouse wearing a costume: it is a genuinely distinguishable input
+// source, because `PointerEvent.pointerType` says which is which ('mouse' | 'touch' | 'pen') —
+// unlike two USB keyboards, which the browser truly cannot tell apart (see input.js's own
+// notes on that). So this is a REAL first-class device, buildable today with no agent and no
+// WebHID: a tap on an iPad's screen and a click of a mouse plugged into the same machine are
+// now two different, independently bindable devices on the bus.
+export const TOUCH_DEVICE = 'pointer:touch';
+
 // Named rather than numbered: "button 3" means nothing to a person, and a switch box
 // wired to the middle button should read as something they can recognize.
 export const BUTTON_LABELS = ['Left click', 'Middle click', 'Right click', 'Back', 'Forward'];
@@ -48,57 +58,72 @@ export function pointerLabel(control) {
   return BUTTON_LABELS[Number(m[1])] || `Button ${m[1]}`;
 }
 
-export function attachPointer(input, { target = window, device = POINTER_DEVICE, aim = null } = {}) {
+// `pen` reads as a precision pointer for this product's purposes — nothing here treats
+// handwriting or pressure specially — so it shares the mouse device rather than getting a
+// third row nobody asked for. Only `touch` is genuinely a different device.
+const deviceFor = (pointerType) => (pointerType === 'touch' ? TOUCH_DEVICE : POINTER_DEVICE);
+
+export function attachPointer(input, { target = window, device = null, aim = null } = {}) {
   if (!input) throw new Error('attachPointer: an input bus is required');
 
-  const wanted = (control) => input.isCapturing() || input.hasBinding(device, control);
+  // `device` stays acceptable as a fixed override (a test, or a caller with no real
+  // PointerEvent to read from) — when not given, the device is decided PER EVENT from
+  // `pointerType`, which is the whole point of this file existing in its 2026-09-12 shape.
+  const wanted = (dev, control) => input.isCapturing() || input.hasBinding(dev, control);
 
   // WHERE, as well as which button. Passive and never preventDefault'd: unlike a bound click,
-  // a mouse moving is not something this adapter has any business intercepting — the page
+  // a pointer moving is not something this adapter has any business intercepting — the page
   // still gets every move, hover still works, and text still selects.
   //
-  // `mousemove` rather than `pointermove` to match the button listeners below, so a device
-  // that reports as a mouse reports its position through the same door as its clicks.
-  const onMove = aim ? (e) => { aim.reportEvent(device, e); } : null;
+  // `pointermove`/`pointerdown`/`pointerup` rather than the mouse-only events: they are the
+  // superset that also fires for touch and pen, WITH `pointerType` on every event — which is
+  // the one thing a plain `mousedown` can never tell you, touch-synthesized or not.
+  const onMove = aim ? (e) => { aim.reportEvent(device || deviceFor(e.pointerType), e); } : null;
 
   const onDown = (e) => {
+    const dev = device || deviceFor(e.pointerType);
     const control = pointerControl(e.button);
-    if (!wanted(control)) return;
+    if (!wanted(dev, control)) return;
     e.preventDefault();
-    input.down(device, control);
+    input.down(dev, control);
   };
 
   const onUp = (e) => {
+    const dev = device || deviceFor(e.pointerType);
     const control = pointerControl(e.button);
-    input.up(device, control);
+    input.up(dev, control);
   };
 
   // A right-click that is bound must not also open the browser's menu over the top of
-  // whatever it just did.
-  const onMenu = (e) => { if (wanted('button:2')) e.preventDefault(); };
+  // whatever it just did. Checked against both devices — a right-click binding may exist on
+  // either, and this fires before pointerType is known to be relevant here.
+  const onMenu = (e) => {
+    if (wanted(POINTER_DEVICE, 'button:2') || wanted(TOUCH_DEVICE, 'button:2')) e.preventDefault();
+  };
 
-  // The pointer leaving the window mid-press means the mouseup lands somewhere else and
+  // The pointer leaving the window mid-press means the pointerup lands somewhere else and
   // never arrives. Same class as the keyboard's blur, and released the same way: `auto`,
-  // because drifting off the edge is not a decision to let go.
+  // because drifting off the edge is not a decision to let go. Both devices, since either
+  // could be mid-press when focus leaves.
   const onLeave = () => {
     for (const [dev, control] of input.heldControls()) {
-      if (dev === device) input.up(dev, control, { auto: true });
+      if (dev === POINTER_DEVICE || dev === TOUCH_DEVICE) input.up(dev, control, { auto: true });
     }
   };
 
-  target.addEventListener('mousedown', onDown);
-  target.addEventListener('mouseup', onUp);
+  target.addEventListener('pointerdown', onDown);
+  target.addEventListener('pointerup', onUp);
   target.addEventListener('contextmenu', onMenu);
-  target.addEventListener('mouseleave', onLeave);
+  target.addEventListener('pointerleave', onLeave);
   target.addEventListener('blur', onLeave);
-  if (onMove) target.addEventListener('mousemove', onMove, { passive: true });
+  if (onMove) target.addEventListener('pointermove', onMove, { passive: true });
 
   return () => {
-    target.removeEventListener('mousedown', onDown);
-    target.removeEventListener('mouseup', onUp);
+    target.removeEventListener('pointerdown', onDown);
+    target.removeEventListener('pointerup', onUp);
     target.removeEventListener('contextmenu', onMenu);
-    target.removeEventListener('mouseleave', onLeave);
+    target.removeEventListener('pointerleave', onLeave);
     target.removeEventListener('blur', onLeave);
-    if (onMove) target.removeEventListener('mousemove', onMove);
+    if (onMove) target.removeEventListener('pointermove', onMove);
   };
 }
