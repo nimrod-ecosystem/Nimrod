@@ -551,4 +551,43 @@ export const UNIVERSAL = {
   ],
 };
 
-export const BUILTIN_BOARDS = { yesno: YESNO, core: UNIVERSAL, care: CARE };
+// *** THE LIBRARY BOARD — a NAMED EXAMPLE, like CARE, never the default. ***
+//
+// Chat's draft, Revision 7 (2026-09-12), for the CPL sample site's patron-facing AAC course —
+// the existing `care` board is one bedside vocabulary and reads, in Mike's word, "too
+// bedridden" for a library patron. Same shape as `care`: tier 16, a 4-across order that is
+// load-bearing (see the note on `UNIVERSAL` above for why reflowing a shipped board is never
+// free). `book`, `computer` and `restroom` have no symbol yet — drawing one is an M row for
+// Mike, not a blocker, and a `null` symbol already renders as word-only (`symbolSvg` returns
+// '' for a missing name, no crash). Mike may change any word; this is a draft, marked as
+// chat's, not a ruling on final wording.
+export const LIBRARY = {
+  version: VOCAB_VERSION,
+  id: 'library',
+  name: 'Library',
+  tier: 16,
+  cells: [
+    // row 1 — answers and a greeting
+    { id: 'yes',    word: 'Yes',       symbol: 'yes',      kind: 'yes' },
+    { id: 'no',     word: 'No',        symbol: 'no',       kind: 'no' },
+    { id: 'hi',     word: 'Hi',        symbol: 'hi',       kind: 'social' },
+    { id: 'thanks', word: 'Thank you', symbol: 'thanks',   kind: 'social' },
+    // row 2 — asking for something, and the two that stop something
+    { id: 'help',   word: 'Help',      symbol: 'help',     kind: 'need' },
+    { id: 'wait',   word: 'Wait',      symbol: 'wait',     kind: 'social' },
+    { id: 'stop',   word: 'Stop',      symbol: 'stop',     kind: 'no' },
+    { id: 'more',   word: 'More',      symbol: 'more',     kind: 'plain' },
+    // row 3 — sentence starters
+    { id: 'want',   word: 'I want',    symbol: 'want',     kind: 'plain' },
+    { id: 'look',   word: 'Look',      symbol: 'look',     kind: 'plain' },
+    { id: 'where',  word: 'Where',     symbol: 'where',    kind: 'social' },
+    { id: 'what',   word: 'What',      symbol: 'what',     kind: 'social' },
+    // row 4 — the things a person asks for in a library, and the way to finish
+    { id: 'book',     word: 'Book',     symbol: null,       kind: 'plain' },
+    { id: 'computer', word: 'Computer', symbol: null,       kind: 'plain' },
+    { id: 'restroom', word: 'Restroom', symbol: null,       kind: 'need' },
+    { id: 'done',     word: 'All done', symbol: 'all_done', kind: 'plain' },
+  ],
+};
+
+export const BUILTIN_BOARDS = { yesno: YESNO, core: UNIVERSAL, care: CARE, library: LIBRARY };
