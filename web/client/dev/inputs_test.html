@@ -108,10 +108,20 @@ function rig({ seed = null, fresh = true } = {}) {
 
   const q = (sel) => host.querySelector(sel);
   const qa = (sel) => [...host.querySelectorAll(sel)];
-  const press = (device, control, ms = 0) => {
+  // A real mouse/touch press-release ALWAYS also fires a trailing DOM `click` on whatever
+  // it landed on — that's what inputs.js's `suppressNextClick` guards against (see its own
+  // comment). `panel.input().down()/up()` here goes straight through the input bus with no
+  // DOM event at all, so a test that presses a pointer device and then goes on to click
+  // something else — not testing the collision itself — would otherwise have that LATER,
+  // unrelated click wrongly eaten. `settle` (default true) closes that gap the way a real
+  // browser would: a harmless click on the panel's own root, consuming the guard the moment
+  // the press completes. The dedicated collision tests pass `settle:false` to leave it armed
+  // on purpose, then fire their own target click to prove what it does.
+  const press = (device, control, ms = 0, { settle = true } = {}) => {
     panel.input().down(device, control);
     clock.advance(ms);
     panel.input().up(device, control);
+    if (settle && (device === 'pointer:mouse' || device === 'pointer:touch')) host.click();
   };
   return { host, panel, clock, saveClock, q, qa, press, padList, spoken,
     saved: () => userStore[INPUTS_KEY] };
@@ -783,6 +793,80 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.q(`[data-bid="${mouseBinding.id}"] [data-repress]`).click();
       check("re-pressing a row's control highlights that row at its FILTERED position, not its position in the full list",
         r.panel.cursor() === 0, String(r.panel.cursor()));
+      r.panel.destroy();
+    }
+
+    // *** MIKE, 2026-09-13: "every time I click anywhere it deletes a row from the
+    // bindings." *** The browser fires a trailing `click` on whatever element a physical
+    // gesture landed on, a beat after that same gesture resolves a capture (input.js `up()`
+    // resolves synchronously; the DOM click event follows). Before this fix, that trailing
+    // click ran through the SAME delegated handler as every other click, unguarded — so
+    // finishing "press a control" could double as "delete that row" or "remove that
+    // device" purely because the completing press happened to land on one.
+    section('*** a capture completing must not let its trailing click ALSO delete or remove anything ***');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      const before = r.panel.bindings().length;
+      const targetBid = r.panel.bindings()[1].id;   // an existing, unrelated row
+
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      check('capture is armed', r.panel.input().isCapturing());
+      // A mouse press-release — the one class of device whose own trailing click this
+      // guards against. `settle:false` leaves the guard armed so the test below can fire
+      // that trailing click itself and prove it does nothing destructive.
+      r.press('pointer:mouse', 'button:9', 0, { settle: false });
+      check('the capture went through — a new binding was added',
+        r.panel.bindings().length === before + 1);
+
+      // Simulates the browser's own trailing click on whatever the completing press landed
+      // on — here, an unrelated row's delete button, the exact shape of Mike's report.
+      const delBtn = r.q(`[data-bid="${targetBid}"] [data-del]`);
+      delBtn.click();
+      check('*** the trailing click did NOT delete the unrelated row it landed on ***',
+        r.panel.bindings().some((b) => b.id === targetBid),
+        JSON.stringify(r.panel.bindings().map((b) => b.id)));
+      check('...and the row is still on screen, not just in memory',
+        !!r.q(`[data-bid="${targetBid}"]`));
+
+      // The guard must consume exactly ONE click, not jam the panel — a genuinely separate,
+      // later click has to keep working normally.
+      delBtn.click();
+      check('a real, later click on the same button still works',
+        !r.panel.bindings().some((b) => b.id === targetBid));
+      r.panel.destroy();
+    }
+    {
+      // The same collision, for Remove device — deleting a device takes its bindings with
+      // it (by design), so this is the highest-stakes place the bug could land.
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-add-device-toggle]').click();
+      r.q('[data-adddev-name]').value = 'Tray switch';
+      r.q('[data-adddev-save]').click();
+      const trayId = r.qa('[data-device-chip]').find((c) => /Tray switch/.test(c.textContent)).dataset.deviceChip;
+
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      // A mouse press, completing elsewhere and unrelated to Tray switch — settle:false
+      // leaves the guard armed so the very next click (below) can be tested against it.
+      r.press('pointer:mouse', 'button:8', 0, { settle: false });
+
+      const originalConfirm = window.confirm;
+      window.confirm = () => true;
+      // The FIRST click after the capture completes — same element the OT would have
+      // clicked expecting to remove the device, none the wiser that a capture had just
+      // resolved onto it.
+      r.q('[data-remove-device]').click();
+      check('*** the trailing click after an unrelated capture did NOT also remove a device ***',
+        r.qa('[data-device-chip]').some((c) => c.dataset.deviceChip === trayId));
+      // And a real, later click still removes it normally — the guard consumes one click,
+      // not the feature.
+      r.q('[data-remove-device]').click();
+      check('a real, later Remove click still works', !r.panel.bindings().some((b) => b.device === trayId)
+        && !r.qa('[data-device-chip]').some((c) => c.dataset.deviceChip === trayId));
+      window.confirm = originalConfirm;
       r.panel.destroy();
     }
 
