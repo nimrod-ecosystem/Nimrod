@@ -30,6 +30,32 @@ import { createLocalBackend, createLocalMediaSources, seedStarterScreen } from '
 import { createProfilesClient, ensureProfile } from './profile.js';
 import { createState } from './state.js';
 import { createEvents } from './events.js';
+import { createAim } from './aim.js';
+import { attachPointer } from './input_pointer.js';
+
+// *** "EVERY MODULE SHOULD BE FULLY FUNCTIONAL THERE." *** Mike, 2026-09-13, direct
+// correction of an earlier decision recorded in this file: "That's the opposite of what I
+// want... The modules page is where you use the modules. It's likely to end up being the
+// most used page." `aim: null` below used to be argued as deliberate — this page as "a
+// settings editor for one module, not a full kiosk." That reasoning did not come from Mike
+// and is not what he wants; removed rather than left to mislead the next reader.
+//
+// Comet's whole point is the head sitting exactly on the cursor (`aim.js`'s own header
+// comment) — with no aim producer it renders correctly and simply never moves, which reads
+// as broken rather than as a missing feature. This attaches a real aim tracker the same way
+// `input_runtime.js` does for the kiosk: `createAim({bus})` feeding `attachPointer`'s
+// pointermove reporting. Only the movement half — no buttons are bound here, since neither
+// host builds the binding/device layer a real kiosk has, and a bound switch is a separate,
+// larger piece of "fully functional" than a mouse or a finger moving the aim.
+function attachAim(bus, host) {
+  const aim = createAim({ bus });
+  // `attachPointer` also wires button-press interception (`onDown`/`onUp`), which needs a
+  // real input bus this page does not have. A stub that never claims a binding or a capture
+  // keeps those handlers inert without pulling in the whole input stack just for movement.
+  const stubInput = { isCapturing: () => false, hasBinding: () => false, down() {}, up() {} };
+  const detach = attachPointer(stubInput, { target: host, aim });
+  return { aim, detach };
+}
 
 /**
  * Build the world a module needs, once, and hand back something that can mount one into any
@@ -58,6 +84,10 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
   const audio = createAudioBus();
   const cameraOwner = createCameraOwner();
   const micOwner = createMicOwner();
+  // Window-scoped, not per-mount: only one module shows at a time on this page (see
+  // modules.html's "one at a time, in the big stage"), and a mouse or finger moving
+  // anywhere over it should count, the same as it would on a real kiosk.
+  const { aim, detach: detachAim } = attachAim(bus, window);
 
   let s = seed;
   const rand = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
@@ -65,7 +95,7 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
   const live = new Map();   // host element -> record, so a page can unmount what it mounted
 
   return {
-    bus, output, audio, profileId, backend, sources,
+    bus, output, audio, profileId, backend, sources, aim,
 
     /**
      * Mount `type` into `host`. Returns the module record, or throws — the caller decides what
@@ -105,7 +135,7 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
         // The kiosk builds this from a live drive socket. There is none here, and a module
         // that says so on screen is more use than one reporting a failure it does not have.
         callTransport: null,
-        aim: null,
+        aim,
         ...extra,
       });
       rec.init();
@@ -125,6 +155,8 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
     /** Everything, for a page teardown. */
     destroy() {
       for (const host of [...live.keys()]) this.unmount(host);
+      detachAim();
+      aim.destroy();
     },
   };
 }
@@ -144,10 +176,14 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
  * URLs kiosk.js's own `stateFor`/`eventsFor` use -- so a setting changed here is the same
  * setting the kiosk reads, not a parallel copy of it.
  *
- * Deliberately NOT the full kiosk world: no call transport, no live drive socket, no
- * person-aim tracking. Those are what makes a screen a KIOSK rather than a settings editor
- * for one module at a time, and this page was never meant to grow into a second kiosk --
- * see the "one at a time, in the big stage" note in modules.html for why.
+ * *** STILL NOT THE FULL KIOSK WORLD, BUT LESS SHORT OF IT THAN IT WAS. *** This comment
+ * used to claim "no person-aim tracking" was deliberate, part of what keeps this page "a
+ * settings editor for one module at a time" rather than a second kiosk. Mike, 2026-09-13,
+ * direct correction: "That's the opposite of what I want... Every module should be fully
+ * functional there." That reasoning was never his; removed rather than left for the next
+ * reader to trust. Aim (mouse/finger position) is wired below, the same producer the real
+ * kiosk uses (`aim.js` + `attachPointer`) — no call transport or live drive socket yet,
+ * since those need a person on the other end of a call, which nothing on this page has.
  */
 export async function createLiveHost({ user }) {
   const bus = createBus();
@@ -160,6 +196,7 @@ export async function createLiveHost({ user }) {
   const cameraOwner = createCameraOwner();
   const micOwner = createMicOwner();
   const rand = Math.random;
+  const { aim, detach: detachAim } = attachAim(bus, window);
 
   const live = new Map();
 
@@ -174,7 +211,7 @@ export async function createLiveHost({ user }) {
   }
 
   return {
-    bus, output, audio, profileId, profile, sources, live: true,
+    bus, output, audio, profileId, profile, sources, aim, live: true,
 
     /** MUST be awaited before `mount(type, ...)` — resolving/creating the real instance
      *  is a network call, unlike the throwaway host's synthetic per-type key. */
@@ -196,7 +233,7 @@ export async function createLiveHost({ user }) {
         makeEvents: (key, opts) => createEvents({ url: profiles.eventsURL(profileId, key), user, ...opts }),
         output, audio, micOwner, cameraOwner, sources, rand,
         callTransport: null,
-        aim: null,
+        aim,
         ...extra,
       });
       rec.init();
@@ -214,6 +251,8 @@ export async function createLiveHost({ user }) {
 
     destroy() {
       for (const host of [...live.keys()]) this.unmount(host);
+      detachAim();
+      aim.destroy();
     },
   };
 }
