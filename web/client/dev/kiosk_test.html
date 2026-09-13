@@ -988,6 +988,74 @@ const ds = () => root.querySelector('.kiosk').dataset;
     check('the burn-in section threw', false, String((e && e.stack) || e));
   }
 
+  // ============================================================================================
+  // "LOAD YOUR OWN PACK" — reachable from the settings menu of a module that actually reads
+  // one, absent from one that does not. 2026-09-12, the device-bus session's pack loader.
+  // ============================================================================================
+  try {
+    const USERPACKS_KEY = 'nimrod:userpacks:v1';
+    const clearUserPacks = () => { try { localStorage.removeItem(USERPACKS_KEY); } catch { /* noop */ } };
+    clearUserPacks();
+
+    const proot = document.createElement('div');
+    proot.style.cssText = 'position:relative;width:520px;height:300px;border:1px solid #ccc';
+    document.body.appendChild(proot);
+
+    async function checkPackItem(moduleType, expectPresent, expectKind) {
+      const profiles2 = createProfilesClient({ user: USER + '-pack-' + moduleType });
+      const pp = await profiles2.create('pack-test-' + moduleType);
+      await profiles2.addModule(pp.id, moduleType);
+      const pk = await mountKiosk(proot, { user: USER + '-pack-' + moduleType, profileId: pp.id, profiles: profiles2, bus: createBus() });
+      await sleep(120);
+      await press('Escape', 40);
+      const items = pk.menu.items().filter((i) => i.kind === 'item');
+      const loadItem = items.find((i) => i.id === 'load-pack');
+      check(`"Load your own pack" ${expectPresent ? 'appears' : 'does NOT appear'} for ${moduleType}`,
+        !!loadItem === expectPresent, JSON.stringify(items.map((i) => i.id)));
+      if (expectPresent) {
+        check(`...and it opens a page (not a cycling field)`, loadItem.page === 'pack-loader');
+        pk.menu.openPage('pack-loader');
+        await sleep(30);
+        const pageBody = proot.querySelector('[data-page] [data-page-body]');
+        check(`...whose page actually renders the loader UI`,
+          !!pageBody?.querySelector('[data-pl-file]'), pageBody?.innerHTML?.slice(0, 120));
+
+        if (expectKind) {
+          // Feed it a pack of the WRONG kind and confirm the page's own kind lock refuses it —
+          // proof `kind` was actually threaded through from the focused module, not left null.
+          const wrongKind = expectKind === 'trivia' ? 'words' : 'trivia';
+          const wrongPack = JSON.stringify({ schema: 'nimrod.pack.v1', kind: wrongKind, name: 'Wrong kind',
+            source: { name: 'test' },
+            items: wrongKind === 'trivia'
+              ? [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A' }]
+              : [{ word: 'x', definition: 'y' }] });
+          pageBody.querySelector('[data-pl-paste-toggle]').click();
+          pageBody.querySelector('[data-pl-paste]').value = wrongPack;
+          pageBody.querySelector('[data-pl-load-pasted]').click();
+          await sleep(30);
+          check(`*** the page is locked to "${expectKind}" — a "${wrongKind}" pack is refused ***`,
+            pageBody.querySelector('[data-pl-msg]').dataset.tone === 'error',
+            pageBody.querySelector('[data-pl-msg]').textContent);
+        }
+      }
+      await press('Escape', 20);
+      pk.destroy?.();
+    }
+
+    await checkPackItem('trivia', true, 'trivia');
+    clearUserPacks();
+    await checkPackItem('wordforge', true, 'words');
+    clearUserPacks();
+    await checkPackItem('quests', true, null);   // no pack kind of its own — unrestricted loader
+    clearUserPacks();
+    await checkPackItem('clock', false, null);   // a module with no concept of a pack at all
+
+    proot.remove();
+    clearUserPacks();
+  } catch (e) {
+    check('the pack-loader section threw', false, String((e && e.stack) || e));
+  }
+
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;
   sum.className = failed ? 'fail' : 'pass';

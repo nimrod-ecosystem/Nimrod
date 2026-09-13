@@ -36,6 +36,7 @@ import { normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle } from
 import { mountSettings } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
+import { mountPackLoader } from './pack_loader.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
 import { createHealthWatch } from './health.js';
@@ -1460,7 +1461,7 @@ export async function mountKiosk(root, {
     fields: () => {
       const rec = focusedRec();
       if (!rec) return [];
-      return fieldItems(fieldsFor(rec.instance.manifest, rec.instance), {
+      const items = fieldItems(fieldsFor(rec.instance.manifest, rec.instance), {
         // A FUNCTION, not a snapshot: two presses without a repaint in between would
         // otherwise step from the same stale value twice, and the second press would look
         // dropped — which somebody debugs as a broken switch.
@@ -1468,6 +1469,21 @@ export async function mountKiosk(root, {
         level: complexity(),
         onStep: (key, value) => { rec.state.set({ [key]: value }); },
       });
+      // *** "MAKE YOUR OWN PACK WITH THE AI OF YOUR CHOICE" NEEDED A WAY BACK IN. ***
+      // `games.html`'s course page already has the prompt; without this, the file it produces
+      // had nowhere to go. A plain item with `page:` here, a matching entry in `pages` below —
+      // same pattern this file already uses for `who`, not a new mechanism. Reachable from
+      // whichever module actually reads a pack (Trivia, Word Forge) plus Quests, since a
+      // pack's points feed the same economy — not from every module, which would be a row
+      // that does nothing on a panel with no concept of a pack.
+      if (['trivia', 'wordforge', 'quests'].includes(rec.type)) {
+        items.push({
+          kind: 'item', id: 'load-pack', page: 'pack-loader',
+          label: 'Load your own pack',
+          hint: 'from a file, or paste JSON',
+        });
+      }
+      return items;
     },
     // THE MENU'S OTHER CONTENT: things the shell should not know about, contributed by the
     // host through `extras` — which is what that hook was for.
@@ -1492,6 +1508,19 @@ export async function mountKiosk(root, {
       // a different person changes whose bindings drive it, whose voice it speaks with and
       // whose events it writes, and cycling past three names to reach the fourth would APPLY
       // each one on the way. A page commits on a press and nothing else.
+      // "LOAD YOUR OWN PACK" — the page the `load-pack` item above opens. `kind` narrows what
+      // the loader accepts to whatever the FOCUSED module actually reads (Trivia wants a
+      // trivia pack, Word Forge wants a words pack); Quests has no pack kind of its own, so it
+      // gets the unrestricted loader — a teacher managing the whole points economy from one
+      // place may be loading either kind for a game they are not currently looking at.
+      get 'pack-loader'() {
+        const rec = focusedRec();
+        const kind = rec?.type === 'trivia' ? 'trivia' : rec?.type === 'wordforge' ? 'words' : null;
+        return {
+          title: 'Load your own pack',
+          render(el) { mountPackLoader(el, { kind }); },
+        };
+      },
       get who() {
         return {
           title: 'Who this screen is for',

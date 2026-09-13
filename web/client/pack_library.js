@@ -1,15 +1,20 @@
-// pack_library.js — WHICH BUILT-IN PACKS EXIST, so a module's settings menu has something to
-// list without a server-side catalog endpoint or an upload UI (neither exists yet).
+// pack_library.js — WHICH PACKS EXIST: the built-in list below, plus whatever a visitor has
+// loaded themselves (`user_packs.js`) — so a module's settings menu has something to list
+// without a server-side catalog endpoint.
 //
-// Deliberately a flat, hand-maintained array rather than a directory listing: `packs.js`
-// validates a pack once it is loaded, but nothing scans `web/client/packs/` at runtime to
-// discover what is there, and a static site has no server-side listing to ask. Adding a pack
-// means adding one row here. When there are enough of these that a static row is genuinely the
-// wrong shape — real upload, a per-account library — that is its own decision, not a reason to
-// guess at one now for a codebase that ships exactly one pack.
+// `PACK_LIBRARY` itself is deliberately a flat, hand-maintained array rather than a directory
+// listing: `packs.js` validates a pack once it is loaded, but nothing scans `web/client/packs/`
+// at runtime to discover what is there, and a static site has no server-side listing to ask.
+// Adding a BUILT-IN pack means adding one row here. `packsFor`/`packById` are where the two
+// sources meet — every caller already goes through these two functions rather than reading
+// `PACK_LIBRARY` directly (checked: nothing does), which is what let user packs join the list
+// here, once, instead of every consumer needing to know a second source exists.
 //
-// `id` is what a module's settings actually store (`packId`), so it must never change once
-// shipped — a saved setting pointing at a renamed id silently falls back to nothing.
+// `id` is what a module's settings actually store (`packId`), so a BUILT-IN id must never
+// change once shipped — a saved setting pointing at a renamed id silently falls back to
+// nothing. A user pack's id is generated once in `user_packs.js` and never renamed either.
+
+import { listUserPacks } from './user_packs.js';
 
 export const PACK_LIBRARY = [
   // Root-relative, not `packs/...` — this is imported by modules mounted from pages at
@@ -30,6 +35,13 @@ export const PACK_LIBRARY = [
     url: '/packs/cleveland_library_facts.json' },
 ];
 
-export const packsFor = (kind) => PACK_LIBRARY.filter((p) => p.kind === kind);
+// `listUserPacks()` reads localStorage fresh on every call — cheap, small, and it means a
+// pack loaded THIS session (see `pack_loader.js`) is already visible to anything that asks
+// again, with no cache to invalidate. A module's own settings list is still computed once at
+// import time (see `trivia.js`/`wordforge.js`), so a pack added mid-session needs the reload
+// the loader UI already tells you to do — this is what makes that reload actually work.
+export const packsFor = (kind) =>
+  [...PACK_LIBRARY, ...listUserPacks()].filter((p) => p.kind === kind);
 
-export const packById = (id) => PACK_LIBRARY.find((p) => p.id === id) || null;
+export const packById = (id) =>
+  [...PACK_LIBRARY, ...listUserPacks()].find((p) => p.id === id) || null;
