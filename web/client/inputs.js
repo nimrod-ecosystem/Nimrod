@@ -498,7 +498,11 @@ export function mountInputs(root, {
           <th title="How long it must be held before it counts">Hold</th>
           <th title="Ignore a second press this soon after the last">Debounce</th>
           <th title="After it fires, refuse a repeat for this long">Lockout</th>
-          <th>Who</th><th></th>
+          <!-- RENAMED FROM "Who", Revision 9 item 4 (chat's suggestion, both agreed): this
+               column is ROLE (Anyone/Moderator/Participant) — who may act in a session, not a
+               person picker. Sitting next to a question about per-person setups, "Who" read
+               as one. Values untouched; Mike can revert this one word if he disagrees. -->
+          <th>May act</th><th></th>
         </tr></thead>
         <tbody>${rows.map((b, i) => {
           // BLANK MEANS "USES THE DEVICE'S OWN SETTING" — the placeholder shows what that
