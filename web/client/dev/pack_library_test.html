@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pack_library.js — built-in packs, plus whatever a visitor loaded themselves</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>pack_library.js</h1>
+<p><code>packsFor</code>/<code>packById</code> are the one place a built-in pack and a
+visitor-loaded one meet — every existing caller (Trivia, Word Forge) already goes through these
+two functions rather than reading <code>PACK_LIBRARY</code> directly, which is what let a user
+pack join the list here without any of those callers changing.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { PACK_LIBRARY, packsFor, packById } from '../pack_library.js';
+import { addUserPack } from '../user_packs.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const STORE_KEY = 'nimrod:userpacks:v1';
+function clearStore() { try { localStorage.removeItem(STORE_KEY); } catch { /* noop */ } }
+
+(async () => {
+try {
+  clearStore();
+
+  // =====================================================================================
+  section('the built-in list is unaffected when nothing has been loaded');
+  {
+    check('PACK_LIBRARY itself is untouched — still just the shipped array',
+      PACK_LIBRARY.every((p) => !p.id.startsWith('user:')));
+    const before = packsFor('trivia').length;
+    check('packsFor("trivia") returns at least the built-ins with an empty user store',
+      before === PACK_LIBRARY.filter((p) => p.kind === 'trivia').length, before);
+  }
+
+  // =====================================================================================
+  section('a loaded pack joins the list, without touching PACK_LIBRARY itself');
+  {
+    const builtinCount = PACK_LIBRARY.filter((p) => p.kind === 'trivia').length;
+    addUserPack(
+      { kind: 'trivia', name: 'Mine' },
+      JSON.stringify({ schema: 'nimrod.pack.v1', kind: 'trivia', name: 'Mine',
+        source: { name: 'test' }, items: [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A' }] }),
+    );
+    check('*** packsFor("trivia") now includes it, one more than before ***',
+      packsFor('trivia').length === builtinCount + 1,
+      `${packsFor('trivia').length} vs expected ${builtinCount + 1}`);
+    check('PACK_LIBRARY itself STILL has not grown — the merge happens only in packsFor',
+      PACK_LIBRARY.filter((p) => p.kind === 'trivia').length === builtinCount);
+    const mine = packsFor('trivia').find((p) => p.label.includes('Mine'));
+    check('the loaded pack is findable by packById too, same as a built-in one',
+      packById(mine.id)?.label === mine.label);
+  }
+
+  // =====================================================================================
+  section('kind separation still holds with a mix of built-in and loaded');
+  {
+    clearStore();
+    addUserPack(
+      { kind: 'words', name: 'My Words' },
+      JSON.stringify({ schema: 'nimrod.pack.v1', kind: 'words', name: 'My Words',
+        source: { name: 'test' }, items: [{ word: 'x', definition: 'y' }] }),
+    );
+    check('a loaded WORDS pack does not leak into packsFor("trivia")',
+      !packsFor('trivia').some((p) => p.label.includes('My Words')));
+    check('...but does show up in packsFor("words")',
+      packsFor('words').some((p) => p.label.includes('My Words')));
+  }
+
+  // =====================================================================================
+  section('a built-in id still resolves — the merge does not shadow it');
+  {
+    const first = PACK_LIBRARY[0];
+    check('packById on a real built-in id still works after loading a user pack',
+      packById(first.id)?.url === first.url);
+  }
+
+  clearStore();
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+  clearStore();
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

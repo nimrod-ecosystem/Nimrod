@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pack_loader.js — "make your own pack" needs a way back in, not just a prompt</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{border:1px dashed #ccc;padding:12px;margin:12px 0}
+</style>
+</head>
+<body>
+<h1>pack_loader.js</h1>
+<p><code>games.html</code>'s course page already has the AI prompt for making a pack. Without
+this, that path ended at a JSON file on somebody's desktop with no way back into the product.
+This suite drives the file-input and paste paths the same way a person would, and checks the
+pack actually lands in <code>user_packs.js</code>, validated.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mountPackLoader } from '../pack_loader.js';
+import { listUserPacks, removeUserPack } from '../user_packs.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const STORE_KEY = 'nimrod:userpacks:v1';
+function clearStore() { try { localStorage.removeItem(STORE_KEY); } catch { /* noop */ } }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const GOOD_TRIVIA = JSON.stringify({
+  schema: 'nimrod.pack.v1', kind: 'trivia', name: 'Loaded Pack',
+  source: { name: 'A file on my desktop' },
+  items: [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A' }],
+});
+const GOOD_WORDS = JSON.stringify({
+  schema: 'nimrod.pack.v1', kind: 'words', name: 'Loaded Words',
+  source: { name: 'A file on my desktop' },
+  items: [{ word: 'x', definition: 'y' }],
+});
+const BAD_JSON = '{not even valid json';
+const NO_SOURCE = JSON.stringify({ schema: 'nimrod.pack.v1', kind: 'trivia', name: 'No source',
+  items: [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A' }] });
+
+// A real <input type=file> cannot be filled programmatically for security reasons in every
+// browser, so this suite drives the PASTE path directly (same `acceptText` code underneath —
+// see the file's own comment: "one path for both entry points") and tests the file input's
+// wiring by dispatching a `change` event with `files` defined via `Object.defineProperty`,
+// which headless Chrome does allow for a `File` object it did not itself create from a real
+// OS dialog.
+
+(async () => {
+try {
+  clearStore();
+
+  // =====================================================================================
+  section('mounting');
+  {
+    const host = document.getElementById('host');
+    const rec = mountPackLoader(host);
+    check('mounts something into the given root', host.children.length > 0);
+    check('a single <style> tag is injected, not one per mount',
+      document.querySelectorAll('#pack-loader-style').length === 1);
+    const rec2 = mountPackLoader(document.createElement('div'));
+    check('mounting a second time does not inject a second style tag',
+      document.querySelectorAll('#pack-loader-style').length === 1);
+    rec.destroy(); rec2.destroy();
+    check('destroy() actually removes it', host.children.length === 0);
+  }
+
+  // =====================================================================================
+  section('the paste path — validate, save, report');
+  {
+    clearStore();
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    let loadedEntry = null;
+    const rec = mountPackLoader(host, { onLoaded: (e) => { loadedEntry = e; } });
+
+    host.querySelector('[data-pl-paste-toggle]').click();
+    const paste = host.querySelector('[data-pl-paste]');
+    check('the paste box is revealed by the toggle', !paste.hidden);
+
+    paste.value = GOOD_TRIVIA;
+    host.querySelector('[data-pl-load-pasted]').click();
+    await sleep(20);
+
+    check('*** a valid pasted pack is accepted and saved ***', listUserPacks().length === 1,
+      JSON.stringify(listUserPacks()));
+    check('onLoaded fires with the saved entry', !!loadedEntry && loadedEntry.kind === 'trivia');
+    check('the message says what happened and that a reload is needed',
+      /Loaded Pack/.test(host.querySelector('[data-pl-msg]').textContent) &&
+      /[Rr]eload/.test(host.querySelector('[data-pl-msg]').textContent),
+      host.querySelector('[data-pl-msg]').textContent);
+    check('the just-loaded pack appears in the visible list',
+      /Loaded Pack/.test(host.querySelector('[data-pl-list]').textContent));
+
+    rec.destroy();
+  }
+
+  // =====================================================================================
+  section('bad input is rejected, not silently swallowed');
+  {
+    clearStore();
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const rec = mountPackLoader(host);
+    host.querySelector('[data-pl-paste-toggle]').click();
+
+    host.querySelector('[data-pl-paste]').value = BAD_JSON;
+    host.querySelector('[data-pl-load-pasted]').click();
+    await sleep(20);
+    check('*** invalid JSON is rejected and NOT saved ***', listUserPacks().length === 0,
+      JSON.stringify(listUserPacks()));
+    check('the error message says so',
+      host.querySelector('[data-pl-msg]').dataset.tone === 'error');
+
+    host.querySelector('[data-pl-paste]').value = NO_SOURCE;
+    host.querySelector('[data-pl-load-pasted]').click();
+    await sleep(20);
+    check('*** the SAME validator rule applies here as everywhere else — no source, no load ***',
+      listUserPacks().length === 0 &&
+      /source/i.test(host.querySelector('[data-pl-msg]').textContent),
+      host.querySelector('[data-pl-msg]').textContent);
+
+    rec.destroy();
+  }
+
+  // =====================================================================================
+  section('kind restriction — a game only wants its own kind');
+  {
+    clearStore();
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    // Mounted the way Trivia's own settings panel would: locked to 'trivia'.
+    const rec = mountPackLoader(host, { kind: 'trivia' });
+    host.querySelector('[data-pl-paste-toggle]').click();
+
+    host.querySelector('[data-pl-paste]').value = GOOD_WORDS;   // a WORDS pack into a trivia-only loader
+    host.querySelector('[data-pl-load-pasted]').click();
+    await sleep(20);
+    check('*** a words pack is refused by a loader locked to trivia ***',
+      listUserPacks().length === 0, JSON.stringify(listUserPacks()));
+    check('...and says which kind it actually needed',
+      /trivia/i.test(host.querySelector('[data-pl-msg]').textContent),
+      host.querySelector('[data-pl-msg]').textContent);
+
+    host.querySelector('[data-pl-paste]').value = GOOD_TRIVIA;
+    host.querySelector('[data-pl-load-pasted]').click();
+    await sleep(20);
+    check('...but the matching kind goes through', listUserPacks().length === 1);
+
+    rec.destroy();
+  }
+
+  // =====================================================================================
+  section('the file-input path is wired, not just the paste box');
+  {
+    clearStore();
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const rec = mountPackLoader(host);
+    const input = host.querySelector('[data-pl-file]');
+    const file = new File([GOOD_TRIVIA], 'my-pack.json', { type: 'application/json' });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(30);
+    check('*** choosing a file loads it, the same as pasting its contents would ***',
+      listUserPacks().length === 1, JSON.stringify(listUserPacks()));
+    check('the message names the file', /my-pack\.json/.test(host.querySelector('[data-pl-msg]').textContent),
+      host.querySelector('[data-pl-msg]').textContent);
+    rec.destroy();
+  }
+
+  // =====================================================================================
+  section('removing a loaded pack from the list');
+  {
+    clearStore();
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const rec = mountPackLoader(host);
+    host.querySelector('[data-pl-paste-toggle]').click();
+    host.querySelector('[data-pl-paste]').value = GOOD_TRIVIA;
+    host.querySelector('[data-pl-load-pasted]').click();
+    await sleep(20);
+    check('one pack showing before removal', listUserPacks().length === 1);
+
+    host.querySelector('[data-pl-remove]').click();
+    await sleep(20);
+    check('*** the remove button in the list actually removes it ***',
+      listUserPacks().length === 0, JSON.stringify(listUserPacks()));
+    check('the list empties out visually too', host.querySelector('[data-pl-list]').hidden);
+
+    rec.destroy();
+  }
+
+  clearStore();
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+  clearStore();
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

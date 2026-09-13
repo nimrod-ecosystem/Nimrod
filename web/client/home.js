@@ -24,6 +24,7 @@
 
 import { mountPeople } from './people.js';
 import { createBus } from './bus.js';
+import { mountPackLoader } from './pack_loader.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -299,7 +300,26 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const { mountMedia } = await import('./media.js');
       const m = mountMedia(host, { user });
       await m.refresh();
-      return m;
+
+      // "MAKE YOUR OWN PACK" NEEDED SOMEWHERE TO LAND BESIDES A GAME'S OWN MENU. Mike's own
+      // ask: Media is where a caregiver already comes to add their own content (a folder of
+      // photos) — a pack is the same idea, content someone brought rather than what shipped,
+      // so it gets a section here too, not only inside Trivia's/Word Forge's settings.
+      // Unrestricted (`kind` omitted): someone here may be adding a pack for a game they are
+      // not currently looking at.
+      const packHost = document.createElement('div');
+      packHost.className = 'm-packs';
+      packHost.innerHTML = '<h3 class="m-packs-head">Content packs</h3>';
+      host.append(packHost);
+      const packRec = mountPackLoader(packHost, {});
+
+      return {
+        async refresh() { await m.refresh(); return this; },
+        destroy() {
+          try { packRec?.destroy?.(); } catch (e) { console.error(e); }
+          try { m.destroy?.(); } catch (e) { console.error(e); }
+        },
+      };
     }
     if (id === 'inputs') {
       // TWO PANELS IN ONE TAB, and it is the right tab: a marker tracker is a DEVICE, sitting

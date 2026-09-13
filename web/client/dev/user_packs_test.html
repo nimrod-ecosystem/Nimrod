@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>user_packs.js — packs a visitor loaded themselves, stored locally</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>user_packs.js</h1>
+<p>Packs a visitor loaded themselves, kept entirely in this browser's localStorage, stored as a
+<code>data:</code> URL so <code>pack_library.js</code>'s existing <code>loadPack(entry.url)</code>
+path needs no second code path for a pack that came from a file instead of the network.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { listUserPacks, addUserPack, removeUserPack } from '../user_packs.js';
+import { parsePack } from '../packs.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const STORE_KEY = 'nimrod:userpacks:v1';
+// *** ISOLATION, NOT ASSUMPTION. *** A prior run of THIS suite, or manual testing against the
+// same origin, leaves real localStorage state behind — the exact cross-run contamination this
+// session already found once elsewhere today. Clear before AND after, so this suite is neither
+// polluted by what came before it nor pollutes whatever runs after it.
+function clearStore() { try { localStorage.removeItem(STORE_KEY); } catch { /* noop */ } }
+
+const TRIVIA_PACK = {
+  schema: 'nimrod.pack.v1', kind: 'trivia', name: 'Test Trivia',
+  source: { name: 'Hand-written for this test' },
+  items: [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A' }],
+};
+const WORDS_PACK = {
+  schema: 'nimrod.pack.v1', kind: 'words', name: 'Test Words',
+  source: { name: 'Hand-written for this test' },
+  items: [{ word: 'x', definition: 'y' }],
+};
+
+(async () => {
+try {
+  clearStore();
+
+  // =====================================================================================
+  section('starts empty, per this browser');
+  {
+    check('nothing loaded yet', listUserPacks().length === 0, JSON.stringify(listUserPacks()));
+  }
+
+  // =====================================================================================
+  section('adding a pack');
+  {
+    const text = JSON.stringify(TRIVIA_PACK);
+    const entry = addUserPack(TRIVIA_PACK, text);
+    check('returns an entry with an id, kind, label and url',
+      !!entry.id && entry.kind === 'trivia' && entry.label.includes('Test Trivia') && !!entry.url);
+    check('the id is namespaced so it cannot collide with a built-in id',
+      entry.id.startsWith('user:'));
+    check('...and it now shows up in the list', listUserPacks().length === 1,
+      JSON.stringify(listUserPacks()));
+    check('the label says it is theirs, not a shipped pack',
+      /\(yours\)/.test(entry.label), entry.label);
+
+    // *** THE WHOLE POINT: `entry.url` MUST BE FETCHABLE THE SAME WAY A NETWORK PACK IS. ***
+    const res = await fetch(entry.url);
+    check('*** the stored data: URL actually fetches, exactly like an http pack would ***',
+      res.ok, String(res.status));
+    const fetchedText = await res.text();
+    check('...and the fetched text parses back into the identical pack via the real validator',
+      parsePack(fetchedText).name === TRIVIA_PACK.name);
+  }
+
+  // =====================================================================================
+  section('multiple packs, different kinds');
+  {
+    clearStore();
+    addUserPack(TRIVIA_PACK, JSON.stringify(TRIVIA_PACK));
+    addUserPack(WORDS_PACK, JSON.stringify(WORDS_PACK));
+    const all = listUserPacks();
+    check('both are kept', all.length === 2, JSON.stringify(all));
+    check('kinds are preserved, not collapsed to one',
+      all.some((p) => p.kind === 'trivia') && all.some((p) => p.kind === 'words'));
+  }
+
+  // =====================================================================================
+  section('removing a pack');
+  {
+    const before = listUserPacks();
+    const target = before.find((p) => p.kind === 'trivia');
+    removeUserPack(target.id);
+    const after = listUserPacks();
+    check('the removed one is gone', !after.some((p) => p.id === target.id), JSON.stringify(after));
+    check('...and the other one is untouched',
+      after.some((p) => p.kind === 'words'), JSON.stringify(after));
+    check('removing an id that never existed is a harmless no-op', (() => {
+      try { removeUserPack('user:nope:doesnotexist'); return true; } catch { return false; }
+    })());
+  }
+
+  // =====================================================================================
+  section('persistence — a fresh read sees what an earlier one wrote');
+  {
+    clearStore();
+    addUserPack(TRIVIA_PACK, JSON.stringify(TRIVIA_PACK));
+    // Simulating a different module instance / a later page load reading the SAME key —
+    // listUserPacks() re-reads localStorage every call rather than caching, so this is really
+    // just calling it twice, but the point being proven is that nothing is held only in memory.
+    const raw = localStorage.getItem(STORE_KEY);
+    check('it is actually IN localStorage, not just in an in-memory variable',
+      typeof raw === 'string' && raw.includes('Test Trivia'), String(raw).slice(0, 80));
+    check('a second, independent read sees the same thing', listUserPacks().length === 1);
+  }
+
+  // =====================================================================================
+  section('corrupt or missing storage never throws');
+  {
+    try { localStorage.setItem(STORE_KEY, 'not json at all {{{'); } catch { /* noop */ }
+    check('*** corrupt JSON in the store reads back as empty, not a thrown error ***',
+      (() => { try { return Array.isArray(listUserPacks()) && listUserPacks().length === 0; }
+                catch { return false; } })());
+
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ not: 'an array' })); } catch { /* noop */ }
+    check('an object where an array was expected also reads back as empty, not a crash',
+      (() => { try { return listUserPacks().length === 0; } catch { return false; } })());
+  }
+
+  clearStore();
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+  clearStore();
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
