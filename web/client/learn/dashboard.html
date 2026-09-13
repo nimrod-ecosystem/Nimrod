@@ -122,7 +122,7 @@ async function loadGallery() {
     const data = await res.json();
     const pick = data.images.slice(0, 6);
     gallery.innerHTML = pick.map((im) =>
-      '<img src="/learn/images/cma/' + esc(im.file) + '" alt="' + esc(im.title) +
+      '<img src="/learn/images/cma/files/' + esc(im.file) + '" alt="' + esc(im.title) +
       ', ' + esc(im.artist) + '" loading="lazy">'
     ).join('');
   } catch (e) {

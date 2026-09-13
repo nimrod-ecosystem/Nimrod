@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>learn/images/cma — a real hosted Photos source, not just a static gallery</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:300px;height:200px;position:relative;border:1px dashed #ccc;margin:12px 0}
+</style>
+</head>
+<body>
+<h1>learn/images/cma — the Photos hosted source</h1>
+<p>Revision 6 addendum's Check 2: the CMA images needed to work as a real <code>media_sources.js</code>
+<code>kind:'agent'</code> source, the same contract <code>demo-media/</code> already proves in
+production — <code>list</code> (the exact <code>{album,albums,items,count}</code> shape) plus a
+<code>files/</code> folder, so <code>resolveListing()</code> needs no changes to read either one.
+This suite proves the whole chain: the raw HTTP contract, the real (unmodified)
+<code>resolveListing()</code>, and a real mounted Photos module instance actually rendering one.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { resolveListing, mediaUrl } from '../media_sources.js';
+import { mountModule } from '../module.js';
+import '../modules/photos.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const SOURCE = { id: 'cma', label: 'Cleveland Museum of Art', kind: 'agent',
+                 base_url: '/learn/images/cma' };
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the raw HTTP contract — same shape demo-media/list already proves in production');
+  {
+    const res = await fetch('/learn/images/cma/list');
+    check('list is fetchable and 200', res.ok, String(res.status));
+    const body = await res.json();
+    check('has the four top-level keys resolveListing() reads',
+      'album' in body && Array.isArray(body.albums) && Array.isArray(body.items)
+      && typeof body.count === 'number');
+    check('*** count matches items.length — no stale count left over from an edit ***',
+      body.count === body.items.length, `count=${body.count}, items=${body.items.length}`);
+    check('18 images, matching manifest.json (18 verified-CC0 works)', body.count === 18, body.count);
+    check('every item has a path, an id and kind:"image"',
+      body.items.every((it) => it.path && it.id && it.kind === 'image'),
+      JSON.stringify(body.items.find((it) => !it.path || !it.id || it.kind !== 'image')));
+    check('every item has a real, non-empty accessible name (not falling back to "Photo")',
+      body.items.every((it) => typeof it.name === 'string' && it.name.trim().length > 0),
+      JSON.stringify(body.items.find((it) => !it.name)));
+
+    // Spot-check one real file is actually there, at the path the contract implies.
+    const first = body.items[0];
+    const fileRes = await fetch('/learn/images/cma/files/' + first.path, { method: 'HEAD' });
+    check('*** the file the list points at actually exists under files/ ***',
+      fileRes.ok, `${first.path} -> ${fileRes.status}`);
+    check('...and it is really a JPEG, not an HTML error page in disguise',
+      (fileRes.headers.get('content-type') || '').includes('image/jpeg'),
+      fileRes.headers.get('content-type'));
+  }
+
+  // =====================================================================================
+  section('through the REAL, unmodified resolveListing() — no special-casing for this source');
+  {
+    const listing = await resolveListing(SOURCE);
+    check('resolves all 18 items', listing.count === 18, listing.count);
+    check('mediaUrl() built the right path for each item',
+      listing.items.every((it) => it.url === `/learn/images/cma/files/${it.path}`),
+      listing.items.find((it) => it.url !== `/learn/images/cma/files/${it.path}`)?.url);
+    check('sourceId is stamped onto every item, same as any other agent source',
+      listing.items.every((it) => it.sourceId === 'cma'));
+
+    // Every resolved URL must actually be fetchable — proves mediaUrl()'s encoding did not
+    // break a filename resolveListing() itself never validates.
+    const sample = listing.items[3];
+    const r = await fetch(sample.url, { method: 'HEAD' });
+    check('*** a resolved item URL, taken at random, actually fetches ***', r.ok, sample.url);
+  }
+
+  // =====================================================================================
+  section('a REAL mounted Photos module instance — the thing a visitor actually sees');
+  {
+    const bus = createBus();
+    let stateData = { sourceId: 'cma' };
+    const subs = [];
+    const state = {
+      get: () => stateData,
+      set: (patch) => { stateData = { ...stateData, ...patch }; subs.forEach((fn) => fn(stateData)); },
+      load: async () => stateData,
+      // *** MUST CALL BACK IMMEDIATELY, matching the real state.js's `subscribe`
+      // ("if (loaded) fn(snapshot())") — a mock that only registers the listener without
+      // ever invoking it once looks identical to a broken module from the outside: nothing
+      // renders, and the silence gives no hint that the harness itself is the gap. Found
+      // exactly this while proving this feature live, before writing this test. ***
+      subscribe: (fn) => { subs.push(fn); fn(stateData); return () => {}; },
+      startPolling: () => {},
+    };
+    const events = { append: async () => {}, load: async () => ({ events: [] }),
+                     subscribe: () => () => {}, startPolling: () => {} };
+
+    const host = document.getElementById('host');
+    const instance = mountModule('photos', {
+      mount: host, state, events, bus, user: 'test', profileId: 'p1',
+      rootBus: bus, instanceId: 'photos-cma-test', personId: null,
+      sources: { async list() { return [SOURCE]; } },
+    });
+    instance.init();
+    await sleep(800);
+
+    const img = host.querySelector('img');
+    check('*** an <img> actually appears in the panel ***', !!img, host.innerHTML.slice(0, 200));
+    check('its src points into the CMA files/ folder',
+      /\/learn\/images\/cma\/files\//.test(img?.src || ''), img?.src);
+    check('the source label names the collection, not a raw id',
+      host.querySelector('[data-source-label]')?.textContent === 'Cleveland Museum of Art — 18 items',
+      host.querySelector('[data-source-label]')?.textContent);
+    check('the "loading" status has been withdrawn now that a photo is actually showing',
+      host.querySelector('[data-status]')?.hidden === true);
+
+    instance.destroy?.();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
