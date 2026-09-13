@@ -171,6 +171,10 @@
   .h-x{border:0;background:transparent;color:var(--text-muted);font:inherit;font-size:1rem;line-height:1;
     cursor:pointer;padding:0 5px;border-radius:99px}
   .h-x:hover{color:var(--accent-warm-deep);background:rgba(0,0,0,.05)}
+  /* .h-chip.on was referenced (screens picker, focus picker) with no rule behind it — a
+     selected chip and an unselected one rendered identically. Fixed here rather than in a
+     third place, since the device picker below needs the same "which one is picked" signal. */
+  .h-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .h-none,.h-hint{font-size:.8rem;color:var(--text-muted)}
   /* "This is the IT one." Says so on the fold, so nobody opens it expecting a button. */
   /* A pairing code is read one character at a time off another screen, so it is set in a
@@ -229,6 +233,24 @@
   /* Inputs panel. The table is dense on purpose: a clinician comparing four bindings
      wants them on one screen, not in four expanding cards. */
   .i-gate{display:flex;gap:8px;flex-wrap:wrap}
+  .i-whose{font-size:.85rem;color:var(--text-muted);margin:0 0 10px}
+  /* Device-first navigation, Revision 9: chips choose which device Devices/Bindings show. */
+  .i-devchips{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
+  .i-add-device{background:transparent;border-style:dashed}
+  .i-adddev{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;margin:0 0 14px;
+    padding:10px 12px;background:var(--surface-alt);border-radius:9px}
+  .i-adddev select,.i-adddev input[type=text]{font:inherit;font-size:.9rem;padding:7px 9px;
+    border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)}
+  .i-adddev .h-hint{flex-basis:100%;margin:2px 0 0}
+  .i-devcard{padding:2px 0}
+  .i-devcard label{display:block;font-size:.85rem;font-weight:600;margin:10px 0 4px}
+  .i-devcard input[type=text]{width:100%;max-width:28ch;font:inherit;font-size:.9rem;
+    padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);
+    color:var(--text)}
+  .i-devnums{display:flex;gap:14px;flex-wrap:wrap}
+  .i-devnums label{margin-top:0}
+  .i-devnums input[type=number]{width:9ch;font:inherit;font-size:.9rem;padding:7px 9px;
+    border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)}
   .i-devs{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px;font-size:.9rem}
   .i-devs code{font-size:.8rem;background:var(--surface-alt);padding:1px 5px;border-radius:5px}
   .i-tab{width:100%;border-collapse:collapse;font-size:.85rem;margin:4px 0 10px}
