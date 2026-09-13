@@ -652,6 +652,43 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.panel.destroy();
     }
 
+    // *** MIKE, 2026-09-13, minutes after the picker shipped: "selecting anything in the
+    // bindings section just deleted it and now the bindings section is empty." Confirmed
+    // live: nothing was deleted — picking a device with no bindings correctly narrows to an
+    // empty table, exactly as designed — but nothing said "you're filtered" or offered a way
+    // back, so a correct empty view read as data loss. This is that fix. ***
+    section('*** a filter must never read as data loss ***');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      const total = r.panel.bindings().length;
+      check('sanity: the person starts with the shipped defaults, not nothing', total > 0);
+
+      // Touch has zero bindings by default — the exact scenario Mike hit.
+      r.q('[data-device-chip="pointer:touch"]').click();
+      check('the empty view names the total sitting elsewhere, not just "nothing here"',
+        new RegExp(`${total} more binding|Showing only`).test(r.host.textContent),
+        r.host.textContent.slice(0, 400));
+      const showAll = r.q('[data-bindings] [data-device-chip=""]');
+      check('...and offers one click back to the full list, right where the empty message is',
+        !!showAll);
+      showAll.click();
+      check('*** clicking it proves nothing was actually lost — every binding is back ***',
+        r.panel.bindings().length === total && r.qa('[data-bindings] [data-bid]').length === total);
+
+      // The same banner belongs on a NON-empty filtered view too — a caregiver filtered to
+      // one device with one binding still needs to know the rest exist elsewhere. Mouse is
+      // a fixed chip (present with zero bindings), unlike a gamepad's chip which only exists
+      // once something is bound to it.
+      r.q('[data-device-chip="pointer:mouse"]').click();
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      r.press('pointer:mouse', 'button:7');
+      check('a non-empty filtered view ALSO shows the "more elsewhere" banner',
+        /more binding.*on other devices/.test(r.host.textContent), r.host.textContent.slice(0, 400));
+      r.panel.destroy();
+    }
+
     section('add a device — the honesty line updates live, and the id it creates is honest');
     {
       const r = rig();

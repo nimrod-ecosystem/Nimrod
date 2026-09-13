@@ -497,13 +497,28 @@ export function mountInputs(root, {
     const rows = selectedDevice
       ? record.bindings.filter((b) => b.device === selectedDevice)
       : record.bindings;
+
+    // *** A FILTER MUST NEVER LOOK LIKE DATA LOSS. *** Mike, 2026-09-13, minutes after this
+    // shipped: "selecting anything in the bindings section just deleted it and now the
+    // bindings section is empty." Confirmed nothing was deleted — clicking a device with no
+    // bindings on it correctly narrows to an empty table, exactly as designed — but nothing
+    // on screen said "you're filtered" or offered a way back, so a correct empty view read
+    // as catastrophe. This banner is the fix: visible whenever the filter is hiding
+    // anything, names how much, and the way back is the same "All devices" chip, one click.
+    const hidden = record.bindings.length - rows.length;
+    const filterBanner = selectedDevice && hidden > 0
+      ? `<p class="i-filter-banner">Showing only <b>${esc(deviceName(selectedDevice))}</b> —
+          ${hidden} more binding${hidden === 1 ? '' : 's'} on other devices, not deleted, just not shown here.
+          <button class="h-btn" data-device-chip="">Show all ${record.bindings.length}</button></p>`
+      : '';
+
     if (!rows.length) {
-      host.innerHTML = selectedDevice
+      host.innerHTML = filterBanner + (selectedDevice
         ? `<p class="h-none">Nothing bound to ${esc(deviceName(selectedDevice))} yet. Pick a control below and press it.</p>`
-        : '<p class="h-none">Nothing bound yet. Pick a control below and press it.</p>';
+        : '<p class="h-none">Nothing bound yet. Pick a control below and press it.</p>');
       return;
     }
-    host.innerHTML = `
+    host.innerHTML = filterBanner + `
       <table class="i-tab">
         <thead><tr>
           <th>Does what</th><th>Control</th><th>When</th>
