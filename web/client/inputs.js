@@ -311,6 +311,22 @@ export function mountInputs(root, {
     renderDevicePicker(); renderDevices(); renderBindings();
   }
 
+  // *** THE WAY BACK FROM A BAD STATE MUST NOT BE "PASTE THIS JSON I HAND-BUILT FOR YOU." ***
+  // Added 2026-09-13 after a real account's bindings were silently mangled by the
+  // capture/click bug (now fixed): every row's control had been overwritten to whatever a
+  // stray mouse click landed on, and the only way back in the moment was generating an
+  // import file by hand and walking someone through pasting it. That is a support call, not
+  // a feature. This is the same restore, as a button.
+  function resetToDefaults() {
+    if (!confirm('Replace every binding and device with the shipped defaults? This cannot be undone.')) return;
+    const fresh = normalizeRecord(null, DEFAULT_BINDINGS);
+    record.bindings = fresh.bindings;
+    record.devices = [];
+    selectedDevice = null;
+    push(); save();
+    renderDevicePicker(); renderDevices(); renderBindings();
+  }
+
   // ---- naming ------------------------------------------------------------------
 
   function deviceName(device) {
@@ -620,6 +636,14 @@ export function mountInputs(root, {
           <button class="h-btn h-primary" data-add>Press a control…</button>
           <span class="h-hint" data-addmsg></span>
         </div>
+        <!-- "RESET TO DEFAULTS" as a real button, not a paste-JSON workaround. Added
+             2026-09-13 after a real account's bindings were silently mangled by the
+             capture/click bug (now fixed) — the only way back was hand-building an import
+             file. That should never be the only way back from a bad state this panel itself
+             can cause. -->
+        <p class="i-reset-row"><button class="h-btn" data-reset-defaults>Reset to the shipped defaults…</button>
+          <span class="h-hint">Replaces every binding and device above with what a brand-new
+            setup gets. For undoing a setup that went wrong, not for everyday use.</span></p>
       </div>
 
       <div class="h-card">
@@ -858,6 +882,8 @@ export function mountInputs(root, {
       if (device) removeDevice(device);
       return;
     }
+
+    if (e.target.closest('[data-reset-defaults]')) { resetToDefaults(); return; }
 
     const addDevSave = e.target.closest('[data-adddev-save]');
     if (addDevSave) {

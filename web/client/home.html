@@ -291,6 +291,10 @@
   .i-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
   .i-add select{font:inherit;font-size:.9rem;padding:8px 10px;border:1px solid var(--border);
     border-radius:10px;background:var(--surface);color:var(--text)}
+  /* A recovery action, not an everyday one — quiet and separated from the main "add a
+     binding" row so it is never the thing a thumb lands on by accident. */
+  .i-reset-row{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .i-log{display:grid;gap:3px;max-height:230px;overflow:auto;font-size:.85rem;margin-top:6px}
   .i-log>div{padding:3px 8px;border-radius:6px;background:var(--surface-alt)}
   /* Output routing grid. Verbs down, channels across — the shape of someone's whole
