@@ -327,7 +327,11 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       // rather than by nesting one panel inside the other, so neither file has to know about
       // the other's internals and either can be mounted alone by a test.
       const { mountInputs } = await import('./inputs.js');
-      const i = mountInputs(host, { profiles, user, makeUserState, personId });
+      // `personName` added 2026-09-13 (Revision 9) — `personId` was already being passed and
+      // silently dropped, since bindings are per-person and nothing on the tab ever said
+      // whose. `mountInputs` re-mounts fresh on every person switch (this whole `mount`
+      // function does), so a name read once at mount time is never stale.
+      const i = mountInputs(host, { profiles, user, makeUserState, personId, personName });
       await i.refresh();
 
       // WHICH MICROPHONE, and what to fall back to. Above the marker panel because it needs no

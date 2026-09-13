@@ -609,6 +609,183 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.panel.destroy();
     }
 
+    // ================= device-first navigation (Revision 9) =================
+    section('device picker — chips choose which device Devices/Bindings show');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');   // a binding that lives ONLY on the gamepad
+
+      check('a chip exists for All devices plus every known device',
+        r.qa('[data-device-chip]').length >= 4,
+        r.qa('[data-device-chip]').map((c) => c.dataset.deviceChip).join(','));
+      check('All devices starts selected', r.q('[data-device-chip=""]').classList.contains('on'));
+      check('the flat table is what All devices shows', !r.q('.i-devcard'));
+
+      r.q(`[data-device-chip="${XAC}"]`).click();
+      check("picking a chip narrows Devices to that device's own card",
+        !!r.q(`.i-devcard[data-device="${XAC}"]`));
+      check('...and the chip itself now reads selected',
+        r.q(`[data-device-chip="${XAC}"]`).classList.contains('on'));
+      const rows = r.qa('[data-bindings] [data-bid]');
+      check("Bindings narrows to only that device's rows",
+        rows.length > 0 && rows.every((row) =>
+          r.panel.bindings().find((b) => b.id === row.dataset.bid).device === XAC),
+        JSON.stringify(r.panel.bindings().map((b) => b.device)));
+
+      r.q('[data-device-chip=""]').click();
+      check('All devices returns the full flat table', !r.q('.i-devcard'));
+      check('and Bindings shows every device again',
+        r.qa('[data-bindings] [data-bid]').length === r.panel.bindings().length);
+      r.panel.destroy();
+    }
+
+    section('add a device — the honesty line updates live, and the id it creates is honest');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      check('the add-device form starts closed', !r.q('[data-adddev-class]'));
+      r.q('[data-add-device-toggle]').click();
+      check('...and opens on click', !!r.q('[data-adddev-class]'));
+      check('defaults to the keyboard-class honesty line',
+        /keyboard/i.test(r.q('[data-adddev-honesty]').textContent));
+
+      const classSel = r.q('[data-adddev-class]');
+      const setClass = (v) => { classSel.value = v; classSel.dispatchEvent(new Event('change', { bubbles: true })); };
+
+      setClass('pointer');
+      check('switching class updates the honesty line live, naming the Mouse row',
+        /Mouse row/.test(r.q('[data-adddev-honesty]').textContent),
+        r.q('[data-adddev-honesty]').textContent);
+      setClass('touch');
+      check('and again for touch, naming the Touch row',
+        /touchscreen/i.test(r.q('[data-adddev-honesty]').textContent)
+        && /Touch row/.test(r.q('[data-adddev-honesty]').textContent),
+        r.q('[data-adddev-honesty]').textContent);
+
+      setClass('pointer');
+      r.q('[data-adddev-name]').value = '';
+      r.q('[data-adddev-save]').click();
+      check('an empty name creates nothing', !r.q('.i-devchips').textContent.includes('undefined'));
+
+      r.q('[data-adddev-name]').value = 'Tray switch';
+      r.q('[data-adddev-save]').click();
+      check('a new device row exists, named as typed',
+        r.q('.i-devcard input[data-df="label"]')?.value === 'Tray switch',
+        r.q('.i-devcard input[data-df="label"]')?.value);
+      const chip = r.qa('[data-device-chip]').find((c) => /Tray switch/.test(c.textContent));
+      check('...and it got its own chip, selected immediately', !!chip && chip.classList.contains('on'));
+      check('the generated id carries the CLASS prefix, not a guess at hardware',
+        chip.dataset.deviceChip.startsWith('pointer:tray-switch-'), chip.dataset.deviceChip);
+      check('the add form closes after a successful add',
+        !r.q('[data-adddev-class]'));
+      r.panel.destroy();
+    }
+
+    section('remove a device — asks first, deletes its bindings together with it');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      r.q(`[data-device-chip="${XAC}"]`).click();
+
+      const originalConfirm = window.confirm;
+      let confirmMsg = '';
+      window.confirm = (msg) => { confirmMsg = msg; return false; };
+      r.q('[data-remove-device]').click();
+      check('declining the confirm leaves the device and its binding untouched',
+        r.panel.bindings().some((b) => b.device === XAC));
+      check('the confirm names how many bindings would go with it',
+        /1 binding/.test(confirmMsg), confirmMsg);
+
+      window.confirm = () => true;
+      r.q('[data-remove-device]').click();
+      check('accepting removes the device AND its bindings together — not orphaned',
+        !r.panel.bindings().some((b) => b.device === XAC));
+      check('the view falls back to All devices rather than showing a ghost card for a device that is gone',
+        !r.q('.i-devcard'));
+      window.confirm = originalConfirm;
+      r.panel.destroy();
+    }
+    {
+      const r = rig();
+      await r.panel.refresh();
+      check('the three fixed device classes offer no Remove button',
+        !r.q('[data-device="keyboard"] [data-remove-device]')
+        && !r.q('[data-device="pointer:mouse"] [data-remove-device]')
+        && !r.q('[data-device="pointer:touch"] [data-remove-device]'));
+      r.panel.destroy();
+    }
+
+    // *** THE ACCESSIBILITY-CRITICAL CASE. *** A one-switch user's Next press must never
+    // land on a row the current device filter has hidden — the exact bug caught and fixed
+    // (visibleBindings()) before this shipped, described in inputs.js's own comment.
+    section('*** the highlight stays inside the FILTERED view, never the full list ***');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');                 // next, bound on the gamepad
+      r.q('[data-new-action]').value = verbTopic('prev');
+      r.q('[data-add]').click();
+      r.press('pointer:mouse', 'button:0');      // prev, bound on the mouse
+
+      r.q(`[data-device-chip="${XAC}"]`).click();
+      check('selecting a chip clears the old highlight — it belonged to a different row order',
+        r.panel.cursor() === -1);
+      r.press(XAC, 'button:0');
+      check("pressing Next lands on row 0 of the FILTERED (1-row) table", r.panel.cursor() === 0);
+      check('...and the DOM actually shows exactly one highlighted row',
+        r.qa('.i-tab tr.i-highlight').length === 1);
+      r.press(XAC, 'button:0');
+      check('a filtered table of one row wraps to itself, rather than drifting into the full list',
+        r.panel.cursor() === 0);
+
+      // Switch the filter to the OTHER device. The verb that moves the cursor still arrives
+      // from the gamepad (whatever is bound to Next), but the row it must land on now lives
+      // in a completely different, unrelated position in the full unfiltered array.
+      r.q('[data-device-chip="pointer:mouse"]').click();
+      check('switching filters clears the highlight again', r.panel.cursor() === -1);
+      r.press(XAC, 'button:0');
+      check('the highlight still lands inside THIS filter\'s own table, not the old one',
+        r.panel.cursor() === 0);
+      const hiRow = r.q('.i-tab tr.i-highlight');
+      check('*** and the highlighted DOM row is real — not a dead cursor pointing at a hidden row ***',
+        !!hiRow);
+      const mouseBinding = r.panel.bindings().find((b) => b.device === 'pointer:mouse' && b.actionId === verbTopic('prev'));
+      check('*** ...and it is genuinely the row belonging to the FILTERED device, not some other one ***',
+        hiRow?.dataset.bid === mouseBinding?.id, `${hiRow?.dataset.bid} vs ${mouseBinding?.id}`);
+
+      r.q('[data-device-chip=""]').click();
+      check('back on All devices, the highlight clears once more rather than keeping a filtered index',
+        r.panel.cursor() === -1);
+      r.panel.destroy();
+    }
+    {
+      // The repress (re-capture) path indexes visibleBindings() too — a click, not a switch
+      // press, but the same table and the same rule: the index must match what is ON SCREEN.
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      r.q('[data-new-action]').value = verbTopic('prev');
+      r.q('[data-add]').click();
+      r.press('pointer:mouse', 'button:0');
+
+      r.q('[data-device-chip="pointer:mouse"]').click();
+      const mouseBinding = r.panel.bindings().find((b) => b.device === 'pointer:mouse' && b.actionId === verbTopic('prev'));
+      r.q(`[data-bid="${mouseBinding.id}"] [data-repress]`).click();
+      check("re-pressing a row's control highlights that row at its FILTERED position, not its position in the full list",
+        r.panel.cursor() === 0, String(r.panel.cursor()));
+      r.panel.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

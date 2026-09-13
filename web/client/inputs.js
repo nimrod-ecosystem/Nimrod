@@ -11,12 +11,17 @@
 // this panel got shorter and much less clever: a flat list of nine, no grouping, nothing
 // to browse.
 //
-// BINDINGS ARE PER USER, NOT PER SCREEN. Which switch someone uses and how long they can
-// hold it is a fact about the PERSON. It does not change between their bedside screen and
-// their living-room screen, and making them re-enter it on each one is precisely the
-// per-device toil this project exists to avoid. Set it up once, ever. This only became
-// possible with verbs: a binding that said "photos/next" was inherently about a screen's
-// contents; one that says "next" is not. (Server side: /api/user-state.)
+// BINDINGS ARE PER PERSON, NOT PER SCREEN. *** CORRECTED 2026-09-13 — this used to say "per
+// USER," and that stopped being true the day people existed as their own scope; `home.js`
+// curries `makePersonState` with whichever person is selected in the people bar, and needed
+// no change here to become per-person. Which switch someone uses and how long they can hold
+// it is a fact about the PERSON. It does not change between their bedside screen and their
+// living-room screen, and making them re-enter it on each one is precisely the per-device
+// toil this project exists to avoid. Set it up once, ever. This only became possible with
+// verbs: a binding that said "photos/next" was inherently about a screen's contents; one that
+// says "next" is not. (Server side: the real path is per-person state; `/api/user-state` is
+// now a LEGACY ALIAS that resolves to the account's default person — see app.py's own
+// comment. There is currently no account-wide/shared layer at all — Revision 9, 2026-09-13.)
 //
 // THE SCREEN PICKER IS STILL HERE and means something different now - it chooses which
 // screen you are TESTING against, because focus moves among that screen's panels. The
@@ -97,6 +102,12 @@ export function suggestHold(heldMs) {
 
 export function mountInputs(root, {
   profiles, user = null, makeUserState = null, initialProfileId = null,
+  // *** "NOTHING ON THE DEVICES TAB SAYS WHOSE SETUP IS ON SCREEN." *** Mike, 2026-09-13
+  // (Revision 9), looking at the live tab. `personId` was already being passed in from
+  // `home.js` and silently dropped — nothing here destructured it. `personName` is the one
+  // this file actually needs to render; `personId` is kept too since a future caller may need
+  // it for something this pass does not.
+  personId = null, personName = '',
   // Seams: the test drives the whole panel with no hardware and no server.
   makeInput = null, makeGamepads = null, makeRouter = null,
   attachKeys = attachKeyboard, attachPtr = attachPointer,
@@ -121,6 +132,13 @@ export function mountInputs(root, {
   // which ROW in a list a one-switch user has walked to. Two senses that never met in one
   // file, right up until something started driving a real pointer. See docs/glossary.md.
   let highlight = -1;              // which binding row the VERBS are pointed at
+  // *** DEVICE-FIRST NAVIGATION, 2026-09-13 (Revision 9). *** Mike, looking at the live tab:
+  // "you need to be able to control/see how each device is set up... add remove devices."
+  // `null` is the "All devices" view — today's flat tables, unchanged, for anyone who prefers
+  // them. Picking a chip narrows Devices to that one device's own card and Bindings to that
+  // device's rows only, so "which device am I working on" has a literal answer on screen.
+  let selectedDevice = null;
+  let addingDevice = false;        // the "+ Add a device" form is open
   let binderOffs = [];
   let record = { v: RECORD_VERSION, gate: 'both', speak: false, bindings: [], devices: [] };
 
@@ -199,7 +217,86 @@ export function mountInputs(root, {
     add(KEYBOARD_DEVICE); add(POINTER_DEVICE); add(TOUCH_DEVICE);
     (pads?.list() || []).forEach((p) => add(p.device));
     record.bindings.forEach((b) => add(b.device));
+    (record.devices || []).forEach((d) => add(d.device));
     return [...set.keys()];
+  }
+
+  // ---- add / remove --------------------------------------------------------------
+  //
+  // *** "A DEVICE ROW CANNOT BE ADDED OR REMOVED." *** Mike, Revision 9. `knownDevices()`
+  // above used to derive its list ENTIRELY from what already exists elsewhere (a fixed
+  // constant, a plugged-in gamepad, an existing binding) — there was no way to create a row
+  // before anything pointed at it, which is the whole point of adding one. The one-line fix
+  // is the last clause just added above: a device that has been explicitly SAVED (via
+  // `addDevice` below, before it is ever bound) now gets a row too.
+
+  // The three permanent classes are never removable — they are not something somebody
+  // "added," they are the machine's own keyboard/mouse/touchscreen, and there is always
+  // exactly one row for each regardless of what is plugged in.
+  function removableDevice(device) {
+    return device !== KEYBOARD_DEVICE && device !== POINTER_DEVICE && device !== TOUCH_DEVICE;
+  }
+
+  function slugify(name) {
+    return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'device';
+  }
+
+  // Classes a person can actually pre-create. Gamepad is deliberately absent: its id comes
+  // from the hardware's own vendor/product string the first time it is pressed
+  // (`input_gamepad.js`), so there is nothing honest to create ahead of that — the add flow
+  // guides toward plugging it in instead, rather than inventing a placeholder id that could
+  // never actually match what shows up.
+  const ADDABLE_CLASSES = [
+    { id: 'keyboard', label: 'A switch that arrives as a keyboard key', prefix: 'keyboard' },
+    { id: 'pointer', label: 'A switch that arrives as a mouse click', prefix: 'pointer' },
+    { id: 'touch', label: 'A touchscreen', prefix: 'pointer:touch' },
+  ];
+
+  // *** THE HONESTY LINE BELONGS IN THE ADD FLOW, NOT A FOOTNOTE. *** Mike, Revision 9: the
+  // moment somebody adds a SECOND keyboard- or pointer-class device, say plainly that the
+  // browser cannot tell it apart from the first, right where they are about to be misled —
+  // not as a caveat they had to already know to go looking for. Keyboard/pointer/touch all
+  // qualify: the fixed permanent row for that class already exists, so anything added here is
+  // always at least the second of its kind. Confirmed on the input side 09-12 (`input.js`'s
+  // own `deviceClass` comment; `input_pointer.js`'s header) — this is that finding placed
+  // where a person is about to act on it, not just recorded in a commit.
+  function addDeviceHonesty(classId) {
+    if (classId === 'keyboard') {
+      return 'Browsers cannot tell two keyboards apart — this row lets you name and pre-tune '
+        + 'a second switch, but until a connector exists, pressing it will also fire whatever '
+        + 'is bound to the Keyboard row above.';
+    }
+    if (classId === 'pointer' || classId === 'touch') {
+      return 'Browsers cannot tell two ' + (classId === 'touch' ? 'touchscreens' : 'pointing devices')
+        + ' apart — this row lets you name and pre-tune a second one, but until a connector '
+        + 'exists, using it will also fire whatever is bound to the ' + (classId === 'touch' ? 'Touch' : 'Mouse')
+        + ' row above.';
+    }
+    return '';
+  }
+
+  function addDevice(classId, name) {
+    const cls = ADDABLE_CLASSES.find((c) => c.id === classId);
+    if (!cls || !name.trim()) return null;
+    const id = `${cls.prefix}:${slugify(name)}-${Date.now().toString(36).slice(-4)}`;
+    editDevice(id, { label: name.trim() });
+    return id;
+  }
+
+  function removeDevice(device) {
+    if (!removableDevice(device)) return;
+    const n = record.bindings.filter((b) => b.device === device).length;
+    const label = deviceRecord(device)?.label || deviceName(device);
+    if (!confirm(`Remove ${label} and its ${n} binding${n === 1 ? '' : 's'}?`)) return;
+    // *** DELETE WITH ITS BINDINGS, NOT ORPHANED. *** Mike, Revision 9, item 6: because
+    // `knownDevices()` also derives rows from bindings, dropping only the device record would
+    // bring the row straight back on the next render — and leave a control that still fires
+    // from a device the person thought they had removed.
+    record.devices = record.devices.filter((d) => d.device !== device);
+    record.bindings = record.bindings.filter((b) => b.device !== device);
+    if (selectedDevice === device) selectedDevice = null;
+    push(); save();
+    renderDevicePicker(); renderDevices(); renderBindings();
   }
 
   // ---- naming ------------------------------------------------------------------
@@ -280,6 +377,32 @@ export function mountInputs(root, {
   // that fixed. Set a switch's hold/debounce/lockout ONCE here and every binding on it that
   // has not overridden its own uses it, immediately, everywhere that switch is bound —
   // instead of a caregiver retyping the same number into every row that switch appears in.
+  // *** THE DEVICE PICKER — CHIPS AS THE WAY IN, PER MIKE'S RULING (Revision 9, item 3): ***
+  // "build 2 as the navigation INTO 3." One row of chips: All devices, then one per known
+  // device, then + Add a device. Picking one narrows both Devices and Bindings below to it.
+  function renderDevicePicker() {
+    const host = el('[data-device-picker]');
+    if (!host) return;
+    const known = knownDevices();
+    const chip = (id, label, on) =>
+      `<button class="h-chip${on ? ' on' : ''}" data-device-chip="${esc(id)}">${esc(label)}</button>`;
+    host.innerHTML = `
+      <div class="i-devchips">
+        ${chip('', 'All devices', selectedDevice === null)}
+        ${known.map((d) => chip(d, deviceRecord(d)?.label || deviceName(d), selectedDevice === d)).join('')}
+        <button class="h-chip i-add-device" data-add-device-toggle>+ Add a device</button>
+      </div>
+      ${addingDevice ? `
+      <div class="i-adddev">
+        <select data-adddev-class>${ADDABLE_CLASSES.map((c) =>
+          `<option value="${c.id}">${esc(c.label)}</option>`).join('')}</select>
+        <input type="text" data-adddev-name placeholder="What do you call it? e.g. Tray switch">
+        <button class="h-btn h-primary" data-adddev-save>Add</button>
+        <p class="h-hint" data-adddev-honesty>${esc(addDeviceHonesty(ADDABLE_CLASSES[0].id))}</p>
+      </div>` : ''}
+    `;
+  }
+
   function renderDevices() {
     const host = el('[data-devices]');
     if (!host) return;
@@ -289,6 +412,36 @@ export function mountInputs(root, {
         + 'button on it. Browsers hide a controller until it is used.</p>';
       return;
     }
+
+    // *** ONE DEVICE'S OWN CARD, not a row in somebody else's table. *** Mike, Revision 9,
+    // item 3: "selecting a device chip shows that device's own card: its label, its hold /
+    // debounce / lockout, its bindings, and Remove."
+    if (selectedDevice && known.includes(selectedDevice)) {
+      const device = selectedDevice;
+      const d = deviceRecord(device) || { label: '', holdMs: 0, debounceMs: 0, lockoutMs: 0 };
+      const numField = (f, title) => `<label>${title}<input type="number" data-df="${f}"
+        min="0" step="50" value="${d[f]}"></label>`;
+      host.innerHTML = `
+        <div class="i-devcard" data-device="${esc(device)}">
+          <div class="h-card-head">
+            <h3>${esc(deviceName(device))}</h3>
+            ${removableDevice(device)
+              ? '<button class="h-x" data-remove-device title="Remove this device">Remove</button>' : ''}
+          </div>
+          ${removableDevice(device) ? `<p class="h-hint">saved as <code>${esc(device)}</code></p>` : ''}
+          <label>Label<input type="text" data-df="label" placeholder="${esc(deviceName(device))}"
+            value="${esc(d.label)}"></label>
+          <div class="i-devnums">
+            ${numField('holdMs', 'Hold')}
+            ${numField('debounceMs', 'Debounce')}
+            ${numField('lockoutMs', 'Lockout')}
+          </div>
+        </div>`;
+      return;
+    }
+
+    // "ALL DEVICES" — today's flat table, unchanged, for anyone who prefers it (chat's
+    // suggestion, Revision 9 item 3: keep it reachable, not replaced).
     host.innerHTML = `
       <table class="i-tab">
         <thead><tr>
@@ -296,6 +449,7 @@ export function mountInputs(root, {
           <th title="Every binding on this device uses this hold time, unless the binding sets its own">Hold</th>
           <th title="Every binding on this device uses this debounce, unless the binding sets its own">Debounce</th>
           <th title="Every binding on this device uses this lockout, unless the binding sets its own">Lockout</th>
+          <th></th>
         </tr></thead>
         <tbody>${known.map((device) => {
           const d = deviceRecord(device) || { label: '', holdMs: 0, debounceMs: 0, lockoutMs: 0 };
@@ -303,12 +457,14 @@ export function mountInputs(root, {
           return `
           <tr data-device="${esc(device)}">
             <td>${esc(deviceName(device))}
-              <span class="h-hint">${device === KEYBOARD_DEVICE || device === POINTER_DEVICE ? '' : `saved as <code>${esc(device)}</code>`}</span></td>
+              <span class="h-hint">${device === KEYBOARD_DEVICE || device === POINTER_DEVICE || device === TOUCH_DEVICE ? '' : `saved as <code>${esc(device)}</code>`}</span></td>
             <td><input type="text" data-df="label" placeholder="${esc(deviceName(device))}"
               value="${esc(d.label)}"></td>
             <td>${numField('holdMs')}</td>
             <td>${numField('debounceMs')}</td>
             <td>${numField('lockoutMs')}</td>
+            <td>${removableDevice(device)
+              ? `<button class="h-x" data-remove-device title="Remove">×</button>` : ''}</td>
           </tr>`;
         }).join('')}</tbody>
       </table>`;
@@ -323,8 +479,16 @@ export function mountInputs(root, {
     renderExport();   // every bindings change is a devices/gate change candidate too
     const host = el('[data-bindings]');
     if (!host) return;
-    if (!record.bindings.length) {
-      host.innerHTML = '<p class="h-none">Nothing bound yet. Pick a control below and press it.</p>';
+    // *** DEVICE-FIRST: THE TABLE NARROWS TO WHAT'S SELECTED. *** A chip's whole job is to
+    // answer "which device am I working on" — a table still showing every OTHER device's
+    // bindings underneath it would answer that question and then immediately contradict it.
+    const rows = selectedDevice
+      ? record.bindings.filter((b) => b.device === selectedDevice)
+      : record.bindings;
+    if (!rows.length) {
+      host.innerHTML = selectedDevice
+        ? `<p class="h-none">Nothing bound to ${esc(deviceName(selectedDevice))} yet. Pick a control below and press it.</p>`
+        : '<p class="h-none">Nothing bound yet. Pick a control below and press it.</p>';
       return;
     }
     host.innerHTML = `
@@ -336,7 +500,7 @@ export function mountInputs(root, {
           <th title="After it fires, refuse a repeat for this long">Lockout</th>
           <th>Who</th><th></th>
         </tr></thead>
-        <tbody>${record.bindings.map((b, i) => {
+        <tbody>${rows.map((b, i) => {
           // BLANK MEANS "USES THE DEVICE'S OWN SETTING" — the placeholder shows what that
           // currently resolves to, so leaving a field blank is a visible choice, not a
           // mystery zero. Typing a number here overrides this one binding only; clearing the
@@ -364,7 +528,7 @@ export function mountInputs(root, {
         }).join('')}</tbody>
       </table>
       <p class="h-hint">A blank Hold/Debounce/Lockout box uses that switch's own setting — see
-        <b>Devices</b> below to set it once for every binding on that switch, instead of typing
+        <b>Devices</b> above to set it once for every binding on that switch, instead of typing
         it into each row.</p>`;
   }
 
@@ -382,6 +546,13 @@ export function mountInputs(root, {
 
   function body() {
     el('[data-body]').innerHTML = `
+      <!-- "SAY WHOSE IT IS." Mike, Revision 9, 2026-09-13: unconditional — build regardless
+           of how the rest of this tab's redesign is ruled on. Every device and binding below
+           is per PERSON, and until this line existed nothing on the page said which one. -->
+      <p class="i-whose">${personName
+        ? `Setting up for <b>${esc(personName)}</b>`
+        : 'Setting up for <b>no one in particular</b> — choose a person above to save this to them'}</p>
+
       <div class="h-card i-gate-pending">
         <div class="h-card-head"><h2>Who may act right now</h2></div>
         <!-- GREYED OUT, 2026-09-12 — Mike's own instruction, reading this tab: this is about
@@ -406,6 +577,7 @@ export function mountInputs(root, {
       <div class="h-card">
         <div class="h-card-head"><h2>Devices</h2><span class="h-hint">set a switch's timing once,
           for every binding on it</span></div>
+        <div data-device-picker></div>
         <div class="i-devs" data-devices></div>
       </div>
 
@@ -446,6 +618,7 @@ export function mountInputs(root, {
         <div class="i-log" data-log><span class="h-none">Press something.</span></div>
       </div>`;
     renderGate();
+    renderDevicePicker();
     renderDevices();
     renderBindings();
     renderScreens();
@@ -497,19 +670,30 @@ export function mountInputs(root, {
 
   // ---- driving the binder with the control being bound --------------------------
 
+  // *** THE SWITCH WALKS THE SAME ROWS THE TABLE ACTUALLY SHOWS. *** Introduced 2026-09-13
+  // alongside the device filter: `highlight` used to index `record.bindings` directly, which
+  // was always exactly what was on screen because nothing ever hid a row. Once a device chip
+  // can narrow the table, that stops being true — a one-switch user scanning past the end of
+  // a filtered list must never land on a row that isn't there, which is a dead cursor with no
+  // way to see why. Everything below walks THIS list, never the raw record.
+  function visibleBindings() {
+    return selectedDevice ? record.bindings.filter((b) => b.device === selectedDevice) : record.bindings;
+  }
+
   function moveHighlight(delta) {
-    const n = record.bindings.length;
+    const rows = visibleBindings();
+    const n = rows.length;
     if (!n) { highlight = -1; return; }
     // Wraps, because with one switch there is only one direction and a dead end at the
     // bottom of the list means reaching for a mouse.
     highlight = highlight < 0 ? (delta > 0 ? 0 : n - 1) : (highlight + delta + n) % n;
     renderBindings();
-    el(`[data-bid="${CSS.escape(record.bindings[highlight].id)}"]`)
+    el(`[data-bid="${CSS.escape(rows[highlight].id)}"]`)
       ?.scrollIntoView({ block: 'nearest' });
   }
 
   function selectHighlight() {
-    const b = record.bindings[highlight];
+    const b = visibleBindings()[highlight];
     if (!b) { moveHighlight(1); return; }
     // Re-press the highlighted row. Note what happens next and why it is right: capture
     // blocks every binding, so the very control that just triggered this is now the one
@@ -518,7 +702,10 @@ export function mountInputs(root, {
     // cancel it while capture owns the bus.
     capture(({ device, control, heldMs }) => {
       edit(b.id, { device, control });
-      renderBindings();
+      // The re-press may have landed on a device nothing has ever bound before — the chip
+      // row and the flat table both derive their list from record.bindings, so both need
+      // telling, not just the table this row lives in.
+      renderDevicePicker(); renderDevices(); renderBindings();
       confirmBound(b.id, device, control, heldMs);
     });
   }
@@ -606,6 +793,41 @@ export function mountInputs(root, {
     const foc = e.target.closest('[data-focus-id]');
     if (foc) { router?.setFocus(foc.dataset.focusId); renderFocus(); return; }
 
+    const devChip = e.target.closest('[data-device-chip]');
+    if (devChip) {
+      selectedDevice = devChip.dataset.deviceChip || null;   // '' -> null -> "All devices"
+      addingDevice = false;
+      highlight = -1;   // last position belonged to the old view's row order
+      renderDevicePicker(); renderDevices(); renderBindings();
+      return;
+    }
+
+    if (e.target.closest('[data-add-device-toggle]')) {
+      addingDevice = !addingDevice;
+      renderDevicePicker();
+      return;
+    }
+
+    const removeDev = e.target.closest('[data-remove-device]');
+    if (removeDev) {
+      const device = removeDev.closest('[data-device]')?.dataset.device;
+      if (device) removeDevice(device);
+      return;
+    }
+
+    const addDevSave = e.target.closest('[data-adddev-save]');
+    if (addDevSave) {
+      const cls = el('[data-adddev-class]')?.value;
+      const name = el('[data-adddev-name]')?.value || '';
+      const id = addDevice(cls, name);
+      if (id) {
+        selectedDevice = id;
+        addingDevice = false;
+        renderDevicePicker(); renderDevices(); renderBindings();
+      }
+      return;
+    }
+
     const gate = e.target.closest('[data-gate]');
     if (gate && gate.dataset.gate) {
       record.gate = gate.dataset.gate;
@@ -636,7 +858,8 @@ export function mountInputs(root, {
         record.bindings = next.bindings;
         record.devices = next.devices;
         record.gate = next.gate;
-        push(); save(); renderGate(); renderDevices(); renderBindings();
+        selectedDevice = null;   // whatever was picked may not exist in the imported setup
+        push(); save(); renderGate(); renderDevicePicker(); renderDevices(); renderBindings();
         if (ta) ta.value = '';
         if (msg) msg.textContent = `Imported ${next.bindings.length} binding${next.bindings.length === 1 ? '' : 's'}`
           + (next.devices.length ? ` and ${next.devices.length} device${next.devices.length === 1 ? '' : 's'}.` : '.');
@@ -649,17 +872,22 @@ export function mountInputs(root, {
     const del = e.target.closest('[data-del]');
     if (del) {
       record.bindings = record.bindings.filter((b) => b.id !== del.closest('[data-bid]').dataset.bid);
-      push(); save(); renderBindings();
+      push(); save();
+      // Deleting a binding can take a device's only mention with it — if that device has no
+      // saved settings of its own and isn't one of the three fixed classes, it drops out of
+      // knownDevices() entirely, and a filter pointed at it would otherwise show a ghost card.
+      if (selectedDevice && !knownDevices().includes(selectedDevice)) selectedDevice = null;
+      renderDevicePicker(); renderDevices(); renderBindings();
       return;
     }
 
     const repress = e.target.closest('[data-repress]');
     if (repress) {
       const bid = repress.closest('[data-bid]').dataset.bid;
-      highlight = record.bindings.findIndex((b) => b.id === bid);   // mouse and switch agree
+      highlight = visibleBindings().findIndex((b) => b.id === bid);   // mouse and switch agree
       capture(({ device, control, heldMs }) => {
         edit(bid, { device, control });
-        renderBindings();
+        renderDevicePicker(); renderDevices(); renderBindings();
         confirmBound(bid, device, control, heldMs);
       });
       return;
@@ -678,7 +906,11 @@ export function mountInputs(root, {
       capture(({ device, control, heldMs }) => {
         const id = `b${record.bindings.length + 1}-${device}-${control}`.replace(/[^a-zA-Z0-9:#+_-]/g, '_');
         record.bindings.push(normalizeBinding({ id, actionId, device, control }));
-        push(); save(); renderBindings();
+        push(); save();
+        // A press CAN be the first thing ever bound on a device nobody has touched before —
+        // the chip row and flat table both read record.bindings, so a device-only render
+        // would leave the newly-created row invisible until something unrelated refreshed it.
+        renderDevicePicker(); renderDevices(); renderBindings();
         confirmBound(id, device, control, heldMs);
       });
     }
@@ -688,6 +920,13 @@ export function mountInputs(root, {
     const sp = e.target.closest('[data-speak]');
     if (sp) { record.speak = sp.checked; save(); if (sp.checked) speakPress('Speaking is on'); return; }
 
+    const addClass = e.target.closest('[data-adddev-class]');
+    if (addClass) {
+      const hint = el('[data-adddev-honesty]');
+      if (hint) hint.textContent = addDeviceHonesty(addClass.value);
+      return;
+    }
+
     const devField = e.target.closest('[data-df]');
     if (devField) {
       const device = devField.closest('[data-device]').dataset.device;
@@ -696,6 +935,9 @@ export function mountInputs(root, {
       // here just means zero -- there is nothing left to fall back to.
       const value = devField.type === 'number' ? Math.max(0, Number(devField.value) || 0) : devField.value;
       editDevice(device, { [key]: value });
+      // A label edit changes the chip's own text, and any binding on this device shows its
+      // placeholders from the same record — both need telling, not just the bindings table.
+      renderDevicePicker();
       renderBindings();   // placeholders on any binding using this device just changed
       return;
     }
@@ -791,7 +1033,9 @@ export function mountInputs(root, {
       binderScope.subscribe('binder/back', () => clearHighlight()),
     ];
     pads = (makeGamepads || createGamepads)({
-      input, onConnect: renderDevices, onDisconnect: renderDevices,
+      input,
+      onConnect: () => { renderDevicePicker(); renderDevices(); },
+      onDisconnect: () => { renderDevicePicker(); renderDevices(); },
     });
     pads.start();
     detach = [attachKeys(input, {}), attachPtr(input, { target: root })];
