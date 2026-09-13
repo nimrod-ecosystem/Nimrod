@@ -139,6 +139,18 @@ export function mountInputs(root, {
   // device's rows only, so "which device am I working on" has a literal answer on screen.
   let selectedDevice = null;
   let addingDevice = false;        // the "+ Add a device" form is open
+  // *** A MOUSE/TOUCH CAPTURE'S RESOLUTION AND A NATIVE CLICK ARE THE SAME PHYSICAL
+  // GESTURE, AND THE BROWSER FIRES BOTH. *** Found 2026-09-13, Mike: "every time I click
+  // anywhere it deletes a row." A press-release with a mouse or a finger ALSO completes as
+  // an ordinary `click` on whatever element the gesture physically landed on, a beat after
+  // `up()` resolves the capture synchronously (input.js's `up()`). Before this flag, that
+  // trailing click ran through the same delegated handler below UNGUARDED, so "press a
+  // control" could double as "delete that row" or "remove that device" purely because the
+  // capturing click happened to land on one. ONLY pointer/touch: a gamepad button or a
+  // keyboard key generates no such trailing click of its own, and flagging those too was
+  // caught, before shipping, swallowing the next deliberate mouse click a person makes
+  // afterward (e.g. accepting the "Require 200ms" offer). Consumed by the very next click.
+  let suppressNextClick = false;
   let binderOffs = [];
   let record = { v: RECORD_VERSION, gate: 'both', speak: false, bindings: [], devices: [] };
 
@@ -735,7 +747,16 @@ export function mountInputs(root, {
     say('press the control now…');
     input.beginCapture({
       onCandidate: ({ device, control }) => say(`${deviceName(device)}: ${controlName(device, control)} — now let go`),
-      onDone: ({ device, control, heldMs }) => { onPicked({ device, control, heldMs }); },
+      onDone: ({ device, control, heldMs }) => {
+        // ONLY pointer/touch: a mouse or finger press-release is the one gesture the
+        // browser ALWAYS also dispatches as a native `click` on whatever it landed on,
+        // a beat after this handler runs. A gamepad button or a keyboard key generates
+        // no such event on its own — flagging it here would swallow the very next
+        // deliberate click a person makes with their actual mouse (e.g. "Require Xms"),
+        // which is a real regression this was caught doing before shipping.
+        if (device === POINTER_DEVICE || device === TOUCH_DEVICE) suppressNextClick = true;
+        onPicked({ device, control, heldMs });
+      },
       onTimeout: () => say('nothing pressed — try again'),
     });
   }
@@ -791,6 +812,10 @@ export function mountInputs(root, {
   }
 
   on('click', (e) => {
+    // The click trailing a just-resolved capture belongs to the physical press that
+    // completed it, not to whatever it happened to land on. See the flag's own comment.
+    if (suppressNextClick) { suppressNextClick = false; return; }
+
     const who = e.target.closest('[data-who-id]');
     if (who) { select(who.dataset.whoId); return; }
 
