@@ -907,6 +907,53 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.panel.destroy();
     }
 
+    // *** THE WAY BACK FROM A BAD STATE MUST NOT BE "PASTE THIS JSON I HAND-BUILT FOR
+    // YOU." *** A real account's bindings were mangled by the capture/click bug above before
+    // it was fixed — the only recovery in the moment was generating an import file by hand.
+    section('*** Reset to the shipped defaults — a real recovery button, not a support call ***');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      // Wreck it the way the real bug did: rebind a few rows to the same control (a
+      // trailing click landing on "Mouse: Left click" over and over), plus an extra device
+      // that should not survive a reset either.
+      const bids = r.panel.bindings().slice(0, 3).map((b) => b.id);
+      for (const bid of bids) {
+        r.q(`[data-bid="${bid}"] [data-repress]`).click();
+        r.press('pointer:mouse', 'button:0');
+      }
+      r.q('[data-add-device-toggle]').click();
+      r.q('[data-adddev-name]').value = 'Tray switch';
+      r.q('[data-adddev-save]').click();
+      const wrecked = () => bids.every((bid) => r.panel.bindings().find((b) => b.id === bid).device === 'pointer:mouse');
+      check('sanity: the setup is genuinely wrecked first',
+        wrecked() && r.qa('[data-device-chip]').some((c) => /Tray switch/.test(c.textContent)));
+
+      const originalConfirm = window.confirm;
+      let asked = '';
+      window.confirm = (msg) => { asked = msg; return false; };
+      r.q('[data-reset-defaults]').click();
+      check('declining the confirm changes nothing', wrecked());
+      check('the confirm says this cannot be undone', /cannot be undone/i.test(asked), asked);
+
+      window.confirm = () => true;
+      r.q('[data-reset-defaults]').click();
+      window.confirm = originalConfirm;
+      check('*** accepting restores the exact shipped defaults — distinct keyboard controls, not one mangled row repeated ***',
+        r.panel.bindings().length === DEFAULT_BINDINGS.length
+        && r.panel.bindings().every((b) => b.device === 'keyboard')
+        && new Set(r.panel.bindings().map((b) => b.control)).size === r.panel.bindings().length,
+        JSON.stringify(r.panel.bindings().map((b) => b.control)));
+      check('...and the bogus device is gone too, not left pointing at a wiped-out binding',
+        !r.qa('[data-device-chip]').some((c) => /Tray switch/.test(c.textContent)));
+      check('the view falls back to All devices, not a filter on a device that no longer exists',
+        !r.q('.i-devcard'));
+      r.saveClock.advance(400);
+      check('...and it actually saved', r.saved()?.bindings?.length === DEFAULT_BINDINGS.length,
+        JSON.stringify(r.saved()));
+      r.panel.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
