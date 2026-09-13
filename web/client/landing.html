@@ -166,10 +166,9 @@
     .navlinks a{white-space:nowrap}
     /* `nav .wrap` is a fixed 64px tall, so nothing here may wrap — and squeezed, the two
        buttons broke onto three lines each and spilled straight out of the bar. So the row is
-       spent deliberately: the badge is decoration rather than a way to anywhere, and "Try it
-       now" is a duplicate of the `Try it` link beside it AND of the full-width button two
-       hundred pixels below in the hero. `Sign in` stays because nothing else on the page
-       reaches it. */
+       spent deliberately: the badge is decoration rather than a way to anywhere, and "Try the
+       full site" is a duplicate of the hero's own full-width button of the same name two
+       hundred pixels below. `Sign in` stays because nothing else on the page reaches it. */
     .freetag{display:none}
     nav .right{flex:0 0 auto}
     nav .right .btn{white-space:nowrap}
@@ -320,7 +319,7 @@
          wraps to two lines on a phone pushes the content off the first screen. -->
     <div class="navlinks">
       <a href="#intention">What it’s for</a>
-      <a href="#demo">Try it</a>
+      <a href="#demo">Quick sample</a>
       <!-- B4: "I don't know where the modules tab is." /modules.html existed and NOTHING
            linked to it from here — it was reachable only from the wallpapers page. It now
            also lets you mount each module and actually try it, which is the half a page
@@ -332,7 +331,14 @@
     </div>
     <div class="right">
       <a href="/auth/login" class="btn outline">Sign in</a>
-      <a href="#demo" class="btn primary">Try it now</a>
+      <!-- *** THE FULL SITE, NOT JUST THE EMBEDDED SAMPLE. *** Mike, 2026-09-13: a real
+           "browse the whole site signed out" link existed here before commit bab35c3
+           (2026-09-01) added the embedded kiosk sample and this nav button was pointed at
+           it instead — "There definitely was a button up there that took you to the
+           homepage signed out... I used it multiple times." Restored, pointed at the
+           current equivalent: /home.html works with no account today (local-device
+           storage), so this is not a new capability, only a way back to it. -->
+      <a href="/home.html" class="btn primary">Try the full site</a>
     </div>
   </div>
 </nav>
@@ -348,7 +354,17 @@
       communicate, advocate, and stay close. Private, modular, and able to run on equipment you
       probably already own.</p>
     <div class="cta">
-      <a href="#demo" class="btn ondark">Try it now — no account, nothing to install</a>
+      <!-- TWO DIFFERENT THINGS, NAMED AS TWO DIFFERENT THINGS. Mike, 2026-09-13, after
+           finding no way back to the real site from here: "There should probably be a
+           button for each, but be clear that the kiosk is just a quick sample and the
+           other one is the full site." The embedded #demo section runs the SEEDED sample
+           account's screen, read-only in spirit even though it's a real kiosk — this is the
+           one that used to be unlabelled "Try it now". /home.html is the actual product:
+           your own dashboards, your own devices setup, saved to this browser with no
+           account. Primary color moved to the full site, since that is the one Mike wants
+           people actually using. -->
+      <a href="/home.html" class="btn ondark">Try the full site — no account needed</a>
+      <a href="#demo" class="btn ondark ghost">See a quick sample</a>
       <a href="/auth/login" class="btn ondark ghost">Get started — it’s free</a>
       <!-- THE TOUR IS OFFERED, NEVER SPRUNG. It does not start on page load: it would be the
            thing everybody has learned to close without reading, and because it follows you
@@ -358,10 +374,15 @@
       <a href="?tour=1" class="btn ondark ghost" data-tour-start>Take the guided tour</a>
     </div>
     <!-- 0.3 — both CTAs used to drop straight into Google OAuth with no warning. One plain
-         sentence, not a modal: says what "Get started" does before it does it. -->
-    <p style="margin:14px 0 0;font-size:.86rem;color:#c7d3c4;max-width:56ch">“Get started” signs
-      you in with Google, just to save your setup to an account — no password to create, and
-      “Try it now” needs no account at all.</p>
+         sentence, not a modal: says what "Get started" does before it does it. Updated
+         2026-09-13 for the fourth button: says plainly which of the first two is the real
+         site and which is a sample, since that distinction is the thing Mike's report says
+         was not clear before. -->
+    <p style="margin:14px 0 0;font-size:.86rem;color:#c7d3c4;max-width:56ch">“Try the full
+      site” opens the real thing — your own dashboards and setup, saved to this browser, no
+      account. “See a quick sample” is a quick look at one seeded screen, nothing saved.
+      “Get started” signs you in with Google, just to save your setup to an account across
+      devices — no password to create.</p>
     <div class="pills">
       <span class="pill"><b>Free for everyone</b></span>
       <span class="pill"><b>Private</b> &nbsp;nothing personal leaves your device</span>
