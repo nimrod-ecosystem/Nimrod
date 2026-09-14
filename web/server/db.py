@@ -29,6 +29,7 @@ from __future__ import annotations
 import contextlib
 import hmac
 import json
+import logging
 import secrets
 import sqlite3
 import threading
@@ -38,6 +39,8 @@ import uuid
 import grants
 import links
 import provenance
+
+log = logging.getLogger("nimrod")
 from datetime import datetime, timedelta, timezone
 
 
@@ -1604,8 +1607,41 @@ class PostgresStore(_Store):
             check=ConnectionPool.check_connection,
             max_idle=120.0,
         )
-        self._pool.wait()
-        self._migrate()
+        # *** A SLOW OR UNREACHABLE DATABASE AT BOOT MUST NOT TAKE DOWN THE WHOLE SITE. ***
+        # Found 2026-09-14: this raised `PoolTimeout` on every restart for two hours
+        # straight (Render's Events log: "Instance failed... exited with status 1", every
+        # ~6 minutes) because Neon was not answering within 30s. Since this constructor runs
+        # at MODULE IMPORT TIME (`app.py`'s `store = PostgresStore(...)`), that exception
+        # crashed the import, which meant uvicorn never started serving ANYTHING -- not just
+        # the DB-backed routes, but landing.html, modules.html, the anonymous local kiosk,
+        # every static file -- none of which touch this store at all. Render's supervisor
+        # then restarted the process into the identical failure, on a loop, for two hours.
+        #
+        # `.wait()` was only ever a nicety: `ConnectionPool` opens connections in a
+        # background thread regardless of whether anything calls `.wait()`, so skipping it
+        # (or having it time out) does not stop the pool from working -- a later checkout
+        # via `self._tx()` simply waits for a connection itself, or raises for THAT ONE
+        # REQUEST, which FastAPI turns into a 500 without taking the process down. So a slow
+        # or currently-unreachable database now costs one clear log line at boot instead of
+        # the whole product.
+        #
+        # KNOWN GAP, not silently papered over: if `_migrate()` below also fails because the
+        # database was unreachable, migrations for this deploy will not automatically retry
+        # -- they only run here, at construction. A deploy that both needs a new migration
+        # AND boots while the database is unreachable would need a manual restart once the
+        # database is confirmed healthy. Written down rather than solved here because the
+        # fix that matters right now is "the site stays up," not "migrations self-heal."
+        try:
+            self._pool.wait(timeout=30.0)
+        except Exception as err:
+            log.error("Postgres pool not ready at boot (%s) -- serving anyway; "
+                      "it keeps trying to connect in the background", err)
+        try:
+            self._migrate()
+        except Exception as err:
+            log.error("Migration did not run at boot (%s) -- it will NOT be retried "
+                      "automatically; restart the service once the database is reachable "
+                      "if this deploy added one", err)
 
     def _table_names(self) -> list[str]:
         with self._tx() as cur:
