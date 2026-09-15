@@ -25,6 +25,7 @@
 import { createBus } from './bus.js';
 import { createState } from './state.js';
 import { createEvents } from './events.js';
+import { createPush } from './push.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule } from './module.js';
 import { createOutputBus } from './output.js';
@@ -119,6 +120,14 @@ export async function mountKiosk(root, {
   // come back to, the cheapest possible outcome is to leave before mounting a whole kiosk.
   let restart = readConfig(user, storage);
   profiles = profiles || createProfilesClient({ user });
+  // ONE shared push connection for every events handle this kiosk opens, not one per
+  // handle — see push.js's own header for why. Only on the real server-backed path:
+  // `makeEvents` injected means signed-out/offline/test, with no server to hold a
+  // stream open to in the first place (same reason that path skips `createProfilesClient`
+  // above). Every `createEvents()` call below still works with no `push` at all — it is
+  // an accelerant for the existing poll-with-backoff, never the only path to a correct
+  // screen (push.js's "fails quiet" header).
+  const push = makeEvents ? null : createPush({ user });
 
   root.innerHTML = `
     <div class="kiosk">
@@ -352,6 +361,11 @@ export async function mountKiosk(root, {
       bus,
       channels: defaultChannels({
         audio,
+        // NOT wired to `push` — this hits the legacy /api/user-events alias, whose POST
+        // handler (append_user_event) calls store.append_event directly and never reaches
+        // the code that publishes (see web/server/push.py). A push subscription here would
+        // just never fire, silently. Revisit once that alias is retired in favor of the
+        // per-profile events endpoint, which does publish.
         events: createEvents({ url: `/api/user-events/${REMOTE_STREAM}`, user }),
       }),
     });
@@ -367,7 +381,7 @@ export async function mountKiosk(root, {
     : createState({ url: profiles.stateURL(profileId, key), user, cacheKey: ck(key), ...opts }));
   const eventsFor = (key, opts = {}) => (makeEvents
     ? makeEvents(key, opts, profileId)
-    : createEvents({ url: profiles.eventsURL(profileId, key), user, ...opts }));
+    : createEvents({ url: profiles.eventsURL(profileId, key), user, push, ...opts }));
 
   const childCtx = (mod) => ({
     bus, user, profileId,
@@ -2112,6 +2126,7 @@ export async function mountKiosk(root, {
       try { markerTracker?.destroy(); } catch { /* already gone */ }
       try { micOwner.destroy(); } catch { /* already gone */ }
       try { markerState?.destroy?.(); } catch { /* already gone */ }
+      try { push?.destroy(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
     },
