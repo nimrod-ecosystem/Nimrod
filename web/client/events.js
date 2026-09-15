@@ -7,12 +7,18 @@
 // trusted for the record.
 
 import { authHeaders, httpError } from './auth.js';
+import { nextPollDelay } from './poll_backoff.js';
 
 // `limit` (optional) caps how many of the most-recent events the server returns
 // (the API's own ?limit param; server default 50). A per-instance log is happy with
 // the default; a SHARED ledger stream (see points.js) wants a bigger window so its
 // derived totals cover more history.
-export function createEvents({ url, user, pollMs = 1500, limit = null }) {
+export function createEvents({ url, user, pollMs = 1500, limit = null,
+                                // See state.js's identical option and poll_backoff.js for
+                                // why: a ceiling on how slow polling gets during a
+                                // sustained failure, not a claim this exact number is the
+                                // only right one.
+                                pollBackoffMaxMs = 60 * 1000 }) {
   const listURL = limit ? `${url}${url.includes('?') ? '&' : '?'}limit=${limit}` : url;
   let cache = { events: [], total: 0 };
   let loaded = false;
@@ -100,9 +106,38 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
     return true;
   }
 
+  // *** BACKS OFF ON FAILURE, RESETS ON SUCCESS. *** Found 2026-09-15, same root cause and
+  // fix as state.js's own polling loop — see poll_backoff.js for the reasoning and the
+  // math. A bare `setInterval` here kept every open kiosk polling every `pollMs` (default
+  // 1.5s) through an hours-long database outage, forever, since a kiosk is designed to run
+  // unattended for as long as the screen is on. `refresh()`'s own contract (never throws,
+  // swallows a bad response) stays untouched for its other callers (`load`, `attest`,
+  // `append`'s fallback) — this tracks success/failure itself via `res.ok` rather than
+  // changing what `refresh()` reports to everyone else.
+  let pollFailures = 0;
+  // See state.js's identical flag for why this cannot just be "is `pollTimer` set" — a
+  // tick already in flight when `destroy()` runs holds no live timer to cancel, and would
+  // reschedule itself right back afterward without this.
+  let pollStopped = false;
   function startPolling() {
     if (pollTimer) return;
-    pollTimer = setInterval(() => { refresh().catch(() => {}); }, pollMs);
+    pollStopped = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(listURL, { headers: authHeaders(user) });
+        if (!res.ok) {
+          pollFailures++;
+        } else {
+          pollFailures = 0;
+          cache = await res.json();
+          loaded = true;
+          notify();
+        }
+      } catch { pollFailures++; }
+      if (pollStopped) return;
+      pollTimer = setTimeout(tick, nextPollDelay(pollMs, pollFailures, pollBackoffMaxMs));
+    };
+    pollTimer = setTimeout(tick, pollMs);
   }
 
   function subscribe(fn) {
@@ -112,7 +147,8 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
   }
 
   function destroy() {
-    clearInterval(pollTimer); pollTimer = null;
+    pollStopped = true;                          // stops a tick already in flight from rescheduling
+    clearTimeout(pollTimer); pollTimer = null;   // a setTimeout chain now, not an interval
   }
 
   return { load: refresh, append, attest, get: () => cache, subscribe, startPolling, destroy };
