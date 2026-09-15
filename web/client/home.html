@@ -370,7 +370,7 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createBus } from './bus.js';
 import { createLocalBackend, seedStarterScreen } from './local_store.js';
-import { authHeaders } from './auth.js';
+import { authHeaders, isAuthError } from './auth.js';
 import { listManifests } from './module.js';
 import { mountHome } from './home.js';
 
@@ -524,8 +524,24 @@ function localBanner() {
       mountTour(document.body, { steps: STEPS, path: '/home.html' });
     }).catch((e) => console.warn('tour', e));
   } catch (e) {
-    root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
-      'Signed in, but your screens could not be loaded. Reload to try again.</p>';
+    // *** "RELOAD TO TRY AGAIN" WAS A DEAD END FOR A SESSION THAT STOPPED VALIDATING. ***
+    // Found 2026-09-15: a real account's session started failing every API call with 401
+    // partway through use, and this page had no way to tell "your session died" apart from
+    // any other mount failure — it said "reload," which resends the exact same broken
+    // cookie and can never work, and the sign-out link lives in the sidebar THIS catch
+    // block exists because that sidebar failed to render. The only way out was typing
+    // `/auth/logout` into the address bar by hand, which nobody would know to do. See
+    // auth.js's `httpError`/`isAuthError` for how a fetch failure now carries its status
+    // instead of only saying so in a message string.
+    if (isAuthError(e)) {
+      root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
+        'Your sign-in has stopped working. <a href="/auth/logout">Sign in again</a> to keep going ' +
+        '— nothing here was lost, this page just could not prove it was still you.</p>';
+    } else {
+      root.innerHTML = '<p class="h-loading" style="max-width:880px;margin:40px auto">' +
+        'Your screens could not be loaded. <a href="javascript:location.reload()">Reload</a> to try ' +
+        'again, or <a href="/auth/logout">sign in again</a> if reloading keeps failing.</p>';
+    }
     console.error('home mount failed', e);
   }
 })();

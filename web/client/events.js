@@ -6,7 +6,7 @@
 // Server assigns the id and timestamp on append — the client clock is never
 // trusted for the record.
 
-import { authHeaders } from './auth.js';
+import { authHeaders, httpError } from './auth.js';
 
 // `limit` (optional) caps how many of the most-recent events the server returns
 // (the API's own ?limit param; server default 50). A per-instance log is happy with
@@ -67,7 +67,7 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
         ...(meta?.producerVersion ? { producer_version: meta.producerVersion } : {}),
       }),
     });
-    if (!res.ok) throw new Error(`POST ${url} -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `POST ${url} -> ${res.status}`);
     const row = await res.json().catch(() => null);
     if (!row || row.id == null) {
       // An older server that answers without the row. Fall back to what this used to do
@@ -95,7 +95,7 @@ export function createEvents({ url, user, pollMs = 1500, limit = null }) {
       headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
       body: JSON.stringify({ note }),
     });
-    if (!res.ok) throw new Error(`attest ${eventId} -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `attest ${eventId} -> ${res.status}`);
     await refresh();
     return true;
   }

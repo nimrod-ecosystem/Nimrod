@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>auth.js — the client's credential, and what a failed fetch actually means</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>auth.js</h1>
+<p>Found 2026-09-15: a real account's session stopped validating server-side mid-use, and
+<code>home.html</code> had no way to tell "your session is gone" apart from any other failure —
+every failed fetch across the client threw a plain <code>Error</code> with the HTTP status baked
+into the MESSAGE TEXT only ("... -&gt; 401"), nothing a catch block could check without parsing a
+string. This suite covers <code>httpError</code>/<code>isAuthError</code>, the fix: a real
+<code>.status</code> property, and the question a catch block actually wants answered.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { getDeviceKey, setDeviceKey, authHeaders, httpError, isAuthError } from '../auth.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const fakeRes = (status, url = 'https://example/api/x') => ({ status, url, ok: status >= 200 && status < 300 });
+
+(async () => {
+try {
+  setDeviceKey('');
+
+  // =====================================================================================
+  section('the device key + header helpers — unchanged, checked for a baseline');
+  {
+    check('no key stored -> no device-key header', Object.keys(authHeaders(null)).length === 0);
+    check('a dev user with no key -> X-Dev-User', authHeaders('mike')['X-Dev-User'] === 'mike');
+    setDeviceKey('secret123');
+    check('a stored key wins over the dev-user override', authHeaders('mike')['X-Device-Key'] === 'secret123');
+    check('...and X-Dev-User is not also sent', !('X-Dev-User' in authHeaders('mike')));
+    setDeviceKey('');
+    check('clearing the key removes it', getDeviceKey() === '');
+  }
+
+  // =====================================================================================
+  section('*** httpError — the status becomes a real property, not just message text ***');
+  {
+    const err = httpError(fakeRes(401), 'GET /api/profiles -> 401');
+    check('it is a real Error — everything that already catches Error still works',
+      err instanceof Error);
+    check('the message is exactly what the caller passed — nothing rewritten',
+      err.message === 'GET /api/profiles -> 401');
+    check('*** .status carries the real HTTP status, readable without parsing the message ***',
+      err.status === 401, String(err.status));
+  }
+  {
+    const err = httpError(fakeRes(500), 'PUT /api/state/x -> 500');
+    check('a different status carries through just as directly', err.status === 500);
+  }
+
+  // =====================================================================================
+  section('*** isAuthError — the question a catch block actually wants answered ***');
+  {
+    check('401 (not authenticated at all) is an auth error',
+      isAuthError(httpError(fakeRes(401), 'x')));
+    check('403 (authenticated, but refused) is ALSO an auth error — same dead end for the user',
+      isAuthError(httpError(fakeRes(403), 'x')));
+    check('404 is not — retrying or signing in again fixes nothing about a missing resource',
+      !isAuthError(httpError(fakeRes(404), 'x')));
+    check('500 is not — a server error is not "your session is gone"',
+      !isAuthError(httpError(fakeRes(500), 'x')));
+    check('409 (optimistic-concurrency conflict, state.js) is not an auth error either',
+      !isAuthError(httpError(fakeRes(409), 'x')));
+  }
+  {
+    // *** THE ACTUAL FAILURE MODE, REPRODUCED. *** A plain `new Error(...)` from BEFORE this
+    // fix, or from a call site this pass did not touch, has no `.status` at all — the exact
+    // shape that left home.html unable to tell an auth failure from anything else.
+    check('a plain Error with no .status is safely NOT an auth error — no throwing, no false positive',
+      !isAuthError(new Error('network blip')));
+    check('null/undefined — the shape of an unrelated non-fetch failure — is also safely not one',
+      !isAuthError(null) && !isAuthError(undefined));
+  }
+
+  section('*** every production call site this pass touched now carries .status ***');
+  {
+    // Not a call-by-call audit here (each file's own suite already exercises its happy path) —
+    // this just proves the shared helper both sides actually use behaves identically for the
+    // two statuses home.html's new catch block distinguishes on.
+    const authFail = httpError(fakeRes(401), 'GET /api/profiles/p1/state/settings -> 401');
+    const otherFail = httpError(fakeRes(502), 'GET /api/profiles/p1/state/settings -> 502');
+    check('a 401 from a real-shaped profile/state URL is caught as an auth error',
+      isAuthError(authFail));
+    check('a 502 from the identical URL shape is NOT — it gets the generic "could not load" path',
+      !isAuthError(otherFail));
+  }
+
+  setDeviceKey('');
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+  setDeviceKey('');
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
