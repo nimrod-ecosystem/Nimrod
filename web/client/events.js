@@ -18,11 +18,22 @@ export function createEvents({ url, user, pollMs = 1500, limit = null,
                                 // why: a ceiling on how slow polling gets during a
                                 // sustained failure, not a claim this exact number is the
                                 // only right one.
-                                pollBackoffMaxMs = 60 * 1000 }) {
+                                pollBackoffMaxMs = 60 * 1000,
+                                // Optional push.js handle (see push.js). When given and
+                                // connected, this handle subscribes to its OWN `url` for an
+                                // instant refresh the moment the server says it changed, and
+                                // the timer-based poll below backs off to the same
+                                // `pollBackoffMaxMs` cadence used for sustained failure — not
+                                // OFF, because push is an accelerant with no delivery
+                                // guarantee (see push.js's "fails quiet" header), never the
+                                // only path to a correct screen. Omit it and this behaves
+                                // exactly as it always has.
+                                push = null }) {
   const listURL = limit ? `${url}${url.includes('?') ? '&' : '?'}limit=${limit}` : url;
   let cache = { events: [], total: 0 };
   let loaded = false;
   let pollTimer = null;
+  let unsubscribePush = null;
   const subscribers = new Set();
 
   function notify() {
@@ -119,25 +130,41 @@ export function createEvents({ url, user, pollMs = 1500, limit = null,
   // tick already in flight when `destroy()` runs holds no live timer to cancel, and would
   // reschedule itself right back afterward without this.
   let pollStopped = false;
+
+  // Shared by the timer tick AND a push notification, so "a push arrived" does exactly what
+  // "a poll tick succeeded" would have — same fetch, same failure counting, same cache
+  // update. Returns nothing; callers that need the schedule react separately.
+  async function fetchOnce() {
+    try {
+      const res = await fetch(listURL, { headers: authHeaders(user) });
+      if (!res.ok) {
+        pollFailures++;
+      } else {
+        pollFailures = 0;
+        cache = await res.json();
+        loaded = true;
+        notify();
+      }
+    } catch { pollFailures++; }
+  }
+
   function startPolling() {
     if (pollTimer) return;
     pollStopped = false;
     const tick = async () => {
-      try {
-        const res = await fetch(listURL, { headers: authHeaders(user) });
-        if (!res.ok) {
-          pollFailures++;
-        } else {
-          pollFailures = 0;
-          cache = await res.json();
-          loaded = true;
-          notify();
-        }
-      } catch { pollFailures++; }
+      await fetchOnce();
       if (pollStopped) return;
-      pollTimer = setTimeout(tick, nextPollDelay(pollMs, pollFailures, pollBackoffMaxMs));
+      // Push connected: this fetch is a slow safety net, not the primary signal, so it
+      // idles at `pollBackoffMaxMs` regardless of `pollFailures` — a push failure mode
+      // (dropped message, hub restart) is exactly the sustained-failure case the max
+      // already covers, not a reason to speed back up on its own.
+      const delay = (push && push.isConnected())
+        ? pollBackoffMaxMs
+        : nextPollDelay(pollMs, pollFailures, pollBackoffMaxMs);
+      pollTimer = setTimeout(tick, delay);
     };
     pollTimer = setTimeout(tick, pollMs);
+    if (push) unsubscribePush = push.subscribe(url, fetchOnce);
   }
 
   function subscribe(fn) {
@@ -149,6 +176,7 @@ export function createEvents({ url, user, pollMs = 1500, limit = null,
   function destroy() {
     pollStopped = true;                          // stops a tick already in flight from rescheduling
     clearTimeout(pollTimer); pollTimer = null;   // a setTimeout chain now, not an interval
+    unsubscribePush?.(); unsubscribePush = null;
   }
 
   return { load: refresh, append, attest, get: () => cache, subscribe, startPolling, destroy };

@@ -120,6 +120,64 @@ function timedFailingFetch(failCount, { thenOk = () => new Response(JSON.stringi
     }
 
     // ===================================================================================
+    section('*** events.js + push: a connected push handle slows the safety-net poll to pollBackoffMaxMs, not pollMs ***');
+    {
+      const { calls, fetchImpl } = timedFailingFetch(0, {
+        thenOk: () => new Response(JSON.stringify({ events: [], total: 0 }), { status: 200 }),
+      });
+      window.fetch = fetchImpl;
+      const fakePush = { isConnected: () => true, subscribe: () => () => {} };
+      const e = createEvents({
+        url: '/fake-events-push', user: 'u', pollMs: 20, pollBackoffMaxMs: 150, push: fakePush,
+      });
+      e.startPolling();
+      await sleep(500);
+      e.destroy();
+      window.fetch = realFetch;
+
+      check('several safety-net polls happened even with push "connected"', calls.length >= 3, calls.length);
+      const gaps = calls.slice(1).map((t, i) => t - calls[i]);
+      check('*** every gap after the first idles near pollBackoffMaxMs, not the fast pollMs cadence ***',
+        gaps.slice(1).every((g) => g > 100),
+        JSON.stringify(gaps.map((g) => Math.round(g))));
+    }
+
+    // ===================================================================================
+    section('*** events.js + push: a push notification fetches immediately, without waiting for the slow timer ***');
+    {
+      const { calls, fetchImpl } = timedFailingFetch(0, {
+        thenOk: () => new Response(JSON.stringify({ events: [], total: 0 }), { status: 200 }),
+      });
+      window.fetch = fetchImpl;
+      let pushCb = null;
+      let subscribedUrl = null;
+      const fakePush = {
+        isConnected: () => false,
+        subscribe: (u, cb) => { subscribedUrl = u; pushCb = cb; return () => { pushCb = null; }; },
+      };
+      // pollMs deliberately huge — the timer alone would not fire during this test at all,
+      // so any fetch we see must have come from the push notification, not the schedule.
+      const e = createEvents({
+        url: '/fake-events-notify', user: 'u', pollMs: 100000, pollBackoffMaxMs: 100000, push: fakePush,
+      });
+      e.startPolling();
+      await sleep(10);
+      check('subscribed to its OWN url, the one a server push would name for this endpoint',
+        subscribedUrl === '/fake-events-notify', subscribedUrl);
+      check('no fetch yet — the timer has not had a chance to fire', calls.length === 0, calls.length);
+
+      pushCb();
+      await sleep(10);
+      check('*** the push notification triggered an immediate fetch, well before the timer ever could ***',
+        calls.length === 1, calls.length);
+
+      e.destroy();
+      window.fetch = realFetch;
+      check('destroy() unsubscribed — calling the old callback again is harmless, not a crash',
+        (() => { try { pushCb?.(); return true; } catch { return false; } })());
+    }
+
+    // ===================================================================================
     section('never a full outage away from Infinity or NaN — the cap actually holds in real use');
     {
       const { calls, fetchImpl } = timedFailingFetch(Infinity);   // never recovers
