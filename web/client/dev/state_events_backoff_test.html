@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>state.js / events.js polling — proof the REAL loops back off, not just the math</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>state.js / events.js polling backoff — the integration proof</h1>
+<p><code>poll_backoff_test.html</code> covers the pure math. This proves the actual polling loops
+in <code>state.js</code> and <code>events.js</code> call it correctly: real gaps between real
+fetches grow while a fake server keeps failing, and snap straight back to the base rate the
+instant it recovers — the exact behavior that would have stopped one kiosk from hammering a down
+database every 1.5 seconds for hours on 2026-09-15.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A real fetch, timed, so the gaps BETWEEN calls are measured directly rather than inferred —
+// this is what proves the polling loop itself is responsible, not just the formula in isolation.
+function timedFailingFetch(failCount, { thenOk = () => new Response(JSON.stringify({}), { status: 200 }) } = {}) {
+  const calls = [];
+  let n = 0;
+  const impl = async (...args) => {
+    calls.push(performance.now());
+    n++;
+    if (n <= failCount) return new Response('', { status: 500 });
+    return thenOk();
+  };
+  return { calls, fetchImpl: impl };
+}
+
+(async () => {
+  const realFetch = window.fetch.bind(window);
+  try {
+    // ===================================================================================
+    section('*** state.js: the real polling loop backs off on failure ***');
+    {
+      const { calls, fetchImpl } = timedFailingFetch(3, {
+        thenOk: () => new Response(JSON.stringify({ data: { x: 1 }, version: 1 }), { status: 200 }),
+      });
+      window.fetch = fetchImpl;
+      const s = createState({ url: '/fake', user: 'u', pollMs: 25, pollBackoffMaxMs: 200 });
+      s.startPolling();
+      await sleep(700);          // enough real time for several backed-off retries to land
+      s.destroy();
+      window.fetch = realFetch;
+
+      check('several polls actually happened', calls.length >= 4, calls.length);
+      const gaps = calls.slice(1).map((t, i) => t - calls[i]);
+      check('*** the gap after each failure grows — not the same fixed 25ms every time ***',
+        gaps[0] < gaps[1] && gaps[1] < gaps[2],
+        JSON.stringify(gaps.map((g) => Math.round(g))));
+      // The 4th call (index 3) is the one that finally succeeds (failCount=3). The gap
+      // BEFORE it reflects backoff from the 3rd failure; the interesting proof is what
+      // happens AFTER it.
+      if (gaps.length > 3) {
+        check('*** the gap right after the SUCCESS drops back down near the base rate, not the backed-off one ***',
+          gaps[3] < gaps[2], `post-success gap ${Math.round(gaps[3])} vs pre-success gap ${Math.round(gaps[2])}`);
+      }
+    }
+
+    // ===================================================================================
+    section('*** state.js: a healthy poll never backs off at all ***');
+    {
+      const { calls, fetchImpl } = timedFailingFetch(0, {
+        thenOk: () => new Response(JSON.stringify({ data: {}, version: 0 }), { status: 200 }),
+      });
+      window.fetch = fetchImpl;
+      const s = createState({ url: '/fake', user: 'u', pollMs: 25, pollBackoffMaxMs: 200 });
+      s.startPolling();
+      await sleep(200);
+      s.destroy();
+      window.fetch = realFetch;
+
+      const gaps = calls.slice(1).map((t, i) => t - calls[i]);
+      const avg = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+      check('every gap stays close to the base pollMs — no drift, no creeping slowdown for a healthy poll',
+        avg < 60, `avg gap ${avg.toFixed(1)}ms for base 25ms`);
+    }
+
+    // ===================================================================================
+    section('*** events.js: the real polling loop backs off on failure, same as state.js ***');
+    {
+      const { calls, fetchImpl } = timedFailingFetch(3, {
+        thenOk: () => new Response(JSON.stringify({ events: [], total: 0 }), { status: 200 }),
+      });
+      window.fetch = fetchImpl;
+      const e = createEvents({ url: '/fake-events', user: 'u', pollMs: 25, pollBackoffMaxMs: 200 });
+      e.startPolling();
+      await sleep(700);
+      e.destroy();
+      window.fetch = realFetch;
+
+      check('several polls actually happened', calls.length >= 4, calls.length);
+      const gaps = calls.slice(1).map((t, i) => t - calls[i]);
+      check('*** the gap after each failure grows here too ***',
+        gaps[0] < gaps[1] && gaps[1] < gaps[2],
+        JSON.stringify(gaps.map((g) => Math.round(g))));
+    }
+
+    // ===================================================================================
+    section('never a full outage away from Infinity or NaN — the cap actually holds in real use');
+    {
+      const { calls, fetchImpl } = timedFailingFetch(Infinity);   // never recovers
+      window.fetch = fetchImpl;
+      const s = createState({ url: '/fake', user: 'u', pollMs: 10, pollBackoffMaxMs: 80 });
+      s.startPolling();
+      await sleep(600);
+      s.destroy();
+      window.fetch = realFetch;
+
+      const gaps = calls.slice(1).map((t, i) => t - calls[i]);
+      const last = gaps[gaps.length - 1] || 0;
+      check('a sustained, never-ending failure settles at the cap rather than growing without bound',
+        last < 150 && Number.isFinite(last), `last gap ${Math.round(last)}ms, cap was 80ms`);
+      check('...and still kept retrying at all, rather than giving up entirely',
+        calls.length >= 3, calls.length);
+    }
+  } catch (e) {
+    window.fetch = realFetch;
+    check('unexpected error', false, String((e && e.stack) || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  sum.className = failed === 0 ? 'pass' : 'fail';
+  sum.dataset.done = 'true';
+  sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

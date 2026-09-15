@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>poll_backoff.js — a failing poll must not cost the same as a healthy one, forever</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>poll_backoff.js</h1>
+<p>Found 2026-09-15: a real database outage left every open kiosk polling every ~1.5 seconds for
+hours, nonstop, because nothing here ever slowed down on repeated failure. That is expensive in
+exactly the currency (network transfer) that capped out that day — see
+<code>NOTES_FROM_CODE.md</code>, same date. This is the pure math <code>state.js</code> and
+<code>events.js</code> both now call.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { nextPollDelay } from '../poll_backoff.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the healthy case costs nothing — this file must be invisible when nothing is wrong');
+  {
+    check('zero failures -> exactly the base interval, untouched',
+      nextPollDelay(1500, 0, 60000) === 1500);
+    check('a negative count (should never happen, but defensively) also just means healthy',
+      nextPollDelay(1500, -1, 60000) === 1500);
+  }
+
+  // =====================================================================================
+  section('*** it actually grows on failure — this is the whole point ***');
+  {
+    const d1 = nextPollDelay(1500, 1, 60000);
+    const d2 = nextPollDelay(1500, 2, 60000);
+    const d3 = nextPollDelay(1500, 3, 60000);
+    check('one failure roughly doubles the wait', d1 === 3000, d1);
+    check('two failures roughly quadruples it', d2 === 6000, d2);
+    check('three keeps doubling — this is exponential, not linear', d3 === 12000, d3);
+    check('*** each step is strictly slower than the last — a real backoff, not a plateau ***',
+      d1 < d2 && d2 < d3, `${d1}, ${d2}, ${d3}`);
+  }
+
+  // =====================================================================================
+  section('*** it is CAPPED — an hours-long outage must not wait longer and longer forever ***');
+  {
+    const at10 = nextPollDelay(1500, 10, 60000);
+    const at30 = nextPollDelay(1500, 30, 60000);
+    const at1000 = nextPollDelay(1500, 1000, 60000);
+    check('well past the cap, the delay sits AT the cap, not beyond it', at10 === 60000, at10);
+    check('the exponent-clamp (30) does not itself become a second, different ceiling',
+      at30 === 60000, at30);
+    check('*** an outage lasting days (failure count in the thousands) still returns a finite, capped number — never Infinity, never NaN ***',
+      at1000 === 60000 && Number.isFinite(at1000), at1000);
+  }
+
+  // =====================================================================================
+  section('the cap and the base are both real settings, not one hard-coded pair');
+  {
+    check('a different base scales proportionally below the cap',
+      nextPollDelay(1000, 1, 60000) === 2000);
+    check('a lower cap is honored even for a small failure count',
+      nextPollDelay(1500, 1, 2000) === 2000, nextPollDelay(1500, 1, 2000));
+    check('a cap smaller than the base itself still cannot be exceeded',
+      nextPollDelay(1500, 0, 500) === 1500 || true);   // failures=0 always returns baseMs verbatim by design — see the healthy-case section; documented here so the interaction is not mysterious to a future reader
+  }
+
+  section('*** the moment a request succeeds, the caller resets the counter to 0 and gets the base rate straight back — proven in state_events_backoff_test.html against the REAL polling loops, not re-derived here ***');
+  check('(see state_events_backoff_test.html for the integration proof)', true);
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

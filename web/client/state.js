@@ -25,6 +25,7 @@
 
 import { cacheGet, cacheSet } from './cache.js';
 import { authHeaders, httpError } from './auth.js';
+import { nextPollDelay } from './poll_backoff.js';
 
 // `cacheKey` (optional) opts this handle into OFFLINE RESILIENCE: every successful
 // load caches {data,version} in localStorage, and a load renders that last-known-good
@@ -40,7 +41,16 @@ import { authHeaders, httpError } from './auth.js';
 // well before anyone watching would otherwise wonder. A setting with a sensible
 // default, not a claim that this number is the only right one.
 export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRetries = 5,
-                               cacheKey = null, staleAfterMs = 3 * 60 * 1000 }) {
+                               cacheKey = null, staleAfterMs = 3 * 60 * 1000,
+                               // A ceiling on how slow polling is allowed to get during a
+                               // sustained failure (a real outage, not a single dropped
+                               // packet) — see poll_backoff.js. One minute is a floor-to-
+                               // ceiling default, not a claim it's the only right number:
+                               // slow enough that an hours-long outage stops costing
+                               // meaningful bandwidth, fast enough that recovery is noticed
+                               // within a minute of the server actually coming back (the
+                               // very next success resets to `pollMs` immediately anyway).
+                               pollBackoffMaxMs = 60 * 1000 }) {
   let data = {};
   let version = 0;
   let loaded = false;
@@ -184,24 +194,52 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
 
   // Interim cross-device convergence until server push (SSE) lands. Never
   // overwrites a dirty mirror; adopts the server's data+version otherwise.
+  //
+  // *** BACKS OFF ON FAILURE, RESETS ON SUCCESS. *** Found 2026-09-15: this used to be a
+  // bare `setInterval` that never stopped or slowed down, success or failure alike. During
+  // a real database outage every open kiosk kept polling every `pollMs` (default 1.5s)
+  // regardless — for HOURS, since a kiosk is designed to run unattended for as long as the
+  // screen is on. Every one of those requests still costs real network transfer even when
+  // it fails, and none of them could possibly have succeeded while the database was down.
+  // A `setInterval` can't vary its own delay, so this is a self-rescheduling `setTimeout`
+  // chain instead — see poll_backoff.js for the actual math and why it resets immediately
+  // rather than ramping back up slowly.
+  let pollFailures = 0;
+  // *** SEPARATE FROM `pollTimer`, ON PURPOSE. *** A tick already in flight (awaiting
+  // `fetch`) holds no live timer at all — `pollTimer` still names the handle that fired TO
+  // START this tick, which is now meaningless to cancel. Without its own flag, calling
+  // `destroy()` while a tick is mid-fetch does nothing: `clearTimeout` cancels a timer that
+  // already fired, the in-flight tick finishes anyway, and it reschedules ITSELF right back
+  // — a "destroyed" handle quietly still polling. Caught by state_events_backoff_test.html
+  // testing several handles back to back, not by reasoning about it in advance.
+  let pollStopped = false;
   function startPolling() {
     if (pollTimer) return;
-    pollTimer = setInterval(async () => {
-      if (dirty) return;
-      try {
-        const res = await fetch(url, { headers: authHeaders(user) });
-        if (!res.ok) return;
-        const body = await res.json();
-        lastServerOkAt = Date.now();          // answered, whether or not anything changed
-        if ((body.version || 0) !== version &&
-            JSON.stringify(body.data || {}) !== JSON.stringify(data)) {
-          data = body.data || {};
-          version = body.version || 0;
-          if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
-          notify();
-        }
-      } catch { /* transient */ }
-    }, pollMs);
+    pollStopped = false;
+    const tick = async () => {
+      if (!dirty) {
+        try {
+          const res = await fetch(url, { headers: authHeaders(user) });
+          if (!res.ok) {
+            pollFailures++;
+          } else {
+            pollFailures = 0;
+            const body = await res.json();
+            lastServerOkAt = Date.now();          // answered, whether or not anything changed
+            if ((body.version || 0) !== version &&
+                JSON.stringify(body.data || {}) !== JSON.stringify(data)) {
+              data = body.data || {};
+              version = body.version || 0;
+              if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
+              notify();
+            }
+          }
+        } catch { pollFailures++; }
+      }
+      if (pollStopped) return;
+      pollTimer = setTimeout(tick, nextPollDelay(pollMs, pollFailures, pollBackoffMaxMs));
+    };
+    pollTimer = setTimeout(tick, pollMs);
   }
 
   function subscribe(fn) {
@@ -211,7 +249,8 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
   }
 
   function destroy() {
-    clearInterval(pollTimer); pollTimer = null;
+    pollStopped = true;                          // stops a tick already in flight from rescheduling
+    clearTimeout(pollTimer); pollTimer = null;   // a setTimeout chain now, not an interval
     clearTimeout(putTimer);
   }
 
