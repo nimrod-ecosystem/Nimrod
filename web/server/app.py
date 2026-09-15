@@ -19,15 +19,18 @@ from collections import defaultdict, deque
 from pathlib import Path
 from urllib.parse import urlparse
 
+import asyncio
+
 from authlib.integrations.starlette_client import OAuth
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
 from drive import ROLES, Rooms, Tickets, parse_message
+from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
 from identity import current_user, optional_user, set_device_key_lookup
@@ -727,12 +730,17 @@ def list_person_events(person_id: str, stream: str, limit: int = 50, user: str =
 
 
 @app.post("/api/people/{person_id}/events/{stream}")
-def append_person_event(person_id: str, stream: str, body: EventPost, user: str = Depends(current_user)):
+def append_person_event(person_id: str, stream: str, body: EventPost, request: Request,
+                        user: str = Depends(current_user)):
     _check(person_id, ID_RE, "person id")
     _check(stream, ID_RE, "event stream")
     _check(body.kind, ID_RE, "event kind")
     owned_person(user, person_id)
-    return store.append_event(user, person_scope(person_id), stream, body.kind, body.data)
+    result = store.append_event(user, person_scope(person_id), stream, body.kind, body.data)
+    # request.url.path is exactly the GET this same data lives at — self-referential on
+    # purpose, so this can never drift out of sync with the URL a poller actually uses.
+    _push.publish(user, request.url.path)
+    return result
 
 
 # ------------------------------------------------------- legacy per-USER aliases
@@ -779,7 +787,8 @@ def list_events(pid: str, stream: str, limit: int = 50, user: str = Depends(curr
 
 
 @app.post("/api/profiles/{pid}/events/{stream}")
-def append_event(pid: str, stream: str, body: EventPost, user: str = Depends(current_user)):
+def append_event(pid: str, stream: str, body: EventPost, request: Request,
+                 user: str = Depends(current_user)):
     _check(pid, ID_RE, "profile id")
     _check(stream, ID_RE, "event stream")
     _check(body.kind, ID_RE, "event kind")
@@ -788,10 +797,14 @@ def append_event(pid: str, stream: str, body: EventPost, user: str = Depends(cur
     if body.producer_version is not None:
         _check(body.producer_version, PRODUCER_RE, "producer version")
     owned_profile(user, pid)
-    return store.append_event(
+    result = store.append_event(
         user, pid, stream, body.kind, body.data,
         session_id=body.session_id, producer_version=body.producer_version,
     )
+    # request.url.path is exactly the GET this same data lives at — self-referential on
+    # purpose, so this can never drift out of sync with the URL a poller actually uses.
+    _push.publish(user, request.url.path)
+    return result
 
 
 class AttestPost(BaseModel):
@@ -1014,6 +1027,52 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
     finally:
         _rooms.leave(room_key, person_id, role, ws)
         await announce()
+
+
+# --------------------------------------------------------------------- server push (SSE)
+# "This URL has new data" — nothing more. See push.py for the full reasoning: the
+# 2026-08-10 decision was "server push = SSE, not WebSocket," and state.js/events.js's
+# polling loops have said "interim... until this lands" since the day they were written.
+_push = PushHub()
+_stream_tickets = StreamTickets()
+
+
+@app.post("/api/stream/ticket")
+def stream_ticket(user: str = Depends(current_user)):
+    """Trade ordinary HTTP auth for something an EventSource CAN carry — it sends no
+    custom headers at all, so a kiosk's X-Device-Key has no way onto the connection
+    directly. Same shape as /api/drive/ticket/{person_id}, scoped to the account instead
+    of one person — see push.py's StreamTickets for why that is a different class."""
+    return {"ticket": _stream_tickets.issue(user), "expires_in": 30}
+
+
+@app.get("/api/stream")
+async def stream(request: Request, t: str = ""):
+    user = _stream_tickets.redeem(t)
+    if not user:
+        # Same reasoning as drive_socket's 4401: a plain 401 lets the client tell "the
+        # ticket went stale, get another" apart from "the network died," and retry the
+        # right one instead of guessing.
+        raise HTTPException(status_code=401, detail="stream ticket invalid or expired")
+    q = _push.subscribe(user)
+    async def gen():
+        try:
+            # A retry hint up front, and a comment line whenever nothing has happened for
+            # a while — EventSource ignores lines starting with `:`, but an entirely
+            # silent response is indistinguishable from a dead one to a proxy in between,
+            # and some will close an idle connection they assume nobody is using.
+            yield "retry: 3000\n\n"
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    url = await asyncio.wait_for(q.get(), timeout=15)
+                    yield f"data: {url}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": keep-alive\n\n"
+        finally:
+            _push.unsubscribe(user, q)
+    return StreamingResponse(gen(), media_type="text/event-stream")
 
 
 # --------------------------------------------------------------- the demo photo listing

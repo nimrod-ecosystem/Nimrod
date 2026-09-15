@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>push.js — one shared connection, many subscribers, and a real fallback if it can't hold</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>push.js</h1>
+<p>The server-push half of the 2026-08-10 decision ("server push = SSE, not WebSocket") that
+state.js's own polling comment has named as pending since the day it was written. No real
+network or EventSource here — a fake of each, since the actual browser API and the ticket
+exchange are exercised live, and what matters here is the STATE MACHINE: which subscriber
+hears what, and that a broken connection recovers with a fresh ticket rather than retrying a
+dead one forever.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createPush } from '../push.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const flush = () => new Promise((r) => setTimeout(r, 0));   // let a pending .then() land
+
+class FakeEventSource {
+  constructor(url) {
+    this.url = url;
+    this.onopen = null;
+    this.onmessage = null;
+    this.onerror = null;
+    this.closed = false;
+    FakeEventSource.instances.push(this);
+  }
+  close() { this.closed = true; }
+  _open() { this.onopen?.(); }
+  _message(data) { this.onmessage?.({ data }); }
+  _error() { this.onerror?.(); }
+}
+FakeEventSource.instances = [];
+
+function fakeTicketFetch({ fail = false } = {}) {
+  let n = 0;
+  const calls = [];
+  const impl = async (url, opts) => {
+    calls.push(url);
+    if (fail) return { ok: false };
+    n++;
+    return { ok: true, json: async () => ({ ticket: `ticket-${n}` }) };
+  };
+  return { impl, calls, ticketCount: () => n };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('construction — fetches a ticket, then opens the stream with it, nobody blocked');
+  {
+    FakeEventSource.instances.length = 0;
+    const { impl, calls } = fakeTicketFetch();
+    const p = createPush({ user: 'u', fetchImpl: impl, EventSourceImpl: FakeEventSource });
+    await flush(); await flush();
+
+    check('the ticket endpoint was hit before anything else', calls[0] === '/api/stream/ticket');
+    check('*** the EventSource URL carries the ticket, not any real credential ***',
+      FakeEventSource.instances[0]?.url.includes('t=ticket-1'),
+      FakeEventSource.instances[0]?.url);
+    check('not connected until the fake source says onopen', !p.isConnected());
+    FakeEventSource.instances[0]._open();
+    check('connected once onopen fires', p.isConnected());
+    p.destroy();
+  }
+
+  // =====================================================================================
+  section('*** subscribers hear only the url they asked about ***');
+  {
+    FakeEventSource.instances.length = 0;
+    const { impl } = fakeTicketFetch();
+    const p = createPush({ user: 'u', fetchImpl: impl, EventSourceImpl: FakeEventSource });
+    await flush(); await flush();
+    const es = FakeEventSource.instances[0];
+
+    const heardA = []; const heardB = [];
+    p.subscribe('/api/profiles/p1/events/a', () => heardA.push(1));
+    p.subscribe('/api/profiles/p1/events/b', () => heardB.push(1));
+
+    es._message('/api/profiles/p1/events/a');
+    check('the matching subscriber heard it', heardA.length === 1);
+    check('*** the OTHER url\'s subscriber did not ***', heardB.length === 0);
+
+    es._message('/api/profiles/p1/events/nobody-subscribed-to-this');
+    check('a message for a url nobody asked about is silently ignored, not an error', true);
+
+    // Multiple subscribers on the SAME url — a real case once state.js and events.js
+    // both eventually use this for the same handle's own url.
+    const heardA2 = [];
+    p.subscribe('/api/profiles/p1/events/a', () => heardA2.push(1));
+    es._message('/api/profiles/p1/events/a');
+    check('*** a second subscriber on the same url ALSO hears it — this fans out, it does not replace ***',
+      heardA.length === 2 && heardA2.length === 1);
+
+    p.destroy();
+  }
+
+  // =====================================================================================
+  section('unsubscribing actually stops hearing, without disturbing anyone else');
+  {
+    FakeEventSource.instances.length = 0;
+    const { impl } = fakeTicketFetch();
+    const p = createPush({ user: 'u', fetchImpl: impl, EventSourceImpl: FakeEventSource });
+    await flush(); await flush();
+    const es = FakeEventSource.instances[0];
+
+    const heard = [];
+    const off = p.subscribe('/x', () => heard.push(1));
+    const stillHere = [];
+    p.subscribe('/x', () => stillHere.push(1));
+
+    es._message('/x');
+    check('sanity: both heard the first message', heard.length === 1 && stillHere.length === 1);
+    off();
+    es._message('/x');
+    check('*** the unsubscribed callback did not fire again ***', heard.length === 1);
+    check('...but the other subscriber on the same url is untouched', stillHere.length === 2);
+
+    p.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a connection error gets a FRESH ticket, not a retry of the stale one ***');
+  {
+    FakeEventSource.instances.length = 0;
+    const { impl, ticketCount } = fakeTicketFetch();
+    const p = createPush({
+      user: 'u', fetchImpl: impl, EventSourceImpl: FakeEventSource, reconnectDelayMs: 10,
+    });
+    await flush(); await flush();
+    check('one ticket fetched to open the first connection', ticketCount() === 1);
+
+    FakeEventSource.instances[0]._open();
+    check('connected before the error', p.isConnected());
+    FakeEventSource.instances[0]._error();
+    check('no longer reporting connected the instant it errors', !p.isConnected());
+
+    await new Promise((r) => setTimeout(r, 40));   // past reconnectDelayMs
+    check('*** the failed connection was closed, not left dangling ***',
+      FakeEventSource.instances[0].closed);
+    check('*** reconnecting fetched a SECOND, fresh ticket — the ticket is single-use, a raw retry would just fail again ***',
+      ticketCount() === 2, ticketCount());
+    check('*** and opened a genuinely NEW EventSource, not reused the dead one ***',
+      FakeEventSource.instances.length === 2);
+
+    p.destroy();
+  }
+
+  // =====================================================================================
+  section('*** destroy() stops a reconnect already scheduled — same bug class as state.js/events.js, fixed the same way ***');
+  {
+    FakeEventSource.instances.length = 0;
+    const { impl, ticketCount } = fakeTicketFetch();
+    const p = createPush({
+      user: 'u', fetchImpl: impl, EventSourceImpl: FakeEventSource, reconnectDelayMs: 10,
+    });
+    await flush(); await flush();
+    FakeEventSource.instances[0]._error();      // schedules a reconnect in 10ms
+    p.destroy();                                 // destroyed BEFORE that reconnect fires
+    await new Promise((r) => setTimeout(r, 40));
+    check('*** no reconnect happened after destroy — a "destroyed" handle must not quietly keep trying ***',
+      ticketCount() === 1 && FakeEventSource.instances.length === 1,
+      `tickets=${ticketCount()}, sources=${FakeEventSource.instances.length}`);
+  }
+
+  // =====================================================================================
+  section('no EventSource in this environment — quietly inert, never throws');
+  {
+    const { impl } = fakeTicketFetch();
+    let threw = false;
+    try {
+      const p = createPush({ user: 'u', fetchImpl: impl, EventSourceImpl: null });
+      await flush();
+      check('isConnected reports false rather than crashing', p.isConnected() === false);
+      p.subscribe('/x', () => {});   // must not throw even though nothing will ever fire it
+      p.destroy();
+    } catch (e) { threw = true; }
+    check('*** constructing with no EventSource support never throws ***', !threw);
+  }
+
+  // =====================================================================================
+  section('a failed ticket request is the same as no EventSource — quiet, not fatal');
+  {
+    FakeEventSource.instances.length = 0;
+    const { impl } = fakeTicketFetch({ fail: true });
+    const p = createPush({ user: 'u', fetchImpl: impl, EventSourceImpl: FakeEventSource, reconnectDelayMs: 10 });
+    await flush(); await flush();
+    check('no EventSource was ever opened off a failed ticket request',
+      FakeEventSource.instances.length === 0);
+    check('isConnected stays false rather than throwing', p.isConnected() === false);
+    p.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
