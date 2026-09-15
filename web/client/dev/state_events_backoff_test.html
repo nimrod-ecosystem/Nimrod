@@ -178,6 +178,71 @@ function timedFailingFetch(failCount, { thenOk = () => new Response(JSON.stringi
     }
 
     // ===================================================================================
+    section('*** state.js + push: a connected push handle slows the safety-net poll to pollBackoffMaxMs, not pollMs ***');
+    {
+      const { calls, fetchImpl } = timedFailingFetch(0, {
+        thenOk: () => new Response(JSON.stringify({ data: {}, version: 0 }), { status: 200 }),
+      });
+      window.fetch = fetchImpl;
+      const fakePush = { isConnected: () => true, subscribe: () => () => {} };
+      const s = createState({
+        url: '/fake-state-push', user: 'u', pollMs: 20, pollBackoffMaxMs: 150, push: fakePush,
+      });
+      s.startPolling();
+      await sleep(500);
+      s.destroy();
+      window.fetch = realFetch;
+
+      check('several safety-net polls happened even with push "connected"', calls.length >= 3, calls.length);
+      const gaps = calls.slice(1).map((t, i) => t - calls[i]);
+      check('*** every gap after the first idles near pollBackoffMaxMs, not the fast pollMs cadence ***',
+        gaps.slice(1).every((g) => g > 100),
+        JSON.stringify(gaps.map((g) => Math.round(g))));
+    }
+
+    // ===================================================================================
+    section('*** state.js + push: a push notification fetches immediately, and skips itself while a local edit is pending ***');
+    {
+      const { calls, fetchImpl } = timedFailingFetch(0, {
+        thenOk: () => new Response(JSON.stringify({ data: { x: 9 }, version: 5 }), { status: 200 }),
+      });
+      window.fetch = fetchImpl;
+      let pushCb = null;
+      let subscribedUrl = null;
+      const fakePush = {
+        isConnected: () => false,
+        subscribe: (u, cb) => { subscribedUrl = u; pushCb = cb; return () => { pushCb = null; }; },
+      };
+      // pollMs deliberately huge — as in events.js's own version of this test, any fetch
+      // seen must have come from the push notification, not the schedule.
+      const s = createState({
+        url: '/fake-state-notify', user: 'u', pollMs: 100000, pollBackoffMaxMs: 100000, push: fakePush,
+      });
+      s.startPolling();
+      await sleep(10);
+      check('subscribed to its OWN url, the one a server PUT would name for this endpoint',
+        subscribedUrl === '/fake-state-notify', subscribedUrl);
+
+      pushCb();
+      await sleep(10);
+      check('*** the push notification triggered an immediate fetch ***', calls.length === 1, calls.length);
+      check('...and the server truth it returned was actually adopted', s.get().x === 9 && s.getVersion() === 5);
+
+      // Now put a local edit in flight (dirty) and fire push again — a poll tick has always
+      // skipped itself here (the `if (!dirty)` guard, unchanged by this work) so a push
+      // notification must skip the exact same way, or push could stomp an edit the debounced
+      // flush hasn't sent yet.
+      window.fetch = async () => { throw new Error('must not fetch while dirty'); };
+      s.set({ y: 1 });        // marks dirty; flush is debounced, so this fetch never fires
+      let threw = false;
+      try { pushCb(); await sleep(5); } catch { threw = true; }
+      check('*** a push notification while dirty does not fetch — same guard a poll tick already had ***', !threw);
+
+      window.fetch = realFetch;
+      s.destroy();
+    }
+
+    // ===================================================================================
     section('never a full outage away from Infinity or NaN — the cap actually holds in real use');
     {
       const { calls, fetchImpl } = timedFailingFetch(Infinity);   // never recovers

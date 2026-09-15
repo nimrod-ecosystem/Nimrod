@@ -311,6 +311,10 @@ export async function mountKiosk(root, {
       url: profiles.personStateURL(personId2, MARKER_KEY),
       user,
       cacheKey: `person:${user}:${personId2}:${MARKER_KEY}`,
+      // The exact scenario push.js's own header names: "a laptop composing a setup and a
+      // paired kiosk showing it." A caregiver clicking the sock on home now reaches the
+      // bedside instantly when push is up, and within a poll or two either way.
+      push,
     });
     await markerState.load().catch(() => {});     // offline: the shipped default is OFF anyway
     // Torn down while that loaded. Close the handle rather than leaving it polling for a screen
@@ -378,7 +382,7 @@ export async function mountKiosk(root, {
 
   const stateFor = (key, opts = {}) => (makeState
     ? makeState(key, opts, profileId)
-    : createState({ url: profiles.stateURL(profileId, key), user, cacheKey: ck(key), ...opts }));
+    : createState({ url: profiles.stateURL(profileId, key), user, cacheKey: ck(key), push, ...opts }));
   const eventsFor = (key, opts = {}) => (makeEvents
     ? makeEvents(key, opts, profileId)
     : createEvents({ url: profiles.eventsURL(profileId, key), user, push, ...opts }));
@@ -497,19 +501,6 @@ export async function mountKiosk(root, {
   });
   settings.startPolling();
 
-  // persist a mirror change into the profile settings (merges with theme/voice/clock)
-  function patchMirror(patch) {
-    const cur = settings.get().kiosk || {};
-    settings.set({ kiosk: { ...cur, mirror: { ...KDEF.mirror, ...(cur.mirror || {}), ...patch } } });
-  }
-
-  // ---- partition modules: camera -> mirror, clock -> clock HUD, rest -> stage
-  // cached so a server blip at boot still yields the last-known dashboard layout.
-  // *** `let`, NOT `const`: THE SCREEN CAN BE SWAPPED IN PLACE. *** See `showScreen` below.
-  let profile = makeState
-    ? await profiles.get(profileId)        // local backend: it IS the source of truth
-    : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
-
   // A LAYOUT, if the composer saved one. It wins for whatever it places: a module sitting
   // in a slot is rendered there, so camera/clock only fall back to being HUD overlays when
   // they were NOT placed. With no layout, everything below behaves exactly as it did
@@ -546,6 +537,17 @@ export async function mountKiosk(root, {
   // Guarded to fire at most once, and skipped entirely for a one-shot PREVIEW layout, which
   // is deliberately never written back to the profile and has nothing server-side to
   // "correct" against.
+  //
+  // *** CAPTURED HERE, IMMEDIATELY AFTER `settings.startPolling()` — NOT AFTER THE
+  // `profiles.get()` BELOW, EVEN THOUGH NEITHER `previewLayout` NOR `savedLayout` NEEDS
+  // `profile`. *** Found 2026-09-15, once `push` made settings converge fast: with a real
+  // await (`profiles.get(profileId)`) sitting between reading `savedLayout` and registering
+  // this watch, a push notification landing in that gap — the composer's OWN save, whose
+  // publish this same `settings` handle is now subscribed to — could get treated as "the
+  // layout changed since boot" on a kiosk that had only ever seen ONE value, and reload
+  // itself before it had finished booting. Closing the gap to zero awaits between the read
+  // and the watch is the actual fix; a kiosk that boots after a genuine change still reloads
+  // exactly as designed, because there is no longer a window for the watch to start late.
   if (!previewLayout) {
     const bootLayoutSig = JSON.stringify(savedLayout || null);
     let reloadedForLayout = false;
@@ -555,6 +557,19 @@ export async function mountKiosk(root, {
       if (nowSig !== bootLayoutSig) { reloadedForLayout = true; location.reload(); }
     });
   }
+
+  // persist a mirror change into the profile settings (merges with theme/voice/clock)
+  function patchMirror(patch) {
+    const cur = settings.get().kiosk || {};
+    settings.set({ kiosk: { ...cur, mirror: { ...KDEF.mirror, ...(cur.mirror || {}), ...patch } } });
+  }
+
+  // ---- partition modules: camera -> mirror, clock -> clock HUD, rest -> stage
+  // cached so a server blip at boot still yields the last-known dashboard layout.
+  // *** `let`, NOT `const`: THE SCREEN CAN BE SWAPPED IN PLACE. *** See `showScreen` below.
+  let profile = makeState
+    ? await profiles.get(profileId)        // local backend: it IS the source of truth
+    : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
 
   // *** A SLOT WHOSE MODULE NO LONGER EXISTS IS AN ORPHAN, AND ORPHANS USED TO EAT PANELS. ***
   //
@@ -1681,6 +1696,10 @@ export async function mountKiosk(root, {
         url: profiles.personStateURL(p.person_id, INPUTS_KEY),
         user,
         cacheKey: `person:${user}:${p.person_id}:${INPUTS_KEY}`,
+        // A binding edited on home.html — "an edit made ELSEWHERE lands here with nobody
+        // reloading anything" is the input runtime's own stated contract — now lands here
+        // near-instantly when push is up, instead of waiting out a poll interval.
+        push,
       }));
       // `useState` guards itself too (see `input_runtime.js`), so this is belt and braces on
       // purpose: the unsubscribe it hands back is the thing `destroy()` would have called, and
