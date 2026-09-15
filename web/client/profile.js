@@ -23,7 +23,7 @@
 // account. The new concept is `person` everywhere — which is also the word the AT field
 // uses, and the word a care setting says out loud in front of the person it describes.
 
-import { authHeaders } from './auth.js';
+import { authHeaders, httpError } from './auth.js';
 import { cachedFetch } from './cache.js';
 
 // A starter profile so a fresh account "just works": photos, the camera mirror, the
@@ -48,7 +48,7 @@ export async function ensureProfile(profiles, user, wantProfile = null) {
 export function createProfilesClient({ user, baseURL = '' }) {
 
   async function json(res) {
-    if (!res.ok) throw new Error(`${res.url} -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `${res.url} -> ${res.status}`);
     return res.json();
   }
   const jsonHeaders = () => ({ ...authHeaders(user), 'Content-Type': 'application/json' });

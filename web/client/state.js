@@ -24,7 +24,7 @@
 // been since the server last actually answered, for a caller that wants to say so.
 
 import { cacheGet, cacheSet } from './cache.js';
-import { authHeaders } from './auth.js';
+import { authHeaders, httpError } from './auth.js';
 
 // `cacheKey` (optional) opts this handle into OFFLINE RESILIENCE: every successful
 // load caches {data,version} in localStorage, and a load renders that last-known-good
@@ -65,7 +65,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
 
   async function fetchServer() {
     const res = await fetch(url, { headers: authHeaders(user) });
-    if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `GET ${url} -> ${res.status}`);
     const body = await res.json();
     return { data: body.data || {}, version: body.version || 0 };
   }
@@ -179,7 +179,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     }
 
     pending = { ...sending, ...pending }; dirty = true;
-    throw new Error(`PUT ${url} -> ${res.status}`);
+    throw httpError(res, `PUT ${url} -> ${res.status}`);
   }
 
   // Interim cross-device convergence until server push (SSE) lands. Never

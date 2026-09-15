@@ -18,7 +18,7 @@
 // picker's play-stats key on it correctly.
 
 import { cachedFetch } from './cache.js';
-import { authHeaders } from './auth.js';
+import { authHeaders, httpError } from './auth.js';
 import { listFolderSources, removeFolderSource, resolveFolderListing,
          folderFileUrl } from './folder_source.js';
 
@@ -53,7 +53,7 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
   const scope = personId ? `?person_id=${encodeURIComponent(personId)}` : '';
   async function fetchList() {
     const res = await fetch(`${base}/api/media-sources${scope}`, { headers: authHeaders(user) });
-    if (!res.ok) throw new Error(`GET /api/media-sources -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `GET /api/media-sources -> ${res.status}`);
     return (await res.json()).sources;
   }
   // `cache:true` opts into offline resilience: the registry (which folder → which
@@ -96,7 +96,7 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
       headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
       body: JSON.stringify({ label, base_url, kind, person_id: person_id || null }),
     });
-    if (!res.ok) throw new Error(`POST /api/media-sources -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `POST /api/media-sources -> ${res.status}`);
     return res.json();
   }
 
@@ -109,7 +109,7 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
       headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
       body: JSON.stringify({ person_id: person_id || null }),
     });
-    if (!res.ok) throw new Error(`PATCH /api/media-sources/${id} -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `PATCH /api/media-sources/${id} -> ${res.status}`);
     return res.json();
   }
   // A folder source only exists on this device, so it is removed from IndexedDB — asking
@@ -120,7 +120,7 @@ export function createMediaSourcesClient({ user, base = '', cache = false, perso
     const res = await fetch(`${base}/api/media-sources/${id}`, {
       method: 'DELETE', headers: authHeaders(user),
     });
-    if (!res.ok) throw new Error(`DELETE /api/media-sources/${id} -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `DELETE /api/media-sources/${id} -> ${res.status}`);
     return res.json();
   }
   return { list, add, remove, moveTo, personId: () => personId || null };
@@ -137,7 +137,7 @@ export async function resolveListing(source, album = '', { fetchImpl = fetch } =
   const base = trimSlash(source.base_url);
   const q = album ? `?album=${encodeURIComponent(album)}` : '';
   const res = await fetchImpl(`${base}/list${q}`);
-  if (!res.ok) throw new Error(`media source "${source.label}": /list -> ${res.status}`);
+  if (!res.ok) throw httpError(res, `media source "${source.label}": /list -> ${res.status}`);
   const body = await res.json();
   const items = (body.items || []).map((it) => ({
     ...it,

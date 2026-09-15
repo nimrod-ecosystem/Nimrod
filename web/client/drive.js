@@ -28,7 +28,7 @@
 // says "not connected" — so state changes are reported and reconnection backs off rather
 // than hammering.
 
-import { authHeaders } from './auth.js';
+import { authHeaders, httpError } from './auth.js';
 import { verbTopic } from './actions.js';
 import { ACTIVATION_TOPIC } from './input.js';
 import { gatePermits, senderMeta, DEFAULT_REMOTE_ROLE } from './sender.js';
@@ -109,7 +109,7 @@ export function connectDrive({
     const res = await fetchImpl(`${base}/api/drive/ticket/${encodeURIComponent(personId)}`, {
       method: 'POST', headers: authHeaders(user),
     });
-    if (!res.ok) throw new Error(`ticket -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `ticket -> ${res.status}`);
     return (await res.json()).ticket;
   }
 

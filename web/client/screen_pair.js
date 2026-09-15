@@ -53,7 +53,7 @@
 // A screen that needs the network to display its own setup code has it backwards: pairing
 // is the moment the network is least likely to be working.
 
-import { setDeviceKey } from './auth.js';
+import { setDeviceKey, httpError } from './auth.js';
 import { qrSVG } from './qr.js';
 
 export const POLL_MS = 3000;
@@ -212,7 +212,7 @@ export function mountScreenPairing(root, {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+    if (!res.ok) throw httpError(res, `${path} -> ${res.status}`);
     return res.json();
   }
 
