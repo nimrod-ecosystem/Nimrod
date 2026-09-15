@@ -332,12 +332,35 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('a PLACED clock is in its slot, not the HUD overlay', !kiosk.hasClock());
 
     // clearing it returns the screen to the old one-at-a-time behavior
+    //
+    // *** `kiosk.destroy()` FIRST, BEFORE THE MUTATION BELOW — NOT AFTER. *** Found
+    // 2026-09-15, once state.js/events.js carried a live push connection: `kiosk` is still
+    // mounted against this exact profile when `s2.flush()` used to run, and a PUT to its
+    // settings now publishes near-instantly (see web/server/push.py). `kiosk`'s own
+    // push-subscribed state handle can hear that before the very next line even runs, which
+    // is precisely what kiosk.js's own "the layout changed elsewhere" self-heal (kiosk.js's
+    // `bootLayoutSig` check) exists for — except that self-heal is `location.reload()`, a
+    // FULL PAGE reload, catastrophic inside a test harness that mounts several scenarios on
+    // one page rather than the one-kiosk-per-tab reality it was written for. Destroying
+    // `kiosk` (which unsubscribes its push handle, same as state.js's own `destroy()`) BEFORE
+    // making the change it would otherwise react to closes the race outright, rather than
+    // relying on timing luck between a network round trip and the very next statement.
+    kiosk.destroy();
     const s2 = makeSettings(profile.id);
     await s2.load();
     s2.set({ kiosk: { ...(s2.get().kiosk || {}), layout: null } });
     await s2.flush();
-    kiosk.destroy();
     document.getElementById('kioskHost').innerHTML = '';
+    // `kiosk` already warmed state.js's resilience cache (cacheKey `${USER}:${profile.id}:
+    // settings`) with the OLD, pre-clear layout — real offline-resilience behavior a real
+    // kiosk relies on, not a bug. Mounting `kiosk2` against that exact same cache key right
+    // after clearing the layout server-side is the one scenario a real device essentially
+    // never hits (a genuine reboot is never microseconds after its own prior write), and it
+    // is real production behavior for a fresh mount to notice a stale cache and reload — see
+    // kiosk.js's own "STALE-CACHE CORRECTION" comment. Clearing the entry here tests what
+    // this section actually cares about (does a cleared layout render correctly) rather than
+    // the cache-staleness path, which is somebody else's test to write.
+    try { localStorage.removeItem(`nimrod:cache:state:${USER}:${profile.id}:settings`); } catch {}
     const kiosk2 = await mountKiosk(document.getElementById('kioskHost'), {
       user: USER, profileId: profile.id, profiles, bus: createBus(),
     });

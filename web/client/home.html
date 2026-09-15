@@ -368,6 +368,7 @@
 import { createProfilesClient } from './profile.js';
 import { createState } from './state.js';
 import { createEvents } from './events.js';
+import { createPush } from './push.js';
 import { createBus } from './bus.js';
 import { createLocalBackend, seedStarterScreen } from './local_store.js';
 import { authHeaders, isAuthError } from './auth.js';
@@ -475,6 +476,17 @@ function localBanner() {
     if (!signedIn) { localBanner(); await seedStarterScreen(backend.profiles); }
 
     const profiles = signedIn ? createProfilesClient({ user: me.user }) : backend.profiles;
+    // ONE shared push connection for every handle home.html opens — see kiosk.js's
+    // identical setup and push.js's own header. Signed out there is no server session to
+    // hold a stream open to (same reason `backend` exists at all), so it stays null and
+    // every handle below just polls on its own, exactly as before this existed.
+    //
+    // *** THIS IS THE OTHER HALF OF "cross-device convergence" NAMED IN push.py'S OWN
+    // DOCSTRING. *** home.html is where a caregiver actually EDITS a setting; kiosk.js is
+    // where it has to land. A push connection here means home's own composer, and any
+    // paired kiosk showing the same profile, converge on each other's writes within one
+    // round trip instead of each polling on its own timer.
+    const push = signedIn ? createPush({ user: me.user }) : null;
     await mountHome(root, {
       email: signedIn ? (me.email || '') : '',
       signedIn,
@@ -483,7 +495,7 @@ function localBanner() {
       // The composer edits each screen's `settings` blob — the same key the kiosk reads
       // its theme, voice and layout from.
       makeSettings: signedIn
-        ? (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: me.user })
+        ? (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: me.user, push })
         : backend.makeSettings,
       // The Adulting tab mounts a real module, so it needs the same handle factories a
       // screen gives one. `forPid` lets a mounted module make sibling handles (its points
@@ -492,24 +504,24 @@ function localBanner() {
       bus: createBus(),
       makeState: signedIn
         ? (key, opts, forPid) =>
-            createState({ url: profiles.stateURL(forPid || keyPid(key), key), user: me.user, ...opts })
+            createState({ url: profiles.stateURL(forPid || keyPid(key), key), user: me.user, push, ...opts })
         : backend.makeState,
       makeEvents: signedIn
         ? (key, opts, forPid) =>
-            createEvents({ url: profiles.eventsURL(forPid || keyPid(key), key), user: me.user, ...opts })
+            createEvents({ url: profiles.eventsURL(forPid || keyPid(key), key), user: me.user, push, ...opts })
         : backend.makeEvents,
       // PER-PERSON, not per screen and not per account — see people.js. The shell curries
       // the current person onto these before handing them down, so the panels below still
       // receive the `makeUserState` / `makeUserEvents` they always did.
       makePersonState: signedIn
         ? (personId, key, opts) =>
-            createState({ url: profiles.personStateURL(personId, key), user: me.user, ...opts })
+            createState({ url: profiles.personStateURL(personId, key), user: me.user, push, ...opts })
         : backend.makePersonState,
       // The per-person mailbox for the `remote` output channel. Signed out there are no
       // other devices to reach, so it is null and the channel is simply not offered.
       makePersonEvents: signedIn
         ? (personId, stream, opts) =>
-            createEvents({ url: profiles.personEventsURL(personId, stream), user: me.user, ...opts })
+            createEvents({ url: profiles.personEventsURL(personId, stream), user: me.user, push, ...opts })
         : null,
     });
 

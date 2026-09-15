@@ -620,14 +620,18 @@ def get_state(pid: str, key: str, user: str = Depends(current_user)):
 
 
 @app.put("/api/profiles/{pid}/state/{key}")
-def put_state(pid: str, key: str, body: StatePut, user: str = Depends(current_user)):
+def put_state(pid: str, key: str, body: StatePut, request: Request, user: str = Depends(current_user)):
     _check(pid, ID_RE, "profile id")
     _check(key, ID_RE, "state key")
     owned_profile(user, pid)
     status, result = store.put_state(user, pid, key, body.data, body.base_version)
     if status == "conflict":
-        # Stale write. Hand back the current truth so the client can rebase + retry.
+        # Stale write, rejected — nothing actually changed, so nobody is told it did.
+        # Hand back the current truth so the client can rebase + retry.
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
+    # request.url.path is exactly the GET this same data lives at — self-referential on
+    # purpose, so this can never drift out of sync with the URL a poller actually uses.
+    _push.publish(user, request.url.path)
     return result
 
 
@@ -708,13 +712,15 @@ def get_person_state(person_id: str, key: str, user: str = Depends(current_user)
 
 
 @app.put("/api/people/{person_id}/state/{key}")
-def put_person_state(person_id: str, key: str, body: StatePut, user: str = Depends(current_user)):
+def put_person_state(person_id: str, key: str, body: StatePut, request: Request,
+                      user: str = Depends(current_user)):
     _check(person_id, ID_RE, "person id")
     _check(key, ID_RE, "state key")
     owned_person(user, person_id)
     status, result = store.put_state(user, person_scope(person_id), key, body.data, body.base_version)
     if status == "conflict":
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
+    _push.publish(user, request.url.path)
     return result
 
 

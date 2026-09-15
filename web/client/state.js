@@ -50,7 +50,15 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
                                // meaningful bandwidth, fast enough that recovery is noticed
                                // within a minute of the server actually coming back (the
                                // very next success resets to `pollMs` immediately anyway).
-                               pollBackoffMaxMs = 60 * 1000 }) {
+                               pollBackoffMaxMs = 60 * 1000,
+                               // Optional push.js handle (see push.js and events.js's
+                               // identical option). When given and connected, this handle
+                               // subscribes to its OWN `url` for an instant refetch the
+                               // moment a PUT anywhere tells the server this changed, and the
+                               // timer-based poll below backs off to `pollBackoffMaxMs`
+                               // instead of `pollMs` — never off, since push has no delivery
+                               // guarantee. Omit it and this behaves exactly as it always has.
+                               push = null }) {
   let data = {};
   let version = 0;
   let loaded = false;
@@ -58,6 +66,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
   let pending = {};        // keys changed since last successful flush
   let putTimer = null;
   let pollTimer = null;
+  let unsubscribePush = null;
   // 0 = the server has never once answered this handle. Set on every confirmed response —
   // a 200 with unchanged data is still proof it answered, not just a changed one.
   let lastServerOkAt = 0;
@@ -192,8 +201,10 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     throw httpError(res, `PUT ${url} -> ${res.status}`);
   }
 
-  // Interim cross-device convergence until server push (SSE) lands. Never
-  // overwrites a dirty mirror; adopts the server's data+version otherwise.
+  // Cross-device convergence. Never overwrites a dirty mirror; adopts the server's
+  // data+version otherwise. Server push (SSE) — the `push` option above — makes this fast
+  // when a caller has a shared connection to give it; without one (or while it's down) this
+  // is still the whole mechanism, polling on its own.
   //
   // *** BACKS OFF ON FAILURE, RESETS ON SUCCESS. *** Found 2026-09-15: this used to be a
   // bare `setInterval` that never stopped or slowed down, success or failure alike. During
@@ -213,33 +224,48 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
   // — a "destroyed" handle quietly still polling. Caught by state_events_backoff_test.html
   // testing several handles back to back, not by reasoning about it in advance.
   let pollStopped = false;
+
+  // Shared by the timer tick AND a push notification — a push saying "this changed" does
+  // exactly what a poll tick would have done anyway: ask, and skip asking at all while a
+  // local edit is still pending (the same `dirty` guard as before push existed).
+  async function pollOnce() {
+    if (dirty) return;
+    try {
+      const res = await fetch(url, { headers: authHeaders(user) });
+      if (!res.ok) {
+        pollFailures++;
+      } else {
+        pollFailures = 0;
+        const body = await res.json();
+        lastServerOkAt = Date.now();          // answered, whether or not anything changed
+        if ((body.version || 0) !== version &&
+            JSON.stringify(body.data || {}) !== JSON.stringify(data)) {
+          data = body.data || {};
+          version = body.version || 0;
+          if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
+          notify();
+        }
+      }
+    } catch { pollFailures++; }
+  }
+
   function startPolling() {
     if (pollTimer) return;
     pollStopped = false;
     const tick = async () => {
-      if (!dirty) {
-        try {
-          const res = await fetch(url, { headers: authHeaders(user) });
-          if (!res.ok) {
-            pollFailures++;
-          } else {
-            pollFailures = 0;
-            const body = await res.json();
-            lastServerOkAt = Date.now();          // answered, whether or not anything changed
-            if ((body.version || 0) !== version &&
-                JSON.stringify(body.data || {}) !== JSON.stringify(data)) {
-              data = body.data || {};
-              version = body.version || 0;
-              if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
-              notify();
-            }
-          }
-        } catch { pollFailures++; }
-      }
+      await pollOnce();
       if (pollStopped) return;
-      pollTimer = setTimeout(tick, nextPollDelay(pollMs, pollFailures, pollBackoffMaxMs));
+      // Push connected: this fetch is a slow safety net, not the primary signal (see
+      // events.js's identical comment) — idles at `pollBackoffMaxMs` regardless of
+      // `pollFailures`, since a push failure mode is exactly the sustained-failure case
+      // that ceiling already covers.
+      const delay = (push && push.isConnected())
+        ? pollBackoffMaxMs
+        : nextPollDelay(pollMs, pollFailures, pollBackoffMaxMs);
+      pollTimer = setTimeout(tick, delay);
     };
     pollTimer = setTimeout(tick, pollMs);
+    if (push) unsubscribePush = push.subscribe(url, pollOnce);
   }
 
   function subscribe(fn) {
@@ -252,6 +278,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     pollStopped = true;                          // stops a tick already in flight from rescheduling
     clearTimeout(pollTimer); pollTimer = null;   // a setTimeout chain now, not an interval
     clearTimeout(putTimer);
+    unsubscribePush?.(); unsubscribePush = null;
   }
 
   return { load, get: snapshot, set, subscribe, flush, startPolling, destroy,
