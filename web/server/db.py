@@ -1661,13 +1661,19 @@ class PostgresStore(_Store):
 
     def _migrate(self) -> None:
         stmts = [
-            # Additive and defaulted, so a live database keeps working while the deploy rolls:
-            # old code writing a row gets `moderator` from the default, new code reading an old
-            # row gets `moderator` too.
-            "ALTER TABLE drive_grants ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'moderator'",
             "CREATE TABLE IF NOT EXISTS drive_grants (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, "
             "person_id TEXT NOT NULL, subject_kind TEXT NOT NULL, subject_id TEXT NOT NULL, "
             "label TEXT NOT NULL DEFAULT '', expires_at TEXT, created_at TEXT NOT NULL)",
+            # Additive and defaulted, so a live database keeps working while the deploy rolls:
+            # old code writing a row gets `moderator` from the default, new code reading an old
+            # row gets `moderator` too. *** MUST FOLLOW THE CREATE TABLE ABOVE. *** Found
+            # 2026-09-16, migrating to a brand-new empty Postgres: this ran FIRST on the live
+            # database's own boot, which worked only because that table already existed from
+            # years of use — an empty database has nothing yet to ALTER, so `_migrate()` failed
+            # on its very first statement and silently created NOTHING (the whole method runs
+            # in one transaction; the first error rolls all of it back). Every other ALTER in
+            # this file already follows its table's CREATE — this was the one out of order.
+            "ALTER TABLE drive_grants ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'moderator'",
             "CREATE INDEX IF NOT EXISTS ix_grants_person ON drive_grants(owner_id, person_id)",
             "CREATE INDEX IF NOT EXISTS ix_grants_subject ON drive_grants(subject_kind, subject_id)",
 
