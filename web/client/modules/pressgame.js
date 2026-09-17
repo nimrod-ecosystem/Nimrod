@@ -293,7 +293,13 @@ registerModule(
     // signed-out preview) still gets the whole game with its on-screen text; it just does not
     // speak. A module that threw without one would be a module that needs a whole subsystem
     // to draw a circle.
-    const { mount, bus, state, events, output = null, audio = null } = ctx;
+    const { mount, bus, state, events, output = null, audio = null,
+            // `makeEvents`/`instanceId` are for CALIBRATION ONLY (see below) — a second,
+            // read-only events handle onto this same instance's own stream, opened just long
+            // enough to read history back. Optional: a bare test rig that only exercises the
+            // go/no-go loop supplies neither, and calibration simply reports it has nothing to
+            // suggest rather than throwing.
+            makeEvents = null, instanceId = null } = ctx;
     let cfg = { ...DEFAULTS };
 
     // Kept apart from cfg.calm for the same reason the comet keeps them apart: folding the
@@ -443,6 +449,70 @@ registerModule(
               + 'not separable here. Points are engagement only.',
         rows: sessionRows.slice(),
       };
+    }
+
+    // ---- calibration: "calibrate from today's results" (change list 2.2) -------------
+    //
+    // *** SUGGESTS A NUMBER. NEVER APPLIES ONE ON ITS OWN. *** This is a real, clinically-
+    // relevant parameter — how long somebody actually holds off before pressing early — and
+    // Mike's own framing of the gap was explicit: "let a caregiver review and apply it
+    // explicitly", not a formula that quietly retunes the game. Every number this computes is
+    // shown before anything is written, and nothing is written until a caregiver presses
+    // Apply in the page below.
+    //
+    // WHY heldOff, NOT latency. Both are recorded, but `minWaitMs` — "never wait less than"
+    // — is a statement about how long she can be asked to hold off, which is exactly what
+    // `heldOff` measures. `latency` (how fast she answers once GO appears) bears on a
+    // different setting (the wait length / challenge timing) that nothing here touches.
+    //
+    // WEIGHTED BY SAMPLE COUNT, ACROSS SESSIONS. Each `session_evidence_record` already
+    // carries its own `heldOff` mean — combining several sessions by averaging those means
+    // equally would let a three-minute session outvote a thirty-minute one. Weighting by each
+    // session's own `n` keeps a long session's evidence proportionate to how much of it there
+    // actually is.
+    const MIN_HELDOFF_SAMPLES = 3;   // below this, there is nothing responsible to say
+    function combineHeldOff(sessionDatas) {
+      let n = 0, weightedSum = 0, min = Infinity, max = -Infinity;
+      for (const d of sessionDatas) {
+        const h = d && d.heldOff;
+        if (!h || !h.n) continue;
+        n += h.n;
+        weightedSum += h.meanMs * h.n;
+        if (Number.isFinite(h.minMs)) min = Math.min(min, h.minMs);
+        if (Number.isFinite(h.maxMs)) max = Math.max(max, h.maxMs);
+      }
+      if (n < MIN_HELDOFF_SAMPLES) return null;
+      return { n, meanMs: Math.round(weightedSum / n), minMs: min, maxMs: max };
+    }
+
+    // `minWaitMs` is a `kind:'choice'` field (see SETTINGS below) — a caregiver picks from a
+    // fixed list, not a typed number, so a suggestion has to land on a value the menu can
+    // actually show as selected rather than an arbitrary millisecond count.
+    const MIN_WAIT_OPTIONS = [1000, 2500, 5000, 8000];
+    function nearestMinWaitOption(ms) {
+      return MIN_WAIT_OPTIONS.reduce((best, v) => (Math.abs(v - ms) < Math.abs(best - ms) ? v : best));
+    }
+
+    // Reads this instance's own event stream back — the ONE thing this module has never done
+    // before, since `events` (above) has only ever been written to. Deliberately a SEPARATE,
+    // temporary handle rather than reusing `events`: that handle exists to append trial rows
+    // with whatever limit the host gave it (commonly 50, which a single busy session can fill
+    // with trial rows alone, pushing older session summaries out of view). This one asks for
+    // as much history as the server will give in one page, reads it once, and is discarded —
+    // it never polls and never writes.
+    async function loadRecentSessionData() {
+      if (!makeEvents || !instanceId) return [];      // a bare test rig, most likely — nothing to read
+      const reader = makeEvents(instanceId, { limit: 500 });
+      try {
+        await reader.load();
+        return (reader.get().events || [])
+          .filter((e) => e.kind === 'session_evidence_record')
+          .map((e) => e.data);
+      } catch {
+        return [];                                     // offline, or nothing recorded yet — same UI either way
+      } finally {
+        reader.destroy?.();
+      }
     }
 
     // ---- sound. Synthesised only — nothing to 404. -----------------------------------
@@ -900,6 +970,15 @@ registerModule(
       }),
       __rows: () => sessionRows.slice(),
       __evidence: () => evidenceRecord(),
+      // Calibration test hooks — the pure math directly, and the async read-back, without
+      // having to drive the settings menu's DOM to reach either.
+      __combineHeldOff: (datas) => combineHeldOff(datas),
+      __nearestMinWaitOption: (ms) => nearestMinWaitOption(ms),
+      __loadRecentSessionData: () => loadRecentSessionData(),
+      // Opens the calibration page through the real settings menu (not a simulated click —
+      // `openPage` is the same call `activate()` makes for a row with `item.page` set) and
+      // hands back its body element so a test can read what actually rendered.
+      __openCalibratePage: () => { menu?.openPage?.('pg-calibrate'); return menuEl?.querySelector('[data-page-body]'); },
 
       init() {
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };
@@ -975,7 +1054,10 @@ registerModule(
           includeHome: false,
           person: () => null,
           subject: () => ({ type: 'pressgame', title: 'Wait and Go' }),
-          extras: () => [{ kind: 'item', id: 'pg-start', label: 'Start' }],
+          extras: () => [
+            { kind: 'item', id: 'pg-start', label: 'Start' },
+            { kind: 'item', id: 'pg-calibrate', label: 'Suggested wait time', page: 'pg-calibrate' },
+          ],
           fields: () => fieldItems(fieldsFor(getManifest('pressgame'), null), {
             values: () => state?.get?.() || {},
             level: 'standard',
@@ -983,6 +1065,42 @@ registerModule(
           }),
           onSelect: (item) => { if (item && item.id === 'pg-start') leaveMenu(); },
           onClose: () => leaveMenu(),
+          pages: {
+            'pg-calibrate': {
+              title: 'Suggested wait time',
+              render(el) {
+                const seconds = (ms) => (ms / 1000).toFixed(1).replace(/\.0$/, '');
+                el.innerHTML = '<p>Reading recent sessions…</p>';
+                loadRecentSessionData().then((datas) => {
+                  if (!el.isConnected) return;       // the caregiver already left this page
+                  const combined = combineHeldOff(datas);
+                  if (!combined) {
+                    el.innerHTML = '<p>Not enough recorded sessions yet — this needs a few '
+                      + 'early presses on record before it can suggest anything.</p>';
+                    return;
+                  }
+                  const suggested = nearestMinWaitOption(combined.meanMs);
+                  const current = cfg.minWaitMs;
+                  el.innerHTML = `<p>From ${combined.n} recorded early presses: held off an `
+                    + `average of ${seconds(combined.meanMs)}s before pressing `
+                    + `(range ${seconds(combined.minMs)}s&ndash;${seconds(combined.maxMs)}s).</p>`
+                    + `<p>Current "never wait less than": ${seconds(current)}s.</p>`
+                    + (suggested === current
+                      ? '<p><b>That already matches the current setting.</b></p>'
+                      : `<p>Suggested: <b>${seconds(suggested)}s</b>.</p>`
+                        + `<button class="st-item" type="button" data-apply>`
+                        + `<span class="st-label">Apply ${seconds(suggested)}s</span></button>`);
+                  el.querySelector('[data-apply]')?.addEventListener('click', () => {
+                    state?.set?.({ minWaitMs: suggested });
+                    el.innerHTML = `<p>Applied — "never wait less than" is now `
+                      + `${seconds(suggested)}s.</p>`;
+                  });
+                }).catch(() => {
+                  if (el.isConnected) el.innerHTML = '<p>Could not read recent sessions.</p>';
+                });
+              },
+            },
+          },
         });
         offs.push(() => { try { menu.destroy(); } catch { /* already gone */ } });
 
