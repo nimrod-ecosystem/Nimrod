@@ -242,7 +242,19 @@ export async function mountKiosk(root, {
   // single owner is the only thing that can honestly answer "is anything listening?". Nothing
   // opens it here — it is opened by whatever acquires it, which today is a call and nothing
   // else. See mic_owner.js for why a call and a recognizer want opposite processing.
-  const micOwner = createMicOwner();
+  //
+  // *** THE FALLBACK PREFERENCE, FOUND MISSING 2026-09-17. *** `home.js`'s Devices tab lets a
+  // caregiver set an ORDERED list of preferred microphones (mic_owner.js's whole reason for
+  // being one — "for somebody whose only route to being understood runs through it, [losing
+  // it] is being cut off") and writes it to per-person state. This construction used to call
+  // `createMicOwner()` with no `preferred` at all — the actual bedside screen never read that
+  // list, so a call here fell back to whatever `getUserMedia` picked by default, silently
+  // ignoring a preference the caregiver had already configured on another device. `deviceState`
+  // below is loaded the same way `markerState` already is; `preferred` is a function so it
+  // reads whatever is currently loaded rather than freezing the value from before boot.
+  const micOwner = createMicOwner({
+    preferred: () => (deviceState?.get() || {}).microphonePreferred || [],
+  });
 
   let output = null;
   // *** DECLARED HERE, NOT WHERE THEY ARE BUILT, AND THAT IS NOT TIDINESS. ***
@@ -271,6 +283,7 @@ export async function mountKiosk(root, {
   let cursor = null;
   let markerTracker = null;
   let markerState = null;
+  let deviceState = null;      // the person's ordered microphone preference — see micOwner above
   // *** SET FIRST IN `destroy()`, AND READ AFTER EVERY AWAIT THAT BUILDS SOMETHING. ***
   //
   // The kiosk resolves its person in the background so a name lookup cannot stop the screen
@@ -336,6 +349,28 @@ export async function mountKiosk(root, {
     sync(markerState.get());
     markerState.subscribe?.(sync);
     markerState.startPolling?.();
+  }
+
+  // ---- THE MICROPHONE FALLBACK PREFERENCE, PER PERSON --------------------------------
+  //
+  // Same shape as `startMarkerTracking` above, for the same reason: a caregiver sets this on
+  // home.html's Devices tab, on any device, and it has to reach the bedside without anyone
+  // reloading anything. `micOwner`'s `preferred` callback already reads `deviceState.get()`
+  // lazily, so nothing else needs to change once this loads — the fallback ladder just starts
+  // finding entries where it found none before.
+  async function startDevicePreference(personId2) {
+    if (deviceState || !personId2 || !profiles.personStateURL) return;
+    const { DEVICE_KEY } = await import('./device_panel.js');
+    if (torn) return;                              // the dynamic import is an await like any other
+    deviceState = createState({
+      url: profiles.personStateURL(personId2, DEVICE_KEY),
+      user,
+      cacheKey: `person:${user}:${personId2}:${DEVICE_KEY}`,
+      push,
+    });
+    await deviceState.load().catch(() => {});      // offline: the shipped default is an empty list
+    if (torn) { try { deviceState.destroy?.(); } catch { /* already gone */ } deviceState = null; return; }
+    deviceState.startPolling?.();
   }
   try {
     // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
@@ -1706,6 +1741,7 @@ export async function mountKiosk(root, {
       // `destroy()` is already past that line.
       if (torn) { try { personOff?.(); } catch { /* already gone */ } personOff = null; return; }
       await startMarkerTracking(p.person_id);
+      await startDevicePreference(p.person_id);
     } catch {
       /* offline or signed out: the shipped defaults still drive the screen */
       // ...but the who heading must stop saying "…". A lookup that FAILED is not a lookup
@@ -2068,6 +2104,13 @@ export async function mountKiosk(root, {
     // call mode without going through a module.
     audio: () => audio,
     cameraOwner: () => cameraOwner,
+    micOwner: () => micOwner,
+    // WHAT THE MIC ARBITER WOULD ACTUALLY FALL BACK TO RIGHT NOW — exposed so a test can prove
+    // the per-person preference set on home.js's Devices tab actually reaches this screen,
+    // rather than trusting that wiring it through `createMicOwner`'s `preferred` callback was
+    // enough. Found missing entirely until 2026-09-17: this construction called
+    // `createMicOwner()` with no `preferred` at all.
+    micPreferred: () => (deviceState?.get() || {}).microphonePreferred || [],
     // The screen currently showing here, and the swap itself - for a test, and for anything
     // that wants to drive it without going through the bus.
     screenId: () => profileId,
@@ -2145,6 +2188,7 @@ export async function mountKiosk(root, {
       try { markerTracker?.destroy(); } catch { /* already gone */ }
       try { micOwner.destroy(); } catch { /* already gone */ }
       try { markerState?.destroy?.(); } catch { /* already gone */ }
+      try { deviceState?.destroy?.(); } catch { /* already gone */ }
       try { push?.destroy(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';

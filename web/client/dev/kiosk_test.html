@@ -29,6 +29,7 @@ import { createBus } from '../bus.js';
 import { createProfilesClient } from '../profile.js';
 import { mountKiosk, SCREEN_SHOW, SCREEN_BACK, SCREEN_SHOWN } from '../kiosk.js';
 import { authHeaders } from '../auth.js';
+import { createState } from '../state.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'kiosk-test-user-' + Math.floor(performance.now());
@@ -919,6 +920,48 @@ const ds = () => root.querySelector('.kiosk').dataset;
     troot.remove();
   } catch (e) {
     check('the touch-bar section threw', false, String((e && e.stack) || e));
+  }
+
+  // ============================================================================================
+  // THE MICROPHONE FALLBACK PREFERENCE REACHES THE REAL SCREEN — found missing 2026-09-17.
+  //
+  // home.js's Devices tab lets a caregiver set an ORDERED list of preferred microphones,
+  // written to the person's own `devices` state. `createMicOwner()` here used to be called with
+  // no `preferred` at all, so that list was read on the builder page and never on the actual
+  // bedside screen — a call would fall back to whatever `getUserMedia` picked, silently
+  // ignoring a preference someone had already configured. Self-contained, same shape as the
+  // sections above: its own root, its own tiny profile, seeded BEFORE the kiosk mounts so there
+  // is no poll-timing race to wait out.
+  try {
+    const mProfiles = createProfilesClient({ user: USER });
+    const mp = await mProfiles.create('TEST-mic-pref');
+    const full = await mProfiles.get(mp.id);
+    check('a fresh profile already has a person behind it — every account gets one on first ask',
+      !!full?.person_id, JSON.stringify(full));
+
+    const seeded = ['mic-usb-headset', 'mic-builtin'];
+    const devState = createState({ url: mProfiles.personStateURL(full.person_id, 'devices'), user: USER });
+    await devState.load().catch(() => {});
+    devState.set({ microphonePreferred: seeded });
+    await devState.flush();
+    devState.destroy();
+
+    const mroot = document.createElement('div');
+    document.body.append(mroot);
+    const mk = await mountKiosk(mroot, {
+      user: USER, profileId: mp.id, profiles: mProfiles, bus: createBus(),
+    });
+    await settled(() => mk.micPreferred().length > 0, 3000);
+
+    check('*** the bedside screen’s own mic arbiter sees the preference set on the builder page ***',
+      JSON.stringify(mk.micPreferred()) === JSON.stringify(seeded), JSON.stringify(mk.micPreferred()));
+    check('and the real mic owner instance is reachable for a test the same way audio/camera are',
+      typeof mk.micOwner === 'function' && !!mk.micOwner());
+
+    try { mk?.destroy?.(); } catch { /* already gone */ }
+    mroot.remove();
+  } catch (e) {
+    check('the microphone-preference section threw', false, String((e && e.stack) || e));
   }
 
   // ============================================================================================
