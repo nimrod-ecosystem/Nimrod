@@ -27,6 +27,17 @@
 //     ## questions
 //     What is the capital of France? | Paris | London | Rome | Madrid
 //
+// A question row may also carry a topic, the same way a word row's fourth field does — but
+// because a question row's trailing fields are wrong answers of no fixed count, the topic is
+// tagged instead of positional: any trailing field written as `topic:something` is pulled out
+// rather than treated as a wrong answer, so it can sit anywhere after the answer:
+//
+//     ## questions
+//     What is a run-on sentence? | Two clauses joined with no punctuation | topic:spotting-a-run-on-sentence
+//
+// This is what lets a lesson topic's own questions be gated by `lessons.js` the same way its
+// vocabulary already is, without changing the shape of a bank nobody tagged this way.
+//
 // A bank with NO heading is read as whatever the reader asked for, so **every bank written
 // before this file existed still parses exactly as it did.** That is not politeness; a format
 // change that silently emptied somebody's word bank would be unrecoverable for anybody who had
@@ -80,7 +91,17 @@ export function parseBank(text, { defaultKind = 'words' } = {}) {
     if (p.length < 2 || !p[0] || !p[1]) continue;             // a half-written row is skipped
     if (kind === 'questions') {
       const [question, answer, ...rest] = p;
-      questions.push({ question, answer, wrong: rest.filter(Boolean) });
+      let topic;
+      const wrong = [];
+      for (const r of rest) {
+        if (!r) continue;
+        const m = /^topic:\s*(.+)$/i.exec(r);
+        if (m) { topic = m[1].trim(); continue; }
+        wrong.push(r);
+      }
+      const it = { question, answer, wrong };
+      if (topic) it.topic = topic;
+      questions.push(it);
     } else {
       const [word, meaning, sentence, grade, topic] = p;
       const it = { word, meaning, sentence: sentence || '' };
@@ -164,11 +185,14 @@ export function checkBank(text, { defaultKind = 'words' } = {}) {
         ? 'needs at least a question and an answer' : 'needs at least a word and a meaning' });
       return;
     }
-    if (kind === 'questions' && p.length < 3) {
-      // Not an error — the game borrows distractors — but worth saying, because somebody who
-      // meant to write three wrong answers and typed the wrong separator would never find out.
-      problems.push({ line: at, text: line, severity: 'note',
-                      why: 'no wrong answers given, so the game will borrow some' });
+    if (kind === 'questions') {
+      const realWrong = p.slice(2).filter((r) => r && !/^topic:\s*/i.test(r));
+      if (realWrong.length === 0) {
+        // Not an error — the game borrows distractors — but worth saying, because somebody who
+        // meant to write three wrong answers and typed the wrong separator would never find out.
+        problems.push({ line: at, text: line, severity: 'note',
+                        why: 'no wrong answers given, so the game will borrow some' });
+      }
     }
     n += 1;
   });
