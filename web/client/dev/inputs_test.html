@@ -515,6 +515,68 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.panel.destroy();
     }
 
+    // ================= which level a value comes from (Mike, 2026-09-17) =================
+    //
+    // "Every settings row must show which level its value comes from" — testable, not just a
+    // placeholder somebody has to already know means something. Only two levels exist for
+    // holdMs/debounceMs/lockoutMs today: the binding's own explicit value, or the device's,
+    // via input.js's own `effective()`. This proves the badge names the right one and — the
+    // part a placeholder alone would silently get wrong — updates the moment editing a field
+    // moves a value from one level to the other, without needing the whole table rebuilt
+    // (rebuilding it mid-edit would throw away focus, the same reason edits don't re-render).
+    section('*** which level a value comes from — shown, and kept honest live ***');
+    {
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('next');
+      r.q('[data-add]').click();
+      r.press(XAC, 'button:0');
+      const bid = r.panel.bindings().find((x) => x.device === XAC).id;
+      const row = r.q(`[data-bid="${bid}"]`);
+      const holdCell = row.querySelector('[data-f="holdMs"]').parentElement;
+
+      check('a freshly-captured binding inherits, and says so',
+        holdCell.querySelector('.i-source')?.dataset.source === 'device',
+        holdCell.innerHTML);
+      check('...naming the device\'s own value, not just "device"',
+        /from device: 0/.test(holdCell.querySelector('.i-source').textContent),
+        holdCell.querySelector('.i-source').textContent);
+
+      // Give the device itself a real hold time — the badge on the BINDING row (still
+      // inheriting) should pick up the new number without anyone touching that row.
+      r.q(`[data-device-chip="${XAC}"]`).click();
+      const devHold = r.q('.i-devcard [data-df="holdMs"]');
+      devHold.value = '300';
+      devHold.dispatchEvent(new Event('change', { bubbles: true }));
+      r.q('[data-device-chip=""]').click();
+      const row2 = r.q(`[data-bid="${bid}"]`);
+      check('*** the inherited badge follows the device\'s own change, on the very next render ***',
+        /from device: 300/.test(row2.querySelector('[data-f="holdMs"]').parentElement
+          .querySelector('.i-source').textContent),
+        row2.querySelector('[data-f="holdMs"]').parentElement.textContent);
+
+      // Now type an explicit value onto the binding itself — the badge must flip to "binding"
+      // immediately, in the SAME change event, since this table is deliberately not rebuilt
+      // on a binding edit (see inputs.js's own comment on that).
+      const holdField = row2.querySelector('[data-f="holdMs"]');
+      holdField.value = '900';
+      holdField.dispatchEvent(new Event('change', { bubbles: true }));
+      const badgeNow = row2.querySelector('[data-f="holdMs"]').parentElement.querySelector('.i-source');
+      check('*** typing an override flips the badge to "this binding\'s own" with no table rebuild ***',
+        badgeNow.dataset.source === 'binding' && /this binding.s own/.test(badgeNow.textContent),
+        badgeNow.outerHTML);
+
+      // And clearing it back to blank must flip the badge back to "device", live, the same way.
+      holdField.value = '';
+      holdField.dispatchEvent(new Event('change', { bubbles: true }));
+      const badgeBack = row2.querySelector('[data-f="holdMs"]').parentElement.querySelector('.i-source');
+      check('*** clearing the override flips the badge straight back to "device", live ***',
+        badgeBack.dataset.source === 'device' && /from device: 300/.test(badgeBack.textContent),
+        badgeBack.outerHTML);
+
+      r.panel.destroy();
+    }
+
     // ================= per-user persistence =================
     section('per USER, not per screen');
     {
