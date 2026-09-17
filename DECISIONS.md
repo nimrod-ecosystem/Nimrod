@@ -1855,3 +1855,41 @@ order both exist in the work order file; neither is chosen. A DECIDE row, not pi
 **Status as of logging:** the preparation this decision itself calls for (the consolidation
 pass — `NEW_CORE_SPEC.md`, `MUST_SURVIVE.md`, `DOC_INDEX.md` — and the per-substrate-file
 assumption check) has not been done. That is the actual next work, not porting a module yet.
+
+---
+
+## There is no "kiosk," architecturally — it is a module that contains modules — and port order is dependency-based. 2026-09-17
+
+**Sharpens, does not reverse, the 2026-09-11 decision's own "container is a tier of module, not
+a non-module" line** — that line already said this; a specific wording in the same decision
+("kiosk.js as a container rather than a shell") let the ambiguity back in anyway, and this
+entry closes it explicitly.
+
+**The tension, found while writing `NEW_CORE_SPEC.md`:** a 2026-09-05 investigation
+(`MIKE_CHANGE_LIST.md` §kiosk-vs-container) had already asked "is a kiosk rendering four
+one-element modules different from one module containing four elements?" and concluded the
+container module already exists and is `view.js`, not `kiosk.js` — `kiosk.js` also owns things
+that are genuinely one-per-screen rather than one-per-arrangement (the audio/camera/mic/output
+arbiters, the input runtime, the settings menu, the cursor, the health-watch, screen-swapping),
+so it is a shell, not a container. The 09-11 decision's wording ("kiosk.js as a container")
+read as reopening that question without saying so.
+
+**Mike's ruling:** *"I don't think we want the kiosk as a separate thing from a module. The
+ultimate idea is a module can house multiple modules, so what we were calling a kiosk is really
+just a module that contains modules. At least as far as the end user would know. It could be
+wired in the most sensible way."* So: no structurally distinct "kiosk" layer, even
+terminologically — a dashboard (the end-user-facing name going forward, not "kiosk") is a
+containing-module, the same tier `view.js` already occupies. Implementation is free to wire it
+however makes sense; the constraint is that nothing about it should read, to the person using
+it, as a different kind of thing from any other module.
+
+**Not decided here, flagged for whoever builds this:** the singleton arbiters `kiosk.js`
+currently owns need a home somewhere, and containing-modules can nest — so something still has
+to be the one instance actually holding "the real speaker," "the real camera," rather than every
+containing-module getting its own. That is very likely still a distinguished ROOT instance of
+the containing-module type, not a second architectural category — but that has not been said in
+so many words anywhere yet, and should be, before the port needs an answer.
+
+**Port order: dependency-based, not Mike's own priority list.** Both existed as candidates in
+`docs/from_chat/work_order_consolidation_and_new_core_20260911.md`; Mike picked chat's
+dependency-ordered sequence over his own priority-ordered one, 2026-09-17.
