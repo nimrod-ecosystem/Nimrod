@@ -40,14 +40,46 @@ export function createBus() {
     }
   }
 
-  function addBinding({ source, signal, topic, transform }) {
-    const binding = { source, signal, topic, transform };
+  function addBinding({ source, signal, topic, transform, consume }) {
+    const binding = { source, signal, topic, transform, consume };
     bindings.add(binding);
     return () => bindings.delete(binding);
   }
 
   // A raw signal fans out to every matching binding. `transform` returning
   // undefined/null means "ignore this signal" (e.g. a key we don't map).
+  //
+  // *** `consume`, ADDED 2026-09-17 — THE ONE NAMED SEAM CHANGE THE ASSUMPTION CHECK FOUND. ***
+  // `ASSUMPTION_CHECK.md`: 17 of 18 substrate files KEEP, only this one needs a seam change —
+  // `route()` had no way for one binding to say "stop, I've got this" to the ones after it.
+  //
+  // *** OFF BY DEFAULT, ON PURPOSE — THIS IS A DESIGN ABSOLUTE'S EDGE CASE HUNTED, NOT GUESSED
+  // AT. *** A binding with no `consume` behaves EXACTLY as before: every matching binding still
+  // fires, in the same order, with the same payload. Nothing existing changes meaning. Only a
+  // binding that explicitly opts in can stop a later one from firing, which is the same
+  // "off by default, available to anybody who turns it on" shape CLAUDE.md's own design-absolutes
+  // section asks for.
+  //
+  // *** SCOPED NARROWLY: A MECHANICAL CONSUME FLAG, NOT A RULING ON THE BIGGER OPEN QUESTION.
+  // *** `NEW_CORE_SPEC.md` §4 names THREE candidate shapes for inhibition (per-binding, per-scope,
+  // or a consume flag) and leaves open how any of them composes with the already-settled
+  // "type is hint not veto, a declared conversion is the answer" ruling. This builds only the
+  // cheapest of the three — a consume flag, "first matching binding wins" — because it is a
+  // mechanical capability with no type-system question attached at all: it says nothing about
+  // whether a TYPE may veto a link, only whether ONE BINDING, having actually handled a signal,
+  // may stop a LATER one from also handling the exact same raw signal. The bigger question
+  // (inhibition as a first-class link/connection type in the composition model, per
+  // `RESEARCH_NOTES.md`'s biology argument) is NOT resolved here and stays open — this is
+  // deliberately the narrow, load-bearing piece underneath it, not a stand-in for it.
+  //
+  // *** CONSUME ONLY FIRES WHEN THE BINDING ACTUALLY HANDLED THE SIGNAL. *** A binding whose
+  // transform returns null/undefined never published — it said "not mine," and a binding that
+  // declined to act has no business stopping one that would have. Consuming is something a
+  // binding EARNS by actually publishing, never something it claims by merely matching.
+  //
+  // Iteration order is insertion order (a `Set` already guarantees this in JS) — "the binding
+  // that consumed" and "the ones after it" is well-defined and stable, the same way it already
+  // was for plain fan-out.
   function route(source, signal, payload, meta) {
     for (const b of bindings) {
       if (b.source !== source) continue;
@@ -67,6 +99,7 @@ export function createBus() {
       // not the transform's to rewrite, and letting it be would make a sender forgeable by
       // any binding rather than only by a publisher.
       publish(b.topic, out, meta);
+      if (b.consume) break;
     }
   }
 

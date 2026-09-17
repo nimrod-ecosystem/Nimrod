@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>bus.js — sources, bindings, sinks, and the new consume flag</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>bus.js — sources, bindings, sinks, and the new consume flag</h1>
+<p>No dedicated unit suite existed for this file before 2026-09-17 — it was only ever exercised
+indirectly through dozens of module suites. This covers the base mechanism directly (so a future
+change to <code>route()</code> has something narrower than "re-run everything" to check against),
+plus the new <code>consume</code> flag from the core-rebuild's one named seam change
+(<code>ASSUMPTION_CHECK.md</code>: 17 of 18 substrate files KEEP, only <code>bus.js</code> needed
+a seam change).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+try {
+  // =====================================================================================
+  section('subscribe / publish — the base pub/sub');
+  {
+    const bus = createBus();
+    const heard = [];
+    const off = bus.subscribe('photos/next', (payload, topic, meta) => heard.push({ payload, topic, meta }));
+    bus.publish('photos/next', { by: 1 }, { from: 'keyboard' });
+    check('a subscriber hears a publish on its own topic',
+      heard.length === 1 && heard[0].payload.by === 1, JSON.stringify(heard));
+    check('the topic name rides along', heard[0].topic === 'photos/next');
+    check('meta rides along as a third argument, untouched', heard[0].meta.from === 'keyboard');
+
+    bus.publish('youtube/next', {}, {});
+    check('a publish on a DIFFERENT topic is not heard', heard.length === 1);
+
+    off();
+    bus.publish('photos/next', {}, {});
+    check('*** unsubscribing actually stops delivery ***', heard.length === 1);
+  }
+
+  section('multiple subscribers on one topic, and cleanup of the empty set');
+  {
+    const bus = createBus();
+    let a = 0, b = 0;
+    const offA = bus.subscribe('x', () => { a += 1; });
+    const offB = bus.subscribe('x', () => { b += 1; });
+    bus.publish('x', {}, {});
+    check('every subscriber on a topic hears a publish', a === 1 && b === 1);
+    offA();
+    bus.publish('x', {}, {});
+    check('removing one subscriber leaves the other hearing it', a === 1 && b === 2);
+    offB();
+    bus.publish('x', {}, {});
+    check('removing the last subscriber leaves nothing to throw on a publish', a === 1 && b === 2);
+  }
+
+  section('*** a sink that throws does not stop the OTHER sinks on the same topic ***');
+  {
+    const bus = createBus();
+    let secondRan = false;
+    const origError = console.error;
+    console.error = () => {};   // the handler is expected to log; keep the test output clean
+    try {
+      bus.subscribe('x', () => { throw new Error('boom'); });
+      bus.subscribe('x', () => { secondRan = true; });
+      bus.publish('x', {}, {});
+    } finally {
+      console.error = origError;
+    }
+    check('a throwing sink does not prevent a later sink on the same publish from running', secondRan);
+  }
+
+  // =====================================================================================
+  section('addBinding / route — a raw signal becomes a semantic publish');
+  {
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('photos/next', (p) => heard.push(p));
+    bus.addBinding({ source: 'keyboard', signal: 'ArrowRight', topic: 'photos/next' });
+    bus.createSource('keyboard').emit('ArrowRight', { raw: true });
+    check('a binding with no transform passes the payload straight through',
+      heard.length === 1 && heard[0].raw === true, JSON.stringify(heard));
+  }
+
+  section('a transform reshapes the payload; returning null/undefined means "ignore"');
+  {
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('counter/change', (p) => heard.push(p));
+    bus.addBinding({
+      source: 'keyboard', signal: '*', topic: 'counter/change',
+      transform: (payload, signal) => (signal === 'ArrowUp' ? 1 : signal === 'ArrowDown' ? -1 : null),
+    });
+    const kb = bus.createSource('keyboard');
+    kb.emit('ArrowUp');
+    kb.emit('ArrowDown');
+    kb.emit('Escape');   // not mapped — the transform returns null
+    check('a mapped signal publishes the transformed value', heard.join(',') === '1,-1', heard.join(','));
+    check('*** an unmapped signal is silently ignored, not published as null/undefined ***',
+      heard.length === 2, JSON.stringify(heard));
+  }
+
+  section('*** a BARE emit with no payload still fires when the binding has no transform ***');
+  {
+    // The exact regression bus.js's own header documents: applying the "ignore" rule to an
+    // untransformed signal once killed nine on-screen buttons across five modules, because
+    // `undefined` in was wrongly read as "ignore this".
+    const bus = createBus();
+    let fired = 0;
+    bus.subscribe('photos/next', () => { fired += 1; });
+    bus.addBinding({ source: 'pointer:mouse', signal: 'click', topic: 'photos/next' });
+    bus.createSource('pointer:mouse').emit('click');   // no payload argument at all
+    check('a bare emit with no transform and no payload still reaches the topic', fired === 1);
+  }
+
+  section('a wildcard `*` binding signal matches any signal from its source');
+  {
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('any', (p, t, m) => heard.push(m?.signal));
+    bus.addBinding({
+      source: 'gamepad:0', signal: '*', topic: 'any',
+      transform: () => ({}),
+    });
+    // meta isn't populated with the signal by route() itself — this just proves '*' matches
+    // every signal from the bound source, using call count instead.
+    const gp = bus.createSource('gamepad:0');
+    gp.emit('button:0'); gp.emit('button:1'); gp.emit('button:2');
+    check('a `*` binding fires for every signal from its source', heard.length === 3, String(heard.length));
+  }
+
+  section('a binding only matches its own declared source — never another device’s signal');
+  {
+    const bus = createBus();
+    let fired = 0;
+    bus.subscribe('x', () => { fired += 1; });
+    bus.addBinding({ source: 'keyboard', signal: 'a', topic: 'x' });
+    bus.createSource('pointer:mouse').emit('a');   // same signal name, different source
+    check('a signal from an unbound source never reaches a binding declared for another source',
+      fired === 0);
+  }
+
+  section('removing a binding stops it from routing, without touching others');
+  {
+    const bus = createBus();
+    let fired = 0;
+    bus.subscribe('x', () => { fired += 1; });
+    const off = bus.addBinding({ source: 'keyboard', signal: 'a', topic: 'x' });
+    bus.createSource('keyboard').emit('a');
+    off();
+    bus.createSource('keyboard').emit('a');
+    check('a removed binding no longer routes its signal', fired === 1);
+  }
+
+  // =====================================================================================
+  section('*** consume, added 2026-09-17 — the one named seam ASSUMPTION_CHECK.md flagged ***');
+  {
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('a', () => heard.push('a'));
+    bus.subscribe('b', () => heard.push('b'));
+    bus.addBinding({ source: 'x', signal: 's', topic: 'a', consume: true });
+    bus.addBinding({ source: 'x', signal: 's', topic: 'b' });
+    bus.createSource('x').emit('s');
+    check('*** a consuming binding stops a LATER matching binding from also firing ***',
+      heard.join(',') === 'a', JSON.stringify(heard));
+  }
+
+  section('*** the default is UNCHANGED — no binding declares consume, every one still fires ***');
+  {
+    // This is the "off by default" half of the design-absolutes hunt: nothing that never
+    // opts in should ever see different behavior.
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('a', () => heard.push('a'));
+    bus.subscribe('b', () => heard.push('b'));
+    bus.subscribe('c', () => heard.push('c'));
+    bus.addBinding({ source: 'x', signal: 's', topic: 'a' });
+    bus.addBinding({ source: 'x', signal: 's', topic: 'b' });
+    bus.addBinding({ source: 'x', signal: 's', topic: 'c' });
+    bus.createSource('x').emit('s');
+    check('*** with no consume anywhere, EVERY matching binding still fires, exactly as before ***',
+      heard.join(',') === 'a,b,c', JSON.stringify(heard));
+  }
+
+  section('consume only counts when the binding actually handled the signal');
+  {
+    // A binding whose transform returns null/undefined never published — it said "not mine",
+    // and declining to act earns it no right to stop a later binding that would have fired.
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('a', () => heard.push('a'));
+    bus.subscribe('b', () => heard.push('b'));
+    bus.addBinding({
+      source: 'x', signal: 's', topic: 'a', consume: true,
+      transform: () => null,   // declines every signal
+    });
+    bus.addBinding({ source: 'x', signal: 's', topic: 'b' });
+    bus.createSource('x').emit('s');
+    check('*** a consume binding that declined the signal (transform -> null) does not suppress the next one ***',
+      heard.join(',') === 'b', JSON.stringify(heard));
+  }
+
+  section('consume stops only LATER bindings for the SAME source+signal — nothing else');
+  {
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('a', () => heard.push('a'));
+    bus.subscribe('b', () => heard.push('b'));
+    bus.subscribe('c', () => heard.push('c'));
+    // 'b' is bound to a DIFFERENT signal, so it is never in the same route() pass as 'a'/'c'.
+    bus.addBinding({ source: 'x', signal: 's1', topic: 'a', consume: true });
+    bus.addBinding({ source: 'x', signal: 's2', topic: 'b' });
+    bus.addBinding({ source: 'x', signal: 's1', topic: 'c' });
+    const src = bus.createSource('x');
+    src.emit('s1');
+    src.emit('s2');
+    check('consume on one signal never reaches a binding for a different signal', heard.includes('b'));
+    check('*** but it still stops a later binding on the SAME signal ***',
+      !heard.includes('c'), JSON.stringify(heard));
+  }
+
+  section('insertion order decides who gets to consume first — the same order plain fan-out already used');
+  {
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('a', () => heard.push('a'));
+    bus.subscribe('b', () => heard.push('b'));
+    // 'b' is added first this time, and does NOT consume — 'a' (added second) still fires,
+    // proving order is insertion order, not declaration order of anything else.
+    bus.addBinding({ source: 'x', signal: 's', topic: 'b' });
+    bus.addBinding({ source: 'x', signal: 's', topic: 'a', consume: true });
+    bus.createSource('x').emit('s');
+    check('bindings still fire in insertion order with consume in the mix',
+      heard.join(',') === 'b,a', JSON.stringify(heard));
+  }
+
+  section('a consuming binding still delivers to every SUBSCRIBER on its own topic — consume is about other BINDINGS, not other sinks');
+  {
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe('a', () => heard.push('sink1'));
+    bus.subscribe('a', () => heard.push('sink2'));
+    bus.addBinding({ source: 'x', signal: 's', topic: 'a', consume: true });
+    bus.addBinding({ source: 'x', signal: 's', topic: 'never' });
+    bus.createSource('x').emit('s');
+    check('every subscriber on the consuming binding’s own topic still hears it',
+      heard.join(',') === 'sink1,sink2', JSON.stringify(heard));
+  }
+
+  // =====================================================================================
+  section('scope() — a module’s tracked, disposable view of the bus');
+  {
+    const bus = createBus();
+    const s = bus.scope();
+    const heard = [];
+    s.subscribe('x', () => heard.push(1));
+    bus.publish('x', {}, {});
+    check('a scoped subscribe hears an ordinary publish', heard.length === 1);
+    s.dispose();
+    bus.publish('x', {}, {});
+    check('*** dispose() releases every subscription the scope opened ***', heard.length === 1);
+  }
+
+  section('scope(instanceId) — bare topic AND the instance-scoped alias, never one instead of the other');
+  {
+    const bus = createBus();
+    const scopedA = bus.scope('photo-a');
+    const scopedB = bus.scope('photo-b');
+    const heardA = [], heardB = [];
+    scopedA.subscribe('photos/next', () => heardA.push(1));
+    scopedB.subscribe('photos/next', () => heardB.push(1));
+
+    bus.publish(bus.instanceTopic('photo-a', 'photos/next'), {}, {});
+    check('*** an instance-addressed publish reaches only that instance ***',
+      heardA.length === 1 && heardB.length === 0, `A=${heardA.length} B=${heardB.length}`);
+
+    bus.publish('photos/next', {}, {});
+    check('*** the BARE topic still broadcasts to every instance, unchanged ***',
+      heardA.length === 2 && heardB.length === 1, `A=${heardA.length} B=${heardB.length}`);
+
+    scopedA.dispose(); scopedB.dispose();
+  }
+
+  section('instanceTopic — a stable, collision-free address, and the no-instance passthrough');
+  {
+    const bus = createBus();
+    check('an instance id produces a `#`-suffixed address',
+      bus.instanceTopic('m1', 'photos/next') === 'photos/next#m1');
+    check('no instance id (null) returns the bare topic unchanged',
+      bus.instanceTopic(null, 'photos/next') === 'photos/next');
+    check('no instance id (undefined) returns the bare topic unchanged',
+      bus.instanceTopic(undefined, 'photos/next') === 'photos/next');
+  }
+
+  section('scope().addBinding tracks and releases the binding on dispose, and consume still works through it');
+  {
+    const bus = createBus();
+    const s = bus.scope();
+    const heard = [];
+    bus.subscribe('a', () => heard.push('a'));
+    bus.subscribe('b', () => heard.push('b'));
+    s.addBinding({ source: 'x', signal: 's', topic: 'a', consume: true });
+    bus.addBinding({ source: 'x', signal: 's', topic: 'b' });
+    bus.createSource('x').emit('s');
+    check('a binding added through a scope still consumes correctly', heard.join(',') === 'a');
+    heard.length = 0;
+    s.dispose();
+    bus.createSource('x').emit('s');
+    check('disposing the scope removes its binding, so the next one now fires',
+      heard.join(',') === 'b', JSON.stringify(heard));
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+</script>
+</body>
+</html>
