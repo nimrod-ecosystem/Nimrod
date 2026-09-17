@@ -1778,3 +1778,80 @@ the demo host never touching the real account. Then the same flow was driven thr
 rendered UI: typed a real time-of-day schedule into the YouTube panel on `/modules.html`, read it
 back through a fresh handle built the way `kiosk.js` builds one, got the identical JSON. Full
 suite sweep: 95/95 clean.
+
+## Rebuild the foundation, port the modules, keep the substrate — provisionally, 2026-09-11
+
+**Logged 2026-09-17, six days late.** This decision was made and directed to be logged
+verbatim on 2026-09-11 (`docs/from_chat/work_order_consolidation_and_new_core_20260911.md`,
+private repo), but the preparation work that document itself sequenced before any porting —
+the consolidation pass, the assumption check, the decision landing here — never ran. The
+port hold that decision came with was lifted by Mike on 2026-09-17 ("It does. That's what I
+want him working on."), which is what surfaced that this was never logged. Recorded now,
+verbatim from that file, dated to when Mike actually decided it.
+
+> Rebuild the foundation, port the modules, keep the substrate — provisionally.
+> 1. REBUILD, as a new core beside the old one, tests first: module.js and ctx (a person in
+>    ctx, prefab/instance), the registry as composition data, kiosk.js as a container rather
+>    than a shell, bus.js for inhibition/consume, links.js as the wiring layer, the settings
+>    model where it assumes one level.
+> 2. PORT the modules onto the new core one at a time, each read from three references first
+>    (see the porting rule in CLAUDE.md). Old and new coexist on one running site with a
+>    visible, tested boundary; an old module is deleted only when its port has proven itself
+>    in place.
+> 3. KEEP the proven substrate — PROVISIONALLY, per file, gated by an assumption check. A
+>    kept service may get a module face (headless instance) without its implementation being
+>    rewritten.
+>
+> Criterion that flips this to a full rebuild, decided by the check and not by mood: the
+> assumption check failing on most of the substrate, or the consolidation pass finding the
+> current core's seams cannot coexist with a new one on the same page.
+>
+> Reasons: the composition rule makes every existing module wrong by construction, so
+> porting is rewriting anyway; ctx has no person and nothing distinguishes a type from an
+> instance, and that cannot be fixed in place without every module "working and none of them
+> right"; the codebase is about a month old; the substrate carries measured fixes with no
+> design reason to change. Sunk cost is not a reason; the reasons, constants, tests and
+> decisions are what must survive, and the consolidation pass names them.
+
+**More of Mike's rulings from the same day, logged in the same entry:**
+- Physical and software identity are ONE scheme (the SKU/identity work). The bricks use the
+  new scheme; the old brick model-number system (`nimrod_model_number_spec.md`, April) is
+  superseded by it.
+- The licence, whatever is chosen per layer, must leave bespoke products and paid
+  implementation open — organisations may pay for service and for custom builds.
+- Everything is a module except the small bang that launches modules. The dashboard is a
+  module; the homepage and the rest of the site are modules, so any of them can be placed
+  inside a dashboard. "Container" is a tier of module, not a non-module.
+- The transport bar and the settings menu live high up, in the core, never drawn by a
+  module. The FIRST container on the new core is the modules module — today's "What you can
+  add" tab (`modules.html`). Tabs are modules too; it keeps its top-tab space and is called
+  "modules". Inside it: one module in the middle, the settings menu to its right, the
+  transport bar below it — the test bed every port goes through before it reaches a
+  dashboard.
+- Binding scope is a sequence of levels, and the person can reorder it for anything they
+  want. Mike's list: account, user, input device, ecosystem, building, atmosphere, room,
+  battlestation, output device, scene, dashboard, module. Extends the existing
+  account → user → screen → instance tree; it is the same tree, longer, and user-orderable —
+  "a binding belongs to a person" is one position in it, not the rule.
+- Verbs (play, next, previous, select, …) are what devices bind to and what modules and the
+  transport bar react to. Custom verbs are the ones users need that were not anticipated.
+  They are added in a glossary-type module (working name **Glossary** — not yet Mike's own
+  name for it) and inline while editing a device's bindings. It covers every exposed or
+  custom variable, not only verbs. Today the only place a verb can be added is code
+  (`MODULE_VERBS` in `actions.js`); that changes with the Devices port.
+- "Vocabulary" is the name reserved for the WORDS side — the AAC board's vocabulary, Word
+  Forge's bank, the person's own language — not for code terms.
+- Site copy never says "her screen" or refers to the person the project was first built for.
+  A visitor has no idea what that means. Internal docs may; the site may not.
+
+**Verdicts already given, not to be re-asked:** pond is PARKED (not ported). interstitials
+is PARKED (not ported). director is not ported as code — it is re-created as a shipped
+PREFAB on the new core once the container and state machine exist, with no skip button of
+its own (the transport bar's own buttons do that job).
+
+**Port order is still open** — Mike's own priority list and chat's proposed dependency
+order both exist in the work order file; neither is chosen. A DECIDE row, not picked here.
+
+**Status as of logging:** the preparation this decision itself calls for (the consolidation
+pass — `NEW_CORE_SPEC.md`, `MUST_SURVIVE.md`, `DOC_INDEX.md` — and the per-substrate-file
+assumption check) has not been done. That is the actual next work, not porting a module yet.
