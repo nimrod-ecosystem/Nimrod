@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>prefab.js — TYPE → PREFAB → INSTANCE</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:76ch}
+</style>
+</head>
+<body>
+<h1>prefab.js — TYPE → PREFAB → INSTANCE</h1>
+
+<div class="note">
+  H1's correction is why this is three layers, not two: a prefab carries a DEFAULT (headless
+  off), and an instance of that prefab can still switch it. This suite proves the resolution
+  chain — type defaults, then a prefab's overrides, then one instance's own overrides — and,
+  most importantly, the diff behavior that keeps a prefab's own later edits from being drowned
+  out by instances that only ever "agreed" with the old value.
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  definePrefab, getPrefab, listPrefabs, retainPrefab, releasePrefab, removePrefab,
+  resolvePrefab, resolveInstance, diffFromPrefab,
+} from '../prefab.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+let n = 0;
+const uid = (prefix) => `${prefix}-${Date.now()}-${n++}`;
+
+try {
+  // =====================================================================================
+  section('definePrefab / getPrefab / listPrefabs');
+  {
+    const id = uid('quiet-audio');
+    const p = definePrefab({ id, type: 'audio-player', overrides: { headless: true }, label: 'Quiet' });
+    check('definePrefab returns the record it made', p.id === id && p.type === 'audio-player');
+    check('getPrefab finds it by id', getPrefab(id)?.label === 'Quiet');
+    check('a prefab starts with zero refs', p.refs === 0);
+    check('listPrefabs includes it', listPrefabs().some((x) => x.id === id));
+    check('listPrefabs(type) narrows correctly', listPrefabs('audio-player').some((x) => x.id === id));
+    check('listPrefabs(a different type) does not include it', !listPrefabs('clock').some((x) => x.id === id));
+  }
+
+  section('overrides are copied, not referenced — mutating the caller’s object cannot reach in later');
+  {
+    const id = uid('copy-check');
+    const src = { color: 'blue' };
+    definePrefab({ id, type: 'clock', overrides: src });
+    src.color = 'red';
+    check('the stored prefab keeps the value it was given, not whatever the caller mutated it to later',
+      getPrefab(id).overrides.color === 'blue', getPrefab(id).overrides.color);
+  }
+
+  section('required fields');
+  {
+    let threw = false;
+    try { definePrefab({ type: 'clock' }); } catch { threw = true; }
+    check('definePrefab requires an id', threw);
+  }
+  {
+    let threw = false;
+    try { definePrefab({ id: uid('no-type') }); } catch { threw = true; }
+    check('definePrefab requires a type', threw);
+  }
+
+  section('*** defining the same id twice is refused, not silently overwritten ***');
+  {
+    const id = uid('dup');
+    definePrefab({ id, type: 'clock', overrides: { corner: 'tl' } });
+    let threw = false;
+    try { definePrefab({ id, type: 'clock', overrides: { corner: 'br' } }); } catch { threw = true; }
+    check('a duplicate id throws rather than silently replacing an existing prefab', threw);
+    check('...and the ORIGINAL prefab is untouched', getPrefab(id).overrides.corner === 'tl');
+  }
+
+  section('getPrefab / removePrefab on an id that was never defined');
+  {
+    check('getPrefab returns null, not undefined or a throw, for an unknown id', getPrefab('never-defined-xyz') === null);
+    check('removePrefab on an unknown id returns false rather than throwing', removePrefab('never-defined-xyz') === false);
+  }
+
+  // =====================================================================================
+  section('refcounting — a courtesy count, not an enforced lock');
+  {
+    const id = uid('refcount');
+    definePrefab({ id, type: 'clock' });
+    check('retainPrefab increments and returns the new count', retainPrefab(id) === 1);
+    check('a second retain goes to 2', retainPrefab(id) === 2);
+    check('releasePrefab decrements', releasePrefab(id) === 1);
+    check('*** releasing past zero clamps at zero rather than going negative ***',
+      releasePrefab(id) === 0 && releasePrefab(id) === 0);
+  }
+  {
+    let threw = false;
+    try { retainPrefab('never-defined-xyz'); } catch { threw = true; }
+    check('retaining an unknown prefab throws rather than silently creating a phantom count', threw);
+  }
+  {
+    // Explicitly NOT a lock — this repo's own standing rule is that policy decisions (block?
+    // orphan? fall back?) belong to whoever builds the deleting UI, not this data layer.
+    const id = uid('remove-while-used');
+    definePrefab({ id, type: 'clock' });
+    retainPrefab(id);
+    check('*** removePrefab succeeds even with a positive refcount — no policy is assumed here ***',
+      removePrefab(id) === true);
+    check('...and it is genuinely gone afterward', getPrefab(id) === null);
+  }
+
+  // =====================================================================================
+  section('resolvePrefab — type defaults, with the prefab’s own overrides layered on top');
+  {
+    const typeDefaults = { headless: false, volume: 0.3, label: 'Player' };
+    const prefab = definePrefab({ id: uid('resolve-a'), type: 'audio-player', overrides: { headless: true } });
+    const resolved = resolvePrefab(typeDefaults, prefab);
+    check('a field the prefab overrides wins', resolved.headless === true);
+    check('a field the prefab never mentions falls through to the type default',
+      resolved.volume === 0.3 && resolved.label === 'Player');
+  }
+
+  section('resolvePrefab with prefab: null — an instance sitting directly on a type, no prefab in between');
+  {
+    const typeDefaults = { headless: false, volume: 0.3 };
+    const resolved = resolvePrefab(typeDefaults, null);
+    check('with no prefab, the type defaults pass through completely unchanged',
+      JSON.stringify(resolved) === JSON.stringify(typeDefaults));
+  }
+
+  section('*** resolveInstance — the full three-layer chain, each layer able to override the one before it ***');
+  {
+    const typeDefaults = { headless: false, volume: 0.3, label: 'Player', mode: 'shuffle' };
+    const prefab = definePrefab({
+      id: uid('resolve-b'), type: 'audio-player',
+      overrides: { headless: true, volume: 0.5 },
+    });
+    const resolved = resolveInstance(typeDefaults, prefab, { volume: 0.8 });
+    check('a field only the TYPE sets passes all the way through', resolved.label === 'Player');
+    check('a field only the PREFAB overrides wins over the type default', resolved.headless === true);
+    check('*** a field the INSTANCE overrides wins over the prefab, which itself already overrode the type ***',
+      resolved.volume === 0.8, JSON.stringify(resolved));
+    check('a field nobody at any layer touches keeps the type default', resolved.mode === 'shuffle');
+  }
+
+  section('resolveInstance with no prefab at all — instance overrides still apply directly on type defaults');
+  {
+    const typeDefaults = { headless: false, volume: 0.3 };
+    const resolved = resolveInstance(typeDefaults, null, { volume: 0.9 });
+    check('instance overrides reach a type with no prefab in between', resolved.volume === 0.9);
+    check('everything else still falls through to the type default', resolved.headless === false);
+  }
+
+  // =====================================================================================
+  section('*** diffFromPrefab — the whole reason this is not a plain object compare ***');
+  {
+    const typeDefaults = { headless: false, volume: 0.3, label: 'Player' };
+    const prefab = definePrefab({ id: uid('diff-a'), type: 'audio-player', overrides: { headless: true } });
+
+    // Somebody editing this instance leaves `headless` exactly as the prefab already has it.
+    const desired1 = { headless: true, volume: 0.3, label: 'Player' };
+    check('a field left exactly as the prefab already gives it produces NO diff entry',
+      Object.keys(diffFromPrefab(typeDefaults, prefab, desired1)).length === 0,
+      JSON.stringify(diffFromPrefab(typeDefaults, prefab, desired1)));
+
+    // Now they actually change volume.
+    const desired2 = { headless: true, volume: 0.9, label: 'Player' };
+    const diff2 = diffFromPrefab(typeDefaults, prefab, desired2);
+    check('*** only the field that actually differs from the prefab’s own resolved value appears in the diff ***',
+      Object.keys(diff2).join(',') === 'volume' && diff2.volume === 0.9, JSON.stringify(diff2));
+  }
+
+  section('*** the exact scenario the header names: the prefab changes later, and old "agreement" must not pin the stale value ***');
+  {
+    const typeDefaults = { headless: false };
+    const prefabV1 = definePrefab({ id: uid('drift-v1'), type: 'audio-player', overrides: { headless: true } });
+    // An instance is edited while headless:true is the prefab's own value — the diff correctly
+    // records nothing, because it agrees with the prefab.
+    const diffAtV1 = diffFromPrefab(typeDefaults, prefabV1, { headless: true });
+    check('agreeing with the prefab’s CURRENT value produces an empty diff', Object.keys(diffAtV1).length === 0);
+
+    // Now imagine the prefab is edited back to headless:false (a fresh record here, standing
+    // in for "the same prefab, later, with a different override set" since prefabs are
+    // immutable-by-replacement in this data layer).
+    const prefabV2 = { ...prefabV1, overrides: { headless: false } };
+    // If (incorrectly) an instance had recorded `headless: true` as ITS OWN override back when
+    // it merely agreed with v1, that stale override would now wrongly win over v2's default.
+    // The correct behavior is demonstrated at the point of diffing, not by reading back a
+    // wrongly-recorded diff — which is exactly why diffFromPrefab is computed against the
+    // CURRENT prefab resolution, never memorized from an earlier one.
+    const resolvedIfNoStaleOverrideWasKept = resolveInstance(typeDefaults, prefabV2, {});
+    check('*** an instance that never recorded a stale override correctly picks up the prefab’s new value ***',
+      resolvedIfNoStaleOverrideWasKept.headless === false);
+  }
+
+  section('diffFromPrefab with no prefab — diffs directly against type defaults');
+  {
+    const typeDefaults = { headless: false, volume: 0.3 };
+    const diff = diffFromPrefab(typeDefaults, null, { headless: true, volume: 0.3 });
+    check('with no prefab, the diff is against the type defaults directly',
+      Object.keys(diff).join(',') === 'headless', JSON.stringify(diff));
+  }
+
+  section('diffFromPrefab distinguishes real value differences from JS’s own quirks (NaN, -0, etc.)');
+  {
+    // Object.is, not ===, so NaN correctly compares equal to itself (a field genuinely left at
+    // NaN must not show up as "changed" every single time just because NaN !== NaN in JS).
+    const typeDefaults = { jitter: NaN };
+    const prefab = definePrefab({ id: uid('nan-check'), type: 'x', overrides: {} });
+    const diff = diffFromPrefab(typeDefaults, prefab, { jitter: NaN });
+    check('*** a field left at NaN does not show up as a spurious diff ***',
+      Object.keys(diff).length === 0, JSON.stringify(diff));
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+</script>
+</body>
+</html>
