@@ -777,10 +777,17 @@ def list_user_events(stream: str, limit: int = 50, user: str = Depends(current_u
 
 
 @app.post("/api/user-events/{stream}")
-def append_user_event(stream: str, body: EventPost, user: str = Depends(current_user)):
+def append_user_event(stream: str, body: EventPost, request: Request,
+                      user: str = Depends(current_user)):
     _check(stream, ID_RE, "event stream")
-    return store.append_event(user, person_scope(store.ensure_default_person(user)),
-                              stream, body.kind, body.data)
+    result = store.append_event(user, person_scope(store.ensure_default_person(user)),
+                                stream, body.kind, body.data)
+    # Found 2026-09-17: this alias never published at all, so the kiosk's own mailbox
+    # channel (defaultChannels' `events`, see kiosk.js) was one of the few remaining
+    # state/events handles still stuck on the raw poll interval regardless of whether
+    # push was up. Same self-referential path as append_event above.
+    _push.publish(user, request.url.path)
+    return result
 
 
 # ------------------------------------------------------------ append-only events
