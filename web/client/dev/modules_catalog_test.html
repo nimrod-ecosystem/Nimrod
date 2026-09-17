@@ -28,7 +28,7 @@
 
 <script type="module">
 import { listManifests } from '../module.js';
-import { CATALOG, GROUPS, USE, NOT_FOR_CAREGIVERS, reconcile, groupItems, titleFor }
+import { CATALOG, GROUPS, USE, NOT_FOR_CAREGIVERS, reconcile, groupItems, titleFor, coreReport }
   from '../modules_catalog.js';
 // The same imports modules.html makes — if this list and that list drift, the reconciliation
 // below is checking a different build from the one the page describes.
@@ -122,6 +122,39 @@ section('...and the check WORKS — a gap is actually detected');
   check('...and it is NOT rendered, so nobody is sent looking for it',
     !groupItems('comfort', missing).some((m) => m.type === 'pond'));
 }
+
+// =====================================================================
+section('*** coreReport — which core every module runs on, Task 4 of the consolidation work order ***');
+{
+  const r = coreReport(manifests);
+  check('every module in today’s real registry is legacy — nothing has been ported yet',
+    r.new.length === 0 && r.legacy.length === manifests.length,
+    `legacy=${r.legacy.length} new=${r.new.length} total=${manifests.length}`);
+  check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length
+    && r.counts.new === r.new.length);
+}
+{
+  // The assertion above only means something if a real 'new' declaration is actually detected.
+  const mixed = [
+    { type: 'legacy-a' }, { type: 'legacy-b', core: 'legacy' },
+    { type: 'ported-a', core: 'new' }, { type: 'ported-b', core: 'new' },
+    { type: 'garbage', core: 'space-station' },   // an unrecognized value reads as legacy
+  ];
+  const r = coreReport(mixed);
+  check('*** an undeclared core reads as legacy, the same pessimistic default dependsOn already uses ***',
+    r.legacy.includes('legacy-a'), JSON.stringify(r));
+  check('an explicit core:"legacy" reads the same as no declaration at all',
+    r.legacy.includes('legacy-b'));
+  check('*** core:"new" is actually detected, and only that exact value counts ***',
+    r.new.join(',') === 'ported-a,ported-b', JSON.stringify(r.new));
+  check('a garbage/unrecognized core value is NOT silently treated as new — legacy is the safe default',
+    r.legacy.includes('garbage') && !r.new.includes('garbage'));
+  check('results are sorted, so a snapshot or a printed report is stable',
+    JSON.stringify(r.legacy) === JSON.stringify([...r.legacy].sort()));
+}
+check('a module with no type is skipped rather than crashing the report',
+  (() => { try { return coreReport([null, {}, { core: 'new' }]).new.length === 0; }
+           catch { return false; } })());
 
 section('development panels are left out ON PURPOSE, and say so');
 {
