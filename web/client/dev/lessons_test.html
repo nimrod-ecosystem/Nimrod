@@ -34,7 +34,7 @@ import {
   createLessons, unlockedFrom, unlockLog, gate, lockedTopics,
   DEFAULT_TOPICS, LESSON_TOPIC, WATCHED_KIND,
 } from '../lessons.js';
-import { videoHTML } from '../modules/lessons.js';
+import { videoHTML, packToTopics, DEFAULTS } from '../modules/lessons.js';
 import { parseWords, buildDeck } from '../modules/wordforge.js';
 import '../modules/lessons.js';
 import '../modules/wordforge.js';
@@ -256,6 +256,115 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
       wfHost.querySelector('[data-held]').textContent);
 
     les.destroy(); audit.destroy(); wf2.destroy(); linst.destroy();
+
+    // ============================================================================================
+    // VIDEO SELECTION, CLOSED BY A PACK — change list §3's "no video-selection mechanism at all
+    // yet, and no lesson-kind pack exists to test one against." Mirrors Word Forge's own
+    // contentSource/packId proof: the pure mapping first, then the real shipped pack over a real
+    // fetch, then the failure paths a caregiver could actually hit.
+    section('*** a ready-made pack of topics, not a per-topic editor — change list §3 ***');
+    {
+      const mapped = packToTopics({ items: [
+        { topic: 'Reading a chart or graph' },
+        { topic: 'Telling fact from opinion!', video: 'https://example.com/clip.mp4' },
+      ] });
+      check('topic text becomes the label, unchanged',
+        mapped[0].label === 'Reading a chart or graph', JSON.stringify(mapped[0]));
+      check('a video URL becomes a plain {kind:"url"} video, not a youtube embed',
+        mapped[1].video && mapped[1].video.kind === 'url' && mapped[1].video.value === 'https://example.com/clip.mp4',
+        JSON.stringify(mapped[1].video));
+      check('no video at all is fine — the field is simply null, not an empty object',
+        mapped[0].video === null);
+      check('*** the id is a stable slug of the topic text, not the array position ***',
+        mapped[0].id === 'reading-a-chart-or-graph' && mapped[1].id === 'telling-fact-from-opinion',
+        JSON.stringify(mapped.map((t) => t.id)));
+
+      // Reordering the pack must not change an existing topic's id — that id is what an
+      // unlock event names forever in an append-only stream.
+      const reordered = packToTopics({ items: [
+        { topic: 'Telling fact from opinion!', video: 'https://example.com/clip.mp4' },
+        { topic: 'Reading a chart or graph' },
+      ] });
+      check('*** an id survives the pack being reordered — position-based ids would silently relock ***',
+        reordered.find((t) => t.label === 'Reading a chart or graph').id === 'reading-a-chart-or-graph',
+        JSON.stringify(reordered.map((t) => t.id)));
+
+      // `questions` is real, valid schema (packs.js's checkLessonItem allows it) and
+      // deliberately not read here — see this file's own note on why wiring a lesson's
+      // questions into another module's pool is a separate, unmade decision.
+      const withQuestions = packToTopics({ items: [
+        { topic: 'Has quiz questions', questions: [
+          { question: '2+2?', answers: ['3', '4', '5'], correct: '4' } ] } ] });
+      check('a pack item\'s questions are valid and simply not read into the topic',
+        withQuestions[0].label === 'Has quiz questions' && !('questions' in withQuestions[0]));
+    }
+
+    // THE REAL FETCH — against this suite's own server, the same shipped pack the module itself
+    // reads. Not mocked: if the URL, the schema or the mapping is wrong, this fails the way a
+    // caregiver's screen would.
+    {
+      const packProfiles = createProfilesClient({ user: USER });
+      const pp = await packProfiles.create('TEST-lessons-pack');
+      const pmod = await packProfiles.addModule(pp.id, 'lessons');
+      const pst = createState({ url: packProfiles.stateURL(pp.id, pmod.id), user: USER });
+      await pst.load();
+      await pst.set({ contentSource: 'pack', packId: 'lesson_starter' });
+      const phost = document.createElement('div');
+      document.body.append(phost);
+      const pinst = mountModule('lessons', {
+        mount: phost, bus: createBus(), state: pst,
+        events: createEvents({ url: packProfiles.eventsURL(pp.id, pmod.id), user: USER }),
+        user: USER, profileId: pp.id,
+        makeState: (key, opts) => createState({ url: packProfiles.stateURL(pp.id, key), user: USER, ...opts }),
+        makeEvents: (key, opts) => createEvents({ url: packProfiles.eventsURL(pp.id, key), user: USER, ...opts }),
+      });
+      pinst.init();
+      await sleep(500);
+
+      const cardCount = phost.querySelectorAll('.l-card').length;
+      check('*** the real shipped pack loaded — five real topics on screen, not the three built-in defaults ***',
+        cardCount === 5, String(cardCount));
+      check('a real pack topic is genuinely on screen, by name',
+        (phost.textContent || '').includes('Telling fact from opinion'), (phost.textContent || '').slice(0, 300));
+      check('none of the three built-in DEFAULT_TOPICS leaked in alongside the pack',
+        DEFAULT_TOPICS.every((t) => !(phost.textContent || '').includes(t.label)),
+        (phost.textContent || '').slice(0, 300));
+
+      pinst.destroy();
+      phost.remove();
+    }
+    {
+      // An id that does not exist must not leave the panel dead — falls back to the written/
+      // default topics, the same as an unreachable network resource anywhere else in this file.
+      const badProfiles = createProfilesClient({ user: USER });
+      const bp = await badProfiles.create('TEST-lessons-badpack');
+      const bmod = await badProfiles.addModule(bp.id, 'lessons');
+      const bst = createState({ url: badProfiles.stateURL(bp.id, bmod.id), user: USER });
+      await bst.load();
+      await bst.set({ contentSource: 'pack', packId: 'no-such-pack' });
+      const bhost = document.createElement('div');
+      document.body.append(bhost);
+      const binst = mountModule('lessons', {
+        mount: bhost, bus: createBus(), state: bst,
+        events: createEvents({ url: badProfiles.eventsURL(bp.id, bmod.id), user: USER }),
+        user: USER, profileId: bp.id,
+        makeState: (key, opts) => createState({ url: badProfiles.stateURL(bp.id, key), user: USER, ...opts }),
+        makeEvents: (key, opts) => createEvents({ url: badProfiles.eventsURL(bp.id, key), user: USER, ...opts }),
+      });
+      binst.init();
+      await sleep(500);
+      check('*** an unresolvable pack id falls back to real topics rather than showing nothing ***',
+        bhost.querySelectorAll('.l-card').length >= 3,
+        String(bhost.querySelectorAll('.l-card').length));
+      binst.destroy();
+      bhost.remove();
+    }
+    {
+      // The default stays "bank" — an existing profile with saved settings that predate this
+      // feature must see exactly the topics it always has, not silently switch to a pack.
+      check('*** DEFAULTS.contentSource is still "bank", unaffected by adding the pack path ***',
+        DEFAULTS.contentSource === 'bank', String(DEFAULTS.contentSource));
+    }
 
     // *** IT DECLARED NO SETTINGS, AND ITS OWN COPY ONCE POINTED AT THE MENU IT DOES NOT HAVE.
     //

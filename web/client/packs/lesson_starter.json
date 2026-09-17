@@ -1,0 +1,19 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "lesson",
+  "name": "Lessons — starter topics",
+  "description": "A ready-made set of lesson topics, hand-written rather than generated. No videos are attached yet — that field is real and per-topic (packs.js's own schema makes it optional), so pointing any of these at a real recording later is a pack edit, not a code change. Each topic still unlocks and works on the honour button alone in the meantime, same as the module's own built-in defaults.",
+  "source": {
+    "name": "Hand-authored for Nimrod, 2026-09-16.",
+    "kind": "hand-authored",
+    "built_at": "2026-09-16T00:00:00Z"
+  },
+  "count": 5,
+  "items": [
+    { "topic": "Reading a chart or graph" },
+    { "topic": "Telling fact from opinion" },
+    { "topic": "Spotting a run-on sentence" },
+    { "topic": "Using an apostrophe correctly" },
+    { "topic": "Following a set of written instructions in order" }
+  ]
+}
