@@ -556,8 +556,19 @@ export function mountInputs(root, {
           // override back to "inherit" from the table — see the Devices panel to change the
           // device itself instead).
           const dd = input?.deviceDefaults?.(b.device) || { holdMs: 0, debounceMs: 0, lockoutMs: 0 };
-          const numField = (f) => `<input type="number" data-f="${f}" min="0" step="50"
-            value="${b[f] == null ? '' : b[f]}" placeholder="${dd[f]}">`;
+          // WHICH LEVEL A VALUE COMES FROM, SAID OUT LOUD — Mike, 2026-09-17: "every settings
+          // row must show which level its value comes from," and it has to be testable, not
+          // just inferable from a placeholder nobody reads as meaningful. `data-source` carries
+          // the same two levels `effective()` in input.js already resolves through (binding,
+          // else device) — nothing new is decided here, only shown.
+          const numField = (f) => {
+            const inherited = b[f] == null;
+            const src = inherited
+              ? `<span class="h-hint i-source" data-source="device">from device: ${dd[f]}</span>`
+              : `<span class="h-hint i-source" data-source="binding">this binding's own</span>`;
+            return `<input type="number" data-f="${f}" min="0" step="50"
+              value="${b[f] == null ? '' : b[f]}" placeholder="${dd[f]}"><br>${src}`;
+          };
           return `
           <tr data-bid="${esc(b.id)}"${i === highlight ? ' class="i-highlight"' : ''}>
             <td><select data-f="actionId">${verbOptions(b.actionId)}</select></td>
@@ -1027,6 +1038,24 @@ export function mountInputs(root, {
     // Deliberately NOT re-rendering: the control already shows its own new value, and
     // rebuilding the table under someone mid-edit throws away their focus and their place.
     if (field.type === 'number') field.value = value == null ? '' : String(value);
+    // The "which level" badge next to a conditioning field would otherwise go stale the
+    // instant someone types — still reading "from device" after the field just became this
+    // binding's own override, exactly the "blank looks like a mystery zero" confusion this
+    // badge exists to prevent. Updated in place, same reason the table itself is not rebuilt.
+    if (inheritable) {
+      const badge = field.parentElement?.querySelector('.i-source');
+      if (badge) {
+        const b = record.bindings.find((x) => x.id === bid);
+        const dd = input?.deviceDefaults?.(b?.device) || { holdMs: 0, debounceMs: 0, lockoutMs: 0 };
+        if (value == null) {
+          badge.dataset.source = 'device';
+          badge.textContent = `from device: ${dd[key]}`;
+        } else {
+          badge.dataset.source = 'binding';
+          badge.textContent = "this binding's own";
+        }
+      }
+    }
   });
 
   // ---- lifecycle ---------------------------------------------------------------
