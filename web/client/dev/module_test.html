@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>module.js — the registry, the manifest, and the mount contract</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:76ch}
+  #host{position:absolute;left:-9999px;width:400px;height:300px}
+</style>
+</head>
+<body>
+<h1>module.js — the registry, the manifest, and the mount contract</h1>
+
+<div class="note">
+  No dedicated suite existed for this file before 2026-09-17 — every other suite exercised it
+  only indirectly, by registering and mounting its own real module. This covers the mechanism
+  itself: registering, mounting, the lifecycle wrapper, and the new <code>core:'new'</code>
+  contract enforcement from the core-rebuild (<code>NEW_CORE_SPEC.md</code> §1).
+</div>
+
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { registerModule, getManifest, listManifests, mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A unique type per test so registering twice across sections never collides or warns.
+let n = 0;
+const uniqueType = (prefix) => `${prefix}-${Date.now()}-${n++}`;
+
+function baseCtx(extra = {}) {
+  const el = document.createElement('div');
+  host.append(el);
+  return { mount: el, bus: createBus(), user: 'u1', profileId: 'p1', instanceId: 'i1', ...extra };
+}
+
+try {
+  // =====================================================================================
+  section('registerModule / getManifest / listManifests');
+  {
+    const type = uniqueType('basic');
+    let initRan = false;
+    registerModule({ type, title: 'Basic', description: 'a plain module' },
+      () => ({ init: () => { initRan = true; } }));
+
+    check('getManifest returns what was registered', getManifest(type)?.title === 'Basic');
+    check('listManifests includes it', listManifests().some((m) => m.type === type));
+
+    const mounted = mountModule(type, baseCtx());
+    mounted.init();
+    check('init() on the wrapper runs the factory’s own init', initRan);
+    check('the wrapper reports its own type back', mounted.type === type);
+    check('the wrapper carries the manifest', mounted.manifest.title === 'Basic');
+  }
+
+  section('registering with no type throws — a manifest without one is not a module');
+  {
+    let threw = false;
+    try { registerModule({ title: 'no type' }, () => ({})); } catch { threw = true; }
+    check('registerModule requires manifest.type', threw);
+  }
+
+  section('mounting an unregistered type throws a clear error, not a silent no-op');
+  {
+    let threw = false, msg = '';
+    try { mountModule('definitely-not-a-real-module-type', baseCtx()); }
+    catch (e) { threw = true; msg = String(e.message || e); }
+    check('mountModule throws for an unregistered type', threw);
+    check('...and names the type in the error, not just "not found"',
+      msg.includes('definitely-not-a-real-module-type'), msg);
+  }
+
+  // =====================================================================================
+  section('the lifecycle wrapper — onResize/onHide/destroy delegate to the real instance');
+  {
+    const type = uniqueType('lifecycle');
+    const calls = [];
+    registerModule({ type, title: 'L' }, () => ({
+      init: () => calls.push('init'),
+      onResize: () => calls.push('onResize'),
+      onHide: () => calls.push('onHide'),
+      destroy: () => calls.push('destroy'),
+    }));
+    const m = mountModule(type, baseCtx());
+    m.init(); m.onResize(); m.onHide();
+    check('every lifecycle method reaches the real instance, in order',
+      calls.join(',') === 'init,onResize,onHide', calls.join(','));
+  }
+
+  section('a module missing a lifecycle method is a no-op, not a crash');
+  {
+    const type = uniqueType('sparse');
+    registerModule({ type, title: 'Sparse' }, () => ({}));   // no init/onResize/onHide at all
+    const m = mountModule(type, baseCtx());
+    let threw = false;
+    try { m.init(); m.onResize(); m.onHide(); } catch { threw = true; }
+    check('calling every lifecycle hook on a module that defines none of them does not throw', !threw);
+  }
+
+  section('`impl` is the escape hatch — the raw factory result, for a module with nothing to inspect in the DOM');
+  {
+    const type = uniqueType('canvas-ish');
+    registerModule({ type, title: 'C' }, () => ({ probe: () => 42 }));
+    const m = mountModule(type, baseCtx());
+    check('impl exposes whatever the factory returned, beyond the lifecycle contract',
+      m.impl.probe() === 42);
+  }
+
+  // =====================================================================================
+  section('the mount contract — every module gets `mod-host`, no page has to remember it');
+  {
+    const type = uniqueType('fit');
+    registerModule({ type, title: 'F' }, () => ({}));
+    const ctx = baseCtx();
+    mountModule(type, ctx);
+    check('mountModule adds mod-host to the mount element itself, unconditionally',
+      ctx.mount.classList.contains('mod-host'));
+  }
+
+  section('instance addressing — a module subscribing through its own ctx.bus hears BOTH the bare topic and its own instance-scoped alias');
+  {
+    // The direction that matters: a HOST (the verb router, a future data link) can address
+    // ONE instance specifically by publishing to `bus.instanceTopic(id, topic)` — and a module
+    // that subscribed the ordinary way, through its own scoped ctx.bus, hears it without ever
+    // knowing the instance-topic naming trick exists. A module's own `publish` is untouched;
+    // only `subscribe` gets the dual registration. See bus.js `scope`'s own comment.
+    const type = uniqueType('scoped');
+    let seenBus = null;
+    registerModule({ type, title: 'S' }, (ctx) => { seenBus = ctx.bus; return {}; });
+    const bus = createBus();
+    mountModule(type, { ...baseCtx(), bus, instanceId: 'mod-1' });
+    const heard = [];
+    seenBus.subscribe('x', () => heard.push(1));
+
+    bus.publish('x', {}, {});
+    check('the module’s own scoped subscribe still hears an ordinary, unaddressed publish',
+      heard.length === 1);
+
+    bus.publish(bus.instanceTopic('mod-1', 'x'), {}, {});
+    check('*** and it ALSO hears a publish addressed specifically to its own instance id ***',
+      heard.length === 2);
+
+    bus.publish(bus.instanceTopic('some-other-instance', 'x'), {}, {});
+    check('...but NOT one addressed to a different instance entirely', heard.length === 2);
+  }
+
+  // =====================================================================================
+  section('*** core:\'new\' contract, enforced 2026-09-17 — the ctx guarantee NEW_CORE_SPEC.md §1 found missing ***');
+  {
+    const type = uniqueType('legacy-untouched');
+    registerModule({ type, title: 'Old' }, () => ({}));   // no core field at all
+    let threw = false;
+    try { mountModule(type, { mount: document.createElement('div'), bus: createBus() }); }
+    catch { threw = true; }
+    check('*** a module with no declared core is COMPLETELY UNCHANGED — no personId/instanceId required ***',
+      !threw);
+  }
+  {
+    const type = uniqueType('legacy-explicit');
+    registerModule({ type, title: 'Old2', core: 'legacy' }, () => ({}));
+    let threw = false;
+    try { mountModule(type, { mount: document.createElement('div'), bus: createBus() }); }
+    catch { threw = true; }
+    check('an explicit core:"legacy" module is unchanged too', !threw);
+  }
+  {
+    const type = uniqueType('new-missing-person');
+    registerModule({ type, title: 'New', core: 'new' }, () => ({}));
+    let threw = false, msg = '';
+    try {
+      // instanceId given, personId key genuinely absent
+      mountModule(type, { mount: document.createElement('div'), bus: createBus(), instanceId: 'i1' });
+    } catch (e) { threw = true; msg = String(e.message || e); }
+    check('*** core:"new" without ctx.personId throws, rather than silently mounting ***', threw);
+    check('...and the error names which module and which field', msg.includes(type) && msg.includes('personId'), msg);
+  }
+  {
+    const type = uniqueType('new-null-person-ok');
+    let mountedOk = false;
+    registerModule({ type, title: 'New2', core: 'new' }, () => ({}));
+    // personId key present with value null (a lookup still resolving) must be ACCEPTED —
+    // this is exactly kiosk.js's own real `get personId() { return personId; }` pattern.
+    try {
+      mountModule(type, { mount: document.createElement('div'), bus: createBus(), personId: null, instanceId: 'i1' });
+      mountedOk = true;
+    } catch { /* left false */ }
+    check('*** a personId key that is present but still null (mid-lookup) is ACCEPTED, not rejected ***',
+      mountedOk);
+  }
+  {
+    const type = uniqueType('new-missing-instance');
+    registerModule({ type, title: 'New3', core: 'new' }, () => ({}));
+    let threw = false, msg = '';
+    try {
+      mountModule(type, { mount: document.createElement('div'), bus: createBus(), personId: 'person-1' });
+    } catch (e) { threw = true; msg = String(e.message || e); }
+    check('core:"new" without a real ctx.instanceId throws', threw);
+    check('...and names instanceId specifically', msg.includes('instanceId'), msg);
+  }
+  {
+    const type = uniqueType('new-empty-instance');
+    registerModule({ type, title: 'New4', core: 'new' }, () => ({}));
+    let threw = false;
+    try {
+      mountModule(type, { mount: document.createElement('div'), bus: createBus(), personId: 'p1', instanceId: '' });
+    } catch { threw = true; }
+    check('an empty-string instanceId is treated as missing, not as a real id', threw);
+  }
+  {
+    const type = uniqueType('new-fully-satisfied');
+    let ran = false;
+    registerModule({ type, title: 'New5', core: 'new' }, () => ({ init: () => { ran = true; } }));
+    let threw = false;
+    try {
+      const m = mountModule(type, {
+        mount: document.createElement('div'), bus: createBus(), personId: 'person-1', instanceId: 'i-1',
+      });
+      m.init();
+    } catch { threw = true; }
+    check('*** core:"new" with both fields correctly supplied mounts and runs exactly as normal ***',
+      !threw && ran);
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+</script>
+</body>
+</html>

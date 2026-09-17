@@ -15,6 +15,12 @@
 //   dependsOn     none | local | server | network - how exposed it is, for picking a fallback.
 //                 Assumed `server` if absent, which is the pessimistic answer on purpose.
 //   importance    critical | normal | optional - how loudly the audit complains about it.
+//   core          'legacy' | 'new' - which core this module runs on, added 2026-09-17 for the
+//                 rebuild's coexistence period (DECISIONS.md, "Rebuild the foundation, port the
+//                 modules, keep the substrate"). Absent means 'legacy' - the same pessimistic
+//                 default `dependsOn` already uses, and for the same reason: a module only
+//                 becomes 'new' by saying so the moment its port actually lands, never by
+//                 omission. See `NEW_CORE_SPEC.md` §9 and `modules_catalog.js`'s `coreReport`.
 //
 //   ctx.mount     the DOM element this instance owns
 //   ctx.bus       a SCOPED bus (sinks/bindings/sources auto-released on destroy)
@@ -25,6 +31,21 @@
 //
 // A module talks to the world ONLY through ctx. It never names its inputs, never
 // reaches storage directly, and never touches the DOM outside ctx.mount.
+//
+// *** `core: 'new'` GUARANTEES TWO MORE ctx FIELDS, AND `mountModule` ENFORCES IT. ***
+// `NEW_CORE_SPEC.md` §1's own finding: every REAL mounting path (kiosk.js's `childCtx`) already
+// supplies `ctx.personId` and `ctx.instanceId`, but `module.js`'s documented contract never named
+// them, so a module that depended on them was trusting one caller's convention, not a promise.
+// A module that opts into the new core is making a claim about what it needs; `mountModule` below
+// checks the claim rather than trusting it, per this repo's own standing rule that a decision
+// nothing checks is a suggestion. A `core: 'legacy'` (or undeclared) module is UNCHANGED -
+// nothing new is required of it, and nothing new is checked.
+//
+//   ctx.personId    REQUIRED (the key must exist, even if its live value is still null while a
+//                   lookup resolves - see kiosk.js's own `get personId()` getter for why a getter,
+//                   not a plain value)
+//   ctx.instanceId  REQUIRED and must be a real, non-empty value - every module is an instance of
+//                   something, and per-instance state/events keying depends on this existing
 
 const registry = new Map(); // type -> { manifest, factory }
 
@@ -111,6 +132,20 @@ function observeBox(el, notify) {
 export function mountModule(type, ctx) {
   const entry = registry.get(type);
   if (!entry) throw new Error(`no module registered: "${type}"`);
+
+  // THE `core: 'new'` CONTRACT, ENFORCED, NOT JUST DOCUMENTED. See this file's own header for
+  // why these two fields specifically. Checked before anything else runs, so a module written
+  // against the new contract fails LOUDLY at its own mount rather than quietly reading
+  // `undefined` three calls deep into its own logic.
+  if (entry.manifest.core === 'new') {
+    if (!('personId' in ctx)) {
+      throw new Error(`mountModule("${type}"): core:'new' requires ctx.personId (the key must `
+        + 'exist even if its value is still null while a lookup resolves)');
+    }
+    if (!ctx.instanceId) {
+      throw new Error(`mountModule("${type}"): core:'new' requires a real ctx.instanceId`);
+    }
+  }
 
   // INSTANCE ADDRESSING: `ctx.instanceId` already reaches here from every real mounting path
   // (kiosk.js's `childCtx`, module_try.js's demo and live hosts) — it was threaded through for

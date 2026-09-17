@@ -418,6 +418,30 @@ export function reconcile(manifests = []) {
   };
 }
 
+/**
+ * Which core every registered module runs on — Task 4 of the consolidation work order
+ * (`NEW_CORE_SPEC.md` §9), the report half of the CI boundary check. Same discipline as
+ * `reconcile()` above: a DECLARED fact read off each manifest, nothing inferred from a file
+ * path or a directory name. A module with no `core` field is 'legacy' — the same pessimistic
+ * default `module.js`'s own `dependsOn` field already uses.
+ *
+ * Returns `{ legacy, new: newCore, counts }`, arrays of type names, sorted, so this is stable
+ * to snapshot in a test or print in a report. Deliberately does not touch the import graph —
+ * that is the STATIC half of the Task 4 design (still not built, see NEW_CORE_SPEC.md §9); this
+ * is only ever what the registry itself already knows.
+ */
+export function coreReport(manifests = []) {
+  const legacy = [];
+  const newCore = [];
+  for (const m of manifests || []) {
+    if (!m || !m.type) continue;
+    (m.core === 'new' ? newCore : legacy).push(m.type);
+  }
+  legacy.sort();
+  newCore.sort();
+  return { legacy, new: newCore, counts: { legacy: legacy.length, new: newCore.length } };
+}
+
 /** The catalog entries for one group, in declared order. */
 export function groupItems(groupId, manifests = []) {
   const registered = new Set(manifests.map((m) => m && m.type).filter(Boolean));
