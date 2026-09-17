@@ -400,12 +400,14 @@ export async function mountKiosk(root, {
       bus,
       channels: defaultChannels({
         audio,
-        // NOT wired to `push` — this hits the legacy /api/user-events alias, whose POST
-        // handler (append_user_event) calls store.append_event directly and never reaches
-        // the code that publishes (see web/server/push.py). A push subscription here would
-        // just never fire, silently. Revisit once that alias is retired in favor of the
-        // per-profile events endpoint, which does publish.
-        events: createEvents({ url: `/api/user-events/${REMOTE_STREAM}`, user }),
+        // WIRED TO `push`, 2026-09-17 — the legacy /api/user-events alias's POST handler
+        // (append_user_event) now calls `_push.publish` too, the same self-referential-path
+        // pattern the per-profile events endpoint already used. Until this, this mailbox
+        // channel was one of the few state/events handles still stuck on the raw poll
+        // interval regardless of whether push was up elsewhere on the same screen — found
+        // while answering Mike's "does this scale to other users" question about the
+        // Neon-quota polling default.
+        events: createEvents({ url: `/api/user-events/${REMOTE_STREAM}`, user, push }),
       }),
     });
   } catch (err) {
