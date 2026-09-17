@@ -55,7 +55,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 // A rig with a fake events sink, so what the module WOULD store is inspectable without a
 // server. The sink records the meta as well as the row — the provenance columns are the
 // point of half these checks.
-function rig(saved = {}, output = null) {
+function rig(saved = {}, output = null, extraCtx = {}) {
   const host = document.createElement('div');
   document.getElementById('host').append(host);
   const bus = createBus();
@@ -85,6 +85,7 @@ function rig(saved = {}, output = null) {
     mount: host, bus, events, output,
     state: st,
     user: 'u', profileId: 'p',
+    ...extraCtx,
   });
   inst.init();
   return { host, bus, inst, appended, impl: inst.impl || inst, st };
@@ -578,6 +579,141 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
       r.impl.__press('verb');
       check('and off means off', r.impl.__probe().music.playing === false &&
         r.impl.__probe().music.mode === 'off');
+    }
+
+    // ================= calibration: "suggest a number, never apply one alone" =================
+    // change list 2.2: "needs to read back a session's recorded heldOffMs/latencyMs, suggest
+    // a number, and let a caregiver review and apply it explicitly — a clinically-relevant
+    // parameter, not something to auto-apply or guess a formula for without more direction."
+    section('*** calibration: the pure math — combining sessions, snapping to a real option ***');
+    {
+      const r = rig();
+      check('too little data says so rather than guessing',
+        r.impl.__combineHeldOff([{ heldOff: { n: 1, meanMs: 3000, minMs: 3000, maxMs: 3000 } }]) === null);
+      check('zero sessions is the same "not enough" case, not a crash',
+        r.impl.__combineHeldOff([]) === null);
+      check('a session with no heldOff data at all (no early presses that round) is skipped, not NaN',
+        r.impl.__combineHeldOff([{}, { heldOff: { n: 0 } },
+          { heldOff: { n: 4, meanMs: 4000, minMs: 3000, maxMs: 5000 } }]).n === 4);
+
+      // Two sessions: one long (n=8, mean 2000ms) one short (n=2, mean 6000ms). A plain
+      // average of the two means (4000ms) would let the short session outvote the long one;
+      // the weighted mean must land near the long session's own number instead.
+      const combined = r.impl.__combineHeldOff([
+        { heldOff: { n: 8, meanMs: 2000, minMs: 1500, maxMs: 2800 } },
+        { heldOff: { n: 2, meanMs: 6000, minMs: 5500, maxMs: 6500 } },
+      ]);
+      check('*** weighted by sample count, not a plain average of the two means ***',
+        combined.n === 10 && combined.meanMs === Math.round((2000 * 8 + 6000 * 2) / 10),
+        JSON.stringify(combined));
+      check('min/max span the whole combined range, not just one session',
+        combined.minMs === 1500 && combined.maxMs === 6500, JSON.stringify(combined));
+
+      check('snaps down to the nearest real menu option',
+        r.impl.__nearestMinWaitOption(2100) === 2500, r.impl.__nearestMinWaitOption(2100));
+      check('snaps up the other way too (3800ms is 1200ms from 5000, 1300ms from 2500)',
+        r.impl.__nearestMinWaitOption(3800) === 5000, r.impl.__nearestMinWaitOption(3800));
+      check('never suggests a number the menu cannot show as selected',
+        [1000, 2500, 5000, 8000].includes(r.impl.__nearestMinWaitOption(50)));
+    }
+
+    section('*** calibration: reading history back, and never on a bare rig ***');
+    {
+      const r = rig();
+      const read = await r.impl.__loadRecentSessionData();
+      check('*** no makeEvents/instanceId (a bare test rig) — reports nothing, does not throw ***',
+        Array.isArray(read) && read.length === 0);
+    }
+    {
+      function fakeReader(rows) {
+        return { load: async () => {}, get: () => ({ events: rows }), destroy() {} };
+      }
+      const sessionRows = [
+        { kind: 'trial', data: { seq: 1 } },   // noise this must filter OUT
+        { kind: 'session_evidence_record', data: { heldOff: { n: 5, meanMs: 3000, minMs: 2000, maxMs: 4000 } } },
+        { kind: 'session_evidence_record', data: { heldOff: { n: 3, meanMs: 4500, minMs: 4000, maxMs: 5000 } } },
+      ];
+      const r = rig({}, null, {
+        instanceId: 'inst-1',
+        makeEvents: (key, opts) => {
+          check('asks for its OWN instance stream, not some other one', key === 'inst-1');
+          check('asks for more than the default 50-row page, so old summaries are not pushed out',
+            (opts && opts.limit) > 50, JSON.stringify(opts));
+          return fakeReader(sessionRows);
+        },
+      });
+      const read = await r.impl.__loadRecentSessionData();
+      check('*** only session_evidence_record rows come back — the trial row is filtered out ***',
+        read.length === 2 && read.every((d) => d.heldOff), JSON.stringify(read));
+    }
+    {
+      // A reader that genuinely fails (offline, a real server error) must not throw past this —
+      // "nothing to suggest" and "could not check" render the same way on purpose (see the page
+      // itself), so a network blip cannot look like a crash.
+      const r = rig({}, null, {
+        instanceId: 'inst-1',
+        makeEvents: () => ({ load: async () => { throw new Error('offline'); }, get: () => ({ events: [] }), destroy() {} }),
+      });
+      let threw = false;
+      let read = null;
+      try { read = await r.impl.__loadRecentSessionData(); } catch { threw = true; }
+      check('*** a failed read is reported as empty, not thrown ***', !threw && Array.isArray(read) && read.length === 0);
+    }
+
+    section('*** calibration: the actual settings page, opened for real ***');
+    {
+      const r = rig({}, null, {
+        instanceId: 'inst-1',
+        makeEvents: () => ({
+          load: async () => {}, get: () => ({ events: [] }), destroy() {},
+        }),
+      });
+      const body = r.impl.__openCalibratePage();
+      await new Promise((res) => setTimeout(res, 0));   // let the page's own .then() land
+      check('*** not enough data is said plainly, in the real rendered page ***',
+        /not enough/i.test(body.textContent), body.textContent);
+      check('and there is no Apply button to press when there is nothing to apply',
+        !body.querySelector('[data-apply]'));
+    }
+    {
+      const sessionRows = [
+        { kind: 'session_evidence_record', data: { heldOff: { n: 6, meanMs: 4900, minMs: 4000, maxMs: 5800 } } },
+      ];
+      const r = rig({ minWaitMs: 1000 }, null, {
+        instanceId: 'inst-1',
+        makeEvents: () => ({ load: async () => {}, get: () => ({ events: sessionRows }), destroy() {} }),
+      });
+      const body = r.impl.__openCalibratePage();
+      await new Promise((res) => setTimeout(res, 0));
+      check('shows the real recorded numbers, not a formula nobody can check',
+        /6 recorded early presses/.test(body.textContent) && /average of 4\.9s/.test(body.textContent),
+        body.textContent);
+      check('*** proposes a real option (5s, the nearest to a 4.9s average) ***',
+        /Suggested:\s*5s/.test(body.textContent), body.textContent);
+      check('and an Apply button exists to actually do it', !!body.querySelector('[data-apply]'));
+      check('nothing has been written yet — only Apply writes anything',
+        r.st.get().minWaitMs === 1000);
+
+      body.querySelector('[data-apply]').click();
+      check('*** Apply, and only Apply, changes the real setting ***',
+        r.st.get().minWaitMs === 5000, JSON.stringify(r.st.get()));
+      check('the page confirms what it just did',
+        /Applied/i.test(body.textContent), body.textContent);
+    }
+    {
+      // The setting already matches what would be suggested — nothing to apply, and the page
+      // says so instead of drawing a button that would write the same value back.
+      const sessionRows = [
+        { kind: 'session_evidence_record', data: { heldOff: { n: 6, meanMs: 2500, minMs: 2000, maxMs: 3000 } } },
+      ];
+      const r = rig({ minWaitMs: 2500 }, null, {
+        instanceId: 'inst-1',
+        makeEvents: () => ({ load: async () => {}, get: () => ({ events: sessionRows }), destroy() {} }),
+      });
+      const body = r.impl.__openCalibratePage();
+      await new Promise((res) => setTimeout(res, 0));
+      check('already matches — says so, and does not offer to re-apply the same number',
+        /already matches/i.test(body.textContent) && !body.querySelector('[data-apply]'), body.textContent);
     }
 
     // ================= teardown =================
