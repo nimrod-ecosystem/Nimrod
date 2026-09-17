@@ -46,9 +46,9 @@ export const PORT_DIRECTIONS = ['in', 'out'];
 // every wiring standard treat as load-bearing. 'one' (the conservative default — a single
 // source of truth, the common case) or 'many' (fan-in, which needs a declared combine rule to
 // mean anything — summing, last-write-wins, whatever a future merge node states explicitly).
-// DECLARED ONLY, NOT ENFORCED HERE — no module is wired with real ports yet (see the file
-// header), so there is nothing yet that would refuse a second link to a 'one' port. That
-// enforcement is the same "later, separate work" the header already names for the patch bay.
+// ENFORCED, 2026-09-17, by `createLinkStore` below, for whenever something actually adds a
+// link through it — no module is wired with real ports yet (see the file header), so nothing
+// live exercises this today, but the refusal itself is real and tested, not a placeholder.
 export const PORT_CARDINALITIES = ['one', 'many'];
 
 // ---------------------------------------------------------------------------------------
@@ -260,4 +260,62 @@ export function createSequencer() {
       return n;
     },
   };
+}
+
+// ---------------------------------------------------------------------------------------
+// createLinkStore — added 2026-09-17, the one enforcement gap the file's own header used to
+// name: "cardinality is declared but not enforced anywhere." Still no patch-bay UI and no
+// module wired with real ports — that is correctly later work, unrelated to this. This is the
+// COLLECTION a patch bay will eventually manage, built now because enforcing cardinality
+// needs somewhere to check "how many links already terminate here", and nothing in this file
+// held a set of links at all before this.
+//
+// CARDINALITY ONLY EVER GOVERNS THE `to` SIDE. It is a fan-IN question — "how many links may
+// feed this one sink port" — the same way `PORT_CARDINALITIES`'s own comment frames it ("a
+// single source of truth" vs "fan-in"). A 'many' port fanning its own value OUT to several
+// sinks is always fine regardless of any of those sinks' own cardinality; each sink's
+// cardinality is checked independently, on its own `to` side, when ITS link is added.
+// ---------------------------------------------------------------------------------------
+export function createLinkStore() {
+  const links = []; // normalized {from, to} records, insertion order
+
+  const sameEndpoint = (a, b) => a.instance === b.instance && a.port === b.port;
+  const sameLink = (a, b) => sameEndpoint(a.from, b.from) && sameEndpoint(a.to, b.to);
+
+  function linksTo(instance, port) {
+    return links.filter((l) => l.to.instance === instance && l.to.port === port);
+  }
+  function linksFrom(instance, port) {
+    return links.filter((l) => l.from.instance === instance && l.from.port === port);
+  }
+
+  /**
+   * `toPort` is the SINK port's own normalized declaration (from `normalizePort`/`portsFor`) —
+   * OPTIONAL, so a caller without one handy can still add a structurally valid link; skipping
+   * it just means cardinality is not checked for that call, never that the link is refused.
+   * Never throws — every rejection comes back as `{ok:false, reason}`, the same convention
+   * `classifyPatch` already uses, so a malformed request reads as a reason rather than a crash.
+   */
+  function addLink(raw, toPort = null) {
+    const link = normalizeLink(raw);
+    if (!link) return { ok: false, reason: 'invalid-link' };
+    if (links.some((l) => sameLink(l, link))) return { ok: false, reason: 'duplicate-link' };
+    if (toPort && toPort.cardinality === 'one') {
+      const existing = linksTo(link.to.instance, link.to.port);
+      if (existing.length > 0) return { ok: false, reason: 'cardinality-one-full', existing };
+    }
+    links.push(link);
+    return { ok: true, link };
+  }
+
+  function removeLink(raw) {
+    const target = normalizeLink(raw);
+    if (!target) return false;
+    const i = links.findIndex((l) => sameLink(l, target));
+    if (i === -1) return false;
+    links.splice(i, 1);
+    return true;
+  }
+
+  return { addLink, removeLink, linksTo, linksFrom, all: () => [...links] };
 }
