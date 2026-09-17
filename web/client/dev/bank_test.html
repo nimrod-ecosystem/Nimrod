@@ -94,6 +94,35 @@ try {
   }
 
   // =====================================================================================
+  section('*** a question row can carry a topic, tagged rather than positional ***');
+  {
+    // A question row's trailing fields are wrong answers of no fixed count, unlike a word row's
+    // fixed fourth column — so the topic is pulled out by a `topic:` prefix, wherever it sits.
+    const TAGGED = `## questions
+What is a run-on sentence? | Two clauses with no punctuation | A long sentence | A sentence with no verb | topic:run-on-sentences
+Untagged question? | yes | no | maybe`;
+    const { questions } = parseBank(TAGGED, { defaultKind: 'questions' });
+    check('the tag is read as a topic, not a fourth wrong answer',
+      questions[0].topic === 'run-on-sentences', JSON.stringify(questions[0]));
+    check('...and it is not left behind in the wrong-answer list',
+      !questions[0].wrong.includes('topic:run-on-sentences'), JSON.stringify(questions[0].wrong));
+    check('...while the real wrong answers are untouched',
+      questions[0].wrong.join(',') === 'A long sentence,A sentence with no verb', JSON.stringify(questions[0].wrong));
+    check('a question with no tag has no topic at all',
+      !('topic' in questions[1]), JSON.stringify(questions[1]));
+    check('the tag can sit anywhere after the answer, not just last',
+      parseBank('## questions\nQ | A | topic:mid | W1 | W2', {}).questions[0].topic === 'mid');
+    check('*** an old bank with no topic: fields anywhere parses exactly as before ***',
+      parseBank(MIXED, { defaultKind: 'words' }).questions.every((q) => !('topic' in q)));
+
+    // The "no wrong answers" note should count REAL wrong answers, not the topic tag itself —
+    // otherwise a topic-tagged question with zero real distractors would look fine when it isn't.
+    const onlyTopic = checkBank('## questions\nQ | A | topic:x', { defaultKind: 'words' });
+    check('a topic tag alone still triggers the no-wrong-answers note',
+      onlyTopic.problems.length === 1 && onlyTopic.problems[0].severity === 'note',
+      JSON.stringify(onlyTopic.problems));
+  }
+
   section('*** a word can become a question. A question cannot become a word. ***');
   {
     const { words } = parseBank(MIXED, {});
