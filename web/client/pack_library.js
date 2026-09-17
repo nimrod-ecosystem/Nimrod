@@ -24,6 +24,8 @@ export const PACK_LIBRARY = [
     url: '/packs/maths_basic.json' },
   { id: 'vocab_starter', kind: 'words', label: 'Vocabulary — starter set',
     url: '/packs/vocab_starter.json' },
+  { id: 'lesson_starter', kind: 'lesson', label: 'Lessons — starter topics',
+    url: '/packs/lesson_starter.json' },
   // Built for the CPL sample site (/learn/) as a worked example of "make your own pack" —
   // real, shippable content (MIT-clean per docs/PACK_SCHEMA.md's packs/ vs packs_local/ split),
   // not decoration limited to that one page.

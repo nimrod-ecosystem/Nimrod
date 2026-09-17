@@ -15,13 +15,70 @@
 import { registerModule } from '../module.js';
 import { readWithLegacy } from '../settings_fields.js';
 import { createLessons, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
+import { loadPack } from '../packs.js';
+import { packsFor, packById } from '../pack_library.js';
 
 // `minWatchMs` is milliseconds - the house rule for every stored duration. It was
 // `minWatchSec`; the key changed rather than the meaning of the old one. The countdown a
 // person READS is still in seconds, which is the point of the rule: store one unit, display
 // the one a human thinks in.
-export const DEFAULTS = { minWatchMs: 30000 };
+export const DEFAULTS = {
+  minWatchMs: 30000,
+  // *** THE VIDEO-SELECTION MECHANISM (change list §3), MIRRORING WORD FORGE'S OWN
+  // contentSource/packId RATHER THAN A SECOND ONE. *** The gap this closes, named in this
+  // file's own header until now: a topic's video lived in `state.topics[]` per topic, and
+  // "choosing videos needs a small editor... or the shared content source this keeps
+  // arriving at from every direction." `packs.js` already validates a `lesson`-kind pack
+  // (topic + optional video + optional questions) — it was declared and unconsumed. This is
+  // the consuming half. `bank` (unchanged) stays the default; `pack` is for somebody with no
+  // topics of their own written yet.
+  contentSource: 'bank',
+  packId: packsFor('lesson')[0]?.id || null,
+};
 const LEGACY_MIN_WATCH = { key: 'minWatchSec', scale: 1000 };
+const LESSON_PACKS = packsFor('lesson');
+
+// `it.questions` (trivia-shaped, per the schema) is deliberately NOT read here. Wiring a
+// lesson's own questions into Trivia's or Word Forge's pool is the SAME "per-module
+// decision" packs.js's own header already declines to make on any consumer's behalf, and
+// stacking that decision onto this pass would answer a bigger, separate question (does an
+// unlocked lesson's content feed one pool, both, or neither) that nobody has been asked yet.
+// A pack's `questions` still validates and loads correctly; nothing here reads it.
+//
+// `id` IS SYNTHESIZED FROM THE TOPIC TEXT, NOT FROM POSITION, and that is load-bearing. The
+// schema carries no `id` field — only `topic`, `video`, `questions` — but `topics[].id` is
+// what an unlock event names forever (`lessons.watch(t.id, ...)`, an append-only stream).
+// An index-based id would silently re-identify every already-unlocked topic the moment a
+// pack's item order changes — reordering a JSON file is not supposed to un-earn anything.
+// Slugging the topic text keeps the id stable across reordering, as long as the topic's own
+// wording does not change (renaming a topic changing its id is the same tradeoff `packById`
+// already accepts for a pack's own `id` field, one level up).
+function slugify(text) {
+  return String(text || '').toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'topic';
+}
+
+export function packToTopics(pack) {
+  return (pack.items || []).map((it) => ({
+    id: slugify(it.topic),
+    label: it.topic,
+    video: it.video ? { kind: 'url', value: it.video } : null,
+  }));
+}
+
+// Module-scope, not per-instance — two Lessons panels on the same screen reading the same
+// pack should share one fetch, same as Word Forge's own `loadPackCached`.
+const packCache = new Map();
+function loadPackCached(id) {
+  if (packCache.has(id)) return packCache.get(id);
+  const entry = packById(id);
+  const p = entry ? loadPack(entry.url) : Promise.reject(new Error(`no such pack: ${id}`));
+  // A failed fetch is not cached — a network blip should not permanently doom every
+  // instance that asks for this pack for the rest of the page's life.
+  p.catch(() => packCache.delete(id));
+  packCache.set(id, p);
+  return p;
+}
 
 // ---------------------------------------------------------------------------------------
 // *** IT DECLARED NO SETTINGS, AND ITS OWN EMPTY-STATE COPY USED TO POINT AT THE MENU. ***
@@ -32,16 +89,19 @@ const LEGACY_MIN_WATCH = { key: 'minWatchSec', scale: 1000 };
 // was fixed then; the missing panel was not, and `minWatchMs` has been live config that no
 // surface could reach ever since.
 //
-// *** WHAT IS STILL MISSING AND IS NOT A ROW, said here rather than implied. ***
+// *** VIDEO SELECTION, CLOSED 2026-09-16 \u2014 BY A PACK, NOT AN EDITOR. ***
 //
-// Chat: Lessons *"says no video chosen and does not say where to choose one."* Half of that is
-// answered by the honest empty state already on screen. The other half is not, and cannot be a
-// settings row: a topic's video lives in `state.topics[]` as `{kind, value}` PER TOPIC, and a
-// list of objects is not a row. Choosing videos needs a small editor inside the module -- the
-// shape `board_editor.js` now has -- or the shared content source this keeps arriving at from
-// every direction. Declaring a `videoUrl` row that could only ever set the first topic's video
-// would be a control that lies about what it does, which is the thing this file was already
-// caught doing once.
+// Chat: Lessons *"says no video chosen and does not say where to choose one."* A topic's video
+// lives in `state.topics[]` as `{kind, value}` PER TOPIC, and a list of objects was never going
+// to be one settings row \u2014 a `videoUrl` row could only ever set the first topic's video, a
+// control that lies about what it does. The two live options this file's own comment already
+// named were a bespoke per-topic editor (the `board_editor.js` shape) or "the shared content
+// source this keeps arriving at from every direction" \u2014 a `lesson`-kind pack was already
+// declared and validated in `packs.js`, unconsumed by anything. This is that consuming half,
+// mirroring Word Forge's own `contentSource`/`packId` rather than inventing a second mechanism
+// for the same idea. A pack supplies topic + video (and optionally per-topic questions this
+// file does not read \u2014 see `packToTopics`'s own note) ready-made; a caregiver with topics of
+// their own still writes `state.topics[]` directly via `contentSource: 'bank'`, unchanged.
 const SETTINGS = [
   // ESSENTIAL, and it is the only knob that changes what a person is asked to DO here: how long
   // the unlock button stays disabled after a lesson is opened. Too long and somebody who
@@ -56,6 +116,17 @@ const SETTINGS = [
     ],
     note: 'Unlocking a topic puts its questions into the game whether or not a video was '
       + 'watched, so this is a nudge rather than a gate.' },
+  ...(LESSON_PACKS.length ? [
+    { key: 'contentSource', label: 'Where topics come from', kind: 'choice', default: 'bank',
+      level: 'standard',
+      options: [{ value: 'bank', label: 'Written topics' },
+                { value: 'pack', label: 'A built-in pack' }],
+      note: 'A pack is ready-made, video included where one exists \u2014 nobody has to write '
+        + 'topics or find videos first.' },
+    { key: 'packId', label: 'Which pack', kind: 'choice', default: LESSON_PACKS[0].id,
+      level: 'standard',
+      options: LESSON_PACKS.map((p) => ({ value: p.id, label: p.label })) },
+  ] : []),
 ];
 
 const esc = (s) => String(s == null ? '' : s)
@@ -93,11 +164,39 @@ registerModule(
     let openId = null;        // the topic whose lesson is showing
     let openedAt = 0;
     let ticker = null;
+    // Guards against a stale pack fetch landing after a NEWER settings change (switch to a
+    // different pack, or back to written topics) already superseded it — same shape as
+    // Word Forge's own `wordGen`.
+    let topicsGen = 0;
 
     const el = (sel) => mount.querySelector(sel);
     const unlocked = () => (lessons ? lessons.unlocked() : new Set());
     const waited = () => Math.max(0, Math.floor((now() - openedAt) / 1000));
     const remaining = () => Math.max(0, Math.ceil(cfg.minWatchMs / 1000) - waited());
+
+    // Written topics resolve synchronously; a pack needs a fetch, so this is async either
+    // way and guarded by `topicsGen` the same way Word Forge guards `resolveWords` — a
+    // settings change mid-fetch (switch packs, or switch back to written topics) must not
+    // have an in-flight older fetch land last and silently win.
+    async function resolveTopics(snap) {
+      const gen = ++topicsGen;
+      if (cfg.contentSource === 'pack' && cfg.packId) {
+        try {
+          const pack = await loadPackCached(cfg.packId);
+          if (gen !== topicsGen) return;           // superseded while the fetch was in flight
+          const fromPack = packToTopics(pack);
+          topics = fromPack.length ? fromPack : DEFAULT_TOPICS;
+          render();
+          return;
+        } catch (err) {
+          console.error(`lessons: pack "${cfg.packId}" failed to load, falling back to written topics`, err);
+          // fall through — an unreachable pack reads as no topics chosen, not a dead panel
+        }
+      }
+      if (gen !== topicsGen) return;
+      topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
+      render();
+    }
 
     function card(t) {
       const isOpen = openId === t.id;
@@ -208,10 +307,13 @@ registerModule(
 
         state.subscribe((s) => {
           const snap = s || {};
-          topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
           const saved = readWithLegacy(snap, 'minWatchMs', LEGACY_MIN_WATCH);
-          cfg = { minWatchMs: Number(saved) >= 0 ? Number(saved) : DEFAULTS.minWatchMs };
-          render();
+          cfg = {
+            minWatchMs: Number(saved) >= 0 ? Number(saved) : DEFAULTS.minWatchMs,
+            contentSource: snap.contentSource === 'pack' ? 'pack' : DEFAULTS.contentSource,
+            packId: typeof snap.packId === 'string' && snap.packId ? snap.packId : DEFAULTS.packId,
+          };
+          resolveTopics(snap);
         });
 
         // Re-render while a lesson is open so the countdown ticks down.
