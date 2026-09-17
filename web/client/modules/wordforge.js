@@ -674,10 +674,24 @@ registerModule(
         // The FIRST round waits for the unlock log, so it can't deal a deck that ignores
         // what's been unlocked and then silently change shape one round later. Deal it on
         // failure too — an unreachable server must not leave a blank game.
+        //
+        // *** THE GUARD BELOW USED TO BE `if (!deck.length) newRound()`, AND THAT WAS THE BUG
+        // (change list 0b, "lessons/wordforge deck doesn't grow on unlock"). *** `state.subscribe`
+        // below fires its own `applyState` -> `resolveWords` -> `newRound()` SYNCHRONOUSLY, the
+        // moment `state.subscribe(applyState)` runs, if state is already loaded — which is well
+        // before this `lessons.load()` (a real network fetch) has any chance to resolve. That
+        // first `newRound()` reads `lessons.unlocked()` before `lessons` has loaded anything, so
+        // it always sees an EMPTY unlocked set and deals a deck that is missing every gated word
+        // — filling `deck` with a real, non-empty (just WRONG) array. By the time this callback
+        // ran, `!deck.length` was already false, so the deck this comment promises would "wait
+        // for the unlock log" never actually got rebuilt with the real one — it stayed wrong for
+        // the rest of the session. Unconditional, not guarded: once the unlock log is actually
+        // in, the deck is rebuilt regardless of whatever an earlier, necessarily-incomplete
+        // build already produced.
         lessons.load()
           .then(() => lessons.startPolling())
           .catch(() => {})
-          .then(() => { if (!deck.length) newRound(); });
+          .then(() => { newRound(); });
         // A lesson finished elsewhere (the Lessons module, another device) — the new words
         // join the pool at the START of the next round, not mid-question.
         bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
