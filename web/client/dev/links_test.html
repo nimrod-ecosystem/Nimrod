@@ -24,7 +24,7 @@ actually rides instance-addressed topics (item 2), reaching one instance and not
 import { createBus } from '../bus.js';
 import {
   PORT_TYPES, PORT_CLASSES, PORT_CARDINALITIES, normalizePort, portsFor, normalizeLink, linkTopic,
-  classifyPatch, mapRange, wrapValue, appendProvenance, createSequencer,
+  classifyPatch, mapRange, wrapValue, appendProvenance, createSequencer, createLinkStore,
 } from '../links.js';
 
 const out = document.getElementById('results');
@@ -193,6 +193,100 @@ try {
     check('a different source has its own counter, unaffected by the first',
       seq.next('board-2') === 1);
     check('...and the first source is unaffected by the second', seq.next('board-1') === 3);
+  }
+
+  // ================= createLinkStore — the enforcement gap this file's own header used to name =================
+  section('createLinkStore — a collection of links, with nothing enforced when no port is given');
+  {
+    const store = createLinkStore();
+    const r1 = store.addLink({ from: { instance: 'a', port: 'x' }, to: { instance: 'b', port: 'y' } });
+    check('a structurally valid link is accepted', r1.ok === true, JSON.stringify(r1));
+    check('all() reports it', store.all().length === 1);
+    check('linksTo finds it by its sink', store.linksTo('b', 'y').length === 1);
+    check('linksFrom finds it by its source', store.linksFrom('a', 'x').length === 1);
+    check('an unrelated (instance, port) has nothing linked to it', store.linksTo('z', 'q').length === 0);
+
+    const r2 = store.addLink({ from: { instance: 'a', port: 'x' }, to: { instance: 'c', port: 'w' } });
+    check('*** with no toPort given, cardinality is simply not checked — a second link to a DIFFERENT sink is fine either way ***',
+      r2.ok === true);
+  }
+
+  section('an invalid link is refused with a reason, never thrown, and never added');
+  {
+    const store = createLinkStore();
+    const r = store.addLink({ from: { instance: 'a' }, to: { instance: 'b', port: 'y' } });   // from.port missing
+    check('a malformed link comes back {ok:false}, not a throw', r.ok === false && r.reason === 'invalid-link');
+    check('...and nothing was added', store.all().length === 0);
+  }
+
+  section('*** duplicate-link — the exact same from/to pair cannot be added twice, regardless of cardinality ***');
+  {
+    const store = createLinkStore();
+    const raw = { from: { instance: 'a', port: 'x' }, to: { instance: 'b', port: 'y' } };
+    check('the first add succeeds', store.addLink(raw).ok === true);
+    const dup = store.addLink(raw);
+    check('the identical link a second time is refused', dup.ok === false && dup.reason === 'duplicate-link',
+      JSON.stringify(dup));
+    check('...and the store still holds exactly one', store.all().length === 1);
+  }
+
+  section('*** cardinality "one" — a second link to the SAME sink is refused once toPort says so ***');
+  {
+    const store = createLinkStore();
+    const onePort = normalizePort({ id: 'y', direction: 'in', class: 'continuous', type: 'number', range: [0, 1] });
+    check('sanity: the port declares cardinality "one" by default', onePort.cardinality === 'one');
+
+    const r1 = store.addLink({ from: { instance: 'a', port: 'x' }, to: { instance: 'b', port: 'y' } }, onePort);
+    check('the first link to a "one" sink succeeds', r1.ok === true);
+
+    const r2 = store.addLink({ from: { instance: 'z', port: 'x2' }, to: { instance: 'b', port: 'y' } }, onePort);
+    check('*** a SECOND, DIFFERENT link to the same "one" sink is refused ***',
+      r2.ok === false && r2.reason === 'cardinality-one-full', JSON.stringify(r2));
+    check('...and only the first link is actually stored', store.all().length === 1);
+    check('...the rejection reports what is already there', r2.existing?.length === 1);
+  }
+
+  section('cardinality "many" — a second link to the same sink is accepted');
+  {
+    const store = createLinkStore();
+    const manyPort = normalizePort({
+      id: 'sum', direction: 'in', class: 'continuous', type: 'number', range: [0, 1], cardinality: 'many',
+    });
+    check('sanity: the port genuinely declares "many"', manyPort.cardinality === 'many');
+    const r1 = store.addLink({ from: { instance: 'a', port: 'x' }, to: { instance: 'b', port: 'sum' } }, manyPort);
+    const r2 = store.addLink({ from: { instance: 'z', port: 'x2' }, to: { instance: 'b', port: 'sum' } }, manyPort);
+    check('*** both links to a "many" sink are accepted ***', r1.ok === true && r2.ok === true);
+    check('the store holds both', store.all().length === 2);
+  }
+
+  section('*** cardinality only ever governs the `to` side — a busy SOURCE fanning out is never blocked ***');
+  {
+    const store = createLinkStore();
+    const oneSourcePort = normalizePort({ id: 'x', direction: 'out', class: 'continuous', type: 'number', range: [0, 1] });
+    // Two DIFFERENT sinks, each with their own cardinality:'one' — the source fans out to both.
+    const sinkA = normalizePort({ id: 'ya', direction: 'in', class: 'continuous', type: 'number', range: [0, 1] });
+    const sinkB = normalizePort({ id: 'yb', direction: 'in', class: 'continuous', type: 'number', range: [0, 1] });
+    const r1 = store.addLink({ from: { instance: 'a', port: 'x' }, to: { instance: 'b', port: 'ya' } }, sinkA);
+    const r2 = store.addLink({ from: { instance: 'a', port: 'x' }, to: { instance: 'c', port: 'yb' } }, sinkB);
+    check('a "one"-cardinality SOURCE port fanning out to two different sinks is never itself the thing checked',
+      r1.ok === true && r2.ok === true, JSON.stringify({ r1, r2 }));
+  }
+
+  section('removeLink — only the exact link is removed, and it can be re-added afterward');
+  {
+    const store = createLinkStore();
+    const onePort = normalizePort({ id: 'y', direction: 'in', class: 'continuous', type: 'number', range: [0, 1] });
+    const linkA = { from: { instance: 'a', port: 'x' }, to: { instance: 'b', port: 'y' } };
+    store.addLink(linkA, onePort);
+    check('removeLink finds and removes an existing link', store.removeLink(linkA) === true);
+    check('...and the store is empty again', store.all().length === 0);
+    check('removing a link that was never added returns false, not a throw',
+      store.removeLink({ from: { instance: 'q', port: 'r' }, to: { instance: 's', port: 't' } }) === false);
+
+    // *** THE WHOLE POINT: freeing a "one" sink lets a NEW link take its place. ***
+    const linkB = { from: { instance: 'z', port: 'w' }, to: { instance: 'b', port: 'y' } };
+    check('*** after removal, a different link to the same "one" sink is now accepted ***',
+      store.addLink(linkB, onePort).ok === true);
   }
 
   // ================= end to end =================
