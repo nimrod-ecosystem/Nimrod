@@ -32,8 +32,30 @@
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
 import { createTryHost, createLiveHost } from '../module_try.js';
+import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
+import { verbTopic } from '../actions.js';
+import { KEYBOARD_DEVICE } from '../input_keyboard.js';
 import '../modules/youtube.js';
 import '../modules/clock.js';
+
+// A real keydown+keyup on window, the way a person actually presses a key — not a synthetic
+// call into the input bus, so this proves the WHOLE path: DOM event -> attachKeyboard ->
+// input bus -> router -> bus.publish -> the mounted module's own scoped subscribe.
+const press = async (key, ms = 20) => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key }));
+  await new Promise((r) => setTimeout(r, ms));
+  window.dispatchEvent(new KeyboardEvent('keyup', { key }));
+  await new Promise((r) => setTimeout(r, ms));
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Poll for a condition rather than a fixed sleep — state.js is local-first, so a SECOND
+// createState() at a cache key an earlier host already read can return the cached snapshot
+// synchronously and only correct against the server a moment later.
+const settled = async (fn, ms = 3000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { if (fn()) return true; await sleep(25); }
+  return false;
+};
 
 const USER = new URLSearchParams(location.search).get('user') || ('try-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -60,6 +82,35 @@ const host = document.getElementById('host');
       t.unmount(host);
       check('unmount clears the stage', host.children.length === 0);
       t.destroy();
+    }
+
+    // ================= the bindable input layer, added for step 3 of the port order =================
+    //
+    // *** THE WHOLE REASON THIS HOST GAINED AN INPUT RUNTIME AT ALL: A KEYBOARD MODULE NEEDS
+    // SOMEWHERE TO TRY ITSELF AGAINST REAL BINDINGS, NOT JUST AIM'S MOVEMENT-ONLY REPORTING. ***
+    section('*** createTryHost now carries a real, bindable input runtime — a fallback keypress reaches a mounted module ***');
+    {
+      const t = await createTryHost();
+      check('the runtime is exposed on the returned host', !!t.runtime && typeof t.runtime.load === 'function');
+
+      // The router publishes to the INSTANCE-SCOPED topic (`bus.instanceTopic`), not the bare
+      // one — see input_router.js's own `dispatch()` — so a subscriber that wants to hear what
+      // a REAL mounted module hears has to listen on that same scoped alias, exactly the way
+      // `module.js`'s own `ctx.bus.scope(instanceId)` registers it automatically.
+      const heard = [];
+      const off = t.bus.subscribe(t.bus.instanceTopic('youtube-try', 'youtube/next'), () => heard.push(1));
+      t.mount('youtube', host);
+
+      await press('ArrowDown');   // DEFAULT_BINDINGS: key:arrowdown -> verbTopic('next')
+      check('*** a real ArrowDown keypress reaches the mounted module’s own routed topic ***',
+        heard.length === 1, JSON.stringify(heard));
+
+      t.unmount(host);
+      await press('ArrowDown');
+      check('*** after unmount, the runtime’s modules() list is empty, so the same key has nothing to focus and routes nowhere ***',
+        heard.length === 1);
+
+      off(); t.destroy();
     }
 
     // ================= createLiveHost resolves a real, persisted profile =================
@@ -129,6 +180,73 @@ const host = document.getElementById('host');
       const saved = check_state.get();
       check('the kiosk’s own read path sees the schedule this page saved',
         saved?.schedule?.[0]?.playlistId === 'PLtest123', JSON.stringify(saved));
+    }
+
+    // ================= createLiveHost's input runtime — real bindings, not just fallback =================
+    section('*** createLiveHost resolves the visitor’s REAL personId, not the hardcoded null it used to pass ***');
+    {
+      check('this account genuinely has a person behind it, per profiles.get() itself',
+        !!live.profile.person_id, JSON.stringify(live.profile));
+
+      const heard = [];
+      const off = live.bus.subscribe(live.bus.instanceTopic(ytModId, 'youtube/next'), () => heard.push(1));
+      const rec = live.mount('youtube', host);
+      await press('ArrowDown');   // still just the fallback default at this point
+      check('*** the fallback ArrowDown binding already reaches a module mounted on the LIVE host too ***',
+        heard.length === 1, JSON.stringify(heard));
+      live.unmount(host);
+      off();
+    }
+
+    section('*** a person’s REAL saved binding, not just the shipped fallback, drives a module mounted here ***');
+    {
+      // Write a binding nothing ships with by default: 'x' -> next. If createLiveHost loads
+      // the person's own record (not just DEFAULT_BINDINGS), a fresh host picks this up with
+      // nobody reloading anything — the exact promise input_runtime.js's own header makes.
+      const profiles = createProfilesClient({ user: USER });
+      const bindingsState = createState({
+        url: profiles.personStateURL(live.profile.person_id, INPUTS_KEY), user: USER,
+      });
+      await bindingsState.load();
+      bindingsState.set({ [INPUTS_KEY]: {
+        v: RECORD_VERSION, gate: 'both', speak: false, devices: [],
+        bindings: [{ id: 'custom-x-next', actionId: verbTopic('next'), device: KEYBOARD_DEVICE,
+          control: 'key:x', edge: 'press', role: 'universal',
+          holdMs: null, debounceMs: null, lockoutMs: null, label: '' }],
+      } });
+      await bindingsState.flush();
+
+      // A fresh host, the same way a real second visit would create one — proving the load
+      // path, not just an already-open connection that happened to update live.
+      const live2 = await createLiveHost({ user: USER });
+      // state.js is local-first: `runtime.useState()` inside createLiveHost may have returned
+      // a cached snapshot from BEFORE this test wrote the custom binding (the earlier `live`
+      // host already read this same cache key), correcting against the server only moments
+      // later. Wait for the actual record to reflect the write rather than racing it.
+      const gotCustom = await settled(() =>
+        live2.runtime.record().bindings.some((b) => b.id === 'custom-x-next'));
+      check('the live host’s runtime record reflects the just-saved binding before proceeding',
+        gotCustom, JSON.stringify(live2.runtime.record().bindings));
+
+      const heard = [];
+      // Same real module id as before (`ytModId`) — this is the same account's same youtube
+      // instance, just mounted through a fresh host object.
+      const off = live2.bus.subscribe(live2.bus.instanceTopic(ytModId, 'youtube/next'), () => heard.push(1));
+      live2.mount('youtube', host);
+
+      await press('x');
+      check('*** the custom saved binding (key "x") fires the module’s routed topic ***',
+        heard.length === 1, JSON.stringify(heard));
+
+      // normalizeRecord's own rule: a VALID saved record (v === RECORD_VERSION) REPLACES the
+      // fallback set entirely, it is never merged with it — a saved record that only lists
+      // "x" means ArrowDown is no longer bound at all, the same way it would not be if a
+      // caregiver had actually deleted every other row in the real binder.
+      await press('ArrowDown');
+      check('*** and the shipped default (ArrowDown), once a real record is saved with only "x" in it, no longer fires — a saved record replaces the fallback set, it does not merge with it ***',
+        heard.length === 1, JSON.stringify(heard));
+
+      off(); live2.unmount(host); live2.destroy();
     }
 
     // ================= the throwaway host never touches the account =================

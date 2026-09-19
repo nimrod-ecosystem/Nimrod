@@ -32,6 +32,8 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createAim } from './aim.js';
 import { attachPointer } from './input_pointer.js';
+import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
+import { DEFAULT_BINDINGS } from './input_keyboard.js';
 
 // *** "EVERY MODULE SHOULD BE FULLY FUNCTIONAL THERE." *** Mike, 2026-09-13, direct
 // correction of an earlier decision recorded in this file: "That's the opposite of what I
@@ -92,10 +94,31 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
   let s = seed;
   const rand = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
 
-  const live = new Map();   // host element -> record, so a page can unmount what it mounted
+  // `{rec, id, type}` per host, not just `rec` — the input runtime's own `modules()` needs to
+  // list what is actually mounted right now, and deriving that from this one map (rather than
+  // a separate "currently mounted" variable) stays correct even if a caller ever mounts more
+  // than the "one at a time" the page above assumes, instead of silently trusting that
+  // assumption never breaks.
+  const live = new Map();   // host element -> {rec, id, type}
+
+  // *** THE BINDABLE INPUT LAYER, ADDED 2026-09-19 — step 3 of the ruled port order
+  // (devices as modules, keyboard first) needs somewhere to actually try a keyboard module
+  // against real bindings, not just aim's movement-only reporting. ***
+  //
+  // Reuses `mountInputRuntime` rather than inventing a second copy of the wiring — its own
+  // header names exactly this case: "headless and injectable, so it can be... mounted by any
+  // surface: kiosk today, a bare module host tomorrow." Fallback bindings only, matching this
+  // host's own "everything is throwaway" contract — there is no per-person record to load
+  // against a `createLocalBackend()`.
+  const runtime = mountInputRuntime({
+    bus,
+    fallback: DEFAULT_BINDINGS,
+    modules: () => [...live.values()].map((v) => ({ id: v.id, type: v.type })),
+  });
+  await runtime.load();
 
   return {
-    bus, output, audio, profileId, backend, sources, aim,
+    bus, output, audio, profileId, backend, sources, aim, runtime,
 
     /**
      * Mount `type` into `host`. Returns the module record, or throws — the caller decides what
@@ -119,13 +142,14 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
      * `state.get()` directly for the same reason — but a host should still keep its side.
      */
     mount(type, host, extra = {}) {
-      const state = backend.makeState(`${type}-try`, {}, profileId);
-      const events = backend.makeEvents(`${type}-try`, {}, profileId);
+      const instanceId = `${type}-try`;
+      const state = backend.makeState(instanceId, {}, profileId);
+      const events = backend.makeEvents(instanceId, {}, profileId);
       state.load?.().catch(() => {});      // offline is not a reason to have no module
       events.load?.().catch(() => {});
       const rec = mountModule(type, {
         mount: host, bus, rootBus: bus, user: null, profileId, personId: null,
-        instanceId: `${type}-try`,
+        instanceId,
         state,
         events,
         makeState: (key, opts) => backend.makeState(key, opts, profileId),
@@ -139,16 +163,17 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
         ...extra,
       });
       rec.init();
-      live.set(host, rec);
+      live.set(host, { rec, id: instanceId, type });
+      try { runtime.router.setFocus(instanceId); } catch { /* focus is not load-bearing */ }
       return rec;
     },
 
     /** Take one down. Safe to call on a host that has nothing on it. */
     unmount(host) {
-      const rec = live.get(host);
-      if (!rec) return;
+      const entry = live.get(host);
+      if (!entry) return;
       live.delete(host);
-      try { rec.destroy(); } catch (err) { console.error('module_try: destroy', err); }
+      try { entry.rec.destroy(); } catch (err) { console.error('module_try: destroy', err); }
       host.innerHTML = '';
     },
 
@@ -157,6 +182,7 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
       for (const host of [...live.keys()]) this.unmount(host);
       detachAim();
       aim.destroy();
+      runtime.destroy();
     },
   };
 }
@@ -190,6 +216,11 @@ export async function createLiveHost({ user }) {
   const profiles = createProfilesClient({ user });
   const profileId = await ensureProfile(profiles, user);
   const profile = await profiles.get(profileId);   // profile.modules cached + mutated below
+  // WHOSE SCREEN THIS IS — the same fact `profile.person_id` already carries for the real
+  // kiosk (`kiosk.js`'s own boot lookup reads it identically). Was hardcoded `null` in this
+  // host's `mount()` ctx below; a module that reads `ctx.personId` here saw nobody, even
+  // though the profile it was mounted against genuinely belongs to somebody.
+  const personId = profile.person_id || null;
   const sources = createLocalMediaSources();        // per-DEVICE folder sources; real either way
   const output = createOutputBus({ channels: defaultChannels({}) });
   const audio = createAudioBus();
@@ -198,7 +229,25 @@ export async function createLiveHost({ user }) {
   const rand = Math.random;
   const { aim, detach: detachAim } = attachAim(bus, window);
 
+  // `{rec, id, type}` per host — see createTryHost's own comment on why this drives the input
+  // runtime's `modules()` directly rather than a separate "currently mounted" variable.
   const live = new Map();
+
+  // *** THE BINDABLE INPUT LAYER, ADDED 2026-09-19 — same reasoning as `createTryHost`, but
+  // with the person's REAL saved bindings loaded, the same as the kiosk does, so trying a
+  // module here means trying it against the actual switch setup it will really be used with. ***
+  const runtime = mountInputRuntime({
+    bus,
+    fallback: DEFAULT_BINDINGS,
+    modules: () => [...live.values()].map((v) => ({ id: v.id, type: v.type })),
+  });
+  await runtime.load();
+  if (personId && profiles.personStateURL) {
+    await runtime.useState(createState({
+      url: profiles.personStateURL(personId, INPUTS_KEY), user,
+      cacheKey: `person:${user}:${personId}:${INPUTS_KEY}`,
+    }));
+  }
 
   /** Find this profile's instance of `type`, adding one for real if it has none yet --
    *  picking a module here is how you add it to your dashboard, same as the composer. */
@@ -211,7 +260,7 @@ export async function createLiveHost({ user }) {
   }
 
   return {
-    bus, output, audio, profileId, profile, sources, aim, live: true,
+    bus, output, audio, profileId, profile, sources, aim, runtime, live: true,
 
     /** MUST be awaited before `mount(type, ...)` — resolving/creating the real instance
      *  is a network call, unlike the throwaway host's synthetic per-type key. */
@@ -225,7 +274,7 @@ export async function createLiveHost({ user }) {
       state.load?.().catch(() => {});
       events.load?.().catch(() => {});
       const rec = mountModule(type, {
-        mount: host, bus, rootBus: bus, user, profileId, personId: null,
+        mount: host, bus, rootBus: bus, user, profileId, personId,
         instanceId: mod.id,
         state,
         events,
@@ -237,15 +286,16 @@ export async function createLiveHost({ user }) {
         ...extra,
       });
       rec.init();
-      live.set(host, rec);
+      live.set(host, { rec, id: mod.id, type });
+      try { runtime.router.setFocus(mod.id); } catch { /* focus is not load-bearing */ }
       return rec;
     },
 
     unmount(host) {
-      const rec = live.get(host);
-      if (!rec) return;
+      const entry = live.get(host);
+      if (!entry) return;
       live.delete(host);
-      try { rec.destroy(); } catch (err) { console.error('module_try: destroy', err); }
+      try { entry.rec.destroy(); } catch (err) { console.error('module_try: destroy', err); }
       host.innerHTML = '';
     },
 
@@ -253,6 +303,7 @@ export async function createLiveHost({ user }) {
       for (const host of [...live.keys()]) this.unmount(host);
       detachAim();
       aim.destroy();
+      runtime.destroy();
     },
   };
 }
