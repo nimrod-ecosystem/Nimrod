@@ -70,6 +70,7 @@ export const HEALTH_EXPECT = {
   director:    { expectMs: 60 * 60 * 1000 },
   // Draws constantly, publishes nothing. Silence is its normal state.
   clock:       { idle: true },
+  keyboard:    { idle: true },
   camera:      { idle: true },
   pond:        { idle: true },
   comet:       { idle: true },

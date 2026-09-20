@@ -56,6 +56,7 @@ import { takePreviewLayout } from './preview.js';
 import { applyTheme, listThemes, DEFAULT_THEME } from './theme.js';
 import { cachedFetch } from './cache.js';
 import './modules/clock.js';
+import './modules/keyboard.js';
 import './modules/camera.js';
 import './modules/photos.js';
 import './modules/youtube.js';
@@ -482,6 +483,26 @@ export async function mountKiosk(root, {
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
+    // PER-PERSON state, distinct from `makeState`'s per-profile/instance scope (see
+    // `profile.js`'s `stateURL` vs `personStateURL`). For a module that needs to read/write
+    // something that must follow the PERSON across screens - e.g. a device module reading
+    // their real input-bindings record - not something scoped to this one placement.
+    // SAME SIGNATURE AS EVERY OTHER `makePersonState` IN THIS CODEBASE - `(personId, key,
+    // opts)`, personId first, not curried (see `local_store.js`'s backend version and
+    // `home.js`'s own comment on the convention; `module_try.js`'s `createTryHost` already
+    // wires its host's version straight through unchanged). A caller reads `ctx.personId`
+    // itself (a getter, resolves in the background like `output`/`aim` already do) and
+    // passes it in - this function does not chase the resolution itself, so its contract
+    // is identical whether the caller already has a personId or is still waiting on one.
+    // Returns `null` (a real, handleable answer, not an error) if personId is falsy or this
+    // deploy has no person-state endpoint.
+    makePersonState: (pid, key, opts = {}) => {
+      if (!pid || !profiles.personStateURL) return null;
+      return createState({
+        url: profiles.personStateURL(pid, key), user,
+        cacheKey: `person:${user}:${pid}:${key}`, push, ...opts,
+      });
+    },
   });
 
   async function mountInstance(mod, host) {

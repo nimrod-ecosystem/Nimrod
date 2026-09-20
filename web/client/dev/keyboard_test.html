@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>keyboard — shows what each key does, read-only, links out to edit</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}.skip{color:#b8860b}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:420px;height:320px;border:1px solid #ddd;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>keyboard</h1>
+<p>H4's first device-as-module: shows the keyboard's current bindings (the person's own saved
+set, or the shipped defaults if they have none) as rows, with a link out to the real editor
+rather than a second one grown here — see the module's own header comment for why.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+import { INPUTS_KEY } from '../input_runtime.js';
+import { KEYBOARD_DEVICE } from '../input_keyboard.js';
+import '../modules/keyboard.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Same fake-state shape as clock_test.html's own `fakeState` — get/set/subscribe/flush/load.
+function fakeState(initial) {
+  let s = initial; const subs = [];
+  return {
+    get: () => s,
+    set: (p) => { s = p; subs.forEach((f) => f(s)); },
+    subscribe: (f) => { subs.push(f); return () => {}; },
+    flush: () => {}, load: async () => {},
+  };
+}
+
+// A fake per-person state provider matching every real `ctx.makePersonState`'s contract
+// in this codebase: `(personId, key, opts) => stateHandle` (see kiosk.js / module_try.js /
+// local_store.js — personId first, never curried). `behind` lets a test simulate the network
+// answer arriving after `init()` has already returned, the same race a real load() has.
+function fakeMakePersonState(record, { behind = false } = {}) {
+  let resolveLoad;
+  const state = fakeState(record);
+  const realLoad = state.load;
+  if (behind) {
+    state.load = () => new Promise((res) => { resolveLoad = () => { res(); }; });
+  }
+  return { makePersonState: async () => state, state, releaseLoad: () => resolveLoad?.() };
+}
+
+function mountKeyboard(ctxExtra = {}) {
+  const host = document.getElementById('host');
+  const inst = mountModule('keyboard', {
+    mount: host, bus: createBus(), personId: 'p1', instanceId: 'keyboard-1',
+    ...ctxExtra,
+  });
+  return { host, inst };
+}
+
+const rowsText = (host) => [...host.querySelectorAll('[data-kb-rows] .kb-row')]
+  .map((r) => r.textContent.replace(/\s+/g, ' ').trim());
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** no saved record yet -> the shipped defaults render, not an empty module ***');
+  {
+    const { makePersonState } = fakeMakePersonState(null);
+    const { host, inst } = mountKeyboard({ makePersonState });
+    await inst.init();
+    await sleep(0);
+    const rows = rowsText(host);
+    check('shows more than zero rows from the shipped defaults', rows.length > 0, rows.length);
+    check('includes the default Next binding (ArrowDown)', rows.some((r) => /Arrow Down/.test(r) && /Next/.test(r)), rows.join(' | '));
+    check('includes the default Menu binding (Escape)', rows.some((r) => /Esc/.test(r) && /Menu/.test(r)), rows.join(' | '));
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** defaults render immediately, before the person-state load resolves ***');
+  {
+    const { makePersonState, releaseLoad } = fakeMakePersonState(null, { behind: true });
+    const { host, inst } = mountKeyboard({ makePersonState });
+    const initDone = inst.init();
+    await sleep(0);
+    const rows = rowsText(host);
+    check('defaults are already showing while the real load is still pending',
+      rows.length > 0 && rows.some((r) => /Arrow Down/.test(r)), rows.join(' | '));
+    releaseLoad();
+    await initDone;
+  }
+
+  // =====================================================================================
+  section('*** a real saved record replaces the defaults with the person\'s own bindings ***');
+  {
+    const saved = {
+      v: 2, gate: 'both', speak: false,
+      bindings: [
+        { id: 'b1', actionId: 'verb/select', device: KEYBOARD_DEVICE, control: 'key:x',
+          edge: 'press', role: 'universal', holdMs: null, debounceMs: null, lockoutMs: null },
+      ],
+      devices: [],
+    };
+    const { makePersonState } = fakeMakePersonState(saved);
+    const { host, inst } = mountKeyboard({ makePersonState });
+    await inst.init();
+    await sleep(0);
+    const rows = rowsText(host);
+    check('shows exactly the one saved binding, not the shipped defaults', rows.length === 1, rows.join(' | '));
+    check('shows the custom key (X) mapped to Primary select', /^X/.test(rows[0]) && /select/i.test(rows[0]), rows[0]);
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a live change to the saved record re-renders without a remount ***');
+  {
+    const saved = { v: 2, gate: 'both', speak: false, devices: [],
+      bindings: [{ id: 'b1', actionId: 'verb/next', device: KEYBOARD_DEVICE, control: 'key:n',
+        edge: 'press', role: 'universal', holdMs: null, debounceMs: null, lockoutMs: null }] };
+    const { makePersonState, state } = fakeMakePersonState(saved);
+    const { host, inst } = mountKeyboard({ makePersonState });
+    await inst.init();
+    await sleep(0);
+    check('starts with the one binding', rowsText(host).length === 1, rowsText(host).join(' | '));
+
+    state.set({ ...saved, bindings: [...saved.bindings,
+      { id: 'b2', actionId: 'verb/prev', device: KEYBOARD_DEVICE, control: 'key:p',
+        edge: 'press', role: 'universal', holdMs: null, debounceMs: null, lockoutMs: null }] });
+    const rows = rowsText(host);
+    check('a second binding pushed onto the live record appears without remounting',
+      rows.length === 2 && rows.some((r) => /^P/.test(r)), rows.join(' | '));
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** non-keyboard bindings in the same record are filtered out ***');
+  {
+    const saved = { v: 2, gate: 'both', speak: false, devices: [],
+      bindings: [
+        { id: 'b1', actionId: 'verb/select', device: KEYBOARD_DEVICE, control: 'key:enter',
+          edge: 'press', role: 'universal', holdMs: null, debounceMs: null, lockoutMs: null },
+        { id: 'b2', actionId: 'verb/select', device: 'gamepad:0', control: 'button:0',
+          edge: 'press', role: 'universal', holdMs: null, debounceMs: null, lockoutMs: null },
+      ] };
+    const { makePersonState } = fakeMakePersonState(saved);
+    const { host, inst } = mountKeyboard({ makePersonState });
+    await inst.init();
+    await sleep(0);
+    const rows = rowsText(host);
+    check('only the keyboard binding shows, the gamepad one does not', rows.length === 1 && /Enter/.test(rows[0]), rows.join(' | '));
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** no personId on this screen -> shipped defaults, no crash ***');
+  {
+    const host = document.getElementById('host');
+    const inst = mountModule('keyboard', { mount: host, bus: createBus(), personId: null, instanceId: 'keyboard-2' });
+    await inst.init();
+    await sleep(0);
+    check('still renders the shipped defaults with no person and no makePersonState',
+      rowsText(host).length > 0, rowsText(host).length);
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the edit-elsewhere link is present, not a second editor ***');
+  {
+    const { makePersonState } = fakeMakePersonState(null);
+    const { host, inst } = mountKeyboard({ makePersonState });
+    await inst.init();
+    await sleep(0);
+    const link = host.querySelector('.kb-edit');
+    check('an "Edit in Devices settings" link exists', !!link && /edit/i.test(link.textContent) && /devices/i.test(link.textContent), link?.textContent);
+    check('the link points at home.html, not a bound-in editor', link?.getAttribute('href') === '/home.html', link?.getAttribute('href'));
+    inst.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
