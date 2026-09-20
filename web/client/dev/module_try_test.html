@@ -198,11 +198,17 @@ const host = document.getElementById('host');
       off();
     }
 
-    section('*** a person’s REAL saved binding, not just the shipped fallback, drives a module mounted here ***');
+    section('*** REVERSED 2026-09-20: a person’s REAL saved binding must NOT reach a module previewed here ***');
     {
-      // Write a binding nothing ships with by default: 'x' -> next. If createLiveHost loads
-      // the person's own record (not just DEFAULT_BINDINGS), a fresh host picks this up with
-      // nobody reloading anything — the exact promise input_runtime.js's own header makes.
+      // Until 2026-09-20 this host loaded the person's real saved input-bindings record here,
+      // on the reasoning that trying a module should mean trying it against a real switch
+      // setup. That collided with the common case input_pointer.js's own header names outright
+      // ("a great many switch interfaces present themselves to the computer as a MOUSE CLICK"):
+      // anyone whose real setup binds a mouse-presenting switch to a verb found their own
+      // direct mouse clicks on a previewed module's own buttons (Trivia, Word Forge) hijacked
+      // by that binding instead of landing on whatever they actually clicked. Reported by Mike
+      // ("clicking answers in trivia and word forge doesn't work"), reproduced directly. Fixed
+      // by keeping this host on fallback bindings only, same as `createTryHost` always was.
       const profiles = createProfilesClient({ user: USER });
       const bindingsState = createState({
         url: profiles.personStateURL(live.profile.person_id, INPUTS_KEY), user: USER,
@@ -217,16 +223,12 @@ const host = document.getElementById('host');
       await bindingsState.flush();
 
       // A fresh host, the same way a real second visit would create one — proving the load
-      // path, not just an already-open connection that happened to update live.
+      // path (or rather, the deliberate absence of one) rather than an already-open connection.
       const live2 = await createLiveHost({ user: USER });
-      // state.js is local-first: `runtime.useState()` inside createLiveHost may have returned
-      // a cached snapshot from BEFORE this test wrote the custom binding (the earlier `live`
-      // host already read this same cache key), correcting against the server only moments
-      // later. Wait for the actual record to reflect the write rather than racing it.
-      const gotCustom = await settled(() =>
-        live2.runtime.record().bindings.some((b) => b.id === 'custom-x-next'));
-      check('the live host’s runtime record reflects the just-saved binding before proceeding',
-        gotCustom, JSON.stringify(live2.runtime.record().bindings));
+      check('the fresh host’s runtime record is still exactly the shipped fallback, not the just-saved custom one',
+        !live2.runtime.record().bindings.some((b) => b.id === 'custom-x-next')
+        && live2.runtime.record().bindings.some((b) => b.id === 'default/next'),
+        JSON.stringify(live2.runtime.record().bindings.map((b) => b.id)));
 
       const heard = [];
       // Same real module id as before (`ytModId`) — this is the same account's same youtube
@@ -235,15 +237,12 @@ const host = document.getElementById('host');
       live2.mount('youtube', host);
 
       await press('x');
-      check('*** the custom saved binding (key "x") fires the module’s routed topic ***',
-        heard.length === 1, JSON.stringify(heard));
+      check('*** the custom saved binding (key "x") does NOT fire the module’s routed topic ***',
+        heard.length === 0, JSON.stringify(heard));
 
-      // normalizeRecord's own rule: a VALID saved record (v === RECORD_VERSION) REPLACES the
-      // fallback set entirely, it is never merged with it — a saved record that only lists
-      // "x" means ArrowDown is no longer bound at all, the same way it would not be if a
-      // caregiver had actually deleted every other row in the real binder.
+      // The shipped default must still work — fallback-only means exactly that, not "broken".
       await press('ArrowDown');
-      check('*** and the shipped default (ArrowDown), once a real record is saved with only "x" in it, no longer fires — a saved record replaces the fallback set, it does not merge with it ***',
+      check('*** the shipped default (ArrowDown) still fires normally — fallback bindings are fully live, just not overridden by the account’s real record ***',
         heard.length === 1, JSON.stringify(heard));
 
       off(); live2.unmount(host); live2.destroy();

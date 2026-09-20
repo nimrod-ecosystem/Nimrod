@@ -892,16 +892,18 @@ const ds = () => root.querySelector('.kiosk').dataset;
     await sleep(150);
 
     const bar = troot.querySelector('.k-controls');
-    check('the control bar is there to begin with',
-      !!bar && !bar.classList.contains('hidden'), bar && bar.className);
+    // *** REVERSED 2026-09-20 — Mike: "The transport bar seems to be always on in the kiosk.
+    // It should just pop up when you put your cursor near the bottom center." Before this, the
+    // bar started VISIBLE (the raw template carries no `hidden` class) and ANY `mousemove`
+    // anywhere on the whole screen re-armed its 3-second timer — so during ordinary use with a
+    // mouse it in practice almost never actually left. It now starts hidden and a plain
+    // mousemove only reveals it near its own real position. ***
+    check('the control bar starts HIDDEN, not shown',
+      !!bar && bar.classList.contains('hidden'), bar && bar.className);
 
-    // Forced rather than waited out: this is about whether it can come BACK, not how long it
-    // takes to go.
-    bar.classList.add('hidden');
-    check('...and it does put itself away, which is the right behaviour',
-      bar.classList.contains('hidden'), bar.className);
-
-    // *** THE ONE THAT MATTERS: a touch, with no mouse anywhere in the story. ***
+    // *** A TOUCH OR A KEY STILL BRINGS IT BACK UNCONDITIONALLY — the 2026-09-07 fix this
+    // section was originally written for is untouched. Position has no meaning for a touch or
+    // a keypress, so neither is narrowed the way mousemove now is. ***
     troot.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     await sleep(50);
     check('*** a TOUCH brings the control bar back ***',
@@ -911,6 +913,29 @@ const ds = () => root.querySelector('.kiosk').dataset;
     troot.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
     await sleep(50);
     check('...and so does a key press', !bar.classList.contains('hidden'), bar.className);
+
+    // *** MOUSEMOVE ONLY REVEALS IT NEAR ITS OWN REAL POSITION, NOT ANYWHERE ON SCREEN. ***
+    // This page does not load kiosk.css, so the bar's real `bottom:2.2vmin` centering is not in
+    // effect here — the check below reads the bar's OWN actual rect at test time (whatever this
+    // page renders it at) rather than assuming where "bottom center" would be, so it exercises
+    // the real decision `pokeIfNearBar` makes off the bar's own `getBoundingClientRect()`.
+    bar.classList.add('hidden');
+    const barRect = bar.getBoundingClientRect();
+    troot.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true, clientX: -5000, clientY: -5000,   // nowhere near the bar, by construction
+    }));
+    await sleep(50);
+    check('*** a mouse moving far away from the bar does NOT reveal it ***',
+      bar.classList.contains('hidden'), bar.className);
+
+    troot.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX: (barRect.left + barRect.right) / 2,
+      clientY: barRect.top,
+    }));
+    await sleep(50);
+    check('*** a mouse moving to the bar’s own actual position DOES reveal it ***',
+      !bar.classList.contains('hidden'), bar.className);
 
     // THE POINT OF THE BAR: the gear that opens the settings menu, where the theme lives.
     const gear = troot.querySelector('[data-act="settings"]');

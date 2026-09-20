@@ -32,7 +32,7 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createAim } from './aim.js';
 import { attachPointer } from './input_pointer.js';
-import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
+import { mountInputRuntime } from './input_runtime.js';
 import { DEFAULT_BINDINGS } from './input_keyboard.js';
 
 // *** "EVERY MODULE SHOULD BE FULLY FUNCTIONAL THERE." *** Mike, 2026-09-13, direct
@@ -233,21 +233,33 @@ export async function createLiveHost({ user }) {
   // runtime's `modules()` directly rather than a separate "currently mounted" variable.
   const live = new Map();
 
-  // *** THE BINDABLE INPUT LAYER, ADDED 2026-09-19 — same reasoning as `createTryHost`, but
-  // with the person's REAL saved bindings loaded, the same as the kiosk does, so trying a
-  // module here means trying it against the actual switch setup it will really be used with. ***
+  // *** THE BINDABLE INPUT LAYER, ADDED 2026-09-19 — FALLBACK BINDINGS ONLY, DELIBERATELY,
+  // REVERSED FROM THAT DAY'S ORIGINAL REASONING 2026-09-20. ***
+  //
+  // This used to also load the person's REAL saved bindings here (`runtime.useState(...)`
+  // against `profiles.personStateURL`), on the reasoning that "trying a module here means
+  // trying it against the actual switch setup it will really be used with." That reasoning
+  // was wrong in exactly the case it was meant to help: `input_pointer.js`'s own header names
+  // it outright — "a great many switch interfaces present themselves to the computer as a
+  // MOUSE CLICK" — so anyone whose real setup binds a mouse-presenting switch to a verb (a
+  // common case, not an edge one) found their own direct mouse clicks on THIS PREVIEW's
+  // answer buttons hijacked by that binding: a click on one option registered as "confirm
+  // whatever the scan cursor is on" instead, which only reads as "clicking answers doesn't
+  // work" — reported by Mike, reproduced directly (`modules.html`'s Trivia/Word Forge
+  // preview, a real saved `pointer:mouse -> verb/select` binding from an earlier session).
+  //
+  // Mike's own framing of this page settles which side of the tradeoff wins: "it's more of a
+  // place to try out the different software modules" — the MODULE's behavior, not a person's
+  // own accessibility calibration. Testing a real switch against a real module belongs on the
+  // real dashboard/kiosk, where there is no competing direct-click surface to collide with.
+  // Fallback-only matches `createTryHost`'s already-safe behavior, so this preview no longer
+  // depends on what happens to be bound on whichever account is previewing it.
   const runtime = mountInputRuntime({
     bus,
     fallback: DEFAULT_BINDINGS,
     modules: () => [...live.values()].map((v) => ({ id: v.id, type: v.type })),
   });
   await runtime.load();
-  if (personId && profiles.personStateURL) {
-    await runtime.useState(createState({
-      url: profiles.personStateURL(personId, INPUTS_KEY), user,
-      cacheKey: `person:${user}:${personId}:${INPUTS_KEY}`,
-    }));
-  }
 
   /** Find this profile's instance of `type`, adding one for real if it has none yet --
    *  picking a module here is how you add it to your dashboard, same as the composer. */
