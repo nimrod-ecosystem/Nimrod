@@ -39,6 +39,22 @@ systemctl --user status nimrod-kiosk      # is it running? how many restarts?
 journalctl --user -u nimrod-kiosk -f      # logs
 ```
 
+**Getting OUT, for maintenance — found missing 2026-09-19.** Mike plugged a projector into a
+real Pi to test it as a second monitor, pressed Alt+F4 to reach the desktop, and the kiosk
+relaunched itself before he had time to do anything: *"the device is effectively bricked for any
+other uses."* Fixed, without weakening `Restart=always` (that guarantee is why the screen never
+stays frozen if Chromium genuinely crashes, and loosening it would mean an accidental close from
+anyone near the keyboard leaves the screen dark instead) — this installer now also adds a labwc
+keybind, **Ctrl+Alt+Shift+Esc**, four keys long on purpose so it is not something brushed
+against by accident, that runs `nimrod-kiosk-pause.sh`. That script `systemctl --user stop`s the
+service (a deliberate stop is never re-triggered by `Restart=`, whatever the policy) and tries to
+open a terminal so there is somewhere to actually work. **It does not come back on its own** —
+bring it back with `systemctl --user start nimrod-kiosk`, or a reboot.
+
+If `~/.config/labwc/rc.xml` already exists, this installer adds the keybind into it (backed up
+first, same timestamped-backup discipline as `autostart` below) rather than overwriting whatever
+customization was already there.
+
 **What this does NOT do:** get the Pi to a logged-in graphical session at boot in the first
 place. Console autologin + labwc launching already works on the machines this has been tested
 on; this installer only takes over from the moment `autostart` runs. If a fresh Pi doesn't
