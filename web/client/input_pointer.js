@@ -63,7 +63,7 @@ export function pointerLabel(control) {
 // third row nobody asked for. Only `touch` is genuinely a different device.
 const deviceFor = (pointerType) => (pointerType === 'touch' ? TOUCH_DEVICE : POINTER_DEVICE);
 
-export function attachPointer(input, { target = window, device = null, aim = null } = {}) {
+export function attachPointer(input, { target = window, device = null, aim = null, ignore = null } = {}) {
   if (!input) throw new Error('attachPointer: an input bus is required');
 
   // `device` stays acceptable as a fixed override (a test, or a caller with no real
@@ -80,7 +80,22 @@ export function attachPointer(input, { target = window, device = null, aim = nul
   // the one thing a plain `mousedown` can never tell you, touch-synthesized or not.
   const onMove = aim ? (e) => { aim.reportEvent(device || deviceFor(e.pointerType), e); } : null;
 
+  // `ignore(e)` — OPT-IN, absent everywhere except the binder page (`inputs.js`). Found
+  // 2026-09-20: a switch that presents as a mouse click (this file's own header — "a $30
+  // button from a hobby shop... arrives identically" to a real mouse) cannot be told apart
+  // from an ordinary click ANYWHERE this adapter is attached. On the kiosk that is correct —
+  // a module's own on-screen button IS the thing a switch should be able to press. On the
+  // Devices/Inputs SETTINGS PAGE it is not: that page attaches this adapter to its whole
+  // root so a real bound switch can be seen driving the binder live, but the same root also
+  // holds the page's OWN controls (device chips, dropdowns, the add-a-binding button) — so
+  // anyone whose switch is already bound to anything found every ordinary click on that page
+  // ALSO fired as a real press, which the binder correctly acted on: it moved the scan
+  // highlight and scrolled to it, mid-click, out from under whatever button they meant to
+  // press. Not a click-handler bug (`inputs.js`'s own device-chip handler runs correctly
+  // whenever this adapter lets a click through unmolested) — the fix belongs here, at the
+  // one place that actually knows which element a press landed on.
   const onDown = (e) => {
+    if (ignore?.(e)) return;
     const dev = device || deviceFor(e.pointerType);
     const control = pointerControl(e.button);
     if (!wanted(dev, control)) return;

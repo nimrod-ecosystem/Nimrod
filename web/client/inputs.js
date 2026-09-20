@@ -1137,7 +1137,15 @@ export function mountInputs(root, {
       onDisconnect: () => { renderDevicePicker(); renderDevices(); },
     });
     pads.start();
-    detach = [attachKeys(input, {}), attachPtr(input, { target: root })];
+    // `ignore` — a press that lands on one of THIS PAGE'S OWN controls is unambiguously
+    // "interacting with the settings page," never "testing a bound switch in open space."
+    // See `input_pointer.js`'s own comment on `ignore` for the bug this closes: without it,
+    // anyone whose switch is already bound to anything (a real mouse click reads identically
+    // to one, per this adapter's own header) found every click on a device chip or dropdown
+    // here ALSO firing as a live press, yanking the scan highlight and the scroll position
+    // out from under the click mid-press.
+    const isPageChrome = (e) => !!e.target.closest?.('button, select, input, textarea, a, [contenteditable]');
+    detach = [attachKeys(input, {}), attachPtr(input, { target: root, ignore: isPageChrome })];
 
     body();
 
