@@ -2029,6 +2029,29 @@ export async function mountKiosk(root, {
       toggleScreens(false);
     }, 3000);
   }
+
+  // *** MOUSEMOVE ONLY REVEALS THE BAR NEAR WHERE IT ACTUALLY LIVES. *** Mike, 2026-09-20:
+  // "The transport bar seems to be always on in the kiosk. It should just pop up when you put
+  // your cursor near the bottom center." Before this, ANY `mousemove` anywhere on the whole
+  // screen called `poke()` unconditionally — a mouse naturally drifting during ordinary use
+  // keeps re-arming the 3-second timer from across the whole screen, so the bar in practice
+  // almost never actually goes away. `.k-controls.hidden` is `opacity:0` (never `display:none`
+  // — see kiosk.css), so its own `getBoundingClientRect()` stays valid and correctly positioned
+  // even while hidden; expanding that real rect by a margin gives the reveal zone for free,
+  // rather than a second, hand-guessed copy of the bar's own position that could drift out of
+  // sync with it.
+  //
+  // POINTERDOWN AND KEYDOWN STILL POKE UNCONDITIONALLY, DELIBERATELY UNCHANGED. Position has no
+  // meaning for a touch or a keypress the way it does for a hovering mouse, and narrowing THOSE
+  // the same way would reintroduce the exact regression fixed 2026-09-07 (a touch screen or a
+  // keyboard-only session that could never bring the bar back at all). This only narrows the
+  // mousemove case, which is the only one a "cursor near the bar" even describes.
+  const BAR_REVEAL_MARGIN_PX = 140;
+  function pokeIfNearBar(e) {
+    const r = controlsEl.getBoundingClientRect();
+    if (e.clientX >= r.left - BAR_REVEAL_MARGIN_PX && e.clientX <= r.right + BAR_REVEAL_MARGIN_PX
+        && e.clientY >= r.top - BAR_REVEAL_MARGIN_PX) poke();
+  }
   // *** `mousemove` ALONE MEANT NO TOUCH SCREEN COULD EVER SEE THIS BAR AGAIN. ***
   //
   // Mike, 2026-09-07: *"There is still no way to choose a theme anywhere in the product."* He is
@@ -2075,10 +2098,18 @@ export async function mountKiosk(root, {
   }
   pokeBurnIn();
 
-  for (const ev of ['mousemove', 'pointerdown', 'keydown']) {
+  root.addEventListener('mousemove', pokeIfNearBar, { passive: true });
+  for (const ev of ['pointerdown', 'keydown']) {
     root.addEventListener(ev, poke, { passive: true });
   }
-  poke();
+  // Starts hidden, deliberately — it pops up on the first real interaction (a touch, a key)
+  // or a mouse coming near it, rather than showing once at boot and then, per the note above,
+  // effectively never actually leaving during ordinary use. The raw template has no `hidden`
+  // class on `.k-controls` (opacity defaults to visible), and `poke()`'s own hide path only
+  // ever runs once ITS timeout fires — so simply not calling `poke()` at boot would have left
+  // the bar showing forever, never actually arming the auto-hide. Setting the class directly
+  // is what genuinely starts it hidden.
+  controlsEl.classList.add('hidden');
 
   // WHAT LEFT THIS HANDLER, and what stayed.
   //
@@ -2189,7 +2220,11 @@ export async function mountKiosk(root, {
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
       window.removeEventListener('keydown', onKey);
-      root.removeEventListener('mousemove', poke);
+      root.removeEventListener('mousemove', pokeIfNearBar);
+      // The pointerdown/keydown pair were never detached here even before today - a real,
+      // separate leak, fixed alongside this one since it is the exact same class of bug.
+      root.removeEventListener('pointerdown', poke);
+      root.removeEventListener('keydown', poke);
       clearTimeout(hideT);
       clearInterval(recoveryTimer);
       health.destroy();
