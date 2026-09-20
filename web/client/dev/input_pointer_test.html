@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>input_pointer — the `ignore` gate, and the bug it closes</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>input_pointer</h1>
+<p>Had no suite of its own until now. Found 2026-09-20: on the Devices/Inputs settings page,
+anyone whose switch already presents as a mouse click (this file's own header — a cheap switch
+and a real mouse "arrive at the browser identically") found every ordinary click on the page's
+OWN controls (a device chip, a dropdown) ALSO firing as a real press — which the binder correctly
+acted on, yanking the scan highlight and the scroll position out from under the click mid-press.
+The fix is the new <code>ignore</code> option: a press whose target is the page's own chrome is
+never forwarded to the bus at all, on the one call site (<code>inputs.js</code>) that attaches
+this adapter to a whole settings page rather than a kiosk module's own on-screen controls.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { attachPointer, POINTER_DEVICE, TOUCH_DEVICE } from '../input_pointer.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// A fake input bus recording exactly what a real one would be told.
+function fakeInput({ capturing = false, bound = false } = {}) {
+  const downs = [];
+  return {
+    downs,
+    isCapturing: () => capturing,
+    hasBinding: () => bound,
+    down: (dev, control) => downs.push({ dev, control }),
+    up: () => {},
+    heldControls: () => [],
+  };
+}
+
+function firePointerDown(target, { button = 0, pointerType = 'mouse' } = {}) {
+  const e = new PointerEvent('pointerdown', { button, pointerType, bubbles: true, cancelable: true });
+  Object.defineProperty(e, 'target', { value: target, configurable: true });
+  target.dispatchEvent(e);
+  return e;
+}
+
+const host = document.createElement('div');
+host.innerHTML = `<button id="chip">Keyboard</button><div id="empty">open space</div>`;
+document.body.append(host);
+const chip = host.querySelector('#chip');
+const empty = host.querySelector('#empty');
+
+(async () => {
+try {
+  // =====================================================================================
+  section('*** baseline — no `ignore` given, existing behavior is unchanged ***');
+  {
+    const input = fakeInput({ bound: true });
+    const detach = attachPointer(input, { target: host });
+    const e = firePointerDown(chip);
+    check('a bound control presses through, same as before this fix existed',
+      input.downs.length === 1 && input.downs[0].dev === POINTER_DEVICE, JSON.stringify(input.downs));
+    check('and the browser default is prevented, same as before',
+      e.defaultPrevented);
+    detach();
+  }
+
+  // =====================================================================================
+  section('*** the actual bug: a bound control, clicked on the page\'s own chrome ***');
+  {
+    const input = fakeInput({ bound: true });
+    const isPageChrome = (ev) => !!ev.target.closest?.('button, select, input, textarea, a');
+    const detach = attachPointer(input, { target: host, ignore: isPageChrome });
+    const e = firePointerDown(chip);
+    check('a press on a real button is NOT forwarded to the bus, even though the control is bound',
+      input.downs.length === 0, JSON.stringify(input.downs));
+    check('and the browser default is left alone — the button click still works normally',
+      !e.defaultPrevented);
+    detach();
+  }
+
+  // =====================================================================================
+  section('*** the same bound control, pressed in open space, still works ***');
+  {
+    const input = fakeInput({ bound: true });
+    const isPageChrome = (ev) => !!ev.target.closest?.('button, select, input, textarea, a');
+    const detach = attachPointer(input, { target: host, ignore: isPageChrome });
+    const e = firePointerDown(empty);
+    check('a press that does NOT land on page chrome still reaches the bus — the live-test feature survives',
+      input.downs.length === 1 && input.downs[0].dev === POINTER_DEVICE, JSON.stringify(input.downs));
+    check('and IS prevented, exactly as the un-ignored case above',
+      e.defaultPrevented);
+    detach();
+  }
+
+  // =====================================================================================
+  section('*** mid-capture, the same exclusion applies — a stray click on a button never completes it ***');
+  {
+    const input = fakeInput({ capturing: true, bound: false });
+    const isPageChrome = (ev) => !!ev.target.closest?.('button, select, input, textarea, a');
+    const detach = attachPointer(input, { target: host, ignore: isPageChrome });
+    const e = firePointerDown(chip);
+    check('a click on a button does not resolve an in-progress capture',
+      input.downs.length === 0, JSON.stringify(input.downs));
+    detach();
+  }
+
+  // =====================================================================================
+  section('*** an unbound, non-capturing press is still a no-op either way (unchanged) ***');
+  {
+    const input = fakeInput({ capturing: false, bound: false });
+    const detach = attachPointer(input, { target: host });
+    const e = firePointerDown(empty);
+    check('nothing forwarded, nothing prevented — the "unbound stays a no-op" rule holds',
+      input.downs.length === 0 && !e.defaultPrevented);
+    detach();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+host.remove();
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
