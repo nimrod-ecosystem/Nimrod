@@ -168,23 +168,6 @@ export const CATALOG = [
       + 'question before it is asked.',
   },
   {
-    // FIRST OF A NEW KIND, NOT JUST A NEW ENTRY - `keyboard` is the first "each input device
-    // is its own module" module (H4). Filed under `comfort` as the closest existing fit (it
-    // runs on its own, nobody has to press anything for it to keep showing what's true), but
-    // none of the three GROUPS above were written with a device/settings module in mind - a
-    // fourth group is a real, open question, not decided here. See MIKE_CHANGE_LIST.md H4.
-    type: 'keyboard',
-    group: 'comfort',
-    use: 'watch',
-    lead: 'What each key on the keyboard does right now.',
-    needs: 'A keyboard.',
-    why: 'Every screen already ships working keyboard defaults - arrows to move, Enter to '
-      + 'choose - but nothing on screen has ever said so out loud. This shows the real, '
-      + 'current mapping, whether it is still the defaults or has been set up differently, '
-      + 'so a caregiver never has to guess or hunt through a settings page just to know '
-      + 'what a key does.',
-  },
-  {
     type: 'board',
     // *** "AAC board", not "Talk". *** Mike, 2026-09-06: people searching for this know the
     // term AAC and nobody recognises "Talk" as the thing they need. The words `AAC` and
@@ -271,8 +254,12 @@ export const CATALOG = [
        + 'a score.',
   },
   {
+    // MOVED FROM `comfort` TO `practice`, 2026-09-20 (Mike, looking at the live catalog: "Comet
+    // is still under something to look at"). It asks for an intentional catch, not passive
+    // viewing - `use: 'touch'` already said as much ("reacts if touched"), the group just
+    // hadn't caught up to it.
     type: 'comet',
-    group: 'comfort',
+    group: 'practice',
     use: 'touch',
     lead: 'A comet that follows your movement, with hearts to catch.',
     needs: 'Nothing.',
@@ -404,13 +391,25 @@ export const CATALOG = [
   },
 ];
 
-// Modules that exist in the registry but are deliberately not offered to a caregiver: dev
-// instrumentation, and one retired module kept only so old screens do not break. Listed
-// rather than filtered silently, so `reconcile` cannot mistake them for an oversight.
+// Modules that exist in the registry but are deliberately not offered on THIS page: dev
+// instrumentation, one retired module kept only so old screens do not break, and (as of
+// 2026-09-20) device modules. Listed rather than filtered silently, so `reconcile` cannot
+// mistake any of them for an oversight.
+//
+// DEVICE MODULES (keyboard, and whatever follows it) ARE REAL AND ADDABLE — Mike, looking at
+// `keyboard` shown here: "I don't think keyboard needs to be on the modules page... it's more
+// of a place to try out the different software modules." This page and its "what does it do
+// for the person, what does it need, can they use it without pressing anything" framing (see
+// the file header) is about CONTENT/ACTIVITY modules a caregiver is choosing between for the
+// person the screen is set up for — a device module answers a different question (how does
+// THIS SCREEN read input) that this page's own three questions don't fit. Still addable from
+// the composer (`home.html`) and still runs in the kiosk; just not browsed here. "For now" —
+// Mike's own qualifier — so revisit if device modules ever get their own real discovery answer.
 export const NOT_FOR_CAREGIVERS = {
   counter: 'a development test panel',
   presslog: 'a development test panel',
   interstitials: 'retired — replaced by Lineup',
+  keyboard: 'a device module, not a software one — see this file’s own note just above',
 };
 
 /**

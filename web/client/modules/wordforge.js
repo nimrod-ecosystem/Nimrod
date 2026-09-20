@@ -115,19 +115,29 @@ export function packToWordBank(pack) {
   }));
 }
 
+// `why` quotes the actual distinguishing WORDS, never "the first"/"the second" - `makeQuestion`
+// below randomizes which of `better`/`weaker` renders first (`opts = rand() < 0.5 ? [...] :
+// [...]`), so a positional explanation is right only half the time. Found 2026-09-20: three of
+// these four originally said "the first is X, the second is Y", which read as flatly backwards
+// whenever the shuffle put `weaker` first - telling somebody who picked the objectively better
+// sentence that they were wrong, with an explanation that (correctly, just mis-worded) still
+// described the two sentences by position instead of content.
 export const DEFAULT_PAIRS = [
   ['Refurbished laptops give low-income families affordable computers.',
    "Refurbished laptops are a thing families who don't have much money can use to get computers that don't cost a lot.",
-   'The first is concise; the second is wordy and repeats itself.'],
+   '"Give low-income families affordable computers" says it directly; the other version repeats '
+   + 'the same idea in more words.'],
   ['He salvaged the drive and installed it in another machine.',
    'He salvaged the drive, and he installed it, into another machine.',
-   'The second has a comma splice and an extra comma; the first flows.'],
+   '"He salvaged the drive and installed it in another machine" flows in one line; the other '
+   + 'adds a comma splice and an extra comma that break it up.'],
   ['The council listened because her argument was specific and backed by numbers.',
    'The council listened because her argument was good and had stuff in it.',
    '"Specific and backed by numbers" says something real; "good and had stuff" is vague.'],
   ['Planned obsolescence keeps working devices out of circulation.',
    "Planned obsolescence is when they make it so working devices don't stay around to get used.",
-   'The first is tight and precise; the second rambles.'],
+   '"Keeps working devices out of circulation" is tight and precise; the other version rambles '
+   + 'to say the same thing.'],
 ].map(([better, weaker, why]) => ({ better, weaker, why, grade: 8 }));
 
 // PRICED AGAINST THE REST OF THE ECONOMY, not invented.

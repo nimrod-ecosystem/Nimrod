@@ -168,6 +168,32 @@ a || b || c`);
     check('...and the explanation is the why', qp.explain === DEFAULT_PAIRS[0].why);
     check('pair rounds tag a writing concept, not a word', qp.concept === CONCEPT_PAIRS, qp.concept);
 
+    // *** THE EXPLANATION MUST NEVER SAY "THE FIRST"/"THE SECOND". ***
+    //
+    // Found 2026-09-20: `makeQuestion` randomizes which of `better`/`weaker` renders first
+    // (`rand() < 0.5`), but three of the four shipped `why` strings originally described the
+    // pair by POSITION ("the first is concise; the second is wordy") - correct only when the
+    // shuffle happened to land `better` first, and flatly backwards the rest of the time. A
+    // real position-independent explanation must hold regardless of which shuffle a given
+    // question got, so this checks both orientations for every shipped pair, not just one.
+    for (const pair of DEFAULT_PAIRS) {
+      check(`"${pair.why.slice(0, 40)}..." does not refer to sentence position`,
+        !/\bthe first\b|\bthe second\b/i.test(pair.why), pair.why);
+    }
+    {
+      const rounds = { true: null, false: null };
+      // Force each shuffle branch directly rather than hunting for a seed that happens to land
+      // it - `rand() < 0.5` is the entire branch condition `makeQuestion` uses.
+      rounds.true = makeQuestion({ kind: 'better', pair: DEFAULT_PAIRS[0] }, DEFAULT_WORDS, () => 0.1);
+      rounds.false = makeQuestion({ kind: 'better', pair: DEFAULT_PAIRS[0] }, DEFAULT_WORDS, () => 0.9);
+      check('the answer index tracks `better` correctly in BOTH shuffle orientations',
+        rounds.true.options[rounds.true.answer] === DEFAULT_PAIRS[0].better
+        && rounds.false.options[rounds.false.answer] === DEFAULT_PAIRS[0].better,
+        JSON.stringify({ true: rounds.true, false: rounds.false }));
+      check('...and the explanation shown is identical either way (position-independent)',
+        rounds.true.explain === rounds.false.explain && rounds.true.explain === DEFAULT_PAIRS[0].why);
+    }
+
     // *** A WRONG GUESS SAYS WHAT THE THING YOU PICKED ACTUALLY MEANS. ***
     //
     // Chat's #11. The difference between being told you are wrong and being told something:
