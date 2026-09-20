@@ -9,8 +9,9 @@ is executable). The ⚙️ items are listed up top so the order is clear; everyt
 - **Client + API — one origin on [Render](https://render.com).** The FastAPI app already serves the
   client on the same origin (`app.py` mounts `StaticFiles` at `/`). Keeping them together for v1 means
   **no CORS and no separate API URL** to configure. ~$7/mo always-on instance.
-- **Database — [Neon](https://neon.tech) Postgres** (free tier). Lives *outside* the server, so a
-  redeploy/restart never loses data, and it self-backs-up. Only tiny text (config, ~150 B/play).
+- **Database — Render's own managed Postgres** (moved off Neon 2026-09-19; see the "Off Neon"
+  note below Part A). Lives *outside* the web service, so a redeploy/restart never loses data,
+  and Render backs it up. Only tiny text (config, ~150 B/play).
 - **CDN + HTTPS + DNS — [Cloudflare](https://cloudflare.com)** in front of Render (free). Gives the
   domain, a global cache for the static assets, and HTTPS (which the camera mirror *requires* —
   `getUserMedia` only runs on HTTPS or localhost).
@@ -63,18 +64,27 @@ the runbook below is executable end to end:
 
 ## Part A — accounts (one-time, ~15 min)
 
-1. 👉 **Neon:** sign up (free). Create a project → a database. Copy its **connection string** (looks like
-   `postgresql://user:pass@host/db`). Keep it handy — it becomes `DATABASE_URL`.
-2. 👉 **Render:** sign up. Connect your GitHub so it can see the `Nimrod` repo.
-3. 👉 **Cloudflare:** sign up (free).
+1. 👉 **Render:** sign up. Connect your GitHub so it can see the `Nimrod` repo.
+2. 👉 **Cloudflare:** sign up (free).
+
+**Off Neon, 2026-09-19.** Earlier revisions of this runbook had you sign up for Neon here and
+paste its connection string in as `DATABASE_URL` in Part B. That's gone — `render.yaml` now
+declares a `databases:` block, so applying the blueprint provisions Render's own managed
+Postgres and wires `DATABASE_URL` to it automatically (`fromDatabase`, not a pasted secret). No
+external database account needed anymore. If you're moving an existing deploy that still has a
+live Neon database, see `web/server/migrate_neon_to_render.py` for the one-time data copy —
+schema bootstraps itself either way (`db.py`'s own `_migrate()`), only the *rows* need moving.
 
 ## Part B — the server on Render (via the blueprint)
 
 1. 👉 Render dashboard → **New → Blueprint** → pick the `Nimrod` repo. Render reads the repo-root
    `render.yaml` and pre-fills everything: the service, `rootDir: web/server`, the build + start
-   commands, the health check, `NIMROD_ENV=prod`, and the always-on Starter plan (~$7/mo).
-2. 👉 It prompts for the two **secrets** (they live in the dashboard, never in git):
-   - `DATABASE_URL` = the Neon string from Part A
+   commands, the health check, `NIMROD_ENV=prod`, the always-on Starter plan (~$7/mo), AND now a
+   managed Postgres database (`databases:` block) — review the plan/price it shows for that
+   database before applying; it's a real recurring cost, not a free add-on.
+2. 👉 It prompts for the remaining **secrets** (they live in the dashboard, never in git) —
+   `DATABASE_URL` is no longer one of them, Render fills it in itself from the database it just
+   provisioned:
    - `DEVICE_KEYS` = `robin:<a-long-random-secret>` (generate a random string — her device's key;
      add more `,user:secret` pairs later for other devices/people)
 3. 👉 Apply. When it's live you get a URL like `https://nimrod-xxxx.onrender.com`. Open it — you should
@@ -217,10 +227,13 @@ in Part F.
 
 ## Cost + upkeep
 
-- **Neon** free · **Cloudflare** free · **Render Starter ~$7/mo** = **~$7/mo total**, and that ONE server
+- **Cloudflare** free · **Render Starter ~$7/mo** (web) · **Render Postgres, smallest paid tier** (db,
+  price confirmed at blueprint-apply time — see Part A) = a small monthly total, and that ONE server
   serves *every* family who uses the site, not per-user. Scale up only when usage genuinely grows.
-- Redeploys are automatic on push to `main` (Render watches the repo). Neon backs up the database on its
-  own. Her device just needs the media agent running (the service handles restart-on-boot).
+  No separate Neon bill anymore (see the "Off Neon" note in Part A) — cancel that subscription once
+  the migration below is confirmed and nothing is reading from it.
+- Redeploys are automatic on push to `main` (Render watches the repo). Render backs up the database on
+  its own. Her device just needs the media agent running (the service handles restart-on-boot).
 - **After a client update:** Cloudflare caches the static JS/HTML, so after a deploy **purge it**
   (Cloudflare → Caching → Purge Everything) so devices pick up the new code — or add a cache rule that
   bypasses cache for `*.html` / `*.js`. (The kiosk holds its page open, so this mainly bites on a
@@ -233,5 +246,5 @@ in Part F.
 Everything above is what *you* (the operator of `nimrodecosystem.com`) do once. A regular family signs up
 for **nothing** — they open the site and use it. A family that wants their own photos either runs the same
 one-command media agent on any always-on machine they own, or points the platform at a **Google Drive
-folder** (no server to run). A family that wants full self-hosting can run their own Render+Neon by
-following this same runbook.
+folder** (no server to run). A family that wants full self-hosting can run their own Render deploy —
+web service + database both — by following this same runbook.

@@ -1586,9 +1586,9 @@ class SQLiteStore(_Store):
 
 
 class PostgresStore(_Store):
-    """Deploy engine (Neon / any Postgres). A small pooled connection; the SAME
-    ``_Store`` logic runs on top. Its live smoke is the deploy step (docs/deploy.md
-    Part B) — there is no local Postgres in dev to run it against here."""
+    """Deploy engine (Render's managed Postgres / any Postgres). A small pooled
+    connection; the SAME ``_Store`` logic runs on top. Its live smoke is the deploy step
+    (docs/deploy.md Part B) — there is no local Postgres in dev to run it against here."""
 
     _pg = True
 
