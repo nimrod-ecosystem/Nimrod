@@ -53,8 +53,8 @@ SOURCE_KINDS = {"agent"}                            # media-source adapters (ext
 CLIENT_DIR = Path(__file__).resolve().parent.parent / "client"
 DB_PATH = os.environ.get("NIMROD_DB", str(Path(__file__).resolve().parent / "nimrod.db"))
 
-# Postgres in deploy (DATABASE_URL, e.g. Neon — durable, external, backed up),
-# SQLite for local dev. Same logic runs on both (db._Store). See docs/deploy.md.
+# Postgres in deploy (DATABASE_URL, Render's own managed Postgres — durable, external,
+# backed up), SQLite for local dev. Same logic runs on both (db._Store). See docs/deploy.md.
 DATABASE_URL = os.environ.get("DATABASE_URL")
 store = PostgresStore(DATABASE_URL) if DATABASE_URL else SQLiteStore(DB_PATH)
 

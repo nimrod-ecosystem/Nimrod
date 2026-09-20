@@ -1,10 +1,26 @@
 # Render blueprint — the coordination server (thin: per-user config text only; no
 # media, no AI). One-click deploy: Render dashboard -> New -> Blueprint -> pick this
-# repo. It reads every setting from here EXCEPT the two secrets (DATABASE_URL,
-# DEVICE_KEYS), which you enter once in the dashboard so they never live in git.
+# repo. It reads every setting from here EXCEPT the still-secret env vars (DEVICE_KEYS,
+# SESSION_SECRET, GOOGLE_CLIENT_ID/SECRET), which you enter once in the dashboard so
+# they never live in git. DATABASE_URL is no longer one of those — see `databases:`
+# below — Render generates and injects it itself.
 #
 # Pairs with docs/deploy.md. The client is served on the same origin by app.py
 # (StaticFiles), so there's no separate frontend service to deploy for v1.
+#
+# Migrated OFF Neon onto Render's own managed Postgres, 2026-09-19 (Mike: "no further
+# dependency on Neon... everything that was there should be handled by render"). The
+# `databases:` block below is new; the actual data move (existing rows, not schema —
+# schema bootstraps itself from web/server/db.py's own _migrate()) is a one-time
+# script, not something this file does — see web/server/migrate_neon_to_render.py.
+databases:
+  - name: nimrod-db
+    plan: basic-256mb          # CHECK THIS AGAINST WHAT RENDER SHOWS YOU BEFORE APPLYING.
+    # ^ Data here is tiny (docs/deploy.md: ~150 B/play of config/state text, not media)
+    # so the smallest paid Postgres tier is the recommendation — but Render's own
+    # blueprint-apply screen shows you the real, current price for whatever plan name
+    # it resolves to before anything is charged. Confirm it there; this is a real
+    # recurring cost decision, not a default to wave through unread.
 services:
   - type: web
     name: nimrod
@@ -22,8 +38,10 @@ services:
         value: prod                     # fail-closed auth: only a valid session or device key is accepted
       - key: PYTHON_VERSION
         value: "3.12.7"
-      - key: DATABASE_URL               # Neon Postgres connection string
-        sync: false                     # secret — set in the Render dashboard, not in git
+      - key: DATABASE_URL               # Render's own Postgres now — see `databases:` above
+        fromDatabase:
+          name: nimrod-db
+          property: connectionString
       - key: DEVICE_KEYS                # "robin:<secret>,..." (unattended-kiosk fallback)
         sync: false                     # secret — set in the Render dashboard, not in git
       - key: SESSION_SECRET             # long random string — signs the login cookie
