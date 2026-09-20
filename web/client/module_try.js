@@ -280,6 +280,12 @@ export async function createLiveHost({ user }) {
         events,
         makeState: (key, opts) => createState({ url: profiles.stateURL(profileId, key), user, ...opts }),
         makeEvents: (key, opts) => createEvents({ url: profiles.eventsURL(profileId, key), user, ...opts }),
+        // Real gap, found while wiring the keyboard module's ctx: this host never exposed
+        // `makePersonState` at all, unlike `createTryHost` (which passes its local backend's
+        // version straight through). Same `(personId, key, opts)` shape as everywhere else.
+        makePersonState: (pid, key, opts = {}) => (profiles.personStateURL
+          ? createState({ url: profiles.personStateURL(pid, key), user, ...opts })
+          : null),
         output, audio, micOwner, cameraOwner, sources, rand,
         callTransport: null,
         aim,

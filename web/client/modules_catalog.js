@@ -168,6 +168,23 @@ export const CATALOG = [
       + 'question before it is asked.',
   },
   {
+    // FIRST OF A NEW KIND, NOT JUST A NEW ENTRY - `keyboard` is the first "each input device
+    // is its own module" module (H4). Filed under `comfort` as the closest existing fit (it
+    // runs on its own, nobody has to press anything for it to keep showing what's true), but
+    // none of the three GROUPS above were written with a device/settings module in mind - a
+    // fourth group is a real, open question, not decided here. See MIKE_CHANGE_LIST.md H4.
+    type: 'keyboard',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'What each key on the keyboard does right now.',
+    needs: 'A keyboard.',
+    why: 'Every screen already ships working keyboard defaults - arrows to move, Enter to '
+      + 'choose - but nothing on screen has ever said so out loud. This shows the real, '
+      + 'current mapping, whether it is still the defaults or has been set up differently, '
+      + 'so a caregiver never has to guess or hunt through a settings page just to know '
+      + 'what a key does.',
+  },
+  {
     type: 'board',
     // *** "AAC board", not "Talk". *** Mike, 2026-09-06: people searching for this know the
     // term AAC and nobody recognises "Talk" as the thing they need. The words `AAC` and
