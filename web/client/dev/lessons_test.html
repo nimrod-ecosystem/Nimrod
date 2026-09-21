@@ -148,7 +148,10 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     const lmod = await profiles.addModule(profile.id, 'lessons');
     const lst = createState({ url: profiles.stateURL(profile.id, lmod.id), user: USER });
     await lst.load();
-    lst.set({ minWatchSec: 0, topics: DEFAULT_TOPICS });   // no wait, so the test isn't a timer
+    // `contentSource: 'bank'` explicit — DEFAULTS.contentSource is 'pack' now (2026-09-22), and
+    // this fixture drives the rest of the file's checks against the written `topics` below, not
+    // a real network pack fetch.
+    lst.set({ minWatchSec: 0, topics: DEFAULT_TOPICS, contentSource: 'bank' });   // no wait, so the test isn't a timer
     await lst.flush();
 
     const host = document.getElementById('host');
@@ -208,7 +211,10 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     const wmod = await profiles.addModule(profile.id, 'wordforge');
     const wst = createState({ url: profiles.stateURL(profile.id, wmod.id), user: USER });
     await wst.load();
-    wst.set({ wordsText: WORDS, roundLength: 40 });
+    // `contentSource: 'bank'` explicit -- wordforge's own DEFAULTS.contentSource is 'pack' now
+    // (2026-09-22), and this fixture drives the gating checks below against the exact WORDS
+    // written here, not a real network pack fetch.
+    wst.set({ wordsText: WORDS, roundLength: 40, contentSource: 'bank' });
     await wst.flush();
 
     const wf = mountModule('wordforge', {
@@ -360,10 +366,41 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
       bhost.remove();
     }
     {
-      // The default stays "bank" — an existing profile with saved settings that predate this
-      // feature must see exactly the topics it always has, not silently switch to a pack.
-      check('*** DEFAULTS.contentSource is still "bank", unaffected by adding the pack path ***',
-        DEFAULTS.contentSource === 'bank', String(DEFAULTS.contentSource));
+      // DEFAULT FLIPPED, 2026-09-22 — Mike: "There should be default packs, so people can play
+      // the games without setting anything up." Matches trivia.js/wordforge.js's own flip, same
+      // day, same reason.
+      check('*** DEFAULTS.contentSource is "pack" — a fresh instance needs nothing written ***',
+        DEFAULTS.contentSource === 'pack', String(DEFAULTS.contentSource));
+      const csRow = (getManifest('lessons').settings || []).find((f) => f.key === 'contentSource');
+      check('...and the settings row agrees, not left pointing at "bank"',
+        csRow?.default === 'pack', String(csRow?.default));
+    }
+    {
+      // The flip must not run over somebody who EXPLICITLY chose "Written topics" in settings —
+      // the exact bug fixed the same day in this file's own cfg-resolution line (it used to
+      // check ONLY for 'pack', so an explicit 'bank' silently fell through to DEFAULTS too).
+      const bankProfiles = createProfilesClient({ user: USER });
+      const bp2 = await bankProfiles.create('TEST-lessons-explicit-bank');
+      const bmod2 = await bankProfiles.addModule(bp2.id, 'lessons');
+      const bst2 = createState({ url: bankProfiles.stateURL(bp2.id, bmod2.id), user: USER });
+      await bst2.load();
+      await bst2.set({ contentSource: 'bank', topics: DEFAULT_TOPICS });
+      const bhost2 = document.createElement('div');
+      document.body.append(bhost2);
+      const binst2 = mountModule('lessons', {
+        mount: bhost2, bus: createBus(), state: bst2,
+        events: createEvents({ url: bankProfiles.eventsURL(bp2.id, bmod2.id), user: USER }),
+        user: USER, profileId: bp2.id,
+        makeState: (key, opts) => createState({ url: bankProfiles.stateURL(bp2.id, key), user: USER, ...opts }),
+        makeEvents: (key, opts) => createEvents({ url: bankProfiles.eventsURL(bp2.id, key), user: USER, ...opts }),
+      });
+      binst2.init();
+      await sleep(500);
+      check('*** an explicit "bank" choice still shows the written topics, not a pack fetch ***',
+        DEFAULT_TOPICS.every((t) => (bhost2.textContent || '').includes(t.label)),
+        (bhost2.textContent || '').slice(0, 300));
+      binst2.destroy();
+      bhost2.remove();
     }
 
     // *** IT DECLARED NO SETTINGS, AND ITS OWN COPY ONCE POINTED AT THE MENU IT DOES NOT HAVE.

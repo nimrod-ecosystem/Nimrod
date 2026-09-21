@@ -162,10 +162,12 @@ export const DEFAULT_PAIRS = [
 // discussing-first change to this game's actual design, not a repricing — flagged, not done
 // silently.
 export const DEFAULTS = {
-  // A READY-MADE PACK, NOT JUST A WRITTEN/SHARED BANK — same additive shape Trivia's own
-  // `contentSource` already ships (2026-09-08 MIKE_CHANGE_LIST §3). `bank` (unchanged) stays
-  // the default; `pack` is for somebody with nobody to write a word list for them.
-  contentSource: 'bank',
+  // A READY-MADE PACK, DEFAULT SINCE 2026-09-22 — same additive shape Trivia's own
+  // `contentSource` ships (2026-09-08 MIKE_CHANGE_LIST §3), flipped the same day and for the
+  // same reason: Mike, "There should be default packs, so people can play the games without
+  // setting anything up." See trivia.js's own DEFAULTS comment for the risk this was weighed
+  // against (silently swapping an existing written bank) and why the explicit ask overrides it.
+  contentSource: 'pack',
   packId: packsFor('words')[0]?.id || null,
   correctPoints: 1,    // a clean first-guess right answer — Trivia's own atom, 100% of it
   tryPoints: 0.75,     // a miss, once the explanation is shown — Trivia's own formula at
@@ -373,7 +375,7 @@ function loadPackCached(id) {
 
 const SETTINGS = [
   ...(WORD_PACKS.length ? [
-    { key: 'contentSource', label: 'Where words come from', kind: 'choice', default: 'bank',
+    { key: 'contentSource', label: 'Where words come from', kind: 'choice', default: 'pack',
       level: 'standard',
       options: [{ value: 'bank', label: 'Written words + shared bank' },
                 { value: 'pack', label: 'A built-in pack' }],
@@ -793,7 +795,17 @@ registerModule(
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
           pairs = (p && p.length) ? p : DEFAULT_PAIRS;
           cfg = {
-            contentSource: snap.contentSource === 'pack' ? 'pack' : DEFAULTS.contentSource,
+            // *** A LATENT BUG THE OLD DEFAULT (`bank`) HID. *** This used to read
+            // `snap.contentSource === 'pack' ? 'pack' : DEFAULTS.contentSource` — which does not
+            // actually check for an EXPLICIT 'bank' choice, only for 'pack'; anything else,
+            // including a deliberately saved 'bank', fell through to `DEFAULTS.contentSource`.
+            // Harmless while the default WAS 'bank' (both paths agreed), but the moment the
+            // default flipped to 'pack' (2026-09-22) this would have silently overridden anyone
+            // who explicitly picked "Written words" in settings. Fixed to treat 'bank' and
+            // 'pack' as real saved values, and only fall back to the default when neither was
+            // ever saved at all.
+            contentSource: (snap.contentSource === 'pack' || snap.contentSource === 'bank')
+              ? snap.contentSource : DEFAULTS.contentSource,
             packId: typeof snap.packId === 'string' && snap.packId ? snap.packId : DEFAULTS.packId,
             correctPoints: Number(snap.correctPoints) > 0 ? Number(snap.correctPoints) : DEFAULTS.correctPoints,
             tryPoints: Number(snap.tryPoints) >= 0 ? Number(snap.tryPoints) : DEFAULTS.tryPoints,

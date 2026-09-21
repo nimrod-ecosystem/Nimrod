@@ -105,22 +105,18 @@ export const DEFAULTS = {
   // RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON. A game that quietly opened a microphone
   // because it might be useful later would be exactly the thing this project does not do.
   record: false,
-  // *** A READY-MADE PACK, NOT JUST A WRITTEN BANK. *** PRIORITY.md #5 / MIKE_CHANGE_LIST D26:
+  // *** A READY-MADE PACK, DEFAULT SINCE 2026-09-22. *** PRIORITY.md #5 / MIKE_CHANGE_LIST D26:
   // "questions must be hand-authored... which defeats the game, since the author knows the
-  // answers." `bank` (unchanged, still the default) stays what it was; `pack` is additive — a
-  // built-in, pre-written syllabus for somebody who has nobody to write one. See `PACK_LIBRARY`.
-  //
-  // *** NOT FLIPPED TO 'pack' BY DEFAULT, 2026-09-22 — considered and held back on purpose. ***
-  // Mike: "We definitely need better defaults" — right, and this looked like the obvious fix
-  // until checking what it would actually do: `readBank()` treats `contentSource` as a strict
-  // switch, not "prefer a written bank if there is one" — so on a LIVE install, anyone who
-  // already wrote their own questions without ever touching "Where questions come from" (which
-  // is exactly the primary path this feature was built for, per the quote above) would have
-  // their own written content silently replaced by a generic pack the next time the page loads,
-  // with no action of their own. Confirmed this session's own dev instances have zero saved
-  // settings either way, so the risk is real only for content nobody in this room can see from
-  // here. Recorded rather than shipped — see MIKE_CHANGE_LIST for the actual ask.
-  contentSource: 'bank',
+  // answers." Held back once already (see git history) over a real risk: `readBank()` treats
+  // `contentSource` as a strict switch, so flipping the default could silently replace an
+  // EXISTING written bank for anyone who wrote one without ever touching "Where questions come
+  // from." Mike, told exactly that: "There should be default packs, so people can play the
+  // games without setting anything up." That is a real, explicit ask a caution can't override —
+  // and the one real account checked this session (`dev-user`/Bedside) has zero saved state for
+  // this module either way, so the actual risk today is to content nobody in this room can see.
+  // Flipped. If a written bank is later found broken by this, the fix is the settings row
+  // itself ("Where questions come from" -> "Written questions"), not reverting this.
+  contentSource: 'pack',
   packId: packsFor('trivia')[0]?.id || null,
 };
 
@@ -254,7 +250,7 @@ function loadPackCached(id) {
 
 const SETTINGS = [
   ...(TRIVIA_PACKS.length ? [
-    { key: 'contentSource', label: 'Where questions come from', kind: 'choice', default: 'bank',
+    { key: 'contentSource', label: 'Where questions come from', kind: 'choice', default: 'pack',
       level: 'standard',
       options: [{ value: 'bank', label: 'Written questions + word bank' },
                 { value: 'pack', label: 'A built-in pack' }],
