@@ -78,6 +78,7 @@ import './modules/comet.js';
 import './modules/pressgame.js';
 import './modules/call.js';
 import './modules/view.js';
+import './modules/settings.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
