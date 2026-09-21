@@ -30,6 +30,7 @@ import { createProfilesClient } from '../profile.js';
 import { mountKiosk, SCREEN_SHOW, SCREEN_BACK, SCREEN_SHOWN } from '../kiosk.js';
 import { authHeaders } from '../auth.js';
 import { createState } from '../state.js';
+import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'kiosk-test-user-' + Math.floor(performance.now());
@@ -987,6 +988,81 @@ const ds = () => root.querySelector('.kiosk').dataset;
     mroot.remove();
   } catch (e) {
     check('the microphone-preference section threw', false, String((e && e.stack) || e));
+  }
+
+  // ============================================================================================
+  // A REAL BOUND SWITCH/MOUSE MUST NOT HIJACK THE KIOSK'S OWN CHROME. Found 2026-09-21 — Mike,
+  // on the real kiosk: "Clicking on anything in the settings menu just jumps you to selecting
+  // a different item... I'll click on Colours and it will jump to someone else using this
+  // screen." Reproduced directly: with a real `pointer:mouse -> verb/select` binding saved on
+  // the person, `attachPointer`'s `preventDefault()` on the bound pointerdown suppressed the
+  // compatibility click entirely, so the settings gear's OWN click handler never even ran —
+  // not specific to the menu's own scanning, just any of the kiosk's chrome, because all of it
+  // sits inside the one `attachPointer(target: window)` the input runtime attaches. Fixed with
+  // an `ignore` predicate (`isKioskChrome`) forwarded through `mountInputRuntime`: a press is
+  // excluded from device interpretation unless it lands inside a mounted module's own content
+  // (`.mod-host`, the one marker every module gets for free from `mountModule`).
+  try {
+    const cProfiles = createProfilesClient({ user: USER });
+    const cp = await cProfiles.create('TEST-chrome-click');
+    const cFull = await cProfiles.get(cp.id);
+
+    // A real, saved binding — the same shape `inputs.js`'s own "Press a control..." flow would
+    // write — mapping the mouse's left button to the universal `select` verb, exactly the
+    // reported scenario (a switch that presents as a mouse click, or a real mouse someone
+    // bound on purpose).
+    const bindState = createState({
+      url: cProfiles.personStateURL(cFull.person_id, INPUTS_KEY), user: USER,
+    });
+    await bindState.load().catch(() => {});
+    bindState.set({ [INPUTS_KEY]: {
+      v: RECORD_VERSION, gate: 'both', speak: false, devices: [],
+      bindings: [{ id: 'test-mouse-select', actionId: 'verb/select', device: 'pointer:mouse',
+        control: 'button:0', edge: 'press', role: 'universal',
+        holdMs: null, debounceMs: null, lockoutMs: null, label: '' }],
+    } });
+    await bindState.flush();
+    bindState.destroy();
+
+    const croot = document.createElement('div');
+    document.body.append(croot);
+    const ck = await mountKiosk(croot, {
+      user: USER, profileId: cp.id, profiles: cProfiles, bus: createBus(),
+    });
+    // Wait for the REAL record (not just the shipped fallback) to actually be loaded, the same
+    // race `module_try_test.html` already guards against for the identical reason.
+    await settled(() => ck.runtime.record().bindings.some((b) => b.id === 'test-mouse-select'), 3000);
+
+    const gear = croot.querySelector('[data-act="settings"]');
+    const scrim = croot.querySelector('[data-scrim]');
+    check('the settings menu starts closed', scrim?.hidden === true, scrim?.className);
+
+    let sawClick = false;
+    let clickDefaultPrevented = null;
+    gear.addEventListener('click', (e) => { sawClick = true; clickDefaultPrevented = e.defaultPrevented; });
+
+    // The real mechanism under test is whether `attachPointer`'s `onDown` calls
+    // `preventDefault()` on THIS pointerdown — that is the actual thing that silently ate the
+    // gear's click before this fix (a real browser then never promotes a prevented pointerdown
+    // into a compatibility click at all). The `click` below is dispatched explicitly rather
+    // than relying on that browser promotion, so the assertion is direct: did the gear's own
+    // handler run, and was pointerdown left alone.
+    const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, pointerType: 'mouse' });
+    gear.dispatchEvent(down);
+    gear.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'mouse' }));
+    gear.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+    check('*** the gear’s own pointerdown is NOT prevented — chrome, not module content ***',
+      !down.defaultPrevented, String(down.defaultPrevented));
+    check('*** and its click handler actually ran, unlike before this fix existed ***',
+      sawClick && !clickDefaultPrevented, JSON.stringify({ sawClick, clickDefaultPrevented }));
+    check('*** so the settings menu genuinely opened, not "jumped to something else" ***',
+      scrim?.hidden === false, scrim?.className);
+
+    try { ck?.destroy?.(); } catch { /* already gone */ }
+    croot.remove();
+  } catch (e) {
+    check('the chrome-click-hijack section threw', false, String((e && e.stack) || e));
   }
 
   // ============================================================================================
