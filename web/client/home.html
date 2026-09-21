@@ -365,7 +365,8 @@
 <div id="root"><p class="h-loading" style="max-width:880px;margin:40px auto">Loading…</p></div>
 
 <script type="module">
-import { createProfilesClient } from './profile.js';
+import { createProfilesClient, resolveTheme } from './profile.js';
+import { applyTheme, DEFAULT_THEME } from './theme.js';
 import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createPush } from './push.js';
@@ -435,6 +436,19 @@ function localBanner() {
     </div>`;
 }
 
+// *** THIS PAGE NEVER APPLIED A THEME EITHER. *** Found 2026-09-21, same audit that fixed
+// `modules.html` — Mike: "Are the themes applied to every page? They should be themes for the
+// site, not just for the modules." `kiosk.js` was the only place that ever called
+// `applyTheme()`; this is the page someone spends real time in setting things up (Devices,
+// Media, their dashboards list), so it should reflect their own choice too, not just the
+// screen it eventually gets displayed on. Applied immediately as the explicit default so the
+// page is never unthemed even for a moment, then upgraded to the real one below once a signed-
+// in visitor's own default screen resolves. A person managing SEVERAL dashboards could have a
+// different theme on each one — this picks the same "default screen" `resolveTheme`/
+// `ensureProfile` already use elsewhere, a reasonable single answer for the shell chrome
+// itself, not a claim that one screen's theme is more correct than another's.
+applyTheme(document.documentElement, DEFAULT_THEME);
+
 (async () => {
   let me = null;
   let signedIn = false;
@@ -477,6 +491,11 @@ function localBanner() {
     if (!signedIn) { localBanner(); await seedStarterScreen(backend.profiles); }
 
     const profiles = signedIn ? createProfilesClient({ user: me.user }) : backend.profiles;
+    if (signedIn) {
+      resolveTheme(profiles, me.user)
+        .then((theme) => { if (theme) applyTheme(document.documentElement, theme); })
+        .catch(() => { /* offline or blocked -- the explicit default already stands */ });
+    }
     // ONE shared push connection for every handle home.html opens — see kiosk.js's
     // identical setup and push.js's own header. Signed out there is no server session to
     // hold a stream open to (same reason `backend` exists at all), so it stays null and
