@@ -149,6 +149,12 @@ export function mountInputRuntime({
   onActivation = null,
   attachDevices = true,
   makeGamepads = createGamepads,
+  // Forwarded straight to `attachPointer` — see ITS OWN comment on `ignore` for what this is
+  // for. Absent by default, so every existing caller (and every module's own on-screen
+  // button) is unaffected; a surface that also has its own caregiver-facing menus/lists with
+  // an internal scan-and-confirm mechanic (the kiosk's settings menu, `inputs.js`) can supply
+  // one so a direct click on a specific item wins over "confirm whatever the scanner is on".
+  ignore = null,
 } = {}) {
   if (!bus) throw new Error('mountInputRuntime: a bus is required');
 
@@ -191,7 +197,7 @@ export function mountInputRuntime({
     detach.push(attachKeyboard(input, { target }));
     // The mouse reports WHERE as well as which button, so a tracker added later is a second
     // producer of the same thing rather than a second path.
-    detach.push(attachPointer(input, { target, aim }));
+    detach.push(attachPointer(input, { target, aim, ignore }));
     // A gamepad is how a great many adaptive switches present themselves — no driver, no
     // permission prompt, no chooser. Starting the poll here is what makes a switch work at
     // the bedside without anybody plugging anything into a laptop first.

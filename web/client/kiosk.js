@@ -1796,10 +1796,33 @@ export async function mountKiosk(root, {
     ? slotRecs.map((r) => ({ id: r.id, type: r.type }))
     : stageDefs.map((d) => ({ id: d.id, type: d.type })));
 
+  // *** A REAL BOUND SWITCH/MOUSE HIJACKED THE KIOSK'S OWN CHROME, NOT JUST A MODULE'S. ***
+  // Found 2026-09-21: Mike, on the real kiosk (not a preview page this time) — "Clicking on
+  // anything in the settings menu just jumps you to selecting a different item... I'll click
+  // on Colours and it will jump to someone else using this screen." Reproduced directly: with
+  // a real `pointer:mouse -> verb/select` binding (the same class of thing already fixed on
+  // the Devices page and the modules.html preview), even the GEAR ITSELF stopped opening the
+  // menu — `attachPointer`'s `preventDefault()` on a bound pointerdown suppresses the
+  // compatibility click entirely, so the gear's own click handler never ran at all. That is
+  // not specific to the settings menu's own next/prev/select scanning (`settings.js`) — it is
+  // ANY of the kiosk's own chrome (the transport bar, the screen picker, the menu), because
+  // ALL of it sits inside this same `attachPointer(target: window)`.
+  //
+  // The fix is the opposite shape from the Devices page's (which denylisted a few known
+  // controls): here the SAFE default is "let a click through unmolested", and the exception is
+  // "unless it lands inside a mounted module's own content" — `.mod-host` is the one marker
+  // `mountModule` already puts on every module's root, everywhere, for free (module.js). A
+  // switch driving actual content (Trivia, the AAC board, Wait and Go) is correct and
+  // intended; a switch double-firing UNDER a click on the kiosk's own chrome is not, and this
+  // is the boundary between those two without hand-listing every chrome element that exists
+  // today or gets added later.
+  const isKioskChrome = (e) => !e.target.closest?.('.mod-host');
+
   runtime = mountInputRuntime({
     bus,
     modules: focusRing,
     fallback: DEFAULT_BINDINGS,
+    ignore: isKioskChrome,
     onFocus: (m) => {
       // *** ON A GRID, SHOW WHICH PANEL THE NEXT PRESS WILL ACT ON. ***
       //
