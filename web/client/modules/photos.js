@@ -32,8 +32,13 @@ import { pick, statsFromEvents } from '../rng.js';
 // a 1200x800 photo in a 775x423 panel lost 18% of its height, off the top and bottom,
 // which is exactly where faces are. For a module whose entire reason for existing is
 // somebody seeing their people, cropping their heads off is not a rendering preference.
-// The letterboxing `contain` would otherwise leave is filled by a blurred copy of the
-// same image (see `render`), so nothing is cropped AND nothing is a black bar.
+// The letterboxing `contain` would otherwise leave is now the theme's own `--surface`
+// (see modules.css) — not a black bar, not the photo blurred into its own backdrop.
+// CHANGED 2026-09-21, Mike: "I think we should lose the blurry background on the photos
+// and just have it show the theme." Was a blurred, darkened copy of the same photo
+// filling the gap (the common photo-frame convention); dropped now that themes are a
+// real, live per-account choice this session built out — a plain themed fill sits behind
+// every photo consistently, instead of each one growing its own soft-focus background.
 const DEFAULTS = { sourceId: '', album: '', intervalMs: 8000, fit: 'contain' };
 // How long a video may go without reporting progress before the slideshow moves on. It is
 // NOT `intervalMs` — that is how long a still photo is shown, and a video is allowed to be
@@ -276,16 +281,6 @@ registerModule(
       const st = stage();
       if (!st) return;
       st.innerHTML = '';
-      // The blurred backdrop that makes `contain` bearable on a wide panel: the same
-      // image, scaled to COVER and blurred out, sitting behind the real one. Every photo
-      // frame worth using does this. Skipped for `cover` (nothing to fill) and for video
-      // (a second decoding video to blur is not worth the battery on a Pi).
-      if (cfg.fit === 'contain' && item.kind !== 'video') {
-        const back = document.createElement('div');
-        back.className = 'fill';
-        back.style.backgroundImage = `url("${String(item.url).replace(/"/g, '%22')}")`;
-        st.append(back);
-      }
       let el;
       if (item.kind === 'video') {
         el = document.createElement('video');
