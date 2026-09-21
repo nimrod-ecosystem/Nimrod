@@ -30,7 +30,8 @@ persistence of a theme setting through the live server's overwrite-state store
 
 <script type="module">
 import { applyTheme, resolveThemeId, listThemes, THEMES, DEFAULT_THEME,
-         onColor, contrast, ACCENT_VARS } from '../theme.js';
+         onColor, contrast, ACCENT_VARS, getStoredTheme, setStoredTheme,
+         mountThemePicker } from '../theme.js';
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
 
@@ -309,6 +310,60 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
         box.remove();
       }
     }
+
+  // --- anonymous theme choice (getStoredTheme/setStoredTheme/mountThemePicker) -----------
+  // A plain object store, same shape as tour_test.html's fakeStore -- never touches the
+  // real browser localStorage, so a failed run cannot leave this machine's own dev profile
+  // holding a stray theme.
+  function fakeStore(seed = {}) {
+    const m = new Map(Object.entries(seed));
+    return {
+      getItem: (k) => (m.has(k) ? m.get(k) : null),
+      setItem: (k, v) => m.set(k, String(v)),
+      removeItem: (k) => m.delete(k),
+    };
+  }
+  {
+    const store = fakeStore();
+    check('getStoredTheme: nothing saved yet -> null', getStoredTheme(store) === null);
+    setStoredTheme('dusk', store);
+    check('setStoredTheme then getStoredTheme round-trips', getStoredTheme(store) === 'dusk');
+    setStoredTheme('not-a-real-theme', store);
+    check('setStoredTheme resolves an unknown id to the default before storing, not garbage',
+      getStoredTheme(store) === DEFAULT_THEME, getStoredTheme(store));
+  }
+  {
+    // A storage that throws on every call — private browsing / blocked site data. Neither
+    // helper may throw back at its caller; talk.js's own store carries the same guarantee.
+    const hostile = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+    let threw = false;
+    try { getStoredTheme(hostile); setStoredTheme('dusk', hostile); } catch { threw = true; }
+    check('getStoredTheme/setStoredTheme never throw even when storage itself does', !threw);
+  }
+  {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const select = document.createElement('select');
+    host.append(select);
+    mountThemePicker(select);
+    check('mountThemePicker lists every theme as an option',
+      select.options.length === listThemes().length,
+      `${select.options.length} vs ${listThemes().length}`);
+    check('mountThemePicker selects the current (default, nothing stored) theme',
+      select.value === DEFAULT_THEME, select.value);
+    select.value = 'dusk';
+    select.dispatchEvent(new Event('change'));
+    check('picking a theme applies it to the real document root',
+      getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() === THEMES.dusk.vars['--bg']);
+    check('picking a theme persists it to (real) localStorage for next time',
+      getStoredTheme() === 'dusk');
+    // Clean up: this is the one place in this suite that touches the real localStorage
+    // (mountThemePicker has no injectable storage — it is meant to run on the one real
+    // page a visitor has), and the real document root's theme, so both are reset.
+    localStorage.removeItem('nimrod:theme');
+    applyTheme(document.documentElement, DEFAULT_THEME);
+    host.remove();
+  }
 
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;

@@ -178,6 +178,8 @@
     border:1px solid var(--border);background:var(--surface-alt);
     padding:4px 10px;border-radius:999px;white-space:nowrap}
   nav .right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .theme-pick{padding:7px 8px;border-radius:10px;font-size:.85rem;border:1.5px solid var(--accent);
+    background:transparent;color:var(--text-strong);cursor:pointer;max-width:112px}
   .btn{display:inline-block;padding:9px 17px;border-radius:10px;font-weight:600;
     font-size:.92rem;border:1.5px solid transparent;cursor:pointer;text-decoration:none}
   .btn.primary{background:var(--accent-warm);color:#3a1f18;border-color:var(--accent-warm)}
@@ -287,6 +289,7 @@
     .freetag{display:none}
     nav .wrap{gap:10px}
     .btn{padding:8px 13px;font-size:.86rem}
+    .theme-pick{max-width:78px;padding:6px 4px;font-size:.78rem}
   }
 </style>
 </head>
@@ -330,6 +333,11 @@
       <a href="#involve">Get involved</a>
     </div>
     <div class="right">
+      <!-- Mike, 2026-09-21: "It would be nice if they could change themes without signing
+           in." No profile exists yet to hold a preference on, so this is the per-browser,
+           localStorage picker (theme.js's mountThemePicker) rather than the real per-profile
+           one a signed-in visitor gets. -->
+      <select id="theme-pick" class="theme-pick" aria-label="Theme"></select>
       <a href="/auth/login" class="btn outline">Sign in</a>
       <!-- *** THE FULL SITE, NOT JUST THE EMBEDDED SAMPLE. *** Mike, 2026-09-13: a real
            "browse the whole site signed out" link existed here before commit bab35c3
@@ -958,8 +966,11 @@ import { CATALOG, GROUPS, USE, STARTER_MODULES } from './modules_catalog.js';
 // theme explicitly, 2026-09-21, means it stays correct if that theme ever changes instead of
 // silently drifting out of sync with a copy nobody remembers to update. Mike: "pre-sign-in
 // pages should have the default theme" — this makes that a live fact, not a coincidence.
-import { applyTheme, DEFAULT_THEME } from './theme.js';
-applyTheme(document.documentElement, DEFAULT_THEME);
+// Extended the same day to read this browser's own stored choice first, if it made one —
+// see mountThemePicker below.
+import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
+mountThemePicker(document.getElementById('theme-pick'));
 
 const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const entry = (type) => CATALOG.find((c) => c.type === type);

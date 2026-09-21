@@ -27,6 +27,8 @@
   .top nav a{padding:8px 14px;border-radius:10px;text-decoration:none;font-weight:650;font-size:.92rem}
   .top nav .ghost{border:1px solid var(--border);color:var(--text)}
   .top nav .solid{background:var(--link);color:#fff}
+  .theme-pick{padding:7px 10px;border-radius:10px;border:1px solid var(--border);
+    background:transparent;color:var(--text);font-size:.92rem;cursor:pointer;max-width:120px}
 
   header.hero{padding:44px 0 4px}
   .eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
@@ -84,6 +86,10 @@
   <div class="wrap">
     <a class="brand" href="/">Nimrod<span>.</span></a>
     <nav>
+      <!-- No account on this page at all -- per-browser choice, same as landing.html.
+           Mike, 2026-09-21: pre-sign-in pages should carry the theme, and be changeable
+           without signing in. -->
+      <select id="theme-pick" class="theme-pick" aria-label="Theme"></select>
       <a class="ghost" href="/modules.html">What you can add</a>
       <a class="ghost" href="/kiosk.html">Try it</a>
       <a class="solid" href="/auth/login">Sign in</a>
@@ -228,5 +234,16 @@
     <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
   </footer>
 </div>
+<script type="module">
+// This page's own `:root{}` block above is a hand-copied snapshot of the DEFAULT theme's
+// values, same as landing.html's was — kept as a safe fallback if this script is ever
+// blocked, but applying the real theme explicitly so it stays correct if a theme changes,
+// and reads this browser's own stored choice (there is no account on this page at all).
+// Mike, 2026-09-21: pre-sign-in pages should carry the theme, and be changeable without
+// signing in.
+import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
+mountThemePicker(document.getElementById('theme-pick'));
+</script>
 </body>
 </html>
