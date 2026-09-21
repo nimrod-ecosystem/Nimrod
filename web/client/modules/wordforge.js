@@ -140,26 +140,36 @@ export const DEFAULT_PAIRS = [
    + 'to say the same thing.'],
 ].map(([better, weaker, why]) => ({ better, weaker, why, grade: 8 }));
 
-// PRICED AGAINST THE REST OF THE ECONOMY, not invented.
+// *** REPRICED 2026-09-22 to match Trivia's own atom: ONE POINT, MAX, PER QUESTION. ***
+// Mike: "Word forge scoring should work like trivia — 100% for first guess, 75 for 2nd etc.,
+// with 1 point being max. We want to keep it around a point per question for things like
+// that." Trivia's own `worth(spent)` (see trivia.js) is `step = max/4; max - step*spent,
+// floored at step` — a real, reachable four-guess ladder, because Trivia never reveals which
+// option is correct until the question ends, so a second, third and fourth guess are real,
+// meaningful attempts.
 //
-// The economy runs at roughly ONE POINT PER MINUTE of real effort: a school hour is 60,
-// dishes are 15 (~10 min), mowing is 60 (~1 hr) — and, the anchor that matters here, the
-// Task Menu already prices **"look up a word's meaning" at 2 points**. Answering a word
-// question correctly is that same act, so it is worth about the same: 2.
-//
-// Do the arithmetic before changing these. A question takes ~15-20s, so a player answers
-// ~3 per minute. At 2 points a correct answer that is ~6 points/minute — already several
-// times the base rate, which is defensible for concentrated learning but is the ceiling,
-// not the floor. The original 10/3 worked out near 30-40 points per minute: a module that
-// simply sprays points and devalues every other way of earning them.
+// *** WORD FORGE CANNOT COPY THAT LADDER AS-IS, AND THIS IS WORTH READING BEFORE CHANGING IT
+// AGAIN. *** This game's whole premise — "a wrong answer explains itself" — means a miss
+// ALREADY reveals `q.explain` (literally what the right answer is/means) on the FIRST wrong
+// guess. A second guess after that would not be a real attempt, it would be clicking the
+// answer the game just told you. So there is no honest 50%/75%/25% ladder to climb here the
+// way Trivia has one — there is exactly ONE real guess, then the reveal. What DOES transfer
+// cleanly is the PRICE of that one guess: Trivia's own formula, evaluated at "one guess
+// already spent" (`max=1, step=0.25` → `1 - 0.25 = 0.75`), is what a wrong-guess-then-shown
+// answer is worth under the identical pricing rule Trivia uses — so that is the number here,
+// not a separately-invented one. If Word Forge should instead grow a REAL multi-guess ladder
+// (hide the reveal until it's earned, matching Trivia's own model), that is a bigger, worth-
+// discussing-first change to this game's actual design, not a repricing — flagged, not done
+// silently.
 export const DEFAULTS = {
   // A READY-MADE PACK, NOT JUST A WRITTEN/SHARED BANK — same additive shape Trivia's own
   // `contentSource` already ships (2026-09-08 MIKE_CHANGE_LIST §3). `bank` (unchanged) stays
   // the default; `pack` is for somebody with nobody to write a word list for them.
   contentSource: 'bank',
   packId: packsFor('words')[0]?.id || null,
-  correctPoints: 2,    // a right answer — the Task Menu's price for looking a word up
-  tryPoints: 1,        // a wrong answer, once the explanation is acknowledged
+  correctPoints: 1,    // a clean first-guess right answer — Trivia's own atom, 100% of it
+  tryPoints: 0.75,     // a miss, once the explanation is shown — Trivia's own formula at
+                       // "one guess spent" (max=1, step=0.25 → 1 - 0.25)
   streakEvery: 5,      // a bonus every N correct in a row
   streakBonus: 3,
   roundLength: 10,     // items per round; each appears at most once
@@ -391,12 +401,14 @@ const SETTINGS = [
       { value: 15, label: '15' },
       { value: 20, label: '20' },
     ] },
-  { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 2,
-    level: 'advanced', min: 0, max: 10, step: 1 },
+  // `step: 0.25` since 2026-09-22 — repriced to Trivia's own quartered atom (see DEFAULTS'
+  // own comment), so both numbers below are legitimately fractional now, not just whole points.
+  { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 1,
+    level: 'advanced', min: 0, max: 10, step: 0.25 },
   // Deliberately worth something. A wrong answer that has been read and acknowledged is the
   // part of this game that teaches, and paying zero for it would price learning at nothing.
   { key: 'tryPoints', label: 'Points for a wrong answer, once explained', kind: 'number',
-    default: 1, level: 'advanced', min: 0, max: 10, step: 1 },
+    default: 0.75, level: 'advanced', min: 0, max: 10, step: 0.25 },
   { key: 'streakEvery', label: 'Streak bonus every', kind: 'choice', default: 5,
     level: 'advanced',
     options: [

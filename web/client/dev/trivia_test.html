@@ -110,23 +110,25 @@ try {
     const keys = (getManifest('trivia').settings || []).map((f) => f.key);
     check('*** a score is at least available now ***', keys.includes('showScore'),
       JSON.stringify(keys));
-    // OFF BY DEFAULT, matching `comet`, which already carries this exact row for the same
-    // reason. One question should not have two different answers in one codebase.
+    // *** ON BY DEFAULT, REVERSED 2026-09-22 — Mike: "Why should a screen someone can't walk
+    // away from not show a score? Games have scores. That's pretty standard." *** `comet` gets
+    // the identical reversal, for the identical reason — still matching each other, just at
+    // the opposite value.
     const row = (getManifest('trivia').settings || []).find((f) => f.key === 'showScore');
     const cometRow = (getManifest('comet').settings || []).find((f) => f.key === 'showScore');
-    check('...off by default, because it is a screen somebody cannot walk away from',
-      row.default === false);
+    check('...on by default, per Mike’s direct ruling',
+      row.default === true);
     check('*** ...and matching comet rather than inventing a second answer ***',
       !!cometRow && cometRow.default === row.default && cometRow.level === row.level,
       JSON.stringify({ trivia: [row.default, row.level], comet: [cometRow?.default, cometRow?.level] }));
 
-    const off = rig({});
+    const off = rig({ saved: { showScore: false } });
     check('with it off, nothing on screen counts anything',
       !off.host.querySelector('.tv-score'), off.host.textContent.slice(0, 60));
     off.inst.destroy();
 
-    const on = rig({ saved: { showScore: true } });
-    check('with it on, the score is on screen', !!on.host.querySelector('.tv-score'),
+    const on = rig({});
+    check('with the default, the score is on screen', !!on.host.querySelector('.tv-score'),
       on.host.textContent.slice(0, 60));
     check('...starting at none right', /0 right/.test(on.host.textContent),
       on.host.querySelector('.tv-score')?.textContent);

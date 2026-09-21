@@ -52,18 +52,18 @@ const DEFAULTS = {
   calm: false,      // motion budget — fewer sparks, no idle pulse, slower drift
   pointer: true,    // does a pointer move the comet
   steerMs: 900,     // how long a `next` glide to a heart takes
-  // *** SHOW A SCORE — A SETTING, AND OFF BY DEFAULT (Mike, 2026-09-02). ***
+  // *** SHOW A SCORE — ON BY DEFAULT, REVERSED 2026-09-22. ***
   //
-  // The count of hearts caught is kept whether or not it is shown; only the readout is
-  // optional. Mike: it plainly is a game, and "we'll want to turn it into something people
-  // want to play" — so a score is wanted and this module should have one.
-  //
-  // WHY OFF BY DEFAULT ANYWAY, and it is not a hedge. This same module is the one that
-  // answers "did I do that?" for somebody re-learning that she can move something, and on
-  // that screen a running total turns a yes into a number that can go down. Off by default
-  // changes nothing on her screen and takes nothing from anybody else — it is one switch.
-  // If it should be on for everyone, this one word is the whole change.
-  showScore: false,
+  // The count of hearts caught is kept whether or not it is shown; only the readout was ever
+  // optional. Mike, 2026-09-02: it plainly is a game, and "we'll want to turn it into something
+  // people want to play" — so a score is wanted and this module should have one. Off-by-default
+  // was this file's own hedge against a specific, real concern: this module also answers "did I
+  // do that?" for somebody re-learning that she can move something at all, and a running total
+  // turns a yes into a number that could read as decline on a bad day. Mike, 2026-09-22, on
+  // reconsidering it directly: "I think comet should probably show a score by default too" — the
+  // hedge is exactly as easy to reverse as it was to add; that concern is not gone, only no
+  // longer the default. `showScore` stays a real, reachable setting either way.
+  showScore: true,
   // Open to a start screen rather than mid-flight. See pressgame.js for the same setting and
   // the same argument; a bedside panel that is meant to be already running turns it off.
   openToMenu: true,
@@ -87,7 +87,7 @@ function readTheme(el) {
 }
 
 const SETTINGS = [
-  { key: 'showScore', label: 'Score', default: false, level: 'essential',
+  { key: 'showScore', label: 'Score', default: true, level: 'essential',
     onLabel: 'Show hearts caught', offLabel: 'No score on screen' },
   { key: 'openToMenu', label: 'When the panel opens', default: true, level: 'essential',
     onLabel: 'Show a start screen first', offLabel: 'Start straight away' },
