@@ -953,6 +953,13 @@
 // `modules_catalog.js` is data only — no module imports — so this costs one small file, not the
 // twenty-one module implementations.
 import { CATALOG, GROUPS, USE, STARTER_MODULES } from './modules_catalog.js';
+// This page's own `:root{}` block above is a hand-copied snapshot of the DEFAULT theme's
+// values (there is no signed-in person here to have a preference for) — applying the real
+// theme explicitly, 2026-09-21, means it stays correct if that theme ever changes instead of
+// silently drifting out of sync with a copy nobody remembers to update. Mike: "pre-sign-in
+// pages should have the default theme" — this makes that a live fact, not a coincidence.
+import { applyTheme, DEFAULT_THEME } from './theme.js';
+applyTheme(document.documentElement, DEFAULT_THEME);
 
 const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const entry = (type) => CATALOG.find((c) => c.type === type);
