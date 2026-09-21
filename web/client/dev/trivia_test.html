@@ -68,12 +68,19 @@ How many legs does a spider have? | Eight | Six | Ten | Four`;
 // module writes, rather than asserting a wall-clock latency is "more than zero" -- which is
 // the assertion that would have passed the whole time the field did not exist.
 function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = () => 0,
-              now = null, telemetry = null, saved = {} } = {}) {
+              now = null, telemetry = null, saved = {}, rigDefault = 'bank' } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
   const events = [];
-  let stored = bankText == null ? { ...saved } : { bankText, ...saved };
+  // `contentSource: rigDefault` ('bank') is the RIG's OWN baseline, not the module's —
+  // DEFAULTS.contentSource is 'pack' now (2026-09-22), so a test that wants its own `bankText`
+  // actually read must say so; `saved` still wins when a test explicitly asks for the pack path
+  // (spread order). Pass `rigDefault: null` for the handful of tests that need to see the
+  // module's REAL default with nothing masking it.
+  const base = rigDefault ? { contentSource: rigDefault } : {};
+  let stored = bankText == null ? { ...base, ...saved }
+                                 : { ...base, bankText, ...saved };
   let sub = null;
   const sharedRow = {
     get: () => (sharedText == null ? {} : { bankText: sharedText }),
@@ -487,10 +494,28 @@ Shared Q | Shared A` });
     r.inst.destroy();
   }
   {
-    // The default stays "bank" — an existing profile with saved settings that predate this
-    // feature must see exactly the syllabus it always has, not silently switch to a pack.
-    const r = rig({ bankText: 'Own Q | Own A | X | Y', saved: {} });
-    check('*** with nothing saved for contentSource, the written bank still wins ***',
+    // DEFAULT FLIPPED, 2026-09-22 — Mike: "There should be default packs, so people can play
+    // the games without setting anything up." A brand-new instance (nothing saved at all,
+    // `rigDefault: null` so the rig's own convenience baseline above does not mask it) now
+    // opens on the real shipped pack, not a five-question seed.
+    const r = rig({ bankText: null, saved: {}, rigDefault: null });
+    await sleep(120);          // the pack fetch is real and async; let it land
+    check('*** a fresh instance, nothing configured, opens on the real pack ***',
+      r.probe().bank === 300, String(r.probe().bank));
+    r.inst.destroy();
+    const csRow = (getManifest('trivia').settings || []).find((f) => f.key === 'contentSource');
+    check('...and the settings row agrees with DEFAULTS, not left pointing at "bank"',
+      csRow?.default === 'pack', String(csRow?.default));
+  }
+  {
+    // The flip must not run over somebody who EXPLICITLY chose "Written questions" in
+    // settings — only the unconfigured case changed. This is exactly the bug the sibling
+    // fix in wordforge.js/lessons.js closed the same day (their resolution line only ever
+    // checked for 'pack', so an explicit 'bank' fell through to DEFAULTS too); trivia.js's
+    // own plain `{...DEFAULTS, ...saved}` spread never had that bug, but the guarantee is
+    // worth a named test now that the two defaults disagree.
+    const r = rig({ bankText: 'Own Q | Own A | X | Y', saved: { contentSource: 'bank' }, rigDefault: null });
+    check('*** an explicit "bank" choice is respected even though the default is now "pack" ***',
       /Own Q/.test(r.probe().question?.question || ''), JSON.stringify(r.probe().question));
     r.inst.destroy();
   }

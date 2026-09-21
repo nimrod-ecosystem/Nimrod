@@ -258,6 +258,11 @@ a || b || c`);
     const mod = await profiles.addModule(profile.id, 'wordforge');
     const st = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
     await st.load();
+    // DEFAULTS.contentSource is 'pack' now (2026-09-22) -- this fixture drives the rest of the
+    // file's gameplay checks against the known, seeded DEFAULT_PAIRS, so it says "bank"
+    // explicitly rather than silently inheriting a real network pack fetch.
+    st.set({ contentSource: 'bank' });
+    await st.flush();
     const host = document.getElementById('host');
     const inst = mountModule('wordforge', {
       mount: host, bus, state: st,
@@ -526,10 +531,52 @@ a || b || c`);
       bhost.remove();
     }
     {
-      // The default stays "bank" — an existing profile with saved settings that predate this
-      // feature must see exactly the syllabus it always has, not silently switch to a pack.
-      check('*** DEFAULTS.contentSource is still "bank", unaffected by adding the pack path ***',
-        DEFAULTS.contentSource === 'bank', String(DEFAULTS.contentSource));
+      // DEFAULT FLIPPED, 2026-09-22 — Mike: "There should be default packs, so people can play
+      // the games without setting anything up." Matches trivia.js's own flip, same day, same
+      // reason.
+      check('*** DEFAULTS.contentSource is "pack" — a fresh instance needs nothing written ***',
+        DEFAULTS.contentSource === 'pack', String(DEFAULTS.contentSource));
+      const csRow = (getManifest('wordforge').settings || []).find((f) => f.key === 'contentSource');
+      check('...and the settings row agrees, not left pointing at "bank"',
+        csRow?.default === 'pack', String(csRow?.default));
+    }
+    {
+      // The flip must not run over somebody who EXPLICITLY chose "Written words" in settings —
+      // this is the exact bug fixed the same day in this file's own cfg-resolution line (it used
+      // to check ONLY for 'pack', so an explicit 'bank' silently fell through to DEFAULTS too).
+      const bankProfiles = createProfilesClient({ user: USER });
+      const bp2 = await bankProfiles.create('TEST-wordforge-explicit-bank');
+      const bmod2 = await bankProfiles.addModule(bp2.id, 'wordforge');
+      const bst2 = createState({ url: bankProfiles.stateURL(bp2.id, bmod2.id), user: USER });
+      await bst2.load();
+      bst2.set({ contentSource: 'bank' });
+      await bst2.flush();
+      const bhost2 = document.createElement('div');
+      document.body.append(bhost2);
+      const bbus2 = createBus();
+      const binst2 = mountModule('wordforge', {
+        mount: bhost2, bus: bbus2, state: bst2,
+        events: createEvents({ url: bankProfiles.eventsURL(bp2.id, bmod2.id), user: USER }),
+        user: USER, profileId: bp2.id,
+        makeState: (key, opts) => createState({ url: bankProfiles.stateURL(bp2.id, key), user: USER, ...opts }),
+        makeEvents: (key, opts) => createEvents({ url: bankProfiles.eventsURL(bp2.id, key), user: USER, ...opts }),
+        rand: fixedRand,
+      });
+      binst2.init();
+      await sleep(400);
+      // A round mixes word questions with sentence-pair ones shuffled together (same as the
+      // pack test above), so the first question dealt is not guaranteed to be a word one.
+      let foundBankWord = false;
+      for (let i = 0; i < 10; i += 1) {
+        const shown2 = (bhost2.textContent || '').toLowerCase();
+        if (DEFAULT_WORDS.some((w) => shown2.includes(w.word))) { foundBankWord = true; break; }
+        bbus2.publish('wordforge/skip');
+        await sleep(150);
+      }
+      check('*** an explicit "bank" choice still shows the built-in word bank, not a pack fetch ***',
+        foundBankWord, (bhost2.textContent || '').slice(0, 200));
+      binst2.destroy();
+      bhost2.remove();
     }
 
     document.getElementById('summary').textContent =

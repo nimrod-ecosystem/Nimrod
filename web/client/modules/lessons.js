@@ -30,9 +30,13 @@ export const DEFAULTS = {
   // "choosing videos needs a small editor... or the shared content source this keeps
   // arriving at from every direction." `packs.js` already validates a `lesson`-kind pack
   // (topic + optional video + optional questions) — it was declared and unconsumed. This is
-  // the consuming half. `bank` (unchanged) stays the default; `pack` is for somebody with no
-  // topics of their own written yet.
-  contentSource: 'bank',
+  // the consuming half.
+  // DEFAULT FLIPPED TO 'pack', 2026-09-22, same reason and same day as its two siblings
+  // (trivia.js/wordforge.js): Mike, "There should be default packs, so people can play the
+  // games without setting anything up." Kept consistent with the two modules this mechanism
+  // was explicitly built to mirror rather than fork from — see trivia.js's own DEFAULTS
+  // comment for the risk this was weighed against.
+  contentSource: 'pack',
   packId: packsFor('lesson')[0]?.id || null,
 };
 const LEGACY_MIN_WATCH = { key: 'minWatchSec', scale: 1000 };
@@ -117,7 +121,7 @@ const SETTINGS = [
     note: 'Unlocking a topic puts its questions into the game whether or not a video was '
       + 'watched, so this is a nudge rather than a gate.' },
   ...(LESSON_PACKS.length ? [
-    { key: 'contentSource', label: 'Where topics come from', kind: 'choice', default: 'bank',
+    { key: 'contentSource', label: 'Where topics come from', kind: 'choice', default: 'pack',
       level: 'standard',
       options: [{ value: 'bank', label: 'Written topics' },
                 { value: 'pack', label: 'A built-in pack' }],
@@ -310,7 +314,12 @@ registerModule(
           const saved = readWithLegacy(snap, 'minWatchMs', LEGACY_MIN_WATCH);
           cfg = {
             minWatchMs: Number(saved) >= 0 ? Number(saved) : DEFAULTS.minWatchMs,
-            contentSource: snap.contentSource === 'pack' ? 'pack' : DEFAULTS.contentSource,
+            // Same fix as wordforge.js's identical line, same day: this only ever checked FOR
+            // 'pack', so an explicitly saved 'bank' fell through to DEFAULTS.contentSource too
+            // — harmless while the default WAS 'bank', silently wrong the moment it flipped to
+            // 'pack'. Now treats both saved values as real, defaulting only when neither was set.
+            contentSource: (snap.contentSource === 'pack' || snap.contentSource === 'bank')
+              ? snap.contentSource : DEFAULTS.contentSource,
             packId: typeof snap.packId === 'string' && snap.packId ? snap.packId : DEFAULTS.packId,
           };
           resolveTopics(snap);
