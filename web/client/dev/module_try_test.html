@@ -29,7 +29,7 @@
 <div id="host"></div>
 
 <script type="module">
-import { createProfilesClient } from '../profile.js';
+import { createProfilesClient, resolveTheme } from '../profile.js';
 import { createState } from '../state.js';
 import { createTryHost, createLiveHost } from '../module_try.js';
 import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
@@ -262,6 +262,31 @@ const host = document.getElementById('host');
       const ytCount = serverProfile.modules.filter((m) => m.type === 'youtube').length;
       check('...and still exactly one real youtube instance — the demo host added nothing',
         ytCount === 1, String(ytCount));
+    }
+
+    // ================= resolveTheme — modules.html's fix, 2026-09-21 =================
+    section('*** resolveTheme — modules.html never applied a visitor’s own theme at all, until this ***');
+    {
+      const profiles = createProfilesClient({ user: USER });
+      const before = await resolveTheme(profiles, USER);
+      check('an account that has never touched "Colours" resolves to null, not a guess',
+        before === null, JSON.stringify(before));
+
+      // Same key/shape kiosk.js's own SCREEN_FIELDS "theme" row writes.
+      const settings = createState({ url: profiles.stateURL(live.profileId, 'settings'), user: USER });
+      await settings.load();
+      const prior = settings.get() || {};
+      settings.set({ ...prior, theme: 'dusk' });
+      await settings.flush();
+
+      const after = await settled(async () => (await resolveTheme(profiles, USER)) === 'dusk');
+      check('*** once a real theme is saved on the account’s default screen, resolveTheme reflects it ***',
+        after, JSON.stringify(await resolveTheme(profiles, USER)));
+
+      // Leave the account as this suite found it — a stray "dusk" would confuse the next run's
+      // "resolves to null" check above.
+      settings.set(prior);
+      await settings.flush();
     }
 
     live.destroy();

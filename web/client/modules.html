@@ -326,6 +326,8 @@ import './modules/youtube.js';
 import './modules/trivia.js';
 import './modules/bank.js';
 import { authHeaders } from './auth.js';
+import { createProfilesClient, resolveTheme } from './profile.js';
+import { applyTheme, DEFAULT_THEME } from './theme.js';
 
 // *** THE BRAND LINK WENT TO "/", NOT BACK TO YOUR OWN DASHBOARDS. *** Mike, live, 2026-09-08:
 // "I hit the Nimrod up top to go back to the home page and it took me to the landing page
@@ -340,7 +342,12 @@ import { authHeaders } from './auth.js';
 // findings, item 3` writeup in MIKE_CHANGE_LIST.md for why this stopped being optional.
 let currentUser = null;
 
-(async () => {
+// A PROMISE, NOT JUST A CALL — the theme step below has to wait for THIS to actually finish
+// resolving `currentUser` before it can check it. Two separate `(async () => {})()` blocks
+// each starting immediately would run CONCURRENTLY, not in order — found the hard way: the
+// theme block below first ran as its own IIFE and read `currentUser` while this one's own
+// `fetch('/api/me')` was still in flight, so it always saw `null` and never applied anything.
+const signedIn = (async () => {
   try {
     const r = await fetch('/api/me', { headers: authHeaders(new URLSearchParams(location.search).get('user')) });
     if (!r.ok) return;   // 401 or offline -- leave the signed-out header exactly as it was
@@ -351,6 +358,25 @@ let currentUser = null;
     if (brand) brand.href = '/home.html';
     if (signIn) { signIn.textContent = 'My dashboards'; signIn.href = '/home.html'; }
   } catch { /* offline or blocked -- the signed-out header is still correct in that case */ }
+})();
+
+// *** THIS PAGE NEVER APPLIED A THEME AT ALL, SIGNED IN OR NOT. *** Found 2026-09-21 chasing
+// Mike's "bright white backgrounds on Word Forge & Trivia" — the modules themselves were never
+// the bug (`.tv-opt`/`.wf-opt` already read `var(--surface)` correctly). `kiosk.js` is the only
+// place that ever calls `applyTheme()`, so a signed-in visitor whose OWN dashboard is set to
+// Dusk or Warm still saw this page's hardcoded, unthemed CSS fallbacks — which happen to equal
+// the DEFAULT theme's own values, including its literal white `--surface` — because nobody had
+// wired this "try it" preview to the same theme their real screen already uses. Best-effort:
+// any failure here (offline, no profile yet, anonymous) leaves the explicit default applied,
+// which is visually identical to what this page already showed before this fix existed.
+(async () => {
+  applyTheme(document.documentElement, DEFAULT_THEME);   // correct immediately, never unthemed
+  await signedIn;
+  if (!currentUser) return;
+  try {
+    const theme = await resolveTheme(createProfilesClient({ user: currentUser }), currentUser);
+    if (theme) applyTheme(document.documentElement, theme);
+  } catch { /* offline or blocked -- the explicit default above already stands */ }
 })();
 
 const esc = (s) => String(s == null ? '' : s)

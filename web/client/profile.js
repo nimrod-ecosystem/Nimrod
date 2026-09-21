@@ -25,6 +25,7 @@
 
 import { authHeaders, httpError } from './auth.js';
 import { cachedFetch } from './cache.js';
+import { createState } from './state.js';
 
 // A starter profile so a fresh account "just works": photos, the camera mirror, the
 // clock, and the Lineup director (rotates youtube / personal videos / educational).
@@ -43,6 +44,20 @@ export async function ensureProfile(profiles, user, wantProfile = null) {
     return p.id;
   }
   return list[0].id;
+}
+
+// The visitor's own chosen theme, read off their account's DEFAULT screen's own settings —
+// or `null` if they have never picked one (an anonymous visitor, or a signed-in one who has
+// never touched "Colours"). For `modules.html`, added 2026-09-21 — see its own header note
+// on why it never applied a theme at all before this. NOT what `kiosk.js` uses: a kiosk is
+// already opened against one SPECIFIC profile (`kiosk.html?profile=<id>`) with that profile's
+// own settings state already loaded, so it reads `.theme` off that directly rather than
+// re-resolving "which profile" the way this helper does for a page with no profile of its own.
+export async function resolveTheme(profiles, user) {
+  const profileId = await ensureProfile(profiles, user);
+  const settings = createState({ url: profiles.stateURL(profileId, 'settings'), user });
+  await settings.load();
+  return (settings.get() || {}).theme || null;
 }
 
 export function createProfilesClient({ user, baseURL = '' }) {
