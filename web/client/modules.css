@@ -220,14 +220,14 @@
 
 /* photos */
 .photos{width:100%;height:100%;position:relative}
-.photos .stage{position:relative;width:100%;height:100%;background:var(--letterbox);border-radius:10px;
+/* `--surface`, not `--letterbox` (camera's video-behind-bars colour, still unchanged) — Mike,
+   2026-09-21: "lose the blurry background on the photos and just have it show the theme."
+   The letterboxing `fit:contain` leaves is now a plain themed fill, the same colour a module's
+   own content sits on, instead of the photo's own blurred, darkened copy of itself. */
+.photos .stage{position:relative;width:100%;height:100%;background:var(--surface);border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
 .photos .stage img,.photos .stage video{position:relative;width:100%;height:100%;object-fit:contain;
   display:block;background:transparent}
-/* The blurred backdrop behind a `contain` photo. `scale(1.1)` hides the soft, semi
-   transparent edge a large blur radius leaves around the fill. */
-.photos .stage .fill{position:absolute;inset:0;background-position:center;background-size:cover;
-  filter:blur(28px) brightness(.55);transform:scale(1.1)}
 .photos .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
   color:var(--on-dark);background:rgba(10,51,35,.72);font-size:1rem;text-align:center;padding:12px}
 .photos .status button{border:1px solid rgba(247,244,213,.5);color:var(--on-dark);background:transparent;border-radius:8px;padding:6px 10px}
