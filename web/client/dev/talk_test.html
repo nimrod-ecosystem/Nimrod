@@ -53,6 +53,7 @@ import { fromQuery, normalizeCfg, boardStateFrom, localEvents, DEFAULTS,
          clipSlug, clipUrl,
          SCAN_MIN, SCAN_MAX, DWELL_MIN, DWELL_MAX } from '../talk.js';
 import { CURSOR_DEFAULTS, STYLES, SIZE_MIN, SIZE_MAX } from '../cursor.js';
+import { applyTheme, listThemes } from '../theme.js';
 import { createDwell } from '../input_dwell.js';
 import { BOARD_TOPIC, SELECT_KIND } from '../modules/board.js';
 import '../modules/board.js';
@@ -360,11 +361,30 @@ try {
     check('the board sees the settings that are its own', seen.boardId === 'care' && seen.highContrast === true);
     check('*** ...and never sees the ones that are not — no cursor size in a board state ***',
       !('cursorSize' in seen), JSON.stringify(Object.keys(seen)));
-    check('the board is pinned to its own palette on this page', seen.followTheme === false);
+    // *** WAS A HARDCODED `false` NO MATTER WHAT CFG SAID, 2026-09-22 — Mike: "None of this
+    // should be hard coded." *** `boardStateFrom` used to write `followTheme: false` as a
+    // literal into the view it hands the board, silently overriding whatever the page's own
+    // config held. Fixed to pass the real value through, same as every other key here.
+    check('*** the board is pinned to its own palette BY DEFAULT, not unconditionally ***',
+      seen.followTheme === false, String(seen.followTheme));
+    let cfg2 = normalizeCfg({ followTheme: true });
+    const st2 = boardStateFrom(() => cfg2, (p) => { cfg2 = normalizeCfg({ ...cfg2, ...p }); });
+    check('*** ...and a real "follow the theme" choice actually reaches the board now ***',
+      st2.get().followTheme === true, String(st2.get().followTheme));
     let told = 0;
     st.subscribe(() => { told += 1; });
     st.notify();
     check('a host change reaches the board', told === 1);
+  }
+  {
+    // `?theme=1` (fromQuery) and the boolean-coercion list (normalizeCfg) both have to know
+    // about the new key, the same as `?hc=` and `highContrast` do.
+    const q = fromQuery('?theme=1');
+    check('?theme= turns theme-following on', q.followTheme === true);
+    check('followTheme is coerced to a real boolean, not left as whatever was stored',
+      normalizeCfg({ followTheme: 'yes' }).followTheme === true
+      && normalizeCfg({}).followTheme === false,
+      JSON.stringify([normalizeCfg({ followTheme: 'yes' }).followTheme, normalizeCfg({}).followTheme]));
   }
 
   // =====================================================================================
@@ -442,6 +462,69 @@ try {
     try { await ev2.append('select', { word: 'Yes' }); } catch { threw = true; }
     check('*** a browser that refuses to store does not break the board ***', threw === false);
     check('...and reading it back simply returns nothing', ev2.read().length === 0);
+  }
+
+  // =====================================================================================
+  section('*** the page\'s own chrome, measured across all five themes — not assumed ***');
+  {
+    // talk.html used to carry its own fixed, always-dark palette specifically because a
+    // hardcode-plus-theme MISMATCH elsewhere once failed contrast (MIKE_CHANGE_LIST §B6).
+    // Mike, 2026-09-22, once that reasoning was walked back: "None of this should be hard
+    // coded." Converted the page's own settings-sheet CSS to the shared theme vars — this
+    // measures the REAL rendered page, the same "measure it, don't assume it" discipline
+    // theme_test.html already holds kiosk.css/modules.css to, rather than trusting the
+    // semantic-looking variable names to be automatically safe (two of them were not — see
+    // below).
+    const ifr = document.createElement('iframe');
+    ifr.style.cssText = 'position:fixed;left:-9999px;width:900px;height:700px';
+    document.body.appendChild(ifr);
+    await new Promise((res) => { ifr.onload = res; ifr.src = '../talk.html'; });
+    await sleep(200);
+    const idoc = ifr.contentDocument;
+    const iwin = ifr.contentWindow;
+    // `applyTheme` only ever writes to the `rootEl` it is given — calling THIS document's own
+    // imported copy against the IFRAME's root works fine cross-document, no need for the
+    // iframe to expose its own module scope.
+
+    function luminance(hex) {
+      const c = hex.replace('#', '');
+      const [r, g, b] = [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2) || 'ff', 16) / 255);
+      const f = (v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+      return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+    }
+    function ratio(a, b) {
+      const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    }
+    function toHex(v) {
+      v = v.trim();
+      if (v.startsWith('#')) return v.length === 4 ? '#' + [...v.slice(1)].map((ch) => ch + ch).join('') : v.slice(0, 7);
+      const m = v.match(/\d+/g);
+      return '#' + m.slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('');
+    }
+
+    let worst = 99, worstLabel = '';
+    for (const { id } of listThemes()) {
+      applyTheme(idoc.documentElement, id);
+      const cs = iwin.getComputedStyle(idoc.documentElement);
+      const get = (v) => toHex(cs.getPropertyValue(v));
+      const pairs = {
+        'text/bg': [get('--text'), get('--bg')],
+        'textSoft/bg (.keys, #fallback)': [get('--text-soft'), get('--bg')],
+        'textStrong/bg (.lab b)': [get('--text-strong'), get('--bg')],
+        'text/surfaceAlt (.btn, .sw, .seg button)': [get('--text'), get('--surface-alt')],
+        'onAccent/accent (.close, .sw on, .seg on)': [get('--on-accent'), get('--accent')],
+        'text/surface (the sheet itself)': [get('--text'), get('--surface')],
+      };
+      for (const [label, [fg, bg]] of Object.entries(pairs)) {
+        const r = ratio(fg, bg);
+        if (r < worst) { worst = r; worstLabel = `${id}: ${label}`; }
+      }
+    }
+    check('*** every measured pair on the settings sheet clears 4.5:1, in all five themes ***',
+      worst >= 4.5, `worst = ${worst.toFixed(2)} (${worstLabel})`);
+
+    ifr.remove();
   }
 
 } catch (err) {

@@ -7,7 +7,7 @@
      zoom stays available, because taking it away from somebody who needs it to read a card is
      a worse trade than a stray zoom on a kiosk. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#12181c">
+<meta name="theme-color" id="theme-color-meta" content="#F7F4D5">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,14 +15,20 @@
 <title>Talk — Nimrod</title>
 <link rel="stylesheet" href="./modules.css">
 <style>
-  /* THE PAGE OWNS ITS OWN SURFACE, and does not read a theme.
-     `kiosk.html` hardcodes a near-black background and pairs it with `--text`, which is a DARK
-     colour in four of the five themes — the measured contrast failure in MIKE_CHANGE_LIST §B6,
-     worst of all in the theme called "High contrast". This page is a board somebody talks
-     with, so it takes the board's own measured palette and nothing else can reach it. */
-  :root { --tk-bg:#0e1418; --tk-ink:#e8eef0; --tk-line:#7d939d; --tk-card:#1b2429; }
+  /* *** NOW A REAL THEME, NOT A FIXED PALETTE. *** Used to own a hand-tuned, always-dark
+     palette (`--tk-bg`/`--tk-ink`/`--tk-line`) with a comment blaming the shared theme system
+     for a contrast failure (MIKE_CHANGE_LIST §B6). Re-examined, 2026-09-21: that failure was a
+     HARDCODE-plus-THEME mismatch elsewhere (a fixed near-black background paired with the
+     theme's own, sometimes-dark, `--text`), not proof the shared themes are unsafe here — and
+     Mike, 2026-09-22, on exactly that reasoning: "None of this should be hard coded." The board's
+     CARDS were never the problem — `board.js` is an ordinary module and already reads the shared
+     vars, same as Trivia or Photos. Only THIS page's own chrome (the settings sheet, the open
+     button, labels) still had its own fixed copies. Converted below to the real theme vars, with
+     `applyTheme`/the anonymous per-browser picker wired at the bottom of this file (this page has
+     no account, same as landing.html/wallpapers.html) — and measured for contrast across all
+     five themes in dev/talk_test.html rather than assumed. */
   html, body {
-    height:100%; margin:0; background:var(--tk-bg); color:var(--tk-ink);
+    height:100%; margin:0; background:var(--bg); color:var(--text);
     font:16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     overflow:hidden; overscroll-behavior:none;
   }
@@ -39,36 +45,42 @@
 
   /* THE SPOKEN WORD, WRITTEN. It is `pointer-events:none` and it fades on a timer: it can
      cover a card for a moment but it can never take a tap, and there is no state here that
-     only an input can leave. */
+     only an input can leave. `--on-dark` over `--letterbox`, not a raw hex pair -- the ONE
+     deliberate exception to "everything here follows the theme": a caption banner that has to
+     read over whatever is behind it (a light card, a photo, anything), the same reasoning
+     `--letterbox` already carries for photos/camera/youtube, and both tokens already exist
+     rather than this needing its own new hardcoded pair. */
   #say {
     position:fixed; left:0; right:0; top:0; z-index:var(--z-floating); pointer-events:none;
     padding:calc(env(safe-area-inset-top,0) + 10px) 16px 12px;
     text-align:center; font-weight:800; letter-spacing:.01em;
-    font-size:clamp(28px, 9vmin, 96px); color:#fff;
-    background:linear-gradient(180deg, rgba(8,12,14,.94), rgba(8,12,14,0));
+    font-size:clamp(28px, 9vmin, 96px); color:var(--on-dark);
+    background:linear-gradient(180deg, var(--letterbox), transparent);
     opacity:0; transform:translateY(-8px); transition:opacity .18s ease, transform .18s ease;
   }
   #say[data-on="1"] { opacity:1; transform:none; }
 
-  /* What a key just did. Small, bottom-centre, out of the way of the cards. */
+  /* What a key just did. Small, bottom-centre, out of the way of the cards. Same always-dark
+     caption reasoning as `#say` above. */
   #toast {
     position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0) + 14px);
     transform:translateX(-50%) translateY(6px); z-index:calc(var(--z-floating) + 5); pointer-events:none;
-    background:rgba(8,12,14,.92); border:1px solid var(--tk-line); border-radius:12px;
-    padding:10px 16px; font-size:15px; font-weight:600; max-width:90vw;
+    background:var(--letterbox); color:var(--on-dark); border:1px solid var(--letterbox);
+    border-radius:12px; padding:10px 16px; font-size:15px; font-weight:600; max-width:90vw;
     opacity:0; transition:opacity .15s ease, transform .15s ease;
   }
   #toast[data-on="1"] { opacity:1; transform:translateX(-50%); }
 
   /* THE WAY IN, and it is deliberately unrewarding to hit by accident: small, in the corner,
      and it needs a press and hold rather than a tap. The ring fills while you hold so it is
-     obvious that holding is the gesture. */
+     obvious that holding is the gesture. Sits directly over the board's own themed surface now
+     (not a guaranteed-dark backdrop), so it reads with the theme rather than assuming one. */
   #open {
     position:fixed; z-index:calc(var(--z-floating) + 6);
     top:calc(env(safe-area-inset-top,0) + 6px); right:calc(env(safe-area-inset-right,0) + 6px);
-    width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,.22);
-    background:rgba(255,255,255,.07); color:var(--tk-ink); font-size:17px; line-height:1;
-    display:grid; place-items:center; cursor:pointer; opacity:.5; touch-action:none;
+    width:44px; height:44px; border-radius:50%; border:1px solid var(--border);
+    background:var(--surface-alt); color:var(--text); font-size:17px; line-height:1;
+    display:grid; place-items:center; cursor:pointer; opacity:.7; touch-action:none;
   }
   #open:hover { opacity:1; }
   #open::after {
@@ -76,11 +88,13 @@
     border:3px solid transparent;
   }
   #open[data-holding="1"] { opacity:1; }
-  #open[data-holding="1"]::after { border-color:#8fae63; animation:hold .65s linear forwards; }
+  #open[data-holding="1"]::after { border-color:var(--accent); animation:hold .65s linear forwards; }
   @keyframes hold { from { clip-path:inset(0 0 100% 0); } to { clip-path:inset(0); } }
 
   /* THE SETTINGS SHEET. Rows are 56px minimum because a finger is not a mouse pointer, and
-     the person adjusting this is often standing next to a bed holding something else. */
+     the person adjusting this is often standing next to a bed holding something else. The
+     scrim behind it stays a fixed dark wash regardless of theme (same reasoning as any modal
+     backdrop elsewhere in this app) -- it is not a surface anyone reads text on. */
   #sheet {
     position:fixed; inset:0; z-index:var(--z-menus); background:rgba(4,8,10,.72);
     display:flex; align-items:flex-end; justify-content:center;
@@ -88,67 +102,81 @@
   }
   #sheet[hidden] { display:none; }
   .sheetbox {
-    width:min(640px, 100%); max-height:92vh; overflow:auto; background:#141c21;
-    border:1px solid var(--tk-line); border-radius:18px 18px 0 0;
+    width:min(640px, 100%); max-height:92vh; overflow:auto; background:var(--surface);
+    color:var(--text); border:1px solid var(--border); border-radius:18px 18px 0 0;
     padding:0 14px calc(env(safe-area-inset-bottom,0) + 18px);
     box-shadow:0 -12px 40px rgba(0,0,0,.5);
   }
   .sheethead {
-    position:sticky; top:0; background:#141c21; z-index:calc(var(--z-panel-contents) + 2);
+    position:sticky; top:0; background:var(--surface); z-index:calc(var(--z-panel-contents) + 2);
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:14px 0 10px; border-bottom:1px solid rgba(255,255,255,.10);
+    padding:14px 0 10px; border-bottom:1px solid var(--border);
   }
   .sheethead h2 { margin:0; font-size:1.05rem; font-weight:700; }
   .close, .btn {
     min-height:48px; padding:0 18px; border-radius:12px; font-size:15px; font-weight:700;
-    border:1px solid var(--tk-line); background:#22303a; color:var(--tk-ink); cursor:pointer;
+    border:1px solid var(--border); background:var(--surface-alt); color:var(--text); cursor:pointer;
   }
-  .close { background:#8fae63; border-color:#8fae63; color:#10170b; }
+  /* `--on-accent` -- DERIVED by applyTheme(), not chosen by hand -- is exactly the guarantee a
+     hardcoded "dark text on this particular green" could not give once the accent itself
+     started varying by theme (teal in Forge, blue in Contrast). */
+  .close { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
 
-  .grp { border-bottom:1px solid rgba(255,255,255,.08); padding:6px 0 12px; }
+  .grp { border-bottom:1px solid var(--border); padding:6px 0 12px; }
   .grp:last-child { border-bottom:0; }
   details.adv > summary {
     cursor:pointer; list-style:none; min-height:56px; display:flex; align-items:center;
     justify-content:space-between; gap:10px; font-weight:700; padding:8px 2px;
   }
   details.adv > summary::-webkit-details-marker { display:none; }
-  details.adv > summary::before { content:"▸"; margin-right:8px; color:var(--tk-line); }
+  details.adv > summary::before { content:"▸"; margin-right:8px; color:var(--border); }
   details.adv[open] > summary::before { content:"▾"; }
-  details.adv > summary span { font-weight:500; color:#a9bcc4; font-size:.9rem; margin-left:auto; }
+  details.adv > summary span { font-weight:500; color:var(--text-soft); font-size:.9rem; margin-left:auto; }
 
   .row { display:flex; align-items:center; justify-content:space-between; gap:14px;
          min-height:56px; padding:6px 2px; }
   .row.range { display:block; }
   .lab { font-size:15px; font-weight:600; display:flex; flex-direction:column; }
-  .lab b { font-weight:800; color:#8fae63; }
-  .lab .note, .lab span { font-weight:400; font-size:.85rem; color:#a9bcc4; }
-  .why { margin:8px 2px 2px; font-size:.85rem; line-height:1.5; color:#a9bcc4; }
-  .why b { color:var(--tk-ink); }
+  /* MEASURED, not the semantically-obvious pick: `--accent` as TEXT here (rather than as a
+     button fill, where it is fine — see `.close`) reads at 2.83:1 in Default and 3.09:1 in
+     Warm, both well under the 4.5:1 floor this file measures everything else against — a real
+     failure this exercise was built to catch. `--link` measured little better (3.98 in Forge).
+     `--text-strong` clears every theme (12.48 minimum) and is still the boldest text role
+     available, so the emphasis survives even without the colour. */
+  .lab b { font-weight:800; color:var(--text-strong); }
+  .lab .note, .lab span { font-weight:400; font-size:.85rem; color:var(--text-soft); }
+  .why { margin:8px 2px 2px; font-size:.85rem; line-height:1.5; color:var(--text-soft); }
+  .why b { color:var(--text); }
 
   .sw { min-width:96px; min-height:48px; border-radius:999px; cursor:pointer;
-        border:1px solid var(--tk-line); background:#22303a; color:var(--tk-ink);
+        border:1px solid var(--border); background:var(--surface-alt); color:var(--text);
         font-weight:700; font-size:15px; }
-  .sw[aria-pressed="true"] { background:#8fae63; border-color:#8fae63; color:#10170b; }
+  .sw[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
 
   .seg { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
   .seg button { min-height:48px; padding:0 14px; border-radius:12px; cursor:pointer;
-    border:1px solid var(--tk-line); background:#22303a; color:var(--tk-ink);
+    border:1px solid var(--border); background:var(--surface-alt); color:var(--text);
     font-size:14px; font-weight:600; }
-  .seg button.on { background:#8fae63; border-color:#8fae63; color:#10170b; }
+  .seg button.on { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
 
   /* A 44px-tall track and a 34px thumb: the number Mike will be dragging at a bedside has to
      be draggable with a thumb, not a cursor. */
-  input[type=range] { width:100%; height:44px; margin:2px 0 0; accent-color:#8fae63; }
+  input[type=range] { width:100%; height:44px; margin:2px 0 0; accent-color:var(--accent); }
 
-  .keys { margin:4px 0 0; padding:0 0 0 2px; list-style:none; font-size:14px; color:#c6d3d9; }
+  /* `--text-soft`, not `--text-muted` — measured: `--text-muted` is 4.31:1 in Warm and 4.40:1
+     in Forge, both under the 4.5:1 floor for text this small (14px). `--text-soft` clears
+     every theme (7.49 minimum). */
+  .keys { margin:4px 0 0; padding:0 0 0 2px; list-style:none; font-size:14px; color:var(--text-soft); }
   .keys li { padding:5px 0; }
   .keys kbd { display:inline-block; min-width:24px; text-align:center; padding:2px 7px;
-    border:1px solid var(--tk-line); border-radius:6px; background:#22303a; font:600 13px/1.4 ui-monospace,Consolas,monospace;
-    margin-right:8px; }
+    border:1px solid var(--border); border-radius:6px; background:var(--surface-alt);
+    font:600 13px/1.4 ui-monospace,Consolas,monospace; color:var(--text); margin-right:8px; }
 
-  /* An honest failure if the module never mounts, rather than a black rectangle. */
+  /* An honest failure if the module never mounts, rather than a black rectangle. `--text-soft`
+     for the same measured reason as `.keys` above — this is the message someone reads when
+     the whole board has failed to start, so it is not the place to risk a borderline theme. */
   #fallback { position:fixed; inset:0; display:none; place-items:center; padding:28px;
-    text-align:center; color:#c6d3d9; }
+    text-align:center; color:var(--text-soft); }
   html[data-failed="1"] #fallback { display:grid; }
 </style>
 </head>
@@ -167,6 +195,19 @@
 
 <script type="module">
   import { startTalk } from './talk.js';
+  // This page's own CHROME (the settings sheet, the open button) always follows the shared
+  // theme now -- same anonymous, per-browser choice as landing.html/wallpapers.html, since this
+  // page has no account either ("this page does not use one", per the fallback text below).
+  // The CARDS are a SEPARATE, already-more-careful decision -- board.js's own `followTheme`
+  // setting, wired through talk.js, off by default so a real bedside board keeps its
+  // proven-safe pinned palette until somebody deliberately turns theme-following on.
+  import { applyTheme, getStoredTheme, resolveThemeId } from './theme.js';
+  applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
+  // The OS status-bar tint (mobile home-screen / PWA chrome) can't read a CSS var, so it is set
+  // from the same resolved value directly rather than left at a stale hardcoded hex.
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  const themeColorMeta = document.getElementById('theme-color-meta');
+  if (bg && themeColorMeta) themeColorMeta.content = bg;
   try {
     window.__talk = startTalk();
   } catch (err) {

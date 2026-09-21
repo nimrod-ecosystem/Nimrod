@@ -56,6 +56,7 @@ import { SCAN_DEFAULTS } from './input_scan.js';
 import { speak, cancel as cancelSpeech, waitForVoices, listVoices } from './voice.js';
 import { BOARD_TOPIC } from './modules/board.js';
 import './modules/board.js';
+import { mountThemePicker } from './theme.js';
 
 const STORE_KEY = 'nimrod.talk.v1';
 const LOG_KEY = 'nimrod.talk.log.v1';
@@ -83,6 +84,18 @@ export const DEFAULTS = {
   // floor (§F7-numbers), so this starts off; it is here because the person who needs 21:1
   // needs it immediately and should not have to find a menu.
   highContrast: false,
+
+  // *** WAS HARDCODED `false` AND UNREACHABLE, 2026-09-22 -- Mike: "None of this should be
+  // hard coded." *** `board.js` already declares this exact setting (`followTheme`, "Follow the
+  // screen's theme" / "The board keeps its own") for precisely this page's own reasoning: a
+  // bedside board's pinned palette is deliberate, but "a person who is not at a bedside, setting
+  // up their own screen... a board that ignores their theme just looks broken" (board.js's own
+  // comment). `boardStateFrom` below used to pass `followTheme: false` as a literal no matter
+  // what anyone chose, silently overriding the module's own setting instead of asking. Off by
+  // default for the same bedside-safety reason as `highContrast` above (a caregiver arriving at
+  // a real bedside should see the board's own proven-safe palette first, not whatever theme was
+  // last picked) -- but now a real, saved, user-facing choice like every other row in this sheet.
+  followTheme: false,
 
   // Scanning, off. Most people who use a board touch it, and turning the scan on for
   // everybody turns a board that answers a tap into one that answers a tap eventually.
@@ -193,6 +206,7 @@ export function fromQuery(search, base = DEFAULTS) {
   const has = (k) => q.has(k) && q.get(k) !== '';
   if (has('board')) out.boardId = q.get('board') === 'care' ? 'care' : 'yesno';
   if (has('hc')) out.highContrast = on(q.get('hc'));
+  if (has('theme')) out.followTheme = on(q.get('theme'));
   if (has('scan')) out.scan = on(q.get('scan'));
   if (has('step')) out.stepMs = clamp(num(q.get('step'), base.stepMs), SCAN_MIN, SCAN_MAX);
   if (has('dwell')) out.dwell = on(q.get('dwell'));
@@ -219,7 +233,7 @@ export function normalizeCfg(raw) {
   if (!['all', 'one'].includes(c.reveal)) c.reveal = 'all';
   c.rate = clamp(num(c.rate, 1), 0.5, 2);
   c.clipBase = String(c.clipBase == null ? '' : c.clipBase);
-  ['highContrast', 'scan', 'dwell', 'tapSelects', 'sayBanner', 'speakAloud', 'useClips']
+  ['highContrast', 'followTheme', 'scan', 'dwell', 'tapSelects', 'sayBanner', 'speakAloud', 'useClips']
     .forEach((k) => { c[k] = !!c[k]; });
   return c;
 }
@@ -239,7 +253,7 @@ export function boardStateFrom(getCfg, onSet) {
       const c = getCfg();
       return {
         boardId: c.boardId, scan: c.scan, stepMs: c.stepMs, reveal: c.reveal,
-        highContrast: c.highContrast, followTheme: false, tapSelects: c.tapSelects,
+        highContrast: c.highContrast, followTheme: c.followTheme, tapSelects: c.tapSelects,
       };
     },
     set: (patch) => onSet(patch),
@@ -307,7 +321,7 @@ export function startTalk({
   // voice — is the shell's, and telling the board about it would make it rebuild all sixteen
   // cards to answer a question it was not asked. That matters while a slider is being
   // dragged: a redraw per pixel also restarts the scan at card one, every pixel.
-  const BOARD_KEYS = ['boardId', 'scan', 'stepMs', 'reveal', 'highContrast', 'tapSelects'];
+  const BOARD_KEYS = ['boardId', 'scan', 'stepMs', 'reveal', 'highContrast', 'followTheme', 'tapSelects'];
   const touchesBoard = (patch) => Object.keys(patch || {}).some((k) => BOARD_KEYS.includes(k));
 
   function save(patch) {
@@ -600,6 +614,10 @@ export function startTalk({
               <button data-board="care" class="${cfg.boardId === 'care' ? 'on' : ''}">Care board (16)</button>
             </div></div>
           ${rowToggle('highContrast', 'High contrast', cfg.highContrast, 'Black on white, 21:1')}
+          ${rowToggle('followTheme', 'Colours', cfg.followTheme,
+            cfg.followTheme ? 'follows the screen’s theme, picked below' : 'the board’s own proven-safe palette')}
+          ${cfg.followTheme ? `<div class="row"><div class="lab">Theme</div>
+            <select data-theme-pick aria-label="Theme"></select></div>` : ''}
           ${rowToggle('speakAloud', 'Speak out loud', cfg.speakAloud,
             `last said with: ${lastHeard}`)}
           ${rowToggle('sayBanner', 'Show the word on screen', cfg.sayBanner,
@@ -671,6 +689,21 @@ export function startTalk({
             here is sent anywhere, and this page never asks anyone to sign in.</p>
         </div>
       </div>`;
+    // Rebuilt into a fresh element every render (innerHTML above), so mountThemePicker's own
+    // change listener is (re)attached each time too -- same reason every other row here is
+    // read via delegation on `sheetEl` rather than a listener kept across renders.
+    if (cfg.followTheme) {
+      mountThemePicker(sheetEl.querySelector('[data-theme-pick]'), {
+        // The OS status-bar tint (mobile home-screen / PWA chrome) cannot read a CSS var, so
+        // a picked theme has to push it directly too, the same as the initial load does in
+        // talk.html's own script.
+        onChange: () => {
+          const meta = doc.getElementById('theme-color-meta');
+          const bg = doc.defaultView?.getComputedStyle(doc.documentElement).getPropertyValue('--bg').trim();
+          if (meta && bg) meta.content = bg;
+        },
+      });
+    }
   }
 
   if (sheetEl) {
