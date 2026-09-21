@@ -331,6 +331,10 @@ import './modules/youtube.js';
 // morning and was visible only inside the running kiosk.
 import './modules/trivia.js';
 import './modules/bank.js';
+// `settings` (and `keyboard` above it) are deliberately NOT imported here -- this is the
+// public "what you can put on a screen" page, for the person the screen is set up for.
+// Settings is a caregiver/admin tool, the same reason keyboard.js was pulled from this page
+// earlier this session; both stay registered and placeable from home.html's composer.
 import { authHeaders } from './auth.js';
 import { createProfilesClient, resolveTheme } from './profile.js';
 import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';

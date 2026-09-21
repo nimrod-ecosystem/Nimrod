@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>modules/settings — settings as a module, not only a gear icon</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;width:420px;height:520px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:0;overflow:auto}
+</style>
+</head>
+<body>
+<h1>modules/settings — settings as a module, not only a gear icon</h1>
+<p>Mike, 2026-09-22: "Make settings a module and then a tab... You're supposed to pick what the
+settings are for — account, user, device, module, etc." Proves the MODULE and THEME scopes are
+real read/write against the same records everything else uses (not a copy of them), that the
+module never offers to edit itself, and that the DEVICE scope is honest about not being reachable
+yet rather than faking it.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createProfilesClient, resolveTheme } from '../profile.js';
+import { mountModule, getManifest } from '../module.js';
+import '../modules/comet.js';
+import '../modules/settings.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('setmod-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+(async () => {
+try {
+  section('*** the manifest, and the contract it declares ***');
+  {
+    const m = getManifest('settings');
+    check('registered', !!m, JSON.stringify(m));
+    check('opts into the new core (it needs ctx.profileId to list siblings)', m.core === 'new');
+    check('has a title', m.title === 'Settings');
+  }
+
+  section('*** a real profile: this module, a comet instance, and nothing else ***');
+  const profiles = createProfilesClient({ user: USER });
+  const profile = await profiles.create('TEST-settings-module');
+  const makeState = (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o });
+  const makeEvents = (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o });
+
+  const cometMod = await profiles.addModule(profile.id, 'comet');
+  const settingsMod = await profiles.addModule(profile.id, 'settings');
+
+  const host = document.getElementById('host');
+  const bus = createBus();
+  const st = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
+  const inst = mountModule('settings', {
+    mount: host, bus, state: st,
+    events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
+    user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
+    makeState, makeEvents,
+  });
+  await inst.init();
+  await sleep(500);   // the module list is fetched async, after init() returns
+
+  {
+    const probe = inst.impl.__probe();
+    check('*** the panel opens itself — no separate gear/trigger needed ***', probe.open === true);
+    check('*** the comet instance is offered as a scope ***',
+      probe.moduleRows.some((r) => r.type === 'comet'), JSON.stringify(probe.moduleRows));
+    check('*** the module never offers to edit ITSELF ***',
+      !probe.moduleRows.some((r) => r.id === settingsMod.id), JSON.stringify(probe.moduleRows));
+  }
+
+  section('*** MODULE scope — a real read/write against the sibling\'s own saved state ***');
+  {
+    const rows = () => [...host.querySelectorAll('[data-n]')];
+    const byLabel = (label) => rows().find((b) => b.querySelector('.st-label')?.textContent === label);
+    const cometRow = byLabel('Comet');
+    check('the comet row is a real, clickable item in the list', !!cometRow, host.innerHTML.slice(0, 400));
+    cometRow?.click();
+    await sleep(80);
+    // `.st-head` also labels the (now-hidden) LIST's own "who" heading -- scope to the page.
+    check('opens a page titled after the module',
+      host.querySelector('[data-page] .st-head')?.textContent === 'Comet',
+      host.querySelector('[data-page] .st-head')?.textContent);
+
+    // showScore is a toggle field on comet, default true (this session's own earlier flip).
+    await sleep(150);   // the page's own async state load
+    const showScoreRow = () => [...host.querySelectorAll('[data-page-body] [data-n]')]
+      .find((b) => b.querySelector('.st-label')?.textContent === 'Score');
+    check('the sibling\'s OWN declared field shows up here', !!showScoreRow(), host.querySelector('[data-page-body]')?.innerHTML?.slice(0, 400));
+    showScoreRow()?.click();
+    await sleep(600);   // debounced write
+
+    // Read the SAME record directly, the way comet's own gear icon would -- proving this
+    // wrote through to the one real state, not a copy of it.
+    const direct = createState({ url: profiles.stateURL(profile.id, cometMod.id), user: USER });
+    await direct.load();
+    check('*** the write landed on the SIBLING\'S OWN saved state, not a second copy ***',
+      direct.get()?.showScore === false, JSON.stringify(direct.get()));
+  }
+
+  section('*** THEME scope — the same per-profile theme every screen reads ***');
+  {
+    host.innerHTML = '';
+    inst.destroy();
+    const st2 = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
+    const inst2 = mountModule('settings', {
+      mount: host, bus: createBus(), state: st2,
+      events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
+      user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
+      makeState, makeEvents,
+    });
+    await inst2.init();
+    await sleep(400);
+    const rows = () => [...host.querySelectorAll('[data-n]')];
+    const themeRow = rows().find((b) => b.querySelector('.st-label')?.textContent === 'Theme');
+    check('a Theme row exists', !!themeRow);
+    themeRow?.click();
+    await sleep(80);
+    const sel = host.querySelector('[data-theme-select]');
+    check('a real picker with every theme, same as the anonymous one this session built',
+      sel && sel.options.length >= 5, sel?.options?.length);
+    sel.value = 'dusk';
+    sel.dispatchEvent(new Event('change'));
+    await sleep(300);
+
+    // Read it back the way `resolveTheme` (used on every kiosk and pre-sign-in page) does --
+    // proving this wrote the SAME record, not a module-local one.
+    const theme = await resolveTheme(profiles, USER);
+    check('*** the choice landed on the real per-profile theme record ***', theme === 'dusk', String(theme));
+    inst2.destroy();
+  }
+
+  section('*** DEVICE scope — honest about not reaching a screen\'s own settings yet ***');
+  {
+    host.innerHTML = '';
+    const st3 = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
+    const inst3 = mountModule('settings', {
+      mount: host, bus: createBus(), state: st3,
+      events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
+      user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
+      makeState, makeEvents,
+    });
+    await inst3.init();
+    await sleep(400);
+    const rows = () => [...host.querySelectorAll('[data-n]')];
+    const deviceRow = rows().find((b) => b.querySelector('.st-label')?.textContent === 'This screen');
+    check('a "This screen" row exists', !!deviceRow);
+    deviceRow?.click();
+    await sleep(80);
+    check('*** says plainly it is not reachable from here yet, rather than showing fake controls ***',
+      /not reachable from here yet/i.test(host.querySelector('[data-page-body]')?.textContent || ''),
+      host.querySelector('[data-page-body]')?.textContent);
+    inst3.destroy();
+  }
+
+} catch (err) {
+  check(`the suite itself threw: ${err && err.message}`, false, String(err && err.stack));
+}
+document.getElementById('summary').textContent =
+  failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>
