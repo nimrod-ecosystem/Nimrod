@@ -34,7 +34,7 @@ import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule, getManifest } from '../module.js';
 import { normalizeField } from '../settings_fields.js';
-import { createPointsLedger, sumBySource } from '../points.js';
+import { createPointsLedger, sumBySource, fmtPoints } from '../points.js';
 import { createTelemetry, byConcept, byBand, bands as bandsOf, summarize } from '../telemetry.js';
 import {
   GAME, DEFAULTS, DEFAULT_WORDS, DEFAULT_PAIRS, CONCEPT_PAIRS,
@@ -416,9 +416,14 @@ a || b || c`);
 
     const qHost = document.getElementById('questsHost');
     const pHost = document.getElementById('progressHost');
+    // `fmtPoints` deliberately FLOORS a fractional balance (points.js's own rule: rounding
+    // 3.75 to 4 would put a 4 on screen beside a reward the button correctly still refuses) --
+    // repricing Word Forge to fractional values (2026-09-22) means a real balance here can now
+    // genuinely be a fraction, so the comparison has to go through the same formatter the
+    // board itself uses rather than expect an exact raw match.
     check('the quest board shows the game’s points in the balance',
-      Number(qHost.querySelector('[data-balance]').textContent) === ledger.total(),
-      `${qHost.querySelector('[data-balance]').textContent} vs ${ledger.total()}`);
+      qHost.querySelector('[data-balance]').textContent === fmtPoints(ledger.total()),
+      `${qHost.querySelector('[data-balance]').textContent} vs ${fmtPoints(ledger.total())} (raw ${ledger.total()})`);
     check('the progress dashboard lists the game',
       [...pHost.querySelectorAll('[data-game]')].some((b) => b.dataset.game === GAME),
       [...pHost.querySelectorAll('[data-game]')].map((b) => b.dataset.game).join(','));

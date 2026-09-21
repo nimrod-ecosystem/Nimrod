@@ -223,12 +223,24 @@ section('*** the start screen, and the score ***');
   inst.destroy(); host.remove();
 }
 {
-  // Counted always, shown only if asked.
+  // *** SHOWS BY DEFAULT WITH NO OVERRIDE AT ALL, since 2026-09-22 (Mike: "I think comet
+  // should probably show a score by default too"). *** No `showScore` key in the saved state
+  // here at all -- this is DEFAULTS.showScore actually taking effect, not an explicit `true`.
   const host = scratch();
   const bus = createBus();
   const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1 }) } });
   await sleep(20);
-  check('*** no score on screen by default ***', !!host.querySelector('.cm-score[hidden]'));
+  check('*** the score is on screen with no setting saved at all — the real default ***',
+    !!host.querySelector('.cm-score:not([hidden])'));
+  inst.destroy(); host.remove();
+}
+{
+  // The setting still genuinely hides it when explicitly turned off, same as it always did.
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1, showScore: false }) } });
+  await sleep(20);
+  check('*** no score on screen when explicitly turned off ***', !!host.querySelector('.cm-score[hidden]'));
   bus.publish('comet/seek');
   steps(inst, 12);
   check('*** but the catch is still counted, so turning the score on later is not from zero ***',

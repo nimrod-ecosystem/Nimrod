@@ -79,9 +79,13 @@ export const GAME = 'trivia';
 
 export const DEFAULTS = {
   roundLength: 10,
-  // *** A SCORE ON SCREEN, OFF BY DEFAULT. See the SETTINGS row, which carries the correction
-  // to what this file used to claim Mike had said. ***
-  showScore: false,
+  // *** A SCORE ON SCREEN, ON BY DEFAULT. *** Reversed 2026-09-22 -- Mike: "Why should a screen
+  // someone can't walk away from not show a score? Games have scores. That's pretty standard."
+  // The earlier off-by-default was itself already a correction of a misquote (see the SETTINGS
+  // row below) -- this is a second, later, direct ruling on top of that, not a reopening of
+  // the misquote question. Still a real `showScore` setting either way, so anyone who wants it
+  // off still can.
+  showScore: true,
   // *** ONE POINT, QUARTERED BY GUESS: 1 / 0.75 / 0.5 / 0.25. *** Chat's #5, and the
   // calibration behind it is Mike's atom -- "a point is roughly a minute of effort", which is
   // what `points.js` already means by one point. Two points for answering a four-choice
@@ -285,11 +289,13 @@ const SETTINGS = [
   // reconsideration, and this was worse — citing a quote for something it does not say, in a
   // comment that reads as settled.
   //
-  // *** OFF BY DEFAULT ANYWAY, and that is not hedging. *** `comet` already carries exactly
-  // this row with exactly this default, for the same reason: a screen somebody cannot walk away
-  // from should not keep a running tally in front of them unless somebody decided it should.
-  // Matching an existing precedent rather than inventing a second answer to one question.
-  { key: 'showScore', label: 'Score', default: false, level: 'essential',
+  // *** ON BY DEFAULT, REVERSED 2026-09-22. *** Mike: "Why should a screen someone can't walk
+  // away from not show a score? Games have scores. That's pretty standard." Direct ruling,
+  // overriding the "off by default anyway" reasoning that used to be here (a screen somebody
+  // cannot walk away from should not keep a running tally unless somebody decided it should) --
+  // he decided it should. `comet` gets the identical reversal for the identical reason; see
+  // its own SETTINGS row.
+  { key: 'showScore', label: 'Score', default: true, level: 'essential',
     onLabel: 'Show how many are right so far', offLabel: 'No score on screen',
     note: 'How many trivia answers were right — never anything about how somebody spoke.' },
   { key: 'correctPoints', label: 'Points for a first-guess answer', kind: 'number', default: 1,
