@@ -109,6 +109,17 @@ export const DEFAULTS = {
   // "questions must be hand-authored... which defeats the game, since the author knows the
   // answers." `bank` (unchanged, still the default) stays what it was; `pack` is additive — a
   // built-in, pre-written syllabus for somebody who has nobody to write one. See `PACK_LIBRARY`.
+  //
+  // *** NOT FLIPPED TO 'pack' BY DEFAULT, 2026-09-22 — considered and held back on purpose. ***
+  // Mike: "We definitely need better defaults" — right, and this looked like the obvious fix
+  // until checking what it would actually do: `readBank()` treats `contentSource` as a strict
+  // switch, not "prefer a written bank if there is one" — so on a LIVE install, anyone who
+  // already wrote their own questions without ever touching "Where questions come from" (which
+  // is exactly the primary path this feature was built for, per the quote above) would have
+  // their own written content silently replaced by a generic pack the next time the page loads,
+  // with no action of their own. Confirmed this session's own dev instances have zero saved
+  // settings either way, so the risk is real only for content nobody in this room can see from
+  // here. Recorded rather than shipped — see MIKE_CHANGE_LIST for the actual ask.
   contentSource: 'bank',
   packId: packsFor('trivia')[0]?.id || null,
 };
