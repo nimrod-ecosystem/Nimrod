@@ -58,6 +58,25 @@
 </p>
 <script type="module">
   import { mountPairClaim } from './pair.js';
+  import { createProfilesClient, resolveTheme } from './profile.js';
+  import { applyTheme, DEFAULT_THEME } from './theme.js';
+  import { authHeaders } from './auth.js';
+
+  // This page's own `:root{}` above is the DEFAULT theme's values, applied as a real default
+  // immediately so the page is never unthemed — but unlike `landing.html`, whoever is HERE is
+  // signed in (`pair.js` itself checks `/api/me`; this is the "enter the code on your own
+  // phone" side of pairing, not the unpaired screen showing one). So their own theme applies
+  // too, once resolved, the same fix as `home.html`/`modules.html`.
+  applyTheme(document.documentElement, DEFAULT_THEME);
+  (async () => {
+    try {
+      const me = await fetch('/api/me', { headers: authHeaders() }).then((r) => (r.ok ? r.json() : null));
+      if (!me) return;
+      const theme = await resolveTheme(createProfilesClient({ user: me.user }), me.user);
+      if (theme) applyTheme(document.documentElement, theme);
+    } catch { /* offline or signed out -- the explicit default already stands */ }
+  })();
+
   mountPairClaim(document.getElementById('root'), {
     // Once a screen is claimed, the useful next place is the list of screens — the person
     // will want to put something on the one they just added. A pause first, because the
