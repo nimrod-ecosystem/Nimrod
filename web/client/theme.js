@@ -315,3 +315,45 @@ export function applyTheme(rootEl, id) {
 export function listThemes() {
   return Object.entries(THEMES).map(([id, t]) => ({ id, label: t.label }));
 }
+
+// --- anonymous theme choice -------------------------------------------------------
+// "Themes are per-PROFILE" (DECISIONS.md) still holds for anyone signed in -- see
+// profile.js's resolveTheme, which is the real, cross-device, per-person store. This is
+// the ONE case that has no profile to hold it: a visitor with no account at all, on
+// landing.html / wallpapers.html / index.html. Mike, 2026-09-21: "Pre-sign-in pages...
+// it would be nice if they could change themes without signing in." Per-browser,
+// localStorage, same injectable-storage/try-catch shape as people.js's readLastPerson
+// and talk.js's own settings store (a page with no sign-in has nowhere else to put it).
+const LOCAL_KEY = 'nimrod:theme';
+
+export function getStoredTheme(storage = (typeof localStorage !== 'undefined' ? localStorage : null)) {
+  try { return storage?.getItem(LOCAL_KEY) || null; } catch { return null; }
+}
+
+export function setStoredTheme(id, storage = (typeof localStorage !== 'undefined' ? localStorage : null)) {
+  try { storage?.setItem(LOCAL_KEY, resolveThemeId(id)); } catch { /* private mode / quota */ }
+}
+
+// A minimal, reusable picker for any page that has nobody signed in to hold a theme on a
+// profile -- one <select>, wired to apply + persist immediately. Deliberately plain: the
+// real, permanent home for changing a theme is the Settings module (once it exists as a
+// placeable module/tab, per Mike 2026-09-21), which signed-in pages should link to rather
+// than growing a second bespoke control. This one is for the pages that have no such
+// module to place it in.
+export function mountThemePicker(selectEl, { onChange = null } = {}) {
+  if (!selectEl) return;
+  const current = resolveThemeId(getStoredTheme());
+  selectEl.innerHTML = '';
+  for (const { id, label } of listThemes()) {
+    const opt = document.createElement('option');
+    opt.value = id; opt.textContent = label;
+    if (id === current) opt.selected = true;
+    selectEl.append(opt);
+  }
+  selectEl.addEventListener('change', () => {
+    const id = resolveThemeId(selectEl.value);
+    setStoredTheme(id);
+    applyTheme(document.documentElement, id);
+    onChange?.(id);
+  });
+}

@@ -34,6 +34,8 @@
     font-size:.92rem}
   .top nav .ghost{border:1px solid var(--border);color:var(--text)}
   .top nav .solid{background:var(--link);color:#fff}
+  .theme-pick{padding:7px 10px;border-radius:10px;border:1px solid var(--border);
+    background:transparent;color:var(--text);font-size:.92rem;cursor:pointer;max-width:120px}
 
   /* ---- header ---- */
   header.hero{padding:44px 0 8px}
@@ -220,6 +222,10 @@
   <div class="wrap">
     <a class="brand" href="/">Nimrod<span>.</span></a>
     <nav>
+      <!-- Anonymous, per-browser theme choice -- hidden once a real signed-in profile theme
+           takes over (see the IIFE below). Mike, 2026-09-21: "It would be nice if they could
+           change themes without signing in." -->
+      <select id="theme-pick" class="theme-pick" aria-label="Theme"></select>
       <a class="ghost" href="/kiosk.html">Try it</a>
       <a class="solid" href="/auth/login">Sign in</a>
     </nav>
@@ -327,7 +333,7 @@ import './modules/trivia.js';
 import './modules/bank.js';
 import { authHeaders } from './auth.js';
 import { createProfilesClient, resolveTheme } from './profile.js';
-import { applyTheme, DEFAULT_THEME } from './theme.js';
+import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
 
 // *** THE BRAND LINK WENT TO "/", NOT BACK TO YOUR OWN DASHBOARDS. *** Mike, live, 2026-09-08:
 // "I hit the Nimrod up top to go back to the home page and it took me to the landing page
@@ -369,10 +375,19 @@ const signedIn = (async () => {
 // wired this "try it" preview to the same theme their real screen already uses. Best-effort:
 // any failure here (offline, no profile yet, anonymous) leaves the explicit default applied,
 // which is visually identical to what this page already showed before this fix existed.
+// Extended 2026-09-21: the "correct immediately" step now reads this browser's own stored
+// choice first (mountThemePicker below), not a bare hardcoded default -- a visitor who picked
+// a theme on landing.html sees it carried here too, until/unless a real signed-in profile
+// theme takes over.
+const themePick = document.getElementById('theme-pick');
+mountThemePicker(themePick);
 (async () => {
-  applyTheme(document.documentElement, DEFAULT_THEME);   // correct immediately, never unthemed
+  applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));   // correct immediately, never unthemed
   await signedIn;
   if (!currentUser) return;
+  // A signed-in visitor's theme lives on their profile (DECISIONS.md), not this browser --
+  // the anonymous picker has nothing left to do once that's the source of truth.
+  if (themePick) themePick.style.display = 'none';
   try {
     const theme = await resolveTheme(createProfilesClient({ user: currentUser }), currentUser);
     if (theme) applyTheme(document.documentElement, theme);
