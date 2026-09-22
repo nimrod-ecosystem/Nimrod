@@ -278,6 +278,14 @@ export function rankFallbacks(manifests = [], { exclude = [], allowNetwork = fal
   };
   return (manifests || [])
     .filter((m) => m && m.type && !skip.has(m.type))
+    // A HEADLESS ('mount: ambient') MODULE CANNOT BE A FALLBACK. Found the hard way: it
+    // declares `dependsOn: 'none'` (correctly -- it needs nothing to draw a few drifting
+    // dots), which put it at the very TOP of the ranking, above photos, above wallpaper,
+    // above everything -- so a stalled real panel would have been "recovered" into a blank-
+    // looking rectangle of decorative scenery instead of any actual content. It is not a
+    // panel at all; kiosk.js's own `partition()` never lets it occupy a normal slot on
+    // purpose, and a recovery swap must not do what ordinary placement already refuses to.
+    .filter((m) => m?.mount !== 'ambient')
     .filter((m) => allowNetwork || (DEPENDS.includes(m.dependsOn) ? m.dependsOn : 'server') !== 'network')
     .map((m) => ({
       type: m.type,

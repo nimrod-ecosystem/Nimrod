@@ -79,6 +79,12 @@ import './modules/pressgame.js';
 import './modules/call.js';
 import './modules/view.js';
 import './modules/settings.js';
+// Registered here (so the mechanism runs when a profile has one) but deliberately NOT wired
+// into home.html's "Add module" picker or modules_catalog.js yet — whether/how this should be
+// user-addable at all is a real product decision nobody has made; see MIKE_CHANGE_LIST.md
+// §everything-becomes-a-module's sibling row on the ambient layer for the actual scope this
+// shipped ("prove the band works", not a caregiver-facing feature).
+import './modules/ambient_drift.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -133,6 +139,13 @@ export async function mountKiosk(root, {
 
   root.innerHTML = `
     <div class="kiosk">
+      <!-- THE AMBIENT LAYER (band 100, layers.css). Empty by default -- a host-owned surface
+           for whatever a headless 'mount: ambient' module draws, sitting behind every panel
+           (z-panels, band 200) but above nothing else. aria-hidden because it is scenery,
+           never content a screen reader should announce -- the same rule the board's own
+           under-the-cards layer follows (modules.css's .ab-flight class). NO BACKTICKS: this
+           comment is inside a template literal and one closes the string. -->
+      <div class="k-ambient" data-ambient hidden aria-hidden="true"></div>
       <div class="k-stage" data-stage></div>
       <div class="k-mirror" data-mirror hidden></div>
       <div class="k-clock" data-clock hidden></div>
@@ -207,6 +220,7 @@ export async function mountKiosk(root, {
     </div>`;
   const kioskEl = root.querySelector('.kiosk');
   const stageEl = root.querySelector('[data-stage]');
+  const ambientEl = root.querySelector('[data-ambient]');
   const mirrorEl = root.querySelector('[data-mirror]');
   const clockEl = root.querySelector('[data-clock]');
   const controlsEl = root.querySelector('[data-controls]');
@@ -655,7 +669,7 @@ export async function mountKiosk(root, {
   if (previewLayout && layout) showPreviewBadge();
 
   let stageDefs = [];
-  let cameraDef = null, clockDef = null;
+  let cameraDef = null, clockDef = null, ambientDef = null;
 
   // The partition, as a FUNCTION so a swapped-in screen goes through exactly the same rules
   // as one mounted at boot. Two code paths deciding where a camera goes is how a swapped
@@ -663,11 +677,15 @@ export async function mountKiosk(root, {
   function partition() {
     const placedIds = new Set(layout ? layout.slots.filter(Boolean) : []);
     stageDefs = [];
-    cameraDef = null; clockDef = null;
+    cameraDef = null; clockDef = null; ambientDef = null;
     for (const mod of profile.modules) {
       if (placedIds.has(mod.id)) continue;                    // it lives in a slot
       if (mod.type === 'camera') cameraDef = mod;
       else if (mod.type === 'clock') clockDef = mod;
+      // A HEADLESS MOUNT, not a third hardcoded type -- a module DECLARES `mount: 'ambient'`
+      // on its own manifest rather than kiosk.js naming it, so any future module can opt in
+      // without this file changing again.
+      else if (getManifest(mod.type)?.mount === 'ambient') ambientDef = mod;
       else if (!layout) stageDefs.push(mod);                  // no layout: the old stage
     }
   }
@@ -695,6 +713,7 @@ export async function mountKiosk(root, {
   }
   let cameraRec = cameraDef ? await mountOverlay(cameraDef, mirrorEl) : null;
   let clockRec = clockDef ? await mountOverlay(clockDef, clockEl) : null;
+  let ambientRec = ambientDef ? await mountOverlay(ambientDef, ambientEl) : null;
 
   // ---- a LAID-OUT stage: every slot mounted at once, in its grid position ----
   const slotRecs = [];
@@ -1113,14 +1132,17 @@ export async function mountKiosk(root, {
     destroyRec(stageRec); stageRec = null;
     destroyRec(cameraRec); cameraRec = null;
     destroyRec(clockRec); clockRec = null;
+    destroyRec(ambientRec); ambientRec = null;
     while (slotRecs.length) destroyRec(slotRecs.pop());
     stageEl.innerHTML = ''; stageEl.className = 'k-stage'; stageEl.removeAttribute('style');
     mirrorEl.innerHTML = ''; mirrorEl.hidden = true;
     clockEl.innerHTML = ''; clockEl.hidden = true;
+    ambientEl.innerHTML = ''; ambientEl.hidden = true;
 
     partition();
     cameraRec = cameraDef ? await mountOverlay(cameraDef, mirrorEl) : null;
     clockRec = clockDef ? await mountOverlay(clockDef, clockEl) : null;
+    ambientRec = ambientDef ? await mountOverlay(ambientDef, ambientEl) : null;
     if (layout) await mountLayout(); else await showPrimary(0);
     renderMods();
   }
@@ -2204,6 +2226,10 @@ export async function mountKiosk(root, {
     slotTypes: () => slotRecs.map((r) => r.type),
     hasCamera: () => !!cameraRec,
     hasClock: () => !!clockRec,
+    hasAmbient: () => !!ambientRec,
+    // The raw element, for a test that needs to dispatch a real event at it (a press in the
+    // gap between panels) rather than only asking whether something is mounted there.
+    ambientEl: () => ambientEl,
     // WHAT IS ACTUALLY MOUNTED, not what was intended. Those were the same thing until the
     // recovery swap arrived; reporting the DEF after a panel had been replaced meant this
     // said "photos" while the screen showed a clock, which is precisely the class of quiet
@@ -2252,7 +2278,7 @@ export async function mountKiosk(root, {
       clearTimeout(hideT);
       clearInterval(recoveryTimer);
       health.destroy();
-      destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec);
+      destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
       while (slotRecs.length) destroyRec(slotRecs.pop());
       settings.destroy();
       menu.destroy();
@@ -2274,6 +2300,7 @@ export async function mountKiosk(root, {
       try { push?.destroy(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';
+      ambientEl.innerHTML = '';
     },
   };
 }

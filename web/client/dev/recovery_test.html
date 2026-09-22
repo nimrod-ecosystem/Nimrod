@@ -318,6 +318,22 @@ section('rankFallbacks — NOTHING is failure-free, so it ranks by exposure');
   check('network CAN be allowed explicitly, for a caller that knows better',
     rankFallbacks(mans, { allowNetwork: true }).some((r) => r.type === 'youtube'));
   check('nothing at all is survivable', rankFallbacks().length === 0);
+
+  // *** A HEADLESS ('mount: ambient') MODULE MUST NEVER BE OFFERED, 2026-09-22. *** Found live:
+  // registering `modules/ambient_drift.js` (dependsOn:'none', to draw a few dots with nothing
+  // running) put it ABOVE every real panel in the ranking -- kiosk_test.html's own recovery
+  // ladder test caught a stalled screen "recovering" into decorative scenery instead of any
+  // real content. It is not a panel at all; kiosk.js's `partition()` never lets it occupy a
+  // slot on purpose, so a recovery swap must not do what ordinary placement already refuses.
+  const withAmbient = [
+    { type: 'ambient_drift', title: 'Ambient drift', dependsOn: 'none', mount: 'ambient' },
+    { type: 'clock', title: 'Clock', dependsOn: 'none' },
+  ];
+  check('*** a mount:"ambient" module never appears in the ranking, no matter how little it needs ***',
+    !rankFallbacks(withAmbient).some((r) => r.type === 'ambient_drift'),
+    JSON.stringify(rankFallbacks(withAmbient)));
+  check('...an ordinary module at the same exposure level is unaffected',
+    rankFallbacks(withAmbient).some((r) => r.type === 'clock'));
 }
 
 // =====================================================================

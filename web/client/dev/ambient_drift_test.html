@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>modules/ambient_drift — the ambient layer's one trivial occupant</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;width:300px;height:200px;position:relative;background:#12181c;border-radius:12px}
+</style>
+</head>
+<body>
+<h1>modules/ambient_drift — the ambient layer's one trivial occupant</h1>
+<p>Chat, once Mike approved building the ambient layer: "The layer plus ONE trivial thing
+drifting in it, to prove the band works. Not the idle game, not Comet-as-ambient, not the
+catchable-balloon economy." Proves: it draws something immediately, it reads the SAME
+per-profile motion setting `modules/wallpaper.js` itself uses rather than inventing a second
+one, and "still" removes motion ENTIRELY rather than just slowing it down.
+Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountModule, getManifest } from '../module.js';
+import '../modules/ambient_drift.js';
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('amb-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+(async () => {
+try {
+  section('*** the manifest — a headless mount, not a slot panel ***');
+  {
+    const m = getManifest('ambient_drift');
+    check('registered', !!m, JSON.stringify(m));
+    check('*** declares `mount: "ambient"` — the flag kiosk.js and recovery.js both key off ***',
+      m.mount === 'ambient');
+    check('declares dependsOn:"none" — it needs nothing running to draw a few dots',
+      m.dependsOn === 'none');
+  }
+
+  const profiles = createProfilesClient({ user: USER });
+  const host = document.getElementById('host');
+
+  section('*** with no wallpaper module on the profile at all — the safe fallback ***');
+  {
+    const profile = await profiles.create('TEST-ambient-nowallpaper');
+    const mod = await profiles.addModule(profile.id, 'ambient_drift');
+    const st = createState({ url: profiles.stateURL(profile.id, mod.id), user: USER });
+    const inst = mountModule('ambient_drift', {
+      mount: host, bus: createBus(), state: st,
+      events: null, user: USER, profileId: profile.id, personId: null, instanceId: mod.id,
+      makeState: () => st, makeEvents: () => null,
+    });
+    await inst.init();
+    await sleep(400);
+    const probe = inst.impl.__probe();
+    check('draws something immediately, correctly shaped, before any network answer',
+      probe.dots > 0, JSON.stringify(probe));
+    check('defaults to moving (gentle) when there is nothing to say otherwise',
+      probe.moving === probe.dots, JSON.stringify(probe));
+    inst.destroy();
+  }
+
+  section('*** reads the SAME per-profile motion setting wallpaper.js itself uses ***');
+  {
+    const profile = await profiles.create('TEST-ambient-withwallpaper');
+    await profiles.addModule(profile.id, 'wallpaper');
+    const wpMod = (await profiles.get(profile.id)).modules.find((m) => m.type === 'wallpaper');
+    const wpState = createState({ url: profiles.stateURL(profile.id, wpMod.id), user: USER });
+    await wpState.load();
+    wpState.set({ motion: 'still' });
+    await wpState.flush();
+
+    const ambMod = await profiles.addModule(profile.id, 'ambient_drift');
+    const st = createState({ url: profiles.stateURL(profile.id, ambMod.id), user: USER });
+    host.innerHTML = '';
+    const inst = mountModule('ambient_drift', {
+      mount: host, bus: createBus(), state: st,
+      events: null, user: USER, profileId: profile.id, personId: null, instanceId: ambMod.id,
+      makeState: () => st, makeEvents: () => null,
+    });
+    await inst.init();
+    await sleep(500);
+    const probe = inst.impl.__probe();
+    check('*** "still" (the wallpaper module’s own saved choice) removes motion ENTIRELY ***',
+      probe.dots > 0 && probe.moving === 0, JSON.stringify(probe));
+    inst.destroy();
+
+    // And the opposite: an explicit "gentle" on the SAME sibling actually moves it.
+    wpState.set({ motion: 'gentle' });
+    await wpState.flush();
+    host.innerHTML = '';
+    const inst2 = mountModule('ambient_drift', {
+      mount: host, bus: createBus(), state: createState({ url: profiles.stateURL(profile.id, ambMod.id), user: USER }),
+      events: null, user: USER, profileId: profile.id, personId: null, instanceId: ambMod.id,
+      makeState: () => st, makeEvents: () => null,
+    });
+    await inst2.init();
+    await sleep(500);
+    const probe2 = inst2.impl.__probe();
+    check('...and picking it back up (still is not a one-way switch) restores the motion',
+      probe2.moving === probe2.dots, JSON.stringify(probe2));
+    inst2.destroy();
+  }
+
+  section('*** no settings of its own, and it never claims to answer a verb ***');
+  {
+    const m = getManifest('ambient_drift');
+    check('nothing to configure — it is the layer itself being proven, not a feature',
+      !m.settings || m.settings.length === 0, JSON.stringify(m.settings));
+  }
+
+} catch (err) {
+  check(`the suite itself threw: ${err && err.message}`, false, String(err && err.stack));
+}
+document.getElementById('summary').textContent =
+  failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>

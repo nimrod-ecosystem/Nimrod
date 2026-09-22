@@ -57,7 +57,12 @@
    * NOT APPLIED TO THE HUD. `.k-clock` and `.k-mirror` are overlays on the dark frame, not
    * panels on it, and they already set their own colours against it. Scoped to `.k-stage` so
    * they are untouched. */
-  .kiosk{position:fixed;inset:0}
+  /* `isolation:isolate` -- the ambient layer (below) needs `.k-stage`'s panels to explicitly
+     out-rank it in z-order, and without a stacking context rooted here a positioned, z-indexed
+     sibling (band 100) would paint IN FRONT of `.k-stage` (z-index:auto) regardless of which
+     comes first in the markup. Rooting it at `.kiosk` -- not just `.k-stage` -- keeps the
+     mirror/clock HUD (already z-indexed against this same element) in the same one scale. */
+  .kiosk{position:fixed;inset:0;isolation:isolate}
   /* BURN-IN PROTECTION (2.18), off by default — see the field's own comment in kiosk.js for
    * why there are only two modes. NEITHER moves one control relative to another: `dim` only
    * darkens (nothing's position changes, so motor memory is untouched); `drift` transforms
@@ -80,7 +85,11 @@
      (two classes to one) on the SINGLE-PANEL stage, which is the full-screen case, so a module
      too tall for a full-screen panel had nowhere to go. `auto` still clips to the rounded
      corner, which is all `hidden` was doing here. */
-  .k-stage .k-mod{background:var(--surface);color:var(--text);border-radius:14px}
+  /* `pointer-events:auto` on the PANEL, `none` on the STAGE that contains it (below) — see the
+     ambient layer rule for why. Restored here rather than left implicit: a panel with no
+     stated pointer-events is auto by inheritance today, so this looks like a no-op until
+     `.k-stage` turns it off. */
+  .k-stage .k-mod{background:var(--surface);color:var(--text);border-radius:14px;pointer-events:auto}
   /* WHICH PANEL THE NEXT PRESS WILL ACT ON. Drawn on the CELL, outside the panel's own box, so
      it never covers the content — a ring over somebody's photograph would be the wrong trade.
      `outline` rather than `border` because a border would resize the cell and shift the grid
@@ -96,7 +105,30 @@
      run is a focus indicator that is wrong at the moment it is needed most: the frame it
      appears. It is also the wrong thing to animate — "which panel will the next press act on"
      should be true immediately or not shown. */
-  .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex}
+  /* `z-index:var(--z-panels)`, made EXPLICIT rather than left to accident: this used to work
+     only because nothing else in `.kiosk` carried a z-index at all, so plain document order
+     put every panel above nothing. The ambient layer (below) is the first sibling that DOES
+     carry one (band 100) -- without this, a positioned z-indexed element out-ranks a
+     positioned auto-z one regardless of markup order, and the scenery would paint over the
+     panels it is meant to sit behind. */
+  /* `pointer-events:none` -- WITHOUT THIS, THE AMBIENT LAYER IS UNREACHABLE. `.k-stage` is a
+     full-bleed, `position:absolute;inset:0` box with no background, so it is easy to assume a
+     click "in the gutter" (the grid gap, or this padding) falls through to whatever is behind
+     it -- it does not. An element with no visible background still captures every pointer
+     event across its entire box unless told otherwise; a transparent stage still shadows
+     everything under it. Turned off HERE and restored on `.k-mod` (below) so a panel is exactly
+     as clickable as before, and only the space that is NOT a panel -- this padding, and the
+     grid gap between cells -- passes a press through to `.k-ambient` underneath. */
+  .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex;z-index:var(--z-panels);pointer-events:none}
+  /* THE AMBIENT LAYER (band 100) -- see kiosk.js's own header comment on `data-ambient` for
+     what mounts here. `pointer-events:auto`, DELIBERATELY differing from the board's own
+     `.ab-surface` (which is `none`, because it sits UNDER cards that are somebody's voice):
+     this surface sits under ordinary dashboard panels, so a press on a panel already reaches
+     the panel first via normal stacking, and a press in the GAP BETWEEN panels can reach the
+     scenery instead of falling through to nothing. Chat's own reasoning, recorded rather than
+     silently assumed: *"the mechanism for... 'move the cursor over and catch one without
+     leaving what you were doing.'"* */
+  .k-ambient{position:absolute;inset:0;z-index:var(--z-ambient);pointer-events:auto}
   .k-stage.k-grid{display:grid;gap:2vmin}
   .k-stage.k-grid .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden}
   /* `overflow:auto` was here and is now on `mod-host`, for every host rather than this one. */
@@ -131,7 +163,7 @@
   /* MIRROR MODE (M): the camera fills the whole screen */
   .kiosk.mirror-full .k-mirror{position:fixed;inset:0;width:auto;aspect-ratio:auto;
     border:0;border-radius:0;box-shadow:none;z-index:calc(var(--z-panels) + 50)}
-  .kiosk.mirror-full .k-stage,.kiosk.mirror-full .k-clock{visibility:hidden}
+  .kiosk.mirror-full .k-stage,.kiosk.mirror-full .k-clock,.kiosk.mirror-full .k-ambient{visibility:hidden}
   /* auto-hiding control bar */
   /* *** THE BAR WRAPS. IT USED TO RUN OFF THE SCREEN. ***
    *
