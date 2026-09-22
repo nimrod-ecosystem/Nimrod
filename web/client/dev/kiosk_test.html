@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <title>kiosk shell — integration test</title>
 <link rel="stylesheet" href="../modules.css">
+<!-- kiosk.css, added for the ambient-layer section only (its own real stacking/pointer-events
+     rules are what that section measures) — nothing else in this file depends on rendered
+     pixels; everything else already asserts against JS state and dataset attributes instead. -->
+<link rel="stylesheet" href="../kiosk.css">
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem}
@@ -1198,6 +1202,97 @@ const ds = () => root.querySelector('.kiosk').dataset;
     clearUserPacks();
   } catch (e) {
     check('the pack-loader section threw', false, String((e && e.stack) || e));
+  }
+
+  // =====================================================================================
+  // THE AMBIENT LAYER (band 100, layers.css). Chat, once Mike approved building it: "The
+  // layer plus ONE trivial thing drifting in it, to prove the band works." Stopping
+  // condition, verbatim: "the surface exists and is empty by default at zero cost; one
+  // headless module draws one drifting thing into it; the motion setting at its calm end
+  // removes the motion entirely; and a test asserts a press in a gap reaches the scenery
+  // while a press on a panel does not." Motion is covered in ambient_drift_test.html; this
+  // proves the surface itself and the press-in-a-gap-vs-on-a-panel mechanism.
+  let savedRootSize = null;
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    // `root` (the same visible, on-screen container every other section reuses) rather than a
+    // detached offscreen div — `document.elementFromPoint` only ever resolves against the real
+    // viewport, so an element positioned off-screen can never be "at" any point tested against it.
+    // Widened for this section only (restored after): a real 2x2 grid plus the transport bar
+    // need more than #root's usual 520x300 to render without the two overlapping.
+    savedRootSize = { w: root.style.width, h: root.style.height };
+    root.style.width = '900px'; root.style.height = '600px';
+
+    // ---- zero cost with no ambient module at all ----
+    {
+      const ap = await profiles.create('TEST-ambient-none');
+      const bus = createBus();
+      const k = await mountKiosk(root, { user: USER, profileId: ap.id, profiles, bus });
+      await sleep(80);
+      check('*** with no ambient-mount module, the surface is not even mounted into ***',
+        k.hasAmbient() === false);
+      const el = root.querySelector('[data-ambient]');
+      check('...and stays hidden, at zero cost', !!el && el.hidden === true);
+      k.destroy();
+    }
+
+    // ---- a real ambient module, in a real grid layout with real gaps ----
+    {
+      const ap = await profiles.create('TEST-ambient-quad');
+      const photosMod = await profiles.addModule(ap.id, 'photos');
+      const youtubeMod = await profiles.addModule(ap.id, 'youtube');
+      await profiles.addModule(ap.id, 'ambient_drift');
+      const settingsState = createState({ url: profiles.stateURL(ap.id, 'settings'), user: USER });
+      await settingsState.load();
+      settingsState.set({ kiosk: { layout: { preset: 'quad', slots: [photosMod.id, youtubeMod.id, null, null] } } });
+      await settingsState.flush();
+
+      const bus = createBus();
+      const k = await mountKiosk(root, { user: USER, profileId: ap.id, profiles, bus });
+      await sleep(150);
+      // `elementFromPoint` resolves against the actual visible viewport — by this point in the
+      // file `#root` has been pushed far down the page by everything `#results` has already
+      // printed above it, so it has to be scrolled back into view before its own
+      // `getBoundingClientRect()` numbers mean anything.
+      root.scrollIntoView({ block: 'center' });
+      await sleep(30);
+
+      check('*** a real ambient_drift instance is mounted into the surface ***', k.hasAmbient() === true);
+      const ambientEl = k.ambientEl();
+      check('...the surface itself is unhidden', ambientEl && ambientEl.hidden === false);
+      check('...and it actually drew something (see ambient_drift_test.html for its own checks)',
+        !!ambientEl.querySelector('.amb-dot'));
+
+      const cell0 = root.querySelector('.k-stage [data-slot="0"]');
+      const cell1 = root.querySelector('.k-stage [data-slot="1"]');
+      check('two real panel cells exist to press on and between', !!cell0 && !!cell1);
+      const r0 = cell0.getBoundingClientRect();
+      const r1 = cell1.getBoundingClientRect();
+
+      // ON a panel: the cell's own centre.
+      const onPanel = document.elementFromPoint(r0.left + r0.width / 2, r0.top + r0.height / 2);
+      check('*** a press ON a panel resolves to the panel, not the ambient layer ***',
+        !!onPanel?.closest?.('.k-mod') && !onPanel.closest('.k-ambient'),
+        onPanel?.className);
+
+      // IN THE GAP: the grid gutter between cell 0 and cell 1 (quad is 2 columns side by
+      // side at the top), at the vertical centre of either.
+      const gapX = Math.round((r0.right + r1.left) / 2);
+      const gapY = Math.round(r0.top + r0.height / 2);
+      check('there really is a gap to press in (the two cells do not touch)', r1.left > r0.right,
+        `cell0 right=${r0.right} cell1 left=${r1.left}`);
+      const inGap = document.elementFromPoint(gapX, gapY);
+      check('*** a press IN THE GAP reaches the ambient scenery, not nothing ***',
+        !!inGap?.closest?.('.k-ambient'), `${inGap?.className} at (${gapX},${gapY})`);
+      check('...and specifically NOT a panel — the gap is not secretly still inside one',
+        !inGap?.closest?.('.k-mod'));
+
+      k.destroy();
+    }
+  } catch (e) {
+    check('the ambient-layer section threw', false, String((e && e.stack) || e));
+  } finally {
+    if (savedRootSize) { root.style.width = savedRootSize.w; root.style.height = savedRootSize.h; }
   }
 
   const sum = document.getElementById('summary');
