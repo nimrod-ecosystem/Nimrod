@@ -559,12 +559,30 @@ export async function mountKiosk(root, {
     kioskEl.dataset.mirrorCorner = CORNERS.includes(m.corner) ? m.corner : KDEF.mirror.corner;
     kioskEl.dataset.clockCorner = CORNERS.includes(c.corner) ? c.corner : KDEF.clock.corner;
   }
+  // *** PANEL BACKGROUNDS, HOST-LEVEL. *** Mike, 2026-09-23, looking at the live kiosk: "I would
+  // make the backgrounds transparent/translucent wherever possible. Like the clock and trivia."
+  // Every panel in the grid gets its background from ONE rule (`.k-stage .k-mod`, kiosk.css) --
+  // no module sets its own, checked by grep before writing this -- so this is a HOST setting,
+  // not something asked of each module (the live-themes README's own rule: "a thing written per
+  // module gets written three times and drifts"). `veil`/`clear` reuse `--board-veil`/
+  // `--board-halo`, the SAME tokens board.js's own veil/clear mode already uses and Design has
+  // already calibrated per theme -- both are the same question ("what does a translucent
+  // surface look like over this theme's moving scene"), so this answers it once rather than
+  // asking Design to calibrate a second, panel-specific color per theme. `solid` (today's only
+  // behaviour) stays the default -- nobody's screen changes until they pick this.
+  const PANEL_SURFACES = ['solid', 'veil', 'clear'];
+  function applyPanelSurface(s) {
+    const v = s && s.panelSurface;
+    kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : 'solid';
+  }
   await settings.load().catch(() => {});
   applyTheme(document.documentElement, settings.get().theme);
   applyLayout(settings.get());
+  applyPanelSurface(settings.get());
   settings.subscribe((s) => {
     applyTheme(document.documentElement, s.theme);
     applyLayout(s);
+    applyPanelSurface(s);
     // A change made through the menu (turning burn-in protection on, off, or switching mode)
     // takes effect immediately — re-arming rather than waiting for the next activity event,
     // so switching it off actually clears an already-dimmed/drifting screen right away.
@@ -1502,6 +1520,17 @@ export async function mountKiosk(root, {
         { value: 'off', label: 'Off' },
         { value: 'dim', label: 'Dim after 10 minutes idle' },
         { value: 'drift', label: 'Slowly shift the picture when idle' },
+      ] },
+    // Mike, 2026-09-23: "I would make the backgrounds transparent/translucent wherever
+    // possible." `standard`, not `essential`, matching `burnIn` above -- a preference, not a
+    // legibility escape hatch. `solid` default: see `applyPanelSurface`'s own comment on why
+    // this changes nobody's screen until they pick it.
+    { key: 'panelSurface', label: 'Panel backgrounds', kind: 'choice', level: 'standard',
+      default: 'solid',
+      options: [
+        { value: 'solid', label: 'Solid' },
+        { value: 'veil', label: 'See-through' },
+        { value: 'clear', label: 'Fully clear' },
       ] },
   ];
 

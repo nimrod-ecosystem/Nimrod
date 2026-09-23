@@ -456,6 +456,25 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('it cycles through all three and wraps home',
         burnLap.join(',') === 'Dim after 10 minutes idle,Slowly shift the picture when idle,Off',
         burnLap.join(' | '));
+
+      // PANEL BACKGROUNDS (Mike, 2026-09-23: "I would make the backgrounds transparent/
+      // translucent wherever possible"). Same shape as theme/burnIn above: a screen setting,
+      // reachable from the bedside menu, that reaches the document (`data-panel-surface`) and
+      // not just the menu row — kiosk.css keys `.k-stage .k-mod`'s background off it.
+      check('panel backgrounds is a screen setting too', !!byId['set:panelSurface'], rows.map((r) => r.id).join(','));
+      check('and it is solid by default — nobody’s screen changes until they pick it',
+        kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint === 'Solid'
+          && ds().panelSurface === 'solid',
+        JSON.stringify({ hint: kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint, ds: ds().panelSurface }));
+      check('the panel-backgrounds row is a stop on the one-button walk', walkTo('set:panelSurface'));
+      const surfaceLap = [];
+      for (let i = 0; i < 3 && kiosk.menu.focusId() === 'set:panelSurface'; i += 1) {
+        kiosk.menu.select();
+        surfaceLap.push([kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint, ds().panelSurface]);
+      }
+      check('it cycles through all three, wraps home, and each step reaches the document',
+        JSON.stringify(surfaceLap) === JSON.stringify([['See-through', 'veil'], ['Fully clear', 'clear'], ['Solid', 'solid']]),
+        JSON.stringify(surfaceLap));
     }
     await press('Escape');
 
