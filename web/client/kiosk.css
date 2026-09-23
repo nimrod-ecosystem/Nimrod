@@ -100,6 +100,18 @@
   .kiosk[data-panel-surface="veil"] .k-stage .k-mod{background:var(--board-veil,rgba(27,36,41,.72))}
   .kiosk[data-panel-surface="clear"] .k-stage .k-mod{background:transparent;
     text-shadow:var(--board-halo,0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6))}
+  /* THE SAME SETTING, ONE PANEL AT A TIME (Mike, 2026-09-23: "change it at different levels...
+     if you only want it for certain modules"). `data-panel-surface` on the INDIVIDUAL `.k-mod`
+     (kiosk.js's `mountInstance`, only ever written for an explicit solid/veil/clear choice, never
+     for 'default') rather than on `.kiosk`. Same four simple selectors as the two screen-level
+     rules above -- tied specificity, so being LATER in the file is what makes an instance's own
+     choice win over the screen default rather than the reverse; do not reorder these above the
+     screen-level pair. A `solid` override needs its own rule too, for a panel opting OUT of a
+     screen that has picked veil/clear for everything else. */
+  .kiosk .k-stage .k-mod[data-panel-surface="solid"]{background:var(--surface);text-shadow:none}
+  .kiosk .k-stage .k-mod[data-panel-surface="veil"]{background:var(--board-veil,rgba(27,36,41,.72))}
+  .kiosk .k-stage .k-mod[data-panel-surface="clear"]{background:transparent;
+    text-shadow:var(--board-halo,0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6))}
   /* WHICH PANEL THE NEXT PRESS WILL ACT ON. Drawn on the CELL, outside the panel's own box, so
      it never covers the content — a ring over somebody's photograph would be the wrong trade.
      `outline` rather than `border` because a border would resize the cell and shift the grid
