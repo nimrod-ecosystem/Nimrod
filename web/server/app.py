@@ -33,7 +33,7 @@ from drive import ROLES, Rooms, Tickets, parse_message
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
-from identity import current_user, optional_user, set_device_key_lookup
+from identity import current_user, optional_user, set_device_key_lookup, set_device_key_touch
 
 log = logging.getLogger("nimrod")
 
@@ -62,6 +62,10 @@ store = PostgresStore(DATABASE_URL) if DATABASE_URL else SQLiteStore(DB_PATH)
 # because identity must not depend on db - db already depends on the pure rules modules and a
 # cycle through the auth layer is the last place anybody wants one.
 set_device_key_lookup(store.device_key_user)
+# `device_keys.last_seen`, kept live rather than frozen at creation — MIKE_CHANGE_LIST.md's own
+# `§uptime-monitoring` finding, the prerequisite for a screen list ever being able to say which
+# one has gone quiet.
+set_device_key_touch(store.touch_device_key)
 app = FastAPI(title="Nimrod platform server", version="0.2.0")
 
 # --- sessions + Google login (OAuth) ---------------------------------------

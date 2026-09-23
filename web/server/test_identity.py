@@ -11,7 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fastapi import HTTPException  # noqa: E402
-from identity import DEV_USER, _device_keys, current_user  # noqa: E402
+from identity import (DEV_USER, _device_keys, current_user,  # noqa: E402
+                       set_device_key_lookup, set_device_key_touch)
 
 passed = 0
 failed = 0
@@ -94,6 +95,35 @@ def main():
     setenv(NIMROD_ENV="prod")
     check("prod: no DEVICE_KEYS -> everything 401 (fail closed)", raises_401({"X-Device-Key": "anything"}))
 
+    # --- table-backed keys touch last_seen; env-var keys never do -----------
+    #
+    # §uptime-monitoring: `device_keys.last_seen` existed but nothing ever wrote to it after
+    # creation, because the one place that authenticates a table-backed key never called
+    # `touch_device_key`. Proven here with fakes — no real database — the same way `_key_lookup`
+    # itself is proven, per this file's own header ("zero deps").
+    setenv(NIMROD_ENV="prod", DEVICE_KEYS="robin:abc")
+    touched = []
+    set_device_key_lookup(lambda k: "family@example.com" if k == "nk_real" else None)
+    set_device_key_touch(lambda k: touched.append(k))
+    check("a table-backed key still resolves", user_of({"X-Device-Key": "nk_real"}) == "family@example.com")
+    check("*** and it touches last_seen with the SAME key it authenticated ***",
+          touched == ["nk_real"], str(touched))
+    check("an env-var key resolves too", user_of({"X-Device-Key": "abc"}) == "robin")
+    check("...but env-var keys have no row to touch, so they never do",
+          touched == ["nk_real"], str(touched))
+    check("a key that fails to resolve is not touched either",
+          raises_401({"X-Device-Key": "nope"}) and touched == ["nk_real"], str(touched))
+
+    # A touch failure must not turn a successful auth into a 401 — the same fail-open reasoning
+    # the lookup's own except clause already gets.
+    def _boom(k):
+        raise RuntimeError("db hiccup")
+    set_device_key_touch(_boom)
+    check("*** a touch that throws does not break authentication ***",
+          user_of({"X-Device-Key": "nk_real"}) == "family@example.com")
+
+    set_device_key_lookup(None)
+    set_device_key_touch(None)
     setenv()
     print(f"\n{passed} passed, {failed} failed")
     return 1 if failed else 0

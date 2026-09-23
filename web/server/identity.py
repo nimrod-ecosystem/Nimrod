@@ -52,11 +52,30 @@ def _device_keys() -> dict[str, str]:
 # hand in whatever it likes and the production path stays one line.
 _key_lookup = None
 
+# Same shape, for `device_keys.last_seen` — see `set_device_key_touch`'s own docstring for why
+# this exists as a second seam rather than folded into `_key_lookup` itself.
+_key_touch = None
+
 
 def set_device_key_lookup(fn) -> None:
     """Install "given a key, which account owns it" - the database half of X-Device-Key."""
     global _key_lookup
     _key_lookup = fn
+
+
+def set_device_key_touch(fn) -> None:
+    """Install "mark this table-backed key as seen just now".
+
+    `MIKE_CHANGE_LIST.md`'s own `§uptime-monitoring` finding: `device_keys.last_seen` exists in
+    the schema for exactly this (so a caregiver's screen list can eventually say which one has
+    gone quiet), but nothing ever called `touch_device_key` from the one place that authenticates
+    a request with one — so the column was frozen at key-creation time, not a live signal.
+    A SEPARATE seam from `_key_lookup` rather than one function doing both: the env-var keys
+    (checked first, see `_match_device_key`) have no row to touch at all, and a lookup succeeding
+    or failing is a different question from whether seeing it succeed should be recorded.
+    """
+    global _key_touch
+    _key_touch = fn
 
 
 def _match_device_key(provided: str | None) -> str | None:
@@ -88,13 +107,23 @@ def _match_device_key(provided: str | None) -> str | None:
             return user
     if _key_lookup is not None:
         try:
-            return _key_lookup(provided) or None
+            user = _key_lookup(provided) or None
         except Exception:
             # A DATABASE HICCUP MUST NOT LOOK LIKE A REVOKED SCREEN. Returning None here
             # would 401 a bedside kiosk over a blip; falling through leaves it to the
             # session/dev paths, which will also fail, so the request errors honestly
             # rather than telling the screen it is no longer trusted.
             return None
+        if user and _key_touch is not None:
+            try:
+                _key_touch(provided)
+            except Exception:
+                # SEEING THE SCREEN DOES NOT DEPEND ON REMEMBERING THAT WE SAW IT. A failed
+                # touch must not turn a request that just authenticated successfully into a
+                # 401 — the exact same reasoning as the lookup's own except clause above,
+                # applied to a write instead of a read.
+                pass
+        return user
     return None
 
 
