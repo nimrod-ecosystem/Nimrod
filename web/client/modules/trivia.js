@@ -74,6 +74,7 @@ import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
+import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
 
 export const GAME = 'trivia';
 
@@ -133,12 +134,23 @@ export function parseBank(text) {
     .filter((p) => p.length >= 2 && p[0] && p[1])
     .map((p) => {
       const [question, answer, ...rest] = p;
-      // A trailing field that is not a plausible distractor is read as a topic. Being generous
-      // here matters: somebody hand-writing a hundred lines will not be consistent, and a bank
-      // that silently drops a third of its rows because of a spacing habit is infuriating to
-      // debug and looks like the game is broken.
-      const wrong = rest.filter(Boolean);
+      // A trailing field written as `topic:something` is pulled out rather than treated as a
+      // wrong answer — the same tag `bank.js`'s own shared `## questions` parser reads, so a
+      // question can be gated by lesson topic the same way a word row already can (lessons.js).
+      // Anything else trailing is a plausible distractor, kept generous on purpose: somebody
+      // hand-writing a hundred lines will not be consistent, and a bank that silently drops a
+      // third of its rows because of a spacing habit is infuriating to debug and looks like the
+      // game is broken.
+      let topic;
+      const wrong = [];
+      for (const r of rest) {
+        if (!r) continue;
+        const m = /^topic:\s*(.+)$/i.exec(r);
+        if (m) { topic = m[1].trim(); continue; }
+        wrong.push(r);
+      }
       const item = { question, answer, wrong };
+      if (topic) item.topic = topic;
       return item;
     });
 }
@@ -359,21 +371,40 @@ registerModule(
     let ledger = null, telemetry = null, session = null;
     let recorder = ctx.recorder || null;
     let sharedBank = null;
+    // *** TOPICS LEVEL UP, THE SAME WAY THEY ALREADY DO IN WORD FORGE. ***
+    // A bank/pack question may carry `topic: '<id>'`; those stay OUT of the deck until the
+    // matching lesson has been watched (../lessons.js). A question with NO topic is always in
+    // play, so a bank written before this existed is unaffected.
+    let lessons = null;
+    let topics = DEFAULT_TOPICS;
+    let held = [];             // topics still holding questions back, for the "waiting behind" note
 
     const el = (s) => mount.querySelector(s);
 
+    // Never let the deck just be quietly shorter (or, at the extreme, entirely empty) —
+    // name what's waiting and why, the same rule Word Forge follows for the same reason.
+    const heldNote = () => held.length
+      ? `${held.reduce((n, h) => n + h.count, 0)} more waiting behind: ${held.map((h) => esc(h.label)).join(', ')}`
+      : '';
+
     function render() {
       if (!q) {
-        // *** THE LINK BACK. *** A tab is discoverable by existing; a module is not, and this
-        // is where that cost is paid. When there is nothing to ask, the game says exactly where
-        // questions come from and what to add — loudest at the moment somebody most needs it.
-        mount.innerHTML = `<div class="tv"><div class="tv-empty">
-          <p><b>No questions yet.</b></p>
-          <p>These come from your bank — the <b>Questions</b> module. Add it to this screen and
-            write some, and anything you write there shows up here.</p>
-          <p class="tv-fmt">One per line:
-            <code>question | answer | wrong | wrong | wrong</code></p>
-        </div></div>`;
+        // *** THE LINK BACK, UNLESS EVERYTHING IS SIMPLY GATED. *** A deck that is empty because
+        // a lesson has not been watched yet is not a bank that was never written — saying "add
+        // the Questions module" here would be actively wrong, and would read as the game not
+        // knowing its own state.
+        mount.innerHTML = held.length
+          ? `<div class="tv"><div class="tv-empty">
+              <p><b>Questions are waiting on a lesson.</b></p>
+              <p class="tv-held">${heldNote()}</p>
+            </div></div>`
+          : `<div class="tv"><div class="tv-empty">
+              <p><b>No questions yet.</b></p>
+              <p>These come from your bank — the <b>Questions</b> module. Add it to this screen and
+                write some, and anything you write there shows up here.</p>
+              <p class="tv-fmt">One per line:
+                <code>question | answer | wrong | wrong | wrong</code></p>
+            </div></div>`;
         return;
       }
       const done = answered !== null;
@@ -381,6 +412,7 @@ registerModule(
         <div class="tv">
           <p class="tv-count">${at + 1} of ${deck.length}${cfg.showScore
             ? ` <span class="tv-score">· ${rightCount} right</span>` : ''}</p>
+          ${held.length ? `<p class="tv-held" data-held>${heldNote()}</p>` : ''}
           <h3 class="tv-q">${esc(q.question)}</h3>
           <ol class="tv-opts" data-opts>
             ${q.options.map((o, i) => {
@@ -565,7 +597,14 @@ registerModule(
     }
 
     function newRound() {
-      deck = buildDeck(bank, { roundLength: cfg.roundLength, rand });
+      // Only what's unlocked goes in the deck. Same threshold Word Forge uses (`>= 4`) before
+      // falling back to the whole bank -- a round built from fewer than four open questions
+      // reads as broken rather than as a level gate, so an under-populated open set plays the
+      // full bank instead of a degenerate one.
+      const unlocked = lessons ? lessons.unlocked() : new Set();
+      const open = gate(bank, unlocked).open;
+      held = lockedTopics(bank, unlocked, topics);
+      deck = buildDeck(open.length >= 4 ? open : bank, { roundLength: cfg.roundLength, rand });
       if (!deck.length) { q = null; render(); return; }
       show(0);
     }
@@ -619,7 +658,9 @@ registerModule(
         bus.subscribe(BANK_TOPIC, () => { sharedBank?.load?.().catch(() => {}).then(readBank); });
 
         state?.subscribe?.((s) => {
-          cfg = { ...DEFAULTS, ...(s || {}) };
+          const snap = s || {};
+          cfg = { ...DEFAULTS, ...snap };
+          topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
           readBank();
         });
         // *** AN EMPTIED BANK STAYS EMPTIED. ***
@@ -629,10 +670,29 @@ registerModule(
         // never had a bank, which is `bankText` being ABSENT, not `bankText` parsing to nothing.
         // Caught by a test that set the bank to a single comment line.
         if (!state?.subscribe) { bank = triviaPool(SEED); newRound(); }
+
+        // *** THE FIRST ROUND WAITS FOR THE UNLOCK LOG, THE SAME FIX WORD FORGE NEEDED. ***
+        // `state.subscribe` above fires its own `readBank` -> `applyBank` -> `newRound()`
+        // SYNCHRONOUSLY if state is already loaded, well before this `lessons.load()` (a real
+        // network fetch) has any chance to resolve — so that first `newRound()` always sees an
+        // EMPTY unlocked set and deals a deck missing every gated question, non-empty just
+        // wrong. UNCONDITIONAL, not guarded behind `if (!deck.length)`: once the unlock log is
+        // actually in, the deck is rebuilt regardless of what an earlier, necessarily-incomplete
+        // build already produced (0b, "lessons/wordforge deck doesn't grow on unlock").
+        try {
+          lessons = createLessons({ makeEvents: ctx.makeEvents, bus });
+          lessons.load().then(() => lessons.startPolling()).catch(() => {}).then(() => { newRound(); });
+          // A lesson finished elsewhere — the new questions join the pool at the START of the
+          // next round, not mid-question (same rule Word Forge follows for the same reason).
+          bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
+        } catch (err) { lessons = null; console.error('trivia: no lessons handle', err); }
       },
       onResize() {},
       onHide() { state?.flush?.(); },
-      destroy() { recorder = null; },
+      destroy() {
+        recorder = null;
+        if (lessons) { lessons.destroy(); lessons = null; }
+      },
     };
   },
 );

@@ -179,6 +179,17 @@ no pipe here
 `).length === 0);
     check('a two-column line still works — an answer with no distractors is a valid row',
       parseBank('Q | A').length === 1);
+    // 2026-09-22: a trailing `topic:something` field is pulled out rather than treated as a
+    // wrong answer — the same tag bank.js's own shared parser reads, so trivia.js's own
+    // instance-local bank can gate a question by lesson topic too (see lessons_test.html for
+    // the end-to-end proof against a real mounted module).
+    const tagged = parseBank('Q | A | wrong1 | topic:roots | wrong2');
+    check('*** a `topic:` field is read as the topic, not as a fourth wrong answer ***',
+      tagged[0].topic === 'roots', JSON.stringify(tagged[0]));
+    check('...and the real wrong answers around it are unaffected, in order',
+      tagged[0].wrong.join(',') === 'wrong1,wrong2', JSON.stringify(tagged[0].wrong));
+    check('a row with no topic tag carries none — old banks are unaffected',
+      !('topic' in parseBank(BANK_TEXT)[0]), JSON.stringify(parseBank(BANK_TEXT)[0]));
   }
 
   section('the deck');
