@@ -14,7 +14,8 @@
 
 import { registerModule } from '../module.js';
 import { readWithLegacy } from '../settings_fields.js';
-import { createLessons, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
+import { createLessons, DEFAULT_TOPICS, LESSON_TOPIC,
+         TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 
@@ -38,16 +39,17 @@ export const DEFAULTS = {
   // comment for the risk this was weighed against.
   contentSource: 'pack',
   packId: packsFor('lesson')[0]?.id || null,
+  // *** RULED, 2026-09-23: "both" (not "neither"). *** `it.questions` (trivia-shaped, per the
+  // schema) used to be deliberately unread — wiring a lesson's own questions into Trivia's or
+  // Word Forge's pool was "the SAME per-module decision packs.js's own header already declines
+  // to make on any consumer's behalf," left for whoever got asked. Mike answered directly:
+  // "both" — a pack's questions feed Trivia's bank and Word Forge's deck by default. Still a
+  // real per-pack choice, not forced: see the `questionsTo` setting below.
+  questionsTo: 'both',
 };
 const LEGACY_MIN_WATCH = { key: 'minWatchSec', scale: 1000 };
 const LESSON_PACKS = packsFor('lesson');
-
-// `it.questions` (trivia-shaped, per the schema) is deliberately NOT read here. Wiring a
-// lesson's own questions into Trivia's or Word Forge's pool is the SAME "per-module
-// decision" packs.js's own header already declines to make on any consumer's behalf, and
-// stacking that decision onto this pass would answer a bigger, separate question (does an
-// unlocked lesson's content feed one pool, both, or neither) that nobody has been asked yet.
-// A pack's `questions` still validates and loads correctly; nothing here reads it.
+const QUESTIONS_TO_VALUES = ['both', 'trivia', 'wordforge', 'none'];
 //
 // `id` IS SYNTHESIZED FROM THE TOPIC TEXT, NOT FROM POSITION, and that is load-bearing. The
 // schema carries no `id` field — only `topic`, `video`, `questions` — but `topics[].id` is
@@ -68,6 +70,29 @@ export function packToTopics(pack) {
     label: it.topic,
     video: it.video ? { kind: 'url', value: it.video } : null,
   }));
+}
+
+// Pull every topic's own bundled `questions[]` (trivia-shaped, per packs.js's own
+// `checkLessonItem`) into ONE flat list, each tagged with its PARENT topic's id — the same
+// `slugify(it.topic)` `packToTopics` uses, so a question and its topic's own unlock event
+// name the same id. A topic with no `questions` contributes nothing; that is not an error,
+// most lesson packs will have none.
+export function questionsFromPack(pack) {
+  const out = [];
+  for (const it of pack.items || []) {
+    if (!Array.isArray(it.questions) || !it.questions.length) continue;
+    const topic = slugify(it.topic);
+    for (const q of it.questions) {
+      if (!q || !q.question || !q.correct) continue;
+      out.push({
+        question: q.question,
+        answer: q.correct,
+        wrong: (q.answers || []).filter((a) => a !== q.correct),
+        topic,
+      });
+    }
+  }
+  return out;
 }
 
 // Module-scope, not per-instance — two Lessons panels on the same screen reading the same
@@ -130,6 +155,16 @@ const SETTINGS = [
     { key: 'packId', label: 'Which pack', kind: 'choice', default: LESSON_PACKS[0].id,
       level: 'standard',
       options: LESSON_PACKS.map((p) => ({ value: p.id, label: p.label })) },
+    { key: 'questionsTo', label: 'Send this pack’s questions to', kind: 'choice',
+      default: 'both', level: 'standard',
+      options: [
+        { value: 'both', label: 'Trivia and Word Forge' },
+        { value: 'trivia', label: 'Trivia only' },
+        { value: 'wordforge', label: 'Word Forge only' },
+        { value: 'none', label: 'Neither' },
+      ],
+      note: 'Only a pack that includes its own questions has any to send — a topic with '
+        + 'none is unaffected either way.' },
   ] : []),
 ];
 
@@ -161,6 +196,11 @@ registerModule(
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now = ctx.now || (() => Date.now());
+    // The two rows this instance writes for Trivia/Word Forge to read — see lessons.js's own
+    // comment on the two constants for why two separate, fully-OWNED-and-regenerated keys
+    // rather than one shared, filtered one.
+    const triviaQ = ctx.makeState ? ctx.makeState(TRIVIA_LESSON_QUESTIONS) : null;
+    const wordforgeQ = ctx.makeState ? ctx.makeState(WORDFORGE_LESSON_QUESTIONS) : null;
 
     let lessons = null;
     let topics = DEFAULT_TOPICS;
@@ -178,6 +218,25 @@ registerModule(
     const waited = () => Math.max(0, Math.floor((now() - openedAt) / 1000));
     const remaining = () => Math.max(0, Math.ceil(cfg.minWatchMs / 1000) - waited());
 
+    // Route this pack's own bundled questions to whichever game(s) `cfg.questionsTo` names,
+    // fully REPLACING what this instance last wrote — never appending. Each game's own row is
+    // this instance's alone to write, so there is no caregiver edit to protect against, but a
+    // switch to a different pack (or to written topics, or `questionsTo: 'none'`) must not
+    // leave a previous pack's questions playable forever; an empty write is exactly as real a
+    // statement as a full one.
+    function routeQuestions(pack) {
+      const all = pack ? questionsFromPack(pack) : [];
+      const toTrivia = all.length && (cfg.questionsTo === 'both' || cfg.questionsTo === 'trivia') ? all : [];
+      const toWordforge = all.length && (cfg.questionsTo === 'both' || cfg.questionsTo === 'wordforge') ? all : [];
+      // No `.load()` first: `set()`+`flush()` PUTs against `base_version` (0 if never loaded),
+      // and state.js's own 409 handler already rebases onto server truth and retries — the
+      // same guarantee every other caller of `flush()` relies on, not a shortcut unique to this.
+      try { triviaQ?.set?.({ items: toTrivia }); triviaQ?.flush?.(); }
+      catch (err) { console.error('lessons: could not route questions to trivia', err); }
+      try { wordforgeQ?.set?.({ items: toWordforge }); wordforgeQ?.flush?.(); }
+      catch (err) { console.error('lessons: could not route questions to wordforge', err); }
+    }
+
     // Written topics resolve synchronously; a pack needs a fetch, so this is async either
     // way and guarded by `topicsGen` the same way Word Forge guards `resolveWords` — a
     // settings change mid-fetch (switch packs, or switch back to written topics) must not
@@ -191,6 +250,7 @@ registerModule(
           const fromPack = packToTopics(pack);
           topics = fromPack.length ? fromPack : DEFAULT_TOPICS;
           render();
+          routeQuestions(pack);
           return;
         } catch (err) {
           console.error(`lessons: pack "${cfg.packId}" failed to load, falling back to written topics`, err);
@@ -200,6 +260,9 @@ registerModule(
       if (gen !== topicsGen) return;
       topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
       render();
+      // Not a pack (or the fetch above failed) -- nothing bundled to route, and any earlier
+      // pack's questions must not keep playing once this instance has moved off it.
+      routeQuestions(null);
     }
 
     function card(t) {

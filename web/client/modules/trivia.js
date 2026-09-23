@@ -74,7 +74,8 @@ import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
-import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
+import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
+         TRIVIA_LESSON_QUESTIONS } from '../lessons.js';
 
 export const GAME = 'trivia';
 
@@ -371,6 +372,7 @@ registerModule(
     let ledger = null, telemetry = null, session = null;
     let recorder = ctx.recorder || null;
     let sharedBank = null;
+    let lessonQ = null;    // what lessons.js has routed here, see lessonItems() below
     // *** TOPICS LEVEL UP, THE SAME WAY THEY ALREADY DO IN WORD FORGE. ***
     // A bank/pack question may carry `topic: '<id>'`; those stay OUT of the deck until the
     // matching lesson has been watched (../lessons.js). A question with NO topic is always in
@@ -564,13 +566,21 @@ registerModule(
     // needs to await it. `bankGen` guards against a slow pack response landing after a NEWER
     // settings change already picked a different source — the stale one must not overwrite it.
     let bankGen = 0;
+    // Whatever a lesson pack elsewhere on this profile has routed here (lessons.js's
+    // `questionsTo` setting, ruled "both" by default 2026-09-23) -- ADDITIVE to whichever
+    // source below is otherwise in play, own pack or own bank, since a lesson's questions are
+    // a second, independent source, not a replacement for this instance's own. Each item
+    // already carries `.topic`, so the existing gate()/lockedTopics() call in newRound() below
+    // holds it back exactly like a hand-written topic-tagged bank row would.
+    const lessonItems = () => lessonQ?.get?.()?.items || [];
+
     async function readBank() {
       const gen = ++bankGen;
       if (cfg.contentSource === 'pack' && cfg.packId) {
         try {
           const pack = await loadPackCached(cfg.packId);
           if (gen !== bankGen) return;         // superseded while the fetch was in flight
-          applyBank(packToTriviaBank(pack));
+          applyBank([...packToTriviaBank(pack), ...lessonItems()]);
           return;
         } catch (err) {
           console.error(`trivia: pack "${cfg.packId}" failed to load, falling back to the bank`, err);
@@ -582,7 +592,7 @@ registerModule(
       const text = own != null ? own : (share != null ? share : SEED);
       const next = Array.isArray(cfg.bank) ? cfg.bank
                  : triviaPool(text, { includeWords: cfg.includeWords !== false, choices: cfg.choices });
-      if (gen === bankGen) applyBank(next);
+      if (gen === bankGen) applyBank([...next, ...lessonItems()]);
     }
 
     function applyBank(next) {
@@ -653,6 +663,18 @@ registerModule(
             sharedBank.subscribe?.(() => readBank());
           }
         } catch (err) { sharedBank = null; console.error('trivia: no shared bank', err); }
+        // WHATEVER A LESSON PACK HAS ROUTED HERE — a second, independent, per-profile row a
+        // Lessons instance elsewhere on this screen owns entirely (see lessons.js's own
+        // comment on TRIVIA_LESSON_QUESTIONS). Polled and subscribed the same as the shared
+        // bank, so a topic unlocking or a caregiver switching lesson packs reaches an
+        // already-open Trivia panel without a remount.
+        try {
+          lessonQ = ctx.makeState ? ctx.makeState(TRIVIA_LESSON_QUESTIONS) : null;
+          if (lessonQ) {
+            lessonQ.load().catch(() => {}).then(() => { readBank(); lessonQ.startPolling?.(); });
+            lessonQ.subscribe?.(() => readBank());
+          }
+        } catch (err) { lessonQ = null; console.error('trivia: no lesson-routed questions', err); }
         // An edit on the same screen lands without a remount, so somebody can write questions
         // beside somebody else playing them.
         bus.subscribe(BANK_TOPIC, () => { sharedBank?.load?.().catch(() => {}).then(readBank); });

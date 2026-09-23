@@ -35,7 +35,8 @@ import {
   createLessons, unlockedFrom, unlockLog, gate, lockedTopics,
   DEFAULT_TOPICS, LESSON_TOPIC, WATCHED_KIND,
 } from '../lessons.js';
-import { videoHTML, packToTopics, DEFAULTS } from '../modules/lessons.js';
+import { videoHTML, packToTopics, questionsFromPack, DEFAULTS } from '../modules/lessons.js';
+import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
 import { parseWords, buildDeck } from '../modules/wordforge.js';
 import '../modules/lessons.js';
 import '../modules/wordforge.js';
@@ -337,6 +338,99 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
         && !/word roots/i.test(tvHost.textContent),
       tvHost.textContent.slice(0, 200));
 
+    // ============================================================================================
+    // A LESSON PACK'S QUESTIONS, ACTUALLY REACHING BOTH GAMES — end to end, on the SAME profile
+    // (`tprofile`) whose "roots" is already unlocked and "concision" is not, from above. Injected
+    // directly into the two routed-questions rows rather than through a real pack fetch (the one
+    // shipped `lesson_starter` pack has no bundled questions on any topic to route) — this proves
+    // the CONSUMING half (does Trivia/Word Forge read, gate and deal them), which is the half
+    // that did not exist before today; `questionsFromPack`'s own conversion is proven separately
+    // above, and lessons.js's own WRITE side has no caregiver-editable content to protect (it is
+    // the sole owner of both rows), so injecting the state it would have written is a faithful
+    // stand-in for a real fetch, not a shortcut around anything meaningful.
+    section('*** a lesson pack\'s questions actually reach Trivia and Word Forge ***');
+    {
+      const routedItems = [
+        { question: 'What holds a root word’s meaning across languages?', answer: 'Its origin', wrong: ['Its length', 'Its spelling'], topic: 'roots' },
+        { question: 'Which word means "brief"?', answer: 'Concise', wrong: ['Long', 'Loud'], topic: 'concision' },
+      ];
+      const triviaQState = createState({ url: tprofiles.stateURL(tprofile.id, TRIVIA_LESSON_QUESTIONS), user: USER });
+      await triviaQState.load();
+      triviaQState.set({ items: routedItems });
+      await triviaQState.flush();
+
+      tvHost.innerHTML = '';
+      const tst3 = createState({ url: tprofiles.stateURL(tprofile.id, tmod.id), user: USER });
+      await tst3.load();
+      const tv3 = mountModule('trivia', {
+        mount: tvHost, bus: createBus(), state: tst3,
+        events: createEvents({ url: tprofiles.eventsURL(tprofile.id, tmod.id), user: USER }),
+        user: USER, profileId: tprofile.id, makeState: tMakeState, makeEvents: tMakeEvents, rand: seeded(7),
+      });
+      tv3.init();
+      await sleep(900);
+      check('*** BOTH routed questions were read into the bank (bank grows by 2) ***',
+        tv3.impl.__probe().bank === 9, `bank=${tv3.impl.__probe().bank} (expected 7 + 2 routed)`);
+      check('*** but only the roots-tagged one (already unlocked) reaches the deck (deck grows by 1) ***',
+        tv3.impl.__probe().deck === 7, `deck=${tv3.impl.__probe().deck} (expected 6 + 1 routed-roots)`);
+      tv3.destroy();
+
+      // Word Forge, same profile, same two routed items, same expectation.
+      const wfQState = createState({ url: tprofiles.stateURL(tprofile.id, WORDFORGE_LESSON_QUESTIONS), user: USER });
+      await wfQState.load();
+      wfQState.set({ items: routedItems });
+      await wfQState.flush();
+
+      const wfMod2 = await tprofiles.addModule(tprofile.id, 'wordforge');
+      const wfSt2 = createState({ url: tprofiles.stateURL(tprofile.id, wfMod2.id), user: USER });
+      await wfSt2.load();
+      wfSt2.set({ contentSource: 'bank', roundLength: 40 });
+      await wfSt2.flush();
+      const wfHost2 = document.createElement('div');
+      document.body.append(wfHost2);
+      const wfDeckSize = () => Number((wfHost2.querySelector('[data-progress]')?.textContent.split('/')[1] || '0').trim());
+      const wf3 = mountModule('wordforge', {
+        mount: wfHost2, bus: createBus(), state: wfSt2,
+        events: createEvents({ url: tprofiles.eventsURL(tprofile.id, wfMod2.id), user: USER }),
+        user: USER, profileId: tprofile.id, makeState: tMakeState, makeEvents: tMakeEvents, rand: seeded(7),
+      });
+      wf3.init();
+      await sleep(900);
+      // `wordforge/skip` cannot walk the deck without answering (its own `advance()` is a
+      // no-op until `answered` is set -- unlike Trivia's, which skips unconditionally), so
+      // this compares deck SIZE with the routed row on vs. cleared, against the SAME profile
+      // and module, rather than trying to cycle through looking for specific text. DEFAULT_WORDS
+      // (12, ungated) + DEFAULT_PAIRS (4, ungated) + only the "roots" routed item (open) = 17;
+      // "concision" stays excluded the same way a topic-tagged word would.
+      const withRouted = wfDeckSize();
+      check('*** the roots-tagged routed question joins Word Forge\'s deck (12 words + 4 pairs + 1) ***',
+        withRouted === 17, `deck=${withRouted}`);
+      check('...and Word Forge names the still-locked topic the same way it already does for words',
+        /waiting behind/i.test(wfHost2.textContent) && /fewer words|concision/i.test(wfHost2.textContent),
+        wfHost2.textContent.slice(0, 200));
+      wf3.destroy();
+
+      // Clear the routed row (as if the pack had none, or questionsTo were "none") and remount
+      // -- the deck must shrink back by exactly the one open item, proving the size difference
+      // really is the routed question and not a coincidence of the fixed rand seed.
+      wfQState.set({ items: [] });
+      await wfQState.flush();
+      wfHost2.innerHTML = '';
+      const wfSt3 = createState({ url: tprofiles.stateURL(tprofile.id, wfMod2.id), user: USER });
+      await wfSt3.load();
+      const wf4 = mountModule('wordforge', {
+        mount: wfHost2, bus: createBus(), state: wfSt3,
+        events: createEvents({ url: tprofiles.eventsURL(tprofile.id, wfMod2.id), user: USER }),
+        user: USER, profileId: tprofile.id, makeState: tMakeState, makeEvents: tMakeEvents, rand: seeded(7),
+      });
+      wf4.init();
+      await sleep(900);
+      check('*** clearing the routed row shrinks the deck back down by exactly one ***',
+        wfDeckSize() === 16, `deck=${wfDeckSize()}`);
+      wf4.destroy();
+      wfHost2.remove();
+    }
+
     tles.destroy(); tv2.destroy();
 
     // ============================================================================================
@@ -371,14 +465,48 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
         reordered.find((t) => t.label === 'Reading a chart or graph').id === 'reading-a-chart-or-graph',
         JSON.stringify(reordered.map((t) => t.id)));
 
-      // `questions` is real, valid schema (packs.js's checkLessonItem allows it) and
-      // deliberately not read here — see this file's own note on why wiring a lesson's
-      // questions into another module's pool is a separate, unmade decision.
+      // `questions` is real, valid schema (packs.js's checkLessonItem allows it), and IS now
+      // read — by questionsFromPack, below — but not INTO THE TOPIC ITSELF: packToTopics's own
+      // job stays just {id, label, video}, unchanged.
       const withQuestions = packToTopics({ items: [
         { topic: 'Has quiz questions', questions: [
           { question: '2+2?', answers: ['3', '4', '5'], correct: '4' } ] } ] });
-      check('a pack item\'s questions are valid and simply not read into the topic',
+      check('a pack item\'s questions are valid, and packToTopics itself still ignores them',
         withQuestions[0].label === 'Has quiz questions' && !('questions' in withQuestions[0]));
+    }
+
+    // ============================================================================================
+    // A LESSON PACK'S OWN QUESTIONS, ROUTED — Mike, 2026-09-23, ruling the earlier DECIDE row:
+    // "both" (not chat's more cautious "neither"). questionsFromPack is the pure conversion;
+    // the end-to-end routing into Trivia and Word Forge is proven further down, once both
+    // games' own gating sections exist to route into.
+    section('*** a lesson pack\'s own bundled questions, converted to the shared shape ***');
+    {
+      const pack = { items: [
+        { topic: 'Reading a chart or graph', questions: [
+          { question: 'What does the x-axis usually show?', answers: ['Time', 'Color', 'Sound'], correct: 'Time' },
+          { question: 'A steep line means what?', answers: ['Fast change', 'No change', 'A mistake'], correct: 'Fast change' },
+        ] },
+        { topic: 'Telling fact from opinion!' },   // no questions — contributes nothing
+        { topic: 'Spotting a run-on sentence', questions: [
+          { question: 'A run-on sentence has what problem?', answers: ['Two clauses, no punctuation', 'Too short', 'No verb'], correct: 'Two clauses, no punctuation' },
+        ] },
+      ] };
+      const qs = questionsFromPack(pack);
+      check('every question from every topic that has any is pulled into one flat list',
+        qs.length === 3, JSON.stringify(qs));
+      check('*** each is tagged with its PARENT topic\'s id — the same slug packToTopics uses ***',
+        qs[0].topic === 'reading-a-chart-or-graph' && qs[2].topic === 'spotting-a-run-on-sentence',
+        JSON.stringify(qs.map((q) => q.topic)));
+      check('...converted to the exact bank-line shape trivia.js already gates by',
+        qs[0].question === 'What does the x-axis usually show?' && qs[0].answer === 'Time'
+        && qs[0].wrong.join(',') === 'Color,Sound', JSON.stringify(qs[0]));
+      check('a topic with no questions at all contributes nothing, silently — not an error',
+        !qs.some((q) => q.topic === 'telling-fact-from-opinion'));
+      check('a malformed question (no answer) is dropped rather than crashing the conversion',
+        questionsFromPack({ items: [{ topic: 'x', questions: [{ question: 'no answer here' }] }] }).length === 0);
+      check('a pack with no questions anywhere converts to an empty list, not an error',
+        questionsFromPack({ items: [{ topic: 'x' }] }).length === 0);
     }
 
     // THE REAL FETCH — against this suite's own server, the same shipped pack the module itself

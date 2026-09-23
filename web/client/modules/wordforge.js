@@ -48,7 +48,8 @@
 import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
-import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC } from '../lessons.js';
+import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
+         WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
 import { parseBank as sharedBank } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack } from '../packs.js';
@@ -202,12 +203,17 @@ export function shuffle(items, rand = Math.random) {
   return a;
 }
 
-// A round is a shuffled mix of word items (two kinds) and sentence pairs, capped at
-// roundLength, with each source item used at most once.
-export function buildDeck(words, pairs, { roundLength = DEFAULTS.roundLength, rand = Math.random } = {}) {
+// A round is a shuffled mix of word items (two kinds), sentence pairs, and — 2026-09-23 —
+// any pre-formed multiple-choice questions a lesson pack has routed here (`given`; see
+// lessons.js's own `questionsTo` setting and `TRIVIA_LESSON_QUESTIONS`/
+// `WORDFORGE_LESSON_QUESTIONS`), capped at roundLength, with each source item used at most
+// once. `given` is a NEW KEY on the options object rather than a new positional argument, so
+// every existing call (this file's own, and every test's) keeps working unchanged.
+export function buildDeck(words, pairs, { given = [], roundLength = DEFAULTS.roundLength, rand = Math.random } = {}) {
   const items = [
     ...words.map((w) => ({ kind: rand() < 0.5 ? 'define' : 'blank', word: w })),
     ...pairs.map((p) => ({ kind: 'better', pair: p })),
+    ...given.map((q) => ({ kind: 'given', question: q })),
   ];
   return shuffle(items, rand).slice(0, roundLength);
 }
@@ -228,6 +234,24 @@ export function makeQuestion(item, words, rand = Math.random) {
       explain: p.why,
       // Nothing to add per option here: `why` is already about the comparison, and both
       // options are the two halves it compares. A note repeating it would be noise.
+      optionNotes: opts.map(() => null),
+    };
+  }
+
+  // A pre-formed multiple-choice question a lesson pack routed here (2026-09-23) -- already
+  // shaped as {question, answer, wrong, topic}, the exact bank-line shape trivia.js's own
+  // bank uses, so no derivation happens here at all, unlike 'define'/'blank'/'better' above.
+  if (item.kind === 'given') {
+    const q = item.question;
+    const opts = shuffle([q.answer, ...(q.wrong || [])], rand);
+    return {
+      kind: 'given',
+      prompt: q.question,
+      options: opts,
+      answer: opts.indexOf(q.answer),
+      concept: q.topic || 'lesson question',
+      band: null,
+      explain: `“${q.answer}” is right.`,
       optionNotes: opts.map(() => null),
     };
   }
@@ -455,7 +479,9 @@ registerModule(
     let tel = null;
     let lessons = null;
     let topics = DEFAULT_TOPICS;
-    let held = [];            // topics still holding words back, for the note
+    let held = [];            // topics still holding words/given questions back, for the note
+    let lessonQ = null;       // what lessons.js has routed here, see givenItems() below
+    const givenItems = () => lessonQ?.get?.()?.items || [];
     let session = null;
     let words = DEFAULT_WORDS;
     let pairs = DEFAULT_PAIRS;
@@ -478,9 +504,15 @@ registerModule(
       // topic — so `gate` passes them straight through.
       const unlocked = lessons ? lessons.unlocked() : new Set();
       const openWords = gate(words, unlocked).open;
-      held = lockedTopics(words, unlocked, topics);
+      // What a lesson pack elsewhere on this profile has routed here (lessons.js's
+      // `questionsTo`, "both" by default 2026-09-23) — already carries `.topic`, gated the
+      // same way words are. ONE combined "waiting behind" message covers both pools, since a
+      // caregiver reading it does not need to know which pool a locked item came from.
+      const givenAll = givenItems();
+      const openGiven = gate(givenAll, unlocked).open;
+      held = lockedTopics([...words, ...givenAll], unlocked, topics);
       deck = buildDeck(openWords.length >= 4 ? openWords : words, pairs,
-        { roundLength: cfg.roundLength, rand });
+        { given: openGiven, roundLength: cfg.roundLength, rand });
       at = 0; streak = 0; earned = 0;
       next();
     }
@@ -645,7 +677,8 @@ registerModule(
       }
 
       host.innerHTML = `
-        <p class="wf-kind">${q.kind === 'better' ? 'Which is better?' : q.kind === 'blank' ? 'Fill the blank' : 'What does it mean?'}</p>
+        <p class="wf-kind">${q.kind === 'better' ? 'Which is better?' : q.kind === 'blank' ? 'Fill the blank'
+          : q.kind === 'given' ? 'Question' : 'What does it mean?'}</p>
         <p class="wf-prompt">${esc(q.prompt)}</p>
         <div class="wf-opts">${opts}</div>
         ${answered ? '' : '<button class="wf-btn wf-idk" data-idk>I don’t know — show me</button>'}
@@ -695,6 +728,18 @@ registerModule(
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });
         tel = createTelemetry({ makeEvents: ctx.makeEvents, bus });
         lessons = createLessons({ makeEvents: ctx.makeEvents, bus });
+        // WHATEVER A LESSON PACK HAS ROUTED HERE — a second, independent, per-profile row a
+        // Lessons instance elsewhere on this screen owns entirely (lessons.js's own comment on
+        // WORDFORGE_LESSON_QUESTIONS). Same unconditional-rebuild-after-load care as `lessons`
+        // itself needs, for the same race: a round dealt before this loads would simply be
+        // missing whatever a lesson pack contributed, not wrong in a way anything would notice.
+        try {
+          lessonQ = ctx.makeState ? ctx.makeState(WORDFORGE_LESSON_QUESTIONS) : null;
+          if (lessonQ) {
+            lessonQ.load().catch(() => {}).then(() => { newRound(); lessonQ.startPolling?.(); });
+            lessonQ.subscribe?.(() => newRound());
+          }
+        } catch (err) { lessonQ = null; console.error('wordforge: no lesson-routed questions', err); }
         // The FIRST round waits for the unlock log, so it can't deal a deck that ignores
         // what's been unlocked and then silently change shape one round later. Deal it on
         // failure too — an unreachable server must not leave a blank game.
