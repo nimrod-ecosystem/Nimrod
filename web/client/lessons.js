@@ -21,6 +21,21 @@ export const LESSON_TOPIC = 'lesson/unlocked';   // bus topic — live nudge
 export const WATCHED_KIND = 'watched';
 export const RELOCKED_KIND = 'relocked';
 
+// *** WHERE A LESSON PACK'S OWN BUNDLED QUESTIONS GO, 2026-09-23. *** Mike: "There should be
+// default packs..." led here — a `lesson`-kind pack's items may carry their own `questions[]`
+// (packs.js's checkLessonItem validates them in Trivia's own shape: {question, answers, correct}),
+// and Mike ruled the routing default is "both" games, not "neither" (chat's own more cautious
+// recommendation). Two separate, per-consumer state keys — not one shared queue with a filter
+// inside it — so `modules/trivia.js` and `modules/wordforge.js` each just read their own and stay
+// unaware the routing setting exists at all; `modules/lessons.js` is the only place that decides
+// who gets what, and it fully OWNS and regenerates each key (never hand-edited, unlike the
+// Questions module's shared bank text), so there is no merge-safety question here at all.
+// Shape written to each: `{ items: [{ question, answer, wrong: string[], topic }] }` — the exact
+// bank-line shape trivia.js's own bank already gates by `.topic`, and the shape wordforge.js's
+// new 'given' deck kind expects directly, unconverted.
+export const TRIVIA_LESSON_QUESTIONS = 'lesson-questions-trivia';
+export const WORDFORGE_LESSON_QUESTIONS = 'lesson-questions-wordforge';
+
 // Seed topics. Videos are per-profile data; these carry no video until someone points them
 // at one, and a topic with no video unlocks on the honor button alone.
 export const DEFAULT_TOPICS = [
