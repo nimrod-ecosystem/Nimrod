@@ -90,6 +90,16 @@
      stated pointer-events is auto by inheritance today, so this looks like a no-op until
      `.k-stage` turns it off. */
   .k-stage .k-mod{background:var(--surface);color:var(--text);border-radius:14px;pointer-events:auto}
+  /* PANEL BACKGROUNDS, A HOST SETTING (kiosk.js's `panelSurface`, screen settings menu). `solid`
+     above is the only behaviour before this existed and stays the default. `veil`/`clear` reuse
+     `--board-veil`/`--board-halo` -- the SAME per-theme tokens board.js's own veil/clear mode
+     uses, calibrated by Design against "the brightest thing that can cross behind it" for the
+     seven live themes (see modules.css's own `.aboard.ab-veil` comment) -- one calibration
+     serves both, rather than a second panel-specific color nobody has picked yet. `clear`'s halo
+     is the identical text-shadow fallback for when there is no surface left to read against. */
+  .kiosk[data-panel-surface="veil"] .k-stage .k-mod{background:var(--board-veil,rgba(27,36,41,.72))}
+  .kiosk[data-panel-surface="clear"] .k-stage .k-mod{background:transparent;
+    text-shadow:var(--board-halo,0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6))}
   /* WHICH PANEL THE NEXT PRESS WILL ACT ON. Drawn on the CELL, outside the panel's own box, so
      it never covers the content — a ring over somebody's photograph would be the wrong trade.
      `outline` rather than `border` because a border would resize the cell and shift the grid
