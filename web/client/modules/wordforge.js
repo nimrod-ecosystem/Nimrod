@@ -48,6 +48,7 @@
 import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
+import { worth as mcqWorth } from '../mcq_scoring.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
          WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
 import { parseBank as sharedBank } from '../bank.js';
@@ -162,6 +163,18 @@ export const DEFAULT_PAIRS = [
 // (hide the reveal until it's earned, matching Trivia's own model), that is a bigger, worth-
 // discussing-first change to this game's actual design, not a repricing — flagged, not done
 // silently.
+//
+// *** THAT DISCUSSION HAPPENED, 2026-09-23. *** Mike: "Trivia allows repeated guesses with
+// partial credit, Word Forge reveals the answer and ends the round on the first miss - I
+// like Trivia's system better for this. Make that the default with the other method as an
+// option." So `guessMode` below is new: `'multi'` is Trivia's own rule (a miss spends that
+// option and hands the question back; the eventual right answer is priced by the SAME
+// shared `worth()` Trivia uses — see mcq_scoring.js, extracted today so the two games can't
+// drift onto two formulas for one idea) and is now the default. `'reveal'` is this game's
+// original behaviour, described above, kept as the option Mike asked to keep it as.
+// `tryPoints` still prices a wrong-guess-then-shown answer in 'reveal' mode, AND still prices
+// "I don't know" in either mode — giving up honestly is not a guess to iterate on, so it is
+// never routed through the ladder.
 export const DEFAULTS = {
   // A READY-MADE PACK, DEFAULT SINCE 2026-09-22 — same additive shape Trivia's own
   // `contentSource` ships (2026-09-08 MIKE_CHANGE_LIST §3), flipped the same day and for the
@@ -170,6 +183,7 @@ export const DEFAULTS = {
   // against (silently swapping an existing written bank) and why the explicit ask overrides it.
   contentSource: 'pack',
   packId: packsFor('words')[0]?.id || null,
+  guessMode: 'multi',  // Trivia's own rule, default since 2026-09-23; 'reveal' is the option
   correctPoints: 1,    // a clean first-guess right answer — Trivia's own atom, 100% of it
   tryPoints: 0.75,     // a miss, once the explanation is shown — Trivia's own formula at
                        // "one guess spent" (max=1, step=0.25 → 1 - 0.25)
@@ -311,10 +325,17 @@ export function makeQuestion(item, words, rand = Math.random) {
 
 // What an answer is worth. A wrong answer is NOT zero — see the header. Saying "I don't
 // know" is worth the same as guessing wrong: honesty should not cost more than a guess.
-export function scoreFor({ correct, streak = 0, cfg = DEFAULTS }) {
+//
+// `spent` (misses already made on THIS question) only matters in `guessMode: 'multi'` — in
+// 'reveal' mode a wrong guess ends the question before a second one is possible, so `spent`
+// is always 0 there and `mcqWorth(0, max) === max`, i.e. this is a no-op for 'reveal' and for
+// any first-guess-correct answer in 'multi' either way. That is why flipping the default to
+// 'multi' does not change what an UNMISSED correct answer pays.
+export function scoreFor({ correct, streak = 0, spent = 0, cfg = DEFAULTS }) {
   if (!correct) return { base: cfg.tryPoints, bonus: 0, total: cfg.tryPoints };
+  const base = cfg.guessMode === 'multi' ? mcqWorth(spent, cfg.correctPoints) : cfg.correctPoints;
   const bonus = (cfg.streakEvery > 0 && streak > 0 && streak % cfg.streakEvery === 0) ? cfg.streakBonus : 0;
-  return { base: cfg.correctPoints, bonus, total: cfg.correctPoints + bonus };
+  return { base, bonus, total: base + bonus };
 }
 
 // The documented line formats, so a profile's bank can be edited as text.
@@ -427,6 +448,15 @@ const SETTINGS = [
       { value: 15, label: '15' },
       { value: 20, label: '20' },
     ] },
+  // Mike, 2026-09-23: "I like Trivia's system better for this. Make that the default with
+  // the other method as an option." See DEFAULTS' own comment for the full history.
+  { key: 'guessMode', label: 'When you miss a question', kind: 'choice', default: 'multi',
+    level: 'standard',
+    options: [
+      { value: 'multi', label: 'Keep guessing — each try is worth a little less' },
+      { value: 'reveal', label: 'Show the answer right away (original)' },
+    ],
+    note: 'Trivia works the "keep guessing" way — see "Points for a right answer" below for what a clean first guess pays.' },
   // `step: 0.25` since 2026-09-22 — repriced to Trivia's own quartered atom (see DEFAULTS'
   // own comment), so both numbers below are legitimately fractional now, not just whole points.
   { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 1,
@@ -493,6 +523,7 @@ registerModule(
     let streak = 0;
     let earned = 0;
     let highlight = 0;      // which option a scanning switch is pointed at
+    let misses = [];         // indices already spent on the CURRENT question, 'multi' mode only
     let answered = null;      // null = unanswered; else {picked, correct, award}
     let capped = false;       // today's payout for this game is spent
     let askedAt = 0;
@@ -520,6 +551,7 @@ registerModule(
     function next() {
       answered = null;
       highlight = 0;
+      misses = [];
       if (at >= deck.length) { q = null; render(); return; }
       q = makeQuestion(deck[at], words, rand);
       askedAt = Date.now();
@@ -527,18 +559,20 @@ registerModule(
     }
 
     // Answering does three things: score it, record it in BOTH streams, and — when it's
-    // wrong — hold the round open on the explanation until it's acknowledged.
-    // `i === null` means "I don't know" — no option was picked.
+    // wrong — either hold the round open for another guess ('multi') or hold it open on the
+    // explanation until acknowledged ('reveal') — see DEFAULTS' own comment on `guessMode`.
+    // `i === null` means "I don't know" — no option was picked, in either mode.
     async function answer(i) {
       if (answered || !q) return;
       const declared = i === null;
-      const correct = !declared && i === q.answer;
-      if (correct) streak += 1; else streak = 0;
-      const award = scoreFor({ correct, streak, cfg });
-      answered = { picked: declared ? null : i, correct, declared, award };
-      render();
+      const chosen = declared ? null : Number(i);
+      if (!declared && cfg.guessMode === 'multi' && misses.includes(chosen)) return; // already spent
+      const correct = !declared && chosen === q.answer;
 
-      // The MEASUREMENT: one trial, concept = the word, so Progress can rank what's hard.
+      // The MEASUREMENT: one trial per guess, whichever mode is in play — a still-open
+      // question that gets guessed again appends its OWN mark rather than overwriting this
+      // one, matching trivia.js's `choose()` (the two games share this rule for the same
+      // reason: a corpus mark, once written, is not taken back).
       tel.log({
         game: GAME,
         session: session.id,
@@ -552,6 +586,28 @@ registerModule(
         latencyMs: Date.now() - askedAt,
         prompt: q.prompt,
       }).catch((e) => console.error('wordforge: telemetry', e));
+
+      // *** 'multi' MODE: A WRONG GUESS SPENDS THAT OPTION AND HANDS THE QUESTION BACK ***,
+      // Trivia's own rule, adopted as the default 2026-09-23 (Mike: "I like Trivia's system
+      // better for this"). No reveal, no points, no round-ending — the same shape as a wrong
+      // press in trivia.js's `choose()`.
+      if (!declared && !correct && cfg.guessMode === 'multi') {
+        misses.push(chosen);
+        streak = 0;
+        // Leave the highlight somewhere pressable, or a switch user's next press lands on
+        // the option they just spent.
+        if (misses.includes(highlight)) moveHighlight(1); else render();
+        return;
+      }
+
+      // A streak is a run of CLEAN answers — Trivia's own rule (`choose()`: "one found after a
+      // miss does not [extend it], because `streak` was already reset above on the press that
+      // missed"). Word Forge's miss branch above already zeroed it; this must not then hand it
+      // straight back by counting the eventual correct guess as if it had been the first one.
+      if (correct) { if (!misses.length) streak += 1; } else { streak = 0; }
+      const award = scoreFor({ correct, streak, spent: misses.length, cfg });
+      answered = { picked: chosen, correct, declared, award };
+      render();
 
       // The ECONOMY: a right answer pays now. A wrong one pays on "Got it" instead —
       // the points are for engaging with the correction, not for being wrong.
@@ -640,12 +696,18 @@ registerModule(
       // behaved differently under the same switch would be a defect of its own.
       const opts = q.options.map((o, i) => {
         let cls = 'wf-opt';
+        // A miss in 'multi' mode disables and marks that option WITHOUT ending the question —
+        // `misses` is only ever non-empty while `answered` is still null (see `answer()`), so
+        // this and the `answered` branch below never both apply to the same render.
+        const missed = !answered && misses.includes(i);
         if (answered) {
           if (i === q.answer) cls += ' is-right';
           else if (i === answered.picked) cls += ' is-wrong';
+        } else if (missed) {
+          cls += ' is-wrong';
         }
         const on = !answered && i === highlight ? ' data-on="1"' : '';
-        return `<button class="${cls}" data-opt="${i}"${on} ${answered ? 'disabled' : ''}>${esc(o)}</button>`;
+        return `<button class="${cls}" data-opt="${i}"${on} ${(answered || missed) ? 'disabled' : ''}>${esc(o)}</button>`;
       }).join('');
 
       let feedback = '';
@@ -681,6 +743,7 @@ registerModule(
           : q.kind === 'given' ? 'Question' : 'What does it mean?'}</p>
         <p class="wf-prompt">${esc(q.prompt)}</p>
         <div class="wf-opts">${opts}</div>
+        ${!answered && misses.length ? '<p class="wf-said">Not that one — try again.</p>' : ''}
         ${answered ? '' : '<button class="wf-btn wf-idk" data-idk>I don’t know — show me</button>'}
         ${feedback}`;
 
@@ -693,16 +756,28 @@ registerModule(
       if (idk) idk.addEventListener('click', () => answer(null));
     }
 
-    // Wraps, because a cursor that stops at the last option strands somebody on it.
+    // Wraps, because a cursor that stops at the last option strands somebody on it. Skips
+    // options already spent in 'multi' mode (the array is empty in 'reveal' mode, where a
+    // wrong guess always ends the question before a second one is possible, so this loop is
+    // a same-iteration no-op there) — same bounded skip-loop as trivia.js's own.
     function moveHighlight(delta) {
       if (!q || answered) return;
       const n = q.options.length;
       if (!n) return;
-      highlight = ((highlight + delta) % n + n) % n;
+      for (let step = 0; step < n; step++) {
+        highlight = ((highlight + delta) % n + n) % n;
+        if (!misses.includes(highlight)) break;
+      }
       render();
     }
 
     return {
+      // Exposed so the suite can assert the misses/worth arithmetic directly rather than
+      // scraping it back out of the DOM — same reason trivia.js exposes `__worth`/`__probe`.
+      __worth: (spent) => mcqWorth(spent, cfg.correctPoints),
+      __probe: () => ({ at, answered, misses: [...misses], highlight, streak, earned,
+                        deck: deck.length, guessMode: cfg.guessMode,
+                        question: q ? { ...q } : null }),
       init() {
         mount.innerHTML = `
           <div class="wordforge">
@@ -852,6 +927,8 @@ registerModule(
             contentSource: (snap.contentSource === 'pack' || snap.contentSource === 'bank')
               ? snap.contentSource : DEFAULTS.contentSource,
             packId: typeof snap.packId === 'string' && snap.packId ? snap.packId : DEFAULTS.packId,
+            guessMode: snap.guessMode === 'multi' || snap.guessMode === 'reveal'
+              ? snap.guessMode : DEFAULTS.guessMode,
             correctPoints: Number(snap.correctPoints) > 0 ? Number(snap.correctPoints) : DEFAULTS.correctPoints,
             tryPoints: Number(snap.tryPoints) >= 0 ? Number(snap.tryPoints) : DEFAULTS.tryPoints,
             streakEvery: Number(snap.streakEvery) >= 0 ? Number(snap.streakEvery) : DEFAULTS.streakEvery,

@@ -70,6 +70,7 @@
 import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
+import { worth as mcqWorth } from '../mcq_scoring.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack } from '../packs.js';
@@ -496,14 +497,12 @@ registerModule(
      * last remaining option after missing the others IS reading the answer after a miss, so
      * the label was true all along and is now true of the behaviour as well.
      */
+    // *** EXTRACTED TO mcq_scoring.js, 2026-09-23 ***, so Word Forge's own multi-guess mode
+    // (Mike: "I like Trivia's system better for this. Make that the default...") prices a
+    // guess by the identical rule rather than a second, independently-drifting formula. This
+    // wrapper is unchanged in behaviour -- it just reads `cfg.correctPoints` for the shared fn.
     function worth(spent) {
-      const full = Number(cfg.correctPoints);
-      const max = Number.isFinite(full) ? full : 1;
-      // A QUARTER OF THE MAXIMUM PER GUESS, floored at a quarter -- so a four-choice question
-      // pays 1, 0.75, 0.5, 0.25 and never nothing. Derived from `max` rather than hardcoded, so
-      // somebody who prices a question at 2 gets 2 / 1.5 / 1 / 0.5 and the same shape.
-      const step = max / 4;
-      return Math.max(step, max - step * spent);
+      return mcqWorth(spent, cfg.correctPoints);
     }
 
     function choose(i) {

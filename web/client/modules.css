@@ -874,6 +874,9 @@
 .wordforge .wf-opt[data-on="1"]::before{content:"\25B8\00a0"}
 .wordforge .wf-opt.is-right{border-color:var(--accent);background:var(--ok-surface);box-shadow:inset 3px 0 0 var(--accent)}
 .wordforge .wf-opt.is-wrong{border-color:var(--accent-warm);background:var(--bad-surface);box-shadow:inset 3px 0 0 var(--accent-warm-deep)}
+/* 'multi' guess mode's transient miss note — same shape as trivia.js's own `.tv-said`, no
+   score in it, just "try again", since the question is still open. */
+.wordforge .wf-said{margin:14px 0 8px;font-size:1.05rem}
 .wordforge .wf-idk{display:block;width:100%;margin-top:10px;background:transparent;border-style:dashed;color:var(--text-muted);font-weight:600}
 .wordforge .wf-idk:hover{background:var(--surface-alt);color:var(--text)}
 .wordforge .wf-fb{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:.9rem;line-height:1.5}

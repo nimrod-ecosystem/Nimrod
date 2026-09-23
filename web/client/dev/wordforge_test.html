@@ -261,7 +261,14 @@ a || b || c`);
     // DEFAULTS.contentSource is 'pack' now (2026-09-22) -- this fixture drives the rest of the
     // file's gameplay checks against the known, seeded DEFAULT_PAIRS, so it says "bank"
     // explicitly rather than silently inheriting a real network pack fetch.
-    st.set({ contentSource: 'bank' });
+    //
+    // *** guessMode: 'reveal' IS EXPLICIT HERE, since 2026-09-23. *** This whole section below
+    // (through the ledger/scoring checks) is written against the ORIGINAL one-shot-reveal
+    // behaviour -- a wrong guess ends the question and shows the answer. That is no longer the
+    // module's default ('multi' is, see wordforge.js's own DEFAULTS comment), but Mike asked to
+    // KEEP it as an option, so this section now proves the option instead of the default, and a
+    // dedicated section below proves the new default. Nothing about the checks below changed.
+    st.set({ contentSource: 'bank', guessMode: 'reveal' });
     await st.flush();
     const host = document.getElementById('host');
     const inst = mountModule('wordforge', {
@@ -443,6 +450,108 @@ a || b || c`);
       String([...pHost.querySelectorAll('.g-crow')].length));
 
     qInst.destroy(); pInst.destroy(); inst.destroy(); ledger.destroy(); tel.destroy();
+
+    // ============================================================================================
+    // *** guessMode: 'multi' IS THE DEFAULT, 2026-09-23. *** Mike: "Trivia allows repeated
+    // guesses with partial credit, Word Forge reveals the answer and ends the round on the first
+    // miss - I like Trivia's system better for this. Make that the default with the other method
+    // as an option." The section above (still passing, unchanged) proves the OPTION Mike asked to
+    // keep ('reveal'); this proves the new default itself, priced by the SAME shared ladder
+    // trivia_test.html already proves for Trivia (`mcq_scoring.js`'s own `worth`) — not a second,
+    // independently-drifting formula.
+    {
+      section('*** guessMode: \'multi\' is the default — a wrong guess spends that option, not the round ***');
+
+      check('the setting exists and defaults to multi',
+        (getManifest('wordforge').settings || []).some((f) => f.key === 'guessMode' && f.default === 'multi'),
+        JSON.stringify((getManifest('wordforge').settings || []).find((f) => f.key === 'guessMode')));
+
+      const gProfiles = createProfilesClient({ user: USER });
+      const gp = await gProfiles.create('TEST-wordforge-multiguess');
+      const gmod = await gProfiles.addModule(gp.id, 'wordforge');
+      const gst = createState({ url: gProfiles.stateURL(gp.id, gmod.id), user: USER });
+      await gst.load();
+      await gst.set({ contentSource: 'bank' });   // guessMode left at its default: 'multi'
+      const ghost = document.createElement('div');
+      document.body.append(ghost);
+      const gbus = createBus();
+      const gMakeEvents = (key, opts) => createEvents({ url: gProfiles.eventsURL(gp.id, key), user: USER, ...opts });
+      const ginst = mountModule('wordforge', {
+        mount: ghost, bus: gbus, state: gst,
+        events: gMakeEvents(gmod.id),
+        user: USER, profileId: gp.id,
+        makeState: (key, opts) => createState({ url: gProfiles.stateURL(gp.id, key), user: USER, ...opts }),
+        makeEvents: gMakeEvents,
+        rand: fixedRand,
+      });
+      ginst.init();
+      await sleep(400);
+
+      const gLedger = createPointsLedger({ makeEvents: gMakeEvents });
+      await gLedger.load();
+      const gBefore = gLedger.total();
+      const gOpts = () => [...ghost.querySelectorAll('[data-opt]')];
+      const probe = () => ginst.impl.__probe();
+
+      check('a question is showing', gOpts().length >= 2, String(gOpts().length));
+      const p0 = probe();
+      const wrongI = p0.question.options.findIndex((_, i) => i !== p0.question.answer);
+      gOpts()[wrongI].click();
+      await sleep(300);
+
+      let p = probe();
+      check('a wrong guess does NOT end the question', p.answered === null, String(p.answered));
+      check('...it is recorded as a guess spent', p.misses.includes(wrongI), JSON.stringify(p.misses));
+      check('...no "Got it"/"Next" button appears — the round is still open',
+        !ghost.querySelector('[data-next]'));
+      check('...the panel says to try again, without giving the answer away',
+        /try again/i.test(ghost.textContent) && !ghost.querySelector('.wf-fb'),
+        ghost.textContent.slice(0, 140));
+      const spentBtn = gOpts()[wrongI];
+      check('the spent option is marked wrong and disabled, but the round is not',
+        spentBtn.disabled === true && spentBtn.classList.contains('is-wrong'));
+
+      // Asserted on the BUTTON via a bus scan, not by re-clicking the same index — a scan that
+      // stopped on a spent option would strand a switch user there (module-input-spec).
+      for (let i = 0; i < 4; i++) gbus.publish('wordforge/next');
+      check('a scan does not stop on the spent option', probe().highlight !== wrongI, String(probe().highlight));
+
+      // THE WHOLE LADDER, asserted through the module's own `worth`, so it is the arithmetic the
+      // ledger will actually be handed — same pattern trivia_test.html uses for its own ladder.
+      const ladder = [0, 1, 2, 3].map((n) => ginst.impl.__worth(n));
+      check('*** priced by the SAME ladder as Trivia: 1 / 0.75 / 0.5 / 0.25 ***',
+        JSON.stringify(ladder) === JSON.stringify([1, 0.75, 0.5, 0.25]), JSON.stringify(ladder));
+
+      // Now take the correct option, arriving after one spent guess.
+      gOpts()[p0.question.answer].click();
+      await sleep(400);
+      p = probe();
+      check('getting there after a miss still finishes the question',
+        p.answered && p.answered.correct === true, JSON.stringify(p.answered));
+      check('...and a run of clean answers is broken by the miss', p.streak === 0, String(p.streak));
+
+      await sleep(300);
+      await gLedger.load();
+      check('*** a correct answer after ONE miss pays the discounted 0.75, not the full point ***',
+        gLedger.total() === gBefore + 0.75, `${gBefore} -> ${gLedger.total()}`);
+
+      // "I don't know" still reveals immediately, even in 'multi' mode — giving up honestly is
+      // not a guess to iterate on, so it is never routed through the ladder (DEFAULTS' own
+      // comment on `guessMode`).
+      ghost.querySelector('[data-next]').click();
+      await sleep(300);
+      check('a fresh question is showing', gOpts().length >= 2, String(gOpts().length));
+      gbus.publish('wordforge/answer', 'idk');
+      await sleep(300);
+      p = probe();
+      check('*** "I don\'t know" still reveals immediately in multi mode ***',
+        !!p.answered && p.answered.declared === true, JSON.stringify(p.answered));
+      check('...and pays the same try-points as ever', p.answered.award.total === DEFAULTS.tryPoints,
+        String(p.answered.award.total));
+
+      ginst.destroy();
+      ghost.remove();
+    }
 
     // ============================================================================================
     // THE REAL FETCH — against this suite's own server, the same shipped pack the module itself
