@@ -1156,6 +1156,57 @@ const ds = () => root.querySelector('.kiosk').dataset;
   }
 
   // ============================================================================================
+  // PANEL BACKGROUNDS, ONE PANEL AT A TIME. Mike, 2026-09-23, on the screen-wide setting above:
+  // "You should be able to change it at different levels like if you only want it for certain
+  // modules." A single-module screen so the mounted panel is unambiguously the focused one.
+  // ============================================================================================
+  try {
+    const ipsProfiles = createProfilesClient({ user: USER + '-panelsurface-instance' });
+    const ip = await ipsProfiles.create('instance-panel-surface');
+    // `trivia`, not `clock` -- `clock` is one of `partition()`'s two hardcoded overlay types
+    // (kiosk.js) and never reaches the stage at all, so it would never have a `.k-stage .k-mod`
+    // for this override to apply to, nor a normal focused-panel settings menu.
+    await ipsProfiles.addModule(ip.id, 'trivia');
+    const iproot = document.createElement('div');
+    iproot.style.cssText = 'position:relative;width:520px;height:300px;border:1px solid #ccc';
+    document.body.appendChild(iproot);
+    const ipk = await mountKiosk(iproot, { user: USER + '-panelsurface-instance', profileId: ip.id, profiles: ipsProfiles, bus: createBus() });
+    await sleep(150);
+
+    const panelEl = () => iproot.querySelector('.k-stage .k-mod');
+    check('the panel is mounted with no override — inherits whatever the screen says',
+      !!panelEl() && panelEl().dataset.panelSurface === undefined,
+      JSON.stringify(panelEl()?.dataset));
+
+    ipk.menu.open();
+    const walkToI = (id) => {
+      for (let i = 0; i < 60 && ipk.menu.focusId() !== id; i += 1) ipk.menu.next();
+      return ipk.menu.focusId() === id;
+    };
+    check('this panel’s own background row is reachable from ITS settings, not the screen’s',
+      walkToI('set:instancePanelSurface'), ipk.menu.items().map((r) => r.id).join(','));
+    check('...and defaults to "use the screen setting"',
+      ipk.menu.items().find((r) => r.id === 'set:instancePanelSurface')?.hint === 'Use the screen setting',
+      ipk.menu.items().find((r) => r.id === 'set:instancePanelSurface')?.hint);
+
+    const lap = [];
+    for (let i = 0; i < 4; i += 1) {
+      ipk.menu.select();
+      lap.push([ipk.menu.items().find((r) => r.id === 'set:instancePanelSurface')?.hint, panelEl().dataset.panelSurface ?? null]);
+    }
+    check('*** cycling reaches THIS PANEL’S OWN attribute at every step, and wraps back to "inherit" ***',
+      JSON.stringify(lap) === JSON.stringify([
+        ['Solid', 'solid'], ['See-through', 'veil'], ['Fully clear', 'clear'], ['Use the screen setting', null],
+      ]),
+      JSON.stringify(lap));
+
+    try { ipk?.destroy?.(); } catch { /* already gone */ }
+    iproot.remove();
+  } catch (e) {
+    check('the instance-level panel-background section threw', false, String((e && e.stack) || e));
+  }
+
+  // ============================================================================================
   // "LOAD YOUR OWN PACK" — reachable from the settings menu of a module that actually reads
   // one, absent from one that does not. 2026-09-12, the device-bus session's pack loader.
   // ============================================================================================

@@ -527,6 +527,19 @@ export async function mountKiosk(root, {
     const instance = mountModule(mod.type, { mount: host, state, events, ...childCtx(mod) });
     await state.load().catch(() => {});
     await events.load().catch(() => {});
+    // THIS PANEL'S OWN `panelSurface`, read off the SAME state row the module's own settings
+    // live in, under a key no module declares — the module never sees this subscription, only
+    // the host does. `state.subscribe` fires immediately (state is already loaded above) and
+    // again on every later change, so a pick made through the menu reaches this exact `.k-mod`
+    // the same tick the screen-wide setting reaches every panel that has NOT overridden it.
+    // Anything other than an explicit solid/veil/clear — including 'default', or simply never
+    // having been set — clears the attribute rather than writing 'default' into the DOM, so the
+    // lower-specificity screen-level rule (kiosk.css) is what applies.
+    state.subscribe((s) => {
+      const v = s && s.instancePanelSurface;
+      if (v === 'solid' || v === 'veil' || v === 'clear') host.dataset.panelSurface = v;
+      else delete host.dataset.panelSurface;
+    });
     instance.init();
     state.startPolling(); events.startPolling();
     return { instance, state, events, type: mod.type, id: mod.id, title: instance.manifest.title, el: host };
@@ -1534,6 +1547,32 @@ export async function mountKiosk(root, {
       ] },
   ];
 
+  // *** THE SAME SETTING, ONE LEVEL MORE SPECIFIC. *** Mike, 2026-09-23, on the screen-wide
+  // version above: "You should be able to change it at different levels like if you only want
+  // it for certain modules." This is the instance level of the inheritance chain this file's
+  // own `fields()` comment already names (instance, module, screen, device, person, account) —
+  // Slice 2 there writes screen settings to the instance for the SAME reason this does: it is
+  // the most specific level, so it is correct under any chain order that ever gets built.
+  // `'default'` (inherit whatever the screen says) keeps a freshly placed panel unchanged from
+  // today until somebody opens ITS OWN settings and picks something else — the per-instance row
+  // never overrides anything silently. Written into the panel's own state row (the same one its
+  // own declared settings live in) under this reserved key; a module never reads it and never
+  // declares a field by this name, so there is nothing for it to collide with.
+  // `instancePanelSurface`, not `panelSurface` -- `screenItems()` and `fields()` are combined
+  // into ONE flat menu by the settings shell, so the two would collide on the SAME item id
+  // (`set:panelSurface`) and the screen-level row would become unreachable. Different key,
+  // same reserved-namespace idea: still nothing a module ever declares or reads.
+  const PANEL_INSTANCE_FIELDS = () => [
+    { key: 'instancePanelSurface', label: 'This panel’s background', kind: 'choice', level: 'standard',
+      default: 'default',
+      options: [
+        { value: 'default', label: 'Use the screen setting' },
+        { value: 'solid', label: 'Solid' },
+        { value: 'veil', label: 'See-through' },
+        { value: 'clear', label: 'Fully clear' },
+      ] },
+  ];
+
   const menu = mountSettings(root.querySelector('[data-settings]'), {
     person: () => whoState,
     // The row under the who heading. It says what is true and, where the account has people
@@ -1601,7 +1640,14 @@ export async function mountKiosk(root, {
     fields: () => {
       const rec = focusedRec();
       if (!rec) return [];
-      const items = fieldItems(fieldsFor(rec.instance.manifest, rec.instance), {
+      // The instance-level override goes FIRST — "which panel is this" before "what does this
+      // kind of panel let you change" — and through the same `fieldItems`/`onStep` call as the
+      // module's own fields, so cycling, hints and disabling all work identically; it is only a
+      // different SOURCE array, not a different mechanism.
+      const items = fieldItems([
+        ...PANEL_INSTANCE_FIELDS().map(normalizeField).filter(Boolean),
+        ...fieldsFor(rec.instance.manifest, rec.instance),
+      ], {
         // A FUNCTION, not a snapshot: two presses without a repaint in between would
         // otherwise step from the same stale value twice, and the second press would look
         // dropped — which somebody debugs as a broken switch.
