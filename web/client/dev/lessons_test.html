@@ -23,6 +23,7 @@ Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app -
 <div id="summary">running…</div>
 <div id="host"></div>
 <div id="wf"></div>
+<div id="tv"></div>
 
 <script type="module">
 import { createBus } from '../bus.js';
@@ -38,6 +39,7 @@ import { videoHTML, packToTopics, DEFAULTS } from '../modules/lessons.js';
 import { parseWords, buildDeck } from '../modules/wordforge.js';
 import '../modules/lessons.js';
 import '../modules/wordforge.js';
+import '../modules/trivia.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('less-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -262,6 +264,80 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
       wfHost.querySelector('[data-held]').textContent);
 
     les.destroy(); audit.destroy(); wf2.destroy(); linst.destroy();
+
+    // ================= Trivia gets the same gating, from scratch (2026-09-22) =================
+    // MIKE_CHANGE_LIST's own "still open" note: confirmed by grep that trivia.js imported none
+    // of gate/lockedTopics/createLessons/LESSON_TOPIC, unlike wordforge.js above. This proves it
+    // now does. A DEDICATED profile — lessons are shared per-profile, and the wordforge section
+    // above already unlocked "roots" and "concision" on `profile.id`, so reusing it here would
+    // start every check already fully unlocked.
+    section('trivia gets the same gating Word Forge already has');
+    const tprofiles = createProfilesClient({ user: USER });
+    const tprofile = await tprofiles.create('TEST-trivia-lesson-gate');
+    const tMakeState = (k, o) => createState({ url: tprofiles.stateURL(tprofile.id, k), user: USER, ...o });
+    const tMakeEvents = (k, o) => createEvents({ url: tprofiles.eventsURL(tprofile.id, k), user: USER, ...o });
+    const TRIVIA_BANK = `
+# 4 ungated questions
+What is 2+2? | 4 | 3 | 5 | 6
+What color is the sky on a clear day? | Blue | Red | Green | Yellow
+Which animal barks? | Dog | Cat | Fish | Bird
+What do bees make? | Honey | Milk | Bread | Juice
+# gated behind topics
+What is a run-on sentence? | Two clauses joined with no punctuation | A short sentence | A question | topic:roots
+Why do writers avoid run-ons? | Clarity | Length | Rhyme | topic:roots
+Which word means "brief"? | Concise | Long | Loud | topic:concision
+`;
+    const tmod = await tprofiles.addModule(tprofile.id, 'trivia');
+    const tst = createState({ url: tprofiles.stateURL(tprofile.id, tmod.id), user: USER });
+    await tst.load();
+    // `contentSource: 'bank'` explicit -- trivia.js's own DEFAULTS.contentSource is 'pack' now
+    // (2026-09-22, same day), so this fixture drives the gating checks against the exact bank
+    // text written here, not a real network pack fetch.
+    tst.set({ bankText: TRIVIA_BANK, roundLength: 40, contentSource: 'bank' });
+    await tst.flush();
+
+    const tvHost = document.getElementById('tv');
+    const tvBus = createBus();
+    const tv = mountModule('trivia', {
+      mount: tvHost, bus: tvBus, state: tst,
+      events: createEvents({ url: tprofiles.eventsURL(tprofile.id, tmod.id), user: USER }),
+      user: USER, profileId: tprofile.id, makeState: tMakeState, makeEvents: tMakeEvents, rand: seeded(7),
+    });
+    tv.init();
+    await sleep(900);
+
+    const tvDeckSize = () => tv.impl.__probe().deck;
+    check('*** the deck contains only the ungated questions until a lesson unlocks the rest ***',
+      tvDeckSize() === 4, `deck=${tvDeckSize()} (expected 4 ungated)`);
+    check('the still-locked topics are NOT silently dropped — the game says so',
+      /waiting behind/i.test(tvHost.textContent), tvHost.textContent.slice(0, 200));
+    check('...naming both topics that hold questions back',
+      /roots/i.test(tvHost.textContent) && /fewer words|concision/i.test(tvHost.textContent),
+      tvHost.textContent.slice(0, 200));
+
+    const tles = createLessons({ makeEvents: tMakeEvents, bus: tvBus });
+    await tles.load();
+    await tles.watch('roots', { label: 'Word roots & origins' });
+    await sleep(900);
+    tv.destroy();
+    const tst2 = createState({ url: tprofiles.stateURL(tprofile.id, tmod.id), user: USER });
+    await tst2.load();
+    tvHost.innerHTML = '';
+    const tv2 = mountModule('trivia', {
+      mount: tvHost, bus: createBus(), state: tst2,
+      events: createEvents({ url: tprofiles.eventsURL(tprofile.id, tmod.id), user: USER }),
+      user: USER, profileId: tprofile.id, makeState: tMakeState, makeEvents: tMakeEvents, rand: seeded(7),
+    });
+    tv2.init();
+    await sleep(900);
+    check('*** after unlocking "roots", its questions join the deck ***',
+      tv2.impl.__probe().deck === 6, `deck=${tv2.impl.__probe().deck} (expected 4 ungated + 2 roots)`);
+    check('...and only "concision" is still reported as held back',
+      /waiting behind/i.test(tvHost.textContent) && /fewer words|concision/i.test(tvHost.textContent)
+        && !/word roots/i.test(tvHost.textContent),
+      tvHost.textContent.slice(0, 200));
+
+    tles.destroy(); tv2.destroy();
 
     // ============================================================================================
     // VIDEO SELECTION, CLOSED BY A PACK — change list §3's "no video-selection mechanism at all
