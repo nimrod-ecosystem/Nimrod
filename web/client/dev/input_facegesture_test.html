@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>facial-gesture switch — the gesture math, and what reaches the bus</title>
+<style>
+  body{font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.25rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>facial-gesture switch — the gesture math, and what reaches the bus</h1>
+<p><b>`MIKE_CHANGE_LIST.md`'s `§trackymouse-instructions`, part 1.</b> No camera and no face model
+are opened by anything on this page — `detectFrame()` is injected, exactly the discipline
+`input_marker.js` states for its own `frames` callback, so the switch logic is provable with a
+plain object built by hand. What is NOT tested here, because it does not exist yet (see
+`input_facegesture.js`'s own header): a real camera feeding a real face-landmark model. That is
+piece 2 of the three the header names, and it needs the real bench Pi, not this page.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  FACEGESTURE_DEVICE, FACEGESTURE_CONTROL, GESTURE_TRIGGERS, DEFAULT_TRIGGER,
+  isTriggerActive, createFaceGestureSwitch,
+} from '../input_facegesture.js';
+import { detectGestures } from '../vendor/tracky_mouse_gestures.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// ---- hand-built landmark shapes, small enough to reason about by hand ----
+//
+// `getAspectMetrics` (inside the vendored file) measures signed distance from each "other"
+// point to the line through the contour's two corners (the FIRST and LAST point of the LOWER
+// contour). With both corners on the x-axis at (0,0) and (10,0), the signed distance of a point
+// at (x, h) off that line is exactly `h` — so a contour shaped this way makes `heightRatio`
+// trivial to control: `heightRatio = h / 10` (10 being the distance between the corners).
+function contour(h) {
+  return {
+    lower: [[0, 0], [10, 0]],   // both points ARE the corners here
+    upper: [[5, h]],             // one point, h above the corner line
+  };
+}
+// A face with a mouth at height `mouthH` and both eyes at height `eyeH` (same shape function
+// for eyes and mouth — `getAspectMetrics` does not know which body part it is measuring).
+function annotations({ mouthH = 0, leftEyeH = 5, rightEyeH = 5 } = {}) {
+  const m = contour(mouthH), l = contour(leftEyeH), r = contour(rightEyeH);
+  return {
+    lipsUpperInner: m.upper, lipsLowerInner: m.lower,
+    leftEyeUpper0: l.upper, leftEyeLower0: l.lower,
+    rightEyeUpper0: r.upper, rightEyeLower0: r.lower,
+  };
+}
+// Mouth: thresholdHigh 0.25 (closed -> open), thresholdLow 0.15 (open -> closed, hysteresis).
+// height 10 -> ratio 1.0, comfortably open. height 0 -> ratio 0, comfortably closed.
+const MOUTH_OPEN = 10, MOUTH_CLOSED = 0;
+// Eyes: thresholdHigh 0.2 (closed -> open), thresholdLow 0.16. `open` is the opposite sense
+// from mouth's `thresholdMet` -- see `isTriggerActive`'s own header on why it exists at all.
+const EYE_OPEN = 10, EYE_CLOSED = 0;
+
+(async () => {
+  // =====================================================================================
+  section('*** the vendored math itself, against a hand-built face (no camera, no model) ***');
+  {
+    // A closed mouth, both eyes open — the resting face.
+    let r = detectGestures({
+      blinkInfo: null, mouthInfo: null, sleepGestureProgress: 0, sleepGestureEyesClosedDuration: 700,
+      mouseButtonUntilMouthCloses: 0, deltaTime: 16,
+      annotations: annotations({ mouthH: MOUTH_CLOSED, leftEyeH: EYE_OPEN, rightEyeH: EYE_OPEN }),
+      s: { clickingMode: 'open-mouth-ignoring-eyes', closeEyesToToggle: false },
+    });
+    check('a closed mouth is not thresholdMet', r.mouthInfo.thresholdMet === false, JSON.stringify(r.mouthInfo));
+    check('open eyes are not thresholdMet (thresholdMet means CLOSED, for eyes)',
+      r.blinkInfo.leftEye.thresholdMet === false && r.blinkInfo.rightEye.thresholdMet === false);
+
+    // Mouth opens.
+    r = detectGestures({
+      blinkInfo: r.blinkInfo, mouthInfo: r.mouthInfo, sleepGestureProgress: r.sleepGestureProgress,
+      sleepGestureEyesClosedDuration: 700, mouseButtonUntilMouthCloses: r.mouseButtonUntilMouthCloses,
+      deltaTime: 16, annotations: annotations({ mouthH: MOUTH_OPEN, leftEyeH: EYE_OPEN, rightEyeH: EYE_OPEN }),
+      s: { clickingMode: 'open-mouth-ignoring-eyes', closeEyesToToggle: false },
+    });
+    check('*** an opened mouth IS thresholdMet ***', r.mouthInfo.thresholdMet === true, JSON.stringify(r.mouthInfo));
+  }
+
+  section('*** isTriggerActive — one read, shared by the switch and any preview panel ***');
+  {
+    const openMouth = { mouthInfo: { thresholdMet: true }, blinkInfo: { leftEye: { active: false }, rightEye: { active: false } } };
+    const closedMouth = { mouthInfo: { thresholdMet: false }, blinkInfo: { leftEye: { active: false }, rightEye: { active: false } } };
+    const leftBlink = { mouthInfo: { thresholdMet: false }, blinkInfo: { leftEye: { active: true }, rightEye: { active: false } } };
+    const rightBlink = { mouthInfo: { thresholdMet: false }, blinkInfo: { leftEye: { active: false }, rightEye: { active: true } } };
+    check('mouth trigger reads mouthInfo.thresholdMet', isTriggerActive(openMouth, 'mouth') === true
+      && isTriggerActive(closedMouth, 'mouth') === false);
+    check('blink-left trigger reads blinkInfo.leftEye.active, not the mouth',
+      isTriggerActive(leftBlink, 'blink-left') === true && isTriggerActive(openMouth, 'blink-left') === false);
+    check('blink-right is independent of blink-left', isTriggerActive(rightBlink, 'blink-right') === true
+      && isTriggerActive(leftBlink, 'blink-right') === false);
+    check('an unknown trigger name is inactive, not a throw', isTriggerActive(openMouth, 'nonsense') === false);
+    check('a null result is inactive, not a throw', isTriggerActive(null, 'mouth') === false);
+    check('mouth is the default, and tracky-mouse’s own choice (not blink) is not relitigated here',
+      DEFAULT_TRIGGER === 'mouth');
+    check('all three triggers are declared', JSON.stringify(GESTURE_TRIGGERS) === JSON.stringify(['mouth', 'blink-left', 'blink-right']));
+  }
+
+  section('*** the switch — edges on the bus, exactly like a physical one ***');
+  {
+    const calls = [];
+    const input = { down: (d, c) => calls.push(['down', d, c]), up: (d, c, o) => calls.push(['up', d, c, o]) };
+    let face = annotations({ mouthH: MOUTH_CLOSED });
+    const sw = createFaceGestureSwitch({ input, detectFrame: () => face });
+    check('device/control are the documented constants', FACEGESTURE_DEVICE === 'facegesture' && FACEGESTURE_CONTROL === 'gesture');
+
+    check('starting produces no edge on a closed mouth', sw.start() === true && calls.length === 0, JSON.stringify(calls));
+    sw.tick();
+    check('...ticking a resting face still produces nothing', calls.length === 0, JSON.stringify(calls));
+
+    face = annotations({ mouthH: MOUTH_OPEN });
+    sw.tick();
+    check('*** opening the mouth presses the switch ***', JSON.stringify(calls) === JSON.stringify([['down', 'facegesture', 'gesture']]),
+      JSON.stringify(calls));
+
+    calls.length = 0;
+    sw.tick();
+    check('holding it open does not press again — one edge, not one per tick', calls.length === 0, JSON.stringify(calls));
+
+    face = annotations({ mouthH: MOUTH_CLOSED });
+    sw.tick();
+    check('*** closing the mouth releases the switch, as a REAL release (auto: false) ***',
+      JSON.stringify(calls) === JSON.stringify([['up', 'facegesture', 'gesture', { auto: false }]]), JSON.stringify(calls));
+
+    calls.length = 0;
+    face = annotations({ mouthH: MOUTH_OPEN });
+    sw.tick();
+    check('opens again after closing', JSON.stringify(calls) === JSON.stringify([['down', 'facegesture', 'gesture']]), JSON.stringify(calls));
+
+    calls.length = 0;
+    face = null;
+    sw.tick();
+    check('*** losing the face releases too, but marked auto — the device let go, not the gesture ***',
+      JSON.stringify(calls) === JSON.stringify([['up', 'facegesture', 'gesture', { auto: true }]]), JSON.stringify(calls));
+
+    calls.length = 0;
+    face = null;
+    sw.tick();
+    check('...and does not release twice for the same lost face', calls.length === 0, JSON.stringify(calls));
+
+    sw.destroy();
+  }
+
+  section('*** the trigger is read fresh every tick — a per-person setting, not fixed at start ***');
+  {
+    const calls = [];
+    const input = { down: (d, c) => calls.push(['down', c]), up: (d, c) => calls.push(['up', c]) };
+    let which = 'mouth';
+    let face = annotations({ mouthH: MOUTH_CLOSED, leftEyeH: EYE_OPEN, rightEyeH: EYE_OPEN });
+    const sw = createFaceGestureSwitch({ input, trigger: () => which, detectFrame: () => face });
+    sw.start();
+
+    face = annotations({ mouthH: MOUTH_OPEN, leftEyeH: EYE_OPEN, rightEyeH: EYE_OPEN });
+    sw.tick();
+    check('mouth trigger fires on an open mouth', calls.some((c) => c[0] === 'down'), JSON.stringify(calls));
+
+    calls.length = 0;
+    which = 'blink-left';
+    face = annotations({ mouthH: MOUTH_OPEN, leftEyeH: EYE_OPEN, rightEyeH: EYE_OPEN });   // mouth still open
+    sw.tick();
+    check('*** switching the trigger to blink-left releases the mouth-driven press ***',
+      calls.some((c) => c[0] === 'up'), JSON.stringify(calls));
+
+    sw.destroy();
+  }
+
+  section('*** a switch with no detectFrame source is a mistake to catch at construction ***');
+  check('throws rather than silently doing nothing',
+    (() => { try { createFaceGestureSwitch({ input: { down() {}, up() {} } }); return false; } catch { return true; } })());
+  check('...and so does one with no input bus',
+    (() => { try { createFaceGestureSwitch({ detectFrame: () => null }); return false; } catch { return true; } })());
+
+  const sum = document.getElementById('summary');
+  sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

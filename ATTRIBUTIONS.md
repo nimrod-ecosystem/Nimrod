@@ -59,6 +59,24 @@ error, the same rule `modules/wallpaper.js` already follows for its own ambient 
 
 ---
 
+## Facial-gesture switch — the mouth-open/blink math
+
+`web/client/vendor/tracky_mouse_gestures.js`
+
+| | |
+|---|---|
+| **What** | The gesture-detection math (mouth-open and blink thresholds, with hysteresis and involuntary-blink rejection) behind `input_facegesture.js`'s facial-gesture switch |
+| **Source** | [tracky-mouse](https://github.com/1j01/tracky-mouse), `core/src/gestures.js` — author Isaiah Odhner |
+| **Licence** | **MIT**, Copyright (c) 2021 Isaiah Odhner |
+| **Verified** | 2026-09-23, via GitHub's own license API (`mit`) and reading `LICENSE.txt` directly |
+
+One file, not the package — the same rule `input_marker.js`'s own header states for why a
+narrower dependency beats a broader one. This project supplies its OWN camera acquisition
+(`camera_owner.js`) and its OWN face-landmark detection; only the gesture math (a pure function
+over a frame's landmark annotations) is tracky-mouse's.
+
+---
+
 ## Fonts, libraries, symbols
 
 The board's symbols (`web/client/aac_symbols.js`) are **drawn in-repo**, not taken from a symbol
