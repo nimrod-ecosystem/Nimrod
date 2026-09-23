@@ -441,6 +441,36 @@ const ds = () => root.querySelector('.kiosk').dataset;
         document.documentElement.style.getPropertyValue('--bg').trim().length > 0,
         document.documentElement.style.getPropertyValue('--bg'));
 
+      // *** A LIVE THEME'S ANIMATED WORLD MUST SURVIVE FULLSCREEN. *** Mike, 2026-09-23:
+      // "Transparent background and themes don't seem to work when you go into fullscreen."
+      // Root cause: `toggleFs()` fullscreens `root` (mountKiosk's own container), and
+      // `applyTheme(document.documentElement, ...)`'s own scene mount lands on `document.body`
+      // — a SIBLING of `root`, excluded from what the Fullscreen API paints. A headless suite
+      // cannot actually toggle fullscreen (no real user gesture, and CI has no compositor to ask
+      // "what would paint"), so this checks the STRUCTURAL fix instead: a second copy of the
+      // scene, mounted where fullscreen cannot exclude it.
+      const CYBERPUNK_LABEL = 'Cyberpunk — a street at night';
+      const wasCyber = kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint;
+      for (let i = 0; i < 20 && kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint !== CYBERPUNK_LABEL; i += 1) {
+        kiosk.menu.select();
+      }
+      check('(setup) cyberpunk is reachable from the theme cycle',
+        kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint === CYBERPUNK_LABEL,
+        kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint);
+      const thisKioskEl = root.querySelector('.kiosk');
+      check('the kiosk root is marked as a scene host',
+        thisKioskEl.hasAttribute('data-scene-host'));
+      const kioskScene = thisKioskEl.querySelector(':scope > .ls');
+      check('*** the live scene is ALSO mounted directly inside .kiosk, a real descendant of '
+        + 'whatever gets fullscreened — not only on document.body ***',
+        !!kioskScene, thisKioskEl.innerHTML.slice(0, 200));
+      check('...and root (the fullscreen target) actually contains it',
+        !!kioskScene && root.contains(kioskScene));
+      // Put the theme back so later sections see what they expect.
+      for (let i = 0; i < 20 && kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint !== wasCyber; i += 1) {
+        kiosk.menu.select();
+      }
+
       // 2.18 — BURN-IN PROTECTION, reachable from the bedside menu, off by default, and only
       // ever two real modes (no content-hiding screensaver — see kiosk.js's own comment).
       check('the burn-in field is a screen setting too', !!byId['set:burnIn'], rows.map((r) => r.id).join(','));

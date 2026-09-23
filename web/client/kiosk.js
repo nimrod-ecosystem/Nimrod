@@ -53,7 +53,8 @@ import { createCallTransport } from './call_transport.js';
 import { readConfig, writeConfig, writePosition, bootPlan, markHopped, hasHopped,
          restartItems } from './restart.js';
 import { takePreviewLayout } from './preview.js';
-import { applyTheme, listThemes, DEFAULT_THEME } from './theme.js';
+import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
+import { syncScene } from './livescene.js';
 import { cachedFetch } from './cache.js';
 import './modules/clock.js';
 import './modules/keyboard.js';
@@ -220,6 +221,38 @@ export async function mountKiosk(root, {
       <div data-settings></div>
     </div>`;
   const kioskEl = root.querySelector('.kiosk');
+  // *** A LIVE THEME'S ANIMATED WORLD MUST LIVE INSIDE THE FULLSCREEN TARGET. ***
+  //
+  // Mike, 2026-09-23: "Transparent background and themes don't seem to work when you go into
+  // fullscreen." Traced, not guessed at: `toggleFs()` below calls `root.requestFullscreen()` —
+  // `root` is the element `mountKiosk` was handed (`kiosk.html`'s `#root`), a PLAIN SIBLING of
+  // whatever `applyTheme(document.documentElement, ...)` mounts a live scene INTO. `theme.js`'s
+  // own `applyTheme` always calls `syncScene(rootEl, theme)` with the SAME `rootEl` it was
+  // given, and `livescene.js`'s `syncScene` treats `rootEl === document.documentElement` as "the
+  // whole page" and appends the scene straight onto `document.body` — a SIBLING of `#root`, not
+  // a descendant of it. The Fullscreen API only paints the fullscreened element and ITS OWN
+  // descendants; a sibling appended to `<body>` is excluded from that view entirely, confirmed
+  // directly (`document.getElementById('root').contains(document.querySelector('.ls')) ===
+  // false`) rather than assumed from the spec. `panelSurface: clear/veil` then has nothing left
+  // to reveal once fullscreen hides the very layer it was supposed to show through.
+  //
+  // Fixed by ALSO mounting the scene where it survives fullscreen: `.kiosk` is already a real
+  // descendant of `root`, already positioned (`position:fixed;inset:0`) so `.ls`'s own
+  // `position:absolute;inset:0` resolves against it correctly, and already an isolated stacking
+  // context so the scene's own `z-index:var(--z-world)` sorts behind `.k-stage`'s panels (200)
+  // without a new host element. `data-scene-host` is `livescene.js`'s own opt-in marker (the
+  // SAME mechanism `board.js`'s per-instance veil/clear mode already uses) — set once, here,
+  // rather than re-checked on every theme change. The ORIGINAL `document.documentElement` mount
+  // is left running too, deliberately not torn out: nothing reads `html[data-live-scene]` from
+  // this file, but another page's own CSS might, and removing a working, order-independent
+  // effect to save one redundant (and cheap — CSS-driven, not a second detection loop) animated
+  // background is not a trade worth making under time pressure without checking every caller.
+  kioskEl.setAttribute('data-scene-host', '');
+  function applyKioskTheme(id) {
+    const resolved = applyTheme(document.documentElement, id);
+    syncScene(kioskEl, THEMES[resolved]);
+    return resolved;
+  }
   const stageEl = root.querySelector('[data-stage]');
   const ambientEl = root.querySelector('[data-ambient]');
   const mirrorEl = root.querySelector('[data-mirror]');
@@ -589,11 +622,11 @@ export async function mountKiosk(root, {
     kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : 'solid';
   }
   await settings.load().catch(() => {});
-  applyTheme(document.documentElement, settings.get().theme);
+  applyKioskTheme(settings.get().theme);
   applyLayout(settings.get());
   applyPanelSurface(settings.get());
   settings.subscribe((s) => {
-    applyTheme(document.documentElement, s.theme);
+    applyKioskTheme(s.theme);
     applyLayout(s);
     applyPanelSurface(s);
     // A change made through the menu (turning burn-in protection on, off, or switching mode)
