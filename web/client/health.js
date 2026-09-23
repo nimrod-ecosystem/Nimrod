@@ -100,6 +100,16 @@ export const HEALTH_EXPECT = {
   bank:        { idle: true },
   wallpaper:   { idle: true },
   board:       { idle: true },
+  // Same as wallpaper, added the same day it shipped rather than left to be found the hard way:
+  // draws constantly, publishes nothing, and nobody looking at it is not a fault.
+  scene:       { idle: true },
+  // Both from earlier the same week, found missing while adding scene's own row above rather
+  // than left for the next person to rediscover the hard way. Settings publishes nothing while
+  // nobody is using it, which is nearly always; ambient_drift never occupies a slot at all
+  // (kiosk.js's partition() and recovery.js's fallback ranking both already exclude it), but a
+  // false "stalled" judgement is worth avoiding regardless of whether anything could act on it.
+  settings:      { idle: true },
+  ambient_drift: { idle: true },
   quests:      { idle: true },
   sprint:      { idle: true },
   progress:    { idle: true },

@@ -49,6 +49,12 @@
 // Themes define the FULL key set below, so switching themes always fully overwrites — no
 // leftover variable from a previously-applied theme.
 
+// From Claude Design's live-themes handoff, 2026-09-22 -- seven animated themes and the scene
+// system they ride on. `syncScene` is a no-op on anything but <html> or an element carrying
+// `data-scene-host` (see below), so every existing call site is unaffected.
+import { liveThemes, BOARD_BASE } from './live_themes.js';
+import { syncScene } from './livescene.js';
+
 const SYSTEM_FONT =
   '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
 
@@ -110,6 +116,11 @@ const BASE = {
   // arguing. A NUMBER rather than a color because the wallpaper varies lightness and
   // saturation itself; a theme that wants a different mood changes this one line.
   '--wallpaper-hue': '158',      // the green the rest of this palette is built on
+  // The board's own pinned values (modules.css), carried here so "every theme defines every
+  // key" still holds for the new `--board-*` roles a live theme's `surface: veil|clear` reads.
+  // Spread LAST -- see BOARD_BASE's own comment in live_themes.js. Without this, switching from
+  // a live theme back to Default would leave the live theme's board tokens inline on the root.
+  ...BOARD_BASE,
 };
 
 export const THEMES = {
@@ -225,6 +236,7 @@ export const THEMES = {
       '--accent-warm-deep': '#8c4a12',
     },
   },
+  ...liveThemes(BASE),
 };
 
 export const DEFAULT_THEME = 'default';
@@ -308,6 +320,10 @@ export function applyTheme(rootEl, id) {
   // light-mode default regardless of which theme is active -- which on Dusk looked exactly like
   // a broken control sitting inside a dark box, because that is what it was.
   rootEl.style.setProperty('color-scheme', theme.dark ? 'dark' : 'light');
+  // A live theme's animated world, behind whatever `rootEl` is -- <html> for the whole page, or
+  // any element carrying `data-scene-host` for a single panel wearing its own theme. Safe on
+  // every other call site: `syncScene` itself checks for that marker and no-ops otherwise.
+  syncScene(rootEl, theme);
   return resolved;
 }
 

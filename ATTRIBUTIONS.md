@@ -41,6 +41,24 @@ this repo and does not need to be — only its output is.
 
 ---
 
+## Weather — the live weather overlay
+
+`web/client/live_weather.js`
+
+| | |
+|---|---|
+| **What** | Real local weather (rain/snow/leaves/fog) and the geocoding lookup for a caregiver-typed town, both used only when a screen's "Weather" setting is turned on (off by default) |
+| **Source** | [Open-Meteo](https://open-meteo.com) — no API key required |
+| **Licence** | **CC BY 4.0** |
+| **Terms checked** | 2026-09-22 — free tier is 600 calls/min, 5,000/hr, 10,000/day (this polls once per 30 minutes per profile, far under any limit); eligible for "private or non-profit ... apps that do not have subscriptions or advertising," which this is |
+
+**What CC BY 4.0 asks of us:** attribution, which is this entry, and wherever the weather setting
+itself is offered. Only a coarse position (~11 km) is ever looked up or sent — never GPS, never a
+browser permission prompt — and a failed or offline lookup reads as "no weather" rather than an
+error, the same rule `modules/wallpaper.js` already follows for its own ambient motion.
+
+---
+
 ## Fonts, libraries, symbols
 
 The board's symbols (`web/client/aac_symbols.js`) are **drawn in-repo**, not taken from a symbol

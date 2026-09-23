@@ -1368,3 +1368,97 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-empty { max-width: 46ch; }
 .tv-empty p { margin: 0 0 8px; }
 .tv-empty .tv-fmt { font-size: .88rem; color: var(--text-muted, #5d7064); }
+
+/* ==================================================================================
+   Appended from Claude Design's live-themes handoff, 2026-09-22 (board_live.css).
+   Adds the see-through/clear AAC board surfaces. Appended at the end of this file, not
+   directly after either existing .aboard.ab-hc rule (there are two, ~275 lines apart) --
+   its own final high-contrast reassertion below still needs to win the cascade over both.
+   ================================================================================== */
+/* board_live.css — the translucent and clear AAC board. APPEND to modules.css, directly after the
+   `.aboard.ab-hc` rule (the re-assertion at the bottom of this file keeps high contrast winning
+   either way, but keeping them adjacent is how the next reader finds both).
+
+   From Claude Design, 2026-09-22. Pairs with the `surface` setting in board_patch.md.
+
+   *** WHAT THIS ADDS, AND WHAT IT DOES NOT TOUCH ***
+   The pinned dark board (2026-09-02) stays the DEFAULT, and every contrast number in the long
+   comment above `.aboard` stays true for it. These are two NEW surfaces a caregiver opts into:
+
+     solid  the board as it is today. Default. Nothing here applies.
+     veil   cards are a translucent sheet (--board-veil) over whatever is behind the board: a scene
+            in .ab-surface, or a live theme's scene behind the whole screen.
+     clear  no card face at all. The word and the symbol sit straight on the scene with a halo,
+            and the card edge is what separates "card" from "hole".
+
+   THE CONTRAST ARGUMENT CHANGES IN THESE MODES and it is named here rather than hidden: over a
+   moving scene the worst case is not "word on card", it is "word on the brightest thing that can
+   cross behind the card". Each live theme's --board-veil was chosen by Design against exactly that
+   case, and the estimates are in AacGround.jsx next to each value. Code measures them. */
+
+.aboard.ab-veil,
+.aboard.ab-clear{
+  background:transparent;
+  --ab-bg:transparent;
+  --ab-card:var(--board-veil,rgba(27,36,41,.72));
+  --ab-ink:var(--board-text,#e8eef0);
+  --ab-line:var(--board-border,#7d939d);
+  --ab-lit:var(--board-lit,#8fae63);
+}
+.aboard.ab-clear{--ab-card:transparent}
+
+/* THE HALO. Only where there is no card face to read against. It runs whichever way the world
+   needs: dark on the dark scenes, light on `cozy` (a dark halo under dark ink just thickens the
+   letters into mud). The theme says which via --board-halo. */
+.aboard.ab-clear .ab-word{text-shadow:var(--board-halo,0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6))}
+.aboard.ab-clear .ab-sym svg{filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.55))}
+
+/* THE SCAN HIGHLIGHT WITHOUT A FACE. On a clear card the border is the only surface left, so the
+   lit ring is drawn outside it as well, rather than disappearing with the fill. Never animated. */
+.aboard.ab-clear .ab-card.ab-lit{box-shadow:0 0 0 max(2px,calc(var(--u,1px) * 2.5)) var(--ab-lit),
+  0 0 0 .8vmin rgba(143,174,99,.45)}
+
+/* An empty slot on a see-through board is still DRAWN: dashed and faint, over the scene. */
+.aboard.ab-veil .ab-card.ab-empty,
+.aboard.ab-clear .ab-card.ab-empty{background:transparent}
+
+/* *** THE SYMBOL AND WORD COLOURS, RE-TINTED PER WORLD, WITH NO JS. ***
+   Every meaning-bearing hex in aac_symbols.js is a literal stroke/fill attribute on inline SVG,
+   and the eight word colours above are the same hexes. Attribute selectors catch the literals,
+   so a live theme re-tints both through --board-sym-* and every other mode keeps today's hex
+   exactly (the fallback IS today's value). `i` because the source mixes #D3968C and #d3968c.
+   Scoped to veil/clear: the pinned board's numbers were measured with the literal hexes. */
+.aboard:is(.ab-veil,.ab-clear) [stroke="#6abf69" i]{stroke:var(--board-sym-yes,#6abf69)}
+.aboard:is(.ab-veil,.ab-clear) [fill="#6abf69" i]{fill:var(--board-sym-yes,#6abf69)}
+.aboard:is(.ab-veil,.ab-clear) [stroke="#d3968c" i]{stroke:var(--board-sym-no,#D3968C)}
+.aboard:is(.ab-veil,.ab-clear) [fill="#d3968c" i]{fill:var(--board-sym-no,#D3968C)}
+.aboard:is(.ab-veil,.ab-clear) [stroke="#e2b45a" i]{stroke:var(--board-sym-need,#e2b45a)}
+.aboard:is(.ab-veil,.ab-clear) [fill="#e2b45a" i]{fill:var(--board-sym-need,#e2b45a)}
+.aboard:is(.ab-veil,.ab-clear) [stroke="#d98a5f" i]{stroke:var(--board-sym-hot,#d98a5f)}
+.aboard:is(.ab-veil,.ab-clear) [fill="#d98a5f" i]{fill:var(--board-sym-hot,#d98a5f)}
+.aboard:is(.ab-veil,.ab-clear) [stroke="#7fc6d8" i]{stroke:var(--board-sym-cold,#7fc6d8)}
+.aboard:is(.ab-veil,.ab-clear) [fill="#7fc6d8" i]{fill:var(--board-sym-cold,#7fc6d8)}
+.aboard:is(.ab-veil,.ab-clear) [stroke="#cf6f86" i]{stroke:var(--board-sym-love,#cf6f86)}
+.aboard:is(.ab-veil,.ab-clear) [fill="#cf6f86" i]{fill:var(--board-sym-love,#cf6f86)}
+.aboard:is(.ab-veil,.ab-clear) .ab-yes .ab-word{color:var(--board-sym-yes,#6abf69)}
+.aboard:is(.ab-veil,.ab-clear) .ab-no .ab-word{color:var(--board-sym-no,#d3968c)}
+.aboard:is(.ab-veil,.ab-clear) .ab-need .ab-word{color:var(--board-sym-need,#e2b45a)}
+.aboard:is(.ab-veil,.ab-clear) .ab-hot .ab-word{color:var(--board-sym-hot,#d98a5f)}
+.aboard:is(.ab-veil,.ab-clear) .ab-cold .ab-word{color:var(--board-sym-cold,#7fc6d8)}
+.aboard:is(.ab-veil,.ab-clear) .ab-love .ab-word{color:var(--board-sym-love,#cf6f86)}
+
+/* *** HIGH CONTRAST STILL WINS. *** Re-asserted after the modes above because they set
+   `background` and several --ab-* keys at the same specificity. Somebody who asked for maximum
+   legibility gets the solid black-on-white board whatever surface was chosen, and the scene in
+   .ab-surface is hidden rather than left showing through a white card. */
+.aboard.ab-hc{background:var(--ab-bg);--ab-bg:#ffffff;--ab-card:#ffffff;--ab-ink:#000000;
+  --ab-line:#000000;--ab-lit:#000000}
+.aboard.ab-hc .ab-word{text-shadow:none}
+.aboard.ab-hc .ab-surface{display:none}
+
+/* *** THE WHOLE-PAGE SCENE CAN ONLY SHOW WHERE NOTHING PAINTS OVER IT. ***
+   livescene.js sets [data-live-scene] on <html> while a live theme is on. The page background
+   moves to <html> so the fixed scene layer (z-index:-1 inside <body>) sits between the two. Pages
+   whose own containers paint var(--bg) opaquely will still cover it — see README "Known work". */
+html[data-live-scene]{background:var(--bg)}
+html[data-live-scene] body{background:transparent}

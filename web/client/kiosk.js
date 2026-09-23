@@ -73,6 +73,7 @@ import './modules/lessons.js';
 import './modules/algebra.js';
 import './modules/pond.js';
 import './modules/wallpaper.js';
+import './modules/scene.js';
 import './modules/board.js';
 import './modules/comet.js';
 import './modules/pressgame.js';

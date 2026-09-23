@@ -62,6 +62,7 @@ import { normalizeBoard, tierOf, gridOf, BUILTIN_BOARDS, YESNO } from '../aac_vo
 import { createMediaSourcesClient, resolveItemUrl } from '../media_sources.js';
 import { mountBoardEditor, blankBoard } from '../board_editor.js';
 import { speak as speakDefault } from '../voice.js';
+import { mountScene, listScenes, listOverlays } from '../livescene.js';
 
 // A card shorter or narrower than this has no room for a symbol AND a legible word. See
 // `setUnit`. Chosen so the smallest card that still shows both is comfortably readable rather
@@ -328,6 +329,32 @@ export const SETTINGS = [
     onLabel: 'Black on white', offLabel: 'The board’s own colours' },
   { key: 'followTheme', label: 'Colours', default: false, level: 'essential',
     onLabel: 'Follow the screen’s theme', offLabel: 'The board keeps its own' },
+  // From Claude Design's live-themes handoff, 2026-09-22. `solid` (today's board) stays the
+  // default -- these are two NEW surfaces a caregiver opts into, not a replacement.
+  { key: 'surface', label: 'Card surface', kind: 'choice', default: 'solid', level: 'essential',
+    options: [
+      { value: 'solid', label: 'Solid — the board’s own cards' },
+      { value: 'veil',  label: 'See-through — the scene shows behind the cards' },
+      { value: 'clear', label: 'Clear — words and pictures straight on the scene' },
+    ] },
+  { key: 'boardScene', label: 'Scene behind the board', kind: 'choice', default: 'none', level: 'standard',
+    options: [
+      { value: 'none',  label: 'None' },
+      { value: 'theme', label: 'Follows the screen’s theme' },
+      ...listScenes(),
+    ],
+    note: 'Only visible when the card surface is see-through or clear.' },
+  { key: 'weather', label: 'Weather', kind: 'choice', default: 'none', level: 'standard',
+    options: [
+      { value: 'none', label: 'None' },
+      { value: 'live', label: 'The real weather outside' },
+      ...listOverlays().filter((o) => o.group === 'weather').map((o) => ({ value: o.value, label: o.label })),
+    ],
+    note: 'Only visible when a scene is behind the board.' },
+  ...listOverlays().filter((o) => o.group !== 'weather').map((o) => ({
+    key: o.value, label: o.label, kind: 'toggle', default: false, level: 'standard',
+    onLabel: 'Yes', offLabel: 'No', note: o.note,
+  })),
   // ADVANCED, and grouped with the other input questions rather than sitting at the top of
   // the list: almost nobody needs to turn touch off, and the person who does will be looking
   // for it deliberately.
@@ -372,6 +399,7 @@ registerModule(
     let cfg = { ...DEFAULTS };
     let board = normalizeBoard(YESNO);
     let scan = null;
+    let boardScene = null;   // the live scene mounted in .ab-surface, when the card surface asks for one
     let cardEls = [];
     let lit = 0;
     // *** WHEN THE CURRENTLY-LIT CELL BECAME LIT, VIA THE SCANNER'S OWN STEP. ***
@@ -789,6 +817,34 @@ registerModule(
       // preference about how it looks; the accessible answer takes precedence over the
       // decorative one rather than the two fighting over the cascade.
       el.classList.toggle('ab-hc', !!cfg.highContrast);
+
+      // From Claude Design's live-themes handoff, 2026-09-22: the see-through/clear surfaces,
+      // and the scene that shows through them.
+      el.classList.toggle('ab-veil', cfg.surface === 'veil');
+      el.classList.toggle('ab-clear', cfg.surface === 'clear');
+
+      // The scene lives in the board's own .ab-surface layer, which already exists for exactly
+      // this, UNDER the grid, aria-hidden, pointer-events:none.
+      const surf = mount.querySelector('[data-surface]');
+      const want = cfg.surface !== 'solid' && !cfg.highContrast && cfg.boardScene !== 'none';
+      const sceneId = cfg.boardScene === 'theme'
+        ? (document.documentElement.getAttribute('data-live-scene') || null)
+        : cfg.boardScene;
+      const overlays = listOverlays().filter((o) => o.group !== 'weather' && cfg[o.value]).map((o) => o.value)
+        .concat(cfg.weather && cfg.weather !== 'none' && cfg.weather !== 'live' ? [cfg.weather] : []);
+      if (want && sceneId && surf) {
+        if (boardScene) boardScene.set({ scene: sceneId, overlays });
+        else boardScene = mountScene(surf, { scene: sceneId, overlays });
+        // A panel-level scene brings its own board tokens, so the cards match the world they
+        // sit on even when the screen's own theme is something else.
+        for (const [k, v] of Object.entries(boardScene.tokens || {})) {
+          el.style.setProperty(
+            k.replace('--ab-', '--board-').replace('--board-ink', '--board-text')
+              .replace('--board-line', '--board-border'),
+            v,
+          );
+        }
+      } else if (boardScene) { boardScene.destroy(); boardScene = null; }
     }
 
     // ------------------------------------------------------------------------------------
@@ -1153,6 +1209,7 @@ registerModule(
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }
         releaseImages();
         closeEditor();
+        boardScene?.destroy(); boardScene = null;
         gone.abort();                       // every listener this module put on the mount
         cardEls = [];
         mount.innerHTML = '';
