@@ -58,6 +58,11 @@ import '../modules/youtube.js';
 // reading of a green run is "nothing stale among these", not "nothing stale".
 import '../modules/wallpaper.js';
 import '../modules/board.js';
+// `settings.js`/`ambient_drift.js` are deliberately NOT added here yet -- doing so surfaces
+// real, pre-existing gaps (no HEALTH_EXPECT row, no development-only declaration, both
+// core:'new') that predate this file's own scope and deserve their own fix, not a drive-by
+// import bump. Flagged in MIKE_CHANGE_LIST.md rather than patched here.
+import '../modules/scene.js';
 import { HEALTH_EXPECT } from '../health.js';
 
 const out = document.getElementById('results');

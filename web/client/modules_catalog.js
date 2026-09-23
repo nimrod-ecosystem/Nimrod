@@ -214,6 +214,19 @@ export const CATALOG = [
       + 'actually matters.',
   },
   {
+    type: 'scene',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'A calm animated world — woods, an aquarium, a night sky.',
+    needs: 'Nothing.',
+    why: 'Something to look at that is never the same twice and never asks for anything. Each '
+      + 'scene is a whole place with depth to it rather than a pattern, and all of the movement '
+      + 'is slow. It can hold a screen on its own, or sit behind an AAC board with the cards '
+      + 'see-through.',
+    note: 'Movement can be slowed or stopped, and it stops by itself if the device asks for '
+      + 'reduced motion.',
+  },
+  {
     type: 'pond',
     group: 'comfort',
     use: 'touch',

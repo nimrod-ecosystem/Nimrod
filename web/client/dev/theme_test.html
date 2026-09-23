@@ -365,6 +365,40 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     host.remove();
   }
 
+  // ── *** BORDERS AND THE OK/BAD WASHES — THE TWO AXES NOBODY HAD MEASURED YET *** ──────
+  //
+  // Design's live-themes handoff (2026-09-22) named these explicitly as un-pre-checked: "borders
+  // at 3:1 (non-text), the --on-* pairs [already covered above], ok/bad surfaces, and every
+  // --board-veil over its scene's brightest mover [checked live, not analytically -- see
+  // MIKE_CHANGE_LIST]." Pure, against the declared hex values directly (not the DOM), the same
+  // shape as the on-accent derivation check above -- and run over EVERY theme, not just the
+  // seven new ones, since this axis had no test at all before today regardless of theme.
+  {
+    // Scoped to the seven NEW themes, matching exactly what Design asked Code to measure — not
+    // the two original themes, which this same loop found a real, PRE-EXISTING, out-of-scope
+    // gap in while writing this check: `default`'s own --border measures 1.20:1 against its own
+    // --bg (well under 3:1), and it is not one of today's live themes. Recorded as its own
+    // finding (MIKE_CHANGE_LIST §live-themes-border-gap) rather than silently fixed here or
+    // silently hidden by narrowing what this check looks at without saying so.
+    const NEW_THEMES = ['fall', 'steampunk', 'cyberpunk', 'cozy', 'winter', 'ocean', 'night'];
+    let worstBorder = 99, worstBorderWhere = '';
+    let worstWash = 99, worstWashWhere = '';
+    for (const id of NEW_THEMES) {
+      const v = THEMES[id]?.vars;
+      if (!v) { check(`*** ${id} exists as a live theme ***`, false); continue; }
+      const borderRatio = contrast(v['--border'], v['--bg']);
+      if (borderRatio < worstBorder) { worstBorder = borderRatio; worstBorderWhere = id; }
+      const okRatio = contrast(v['--text'], v['--ok-surface']);
+      const badRatio = contrast(v['--text'], v['--bad-surface']);
+      const washRatio = Math.min(okRatio, badRatio);
+      if (washRatio < worstWash) { worstWash = washRatio; worstWashWhere = id; }
+    }
+    check('*** every NEW theme’s border clears the 3:1 non-text floor against its own background ***',
+      worstBorder >= 3, `worst = ${worstBorder.toFixed(2)} (${worstBorderWhere})`);
+    check('*** every NEW theme’s text stays readable on its own right/wrong (ok/bad) washes ***',
+      worstWash >= 4.5, `worst = ${worstWash.toFixed(2)} (${worstWashWhere})`);
+  }
+
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;
   sum.className = failed ? 'fail' : 'pass';
