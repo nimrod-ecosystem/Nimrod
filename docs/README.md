@@ -13,5 +13,7 @@
   words and must not be invented.
 - [`lookup-panel.md`](lookup-panel.md) — spec for word lookup inside Word Forge: two users
   with opposite needs, sources as folders, scoring, and where the weights live.
+- [`face-tracking-hookup.md`](face-tracking-hookup.md) — face tracking is not bundled; this is
+  how to wire a real face-landmark library into `input_facegesture.js`'s own tested seam.
 
 Keeping module docs current is part of "done" — a module without a doc is unfinished.
