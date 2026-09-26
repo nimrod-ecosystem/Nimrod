@@ -57,7 +57,14 @@ export function createSpeechChannel({
       const opts = {};
       if (synth) opts.synth = synth;
       if (Utterance) opts.Utterance = Utterance;
-      const u = speak(item.text, pref() || {}, opts);
+      // A caller's OWN voice choice, carried through `data.voice`, wins over the person's
+      // general preference — same shape `board.js`'s AAC voice picker already needs and
+      // `educational.js`/`sprint.js` already had before this channel existed (a per-instance
+      // `s.voice`, read from that module's own settings). Falls back to `pref()` exactly as
+      // before when nothing more specific was asked for, so a caller that never sets it sees
+      // no change at all.
+      const v = (item.data && item.data.voice) || pref() || {};
+      const u = speak(item.text, v, opts);
       if (!u) { done(); return null; }
 
       // Ducked for the sentence, and released on EVERY exit below - including the watchdog.

@@ -54,6 +54,12 @@ export const DROPS = [
   'preempted',       // something more urgent took the channel, too many times
   'queue-full',      // the channel is saturated and this was the least urgent
   'failed',          // the adapter threw
+  // A DISTINCT reason from `preempted`, on purpose. Preempted means something ELSE, more
+  // urgent, took the channel; cancelled means the ORIGINATING caller superseded its own
+  // earlier message — a stale word on an AAC board, the last of several rapid presses.
+  // Same telemetry question either can't answer alone: "was this dropped by a priority
+  // conflict, or because the source itself decided its own last thing no longer mattered."
+  'cancelled',
 ];
 
 export const DELIVERY_TOPIC = 'output/delivery';   // live diagnostic, not the record
@@ -274,6 +280,37 @@ export function createOutputBus({
     return [...muted];
   }
 
+  // *** CANCEL ONE MESSAGE BY ID, NOT THE WHOLE CHANNEL. *** `silence()` already existed for
+  // "stop everything, now" (the panic button, sleep) — this is the missing piece: a caller
+  // taking back ONE thing IT SAID, the moment a newer one supersedes it. Without this, a
+  // module wanting "the last press is the one worth hearing" or "a stale AAC word must not
+  // keep talking over the one just tapped" had no honest way to ask for that through the bus
+  // at all, which is the actual reason several modules called `voice.js` directly instead of
+  // going through `say()` — MIKE_CHANGE_LIST.md's own finding, not a guess made while adding
+  // this. Checks the queue first (cheap, no side effect on anything running), then whichever
+  // channel has it in flight. Returns whether anything was actually found and cancelled, so a
+  // caller can tell "the thing I cancelled was already done" from "I found and stopped it".
+  function cancel(id) {
+    if (!id) return false;
+    for (const [name, q] of queues) {
+      const i = q.findIndex((x) => x.id === id);
+      if (i >= 0) {
+        const [it] = q.splice(i, 1);
+        report(it, name, { reason: 'cancelled' });
+        return true;
+      }
+    }
+    for (const [name, list] of running) {
+      const run = list.find((r) => r.item.id === id);
+      if (run) {
+        try { run.cancel?.(); } catch (err) { console.error('cancel threw', err); }
+        run.finish({ reason: 'cancelled' });
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Stop everything, now. The caregiver-facing panic button, and what a screen does when
   // it goes to sleep - the output-side twin of the input bus's releaseAll().
   function silence() {
@@ -292,6 +329,7 @@ export function createOutputBus({
 
   return {
     emit, say, notify, alert, status,
+    cancel,
     setRouting, getRouting: () => ({ ...route }),
     setMuted, isMuted: (name) => muted.has(name),
     silence,

@@ -175,6 +175,9 @@ registerModule(
     let endTimer = null;
     let voicePref = {};                                            // from the profile's settings blob
     let settings = null;
+    let lastSpeechId = null;  // MIKE_CHANGE_LIST.md's §speech-side-doors: so `cancelSay()`
+                               // below can take back THIS module's own last utterance through
+                               // the output bus (`output.cancel`) rather than reaching past it
 
     function indexItems() {
       const fromText = (!Array.isArray(cfg.items) || !cfg.items.length) && cfg.itemsText
@@ -216,7 +219,23 @@ registerModule(
       if (!item) return;
       currentId = id;
       render(item);
-      if (item.speak) { try { speak(item.speak, voicePref); } catch (e) { console.error('educational: speak', e); } }
+      // *** THROUGH THE OUTPUT BUS WHEN ONE IS INJECTED, DIRECT `voice.js` ONLY WHEN NOT. ***
+      // `ctx.speak`/`speakDefault` bypassed the bus entirely even when a real one existed
+      // (kiosk.js always supplies `ctx.output`, never `ctx.speak`) — the exact shape
+      // MIKE_CHANGE_LIST.md's §speech-side-doors found and Mike ruled on ("They definitely
+      // shouldn't be doing that"). Same `if (ctx.output?.say) … else speak(...)` idiom
+      // `board.js`'s own `say()` already uses. `data.voice` carries this module's own
+      // per-instance voice preference through the shared channel (`output_channels.js`'s
+      // `createSpeechChannel` now prefers it over the person's general one).
+      if (item.speak) {
+        try {
+          if (ctx.output?.say) {
+            lastSpeechId = ctx.output.say(item.speak, { source: 'educational', data: { voice: voicePref } });
+          } else {
+            speak(item.speak, voicePref);
+          }
+        } catch (e) { console.error('educational: speak', e); }
+      }
       if (record) {
         recent.push(id);
         if (recent.length > RECENT_CAP) recent.shift();
@@ -234,7 +253,13 @@ registerModule(
     }
 
     function prev() { if (histPos > 0) { histPos -= 1; show(history[histPos], false); } }
-    function skip() { try { cancelSpeak(); } catch { /* noop */ } clearEnd(); advance(); }
+    function cancelSay() {
+      try {
+        if (ctx.output?.cancel && lastSpeechId) { ctx.output.cancel(lastSpeechId); lastSpeechId = null; }
+        else cancelSpeak();
+      } catch { /* noop */ }
+    }
+    function skip() { cancelSay(); clearEnd(); advance(); }
 
     // Read a settings row and act on it. Extracted from the state subscription so `init` can
     // call it too — see the note at the call site.
@@ -308,10 +333,10 @@ registerModule(
         applyState(state.get());
       },
       onResize() {},
-      onHide() { try { cancelSpeak(); } catch { /* noop */ } state.flush(); },
+      onHide() { cancelSay(); state.flush(); },
       destroy() {
         clearEnd();
-        try { cancelSpeak(); } catch { /* noop */ }
+        cancelSay();
         if (settings) { settings.destroy(); settings = null; }
       },
     };
