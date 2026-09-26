@@ -8,6 +8,13 @@
 // the false-activation gate all apply exactly as they do to a real button. Nothing here invents a
 // second switch mechanism; see `input_gamepad.js`'s own `edge()` helper, which this mirrors.
 //
+// *** MIKE'S RULING, 2026-09-26: NOT BUNDLED BY DEFAULT. *** "Color tracker built in sounds
+// good. Maybe give links for the other trackers and make them easy to hook up to Nimrod." This
+// file (the switch logic) ships; a real camera + face-landmark model does not. See
+// `docs/face-tracking-hookup.md` for the two candidate libraries, exactly what shape
+// `detectFrame()` below needs from one, and how to check whether it runs fast enough on a given
+// machine before relying on it -- that page IS the hookup this ruling asked for.
+//
 // ---------------------------------------------------------------------------------------
 // *** THIS FILE IS ONE THIRD OF THE WHOLE PICTURE, AND IT IS THE SMALL THIRD. ***
 // ---------------------------------------------------------------------------------------
