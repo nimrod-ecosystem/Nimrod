@@ -210,6 +210,9 @@ registerModule(
     let ledger = null;        // the shared points ledger (this module's own handle)
     let settings = null;      // the profile settings blob — for the voice preference
     let voicePref = {};
+    let lastSpeechId = null;  // MIKE_CHANGE_LIST.md's §speech-side-doors: so `cancelSay()`
+                               // below can take back THIS module's own last utterance through
+                               // the output bus (`output.cancel`) rather than reaching past it
     let ticker = null;
     let cfg = { ...DEFAULTS };
     let run = { phase: 'idle', endsAt: null, remainMs: null, cycle: 0 };
@@ -303,7 +306,7 @@ registerModule(
     }
 
     function reset() {
-      cancelSpeak();
+      cancelSay();
       persist({ phase: 'idle', endsAt: null, remainMs: null, cycle: 0 });
       notice = '';
       // A pause that ends in a reset rather than a resume was never really "resumed" — no
@@ -354,8 +357,30 @@ registerModule(
       }
     }
 
+    // *** THROUGH THE OUTPUT BUS WHEN ONE IS INJECTED, DIRECT `voice.js` ONLY WHEN NOT. ***
+    // `ctx.speak`/`speakDefault` bypassed the bus entirely even when a real one existed
+    // (kiosk.js always supplies `ctx.output`, never `ctx.speak`) — the exact shape
+    // MIKE_CHANGE_LIST.md's §speech-side-doors found and Mike ruled on ("They definitely
+    // shouldn't be doing that"). Same `if (ctx.output?.say) … else speak(...)` idiom
+    // `board.js`'s own `say()` already uses. `data.voice` carries this module's own
+    // per-instance voice preference through the shared channel (`output_channels.js`'s
+    // `createSpeechChannel` now prefers it over the person's general one) — without that,
+    // routing through the bus would have silently dropped it.
     function say(text) {
-      try { speak(text, voicePref); } catch (err) { console.error('sprint: speak', err); }
+      try {
+        if (ctx.output?.say) {
+          lastSpeechId = ctx.output.say(text, { source: 'sprint', data: { voice: voicePref } });
+        } else {
+          speak(text, voicePref);
+        }
+      } catch (err) { console.error('sprint: speak', err); }
+    }
+
+    function cancelSay() {
+      try {
+        if (ctx.output?.cancel && lastSpeechId) { ctx.output.cancel(lastSpeechId); lastSpeechId = null; }
+        else cancelSpeak();
+      } catch (err) { console.error('sprint: cancel speak', err); }
     }
 
     // ---- the clock tick ----
@@ -490,7 +515,7 @@ registerModule(
 
       destroy() {
         if (ticker != null) { clearTicker(ticker); ticker = null; }
-        cancelSpeak();
+        cancelSay();
         if (ledger) { ledger.destroy(); ledger = null; }
         if (settings) { settings.destroy(); settings = null; }
         resumeStream?.destroy?.();

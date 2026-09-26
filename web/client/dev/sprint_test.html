@@ -330,6 +330,54 @@ const MIN = 60000;
     led.destroy();
     check('destroy stopped the ticker (no throw on later time)', (() => { try { clock.advance(60 * MIN); return true; } catch { return false; } })());
 
+    // §speech-side-doors: PREFERS ctx.output OVER direct voice.js, same as board.js already
+    // does — kiosk.js's own childCtx only ever sets `ctx.output`, never `ctx.speak`, so this
+    // module bypassed the real, arbitrated bus in every live kiosk. Fresh profile/mount, and
+    // deliberately NO `speak` anywhere in this ctx — matching the real kiosk exactly — so a
+    // wrong fallback would throw or silently reach the real, un-injected voice.js.
+    section('§speech-side-doors: routes through ctx.output, not direct voice.js');
+    {
+      const soProfiles = createProfilesClient({ user: USER + '-output-bus' });
+      const sop = await soProfiles.create('sprint-output-bus');
+      const somod = await soProfiles.addModule(sop.id, 'sprint');
+      const sost = createState({ url: soProfiles.stateURL(sop.id, somod.id), user: USER + '-output-bus' });
+      await sost.load();
+      const soclock = fakeClock();
+      const said = [], cancelled = [];
+      const fakeOutput = {
+        say: (text, opts) => { const id = 'o' + (said.length + 1); said.push({ id, text, opts }); return id; },
+        cancel: (id) => { cancelled.push(id); return true; },
+      };
+      const sohost = document.createElement('div');
+      document.body.append(sohost);
+      const sobus = createBus();
+      const soi = mountModule('sprint', {
+        mount: sohost, bus: sobus,
+        state: sost, events: createEvents({ url: soProfiles.eventsURL(sop.id, somod.id), user: USER + '-output-bus' }),
+        user: USER + '-output-bus', profileId: sop.id, makeState, makeEvents,
+        now: soclock.now, setTicker: soclock.setTicker, clearTicker: soclock.clearTicker,
+        output: fakeOutput,
+      });
+      soi.init();
+      await sleep(60);
+
+      sobus.publish('sprint/control', 'start');
+      await sleep(20);
+      soclock.advance(25 * MIN);   // the work phase completing announces the next one
+      check('*** the phase announcement speaks through ctx.output.say ***',
+        said.length >= 1, JSON.stringify(said));
+      check('...carrying this instance’s own voice preference through `data.voice`',
+        said[0] && typeof said[0].opts?.data?.voice === 'object', JSON.stringify(said[0]?.opts));
+
+      const spentBefore = cancelled.length;
+      sobus.publish('sprint/control', 'reset');
+      await sleep(20);
+      check('*** reset cancels through ctx.output.cancel, not direct voice.js ***',
+        cancelled.length > spentBefore, JSON.stringify(cancelled));
+
+      soi.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

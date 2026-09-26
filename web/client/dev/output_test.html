@@ -263,6 +263,57 @@ function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
       check('the whole channel is idle', r.output.active('speech') === 0);
     }
 
+    // ================= cancel one message, not the whole channel =================
+    //
+    // MIKE_CHANGE_LIST.md's §speech-side-doors finding: several modules called voice.js
+    // directly instead of going through say() because the bus had no way to take back ONE
+    // message — only `silence()`, which stops every channel. "The last press is the one
+    // worth hearing" (inputs.js's own reasoning) and "a stale AAC word must not keep
+    // talking over the one just tapped" (talk.js's own reasoning) are both this exact shape:
+    // cancel MY OWN earlier message, leave everything else alone.
+    section('cancel — one message, by id, without touching anything else');
+    {
+      const r = rig({ routing: { say: ['speech'] } });
+      const id = r.output.say('stale word');
+      const ok = r.output.cancel(id);
+      check('cancelling what is currently speaking reports success', ok === true);
+      check('...and it actually stops', r.chans.speech.canceled().map((t) => t).includes('stale word'));
+      check('*** recorded as cancelled, NOT preempted — a different question for the log ***',
+        r.dropped('cancelled').some((x) => x.id === id), JSON.stringify(r.log));
+      check('the channel is free again — cancel is not a leak', r.output.active('speech') === 0);
+    }
+    {
+      // Queued, not yet running — cancel must find it there too, and touch nothing running.
+      const r = rig({ routing: { say: ['speech'] } });
+      r.output.say('speaking now');                 // takes the one speech slot
+      const queuedId = r.output.say('never gets heard');
+      check('(setup) the second one is waiting, not running',
+        r.output.pending('speech') === 1 && r.chans.speech.speaking().join() === 'speaking now');
+      const ok = r.output.cancel(queuedId);
+      check('cancelling a QUEUED item reports success too', ok === true);
+      check('...removes it from the queue', r.output.pending('speech') === 0);
+      check('...and leaves the running item alone', r.chans.speech.speaking().join() === 'speaking now');
+    }
+    {
+      const r = rig({ routing: { say: ['speech'] } });
+      check('cancelling an id that was never issued is a no-op, not a throw',
+        r.output.cancel('no-such-id') === false);
+      const id = r.output.say('done already');
+      r.chans.speech.finish();
+      check('cancelling something that already finished reports nothing to cancel',
+        r.output.cancel(id) === false);
+    }
+    {
+      // The point of the whole feature: cancelling what's running frees the channel for
+      // whatever comes next, the same as a normal finish would.
+      const r = rig({ routing: { say: ['speech'] } });
+      const first = r.output.say('one');
+      r.output.say('two');
+      r.output.cancel(first);
+      check('*** cancelling the active item lets the next queued one start, same as finishing ***',
+        r.chans.speech.speaking().join() === 'two', r.chans.speech.speaking().join());
+    }
+
     // ================= the log =================
     section('the log — an undelivered message is data');
     {
@@ -365,6 +416,35 @@ function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
 
       output.say('queued behind nothing');
       check('and the channel works again after the watchdog fired', spoken.length === 3);
+    }
+    {
+      // A CALLER'S OWN VOICE CHOICE WINS, carried through `data.voice`. MIKE_CHANGE_LIST.md's
+      // §speech-side-doors: several modules (educational.js, sprint.js) call `voice.js`
+      // directly instead of `output.say()` precisely because they carry a per-instance
+      // `s.voice` the shared channel's own `pref()` getter (the person's general preference)
+      // does not know about. Without a way to pass it through per message, moving them onto
+      // the bus would silently drop that customization.
+      const clock = fakeClock();
+      const spoken = [];
+      let live = null;
+      const fakeSynth = { speak: (u) => { live = u; spoken.push(u); }, cancel: () => {}, getVoices: () => [] };
+      function FakeUtterance(text) { this.text = text; }
+      const speech = createSpeechChannel({
+        synth: fakeSynth, Utterance: FakeUtterance,
+        pref: () => ({ rate: 1 }),                    // the person's general preference
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      });
+      const output = createOutputBus({
+        channels: { speech }, routing: { say: ['speech'] },
+        now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      });
+      output.say('the general way', {});
+      check('with no override, the channel uses the person’s general preference',
+        spoken[0].rate === 1, String(spoken[0].rate));
+      live.onend();                                   // free the channel before the next one
+      output.say('this module’s own way', { data: { voice: { rate: 1.8 } } });
+      check('*** a per-message voice override reaches the actual utterance ***',
+        spoken[1].rate === 1.8, String(spoken[1].rate));
     }
     {
       const chans = defaultChannels({ mount: document.getElementById('stage') });

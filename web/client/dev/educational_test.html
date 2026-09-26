@@ -150,6 +150,61 @@ function fakeTimers(){
     instance.destroy();
     check('destroy() cleans up without error', true);
 
+    // ── §speech-side-doors: PREFERS ctx.output OVER direct voice.js ─────────
+    //
+    // `ctx.speak` bypassed the real output bus entirely — kiosk.js's own `childCtx` never sets
+    // it, only `ctx.output`, so in the live kiosk this module ALWAYS took the direct-voice.js
+    // path even though a real, arbitrated bus was sitting right there. Mike, on the seven files
+    // doing this across the codebase: "They definitely shouldn't be doing that." Board.js
+    // already gets this right (`ctx.output?.say` first, `speak()` only as a fallback); this
+    // proves educational.js now matches it, with a FRESH profile/mount so it cannot be
+    // confused with the STUB-`speak` instance already destroyed above.
+    {
+      const eoProfiles = createProfilesClient({ user: USER + '-output-bus' });
+      const eop = await eoProfiles.create('educational-output-bus');
+      const eomod = await eoProfiles.addModule(eop.id, 'educational');
+      const eost = createState({ url: eoProfiles.stateURL(eop.id, eomod.id), user: USER + '-output-bus' });
+      await eost.load().catch(() => {});
+      await eost.set({ directed: true, autoAdvance: true });
+      await eost.flush();
+      const eohost = document.createElement('div');
+      document.body.append(eohost);
+      const said = [];
+      const cancelled = [];
+      const fakeOutput = {
+        say: (text, opts) => { const id = 'o' + (said.length + 1); said.push({ id, text, opts }); return id; },
+        cancel: (id) => { cancelled.push(id); return true; },
+      };
+      const T2 = fakeTimers();
+      const eobus = createBus();
+      const eoi = mountModule('educational', {
+        mount: eohost, bus: eobus,
+        state: eost, events: createEvents({ url: eoProfiles.eventsURL(eop.id, eomod.id), user: USER + '-output-bus' }),
+        user: USER + '-output-bus', profileId: eop.id,
+        // NO `speak` in this ctx at all — matching what kiosk.js's own childCtx actually
+        // supplies — so a fallback to it (instead of `ctx.output`) would throw or silently
+        // call the real, un-injected `voice.js`, either of which the checks below would catch.
+        output: fakeOutput,
+        setTimer: T2.setTimer, clearTimer: T2.clearTimer,
+      });
+      eoi.init();
+      await sleep(250);
+
+      eobus.publish('educational/next');
+      await sleep(20);
+      check('*** advancing speaks through ctx.output.say, not direct voice.js ***',
+        said.length === 1, JSON.stringify(said));
+      check('...carrying this instance’s own voice preference through `data.voice`',
+        said[0] && typeof said[0].opts?.data?.voice === 'object', JSON.stringify(said[0]?.opts));
+
+      eobus.publish('educational/skip');
+      await sleep(20);
+      check('*** skip cancels through ctx.output.cancel, not direct voice.js ***',
+        cancelled.length === 1 && cancelled[0] === said[0].id, JSON.stringify({ cancelled, saidId: said[0]?.id }));
+
+      eoi.destroy();
+    }
+
     // ── G12: A HOST THAT DID NOT PRE-LOAD THE STATE ─────────────────────────
     //
     // Mike found this module on the public parts page as "an empty cream box": the arrows and
