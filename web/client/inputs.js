@@ -791,9 +791,27 @@ export function mountInputs(root, {
   //
   // Silence is the worst possible answer here, because the person doing this often cannot
   // see the table and the whole question they are asking is "did that work?".
+  // Set only while the left-click warning below is showing — the proceed callback a
+  // "Bind it anyway" press should run. A fresh capture always clears it: whatever the
+  // last warning was waiting on is void the moment a new press-and-pick starts.
+  let pendingDangerousBind = null;
+
+  // Bare left click, unqualified — the one control every mouse and touch device shares,
+  // and the one `input_pointer.js`'s own onDown cannot tell apart from a real switch that
+  // merely PRESENTS as a mouse (see that file's header). Bind anything to it and every
+  // ordinary click anywhere under a module — trivia's answer buttons, YouTube's settings
+  // fields — gets intercepted as a generic switch press instead of reaching what it
+  // actually landed on. Found 2026-09-27 live on the deployed kiosk (Mike: "Mouse over
+  // buttons doesn't work on trivia now... clicking in the module clicks the selected box,
+  // not the one you're actually clicking on"), the same mechanism as an earlier incident
+  // (commit f92f744, 2026-09-20) that was only ever cleaned from the local dev database,
+  // never the live account.
+  const isBareLeftClick = (device, control) => device === POINTER_DEVICE && control === 'button:0';
+
   function capture(onPicked) {
     const msg = el('[data-addmsg]');
     const say = (t) => { if (msg) msg.textContent = t; };
+    pendingDangerousBind = null;
     say('press the control now…');
     input.beginCapture({
       onCandidate: ({ device, control }) => say(`${deviceName(device)}: ${controlName(device, control)} — now let go`),
@@ -805,10 +823,33 @@ export function mountInputs(root, {
         // deliberate click a person makes with their actual mouse (e.g. "Require Xms"),
         // which is a real regression this was caught doing before shipping.
         if (device === POINTER_DEVICE || device === TOUCH_DEVICE) suppressNextClick = true;
+        // Warn BEFORE the binding is made, not after: once it exists, the very next
+        // ordinary click this page sees IS the hijack this is warning about, and by then
+        // it is too late to ask calmly. Nothing commits unless "Bind it anyway" is
+        // pressed — saying nothing just leaves the old binding (or no binding at all)
+        // in place, the same safe-by-inaction shape every other unanswered prompt here
+        // already has.
+        if (isBareLeftClick(device, control)) {
+          warnBareLeftClick(() => onPicked({ device, control, heldMs }));
+          return;
+        }
         onPicked({ device, control, heldMs });
       },
       onTimeout: () => say('nothing pressed — try again'),
     });
+  }
+
+  // Mike's own approved wording (2026-09-28), unchanged: say exactly what it does, not a
+  // generic "are you sure?". A dismissible warning, not a blocked screen — declining just
+  // means the press is dropped, matching capture()'s own onTimeout ("nothing pressed").
+  function warnBareLeftClick(proceed) {
+    const msg = el('[data-addmsg]');
+    if (!msg) { proceed(); return; }
+    pendingDangerousBind = proceed;
+    msg.innerHTML = `<b>Wait —</b> this makes left-click confirm whatever's highlighted, `
+      + `everywhere, instead of clicking what you point at. `
+      + `<button class="h-btn" data-bindanyway>Bind it anyway</button> `
+      + `<button class="h-btn" data-canceldanger>Never mind</button>`;
   }
 
   // Said after every capture, hold offer or not. `bid` names the row so the confirmation
@@ -979,6 +1020,20 @@ export function mountInputs(root, {
       edit(useHold.dataset.usehold, { holdMs: Number(useHold.dataset.ms) });
       renderBindings();
       el('[data-addmsg]').textContent = '';
+      return;
+    }
+
+    if (e.target.closest('[data-bindanyway]')) {
+      const proceed = pendingDangerousBind;
+      pendingDangerousBind = null;
+      proceed?.();
+      return;
+    }
+
+    if (e.target.closest('[data-canceldanger]')) {
+      pendingDangerousBind = null;
+      const msg = el('[data-addmsg]');
+      if (msg) msg.textContent = '';
       return;
     }
 
