@@ -70,7 +70,10 @@ export function calcPress(state, key) {
     if (s.entry === 'error') return s;
     // Chaining: "2 + 3 + " folds the pending operation first, like a real calculator.
     s.acc = (s.op != null && !s.fresh) ? applyOp(s.acc, s.op, num()) : num();
-    if (s.acc == null) { s.entry = 'error'; s.op = null; return s; }
+    // `fresh` too, the way the '=' branch leaves an error: without it the next digit was APPENDED to
+    // the word ("error3") and the display stayed unreadable until C. (Fixed 2026-09-28; it was moved
+    // here verbatim from algebra.js first, so the move itself could be proven to change nothing.)
+    if (s.acc == null) { s.entry = 'error'; s.op = null; s.fresh = true; return s; }
     s.op = key; s.fresh = true;
     return s;
   }

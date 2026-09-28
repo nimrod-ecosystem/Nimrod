@@ -158,15 +158,17 @@ try {
     check('C recovers from an error', JSON.stringify(calcPress(bad, 'C')) === JSON.stringify(calcInit()));
     check('a fresh calculation after an error works: 5/0= then 2+2=',
       calcValue(run('2+2=', bad)) === 4, run('2+2=', bad).entry);
-    // Dividing by zero through a CHAIN ("5 / 0 +") takes a different path in calcPress that does not
-    // set `fresh`, so the next digit is APPENDED to the word.
+    // Dividing by zero through a CHAIN ("5 / 0 +") used to take a path in calcPress that did not set
+    // `fresh`, so the next digit was APPENDED to the word ("error3"). Fixed 2026-09-28: it recovers
+    // the way the '=' path always did.
     const chained = run('5/0+');
-    check('KNOWN QUIRK: a divide-by-zero found by chaining also says error', chained.entry === 'error',
+    check('a divide-by-zero found by chaining also says error', chained.entry === 'error',
       chained.entry);
-    check('KNOWN QUIRK: ...but the next digit is appended to it (error3) rather than replacing it',
-      run('3', chained).entry === 'error3', run('3', chained).entry);
-    check('KNOWN QUIRK: ...and that reads as no number, until C', calcValue(run('3', chained)) === null
-      && calcValue(calcPress(run('3', chained), 'C')) === 0);
+    check('...and the next digit REPLACES it, exactly as after a plain 5/0= (was: error3)',
+      run('3', chained).entry === '3', run('3', chained).entry);
+    check('...so a fresh calculation after it works: 5/0+ then 2+2=',
+      calcValue(run('2+2=', chained)) === 4, run('2+2=', chained).entry);
+    check('...and a point recovers from it too', run('.', chained).entry === '0.', run('.', chained).entry);
   }
 
   section('C (clear)');
