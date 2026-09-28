@@ -183,7 +183,7 @@ const SETTINGS = [
       { value: 40000, label: 'A very long wait' },
     ] },
   { key: 'challenge', label: 'Mode', default: false, level: 'essential',
-    onLabel: 'Challenge — the invite can time out', offLabel: 'Calm — the invite waits for her' },
+    onLabel: 'Challenge — the invite can time out', offLabel: 'Calm — the invite waits for them' },
   { key: 'sound', label: 'Sound', default: true, level: 'essential',
     onLabel: 'Tones on', offLabel: 'Silent' },
   { key: 'speak', label: 'Say the cues out loud', default: true, level: 'essential',
@@ -444,7 +444,7 @@ registerModule(
           : { n: 0 },
         // The honest framing, carried in the record itself rather than left to a reader's
         // good intentions.
-        caveat: 'Evidence candidates, not scores. A missed press is not proof she cannot '
+        caveat: 'Evidence candidates, not scores. A missed press is not proof the person cannot '
               + 'respond — arousal, fatigue, attention, motor output and the screen itself are '
               + 'not separable here. Points are engagement only.',
         rows: sessionRows.slice(),
