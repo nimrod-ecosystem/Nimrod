@@ -305,7 +305,7 @@ section('IS IT EVEN PLUGGED IN? — the question before "what is it bound to"');
   const all = deviceStatus({ bindings, devices: [], now: 1000 });
   check('WHEN NOTHING SHE IS BOUND TO IS CONNECTED, THAT IS THE HEADLINE — no amount of '
     + 'reading the binding list will help', all.verdict.tone === 'bad'
-    && all.verdict.text.includes('Nothing she is bound to'), all.verdict.text);
+    && all.verdict.text.includes('None of the bound controls'), all.verdict.text);
 
   const some = deviceStatus({ bindings, devices: [{ device: 'gamepad:one' }], now: 1000 });
   check('with one of two present it says how many, rather than crying wolf',

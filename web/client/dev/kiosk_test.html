@@ -628,7 +628,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
     await press('Escape');
     const labels = kiosk.menu.items().map((i) => i.label);
     check('the menu offers the restart choices',
-      labels.some((l) => l.includes('Pick up where she left off'))
+      labels.some((l) => l.includes('Pick up where it left off'))
       && labels.some((l) => l.includes('Start this screen from the top'))
       && labels.some((l) => l.includes('Always come back to')), JSON.stringify(labels));
     check('and it names THIS screen, so there is no list to scan',
