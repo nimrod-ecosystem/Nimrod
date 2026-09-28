@@ -34,6 +34,7 @@ import { mountModule, getManifest } from '../module.js';
 import {
   createLessons, unlockedFrom, unlockLog, gate, lockedTopics,
   DEFAULT_TOPICS, LESSON_TOPIC, WATCHED_KIND,
+  MODE_KEY, MODES, DEFAULT_MODE, modeFrom, ALL_UNLOCKED, createQuestMode, PROFILE_SETTINGS_KEY,
 } from '../lessons.js';
 import { videoHTML, packToTopics, questionsFromPack, DEFAULTS } from '../modules/lessons.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
@@ -114,6 +115,50 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     check('a plain url becomes a video element', /<video/.test(videoHTML({ kind: 'url', value: '/a.mp4' })));
     check('no video is not an error', videoHTML(null) === '');
 
+    // ================= mode: quest vs sandbox (register 252/257.2) — pure =================
+    section('mode — quest vs sandbox, the pure half');
+    check('DEFAULT_MODE is sandbox — Mike, 2026-09-28: "Sandbox is default for new profiles"',
+      DEFAULT_MODE === 'sandbox', DEFAULT_MODE);
+    check('MODES declares exactly the two', MODES.length === 2 && MODES.includes('quest')
+      && MODES.includes('sandbox'), JSON.stringify(MODES));
+    check('never chosen (an empty settings row) reads as the default, sandbox',
+      modeFrom({}) === 'sandbox', modeFrom({}));
+    check('...and so does a settings row with no questMode key at all, only theme',
+      modeFrom({ theme: 'dark' }) === 'sandbox', modeFrom({ theme: 'dark' }));
+    check('an explicit "quest" is honored', modeFrom({ [MODE_KEY]: 'quest' }) === 'quest');
+    check('an explicit "sandbox" is honored', modeFrom({ [MODE_KEY]: 'sandbox' }) === 'sandbox');
+    check('*** PRESENCE IS WHAT COUNTS, not validity — a stray/pre-feature value reads as absent, '
+      + 'not as a crash or a silent wrong pick ***', modeFrom({ [MODE_KEY]: 'bogus' }) === 'sandbox',
+      modeFrom({ [MODE_KEY]: 'bogus' }));
+    check('null and undefined values are absent too, same as a missing key',
+      modeFrom({ [MODE_KEY]: null }) === 'sandbox' && modeFrom(null) === 'sandbox' && modeFrom(undefined) === 'sandbox');
+    check('*** ALL_UNLOCKED satisfies gate() the same way a real fully-unlocked Set would ***',
+      gate(words, ALL_UNLOCKED).open.length === words.length && gate(words, ALL_UNLOCKED).locked.length === 0,
+      JSON.stringify(gate(words, ALL_UNLOCKED)));
+    check('...and lockedTopics() reports nothing held back either',
+      lockedTopics(words, ALL_UNLOCKED, DEFAULT_TOPICS).length === 0,
+      JSON.stringify(lockedTopics(words, ALL_UNLOCKED, DEFAULT_TOPICS)));
+
+    // The live handle — same shape as createLessons on purpose, proven against a fake
+    // makeState the same way watch()'s own fakeStream proves createLessons just below.
+    {
+      let stored = {};
+      const fakeState = {
+        get: () => stored, set: (patch) => { stored = { ...stored, ...patch }; },
+        load: () => Promise.resolve(), startPolling() {}, subscribe: () => () => {}, destroy() {},
+      };
+      let seenKey = null;
+      const qm = createQuestMode({ makeState: (key) => { seenKey = key; return fakeState; } });
+      check('*** createQuestMode reads the SAME reserved key theme lives under, not a new one ***',
+        seenKey === PROFILE_SETTINGS_KEY && seenKey === 'settings', String(seenKey));
+      check('a fresh handle (nothing stored) reads as sandbox', qm.get() === 'sandbox' && qm.isSandbox());
+      fakeState.set({ [MODE_KEY]: 'quest' });
+      check('...and picks up an explicit choice with no extra wiring',
+        qm.get() === 'quest' && !qm.isSandbox());
+      check('createQuestMode refuses to run without ctx.makeState, the same guard createLessons has',
+        (() => { try { createQuestMode({}); return false; } catch { return true; } })());
+    }
+
     // ================= watch()'s new, optional latencyMs — deterministic, no server timing =====
     section('watch() — latencyMs is real when given, never fabricated when not');
     {
@@ -147,6 +192,16 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     const makeState = (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o });
     const makeEvents = (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o });
     const bus = createBus();
+    // *** PINNED TO QUEST, EXPLICITLY (register 252/257.2). *** This whole file is proving what
+    // gating DOES — DEFAULT_MODE is now 'sandbox' (Mike: "Sandbox is default for new profiles"),
+    // so a profile that never says otherwise would bypass every gate below and these checks
+    // would stop testing anything. Pinning here is what makes the rest of this file's "quest
+    // mode is unchanged" claim actually true rather than assumed — see the dedicated sandbox
+    // section near the end of this file for the other half.
+    await (async () => {
+      const s = createState({ url: profiles.stateURL(profile.id, 'settings'), user: USER });
+      await s.load(); s.set({ questMode: 'quest' }); await s.flush();
+    })();
 
     const lmod = await profiles.addModule(profile.id, 'lessons');
     const lst = createState({ url: profiles.stateURL(profile.id, lmod.id), user: USER });
@@ -277,6 +332,11 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     const tprofile = await tprofiles.create('TEST-trivia-lesson-gate');
     const tMakeState = (k, o) => createState({ url: tprofiles.stateURL(tprofile.id, k), user: USER, ...o });
     const tMakeEvents = (k, o) => createEvents({ url: tprofiles.eventsURL(tprofile.id, k), user: USER, ...o });
+    // *** PINNED TO QUEST, EXPLICITLY — same reason as `profile` above. ***
+    await (async () => {
+      const s = createState({ url: tprofiles.stateURL(tprofile.id, 'settings'), user: USER });
+      await s.load(); s.set({ questMode: 'quest' }); await s.flush();
+    })();
     const TRIVIA_BANK = `
 # 4 ungated questions
 What is 2+2? | 4 | 3 | 5 | 6
@@ -432,6 +492,62 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
     }
 
     tles.destroy(); tv2.destroy();
+
+    // ============================================================================================
+    // SANDBOX MODE, END TO END (register 252/257.2). Reuses `tprofile` deliberately: "roots" is
+    // unlocked and "concision" is not, from everything above, and the log now also carries the
+    // two routed lesson-pack questions' topics. Proving sandbox plays "concision" WITHOUT it
+    // ever being unlocked, and that flipping straight back to quest re-gates from that exact
+    // same log, is the "switching loses nothing" ruling read literally — against a profile with
+    // REAL partial history, not a fresh, otherwise-empty one.
+    section('*** sandbox mode, end-to-end: bypasses the gate above, then quest picks up exactly where it left off ***');
+    {
+      const sSettings = createState({ url: tprofiles.stateURL(tprofile.id, 'settings'), user: USER });
+      await sSettings.load();
+      sSettings.set({ questMode: 'sandbox' });
+      await sSettings.flush();
+
+      tvHost.innerHTML = '';
+      const tst4 = createState({ url: tprofiles.stateURL(tprofile.id, tmod.id), user: USER });
+      await tst4.load();
+      const tv4 = mountModule('trivia', {
+        mount: tvHost, bus: createBus(), state: tst4,
+        events: createEvents({ url: tprofiles.eventsURL(tprofile.id, tmod.id), user: USER }),
+        user: USER, profileId: tprofile.id, makeState: tMakeState, makeEvents: tMakeEvents, rand: seeded(7),
+      });
+      tv4.init();
+      await sleep(900);
+      check('*** sandbox: EVERY question plays, including "concision", which was never unlocked ***',
+        tv4.impl.__probe().deck === 9, `deck=${tv4.impl.__probe().deck} (expected all 9)`);
+      check('...and nothing is reported as held back',
+        !/waiting behind/i.test(tvHost.textContent), tvHost.textContent.slice(0, 200));
+      tv4.destroy();
+
+      // The log itself was never touched by being in sandbox — "concision" is still not in it.
+      const auditAfterSandbox = createLessons({ makeEvents: tMakeEvents });
+      await auditAfterSandbox.load();
+      check('*** the unlock log is exactly as it was — sandbox never wrote to it ***',
+        auditAfterSandbox.unlocked().has('roots') && !auditAfterSandbox.unlocked().has('concision'),
+        JSON.stringify([...auditAfterSandbox.unlocked()]));
+      auditAfterSandbox.destroy();
+
+      sSettings.set({ questMode: 'quest' });
+      await sSettings.flush();
+      tvHost.innerHTML = '';
+      const tst5 = createState({ url: tprofiles.stateURL(tprofile.id, tmod.id), user: USER });
+      await tst5.load();
+      const tv5 = mountModule('trivia', {
+        mount: tvHost, bus: createBus(), state: tst5,
+        events: createEvents({ url: tprofiles.eventsURL(tprofile.id, tmod.id), user: USER }),
+        user: USER, profileId: tprofile.id, makeState: tMakeState, makeEvents: tMakeEvents, rand: seeded(7),
+      });
+      tv5.init();
+      await sleep(900);
+      check('*** switching straight back to quest re-gates to EXACTLY the same 7 as before — '
+        + 'nothing lost, nothing extra ***',
+        tv5.impl.__probe().deck === 7, `deck=${tv5.impl.__probe().deck} (expected 7, same as pre-sandbox)`);
+      tv5.destroy();
+    }
 
     // ============================================================================================
     // VIDEO SELECTION, CLOSED BY A PACK — change list §3's "no video-selection mechanism at all

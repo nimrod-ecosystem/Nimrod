@@ -69,7 +69,11 @@ How many legs does a spider have? | Eight | Six | Ten | Four`;
 // module writes, rather than asserting a wall-clock latency is "more than zero" -- which is
 // the assertion that would have passed the whole time the field did not exist.
 function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = () => 0,
-              now = null, telemetry = null, saved = {}, rigDefault = 'bank' } = {}) {
+              now = null, telemetry = null, saved = {}, rigDefault = 'bank',
+              // `mode` — quest/sandbox (register 252/257.2). `undefined` (the default) means
+              // "never chosen", which `lessons.js`'s own `modeFrom` reads as sandbox, same as
+              // any other profile that has not touched the setting.
+              mode = undefined } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
@@ -88,11 +92,19 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
     set: () => {}, flush: async () => {}, load: async () => {},
     startPolling() {}, subscribe: () => () => {}, destroy() {},
   };
+  // The profile's shared 'settings' row `createQuestMode` reads (see ../lessons.js). A
+  // SEPARATE fake from `sharedRow` — `ctx.makeState` is dispatched by key below — so a test
+  // can set the mode without also having to reason about the bank-sharing row.
+  const modeRow = {
+    get: () => (mode === undefined ? {} : { questMode: mode }),
+    set: () => {}, flush: async () => {}, load: async () => {},
+    startPolling() {}, subscribe: () => () => {}, destroy() {},
+  };
   const inst = mountModule('trivia', {
     mount: host, bus, rand, recorder,
     ...(now ? { now } : {}),
     ...(telemetry ? { telemetry } : {}),
-    makeState: () => sharedRow,
+    makeState: (key) => (key === 'settings' ? modeRow : sharedRow),
     state: { get: () => stored, set: () => {}, flush: () => {},
              subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } },
     makeEvents: (name) => ({ name, append: async (k, d) => { events.push([k, d, name]); },
@@ -191,6 +203,45 @@ no pipe here
       tagged[0].wrong.join(',') === 'wrong1,wrong2', JSON.stringify(tagged[0].wrong));
     check('a row with no topic tag carries none — old banks are unaffected',
       !('topic' in parseBank(BANK_TEXT)[0]), JSON.stringify(parseBank(BANK_TEXT)[0]));
+  }
+
+  // =====================================================================================
+  section('*** sandbox mode (register 252/257.2) — bypasses lesson gating, log untouched ***');
+  {
+    // 4 ungated + 2 gated behind 'roots' — the same shape as lessons_test.html's own
+    // TRIVIA_BANK, chosen so the "<4 open falls back to the whole bank" safety rule in
+    // newRound() doesn't mask the gating difference this section exists to prove.
+    const GATED_BANK = `
+What is 2+2? | 4 | 3 | 5 | 6
+Which animal barks? | Dog | Cat | Fish | Bird
+What color is the sky on a clear day? | Blue | Red | Green | Yellow
+What do bees make? | Honey | Milk | Bread | Juice
+What is a run-on sentence? | Two clauses joined with no punctuation | A short sentence | A question | topic:roots
+Why do writers avoid run-ons? | Clarity | Length | Rhyme | topic:roots
+`;
+    // A tick to let `mode.load()`'s promise chain resolve and rebuild the round — even a fake
+    // that never actually awaits anything still settles on a MICROTASK, not synchronously
+    // within `rig()`'s own call, mirroring exactly why the module's own code waits for
+    // `mode.load()` before trusting a round (see trivia.js's own comment at the call site).
+    const quest = rig({ bankText: GATED_BANK, mode: 'quest' });
+    await sleep(20);
+    check('*** quest mode: unchanged from today — the gated pair stays out of the deck ***',
+      quest.probe().bank === 6 && quest.probe().deck === 4, JSON.stringify(quest.probe()));
+    quest.inst.destroy();
+
+    const sandbox = rig({ bankText: GATED_BANK, mode: 'sandbox' });
+    await sleep(20);
+    check('*** sandbox mode: the same gated pair plays, with NOTHING in the unlock log ***',
+      sandbox.probe().bank === 6 && sandbox.probe().deck === 6, JSON.stringify(sandbox.probe()));
+    sandbox.inst.destroy();
+
+    // `mode` left unset entirely — Mike, 2026-09-28, register 257.2: "Sandbox is default for
+    // new profiles."
+    const def = rig({ bankText: GATED_BANK });
+    await sleep(20);
+    check('*** DEFAULT (mode never chosen) reads as sandbox, per Mike’s ruling ***',
+      def.probe().deck === 6, JSON.stringify(def.probe()));
+    def.inst.destroy();
   }
 
   section('the deck');

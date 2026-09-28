@@ -148,6 +148,45 @@ try {
     inst2.destroy();
   }
 
+  section('*** LEARNING MODE scope — quest vs sandbox, register 252/257.2 ***');
+  {
+    host.innerHTML = '';
+    const st4 = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
+    const inst4 = mountModule('settings', {
+      mount: host, bus: createBus(), state: st4,
+      events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
+      user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
+      makeState, makeEvents,
+    });
+    await inst4.init();
+    await sleep(400);
+    const rows = () => [...host.querySelectorAll('[data-n]')];
+    const modeRow = rows().find((b) => b.querySelector('.st-label')?.textContent === 'Learning mode');
+    check('a Learning mode row exists', !!modeRow);
+    modeRow?.click();
+    await sleep(80);
+    const sel = host.querySelector('[data-mode-select]');
+    check('a real picker offering exactly quest and sandbox', sel && sel.options.length === 2,
+      sel && JSON.stringify([...sel.options].map((o) => o.value)));
+    await sleep(150);   // the page's own async state load
+    check('*** shows sandbox on screen — this profile has never chosen, and that is the default ***',
+      sel.value === 'sandbox', sel.value);
+    sel.value = 'quest';
+    sel.dispatchEvent(new Event('change'));
+    await sleep(300);
+
+    // Read it back the way trivia/wordforge/algebra actually do (createQuestMode / lessons.js's
+    // modeFrom), proving this wrote the SAME per-profile record those games read, not a
+    // module-local copy of it — and the SAME reserved 'settings' document theme just wrote to.
+    const modeState = createState({ url: profiles.stateURL(profile.id, 'settings'), user: USER });
+    await modeState.load();
+    check('*** the choice landed on the real per-profile record the games read ***',
+      modeState.get()?.questMode === 'quest', JSON.stringify(modeState.get()));
+    check('...beside the theme this suite already set, not overwriting it',
+      modeState.get()?.theme === 'dusk', JSON.stringify(modeState.get()));
+    inst4.destroy();
+  }
+
   section('*** DEVICE scope — honest about not reaching a screen\'s own settings yet ***');
   {
     host.innerHTML = '';
