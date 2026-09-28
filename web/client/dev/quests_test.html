@@ -35,7 +35,11 @@ import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
 import { createPointsLedger, POINTS_TOPIC, sumEarned, sumSpent, sumMinutes, weekStart,
          pointsValue, fmtPoints } from '../points.js';
-import { weeklyTarget, hoursBand, fmtHours, DEFAULT_TASKS, DEFAULT_REWARDS } from '../modules/quests.js';
+import { weeklyTarget, hoursBand, fmtHours, DEFAULT_TASKS, DEFAULT_REWARDS,
+         SPEND_ORDER, EXCHANGE_STEPS, acceptsOf, chooseCurrency } from '../modules/quests.js';
+import { DEFAULT_CURRENCIES } from '../points.js';
+import { getManifest } from '../module.js';
+import { fieldsFor, fieldValue } from '../settings_fields.js';
 import '../modules/sprint.js';
 
 const params = new URLSearchParams(location.search);
@@ -175,7 +179,8 @@ const MIN = 60000;
     buys()[treat].click();                      // first tap = arm only
     await sleep(150);
     check('one tap does NOT spend', balance() === beforeBuy, txt('[data-balance]'));
-    check('it asks for confirmation', /confirm/i.test(txt('[data-flash]') || ''), txt('[data-flash]'));
+    // Since 2026-09-28 the confirm names the currency ("Tap again to buy with School points").
+    check('it asks for confirmation', /tap again/i.test(txt('[data-flash]') || ''), txt('[data-flash]'));
     buys()[treat].click();                      // second tap = buy
     await sleep(300);
     check('confirming spends the points', balance() === beforeBuy - 50, txt('[data-balance]'));
@@ -317,6 +322,226 @@ const MIN = 60000;
       check('...and a part-point earning is still visible rather than shown as nothing',
         fmtPoints(0.75) === '0.75', fmtPoints(0.75));
     }
+
+    // ── *** TWO CURRENCIES IN THE REWARD STORE (register 262-263, 2026-09-28) *** ─────────
+    //
+    // Mike: "play and school points would be like two different currencies. That would go
+    // together into total points. You can trade school points for play points, but not the
+    // other way around." Screen time is School only; Play is spent first where it is accepted.
+    const J = (x) => JSON.stringify(x);
+    section('rewards: which currencies each accepts (pure)');
+    const SOLO = DEFAULT_REWARDS.findIndex((r) => r.reward === 'Screen time — 1 hr, solo');
+    const FRIEND = DEFAULT_REWARDS.findIndex((r) => r.reward === 'Screen time — 1 hr, w/ friend');
+    const TREAT = DEFAULT_REWARDS.findIndex((r) => r.cost === 50);
+    const MOVIE = DEFAULT_REWARDS.findIndex((r) => r.cost === 40);
+    check('both screen-time rewards accept School ONLY',
+      J(DEFAULT_REWARDS[SOLO].accepts) === J(['school']) && J(DEFAULT_REWARDS[FRIEND].accepts) === J(['school']),
+      J([DEFAULT_REWARDS[SOLO], DEFAULT_REWARDS[FRIEND]]));
+    check('every other default reward accepts both',
+      DEFAULT_REWARDS.filter((_, i) => i !== SOLO && i !== FRIEND)
+        .every((r) => J(r.accepts) === J(['school', 'play'])), J(DEFAULT_REWARDS.map((r) => r.accepts)));
+    check('*** a saved reward with no `accepts` accepts EVERY currency — no magic by name ***',
+      J(acceptsOf({ reward: 'Screen time — 1 hr, solo', cost: 60 })) === J(DEFAULT_CURRENCIES.map((c) => c.id)));
+    check('ids a reward lists that are not currencies are ignored',
+      J(acceptsOf({ accepts: ['play', 'gold'] })) === J(['play']));
+    check('the spend order: Play first, then School', J(SPEND_ORDER) === J(['play', 'school']));
+    const treatR = DEFAULT_REWARDS[TREAT];
+    check('Play pays first when it is accepted and covers the cost',
+      chooseCurrency(treatR, { school: 100, play: 50 }).currency === 'play');
+    check('School pays when Play is short (no split purchases)',
+      chooseCurrency(treatR, { school: 100, play: 49 }).currency === 'school');
+    const noScreen = chooseCurrency(DEFAULT_REWARDS[SOLO], { school: 10, play: 500 });
+    check('*** a Play-only balance cannot buy screen time ***', noScreen.currency === null, J(noScreen));
+    check('...and the reason names the short currency and what there is of it',
+      /School/.test(noScreen.why || '') && /10/.test(noScreen.why || '') && !/Play/.test(noScreen.why || ''),
+      noScreen.why);
+    const neither = chooseCurrency(treatR, { school: 3, play: 4 });
+    check('when every accepted currency is short, the reason names each',
+      neither.currency === null && /Play/.test(neither.why || '') && /School/.test(neither.why || ''), neither.why);
+    check('affordability is the TRUE balance, which the floored display agrees with (59.75 shows 59, cannot buy 60)',
+      chooseCurrency({ cost: 60, accepts: ['school'] }, { school: 59.75, play: 0 }).currency === null
+      && fmtPoints(59.75) === '59');
+    const emptyAcc = chooseCurrency({ cost: 1, accepts: [] }, { school: 99, play: 99 });
+    check('an empty accepts list is honest: nothing can buy it, and it says so',
+      emptyAcc.currency === null && !!emptyAcc.why, J(emptyAcc));
+
+    section('the exchange-rate setting');
+    const qFields = fieldsFor(getManifest('quests'));
+    const rateF = qFields.find((f) => f.key === 'exchangeRate');
+    check('the exchange rate is a declared setting, a cycleable choice',
+      !!rateF && rateF.kind === 'choice' && rateF.cycleable, J(rateF));
+    check('default 1 (1 School -> 1 Play)', rateF && fieldValue(rateF, {}) === 1, rateF && fieldValue(rateF, {}));
+    check('a few options, 1 among them',
+      rateF && rateF.options.length >= 3 && rateF.options.length <= 5 && rateF.options.some((o) => o.value === 1),
+      rateF && J(rateF.options));
+    check('no other setting was invented', qFields.length === 1, qFields.map((f) => f.key).join());
+    check('the exchange steps are a few fixed whole amounts',
+      EXCHANGE_STEPS.length >= 2 && EXCHANGE_STEPS.length <= 4 && EXCHANGE_STEPS.every((n) => Number.isInteger(n) && n > 0),
+      J(EXCHANGE_STEPS));
+
+    section('two currencies, mounted');
+    const cProfile = await profiles.create('TEST-quests-currencies');
+    const cMakeState  = (key, opts) => createState({ url: profiles.stateURL(cProfile.id, key), user: USER, ...opts });
+    const cMakeEvents = (key, opts) => createEvents({ url: profiles.eventsURL(cProfile.id, key), user: USER, ...opts });
+    const seed = createPointsLedger({ makeEvents: cMakeEvents });
+    await seed.load();
+    await seed.award({ amount: 100, source: 'comet_ambient', type: 'Play', note: 'balloons' });
+
+    const newHost = (id) => {
+      const d = document.createElement('div');
+      d.id = id; d.style.cssText = 'width:420px;margin-top:12px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:12px';
+      document.body.append(d); return d;
+    };
+    const cbus = createBus();
+    const cmod = await profiles.addModule(cProfile.id, 'quests');
+    const cstate = createState({ url: profiles.stateURL(cProfile.id, cmod.id), user: USER });
+    await cstate.load();
+    const chost = newHost('curHost');
+    const cinst = mountModule('quests', {
+      mount: chost, bus: cbus, state: cstate,
+      events: createEvents({ url: profiles.eventsURL(cProfile.id, cmod.id), user: USER }),
+      user: USER, profileId: cProfile.id, makeState: cMakeState, makeEvents: cMakeEvents,
+    });
+    cinst.init();
+    await sleep(400);
+
+    const ct = (sel) => chost.querySelector(sel)?.textContent?.trim();
+    const cur = (id) => Number(chost.querySelector(`[data-currency="${id}"] [data-amount]`)?.textContent);
+    const cBuys = () => [...chost.querySelectorAll('[data-buy]')];
+    const exBtns = () => [...chost.querySelectorAll('[data-exchange]')];
+    const label = (b) => (b && (b.getAttribute('aria-label') || b.textContent)) || '';
+    const lastEvent = async () => { await seed.load(); return seed.events().at(-1); };
+
+    check('the header still shows the TOTAL', ct('[data-balance]') === '100', ct('[data-balance]'));
+    check('...and each currency, named from the data',
+      cur('play') === 100 && cur('school') === 0
+      && /Play/.test(ct('[data-currency="play"]') || '') && /School/.test(ct('[data-currency="school"]') || ''),
+      `${ct('[data-currency="school"]')} | ${ct('[data-currency="play"]')}`);
+    check('no icon is drawn while the data has none (a design task)', !chost.querySelector('[data-currency] .q-cur-icon'));
+
+    [...chost.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === 'rewards').click();
+    await sleep(120);
+    check('*** screen time is disabled on a Play-only balance ***', cBuys()[SOLO].disabled && cBuys()[FRIEND].disabled);
+    check('...and the row says why, naming School',
+      /School/.test(cBuys()[SOLO].querySelector('[data-why]')?.textContent || ''),
+      cBuys()[SOLO].querySelector('[data-why]')?.textContent);
+    check('a reward that accepts Play is buyable, and says it will be paid in Play',
+      !cBuys()[TREAT].disabled && cBuys()[TREAT].dataset.pay === 'play', cBuys()[TREAT].outerHTML);
+
+    cBuys()[TREAT].click();
+    await sleep(150);
+    check('*** the confirm names the currency ***', /Tap again to buy with Play points/.test(ct('[data-flash]') || ''),
+      ct('[data-flash]'));
+    check('one tap spends nothing', cur('play') === 100);
+    cBuys()[TREAT].click();
+    await sleep(500);
+    check('bought with Play: Play 50, School untouched, total 50',
+      cur('play') === 50 && cur('school') === 0 && ct('[data-balance]') === '50',
+      `${cur('school')}/${cur('play')}/${ct('[data-balance]')}`);
+    const boughtEv = await lastEvent();
+    check('...and the spend records the currency it came from',
+      boughtEv.data.type === 'Reward' && boughtEv.data.currency === 'play', J(boughtEv.data));
+
+    section('exchange: School for Play, two taps, never back');
+    check('the exchange control is there, one button per fixed step', exBtns().length === EXCHANGE_STEPS.length,
+      String(exBtns().length));
+    check('each is a real button whose label says what it does',
+      exBtns().every((b) => b.tagName === 'BUTTON' && /^Trade \d+ School points? for \d+ Play points?/.test(label(b))),
+      exBtns().map(label).join(' | '));
+    check('with no School, trading is refused politely: disabled, and it says why',
+      exBtns().every((b) => b.disabled) && /School/.test(ct('[data-exchange-why]') || ''), ct('[data-exchange-why]'));
+    check('there is no Play -> School control at all', !chost.querySelector('[data-exchange-from="play"]'));
+
+    cbus.publish('quests/log', 'Mow the lawn');                  // +60 School
+    await sleep(500);
+    check('a chore pays School', cur('school') === 60 && cur('play') === 50, `${cur('school')}/${cur('play')}`);
+    const step = EXCHANGE_STEPS[0];
+    check('a step School covers is enabled', !exBtns()[0].disabled);
+    exBtns()[0].click();
+    await sleep(120);
+    check('the first tap asks, naming both currencies',
+      new RegExp(`Tap again to trade ${step} School points for ${step} Play points`).test(ct('[data-flash]') || ''),
+      ct('[data-flash]'));
+    check('...and moves nothing', cur('school') === 60 && cur('play') === 50);
+    exBtns()[0].click();
+    await sleep(500);
+    check('*** traded: School down by the step, Play up by it ***',
+      cur('school') === 60 - step && cur('play') === 50 + step, `${cur('school')}/${cur('play')}`);
+    check('at 1:1 the total did not move', ct('[data-balance]') === '110', ct('[data-balance]'));
+    const exEvRec = await lastEvent();
+    check('one Exchange event on the record', exEvRec.data.type === 'Exchange' && exEvRec.data.from === 'school'
+      && exEvRec.data.to === 'play' && exEvRec.data.amount === step && exEvRec.data.rate === 1, J(exEvRec.data));
+    const big = exBtns().findIndex((b) => Number(b.dataset.exchange) > cur('school'));
+    check('a step bigger than the School balance is refused, and its label says how much there is',
+      big >= 0 && exBtns()[big].disabled && new RegExp(`you have ${cur('school')}`).test(label(exBtns()[big])),
+      big >= 0 ? label(exBtns()[big]) : 'no step above the balance');
+
+    cstate.set({ exchangeRate: 2 });
+    await sleep(150);
+    check('the labels follow the rate setting',
+      new RegExp(`Trade ${step} School points for ${step * 2} Play points`).test(label(exBtns()[0])), label(exBtns()[0]));
+    exBtns()[0].click(); await sleep(80);
+    exBtns()[0].click(); await sleep(500);
+    check('at 1 School : 2 Play, the step became twice as much Play',
+      cur('school') === 60 - 2 * step && cur('play') === 50 + step + 2 * step, `${cur('school')}/${cur('play')}`);
+    check('...and the total moved by exactly the step', ct('[data-balance]') === String(110 + step), ct('[data-balance]'));
+    cstate.set({ exchangeRate: 1 });
+    await sleep(150);
+
+    section('buying falls back to School when Play is short');
+    // Spend Play down with the treat, so the movie (40, both accepted) has to be paid in School.
+    const schoolNow = cur('school');
+    cBuys()[TREAT].click(); await sleep(80); cBuys()[TREAT].click(); await sleep(500);
+    const playNow = cur('play');
+    check('(setup) Play is now short of the movie and School covers it', playNow < 40 && schoolNow >= 40,
+      `${schoolNow}/${playNow}`);
+    check('the movie row says it will be paid in School', cBuys()[MOVIE].dataset.pay === 'school', cBuys()[MOVIE].outerHTML);
+    cBuys()[MOVIE].click(); await sleep(120);
+    check('the confirm says School', /Tap again to buy with School points/.test(ct('[data-flash]') || ''), ct('[data-flash]'));
+    cBuys()[MOVIE].click(); await sleep(500);
+    check('paid in School, Play untouched', cur('school') === schoolNow - 40 && cur('play') === playNow,
+      `${cur('school')}/${cur('play')}`);
+    [...chost.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === 'log').click();
+    await sleep(150);
+    check('the log names the currency a purchase came from',
+      /School/.test(chost.querySelector('.q-log tbody tr')?.textContent || ''),
+      chost.querySelector('.q-log tbody tr')?.textContent);
+    check('...and shows a trade as a trade',
+      [...chost.querySelectorAll('.q-log tbody tr')].some((r) => /Traded \d+ School for \d+ Play/.test(r.textContent)),
+      [...chost.querySelectorAll('.q-log tbody tr')].map((r) => r.textContent.replace(/\s+/g, ' ')).join(' | '));
+    cinst.destroy();
+
+    section('a saved reward list from BEFORE currencies (no `accepts`)');
+    // Existing users' saved lists keep their old behavior until edited: nothing is special-cased
+    // by name. Whether saved screen-time rewards should be made School-only is Mike's call.
+    const lmod = await profiles.addModule(cProfile.id, 'quests');
+    const lstate = createState({ url: profiles.stateURL(cProfile.id, lmod.id), user: USER });
+    await lstate.load();
+    lstate.set({ rewards: [{ reward: 'Screen time — 1 hr, solo', kind: 'Want', cost: 5, note: 'saved long ago' }] });
+    await lstate.flush();
+    const lhost = newHost('legacyHost');
+    const linst = mountModule('quests', {
+      mount: lhost, bus: createBus(), state: lstate,
+      events: createEvents({ url: profiles.eventsURL(cProfile.id, lmod.id), user: USER }),
+      user: USER, profileId: cProfile.id, makeState: cMakeState, makeEvents: cMakeEvents,
+    });
+    linst.init();
+    await sleep(400);
+    [...lhost.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === 'rewards').click();
+    await sleep(120);
+    const lBuys = () => [...lhost.querySelectorAll('[data-buy]')];
+    const lPlay = () => Number(lhost.querySelector('[data-currency="play"] [data-amount]')?.textContent);
+    const lPlay0 = lPlay();
+    check('the legacy list loads', lBuys().length === 1, String(lBuys().length));
+    check('*** with no `accepts` it accepts every currency, so Play pays for it (old behavior, until edited) ***',
+      !lBuys()[0].disabled && lBuys()[0].dataset.pay === 'play', lBuys()[0].outerHTML);
+    lBuys()[0].click(); await sleep(80); lBuys()[0].click(); await sleep(500);
+    check('...and it buys', lPlay() === lPlay0 - 5, `${lPlay0} -> ${lPlay()}`);
+    const lEv = await lastEvent();
+    check('...recording Play as the currency', lEv.data.currency === 'play' && lEv.data.note === 'Screen time — 1 hr, solo',
+      J(lEv.data));
+    linst.destroy();
+    seed.destroy();
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;

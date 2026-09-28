@@ -32,11 +32,19 @@
 // They share the substrate — a profile-scoped append-only stream — and nothing else.
 //
 // TESTABILITY: ctx.now() is injectable (default Date.now), like sprint.js.
+//
+// TWO CURRENCIES (2026-09-28, register 262-263). The ledger now derives a balance per currency
+// (School and Play by default — see points.js's header). This module is where that becomes a
+// store: each reward lists the currencies it `accepts`, a purchase is paid in exactly ONE of
+// them and records which, the header shows the total AND each currency, and School can be
+// traded for Play (never back) at a rate that is a setting.
 
 import { registerModule } from '../module.js';
 import {
   createPointsLedger, POINTS_TOPIC, pointsValue, fmtPoints,
-  sumEarned, sumSpent, sumMinutes, weekStart,
+  sumEarned, sumSpent, sumMinutes, sumPoints, weekStart,
+  DEFAULT_CURRENCIES, DEFAULT_EXCHANGES, EXCHANGE_TYPE,
+  checkExchange, exchangeParts, currencyOf,
 } from '../points.js';
 
 export const SOURCE = 'quests';
@@ -84,15 +92,104 @@ export const DEFAULT_TASKS = [
 ];
 
 // Seeded from the "Rewards Store" tab. Needs cost fewer points per dollar than wants.
+//
+// `accepts` — WHICH CURRENCIES MAY PAY (ids from points.js's currency data). Screen time is
+// School only: Mike, *"Points from playing a game shouldn't go towards screen time or anything
+// like that."* Everything else takes either. Listed explicitly rather than left absent, so a
+// game currency added later does not silently become able to buy these too.
+const BOTH = ['school', 'play'];
 export const DEFAULT_REWARDS = [
-  { reward: 'Treat out (bike there)',        kind: 'Want', cost: 50,  note: '' },
-  { reward: 'Screen time — 1 hr, solo',      kind: 'Want', cost: 60,  note: 'free with a real-life friend' },
-  { reward: 'Screen time — 1 hr, w/ friend', kind: 'Want', cost: 30,  note: 'half price' },
-  { reward: 'Movie night — you pick',        kind: 'Want', cost: 40,  note: '' },
-  { reward: 'A new video game',              kind: 'Want', cost: 800, note: 'wants cost more per dollar' },
-  { reward: 'Clothes ($20)',                 kind: 'Need', cost: 150, note: 'needs cost fewer per dollar' },
-  { reward: 'A day off',                     kind: '—',    cost: 200, note: 'plus banked stretch hours' },
+  { reward: 'Treat out (bike there)',        kind: 'Want', cost: 50,  note: '', accepts: BOTH },
+  { reward: 'Screen time — 1 hr, solo',      kind: 'Want', cost: 60,  note: 'free with a real-life friend', accepts: ['school'] },
+  { reward: 'Screen time — 1 hr, w/ friend', kind: 'Want', cost: 30,  note: 'half price', accepts: ['school'] },
+  { reward: 'Movie night — you pick',        kind: 'Want', cost: 40,  note: '', accepts: BOTH },
+  { reward: 'A new video game',              kind: 'Want', cost: 800, note: 'wants cost more per dollar', accepts: BOTH },
+  { reward: 'Clothes ($20)',                 kind: 'Need', cost: 150, note: 'needs cost fewer per dollar', accepts: BOTH },
+  { reward: 'A day off',                     kind: '—',    cost: 200, note: 'plus banked stretch hours', accepts: BOTH },
 ];
+
+// WHICH CURRENCY PAYS, when a reward accepts more than one. A REVISABLE DEFAULT, not a rule:
+// Play first, because it is the LESS FLEXIBLE currency — it buys fewer things and cannot be
+// traded back — so spending it first keeps School, which buys everything, for later. Only a
+// currency that covers the WHOLE cost is chosen: no split purchases in v1 (one purchase, one
+// currency, one record of which). Currencies not named here come after, in the data's order.
+export const SPEND_ORDER = ['play', 'school'];
+
+// The exchange control's fixed steps. Fixed buttons rather than a slider, because a slider is
+// not reachable with one switch and three buttons are. 60 is an hour of the "a point is a
+// minute" economy; 10 and 30 are the small change.
+export const EXCHANGE_STEPS = [10, 30, 60];
+
+// THE ONE SETTING: the School -> Play rate. `advanced`, following algebra.js's rule that
+// what prices the economy is advanced. Stored as how much Play ONE School buys.
+const [HOME_CUR, PLAY_CUR] = DEFAULT_CURRENCIES;
+const rateLabel = (rate) => (rate >= 1
+  ? `1 ${HOME_CUR.name} for ${rate} ${PLAY_CUR.name}`
+  : `${1 / rate} ${HOME_CUR.name} for 1 ${PLAY_CUR.name}`);
+export const QUESTS_SETTINGS = [
+  { key: 'exchangeRate', label: `Trading ${HOME_CUR.name} for ${PLAY_CUR.name} points`,
+    kind: 'choice', default: 1, level: 'advanced',
+    options: [0.5, 1, 2].map((value) => ({ value, label: rateLabel(value) })) },
+];
+
+// The exchange data with the setting applied. Today there is ONE exchange row (School -> Play)
+// and the setting prices it; when there are more, each needs its own setting, and this is the
+// line that has to learn which is which.
+export function exchangesAt(rate, exchanges = DEFAULT_EXCHANGES) {
+  const r = Number(rate);
+  if (!Number.isFinite(r) || r <= 0) return exchanges;
+  return exchanges.map((x, i) => (i === 0 ? { ...x, rate: r } : x));
+}
+
+// Which currency ids a reward accepts, as the data knows them.
+//
+// *** A SAVED REWARD WITH NO `accepts` ACCEPTS EVERY CURRENCY. *** Existing users' saved reward
+// lists were written before currencies existed, and they keep their old behavior until they
+// are edited — there is deliberately NO special-casing by name (no "if it says screen time,
+// make it School-only"), because a rule keyed on a reward's wording breaks the first time
+// somebody words it differently. Whether saved screen-time rewards should be migrated to
+// School-only is an open question for Mike, not something this read decides.
+export function acceptsOf(reward, currencies = DEFAULT_CURRENCIES) {
+  const ids = currencies.map((c) => c.id);
+  if (!reward || !Array.isArray(reward.accepts)) return ids;
+  return ids.filter((id) => reward.accepts.includes(id));
+}
+
+const nameOf = (id, currencies = DEFAULT_CURRENCIES) =>
+  (currencies.find((c) => c.id === id) || {}).name || id;
+
+/**
+ * Which ONE currency pays for this reward, or why none can: `{ currency, why }`.
+ * Affordability is the TRUE balance (`>= cost`), which for whole-number costs is exactly what
+ * the floored display says — 59.75 shows as 59 and cannot buy a 60, so the number and the
+ * button agree (see `fmtPoints`).
+ */
+export function chooseCurrency(reward, balances = {}, { currencies = DEFAULT_CURRENCIES, order = SPEND_ORDER } = {}) {
+  const accepted = acceptsOf(reward, currencies);
+  const cost = Number(reward && reward.cost) || 0;
+  if (!accepted.length) return { currency: null, why: 'No currency can buy this' };
+  const ranked = [...order.filter((id) => accepted.includes(id)),
+                  ...accepted.filter((id) => !order.includes(id))];
+  for (const id of ranked) {
+    if ((Number(balances[id]) || 0) >= cost) return { currency: id, why: null };
+  }
+  const have = (id) => fmtPoints(Number(balances[id]) || 0);
+  if (ranked.length === 1) {
+    const id = ranked[0];
+    return { currency: null,
+      why: accepted.length < currencies.length
+        ? `${nameOf(id, currencies)} points only — you have ${have(id)} of ${cost}`
+        : `Needs ${cost} ${nameOf(id, currencies)} — you have ${have(id)}` };
+  }
+  return { currency: null,
+    // "Play or School", not "Play and School": one purchase is paid in one currency.
+    why: `Needs ${cost} ${ranked.map((id) => nameOf(id, currencies)).join(' or ')} — you have ${ranked.map((id) => `${have(id)} ${nameOf(id, currencies)}`).join(', ')}` };
+}
+
+// An AMOUNT (a price, what a trade gives) is shown exactly — flooring is for balances only, and
+// a trade that gives 2.5 must not say 2.
+const fmtAmount = (n) => String(Math.round(Number(n) * 100) / 100);
+const plural = (n, word) => `${fmtAmount(n)} ${word} point${Number(n) === 1 ? '' : 's'}`;
 
 // The "Weekly Hours" tab's X / Y / Z.
 export const DEFAULT_HOURS = { hoursPerDay: 4, schoolDays: 5, stretchHours: 5 };
@@ -141,7 +238,7 @@ registerModule(
     // so without the platform it is running and useless, which is precisely what `server`
     // means for the recovery ladder.
   { type: 'quests', title: 'Quests',
-    dependsOn: 'server', description: 'Points, tasks and rewards' },
+    dependsOn: 'server', description: 'Points, tasks and rewards', settings: QUESTS_SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const now = ctx.now || (() => Date.now());
@@ -151,14 +248,21 @@ registerModule(
     let rewards = DEFAULT_REWARDS;
     let hoursCfg = { ...DEFAULT_HOURS };
     let pointsPerHour = 60;
+    let exchangeRate = 1;         // the one setting — how much Play one School buys
     let tab = 'tasks';
     let doubling = false;         // the x2 toggle, only offered on double-eligible tasks
     let pendingBuy = null;        // index of a reward awaiting its confirm tap
     let pendingBuyAt = null;      // when it was armed — MIKE_CHANGE_LIST.md §0a item 6
+    let pendingBuyCurrency = null; // the currency the confirm tap was TOLD it would pay with
+    let pendingEx = null;         // 'from>to:amount' of a trade awaiting its confirm tap
     let flash = '';
 
+    const currencies = DEFAULT_CURRENCIES;
     const el = (sel) => mount.querySelector(sel);
     const events = () => (ledger ? ledger.events() : []);
+    const balances = () => (ledger ? ledger.balances() : Object.fromEntries(currencies.map((c) => [c.id, 0])));
+    const exchanges = () => exchangesAt(exchangeRate);
+    const disarm = () => { pendingBuy = null; pendingBuyAt = null; pendingBuyCurrency = null; pendingEx = null; };
 
     // ---- actions (both APPEND; nothing is ever edited) ----
 
@@ -185,35 +289,98 @@ registerModule(
     // the one place this module shows something and times the response — see points.js's
     // header on `latencyMs`. Only the CONFIRMING tap carries it: the first tap is what
     // starts the clock, not an answer to anything yet.
+    //
+    // THE FIRST TAP CHOOSES THE CURRENCY AND SAYS SO ("Tap again to buy with Play points"), and
+    // the confirm pays in THAT currency or not at all. If the balances moved between the taps
+    // (another device, a nudge) and it no longer covers the cost, nothing is spent and the
+    // flash says why — quietly paying with a different currency than the one the person
+    // confirmed would be spending something they did not agree to spend.
     async function buy(i) {
       const r = rewards[i];
       if (!r) return;
       if (pendingBuy !== i) {
-        pendingBuy = i; pendingBuyAt = now();
-        flash = `Tap again to confirm — ${r.reward}`; render(); return;
+        const pick = chooseCurrency(r, balances(), { currencies });
+        if (!pick.currency) { disarm(); flash = pick.why; render(); return; }
+        disarm();
+        pendingBuy = i; pendingBuyAt = now(); pendingBuyCurrency = pick.currency;
+        flash = `Tap again to buy with ${nameOf(pick.currency)} points — ${r.reward}`; render(); return;
       }
       const latencyMs = pendingBuyAt != null ? Math.max(0, now() - pendingBuyAt) : null;
-      pendingBuy = null; pendingBuyAt = null;
+      const cur = pendingBuyCurrency;
+      disarm();
+      if (!cur || !((Number(balances()[cur]) || 0) >= (Number(r.cost) || 0))) {
+        flash = `Not enough ${nameOf(cur)} points any more — nothing was spent.`;
+        render(); return;
+      }
       const res = await ledger.spend({
-        amount: r.cost, source: SOURCE, tags: ['reward'], note: r.reward,
+        amount: r.cost, currency: cur, source: SOURCE, tags: ['reward'], note: r.reward,
         ...(latencyMs != null ? { latencyMs } : {}),
       }).catch((err) => { console.error('quests: buy failed', err); return null; });
-      flash = res ? `Bought ${r.reward} — ${r.cost} points` : 'Could not save that — try again.';
+      flash = res ? `Bought ${r.reward} — ${plural(r.cost, nameOf(cur))}` : 'Could not save that — try again.';
       render();
+    }
+
+    // Trade School for Play: two taps, like buying, and for the same reason. The ledger refuses
+    // anything the exchange data does not allow; the refusal is explained here, not thrown.
+    async function trade(from, to, amount) {
+      const key = `${from}>${to}:${amount}`;
+      const verdict = checkExchange({ from, to, amount }, events(), { currencies, exchanges: exchanges() });
+      if (pendingEx !== key) {
+        disarm();
+        if (!verdict.ok) { flash = refusal(verdict, from); render(); return; }
+        pendingEx = key;
+        flash = `Tap again to trade ${plural(amount, nameOf(from))} for ${plural(verdict.gets, nameOf(to))}`;
+        render(); return;
+      }
+      disarm();
+      if (!verdict.ok) { flash = refusal(verdict, from); render(); return; }
+      const res = await ledger.exchange({
+        from, to, amount, source: SOURCE, exchanges: exchanges(),
+        note: `${nameOf(from)} for ${nameOf(to)}`,
+      }).catch((err) => { console.error('quests: trade failed', err); return null; });
+      flash = res
+        ? `Traded ${plural(amount, nameOf(from))} for ${plural(res.gets, nameOf(to))}`
+        : 'Could not trade that — nothing was changed.';
+      render();
+    }
+
+    function refusal(verdict, from) {
+      if (verdict.reason === 'short') {
+        return `Not enough ${nameOf(from)} points — you have ${fmtPoints(verdict.have)}. Nothing was traded.`;
+      }
+      if (verdict.reason === 'not-allowed') return 'That trade is not allowed.';
+      return 'Nothing to trade.';
     }
 
     // ---- render ----
 
+    // A currency's icon, when the data has one (a design task — null today, so nothing is drawn).
+    // An image path/URL becomes an <img>; anything else (a glyph) is shown as text. Decorative
+    // either way: the name beside it is what a screen reader reads.
+    function iconHtml(c) {
+      if (!c.icon) return '';
+      const s = String(c.icon);
+      return /^(https?:|data:|\/|\.)|\.(svg|png|jpe?g|webp|gif)$/i.test(s)
+        ? `<img class="q-cur-icon" src="${esc(s)}" alt="">`
+        : `<span class="q-cur-icon" aria-hidden="true">${esc(s)}</span>`;
+    }
+
     function renderHeader() {
       const evs = events();
-      const balance = evs.reduce((n, e) => n + pointsValue(e), 0);
+      // The TOTAL, computed exactly as ledger.total() does (not by adding the rounded-per-
+      // currency figures), so every other surface that shows the total agrees with this one.
+      const balance = sumPoints(evs);
+      const bal = balances();
       const hrs = sumMinutes(evs, weekStart(now())) / 60;
       const band = hoursBand(hrs, hoursCfg, pointsPerHour);
       const pct = band.target ? Math.min(100, Math.round((hrs / band.target) * 100)) : 0;
 
       // Floored, not rounded -- see `fmtPoints`. A balance shown as more than can be spent is
-      // a number that disagrees with the button beside it.
+      // a number that disagrees with the button beside it. Each currency too.
       el('[data-balance]').textContent = fmtPoints(balance);
+      el('[data-currencies]').innerHTML = currencies.map((c) =>
+        `<span class="q-cur" data-currency="${esc(c.id)}">${iconHtml(c)}<b data-amount>${fmtPoints(bal[c.id] || 0)}</b> ${esc(c.name)}</span>`,
+      ).join('');
       el('[data-earned]').textContent = fmtPoints(sumEarned(evs));
       el('[data-spent]').textContent = fmtPoints(sumSpent(evs));
       el('[data-hours]').textContent = `${fmtHours(hrs)} / ${band.target}h`;
@@ -253,21 +420,59 @@ registerModule(
         </div>`;
     }
 
-    function renderRewards(balance) {
+    // The trade control: one block per allowed exchange IN THE DATA (so Play -> School has no
+    // control at all, because it has no row), a few fixed steps, each a real button whose label
+    // says the whole trade. A step the `from` balance cannot cover is disabled and says how much
+    // there is — the same convention as an unaffordable reward.
+    function renderExchange(bal) {
+      return exchanges().map((x) => {
+        const from = x.from, to = x.to;
+        const have = Number(bal[from]) || 0;
+        const steps = EXCHANGE_STEPS.map((n) => {
+          const key = `${from}>${to}:${n}`;
+          const ok = have >= n;
+          const say = `Trade ${plural(n, nameOf(from))} for ${plural(n * x.rate, nameOf(to))}`;
+          return `
+            <button class="q-item q-ex-step" data-exchange="${n}" data-exchange-from="${esc(from)}" data-exchange-to="${esc(to)}"
+                    aria-label="${esc(ok ? say : `${say} — you have ${fmtPoints(have)}`)}" ${ok ? '' : 'disabled'}>
+              <span class="q-item-main">
+                <span class="q-item-name">${esc(say)}</span>
+                ${ok ? '' : `<span class="q-item-note">you have ${esc(fmtPoints(have))}</span>`}
+              </span>
+              <span class="q-item-pts">${pendingEx === key ? 'confirm?' : '⇄'}</span>
+            </button>`;
+        }).join('');
+        const why = have < Math.min(...EXCHANGE_STEPS)
+          ? `Earn ${nameOf(from)} points to trade — you have ${fmtPoints(have)}.` : '';
+        return `
+          <div class="q-exchange" data-exchange-block="${esc(from)}>${esc(to)}">
+            <div class="q-ex-head">Trade ${esc(nameOf(from))} for ${esc(nameOf(to))} <span>(${esc(rateLabel(x.rate))} · one way)</span></div>
+            <div class="q-ex-why" data-exchange-why>${esc(why)}</div>
+            <div class="q-list">${steps}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderRewards() {
+      const bal = balances();
+      // Rewards first — buying is what the store is for; trading is below it.
       return `
         <div class="q-list">
           ${rewards.map((r, i) => {
-            const afford = balance >= r.cost;
+            const pick = chooseCurrency(r, bal, { currencies });
+            const afford = !!pick.currency;
             return `
-            <button class="q-item" data-buy="${i}" data-kind="${esc(r.kind)}" ${afford ? '' : 'disabled'}>
+            <button class="q-item" data-buy="${i}" data-kind="${esc(r.kind)}" ${afford ? `data-pay="${esc(pick.currency)}"` : 'disabled'}>
               <span class="q-item-main">
                 <span class="q-item-name">${esc(r.reward)}</span>
-                <span class="q-item-note">${esc(r.kind)}${r.note ? ' · ' + esc(r.note) : ''}</span>
+                <span class="q-item-note">${esc(r.kind)}${r.note ? ' · ' + esc(r.note) : ''}${afford ? ` · pays with ${esc(nameOf(pick.currency))}` : ''}</span>
+                ${afford ? '' : `<span class="q-item-why" data-why>${esc(pick.why)}</span>`}
               </span>
               <span class="q-item-pts">${pendingBuy === i ? 'confirm?' : '-' + esc(r.cost)}</span>
             </button>`;
           }).join('')}
-        </div>`;
+        </div>
+        ${renderExchange(bal)}`;
     }
 
     function renderLog() {
@@ -283,9 +488,16 @@ registerModule(
               const stamp = Number.isNaN(when.getTime()) ? '' :
                 `${when.getMonth() + 1}/${when.getDate()} ${when.getHours()}:${String(when.getMinutes()).padStart(2, '0')}`;
               const v = pointsValue(e);
+              // A trade reads as a trade; everything else names the currency it landed in (or,
+              // for a purchase, the one it was paid from) beside its source.
+              const x = d.type === EXCHANGE_TYPE ? exchangeParts(e) : null;
+              const what = x
+                ? `Traded ${fmtAmount(x.amount)} ${nameOf(x.from)} for ${fmtAmount(x.amount * x.rate)} ${nameOf(x.to)}`
+                : (d.note || d.source || '');
+              const curTag = d.type === EXCHANGE_TYPE ? '' : nameOf(currencyOf(e, currencies));
               return `<tr data-kind="${esc(d.type || '')}">
                 <td>${esc(stamp)}</td>
-                <td>${esc(d.note || d.source || '')}<span class="q-src">${esc(d.source || '')}</span></td>
+                <td>${esc(what)}${curTag ? `<span class="q-cur-tag">${esc(curTag)}</span>` : ''}<span class="q-src">${esc(d.source || '')}</span></td>
                 <td>${esc(d.amount)}</td>
                 <td>${esc(d.mult)}</td>
                 <td class="${v < 0 ? 'q-neg' : 'q-pos'}">${v >= 0 ? '+' : ''}${fmtPoints(v)}</td>
@@ -297,14 +509,13 @@ registerModule(
 
     function render() {
       if (!mount.querySelector('.quests')) return;
-      const balance = events().reduce((n, e) => n + pointsValue(e), 0);
 
       for (const b of mount.querySelectorAll('[data-tab]')) {
         b.classList.toggle('on', b.dataset.tab === tab);
       }
       el('[data-panel]').innerHTML =
         tab === 'tasks' ? renderTasks() :
-        tab === 'rewards' ? renderRewards(balance) :
+        tab === 'rewards' ? renderRewards() :
         renderLog();
 
       renderHeader();
@@ -317,6 +528,10 @@ registerModule(
       for (const b of mount.querySelectorAll('[data-buy]')) {
         b.addEventListener('click', () => buy(Number(b.dataset.buy)));
       }
+      for (const b of mount.querySelectorAll('[data-exchange]')) {
+        b.addEventListener('click', () =>
+          trade(b.dataset.exchangeFrom, b.dataset.exchangeTo, Number(b.dataset.exchange)));
+      }
     }
 
     return {
@@ -325,6 +540,7 @@ registerModule(
           <div class="quests">
             <div class="q-head">
               <div class="q-balance"><b data-balance>0</b><span>points</span></div>
+              <div class="q-curs" data-currencies></div>
               <div class="q-sub">
                 <span>earned <b data-earned>0</b></span>
                 <span>spent <b data-spent>0</b></span>
@@ -346,7 +562,7 @@ registerModule(
           </div>`;
 
         for (const b of mount.querySelectorAll('[data-tab]')) {
-          b.addEventListener('click', () => { tab = b.dataset.tab; pendingBuy = null; pendingBuyAt = null; flash = ''; render(); });
+          b.addEventListener('click', () => { tab = b.dataset.tab; disarm(); flash = ''; render(); });
         }
 
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });
@@ -375,6 +591,8 @@ registerModule(
             stretchHours: Number(snap.stretchHours) || DEFAULT_HOURS.stretchHours,
           };
           pointsPerHour = Number(snap.pointsPerHour) || 60;
+          const rate = Number(snap.exchangeRate);
+          exchangeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
           render();
         });
 

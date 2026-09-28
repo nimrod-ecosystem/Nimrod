@@ -49,6 +49,26 @@
 // the whole log, while "earned" and "spent" stay separately reportable — the same split
 // the spreadsheet model draws between its Daily Log and its purchases list.
 //
+// *** 2026-09-28: THERE IS NO LONGER ONE BALANCE — THERE ARE CURRENCIES, AND THE ONE ABOVE IS
+// NOW THE TOTAL. *** Kept rather than deleted, because it is still true of `sumPoints` and it
+// is the reasoning the currencies were built on. Register 262-263, Mike: *"play and school
+// points would be like two different currencies. That would go together into total points.
+// You can trade school points for play points, but not the other way around."* So:
+//   - A CURRENCY is a row of DATA (`DEFAULT_CURRENCIES` below): id, name, icon, and which
+//     earning TYPES feed it. School and Play are just the first two rows; games may get their
+//     own later ("more of an economy"). The names are placeholders; the ids are the keys.
+//   - Each currency's balance is DERIVED from the same log — earnings of the types that feed
+//     it, minus the spends that name it (`currency` on a Reward event), plus/minus exchanges.
+//     Nothing about an award call changed: the currency comes from the event's `type`.
+//   - The TOTAL is the sum of the currencies, and `sumPoints` still returns it, so every
+//     existing caller keeps its meaning.
+//   - An EXCHANGE (`type: 'Exchange'`) is ONE event that debits `from` by `amount` and credits
+//     `to` by `amount x rate`. It is neither earning nor spending; its only effect on the total
+//     is `amount x (rate - 1)` — nothing at the default 1:1. Which directions exist, and at what
+//     rate, is DATA too (`DEFAULT_EXCHANGES`); a direction with no row is not allowed.
+//   - "Earned" and "spent" keep their old meaning and leave exchanges out, so
+//     total = earned - spent + (the net of any exchanges).
+//
 // A POINT IS A MINUTE OF SUBJECT CREDIT. This is the rule the whole economy turns on, and
 // it is about understanding rather than seat time: **games do not pay for time spent.**
 // They pay for correct answers, and each point earned also discharges one minute of that
@@ -77,9 +97,141 @@
 // change. WHAT PLAY CANNOT DO IS NOT ENFORCED HERE: a per-user setting for which classes may
 // buy which rewards (register 250 §2) is separate, not-yet-built work in the reward store
 // (quests.js) -- this file only makes the category exist and stops it defaulting to Bonus.
-export const TYPES = ['Obligatory', 'Bonus', 'Idea', 'Penalty', 'School', 'Reward', 'Play'];
+// 2026-09-28, later the same day: WHAT PLAY CANNOT BUY IS NOW ENFORCED — by currencies (below)
+// and each reward's `accepts` list in quests.js, not by a check on types.
+// `Exchange` (added the same day) is a School -> Play trade; only `exchange()` writes it.
+export const TYPES = ['Obligatory', 'Bonus', 'Idea', 'Penalty', 'School', 'Reward', 'Play', 'Exchange'];
 export const REWARD_TYPE = 'Reward';
 export const SCHOOL_TYPE = 'School';
+export const EXCHANGE_TYPE = 'Exchange';
+
+// ---------- currencies (register 262-263): DATA, not two hard-coded names ----------
+//
+// WHY THIS LIVES HERE AND NOT IN A currencies.js: a balance per currency has to understand
+// every event shape this file defines — a Reward spend, an Exchange, the fallbacks for types it
+// does not know — and `pointsValue` has to know what an Exchange is worth to the total. Split
+// out, the two files would each need the other's rules. One file is the ledger's language.
+//
+// `icon` is null on purpose: Mike, *"The different currencies should probably have different
+// icons. We'll have to go to design for this."* The slot exists so the design lands as data.
+// `name` is a placeholder too (*"We'll probably need different names than play and school"*);
+// `id` is what the record is keyed by and should not change when the name does.
+export const DEFAULT_CURRENCIES = [
+  { id: 'school', name: 'School', icon: null,
+    feeds: ['Obligatory', 'Bonus', 'Idea', 'Penalty', 'School'] },
+  { id: 'play', name: 'Play', icon: null, feeds: ['Play'] },
+];
+
+// Which trades are allowed, and at what rate: `to` receives `amount x rate`. A direction with
+// no row is NOT allowed — so Play -> School is refused by the absence of a row, which is the
+// rule Mike gave ("not the other way around"), and a later game currency is refused until
+// somebody writes it a row. The 1:1 rate is a default; quests.js exposes it as a setting.
+export const DEFAULT_EXCHANGES = [{ from: 'school', to: 'play', rate: 1 }];
+
+// THE HOME CURRENCY — where anything the data cannot place lands. School, argued: (1) every
+// event recorded before 2026-09-28 fed School, because Play did not exist; (2) `award()` already
+// turns an unknown type into `Bonus`, which feeds School, so the read side and the write side
+// agree; (3) the alternative — a point that belongs to no currency — would make the total and
+// the sum of the currencies disagree, which is the one thing Mike's "go together into total
+// points" rules out. The cost, stated: a type written by some future client this code does not
+// know would be spendable as School. Revisable; it is a default, not a rule. A custom currency
+// list without a `school` row uses its FIRST row instead.
+export const HOME_CURRENCY = 'school';
+
+const currencyList = (currencies) =>
+  (Array.isArray(currencies) && currencies.length ? currencies : DEFAULT_CURRENCIES);
+
+function homeCurrencyId(currencies) {
+  const list = currencyList(currencies);
+  return list.some((c) => c.id === HOME_CURRENCY) ? HOME_CURRENCY : list[0].id;
+}
+
+// A currency id as the data knows it; anything else (absent, deleted, misspelled) is the home.
+function resolveCurrencyId(id, currencies) {
+  const list = currencyList(currencies);
+  return list.some((c) => c.id === id) ? id : homeCurrencyId(list);
+}
+
+// The parts of a well-formed Exchange event, or null. Malformed exchanges count for NOTHING —
+// not in any balance and not in the total — rather than being guessed at.
+export function exchangeParts(ev) {
+  const d = (ev && ev.data) || {};
+  if (d.type !== EXCHANGE_TYPE) return null;
+  const amount = Number(d.amount);
+  const rate = Number(d.rate);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  if (!Number.isFinite(rate) || rate <= 0) return null;
+  if (typeof d.from !== 'string' || !d.from || typeof d.to !== 'string' || !d.to) return null;
+  return { from: d.from, to: d.to, amount, rate };
+}
+
+/**
+ * Which currency one event belongs to.
+ *   - an earning event: the currency its `type` feeds (unknown or missing type -> home)
+ *   - a Reward (spend): the `currency` it records. *** A LEGACY SPEND — one written before
+ *     2026-09-28, with no `currency` field — COUNTS AGAINST SCHOOL (the home currency), because
+ *     every point earned before today's `Play` type fed School, so School is what it spent. ***
+ *   - an Exchange: null — it moves points BETWEEN two currencies; see `balancesByCurrency`.
+ */
+export function currencyOf(ev, currencies = DEFAULT_CURRENCIES) {
+  const list = currencyList(currencies);
+  const d = (ev && ev.data) || {};
+  if (d.type === EXCHANGE_TYPE) return null;
+  if (d.type === REWARD_TYPE) return resolveCurrencyId(d.currency, list);
+  const hit = list.find((c) => Array.isArray(c.feeds) && c.feeds.includes(d.type));
+  return hit ? hit.id : homeCurrencyId(list);
+}
+
+// { currencyId -> balance } over the whole log. Every currency in the data is present, at 0 if
+// nothing touched it. The values sum to `sumPoints(events)` — always; the tests hold it to that.
+export function balancesByCurrency(events, currencies = DEFAULT_CURRENCIES) {
+  const list = currencyList(currencies);
+  const out = {};
+  for (const c of list) out[c.id] = 0;
+  for (const e of pointsEvents(events)) {
+    const d = e.data || {};
+    if (d.type === EXCHANGE_TYPE) {
+      const x = exchangeParts(e);
+      if (!x) continue;
+      out[resolveCurrencyId(x.from, list)] -= x.amount;
+      out[resolveCurrencyId(x.to, list)] += x.amount * x.rate;
+      continue;
+    }
+    out[currencyOf(e, list)] += pointsValue(e);
+  }
+  return out;
+}
+
+// The total across currencies ("go together into total points").
+export function totalOfBalances(balances) {
+  return Object.values(balances || {}).reduce((n, v) => n + (Number(v) || 0), 0);
+}
+
+// The exchange row for from -> to, or null when that direction is not allowed.
+export function findExchange(from, to, exchanges = DEFAULT_EXCHANGES) {
+  if (!from || !to || from === to) return null;
+  const hit = (Array.isArray(exchanges) ? exchanges : [])
+    .find((x) => x && x.from === from && x.to === to && Number(x.rate) > 0);
+  return hit ? { from, to, rate: Number(hit.rate) } : null;
+}
+
+/**
+ * Would this exchange be allowed right now? Pure, so a module can EXPLAIN a refusal rather
+ * than only suffer one. `{ ok, reason, rate, gets, have }`, reason one of:
+ *   'not-allowed'  no row for that direction (Play -> School, by default)
+ *   'bad-amount'   zero, negative, or not a number
+ *   'short'        more than the `from` balance (checked against the TRUE balance)
+ */
+export function checkExchange({ from, to, amount } = {}, events = [],
+                              { currencies = DEFAULT_CURRENCIES, exchanges = DEFAULT_EXCHANGES } = {}) {
+  const row = findExchange(from, to, exchanges);
+  const n = Number(amount);
+  const have = balancesByCurrency(events, currencies)[from];
+  if (!row) return { ok: false, reason: 'not-allowed', have };
+  if (!Number.isFinite(n) || n <= 0) return { ok: false, reason: 'bad-amount', have, rate: row.rate };
+  if (!(Number(have) >= n)) return { ok: false, reason: 'short', have: Number(have) || 0, rate: row.rate };
+  return { ok: true, reason: null, rate: row.rate, gets: n * row.rate, have };
+}
 
 export const POINTS_STREAM = 'points';        // well-known shared stream key
 export const POINTS_TOPIC  = 'points/award';  // bus topic — live nudge, NOT the record
@@ -106,6 +258,13 @@ export const POINTS_KIND   = 'points';        // event kind within the stream
  */
 export function pointsValue(ev) {
   const d = (ev && ev.data) || {};
+  // AN EXCHANGE IS WORTH ITS EFFECT ON THE TOTAL: `to` gains amount x rate, `from` loses amount,
+  // so the total moves by amount x (rate - 1) — zero at 1:1. Everything that sums pointsValue
+  // (the total, a day's total, by-source) therefore stays equal to the sum of the currencies.
+  if (d.type === EXCHANGE_TYPE) {
+    const x = exchangeParts(ev);
+    return x ? x.amount * x.rate - x.amount : 0;
+  }
   const amount = Number(d.amount);
   if (!Number.isFinite(amount)) return 0;
   const mult = Number(d.mult);
@@ -135,16 +294,21 @@ export function pointsEvents(events) {
   return (events || []).filter((e) => e && e.kind === POINTS_KIND);
 }
 
-// The BALANCE: the whole log summed. Purchases are negative, so this is earned - spent.
+// The TOTAL: the whole log summed. Purchases are negative, so this is earned - spent (plus the
+// net of any exchanges, which is 0 at 1:1). Since 2026-09-28 it equals the sum of
+// `balancesByCurrency` — this is the "total points" the currencies go together into.
 export function sumPoints(events) {
   return pointsEvents(events).reduce((n, e) => n + pointsValue(e), 0);
 }
 
 const isSpend = (e) => (e.data && e.data.type) === REWARD_TYPE;
+const isExchange = (e) => (e.data && e.data.type) === EXCHANGE_TYPE;
 
 // Everything that isn't a purchase — penalties included, exactly as the Daily Log sums them.
+// NOT exchanges: trading School for Play is not something you did to earn points.
 export function sumEarned(events) {
-  return pointsEvents(events).filter((e) => !isSpend(e)).reduce((n, e) => n + pointsValue(e), 0);
+  return pointsEvents(events).filter((e) => !isSpend(e) && !isExchange(e))
+    .reduce((n, e) => n + pointsValue(e), 0);
 }
 
 // Purchases, reported POSITIVE ("you have spent 110") though stored negative.
@@ -184,6 +348,9 @@ export function weekStart(now = Date.now()) {
 }
 
 // { source -> total }, for the dashboard's "where did today's points come from".
+// An exchange contributes its NET (0 at 1:1) under the source that wrote it (`quests`), so the
+// sources still add up to the total. Day totals (`sumPointsOn`) do the same; and because an
+// exchange is written as `quests`, it can never count against a GAME's daily cap.
 export function sumBySource(events) {
   const out = {};
   for (const e of pointsEvents(events)) {
@@ -224,21 +391,30 @@ export function sumPointsOnBySource(events, key, source) {
 // builds a storage URL itself.
 //
 //   award({amount, source, mult, tags, note})  append the record + publish the nudge
+//   spend({amount, currency, ...})             a Reward event that names the currency paid
+//   exchange({from, to, amount})               one Exchange event, or null if refused
 //   subscribe(fn)                              fn({events,total}) on every refresh
-//   total() / totalToday()                     derived from the loaded window
+//   total() / totalToday()                     derived from the loaded window (the TOTAL)
+//   balances()                                 { currencyId -> balance }, summing to total()
 //
 // The caller owns the lifecycle: call destroy() in the module's destroy(), because
 // handles a module makes itself are not the ones the runtime disposes.
-export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollMs = 4000 }) {
+export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollMs = 4000,
+                                     currencies = DEFAULT_CURRENCIES,
+                                     exchanges = DEFAULT_EXCHANGES } = {}) {
   if (typeof makeEvents !== 'function') {
     throw new Error('createPointsLedger: ctx.makeEvents is required');
   }
   const stream = makeEvents(POINTS_STREAM, { limit, pollMs });
+  const all = () => stream.get().events || [];
 
   async function award({ amount, source, mult = 1, type = 'Bonus', tags = [], note = '',
-                         minutes = null, subject = null, latencyMs = null } = {}) {
+                         minutes = null, subject = null, latencyMs = null, currency = null } = {}) {
     const n = Number(amount);
     if (!Number.isFinite(n) || n === 0) return null;           // nothing earned, nothing recorded
+    // An Exchange cannot be recorded honestly without from/to/rate, and award() has none of
+    // them — so it records nothing rather than guessing (and never throws into a module).
+    if (type === EXCHANGE_TYPE) return null;
     const m = Number(mult);
     const data = {
       amount: n,
@@ -251,6 +427,8 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
     if (Number.isFinite(Number(minutes)) && Number(minutes) > 0) data.minutes = Number(minutes);
     if (subject) data.subject = String(subject);
     if (Number.isFinite(latencyMs) && latencyMs >= 0) data.latencyMs = latencyMs;
+    // Only a spend names its currency; an earning's currency is derived from its type.
+    if (data.type === REWARD_TYPE) data.currency = resolveCurrencyId(currency, currencies);
     await stream.append(POINTS_KIND, data);                    // 1. the record (durable, first)
     const value = Math.round(data.amount * data.mult);
     if (bus) bus.publish(POINTS_TOPIC, { ...data, value });    // 2. the nudge (live)
@@ -259,15 +437,43 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
 
   // Spending is an award with the sign flipped and the Reward type — one stream, one
   // append path, so a purchase can no more be silently edited away than a point earned.
-  const spend = ({ amount, note = '', source = 'quests', tags = [], latencyMs = null } = {}) => {
+  // Since 2026-09-28 it RECORDS WHICH CURRENCY PAID (`currency`); none named = the home
+  // currency, written explicitly so the record never depends on today's fallback rule.
+  // It does not check the balance — the reward store does, against the chosen currency.
+  const spend = ({ amount, currency = null, note = '', source = 'quests', tags = [],
+                   latencyMs = null } = {}) => {
     const n = Math.abs(Number(amount) || 0);
-    return n ? award({ amount: -n, mult: 1, type: REWARD_TYPE, source, tags, note, latencyMs })
+    return n ? award({ amount: -n, mult: 1, type: REWARD_TYPE, source, tags, note, latencyMs, currency })
              : Promise.resolve(null);
   };
+
+  // Trade one currency for another: ONE append-only Exchange event, debit and credit together.
+  // One event rather than a debit/credit PAIR because a pair can be half-written (the second
+  // append fails and the School is gone with no Play to show for it); one event cannot.
+  // REFUSES — returns null, records nothing, never throws — a direction with no row in the
+  // exchange data, a non-positive amount, or more than the `from` balance. `exchanges` may be
+  // passed per call so a module's rate SETTING applies without rebuilding the ledger.
+  async function exchange({ from, to, amount, source = 'quests', note = '',
+                            exchanges: rows = exchanges } = {}) {
+    const verdict = checkExchange({ from, to, amount }, all(), { currencies, exchanges: rows });
+    if (!verdict.ok) return null;
+    const data = {
+      amount: Number(amount), mult: 1, type: EXCHANGE_TYPE,
+      from, to, rate: verdict.rate,
+      source: String(source || 'quests'), tags: ['exchange'], note: String(note || ''),
+    };
+    await stream.append(POINTS_KIND, data);
+    const value = data.amount * data.rate - data.amount;       // its effect on the total
+    if (bus) bus.publish(POINTS_TOPIC, { ...data, value });
+    return { ...data, value, gets: verdict.gets };
+  }
 
   return {
     award,
     spend,
+    exchange,
+    currencies: () => currencyList(currencies),
+    balances: () => balancesByCurrency(all(), currencies),
     load: () => stream.load(),
     startPolling: () => stream.startPolling(),
     subscribe: (fn) => stream.subscribe(fn),

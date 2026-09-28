@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>points ledger — currencies, exchange, legacy spends — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>points ledger — currencies as data</h1>
+<p>Pure helpers in <code>points.js</code>, plus the ledger handle over an IN-MEMORY stream (no server).
+Register 262–263: School and Play are two balances derived from one append-only log; their sum is the
+total; School can be traded for Play and not back; each spend records which currency paid.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  POINTS_KIND, TYPES, EXCHANGE_TYPE, REWARD_TYPE,
+  DEFAULT_CURRENCIES, DEFAULT_EXCHANGES, HOME_CURRENCY,
+  currencyOf, balancesByCurrency, totalOfBalances, exchangeParts, findExchange, checkExchange,
+  pointsValue, sumPoints, sumEarned, sumSpent, sumBySource, sumMinutes, minutesBySubject,
+  sumPointsOn, sumPointsOnBySource, dayKey, fmtPoints, createPointsLedger,
+} from '../points.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+
+const AT = new Date(); AT.setHours(12, 0, 0, 0);
+const at = AT.toISOString();
+const earn = (amount, type, extra = {}) =>
+  ({ kind: POINTS_KIND, created_at: at, data: { amount, mult: 1, type, source: 'test', ...extra } });
+const spendEv = (amount, currency) =>
+  ({ kind: POINTS_KIND, created_at: at,
+     data: { amount: -amount, mult: 1, type: REWARD_TYPE, source: 'quests', ...(currency ? { currency } : {}) } });
+const exEv = (from, to, amount, rate) =>
+  ({ kind: POINTS_KIND, created_at: at,
+     data: { amount, mult: 1, type: EXCHANGE_TYPE, from, to, rate, source: 'quests' } });
+
+// An in-memory stand-in for ctx.makeEvents: the same append/load/get/subscribe surface the
+// real `events.js` handle offers, with the server's `id` + `created_at` stamping.
+function memoryEvents(seed = []) {
+  const events = [...seed];
+  const subs = [];
+  let id = 0;
+  return () => ({
+    append: async (kind, data) => {
+      events.push({ id: ++id, kind, data: JSON.parse(JSON.stringify(data)), created_at: new Date().toISOString() });
+      subs.forEach((f) => f({ events }));
+    },
+    load: async () => ({ events }),
+    get: () => ({ events }),
+    subscribe: (f) => { subs.push(f); return () => {}; },
+    startPolling() {}, destroy() {},
+  });
+}
+
+(async () => {
+  try {
+    // ============================================================
+    section('currencies are DATA, not two hard-coded names (register 263)');
+    check('two default currencies, School then Play',
+      DEFAULT_CURRENCIES.map((c) => c.id).join() === 'school,play', J(DEFAULT_CURRENCIES));
+    check('each has an id, a display name, an icon slot (null until design picks one) and feeds',
+      DEFAULT_CURRENCIES.every((c) => typeof c.id === 'string' && typeof c.name === 'string'
+        && c.icon === null && Array.isArray(c.feeds)), J(DEFAULT_CURRENCIES));
+    check('chores, bonuses, ideas, penalties and School time all feed School (Mike, 2026-09-28)',
+      J(DEFAULT_CURRENCIES[0].feeds.slice().sort()) === J(['Bonus', 'Idea', 'Obligatory', 'Penalty', 'School']),
+      J(DEFAULT_CURRENCIES[0].feeds));
+    check('only Play feeds Play', J(DEFAULT_CURRENCIES[1].feeds) === J(['Play']));
+    check('no earning type feeds two currencies', (() => {
+      const all = DEFAULT_CURRENCIES.flatMap((c) => c.feeds);
+      return all.length === new Set(all).size;
+    })());
+    check('the home currency is School', HOME_CURRENCY === 'school');
+    check('Exchange is a ledger type now', TYPES.includes('Exchange') && EXCHANGE_TYPE === 'Exchange');
+    check('ONE allowed exchange by default: School -> Play at 1:1',
+      J(DEFAULT_EXCHANGES) === J([{ from: 'school', to: 'play', rate: 1 }]), J(DEFAULT_EXCHANGES));
+    check('School -> Play is found', !!findExchange('school', 'play', DEFAULT_EXCHANGES));
+    check('*** Play -> School is NOT (no entry = not allowed) ***',
+      findExchange('play', 'school', DEFAULT_EXCHANGES) === null);
+
+    // ============================================================
+    section('currencyOf — derived from the event TYPE, so no award call has to change');
+    check('a chore (Obligatory) is School', currencyOf(earn(5, 'Obligatory')) === 'school');
+    check('a Bonus is School', currencyOf(earn(5, 'Bonus')) === 'school');
+    check('an Idea is School', currencyOf(earn(5, 'Idea')) === 'school');
+    check('a Penalty is School', currencyOf(earn(-5, 'Penalty')) === 'school');
+    check('School time is School', currencyOf(earn(25, 'School')) === 'school');
+    check('Play is Play', currencyOf(earn(3, 'Play')) === 'play');
+    check('an UNKNOWN type falls back to the home currency (School) — same as award()’s own Bonus default',
+      currencyOf(earn(4, 'Mystery')) === 'school');
+    check('an event with NO type at all (older shapes) is School',
+      currencyOf({ kind: POINTS_KIND, data: { amount: 4 } }) === 'school');
+    check('a spend is the currency it records', currencyOf(spendEv(10, 'play')) === 'play');
+    check('*** a LEGACY spend (no currency field) counts against School ***',
+      currencyOf(spendEv(10)) === 'school');
+    check('an exchange belongs to no single currency', currencyOf(exEv('school', 'play', 5, 1)) === null);
+    const custom = [
+      { id: 'coins', name: 'Coins', icon: '🪙', feeds: ['Play'] },
+      { id: 'credit', name: 'Credit', icon: null, feeds: ['Bonus', 'School'] },
+    ];
+    check('a custom currency list works, and unknown types go to ITS first row when it has no School',
+      currencyOf(earn(1, 'Play'), custom) === 'coins' && currencyOf(earn(1, 'Idea'), custom) === 'coins'
+      && currencyOf(earn(1, 'School'), custom) === 'credit');
+
+    // ============================================================
+    section('balancesByCurrency — two real balances, and total = their sum');
+    const log = [
+      earn(60, 'Obligatory'),    // school +60
+      earn(15, 'Bonus'),         // school +15
+      earn(-10, 'Penalty'),      // school -10
+      earn(8, 'Play'),           // play   +8
+      earn(4, 'Play'),           // play   +4
+      spendEv(30, 'school'),     // school -30
+      spendEv(5, 'play'),        // play   -5
+      spendEv(20),               // LEGACY -> school -20
+      { kind: 'other', data: { amount: 999, type: 'Play' } },   // not a points event
+    ];
+    const b = balancesByCurrency(log);
+    check('School = 60 + 15 - 10 - 30 - 20 (legacy spend included)', b.school === 15, J(b));
+    check('Play = 8 + 4 - 5', b.play === 7, J(b));
+    check('every currency is present even at zero', J(balancesByCurrency([])) === J({ school: 0, play: 0 }));
+    check('total = the sum of the currencies ("go together into total points")',
+      totalOfBalances(b) === 22, String(totalOfBalances(b)));
+    check('*** sumPoints still means the TOTAL, so existing callers keep their meaning ***',
+      sumPoints(log) === totalOfBalances(b), `${sumPoints(log)} vs ${totalOfBalances(b)}`);
+    check('earned and spent are unchanged in meaning', sumEarned(log) === 77 && sumSpent(log) === 55,
+      `${sumEarned(log)}/${sumSpent(log)}`);
+    const legacyOnly = [earn(100, 'Bonus'), spendEv(60)];
+    check('a pre-currency log (Bonus earned, spend with no currency) is all School',
+      J(balancesByCurrency(legacyOnly)) === J({ school: 40, play: 0 }), J(balancesByCurrency(legacyOnly)));
+    check('a spend naming a currency that is not in the data counts against the home currency',
+      balancesByCurrency([earn(10, 'Bonus'), spendEv(3, 'gone')]).school === 7);
+    check('fractional earnings survive per currency (trivia pays quarters)',
+      balancesByCurrency([earn(0.75, 'School'), earn(0.5, 'Play'), earn(3, 'Play')]).play === 3.5);
+    check('*** each currency is FLOORED for display, never rounded up ***',
+      fmtPoints(balancesByCurrency([earn(3.75, 'Play')]).play) === '3'
+      && fmtPoints(balancesByCurrency([earn(59.75, 'Bonus')]).school) === '59');
+    check('...and a part-point balance is still visible', fmtPoints(balancesByCurrency([earn(0.75, 'Play')]).play) === '0.75');
+
+    // ============================================================
+    section('Exchange events — debit from, credit to, total moves only by (rate - 1)');
+    const e1 = exEv('school', 'play', 10, 1);
+    check('exchangeParts reads a well-formed exchange',
+      J(exchangeParts(e1)) === J({ from: 'school', to: 'play', amount: 10, rate: 1 }), J(exchangeParts(e1)));
+    check('exchangeParts rejects a malformed one', exchangeParts(exEv('school', 'play', 10, 0)) === null
+      && exchangeParts(exEv('school', '', 10, 1)) === null && exchangeParts(exEv('school', 'play', -4, 1)) === null
+      && exchangeParts(earn(5, 'Bonus')) === null);
+    const withEx = [earn(50, 'Bonus'), e1];
+    const bx = balancesByCurrency(withEx);
+    check('a 1:1 exchange of 10 moves 10 from School to Play', bx.school === 40 && bx.play === 10, J(bx));
+    check('*** at 1:1 the TOTAL does not move ***', sumPoints(withEx) === 50, String(sumPoints(withEx)));
+    check('the exchange event is worth rate - 1 times amount to the total', pointsValue(e1) === 0
+      && pointsValue(exEv('school', 'play', 10, 2)) === 10 && pointsValue(exEv('school', 'play', 10, 0.5)) === -5);
+    const at2 = [earn(50, 'Bonus'), exEv('school', 'play', 10, 2)];
+    const b2 = balancesByCurrency(at2);
+    check('at 1 School : 2 Play, 10 School becomes 20 Play', b2.school === 40 && b2.play === 20, J(b2));
+    check('...and the total moves by exactly amount x (rate - 1) = +10',
+      sumPoints(at2) === 60 && totalOfBalances(b2) === 60, `${sumPoints(at2)} / ${totalOfBalances(b2)}`);
+    const half = balancesByCurrency([earn(50, 'Bonus'), exEv('school', 'play', 5, 0.5)]);
+    check('at 2 School : 1 Play, 5 School becomes 2.5 Play — the record keeps the half', half.play === 2.5, J(half));
+    check('a malformed exchange changes nothing at all',
+      J(balancesByCurrency([earn(5, 'Bonus'), exEv('school', 'play', 'x', 1)])) === J({ school: 5, play: 0 })
+      && sumPoints([earn(5, 'Bonus'), exEv('school', 'play', 'x', 1)]) === 5);
+    check('an exchange into a currency no longer in the data lands in the home currency (nothing vanishes)',
+      (() => { const l = [earn(20, 'Bonus'), exEv('school', 'gone', 5, 1)];
+               return totalOfBalances(balancesByCurrency(l)) === sumPoints(l); })());
+
+    // ============================================================
+    section('what every helper does with an Exchange (it is neither earning nor spending)');
+    const mixed = [earn(40, 'School', { minutes: 40, subject: 'Math' }), earn(6, 'Play', { source: 'comet_ambient' }),
+                   exEv('school', 'play', 10, 1), spendEv(5, 'play')];
+    check('sumEarned leaves it out (you did not earn anything by trading)', sumEarned(mixed) === 46, String(sumEarned(mixed)));
+    check('sumSpent leaves it out (you did not buy anything)', sumSpent(mixed) === 5, String(sumSpent(mixed)));
+    check('so earned - spent + exchange net = total, and at 1:1 the net is 0',
+      sumEarned(mixed) - sumSpent(mixed) === sumPoints(mixed));
+    check('sumMinutes: an exchange is not school time', sumMinutes(mixed) === 40, String(sumMinutes(mixed)));
+    check('minutesBySubject: an exchange carries no subject credit', J(minutesBySubject(mixed)) === J({ Math: 40 }));
+    const bs = sumBySource(mixed);
+    check('sumBySource still adds up to the total (the exchange contributes its net, 0 at 1:1)',
+      Object.values(bs).reduce((n, v) => n + v, 0) === sumPoints(mixed), J(bs));
+    const day = dayKey(at);
+    check('a day total counts only the net change (0 at 1:1)', sumPointsOn(mixed, day) === sumPoints(mixed));
+    check('an exchange never counts against a GAME’s daily cap (it is written as quests)',
+      sumPointsOnBySource(mixed, day, 'comet_ambient') === 6);
+
+    // ============================================================
+    section('checkExchange — the refusals, as data a module can explain');
+    const bal50 = [earn(50, 'Bonus'), earn(9, 'Play')];
+    const ok = checkExchange({ from: 'school', to: 'play', amount: 10 }, bal50);
+    check('a covered, allowed exchange is ok and says what you get', ok.ok && ok.gets === 10 && ok.rate === 1, J(ok));
+    const rev = checkExchange({ from: 'play', to: 'school', amount: 5 }, bal50);
+    check('*** Play -> School is refused: not-allowed ***', !rev.ok && rev.reason === 'not-allowed', J(rev));
+    const short = checkExchange({ from: 'school', to: 'play', amount: 60 }, bal50);
+    check('more than the School balance is refused: short, with what you have',
+      !short.ok && short.reason === 'short' && short.have === 50, J(short));
+    check('exactly the balance is allowed', checkExchange({ from: 'school', to: 'play', amount: 50 }, bal50).ok);
+    check('zero is refused', checkExchange({ from: 'school', to: 'play', amount: 0 }, bal50).reason === 'bad-amount');
+    check('negative is refused', checkExchange({ from: 'school', to: 'play', amount: -5 }, bal50).reason === 'bad-amount');
+    check('junk is refused', checkExchange({ from: 'school', to: 'play', amount: 'lots' }, bal50).reason === 'bad-amount');
+    check('the rate comes from the exchange DATA (a setting can change it)',
+      checkExchange({ from: 'school', to: 'play', amount: 10 }, bal50,
+        { exchanges: [{ from: 'school', to: 'play', rate: 2 }] }).gets === 20);
+    check('a same-currency "exchange" is refused', checkExchange({ from: 'school', to: 'school', amount: 5 }, bal50,
+      { exchanges: [{ from: 'school', to: 'school', rate: 2 }] }).reason === 'not-allowed');
+
+    // ============================================================
+    section('the ledger handle — spend records its currency; exchange appends ONE event');
+    const mem = memoryEvents();
+    const bus = { sent: [], publish(t, p) { this.sent.push([t, p]); } };
+    const led = createPointsLedger({ makeEvents: mem, bus });
+    await led.award({ amount: 40, source: 'quests', type: 'Bonus' });
+    await led.award({ amount: 12, source: 'comet_ambient', type: 'Play' });
+    check('the handle reports balances by currency', J(led.balances()) === J({ school: 40, play: 12 }), J(led.balances()));
+    check('...and total() is still the sum', led.total() === 52);
+
+    await led.spend({ amount: 5, currency: 'play', note: 'treat' });
+    const sp = led.events().at(-1).data;
+    check('*** a spend carries the currency it came from ***', sp.type === 'Reward' && sp.currency === 'play', J(sp));
+    check('...and it came out of Play, not School', J(led.balances()) === J({ school: 40, play: 7 }), J(led.balances()));
+    await led.spend({ amount: 3, note: 'no currency given' });
+    check('a spend with no currency named is recorded as the home currency, explicitly',
+      led.events().at(-1).data.currency === 'school' && led.balances().school === 37);
+
+    const before = led.events().length;
+    const res = await led.exchange({ from: 'school', to: 'play', amount: 10 });
+    const ex = led.events().at(-1);
+    check('exchange() appends exactly ONE event (a pair could be half-written)',
+      led.events().length === before + 1, `${before} -> ${led.events().length}`);
+    check('...typed Exchange, with from, to, amount and rate stored',
+      ex.data.type === 'Exchange' && ex.data.from === 'school' && ex.data.to === 'play'
+      && ex.data.amount === 10 && ex.data.rate === 1, J(ex.data));
+    check('...and it returns what happened', res && res.gets === 10, J(res));
+    check('the balances moved', J(led.balances()) === J({ school: 27, play: 17 }), J(led.balances()));
+    check('the total did not', led.total() === 44, String(led.total()));
+    check('the live nudge went out for it (quests refreshes on it)',
+      bus.sent.at(-1)[0] === 'points/award' && bus.sent.at(-1)[1].type === 'Exchange');
+
+    const n0 = led.events().length;
+    const r1 = await led.exchange({ from: 'play', to: 'school', amount: 5 });
+    const r2 = await led.exchange({ from: 'school', to: 'play', amount: 500 });
+    const r3 = await led.exchange({ from: 'school', to: 'play', amount: 0 });
+    const r4 = await led.exchange({});
+    check('*** refusals return null and record NOTHING (never throw into a module) ***',
+      r1 === null && r2 === null && r3 === null && r4 === null && led.events().length === n0,
+      `${J([r1, r2, r3, r4])} / ${n0} -> ${led.events().length}`);
+    const r5 = await led.exchange({ from: 'school', to: 'play', amount: 5,
+                                    exchanges: [{ from: 'school', to: 'play', rate: 2 }] });
+    check('exchange() honours the exchange data it is handed (the rate setting)',
+      r5 && r5.gets === 10 && led.events().at(-1).data.rate === 2, J(r5));
+
+    const n1 = led.events().length;
+    const aw = await led.award({ amount: 5, source: 'x', type: 'Exchange' });
+    check('award() will not write an Exchange (it cannot say from/to) — nothing recorded',
+      aw === null && led.events().length === n1);
+    led.destroy();
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+  }
+  const s = document.getElementById('summary');
+  s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  s.className = failed === 0 ? 'pass' : 'fail';
+})();
+</script>
+</body>
+</html>
