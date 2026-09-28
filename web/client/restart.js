@@ -130,7 +130,7 @@ export function restartItems(cfg, { screenName = 'this screen', onChange } = {})
   return [
     { kind: 'heading', id: 'restart', label: 'When the power comes back' },
     {
-      kind: 'item', id: 'restart-resume', label: `${tick('resume')}Pick up where she left off`,
+      kind: 'item', id: 'restart-resume', label: `${tick('resume')}Pick up where it left off`,
       run: () => onChange({ mode: 'resume' }),
     },
     {

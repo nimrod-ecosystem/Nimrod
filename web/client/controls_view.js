@@ -172,12 +172,12 @@ export function deviceStatus({ bindings = [], devices = [], activity = [],
   if (rows.length && rows.every((r) => r.state === 'missing')) {
     // THE HEADLINE. Everything she is bound to is absent, so no amount of reading the
     // binding list will help and somebody should be told that first.
-    verdict = { tone: 'bad', text: 'Nothing she is bound to is connected to this screen' };
+    verdict = { tone: 'bad', text: 'None of the bound controls is connected to this screen' };
   } else if (missing.length) {
     verdict = { tone: 'mixed',
       text: `${missing.length} of ${rows.length} controls are bound but not connected` };
   } else if (rows.length) {
-    verdict = { tone: 'good', text: 'Everything she is bound to is connected, or cannot be checked' };
+    verdict = { tone: 'good', text: 'Every bound control is connected, or cannot be checked' };
   }
   return { rows, missing: missing.length, verdict };
 }
