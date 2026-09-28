@@ -356,9 +356,36 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.q('[data-new-action]').value = verbTopic('focus-next');
       r.q('[data-add]').click();
       r.press('pointer:mouse', 'button:0');
-      check('a mouse click binds like anything else — the cheapest thing a switch box emulates',
+      // *** THE BINDING-TIME WARNING, Mike's own approved wording (2026-09-28): bare left
+      // click hijacks every ordinary click on the page once bound to anything (the
+      // trivia/youtube click bug), so it does not commit on press alone. ***
+      const warned = r.q('[data-addmsg]').innerHTML;
+      check('binding bare left click warns instead of confirming immediately',
+        /this makes left-click confirm whatever's highlighted/.test(warned), warned);
+      check('it is not bound yet — nothing commits on a warning alone',
+        !r.panel.bindings().some((x) => x.device === 'pointer:mouse'));
+      check('declining leaves nothing bound', !!r.q('[data-canceldanger]'));
+      r.q('[data-canceldanger]').click();
+      check('...and clears the message', r.q('[data-addmsg]').textContent === '');
+      check('still not bound after declining',
+        !r.panel.bindings().some((x) => x.device === 'pointer:mouse'));
+
+      // Doing it again and taking the "bind it anyway" offer completes the same binding
+      // the old, un-warned flow used to make immediately.
+      r.q('[data-add]').click();
+      r.press('pointer:mouse', 'button:0');
+      r.q('[data-bindanyway]').click();
+      check('a mouse click binds like anything else once confirmed — the cheapest thing a switch box emulates',
         r.panel.bindings().some((x) => x.device === 'pointer:mouse'));
       check('and reads as a click, not a number', /Mouse: Left click/.test(r.host.textContent));
+
+      // A different control on the same device is not the dangerous one — no warning.
+      r.q('[data-new-action]').value = verbTopic('focus-prev');
+      r.q('[data-add]').click();
+      r.press('pointer:mouse', 'button:2');
+      check('right click is not the hijack — it binds without a warning',
+        r.panel.bindings().some((x) => x.device === 'pointer:mouse' && x.control === 'button:2')
+        && !r.q('[data-bindanyway]'));
       r.panel.destroy();
     }
 
@@ -843,6 +870,7 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.q('[data-new-action]').value = verbTopic('prev');
       r.q('[data-add]').click();
       r.press('pointer:mouse', 'button:0');      // prev, bound on the mouse
+      r.q('[data-bindanyway]').click();          // bare left click warns first; take the offer
 
       r.q(`[data-device-chip="${XAC}"]`).click();
       check('selecting a chip clears the old highlight — it belonged to a different row order',
@@ -886,6 +914,7 @@ const logText = (r) => r.q('[data-log]').textContent;
       r.q('[data-new-action]').value = verbTopic('prev');
       r.q('[data-add]').click();
       r.press('pointer:mouse', 'button:0');
+      r.q('[data-bindanyway]').click();          // bare left click warns first; take the offer
 
       r.q('[data-device-chip="pointer:mouse"]').click();
       const mouseBinding = r.panel.bindings().find((b) => b.device === 'pointer:mouse' && b.actionId === verbTopic('prev'));
@@ -983,6 +1012,7 @@ const logText = (r) => r.q('[data-log]').textContent;
       for (const bid of bids) {
         r.q(`[data-bid="${bid}"] [data-repress]`).click();
         r.press('pointer:mouse', 'button:0');
+        r.q('[data-bindanyway]').click();        // bare left click warns first; take the offer
       }
       r.q('[data-add-device-toggle]').click();
       r.q('[data-adddev-name]').value = 'Tray switch';
