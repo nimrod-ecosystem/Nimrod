@@ -160,7 +160,11 @@ registerModule(
       hearts[i] = { ...spawnHeart(false, cfg.speed, nowMs), id: hearts[i].id };
       if (cfg.mode !== 'interactive' || !ledger) return;
       try {
-        await ledger.award({ amount: cfg.points, source: 'comet_ambient', note: 'caught a balloon' });
+        // Play, not Bonus (2026-09-28, register 250/257, Mike: "Arcade only... points from
+        // playing a game shouldn't go towards screen time or anything like that"). Leaving
+        // this unset defaults to Bonus in points.js, which IS spendable on screen time --
+        // exactly the case Mike flagged the first time Comet ever paid into the ledger.
+        await ledger.award({ amount: cfg.points, source: 'comet_ambient', type: 'Play', note: 'caught a balloon' });
       } catch (err) { console.error('comet_ambient: award', err); }
     }
 
