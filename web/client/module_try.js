@@ -350,11 +350,13 @@ export async function createLiveHost({ user }) {
 // reversal `createLiveHost` documents above (a saved `pointer:mouse` binding turns every direct
 // click on a preview into a switch press).
 //
-// *** THE HUD TYPES ARE NOT PANELS, SO THEY GET NO CHROME. *** The kiosk draws camera and clock
-// as overlays in a corner, and ambient modules as a background layer; none has a chip on the
-// transport bar and `showModule` says false for them. For those types the page keeps mounting the
-// plain host (`isKioskPanel` is how it tells). That is a real limit, not a bug to hide: their
-// settings are still only reachable from the screen they belong to.
+// *** THE HUD TYPES GET A ONE-SLOT LAYOUT, SO THEY ARE PANELS TOO. *** Unplaced, the kiosk draws the
+// camera and clock as overlays and ambient modules as a background layer, with no bar or menu of
+// their own -- which first shipped here as "plain host, no chrome" and left their settings
+// unreachable on this page. But `partition()` treats ANY module placed in a slot as an ordinary
+// panel, so for those types this hands the kiosk `embedLayout: {preset:'full', slots:[id]}` (held
+// in memory only; kiosk.js never writes a layout back) and they get the same bar and menu as
+// everything else. `isKioskPanel` now only decides which types need that placement.
 // =====================================================================================================
 
 /** Does the kiosk show this type as a PANEL (a chip on the bar, a slot or the stage)? */
@@ -415,6 +417,10 @@ export async function mountEmbeddedKiosk({ stage, user = null, type }) {
   let busy = false;
   let again = false;
 
+  // A panel type needs no arrangement (it goes on the stage). A HUD/ambient type is PLACED in a one-
+  // slot layout so it is a panel too -- see the header above.
+  const placeFor = (id) => (isKioskPanel(current) ? null : { preset: 'full', slots: [id] });
+
   async function boot() {
     stage.innerHTML = '';
     const seams = {
@@ -428,7 +434,7 @@ export async function mountEmbeddedKiosk({ stage, user = null, type }) {
       const real = createProfilesClient({ user });
       const profileId = await ensureProfile(real, user);
       const profile = await real.get(profileId);
-      await ensureModuleInstance(real, profileId, profile, current);
+      const mod = await ensureModuleInstance(real, profileId, profile, current);
       const pick = current;
       const { moveToPerson, ...rest } = real;   // withheld: see the header above
       const profiles = {
@@ -439,7 +445,7 @@ export async function mountEmbeddedKiosk({ stage, user = null, type }) {
           return { ...p, modules: (p.modules || []).filter((m) => m.type === pick) };
         },
       };
-      kiosk = await mountKiosk(stage, { ...seams, user, profileId, profiles });
+      kiosk = await mountKiosk(stage, { ...seams, user, profileId, profiles, embedLayout: placeFor(mod.id) });
     } else {
       const backend = createLocalBackend();
       const profileId = `try-${current}`;
@@ -454,6 +460,7 @@ export async function mountEmbeddedKiosk({ stage, user = null, type }) {
       kiosk = await mountKiosk(stage, {
         ...seams, user: null, profileId, profiles,
         makeState: backend.makeState, makeEvents: backend.makeEvents,
+        embedLayout: placeFor(screen.modules[0].id),
       });
     }
     if (torn) { try { kiosk.destroy(); } catch { /* already gone */ } kiosk = null; return; }
@@ -487,7 +494,7 @@ export async function mountEmbeddedKiosk({ stage, user = null, type }) {
   return {
     get kiosk() { return kiosk; },
     async showModule(t) {
-      if (torn || !isKioskPanel(t)) return false;
+      if (torn || !t) return false;
       current = t;
       if (kiosk && await kiosk.showModule(t)) return true;
       await rebuild();                    // not on this screen yet: rebuild around it
