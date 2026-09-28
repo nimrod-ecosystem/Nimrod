@@ -1672,7 +1672,11 @@ export async function mountKiosk(root, {
       ] },
   ];
 
-  const menu = mountSettings(root.querySelector('[data-settings]'), {
+  // `:scope >` is not decoration. The camera module draws its OWN hidden `[data-settings]` inline
+  // panel inside the mirror overlay, which comes EARLIER in document order, so a bare
+  // `querySelector('[data-settings]')` mounted this menu inside it: open, but hidden by its
+  // ancestor and 0x0 wide, on every screen that has a camera.
+  const menu = mountSettings(kioskEl.querySelector(':scope > [data-settings]'), {
     person: () => whoState,
     // The row under the who heading. It says what is true and, where the account has people
     // to choose between, opens the picker.
