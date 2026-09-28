@@ -220,11 +220,18 @@
 
 /* photos */
 .photos{width:100%;height:100%;position:relative}
-/* `--surface`, not `--letterbox` (camera's video-behind-bars colour, still unchanged) — Mike,
-   2026-09-21: "lose the blurry background on the photos and just have it show the theme."
-   The letterboxing `fit:contain` leaves is now a plain themed fill, the same colour a module's
-   own content sits on, instead of the photo's own blurred, darkened copy of itself. */
-.photos .stage{position:relative;width:100%;height:100%;background:var(--surface);border-radius:10px;
+/* TRANSPARENT, NOT `--surface` — CHANGED 2026-09-27, Mike, off the live site: "The background on
+   photos won't go transparent no matter how you set it, you get the green bars on the sides."
+   Root cause, confirmed before fixing: this rule painted `--surface` directly on `.stage`, a
+   descendant of `.k-mod` — the new `panelSurface` setting (kiosk.js/kiosk.css, 2026-09-23) only
+   ever changes `.k-mod`'s OWN background, and never touched this one, so the letterbox gaps kept
+   showing a solid colour no matter what the panel setting said. Making `.stage` transparent lets
+   `.k-mod`'s own CURRENT background show through instead — in `solid` mode this paints the exact
+   same `--surface` colour as before (zero visual change, since that IS `.k-mod`'s own default
+   background), and in `veil`/`clear` mode the letterbox gaps now correctly show the live scene
+   too, which is what Mike's original 2026-09-21 ask ("just have it show the theme") means now
+   that a theme can BE a moving scene rather than only a flat colour. */
+.photos .stage{position:relative;width:100%;height:100%;background:transparent;border-radius:10px;
   overflow:hidden;display:flex;align-items:center;justify-content:center}
 .photos .stage img,.photos .stage video{position:relative;width:100%;height:100%;object-fit:contain;
   display:block;background:transparent}
