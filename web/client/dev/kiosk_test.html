@@ -194,6 +194,20 @@ const ds = () => root.querySelector('.kiosk').dataset;
     await press('Escape', 40);
     check('Escape opens the settings menu — the habit key, and free outside element fullscreen',
       kiosk.menu.isOpen() === true);
+    // *** THE MENU MUST BE VISIBLE, NOT JUST OPEN. *** This screen has a camera, and the camera
+    // module draws its own hidden `[data-settings]` panel inside the mirror overlay. The kiosk
+    // used to mount its menu into THAT one: `isOpen()` said true while the scrim sat inside a
+    // hidden ancestor and the panel measured 0x0.
+    {
+      const scrim = root.querySelector('.st-scrim');
+      const panelEl = root.querySelector('.st-panel');
+      check('with a camera on the screen, the menu is not mounted inside the camera overlay',
+        !!scrim && !scrim.closest('.k-mirror'));
+      check('...so nothing above it is hidden', !!scrim && !scrim.closest('[hidden]'));
+      const r = panelEl?.getBoundingClientRect();
+      check('...and the panel actually has a size', !!r && r.width > 0 && r.height > 0,
+        JSON.stringify(r && r.toJSON()));
+    }
     check('it names the panel it is about to change', kiosk.menu.items()
       .some((i) => i.label === 'This panel — Photos'),
       JSON.stringify(kiosk.menu.items().map((i) => i.label)));
