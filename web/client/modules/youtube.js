@@ -30,6 +30,7 @@ import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { createHeldSignal } from '../held.js';
+import { createPresetLibrary } from '../presets.js';
 
 // `stallMs` is the STOPPED-VIDEO WATCHDOG (see the header). 20s is long enough that a
 // slow-but-working load on facility wifi isn't cut off, short enough that nobody sits in
@@ -42,6 +43,11 @@ const DEFAULTS = {
   playlist: [],            // explicit video refs {id, channel, title, durationSec}
   playlistId: '',          // a YouTube playlist to draw from instead of / as well as the above
   schedule: [],            // [{name, start, playlistId}] — time-of-day playlists
+  // *** PRESETS (register #255). *** Empty means "this instance's own playlist/schedule/
+  // shuffle, exactly as before" — see presets.js's header for the full argument on why this
+  // is a per-PERSON library rather than per-profile or per-account, and the `effective*`
+  // helpers below for how a set presetId overrides the three fields it names, and ONLY them.
+  presetId: '',
   graceMin: 10,            // a nearly-finished video may run this long past a daypart boundary
   shuffle: true,           // weighted-random pick (the default); off = straight playlist order
   autoAdvance: true,
@@ -123,6 +129,13 @@ export const SETTINGS = [
       { value: 21600000, label: 'after 6 hours' },
       { value: 43200000, label: 'after 12 hours' },
     ] },
+  // `presetId` is a LIVE choice, the same pattern `photos.js`'s `sourceId` already uses: the
+  // options are this PERSON's saved YouTube presets, which are data and cannot be written into
+  // a manifest — see `settingsChoices` below. Reachable and cycleable through the exact same
+  // one-button/input-bus menu `sourceId` already is, so "switching preset is a verb" (register
+  // #255) needs no new bus wiring here: this menu is already switch- and input-bus-operable.
+  { key: 'presetId', label: 'Use a saved preset', kind: 'choice', default: '', level: 'standard',
+    emptyLabel: 'No preset — this instance’s own playlist, schedule and shuffle' },
 ];
 
 // Parse a YouTube video id from a URL or a bare id. Accepts youtu.be/<id>,
@@ -406,6 +419,22 @@ registerModule(
     // the whole reason a held screen could only ever show a frozen frame — see `held.js`.
     const heldSignal = createHeldSignal(bus, 'youtube');
 
+    // *** PRESETS (register #255) — see presets.js's header for the scope argument. ***
+    // `ctx.makePersonState` is the SAME per-person seam `modules/keyboard.js`'s bindings and
+    // `kiosk.js`'s marker/device preferences already use — curried onto this screen's own
+    // person the same way `home.js`'s `makeUserState` curries it for the panels there. Absent
+    // on any host that hasn't wired `ctx.personId`/`ctx.makePersonState` (the dev harness, this
+    // suite, a signed-out demo): `presetsLib` is then null, `activePreset()` always answers
+    // null, and every `effective*` helper below falls straight through to the instance's own
+    // cfg — i.e. exactly today's behavior, unchanged.
+    const presetsLib = (ctx.personId && ctx.makePersonState)
+      ? createPresetLibrary({ makeState: (key, opts) => ctx.makePersonState(ctx.personId, key, opts) })
+      : null;
+    // The settings menu PAINTS SYNCHRONOUSLY (see `settingsChoices` below, and photos.js's
+    // identical `knownSources`), so this is refreshed from `presetsLib`'s own live subscription
+    // rather than fetched fresh on every menu open.
+    let knownPresets = [];
+
     let cfg = { ...DEFAULTS };
     let ids = [], byId = {}, channels = {}, durations = {};
     let stats = {};                 // derived from play events
@@ -633,11 +662,44 @@ registerModule(
       if (text) s.textContent = text;
     }
 
+    // ---- presets: which playlist/schedule/shuffle is actually IN FORCE -----------------
+    //
+    // Resolved fresh on every call rather than cached, so a preset renamed, edited or deleted
+    // on another screen is never stale here for longer than the next `presetsLib` notification
+    // (a poll tick or a push). `type` is checked because `cfg.presetId` is only ever validated
+    // against KNOWN presets by the settings menu at pick time — a preset later re-typed to a
+    // different module elsewhere, or simply deleted, must fall back to "no preset" rather than
+    // apply a stranger's settings shaped for something else.
+    function activePreset() {
+      if (!cfg.presetId || !presetsLib) return null;
+      const p = presetsLib.getPreset(cfg.presetId);
+      return (p && p.type === 'youtube') ? p : null;
+    }
+    function effectivePlaylist() {
+      const p = activePreset();
+      return p ? (Array.isArray(p.settings?.playlist) ? p.settings.playlist : [])
+                : (Array.isArray(cfg.playlist) ? cfg.playlist : []);
+    }
+    function effectiveSchedule() {
+      const p = activePreset();
+      return p ? (Array.isArray(p.settings?.schedule) ? p.settings.schedule : [])
+                : (Array.isArray(cfg.schedule) ? cfg.schedule : []);
+    }
+    // Same "absent/null/undefined means on" convention `cfg.shuffle` itself already uses.
+    function effectiveShuffle() {
+      const p = activePreset();
+      return p ? p.settings?.shuffle !== false : cfg.shuffle !== false;
+    }
+    function effectivePlaylistId() {
+      const p = activePreset();
+      return String((p ? p.settings?.playlistId : cfg.playlistId) || '');
+    }
+
     // Rebuild the id/channel/duration maps from the playlist config. Channel
     // defaults to the video id (so a video with no channel still counts as its own
     // channel — diversity degrades gracefully, never divides by an empty axis).
     function indexPlaylist() {
-      const pinned = Array.isArray(cfg.playlist) ? cfg.playlist : [];
+      const pinned = effectivePlaylist();
       // Ids from a cued playlist carry no title/channel/duration — YouTube does not hand
       // them over without the Data API. They degrade the same way a video added with no
       // channel does: their own id becomes their channel, duration 0 means the
@@ -682,7 +744,7 @@ registerModule(
       // the weighted picker spreads plays across channels, backs off things played
       // recently, and stops one long video from dominating. Straight playlist order is
       // opt-out, for the case where the order is the point — a lesson series, a story.
-      if (cfg.shuffle === false) {
+      if (!effectiveShuffle()) {
         const at = ids.indexOf(currentId);
         const next = ids[(at + 1) % ids.length];
         if (next) show(next, true);
@@ -715,8 +777,10 @@ registerModule(
     function renderSchedule() {
       const el = mount.querySelector('[data-sched]');
       if (!el) return;
-      const parts = Array.isArray(cfg.schedule) ? cfg.schedule.filter((d) => d && d.playlistId) : [];
-      const on = pickDaypart(cfg.schedule, nowDate());
+      const preset = activePreset();
+      const schedule = effectiveSchedule();
+      const parts = schedule.filter((d) => d && d.playlistId);
+      const on = pickDaypart(schedule, nowDate());
       el.innerHTML = '';
       const head = document.createElement('div');
       head.className = 'yt-schhead';
@@ -734,13 +798,21 @@ registerModule(
           : `from ${hhmm(d.start)}`;
         row.innerHTML = `<span>${esc(d.name || 'unnamed')} · ${esc(when)}`
           + `${on && on === d ? ' · <b>now</b>' : ''}</span>`;
-        const rm = document.createElement('button');
-        rm.type = 'button';
-        rm.textContent = 'Remove';
-        rm.addEventListener('click', () => {
-          state.set({ schedule: (cfg.schedule || []).filter((x) => x !== d) });
-        });
-        row.append(rm);
+        // A PRESET'S SCHEDULE IS READ-ONLY FROM HERE. Removing a row would have to write it
+        // back to the PRESET (touching every other screen using it, silently — exactly the
+        // "used on N dashboards" case this pass deliberately does not build a warning for, see
+        // presets.js/this feature's report) or to this instance's own (currently inert)
+        // `cfg.schedule`, which would remove nothing the person can see and look broken. A
+        // fake affordance is worse than an absent one (settings_fields.js's own rule).
+        if (!preset) {
+          const rm = document.createElement('button');
+          rm.type = 'button';
+          rm.textContent = 'Remove';
+          rm.addEventListener('click', () => {
+            state.set({ schedule: (cfg.schedule || []).filter((x) => x !== d) });
+          });
+          row.append(rm);
+        }
         el.append(row);
       }
     }
@@ -752,21 +824,27 @@ registerModule(
       el.textContent = v ? (v.title || v.id) : `${ids.length} video${ids.length === 1 ? '' : 's'}`;
     }
 
-    // Reflect the current playlist in the settings list (with per-row remove).
+    // Reflect the current playlist in the settings list (with per-row remove) — or, while a
+    // preset is active, the PRESET's playlist, read-only (see renderSchedule's identical note
+    // on why a remove button would either silently edit a shared preset or silently do
+    // nothing against this instance's own, now-inert, `cfg.playlist`).
     function renderPlaylist() {
       const box = mount.querySelector('[data-list]');
       if (!box) return;
+      const preset = activePreset();
       box.innerHTML = '';
-      for (const v of (cfg.playlist || [])) {
+      for (const v of effectivePlaylist()) {
         const row = document.createElement('div');
         row.className = 'ytrow';
         row.innerHTML = `<span>${esc(v.title || v.id)}${v.channel ? ' · ' + esc(v.channel) : ''}</span>`;
-        const rm = document.createElement('button');
-        rm.textContent = '✕'; rm.title = 'remove';
-        rm.addEventListener('click', () => {
-          state.set({ playlist: (cfg.playlist || []).filter((x) => x.id !== v.id) });
-        });
-        row.append(rm);
+        if (!preset) {
+          const rm = document.createElement('button');
+          rm.textContent = '✕'; rm.title = 'remove';
+          rm.addEventListener('click', () => {
+            state.set({ playlist: (cfg.playlist || []).filter((x) => x.id !== v.id) });
+          });
+          row.append(rm);
+        }
         box.append(row);
       }
     }
@@ -880,15 +958,15 @@ registerModule(
     // branch below — they fire in that order, so two different strings meant the specific
     // one was immediately overwritten by the generic one.
     function loadingMessage() {
-      const part = pickDaypart(cfg.schedule, nowDate());
+      const part = pickDaypart(effectiveSchedule(), nowDate());
       return part ? `Loading ${part.name}…` : 'Loading playlist…';
     }
 
     // Load whichever playlist the clock says, if any. Re-cueing the SAME list is skipped —
     // it would restart the pool and interrupt whatever is playing for no reason.
     function syncPlaylistSource() {
-      const part = pickDaypart(cfg.schedule, nowDate());
-      const wanted = (part && part.playlistId) || cfg.playlistId || '';
+      const part = pickDaypart(effectiveSchedule(), nowDate());
+      const wanted = (part && part.playlistId) || effectivePlaylistId() || '';
       if (!wanted) { activeList = null; activePart = null; return; }
       if (wanted === activeList) { activePart = part; return; }
       activeList = wanted;
@@ -904,7 +982,7 @@ registerModule(
     // but only up to graceMin, so a very long video cannot hold the screen in the wrong
     // daypart all evening.
     function checkSchedule() {
-      const part = pickDaypart(cfg.schedule, nowDate());
+      const part = pickDaypart(effectiveSchedule(), nowDate());
       if (!part || !activePart || part.name === activePart.name) return;
       if (!currentId) { syncPlaylistSource(); return; }
       if (pendingPart && pendingPart.name === part.name) return;
@@ -926,7 +1004,7 @@ registerModule(
     // Self-rescheduling rather than an interval so it uses the same injected timer seam the
     // watchdog does. A minute is plenty: boundaries land on the hour.
     function syncScheduleWatch() {
-      const wanted = !!pickDaypart(cfg.schedule, nowDate());
+      const wanted = !!pickDaypart(effectiveSchedule(), nowDate());
       if (wanted && !tickTimer) {
         const tick = () => {
           try { checkSchedule(); } catch (e) { console.error('youtube: schedule', e); }
@@ -944,10 +1022,21 @@ registerModule(
       indexPlaylist();
       renderPlaylist();
       renderSchedule();
+      const preset = activePreset();
+      const note = mount.querySelector('[data-preset-note]');
+      if (note) {
+        note.hidden = !preset;
+        if (preset) {
+          note.textContent = `Using preset "${preset.name}" for the playlist, schedule and `
+            + 'shuffle above. Adding a video or schedule entry, or changing shuffle, below '
+            + 'edits this instance’s OWN settings — they take effect once the preset above '
+            + 'is cleared.';
+        }
+      }
       const sync = mount.querySelector('[data-opt="autoAdvance"]');
       if (sync) sync.checked = !!cfg.autoAdvance;
       const shuf = mount.querySelector('[data-opt="shuffle"]');
-      if (shuf) shuf.checked = cfg.shuffle !== false;
+      if (shuf) { shuf.checked = effectiveShuffle(); shuf.disabled = !!preset; }
       if (!ids.length) {
         setStatus(activeList ? loadingMessage() : 'No videos yet. Add one in settings.');
         currentId = null; updateLabel(); return;
@@ -983,6 +1072,12 @@ registerModule(
                    which is lifted above the panel so the thing that opened it still
                    closes it. -->
               <button type="button" class="yt-close" data-close aria-label="close settings">Close ✕</button>
+              <!-- Set from the universal settings menu (this module's own SETTINGS declares
+                   presetId, with live options from settingsChoices below) — this is just the
+                   explanation for what changed once one is picked. See presets.js/register #255.
+                   NO BACKTICKS IN THIS COMMENT — see the identical warning above this panel's
+                   schedule editor; it lives inside the same template literal. -->
+              <div class="yt-schhead" data-preset-note hidden></div>
               <label class="chk"><input type="checkbox" data-opt="autoAdvance"> auto-advance when a video ends</label>
               <label class="chk"><input type="checkbox" data-opt="shuffle"> shuffle (off = play the playlist in order)</label>
               <div class="addrow">
@@ -1204,6 +1299,22 @@ registerModule(
           applyConfig();
         });
 
+        // Presets (register #255): load this person's library once, then keep `knownPresets`
+        // (for the synchronous `settingsChoices` menu) and whatever is actually playing
+        // (`applyConfig`, via `effective*`) current as presets are added, edited, renamed or
+        // deleted anywhere — this screen included. Absent host (no `ctx.personId`/
+        // `ctx.makePersonState`): `presetsLib` is null and none of this runs, same as today.
+        if (presetsLib) {
+          presetsLib.load()
+            .then(() => { knownPresets = presetsLib.listPresets(); if (!destroyed) applyConfig(); })
+            .catch((e) => console.error('youtube: presets load', e));
+          presetsLib.subscribe(() => {
+            knownPresets = presetsLib.listPresets();
+            if (!destroyed) applyConfig();
+          });
+          presetsLib.startPolling?.();
+        }
+
       },
       onResize() {},
       onHide() { active = false; clearStall(); state.flush(); },
@@ -1217,7 +1328,17 @@ registerModule(
         // A module torn down while held must publish its end, or whatever reacted to the hold
         // is stuck in a state only the destroyed module could have left. See `held.js` rule 3.
         heldSignal.release();
+        try { presetsLib?.destroy(); } catch { /* already gone */ }
         try { player?.destroy(); } catch { /* noop */ } player = null; },
+
+      // LIVE OPTIONS for the declared `presetId` field — this person's saved YouTube presets,
+      // which are data and cannot be written into the manifest. Same pattern as photos.js's
+      // `sourceId` / board.js's `boardId`.
+      settingsChoices: () => ({
+        presetId: knownPresets
+          .filter((p) => p && p.type === 'youtube')
+          .map((p) => ({ value: p.id, label: p.name })),
+      }),
     };
   },
 );

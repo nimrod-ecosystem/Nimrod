@@ -298,7 +298,12 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
   const mount = mountTab || (async (id, host) => {
     if (id === 'media') {
       const { mountMedia } = await import('./media.js');
-      const m = mountMedia(host, { user });
+      // `personId`/`makeUserState` (register #255): presets are a per-PERSON library (see
+      // presets.js's own header for the scope argument), the exact same currying `inputs.js`
+      // already gets below for bindings. Absent before a person has resolved — `mountMedia`
+      // treats that exactly like a signed-out visitor: the Presets section renders, says so,
+      // and every other part of the page (Sources) is unaffected.
+      const m = mountMedia(host, { user, personId, makeUserState });
       await m.refresh();
 
       // "MAKE YOUR OWN PACK" NEEDED SOMEWHERE TO LAND BESIDES A GAME'S OWN MENU. Mike's own

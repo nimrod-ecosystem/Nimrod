@@ -24,6 +24,7 @@ as a blank screen at a bedside.</p>
 
 <script type="module">
 import { mountMedia } from '../media.js';
+import { createPresetLibrary } from '../presets.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -72,6 +73,23 @@ function fakeClient(initial = []) {
     },
     remove: async (id) => { calls.remove.push(id); rows = rows.filter((r) => r.id !== id); return { ok: true }; },
     _push: (row) => rows.push(row),
+  };
+}
+
+// A fake per-person state handle — same shape `presets_test.html`'s own `fakeState` uses for
+// `createPresetLibrary`, so this section proves the REAL library wired into the REAL panel,
+// with no server.
+function fakePresetState(initial = {}) {
+  let stored = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => stored,
+    set: (patch) => { stored = { ...stored, ...patch }; for (const fn of subs) fn(stored); },
+    load: () => Promise.resolve(),
+    startPolling() {},
+    flush: () => Promise.resolve(),
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    destroy() {},
   };
 }
 
@@ -252,6 +270,124 @@ section('disconnecting');
   check('it disappears from the list', !/Old folder/.test(host.querySelector('[data-list]').textContent));
   check('and it reassures you the files are untouched',
         /files were not touched/.test(text(host.querySelector('[data-msg]'))));
+}
+
+// --------------------------------------------------------- Presets (register #255)
+section('presets — no account/dashboard wired at all');
+{
+  const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0) });
+  await p.refresh();
+  const box = host.querySelector('[data-preset-list]');
+  check('says presets need an account rather than showing an empty, unexplained list',
+        /signed-in account/.test(text(box)), text(box));
+  host.querySelector('[data-preset-name]').value = 'Should not save';
+  host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
+  await settle();
+  check('trying to save without one is refused, not silently dropped',
+        /signed-in account/.test(text(host.querySelector('[data-preset-msg]'))),
+        text(host.querySelector('[data-preset-msg]')));
+}
+
+section('presets — create, list, edit and delete end to end');
+{
+  const presets = createPresetLibrary({ makeState: () => fakePresetState() });
+  const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0), presets });
+  await p.refresh();
+  check('a fresh library says so plainly', /No presets saved yet/.test(text(host.querySelector('[data-preset-list]'))));
+
+  // ---- create, with a real playlist/schedule/shuffle, the same fields youtube.js's own
+  // instance settings hold — proving this form can produce a USABLE preset, not an empty shell.
+  host.querySelector('[data-preset-name]').value = 'Saturday cartoons';
+  host.querySelector('[data-preset-playlist]').value =
+    'https://youtu.be/dQw4w9WgXcQ | Cartoon Co\nabc12345678';
+  host.querySelector('[data-preset-playlist-id]').value = 'https://www.youtube.com/playlist?list=PLR0lG5yo6NRE';
+  host.querySelector('[data-preset-schedule]').value = 'Morning | 07:00 | 09:00 | PLmorningset';
+  host.querySelector('[data-preset-shuffle]').checked = false;
+  host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
+  await settle();
+
+  const listText = text(host.querySelector('[data-preset-list]'));
+  check('*** the new preset is listed by name ***', /Saturday cartoons/.test(listText), listText);
+  check('...naming its type', /youtube/.test(listText), listText);
+  check('...and a summary of what it actually holds (2 videos, a playlist link, 1 schedule entry, shuffle off)',
+        /2 videos/.test(listText) && /playlist link/.test(listText)
+          && /1 schedule entry/.test(listText) && /shuffle off/.test(listText), listText);
+  check('confirms the save', /Preset saved/.test(text(host.querySelector('[data-preset-msg]'))));
+
+  const saved = presets.listPresets('youtube')[0];
+  check('*** the video link was actually parsed into a real video id, not stored as a raw URL ***',
+        saved.settings.playlist.some((v) => v.id === 'dQw4w9WgXcQ' && v.channel === 'Cartoon Co'),
+        JSON.stringify(saved.settings.playlist));
+  check('...and a bare id works too', saved.settings.playlist.some((v) => v.id === 'abc12345678'));
+  check('the playlist LINK was parsed out to a bare playlist id',
+        saved.settings.playlistId === 'PLR0lG5yo6NRE', saved.settings.playlistId);
+  check('the schedule line became a real entry with hours as numbers',
+        saved.settings.schedule[0]?.start === 7 && saved.settings.schedule[0]?.end === 9
+          && saved.settings.schedule[0]?.playlistId === 'PLmorningset',
+        JSON.stringify(saved.settings.schedule));
+  check('shuffle off was captured', saved.settings.shuffle === false);
+  check('the form clears and returns to "Save preset" once the save lands',
+        host.querySelector('[data-preset-name]').value === ''
+          && host.querySelector('[data-preset-save]').textContent === 'Save preset');
+
+  // ---- a second preset of the SAME type coexists
+  host.querySelector('[data-preset-name]').value = 'Bedtime nature docs';
+  host.querySelector('[data-preset-playlist]').value = 'zzz11111111';
+  host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
+  await settle();
+  check('a second preset is listed alongside the first, not replacing it',
+        /Saturday cartoons/.test(text(host.querySelector('[data-preset-list]')))
+          && /Bedtime nature docs/.test(text(host.querySelector('[data-preset-list]'))));
+
+  // ---- edit in place
+  const editBtn = [...host.querySelectorAll('[data-edit-preset]')]
+    .find((b) => b.closest('.h-card').textContent.includes('Saturday cartoons'));
+  editBtn.click();
+  await settle();
+  check('*** Edit loads the preset back into the form ***',
+        host.querySelector('[data-preset-name]').value === 'Saturday cartoons');
+  check('...with its playlist round-tripped back into the textarea',
+        /dQw4w9WgXcQ/.test(host.querySelector('[data-preset-playlist]').value)
+          && /Cartoon Co/.test(host.querySelector('[data-preset-playlist]').value),
+        host.querySelector('[data-preset-playlist]').value);
+  check('...and the Save button now says so, with a way to back out',
+        host.querySelector('[data-preset-save]').textContent === 'Save changes'
+          && host.querySelector('[data-preset-cancel]').hidden === false);
+
+  host.querySelector('[data-preset-name]').value = 'Saturday cartoons (renamed)';
+  host.querySelector('[data-preset-form]').dispatchEvent(new Event('submit', { cancelable: true }));
+  await settle();
+  check('*** saving the edit RENAMES in place — still exactly two presets, not three ***',
+        presets.listPresets().length === 2, JSON.stringify(presets.listPresets().map((p) => p.name)));
+  check('...the renamed one is there', /Saturday cartoons \(renamed\)/.test(text(host.querySelector('[data-preset-list]'))));
+  check('confirms an update, worded differently from a create',
+        /Preset updated/.test(text(host.querySelector('[data-preset-msg]'))));
+
+  // ---- delete
+  const delBtn = [...host.querySelectorAll('[data-remove-preset]')]
+    .find((b) => b.closest('.h-card').textContent.includes('Bedtime nature docs'));
+  delBtn.click();
+  await settle();
+  check('*** delete removes exactly that one ***',
+        presets.listPresets().length === 1 && presets.listPresets()[0].name === 'Saturday cartoons (renamed)');
+  check('...and says so', /Preset deleted/.test(text(host.querySelector('[data-preset-msg]'))));
+  check('...disappearing from the list', !/Bedtime nature docs/.test(text(host.querySelector('[data-preset-list]'))));
+
+  presets.destroy();
+}
+
+section('presets — the module itself keeps behaving with an injected library present');
+{
+  // Not a regression test for youtube.js (that lives in youtube_test.html) — just proof that
+  // Media's OWN Sources flow is completely unaffected by the Presets section sitting beside it.
+  const client = fakeClient([{ id: 'a1', label: 'Bedside', base_url: 'http://localhost:8770', kind: 'agent' }]);
+  const presets = createPresetLibrary({ makeState: () => fakePresetState() });
+  const p = mount({ client, folders: fakeFolders(), resolve: okListing(3), presets });
+  await p.refresh();
+  await settle();
+  check('sources still list normally beside an active Presets section',
+        /Bedside/.test(text(host.querySelector('[data-list]'))));
+  presets.destroy();
 }
 
 document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;

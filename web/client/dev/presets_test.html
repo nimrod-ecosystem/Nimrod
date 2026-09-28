@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>presets.js — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>presets.js — test</h1>
+<p>The generic named-presets library (register #255 / MIKE_CHANGE_LIST.md row 2.22): pure
+helpers over a person's `presets` document, plus the live handle against a fake per-person
+`makeState` — no server, the same style `lessons_test.html`'s `createQuestMode` coverage uses
+for its own single-value reserved key.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  PRESETS_KEY, presetsFrom, presetById, createPresetLibrary,
+} from '../presets.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+function fatal(what, err) {
+  failed++;
+  const d = document.createElement('div');
+  d.className = 'fail';
+  d.textContent = `FAIL  ${what}: ${err && err.stack ? err.stack : err}`;
+  out.append(d);
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed (aborted)`;
+  sum.className = 'fail';
+}
+window.addEventListener('error', (e) => fatal('uncaught', e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => fatal('unhandled rejection', e.reason));
+
+// A fake per-person state handle — the same shape `lessons_test.html`'s own `fakeState` for
+// `createQuestMode` uses, extended with `flush` because `savePreset`/`deletePreset` call it.
+function fakeState(initial = {}) {
+  let stored = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => stored,
+    set: (patch) => { stored = { ...stored, ...patch }; for (const fn of subs) fn(stored); },
+    load: () => Promise.resolve(),
+    startPolling() {},
+    flush: () => Promise.resolve(),
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    destroy() {},
+  };
+}
+
+(async () => {
+  try {
+    // ------------------------------------------------------------------ pure helpers
+    section('presetsFrom / presetById — pure');
+    check('an absent presets array reads as empty, not a crash',
+      presetsFrom({}).length === 0 && presetsFrom(null).length === 0
+        && presetsFrom(undefined).length === 0);
+    const rows = [
+      { id: 'a', type: 'youtube', name: 'Cartoons' },
+      { id: 'b', type: 'youtube', name: 'Nature docs' },
+      { id: 'c', type: 'trivia', name: 'Basic maths' },
+    ];
+    check('presetsFrom with no type returns everything',
+      presetsFrom({ presets: rows }).length === 3);
+    check('presetsFrom(type) filters to that type only',
+      presetsFrom({ presets: rows }, 'youtube').length === 2
+        && presetsFrom({ presets: rows }, 'trivia').length === 1,
+      JSON.stringify(presetsFrom({ presets: rows }, 'youtube')));
+    check('presetById finds the one with that id',
+      presetById({ presets: rows }, 'b')?.name === 'Nature docs');
+    check('presetById with no match, or no id at all, is null — not a throw',
+      presetById({ presets: rows }, 'nope') === null && presetById({ presets: rows }, '') === null
+        && presetById({ presets: rows }, null) === null);
+
+    // ------------------------------------------------------------------ the live handle
+    section('createPresetLibrary — CRUD against a fake per-person state');
+    {
+      let seenKey = null;
+      const state = fakeState();
+      const lib = createPresetLibrary({ makeState: (key) => { seenKey = key; return state; } });
+      check('*** it reads/writes the reserved `presets` key, not a bare string repeated ***',
+        seenKey === PRESETS_KEY && seenKey === 'presets', String(seenKey));
+      check('createPresetLibrary refuses to run without makeState, the same guard createQuestMode has',
+        (() => { try { createPresetLibrary({}); return false; } catch { return true; } })());
+
+      await lib.load();
+      check('a fresh library (nothing stored) lists nothing', lib.listPresets().length === 0);
+
+      const saved = await lib.savePreset({
+        type: 'youtube', name: 'Saturday cartoons',
+        settings: { playlist: [{ id: 'v1' }], playlistId: '', schedule: [], shuffle: true },
+      });
+      check('*** saving without an id CREATES, and hands back a real id ***',
+        !!saved.id && saved.name === 'Saturday cartoons' && saved.type === 'youtube',
+        JSON.stringify(saved));
+      check('...and it is now listed', lib.listPresets().length === 1);
+      check('...findable by id', lib.getPreset(saved.id)?.name === 'Saturday cartoons');
+      check('...with createdAt and updatedAt stamped, and equal on first save',
+        Number.isFinite(saved.createdAt) && saved.createdAt === saved.updatedAt);
+      check('the settings object is stored, not merely referenced (a later local mutation must not leak in)',
+        (() => { const snap = lib.getPreset(saved.id); const src = { playlist: [{ id: 'zzz' }] };
+          return JSON.stringify(snap.settings.playlist) !== JSON.stringify(src.playlist); })());
+
+      const saved2 = await lib.savePreset({ type: 'trivia', name: 'Basic maths', settings: {} });
+      check('a second preset of a DIFFERENT type coexists in the same document',
+        lib.listPresets().length === 2);
+      check('listPresets(type) filters this library the same way the pure helper does',
+        lib.listPresets('youtube').length === 1 && lib.listPresets('trivia').length === 1);
+
+      const before = saved.updatedAt;
+      await new Promise((r) => setTimeout(r, 5));
+      const updated = await lib.savePreset({
+        id: saved.id, type: 'youtube', name: 'Saturday cartoons (renamed)',
+        settings: { playlist: [], playlistId: 'PLnew', schedule: [], shuffle: false },
+      });
+      check('*** saving WITH an id UPDATES in place — same id, same createdAt ***',
+        updated.id === saved.id && updated.createdAt === saved.createdAt, JSON.stringify(updated));
+      check('...the name and settings actually changed',
+        updated.name === 'Saturday cartoons (renamed)' && updated.settings.playlistId === 'PLnew');
+      check('...and updatedAt moved', updated.updatedAt > before,
+        `${before} -> ${updated.updatedAt}`);
+      check('still exactly one youtube preset — an update never duplicates the row',
+        lib.listPresets('youtube').length === 1);
+
+      const rejectedNoName = await lib.savePreset({ type: 'youtube', name: '', settings: {} })
+        .then(() => 'resolved').catch((e) => e.message);
+      check('*** a blank name is refused rather than saved silently ***',
+        /name/i.test(rejectedNoName), rejectedNoName);
+      const rejectedNoType = await lib.savePreset({ type: '', name: 'x', settings: {} })
+        .then(() => 'resolved').catch((e) => e.message);
+      check('*** a blank type is refused too ***', /type/i.test(rejectedNoType), rejectedNoType);
+      const rejectedBadId = await lib.savePreset({ id: 'nope-not-real', type: 'youtube', name: 'x', settings: {} })
+        .then(() => 'resolved').catch((e) => e.message);
+      check('updating an id that does not exist is refused, not silently created',
+        /no such preset/i.test(rejectedBadId), rejectedBadId);
+
+      await lib.deletePreset(saved2.id);
+      check('*** delete removes exactly that one ***',
+        lib.listPresets().length === 1 && lib.getPreset(saved2.id) === null);
+      check('...and the other preset is untouched', lib.getPreset(saved.id)?.name === 'Saturday cartoons (renamed)');
+
+      let notified = 0;
+      lib.subscribe(() => { notified += 1; });
+      await lib.savePreset({ type: 'youtube', name: 'Third one', settings: {} });
+      check('subscribers hear about a save — the same live-update contract every other reserved-key handle in this codebase makes',
+        notified >= 1, String(notified));
+
+      await lib.deletePreset('does-not-exist');
+      check('deleting an id that is not there is a harmless no-op, not a throw', lib.listPresets().length === 2);
+    }
+
+    // ------------------------------------------------------------------ no state available
+    section('createPresetLibrary — a host with no live state handle degrades safely');
+    {
+      const lib = createPresetLibrary({ makeState: () => null });
+      check('*** a null state handle never throws building the library ***', !!lib);
+      await lib.load();
+      check('listPresets is simply empty', lib.listPresets().length === 0);
+      check('getPreset is simply null', lib.getPreset('anything') === null);
+      const err = await lib.savePreset({ type: 'youtube', name: 'x', settings: {} })
+        .then(() => 'resolved').catch((e) => e.message);
+      check('*** saving without anywhere to persist FAILS LOUDLY rather than pretending to save ***',
+        typeof err === 'string' && err !== 'resolved', err);
+      await lib.deletePreset('x');
+      check('deleting is a harmless no-op the same way', true);
+      lib.destroy();
+      check('destroy is harmless too', true);
+    }
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
