@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>transcript_quiz — questions from a pasted transcript, checked against it</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>transcript_quiz — pure logic (no DOM, no network)</h1>
+<p>Row 2.24 and §0h: a model writes questions from a pasted transcript; a DETERMINISTIC check
+keeps only the ones whose answer is in the line they quote. Also the timestamp reader, the
+requirement arithmetic, the tolerant JSON reader, the quiz engine (a wrong answer comes back
+later, the requirement is always reachable) and the review log.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  parseTimestamp, videoMinutes, cleanTranscript, requiredAnswers, buildPrompt, parseQuestions,
+  normalizeText, grounded, checkQuestions, toLessonQuestion, toRoutedQuestion, questionId,
+  transcriptKey, lengthTellsFor, startQuiz, quizCurrent, quizAnswer, quizProgress, quizDrop,
+  reviewItems, poolFrom, isPaid, REVIEW_KINDS, MINUTE_CHOICES,
+} from '../transcript_quiz.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const seeded = (s0) => { let x = s0 >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; };
+const J = (x) => JSON.stringify(x);
+
+// YouTube "Show transcript" pastes as timestamp line, text line, timestamp line, ...
+const YT = `0:00
+Honeybees live in colonies of
+0:04
+thousands of workers and one queen.
+0:09
+A worker bee has six legs and
+0:12
+four wings, like every adult insect.
+0:18
+Bees make honey from the nectar of flowers.
+1:02
+The queen can lay about 1,500 eggs in a single day.
+12:34
+That is why a strong hive grows so quickly.`;
+
+(async () => {
+  try {
+    // ================= timestamps =================
+    section('timestamps — how long was the video');
+    check('m:ss', parseTimestamp('12:34') === 754, String(parseTimestamp('12:34')));
+    check('h:mm:ss', parseTimestamp('1:02:03') === 3723, String(parseTimestamp('1:02:03')));
+    check('0:00 is zero, not "none"', parseTimestamp('0:00') === 0);
+    check('not a timestamp', parseTimestamp('hello') === null && parseTimestamp('') === null);
+    check('seconds past 59 are not a timestamp', parseTimestamp('1:75') === null);
+    check('YouTube style (own lines): the last stamp, in whole minutes, rounded UP',
+      videoMinutes(YT) === 13, String(videoMinutes(YT)));
+    check('h:mm:ss transcript', videoMinutes('0:00 hi\n1:02:03 bye') === 63,
+      String(videoMinutes('0:00 hi\n1:02:03 bye')));
+    check('stamps LEADING a line count too', videoMinutes('0:05 Hello there\n4:10 And goodbye') === 5,
+      String(videoMinutes('0:05 Hello there\n4:10 And goodbye')));
+    check('no timestamps at all -> null (the UI asks instead)',
+      videoMinutes('Just some words.\nMore words.') === null);
+    check('only 0:00 -> null, there is no length to read', videoMinutes('0:00\nhello') === null);
+    check('a time quoted mid-sentence is not a timestamp',
+      videoMinutes('We met at 10:30 that morning.') === null);
+    check('*** when own-line stamps exist, a line merely STARTING with a time is not read as one ***',
+      videoMinutes('0:00\nhi\n2:10\n45:00 minutes later we left') === 3,
+      String(videoMinutes('0:00\nhi\n2:10\n45:00 minutes later we left')));
+    check('empty / nonsense input is null, never a throw',
+      videoMinutes('') === null && videoMinutes(null) === null && videoMinutes(42) === null);
+    check('the fixed minute choices exist for when there is nothing to read',
+      Array.isArray(MINUTE_CHOICES) && MINUTE_CHOICES.length >= 4 && MINUTE_CHOICES.every(Number.isFinite));
+
+    section('cleanTranscript — what the model is sent');
+    const clean = cleanTranscript(YT);
+    check('timestamps are gone', !/\d:\d\d/.test(clean), clean.slice(0, 120));
+    check('the words are all there, joined into prose',
+      clean.includes('Honeybees live in colonies of thousands of workers and one queen.'), clean.slice(0, 120));
+
+    // ================= requirement =================
+    section('requiredAnswers — chat\'s default, NOT YET CHOSEN by Mike');
+    check('5 min -> 3 (the minimum)', requiredAnswers(5) === 3, String(requiredAnswers(5)));
+    check('10 min -> 5', requiredAnswers(10) === 5, String(requiredAnswers(10)));
+    check('60 min -> 30', requiredAnswers(60) === 30, String(requiredAnswers(60)));
+    check('1 min -> still the minimum', requiredAnswers(1) === 3);
+    check('the rate is a setting', requiredAnswers(10, { perMinutes: 1 }) === 10);
+    check('the minimum is a setting', requiredAnswers(2, { minimum: 1 }) === 1);
+    check('unknown minutes -> the minimum, not NaN', requiredAnswers(null) === 3 && requiredAnswers(undefined) === 3);
+    check('a nonsense rate falls back to the default rather than dividing by zero',
+      requiredAnswers(10, { perMinutes: 0 }) === 5 && requiredAnswers(10, { perMinutes: 'x' }) === 5);
+
+    // ================= prompt =================
+    section('buildPrompt');
+    const msgs = buildPrompt(YT, 6);
+    check('chat messages: a system and a user message', Array.isArray(msgs) && msgs.length === 2
+      && msgs[0].role === 'system' && msgs[1].role === 'user', J(msgs.map((m) => m.role)));
+    const all = msgs.map((m) => m.content).join('\n');
+    check('asks for strict JSON with the four fields',
+      /json/i.test(all) && /"question"/.test(all) && /"answer"/.test(all) && /"wrong"/.test(all) && /"source_line"/.test(all));
+    check('asks for the source line copied VERBATIM', /verbatim|exactly/i.test(all));
+    check('*** the source line comes FIRST in the shape, so the answer is taken from it (measured) ***',
+      all.indexOf('"source_line"') < all.indexOf('"question"'), String(all.indexOf('"source_line"')));
+    check('asks for the main ideas', /main idea/i.test(all));
+    check('asks for SHORT answers, not the whole source sentence (measured: the model did that)',
+      /short phrase/i.test(all) && /not the whole sentence/i.test(all));
+    check('*** asks for wrong options of similar length and form (row 2.25) ***', /similar length/i.test(all));
+    check('says how many (up to N, fewer if the content does not support it)', /\b6\b/.test(all) && /fewer/i.test(all));
+    check('carries the transcript, cleaned of timestamps', all.includes('Bees make honey from the nectar of flowers.')
+      && !all.includes('12:34'));
+
+    // ================= parse =================
+    section('parseQuestions — models wrap JSON in prose and fences');
+    const good = { question: 'How many legs does a worker bee have?', answer: 'Six',
+      wrong: ['Four', 'Eight', 'Ten'], source_line: 'A worker bee has six legs and four wings' };
+    check('a bare array', parseQuestions(J([good])).length === 1);
+    check('an object with questions[]', parseQuestions(J({ questions: [good] })).length === 1);
+    check('fenced ```json', parseQuestions('Here you go:\n```json\n' + J({ questions: [good] }) + '\n```\nEnjoy!').length === 1);
+    check('prose-wrapped, no fence', parseQuestions('Sure! ' + J([good]) + ' Hope that helps.').length === 1);
+    check('garbage -> [] not a throw', parseQuestions('I cannot do that.').length === 0
+      && parseQuestions('').length === 0 && parseQuestions(null).length === 0 && parseQuestions('{broken').length === 0);
+    const mixed = parseQuestions(J({ questions: [
+      good,
+      { question: 'no answer', wrong: ['a', 'b', 'c'], source_line: 'x y z' },
+      { question: 'Q?', answer: 'A', wrong: ['B'], source_line: 'A is here' },            // too few wrong
+      { question: 'Q2?', answer: 'Same', wrong: ['same', 'B', 'C'], source_line: 'Same line' }, // wrong == answer
+      { question: 'Q3?', answer: 'A', wrong: ['B', 'C', 'D'] },                           // no source
+      'not an object',
+    ] }));
+    check('only well-formed items survive', mixed.length === 1 && mixed[0].answer === 'Six', J(mixed));
+    const aliased = parseQuestions(J([{ question: 'Q?', correct: 'Six', distractors: ['a', 'b', 'c', 'd'], source: 'six legs' }]));
+    check('common field-name variants are accepted, and extra wrong options trimmed to three',
+      aliased.length === 1 && aliased[0].answer === 'Six' && aliased[0].wrong.length === 3 && aliased[0].source_line === 'six legs',
+      J(aliased));
+
+    // ================= grounded =================
+    section('*** grounded — THE DETERMINISTIC CHECK (§0h) ***');
+    check('normalizeText: case, punctuation, whitespace',
+      normalizeText('  A Worker-bee, has   SIX legs!  ') === 'a worker bee has six legs', normalizeText('  A Worker-bee, has   SIX legs!  '));
+    check('*** a real line + an answer in it passes ***', grounded(good, YT).ok, J(grounded(good, YT)));
+    check('*** the quoted line may span YouTube\'s line breaks — they split sentences mid-way ***',
+      grounded({ ...good, source_line: 'Honeybees live in colonies of thousands of workers and one queen.',
+        question: 'Who lives with the workers?', answer: 'one queen' }, YT).ok);
+    const invented = grounded({ ...good, source_line: 'A worker bee has six legs and flies at night.' }, YT);
+    check('*** an INVENTED source line is rejected ***', !invented.ok && /not in the transcript/i.test(invented.reason), J(invented));
+    const notInLine = grounded({ ...good, answer: 'Eight', wrong: ['Six', 'Four', 'Ten'] }, YT);
+    check('*** an answer that is not in its own line is rejected ***', !notInLine.ok && /answer/i.test(notInLine.reason), J(notInLine));
+    check('case and punctuation do not matter',
+      grounded({ ...good, answer: 'SIX!', source_line: 'a WORKER bee has six legs, and' }, YT).ok);
+    check('stopwords in the answer are ignored ("the nectar of flowers")',
+      grounded({ question: 'Honey is made from what?', answer: 'The nectar of flowers', wrong: ['Pollen', 'Water', 'Wax'],
+        source_line: 'Bees make honey from the nectar of flowers.' }, YT).ok);
+    check('a plural in the answer matches the singular in the line ("wings" / "wing") and back',
+      grounded({ question: 'Q?', answer: 'wing', wrong: ['a', 'b', 'c'], source_line: 'four wings, like every adult insect' }, YT).ok);
+    check('an answer made ONLY of stopwords is rejected (nothing to check)',
+      !grounded({ question: 'Q?', answer: 'It is', wrong: ['a', 'b', 'c'], source_line: 'A worker bee has six legs' }, YT).ok);
+    check('*** numbers: "1500" matches "1,500" in the line ***',
+      grounded({ question: 'How many eggs a day?', answer: '1500', wrong: ['150', '15', '15000'],
+        source_line: 'The queen can lay about 1,500 eggs in a single day.' }, YT).ok);
+    check('*** numbers: a WRONG number is rejected even though the other words match ***',
+      !grounded({ question: 'How many eggs a day?', answer: '1,600 eggs', wrong: ['150', '15', '15000'],
+        source_line: 'The queen can lay about 1,500 eggs in a single day.' }, YT).ok);
+    check('numbers: the digit answer "6" matches the word "six" in the line',
+      grounded({ ...good, answer: '6' }, YT).ok);
+    check('numbers: the word answer "four" matches, "five" does not',
+      grounded({ ...good, answer: 'four', source_line: 'four wings, like every adult insect' }, YT).ok
+      && !grounded({ ...good, answer: 'five', source_line: 'four wings, like every adult insect' }, YT).ok);
+    check('a source line of one or two words is too thin to prove anything',
+      !grounded({ ...good, answer: 'six', source_line: 'six legs' }, YT).ok);
+    check('a word must match as a WORD, not a fragment ("bee" is not in "beehive")',
+      !grounded({ question: 'Q?', answer: 'hive', wrong: ['a', 'b', 'c'], source_line: 'That is why a strong beehive grows' }, 'That is why a strong beehive grows so quickly.').ok);
+    check('...while the whole word does match (control for the check above)',
+      grounded({ question: 'Q?', answer: 'beehive', wrong: ['a', 'b', 'c'], source_line: 'That is why a strong beehive grows' }, 'That is why a strong beehive grows so quickly.').ok);
+    check('never throws on junk', grounded(null, YT).ok === false && grounded(good, null).ok === false);
+
+    const { passed: kept, rejected } = checkQuestions([good, { ...good, source_line: 'Made up line here' }], YT);
+    check('checkQuestions splits kept from rejected, with a reason each',
+      kept.length === 1 && rejected.length === 1 && typeof rejected[0].reason === 'string', J(rejected));
+
+    // ================= conversion =================
+    section('conversion to the shapes the routing already uses');
+    const lq = toLessonQuestion(good, seeded(3));
+    check('lesson-question shape { question, correct, answers, source }',
+      lq.question === good.question && lq.correct === 'Six' && lq.source === good.source_line
+      && Array.isArray(lq.answers) && lq.answers.length === 4, J(lq));
+    check('answers hold the right one and all three wrong ones', ['Six', 'Four', 'Eight', 'Ten'].every((a) => lq.answers.includes(a)));
+    // Widely spaced seeds: this LCG's first draw barely moves between seeds 1..8.
+    const orders = new Set([1, 99, 12345, 777777, 31337, 424242, 9999999, 55555]
+      .map((s) => toLessonQuestion(good, seeded(s)).answers.indexOf('Six')));
+    check('answers are shuffled (the right one does not always sit first)', orders.size > 1, J([...orders]));
+    const rq = toRoutedQuestion(lq, 'bees');
+    check('routed shape is exactly the bank-line shape trivia/wordforge read, plus its source',
+      rq.question === lq.question && rq.answer === 'Six' && rq.wrong.length === 3 && !rq.wrong.includes('Six')
+      && rq.topic === 'bees' && rq.source === good.source_line, J(rq));
+    check('questionId is stable for the same question and differs for another',
+      questionId('bees', lq) === questionId('bees', { ...lq }) && questionId('bees', lq) !== questionId('ants', lq));
+    check('transcriptKey ignores whitespace/case noise but not content',
+      transcriptKey('bees', YT) === transcriptKey('bees', YT.toUpperCase().replace(/\n/g, '\n\n'))
+      && transcriptKey('bees', YT) !== transcriptKey('bees', YT + ' more'));
+
+    section('*** lengthTells (row 2.25) runs over a generated set ***');
+    const tellSet = Array.from({ length: 10 }, (_, i) => ({
+      question: `Q${i}?`, correct: `The long and obviously correct answer ${i}`,
+      answers: [`The long and obviously correct answer ${i}`, 'No', 'Nope', 'Nah'], source: 'x' }));
+    const tells = lengthTellsFor(tellSet);
+    check('a set whose right answer is always longest is warned about', tells.length >= 1 && /longest/.test(tells[0]), J(tells));
+    const fair = Array.from({ length: 10 }, (_, i) => ({ question: `Q${i}?`, correct: 'Blue',
+      answers: ['Blue', 'Reds', 'Pink', 'Gold'], source: 'x' }));
+    check('a fair set says nothing', lengthTellsFor(fair).length === 0, J(lengthTellsFor(fair)));
+
+    // ================= quiz engine =================
+    section('*** the quiz — a wrong answer comes back later, the requirement is always reachable ***');
+    const qs = ['a', 'b', 'c'].map((k) => ({ id: k, question: `Q ${k}?`, correct: `right-${k}`,
+      answers: [`right-${k}`, 'w1', 'w2', 'w3'], source: `line about ${k}` }));
+    let s = startQuiz(qs, { required: 2, rand: seeded(1) });
+    check('requirement and mode are held', s.required === 2 && s.mode === 'correct');
+    const first = quizCurrent(s);
+    let r = quizAnswer(s, 'w1');
+    check('a wrong answer says so and gives the source line', r.correct === false && r.source === first.source
+      && r.correctAnswer === first.correct, J(r));
+    check('*** ...and the question goes to the BACK of the queue, not away ***',
+      s.queue[s.queue.length - 1] === first.id && s.queue.length === 3 && quizCurrent(s).id !== first.id, J(s.queue));
+    check('progress did not move on a wrong answer', quizProgress(s).have === 0);
+    r = quizAnswer(s, quizCurrent(s).correct);
+    check('a right answer counts and also shows the source', r.correct && r.source && quizProgress(s).have === 1);
+    check('progress text reads "1 of 2 correct answers needed"', quizProgress(s).text === '1 of 2 correct answers needed', quizProgress(s).text);
+    r = quizAnswer(s, quizCurrent(s).correct);
+    check('requirement met at 2', quizProgress(s).met && s.met);
+
+    section('requirement never exceeds what the quiz can give');
+    const s2 = startQuiz(qs, { required: 10 });
+    check('correct-answers mode caps the requirement at the number of questions', s2.required === 3, String(s2.required));
+    const s3 = startQuiz([], { required: 3 });
+    check('no questions -> exhausted, never "met"', s3.exhausted && !s3.met);
+
+    section('points mode — 1, 0.75, 0.5, 0.25 by misses (mcq_scoring), refilled so it stays reachable');
+    const sp = startQuiz(qs, { required: 3, mode: 'points', rand: seeded(2) });
+    // miss every question once, then answer them all: each pays 0.75 -> 2.25 < 3
+    for (let i = 0; i < 3; i++) quizAnswer(sp, 'w1');
+    for (let i = 0; i < 3; i++) quizAnswer(sp, quizCurrent(sp).correct);
+    check('each question answered after one miss pays 0.75', Math.abs(sp.points - 2.25) < 1e-9, String(sp.points));
+    check('*** not met, but NOT stranded: the questions come round again ***', !sp.met && quizCurrent(sp) !== null
+      && sp.queue.length === 3, J(sp.queue));
+    quizAnswer(sp, quizCurrent(sp).correct);
+    check('a clean answer on the second pass pays a full point and meets it', sp.met && Math.abs(sp.points - 3.25) < 1e-9, String(sp.points));
+    check('points progress text', /of 3 points needed/.test(quizProgress(sp).text), quizProgress(sp).text);
+
+    section('dropping a flagged question keeps the requirement reachable');
+    const sd = startQuiz(qs, { required: 3 });
+    quizDrop(sd, quizCurrent(sd).id);
+    check('dropped from the queue and the requirement shrinks to what is left',
+      sd.queue.length === 2 && sd.required === 2, `${sd.queue.length}/${sd.required}`);
+    quizDrop(sd, sd.queue[0]); quizDrop(sd, sd.queue[0]);
+    check('every question dropped -> exhausted, not met', sd.exhausted && !sd.met);
+
+    // ================= review log =================
+    section('*** the review log (§0h): pending by default, approve/reject, flags, pay-once ***');
+    // Without ids, events are read in the order given, as OLDEST FIRST — the server's order
+    // (db.py list_events). With ids (every real event), they are sorted by id — see below.
+    const batch = (autoApproved) => ({ kind: REVIEW_KINDS.QUESTIONS, data: { topic: 'bees', key: 'k1', autoApproved,
+      items: [{ id: 'q1', question: 'A?', correct: 'x', answers: ['x', 'y', 'z', 'w'], source: 's1' },
+              { id: 'q2', question: 'B?', correct: 'x', answers: ['x', 'y', 'z', 'w'], source: 's2' },
+              { id: 'q3', question: 'C?', correct: 'x', answers: ['x', 'y', 'z', 'w'], source: 's3' }] } });
+    const ev = [
+      batch(false),
+      { kind: REVIEW_KINDS.REVIEW, data: { id: 'q1', verdict: 'rejected' } },
+      { kind: REVIEW_KINDS.REVIEW, data: { id: 'q2', verdict: 'approved' } },
+      { kind: REVIEW_KINDS.FLAG, data: { id: 'q2', by: 'caregiver', reason: 'looks off' } },
+      { kind: REVIEW_KINDS.REVIEW, data: { id: 'q3', verdict: 'approved' } },
+      { kind: REVIEW_KINDS.FLAG, data: { id: 'q3', by: 'player' } },
+      { kind: REVIEW_KINDS.UNFLAG, data: { id: 'q3' } },
+    ];
+    const items = reviewItems(ev);
+    const by = Object.fromEntries(items.map((i) => [i.id, i]));
+    check('three items, oldest batch first', items.length === 3, J(items.map((i) => i.id)));
+    check('q1 rejected', by.q1.status === 'rejected');
+    check('q2 approved but flagged, with who flagged it', by.q2.status === 'approved' && by.q2.flagged && by.q2.flags[0].by === 'caregiver');
+    check('q3 approved, flagged, then cleared', by.q3.status === 'approved' && !by.q3.flagged);
+    const pool = poolFrom(items);
+    check('*** only approved AND unflagged questions reach the pool ***', pool.length === 1 && pool[0].id === 'q3', J(pool.map((p) => p.id)));
+    check('pending is the default before anyone looks', reviewItems([batch(false)]).every((i) => i.status === 'pending'));
+    check('auto-approve (recorded at generation time) starts them approved',
+      reviewItems([batch(true)]).every((i) => i.status === 'approved'));
+    check('a question seen twice (same id) is listed once — the first time counts',
+      reviewItems([batch(false), batch(true)]).length === 3
+      && reviewItems([batch(false), batch(true)]).every((i) => i.status === 'pending')
+      && reviewItems([batch(true), batch(false)]).every((i) => i.status === 'approved'));
+    // *** A CACHE IN NEITHER ORDER: loaded oldest-first from the server, then appended to at the
+    // FRONT by events.js. Real events carry the server's increasing id; that decides. ***
+    const withIds = ev.map((e, i) => ({ ...e, id: 100 + i }));
+    const cacheOrder = [withIds[6], withIds[5], ...withIds.slice(0, 5)];     // two fresh appends on the front
+    const byMixed = Object.fromEntries(reviewItems(cacheOrder).map((i) => [i.id, i]));
+    check('*** events carrying server ids are read in id order, whatever order the cache holds them in ***',
+      byMixed.q3 && byMixed.q3.status === 'approved' && !byMixed.q3.flagged && byMixed.q2.flagged
+      && byMixed.q1.status === 'rejected', J(Object.values(byMixed).map((i) => [i.id, i.status, i.flagged])));
+    check('...the same as fully reversed (newest first)',
+      J(reviewItems([...withIds].reverse())) === J(reviewItems(withIds)));
+    check('isPaid reads the paid marker for exactly that key',
+      isPaid([{ kind: REVIEW_KINDS.PAID, data: { key: 'k1' } }], 'k1') && !isPaid([{ kind: REVIEW_KINDS.PAID, data: { key: 'k1' } }], 'k2')
+      && !isPaid([], 'k1'));
+    check('isPaid also honours a tag in the points ledger (the payment itself is the record)',
+      isPaid([], 'k9', [{ kind: 'points', data: { tags: ['transcript', 'transcript:k9'] } }]));
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

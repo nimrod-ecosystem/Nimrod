@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ai — the one OpenAI-compatible adapter</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.skip{color:#8a6d1a;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>ai.js — one OpenAI-compatible adapter, several backends</h1>
+<p>Everything above the live section runs against a FAKE fetch — no network. The live section
+runs only when a model server answers at <code>http://127.0.0.1:11434/v1/models</code>, and
+otherwise records a SKIP rather than a pass.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createAI, pickModel, modelSize, readAISettings, writeAISettings, explainFailure,
+  AI_SETTINGS_KEY, DEFAULT_BASE_URL,
+} from '../ai.js';
+import { buildPrompt, parseQuestions, checkQuestions, videoMinutes } from '../transcript_quiz.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0, skipped = 0;
+let liveNote = '';
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function skip(name, why) {
+  skipped++;
+  const d = document.createElement('div'); d.className = 'skip';
+  d.textContent = `SKIP  ${name} — ${why}`; out.append(d);
+}
+function note(text) { const d = document.createElement('div'); d.textContent = `      ${text}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+
+function memStorage(init = {}) {
+  const m = new Map(Object.entries(init));
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), _m: m };
+}
+const throwingStorage = { getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); } };
+
+// A fake fetch: records every call, answers from a handler.
+function fakeFetch(handler) {
+  const calls = [];
+  const f = async (url, opts = {}) => {
+    calls.push({ url, opts, body: opts.body ? JSON.parse(opts.body) : null });
+    return handler(url, opts, calls);
+  };
+  f.calls = calls;
+  return f;
+}
+const resp = (status, body, { json = true } = {}) => ({
+  ok: status >= 200 && status < 300, status,
+  json: async () => { if (!json) throw new SyntaxError('Unexpected token < in JSON'); return typeof body === 'string' ? JSON.parse(body) : body; },
+  text: async () => (typeof body === 'string' ? body : JSON.stringify(body)),
+});
+const MODELS = { object: 'list', data: [{ id: 'qwen2.5:7b' }, { id: 'nomic-embed-text:latest' }, { id: 'qwen2.5:3b' }] };
+
+(async () => {
+  try {
+    // ================= model choice =================
+    section('pickModel — never an embedding model; the larger chat model when there is a choice');
+    check('the list measured on this machine picks qwen2.5:7b',
+      pickModel(['qwen2.5:7b', 'nomic-embed-text:latest', 'qwen2.5:3b']) === 'qwen2.5:7b');
+    check('*** an embedding model is never picked, even alone ***',
+      pickModel(['nomic-embed-text:latest']) === null && pickModel(['mxbai-embed-large', 'all-minilm-embed']) === null);
+    check('order of the list does not matter', pickModel(['qwen2.5:3b', 'qwen2.5:7b']) === 'qwen2.5:7b');
+    check('an explicit instruct/chat tag outranks size',
+      pickModel(['llama3:70b-text', 'llama3:8b-instruct']) === 'llama3:8b-instruct');
+    check('a size-less name is still usable when it is all there is', pickModel(['phi3:mini']) === 'phi3:mini');
+    check('empty / junk -> null', pickModel([]) === null && pickModel(null) === null);
+    check('modelSize reads 7b, 3.8b and 135m', modelSize('qwen2.5:7b') === 7 && modelSize('phi3:3.8b') === 3.8
+      && modelSize('smollm:135m') === 0.135 && modelSize('phi3:mini') === null);
+
+    // ================= per-device settings =================
+    section('settings are PER DEVICE (localStorage), with safe defaults');
+    const st = memStorage();
+    check('defaults: Ollama\'s local OpenAI-compatible address, model chosen automatically',
+      J(readAISettings(st)) === J({ baseUrl: DEFAULT_BASE_URL, model: '' }) && DEFAULT_BASE_URL === 'http://127.0.0.1:11434/v1');
+    writeAISettings({ baseUrl: 'http://10.0.0.5:8080/v1/' }, st);
+    check('a written base URL is kept, trailing slash trimmed',
+      readAISettings(st).baseUrl === 'http://10.0.0.5:8080/v1', readAISettings(st).baseUrl);
+    check('...under ONE clearly named key', st._m.has(AI_SETTINGS_KEY) && st._m.size === 1, J([...st._m.keys()]));
+    writeAISettings({ model: 'qwen2.5:3b' }, st);
+    check('a patch merges rather than replacing', J(readAISettings(st)) === J({ baseUrl: 'http://10.0.0.5:8080/v1', model: 'qwen2.5:3b' }));
+    check('*** storage that throws (private window) reads as defaults, never a throw ***',
+      readAISettings(throwingStorage).baseUrl === DEFAULT_BASE_URL && (writeAISettings({ model: 'x' }, throwingStorage), true));
+    check('garbage in storage reads as defaults', readAISettings(memStorage({ [AI_SETTINGS_KEY]: '{not json' })).baseUrl === DEFAULT_BASE_URL);
+    check('a non-http base URL is refused and the default used',
+      readAISettings(memStorage({ [AI_SETTINGS_KEY]: J({ baseUrl: 'javascript:alert(1)' }) })).baseUrl === DEFAULT_BASE_URL);
+
+    // ================= listing =================
+    section('listModels / resolveModel over a fake server');
+    {
+      const f = fakeFetch((url) => (url.endsWith('/models') ? resp(200, MODELS) : resp(404, {})));
+      const ai = createAI({ fetchImpl: f, storage: memStorage() });
+      const r = await ai.listModels();
+      check('lists the ids', r.ok && J(r.models) === J(['qwen2.5:7b', 'nomic-embed-text:latest', 'qwen2.5:3b']), J(r));
+      check('asked GET <baseUrl>/models', f.calls[0].url === 'http://127.0.0.1:11434/v1/models');
+      const auto = await ai.resolveModel('');
+      check('automatic -> the picked model', auto.ok && auto.model === 'qwen2.5:7b' && !auto.fellBack, J(auto));
+      const pref = await ai.resolveModel('qwen2.5:3b');
+      check('a preferred model this server HAS wins', pref.model === 'qwen2.5:3b');
+      const gone = await ai.resolveModel('llama3:8b');
+      check('*** a preferred model this device does NOT have falls back, and says so ***',
+        gone.ok && gone.model === 'qwen2.5:7b' && gone.fellBack, J(gone));
+      const ai2 = createAI({ fetchImpl: f, storage: memStorage({ [AI_SETTINGS_KEY]: J({ model: 'qwen2.5:3b' }) }) });
+      check('the device\'s own saved model is used when nothing is preferred', (await ai2.resolveModel('')).model === 'qwen2.5:3b');
+      const onlyEmbed = createAI({ fetchImpl: fakeFetch(() => resp(200, { data: [{ id: 'nomic-embed-text' }] })), storage: memStorage() });
+      const none = await onlyEmbed.resolveModel('');
+      check('only an embedding model -> not ok, with a plain reason', !none.ok && /no .*model/i.test(none.reason), J(none));
+    }
+
+    // ================= chat =================
+    section('chat — the call shape');
+    {
+      const f = fakeFetch(() => resp(200, { choices: [{ message: { role: 'assistant', content: '{"questions":[]}' } }] }));
+      const ai = createAI({ fetchImpl: f, storage: memStorage() });
+      const r = await ai.chat([{ role: 'user', content: 'hi' }], { model: 'qwen2.5:7b', json: true, temperature: 0.2 });
+      const c = f.calls[0];
+      check('POSTs to <baseUrl>/chat/completions', c.url === 'http://127.0.0.1:11434/v1/chat/completions' && c.opts.method === 'POST');
+      check('OpenAI body: model, messages, stream false, temperature',
+        c.body.model === 'qwen2.5:7b' && c.body.messages[0].content === 'hi' && c.body.stream === false && c.body.temperature === 0.2, J(c.body));
+      check('json:true asks for a JSON object (response_format)', c.body.response_format && c.body.response_format.type === 'json_object');
+      check('NO Authorization header in this pass (no API key field yet)',
+        !Object.keys(c.opts.headers || {}).some((h) => /authorization/i.test(h)), J(c.opts.headers));
+      check('returns the text, the model and how long it took', r.ok && r.text === '{"questions":[]}' && r.model === 'qwen2.5:7b'
+        && Number.isFinite(r.ms), J(r));
+      const r2 = await createAI({ fetchImpl: f, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], {});
+      check('with no model given, it resolves one first (list, then chat)', r2.ok || /model/i.test(r2.reason || ''), J(r2));
+    }
+
+    section('chat — failures come back as a plain reason, never a throw');
+    {
+      const ai403 = createAI({ fetchImpl: fakeFetch(() => resp(403, '')), storage: memStorage(), pageOrigin: 'https://nimrodecosystem.com' });
+      const r = await ai403.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+      check('*** a 403 becomes the plain-language "this website is not allowed" reason ***',
+        !r.ok && /not been told to accept/i.test(r.reason) && r.reason.includes('https://nimrodecosystem.com'), r.reason);
+      check('...naming the setting for whoever looks after the computer, without telling anyone to run a command',
+        /allowed websites/i.test(r.reason) && !/\b(cmd|powershell|terminal|setx|export)\b/i.test(r.reason), r.reason);
+      const lm = await ai403.listModels();
+      check('the same reason for the models list', !lm.ok && /not been told to accept/i.test(lm.reason), lm.reason);
+
+      const aiDown = createAI({ fetchImpl: async () => { throw new TypeError('Failed to fetch'); }, storage: memStorage(),
+        pageOrigin: 'http://localhost:8000' });
+      const d = await aiDown.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+      check('a network failure from a local page reads as "not running", in plain words',
+        !d.ok && /could not reach/i.test(d.reason) && /running/i.test(d.reason), d.reason);
+      const aiDownRemote = createAI({ fetchImpl: async () => { throw new TypeError('Failed to fetch'); }, storage: memStorage(),
+        pageOrigin: 'https://nimrodecosystem.com' });
+      const dr = await aiDownRemote.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+      check('*** the same failure from the live site names BOTH possibilities — a browser cannot tell them apart ***',
+        /not running/i.test(dr.reason) && /not been told to accept/i.test(dr.reason), dr.reason);
+
+      const ai500 = createAI({ fetchImpl: fakeFetch(() => resp(500, { error: { message: 'model "zzz" not found' } })), storage: memStorage() });
+      const e5 = await ai500.chat([{ role: 'user', content: 'x' }], { model: 'zzz' });
+      check('a server error keeps the server\'s own message', !e5.ok && /500/.test(e5.reason) && /not found/.test(e5.reason), e5.reason);
+
+      const aiHtml = createAI({ fetchImpl: fakeFetch(() => resp(200, '<html>nope</html>', { json: false })), storage: memStorage() });
+      const h = await aiHtml.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+      check('*** a non-JSON answer is a reason, not a throw ***', !h.ok && /could not be read/i.test(h.reason), h.reason);
+
+      const aiEmpty = createAI({ fetchImpl: fakeFetch(() => resp(200, { choices: [] })), storage: memStorage() });
+      const em = await aiEmpty.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+      check('an answer with no message in it is a reason too', !em.ok && typeof em.reason === 'string', J(em));
+    }
+
+    section('timeouts and Cancel (AbortController)');
+    {
+      // A fetch that never answers until aborted — exactly what a slow CPU model looks like.
+      const hang = async (url, opts) => new Promise((_, reject) => {
+        opts.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+      });
+      const ai = createAI({ fetchImpl: hang, storage: memStorage() });
+      const t0 = performance.now();
+      const r = await ai.chat([{ role: 'user', content: 'x' }], { model: 'm', timeoutMs: 80 });
+      check('*** a timeout stops it and says so plainly ***', !r.ok && r.timedOut && /took longer/i.test(r.reason), J(r));
+      check('...promptly', performance.now() - t0 < 1500, String(performance.now() - t0));
+
+      const ctl = new AbortController();
+      const p = ai.chat([{ role: 'user', content: 'x' }], { model: 'm', timeoutMs: 60000, signal: ctl.signal });
+      setTimeout(() => ctl.abort(), 30);
+      const c = await p;
+      check('*** Cancel stops it, reported as cancelled, not as an error ***', !c.ok && c.cancelled && !c.timedOut, J(c));
+      const pre = new AbortController(); pre.abort();
+      const c2 = await ai.chat([{ role: 'user', content: 'x' }], { model: 'm', signal: pre.signal });
+      check('an already-cancelled signal never starts', !c2.ok && c2.cancelled);
+    }
+
+    section('explainFailure is exported for any caller');
+    check('it never returns an empty string', ['network', 'forbidden', 'timeout', 'http', 'unreadable', 'x']
+      .every((k) => typeof explainFailure({ kind: k, baseUrl: DEFAULT_BASE_URL, pageOrigin: 'http://localhost:8000' }) === 'string'
+        && explainFailure({ kind: k }).length > 10));
+
+    // ================= LIVE =================
+    section('LIVE smoke — a real model writes questions from a real transcript');
+    let up = false;
+    try {
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 3000);
+      const res = await fetch('http://127.0.0.1:11434/v1/models', { signal: ctl.signal });
+      clearTimeout(tm);
+      up = res.ok;
+    } catch { up = false; }
+    if (!up) {
+      skip('live generation', 'no model server answered at http://127.0.0.1:11434/v1/models');
+    } else {
+      // About two minutes of a plain, factual explainer, pasted YouTube-style (stamp line, text line).
+      const SAMPLE = `0:00
+The water cycle is the path water takes as it moves between the land, the oceans and the sky.
+0:08
+It starts when the sun heats water in oceans, lakes and rivers.
+0:14
+Some of that water turns into an invisible gas called water vapor. This is called evaporation.
+0:23
+Plants also give off water vapor from their leaves, and that is called transpiration.
+0:31
+As water vapor rises into the sky, it cools down.
+0:37
+Cool air cannot hold as much water vapor, so the vapor turns back into tiny drops of liquid water. This is called condensation.
+0:49
+Billions of these tiny drops gather together to form clouds.
+0:56
+When the drops join together and become too heavy, they fall back to the ground as precipitation.
+1:04
+Precipitation can be rain, snow, sleet or hail.
+1:11
+Some of the water soaks into the ground and becomes groundwater.
+1:18
+Some of it runs off into streams and rivers, which carry it back to the ocean. This is called collection.
+1:28
+Then the sun heats the water again, and the whole cycle starts over.
+1:35
+About 97 percent of the water on Earth is salt water in the oceans.
+1:43
+The water cycle has no beginning and no end. The same water has been moving around Earth for billions of years.
+1:52
+That is the water cycle.`;
+      check('the sample reads as a 2-minute video', videoMinutes(SAMPLE) === 2, String(videoMinutes(SAMPLE)));
+      const ai = createAI({ storage: memStorage() });      // real fetch, defaults, nothing saved
+      const m = await ai.resolveModel('');
+      check('a real model was chosen (never the embedding one)', m.ok && !/embed/i.test(m.model), J(m));
+      const t0 = performance.now();
+      const r = await ai.chat(buildPrompt(SAMPLE, 5), { model: m.model, json: true, temperature: 0.2, timeoutMs: 8 * 60 * 1000 });
+      const secs = Math.round((performance.now() - t0) / 1000);
+      check('the real model answered', r.ok, r.reason || '');
+      const parsed = parseQuestions(r.text || '');
+      const { passed: kept, rejected } = checkQuestions(parsed, SAMPLE);
+      note(`model ${m.model}: ${secs}s; ${parsed.length} well-formed, ${kept.length} passed grounded, ${rejected.length} rejected`);
+      for (const q of kept) note(`KEPT  ${q.question}  ->  ${q.answer}   [${q.source_line}]`);
+      for (const x of rejected) note(`REJECTED (${x.reason})  ${x.item.question}  ->  ${x.item.answer}   [${x.item.source_line}]`);
+      if (!parsed.length) note(`raw reply: ${(r.text || '').slice(0, 600)}`);
+      check('*** at least one real generated question passes the deterministic check ***', kept.length >= 1,
+        `${parsed.length} parsed; raw: ${(r.text || '').slice(0, 300)}`);
+      liveNote = ` (live: ${m.model} ${secs}s, ${kept.length} of ${parsed.length} grounded)`;
+      window.__live = { model: m.model, secs, parsed, kept, rejected, raw: r.text };
+    }
+
+    const sum = document.getElementById('summary');
+    if (failed) sum.textContent = `${failed} FAILED / ${passed} passed`;
+    else if (skipped) sum.textContent = `PASS WITH SKIPS — ${passed} checks, ${skipped} SKIPPED`;
+    else sum.textContent = `ALL PASS — ${passed} checks${liveNote}`;
+    sum.className = failed ? 'fail' : (skipped ? 'skip' : 'pass');
+    sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
