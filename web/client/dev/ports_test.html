@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ports — a module's declared ports, over the bus</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>ports — a module's declared ports, over the bus</h1>
+<p>No server needed. <code>ports.js</code> is the helper a module uses to SEND on its declared OUT
+ports and LISTEN on its declared IN ports, without changing the <code>ctx</code> contract: it takes
+the <code>rootBus</code> and <code>instanceId</code> a module already receives, plus its own manifest.
+A port that was not declared, or is declared in the other direction, is refused quietly rather than
+thrown, so one module's mistake cannot take a host down.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { linkTopic } from '../links.js';
+import { createPorts } from '../ports.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const MANIFEST = {
+  type: 'demo',
+  ports: [
+    { id: 'result', direction: 'out', class: 'event', type: 'number', label: 'Result' },
+    { id: 'display', direction: 'out', class: 'continuous', type: 'text', label: 'Display' },
+    { id: 'level', direction: 'out', class: 'continuous', type: 'number', range: [0, 10] },
+    { id: 'answer', direction: 'in', class: 'event', type: 'number', label: 'Answer' },
+    { id: 'note', direction: 'in', class: 'event', type: 'text' },
+    { id: 'bad id!', direction: 'out', class: 'event', type: 'number' },          // dropped
+    { id: 'nomax', direction: 'out', class: 'continuous', type: 'number' },        // dropped: no range
+  ],
+};
+
+// A raw listener on an instance's port topic — what a link runner (or a test) sees.
+function tap(bus, instance, port) {
+  const heard = [];
+  const off = bus.subscribe(linkTopic(bus, { instance, port }), (env) => heard.push(env));
+  return { heard, off };
+}
+
+try {
+  section('declared — exactly the manifest\'s good ports');
+  {
+    const bus = createBus();
+    const ports = createPorts({ rootBus: bus, instanceId: 'd-1', manifest: MANIFEST });
+    const ids = ports.declared.map((p) => p.id).sort();
+    check('a bad id and a range-less continuous number are dropped, the rest kept',
+      JSON.stringify(ids) === JSON.stringify(['answer', 'display', 'level', 'note', 'result']), JSON.stringify(ids));
+    check('a declared port is the NORMALIZED one (direction, class, type, cardinality present)',
+      ports.declared.find((p) => p.id === 'answer').cardinality === 'one'
+      && ports.declared.find((p) => p.id === 'answer').direction === 'in');
+    ports.declared.push({ id: 'evil' });
+    check('the caller cannot grow the declared list by mutating it',
+      createPorts({ rootBus: bus, instanceId: 'd-1', manifest: MANIFEST }).declared.length === 5
+      && !ports.declared.slice(0, 5).some((p) => p.id === 'evil'));
+    check('no manifest, or a manifest with no ports, declares nothing',
+      createPorts({ rootBus: bus, instanceId: 'x' }).declared.length === 0
+      && createPorts({ rootBus: bus, instanceId: 'x', manifest: { type: 'plain' } }).declared.length === 0);
+  }
+
+  section('emit — an event port');
+  {
+    const bus = createBus();
+    let t = 1000;
+    const ports = createPorts({ rootBus: bus, instanceId: 'd-1', manifest: MANIFEST, now: () => t });
+    const { heard } = tap(bus, 'd-1', 'result');
+    const r = ports.emit('result', 10);
+    check('a declared OUT port emits and says so', r === true);
+    check('exactly one message reached the instance-addressed topic', heard.length === 1, String(heard.length));
+    const env = heard[0];
+    check('the envelope carries the value, the class and the source timestamp',
+      env.value === 10 && env.class === 'event' && env.timestamp === 1000, JSON.stringify(env));
+    check('an event port gets a sequence number from 1', env.seq === 1, String(env.seq));
+    check('provenance starts with ONE origin hop naming instance/port',
+      env.provenance.length === 1 && env.provenance[0].source === 'd-1/result'
+      && env.provenance[0].transform === 'origin', JSON.stringify(env.provenance));
+    t = 2000; ports.emit('result', 11); ports.emit('result', 12);
+    check('the sequence counts up per source', heard.map((e) => e.seq).join() === '1,2,3', heard.map((e) => e.seq).join());
+    check('each message is stamped when it was emitted, not when it is read', heard[1].timestamp === 2000);
+    check('provenance arrays are not shared between messages',
+      heard[0].provenance !== heard[1].provenance);
+    check('no edge unless one is given', !('edge' in heard[0]));
+    ports.emit('result', 13, { edge: 'press' });
+    ports.emit('result', 14, { edge: 'sideways' });
+    check('a valid edge rides along; an invalid one is dropped, not passed',
+      heard[3].edge === 'press' && !('edge' in heard[4]), JSON.stringify([heard[3].edge, heard[4].edge]));
+    check('zero is a real value, not an absence', ports.emit('result', 0) === true && heard[5].value === 0);
+    check('a negative and a fraction pass unchanged',
+      ports.emit('result', -2.5) === true && heard[6].value === -2.5);
+  }
+
+  section('emit — a continuous port');
+  {
+    const bus = createBus();
+    const ports = createPorts({ rootBus: bus, instanceId: 'd-1', manifest: MANIFEST });
+    const disp = tap(bus, 'd-1', 'display');
+    const lvl = tap(bus, 'd-1', 'level');
+    ports.emit('display', '12.5');
+    ports.emit('level', 4);
+    check('a continuous text port emits its text as class continuous',
+      disp.heard[0].value === '12.5' && disp.heard[0].class === 'continuous');
+    check('a continuous port has NO sequence number (latest wins, a duplicate is harmless)',
+      !('seq' in disp.heard[0]) && !('seq' in lvl.heard[0]));
+    check('a continuous port still starts provenance at its origin',
+      disp.heard[0].provenance[0].source === 'd-1/display');
+    check('text is text: a number given to a text port is carried as its string',
+      (ports.emit('display', 7), disp.heard[1].value === '7'));
+  }
+
+  section('emit — refused, quietly');
+  {
+    const bus = createBus();
+    const ports = createPorts({ rootBus: bus, instanceId: 'd-1', manifest: MANIFEST });
+    const all = [];
+    const offAll = ['result', 'answer', 'ghost', 'display', 'level', 'note'].map((p) =>
+      bus.subscribe(linkTopic(bus, { instance: 'd-1', port: p }), (e) => all.push([p, e])));
+    check('an undeclared port is refused (false), not thrown', ports.emit('ghost', 1) === false);
+    check('an IN port cannot be emitted from', ports.emit('answer', 1) === false);
+    check('a port dropped by normalization was never declared', ports.emit('nomax', 1) === false);
+    check('a non-finite number is refused on a number port',
+      ports.emit('result', NaN) === false && ports.emit('result', Infinity) === false
+      && ports.emit('result', 'error') === false && ports.emit('result', undefined) === false
+      && ports.emit('result', null) === false);
+    check('a numeric STRING is not silently a number', ports.emit('result', '7') === false);
+    check('nothing at all was published by any refusal', all.length === 0, JSON.stringify(all));
+    check('a refusal does not consume a sequence number',
+      (ports.emit('result', 5), all[0][1].seq === 1));
+    check('a missing port id is refused', ports.emit(undefined, 1) === false && ports.emit('', 1) === false);
+  }
+
+  section('on — an IN port');
+  {
+    const bus = createBus();
+    const ports = createPorts({ rootBus: bus, instanceId: 'd-2', manifest: MANIFEST });
+    const got = [];
+    const off = ports.on('answer', (v, env) => got.push([v, env]));
+    check('on() hands back an unsubscribe function', typeof off === 'function');
+    // What a link runner does: publish an envelope on the TO topic.
+    const send = (val) => bus.publish(linkTopic(bus, { instance: 'd-2', port: 'answer' }),
+      { value: val, timestamp: 5, class: 'event', provenance: [{ source: 'x/y', transform: 'origin' }], seq: 1 });
+    send(10);
+    check('a value published on the port\'s topic reaches the listener',
+      got.length === 1 && got[0][0] === 10, JSON.stringify(got));
+    check('the listener also gets the whole envelope (timestamp, provenance)',
+      got[0][1].timestamp === 5 && got[0][1].provenance[0].source === 'x/y');
+    send(0);
+    check('a zero arrives', got[1] && got[1][0] === 0);
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'answer' }), 42);
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'answer' }), null);
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'answer' }), { nope: 1 });
+    check('a payload that is not an envelope is ignored', got.length === 2, String(got.length));
+    send('ten'); send(NaN);
+    check('a value of the wrong type for the port is dropped (a number port takes numbers)',
+      got.length === 2, String(got.length));
+    // A DIFFERENT instance of the same module type does not hear it.
+    const other = createPorts({ rootBus: bus, instanceId: 'd-3', manifest: MANIFEST });
+    const otherGot = [];
+    other.on('answer', (v) => otherGot.push(v));
+    send(99);
+    check('the addressed instance hears it', got.length === 3);
+    check('a sibling instance on the identical port id does NOT', otherGot.length === 0);
+    off();
+    send(1);
+    check('the returned function unsubscribes', got.length === 3, String(got.length));
+    check('...and is safe to call twice', (() => { try { off(); return true; } catch { return false; } })());
+  }
+
+  section('on — refused, quietly');
+  {
+    const bus = createBus();
+    const ports = createPorts({ rootBus: bus, instanceId: 'd-2', manifest: MANIFEST });
+    let heard = 0;
+    const offOut = ports.on('result', () => heard++);          // OUT port
+    const offGhost = ports.on('ghost', () => heard++);         // undeclared
+    check('on() of an OUT port still hands back a callable no-op', typeof offOut === 'function');
+    check('on() of an undeclared port still hands back a callable no-op', typeof offGhost === 'function');
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'result' }), { value: 1, class: 'event', provenance: [] });
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'ghost' }), { value: 1, class: 'event', provenance: [] });
+    check('neither ever fires', heard === 0);
+    check('the no-ops are safe to call', (() => { try { offOut(); offGhost(); return true; } catch { return false; } })());
+    check('a non-function listener is refused without throwing',
+      typeof ports.on('answer', 'not a function') === 'function');
+  }
+
+  section('a listener that throws does not reach the sender');
+  {
+    const bus = createBus();
+    const a = createPorts({ rootBus: bus, instanceId: 'a', manifest: MANIFEST });
+    const b = createPorts({ rootBus: bus, instanceId: 'b', manifest: MANIFEST });
+    const errs = console.error; console.error = () => {};
+    let after = 0;
+    b.on('answer', () => { throw new Error('boom'); });
+    b.on('answer', () => { after++; });
+    const env = { value: 3, class: 'event', provenance: [] };
+    let threw = false;
+    try { bus.publish(linkTopic(bus, { instance: 'b', port: 'answer' }), env); } catch { threw = true; }
+    console.error = errs;
+    check('publishing to a throwing listener does not throw', !threw);
+    check('and the next listener on the same port still runs', after === 1);
+  }
+
+  section('dispose — every listener a module opened, released at once');
+  {
+    const bus = createBus();
+    const ports = createPorts({ rootBus: bus, instanceId: 'd-2', manifest: MANIFEST });
+    let n = 0;
+    ports.on('answer', () => n++);
+    ports.on('answer', () => n++);
+    ports.on('note', () => n++);
+    const env = { value: 1, class: 'event', provenance: [] };
+    const envT = { value: 'hi', class: 'event', provenance: [] };
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'answer' }), env);
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'note' }), envT);
+    check('three listeners heard two publishes (2 + 1)', n === 3, String(n));
+    ports.dispose();
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'answer' }), env);
+    bus.publish(linkTopic(bus, { instance: 'd-2', port: 'note' }), envT);
+    check('after dispose NOTHING is heard (no leaked subscriber)', n === 3, String(n));
+    check('emit after dispose is refused', ports.emit('result', 1) === false);
+    check('on after dispose is a no-op', (() => { const off = ports.on('answer', () => n++);
+      bus.publish(linkTopic(bus, { instance: 'd-2', port: 'answer' }), env); off(); return n === 3; })());
+    check('dispose twice is safe', (() => { try { ports.dispose(); return true; } catch { return false; } })());
+  }
+
+  section('inert without a bus or an instance');
+  {
+    const bare = createPorts({ manifest: MANIFEST });
+    check('no bus: emit is false, on is a no-op, nothing throws',
+      bare.emit('result', 1) === false && typeof bare.on('answer', () => {}) === 'function');
+    const noId = createPorts({ rootBus: createBus(), manifest: MANIFEST });
+    check('no instance id: refused too (an address needs an instance)',
+      noId.emit('result', 1) === false && typeof noId.on('answer', () => {}) === 'function');
+    check('a scoped bus (no instanceTopic) is refused, not crashed on',
+      createPorts({ rootBus: createBus().scope('x'), instanceId: 'x', manifest: MANIFEST }).emit('result', 1) === false);
+    check('the manifest\'s ports are still readable when inert', bare.declared.length === 5);
+    check('createPorts with no argument at all does not throw',
+      (() => { try { const p = createPorts(); return p.emit('a', 1) === false; } catch { return false; } })());
+  }
+
+  section('the sequence belongs to the bus, so a re-mounted module keeps counting');
+  {
+    const bus = createBus();
+    const first = createPorts({ rootBus: bus, instanceId: 'd-1', manifest: MANIFEST });
+    const { heard } = tap(bus, 'd-1', 'result');
+    first.emit('result', 1); first.emit('result', 2);
+    first.dispose();
+    const second = createPorts({ rootBus: bus, instanceId: 'd-1', manifest: MANIFEST });
+    second.emit('result', 3);
+    check('a second createPorts for the same instance continues 1,2 -> 3', heard.map((e) => e.seq).join() === '1,2,3',
+      heard.map((e) => e.seq).join());
+    const bus2 = createBus();
+    const t2 = tap(bus2, 'd-1', 'result');
+    createPorts({ rootBus: bus2, instanceId: 'd-1', manifest: MANIFEST }).emit('result', 9);
+    check('a different bus starts its own count', t2.heard[0].seq === 1);
+    const sibling = createPorts({ rootBus: bus, instanceId: 'd-9', manifest: MANIFEST });
+    const t3 = tap(bus, 'd-9', 'result');
+    sibling.emit('result', 1);
+    check('a different instance on the same bus starts its own count', t3.heard[0].seq === 1);
+  }
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>
