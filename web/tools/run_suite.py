@@ -27,11 +27,22 @@ USAGE, from the repo root, with the server already running:
     web/server/.venv/Scripts/python web/tools/run_suite.py fit panel_fit photos
 
 Each argument is a suite NAME (`fit` -> `dev/fit_test.html`) or a full path/URL. Exit status is
-0 only if every suite finished and reported zero failures, so it is usable from a hook or CI.
+0 only if every suite finished and reported zero failures AND the pre-step below passed, so it is
+usable from a hook or CI.
 
-    SUITE_BASE   default http://localhost:8000 - point it at the live site to check a deploy
-    SUITE_WAIT   seconds to wait for a summary, default 90
-    SUITE_HEAD   set to anything to watch it happen in a real window instead of headless
+    SUITE_BASE     default http://localhost:8000 - point it at the live site to check a deploy
+    SUITE_WAIT     seconds to wait for a summary, default 90
+    SUITE_HEAD     set to anything to watch it happen in a real window instead of headless
+    SUITE_NO_LINT  set to anything to skip the pre-step (see below)
+
+THE PRE-STEP. Before any suite runs, `check_bare_topic_subscribers.py` runs (about a tenth of a
+second): it flags a test that listens on a bare verb topic the router no longer publishes to,
+which is how `input_runtime_test` sat red for eighteen days (`e0c2027`, 2026-09-10). A failure is
+PRINTED FIRST and makes the whole run exit 1, but the suites still run afterwards - a stale
+listener and a real regression are different problems and you want to see both in one pass. It
+reads local source, so it runs whatever SUITE_BASE points at, and not on `--shot`. A missing or
+crashing checker fails the run rather than being skipped: a gate that goes quiet when it breaks
+is the same failure this exists to stop.
 
 AND IT TAKES PICTURES, which is the other half of the same problem. A page can be measured all
 day and still look wrong, and the pane available here is 800x520 no matter what it is asked for -
@@ -327,10 +338,34 @@ async def shoot(cdp, name, outdir, w, h):
     return path
 
 
+LINT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'check_bare_topic_subscribers.py')
+
+
+def lint_pre_step():
+    """Run the bare-topic check. Returns True if clean. Prints its report only when it is not."""
+    if os.environ.get('SUITE_NO_LINT'):
+        print('lint  bare-topic subscribers: SKIPPED (SUITE_NO_LINT is set)\n')
+        return True
+    if not os.path.exists(LINT):
+        print(f'lint  bare-topic subscribers: FAIL - checker not found at {LINT}\n')
+        return False
+    r = subprocess.run([sys.executable, LINT], capture_output=True, text=True,
+                       encoding='utf-8', errors='replace')
+    if r.returncode == 0:
+        print(f"lint  bare-topic subscribers: {r.stdout.strip().splitlines()[-1]}\n")
+        return True
+    print('lint  bare-topic subscribers: FAIL')
+    for line in (r.stdout + r.stderr).rstrip().splitlines():
+        print(f'        {line}')
+    print()
+    return False
+
+
 async def main(names, shotdir=None):
     if not CHROME:
         print('no chrome found - set one of the paths at the top of this file', file=sys.stderr)
         return 2
+    lint_ok = True if shotdir else lint_pre_step()
     # *** SWEEP WHAT EARLIER RUNS COULD NOT. ***
     #
     # The `finally` below removes this run's profile, and that is enough when the run ENDS. It
@@ -392,7 +427,9 @@ async def main(names, shotdir=None):
         for f in r['fails']:
             print(f"        {f}")
     print(f"\n{len(results) - bad} of {len(results)} suites clean")
-    return 1 if bad else 0
+    if not lint_ok:
+        print('and the bare-topic lint FAILED (see the top of this output) - exit 1')
+    return 1 if (bad or not lint_ok) else 0
 
 
 if __name__ == '__main__':
