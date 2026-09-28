@@ -38,7 +38,7 @@ import {
 } from '../lessons.js';
 import { videoHTML, packToTopics, questionsFromPack, DEFAULTS } from '../modules/lessons.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
-import { parseWords, buildDeck } from '../modules/wordforge.js';
+import { parseWords, buildDeck, DEFAULT_WORDS, DEFAULT_PAIRS } from '../modules/wordforge.js';
 import '../modules/lessons.js';
 import '../modules/wordforge.js';
 import '../modules/trivia.js';
@@ -286,9 +286,10 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     const wfHost = document.getElementById('wf');
     const deckSize = () => Number((wfHost.querySelector('[data-progress]').textContent.split('/')[1] || '0').trim());
     // The deck is words + sentence pairs; only WORDS are gated, so the 4 seeded pairs are
-    // always in it. 4 ungated words + 2 from `roots` + 4 pairs = 10.
+    // always in it. 4 ungated words + 2 from `roots` + every seeded pair (counted, not written in).
     check('the deck contains the unlocked topic’s words plus the ungated ones',
-      deckSize() === 10, `deck=${deckSize()} (expected 4 ungated + 2 roots + 4 pairs)`);
+      deckSize() === 6 + DEFAULT_PAIRS.length,
+      `deck=${deckSize()} (expected 4 ungated + 2 roots + ${DEFAULT_PAIRS.length} pairs)`);
     check('the still-locked topic is NOT silently dropped — the game says so',
       /waiting behind/i.test(wfHost.querySelector('[data-held]').textContent),
       wfHost.querySelector('[data-held]').textContent);
@@ -313,8 +314,8 @@ terse  | brief to the point of rudeness | His terse reply ended it. | 9 | concis
     });
     wf2.init();
     await sleep(900);
-    check('after the second lesson every word is in play', deckSize() === 11,
-      `deck=${deckSize()} (expected all 7 words + 4 pairs)`);
+    check('after the second lesson every word is in play', deckSize() === 7 + DEFAULT_PAIRS.length,
+      `deck=${deckSize()} (expected all 7 words + ${DEFAULT_PAIRS.length} pairs)`);
     check('...and nothing is reported as held back',
       wfHost.querySelector('[data-held]').textContent.trim() === '',
       wfHost.querySelector('[data-held]').textContent);
@@ -460,11 +461,13 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       // no-op until `answered` is set -- unlike Trivia's, which skips unconditionally), so
       // this compares deck SIZE with the routed row on vs. cleared, against the SAME profile
       // and module, rather than trying to cycle through looking for specific text. DEFAULT_WORDS
-      // (12, ungated) + DEFAULT_PAIRS (4, ungated) + only the "roots" routed item (open) = 17;
+      // (ungated) + DEFAULT_PAIRS (ungated) + only the "roots" routed item (open). Computed from the
+      // imported lists rather than written as 17: that literal went stale the day pairs were added.
       // "concision" stays excluded the same way a topic-tagged word would.
       const withRouted = wfDeckSize();
-      check('*** the roots-tagged routed question joins Word Forge\'s deck (12 words + 4 pairs + 1) ***',
-        withRouted === 17, `deck=${withRouted}`);
+      const expectDeck = DEFAULT_WORDS.length + DEFAULT_PAIRS.length + 1;
+      check(`*** the roots-tagged routed question joins Word Forge's deck (${DEFAULT_WORDS.length} words + ${DEFAULT_PAIRS.length} pairs + 1) ***`,
+        withRouted === expectDeck, `deck=${withRouted} expected=${expectDeck}`);
       check('...and Word Forge names the still-locked topic the same way it already does for words',
         /waiting behind/i.test(wfHost2.textContent) && /fewer words|concision/i.test(wfHost2.textContent),
         wfHost2.textContent.slice(0, 200));
@@ -486,7 +489,7 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       wf4.init();
       await sleep(900);
       check('*** clearing the routed row shrinks the deck back down by exactly one ***',
-        wfDeckSize() === 16, `deck=${wfDeckSize()}`);
+        wfDeckSize() === expectDeck - 1, `deck=${wfDeckSize()} expected=${expectDeck - 1}`);
       wf4.destroy();
       wfHost2.remove();
     }

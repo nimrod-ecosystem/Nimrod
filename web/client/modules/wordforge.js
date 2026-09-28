@@ -140,6 +140,28 @@ export const DEFAULT_PAIRS = [
    "Planned obsolescence is when they make it so working devices don't stay around to get used.",
    '"Keeps working devices out of circulation" is tight and precise; the other version rambles '
    + 'to say the same thing.'],
+  // *** WHERE THE LONGER SENTENCE IS THE BETTER ONE (row 2.25, Mike 2026-09-28): "the shorter of
+  // the two sentences is always the better one." Three of the four pairs above were about cutting
+  // words, so length alone answered them. Good writing is not short writing: these four add what a
+  // reader actually needs -- a pronoun made specific, a missing detail, a transition that shows why,
+  // and rules spelled out -- so the better sentence is the longer one. `wordforge_test` now checks
+  // the balance, so a later pair cannot quietly tip it back.
+  ['After Maya handed the tablet to Grandpa, he opened the photo app.',
+   'After Maya handed it to him, he opened it.',
+   '"Handed the tablet to Grandpa, he opened the photo app" says who and what; in "handed it to '
+   + 'him, he opened it" nobody can tell what "it" is.'],
+  ['The repair café meets every Saturday morning at the library.',
+   'The repair café meets sometimes.',
+   '"Every Saturday morning at the library" tells you when and where to go; "meets sometimes" '
+   + 'leaves you guessing.'],
+  ['The laptop was too slow for school, so we replaced its hard drive with a faster one.',
+   'The laptop was too slow for school. We replaced its hard drive with a faster one.',
+   '"So we replaced" shows the slow laptop is the reason for the repair; as two separate sentences, '
+   + 'the reader has to guess how they connect.'],
+  ['The library lends laptops for two weeks, and you can renew them once online.',
+   'The library lends laptops, and there are some rules.',
+   '"For two weeks, and you can renew them once online" says what the rules are; "there are some '
+   + 'rules" sends the reader off to find out.'],
 ].map(([better, weaker, why]) => ({ better, weaker, why, grade: 8 }));
 
 // *** REPRICED 2026-09-22 to match Trivia's own atom: ONE POINT, MAX, PER QUESTION. ***

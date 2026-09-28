@@ -147,6 +147,80 @@ function checkLessonItem(it) {
   return bad;
 }
 
+// ---------------------------------------------------------------------------------------------
+// LENGTH TELLS -- a WARNING, never a refusal (row 2.25, Mike 2026-09-28): "Some of the questions you
+// could guess the answers because a longer than normal answer always ends up being the correct one."
+// A pack whose right answer is the longest option far more often than chance teaches a player to
+// measure the options instead of knowing the answer. It is still a valid pack -- the questions are
+// not wrong -- so `validatePack` stays the only gate and this only reports, so a pack author sees the
+// tell before a player does.
+//
+// It checks both ends: the right answer being the single LONGEST option, and the single SHORTEST.
+// Word Forge's own "better writing" pairs had the opposite tell (the better sentence was the shorter
+// one in 3 of 4), and "always the shortest" is as guessable as "always the longest".
+//
+// "FAR MORE OFTEN THAN CHANCE" IS A NUMBER, SO IT IS ARGUED HERE: with k options and lengths that
+// carry no information, the right answer is the unique longest about 1 time in k (ties make it a
+// little rarer, so this slightly OVERstates chance and errs toward NOT warning). The per-question
+// chances are added up exactly (a Poisson-binomial tail), and the pack is flagged when a count at
+// least this high would happen by luck less than `alpha` of the time -- 5% by default, the ordinary
+// "unlikely to be luck" line, and an option rather than a constant. Chat's first Harmontown pack had
+// the right answer longest in 13 of 24 four-option questions (about 6 expected): flagged. Its rewrite,
+// 5 of 24: not flagged.
+function tailAtLeast(ps, k) {
+  // P(at least k successes) for independent trials with success chances `ps`.
+  let dist = [1];
+  for (const p of ps) {
+    const next = new Array(dist.length + 1).fill(0);
+    dist.forEach((v, i) => { next[i] += v * (1 - p); next[i + 1] += v * p; });
+    dist = next;
+  }
+  return dist.slice(k).reduce((a, b) => a + b, 0);
+}
+
+// Every question in a pack as {correct, options}: trivia items, lesson items' questions, and words
+// items with decoys (a definition among its decoys is the same kind of multiple choice).
+function choiceQuestions(pack) {
+  const out = [];
+  const add = (correct, options) => {
+    if (typeof correct !== 'string' || !Array.isArray(options)) return;
+    const opts = options.filter((o) => typeof o === 'string');
+    if (opts.length >= 2 && opts.includes(correct)) out.push({ correct, options: opts });
+  };
+  for (const it of (pack && Array.isArray(pack.items) ? pack.items : [])) {
+    if (!it) continue;
+    if (pack.kind === 'trivia') add(it.correct, it.answers);
+    else if (pack.kind === 'lesson') for (const q of it.questions || []) add(q && q.correct, q && q.answers);
+    else if (pack.kind === 'words' && Array.isArray(it.decoys)) add(it.definition, [it.definition, ...it.decoys]);
+  }
+  return out;
+}
+
+/**
+ * Warnings about a pack that is VALID but guessable by length. A list of plain sentences, empty
+ * when there is nothing to say. Never throws.
+ */
+export function lengthTells(pack, { alpha = 0.05 } = {}) {
+  const qs = choiceQuestions(pack);
+  if (!qs.length) return [];
+  const warnings = [];
+  for (const [word, pick] of [['longest', (a, b) => a > b], ['shortest', (a, b) => a < b]]) {
+    let hits = 0;
+    for (const { correct, options } of qs) {
+      const len = correct.trim().length;
+      if (options.every((o) => o === correct || pick(len, o.trim().length))) hits += 1;
+    }
+    const ps = qs.map((q) => 1 / q.options.length);
+    const expected = ps.reduce((a, b) => a + b, 0);
+    if (hits > expected && tailAtLeast(ps, hits) < alpha) {
+      warnings.push(`the right answer is the ${word} option in ${hits} of ${qs.length} questions `
+        + `(about ${Math.round(expected)} would be expected by chance), so a player could guess by `
+        + `length instead of knowing the answer`);
+    }
+  }
+  return warnings;
+}
+
 /**
  * Parse and validate pack TEXT (already fetched). Throws with every problem joined into one
  * message, because a caller that only sees "invalid pack" has to come back here and re-run this

@@ -176,6 +176,16 @@ a || b || c`);
     // shuffle happened to land `better` first, and flatly backwards the rest of the time. A
     // real position-independent explanation must hold regardless of which shuffle a given
     // question got, so this checks both orientations for every shipped pair, not just one.
+    // *** LENGTH MUST NOT PREDICT THE ANSWER (row 2.25). *** Mike: "the shorter of the two sentences is
+    // always the better one." Three of the first four pairs were about cutting words; if the better
+    // sentence is the shorter one in most pairs, a player can win without reading.
+    {
+      const shorterWins = DEFAULT_PAIRS.filter((p) => p.better.length < p.weaker.length).length;
+      const longerWins = DEFAULT_PAIRS.filter((p) => p.better.length > p.weaker.length).length;
+      check('*** the better sentence is the longer one in some pairs and the shorter in others, about evenly ***',
+        longerWins >= 3 && shorterWins >= 3 && Math.abs(longerWins - shorterWins) <= 2,
+        `longer better: ${longerWins}, shorter better: ${shorterWins}`);
+    }
     for (const pair of DEFAULT_PAIRS) {
       check(`"${pair.why.slice(0, 40)}..." does not refer to sentence position`,
         !/\bthe first\b|\bthe second\b/i.test(pair.why), pair.why);
@@ -293,19 +303,28 @@ a || b || c`);
     const before = ledger.total();
 
     // click an option that is not the answer (find it after answering is impossible, so
-    // read the module's own marking by clicking index 0 then checking, and retry if it
-    // happened to be right)
+    // read the module's own marking after each click, and move on if it happened to be right).
+    // It ALTERNATES which option it clicks and tries up to eight questions: with only two tries
+    // (options 0 then 1) a change in the seeded deck -- more "better writing" pairs, 2026-09-28 --
+    // landed both on right answers and the section never got its miss. Every answer is RECORDED
+    // in `seen`, in order, because the round's arithmetic below replays them to recompute streaks.
+    const seen = [];
     let wrongPicked = false;
-    for (const i of [0, 1]) {
+    for (let n = 0; n < 8; n++) {
       if (host.querySelector('[data-opt]:disabled')) break;
-      opts()[i].click();
+      const o = opts();
+      if (!o.length) break;
+      o[n % 2].click();
       await sleep(300);
-      if (host.querySelector('.wf-opt.is-wrong')) { wrongPicked = true; break; }
-      // it was right — advance and try again on the next question
-      host.querySelector('[data-next]').click();
+      if (host.querySelector('.wf-opt.is-wrong')) { wrongPicked = true; seen.push({ correct: false }); break; }
+      seen.push({ correct: true });
+      host.querySelector('[data-next]').click();    // it was right: advance and try the next one
       await sleep(300);
     }
-    check('a wrong answer can be produced', wrongPicked || !!host.querySelector('.wf-opt.is-wrong'));
+    await ledger.load();
+    const beforeAck = ledger.total();                // right answers above are already banked
+    check('a wrong answer can be produced', wrongPicked || !!host.querySelector('.wf-opt.is-wrong'),
+      `${seen.length} answers, all right`);
     check('the right answer is revealed', rightIdx() >= 0, String(rightIdx()));
     check('the miss is EXPLAINED, not just marked wrong',
       (txt('.wf-fb.is-wrong') || '').length > 30, txt('.wf-fb.is-wrong'));
@@ -316,19 +335,19 @@ a || b || c`);
     await sleep(400);
     await ledger.load();
     check('the try points are NOT paid before the explanation is acknowledged',
-      ledger.total() === before, `${before} -> ${ledger.total()}`);
+      ledger.total() === beforeAck, `${beforeAck} -> ${ledger.total()}`);
 
     host.querySelector('[data-next]').click();     // "Got it"
     await sleep(600);
     await ledger.load();
     check('acknowledging the explanation banks the try points',
-      ledger.total() === before + DEFAULTS.tryPoints, `${before} -> ${ledger.total()}`);
+      ledger.total() === beforeAck + DEFAULTS.tryPoints, `${beforeAck} -> ${ledger.total()}`);
 
     // --- play out the rest of the round, always picking the first option ---
     // The deck is deterministic under fixedRand but the ANSWER position varies, so this
     // naturally produces a mix of right and wrong — which is exactly what we want to
     // check the arithmetic against.
-    const seen = [{ correct: false }];          // the deliberate miss above, already banked
+    // `seen` already holds every answer given above, the deliberate miss last.
     for (let n = 0; n < 12; n++) {
       const o = opts();
       if (!o.length) break;                      // round finished
@@ -735,8 +754,8 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
       });
       quest.init();
       await sleep(900);
-      check('*** quest mode: unchanged from today — 4 ungated words + 4 pairs, "roots" held back ***',
-        mDeckSize() === 8, `deck=${mDeckSize()}`);
+      check(`*** quest mode: unchanged from today — 4 ungated words + ${DEFAULT_PAIRS.length} pairs, "roots" held back ***`,
+        mDeckSize() === 4 + DEFAULT_PAIRS.length, `deck=${mDeckSize()}`);
       check('...and the game says so, same as it always has',
         /waiting behind/i.test(mHost.textContent), mHost.textContent.slice(0, 200));
       quest.destroy();
@@ -753,8 +772,8 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
       });
       sandbox.init();
       await sleep(900);
-      check('*** sandbox mode: all 6 words + 4 pairs play, with NOTHING actually unlocked ***',
-        mDeckSize() === 10, `deck=${mDeckSize()}`);
+      check(`*** sandbox mode: all 6 words + ${DEFAULT_PAIRS.length} pairs play, with NOTHING actually unlocked ***`,
+        mDeckSize() === 6 + DEFAULT_PAIRS.length, `deck=${mDeckSize()}`);
       check('...and nothing is reported as held back',
         mHost.querySelector('[data-held]').textContent.trim() === '',
         mHost.querySelector('[data-held]').textContent);
@@ -775,7 +794,7 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
       backToQuest.init();
       await sleep(900);
       check('*** switching back to quest re-gates exactly as before — sandbox never touched the log ***',
-        mDeckSize() === 8, `deck=${mDeckSize()}`);
+        mDeckSize() === 4 + DEFAULT_PAIRS.length, `deck=${mDeckSize()}`);
       backToQuest.destroy();
       mHost.remove();
     }
