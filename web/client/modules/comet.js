@@ -45,6 +45,7 @@ import { registerModule, getManifest } from '../module.js';
 import { mountSettings } from '../settings.js';
 import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
+import { hitCircle, nearest } from '../hitbox.js';
 
 const DEFAULTS = {
   hearts: 4,        // how many balloons are up at once
@@ -316,8 +317,11 @@ registerModule(
         // both a wrong number and a heart nobody saw themselves take.
         if (!started || cx < 0) continue;
         const hx = heartX(h, nowMs()), hy = h.y * H, r = h.size * minD;
-        const dx = hx - cx, dy = hy - cy;
-        if (dx * dx + dy * dy < r * r) {
+        // *** THE SHARED HIT-BOX CHECK, NOT A SECOND ONE. *** Same squared-distance-vs-radius
+        // this line always ran, moved to `hitbox.js` so the next scene item that wants "can
+        // this be pressed" reuses it instead of re-deriving it (Mike, 2026-09-26, asking how
+        // buttons and Godot's own Area2D handle exactly this question).
+        if (hitCircle(cx, cy, { x: hx, y: hy, r })) {
           bloom(hx, hy, '#ff7a96');
           chime();
           caught++;
@@ -434,13 +438,14 @@ registerModule(
       if (!hearts.length) return;
       const from = cx >= 0 ? { x: cx, y: cy } : { x: W / 2, y: H * 0.9 };
       const t = nowMs();
-      let best = null, bestD = Infinity;
-      for (const h of hearts) {
-        const hx = heartX(h, t), hy = h.y * H;
-        if (hy < -0.1 * H) continue;
-        const d = (hx - from.x) ** 2 + (hy - from.y) ** 2;
-        if (d < bestD) { bestD = d; best = { x: hx, y: hy }; }
-      }
+      // Still-off-screen hearts are filtered out first (domain-specific: a switch user should
+      // never be steered to something not yet visible), then `hitbox.js`'s own `nearest()`
+      // answers the shared question — the exact same "go to the closest live target" this
+      // function has always answered, just through the shared primitive.
+      const candidates = hearts
+        .map((h) => ({ x: heartX(h, t), y: h.y * H }))
+        .filter((p) => p.y >= -0.1 * H);
+      const best = nearest(from.x, from.y, candidates);
       if (!best) return;
       steer = { fx: from.x, fy: from.y, tx: best.x, ty: best.y, t0: simT };
       if (cx < 0) { cx = from.x; cy = from.y; }

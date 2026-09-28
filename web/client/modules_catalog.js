@@ -282,6 +282,26 @@ export const CATALOG = [
       + 'worth answering. It can also be driven with a single switch, which goes and gets a '
       + 'heart for you.',
   },
+  {
+    // A HEADLESS SIBLING OF COMET, NOT A SECOND COPY OF THE SAME MODULE. Mike, 2026-09-26: "I
+    // would even add an option to comet to... go headless, so the balloons go over the other
+    // modules" — built as its own module (`mount:'ambient'`) rather than a setting on `comet`
+    // itself, because the two need genuinely different homes (a dashboard slot vs. no slot at
+    // all) — see MIKE_CHANGE_LIST.md §comet-headless-toggle-proposal for the full reasoning.
+    type: 'comet_ambient',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'Hearts drifting behind your other panels — decorative by default.',
+    needs: 'Nothing.',
+    why: 'Does not take a dashboard slot of its own — it sits behind whatever else is on '
+      + 'screen, the same layer a wallpaper drifts on. Set to "just for looks" it is pure '
+      + 'scenery; set to "something to catch" it becomes a small, quiet game layered over '
+      + 'everything else, worth points, without ever covering the thing you were already '
+      + 'looking at.',
+    note: 'Interactive mode has no dedicated place on the switch-scan cycle yet — a caregiver '
+      + 'binds a switch to it directly, the same as any module, rather than it being "whatever '
+      + 'is currently focused."',
+  },
 
   // ------------------------------------------------------------------ practice
   {

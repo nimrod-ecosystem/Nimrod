@@ -1384,8 +1384,14 @@ const ds = () => root.querySelector('.kiosk').dataset;
       const inGap = document.elementFromPoint(gapX, gapY);
       check('*** a press IN THE GAP reaches the ambient scenery, not nothing ***',
         !!inGap?.closest?.('.k-ambient'), `${inGap?.className} at (${gapX},${gapY})`);
-      check('...and specifically NOT a panel — the gap is not secretly still inside one',
-        !inGap?.closest?.('.k-mod'));
+      // *** NOT "no .k-mod at all" — the ambient occupant legitimately has its own now (see
+      // kiosk.css's own comment on `.k-ambient > .k-mod`, added 2026-09-27 building
+      // `comet_ambient.js`: an ambient occupant needs real pixels the same as any other module,
+      // and giving it that made its own `.k-mod` correctly span the whole ambient surface). What
+      // must still be false is a REAL STAGE PANEL — this assertion narrowed to that, rather
+      // than weakened, when the fix that broke the old blanket check landed. ***
+      check('...and specifically NOT A STAGE PANEL — the gap is not secretly still inside one',
+        !inGap?.closest?.('.k-stage .k-mod'), inGap?.className);
 
       k.destroy();
     }
