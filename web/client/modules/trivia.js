@@ -213,8 +213,17 @@ export function makeQuestion(item, bank, { choices = DEFAULTS.choices, rand = Ma
     }
   }
   const options = shuffle(opts, rand);
+  // `source` (2026-09-28, row 2.24 / §0h): a transcript-lesson question routed here by Lessons
+  // carries the transcript line its answer came from, and Mike's own §0h addition is that the
+  // player SEES it alongside the answer. Empty for every hand-written row, which shows nothing.
+  //
+  // *** A TENSION WITH THE HEADER ABOVE, STATED RATHER THAN HIDDEN. *** "Nothing here generates
+  // an option" stays true of this function — but a routed transcript question's wrong options
+  // were written by a model, not a person. What keeps PRINCIPLES.md §2 true for those is the
+  // review queue in Lessons (ON by default: a person reads every option before it reaches this
+  // bank). A caregiver who turns auto-approve on takes that check away; see lessons.js.
   return { question: item.question, answer: item.answer, options,
-           correctIndex: options.indexOf(item.answer) };
+           correctIndex: options.indexOf(item.answer), source: item.source || '' };
 }
 
 const esc = (s) => String(s == null ? '' : s)
@@ -436,6 +445,7 @@ registerModule(
           </ol>
           ${done
             ? `<p class="tv-said">Correct.</p>
+               ${q.source ? `<p class="tv-src" data-source>From the lesson: “${esc(q.source)}”</p>` : ''}
                <button type="button" class="tv-next" data-next>Next question</button>`
             // NOT "the answer was X". The question is still open, so telling them the answer
             // would end it for them.

@@ -967,6 +967,38 @@
   border:1px dashed var(--border);border-radius:10px;margin:0}
 .lessons .l-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 .lessons .l-wait{font-size:.78rem;color:var(--text-muted)}
+/* transcript lessons (row 2.24) and the review list (§0h) */
+.lessons .l-tq{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt)}
+.lessons .l-tq-title{margin:0 0 6px;font-size:.92rem}
+.lessons .l-tq-help{margin:4px 0;font-size:.82rem;color:var(--text-muted);max-width:66ch}
+.lessons .l-tq-text{width:100%;box-sizing:border-box;min-height:7em;padding:8px;border:1px solid var(--border);
+  border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-size:.85rem;resize:vertical}
+.lessons .l-tq-mins{display:flex;flex-wrap:wrap;gap:6px}
+.lessons .l-tq-need,.lessons .l-tq-progress{margin:6px 0;font-size:.85rem;font-weight:600}
+.lessons .l-tq-working{margin:6px 0;font-weight:600}
+.lessons .l-tq-error{margin:6px 0;padding:8px 10px;border-radius:8px;background:var(--bad-surface);font-size:.85rem}
+.lessons .l-tq-q{margin:10px 0 6px;font-size:1rem;font-weight:600}
+.lessons .l-tq-opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.lessons .l-tq-opt{width:100%;text-align:left;white-space:normal}
+.lessons .l-tq-opt[data-right="1"]{background:var(--ok-surface);border-color:var(--accent)}
+.lessons .l-tq-opt[data-wrong="1"]{background:var(--bad-surface)}
+.lessons .l-tq-said{margin:10px 0 4px;font-weight:600}
+.lessons .l-tq-src,.lessons .l-rq-src{margin:4px 0;padding:6px 10px;border-left:3px solid var(--accent);
+  background:var(--surface);font-size:.84rem;color:var(--text-soft)}
+.lessons .l-tq-warn{margin:4px 0;font-size:.8rem;color:var(--text-soft);font-style:italic}
+.lessons .l-ai{margin-top:10px;font-size:.84rem}
+.lessons .l-ai summary{cursor:pointer;color:var(--text-muted)}
+.lessons .l-ai-url{flex:1 1 16em;min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:8px;
+  background:var(--surface);color:var(--text);font:inherit;font-size:.84rem}
+.lessons .l-review{margin-top:6px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.lessons .l-rv-title{margin:0 0 4px;font-size:.95rem}
+.lessons .l-rv-topic{margin:10px 0 4px;font-size:.8rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+.lessons .l-rq{padding:8px 0;border-top:1px solid var(--border)}
+.lessons .l-rq.is-flagged{background:var(--bad-surface)}
+.lessons .l-rq-q{margin:0;font-weight:600;font-size:.9rem}
+.lessons .l-rq-a{margin:2px 0;font-size:.82rem;color:var(--text-soft)}
+.lessons .l-rq-flag{margin:4px 0;font-size:.8rem}
+.lessons .l-rv-in summary{cursor:pointer;margin-top:8px;font-size:.84rem;color:var(--text-muted)}
 .wordforge .wf-held{font-size:.75rem;color:var(--link);text-align:center;min-height:1em}
 
 /* algebra (solve for x, with a calculator) */
@@ -1406,6 +1438,8 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-opt[data-wrong="1"] { border-color: #a4243b; background: var(--bad-surface); }
 .tv-opt:disabled { cursor: default; }
 .tv-said { margin: 14px 0 8px; font-size: 1.05rem; }
+/* a transcript-lesson question's source line, shown with the answer (row 2.24 / §0h) */
+.tv-src { margin: 0 0 10px; padding: 6px 10px; border-left: 3px solid var(--accent); font-size: .88rem; color: var(--text-soft); }
 .tv-next { min-height: 48px; padding: 10px 20px; font-size: 1rem; }
 .tv-empty { color: var(--text-muted, #5d7064); max-width: 60ch; }
 

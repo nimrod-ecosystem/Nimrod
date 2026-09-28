@@ -281,6 +281,13 @@ Why do writers avoid run-ons? | Clarity | Length | Rhyme | topic:roots
     check('a row with no wrong answers borrows other answers from the bank',
       q2.options.length === 4 && q2.options.includes('a'), JSON.stringify(q2.options));
     check('...and never borrows its own answer twice', new Set(q2.options).size === 4);
+
+    // Row 2.24 / §0h: a transcript-lesson question carries its source line, and the player sees it.
+    const sourced = makeQuestion({ question: 'What does bio mean?', answer: 'life', wrong: ['water', 'fire', 'air'],
+      source: 'The Greek root bio means life.' }, bank, { choices: 4, rand: () => 0 });
+    check('*** a routed question keeps the transcript line its answer came from ***',
+      sourced.source === 'The Greek root bio means life.', JSON.stringify(sourced));
+    check('...and a hand-written row has none (nothing extra is shown)', q.source === '', JSON.stringify(q.source));
   }
 
   // =====================================================================================
