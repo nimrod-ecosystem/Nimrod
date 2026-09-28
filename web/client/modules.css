@@ -861,6 +861,25 @@
 .gprogress .g-src{display:block;font-size:.64rem;color:var(--text-muted)}
 .gprogress .g-empty{font-size:.85rem;color:var(--text-muted);text-align:center;padding:18px}
 
+/* reading_log (a simple append-only log of what was read) */
+.rlog{display:flex;flex-direction:column;gap:10px;width:100%}
+.rlog .rl-form{display:flex;flex-direction:column;gap:6px}
+.rlog .rl-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface-alt);color:var(--text);font:inherit;font-size:.9rem}
+.rlog .rl-notefield{resize:vertical}
+.rlog .rl-btn{align-self:flex-start;padding:8px 16px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.rlog .rl-btn:hover:not(:disabled){background:var(--surface-alt)}
+.rlog .rl-btn:disabled{opacity:.45;cursor:not-allowed}
+.rlog .rl-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.rlog .rl-primary:hover:not(:disabled){filter:brightness(.93);background:var(--accent)}
+.rlog .rl-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto}
+.rlog .rl-row{border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:8px 10px}
+.rlog .rl-title{font-weight:700;font-size:.92rem;color:var(--text-strong)}
+.rlog .rl-meta{font-size:.76rem;color:var(--text-muted);margin-top:1px}
+.rlog .rl-note{font-size:.8rem;color:var(--text-soft);margin-top:4px;white-space:pre-wrap}
+.rlog .rl-empty{font-size:.85rem;color:var(--text-muted);text-align:center;padding:18px}
+
 /* wordforge (vocabulary game) */
 .wordforge{display:flex;flex-direction:column;gap:10px;width:100%}
 .wordforge .wf-top{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text-muted)}

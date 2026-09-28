@@ -67,6 +67,7 @@ import './modules/director.js';
 import './modules/sprint.js';
 import './modules/quests.js';
 import './modules/progress.js';
+import './modules/reading_log.js';
 import './modules/wordforge.js';
 import './modules/trivia.js';    // registers 'trivia'
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)

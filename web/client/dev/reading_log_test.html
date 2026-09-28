@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>reading log — append-only, no edit/delete</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:360px;margin-top:12px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:12px}
+</style>
+</head>
+<body>
+<h1>reading log — row 2.23 / register 254</h1>
+<p>Self-contained: mounts the real <code>reading_log</code> module against a fake
+<code>makeEvents</code> store (same shape <code>comet_ambient_test.html</code> fakes), so no
+server is needed. Covers the append-only shape, the form, and the ordering rule (most
+recently READ first, by the entry's own date — not by when it was typed in).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/reading_log.js';
+import { mountModule, getManifest } from '../module.js';
+import { fieldsFor } from '../settings_fields.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { READING_LOG_STREAM, READING_LOG_KIND, todayStr, fmtDate, sortEntries }
+  from '../modules/reading_log.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A fake events handle with the same shape events.js's real createEvents() returns
+// (load/append/get/subscribe/startPolling/destroy), so the module cannot tell it apart
+// from the real thing. `seed` lets a test start with history already "on the server."
+function fakeStore(seed = []) {
+  let events = [...seed];
+  const subs = new Set();
+  let calls = [];
+  function snapshot() { return { events: [...events], total: events.length }; }
+  function notify() { for (const fn of [...subs]) fn(snapshot()); }
+  return {
+    append(kind, data) {
+      const row = { id: events.length + 1, kind, data, created_at: new Date(Date.now() + events.length).toISOString() };
+      events = [row, ...events];
+      calls.push({ kind, data });
+      notify();
+      return Promise.resolve(row);
+    },
+    load: () => { notify(); return Promise.resolve(); },
+    get: snapshot,
+    subscribe(fn) { subs.add(fn); fn(snapshot()); return () => subs.delete(fn); },
+    startPolling() {},
+    destroy() {},
+    calls: () => calls,
+  };
+}
+
+let lastMakeEventsCall = null;
+function mount(host, { store = null, now = () => Date.now() } = {}) {
+  const useStore = store || fakeStore();
+  const inst = mountModule('reading_log', {
+    mount: host, bus: createBus(), state: null, events: null,
+    user: 'u', profileId: 'p',
+    makeEvents: (key, opts) => { lastMakeEventsCall = { key, opts }; return useStore; },
+    now,
+  });
+  inst.init();
+  return { inst, store: useStore };
+}
+
+const val = (host, sel) => host.querySelector(sel)?.value ?? '';
+const setVal = (host, sel, v) => {
+  const el = host.querySelector(sel);
+  el.value = v;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+};
+const click = (host, sel) => host.querySelector(sel)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+const enter = (host, sel) => host.querySelector(sel)?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+function scratch() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden';
+  document.body.append(el);
+  return el;
+}
+
+(async () => {
+  // =====================================================================
+  section('pure helpers');
+  check('todayStr is local-calendar, not UTC-shifted', todayStr(new Date(2026, 8, 28, 23, 0).getTime()) === '2026-09-28');
+  check('fmtDate: ISO -> M/D/YYYY', fmtDate('2026-09-05') === '9/5/2026', fmtDate('2026-09-05'));
+  check('fmtDate: something odd is shown as typed, not hidden', fmtDate('sometime in June') === 'sometime in June');
+  check('fmtDate: nothing at all', fmtDate('') === '—');
+  {
+    const evs = [
+      { kind: READING_LOG_KIND, created_at: '2026-09-01T00:00:00Z', data: { title: 'Old, logged last', date: '2026-08-01' } },
+      { kind: READING_LOG_KIND, created_at: '2026-09-02T00:00:00Z', data: { title: 'New, logged first', date: '2026-09-20' } },
+      { kind: 'other', created_at: '2026-09-03T00:00:00Z', data: { title: 'not an entry' } },
+    ];
+    const sorted = sortEntries(evs);
+    check('non-entry kinds are dropped', sorted.length === 2, String(sorted.length));
+    check('*** ordered by the entry’s OWN date, not by when it was typed in ***',
+      sorted[0].data.title === 'New, logged first' && sorted[1].data.title === 'Old, logged last',
+      JSON.stringify(sorted.map((e) => e.data.title)));
+  }
+
+  section('it is a module like any other, and it is described honestly');
+  check('it registers a manifest', !!getManifest('reading_log'));
+  check('declares dependsOn: server — the record lives in the shared stream', getManifest('reading_log').dependsOn === 'server');
+  check('settings survive the shared field reader even with none declared',
+    Array.isArray(fieldsFor(getManifest('reading_log'))));
+  check('described in the catalog, not silently missing', CATALOG.some((m) => m.type === 'reading_log'));
+
+  section('mounts empty, form disabled until a title is typed');
+  {
+    const host = scratch();
+    const { inst } = mount(host);
+    await sleep(10);
+    check('empty state shown', host.querySelector('.rl-empty')?.textContent === 'Nothing logged yet.',
+      host.querySelector('.rl-empty')?.textContent);
+    check('date field defaults to today', val(host, '[data-date]') === todayStr(), val(host, '[data-date]'));
+    check('*** Add starts disabled — no title, nothing to save ***', host.querySelector('[data-add]').disabled === true);
+    setVal(host, '[data-title]', '  ');
+    check('...and whitespace alone does not enable it', host.querySelector('[data-add]').disabled === true);
+    setVal(host, '[data-title]', 'The Hobbit');
+    check('a real title enables it', host.querySelector('[data-add]').disabled === false);
+    inst.destroy(); host.remove();
+  }
+
+  section('*** adding an entry appends to the well-known shared stream, not a private one ***');
+  {
+    const host = scratch();
+    const { inst, store } = mount(host);
+    await sleep(10);
+    check('mounted against the well-known shared stream key, the same way points.js does for the ledger',
+      lastMakeEventsCall && lastMakeEventsCall.key === READING_LOG_STREAM, JSON.stringify(lastMakeEventsCall));
+    setVal(host, '[data-title]', 'The Hobbit');
+    setVal(host, '[data-author]', 'J.R.R. Tolkien');
+    setVal(host, '[data-pages]', 'chapter 4');
+    setVal(host, '[data-note]', 'Riddles in the dark');
+    click(host, '[data-add]');
+    await sleep(10);
+    check('exactly one event appended', store.calls().length === 1, String(store.calls().length));
+    const c = store.calls()[0];
+    check('right kind', c.kind === READING_LOG_KIND, c.kind);
+    check('title carried through', c.data.title === 'The Hobbit', JSON.stringify(c.data));
+    check('author carried through', c.data.author === 'J.R.R. Tolkien', JSON.stringify(c.data));
+    check('chapter/pages is free text, carried through as typed', c.data.pages === 'chapter 4', JSON.stringify(c.data));
+    check('note carried through', c.data.note === 'Riddles in the dark', JSON.stringify(c.data));
+    check('date defaulted (never blank)', c.data.date === todayStr(), JSON.stringify(c.data));
+
+    check('*** the form resets after a save, ready for the next entry ***', val(host, '[data-title]') === '');
+    check('...date field is set back to today, not left blank', val(host, '[data-date]') === todayStr());
+    check('the list now shows the title', host.querySelector('.rl-title')?.textContent === 'The Hobbit');
+    check('...and the note', host.querySelector('.rl-note')?.textContent === 'Riddles in the dark');
+    check('...and author + chapter joined in the meta line',
+      /Tolkien/.test(host.querySelector('.rl-meta')?.textContent) && /chapter 4/.test(host.querySelector('.rl-meta')?.textContent),
+      host.querySelector('.rl-meta')?.textContent);
+    inst.destroy(); host.remove();
+  }
+
+  section('optional fields stay optional — omitted, not stored as empty strings');
+  {
+    const host = scratch();
+    const { inst, store } = mount(host);
+    await sleep(10);
+    setVal(host, '[data-title]', 'Just a title');
+    click(host, '[data-add]');
+    await sleep(10);
+    const c = store.calls()[0].data;
+    check('author omitted rather than blank', !('author' in c), JSON.stringify(c));
+    check('pages omitted rather than blank', !('pages' in c), JSON.stringify(c));
+    check('note omitted rather than blank', !('note' in c), JSON.stringify(c));
+    check('date is still always present', typeof c.date === 'string' && c.date.length > 0, JSON.stringify(c));
+    check('meta line is just the date when nothing else was given',
+      host.querySelector('.rl-meta')?.textContent === fmtDate(c.date), host.querySelector('.rl-meta')?.textContent);
+    check('no stray note block when there is no note', !host.querySelector('.rl-note'));
+    inst.destroy(); host.remove();
+  }
+
+  section('Enter submits from the single-line fields, like youtube.js’s own add-url field');
+  {
+    const host = scratch();
+    const { inst, store } = mount(host);
+    await sleep(10);
+    setVal(host, '[data-title]', 'Enter-key entry');
+    enter(host, '[data-title]');
+    await sleep(10);
+    check('Enter on the title field saved the entry', store.calls().length === 1, String(store.calls().length));
+    inst.destroy(); host.remove();
+  }
+
+  section('most recent READ first, by the entry’s own date — proven through the real module, not just the helper');
+  {
+    const host = scratch();
+    const seeded = fakeStore([
+      { id: 1, kind: READING_LOG_KIND, created_at: '2026-09-01T00:00:00Z', data: { title: 'Read a while ago', date: '2026-08-01' } },
+      { id: 2, kind: READING_LOG_KIND, created_at: '2026-09-02T00:00:00Z', data: { title: 'Read most recently', date: '2026-09-25' } },
+    ]);
+    const { inst } = mount(host, { store: seeded });
+    await sleep(10);
+    const titles = [...host.querySelectorAll('.rl-title')].map((el) => el.textContent);
+    check('the most recently READ book leads, even though it was logged first',
+      titles[0] === 'Read most recently' && titles[1] === 'Read a while ago', JSON.stringify(titles));
+    inst.destroy(); host.remove();
+  }
+
+  section('*** no edit/delete affordance — checked, not just left out by accident ***');
+  {
+    const host = scratch();
+    const seeded = fakeStore([
+      { id: 1, kind: READING_LOG_KIND, created_at: '2026-09-01T00:00:00Z', data: { title: 'A typo’d title', date: '2026-08-01' } },
+    ]);
+    const { inst } = mount(host, { store: seeded });
+    await sleep(10);
+    check('no delete control anywhere in the row', !host.querySelector('[data-delete]'));
+    check('no edit control anywhere in the row', !host.querySelector('[data-edit]'));
+    check('the row itself is not a button/editable control', host.querySelector('.rl-row').tagName !== 'BUTTON');
+    inst.destroy(); host.remove();
+  }
+
+  section('destroy cleans up without error');
+  {
+    const host = scratch();
+    const { inst } = mount(host);
+    await sleep(10);
+    inst.destroy();
+    check('no throw', true);
+    host.remove();
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

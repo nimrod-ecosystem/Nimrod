@@ -115,6 +115,9 @@ export const HEALTH_EXPECT = {
   sprint:      { idle: true },
   progress:    { idle: true },
   lessons:     { idle: true },
+  // A form plus a list. It publishes nothing on the bus, and nobody typing into it for a
+  // while is not a fault — the same reasoning as `quests`/`sprint` just above.
+  reading_log: { idle: true },
 };
 
 export function expectFor(type, table = HEALTH_EXPECT) {
