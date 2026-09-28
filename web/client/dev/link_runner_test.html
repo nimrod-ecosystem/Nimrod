@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>link_runner — carrying values along links</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>link_runner — carrying values along links</h1>
+<p>No server needed. <code>links.js</code> is structure only; this is the thing that makes a link
+carry traffic: it reads a <code>createLinkStore()</code>, checks each link with
+<code>classifyPatch</code>, and republishes a value from the FROM port's topic onto the TO port's
+topic — appending a provenance hop, keeping the source's timestamp, applying a range map only where
+both ranges are declared. A link that cannot carry stays in <code>status()</code> with its reason
+rather than vanishing.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import {
+  portsFor, linkTopic, classifyPatch, mapRange, wrapValue, createLinkStore, normalizePort,
+} from '../links.js';
+import { createPorts } from '../ports.js';
+import { createLinkRunner, DEFAULT_MAX_HOPS } from '../link_runner.js';
+import { readLinks, createScreenLinks } from '../screen_links.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// Two invented module types, only as wide as the tests need.
+const SRC = { type: 'src', ports: [
+  { id: 'result', direction: 'out', class: 'event', type: 'number' },
+  { id: 'display', direction: 'out', class: 'continuous', type: 'text' },
+  { id: 'level', direction: 'out', class: 'continuous', type: 'number', range: [0, 1] },
+  { id: 'tick', direction: 'in', class: 'event', type: 'number' },
+] };
+const SINK = { type: 'sink', ports: [
+  { id: 'answer', direction: 'in', class: 'event', type: 'number' },
+  { id: 'answer2', direction: 'in', class: 'event', type: 'number', cardinality: 'many' },
+  { id: 'note', direction: 'in', class: 'event', type: 'text' },
+  { id: 'dial', direction: 'in', class: 'continuous', type: 'number', range: [0, 100] },
+  { id: 'label', direction: 'in', class: 'continuous', type: 'text' },
+  { id: 'echo', direction: 'out', class: 'event', type: 'number' },
+] };
+const TYPES = { src: portsFor(SRC), sink: portsFor(SINK) };
+const INSTANCES = { 's-1': 'src', 's-2': 'src', 'k-1': 'sink', 'k-2': 'sink' };
+const portsOf = (id) => TYPES[INSTANCES[id]] || [];
+const portOf = (inst, id) => portsOf(inst).find((p) => p.id === id) || null;
+
+const L = (from, to) => ({ from: { instance: from[0], port: from[1] }, to: { instance: to[0], port: to[1] } });
+const topic = (bus, [instance, port]) => linkTopic(bus, { instance, port });
+function listen(bus, ep) {
+  const heard = [];
+  const off = bus.subscribe(topic(bus, ep), (env) => heard.push(env));
+  return { heard, off };
+}
+function mk(links, opts = {}) {
+  const bus = opts.bus || createBus();
+  const store = createLinkStore();
+  for (const l of links) store.addLink(l, portOf(l.to.instance, l.to.port));
+  const runner = createLinkRunner({ rootBus: bus, store, portsOf, ...opts.runner });
+  return { bus, store, runner };
+}
+const emitter = (bus, instance, now) => createPorts({ rootBus: bus, instanceId: instance,
+  manifest: instance.startsWith('s') ? SRC : SINK, now });
+
+try {
+  // =============================================================================================
+  section('the question that decides whether "identity" is true: event/number, no ranges');
+  {
+    const ev = normalizePort({ id: 'a', direction: 'out', class: 'event', type: 'number' });
+    const ev2 = normalizePort({ id: 'b', direction: 'in', class: 'event', type: 'number' });
+    const c = classifyPatch(ev, ev2);
+    check('an event number port with no range is a real, kept port (range is only required for continuous)',
+      !!ev && ev.range === null);
+    check('classifyPatch says ok, and calls it linear-range with NULL ranges (not "identity")',
+      c.ok === true && c.transform === 'linear-range' && c.from === null && c.to === null, JSON.stringify(c));
+    check('mapRange with no ranges returns the number unchanged, for every kind of number',
+      [10, 0, -3.5, 1e21, 0.1, -0].every((n) => Object.is(mapRange(n, null, null), n) || mapRange(n, null, null) === n));
+    check('mapRange with only ONE range present is also unchanged (it needs both to map)',
+      mapRange(7, [0, 10], null) === 7 && mapRange(7, null, [0, 100]) === 7);
+    check('so the two together ARE an identity for event/number: no value is altered on the way',
+      mapRange(10, c.from, c.to) === 10);
+    check('...and mapRange coerces with Number(), so a numeric STRING would come out a number: the runner and '
+      + 'ports.js therefore both insist on real numbers upstream',
+      mapRange('7', null, null) === 7 && typeof mapRange('7', null, null) === 'number');
+  }
+
+  // =============================================================================================
+  section('carrying an event/number value — identity');
+  {
+    const { bus, runner } = mk([L(['s-1', 'result'], ['k-1', 'answer'])]);
+    const sink = listen(bus, ['k-1', 'answer']);
+    runner.start();
+    const src = emitter(bus, 's-1', () => 1234);
+    src.emit('result', 10);
+    check('the value arrives on the TO port\'s topic, once', sink.heard.length === 1, String(sink.heard.length));
+    const env = sink.heard[0];
+    check('unchanged', env.value === 10);
+    check('*** the SOURCE\'s timestamp is kept, not the arrival time ***', env.timestamp === 1234,
+      `${env.timestamp} (now is ${Date.now()})`);
+    check('class and seq ride along untouched', env.class === 'event' && env.seq === 1, JSON.stringify(env));
+    check('provenance is APPENDED to: origin first, then this link\'s hop',
+      env.provenance.length === 2 && env.provenance[0].source === 's-1/result'
+      && env.provenance[0].transform === 'origin'
+      && env.provenance[1].source === 'k-1/answer' && env.provenance[1].transform === 'identity',
+      JSON.stringify(env.provenance));
+    src.emit('result', 11); src.emit('result', 12);
+    check('the sequence numbers are the source\'s own, in order', sink.heard.map((e) => e.seq).join() === '1,2,3');
+    check('each message has its own provenance array', sink.heard[0].provenance !== sink.heard[1].provenance);
+
+    // The envelope that was sent must not be changed by the hop appended for the sink.
+    const tapSrc = listen(bus, ['s-1', 'result']);
+    src.emit('result', 13);
+    check('the message on the FROM topic is left alone by the hop appended for the sink',
+      tapSrc.heard[0].provenance.length === 1 && sink.heard[3].provenance.length === 2);
+    check('runner.status() counts what it carried',
+      runner.status()[0].delivered === 4, JSON.stringify(runner.status()[0]));
+    runner.destroy();
+  }
+
+  section('carrying an event/text value — same type passes straight through');
+  {
+    const CT = { type: 'ct', ports: [{ id: 'said', direction: 'out', class: 'event', type: 'text' }] };
+    TYPES.ct = portsFor(CT); INSTANCES['t-1'] = 'ct';
+    const { bus, runner } = mk([L(['t-1', 'said'], ['k-1', 'note'])]);
+    const sink = listen(bus, ['k-1', 'note']);
+    runner.start();
+    createPorts({ rootBus: bus, instanceId: 't-1', manifest: CT }).emit('said', 'hello');
+    check('text arrives as text with an identity hop', sink.heard[0]?.value === 'hello'
+      && sink.heard[0].provenance[1].transform === 'identity', JSON.stringify(sink.heard[0]));
+    runner.destroy();
+  }
+
+  // =============================================================================================
+  section('carrying a continuous value — a range map, but only where both ranges exist');
+  {
+    const { bus, runner } = mk([L(['s-1', 'level'], ['k-1', 'dial'])]);
+    const sink = listen(bus, ['k-1', 'dial']);
+    runner.start();
+    const src = emitter(bus, 's-1');
+    src.emit('level', 0.5);
+    check('0..1 onto 0..100: 0.5 becomes 50', sink.heard[0]?.value === 50, JSON.stringify(sink.heard[0]));
+    check('and the hop says linear-range, because a map really happened',
+      sink.heard[0].provenance[1].transform === 'linear-range', JSON.stringify(sink.heard[0].provenance));
+    src.emit('level', 1);
+    check('the top of the range maps to the top', sink.heard[1].value === 100);
+    src.emit('level', 0);
+    check('the bottom maps to the bottom', sink.heard[2].value === 0);
+    check('a continuous message has no seq', !('seq' in sink.heard[0]));
+    runner.destroy();
+  }
+  {
+    const SAME = { type: 'same', ports: [{ id: 'v', direction: 'in', class: 'continuous', type: 'number', range: [0, 1] }] };
+    TYPES.same = portsFor(SAME); INSTANCES['m-1'] = 'same';
+    const { bus, runner } = mk([L(['s-1', 'level'], ['m-1', 'v'])]);
+    const sink = listen(bus, ['m-1', 'v']);
+    runner.start();
+    emitter(bus, 's-1').emit('level', 0.25);
+    check('identical ranges are an identity hop, value unchanged',
+      sink.heard[0]?.value === 0.25 && sink.heard[0].provenance[1].transform === 'identity',
+      JSON.stringify(sink.heard[0]));
+    runner.destroy();
+  }
+  {
+    const { bus, runner } = mk([L(['s-1', 'display'], ['k-1', 'label'])]);
+    const sink = listen(bus, ['k-1', 'label']);
+    runner.start();
+    emitter(bus, 's-1').emit('display', '12.5');
+    check('continuous text passes through', sink.heard[0]?.value === '12.5' && sink.heard[0].class === 'continuous');
+    runner.destroy();
+  }
+
+  // =============================================================================================
+  section('a link that cannot carry stays in status, with a reason, and carries NOTHING');
+  {
+    const links = [
+      L(['s-1', 'display'], ['k-1', 'answer']),   // continuous text -> event number
+      L(['s-1', 'result'], ['k-1', 'dial']),      // event number -> continuous number
+      L(['s-1', 'result'], ['k-1', 'note']),      // event number -> event text
+    ];
+    const { bus, runner } = mk(links);
+    const heardAll = [];
+    for (const to of [['k-1', 'answer'], ['k-1', 'dial'], ['k-1', 'note']]) {
+      bus.subscribe(topic(bus, to), (e) => heardAll.push([to[1], e]));
+    }
+    runner.start();
+    const src = emitter(bus, 's-1');
+    src.emit('display', '5'); src.emit('result', 5);
+    check('nothing at all was carried by any refused link', heardAll.length === 0, JSON.stringify(heardAll));
+    const st = runner.status();
+    check('all three are still PRESENT in status (never absent)', st.length === 3);
+    check('each says it is not ok, and why',
+      st.every((s) => s.ok === false && typeof s.reason === 'string'), JSON.stringify(st.map((s) => [s.ok, s.reason])));
+    check('continuous -> event needs an edge node', st[0].reason === 'needs-edge-node', st[0].reason);
+    check('event -> continuous needs a hold node', st[1].reason === 'needs-hold-node', st[1].reason);
+    check('number -> text needs a converter', st[2].reason === 'needs-converter', st[2].reason);
+    check('status names the link it is about',
+      st[0].link.from.instance === 's-1' && st[0].link.to.port === 'answer');
+    check('a refused link delivered nothing', st.every((s) => s.delivered === 0));
+    runner.destroy();
+  }
+
+  section('a link whose ends do not resolve is disabled with a reason — and comes alive on refresh');
+  {
+    const ghost = L(['s-1', 'nope'], ['k-1', 'answer']);
+    const ghostTo = L(['s-1', 'result'], ['k-9', 'answer']);
+    const ghostFrom = L(['s-9', 'result'], ['k-1', 'answer2']);
+    const { bus, runner } = mk([ghost, ghostTo, ghostFrom]);
+    const to9 = listen(bus, ['k-9', 'answer']);
+    const to2 = listen(bus, ['k-1', 'answer2']);
+    runner.start();
+    const st = runner.status();
+    check('unknown FROM port', st[0].ok === false && st[0].reason === 'from-port-missing', st[0].reason);
+    check('unknown TO instance', st[1].ok === false && st[1].reason === 'to-port-missing', st[1].reason);
+    check('unknown FROM instance', st[2].ok === false && st[2].reason === 'from-port-missing', st[2].reason);
+    emitter(bus, 's-1').emit('result', 1);
+    check('and none of them carried', to9.heard.length === 0);
+    // The other end mounts later (a screen swap, a module added): the host calls refresh().
+    INSTANCES['k-9'] = 'sink'; INSTANCES['s-9'] = 'src';
+    runner.refresh();
+    check('after the instance exists and refresh() runs, the link is ok', runner.status()[1].ok === true,
+      JSON.stringify(runner.status()[1]));
+    emitter(bus, 's-1').emit('result', 2);
+    check('...and now carries', to9.heard.length === 1 && to9.heard[0].value === 2);
+    emitter(bus, 's-9').emit('result', 3);
+    check('the third link came alive the same way', to2.heard.length === 1 && to2.heard[0].value === 3);
+    delete INSTANCES['k-9']; delete INSTANCES['s-9'];
+    runner.refresh();
+    check('and if the instance goes away again the link goes back to disabled, with the reason',
+      runner.status()[1].ok === false && runner.status()[1].reason === 'to-port-missing');
+    emitter(bus, 's-1').emit('result', 4);
+    check('...and stops carrying', to9.heard.length === 1);
+    runner.destroy();
+  }
+
+  section('direction: a link runs from an OUT port to an IN port');
+  {
+    const { bus, runner } = mk([
+      L(['k-1', 'answer'], ['k-2', 'answer']),   // from an IN port
+      L(['s-1', 'result'], ['s-2', 'result']),   // to an OUT port
+    ]);
+    const a = listen(bus, ['k-2', 'answer']); const b = listen(bus, ['s-2', 'result']);
+    runner.start();
+    check('from an IN port is refused', runner.status()[0].reason === 'from-port-not-out', runner.status()[0].reason);
+    check('to an OUT port is refused', runner.status()[1].reason === 'to-port-not-in', runner.status()[1].reason);
+    bus.publish(topic(bus, ['k-1', 'answer']), wrapValue({ value: 1, class: 'event', provenance: [] }));
+    emitter(bus, 's-1').emit('result', 1);
+    check('neither carried anything', a.heard.length === 0 && b.heard.length === 0,
+      `${a.heard.length} ${b.heard.length}`);
+    runner.destroy();
+  }
+
+  // =============================================================================================
+  section('lifecycle — nothing runs until start(), and start() is idempotent');
+  {
+    const { bus, runner } = mk([L(['s-1', 'result'], ['k-1', 'answer'])]);
+    const sink = listen(bus, ['k-1', 'answer']);
+    const src = emitter(bus, 's-1');
+    src.emit('result', 1);
+    check('before start(), nothing is carried', sink.heard.length === 0);
+    check('status() before start() still lists the link, as not running',
+      runner.status().length === 1 && runner.status()[0].running === false, JSON.stringify(runner.status()));
+    runner.start(); runner.start(); runner.start();
+    src.emit('result', 2);
+    check('start() three times still carries each value ONCE', sink.heard.length === 1, String(sink.heard.length));
+    runner.refresh(); runner.refresh(); runner.refresh();
+    src.emit('result', 3);
+    check('refresh() three times still carries each value ONCE (unchanged links are not re-subscribed)',
+      sink.heard.length === 2, String(sink.heard.length));
+    check('an empty store has an empty status',
+      createLinkRunner({ rootBus: createBus(), store: createLinkStore(), portsOf }).status().length === 0);
+    runner.destroy();
+  }
+
+  section('refresh() follows the store');
+  {
+    const { bus, store, runner } = mk([L(['s-1', 'result'], ['k-1', 'answer'])]);
+    const a = listen(bus, ['k-1', 'answer']); const b = listen(bus, ['k-1', 'answer2']);
+    runner.start();
+    const src = emitter(bus, 's-1');
+    src.emit('result', 1);
+    store.addLink(L(['s-1', 'result'], ['k-1', 'answer2']), portOf('k-1', 'answer2'));
+    src.emit('result', 2);
+    check('a link added to the store does nothing until refresh()', a.heard.length === 2 && b.heard.length === 0);
+    runner.refresh();
+    src.emit('result', 3);
+    check('after refresh() the new link carries (fan-out: both sinks hear it)',
+      a.heard.length === 3 && b.heard.length === 1 && b.heard[0].value === 3);
+    store.removeLink(L(['s-1', 'result'], ['k-1', 'answer']));
+    runner.refresh();
+    src.emit('result', 4);
+    check('a removed link stops after refresh(); the other is unaffected',
+      a.heard.length === 3 && b.heard.length === 2);
+    check('status follows too', runner.status().length === 1 && runner.status()[0].link.to.port === 'answer2');
+    runner.destroy();
+  }
+
+  section('cardinality is the store\'s to enforce, and the runner respects the result');
+  {
+    const bus = createBus();
+    const store = createLinkStore();
+    const first = store.addLink(L(['s-1', 'result'], ['k-1', 'answer']), portOf('k-1', 'answer'));
+    const second = store.addLink(L(['s-2', 'result'], ['k-1', 'answer']), portOf('k-1', 'answer'));
+    check('a second link into a cardinality-one port is refused by the store',
+      first.ok && !second.ok && second.reason === 'cardinality-one-full');
+    const runner = createLinkRunner({ rootBus: bus, store, portsOf });
+    const sink = listen(bus, ['k-1', 'answer']);
+    runner.start();
+    emitter(bus, 's-1').emit('result', 1); emitter(bus, 's-2').emit('result', 2);
+    check('so only the first source ever reaches the sink', sink.heard.length === 1 && sink.heard[0].value === 1);
+    runner.destroy();
+  }
+
+  // =============================================================================================
+  section('a message that is not an envelope is ignored');
+  {
+    const { bus, runner } = mk([L(['s-1', 'result'], ['k-1', 'answer'])]);
+    const sink = listen(bus, ['k-1', 'answer']);
+    runner.start();
+    let threw = false;
+    try {
+      for (const junk of [7, null, undefined, 'x', { nope: 1 }]) bus.publish(topic(bus, ['s-1', 'result']), junk);
+    } catch { threw = true; }
+    check('naked values and junk on a FROM topic are dropped, without throwing', !threw && sink.heard.length === 0);
+    runner.destroy();
+  }
+
+  section('a sink that throws does not stop the others');
+  {
+    const { bus, runner } = mk([
+      L(['s-1', 'result'], ['k-1', 'answer']), L(['s-1', 'result'], ['k-1', 'answer2']),
+    ]);
+    const errs = console.error; console.error = () => {};
+    bus.subscribe(topic(bus, ['k-1', 'answer']), () => { throw new Error('boom'); });
+    const ok = listen(bus, ['k-1', 'answer2']);
+    runner.start();
+    let threw = false;
+    try { emitter(bus, 's-1').emit('result', 5); } catch { threw = true; }
+    console.error = errs;
+    check('the sender is not disturbed', !threw);
+    check('the other link still delivered', ok.heard.length === 1);
+    runner.destroy();
+  }
+
+  // =============================================================================================
+  section('the hop cap — a cycle cannot spin forever');
+  {
+    check('the default cap is exported, and is a small positive whole number',
+      Number.isInteger(DEFAULT_MAX_HOPS) && DEFAULT_MAX_HOPS > 1 && DEFAULT_MAX_HOPS <= 64, String(DEFAULT_MAX_HOPS));
+
+    // BOUNDARY: an envelope whose provenance is already at the cap is not carried; one hop under is.
+    const { bus, runner } = mk([L(['s-1', 'result'], ['k-1', 'answer'])], { runner: { maxHops: 5 } });
+    const sink = listen(bus, ['k-1', 'answer']);
+    runner.start();
+    const hops = (n) => Array.from({ length: n }, (_, i) => ({ source: `h/${i}`, transform: 'identity' }));
+    bus.publish(topic(bus, ['s-1', 'result']), wrapValue({ value: 1, class: 'event', provenance: hops(4) }));
+    check('provenance one under the cap IS carried (and lands at exactly the cap)',
+      sink.heard.length === 1 && sink.heard[0].provenance.length === 5, String(sink.heard[0]?.provenance.length));
+    bus.publish(topic(bus, ['s-1', 'result']), wrapValue({ value: 2, class: 'event', provenance: hops(5) }));
+    check('provenance already AT the cap is NOT carried', sink.heard.length === 1);
+    check('status says so: it is counted as stopped by the cap, and the link itself is still ok',
+      runner.status()[0].hopLimited === 1 && runner.status()[0].ok === true, JSON.stringify(runner.status()[0]));
+    runner.destroy();
+  }
+  {
+    // A REAL two-link cycle. Links only run OUT -> IN, so a loop needs something that turns an IN
+    // value back into an OUT one: a relay, here written by hand. It continues the PATH (appends to
+    // provenance rather than starting a new origin), which is what links.js says a transform may do.
+    //   x.result --link1--> y.answer   relay:  y.answer  -> y.echo
+    //   y.echo   --link2--> x.tick     relay:  x.tick    -> x.result   (and round again)
+    const RELAY = { type: 'relay', ports: [
+      { id: 'result', direction: 'out', class: 'event', type: 'number' },
+      { id: 'tick', direction: 'in', class: 'event', type: 'number' },
+      { id: 'answer', direction: 'in', class: 'event', type: 'number' },
+      { id: 'echo', direction: 'out', class: 'event', type: 'number' },
+    ] };
+    TYPES.relay = portsFor(RELAY); INSTANCES['x-1'] = 'relay'; INSTANCES['y-1'] = 'relay';
+    const bus = createBus();
+    const store = createLinkStore();
+    store.addLink(L(['x-1', 'result'], ['y-1', 'answer']), portOf('y-1', 'answer'));
+    store.addLink(L(['y-1', 'echo'], ['x-1', 'tick']), portOf('x-1', 'tick'));
+    const runner = createLinkRunner({ rootBus: bus, store, portsOf, maxHops: 8 });
+    let relayed = 0, maxSeen = 0;
+    const relay = (inPort, outInstance, outPort) => (env) => {
+      relayed++; maxSeen = Math.max(maxSeen, env.provenance.length);
+      if (relayed > 500) return;                       // the test's own tripwire: a runaway would trip THIS
+      bus.publish(topic(bus, [outInstance, outPort]),
+        { ...env, provenance: [...env.provenance, { source: `${outInstance}/${outPort}`, transform: 'relay' }] });
+    };
+    bus.subscribe(topic(bus, ['y-1', 'answer']), relay('answer', 'y-1', 'echo'));
+    bus.subscribe(topic(bus, ['x-1', 'tick']), relay('tick', 'x-1', 'result'));
+    runner.start();
+    const errs = console.error; console.error = () => {};
+    let threw = false;
+    try { createPorts({ rootBus: bus, instanceId: 'x-1', manifest: RELAY }).emit('result', 1); } catch { threw = true; }
+    console.error = errs;
+    check('a two-link cycle STOPS (the relay tripwire of 500 was never reached)', relayed > 0 && relayed <= 500, String(relayed));
+    check('...without throwing at the sender', !threw);
+    check('...and it stopped because of the cap: no envelope ever grew past it', maxSeen <= 8, String(maxSeen));
+    check('...it went round a bounded number of times, not once and not forever', relayed >= 2 && relayed <= 16, String(relayed));
+    check('status shows the cap stopped it', runner.status().some((s) => s.hopLimited > 0), JSON.stringify(runner.status()));
+    runner.destroy();
+  }
+
+  // =============================================================================================
+  section('destroy — no leaked subscriber, counted');
+  {
+    // The bus has no way to ask how many subscribers it has, so count through a wrapper.
+    const real = createBus();
+    let live = 0;
+    const counted = { ...real, subscribe(t, h) { live++; const off = real.subscribe(t, h); let done = false;
+      return () => { if (!done) { done = true; live--; off(); } }; } };
+    const store = createLinkStore();
+    const links = [L(['s-1', 'result'], ['k-1', 'answer']), L(['s-1', 'result'], ['k-1', 'answer2']),
+                   L(['s-1', 'level'], ['k-1', 'dial']), L(['s-1', 'display'], ['k-1', 'answer'])];
+    store.addLink(links[0], portOf('k-1', 'answer'));
+    store.addLink(links[1], portOf('k-1', 'answer2'));
+    store.addLink(links[2], portOf('k-1', 'dial'));
+    store.addLink(links[3], null);                                 // refused by classifyPatch
+    const runner = createLinkRunner({ rootBus: counted, store, portsOf });
+    check('nothing is subscribed before start()', live === 0, String(live));
+    runner.start();
+    check('one subscription per link that can carry (3), none for the refused one', live === 3, String(live));
+    // Churn: add and remove links and refresh, many times. A leak would show as growth.
+    for (let i = 0; i < 60; i++) {
+      store.removeLink(links[1]); runner.refresh();
+      store.addLink(links[1], portOf('k-1', 'answer2')); runner.refresh();
+    }
+    check('sixty add/remove/refresh cycles later it is STILL 3', live === 3, String(live));
+    const sink = listen(real, ['k-1', 'answer']);
+    const before = live;
+    runner.destroy();
+    check('destroy() leaves NO subscriber of its own', live === 0, `${live} (before destroy: ${before})`);
+    emitter(real, 's-1').emit('result', 9);
+    check('and publishing after destroy carries nothing', sink.heard.length === 0);
+    check('destroy twice is safe', (() => { try { runner.destroy(); return true; } catch { return false; } })());
+    runner.start(); runner.refresh();
+    check('start() and refresh() after destroy do nothing and do not resubscribe', live === 0, String(live));
+    check('status() after destroy is empty rather than stale', runner.status().length === 0);
+  }
+
+  section('a source of a link is not affected by the runner being torn down');
+  {
+    const { bus, runner } = mk([L(['s-1', 'result'], ['k-1', 'answer'])]);
+    const tapFrom = listen(bus, ['s-1', 'result']);
+    runner.start(); runner.destroy();
+    emitter(bus, 's-1').emit('result', 1);
+    check('a plain listener on the FROM topic still hears it (the runner only owns its own subscriptions)',
+      tapFrom.heard.length === 1);
+  }
+
+  // =============================================================================================
+  section('screen_links — a screen owns its links: reading them from the settings doc');
+  {
+    check('no kiosk settings at all reads as no links', readLinks(undefined).length === 0 && readLinks(null).length === 0
+      && readLinks({}).length === 0);
+    check('links that is not an array reads as no links', readLinks({ links: 'x' }).length === 0
+      && readLinks({ links: { a: 1 } }).length === 0 && readLinks({ links: 7 }).length === 0);
+    const good = { from: { instance: 's-1', port: 'result' }, to: { instance: 'k-1', port: 'answer' } };
+    const got = readLinks({ links: [good, null, 7, 'x', {}, { from: { instance: 'a' }, to: { instance: 'b', port: 'c' } },
+      { from: { instance: 'a', port: 'p' }, to: { instance: 'a', port: 'p' } },
+      { from: { instance: ' s-2 ', port: ' result ', junk: 1 }, to: { instance: 'k-2', port: 'answer' }, transform: 'evil' }] });
+    check('junk rows are dropped, not thrown; self-links are dropped; the rest are kept',
+      got.length === 2, JSON.stringify(got));
+    check('a kept link is the normalized structure only (trimmed, no extra fields, no transform)',
+      JSON.stringify(got[1]) === JSON.stringify({ from: { instance: 's-2', port: 'result' }, to: { instance: 'k-2', port: 'answer' } }),
+      JSON.stringify(got[1]));
+    check('reading does not mutate the settings it was given', (() => {
+      const cfg = { links: [good, null] }; const snap = JSON.stringify(cfg); readLinks(cfg); return JSON.stringify(cfg) === snap; })());
+  }
+
+  section('screen_links — a runner exists only while the screen has links');
+  {
+    const REG = { src: SRC, sink: SINK };
+    const modules = () => Object.entries(INSTANCES).map(([id, type]) => ({ id, type }));
+    const real = createBus(); let live = 0;
+    const counted = { ...real, subscribe(t, h) { live++; const off = real.subscribe(t, h); let d = false;
+      return () => { if (!d) { d = true; live--; off(); } }; } };
+    let cfg = {};
+    const sl = createScreenLinks({ rootBus: counted, settings: () => cfg, modules, manifestOf: (t) => REG[t] });
+    sl.sync();
+    check('no links: status is null (no runner exists), and nothing is subscribed', sl.status() === null && live === 0, String(live));
+    sl.sync(); sl.sync();
+    check('...however many times it is synced', sl.status() === null && live === 0);
+
+    cfg = { kiosk: { links: [L(['s-1', 'result'], ['k-1', 'answer'])] } };
+    sl.sync();
+    const sink = listen(real, ['k-1', 'answer']);
+    check('one link: a runner appears and holds one subscription', sl.status()?.length === 1 && live === 1, `${sl.status()?.length} ${live}`);
+    check('instance ids resolve to module types through the screen\'s module list, then the manifest',
+      sl.status()[0].ok === true && sl.status()[0].transform === 'identity', JSON.stringify(sl.status()));
+    emitter(real, 's-1').emit('result', 3);
+    check('and it carries', sink.heard.length === 1 && sink.heard[0].value === 3);
+    sl.sync(); sl.sync();
+    emitter(real, 's-1').emit('result', 4);
+    check('syncing again with the SAME links neither doubles delivery nor resets the counter',
+      sink.heard.length === 2 && sl.status()[0].delivered === 2 && live === 1, `${sink.heard.length} ${JSON.stringify(sl.status()[0])} ${live}`);
+
+    cfg = { kiosk: { links: [L(['s-1', 'result'], ['k-1', 'answer']), L(['s-1', 'result'], ['k-1', 'answer2']), L(['s-2', 'result'], ['k-1', 'answer'])] } };
+    sl.sync();
+    const st = sl.status();
+    check('a second link into a cardinality-one port is listed, disabled, with the store\'s own reason',
+      st.length === 3 && st[2].ok === false && st[2].reason === 'cardinality-one-full', JSON.stringify(st.map((x) => [x.ok, x.reason])));
+    check('...it never carries', (() => { const n = sink.heard.length; emitter(real, 's-2').emit('result', 8);
+      return sink.heard.length === n; })());
+    check('a fan-out to a many-cardinality port is fine', st[1].ok === true);
+    cfg = { kiosk: { links: [L(['s-1', 'result'], ['k-1', 'answer']), L(['s-1', 'result'], ['k-1', 'answer'])] } };
+    sl.sync();
+    check('an exact duplicate is listed once as carrying and once as disabled (duplicate-link)',
+      sl.status().length === 2 && sl.status()[1].reason === 'duplicate-link', JSON.stringify(sl.status().map((x) => [x.ok, x.reason])));
+
+    cfg = { kiosk: { links: [L(['s-1', 'result'], ['k-1', 'answer']), L(['s-1', 'nope'], ['k-1', 'answer2']), L(['s-1', 'result'], ['gone-9', 'answer'])] } };
+    sl.sync();
+    check('a link naming a port or instance the screen does not have is present but disabled, with a reason',
+      sl.status()[1].reason === 'from-port-missing' && sl.status()[2].reason === 'to-port-missing',
+      JSON.stringify(sl.status().map((x) => x.reason)));
+    check('...and does not disturb the good one beside it', sl.status()[0].ok === true);
+    INSTANCES['gone-9'] = 'sink';
+    sl.sync();
+    check('when the instance appears on the screen, the next sync brings the link alive', sl.status()[2].ok === true);
+    delete INSTANCES['gone-9'];
+
+    const before = live;
+    cfg = { kiosk: { links: [] } };
+    sl.sync();
+    check('removing every link tears the runner down: status null again, nothing subscribed',
+      sl.status() === null && live === 0, `${sl.status()} ${live} (was ${before})`);
+    const n = sink.heard.length; emitter(real, 's-1').emit('result', 9);
+    check('...and nothing is carried', sink.heard.length === n);
+
+    cfg = { kiosk: { links: [L(['s-1', 'result'], ['k-1', 'answer'])] } };
+    sl.sync();
+    check('links come back, the runner comes back', sl.status()?.length === 1 && live === 1);
+    check('status() hands back copies (mutating one changes nothing)', (() => { const a = sl.status(); a[0].ok = 'x'; a[0].link.from.instance = 'zzz';
+      return sl.status()[0].ok === true && sl.status()[0].link.from.instance === 's-1'; })());
+    sl.destroy();
+    check('destroy: nothing subscribed, status null', live === 0 && sl.status() === null, String(live));
+    sl.sync();
+    check('sync after destroy does nothing', live === 0 && sl.status() === null);
+    check('destroy twice is safe', (() => { try { sl.destroy(); return true; } catch { return false; } })());
+    check('a screen whose settings throw is treated as having no links, not a crash', (() => {
+      const bad = createScreenLinks({ rootBus: counted, settings: () => { throw new Error('boom'); }, modules, manifestOf: (t) => REG[t] });
+      try { bad.sync(); return bad.status() === null; } catch { return false; } })());
+  }
+
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

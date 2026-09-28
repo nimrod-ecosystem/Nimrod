@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>calc — the four-function state machine (characterization)</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>calc — the four-function state machine (characterization)</h1>
+<p>No server needed. This suite was written BEFORE the calculator moved out of
+<code>modules/algebra.js</code> into <code>calc.js</code>, and run against the old location first
+(<code>?src=algebra</code>) to pin what the code really does; it then has to pass unchanged
+against the new one (<code>?src=calc</code>, the default). A characterization test records
+behaviour, it does not bless it — where the code does something surprising, the check is named
+<b>KNOWN QUIRK</b> so nobody reads it as a design decision.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+const src = new URLSearchParams(location.search).get('src') || 'calc';
+const mod = await import(src === 'algebra' ? '../modules/algebra.js' : '../calc.js');
+const { calcInit, calcPress, calcValue, CALC_KEYS } = mod;
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const run = (keys, from = calcInit()) => keys.split('').reduce((st, k) => calcPress(st, k), from);
+const eq = (keys) => calcPress(run(keys), '=');
+
+try {
+  check(`(testing the ${src} export)`, typeof calcPress === 'function');
+
+  section('the starting state and the key set');
+  {
+    const s = calcInit();
+    check('starts at 0, nothing pending, fresh',
+      s.entry === '0' && s.acc === null && s.op === null && s.fresh === true, JSON.stringify(s));
+    check('each calcInit is its own object', calcInit() !== calcInit());
+    check('the key set is exactly the sixteen keys the pad has always had',
+      JSON.stringify(CALC_KEYS) === JSON.stringify(
+        ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '±', '+']),
+      JSON.stringify(CALC_KEYS));
+    check('calcValue reads the starting state as 0', calcValue(s) === 0);
+  }
+
+  section('digits and the leading zero');
+  {
+    check('a digit replaces the initial 0', run('7').entry === '7', run('7').entry);
+    check('digits accumulate', run('123').entry === '123');
+    check('typing 0 first stays 0', run('0').entry === '0');
+    check('...and 0 again is still 0 (no 00)', run('00').entry === '0', run('00').entry);
+    check('a leading zero does not stick: 05 reads 5', run('05').entry === '5', run('05').entry);
+    check('a digit typed leaves the state not-fresh', run('7').fresh === false);
+  }
+
+  section('decimals');
+  {
+    check('a point on a fresh entry starts 0.', run('.').entry === '0.', run('.').entry);
+    check('0.5 reads as a number', calcValue(run('.5')) === 0.5, run('.5').entry);
+    check('a point after digits appends', run('1.5').entry === '1.5');
+    check('a second point in one number is ignored', run('1..5').entry === '1.5', run('1..5').entry);
+    check('...also when separated by digits', run('1.5.2').entry === '1.52', run('1.5.2').entry);
+    check('1.5 * 2 = 3', calcValue(eq('1.5*2')) === 3);
+  }
+
+  section('± (change sign)');
+  {
+    check('flips a positive to negative', run('5±').entry === '-5');
+    check('...and back', run('5±±').entry === '5');
+    check('zero has no sign to flip', run('±').entry === '0', run('±').entry);
+    check('a negative reads back as a negative number', calcValue(run('5±')) === -5);
+    check('a negative operand works: -5 + 3 = -2', calcValue(eq('5±+3')) === -2, eq('5±+3').entry);
+    check('a result can be sign-flipped and stays fresh',
+      (() => { const s = calcPress(eq('7+3'), '±'); return s.entry === '-10' && s.fresh === true; })());
+  }
+
+  section('backspace (<)');
+  {
+    check('removes one digit', calcPress(run('123'), '<').entry === '12');
+    check('bottoms out at 0, never empty', run('7<').entry === '0', run('7<').entry);
+    check('...and stays at 0 on more presses', run('7<<<').entry === '0');
+    check('a lone minus sign collapses to 0', run('5±<').entry === '0', run('5±<').entry);
+    check('does nothing on a fresh entry (the start, or a finished result)',
+      calcPress(calcInit(), '<').entry === '0' && calcPress(eq('7+3'), '<').entry === '10');
+    check('removes a decimal point', run('1.<').entry === '1', run('1.<').entry);
+  }
+
+  section('the four operations');
+  {
+    check('adds: 7 + 3 = 10', calcValue(eq('7+3')) === 10);
+    check('subtracts: 9 - 4 = 5', calcValue(eq('9-4')) === 5);
+    check('subtracts into the negatives: 4 - 9 = -5', calcValue(eq('4-9')) === -5);
+    check('multiplies: 6 * 7 = 42', calcValue(eq('6*7')) === 42);
+    check('divides: 84 / 2 = 42', calcValue(eq('84/2')) === 42);
+    check('divides to a decimal: 1 / 4 = 0.25', calcValue(eq('1/4')) === 0.25, eq('1/4').entry);
+    check('the result sits in the entry as text', eq('7+3').entry === '10');
+    check('= clears the pending operation and leaves the state fresh',
+      (() => { const s = eq('7+3'); return s.op === null && s.acc === null && s.fresh === true; })());
+    check('a new digit after = starts a new number', run('4', eq('7+3')).entry === '4');
+    check('an operator after = continues from the result', calcValue(eq('7+3+5')) === 15,
+      eq('7+3+5').entry);
+    check('...carrying it as the running total',
+      (() => { const s = run('+', eq('7+3')); return s.acc === 10 && s.op === '+'; })());
+  }
+
+  section('chaining and operator handling');
+  {
+    check('2 + 3 + 4 = 9, folding the pending operation each time', calcValue(eq('2+3+4')) === 9);
+    check('2 + 3 * 4 = 20 (left to right, like a pocket calculator, not by precedence)',
+      calcValue(eq('2+3*4')) === 20, eq('2+3*4').entry);
+    check('a second operator folds the first',
+      (() => { const s = run('2+3+'); return s.acc === 5 && s.op === '+' && s.fresh === true; })(),
+      JSON.stringify(run('2+3+')));
+    check('KNOWN QUIRK: after "2 + 3 +" the entry still reads 3, not the running total 5',
+      run('2+3+').entry === '3', run('2+3+').entry);
+    check('a second operator in a row replaces the first: 2 + * 3 = 6',
+      calcValue(eq('2+*3')) === 6, eq('2+*3').entry);
+    check('= with nothing pending is harmless and leaves the number',
+      eq('7').entry === '7' && eq('7').op === null);
+    check('= with nothing pending marks the entry finished', eq('7').fresh === true);
+    check('= straight after an operator uses the entry as both sides: 5 + = 10',
+      calcValue(eq('5+')) === 10, eq('5+').entry);
+  }
+
+  section('float cleanup');
+  {
+    check('0.1 + 0.2 = 0.3, not 0.30000000000000004', eq('.1+.2').entry === '0.3', eq('.1+.2').entry);
+    check('0.7 * 3 reads 2.1', eq('.7*3').entry === '2.1', eq('.7*3').entry);
+    check('1 / 3 stays finite and readable', calcValue(eq('1/3')) > 0.333333 && calcValue(eq('1/3')) < 0.333334,
+      eq('1/3').entry);
+    check('a result is always a plain decimal string that reads back as a finite number',
+      ['9*9', '0.5*0.5', '10/4', '3-8'].every((k) => Number.isFinite(calcValue(eq(k)))));
+  }
+
+  section('divide by zero, and getting back from it');
+  {
+    const bad = eq('5/0');
+    check('says error rather than Infinity', bad.entry === 'error', bad.entry);
+    check('...and has nothing pending', bad.op === null && bad.acc === null);
+    check('...and reads back as no number at all', calcValue(bad) === null);
+    check('0 / 5 is fine (only dividing BY zero is an error)', calcValue(eq('0/5')) === 0);
+    check('an operator on an error does nothing', run('+', bad).entry === 'error' && run('+', bad).op === null);
+    check('a digit recovers from an error', run('3', bad).entry === '3', run('3', bad).entry);
+    check('a point recovers from an error too', run('.', bad).entry === '0.', run('.', bad).entry);
+    check('C recovers from an error', JSON.stringify(calcPress(bad, 'C')) === JSON.stringify(calcInit()));
+    check('a fresh calculation after an error works: 5/0= then 2+2=',
+      calcValue(run('2+2=', bad)) === 4, run('2+2=', bad).entry);
+    // Dividing by zero through a CHAIN ("5 / 0 +") takes a different path in calcPress that does not
+    // set `fresh`, so the next digit is APPENDED to the word.
+    const chained = run('5/0+');
+    check('KNOWN QUIRK: a divide-by-zero found by chaining also says error', chained.entry === 'error',
+      chained.entry);
+    check('KNOWN QUIRK: ...but the next digit is appended to it (error3) rather than replacing it',
+      run('3', chained).entry === 'error3', run('3', chained).entry);
+    check('KNOWN QUIRK: ...and that reads as no number, until C', calcValue(run('3', chained)) === null
+      && calcValue(calcPress(run('3', chained), 'C')) === 0);
+  }
+
+  section('C (clear)');
+  {
+    check('C returns to the starting state from anywhere',
+      ['123+45', '5/0=', '7+3=', '9±', '2+'].every((k) =>
+        JSON.stringify(calcPress(run(k.replace('=', '')), 'C')) === JSON.stringify(calcInit())));
+    check('C mid-calculation drops the pending operation',
+      (() => { const s = calcPress(run('2+3'), 'C'); return s.op === null && s.acc === null; })());
+  }
+
+  section('purity and unknown keys');
+  {
+    const before = run('12+3');
+    const snapshot = JSON.stringify(before);
+    calcPress(before, '4'); calcPress(before, '='); calcPress(before, 'C'); calcPress(before, '±');
+    check('calcPress never mutates the state it was given', JSON.stringify(before) === snapshot);
+    const s = run('12+3');
+    check('an unknown key leaves the state as it was',
+      JSON.stringify(calcPress(s, 'q')) === JSON.stringify(s) && JSON.stringify(calcPress(s, 'x')) === JSON.stringify(s));
+    // `'+-*/'.includes(key)` is a substring test, so the empty string and any run of operator
+    // characters pass it. Nothing on the pad can send either, but a `key` PORT can carry any text:
+    // the calculator module validates a token before it reaches calcPress (see calculator_test).
+    check('KNOWN QUIRK: the empty key and "+-" are read as an operator, not ignored',
+      calcPress(s, '').op === '' && calcPress(s, '+-').op === '+-',
+      `${JSON.stringify(calcPress(s, ''))} ${JSON.stringify(calcPress(s, '+-'))}`);
+    check('calcValue reads a finished result', calcValue(eq('12+3')) === 15);
+  }
+
+  if (src === 'calc') {
+    section('algebra.js still exports the same calculator, unchanged');
+    const alg = await import('../modules/algebra.js');
+    check('calcInit is the SAME function', alg.calcInit === calcInit);
+    check('calcPress is the SAME function', alg.calcPress === calcPress);
+    check('calcValue is the SAME function', alg.calcValue === calcValue);
+    check('CALC_KEYS is the SAME array', alg.CALC_KEYS === CALC_KEYS);
+  }
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>
