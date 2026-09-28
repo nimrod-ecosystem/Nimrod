@@ -474,8 +474,7 @@ let VERDICTS = { ran: 'drew', empty: 'blank', threw: 'threw' };
 //   * the real kiosk on your real screen (signed in): the bar and the gear menu are the ones on
 //     your dashboard, and what you change saves to it;
 //   * the real kiosk on a throwaway screen (signed out): the same bar and menu, nothing saved;
-//   * a bare module, no bar (the camera and clock, which a kiosk draws as a corner overlay rather
-//     than a panel, and the "run every one" audit).
+//   * a bare module, no bar: only the "run every one" audit, or if the kiosk failed to load.
 function stageNote(isLive, mode) {
   if (mode === 'chrome') {
     return isLive
@@ -486,15 +485,10 @@ function stageNote(isLive, mode) {
       : 'A demo, on your own device, with the same bar and ⚙ settings menu a real screen has. '
         + 'Nothing here is saved to an account.';
   }
-  const hud = mode === 'hud'
-    ? ' On a real screen this one is drawn as an overlay or a background layer rather than a panel, so '
-      + 'it has no bar or settings menu of its own here — its settings live on the screen it belongs '
-      + 'to.'
-    : '';
-  return (isLive
+  return isLive
     ? 'This is live — changes here save straight to your dashboard, the same as opening it '
       + 'from <a href="/home.html">My dashboards</a>.'
-    : 'A demo, on your own device. Nothing here is saved to a screen.') + hud;
+    : 'A demo, on your own device. Nothing here is saved to a screen.';
 }
 
 function renderDetail(m, isLive, mode) {
@@ -533,10 +527,10 @@ async function select(type, { forceDemo = false } = {}) {
   // THE REAL KIOSK, WITH ITS TRANSPORT BAR AND SETTINGS MENU, for anything the kiosk shows as a
   // panel — signed in or out. Not for `forceDemo`: "run every one of them" mounts ~30 modules in a
   // row purely to check each draws, must never touch a real account, and would have a full kiosk
-  // fighting over the camera and microphone each time. And not for the camera and clock, which
-  // the kiosk draws as an overlay, not a panel — they get the bare module, and the note says so.
-  const chrome = !forceDemo && isKioskPanel(type);
-  const mode = chrome ? 'chrome' : (!forceDemo && embeddingReady ? 'hud' : 'plain');
+  // fighting over the camera and microphone each time. The camera, the clock and ambient modules get
+  // it too: module_try.js places them in a one-slot layout, which makes each an ordinary panel.
+  const chrome = !forceDemo && embeddingReady;
+  const mode = chrome ? 'chrome' : 'plain';
   const stage = renderDetail(m, isLive, mode);
   const note = document.getElementById('stagenote');
   try {
@@ -610,16 +604,13 @@ let embed = null;                // ...and the same for the embedded kiosk (modu
 let pickSeq = 0;                 // which `select` is the newest, so a stale one can stand down
 let auditing = false;
 
-// The embedding helper, loaded once before the first pick (see the bottom of the file).
-// `select` needs `isKioskPanel` synchronously — whether a module gets the kiosk's bar is decided
-// from its type — so it cannot be fetched lazily inside `select` itself.
+// The embedding helper, loaded once before the first pick (see the bottom of the file), so
+// `select` can decide synchronously whether the kiosk is available at all.
 let mountEmbeddedKiosk = null;
-let isKioskPanel = () => false;
 let embeddingReady = false;
 async function loadEmbedding() {
   const mt = await import('./module_try.js');
   mountEmbeddedKiosk = mt.mountEmbeddedKiosk;
-  isKioskPanel = mt.isKioskPanel;
   embeddingReady = true;
 }
 
@@ -721,10 +712,10 @@ document.getElementById('runall')?.addEventListener('click', (e) => runAll(e.cur
 // `openStage`, which are `let`s declared further down, and calling it earlier threw
 // `Cannot access 'openStage' before initialization` on every load.
 const wanted = new URLSearchParams(location.search).get('m');
-// The embedding helper has to be loaded BEFORE the first pick, because whether a module gets the
-// kiosk's bar is decided from its type, synchronously, at the top of `select`. A failed import
-// leaves `isKioskPanel` false for everything, i.e. the page as it was before the kiosk was
-// embedded: bare modules, no bar. Worse than the new page, and still a page.
+// The embedding helper has to be loaded BEFORE the first pick, because `select` decides
+// synchronously whether the kiosk is available. A failed import leaves `embeddingReady` false,
+// i.e. the page as it was before the kiosk was embedded: bare modules, no bar. Worse than the new
+// page, and still a page.
 loadEmbedding().catch((err) => console.error('modules: embedded kiosk unavailable', err))
   .finally(() => {
     if (ITEMS.length) select(ITEMS.some((m) => m.type === wanted) ? wanted : ITEMS[0].type);

@@ -154,6 +154,15 @@ export async function mountKiosk(root, {
   // The caller supplies `navigate`/`reloadPage`/`storage`/`session` seams; `reloadPage` here
   // means "rebuild this embed", not "reload the page".
   embedded = false,
+  // `embedLayout` -- ONLY read when `embedded` is true; ignored otherwise, so no real screen can be
+  // handed an arrangement this way. An embed normally shows one panel on the stage with no layout.
+  // The camera, the clock and ambient modules are not panels on a stage (`partition()` turns them
+  // into the mirror, the corner clock and the background layer), so they would get no bar and no
+  // menu of their own. A one-slot layout that PLACES them makes each an ordinary panel, which is
+  // what `partition()` already does for any placed module. Held in memory only: the kiosk never
+  // writes its layout back (its one write to `settings.kiosk`, `patchMirror`, spreads the STORED
+  // value), so a signed-in visitor's real arrangement is untouched.
+  embedLayout = null,
 } = {}) {
   bus = bus || createBus();
   // Read before anything else renders: if this screen is not where the device is meant to
@@ -685,7 +694,8 @@ export async function mountKiosk(root, {
 
   // An embed shows ONE panel on the stage, never the screen's saved arrangement: a grid with the
   // picked module in one cell of it is not "the module, large".
-  const savedLayout = previewLayout || (embedded ? null : (settings.get().kiosk || {}).layout);
+  const savedLayout = previewLayout
+    || (embedded ? (embedLayout || null) : (settings.get().kiosk || {}).layout);
   let layout = null;
 
   // *** STALE-CACHE CORRECTION FOR THE ARRANGEMENT. ***
@@ -1348,11 +1358,15 @@ export async function mountKiosk(root, {
   // has no such PANEL. The HUD pair and ambient modules are not panels and have no chip, so they
   // are false here on purpose rather than "handled" by pretending.
   async function showModule(type) {
-    if (!type || type === 'camera' || type === 'clock'
-        || getManifest(type)?.mount === 'ambient') return false;
+    if (!type) return false;
+    // A module PLACED in a slot is a panel whatever its type -- that is `partition()`'s own rule --
+    // so it is looked for first. Only an UNPLACED camera/clock/ambient module is not a panel here.
     if (layout) {
       const rec = slotRecs.find((r) => r.type === type);
       if (rec) { focusPlaced(rec.id); return true; }
+    }
+    if (type === 'camera' || type === 'clock' || getManifest(type)?.mount === 'ambient') return false;
+    if (layout) {
       const def = unplacedDefs().find((d) => d.type === type);
       if (!def) return false;
       await showUnplaced(def);

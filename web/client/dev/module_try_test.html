@@ -344,9 +344,6 @@ const host = document.getElementById('host');
       e.kiosk.menu.close();
 
       check('showModule(same type) is true, and does not rebuild anything', (await e.showModule('trivia')) === true && !!e.kiosk);
-      check('showModule(camera) is false — not a panel, so it gets no chrome', (await e.showModule('camera')) === false);
-      check('showModule(clock) is false', (await e.showModule('clock')) === false);
-      check('...and neither touched what was showing', e.kiosk.primaryType() === 'trivia');
       check('showModule of ANOTHER type on a demo rebuilds around it (a demo screen has one module)',
         (await e.showModule('photos')) === true && e.kiosk.primaryType() === 'photos'
         && [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'photos');
@@ -362,6 +359,40 @@ const host = document.getElementById('host');
       check('destroy() empties the box', eStage.innerHTML === '');
       check('...and a second destroy() is harmless', (() => { try { e.destroy(); return true; } catch { return false; } })());
       check('showModule after destroy is false, not a resurrection', (await e.showModule('trivia')) === false && eStage.innerHTML === '');
+    }
+
+    // *** THE CAMERA, THE CLOCK AND AMBIENT MODULES GET THE BAR AND THE MENU TOO. *** They first
+    // shipped here as a bare module with no chrome, because a kiosk draws them as overlays or a
+    // background -- which left their settings unreachable on this page. The embed now PLACES them in
+    // a one-slot layout, and `partition()` treats any placed module as an ordinary panel.
+    for (const [type, sel, title] of [['clock', '.clock', 'Clock'], ['camera', '.camera', 'Camera'],
+                                      ['comet_ambient', 'canvas', 'Comet (ambient)']]) {
+      const e = await mountEmbeddedKiosk({ stage: eStage, type });
+      await sleep(300);
+      const k = e.kiosk;
+      check(`*** ${type}: a real kiosk with its transport bar and gear ***`,
+        !!eStage.querySelector('.kiosk.k-embed') && !!eStage.querySelector('.k-controls [data-act="settings"]'));
+      check(`${type}: drawn as a PANEL in the one slot, not as an overlay or background`,
+        k.slotCount() === 1 && k.slotTypes()[0] === type && !!eStage.querySelector(`.k-stage ${sel}`)
+        && !k.hasCamera() && !k.hasClock() && !k.hasAmbient(),
+        JSON.stringify({ slots: k.slotTypes(), cam: k.hasCamera(), clock: k.hasClock(), amb: k.hasAmbient() }));
+      k.menu.open();
+      const labels = k.menu.items().map((i) => i.label);
+      check(`*** ${type}: the gear menu names ITS OWN settings -- the thing that was unreachable ***`,
+        labels.some((l) => l === `This panel \u2014 ${title}`), JSON.stringify(labels));
+      k.menu.close();
+      check(`${type}: showModule of the same type is true`, (await e.showModule(type)) === true);
+      e.destroy();
+    }
+    {
+      // Switching from a panel type to a HUD type rebuilds around it, and back.
+      const e = await mountEmbeddedKiosk({ stage: eStage, type: 'trivia' });
+      await sleep(250);
+      check('trivia -> clock: rebuilt around the clock, placed in the slot',
+        (await e.showModule('clock')) === true && e.kiosk.slotTypes().join() === 'clock');
+      check('clock -> trivia: back on the stage, no layout',
+        (await e.showModule('trivia')) === true && e.kiosk.primaryType() === 'trivia' && e.kiosk.slotLayout() === null);
+      e.destroy();
     }
 
     section('*** mountEmbeddedKiosk — signed in: the REAL instance on the REAL default screen, scoped to what was picked ***');
@@ -434,8 +465,22 @@ const host = document.getElementById('host');
       check('...and the kiosk was rebuilt around it, scoped to it', [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'trivia');
       await e.showModule('youtube'); await e.showModule('trivia');
       check('picking around again adds nothing more (idempotent)', (await countType('trivia')) === 1 && (await countType('youtube')) === 1);
-      check('showModule(camera) is false and the account’s camera instance stays unmounted',
-        (await e.showModule('camera')) === false && !e.kiosk.hasCamera());
+      // The camera is now a PANEL here (placed in a one-slot preview layout), like everything else --
+      // which must not add a second camera to the real screen or touch its saved arrangement.
+      const camsBefore = await countType('camera');
+      const realSettings = createState({ url: profiles.stateURL(live.profileId, 'settings'), user: USER });
+      await realSettings.load();
+      const layoutBefore = JSON.stringify((realSettings.get().kiosk || {}).layout || null);
+      check('showModule(camera) is true: shown as a panel in the one slot, not as the overlay',
+        (await e.showModule('camera')) === true && e.kiosk.slotTypes().join() === 'camera' && !e.kiosk.hasCamera(),
+        JSON.stringify(e.kiosk.slotTypes()));
+      check('*** ...it reused the real camera instance, never adding a second ***',
+        (await countType('camera')) === Math.max(camsBefore, 1), `${camsBefore} -> ${await countType('camera')}`);
+      await sleep(400);
+      await realSettings.load();
+      check('*** ...and the real screen’s saved arrangement is untouched by the preview layout ***',
+        JSON.stringify((realSettings.get().kiosk || {}).layout || null) === layoutBefore, layoutBefore);
+      realSettings.destroy();
 
       // ---- what it must not leave behind on the host page ----
       const cached = (await import('../cache.js')).cacheGet(`profile:${USER}:${live.profileId}`);
@@ -474,11 +519,13 @@ const host = document.getElementById('host');
         await until(() => stageOf()?.querySelector('.k-mods .k-dot')?.textContent === 'trivia' && nkiosks() === 1
           && !stageOf().querySelector('.photos')), doc.querySelector('.k-mods')?.textContent);
 
-      // the camera and clock are HUD overlays: plain host, no chrome, and the note says so
+      // the clock is drawn as an overlay on a real screen; here it is placed in a slot, so it gets the
+      // same bar and menu as everything else (it used to get the plain host, and no settings)
       q('clock').click();
-      check('*** the clock (a HUD, not a panel) gets the plain host: no kiosk, no bar ***',
-        await until(() => nkiosks() === 0 && !!stageOf()?.querySelector('.clock')), `kiosks=${nkiosks()}`);
-      check('...and the note says plainly why', /overlay/i.test(doc.getElementById('stagenote').textContent),
+      check('*** the clock gets the embedded kiosk, with its bar, as a panel ***',
+        await until(() => nkiosks() === 1 && !!stageOf()?.querySelector('.k-stage .clock')
+          && !!stageOf()?.querySelector('.k-controls [data-act="settings"]')), `kiosks=${nkiosks()}`);
+      check('...and the note describes the bar, not a limitation', /bar below/i.test(doc.getElementById('stagenote').textContent),
         doc.getElementById('stagenote').textContent);
 
       // click down the list quickly: the newest wins and nothing stale is left running
