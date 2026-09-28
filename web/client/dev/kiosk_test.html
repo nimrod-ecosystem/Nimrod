@@ -943,8 +943,10 @@ const ds = () => root.querySelector('.kiosk').dataset;
         highlightIdx() !== null, String(highlightIdx()));
 
       const published = [];
-      backBus.subscribe('wordforge/next', () => published.push('next'));
-      backBus.subscribe('wordforge/prev', () => published.push('prev'));
+      // The transport bar's Next/Back publish the bare `<type>/next` themselves (kiosk.js), not
+      // through the verb router, so the bare topic is the one that is published to.
+      backBus.subscribe('wordforge/next', () => published.push('next')); // bare-topic-ok: bar publishes bare
+      backBus.subscribe('wordforge/prev', () => published.push('prev')); // bare-topic-ok: bar publishes bare
 
       const idx0 = highlightIdx();
       nextBtnEl.click();
