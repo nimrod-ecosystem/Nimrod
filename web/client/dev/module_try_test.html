@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <title>module_try — the modules-page hosts — integration test</title>
+<!-- The embed sections measure real geometry (the box the kiosk fills, the menu staying inside it),
+     which needs the kiosk's and the menu's stylesheets; the older sections assert on DOM and state. -->
+<link rel="stylesheet" href="../settings.css">
+<link rel="stylesheet" href="../kiosk.css">
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
@@ -32,7 +36,10 @@
 import { createProfilesClient, resolveTheme } from '../profile.js';
 import { createState } from '../state.js';
 import { MODE_KEY, DEFAULT_MODE, modeFrom } from '../lessons.js';
-import { createTryHost, createLiveHost } from '../module_try.js';
+import { createTryHost, createLiveHost, mountEmbeddedKiosk, isKioskPanel } from '../module_try.js';
+import { mountKiosk } from '../kiosk.js';
+import { createBus } from '../bus.js';
+import { createLocalBackend } from '../local_store.js';
 import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
 import { verbTopic } from '../actions.js';
 import { KEYBOARD_DEVICE } from '../input_keyboard.js';
@@ -302,6 +309,199 @@ const host = document.getElementById('host');
       // "resolves to null" check above.
       settings.set(prior);
       await settings.flush();
+    }
+
+
+    // ================= mountEmbeddedKiosk — the REAL kiosk in a box (2026-09-28) =================
+    //
+    // *** THE MODULES PAGE GETS THE TRANSPORT BAR AND THE SETTINGS MENU BY EMBEDDING THE KIOSK, NOT
+    // BY COPYING ITS CHROME. *** `createTryHost`/`createLiveHost` above are unchanged (their sections
+    // pass untouched); this is the third thing, and it must be safe on a public page.
+    section('*** mountEmbeddedKiosk — demo (signed out): a real kiosk, a throwaway one-module screen ***');
+    const eStage = document.createElement('div');
+    eStage.style.cssText = 'position:relative;width:640px;height:420px;margin-top:12px;border:1px solid #999';
+    document.body.append(eStage);
+    {
+      const localBefore = (await createLocalBackend().profiles.list()).map((p) => p.id).sort().join();
+      const restartBefore = localStorage.getItem('nimrod.restart');
+      const e = await mountEmbeddedKiosk({ stage: eStage, type: 'trivia' });
+      await sleep(300);
+      check('a real kiosk is in the box, in its embed variant', !!eStage.querySelector('.kiosk.k-embed'));
+      check('*** it has a transport bar ***', !!eStage.querySelector('.k-controls [data-act="next"]')
+        && !!eStage.querySelector('.k-controls [data-act="settings"]'));
+      const chips = [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent);
+      check('*** exactly the picked module’s chip, and it is the lit one ***',
+        chips.length === 1 && chips[0] === 'trivia' && eStage.querySelector('.k-mods .k-dot.on')?.textContent === 'trivia',
+        JSON.stringify(chips));
+      check('the picked module is what is actually mounted', e.kiosk.primaryType() === 'trivia' && !!eStage.querySelector('.k-stage .k-mod'));
+      check('no camera or clock overlay, no other panels — the page never asked for them',
+        !e.kiosk.hasCamera() && !e.kiosk.hasClock() && e.kiosk.stageCount() === 1);
+      check('*** no remote-drive socket: a page in a tab is not somebody’s screen ***', e.kiosk.drive() === null);
+      check('the settings menu opens, inside the box',
+        (() => { e.kiosk.menu.open(); const s = eStage.querySelector('.kiosk > [data-settings] .st-scrim');
+          const b = s?.getBoundingClientRect(), o = eStage.getBoundingClientRect();
+          return !!s && !s.hidden && b.left >= o.left - 1 && b.right <= o.right + 1 && b.top >= o.top - 1 && b.bottom <= o.bottom + 1; })());
+      e.kiosk.menu.close();
+
+      check('showModule(same type) is true, and does not rebuild anything', (await e.showModule('trivia')) === true && !!e.kiosk);
+      check('showModule(camera) is false — not a panel, so it gets no chrome', (await e.showModule('camera')) === false);
+      check('showModule(clock) is false', (await e.showModule('clock')) === false);
+      check('...and neither touched what was showing', e.kiosk.primaryType() === 'trivia');
+      check('showModule of ANOTHER type on a demo rebuilds around it (a demo screen has one module)',
+        (await e.showModule('photos')) === true && e.kiosk.primaryType() === 'photos'
+        && [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'photos');
+      check('isKioskPanel: photos and trivia yes, camera, clock and an ambient module no',
+        isKioskPanel('photos') && isKioskPanel('trivia') && !isKioskPanel('camera') && !isKioskPanel('clock')
+        && !isKioskPanel('comet_ambient') && !isKioskPanel(''));
+
+      check('*** it wrote nothing into the visitor’s local screen list (no stray "screen" per pick) ***',
+        (await createLocalBackend().profiles.list()).map((p) => p.id).sort().join() === localBefore);
+      check('*** ...and nothing into the device’s restart storage (the real kiosk reads that) ***',
+        localStorage.getItem('nimrod.restart') === restartBefore);
+      e.destroy();
+      check('destroy() empties the box', eStage.innerHTML === '');
+      check('...and a second destroy() is harmless', (() => { try { e.destroy(); return true; } catch { return false; } })());
+      check('showModule after destroy is false, not a resurrection', (await e.showModule('trivia')) === false && eStage.innerHTML === '');
+    }
+
+    section('*** mountEmbeddedKiosk — signed in: the REAL instance on the REAL default screen, scoped to what was picked ***');
+    {
+      const profiles = createProfilesClient({ user: USER });
+      const restartBefore = localStorage.getItem('nimrod.restart');
+      const countType = async (type) => (await profiles.get(live.profileId)).modules.filter((m) => m.type === type).length;
+
+      // A saved `pointer:mouse -> select` binding on the person, the exact record that hijacked
+      // direct clicks on this page (createLiveHost's header). Written BEFORE anything mounts.
+      const bindings = createState({ url: profiles.personStateURL(live.profile.person_id, INPUTS_KEY), user: USER });
+      await bindings.load();
+      bindings.set({ [INPUTS_KEY]: {
+        v: RECORD_VERSION, gate: 'both', speak: false, devices: [],
+        bindings: [{ id: 'saved-mouse-select', actionId: verbTopic('select'), device: 'pointer:mouse',
+          control: 'button:0', edge: 'press', role: 'universal',
+          holdMs: null, debounceMs: null, lockoutMs: null, label: '' }],
+      } });
+      await bindings.flush(); bindings.destroy();
+
+      const e = await mountEmbeddedKiosk({ stage: eStage, user: USER, type: 'youtube' });
+      await sleep(400);
+      check('the account’s existing YouTube instance is the one shown (same id the kiosk would read)',
+        e.kiosk.primaryType() === 'youtube' && !!eStage.querySelector('.k-stage .youtube'));
+      check('*** scoped: only the picked module’s chip — not the account’s photos, camera, clock, director ***',
+        [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'youtube',
+        [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join());
+      check('*** ...so no camera overlay opens on a public page just because somebody picked YouTube ***',
+        !e.kiosk.hasCamera() && !e.kiosk.hasClock() && e.kiosk.stageCount() === 1);
+      check('...and it did not add a second instance', (await countType('youtube')) === 1);
+      check('*** no remote-drive socket, signed in either ***', e.kiosk.drive() === null);
+      e.kiosk.menu.open();
+      check('"hand this screen to another person" is withheld from a preview (it would move somebody’s real screen)',
+        !e.kiosk.menu.items().some((i) => i.id === 'who-pick'), e.kiosk.menu.items().map((i) => i.id).join());
+      e.kiosk.menu.close();
+
+      // ---- the hijack, proven both ways ----
+      await sleep(1500);   // long enough for a real kiosk to have loaded the saved record
+      check('*** embedded: the saved binding was NOT loaded — fallback bindings only ***',
+        !e.kiosk.runtime.record().bindings.some((b) => b.id === 'saved-mouse-select')
+        && e.kiosk.runtime.record().bindings.some((b) => b.id === 'default/next'),
+        JSON.stringify(e.kiosk.runtime.record().bindings.map((b) => b.id)));
+      const target = eStage.querySelector('.k-stage .mod-host');
+      const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, pointerType: 'mouse' });
+      target.dispatchEvent(down);
+      target.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'mouse' }));
+      check('*** a direct click on the module is NOT swallowed by the saved pointer binding ***', !down.defaultPrevented);
+
+      // The control: the SAME account, the SAME saved record, a normal (non-embedded) kiosk. If this
+      // did not hijack, the check above would prove nothing.
+      const ctlStage = document.createElement('div');
+      ctlStage.style.cssText = 'position:relative;width:640px;height:420px';
+      document.body.append(ctlStage);
+      const ctl = await mountKiosk(ctlStage, { user: USER, profileId: live.profileId, profiles: createProfilesClient({ user: USER }),
+        bus: createBus(), storage: { getItem: () => null, setItem() {}, removeItem() {} }, session: { getItem: () => null, setItem() {}, removeItem() {} }, navigate() {}, reloadPage() {} });
+      await settled(() => ctl.runtime.record().bindings.some((b) => b.id === 'saved-mouse-select'), 4000);
+      const ctlTarget = ctlStage.querySelector('.mod-host');
+      const ctlDown = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, pointerType: 'mouse' });
+      ctlTarget.dispatchEvent(ctlDown);
+      ctlTarget.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'mouse' }));
+      check('(control) a NORMAL kiosk with that saved record DOES swallow the same click — so the check above is meaningful',
+        ctlDown.defaultPrevented === true);
+      ctl.destroy(); ctlStage.remove();
+
+      // ---- a type the screen does not have yet: added for real, kiosk rebuilt around it ----
+      check('(setup) this account has no Trivia yet', (await countType('trivia')) === 0);
+      check('showModule(a missing type) is true and brings it forward',
+        (await e.showModule('trivia')) === true && e.kiosk.primaryType() === 'trivia');
+      check('*** ...it was added to the REAL screen, once ***', (await countType('trivia')) === 1);
+      check('...and the kiosk was rebuilt around it, scoped to it', [...eStage.querySelectorAll('.k-mods .k-dot')].map((b) => b.textContent).join() === 'trivia');
+      await e.showModule('youtube'); await e.showModule('trivia');
+      check('picking around again adds nothing more (idempotent)', (await countType('trivia')) === 1 && (await countType('youtube')) === 1);
+      check('showModule(camera) is false and the account’s camera instance stays unmounted',
+        (await e.showModule('camera')) === false && !e.kiosk.hasCamera());
+
+      // ---- what it must not leave behind on the host page ----
+      const cached = (await import('../cache.js')).cacheGet(`profile:${USER}:${live.profileId}`);
+      check('*** it did not write its ONE-module profile into the real kiosk’s last-known-good cache ***',
+        cached === null || (cached.modules || []).length > 1, JSON.stringify(cached && cached.modules.length));
+      check('...nor into the device’s restart storage', localStorage.getItem('nimrod.restart') === restartBefore);
+      e.destroy();
+      check('destroy() empties the box', eStage.innerHTML === '');
+    }
+
+    // ================= the real page: modules.html, in an iframe =================
+    section('*** modules.html — the page mounts the embedded kiosk, and only for panels ***');
+    {
+      const ifr = document.createElement('iframe');
+      ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1100px;height:900px';
+      document.body.append(ifr);
+      await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?user=${encodeURIComponent(USER)}&m=photos`; });
+      const doc = ifr.contentDocument, win = ifr.contentWindow;
+      const until = async (fn, ms = 8000) => { const t = Date.now() + ms; while (Date.now() < t) { if (fn()) return true; await sleep(50); } return false; };
+      const stageOf = () => doc.getElementById('stage');
+
+      check('*** picking Photos puts the real kiosk in the stage, with its bar ***',
+        await until(() => stageOf()?.querySelector('.kiosk.k-embed .k-controls [data-act="settings"]')),
+        stageOf()?.innerHTML.slice(0, 120));
+      check('the stage note says what is in the box (live, this one part, the bar below)',
+        /live/i.test(doc.getElementById('stagenote').textContent) && /bar below/i.test(doc.getElementById('stagenote').textContent),
+        doc.getElementById('stagenote').textContent);
+      check('the stage box is positioned, so the embed can size to it', win.getComputedStyle(stageOf()).position === 'relative');
+      const nkiosks = () => doc.querySelectorAll('.kiosk').length;
+      check('exactly one kiosk on the page', nkiosks() === 1);
+
+      // picking another one tears the first down
+      const q = (t) => doc.querySelector(`[data-pick="${t}"]`);
+      q('trivia').click();
+      check('picking Trivia swaps to it: one kiosk, Trivia’s chip, Photos gone',
+        await until(() => stageOf()?.querySelector('.k-mods .k-dot')?.textContent === 'trivia' && nkiosks() === 1
+          && !stageOf().querySelector('.photos')), doc.querySelector('.k-mods')?.textContent);
+
+      // the camera and clock are HUD overlays: plain host, no chrome, and the note says so
+      q('clock').click();
+      check('*** the clock (a HUD, not a panel) gets the plain host: no kiosk, no bar ***',
+        await until(() => nkiosks() === 0 && !!stageOf()?.querySelector('.clock')), `kiosks=${nkiosks()}`);
+      check('...and the note says plainly why', /overlay/i.test(doc.getElementById('stagenote').textContent),
+        doc.getElementById('stagenote').textContent);
+
+      // click down the list quickly: the newest wins and nothing stale is left running
+      for (const t of ['photos', 'trivia', 'youtube', 'photos']) { q(t).click(); await sleep(60); }
+      check('*** rapid picks leave exactly one kiosk, showing the last pick ***',
+        await until(() => nkiosks() === 1 && stageOf()?.querySelector('.k-mods .k-dot.on')?.textContent === 'photos'),
+        `kiosks=${nkiosks()} chip=${stageOf()?.querySelector('.k-mods .k-dot.on')?.textContent}`);
+
+      // typing in the search box must not reach the kiosk's hotkeys
+      const search = doc.getElementById('q'); search.focus();
+      for (const k of ['c', 'h', 'f', '2', 'm', '[']) {
+        search.dispatchEvent(new win.KeyboardEvent('keydown', { key: k, bubbles: true }));
+        search.dispatchEvent(new win.KeyboardEvent('keyup', { key: k, bubbles: true }));
+      }
+      await sleep(200);
+      check('*** typing "c h f 2 m [" in the search box does nothing to the stage ***',
+        !doc.querySelector('.kiosk.mirror-full') && doc.querySelector('.k-screens')?.hidden !== false
+        && !doc.querySelector('.kiosk > [data-settings] .st-scrim:not([hidden])') && !doc.fullscreenElement);
+      // the theme picker still works and survives a re-pick
+      const pick = doc.getElementById('theme-pick');
+      check('the anonymous theme picker is hidden once signed in (unchanged)', pick.style.display === 'none');
+
+      ifr.remove();
     }
 
     live.destroy();

@@ -504,7 +504,14 @@ export function mountSettings(root, {
   // prev()/select() from its own key handler instead. Two paths, never both at once.
   panel.addEventListener('keydown', (e) => {
     if (!open) return;
-    if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+    // `stopPropagation` because Escape is ALSO bound (input_keyboard.js's default/menu -> verb/menu
+    // -> `toggle()`, via `attachBus`), and the same keystroke bubbles on to the window listener
+    // that feeds the input bus. Closing here and then letting that run put the menu straight back:
+    // pressing Escape with focus in the panel -- where a click on the gear leaves it -- did
+    // nothing, on any host with a single menu and the default bindings (a signed-out kiosk, and
+    // the modules-page embed). `M` and the Close row never had the problem: neither reaches this
+    // handler.
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
     if (e.key !== 'Tab') return;
     // The focus trap. Tab must not walk out of an open modal onto the page behind it.
     const focusable = [...panel.querySelectorAll('button:not([disabled])')];

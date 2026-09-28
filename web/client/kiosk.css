@@ -197,6 +197,41 @@
   .kiosk.mirror-full .k-mirror{position:fixed;inset:0;width:auto;aspect-ratio:auto;
     border:0;border-radius:0;box-shadow:none;z-index:calc(var(--z-panels) + 50)}
   .kiosk.mirror-full .k-stage,.kiosk.mirror-full .k-clock,.kiosk.mirror-full .k-ambient{visibility:hidden}
+  /* *** EMBEDDED: THE KIOSK AS A BOX ON SOMEBODY ELSE'S PAGE. ***
+   * `mountKiosk({ embedded: true })` adds `k-embed` to `.kiosk`; nothing else sets it, so every
+   * rule here is unreachable from the product screen and the normal kiosk is unchanged. It is
+   * for `modules.html`, which mounts the real kiosk inside its stage so the transport bar and
+   * the settings menu exist once. The host box must be positioned (`.trystage` is).
+   *
+   * Everything in the kiosk that was pinned to the VIEWPORT is re-pinned to the box: the kiosk
+   * itself, full-screen mirror mode, and the settings scrim (`settings.css`'s `.st-scrim` is
+   * `position:fixed;inset:0`, which is right for a kiosk that IS the screen and would cover a
+   * whole public page from inside a 560px box). `.kiosk` is positioned, so an absolute scrim
+   * resolves against it. The menu panel is sized in `vh`/`vw` for the same viewport reason, so it
+   * gets the measure-against-your-box rule `settings.css` already gives an inline menu.
+   * `overflow:hidden` because a box on a page must not let its HUD or drift bleed onto the text
+   * around it; the bedside kiosk never needed that, the viewport did it. `.cur` (the drawn
+   * cursor) stays fixed on purpose: it is placed from viewport coordinates. */
+  .kiosk.k-embed{position:absolute;inset:0;overflow:hidden}
+  .kiosk.k-embed.mirror-full .k-mirror{position:absolute}
+  .kiosk.k-embed .st-scrim{position:absolute}
+  .kiosk.k-embed .st-scrim .st-panel{max-height:100%;width:min(560px,100%)}
+  /* THE BAR IS A TOOLBAR UNDER THE STAGE HERE, NOT AN OVERLAY ON IT, AND IT DOES NOT HIDE. On a
+     bedside screen the bar floats over the panels and puts itself away, because nobody is meant
+     to be operating it. On a page a visitor is USING, an invisible bar is an undiscoverable
+     settings menu (nothing tells you to hover the bottom edge), and one floating over the module
+     covers whatever is at the bottom of it. So the stage takes the room the bar leaves. */
+  .kiosk.k-embed{display:flex;flex-direction:column}
+  .kiosk.k-embed .k-stage{position:relative;inset:auto;flex:1;min-height:0}
+  .kiosk.k-embed .k-controls{position:relative;left:auto;bottom:auto;transform:none;flex:none;
+    margin:0 auto 8px}
+  /* "Home" leaves for the list of your screens; a preview has no other screens to go to, and the
+     site's own navigation is the way out of this page. The menu's own Home row is not touched. */
+  .kiosk.k-embed [data-act="home"]{display:none}
+  /* "Mirror" toggles the camera full-screen. An embed is only ever handed a panel (never the
+     camera, which the kiosk draws as an overlay), so it would be a button that does nothing --
+     the one thing the bar's own comments say it must never have. */
+  .kiosk.k-embed [data-act="mirror"]{display:none}
   /* auto-hiding control bar */
   /* *** THE BAR WRAPS. IT USED TO RUN OFF THE SCREEN. ***
    *

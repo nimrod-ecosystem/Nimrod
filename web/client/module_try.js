@@ -20,7 +20,7 @@
 // to put on a public page.
 
 import { createBus } from './bus.js';
-import { mountModule } from './module.js';
+import { mountModule, getManifest } from './module.js';
 import { createOutputBus } from './output.js';
 import { defaultChannels } from './output_channels.js';
 import { createAudioBus } from './audio_bus.js';
@@ -188,6 +188,20 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
 }
 
 /**
+ * Find this profile's instance of `type`, adding one for real if it has none yet -- picking a
+ * module on the modules page is how you add it to your dashboard, same as the composer. One
+ * function so `createLiveHost` and `mountEmbeddedKiosk` (below) cannot disagree about it.
+ * `profile.modules` is the caller's cached copy and is mutated so it stays truthful.
+ */
+export async function ensureModuleInstance(profiles, profileId, profile, type) {
+  let mod = profile.modules.find((m) => m.type === type);
+  if (mod) return mod;
+  mod = await profiles.addModule(profileId, type);
+  profile.modules.push(mod);
+  return mod;
+}
+
+/**
  * `createTryHost`'s signed-in twin. `/modules.html` mounted every module against a
  * throwaway local backend regardless of whether the visitor had an account -- which meant
  * a signed-in person configuring a YouTube schedule there was writing to a sandbox no
@@ -261,15 +275,7 @@ export async function createLiveHost({ user }) {
   });
   await runtime.load();
 
-  /** Find this profile's instance of `type`, adding one for real if it has none yet --
-   *  picking a module here is how you add it to your dashboard, same as the composer. */
-  async function ensureInstance(type) {
-    let mod = profile.modules.find((m) => m.type === type);
-    if (mod) return mod;
-    mod = await profiles.addModule(profileId, type);
-    profile.modules.push(mod);
-    return mod;
-  }
+  const ensureInstance = (type) => ensureModuleInstance(profiles, profileId, profile, type);
 
   return {
     bus, output, audio, profileId, profile, sources, aim, runtime, live: true,
@@ -322,6 +328,174 @@ export async function createLiveHost({ user }) {
       detachAim();
       aim.destroy();
       runtime.destroy();
+    },
+  };
+}
+
+// =====================================================================================================
+// THE REAL KIOSK, IN A BOX ON THE MODULES PAGE.
+//
+// Mike, 2026-09-13: the modules page "is where you use the modules... every module should be
+// fully functional there". A module whose settings are reachable only through the universal
+// settings menu (camera, clock and photos hide their inline gear on purpose) had none there,
+// because the transport bar and that menu existed only inside `kiosk.js`. And DECISIONS.md
+// (2026-09-17): a dashboard is a module that contains modules, so there should be ONE
+// implementation of the bar and the menu, built once. So this does not copy the chrome into the
+// hosts above: it mounts `mountKiosk` itself, sized to the stage box (`embedded: true`, kiosk.css's
+// `.k-embed`).
+//
+// *** WHAT `embedded` TURNS OFF, AND WHY THIS PAGE NEEDS EACH ONE *** (the full list is on the
+// option in kiosk.js): no remote-drive socket, so a page open in a tab never presents itself as
+// somebody's screen; and FALLBACK BINDINGS ONLY, never the person's saved ones, which is the same
+// reversal `createLiveHost` documents above (a saved `pointer:mouse` binding turns every direct
+// click on a preview into a switch press).
+//
+// *** THE HUD TYPES ARE NOT PANELS, SO THEY GET NO CHROME. *** The kiosk draws camera and clock
+// as overlays in a corner, and ambient modules as a background layer; none has a chip on the
+// transport bar and `showModule` says false for them. For those types the page keeps mounting the
+// plain host (`isKioskPanel` is how it tells). That is a real limit, not a bug to hide: their
+// settings are still only reachable from the screen they belong to.
+// =====================================================================================================
+
+/** Does the kiosk show this type as a PANEL (a chip on the bar, a slot or the stage)? */
+export function isKioskPanel(type) {
+  return !!type && type !== 'camera' && type !== 'clock' && getManifest(type)?.mount !== 'ambient';
+}
+
+// An in-memory stand-in for localStorage/sessionStorage. The kiosk remembers "where she left off"
+// and "which screen to come back to" in device storage; an embed on a public page must not write
+// either into the visitor's real browser storage, where the actual kiosk would later read it.
+function memoryStorage() {
+  const m = new Map();
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); },
+  };
+}
+
+/**
+ * Mount the real kiosk into `stage` with `type` brought forward. Returns
+ * `{ kiosk, showModule(type), destroy() }`.
+ *
+ * SIGNED OUT (`user` falsy): a throwaway one-module screen for `type`, over the browser's local
+ * backend. The screen is an in-memory object, NOT a row in the visitor's local profile list --
+ * `createLocalProfilesClient().create()` would leave a "screen" behind on every pick (and after
+ * every closed tab), and it would show up in their Dashboards and stop the starter screen from
+ * ever being seeded. Only module state rows are written, under a `try-<type>` scope nothing lists.
+ *
+ * SIGNED IN: the visitor's REAL default screen (`ensureProfile`) and the REAL instance of `type`
+ * on it -- added when missing (`ensureModuleInstance`, shared with `createLiveHost`) BEFORE the
+ * kiosk boots, so the kiosk's module list is never stale. Its state, events and screen settings
+ * are the real ones, so a change here is the change the dashboard reads. If `showModule` later
+ * asks for a type the screen does not have, that adds it and rebuilds the kiosk, rather than
+ * mutating the kiosk's internals.
+ *
+ * *** THE KIOSK IS HANDED THE SCREEN'S ONE PICKED MODULE, NOT THE WHOLE SCREEN. *** Mounting the
+ * whole real screen was the first design, and it was tried: the visitor picks Trivia and gets
+ * their entire dashboard -- the live camera overlay covering half of it (and opening the webcam
+ * on a public page), the clock, every other panel mounting and playing at once. So `get()` is
+ * scoped to the picked type, `list()` is empty (no other screens to hop to from a preview),
+ * `moveToPerson` is withheld (a preview must not hand somebody's screen to another person), and
+ * the kiosk ignores the saved arrangement (`embedded`). What is real is the instance and the
+ * settings; what is deliberately not is the surrounding screen.
+ *
+ * `reloadPage` here means "rebuild this embed": the kiosk calls it for the recovery ladder's
+ * reload rung, for a corrected layout arriving after boot, and after handing the screen to another
+ * person. Reloading the modules page would be the wrong reading of any of them.
+ */
+export async function mountEmbeddedKiosk({ stage, user = null, type }) {
+  // Dynamic, so the two hosts above (and every page that only wants THEM) do not drag in the
+  // whole kiosk and, with it, every module registration -- `modules.html` deliberately does not
+  // register `settings` or `keyboard`.
+  const { mountKiosk } = await import('./kiosk.js');
+  let kiosk = null;
+  let current = type;
+  let torn = false;
+  let busy = false;
+  let again = false;
+
+  async function boot() {
+    stage.innerHTML = '';
+    const seams = {
+      navigate: () => {},
+      reloadPage: () => { rebuild().catch((err) => console.error('module_try: rebuild', err)); },
+      storage: memoryStorage(), session: memoryStorage(),
+      sources: createLocalMediaSources(),
+      embedded: true,
+    };
+    if (user) {
+      const real = createProfilesClient({ user });
+      const profileId = await ensureProfile(real, user);
+      const profile = await real.get(profileId);
+      await ensureModuleInstance(real, profileId, profile, current);
+      const pick = current;
+      const { moveToPerson, ...rest } = real;   // withheld: see the header above
+      const profiles = {
+        ...rest,
+        list: async () => [],
+        get: async (id) => {
+          const p = await real.get(id);
+          return { ...p, modules: (p.modules || []).filter((m) => m.type === pick) };
+        },
+      };
+      kiosk = await mountKiosk(stage, { ...seams, user, profileId, profiles });
+    } else {
+      const backend = createLocalBackend();
+      const profileId = `try-${current}`;
+      const screen = { id: profileId, name: 'Try it', person_id: null,
+                       modules: [{ id: `${current}-try`, type: current, position: 0 }] };
+      const profiles = {
+        list: async () => [],
+        get: async () => ({ ...screen, modules: screen.modules.map((m) => ({ ...m })) }),
+        stateURL: (pid, key) => `local:${pid}::${key}`,
+        eventsURL: (pid, key) => `local:${pid}::${key}`,
+      };
+      kiosk = await mountKiosk(stage, {
+        ...seams, user: null, profileId, profiles,
+        makeState: backend.makeState, makeEvents: backend.makeEvents,
+      });
+    }
+    if (torn) { try { kiosk.destroy(); } catch { /* already gone */ } kiosk = null; return; }
+    await kiosk.showModule(current);
+  }
+
+  function teardown() {
+    const k = kiosk; kiosk = null;
+    try { k?.destroy(); } catch (err) { console.error('module_try: kiosk destroy', err); }
+    stage.innerHTML = '';
+  }
+
+  // One rebuild at a time; a request that arrives while one is running runs once after it. Capped
+  // at three in a row: a kiosk that asks to be rebuilt every time it boots would otherwise spin
+  // for ever on somebody's page, and a stale embed is a better failure than a busy loop.
+  async function rebuild() {
+    if (torn) return;
+    if (busy) { again = true; return; }
+    busy = true;
+    try {
+      let n = 0;
+      do { again = false; teardown(); await boot(); } while (again && !torn && ++n < 3);
+      again = false;
+    } finally { busy = false; }
+  }
+
+  busy = true;
+  try { await boot(); } finally { busy = false; }
+  if (again) await rebuild();
+
+  return {
+    get kiosk() { return kiosk; },
+    async showModule(t) {
+      if (torn || !isKioskPanel(t)) return false;
+      current = t;
+      if (kiosk && await kiosk.showModule(t)) return true;
+      await rebuild();                    // not on this screen yet: rebuild around it
+      return !!kiosk && kiosk.showModule(t);
+    },
+    destroy() {
+      torn = true;
+      teardown();
     },
   };
 }

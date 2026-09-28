@@ -129,6 +129,29 @@ export async function mountKiosk(root, {
   // actually waited that long to prove the dim/drift class appears would be a test nobody
   // runs; this seam lets it use milliseconds instead, the same reason `recoveryTick` is one.
   burnInIdleMs = 10 * 60 * 1000,
+  // *** `embedded`: "THIS KIOSK IS A PREVIEW HOST ON SOMEBODY ELSE'S PAGE." Default false, and
+  // false is byte-for-byte today's behavior. `modules.html` mounts the real kiosk inside a box on
+  // a public page so the transport bar and settings menu are the ONE implementation rather than
+  // a copy that drifts (module_try.js's `mountEmbeddedKiosk`). When true, and ONLY then:
+  //   - it never presents itself as the person's screen: no remote-drive socket, so nobody can
+  //     drive a page that merely happens to be open in a browser tab, and no "someone is helping"
+  //     banner logic behind it;
+  //   - it keeps FALLBACK bindings (`DEFAULT_BINDINGS`) and never loads the person's saved ones,
+  //     nor the marker-tracking / microphone-preference layer that comes after them. A saved
+  //     `pointer:mouse` binding makes `input_pointer.js` route every left click through the bus
+  //     as a switch press instead of clicking what you point at - the exact hijack
+  //     `module_try.js`'s createLiveHost header documents on this same page;
+  //   - it sizes to its parent (`.k-embed`, kiosk.css) instead of the viewport, keeps its bar
+  //     showing (a visitor cannot use a settings menu they cannot see), and ignores the
+  //     screen's saved arrangement (one panel on the stage), the profile cache, and the
+  //     watch that reloads when a corrected layout arrives after boot;
+  //   - it does not consume the composer's one-shot preview-layout stash, does not stomp the
+  //     host page's own theme when the screen has none saved, and its caregiver hotkeys only
+  //     answer when the keystroke is inside `root` (a reader pressing "f" on a public page must
+  //     not go fullscreen).
+  // The caller supplies `navigate`/`reloadPage`/`storage`/`session` seams; `reloadPage` here
+  // means "rebuild this embed", not "reload the page".
+  embedded = false,
 } = {}) {
   bus = bus || createBus();
   // Read before anything else renders: if this screen is not where the device is meant to
@@ -211,7 +234,7 @@ export async function mountKiosk(root, {
                stops. It is for the ordinary moment when somebody walks in to talk to her and
                the music is in the way. -->
           <button data-act="hush" data-on="0"
-            title="pause the music and video so you can talk (she is still heard)">Hush</button>
+            title="pause the music and video so you can talk (voices and speech are still heard)">Hush</button>
           <button data-act="settings" title="settings (Esc or M)">⚙</button>
           <button data-act="fs" title="fullscreen (F)">⛶</button>
         </div>
@@ -226,6 +249,7 @@ export async function mountKiosk(root, {
       <div data-settings></div>
     </div>`;
   const kioskEl = root.querySelector('.kiosk');
+  if (embedded) kioskEl.classList.add('k-embed');
   // *** A LIVE THEME'S ANIMATED WORLD MUST LIVE INSIDE THE FULLSCREEN TARGET. ***
   //
   // Mike, 2026-09-23: "Transparent background and themes don't seem to work when you go into
@@ -254,6 +278,9 @@ export async function mountKiosk(root, {
   // background is not a trade worth making under time pressure without checking every caller.
   kioskEl.setAttribute('data-scene-host', '');
   function applyKioskTheme(id) {
+    // An embed lives on somebody's page, which already has a theme (its own picker, or the
+    // signed-in profile's). A screen that has never picked one must not reset that to default.
+    if (embedded && !id) return null;
     const resolved = applyTheme(document.documentElement, id);
     syncScene(kioskEl, THEMES[resolved]);
     return resolved;
@@ -652,9 +679,11 @@ export async function mountKiosk(root, {
   // read once, cleared immediately, never written to the profile. This is what lets someone
   // try an arrangement — or swap to one temporarily — without committing it, which the
   // composer's save-then-open behavior otherwise took away.
-  const previewLayout = takePreviewLayout(profileId);
+  const previewLayout = embedded ? null : takePreviewLayout(profileId);
 
-  const savedLayout = previewLayout || (settings.get().kiosk || {}).layout;
+  // An embed shows ONE panel on the stage, never the screen's saved arrangement: a grid with the
+  // picked module in one cell of it is not "the module, large".
+  const savedLayout = previewLayout || (embedded ? null : (settings.get().kiosk || {}).layout);
   let layout = null;
 
   // *** STALE-CACHE CORRECTION FOR THE ARRANGEMENT. ***
@@ -691,13 +720,16 @@ export async function mountKiosk(root, {
   // itself before it had finished booting. Closing the gap to zero awaits between the read
   // and the watch is the actual fix; a kiosk that boots after a genuine change still reloads
   // exactly as designed, because there is no longer a window for the watch to start late.
-  if (!previewLayout) {
+  // Not in an embed: it boots with NO layout on purpose (see `savedLayout`), so "the corrected layout
+  // differs from the one I booted with" is true of every real screen that has one, and the reaction
+  // is a rebuild, which boots with no layout, which differs again. That is a loop, and it was one.
+  if (!previewLayout && !embedded) {
     const bootLayoutSig = JSON.stringify(savedLayout || null);
     let reloadedForLayout = false;
     settings.subscribe((s) => {
       if (reloadedForLayout) return;
       const nowSig = JSON.stringify((s.kiosk || {}).layout || null);
-      if (nowSig !== bootLayoutSig) { reloadedForLayout = true; location.reload(); }
+      if (nowSig !== bootLayoutSig) { reloadedForLayout = true; reloadPage(); }
     });
   }
 
@@ -710,7 +742,10 @@ export async function mountKiosk(root, {
   // ---- partition modules: camera -> mirror, clock -> clock HUD, rest -> stage
   // cached so a server blip at boot still yields the last-known dashboard layout.
   // *** `let`, NOT `const`: THE SCREEN CAN BE SWAPPED IN PLACE. *** See `showScreen` below.
-  let profile = makeState
+  // (An embed skips the cache, and it is not a nicety: `module_try.js` hands it a profile scoped to
+  // ONE module, and that must never be written into `profile:<user>:<id>`, the last-known-good the
+  // real kiosk falls back to when the server is down.)
+  let profile = (makeState || embedded)
     ? await profiles.get(profileId)        // local backend: it IS the source of truth
     : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
 
@@ -1058,6 +1093,14 @@ export async function mountKiosk(root, {
     renderMods();
   }
 
+  // What pressing a PLACED panel's chip does: move focus there and repaint the ring and the bar.
+  // A function so `showModule` (below) does exactly the same thing rather than a look-alike.
+  function focusPlaced(id) {
+    try { runtime?.router?.setFocus?.(id); } catch { /* focus is not load-bearing */ }
+    paintFocus(id);
+    renderMods();
+  }
+
   function renderMods() {
     // The panel button lives or dies with the same facts the bar is drawn from, so it is
     // refreshed here rather than at each of the four call sites that redraw the bar.
@@ -1134,11 +1177,7 @@ export async function mountKiosk(root, {
           }
           b.textContent = rec.title || rec.type;
           b.dataset.id = rec.id;
-          b.addEventListener('click', () => {
-            try { runtime?.router?.setFocus?.(rec.id); } catch { /* focus is not load-bearing */ }
-            paintFocus(rec.id);
-            renderMods();
-          });
+          b.addEventListener('click', () => focusPlaced(rec.id));
           modsEl.append(b);
         } else {
           const b = document.createElement('button');
@@ -1271,6 +1310,28 @@ export async function mountKiosk(root, {
     showScreen(id).catch(() => {});
   }));
   offsScreen.push(bus.subscribe(SCREEN_BACK, () => { showPreviousScreen().catch(() => {}); }));
+
+  // *** BRING THE MODULE OF THIS TYPE FORWARD, EXACTLY AS PRESSING ITS CHIP DOES. ***
+  // For a host that knows a TYPE ("Trivia") rather than an instance id - `modules.html`'s embed.
+  // Resolves true if a panel of that type is now the one the bar is about, false if this screen
+  // has no such PANEL. The HUD pair and ambient modules are not panels and have no chip, so they
+  // are false here on purpose rather than "handled" by pretending.
+  async function showModule(type) {
+    if (!type || type === 'camera' || type === 'clock'
+        || getManifest(type)?.mount === 'ambient') return false;
+    if (layout) {
+      const rec = slotRecs.find((r) => r.type === type);
+      if (rec) { focusPlaced(rec.id); return true; }
+      const def = unplacedDefs().find((d) => d.type === type);
+      if (!def) return false;
+      await showUnplaced(def);
+      return true;
+    }
+    const j = stageDefs.findIndex((d) => d.type === type);
+    if (j < 0) return false;
+    if (j !== primary || !stageRec) await showPrimary(j);   // already showing: do not remount it
+    return true;
+  }
 
   // "next" within the current stage module — the director advances via segment/done,
   // everything else via <type>/next. Only the visible module is mounted, so this
@@ -1461,7 +1522,7 @@ export async function mountKiosk(root, {
     hushBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     hushBtn.title = on
       ? 'the music and video are paused — press to bring them back'
-      : 'pause the music and video so you can talk (she is still heard)';
+      : 'pause the music and video so you can talk (voices and speech are still heard)';
   }
   hushBtn.addEventListener('click', () => { audio?.hush?.(!audio.isHushed()); renderHush(); });
   renderHush();
@@ -1800,7 +1861,7 @@ export async function mountKiosk(root, {
                     // and the input runtime, the drive socket and the marker stream were all
                     // built around the old person at boot. Pretending a live swap happened
                     // would leave a screen that says one name and answers to another.
-                    location.reload();
+                    reloadPage();
                   } catch (err) {
                     b.insertAdjacentHTML('afterend',
                       `<div class="st-hint">could not move it: ${esc(err.message || err)}</div>`);
@@ -1886,7 +1947,7 @@ export async function mountKiosk(root, {
       // own room. CONFIRMED BY MIKE 2026-08-26 as a SAFETY/CONSENT INVARIANT, which is the
       // only category of rule allowed to be absolute here. It is not a setting, it is not
       // hideable at any complexity level, and it does not bend for a nicer-looking screen.
-      if (!makeState && profiles.personStateURL) {
+      if (!makeState && !embedded && profiles.personStateURL) {
         drive = attachDriveToBus(bus, {
           personId: p.person_id,
           user,
@@ -1904,7 +1965,7 @@ export async function mountKiosk(root, {
           },
         });
       }
-      if (makeState || !profiles.personStateURL) return;
+      if (makeState || embedded || !profiles.personStateURL) return;
       if (torn) return;
       personOff = await runtime.useState(createState({
         url: profiles.personStateURL(p.person_id, INPUTS_KEY),
@@ -2201,7 +2262,7 @@ export async function mountKiosk(root, {
     controlsEl.classList.remove('hidden');
     clearTimeout(hideT);
     hideT = setTimeout(() => {
-      controlsEl.classList.add('hidden');
+      if (!embedded) controlsEl.classList.add('hidden');    // an embed's bar stays: see kiosk.css
       // The picker goes with the bar it hangs off. This is the "what if nobody answers"
       // answer for it: left alone, it puts itself away and the screen is back to what it was
       // doing, with nothing having been decided on anybody's behalf.
@@ -2272,7 +2333,8 @@ export async function mountKiosk(root, {
   // poke, for the same reason: pointerdown covers touch, keydown covers a keyboard with no
   // mouse ever moving.
   function pokeBurnIn() { clearBurnIn(); armBurnIn(); }
-  for (const ev of ['mousemove', 'pointerdown', 'keydown']) {
+  const BURN_IN_EVENTS = ['mousemove', 'pointerdown', 'keydown'];
+  for (const ev of BURN_IN_EVENTS) {
     root.addEventListener(ev, pokeBurnIn, { passive: true });
   }
   pokeBurnIn();
@@ -2288,7 +2350,7 @@ export async function mountKiosk(root, {
   // ever runs once ITS timeout fires — so simply not calling `poke()` at boot would have left
   // the bar showing forever, never actually arming the auto-hide. Setting the class directly
   // is what genuinely starts it hidden.
-  controlsEl.classList.add('hidden');
+  if (!embedded) controlsEl.classList.add('hidden');
 
   // WHAT LEFT THIS HANDLER, and what stayed.
   //
@@ -2304,6 +2366,8 @@ export async function mountKiosk(root, {
   // anyway: it is the CAMERA mirror.
   const onKey = (e) => {
     if (menu.isOpen()) return;               // the menu is driven by the bus, not from here
+    // (`window` and `document` can be an event's target and are not Nodes: `contains` throws on them.)
+    if (embedded && !(e.target instanceof Node && root.contains(e.target))) return;   // a host page's keystrokes are not ours
     // TYPING IS NOT INPUT (input_keyboard.js says so for the bus; this handler never did). A
     // "c" typed into a text box toggled the camera mirror, an "h" opened the screen picker, and
     // a digit switched panels -- out from under the very field somebody was typing in.
@@ -2381,6 +2445,7 @@ export async function mountKiosk(root, {
     mirrorFull: () => mirrorFull,
     layout: () => ({ mirrorSize: kioskEl.dataset.mirrorSize, mirrorCorner: kioskEl.dataset.mirrorCorner, clockCorner: kioskEl.dataset.clockCorner }),
     showPrimary,
+    showModule,
     menu,
     runtime,
     // The recovery machinery, exposed so a test can drive it a step at a time rather than
@@ -2413,6 +2478,11 @@ export async function mountKiosk(root, {
       root.removeEventListener('pointerdown', poke);
       root.removeEventListener('keydown', poke);
       clearTimeout(hideT);
+      // The burn-in trio was never detached, and its timer never cleared. Invisible on a page that
+      // mounts one kiosk for its whole life; an embed mounts and destroys into the SAME root every
+      // time somebody picks another module, so each cycle stacked three more listeners on it.
+      for (const ev of BURN_IN_EVENTS) root.removeEventListener(ev, pokeBurnIn);
+      clearBurnIn();
       clearInterval(recoveryTimer);
       health.destroy();
       destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
