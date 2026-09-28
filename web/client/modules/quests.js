@@ -143,16 +143,28 @@ export function exchangesAt(rate, exchanges = DEFAULT_EXCHANGES) {
 
 // Which currency ids a reward accepts, as the data knows them.
 //
-// *** A SAVED REWARD WITH NO `accepts` ACCEPTS EVERY CURRENCY. *** Existing users' saved reward
-// lists were written before currencies existed, and they keep their old behavior until they
-// are edited — there is deliberately NO special-casing by name (no "if it says screen time,
-// make it School-only"), because a rule keyed on a reward's wording breaks the first time
-// somebody words it differently. Whether saved screen-time rewards should be migrated to
-// School-only is an open question for Mike, not something this read decides.
+// *** A SAVED REWARD WITH NO `accepts` -- one written before currencies existed. *** Mike,
+// 2026-09-28, asked whether saved screen-time rewards should become School-only: "No one is using
+// it yet. Go ahead and make the changes." So a reward without `accepts` is read as:
+//   1. one of the shipped DEFAULT_REWARDS (same name): that default's own `accepts`;
+//   2. otherwise, a name that says "screen time": School only -- the rule the defaults encode,
+//      applied to a reward somebody added themselves;
+//   3. otherwise: every currency, as before.
+// Worked out at READ time, never written back, so an explicit `accepts` on a saved reward always
+// wins. The name match in (2) is a known weakness -- a reward worded differently ("tablet hour")
+// is not caught -- and it is here only for lists saved before `accepts` existed.
+const SCREEN_TIME = /screen[\s-]*time/i;
 export function acceptsOf(reward, currencies = DEFAULT_CURRENCIES) {
   const ids = currencies.map((c) => c.id);
-  if (!reward || !Array.isArray(reward.accepts)) return ids;
-  return ids.filter((id) => reward.accepts.includes(id));
+  if (!reward) return ids;
+  let accepts = reward.accepts;
+  if (!Array.isArray(accepts)) {
+    const known = DEFAULT_REWARDS.find((d) => d.reward === reward.reward);
+    if (known) accepts = known.accepts;
+    else if (SCREEN_TIME.test(String(reward.reward || ''))) accepts = ['school'];
+    else return ids;
+  }
+  return ids.filter((id) => accepts.includes(id));
 }
 
 const nameOf = (id, currencies = DEFAULT_CURRENCIES) =>
