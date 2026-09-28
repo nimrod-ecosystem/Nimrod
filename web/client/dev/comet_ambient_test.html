@@ -99,6 +99,9 @@ const steps = (inst, n, dt = 16) => { for (let i = 0; i < n; i++) inst.impl.__st
     check('*** seeking does nothing in decorative mode — there is no head to move ***',
       probe(inst).cx === -1, probe(inst).cx);
     check('...and nothing is ever caught', probe(inst).caught === 0);
+    check('*** and the score never shows — decorative mode never catches anything, so a '
+      + 'permanent "0 caught" would just be noise over the scenery ***',
+      probe(inst).scoreVisible === false);
     inst.destroy(); host.remove();
   }
 
@@ -109,6 +112,9 @@ const steps = (inst, n, dt = 16) => { for (let i = 0; i < n; i++) inst.impl.__st
     const inst = mount(host, { bus, settings: { mode: 'interactive', count: 1, points: 2 } });
     await sleep(20);
     check('no head yet — nothing has moved it', probe(inst).cx === -1);
+    check('*** the score is visible in interactive mode, even before anything is caught ***',
+      probe(inst).scoreVisible === true);
+    check('...starting at zero', probe(inst).scoreText === '0 caught', probe(inst).scoreText);
 
     bus.publish('comet_ambient/seek');
     steps(inst, 5);
@@ -117,6 +123,9 @@ const steps = (inst, n, dt = 16) => { for (let i = 0; i < n; i++) inst.impl.__st
     steps(inst, 55);   // well past the fixed glide duration
     check('*** arriving at the only heart catches it ***', probe(inst).caught === 1, JSON.stringify(probe(inst)));
     check('...and a new one takes its place', probe(inst).hearts === 1);
+    check('*** Mike, 2026-09-27: "have the ambient balloons score show somewhere" — it does, '
+      + 'and it updates the moment a catch happens ***',
+      probe(inst).scoreText === '1 caught', probe(inst).scoreText);
 
     await sleep(20);   // the award is async
     check('*** it pays through the shared points ledger, with the configured amount ***',
