@@ -508,6 +508,47 @@ const ds = () => root.querySelector('.kiosk').dataset;
     }
     await press('Escape');
 
+    // *** PANEL BACKGROUNDS MUST REACH A MODULE'S OWN LETTERBOX FILL TOO, NOT JUST `.k-mod`
+    // ITSELF. *** Mike, 2026-09-27, off the live site: "The background on photos won't go
+    // transparent no matter how you set it, you get the green bars on the sides." Root cause:
+    // `.photos .stage` painted `--surface` directly, a rule the panelSurface feature never
+    // touched because it only ever targets `.k-mod`. Fixed by making `.stage` transparent so
+    // `.k-mod`'s OWN current background shows through the letterbox gaps instead — this proves
+    // it does, in a real mounted kiosk, not just by reading the CSS.
+    {
+      const pbProfiles = createProfilesClient({ user: USER + '-photos-transparency' });
+      const pbp = await pbProfiles.create('photos-transparency');
+      await pbProfiles.addModule(pbp.id, 'photos');
+      const pbroot = document.createElement('div');
+      pbroot.style.cssText = 'position:relative;width:400px;height:300px';
+      document.body.appendChild(pbroot);
+      const pbk = await mountKiosk(pbroot, { user: USER + '-photos-transparency', profileId: pbp.id, profiles: pbProfiles, bus: createBus() });
+      await sleep(150);
+
+      const stageBg = () => getComputedStyle(pbroot.querySelector('.photos .stage')).backgroundColor;
+      const modBg = () => getComputedStyle(pbroot.querySelector('.k-stage .k-mod')).backgroundColor;
+      check('(setup) a photos panel with a real .stage exists', !!pbroot.querySelector('.photos .stage'));
+      // `.stage`'s OWN computed background is transparent EITHER WAY now — that is the fix
+      // (it no longer paints its own colour at all) — so what has to be checked is what shows
+      // through it: `.k-mod`'s own background, which panelSurface still correctly controls.
+      check('*** the letterbox fill itself no longer paints its own colour ***',
+        stageBg() === 'rgba(0, 0, 0, 0)' || stageBg() === 'transparent', stageBg());
+      const solidModBg = modBg();
+      check('solid (the default): .k-mod shows a real colour, unchanged from before this fix',
+        solidModBg !== 'rgba(0, 0, 0, 0)' && solidModBg !== 'transparent', solidModBg);
+
+      const settingsState2 = createState({ url: pbProfiles.stateURL(pbp.id, 'settings'), user: USER + '-photos-transparency' });
+      await settingsState2.load().catch(() => {});
+      settingsState2.set({ panelSurface: 'clear' });
+      await settingsState2.flush();
+      await sleep(100);
+      check('*** clear: .k-mod itself goes transparent, and .stage no longer hides that behind '
+        + 'its own green fill ***',
+        modBg() === 'rgba(0, 0, 0, 0)' || modBg() === 'transparent', modBg());
+
+      pbk.destroy?.(); pbroot.remove();
+    }
+
     // THE FIELDS FOLLOW THE FOCUSED PANEL. Settings belong to the panel the menu names, so
     // changing which panel is on the stage has to change which settings are offered - or the
     // menu is quietly editing something other than the thing it says it is editing.
