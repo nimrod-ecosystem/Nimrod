@@ -26,7 +26,13 @@ window throttles every tab to about one timer per second, and suites that mount 
 in short waits. Measured: <code>youtube_test</code> finishes in 2.0s in one iframe and
 <code>soak_test</code> in 23s alongside three others — both report <code>no summary</code> when the
 window is hidden. <b>Check a suite on its own before believing this page about it.</b></p>
-<p>Needs the server: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.
+<p><b>This page is not the complete check.</b> Its <code>SUITES</code> list below is hand-kept and is
+missing suites that exist on disk, and a browser cannot list a directory to find them. The
+complete run is <code>py -3.13 web/tools/run_suite.py</code> from <code>web/</code>, which also runs
+<code>web/tools/check_bare_topic_subscribers.py</code> first over every
+<code>dev/*_test.html</code> &mdash; the one copy of that rule. It is deliberately not repeated
+here.</p>
+<p>Needs the server:<code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.
 Suites listed as <span class="skip">no summary</span> did not finish inside the timeout, which
 is usually a real hang and worth opening on its own.</p>
 <div id="out"></div>
@@ -212,112 +218,8 @@ function runOne(name) {
   });
 }
 
-// =====================================================================================
-// THE BARE-TOPIC LINT — a JS port of `web/tools/check_bare_topic_subscribers.py`, which is what
-// `run_suite.py` runs as its pre-step. READ THAT FILE'S DOCSTRING for why this exists (short
-// version: `e0c2027` moved verb dispatch onto instance-scoped topics, one suite kept listening on
-// the bare topic, and it sat red for eighteen days). This page needs its own copy because a
-// browser cannot run Python; the two are kept honest by sharing the same 14 self-test cases below
-// and by having been checked against each other on the same tree and the same planted stale file.
-// **If you change the rules in one, change the other.**
-//
-// HONEST LIMIT, specific to this page: a browser cannot list a directory, so this lints only the
-// files in SUITES above. The Python version scans every `dev/*_test.html`. Any suite that is on
-// disk but missing from SUITES is invisible here — and SUITES was missing 25 of 123 on 2026-09-28.
-const TOPIC_RE = '[a-z][a-z0-9_]*/[a-z][a-z0-9_-]*';
-const QUOTED_TOPIC = new RegExp('[\'"`](' + TOPIC_RE + ')[\'"`]', 'g');
-const SUBSCRIBE = new RegExp('(\\w+)\\.subscribe\\(\\s*([\'"`])(' + TOPIC_RE + ')\\2', 'g');
-const SCOPED_RECEIVER = /\b(\w+)\s*=\s*[\w.]*\.scope\(/g;
-const ROUTES_VERBS = /\b(mountInputRuntime|createVerbRouter|mountKiosk)\b|['"`]verb\//;
-const MARKER = /bare-topic-ok:\s*\S/;
-const stripLineComment = (l) => { const at = l.indexOf('//'); return at < 0 ? l : l.slice(0, at); };
-
-function verbTopics(actionsSrc) {
-  const start = actionsSrc.indexOf('export const MODULE_VERBS');
-  if (start < 0) throw new Error('MODULE_VERBS not found in actions.js');
-  const end = actionsSrc.indexOf('\n};', start);
-  if (end < 0) throw new Error('could not find the end of MODULE_VERBS');
-  const body = actionsSrc.slice(start, end).split(/\r?\n/).map(stripLineComment).join('\n');
-  const topics = new Set([...body.matchAll(QUOTED_TOPIC)].map((m) => m[1]));
-  if (topics.size < 10) throw new Error(`only ${topics.size} verb topics parsed from MODULE_VERBS`);
-  return topics;
-}
-
-function scanBareTopics(text, topics) {
-  if (!ROUTES_VERBS.test(text)) return [];
-  const lines = text.split(/\r?\n/);
-  const scoped = new Set([...text.matchAll(SCOPED_RECEIVER)].map((m) => m[1]));
-  const hits = [];
-  lines.forEach((raw, i) => {
-    for (const m of stripLineComment(raw).matchAll(SUBSCRIBE)) {
-      const receiver = m[1], topic = m[3];
-      if (!topics.has(topic) || scoped.has(receiver)) continue;
-      if (MARKER.test(raw + '\n' + (i ? lines[i - 1] : ''))) continue;
-      hits.push({ line: i + 1, topic });
-    }
-  });
-  return hits;
-}
-
-// Same cases, same order, as `self_test` in the Python file.
-function bareTopicSelfTest(topics) {
-  const cases = [
-    ["mountInputRuntime({}); bus.subscribe(bus.instanceTopic('p1', 'photos/next'), f)", false],
-    ["mountInputRuntime({}); bus.subscribe('photos/next', f)", true],
-    ['mountInputRuntime({}); bus.subscribe("photos/next", f)', true],
-    ['mountInputRuntime({}); this.bus.subscribe(`photos/next`, f)', true],
-    ["mountInputRuntime({}); // bare-topic-ok: proves bare publishers reach all\nbus.subscribe('photos/next', f)", false],
-    ["mountInputRuntime({}); bus.subscribe('photos/next', f) // bare-topic-ok: every one", false],
-    ["mountInputRuntime({}); bus.subscribe('photos/next', f) // bare-topic-ok:", true],
-    ["mountInputRuntime({}); // bus.subscribe('photos/next', f)", false],
-    ["mountInputRuntime({}); bus.subscribe('not/a-verb-topic', f)", false],
-    ["bus.publish('photos/next'); bus.subscribe('photos/next', f)", false],
-    ["createVerbRouter({}); bus.subscribe('segment/done', f)", true],
-    ["mountInputRuntime({}); const a = bus.scope('p1'); a.subscribe('photos/next', f)", false],
-    ["mountInputRuntime({}); const a = bus.scope('p1'); bus.subscribe('photos/next', f)", true],
-  ];
-  const bad = cases.filter(([src, want]) => (scanBareTopics(src, topics).length > 0) !== want);
-  if (!topics.has('photos/next') || !topics.has('segment/done')) bad.push(['MODULE_VERBS lost photos/next or segment/done']);
-  return bad.length ? `self-test failed on ${bad.length} case(s): ${bad.map((b) => JSON.stringify(b[0]).slice(0, 60)).join(' | ')}` : null;
-}
-
-// Returns { ok, text, hits } — never throws. A checker that cannot run FAILS; it is not skipped.
-async function lintBareTopics() {
-  try {
-    const res = await fetch('../actions.js');
-    if (!res.ok) throw new Error(`actions.js: HTTP ${res.status}`);
-    const topics = verbTopics(await res.text());
-    const selfBad = bareTopicSelfTest(topics);
-    if (selfBad) return { ok: false, text: selfBad, hits: [] };
-    const hits = [];
-    const files = await Promise.all(SUITES.map(async (name) => {
-      const r = await fetch(`${name}_test.html`);
-      if (!r.ok) throw new Error(`${name}_test.html: HTTP ${r.status}`);
-      return [name, await r.text()];
-    }));
-    for (const [name, text] of files) {
-      for (const h of scanBareTopics(text, topics)) hits.push(`${name}_test.html:${h.line} "${h.topic}"`);
-    }
-    return hits.length
-      ? { ok: false, text: `${hits.length} bare subscriber(s): ${hits.join(', ')} — subscribe on bus.instanceTopic(<id>, <topic>) or mark "// bare-topic-ok: <why>"`, hits }
-      : { ok: true, text: `clean (${SUITES.length} listed suites, ${topics.size} verb topics)`, hits };
-  } catch (e) {
-    return { ok: false, text: `could not run: ${e.message}`, hits: [] };
-  }
-}
-
 (async () => {
   const results = [];
-  // Runs first and takes well under a second. A failure is a row like any other, in the failing
-  // colour, and counts toward the summary — but the suites still run, same as `run_suite.py`.
-  const lint = await lintBareTopics();
-  {
-    const row = table.insertRow();
-    row.insertCell().textContent = 'lint: bare-topic subscribers';
-    const cell = row.insertCell();
-    cell.className = lint.ok ? 'pass' : 'fail';
-    cell.textContent = lint.text;
-  }
   for (let i = 0; i < SUITES.length; i += BATCH) {
     const batch = await Promise.all(SUITES.slice(i, i + BATCH).map(runOne));
     for (const r of batch) {
@@ -342,12 +244,10 @@ async function lintBareTopics() {
   const skipNote = skipped.length
     ? ` · ${skipped.length} SKIPPED (${skipped.map((r) => r.name).join(', ')}) — needs something that is not running`
     : '';
-  const lintNote = lint.ok ? '' : ' · bare-topic LINT FAILED (first row)';
-  s.textContent = ((failed || stalled || !lint.ok)
+  s.textContent = ((failed || stalled)
     ? `${failed} suite(s) failing, ${stalled} without a summary — ${checks} checks ran`
-    : `ALL PASS — ${results.length - skipped.length} suites, ${checks} checks`) + skipNote + lintNote;
-  s.className = (failed || stalled || !lint.ok) ? 'fail' : 'pass';
-  s.dataset.lint = lint.ok ? 'ok' : 'failed';
+    : `ALL PASS — ${results.length - skipped.length} suites, ${checks} checks`) + skipNote;
+  s.className = (failed || stalled) ? 'fail' : 'pass';
   s.dataset.done = 'true';
 })();
 </script>
