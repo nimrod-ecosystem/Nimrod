@@ -422,6 +422,17 @@ export const CATALOG = [
       + 'conversation where somebody has to say whether a person is improving and wants '
       + 'something better than an impression to say it with.',
   },
+  {
+    type: 'reading_log',
+    group: 'record',
+    use: 'touch',
+    lead: 'What they have read — title, author, how far, and when.',
+    needs: 'Nothing. Type it in as you go.',
+    why: 'A plain record of what was read, worth keeping on its own, and readable by anyone '
+      + 'who wants to know what someone has gotten through lately. It is also the raw '
+      + 'material a later feature can build questions from — not built yet, so today this '
+      + 'only keeps the log.',
+  },
 ];
 
 // Modules that exist in the registry but are deliberately not offered on THIS page: dev
