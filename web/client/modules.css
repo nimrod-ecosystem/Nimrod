@@ -807,6 +807,14 @@
 .quests .q-item-main{display:flex;flex-direction:column;gap:1px;min-width:0}
 .quests .q-item-name{font-weight:600;font-size:.9rem}
 .quests .q-item-note{font-size:.74rem;color:var(--text-muted)}
+.quests .q-reward-row{display:flex;flex-direction:column;gap:3px}
+.quests .q-accepts{align-self:flex-start;font:inherit;font-size:.72rem;padding:2px 8px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer}
+.quests .q-ask{border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px;
+  background:var(--surface-alt);font-size:.85rem}
+.quests .q-ask p{margin:0 0 6px}
+.quests .q-ask-btn{font:inherit;font-size:.8rem;padding:4px 10px;margin-right:6px;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer}
 .quests .q-item-pts{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--link)}
 .quests .q-item[data-kind="Penalty"] .q-item-pts{color:var(--accent-warm-deep)}
 .quests .q-x2{font-style:normal;font-size:.68rem;margin-left:4px;color:var(--text-muted)}
