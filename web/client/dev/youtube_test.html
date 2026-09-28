@@ -39,6 +39,7 @@ import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
 import { pressControls, checkHiddenHides } from './press_controls.js';
 import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
+import { createPresetLibrary } from '../presets.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'youtube-test-user';
@@ -637,6 +638,107 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
         `hidden ${wasHidden} -> ${panel.hidden}`);
       gear.click();
       check('...and pressing it again puts it away', panel.hidden === true);
+    }
+
+    // ── PRESETS (register #255): a named library an instance can point at ────────
+    //
+    // `ctx.personId`/`ctx.makePersonState` are the real per-person seam `modules/keyboard.js`'s
+    // bindings and `kiosk.js`'s marker/device preferences already use, wired here against the
+    // REAL server (`profiles.personStateURL`) — the same way every other handle in this suite
+    // already talks to the live server rather than a stub.
+    {
+      const people = await profiles.people();
+      const person = people[0];
+      const makePersonState = (pid, key, opts = {}) =>
+        createState({ url: profiles.personStateURL(pid, key), user: USER, ...opts });
+
+      const lib = createPresetLibrary({
+        makeState: (key, opts) => makePersonState(person.id, key, opts),
+      });
+      await lib.load();
+      const preset = await lib.savePreset({
+        type: 'youtube', name: 'Preset playlist',
+        settings: {
+          playlist: [
+            { id: 'presetV1', channel: 'P', title: 'Preset-1' },
+            { id: 'presetV2', channel: 'P', title: 'Preset-2' },
+          ],
+          shuffle: false,
+        },
+      });
+
+      const pp = await profiles.create('TEST-youtube-preset');
+      const pm = await profiles.addModule(pp.id, 'youtube');
+      const pst = createState({ url: profiles.stateURL(pp.id, pm.id), user: USER });
+      const pev = createEvents({ url: profiles.eventsURL(pp.id, pm.id), user: USER });
+      await pst.load(); await pev.load();
+      // The instance keeps its OWN, DIFFERENT playlist locally — proving the PRESET's content,
+      // not the instance's own, is what actually plays once `presetId` is set.
+      pst.set({ playlist: PLAYLIST.slice(0, 2), autoAdvance: false });
+      await pst.flush();
+
+      const pstub = makeStubPlayer();
+      const phost = document.createElement('div');
+      document.body.append(phost);
+      const pinst = mountModule('youtube', {
+        mount: phost, bus: createBus(), state: pst, events: pev, user: USER, profileId: pp.id,
+        playerFactory: pstub.factory,
+        personId: person.id, makePersonState,
+      });
+      pinst.init();
+      await sleep(80);
+
+      check('*** with no presetId set, an instance with personId/makePersonState wired still '
+        + 'behaves exactly like one without either — its OWN playlist plays ***',
+        PLAYLIST.slice(0, 2).some((v) => v.id === pstub.current()), String(pstub.current()));
+
+      pst.set({ presetId: preset.id });
+      await sleep(80);
+
+      check('*** setting presetId switches playback to the PRESET, not the instance\'s own ***',
+        ['presetV1', 'presetV2'].includes(pstub.current()), String(pstub.current()));
+
+      check('the settings panel offers this preset as a live choice (settingsChoices)',
+        pinst.impl.settingsChoices().presetId
+          .some((o) => o.value === preset.id && o.label === 'Preset playlist'),
+        JSON.stringify(pinst.impl.settingsChoices()));
+
+      phost.querySelector('.youtube .gear').click();
+      const shufBox = phost.querySelector('[data-opt="shuffle"]');
+      check("the shuffle checkbox reflects the PRESET's value (false), not the instance's own default (true)",
+        shufBox && shufBox.checked === false, shufBox && String(shufBox.checked));
+      check('...and is disabled while a preset is active, so it cannot be edited from here by mistake',
+        shufBox && shufBox.disabled === true);
+
+      const listBox = phost.querySelector('[data-list]');
+      check("the playlist panel shows the PRESET's videos",
+        /Preset-1/.test(listBox.textContent) && /Preset-2/.test(listBox.textContent),
+        listBox.textContent);
+      check('...with no remove button on a preset row (read-only, not a fake affordance)',
+        !listBox.querySelector('button'), listBox.innerHTML);
+      const note = phost.querySelector('[data-preset-note]');
+      check('...and a note explains why', note && !note.hidden && /Preset playlist/.test(note.textContent),
+        note && note.textContent);
+
+      // shuffle off (from the preset): a manual Next walks the preset's ids in order.
+      phost.querySelector('[data-next]').click();
+      await sleep(40);
+      check('shuffle off (from the preset) walks the preset playlist, not the instance\'s own',
+        ['presetV1', 'presetV2'].includes(pstub.current())
+          && !PLAYLIST.some((v) => v.id === pstub.current()),
+        String(pstub.current()));
+
+      // Clearing the preset reverts to the instance's own settings — nothing lost, nothing stuck.
+      pst.set({ presetId: '' });
+      await sleep(80);
+      check("*** clearing presetId reverts fully to the instance's own playlist ***",
+        PLAYLIST.slice(0, 2).some((v) => v.id === pstub.current()), String(pstub.current()));
+      const shufBox2 = phost.querySelector('[data-opt="shuffle"]');
+      check('...and the shuffle control is editable again',
+        shufBox2 && shufBox2.disabled === false);
+
+      pinst.destroy(); pst.destroy(); pev.destroy(); phost.remove();
+      lib.destroy();
     }
 
   } catch (e) {

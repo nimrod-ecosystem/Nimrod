@@ -60,6 +60,13 @@ import { createProfilesClient } from './profile.js';
 import {
   isFolderPickerSupported, pickFolder, folderPermission, requestFolderAccess,
 } from './folder_source.js';
+import { createPresetLibrary } from './presets.js';
+// Reused rather than re-implemented (§0g/register #255 point 4: "one code path, not two") —
+// the exact parsing `youtube.js`'s own Add-video/Use-playlist controls already do. Importing
+// this file is safe here: ES modules are evaluated once per resolved URL, so on every page
+// that already loads the 'youtube' module (every real page this panel is mounted on) this is
+// the SAME module instance, not a second `registerModule('youtube', …)` call.
+import { parseVideoId, parsePlaylistId } from './modules/youtube.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -77,9 +84,26 @@ export function mountMedia(root, {
   // the test drives a full pairing — claim, probe, save — with no server and no agent.
   pairs = null,
   fetchAgent = (...a) => fetch(...a),
+  // Presets (register #255) — `presets` is an already-built `createPresetLibrary()` handle,
+  // injectable exactly like `client` is, so the test drives create/list/edit/delete with no
+  // server. Without one, `personId` + `makeUserState` build a real one (per-person — see
+  // presets.js's header for the full scope argument). `makeUserState` is `home.js`'s OWN
+  // per-person state factory, ALREADY curried onto the current person — the exact `(key, opts)
+  // => handle` shape `inputs.js`/`output_panel.js` already receive under this same name, and
+  // exactly what `createPresetLibrary({ makeState })` wants — `personId` is passed alongside it
+  // only as the "has a person resolved at all" guard, never re-applied to the call.
+  presets = null,
+  personId = null,
+  makeUserState = null,
 } = {}) {
   const sources = client || createMediaSourcesClient({ user });
   const pairClient = pairs || createProfilesClient({ user });
+  // Only torn down here if THIS call built it — an injected `presets` handle is the caller's
+  // to manage, the same way an injected `client` is never destroyed by this file either.
+  const ownsPresetLib = !presets;
+  const presetLib = presets || ((personId && makeUserState)
+    ? createPresetLibrary({ makeState: makeUserState })
+    : null);
   const fs = folders || {
     isSupported: isFolderPickerSupported,
     pick: pickFolder,
@@ -169,6 +193,32 @@ export function mountMedia(root, {
           <button type="submit" class="h-btn">Connect</button>
         </form>
       </details>
+
+      <div class="h-card h-presets">
+        <div class="h-card-head"><h2>Presets</h2></div>
+        <p class="h-quiet">Save a module's settings under a name, then point more than one
+          dashboard at it — a YouTube playlist and schedule you set up once, reused everywhere,
+          instead of re-entering it on every screen. Each dashboard can still keep its own
+          settings instead, unchanged, if you never pick a preset for it.</p>
+        <div class="h-msg" data-preset-msg></div>
+        <div class="h-list" data-preset-list><p class="h-loading">Loading…</p></div>
+        <form class="h-new h-preset-form" data-preset-form>
+          <input type="text" data-preset-name placeholder="Name this preset (e.g. Saturday cartoons)"
+                 aria-label="preset name" required>
+          <select data-preset-type aria-label="preset type">
+            <option value="youtube">YouTube</option>
+          </select>
+          <textarea data-preset-playlist rows="3" style="width:100%;flex:1 1 100%"
+            placeholder="Videos, one per line: a YouTube link or id, optionally '| channel name'"></textarea>
+          <input type="text" data-preset-playlist-id
+                 placeholder="Playlist link or id (PL…) — optional, instead of / as well as videos above">
+          <textarea data-preset-schedule rows="3" style="width:100%;flex:1 1 100%"
+            placeholder="Time-of-day playlists, one per line (optional): name | HH:MM | HH:MM (optional) | playlist link or id"></textarea>
+          <label class="chk"><input type="checkbox" data-preset-shuffle checked> shuffle (off = play in order)</label>
+          <button type="submit" class="h-btn h-primary" data-preset-save>Save preset</button>
+          <button type="button" class="h-btn" data-preset-cancel hidden>Cancel edit</button>
+        </form>
+      </div>
     </div>`;
 
   const el = (sel) => root.querySelector(sel);
@@ -260,6 +310,203 @@ export function mountMedia(root, {
     for (const s of list) probe(s);
   }
 
+  // ------------------------------------------------------------- Presets (register #255)
+  //
+  // Reuses `youtube.js`'s own parsers (`parseVideoId`/`parsePlaylistId`) so a link pasted
+  // here is accepted or refused exactly the way it is inside a YouTube instance's own panel
+  // — one rule for "is this a video/playlist link", not two that can quietly disagree.
+  const presetSay = (text, bad = false) => {
+    const m = el('[data-preset-msg]');
+    if (!m) return;
+    m.textContent = text || '';
+    m.classList.toggle('bad', !!bad);
+  };
+
+  // One video/playlist-id per line, optionally `<link or id> | <channel>` — the same two
+  // fields `youtube.js`'s own "Add" row collects, folded onto one line so this form does not
+  // need to grow a repeating widget for what is, for a first pass, a paste-a-list job.
+  function parsePlaylistLines(text) {
+    const out = [];
+    for (const raw of String(text || '').split('\n')) {
+      const line = raw.trim();
+      if (!line) continue;
+      const [urlPart, channelPart] = line.split('|');
+      const id = parseVideoId((urlPart || '').trim());
+      if (!id) continue;               // silently skipped, the same way a bad add is refused
+      out.push({ id, title: id, channel: (channelPart || '').trim() || undefined });
+    }
+    return out;
+  }
+  const formatPlaylistLines = (list) => (Array.isArray(list) ? list : [])
+    .map((v) => (v && v.channel ? `${v.id} | ${v.channel}` : (v && v.id) || '')).filter(Boolean).join('\n');
+
+  function hoursFromTime(v) {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '').trim());
+    if (!m) return null;
+    const h = Number(m[1]), mi = Number(m[2]);
+    return (h >= 0 && h <= 23 && mi >= 0 && mi <= 59) ? h + mi / 60 : null;
+  }
+  function hhmm(h) {
+    const n = Math.max(0, Math.min(24, Number(h) || 0));
+    const hh = Math.floor(n);
+    const mm = Math.round((n - hh) * 60);
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  }
+  // `name | from | to | playlist` (4 fields) or `name | from | playlist` (3, no end) — the
+  // same optional-"to" `youtube.js`'s own schedule editor already allows, just one line per
+  // entry instead of four separate inputs.
+  function parseScheduleLines(text) {
+    const out = [];
+    for (const raw of String(text || '').split('\n')) {
+      const line = raw.trim();
+      if (!line) continue;
+      const parts = line.split('|').map((s) => s.trim());
+      const name = parts[0];
+      const from = hoursFromTime(parts[1]);
+      const to = parts.length >= 4 ? hoursFromTime(parts[2]) : null;
+      const listId = parsePlaylistId(parts.length >= 4 ? parts[3] : parts[2]);
+      if (from == null || !listId) continue;
+      const entry = { name: name || `from ${hhmm(from)}`, start: from, playlistId: listId };
+      if (to != null) entry.end = to;
+      out.push(entry);
+    }
+    return out;
+  }
+  const formatScheduleLines = (list) => (Array.isArray(list) ? list : [])
+    .map((d) => `${d.name || ''} | ${hhmm(d.start)}`
+      + `${Number.isFinite(Number(d.end)) ? ' | ' + hhmm(d.end) : ''} | ${d.playlistId}`).join('\n');
+
+  function summarizePreset(p) {
+    const s = p.settings || {};
+    const n = Array.isArray(s.playlist) ? s.playlist.length : 0;
+    const sched = Array.isArray(s.schedule) ? s.schedule.length : 0;
+    const bits = [`${n} video${n === 1 ? '' : 's'}`];
+    if (s.playlistId) bits.push('a playlist link');
+    if (sched) bits.push(`${sched} schedule ${sched === 1 ? 'entry' : 'entries'}`);
+    bits.push(s.shuffle === false ? 'shuffle off' : 'shuffle on');
+    return bits.join(' · ');
+  }
+
+  function presetCard(p) {
+    return `
+      <div class="h-card">
+        <div class="h-card-head">
+          <b>${esc(p.name)}</b>
+          <span>
+            <button class="h-btn" data-edit-preset="${esc(p.id)}">Edit</button>
+            <button class="h-btn" data-remove-preset="${esc(p.id)}">Delete</button>
+          </span>
+        </div>
+        <div class="h-quiet">${esc(p.type)} · ${esc(summarizePreset(p))}</div>
+      </div>`;
+  }
+
+  function renderPresets() {
+    const box = el('[data-preset-list]');
+    if (!box) return;
+    if (!presetLib) {
+      box.innerHTML = '<p class="h-loading">Presets need a signed-in account with a dashboard set up.</p>';
+      return;
+    }
+    const rows = presetLib.listPresets();
+    box.innerHTML = rows.length ? rows.map(presetCard).join('')
+      : '<p class="h-loading">No presets saved yet.</p>';
+    for (const b of root.querySelectorAll('[data-edit-preset]')) {
+      b.addEventListener('click', () => startEditPreset(b.dataset.editPreset));
+    }
+    for (const b of root.querySelectorAll('[data-remove-preset]')) {
+      b.addEventListener('click', () => removePreset(b.dataset.removePreset));
+    }
+  }
+
+  let editingPresetId = null;
+
+  function resetPresetForm() {
+    editingPresetId = null;
+    el('[data-preset-form]')?.reset();
+    const cancel = el('[data-preset-cancel]');
+    if (cancel) cancel.hidden = true;
+    const save = el('[data-preset-save]');
+    if (save) save.textContent = 'Save preset';
+  }
+
+  function startEditPreset(id) {
+    const p = presetLib?.getPreset(id);
+    if (!p) return;
+    editingPresetId = id;
+    el('[data-preset-name]').value = p.name;
+    el('[data-preset-type]').value = p.type;
+    el('[data-preset-playlist]').value = formatPlaylistLines(p.settings?.playlist);
+    el('[data-preset-playlist-id]').value = p.settings?.playlistId || '';
+    el('[data-preset-schedule]').value = formatScheduleLines(p.settings?.schedule);
+    el('[data-preset-shuffle]').checked = p.settings?.shuffle !== false;
+    el('[data-preset-cancel]').hidden = false;
+    el('[data-preset-save]').textContent = 'Save changes';
+    presetSay('');
+  }
+
+  async function savePresetFromForm() {
+    if (!presetLib) {
+      presetSay('Presets need a signed-in account with a dashboard set up.', true);
+      return;
+    }
+    const name = el('[data-preset-name]').value.trim();
+    if (!name) { presetSay('Give the preset a name.', true); return; }
+    const type = el('[data-preset-type]').value;
+    const settings = {
+      playlist: parsePlaylistLines(el('[data-preset-playlist]').value),
+      playlistId: parsePlaylistId(el('[data-preset-playlist-id]').value),
+      schedule: parseScheduleLines(el('[data-preset-schedule]').value),
+      shuffle: el('[data-preset-shuffle]').checked,
+    };
+    try {
+      await presetLib.savePreset({ id: editingPresetId, type, name, settings });
+      const wasEdit = !!editingPresetId;
+      resetPresetForm();
+      renderPresets();
+      presetSay(wasEdit ? 'Preset updated.' : 'Preset saved.');
+    } catch (err) {
+      console.error(err);
+      presetSay(err.message || 'That preset could not be saved.', true);
+    }
+  }
+
+  async function removePreset(id) {
+    if (!presetLib) return;
+    try {
+      await presetLib.deletePreset(id);
+      if (editingPresetId === id) resetPresetForm();
+      renderPresets();
+      presetSay('Preset deleted.');
+    } catch (err) {
+      console.error(err);
+      presetSay('That preset could not be deleted.', true);
+    }
+  }
+
+  async function refreshPresets() {
+    if (!presetLib) { renderPresets(); return; }
+    try {
+      await presetLib.load();
+      renderPresets();
+      presetLib.startPolling?.();
+    } catch (err) {
+      console.error(err);
+      const box = el('[data-preset-list]');
+      if (box) box.innerHTML = '<p class="h-loading">Could not load your presets.</p>';
+    }
+  }
+
+  el('[data-preset-form]').addEventListener('submit', (e) => {
+    e.preventDefault();
+    savePresetFromForm();
+  });
+  el('[data-preset-cancel]').addEventListener('click', () => resetPresetForm());
+  // Kept live: a preset saved or deleted from a DIFFERENT screen (or this same section on
+  // another tab) should not need a manual reload to show up here — the same expectation
+  // `state.subscribe` already sets for every other saved setting in this codebase.
+  presetLib?.subscribe?.(() => renderPresets());
+
   async function refresh() {
     try {
       list = await sources.list();
@@ -268,6 +515,7 @@ export function mountMedia(root, {
       console.error(err);
       listEl.innerHTML = '<p class="h-loading">Could not load your connected photos.</p>';
     }
+    await refreshPresets();
   }
 
   async function choose() {
@@ -370,5 +618,12 @@ export function mountMedia(root, {
     if (label && url) add(label, url);
   });
 
-  return { refresh, destroy() {} };
+  return {
+    refresh,
+    destroy() {
+      // Only torn down when this call built the library itself — an injected `presets`
+      // handle is the caller's own to manage (see `ownsPresetLib` above).
+      if (ownsPresetLib) { try { presetLib?.destroy(); } catch { /* already gone */ } }
+    },
+  };
 }
