@@ -43,7 +43,7 @@ export function keyControl(e) {
 }
 
 const EDITABLE = ['input', 'textarea', 'select'];
-function isTyping(target) {
+export function isTyping(target) {
   if (!target) return false;
   const tag = String(target.tagName || '').toLowerCase();
   return EDITABLE.includes(tag) || target.isContentEditable === true;

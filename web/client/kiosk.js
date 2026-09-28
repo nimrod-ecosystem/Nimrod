@@ -47,7 +47,7 @@ import { listManifests, getManifest } from './module.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
-import { DEFAULT_BINDINGS } from './input_keyboard.js';
+import { DEFAULT_BINDINGS, isTyping } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
 import { createCallTransport } from './call_transport.js';
 import { readConfig, writeConfig, writePosition, bootPlan, markHopped, hasHopped,
@@ -2304,6 +2304,10 @@ export async function mountKiosk(root, {
   // anyway: it is the CAMERA mirror.
   const onKey = (e) => {
     if (menu.isOpen()) return;               // the menu is driven by the bus, not from here
+    // TYPING IS NOT INPUT (input_keyboard.js says so for the bus; this handler never did). A
+    // "c" typed into a text box toggled the camera mirror, an "h" opened the screen picker, and
+    // a digit switched panels -- out from under the very field somebody was typing in.
+    if (isTyping(e.target)) return;
     if (e.key >= '1' && e.key <= '9') { const i = Number(e.key) - 1; if (i < stageDefs.length) showPrimary(i); else return; }
     else if (e.key.toLowerCase() === 'h') { toggleScreens(); return; }
     else if (e.key.toLowerCase() === 'c') toggleMirrorFull();
