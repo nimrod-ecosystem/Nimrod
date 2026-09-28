@@ -60,7 +60,7 @@ function rig({ existing = [], total = null, postReturns = 'row' } = {}) {
         session_id: body.session_id ?? null,
         producer_version: body.producer_version ?? null,
       };
-      existing = [row, ...existing];
+      existing = [...existing, row];      // the real server lists oldest first (db.py list_events)
       return { ok: true, json: async () => (postReturns === 'row' ? row : { ok: true }) };
     }
     return { ok: true, json: async () => ({ events: existing, total: total ?? existing.length }) };
@@ -102,8 +102,8 @@ try {
     const c = ev.get();
 
     check('the new row is in the cache', c.events.length === 1 && c.events[0].data.n === 7);
-    check('*** newest first, the same order a refresh returned ***',
-      c.events[0].kind === 'trial');
+    check('*** oldest first, the same order a refresh returns ***',
+      c.events[c.events.length - 1].kind === 'trial');
     // THE POINT: the row in the cache is the SERVER'S row. The client clock is still never
     // trusted for the record, which is the rule the old refresh was protecting.
     check('*** it carries the SERVER id and timestamp, not a locally invented one ***',
@@ -123,7 +123,7 @@ try {
     const before = seen;
     await ev.append('trial', { n: 2 });
     check('subscribers are still told — a dashboard reacting to a write keeps working',
-      seen > before && last.events[0].data.n === 2);
+      seen > before && last.events[last.events.length - 1].data.n === 2);
     r.restore();
   }
 
@@ -135,15 +135,34 @@ try {
     await ev.load();
     check('it starts at the limit', ev.get().events.length === 2);
     await ev.append('trial', { n: 3 });
-    check('*** appending past the limit drops the oldest rather than growing forever ***',
-      ev.get().events.length === 2 && ev.get().events[0].data.n === 3,
-      String(ev.get().events.length));
+    check('*** appending past the limit drops the OLDEST rather than growing forever ***',
+      ev.get().events.length === 2 && ev.get().events.map((e) => e.id).join() === '2,1001',
+      ev.get().events.map((e) => e.id).join());
+    // THE BUG THIS PINS (2026-09-28): the new row used to go on the FRONT and the cache kept the
+    // first `limit` -- so this case kept [new, 1] and threw away 2, the newest existing row.
+    check('...so the newest existing row survives, and the new one is last',
+      ev.get().events[0].id === 2 && ev.get().events[1].data.n === 3);
     check('...and the total still counts what is stored, not what is cached',
       ev.get().total === 3, String(ev.get().total));
     r.restore();
   }
 
   // =====================================================================================
+  section('*** order after several appends matches a refresh exactly ***');
+  {
+    const r = rig({ existing: [{ id: 1, kind: 'trial', data: {} }, { id: 2, kind: 'trial', data: {} }] });
+    const ev = createEvents({ url: '/api/x/events/s', user: 'u' });
+    await ev.load();
+    await ev.append('trial', { n: 'a' });
+    await ev.append('trial', { n: 'b' });
+    const cached = ev.get().events.map((e) => e.id).join();
+    await ev.load();
+    const refreshed = ev.get().events.map((e) => e.id).join();
+    check('*** the cache after appends is in the same order a fresh load returns ***',
+      cached === refreshed && cached === '1,2,1001,1002', `cached ${cached} vs refreshed ${refreshed}`);
+    r.restore();
+  }
+
   section('an older server that does not answer with the row');
   {
     // A deploy where the client is newer than the server. Falling back is the honest
