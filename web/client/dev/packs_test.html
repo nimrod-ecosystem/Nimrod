@@ -25,7 +25,7 @@ decision for the next pass, not a guess made here.</p>
 <div id="summary">running…</div>
 
 <script type="module">
-import { validatePack, parsePack, loadPack, PACK_SCHEMA_VERSION, PACK_KINDS }
+import { validatePack, parsePack, loadPack, lengthTells, PACK_SCHEMA_VERSION, PACK_KINDS }
   from '../packs.js';
 
 const out = document.getElementById('results');
@@ -290,6 +290,52 @@ try {
       JSON.stringify(validatePack({})));
     check('PACK_SCHEMA_VERSION is the literal string the doc specifies',
       PACK_SCHEMA_VERSION === 'nimrod.pack.v1');
+  }
+  // =====================================================================================
+  section('*** length tells (row 2.25): a WARNING about a valid pack, never a refusal ***');
+  {
+    // 24 four-option questions; `longHits` of them have the right answer as the single longest.
+    const trivia = (longHits, n = 24, { shortHits = 0 } = {}) => ({
+      schema: PACK_SCHEMA_VERSION, kind: 'trivia', name: 'T', source: { name: 's' },
+      items: Array.from({ length: n }, (_, i) => {
+        const long = i < longHits, short = !long && i < longHits + shortHits;
+        const correct = long ? 'a much longer right answer' : short ? 'ok' : 'right one';
+        return { question: `q${i}?`, correct,
+                 answers: [correct, 'wrong one', 'other one', 'third one'] };
+      }),
+    });
+    const p13 = trivia(13);
+    check('(fixture) the fixture is a valid pack', validatePack(p13).length === 0, JSON.stringify(validatePack(p13)));
+    const w13 = lengthTells(p13);
+    check('*** 13 of 24 longest (the Harmontown count) is flagged ***',
+      w13.length === 1 && /longest option in 13 of 24/.test(w13[0]) && /about 6/.test(w13[0]), JSON.stringify(w13));
+    check('...and it stays a valid pack: validatePack is untouched by it', validatePack(p13).length === 0);
+    check('5 of 24 longest (the rewrite) is not flagged', lengthTells(trivia(5)).length === 0,
+      JSON.stringify(lengthTells(trivia(5))));
+    check('6 of 24 (what chance gives) is not flagged', lengthTells(trivia(6)).length === 0);
+    const s = lengthTells(trivia(0, 24, { shortHits: 14 }));
+    check('*** the SHORTEST tell is caught too (Word Forge had that one) ***',
+      s.length === 1 && /shortest option in 14 of 24/.test(s[0]), JSON.stringify(s));
+    // ties are not "the longest": equal-length options carry no tell
+    const tied = trivia(0);
+    tied.items.forEach((it) => { it.answers = ['aaaa', 'bbbb', 'cccc', 'dddd']; it.correct = 'aaaa'; });
+    check('ties never count as a tell', lengthTells(tied).length === 0, JSON.stringify(lengthTells(tied)));
+    check('a tiny pack cannot trip it on luck: 2 of 2 longest is not flagged', lengthTells(trivia(2, 2)).length === 0);
+    check('...but 4 of 4 is', lengthTells(trivia(4, 4)).length === 1);
+    check('alpha is an option, not a constant: 2 of 2 is flagged at alpha 0.1',
+      lengthTells(trivia(2, 2), { alpha: 0.1 }).length === 1);
+    // lesson questions and word decoys are the same kind of multiple choice
+    const lesson = { schema: PACK_SCHEMA_VERSION, kind: 'lesson', name: 'L', source: { name: 's' },
+      items: [{ topic: 't', questions: trivia(13).items }] };
+    check('lesson questions are checked', lengthTells(lesson).length === 1);
+    const words = { schema: PACK_SCHEMA_VERSION, kind: 'words', name: 'W', source: { name: 's' },
+      items: Array.from({ length: 12 }, (_, i) => ({ word: `w${i}`,
+        definition: 'a long and careful definition of the word', decoys: ['short', 'brief', 'curt'] })) };
+    check('a words pack whose definition is always the longest is flagged', lengthTells(words).length === 1,
+      JSON.stringify(lengthTells(words)));
+    check('never throws on nonsense', (() => { try { return lengthTells(null).length === 0
+      && lengthTells({}).length === 0 && lengthTells({ kind: 'trivia', items: [null, {}] }).length === 0; }
+      catch { return false; } })());
   }
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));

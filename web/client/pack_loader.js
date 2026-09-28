@@ -15,7 +15,7 @@
 // Media tab, and Points & Quests — see the four callers rather than one, per Mike's own ask
 // that this not be buried behind a single game's menu.
 
-import { parsePack } from './packs.js';
+import { parsePack, lengthTells } from './packs.js';
 import { addUserPack, listUserPacks, removeUserPack } from './user_packs.js';
 
 const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -49,6 +49,7 @@ function ensureStyle(documentRef) {
 .pack-loader .pl-msg{margin:8px 0 0;font-size:.88rem;min-height:1.2em}
 .pack-loader .pl-msg[data-tone="error"]{color:#a85f52}
 .pack-loader .pl-msg[data-tone="ok"]{color:var(--accent,#3a7a4a)}
+.pack-loader .pl-msg[data-tone="warn"]{color:var(--text-strong,inherit)}
 .pack-loader .pl-list{list-style:none;margin:8px 0 0;padding:0;font-size:.88rem}
 .pack-loader .pl-list li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;
   border-top:1px solid var(--border,#eee)}
@@ -128,7 +129,11 @@ export function mountPackLoader(root, { kind = null, onLoaded = null, documentRe
     }
     const entry = addUserPack(pack, text);
     renderList();
-    setMsg(`"${pack.name}" loaded from ${sourceLabel}. Reload the page to use it.`, 'ok');
+    // A tell is not a reason to refuse the pack (it is valid), so it rides on the success message --
+    // the one moment the author is looking at this pack, before any player has met it.
+    const tells = lengthTells(pack);
+    setMsg(`"${pack.name}" loaded from ${sourceLabel}. Reload the page to use it.`
+      + (tells.length ? ` Heads up: ${tells.join('; and ')}.` : ''), tells.length ? 'warn' : 'ok');
     onLoaded?.(entry);
   }
 

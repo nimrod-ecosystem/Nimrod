@@ -111,6 +111,27 @@ try {
   }
 
   // =====================================================================================
+  section('*** a valid but guessable pack loads, and the message says so (row 2.25) ***');
+  {
+    clearStore();
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const rec = mountPackLoader(host, {});
+    host.querySelector('[data-pl-paste-toggle]').click();
+    const tell = { schema: 'nimrod.pack.v1', kind: 'trivia', name: 'Tell Pack', source: { name: 's' },
+      items: Array.from({ length: 12 }, (_, i) => ({ question: `q${i}?`, correct: 'the long right answer here',
+        answers: ['the long right answer here', 'no', 'nah', 'nope'] })) };
+    host.querySelector('[data-pl-paste]').value = JSON.stringify(tell);
+    host.querySelector('[data-pl-load-pasted]').click();
+    await sleep(20);
+    const msg = host.querySelector('[data-pl-msg]');
+    check('it is still accepted and saved -- a tell is a warning, never a refusal', listUserPacks().length === 1);
+    check('*** the message names the tell ***', /Heads up/.test(msg.textContent) && /longest option in 12 of 12/.test(msg.textContent),
+      msg.textContent);
+    check('...in the warning tone, not the plain success tone', msg.dataset.tone === 'warn', msg.dataset.tone);
+    rec.destroy();
+  }
+
   section('bad input is rejected, not silently swallowed');
   {
     clearStore();
