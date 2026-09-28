@@ -36,7 +36,7 @@ import { mountModule } from '../module.js';
 import { createPointsLedger, POINTS_TOPIC, sumEarned, sumSpent, sumMinutes, weekStart,
          pointsValue, fmtPoints } from '../points.js';
 import { weeklyTarget, hoursBand, fmtHours, DEFAULT_TASKS, DEFAULT_REWARDS,
-         SPEND_ORDER, EXCHANGE_STEPS, acceptsOf, chooseCurrency } from '../modules/quests.js';
+         SPEND_ORDER, EXCHANGE_STEPS, acceptsOf, chooseCurrency, acceptChoices, choiceIndexOf } from '../modules/quests.js';
 import { DEFAULT_CURRENCIES } from '../points.js';
 import { getManifest } from '../module.js';
 import { fieldsFor, fieldValue } from '../settings_fields.js';
@@ -559,6 +559,87 @@ const MIN = 60000;
     check('...recording Play as the currency', lEv.data.currency === 'play' && lEv.data.note === 'Ice cream',
       J(lEv.data));
     linst.destroy();
+
+    section('*** the store asks ONCE that School-only is a choice, and every reward can be changed ***');
+    // Mike, 2026-09-28: "Start out as school only as default, but let the user decide. Have it ask
+    // the first time in the store, so you know it's an option."
+    check('the choices come from the currency data: every currency, then each alone',
+      J(acceptChoices().map((c) => c.label)) === J(['School or Play', 'School only', 'Play only']),
+      J(acceptChoices().map((c) => c.label)));
+    check('a School-only reward sits on the "School only" stop',
+      choiceIndexOf({ reward: 'x', accepts: ['school'] }) === 1);
+    const mountQ = async (id) => {
+      const mod = await profiles.addModule(cProfile.id, 'quests');
+      const st = createState({ url: profiles.stateURL(cProfile.id, mod.id), user: USER });
+      await st.load();
+      const host = newHost(id);
+      const inst = mountModule('quests', {
+        mount: host, bus: createBus(), state: st,
+        events: createEvents({ url: profiles.eventsURL(cProfile.id, mod.id), user: USER }),
+        user: USER, profileId: cProfile.id, makeState: cMakeState, makeEvents: cMakeEvents,
+      });
+      inst.init();
+      await sleep(400);
+      [...host.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === 'rewards').click();
+      await sleep(120);
+      return { mod, st, host, inst };
+    };
+    {
+      const a = await mountQ('askKeepHost');
+      const ask = a.host.querySelector('[data-ask]');
+      check('*** the first time the store opens, it says School-only is a choice ***',
+        !!ask && /Screen time/.test(ask.textContent) && /School only/.test(ask.textContent), ask && ask.textContent);
+      check('it is a notice, not a gate: the rewards are all still there to press',
+        a.host.querySelectorAll('[data-buy]').length === DEFAULT_REWARDS.length);
+      check('every reward has its own "Paid with" button',
+        a.host.querySelectorAll('[data-accepts]').length === DEFAULT_REWARDS.length);
+      a.host.querySelector('[data-ask-keep]').click();
+      await sleep(300);
+      check('"Keep it that way" puts the notice away', !a.host.querySelector('[data-ask]'));
+      await a.st.flush?.();
+      check('...remembers it was answered', a.st.get().currencyChoiceAsked === true, J(a.st.get()));
+      check('...and screen time is still School only',
+        J(acceptsOf(a.st.get().rewards.find((r) => /solo/.test(r.reward)))) === J(['school']));
+      a.inst.destroy();
+      // the same module again: it does not ask twice
+      const again = mountModule('quests', {
+        mount: a.host, bus: createBus(), state: a.st,
+        events: createEvents({ url: profiles.eventsURL(cProfile.id, a.mod.id), user: USER }),
+        user: USER, profileId: cProfile.id, makeState: cMakeState, makeEvents: cMakeEvents,
+      });
+      again.init();
+      await sleep(400);
+      [...a.host.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === 'rewards').click();
+      await sleep(120);
+      check('*** it asks ONCE: opening the store again shows no notice ***', !a.host.querySelector('[data-ask]'));
+
+      // the per-reward button: School only -> Play only -> School or Play, saved each time
+      const soloIdx = DEFAULT_REWARDS.findIndex((r) => /solo/.test(r.reward));
+      const pb = () => a.host.querySelector(`[data-accepts="${soloIdx}"]`);
+      check('the solo screen-time button starts on "School only"', /School only/.test(pb().textContent), pb().textContent);
+      pb().click(); await sleep(250);
+      check('*** pressing it moves to the next choice, and saves it ***',
+        /Play only/.test(pb().textContent) && J(a.st.get().rewards[soloIdx].accepts) === J(['play']),
+        pb().textContent + ' ' + J(a.st.get().rewards[soloIdx]));
+      pb().click(); await sleep(250);
+      check('...and wraps round to every currency',
+        /School or Play/.test(pb().textContent) && J(a.st.get().rewards[soloIdx].accepts) === J(['school', 'play']),
+        pb().textContent);
+      check('the other rewards were saved untouched, each with an explicit accepts',
+        a.st.get().rewards.every((r, i) => i === soloIdx || J(r.accepts) === J(DEFAULT_REWARDS[i].accepts)));
+      again.destroy();
+    }
+    {
+      const b = await mountQ('askAllowHost');
+      b.host.querySelector('[data-ask-allow]').click();
+      await sleep(300);
+      check('*** "Let every kind of points buy them" opens the School-only rewards to Play too ***',
+        !b.host.querySelector('[data-ask]')
+        && b.st.get().rewards.filter((r) => /Screen time/.test(r.reward)).every((r) => J(r.accepts) === J(['school', 'play']))
+        && b.st.get().currencyChoiceAsked === true,
+        J(b.st.get().rewards.map((r) => r.accepts)));
+      b.inst.destroy();
+    }
     seed.destroy();
 
     document.getElementById('summary').textContent =

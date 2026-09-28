@@ -167,6 +167,26 @@ export function acceptsOf(reward, currencies = DEFAULT_CURRENCIES) {
   return ids.filter((id) => accepts.includes(id));
 }
 
+// THE CHOICES A REWARD CAN BE SET TO, built from the currency data rather than naming School and
+// Play: every currency, then each one alone. Mike, 2026-09-28: "Start out as school only as default,
+// but let the user decide." A short list of stops, not a checklist, because one switch walks a
+// choice one press at a time.
+export function acceptChoices(currencies = DEFAULT_CURRENCIES) {
+  const ids = currencies.map((c) => c.id);
+  const name = (id) => (currencies.find((c) => c.id === id) || {}).name || id;
+  return [
+    { accepts: ids, label: ids.map(name).join(' or ') },
+    ...ids.map((id) => ({ accepts: [id], label: `${name(id)} only` })),
+  ];
+}
+
+export function choiceIndexOf(reward, currencies = DEFAULT_CURRENCIES) {
+  const have = acceptsOf(reward, currencies);
+  const i = acceptChoices(currencies).findIndex((c) =>
+    c.accepts.length === have.length && c.accepts.every((id) => have.includes(id)));
+  return i < 0 ? 0 : i;
+}
+
 const nameOf = (id, currencies = DEFAULT_CURRENCIES) =>
   (currencies.find((c) => c.id === id) || {}).name || id;
 
@@ -261,6 +281,7 @@ registerModule(
     let hoursCfg = { ...DEFAULT_HOURS };
     let pointsPerHour = 60;
     let exchangeRate = 1;         // the one setting — how much Play one School buys
+    let choiceAsked = false;      // has the one-time "School only is a choice" notice been answered
     let tab = 'tasks';
     let doubling = false;         // the x2 toggle, only offered on double-eligible tasks
     let pendingBuy = null;        // index of a reward awaiting its confirm tap
@@ -354,6 +375,46 @@ registerModule(
         ? `Traded ${plural(amount, nameOf(from))} for ${plural(res.gets, nameOf(to))}`
         : 'Could not trade that — nothing was changed.';
       render();
+    }
+
+    // *** SAVING A REWARD'S CURRENCIES. *** Every reward is written with an explicit `accepts`, so the
+    // read-time rule in `acceptsOf` (defaults and "screen time" names) stops mattering the moment a
+    // person has made a choice. The whole list is written because that is what this module's state
+    // holds -- the same list the store reads.
+    function saveRewards(next, extra = {}) {
+      rewards = next;
+      state.set({ rewards: next.map((r) => ({ ...r, accepts: acceptsOf(r, currencies) })), ...extra });
+      render();
+    }
+
+    function cycleAccepts(i) {
+      const r = rewards[i];
+      if (!r) return;
+      disarm();
+      const choices = acceptChoices(currencies);
+      const next = choices[(choiceIndexOf(r, currencies) + 1) % choices.length];
+      saveRewards(rewards.map((x, j) => (j === i ? { ...x, accepts: next.accepts } : x)));
+      flash = `${r.reward} can now be bought with ${next.label}`;
+      render();
+    }
+
+    // THE ONE-TIME QUESTION (Mike, 2026-09-28: "Have it ask the first time in the store, so you know
+    // it's an option"). Answering it either way records it; "let Play buy it" opens every
+    // School-only reward to every currency. Not answering changes nothing: the School-only default
+    // stands and the store works -- the notice is information, never a gate.
+    function answerChoice(allowAll) {
+      disarm();
+      const all = currencies.map((c) => c.id);
+      const next = allowAll
+        ? rewards.map((r) => (restrictedRewards().includes(r) ? { ...r, accepts: all } : r))
+        : rewards;
+      choiceAsked = true;
+      saveRewards(next, { currencyChoiceAsked: true });
+    }
+
+    function restrictedRewards() {
+      const n = currencies.length;
+      return rewards.filter((r) => acceptsOf(r, currencies).length < n);
     }
 
     function refusal(verdict, from) {
@@ -468,12 +529,27 @@ registerModule(
     function renderRewards() {
       const bal = balances();
       // Rewards first — buying is what the store is for; trading is below it.
+      const restricted = choiceAsked ? [] : restrictedRewards();
+      const notice = restricted.length ? `
+        <div class="q-ask" data-ask role="note">
+          <p>${esc(restricted.map((r) => r.reward).join(', '))} can be bought with
+            ${esc(restricted.map((r) => acceptChoices(currencies)[choiceIndexOf(r, currencies)].label)
+              .filter((v, k, a) => a.indexOf(v) === k).join(' / '))}. That is a choice, and you can
+            change it for any reward with its "Paid with" button.</p>
+          <button class="q-ask-btn" data-ask-keep>Keep it that way</button>
+          <button class="q-ask-btn" data-ask-allow>Let every kind of points buy them</button>
+        </div>` : '';
+      const choices = acceptChoices(currencies);
       return `
+        ${notice}
         <div class="q-list">
           ${rewards.map((r, i) => {
             const pick = chooseCurrency(r, bal, { currencies });
             const afford = !!pick.currency;
+            const paid = choices[choiceIndexOf(r, currencies)].label;
             return `
+            <div class="q-reward-row">
+            <button class="q-accepts" data-accepts="${i}" aria-label="${esc(r.reward)}: paid with ${esc(paid)}. Press to change.">Paid with: ${esc(paid)}</button>
             <button class="q-item" data-buy="${i}" data-kind="${esc(r.kind)}" ${afford ? `data-pay="${esc(pick.currency)}"` : 'disabled'}>
               <span class="q-item-main">
                 <span class="q-item-name">${esc(r.reward)}</span>
@@ -481,7 +557,8 @@ registerModule(
                 ${afford ? '' : `<span class="q-item-why" data-why>${esc(pick.why)}</span>`}
               </span>
               <span class="q-item-pts">${pendingBuy === i ? 'confirm?' : '-' + esc(r.cost)}</span>
-            </button>`;
+            </button>
+            </div>`;
           }).join('')}
         </div>
         ${renderExchange(bal)}`;
@@ -540,6 +617,11 @@ registerModule(
       for (const b of mount.querySelectorAll('[data-buy]')) {
         b.addEventListener('click', () => buy(Number(b.dataset.buy)));
       }
+      for (const b of mount.querySelectorAll('[data-accepts]')) {
+        b.addEventListener('click', () => cycleAccepts(Number(b.dataset.accepts)));
+      }
+      el('[data-ask-keep]')?.addEventListener('click', () => answerChoice(false));
+      el('[data-ask-allow]')?.addEventListener('click', () => answerChoice(true));
       for (const b of mount.querySelectorAll('[data-exchange]')) {
         b.addEventListener('click', () =>
           trade(b.dataset.exchangeFrom, b.dataset.exchangeTo, Number(b.dataset.exchange)));
@@ -605,6 +687,7 @@ registerModule(
           pointsPerHour = Number(snap.pointsPerHour) || 60;
           const rate = Number(snap.exchangeRate);
           exchangeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
+          choiceAsked = snap.currencyChoiceAsked === true;
           render();
         });
 
