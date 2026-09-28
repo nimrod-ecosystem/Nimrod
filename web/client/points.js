@@ -69,7 +69,15 @@
 
 // The ledger's categories. The first four mirror the points-tracker spreadsheet's "Type"
 // column; `School` is focused school time (carries `minutes`); `Reward` is a purchase.
-export const TYPES = ['Obligatory', 'Bonus', 'Idea', 'Penalty', 'School', 'Reward'];
+// `Play` (added 2026-09-28, Mike -- register 250/257: "Arcade only... points from playing a
+// game shouldn't go towards screen time or anything like that") is arcade-style play only
+// (Comet, balloons, pond, press games) -- Word Forge, Trivia and algebra keep paying School,
+// because those pay for correct answers against the curriculum this ledger is built on.
+// "Play" is a working name from the register, not a spreadsheet column; say so if it should
+// change. WHAT PLAY CANNOT DO IS NOT ENFORCED HERE: a per-user setting for which classes may
+// buy which rewards (register 250 §2) is separate, not-yet-built work in the reward store
+// (quests.js) -- this file only makes the category exist and stops it defaulting to Bonus.
+export const TYPES = ['Obligatory', 'Bonus', 'Idea', 'Penalty', 'School', 'Reward', 'Play'];
 export const REWARD_TYPE = 'Reward';
 export const SCHOOL_TYPE = 'School';
 

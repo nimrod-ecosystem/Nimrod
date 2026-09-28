@@ -131,6 +131,9 @@ const steps = (inst, n, dt = 16) => { for (let i = 0; i < n; i++) inst.impl.__st
     check('*** it pays through the shared points ledger, with the configured amount ***',
       awardCalls.some((c) => c.kind === 'points' && c.data.amount === 2 && c.data.source === 'comet_ambient'),
       JSON.stringify(awardCalls));
+    check('*** Play, not Bonus (Mike, 2026-09-28, register 250/257: "Arcade only" -- Play points '
+      + 'must not be able to buy screen time the way an unset/unrecognized type silently would) ***',
+      awardCalls.some((c) => c.kind === 'points' && c.data.type === 'Play'), JSON.stringify(awardCalls));
     inst.destroy(); host.remove();
   }
 
