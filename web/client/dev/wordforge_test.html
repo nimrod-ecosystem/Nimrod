@@ -618,15 +618,34 @@ a || b || c`);
       // Either question kind puts a pack word somewhere on screen: 'define' puts it in the
       // PROMPT ("What does 'candid' mean?"); 'blank' blanks it out of the prompt but puts it
       // (and three others) in the OPTIONS instead. Reading the whole panel's text catches both.
+      //
+      // *** IT HAS TO ANSWER TO MOVE ON. *** This loop used to publish `wordforge/skip`, but
+      // `advance()` returns at once while a question is unanswered -- so it never moved, only the
+      // FIRST question was ever checked, and the check passed or failed on whether that one
+      // happened to be a word question. Flaky, and more so once the deck gained sentence pairs
+      // (2026-09-28). Now it answers (first option), takes the correction in if it was wrong, and
+      // goes on, waiting for the question to actually change rather than for a fixed time.
       let foundPackWord = false;
-      for (let i = 0; i < 10; i += 1) {
-        const shown = (phost.textContent || '').toLowerCase();
-        if ([...packWords].some((w) => shown.includes(w))) { foundPackWord = true; break; }
-        pbus.publish('wordforge/skip');
-        await sleep(150);
+      const shownNow = () => ' ' + (phost.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      const hasPackWord = () => [...packWords].some((w) => shownNow().includes(w));
+      for (let i = 0; i < 12 && !foundPackWord; i += 1) {
+        if (hasPackWord()) { foundPackWord = true; break; }
+        const before = shownNow();
+        const o = popts();
+        if (!o.length) break;                                   // the round is over
+        o[0].click();
+        await sleep(120);
+        for (let k = 0; k < 2; k += 1) {                        // "Next", or "Got it" then "Next"
+          const nx = phost.querySelector('[data-next]');
+          if (!nx) break;
+          nx.click();
+          await sleep(120);
+          if (shownNow() !== before && !phost.querySelector('.wf-fb')) break;
+        }
+        for (let w = 0; w < 20 && shownNow() === before; w += 1) await sleep(50);
       }
       check('*** the on-screen question is actually built from the pack’s own words ***',
-        foundPackWord, (phost.textContent || '').slice(0, 300));
+        foundPackWord, shownNow().slice(0, 300));
 
       pinst.destroy();
       phost.remove();
