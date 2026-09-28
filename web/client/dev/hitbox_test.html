@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>hitbox — can this scene thing be pressed?</title>
+<style>
+  body{font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.25rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>hitbox — can this scene thing be pressed?</h1>
+<p>No canvas, no camera, no module mounted — every function here is pure given a point and a
+list of circular targets, the same discipline `input_marker.js`'s own pure colour maths is
+tested under.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { distSq, hitCircle, hitTest, nearest, createHoverTracker } from '../hitbox.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+(async () => {
+  section('*** distSq — the one line comet.js already ran, named and shared ***');
+  check('distance to yourself is zero', distSq(5, 5, 5, 5) === 0);
+  check('a 3-4-5 triangle squares to 25', distSq(0, 0, 3, 4) === 25);
+  check('order does not matter', distSq(1, 2, 9, 7) === distSq(9, 7, 1, 2));
+
+  section('hitCircle — exactly the check comet.js ran inline');
+  {
+    const t = { x: 100, y: 100, r: 10 };
+    check('dead center is a hit', hitCircle(100, 100, t) === true);
+    check('just inside the radius is a hit', hitCircle(100, 109, t) === true);
+    check('*** exactly ON the radius is NOT a hit (strict <, matching comet.js) ***',
+      hitCircle(110, 100, t) === false);
+    check('well outside is not a hit', hitCircle(200, 200, t) === false);
+  }
+
+  section('hitTest — every overlapping target, nearest first, none pretending to be one');
+  {
+    const targets = [
+      { id: 'far', x: 300, y: 300, r: 20 },
+      { id: 'near', x: 12, y: 9, r: 25 },
+      { id: 'medium', x: 40, y: 30, r: 60 },
+    ];
+    const hits = hitTest(10, 10, targets);
+    check('finds every target the point is actually inside', hits.length === 2, JSON.stringify(hits.map((t) => t.id)));
+    check('*** nearest first, not registration order ***',
+      hits[0].id === 'near' && hits[1].id === 'medium', JSON.stringify(hits.map((t) => t.id)));
+    check('a point inside nothing gets an empty list, not a throw',
+      JSON.stringify(hitTest(9999, 9999, targets)) === '[]');
+    check('an empty target list is a no-op, not a throw', JSON.stringify(hitTest(0, 0, [])) === '[]');
+  }
+
+  section('nearest — the switch-scan half (comet.js’s own steerToNearestHeart, generalized)');
+  {
+    const targets = [
+      { id: 'a', x: 0, y: 0 },
+      { id: 'b', x: 100, y: 100 },
+      { id: 'c', x: 5, y: 5 },
+    ];
+    check('picks the genuinely closest one, not the first or last', nearest(0, 0, targets).id === 'a');
+    check('...and it changes when "here" changes',
+      nearest(90, 90, targets).id === 'b', nearest(90, 90, targets).id);
+    check('no targets at all is null, not a throw', nearest(0, 0, []) === null);
+    check('one target is always the answer', nearest(500, 500, [{ id: 'only', x: 1, y: 1 }]).id === 'only');
+  }
+
+  section('*** createHoverTracker — the enter/exit half, the same shape as a DOM button’s :hover ***');
+  {
+    const hv = createHoverTracker();
+    const targets = () => [{ id: 'x', x: 50, y: 50, r: 10 }, { id: 'y', x: 200, y: 200, r: 10 }];
+
+    let r = hv.update(0, 0, targets());
+    check('nothing entered when the point starts outside everything',
+      r.entered.length === 0 && r.left.length === 0 && r.inside.length === 0);
+
+    r = hv.update(50, 50, targets());
+    check('*** moving onto a target fires ENTER, once ***', r.entered.join() === 'x', JSON.stringify(r));
+    check('isInside reflects it immediately', hv.isInside('x') === true && hv.isInside('y') === false);
+
+    r = hv.update(51, 49, targets());
+    check('staying inside the SAME target fires neither enter nor exit again',
+      r.entered.length === 0 && r.left.length === 0, JSON.stringify(r));
+
+    r = hv.update(0, 0, targets());
+    check('*** moving off a target fires LEAVE, once ***', r.left.join() === 'x', JSON.stringify(r));
+    check('and isInside forgets it', hv.isInside('x') === false);
+
+    r = hv.update(200, 200, targets());
+    check('moving straight onto a DIFFERENT target enters that one',
+      r.entered.join() === 'y' && r.left.length === 0, JSON.stringify(r));
+
+    hv.forget('y');
+    check('*** forget() clears a target that vanished without its own final update — no stuck "inside" ***',
+      hv.isInside('y') === false);
+
+    hv.reset();
+    check('reset() clears everything at once', hv.isInside('y') === false);
+  }
+
+  section('two overlapping targets — enter/leave tracked independently, not as one blob');
+  {
+    const hv = createHoverTracker();
+    const targets = [{ id: 'big', x: 0, y: 0, r: 100 }, { id: 'small', x: 0, y: 0, r: 10 }];
+    let r = hv.update(50, 0, targets);
+    check('inside the big one only', r.entered.join() === 'big' && hv.isInside('small') === false);
+    r = hv.update(5, 0, targets);
+    check('*** entering the small one while still inside the big one only reports the NEW entry ***',
+      r.entered.join() === 'small' && r.left.length === 0, JSON.stringify(r));
+    r = hv.update(50, 0, targets);
+    check('leaving the small one (back to just the big one) reports only that exit',
+      r.left.join() === 'small' && r.entered.length === 0, JSON.stringify(r));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

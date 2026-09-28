@@ -87,6 +87,10 @@ import './modules/settings.js';
 // §everything-becomes-a-module's sibling row on the ambient layer for the actual scope this
 // shipped ("prove the band works", not a caregiver-facing feature).
 import './modules/ambient_drift.js';
+// UNLIKE ambient_drift above, this one IS meant to be user-addable — Mike asked for the real
+// feature, not just proof the ambient band works (MIKE_CHANGE_LIST.md §comet-headless-toggle-
+// proposal). Wired into home.html/modules.html's composer and modules_catalog.js as well.
+import './modules/comet_ambient.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];

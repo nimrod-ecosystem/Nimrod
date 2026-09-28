@@ -151,6 +151,17 @@
      silently assumed: *"the mechanism for... 'move the cursor over and catch one without
      leaving what you were doing.'"* */
   .k-ambient{position:absolute;inset:0;z-index:var(--z-ambient);pointer-events:auto}
+  /* *** THE OCCUPANT NEEDS REAL PIXELS, AND NOTHING WAS GIVING IT ANY. *** `.k-mod{position:
+     relative}` (modules.css) has no explicit height, so as a plain child of `.k-ambient` it sizes
+     to its own CONTENT in normal flow -- zero, before anything has drawn into it. `.k-stage`'s own
+     children get `flex:1` from `.k-stage.k-grid .k-cell .k-mod` below; `.k-ambient` never gave its
+     one child the equivalent. Found building `comet_ambient.js` (2026-09-27): its canvas measured
+     its own host via `getBoundingClientRect()`, same as every other canvas module, and got a real
+     `0px` height back -- confirmed directly, not assumed, before writing this rule. A CSS-only
+     occupant like `ambient_drift.js` partly hid the same bug: its dots are `position:absolute`
+     against this same zero-height box and would be clipped by `.amb-drift{overflow:hidden}`
+     rather than erroring, which is a quieter failure, not a different one. */
+  .k-ambient > .k-mod{position:absolute;inset:0}
   .k-stage.k-grid{display:grid;gap:2vmin}
   .k-stage.k-grid .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden}
   /* `overflow:auto` was here and is now on `mod-host`, for every host rather than this one. */

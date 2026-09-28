@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>comet (ambient) — a scene item, not a panel</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:420px;height:260px;margin-top:12px;border-radius:14px;overflow:hidden;position:relative;background:#222}
+</style>
+</head>
+<body>
+<h1>comet (ambient) — hearts drifting behind your other panels</h1>
+<p>Mike, 2026-09-26: "the balloons are just an overlay you can set the frequency/speed/points on
+... decorative or something to do." Reuses <code>hitbox.js</code> for the catch — same squared-
+distance check `comet.js`'s own panel version has always run, proven there first
+(<code>comet_test.html</code>, unchanged after the extraction).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/comet_ambient.js';
+import { mountModule, getManifest } from '../module.js';
+import { fieldsFor } from '../settings_fields.js';
+import { createBus } from '../bus.js';
+import { AIM_TOPIC } from '../aim.js';
+import { CATALOG } from '../modules_catalog.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function scratch(w = 400, h = 240) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+
+let awardCalls = [];
+function fakeMakeEvents() {
+  return {
+    append: (kind, data) => { awardCalls.push({ kind, data }); return Promise.resolve({ kind, data }); },
+    load: () => Promise.resolve(),
+    get: () => ({ events: [] }),
+    destroy() {},
+  };
+}
+
+function mount(host, { bus = createBus(), settings = {}, makeEvents = fakeMakeEvents } = {}) {
+  const st = { get: () => settings, subscribe: () => (() => {}), destroy() {} };
+  const inst = mountModule('comet_ambient', {
+    mount: host, bus, state: st, events: null,
+    user: 'u', profileId: 'p', makeEvents,
+  });
+  inst.init();
+  return inst;
+}
+const probe = (inst) => inst.impl.__probe();
+const steps = (inst, n, dt = 16) => { for (let i = 0; i < n; i++) inst.impl.__step(dt); };
+
+(async () => {
+  // =====================================================================
+  section('it is a module like any other, and it is ambient, not a panel');
+  check('it registers a manifest', !!getManifest('comet_ambient'));
+  check('*** mount:\'ambient\' — no dashboard slot of its own, matching §ambient-layer ***',
+    getManifest('comet_ambient').mount === 'ambient');
+  check('it declares no dependency, same honesty comet.js’s own manifest carries',
+    getManifest('comet_ambient').dependsOn === 'none');
+  check('settings survive the shared field reader', fieldsFor(getManifest('comet_ambient')).length > 0);
+  check('described in the catalog, not silently missing',
+    CATALOG.some((m) => m.type === 'comet_ambient'));
+
+  section('decorative by default — hearts drift, nothing is catchable');
+  {
+    const host = scratch();
+    const bus = createBus();
+    const inst = mount(host, { bus, settings: { count: 3 } });
+    await sleep(20);
+    check('hearts exist', probe(inst).hearts === 3, probe(inst).hearts);
+    check('*** default mode is decorative ***', probe(inst).cfg.mode === 'decorative');
+    steps(inst, 30);
+    bus.publish('comet_ambient/seek');
+    steps(inst, 60);
+    check('*** seeking does nothing in decorative mode — there is no head to move ***',
+      probe(inst).cx === -1, probe(inst).cx);
+    check('...and nothing is ever caught', probe(inst).caught === 0);
+    inst.destroy(); host.remove();
+  }
+
+  section('*** interactive mode — the shared hit-box module actually catches a heart ***');
+  {
+    const host = scratch();
+    const bus = createBus();
+    const inst = mount(host, { bus, settings: { mode: 'interactive', count: 1, points: 2 } });
+    await sleep(20);
+    check('no head yet — nothing has moved it', probe(inst).cx === -1);
+
+    bus.publish('comet_ambient/seek');
+    steps(inst, 5);
+    check('a seek starts moving the head', probe(inst).cx !== -1);
+
+    steps(inst, 55);   // well past the fixed glide duration
+    check('*** arriving at the only heart catches it ***', probe(inst).caught === 1, JSON.stringify(probe(inst)));
+    check('...and a new one takes its place', probe(inst).hearts === 1);
+
+    await sleep(20);   // the award is async
+    check('*** it pays through the shared points ledger, with the configured amount ***',
+      awardCalls.some((c) => c.kind === 'points' && c.data.amount === 2 && c.data.source === 'comet_ambient'),
+      JSON.stringify(awardCalls));
+    inst.destroy(); host.remove();
+  }
+
+  section('a real aim (mouse/tracker) moves the head, the same door comet.js’s own pointer path uses');
+  {
+    // The catch mechanism itself is already proven above (via `seek`, matching comet_test.html's
+    // own choice to exercise verb-driven steering rather than predicting a heart's exact pixel
+    // position). What is unique to the pointer path is that it reaches this module AT ALL —
+    // through `input/aim`, the same bus topic every producer (mouse, a camera tracker) reports
+    // into, and cannot tell apart — so this proves THAT wire is live, not a second catch test.
+    const host = scratch();
+    document.body.append(host);   // needs real layout for aimIn()'s getBoundingClientRect
+    host.style.cssText = 'position:fixed;top:0;left:0;width:400px;height:240px';
+    const bus = createBus();
+    const inst = mount(host, { bus, settings: { mode: 'interactive', count: 0 } });
+    await sleep(20);
+    check('no head yet', probe(inst).cx === -1);
+    bus.publish(AIM_TOPIC, { x: 0.5, y: 0.5, device: 'mouse:test' });
+    check('*** a real aim, off the shared bus, moves the head — the exact door a mouse or a '
+      + 'future camera tracker uses, and this module cannot tell them apart ***',
+      probe(inst).cx !== -1, JSON.stringify(probe(inst)));
+    inst.destroy(); host.remove();
+  }
+
+  section('decorative and interactive are a real settings CHOICE, not a hidden default');
+  {
+    const modes = (fieldsFor(getManifest('comet_ambient')).find((f) => f.key === 'mode') || {}).options || [];
+    check('both of Mike’s own words are the two options',
+      modes.some((o) => o.value === 'decorative') && modes.some((o) => o.value === 'interactive'),
+      JSON.stringify(modes));
+  }
+
+  section('destroy cleans up without error');
+  {
+    const host = scratch();
+    const inst = mount(host, { settings: { mode: 'interactive' } });
+    await sleep(20);
+    inst.destroy();
+    check('no throw', true);
+    host.remove();
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

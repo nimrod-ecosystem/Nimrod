@@ -110,6 +110,7 @@ export const HEALTH_EXPECT = {
   // false "stalled" judgement is worth avoiding regardless of whether anything could act on it.
   settings:      { idle: true },
   ambient_drift: { idle: true },
+  comet_ambient: { idle: true },
   quests:      { idle: true },
   sprint:      { idle: true },
   progress:    { idle: true },
