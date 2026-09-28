@@ -42,6 +42,9 @@ import { parseWords, buildDeck, DEFAULT_WORDS, DEFAULT_PAIRS } from '../modules/
 import '../modules/lessons.js';
 import '../modules/wordforge.js';
 import '../modules/trivia.js';
+import { createPointsLedger } from '../points.js';
+import { TRANSCRIPT_STREAM, REVIEW_KINDS, reviewItems } from '../transcript_quiz.js';
+import { fieldsFor } from '../settings_fields.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('less-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -743,6 +746,385 @@ Which word means "brief"? | Concise | Long | Loud | topic:concision
       check('*** and no video row was invented over a per-topic list ***',
         !keys.some((k) => /video|url/i.test(k)), JSON.stringify(keys));
     }
+
+    // ============================================================================================
+    // AN OPEN VIDEO SURVIVES A REFRESH. The list used to be rebuilt (innerHTML) on every poll of
+    // the unlock log — every 4s — and every second of the countdown, which recreates the <video>
+    // or YouTube <iframe> and restarts it. Invisible while no topic had a video; the first real
+    // one would have been unwatchable, and watching is step one of row 2.24.
+    section('*** an open lesson video is not rebuilt by polling or the countdown ***');
+    {
+      const vp = createProfilesClient({ user: USER });
+      const vprof = await vp.create('TEST-lessons-video-stable');
+      const vmod = await vp.addModule(vprof.id, 'lessons');
+      const vst = createState({ url: vp.stateURL(vprof.id, vmod.id), user: USER });
+      await vst.load();
+      vst.set({ contentSource: 'bank', minWatchMs: 2000,
+        topics: [{ id: 'clip', label: 'A clip', video: { kind: 'url', value: '/no-such-clip.mp4' } }] });
+      await vst.flush();
+      const vhost = document.createElement('div'); document.body.append(vhost);
+      const vMakeEvents = (k, o) => createEvents({ url: vp.eventsURL(vprof.id, k), user: USER, ...o });
+      const vinst = mountModule('lessons', {
+        mount: vhost, bus: createBus(), state: vst,
+        events: createEvents({ url: vp.eventsURL(vprof.id, vmod.id), user: USER }),
+        user: USER, profileId: vprof.id,
+        makeState: (k, o) => createState({ url: vp.stateURL(vprof.id, k), user: USER, ...o }), makeEvents: vMakeEvents,
+      });
+      vinst.init();
+      await sleep(400);
+      vhost.querySelector('[data-open="clip"]').click();
+      await sleep(100);
+      const vid = vhost.querySelector('video');
+      check('the lesson video is on screen', !!vid);
+      check('...with the countdown showing and the button held', /available in/.test(vhost.textContent)
+        && vhost.querySelector('[data-watched="clip"]').disabled, vhost.textContent.slice(0, 200));
+      // A second handle appending to the same log is exactly what a poll then delivers.
+      const other = createLessons({ makeEvents: vMakeEvents });
+      await other.load(); await other.watch('unrelated-topic', { label: 'x' }); other.destroy();
+      await sleep(5200);                                      // > one poll (4s) and past the countdown
+      check('*** the SAME video element is still there after a poll and a finished countdown ***',
+        vhost.querySelector('video') === vid, 'the <video> was rebuilt');
+      check('...and the countdown still finished: the button is enabled now',
+        !vhost.querySelector('[data-watched="clip"]').disabled && !/available in/.test(vhost.textContent),
+        vhost.textContent.slice(0, 200));
+      vinst.destroy(); vhost.remove();
+    }
+
+    // ============================================================================================
+    // ROW 2.24 — TRANSCRIPT LESSONS, END TO END, with a FAKE AI injected on ctx (`ctx.ai`, the
+    // same kind of seam as `ctx.now`/`ctx.rand`). The real model is proven separately, in
+    // dev/ai_test.html's live section.
+    section('*** row 2.24: paste a transcript, answer its questions, earn the video — with a fake AI ***');
+    const ROOTS_TRANSCRIPT = `0:00
+Many English words come from Latin and Greek roots.
+0:20
+The Greek root bio means life, as in biology.
+0:45
+The Latin root aqua means water, as in aquarium.
+1:30
+The Greek root graph means to write, as in autograph.
+2:40
+Knowing a root lets you guess a new word.`;
+    const ROOTS_QS = [
+      { question: 'What does the root bio mean?', answer: 'life', wrong: ['water', 'writing', 'light'],
+        source_line: 'The Greek root bio means life, as in biology.' },
+      { question: 'What does the root aqua mean?', answer: 'water', wrong: ['life', 'fire', 'earth'],
+        source_line: 'The Latin root aqua means water, as in aquarium.' },
+      { question: 'What does the root graph mean?', answer: 'to write', wrong: ['to read', 'to draw', 'to speak'],
+        source_line: 'The Greek root graph means to write, as in autograph.' },
+      // INVENTED — this line is not in the transcript, so the deterministic check must drop it.
+      { question: 'What does the root tele mean?', answer: 'far', wrong: ['near', 'loud', 'small'],
+        source_line: 'The Greek root tele means far.' },
+    ];
+    const answerOf = (q) => (ROOTS_QS.find((x) => x.question === q) || {}).answer;
+    function fakeAI(questions, { delayMs = 0, fail = null } = {}) {
+      const calls = [];
+      return {
+        calls,
+        settings: () => ({ baseUrl: 'http://fake.test/v1', model: '' }),
+        setSettings: () => ({ baseUrl: 'http://fake.test/v1', model: '' }),
+        listModels: async () => ({ ok: true, models: ['fake-7b', 'fake-embed'] }),
+        resolveModel: async (pref) => ({ ok: true, model: pref || 'fake-7b', models: ['fake-7b'] }),
+        chat: (messages, opts = {}) => new Promise((resolve) => {
+          calls.push({ messages, opts });
+          const done = () => resolve(fail ? { ok: false, reason: fail }
+            : { ok: true, model: opts.model, ms: 5,
+                text: 'Here are your questions:\n```json\n' + JSON.stringify({ questions }) + '\n```' });
+          const t = setTimeout(done, delayMs);
+          opts.signal?.addEventListener('abort', () => { clearTimeout(t); resolve({ ok: false, cancelled: true, reason: 'Cancelled.' }); });
+        }),
+      };
+    }
+
+    const xp = createProfilesClient({ user: USER });
+    const xprof = await xp.create('TEST-lessons-transcript');
+    const xMakeState = (k, o) => createState({ url: xp.stateURL(xprof.id, k), user: USER, ...o });
+    const xMakeEvents = (k, o) => createEvents({ url: xp.eventsURL(xprof.id, k), user: USER, ...o });
+    const xmod = await xp.addModule(xprof.id, 'lessons');
+    const xst = createState({ url: xp.stateURL(xprof.id, xmod.id), user: USER });
+    await xst.load();
+    xst.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS });
+    await xst.flush();
+    const xhost = document.createElement('div'); document.body.append(xhost);
+    const ai1 = fakeAI(ROOTS_QS);
+    // Loaded before mounting, the way the runtime (and every other mount in this file) does it.
+    const mountX = async (ai) => {
+      const xs = createState({ url: xp.stateURL(xprof.id, xmod.id), user: USER });
+      await xs.load();
+      const inst = mountModule('lessons', {
+        mount: xhost, bus: createBus(), state: xs,
+        events: createEvents({ url: xp.eventsURL(xprof.id, xmod.id), user: USER }),
+        user: USER, profileId: xprof.id, makeState: xMakeState, makeEvents: xMakeEvents, rand: seeded(5), ai,
+      });
+      inst.init();
+      return inst;
+    };
+    let xinst = await mountX(ai1);
+    await sleep(600);
+    const tq = () => xhost.querySelector('.l-tq');
+    const tqText = (sel) => (xhost.querySelector(sel)?.textContent || '').replace(/\s+/g, ' ').trim();
+
+    check('the feature adds nothing to a closed card', !xhost.querySelector('[data-tq-open]'));
+    xhost.querySelector('[data-open="roots"]').click();
+    await sleep(100);
+    const openBtn = xhost.querySelector('[data-tq-open="roots"]');
+    check('*** an open card offers the transcript quiz — video or not (these topics have none) ***', !!openBtn);
+    openBtn.click();
+    await sleep(100);
+    check('the transcript panel opens INSIDE that card', !!tq() && !!tq().closest('.l-card'));
+    const ta = xhost.querySelector('[data-tq-text]');
+    check('...with a place to paste', ta && ta.tagName === 'TEXTAREA');
+    check('Make questions waits for a transcript', xhost.querySelector('[data-tq-make]').disabled);
+
+    ta.value = 'no timestamps here, just words about roots';
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    await sleep(50);
+    check('*** no timestamps -> it asks how long the video was, from a fixed set ***',
+      xhost.querySelectorAll('[data-tq-minute]').length >= 4 && xhost.querySelector('[data-tq-make]').disabled,
+      tqText('[data-tq-need]'));
+
+    ta.value = ROOTS_TRANSCRIPT;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    await sleep(50);
+    check('with timestamps it reads the length itself and says what is needed and what it pays',
+      /3 minutes/.test(tqText('[data-tq-need]')) && /3 correct answers/.test(tqText('[data-tq-need]'))
+        && /3 School points/.test(tqText('[data-tq-need]')) && !xhost.querySelector('[data-tq-minute]'),
+      tqText('[data-tq-need]'));
+    check('...the same textarea element, still holding what was pasted', xhost.querySelector('[data-tq-text]') === ta
+      && ta.value === ROOTS_TRANSCRIPT);
+
+    xhost.querySelector('[data-tq-make]').click();
+    await sleep(900);
+    check('the model was asked once, with the transcript and for JSON',
+      ai1.calls.length === 1 && ai1.calls[0].opts.json === true
+        && ai1.calls[0].messages.some((m) => m.content.includes('The Greek root bio means life')), String(ai1.calls.length));
+    check('*** the invented question was DROPPED and the count is shown ***',
+      /1 .*(dropped|could not be checked)/i.test(tqText('[data-tq-rejected]')), tqText('[data-tq-rejected]'));
+    check('progress line: "0 of 3 correct answers needed"', tqText('[data-tq-progress]') === '0 of 3 correct answers needed',
+      tqText('[data-tq-progress]'));
+    check('four options', xhost.querySelectorAll('[data-tq-opt]').length === 4);
+
+    // Answer the first one WRONG.
+    const firstQ = tqText('[data-tq-q]');
+    const wrongBtn = [...xhost.querySelectorAll('[data-tq-opt]')].find((b) => b.textContent.trim() !== answerOf(firstQ));
+    wrongBtn.click();
+    await sleep(50);
+    const src1 = ROOTS_QS.find((x) => x.question === firstQ).source_line;
+    check('*** a wrong answer shows the right one AND the transcript line it came from ***',
+      /not quite/i.test(tqText('[data-tq-feedback]')) && tqText('[data-tq-feedback]').includes(answerOf(firstQ))
+        && tqText('[data-tq-source]').includes(src1), `${tqText('[data-tq-feedback]')} | ${tqText('[data-tq-source]')}`);
+    check('progress did not move', tqText('[data-tq-progress]').startsWith('0 of 3'));
+    check('a "this looks wrong" flag is offered to the player', !!xhost.querySelector('[data-tq-flag]'));
+    xhost.querySelector('[data-tq-next]').click();
+    await sleep(50);
+
+    // Answer everything else correctly, noting whether the missed one came back.
+    const seenQs = [];
+    for (let guard = 0; guard < 10 && xhost.querySelector('[data-tq-q]'); guard++) {
+      const qtext = tqText('[data-tq-q]');
+      seenQs.push(qtext);
+      const right = [...xhost.querySelectorAll('[data-tq-opt]')].find((b) => b.textContent.trim() === answerOf(qtext));
+      right.click();
+      await sleep(40);
+      if (guard === 0) {
+        check('a right answer shows the source line too (§0h, Mike\'s addition)',
+          /right/i.test(tqText('[data-tq-feedback]')) && tqText('[data-tq-source]').length > 10, tqText('[data-tq-source]'));
+      }
+      const next = xhost.querySelector('[data-tq-next]');
+      if (next) { next.click(); await sleep(40); } else break;
+    }
+    check('*** the missed question CAME BACK later in the same session ***', seenQs.includes(firstQ)
+      && seenQs[0] !== firstQ, JSON.stringify(seenQs));
+    await sleep(900);
+    check('the requirement was met and it says so', /done|finished|earned/i.test(tqText('[data-tq-done]')), tqText('.l-tq'));
+
+    const ledger = createPointsLedger({ makeEvents: xMakeEvents });
+    await ledger.load();
+    const paid = () => ledger.events().filter((e) => e.data.source === 'lessons');
+    check('*** the video\'s points were paid: School, a point per minute, subject from the topic ***',
+      paid().length === 1 && paid()[0].data.type === 'School' && paid()[0].data.amount === 3
+        && paid()[0].data.minutes === 3 && paid()[0].data.subject === 'English language arts'
+        && paid()[0].data.note === 'Word roots & origins', JSON.stringify(paid().map((e) => e.data)));
+    const audit2 = createLessons({ makeEvents: xMakeEvents });
+    await audit2.load();
+    check('finishing the quiz also unlocks the topic (a stronger proof than the honour button)',
+      audit2.unlocked().has('roots'), JSON.stringify([...audit2.unlocked()]));
+    audit2.destroy();
+    const tlog = xMakeEvents(TRANSCRIPT_STREAM, { limit: 500 });
+    await tlog.load();
+    check('the paid marker is in the review log', (tlog.get().events || []).some((e) => e.kind === REVIEW_KINDS.PAID));
+
+    // ---- remount, same transcript: must NOT pay again ----
+    xinst.destroy();
+    xhost.innerHTML = '';
+    xinst = await mountX(fakeAI(ROOTS_QS));
+    await sleep(700);
+    xhost.querySelector('[data-open="roots"]').click(); await sleep(80);
+    xhost.querySelector('[data-tq-open="roots"]').click(); await sleep(80);
+    const ta2 = xhost.querySelector('[data-tq-text]');
+    ta2.value = ROOTS_TRANSCRIPT.replace(/\n/g, '\n\n');        // same video, pasted a little differently
+    ta2.dispatchEvent(new Event('input', { bubbles: true }));
+    xhost.querySelector('[data-tq-make]').click();
+    await sleep(900);
+    check('a second go at the same video says it was already earned — practice, not pay',
+      /already earned/i.test(tqText('.l-tq')), tqText('.l-tq').slice(0, 300));
+    for (let guard = 0; guard < 10 && xhost.querySelector('[data-tq-q]'); guard++) {
+      const qtext = tqText('[data-tq-q]');
+      [...xhost.querySelectorAll('[data-tq-opt]')].find((b) => b.textContent.trim() === answerOf(qtext)).click();
+      await sleep(40);
+      const next = xhost.querySelector('[data-tq-next]');
+      if (next) { next.click(); await sleep(40); } else break;
+    }
+    await sleep(900);
+    await ledger.load();
+    check('*** after a remount, the same transcript does NOT pay twice ***', paid().length === 1, String(paid().length));
+
+    // ---- the review queue (§0h) ----
+    section('*** §0h review queue: pending by default, source beside each, approve / reject / flag ***');
+    const trivRow = xMakeState(TRIVIA_LESSON_QUESTIONS);
+    const wfRow = xMakeState(WORDFORGE_LESSON_QUESTIONS);
+    await trivRow.load(); await wfRow.load();
+    check('*** before review, NONE of them has reached the games ***',
+      (trivRow.get().items || []).length === 0 && (wfRow.get().items || []).length === 0, JSON.stringify(trivRow.get()));
+    const rqs = () => [...xhost.querySelectorAll('[data-rq]')];
+    check('the three checked questions wait in the review list (the same ones regenerated are listed once)',
+      rqs().filter((r) => r.querySelector('[data-rq-approve]')).length === 3, String(rqs().length));
+    check('each shows its source line beside it', rqs().every((r) => (r.querySelector('.l-rq-src')?.textContent || '').length > 10));
+    check('the invented one is not in the list at all', !/tele/.test(xhost.querySelector('[data-review]').textContent));
+    const pending = rqs().filter((r) => r.querySelector('[data-rq-approve]'));
+    const idOf = (r) => r.dataset.rq;
+    const [pA, pB, pC] = pending.map(idOf);
+    xhost.querySelector(`[data-rq="${pA}"] [data-rq-approve]`).click(); await sleep(400);
+    xhost.querySelector(`[data-rq="${pB}"] [data-rq-approve]`).click(); await sleep(400);
+    xhost.querySelector(`[data-rq="${pC}"] [data-rq-flag]`).click(); await sleep(400);
+    xhost.querySelector(`[data-rq="${pC}"] [data-rq-approve]`)?.click(); await sleep(900);
+    await trivRow.load(); await wfRow.load();
+    const tItems = trivRow.get().items || [];
+    check('*** approved questions reach Trivia\'s routed row; the flagged one does NOT, even once approved ***',
+      tItems.length === 2 && tItems.every((i) => i.topic === 'roots'), JSON.stringify(tItems));
+    check('...in exactly the pack-question shape, plus the source line',
+      tItems.every((i) => i.question && i.answer && Array.isArray(i.wrong) && i.wrong.length === 3 && !i.wrong.includes(i.answer)
+        && typeof i.source === 'string' && i.source.length > 10), JSON.stringify(tItems[0]));
+    check('...and Word Forge\'s too (questionsTo default "both")', (wfRow.get().items || []).length === 2);
+    await tlog.load();
+    const byId = Object.fromEntries(reviewItems(tlog.get().events || []).map((i) => [i.id, i]));
+    check('the flag records who raised it', byId[pC].flagged && byId[pC].flags[0].by === 'caregiver', JSON.stringify(byId[pC]));
+    xhost.querySelector(`[data-rq="${pC}"] [data-rq-unflag]`).click(); await sleep(1000);
+    await trivRow.load();
+    check('*** clearing the flag lets it join the pool ***', (trivRow.get().items || []).length === 3,
+      String((trivRow.get().items || []).length));
+
+    // The consuming half: Trivia really reads them.
+    section('approved transcript questions play in Trivia like any routed lesson question');
+    {
+      const tmodX = await xp.addModule(xprof.id, 'trivia');
+      const tstX = createState({ url: xp.stateURL(xprof.id, tmodX.id), user: USER });
+      await tstX.load(); tstX.set({ contentSource: 'bank', bankText: 'What is 2+2? | 4 | 3 | 5 | 6', roundLength: 40 }); await tstX.flush();
+      const th = document.createElement('div'); document.body.append(th);
+      const tvX = mountModule('trivia', {
+        mount: th, bus: createBus(), state: tstX,
+        events: createEvents({ url: xp.eventsURL(xprof.id, tmodX.id), user: USER }),
+        user: USER, profileId: xprof.id, makeState: xMakeState, makeEvents: xMakeEvents, rand: seeded(7),
+      });
+      tvX.init(); await sleep(1200);
+      check('*** Trivia\'s bank = its own 1 + the 3 approved transcript questions ***',
+        tvX.impl.__probe().bank === 4, `bank=${tvX.impl.__probe().bank}`);
+      tvX.destroy(); th.remove();
+    }
+
+    section('questionsTo routes generated questions exactly like pack questions');
+    xst.set({ questionsTo: 'trivia' }); await xst.flush();
+    xinst.destroy(); xhost.innerHTML = '';
+    xinst = await mountX(fakeAI(ROOTS_QS));
+    await sleep(1500);
+    await trivRow.load(); await wfRow.load();
+    check('*** "Trivia only": Trivia keeps them, Word Forge\'s row is emptied ***',
+      (trivRow.get().items || []).length === 3 && (wfRow.get().items || []).length === 0,
+      `${(trivRow.get().items || []).length}/${(wfRow.get().items || []).length}`);
+    xst.set({ questionsTo: 'both' }); await xst.flush();
+    await sleep(1200);
+
+    section('auto-approve (OFF by default) skips the queue for checked questions');
+    const autoField = (getManifest('lessons').settings || []).find((f) => f.key === 'autoApprove');
+    check('auto-approve is declared and OFF by default', autoField && autoField.default === false, JSON.stringify(autoField));
+    xst.set({ autoApprove: true }); await xst.flush();
+    await sleep(700);
+    const CONC = `0:00
+Short sentences are easier to read than long ones.
+1:10
+Cutting extra words makes writing clearer.
+3:50
+Say it once and move on.`;
+    const CONC_QS = [{ question: 'Which sentences are easier to read?', answer: 'Short sentences', wrong: ['Long sentences', 'Odd sentences', 'Old sentences'],
+      source_line: 'Short sentences are easier to read than long ones.' }];
+    xinst.destroy(); xhost.innerHTML = '';
+    xinst = await mountX(fakeAI(CONC_QS));
+    await sleep(700);
+    xhost.querySelector('[data-open="concision"]').click(); await sleep(80);
+    xhost.querySelector('[data-tq-open="concision"]').click(); await sleep(80);
+    const ta3 = xhost.querySelector('[data-tq-text]');
+    ta3.value = CONC; ta3.dispatchEvent(new Event('input', { bubbles: true }));
+    xhost.querySelector('[data-tq-make]').click();
+    await sleep(1500);
+    await trivRow.load();
+    check('*** with auto-approve on, a checked question joins the pool with no review ***',
+      (trivRow.get().items || []).some((i) => i.topic === 'concision'), JSON.stringify((trivRow.get().items || []).map((i) => i.topic)));
+    check('...and the requirement is capped at what the model could give (1 question, not 3)',
+      tqText('[data-tq-progress]') === '0 of 1 correct answers needed', tqText('[data-tq-progress]'));
+    xst.set({ autoApprove: false }); await xst.flush();
+
+    section('failures never strand anybody');
+    xinst.destroy(); xhost.innerHTML = '';
+    xinst = await mountX(fakeAI(ROOTS_QS, { fail: 'The AI program is running, but it said no.' }));
+    await sleep(700);
+    xhost.querySelector('[data-open="punctuation"]').click(); await sleep(80);
+    xhost.querySelector('[data-tq-open="punctuation"]').click(); await sleep(80);
+    let ta4 = xhost.querySelector('[data-tq-text]');
+    ta4.value = ROOTS_TRANSCRIPT; ta4.dispatchEvent(new Event('input', { bubbles: true }));
+    xhost.querySelector('[data-tq-make]').click();
+    await sleep(500);
+    check('*** an AI failure shows its plain reason and a way back ***',
+      /said no/.test(tqText('[data-tq-error]')) && !!xhost.querySelector('[data-tq-retry]'), tqText('.l-tq'));
+    xhost.querySelector('[data-tq-retry]').click(); await sleep(50);
+    check('...and "Try again" keeps what was pasted', xhost.querySelector('[data-tq-text]').value === ROOTS_TRANSCRIPT);
+
+    xinst.destroy(); xhost.innerHTML = '';
+    xinst = await mountX(fakeAI(ROOTS_QS, { delayMs: 60000 }));
+    await sleep(700);
+    xhost.querySelector('[data-open="punctuation"]').click(); await sleep(80);
+    xhost.querySelector('[data-tq-open="punctuation"]').click(); await sleep(80);
+    ta4 = xhost.querySelector('[data-tq-text]');
+    ta4.value = ROOTS_TRANSCRIPT; ta4.dispatchEvent(new Event('input', { bubbles: true }));
+    xhost.querySelector('[data-tq-make]').click();
+    await sleep(200);
+    check('while the model works it says so, and offers Cancel', /writing questions/i.test(tqText('.l-tq'))
+      && !!xhost.querySelector('[data-tq-cancel]'), tqText('.l-tq'));
+    xhost.querySelector('[data-open="concision"]').click(); await sleep(80);
+    check('*** the rest of the module still works while it runs (another card opens) ***',
+      !!xhost.querySelector('[data-watched="concision"]'));
+    xhost.querySelector('[data-open="punctuation"]').click(); await sleep(80);
+    check('...and going back finds the same job still running', /writing questions/i.test(tqText('.l-tq')), tqText('.l-tq'));
+    xhost.querySelector('[data-tq-cancel]').click(); await sleep(100);
+    check('*** Cancel stops it and returns to the paste box with the transcript kept ***',
+      xhost.querySelector('[data-tq-text]')?.value === ROOTS_TRANSCRIPT, tqText('.l-tq'));
+
+    section('settings declared for the feature');
+    {
+      const f = Object.fromEntries((getManifest('lessons').settings || []).map((x) => [x.key, x]));
+      check('requirement mode: correct answers (default) or points', f.requireBy?.default === 'correct'
+        && f.requireBy.options.map((o) => o.value).join(',') === 'correct,points', JSON.stringify(f.requireBy));
+      check('the per-minutes rate and the minimum are choices (chat\'s 2 and 3 as defaults)',
+        f.perMinutes?.kind === 'choice' && f.perMinutes.default === 2 && f.minAnswers?.kind === 'choice' && f.minAnswers.default === 3);
+      check('subject is text, default General, advanced (algebra.js\'s pattern)',
+        f.subject?.kind === 'text' && f.subject.default === 'General' && f.subject.level === 'advanced');
+      check('the AI model is a live choice with no options baked in', f.aiModel?.kind === 'choice' && !(f.aiModel.options || []).length);
+      const live = fieldsFor(getManifest('lessons'), xinst).find((x) => x.key === 'aiModel');
+      check('*** once the panel has asked the server, the menu offers its models — never an embedding one ***',
+        live && live.options.some((o) => o.value === 'fake-7b') && !live.options.some((o) => /embed/.test(o.value))
+          && live.options.some((o) => o.value === ''), JSON.stringify(live && live.options));
+      check('no API-key field in this pass', !Object.keys(f).some((k) => /key|token|secret/i.test(k) && k !== 'questionsTo'));
+    }
+    xinst.destroy(); xhost.remove();
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
