@@ -340,8 +340,19 @@ const MIN = 60000;
     check('every other default reward accepts both',
       DEFAULT_REWARDS.filter((_, i) => i !== SOLO && i !== FRIEND)
         .every((r) => J(r.accepts) === J(['school', 'play'])), J(DEFAULT_REWARDS.map((r) => r.accepts)));
-    check('*** a saved reward with no `accepts` accepts EVERY currency — no magic by name ***',
-      J(acceptsOf({ reward: 'Screen time — 1 hr, solo', cost: 60 })) === J(DEFAULT_CURRENCIES.map((c) => c.id)));
+    // Saved before `accepts` existed (Mike, 2026-09-28: "No one is using it yet. Go ahead and make
+    // the changes."): a shipped default takes its default's list, a "screen time" name is School
+    // only, anything else still accepts every currency, and an explicit `accepts` always wins.
+    check('*** a saved default reward with no `accepts` takes the default\'s own list (screen time: School only) ***',
+      J(acceptsOf({ reward: 'Screen time — 1 hr, solo', cost: 60 })) === J(['school']));
+    check('...a default that accepts both still does', J(acceptsOf({ reward: 'Movie night — you pick', cost: 40 }))
+      === J(DEFAULT_CURRENCIES.map((c) => c.id)));
+    check('*** a reward somebody added, named "screen time", is School only ***',
+      J(acceptsOf({ reward: 'Extra Screen-Time (30 min)', cost: 20 })) === J(['school']));
+    check('any other saved reward with no `accepts` still accepts every currency',
+      J(acceptsOf({ reward: 'Ice cream', cost: 10 })) === J(DEFAULT_CURRENCIES.map((c) => c.id)));
+    check('an explicit `accepts` always wins, even on a screen-time name',
+      J(acceptsOf({ reward: 'Screen time — 1 hr, solo', accepts: ['play'] })) === J(['play']));
     check('ids a reward lists that are not currencies are ignored',
       J(acceptsOf({ accepts: ['play', 'gold'] })) === J(['play']));
     check('the spend order: Play first, then School', J(SPEND_ORDER) === J(['play', 'school']));
@@ -512,12 +523,13 @@ const MIN = 60000;
     cinst.destroy();
 
     section('a saved reward list from BEFORE currencies (no `accepts`)');
-    // Existing users' saved lists keep their old behavior until edited: nothing is special-cased
-    // by name. Whether saved screen-time rewards should be made School-only is Mike's call.
+    // Mike, 2026-09-28: saved screen-time rewards become School only. A shipped default takes its
+    // default's `accepts`; anything else without one still accepts every currency.
     const lmod = await profiles.addModule(cProfile.id, 'quests');
     const lstate = createState({ url: profiles.stateURL(cProfile.id, lmod.id), user: USER });
     await lstate.load();
-    lstate.set({ rewards: [{ reward: 'Screen time — 1 hr, solo', kind: 'Want', cost: 5, note: 'saved long ago' }] });
+    lstate.set({ rewards: [{ reward: 'Screen time — 1 hr, solo', kind: 'Want', cost: 5, note: 'saved long ago' },
+                           { reward: 'Ice cream', kind: 'Want', cost: 5, note: 'added by hand, long ago' }] });
     await lstate.flush();
     const lhost = newHost('legacyHost');
     const linst = mountModule('quests', {
@@ -532,13 +544,19 @@ const MIN = 60000;
     const lBuys = () => [...lhost.querySelectorAll('[data-buy]')];
     const lPlay = () => Number(lhost.querySelector('[data-currency="play"] [data-amount]')?.textContent);
     const lPlay0 = lPlay();
-    check('the legacy list loads', lBuys().length === 1, String(lBuys().length));
-    check('*** with no `accepts` it accepts every currency, so Play pays for it (old behavior, until edited) ***',
-      !lBuys()[0].disabled && lBuys()[0].dataset.pay === 'play', lBuys()[0].outerHTML);
-    lBuys()[0].click(); await sleep(80); lBuys()[0].click(); await sleep(500);
-    check('...and it buys', lPlay() === lPlay0 - 5, `${lPlay0} -> ${lPlay()}`);
+    check('the legacy list loads', lBuys().length === 2, String(lBuys().length));
+    // School is whatever is left at this point in the suite, so it may or may not cover 5 -- the
+    // point is that Play can never be the payment, and a disabled row says why.
+    check('*** the saved Screen time reward never pays with Play: School, or disabled saying School only ***',
+      lBuys()[0].dataset.pay === 'school'
+        || (lBuys()[0].disabled && lBuys()[0].dataset.pay !== 'play' && /School points only/.test(lBuys()[0].textContent)),
+      lBuys()[0].textContent.replace(/\s+/g, ' '));
+    check('...the hand-added reward with no `accepts` still takes Play first, as before',
+      !lBuys()[1].disabled && lBuys()[1].dataset.pay === 'play', lBuys()[1].outerHTML);
+    lBuys()[1].click(); await sleep(80); lBuys()[1].click(); await sleep(500);
+    check('...and it buys with Play', lPlay() === lPlay0 - 5, `${lPlay0} -> ${lPlay()}`);
     const lEv = await lastEvent();
-    check('...recording Play as the currency', lEv.data.currency === 'play' && lEv.data.note === 'Screen time — 1 hr, solo',
+    check('...recording Play as the currency', lEv.data.currency === 'play' && lEv.data.note === 'Ice cream',
       J(lEv.data));
     linst.destroy();
     seed.destroy();
