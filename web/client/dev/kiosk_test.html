@@ -921,6 +921,46 @@ const ds = () => root.querySelector('.kiosk').dataset;
       swapRoot.remove();
     }
 
+    // *** A SWAP SHOWS THE INCOMING SCREEN'S OWN ARRANGEMENT. ***
+    // `showScreen` read the layout from the settings handle opened for the screen the kiosk BOOTED on,
+    // so swapping to a screen with its own arrangement applied the OLD screen's slot ids to the NEW
+    // screen's modules (which matched nothing) instead of the new screen's own layout. Reported by the
+    // calculator-port agent 2026-09-28, reproduced here before it was fixed.
+    {
+      const lRoot = document.createElement('div');
+      document.body.append(lRoot);
+      const setLayout = async (screen, slots) => {
+        const st = createState({ url: profiles.stateURL(screen.id, 'settings'), user: USER });
+        await st.load();
+        st.set({ kiosk: { layout: { preset: 'quad', slots } } });
+        await st.flush();
+        st.destroy();
+      };
+      const A = await profiles.create('TEST-swap-layout-A');
+      const aPhotos = await profiles.addModule(A.id, 'photos');
+      const aWord = await profiles.addModule(A.id, 'wordforge');
+      await setLayout(A, [aWord.id, aPhotos.id, null, null]);   // reversed: NOT the order they were added
+      const B = await profiles.create('TEST-swap-layout-B');
+      const bTrivia = await profiles.addModule(B.id, 'trivia');
+      const bWord = await profiles.addModule(B.id, 'wordforge');
+      await setLayout(B, [bWord.id, bTrivia.id, null, null]);   // reversed too
+
+      const kl = await mountKiosk(lRoot, { user: USER, profileId: A.id, profiles, bus: createBus() });
+      await sleep(250);
+      check('booted on A: its own arrangement (wordforge, photos)',
+        JSON.stringify(kl.slotTypes()) === JSON.stringify(['wordforge', 'photos']), JSON.stringify(kl.slotTypes()));
+      await kl.showScreen(B.id);
+      await sleep(400);
+      check('*** after swapping to B: B\'s own arrangement (wordforge, trivia), not A\'s ids applied to B ***',
+        JSON.stringify(kl.slotTypes()) === JSON.stringify(['wordforge', 'trivia']), JSON.stringify(kl.slotTypes()));
+      await kl.showScreen(A.id);
+      await sleep(400);
+      check('and back to A: its arrangement again',
+        JSON.stringify(kl.slotTypes()) === JSON.stringify(['wordforge', 'photos']), JSON.stringify(kl.slotTypes()));
+      kl.destroy();
+      lRoot.remove();
+    }
+
     // ---- THE BACK BUTTON: the reverse of Next, proven on the real wiring -----------------
     //
     // `photos` — the module the rest of this suite mounts — needs a connected media source
