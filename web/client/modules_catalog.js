@@ -260,8 +260,8 @@ export const CATALOG = [
     lead: 'Hold off while a charge builds, then press when the invite opens.',
     needs: 'Nothing, to play. Somewhere to save, if you want to keep the record.',
     why: 'The go/no-go task a therapist runs by hand, with the waiting made worth something: '
-       + 'the longer she holds off, the bigger the payoff. In calm mode the invite never times '
-       + 'out - it waits for her, so there is no way to fail it - and only challenge mode '
+       + 'the longer they hold off, the bigger the payoff. In calm mode the invite never times '
+       + 'out - it waits for them, so there is no way to fail it - and only challenge mode '
        + 'closes the window. It writes down every press and release with its timing, including '
        + 'presses the game itself ignored, as evidence for a clinician to read rather than as '
        + 'a score.',
