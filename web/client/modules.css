@@ -1046,6 +1046,34 @@
 }
 
 
+/* calculator (the standalone module: modules/calculator.js). Same tokens and the same key look as the
+   keypad inside the math game, but it FILLS its box (the game's is a fixed-width widget), so the keys
+   grow with the panel instead of sitting in a corner of it. No literal colours: everything is a token.
+   The lit key (a switch walking the pad) is an OUTLINE plus an arrow, never a colour change alone. */
+.calc{display:flex;flex-direction:column;gap:8px;width:100%;height:100%;min-height:0;box-sizing:border-box;padding:10px}
+.calc .calc-display{flex:none;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt);
+  color:var(--text-strong);font-size:1.7rem;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2}
+.calc .calc-pad{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(34px,1fr);gap:6px}
+.calc .calc-key{position:relative;padding:0;border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:1.15rem;font-weight:600;line-height:1.1;cursor:pointer}
+.calc .calc-key:hover{background:var(--surface-alt)}
+.calc .calc-key.is-op{background:var(--surface-alt);color:var(--link);font-weight:800}
+.calc .calc-key.is-fn{color:var(--text-muted)}
+.calc .calc-key.is-eq{grid-column:span 2;background:var(--link);border-color:var(--link);color:var(--on-link)}
+.calc .calc-key[data-on="1"]{outline:3px solid var(--link);outline-offset:2px;z-index:1}
+.calc .calc-key.is-eq[data-on="1"]{outline-color:var(--text-strong)}
+.calc .calc-key[data-on="1"]::before{content:"\25B8";position:absolute;left:5px;top:50%;transform:translateY(-50%);
+  font-size:.8em;line-height:1}
+/* Fit the pad to the box rather than overflow it, the same way the game's keypad does: the type
+   scales with the panel's height, and the upper bounds are the sizes above. */
+@container cell (min-height: 1px){
+  .calc{gap:clamp(2px,1.4cqh,8px);padding:clamp(3px,2cqh,10px)}
+  .calc .calc-display{padding:clamp(2px,1.2cqh,8px) 12px;font-size:clamp(.9rem,7cqh,2.4rem)}
+  .calc .calc-pad{gap:clamp(2px,1.2cqh,6px);grid-auto-rows:minmax(0,1fr)}
+  .calc .calc-key{font-size:clamp(.72rem,4.6cqh,1.6rem)}
+}
+
 /* The pond fills whatever box it is given and clips its own canvas. `position:absolute`
  * inside a relative mount is what lets it size to a slot without measuring anything. */
 /* RELATIVE, not absolute. `inset:0` would escape to the nearest POSITIONED ancestor, and

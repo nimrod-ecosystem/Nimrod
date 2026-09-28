@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>calculator — the standalone calculator module</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{margin-top:12px;width:340px;height:420px;background:#fff;border:1px solid #e4e0c2;border-radius:16px}
+</style>
+</head>
+<body>
+<h1>calculator — the standalone calculator module</h1>
+<p>No server needed: the module needs nothing from the platform (<code>dependsOn: 'local'</code>), and
+this suite mounts it with every handle rejecting to prove it. Covers the keypad (click), the
+<code>key</code> port, the switch verbs (<code>next</code>/<code>prev</code>/<code>select</code>, published on the
+INSTANCE-scoped topic the router uses), what <code>=</code> emits on the <code>result</code> port, and that a
+destroyed instance leaves nothing listening.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { portsFor, linkTopic, wrapValue } from '../links.js';
+import { calcInit, calcPress, calcValue, CALC_KEYS } from '../calc.js';
+import { MODULE_VERBS, verbTarget, verbsFor, respondsToVerbs } from '../actions.js';
+import '../modules/calculator.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const seeded = (s0) => { let x = s0 >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; };
+
+// A DEAD PLATFORM: every handle a real kiosk would supply exists, and every call on it rejects.
+const dead = () => Promise.reject(new Error('platform is down'));
+const deadHandle = () => ({
+  get: () => ({}), subscribe: () => () => {}, set: () => {},
+  load: dead, flush: dead, append: dead, startPolling: () => {}, destroy: () => {},
+});
+
+const bus = createBus();
+const stages = document.getElementById('stages');
+const READING_ORDER = [...CALC_KEYS, 'C', '<', '='];
+
+function mount(id, extra = {}) {
+  const host = document.createElement('div');
+  host.className = 'stage mod-box';
+  stages.append(host);
+  const inst = mountModule('calculator', {
+    mount: host, bus, rootBus: bus, instanceId: id, personId: null, user: null, profileId: 'p-test',
+    state: deadHandle(), events: deadHandle(),
+    makeState: () => deadHandle(), makeEvents: () => deadHandle(),
+    makePersonState: () => null,
+    ...extra,
+  });
+  inst.init();
+  return {
+    inst, host, id,
+    keyBtn: (k) => host.querySelector(`[data-key="${k}"]`),
+    display: () => host.querySelector('[data-display]').textContent.trim(),
+    lit: () => { const b = host.querySelector('[data-on="1"]'); return b ? b.dataset.key : null; },
+    click: (keys) => { for (const k of keys.split('')) host.querySelector(`[data-key="${k}"]`).click(); },
+  };
+}
+function tap(instance, port) {
+  const heard = [];
+  bus.subscribe(linkTopic(bus, { instance, port }), (env) => heard.push(env));
+  return heard;
+}
+const sendKey = (instance, value) => bus.publish(linkTopic(bus, { instance, port: 'key' }),
+  wrapValue({ value, class: 'event', provenance: [{ source: 'test/keys', transform: 'origin' }], seq: 1 }));
+const verb = (instance, name) => bus.publish(bus.instanceTopic(instance, `calculator/${name}`));
+
+try {
+  // =============================================================================================
+  section('the manifest');
+  {
+    const m = getManifest('calculator');
+    check('it is registered, titled Calculator', !!m && m.title === 'Calculator');
+    check('it declares core:"new" and dependsOn:"local"', m.core === 'new' && m.dependsOn === 'local');
+    const ports = portsFor(m);
+    const by = Object.fromEntries(ports.map((p) => [p.id, p]));
+    check('it declares exactly three ports: key, result, display', ports.length === 3
+      && !!by.key && !!by.result && !!by.display, JSON.stringify(ports.map((p) => p.id)));
+    check('key is an EVENT-class TEXT port coming IN',
+      by.key.direction === 'in' && by.key.class === 'event' && by.key.type === 'text');
+    check('result is an EVENT-class NUMBER port going OUT (a continuous number port with no range would have been dropped)',
+      by.result.direction === 'out' && by.result.class === 'event' && by.result.type === 'number');
+    check('display is a CONTINUOUS TEXT port going OUT',
+      by.display.direction === 'out' && by.display.class === 'continuous' && by.display.type === 'text');
+    check('every declared port survived normalization (nothing silently dropped)',
+      (m.ports || []).length === ports.length);
+    check('it declares no settings (nothing to change that is not already a key on the pad)', !m.settings);
+    check('the description is plain words and names no person', typeof m.description === 'string'
+      && m.description.length > 10 && !/\bher\b|christine/i.test(m.description));
+  }
+
+  section('the new-core contract is enforced at mount');
+  {
+    const host = document.createElement('div');
+    let threwNoPerson = false, threwNoInstance = false;
+    try { mountModule('calculator', { mount: host, bus, rootBus: bus, instanceId: 'c-x', state: deadHandle(), events: deadHandle() }); }
+    catch (e) { threwNoPerson = /personId/.test(String(e)); }
+    try { mountModule('calculator', { mount: host, bus, rootBus: bus, personId: null, state: deadHandle(), events: deadHandle() }); }
+    catch (e) { threwNoInstance = /instanceId/.test(String(e)); }
+    check('mounting without a personId key is refused loudly', threwNoPerson);
+    check('mounting without an instanceId is refused loudly', threwNoInstance);
+  }
+
+  // =============================================================================================
+  section('the keypad, and a dead platform');
+  const A = mount('calc-a');
+  {
+    const buttons = [...A.host.querySelectorAll('button')];
+    check('the display and the keypad render with every platform handle rejecting', !!A.host.querySelector('[data-display]')
+      && buttons.length === READING_ORDER.length, String(buttons.length));
+    check('nineteen keys: the sixteen of the four-function set, plus C, backspace and =',
+      buttons.length === 19 && READING_ORDER.every((k) => !!A.keyBtn(k)));
+    check('the keys are in DOM order == reading order (the order the verbs walk)',
+      buttons.map((b) => b.dataset.key).join('') === READING_ORDER.join(''),
+      buttons.map((b) => b.dataset.key).join(''));
+    check('every key is a real button that will not submit a form', buttons.every((b) => b.type === 'button'));
+    check('every key has a spoken name (aria-label), and no two share one',
+      buttons.every((b) => !!b.getAttribute('aria-label'))
+      && new Set(buttons.map((b) => b.getAttribute('aria-label'))).size === buttons.length,
+      buttons.map((b) => b.getAttribute('aria-label')).join('|'));
+    check('the operator keys say what they do, not a symbol',
+      A.keyBtn('/').getAttribute('aria-label') === 'divided by' && A.keyBtn('*').getAttribute('aria-label') === 'times'
+      && A.keyBtn('<').getAttribute('aria-label') === 'delete last digit'
+      && A.keyBtn('=').getAttribute('aria-label') === 'equals');
+    const disp = A.host.querySelector('[data-display]');
+    check('the display is a polite live region, read whole', disp.getAttribute('aria-live') === 'polite'
+      && disp.getAttribute('aria-atomic') === 'true');
+    check('the display starts at 0 and nothing is highlighted', A.display() === '0' && A.lit() === null);
+    check('the keypad is a labelled group', !!A.host.querySelector('[role="group"][aria-label]'));
+  }
+
+  section('clicking keys');
+  {
+    const results = tap('calc-a', 'result');
+    A.click('7+3');
+    check('typing 7 + 3 shows the second operand', A.display() === '3', A.display());
+    A.click('=');
+    check('= shows 10', A.display() === '10', A.display());
+    check('*** = emitted exactly one result event ***', results.length === 1, String(results.length));
+    check('with the right number, on a number port', results[0].value === 10 && typeof results[0].value === 'number');
+    check('and it is an event: class event, seq 1', results[0].class === 'event' && results[0].seq === 1,
+      JSON.stringify(results[0]));
+    check('its provenance names this instance\'s port as the origin',
+      results[0].provenance.length === 1 && results[0].provenance[0].source === 'calc-a/result'
+      && results[0].provenance[0].transform === 'origin', JSON.stringify(results[0].provenance));
+    A.click('C5*2=');
+    check('a second calculation: 5 x 2 = 10, emitted, seq 2', results.length === 2 && results[1].value === 10 && results[1].seq === 2,
+      JSON.stringify(results.map((r) => [r.value, r.seq])));
+    A.click('C2+3+4');
+    check('the intermediate + of a chain emits nothing (only = does)', results.length === 2);
+    A.click('=');
+    check('2 + 3 + 4 = 9 emits once', results.length === 3 && results[2].value === 9);
+    A.click('C.1+.2=');
+    check('float clean-up carries through to the port: 0.1 + 0.2 emits 0.3',
+      results.length === 4 && results[3].value === 0.3, String(results[3]?.value));
+    A.click('C5±+3=');
+    check('a negative result is a number: -2', results[4]?.value === -2, String(results[4]?.value));
+    A.click('C7=');
+    check('= with nothing pending emits the entry (7)', results.length === 6 && results[5].value === 7, String(results.length));
+    A.click('=');
+    check('...and every further = is one more event, one per press', results.length === 7, String(results.length));
+    check('sequence numbers count 1..7 without a gap', results.map((r) => r.seq).join() === '1,2,3,4,5,6,7',
+      results.map((r) => r.seq).join());
+  }
+
+  section('an error emits no result, and the calculator recovers');
+  {
+    const results = tap('calc-a', 'result');
+    A.click('C5/0=');
+    check('divide by zero shows error', A.display() === 'error');
+    check('*** and emits NO result event ***', results.length === 0, String(results.length));
+    A.click('=');
+    check('= on an error emits nothing either', results.length === 0);
+    A.click('C2+2=');
+    check('C then a fresh sum works, and that one DOES emit', A.display() === '4' && results.length === 1 && results[0].value === 4
+      && results[0].seq === 8, JSON.stringify(results));
+    A.click('5/0=3');
+    check('a digit after an error starts a new number', A.display() === '3', A.display());
+    A.click('C');
+  }
+
+  section('the display port — continuous text, every change');
+  {
+    const B = mount('calc-b');
+    const shown = tap('calc-b', 'display');
+    const startCount = shown.length;
+    B.click('7+3=');
+    check('it carries each CHANGE: 7 (the + changes nothing), 3, then 10',
+      shown.slice(startCount).map((e) => e.value).join() === '7,3,10', shown.map((e) => e.value).join());
+    check('it is continuous: no seq, class continuous, text', shown.every((e) => e.class === 'continuous'
+      && !('seq' in e) && typeof e.value === 'string'));
+    check('a press that changes nothing sends nothing (C at zero)', (() => { B.click('C'); const n = shown.length;
+      B.click('C'); return shown.length === n; })());
+    B.click('5/0=');
+    check('an error is shown as the word error', shown[shown.length - 1].value === 'error');
+    B.inst.destroy();
+  }
+  {
+    // Mounted AFTER the tap exists: the initial value is delivered.
+    const heard = tap('calc-init', 'display');
+    const C = mount('calc-init');
+    check('mounting reports the starting display, 0', heard.length === 1 && heard[0].value === '0', JSON.stringify(heard));
+    C.inst.destroy();
+  }
+
+  // =============================================================================================
+  section('the key port');
+  {
+    const P = mount('calc-p');
+    const results = tap('calc-p', 'result');
+    for (const k of ['7', '+', '3', '=']) sendKey('calc-p', k);
+    check('7 + 3 = through the port shows 10', P.display() === '10', P.display());
+    check('and emits exactly one result', results.length === 1 && results[0].value === 10);
+    for (const k of ['C', '9', '<', '±', '.', '5']) sendKey('calc-p', k);
+    check('C, digit, backspace, sign and point all work as tokens: C 9 < ± . 5 reads 0.5', P.display() === '0.5', P.display());
+    sendKey('calc-p', 'C');
+    for (const k of ['1', '2', '<', '±']) sendKey('calc-p', k);
+    check('12, backspace, sign -> -1', P.display() === '-1', P.display());
+    sendKey('calc-p', 'C');
+    for (const k of ['8', '*', '4', '=']) sendKey('calc-p', k);
+    check('the multiply token is *, as on the pad', P.display() === '32', P.display());
+    sendKey('calc-p', 'C');
+    const before = P.display();
+    const beforeResults = results.length;
+    let threw = false;
+    try {
+      for (const junk of ['', 'q', '+-', '12', 'x', '×', 'c', ' 7', '7 ', 7, null, undefined, {}, ['7'], true]) sendKey('calc-p', junk);
+      bus.publish(linkTopic(bus, { instance: 'calc-p', port: 'key' }), 7);
+      bus.publish(linkTopic(bus, { instance: 'calc-p', port: 'key' }), null);
+      bus.publish(linkTopic(bus, { instance: 'calc-p', port: 'key' }), { nope: 1 });
+    } catch { threw = true; }
+    check('*** anything that is not exactly one of the nineteen key tokens is ignored ***', !threw && P.display() === before
+      && results.length === beforeResults, `${P.display()} ${results.length}`);
+    sendKey('calc-p', '5'); sendKey('calc-p', ''); sendKey('calc-p', '+-'); sendKey('calc-p', '3');
+    check('...including "" and "+-", which calcPress on its own would treat as an operator (see calc_test): 5, "", "+-", 3 reads 53',
+      P.display() === '53', P.display());
+    P.inst.destroy();
+  }
+
+  section('the port, the pad and the pure machine agree, on 300 random sequences');
+  {
+    const TOKENS = READING_ORDER;
+    const r = seeded(20260928);
+    let bad = null;
+    for (let i = 0; i < 300 && !bad; i++) {
+      const seq = Array.from({ length: 1 + Math.floor(r() * 12) }, () => TOKENS[Math.floor(r() * TOKENS.length)]);
+      const viaClick = mount(`eq-c-${i}`), viaPort = mount(`eq-p-${i}`);
+      const resClick = tap(`eq-c-${i}`, 'result'), resPort = tap(`eq-p-${i}`, 'result');
+      let model = calcInit(); let expectResults = [];
+      for (const k of seq) {
+        viaClick.keyBtn(k).click(); sendKey(`eq-p-${i}`, k);
+        model = calcPress(model, k);
+        if (k === '=' && calcValue(model) !== null) expectResults.push(calcValue(model));
+      }
+      const want = model.entry;
+      if (viaClick.display() !== want || viaPort.display() !== want
+        || JSON.stringify(resClick.map((e) => e.value)) !== JSON.stringify(expectResults)
+        || JSON.stringify(resPort.map((e) => e.value)) !== JSON.stringify(expectResults)) {
+        bad = { seq: seq.join(' '), click: viaClick.display(), port: viaPort.display(), want, expectResults,
+                resClick: resClick.map((e) => e.value), resPort: resPort.map((e) => e.value) };
+      }
+      viaClick.inst.destroy(); viaPort.inst.destroy();
+      viaClick.host.remove(); viaPort.host.remove();
+    }
+    check('clicking, the key port, and calcPress give the same display and the same result events', !bad, JSON.stringify(bad));
+  }
+
+  // =============================================================================================
+  section('switch verbs — next, prev, select, on the instance-scoped topics the router publishes');
+  {
+    check('calculator is in MODULE_VERBS', !!MODULE_VERBS.calculator);
+    check('it answers next, prev and select and NOTHING else (no back, menu, up/down, focus)',
+      JSON.stringify(verbsFor('calculator').sort()) === JSON.stringify(['next', 'prev', 'select']),
+      JSON.stringify(verbsFor('calculator')));
+    check('so a switch can focus it at all (respondsToVerbs)', respondsToVerbs('calculator'));
+    check('each verb resolves to a real topic', ['next', 'prev', 'select'].every((v) => {
+      const t = verbTarget('calculator', v); return t && /^calculator\//.test(t.topic); }));
+
+    const V = mount('calc-v');
+    const W = mount('calc-w');                         // a SIBLING of the same type
+    const results = tap('calc-v', 'result');
+    check('nothing is highlighted until a verb arrives (a mouse user never sees a ring)', V.lit() === null);
+    verb('calc-v', 'next');
+    check('the first next lights the FIRST key in reading order (7)', V.lit() === '7', String(V.lit()));
+    check('...and does not press it', V.display() === '0');
+    check('the lit key says so to a screen reader too', V.keyBtn('7').getAttribute('aria-current') === 'true'
+      && V.host.querySelectorAll('[aria-current="true"]').length === 1);
+    check('*** the SIBLING instance did not move (the verb was addressed to one instance) ***', W.lit() === null);
+    verb('calc-v', 'next');
+    check('next again: 8', V.lit() === '8');
+    verb('calc-v', 'prev');
+    check('prev goes back: 7', V.lit() === '7');
+    verb('calc-v', 'prev');
+    check('prev from the first wraps to the LAST key (=)', V.lit() === '=', String(V.lit()));
+    verb('calc-v', 'next');
+    check('next from the last wraps to the first', V.lit() === '7');
+    check('exactly one key is lit at a time', V.host.querySelectorAll('[data-on="1"]').length === 1);
+
+    // Walk to a token the way a person with one switch would, and count the presses.
+    const walkTo = (inst, token) => {
+      let n = 0;
+      while (inst.lit() !== token && n < 40) { verb(inst.id, 'next'); n += 1; }
+      return n;
+    };
+    const idx = (t) => READING_ORDER.indexOf(t);
+    const dist = (from, to) => (idx(to) - idx(from) + READING_ORDER.length) % READING_ORDER.length;
+    verb('calc-v', 'select');
+    check('select presses the lit key: 7', V.display() === '7', V.display());
+    check('the highlight stays where it was', V.lit() === '7');
+    check('walking 7 -> + takes exactly the reading-order distance', walkTo(V, '+') === dist('7', '+'), String(dist('7', '+')));
+    verb('calc-v', 'select');
+    const n3 = walkTo(V, '3');
+    check('then + -> 3, by reading order', n3 === dist('+', '3'), `${n3} vs ${dist('+', '3')}`);
+    verb('calc-v', 'select');
+    walkTo(V, '=');
+    verb('calc-v', 'select');
+    check('*** 7 + 3 = worked entirely with next and select ***', V.display() === '10', V.display());
+    check('and it emitted exactly one result, 10', results.length === 1 && results[0].value === 10, JSON.stringify(results));
+    check('the sibling calculator is untouched throughout', W.display() === '0' && W.lit() === null);
+
+    // The verbs a switch user has, and the ones that must not reach a calculator.
+    const beforeLit = V.lit(), beforeDisp = V.display();
+    for (const name of ['back', 'menu', 'up', 'down', 'left', 'right', 'skip', 'focus-next']) verb('calc-v', name);
+    check('other verbs published at it do nothing', V.lit() === beforeLit && V.display() === beforeDisp);
+
+    // select before anything is lit reveals the highlight rather than pressing a key blind.
+    const X = mount('calc-x');
+    verb('calc-x', 'select');
+    check('select with nothing lit only REVEALS the first key; it does not press it blind',
+      X.lit() === '7' && X.display() === '0', `${X.lit()} ${X.display()}`);
+    verb('calc-x', 'select');
+    check('a second select presses it', X.display() === '7');
+    // prev from hidden
+    const Y = mount('calc-y');
+    verb('calc-y', 'prev');
+    check('prev with nothing lit starts from the last key', Y.lit() === '=');
+
+    // Clicking is independent of the highlight.
+    const Z = mount('calc-z');
+    verb('calc-z', 'next'); verb('calc-z', 'next');
+    Z.click('9');
+    check('a click does not move the highlight', Z.lit() === '8' && Z.display() === '9');
+
+    // Bare-topic publish reaches EVERY instance of the type (bus.js: nothing existing is narrowed).
+    bus.publish('calculator/next');
+    check('the bare topic still reaches every instance (existing convention unchanged)',
+      Z.lit() === '9' && X.lit() === '8' && Y.lit() === '7');
+    for (const m of [V, W, X, Y, Z]) m.inst.destroy();
+  }
+
+  section('the key port is addressed to one instance');
+  {
+    const P1 = mount('calc-p1'), P2 = mount('calc-p2');
+    sendKey('calc-p1', '9');
+    check('the addressed instance changed, its sibling did not', P1.display() === '9' && P2.display() === '0');
+    P1.inst.destroy(); P2.inst.destroy();
+  }
+
+  // =============================================================================================
+  section('destroy — nothing left listening, nothing emitted');
+  {
+    const D = mount('calc-d');
+    const results = tap('calc-d', 'result');
+    const disp = tap('calc-d', 'display');
+    D.click('1+1=');
+    const nResults = results.length, nDisp = disp.length;
+    D.inst.destroy();
+    for (const k of ['5', '+', '5', '=']) sendKey('calc-d', k);
+    verb('calc-d', 'next'); verb('calc-d', 'select');
+    bus.publish('calculator/next'); bus.publish('calculator/select');
+    check('after destroy the key port and the verbs do nothing', D.display() === '2' && D.lit() === null,
+      `${D.display()} ${D.lit()}`);
+    check('after destroy nothing more is emitted on either port', results.length === nResults && disp.length === nDisp,
+      `${results.length}/${nResults} ${disp.length}/${nDisp}`);
+    D.keyBtn('1').click();
+    check('a stray click on the orphaned DOM does nothing either', results.length === nResults && disp.length === nDisp);
+    let twice = true; try { D.inst.destroy(); } catch { twice = false; }
+    check('destroy twice does not throw', twice);
+  }
+  {
+    // The bus cannot be asked how many subscribers it has, so hand the module a rootBus that counts.
+    let live = 0;
+    const counted = { ...bus, subscribe(t, h) { live++; const off = bus.subscribe(t, h); let done = false;
+      return () => { if (!done) { done = true; live--; off(); } }; } };
+    const K = mount('calc-count', { rootBus: counted });
+    check('a mounted calculator holds exactly one port subscription of its own (the key port)', live === 1, String(live));
+    K.inst.destroy();
+    check('*** destroy releases it: nothing of the module\'s is left subscribed ***', live === 0, String(live));
+    for (let i = 0; i < 25; i++) { const t = mount('calc-count', { rootBus: counted }); t.inst.destroy(); t.host.remove(); }
+    check('25 mount/destroy cycles later it is still zero', live === 0, String(live));
+  }
+  {
+    // Mount / destroy churn: after 40 cycles a live instance still hears each key exactly once.
+    const live = mount('calc-live');
+    const results = tap('calc-live', 'result');
+    for (let i = 0; i < 40; i++) { const t = mount('calc-live'); t.inst.destroy(); t.host.remove(); }
+    for (const k of ['2', '+', '2', '=']) sendKey('calc-live', k);
+    check('after 40 mount/destroy cycles under one instance id, one press is still ONE press', live.display() === '4'
+      && results.length === 1, `${live.display()} ${results.length}`);
+    live.inst.destroy();
+  }
+
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

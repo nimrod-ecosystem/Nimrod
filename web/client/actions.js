@@ -228,6 +228,14 @@ export const MODULE_VERBS = {
   trivia:        { next: 'trivia/next', prev: 'trivia/prev', select: 'trivia/select',
                    back: 'trivia/skip' },
   algebra:       { select: 'algebra/submit' },
+  // THE STANDALONE CALCULATOR (2026-09-28). `algebra` above has a calculator keypad inside it and
+  // answers only `select` (Submit) - no verb ever reached its keys, so somebody with one switch could
+  // submit an answer but not work one out. This one is a keypad and nothing else, so the verbs are
+  // the keypad's: `next`/`prev` walk a highlight through the keys in a fixed reading order (the same
+  // order they are drawn in, wrapping) and `select` presses whichever is lit. Deliberately NO `back`,
+  // `menu` or the arrow verbs: a calculator has nowhere to go back to and no menu, and a verb that
+  // does nothing is a press somebody spent effort on for no result (see `call` below).
+  calculator:    { next: 'calculator/next', prev: 'calculator/prev', select: 'calculator/select' },
   sprint:        { select: { topic: 'sprint/control', payload: 'toggle' },
                    next:   { topic: 'sprint/control', payload: 'start' },
                    back:   { topic: 'sprint/control', payload: 'pause' } },

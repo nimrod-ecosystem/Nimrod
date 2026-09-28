@@ -48,6 +48,7 @@ import '../modules/pond.js';
 import '../modules/progress.js';
 import '../modules/quests.js';
 import '../modules/reading_log.js';
+import '../modules/calculator.js';
 import '../modules/sprint.js';
 import '../modules/trivia.js';
 import '../modules/bank.js';      // registers 'bank' (the shared questions + words)
@@ -138,9 +139,13 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // into THIS file (see the import list above — it mirrors modules.html on purpose, and
   // modules.html deliberately does not offer device modules, 2026-09-20). So for the set of
   // modules this page actually describes, the original claim still holds.
-  check('every module in today’s real registry is legacy — nothing has been ported yet',
-    r.new.length === 0 && r.legacy.length === manifests.length,
-    `legacy=${r.legacy.length} new=${r.new.length} total=${manifests.length}`);
+  // Updated 2026-09-28: this used to read "every module in today's real registry is legacy —
+  // nothing has been ported yet", which stopped being true the day `calculator` (port-order step 5,
+  // the first real module port) was imported above. The claim now is the honest one: exactly the
+  // modules that have DECLARED `core: 'new'` are counted as new, and there is one.
+  check('exactly one module in today’s real registry has been ported: the calculator',
+    r.new.length === 1 && r.new[0] === 'calculator' && r.legacy.length === manifests.length - 1,
+    `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length
     && r.counts.new === r.new.length);
 }

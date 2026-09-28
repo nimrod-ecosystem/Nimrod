@@ -56,6 +56,7 @@ import { takePreviewLayout } from './preview.js';
 import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
 import { syncScene } from './livescene.js';
 import { cachedFetch } from './cache.js';
+import { createScreenLinks } from './screen_links.js';
 import './modules/clock.js';
 import './modules/keyboard.js';
 import './modules/camera.js';
@@ -68,6 +69,7 @@ import './modules/sprint.js';
 import './modules/quests.js';
 import './modules/progress.js';
 import './modules/reading_log.js';
+import './modules/calculator.js';
 import './modules/wordforge.js';
 import './modules/trivia.js';    // registers 'trivia'
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
@@ -749,6 +751,20 @@ export async function mountKiosk(root, {
     ? await profiles.get(profileId)        // local backend: it IS the source of truth
     : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
 
+  // *** THIS SCREEN'S LINKS (2026-09-28, port-order step 5). *** A link joins one module instance's
+  // port to another's, and per the 2026-09-17 ruling (a dashboard is a module that contains modules)
+  // it is the CONTAINING screen's own structure: an array `links` beside `layout` on this screen's
+  // settings doc, `settings.kiosk.links`, written with real instance ids. `screen_links.js` reads it and
+  // owns the runner; THE RUNNER EXISTS ONLY WHILE THAT ARRAY IS NON-EMPTY, so a screen with no links
+  // creates nothing and behaves exactly as it always has. There is no patch-bay UI; links are authored
+  // by data. NOT in an embed: an embed is a preview host on somebody else's page showing one panel, and
+  // wiring a visitor's preview into a real screen's links is not what it is for. Composition
+  // identity (does a link enter a screen's fingerprint?) is deliberately untouched: NEW_CORE_SPEC.md
+  // §1/§2 still lists it as [design]. `settings` is read lazily, at each `sync()`, never here.
+  const screenLinks = embedded ? null : createScreenLinks({
+    rootBus: bus, settings: () => settings.get(), modules: () => profile.modules, manifestOf: getManifest,
+  });
+
   // *** A SLOT WHOSE MODULE NO LONGER EXISTS IS AN ORPHAN, AND ORPHANS USED TO EAT PANELS. ***
   //
   // `normalizeLayout` nulls any slot holding an id that is not in the profile — correctly, it
@@ -1254,6 +1270,8 @@ export async function mountKiosk(root, {
     ambientRec = ambientDef ? await mountOverlay(ambientDef, ambientEl) : null;
     if (layout) await mountLayout(); else await showPrimary(0);
     renderMods();
+    // The instances just changed, so every link's two ends may now resolve differently.
+    screenLinks?.sync();
   }
 
   /** Show another screen here, keeping everything that is not a module.
@@ -2404,6 +2422,16 @@ export async function mountKiosk(root, {
 
   if (layout) await mountLayout(); else await showPrimary(plan.stageIndex);
 
+  // Links, once the modules exist: sync now, and again whenever the settings doc changes (links
+  // written after boot are picked up without a reload, since they are not part of the layout). The
+  // subscribe replays at once if settings are loaded, so the explicit sync only matters when they
+  // are not; it is idempotent either way.
+  let offLinks = null;
+  if (screenLinks) {
+    screenLinks.sync();
+    offLinks = settings.subscribe(() => { if (!torn) screenLinks.sync(); });
+  }
+
   return {
     // The speaker arbiter, so a test (and a future call handler) can reach hush and the
     // call mode without going through a module.
@@ -2429,6 +2457,9 @@ export async function mountKiosk(root, {
     slotLayout: () => (layout ? { ...layout } : null),
     slotCount: () => slotRecs.length,
     slotTypes: () => slotRecs.map((r) => r.type),
+    // One row per link on this screen, carrying or not, each with `ok` and (if not) a `reason`.
+    // NULL means no runner exists: the screen has no links, or this is an embed. See screen_links.js.
+    linkStatus: () => (screenLinks ? screenLinks.status() : null),
     hasCamera: () => !!cameraRec,
     hasClock: () => !!clockRec,
     hasAmbient: () => !!ambientRec,
@@ -2489,6 +2520,8 @@ export async function mountKiosk(root, {
       clearBurnIn();
       clearInterval(recoveryTimer);
       health.destroy();
+      try { offLinks?.(); } catch { /* already gone */ }
+      screenLinks?.destroy();
       destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
       while (slotRecs.length) destroyRec(slotRecs.pop());
       settings.destroy();
