@@ -817,6 +817,17 @@
 .quests .q-log .q-pos{color:var(--accent);font-weight:700;text-align:right}
 .quests .q-log .q-neg{color:var(--accent-warm-deep);font-weight:700;text-align:right}
 .quests .q-empty{font-size:.85rem;color:var(--text-muted);text-align:center;padding:14px}
+/* currencies (2026-09-28): each balance beside the total, the why on a reward nobody can pay for, the trade block */
+.quests .q-curs{display:flex;gap:12px;font-size:.85rem;color:var(--text-muted)}
+.quests .q-cur{display:inline-flex;align-items:baseline;gap:4px}
+.quests .q-cur b{color:var(--text-strong);font-weight:800;font-variant-numeric:tabular-nums}
+.quests .q-cur-icon{width:1em;height:1em;align-self:center}
+.quests .q-item-why{font-size:.74rem;color:var(--accent-warm-deep);font-weight:600}
+.quests .q-exchange{margin-top:12px;padding-top:8px;border-top:1px solid var(--border)}
+.quests .q-ex-head{font-size:.85rem;font-weight:700;color:var(--text-soft);margin-bottom:2px}
+.quests .q-ex-head span{font-weight:400;color:var(--text-muted)}
+.quests .q-ex-why{font-size:.76rem;color:var(--text-muted);min-height:1em;margin-bottom:4px}
+.quests .q-log .q-cur-tag{display:inline-block;margin-left:6px;font-size:.68rem;color:var(--text-soft);font-weight:600}
 
 /* progress (gameplay measurement — accuracy, concepts, sessions) */
 .gprogress{display:flex;flex-direction:column;gap:8px;width:100%}
