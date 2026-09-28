@@ -1436,6 +1436,49 @@ const ds = () => root.querySelector('.kiosk').dataset;
 
       k.destroy();
     }
+
+    // *** AN AMBIENT MODULE'S OWN SETTINGS MUST BE REACHABLE FROM SOMEWHERE. ***
+    // Found missing entirely 2026-09-27: `comet_ambient.js` shipped with real settings (mode,
+    // count, speed, points) and nothing in the menu ever showed them, because `mount:'ambient'`
+    // content is never `focusedRec()`. Fixed by folding them into the SCREEN settings, alongside
+    // theme/burnIn/panelSurface — proves that here, with the real module, not just by reading
+    // the code that adds them.
+    {
+      const cap = await profiles.create('TEST-ambient-comet-settings');
+      await profiles.addModule(cap.id, 'comet_ambient');
+      const bus = createBus();
+      const k = await mountKiosk(root, { user: USER, profileId: cap.id, profiles, bus });
+      await sleep(80);
+      check('(setup) comet_ambient is mounted as the ambient occupant', k.hasAmbient() === true);
+
+      k.menu.open();
+      const items = k.menu.items();
+      const modeRow = items.find((r) => r.id === 'set:mode');
+      check('*** comet_ambient’s own "mode" setting is reachable from the screen menu ***',
+        !!modeRow, items.map((r) => r.id).join(','));
+      check('...defaulting to decorative, Mike’s own word for it',
+        modeRow?.hint === 'Just for looks', modeRow?.hint);
+      check('...and its other standard-level settings are there too (points is advanced-level '
+        + 'and correctly hidden at the default complexity — not asserted here)',
+        !!items.find((r) => r.id === 'set:count'), items.map((r) => r.id).join(','));
+
+      // Stepping it through the real menu reaches the module's own state, the same "reaches the
+      // document, not just the menu" proof the screen-level fields already get. `walkTo` first —
+      // `select()` acts on whichever row the menu's own cursor is currently on, same as every
+      // other menu test in this file.
+      const walkToMode = (id) => {
+        for (let i = 0; i < 60 && k.menu.focusId() !== id; i += 1) k.menu.next();
+        return k.menu.focusId() === id;
+      };
+      check('(setup) the mode row is a stop on the one-button walk', walkToMode('set:mode'));
+      k.menu.select();   // decorative -> interactive
+      await sleep(20);
+      check('*** stepping it through the menu actually reaches the module’s own saved state ***',
+        k.menu.items().find((r) => r.id === 'set:mode')?.hint === 'Something to catch',
+        k.menu.items().find((r) => r.id === 'set:mode')?.hint);
+
+      k.destroy();
+    }
   } catch (e) {
     check('the ambient-layer section threw', false, String((e && e.stack) || e));
   } finally {

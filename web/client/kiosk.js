@@ -1647,6 +1647,25 @@ export async function mountKiosk(root, {
         level: complexity(),
         onStep: (key, value) => { settings.set({ [key]: value }); },
       }),
+      // *** AN AMBIENT MODULE'S OWN SETTINGS, FOUND MISSING ENTIRELY 2026-09-27. ***
+      //
+      // `mount:'ambient'` content is never `focusedRec()` — it has no stage slot, so it never
+      // becomes "the focused panel" the way `fields()` below reaches a real module's own
+      // settings. `ambient_drift.js` never surfaced this gap because it declares no settings at
+      // all; `comet_ambient.js` was the first ambient module built WITH real ones (decorative/
+      // interactive, how many, how fast, points), and shipped them with no way to actually reach
+      // them from the menu at all — Mike asked "how do I add the overlays and ambient balloons"
+      // and the honest answer, before this, was "you can add it, but you can never change how it
+      // behaves." Screen-level, not focus-dependent, is the right home: an ambient module is a
+      // property of the SCREEN'S background, the same category theme/burnIn/panelSurface already
+      // live in, not of any one panel. Empty array (today's only OTHER ambient module,
+      // `ambient_drift`, declares no settings) is a silent no-op, so this costs nothing when
+      // there is nothing to show.
+      ...(ambientRec ? fieldItems(fieldsFor(ambientRec.instance.manifest, ambientRec.instance), {
+        values: () => ambientRec.state.get() || {},
+        level: complexity(),
+        onStep: (key, value) => { ambientRec.state.set({ [key]: value }); },
+      }) : []),
     ],
     // In a laid-out screen every panel is visible at once and the kiosk has no focus
     // concept yet, so there is no single subject and the menu says so rather than
