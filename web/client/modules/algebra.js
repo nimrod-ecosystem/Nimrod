@@ -25,7 +25,8 @@
 import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
-import { createLessons, gate, lockedTopics, LESSON_TOPIC } from '../lessons.js';
+import { createLessons, gate, lockedTopics, LESSON_TOPIC,
+         createQuestMode, ALL_UNLOCKED } from '../lessons.js';
 
 export const GAME = 'algebra';
 
@@ -269,6 +270,9 @@ registerModule(
     const rand = ctx.rand || Math.random;
 
     let ledger = null, tel = null, lessons = null, session = null;
+    // Quest (gating enforced, today's behavior) vs sandbox (everything open) — a per-PROFILE
+    // choice read the same way `lessons` itself is, see ../lessons.js's own "mode" section.
+    let mode = null;
     let cfg = { ...DEFAULTS };
     let calc = calcInit();
     let problem = null;
@@ -280,7 +284,13 @@ registerModule(
     const el = (sel) => mount.querySelector(sel);
 
     function nextProblem() {
-      const unlocked = lessons ? lessons.unlocked() : new Set();
+      // SANDBOX hands availablePool()'s gate() a stand-in that says everything is unlocked,
+      // rather than reading the real unlock log at all — the log is never touched by being in
+      // sandbox mode (see ../lessons.js). No `mode` handle (an older harness with no
+      // ctx.makeState) falls back to quest — the same "absent mechanism means today's
+      // behavior" rule the line below already follows for a missing `lessons` handle.
+      const sandbox = mode ? mode.isSandbox() : false;
+      const unlocked = sandbox ? ALL_UNLOCKED : (lessons ? lessons.unlocked() : new Set());
       const { open, lockedItems } = availablePool(cfg.pool, unlocked);
       held = lockedTopics(lockedItems, unlocked, cfg.topics || []);
       const keys = open.length ? open : POOLS.warm;
@@ -411,6 +421,7 @@ registerModule(
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });
         tel = createTelemetry({ makeEvents: ctx.makeEvents, bus });
         lessons = createLessons({ makeEvents: ctx.makeEvents, bus });
+        mode = ctx.makeState ? createQuestMode({ makeState: ctx.makeState }) : null;
         session = tel.session({ game: GAME, mode: cfg.pool });
         ledger.load().catch(() => {});
         tel.load().catch(() => {});
@@ -433,12 +444,14 @@ registerModule(
           };
         });
 
-        // Like wordforge: wait for the unlock log before dealing, and deal anyway if the
-        // server is unreachable, so a blip never leaves a blank game.
-        lessons.load()
-          .then(() => lessons.startPolling())
-          .catch(() => {})
-          .then(() => { if (!problem) nextProblem(); });
+        // Like wordforge: wait for the unlock log (AND the mode — see trivia.js's identical
+        // comment on why `mode`'s default, sandbox, is the opposite risk from `lessons`'s)
+        // before dealing, and deal anyway if the server is unreachable, so a blip never leaves
+        // a blank game.
+        Promise.all([
+          lessons.load().then(() => lessons.startPolling()).catch(() => {}),
+          mode ? mode.load().then(() => mode.startPolling()).catch(() => {}) : Promise.resolve(),
+        ]).then(() => { if (!problem) nextProblem(); });
       },
       onResize() {},
       onHide() { state.flush(); },
@@ -446,6 +459,7 @@ registerModule(
         if (ledger) { ledger.destroy(); ledger = null; }
         if (tel) { tel.destroy(); tel = null; }
         if (lessons) { lessons.destroy(); lessons = null; }
+        if (mode) { mode.destroy(); mode = null; }
       },
     };
   },

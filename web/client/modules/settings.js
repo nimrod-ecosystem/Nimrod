@@ -51,6 +51,7 @@ import { fieldsFor, fieldItems } from '../settings_fields.js';
 import { createProfilesClient, resolveTheme } from '../profile.js';
 import { createState } from '../state.js';
 import { applyTheme, listThemes, resolveThemeId } from '../theme.js';
+import { MODE_KEY, MODES, modeFrom, PROFILE_SETTINGS_KEY } from '../lessons.js';
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => (
@@ -138,9 +139,49 @@ registerModule(
         sel.addEventListener('change', async () => {
           const id = resolveThemeId(sel.value);
           applyTheme(document.documentElement, id);
-          const settingsState = createState({ url: profiles.stateURL(ctx.profileId, 'settings'), user: ctx.user });
+          const settingsState = createState({ url: profiles.stateURL(ctx.profileId, PROFILE_SETTINGS_KEY), user: ctx.user });
           await settingsState.load().catch(() => {});
           settingsState.set({ theme: id });
+        });
+      },
+    };
+
+    // LEARNING MODE SCOPE — quest (lesson-topic gating enforced) vs sandbox (everything
+    // open), register 252/257.2, Mike 2026-09-28. Same reserved per-profile document as
+    // THEME above (`../lessons.js`'s own header on `createQuestMode` explains why this rides
+    // that seam rather than a new one) — Trivia, Word Forge and the algebra game all read it
+    // the same way they already read the shared unlock log, with no wiring specific to any one
+    // of them. Points are earned in both modes; nothing here ever touches the unlock log
+    // itself, so switching back and forth loses nothing.
+    //
+    // NO LOCK IS BUILT HERE. Mike's own ruling named a possible future guardian lock on this
+    // control ("unless locked by a guardian account or something") but the row that asked for
+    // this switch also says the lock itself "needs a design pass with Mike" and this codebase
+    // has no guardian/owner-account concept today (`web/server/grants.py`'s only roles,
+    // moderator/participant, govern who may DRIVE a screen, not who may change a setting). If
+    // that lock is built later, this is the control it would need to disable — named here so
+    // whoever builds it does not have to go hunting for where "mode" actually lives.
+    pages['sc-mode'] = {
+      title: 'Learning mode',
+      render(el) {
+        el.innerHTML = `<p class="st-hint" style="display:block;margin:0 0 10px">Quest keeps
+          lesson topics locked until they’re watched. Sandbox opens everything right away.
+          Points are earned either way, and nothing already unlocked is ever lost by
+          switching.</p>
+          <select data-mode-select style="width:100%;padding:10px;border-radius:10px;
+            border:1px solid var(--border);background:var(--surface);color:var(--text)">
+            <option value="sandbox">Sandbox — everything open</option>
+            <option value="quest">Quest — topics unlock as you go</option>
+          </select>`;
+        const sel = el.querySelector('[data-mode-select]');
+        const modeState = createState({ url: profiles.stateURL(ctx.profileId, PROFILE_SETTINGS_KEY), user: ctx.user });
+        modeState.load().then(() => {
+          if (!el.isConnected) return;
+          sel.value = modeFrom(modeState.get());
+        }).catch(() => {});
+        sel.addEventListener('change', () => {
+          const value = MODES.includes(sel.value) ? sel.value : 'sandbox';
+          modeState.set({ [MODE_KEY]: value });
         });
       },
     };
@@ -171,6 +212,7 @@ registerModule(
               kind: 'item', id: `mod-${row.id}`, label: row.title, page: `mod-${row.id}`,
             })),
             { kind: 'item', id: 'sc-theme', label: 'Theme', page: 'sc-theme' },
+            { kind: 'item', id: 'sc-mode', label: 'Learning mode', page: 'sc-mode' },
             { kind: 'item', id: 'sc-device', label: 'This screen', page: 'sc-device' },
           ],
           pages,

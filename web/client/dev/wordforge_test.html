@@ -424,7 +424,7 @@ a || b || c`);
       user: USER, profileId: profile.id, makeState, makeEvents,
     });
     pInst.init();
-    await sleep(900);
+    await sleep(600);
 
     const qHost = document.getElementById('questsHost');
     const pHost = document.getElementById('progressHost');
@@ -686,6 +686,98 @@ a || b || c`);
         foundBankWord, (bhost2.textContent || '').slice(0, 200));
       binst2.destroy();
       bhost2.remove();
+    }
+
+    // =====================================================================================
+    // SANDBOX MODE (register 252/257.2) — a DEDICATED profile, same reason lessons_test.html's
+    // own trivia section uses one: lesson unlocks are shared per-profile, and reusing the main
+    // profile above (already partly unlocked by earlier checks in some runs) would not start
+    // from a clean "nothing unlocked" baseline. Real end-to-end proof against the actual
+    // per-profile 'settings' document `modules/settings.js`'s new "Learning mode" page writes,
+    // not a stub — this is what a caregiver flipping that control actually changes.
+    section('*** sandbox mode bypasses lesson gating, without touching the unlock log ***');
+    {
+      const mProfiles = createProfilesClient({ user: USER });
+      const mProfile = await mProfiles.create('TEST-wordforge-sandbox');
+      const mMakeState = (k, o) => createState({ url: mProfiles.stateURL(mProfile.id, k), user: USER, ...o });
+      const mMakeEvents = (k, o) => createEvents({ url: mProfiles.eventsURL(mProfile.id, k), user: USER, ...o });
+      // 4 ungated words (+ the module's own default sentence pairs) + 2 gated behind 'roots' —
+      // enough ungated content that the "< 4 open falls back to the whole bank" safety rule in
+      // newRound() doesn't mask the gating difference this section exists to prove.
+      const GATED_WORDS = `
+alpha | first letter | Alpha comes first.
+beta  | second       | Beta follows alpha.
+gamma | third        | Gamma is third.
+delta | a change     | Delta means change.
+etymon | the original form of a word | Etymon is the root a word grew from. | 9 | roots
+lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | roots
+`;
+      const mMod = await mProfiles.addModule(mProfile.id, 'wordforge');
+      const mSt = createState({ url: mProfiles.stateURL(mProfile.id, mMod.id), user: USER });
+      await mSt.load();
+      mSt.set({ wordsText: GATED_WORDS, roundLength: 40, contentSource: 'bank' });
+      await mSt.flush();
+      const mHost = document.createElement('div');
+      document.body.append(mHost);
+      const mDeckSize = () => Number((mHost.querySelector('[data-progress]')?.textContent.split('/')[1] || '0').trim());
+
+      // Nothing is ever written to the 'settings' document by this section but `questMode` —
+      // no theme, no prior mode — so the "quest" mount below also proves DEFAULT_MODE has not
+      // silently changed the moment something is set, only that an explicit choice is honored.
+      const mSettings = createState({ url: mProfiles.stateURL(mProfile.id, 'settings'), user: USER });
+      await mSettings.load();
+      mSettings.set({ questMode: 'quest' });
+      await mSettings.flush();
+      const quest = mountModule('wordforge', {
+        mount: mHost, bus: createBus(), state: mSt,
+        events: createEvents({ url: mProfiles.eventsURL(mProfile.id, mMod.id), user: USER }),
+        user: USER, profileId: mProfile.id, makeState: mMakeState, makeEvents: mMakeEvents, rand: fixedRand,
+      });
+      quest.init();
+      await sleep(900);
+      check('*** quest mode: unchanged from today — 4 ungated words + 4 pairs, "roots" held back ***',
+        mDeckSize() === 8, `deck=${mDeckSize()}`);
+      check('...and the game says so, same as it always has',
+        /waiting behind/i.test(mHost.textContent), mHost.textContent.slice(0, 200));
+      quest.destroy();
+
+      mSettings.set({ questMode: 'sandbox' });
+      await mSettings.flush();
+      mHost.innerHTML = '';
+      const mSt2 = createState({ url: mProfiles.stateURL(mProfile.id, mMod.id), user: USER });
+      await mSt2.load();
+      const sandbox = mountModule('wordforge', {
+        mount: mHost, bus: createBus(), state: mSt2,
+        events: createEvents({ url: mProfiles.eventsURL(mProfile.id, mMod.id), user: USER }),
+        user: USER, profileId: mProfile.id, makeState: mMakeState, makeEvents: mMakeEvents, rand: fixedRand,
+      });
+      sandbox.init();
+      await sleep(900);
+      check('*** sandbox mode: all 6 words + 4 pairs play, with NOTHING actually unlocked ***',
+        mDeckSize() === 10, `deck=${mDeckSize()}`);
+      check('...and nothing is reported as held back',
+        mHost.querySelector('[data-held]').textContent.trim() === '',
+        mHost.querySelector('[data-held]').textContent);
+      sandbox.destroy();
+
+      // Flip straight back to quest with NO relearning — proves the unlock log (empty the
+      // whole time here) is what quest reads, not something sandbox mode wrote or cleared.
+      mSettings.set({ questMode: 'quest' });
+      await mSettings.flush();
+      mHost.innerHTML = '';
+      const mSt3 = createState({ url: mProfiles.stateURL(mProfile.id, mMod.id), user: USER });
+      await mSt3.load();
+      const backToQuest = mountModule('wordforge', {
+        mount: mHost, bus: createBus(), state: mSt3,
+        events: createEvents({ url: mProfiles.eventsURL(mProfile.id, mMod.id), user: USER }),
+        user: USER, profileId: mProfile.id, makeState: mMakeState, makeEvents: mMakeEvents, rand: fixedRand,
+      });
+      backToQuest.init();
+      await sleep(900);
+      check('*** switching back to quest re-gates exactly as before — sandbox never touched the log ***',
+        mDeckSize() === 8, `deck=${mDeckSize()}`);
+      backToQuest.destroy();
+      mHost.remove();
     }
 
     document.getElementById('summary').textContent =

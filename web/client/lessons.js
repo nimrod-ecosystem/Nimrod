@@ -105,6 +105,84 @@ export function lockedTopics(items, unlocked, topics = [], key = 'topic') {
   })).sort((a, b) => b.count - a.count);
 }
 
+// ---------- mode: quest (gating enforced) vs sandbox (everything open) ----------
+//
+// A per-PROFILE choice, not a per-module one (register 252/257 point 2, Mike 2026-09-28:
+// "I think users should be able to switch between quest and sandbox unless locked by a
+// guardian account or something" / "Sandbox is default for new profiles"). One person's "how
+// do I want to learn" should not need setting three separate times because it happens to
+// touch Trivia, Word Forge and the algebra game at once.
+//
+// WHERE IT LIVES, and why this is not a new mechanism: `kiosk.js` already keeps "per-profile
+// render settings (theme now; voice next)" in the versioned overwrite store under the
+// reserved key `'settings'` (module ids are 32-hex UUIDs, so a well-known short key never
+// collides with an instance's own state) — see kiosk.js's own comment at the theme wiring,
+// and `profile.js`'s `resolveTheme`. `ctx.makeState` already reaches that exact document from
+// every module, unconditionally, the same way `ctx.makeEvents` already reaches the shared
+// `lessons` stream just above — so this rides the seam that already exists (theme's own
+// header names 'voice next'; this is the next tenant after that) rather than inventing a
+// second, competing one. `modules/settings.js`'s new "Learning mode" page is the control that
+// writes here — the same reserved document its own "Theme" page already writes `theme` into.
+//
+// QUEST = today's behavior, byte for byte: `gate()`/`lockedTopics()` run exactly as before,
+// against the real `unlocked()` set — nothing in this section changes what either function
+// does. SANDBOX = every item in every bank plays as though unlocked, done by handing `gate()`
+// a stand-in that answers `.has()` with `true` for anything (`ALL_UNLOCKED`, below) — `gate`
+// and `lockedTopics` never have to know sandbox exists, so this cannot drift from the real
+// gating logic by accident. THE UNLOCK LOG ITSELF IS NEVER TOUCHED BY BEING IN SANDBOX:
+// nothing here calls `watch()`/`relock()`, so quest -> sandbox -> quest always comes back to
+// exactly what was earned, per the ruling ("switching loses nothing").
+// The reserved per-profile key theme/voice/mode all share — named once here rather than as a
+// bare `'settings'` string repeated at every call site, which is how a typo in one of them
+// would silently create a SECOND document nobody reads.
+export const PROFILE_SETTINGS_KEY = 'settings';
+
+export const MODE_KEY = 'questMode';
+export const MODES = ['quest', 'sandbox'];
+// Mike, 2026-09-28 (register 257.2): "Sandbox is default for new profiles." Applied uniformly
+// to "never explicitly chosen" rather than special-cased to only profiles created after this
+// feature landed — the same PRESENCE-IS-WHAT-COUNTS convention `settings_fields.js`'s
+// `fieldValue`/`readWithLegacy` already use for every other setting here (absent, null and
+// undefined all mean "use the default"; there is no separate tri-state to preserve, and
+// inventing one — "old profile" vs "new profile" — is itself a rule nobody asked for). See
+// this feature's own report for the one real tradeoff this glosses over: a profile that
+// predates this feature and had never touched it also reads as sandbox now, same as a
+// brand-new one, because nothing distinguishes "never chosen because new" from "never chosen
+// because the setting didn't exist yet" — both are simply absent.
+export const DEFAULT_MODE = 'sandbox';
+
+// `values` is whatever the profile's shared 'settings' document currently holds (the object
+// `theme` already lives beside). A stored value outside MODES — nothing writes one today, but
+// a hand-edited row, or one written before 'quest'/'sandbox' existed, could hold anything —
+// reads as absent rather than crashing or silently picking one.
+export function modeFrom(values) {
+  const raw = values && values[MODE_KEY];
+  return MODES.includes(raw) ? raw : DEFAULT_MODE;
+}
+
+// A `.has()`-only stand-in for the real `unlocked()` Set. `gate()` and `lockedTopics()` never
+// call anything else on what they're given (see both above), so this satisfies both, and
+// sandbox mode never has to read — or even know about — the actual unlock log to do it.
+export const ALL_UNLOCKED = { has: () => true };
+
+// The live handle. Deliberately the same shape as `createLessons` below (`load`/
+// `startPolling`/`subscribe`/`get`/`destroy`) — a caller that already knows how to hold a
+// `lessons` handle learns nothing new to also hold one of these.
+export function createQuestMode({ makeState } = {}) {
+  if (typeof makeState !== 'function') {
+    throw new Error('createQuestMode: ctx.makeState is required');
+  }
+  const state = makeState(PROFILE_SETTINGS_KEY);
+  return {
+    load: () => state.load(),
+    startPolling: () => state.startPolling(),
+    get: () => modeFrom(state.get()),
+    isSandbox: () => modeFrom(state.get()) === 'sandbox',
+    subscribe: (fn) => state.subscribe(fn),
+    destroy: () => state.destroy(),
+  };
+}
+
 // ---------- the handle ----------
 
 export function createLessons({ makeEvents, bus = null, limit = 500, pollMs = 4000 } = {}) {

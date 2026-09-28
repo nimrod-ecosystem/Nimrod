@@ -26,6 +26,7 @@
 import { authHeaders, httpError } from './auth.js';
 import { cachedFetch } from './cache.js';
 import { createState } from './state.js';
+import { MODE_KEY, DEFAULT_MODE, PROFILE_SETTINGS_KEY } from './lessons.js';
 
 // A starter profile so a fresh account "just works": photos, the camera mirror, the
 // clock, and the Lineup director (rotates youtube / personal videos / educational).
@@ -41,6 +42,15 @@ export async function ensureProfile(profiles, user, wantProfile = null) {
     await profiles.addModule(p.id, 'camera');
     await profiles.addModule(p.id, 'clock');
     await profiles.addModule(p.id, 'director');
+    // A brand-new profile starts in SANDBOX (Mike, 2026-09-28, register 257.2: "Sandbox is
+    // default for new profiles"). `lessons.js`'s own `modeFrom` already falls back to sandbox
+    // for any profile that has never chosen one, so this write changes no behavior today — but
+    // it makes the choice a real, durable record on the one profile this function actually
+    // creates, rather than something inferred forever from an absence. See `lessons.js`'s own
+    // "mode" section for the read half (`createQuestMode`, used by trivia/wordforge/algebra).
+    const settings = createState({ url: profiles.stateURL(p.id, PROFILE_SETTINGS_KEY), user });
+    await settings.load().catch(() => {});
+    settings.set({ [MODE_KEY]: DEFAULT_MODE });
     return p.id;
   }
   return list[0].id;

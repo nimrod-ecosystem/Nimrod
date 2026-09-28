@@ -76,7 +76,7 @@ import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
-         TRIVIA_LESSON_QUESTIONS } from '../lessons.js';
+         TRIVIA_LESSON_QUESTIONS, createQuestMode, ALL_UNLOCKED } from '../lessons.js';
 
 export const GAME = 'trivia';
 
@@ -379,6 +379,9 @@ registerModule(
     // matching lesson has been watched (../lessons.js). A question with NO topic is always in
     // play, so a bank written before this existed is unaffected.
     let lessons = null;
+    // Quest (gating enforced, today's behavior) vs sandbox (everything open) — a per-PROFILE
+    // choice read the same way `lessons` itself is, see ../lessons.js's own "mode" section.
+    let mode = null;
     let topics = DEFAULT_TOPICS;
     let held = [];             // topics still holding questions back, for the "waiting behind" note
 
@@ -610,7 +613,13 @@ registerModule(
       // falling back to the whole bank -- a round built from fewer than four open questions
       // reads as broken rather than as a level gate, so an under-populated open set plays the
       // full bank instead of a degenerate one.
-      const unlocked = lessons ? lessons.unlocked() : new Set();
+      // SANDBOX hands gate() a stand-in that says everything is unlocked, rather than reading
+      // the real unlock log at all — the log is never touched by being in sandbox mode (see
+      // ../lessons.js). No `mode` handle (an older harness with no ctx.makeState) falls back
+      // to quest — the same "absent mechanism means today's behavior" rule `lessons ? ... :
+      // new Set()` already follows on the line below.
+      const sandbox = mode ? mode.isSandbox() : false;
+      const unlocked = sandbox ? ALL_UNLOCKED : (lessons ? lessons.unlocked() : new Set());
       const open = gate(bank, unlocked).open;
       held = lockedTopics(bank, unlocked, topics);
       deck = buildDeck(open.length >= 4 ? open : bank, { roundLength: cfg.roundLength, rand });
@@ -700,19 +709,34 @@ registerModule(
         // wrong. UNCONDITIONAL, not guarded behind `if (!deck.length)`: once the unlock log is
         // actually in, the deck is rebuilt regardless of what an earlier, necessarily-incomplete
         // build already produced (0b, "lessons/wordforge deck doesn't grow on unlock").
+        // *** MODE LOADS ALONGSIDE LESSONS, IN THE SAME PROMISE CHAIN, FOR THE SAME REASON. ***
+        // `mode`'s default (sandbox) is the OPPOSITE risk from `lessons`'s (quest-strict): a
+        // round dealt before `mode.load()` resolves would read "not sandbox" and gate as quest
+        // even for a profile that has actually chosen sandbox, then narrow-then-widen once the
+        // real value is in — the mirror image of the already-fixed "first round ignores the
+        // unlock log" bug (0b). Both loads gate the one unconditional rebuild below.
         try {
           lessons = createLessons({ makeEvents: ctx.makeEvents, bus });
-          lessons.load().then(() => lessons.startPolling()).catch(() => {}).then(() => { newRound(); });
+          mode = ctx.makeState ? createQuestMode({ makeState: ctx.makeState }) : null;
+          Promise.all([
+            lessons.load().then(() => lessons.startPolling()).catch(() => {}),
+            mode ? mode.load().then(() => mode.startPolling()).catch(() => {}) : Promise.resolve(),
+          ]).then(() => { newRound(); });
           // A lesson finished elsewhere — the new questions join the pool at the START of the
           // next round, not mid-question (same rule Word Forge follows for the same reason).
           bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
-        } catch (err) { lessons = null; console.error('trivia: no lessons handle', err); }
+          // A mode switched elsewhere (the settings module, another device) reaches here on
+          // `mode`'s own poll (`startPolling()` above) with no extra wiring — every `newRound()`
+          // reads `mode.isSandbox()` fresh, the same way it already reads `lessons.unlocked()`
+          // fresh, so nothing needs to force a rebuild the moment the poll lands.
+        } catch (err) { lessons = null; mode = null; console.error('trivia: no lessons handle', err); }
       },
       onResize() {},
       onHide() { state?.flush?.(); },
       destroy() {
         recorder = null;
         if (lessons) { lessons.destroy(); lessons = null; }
+        if (mode) { mode.destroy(); mode = null; }
       },
     };
   },

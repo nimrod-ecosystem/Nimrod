@@ -50,7 +50,7 @@ import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
 import { worth as mcqWorth } from '../mcq_scoring.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
-         WORDFORGE_LESSON_QUESTIONS } from '../lessons.js';
+         WORDFORGE_LESSON_QUESTIONS, createQuestMode, ALL_UNLOCKED } from '../lessons.js';
 import { parseBank as sharedBank } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack } from '../packs.js';
@@ -508,6 +508,9 @@ registerModule(
     let applyState = () => {};            // named so a shared-bank change re-runs it
     let tel = null;
     let lessons = null;
+    // Quest (gating enforced, today's behavior) vs sandbox (everything open) — a per-PROFILE
+    // choice read the same way `lessons` itself is, see ../lessons.js's own "mode" section.
+    let mode = null;
     let topics = DEFAULT_TOPICS;
     let held = [];            // topics still holding words/given questions back, for the note
     let lessonQ = null;       // what lessons.js has routed here, see givenItems() below
@@ -533,7 +536,13 @@ registerModule(
     function newRound() {
       // Only what's unlocked goes in the deck. Pairs are ungated for now — they carry no
       // topic — so `gate` passes them straight through.
-      const unlocked = lessons ? lessons.unlocked() : new Set();
+      // SANDBOX hands gate() a stand-in that says everything is unlocked, rather than reading
+      // the real unlock log at all — the log is never touched by being in sandbox mode (see
+      // ../lessons.js). No `mode` handle (an older harness with no ctx.makeState) falls back
+      // to quest — the same "absent mechanism means today's behavior" rule the line below
+      // already follows for a missing `lessons` handle.
+      const sandbox = mode ? mode.isSandbox() : false;
+      const unlocked = sandbox ? ALL_UNLOCKED : (lessons ? lessons.unlocked() : new Set());
       const openWords = gate(words, unlocked).open;
       // What a lesson pack elsewhere on this profile has routed here (lessons.js's
       // `questionsTo`, "both" by default 2026-09-23) — already carries `.topic`, gated the
@@ -803,6 +812,7 @@ registerModule(
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });
         tel = createTelemetry({ makeEvents: ctx.makeEvents, bus });
         lessons = createLessons({ makeEvents: ctx.makeEvents, bus });
+        mode = ctx.makeState ? createQuestMode({ makeState: ctx.makeState }) : null;
         // WHATEVER A LESSON PACK HAS ROUTED HERE — a second, independent, per-profile row a
         // Lessons instance elsewhere on this screen owns entirely (lessons.js's own comment on
         // WORDFORGE_LESSON_QUESTIONS). Same unconditional-rebuild-after-load care as `lessons`
@@ -832,13 +842,19 @@ registerModule(
         // the rest of the session. Unconditional, not guarded: once the unlock log is actually
         // in, the deck is rebuilt regardless of whatever an earlier, necessarily-incomplete
         // build already produced.
-        lessons.load()
-          .then(() => lessons.startPolling())
-          .catch(() => {})
-          .then(() => { newRound(); });
+        // MODE LOADS IN THE SAME CHAIN, FOR THE SAME REASON, per trivia.js's identical comment:
+        // `mode`'s default (sandbox) is the opposite risk from `lessons`'s (quest-strict) — a
+        // round dealt before `mode.load()` resolves would gate as quest even for a profile that
+        // has actually chosen sandbox. Both loads gate the one unconditional rebuild.
+        Promise.all([
+          lessons.load().then(() => lessons.startPolling()).catch(() => {}),
+          mode ? mode.load().then(() => mode.startPolling()).catch(() => {}) : Promise.resolve(),
+        ]).then(() => { newRound(); });
         // A lesson finished elsewhere (the Lessons module, another device) — the new words
         // join the pool at the START of the next round, not mid-question.
         bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
+        // A mode switched elsewhere reaches here on `mode`'s own poll (`startPolling()` above)
+        // with no extra wiring — every `newRound()` reads `mode.isSandbox()` fresh.
         session = tel.session({ game: GAME, mode: 'practice' });
         ledger.load().catch(() => {});
         tel.load().catch(() => {});
@@ -951,6 +967,7 @@ registerModule(
         if (ledger) { ledger.destroy(); ledger = null; }
         if (tel) { tel.destroy(); tel = null; }
         if (lessons) { lessons.destroy(); lessons = null; }
+        if (mode) { mode.destroy(); mode = null; }
       },
     };
   },

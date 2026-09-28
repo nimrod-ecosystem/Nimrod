@@ -31,6 +31,7 @@
 <script type="module">
 import { createProfilesClient, resolveTheme } from '../profile.js';
 import { createState } from '../state.js';
+import { MODE_KEY, DEFAULT_MODE, modeFrom } from '../lessons.js';
 import { createTryHost, createLiveHost } from '../module_try.js';
 import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
 import { verbTopic } from '../actions.js';
@@ -132,6 +133,20 @@ const host = document.getElementById('host');
         live.profile.modules.some((m) => m.type === 'photos')
         && live.profile.modules.some((m) => m.type === 'clock'),
         JSON.stringify(live.profile.modules.map((m) => m.type)));
+
+      // *** ensureProfile's OWN new hook (register 252/257.2): a brand-new profile's mode is
+      // written EXPLICITLY, not left purely inferred. *** Read the same real per-profile
+      // 'settings' document trivia/wordforge/algebra actually read via createQuestMode.
+      // `ensureProfile`'s own write is debounced (state.js's ordinary `set()`/`flush()`), so
+      // this waits past that window rather than racing it.
+      await sleep(400);
+      const settings = createState({ url: profiles.stateURL(live.profileId, 'settings'), user: USER });
+      await settings.load();
+      check('*** a brand-new account\'s starter profile is durably recorded as sandbox ***',
+        settings.get()?.[MODE_KEY] === DEFAULT_MODE && settings.get()?.[MODE_KEY] === 'sandbox',
+        JSON.stringify(settings.get()));
+      check('...and modeFrom() agrees, the same way the games would read it',
+        modeFrom(settings.get()) === 'sandbox');
     }
 
     // ================= ensure() adds the real instance, idempotently =================

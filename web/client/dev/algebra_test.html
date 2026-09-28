@@ -231,6 +231,87 @@ const type = (keys) => keys.split('').reduce((st, k) => calcPress(st, k), calcIn
 
     ledger.destroy(); tel.destroy(); inst.destroy();
 
+    // =====================================================================================
+    // SANDBOX MODE (register 252/257.2) — a DEDICATED profile so this starts from a clean
+    // "nothing unlocked" baseline, same reason lessons_test.html's own trivia section uses
+    // one. `pool: 'mixed'` (not 'warm', which the section above uses precisely because it has
+    // no gated types at all) is what actually exercises the skill-tree gate this section
+    // exists to prove sandbox bypasses.
+    section('*** sandbox mode bypasses the algebra skill-tree gate, log untouched ***');
+    {
+      const sProfiles = createProfilesClient({ user: USER });
+      const sProfile = await sProfiles.create('TEST-algebra-sandbox');
+      const sMakeState = (k, o) => createState({ url: sProfiles.stateURL(sProfile.id, k), user: USER, ...o });
+      const sMakeEvents = (k, o) => createEvents({ url: sProfiles.eventsURL(sProfile.id, k), user: USER, ...o });
+      const sMod = await sProfiles.addModule(sProfile.id, 'algebra');
+      const sSt = createState({ url: sProfiles.stateURL(sProfile.id, sMod.id), user: USER });
+      await sSt.load();
+      sSt.set({ pool: 'mixed' });
+      await sSt.flush();
+      const sHost = document.createElement('div');
+      document.body.append(sHost);
+      const heldText = () => (sHost.querySelector('[data-held]')?.textContent || '');
+
+      const sSettings = createState({ url: sProfiles.stateURL(sProfile.id, 'settings'), user: USER });
+      await sSettings.load();
+      sSettings.set({ questMode: 'quest' });
+      await sSettings.flush();
+      const questInst = mountModule('algebra', {
+        mount: sHost, bus: createBus(), state: sSt,
+        events: createEvents({ url: sProfiles.eventsURL(sProfile.id, sMod.id), user: USER }),
+        user: USER, profileId: sProfile.id, makeState: sMakeState, makeEvents: sMakeEvents, rand: seeded(555),
+      });
+      questInst.init();
+      await sleep(700);
+      check('*** quest mode: unchanged from today — the ungated skill-tree gate still applies ***',
+        /distributing/i.test(heldText()) && /both-sides/i.test(heldText()), heldText());
+      questInst.destroy();
+
+      sSettings.set({ questMode: 'sandbox' });
+      await sSettings.flush();
+      sHost.innerHTML = '';
+      const sSt2 = createState({ url: sProfiles.stateURL(sProfile.id, sMod.id), user: USER });
+      await sSt2.load();
+      const sandboxInst = mountModule('algebra', {
+        mount: sHost, bus: createBus(), state: sSt2,
+        events: createEvents({ url: sProfiles.eventsURL(sProfile.id, sMod.id), user: USER }),
+        user: USER, profileId: sProfile.id, makeState: sMakeState, makeEvents: sMakeEvents, rand: seeded(555),
+      });
+      sandboxInst.init();
+      await sleep(700);
+      check('*** sandbox mode: nothing is reported as held back, with NOTHING actually unlocked ***',
+        heldText().trim() === '', heldText());
+      sandboxInst.destroy();
+
+      // `questMode` left unset entirely on a THIRD, brand-new profile — Mike, 2026-09-28,
+      // register 257.2: "Sandbox is default for new profiles."
+      const dProfiles = createProfilesClient({ user: USER });
+      const dProfile = await dProfiles.create('TEST-algebra-default-mode');
+      const dMod = await dProfiles.addModule(dProfile.id, 'algebra');
+      const dSt = createState({ url: dProfiles.stateURL(dProfile.id, dMod.id), user: USER });
+      await dSt.load();
+      dSt.set({ pool: 'mixed' });
+      await dSt.flush();
+      const dHost = document.createElement('div');
+      document.body.append(dHost);
+      const defaultInst = mountModule('algebra', {
+        mount: dHost, bus: createBus(), state: dSt,
+        events: createEvents({ url: dProfiles.eventsURL(dProfile.id, dMod.id), user: USER }),
+        user: USER, profileId: dProfile.id,
+        makeState: (k, o) => createState({ url: dProfiles.stateURL(dProfile.id, k), user: USER, ...o }),
+        makeEvents: (k, o) => createEvents({ url: dProfiles.eventsURL(dProfile.id, k), user: USER, ...o }),
+        rand: seeded(555),
+      });
+      defaultInst.init();
+      await sleep(700);
+      check('*** DEFAULT (mode never chosen) reads as sandbox — nothing held back ***',
+        (dHost.querySelector('[data-held]')?.textContent || '').trim() === '',
+        dHost.querySelector('[data-held]')?.textContent);
+      defaultInst.destroy();
+      sHost.remove();
+      dHost.remove();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
