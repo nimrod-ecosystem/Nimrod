@@ -71,8 +71,13 @@ export function createEvents({ url, user, pollMs = 1500, limit = null,
   // optimistic guess: it is the server's own row, so the rule that the client clock is never
   // trusted for the record still holds exactly as before.
   //
-  // Newest first and capped at `limit`, matching what a refresh would have returned, so
-  // nothing downstream can tell the difference except by counting requests.
+  // OLDEST FIRST, the newest `limit` rows -- exactly what a refresh returns (`db.py list_events`
+  // takes the newest `limit` and reverses them into chronological order). Fixed 2026-09-28: this
+  // used to PUT THE NEW ROW AT THE FRONT and keep the FIRST `limit`, while this comment claimed
+  // newest-first. So until the next poll the cache was in mixed order, and once the window was full
+  // an append dropped the NEWEST existing row (the tail) instead of the oldest. Every reader in this
+  // codebase treats the list as oldest-first (quests, presslog, progress all reverse it for "latest
+  // first"); now the cache agrees with them and with the server.
   async function append(kind, data = {}, meta = null) {
     const res = await fetch(url, {
       method: 'POST',
@@ -92,10 +97,10 @@ export function createEvents({ url, user, pollMs = 1500, limit = null,
       await refresh();
       return;
     }
-    const events = [row, ...(cache.events || [])];
+    const events = [...(cache.events || []), row];
     cache = {
       ...cache,
-      events: limit ? events.slice(0, limit) : events,
+      events: limit ? events.slice(-limit) : events,
       total: (cache.total || 0) + 1,
     };
     loaded = true;
