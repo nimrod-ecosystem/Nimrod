@@ -217,7 +217,10 @@ section('device → verb → module, with no UI in the middle');
 {
   const bus = createBus();
   let nexts = 0;
-  bus.subscribe('photos/next', () => { nexts += 1; });
+  // INSTANCE ADDRESSING (2026-09-10): the router publishes to the focused instance's own
+  // scoped topic — see input_router.js `dispatch` / bus.js `instanceTopic` — so a listener
+  // subscribes on the same address the instance id below resolves to, not the bare topic.
+  bus.subscribe(bus.instanceTopic('p1', 'photos/next'), () => { nexts += 1; });
   const rt = mountInputRuntime({
     bus, attachDevices: false,
     fallback: [kb('key:a', verbTopic('next'))],
@@ -275,7 +278,10 @@ section('THE DIRECTOR — on her actual screen, and it answered nothing');
 
   const bus = createBus();
   let done = null;
-  bus.subscribe('segment/done', (p) => { done = p; });
+  // INSTANCE ADDRESSING (2026-09-10): the router publishes to the focused instance's own
+  // scoped topic — see input_router.js `dispatch` / bus.js `instanceTopic` — so a listener
+  // subscribes on the same address the instance id below resolves to, not the bare topic.
+  bus.subscribe(bus.instanceTopic('d1', 'segment/done'), (p) => { done = p; });
   const rt = mountInputRuntime({
     bus, attachDevices: false,
     fallback: [kb('key:a', verbTopic('next'))],
@@ -294,8 +300,11 @@ section('THE CLINICAL SCENARIO — one person configuring while another uses it'
 {
   const bus = createBus();
   let nexts = 0, prevs = 0;
-  bus.subscribe('photos/next', () => { nexts += 1; });
-  bus.subscribe('photos/prev', () => { prevs += 1; });
+  // INSTANCE ADDRESSING (2026-09-10): the router publishes to the focused instance's own
+  // scoped topic — see input_router.js `dispatch` / bus.js `instanceTopic` — so a listener
+  // subscribes on the same address the instance id below resolves to, not the bare topic.
+  bus.subscribe(bus.instanceTopic('p1', 'photos/next'), () => { nexts += 1; });
+  bus.subscribe(bus.instanceTopic('p1', 'photos/prev'), () => { prevs += 1; });
 
   const state = fakeState({ [INPUTS_KEY]: rec([kb('key:a', verbTopic('next'))]) });
   const rt = mountInputRuntime({
