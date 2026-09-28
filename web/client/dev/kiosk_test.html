@@ -231,6 +231,27 @@ const ds = () => root.querySelector('.kiosk').dataset;
     await press('c', 40);
     check('C toggles back', kiosk.mirrorFull() === false);
 
+    // *** TYPING IS NOT INPUT. *** The kiosk's own hotkeys ignored where the key landed, so a
+    // "c" typed into a text box flipped the mirror and a digit switched panels mid-sentence.
+    {
+      const field = document.createElement('input');
+      field.type = 'text';
+      root.appendChild(field);
+      const before = kiosk.primaryType();
+      for (const key of ['c', 'h', 'f', '2', '[']) {
+        field.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+        field.dispatchEvent(new KeyboardEvent('keyup', { key, bubbles: true }));
+      }
+      await sleep(60);
+      check('typing c/h/f/2/[ into a text field does not toggle the mirror', kiosk.mirrorFull() === false);
+      check('...nor switch panels', kiosk.primaryType() === before, `${before} -> ${kiosk.primaryType()}`);
+      check('...nor open the screen picker', root.querySelector('[data-screens]')?.hidden !== false);
+      field.remove();
+      await press('c', 40);
+      check('CONTROL: the same key from outside a field still works', kiosk.mirrorFull() === true);
+      await press('c', 40);
+    }
+
     // ---- THE TWO DIAGNOSTIC PAGES, reachable by switch ----
     await press('Escape');
     const menuIds = kiosk.menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
