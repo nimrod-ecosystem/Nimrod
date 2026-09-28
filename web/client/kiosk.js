@@ -1290,7 +1290,20 @@ export async function mountKiosk(root, {
       profile = next;
       // The incoming screen's own arrangement. A PREVIEW layout is a one-shot for the screen
       // it was handed to and must never follow a swap.
-      const sl = (settings.get().kiosk || {}).layout;
+      //
+      // Read from the INCOMING screen's settings doc. `settings` (above) is the handle opened for the
+      // screen this kiosk BOOTED on and is never re-pointed, so reading it here applied the OLD
+      // screen's slot ids to the NEW screen's modules -- none matched, every slot was orphaned, and
+      // the panels fell back to module order instead of the arrangement somebody had made. (Reported
+      // by the calculator-port agent 2026-09-28 and reproduced in kiosk_test before this fix.)
+      // `stateFor` reads `profileId` when it is CALLED, and it has just been set to `nextId`.
+      // Everything else on the boot handle -- theme, the panel fields in the menu -- deliberately stays
+      // as it was: only the arrangement is documented as belonging to the incoming screen.
+      const incoming = stateFor('settings');
+      let sl;
+      try { await incoming.load(); sl = (incoming.get().kiosk || {}).layout; }
+      catch { sl = undefined; }      // unreadable: no arrangement, not the previous screen's
+      finally { try { incoming.destroy(); } catch { /* already gone */ } }
       layout = resolveLayout(sl, profile.modules);
       await applyModules();
       bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
