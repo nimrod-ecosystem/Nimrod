@@ -119,8 +119,21 @@ registerModule(
     let observer = null;
     let ledger = null;
     let caught = 0;
+    let scoreEl = null;
     const hover = createHoverTracker();
     const offs = [];
+
+    // DOM, not canvas-drawn — the exact reason comet.js's own score is DOM text: it is text, so
+    // it should be text (selectable, readable by a screen reader), not pixels nobody but a
+    // sighted person staring right at that corner can read. Mike, 2026-09-27: "It would be nice
+    // if you could have the ambient balloons score show somewhere" — only shown in interactive
+    // mode, since decorative mode never catches anything and a "0 caught" nobody can ever
+    // increase would just be noise sitting over the scenery.
+    function paintScore() {
+      if (!scoreEl) return;
+      scoreEl.hidden = cfg.mode !== 'interactive';
+      scoreEl.textContent = `${caught} caught`;
+    }
 
     const nowMs = () => performance.now();
 
@@ -143,6 +156,7 @@ registerModule(
 
     async function catchHeart(i, hx, hy) {
       caught += 1;
+      paintScore();
       hearts[i] = { ...spawnHeart(false, cfg.speed, nowMs), id: hearts[i].id };
       if (cfg.mode !== 'interactive' || !ledger) return;
       try {
@@ -254,6 +268,7 @@ registerModule(
       __step: (dt = 16) => step(dt),
       __probe: () => ({
         cx, cy, running, hearts: hearts.length, caught, cfg: { ...cfg },
+        scoreVisible: !!scoreEl && !scoreEl.hidden, scoreText: scoreEl?.textContent || null,
       }),
       async init() {
         mount.innerHTML = '';
@@ -262,9 +277,21 @@ registerModule(
         mount.appendChild(canvas);
         c2d = canvas.getContext('2d');
 
+        // Corner, out of the way, the same placement comet.js's own score uses — quiet by
+        // design (this is a count of nice things that happened, not a leaderboard) and
+        // `pointer-events:none` so it never competes with a press meant for a heart underneath.
+        scoreEl = document.createElement('div');
+        scoreEl.className = 'ca-score';
+        scoreEl.style.cssText = 'position:absolute;top:3%;right:4%;pointer-events:none;'
+          + 'font:600 min(3.4cqw,18px)/1 system-ui,sans-serif;color:var(--on-dark,#fff);opacity:.8;'
+          + 'text-shadow:0 2px 10px rgba(0,0,0,.8)';
+        scoreEl.hidden = true;
+        mount.appendChild(scoreEl);
+
         cfg = { ...DEFAULTS, ...(ctx.state?.get?.() || {}) };
         resize();
         buildHearts();
+        paintScore();
 
         try { ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus }); ledger.load().catch(() => {}); }
         catch (err) { ledger = null; console.error('comet_ambient: no points ledger', err); }
@@ -273,6 +300,7 @@ registerModule(
           const prevCount = cfg.count;
           cfg = { ...DEFAULTS, ...(ctx.state.get() || {}) };
           if (cfg.count !== prevCount) buildHearts();
+          paintScore();
         }) || (() => {}));
 
         offs.push(bus.subscribe(AIM_TOPIC, onAim));
@@ -295,7 +323,7 @@ registerModule(
         offs.forEach((f) => { try { f(); } catch { /* nothing to do */ } });
         offs.length = 0;
         ledger?.destroy?.();
-        canvas = null; c2d = null; hearts = [];
+        canvas = null; c2d = null; scoreEl = null; hearts = [];
       },
     };
   },
