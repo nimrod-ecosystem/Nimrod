@@ -423,6 +423,20 @@ export const CATALOG = [
       + 'something better than an impression to say it with.',
   },
   {
+    type: 'calculator',
+    group: 'practice',
+    // `touch`, not `answer`: it asks nothing and waits on nobody. Left alone it just shows 0, and
+    // a screen that has one on it is not stalled by it, which is what the `touch` legend says.
+    // It does need somebody to press keys to be of any use, and the copy below does not hide that.
+    use: 'touch',
+    lead: 'A four-function calculator, on a panel of its own.',
+    needs: 'Nothing. It works with no internet.',
+    why: 'For working something out without leaving the screen, and without it being buried '
+      + 'inside the Math game. The keys can be touched or walked with a switch. It can also '
+      + 'pass its answer on to another panel that takes one; there is no screen for setting '
+      + 'that up yet, so today that link is written into the data behind the screen by hand.',
+  },
+  {
     type: 'reading_log',
     group: 'record',
     use: 'touch',

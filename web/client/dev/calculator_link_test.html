@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>calculator -> algebra — the first data link between two real modules</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{margin-top:12px;width:460px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:14px}
+  .stage.calc-stage{height:380px;padding:0}
+</style>
+</head>
+<body>
+<h1>calculator -> algebra — the first data link between two real modules</h1>
+<p>Two REAL modules, mounted with instance ids on one bus, joined by a link in a
+<code>createLinkStore()</code> and carried by a <code>createLinkRunner()</code>: typing
+<b>7 + 3 =</b> on the calculator puts <b>10</b> in the math game's answer box. It fills the box; it does
+NOT press Submit (the <code>=</code> / Submit separation is the game's own rule). Signed out, over the browser's
+local backend, so no server is needed.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { portsFor, createLinkStore, linkTopic } from '../links.js';
+import { createLinkRunner } from '../link_runner.js';
+import { createLocalBackend } from '../local_store.js';
+import '../modules/calculator.js';
+import '../modules/algebra.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const seeded = (s0) => { let x = s0 >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; };
+
+const backend = createLocalBackend();
+const PID = `link-test-${Math.floor(Math.random() * 1e9)}`;
+const stages = document.getElementById('stages');
+
+// One instance of each, addressed the way the kiosk addresses them.
+const INSTANCES = { 'calc-1': 'calculator', 'alg-1': 'algebra' };
+const portsOf = (id) => (INSTANCES[id] ? portsFor(getManifest(INSTANCES[id])) : []);
+
+function mountBoth(bus, { algebraHasBus = true } = {}) {
+  const calcHost = document.createElement('div'); calcHost.className = 'stage calc-stage mod-box'; stages.append(calcHost);
+  const algHost = document.createElement('div'); algHost.className = 'stage'; stages.append(algHost);
+  const common = (id, hasBus = true) => ({
+    bus, user: null, profileId: PID, personId: null, instanceId: id,
+    ...(hasBus ? { rootBus: bus } : {}),
+    state: backend.makeState(id, {}, PID), events: backend.makeEvents(id, {}, PID),
+    makeState: (k, o) => backend.makeState(k, o, PID), makeEvents: (k, o) => backend.makeEvents(k, o, PID),
+    makePersonState: backend.makePersonState,
+  });
+  const calc = mountModule('calculator', { mount: calcHost, ...common('calc-1') });
+  const alg = mountModule('algebra', { mount: algHost, ...common('alg-1', algebraHasBus), rand: seeded(4242) });
+  calc.init(); alg.init();
+  return { calc, alg, calcHost, algHost };
+}
+
+try {
+  section('the two manifests, and what the link needs of them');
+  {
+    const cPorts = portsFor(getManifest('calculator')), aPorts = portsFor(getManifest('algebra'));
+    check('calculator.result is an OUT event number', cPorts.some((p) => p.id === 'result' && p.direction === 'out'
+      && p.class === 'event' && p.type === 'number'));
+    check('algebra.answer is an IN event number (the sink)', aPorts.some((p) => p.id === 'answer' && p.direction === 'in'
+      && p.class === 'event' && p.type === 'number'));
+    check('algebra is still a legacy-core module: it did not opt into core:new by gaining a port',
+      getManifest('algebra').core === undefined);
+    check('algebra declares exactly one port', aPorts.length === 1 && (getManifest('algebra').ports || []).length === 1);
+  }
+
+  const bus = createBus();
+  const { calc, alg, calcHost, algHost } = mountBoth(bus);
+  await sleep(800);            // algebra deals its first problem after the lesson/mode loads
+  const keyBtn = (h, k) => h.querySelector(`[data-key="${k}"]`);
+  const calcDisplay = () => calcHost.querySelector('[data-display]').textContent.trim();
+  const algDisplay = () => algHost.querySelector('[data-display]').textContent.trim();
+  const clickCalc = (keys) => { for (const k of keys.split('')) keyBtn(calcHost, k).click(); };
+  const clickAlg = (keys) => { for (const k of keys.split('')) keyBtn(algHost, k).click(); };
+
+  section('before any link exists');
+  {
+    check('a problem is showing in the game', (algHost.querySelector('.al-prompt')?.textContent || '').length > 2);
+    clickCalc('7+3=');
+    check('the calculator says 10', calcDisplay() === '10');
+    check('and the game\'s answer box is untouched (nothing links them yet)', algDisplay() === '0', algDisplay());
+  }
+
+  section('linked: calculator.result -> algebra.answer');
+  const store = createLinkStore();
+  const linkDef = { from: { instance: 'calc-1', port: 'result' }, to: { instance: 'alg-1', port: 'answer' } };
+  const added = store.addLink(linkDef, portsOf('alg-1').find((p) => p.id === 'answer'));
+  const runner = createLinkRunner({ rootBus: bus, store, portsOf });
+  runner.start();
+  {
+    check('the link was accepted by the store', added.ok === true, JSON.stringify(added));
+    check('and the runner says it can carry: transform identity',
+      runner.status()[0].ok === true && runner.status()[0].transform === 'identity', JSON.stringify(runner.status()));
+    const fbBefore = algHost.querySelector('.al-fb');
+    clickCalc('C7+3=');
+    check('*** typing 7 + 3 = on the calculator makes the game\'s answer box read 10 ***', algDisplay() === '10', algDisplay());
+    check('the calculator itself still reads 10 (the link copies, it does not take)', calcDisplay() === '10');
+    check('*** and Submit was NOT triggered: no feedback appeared, the button is still live ***',
+      !fbBefore && !algHost.querySelector('.al-fb') && !algHost.querySelector('[data-submit]').disabled);
+    check('the runner counted one delivery', runner.status()[0].delivered === 1, JSON.stringify(runner.status()[0]));
+
+    // "As if typed" is literal.
+    clickAlg('+5=');
+    check('the linked 10 is a REAL entry: pressing + 5 = on the game\'s own keypad gives 15', algDisplay() === '15', algDisplay());
+    clickCalc('C9*9=');
+    check('a second result replaces the entry: 81', algDisplay() === '81', algDisplay());
+    clickAlg('4');
+    check('a digit typed after a linked value starts a new number, as after any =', algDisplay() === '4', algDisplay());
+    clickCalc('C2-9=');
+    check('a negative result arrives as a negative number', algDisplay() === '-7', algDisplay());
+    clickCalc('C.1+.2=');
+    check('a decimal result arrives clean: 0.3', algDisplay() === '0.3', algDisplay());
+    clickCalc('C5/0=');
+    check('an error on the calculator sends nothing: the game still shows the last result', algDisplay() === '0.3', algDisplay());
+    check('the game did not learn about the error and did not submit anything', !algHost.querySelector('.al-fb'));
+
+    // The value that arrived can actually be SUBMITTED, by the game's own button, and be judged.
+    clickCalc('C1+1=');
+    algHost.querySelector('[data-submit]').click();
+    await sleep(500);
+    check('the game\'s own Submit judges the linked value (feedback appears only when Submit is pressed)',
+      !!algHost.querySelector('.al-fb'));
+    // While feedback is showing the game ignores typed keys; a linked value is the same.
+    const shown = algDisplay();
+    clickCalc('C8+8=');
+    check('while feedback is showing, a linked value is ignored, like a typed key', algDisplay() === shown, `${algDisplay()} vs ${shown}`);
+    algHost.querySelector('[data-next]').click();
+    await sleep(600);
+    check('next problem: the calculator is clear again', algDisplay() === '0', algDisplay());
+    clickCalc('C6*7=');
+    check('and the link still works on the next problem: 42', algDisplay() === '42', algDisplay());
+  }
+
+  section('the runner and the modules shut down clean');
+  {
+    runner.destroy();
+    clickCalc('C1+1=');
+    check('after the runner is destroyed the link carries nothing', algDisplay() === '42', algDisplay());
+    // Re-create it: the modules were never touched by the runner's lifecycle.
+    const r2 = createLinkRunner({ rootBus: bus, store, portsOf }); r2.start();
+    clickCalc('C3+3=');
+    check('a fresh runner over the same store carries again', algDisplay() === '6', algDisplay());
+    r2.destroy();
+    alg.destroy();
+    let threw = false;
+    try { bus.publish(linkTopic(bus, { instance: 'alg-1', port: 'answer' }), { value: 5, class: 'event', provenance: [] }); }
+    catch { threw = true; }
+    check('a value sent to a destroyed game is harmless', !threw);
+    calc.destroy();
+  }
+
+  section('algebra mounted by a host that gives it no rootBus still works, and simply takes no link');
+  {
+    const bus2 = createBus();
+    const b = mountBoth(bus2, { algebraHasBus: false });
+    await sleep(700);
+    const store2 = createLinkStore();
+    store2.addLink(linkDef, portsOf('alg-1').find((p) => p.id === 'answer'));
+    const r = createLinkRunner({ rootBus: bus2, store: store2, portsOf }); r.start();
+    const ad = () => b.algHost.querySelector('[data-display]').textContent.trim();
+    check('the game mounts and deals a problem without a rootBus', (b.algHost.querySelector('.al-prompt')?.textContent || '').length > 2);
+    keyBtn(b.algHost, '4').click();
+    check('its own keypad is unaffected', ad() === '4');
+    keyBtn(b.calcHost, '9').click(); keyBtn(b.calcHost, '=').click();
+    check('the calculator (which has its bus) sends 9; the game, with no rootBus, has no live port and does not hear it', ad() === '4', ad());
+    r.destroy(); b.calc.destroy(); b.alg.destroy();
+  }
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

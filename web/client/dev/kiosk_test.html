@@ -1758,6 +1758,131 @@ const ds = () => root.querySelector('.kiosk').dataset;
     }
   }
 
+  // =====================================================================================
+  // *** A SCREEN OWNS ITS LINKS. *** (2026-09-28, port-order step 5.) Links are an array beside the
+  // layout on the screen's own settings doc (`settings.kiosk.links`), each
+  // `{from: {instance, port}, to: {instance, port}}` with real module instance ids. mountKiosk starts a
+  // link runner from them ONLY when that array is non-empty; a screen with none creates nothing. No
+  // patch-bay UI exists: these are written by data, which is what this section does.
+  // A counting bus is used because the bus cannot be asked how many subscribers it has: it counts only
+  // `link/…` topics, i.e. a module's port listeners and the runner's own.
+  // =====================================================================================
+  {
+    const lBoxes = [];
+    const mkLBox = () => {
+      const b = document.createElement('div');
+      b.style.cssText = 'position:relative;width:640px;height:420px;margin:8px 0;border:1px solid #999';
+      document.body.append(b); lBoxes.push(b); return b;
+    };
+    const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const seamsL = () => ({ storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {} });
+    const countingBus = () => {
+      const real = createBus(); let live = 0;
+      return { ...real, subscribe(t, h) {
+        const isLink = String(t).startsWith('link/'); if (isLink) live++;
+        const off = real.subscribe(t, h); let d = false;
+        return () => { if (!d) { d = true; if (isLink) live--; off(); } };
+      }, linkSubs: () => live };
+    };
+    const cellOf = (box, kind) => box.querySelector(`.k-cell[data-kind="${kind}"]`);
+    const keys = (box, kind, str) => { for (const k of str.split('')) cellOf(box, kind).querySelector(`[data-key="${k}"]`).click(); };
+    const algDisplay = (box) => cellOf(box, 'algebra')?.querySelector('[data-display]')?.textContent.trim();
+    const ready = (box) => settled(() => !!cellOf(box, 'calculator')?.querySelector('[data-key="7"]')
+      && !!cellOf(box, 'algebra')?.querySelector('.al-prompt'), 8000);
+    const lProfiles = createProfilesClient({ user: USER });
+    async function screenWith(name, kioskExtra) {
+      const sp = await lProfiles.create(name);
+      const calcMod = await lProfiles.addModule(sp.id, 'calculator');
+      const algMod = await lProfiles.addModule(sp.id, 'algebra');
+      const st = createState({ url: lProfiles.stateURL(sp.id, 'settings'), user: USER });
+      await st.load();
+      st.set({ kiosk: { layout: { preset: 'quad', slots: [calcMod.id, algMod.id, null, null] }, ...(kioskExtra ? kioskExtra(calcMod, algMod) : {}) } });
+      await st.flush();
+      return { sp, calcMod, algMod, st };
+    }
+    try {
+      // ---------------- NO LINKS: nothing is created, nothing is carried ----------------
+      const A = await screenWith('TEST-links-none');
+      const boxA = mkLBox(); const busA = countingBus();
+      const kA = await mountKiosk(boxA, { user: USER, profileId: A.sp.id, profiles: lProfiles, bus: busA, ...seamsL() });
+      check('links: (setup) the screen mounted a calculator and the game side by side', await ready(boxA));
+      check('*** a screen with NO links creates no runner at all (linkStatus is null) ***', kA.linkStatus() === null);
+      check('...and the only link topics subscribed are the two modules\' own ports (key, answer) — none from the kiosk',
+        busA.linkSubs() === 2, String(busA.linkSubs()));
+      keys(boxA, 'calculator', '7+3=');
+      await sleep(150);
+      check('...so 7 + 3 = on the calculator reaches nothing: the game\'s answer box is untouched',
+        cellOf(boxA, 'calculator').querySelector('[data-display]').textContent.trim() === '10' && algDisplay(boxA) === '0',
+        algDisplay(boxA));
+
+      // ---------------- links written to the settings doc AFTER boot are picked up ----------------
+      const Aw = createState({ url: lProfiles.stateURL(A.sp.id, 'settings'), user: USER });
+      await Aw.load();
+      const cur = Aw.get().kiosk || {};
+      Aw.set({ kiosk: { ...cur, links: [{ from: { instance: A.calcMod.id, port: 'result' }, to: { instance: A.algMod.id, port: 'answer' } }] } });
+      await Aw.flush();
+      check('a link added to the settings doc after boot starts a runner (no reload: the layout did not change)',
+        await settled(() => kA.linkStatus() !== null, 12000), String(kA.linkStatus()));
+      keys(boxA, 'calculator', 'C6*7=');
+      check('...and it carries at once: 42', algDisplay(boxA) === '42', algDisplay(boxA));
+      Aw.set({ kiosk: { ...cur, links: [] } });
+      await Aw.flush();
+      check('emptying the array tears the runner down again',
+        await settled(() => kA.linkStatus() === null, 12000) && busA.linkSubs() === 2, `${kA.linkStatus()} ${busA.linkSubs()}`);
+      Aw.destroy();
+      kA.destroy();
+      check('destroy leaves NO link subscription behind (the modules\' own and the kiosk\'s)', busA.linkSubs() === 0, String(busA.linkSubs()));
+
+      // ---------------- A LINKED SCREEN: typing 7 + 3 = fills the game's answer box, and stops there ----------------
+      const B = await screenWith('TEST-links-on', (c, a) => ({ links: [
+        { from: { instance: c.id, port: 'result' }, to: { instance: a.id, port: 'answer' } },          // the good one
+        { from: { instance: c.id, port: 'display' }, to: { instance: c.id, port: 'key' } },            // continuous -> event: refused
+        'junk', null, { from: { instance: c.id } },                                                     // not links at all
+        { from: { instance: c.id, port: 'result' }, to: { instance: a.id, port: 'nope' } },            // a port the game does not have
+      ] }));
+      const boxB = mkLBox(); const busB = countingBus();
+      const kB = await mountKiosk(boxB, { user: USER, profileId: B.sp.id, profiles: lProfiles, bus: busB, ...seamsL() });
+      check('links: (setup) linked screen is up', await ready(boxB));
+      const stB = kB.linkStatus();
+      check('a runner exists, with one row per WELL-FORMED link (the three junk rows are dropped)',
+        Array.isArray(stB) && stB.length === 3, JSON.stringify(stB));
+      check('*** the good link can carry ***', stB[0].ok === true && stB[0].transform === 'identity', JSON.stringify(stB[0]));
+      check('the continuous -> event link is present, disabled, with its reason',
+        stB[1].ok === false && stB[1].reason === 'needs-edge-node', JSON.stringify(stB[1]));
+      check('the link to a port that does not exist is present, disabled, with its reason',
+        stB[2].ok === false && stB[2].reason === 'to-port-missing', JSON.stringify(stB[2]));
+      check('the calculator ports + the game\'s + ONE runner subscription (only the carrying link subscribes)',
+        busB.linkSubs() === 3, String(busB.linkSubs()));
+      const fbBefore = cellOf(boxB, 'algebra').querySelector('.al-fb');
+      keys(boxB, 'calculator', '7+3=');
+      check('*** 7 + 3 = on the calculator makes the game\'s answer box read 10, through mountKiosk ***',
+        algDisplay(boxB) === '10', algDisplay(boxB));
+      check('*** and the game did NOT submit: no feedback, Submit still live ***',
+        !fbBefore && !cellOf(boxB, 'algebra').querySelector('.al-fb') && !cellOf(boxB, 'algebra').querySelector('[data-submit]').disabled);
+      check('the status counted the one delivery', kB.linkStatus()[0].delivered === 1, JSON.stringify(kB.linkStatus()[0]));
+      keys(boxB, 'calculator', 'C5/0=');
+      check('an error on the calculator carries nothing', algDisplay(boxB) === '10');
+      kB.destroy();
+      check('destroy tears the runner and both modules\' listeners down: zero link subscriptions', busB.linkSubs() === 0, String(busB.linkSubs()));
+      check('...and the handle answers null afterwards (no stale runner)', kB.linkStatus() === null);
+
+      // ---------------- EMBEDDED skips links ----------------
+      const boxE = mkLBox(); const busE = countingBus();
+      const kE = await mountKiosk(boxE, { user: USER, profileId: B.sp.id, profiles: lProfiles, bus: busE, embedded: true, ...seamsL() });
+      await sleep(400);
+      check('*** embedded: links are skipped entirely (a preview host on somebody else\'s page) ***',
+        kE.linkStatus() === null);
+      check('embedded: ...and nothing link-related is subscribed by the kiosk',
+        busE.linkSubs() <= 1, String(busE.linkSubs()));
+      kE.destroy();
+      check('embedded: destroy leaves nothing', busE.linkSubs() === 0);
+    } catch (e) {
+      check('the links section threw', false, String((e && e.stack) || e));
+    } finally {
+      for (const b of lBoxes) b.remove();
+    }
+  }
+
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;
   sum.className = failed ? 'fail' : 'pass';

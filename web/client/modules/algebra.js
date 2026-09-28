@@ -27,6 +27,8 @@ import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
 import { createLessons, gate, lockedTopics, LESSON_TOPIC,
          createQuestMode, ALL_UNLOCKED } from '../lessons.js';
+import { CALC_KEYS, calcInit, calcPress, calcValue } from '../calc.js';
+import { createPorts } from '../ports.js';
 
 export const GAME = 'algebra';
 
@@ -140,67 +142,11 @@ export function scoreFor({ correct, points = 1, streak = 0, cfg = DEFAULTS }) {
 }
 
 // ---------- the calculator ----------
-// A tiny four-function machine. Pure, so its behavior is testable without the DOM — and
-// so the one place that decides what "7 + 3 =" means can't drift from what's on screen.
-export const CALC_KEYS = ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '±', '+'];
-
-export function calcInit() { return { entry: '0', acc: null, op: null, fresh: true }; }
-
-function applyOp(acc, op, val) {
-  switch (op) {
-    case '+': return acc + val;
-    case '-': return acc - val;
-    case '*': return acc * val;
-    case '/': return val === 0 ? null : acc / val;   // null = undefined result, shown as an error
-    default: return val;
-  }
-}
-
-// Returns the NEXT state. `key` is a calculator key, 'C' (clear), '<' (backspace) or '='.
-export function calcPress(state, key) {
-  const s = { ...state };
-  const num = () => Number(s.entry);
-
-  if (key === 'C') return calcInit();
-  if (key === '<') {
-    if (s.fresh) return s;
-    s.entry = s.entry.length > 1 ? s.entry.slice(0, -1) : '0';
-    if (s.entry === '-' || s.entry === '') s.entry = '0';
-    return s;
-  }
-  if (key === '±') { s.entry = s.entry.startsWith('-') ? s.entry.slice(1) : (s.entry === '0' ? '0' : '-' + s.entry); return s; }
-  if (/^[0-9]$/.test(key)) {
-    s.entry = (s.fresh || s.entry === '0') ? key : s.entry + key;
-    s.fresh = false;
-    return s;
-  }
-  if (key === '.') {
-    if (s.fresh) { s.entry = '0.'; s.fresh = false; return s; }
-    if (!s.entry.includes('.')) s.entry += '.';
-    return s;
-  }
-  if (key === '=') {
-    if (s.op == null) { s.fresh = true; return s; }
-    const out = applyOp(s.acc, s.op, num());
-    s.entry = out == null ? 'error' : String(Number(out.toFixed(10)));
-    s.acc = null; s.op = null; s.fresh = true;
-    return s;
-  }
-  if ('+-*/'.includes(key)) {
-    if (s.entry === 'error') return s;
-    // Chaining: "2 + 3 + " folds the pending operation first, like a real calculator.
-    s.acc = (s.op != null && !s.fresh) ? applyOp(s.acc, s.op, num()) : num();
-    if (s.acc == null) { s.entry = 'error'; s.op = null; return s; }
-    s.op = key; s.fresh = true;
-    return s;
-  }
-  return s;
-}
-
-export function calcValue(state) {
-  const n = Number(state.entry);
-  return Number.isFinite(n) ? n : null;
-}
+// The four-function machine itself now lives in `../calc.js` (2026-09-28: the calculator became its
+// own module, and the two share this one place that decides what "7 + 3 =" means). This file keeps
+// its own inline calculator exactly as it was - it still imports the same functions, and RE-EXPORTS
+// them so `algebra_test.html` and any other importer are untouched.
+export { CALC_KEYS, calcInit, calcPress, calcValue };
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -251,6 +197,18 @@ const SETTINGS = [
     level: 'advanced', note: 'which subject a point of credit discharges' },
 ];
 
+// THE ONE PORT THIS MODULE DECLARES, and it is a SINK (2026-09-28: the calculator became its own
+// module, and this is the second half of the first data link between two real modules). A number
+// arriving on `answer` is put in the calculator's entry exactly as if it had been typed, and that is
+// ALL it does: it fills the answer box, it does not press Submit. The `=` / Submit separation this
+// file's header describes is the reason - a link that submitted for you would turn every result the
+// other calculator ever produced into a graded answer. Nothing else changed: the inline keypad
+// above is still here, still the way this game works on its own, and a screen with no link to this
+// port behaves exactly as it did.
+export const ALGEBRA_PORTS = [
+  { id: 'answer', direction: 'in', class: 'event', type: 'number', label: 'Answer' },
+];
+
 registerModule(
     // `local`, MEASURED RATHER THAN GUESSED (2026-09-05). Mounted with every handle rejecting -
     // a dead platform, with the factories still present the way a real kiosk supplies them -
@@ -264,7 +222,7 @@ registerModule(
   { type: 'algebra', title: 'Math', // Describes rather than justifies (PRIORITY.md #4): "the point is the method, not the
     // arithmetic" is the reasoning, and it is kept in the catalog's `why`.
     description: 'Solve for x, one step at a time, with a calculator on screen',
-    dependsOn: 'local', settings: SETTINGS },
+    dependsOn: 'local', settings: SETTINGS, ports: ALGEBRA_PORTS },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const rand = ctx.rand || Math.random;
@@ -280,6 +238,7 @@ registerModule(
     let streak = 0, earned = 0, solved = 0;
     let askedAt = 0;
     let held = [];
+    let ports = null;
 
     const el = (sel) => mount.querySelector(sel);
 
@@ -348,6 +307,17 @@ registerModule(
     function press(key) {
       if (answered) return;
       calc = calcPress(calc, key);
+      const d = el('[data-display]');
+      if (d) d.textContent = calc.entry;
+    }
+
+    // A value arriving on the `answer` port. "As if typed" is literal: it is the same state a finished
+    // `=` leaves (`fresh`), so a following digit starts a new number and an operator carries this one.
+    // Ignored, like a typed key, while a problem's feedback is on screen or before one has been dealt
+    // (`nextProblem` starts every problem from a cleared calculator anyway).
+    function fillAnswer(value) {
+      if (answered || !problem) return;
+      calc = { entry: String(value), acc: null, op: null, fresh: true };
       const d = el('[data-display]');
       if (d) d.textContent = calc.entry;
     }
@@ -426,6 +396,12 @@ registerModule(
         ledger.load().catch(() => {});
         tel.load().catch(() => {});
 
+        // `ctx.rootBus` / `ctx.instanceId` are supplied by the kiosk and by both `module_try.js` hosts;
+        // a host that supplies neither (algebra_test.html mounts it bare) gets an inert `ports`, not an
+        // error, and the game runs exactly as before.
+        ports = createPorts({ rootBus: ctx.rootBus, instanceId: ctx.instanceId, manifest: { ports: ALGEBRA_PORTS } });
+        ports.on('answer', fillAnswer);
+
         // A keypad, a switch, or a companion can drive it without touching this module.
         bus.subscribe('algebra/key', (k) => press(String(k)));
         bus.subscribe('algebra/submit', () => submit(false));
@@ -456,6 +432,7 @@ registerModule(
       onResize() {},
       onHide() { state.flush(); },
       destroy() {
+        if (ports) { ports.dispose(); ports = null; }
         if (ledger) { ledger.destroy(); ledger = null; }
         if (tel) { tel.destroy(); tel = null; }
         if (lessons) { lessons.destroy(); lessons = null; }
