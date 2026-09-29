@@ -41,7 +41,7 @@ import { createAI, isChatModel } from '../ai.js';
 import { createWikipedia } from '../wikipedia.js';
 import { createPointsLedger } from '../points.js';
 import {
-  videoMinutes, requiredAnswers, buildPrompt, parseQuestions, checkQuestions, toLessonQuestion,
+  videoMinutes, requiredAnswers, splitTranscript, buildPrompt, parseQuestions, checkQuestions, toLessonQuestion,
   toRoutedQuestion, questionId, transcriptKey, lengthTellsFor, startQuiz, quizCurrent, quizAnswer,
   quizProgress, quizDrop, reviewItems, poolFrom, isPaid, TRANSCRIPT_STREAM, REVIEW_KINDS, MINUTE_CHOICES,
   factCheck, FACT,
@@ -77,8 +77,14 @@ export const DEFAULTS = {
   questionsTo: 'both',
   // ---- transcript lessons (row 2.24). Each is a revisable default, argued at its settings row. ----
   requireBy: 'correct',
-  perMinutes: 2,
-  minAnswers: 3,
+  // Mike, 2026-09-29: one per minute for the first 5 minutes, then one per 2.5 (transcript_quiz.js).
+  firstMinutes: 5,
+  firstEvery: 1,
+  perMinutes: 2.5,
+  minAnswers: 1,
+  // How many questions are WRITTEN is not tied to the requirement (Mike, same day). 0 = no limit.
+  maxQuestions: 0,
+  pieceWords: 900,
   autoApprove: true,     // flipped 2026-09-28 (Mike: "Flip review."); see its settings row
   factCheck: false,
   aiModel: '',
@@ -213,14 +219,33 @@ const SETTINGS = [
     level: 'standard',
     options: [{ value: 'correct', label: 'Correct answers' },
               { value: 'points', label: 'Points (less after a miss)' }] },
-  // *** NOT YET CHOSEN BY MIKE. *** Chat's proposal (register 258): one per 2 minutes, at least 3.
-  // Mike later warned against a strict per-minute rate (register 261.3), so these are settings, and
-  // the requirement is also capped at however many checked questions the model managed to write.
-  { key: 'perMinutes', label: 'One needed for every', kind: 'choice', default: 2, level: 'advanced',
-    options: [{ value: 1, label: 'minute of video' }, { value: 2, label: '2 minutes of video' },
-              { value: 3, label: '3 minutes of video' }, { value: 5, label: '5 minutes of video' }] },
-  { key: 'minAnswers', label: 'But never fewer than', kind: 'choice', default: 3, level: 'advanced',
+  // *** CHOSEN BY MIKE, 2026-09-29 (row 2.24): *** "default to 1 per minute for the first 5 minutes
+  // and one for every two and a half minutes after that." Four settings, because each number is his
+  // default rather than a rule; the requirement is also capped at however many checked questions
+  // the model managed to write, so it is always reachable.
+  { key: 'firstMinutes', label: 'For the first', kind: 'choice', default: 5, level: 'advanced',
+    options: [{ value: 0, label: 'no separate start' }, { value: 3, label: '3 minutes' },
+              { value: 5, label: '5 minutes' }, { value: 10, label: '10 minutes' }] },
+  { key: 'firstEvery', label: '…one needed for every', kind: 'choice', default: 1, level: 'advanced',
+    options: [{ value: 1, label: 'minute' }, { value: 2, label: '2 minutes' }] },
+  { key: 'perMinutes', label: 'After that, one for every', kind: 'choice', default: 2.5, level: 'advanced',
+    options: [{ value: 1, label: 'minute' }, { value: 2, label: '2 minutes' }, { value: 2.5, label: '2½ minutes' },
+              { value: 3, label: '3 minutes' }, { value: 5, label: '5 minutes' }] },
+  { key: 'minAnswers', label: 'But never fewer than', kind: 'choice', default: 1, level: 'advanced',
     options: [1, 2, 3, 5].map((n) => ({ value: n, label: String(n) })) },
+  // *** HOW MANY ARE WRITTEN is its own thing (Mike, 2026-09-29: "I didn't want a number like that
+  // put on the amount of questions made"). *** The model is asked for as many good questions as each
+  // piece of the transcript supports. This ceiling exists only for someone who wants one — e.g. a
+  // slow computer and a long lecture — and defaults to none. It replaced a hard-coded 40.
+  { key: 'maxQuestions', label: 'Most questions to write', kind: 'choice', default: 0, level: 'advanced',
+    options: [{ value: 0, label: 'No limit' }, { value: 10, label: '10' }, { value: 20, label: '20' },
+              { value: 40, label: '40' }] },
+  // The transcript goes to the model in pieces it can read whole (transcript_quiz.js
+  // `splitTranscript`: measured, the local model here reads about 4,096 tokens at once, and a longer
+  // transcript was silently cut). A setting because a bigger model reads bigger pieces.
+  { key: 'pieceWords', label: 'Send the transcript in pieces of', kind: 'choice', default: 900, level: 'advanced',
+    options: [{ value: 600, label: '600 words' }, { value: 900, label: '900 words' },
+              { value: 1500, label: '1,500 words' }, { value: 3000, label: '3,000 words' }] },
   // §0h, agreed 2026-09-17: the review queue is ON by default; skipping it is opt-in.
   // *** FLIPPED 2026-09-28 — Mike: "Flip review." *** Auto-approve is the DEFAULT now: a question that
   // passes `grounded` (and, when the fact check is on, is not flagged by it) joins the games with no
@@ -621,7 +646,8 @@ registerModule(
     }
 
     function needFor(minutes) {
-      return requiredAnswers(minutes, { perMinutes: cfg.perMinutes, minimum: cfg.minAnswers });
+      return requiredAnswers(minutes, { firstMinutes: cfg.firstMinutes, firstEvery: cfg.firstEvery,
+        perMinutes: cfg.perMinutes, minimum: cfg.minAnswers });
     }
 
     // Only the parts that depend on what was pasted — never the textarea itself.
@@ -699,7 +725,7 @@ registerModule(
       } else if (s.stage === 'working') {
         body = `
           <p class="l-tq-working" role="status">Writing questions${s.modelName ? ` with ${esc(s.modelName)}` : ''}…
-            <span data-tq-elapsed>0:00</span></p>
+            ${s.parts > 1 && s.part ? `<span data-tq-part>part ${s.part} of ${s.parts}</span> · ` : ''}<span data-tq-elapsed>0:00</span></p>
           <p class="l-tq-help">A model on a computer without a graphics card can take several minutes.
             Everything else here keeps working while it runs.</p>
           <div class="l-actions"><button type="button" class="l-btn" data-tq-cancel>Cancel</button></div>`;
@@ -720,6 +746,8 @@ registerModule(
           <p class="l-tq-help" data-tq-rejected>${s.rejected
             ? `${plural(s.rejected, 'question was', 'questions were')} dropped because the answer could not be checked against the transcript.`
             : `All ${plural(s.kept, 'question')} checked out against the transcript.`}</p>
+          ${s.piecesFailed ? `<p class="l-tq-help" data-tq-pieces-failed>${plural(s.piecesFailed, 'part')} of the transcript
+            could not be read by the model, so there are no questions from ${s.piecesFailed === 1 ? 'it' : 'them'}.</p>` : ''}
           ${s.paidAlready ? '<p class="l-tq-help">This video’s points were already earned, so this round is practice.</p>' : ''}
           ${s.fellBack ? `<p class="l-tq-help">The model chosen in settings is not on this device, so ${esc(s.modelName)} was used.</p>` : ''}
           ${factLine}
@@ -841,11 +869,13 @@ registerModule(
       if (!text.trim() || !minutes) return;
       const t = topicOf(session.topicId);
       const required = needFor(minutes);
-      // Ask for some headroom over the requirement: the check drops what it cannot confirm, and
-      // the model is told to write fewer if the content does not support that many (Mike, 261.3).
-      const askFor = Math.min(40, required + Math.max(2, Math.ceil(required / 2)));
+      // *** HOW MANY TO WRITE IS NOT DERIVED FROM `required` (Mike, 2026-09-29). *** It used to be
+      // `min(40, required + headroom)`. Now each piece of the transcript is asked for as many good
+      // questions as it supports; `maxQuestions` is an optional ceiling (0 = none, the default).
+      const ceiling = Number(cfg.maxQuestions) > 0 ? Math.floor(Number(cfg.maxQuestions)) : 0;
+      const pieces = splitTranscript(text, { maxWords: cfg.pieceWords });
       Object.assign(session, { stage: 'working', error: null, startedAt: now(), modelName: '',
-        controller: new AbortController(), payState: null, answered: null });
+        controller: new AbortController(), payState: null, answered: null, part: 0, parts: pieces.length });
       renderTq();
       const { signal } = session.controller;
       const m = await ai().resolveModel(cfg.aiModel, { signal });
@@ -855,12 +885,31 @@ registerModule(
       session.modelName = m.model;
       session.fellBack = !!m.fellBack;
       renderTq();
-      const r = await ai().chat(buildPrompt(text, askFor),
-        { model: m.model, json: true, temperature: 0.2, timeoutMs: cfg.aiTimeoutMs, signal });
-      if (tq !== session) return;
-      if (!r.ok) { failWith(session, r); return; }
+      // One piece at a time: a CPU-only machine runs one model turn at once anyway, and a failure in
+      // one piece keeps what the others wrote rather than throwing the whole video away.
+      const parsed = [];
+      let lastFail = null;
+      let piecesFailed = 0;
+      const r = { ms: 0 };
+      for (let i = 0; i < pieces.length; i++) {
+        if (ceiling && parsed.length >= ceiling) break;
+        session.part = i + 1;
+        if (tq === session) renderTq();
+        const left = ceiling ? ceiling - parsed.length : null;
+        const one = await ai().chat(buildPrompt(pieces[i], left, { part: i + 1, parts: pieces.length }),
+          { model: m.model, json: true, temperature: 0.2, timeoutMs: cfg.aiTimeoutMs, signal });
+        if (tq !== session) return;
+        if (!one.ok) {
+          if (one.cancelled) { failWith(session, one); return; }
+          lastFail = one; piecesFailed += 1; continue;
+        }
+        r.ms += Number(one.ms) || 0;
+        parsed.push(...parseQuestions(one.text));
+      }
+      if (!parsed.length && lastFail) { failWith(session, lastFail); return; }
+      if (ceiling && parsed.length > ceiling) parsed.length = ceiling;
+      session.piecesFailed = piecesFailed;
 
-      const parsed = parseQuestions(r.text);
       const { passed, rejected } = checkQuestions(parsed, text);
       if (!passed.length) {
         failWith(session, { reason: parsed.length
@@ -1413,8 +1462,16 @@ registerModule(
             // proved the consuming half by writing the routed rows directly.
             questionsTo: QUESTIONS_TO_VALUES.includes(snap.questionsTo) ? snap.questionsTo : DEFAULTS.questionsTo,
             requireBy: snap.requireBy === 'points' ? 'points' : DEFAULTS.requireBy,
+            // 0 is a real value for these two ("no separate start", "no limit"), so an unset null or
+            // '' — which Number() also reads as 0 — must fall to the default, not to 0.
+            firstMinutes: snap.firstMinutes == null || snap.firstMinutes === '' ? DEFAULTS.firstMinutes
+              : num('firstMinutes', (n) => n >= 0),
+            firstEvery: num('firstEvery', (n) => n > 0),
             perMinutes: num('perMinutes', (n) => n > 0),
             minAnswers: num('minAnswers', (n) => n >= 1),
+            maxQuestions: snap.maxQuestions == null || snap.maxQuestions === '' ? DEFAULTS.maxQuestions
+              : num('maxQuestions', (n) => n >= 0),
+            pieceWords: num('pieceWords', (n) => n >= 50),
             // Default ON since 2026-09-28, so — like `factCheck` below — only an explicit false
             // turns it off, and never set reads as the default.
             autoApprove: snap.autoApprove === false || snap.autoApprove === 'false' ? false

@@ -103,21 +103,73 @@ export function cleanTranscript(transcript) {
 /**
  * How many correct answers (or points) a video of `minutes` asks for.
  *
- * *** THE DEFAULT IS CHAT'S PROPOSAL AND IS NOT YET CHOSEN BY MIKE *** (register 258, "1 correct
- * answer per 2 minutes of video, minimum 3": 5 min -> 3, 10 -> 5, 60 -> 30, an estimate, not
- * measured). And Mike, later the same day (register 261.3): "I don't think we should try to set
- * questions per minute too strictly. Some minutes could justify more questions than others." So
- * both numbers are SETTINGS (`modules/lessons.js`), and the model is asked for what the content
- * supports rather than a strict per-minute count — see `buildPrompt`. Chat's other suggestion, a
- * share of the lesson's questions instead of a rate, is not built; this is the seam it would
- * replace.
+ * *** MIKE'S RULE, 2026-09-29 (row 2.24): *** "default to 1 per minute for the first 5 minutes and
+ * one for every two and a half minutes after that." So 3 min -> 3, 5 -> 5, 10 -> 7, 17 -> 9,
+ * 60 -> 27. A PARTIAL later stretch adds nothing (17 min = 5 + 12 min, and 12 / 2.5 is 4.8 -> 4):
+ * "one for every two and a half minutes" is read as whole stretches, so a question is never owed
+ * for time the video did not run. Every number is a setting (`modules/lessons.js`); `minimum`
+ * defaults to 1 because Mike's rule has no floor (chat's earlier "minimum 3" would have made a
+ * 1-minute clip owe 3). The requirement is ALSO capped at the questions that were actually written
+ * (`startQuiz`), so it is always reachable.
+ *
+ * This is how many the student must get RIGHT. How many the model WRITES is not derived from it at
+ * all (Mike, same day: "I didn't want a number like that put on the amount of questions made") —
+ * see `buildPrompt` and `splitTranscript`.
+ *
+ *   firstMinutes  the opening stretch at the faster rate (0 = none)       default 5
+ *   firstEvery    one per this many minutes in that stretch                default 1
+ *   perMinutes    one per this many minutes after it                       default 2.5
+ *   minimum       never fewer than this                                    default 1
  */
-export function requiredAnswers(minutes, { perMinutes = 2, minimum = 3 } = {}) {
-  const rate = Number(perMinutes) > 0 ? Number(perMinutes) : 2;
-  const floor = Number(minimum) >= 1 ? Math.floor(Number(minimum)) : 3;
+export function requiredAnswers(minutes, { firstMinutes = 5, firstEvery = 1, perMinutes = 2.5, minimum = 1 } = {}) {
+  const pos = (v, dflt) => (Number(v) > 0 ? Number(v) : dflt);
+  const opening = Number(firstMinutes) >= 0 && Number.isFinite(Number(firstMinutes)) ? Number(firstMinutes) : 5;
+  const early = pos(firstEvery, 1);
+  const later = pos(perMinutes, 2.5);
+  const floor = Number(minimum) >= 1 ? Math.floor(Number(minimum)) : 1;
   const m = Number(minutes);
   if (!Number.isFinite(m) || m <= 0) return floor;
-  return Math.max(floor, Math.ceil(m / rate));
+  // A hair of tolerance, so 7.5 / 2.5 is 3 and not 2.9999…
+  const whole = (x) => Math.floor(x + 1e-9);
+  const count = whole(Math.min(m, opening) / early) + whole(Math.max(0, m - opening) / later);
+  return Math.max(floor, count);
+}
+
+/**
+ * The transcript in pieces the model can actually read, as cleaned prose (`cleanTranscript`).
+ *
+ * *** WHY, MEASURED 2026-09-29: *** Ollama on this desktop runs with a 4,096-token context window
+ * (its own server log: "vram-based default context … default_num_ctx=4096" on a machine with no
+ * graphics card). The prompt, the transcript and the questions written back all share it, and a
+ * transcript that does not fit is cut SILENTLY — questions would only ever cover the start. That
+ * is `§long-transcript-context`. Pieces of `maxWords` (default 900, roughly six minutes of speech,
+ * about 1,200 tokens, leaving room for the prompt and the answer) keep every part of the video in
+ * front of the model. A setting, because a model with a bigger window wants bigger pieces.
+ *
+ * Split at sentence ends where the transcript has them; auto-generated captions often have none,
+ * so a run with no sentence end inside the limit is cut between words. A piece is always a
+ * contiguous run of the cleaned text, so a line quoted from it is found by `grounded` in the whole.
+ */
+export function splitTranscript(transcript, { maxWords = 900 } = {}) {
+  const text = cleanTranscript(transcript);
+  if (!text) return [];
+  const limit = Number(maxWords) >= 50 ? Math.floor(Number(maxWords)) : 900;
+  const words = text.split(' ');
+  if (words.length <= limit) return [text];
+  const pieces = [];
+  let at = 0;
+  while (at < words.length) {
+    let end = Math.min(words.length, at + limit);
+    if (end < words.length) {
+      // Back up to the last sentence end in the second half of the piece, if there is one.
+      for (let i = end - 1; i > at + Math.floor(limit / 2); i--) {
+        if (/[.!?]["'”’)]?$/.test(words[i])) { end = i + 1; break; }
+      }
+    }
+    pieces.push(words.slice(at, end).join(' '));
+    at = end;
+  }
+  return pieces;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -130,9 +182,14 @@ export function requiredAnswers(minutes, { perMinutes = 2, minimum = 3 } = {}) {
  * the answer — the length tell (row 2.25) is the easiest way a generated set becomes guessable;
  * `lengthTellsFor` checks the result anyway. "Fewer if the transcript does not support that many"
  * is Mike's register 261.3: the model writes what the content supports.
+ *
+ * `count` is now OPTIONAL and normally absent (Mike, 2026-09-29: no number derived from the video's
+ * length on the questions MADE). Absent, the model is asked for as many good questions as the text
+ * supports; given (the "Most questions to write" setting), it is a ceiling, never a target.
+ * `{ part, parts }` tells the model it is reading one piece of a longer transcript.
  */
-export function buildPrompt(transcript, count) {
-  const n = Math.max(1, Math.floor(Number(count) || 1));
+export function buildPrompt(transcript, count = null, { part = 0, parts = 0 } = {}) {
+  const n = Number(count) >= 1 && Number.isFinite(Number(count)) ? Math.floor(Number(count)) : 0;
   const text = cleanTranscript(transcript);
   const system = [
     'You write multiple-choice quiz questions about a video, using ONLY its transcript.',
@@ -153,8 +210,11 @@ export function buildPrompt(transcript, count) {
     'Write exactly three wrong options of similar length and form to the answer, so length does not give the answer away.',
     'Wrong options must be plausible but clearly wrong according to the transcript.',
   ].join('\n');
-  const user = `Write up to ${n} questions (fewer if the transcript does not support that many good ones).\n\n`
-    + `TRANSCRIPT:\n${text}`;
+  const ask = n
+    ? `Write up to ${n} questions (fewer if the transcript does not support that many good ones).`
+    : 'Write as many good questions as this transcript supports: one for each idea worth asking about, and none as filler.';
+  const piece = parts > 1 ? `\nThis is part ${part} of ${parts} of a longer transcript; ask only about this part.` : '';
+  const user = `${ask}${piece}\n\nTRANSCRIPT:\n${text}`;
   return [{ role: 'system', content: system }, { role: 'user', content: user }];
 }
 

@@ -22,7 +22,7 @@ later, the requirement is always reachable) and the review log.</p>
 
 <script type="module">
 import {
-  parseTimestamp, videoMinutes, cleanTranscript, requiredAnswers, buildPrompt, parseQuestions,
+  parseTimestamp, videoMinutes, cleanTranscript, requiredAnswers, splitTranscript, buildPrompt, parseQuestions,
   normalizeText, grounded, checkQuestions, toLessonQuestion, toRoutedQuestion, questionId,
   transcriptKey, lengthTellsFor, startQuiz, quizCurrent, quizAnswer, quizProgress, quizDrop,
   reviewItems, poolFrom, isPaid, REVIEW_KINDS, MINUTE_CHOICES,
@@ -93,16 +93,40 @@ That is why a strong hive grows so quickly.`;
       clean.includes('Honeybees live in colonies of thousands of workers and one queen.'), clean.slice(0, 120));
 
     // ================= requirement =================
-    section('requiredAnswers — chat\'s default, NOT YET CHOSEN by Mike');
-    check('5 min -> 3 (the minimum)', requiredAnswers(5) === 3, String(requiredAnswers(5)));
-    check('10 min -> 5', requiredAnswers(10) === 5, String(requiredAnswers(10)));
-    check('60 min -> 30', requiredAnswers(60) === 30, String(requiredAnswers(60)));
-    check('1 min -> still the minimum', requiredAnswers(1) === 3);
-    check('the rate is a setting', requiredAnswers(10, { perMinutes: 1 }) === 10);
-    check('the minimum is a setting', requiredAnswers(2, { minimum: 1 }) === 1);
-    check('unknown minutes -> the minimum, not NaN', requiredAnswers(null) === 3 && requiredAnswers(undefined) === 3);
+    section('requiredAnswers — Mike\'s rule (2026-09-29): 1 a minute for the first 5, then 1 per 2.5');
+    for (const [mins, want] of [[1, 1], [3, 3], [5, 5], [7, 5], [7.5, 6], [10, 7], [17, 9], [60, 27]]) {
+      check(`*** ${mins} min -> ${want} ***`, requiredAnswers(mins) === want, String(requiredAnswers(mins)));
+    }
+    check('a partial later stretch adds nothing (12 min after the first 5 is 4 stretches, not 5)', requiredAnswers(17) === 9);
+    check('no floor by default: a 1-minute clip owes 1, not chat\'s old 3', requiredAnswers(1) === 1);
+    check('the opening stretch is a setting (0 = none: 10 min at 2.5 -> 4)', requiredAnswers(10, { firstMinutes: 0 }) === 4);
+    check('its rate is a setting (first 5 at one per 2 -> 2, then 2)', requiredAnswers(10, { firstEvery: 2 }) === 4);
+    check('the later rate is a setting', requiredAnswers(10, { perMinutes: 1 }) === 10);
+    check('the minimum is a setting', requiredAnswers(2, { minimum: 3 }) === 3);
+    check('unknown minutes -> the minimum, not NaN', requiredAnswers(null) === 1 && requiredAnswers(undefined) === 1);
     check('a nonsense rate falls back to the default rather than dividing by zero',
-      requiredAnswers(10, { perMinutes: 0 }) === 5 && requiredAnswers(10, { perMinutes: 'x' }) === 5);
+      requiredAnswers(10, { perMinutes: 0 }) === 7 && requiredAnswers(10, { perMinutes: 'x' }) === 7
+      && requiredAnswers(10, { firstEvery: 0 }) === 7);
+
+    section('splitTranscript — pieces the model can read whole (measured: a 4,096-token window here)');
+    {
+      check('a short transcript is one piece, cleaned', J(splitTranscript(YT)) === J([cleanTranscript(YT)]));
+      check('empty -> no pieces', splitTranscript('').length === 0 && splitTranscript(null).length === 0);
+      const sentence = (i) => `Fact number ${i} is here and it matters a lot.`;       // 10 words
+      const long = Array.from({ length: 200 }, (_, i) => sentence(i)).join(' ');     // 2,000 words
+      const ps = splitTranscript(long, { maxWords: 900 });
+      check('*** 2,000 words at 900 -> three pieces, none over the limit ***',
+        ps.length === 3 && ps.every((p) => p.split(' ').length <= 900), J(ps.map((p) => p.split(' ').length)));
+      check('pieces break at sentence ends where there are any', ps.slice(0, -1).every((p) => /\.$/.test(p)));
+      check('*** nothing is lost or repeated: the pieces rejoin to the whole ***', ps.join(' ') === cleanTranscript(long));
+      const captions = Array.from({ length: 1900 }, (_, i) => `word${i}`).join(' ');  // no punctuation at all
+      const pc = splitTranscript(captions, { maxWords: 900 });
+      check('auto-captions with no sentence ends are cut between words',
+        pc.length === 3 && pc.join(' ') === captions && pc[0].split(' ').length === 900, J(pc.map((p) => p.split(' ').length)));
+      check('*** a line quoted from a piece is still found in the whole transcript ***',
+        grounded({ source_line: sentence(150), answer: 'matters' }, long).ok === true
+        && ps.some((p) => p.includes(sentence(150))));
+    }
 
     // ================= prompt =================
     section('buildPrompt');
@@ -119,7 +143,15 @@ That is why a strong hive grows so quickly.`;
     check('asks for SHORT answers, not the whole source sentence (measured: the model did that)',
       /short phrase/i.test(all) && /not the whole sentence/i.test(all));
     check('*** asks for wrong options of similar length and form (row 2.25) ***', /similar length/i.test(all));
-    check('says how many (up to N, fewer if the content does not support it)', /\b6\b/.test(all) && /fewer/i.test(all));
+    check('given a ceiling, says it (up to N, fewer if the content does not support it)', /\b6\b/.test(all) && /fewer/i.test(all));
+    {
+      const free = buildPrompt(YT).map((m) => m.content).join('\n');
+      check('*** with no ceiling (the default), asks for as many as the transcript supports — no number ***',
+        /as many good questions/i.test(free) && !/up to \d/i.test(free), free.slice(free.indexOf('Write'), free.indexOf('Write') + 120));
+      const part = buildPrompt(YT, null, { part: 2, parts: 3 })[1].content;
+      check('a piece says which part it is, and to ask only about it', /part 2 of 3/.test(part) && /only about this part/.test(part));
+      check('a single piece does not mention parts', !/part \d of/.test(buildPrompt(YT, null, { part: 1, parts: 1 })[1].content));
+    }
     check('carries the transcript, cleaned of timestamps', all.includes('Bees make honey from the nectar of flowers.')
       && !all.includes('12:34'));
 
