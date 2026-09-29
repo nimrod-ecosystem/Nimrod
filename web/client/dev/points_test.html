@@ -76,9 +76,16 @@ function memoryEvents(seed = []) {
     section('currencies are DATA, not two hard-coded names (register 263)');
     check('two default currencies, School then Play',
       DEFAULT_CURRENCIES.map((c) => c.id).join() === 'school,play', J(DEFAULT_CURRENCIES));
-    check('each has an id, a display name, an icon slot (null until design picks one) and feeds',
+    check('each has an id, a display name, Design’s icon (an absolute path, loadable from any page) and feeds',
       DEFAULT_CURRENCIES.every((c) => typeof c.id === 'string' && typeof c.name === 'string'
-        && c.icon === null && Array.isArray(c.feeds)), J(DEFAULT_CURRENCIES));
+        && c.icon === `/design-assets/points/${c.id}.svg` && Array.isArray(c.feeds)), J(DEFAULT_CURRENCIES));
+    for (const c of DEFAULT_CURRENCIES) {
+      const res = await fetch(c.icon).catch(() => null);
+      const body = res && res.ok ? await res.text() : '';
+      check(`${c.name}'s icon is served, is an SVG, and keeps its content credential`,
+        /image\/svg\+xml/.test(res?.headers.get('content-type') || '') && /<svg[\s>]/.test(body)
+        && /c2pa:manifest/.test(body), `${res?.status} ${res?.headers.get('content-type')}`);
+    }
     check('chores, bonuses, ideas, penalties and School time all feed School (Mike, 2026-09-28)',
       J(DEFAULT_CURRENCIES[0].feeds.slice().sort()) === J(['Bonus', 'Idea', 'Obligatory', 'Penalty', 'School']),
       J(DEFAULT_CURRENCIES[0].feeds));

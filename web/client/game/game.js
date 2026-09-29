@@ -29,9 +29,11 @@
 //     a spot for it, but you can move it if you want": the picture's spot is the first, the sign's
 //     the second, and the composer (Home -> the screen -> arrange) moves either. 'quad' or 'main'
 //     would leave empty cells that read as something missing on a first screen.
-//   * The sign starts as a plaque with the person's name (or "Your name"); the picture starts in a
-//     picture frame captioned "My picture" with NO picture chosen — choosing one is the person's
-//     first real use of the settings menu, and the game cannot know which photo is them.
+//   * The sign starts as Design's name plate with the person's name (or "Your name"); the picture
+//     starts in Design's classic picture frame captioned "My picture" with NO picture chosen —
+//     choosing one is the person's first real use of the settings menu, and the game cannot know
+//     which photo is them. (Until 2026-09-29 these were the placeholder `plaque` and `picture`;
+//     profiles made then still read as `plate` and `classic` — button.js's LEGACY_* maps.)
 
 import { THEMES, DEFAULT_THEME } from '../theme.js';
 import { normalizeLayout, isArranged } from '../layout.js';
@@ -42,8 +44,8 @@ export const PROFILE_STAMP = 'profile';         // settings.game on the screen t
 export const ROOM_THEME = 'cozy';
 export const PROFILE_LAYOUT = 'side';
 export const SLOT = Object.freeze({ picture: 0, sign: 1 });
-export const PICTURE_START = Object.freeze({ label: 'My picture', frame: 'picture', style: 'plain' });
-export const SIGN_START = Object.freeze({ style: 'plaque', frame: 'none' });
+export const PICTURE_START = Object.freeze({ label: 'My picture', frame: 'classic', style: 'plain' });
+export const SIGN_START = Object.freeze({ style: 'plate', frame: 'none' });
 
 // "Me" is what BOTH backends call an account's first person before anybody names them
 // (`db.ensure_default_person`, `local_store.js`), so it is a placeholder, not a name to put on a sign.
