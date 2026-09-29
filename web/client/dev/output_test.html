@@ -418,6 +418,38 @@ function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
       check('and the channel works again after the watchdog fired', spoken.length === 3);
     }
     {
+      // ROW 2.27: an engine that reports `speaking` frees the channel when it goes quiet, even
+      // though `onend` never comes -- well before the 30 s watchdog. And never before it was seen
+      // speaking, so a slow start is not taken for an end.
+      const clock = fakeClock();
+      const spoken = [];
+      const eng = { speaking: false, pending: false, getVoices: () => [],
+        speak(u) { spoken.push(u.text); }, cancel() { this.speaking = false; } };
+      function FakeUtterance(text) { this.text = text; }
+      const speech = createSpeechChannel({
+        synth: eng, Utterance: FakeUtterance, maxMs: 30000, pollMs: 250,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      });
+      const output = createOutputBus({
+        channels: { speech }, routing: { say: ['speech'] },
+        now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      });
+      output.say('first word');
+      clock.advance(1000);
+      check('a slow start (engine not yet speaking) is not mistaken for an end',
+        output.active('speech') === 1);
+      eng.speaking = true;
+      clock.advance(250);
+      eng.speaking = false;            // it finished, and the phone never fired onend
+      clock.advance(250);
+      check('*** the engine going quiet frees the channel with no onend, long before the watchdog ***',
+        output.active('speech') === 0);
+      output.say('second word');
+      check('...so the next word is spoken straight away', spoken.join('|') === 'first word|second word', spoken.join('|'));
+      check('...and nothing is left polling once it ends',
+        (eng.speaking = true, clock.advance(250), eng.speaking = false, clock.advance(250), output.active('speech') === 0));
+    }
+    {
       // A CALLER'S OWN VOICE CHOICE WINS, carried through `data.voice`. MIKE_CHANGE_LIST.md's
       // §speech-side-doors: several modules (educational.js, sprint.js) call `voice.js`
       // directly instead of `output.say()` precisely because they carry a per-instance

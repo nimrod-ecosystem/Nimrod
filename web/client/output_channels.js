@@ -42,6 +42,11 @@ export function createSpeechChannel({
   // and then nothing is ever said again. Same disease as the input bus's stuck switch,
   // same cure: a watchdog with a generous ceiling.
   maxMs = 30000,
+  // Row 2.27: and a shorter way out than the watchdog. An engine that reports `speaking` is
+  // watched; once it has been seen speaking and then goes quiet with nothing queued, the
+  // utterance is over whether or not `onend` ever arrives. Never before it was seen speaking,
+  // so a slow start is not mistaken for an end. 0 turns the watching off.
+  pollMs = 250,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
@@ -74,15 +79,32 @@ export function createSpeechChannel({
       audio?.setActive?.(audioId, true);
 
       let finished = false;
-      const guard = setTimer(() => { if (!finished) { finished = true; audio?.setActive?.(audioId, false); done(); } }, maxMs);
-      const end = () => { if (finished) return; finished = true; clearTimer(guard); audio?.setActive?.(audioId, false); done(); };
+      let watch = null;
+      const stopWatch = () => { if (watch != null) { clearTimer(watch); watch = null; } };
+      const guard = setTimer(() => { if (!finished) { finished = true; stopWatch(); audio?.setActive?.(audioId, false); done(); } }, maxMs);
+      const end = () => { if (finished) return; finished = true; clearTimer(guard); stopWatch(); audio?.setActive?.(audioId, false); done(); };
       u.onend = end;
       u.onerror = end;
+
+      const engine = synth || (typeof window !== 'undefined' ? window.speechSynthesis : null);
+      if (pollMs > 0 && engine && typeof engine.speaking === 'boolean') {
+        let seen = false;
+        u.onstart = () => { seen = true; };
+        const tick = () => {
+          watch = null;
+          if (finished) return;
+          if (engine.speaking || engine.pending) seen = true;
+          else if (seen) { end(); return; }
+          watch = setTimer(tick, pollMs);
+        };
+        watch = setTimer(tick, pollMs);
+      }
 
       return () => {                     // cancel
         if (finished) return;
         finished = true;
         clearTimer(guard);
+        stopWatch();
         audio?.setActive?.(audioId, false);
         cancelSpeech(synth || undefined);
       };

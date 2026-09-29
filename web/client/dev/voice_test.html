@@ -21,7 +21,7 @@ server's overwrite-state store (the same <code>settings</code> blob as themes).<
 <div id="summary">running…</div>
 
 <script type="module">
-import { listVoices, resolveVoice, speak } from '../voice.js';
+import { listVoices, resolveVoice, speak, cancel } from '../voice.js';
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
 
@@ -94,6 +94,64 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     const u4 = speak('hi', { lang: 'en-US' }, { synth: emptySynth, Utterance: FakeUtterance });
     check('no voices yet -> still speaks, voice=null, uses preferred lang',
       emptySynth.spoken.length === 1 && u4.voice === null && u4.lang === 'en-US', `voice=${u4.voice} lang=${u4.lang}`);
+
+    // --- row 2.27: an engine that reports its state (every real browser) ---
+    // An Android phone spoke one AAC word, then nothing until the page reloaded. These pin the four
+    // defenses in voice.js; which one the phone needed is dev/speech_probe.html's job.
+    {
+      const timers = [];
+      const setTimer = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
+      const clearTimer = (id) => { if (timers[id - 1]) timers[id - 1].fn = null; };
+      const runTimers = () => { const t = timers.splice(0); t.forEach((x) => x.fn && x.fn()); };
+      const eng = () => ({ spoken: [], canceled: 0, resumed: 0, speaking: false, pending: false, paused: false,
+        getVoices: () => VOICES, cancel() { this.canceled++; this.speaking = false; this.pending = false; },
+        resume() { this.resumed++; this.paused = false; }, speak(u) { this.spoken.push(u.text); } });
+      const o = (s) => ({ synth: s, Utterance: FakeUtterance, setTimer, clearTimer });
+
+      let s = eng();
+      speak('one', {}, o(s));
+      check('*** an idle engine is NOT cancelled before speaking (it used to be, every word) ***',
+        s.canceled === 0 && s.spoken.join() === 'one', `canceled ${s.canceled}`);
+
+      s = eng(); s.speaking = true;
+      speak('two', {}, o(s));
+      check('a speaking engine is cancelled first', s.canceled === 1);
+      check('*** ...and the new word waits a moment after the cancel instead of the same tick ***',
+        s.spoken.length === 0 && timers.length === 1 && timers[0].ms === 100, JSON.stringify(timers.map((t) => t.ms)));
+      runTimers();
+      check('...then is spoken', s.spoken.join() === 'two');
+
+      s = eng(); s.speaking = true;
+      speak('stale', {}, o(s));
+      s.speaking = true;
+      speak('fresh', {}, o(s));
+      runTimers();
+      check('*** two quick presses: only the latest is spoken, never the stale one after it ***',
+        s.spoken.join() === 'fresh', s.spoken.join());
+
+      s = eng(); s.pending = true;
+      speak('queued', {}, { ...o(s), afterCancelMs: 0 });
+      check('afterCancelMs 0 speaks in the same tick', s.canceled === 1 && s.spoken.join() === 'queued');
+
+      s = eng(); s.paused = true;
+      speak('wake', {}, o(s));
+      check('*** a paused engine is resumed ***', s.resumed === 1 && s.spoken.join() === 'wake');
+
+      s = eng();
+      speak('old way', {}, { ...o(s), legacy: true });
+      check('legacy: true restores the old behaviour exactly (cancel every time, same tick) -- the probe\'s switch',
+        s.canceled === 1 && s.spoken.join() === 'old way' && timers.length === 0);
+
+      s = eng(); s.speaking = true;
+      const dropped = speak('dropped', {}, o(s));
+      let interrupted = null;
+      dropped.onerror = (e) => { interrupted = e && e.error; };
+      cancel(s);
+      await Promise.resolve();
+      runTimers();
+      check('*** cancel() also drops a word still waiting out its pause, and says it was interrupted ***',
+        s.spoken.length === 0 && interrupted === 'interrupted', `spoken ${s.spoken.join()} err ${interrupted}`);
+    }
 
     // --- persistence: the voice pref survives a fresh settings handle ------
     const profiles = createProfilesClient({ user: USER });
