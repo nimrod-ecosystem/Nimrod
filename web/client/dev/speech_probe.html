@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speech check</title>
+<!--
+  Row 2.27 (2026-09-29): on an Android phone the AAC board spoke one word, then nothing until the
+  page was reloaded. Not reproducible on the desktop, so this page lets the phone itself answer
+  which way of speaking keeps working. "Old way" is voice.js exactly as it was (cancel before every
+  word, same tick); "new way" is the fix (cancel only when busy, a short pause after a cancel, the
+  live utterance held, a paused engine resumed). Each word logs whether the engine reported it
+  starting and ending -- a word with no start is a word nobody heard.
+  Not a test suite (no _test suffix): it speaks out loud and needs a person listening.
+-->
+<style>
+  :root { --bg:#fbfaf3; --surface:#fff; --text:#1f2a24; --muted:#5d7064; --border:#d9d5bb;
+          --accent:#105666; --on-accent:#fff; --ok:#1d6b3a; --bad:#9b2c1f; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141a17; --surface:#1d2521; --text:#e9efe9; --muted:#a8b6ad; --border:#34403a;
+            --accent:#7cc4d4; --on-accent:#0d1a1e; --ok:#7fd49a; --bad:#f09a8c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--text);
+         font: 17px/1.45 system-ui, sans-serif; max-width: 640px; }
+  h1 { font-size: 1.35rem; margin: 0 0 8px; }
+  p { margin: 0 0 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+  button { flex: 1 1 140px; min-height: 56px; padding: 10px 14px; border-radius: 12px; font: inherit;
+           font-weight: 600; border: 2px solid var(--accent); background: var(--surface); color: var(--text); }
+  button.primary { background: var(--accent); color: var(--on-accent); }
+  #state { font-family: ui-monospace, monospace; font-size: .92rem; padding: 8px 10px; border-radius: 8px;
+           border: 1px solid var(--border); background: var(--surface); }
+  ol { padding-left: 1.4em; margin: 8px 0; font-size: .95rem; }
+  li { margin: 4px 0; }
+  .ok { color: var(--ok); font-weight: 600; }
+  .bad { color: var(--bad); font-weight: 600; }
+  .muted { color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<h1>Speech check</h1>
+<p>This finds out which way of speaking keeps working on this device.</p>
+<ol class="muted">
+  <li>Tap <b>Old way</b> four or five times, a couple of seconds apart. Listen.</li>
+  <li><b>Reload this page.</b></li>
+  <li>Tap <b>New way</b> four or five times. Listen.</li>
+  <li>Tap <b>Copy results</b> and paste them to Claude (or take a screenshot).</li>
+</ol>
+<div class="row">
+  <button type="button" data-way="old">Old way</button>
+  <button type="button" data-way="new" class="primary">New way</button>
+</div>
+<div id="state">Engine: …</div>
+<ol id="log"></ol>
+<div class="row">
+  <button type="button" id="copy">Copy results</button>
+</div>
+<p class="muted" id="copied" role="status"></p>
+
+<script type="module">
+import { speak } from '../voice.js';
+
+const WORDS = ['apple', 'banana', 'cherry', 'dog', 'egg', 'fish', 'grape', 'house', 'ice', 'jam'];
+const synth = window.speechSynthesis;
+const logEl = document.getElementById('log');
+const stateEl = document.getElementById('state');
+const rows = [];
+let n = 0;
+
+function engineState() {
+  if (!synth) return 'no speech engine in this browser';
+  return `speaking ${synth.speaking} · pending ${synth.pending} · paused ${synth.paused} · voices ${synth.getVoices().length}`;
+}
+setInterval(() => { stateEl.textContent = `Engine: ${engineState()}`; }, 200);
+
+function render() {
+  logEl.innerHTML = rows.map((r) => {
+    const start = r.start != null ? `<span class="ok">started ${r.start} ms</span>`
+      : (r.gaveUp ? '<span class="bad">never started</span>' : 'waiting…');
+    const end = r.end != null ? `, ended ${r.end} ms` : '';
+    const err = r.error ? `, <span class="bad">error: ${r.error}</span>` : '';
+    return `<li>${r.way} way, “${r.word}”: busy before ${r.busy ? 'yes' : 'no'} — ${start}${end}${err}</li>`;
+  }).join('');
+}
+
+function say(way) {
+  const word = WORDS[n % WORDS.length];
+  n += 1;
+  const r = { way, word, busy: !!(synth && (synth.speaking || synth.pending)), start: null, end: null, error: '', gaveUp: false };
+  rows.push(r);
+  const t0 = performance.now();
+  const u = speak(word, {}, { legacy: way === 'old' });
+  if (!u) { r.error = 'nothing to speak with'; render(); return; }
+  u.addEventListener('start', () => { r.start = Math.round(performance.now() - t0); render(); });
+  u.addEventListener('end', () => { r.end = Math.round(performance.now() - t0); render(); });
+  u.addEventListener('error', (e) => { r.error = (e && e.error) || 'error'; render(); });
+  setTimeout(() => { if (r.start == null) { r.gaveUp = true; render(); } }, 4000);
+  render();
+}
+
+document.querySelectorAll('[data-way]').forEach((b) => b.addEventListener('click', () => say(b.dataset.way)));
+document.getElementById('copy').addEventListener('click', async () => {
+  const text = [navigator.userAgent, engineState(),
+    ...rows.map((r, i) => `${i + 1}. ${r.way} "${r.word}" busy=${r.busy} start=${r.start ?? (r.gaveUp ? 'NEVER' : '?')} end=${r.end ?? '-'} error=${r.error || '-'}`)].join('\n');
+  try { await navigator.clipboard.writeText(text); document.getElementById('copied').textContent = 'Copied.'; }
+  catch { document.getElementById('copied').textContent = 'Could not copy here — a screenshot works too.'; }
+});
+</script>
+</body>
+</html>
