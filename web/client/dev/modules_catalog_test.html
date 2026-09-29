@@ -49,6 +49,7 @@ import '../modules/progress.js';
 import '../modules/quests.js';
 import '../modules/reading_log.js';
 import '../modules/calculator.js';
+import '../modules/button.js';
 import '../modules/sprint.js';
 import '../modules/trivia.js';
 import '../modules/bank.js';      // registers 'bank' (the shared questions + words)
@@ -143,8 +144,12 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // nothing has been ported yet", which stopped being true the day `calculator` (port-order step 5,
   // the first real module port) was imported above. The claim now is the honest one: exactly the
   // modules that have DECLARED `core: 'new'` are counted as new, and there is one.
-  check('exactly one module in today’s real registry has been ported: the calculator',
-    r.new.length === 1 && r.new[0] === 'calculator' && r.legacy.length === manifests.length - 1,
+  // Updated again the same day: `button` (change list row 2.26, the game's name sign and picture)
+  // was BUILT on the new core rather than ported to it, and it counts the same way. Still strict —
+  // the list is named, so a third arrival has to be added here on purpose.
+  const PORTED = ['button', 'calculator'];
+  check('exactly two modules in today’s real registry are on the new core: button and calculator',
+    r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length
     && r.counts.new === r.new.length);

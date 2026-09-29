@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>button — words and/or a picture on a face you can press</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{margin-top:12px;width:360px;height:300px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>button — words and/or a picture on a face you can press</h1>
+<p>Change list row 2.26: the game's name sign and profile picture are two instances of this one
+module. Covers: the manifest (<code>core:'new'</code>, <code>dependsOn:'local'</code>, the declared
+settings), mounting with every platform handle rejecting, rendering the words, picture, font, style,
+colours and frame from its state, the live picture choices (listed by name from a real media agent
+listing — the bundled samples), the <code>select</code> verb and a click saying the words through a
+fake <code>ctx.output</code> only when asked to, and the settings rows the universal menu builds.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { MODULE_VERBS, verbsFor, respondsToVerbs } from '../actions.js';
+import { fieldsFor, fieldItems } from '../settings_fields.js';
+import { DEFAULT_PALETTE } from '../color_picker.js';
+import { listItemNames } from '../media_sources.js';
+import { cardFaceHTML } from '../card_face.js';
+import { FONTS, STYLES, FRAMES, DEFAULT_INK, DEFAULT_GROUND, configFrom, fontStack }
+  from '../modules/button.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function settled(fn, ms = 3000) {
+  const t0 = performance.now();
+  while (performance.now() - t0 < ms) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(20); }
+  return false;
+}
+
+// A DEAD PLATFORM: every handle exists, and every call on it rejects.
+const dead = () => Promise.reject(new Error('platform is down'));
+const deadHandle = () => ({
+  get: () => ({}), subscribe: () => () => {}, set: () => {},
+  load: dead, flush: dead, append: dead, startPolling: () => {}, destroy: () => {},
+});
+// A state handle that can actually change, and records writes.
+function liveState(initial = {}) {
+  let row = { ...initial };
+  const subs = new Set();
+  const writes = [];
+  return {
+    writes,
+    get: () => ({ ...row }),
+    set: (patch) => { writes.push(patch); row = { ...row, ...patch }; subs.forEach((f) => f({ ...row })); },
+    subscribe: (f) => { subs.add(f); f({ ...row }); return () => subs.delete(f); },
+    load: () => Promise.resolve(), flush: () => Promise.resolve(), startPolling() {}, destroy() { subs.clear(); },
+  };
+}
+
+// THE BUNDLED SAMPLES, as a real media agent: /demo-media/list is the ordinary listing contract.
+const SAMPLES = { id: 'demo-samples', label: 'Sample photos', kind: 'agent',
+  base_url: new URL('../demo-media', location.href).href.replace(/\/+$/, '') };
+const OTHER = { id: 'other-src', label: 'Other photos', kind: 'agent', base_url: SAMPLES.base_url };
+const sourcesOf = (...list) => ({ list: async () => list, add: dead, remove: dead });
+
+const bus = createBus();
+const stages = document.getElementById('stages');
+
+function mount(id, extra = {}) {
+  const host = document.createElement('div');
+  host.className = 'stage mod-box';
+  stages.append(host);
+  const said = [];
+  const inst = mountModule('button', {
+    mount: host, bus, rootBus: bus, instanceId: id, personId: null, user: null, profileId: 'p-test',
+    state: deadHandle(), events: deadHandle(),
+    makeState: () => deadHandle(), makeEvents: () => deadHandle(), makePersonState: () => null,
+    output: { say: (text, meta) => said.push({ text, meta }) },
+    sources: sourcesOf(),
+    ...extra,
+  });
+  inst.init();
+  return {
+    inst, host, id, said,
+    face: () => host.querySelector('[data-face]'),
+    word: () => host.querySelector('[data-face] .ab-word')?.textContent ?? null,
+    img: () => host.querySelector('[data-face] .ab-img img'),
+  };
+}
+const select = (id) => bus.publish(bus.instanceTopic(id, 'button/select'));
+
+(async () => {
+try {
+  // =============================================================================================
+  section('the manifest');
+  {
+    const m = getManifest('button');
+    check('it is registered, titled Button', !!m && m.title === 'Button');
+    check('it declares core:"new" and dependsOn:"local"', m.core === 'new' && m.dependsOn === 'local');
+    const keys = (m.settings || []).map((s) => s.key);
+    check('it declares the nine settings, in menu order',
+      keys.join(',') === 'label,imageFrom,image,frame,font,color,style,background,whenPressed', keys.join(','));
+    const kind = Object.fromEntries(m.settings.map((s) => [s.key, s.kind]));
+    check('label is TEXT (the menu gives it a text box)', kind.label === 'text');
+    check('color and background use the menu’s COLOUR picker', kind.color === 'color' && kind.background === 'color');
+    check('font, style, frame and whenPressed are choices', ['font', 'style', 'frame', 'whenPressed'].every((k) => kind[k] === 'choice'));
+    const dflt = Object.fromEntries(m.settings.map((s) => [s.key, s.default]));
+    check('whenPressed defaults to NOTHING (wiring a press is a side quest)', dflt.whenPressed === 'nothing');
+    check('no picture by default', dflt.image === '' && dflt.imageFrom === '');
+    check('the colour defaults are PALETTE entries (black words on white), not literals of this module',
+      dflt.color === DEFAULT_PALETTE.find((c) => c.id === 'black').hex
+      && dflt.background === DEFAULT_PALETTE.find((c) => c.id === 'white').hex);
+    check('the frame choice is none / picture frame / TV / monitor',
+      FRAMES.map((f) => f.value).join(',') === 'none,picture,tv,monitor');
+    check('every font stack ends in a GENERIC family (nothing needs downloading)',
+      FONTS.every((f) => f.value === 'theme' || /(serif|sans-serif|monospace|cursive)$/.test(f.stack)),
+      FONTS.map((f) => f.stack).join(' | '));
+    check('the style and frame rows say they are placeholders, where somebody choosing reads them',
+      /for now/.test(m.settings.find((s) => s.key === 'style').label)
+      && /for now/.test(m.settings.find((s) => s.key === 'frame').label));
+    check('the description is plain words and names no person', typeof m.description === 'string'
+      && m.description.length > 10 && !/\bher\b|christine/i.test(m.description));
+  }
+
+  section('the select verb is registered, and is the ONLY verb');
+  {
+    check('button is in MODULE_VERBS', !!MODULE_VERBS.button);
+    check('its only verb is select', JSON.stringify(verbsFor('button')) === '["select"]', JSON.stringify(verbsFor('button')));
+    check('so a switch can focus it at all', respondsToVerbs('button'));
+  }
+
+  section('the new-core contract is enforced at mount');
+  {
+    const host = document.createElement('div');
+    let noPerson = false, noInstance = false;
+    try { mountModule('button', { mount: host, bus, rootBus: bus, instanceId: 'b-x', state: deadHandle(), events: deadHandle() }); }
+    catch (e) { noPerson = /personId/.test(String(e)); }
+    try { mountModule('button', { mount: host, bus, rootBus: bus, personId: null, state: deadHandle(), events: deadHandle() }); }
+    catch (e) { noInstance = /instanceId/.test(String(e)); }
+    check('mounting without a personId key is refused loudly', noPerson);
+    check('mounting without an instanceId is refused loudly', noInstance);
+  }
+
+  // =============================================================================================
+  section('a dead platform: it still renders, from its defaults (the measurement behind dependsOn:"local")');
+  const D = mount('btn-dead', { sources: { list: dead } });
+  {
+    await sleep(40);
+    const f = D.face();
+    check('the face is a real <button>', !!f && f.tagName === 'BUTTON' && f.type === 'button');
+    check('it shows its default words', D.word() === 'Your words', String(D.word()));
+    check('and its accessible name is those words', f.getAttribute('aria-label') === 'Your words');
+    check('default look: plain, no frame, black on white',
+      f.dataset.style === 'plain' && f.dataset.frame === 'none'
+      && f.style.getPropertyValue('--nb-ink') === DEFAULT_INK && f.style.getPropertyValue('--nb-bg') === DEFAULT_GROUND);
+    check('no picture frame is drawn when there is no picture', !f.querySelector('.ab-img') && !('hasImg' in f.dataset));
+    D.face().click();
+    check('a press with whenPressed=nothing says nothing', D.said.length === 0);
+    select('btn-dead');
+    check('...and neither does the select verb', D.said.length === 0);
+  }
+
+  // =============================================================================================
+  section('it renders what its state says');
+  const st = liveState({ label: 'Robin', font: 'serif', style: 'plaque', frame: 'picture',
+    color: DEFAULT_PALETTE[5].hex, background: DEFAULT_PALETTE[2].hex });
+  const S = mount('btn-sign', { state: st });
+  {
+    await sleep(30);
+    const f = S.face();
+    check('the words', S.word() === 'Robin' && f.getAttribute('aria-label') === 'Robin');
+    check('the style and the frame, as stored ids on the face', f.dataset.style === 'plaque' && f.dataset.frame === 'picture');
+    check('the colours reach the stylesheet as custom properties',
+      f.style.getPropertyValue('--nb-ink') === DEFAULT_PALETTE[5].hex
+      && f.style.getPropertyValue('--nb-bg') === DEFAULT_PALETTE[2].hex);
+    check('the font is stored as MEANING (an id) and rendered as a stack',
+      f.style.getPropertyValue('--nb-font') === fontStack('serif') && fontStack('serif').includes('Georgia'));
+    const cs = getComputedStyle(f);
+    check('...and the computed colour and font actually follow them',
+      cs.color === 'rgb(47, 111, 224)' && /Georgia/.test(cs.fontFamily), `${cs.color} ${cs.fontFamily}`);
+    check('the face markup IS the AAC card face (card_face.js), not a second one',
+      f.innerHTML === cardFaceHTML({ word: 'Robin' }), f.innerHTML);
+
+    st.set({ label: 'Robin & Sam <3' });
+    await sleep(10);
+    check('a new label repaints, escaped', S.word() === 'Robin & Sam <3' && !f.querySelector('b,i,script'));
+    st.set({ label: '' });
+    await sleep(10);
+    check('no words: no word element, and the button is still NAMED', S.word() === null
+      && f.getAttribute('aria-label') === 'Button', f.getAttribute('aria-label'));
+    st.set({ label: 'Robin', font: 'nonsense', style: 'nonsense', frame: 'nonsense', color: 'not-a-colour' });
+    await sleep(10);
+    check('garbage in any setting falls back to its default, never to nothing',
+      f.dataset.style === 'plain' && f.dataset.frame === 'none'
+      && f.style.getPropertyValue('--nb-font') === fontStack('theme')
+      && f.style.getPropertyValue('--nb-ink') === DEFAULT_INK);
+    check('configFrom agrees', JSON.stringify(configFrom({ frame: 'x', whenPressed: 'shout' }).frame) === '"none"'
+      && configFrom({ whenPressed: 'shout' }).whenPressed === 'nothing');
+  }
+
+  // =============================================================================================
+  section('a picture from Media: live choices, the one-source adoption, and the card’s own URL');
+  const names = await listItemNames(SAMPLES, '');
+  check('(setup) the samples list by NAME ONLY through listItemNames — four images',
+    names.length === 4 && names.every((n) => n.path && n.kind === 'image' && !('url' in n)), JSON.stringify(names));
+  const pst = liveState({ label: 'My picture', frame: 'picture' });
+  const P = mount('btn-pic', { state: pst, sources: sourcesOf(SAMPLES) });
+  {
+    const adopted = await settled(() => pst.get().imageFrom === SAMPLES.id);
+    check('with exactly one source and nothing chosen, it adopts that source (as photos does)', adopted,
+      JSON.stringify(pst.writes));
+    const ch = () => P.inst.impl.settingsChoices();
+    const listed = await settled(() => ch().image.length === 5);
+    check('the picture row offers "No picture" plus the four samples, by name', listed
+      && ch().image[0].value === '' && ch().image[0].label === 'No picture'
+      && ch().image.slice(1).map((o) => o.value).join(',') === names.map((n) => n.path).join(','),
+      JSON.stringify(ch().image));
+    check('the source row offers the source by its label', ch().imageFrom.length === 1
+      && ch().imageFrom[0].label === 'Sample photos');
+    check('still no picture until one is chosen', !P.img() && P.word() === 'My picture');
+
+    pst.set({ image: names[1].path });
+    const shown = await settled(() => !!P.img() && P.img().complete && P.img().naturalWidth > 0, 4000);
+    check('choosing one shows it, in the card’s picture slot', shown, P.face().innerHTML);
+    check('...from the source’s own URL for that one file', (P.img()?.src || '').endsWith(`/demo-media/files/${names[1].path}`),
+      P.img()?.src);
+    check('...with the words as its caption, so the image itself is decoration (alt "")',
+      P.word() === 'My picture' && P.img()?.alt === '');
+    check('...and the face takes a picture’s shape', 'hasImg' in P.face().dataset);
+
+    const imgNode = P.img();
+    pst.set({ color: DEFAULT_PALETTE[0].hex, frame: 'tv' });
+    await sleep(20);
+    check('changing a colour or the frame does NOT reload the picture (same element)', P.img() === imgNode
+      && P.face().dataset.frame === 'tv');
+    pst.set({ label: '' });
+    const alt = await settled(() => P.img()?.alt === 'Picture');
+    check('a picture with no words carries the name itself', alt && P.face().getAttribute('aria-label') === 'Picture');
+    pst.set({ image: '' });
+    await sleep(20);
+    check('"No picture" takes it away again', !P.img() && !P.face().querySelector('.ab-img'));
+
+    // Two sources: nothing is adopted, and the rows say so.
+    const tst = liveState({});
+    const T = mount('btn-two', { state: tst, sources: sourcesOf(SAMPLES, OTHER) });
+    await sleep(150);
+    check('with two sources, nothing is adopted for the person', !tst.get().imageFrom, JSON.stringify(tst.get()));
+    check('...both are offered', T.inst.impl.settingsChoices().imageFrom.length === 2);
+    check('...and until one is chosen the picture row offers only "No picture"',
+      T.inst.impl.settingsChoices().image.length === 1);
+    tst.set({ imageFrom: OTHER.id });
+    const other = await settled(() => T.inst.impl.settingsChoices().image.length === 5);
+    check('choosing the second source offers ITS pictures', other);
+    T.inst.destroy(); T.host.remove();
+  }
+
+  // =============================================================================================
+  section('pressing it: the select verb and a click, "say the words" through ctx.output');
+  {
+    const wst = liveState({ label: 'Hello there', whenPressed: 'say' });
+    const W = mount('btn-say', { state: wst });
+    await sleep(20);
+    select('btn-say');
+    check('the select verb (on its INSTANCE-scoped topic) says the words', W.said.length === 1
+      && W.said[0].text === 'Hello there', JSON.stringify(W.said));
+    check('...as `say`, tagged with where it came from', W.said[0]?.meta?.source === 'button');
+    W.face().click();
+    check('a click says them too — one path', W.said.length === 2 && W.said[1].text === 'Hello there');
+    check('another button’s verb does not press this one', (select('btn-sign'), W.said.length === 2));
+    wst.set({ whenPressed: 'nothing' });
+    select('btn-say'); W.face().click();
+    check('switched back to "Nothing": neither says anything', W.said.length === 2);
+    wst.set({ whenPressed: 'say', label: '   ' });
+    select('btn-say');
+    check('"say the words" with no words says nothing rather than an empty utterance', W.said.length === 2);
+    wst.set({ label: 'Bye' });
+    W.inst.destroy();
+    select('btn-say');
+    check('after destroy the verb reaches nothing', W.said.length === 2);
+    check('...and the mount is empty', W.host.innerHTML === '');
+    W.host.remove();
+
+    // With no output bus, it falls back to the voice (the board’s rule) — through the ctx seam.
+    const spoke = [];
+    const V = mount('btn-voice', { state: liveState({ label: 'Hi', whenPressed: 'say' }), output: undefined,
+      speak: (t) => spoke.push(t) });
+    select('btn-voice');
+    check('no output bus: it speaks through the voice instead', spoke.join() === 'Hi', spoke.join());
+    V.inst.destroy(); V.host.remove();
+  }
+
+  // =============================================================================================
+  section('the rows the universal settings menu builds for it');
+  {
+    const rows = fieldItems(fieldsFor(P.inst.manifest, P.inst), { values: () => pst.get(), level: 'standard',
+      onStep: (k, v) => pst.set({ [k]: v }) });
+    const row = (k) => rows.find((r) => r.key === k);
+    check('every setting has a row at the default level', rows.length === 9, String(rows.length));
+    check('the words row is a TEXT BOX row (editable) and says a switch needs a keyboard',
+      !!row('label').edit && /needs a keyboard/.test(row('label').hint));
+    check('typing through it writes the label', row('label').commit('Nimrod') === true && pst.get().label === 'Nimrod');
+    check('the colour row is a colour picker row, cycleable by one switch', !!row('color').color && !row('color').disabled);
+    // FROM THE DEFAULTS, the first press on the words' colour must not match the ground: found on
+    // the real kiosk, where Black -> White made a white-on-white sign vanish.
+    {
+      const fresh = liveState({});
+      const rs = fieldItems(fieldsFor(P.inst.manifest, P.inst), { values: () => fresh.get(), level: 'standard',
+        onStep: (k, v) => fresh.set({ [k]: v }) });
+      rs.find((r) => r.key === 'color').run();
+      check('*** from black-on-white, ONE press on the words’ colour lands on Red, not the White ground ***',
+        fresh.get().color === DEFAULT_PALETTE.find((c) => c.id === 'red').hex && fresh.get().color !== DEFAULT_GROUND,
+        fresh.get().color);
+      const walked = [fresh.get().color];
+      for (let i = 0; i < 11; i++) { rs.find((r) => r.key === 'color').run(); walked.push(fresh.get().color); }
+      check('...and the walk still visits all twelve colours and comes home to Black',
+        new Set(walked).size === 12 && walked[11] === DEFAULT_INK, walked.join(','));
+    }
+    const before = pst.get().color;
+    row('color').run();
+    check('one press moves to the next palette colour', pst.get().color !== before
+      && DEFAULT_PALETTE.some((c) => c.hex === pst.get().color), `${before} -> ${pst.get().color}`);
+    check('the picture row carries the live options (5)', row('image').field.options.length === 5);
+    row('frame').run();
+    check('the frame row cycles', FRAMES.some((f) => f.value === pst.get().frame));
+    check('the style and font rows cycle through the declared lists',
+      row('style').field.options.length === STYLES.length && row('font').field.options.length === FONTS.length);
+  }
+
+  S.inst.destroy(); P.inst.destroy(); D.inst.destroy();
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+})();
+</script>
+</body>
+</html>

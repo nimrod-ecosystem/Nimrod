@@ -1572,3 +1572,60 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
    whose own containers paint var(--bg) opaquely will still cover it — see README "Known work". */
 html[data-live-scene]{background:var(--bg)}
 html[data-live-scene] body{background:transparent}
+
+
+/* button (modules/button.js) — THE GAME'S NAME SIGN AND PICTURE, and any other button. The face is
+   the AAC board's card (card_face.js: `.ab-img` then `.ab-word`), styled here under its own root so
+   the board's stylesheet is untouched. NO LITERAL COLOURS: the two chosen colours arrive as
+   --nb-ink / --nb-bg (set by the module from the settings menu's colour picker), and every frame and
+   style below is drawn with theme tokens, currentColor and color-mix of tokens.
+   *** THE STYLES AND FRAMES ARE PLACEHOLDERS *** until Design's sign styles and frames land; the
+   stored ids (plaque, banner, glow; picture, tv, monitor) stay and only these rules change. */
+.nbtn-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  box-sizing:border-box;padding:6cqmin;container-type:size;container-name:nbtn;overflow:hidden}
+.nbtn{--nb-ink:var(--text);--nb-bg:var(--surface);--nb-font:var(--font);
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2cqmin;box-sizing:border-box;max-width:100%;max-height:100%;min-width:min(40cqw,100%);
+  padding:4cqmin 7cqmin;margin:0;border:0;border-radius:1.6cqmin;cursor:pointer;
+  color:var(--nb-ink);background:var(--nb-bg);font-family:var(--nb-font);
+  /* A clear panel gives its text a halo to read against the scene; a button brings its own
+     ground, so it does not want one (the glow style adds its own below). */
+  text-shadow:none;transition:transform .12s ease}
+.nbtn .ab-word{display:block;max-width:100%;font-size:clamp(14px,12cqmin,170px);font-weight:700;
+  line-height:1.08;text-align:center;overflow-wrap:break-word;hyphens:auto}
+.nbtn .ab-img{display:block;flex:1 1 auto;min-height:0;width:100%;line-height:0}
+.nbtn .ab-img img{display:block;width:100%;height:100%;object-fit:contain}
+/* WITH A PICTURE the face takes a picture's shape and the words become its caption. */
+.nbtn[data-has-img]{height:min(86cqh,120cqw);aspect-ratio:4/5;padding:3cqmin}
+.nbtn[data-has-img] .ab-word{flex:none;font-size:clamp(11px,5.5cqmin,48px);font-weight:600}
+.nbtn:focus-visible{outline:max(3px,.8cqmin) solid var(--highlight);outline-offset:max(3px,.8cqmin)}
+.nbtn.nbtn-press{transform:scale(.97)}
+
+/* SIGN STYLES (placeholders). Shape and treatment only; the colours are the person's. */
+.nbtn[data-style="plaque"]{border:max(3px,1.3cqmin) double currentColor;border-radius:3cqmin;
+  box-shadow:0 1.2cqmin 2.6cqmin color-mix(in srgb,var(--text) 35%,transparent)}
+.nbtn[data-style="banner"]{border-radius:0;padding-inline:12cqmin;
+  clip-path:polygon(0 0,100% 0,93% 50%,100% 100%,0 100%,7% 50%)}
+.nbtn[data-style="glow"]{border:max(2px,.8cqmin) solid currentColor;border-radius:4cqmin;
+  text-shadow:0 0 .6cqmin currentColor,0 0 2.4cqmin currentColor;
+  box-shadow:0 0 2.4cqmin color-mix(in srgb,var(--nb-ink) 60%,transparent),
+    inset 0 0 2.4cqmin color-mix(in srgb,var(--nb-ink) 45%,transparent)}
+
+/* FRAMES (placeholders). A frame replaces a style's edge; after the styles so it wins. The
+   background colour is the mat inside a picture frame and the screen inside a TV or monitor. */
+.nbtn[data-frame="picture"]{clip-path:none;border:max(6px,3.2cqmin) solid var(--accent-warm-deep);
+  border-radius:.6cqmin;padding:4cqmin;
+  box-shadow:inset 0 0 0 max(2px,.9cqmin) color-mix(in srgb,var(--accent-warm-deep) 55%,var(--text)),
+    0 1.6cqmin 3.2cqmin color-mix(in srgb,var(--text) 40%,transparent)}
+.nbtn[data-frame="tv"],.nbtn[data-frame="monitor"]{clip-path:none;border-style:solid;
+  border-color:var(--letterbox);padding:2cqmin;
+  box-shadow:0 1.6cqmin 3.2cqmin color-mix(in srgb,var(--text) 40%,transparent)}
+.nbtn[data-frame="tv"]{border-width:max(8px,4cqmin);border-radius:4.5cqmin}
+.nbtn[data-frame="monitor"]{border-width:max(5px,1.8cqmin) max(5px,1.8cqmin) max(9px,4.2cqmin);
+  border-radius:1.4cqmin;margin-bottom:10cqh}
+.nbtn[data-frame="tv"][data-has-img],.nbtn[data-frame="monitor"][data-has-img]{aspect-ratio:16/10;
+  height:min(70cqh,56cqw)}
+/* The monitor's stand: a neck and a foot under the screen, drawn in the bezel's own token. */
+.nbtn[data-frame="monitor"]::after{content:"";position:absolute;left:50%;top:100%;
+  width:34%;height:10cqh;transform:translateX(-50%);background:var(--letterbox);
+  clip-path:polygon(42% 0,58% 0,62% 72%,100% 80%,100% 100%,0 100%,0 80%,38% 72%)}

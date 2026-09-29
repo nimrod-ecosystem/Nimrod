@@ -121,6 +121,9 @@ export const HEALTH_EXPECT = {
   // A keypad and a display. It sends on its ports only when somebody presses a key, and nobody
   // pressing one for a while is not a fault - the same reasoning as `algebra` above.
   calculator:  { idle: true },
+  // A sign or a framed picture. It publishes nothing unless somebody presses it, and a sign
+  // nobody has pressed all week is a sign doing its job.
+  button:      { idle: true },
 };
 
 export function expectFor(type, table = HEALTH_EXPECT) {

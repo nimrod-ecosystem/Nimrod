@@ -303,6 +303,24 @@ export const CATALOG = [
       + 'is currently focused."',
   },
 
+  {
+    type: 'button',
+    group: 'comfort',
+    // `touch`: left alone it is a sign or a picture on the wall, and nothing waits on anybody.
+    use: 'touch',
+    lead: 'Words, a picture, or both, on something you can press.',
+    needs: 'Nothing for words. A picture comes from your Media — a folder on this computer, or '
+      + 'your media agent.',
+    why: 'A name on a sign, a photo in a frame, a label on the wall: one button, set up entirely '
+      + 'from the settings menu — the words, a font, the colours, a frame, and whether pressing '
+      + 'it says the words out loud. The first step of the Nimrod game builds a profile out of two '
+      + 'of them.',
+    note: 'The sign styles and frames are simple placeholders for now; designed ones are on the '
+      + 'way and will replace them without changing anybody’s choices. Choosing a picture walks '
+      + 'the pictures in a source one at a time, so a small folder of the ones you want is '
+      + 'quickest.',
+  },
+
   // ------------------------------------------------------------------ practice
   {
     type: 'educational',

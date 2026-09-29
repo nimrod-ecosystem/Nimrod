@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>game — step 1: your profile is your first dashboard</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>game — step 1: your profile is your first dashboard</h1>
+<p>Drives <code>game/game.js</code> against the browser's LOCAL backend (the signed-out one), as a
+person of its own made for this run and removed at the end — so it never touches anybody else's
+screens, and it checks that it did not. Make-profile creates exactly one EMPTY screen and remembers
+it per person; running it again (a refresh, a second visit) reuses it; the two steps add exactly one
+sign and one picture, placed in the layout; running them again adds nothing; the person's moves
+stand; and every other screen is byte-for-byte untouched.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createLocalBackend } from '../local_store.js';
+import { THEMES } from '../theme.js';
+import { createGame, GAME_KEY, PROFILE_NAME, ROOM_THEME, PROFILE_LAYOUT, SLOT, signWords, kioskURL }
+  from '../game/game.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const backend = createLocalBackend();
+const { profiles } = backend;
+// The game's view of a backend: four factories, the same ones home.html hands its panels.
+const gameBackend = {
+  profiles,
+  makeSettings: (pid) => backend.makeSettings(pid),
+  makeInstanceState: (pid, id) => backend.makeState(id, {}, pid),
+  makePersonState: (personId, key) => backend.makePersonState(personId, key),
+};
+const read = async (make) => { const s = make(); await s.load(); const v = s.get(); s.destroy(); return v; };
+const settingsOf = (pid) => read(() => backend.makeSettings(pid));
+const stateOf = (pid, id) => read(() => backend.makeState(id, {}, pid));
+const gameStateOf = (personId) => read(() => backend.makePersonState(personId, GAME_KEY));
+
+// EVERYTHING ELSE IN THIS BROWSER, before: every screen, its modules and its settings doc.
+async function snapshotOthers(exceptPerson) {
+  const all = (await profiles.list()).filter((p) => p.person_id !== exceptPerson);
+  const rows = [];
+  for (const p of all) rows.push({ p: await profiles.get(p.id), s: await settingsOf(p.id) });
+  return JSON.stringify(rows);
+}
+
+let person = null;
+(async () => {
+try {
+  person = await profiles.addPerson('Robin Game-Test');
+  const othersBefore = await snapshotOthers(person.id);
+
+  // The person already has a screen of their own. It must come through untouched.
+  const own = await profiles.create('Robin’s everyday screen', person.id);
+  const ownPhotos = await profiles.addModule(own.id, 'photos');
+  { const s = backend.makeSettings(own.id); await s.load();
+    s.set({ theme: 'dusk', kiosk: { layout: { preset: 'full', slots: [ownPhotos.id] } } }); await s.flush(); s.destroy(); }
+  // ...and one they happened to NAME "My profile" themselves. The game must not adopt it.
+  const lookalike = await profiles.create(PROFILE_NAME, person.id);
+  const ownBefore = JSON.stringify([await profiles.get(own.id), await settingsOf(own.id),
+    await profiles.get(lookalike.id), await settingsOf(lookalike.id)]);
+
+  const game = () => createGame({ ...gameBackend, personId: person.id, personName: person.name });
+  const mine = async () => (await profiles.list(person.id)).map((p) => p.id);
+
+  // ===========================================================================================
+  section('the defaults, argued in game.js');
+  check('the room theme exists (Cozy — a window seat and books)', ROOM_THEME === 'cozy' && !!THEMES[ROOM_THEME]);
+  check('the layout is side by side, picture in the first spot and the sign in the second',
+    PROFILE_LAYOUT === 'side' && SLOT.picture === 0 && SLOT.sign === 1);
+  check('the sign starts with the person’s name', signWords('Robin') === 'Robin');
+  check('...but the placeholder "Me" (what a new account’s first person is called) is not a name',
+    signWords('Me') === 'Your name' && signWords('') === 'Your name' && signWords('  ') === 'Your name');
+  check('the profile opens on the real kiosk', kioskURL('abc') === '/kiosk.html?profile=abc');
+
+  // ===========================================================================================
+  section('before anything: nothing is made just by looking');
+  {
+    const g = game();
+    const st = await g.status();
+    check('status on a fresh person says nothing exists yet', !st.profileId && !st.pictureId && !st.signId,
+      JSON.stringify(st));
+    check('...and looking created no screen', (await mine()).length === 2);
+  }
+
+  // ===========================================================================================
+  section('make my profile — once');
+  let pid = null;
+  {
+    const r = await game().makeProfile();
+    pid = r.profileId;
+    check('it made a screen', !!pid && r.created === true, JSON.stringify(r));
+    const p = await profiles.get(pid);
+    check('named "My profile", for this person', p.name === PROFILE_NAME && p.person_id === person.id);
+    check('*** it starts EMPTY — no modules at all ***', (p.modules || []).length === 0, JSON.stringify(p.modules));
+    const s = await settingsOf(pid);
+    check('its background is the room theme', s.theme === ROOM_THEME, JSON.stringify(s));
+    check('its panels are clear, so the room shows around what goes on the wall', s.panelSurface === 'clear');
+    check('no arrangement yet (an empty screen, not an empty grid)', !(s.kiosk && s.kiosk.layout));
+    check('it carries the game’s stamp, so it can be recognised again', s.game === 'profile');
+    const gs = await gameStateOf(person.id);
+    check('it is remembered in PER-PERSON state', gs.profile && gs.profile.screenId === pid, JSON.stringify(gs));
+    check('the person now has exactly one more screen', (await mine()).length === 3);
+  }
+
+  section('...and a second run (a refresh, another visit) reuses it');
+  {
+    const r2 = await game().makeProfile();
+    check('same screen, nothing created', r2.profileId === pid && r2.created === false, JSON.stringify(r2));
+    check('still exactly three screens for this person', (await mine()).length === 3);
+    // The person changes their room in the menu; a re-run must not put it back.
+    { const s = backend.makeSettings(pid); await s.load(); s.set({ theme: 'winter' }); await s.flush(); s.destroy(); }
+    await game().makeProfile();
+    check('a re-run does not undo a theme the person picked', (await settingsOf(pid)).theme === 'winter');
+  }
+
+  section('...and a lost memory does not make a duplicate: the stamped screen is found again');
+  {
+    const ps = backend.makePersonState(person.id, GAME_KEY); await ps.load();
+    ps.set({ profile: null }); await ps.flush(); ps.destroy();
+    const r3 = await game().makeProfile();
+    check('the stamped screen is adopted, not recreated', r3.profileId === pid && r3.created === false,
+      JSON.stringify(r3));
+    check('the look-alike the person named "My profile" themselves was NOT adopted', r3.profileId !== lookalike.id);
+    check('still exactly three screens', (await mine()).length === 3);
+    check('and it is remembered again', (await gameStateOf(person.id)).profile?.screenId === pid);
+  }
+
+  // ===========================================================================================
+  section('put up your name sign — before the picture, to prove the order does not matter');
+  let signId = null, picId = null;
+  {
+    const r = await game().putUpSign();
+    signId = r.id;
+    check('it added a sign', !!signId && r.created === true, JSON.stringify(r));
+    const p = await profiles.get(pid);
+    check('exactly one module on the profile, a button', p.modules.length === 1 && p.modules[0].type === 'button'
+      && p.modules[0].id === signId, JSON.stringify(p.modules));
+    const s = await stateOf(pid, signId);
+    check('its words are the person’s name', s.label === 'Robin Game-Test', JSON.stringify(s));
+    check('...on a sign-shaped starting look (a plaque, no frame)', s.style === 'plaque' && s.frame === 'none');
+    const lay = (await settingsOf(pid)).kiosk?.layout;
+    check('it is placed in ITS spot (the second), with the picture’s spot waiting',
+      lay && lay.preset === PROFILE_LAYOUT && lay.slots[SLOT.sign] === signId && !lay.slots[SLOT.picture],
+      JSON.stringify(lay));
+  }
+
+  section('hang your picture');
+  {
+    const r = await game().hangPicture();
+    picId = r.id;
+    check('it added a picture', !!picId && r.created === true && picId !== signId);
+    const p = await profiles.get(pid);
+    check('exactly two modules now, both buttons', p.modules.length === 2 && p.modules.every((m) => m.type === 'button'));
+    const s = await stateOf(pid, picId);
+    check('it starts in a picture frame, captioned', s.frame === 'picture' && s.label === 'My picture', JSON.stringify(s));
+    check('...with no picture chosen yet (that is the person’s to pick, in the menu)', !s.image);
+    const lay = (await settingsOf(pid)).kiosk?.layout;
+    check('both are on the wall: picture first spot, sign second',
+      lay.slots.join(',') === [picId, signId].join(','), JSON.stringify(lay));
+    const gs = (await gameStateOf(person.id)).profile;
+    check('both remembered per person', gs.pictureId === picId && gs.signId === signId, JSON.stringify(gs));
+  }
+
+  section('running every step again adds nothing');
+  {
+    const g = game();
+    const a = await g.makeProfile(), b = await g.hangPicture(), c = await g.putUpSign();
+    check('same ids, nothing created', a.profileId === pid && b.id === picId && c.id === signId
+      && !a.created && !b.created && !c.created, JSON.stringify([a, b, c]));
+    check('still two modules', (await profiles.get(pid)).modules.length === 2);
+    check('still three screens for this person', (await mine()).length === 3);
+    const st = await game().status();
+    check('status reports all three done', st.profileId === pid && st.pictureId === picId && st.signId === signId,
+      JSON.stringify(st));
+  }
+
+  section('the person’s own changes stand');
+  {
+    // They move the sign to the first spot and the picture to the second (the composer does this).
+    { const s = backend.makeSettings(pid); await s.load();
+      s.set({ kiosk: { ...(s.get().kiosk || {}), layout: { preset: 'side', slots: [signId, picId] } } });
+      await s.flush(); s.destroy(); }
+    // ...and rename the sign in the settings menu.
+    { const s = backend.makeState(signId, {}, pid); await s.load(); s.set({ label: 'Robin R.' }); await s.flush(); s.destroy(); }
+    await game().hangPicture(); await game().putUpSign();
+    const lay = (await settingsOf(pid)).kiosk.layout;
+    check('re-running the steps does not move things back', lay.slots.join(',') === [signId, picId].join(','),
+      JSON.stringify(lay));
+    check('...nor reset the sign’s words', (await stateOf(pid, signId)).label === 'Robin R.');
+  }
+
+  section('a sign the person took down comes back only when asked, into the free spot');
+  {
+    await profiles.removeModule(pid, signId);
+    const st = await game().status();
+    check('status notices it is gone', !st.signId && st.pictureId === picId, JSON.stringify(st));
+    const r = await game().putUpSign();
+    check('putting it up again makes a NEW sign', r.created === true && r.id !== signId);
+    const lay = (await settingsOf(pid)).kiosk.layout;
+    check('...into the spot that is free, leaving the picture where the person put it',
+      lay.slots[1] === picId && lay.slots[0] === r.id, JSON.stringify(lay));
+    check('still exactly two modules', (await profiles.get(pid)).modules.length === 2);
+    signId = r.id;
+  }
+
+  section('a step pressed first makes the profile it needs, and still only one');
+  {
+    const other = await profiles.addPerson('Me');
+    const g2 = createGame({ ...gameBackend, personId: other.id, personName: other.name });
+    const r = await g2.hangPicture();
+    const theirs = await profiles.list(other.id);
+    check('one screen made, with the picture on it', theirs.length === 1 && (await profiles.get(theirs[0].id)).modules.length === 1);
+    const r2 = await g2.putUpSign();
+    check('a person called "Me" gets a sign reading "Your name"', (await stateOf(theirs[0].id, r2.id)).label === 'Your name');
+    for (const p of await profiles.list(other.id)) await profiles.remove(p.id);
+    await profiles.removePerson(other.id);
+  }
+
+  // ===========================================================================================
+  section('*** nobody else’s screens, and none of the person’s other screens, were touched ***');
+  {
+    const ownAfter = JSON.stringify([await profiles.get(own.id), await settingsOf(own.id),
+      await profiles.get(lookalike.id), await settingsOf(lookalike.id)]);
+    check('the person’s own screens are byte-for-byte as they were', ownAfter === ownBefore);
+    check('every other person’s screens too', (await snapshotOthers(person.id)) === othersBefore);
+  }
+} catch (err) {
+  check('unexpected error', false, String((err && err.stack) || err));
+} finally {
+  // Leave this browser as it was found.
+  try {
+    if (person) {
+      for (const p of await profiles.list(person.id)) await profiles.remove(p.id);
+      await profiles.removePerson(person.id);
+    }
+  } catch (e) { console.warn('game_test cleanup', e); }
+}
+
+document.getElementById('summary').textContent =
+  failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+})();
+</script>
+</body>
+</html>

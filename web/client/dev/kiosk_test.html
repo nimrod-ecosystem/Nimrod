@@ -2044,6 +2044,79 @@ const ds = () => root.querySelector('.kiosk').dataset;
     }
   }
 
+  // ---- THE REAL `button` MODULE, THROUGH THE REAL MENU (change list row 2.26, 2026-09-28) ----
+  //
+  // The section above proves the text and colour rows with a test-only module. This is the one the
+  // game puts on a profile: type the sign's words through the menu's text box, cycle its colour
+  // with nothing but Down and Enter, and see both land on the FACE, not just in state.
+  {
+    const bbox = document.createElement('div');
+    bbox.style.cssText = 'position:relative;width:520px;height:320px;border:1px solid #ccc';
+    document.body.appendChild(bbox);
+    let bk = null;
+    try {
+      const bUser = USER + '-button';
+      const bProfiles = createProfilesClient({ user: bUser });
+      const bp = await bProfiles.create('TEST-button-sign');
+      await bProfiles.addModule(bp.id, 'button');
+      bk = await mountKiosk(bbox, { user: bUser, profileId: bp.id, profiles: bProfiles, bus: createBus() });
+      const face = () => bbox.querySelector('[data-face]');
+      await settled(() => !!face());
+      check('(setup) the button is the focused panel, showing its default words',
+        bk.primaryType() === 'button' && face()?.textContent.trim() === 'Your words', face()?.textContent);
+
+      await press('Escape', 40);
+      if (!bk.menu.isOpen()) bk.menu.open();
+      check('(setup) the menu is open', bk.menu.isOpen() === true);
+      const rowIds = bk.menu.items().map((r) => r.id);
+      check('the menu lists the button’s own rows: Words, Picture, Frame, Font, Colour of the words',
+        ['set:label', 'set:image', 'set:frame', 'set:font', 'set:color'].every((id) => rowIds.includes(id)),
+        rowIds.join(','));
+      const hintOf = (id) => bk.menu.items().find((r) => r.id === id)?.hint;
+      const walk = async (id) => {
+        for (let i = 0; i < 60 && bk.menu.focusId() !== id; i += 1) await press('ArrowDown', 10);
+        return bk.menu.focusId() === id;
+      };
+      const box = () => bbox.querySelector('input.st-input');
+
+      check('ArrowDown walks to the Words row', await walk('set:label'));
+      await press('Enter', 40);
+      check('Enter opens the text box, with the keyboard in it', !!box() && document.activeElement === box());
+      box().value = 'Robin';
+      box().dispatchEvent(new Event('input', { bubbles: true }));
+      box().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+      await sleep(60);
+      check('*** THE TYPED WORDS LAND IN THE BUTTON’S STATE ***', bk.stageState().label === 'Robin',
+        JSON.stringify(bk.stageState()));
+      check('*** ...AND ON ITS FACE, as its accessible name too ***',
+        face().textContent.trim() === 'Robin' && face().getAttribute('aria-label') === 'Robin', face().textContent);
+
+      check('ArrowDown reaches the Colour of the words row', await walk('set:color'));
+      const inkBefore = face().style.getPropertyValue('--nb-ink');
+      check('it starts on Black, by name', hintOf('set:color') === 'Black', hintOf('set:color'));
+      await press('Enter', 30);
+      // Red, NOT White: the words' palette starts at Black so a first press cannot turn black words
+      // on a white sign into white on white (button.js, INK_PALETTE — found on the real kiosk).
+      const want = DEFAULT_PALETTE.find((c) => c.id === 'red');
+      check('one Enter cycles to the next colour — Red, never the sign’s own White', hintOf('set:color') === want.name
+        && bk.stageState().color === want.hex, `${hintOf('set:color')} ${bk.stageState().color}`);
+      check('*** ...and the face’s words take that colour ***', face().style.getPropertyValue('--nb-ink') === want.hex
+        && inkBefore !== want.hex && getComputedStyle(face()).color !== '', face().style.getPropertyValue('--nb-ink'));
+
+      check('ArrowDown reaches the Font row', await walk('set:font'));
+      await press('Enter', 30);
+      check('Enter changes the font, stored as a name and drawn as a stack', bk.stageState().font === 'serif'
+        && /Georgia/.test(face().style.getPropertyValue('--nb-font')), JSON.stringify(bk.stageState()));
+      await press('Escape', 40);
+      check('Escape closes the menu', bk.menu.isOpen() === false);
+    } catch (e) {
+      check('the button section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { bk?.destroy(); } catch { /* already gone */ }
+      bbox.remove();
+    }
+  }
+
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;
   sum.className = failed ? 'fail' : 'pass';
