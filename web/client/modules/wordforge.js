@@ -573,9 +573,8 @@ registerModule(
     // *** "I THINK THIS QUESTION IS WRONG" (Mike, 2026-09-28) — ../contests.js, and trivia.js's
     // identical wiring. *** After an answer the post-answer highlight has two stops: `after` 0 is
     // Next / "Got it" (the default, so the ordinary path is still one `select`), 1 is the contest.
-    // `next`/`prev` walk them the way they walk the options before an answer, so `next` no longer
-    // ALSO advances once a question is answered (`select` and `back` still do); with the contest
-    // used, only Next is left and `next` advances again. A contest writes one row to the per-profile
+    // `prev` walks them; `next` advances, as it always did (Mike, 2026-09-29 — see trivia.js).
+    // A contest writes one row to the per-profile
     // contests log and nothing else — "Got it" still banks the same try points afterwards.
     let contests = null;
     let after = 0;
@@ -980,7 +979,9 @@ registerModule(
         // `next` steps the options while a question is open, and once it is answered steps the
         // post-answer stops (Next, then the contest) — trivia's shape, so one switch behaves the
         // same way in both games. `select` takes whatever is lit; Next is lit by default.
-        bus.subscribe('wordforge/next', () => (answered ? moveAfter(1) : moveHighlight(1)));
+        // Mike, 2026-09-29: after an answer `next` goes to the next question (trivia.js, same day);
+        // `prev` walks Next / the contest stop, `select` presses the lit one.
+        bus.subscribe('wordforge/next', () => (answered ? advance() : moveHighlight(1)));
         bus.subscribe('wordforge/prev', () => (answered ? moveAfter(-1) : moveHighlight(-1)));
         bus.subscribe('wordforge/select', () => (answered ? pressAfter() : answer(highlight)));
         // Skipping outright still has a home, so the old behaviour is not lost — it is just no
