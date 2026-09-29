@@ -26,6 +26,7 @@ import {
   normalizeText, grounded, checkQuestions, toLessonQuestion, toRoutedQuestion, questionId,
   transcriptKey, lengthTellsFor, startQuiz, quizCurrent, quizAnswer, quizProgress, quizDrop,
   reviewItems, poolFrom, isPaid, REVIEW_KINDS, MINUTE_CHOICES,
+  FACT, buildFactPrompt, parseFactReply, quoteSource, sameAnswer, buildComparePrompt, parseCompareReply, factCheck,
 } from '../transcript_quiz.js';
 
 const out = document.getElementById('results');
@@ -313,6 +314,131 @@ That is why a strong hive grows so quickly.`;
       && !isPaid([], 'k1'));
     check('isPaid also honours a tag in the points ledger (the payment itself is the record)',
       isPaid([], 'k9', [{ kind: 'points', data: { tags: ['transcript', 'transcript:k9'] } }]));
+
+    // ================= the fact check (register 258) =================
+    section('*** the fact check, pure half: the model answers from Wikipedia BLIND, and its quote must be real ***');
+    const ART = [
+      { title: 'Australian Capital Territory', url: 'https://en.wikipedia.org/wiki/Australian_Capital_Territory',
+        extract: 'The Australian Capital Territory (ACT) is an internal territory of Australia. Canberra, the capital city of Australia, is situated within the territory. It is landlocked.',
+        text: 'The Australian Capital Territory (ACT) is an internal territory of Australia. Canberra, the capital city of Australia, is situated within the territory.' },
+      { title: 'Sydney', url: 'https://en.wikipedia.org/wiki/Sydney',
+        extract: 'Sydney is the capital of the state of New South Wales and the largest city in Australia. It has 1,500 beaches.',
+        text: 'Sydney is the capital of the state of New South Wales and the largest city in Australia.' },
+    ];
+    const fp = buildFactPrompt('What is the capital of Australia?', ART);
+    check('*** the first prompt does NOT contain the video\'s answer — measured: shown it, the model goes looking for it ***',
+      fp.length === 2 && fp[1].content.includes('QUESTION: What is the capital of Australia?')
+        && fp[1].content.includes('[Sydney]') && !/ANSWER/.test(fp[1].content), fp[1].content);
+    check('...it sends the TRIMMED text, not the whole introduction', !fp[1].content.includes('It is landlocked'));
+    check('...and asks for strict JSON with a verbatim quote', /strict JSON/.test(fp[0].content) && /word for word/.test(fp[0].content));
+
+    check('parseFactReply reads a plain reply', J(parseFactReply('{"quote": "A b c.", "answer": "Canberra"}')) === J({ quote: 'A b c.', answer: 'Canberra' }));
+    check('...a fenced reply with prose around it', parseFactReply('Sure:\n```json\n{"quote":"x y z","answer":"six"}\n```').answer === 'six');
+    check('...field-name drift', parseFactReply('{"sentence":"x y z","wikipedia_answer":"six"}').answer === 'six');
+    check('...and garbage as empty, never a throw', J(parseFactReply('no json')) === J({ quote: '', answer: '' })
+      && J(parseFactReply(null)) === J({ quote: '', answer: '' }) && J(parseFactReply('[1,2]')) === J({ quote: '', answer: '' }));
+
+    check('*** quoteSource: a real sentence is found, and names its article ***',
+      quoteSource('Canberra, the capital city of Australia, is situated within the territory.', ART)?.title === 'Australian Capital Territory');
+    check('...tolerant of case and punctuation, as grounded is', quoteSource('canberra the capital city of australia', ART)?.title === 'Australian Capital Territory');
+    check('...checked against the FULL introduction, so a sentence the model was not shown still counts',
+      quoteSource('It is landlocked, as it happens', ART) === null && quoteSource('It has 1500 beaches', ART)?.title === 'Sydney');
+    check('*** a quote that is NOT in the text is refused ***', quoteSource('Sydney is the capital city of Australia.', ART) === null);
+    check('...as is a two-word "quote" (it proves nothing) and an empty one',
+      quoteSource('Canberra, the', ART) === null && quoteSource('', ART) === null && quoteSource('x y z', []) === null);
+    check('...and whole words only: "capital city of Austral" is not in "Australia"', quoteSource('the capital city of Austral', ART) === null);
+
+    check('sameAnswer: the same word', sameAnswer('Canberra', 'canberra.'));
+    check('...a more exact form ("floral nectar" / "nectar"), either way round', sameAnswer('nectar', 'floral nectar') && sameAnswer('floral nectar', 'nectar'));
+    check('...numbers as numbers ("six" / "6", "1,500" / "1500")', sameAnswer('six', '6') && sameAnswer('1,500 eggs', '1500'));
+    check('...a plain plural', sameAnswer('bee', 'bees'));
+    check('*** different words are NOT same — which means "ask the model", not "wrong" ***',
+      !sameAnswer('Sydney', 'Canberra') && !sameAnswer('to write', 'writing') && !sameAnswer('eight', 'six'));
+    check('...a negation always goes to the model ("not Canberra" holds every word of "Canberra")',
+      !sameAnswer('not Canberra', 'Canberra') && !sameAnswer('Canberra', 'never Canberra'));
+    check('...and empty is never the same', !sameAnswer('', '') && !sameAnswer('x', '') && !sameAnswer('the', 'the'));
+
+    const cp = buildComparePrompt('Q?', 'Sydney', 'Canberra');
+    check('the compare prompt does not say which answer came from where', !/video|wikipedia/i.test(cp[1].content) && /ANSWER A: Sydney/.test(cp[1].content));
+    check('parseCompareReply: yes / no / unsure, booleans too, garbage as unsure',
+      parseCompareReply('{"reason":"r","same":"no"}').same === 'no' && parseCompareReply('{"same":"YES"}').same === 'yes'
+      && parseCompareReply('{"same":true}').same === 'yes' && parseCompareReply('{"same":false}').same === 'no'
+      && parseCompareReply('{"same":"maybe"}').same === 'unsure' && parseCompareReply('junk').same === 'unsure'
+      && parseCompareReply('{"reason":"Different cities.","same":"no"}').reason === 'Different cities.');
+
+    // factCheck: the whole decision, with a fake lookup and a fake model.
+    section('*** factCheck: every path to a verdict ***');
+    const okLookup = (articles = ART) => async () => ({ ok: true, articles });
+    const fakeChat = (first, second = { same: 'no', reason: 'Different cities.' }) => {
+      const calls = [];
+      const fn = async (messages) => {
+        calls.push(messages);
+        const isCompare = /compare two short answers/.test(messages[0].content);
+        const v = isCompare ? second : first;
+        if (v && v.fail) return { ok: false, reason: v.fail, cancelled: !!v.cancelled };
+        return { ok: true, text: typeof v === 'string' ? v : JSON.stringify(v) };
+      };
+      fn.calls = calls;
+      return fn;
+    };
+    const CANB = { quote: 'Canberra, the capital city of Australia, is situated within the territory.', answer: 'Canberra' };
+    let chat = fakeChat(CANB);
+    r = await factCheck({ question: 'What is the capital of Australia?', answer: 'Canberra' }, { lookup: okLookup(), chat });
+    check('*** the same answer -> supports, with the quote, the article and its link, and NO second model turn ***',
+      r.verdict === FACT.SUPPORTS && r.quote === CANB.quote && r.title === 'Australian Capital Territory'
+        && r.url === 'https://en.wikipedia.org/wiki/Australian_Capital_Territory' && r.wikipediaAnswer === 'Canberra' && chat.calls.length === 1, J(r));
+    chat = fakeChat(CANB);
+    r = await factCheck({ question: 'What is the capital of Australia?', answer: 'Sydney' }, { lookup: okLookup(), chat });
+    check('*** a different answer the model rules out -> contradicts, with the reason naming both ***',
+      r.verdict === FACT.CONTRADICTS && /Canberra/.test(r.reason) && /Sydney/.test(r.reason) && r.quote === CANB.quote && chat.calls.length === 2, J(r));
+    check('...and the compare turn saw both answers', /ANSWER A: Sydney/.test(chat.calls[1][1].content) && /ANSWER B: Canberra/.test(chat.calls[1][1].content));
+    r = await factCheck({ question: 'Q?', answer: 'to write' }, { lookup: okLookup(), chat: fakeChat({ ...CANB, answer: 'writing' }, { same: 'yes', reason: 'Same idea.' }) });
+    check('different words the model says mean the same -> supports', r.verdict === FACT.SUPPORTS, J(r));
+    r = await factCheck({ question: 'Q?', answer: 'x' }, { lookup: okLookup(), chat: fakeChat(CANB, { same: 'unsure' }) });
+    check('"unsure" -> not-covered, never a flag', r.verdict === FACT.NOT_COVERED, J(r));
+    r = await factCheck({ question: 'Q?', answer: 'Sydney' }, { lookup: okLookup(),
+      chat: fakeChat({ quote: 'Sydney is the capital city of Australia.', answer: 'Sydney' }) });
+    check('*** a verdict whose quote is not in the Wikipedia text is not used -> not-covered ***',
+      r.verdict === FACT.NOT_COVERED && /not in the Wikipedia article/.test(r.reason), J(r));
+    r = await factCheck({ question: 'Q?', answer: 'Sydney' }, { lookup: okLookup(),
+      chat: fakeChat({ quote: 'Canberra, the capital city of Australia, is situated within the territory.', answer: 'Canberra' }, { same: 'no' }) });
+    check('(the same wrong answer with a REAL quote does flag — the rule is about the quote, not the verdict)', r.verdict === FACT.CONTRADICTS);
+    r = await factCheck({ question: 'Q?', answer: 'x' }, { lookup: okLookup(), chat: fakeChat({ quote: '', answer: '' }) });
+    check('the model finds no answer in the text -> not-covered', r.verdict === FACT.NOT_COVERED, J(r));
+    chat = fakeChat(CANB);
+    r = await factCheck({ question: 'Q?', answer: 'x' }, { lookup: okLookup([]), chat });
+    check('Wikipedia has nothing on it -> not-covered, without spending a model turn', r.verdict === FACT.NOT_COVERED && chat.calls.length === 0, J(r));
+    chat = fakeChat(CANB);
+    r = await factCheck({ question: 'Q?', answer: 'x' }, { lookup: async () => ({ ok: false, offline: true, reason: 'Could not reach Wikipedia, so this was not checked.' }), chat });
+    check('*** offline -> NOT CHECKED (never "wrong"), and no model turn ***',
+      r.verdict === FACT.NOT_CHECKED && /reach Wikipedia/.test(r.reason) && chat.calls.length === 0, J(r));
+    r = await factCheck({ question: 'Q?', answer: 'x' }, { lookup: okLookup(), chat: fakeChat({ fail: 'The AI program is running, but it said no.' }) });
+    check('the model failing -> not checked, with its reason', r.verdict === FACT.NOT_CHECKED && /said no/.test(r.reason), J(r));
+    r = await factCheck({ question: 'Q?', answer: 'Sydney' }, { lookup: okLookup(), chat: fakeChat(CANB, { fail: 'timed out' }) });
+    check('the compare turn failing -> not checked (keeping what Wikipedia said)', r.verdict === FACT.NOT_CHECKED && r.wikipediaAnswer === 'Canberra', J(r));
+    const ac = new AbortController(); ac.abort();
+    r = await factCheck({ question: 'Q?', answer: 'x' }, { lookup: okLookup(), chat: fakeChat(CANB), signal: ac.signal });
+    check('stopped -> not checked, marked cancelled', r.verdict === FACT.NOT_CHECKED && r.cancelled, J(r));
+    r = await factCheck({ question: 'Q?', answer: 'x' }, { lookup: async () => { throw new Error('boom'); }, chat: fakeChat(CANB) });
+    check('a lookup that THROWS is not checked, not a crash', r.verdict === FACT.NOT_CHECKED && /boom/.test(r.reason), J(r));
+
+    section('the review log carries the check; a fact-check flag holds a question out like any flag');
+    const fev = [
+      batch(true),
+      { kind: REVIEW_KINDS.CHECK, data: { id: 'q1', verdict: 'supports', quote: 'x y z', title: 'T', url: 'https://en.wikipedia.org/wiki/T' } },
+      { kind: REVIEW_KINDS.CHECK, data: { id: 'q2', verdict: 'contradicts', reason: 'r', quote: 'a b c', title: 'U', url: 'https://en.wikipedia.org/wiki/U' } },
+      { kind: REVIEW_KINDS.FLAG, data: { id: 'q2', by: 'fact-check', reason: 'r', quote: 'a b c', title: 'U', url: 'https://en.wikipedia.org/wiki/U' } },
+      { kind: REVIEW_KINDS.CHECK, data: { id: 'q3', verdict: 'bogus' } },
+    ];
+    const fby = Object.fromEntries(reviewItems(fev).map((i) => [i.id, i]));
+    check('each item carries its latest check', fby.q1.check.verdict === 'supports' && fby.q2.check.title === 'U');
+    check('an unknown verdict is ignored, not stored', fby.q3.check === null);
+    check('*** the fact-check flag keeps q2 out of the pool, even auto-approved ***',
+      J(poolFrom(Object.values(fby)).map((i) => i.id)) === J(['q1', 'q3']));
+    check('...the flag keeps its quote, title and link', fby.q2.flags[0].by === 'fact-check' && fby.q2.flags[0].url === 'https://en.wikipedia.org/wiki/U');
+    const cleared = Object.fromEntries(reviewItems([...fev, { kind: REVIEW_KINDS.UNFLAG, data: { id: 'q2' } }]).map((i) => [i.id, i]));
+    check('a person clearing it lets it in; the history stays, marked cleared',
+      !cleared.q2.flagged && cleared.q2.flags.length === 1 && cleared.q2.flagsCleared === 1 && poolFrom(Object.values(cleared)).length === 3);
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;

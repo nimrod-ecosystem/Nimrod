@@ -20,8 +20,11 @@
 // questions wait in a review list (§0h: queue ON by default, auto-approve OFF by default, a "this
 // looks wrong" flag for player and caregiver) and approved ones join the pool through the SAME
 // `questionsTo` routing a pack's own questions already use. Unused, every card behaves as before.
-// NOT in this pass: the web lookup for the fact check (register 258 — the lookup source is not
-// chosen), checkpoints for long videos, notes-first (253), books (2.23), an API-key field.
+// THE FACT CHECK (register 258, Wikipedia — Mike's pick, 2026-09-28) runs after the questions are
+// written, in the background while the quiz is already being asked: each checked question is looked
+// up (../wikipedia.js), and one Wikipedia seems to contradict is FLAGGED — held out of the pool
+// until a person clears it. It never changes an answer key. Setting `factCheck`.
+// NOT in this pass: checkpoints for long videos, notes-first (253), books (2.23), an API-key field.
 
 import { registerModule } from '../module.js';
 import { readWithLegacy } from '../settings_fields.js';
@@ -30,11 +33,13 @@ import { createLessons, DEFAULT_TOPICS, LESSON_TOPIC,
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createAI, isChatModel } from '../ai.js';
+import { createWikipedia } from '../wikipedia.js';
 import { createPointsLedger } from '../points.js';
 import {
   videoMinutes, requiredAnswers, buildPrompt, parseQuestions, checkQuestions, toLessonQuestion,
   toRoutedQuestion, questionId, transcriptKey, lengthTellsFor, startQuiz, quizCurrent, quizAnswer,
   quizProgress, quizDrop, reviewItems, poolFrom, isPaid, TRANSCRIPT_STREAM, REVIEW_KINDS, MINUTE_CHOICES,
+  factCheck, FACT,
 } from '../transcript_quiz.js';
 
 // `minWatchMs` is milliseconds - the house rule for every stored duration. It was
@@ -69,6 +74,7 @@ export const DEFAULTS = {
   perMinutes: 2,
   minAnswers: 3,
   autoApprove: false,
+  factCheck: false,
   aiModel: '',
   aiTimeoutMs: 15 * 60 * 1000,
   subject: 'General',
@@ -213,12 +219,34 @@ const SETTINGS = [
   { key: 'autoApprove', label: 'Add checked questions to the games without review', kind: 'toggle',
     default: false, level: 'standard',
     note: 'Checked means the answer was found in the transcript line it quotes. It does not mean the video is right.' },
+  // *** THE FACT CHECK (register 258). DEFAULT ON — A DEFAULT, ARGUED BOTH WAYS, FLAGGED FOR MIKE. ***
+  // For OFF: it is a request to a third party (the Wikimedia Foundation) from what may be a child's
+  // device, and the device's address goes with any web request. `live_weather.js`, the nearest
+  // precedent, is off by default. And the landing page says "Anything I add later arrives switched
+  // off and needs its own separate yes" — written about what the SERVER stores (this stores nothing
+  // new there beyond rows in an existing log), but a reader could fairly take it to cover this too.
+  // For ON: the weather precedent is off because it sends a LOCATION, on a timer; this sends only
+  // the question and answer a model wrote about a public video (see wikipedia.js), and only when a
+  // person has just pressed "Make questions". Its only possible effect is holding a question back
+  // for a person to look at — it cannot change an answer, block the quiz or cost a point. And Mike
+  // asked for the lookup (register 258); off by default, it runs only for somebody who turns it on.
+  // *** OFF, DECIDED IN REVIEW 2026-09-28, AND WHY. *** The landing page promises, publicly:
+  // "Anything I add later arrives switched off and needs its own separate yes." A lookup that sends
+  // question text to a third party and stores what it found (check events) is what a reader would
+  // take that to cover, so it ships off and this row IS the separate yes (level 'standard', so it is
+  // not hidden). If Mike reads the promise as covering only server storage, flip this default --
+  // his call, logged as a change-list row.
+  { key: 'factCheck', label: 'Look questions up on Wikipedia', kind: 'toggle', default: false,
+    level: 'standard',
+    note: 'Sends only each question and its answer to Wikipedia. A question Wikipedia seems to '
+      + 'disagree with is held back until a person checks it; nothing else changes.' },
   // A LIVE choice (photos.js `sourceId`'s pattern): the options are whatever the model server on
   // THIS device lists, fetched only once somebody opens the transcript panel (see ai.js on why
   // nothing reaches for the model server on its own). '' = automatic. A model this device does not
   // have falls back to automatic, and the panel says so. The ADDRESS of the model server is not
-  // here: the universal menu cannot edit text by design (settings_fields.js), so it is a plain
-  // input in this module's own panel, stored per device by ai.js.
+  // here because it belongs to the DEVICE, not to this module's saved settings (a Pi and a desktop
+  // run different servers), so it is a plain input in this module's own panel, stored per device by
+  // ai.js. (The menu can edit text since 2026-09-28; that is no longer the reason.)
   { key: 'aiModel', label: 'AI model', kind: 'choice', default: '', level: 'advanced',
     emptyLabel: 'Automatic (best one on this device)' },
   // Measured 2026-09-28: qwen2.5:7b on this CPU-only desktop took 55-218s to write 3 questions
@@ -287,6 +315,11 @@ registerModule(
     // client at all.
     let aiClient = null;
     const ai = () => aiClient || (aiClient = ctx.ai || createAI());
+    // `ctx.wikipedia`, the same kind of test seam: anything with wikipedia.js's `lookup`. Created
+    // lazily too — nothing here reaches for Wikipedia until a fact check runs.
+    let wikiClient = null;
+    const wiki = () => wikiClient || (wikiClient = ctx.wikipedia || createWikipedia());
+    const factJobs = new Set();               // running fact checks, so destroy() can stop them
     // The review log: ONE well-known, per-PROFILE events stream (transcript_quiz.js explains why
     // a log and not a state document). Per profile, not per instance, because the pool it feeds
     // is per profile — the routed rows are profile-wide — and two Lessons panels, or a phone and
@@ -621,6 +654,8 @@ registerModule(
       if (!tq) { tqEl.innerHTML = ''; return; }
       const s = tq;
       const t = topicOf(s.topicId);
+      const fl = factLineHTML(s);
+      const factLine = `<p class="l-tq-help l-fc" data-fc role="status"${fl ? '' : ' hidden'}>${fl}</p>`;
       let body = '';
       if (s.stage === 'paste') {
         body = `
@@ -661,7 +696,8 @@ registerModule(
             ? `${plural(s.rejected, 'question was', 'questions were')} dropped because the answer could not be checked against the transcript.`
             : `All ${plural(s.kept, 'question')} checked out against the transcript.`}</p>
           ${s.paidAlready ? '<p class="l-tq-help">This video’s points were already earned, so this round is practice.</p>' : ''}
-          ${s.fellBack ? `<p class="l-tq-help">The model chosen in settings is not on this device, so ${esc(s.modelName)} was used.</p>` : ''}`;
+          ${s.fellBack ? `<p class="l-tq-help">The model chosen in settings is not on this device, so ${esc(s.modelName)} was used.</p>` : ''}
+          ${factLine}`;
         if (a) {
           body = `${head}
             <p class="l-tq-q">${esc(a.question)}</p>
@@ -671,6 +707,7 @@ registerModule(
               ? 'Right!'
               : `Not quite. The answer is <b>${esc(a.correctAnswer)}</b>. This one will come back later.`}</p>
             <blockquote class="l-tq-src" data-tq-source>From the transcript: “${esc(a.source)}”</blockquote>
+            ${factNoteHTML(s, a.id, true)}
             <div class="l-actions">
               <button type="button" class="l-btn l-primary" data-tq-next>${a.met ? 'See how you did' : 'Next question'}</button>
               <button type="button" class="l-btn" data-tq-flag>This looks wrong</button>
@@ -678,6 +715,7 @@ registerModule(
         } else if (q) {
           body = `${head}
             <p class="l-tq-q" data-tq-q>${esc(q.question)}</p>
+            ${factNoteHTML(s, q.id, false)}
             <ol class="l-tq-opts">${shown.options.map((o, i) => `<li><button type="button" class="l-btn l-tq-opt"
               data-tq-opt="${i}">${esc(o)}</button></li>`).join('')}</ol>`;
         } else {
@@ -703,6 +741,7 @@ registerModule(
             <p>${pay}</p>
             <p class="l-tq-help">${where}</p>
             ${(s.tells || []).map((w) => `<p class="l-tq-warn">Worth a look: ${esc(w)}.</p>`).join('')}
+            ${factLine}
           </div>
           <div class="l-actions">
             ${s.payState === 'failed' ? '<button type="button" class="l-btn l-primary" data-tq-pay>Try recording the points again</button>' : ''}
@@ -739,6 +778,7 @@ registerModule(
       }
       on('[data-tq-next]', () => next(s));
       on('[data-tq-flag]', (ev) => { ev.currentTarget.disabled = true; flagFromQuiz(s); });
+      on('[data-fc-stop]', () => s.fact?.controller.abort());
       const url = tqEl.querySelector('[data-ai-url]');
       on('[data-ai-save]', () => {
         ai().setSettings?.({ baseUrl: url ? url.value : '' });
@@ -823,6 +863,143 @@ registerModule(
       session.stage = 'quiz';
       showQuestion(session);
       renderTq();
+      if (cfg.factCheck) startFactCheck(session, lqs, m.model).catch((err) => console.error('lessons: fact check', err));
+    }
+
+    // =========================================================================================
+    // THE FACT CHECK (register 258) — each question looked up on Wikipedia
+    // =========================================================================================
+    //
+    // *** WHEN IT RUNS, ARGUED: after the questions are written, IN THE BACKGROUND, while the quiz
+    // is already being asked. *** Measured 2026-09-28 on this desktop (qwen2.5:7b, CPU only): a
+    // check costs 15-50 s a question (two Wikipedia searches ~1 s, then one model turn, and a second
+    // short one only when the answers' words differ) — about two minutes for three questions,
+    // after a generation that already took one to four. Holding the quiz for that would double the
+    // wait for the part the person came for, and the check's only output is a flag, which only
+    // matters to the LONG-TERM pool: a question stays in the review queue (pending by default)
+    // long after these checks finish. The cost: a question can be asked before its check lands.
+    //
+    // *** A QUESTION FLAGGED MID-QUIZ STAYS IN THE QUIZ, CARRYING THE FLAG. *** Taking it out would
+    // move the requirement under the player because of a background job, on the say-so of a 7B
+    // model's reading — a suspicion, not a ruling. The quiz is about what the VIDEO said (its answer
+    // key is the transcript's, by design), so the question is asked as the video put it, marked
+    // "Wikipedia may disagree", and after answering the player sees Wikipedia's sentence and the
+    // article's name. The player's own "This looks wrong" still takes it out, as before.
+    //
+    // ONE MODEL TURN PER QUESTION, NOT ONE FOR ALL: measured, batching would save almost nothing —
+    // the fixed part (the instructions) is ~100 tokens that Ollama already reuses from its cache
+    // between calls, while the per-question passages and answers cost the same either way. Per
+    // question, a Stop lands between questions, progress is real, and one malformed reply costs one
+    // question's check rather than all of them.
+    //
+    // It belongs to the MODULE, not the panel: closing the panel leaves it running (it only writes to
+    // the review log); "Stop checking" and removing the module stop it. A question that already has
+    // a finished check (the same question made again from the same video) is not looked up again.
+    async function startFactCheck(session, lqs, model) {
+      const prior = new Map(generatedItems().map((i) => [i.id, i.check]));
+      const job = { total: lqs.length, current: 0, done: 0, results: {}, running: true,
+        controller: new AbortController() };
+      session.fact = job;
+      factJobs.add(job);
+      const { signal } = job.controller;
+      const chat = (messages) => ai().chat(messages, { model, json: true, temperature: 0,
+        timeoutMs: cfg.aiTimeoutMs, signal });
+      const lookup = (q, a) => wiki().lookup(q, a, { signal });
+      try {
+        for (const q of lqs) {
+          job.current += 1;
+          showFact(session);
+          const known = prior.get(q.id);
+          let res;
+          if (known && known.verdict !== FACT.NOT_CHECKED) {
+            res = known;
+          } else {
+            const t0 = Date.now();
+            res = await factCheck({ question: q.question, answer: q.correct }, { lookup, chat, signal });
+            const rec = { id: q.id, verdict: res.verdict, reason: res.reason, quote: res.quote, title: res.title,
+              url: res.url, wikipediaAnswer: res.wikipediaAnswer, model, ms: Date.now() - t0 };
+            try {
+              await tlog?.append(REVIEW_KINDS.CHECK, rec);
+              // THE EXISTING FLAG MECHANISM, reused: this is what holds it out of the pool.
+              if (res.verdict === FACT.CONTRADICTS) {
+                await tlog?.append(REVIEW_KINDS.FLAG, { id: q.id, by: 'fact-check', reason: res.reason,
+                  quote: res.quote, title: res.title, url: res.url });
+              }
+            } catch (err) { console.error('lessons: could not record the fact check', err); }
+          }
+          job.results[q.id] = res;
+          job.done += 1;
+          showFact(session, q.id);
+        }
+      } finally {
+        job.running = false;
+        factJobs.delete(job);
+        showFact(session);
+      }
+    }
+
+    const SAFE_WIKI = /^https:\/\/[a-z-]+\.wikipedia\.org\//;
+    const wikiName = (r) => (r && r.title ? r.title : 'Wikipedia');
+
+    // The progress/summary line for a session's check, or ''.
+    function factLineHTML(session) {
+      const job = session && session.fact;
+      if (!job) return '';
+      if (job.running && !job.controller.signal.aborted) {
+        return `<span>Checking ${Math.min(job.current, job.total)} of ${job.total} on Wikipedia…</span>
+          <button type="button" class="l-btn" data-fc-stop>Stop checking</button>`;
+      }
+      if (job.running) return '<span>Stopping the Wikipedia check…</span>';
+      const rs = Object.values(job.results);
+      const n = (v) => rs.filter((r) => r.verdict === v).length;
+      const agree = n(FACT.SUPPORTS); const against = n(FACT.CONTRADICTS);
+      const none = n(FACT.NOT_COVERED); const unchecked = n(FACT.NOT_CHECKED) + (job.total - rs.length);
+      if (unchecked === job.total) {
+        const why = rs.find((r) => r.verdict === FACT.NOT_CHECKED)?.reason || 'Stopped before it was checked.';
+        return `<span>Not checked on Wikipedia. ${esc(why)}</span>`;
+      }
+      const parts = [
+        agree ? `${agree} ${agree === 1 ? 'agrees' : 'agree'}` : '',
+        against ? `${against} ${against === 1 ? 'seems' : 'seem'} to disagree (held back until a person checks)` : '',
+        none ? `${none} not covered` : '',
+        unchecked ? `${unchecked} not checked` : '',
+      ].filter(Boolean);
+      return `<span>Checked on Wikipedia: ${esc(parts.join(', '))}.</span>`;
+    }
+
+    // Update the check's line in place; re-render the quiz only when the question on screen is the
+    // one whose result just landed (so its note appears), never otherwise — the paste box and a
+    // question being answered are not rebuilt by a background job.
+    function showFact(session, justId) {
+      if (tq !== session) return;
+      if (justId && session.stage === 'quiz' && (session.shown?.id === justId || session.answered?.id === justId)) {
+        renderTq();
+        return;
+      }
+      const line = tqEl.querySelector('[data-fc]');
+      if (line) {
+        line.innerHTML = factLineHTML(session);
+        line.hidden = !line.innerHTML;
+        line.querySelector('[data-fc-stop]')?.addEventListener('click', () => session.fact?.controller.abort());
+      }
+    }
+
+    // What the quiz shows about one question's check. Before answering, only that Wikipedia may
+    // disagree (its sentence could give an answer away); after, the sentence and the article.
+    function factNoteHTML(session, id, answered) {
+      const r = session.fact && session.fact.results[id];
+      if (!r) return '';
+      if (r.verdict === FACT.CONTRADICTS) {
+        return answered
+          ? `<p class="l-tq-warn" data-tq-fact="contradicts">Wikipedia may disagree with the video here: “${esc(r.quote)}” (${esc(wikiName(r))}).
+              This question is held back from the games until a person checks it.</p>`
+          : `<p class="l-tq-warn" data-tq-fact="contradicts">Wikipedia may disagree with the video on this one.
+              Answer with what the video said; a person will check it.</p>`;
+      }
+      if (r.verdict === FACT.SUPPORTS && answered) {
+        return `<p class="l-tq-help" data-tq-fact="supports">Wikipedia agrees (${esc(wikiName(r))}).</p>`;
+      }
+      return '';
     }
 
     function showQuestion(session) {
@@ -903,7 +1080,8 @@ registerModule(
       const box = el('[data-review]');
       if (!box) return;
       const items = generatedItems();
-      const sig = JSON.stringify([cfg.questionsTo, items.map((i) => [i.id, i.status, i.flagged, i.flags.length])]);
+      const sig = JSON.stringify([cfg.questionsTo, items.map((i) => [i.id, i.status, i.flagged, i.flags.length,
+        i.check && i.check.verdict])]);
       if (sig === reviewSig) return;
       reviewSig = sig;
       if (!items.length) { box.hidden = true; box.innerHTML = ''; return; }
@@ -913,13 +1091,37 @@ registerModule(
       const target = TARGETS[cfg.questionsTo] ?? TARGETS.both;
       const byBatch = new Map();
       for (const i of items) { if (!byBatch.has(i.key)) byBatch.set(i.key, []); byBatch.get(i.key).push(i); }
-      const row = (i, { review }) => `
+      // The fact check's verdict and the Wikipedia link, beside the question. The link only when it
+      // really is a Wikipedia address — the log is shared, and a row is data, not trusted markup.
+      const factHTML = (c) => {
+        if (!c) return '';
+        const link = c.url && SAFE_WIKI.test(c.url)
+          ? ` <a class="l-rq-wiki" href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">${esc(c.title || 'Wikipedia')}</a>`
+          : (c.title ? ` (${esc(c.title)})` : '');
+        const quote = c.quote ? `<blockquote class="l-rq-src">Wikipedia: “${esc(c.quote)}”</blockquote>` : '';
+        switch (c.verdict) {
+          case FACT.CONTRADICTS:
+            return `<p class="l-rq-fact is-contradicts" data-rq-fact="contradicts">Wikipedia seems to disagree. ${esc(c.reason)}${link}</p>${quote}`;
+          case FACT.SUPPORTS:
+            return `<p class="l-rq-fact is-supports" data-rq-fact="supports">Wikipedia agrees.${link}</p>${quote}`;
+          case FACT.NOT_COVERED:
+            return `<p class="l-rq-fact" data-rq-fact="not-covered">Wikipedia does not settle this one. ${esc(c.reason)}${link}</p>`;
+          default:
+            return `<p class="l-rq-fact" data-rq-fact="not-checked">Not checked on Wikipedia. ${esc(c.reason)}</p>`;
+        }
+      };
+      const row = (i, { review }) => {
+        const current = i.flags.slice(i.flagsCleared || 0);
+        const people = [...new Set(current.map((f) => f.by).filter((b) => b !== 'fact-check'))];
+        const byCheck = current.some((f) => f.by === 'fact-check');
+        return `
         <div class="l-rq${i.flagged ? ' is-flagged' : ''}" data-rq="${esc(i.id)}">
           <p class="l-rq-q">${esc(i.question)}</p>
           <p class="l-rq-a">Answer: <b>${esc(i.correct)}</b> · also offered: ${esc((i.answers || []).filter((x) => x !== i.correct).join(', '))}</p>
           <blockquote class="l-rq-src">“${esc(i.source)}”</blockquote>
-          ${i.flagged ? `<p class="l-rq-flag">Marked “this looks wrong” by ${esc([...new Set(i.flags.map((f) => f.by))].join(' and '))}.
-            It stays out of the games until someone clears the mark.</p>` : ''}
+          ${factHTML(i.check)}
+          ${i.flagged ? `<p class="l-rq-flag">${people.length ? `Marked “this looks wrong” by ${esc(people.join(' and '))}. ` : ''}${byCheck
+            ? 'Held back because Wikipedia seems to disagree with the video. ' : ''}It stays out of the games until someone clears the mark.</p>` : ''}
           <div class="l-actions">
             ${review && i.status === 'pending' ? `<button type="button" class="l-btn l-primary" data-rq-approve>Approve</button>
               <button type="button" class="l-btn" data-rq-reject>Reject</button>` : ''}
@@ -927,6 +1129,7 @@ registerModule(
               : '<button type="button" class="l-btn" data-rq-flag>This looks wrong</button>'}
           </div>
         </div>`;
+      };
       const groups = [...byBatch.entries()].map(([key, batch]) => {
         const shown = batch.filter((i) => waiting.includes(i));
         if (!shown.length) return '';
@@ -940,7 +1143,8 @@ registerModule(
       box.innerHTML = `
         <h3 class="l-rv-title">Transcript questions to check (${waiting.length})</h3>
         <p class="l-tq-help">A model wrote these, and each one passed a check: its answer is in the transcript
-          line shown. That does not mean the video is right.
+          line shown. That does not mean the video is right; where a question was looked up on Wikipedia,
+          what was found is shown with it.
           ${target ? `Approved questions join ${target}.` : 'This screen sends lesson questions to neither game.'}</p>
         ${groups || '<p class="l-tq-help">Nothing is waiting.</p>'}
         ${inGames.length ? `<details class="l-rv-in"><summary>In the games (${inGames.length})</summary>
@@ -1015,6 +1219,9 @@ registerModule(
             perMinutes: num('perMinutes', (n) => n > 0),
             minAnswers: num('minAnswers', (n) => n >= 1),
             autoApprove: snap.autoApprove === true || snap.autoApprove === 'true',
+            // Only an explicit false turns it off; never set reads as the default.
+            factCheck: snap.factCheck === false || snap.factCheck === 'false' ? false
+              : snap.factCheck === true || snap.factCheck === 'true' ? true : DEFAULTS.factCheck,
             aiModel: typeof snap.aiModel === 'string' ? snap.aiModel : DEFAULTS.aiModel,
             aiTimeoutMs: num('aiTimeoutMs', (n) => n > 0),
             subject: typeof snap.subject === 'string' && snap.subject.trim() ? snap.subject.trim() : DEFAULTS.subject,
@@ -1037,6 +1244,7 @@ registerModule(
       destroy() {
         if (ticker != null) { clearInterval(ticker); ticker = null; }
         if (tq && tq.controller) tq.controller.abort();
+        for (const job of factJobs) job.controller.abort();
         tq = null;
         if (lessons) { lessons.destroy(); lessons = null; }
         if (tlog) { tlog.destroy(); tlog = null; }

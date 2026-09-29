@@ -998,6 +998,10 @@
 .lessons .l-rq-q{margin:0;font-weight:600;font-size:.9rem}
 .lessons .l-rq-a{margin:2px 0;font-size:.82rem;color:var(--text-soft)}
 .lessons .l-rq-flag{margin:4px 0;font-size:.8rem}
+.lessons .l-rq-fact{margin:4px 0;font-size:.8rem;color:var(--text-soft)}
+.lessons .l-rq-fact.is-contradicts{color:var(--text);font-weight:600}
+.lessons .l-rq-wiki{color:var(--link)}
+.lessons .l-fc:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .lessons .l-rv-in summary{cursor:pointer;margin-top:8px;font-size:.84rem;color:var(--text-muted)}
 .wordforge .wf-held{font-size:.75rem;color:var(--link);text-align:center;min-height:1em}
 

@@ -12,13 +12,16 @@
 // are in that line. A question that fails is DROPPED and counted as rejected, never quietly kept.
 // This is §0h's "grounded-by-construction check", agreed 2026-09-17.
 //
-// WHAT THIS DOES NOT CHECK, stated so nobody reads more into a pass than is there: that the
-// VIDEO is right. The transcript is the evidence; a video can be wrong. Register 258's fact
-// check ("the model looks claims up") is NOT BUILT in this pass — its lookup source (Wikipedia's
-// API was suggested) is not chosen, and it needs network. Also not built here: checkpoints for
+// WHAT `grounded` DOES NOT CHECK, stated so nobody reads more into a pass than is there: that the
+// VIDEO is right. The transcript is the evidence; a video can be wrong. That is register 258's
+// FACT CHECK, below (`factCheck`, built 2026-09-28 with Wikipedia as the source, Mike's pick): the
+// question is looked up, and a question Wikipedia seems to contradict is FLAGGED — held out of the
+// pool until a person looks. It never rewrites the answer key. Not built here: checkpoints for
 // long videos, notes-first (253), books (2.23's reading log feeds a later version).
 //
-// Everything here is pure: no DOM, no network, no clock. `modules/lessons.js` is the caller.
+// Everything here is pure: no DOM, no network, no clock. `modules/lessons.js` is the caller. The
+// one async function, `factCheck`, is handed its lookup and its model as functions and touches
+// neither the network nor the page itself.
 
 import { lengthTells } from './packs.js';
 import { worth as mcqWorth } from './mcq_scoring.js';
@@ -300,6 +303,187 @@ export function checkQuestions(items, transcript) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// *** THE FACT CHECK (register 258) — the video's answer against Wikipedia ***
+// ---------------------------------------------------------------------------------------------
+//
+// Four outcomes, and only one of them does anything:
+//   'supports'     Wikipedia gives the same answer.                      Nothing happens.
+//   'contradicts'  Wikipedia gives an answer that cannot also be right.  The question is FLAGGED.
+//   'not-covered'  The articles found do not answer the question.        Nothing happens.
+//   'not-checked'  Wikipedia or the model could not be reached, or the check was stopped.
+//                  NOT the same as wrong — nothing happens, and it says "not checked".
+//
+// *** THE MODEL IS NOT SHOWN THE VIDEO'S ANSWER, and that is measured, not a hunch. *** The
+// obvious prompt — "here is the text, here is the answer, does the text support, contradict or not
+// cover it?" — was tried first, in four wordings, on qwen2.5:7b (the model on this desktop),
+// 2026-09-28. With the answer in front of it the model went LOOKING FOR THE ANSWER: for "capital
+// of Australia -> Sydney" it said "not covered" with "Canberra, the capital city of Australia" in
+// its own passages, and for "legs on an insect -> eight" it said "not covered" (once "supports")
+// with "three pairs of jointed legs" in them. Asked the question WITHOUT the answer, the same model
+// quoted exactly those sentences and answered "Canberra" and "six". So the check is two steps:
+//   1. the model answers the question from the Wikipedia text alone, quoting the sentence it used
+//      (`buildFactPrompt`). The quote must really be in the article (`quoteSource`, the same spirit
+//      as `grounded`) or the answer is not used — "not covered";
+//   2. its answer is compared with the video's: deterministically first (`sameAnswer`: the same
+//      words or numbers means "supports", no model needed), and only when the words differ, by a
+//      second, short model turn that sees the two answers side by side without being told which
+//      came from where (`buildComparePrompt`) — "writing" and "to write" are the same answer,
+//      "Sydney" and "Canberra" are not, and only a model can tell those apart.
+// The record keeps the quote, the article's title and link, Wikipedia's answer and a reason, so a
+// person reviewing a flag sees the evidence, not just a verdict.
+
+export const FACT = Object.freeze({
+  SUPPORTS: 'supports', CONTRADICTS: 'contradicts', NOT_COVERED: 'not-covered', NOT_CHECKED: 'not-checked',
+});
+
+/** Chat messages: answer `question` from the articles' text ALONE, quoting the sentence used. */
+export function buildFactPrompt(question, articles) {
+  const system = [
+    'You answer one quiz question using ONLY the Wikipedia passages given. Do not use your own knowledge.',
+    'Reply with strict JSON only, in exactly this shape:',
+    '{"quote": "...", "answer": "..."}',
+    '"quote": the sentence from the passages that answers the question, copied exactly, word for word.',
+    '"answer": the answer according to that sentence, in a few words.',
+    'If no sentence in the passages answers the question, reply {"quote": "", "answer": ""}.',
+  ].join('\n');
+  const passages = (articles || []).map((a) => `[${a.title}]\n${a.text || a.extract || ''}`).join('\n\n');
+  return [{ role: 'system', content: system },
+    { role: 'user', content: `PASSAGES:\n${passages}\n\nQUESTION: ${String(question || '').trim()}` }];
+}
+
+function firstJSONObject(text) {
+  for (const c of jsonCandidates(text)) {
+    try { const d = JSON.parse(c); if (d && typeof d === 'object' && !Array.isArray(d)) return d; } catch { /* next */ }
+  }
+  return null;
+}
+
+/** `{ quote, answer }` from the first step's reply; both '' when nothing can be read. Never throws. */
+export function parseFactReply(text) {
+  const d = typeof text === 'string' && text.trim() ? firstJSONObject(text) : null;
+  if (!d) return { quote: '', answer: '' };
+  return { quote: firstStr(d, ['quote', 'sentence', 'source', 'source_line']),
+           answer: firstStr(d, ['answer', 'passage_answer', 'wikipedia_answer']) };
+}
+
+/**
+ * The article a quote really comes from, or null. Normalized the same way `grounded` compares a
+ * source line with a transcript (case, punctuation, `1,500` = `1500`), as whole words, against the
+ * article's FULL introduction — not the trimmed copy the model read, so a "quote" stitched from
+ * two sentences that are not next to each other on Wikipedia does not pass. Shorter than three
+ * words proves nothing.
+ */
+export function quoteSource(quote, articles) {
+  const q = normalizeText(quote);
+  if (!q || q.split(' ').length < MIN_SOURCE_WORDS) return null;
+  for (const a of articles || []) {
+    const whole = ` ${normalizeText(a && (a.extract || a.text))} `;
+    if (whole.includes(` ${q} `)) return a;
+  }
+  return null;
+}
+
+const NEGATION = /\b(not|no|never|none|neither|nor)\b/;
+
+/**
+ * Do two short answers say the same thing, by their words? True when every content word (and
+ * every number, `six` = `6`) of one is in the other, allowing a plain plural — "nectar" and
+ * "floral nectar", "Canberra" and "Canberra". False means "cannot tell from the words", never
+ * "different": "writing" and "to write" are false here and the same answer. A negation on either
+ * side is always false here (a model decides), since "not Canberra" holds every word of "Canberra".
+ */
+export function sameAnswer(a, b) {
+  const na = normalizeText(a); const nb = normalizeText(b);
+  if (!na || !nb || NEGATION.test(na) || NEGATION.test(nb)) return false;
+  const within = (x, y) => {
+    const content = x.split(' ').filter((w) => w && !STOPWORDS.has(w));
+    if (!content.length) return false;
+    const ys = y.split(' ');
+    const nums = new Set(ys.map(numberOf).filter((n) => n !== null));
+    return content.every((w) => (numberOf(w) !== null ? nums.has(numberOf(w)) : wordIn(w, ys)));
+  };
+  return within(na, nb) || within(nb, na);
+}
+
+/** Chat messages: do two answers to `question` mean the same? Neither is labelled with its source. */
+export function buildComparePrompt(question, answerA, answerB) {
+  const system = [
+    'You compare two short answers to the same quiz question.',
+    'Reply with strict JSON only, in exactly this shape:',
+    '{"reason": "...", "same": "yes" | "no" | "unsure"}',
+    'First "reason": one short sentence. Then "same":',
+    '"yes": they mean the same thing, or one is a more exact form of the other.',
+    '"no": they cannot both be right answers to this question.',
+    '"unsure": anything else.',
+  ].join('\n');
+  return [{ role: 'system', content: system }, { role: 'user', content:
+    `QUESTION: ${String(question || '').trim()}\nANSWER A: ${String(answerA || '').trim()}\nANSWER B: ${String(answerB || '').trim()}` }];
+}
+
+/** `{ same: 'yes' | 'no' | 'unsure', reason }` from the second step's reply. Unreadable is 'unsure'. */
+export function parseCompareReply(text) {
+  const d = typeof text === 'string' && text.trim() ? firstJSONObject(text) : null;
+  if (!d) return { same: 'unsure', reason: '' };
+  const v = d.same;
+  const s = typeof v === 'boolean' ? (v ? 'yes' : 'no') : str(v).toLowerCase();
+  return { same: s === 'yes' || s === 'true' ? 'yes' : s === 'no' || s === 'false' ? 'no' : 'unsure',
+           reason: firstStr(d, ['reason', 'why']) };
+}
+
+/**
+ * Check one question. `lookup(question, answer)` resolves as wikipedia.js's `lookup` does;
+ * `chat(messages)` as ai.js's `chat` does (the caller binds the model, timeout and Cancel).
+ * Resolves `{ verdict, reason, quote, title, url, wikipediaAnswer, cancelled? }`. Never throws:
+ * anything unexpected is 'not-checked', because a check that broke has not checked anything.
+ */
+export async function factCheck({ question, answer } = {}, { lookup, chat, signal } = {}) {
+  const base = { quote: '', title: '', url: '', wikipediaAnswer: '' };
+  const stopped = () => ({ ...base, verdict: FACT.NOT_CHECKED, reason: 'Stopped before it was checked.', cancelled: true });
+  const notChecked = (reason) => ({ ...base, verdict: FACT.NOT_CHECKED, reason });
+  try {
+    if (signal?.aborted) return stopped();
+    const found = await lookup(question, answer);
+    if (found?.cancelled || signal?.aborted) return stopped();
+    if (!found || !found.ok) return notChecked((found && found.reason) || 'Could not reach Wikipedia, so this was not checked.');
+    const articles = Array.isArray(found.articles) ? found.articles : [];
+    if (!articles.length) return { ...base, verdict: FACT.NOT_COVERED, reason: 'Wikipedia had no article that matched this question.' };
+
+    const r1 = await chat(buildFactPrompt(question, articles));
+    if (r1?.cancelled || signal?.aborted) return stopped();
+    if (!r1 || !r1.ok) return notChecked(`The AI could not check this: ${(r1 && r1.reason) || 'no answer'}`);
+    const got = parseFactReply(r1.text);
+    const src = got.quote && got.answer ? quoteSource(got.quote, articles) : null;
+    if (!src) {
+      return { ...base, verdict: FACT.NOT_COVERED, reason: got.quote && got.answer
+        ? 'The AI quoted a sentence that is not in the Wikipedia article, so its answer was not used.'
+        : 'The Wikipedia articles found do not answer this question.' };
+    }
+    const found1 = { quote: got.quote, title: src.title, url: src.url, wikipediaAnswer: got.answer };
+    if (sameAnswer(answer, got.answer)) {
+      return { ...found1, verdict: FACT.SUPPORTS, reason: `Wikipedia gives the same answer: ${got.answer}.` };
+    }
+    const r2 = await chat(buildComparePrompt(question, answer, got.answer));
+    if (r2?.cancelled || signal?.aborted) return stopped();
+    if (!r2 || !r2.ok) {
+      return { ...found1, verdict: FACT.NOT_CHECKED,
+        reason: `The AI could not compare the answers: ${(r2 && r2.reason) || 'no answer'}` };
+    }
+    const cmp = parseCompareReply(r2.text);
+    if (cmp.same === 'yes') {
+      return { ...found1, verdict: FACT.SUPPORTS, reason: `Wikipedia's answer, ${got.answer}, means the same.` };
+    }
+    if (cmp.same === 'no') {
+      return { ...found1, verdict: FACT.CONTRADICTS,
+        reason: `Wikipedia says "${got.answer}"; the video says "${answer}".${cmp.reason ? ` ${cmp.reason}` : ''}` };
+    }
+    return { ...found1, verdict: FACT.NOT_COVERED,
+      reason: `Wikipedia says "${got.answer}"; it is not clear whether that matches "${answer}".` };
+  } catch (err) {
+    return notChecked(`The check went wrong: ${String((err && err.message) || err)}`);
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
 // CONVERSION — into the shapes the existing routing already carries
 // ---------------------------------------------------------------------------------------------
 
@@ -482,9 +666,10 @@ export const TRANSCRIPT_STREAM = 'transcript-lessons';
 export const REVIEW_KINDS = Object.freeze({
   QUESTIONS: 'questions',     // { topic, topicLabel, key, autoApproved, items: [lesson q + id], rejected, model }
   REVIEW: 'review',           // { id, verdict: 'approved' | 'rejected' }
-  FLAG: 'flag',               // { id, by: 'player' | 'caregiver', reason? }
+  FLAG: 'flag',               // { id, by: 'player' | 'caregiver' | 'fact-check', reason?, quote?, title?, url? }
   UNFLAG: 'unflag',           // { id }  a person cleared the flag
   PAID: 'paid',               // { topic, key, amount, subject }
+  CHECK: 'check',             // { id, verdict, reason, quote, title, url, wikipediaAnswer, model, ms }  the fact check
 });
 
 // The derivation needs events IN THE ORDER THEY HAPPENED, and array order cannot be trusted for
@@ -502,7 +687,10 @@ function chronological(events) {
 
 /**
  * Every generated question with its current review status:
- * `{ id, topic, topicLabel, key, question, correct, answers, source, status, flagged, flags }`.
+ * `{ id, topic, topicLabel, key, question, correct, answers, source, status, flagged, flags, check }`.
+ * `check` is the latest fact-check result (`factCheck`'s shape) or null. A 'contradicts' result is
+ * ALSO written as a FLAG (`by: 'fact-check'`), and it is the flag — the one mechanism every hold
+ * already goes through — that keeps the question out of the pool; clearing it works the same way.
  * Status starts 'pending' — the review queue is ON by default (§0h) — or 'approved' when the
  * batch was generated with auto-approve on. Auto-approve is recorded AT GENERATION rather than
  * read at display time, so turning it on later does not silently approve a backlog nobody saw.
@@ -515,17 +703,29 @@ export function reviewItems(events) {
       for (const q of Array.isArray(d.items) ? d.items : []) {
         if (!q || !q.id || byId.has(q.id)) continue;       // the first time a question appears counts
         byId.set(q.id, { ...q, topic: d.topic, topicLabel: d.topicLabel || d.topic, key: d.key,
-          status: d.autoApproved ? 'approved' : 'pending', flagged: false, flags: [] });
+          status: d.autoApproved ? 'approved' : 'pending', flagged: false, flags: [], check: null });
       }
     } else if (e.kind === REVIEW_KINDS.REVIEW) {
       const it = byId.get(d.id);
       if (it && (d.verdict === 'approved' || d.verdict === 'rejected')) it.status = d.verdict;
     } else if (e.kind === REVIEW_KINDS.FLAG) {
       const it = byId.get(d.id);
-      if (it) { it.flagged = true; it.flags.push({ by: d.by || 'someone', reason: d.reason || '' }); }
+      if (it) {
+        it.flagged = true;
+        it.flags.push({ by: d.by || 'someone', reason: d.reason || '', quote: d.quote || '',
+          title: d.title || '', url: d.url || '' });
+      }
+    } else if (e.kind === REVIEW_KINDS.CHECK) {
+      const it = byId.get(d.id);
+      if (it && Object.values(FACT).includes(d.verdict)) {
+        it.check = { verdict: d.verdict, reason: d.reason || '', quote: d.quote || '', title: d.title || '',
+          url: d.url || '', wikipediaAnswer: d.wikipediaAnswer || '' };
+      }
     } else if (e.kind === REVIEW_KINDS.UNFLAG) {
       const it = byId.get(d.id);
-      if (it) it.flagged = false;
+      // `flags` stays the whole history (who flagged what is the point of a log); `flagsCleared`
+      // says how many of them a person has already cleared, so a screen can show the current ones.
+      if (it) { it.flagged = false; it.flagsCleared = it.flags.length; }
     }
   }
   return [...byId.values()];
