@@ -870,12 +870,13 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
       check('(the answer was paid and logged, so "unchanged" below means something)', paidBefore > 0 && trialsBefore === 1,
         `${paidBefore} / ${trialsBefore}`);
 
-      c.b.publish('wordforge/next');
-      check('*** next walks onto the contest stop; it does not advance ***',
+      // Mike, 2026-09-29: after an answer `next` goes to the next question; `prev` walks the stops.
+      c.b.publish('wordforge/prev');
+      check('*** prev walks onto the contest stop; it does not advance ***',
         c.probe().after === 1 && cbtn()?.dataset.on === '1' && c.probe().at === at0);
-      c.b.publish('wordforge/next');
+      c.b.publish('wordforge/prev');
       check('...and wraps back to Next', c.probe().after === 0);
-      c.b.publish('wordforge/next');
+      c.b.publish('wordforge/prev');
       c.b.publish('wordforge/select');
       await sleep(900);
       const cStream = cMakeEvents('contests');

@@ -401,10 +401,9 @@ registerModule(
     let held = [];             // topics still holding questions back, for the "waiting behind" note
     // *** "I THINK THIS QUESTION IS WRONG" (Mike, 2026-09-28) — see ../contests.js. *** Offered once
     // the question is answered, as a SECOND STOP in the post-answer highlight: `after` 0 is Next (the
-    // default, so the ordinary path is still one `select`), 1 is the contest. `next`/`prev` walk the
-    // two the way they walk the options before an answer — which means `next` no longer ALSO
-    // advances after an answer (it used to; `select` and `back` still do). Once used, the contest
-    // stop goes away and `next` advances again, as before. A contest writes one row to the
+    // default, so the ordinary path is still one `select`), 1 is the contest. `prev` walks the two;
+    // `next` ADVANCES, as it always did (Mike, 2026-09-29: "I'd have it go to the next question" —
+    // a 2026-09-28 version had `next` step onto the contest instead). A contest writes one row to the
     // per-profile contests log and nothing else: no points, no trial, no change to the answer.
     let contests = null;
     let after = 0;
@@ -731,7 +730,10 @@ registerModule(
 
         // Scan with `next`, choose with `select` — so the whole game is one button. After an
         // answer the same two verbs walk and press the post-answer stops (Next, then the contest).
-        bus.subscribe('trivia/next', () => (answered === null ? moveHighlight(1) : moveAfter(1)));
+        // *** Mike, 2026-09-29: after an answer, Next goes to the NEXT QUESTION (the transport bar's
+        // Next included) — it no longer steps onto the contest stop. `prev` walks the two post-answer
+        // stops instead, and `select` presses whichever is lit, so a switch still reaches Contest.
+        bus.subscribe('trivia/next', () => (answered === null ? moveHighlight(1) : advance()));
         bus.subscribe('trivia/prev', () => (answered === null ? moveHighlight(-1) : moveAfter(-1)));
         bus.subscribe('trivia/select', () => (answered === null ? choose(highlight) : pressAfter()));
         bus.subscribe('trivia/skip', () => advance());

@@ -633,20 +633,18 @@ Shared Q | Shared A` });
       r.host.querySelector('[data-next]')?.dataset.on === '1' && btn().dataset.on !== '1' && r.probe().after === 0,
       JSON.stringify({ next: r.host.querySelector('[data-next]')?.dataset.on, contest: btn().dataset.on }));
     const at0 = r.probe().at;
-    r.bus.publish('trivia/next');
-    check('*** next walks the post-answer highlight onto the contest stop — it does not advance ***',
+    // Mike, 2026-09-29: "I'd have it go to the next question." `prev` walks the post-answer stops.
+    r.bus.publish('trivia/prev');
+    check('*** prev walks the post-answer highlight onto the contest stop — it does not advance ***',
       r.probe().after === 1 && btn()?.dataset.on === '1' && r.probe().at === at0, JSON.stringify(r.probe()));
-    r.bus.publish('trivia/next');
+    r.bus.publish('trivia/prev');
     check('...and wraps back to Next', r.probe().after === 0 && r.host.querySelector('[data-next]').dataset.on === '1');
-    r.bus.publish('trivia/prev');
-    check('prev walks it the other way', r.probe().after === 1);
-    r.bus.publish('trivia/prev');
 
-    // Now contest it: next, then select. Counted before and after — nothing but the contest row.
+    // Now contest it: prev, then select. Counted before and after — nothing but the contest row.
     const scoreBefore = JSON.stringify(r.inst.impl.__score());
     const writesBefore = r.events.filter(([, , name]) => name !== 'contests').length;
     const answeredBefore = r.probe().answered;
-    r.bus.publish('trivia/next');
+    r.bus.publish('trivia/prev');
     r.bus.publish('trivia/select');
     await sleep(20);
     const rows = store.contests || [];
@@ -666,6 +664,17 @@ Shared Q | Shared A` });
       !btn() && r.probe().after === 0 && r.host.querySelector('[data-next]').dataset.on === '1');
     r.bus.publish('trivia/select');
     check('select still takes Next — the ordinary path is one press, as before', r.probe().at !== at0, String(r.probe().at));
+    {
+      // *** Mike, 2026-09-29: after an answer, NEXT goes to the next question — the transport bar's
+      // Next included — whether or not the contest was offered. ***
+      const q2 = r.probe().question; const at1 = r.probe().at;
+      while (r.probe().highlight !== q2.correctIndex) r.bus.publish('trivia/next');
+      r.bus.publish('trivia/select');
+      await sleep(20);
+      check('(the next question is answered, contest offered)', !!btn() && r.probe().at === at1);
+      r.bus.publish('trivia/next');
+      check('*** next after an answer goes straight to the next question ***', r.probe().at !== at1, String(r.probe().at));
+    }
     r.inst.destroy();
 
     // A second panel on the same profile: the contested question is no longer dealt.
