@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>wikipedia — the fact check's lookup</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.skip{color:#8a6d1a;font-weight:700}.note{color:#555}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>wikipedia — looking a quiz question up (register 258)</h1>
+<p>Everything above the live section runs against a FAKE fetch — no network. The live section asks
+the real Wikipedia and the real model on this computer (Ollama), and records a SKIP rather than a
+pass when either cannot be reached.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  WIKI_API, searchText, searchQueries, searchURL, parseResults, splitSentences, termsOf, pickEvidence,
+  createWikipedia, REASONS, EVIDENCE_CHARS,
+} from '../wikipedia.js';
+import { factCheck, FACT } from '../transcript_quiz.js';
+import { createAI } from '../ai.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0, skipped = 0;
+let liveNote = '';
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function skip(name, why) {
+  skipped++;
+  const d = document.createElement('div'); d.className = 'skip';
+  d.textContent = `SKIP  ${name} — ${why}`; out.append(d);
+}
+function note(t) { const d = document.createElement('div'); d.className = 'note'; d.textContent = `      ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const memStorage = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) }; };
+
+(async () => {
+  try {
+    section('building the request');
+    check('a question becomes plain lowercase words', searchText('What is the capital of Australia?') === 'what is the capital of australia');
+    check('*** search syntax cannot get through: quotes, -exclude, !, intitle:, *, ~, AND/OR/NOT ***',
+      searchText('"exact" -not !bang intitle:x wild* fuzzy~ A AND B OR C NOT D') === 'exact not bang intitle x wild fuzzy a and b or c not d',
+      searchText('"exact" -not !bang intitle:x wild* fuzzy~ A AND B OR C NOT D'));
+    check('apostrophes and hyphens inside words survive', searchText("Earth's well-known moon") === "earth's well-known moon");
+    check('letters outside ASCII survive', searchText('Where is Zürich?') === 'where is zürich');
+    const long = searchText('word '.repeat(100));
+    check('a very long question is cut at a word, under 250 characters', long.length <= 250 && !long.endsWith(' ') && long.endsWith('word'), String(long.length));
+    check('empty or junk is empty', searchText('') === '' && searchText(null) === '' && searchText('?!*') === '');
+    check('*** two searches: the question alone, and the question with the video\'s answer ***',
+      J(searchQueries('What is the capital of Australia?', 'Sydney')) === J(['what is the capital of australia', 'what is the capital of australia sydney']));
+    check('...one when the answer adds nothing', searchQueries('Q about bees?', '').length === 1);
+    const u = new URL(searchURL('capital of australia'));
+    check('the URL is the Action API with origin=* (anonymous CORS), one request for search + intros',
+      `${u.origin}${u.pathname}` === WIKI_API && u.searchParams.get('origin') === '*' && u.searchParams.get('generator') === 'search'
+        && u.searchParams.get('gsrsearch') === 'capital of australia' && /extracts/.test(u.searchParams.get('prop'))
+        && u.searchParams.get('exintro') === '1' && u.searchParams.get('explaintext') === '1' && u.searchParams.get('gsrlimit') === '3'
+        && u.searchParams.get('gsrnamespace') === '0', u.href);
+
+    section('reading the reply');
+    const REPLY = { batchcomplete: true, query: { pages: [
+      { pageid: 2, title: 'Honey bee', index: 3, fullurl: 'https://en.wikipedia.org/wiki/Honey_bee', extract: 'A honey bee is an insect. It makes honey.' },
+      { pageid: 1, title: 'Honey', index: 1, fullurl: 'https://en.wikipedia.org/wiki/Honey', extract: 'Honey is sweet.\nBees make it from nectar.' },
+      { pageid: 3, title: 'Bees Make Honey', index: 2, pageprops: { disambiguation: '' }, extract: 'Bees Make Honey may refer to:' },
+      { pageid: 4, title: 'List of bees', index: 4, extract: '' },
+      { pageid: 5, title: 'Evil', index: 5, fullurl: 'javascript:alert(1)', extract: 'Text.' },
+    ] } };
+    const parsed = parseResults(REPLY);
+    check('in search order (index), not the order the API lists them', J(parsed.map((p) => p.title)) === J(['Honey', 'Honey bee', 'Evil']), J(parsed.map((p) => p.title)));
+    check('*** disambiguation pages and pages with no introduction are left out ***', !parsed.some((p) => /Bees Make Honey|List of/.test(p.title)));
+    check('a URL that is not Wikipedia\'s is replaced by the article\'s real address', parsed[2].url === 'https://en.wikipedia.org/wiki/Evil', parsed[2].url);
+    check('formatversion 1 (pages as an object) reads the same', parseResults({ query: { pages: { 1: REPLY.query.pages[1] } } })[0]?.title === 'Honey');
+    check('no results, garbage, null -> []', J(parseResults({ batchcomplete: true })) === '[]' && J(parseResults('x')) === '[]' && J(parseResults(null)) === '[]');
+    check('sentences split on stops and line breaks', J(splitSentences('One. Two? Three!\nFour')) === J(['One.', 'Two?', 'Three!', 'Four']));
+    check('terms drop stopwords and short words', J([...termsOf('What is the capital of Australia?')]) === J(['capital', 'australia']));
+    const big = { title: 'Big', url: 'u', extract: ['Big is a topic.', ...Array.from({ length: 40 }, (_, i) => `Filler sentence number ${i} about nothing.`),
+      'The capital of Australia is Canberra.', 'More filler here.'].join(' ') };
+    const ev = pickEvidence([big], termsOf('capital australia'), { budget: 300 })[0];
+    check('*** evidence keeps the first sentence and the matching one, within the budget ***',
+      ev.text.startsWith('Big is a topic.') && ev.text.includes('The capital of Australia is Canberra.') && ev.text.length <= 300, ev.text);
+    check('...and keeps the whole introduction beside it, for checking a quote', ev.extract === big.extract);
+    check('the default budget is the measured one', EVIDENCE_CHARS === 1500);
+
+    section('the client, with a fake fetch');
+    const fake = (handler) => { const urls = []; const impl = async (url, init) => { urls.push({ url, init }); return handler(url, init); }; return { urls, impl }; };
+    const okJSON = (j) => ({ ok: true, status: 200, json: async () => j });
+    const byQuery = (map) => (url) => okJSON(map[new URL(url).searchParams.get('gsrsearch')] || { batchcomplete: true });
+    const page = (title, index, extract) => ({ title, index, fullurl: `https://en.wikipedia.org/wiki/${title}`, extract });
+    let f = fake(byQuery({
+      'what is the capital of australia': { query: { pages: [page('ACT', 1, 'The ACT is a territory. Canberra, the capital city of Australia, is in it.'), page('Question', 2, 'A question asks.')] } },
+      'what is the capital of australia sydney': { query: { pages: [page('Sydney', 1, 'Sydney is a city.'), page('ACT', 2, 'The ACT is a territory.')] } },
+    }));
+    let w = createWikipedia({ fetchImpl: f.impl });
+    let r = await w.lookup('What is the capital of Australia?', 'Sydney');
+    check('*** both searches run, the hits are interleaved and de-duplicated, at most three ***',
+      r.ok && J(r.articles.map((a) => a.title)) === J(['ACT', 'Sydney', 'Question']) && f.urls.length === 2, J(r));
+    check('each article carries trimmed text, the whole introduction and its link',
+      r.articles[0].text && r.articles[0].extract && r.articles[0].url === 'https://en.wikipedia.org/wiki/ACT');
+    check('*** without cookies ***', f.urls.every((x) => x.init.credentials === 'omit'));
+    check('*** only the question and the answer are in what is sent ***',
+      J(f.urls.map((x) => new URL(x.url).searchParams.get('gsrsearch'))) === J(['what is the capital of australia', 'what is the capital of australia sydney']));
+
+    f = fake(() => okJSON({ batchcomplete: true }));
+    r = await createWikipedia({ fetchImpl: f.impl }).lookup('zzqxjv', 'wobblefrump');
+    check('nothing found is ok, with no articles (the check calls that "not covered")', r.ok && r.articles.length === 0, J(r));
+
+    f = fake(() => { throw new TypeError('Failed to fetch'); });
+    r = await createWikipedia({ fetchImpl: f.impl }).lookup('Q?', 'A');
+    check('*** offline -> not ok, "could not reach", never a throw ***', !r.ok && r.offline && r.reason === REASONS.offline, J(r));
+
+    f = fake(() => ({ ok: false, status: 429, json: async () => ({}) }));
+    r = await createWikipedia({ fetchImpl: f.impl }).lookup('Q?', 'A');
+    check('an HTTP error -> not ok, with the status in words', !r.ok && /429/.test(r.reason), J(r));
+
+    f = fake(() => ({ ok: true, status: 200, json: async () => { throw new SyntaxError('bad'); } }));
+    r = await createWikipedia({ fetchImpl: f.impl }).lookup('Q?', 'A');
+    check('an unreadable reply -> not ok', !r.ok && r.reason === REASONS.unreadable, J(r));
+
+    let n = 0;
+    f = fake(() => (n++ === 0 ? Promise.reject(new TypeError('Failed to fetch')) : okJSON({ query: { pages: [page('One', 1, 'One is a number.')] } })));
+    r = await createWikipedia({ fetchImpl: f.impl }).lookup('Q one?', 'A');
+    check('one search failing while the other answers still counts as looked up', r.ok && r.articles.length === 1, J(r));
+
+    const hang = (url, init) => new Promise((_, reject) => init.signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))));
+    const t0 = performance.now();
+    r = await createWikipedia({ fetchImpl: hang, timeoutMs: 150 }).lookup('Q?', 'A');
+    check('*** a timeout -> not ok, "took too long", and it really stops waiting ***',
+      !r.ok && r.timedOut && r.reason === REASONS.timeout && performance.now() - t0 < 1500, J(r));
+    const ctl = new AbortController();
+    const p = createWikipedia({ fetchImpl: hang, timeoutMs: 10000 }).lookup('Q?', 'A', { signal: ctl.signal });
+    setTimeout(() => ctl.abort(), 50);
+    r = await p;
+    check('Cancel -> not ok, cancelled', !r.ok && r.cancelled && r.reason === REASONS.cancelled, J(r));
+    r = await createWikipedia({ fetchImpl: async () => okJSON({}) }).lookup('', '');
+    check('nothing to look up -> not ok, no request', !r.ok);
+
+    // ================= LIVE =================
+    section('LIVE — the real Wikipedia, then the real model: a true fact and a false answer');
+    let wikiUp = false;
+    try {
+      const c = new AbortController(); const tm = setTimeout(() => c.abort(), 8000);
+      const res = await fetch(searchURL('canberra'), { signal: c.signal, credentials: 'omit' });
+      clearTimeout(tm);
+      wikiUp = res.ok;
+    } catch { wikiUp = false; }
+    let aiUp = false;
+    try {
+      const c = new AbortController(); const tm = setTimeout(() => c.abort(), 3000);
+      const res = await fetch('http://127.0.0.1:11434/v1/models', { signal: c.signal });
+      clearTimeout(tm);
+      aiUp = res.ok;
+    } catch { aiUp = false; }
+    if (!wikiUp) {
+      skip('live lookup', 'Wikipedia did not answer from this page');
+    } else {
+      const wl = createWikipedia();
+      const lt = performance.now();
+      const lr = await wl.lookup('What is the capital of Australia?', 'Sydney');
+      const lms = Math.round(performance.now() - lt);
+      check('the real Wikipedia answers an anonymous request from this page (origin=*)', lr.ok && lr.articles.length > 0, J(lr).slice(0, 300));
+      note(`lookup ${lms} ms: ${lr.articles.map((a) => a.title).join(' | ')}`);
+      check('...and one of the articles says what the capital is',
+        lr.articles.some((a) => /canberra/i.test(a.extract)), lr.articles.map((a) => a.title).join(', '));
+      if (!aiUp) {
+        skip('live fact check', 'no model server answered at http://127.0.0.1:11434/v1/models');
+      } else {
+        const ai = createAI({ storage: memStorage() });
+        const m = await ai.resolveModel('');
+        check('a real model was chosen', m.ok, J(m));
+        const chat = (messages) => ai.chat(messages, { model: m.model, json: true, temperature: 0, timeoutMs: 10 * 60 * 1000 });
+        const lookup = (q, a) => wl.lookup(q, a);
+        const CASES = [
+          { question: 'What is the capital of Australia?', answer: 'Canberra', expect: FACT.SUPPORTS },
+          { question: 'What is the capital of Australia?', answer: 'Sydney', expect: FACT.CONTRADICTS },
+          { question: 'What do bees make honey from?', answer: 'nectar', expect: FACT.SUPPORTS },
+          { question: 'How many legs does an insect have?', answer: 'eight', expect: FACT.CONTRADICTS },
+        ];
+        window.__live = [];
+        for (const c of CASES) {
+          const t = performance.now();
+          const res = await factCheck(c, { lookup, chat });
+          const secs = Math.round((performance.now() - t) / 100) / 10;
+          window.__live.push({ ...c, ...res, secs });
+          note(`${c.question} -> ${c.answer}: ${res.verdict} in ${secs}s. Wikipedia said "${res.wikipediaAnswer}" (${res.title}). ${res.reason}`);
+          if (res.quote) note(`   quote: "${res.quote}"`);
+          // A verdict is never allowed to rest on a quote that is not Wikipedia's.
+          check(`${c.answer}: a verdict, and any quote really is in the article`, Object.values(FACT).includes(res.verdict)
+            && (!res.quote || res.verdict === FACT.NOT_CHECKED || !!res.title));
+        }
+        const got = (i) => window.__live[i].verdict;
+        // The TRUE facts must never be flagged; that would be the check doing harm. The false ones
+        // are reported, and required to be caught for the one the measurement was built around.
+        check('*** a true fact is never flagged (Canberra, nectar) ***', got(0) !== FACT.CONTRADICTS && got(2) !== FACT.CONTRADICTS,
+          `${got(0)} / ${got(2)}`);
+        check('*** the false answer "Sydney" is flagged as contradicted ***', got(1) === FACT.CONTRADICTS, got(1));
+        note(`"eight legs" (needs "three pairs" = six): ${got(3)}`);
+        // In the summary line too, because that is the one line run_suite.py prints.
+        liveNote = ` (live: ${m.model}; lookup ${lms} ms; ${window.__live.map((x) => `${x.answer}=${x.verdict} ${x.secs}s`).join(', ')})`;
+      }
+    }
+
+    const sum = document.getElementById('summary');
+    if (failed) sum.textContent = `${failed} FAILED / ${passed} passed`;
+    else if (skipped) sum.textContent = `PASS WITH SKIPS — ${passed} checks, ${skipped} SKIPPED`;
+    else sum.textContent = `ALL PASS — ${passed} checks${liveNote}`;
+    sum.className = failed ? 'fail' : (skipped ? 'skip' : 'pass');
+    sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

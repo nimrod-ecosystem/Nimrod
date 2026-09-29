@@ -43,7 +43,8 @@ import '../modules/lessons.js';
 import '../modules/wordforge.js';
 import '../modules/trivia.js';
 import { createPointsLedger } from '../points.js';
-import { TRANSCRIPT_STREAM, REVIEW_KINDS, reviewItems } from '../transcript_quiz.js';
+import { TRANSCRIPT_STREAM, REVIEW_KINDS, reviewItems, poolFrom } from '../transcript_quiz.js';
+import { createWikipedia } from '../wikipedia.js';
 import { fieldsFor } from '../settings_fields.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('less-' + Math.floor(Math.random() * 1e6));
@@ -843,7 +844,9 @@ Knowing a root lets you guess a new word.`;
     const xmod = await xp.addModule(xprof.id, 'lessons');
     const xst = createState({ url: xp.stateURL(xprof.id, xmod.id), user: USER });
     await xst.load();
-    xst.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS });
+    // `factCheck: false` explicit: the fact check (default ON) has its own section below, with a
+    // fake Wikipedia; this section is the flow without it, and must not reach the real one.
+    xst.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS, factCheck: false });
     await xst.flush();
     const xhost = document.createElement('div'); document.body.append(xhost);
     const ai1 = fakeAI(ROOTS_QS);
@@ -1123,8 +1126,216 @@ Say it once and move on.`;
         live && live.options.some((o) => o.value === 'fake-7b') && !live.options.some((o) => /embed/.test(o.value))
           && live.options.some((o) => o.value === ''), JSON.stringify(live && live.options));
       check('no API-key field in this pass', !Object.keys(f).some((k) => /key|token|secret/i.test(k) && k !== 'questionsTo'));
+      // OFF by default: the landing page promises "Anything I add later arrives switched off and needs
+      // its own separate yes" (argued in lessons.js; Mike may flip it).
+      check('*** the fact check is a setting: a toggle, OFF by default -- the landing page\'s own promise ***',
+        f.factCheck?.kind === 'toggle' && f.factCheck.default === false && DEFAULTS.factCheck === false, JSON.stringify(f.factCheck));
     }
     xinst.destroy(); xhost.remove();
+
+    // ============================================================================================
+    // REGISTER 258 — THE FACT CHECK, with a FAKE WIKIPEDIA (the real wikipedia.js client over a fake
+    // fetch, so its parsing is exercised too) and the fake AI answering all three prompts. The real
+    // Wikipedia and the real model are proven in dev/wikipedia_test.html's live section.
+    section('*** register 258: each question looked up on Wikipedia; a contradiction FLAGS it ***');
+    {
+      const PAGES = {
+        bio: { title: 'Biology', extract: 'Biology is the scientific study of life. The word comes from the Greek bios, meaning life.' },
+        aqua: { title: 'Aqua (test)', extract: 'Aqua is a word used in this test. In this test article, aqua means fire and nothing else.' },
+        graph: { title: 'Graph (test)', extract: 'A graph is a picture of numbers. It has two axes.' },
+      };
+      // What the fake model "reads" from those pages, keyed by the question it is asked.
+      const FACTS = {
+        'What does the root bio mean?': { quote: 'The word comes from the Greek bios, meaning life.', answer: 'life' },
+        'What does the root aqua mean?': { quote: 'In this test article, aqua means fire and nothing else.', answer: 'fire' },
+        'What does the root graph mean?': { quote: '', answer: '' },
+      };
+      function fakeWikiFetch({ delayMs = 0, offline = false } = {}) {
+        const urls = [];
+        const impl = (url, init = {}) => new Promise((resolve, reject) => {
+          urls.push({ url, init });
+          const t = setTimeout(() => {
+            if (offline) { reject(new TypeError('Failed to fetch')); return; }
+            const q = new URL(url).searchParams.get('gsrsearch') || '';
+            const key = Object.keys(PAGES).find((k) => q.includes(k));
+            const pages = key ? [{ ...PAGES[key], index: 1, fullurl: `https://en.wikipedia.org/wiki/${encodeURIComponent(PAGES[key].title.replace(/ /g, '_'))}` }] : [];
+            resolve({ ok: true, status: 200, json: async () => ({ batchcomplete: true, ...(pages.length ? { query: { pages } } : {}) }) });
+          }, delayMs);
+          init.signal?.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('aborted', 'AbortError')); });
+        });
+        return { urls, impl };
+      }
+      function factAI(questions) {
+        const calls = { gen: 0, fact: 0, compare: 0 };
+        const reply = (text) => ({ ok: true, model: 'fake-7b', ms: 5, text });
+        return {
+          calls,
+          settings: () => ({ baseUrl: 'http://fake.test/v1', model: '' }),
+          setSettings: () => ({ baseUrl: 'http://fake.test/v1', model: '' }),
+          listModels: async () => ({ ok: true, models: ['fake-7b'] }),
+          resolveModel: async (pref) => ({ ok: true, model: pref || 'fake-7b', models: ['fake-7b'] }),
+          chat: async (messages, opts = {}) => {
+            if (opts.signal?.aborted) return { ok: false, cancelled: true, reason: 'Cancelled.' };
+            const sys = messages[0].content; const user = messages[messages.length - 1].content;
+            if (/answer one quiz question using ONLY the Wikipedia passages/.test(sys)) {
+              calls.fact++;
+              const q = Object.keys(FACTS).find((k) => user.includes(k));
+              return reply(JSON.stringify(FACTS[q] || { quote: '', answer: '' }));
+            }
+            if (/compare two short answers/.test(sys)) {
+              calls.compare++;
+              return reply(JSON.stringify({ reason: 'Water and fire are different things.', same: 'no' }));
+            }
+            calls.gen++;
+            return reply(JSON.stringify({ questions }));
+          },
+        };
+      }
+      // A fresh profile per scenario: a question that already has a finished check is not looked up
+      // again, so reusing one would test the reuse, not the check.
+      async function scenario(name, { fetch, settings = {} }) {
+        const pc = createProfilesClient({ user: USER });
+        const prof = await pc.create(`TEST-lessons-factcheck-${name}`);
+        const ms = (k, o) => createState({ url: pc.stateURL(prof.id, k), user: USER, ...o });
+        const me = (k, o) => createEvents({ url: pc.eventsURL(prof.id, k), user: USER, ...o });
+        const mod = await pc.addModule(prof.id, 'lessons');
+        const st = createState({ url: pc.stateURL(prof.id, mod.id), user: USER });
+        await st.load();
+        // The check is OFF by default, so these scenarios turn it on -- the person's "separate yes".
+        st.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS, factCheck: true, ...settings });
+        await st.flush();
+        const host = document.createElement('div'); document.body.append(host);
+        const ai = factAI(ROOTS_QS);
+        const inst = mountModule('lessons', {
+          mount: host, bus: createBus(), state: st,
+          events: createEvents({ url: pc.eventsURL(prof.id, mod.id), user: USER }),
+          user: USER, profileId: prof.id, makeState: ms, makeEvents: me, rand: seeded(11), ai,
+          wikipedia: createWikipedia({ fetchImpl: fetch.impl }),
+        });
+        inst.init();
+        await sleep(600);
+        host.querySelector('[data-open="roots"]').click(); await sleep(80);
+        host.querySelector('[data-tq-open="roots"]').click(); await sleep(80);
+        const box = host.querySelector('[data-tq-text]');
+        box.value = ROOTS_TRANSCRIPT; box.dispatchEvent(new Event('input', { bubbles: true }));
+        host.querySelector('[data-tq-make]').click();
+        const log = me(TRANSCRIPT_STREAM, { limit: 500 });
+        const text = (sel) => (host.querySelector(sel)?.textContent || '').replace(/\s+/g, ' ').trim();
+        return { host, inst, ai, log, text, ms, st, done: () => { inst.destroy(); host.remove(); } };
+      }
+      const idByQ = (items) => Object.fromEntries(items.map((i) => [i.question, i]));
+
+      // ---- A: contradicts flags; supports / not-covered do not; the quiz does not wait ----
+      const fA = fakeWikiFetch({ delayMs: 500 });
+      const A = await scenario('verdicts', { fetch: fA, settings: { autoApprove: true } });
+      await sleep(700);
+      check('*** the quiz starts BEFORE the checks finish (they run in the background) ***',
+        !!A.host.querySelector('[data-tq-q]') && /Checking \d of 3 on Wikipedia/.test(A.text('[data-fc]')),
+        `${A.text('[data-fc]')} | q=${!!A.host.querySelector('[data-tq-q]')}`);
+      check('...with a way to stop it', !!A.host.querySelector('[data-fc-stop]'));
+      await sleep(2500);
+      await A.log.load();
+      const aItems = idByQ(reviewItems(A.log.get().events || []));
+      const aqua = aItems['What does the root aqua mean?'];
+      const bio = aItems['What does the root bio mean?'];
+      const graph = aItems['What does the root graph mean?'];
+      check('every checked question has a verdict in the log',
+        bio?.check?.verdict === 'supports' && aqua?.check?.verdict === 'contradicts' && graph?.check?.verdict === 'not-covered',
+        JSON.stringify([bio?.check, aqua?.check, graph?.check]));
+      check('*** a CONTRADICTS verdict FLAGS the question (by the fact check) — the existing flag mechanism ***',
+        aqua.flagged && aqua.flags.some((x) => x.by === 'fact-check'), JSON.stringify(aqua.flags));
+      check('...with the reason, the Wikipedia quote, and the article title and link recorded',
+        /fire/.test(aqua.flags[0].reason) && aqua.flags[0].quote === FACTS['What does the root aqua mean?'].quote
+          && aqua.flags[0].title === 'Aqua (test)' && aqua.flags[0].url === 'https://en.wikipedia.org/wiki/Aqua_(test)',
+        JSON.stringify(aqua.flags[0]));
+      check('*** supports and not-covered do NOT flag ***', !bio.flagged && !graph.flagged);
+      check('*** the answer key is untouched: the flagged question still says "water" ***',
+        aqua.correct === 'water', aqua.correct);
+      check('a matching answer needs no second model turn; only the differing one was compared',
+        A.ai.calls.fact === 3 && A.ai.calls.compare === 1, JSON.stringify(A.ai.calls));
+      await sleep(900);
+      const aRow = A.ms(TRIVIA_LESSON_QUESTIONS); await aRow.load();
+      const aRouted = (aRow.get().items || []).map((i) => i.answer).sort();
+      check('*** auto-approve ON, yet the contradicted one stays OUT of the pool; the other two are in ***',
+        aRouted.join(',') === 'life,to write', JSON.stringify(aRouted));
+      check('the summary line counts what was found',
+        /1 agrees/.test(A.text('[data-fc]')) && /1 seems to disagree/.test(A.text('[data-fc]')) && /1 not covered/.test(A.text('[data-fc]')),
+        A.text('[data-fc]'));
+      // The review list: verdict and link beside each question.
+      const rowOf = (h, q) => [...h.querySelectorAll('[data-rq]')].find((r) => r.querySelector('.l-rq-q')?.textContent === q);
+      const aquaRow = rowOf(A.host, 'What does the root aqua mean?');
+      check('*** the review list shows the verdict and a link to the Wikipedia article ***',
+        aquaRow?.querySelector('[data-rq-fact="contradicts"]')
+          && aquaRow.querySelector('a.l-rq-wiki')?.getAttribute('href') === 'https://en.wikipedia.org/wiki/Aqua_(test)'
+          && /fire and nothing else/.test(aquaRow.textContent) && /held back because Wikipedia/i.test(aquaRow.textContent),
+        aquaRow ? aquaRow.textContent.replace(/\s+/g, ' ').slice(0, 400) : 'no row');
+      const bioRow = rowOf(A.host, 'What does the root bio mean?');
+      check('...and "agrees" beside a supported one (in the games list, since auto-approve is on)',
+        !!bioRow?.querySelector('[data-rq-fact="supports"]') && !!bioRow.querySelector('a.l-rq-wiki'),
+        bioRow ? bioRow.textContent.replace(/\s+/g, ' ').slice(0, 300) : 'no row');
+      // The quiz: the contradicted question carries the flag when it is shown.
+      let sawNote = false; let sawAfter = false;
+      for (let guard = 0; guard < 10 && A.host.querySelector('[data-tq-q]'); guard++) {
+        const qtext = A.text('[data-tq-q]');
+        if (qtext === 'What does the root aqua mean?') sawNote = A.host.querySelector('[data-tq-fact="contradicts"]') !== null;
+        [...A.host.querySelectorAll('[data-tq-opt]')].find((b) => b.textContent.trim() === answerOf(qtext)).click();
+        await sleep(40);
+        if (qtext === 'What does the root aqua mean?') sawAfter = /fire and nothing else/.test(A.text('[data-tq-fact]'));
+        const nx = A.host.querySelector('[data-tq-next]');
+        if (nx) { nx.click(); await sleep(40); } else break;
+      }
+      check('*** a contradicted question shown later in the quiz visibly carries the flag ***', sawNote);
+      check('...and after answering, the player sees Wikipedia\'s sentence', sawAfter);
+      // What was sent: only the question, and the question with the answer.
+      const sent = fA.urls.map((u) => decodeURIComponent(u.url).toLowerCase());
+      check('*** only the question and answer are sent: never the transcript, its lines, or the topic ***',
+        sent.length === 6 && sent.every((u) => !/aquarium|autograph|biology|latin|greek root|knowing a root|word roots/.test(u)),
+        JSON.stringify(sent.map((u) => new URL(u).searchParams.get('gsrsearch'))));
+      check('...without cookies', fA.urls.every((u) => u.init.credentials === 'omit'));
+      A.done();
+
+      // ---- B: the setting off means NO lookup at all ----
+      const fB = fakeWikiFetch();
+      const B = await scenario('off', { fetch: fB, settings: { factCheck: false } });
+      await sleep(1200);
+      await B.log.load();
+      check('*** setting off: not one request to Wikipedia, no model turn for it, no verdicts ***',
+        fB.urls.length === 0 && B.ai.calls.fact === 0 && !(B.log.get().events || []).some((e) => e.kind === REVIEW_KINDS.CHECK),
+        `${fB.urls.length} requests, ${B.ai.calls.fact} fact turns`);
+      check('...and the quiz says nothing about Wikipedia', !!B.host.querySelector('[data-tq-q]')
+        && B.host.querySelector('[data-fc]')?.hidden && !/wikipedia/i.test(B.text('.l-tq')), B.text('.l-tq'));
+      B.done();
+
+      // ---- C: offline is NOT CHECKED, never wrong ----
+      const fC = fakeWikiFetch({ offline: true });
+      const C = await scenario('offline', { fetch: fC });
+      await sleep(1500);
+      await C.log.load();
+      const cItems = reviewItems(C.log.get().events || []);
+      check('*** offline: every question stays as it was — none flagged — and each is marked not checked ***',
+        cItems.length === 3 && cItems.every((i) => !i.flagged && i.check?.verdict === 'not-checked' && /reach Wikipedia/.test(i.check.reason)),
+        JSON.stringify(cItems.map((i) => [i.flagged, i.check])));
+      check('...no model turn was spent on a lookup that never happened', C.ai.calls.fact === 0, JSON.stringify(C.ai.calls));
+      check('...the quiz says so plainly', /Not checked on Wikipedia/.test(C.text('[data-fc]')) && /reach Wikipedia/.test(C.text('[data-fc]')),
+        C.text('[data-fc]'));
+      check('...and the review list too', [...C.host.querySelectorAll('[data-rq-fact="not-checked"]')].length === 3);
+      C.done();
+
+      // ---- D: Stop checking ----
+      const fD = fakeWikiFetch({ delayMs: 2500 });
+      const D = await scenario('stop', { fetch: fD });
+      await sleep(800);
+      check('while it checks, the quiz is already there', !!D.host.querySelector('[data-tq-q]') && !!D.host.querySelector('[data-fc-stop]'));
+      D.host.querySelector('[data-fc-stop]').click();
+      await sleep(900);
+      await D.log.load();
+      const dItems = reviewItems(D.log.get().events || []);
+      check('*** Stop checking stops it: nothing flagged, each marked "stopped", no further requests ***',
+        dItems.every((i) => !i.flagged && i.check?.verdict === 'not-checked' && /Stopped/.test(i.check.reason))
+          && fD.urls.length === 2, `${fD.urls.length} requests; ${JSON.stringify(dItems.map((i) => i.check))}`);
+      check('...and the quiz carries on', !!D.host.querySelector('[data-tq-q]'));
+      D.done();
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
