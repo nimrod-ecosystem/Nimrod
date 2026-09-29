@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Claude Design's AAC symbol sets — the files, the map, the measurements — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#3c5346}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>Claude Design’s AAC symbol sets</h1>
+<p>Every file is re-read here: it must be safe to put on a page, name nobody, and use exactly the
+colours <code>aac_sets_data.js</code> says it does, because the board measures a drawing against its
+card from those colours. Then the theme-to-set map, and the contrast of every set on every card.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { SET_WORDS } from '../aac_sets_data.js';
+import { SYMBOL_SETS, THEME_SETS, setForTheme, setHas, symbolUrl, setColours, ownColours,
+         drawingContrast, pickSymbol, themeIdFromRoot, parseColour, SYMBOL_MIN_CONTRAST,
+         AAC_ASSETS } from '../aac_sets.js';
+import { SYMBOLS, SYMBOL_NAMES } from '../aac_symbols.js';
+import { THEMES, applyTheme, contrast } from '../theme.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function info(t) { const d = document.createElement('div'); d.className = 'info'; d.textContent = t; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const PINNED_CARD = '#1b2429';     // modules.css `.aboard --ab-card`, the board's default card
+const PINNED_INK = '#e8eef0';
+const HC_CARD = '#ffffff';
+
+(async () => {
+try {
+  section('the sets and their words');
+  {
+    const ids = SYMBOL_SETS.map((s) => s.id);
+    check('nine sets, as delivered (the tenth is the board’s own drawings, not a new set)',
+      ids.length === 9 && ids.join() === 'color,mono,fall,steampunk,cyberpunk,cozy,winter,ocean,night',
+      ids.join());
+    for (const id of ids) {
+      const words = Object.keys(SET_WORDS[id]).sort();
+      check(`${id}: draws every one of the board’s ${SYMBOL_NAMES.length} symbol names, and nothing else`,
+        words.join() === [...SYMBOL_NAMES].sort().join(),
+        `${words.length} words; missing ${SYMBOL_NAMES.filter((n) => !words.includes(n)).join(',')}`);
+    }
+    check('every set says what kind of card it was drawn for',
+      SYMBOL_SETS.every((s) => ['dark', 'light', 'mixed'].includes(s.card)));
+  }
+
+  section('*** every file: safe, names nobody, and matches the manifest ***');
+  {
+    const COLOUR = /(?:stroke|fill)\s*=\s*"(#[0-9a-fA-F]{3,8}|currentColor)"/g;
+    const UNSAFE = [
+      [/<script/i, 'script'], [/\son[a-z]+\s*=/i, 'on* handler'], [/javascript:/i, 'javascript:'],
+      [/<foreignObject/i, 'foreignObject'], [/<image\b/i, '<image>'],
+      [/(?:xlink:)?href\s*=\s*["'](?!#)/i, 'external href'], [/url\(\s*["']?(?!#)/i, 'external url()'],
+      [/<text\b/i, 'drawn text'],
+    ];
+    const bad = [], mismatch = [], missing = [], shape = [];
+    const jobs = [];
+    for (const s of SYMBOL_SETS) {
+      for (const name of Object.keys(SET_WORDS[s.id])) {
+        jobs.push((async () => {
+          const res = await fetch(symbolUrl(s.id, name));
+          if (!res.ok) { missing.push(`${s.id}/${name} ${res.status}`); return; }
+          const raw = await res.text();
+          const body = raw.replace(/<metadata>[\s\S]*?<\/metadata>/g, '');
+          for (const [re, what] of UNSAFE) if (re.test(body)) bad.push(`${s.id}/${name}: ${what}`);
+          // Every name the product was built around, anywhere in the file, even in metadata.
+          if (/cici|christine/i.test(raw)) bad.push(`${s.id}/${name}: names a person`);
+          if (!/viewBox="0 0 100 100"/.test(body)) shape.push(`${s.id}/${name}`);
+          const cols = [];
+          for (const m of body.matchAll(COLOUR)) {
+            const c = m[1].toLowerCase() === 'currentcolor' ? 'currentColor' : m[1].toLowerCase();
+            if (!cols.includes(c)) cols.push(c);
+          }
+          if (cols.join() !== setColours(s.id, name).join()) {
+            mismatch.push(`${s.id}/${name}: file ${cols.join()} manifest ${setColours(s.id, name).join()}`);
+          }
+        })());
+      }
+    }
+    await Promise.all(jobs);
+    check(`all ${jobs.length} files are served from ${AAC_ASSETS}`, jobs.length === 495 && missing.length === 0,
+      `${jobs.length} files; ${missing.slice(0, 5).join('; ')}`);
+    check('*** no script, handler, external reference, or drawn text in any of them ***',
+      bad.length === 0, bad.slice(0, 8).join('; '));
+    check('every one is drawn on the board’s 100×100 grid', shape.length === 0, shape.slice(0, 5).join());
+    check('*** every file uses exactly the colours the manifest says (the board measures from these) ***',
+      mismatch.length === 0, mismatch.slice(0, 5).join('; '));
+    check('no designed set leans on currentColor — each carries its own colours',
+      SYMBOL_SETS.every((s) => Object.values(SET_WORDS[s.id]).every((c) => !c.includes('currentColor'))));
+  }
+
+  section('*** which set goes with which theme ***');
+  {
+    const themeIds = Object.keys(THEMES);
+    const unmapped = themeIds.filter((id) => !(id in THEME_SETS));
+    check('*** EVERY theme has a line in the map — a new theme fails here until somebody decides ***',
+      unmapped.length === 0, `unmapped: ${unmapped.join(', ')}`);
+    check('every line names a real set', Object.values(THEME_SETS).every((v) => setHas(v, 'yes')));
+    for (const live of ['fall', 'steampunk', 'cyberpunk', 'cozy', 'winter', 'ocean', 'night']) {
+      check(`the ${live} theme gets Design’s own ${live} set`, setForTheme(live) === live);
+    }
+    check('the themes with no set of their own: dusk -> night, contrast -> mono, warm -> cozy, forge -> cozy',
+      setForTheme('dusk') === 'night' && setForTheme('contrast') === 'mono'
+        && setForTheme('warm') === 'cozy' && setForTheme('forge') === 'cozy');
+    check('the default theme gets `color`, drawn in its own accent and link',
+      setForTheme('default') === 'color'
+        && setColours('color', 'do').includes(THEMES.default.vars['--accent'].toLowerCase())
+        && setColours('color', 'you').includes(THEMES.default.vars['--link'].toLowerCase()));
+    check('an unknown theme follows to nothing (the board’s own), never a guess',
+      setForTheme('no-such-theme') === null);
+    check('no theme at all reads as the default theme', setForTheme(null) === 'color');
+  }
+
+  section('reading the theme back off the page');
+  {
+    const bgs = Object.values(THEMES).map((t) => `${t.vars['--bg']}|${t.vars['--text']}`.toLowerCase());
+    check('*** every theme is told apart by its --bg and --text ***', new Set(bgs).size === bgs.length);
+    const wrong = [];
+    for (const id of Object.keys(THEMES)) {
+      const el = document.createElement('div');
+      applyTheme(el, id);
+      if (themeIdFromRoot(el) !== id) wrong.push(`${id} -> ${themeIdFromRoot(el)}`);
+    }
+    check('applyTheme then themeIdFromRoot gives the same id back, for every theme',
+      wrong.length === 0, wrong.join('; '));
+    check('an element with no theme on it reads as nothing', themeIdFromRoot(document.createElement('div')) === null);
+  }
+
+  section('parsing a colour the way the browser writes it');
+  check('#rgb', parseColour('#fff')?.hex === '#ffffff' && parseColour('#fff').alpha === 1);
+  check('#rrggbb, any case', parseColour(' #1B2429 ')?.hex === '#1b2429');
+  check('#rrggbbaa keeps its alpha', Math.abs(parseColour('#00000080').alpha - 128 / 255) < 1e-9);
+  check('rgb()', parseColour('rgb(27, 36, 41)')?.hex === '#1b2429');
+  check('rgba() with a bare-decimal alpha (the veil is written .72)',
+    parseColour('rgba(27,36,41,.72)')?.alpha === 0.72);
+  check('transparent is fully transparent', parseColour('transparent')?.alpha === 0);
+  check('nonsense is null, not black', parseColour('var(--x)') === null && parseColour('') === null);
+
+  section('*** the measurements — every set on every card ***');
+  {
+    // The cards a board can draw: its own pinned card, the high-contrast card, and every theme's
+    // card when the board follows the theme's colours (`--surface`, which on the live themes is
+    // also `--board-card`, the veil's tint).
+    const cards = { pinned: PINNED_CARD, highContrast: HC_CARD };
+    for (const [id, t] of Object.entries(THEMES)) cards[`theme:${id}`] = t.vars['--surface'];
+    const worst = (setId, bg) => Math.min(...Object.keys(SET_WORDS[setId])
+      .map((n) => drawingContrast(setColours(setId, n), bg, null)));
+    const table = {};
+    for (const s of SYMBOL_SETS) {
+      table[s.id] = Object.fromEntries(Object.entries(cards).map(([k, bg]) => [k, +worst(s.id, bg).toFixed(2)]));
+    }
+    for (const s of SYMBOL_SETS) {
+      const passes = Object.entries(table[s.id]).filter(([, v]) => v >= SYMBOL_MIN_CONTRAST).map(([k]) => k);
+      info(`  ${s.id.padEnd(10)} clears ${SYMBOL_MIN_CONTRAST}:1 on: ${passes.join(', ') || 'NO card'}`);
+    }
+    const DARK = ['fall', 'steampunk', 'cyberpunk', 'winter', 'ocean', 'night'];
+    check('*** the six dark-card sets all clear 3:1 on the board’s own pinned card ***',
+      DARK.every((id) => table[id].pinned >= 3), JSON.stringify(DARK.map((id) => table[id].pinned)));
+    check('...and every dark theme’s card', DARK.every((id) => ['dusk', 'fall', 'steampunk', 'cyberpunk',
+      'winter', 'ocean', 'night'].every((th) => table[id][`theme:${th}`] >= 3)));
+    check('cozy and mono clear it on every light card', ['cozy', 'mono'].every((id) => ['default',
+      'contrast', 'warm', 'forge', 'cozy'].every((th) => table[id][`theme:${th}`] >= 3)
+      && table[id].highContrast >= 3));
+    check('KNOWN, recorded: every single-family set FAILS on the other kind of card',
+      DARK.every((id) => table[id].highContrast < 3) && table.cozy.pinned < 3 && table.mono.pinned < 3);
+    check('KNOWN, recorded: `color` clears 3:1 on NO card (1.91 on the pinned card and on white)',
+      Object.values(table.color).every((v) => v < 3), JSON.stringify(table.color));
+    // Each theme's own set on that theme's own card: the combination "follow the theme" produces
+    // when the board also follows the theme's colours.
+    const own = Object.keys(THEMES).map((th) => [th, table[setForTheme(th)][`theme:${th}`]]);
+    const failing = own.filter(([, v]) => v < 3).map(([th, v]) => `${th}:${v}`);
+    check('*** every theme’s set reads on that theme’s own card — EXCEPT default/color, which is known ***',
+      failing.length === 1 && failing[0].startsWith('default:'), failing.join(', '));
+    const colorDark = Object.keys(SET_WORDS.color).filter((n) =>
+      drawingContrast(setColours('color', n), PINNED_CARD, null) < 3);
+    const colorLight = Object.keys(SET_WORDS.color).filter((n) =>
+      drawingContrast(setColours('color', n), '#ffffff', null) < 3);
+    info(`  color fails on the pinned card (${colorDark.length}): ${colorDark.join(', ')}`);
+    info(`  color fails on white (${colorLight.length}): ${colorLight.join(', ')}`);
+    check('color: the 13 words in the default theme’s link colour are the ones that fail on the pinned card',
+      colorDark.length === 13 && colorDark.every((n) => setColours('color', n).includes('#105666')));
+    // On white, some of those 12 fail in the board's own drawings too (the same light accent in
+    // the same word), and some are words the board draws in its ink but Design drew in an accent.
+    const alsoOwn = colorLight.filter((n) => drawingContrast(ownColours(n), '#ffffff', '#0a3323')
+      <= drawingContrast(setColours('color', n), '#ffffff', null) + 1e-9);
+    const worse = colorLight.filter((n) => !alsoOwn.includes(n));
+    info(`  ...of which fail the same way in the board’s own drawings: ${alsoOwn.join(', ')}`);
+    info(`  ...and read worse than the board’s own: ${worse.join(', ')}`);
+    check('color on white: 12 words fail, all in the light accents', colorLight.length === 12
+      && colorLight.every((n) => setColours('color', n).some((c) => ['#e2b45a', '#7fc6d8', '#d98a5f',
+        '#d3968c', '#6abf69'].includes(c))), colorLight.join());
+    check('...and following the theme, the ones worse than the board’s own use the board’s own',
+      worse.every((n) => pickSymbol({ name: n, setId: 'color', guard: true, bg: '#ffffff',
+        ink: '#0a3323' }).from === 'own')
+      && alsoOwn.every((n) => pickSymbol({ name: n, setId: 'color', guard: true, bg: '#ffffff',
+        ink: '#0a3323' }).from === 'set'), `worse: ${worse.join()} same: ${alsoOwn.join()}`);
+  }
+
+  section('*** pickSymbol — which drawing goes on a card ***');
+  {
+    const own = pickSymbol({ name: 'yes' });
+    check('no set: the board’s own', own.from === 'own');
+    check('a set somebody PINNED is used as it is, even on a card it was not drawn for',
+      pickSymbol({ name: 'yes', setId: 'cozy', guard: false, bg: PINNED_CARD, ink: PINNED_INK }).from === 'set');
+    check('*** following the theme, a drawing that would vanish on this card gives way to the board’s own ***',
+      pickSymbol({ name: 'you', setId: 'cozy', guard: true, bg: PINNED_CARD, ink: PINNED_INK }).from === 'own');
+    check('...and one that reads is used', pickSymbol({ name: 'you', setId: 'night', guard: true,
+      bg: PINNED_CARD, ink: PINNED_INK }).from === 'set');
+    check('...per word: color on the pinned card keeps its green words and gives up its blue ones',
+      pickSymbol({ name: 'do', setId: 'color', guard: true, bg: PINNED_CARD, ink: PINNED_INK }).from === 'set'
+        && pickSymbol({ name: 'you', setId: 'color', guard: true, bg: PINNED_CARD, ink: PINNED_INK }).from === 'own');
+    check('a failing drawing that is NO WORSE than the board’s own is kept (it is not a downgrade)',
+      pickSymbol({ name: 'help', setId: 'color', guard: true, bg: '#ffffff', ink: '#0a3323' }).from === 'set');
+    check('*** a card that cannot be measured keeps the board’s own — unmeasured is "as it was" ***',
+      pickSymbol({ name: 'you', setId: 'night', guard: true, bg: null, ink: null }).from === 'own');
+    const saved = SET_WORDS.night.yes;
+    delete SET_WORDS.night.yes;
+    try {
+      check('*** a word the set did not draw uses the board’s own drawing of that word ***',
+        pickSymbol({ name: 'yes', setId: 'night', guard: false, bg: PINNED_CARD }).from === 'own'
+          && pickSymbol({ name: 'no', setId: 'night', guard: false, bg: PINNED_CARD }).from === 'set');
+    } finally { SET_WORDS.night.yes = saved; }
+    check('a symbol nobody drew at all is "none" — a word-only card, never a broken picture',
+      pickSymbol({ name: 'no-such-symbol', setId: 'night' }).from === 'none');
+    check('the board’s own drawings have colours to measure too', ownColours('yes').join() === '#6abf69'
+      && ownColours('okay').join() === 'currentColor');
+    check('currentColor is measured as the card’s ink', Math.abs(drawingContrast(['currentColor'],
+      PINNED_CARD, PINNED_INK) - contrast(PINNED_INK, PINNED_CARD)) < 1e-9);
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

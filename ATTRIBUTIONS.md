@@ -93,6 +93,20 @@ third-party licence to record here — this entry is the credit.
 
 ---
 
+## AAC board symbol sets — made with Claude Design
+
+`web/client/design-assets/aac/` (`color/`, `mono/`, `fall/`, `steampunk/`, `cyberpunk/`, `cozy/`, `winter/`, `ocean/`, `night/`)
+
+| | |
+|---|---|
+| **What** | The AAC board's 55 symbol words drawn in nine styles — one for each live theme, a full-colour set and a black-line set. Offered on the board as a choice (`modules/board.js` setting "Symbols"; `aac_sets.js`): the board's own drawings stay the default, a board can follow the screen's theme, or pin one set |
+| **Made by** | [Claude Design](https://claude.ai), for this project, delivered 2026-09-28 |
+| **Provenance** | Each SVG carries its C2PA content credential in `<metadata>`; it is kept, not stripped |
+| **Changed** | Nothing — byte-for-byte what was delivered. Every file was checked on the way in (no script, handler, external reference or drawn text) by `web/tools/build_aac_sets.py`, and is re-checked by `dev/aac_sets_test.html`. Design's tenth, unthemed style was not copied: it is identical, word for word, to the board's own drawings in `aac_symbols.js` |
+
+Made for this project, not taken from a symbol library, so there is no third-party licence to
+record here — this entry is the credit.
+
 ---
 
 ## Nimrod the cat — made with Claude Design
@@ -115,7 +129,8 @@ credit.
 
 The board's symbols (`web/client/aac_symbols.js`) are **drawn in-repo**, not taken from a symbol
 library, so there is nothing to attribute and nothing that constrains how they are licensed
-later. That was a deliberate choice and it is the reason this file is short.
+later. That was a deliberate choice and it is the reason this file is short. (The optional designed
+sets the board can use instead are credited above; they too were made for this project.)
 
 Anything else added from outside — a font, a library, an icon set, a sound — gets a row here in
 the same shape as the one above, **before** it is committed.

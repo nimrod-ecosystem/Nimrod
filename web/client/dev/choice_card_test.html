@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the choice card — offered, never imposed — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:relative;width:480px;height:320px;margin-top:12px;border:1px solid #999}
+</style>
+</head>
+<body>
+<h1>the choice card</h1>
+<p>A small card that offers a choice at the moment it matters (Mike, 2026-09-29), built so that
+<b>if nobody answers, nothing happens</b>: it is non-modal, closes by button, by Escape and by
+itself, and closing it never changes anything but a ticked “Don’t show again”.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"><button type="button" id="under">a control under the card</button></div>
+
+<script type="module">
+import { showChoiceCard, createChoiceMemory, openChoiceCard,
+         CHOICE_TIMEOUT_MS, CHOICE_TIMEOUT_MIN_MS } from '../choice_card.js';
+import { applyTheme } from '../theme.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    pending: () => armed.length,
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+function fakeStore(v = {}) {
+  let val = { ...v };
+  return { get: () => val, set: (p) => { val = { ...val, ...p }; } };
+}
+const host = document.getElementById('host');
+const OPTS = [{ value: 'follow', label: 'Use them' }, { value: 'keep', label: 'Keep mine' }];
+const key = (k, target = document) => target.dispatchEvent(
+  new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+
+(async () => {
+try {
+  applyTheme(document.documentElement, 'default');
+
+  section('*** non-modal: nothing underneath stops working ***');
+  {
+    const clock = fakeClock();
+    const under = document.getElementById('under');
+    under.focus();
+    let underPressed = 0;
+    under.onclick = () => { underPressed++; };
+    const h = showChoiceCard(host, { id: 'q.modal', title: 'T', text: 'x', options: OPTS,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    check('it shows', h.shown && host.contains(h.el));
+    check('*** it is not modal — aria-modal is false, and nothing else is marked modal ***',
+      h.el.getAttribute('aria-modal') === 'false'
+        && !document.querySelector('[aria-modal="true"]'));
+    check('*** it does not take focus when it appears ***', document.activeElement === under,
+      String(document.activeElement && document.activeElement.id));
+    check('there is no backdrop: the card is the only thing it added', host.querySelectorAll('.choice-card').length === 1
+      && host.children.length === 2);
+    under.click();
+    check('*** a control beside it still works while it is up ***', underPressed === 1);
+    const r = h.el.getBoundingClientRect(), hr = host.getBoundingClientRect();
+    check('it covers only its own rectangle, not its host', r.height < hr.height && r.height > 0,
+      `${r.height} of ${hr.height}`);
+    check('it is a labelled dialog with its title and text', h.el.getAttribute('role') === 'dialog'
+      && document.getElementById(h.el.getAttribute('aria-labelledby'))?.textContent === 'T');
+    h.close();
+  }
+
+  section('*** it closes three ways, and closing is inaction ***');
+  for (const how of ['button', 'escape-anywhere', 'escape-inside']) {
+    const clock = fakeClock();
+    const chose = [], closed = [];
+    const h = showChoiceCard(host, { id: `q.close.${how}`, title: 'T', text: 'x', options: OPTS,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onChoose: (v) => chose.push(v), onClose: (i) => closed.push(i.reason) });
+    let outerEscape = 0;
+    const count = (e) => { if (e.key === 'Escape') outerEscape++; };
+    document.addEventListener('keydown', count);
+    if (how === 'button') h.el.querySelector('[data-cc-close]').click();
+    else if (how === 'escape-anywhere') key('Escape', document.body);
+    else { h.el.querySelector('[data-cc-opt]').focus(); key('Escape', h.el.querySelector('[data-cc-opt]')); }
+    document.removeEventListener('keydown', count);
+    check(`${how}: closed`, !host.contains(h.el) && closed.length === 1, JSON.stringify(closed));
+    check(`${how}: *** and chose nothing ***`, chose.length === 0, JSON.stringify(chose));
+    check(`${how}: its timer went with it`, clock.pending() === 0, String(clock.pending()));
+    if (how === 'escape-anywhere') {
+      check('Escape pressed elsewhere is NOT swallowed — a menu it was pressed for still gets it',
+        outerEscape === 1, String(outerEscape));
+    }
+    if (how === 'escape-inside') {
+      check('Escape inside the card stops at the card', outerEscape === 0, String(outerEscape));
+    }
+  }
+  {
+    const b = document.createElement('div');
+    check('the close button is labelled and reachable',
+      (() => { const h = showChoiceCard(host, { id: 'q.x', title: 'T', options: OPTS });
+        const x = h.el.querySelector('[data-cc-close]');
+        const ok = x && x.getAttribute('aria-label') === 'Close' && x.tagName === 'BUTTON';
+        h.close(); return ok; })());
+    b.remove();
+  }
+
+  section('*** if nobody answers, it goes away by itself — and nothing changes ***');
+  {
+    const clock = fakeClock();
+    const chose = [], closed = [];
+    const h = showChoiceCard(host, { id: 'q.timeout', title: 'T', options: OPTS, timeoutMs: 20000,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onChoose: (v) => chose.push(v), onClose: (i) => closed.push(i.reason) });
+    clock.advance(19999);
+    check('still up just before its delay', host.contains(h.el));
+    clock.advance(1);
+    check('*** gone at its delay ***', !host.contains(h.el), JSON.stringify(closed));
+    check('*** and nothing was chosen ***', chose.length === 0 && closed[0] === 'timeout',
+      JSON.stringify({ chose, closed }));
+  }
+  {
+    const clock = fakeClock();
+    for (const asked of [0, -5, null, 'never', 1000]) {
+      const h = showChoiceCard(host, { id: `q.min.${asked}`, title: 'T', options: OPTS,
+        timeoutMs: asked, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      const w = h.probe().waitMs;
+      check(`*** asked for ${JSON.stringify(asked)}: it still goes by itself (${w} ms) ***`,
+        Number.isFinite(w) && w >= CHOICE_TIMEOUT_MIN_MS, String(w));
+      h.close();
+    }
+    check('the default delay is the documented one', CHOICE_TIMEOUT_MS === 30000);
+  }
+  {
+    const clock = fakeClock();
+    const h = showChoiceCard(host, { id: 'q.hold', title: 'T', options: OPTS, timeoutMs: 20000,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    h.el.dispatchEvent(new PointerEvent('pointerenter'));
+    clock.advance(60000);
+    check('somebody pointing at it is reading it: the delay waits', host.contains(h.el));
+    h.el.dispatchEvent(new PointerEvent('pointerleave'));
+    clock.advance(19999);
+    check('...and starts again, in full, when they leave it', host.contains(h.el));
+    clock.advance(1);
+    check('...and it then goes', !host.contains(h.el));
+  }
+  {
+    const clock = fakeClock();
+    const h = showChoiceCard(host, { id: 'q.focus', title: 'T', options: OPTS, timeoutMs: 20000,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    h.el.querySelector('[data-cc-always]').focus();
+    clock.advance(60000);
+    check('focus inside it (a keyboard or switch user on a checkbox) also holds the delay',
+      host.contains(h.el));
+    document.getElementById('under').focus();
+    clock.advance(20000);
+    check('...and leaving it lets it go', !host.contains(h.el));
+  }
+
+  section('*** choosing, and the two checkboxes Mike named ***');
+  {
+    const clock = fakeClock();
+    const store = fakeStore();
+    const memory = createChoiceMemory(store, { now: clock.now });
+    const chose = [];
+    const h = showChoiceCard(host, { id: 'q.plain', title: 'T', options: OPTS, memory,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onChoose: (v, i) => chose.push([v, i]) });
+    check('the two checkboxes are there, with the words Mike used',
+      /Always use this option/.test(h.el.textContent) && /Don’t show again/.test(h.el.textContent));
+    check('both start unticked', !h.probe().always && !h.probe().dontShow);
+    h.el.querySelectorAll('[data-cc-opt]')[1].click();
+    check('an option press chooses exactly that option', chose.length === 1 && chose[0][0] === 'keep',
+      JSON.stringify(chose));
+    check('...and closes the card', !host.contains(h.el));
+    check('*** with neither box ticked, nothing is remembered: it will ask again ***',
+      memory.answer('q.plain') === undefined && !memory.muted('q.plain'), JSON.stringify(store.get()));
+    const again = showChoiceCard(host, { id: 'q.plain', title: 'T', options: OPTS, memory,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    check('...and does', again.shown === true);
+    again.close();
+  }
+  {
+    const clock = fakeClock();
+    const store = fakeStore();
+    const memory = createChoiceMemory(store, { now: clock.now });
+    const h = showChoiceCard(host, { id: 'q.always', title: 'T', options: OPTS, memory,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    h.el.querySelector('[data-cc-always]').click();
+    h.el.querySelectorAll('[data-cc-opt]')[0].click();
+    check('ALWAYS USE THIS OPTION: the answer is remembered in the store it was given',
+      store.get()['q.always']?.answer === 'follow', JSON.stringify(store.get()));
+    const chose = [];
+    const next = showChoiceCard(host, { id: 'q.always', title: 'T', options: OPTS, memory,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onChoose: (v, i) => chose.push([v, i]) });
+    check('*** next time it is APPLIED without showing the card ***',
+      next.shown === false && next.reason === 'remembered' && !host.querySelector('.choice-card'),
+      JSON.stringify(next));
+    check('...the caller is told it was a remembered answer',
+      chose.length === 1 && chose[0][0] === 'follow' && chose[0][1].remembered === true,
+      JSON.stringify(chose));
+    const stale = showChoiceCard(host, { id: 'q.always', title: 'T', memory,
+      options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }],
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    check('a remembered answer that is not among today’s options is ignored, and it asks',
+      stale.shown === true);
+    stale.close();
+    memory.forget('q.always');
+    const back = showChoiceCard(host, { id: 'q.always', title: 'T', options: OPTS, memory,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    check('forget() is the way back: it asks again', back.shown === true);
+    back.close();
+  }
+  {
+    const clock = fakeClock();
+    const store = fakeStore();
+    const memory = createChoiceMemory(store, { now: clock.now });
+    const h = showChoiceCard(host, { id: 'q.always-closed', title: 'T', options: OPTS, memory,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    h.el.querySelector('[data-cc-always]').click();
+    h.el.querySelector('[data-cc-close]').click();
+    check('"Always" ticked and then CLOSED remembers nothing — there was no option to remember',
+      store.get()['q.always-closed'] === undefined, JSON.stringify(store.get()));
+  }
+  for (const how of ['close', 'timeout', 'escape', 'chosen']) {
+    const clock = fakeClock();
+    const store = fakeStore();
+    const memory = createChoiceMemory(store, { now: clock.now });
+    const chose = [];
+    const h = showChoiceCard(host, { id: `q.mute.${how}`, title: 'T', options: OPTS, memory,
+      timeoutMs: 10000, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onChoose: (v) => chose.push(v) });
+    h.el.querySelector('[data-cc-mute]').click();
+    document.getElementById('under').focus();       // the tick must not hold the timeout forever
+    if (how === 'close') h.el.querySelector('[data-cc-close]').click();
+    else if (how === 'timeout') clock.advance(10000);
+    else if (how === 'escape') key('Escape', document.body);
+    else h.el.querySelectorAll('[data-cc-opt]')[1].click();
+    check(`DON’T SHOW AGAIN, then ${how}: remembered`, memory.muted(`q.mute.${how}`),
+      JSON.stringify(store.get()));
+    const next = showChoiceCard(host, { id: `q.mute.${how}`, title: 'T', options: OPTS, memory,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onChoose: (v) => chose.push(v) });
+    check(`...next time it does not show (${how})`, next.shown === false && next.reason === 'muted');
+    check(`...*** and applies nothing — the setting stands as it is (${how}) ***`,
+      chose.length === (how === 'chosen' ? 1 : 0), JSON.stringify(chose));
+  }
+
+  section('*** it never appears by itself ***');
+  {
+    // The component has no way to open without being called: no timer that shows anything, and
+    // loading the file does nothing to the page. The callers' suites prove they only call it
+    // after a change made on their own device (board_symbols_test).
+    const clock = fakeClock();
+    check('importing it put nothing on the page', !document.querySelector('.choice-card'));
+    const h = showChoiceCard(host, { id: 'q.once', title: 'T', options: OPTS,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    h.close();
+    clock.advance(10 * 60 * 1000);
+    check('*** closed stays closed — nothing re-opens it later ***',
+      !document.querySelector('.choice-card') && clock.pending() === 0);
+    const one = showChoiceCard(host, { id: 'q.dup', title: 'first', options: OPTS,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const two = showChoiceCard(host, { id: 'q.dup', title: 'second', options: OPTS,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    check('one question, one card: asking again replaces it',
+      host.querySelectorAll('.choice-card').length === 1 && openChoiceCard('q.dup') === two
+        && !host.contains(one.el));
+    two.close();
+    check('nothing is drawn with no options to offer', showChoiceCard(host, { id: 'q.none',
+      options: [] }).shown === false && !host.querySelector('.choice-card'));
+  }
+
+  section('*** a press on the card is a press on the card ***');
+  {
+    const clock = fakeClock();
+    let bubbled = 0;
+    const count = () => { bubbled++; };
+    host.addEventListener('pointerdown', count);
+    host.addEventListener('click', count);
+    const h = showChoiceCard(host, { id: 'q.press', title: 'T', options: OPTS,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    h.el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    h.el.querySelector('[data-cc-always]').click();
+    check('a screen-wide pointer binding never sees it as a switch press', bubbled === 0,
+      String(bubbled));
+    host.removeEventListener('pointerdown', count);
+    host.removeEventListener('click', count);
+    h.close();
+  }
+
+  section('it wears the theme, with no colours of its own');
+  {
+    const clock = fakeClock();
+    const h = showChoiceCard(host, { id: 'q.look', title: 'T', options: OPTS,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    await sleep(120);                          // its stylesheet is loaded by the component
+    const cs = getComputedStyle(h.el);
+    check('its stylesheet arrived', cs.position === 'absolute', cs.position);
+    check('background is the theme surface', cs.backgroundColor === 'rgb(255, 255, 255)', cs.backgroundColor);
+    applyTheme(document.documentElement, 'night');
+    const dark = getComputedStyle(h.el).backgroundColor;
+    check('...and follows a theme change with no work', dark === 'rgb(19, 26, 42)', dark);
+    applyTheme(document.documentElement, 'default');
+    h.close();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

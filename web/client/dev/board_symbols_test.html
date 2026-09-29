@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the board's symbol sets — offered, followed, pinned — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .host{position:relative;width:600px;height:440px;margin-top:12px;border:1px solid #999}
+</style>
+</head>
+<body>
+<h1>the board’s symbol sets</h1>
+<p>Mike, 2026-09-29: <i>“Offered as a choice. They should change when you change themes and there
+should be an option to lock them to a single set.”</i> This suite proves the three halves of that,
+that an existing board is untouched until somebody chooses, and that the choice card only ever
+appears on the screen where somebody just changed the theme — and changes nothing if left alone.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div class="host" id="host"></div>
+<div class="host" id="host2"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { normalizeField } from '../settings_fields.js';
+import { normalizeBoard, BUILTIN_BOARDS } from '../aac_vocab.js';
+import { symbolSvg } from '../aac_symbols.js';
+import { cardFaceHTML } from '../card_face.js';
+import { applyTheme } from '../theme.js';
+import { SET_WORDS } from '../aac_sets_data.js';
+import { SYMBOL_SETS, setColours } from '../aac_sets.js';
+import { CHOICE_TIMEOUT_MS } from '../choice_card.js';
+import { SETTINGS, THEME_PICKED_TOPIC, CHOICES_KEY } from '../modules/board.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const tick = () => sleep(0);
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+function fakeState(v) {
+  let val = { ...v };
+  const subs = [];
+  return { get: () => val, set: (p) => { val = { ...val, ...p }; subs.forEach((f) => f(val)); },
+           subscribe: (f) => { subs.push(f); }, flush: () => {}, load: () => Promise.resolve() };
+}
+function fakeEvents() {
+  const rows = [];
+  return { rows, append: (kind, data) => { rows.push({ kind, data }); return Promise.resolve(); } };
+}
+
+const root = document.documentElement;
+async function theme(id, { local = false, bus = null } = {}) {
+  applyTheme(root, id);
+  if (local) bus.publish(THEME_PICKED_TOPIC, { theme: id });
+  await tick();
+}
+
+// A board, the way the kiosk mounts one — with a per-profile `makeState` so the choice card has
+// somewhere to remember answers. `stores` is shared when two boards are the same profile.
+async function mountBoard(row, { hostId = 'host', stores = {}, bus = createBus(), clock = fakeClock() } = {}) {
+  const events = fakeEvents();
+  const said = [];
+  const state = fakeState(row);
+  const inst = mountModule('board', {
+    mount: document.getElementById(hostId), bus, events, state,
+    output: { say: (t) => said.push(t) },
+    setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+    makeState: (k) => (stores[k] = stores[k] || fakeState({})),
+  });
+  inst.init();
+  await tick();
+  return { inst, p: () => inst.impl.__probe(), state, bus, clock, events, said, stores };
+}
+const CARE = normalizeBoard(BUILTIN_BOARDS.care);
+const symbolsOf = (b) => b.cells.filter(Boolean).map((c) => c.symbol);
+const allFrom = (p, what) => p.symbolFrom.filter((x) => x !== null).every((x) => x === what);
+
+(async () => {
+try {
+  await theme('default');
+
+  section('*** an existing board is untouched until somebody chooses ***');
+  {
+    const b = await mountBoard({ boardId: 'care' });
+    const p = b.p();
+    check('the default is the board’s own drawings', p.symbols === 'own' && p.symbolMode === 'own'
+      && p.symbolSet === null);
+    // Through the browser's own serializer, as the card's innerHTML was, so `<path/>` and
+    // `<path></path>` compare as the same markup.
+    const serial = (html) => { const t = document.createElement('button'); t.innerHTML = html; return t.innerHTML; };
+    const expected = CARE.cells.map((c) => (c ? serial(cardFaceHTML({ word: c.word,
+      symbol: symbolSvg(c.symbol), image: !!c.image })) : ''));
+    const same = p.cardHTML.every((h, i) => !CARE.cells[i] || h === expected[i]);
+    check('*** every card is byte-for-byte what it was before sets existed ***', same,
+      p.cardHTML.find((h, i) => CARE.cells[i] && h !== expected[i]));
+    check('...and carries no new attribute', p.symbolFrom.every((x) => x === null || x === 'own')
+      && !document.querySelector('#host [data-sym]'));
+    const before = p.cardHTML.join('');
+    await theme('night');
+    check('the theme changed and the board saw it', b.p().theme === 'night');
+    check('*** ...and not one card moved: its own drawings do not follow a theme ***',
+      b.p().cardHTML.join('') === before);
+    await theme('cozy');
+    check('...nor on a light theme', b.p().cardHTML.join('') === before);
+    check('a theme that arrived without anybody picking it here asks nothing', !b.p().card
+      && !document.querySelector('.choice-card'));
+    b.inst.destroy();
+    await theme('default');
+
+    const unknown = await mountBoard({ boardId: 'care', symbols: 'a-set-since-withdrawn' });
+    check('a stored set that no longer exists draws the board’s own, never a guess',
+      unknown.p().symbolMode === 'own' && unknown.p().cardHTML.join('') === before);
+    unknown.inst.destroy();
+  }
+
+  section('*** "Follow the theme": the symbols change when the theme does ***');
+  {
+    const b = await mountBoard({ boardId: 'care', symbols: 'theme' });
+    await theme('night');
+    let p = b.p();
+    check('night theme: every card draws the night set', p.symbolSet === 'night' && allFrom(p, 'set:night'),
+      JSON.stringify(p.symbolFrom));
+    check('...from Design’s files', p.symbolSrc.filter(Boolean).every((s, i) =>
+      /^\/design-assets\/aac\/night\/[a-z_]+\.svg$/.test(s)), p.symbolSrc.join());
+    check('...each card’s file is its own word', CARE.cells.every((c, i) => !c
+      || p.symbolSrc[i] === `/design-assets/aac/night/${c.symbol}.svg`));
+    await sleep(400);
+    const img = document.querySelector('#host .ab-sym img');
+    check('the drawings actually load', img && img.complete && img.naturalWidth > 0,
+      img ? `${img.src} ${img.naturalWidth}` : 'no img');
+    check('a drawing is decoration: alt is empty, the card is named by its word',
+      img && img.getAttribute('alt') === '' && img.closest('.ab-card').getAttribute('aria-label'));
+    const words = p.words.join('|');
+    await theme('steampunk');
+    p = b.p();
+    check('*** steampunk theme: the steampunk set, with no reload ***', allFrom(p, 'set:steampunk'));
+    check('the WORDS never change with the symbols', p.words.join('|') === words);
+    await theme('dusk');
+    check('dusk (no set of its own) follows to night', allFrom(b.p(), 'set:night'));
+
+    // The board's own card is pinned dark by default. Cozy's dark drawings on it would be 1.33:1.
+    await theme('cozy');
+    p = b.p();
+    check('*** cozy theme on the board’s own DARK card: its dark drawings would vanish, so the board’s own are used ***',
+      p.symbolSet === 'cozy' && allFrom(p, 'own'), JSON.stringify(p.symbolFrom));
+    b.state.set({ followTheme: true });
+    await tick();
+    p = b.p();
+    check('...and when the board’s colours follow the theme too (a white card), cozy’s drawings are used',
+      allFrom(p, 'set:cozy'), JSON.stringify(p.symbolFrom));
+    b.state.set({ followTheme: false });
+
+    await theme('default');
+    p = b.p();
+    const split = CARE.cells.filter(Boolean).map((c, i) => [c.symbol, p.symbolFrom[CARE.cells.indexOf(c)]]);
+    const linkWords = split.filter(([s]) => setColours('color', s).includes('#105666'));
+    check('*** default theme on the pinned card: PER WORD, color’s dark-blue words give way, the rest are used ***',
+      linkWords.length > 0 && linkWords.every(([, f]) => f === 'own')
+        && split.filter(([s]) => !setColours('color', s).includes('#105666')).every(([, f]) => f === 'set:color'),
+      JSON.stringify(split));
+    b.inst.destroy();
+  }
+
+  section('*** "Lock to one set": pinned, whatever the theme ***');
+  {
+    const b = await mountBoard({ boardId: 'care', symbols: 'winter' });
+    check('winter pinned', b.p().symbolMode === 'lock' && allFrom(b.p(), 'set:winter'));
+    await theme('night');
+    check('...the night theme does not move it', allFrom(b.p(), 'set:winter'));
+    await theme('cozy');
+    b.state.set({ followTheme: true });
+    await tick();
+    check('*** ...nor a light theme on a white card: a pinned set is used as it is (the chooser’s call) ***',
+      allFrom(b.p(), 'set:winter'), JSON.stringify(b.p().symbolFrom));
+    b.inst.destroy();
+    await theme('default');
+  }
+
+  section('*** per word: a word the set did not draw keeps the board’s own drawing ***');
+  {
+    const saved = SET_WORDS.night.yes;
+    delete SET_WORDS.night.yes;
+    try {
+      const b = await mountBoard({ boardId: 'care', symbols: 'night' });
+      const p = b.p();
+      const yi = CARE.cells.findIndex((c) => c && c.symbol === 'yes');
+      const ni = CARE.cells.findIndex((c) => c && c.symbol === 'no');
+      check('the word Design did not draw uses the board’s own drawing',
+        p.symbolFrom[yi] === 'own' && /<svg/.test(p.cardHTML[yi]), p.symbolFrom[yi]);
+      check('...and the words it did draw use the set', p.symbolFrom[ni] === 'set:night');
+      b.inst.destroy();
+    } finally { SET_WORDS.night.yes = saved; }
+  }
+
+  section('the setting, as the menu sees it');
+  {
+    const f = normalizeField(SETTINGS.find((s) => s.key === 'symbols'));
+    check('one "Symbols" row, defaulting to the board’s own', f && f.kind === 'choice' && f.default === 'own');
+    const vals = f.options.map((o) => o.value);
+    check('it offers own, follow-the-theme, and every set pinned',
+      vals[0] === 'own' && vals[1] === 'theme' && SYMBOL_SETS.every((s) => vals.includes(s.id)),
+      vals.join());
+    check('each pinned set says which kind of card it was drawn for (except color, drawn for both)',
+      f.options.filter((o) => SYMBOL_SETS.some((s) => s.id === o.value && s.card !== 'mixed'))
+        .every((o) => /\(for (dark|light) cards\)/.test(o.label)));
+    const t = normalizeField(SETTINGS.find((s) => s.key === 'choiceCardMs'));
+    check('the choice card’s delay is a setting, default 30 seconds', t && t.default === CHOICE_TIMEOUT_MS);
+    check('*** ...and it has no "never" — every option goes by itself ***',
+      t.options.every((o) => Number(o.value) > 0), JSON.stringify(t.options));
+  }
+
+  section('*** the choice card appears ONLY after a theme picked on this screen ***');
+  {
+    const b = await mountBoard({ boardId: 'care' });
+    await theme('night');
+    check('a theme arriving from elsewhere (polling, another device) asks nothing', !b.p().card
+      && !document.querySelector('.choice-card'));
+    await theme('ocean', { local: true, bus: b.bus });
+    let p = b.p();
+    check('*** picked on this screen: the card offers the matching set ***', p.card && p.card.open
+      && p.card.options.join() === 'follow,keep', JSON.stringify(p.card));
+    check('...drawn inside the board, not over the whole page', p.cardEl
+      && document.querySelector('#host .aboard').contains(p.cardEl));
+    check('...and it says what it is about', /matching board symbols/.test(p.cardEl.textContent)
+      && /Aquarium set/.test(p.cardEl.textContent), p.cardEl.textContent);
+
+    // NON-MODAL on the board: the cards beside it still speak.
+    const card0 = document.querySelectorAll('#host .ab-card')[0];
+    card0.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('*** with the card up, touching a board card still says the word ***',
+      b.said.length === 1 && b.said[0] === CARE.cells[0].word, JSON.stringify(b.said));
+    b.bus.publish('board/pick', { index: 1 });
+    check('...and a switch or remote pick still chooses', b.said.length === 2);
+    check('the card did not take focus from the board', !b.p().cardEl.contains(document.activeElement));
+
+    b.clock.advance(CHOICE_TIMEOUT_MS);
+    p = b.p();
+    check('*** nobody answered: it went away by itself ***', !p.card && !document.querySelector('.choice-card'));
+    check('*** ...and NOTHING changed: still the board’s own drawings, nothing written ***',
+      p.symbols === 'own' && !('symbols' in b.state.get()) && allFrom(p, 'own'),
+      JSON.stringify(b.state.get()));
+
+    await theme('night', { local: true, bus: b.bus });
+    b.p().cardEl.querySelectorAll('[data-cc-opt]')[0].click();
+    await tick();
+    p = b.p();
+    check('*** "Use them": the board now follows the theme ***', b.state.get().symbols === 'theme'
+      && p.symbolMode === 'theme' && allFrom(p, 'set:night'), JSON.stringify(p.symbolFrom));
+    check('...and the card is gone', !p.card && !document.querySelector('.choice-card'));
+
+    // Following now. The next pick on this screen changes the set, and the card says so.
+    await theme('winter', { local: true, bus: b.bus });
+    p = b.p();
+    check('following: a picked theme changes the set AND offers to keep the old one',
+      allFrom(p, 'set:winter') && p.card && /changed with the theme/.test(p.cardEl.textContent)
+        && /Night set/.test(p.cardEl.textContent), p.cardEl && p.cardEl.textContent);
+    [...p.cardEl.querySelectorAll('[data-cc-opt]')].find((x) => /Keep the Night/.test(x.textContent)).click();
+    await tick();
+    p = b.p();
+    check('*** "Keep the Night set": pinned to night, whatever the theme ***',
+      b.state.get().symbols === 'night' && p.symbolMode === 'lock' && allFrom(p, 'set:night'));
+    await theme('ocean', { local: true, bus: b.bus });
+    check('a pinned set is a question already answered: no card', !b.p().card && allFrom(b.p(), 'set:night'));
+    b.inst.destroy();
+    await theme('default');
+  }
+  {
+    const b = await mountBoard({ boardId: 'care', symbols: 'theme' });
+    await theme('warm');
+    await theme('forge', { local: true, bus: b.bus });
+    check('following, a picked theme whose set is the same (warm -> forge, both cozy) asks nothing',
+      !b.p().card);
+    await theme('night');
+    check('following, a theme from elsewhere switches the set silently',
+      allFrom(b.p(), 'set:night') && !b.p().card);
+    b.inst.destroy();
+    await theme('default');
+  }
+
+  section('closing it — by button, by Escape — changes nothing');
+  for (const how of ['button', 'escape']) {
+    const b = await mountBoard({ boardId: 'care' });
+    await theme('night', { local: true, bus: b.bus });
+    const el = b.p().cardEl;
+    if (how === 'button') el.querySelector('[data-cc-close]').click();
+    else document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await tick();
+    check(`${how}: closed, and still the board’s own drawings`, !b.p().card && b.p().symbolMode === 'own'
+      && !('symbols' in b.state.get()));
+    b.inst.destroy();
+    await theme('default');
+  }
+
+  section('*** the two checkboxes, remembered per profile ***');
+  {
+    const stores = {};
+    const a = await mountBoard({ boardId: 'care' }, { stores });
+    await theme('night', { local: true, bus: a.bus });
+    const el = a.p().cardEl;
+    el.querySelector('[data-cc-always]').click();
+    el.querySelectorAll('[data-cc-opt]')[0].click();
+    await tick();
+    check('ALWAYS + "Use them": remembered in the profile’s shared row',
+      stores[CHOICES_KEY] && stores[CHOICES_KEY].get()['board.symbols.offer']?.answer === 'follow',
+      JSON.stringify(stores[CHOICES_KEY] && stores[CHOICES_KEY].get()));
+    a.inst.destroy();
+    await theme('default');
+
+    // Another board on the same profile, still on its own drawings.
+    const b = await mountBoard({ boardId: 'care' }, { stores });
+    await theme('ocean', { local: true, bus: b.bus });
+    check('*** next time: applied without a card ***', !b.p().card && !document.querySelector('.choice-card')
+      && b.state.get().symbols === 'theme' && allFrom(b.p(), 'set:ocean'), JSON.stringify(b.state.get()));
+    b.inst.destroy();
+    await theme('default');
+  }
+  {
+    const stores = {};
+    const a = await mountBoard({ boardId: 'care' }, { stores });
+    await theme('night', { local: true, bus: a.bus });
+    const el = a.p().cardEl;
+    el.querySelector('[data-cc-mute]').click();
+    el.querySelector('[data-cc-close]').click();
+    await tick();
+    check('DON’T SHOW AGAIN + close: remembered', stores[CHOICES_KEY].get()['board.symbols.offer']?.dontShow === true);
+    await theme('ocean', { local: true, bus: a.bus });
+    check('*** next time: no card, and nothing applied ***', !a.p().card && a.p().symbolMode === 'own'
+      && !('symbols' in a.state.get()));
+    a.inst.destroy();
+    await theme('default');
+  }
+
+  section('when it is NOT offered');
+  {
+    const b = await mountBoard({ boardId: 'care', locked: true });
+    await theme('night', { local: true, bus: b.bus });
+    check('a LOCKED board shows no caregiver control on its cards — this card included', !b.p().card);
+    b.inst.destroy();
+    await theme('default');
+    const c = await mountBoard({ boardId: 'care' });
+    await theme('cozy', { local: true, bus: c.bus });
+    check('a set that would not read on this board’s cards is not offered (cozy on the dark card)',
+      !c.p().card);
+    c.inst.destroy();
+    await theme('default');
+    const d = await mountBoard({ boardId: 'care', followTheme: true });
+    await theme('cozy', { local: true, bus: d.bus });
+    check('...and is, once the cards are the theme’s white', !!d.p().card);
+    d.inst.destroy();
+    await theme('default');
+  }
+
+  section('its delay is the board’s setting');
+  {
+    const b = await mountBoard({ boardId: 'care', choiceCardMs: 60000 });
+    await theme('night', { local: true, bus: b.bus });
+    b.clock.advance(30000);
+    check('set to a minute: still up at thirty seconds', !!b.p().card);
+    b.clock.advance(30000);
+    check('...gone at a minute, having changed nothing', !b.p().card && b.p().symbolMode === 'own');
+    b.inst.destroy();
+    await theme('default');
+  }
+  {
+    const b = await mountBoard({ boardId: 'care' });
+    await theme('night', { local: true, bus: b.bus });
+    b.inst.destroy();
+    check('destroying the board takes its card and its timer with it', !document.querySelector('.choice-card'));
+    await theme('default');
+  }
+
+  section('*** the kiosk is what says "picked on this screen" ***');
+  {
+    const src = await (await fetch('../kiosk.js')).text();
+    check('the topic is the one the kiosk publishes', THEME_PICKED_TOPIC === 'screen/theme-picked');
+    check('*** kiosk.js publishes it from its own menu, only for the theme row ***',
+      /if \(key === 'theme'\) bus\.publish\('screen\/theme-picked'/.test(src));
+    const poll = src.indexOf('settings.subscribe((s) => {');
+    const block = poll >= 0 ? src.slice(poll, src.indexOf('});', poll)) : '';
+    check('...and NOT from the settings subscription, which is where a theme from another device lands',
+      poll >= 0 && !/theme-picked/.test(block));
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+try { applyTheme(document.documentElement, 'default'); } catch { /* noop */ }
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

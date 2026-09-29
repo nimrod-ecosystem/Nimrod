@@ -1757,7 +1757,15 @@ export async function mountKiosk(root, {
         // active level would change nothing today — but passing `advanced` here would be the
         // quiet way the escape hatch stops being one the first time somebody adds a row.
         level: complexity(),
-        onStep: (key, value) => { settings.set({ [key]: value }); },
+        onStep: (key, value) => {
+          settings.set({ [key]: value });
+          // A THEME PICKED HERE, BY SOMEBODY AT THIS SCREEN. Published after the set (which
+          // applies the theme synchronously), so a listener sees the new theme already on screen.
+          // It is how the AAC board knows it may offer its symbol-set choice card: a theme that
+          // arrives from another device by polling never passes through here, so it never asks.
+          // Topic: `THEME_PICKED_TOPIC` in modules/board.js (its suite checks this line).
+          if (key === 'theme') bus.publish('screen/theme-picked', { theme: value });
+        },
       }),
       // *** AN AMBIENT MODULE'S OWN SETTINGS, FOUND MISSING ENTIRELY 2026-09-27. ***
       //
