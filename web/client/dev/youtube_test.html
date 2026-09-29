@@ -36,7 +36,8 @@ import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
-import { mountModule } from '../module.js';
+import { mountModule, getManifest } from '../module.js';
+import { fieldsFor, displayValue } from '../settings_fields.js';
 import { pressControls, checkHiddenHides } from './press_controls.js';
 import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
 import { createPresetLibrary } from '../presets.js';
@@ -111,6 +112,13 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
   checkHiddenHides('youtube', 'status', check, 'youtube’s status sheet');
 
   try {
+    // Mike, 2026-09-28: "mask it" -- the API key must never be readable from the settings menu.
+    {
+      const key = fieldsFor(getManifest('youtube')).find((f) => f.key === 'apiKey');
+      check('*** the API key field is SECRET: masked in the menu, never put back into the page ***',
+        key && key.secret === true && !displayValue(key, 'AIzaSyD-abcdef1234').includes('abcdef'),
+        JSON.stringify(key));
+    }
     // --- unit: the id parser (pure) ------------------------------------------
     check('parseVideoId: bare 11-char id', parseVideoId('dQw4w9WgXcQ') === 'dQw4w9WgXcQ');
     check('parseVideoId: watch?v= url', parseVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10s') === 'dQw4w9WgXcQ');
