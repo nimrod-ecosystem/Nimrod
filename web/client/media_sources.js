@@ -20,7 +20,7 @@
 import { cachedFetch } from './cache.js';
 import { authHeaders, httpError } from './auth.js';
 import { listFolderSources, removeFolderSource, resolveFolderListing,
-         folderFileUrl } from './folder_source.js';
+         folderFileUrl, listFolderNames } from './folder_source.js';
 
 const trimSlash = (u) => String(u || '').replace(/\/+$/, '');
 
@@ -145,6 +145,27 @@ export async function resolveListing(source, album = '', { fetchImpl = fetch } =
     url: mediaUrl(base, it.path),
   }));
   return { album: body.album || album, albums: body.albums || [], items, count: items.length };
+}
+
+/**
+ * WHAT IS ON A SOURCE, BY NAME ONLY — for something that offers a choice of one file (the
+ * `button` module's picture) rather than playing them all. Returns `[{ path, name, kind }]`.
+ *
+ * For a FOLDER it deliberately does not go through `resolveListing`: that makes an object URL for
+ * every file and revokes the previous listing's, which would blank a photo panel showing the same
+ * folder (see `listFolderNames`). For an agent, `/list` already is names only.
+ */
+export async function listItemNames(source, album = '', { fetchImpl = fetch } = {}) {
+  if (!source) return [];
+  if (source.kind === 'folder') return listFolderNames(source, album);
+  const base = trimSlash(source.base_url);
+  const q = album ? `?album=${encodeURIComponent(album)}` : '';
+  const res = await fetchImpl(`${base}/list${q}`);
+  if (!res.ok) throw httpError(res, `media source "${source.label}": /list -> ${res.status}`);
+  const body = await res.json();
+  return (body.items || []).map((it) => ({
+    path: it.path, name: it.name || String(it.path || '').split('/').pop(), kind: it.kind,
+  })).filter((it) => it.path);
 }
 
 /**

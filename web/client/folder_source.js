@@ -210,6 +210,43 @@ export async function folderFileUrl(sourceId, path) {
   return { url, release: () => { try { URL.revokeObjectURL(url); } catch { /* gone */ } } };
 }
 
+/**
+ * THE NAMES IN A FOLDER, AND NOTHING ELSE — no files read, no object URLs made.
+ *
+ * Added 2026-09-28 for `modules/button.js`, whose picture setting offers "which picture" as a
+ * list. It must NOT call `resolveFolderListing` to get that list: every run of that function
+ * revokes the previous listing's URLs for the same folder, so a settings row asking "what is in
+ * this folder?" would blank a photo panel showing the same folder on the same screen. This reads
+ * the directory the same way and stops before touching a single file.
+ *
+ * Returns `[{ path, name, kind }]`, sorted by name, same `album` rules and same coded failures.
+ */
+export async function listFolderNames(source, album = '') {
+  const row = await getRow(source.id);
+  if (!row || !row.handle) {
+    throw folderError('missing', `folder source "${source.label}": no longer stored`, source.id);
+  }
+  const perm = await row.handle.queryPermission({ mode: 'read' });
+  if (perm !== 'granted') {
+    throw folderError('permission',
+      `folder source "${source.label}": permission is "${perm}"`, source.id);
+  }
+  let dir = row.handle;
+  for (const part of String(album || '').split('/').filter(Boolean)) {
+    try { dir = await dir.getDirectoryHandle(part); }
+    catch { throw folderError('album', `folder source "${source.label}": no album "${album}"`, source.id); }
+  }
+  const out = [];
+  for await (const [name, entry] of dir.entries()) {
+    if (name.startsWith('.') || entry.kind === 'directory') continue;
+    const k = kindOf(name);
+    if (!k) continue;
+    out.push({ path: album ? `${album}/${name}` : name, name, kind: k });
+  }
+  out.sort((a, b) => a.name.localeCompare(b.name));
+  return out;
+}
+
 export async function resolveFolderListing(source, album = '') {
   const row = await getRow(source.id);
   if (!row || !row.handle) {

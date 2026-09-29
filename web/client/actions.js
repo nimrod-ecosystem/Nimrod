@@ -236,6 +236,10 @@ export const MODULE_VERBS = {
   // `menu` or the arrow verbs: a calculator has nowhere to go back to and no menu, and a verb that
   // does nothing is a press somebody spent effort on for no result (see `call` below).
   calculator:    { next: 'calculator/next', prev: 'calculator/prev', select: 'calculator/select' },
+  // THE BUTTON (2026-09-28, change list row 2.26 — the game's name sign and picture). One face,
+  // so one verb: `select` presses it, exactly as a click does. No `next`/`prev`: there is nothing
+  // inside it to walk, and a verb that does nothing is a press spent for no result.
+  button:        { select: 'button/select' },
   sprint:        { select: { topic: 'sprint/control', payload: 'toggle' },
                    next:   { topic: 'sprint/control', payload: 'start' },
                    back:   { topic: 'sprint/control', payload: 'pause' } },

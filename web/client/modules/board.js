@@ -59,7 +59,8 @@ import { registerModule } from '../module.js';
 import { createScan, SCAN_DEFAULTS } from '../input_scan.js';
 import { symbolSvg } from '../aac_symbols.js';
 import { normalizeBoard, tierOf, gridOf, BUILTIN_BOARDS, YESNO } from '../aac_vocab.js';
-import { createMediaSourcesClient, resolveItemUrl } from '../media_sources.js';
+import { createMediaSourcesClient } from '../media_sources.js';
+import { cardFaceHTML, createCardImages } from '../card_face.js';
 import { mountBoardEditor, blankBoard } from '../board_editor.js';
 import { speak as speakDefault } from '../voice.js';
 import { mountScene, listScenes, listOverlays } from '../livescene.js';
@@ -593,9 +594,9 @@ registerModule(
           // fills the frame when the file has been read. Nothing waits on the file: a board
           // whose folder permission has lapsed still says every word it says today, which is
           // the difference between a degraded board and a person with no voice this morning.
-          b.innerHTML = (cell.image ? '<span class="ab-img" data-img></span>'
-                        : sym ? `<span class="ab-sym">${sym}</span>` : '')
-            + `<span class="ab-word">${escapeHtml(cell.word)}</span>`;
+          // The face itself is `card_face.js` (2026-09-28), shared with `modules/button.js` —
+          // the same markup this line used to write inline.
+          b.innerHTML = cardFaceHTML({ word: cell.word, symbol: sym, image: !!cell.image });
           if (cell.image) loadImage(b, cell.image);
           // pointerdown, and it stops there: a tap IS this card, and letting it bubble would
           // let a global pointer binding ALSO fire a generic select — the same card chosen
@@ -627,40 +628,19 @@ registerModule(
     // Each picture takes a URL IT OWNS (`resolveItemUrl`) rather than one off a shared listing,
     // because a folder listing revokes the previous listing's URLs — so a card reusing one
     // would go blank the moment a photo panel refreshed the same folder. See `folderFileUrl`.
-    let sourcesP = null;                      // listed once per mount, not once per card
-    let imgReleases = [];
+    // The loader lives in `card_face.js` now (2026-09-28), shared with `modules/button.js`, so
+    // that rule is written once. Sources are still listed once per mount, not once per card.
+    // `personId` is read when the first picture loads (a getter on the kiosk's ctx), as before.
+    let cardImages = null;
+    const images = () => cardImages || (cardImages = createCardImages({
+      sources: ctx.mediaSources || null, user: ctx.user, personId: ctx.personId || null,
+      alive: () => !destroyed,
+    }));
 
-    function releaseImages() {
-      for (const r of imgReleases) { try { r(); } catch { /* already gone */ } }
-      imgReleases = [];
-    }
+    function releaseImages() { cardImages?.releaseAll(); }
 
-    async function loadImage(cardEl, ref) {
-      try {
-        if (!sourcesP) {
-          const client = ctx.mediaSources
-            || createMediaSourcesClient({ user: ctx.user, cache: true,
-                                          personId: ctx.personId || null });
-          sourcesP = client.list();
-        }
-        const sources = (await sourcesP) || [];
-        const src = sources.find((x) => x.id === ref.sourceId);
-        if (!src) return;                     // the folder is not connected on this device
-        const got = await resolveItemUrl(src, ref.path);
-        if (!got || destroyed || !cardEl.isConnected) { got?.release?.(); return; }
-        imgReleases.push(got.release);
-        const frame = cardEl.querySelector('[data-img]');
-        if (!frame) { got.release(); return; }
-        const img = document.createElement('img');
-        img.alt = '';                         // the word beside it is the label; this is decoration
-        img.src = got.url;
-        frame.append(img);
-      } catch (err) {
-        // Silent on the CARD, loud in the console. A red error over somebody's word is worse
-        // than a missing picture, and the word is still there and still speaks.
-        console.warn('board: could not load a card picture', err);
-      }
-    }
+    // The word beside the picture is the label, so the image itself is decoration: alt ''.
+    function loadImage(cardEl, ref) { return images().load(cardEl, ref, { alt: '' }); }
 
     function paint() {
       const showOne = cfg.reveal === 'one' && !!scan;
