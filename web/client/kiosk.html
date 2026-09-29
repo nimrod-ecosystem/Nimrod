@@ -27,6 +27,26 @@
 <div id="boot">Starting Nimrod…</div>
 <div id="root"></div>
 
+<!-- BOOT WATCHDOG (2026-09-29). A CLASSIC script, on purpose: if any file in the module graph below
+     fails to load, NONE of the module code runs -- no error on screen, nothing in the console, just
+     "Starting Nimrod…" forever. That is what an ad blocker refusing `hitbox.js` did to the bench Pi
+     (now `pressable.js`; web/tools/check_blocked_names.py guards the names). This runs regardless:
+     still booting after 30 s, it says so plainly, then tries a fresh load every 2 minutes, so a
+     screen nobody can touch recovers on its own once the cause clears. Every successful boot path
+     removes #boot, which stands it down. -->
+<script>
+(function () {
+  var SAY_AFTER_MS = 30000, RETRY_EVERY_MS = 120000;
+  setTimeout(function () {
+    var b = document.getElementById('boot');
+    if (!b) return;
+    b.textContent = 'Nimrod is taking a long time to start, and will keep trying. '
+      + 'If this browser blocks ads, allowing this site may fix it.';
+    setInterval(function () { if (document.getElementById('boot')) location.reload(); }, RETRY_EVERY_MS);
+  }, SAY_AFTER_MS);
+})();
+</script>
+
 <script type="module">
 import { createProfilesClient, ensureProfile } from './profile.js';
 import { cachedFetch } from './cache.js';

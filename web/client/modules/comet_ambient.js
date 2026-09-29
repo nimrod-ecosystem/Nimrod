@@ -13,7 +13,7 @@
 // *** WHAT THIS REUSES FROM `comet.js`, AND WHAT IT HONESTLY DOES NOT. ***
 //
 // The MECHANICS are shared exactly, not re-derived: heart spawn/sway math is the same formula
-// `comet.js` has always used, and "can this be pressed" now runs through `hitbox.js` — the same
+// `comet.js` has always used, and "can this be pressed" now runs through `pressable.js` — the same
 // squared-distance-vs-radius check `comet.js`'s own `updateHearts` runs, extracted there in the
 // same pass that built this file (see that file's own comment on the change).
 //
@@ -38,7 +38,7 @@
 
 import { registerModule } from '../module.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
-import { hitCircle, nearest, createHoverTracker } from '../hitbox.js';
+import { hitCircle, nearest, createHoverTracker } from '../pressable.js';
 import { createPointsLedger } from '../points.js';
 
 const DEFAULTS = {

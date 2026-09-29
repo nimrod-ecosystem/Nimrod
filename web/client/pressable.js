@@ -1,4 +1,11 @@
-// hitbox.js — CAN THIS SCENE THING BE PRESSED? One shared answer, not a per-item reinvention.
+// pressable.js — CAN THIS SCENE THING BE PRESSED? One shared answer, not a per-item reinvention.
+//
+// *** RENAMED FROM hitbox.js, 2026-09-29, AND THE NAME MATTERS. *** Ad blockers block any file called
+// `hitbox.js` (HitBox was an old web-analytics product, and the filter lists still carry it). uBlock
+// Origin Lite -- loaded by default in Raspberry Pi OS's Chromium -- refused it on the bench Pi, and
+// because comet.js imports this file, the WHOLE kiosk script never ran: the screen sat on
+// "Starting Nimrod..." with no error at all. Any visitor with an ad blocker got the same.
+// tools/check_blocked_names.py now checks every client file name against the filter lists.
 //
 // Mike, 2026-09-26, asking how buttons detect "the cursor is over them" and how Godot and other
 // engines handle it: an ordinary DOM button gets that FOR FREE from the browser's own layout
