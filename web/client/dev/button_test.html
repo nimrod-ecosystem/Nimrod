@@ -36,7 +36,7 @@ import { cardFaceHTML } from '../card_face.js';
 import { contrast } from '../color_picker.js';
 import { FONTS, STYLES, FRAMES, SIGNS, FRAME_ART, DEFAULT_INK, DEFAULT_GROUND, configFrom, fontStack,
   LEGACY_STYLES, LEGACY_FRAMES, ASPECT_CUTOFF, aspectVariant, suggestedInk, inkOrder, signOf, frameOf,
-  CAPTION_SIGN_WIDTH } from '../modules/button.js';
+  CAPTION_SIGN_WIDTH, CAPTION_LINE } from '../modules/button.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -634,6 +634,14 @@ try {
     const win = mapBox(f, v.viewBox, v.window);
     const w = f.querySelector('.ab-word');
     check(`${fa.value}: the words sit inside the window`, inside(textRect(w), win), `${fmtR(textRect(w))} in ${fmtR(win)}`);
+    {
+      // Mike, 2026-09-29: "cap them" — an empty frame's words are no bigger than a caption under a
+      // picture in the same frame (CAPTION_LINE of its width, at the fitter's 1.2 line).
+      const size = parseFloat(getComputedStyle(w).fontSize);
+      const cap = CAPTION_LINE * r.width / 1.2;
+      check(`*** ${fa.value}: empty, the words are capped at caption size, not the whole window ***`,
+        size <= Math.max(8, cap) + 0.5, `${size.toFixed(1)}px vs cap ${cap.toFixed(1)}px`);
+    }
     const fill = getComputedStyle(f, '::before');
     check(`${fa.value}: the window’s ground is the background colour`, fill.backgroundColor === 'rgb(255, 255, 255)',
       fill.backgroundColor);
@@ -647,6 +655,18 @@ try {
       inside(sr, win2) && inside(textRect(w), mapBox(w, s.viewBox, s.text))
       && near((sr.top + sr.bottom) / 2, (win2.top + win2.bottom) / 2, 1.5), `${fmtR(sr)} in ${fmtR(win2)}`);
     B.inst.destroy(); B.host.remove();
+  }
+  {
+    // Mike, 2026-09-29: "hide it" — the background row only where it shows.
+    const rows = (values) => fieldItems(fieldsFor(getManifest('button')), { values, level: 'standard' }).map((i) => i.key);
+    check('*** a designed sign with no frame: no Background colour row (the sign brings its own ground) ***',
+      !rows({ style: 'plate', frame: 'none' }).includes('background'), rows({ style: 'plate', frame: 'none' }).join());
+    check('the plain face: the row is there', rows({ style: 'plain' }).includes('background'));
+    check('a designed sign IN a frame: the row is there (it colours the window)',
+      rows({ style: 'plate', frame: 'classic' }).includes('background'));
+    check('an old stored look reads through its alias (plaque = plate: hidden)',
+      !rows({ style: 'plaque', frame: 'none' }).includes('background'));
+    check('hiding the row keeps the stored value in force', configFrom({ style: 'plate', background: '#123456' }).background === '#123456');
   }
   {
     const B = mount('btn-noframe', { state: liveState({ frame: 'none', label: 'x' }) });
