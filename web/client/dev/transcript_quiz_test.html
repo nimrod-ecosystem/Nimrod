@@ -440,6 +440,44 @@ That is why a strong hive grows so quickly.`;
     check('a person clearing it lets it in; the history stays, marked cleared',
       !cleared.q2.flagged && cleared.q2.flags.length === 1 && cleared.q2.flagsCleared === 1 && poolFrom(Object.values(cleared)).length === 3);
 
+    // *** AUTO-APPROVE WITH THE FACT CHECK ON (Mike, 2026-09-28, "flip review"): a question joins the
+    // pool when it passed `grounded` AND, when the check was on, the check did not flag it. So a batch
+    // recorded as auto-approved WITH the check on waits for each question's verdict. ***
+    section('auto-approve waits for the Wikipedia check when the check was on');
+    const fcBatch = { kind: REVIEW_KINDS.QUESTIONS, data: { ...batch(true).data, factCheck: true } };
+    const w0 = Object.fromEntries(reviewItems([fcBatch]).map((i) => [i.id, i]));
+    check('*** before any verdict, none of them is in the pool ***', poolFrom(Object.values(w0)).length === 0
+      && Object.values(w0).every((i) => i.status === 'pending' && i.awaitingCheck), J(Object.values(w0).map((i) => [i.status, i.awaitingCheck])));
+    const w1 = Object.fromEntries(reviewItems([fcBatch,
+      { kind: REVIEW_KINDS.CHECK, data: { id: 'q1', verdict: 'supports' } },
+      { kind: REVIEW_KINDS.CHECK, data: { id: 'q2', verdict: 'contradicts' } },
+      { kind: REVIEW_KINDS.FLAG, data: { id: 'q2', by: 'fact-check' } },
+      { kind: REVIEW_KINDS.CHECK, data: { id: 'q3', verdict: 'not-checked', reason: 'Could not reach Wikipedia' } },
+    ]).map((i) => [i.id, i]));
+    check('*** a verdict that does not flag lets it in with no person: supports, and even "not checked" ***',
+      J(poolFrom(Object.values(w1)).map((i) => i.id)) === J(['q1', 'q3']), J(Object.values(w1).map((i) => [i.id, i.status, i.flagged])));
+    check('...the contradicted one is approved-but-flagged: it waits for a person', w1.q2.status === 'approved' && w1.q2.flagged);
+    const w2 = Object.fromEntries(reviewItems([fcBatch,
+      { kind: REVIEW_KINDS.REVIEW, data: { id: 'q1', verdict: 'rejected' } },
+      { kind: REVIEW_KINDS.REVIEW, data: { id: 'q2', verdict: 'approved' } },
+      { kind: REVIEW_KINDS.CHECK, data: { id: 'q1', verdict: 'supports' } },
+    ]).map((i) => [i.id, i]));
+    check('a person who decided before the check landed is not overruled by it',
+      w2.q1.status === 'rejected' && w2.q2.status === 'approved' && !w2.q1.awaitingCheck, J([w2.q1.status, w2.q2.status]));
+    check('a batch WITHOUT the check (every batch before this) is not held for one',
+      reviewItems([batch(true)]).every((i) => i.status === 'approved' && !i.awaitingCheck));
+    check('*** the old backlog: a batch recorded NOT auto-approved stays pending after the default flip ***',
+      reviewItems([batch(false)]).every((i) => i.status === 'pending'));
+
+    section('a contest from a game is a flag like any other, and says so');
+    const cf = Object.fromEntries(reviewItems([batch(true),
+      { kind: REVIEW_KINDS.FLAG, data: { id: 'q1', by: 'player', contest: true, contestId: 'c1', module: 'trivia' } },
+    ]).map((i) => [i.id, i]));
+    check('*** a contest flag holds it out of the pool ***', cf.q1.flagged && !poolFrom([cf.q1]).length);
+    check('...and keeps which contest raised it and from which screen',
+      cf.q1.flags[0].contest === true && cf.q1.flags[0].contestId === 'c1' && cf.q1.flags[0].module === 'trivia', J(cf.q1.flags[0]));
+    check('an ordinary flag is not marked as a contest', reviewItems(ev).find((i) => i.id === 'q2').flags[0].contest === false);
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

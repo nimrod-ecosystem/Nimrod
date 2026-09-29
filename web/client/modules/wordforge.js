@@ -55,8 +55,26 @@ import { parseBank as sharedBank } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
+import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 
 export const GAME = 'wordforge';
+
+const BETTER_PROMPT = 'Which sentence is better writing?';
+
+/**
+ * The key a contest holds a DECK ITEM by (../contests.js explains the key). A pack/lesson question
+ * is keyed exactly as Trivia keys it — question text + right answer — so one contest holds it in
+ * both games. A WORD is keyed by the word and its meaning, not by the question it happened to be
+ * asked as: the same word is asked two ways (what it means / fill the blank), and a contest about
+ * either is a contest about that row of the bank. A sentence pair by its better sentence, since every
+ * pair shares one prompt.
+ */
+export function itemKey(item) {
+  if (!item) return '';
+  if (item.kind === 'better') return contestKey(BETTER_PROMPT, item.pair && item.pair.better);
+  if (item.kind === 'given') return contestKey(item.question && item.question.question, item.question && item.question.answer);
+  return contestKey(item.word && item.word.word, item.word && item.word.meaning);
+}
 
 // Seeded from the word bank in the documented format. Editable per profile.
 //
@@ -262,7 +280,7 @@ export function makeQuestion(item, words, rand = Math.random) {
     const opts = rand() < 0.5 ? [p.better, p.weaker] : [p.weaker, p.better];
     return {
       kind: 'better',
-      prompt: 'Which sentence is better writing?',
+      prompt: BETTER_PROMPT,
       options: opts,
       answer: opts.indexOf(p.better),
       concept: CONCEPT_PAIRS,
@@ -552,6 +570,18 @@ registerModule(
     let answered = null;      // null = unanswered; else {picked, correct, award}
     let capped = false;       // today's payout for this game is spent
     let askedAt = 0;
+    // *** "I THINK THIS QUESTION IS WRONG" (Mike, 2026-09-28) — ../contests.js, and trivia.js's
+    // identical wiring. *** After an answer the post-answer highlight has two stops: `after` 0 is
+    // Next / "Got it" (the default, so the ordinary path is still one `select`), 1 is the contest.
+    // `next`/`prev` walk them the way they walk the options before an answer, so `next` no longer
+    // ALSO advances once a question is answered (`select` and `back` still do); with the contest
+    // used, only Next is left and `next` advances again. A contest writes one row to the per-profile
+    // contests log and nothing else — "Got it" still banks the same try points afterwards.
+    let contests = null;
+    let after = 0;
+    let contested = false;
+    let contestFailed = false;
+    const heldSet = () => (contests ? contests.held() : new Set());
 
     const el = (sel) => mount.querySelector(sel);
 
@@ -565,15 +595,22 @@ registerModule(
       // already follows for a missing `lessons` handle.
       const sandbox = mode ? mode.isSandbox() : false;
       const unlocked = sandbox ? ALL_UNLOCKED : (lessons ? lessons.unlocked() : new Set());
-      const openWords = gate(words, unlocked).open;
+      // CONTESTED ITEMS ARE LEFT OUT FIRST (../contests.js), before the "fewer than four open"
+      // fallback, so a small bank does not deal them back through it. `words` itself stays whole:
+      // it is also where distractors come from, and a contested word is still a real word.
+      const out = heldSet();
+      const keep = (kind, field) => (x) => !out.size || !out.has(itemKey({ kind, [field]: x }));
+      const playWords = words.filter(keep('define', 'word'));
+      const playPairs = pairs.filter(keep('better', 'pair'));
+      const openWords = gate(playWords, unlocked).open;
       // What a lesson pack elsewhere on this profile has routed here (lessons.js's
       // `questionsTo`, "both" by default 2026-09-23) — already carries `.topic`, gated the
       // same way words are. ONE combined "waiting behind" message covers both pools, since a
       // caregiver reading it does not need to know which pool a locked item came from.
-      const givenAll = givenItems();
+      const givenAll = givenItems().filter(keep('given', 'question'));
       const openGiven = gate(givenAll, unlocked).open;
-      held = lockedTopics([...words, ...givenAll], unlocked, topics);
-      deck = buildDeck(openWords.length >= 4 ? openWords : words, pairs,
+      held = lockedTopics([...playWords, ...givenAll], unlocked, topics);
+      deck = buildDeck(openWords.length >= 4 ? openWords : playWords, playPairs,
         { given: openGiven, roundLength: cfg.roundLength, rand });
       at = 0; streak = 0; earned = 0;
       next();
@@ -583,6 +620,12 @@ registerModule(
       answered = null;
       highlight = 0;
       misses = [];
+      after = 0;
+      contested = false;
+      contestFailed = false;
+      // An item contested during this round is not asked again in it.
+      const out = heldSet();
+      while (out.size && at < deck.length && out.has(itemKey(deck[at]))) at += 1;
       if (at >= deck.length) { q = null; render(); return; }
       q = makeQuestion(deck[at], words, rand);
       askedAt = Date.now();
@@ -687,6 +730,36 @@ registerModule(
       next();
     }
 
+    // The post-answer highlight (see `after` above). With only Next left, `next` advances as it
+    // always did.
+    function moveAfter(delta) {
+      if (!answered) return;
+      const stops = contested ? 1 : 2;
+      if (stops === 1) { advance(); return; }
+      after = ((after + delta) % stops + stops) % stops;
+      render();
+    }
+
+    function pressAfter() {
+      if (after === 1 && !contested) contest(); else advance();
+    }
+
+    // One row in the contests log and a thank-you. Nothing else: the answer, its trial and its
+    // points stay exactly as recorded, and a pending "Got it" still pays what it said it would.
+    function contest() {
+      if (!q || !answered || contested) return;
+      contested = true;
+      contestFailed = false;
+      after = 0;
+      render();
+      const shown = q;
+      Promise.resolve(contests?.contest?.({ module: GAME, question: shown.prompt,
+        answer: shown.options[shown.answer], key: itemKey(deck[at]),
+        chosen: answered.picked != null ? shown.options[answered.picked] : null }))
+        .then((rec) => { if (!rec && q === shown) { contestFailed = true; render(); } })
+        .catch(() => {});
+    }
+
     // ---------- render ----------
     function render() {
       const host = el('[data-body]');
@@ -724,7 +797,9 @@ registerModule(
       //
       // Copied from `trivia.js` rather than invented: same `data-on="1"` attribute, same
       // wrap-around stepping, same "next advances once you have answered". Two quizzes that
-      // behaved differently under the same switch would be a defect of its own.
+      // behaved differently under the same switch would be a defect of its own. (2026-09-28: once
+      // answered, `next` now steps Next / the contest stop instead, in BOTH games, for the same
+      // reason — see `after` above.)
       const opts = q.options.map((o, i) => {
         let cls = 'wf-opt';
         // A miss in 'multi' mode disables and marks that option WITHOUT ending the question —
@@ -742,13 +817,22 @@ registerModule(
       }).join('');
 
       let feedback = '';
+      // The post-answer stops: Next / "Got it", then the contest while it is still offered.
+      const afterStops = (nextLabel) => `
+             <div class="wf-after">
+               <button class="wf-btn wf-primary" data-next${after === 0 ? ' data-on="1"' : ''}>${nextLabel}</button>
+               ${contested ? '' : `<button class="wf-btn wf-contest" data-contest${after === 1 ? ' data-on="1"' : ''}>I think this question is wrong</button>`}
+             </div>
+             ${contested ? `<p class="wf-contested" role="status" data-contested>${contestFailed
+               ? 'Thanks. It could not be saved just now, so it may come up again.'
+               : 'Thanks — it’s held back until someone looks at it.'}</p>` : ''}`;
       if (answered) {
         if (answered.correct) {
           feedback = `<div class="wf-fb is-right">
                <b>Right.</b> +${answered.award.total}
                ${answered.award.bonus ? `<span class="wf-bonus">includes a +${answered.award.bonus} streak bonus</span>` : ''}
              </div>
-             <button class="wf-btn wf-primary" data-next>Next</button>`;
+             ${afterStops('Next')}`;
         } else {
           // A miss is a teaching moment: the explanation, then the points for taking it in.
           // Saying so plainly gets a different opening line from a wrong guess, but the
@@ -765,7 +849,7 @@ registerModule(
                ${note ? `<span class="wf-picked">You picked: ${esc(note)}</span>` : ''}
                <span class="wf-try">+${answered.award.total} for ${answered.declared ? 'asking' : 'the try'} — press “Got it” to bank it.</span>
              </div>
-             <button class="wf-btn wf-primary" data-next>Got it</button>`;
+             ${afterStops('Got it')}`;
         }
       }
 
@@ -783,6 +867,8 @@ registerModule(
       }
       const nx = host.querySelector('[data-next]');
       if (nx) nx.addEventListener('click', advance);
+      const ct = host.querySelector('[data-contest]');
+      if (ct) ct.addEventListener('click', contest);
       const idk = host.querySelector('[data-idk]');
       if (idk) idk.addEventListener('click', () => answer(null));
     }
@@ -807,7 +893,7 @@ registerModule(
       // scraping it back out of the DOM — same reason trivia.js exposes `__worth`/`__probe`.
       __worth: (spent) => mcqWorth(spent, cfg.correctPoints),
       __probe: () => ({ at, answered, misses: [...misses], highlight, streak, earned,
-                        deck: deck.length, guessMode: cfg.guessMode,
+                        deck: deck.length, guessMode: cfg.guessMode, after, contested,
                         question: q ? { ...q } : null }),
       init() {
         mount.innerHTML = `
@@ -820,6 +906,12 @@ registerModule(
             <div class="wf-body" data-body></div>
             <div class="wf-held" data-held></div>
           </div>`;
+
+        // FIRST, so no round is dealt without it (see trivia.js's identical line).
+        try {
+          contests = typeof ctx.makeEvents === 'function' ? createContests({ makeEvents: ctx.makeEvents, bus }) : null;
+          if (contests) bus.subscribe(CONTEST_TOPIC, () => { contests.load().catch(() => {}); });
+        } catch (err) { contests = null; console.error('wordforge: no contests log', err); }
 
         try {
           sharedRow = ctx.makeState ? ctx.makeState(BANK_STATE) : null;
@@ -871,6 +963,8 @@ registerModule(
         Promise.all([
           lessons.load().then(() => lessons.startPolling()).catch(() => {}),
           mode ? mode.load().then(() => mode.startPolling()).catch(() => {}) : Promise.resolve(),
+          // The contests log gates the deck too, so the rebuild waits for it as well.
+          contests ? contests.load().then(() => contests.startPolling()).catch(() => {}) : Promise.resolve(),
         ]).then(() => { newRound(); });
         // A lesson finished elsewhere (the Lessons module, another device) — the new words
         // join the pool at the START of the next round, not mid-question.
@@ -883,11 +977,12 @@ registerModule(
 
         // Anything on the bus can answer — a keypad, a switch, a companion.
         bus.subscribe('wordforge/answer', (i) => answer(i === null || i === 'idk' ? null : Number(i)));
-        // `next` steps the options while a question is open and moves on once it is answered —
-        // trivia's shape, so one switch behaves the same way in both games.
-        bus.subscribe('wordforge/next', () => (answered ? advance() : moveHighlight(1)));
-        bus.subscribe('wordforge/prev', () => moveHighlight(-1));
-        bus.subscribe('wordforge/select', () => (answered ? advance() : answer(highlight)));
+        // `next` steps the options while a question is open, and once it is answered steps the
+        // post-answer stops (Next, then the contest) — trivia's shape, so one switch behaves the
+        // same way in both games. `select` takes whatever is lit; Next is lit by default.
+        bus.subscribe('wordforge/next', () => (answered ? moveAfter(1) : moveHighlight(1)));
+        bus.subscribe('wordforge/prev', () => (answered ? moveAfter(-1) : moveHighlight(-1)));
+        bus.subscribe('wordforge/select', () => (answered ? pressAfter() : answer(highlight)));
         // Skipping outright still has a home, so the old behaviour is not lost — it is just no
         // longer the only thing a switch can do.
         bus.subscribe('wordforge/skip', () => advance());
@@ -986,6 +1081,7 @@ registerModule(
       onResize() {},
       onHide() { state.flush(); },
       destroy() {
+        if (contests) { contests.destroy(); contests = null; }
         if (ledger) { ledger.destroy(); ledger = null; }
         if (tel) { tel.destroy(); tel = null; }
         if (lessons) { lessons.destroy(); lessons = null; }

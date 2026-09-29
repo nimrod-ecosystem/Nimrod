@@ -844,9 +844,13 @@ Knowing a root lets you guess a new word.`;
     const xmod = await xp.addModule(xprof.id, 'lessons');
     const xst = createState({ url: xp.stateURL(xprof.id, xmod.id), user: USER });
     await xst.load();
-    // `factCheck: false` explicit: the fact check (default ON) has its own section below, with a
-    // fake Wikipedia; this section is the flow without it, and must not reach the real one.
-    xst.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS, factCheck: false });
+    // `factCheck: false` explicit: the fact check has its own section below, with a fake Wikipedia;
+    // this section is the flow without it, and must not reach the real one.
+    // `autoApprove: false` explicit since 2026-09-28 (Mike: "Flip review." — auto-approve is the
+    // DEFAULT now): this section proves the review queue, which is now the option a caregiver turns
+    // on, the same way the fact-check scenarios below set `factCheck: true`. The default itself is
+    // proven in its own section further down.
+    xst.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS, factCheck: false, autoApprove: false });
     await xst.flush();
     const xhost = document.createElement('div'); document.body.append(xhost);
     const ai1 = fakeAI(ROOTS_QS);
@@ -917,7 +921,10 @@ Knowing a root lets you guess a new word.`;
       /not quite/i.test(tqText('[data-tq-feedback]')) && tqText('[data-tq-feedback]').includes(answerOf(firstQ))
         && tqText('[data-tq-source]').includes(src1), `${tqText('[data-tq-feedback]')} | ${tqText('[data-tq-source]')}`);
     check('progress did not move', tqText('[data-tq-progress]').startsWith('0 of 3'));
-    check('a "this looks wrong" flag is offered to the player', !!xhost.querySelector('[data-tq-flag]'));
+    check('"I think this question is wrong" is offered to the player (the contest, contests.js)',
+      /I think this question is wrong/.test(xhost.querySelector('[data-tq-contest]')?.textContent || ''));
+    check('...AFTER Next, so Next is the first stop a keyboard or switch reaches, never the contest',
+      (() => { const b = [...xhost.querySelectorAll('.l-tq .l-actions button')]; return b.length >= 2 && b[0].hasAttribute('data-tq-next') && b.indexOf(xhost.querySelector('[data-tq-contest]')) > 0; })());
     xhost.querySelector('[data-tq-next]').click();
     await sleep(50);
 
@@ -1047,9 +1054,10 @@ Knowing a root lets you guess a new word.`;
     xst.set({ questionsTo: 'both' }); await xst.flush();
     await sleep(1200);
 
-    section('auto-approve (OFF by default) skips the queue for checked questions');
+    section('auto-approve (ON by default since 2026-09-28) skips the queue for checked questions');
     const autoField = (getManifest('lessons').settings || []).find((f) => f.key === 'autoApprove');
-    check('auto-approve is declared and OFF by default', autoField && autoField.default === false, JSON.stringify(autoField));
+    check('*** auto-approve is declared and ON by default (Mike: "Flip review.") — still a setting ***',
+      autoField && autoField.default === true && DEFAULTS.autoApprove === true && autoField.kind === 'toggle', JSON.stringify(autoField));
     xst.set({ autoApprove: true }); await xst.flush();
     await sleep(700);
     const CONC = `0:00
@@ -1075,6 +1083,19 @@ Say it once and move on.`;
     check('...and the requirement is capped at what the model could give (1 question, not 3)',
       tqText('[data-tq-progress]') === '0 of 1 correct answers needed', tqText('[data-tq-progress]'));
     xst.set({ autoApprove: false }); await xst.flush();
+
+    // *** WHAT THE FLIP DOES TO AN OLD BACKLOG. *** The roots questions above were generated with
+    // auto-approve OFF and recorded that way; the rule that auto-approve is recorded AT GENERATION
+    // means switching it on later — or the DEFAULT changing — does not approve them.
+    {
+      const bl = xMakeEvents(TRANSCRIPT_STREAM, { limit: 500 });
+      await bl.load();
+      const batches = (bl.get().events || []).filter((e) => e.kind === REVIEW_KINDS.QUESTIONS && e.data.topic === 'roots');
+      check('*** an old backlog (recorded not auto-approved) is NOT approved by the default flipping ***',
+        batches.length >= 1 && batches.every((e) => e.data.autoApproved === false)
+          && reviewItems([batches[0]]).every((i) => i.status === 'pending'), JSON.stringify(batches.map((e) => e.data.autoApproved)));
+      bl.destroy();
+    }
 
     section('failures never strand anybody');
     xinst.destroy(); xhost.innerHTML = '';
@@ -1193,7 +1214,9 @@ Say it once and move on.`;
       }
       // A fresh profile per scenario: a question that already has a finished check is not looked up
       // again, so reusing one would test the reuse, not the check.
-      async function scenario(name, { fetch, settings = {} }) {
+      // `fc: false` leaves the fact check at its DEFAULT (never set); `make: false` stops at the paste
+      // box, transcript pasted, so a check can look at it before "Make questions" is pressed.
+      async function scenario(name, { fetch, settings = {}, fc = true, make = true, qs = ROOTS_QS }) {
         const pc = createProfilesClient({ user: USER });
         const prof = await pc.create(`TEST-lessons-factcheck-${name}`);
         const ms = (k, o) => createState({ url: pc.stateURL(prof.id, k), user: USER, ...o });
@@ -1202,10 +1225,10 @@ Say it once and move on.`;
         const st = createState({ url: pc.stateURL(prof.id, mod.id), user: USER });
         await st.load();
         // The check is OFF by default, so these scenarios turn it on -- the person's "separate yes".
-        st.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS, factCheck: true, ...settings });
+        st.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS, ...(fc ? { factCheck: true } : {}), ...settings });
         await st.flush();
         const host = document.createElement('div'); document.body.append(host);
-        const ai = factAI(ROOTS_QS);
+        const ai = factAI(qs);
         const inst = mountModule('lessons', {
           mount: host, bus: createBus(), state: st,
           events: createEvents({ url: pc.eventsURL(prof.id, mod.id), user: USER }),
@@ -1218,10 +1241,10 @@ Say it once and move on.`;
         host.querySelector('[data-tq-open="roots"]').click(); await sleep(80);
         const box = host.querySelector('[data-tq-text]');
         box.value = ROOTS_TRANSCRIPT; box.dispatchEvent(new Event('input', { bubbles: true }));
-        host.querySelector('[data-tq-make]').click();
+        if (make) host.querySelector('[data-tq-make]').click();
         const log = me(TRANSCRIPT_STREAM, { limit: 500 });
         const text = (sel) => (host.querySelector(sel)?.textContent || '').replace(/\s+/g, ' ').trim();
-        return { host, inst, ai, log, text, ms, st, done: () => { inst.destroy(); host.remove(); } };
+        return { host, inst, ai, log, text, ms, me, st, prof, pc, mod, done: () => { inst.destroy(); host.remove(); } };
       }
       const idByQ = (items) => Object.fromEntries(items.map((i) => [i.question, i]));
 
@@ -1302,8 +1325,13 @@ Say it once and move on.`;
       check('*** setting off: not one request to Wikipedia, no model turn for it, no verdicts ***',
         fB.urls.length === 0 && B.ai.calls.fact === 0 && !(B.log.get().events || []).some((e) => e.kind === REVIEW_KINDS.CHECK),
         `${fB.urls.length} requests, ${B.ai.calls.fact} fact turns`);
-      check('...and the quiz says nothing about Wikipedia', !!B.host.querySelector('[data-tq-q]')
-        && B.host.querySelector('[data-fc]')?.hidden && !/wikipedia/i.test(B.text('.l-tq')), B.text('.l-tq'));
+      // Until 2026-09-28 this checked the quiz said NOTHING about Wikipedia. Mike's ruling that day
+      // ("make it obvious to the user rather than just having it buried in settings") replaced that:
+      // it says so once, in one line, with the checkbox — and nothing else about Wikipedia.
+      check('...and the quiz says only, once, that these were not checked (no progress line, no verdicts)',
+        !!B.host.querySelector('[data-tq-q]') && B.host.querySelector('[data-fc]')?.hidden
+          && B.host.querySelectorAll('[data-fc-off]').length === 1
+          && !/wikipedia/i.test(B.text('.l-tq').replace(B.text('[data-fc-off]'), '')), B.text('.l-tq'));
       B.done();
 
       // ---- C: offline is NOT CHECKED, never wrong ----
@@ -1335,6 +1363,196 @@ Say it once and move on.`;
           && fD.urls.length === 2, `${fD.urls.length} requests; ${JSON.stringify(dItems.map((i) => i.check))}`);
       check('...and the quiz carries on', !!D.host.querySelector('[data-tq-q]'));
       D.done();
+
+      // ---- E: NOTHING SET — the two defaults together (Mike, 2026-09-28) ----
+      // "Flip review.": checked questions join the games with no person. "Off for now": no Wikipedia.
+      const fE = fakeWikiFetch();
+      const E = await scenario('defaults', { fetch: fE, fc: false });
+      await sleep(1500);
+      const eRow = E.ms(TRIVIA_LESSON_QUESTIONS); await eRow.load();
+      check('*** DEFAULT: all three checked questions reach the games with no person approving them ***',
+        (eRow.get().items || []).map((i) => i.answer).sort().join(',') === 'life,to write,water',
+        JSON.stringify((eRow.get().items || []).map((i) => i.answer)));
+      check('*** DEFAULT: not one request to Wikipedia ***', fE.urls.length === 0 && E.ai.calls.fact === 0, String(fE.urls.length));
+      check('*** the quiz says once, briefly, "Not checked on Wikipedia" — with the same checkbox, unticked ***',
+        /Not checked on Wikipedia/.test(E.text('[data-fc-off]'))
+          && E.host.querySelectorAll('[data-fc-off]').length === 1
+          && E.host.querySelector('[data-fc-off] input[type="checkbox"][data-tq-factcheck]')?.checked === false,
+        E.text('.l-tq').slice(0, 300));
+      check('the done/where line says they were added (no "waiting for a person")',
+        !/waiting below for a person/.test(E.text('.l-tq')));
+      // Ticking it there is the separate yes, for THIS set too: it starts the check now.
+      const eBox = E.host.querySelector('[data-fc-off] [data-tq-factcheck]');
+      eBox.click();
+      await sleep(900);
+      check('*** ticking it in the quiz turns the setting on (the gear row reads the same value) ***',
+        E.st.get().factCheck === true, JSON.stringify(E.st.get().factCheck));
+      check('...and checks this set now', fE.urls.length > 0 && /Checked on Wikipedia|Checking/.test(E.text('[data-fc]')),
+        `${fE.urls.length} requests; ${E.text('[data-fc]')}`);
+      E.done();
+
+      // ---- F: fact check ON, auto-approve at its default: nothing joins before its check ----
+      const fF = fakeWikiFetch({ delayMs: 1500 });
+      const F = await scenario('wait-for-check', { fetch: fF });
+      await sleep(1000);
+      const fRow = F.ms(TRIVIA_LESSON_QUESTIONS); await fRow.load();
+      check('*** with the check ON, a question does not join the games before its check lands ***',
+        (fRow.get().items || []).length === 0 && !!F.host.querySelector('[data-tq-q]'), JSON.stringify(fRow.get().items || []));
+      await sleep(5000);
+      await fRow.load();
+      check('*** ...then the ones it did not flag join with no person; the contradicted one waits ***',
+        (fRow.get().items || []).map((i) => i.answer).sort().join(',') === 'life,to write',
+        JSON.stringify((fRow.get().items || []).map((i) => i.answer)));
+      const aquaF = [...F.host.querySelectorAll('[data-rq]')].find((r) => /aqua/.test(r.textContent));
+      check('...and the waiting one is in the review list with a way to clear it',
+        !!aquaF && !!aquaF.querySelector('[data-rq-unflag]'), aquaF ? aquaF.textContent.replace(/\s+/g, ' ').slice(0, 200) : 'no row');
+      F.done();
+
+      // ---- G: the checkbox beside "Make questions" and the gear-menu row are ONE setting ----
+      const fG = fakeWikiFetch();
+      const G = await scenario('checkbox', { fetch: fG, fc: false, make: false });
+      const gBox = () => G.host.querySelector('.l-tq [data-tq-factcheck]');
+      const makeBtn = G.host.querySelector('[data-tq-make]');
+      check('*** a real checkbox sits right beside "Make questions" ***',
+        gBox()?.type === 'checkbox' && makeBtn.parentElement.contains(gBox()), G.text('.l-tq').slice(0, 200));
+      const lab = gBox()?.closest('label');
+      check('...with a plain label that says what it sends and what happens',
+        !!lab && /Also check the answers on Wikipedia/.test(lab.textContent)
+          && /only each question and its answer/i.test(G.text('.l-tq')) && /waits for a person/i.test(G.text('.l-tq')),
+        lab ? lab.textContent : 'no label');
+      check('*** unchecked by default — the landing page\'s "its own separate yes" ***', gBox().checked === false);
+      const gText = G.host.querySelector('[data-tq-text]');
+      // The gear row writes the module's own state; the checkbox must follow, in place.
+      G.st.set({ factCheck: true }); await sleep(50);
+      check('*** gear row -> checkbox: turning it on in settings ticks the box ***', gBox().checked === true);
+      G.st.set({ factCheck: false }); await sleep(50);
+      check('...and off again unticks it', gBox().checked === false);
+      check('...without rebuilding the paste box (what was pasted is still there, same element)',
+        G.host.querySelector('[data-tq-text]') === gText && gText.value === ROOTS_TRANSCRIPT);
+      gBox().click(); await sleep(50);
+      check('*** checkbox -> gear row: ticking it writes the module\'s own setting ***', G.st.get().factCheck === true);
+      await G.st.flush();
+      const gSaved = createState({ url: G.pc.stateURL(G.prof.id, G.mod.id), user: USER }); await gSaved.load();
+      check('...saved, so the settings menu shows the same value', gSaved.get().factCheck === true, JSON.stringify(gSaved.get()));
+      gBox().click(); await sleep(50);
+      check('unticking writes it back off', G.st.get().factCheck === false);
+      G.host.querySelector('[data-tq-make]').click();
+      await sleep(1500);
+      check('*** made with the box unticked: no request to Wikipedia at all ***', fG.urls.length === 0, String(fG.urls.length));
+      G.done();
+    }
+
+    // ============================================================================================
+    // *** "I THINK THIS QUESTION IS WRONG" — contests from the quiz and from the games, in the
+    // review list (Mike, 2026-09-28). *** Its own profile; auto-approve and the fact check at their
+    // defaults (on, off).
+    section('*** a contest while playing: free, held back, "Contested while playing" in the review list ***');
+    {
+      const cp = createProfilesClient({ user: USER });
+      const cprof = await cp.create('TEST-lessons-contest');
+      const cMS = (k, o) => createState({ url: cp.stateURL(cprof.id, k), user: USER, ...o });
+      const cME = (k, o) => createEvents({ url: cp.eventsURL(cprof.id, k), user: USER, ...o });
+      const cmod = await cp.addModule(cprof.id, 'lessons');
+      const cst = createState({ url: cp.stateURL(cprof.id, cmod.id), user: USER });
+      await cst.load(); cst.set({ contentSource: 'bank', minWatchMs: 0, topics: DEFAULT_TOPICS }); await cst.flush();
+      const chost = document.createElement('div'); document.body.append(chost);
+      const cbus = createBus();
+      const cinst = mountModule('lessons', {
+        mount: chost, bus: cbus, state: cst, events: cME(cmod.id),
+        user: USER, profileId: cprof.id, makeState: cMS, makeEvents: cME, rand: seeded(5), ai: fakeAI(ROOTS_QS),
+      });
+      cinst.init();
+      await sleep(600);
+      const ct = (sel) => (chost.querySelector(sel)?.textContent || '').replace(/\s+/g, ' ').trim();
+      chost.querySelector('[data-open="roots"]').click(); await sleep(80);
+      chost.querySelector('[data-tq-open="roots"]').click(); await sleep(80);
+      const cbox = chost.querySelector('[data-tq-text]');
+      cbox.value = ROOTS_TRANSCRIPT; cbox.dispatchEvent(new Event('input', { bubbles: true }));
+      chost.querySelector('[data-tq-make]').click();
+      await sleep(1200);
+      const cRow = cMS(TRIVIA_LESSON_QUESTIONS);
+      await cRow.load();
+      check('(auto-approve default: all three are in the games before anyone contests)', (cRow.get().items || []).length === 3,
+        String((cRow.get().items || []).length));
+
+      // Answer the first one RIGHT, then contest it.
+      const q1 = ct('[data-tq-q]');
+      [...chost.querySelectorAll('[data-tq-opt]')].find((b) => b.textContent.trim() === answerOf(q1)).click();
+      await sleep(60);
+      const progress0 = ct('[data-tq-progress]');
+      const cLedger = createPointsLedger({ makeEvents: cME }); await cLedger.load();
+      const paid0 = cLedger.total();
+      chost.querySelector('[data-tq-contest]').click();
+      await sleep(900);
+      check('*** a short, non-judgmental thank-you, and Next is still there ***',
+        /Thanks\W+it.s held back until someone looks at it/i.test(ct('.l-tq')) && !!chost.querySelector('[data-tq-next]')
+          && !chost.querySelector('[data-tq-contest]'), ct('.l-tq').slice(0, 300));
+      check('*** the right answer already given still counts — the progress line did not move back ***',
+        ct('[data-tq-progress]') === progress0, `${progress0} -> ${ct('[data-tq-progress]')}`);
+      await cLedger.load();
+      check('...and no points moved', cLedger.total() === paid0, `${paid0} -> ${cLedger.total()}`);
+      const cLog = cME('contests'); await cLog.load();
+      const cRows = (cLog.get().events || []).filter((e) => e.kind === 'contest');
+      check('*** one contest in the per-profile contests log: from Lessons, with the question, its source line and its id ***',
+        cRows.length === 1 && cRows[0].data.module === 'lessons' && cRows[0].data.question === q1
+          && cRows[0].data.source === ROOTS_QS.find((x) => x.question === q1).source_line && /^tq-/.test(cRows[0].data.qid || ''),
+        JSON.stringify(cRows.map((e) => e.data)));
+      const tl = cME(TRANSCRIPT_STREAM, { limit: 500 }); await tl.load();
+      const it1 = reviewItems(tl.get().events || []).find((i) => i.question === q1);
+      check('*** ...and the transcript question is FLAGGED through the existing mechanism (a contest flag) ***',
+        it1.flagged && it1.flags.some((f) => f.contest && f.contestId === cRows[0].data.cid), JSON.stringify(it1.flags));
+      await cRow.load();
+      check('*** held OUT of the games\' pool ***', !(cRow.get().items || []).some((i) => i.question === q1),
+        JSON.stringify((cRow.get().items || []).map((i) => i.question)));
+      const rv = () => [...chost.querySelectorAll('[data-rq]')].find((r) => r.querySelector('.l-rq-q')?.textContent === q1);
+      check('*** the review list shows it as "Contested while playing", with Clear and Keep out ***',
+        !!rv() && /Contested while playing/.test(rv().textContent) && !!rv().querySelector('[data-rq-clear]') && !!rv().querySelector('[data-rq-keepout]'),
+        rv() ? rv().textContent.replace(/\s+/g, ' ').slice(0, 300) : 'no row');
+
+      // Clear puts it back: the flag cleared, the contest cleared, the pool has it again.
+      rv().querySelector('[data-rq-clear]').click();
+      await sleep(1500);
+      await cRow.load(); await cLog.load(); await tl.load();
+      check('*** Clear puts it back in the games ***', (cRow.get().items || []).some((i) => i.question === q1),
+        JSON.stringify((cRow.get().items || []).map((i) => i.question)));
+      check('...by clearing both the contest and the flag (so nothing re-flags it)',
+        (cLog.get().events || []).some((e) => e.kind === 'clear' && e.data.key === cRows[0].data.key)
+          && !reviewItems(tl.get().events || []).find((i) => i.question === q1).flagged);
+      await sleep(1200);
+      await tl.load();
+      check('...and it stays cleared (the sync does not flag the same contest twice)',
+        !reviewItems(tl.get().events || []).find((i) => i.question === q1).flagged
+          && reviewItems(tl.get().events || []).find((i) => i.question === q1).flags.filter((f) => f.contest).length === 1);
+
+      // From TRIVIA on the same screen (same bus, as a kiosk has): a transcript question and a
+      // hand-written one, contested on this profile. The bus nudge makes the Lessons panel look now
+      // rather than on its 15-second poll.
+      const cc = (await import('../contests.js')).createContests({ makeEvents: cME, bus: cbus });
+      await cc.load();
+      const q2 = ROOTS_QS.find((x) => x.question !== q1 && x.question !== 'What does the root tele mean?');
+      await cc.contest({ module: 'trivia', question: q2.question, answer: q2.answer, source: q2.source_line });
+      await cc.contest({ module: 'trivia', question: 'What is 2+2?', answer: '4' });
+      cc.destroy();
+      await sleep(2000);
+      await tl.load(); await cRow.load();
+      check('*** a transcript question contested in TRIVIA is flagged here too, and leaves the pool ***',
+        reviewItems(tl.get().events || []).find((i) => i.question === q2.question).flagged
+          && !(cRow.get().items || []).some((i) => i.question === q2.question), JSON.stringify((cRow.get().items || []).map((i) => i.question)));
+      const rv2 = [...chost.querySelectorAll('[data-rq]')].find((r) => r.querySelector('.l-rq-q')?.textContent === q2.question);
+      check('...and is listed as contested while playing (in Trivia)', !!rv2 && /Contested while playing/.test(rv2.textContent) && /Trivia/.test(rv2.textContent),
+        rv2 ? rv2.textContent.replace(/\s+/g, ' ').slice(0, 300) : 'no row');
+      const rv3 = [...chost.querySelectorAll('[data-contested-key]')].find((r) => /What is 2\+2\?/.test(r.textContent));
+      check('*** a hand-written Trivia question is listed too — with Clear and Keep out ***',
+        !!rv3 && /Contested while playing/.test(rv3.textContent) && !!rv3.querySelector('[data-rq-clear]') && !!rv3.querySelector('[data-rq-keepout]'),
+        ct('[data-review]').slice(0, 600));
+      rv3.querySelector('[data-rq-keepout]').click();
+      await sleep(1000);
+      await cLog.load();
+      check('*** Keep out keeps it out (recorded, append-only) ***',
+        (cLog.get().events || []).some((e) => e.kind === 'keep-out' && e.data.key === rv3.dataset.contestedKey));
+      check('...and it leaves the waiting list', ![...chost.querySelectorAll('[data-contested-key]')]
+        .some((r) => r.dataset.contestedKey === rv3.dataset.contestedKey && r.querySelector('[data-rq-keepout]')));
+      cinst.destroy(); chost.remove(); cLedger.destroy(); cLog.destroy(); tl.destroy();
     }
 
     document.getElementById('summary').textContent =

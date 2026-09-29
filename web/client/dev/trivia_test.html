@@ -73,11 +73,15 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
               // `mode` — quest/sandbox (register 252/257.2). `undefined` (the default) means
               // "never chosen", which `lessons.js`'s own `modeFrom` reads as sandbox, same as
               // any other profile that has not touched the setting.
-              mode = undefined } = {}) {
+              mode = undefined,
+              // Per-stream rows, SHARED between rigs that are handed the same object — two rigs
+              // with one `store` are two panels on one profile (the contests log is per profile).
+              store = {} } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
   const events = [];
+  let nextId = Object.values(store).reduce((n, rows) => n + rows.length, 0);
   // `contentSource: rigDefault` ('bank') is the RIG's OWN baseline, not the module's —
   // DEFAULTS.contentSource is 'pack' now (2026-09-22), so a test that wants its own `bankText`
   // actually read must say so; `saved` still wins when a test explicitly asks for the pack path
@@ -107,13 +111,17 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
     makeState: (key) => (key === 'settings' ? modeRow : sharedRow),
     state: { get: () => stored, set: () => {}, flush: () => {},
              subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } },
-    makeEvents: (name) => ({ name, append: async (k, d) => { events.push([k, d, name]); },
+    // Each named stream keeps its own rows in `store` (so the contests log really holds what was
+    // contested); `events` still collects every append, in order, as every older check reads it.
+    makeEvents: (name) => ({ name,
+                             append: async (k, d) => { events.push([k, d, name]);
+                               (store[name] ||= []).push({ id: ++nextId, kind: k, data: d }); },
                              load: async () => {}, flush: async () => {},
-                             get: () => ({ events: [] }), subscribe: () => () => {},
+                             get: () => ({ events: store[name] || [] }), subscribe: () => () => {},
                              startPolling() {}, destroy() {} }),
   });
   inst.init();
-  return { inst, host, bus, events, probe: () => inst.impl.__probe() };
+  return { inst, host, bus, events, store, probe: () => inst.impl.__probe() };
 }
 
 (async () => {
@@ -600,6 +608,94 @@ Shared Q | Shared A` });
     const r = rig({ bankText: 'Own Q | Own A | X | Y', saved: { contentSource: 'bank' }, rigDefault: null });
     check('*** an explicit "bank" choice is respected even though the default is now "pack" ***',
       /Own Q/.test(r.probe().question?.question || ''), JSON.stringify(r.probe().question));
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** "I think this question is wrong" — a contest, free, and held until a person looks ***');
+  {
+    // Mike, 2026-09-28: "Maybe add a contest button to the questions? In case you think it's wrong
+    // when you're playing." Offered AFTER the question is answered; one more stop in the
+    // post-answer highlight, AFTER Next, never the default one.
+    const store = {};
+    const r = rig({ store });
+    await sleep(20);                    // the first round is re-dealt once the logs have loaded
+    const q = r.probe().question;
+    check('before answering there is no contest button (it would be one more stop in every scan)',
+      !r.host.querySelector('[data-contest]'));
+    while (r.probe().highlight !== q.correctIndex) r.bus.publish('trivia/next');
+    r.bus.publish('trivia/select');
+    await sleep(20);                    // the answer's own trial and points rows land
+    const btn = () => r.host.querySelector('[data-contest]');
+    check('*** after an answer, "I think this question is wrong" is offered ***',
+      !!btn() && /I think this question is wrong/.test(btn().textContent), r.host.textContent.slice(0, 200));
+    check('*** ...and the lit stop is NEXT, never the contest ***',
+      r.host.querySelector('[data-next]')?.dataset.on === '1' && btn().dataset.on !== '1' && r.probe().after === 0,
+      JSON.stringify({ next: r.host.querySelector('[data-next]')?.dataset.on, contest: btn().dataset.on }));
+    const at0 = r.probe().at;
+    r.bus.publish('trivia/next');
+    check('*** next walks the post-answer highlight onto the contest stop — it does not advance ***',
+      r.probe().after === 1 && btn()?.dataset.on === '1' && r.probe().at === at0, JSON.stringify(r.probe()));
+    r.bus.publish('trivia/next');
+    check('...and wraps back to Next', r.probe().after === 0 && r.host.querySelector('[data-next]').dataset.on === '1');
+    r.bus.publish('trivia/prev');
+    check('prev walks it the other way', r.probe().after === 1);
+    r.bus.publish('trivia/prev');
+
+    // Now contest it: next, then select. Counted before and after — nothing but the contest row.
+    const scoreBefore = JSON.stringify(r.inst.impl.__score());
+    const writesBefore = r.events.filter(([, , name]) => name !== 'contests').length;
+    const answeredBefore = r.probe().answered;
+    r.bus.publish('trivia/next');
+    r.bus.publish('trivia/select');
+    await sleep(20);
+    const rows = store.contests || [];
+    check('*** selecting the contest stop records ONE contest in the per-profile contests log ***',
+      rows.length === 1 && rows[0].kind === 'contest' && rows[0].data.module === 'trivia'
+        && rows[0].data.question === q.question && rows[0].data.answer === q.answer && !!rows[0].data.at,
+      JSON.stringify(rows));
+    check('*** it costs nothing: no points, no trial, the score and the recorded answer untouched ***',
+      r.events.filter(([, , name]) => name !== 'contests').length === writesBefore
+        && JSON.stringify(r.inst.impl.__score()) === scoreBefore && r.probe().answered === answeredBefore,
+      JSON.stringify({ writes: r.events.map(([k, , n]) => `${n}:${k}`), score: r.inst.impl.__score() }));
+    check('...and it is still the same question, still answered (contesting is not a skip)',
+      r.probe().at === at0 && r.probe().answered === q.correctIndex);
+    check('*** a short, non-judgmental thank-you ***',
+      /Thanks\W+it.s held back until someone looks at it/i.test(r.host.textContent), r.host.textContent.slice(0, 260));
+    check('the contest stop is gone once used, and the highlight is back on Next',
+      !btn() && r.probe().after === 0 && r.host.querySelector('[data-next]').dataset.on === '1');
+    r.bus.publish('trivia/select');
+    check('select still takes Next — the ordinary path is one press, as before', r.probe().at !== at0, String(r.probe().at));
+    r.inst.destroy();
+
+    // A second panel on the same profile: the contested question is no longer dealt.
+    const r2 = rig({ store });
+    await sleep(20);
+    check('*** the contested question is held OUT of the deck on this profile ***',
+      r2.probe().deck === 2 && r2.probe().bank === 3, JSON.stringify({ deck: r2.probe().deck, bank: r2.probe().bank }));
+    r2.inst.destroy();
+
+    // A person clears it (the Lessons review list does this) -> it plays again.
+    store.contests.push({ id: 999, kind: 'clear', data: { key: rows[0].data.key } });
+    const r3 = rig({ store });
+    await sleep(20);
+    check('*** once a person clears it, it is dealt again ***', r3.probe().deck === 3, String(r3.probe().deck));
+    r3.inst.destroy();
+  }
+  {
+    // A WRONG press does not end a Trivia question, so the contest waits until the question is
+    // answered — and then it is offered exactly the same way, by pointer as well as by switch.
+    const store = {};
+    const r = rig({ store });
+    await sleep(20);
+    const q = r.probe().question;
+    const wrong = q.options.findIndex((_, i) => i !== q.correctIndex);
+    r.host.querySelectorAll('[data-opt]')[wrong].click();
+    check('a missed guess does not offer a contest yet (the question is still open)', !r.host.querySelector('[data-contest]'));
+    r.host.querySelectorAll('[data-opt]')[q.correctIndex].click();
+    r.host.querySelector('[data-contest]').click();
+    await sleep(20);
+    check('*** clicking it works the same (pointer) ***', (store.contests || []).length === 1, JSON.stringify(store.contests));
     r.inst.destroy();
   }
 

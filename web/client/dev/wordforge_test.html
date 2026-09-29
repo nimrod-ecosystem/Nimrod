@@ -818,6 +818,115 @@ lexeme | a unit of vocabulary | A lexeme covers all forms of one word. | 10 | ro
       mHost.remove();
     }
 
+    // ============================================================================================
+    // *** "I THINK THIS QUESTION IS WRONG" (Mike, 2026-09-28) — see contests.js. *** One more stop
+    // after Next in the post-answer highlight, never the default; free; held out of this profile's
+    // decks until a person clears it. Real server, its own profile.
+    {
+      section('*** a contest after answering: free, held out of the deck, and back once cleared ***');
+      const cProfiles = createProfilesClient({ user: USER });
+      const cp = await cProfiles.create('TEST-wordforge-contest');
+      const cmod = await cProfiles.addModule(cp.id, 'wordforge');
+      const cMakeState = (key, opts) => createState({ url: cProfiles.stateURL(cp.id, key), user: USER, ...opts });
+      const cMakeEvents = (key, opts) => createEvents({ url: cProfiles.eventsURL(cp.id, key), user: USER, ...opts });
+      const cst = createState({ url: cProfiles.stateURL(cp.id, cmod.id), user: USER });
+      await cst.load();
+      cst.set({ contentSource: 'bank', roundLength: 40 });
+      await cst.flush();
+      const chost = document.createElement('div');
+      document.body.append(chost);
+      const mountC = async () => {
+        const s = createState({ url: cProfiles.stateURL(cp.id, cmod.id), user: USER });
+        await s.load();
+        const b = createBus();
+        const i = mountModule('wordforge', {
+          mount: chost, bus: b, state: s, events: cMakeEvents(cmod.id),
+          user: USER, profileId: cp.id, makeState: cMakeState, makeEvents: cMakeEvents, rand: seeded(7),
+        });
+        i.init();
+        await sleep(900);
+        return { i, b, probe: () => i.impl.__probe() };
+      };
+      let c = await mountC();
+      const fullDeck = DEFAULT_WORDS.length + DEFAULT_PAIRS.length;
+      check('the whole built-in bank is dealt to start with', c.probe().deck === fullDeck, `${c.probe().deck} vs ${fullDeck}`);
+      check('no contest button before the question is answered', !chost.querySelector('[data-contest]'));
+
+      const q0 = c.probe().question;
+      while (c.probe().highlight !== q0.answer) c.b.publish('wordforge/next');
+      c.b.publish('wordforge/select');
+      await sleep(700);
+      const cbtn = () => chost.querySelector('[data-contest]');
+      check('*** after an answer, "I think this question is wrong" is offered ***',
+        !!cbtn() && /I think this question is wrong/.test(cbtn().textContent), chost.textContent.slice(0, 200));
+      check('*** ...and the lit stop is Next, never the contest ***',
+        chost.querySelector('[data-next]')?.dataset.on === '1' && cbtn().dataset.on !== '1' && c.probe().after === 0);
+
+      const cLedger = createPointsLedger({ makeEvents: cMakeEvents });
+      const cTel = createTelemetry({ makeEvents: cMakeEvents });
+      await cLedger.load(); await cTel.load();
+      const paidBefore = cLedger.total(); const trialsBefore = cTel.trials().length;
+      const at0 = c.probe().at; const answered0 = JSON.stringify(c.probe().answered);
+      check('(the answer was paid and logged, so "unchanged" below means something)', paidBefore > 0 && trialsBefore === 1,
+        `${paidBefore} / ${trialsBefore}`);
+
+      c.b.publish('wordforge/next');
+      check('*** next walks onto the contest stop; it does not advance ***',
+        c.probe().after === 1 && cbtn()?.dataset.on === '1' && c.probe().at === at0);
+      c.b.publish('wordforge/next');
+      check('...and wraps back to Next', c.probe().after === 0);
+      c.b.publish('wordforge/next');
+      c.b.publish('wordforge/select');
+      await sleep(900);
+      const cStream = cMakeEvents('contests');
+      await cStream.load();
+      const cRows = (cStream.get().events || []).filter((e) => e.kind === 'contest');
+      check('*** one contest in the profile\'s contests log, from Word Forge, with what was asked ***',
+        cRows.length === 1 && cRows[0].data.module === 'wordforge' && cRows[0].data.question === q0.prompt
+          && cRows[0].data.answer === q0.options[q0.answer] && !!cRows[0].data.key,
+        JSON.stringify(cRows.map((e) => e.data)));
+      await cLedger.load(); await cTel.load();
+      check('*** it costs nothing: points and trials unchanged, the recorded answer untouched ***',
+        cLedger.total() === paidBefore && cTel.trials().length === trialsBefore
+          && JSON.stringify(c.probe().answered) === answered0 && c.probe().at === at0,
+        `${paidBefore} -> ${cLedger.total()}, ${trialsBefore} -> ${cTel.trials().length}`);
+      check('*** a short, non-judgmental thank-you ***',
+        /Thanks\W+it.s held back until someone looks at it/i.test(chost.textContent), chost.textContent.slice(0, 300));
+      check('the contest stop is gone, Next is lit', !cbtn() && chost.querySelector('[data-next]')?.dataset.on === '1');
+      c.b.publish('wordforge/select');
+      await sleep(300);
+      check('select takes Next — the ordinary path is still one press', c.probe().at === at0 + 1, String(c.probe().at));
+
+      // "I don't know", then a contest, then "Got it": the try points are banked exactly as ever —
+      // a contest is never a wrong answer and never takes the explanation's points away.
+      c.b.publish('wordforge/answer', 'idk');
+      await sleep(300);
+      await cLedger.load();
+      const beforeGotIt = cLedger.total();
+      cbtn().click();
+      await sleep(600);
+      chost.querySelector('[data-next]').click();          // "Got it"
+      await sleep(700);
+      await cLedger.load();
+      check('*** after a contest, "Got it" still banks the same try points ***',
+        cLedger.total() === beforeGotIt + DEFAULTS.tryPoints, `${beforeGotIt} -> ${cLedger.total()}`);
+      c.i.destroy(); chost.innerHTML = '';
+
+      c = await mountC();
+      check('*** both contested questions are held OUT of the next deck on this profile ***',
+        c.probe().deck === fullDeck - 2, `${c.probe().deck} vs ${fullDeck - 2}`);
+      c.i.destroy(); chost.innerHTML = '';
+
+      await cStream.load();
+      const firstKey = (cStream.get().events || []).find((e) => e.kind === 'contest').data.key;
+      await cStream.append('clear', { key: firstKey });
+      c = await mountC();
+      check('*** a person clears one (the Lessons review list does this) — it is dealt again ***',
+        c.probe().deck === fullDeck - 1, `${c.probe().deck} vs ${fullDeck - 1}`);
+      c.i.destroy(); chost.remove();
+      cLedger.destroy(); cTel.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

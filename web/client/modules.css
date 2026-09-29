@@ -933,6 +933,13 @@
    “what was I thinking of” — and a reader has to be able to tell which is which. */
 .wordforge .wf-picked{display:block;margin-top:6px;padding-left:9px;
   border-left:3px solid var(--border);font-size:.82rem;color:var(--text-soft, var(--link))}
+/* "I think this question is wrong" (contests.js) — a quieter second stop after Next / Got it. The
+   lit stop gets the same border + arrow treatment as a lit option, never color alone. */
+.wordforge .wf-after{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.wordforge .wf-contest{background:transparent;color:var(--text-soft)}
+.wordforge .wf-after [data-on="1"]{outline:3px solid var(--link,#105666);outline-offset:2px}
+.wordforge .wf-after [data-on="1"]::before{content:"\25B8\00a0"}
+.wordforge .wf-contested{margin:8px 0 0;font-size:.9rem;color:var(--text-soft)}
 .wordforge .wf-btn{margin-top:10px;padding:10px 18px;border:1px solid var(--border);border-radius:10px;
   background:var(--surface);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
 .wordforge .wf-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
@@ -1002,6 +1009,13 @@
 .lessons .l-rq-fact.is-contradicts{color:var(--text);font-weight:600}
 .lessons .l-rq-wiki{color:var(--link)}
 .lessons .l-fc:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+/* The fact-check checkbox (Mike, 2026-09-28: "obvious ... rather than buried in settings"): a real
+   labelled input beside "Make questions"; the note in its label says what is sent. */
+.lessons .l-fc-opt{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.88rem;cursor:pointer;max-width:48ch}
+.lessons .l-fc-opt input{width:1.15rem;height:1.15rem;margin:0}
+.lessons .l-fc-note{flex-basis:100%;font-size:.78rem;color:var(--text-muted)}
+.lessons .l-fc-off .l-fc-opt{margin-left:4px}
+.lessons .l-tq-contested,.lessons .l-rq-contested{font-weight:600}
 .lessons .l-rv-in summary{cursor:pointer;margin-top:8px;font-size:.84rem;color:var(--text-muted)}
 .wordforge .wf-held{font-size:.75rem;color:var(--link);text-align:center;min-height:1em}
 
@@ -1445,6 +1459,14 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 /* a transcript-lesson question's source line, shown with the answer (row 2.24 / §0h) */
 .tv-src { margin: 0 0 10px; padding: 6px 10px; border-left: 3px solid var(--accent); font-size: .88rem; color: var(--text-soft); }
 .tv-next { min-height: 48px; padding: 10px 20px; font-size: 1rem; }
+/* "I think this question is wrong" (contests.js): a quieter second stop after Next. The post-answer
+   highlight is the same border + arrow as the options', never color alone. */
+.tv-after { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.tv-contest { min-height: 48px; padding: 10px 16px; font-size: .95rem; border-radius: 10px;
+  border: 1px solid var(--border, #e4e0c2); background: transparent; color: var(--text-soft, #3d5347); cursor: pointer; }
+.tv-next[data-on="1"], .tv-contest[data-on="1"] { outline: 3px solid var(--link, #105666); outline-offset: 2px; }
+.tv-next[data-on="1"]::before, .tv-contest[data-on="1"]::before { content: "\25B8\00a0"; }
+.tv-contested { margin: 10px 0 0; font-size: .92rem; color: var(--text-soft, #3d5347); }
 .tv-empty { color: var(--text-muted, #5d7064); max-width: 60ch; }
 
 /* ---- THE BANK EDITOR (Questions tab) ----

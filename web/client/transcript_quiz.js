@@ -664,9 +664,10 @@ export function quizDrop(s, id) {
 
 export const TRANSCRIPT_STREAM = 'transcript-lessons';
 export const REVIEW_KINDS = Object.freeze({
-  QUESTIONS: 'questions',     // { topic, topicLabel, key, autoApproved, items: [lesson q + id], rejected, model }
+  QUESTIONS: 'questions',     // { topic, topicLabel, key, autoApproved, factCheck, items: [lesson q + id], rejected, model }
   REVIEW: 'review',           // { id, verdict: 'approved' | 'rejected' }
-  FLAG: 'flag',               // { id, by: 'player' | 'caregiver' | 'fact-check', reason?, quote?, title?, url? }
+  FLAG: 'flag',               // { id, by: 'player' | 'caregiver' | 'fact-check', reason?, quote?, title?, url?,
+                              //   contest?, contestId?, module? }  (contest: raised while playing, contests.js)
   UNFLAG: 'unflag',           // { id }  a person cleared the flag
   PAID: 'paid',               // { topic, key, amount, subject }
   CHECK: 'check',             // { id, verdict, reason, quote, title, url, wikipediaAnswer, model, ms }  the fact check
@@ -691,35 +692,53 @@ function chronological(events) {
  * `check` is the latest fact-check result (`factCheck`'s shape) or null. A 'contradicts' result is
  * ALSO written as a FLAG (`by: 'fact-check'`), and it is the flag — the one mechanism every hold
  * already goes through — that keeps the question out of the pool; clearing it works the same way.
- * Status starts 'pending' — the review queue is ON by default (§0h) — or 'approved' when the
+ * Status starts 'pending' — the review queue was ON by default (§0h, 2026-09-17; flipped to
+ * auto-approve 2026-09-28, below, and still a setting) — or 'approved' when the
  * batch was generated with auto-approve on. Auto-approve is recorded AT GENERATION rather than
  * read at display time, so turning it on later does not silently approve a backlog nobody saw.
+ *
+ * *** AUTO-APPROVE DEFAULT FLIPPED ON, 2026-09-28 (Mike: "Flip review.") — WHAT THAT MEANS HERE. ***
+ * A question joins the pool without a person when it passed `grounded` and, WHEN THE FACT CHECK WAS
+ * ON for its batch (`factCheck: true`, recorded at generation beside `autoApproved`), the check did
+ * not flag it. So such an item starts 'pending' with `awaitingCheck`, and its first CHECK event —
+ * any verdict, 'not-checked' included, since "not checked" is not "wrong" — approves it; a
+ * 'contradicts' verdict is also written as a FLAG, which keeps it out until a person clears it. A
+ * person's own Approve/Reject before the verdict lands stands (the check never overrules a person).
+ * A check that never lands (the page closed mid-check) leaves it pending in the review list, where
+ * Approve is one press — inaction, not a stranded screen. Batches from before this carry no
+ * `factCheck` and are not held for one.
  */
 export function reviewItems(events) {
   const byId = new Map();
   for (const e of chronological(events)) {
     const d = (e && e.data) || {};
     if (e.kind === REVIEW_KINDS.QUESTIONS) {
+      const waits = !!(d.autoApproved && d.factCheck);
       for (const q of Array.isArray(d.items) ? d.items : []) {
         if (!q || !q.id || byId.has(q.id)) continue;       // the first time a question appears counts
         byId.set(q.id, { ...q, topic: d.topic, topicLabel: d.topicLabel || d.topic, key: d.key,
-          status: d.autoApproved ? 'approved' : 'pending', flagged: false, flags: [], check: null });
+          status: d.autoApproved && !waits ? 'approved' : 'pending', awaitingCheck: waits,
+          factChecked: !!d.factCheck, flagged: false, flags: [], check: null });
       }
     } else if (e.kind === REVIEW_KINDS.REVIEW) {
       const it = byId.get(d.id);
-      if (it && (d.verdict === 'approved' || d.verdict === 'rejected')) it.status = d.verdict;
+      if (it && (d.verdict === 'approved' || d.verdict === 'rejected')) { it.status = d.verdict; it.awaitingCheck = false; }
     } else if (e.kind === REVIEW_KINDS.FLAG) {
       const it = byId.get(d.id);
       if (it) {
         it.flagged = true;
+        // `contest`: raised with "I think this question is wrong" while playing (contests.js); the
+        // contest's own id, so one contest raises at most one flag however many panels see it.
         it.flags.push({ by: d.by || 'someone', reason: d.reason || '', quote: d.quote || '',
-          title: d.title || '', url: d.url || '' });
+          title: d.title || '', url: d.url || '', contest: !!d.contest, contestId: d.contestId || null,
+          module: d.module || '' });
       }
     } else if (e.kind === REVIEW_KINDS.CHECK) {
       const it = byId.get(d.id);
       if (it && Object.values(FACT).includes(d.verdict)) {
         it.check = { verdict: d.verdict, reason: d.reason || '', quote: d.quote || '', title: d.title || '',
           url: d.url || '', wikipediaAnswer: d.wikipediaAnswer || '' };
+        if (it.awaitingCheck) { it.awaitingCheck = false; if (it.status === 'pending') it.status = 'approved'; }
       }
     } else if (e.kind === REVIEW_KINDS.UNFLAG) {
       const it = byId.get(d.id);
