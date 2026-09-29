@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>color_picker — the reusable colour piece — test</title>
+<link rel="stylesheet" href="../settings.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;padding:12px;border:1px solid #e4e0c2;border-radius:12px;background:#fff}
+</style>
+</head>
+<body>
+<h1>color_picker — palette as data, pure helpers, one small renderer</h1>
+<p>No server, no network. The palette is a DEFAULT (Rule 1): a field can bring its own, and a
+Design-supplied palette replaces this data outright. What is tested here is what must hold for
+ANY palette — names a person can hear, hex values that normalise, a nearest-name answer for a
+colour that is not on the list — plus the one property of THIS palette that justifies it: every
+chromatic swatch reads (3:1) against both the lightest and the darkest shipped theme ground.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import {
+  DEFAULT_PALETTE, normalizeHex, nearestColor, describeColor, normalizePalette,
+  contrast, swatchesHTML, mountColorPicker,
+} from '../color_picker.js';
+import { THEMES, contrast as themeContrast } from '../theme.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// =====================================================================
+section('the default palette — data, named, and legible on the shipped themes');
+{
+  check('a dozen or so colours, not three and not forty — every one is a press on one switch',
+    DEFAULT_PALETTE.length >= 10 && DEFAULT_PALETTE.length <= 14, `${DEFAULT_PALETTE.length}`);
+  check('every entry is { id, name, hex }',
+    DEFAULT_PALETTE.every((c) => typeof c.id === 'string' && c.id
+      && typeof c.name === 'string' && c.name && typeof c.hex === 'string'));
+  check('ids are unique', new Set(DEFAULT_PALETTE.map((c) => c.id)).size === DEFAULT_PALETTE.length);
+  check('NAMES are unique — two swatches that sound the same to a screen reader are one swatch',
+    new Set(DEFAULT_PALETTE.map((c) => c.name.toLowerCase())).size === DEFAULT_PALETTE.length);
+  check('no name is a hex code — "dark blue", never "#1d4ed8"',
+    DEFAULT_PALETTE.every((c) => !/#|^[0-9a-f]{3,6}$/i.test(c.name)),
+    DEFAULT_PALETTE.map((c) => c.name).join(','));
+  check('every hex is already in canonical form (#rrggbb, lower case)',
+    DEFAULT_PALETTE.every((c) => normalizeHex(c.hex) === c.hex),
+    DEFAULT_PALETTE.filter((c) => normalizeHex(c.hex) !== c.hex).map((c) => c.hex).join(','));
+  check('hex values are unique', new Set(DEFAULT_PALETTE.map((c) => c.hex)).size === DEFAULT_PALETTE.length);
+  check('the palette cannot be mutated by a caller — it is shared by every colour field',
+    Object.isFrozen(DEFAULT_PALETTE) && DEFAULT_PALETTE.every((c) => Object.isFrozen(c)));
+
+  // The property that justifies THESE values. 3:1 is WCAG's floor for graphics and large text
+  // (1.4.11 / 1.4.3 large) — a swatch, a fill, a name sign — NOT the 4.5 body-text floor, and
+  // it is stated as 3 so nobody reads this as a promise about small text.
+  const light = THEMES.default.vars['--bg'];
+  const dark = THEMES.dusk.vars['--bg'];
+  const grounds = ['default', 'contrast', 'warm', 'forge', 'dusk'].map((id) => [id, THEMES[id].vars['--bg']]);
+  const NEUTRAL = new Set(['black', 'white']);
+  const weak = [];
+  for (const c of DEFAULT_PALETTE) {
+    if (NEUTRAL.has(c.id)) continue;
+    for (const [id, bg] of grounds) {
+      const r = contrast(c.hex, bg);
+      if (r < 3) weak.push(`${c.name} on ${id} = ${r.toFixed(2)}`);
+    }
+  }
+  check('EVERY CHROMATIC COLOUR reads at 3:1 or better on the default, contrast, warm, forge AND '
+    + 'dusk grounds — the lightest and the darkest this product ships', weak.length === 0, weak.join('; '));
+  check('black and white are there as neutrals, and each reads strongly on the ground it is FOR',
+    contrast('#000000', light) >= 4.5 && contrast('#ffffff', dark) >= 4.5
+    && DEFAULT_PALETTE.some((c) => c.id === 'black') && DEFAULT_PALETTE.some((c) => c.id === 'white'));
+}
+
+// =====================================================================
+section('contrast — reused from theme.js, not written twice');
+{
+  check('the contrast helper IS theme.js’s — one WCAG implementation in the repo, not two',
+    contrast === themeContrast);
+  check('and it is the ratio it claims to be: black on white is 21', Math.abs(contrast('#000', '#fff') - 21) < 1e-9);
+}
+
+// =====================================================================
+section('normalizeHex — every way a colour arrives, one way it is stored');
+{
+  check('#rgb expands', normalizeHex('#ABC') === '#aabbcc', normalizeHex('#ABC'));
+  check('a missing # is accepted', normalizeHex('1D4ED8') === '#1d4ed8');
+  check('upper case is folded — "#1D4ED8" and "#1d4ed8" are one colour, so they must compare equal',
+    normalizeHex('#1D4ED8') === '#1d4ed8');
+  check('whitespace is trimmed', normalizeHex('  #2f6fe0 ') === '#2f6fe0');
+  for (const bad of ['', null, undefined, 'blue', '#12345', '#ggg', '#1234567', 123, {}, '#']) {
+    check(`garbage is null, never a guess: ${JSON.stringify(bad)}`, normalizeHex(bad) === null);
+  }
+  // Alpha is REFUSED, not silently dropped: a half-transparent swatch is a different colour on
+  // every background, which is exactly the thing a named palette exists to rule out.
+  check('an 8-digit hex with alpha is refused rather than half-kept', normalizeHex('#1d4ed8ff') === null);
+}
+
+// =====================================================================
+section('nearestColor / describeColor — a colour off the list still gets a name');
+{
+  const blue = DEFAULT_PALETTE.find((c) => c.id === 'blue');
+  check('an exact hex finds its own entry', nearestColor(blue.hex)?.id === 'blue');
+  check('case does not matter to the lookup', nearestColor(blue.hex.toUpperCase())?.id === 'blue');
+  check('a colour one step off finds the obvious neighbour', nearestColor('#2f6fe1')?.id === 'blue',
+    nearestColor('#2f6fe1')?.id);
+  check('near-black is Black', nearestColor('#050505')?.id === 'black');
+  check('near-white is White', nearestColor('#fafafa')?.id === 'white');
+  check('garbage has no nearest colour', nearestColor('nope') === null);
+  check('an empty palette has no nearest colour rather than throwing', nearestColor('#123456', []) === null);
+  const custom = [{ id: 'a', name: 'Sea', hex: '#006699' }, { id: 'b', name: 'Sand', hex: '#ddcc99' }];
+  check('a CUSTOM palette is the one searched', nearestColor('#007799', custom)?.name === 'Sea');
+
+  check('an on-palette colour is described by its NAME alone', describeColor(blue.hex) === blue.name,
+    describeColor(blue.hex));
+  check('an off-palette colour is its nearest name PLUS the hex — honest that it is not exactly that',
+    describeColor('#2f6fe1') === `Close to ${blue.name} (#2f6fe1)`, describeColor('#2f6fe1'));
+  check('garbage describes as nothing, not as "Close to undefined"', describeColor('x') === '');
+}
+
+// =====================================================================
+section('normalizePalette — a field’s own colours, in whatever shape the author wrote');
+{
+  const p = normalizePalette([
+    { id: 'sea', name: 'Sea', hex: '#006699' },
+    { value: '#DDCC99', label: 'Sand' },
+    '#2f6fe0',                       // bare hex: named from the default palette
+    '#2f6fe0',                       // duplicate: first wins
+    { id: 'x', name: 'Broken', hex: 'nope' },
+    null,
+  ]);
+  check('three good entries survive, garbage and duplicates are dropped', p.length === 3, JSON.stringify(p));
+  check('{ value, label } is accepted and canonicalised', p[1].hex === '#ddcc99' && p[1].name === 'Sand');
+  check('a bare hex is NAMED — an unnamed swatch is unusable by ear',
+    p[2].name === DEFAULT_PALETTE.find((c) => c.id === 'blue').name, p[2].name);
+  check('every entry has an id', p.every((c) => c.id));
+  check('nothing at all is an empty list', normalizePalette(undefined).length === 0);
+}
+
+// =====================================================================
+section('swatchesHTML — the renderer, as a string any surface can paint');
+{
+  const host = document.getElementById('host');
+  const blue = DEFAULT_PALETTE.find((c) => c.id === 'blue');
+  host.innerHTML = swatchesHTML({ palette: DEFAULT_PALETTE, value: blue.hex, label: 'Ink <b>colour</b>' });
+  const sw = [...host.querySelectorAll('[data-swatch]')];
+  check('one swatch button per palette entry', sw.length === DEFAULT_PALETTE.length, `${sw.length}`);
+  check('each swatch is a real button with the colour NAME as its accessible name',
+    sw.every((b, i) => b.tagName === 'BUTTON' && b.getAttribute('aria-label') === DEFAULT_PALETTE[i].name));
+  check('exactly the current one is pressed', sw.filter((b) => b.getAttribute('aria-pressed') === 'true').length === 1
+    && host.querySelector(`[data-swatch="${blue.hex}"]`).getAttribute('aria-pressed') === 'true');
+  const fine = host.querySelector('input[type="color"]');
+  check('the browser’s own fine picker is there, holding the current value', !!fine && fine.value === blue.hex,
+    fine && fine.value);
+  check('the group label is escaped, not injected', !host.querySelector('b')
+    && host.querySelector('[role="group"]').getAttribute('aria-label').includes('<b>'));
+
+  host.innerHTML = swatchesHTML({ palette: DEFAULT_PALETTE, value: '#2f6fe1' });
+  check('an off-palette value presses NO swatch — none of them is what is set',
+    host.querySelectorAll('[aria-pressed="true"]').length === 0);
+  check('...and the fine picker still shows the exact value', host.querySelector('input[type="color"]').value === '#2f6fe1');
+  host.innerHTML = '';
+}
+
+// =====================================================================
+section('mountColorPicker — the same, with the clicks wired');
+{
+  const host = document.getElementById('host');
+  const picks = [];
+  const cp = mountColorPicker(host, {
+    value: DEFAULT_PALETTE[0].hex, label: 'Demo', onPick: (hex, entry) => picks.push([hex, entry?.name]),
+  });
+  host.querySelector(`[data-swatch="${DEFAULT_PALETTE[2].hex}"]`).click();
+  check('clicking a swatch reports its hex and its entry',
+    picks.length === 1 && picks[0][0] === DEFAULT_PALETTE[2].hex && picks[0][1] === DEFAULT_PALETTE[2].name,
+    JSON.stringify(picks));
+  check('and the pressed swatch follows', host.querySelector('[aria-pressed="true"]')?.dataset.swatch === DEFAULT_PALETTE[2].hex);
+  const fine = host.querySelector('input[type="color"]');
+  fine.value = '#123456';
+  fine.dispatchEvent(new Event('change', { bubbles: true }));
+  check('a fine pick reports the exact hex, with no entry (it is not on the list)',
+    picks.length === 2 && picks[1][0] === '#123456' && picks[1][1] === undefined, JSON.stringify(picks));
+  cp.set(DEFAULT_PALETTE[4].hex);
+  check('set() moves the pressed swatch without reporting a pick', picks.length === 2
+    && host.querySelector('[aria-pressed="true"]')?.dataset.swatch === DEFAULT_PALETTE[4].hex);
+  cp.destroy();
+  check('destroy empties the host', host.innerHTML === '');
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

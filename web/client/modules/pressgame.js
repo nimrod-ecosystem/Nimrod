@@ -221,8 +221,10 @@ const SETTINGS = [
     ] },
   { key: 'musicSourceId', label: 'Music from', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No source connected' },
+  // readOnly since 2026-09-28, when a text field became editable by default: this is a pick over
+  // live data owned in Media / Sources (photos.js's `album`, same reasoning), not free text.
   { key: 'musicAlbum', label: 'Music folder', kind: 'text', default: '', level: 'standard',
-    placeholder: 'Everything', note: 'set in Media / Sources' },
+    placeholder: 'Everything', readOnly: true, note: 'set in Media / Sources' },
   { key: 'musicVolume', label: 'How loud the music is', kind: 'choice', default: 0.3,
     level: 'standard',
     options: [

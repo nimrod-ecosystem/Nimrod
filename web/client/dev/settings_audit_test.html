@@ -98,6 +98,12 @@ section('pressesToWalk — a LAP, because with one switch you can only go one wa
     pressesToWalk(nf({ key: 'a', kind: 'text' })) === 0
     && pressesToWalk(nf({ key: 'n', kind: 'number' })) === 0);
   check('and nothing at all is survivable', pressesToWalk(null) === 0);
+  // 2026-09-28: the colour kind walks its palette like a choice walks its options.
+  check('a colour is one press per palette colour',
+    pressesToWalk(nf({ key: 'ink', kind: 'color' })) === nf({ key: 'ink', kind: 'color' }).options.length
+    && pressesToWalk(nf({ key: 'ink', kind: 'color', options: ['#000000', '#ffffff', '#d32f2f'] })) === 3);
+  check('an editable text row still costs ZERO to walk — a switch cannot type in it',
+    pressesToWalk(nf({ key: 'a', kind: 'text' })) === 0);
 
   // THE NUMBER THAT KILLED THE ORIGINAL DECLARATION, kept as a test so nobody re-adds it.
   check('2-60 in ones is 59 presses — the thing that is not a control',
@@ -110,7 +116,7 @@ section('walkCosts — reach + lap, and the disabled rows that cost nothing to p
 {
   const fields = [
     nf({ key: 'a', default: false }),                       // toggle, 2
-    nf({ key: 'b', kind: 'text' }),                          // not a stop at all
+    nf({ key: 'b', kind: 'text', readOnly: true }),          // not a stop at all (owned elsewhere)
     nf({ key: 'c', options: ['x', 'y', 'z'] }),              // choice, 3
     nf({ key: 'd', kind: 'number', min: 0, max: 10, step: 5, level: 'advanced' }),
   ];
@@ -129,6 +135,23 @@ section('walkCosts — reach + lap, and the disabled rows that cost nothing to p
   const adv = walkCosts(fields, { level: 'advanced' });
   check('at advanced the extra field joins and costs more to reach',
     adv.rows.length === 3 && adv.rows[2].reach === 2);
+}
+{
+  // 2026-09-28: an EDITABLE text row is a real cursor stop now (the menu opens a text box on it),
+  // so it costs a press to PASS even though a switch cannot use it. The audit has to count that,
+  // or it under-reports what every row after it costs to reach.
+  const fields = [
+    nf({ key: 'a', default: false }),                       // toggle
+    nf({ key: 't', kind: 'text' }),                          // editable: a stop, but no lap
+    nf({ key: 'c', options: ['x', 'y', 'z'] }),              // choice
+  ];
+  const c = walkCosts(fields, { level: 'standard' });
+  check('an editable text row COSTS ONE PRESS TO PASS — it is a stop now',
+    c.rows.find((r) => r.key === 'c')?.reach === 2, JSON.stringify(c.rows));
+  check('...but it is not a row with a lap: a switch cannot drive it',
+    !c.rows.some((r) => r.key === 't'));
+  check('...and it is still listed as unreachable by a switch, with the reason',
+    c.unreachable.some((u) => u.key === 't' && /keyboard/.test(u.why)));
 }
 
 // =====================================================================
@@ -270,6 +293,15 @@ section('auditValues — did the migration actually finish?');
 
   check('CONTROL: clean storage produces nothing',
     auditValues(f, { intervalMs: 4000 }).length === 0);
+
+  // 2026-09-28: a colour field reads garbage as its default, so garbage in storage DISPLAYS fine
+  // and is silently not what anybody chose — exactly the case this function exists to surface.
+  const ink = [nf({ key: 'ink', kind: 'color' })];
+  check('a stored colour that is not a colour is a warning',
+    auditValues(ink, { ink: 'blueish' }).some((v) => v.code === 'orphan-value'), codes(auditValues(ink, { ink: 'blueish' })));
+  check('an OFF-PALETTE colour is NOT a finding — a fine-picked colour is a real choice',
+    auditValues(ink, { ink: '#123456' }).length === 0);
+  check('...and neither is a palette colour in upper case', auditValues(ink, { ink: '#D32F2F' }).length === 0);
 }
 
 // =====================================================================

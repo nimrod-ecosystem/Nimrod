@@ -35,6 +35,8 @@ import { mountKiosk, SCREEN_SHOW, SCREEN_BACK, SCREEN_SHOWN } from '../kiosk.js'
 import { authHeaders } from '../auth.js';
 import { createState } from '../state.js';
 import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
+import { registerModule } from '../module.js';
+import { DEFAULT_PALETTE } from '../color_picker.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'kiosk-test-user-' + Math.floor(performance.now());
@@ -1920,6 +1922,125 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('the links section threw', false, String((e && e.stack) || e));
     } finally {
       for (const b of lBoxes) b.remove();
+    }
+  }
+
+  // ---- TEXT AND COLOUR FIELDS, THROUGH THE REAL MENU ON THE REAL KIOSK (2026-09-28) ----
+  //
+  // settings_test proves the rules; this proves the wiring, with the real keyboard adapter and
+  // the real input bus in the loop: a typed value reaches the MODULE's own state, typing does not
+  // drive the menu or the screen, and a colour row is walked with nothing but Down and Enter.
+  // The module is registered here, test-only, because no shipped module declares a colour yet.
+  {
+    const fbox = document.createElement('div');
+    fbox.style.cssText = 'position:relative;width:520px;height:300px;border:1px solid #ccc';
+    document.body.appendChild(fbox);
+    let fk = null;
+    try {
+      registerModule({
+        type: 'fieldkindstest', title: 'Field kinds', description: 'test only',
+        settings: [
+          { key: 'caption', label: 'Caption', kind: 'text', default: '', level: 'essential',
+            placeholder: 'Nothing yet' },
+          { key: 'ink', label: 'Caption colour', kind: 'color', level: 'essential' },
+        ],
+      }, (ctx) => ({
+        init() { ctx.mount.innerHTML = '<div class="fk-test">field kinds</div>'; },
+        destroy() { ctx.mount.innerHTML = ''; },
+      }));
+      const fUser = USER + '-fieldkinds';
+      const fProfiles = createProfilesClient({ user: fUser });
+      const fp = await fProfiles.create('TEST-field-kinds');
+      await fProfiles.addModule(fp.id, 'fieldkindstest');
+      fk = await mountKiosk(fbox, { user: fUser, profileId: fp.id, profiles: fProfiles, bus: createBus() });
+      await settled(() => !!fbox.querySelector('.fk-test'));
+      check('(setup) the test module is the focused panel', fk.primaryType() === 'fieldkindstest', fk.primaryType());
+
+      await press('Escape', 40);
+      check('(setup) Escape opens the menu through the real bus', fk.menu.isOpen() === true);
+      if (!fk.menu.isOpen()) fk.menu.open();
+      const hintOf = (id) => fk.menu.items().find((r) => r.id === id)?.hint;
+      const walk = async (id) => {
+        for (let i = 0; i < 40 && fk.menu.focusId() !== id; i += 1) await press('ArrowDown', 10);
+        return fk.menu.focusId() === id;
+      };
+      const box = () => fbox.querySelector('input.st-input');
+
+      // --- TEXT ---
+      check('the text row is there, and tells a switch user the truth',
+        (hintOf('set:caption') || '').includes('needs a keyboard'), hintOf('set:caption'));
+      check('ArrowDown (the real bus) walks to the text row — it is a stop now', await walk('set:caption'));
+      await press('Enter', 40);
+      check('*** ENTER (the real bus’s select) OPENS A TEXT BOX on the real kiosk ***', !!box());
+      check('...and puts the keyboard in it', document.activeElement === box());
+
+      // TYPING IS NOT INPUT: every key below is one the bus or the kiosk would act on if it were
+      // not typed into a field. M and Space and Down are menu/next bindings; C is the mirror.
+      const mirrorBefore = fk.mirrorFull();
+      for (const key of ['m', ' ', 'ArrowDown', 'c', 'h', '2']) {
+        box().dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+        box().dispatchEvent(new KeyboardEvent('keyup', { key, bubbles: true }));
+      }
+      await sleep(60);
+      check('typing M / Space / Down / C / H / 2 in the box does NOT close the menu', fk.menu.isOpen() === true);
+      check('...nor move the menu cursor', fk.menu.focusId() === 'set:caption', String(fk.menu.focusId()));
+      check('...nor close the box', !!box());
+      check('...nor flip the camera mirror', fk.mirrorFull() === mirrorBefore);
+
+      box().value = 'Throw this away';
+      box().dispatchEvent(new Event('input', { bubbles: true }));
+      box().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      box()?.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true }));
+      await sleep(60);
+      check('*** ESCAPE IN THE BOX cancels the edit and LEAVES THE MENU OPEN ***',
+        !box() && fk.menu.isOpen() === true);
+      check('...and wrote nothing', (fk.stageState().caption ?? '') === '', JSON.stringify(fk.stageState()));
+
+      await press('Enter', 40);
+      check('Enter on the row opens the box again', !!box());
+      box().value = 'Good morning, Robin';
+      box().dispatchEvent(new Event('input', { bubbles: true }));
+      box().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+      await sleep(60);
+      check('*** A TYPED VALUE LANDS IN THE MODULE’S OWN STATE ***',
+        fk.stageState().caption === 'Good morning, Robin', JSON.stringify(fk.stageState()));
+      check('...the row repaints with it', (hintOf('set:caption') || '').startsWith('Good morning, Robin'), hintOf('set:caption'));
+      check('...and the menu is still open, cursor on the row', fk.menu.isOpen() && fk.menu.focusId() === 'set:caption');
+      await press('ArrowDown', 30);
+      check('...and the very next arrow drives the MENU again, not the box', fk.menu.focusId() !== 'set:caption'
+        && !box(), String(fk.menu.focusId()));
+
+      // --- COLOUR, with nothing but Down and Enter ---
+      check('ArrowDown reaches the colour row', await walk('set:ink'));
+      check('it starts on the first palette colour, by name', hintOf('set:ink') === DEFAULT_PALETTE[0].name, hintOf('set:ink'));
+      const names = [];
+      const stored = [];
+      for (let i = 0; i < DEFAULT_PALETTE.length; i += 1) {
+        await press('Enter', 20);
+        names.push(hintOf('set:ink'));
+        stored.push(fk.stageState().ink);
+      }
+      check('*** ENTER CYCLES THE PALETTE BY NAME AND WRAPS home in exactly one lap ***',
+        names.join(',') === [...DEFAULT_PALETTE.slice(1), DEFAULT_PALETTE[0]].map((c) => c.name).join(','),
+        names.join(' | '));
+      check('...and what lands in the module’s state is the hex, not the name',
+        stored.join(',') === [...DEFAULT_PALETTE.slice(1), DEFAULT_PALETTE[0]].map((c) => c.hex).join(','),
+        stored.join(','));
+      check('...the cursor never left the row', fk.menu.focusId() === 'set:ink');
+      const pick = DEFAULT_PALETTE[5];
+      fbox.querySelector(`[data-swatch="${pick.hex}"]`)?.click();
+      await sleep(30);
+      check('a swatch click writes that colour to the module’s state', fk.stageState().ink === pick.hex,
+        JSON.stringify(fk.stageState()));
+      check('...and the row names it', hintOf('set:ink') === pick.name, hintOf('set:ink'));
+
+      await press('Escape', 40);
+      check('Escape (outside the box) still closes the menu', fk.menu.isOpen() === false);
+    } catch (e) {
+      check('the text/colour field section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { fk?.destroy(); } catch { /* already gone */ }
+      fbox.remove();
     }
   }
 

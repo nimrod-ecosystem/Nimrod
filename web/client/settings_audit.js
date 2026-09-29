@@ -31,6 +31,7 @@
 // same functions audit a live build, a proposed change, and a fixture with known faults.
 
 import { normalizeField, fieldsFor, showsAtLevel, readWithLegacy, LEVELS } from './settings_fields.js';
+import { normalizeHex } from './color_picker.js';
 
 export const SEVERITY = ['error', 'warn', 'info'];
 
@@ -82,7 +83,8 @@ const finding = (severity, code, text, where = {}) => ({ severity, code, text, .
 export function pressesToWalk(field) {
   if (!field || !field.cycleable) return 0;
   if (field.kind === 'toggle') return 2;
-  if (field.kind === 'choice') return (field.options || []).length;
+  // A colour walks its palette exactly as a choice walks its options (2026-09-28).
+  if (field.kind === 'choice' || field.kind === 'color') return (field.options || []).length;
   if (field.kind === 'number') {
     const { min, max, step } = field;
     if (!Number.isFinite(min) || !Number.isFinite(max) || !(step > 0)) return 0;
@@ -100,18 +102,23 @@ export function pressesToWalk(field) {
 // walkCosts — the whole menu, at one complexity level.
 //
 // `reach` is how many `next` presses it takes to land on a row: rows are walked in order and
-// the cursor wraps, so row N costs N presses from the top. Non-cycleable rows are skipped by
-// the cursor and therefore cost nothing to pass — which is exactly why they are rendered
-// disabled rather than hidden.
+// the cursor wraps, so row N costs N presses from the top. Disabled rows are skipped by the
+// cursor and therefore cost nothing to pass — which is exactly why they are rendered disabled
+// rather than hidden. (An EDITABLE text row is not disabled: it is a stop, so it costs a press to
+// pass, and it is still listed as unreachable because a switch cannot type. 2026-09-28.)
 //
 // `total` is reach + a full lap, i.e. THE WORST CASE for "change this one thing and be sure
 // you could have picked anything else".
 // ---------------------------------------------------------------------------------------
 export function walkCosts(fields = [], { level = 'standard', usage = null } = {}) {
   const shown = (fields || []).filter((f) => f && showsAtLevel(f, level));
-  const stops = shown.filter((f) => f.cycleable);
+  // A STOP IS ANYTHING THE CURSOR LANDS ON, and since 2026-09-28 that includes an EDITABLE text
+  // row (the menu opens a text box on it). It costs a press to pass even though a switch cannot
+  // use it, so it counts toward everything after it - but it has no lap, so it gets no row.
+  const stops = shown.filter((f) => f.cycleable || f.editable);
   const rows = [];
   stops.forEach((f, i) => {
+    if (!f.cycleable) return;
     const walk = pressesToWalk(f);
     const uses = usage && Object.prototype.hasOwnProperty.call(usage, f.key)
       ? Number(usage[f.key]) || 0 : null;
@@ -311,6 +318,13 @@ export function auditValues(fields = [], values = {}, { type = '' } = {}) {
     if (want && typeof v !== want) {
       out.push(finding('error', 'type-mismatch',
         `"${f.key}" is stored as ${typeof v} (${JSON.stringify(v)}) but declared ${f.kind}`,
+        at(f.key)));
+    }
+    // A colour that is not a colour READS AS THE DEFAULT, so it displays fine and is silently not
+    // what anybody chose. Off-palette is fine - a fine-picked colour is a real choice.
+    if (f.kind === 'color' && !normalizeHex(v)) {
+      out.push(finding('warn', 'orphan-value',
+        `"${f.key}" holds ${JSON.stringify(v)}, which is not a colour; it is showing the default`,
         at(f.key)));
     }
     if (f.kind === 'choice' && (f.options || []).length) {

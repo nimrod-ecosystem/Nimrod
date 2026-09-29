@@ -22,25 +22,71 @@
 // nobody applies the wrong one.
 //
 // ---------------------------------------------------------------------------------------
-// THE FOUR KINDS, and what `select` does to each
+// THE FIVE KINDS, and what `select` does to each
 //
 //   toggle   flips it
 //   choice   cycles to the next option, AND WRAPS
 //   number   steps by `step`, AND WRAPS at max back to min
-//   text     NOT cycleable, and honest about it. Free text and pickers over live data (a
-//            folder path, an album of four hundred) render read-only with a reason, and stay
-//            editable where they already live. NOBODY CYCLES FOUR HUNDRED ALBUMS ONE PRESS
-//            AT A TIME; a fake affordance is worse than an absent one.
+//   color    cycles to the next colour in its palette, AND WRAPS (see below)
+//   text     opens a TEXT BOX (see below). NOT cycleable, and honest about it.
 //
 // WHY WRAPPING IS THE WHOLE CONTRACT: with one switch you can only travel ONE WAY. A control
 // that stops at its maximum strands the person there with no way back. Same rule the menu
 // cursor and the focus ring already follow, for the same reason.
 //
 // ---------------------------------------------------------------------------------------
+// TEXT — CHANGED 2026-09-28, and what survived the change.
+//
+// What this said until today: *"text: NOT cycleable, and honest about it. Free text and pickers
+// over live data (a folder path, an album of four hundred) render read-only with a reason, and
+// stay editable where they already live."* Half of that was right and is KEPT; half was a
+// smaller product than it needed to be and is gone.
+//
+//   KEPT: a person with only a switch cannot type, and the row SAYS SO ("needs a keyboard") -
+//   in the hint, on every text row, whether or not a keyboard is plugged in. Stepping a text
+//   field is still a no-op, and `cycleable` is still false. No fake affordance.
+//
+//   GONE: "read-only in the menu". It refused the keyboard and the mouse that COULD type, so
+//   every text setting in the product (a sprint's name, a subject, an API key) was unreachable
+//   from the one menu meant to hold every setting - each module grew its own text box instead,
+//   which is the per-module-menu drift `settings.js` exists to stop. Mike, asked what to do
+//   about a name that has to be typed: *"plain text box is fine"* / *"keyboard box now"*.
+//
+// SO: a text field is `editable` unless declared `readOnly`. Its row is a cursor STOP (the
+// keyboard user walks to it with the same arrows as everything else); `select` or a click
+// opens an inline box in the menu; Enter/Save commits, Escape/Cancel leaves it unchanged. The
+// box itself lives in `settings.js` - this file only says the field is editable and hands the
+// row a `commit(value)` that reports through `onStep` like every other write (see below).
+//
+// THE COST, stated rather than hidden: an editable text row is now one more stop on a switch
+// user's walk, and pressing select on it opens a box they cannot use. Every menu move (`next`,
+// `prev`, `back`, `select`) leaves the box, so it is one wasted press, never a trap. A field
+// that is genuinely OWNED elsewhere - a picker over live data, like photos' album - declares
+// `readOnly` and stays the disabled signpost it always was.
+//
+// ---------------------------------------------------------------------------------------
+// COLOR — ADDED 2026-09-28 (Mike: *"settings for font, style, and color ... the color picker
+// should be in the settings menu"*).
+//
+// The value is a hex string, `#rrggbb`. Its options are a PALETTE of named colours -
+// `color_picker.js`'s DEFAULT_PALETTE unless the field declares its own `options` - and
+// stepping cycles through them and wraps, exactly like a choice, so a colour is reachable from
+// one switch. The menu ALSO draws the swatches and the browser's fine picker for a pointer;
+// those are not cursor stops, and a value chosen with the fine picker is a real value, not a
+// dead one: the row names it by its nearest palette colour plus the hex, and the next press
+// steps on from THAT colour's place rather than jumping to the top.
+//
+// FONT NEEDS NO KIND. A `choice` of font options is exactly the control a font wants; adding a
+// kind for it would be a second engine for the same walk.
+//
+// ---------------------------------------------------------------------------------------
 // WHAT THIS FILE MUST NEVER DO: WRITE.
 //
 // Nothing here calls `state.set()`. `stepValue` computes the next value and `fieldItems`
-// reports `(key, nextValue, field)` through `onStep`, and stops. ONLY THE HOST KNOWS WHERE A
+// reports `(key, nextValue, field)` through `onStep`, and stops. A typed value or a picked
+// colour (`commit()` on a text or colour row, 2026-09-28) goes out THROUGH THE SAME `onStep` -
+// one write path, so a host that knows where one value lives knows where all of them do. The
+// name is historical; it is the write callback. ONLY THE HOST KNOWS WHERE A
 // VALUE LIVES — there are six homes for one (instance, module, screen, device, person,
 // account) and they are an INHERITANCE CHAIN, not six buckets. Baking a destination in here
 // would have to be unpicked the day the chain arrives. The chain itself is not built yet;
@@ -71,8 +117,10 @@
 // ---------------------------------------------------------------------------------------
 
 // Most permissive last. A field shows when its own level is at or below the active one.
+import { DEFAULT_PALETTE, normalizeHex, normalizePalette, nearestColor, describeColor } from './color_picker.js';
+
 export const LEVELS = ['essential', 'standard', 'advanced'];
-export const KINDS = ['toggle', 'choice', 'number', 'text'];
+export const KINDS = ['toggle', 'choice', 'number', 'text', 'color'];
 
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 
@@ -177,6 +225,8 @@ export function normalizeField(raw = {}) {
     // panels all read the migrated value through ONE function.
     legacy: normalizeLegacy(raw.legacy),
     cycleable: false,
+    // Can a KEYBOARD or a POINTER set it in the menu, when a switch cannot? Only text, today.
+    editable: false,
     why: null,
   };
 
@@ -227,10 +277,29 @@ export function normalizeField(raw = {}) {
     if (min === null || max === null) f.why = 'needs a keyboard';
     else if (min === max) f.why = 'only one value';
     else f.cycleable = true;
+  } else if (kind === 'color') {
+    // THE PALETTE IS A DEFAULT, NOT A LAW: a field's own `options` replace it (any of the shapes
+    // `normalizePalette` accepts). Held twice on purpose - `palette` in the picker's own
+    // `{ id, name, hex }` shape for the swatches, `options` in the `{ value, label }` shape every
+    // other reader of a field (the audit, `pressesToWalk`) already understands.
+    const declared = Array.isArray(raw.options) && raw.options.length ? normalizePalette(raw.options) : null;
+    f.palette = declared && declared.length ? declared : normalizePalette(DEFAULT_PALETTE);
+    f.options = f.palette.map((c) => ({ value: c.hex, label: c.name }));
+    // A garbage default is not a colour; the first on the list is the one guaranteed to be.
+    f.default = normalizeHex(raw.default) || f.options[0]?.value || '';
+    if (f.options.length >= 2) f.cycleable = true;
+    else f.why = f.options.length ? 'only one to choose from' : 'nothing to choose from yet';
   } else {
     f.default = raw.default === undefined ? '' : String(raw.default);
     f.placeholder = String(raw.placeholder || 'Not set');
+    // STILL SAID, on every text row (see the header's TEXT section): a switch cannot type.
     f.why = 'needs a keyboard';
+    // ...but a keyboard and a mouse can, so the menu gives them a box. `readOnly` below undoes
+    // this for a field that is only REPORTED here.
+    f.editable = true;
+    const ml = Number(raw.maxLength);
+    // No length limit is invented: how long a name or a caption may be is the module's call.
+    f.maxLength = Number.isFinite(ml) && ml > 0 ? Math.floor(ml) : null;
   }
 
   // WHAT THIS SETTING NEEDS IN ORDER TO WORK AT ALL. Mike: *"It should also be clearly marked
@@ -248,6 +317,8 @@ export function normalizeField(raw = {}) {
   // OWNED somewhere else (a source picker, a folder path) gets a row without a fake handle.
   if (raw.readOnly) {
     f.cycleable = false;
+    f.editable = false;
+    f.readOnly = true;
     f.why = f.why || 'changed where it lives';
   }
   if (f.note) f.why = f.note;
@@ -299,6 +370,11 @@ export function fieldValue(field, values = {}) {
     if (isNum(field.max) && n > field.max) return field.max;
     return round(n, field.decimals ?? 0);
   }
+  if (field.kind === 'color') {
+    // Canonical on read, so "#D32F2F" from one surface and "#d32f2f" from another are the same
+    // colour to everything downstream. Garbage is not in force; the default is.
+    return normalizeHex(raw) || field.default;
+  }
   return raw === undefined ? '' : String(raw);
 }
 
@@ -349,6 +425,25 @@ export function stepValue(field, current, dir = 1) {
     return n;
   }
 
+  if (field.kind === 'color') {
+    const opts = field.options || [];
+    if (!opts.length) return current;
+    const cur = normalizeHex(current);
+    // Garbage recovers to the first colour in one press - the choice branch's repair.
+    if (!cur) return opts[0].value;
+    let at = opts.findIndex((o) => o.value === cur);
+    // A COLOUR OFF THE LIST IS NOT DEAD. Unlike a deleted media source it is a real choice
+    // somebody made with the fine picker, and the row is showing it as "Close to Blue". So the
+    // press moves on from where the row SAID it was - Blue's place - rather than jumping to the
+    // top, which would read as the control ignoring what is set.
+    if (at < 0) {
+      const near = nearestColor(cur, field.palette || opts.map((o) => ({ hex: o.value, name: o.label })));
+      at = near ? opts.findIndex((o) => o.value === normalizeHex(near.hex)) : -1;
+      if (at < 0) return opts[0].value;
+    }
+    return opts[(at + d + opts.length) % opts.length].value;
+  }
+
   return current;
 }
 
@@ -373,6 +468,11 @@ export function displayValue(field, value) {
     const shown = scale === 1 ? value : round(Number(value) / scale, field.displayDecimals ?? 0);
     const unit = (shown === 1 && field.unitOne) ? field.unitOne : field.unit;
     return unit ? `${shown} ${unit}` : String(shown);
+  }
+  if (field.kind === 'color') {
+    // The NAME, because it may be heard rather than seen. Off the list: the nearest name plus the
+    // hex, honest that it is not exactly that colour.
+    return describeColor(value, field.palette) || field.default;
   }
   return value === '' || value === undefined || value === null ? field.placeholder : String(value);
 }
@@ -417,7 +517,13 @@ export function fieldItems(fields = [], {
     if (!f || !showsAtLevel(f, level)) continue;
     const value = fieldValue(f, read() || {});
     const shown = displayValue(f, value);
-    out.push({
+    // What the row says after the value. An EDITABLE text row keeps "needs a keyboard" AND its
+    // note - the note used to replace the reason, which was fine while the reason was the whole
+    // story, but now the row is usable by some people and not others and has to say both.
+    const says = f.cycleable ? [shown]
+      : f.editable ? [shown, 'needs a keyboard', f.note]
+      : [shown, f.why];
+    const item = {
       kind: 'item',
       id: `${idPrefix}${f.key}`,
       label: f.label,
@@ -426,10 +532,10 @@ export function fieldItems(fields = [], {
       // way round to undo the answer.
       // The requirement rides in the hint, so it is visible WHERE THE SETTING IS SET rather
       // than only when it fails.
-      hint: [f.cycleable ? shown : `${shown} · ${f.why}`,
-             f.requires === 'direct' ? 'needs a direct connection (VPN)' : f.requires]
+      hint: [...says, f.requires === 'direct' ? 'needs a direct connection (VPN)' : f.requires]
         .filter(Boolean).join(' · '),
-      disabled: !f.cycleable,
+      // An editable text row is a real stop: a keyboard user reaches it with the same arrows.
+      disabled: !f.cycleable && !f.editable,
       key: f.key,
       field: f,
       value,
@@ -438,7 +544,34 @@ export function fieldItems(fields = [], {
         const now = fieldValue(f, read() || {});
         onStep(f.key, stepValue(f, now, dir), f);
       },
-    });
+      // SETTING A VALUE OUTRIGHT - a typed string, a swatch, the fine picker - rather than
+      // stepping to the next one. Reports through the SAME `onStep` and returns whether it did,
+      // so the shell can close the box either way. A value equal to the one in force is not a
+      // write: no event, no state churn, for a change nobody made.
+      commit: (raw) => {
+        if (!onStep || f.readOnly) return false;
+        let next;
+        if (f.kind === 'text' && f.editable) {
+          // Trimmed: a switch that emulates Space, pressed in the box, must not be able to pad a
+          // name with blanks and have that count as a change.
+          next = String(raw == null ? '' : raw).trim();
+          if (f.maxLength) next = next.slice(0, f.maxLength);
+        } else if (f.kind === 'color' && f.options && f.options.length) {
+          next = normalizeHex(raw);
+          if (!next) return false;
+        } else {
+          return false;
+        }
+        if (next === fieldValue(f, read() || {})) return false;
+        onStep(f.key, next, f);
+        return true;
+      },
+    };
+    if (f.editable) {
+      item.edit = { kind: 'text', value, placeholder: f.placeholder, maxLength: f.maxLength };
+    }
+    if (f.kind === 'color' && !f.readOnly) item.color = { value, palette: f.palette || [] };
+    out.push(item);
   }
   return out;
 }

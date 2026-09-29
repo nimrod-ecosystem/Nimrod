@@ -1,0 +1,64 @@
+/* color_picker.css - the swatch row `color_picker.js` renders, wherever it is rendered.
+ *
+ * Its own file because the picker is its own piece (Mike, 2026-09-28: "some sort of separate color
+ * picker module. Selecting colors will come up more"). `settings.css` imports it, so the settings
+ * menu - its first user - gets it on every page that already has the menu; a later surface links
+ * this file and nothing else.
+ *
+ * TOKEN-ONLY, deliberately: the ONLY colour literal a swatch has is its own `--sw`, set inline by
+ * the renderer from the palette DATA. Everything around it (border, pressed ring) is the theme's,
+ * so a white swatch still has an edge on a white panel and the pressed ring follows the cursor
+ * colour in every theme. `check_hardcoded_colors.py` should report 0 for this file.
+ *
+ * THE FALLBACKS ARE KEYWORDS (`currentColor`, `Canvas`), NOT HEX. Measured on a page that never
+ * applied a theme (dev/settings_test.html): with a bare `var(--border)` the whole `border`
+ * declaration went invalid, every swatch lost its edge and the White swatch vanished into the
+ * panel. A hex fallback would fix that and be a literal the colour check has to triage; a keyword
+ * fixes it and is not a colour decision at all. */
+
+.cp-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(6px, 1vmin, 10px);
+  padding: clamp(4px, 0.8vmin, 8px) clamp(10px, 1.6vmin, 16px) clamp(6px, 1vmin, 10px);
+}
+
+.cp-swatch {
+  /* Big enough to hit with a tremor, the same argument as `.st-item`'s row height. */
+  width: clamp(30px, 4.4vmin, 44px);
+  height: clamp(30px, 4.4vmin, 44px);
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border, currentColor);
+  background: var(--sw);
+  cursor: pointer;
+}
+.cp-swatch:hover { border-color: var(--text-muted, currentColor); }
+
+/* PRESSED IS SHAPE AS WELL AS COLOUR: a thick ring in the cursor colour AND a gap, so it reads
+ * for somebody who cannot tell the ring's colour from the swatch's. */
+.cp-swatch[aria-pressed="true"] {
+  border-color: var(--surface, Canvas);
+  outline: 3px solid var(--link, currentColor);
+  outline-offset: 1px;
+}
+.cp-swatch:focus-visible { outline: 3px solid var(--accent, currentColor); outline-offset: 2px; }
+
+.cp-fine {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: clamp(0.72rem, 1.4vmin, 0.9rem);
+  color: var(--text-muted, currentColor);
+  cursor: pointer;
+}
+.cp-fine input[type="color"] {
+  width: clamp(34px, 4.8vmin, 48px);
+  height: clamp(30px, 4.4vmin, 44px);
+  padding: 0;
+  border: 2px solid var(--border, currentColor);
+  border-radius: 8px;
+  background: var(--surface, Canvas);
+  cursor: pointer;
+}
