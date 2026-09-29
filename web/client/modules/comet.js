@@ -45,7 +45,7 @@ import { registerModule, getManifest } from '../module.js';
 import { mountSettings } from '../settings.js';
 import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
-import { hitCircle, nearest } from '../hitbox.js';
+import { hitCircle, nearest } from '../pressable.js';
 
 const DEFAULTS = {
   hearts: 4,        // how many balloons are up at once
@@ -318,7 +318,7 @@ registerModule(
         if (!started || cx < 0) continue;
         const hx = heartX(h, nowMs()), hy = h.y * H, r = h.size * minD;
         // *** THE SHARED HIT-BOX CHECK, NOT A SECOND ONE. *** Same squared-distance-vs-radius
-        // this line always ran, moved to `hitbox.js` so the next scene item that wants "can
+        // this line always ran, moved to `pressable.js` so the next scene item that wants "can
         // this be pressed" reuses it instead of re-deriving it (Mike, 2026-09-26, asking how
         // buttons and Godot's own Area2D handle exactly this question).
         if (hitCircle(cx, cy, { x: hx, y: hy, r })) {
@@ -439,7 +439,7 @@ registerModule(
       const from = cx >= 0 ? { x: cx, y: cy } : { x: W / 2, y: H * 0.9 };
       const t = nowMs();
       // Still-off-screen hearts are filtered out first (domain-specific: a switch user should
-      // never be steered to something not yet visible), then `hitbox.js`'s own `nearest()`
+      // never be steered to something not yet visible), then `pressable.js`'s own `nearest()`
       // answers the shared question — the exact same "go to the closest live target" this
       // function has always answered, just through the shared primitive.
       const candidates = hearts

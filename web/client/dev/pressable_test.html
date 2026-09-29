@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>hitbox — can this scene thing be pressed?</title>
+<title>pressable — can this scene thing be pressed?</title>
 <style>
   body{font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.25rem} h2{font-size:.95rem;margin:18px 0 4px}
@@ -12,7 +12,7 @@
 </style>
 </head>
 <body>
-<h1>hitbox — can this scene thing be pressed?</h1>
+<h1>pressable — can this scene thing be pressed?</h1>
 <p>No canvas, no camera, no module mounted — every function here is pure given a point and a
 list of circular targets, the same discipline `input_marker.js`'s own pure colour maths is
 tested under.</p>
@@ -20,7 +20,7 @@ tested under.</p>
 <div id="summary">running…</div>
 
 <script type="module">
-import { distSq, hitCircle, hitTest, nearest, createHoverTracker } from '../hitbox.js';
+import { distSq, hitCircle, hitTest, nearest, createHoverTracker } from '../pressable.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
