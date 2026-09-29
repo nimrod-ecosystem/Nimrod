@@ -2,6 +2,9 @@
    in this file invents a number. `@import` must precede every other rule, which is why
    it is the first line. */
 @import url('./layers.css');
+/* The colour picker's swatches (2026-09-28). Its own file because the picker is its own piece;
+   imported here because the menu is its first user, so every page with the menu has it. */
+@import url('./color_picker.css');
 
 /* settings.css — the universal settings menu.
  *
@@ -144,6 +147,59 @@
   flex: none;
 }
 .st-item.on .st-hint { color: var(--bg, #F7F4D5); opacity: 0.8; }
+
+/* ---- 2026-09-28: the text box and the colour chip. Token-first with KEYWORD fallbacks
+ * (currentColor / Canvas / CanvasText), never hex - so a page that never applied a theme still
+ * draws the box, and `check_hardcoded_colors.py` counts nothing new here (see color_picker.css
+ * for the measurement that made the fallbacks necessary). ---- */
+
+/* A colour row's current colour, on the row itself - so the cursor row shows it too. The ring
+ * is the theme's border, so White still has an edge on a white panel. */
+.st-chip {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  margin-right: 0.45em;
+  vertical-align: -0.12em;
+  border-radius: 50%;
+  background: var(--sw);
+  border: 1px solid var(--border, currentColor);
+}
+.st-item.on .st-chip { opacity: 1; border-color: var(--bg, Canvas); }
+
+/* THE INLINE TEXT BOX. As big as a row, because it is typed into by the same caregiver in the
+ * same hurry the row sizes were chosen for. */
+.st-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(6px, 1vmin, 10px);
+  padding: clamp(4px, 0.8vmin, 8px) clamp(10px, 1.6vmin, 16px) clamp(6px, 1vmin, 10px);
+}
+.st-input {
+  flex: 1 1 12em;
+  min-width: 0;
+  font: inherit;
+  font-size: clamp(1rem, 2.2vmin, 1.35rem);
+  padding: clamp(8px, 1.4vmin, 14px) clamp(10px, 1.6vmin, 16px);
+  border: 2px solid var(--link, currentColor);
+  border-radius: clamp(8px, 1.4vmin, 14px);
+  background: var(--surface, Canvas);
+  color: var(--text, CanvasText);
+}
+.st-input:focus { outline: 3px solid var(--accent, currentColor); outline-offset: 1px; }
+.st-mini {
+  font: inherit;
+  font-size: clamp(0.9rem, 1.9vmin, 1.15rem);
+  padding: clamp(8px, 1.4vmin, 14px) clamp(12px, 1.8vmin, 18px);
+  border: 1px solid var(--border, currentColor);
+  border-radius: clamp(8px, 1.4vmin, 14px);
+  background: var(--surface-alt, Canvas);
+  color: var(--text, CanvasText);
+  cursor: pointer;
+}
+.st-mini[data-edit-save] { background: var(--link, currentColor); border-color: var(--link, currentColor); color: var(--on-link, Canvas); font-weight: 700; }
+.st-mini:focus-visible { outline: 3px solid var(--accent, currentColor); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .st-item { transition: background 120ms ease, color 120ms ease; }

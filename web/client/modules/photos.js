@@ -70,6 +70,11 @@ const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 
 // `album` is TEXT and therefore not cycleable, and it says so rather than pretending. Nobody
 // picks one of four hundred albums one press at a time, and a fake affordance is worse than
 // an absent one.
+//
+// `readOnly` SINCE 2026-09-28, and it changes nothing you can see: that day the settings menu
+// learned to give a text field a real text box, so a text field is editable UNLESS it says
+// otherwise. This one says otherwise because the album is a pick over LIVE data owned in Media /
+// Sources - typing a name here that the source does not have would be a way to break the panel.
 const SETTINGS = [
   { key: 'intervalMs', label: 'Change photo every', kind: 'choice', default: 8000,
     level: 'essential',
@@ -89,7 +94,7 @@ const SETTINGS = [
   { key: 'sourceId', label: 'Photos from', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No source connected' },
   { key: 'album', label: 'Album', kind: 'text', default: '', level: 'standard',
-    placeholder: 'Everything', note: 'set in Media / Sources' },
+    placeholder: 'Everything', readOnly: true, note: 'set in Media / Sources' },
 ];
 
 // THE DECLARATION IS THE TYPE, and this is the one place that decides it. `intervalSec` is

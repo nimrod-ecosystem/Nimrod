@@ -50,6 +50,7 @@
 // SCREEN section held nothing but "Close menu". Two universal headings, no universal content.
 
 import { VERBS, verbTopic } from './actions.js';
+import { swatchesHTML } from './color_picker.js';
 
 export const MENU_VERB = 'menu';
 export const MENU_TOPIC = verbTopic(MENU_VERB);
@@ -300,6 +301,8 @@ export function mountSettings(root, {
 
   let open = false;
   let page = null;             // the open page's id, or null for the list
+  // THE ONE TEXT BOX that may be open, as `{ id, draft }`, or null. See "TEXT ROWS" below.
+  let editing = null;
   let items = [];
   let nav = createNav([]);
   let returnFocus = null;
@@ -348,35 +351,126 @@ export function mountSettings(root, {
       const n = items.findIndex((it) => it.id === keep && it.kind === 'item' && !it.disabled);
       if (n >= 0) nav.setIndex(n);
     }
+    // A box open on a row that no longer exists (the panel it belonged to went away) closes
+    // rather than floating under whatever row took its place.
+    if (editing && !items.some((it) => it.id === editing.id && it.edit)) editing = null;
     paint();
   }
 
+  const editInput = () => listEl.querySelector('[data-edit-input]');
+
   function paint() {
     const at = nav.index();
+    // A REPAINT MUST NOT EAT TYPING. The kiosk refreshes this menu when a person's name arrives
+    // and after every activation; rebuilding the list replaces the box, so the draft, the focus
+    // and the caret are carried across by hand.
+    const box = editInput();
+    const hadFocus = !!box && doc?.activeElement === box;
+    const caret = hadFocus ? [box.selectionStart, box.selectionEnd] : null;
     listEl.innerHTML = items.map((it, n) => {
       if (it.kind === 'heading') return `<div class="st-head">${esc(it.label)}</div>`;
       const on = n === at;
       const dis = it.disabled ? ' disabled' : '';
-      return `<button class="st-item${on ? ' on' : ''}" data-n="${n}" type="button"${dis}
-        aria-current="${on ? 'true' : 'false'}">
+      const isEditing = !!(editing && it.edit && editing.id === it.id);
+      // A colour row carries a chip of its colour beside the name, on the row itself, so the
+      // cursor row shows it too and a sighted switch user sees what "Blue" means.
+      const chip = it.color && it.color.value
+        ? `<span class="st-chip" style="--sw:${esc(it.color.value)}" aria-hidden="true"></span>` : '';
+      const row = `<button class="st-item${on ? ' on' : ''}" data-n="${n}" type="button"${dis}
+        aria-current="${on ? 'true' : 'false'}"${it.edit ? ` aria-expanded="${isEditing ? 'true' : 'false'}"` : ''}>
         <span class="st-label">${esc(it.label)}</span>
-        ${it.hint ? `<span class="st-hint">${esc(it.hint)}</span>` : ''}
+        ${it.hint || chip ? `<span class="st-hint">${chip}${esc(it.hint || '')}</span>` : ''}
       </button>`;
+      // The swatches are for a POINTER and are not cursor stops (they are not items), so a
+      // switch user pays one press for this row and steps it with `select` like any other.
+      const swatches = it.color && !it.disabled
+        ? swatchesHTML({ palette: it.color.palette, value: it.color.value, label: it.label,
+          attrs: `data-for="${n}"` })
+        : '';
+      const editor = isEditing ? `<div class="st-edit" data-edit-for="${n}">
+          <input class="st-input" type="text" data-edit-input value="${esc(editing.draft)}"
+            placeholder="${esc(it.edit.placeholder || '')}" aria-label="${esc(it.label)}"
+            ${it.edit.maxLength ? `maxlength="${Number(it.edit.maxLength)}"` : ''} autocomplete="off" spellcheck="false">
+          <button type="button" class="st-mini" data-edit-save>Save</button>
+          <button type="button" class="st-mini" data-edit-cancel>Cancel</button>
+        </div>` : '';
+      return row + swatches + editor;
     }).join('');
+    if (editing && (hadFocus || editing.focus)) {
+      const el = editInput();
+      if (el) {
+        el.focus?.();
+        if (caret) { try { el.setSelectionRange(caret[0], caret[1]); } catch { /* not a text input */ } }
+        else { try { el.select(); } catch { /* same */ } }
+      }
+      editing.focus = false;
+    }
     // The cursor must be visible without scrolling to it — someone driving with a switch
     // cannot scroll, and a highlighted row below the fold is the same as no highlight.
     listEl.querySelector('.st-item.on')?.scrollIntoView({ block: 'nearest' });
+    // ...and so must the box somebody is typing in.
+    editInput()?.scrollIntoView?.({ block: 'nearest' });
   }
+
+  // ---------------------------------------------------------------------------------
+  // TEXT ROWS (2026-09-28). Mike: "plain text box is fine" / "keyboard box now".
+  //
+  // `select` or a click on an editable text row opens ONE inline box under it. Enter or Save
+  // commits through the row's `commit()` - which reports through the host's `onStep`, the same
+  // write path every other row uses; this file still writes nothing. Escape or Cancel leaves the
+  // value as it was.
+  //
+  // THE BOX NEVER TRAPS ANYBODY. Every move this menu understands leaves it: `next`/`prev`
+  // cancel and move on, `back` cancels and stays, `select` saves, closing the menu closes it. So
+  // a switch user who lands in it - they can, it is a stop - is one press from out, and the row
+  // told them before they pressed that it needs a keyboard.
+  //
+  // WHY TYPING DOES NOT DRIVE THE MENU OR THE SCREEN, checked rather than assumed: the input
+  // bus's keyboard adapter (`input_keyboard.js` `attachKeyboard`) and the kiosk's caregiver keys
+  // (`kiosk.js` `onKey`) both return early on `isTyping(e.target)`, and an `<input>` is typing.
+  // So ordinary keys are left to bubble (the activity/idle listeners should still see them).
+  // ESCAPE is the exception and is stopped at the box: the panel's own keydown below closes the
+  // whole menu on Escape, and the bus would read it as the Menu verb.
+  // ---------------------------------------------------------------------------------
+  function openEditor(item) {
+    if (!item || !item.edit) return null;
+    if (editing && editing.id === item.id) { editing.focus = true; paint(); return item; }
+    editing = { id: item.id, draft: String(item.edit.value ?? ''), focus: true };
+    paint();
+    return item;
+  }
+
+  function endEdit({ save }) {
+    if (!editing) return false;
+    const it = items.find((x) => x.id === editing.id);
+    const draft = editing.draft;
+    editing = null;
+    let wrote = false;
+    if (save && it && typeof it.commit === 'function') {
+      try { wrote = !!it.commit(draft); } catch (err) { console.warn('settings: commit threw', err); }
+      if (wrote) onSelect?.(it);
+    }
+    // Focus back to the panel: the box is gone, and the panel is where this menu's keys live
+    // (Escape, the focus trap) - leaving it on <body> would put the next Escape nowhere.
+    if (open) { render(); panel.focus?.(); }
+    return wrote;
+  }
+  const saveEdit = () => endEdit({ save: true });
+  const cancelEdit = () => endEdit({ save: false });
 
   // --- the four moves. Everything else in the file exists to serve these. ---
   // While a page is open the only control is Back, so moving does nothing rather than
   // scrolling a cursor nobody can see.
-  function next() { if (!open || page) return null; const it = nav.next(); paint(); return it; }
-  function prev() { if (!open || page) return null; const it = nav.prev(); paint(); return it; }
+  // A move while a box is open leaves the box first (see TEXT ROWS) - never a trap.
+  function next() { if (!open || page) return null; if (editing) editing = null; const it = nav.next(); paint(); return it; }
+  function prev() { if (!open || page) return null; if (editing) editing = null; const it = nav.prev(); paint(); return it; }
 
   function activate(item) {
     if (!item || item.disabled) return null;
     if (item.page) { openPage(item.page); return item; }
+    // A text row opens its box. `onSelect` is not told yet: nothing has been chosen until the
+    // box commits (and then it is, from `endEdit`).
+    if (item.edit) return openEditor(item);
     if (item.id === 'close') { close(); return item; }
     if (item.id === 'home') {
       close();
@@ -406,15 +500,18 @@ export function mountSettings(root, {
   function select() {
     if (!open) return null;
     if (page) { closePage(); return { id: 'page-back' }; }
+    // Select while typing is "done": it saves, the same as Enter.
+    if (editing) { const id = editing.id; saveEdit(); return { id, saved: true }; }
     return activate(nav.current());
   }
 
   // BACK LEAVES THE PAGE BEFORE IT LEAVES THE MENU. Closing the whole thing from inside a
   // page would throw away where somebody was, and for a person navigating by scanning,
-  // getting back to a place costs real presses.
+  // getting back to a place costs real presses. The same for a text box: back leaves the box.
   function back() {
     if (!open) return;
     if (page) { closePage(); return; }
+    if (editing) { cancelEdit(); return; }
     close();
   }
 
@@ -461,6 +558,10 @@ export function mountSettings(root, {
   function close() {
     if (!open) return;
     if (page) closePage();
+    // An open box is abandoned, not saved: closing is a way OUT, and saving half a word on the
+    // way out would be a write nobody asked for. Removed from the DOM too, so a hidden menu is
+    // not holding a focusable text box.
+    if (editing) { editing = null; listEl.querySelector('.st-edit')?.remove(); }
     open = false;
     scrim.hidden = true;
     router?.setPaused?.(false);
@@ -480,12 +581,58 @@ export function mountSettings(root, {
   const sig = { signal: listeners.signal };
 
   listEl.addEventListener('click', (e) => {
+    // The text box's own buttons, first: they sit in the list but are not rows.
+    if (e.target.closest('[data-edit-save]')) { saveEdit(); return; }
+    if (e.target.closest('[data-edit-cancel]')) { cancelEdit(); return; }
+    if (e.target.closest('.st-edit')) return;            // a click INTO the box is typing, not a choice
+    // A SWATCH sets its colour outright, through the row's `commit()` - the host's write path.
+    const sw = e.target.closest('[data-swatch]');
+    if (sw) {
+      const n = Number(sw.dataset.for);
+      const it = items[n];
+      if (!it || typeof it.commit !== 'function') return;
+      editing = null;
+      nav.setIndex(n);
+      if (it.commit(sw.dataset.swatch)) onSelect?.(it);
+      render();
+      return;
+    }
     const btn = e.target.closest('.st-item');
     if (!btn || btn.disabled) return;
     const n = Number(btn.dataset.n);
+    // Clicking a DIFFERENT row while typing abandons the box: the click is the person's answer
+    // to "are you done with that".
+    if (editing && items[n]?.id !== editing.id) editing = null;
     nav.setIndex(n);
     paint();
     activate(items[n]);
+  }, sig);
+
+  // The browser's own fine colour picker. `change`, not `input`: `input` fires continuously while
+  // somebody drags across the spectrum, and every one of those would be a write.
+  listEl.addEventListener('change', (e) => {
+    const fine = e.target.closest?.('[data-fine]');
+    if (!fine) return;
+    const n = Number(fine.dataset.for);
+    const it = items[n];
+    if (!it || typeof it.commit !== 'function') return;
+    nav.setIndex(n);
+    if (it.commit(fine.value)) onSelect?.(it);
+    render();
+  }, sig);
+
+  // The draft, kept in step with the box so a repaint cannot lose it.
+  listEl.addEventListener('input', (e) => {
+    if (editing && e.target.matches?.('[data-edit-input]')) editing.draft = e.target.value;
+  }, sig);
+
+  // Enter and Escape IN THE BOX. Handled here, on the list, because this runs before the panel's
+  // own keydown below (the event bubbles box -> list -> panel). See TEXT ROWS for why only
+  // Escape is stopped.
+  listEl.addEventListener('keydown', (e) => {
+    if (!editing || !e.target.matches?.('[data-edit-input]')) return;
+    if (e.key === 'Enter') { e.preventDefault(); editing.draft = e.target.value; saveEdit(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancelEdit(); }
   }, sig);
 
   // Clicking the scrim closes. A menu you cannot dismiss by clicking away reads as a
@@ -513,8 +660,10 @@ export function mountSettings(root, {
     // handler.
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
     if (e.key !== 'Tab') return;
-    // The focus trap. Tab must not walk out of an open modal onto the page behind it.
-    const focusable = [...panel.querySelectorAll('button:not([disabled])')];
+    // The focus trap. Tab must not walk out of an open modal onto the page behind it. Inputs
+    // count since 2026-09-28: the text box and the fine colour picker are focusable too, and a
+    // trap that only knew buttons would let Tab walk off the last one of THOSE.
+    const focusable = [...panel.querySelectorAll('button:not([disabled]), input:not([disabled])')];
     if (!focusable.length) { e.preventDefault(); return; }
     const first = focusable[0], last = focusable[focusable.length - 1];
     const active = doc.activeElement;
@@ -550,6 +699,8 @@ export function mountSettings(root, {
     openPage,
     closePage,
     page: () => page,
+    // The id of the row whose text box is open, or null.
+    editing: () => editing?.id || null,
     items: () => items.map((it) => ({ ...it })),
     focusIndex: () => nav.index(),
     focusId: () => nav.current()?.id || null,

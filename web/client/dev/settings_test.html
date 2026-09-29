@@ -32,7 +32,8 @@ tested end to end — so the resolver gets hammered alone and the wiring gets te
 <script type="module">
 import { createNav, buildItems, mountSettings, MENU_TOPIC } from '../settings.js';
 import { normalizeField, fieldValue, stepValue, displayValue, showsAtLevel,
-         fieldItems, fieldsFor, readWithLegacy, LEVELS } from '../settings_fields.js';
+         fieldItems, fieldsFor, readWithLegacy, LEVELS, KINDS } from '../settings_fields.js';
+import { DEFAULT_PALETTE } from '../color_picker.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
 import { verbTopic } from '../actions.js';
@@ -741,7 +742,9 @@ section('fieldItems — declarations become ordinary menu rows');
 {
   const fields = [
     normalizeField({ key: 'calm', label: 'Motion', default: false, onLabel: 'Calm', offLabel: 'Normal' }),
-    normalizeField({ key: 'album', label: 'Album', kind: 'text', note: 'set in Media / Sources' }),
+    // readOnly since 2026-09-28: a text field is EDITABLE by default now (a real text box), so a
+    // field that is owned somewhere else has to say so - which is what photos.js's album does.
+    normalizeField({ key: 'album', label: 'Album', kind: 'text', readOnly: true, note: 'set in Media / Sources' }),
     normalizeField({ key: 'ms', label: 'A ripple every', kind: 'number', default: 1500,
       min: 500, max: 3000, step: 500, unit: 'ms', level: 'advanced' }),
   ];
@@ -832,7 +835,8 @@ section('the shell, with fields spliced in — walked with one button');
 {
   const fields = [
     normalizeField({ key: 'calm', label: 'Motion', default: false, onLabel: 'Calm', offLabel: 'Normal' }),
-    normalizeField({ key: 'album', label: 'Album', kind: 'text', note: 'needs a keyboard' }),
+    // A READ-ONLY text row: reported here, owned elsewhere. Still the dead row the walk must skip.
+    normalizeField({ key: 'album', label: 'Album', kind: 'text', readOnly: true, note: 'set in Media / Sources' }),
   ];
   const live = { calm: false };
   const rows = () => fieldItems(fields, {
@@ -906,6 +910,306 @@ section('the shell, with fields spliced in — walked with one button');
 }
 
 // =====================================================================
+// TEXT ROWS GET A REAL TEXT BOX (Mike, 2026-09-28: "plain text box is fine" / "keyboard box
+// now"). The old contract was half right and half wrong: HONEST that a switch cannot type - kept,
+// the row still says "needs a keyboard" - but it also refused the keyboard and the mouse that
+// COULD type, which left every text setting unreachable from the one menu that is supposed to
+// hold them all.
+section('text fields — pure: editable, honest, and still not cycleable');
+
+{
+  const t = normalizeField({ key: 'caption', label: 'Caption', kind: 'text', placeholder: 'Nothing yet' });
+  check('a text field is EDITABLE now', t.editable === true);
+  check('...and still NOT cycleable — a switch cannot type, and stepping stays a no-op',
+    t.cycleable === false && stepValue(t, 'x') === 'x');
+  check('...and still says so, in the same words', t.why === 'needs a keyboard');
+  const ro = normalizeField({ key: 'album', kind: 'text', readOnly: true, note: 'set in Media / Sources' });
+  check('readOnly text is NOT editable — owned elsewhere, reported here', ro.editable === false);
+  check('non-text kinds are never "editable" — they have their own handles',
+    normalizeField({ key: 'a', default: true }).editable !== true
+    && normalizeField({ key: 'n', kind: 'number', min: 0, max: 9 }).editable !== true);
+  check('a declared maxLength is carried, and none is invented',
+    normalizeField({ key: 'a', kind: 'text', maxLength: 40 }).maxLength === 40
+    && normalizeField({ key: 'a', kind: 'text' }).maxLength === null);
+
+  const live = { caption: 'Hello' };
+  const writes = [];
+  const [row, roRow] = fieldItems([t, ro], {
+    values: () => live,
+    onStep: (k, v) => { writes.push([k, v]); live[k] = v; },
+  });
+  check('an editable text row is NOT disabled — the keyboard and the mouse can use it',
+    row.disabled === false);
+  check('its hint still says the value AND that it needs a keyboard — honest to the switch user',
+    row.hint === 'Hello · needs a keyboard', row.hint);
+  check('it carries what an editor needs: the current value and the placeholder',
+    row.edit && row.edit.value === 'Hello' && row.edit.placeholder === 'Nothing yet', JSON.stringify(row.edit));
+  row.run();
+  check('run() still writes NOTHING — pressing select on a text row cannot invent a value',
+    writes.length === 0);
+
+  check('commit() WRITES THROUGH THE SAME onStep every other field uses, and reports it did',
+    row.commit('Good morning') === true && writes.length === 1
+    && writes[0][0] === 'caption' && writes[0][1] === 'Good morning', JSON.stringify(writes));
+  check('the typed value is trimmed — a switch that emulates Space cannot pad a name with blanks',
+    (row.commit('  Hi  '), live.caption === 'Hi'), JSON.stringify(live));
+  const n = writes.length;
+  check('committing the value already in force writes nothing — no event for a non-change',
+    row.commit('Hi') === false && writes.length === n);
+  check('committing an EMPTY string is a real write — clearing a field is a choice somebody made',
+    row.commit('') === true && live.caption === '');
+  check('a read-only row is disabled, has no editor, and its commit() does nothing',
+    roRow.disabled === true && !roRow.edit && roRow.commit('x') === false && writes.every((w) => w[0] !== 'album'));
+  const noted = fieldItems([normalizeField({ key: 's', kind: 'text', default: 'Math', note: 'which subject' })],
+    { values: {} })[0];
+  check('a note is KEPT beside "needs a keyboard" rather than replacing it',
+    noted.hint === 'Math · needs a keyboard · which subject', noted.hint);
+}
+
+// =====================================================================
+section('color fields — pure: a palette you can walk with one switch');
+
+{
+  check('color is a declared kind', KINDS.includes('color'));
+  const c = normalizeField({ key: 'ink', label: 'Ink', kind: 'color' });
+  check('with no options, the DEFAULT palette is used', c.options.length === DEFAULT_PALETTE.length
+    && c.options.every((o, i) => o.value === DEFAULT_PALETTE[i].hex && o.label === DEFAULT_PALETTE[i].name));
+  check('it is cycleable — THE WHOLE POINT: a colour is reachable from one switch', c.cycleable === true);
+  check('with no default, the first palette colour is the default', c.default === DEFAULT_PALETTE[0].hex);
+  check('a declared default is normalised', normalizeField({ key: 'i', kind: 'color', default: '#2F6FE0' }).default === '#2f6fe0');
+  check('a garbage default falls back to the first palette colour',
+    normalizeField({ key: 'i', kind: 'color', default: 'blueish' }).default === DEFAULT_PALETTE[0].hex);
+
+  const own = normalizeField({ key: 'i', kind: 'color', options: [
+    { id: 'sea', name: 'Sea', hex: '#006699' }, { value: '#ddcc99', label: 'Sand' }, '#2f6fe0'] });
+  check('a field’s OWN colours override the palette — the palette is a default, not a law',
+    own.options.length === 3 && own.options[0].label === 'Sea' && own.options[1].value === '#ddcc99',
+    JSON.stringify(own.options));
+  const one = normalizeField({ key: 'i', kind: 'color', options: ['#006699'] });
+  check('a single colour is not a control, and says why', one.cycleable === false && one.why === 'only one to choose from');
+
+  check('fieldValue normalises what is stored', fieldValue(c, { ink: '#2F6FE0' }) === '#2f6fe0');
+  check('a garbage stored colour reads as the default rather than as garbage', fieldValue(c, { ink: 'red-ish' }) === c.default);
+  check('absent reads as the default', fieldValue(c, {}) === c.default);
+
+  // The one-button contract, the same lap test every other kind gets.
+  const seen = [];
+  let v = c.default;
+  for (let i = 0; i < c.options.length; i += 1) { seen.push(v); v = stepValue(c, v); }
+  check('ONE LAP visits every colour exactly once', new Set(seen).size === c.options.length
+    && seen.join(',') === c.options.map((o) => o.value).join(','), seen.join(','));
+  check('AND WRAPS home — with one switch you only travel one way', v === c.default);
+  check('backwards wraps the other way', stepValue(c, c.default, -1) === c.options[c.options.length - 1].value);
+  check('stepping compares case-blind — "#D32F2F" is on the list, not off it',
+    stepValue(c, c.options[0].value.toUpperCase()) === c.options[1].value);
+  // A fine-picked colour is NOT dead (unlike a deleted media source) - it is a real choice. So a
+  // press moves on from where it SITS, its nearest named colour, rather than jumping to the top.
+  const blueAt = c.options.findIndex((o) => o.label === 'Blue');
+  check('an off-palette colour steps on from its NEAREST named colour, not from the top',
+    stepValue(c, '#2f6fe1') === c.options[(blueAt + 1) % c.options.length].value, stepValue(c, '#2f6fe1'));
+  check('...and backwards from the same place',
+    stepValue(c, '#2f6fe1', -1) === c.options[(blueAt - 1 + c.options.length) % c.options.length].value);
+  check('garbage recovers to the first colour in one press', stepValue(c, 'nope') === c.options[0].value);
+
+  check('the row shows the colour’s NAME, never a bare hex', displayValue(c, c.options[blueAt].value) === 'Blue');
+  check('an off-palette value shows its nearest name PLUS the hex', displayValue(c, '#2f6fe1') === 'Close to Blue (#2f6fe1)',
+    displayValue(c, '#2f6fe1'));
+
+  const live = {};
+  const writes = [];
+  const [row] = fieldItems([c], { values: () => live, onStep: (k, val) => { writes.push([k, val]); live[k] = val; } });
+  check('a colour row is an ordinary, enabled item', row.kind === 'item' && row.disabled === false);
+  check('its hint is the colour name', row.hint === DEFAULT_PALETTE[0].name, row.hint);
+  check('it carries the palette so the shell can draw swatches', row.color
+    && row.color.value === c.default && row.color.palette.length === DEFAULT_PALETTE.length);
+  row.run();
+  check('run() — select, from a switch — steps to the NEXT colour through onStep',
+    writes.length === 1 && writes[0][1] === DEFAULT_PALETTE[1].hex, JSON.stringify(writes));
+  check('commit(hex) — a swatch or the fine picker — writes through the same onStep',
+    row.commit('#ABCDEF') === true && live.ink === '#abcdef', JSON.stringify(live));
+  check('committing garbage writes nothing', row.commit('nope') === false && live.ink === '#abcdef');
+  check('committing the colour already set writes nothing', (() => { const n = writes.length; return row.commit('#abcdef') === false && writes.length === n; })());
+}
+
+// =====================================================================
+section('the shell — a text row opens a real text box, and every way out works');
+
+{
+  const fields = [
+    normalizeField({ key: 'caption', label: 'Caption', kind: 'text', placeholder: 'Nothing yet' }),
+    normalizeField({ key: 'calm', label: 'Motion', default: false }),
+  ];
+  const live = { caption: 'Hello', calm: false };
+  const writes = [];
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'sign', title: 'Sign' }),
+    fields: () => fieldItems(fields, { values: () => live, onStep: (k, v) => { writes.push([k, v]); live[k] = v; } }),
+  });
+  m.open();
+  const input = () => h.querySelector('input.st-input');
+  const stops = new Set();
+  for (let i = 0; i < 6; i += 1) { stops.add(m.focusId()); m.next(); }
+  check('AN EDITABLE TEXT ROW IS A STOP now — the keyboard user walks to it like any other row',
+    stops.has('set:caption'), [...stops].join(','));
+  check('its row still says "needs a keyboard"', h.querySelector('[data-n]')?.textContent.includes('needs a keyboard'));
+
+  while (m.focusId() !== 'set:caption') m.next();
+  check('no text box before it is asked for', !input());
+  m.select();
+  check('SELECT opens an inline text box', !!input());
+  check('...holding the current value', input()?.value === 'Hello', input()?.value);
+  check('...with the placeholder the field declared', input()?.placeholder === 'Nothing yet');
+  check('...focused, so a keyboard user can simply type', document.activeElement === input());
+  check('...inside the menu panel, so the focus trap still holds it', !!input()?.closest('.st-panel'));
+  check('...labelled for a screen reader by the setting it changes', input()?.getAttribute('aria-label') === 'Caption');
+  check('the menu is still open and nothing was written yet', m.isOpen() && writes.length === 0);
+  check('the editor is reported, for a host that wants to know', m.editing() === 'set:caption');
+
+  // Typing survives a repaint: the kiosk refreshes the menu when a person's name arrives, and a
+  // refresh that threw away half a typed word would be a menu that eats input.
+  input().value = 'Good mor';
+  input().dispatchEvent(new Event('input', { bubbles: true }));
+  m.refresh();
+  check('A REFRESH WHILE TYPING KEEPS THE DRAFT', input()?.value === 'Good mor', input()?.value);
+  check('...and keeps focus in the box', document.activeElement === input());
+
+  input().value = 'Good morning';
+  input().dispatchEvent(new Event('input', { bubbles: true }));
+  input().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+  check('ENTER SAVES through onStep', writes.length === 1 && live.caption === 'Good morning', JSON.stringify(writes));
+  check('the box closes and the row repaints with the new value', !input()
+    && h.querySelector('.st-item.on')?.textContent.includes('Good morning'));
+  check('the cursor is still on the row', m.focusId() === 'set:caption');
+  check('the menu is still open', m.isOpen());
+  check('focus goes back to the menu panel, so the next key drives the menu', document.activeElement === h.querySelector('.st-panel'));
+
+  // ESCAPE CANCELS THE EDIT, NOT THE MENU. The panel's own keydown closes the menu on Escape;
+  // without stopping it at the box, one Escape would throw away the typing AND the menu.
+  m.select();
+  input().value = 'Throw this away';
+  input().dispatchEvent(new Event('input', { bubbles: true }));
+  const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+  let reachedWindow = false;
+  const spy = (e) => { if (e === esc) reachedWindow = true; };
+  window.addEventListener('keydown', spy);
+  input().dispatchEvent(esc);
+  window.removeEventListener('keydown', spy);
+  check('ESCAPE CANCELS the edit — nothing written', live.caption === 'Good morning' && writes.length === 1);
+  check('...the box closes', !input());
+  check('...AND THE MENU STAYS OPEN — Escape leaves the box, a second Escape leaves the menu', m.isOpen());
+  check('...and that Escape did not travel on to the window (where the input bus would read it as Menu)',
+    reachedWindow === false);
+
+  // Save and Cancel buttons, for the mouse.
+  m.select();
+  input().value = 'By mouse';
+  input().dispatchEvent(new Event('input', { bubbles: true }));
+  h.querySelector('[data-edit-cancel]').click();
+  check('the Cancel button cancels', !input() && live.caption === 'Good morning');
+  m.select();
+  input().value = 'By mouse';
+  input().dispatchEvent(new Event('input', { bubbles: true }));
+  h.querySelector('[data-edit-save]').click();
+  check('the Save button saves', !input() && live.caption === 'By mouse', live.caption);
+  check('a click on the row itself opens the editor too', (h.querySelector('.st-item.on').click(), !!input()));
+  m.back();
+
+  // THE SWITCH CAN ALWAYS LEAVE. A person with only next/select who lands in the box must not be
+  // stuck in it: every menu move while editing is a way out.
+  check('BACK while editing closes the box, not the menu', !input() && m.isOpen());
+  m.select();
+  m.next();
+  check('NEXT while editing cancels and MOVES ON — a switch is never trapped in a text box',
+    !input() && m.focusId() !== 'set:caption' && live.caption === 'By mouse', String(m.focusId()));
+  while (m.focusId() !== 'set:caption') m.next();
+  m.select();
+  input().value = '   By mouse   ';
+  input().dispatchEvent(new Event('input', { bubbles: true }));
+  const before = writes.length;
+  m.select();
+  check('SELECT while editing saves — and a switch that padded it with spaces changed nothing',
+    !input() && writes.length === before && live.caption === 'By mouse');
+  m.select();
+  m.close();
+  check('closing the menu while editing closes the box with it', !input() && !m.isOpen());
+  m.open();
+  check('...and it does not come back on the next open', !input() && m.editing() === null);
+  m.destroy();
+}
+
+{
+  // The focus trap has to count the box: Tab from the last control must wrap, not walk out onto
+  // the page behind the modal.
+  const h = makeHost();
+  const live = { caption: '' };
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'sign', title: 'Sign' }),
+    fields: () => fieldItems([normalizeField({ key: 'caption', kind: 'text' })],
+      { values: () => live, onStep: (k, v) => { live[k] = v; } }),
+  });
+  m.open();
+  while (m.focusId() !== 'set:caption') m.next();
+  m.select();
+  const focusables = [...h.querySelectorAll('.st-panel button:not([disabled]), .st-panel input')];
+  check('the text box is one of the panel’s focusable controls',
+    focusables.includes(h.querySelector('input.st-input')));
+  m.destroy();
+}
+
+// =====================================================================
+section('the shell — a colour row: switch cycles, mouse picks');
+
+{
+  const f = normalizeField({ key: 'ink', label: 'Ink', kind: 'color' });
+  const live = {};
+  const writes = [];
+  const h = makeHost();
+  const m = mountSettings(h, {
+    subject: () => ({ type: 'sign', title: 'Sign' }),
+    fields: () => fieldItems([f], { values: () => live, onStep: (k, v) => { writes.push([k, v]); live[k] = v; } }),
+  });
+  m.open();
+  const stopsBefore = new Set();
+  for (let i = 0; i < 8; i += 1) { stopsBefore.add(m.focusId()); m.next(); }
+  check('the colour row is a stop', stopsBefore.has('set:ink'));
+  check('THE SWATCHES ARE NOT CURSOR STOPS — a switch user pays one press for the row, not twelve',
+    [...stopsBefore].every((id) => !String(id).startsWith('swatch')), [...stopsBefore].join(','));
+
+  const sw = () => [...h.querySelectorAll('[data-swatch]')];
+  check('the row shows its swatches, one per palette colour', sw().length === DEFAULT_PALETTE.length, `${sw().length}`);
+  check('the current colour is the pressed swatch',
+    h.querySelector('[data-swatch][aria-pressed="true"]')?.dataset.swatch === DEFAULT_PALETTE[0].hex);
+  check('the fine picker is there for a pointer', !!h.querySelector('input[type="color"]'));
+
+  while (m.focusId() !== 'set:ink') m.next();
+  const lap = [];
+  for (let i = 0; i < DEFAULT_PALETTE.length; i += 1) {
+    m.select();
+    lap.push(m.items().find((it) => it.id === 'set:ink').hint);
+  }
+  check('SELECT walks the palette by name and WRAPS home in exactly one lap',
+    lap.join(',') === [...DEFAULT_PALETTE.slice(1), DEFAULT_PALETTE[0]].map((c) => c.name).join(','), lap.join(' | '));
+  check('the cursor never left the row', m.focusId() === 'set:ink');
+
+  const target = DEFAULT_PALETTE[5];
+  h.querySelector(`[data-swatch="${target.hex}"]`).click();
+  check('clicking a swatch writes that colour through onStep', live.ink === target.hex, JSON.stringify(live));
+  check('...the row repaints with its name', m.items().find((it) => it.id === 'set:ink').hint === target.name);
+  check('...and the pressed swatch follows', h.querySelector('[data-swatch][aria-pressed="true"]')?.dataset.swatch === target.hex);
+  check('...and the menu is still open', m.isOpen());
+
+  const fine = h.querySelector('input[type="color"]');
+  fine.value = '#2f6fe1';
+  fine.dispatchEvent(new Event('change', { bubbles: true }));
+  check('the fine picker writes the exact colour', live.ink === '#2f6fe1', JSON.stringify(live));
+  check('...and the row names it honestly', m.items().find((it) => it.id === 'set:ink').hint === 'Close to Blue (#2f6fe1)',
+    m.items().find((it) => it.id === 'set:ink').hint);
+  check('...with no swatch pretending to be it', !h.querySelector('[data-swatch][aria-pressed="true"]'));
+  m.destroy();
+}
+
+// =====================================================================
 // A live one to look at, themed by the same tokens the bedside uses.
 //
 // NOT auto-opened: the scrim is `position: fixed` and covers the viewport, so an
@@ -928,7 +1232,10 @@ section('the shell, with fields spliced in — walked with one button');
     { key: 'sourceId', label: 'Photos from', kind: 'choice', default: '',
       emptyLabel: 'No source connected' },
     { key: 'album', label: 'Album', kind: 'text', placeholder: 'Everything',
-      note: 'set in Media / Sources' },
+      readOnly: true, note: 'set in Media / Sources' },
+    // The two kinds added 2026-09-28, so they can be LOOKED at, not only asserted.
+    { key: 'caption', label: 'Caption', kind: 'text', placeholder: 'Nothing yet' },
+    { key: 'ink', label: 'Caption colour', kind: 'color' },
   ].map(normalizeField);
   const m = mountSettings(document.getElementById('demo-mount'), {
     person: () => ({ name: 'Robin' }),
