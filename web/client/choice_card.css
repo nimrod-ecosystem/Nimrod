@@ -1,0 +1,43 @@
+/* choice_card.css — the look of `choice_card.js`. Loaded by the component itself, once per page.
+
+   NO LITERAL COLOURS. Inside a board the card wears the board's own palette (`--ab-*`, which
+   follows the board's pinned, themed or high-contrast colours), and anywhere else it wears the
+   screen's theme. Either way it matches what it sits on, and a theme change reaches it for free.
+
+   SMALL AND AT THE FOOT OF ITS HOST, because it is NON-MODAL: it covers its own rectangle and
+   nothing else, and whatever is beside it keeps working. Sized in px, not the board's `--u`: it is
+   read by somebody standing at the screen, like the board's settings panel.
+
+   Its depth is `--cc-z` when the host sets one; the default puts it over a board's cards and its
+   settings panel, and under the board editor (modules.css), which covers everything on purpose. */
+.choice-card{
+  position:absolute;left:8px;right:8px;bottom:8px;margin:0 auto;
+  z-index:var(--cc-z, calc(var(--z-panel-contents) + 5));
+  max-width:360px;box-sizing:border-box;padding:12px 14px;
+  background:var(--ab-card, var(--surface));
+  color:var(--ab-ink, var(--text));
+  border:2px solid var(--ab-lit, var(--accent));
+  border-radius:12px;
+  font:14px/1.45 var(--font, system-ui, sans-serif);
+  display:flex;flex-direction:column;gap:8px;
+  pointer-events:auto;
+}
+.choice-card .cc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.choice-card .cc-title{font-size:15px;line-height:1.3}
+.choice-card .cc-text{margin:0}
+/* The close button clears 44px, the floor for anything somebody has to press on purpose. */
+.choice-card .cc-x{flex:0 0 auto;width:44px;height:44px;margin:-8px -8px 0 0;cursor:pointer;
+  border:1px solid var(--ab-line, var(--border));border-radius:50%;
+  background:transparent;color:inherit;font-size:22px;line-height:1}
+.choice-card .cc-opts{display:flex;flex-wrap:wrap;gap:8px}
+.choice-card .cc-opt{min-height:44px;padding:8px 12px;cursor:pointer;flex:1 1 auto;
+  border:1px solid var(--ab-line, var(--border));border-radius:8px;
+  background:var(--ab-bg, var(--surface-alt));color:inherit;font-family:inherit;font-weight:600;font-size:13.5px;line-height:1.25}
+.choice-card .cc-opt:first-child{background:var(--ab-lit, var(--accent));
+  border-color:var(--ab-lit, var(--accent));color:var(--ab-bg, var(--on-accent))}
+.choice-card .cc-check{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:32px}
+.choice-card .cc-check input{width:20px;height:20px;flex:0 0 auto;margin:0;
+  accent-color:var(--ab-lit, var(--accent))}
+.choice-card .cc-foot{margin:0;font-size:12.5px;opacity:.75}
+.choice-card :is(.cc-x,.cc-opt,.cc-check input):focus-visible{
+  outline:3px solid var(--ab-lit, var(--accent));outline-offset:2px}

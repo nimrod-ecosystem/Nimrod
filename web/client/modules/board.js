@@ -64,6 +64,22 @@ import { cardFaceHTML, createCardImages } from '../card_face.js';
 import { mountBoardEditor, blankBoard } from '../board_editor.js';
 import { speak as speakDefault } from '../voice.js';
 import { mountScene, listScenes, listOverlays } from '../livescene.js';
+import { SYMBOL_SETS, setForTheme, symbolSet, pickSymbol, symbolUrl, themeIdFromRoot,
+         parseColour, setHas, setColours, drawingContrast, SYMBOL_MIN_CONTRAST } from '../aac_sets.js';
+import { showChoiceCard, createChoiceMemory, CHOICE_TIMEOUT_MS } from '../choice_card.js';
+
+// *** A THEME PICKED ON THIS SCREEN, BY SOMEBODY STANDING AT IT. ***
+//
+// Published by the kiosk's own settings menu (`kiosk.js`, the screen-level `onStep`) the moment
+// somebody changes the theme there, and by nothing else. It is the ONLY thing that can put a
+// choice card on a board: a theme that arrives from another device by polling changes the
+// symbols (if the board follows the theme) but never asks anybody anything, because nobody here
+// asked for the change. The board's suite reads kiosk.js's source for this exact string, so the
+// two cannot drift apart silently.
+export const THEME_PICKED_TOPIC = 'screen/theme-picked';
+// The per-profile row the choice card remembers answers in. Shared by name, like `bank`, so a
+// "don't show again" belongs to the screen rather than to one panel on it.
+export const CHOICES_KEY = 'choices';
 
 // A card shorter or narrower than this has no room for a symbol AND a legible word. See
 // `setUnit`. Chosen so the smallest card that still shows both is comfortably readable rather
@@ -232,7 +248,40 @@ const DEFAULTS = {
   //   person this should be OFF, and it is one setting. It is off-able precisely because I do
   //   not think a default can be right for both. ***
   fitScreen: true,
+
+  // *** WHICH DRAWINGS: THE BOARD'S OWN, UNLESS SOMEBODY CHOOSES OTHERWISE. ***
+  //
+  // Claude Design's sets (2026-09-28, `aac_sets.js`) are OFFERED, not swapped in — Mike: *"Offered
+  // as a choice."* The default stays the drawings every existing board has today, for three
+  // reasons, strongest first:
+  //
+  //   * position is sacred on this module, and a symbol is part of how somebody finds a word
+  //     without reading it. Changing every picture on every existing board overnight is the
+  //     picture version of the silent reflow `aac_vocab.js` exists to prevent;
+  //   * the board's own drawings are the ones measured against its pinned card (4.71 at worst);
+  //     following the theme's set onto that card is only guaranteed where the set was drawn for a
+  //     dark card, which is six of the nine;
+  //   * and the offer is not buried: the first time somebody changes the theme on a screen with a
+  //     board on it, the board says a matching set exists and offers it (the choice card, below).
+  //
+  // THE COUNTER-CASE: a new screen set up by somebody who picked a live theme precisely because
+  // they like how it looks, for whom a board in different drawings looks unfinished. For them this
+  // is one press on the card, or one setting. A NEW board defaulting to 'theme' would serve them
+  // better and is Mike's call (`MIKE_CHANGE_LIST.md`), not something to decide inside a default.
+  symbols: 'own',
+
+  // How long the choice card stays if nobody answers it. See the SETTINGS row.
+  choiceCardMs: CHOICE_TIMEOUT_MS,
 };
+
+// The drawing a card shows from a designed set. `alt=""`: the word beside it is the label, and the
+// card itself is named by the word (`aria-label`), so the picture is decoration to a screen reader
+// — the same rule the board's own drawings (`aria-hidden`) and a card's photo (`alt ''`) follow.
+// Sized inline because modules.css sizes the board's own drawings as `svg`, and this is an `img`.
+function designedSymbolHTML(setId, name) {
+  return `<img src="${escapeHtml(symbolUrl(setId, name))}" alt="" draggable="false" `
+    + 'decoding="async" style="width:100%;height:100%;display:block">';
+}
 
 export const SETTINGS = [
   { key: 'boardId', label: 'Which board', kind: 'choice', default: 'yesno', level: 'standard',
@@ -330,6 +379,40 @@ export const SETTINGS = [
     onLabel: 'Black on white', offLabel: 'The board’s own colours' },
   { key: 'followTheme', label: 'Colours', default: false, level: 'essential',
     onLabel: 'Follow the screen’s theme', offLabel: 'The board keeps its own' },
+  // *** ONE ROW, NOT TWO. *** "Follow the theme" and "lock to one set" are options of the SAME
+  // question, so a pinned set is a value here rather than a second row that only applies
+  // sometimes. It also means a pinned set is stored by name the moment it is chosen, so nothing
+  // about it can drift when the theme later changes — which a separate "which set" row with a
+  // theme-derived default would have done.
+  //
+  // `standard`, not `essential`: it is how the board looks, not whether it can be read. The
+  // legibility controls above stay the essential ones.
+  { key: 'symbols', label: 'Symbols', kind: 'choice', default: 'own', level: 'standard',
+    options: [
+      { value: 'own',   label: 'The board’s own drawings' },
+      { value: 'theme', label: 'Designed sets — change with the screen’s theme' },
+      ...SYMBOL_SETS.map((s) => ({
+        value: s.id,
+        label: `Always the ${s.label} set${s.card === 'dark' ? ' (for dark cards)'
+          : s.card === 'light' ? ' (for light cards)' : ''}`,
+      })),
+    ],
+    note: 'Following the theme, a drawing that would be hard to see on this board’s cards uses '
+      + 'the board’s own instead. A set chosen here is always used as it is. The words never change.' },
+  // *** THE CHOICE CARD GOES BY ITSELF, AND THIS IS HOW SOON. ***
+  //
+  // Thirty seconds by default: long enough to close a settings menu, look at the board and read
+  // two sentences; short enough that a card over the foot of somebody's board is brief. It pauses
+  // while a pointer or focus is on it. There is deliberately no "never": a card that stays until
+  // it is answered is the undismissable gate, and the minimum is enforced in `choice_card.js`.
+  { key: 'choiceCardMs', label: 'Suggestions on the board go away after', kind: 'choice',
+    default: CHOICE_TIMEOUT_MS, level: 'advanced',
+    options: [
+      { value: 15000, label: '15 seconds' },
+      { value: 30000, label: '30 seconds' },
+      { value: 60000, label: '1 minute' },
+    ],
+    note: 'Nothing changes if a suggestion is left to go away by itself.' },
   // From Claude Design's live-themes handoff, 2026-09-22. `solid` (today's board) stays the
   // default -- these are two NEW surfaces a caregiver opts into, not a replacement.
   { key: 'surface', label: 'Card surface', kind: 'choice', default: 'solid', level: 'essential',
@@ -435,6 +518,18 @@ registerModule(
     let pointed = false;
     let aimHold = false;                     // we are the ones holding the scan clock off
     const view = ctx.view || (typeof window !== 'undefined' ? window : null);
+
+    // THE SCREEN'S THEME, AS LAST SEEN — read back from the root (`themeIdFromRoot`), because the
+    // symbols can follow it. `null` until `init`; a page with no theme applied reads as 'default'.
+    let themeId = null;
+    let themeWatch = null;                   // the MutationObserver on the root's style
+    let unsubPicked = null;
+    let choiceMemory = null;                 // remembered choice-card answers, per profile
+    let choiceStore = null;
+    let card = null;                         // the choice card on this board, if one is open
+    let cardFor = null;                      // the `symbols` value it was offered against
+    const docRoot = () => (typeof document !== 'undefined' ? document.documentElement : null);
+    const readTheme = () => themeIdFromRoot(docRoot()) || 'default';
 
     const el = (s) => mount.querySelector(s);
     const grid = () => el('[data-grid]');
@@ -574,6 +669,12 @@ registerModule(
       releaseImages();
       g.innerHTML = '';
       cardEls = [];
+      // Which set, if any, and — only when one is in force — what the cards look like, so a
+      // drawing can be measured against the card it is about to sit on. With the board's own
+      // drawings (the default) nothing here runs and the cards are drawn exactly as before.
+      const setId = activeSet();
+      const guard = symbolMode() === 'theme';
+      const { bg, ink } = setId ? cardColours() : { bg: null, ink: null };
       // Every slot in the tier is rendered, including empty ones. A hole is drawn as a hole:
       // the positions after it must not move, which is the whole rule in `aac_vocab.js`.
       for (let i = 0; i < t.cells; i++) {
@@ -587,7 +688,12 @@ registerModule(
           b.setAttribute('aria-hidden', 'true');
         } else {
           b.setAttribute('aria-label', cell.word);
-          const sym = symbolSvg(cell.symbol);
+          // PER WORD: a word the set did not draw, or (following the theme) one that would read
+          // worse than the board's own on this card, keeps the board's own drawing of it.
+          const pick = setId ? pickSymbol({ name: cell.symbol, setId, guard, bg, ink }) : null;
+          const sym = pick && pick.from === 'set'
+            ? designedSymbolHTML(pick.setId, cell.symbol) : symbolSvg(cell.symbol);
+          if (pick) b.dataset.sym = pick.from === 'set' ? `set:${pick.setId}` : pick.from;
           // *** THE PICTURE IS OPTIONAL AND ARRIVES LATE; THE WORD IS NEITHER. ***
           //
           // A card with an image renders the WORD immediately and an empty picture frame, then
@@ -828,6 +934,151 @@ registerModule(
     }
 
     // ------------------------------------------------------------------------------------
+    // SYMBOL SETS — the board's own drawings, or Claude Design's (`aac_sets.js`)
+    // ------------------------------------------------------------------------------------
+
+    /** 'own' | 'theme' | 'lock'. An unknown stored value (a set since withdrawn) is 'own':
+     *  the drawings the board has always had, never a guess at a replacement. */
+    function symbolMode() {
+      if (cfg.symbols === 'theme') return 'theme';
+      if (symbolSet(cfg.symbols)) return 'lock';
+      return 'own';
+    }
+
+    function activeSet() {
+      const mode = symbolMode();
+      if (mode === 'theme') return setForTheme(themeId || readTheme());
+      if (mode === 'lock') return cfg.symbols;
+      return null;
+    }
+
+    /** A CSS colour as `{ hex, alpha }`, however the browser wrote it. Hex and rgb() are parsed
+     *  directly; anything else (a named colour) is handed to the browser to normalise. */
+    function resolveColour(str) {
+      const direct = parseColour(str);
+      if (direct || !str || !String(str).trim()) return direct;
+      const host = mount.querySelector('.aboard');
+      if (!host || !view?.getComputedStyle) return null;
+      const probe = document.createElement('span');
+      probe.style.color = String(str).trim();
+      if (!probe.style.color) return null;
+      host.append(probe);
+      const got = parseColour(view.getComputedStyle(probe).color);
+      probe.remove();
+      return got;
+    }
+
+    /**
+     * The card's fill and ink AS DRAWN, from the board's own palette variables — so pinned,
+     * themed, high-contrast and scene-tinted boards are each measured as what they are.
+     *
+     * A see-through or clear card has no fill of its own: the scene shows through. The theme's
+     * own board card colour (`--board-card`, which every theme defines) is the nearest honest
+     * stand-in, and it is what the veil is a tint of. If even that cannot be read, `bg` is null
+     * and `pickSymbol` keeps the board's own drawings rather than guessing.
+     */
+    function cardColours() {
+      const a = mount.querySelector('.aboard');
+      if (!a || !view?.getComputedStyle) return { bg: null, ink: null };
+      const cs = view.getComputedStyle(a);
+      let bg = resolveColour(cs.getPropertyValue('--ab-card'));
+      if (!bg || bg.alpha < 1) bg = resolveColour(cs.getPropertyValue('--board-card'));
+      const ink = resolveColour(cs.getPropertyValue('--ab-ink'));
+      return { bg: bg && bg.alpha >= 1 ? bg.hex : null, ink: ink ? ink.hex : null };
+    }
+
+    const setLabel = (id) => (id ? `${symbolSet(id)?.label || id} set` : 'board’s own drawings');
+
+    /**
+     * The screen's theme changed. `local` is true only when it was picked in THIS screen's own
+     * menu (`THEME_PICKED_TOPIC`) — the one case where somebody is standing here and may be asked.
+     */
+    function onTheme(next, local) {
+      if (destroyed) return;
+      const id = next || 'default';
+      if (id === themeId) return;
+      const prev = themeId;
+      themeId = id;
+      const mode = symbolMode();
+      // Following the theme: new set, and a new card colour to measure it against. A pinned set
+      // or the board's own drawings do not move with the theme, so nothing is redrawn for them.
+      if (mode === 'theme') draw();
+      if (local) offerChoice(mode, prev, id);
+    }
+
+    /**
+     * *** THE CHOICE CARD, AND THE THREE CASES IT IS NOT SHOWN IN. ***
+     *
+     *   * the change did not come from this screen's own menu — nobody here asked (see onTheme);
+     *   * the board is LOCKED — a lock hides the caregiver's controls that sit on the cards, and
+     *     this card is one of them;
+     *   * a set is PINNED — somebody already answered this question, deliberately.
+     *
+     * Otherwise, two questions, each remembered separately:
+     *   'board.symbols.follow'  the board follows the theme and the set just changed: keep
+     *                           following, or keep the set it had?
+     *   'board.symbols.offer'   the board has its own drawings and this theme has a set drawn for
+     *                           cards like this board's: use designed sets from now on?
+     * Leaving either card alone changes nothing: the symbols are whatever the setting already
+     * made them.
+     */
+    function offerChoice(mode, prevTheme, nextTheme) {
+      if (cfg.locked || mode === 'lock') return;
+      const before = setForTheme(prevTheme);
+      const after = setForTheme(nextTheme);
+      const host = mount.querySelector('.aboard');
+      if (!host) return;
+      let ask = null;
+      if (mode === 'theme') {
+        if (before === after) return;
+        ask = {
+          id: 'board.symbols.follow',
+          title: 'The board’s symbols changed with the theme',
+          text: `The cards now use the ${setLabel(after)}. Keep them changing with the theme, or `
+            + `keep the ${setLabel(before)} on this board?`,
+          options: [
+            { value: 'follow', label: 'Keep changing with the theme' },
+            { value: 'keep', label: `Keep the ${setLabel(before)}` },
+          ],
+          choose: (v) => { if (v === 'keep') saveSetting('symbols', before || 'own'); },
+        };
+      } else {
+        // Only offered where it would actually read: a set drawn for dark cards is not offered
+        // to a board whose cards are white, and the reverse.
+        if (!after || !setReadsHere(after)) return;
+        ask = {
+          id: 'board.symbols.offer',
+          title: 'This theme has matching board symbols',
+          text: `The ${setLabel(after)} was drawn for this theme. Use designed symbols on this `
+            + 'board, changing with the theme? The words stay the same either way.',
+          options: [
+            { value: 'follow', label: 'Use them' },
+            { value: 'keep', label: 'Keep the board’s own drawings' },
+          ],
+          choose: (v) => { if (v === 'follow') saveSetting('symbols', 'theme'); },
+        };
+      }
+      try { card?.close?.('replaced'); } catch { /* already gone */ }
+      const shown = showChoiceCard(host, {
+        id: ask.id, title: ask.title, text: ask.text, options: ask.options,
+        memory: choiceMemory,
+        timeoutMs: Number(cfg.choiceCardMs) || CHOICE_TIMEOUT_MS,
+        setTimer, clearTimer,
+        onChoose: (v) => ask.choose(v),
+        onClose: () => { if (card === shown) { card = null; cardFor = null; } },
+      });
+      if (shown && shown.shown) { card = shown; cardFor = cfg.symbols; }
+    }
+
+    /** Would every word of this set clear the floor on this board's cards as they are now? */
+    function setReadsHere(setId) {
+      const { bg, ink } = cardColours();
+      if (!bg) return false;
+      return board.cells.every((c) => !c || !setHas(setId, c.symbol)
+        || drawingContrast(setColours(setId, c.symbol), bg, ink) >= SYMBOL_MIN_CONTRAST);
+    }
+
+    // ------------------------------------------------------------------------------------
     // THE SETTINGS PANEL
     // ------------------------------------------------------------------------------------
 
@@ -945,6 +1196,13 @@ registerModule(
       const g = gearEl();
       if (g) g.hidden = !!cfg.locked;
       if (cfg.locked) { panelOpen(false); closeEditor(); }
+      // A choice card asks about the symbols setting AS IT WAS. Once that setting has changed —
+      // from the card itself, the menu, or another device — the question is stale, and so is a
+      // card on a board that has just been locked.
+      if (card && (cfg.locked || cfg.symbols !== cardFor)) {
+        try { card.close('stale'); } catch { /* already gone */ }
+        card = null; cardFor = null;
+      }
       lit = 0;
       // A different board is a different set of rectangles. Whatever the aim was resting on
       // is not there any more, so the highlight goes with it rather than sitting on whichever
@@ -995,6 +1253,14 @@ registerModule(
         // that a config key was set.
         themed: !!mount.querySelector('.aboard.ab-themed'),
         hc: !!mount.querySelector('.aboard.ab-hc'),
+        // Symbols AS DRAWN: where each card's picture came from, and the file when it is a set's.
+        symbols: cfg.symbols, symbolMode: symbolMode(), symbolSet: activeSet(), theme: themeId,
+        symbolFrom: cardEls.map((b) => (b.disabled ? null : b.dataset.sym
+          || (b.querySelector('.ab-sym svg') ? 'own' : 'none'))),
+        symbolSrc: cardEls.map((b) => b.querySelector('.ab-sym img')?.getAttribute('src') || null),
+        cardHTML: cardEls.map((b) => b.innerHTML),
+        card: card && card.shown ? card.probe() : null,
+        cardEl: card && card.shown ? card.el : null,
       }),
 
       init() {
@@ -1069,7 +1335,29 @@ registerModule(
           </div>`;
 
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };
+        themeId = readTheme();
         applyConfig();
+
+        // *** THE THEME, WATCHED FROM TWO PLACES FOR TWO DIFFERENT REASONS. ***
+        //
+        // The root's style is where `applyTheme` writes every theme, whoever picked it and on
+        // whatever device — so a board following the theme follows it from there, silently.
+        // `THEME_PICKED_TOPIC` is the screen's own menu saying a person here just picked one; it
+        // arrives FIRST (the kiosk applies the theme, then publishes, synchronously, and the
+        // observer's callback is a microtask), so it is the one that gets to offer the card.
+        if (typeof MutationObserver !== 'undefined' && docRoot()) {
+          themeWatch = new MutationObserver(() => onTheme(readTheme(), false));
+          themeWatch.observe(docRoot(), { attributes: true, attributeFilter: ['style'] });
+        }
+        const unsub = bus?.subscribe?.(THEME_PICKED_TOPIC, () => onTheme(readTheme(), true));
+        unsubPicked = typeof unsub === 'function' ? unsub : null;
+
+        // Remembered choice-card answers: the profile's shared row when the host offers one, else
+        // they last as long as this board does. Offline is not a reason to ask again and again,
+        // nor a reason not to ask at all — a row that never loads reads as "nothing remembered".
+        choiceStore = ctx.makeState ? ctx.makeState(CHOICES_KEY) : null;
+        choiceMemory = createChoiceMemory(choiceStore, { now });
+        Promise.resolve(choiceStore?.load?.()).catch(() => {});
 
         // A panel can change size without the host calling onResize — a sibling collapsing, a
         // window drag, the kiosk re-laying out. Cheap, and the alternative is a board whose
@@ -1190,6 +1478,10 @@ registerModule(
         releaseImages();
         closeEditor();
         boardScene?.destroy(); boardScene = null;
+        try { card?.close?.('gone'); } catch { /* already gone */ } card = null;
+        try { themeWatch?.disconnect(); } catch { /* already gone */ } themeWatch = null;
+        try { unsubPicked?.(); } catch { /* already gone */ } unsubPicked = null;
+        try { choiceStore?.destroy?.(); } catch { /* already gone */ } choiceStore = null;
         gone.abort();                       // every listener this module put on the mount
         cardEls = [];
         mount.innerHTML = '';
