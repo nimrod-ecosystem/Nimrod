@@ -972,6 +972,21 @@ section('*** secret text (an API key): masked on screen, never put in the page, 
     && displayValue(normalizeField({ key: 'c', kind: 'text' }), 'Hello') === 'Hello');
 }
 
+section('*** appliesWhen: a row that would do nothing right now is left out, its value kept ***');
+{
+  const fs = [normalizeField({ key: 'a', kind: 'toggle', default: false }),
+    normalizeField({ key: 'b', kind: 'toggle', default: false, appliesWhen: (v) => v.a === true }),
+    normalizeField({ key: 'c', kind: 'toggle', default: false, appliesWhen: () => { throw new Error('x'); } })];
+  const keys = (values) => fieldItems(fs, { values }).map((i) => i.key).join();
+  check('*** false hides the row ***', keys({ a: false, b: true }) === 'a,c', keys({ a: false, b: true }));
+  check('true shows it', keys({ a: true }) === 'a,b,c');
+  check('a function that throws SHOWS the row (a broken module must not hide its own settings)', keys({}).includes('c'));
+  check('no appliesWhen: always shown, as before', normalizeField({ key: 'z', kind: 'toggle' }).appliesWhen === null);
+  let live = { a: false };
+  check('values as a function are read at paint time', fieldItems(fs, { values: () => live }).length === 2
+    && ((live = { a: true }), fieldItems(fs, { values: () => live }).length === 3));
+}
+
 section('text fields — pure: editable, honest, and still not cycleable');
 
 {

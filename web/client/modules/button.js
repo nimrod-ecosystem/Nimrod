@@ -281,8 +281,11 @@ export const SETTINGS = [
     level: 'essential', options: INK_PALETTE.map((c) => ({ ...c })) },
   { key: 'style', label: 'Sign style', kind: 'choice', default: DEFAULTS.style, aliases: LEGACY_STYLES,
     level: 'standard', options: STYLES.map(({ value, label }) => ({ value, label })) },
+  // Shown only where it shows (Mike, 2026-09-29: "hide it"): on the plain face, and in a frame's
+  // window. A designed sign with no frame brings its own ground, so there the row would do nothing.
   { key: 'background', label: 'Background colour', kind: 'color', default: DEFAULTS.background,
-    level: 'standard' },
+    level: 'standard',
+    appliesWhen: (row) => { const c = configFrom(row); return c.style === 'plain' || c.frame !== 'none'; } },
   { key: 'whenPressed', label: 'When pressed', kind: 'choice', default: DEFAULTS.whenPressed,
     level: 'standard', options: WHEN_PRESSED.map(({ value, label }) => ({ value, label })) },
 ];
@@ -466,9 +469,17 @@ registerModule(
       const boxH = outer.height - px('paddingTop') - px('paddingBottom');
       if (!(boxW > 1 && boxH > 1)) return;          // not laid out (hidden, or zero-sized)
       const sign = signOf(cfg.style);
-      const ceiling = Math.max(FIT_FLOOR_PX, sign
+      let ceiling = Math.max(FIT_FLOOR_PX, sign
         ? Math.min(boxH / FIT_LINE, sign.fontSize / sign.viewBox[1] * outer.height)
         : boxH / FIT_LINE);
+      // AN EMPTY FRAME (Mike, 2026-09-29: "cap them"). With no picture yet, the words sit in the
+      // whole window and filled it — "My picture" read as a headline. They are capped at the size
+      // they have as a CAPTION under a picture in the same frame (a CAPTION_LINE of its width), so
+      // choosing a picture does not make them jump, and the empty frame reads as an empty frame.
+      if (frameOf(cfg.frame) && !('hasImg' in faceEl.dataset)) {
+        const frameW = faceEl.getBoundingClientRect().width;
+        if (frameW > 1) ceiling = Math.min(ceiling, Math.max(FIT_FLOOR_PX, CAPTION_LINE * frameW / FIT_LINE));
+      }
       const range = document.createRange();
       range.selectNodeContents(w);
       const fits = (size) => {

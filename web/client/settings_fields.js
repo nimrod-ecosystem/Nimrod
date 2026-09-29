@@ -256,6 +256,13 @@ export function normalizeField(raw = {}) {
     // the SAME colour — the menu never says "Black" over white words. A function that throws or
     // returns nothing falls back to `default`: the menu must survive a broken module.
     defaultFrom: typeof raw.defaultFrom === 'function' ? raw.defaultFrom : null,
+    // A SETTING THAT ONLY MATTERS SOMETIMES (added 2026-09-29, Mike: "hide it"). `appliesWhen(values)`
+    // gets the stored row; false means the row would change nothing on the screen right now (the
+    // button's background colour under a designed sign with no frame — the sign brings its own
+    // ground), so the menu leaves the row out rather than offering a control that visibly does
+    // nothing. The VALUE is untouched and comes back into force the moment the row applies again.
+    // A function that throws shows the row: a broken module must not hide its own settings.
+    appliesWhen: typeof raw.appliesWhen === 'function' ? raw.appliesWhen : null,
     cycleable: false,
     // Can a KEYBOARD or a POINTER set it in the menu, when a switch cannot? Only text, today.
     editable: false,
@@ -564,6 +571,11 @@ export function fieldItems(fields = [], {
   const out = [];
   for (const f of fields || []) {
     if (!f || !showsAtLevel(f, level)) continue;
+    if (f.appliesWhen) {
+      let applies = true;
+      try { applies = f.appliesWhen(read() || {}) !== false; } catch { applies = true; }
+      if (!applies) continue;
+    }
     const value = fieldValue(f, read() || {});
     const shown = displayValue(f, value);
     // What the row says after the value. An EDITABLE text row keeps "needs a keyboard" AND its
