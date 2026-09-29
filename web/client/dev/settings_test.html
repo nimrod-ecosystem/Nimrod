@@ -915,6 +915,28 @@ section('the shell, with fields spliced in — walked with one button');
 // the row still says "needs a keyboard" - but it also refused the keyboard and the mouse that
 // COULD type, which left every text setting unreachable from the one menu that is supposed to
 // hold them all.
+section('*** secret text (an API key): masked on screen, never put in the page, empty keeps it ***');
+{
+  // Mike, 2026-09-28: "mask it" -- YouTube's API key was readable by anyone who opened the menu.
+  const s = normalizeField({ key: 'apiKey', label: 'Key', kind: 'text', secret: true });
+  check('a secret is still an editable text field', s.secret === true && s.editable === true);
+  check('*** the row shows only the last four characters ***',
+    displayValue(s, 'AIzaSyD-abcdef1234') === '\u2022\u2022\u2022\u20221234', displayValue(s, 'AIzaSyD-abcdef1234'));
+  check('a short secret shows no characters at all', displayValue(s, 'abc12') === '\u2022\u2022\u2022\u2022');
+  check('unset says so', displayValue(s, '') === 'Not set');
+  const live = { apiKey: 'AIzaSyD-abcdef1234' };
+  const writes = [];
+  const [row] = fieldItems([s], { values: () => live, onStep: (k, v) => { writes.push([k, v]); live[k] = v; } });
+  check('*** the text box opens EMPTY -- the key is never put into the page ***', row.edit.value === '', JSON.stringify(row.edit));
+  check('...and the hint does not contain it', !row.hint.includes('abcdef'), row.hint);
+  check('*** saving an empty box keeps the key (it opened empty) ***', row.commit('   ') === false && writes.length === 0
+    && live.apiKey === 'AIzaSyD-abcdef1234');
+  check('typing a new one replaces it', row.commit('NEWKEY-9999') === true && live.apiKey === 'NEWKEY-9999');
+  check('an ordinary text field is not secret, and shows its value',
+    normalizeField({ key: 'c', kind: 'text' }).secret === false
+    && displayValue(normalizeField({ key: 'c', kind: 'text' }), 'Hello') === 'Hello');
+}
+
 section('text fields — pure: editable, honest, and still not cycleable');
 
 {

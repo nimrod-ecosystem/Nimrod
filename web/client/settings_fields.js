@@ -291,7 +291,11 @@ export function normalizeField(raw = {}) {
     else f.why = f.options.length ? 'only one to choose from' : 'nothing to choose from yet';
   } else {
     f.default = raw.default === undefined ? '' : String(raw.default);
-    f.placeholder = String(raw.placeholder || 'Not set');
+    // `secret: true` -- a key or token. Mike, 2026-09-28: "mask it". Anyone at a shared or bedside
+    // screen can open the menu, so the row shows only the last four characters, the text box opens
+    // EMPTY (the value is never put into the page), and saving an empty box keeps what is there.
+    f.secret = raw.secret === true;
+    f.placeholder = String(raw.placeholder || (f.secret ? 'Type a new one to replace it' : 'Not set'));
     // STILL SAID, on every text row (see the header's TEXT section): a switch cannot type.
     f.why = 'needs a keyboard';
     // ...but a keyboard and a mouse can, so the menu gives them a box. `readOnly` below undoes
@@ -453,6 +457,10 @@ export function stepValue(field, current, dir = 1) {
 // ---------------------------------------------------------------------------------------
 export function displayValue(field, value) {
   if (!field) return '';
+  if (field.secret) {
+    const v = String(value ?? '');
+    return v ? `\u2022\u2022\u2022\u2022${v.length > 8 ? v.slice(-4) : ''}` : 'Not set';
+  }
   if (field.kind === 'toggle') return value ? field.onLabel : field.offLabel;
   if (field.kind === 'choice') {
     const hit = (field.options || []).find((o) => o.value === value);
@@ -556,6 +564,8 @@ export function fieldItems(fields = [], {
           // name with blanks and have that count as a change.
           next = String(raw == null ? '' : raw).trim();
           if (f.maxLength) next = next.slice(0, f.maxLength);
+          // A secret's box opens empty, so an empty save means "keep it", never "erase it".
+          if (f.secret && !next) return false;
         } else if (f.kind === 'color' && f.options && f.options.length) {
           next = normalizeHex(raw);
           if (!next) return false;
@@ -568,7 +578,7 @@ export function fieldItems(fields = [], {
       },
     };
     if (f.editable) {
-      item.edit = { kind: 'text', value, placeholder: f.placeholder, maxLength: f.maxLength };
+      item.edit = { kind: 'text', value: f.secret ? '' : value, placeholder: f.placeholder, maxLength: f.maxLength };
     }
     if (f.kind === 'color' && !f.readOnly) item.color = { value, palette: f.palette || [] };
     out.push(item);

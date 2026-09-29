@@ -118,7 +118,7 @@ export const SETTINGS = [
   // lying around, and search is the only thing that uses it — everything else in this module
   // works without one.
   { key: 'apiKey', label: 'YouTube API key (for searching)', kind: 'text', default: '',
-    level: 'advanced',
+    level: 'advanced', secret: true,
     note: 'Only needed to search from this panel. Get one from Google Cloud, and restrict it '
       + 'to this site. Searching sends what you type to Google; nothing else here does.' },
   { key: 'heldNotifyMs', label: 'If someone pauses it, let people know after', kind: 'choice',
