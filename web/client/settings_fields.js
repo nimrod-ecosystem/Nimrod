@@ -172,6 +172,30 @@ export function readWithLegacy(values, key, legacy = null) {
   return Number.isFinite(n) ? n * legacy.scale : undefined;
 }
 
+// `{ oldValue: newValue }`, kept only where the new value is one of the options — an alias to
+// nothing would turn one dead value into another.
+function normalizeAliases(raw, options) {
+  if (!raw || typeof raw !== 'object') return null;
+  const out = {};
+  for (const [from, to] of Object.entries(raw)) {
+    const hit = options.find((o) => String(o.value) === String(to));
+    if (hit && !options.some((o) => String(o.value) === from)) out[from] = hit.value;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+// The default in force for this row: `defaultFrom(values)` when the field has one and it answers,
+// else the static `default`.
+function defaultFor(field, values) {
+  if (field.defaultFrom) {
+    try {
+      const v = field.defaultFrom(values || {});
+      if (v !== undefined && v !== null) return v;
+    } catch { /* a broken module must not take the menu with it */ }
+  }
+  return field.default;
+}
+
 // Accepts `['a', 'b']` or `[{ value, label }]`, because a module author will write both and
 // being fussy about it buys nothing.
 function normalizeOptions(raw) {
@@ -224,6 +248,14 @@ export function normalizeField(raw = {}) {
     // - and so the module, the settings menu and anything that later groups settings across
     // panels all read the migrated value through ONE function.
     legacy: normalizeLegacy(raw.legacy),
+    // A DEFAULT THAT DEPENDS ON THE OTHER SETTINGS (added 2026-09-29 for `button`: the words'
+    // colour nobody has chosen should be the one that READS on the sign they did choose — light
+    // words on a chalkboard, dark ones on a brass plate). `defaultFrom(values)` gets the stored row
+    // and returns the default in force; `default` stays the static fallback (and what a reader
+    // with no row sees). Read by `fieldValue`, so the module, the menu row and the swatch all name
+    // the SAME colour — the menu never says "Black" over white words. A function that throws or
+    // returns nothing falls back to `default`: the menu must survive a broken module.
+    defaultFrom: typeof raw.defaultFrom === 'function' ? raw.defaultFrom : null,
     cycleable: false,
     // Can a KEYBOARD or a POINTER set it in the menu, when a switch cannot? Only text, today.
     editable: false,
@@ -239,6 +271,11 @@ export function normalizeField(raw = {}) {
     f.options = options;
     f.default = raw.default === undefined ? (options[0]?.value ?? '') : raw.default;
     f.emptyLabel = String(raw.emptyLabel || 'Not set');
+    // RENAMED VALUES (added 2026-09-29): `aliases: { oldId: newId }`. `legacy` above is for a
+    // KEY that moved; this is for a VALUE that did — `button`'s placeholder sign `plaque` became
+    // Design's `plate`. Read-time only, like `legacy`: nothing is rewritten in storage, and the
+    // row shows (and steps from) the new value, so a saved choice never reads as dead.
+    f.aliases = normalizeAliases(raw.aliases, options);
     if (options.length >= 2) f.cycleable = true;
     // NOT AN ERROR, AND NOT HIDDEN. "No photo source connected" is a state a real screen sits
     // in, and the row saying so is the only place a caregiver learns it.
@@ -344,7 +381,7 @@ export function fieldValue(field, values = {}) {
   // saved value meaning "no source chosen", and overwriting it with a default would undo
   // somebody's clearing of it.
   let raw = readWithLegacy(values, field.key, field.legacy);
-  if (raw === undefined || raw === null) raw = field.default;
+  if (raw === undefined || raw === null) raw = defaultFor(field, values);
 
   if (field.kind === 'toggle') {
     if (typeof raw === 'string') return raw !== '' && raw !== 'false' && raw !== '0';
@@ -362,6 +399,10 @@ export function fieldValue(field, values = {}) {
     const hit = opts.find((o) => o.value === raw)
       || opts.find((o) => String(o.value) === String(raw));
     if (hit) return hit.value;
+    if (field.aliases && raw !== undefined
+        && Object.prototype.hasOwnProperty.call(field.aliases, String(raw))) {
+      return field.aliases[String(raw)];
+    }
     return raw === undefined ? '' : raw;
   }
   if (field.kind === 'number') {
@@ -377,7 +418,7 @@ export function fieldValue(field, values = {}) {
   if (field.kind === 'color') {
     // Canonical on read, so "#D32F2F" from one surface and "#d32f2f" from another are the same
     // colour to everything downstream. Garbage is not in force; the default is.
-    return normalizeHex(raw) || field.default;
+    return normalizeHex(raw) || normalizeHex(defaultFor(field, values)) || field.default;
   }
   return raw === undefined ? '' : String(raw);
 }

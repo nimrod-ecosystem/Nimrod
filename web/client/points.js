@@ -112,14 +112,18 @@ export const EXCHANGE_TYPE = 'Exchange';
 // does not know — and `pointsValue` has to know what an Exchange is worth to the total. Split
 // out, the two files would each need the other's rules. One file is the ledger's language.
 //
-// `icon` is null on purpose: Mike, *"The different currencies should probably have different
-// icons. We'll have to go to design for this."* The slot exists so the design lands as data.
+// `icon` was null until design delivered: Mike, *"The different currencies should probably have
+// different icons. We'll have to go to design for this."* The slot existed so the design could land
+// as data, and on 2026-09-29 it did — Claude Design's two coins (a book on a shield for School, a
+// star for Play), in `web/client/design-assets/points/`, credited in ATTRIBUTIONS.md. An ABSOLUTE
+// path, like `/packs/…`, so a module on any page reaches it. A custom currency may still carry a
+// glyph or null; quests.js draws whichever it gets.
 // `name` is a placeholder too (*"We'll probably need different names than play and school"*);
 // `id` is what the record is keyed by and should not change when the name does.
 export const DEFAULT_CURRENCIES = [
-  { id: 'school', name: 'School', icon: null,
+  { id: 'school', name: 'School', icon: '/design-assets/points/school.svg',
     feeds: ['Obligatory', 'Bonus', 'Idea', 'Penalty', 'School'] },
-  { id: 'play', name: 'Play', icon: null, feeds: ['Play'] },
+  { id: 'play', name: 'Play', icon: '/design-assets/points/play.svg', feeds: ['Play'] },
 ];
 
 // Which trades are allowed, and at what rate: `to` receives `amount x rate`. A direction with

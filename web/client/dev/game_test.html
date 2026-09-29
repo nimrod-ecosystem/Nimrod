@@ -27,6 +27,7 @@ import { createLocalBackend } from '../local_store.js';
 import { THEMES } from '../theme.js';
 import { createGame, GAME_KEY, PROFILE_NAME, ROOM_THEME, PROFILE_LAYOUT, SLOT, signWords, kioskURL }
   from '../game/game.js';
+import { STYLES, FRAMES, signOf, frameOf } from '../modules/button.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -155,7 +156,9 @@ try {
       && p.modules[0].id === signId, JSON.stringify(p.modules));
     const s = await stateOf(pid, signId);
     check('its words are the person’s name', s.label === 'Robin Game-Test', JSON.stringify(s));
-    check('...on a sign-shaped starting look (a plaque, no frame)', s.style === 'plaque' && s.frame === 'none');
+    check('...on Design’s name plate, no frame', s.style === 'plate' && s.frame === 'none', JSON.stringify(s));
+    check('...and those are REAL choices of the button (a designed sign, not a stale placeholder id)',
+      STYLES.some((o) => o.value === s.style) && !!signOf(s.style) && FRAMES.some((o) => o.value === s.frame));
     const lay = (await settingsOf(pid)).kiosk?.layout;
     check('it is placed in ITS spot (the second), with the picture’s spot waiting',
       lay && lay.preset === PROFILE_LAYOUT && lay.slots[SLOT.sign] === signId && !lay.slots[SLOT.picture],
@@ -170,7 +173,9 @@ try {
     const p = await profiles.get(pid);
     check('exactly two modules now, both buttons', p.modules.length === 2 && p.modules.every((m) => m.type === 'button'));
     const s = await stateOf(pid, picId);
-    check('it starts in a picture frame, captioned', s.frame === 'picture' && s.label === 'My picture', JSON.stringify(s));
+    check('it starts in Design’s classic picture frame, captioned', s.frame === 'classic' && s.label === 'My picture', JSON.stringify(s));
+    check('...a REAL designed frame of the button, with a plain caption',
+      FRAMES.some((o) => o.value === s.frame) && !!frameOf(s.frame) && s.style === 'plain');
     check('...with no picture chosen yet (that is the person’s to pick, in the menu)', !s.image);
     const lay = (await settingsOf(pid)).kiosk?.layout;
     check('both are on the wall: picture first spot, sign second',

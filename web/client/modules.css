@@ -1603,10 +1603,11 @@ html[data-live-scene] body{background:transparent}
 /* button (modules/button.js) — THE GAME'S NAME SIGN AND PICTURE, and any other button. The face is
    the AAC board's card (card_face.js: `.ab-img` then `.ab-word`), styled here under its own root so
    the board's stylesheet is untouched. NO LITERAL COLOURS: the two chosen colours arrive as
-   --nb-ink / --nb-bg (set by the module from the settings menu's colour picker), and every frame and
-   style below is drawn with theme tokens, currentColor and color-mix of tokens.
-   *** THE STYLES AND FRAMES ARE PLACEHOLDERS *** until Design's sign styles and frames land; the
-   stored ids (plaque, banner, glow; picture, tv, monitor) stay and only these rules change. */
+   --nb-ink / --nb-bg (set by the module from the settings menu's colour picker). The signs and
+   frames are Claude Design's SVGs (web/client/design-assets/), handed in by the module as
+   --nb-sign / --fr-art together with the geometry it measured from them; these rules only place
+   them. The placeholder looks these replaced (plaque, glow; picture, tv) read as their designed
+   successors — see LEGACY_STYLES / LEGACY_FRAMES in button.js. */
 .nbtn-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   box-sizing:border-box;padding:6cqmin;container-type:size;container-name:nbtn;overflow:hidden}
 .nbtn{--nb-ink:var(--text);--nb-bg:var(--surface);--nb-font:var(--font);
@@ -1615,7 +1616,7 @@ html[data-live-scene] body{background:transparent}
   padding:4cqmin 7cqmin;margin:0;border:0;border-radius:1.6cqmin;cursor:pointer;
   color:var(--nb-ink);background:var(--nb-bg);font-family:var(--nb-font);
   /* A clear panel gives its text a halo to read against the scene; a button brings its own
-     ground, so it does not want one (the glow style adds its own below). */
+     ground, so it does not want one (the neon sign adds its own below). */
   text-shadow:none;transition:transform .12s ease}
 .nbtn .ab-word{display:block;max-width:100%;font-size:clamp(14px,12cqmin,170px);font-weight:700;
   line-height:1.08;text-align:center;overflow-wrap:break-word;hyphens:auto}
@@ -1627,31 +1628,61 @@ html[data-live-scene] body{background:transparent}
 .nbtn:focus-visible{outline:max(3px,.8cqmin) solid var(--highlight);outline-offset:max(3px,.8cqmin)}
 .nbtn.nbtn-press{transform:scale(.97)}
 
-/* SIGN STYLES (placeholders). Shape and treatment only; the colours are the person's. */
-.nbtn[data-style="plaque"]{border:max(3px,1.3cqmin) double currentColor;border-radius:3cqmin;
-  box-shadow:0 1.2cqmin 2.6cqmin color-mix(in srgb,var(--text) 35%,transparent)}
-.nbtn[data-style="banner"]{border-radius:0;padding-inline:12cqmin;
-  clip-path:polygon(0 0,100% 0,93% 50%,100% 100%,0 100%,7% 50%)}
-.nbtn[data-style="glow"]{border:max(2px,.8cqmin) solid currentColor;border-radius:4cqmin;
-  text-shadow:0 0 .6cqmin currentColor,0 0 2.4cqmin currentColor;
-  box-shadow:0 0 2.4cqmin color-mix(in srgb,var(--nb-ink) 60%,transparent),
-    inset 0 0 2.4cqmin color-mix(in srgb,var(--nb-ink) 45%,transparent)}
+/* DESIGNED SIGNS. THE WORDS ELEMENT IS THE SIGN: Design's SVG is its background, at the sign's own
+   proportions (--nb-sign-a), and the text box the module measured from the SVG is its padding
+   (--nb-tb-*, each a % of the sign's width). A percentage padding is measured against the box the
+   sign sits IN, so --nb-sw — the sign's width as a share of that box — scales the insets onto the
+   sign. The module fits the font size to the box (button.js `fitWords`). */
+.nbtn[data-sign] .ab-word{--nb-sw:1;display:flex;align-items:center;justify-content:center;
+  box-sizing:border-box;flex:none;min-width:0;min-height:0;
+  width:calc(var(--nb-sw) * 100%);aspect-ratio:var(--nb-sign-a);
+  padding:calc(var(--nb-tb-t) * var(--nb-sw) * 1%) calc(var(--nb-tb-r) * var(--nb-sw) * 1%)
+    calc(var(--nb-tb-b) * var(--nb-sw) * 1%) calc(var(--nb-tb-l) * var(--nb-sw) * 1%);
+  background:var(--nb-sign) center/100% 100% no-repeat;font-weight:800}
+/* A sign on its own: the face is exactly the sign, as big as the panel allows. The sign is its
+   own ground, so the background colour does not paint here (see button.js's header). */
+.nbtn[data-sign]:not([data-has-img]):not([data-frame-art]){
+  width:min(100cqw,calc(100cqh * var(--nb-sign-a)));min-width:0;padding:0;border-radius:0;
+  background:none}
+/* Under a picture the sign is its caption: a plate on the wall below the painting. */
+.nbtn[data-sign][data-has-img] .ab-word{--nb-sw:var(--nb-capw);align-self:center}
+/* The neon sign's words glow in their own colour, as Design drew them. */
+.nbtn[data-style="neon"] .ab-word{
+  text-shadow:0 0 .12em currentColor,0 0 .4em color-mix(in srgb,currentColor 55%,transparent)}
 
-/* FRAMES (placeholders). A frame replaces a style's edge; after the styles so it wins. The
-   background colour is the mat inside a picture frame and the screen inside a TV or monitor. */
-.nbtn[data-frame="picture"]{clip-path:none;border:max(6px,3.2cqmin) solid var(--accent-warm-deep);
-  border-radius:.6cqmin;padding:4cqmin;
-  box-shadow:inset 0 0 0 max(2px,.9cqmin) color-mix(in srgb,var(--accent-warm-deep) 55%,var(--text)),
-    0 1.6cqmin 3.2cqmin color-mix(in srgb,var(--text) 40%,transparent)}
-.nbtn[data-frame="tv"],.nbtn[data-frame="monitor"]{clip-path:none;border-style:solid;
-  border-color:var(--letterbox);padding:2cqmin;
-  box-shadow:0 1.6cqmin 3.2cqmin color-mix(in srgb,var(--text) 40%,transparent)}
-.nbtn[data-frame="tv"]{border-width:max(8px,4cqmin);border-radius:4.5cqmin}
-.nbtn[data-frame="monitor"]{border-width:max(5px,1.8cqmin) max(5px,1.8cqmin) max(9px,4.2cqmin);
-  border-radius:1.4cqmin;margin-bottom:10cqh}
-.nbtn[data-frame="tv"][data-has-img],.nbtn[data-frame="monitor"][data-has-img]{aspect-ratio:16/10;
-  height:min(70cqh,56cqw)}
-/* The monitor's stand: a neck and a foot under the screen, drawn in the bezel's own token. */
-.nbtn[data-frame="monitor"]::after{content:"";position:absolute;left:50%;top:100%;
-  width:34%;height:10cqh;transform:translateX(-50%);background:var(--letterbox);
-  clip-path:polygon(42% 0,58% 0,62% 72%,100% 80%,100% 100%,0 100%,0 80%,38% 72%)}
+/* DESIGNED FRAMES. The frame art is drawn OVER the window (::after), so the picture shows only
+   through the transparent hole Design left and a rounded window rounds the picture; the window's
+   ground (::before) is the background colour — the mat an empty frame shows, and what is seen
+   while a picture loads. --fr-x/y/w/h are the window, measured from the SVG by the module, as %
+   of the art. The picture FILLS the window (cover): a frame with bars inside it looks broken, and
+   the module picks the frame shape closest to the picture's own so the crop stays small. */
+.nbtn[data-frame-art]{padding:0;border-radius:0;background:none;min-width:0}
+.nbtn[data-frame-art]:not([data-has-img]),.nbtn[data-frame-art] .ab-img{position:relative;isolation:isolate}
+.nbtn[data-frame-art]:not([data-has-img])::before,.nbtn[data-frame-art] .ab-img::before{content:"";
+  position:absolute;z-index:0;left:calc(var(--fr-x) * 1%);top:calc(var(--fr-y) * 1%);
+  width:calc(var(--fr-w) * 1%);height:calc(var(--fr-h) * 1%);background:var(--nb-bg)}
+.nbtn[data-frame-art]:not([data-has-img])::after,.nbtn[data-frame-art] .ab-img::after{content:"";
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:var(--fr-art) center/100% 100% no-repeat}
+/* No picture (yet): the face is the frame, and the words sit in its window. */
+.nbtn[data-frame-art]:not([data-has-img]){display:block;
+  width:min(100cqw,calc(100cqh * var(--fr-a)));aspect-ratio:var(--fr-a)}
+.nbtn[data-frame-art]:not([data-has-img]) .ab-word{position:absolute;z-index:1;box-sizing:border-box;
+  display:flex;align-items:center;justify-content:center;
+  left:calc(var(--fr-x) * 1%);top:calc(var(--fr-y) * 1%);
+  width:calc(var(--fr-w) * 1%);height:calc(var(--fr-h) * 1%)}
+.nbtn[data-frame-art]:not([data-has-img]):not([data-sign]) .ab-word{padding:4% 5%}
+/* ...and with a sign as well, the sign hangs centred in the window. */
+.nbtn[data-frame-art][data-sign]:not([data-has-img]) .ab-word{--nb-sw:calc(var(--fr-w) / 100);
+  height:auto;top:calc((var(--fr-y) + var(--fr-h) / 2) * 1%);transform:translateY(-50%)}
+/* A picture: the frame, then its caption. The face's width is solved so the frame (width / --fr-a
+   tall) plus the caption (--nb-cap of the width tall) plus the gap fit the panel's height. */
+.nbtn[data-frame-art][data-has-img]{
+  --nb-fw:min(100cqw,calc((100cqh - 2cqmin) / (1 / var(--fr-a) + var(--nb-cap))));
+  width:var(--nb-fw);height:auto;aspect-ratio:auto}
+.nbtn[data-frame-art] .ab-img{flex:none;width:100%;min-height:0;aspect-ratio:var(--fr-a)}
+.nbtn[data-frame-art] .ab-img img{position:absolute;z-index:1;
+  left:calc(var(--fr-x) * 1%);top:calc(var(--fr-y) * 1%);
+  width:calc(var(--fr-w) * 1%);height:calc(var(--fr-h) * 1%);object-fit:cover}
+.nbtn[data-frame-art][data-has-img]:not([data-sign]) .ab-word{box-sizing:border-box;width:100%;
+  height:calc(var(--nb-fw) * var(--nb-cap));display:flex;align-items:center;justify-content:center}

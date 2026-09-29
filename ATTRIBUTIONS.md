@@ -77,6 +77,22 @@ over a frame's landmark annotations) is tracky-mouse's.
 
 ---
 
+## Sign styles, frames and points icons — made with Claude Design
+
+`web/client/design-assets/` (`signs/`, `frames/`, `points/`)
+
+| | |
+|---|---|
+| **What** | Six sign backgrounds (banner, chalkboard, neon, plate, street, wood), seven picture frames each in a 4:3 and a square shape (classic, flatTv, instant, monitor, ornate, retroTv, tablet), and the School and Play points icons. Used by `modules/button.js` (the game's name sign and picture, and any other button) and `points.js` (the currency icons in Quests) |
+| **Made by** | [Claude Design](https://claude.ai), for this project, delivered 2026-09-28 |
+| **Provenance** | Each SVG carries its C2PA content credential in `<metadata>`; it is kept, not stripped |
+| **Changed** | The six sign files only: Design drew a sample word on each, and it was removed, because a person's own words are laid over the sign. A comment in each of those files says so; the credential describes the file as delivered. The frames and icons are byte-for-byte what was delivered |
+
+They were made for this project, not taken from a third-party asset library, so there is no
+third-party licence to record here — this entry is the credit.
+
+---
+
 ## Fonts, libraries, symbols
 
 The board's symbols (`web/client/aac_symbols.js`) are **drawn in-repo**, not taken from a symbol

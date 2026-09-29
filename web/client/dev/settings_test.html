@@ -584,6 +584,41 @@ section('legacy — the seconds-to-milliseconds migration, declared rather than 
 }
 
 // =====================================================================
+section('aliases and defaultFrom — a renamed VALUE, and a default that depends on the other settings');
+
+{
+  // button.js (2026-09-29): the placeholder sign `plaque` became Design's `plate`.
+  const look = normalizeField({ key: 'style', kind: 'choice', default: 'plain',
+    options: ['plain', 'plate', 'neon'], aliases: { plaque: 'plate', glow: 'neon', gone: 'nowhere', plain: 'neon' } });
+  check('an old stored value reads as its new one', fieldValue(look, { style: 'plaque' }) === 'plate');
+  check('...so the row names the new look, not "not one of the choices"',
+    displayValue(look, fieldValue(look, { style: 'plaque' })) === 'plate');
+  check('...and a press steps on FROM it rather than "repairing" it to the first option',
+    stepValue(look, fieldValue(look, { style: 'plaque' })) === 'neon');
+  check('an alias to nothing is dropped (it would only swap one dead value for another)',
+    fieldValue(look, { style: 'gone' }) === 'gone');
+  check('an alias can never shadow a real option', fieldValue(look, { style: 'plain' }) === 'plain');
+  check('a field with no aliases is unchanged', normalizeField({ key: 'x', options: ['a', 'b'] }).aliases === null);
+
+  const ink = normalizeField({ key: 'color', kind: 'color', default: '#000000',
+    defaultFrom: (row) => (row.style === 'dark' ? '#ffffff' : undefined) });
+  check('with the other setting absent, defaultFrom answers nothing and the static default holds',
+    fieldValue(ink, {}) === '#000000');
+  check('the default in force follows the OTHER setting', fieldValue(ink, { style: 'dark' }) === '#ffffff');
+  check('a stored value still wins over it — chosen beats suggested, black included',
+    fieldValue(ink, { style: 'dark', color: '#000000' }) === '#000000');
+  check('garbage stored reads as the default IN FORCE, not the static one',
+    fieldValue(ink, { style: 'dark', color: 'not-a-colour' }) === '#ffffff');
+  check('the row names the colour in force', displayValue(ink, fieldValue(ink, { style: 'dark' })) === 'White');
+  const boom = normalizeField({ key: 'color', kind: 'color', default: '#000000', defaultFrom: () => { throw new Error('x'); } });
+  check('a defaultFrom that throws falls back to the default — the menu survives the module',
+    fieldValue(boom, {}) === '#000000');
+  const rows = fieldItems([ink], { values: () => ({ style: 'dark' }), onStep: () => {} });
+  check('the menu row and its swatch carry the colour in force',
+    rows[0].value === '#ffffff' && rows[0].color.value === '#ffffff');
+}
+
+// =====================================================================
 section('stepValue — THE ONE-BUTTON CONTRACT, hammered');
 
 {

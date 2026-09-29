@@ -55,6 +55,11 @@ function check(name, cond, detail = '') {
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function settled(fn, ms = 3000) {
+  const t0 = performance.now();
+  while (performance.now() - t0 < ms) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(20); }
+  return false;
+}
 
 function fakeClock(start) {
   let t = start; const tickers = new Map(); let id = 0;
@@ -134,7 +139,9 @@ const MIN = 60000;
     // log a plain task
     const dishes = DEFAULT_TASKS.findIndex((t) => t.task === 'Do the dishes');
     items()[dishes].click();
-    await sleep(250);
+    // Waits for the result, not a fixed 250 ms: 1 run in 4 the ledger write had not landed yet
+    // (found 2026-09-29, the x2 checks below).
+    await settled(() => balance() === 15);
     check('logging a task moves the balance', balance() === 15, txt('[data-balance]'));
     check('the log confirms what was earned', /\+15/.test(txt('[data-flash]') || ''), txt('[data-flash]'));
 
@@ -143,7 +150,7 @@ const MIN = 60000;
     host.querySelector('[data-double]').checked = true;
     host.querySelector('[data-double]').dispatchEvent(new Event('change'));
     items()[photo].click();
-    await sleep(250);
+    await settled(() => balance() === 17);
     check('x2 doubles a double-eligible task', balance() === 17, txt('[data-balance]'));
     check('the x2 toggle resets after use', !host.querySelector('[data-double]').checked);
 
@@ -428,7 +435,20 @@ const MIN = 60000;
       cur('play') === 100 && cur('school') === 0
       && /Play/.test(ct('[data-currency="play"]') || '') && /School/.test(ct('[data-currency="school"]') || ''),
       `${ct('[data-currency="school"]')} | ${ct('[data-currency="play"]')}`);
-    check('no icon is drawn while the data has none (a design task)', !chost.querySelector('[data-currency] .q-cur-icon'));
+    {
+      // Design's icons landed as data (points.js DEFAULT_CURRENCIES, 2026-09-29).
+      const icon = (id) => chost.querySelector(`[data-currency="${id}"] img.q-cur-icon`);
+      const loaded = await settled(() => ['school', 'play'].every((id) => icon(id)?.complete && icon(id).naturalWidth > 0), 3000);
+      check('each currency draws Design’s icon, and it actually loads', loaded,
+        ['school', 'play'].map((id) => `${id}:${icon(id)?.getAttribute('src')}`).join(' '));
+      check('...from the data’s absolute path, decorative (alt ""), the name beside it read instead',
+        icon('school')?.getAttribute('src') === '/design-assets/points/school.svg'
+        && icon('play')?.getAttribute('src') === '/design-assets/points/play.svg'
+        && icon('school').alt === '' && icon('play').alt === '');
+      const r = icon('school')?.getBoundingClientRect();
+      check('...at the size of the text beside it, not the SVG’s own', r && r.width > 4 && r.width < 40,
+        r && `${r.width}x${r.height}`);
+    }
 
     [...chost.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === 'rewards').click();
     await sleep(120);

@@ -33,8 +33,10 @@ import { fieldsFor, fieldItems } from '../settings_fields.js';
 import { DEFAULT_PALETTE } from '../color_picker.js';
 import { listItemNames } from '../media_sources.js';
 import { cardFaceHTML } from '../card_face.js';
-import { FONTS, STYLES, FRAMES, DEFAULT_INK, DEFAULT_GROUND, configFrom, fontStack }
-  from '../modules/button.js';
+import { contrast } from '../color_picker.js';
+import { FONTS, STYLES, FRAMES, SIGNS, FRAME_ART, DEFAULT_INK, DEFAULT_GROUND, configFrom, fontStack,
+  LEGACY_STYLES, LEGACY_FRAMES, ASPECT_CUTOFF, aspectVariant, suggestedInk, inkOrder, signOf, frameOf,
+  CAPTION_SIGN_WIDTH } from '../modules/button.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -46,6 +48,45 @@ function check(name, cond, detail = '') {
   out.append(d);
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+// A measured number worth reading on a PASS too (contrast ratios, the windows found), not counted.
+function note(t) { const d = document.createElement('div'); d.textContent = `      ${t}`; out.append(d); }
+const hexOfId = (id) => DEFAULT_PALETTE.find((c) => c.id === id).hex;
+const near = (a, b, tol = 1) => Math.abs(a - b) <= tol;
+// The words' own extent (the glyphs, via a Range), and whether it lies inside a rect.
+function textRect(el) { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect(); }
+const inside = (r, box, tol = 1) => r.width > 0 && r.left >= box.left - tol && r.right <= box.right + tol
+  && r.top >= box.top - tol && r.bottom <= box.bottom + tol;
+// A rect `[x, y, w, h]` in an SVG's viewBox units, mapped onto an element drawing that SVG at 100% 100%.
+function mapBox(el, [vw, vh], [x, y, w, h]) {
+  const b = el.getBoundingClientRect();
+  return { left: b.left + (x / vw) * b.width, top: b.top + (y / vh) * b.height,
+           right: b.left + ((x + w) / vw) * b.width, bottom: b.top + ((y + h) / vh) * b.height };
+}
+const fmtR = (r) => r ? `[${[r.left, r.top, r.right, r.bottom].map((n) => n.toFixed(1)).join(',')}]` : 'none';
+// An SVG file, fetched and put in the page (off to one side) so its shapes can be MEASURED with getBBox.
+const measureHost = Object.assign(document.createElement('div'),
+  { style: 'position:absolute;left:-5000px;top:0;width:400px;height:400px;overflow:hidden' });
+document.body.append(measureHost);
+async function loadSvg(file) {
+  const res = await fetch(file);
+  const text = res.ok ? await res.text() : '';
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const svg = document.importNode(doc.documentElement, true);
+  measureHost.append(svg);
+  return { res, text, svg };
+}
+// The bounding box of each sub-path of a path's `d` (split at every moveto), measured by the browser.
+function subpathBoxes(svg, pathEl) {
+  const parts = (pathEl.getAttribute('d') || '').split(/(?=M)/).map((s) => s.trim()).filter(Boolean);
+  return parts.map((d) => {
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', d);
+    svg.append(p);
+    const b = p.getBBox();
+    p.remove();
+    return b;
+  });
+}
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function settled(fn, ms = 3000) {
   const t0 = performance.now();
@@ -126,14 +167,18 @@ try {
     check('the colour defaults are PALETTE entries (black words on white), not literals of this module',
       dflt.color === DEFAULT_PALETTE.find((c) => c.id === 'black').hex
       && dflt.background === DEFAULT_PALETTE.find((c) => c.id === 'white').hex);
-    check('the frame choice is none / picture frame / TV / monitor',
-      FRAMES.map((f) => f.value).join(',') === 'none,picture,tv,monitor');
+    check('the frame choice is "none" plus Design’s seven frames',
+      FRAMES.map((f) => f.value).join(',') === 'none,classic,ornate,instant,flatTv,retroTv,monitor,tablet',
+      FRAMES.map((f) => f.value).join(','));
+    check('the style choice is "plain" plus Design’s six signs',
+      STYLES.map((s) => s.value).join(',') === 'plain,plate,wood,chalkboard,street,banner,neon',
+      STYLES.map((s) => s.value).join(','));
     check('every font stack ends in a GENERIC family (nothing needs downloading)',
       FONTS.every((f) => f.value === 'theme' || /(serif|sans-serif|monospace|cursive)$/.test(f.stack)),
       FONTS.map((f) => f.stack).join(' | '));
-    check('the style and frame rows say they are placeholders, where somebody choosing reads them',
-      /for now/.test(m.settings.find((s) => s.key === 'style').label)
-      && /for now/.test(m.settings.find((s) => s.key === 'frame').label));
+    check('the style and frame rows no longer call themselves placeholders — the designed ones landed',
+      !/for now/.test(m.settings.find((s) => s.key === 'style').label)
+      && !/for now/.test(m.settings.find((s) => s.key === 'frame').label));
     check('the description is plain words and names no person', typeof m.description === 'string'
       && m.description.length > 10 && !/\bher\b|christine/i.test(m.description));
   }
@@ -185,7 +230,8 @@ try {
     await sleep(30);
     const f = S.face();
     check('the words', S.word() === 'Robin' && f.getAttribute('aria-label') === 'Robin');
-    check('the style and the frame, as stored ids on the face', f.dataset.style === 'plaque' && f.dataset.frame === 'picture');
+    check('the style and the frame, as ids on the face — yesterday’s stored placeholders read as Design’s',
+      f.dataset.style === 'plate' && f.dataset.frame === 'classic', `${f.dataset.style} ${f.dataset.frame}`);
     check('the colours reach the stylesheet as custom properties',
       f.style.getPropertyValue('--nb-ink') === DEFAULT_PALETTE[5].hex
       && f.style.getPropertyValue('--nb-bg') === DEFAULT_PALETTE[2].hex);
@@ -194,8 +240,9 @@ try {
     const cs = getComputedStyle(f);
     check('...and the computed colour and font actually follow them',
       cs.color === 'rgb(47, 111, 224)' && /Georgia/.test(cs.fontFamily), `${cs.color} ${cs.fontFamily}`);
+    // Fitting the words sets a font size on the word element; the MARKUP is still the card's.
     check('the face markup IS the AAC card face (card_face.js), not a second one',
-      f.innerHTML === cardFaceHTML({ word: 'Robin' }), f.innerHTML);
+      f.innerHTML.replace(/ style="[^"]*"/g, '') === cardFaceHTML({ word: 'Robin' }), f.innerHTML);
 
     st.set({ label: 'Robin & Sam <3' });
     await sleep(10);
@@ -248,7 +295,7 @@ try {
     pst.set({ color: DEFAULT_PALETTE[0].hex, frame: 'tv' });
     await sleep(20);
     check('changing a colour or the frame does NOT reload the picture (same element)', P.img() === imgNode
-      && P.face().dataset.frame === 'tv');
+      && P.face().dataset.frame === 'flatTv');
     pst.set({ label: '' });
     const alt = await settled(() => P.img()?.alt === 'Picture');
     check('a picture with no words carries the name itself', alt && P.face().getAttribute('aria-label') === 'Picture');
@@ -340,6 +387,320 @@ try {
     check('the frame row cycles', FRAMES.some((f) => f.value === pst.get().frame));
     check('the style and font rows cycle through the declared lists',
       row('style').field.options.length === STYLES.length && row('font').field.options.length === FONTS.length);
+  }
+
+  // =============================================================================================
+  section('Design’s signs: the files are served, provenance kept, and the numbers in button.js MATCH them');
+  for (const s of SIGNS) {
+    const { res, text, svg } = await loadSvg(s.file);
+    check(`${s.value}: served as an SVG from ${s.file}`, res.ok
+      && /image\/svg\+xml/.test(res.headers.get('content-type') || ''), `${res.status} ${res.headers.get('content-type')}`);
+    check(`${s.value}: keeps its C2PA content credential`, /<metadata>\s*<c2pa:manifest>/.test(text));
+    check(`${s.value}: Design’s sample word is gone (nothing drawn under the person’s words)`,
+      !svg.querySelector('text') && !/<text\b/.test(text));
+    check(`${s.value}: no scripts, handlers or outside references`,
+      !/<script|\son\w+\s*=|href\s*=\s*["']https?:|url\(\s*["']?https?:/i.test(text));
+    check(`${s.value}: viewBox ${s.viewBox.join('x')} as the table says`,
+      svg.getAttribute('viewBox') === `0 0 ${s.viewBox[0]} ${s.viewBox[1]}`, svg.getAttribute('viewBox'));
+    // THE BOARD: the element filled with the colour the table names. Its box must hold the text box.
+    const boards = [...svg.querySelectorAll('[fill]')].filter((e) => e.getAttribute('fill').toLowerCase() === s.board.fill);
+    const [x, y, w, h] = s.text;
+    const bb = boards[0]?.getBBox();
+    check(`${s.value}: the board (${s.board.fill}) exists, and the text box lies on it`,
+      !!bb && x >= bb.x && y >= bb.y && x + w <= bb.x + bb.width && y + h <= bb.y + bb.height,
+      bb ? `board ${bb.x},${bb.y} ${bb.width}x${bb.height}; text ${s.text}` : 'no board');
+    // The board's colours ARE the file's: a flat fill, or every stop of its gradient, in order.
+    const grad = /^url\(#(.+)\)$/.exec(s.board.fill);
+    const fileColors = grad
+      ? [...svg.querySelectorAll(`[id="${grad[1]}"] stop`)].map((st) => st.getAttribute('stop-color').toLowerCase())
+      : [s.board.fill];
+    check(`${s.value}: the board colours in the table are the file’s own`,
+      fileColors.join() === s.board.colors.join(), `${fileColors} vs ${s.board.colors}`);
+    // Every CLOSED outline drawn inside the board (the street sign's border, the plate's inner line,
+    // the neon tube) must contain the text box, inset by half its stroke — words never cross a line.
+    for (const p of svg.querySelectorAll('path[fill="none"]')) {
+      if (!/Z\s*$/i.test(p.getAttribute('d') || '')) continue;     // the wood grain is not an outline
+      const b = p.getBBox();
+      const sw = Number(p.getAttribute('stroke-width') || 0) / 2;
+      check(`${s.value}: the text box sits inside its drawn outline`,
+        x >= b.x + sw && y >= b.y + sw && x + w <= b.x + b.width - sw && y + h <= b.y + b.height - sw,
+        `outline ${b.x},${b.y} ${b.width}x${b.height} sw ${sw}; text ${s.text}`);
+    }
+    // ...and clear of every screw and nail.
+    const hits = [...svg.querySelectorAll('circle')].filter((c) => {
+      const b = c.getBBox();
+      return b.x < x + w && b.x + b.width > x && b.y < y + h && b.y + b.height > y;
+    });
+    check(`${s.value}: the text box is clear of the screws and nails`, hits.length === 0, `${hits.length} overlap`);
+    check(`${s.value}: the text box is centred where Design centred its sample word (x = 180)`, near(x + w / 2, 180, 0.01));
+    svg.remove();
+  }
+
+  section('the suggested ink on each sign reads at 4.5:1 or better, against EVERY colour of its board');
+  for (const s of SIGNS) {
+    const ink = hexOfId(s.ink);
+    const ratios = s.board.colors.map((c) => contrast(ink, c));
+    const worst = Math.min(...ratios);
+    check(`${s.value}: ${s.ink} words — worst ${worst.toFixed(2)}:1`, worst >= 4.5, ratios.map((r) => r.toFixed(2)).join(', '));
+    note(`${s.value}: ${s.ink} (${ink}) on ${s.board.colors.join(' / ')} = ${ratios.map((r) => r.toFixed(2)).join(' / ')}`);
+    check(`${s.value}: the ink is a PALETTE colour, so the menu names it plainly`,
+      DEFAULT_PALETTE.some((c) => c.hex === ink));
+  }
+
+  // =============================================================================================
+  section('Design’s frames: served, provenance kept, and each WINDOW measured from the file matches');
+  for (const f of FRAME_ART) {
+    for (const [shape, v] of Object.entries(f.variants)) {
+      const { res, text, svg } = await loadSvg(v.file);
+      const tag = `${f.value} ${shape}`;
+      check(`${tag}: served as an SVG, credential kept, nothing active`, res.ok
+        && /image\/svg\+xml/.test(res.headers.get('content-type') || '') && /<metadata>\s*<c2pa:manifest>/.test(text)
+        && !/<script|\son\w+\s*=|href\s*=\s*["']https?:/i.test(text));
+      check(`${tag}: viewBox ${v.viewBox.join('x')}`, svg.getAttribute('viewBox') === `0 0 ${v.viewBox.join(' ')}`,
+        svg.getAttribute('viewBox'));
+      // THE WINDOW is a HOLE: a sub-path after the first in an even-odd path. With a mat (classic),
+      // there are two rings; the picture's window is the smallest hole of all.
+      const holes = [...svg.querySelectorAll('path[fill-rule="evenodd"]')]
+        .flatMap((p) => subpathBoxes(svg, p).slice(1));
+      const win = holes.sort((a, b) => a.width * a.height - b.width * b.height)[0];
+      const [x, y, w, h] = v.window;
+      check(`${tag}: the window in button.js is the file’s hole`, !!win && near(win.x, x, 0.05) && near(win.y, y, 0.05)
+        && near(win.width, w, 0.05) && near(win.height, h, 0.05),
+        win ? `file ${win.x},${win.y} ${win.width}x${win.height}; table ${v.window}` : 'no hole found');
+      check(`${tag}: the window is ${shape === '4x3' ? '4:3' : 'square'}`, near(w / h, shape === '4x3' ? 4 / 3 : 1, 0.001));
+      // Nothing drawn in front of the window (an LED, a stand) would sit on the picture.
+      const over = [...svg.querySelectorAll('circle, rect')].filter((c) => {
+        const b = c.getBBox();
+        return b.x < x + w && b.x + b.width > x && b.y < y + h && b.y + b.height > y;
+      });
+      check(`${tag}: nothing else is drawn over the window`, over.length === 0, over.map((e) => e.outerHTML).join(' '));
+      svg.remove();
+    }
+  }
+
+  // =============================================================================================
+  section('which frame shape: the picture’s own proportions, cut at √(4/3)');
+  {
+    check('the cut-off is √(4/3) ≈ 1.1547 — where the two windows crop the same share',
+      near(ASPECT_CUTOFF, 1.1547, 0.0001) && near(1 - 1 / ASPECT_CUTOFF, 1 - ASPECT_CUTOFF / (4 / 3), 1e-9));
+    const cases = [[1600, 1200, '4x3'], [1920, 1080, '4x3'], [1160, 1000, '4x3'], [1150, 1000, 'square'],
+      [1000, 1000, 'square'], [1440, 1920, 'square'], [900, 1600, 'square'], [0, 0, '4x3'], [NaN, 5, '4x3']];
+    for (const [w, h, want] of cases) check(`${w}x${h} → ${want}`, aspectVariant(w, h) === want, aspectVariant(w, h));
+  }
+
+  // =============================================================================================
+  section('yesterday’s placeholder values still work');
+  {
+    check('the map is plaque→plate, glow→neon; picture→classic, tv→flatTv (banner, monitor, plain, none kept their ids)',
+      JSON.stringify(LEGACY_STYLES) === '{"plaque":"plate","glow":"neon"}'
+      && JSON.stringify(LEGACY_FRAMES) === '{"picture":"classic","tv":"flatTv"}'
+      && ['plain', 'banner'].every((id) => STYLES.some((s) => s.value === id))
+      && ['none', 'monitor'].every((id) => FRAMES.some((f) => f.value === id)));
+    const pairs = [['plaque', 'plate'], ['glow', 'neon'], ['banner', 'banner'], ['plain', 'plain']];
+    for (const [old, now] of pairs) check(`style ${old} reads as ${now}`, configFrom({ style: old }).style === now);
+    const fpairs = [['picture', 'classic'], ['tv', 'flatTv'], ['monitor', 'monitor'], ['none', 'none']];
+    for (const [old, now] of fpairs) check(`frame ${old} reads as ${now}`, configFrom({ frame: old }).frame === now);
+    const m = getManifest('button');
+    const rows = fieldItems(fieldsFor(m, null), { values: () => ({ style: 'plaque', frame: 'picture' }), onStep: () => {} });
+    const r = (k) => rows.find((x) => x.key === k);
+    check('the MENU names them too (no "not one of the choices")',
+      r('style').value === 'plate' && /Name plate/.test(r('style').hint)
+      && r('frame').value === 'classic' && /Picture frame/.test(r('frame').hint), `${r('style').hint} | ${r('frame').hint}`);
+    let stepped = null;
+    fieldItems(fieldsFor(m, null), { values: () => ({ style: 'plaque' }), onStep: (k, v) => { if (k === 'style') stepped = v; } })
+      .find((x) => x.key === 'style').run();
+    check('...and a press steps on from the new id, not back to the first option', stepped === 'wood', stepped);
+    check('...and a plaque made yesterday takes the plate’s ink (black), since nobody chose a colour',
+      configFrom({ style: 'plaque' }).color === hexOfId('black')
+      && configFrom({ style: 'glow' }).color === hexOfId('white'));
+  }
+
+  // =============================================================================================
+  section('every sign renders its SVG, and the words stay inside its text box — short, long, one long word');
+  const LABELS = ['Al', 'Robin', 'Bartholomew Montgomery-Featherstone', 'Supercalifragilisticexpialidocious'];
+  for (const s of SIGNS) {
+    const st = liveState({ style: s.value, label: LABELS[0] });
+    const B = mount(`btn-sign-${s.value}`, { state: st });
+    await sleep(20);
+    const f = B.face();
+    const w = f.querySelector('.ab-word');
+    const cs = getComputedStyle(w);
+    check(`${s.value}: the words element carries Design’s sign`, 'sign' in f.dataset
+      && cs.backgroundImage.includes(s.file), cs.backgroundImage);
+    const r = w.getBoundingClientRect();
+    check(`${s.value}: at the sign’s own proportions (3:1)`, near(r.width / r.height, s.viewBox[0] / s.viewBox[1], 0.03),
+      `${r.width.toFixed(1)}x${r.height.toFixed(1)}`);
+    {
+      const wrap = B.host.querySelector('[data-nbtn]');
+      const ws = getComputedStyle(wrap);
+      const cw = wrap.clientWidth - parseFloat(ws.paddingLeft) - parseFloat(ws.paddingRight);
+      const ch = wrap.clientHeight - parseFloat(ws.paddingTop) - parseFloat(ws.paddingBottom);
+      check(`${s.value}: as big as the panel allows (the panel’s width, or 3x its height)`,
+        near(r.width, Math.min(cw, ch * 3), 1.5), `${r.width.toFixed(1)} vs ${cw.toFixed(1)}/${ch.toFixed(1)}`);
+    }
+    for (const label of LABELS) {
+      st.set({ label });
+      await sleep(10);
+      // New words build a new word element (the card face is rebuilt), so look it up again.
+      const w = f.querySelector('.ab-word');
+      const box = mapBox(w, s.viewBox, s.text);
+      const t = textRect(w);
+      check(`${s.value} “${label}”: inside the text box`, inside(t, box), `text ${fmtR(t)} box ${fmtR(box)}`);
+      const size = parseFloat(getComputedStyle(w).fontSize);
+      check(`${s.value} “${label}”: no bigger than Design drew its sample (${s.fontSize}/${s.viewBox[1]} of the height)`,
+        size <= (s.fontSize / s.viewBox[1]) * r.height + 0.5, `${size}px`);
+    }
+    st.set({ label: 'Al' });
+    await sleep(10);
+    const w2 = f.querySelector('.ab-word');
+    check(`${s.value}: a short name is set AT Design’s size, not shrunk`,
+      near(parseFloat(getComputedStyle(w2).fontSize), (s.fontSize / s.viewBox[1]) * w2.getBoundingClientRect().height, 0.6),
+      getComputedStyle(w2).fontSize);
+    B.inst.destroy(); B.host.remove();
+  }
+  {
+    const st = liveState({ style: 'plain', label: 'Robin' });
+    const B = mount('btn-plain', { state: st });
+    await sleep(10);
+    const w = B.face().querySelector('.ab-word');
+    check('plain: no sign image, no fitting — the face keeps its own ground and CSS size',
+      !('sign' in B.face().dataset) && !('fit' in B.face().dataset)
+      && getComputedStyle(w).backgroundImage === 'none' && !w.style.fontSize);
+    B.inst.destroy(); B.host.remove();
+  }
+
+  // =============================================================================================
+  section('the suggested ink: applied until a colour is chosen, then the chosen one wins');
+  {
+    const st = liveState({ style: 'chalkboard', label: 'Robin' });
+    const B = mount('btn-ink', { state: st });
+    await sleep(10);
+    const f = B.face();
+    const ink = () => f.style.getPropertyValue('--nb-ink');
+    const rowsNow = () => fieldItems(fieldsFor(B.inst.manifest, B.inst), { values: () => st.get(), onStep: (k, v) => st.set({ [k]: v }) });
+    const colorRow = () => rowsNow().find((x) => x.key === 'color');
+    check('chalkboard, nothing chosen: WHITE words', ink() === hexOfId('white')
+      && getComputedStyle(f.querySelector('.ab-word')).color === 'rgb(255, 255, 255)' && !('inkChosen' in f.dataset));
+    check('...and the menu row and its swatch say White — the colour in use, not the declared Black',
+      colorRow().value === hexOfId('white') && colorRow().color.value === hexOfId('white') && /White/.test(colorRow().hint),
+      colorRow().hint);
+    const opts = colorRow().field.options.map((o) => o.value);
+    check('...its walk starts at White and leaves the colour that vanishes on slate (Black) for LAST',
+      opts[0] === hexOfId('white') && opts.at(-1) === hexOfId('black') && opts.length === 12, opts.join(','));
+    colorRow().run();
+    const first = st.get().color;
+    check('...so ONE press lands on something that is not Black', !!first && first !== hexOfId('black')
+      && first !== hexOfId('white'), first);
+    st.set({ color: hexOfId('black') });
+    await sleep(10);
+    check('a chosen colour wins — EVEN BLACK on a chalkboard (it is their choice)', ink() === hexOfId('black')
+      && 'inkChosen' in f.dataset && colorRow().value === hexOfId('black'));
+    st.set({ style: 'neon' });
+    await sleep(10);
+    check('...and it stays chosen when the sign changes', ink() === hexOfId('black'));
+    st.set({ color: undefined });
+    await sleep(10);
+    check('cleared again: the neon sign’s suggestion (white) is back', ink() === hexOfId('white') && !('inkChosen' in f.dataset));
+    st.set({ style: 'plate' });
+    await sleep(10);
+    check('the brass plate suggests BLACK', ink() === hexOfId('black'));
+    st.set({ style: 'plain', background: hexOfId('black') });
+    await sleep(10);
+    check('plain on a dark background the person chose: the words go WHITE', ink() === hexOfId('white'));
+    st.set({ background: hexOfId('white') });
+    await sleep(10);
+    check('plain on white: black, exactly as before', ink() === DEFAULT_INK);
+    check('inkOrder on the default look IS the old INK_PALETTE order (black first, white last)',
+      inkOrder('plain', DEFAULT_GROUND).map((c) => c.id).join() === getManifest('button').settings
+        .find((x) => x.key === 'color').options.map((c) => c.id).join());
+    check('suggestedInk agrees with every sign’s table entry', SIGNS.every((s) => suggestedInk(s.value) === hexOfId(s.ink)));
+    B.inst.destroy(); B.host.remove();
+  }
+
+  // =============================================================================================
+  section('every frame renders its SVG over the window, and the words (no picture yet) sit in the window');
+  for (const fa of FRAME_ART) {
+    const st = liveState({ frame: fa.value, label: 'My picture' });
+    const B = mount(`btn-frame-${fa.value}`, { state: st });
+    await sleep(20);
+    const f = B.face();
+    const v = fa.variants['4x3'];
+    const art = getComputedStyle(f, '::after').backgroundImage;
+    check(`${fa.value}: the frame art is drawn (the 4:3 shape with no picture)`, 'frameArt' in f.dataset
+      && f.dataset.aspect === '4x3' && art.includes(v.file), art);
+    const r = f.getBoundingClientRect();
+    check(`${fa.value}: the face has the art’s proportions`, near(r.width / r.height, v.viewBox[0] / v.viewBox[1], 0.02),
+      `${r.width.toFixed(1)}x${r.height.toFixed(1)}`);
+    const win = mapBox(f, v.viewBox, v.window);
+    const w = f.querySelector('.ab-word');
+    check(`${fa.value}: the words sit inside the window`, inside(textRect(w), win), `${fmtR(textRect(w))} in ${fmtR(win)}`);
+    const fill = getComputedStyle(f, '::before');
+    check(`${fa.value}: the window’s ground is the background colour`, fill.backgroundColor === 'rgb(255, 255, 255)',
+      fill.backgroundColor);
+    // A sign as well: it hangs in the window, and its words stay in ITS text box.
+    st.set({ style: 'street' });
+    await sleep(10);
+    const s = signOf('street');
+    const sr = w.getBoundingClientRect();
+    const win2 = mapBox(f, v.viewBox, v.window);      // re-read: every check line moves the page
+    check(`${fa.value} + street sign: the sign hangs inside the window, words inside its text box`,
+      inside(sr, win2) && inside(textRect(w), mapBox(w, s.viewBox, s.text))
+      && near((sr.top + sr.bottom) / 2, (win2.top + win2.bottom) / 2, 1.5), `${fmtR(sr)} in ${fmtR(win2)}`);
+    B.inst.destroy(); B.host.remove();
+  }
+  {
+    const B = mount('btn-noframe', { state: liveState({ frame: 'none', label: 'x' }) });
+    await sleep(10);
+    check('frame "none" is still a choice, and draws no frame', FRAMES[0].value === 'none'
+      && !('frameArt' in B.face().dataset) && getComputedStyle(B.face(), '::after').backgroundImage === 'none');
+    B.inst.destroy(); B.host.remove();
+  }
+
+  // =============================================================================================
+  section('a real picture in a frame: the right shape for its proportions, placed exactly in the window');
+  for (const [i, frameId] of [[0, 'retroTv'], [1, 'classic'], [0, 'instant'], [1, 'monitor']]) {
+    const st = liveState({ frame: frameId, label: 'My picture', imageFrom: SAMPLES.id, image: names[i].path });
+    const B = mount(`btn-pic-${frameId}-${i}`, { state: st, sources: sourcesOf(SAMPLES) });
+    const ok = await settled(() => B.img()?.complete && B.img().naturalWidth > 0, 4000);
+    await sleep(30);
+    const img = B.img();
+    const want = img ? aspectVariant(img.naturalWidth, img.naturalHeight) : '?';
+    const f = B.face();
+    check(`${frameId}, ${names[i].path}: loaded, and the ${want} frame chosen for ${img?.naturalWidth}x${img?.naturalHeight}`,
+      ok && f.dataset.aspect === want
+      && getComputedStyle(f.querySelector('.ab-img'), '::after').backgroundImage.includes(frameOf(frameId).variants[want].file),
+      `${f.dataset.aspect} ${getComputedStyle(f.querySelector('.ab-img'), '::after').backgroundImage}`);
+    const v = frameOf(frameId).variants[want];
+    const holder = f.querySelector('.ab-img');
+    const win = mapBox(holder, v.viewBox, v.window);
+    const ir = img.getBoundingClientRect();
+    check(`${frameId}: the picture covers the window exactly`, near(ir.left, win.left) && near(ir.top, win.top)
+      && near(ir.right, win.right) && near(ir.bottom, win.bottom), `${fmtR(ir)} vs ${fmtR(win)}`);
+    check(`${frameId}: it FILLS the window (no bars)`, getComputedStyle(img).objectFit === 'cover');
+    // EVERY RECT IN ONE READ, before any check: each check adds a line to the results ABOVE the
+    // stages, which moves everything below it down by a line — a rect read after a check is not
+    // comparable with one read before it.
+    const cap = f.querySelector('.ab-word');
+    const measure = () => ({ hr: holder.getBoundingClientRect(), fr: f.getBoundingClientRect(),
+      panel: B.host.querySelector('[data-nbtn]').getBoundingClientRect(), cr: cap.getBoundingClientRect(),
+      tr: textRect(cap) });
+    const m1 = measure();
+    check(`${frameId}: the frame keeps the art’s proportions`, near(m1.hr.width / m1.hr.height, v.viewBox[0] / v.viewBox[1], 0.02));
+    check(`${frameId}: the caption sits under the frame, the whole face inside the panel, words inside the caption`,
+      m1.cr.top >= m1.hr.bottom - 1 && inside(m1.fr, m1.panel) && inside(m1.tr, m1.cr),
+      `face ${fmtR(m1.fr)} in ${fmtR(m1.panel)}; frame ${fmtR(m1.hr)} caption ${fmtR(m1.cr)} text ${fmtR(m1.tr)}`);
+    if (i === 1 && frameId === 'classic') {
+      st.set({ style: 'plate' });
+      await sleep(20);
+      const s = signOf('plate');
+      const m2 = measure();
+      const tb = mapBox(cap, s.viewBox, s.text);
+      check('a sign style under a framed picture: the caption becomes a small plate, 60% of the frame’s width',
+        getComputedStyle(cap).backgroundImage.includes(s.file) && near(m2.cr.width, CAPTION_SIGN_WIDTH * m2.hr.width, 1.5)
+        && inside(m2.tr, tb) && inside(m2.fr, m2.panel) && m2.cr.top >= m2.hr.bottom - 1,
+        `${m2.cr.width.toFixed(1)} vs ${(CAPTION_SIGN_WIDTH * m2.hr.width).toFixed(1)}; text ${fmtR(m2.tr)} box ${fmtR(tb)}; face ${fmtR(m2.fr)} panel ${fmtR(m2.panel)}`);
+    }
+    B.inst.destroy(); B.host.remove();
   }
 
   S.inst.destroy(); P.inst.destroy(); D.inst.destroy();
