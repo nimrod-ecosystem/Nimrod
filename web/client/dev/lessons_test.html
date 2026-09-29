@@ -1132,13 +1132,53 @@ Say it once and move on.`;
     check('*** Cancel stops it and returns to the paste box with the transcript kept ***',
       xhost.querySelector('[data-tq-text]')?.value === ROOTS_TRANSCRIPT, tqText('.l-tq'));
 
+    // Row 2.24 / §long-transcript-context, 2026-09-29: the model here reads ~4,096 tokens at once,
+    // so a long transcript goes in pieces, each asked for as many questions as it supports — no
+    // count derived from the video's length. A piece that fails keeps what the others wrote.
+    section('*** long transcripts go to the model in pieces; one failed piece keeps the rest ***');
+    {
+      xinst.destroy(); xhost.innerHTML = '';
+      xst.set({ pieceWords: 50 }); await xst.flush();
+      const filler = Array.from({ length: 30 }, (_, i) => `This is filler sentence number ${i} about nothing much.`).join('\n');
+      const LONG = `${ROOTS_TRANSCRIPT}\n3:00\n${filler}`;
+      const calls = [];
+      const pieceAI = { ...fakeAI(ROOTS_QS),
+        chat: async (messages, opts = {}) => {
+          calls.push(messages[1].content);
+          if (calls.length === 2) return { ok: false, reason: 'The model gave up on this one.' };
+          return { ok: true, model: opts.model, ms: 5, text: JSON.stringify({ questions: ROOTS_QS }) };
+        } };
+      xinst = await mountX(pieceAI);
+      await sleep(700);
+      xhost.querySelector('[data-open="punctuation"]').click(); await sleep(80);
+      xhost.querySelector('[data-tq-open="punctuation"]').click(); await sleep(80);
+      const ta5 = xhost.querySelector('[data-tq-text]');
+      ta5.value = LONG; ta5.dispatchEvent(new Event('input', { bubbles: true }));
+      await sleep(50);
+      xhost.querySelector('[data-tq-make]').click();
+      await sleep(900);
+      const n = calls.length;
+      check('*** several model calls, one per piece ***', n >= 5, String(n));
+      check('each piece is told which part it is', calls.every((c, i) => c.includes(`part ${i + 1} of ${n}`)), calls.map((c) => c.slice(0, 160)).join(' || '));
+      check('*** and none is given a number of questions derived from the video ***', calls.every((c) => !/up to \d/i.test(c)));
+      check('the quiz still starts from the pieces that worked', !!xhost.querySelector('[data-tq-progress]'), tqText('.l-tq'));
+      check('...and says plainly that one part could not be read', /1 part of the transcript could not be read/.test(tqText('[data-tq-pieces-failed]')),
+        tqText('.l-tq'));
+      xst.set({ pieceWords: 900 }); await xst.flush();
+    }
+
     section('settings declared for the feature');
     {
       const f = Object.fromEntries((getManifest('lessons').settings || []).map((x) => [x.key, x]));
       check('requirement mode: correct answers (default) or points', f.requireBy?.default === 'correct'
         && f.requireBy.options.map((o) => o.value).join(',') === 'correct,points', JSON.stringify(f.requireBy));
-      check('the per-minutes rate and the minimum are choices (chat\'s 2 and 3 as defaults)',
-        f.perMinutes?.kind === 'choice' && f.perMinutes.default === 2 && f.minAnswers?.kind === 'choice' && f.minAnswers.default === 3);
+      check('*** the requirement is Mike\'s rule as four choices: first 5 min at 1 a minute, then 1 per 2.5, no floor ***',
+        f.firstMinutes?.kind === 'choice' && f.firstMinutes.default === 5 && f.firstEvery?.default === 1
+        && f.perMinutes?.kind === 'choice' && f.perMinutes.default === 2.5 && f.minAnswers?.kind === 'choice' && f.minAnswers.default === 1,
+        JSON.stringify([f.firstMinutes?.default, f.firstEvery?.default, f.perMinutes?.default, f.minAnswers?.default]));
+      check('*** how many are WRITTEN is its own choice, defaulting to no limit (the hard-coded 40 is gone) ***',
+        f.maxQuestions?.kind === 'choice' && f.maxQuestions.default === 0 && f.maxQuestions.options[0].label === 'No limit');
+      check('the transcript piece size is a choice (900 words by default)', f.pieceWords?.kind === 'choice' && f.pieceWords.default === 900);
       check('subject is text, default General, advanced (algebra.js\'s pattern)',
         f.subject?.kind === 'text' && f.subject.default === 'General' && f.subject.level === 'advanced');
       check('the AI model is a live choice with no options baked in', f.aiModel?.kind === 'choice' && !(f.aiModel.options || []).length);
