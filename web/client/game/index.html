@@ -35,6 +35,15 @@
   .g-try kbd{padding:0 .35em;border:1px solid var(--border);border-radius:5px;background:var(--surface);font:inherit;font-size:.9em}
   .g-status{min-height:1.5em;margin:14px 0 0;color:var(--text-soft)}
   .g-status.bad{color:var(--accent-warm-deep);font-weight:700}
+  .g-cat{display:flex;align-items:center;gap:14px;margin:0 0 22px;padding:12px 16px;border:1px solid var(--border);
+    border-radius:14px;background:var(--surface)}
+  .g-cat img{flex:none;width:56px;height:56px}
+  .g-cat p{flex:1;min-width:0;margin:0;color:var(--text-soft)}
+  .g-cat p b{color:var(--text-strong)}
+  .g-cat-set{margin:-12px 0 22px;padding:0 16px;color:var(--text-soft);font-size:.95rem}
+  .g-cat-set summary{cursor:pointer;padding:4px 0}
+  .g-cat-set label{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .g-cat-set select{font:inherit}
   .g-foot{margin-top:28px;font-size:.95rem;color:var(--text-soft)}
   .g-foot a{color:var(--link)}
   @media (max-width:560px){ .g-step{flex-wrap:wrap} .g-btn{margin-left:48px} }
@@ -48,6 +57,23 @@
     your picture on the wall and your name on a sign. These buttons build it for real. Every one of them
     is safe to press again: it finds what it already made instead of making another, and it leaves the rest of your screens alone.</p>
   <div id="note"></div>
+  <!-- NIMROD THE CAT. He appears only when this is pressed (or a later quest step asks for him),
+       never on his own; see cat_guide.js. -->
+  <section class="g-cat" aria-label="Nimrod the cat">
+    <img src="../design-assets/nimrod-cat/idle.svg" alt="" width="56" height="56">
+    <p><b>Nimrod the cat</b> can walk you through this, and then show you the bar and the settings
+      menu on your new profile.</p>
+    <button type="button" class="g-btn" data-cat-ask>Show me how</button>
+  </section>
+  <details class="g-cat-set">
+    <summary>Nimrod’s settings</summary>
+    <label>How much he says
+      <select data-cat-pref="chat"></select></label>
+    <label><input type="checkbox" data-cat-pref="speak"> Read his words aloud too</label>
+    <label><input type="checkbox" data-cat-pref="follow"> Move on by himself when you have done a step</label>
+    <label>If nobody touches the page, he closes after
+      <select data-cat-pref="restMinutes"></select></label>
+  </details>
   <ol class="g-steps">
     <li class="g-step" data-step="profile">
       <div class="g-what"><b>Make my profile</b>
@@ -82,7 +108,7 @@
     </ul>
   </section>
   <p class="g-status" id="status" role="status" aria-live="polite"></p>
-  <p class="g-foot">What comes next — the guide, and more of the game — is on its way.
+  <p class="g-foot">More of the game is on its way.
     <a href="../home.html">Back to Home</a></p>
 </main>
 
@@ -94,8 +120,47 @@ import { createLocalBackend } from '../local_store.js';
 import { authHeaders } from '../auth.js';
 import { pickCurrent, readLastPerson } from '../people.js';
 import { createGame, signWords } from './game.js';
+import { mountCat, readCatPrefs, writeCatPrefs, CHATTINESS, REST_CHOICES } from '../cat_guide.js';
+import { CAT_STEPS, GAME_PAGE, catGoThere, rememberCatProfile } from './cat_steps.js';
+import { createOutputBus } from '../output.js';
+import { defaultChannels } from '../output_channels.js';
 
 applyTheme(document.documentElement, DEFAULT_THEME);
+
+// ---- NIMROD THE CAT -------------------------------------------------------------------------
+// His words go to this page's own output bus, the same kind every screen has, so `say` becomes
+// speech wherever speech is available and the log records what he said. Built once, here.
+let catOutput = null;
+try { catOutput = createOutputBus({ channels: defaultChannels({}) }); }
+catch (err) { console.warn('game: no output bus, Nimrod will only show his words', err); }
+let cat = null;
+const catOpts = () => ({ steps: CAT_STEPS, path: GAME_PAGE, goThere: catGoThere(), output: catOutput });
+// A walk somebody already started (on this page or the profile) carries on; nothing else shows.
+const resumeCat = () => { if (!cat?.shown()) cat = mountCat(document.body, catOpts()); };
+document.querySelector('[data-cat-ask]').addEventListener('click', () => {
+  cat?.destroy();
+  // `start` begins the walk again from the top (steps already done are passed over by themselves).
+  cat = mountCat(document.body, { ...catOpts(), start: true });
+});
+// His settings. Kept in this browser, the same place his position is (see cat_guide.js).
+{
+  const prefs = readCatPrefs();
+  const chatSel = document.querySelector('[data-cat-pref="chat"]');
+  chatSel.innerHTML = CHATTINESS.map((c) => `<option value="${c.value}">${c.label}</option>`).join('');
+  chatSel.value = prefs.chat;
+  const restSel = document.querySelector('[data-cat-pref="restMinutes"]');
+  restSel.innerHTML = REST_CHOICES.map((m) => `<option value="${m}">${m ? `${m} minutes` : 'never'}</option>`).join('');
+  restSel.value = String(prefs.restMinutes);
+  document.querySelector('[data-cat-pref="speak"]').checked = prefs.speak;
+  document.querySelector('[data-cat-pref="follow"]').checked = prefs.follow;
+  document.querySelector('.g-cat-set').addEventListener('change', (e) => {
+    const key = e.target.dataset?.catPref;
+    if (!key) return;
+    const value = e.target.type === 'checkbox' ? e.target.checked
+      : key === 'restMinutes' ? Number(e.target.value) : e.target.value;
+    if (cat?.shown()) cat.setPrefs({ [key]: value }); else writeCatPrefs(undefined, { [key]: value });
+  });
+}
 
 const $ = (s) => document.querySelector(s);
 const statusEl = $('#status');
@@ -164,6 +229,7 @@ async function backendFor() {
       const li = $(`[data-step="${step}"]`);
       if (done) li.dataset.done = ''; else delete li.dataset.done;
     };
+    rememberCatProfile(st.profileId);
     mark('profile', !!st.profileId);
     mark('picture', !!st.pictureId);
     mark('sign', !!st.signId);
@@ -208,6 +274,7 @@ async function backendFor() {
   });
 
   await paint();
+  resumeCat();
 })();
 
 function esc(s) {

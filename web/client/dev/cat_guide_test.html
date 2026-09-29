@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nimrod the cat — asked for, never a gate — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  #sandbox{position:relative;height:1px;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>Nimrod the cat (game step 1's walkthrough)</h1>
+
+<div class="warn">
+  Mike, 2026-09-29: the cat appears only when asked, never uninvited; always dismissible (Close and
+  Escape); how chatty he is is a setting; his words also go to the output bus. And the project's
+  invariant: <i>a screen must never enter a state that only an input can leave, when the person in
+  front of it cannot give that input.</i> The gate checks carry negative controls: the guard is
+  removed, the check is confirmed to go red, and it is restored.
+</div>
+
+<div id="sandbox"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mountCat, startCat, catStarted, resetCat, readCatPrefs, writeCatPrefs, catWords, poseToward,
+         catImageURL, CAT_KEYS, CAT_PREFS_KEY, CAT_SOURCE, CHATTINESS, DEFAULT_CAT_PREFS, POSES,
+         REST_CHOICES } from '../cat_guide.js';
+import { CAT_STEPS, GAME_PAGE, PROFILE_PAGE, CAT_PROFILE_KEY, catGoThere, catPathOnKiosk,
+         rememberCatProfile } from '../game/cat_steps.js';
+import { startTour, mountTour, findTarget, TOUR_KEYS, allTourSteps } from '../tour.js';
+import { STEPS } from '../steps.js';
+import { createOutputBus } from '../output.js';
+import { createLocalBackend, createLocalMediaSources } from '../local_store.js';
+import { createGame, kioskURL } from '../game/game.js';
+import { mountKiosk } from '../kiosk.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
+
+// A storage that is a plain object, so a test never touches the real one.
+function fakeStore(seed = {}) {
+  const m = new Map(Object.entries(seed));
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => m.set(k, String(v)),
+    removeItem: (k) => m.delete(k),
+    dump: () => Object.fromEntries(m),
+  };
+}
+// An output bus that writes down what it was asked to say.
+function fakeOutput() {
+  let n = 0;
+  const o = { said: [], cancelled: [],
+    say(text, opts = {}) { const id = `s${++n}`; o.said.push({ id, text, source: opts.source }); return id; },
+    cancel(id) { o.cancelled.push(id); return true; } };
+  return o;
+}
+// Fake timers, for the rest clock.
+function fakeTimers() {
+  let n = 0; const live = new Map();
+  return {
+    setTimer: (fn, ms) => { const id = ++n; live.set(id, { fn, ms }); return id; },
+    clearTimer: (id) => { live.delete(id); },
+    fireAll: () => { for (const [id, t] of [...live]) { live.delete(id); t.fn(); } },
+    pending: () => [...live.values()].map((t) => t.ms),
+  };
+}
+const hosts = [];
+const host = () => { const d = document.createElement('div'); document.body.append(d); hosts.push(d); return d; };
+const mount = (opts = {}) => mountCat(host(), {
+  steps: CAT_STEPS, storage: fakeStore(), path: GAME_PAGE, start: true, reducedMotion: true, ...opts,
+});
+const catsInDom = () => document.querySelectorAll('[data-cat]').length;
+const WALK = allTourSteps(CAT_STEPS);
+const GAME_STEPS = WALK.filter((s) => s.page === GAME_PAGE);
+const PROFILE_STEPS = WALK.filter((s) => s.page === PROFILE_PAGE);
+const sandbox = document.getElementById('sandbox');
+const resetSandbox = () => {
+  sandbox.replaceChildren();
+  sandbox.style.cssText = 'position:relative;height:1px;overflow:hidden';
+};
+
+try {
+// =====================================================================================
+section('*** NEVER SHOWN WITHOUT A REQUEST ***');
+{
+  for (const p of [GAME_PAGE, PROFILE_PAGE, '/kiosk.html']) {
+    const c = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore(), path: p, reducedMotion: true });
+    check(`a browser that never asked gets no cat on ${p}`, c === null && catsInDom() === 0);
+  }
+  // NEGATIVE CONTROL: the check above must be able to go red. With the start gate removed, the
+  // same call DOES render — so the null above is the gate, not a mount that silently failed.
+  const ungated = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore(), path: GAME_PAGE,
+    reducedMotion: true, requireStarted: false });
+  check('NEGATIVE CONTROL: without the start gate the same call renders a cat', !!ungated && catsInDom() === 1);
+  ungated?.destroy();
+  check('...and destroying it leaves nothing behind', catsInDom() === 0);
+
+  const store = fakeStore();
+  startCat(CAT_STEPS, store);
+  check('startCat (the "Show me how" press) begins a walk', catStarted(store));
+  const resumed = mountCat(host(), { steps: CAT_STEPS, storage: store, path: GAME_PAGE, reducedMotion: true });
+  check('once asked, a plain mount picks the walk up (it survives a page change)', !!resumed && resumed.index() === 0);
+  resumed.close();
+  check('closed means closed: a plain mount afterwards shows nothing',
+    mountCat(host(), { steps: CAT_STEPS, storage: store, path: GAME_PAGE, reducedMotion: true }) === null);
+  const again = mountCat(host(), { steps: CAT_STEPS, storage: store, path: GAME_PAGE, reducedMotion: true, start: true });
+  check('...but asking again works', !!again && again.index() === 0);
+  again.destroy();
+
+  // TWO WALKS, TWO POSITIONS. The kiosk mounts the site tour and the cat side by side.
+  const both = fakeStore();
+  startTour(STEPS, both);
+  check('starting the SITE tour does not summon the cat',
+    mountCat(host(), { steps: CAT_STEPS, storage: both, path: GAME_PAGE, reducedMotion: true }) === null);
+  const only = fakeStore();
+  startCat(CAT_STEPS, only);
+  check('starting the cat does not summon the site tour',
+    mountTour(host(), { steps: STEPS, storage: only, path: '/' }) === null);
+  check('their storage keys differ', CAT_KEYS.pos !== TOUR_KEYS.pos && CAT_KEYS.done !== TOUR_KEYS.done);
+  resetCat(only);
+  check('resetCat forgets the walk', !catStarted(only));
+}
+
+// =====================================================================================
+section('*** NEVER A GATE — the page underneath stays usable ***');
+{
+  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:180px;height:44px;z-index:1';
+  const under = document.createElement('button');
+  under.textContent = 'under the cat';
+  under.style.cssText = 'width:100%;height:100%';
+  let clicks = 0;
+  under.addEventListener('click', () => { clicks++; });
+  sandbox.replaceChildren(under);
+  under.focus();
+
+  const c = mount();
+  check('the cat is up', !!c && c.shown());
+  check('he took no focus: what had focus still has it', document.activeElement === under,
+    `activeElement <${document.activeElement?.tagName?.toLowerCase()}>`);
+  check('nothing of his is aria-modal', !c.el.querySelector('[aria-modal="true"]') && c.el.getAttribute('aria-modal') !== 'true');
+  check('the overlay takes no pointer events', c.el.style.pointerEvents === 'none', c.el.style.pointerEvents);
+  const panel = c.el.querySelector('[data-tour-panel]');
+  check('...only his own panel does', panel.style.pointerEvents === 'auto', panel.style.pointerEvents);
+
+  const r = under.getBoundingClientRect();
+  const px = [r.left + r.width / 2, r.top + r.height / 2];
+  if (!(innerWidth > px[0] && innerHeight > px[1])) {
+    check(`NOT RUN: hit test needs a real viewport (this one is ${innerWidth}×${innerHeight})`, true);
+  } else {
+    check('*** a control underneath him is still what a click lands on ***',
+      document.elementFromPoint(px[0], px[1]) === under);
+    c.el.style.pointerEvents = 'auto';
+    check('NEGATIVE CONTROL: with pointer-events removed, the overlay DOES block it',
+      document.elementFromPoint(px[0], px[1]) !== under);
+    c.el.style.pointerEvents = 'none';
+  }
+  under.click();
+  check('a button underneath works while he is up', clicks === 1);
+
+  // ONE VERB IS ENOUGH TO LEAVE. From every step, Next pressed enough times ends the walk.
+  let stuck = null;
+  for (let s = 0; s < WALK.length; s++) {
+    const store = fakeStore({ [CAT_KEYS.pos]: WALK[s].id });
+    const w = mountCat(host(), { steps: CAT_STEPS, storage: store, path: WALK[s].page, reducedMotion: true });
+    let presses = 0;
+    while (w.shown() && presses < WALK.length * 3) { w.next(); presses++; }
+    if (w.shown()) { stuck = WALK[s].id; w.destroy(); }
+  }
+  check('*** Next alone always ends the walk, from every step ***', stuck === null, `stuck at ${stuck}`);
+  c.destroy();
+  resetSandbox();
+}
+
+// =====================================================================================
+section('if nobody answers: he waits, harmlessly, and then closes himself');
+{
+  const t = fakeTimers();
+  let reason = null;
+  const c = mount({ setTimer: t.setTimer, clearTimer: t.clearTimer, onFinish: (why) => { reason = why; } });
+  check(`the default rest is ${DEFAULT_CAT_PREFS.restMinutes} minutes`,
+    t.pending().includes(DEFAULT_CAT_PREFS.restMinutes * 60000), JSON.stringify(t.pending()));
+  window.dispatchEvent(new PointerEvent('pointerdown'));
+  check('somebody touching the page restarts the clock (still exactly one clock)',
+    t.pending().filter((ms) => ms === DEFAULT_CAT_PREFS.restMinutes * 60000).length === 1);
+  t.fireAll();
+  check('*** after the rest time with nobody there, he is gone ***', !c.shown() && catsInDom() === 0);
+  check('...and says why', reason === 'rested', reason);
+
+  const t0 = fakeTimers();
+  const never = mount({ setTimer: t0.setTimer, clearTimer: t0.clearTimer,
+    storage: fakeStore({ [CAT_PREFS_KEY]: JSON.stringify({ restMinutes: 0 }) }) });
+  check('restMinutes 0 means he never closes himself', !t0.pending().some((ms) => ms >= 60000));
+  never.destroy();
+  check('the rest choices offered include never', REST_CHOICES.includes(0));
+}
+
+// =====================================================================================
+section('*** DISMISS: Close, and Escape — and the page is fully usable after ***');
+{
+  const o = fakeOutput();
+  const store = fakeStore();
+  const c = mount({ storage: store, output: o });
+  const close = c.el.querySelector('[data-tour-skip]');
+  check('there is one obvious Close', !!close && close.textContent.trim() === 'Close');
+  close.click();
+  check('Close removes him', !c.shown() && catsInDom() === 0);
+  check('...records that he was closed', store.getItem(CAT_KEYS.done) === '1');
+  check('...and takes back what he was saying', o.cancelled.includes(o.said.at(-1)?.id));
+
+  // ESCAPE. A window listener in the BUBBLE phase stands in for the kiosk's own (which reads
+  // Escape as "open the settings menu"). One Escape must close him and not also do that.
+  let seen = 0;
+  const bubble = (e) => { if (e.key === 'Escape') seen++; };
+  window.addEventListener('keydown', bubble);
+  const esc = (target) => {
+    const ev = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    target.dispatchEvent(ev);
+    return ev;
+  };
+  const e1 = mount();
+  const ev = esc(document.body);
+  check('*** Escape closes him ***', !e1.shown() && catsInDom() === 0);
+  check('...and does not also reach the page (no menu opening behind him)', seen === 0 && ev.defaultPrevented);
+
+  // NEGATIVE CONTROL for the one above: with him gone, the same Escape reaches the page.
+  esc(document.body);
+  check('NEGATIVE CONTROL: with no cat, Escape reaches the page as before', seen === 1);
+
+  // Escape that belongs to something else. The settings menu is aria-modal and closes on its own
+  // Escape; a text box uses Escape to cancel typing. He steps aside for both.
+  const modal = document.createElement('div');
+  modal.setAttribute('aria-modal', 'true');
+  const inModal = document.createElement('button');
+  modal.append(inModal);
+  const box = document.createElement('input');
+  sandbox.append(modal, box);
+  const e2 = mount();
+  esc(inModal);
+  check('Escape inside an open menu is the menu’s: he stays', e2.shown() && seen === 2);
+  esc(box);
+  check('Escape in a text box is the box’s: he stays', e2.shown() && seen === 3);
+  esc(e2.el.querySelector('[data-tour-next]'));
+  check('Escape on his own buttons closes him', !e2.shown());
+  window.removeEventListener('keydown', bubble);
+  resetSandbox();
+}
+
+// =====================================================================================
+section('*** EVERY STEP’S WORDS GO TO THE OUTPUT BUS ***');
+{
+  // The whole walk, both pages, at the default chattiness.
+  const o = fakeOutput();
+  const g = mount({ output: o, goThere: catGoThere(fakeStore()) });
+  while (g.shown() && !g.waiting()) g.next();
+  const heardGame = o.said.map((x) => x.text);
+  check('each game-page step was said, in order',
+    GAME_STEPS.every((s, k) => heardGame[k] === catWords(s, 'some')), JSON.stringify(heardGame));
+  check('...and so was the holding line (where to go next)',
+    heardGame.at(-1) === catGoThere(fakeStore())(PROFILE_PAGE).say, heardGame.at(-1));
+  check('every one is marked as his', o.said.every((x) => x.source === CAT_SOURCE));
+  check('each superseded line was taken back when he moved on',
+    o.said.slice(0, -1).every((x) => o.cancelled.includes(x.id)));
+  g.destroy();
+
+  const o2 = fakeOutput();
+  const p = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+    path: PROFILE_PAGE, reducedMotion: true, output: o2 });
+  while (p.shown()) p.next();
+  check('each profile step was said, in order',
+    PROFILE_STEPS.every((s, k) => o2.said[k]?.text === catWords(s, 'some')), JSON.stringify(o2.said.map((x) => x.text)));
+  check(`all ${WALK.length} steps, between the two pages`,
+    o.said.length - 1 + o2.said.length === WALK.length);
+
+  // THROUGH THE REAL BUS, to a channel: not just "say was called" but "a channel was handed it".
+  const heard = [];
+  const bus = createOutputBus({ channels: {
+    speech: { concurrency: 1, present(item, { done }) { heard.push(item); done(); return null; } } } });
+  const r = mount({ output: bus });
+  check('*** through a real output bus, his first line reaches the speech channel ***',
+    heard.length === 1 && heard[0].text === catWords(WALK[0], 'some') && heard[0].verb === 'say'
+      && heard[0].source === CAT_SOURCE, JSON.stringify(heard));
+  r.next();
+  check('...and the next one too', heard.length === 2 && heard[1].text === catWords(WALK[1], 'some'));
+  r.destroy();
+
+  // Not reading aloud: the words still show; nothing is sent.
+  const o3 = fakeOutput();
+  const quiet = mount({ output: o3, storage: fakeStore({ [CAT_PREFS_KEY]: JSON.stringify({ speak: false }) }) });
+  check('with "read aloud" off, nothing is sent', o3.said.length === 0);
+  check('...and the words are still on screen',
+    quiet.el.querySelector('[data-tour-say]').textContent === catWords(WALK[0], 'some'));
+  quiet.destroy();
+  const none = mount({ output: null });
+  check('no output bus at all is fine: he shows his words', none.shown());
+  none.destroy();
+}
+
+// =====================================================================================
+section('*** HOW CHATTY HE IS IS A SETTING, AND IT CHANGES WHAT HE SAYS ***');
+{
+  check('three levels, default "some"',
+    CHATTINESS.map((c) => c.value).join() === 'few,some,lots' && DEFAULT_CAT_PREFS.chat === 'some');
+  check('every step has all three lengths', WALK.every((s) => s.brief && s.say && s.more),
+    WALK.filter((s) => !(s.brief && s.say && s.more)).map((s) => s.id).join());
+  check('"a few" is shorter than "some", which is shorter than "lots", on every step',
+    WALK.every((s) => catWords(s, 'few').length < catWords(s, 'some').length
+      && catWords(s, 'some').length < catWords(s, 'lots').length));
+  check('"lots" is "some" plus more, not different advice',
+    WALK.every((s) => catWords(s, 'lots').startsWith(catWords(s, 'some'))));
+
+  const store = fakeStore({ [CAT_PREFS_KEY]: JSON.stringify({ chat: 'few' }) });
+  const o = fakeOutput();
+  const c = mount({ storage: store, output: o });
+  const shown = () => c.el.querySelector('[data-tour-say]').textContent;
+  check('set to "a few": the short line is shown', shown() === WALK[0].brief, shown());
+  check('...and the short line is what is said', o.said.at(-1).text === WALK[0].brief);
+  const btn = c.el.querySelector('[data-cat-chat]');
+  check('the setting is on his panel, one press', !!btn && /A few/.test(btn.textContent), btn?.textContent);
+  btn.click();
+  check('pressing it steps to "some", and remembers it', readCatPrefs(store).chat === 'some');
+  check('...shows the longer line', shown() === WALK[0].say, shown());
+  check('...and says it (the old one taken back)', o.said.at(-1).text === WALK[0].say
+    && o.cancelled.includes(o.said.at(-2).id));
+  c.el.querySelector('[data-cat-chat]').click();
+  check('again: "lots"', readCatPrefs(store).chat === 'lots' && shown() === catWords(WALK[0], 'lots'));
+  c.el.querySelector('[data-cat-chat]').click();
+  check('...and round to "a few"', readCatPrefs(store).chat === 'few');
+  c.setPrefs({ chat: 'some' });
+  check('setPrefs (the game page’s settings) does the same', shown() === WALK[0].say);
+  c.destroy();
+
+  const bad = fakeStore({ [CAT_PREFS_KEY]: '{"chat":"shouting","speak":"yes","restMinutes":-3}' });
+  const pr = readCatPrefs(bad);
+  check('nonsense in storage falls back to the defaults, field by field',
+    pr.chat === 'some' && pr.speak === true && pr.restMinutes === DEFAULT_CAT_PREFS.restMinutes, JSON.stringify(pr));
+  check('broken JSON does too', readCatPrefs(fakeStore({ [CAT_PREFS_KEY]: '{' })).chat === 'some');
+  const w = writeCatPrefs(fakeStore(), { speak: false });
+  check('writeCatPrefs keeps the other defaults', w.speak === false && w.chat === 'some' && w.follow === true);
+}
+
+// =====================================================================================
+section('*** REDUCED MOTION USES THE STILL DRAWING ***');
+{
+  let loads = 0;
+  const loadSvg = async () => { loads++; return '<svg xmlns="http://www.w3.org/2000/svg"></svg>'; };
+  const still = mount({ reducedMotion: true, loadSvg });
+  const img = still.el.querySelector('[data-cat-figure] img');
+  check('reduced motion: his picture is an <img> of the still pose',
+    !!img && img.src.endsWith(`/${still.pose()}.svg`) && !img.src.includes('-animated'), img?.src);
+  await tick(10);
+  check('...no animated drawing was even fetched', loads === 0 && still.motion() === 'still');
+  check('...and no inline SVG is on the page', !still.el.querySelector('[data-cat-figure] svg'));
+  still.destroy();
+
+  const urls = [];
+  const svgText = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" onload="window.__catPwned=1">'
+    // Split so the HTML parser does not read a closing script tag inside this one.
+    + '<scr' + 'ipt>window.__catPwned=1</scr' + 'ipt><g class="lid"><circle r="4" onclick="x()"/></g>'
+    + '<a href="https://example.com"><rect width="1" height="1"/></a></svg>';
+  const moving = mount({ reducedMotion: false, loadSvg: async (u) => { urls.push(u); return svgText; } });
+  check('motion allowed: the still is shown at once, before anything loads',
+    !!moving.el.querySelector('[data-cat-figure] img'));
+  await tick(20);
+  const fig = moving.el.querySelector('[data-cat-figure]');
+  check('...then the animated drawing replaces it', moving.motion() === 'animated' && !!fig.querySelector('svg'),
+    moving.motion());
+  check('...fetched as the -animated file', urls.length >= 1 && urls.every((u) => u.endsWith('-animated.svg')), urls.join());
+  check('...inside the .nimrod-cat wrapper motion.css animates, with the pose on it',
+    fig.classList.contains('nimrod-cat') && fig.dataset.pose === moving.pose());
+  check('...and motion.css is linked once', document.querySelectorAll('link[data-cat-motion]').length === 1);
+  check('inlining strips scripts, handlers and outside links, whatever the file says',
+    !fig.querySelector('script') && ![...fig.querySelectorAll('*')].some((el) =>
+      [...el.attributes].some((a) => /^on/i.test(a.name) || (/href$/i.test(a.name) && !a.value.startsWith('#'))))
+      && !window.__catPwned);
+  moving.destroy();
+
+  // The files themselves, as served.
+  let bad = [];
+  for (const p of POSES) {
+    for (const animated of [false, true]) {
+      const url = catImageURL(p, animated);
+      const r = await fetch(url);
+      const t = r.ok ? await r.text() : '';
+      if (!r.ok) { bad.push(`${url}: ${r.status}`); continue; }
+      if (/<script|\son[a-z]+\s*=|href\s*=|url\(\s*(?!#)|<text|<foreignObject|<image|Cici|Christine/i.test(t)) bad.push(`${url}: content`);
+    }
+  }
+  check(`all ${POSES.length * 2} pose files are served, and none has a script, handler, outside link or text`,
+    bad.length === 0, bad.join('; '));
+  const css = await fetch(new URL('../design-assets/nimrod-cat/motion.css', location.href));
+  const cssText = css.ok ? await css.text() : '';
+  check('motion.css is served, and every animation in it sits inside the no-preference guard',
+    css.ok && /prefers-reduced-motion:\s*no-preference/.test(cssText)
+      && !/animation\s*:/.test(cssText.split('@media')[0]), css.status);
+}
+
+// =====================================================================================
+section('he points at what he is talking about');
+{
+  const R = (left, top, w = 10, h = 10) => ({ left, top, width: w, height: h });
+  check('target above: point-up', poseToward(R(100, 500), R(100, 10)) === 'point-up');
+  check('target below: point-down', poseToward(R(100, 10), R(100, 500)) === 'point-down');
+  check('target left: point-left', poseToward(R(500, 100), R(10, 100)) === 'point-left');
+  check('target right: point-right', poseToward(R(10, 100), R(500, 100)) === 'point-right');
+  check('no target: talking', poseToward(R(0, 0), null) === 'talking');
+
+  const c = mount();
+  check('the first step waves hello', c.pose() === 'wave', c.pose());
+  c.destroy();
+  const d = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-done' }),
+    path: PROFILE_PAGE, reducedMotion: true });
+  check('the last step is happy', d.pose() === 'happy', d.pose());
+  d.destroy();
+
+  // A real target at the top-left; his panel is at the bottom.
+  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:120px;height:40px';
+  const b = document.createElement('button');
+  b.setAttribute('data-do', 'profile');
+  b.style.cssText = 'width:100%;height:100%';
+  sandbox.replaceChildren(b);
+  const s = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-profile' }),
+    path: GAME_PAGE, reducedMotion: true });
+  if (innerHeight > 200) {
+    check('a target up and to the left: his paw points up at it (panel below)', s.pose() === 'point-up', s.pose());
+    check('...and the ring is drawn around it', !s.el.querySelector('[data-tour-ring]').hidden);
+  } else {
+    check(`NOT RUN: pointing needs a real viewport (${innerWidth}×${innerHeight})`, true);
+  }
+  s.destroy();
+  resetSandbox();
+}
+
+// =====================================================================================
+section('following along: he notices what you did, and never does it for you');
+{
+  // Already done on arrival: skipped, and not said.
+  const done = document.createElement('li');
+  done.setAttribute('data-step', 'profile');
+  done.setAttribute('data-done', '');
+  sandbox.replaceChildren(done);
+  const o = fakeOutput();
+  const c = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-profile' }),
+    path: GAME_PAGE, reducedMotion: true, output: o });
+  await tick(0);
+  check('a step already done is passed over', c.step().id === 'cat-picture', c.step().id);
+  check('...without saying it', !o.said.some((x) => x.text === catWords(WALK[1], 'some')));
+  c.destroy();
+
+  // Done while he watches.
+  sandbox.replaceChildren();
+  const c2 = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-profile' }),
+    path: GAME_PAGE, reducedMotion: true });
+  const li = document.createElement('li');
+  li.setAttribute('data-step', 'profile');
+  sandbox.append(li);
+  await tick(150);
+  check('nothing done yet: he waits', c2.step().id === 'cat-profile');
+  li.setAttribute('data-done', '');
+  await tick(200);
+  check('*** the person does it: he moves on by himself ***', c2.step().id === 'cat-picture', c2.step().id);
+  c2.destroy();
+
+  // Off: he waits for Next.
+  li.removeAttribute('data-done');
+  const c3 = mountCat(host(), { steps: CAT_STEPS, path: GAME_PAGE, reducedMotion: true,
+    storage: fakeStore({ [CAT_KEYS.pos]: 'cat-profile', [CAT_PREFS_KEY]: JSON.stringify({ follow: false }) }) });
+  li.setAttribute('data-done', '');
+  await tick(200);
+  check('with "move on by himself" off, he waits', c3.step().id === 'cat-profile');
+  c3.destroy();
+
+  // Pressing the target itself, where it leaves the page: position saved in the same click.
+  const open = document.createElement('a');
+  open.setAttribute('data-open', '');
+  open.setAttribute('aria-disabled', 'true');
+  open.textContent = 'Open it';
+  sandbox.replaceChildren(open);
+  const store = fakeStore({ [CAT_KEYS.pos]: 'cat-open' });
+  const c4 = mountCat(host(), { steps: CAT_STEPS, storage: store, path: GAME_PAGE, reducedMotion: true });
+  open.click();
+  check('a disabled Open does not move him on', c4.step().id === 'cat-open');
+  open.setAttribute('aria-disabled', 'false');
+  open.click();
+  check('pressing Open moves him on in the same click', c4.step().id === 'cat-bar' && c4.waiting());
+  check('...with the position already saved for the next page', store.getItem(CAT_KEYS.pos) === 'cat-bar');
+  c4.destroy();
+  resetSandbox();
+
+  // Already on the page he was sending you to: jump forward, never back.
+  const s1 = fakeStore({ [CAT_KEYS.pos]: 'cat-profile' });
+  const j = mountCat(host(), { steps: CAT_STEPS, storage: s1, path: PROFILE_PAGE, reducedMotion: true });
+  check('on the profile with the walk still on the game page: he jumps to the profile’s first step',
+    j.step().id === 'cat-bar' && !j.waiting(), j.step().id);
+  j.destroy();
+  const s2 = fakeStore({ [CAT_KEYS.pos]: 'cat-words' });
+  const k = mountCat(host(), { steps: CAT_STEPS, storage: s2, path: GAME_PAGE, reducedMotion: true });
+  check('back on the game page mid-profile: no jump backwards, he holds with a link', k.step().id === 'cat-words' && k.waiting());
+  k.destroy();
+}
+
+// =====================================================================================
+section('which screen is the profile');
+{
+  const s = fakeStore();
+  check('nothing remembered: any screen will do', catPathOnKiosk('abc', s) === PROFILE_PAGE);
+  rememberCatProfile('p1', s);
+  check('the remembered profile is the profile', catPathOnKiosk('p1', s) === PROFILE_PAGE);
+  check('another screen is not', catPathOnKiosk('p2', s) === '/kiosk.html');
+  const go = catGoThere(s)(PROFILE_PAGE);
+  check('the link to carry on opens that profile on the kiosk', go.href === kioskURL('p1'), go.href);
+  check('with no profile yet, the link goes to the game page', catGoThere(fakeStore())(PROFILE_PAGE).href === GAME_PAGE);
+  const w = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar', [CAT_PROFILE_KEY]: 'p1' }),
+    path: '/kiosk.html', reducedMotion: true, goThere: catGoThere(fakeStore({ [CAT_PROFILE_KEY]: 'p1' })) });
+  const a = w.el.querySelector('[data-tour-go]');
+  check('on another screen he holds, with a link to the profile', w.waiting() && a?.getAttribute('href') === kioskURL('p1'),
+    a?.getAttribute('href'));
+  check('...and draws no ring around this screen’s bar (it is not the one he means)',
+    w.el.querySelector('[data-tour-ring]').hidden);
+  w.destroy();
+}
+
+// =====================================================================================
+section('*** THE STEPS POINT AT THE REAL CONTROLS ***');
+{
+  // The game page, as served.
+  const html = await (await fetch('../game/index.html')).text();
+  const gdoc = new DOMParser().parseFromString(html, 'text/html');
+  const gameTargets = GAME_STEPS.filter((s) => s.target);
+  check('every game-page step’s target is on the real game page',
+    gameTargets.every((s) => gdoc.querySelector(s.target)), gameTargets.filter((s) => !gdoc.querySelector(s.target)).map((s) => s.id).join());
+  check('...and every "done" marker names a real step row',
+    GAME_STEPS.filter((s) => s.doneWhen).every((s) => gdoc.querySelector(s.doneWhen.replace('[data-done]', ''))));
+  check('the game page has the visible "Show me how"', !!gdoc.querySelector('[data-cat-ask]'));
+
+  // THE REAL KIOSK, on a real profile made by the real game, signed out (browser storage).
+  const backend = createLocalBackend();
+  const { profiles } = backend;
+  const person = await profiles.addPerson('Robin Cat-Test');
+  let kroot = null, k = null, cat = null;
+  try {
+    const game = createGame({ profiles, makeSettings: (pid) => backend.makeSettings(pid),
+      makeInstanceState: (pid, id) => backend.makeState(id, {}, pid),
+      makePersonState: (pid, key) => backend.makePersonState(pid, key), personId: person.id, personName: 'Robin' });
+    const { profileId } = await game.makeProfile();
+    await game.hangPicture();
+    await game.putUpSign();
+    kroot = document.createElement('div');
+    kroot.style.cssText = 'position:fixed;inset:0;z-index:0';
+    document.body.append(kroot);
+    k = await mountKiosk(kroot, { user: null, profileId, profiles, makeState: backend.makeState,
+      makeEvents: backend.makeEvents, sources: createLocalMediaSources() });
+    check('the kiosk mounted the game’s profile', k.screenId() === profileId && k.slotCount() === 2, k.slotCount());
+
+    const unresolved = PROFILE_STEPS.filter((s) => s.target && !findTarget(document, s.target)).map((s) => s.id);
+    check('menu closed: every profile step points at something real on the kiosk', unresolved.length === 0, unresolved.join());
+    check('the bar step rings the transport bar', findTarget(document, WALK.find((s) => s.id === 'cat-bar').target)?.matches('[data-controls]'));
+    check('the panel step rings Panel ▸', findTarget(document, WALK.find((s) => s.id === 'cat-panel').target)?.matches('[data-act="panel"]'));
+    check('the gear step rings the gear', findTarget(document, WALK.find((s) => s.id === 'cat-gear').target)?.matches('[data-act="settings"]'));
+    const gear = WALK.find((s) => s.id === 'cat-gear');
+    check('...and is not "done" while the menu is shut', !document.querySelector(gear.doneWhen));
+
+    // Choose a panel the way the step says to, then open the menu.
+    document.querySelector('[data-act="panel"]').click();
+    const opened = k.menu.open();
+    check('the settings menu opens', opened !== false && k.menu.isOpen());
+    check('the gear step’s "done" matches the menu being open', !!document.querySelector(gear.doneWhen));
+    const rowFor = (id) => findTarget(document, WALK.find((s) => s.id === id).target);
+    check('Words: the real "Words" row', rowFor('cat-words')?.matches('.st-item[data-id="set:label"]'), rowFor('cat-words')?.outerHTML?.slice(0, 80));
+    check('Colours: the real "Colours" row', rowFor('cat-room')?.matches('.st-item[data-id="set:theme"]'));
+    check('Close: the real "Close menu" row', rowFor('cat-close')?.matches('.st-item[data-id="close"]'));
+    check('Picture: the real "Picture" or "Picture from" row',
+      rowFor('cat-picture-rows')?.matches('.st-item[data-id="set:image"], .st-item[data-id="set:imageFrom"]'),
+      rowFor('cat-picture-rows')?.outerHTML?.slice(0, 80));
+    check('the labels he names are the labels on those rows',
+      /Words/.test(rowFor('cat-words')?.textContent) && /Colours/.test(rowFor('cat-room')?.textContent)
+        && /Close menu/.test(rowFor('cat-close')?.textContent));
+
+    // The cat on the kiosk, speaking through the kiosk's own bus.
+    check('the kiosk hands out its output bus', typeof k.output?.()?.say === 'function');
+    cat = mountCat(document.body, { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-words' }),
+      path: catPathOnKiosk(k.screenId(), fakeStore()), reducedMotion: true, output: k.output() });
+    check('on the kiosk he shows the step, with the menu still open underneath', cat.shown() && k.menu.isOpen());
+    check('...his words went to the kiosk’s bus (it gave back an id)', typeof cat.lastSaid() === 'string', String(cat.lastSaid()));
+    if (innerHeight > 200) {
+      check('...and the ring is on the Words row', !cat.el.querySelector('[data-tour-ring]').hidden);
+    }
+    // Escape with focus in the menu: the MENU closes, he stays.
+    const inMenu = document.querySelector('.kiosk [data-panel]');
+    inMenu.focus();
+    inMenu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    check('Escape in the open menu closes the menu, not him', !k.menu.isOpen() && cat.shown());
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    check('the next Escape closes him — and does not open the menu behind him', !cat.shown() && !k.menu.isOpen());
+  } finally {
+    try { cat?.destroy(); } catch { /* already gone */ }
+    try { k?.destroy(); } catch (e) { console.warn(e); }
+    kroot?.remove();
+    for (const p of await profiles.list(person.id)) await profiles.remove(p.id);
+    await profiles.removePerson(person.id);
+  }
+}
+
+// =====================================================================================
+section('his bus topics are his own');
+{
+  const subs = new Map();
+  const bus = { subscribe: (t, fn) => { subs.set(t, fn); return () => subs.delete(t); } };
+  const c = mount({ bus });
+  subs.get('tour/next')?.();
+  check('the site tour’s "next" does not move him', c.index() === 0 && !subs.has('tour/next'));
+  subs.get('nimrod-cat/next')();
+  check('his own does', c.index() === 1);
+  subs.get('nimrod-cat/skip')();
+  check('...and his own "skip" closes him', !c.shown());
+}
+} catch (err) {
+  check(`the suite threw: ${err?.message || err}`, false, err?.stack || '');
+}
+
+// =====================================================================================
+// THE SUMMARY GOES LAST, AND STAYS LAST. Anything added goes ABOVE this line.
+// =====================================================================================
+hosts.forEach((h) => h.remove());
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+/* NIMROD'S MOTION. Load this and inline a *-animated.svg (GuideCat does both). As an <img>, the
+   same file is the still drawing, because a page's CSS can't reach inside an <img>.
+
+   Everything that moves is inside prefers-reduced-motion: no-preference. Nothing flashes: no large
+   area changes brightness, and nothing repeats faster than about 2.5 times a second. */
+
+/* resting state, outside the guard: lids open, so a still cat never has his eyes shut */
+.nimrod-cat .lid{transform-box:fill-box;transform-origin:center top;transform:scaleY(0)}
+
+@media (prefers-reduced-motion: no-preference){
+  /* a slow cat-blink every 9 s */
+  .nimrod-cat .lid{animation:ncBlink 9s ease-in-out infinite}
+  .nimrod-cat .tail{transform-box:view-box;transform-origin:142px 180px;animation:ncSway 5s ease-in-out infinite alternate}
+  .nimrod-cat .ear{transform-box:fill-box;transform-origin:20% 95%;animation:ncTwitch 7s ease-in-out infinite}
+  /* speech rhythm, deliberately uneven so it never reads as a regular on/off */
+  .nimrod-cat .mouth{transform-box:fill-box;transform-origin:center top;animation:ncTalk 2.4s ease-in-out infinite}
+  /* the paw nudges 4px toward what it points at, and back */
+  .nimrod-cat .nudge{animation:ncNudgeX 1.8s ease-in-out infinite alternate}
+  .nimrod-cat[data-pose="point-up"] .nudge{animation-name:ncNudgeUp}
+  .nimrod-cat[data-pose="point-down"] .nudge{animation-name:ncNudgeDown}
+  .nimrod-cat .wave{transform-box:view-box;transform-origin:118px 136px;animation:ncWave 1.6s ease-in-out infinite alternate}
+  /* thought bubbles fill in one after another, then rest */
+  .nimrod-cat .t{opacity:.15;animation:ncThink 4.5s ease-in-out infinite}
+  .nimrod-cat .t2{animation-delay:.5s}
+  .nimrod-cat .t3{animation-delay:1s}
+  .nimrod-cat .spark path{animation:ncTwinkle 3.2s ease-in-out infinite alternate}
+  .nimrod-cat .spark path:nth-child(2){animation-delay:-1.1s}
+  .nimrod-cat .spark path:nth-child(3){animation-delay:-2s}
+  .nimrod-cat .spark path:nth-child(4){animation-delay:-.6s}
+  /* asleep: a slow breath, and the z's drift */
+  .nimrod-cat[data-pose="sleeping"] .cat{transform-box:view-box;transform-origin:110px 178px;animation:ncBreathe 4.4s ease-in-out infinite alternate}
+  .nimrod-cat .z{animation:ncDrift 6s ease-in-out infinite alternate}
+}
+@keyframes ncBlink{0%,86%{transform:scaleY(0)}91.5%,96%{transform:scaleY(1)}100%{transform:scaleY(0)}}
+@keyframes ncSway{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+@keyframes ncTwitch{0%,78%,88%,100%{transform:rotate(0)}82%{transform:rotate(-9deg)}}
+@keyframes ncTalk{0%,100%{transform:scaleY(1)}14%{transform:scaleY(.4)}30%{transform:scaleY(.95)}44%{transform:scaleY(.5)}58%{transform:scaleY(1)}76%{transform:scaleY(.35)}}
+@keyframes ncNudgeX{from{transform:translate(0,0)}to{transform:translateX(4px)}}
+@keyframes ncNudgeUp{from{transform:translate(0,0)}to{transform:translateY(-4px)}}
+@keyframes ncNudgeDown{from{transform:translate(0,0)}to{transform:translateY(4px)}}
+@keyframes ncWave{from{transform:rotate(-7deg)}to{transform:rotate(9deg)}}
+@keyframes ncThink{0%,8%{opacity:.15}24%,70%{opacity:1}90%,100%{opacity:.15}}
+@keyframes ncTwinkle{from{opacity:.4}to{opacity:1}}
+@keyframes ncBreathe{from{transform:scaleY(1)}to{transform:scaleY(1.035)}}
+@keyframes ncDrift{from{opacity:.45;transform:translateY(0)}to{opacity:1;transform:translateY(-4px)}}

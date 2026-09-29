@@ -83,6 +83,32 @@
 
 export const TOUR_POS_KEY = 'nimrod:tourStep';
 export const TOUR_DONE_KEY = 'nimrod:tourDone';
+export const TOUR_KEYS = Object.freeze({ pos: TOUR_POS_KEY, done: TOUR_DONE_KEY });
+
+// ---------------------------------------------------------------------------------------
+// *** A SECOND WALK ON THE SAME ENGINE (2026-09-29): NIMROD THE CAT. ***
+// ---------------------------------------------------------------------------------------
+//
+// Change list row 2.26 (d): the cat walkthrough must "reuse the tour's recorded-playback
+// mechanism rather than a second one". So `cat_guide.js` does not have a step engine of its own;
+// it calls `mountTour` with its own steps and the options below. Every one of them DEFAULTS TO
+// WHAT THIS FILE ALREADY DID, so the site tour, its three hosts and `tour_test.html` see no change:
+//
+//   keys          where the position lives. Two walks on one page (the kiosk mounts both) must
+//                 not share a position, or finishing one would cancel the other.
+//   topic         the bus prefix (`tour/next` ...), for the same reason.
+//   label / skipLabel / panelStyle   the words and colours on the panel.
+//   goThere(page) -> { say, label, href } for a page this file's GO_THERE table does not know,
+//                 or whose address carries an id (a profile's kiosk URL).
+//   sayFor(step)  which words to show for a step (the cat's chattiness setting picks them).
+//   decorate(panel, step, info)   called after every render, to add to the panel (the cat).
+//   onPlace(rect) told where the ring landed, or null (the cat points his paw at it).
+//   escapeCloses  Escape closes the walk. OFF by default because the kiosk already binds Escape
+//                 to its settings menu, and the site tour never promised it; see `onEscape`.
+//
+// A `target` may now also be a LIST of selectors: the first one that is on the page and has a
+// size wins. That is how a step points at a row inside the settings menu when the menu is open
+// and at the gear that opens it when it is not, without the step knowing which.
 
 /** Every stop on the whole walk, in order, across all pages. */
 export const allTourSteps = (steps) => (steps || []).filter((s) => s.tour !== false && s.say);
@@ -107,6 +133,27 @@ export function samePage(a, b) {
 // making its own problem theirs; a link they press is still THEM navigating, which is the line
 // that matters — the tour never performs the step, but it can hold the door. Anybody who would
 // rather get there their own way still can, because the page underneath was never blocked.
+/**
+ * The element a step points at, or null. A string is one selector; an array is tried in order
+ * and the first element that exists AND has a size wins (a hidden menu row has none).
+ */
+export function findTarget(doc, target) {
+  if (!doc || !target) return null;
+  const list = Array.isArray(target) ? target : [target];
+  let fallback = null;
+  for (const sel of list) {
+    let el = null;
+    try { el = doc.querySelector(sel); } catch { el = null; }   // a bad selector is "not here"
+    if (!el) continue;
+    const r = el.getBoundingClientRect?.();
+    if (r && (r.width || r.height)) return el;
+    fallback = fallback || el;
+  }
+  // Only a single selector falls back to a sizeless element, which is what this file always did
+  // (and `place()` then draws no ring). A list keeps looking, and settles for the first match.
+  return fallback;
+}
+
 const GO_THERE = {
   '/': { say: 'Head back to the front page to finish.', label: 'Front page' },
   '/home.html': { say: 'Open your screens to carry on — the tour picks up where you left it.',
@@ -127,18 +174,20 @@ const goThere = (page) =>
  * close without reading, and it would ride along to the kiosk, which is a screen a patient may
  * be looking at. Offered beats sprung.
  */
-export function startTour(steps, storage = (typeof localStorage !== 'undefined' ? localStorage : null)) {
+export function startTour(steps, storage = (typeof localStorage !== 'undefined' ? localStorage : null),
+                          { keys = TOUR_KEYS } = {}) {
   const first = allTourSteps(steps)[0];
   try {
-    storage?.removeItem(TOUR_DONE_KEY);   // so "take it again" works after finishing
-    if (first) storage?.setItem(TOUR_POS_KEY, first.id);
+    storage?.removeItem(keys.done);   // so "take it again" works after finishing
+    if (first) storage?.setItem(keys.pos, first.id);
   } catch { /* private mode: the tour will run but not survive navigation */ }
   return first || null;
 }
 
 /** Is a walk in progress in this browser? */
-export const tourStarted = (storage = (typeof localStorage !== 'undefined' ? localStorage : null)) => {
-  try { return !!storage?.getItem(TOUR_POS_KEY) && !storage?.getItem(TOUR_DONE_KEY); }
+export const tourStarted = (storage = (typeof localStorage !== 'undefined' ? localStorage : null),
+                            { keys = TOUR_KEYS } = {}) => {
+  try { return !!storage?.getItem(keys.pos) && !storage?.getItem(keys.done); }
   catch { return false; }
 };
 
@@ -169,17 +218,39 @@ export function mountTour(root, {
   respectDone = true,
   requireStarted = true,
   start = false,
+  // --- the second-walk options; see the header block at the top of this file ---
+  keys = TOUR_KEYS,
+  topic = 'tour',
+  label: ariaLabel = 'Guided tour',
+  skipLabel = 'Skip the tour',
+  panelStyle = null,
+  goThere: goThereFor = null,
+  sayFor = null,
+  decorate = null,
+  onPlace = null,
+  escapeCloses = false,
 } = {}) {
   if (!root || !doc) return null;
 
   const all = allTourSteps(steps);
   if (!all.length) return null;
 
+  const TOUR_POS_KEY = keys.pos;     // shadow the module constants: every read below uses these
+  const TOUR_DONE_KEY = keys.done;
   const read = (k, d = null) => { try { return storage?.getItem(k) ?? d; } catch { return d; } };
   const write = (k, v) => { try { storage?.setItem(k, v); } catch { /* private mode */ } };
   const drop = (k) => { try { storage?.removeItem(k); } catch { /* private mode */ } };
+  const whereTo = (page) => {
+    let custom = null;
+    try { custom = goThereFor?.(page) || null; } catch { custom = null; }
+    return custom || goThere(page);
+  };
+  const wordsFor = (step) => {
+    try { const s = sayFor?.(step); if (s) return s; } catch { /* fall back to the step's own line */ }
+    return step.say;
+  };
 
-  if (start) startTour(steps, storage);
+  if (start) startTour(steps, storage, { keys });
 
   // *** BOTH GATES ARE SKIPPED WHEN `start` IS PASSED, AND THAT IS NOT A CONVENIENCE. ***
   // `start: true` means a person just pressed "Take the guided tour" — the caller has the fact
@@ -250,7 +321,7 @@ export function mountTour(root, {
   panel.setAttribute('data-tour-panel', '');
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-live', 'polite');
-  panel.setAttribute('aria-label', 'Guided tour');
+  panel.setAttribute('aria-label', ariaLabel);
   panel.style.cssText = [
     'position:fixed', 'left:50%', 'bottom:22px', 'transform:translateX(-50%)',
     'max-width:min(62ch,92vw)', 'box-sizing:border-box',
@@ -258,6 +329,9 @@ export function mountTour(root, {
     'pointer-events:auto',
     'background:rgba(10,51,35,.96)', 'color:#e8f0ea', 'border:1px solid rgba(255,255,255,.22)',
     'border-radius:14px', 'padding:14px 16px', 'box-shadow:0 10px 40px rgba(0,0,0,.45)',
+    // A host's own look, appended so it wins. It must not touch pointer-events or position:
+    // that is the not-a-gate property, and `tour_test.html` checks it on the default panel.
+    ...(panelStyle ? [panelStyle] : []),
   ].join(';');
 
   function styleRing() {
@@ -301,27 +375,34 @@ export function mountTour(root, {
   }
 
   function place() {
-    const sel = current()?.target;
-    const el = sel ? doc.querySelector(sel) : null;
+    if (done) return;
+    // Waiting for another page: whatever matches here is not what the step is about.
+    const el = waiting ? null : findTarget(doc, current()?.target);
     // A TARGET THAT IS NOT ON THIS PAGE IS NOT AN ERROR HERE — it is the graceful half of the
     // failure the recorder makes loud. The line still shows; there is simply no ring. Drawing
     // one at 0,0 around nothing would be worse than drawing none, and it is what `.k-mods`
     // would have produced before the recorder caught it.
     const r = el?.getBoundingClientRect?.();
-    if (!r || (!r.width && !r.height)) { ring.hidden = true; reseat(); return; }
+    if (!r || (!r.width && !r.height)) {
+      ring.hidden = true; reseat();
+      try { onPlace?.(null); } catch (err) { console.error('tour: onPlace', err); }
+      return;
+    }
     ring.hidden = false;
     ring.style.left = `${r.left - 6}px`;
     ring.style.top = `${r.top - 6}px`;
     ring.style.width = `${r.width + 12}px`;
     ring.style.height = `${r.height + 12}px`;
     reseat();
+    try { onPlace?.(r); } catch (err) { console.error('tour: onPlace', err); }
   }
 
   function render() {
     if (done) return;
     const step = current();
     const n = i + 1;
-    const go = waiting ? goThere(step.page) : null;
+    const go = waiting ? whereTo(step.page) : null;
+    const text = go ? go.say : wordsFor(step);
     const label = waiting ? 'End the tour' : n >= all.length ? 'Done' : 'Next';
     const primary = 'flex:0 0 auto;background:#F7C948;color:#0A3323;border:0;border-radius:9px;'
       + 'padding:9px 16px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none';
@@ -330,17 +411,19 @@ export function mountTour(root, {
       + 'font:inherit;cursor:pointer;text-decoration:none';
 
     panel.innerHTML = `
-      <div data-tour-say>${esc(go ? go.say : step.say)}</div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
-        ${go ? `<a data-tour-go href="${esc(step.page)}" style="${primary}">${esc(go.label)} →</a>` : ''}
+      <div data-tour-say>${esc(text)}</div>
+      <div data-tour-row style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+        ${go ? `<a data-tour-go href="${esc(go.href || step.page)}" style="${primary}">${esc(go.label)} →</a>` : ''}
         <button type="button" data-tour-next style="${go ? quiet : primary}">${esc(label)}</button>
-        <button type="button" data-tour-skip style="${quiet}">Skip the tour</button>
+        <button type="button" data-tour-skip style="${quiet}">${esc(skipLabel)}</button>
         <span data-tour-count style="margin-left:auto;opacity:.6;font-size:.86rem">${n} of ${all.length}</span>
       </div>`;
     panel.querySelector('[data-tour-next]').addEventListener('click', next);
     panel.querySelector('[data-tour-skip]').addEventListener('click', skip);
+    try { decorate?.(panel, step, { waiting, n, total: all.length, text, go }); }
+    catch (err) { console.error('tour: decorate', err); }
     place();
-    try { onStep?.(step, n, { waiting }); } catch (err) { console.error('tour: onStep', err); }
+    try { onStep?.(step, n, { waiting, text }); } catch (err) { console.error('tour: onStep', err); }
   }
 
   // ------------------------------------------------------------------------------------
@@ -394,10 +477,33 @@ export function mountTour(root, {
   // THE TOUR NEVER NAMES ITS INPUT, same as every module. A switch, a key, a dwell or a remote
   // all drive it by publishing these; binding them is somebody else's job.
   if (bus?.subscribe) {
-    for (const [topic, fn] of [['tour/next', next], ['tour/prev', prev], ['tour/skip', skip]]) {
-      const u = bus.subscribe(topic, fn);
+    for (const [t, fn] of [[`${topic}/next`, next], [`${topic}/prev`, prev], [`${topic}/skip`, skip]]) {
+      const u = bus.subscribe(t, fn);
       if (typeof u === 'function') off.push(u);
     }
+  }
+
+  // ESCAPE CLOSES — only when asked for (`escapeCloses`), and only when Escape is not already
+  // somebody else's. Capture phase on the window, so it runs before the kiosk's own window
+  // listeners (which read Escape as "open the settings menu"): one Escape closes the walk and
+  // does not ALSO open a menu behind it. But inside an open modal (the settings menu, which closes
+  // on its own Escape) or a text box, Escape belongs to that thing, and this steps aside — the
+  // nearest thing closes first, which is what anybody expects of Escape.
+  if (escapeCloses && doc.defaultView?.addEventListener) {
+    const win = doc.defaultView;
+    const onEscape = (e) => {
+      if (done || e.key !== 'Escape' || e.defaultPrevented) return;
+      const t = e.target;
+      const inOurs = !!(t && t.nodeType === 1 && layer.contains(t));
+      const elsewhere = !inOurs && t && t.closest?.(
+        '[aria-modal="true"], input, textarea, select, [contenteditable=""], [contenteditable="true"]');
+      if (elsewhere) return;
+      e.preventDefault();
+      e.stopPropagation();
+      skip();
+    };
+    win.addEventListener('keydown', onEscape, true);
+    off.push(() => win.removeEventListener('keydown', onEscape, true));
   }
 
   if (typeof window !== 'undefined') {
@@ -431,6 +537,10 @@ export function mountTour(root, {
     waiting: () => waiting,
     reduced: () => reduced,
     shown: () => !done && !!layer.isConnected,
+    // Re-measure the ring (something on the page moved or opened), and re-render the panel (its
+    // words depend on a setting that just changed). Both are no-ops once the walk is over.
+    refresh: () => place(),
+    repaint: () => render(),
     // `destroy` is NOT `skip`: a host tearing down a page must not record that the person
     // finished, or navigating away once would silently cancel the tour for good.
     destroy() { if (!done) { done = true; teardown(); } },
@@ -438,7 +548,8 @@ export function mountTour(root, {
 }
 
 /** Let somebody take the tour again. Nothing calls this yet; a settings row should. */
-export function resetTour(storage = (typeof localStorage !== 'undefined' ? localStorage : null)) {
-  try { storage?.removeItem(TOUR_DONE_KEY); storage?.removeItem(TOUR_POS_KEY); }
+export function resetTour(storage = (typeof localStorage !== 'undefined' ? localStorage : null),
+                          { keys = TOUR_KEYS } = {}) {
+  try { storage?.removeItem(keys.done); storage?.removeItem(keys.pos); }
   catch { /* private mode */ }
 }

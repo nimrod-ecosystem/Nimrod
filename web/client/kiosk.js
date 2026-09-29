@@ -2464,6 +2464,10 @@ export async function mountKiosk(root, {
     // The speaker arbiter, so a test (and a future call handler) can reach hush and the
     // call mode without going through a module.
     audio: () => audio,
+    // The output bus, for something ABOVE the modules that talks on this screen — Nimrod the cat
+    // (`cat_guide.js`, mounted by kiosk.html). Same bus, same one pair of ears: his words queue and
+    // yield like any module's instead of talking over them. Null if the bus failed to build.
+    output: () => output,
     cameraOwner: () => cameraOwner,
     micOwner: () => micOwner,
     // WHAT THE MIC ARBITER WOULD ACTUALLY FALL BACK TO RIGHT NOW — exposed so a test can prove
