@@ -77,6 +77,7 @@ import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
          TRIVIA_LESSON_QUESTIONS, createQuestMode, ALL_UNLOCKED } from '../lessons.js';
+import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 
 export const GAME = 'trivia';
 
@@ -219,9 +220,14 @@ export function makeQuestion(item, bank, { choices = DEFAULTS.choices, rand = Ma
   //
   // *** A TENSION WITH THE HEADER ABOVE, STATED RATHER THAN HIDDEN. *** "Nothing here generates
   // an option" stays true of this function — but a routed transcript question's wrong options
-  // were written by a model, not a person. What keeps PRINCIPLES.md §2 true for those is the
-  // review queue in Lessons (ON by default: a person reads every option before it reaches this
-  // bank). A caregiver who turns auto-approve on takes that check away; see lessons.js.
+  // were written by a model, not a person. What kept PRINCIPLES.md §2 true for those was the
+  // review queue in Lessons (ON by default until 2026-09-28: a person read every option before it
+  // reached this bank). *** 2026-09-28, Mike: "Flip review." *** Auto-approve is now the default,
+  // so by default NO person reads a generated question's wrong options before they are asked here.
+  // What is left: `grounded` (the right answer is in the transcript line it quotes — it says
+  // nothing about the wrong ones), the optional Wikipedia check, the "I think this question is
+  // wrong" contest after every answer (../contests.js), and the setting to turn review back on.
+  // Stated here because this function's header still says "nothing here generates an option".
   return { question: item.question, answer: item.answer, options,
            correctIndex: options.indexOf(item.answer), source: item.source || '' };
 }
@@ -393,6 +399,18 @@ registerModule(
     let mode = null;
     let topics = DEFAULT_TOPICS;
     let held = [];             // topics still holding questions back, for the "waiting behind" note
+    // *** "I THINK THIS QUESTION IS WRONG" (Mike, 2026-09-28) — see ../contests.js. *** Offered once
+    // the question is answered, as a SECOND STOP in the post-answer highlight: `after` 0 is Next (the
+    // default, so the ordinary path is still one `select`), 1 is the contest. `next`/`prev` walk the
+    // two the way they walk the options before an answer — which means `next` no longer ALSO
+    // advances after an answer (it used to; `select` and `back` still do). Once used, the contest
+    // stop goes away and `next` advances again, as before. A contest writes one row to the
+    // per-profile contests log and nothing else: no points, no trial, no change to the answer.
+    let contests = null;
+    let after = 0;
+    let contested = false;       // the question on screen was contested
+    let contestFailed = false;   // ...but the row could not be saved
+    const isHeldItem = (item, set) => !!item && set.has(contestKey(item.question, item.answer));
 
     const el = (s) => mount.querySelector(s);
 
@@ -446,7 +464,13 @@ registerModule(
           ${done
             ? `<p class="tv-said">Correct.</p>
                ${q.source ? `<p class="tv-src" data-source>From the lesson: “${esc(q.source)}”</p>` : ''}
-               <button type="button" class="tv-next" data-next>Next question</button>`
+               <div class="tv-after">
+                 <button type="button" class="tv-next" data-next${after === 0 ? ' data-on="1"' : ''}>Next question</button>
+                 ${contested ? '' : `<button type="button" class="tv-contest" data-contest${after === 1 ? ' data-on="1"' : ''}>I think this question is wrong</button>`}
+               </div>
+               ${contested ? `<p class="tv-contested" role="status" data-contested>${contestFailed
+                 ? 'Thanks. It could not be saved just now, so it may come up again.'
+                 : 'Thanks — it’s held back until someone looks at it.'}</p>` : ''}`
             // NOT "the answer was X". The question is still open, so telling them the answer
             // would end it for them.
             //
@@ -472,6 +496,9 @@ registerModule(
       misses = [];
       askedAt = now();
       highlight = 0;
+      after = 0;
+      contested = false;
+      contestFailed = false;
       render();
       // *** THE MARK GOES IN AT THE MOMENT THE QUESTION APPEARS ***, not when it is answered,
       // because the audio that matters is what happens between the two.
@@ -493,6 +520,36 @@ registerModule(
         if (!misses.includes(highlight)) break;
       }
       render();
+    }
+
+    // The post-answer highlight: Next, then the contest while it is still offered. With only Next
+    // left there is nothing to walk, so `next` advances, exactly as it always did.
+    function moveAfter(delta) {
+      if (!q || answered === null) return;
+      const stops = contested ? 1 : 2;
+      if (stops === 1) { advance(); return; }
+      after = ((after + delta) % stops + stops) % stops;
+      render();
+    }
+
+    function pressAfter() {
+      if (after === 1 && !contested) contest(); else advance();
+    }
+
+    // Records the contest and says thank you. Nothing else changes: the answer stays recorded, the
+    // points stay paid, the round does not move. The row is what holds the question out of the next
+    // deck (and every other game's on this profile).
+    function contest() {
+      if (!q || answered === null || contested) return;
+      contested = true;
+      contestFailed = false;
+      after = 0;
+      render();
+      const shown = q;
+      Promise.resolve(contests?.contest?.({ module: GAME, question: shown.question, answer: shown.answer,
+        source: shown.source || '' }))
+        .then((rec) => { if (!rec && q === shown) { contestFailed = true; render(); } })
+        .catch(() => {});
     }
 
     /**
@@ -614,7 +671,12 @@ registerModule(
     }
 
     function advance() {
-      if (at + 1 < deck.length) show(at + 1);
+      // A question contested during this round is not asked again in it (a bank can carry the same
+      // question twice, or a pack question can also arrive from a lesson).
+      const out = contests ? contests.held() : null;
+      let i = at + 1;
+      while (out && out.size && i < deck.length && isHeldItem(deck[i], out)) i++;
+      if (i < deck.length) show(i);
       else newRound();
     }
 
@@ -630,9 +692,13 @@ registerModule(
       // new Set()` already follows on the line below.
       const sandbox = mode ? mode.isSandbox() : false;
       const unlocked = sandbox ? ALL_UNLOCKED : (lessons ? lessons.unlocked() : new Set());
-      const open = gate(bank, unlocked).open;
-      held = lockedTopics(bank, unlocked, topics);
-      deck = buildDeck(open.length >= 4 ? open : bank, { roundLength: cfg.roundLength, rand });
+      // CONTESTED QUESTIONS ARE LEFT OUT FIRST (../contests.js), before the "fewer than four open"
+      // fallback — otherwise a small bank would deal the whole bank, contested ones included.
+      const out = contests ? contests.held() : null;
+      const playable = out && out.size ? bank.filter((b) => !isHeldItem(b, out)) : bank;
+      const open = gate(playable, unlocked).open;
+      held = lockedTopics(playable, unlocked, topics);
+      deck = buildDeck(open.length >= 4 ? open : playable, { roundLength: cfg.roundLength, rand });
       if (!deck.length) { q = null; render(); return; }
       show(0);
     }
@@ -644,9 +710,15 @@ registerModule(
       __score: () => ({ right: rightCount, asked: askedCount }),
       __worth: (spent) => worth(spent),
       __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length), askedAt,
-        highlight, streak, deck: deck.length,
+        highlight, streak, deck: deck.length, after, contested,
                         question: q ? { ...q } : null, bank: bank.length }),
       init() {
+        // FIRST, so the very first round is dealt without contested questions in it.
+        try {
+          contests = typeof ctx.makeEvents === 'function' ? createContests({ makeEvents: ctx.makeEvents, bus }) : null;
+          // Another panel on this screen contested something: fetch now; it applies from the next round.
+          if (contests) bus.subscribe(CONTEST_TOPIC, () => { contests.load().catch(() => {}); });
+        } catch (err) { contests = null; console.error('trivia: no contests log', err); }
         // Both streams, exactly as `wordforge` opens them — same constructors, same arguments,
         // so the points board and the progress dashboard pick this game up with no wiring at all.
         try { ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus }); }
@@ -657,10 +729,11 @@ registerModule(
           telemetry.load().catch(() => {});
         } catch (err) { telemetry = null; console.error('trivia: no telemetry', err); }
 
-        // Scan with `next`, choose with `select` — so the whole game is one button.
-        bus.subscribe('trivia/next', () => (answered === null ? moveHighlight(1) : advance()));
-        bus.subscribe('trivia/prev', () => moveHighlight(-1));
-        bus.subscribe('trivia/select', () => (answered === null ? choose(highlight) : advance()));
+        // Scan with `next`, choose with `select` — so the whole game is one button. After an
+        // answer the same two verbs walk and press the post-answer stops (Next, then the contest).
+        bus.subscribe('trivia/next', () => (answered === null ? moveHighlight(1) : moveAfter(1)));
+        bus.subscribe('trivia/prev', () => (answered === null ? moveHighlight(-1) : moveAfter(-1)));
+        bus.subscribe('trivia/select', () => (answered === null ? choose(highlight) : pressAfter()));
         bus.subscribe('trivia/skip', () => advance());
 
         mount.addEventListener('click', (e) => {
@@ -668,6 +741,7 @@ registerModule(
           if (!t) return;
           if (t.dataset.opt != null) return choose(Number(t.dataset.opt));
           if (t.hasAttribute('data-next')) return advance();
+          if (t.hasAttribute('data-contest')) return contest();
           return undefined;
         });
 
@@ -731,6 +805,8 @@ registerModule(
           Promise.all([
             lessons.load().then(() => lessons.startPolling()).catch(() => {}),
             mode ? mode.load().then(() => mode.startPolling()).catch(() => {}) : Promise.resolve(),
+            // The contests log gates the deck the same way, so it joins the same wait.
+            contests ? contests.load().then(() => contests.startPolling()).catch(() => {}) : Promise.resolve(),
           ]).then(() => { newRound(); });
           // A lesson finished elsewhere — the new questions join the pool at the START of the
           // next round, not mid-question (same rule Word Forge follows for the same reason).
@@ -745,6 +821,7 @@ registerModule(
       onHide() { state?.flush?.(); },
       destroy() {
         recorder = null;
+        if (contests) { contests.destroy(); contests = null; }
         if (lessons) { lessons.destroy(); lessons = null; }
         if (mode) { mode.destroy(); mode = null; }
       },

@@ -20,6 +20,11 @@
 // questions wait in a review list (§0h: queue ON by default, auto-approve OFF by default, a "this
 // looks wrong" flag for player and caregiver) and approved ones join the pool through the SAME
 // `questionsTo` routing a pack's own questions already use. Unused, every card behaves as before.
+// *** 2026-09-28, Mike: "Flip review." *** Auto-approve is now ON by default: a question that passes
+// `grounded` (and, when the fact check is on, is not flagged by it) joins the pool with no person;
+// anything flagged still waits. The setting stays, so a caregiver can turn review back on. The
+// player's flag became "I think this question is wrong" — a CONTEST (../contests.js), offered in
+// this quiz, in Trivia and in Word Forge, and listed here as "Contested while playing".
 // THE FACT CHECK (register 258, Wikipedia — Mike's pick, 2026-09-28) runs after the questions are
 // written, in the background while the quiz is already being asked: each checked question is looked
 // up (../wikipedia.js), and one Wikipedia seems to contradict is FLAGGED — held out of the pool
@@ -41,6 +46,7 @@ import {
   quizProgress, quizDrop, reviewItems, poolFrom, isPaid, TRANSCRIPT_STREAM, REVIEW_KINDS, MINUTE_CHOICES,
   factCheck, FACT,
 } from '../transcript_quiz.js';
+import { createContests, contestKey, CONTEST_STATUS, CONTEST_TOPIC } from '../contests.js';
 
 // `minWatchMs` is milliseconds - the house rule for every stored duration. It was
 // `minWatchSec`; the key changed rather than the meaning of the old one. The countdown a
@@ -73,7 +79,7 @@ export const DEFAULTS = {
   requireBy: 'correct',
   perMinutes: 2,
   minAnswers: 3,
-  autoApprove: false,
+  autoApprove: true,     // flipped 2026-09-28 (Mike: "Flip review."); see its settings row
   factCheck: false,
   aiModel: '',
   aiTimeoutMs: 15 * 60 * 1000,
@@ -216,9 +222,20 @@ const SETTINGS = [
   { key: 'minAnswers', label: 'But never fewer than', kind: 'choice', default: 3, level: 'advanced',
     options: [1, 2, 3, 5].map((n) => ({ value: n, label: String(n) })) },
   // §0h, agreed 2026-09-17: the review queue is ON by default; skipping it is opt-in.
+  // *** FLIPPED 2026-09-28 — Mike: "Flip review." *** Auto-approve is the DEFAULT now: a question that
+  // passes `grounded` (and, when the fact check is on, is not flagged by it) joins the games with no
+  // person; anything flagged — by the fact check, a caregiver, or a player's contest — still waits.
+  // The row stays, so a caregiver can turn review back on. What the flip gives up, stated rather than
+  // hidden: by default nobody reads a generated question's WRONG options before they are asked, and
+  // `grounded` checks only the right one (trivia.js's `makeQuestion` note says what is left).
+  // Recorded AT GENERATION (transcript_quiz.js `reviewItems`), so neither turning this on later nor
+  // the default changing approves an old backlog: questions generated before this change on an
+  // account that never touched the setting were recorded "not auto-approved" and stay in the review
+  // list until somebody approves them. That is deliberate — nobody chose to skip review for them.
   { key: 'autoApprove', label: 'Add checked questions to the games without review', kind: 'toggle',
-    default: false, level: 'standard',
-    note: 'Checked means the answer was found in the transcript line it quotes. It does not mean the video is right.' },
+    default: true, level: 'standard',
+    note: 'Checked means the answer was found in the transcript line it quotes. It does not mean the video is right. '
+      + 'Anything flagged still waits for a person.' },
   // *** THE FACT CHECK (register 258). DEFAULT ON — A DEFAULT, ARGUED BOTH WAYS, FLAGGED FOR MIKE. ***
   // For OFF: it is a request to a third party (the Wikimedia Foundation) from what may be a child's
   // device, and the device's address goes with any web request. `live_weather.js`, the nearest
@@ -236,6 +253,12 @@ const SETTINGS = [
   // take that to cover, so it ships off and this row IS the separate yes (level 'standard', so it is
   // not hidden). If Mike reads the promise as covering only server storage, flip this default --
   // his call, logged as a change-list row.
+  // *** RULED 2026-09-28 — Mike: "off for now, but try to make it obvious to the user rather than
+  // just having it buried in settings." *** So it stays OFF, and the transcript panel carries a plain
+  // checkbox right beside "Make questions" bound to THIS key (written through this module's own
+  // state, exactly as this row writes it, so the two can never disagree). That checkbox is the
+  // separate yes the landing page promises. Questions made with it off say "Not checked on
+  // Wikipedia" once, in the quiz, with the same checkbox beside it.
   { key: 'factCheck', label: 'Look questions up on Wikipedia', kind: 'toggle', default: false,
     level: 'standard',
     note: 'Sends only each question and its answer to Wikipedia. A question Wikipedia seems to '
@@ -326,6 +349,7 @@ registerModule(
     // a desktop, must see one queue. Polled slowly: a review is not a race.
     let tlog = null;
     let tlogReady = Promise.resolve();
+    let contests = null;                      // the per-profile contests log (../contests.js)
     let ledger = null;                        // points, made when first needed
     let lastPack = null;
     let routedOnce = false;
@@ -668,6 +692,7 @@ registerModule(
           <p class="l-tq-need" data-tq-need></p>
           <div class="l-actions">
             <button type="button" class="l-btn l-primary" data-tq-make disabled>Make questions</button>
+            ${factBoxHTML()}
             <button type="button" class="l-btn" data-tq-close>Close</button>
           </div>
           ${aiPanelHTML()}`;
@@ -697,8 +722,10 @@ registerModule(
             : `All ${plural(s.kept, 'question')} checked out against the transcript.`}</p>
           ${s.paidAlready ? '<p class="l-tq-help">This video’s points were already earned, so this round is practice.</p>' : ''}
           ${s.fellBack ? `<p class="l-tq-help">The model chosen in settings is not on this device, so ${esc(s.modelName)} was used.</p>` : ''}
-          ${factLine}`;
+          ${factLine}
+          ${s.fact ? '' : `<p class="l-tq-help l-fc-off" data-fc-off>Not checked on Wikipedia. ${factBoxHTML()}</p>`}`;
         if (a) {
+          const contestedNow = s.contested && s.contested.has(a.id);
           body = `${head}
             <p class="l-tq-q">${esc(a.question)}</p>
             <ol class="l-tq-opts">${shown.options.map((o) => `<li><button type="button" class="l-btn l-tq-opt" disabled
@@ -709,9 +736,12 @@ registerModule(
             <blockquote class="l-tq-src" data-tq-source>From the transcript: “${esc(a.source)}”</blockquote>
             ${factNoteHTML(s, a.id, true)}
             <div class="l-actions">
-              <button type="button" class="l-btn l-primary" data-tq-next>${a.met ? 'See how you did' : 'Next question'}</button>
-              <button type="button" class="l-btn" data-tq-flag>This looks wrong</button>
-            </div>`;
+              <button type="button" class="l-btn l-primary" data-tq-next>${a.met || s.quiz.met ? 'See how you did' : 'Next question'}</button>
+              ${contestedNow ? '' : '<button type="button" class="l-btn" data-tq-contest>I think this question is wrong</button>'}
+            </div>
+            ${contestedNow ? `<p class="l-tq-help l-tq-contested" role="status" data-tq-contested>${s.contestFailed
+              ? 'Thanks. It could not be saved just now, so it may come up again.'
+              : 'Thanks — it’s held back until someone looks at it.'}</p>` : ''}`;
         } else if (q) {
           body = `${head}
             <p class="l-tq-q" data-tq-q>${esc(q.question)}</p>
@@ -733,7 +763,9 @@ registerModule(
         const where = !target
           ? 'They are kept for review, but this screen sends lesson questions to neither game.'
           : s.autoApproved
-            ? `The questions were added to ${target}.`
+            ? (s.factCheckOn
+              ? `They join ${target} as each one’s Wikipedia check finishes; one Wikipedia seems to disagree with waits for a person.`
+              : `The questions were added to ${target}.`)
             : `The questions are waiting below for a person to check them before they join ${target}.`;
         body = `
           <div data-tq-done>
@@ -777,7 +809,10 @@ registerModule(
         b.addEventListener('click', () => answer(s, Number(b.dataset.tqOpt)));
       }
       on('[data-tq-next]', () => next(s));
-      on('[data-tq-flag]', (ev) => { ev.currentTarget.disabled = true; flagFromQuiz(s); });
+      on('[data-tq-contest]', (ev) => { ev.currentTarget.disabled = true; contestFromQuiz(s); });
+      for (const b of tqEl.querySelectorAll('[data-tq-factcheck]')) {
+        b.addEventListener('change', () => setFactCheck(b.checked, s));
+      }
       on('[data-fc-stop]', () => s.fact?.controller.abort());
       const url = tqEl.querySelector('[data-ai-url]');
       on('[data-ai-save]', () => {
@@ -849,13 +884,17 @@ registerModule(
         // The topic's own subject when it names one (the more specific fact), else the setting.
         subject: t.subject || cfg.subject,
         rejected: rejected.length, kept: lqs.length, tells: lengthTellsFor(lqs),
-        autoApproved: !!cfg.autoApprove, controller: null,
+        autoApproved: !!cfg.autoApprove, factCheckOn: !!cfg.factCheck, controller: null,
+        lqs, model: m.model,
       });
       try { await getLedger().load(); } catch { /* checked again, fresh, before paying */ }
       session.paidAlready = isPaid(tlog ? tlog.get().events || [] : [], key, ledger ? ledger.events() : []);
       try {
+        // `factCheck` is recorded beside `autoApproved`, AT GENERATION, for the same reason: with
+        // both on, a question joins the pool only once its check lands and did not flag it
+        // (transcript_quiz.js `reviewItems`), and that must not change if the setting does later.
         await tlog?.append(REVIEW_KINDS.QUESTIONS, { topic: t.id, topicLabel: t.label, key,
-          autoApproved: !!cfg.autoApprove, items: lqs, rejected: rejected.length,
+          autoApproved: !!cfg.autoApprove, factCheck: !!cfg.factCheck, items: lqs, rejected: rejected.length,
           model: m.model, ms: r.ms, minutes });
       } catch (err) { console.error('lessons: could not record the generated questions', err); }
       if (tq !== session) return;
@@ -863,7 +902,7 @@ registerModule(
       session.stage = 'quiz';
       showQuestion(session);
       renderTq();
-      if (cfg.factCheck) startFactCheck(session, lqs, m.model).catch((err) => console.error('lessons: fact check', err));
+      if (session.factCheckOn) startFactCheck(session, lqs, m.model).catch((err) => console.error('lessons: fact check', err));
     }
 
     // =========================================================================================
@@ -1027,16 +1066,94 @@ registerModule(
       renderTq();
     }
 
-    // The PLAYER's "this looks wrong" (§0h). It leaves this quiz — the requirement shrinks with it,
-    // so flagging never strands anyone — and stays out of the pool until a person clears it.
-    async function flagFromQuiz(session) {
-      const id = session.answered && session.answered.id;
-      if (!id) return;
-      try { await tlog?.append(REVIEW_KINDS.FLAG, { id, by: 'player' }); }
-      catch (err) { console.error('lessons: flag', err); }
-      quizDrop(session.quiz, id);
+    // The PLAYER's "I think this question is wrong" — a CONTEST (../contests.js; it was §0h's
+    // "this looks wrong" flag until 2026-09-28, and still IS that flag underneath). Offered only
+    // after the question is answered. It:
+    //   * leaves THIS quiz — the requirement shrinks with it, so contesting never strands anyone —
+    //     while a right answer already given still counts and no points move (quizDrop keeps both);
+    //   * is recorded in the per-profile contests log (module 'lessons', the question, its source
+    //     line, its id) AND flags the question in the review log, which is what keeps it out of the
+    //     pool until a person clears it in the review list below;
+    //   * says thank you, and waits for Next like any other answer — it does not advance on its own.
+    async function contestFromQuiz(session) {
+      const a = session.answered;
+      if (!a || !a.id || (session.contested && session.contested.has(a.id))) return;
+      const lq = session.quiz.items[a.id] || { question: a.question, correct: a.correctAnswer, source: a.source };
+      (session.contested ||= new Set()).add(a.id);
+      session.contestFailed = false;
+      pendingFlags.add(a.id);                       // so the contests sync does not flag it a second time
+      quizDrop(session.quiz, a.id);
+      if (tq === session) renderTq();
       if (session.quiz.met && session.payState == null) pay(session);
-      if (tq === session) next(session);
+      const rec = await Promise.resolve(contests?.contest?.({ module: 'lessons', question: lq.question,
+        answer: lq.correct, source: lq.source || '', qid: a.id, chosen: a.chosen })).catch(() => null);
+      try {
+        await tlog?.append(REVIEW_KINDS.FLAG, { id: a.id, by: 'player', contest: true,
+          contestId: rec ? rec.cid : null, module: 'lessons' });
+      } catch (err) {
+        console.error('lessons: contest flag', err);
+        if (!rec) session.contestFailed = true;
+      } finally { pendingFlags.delete(a.id); }
+      if (!rec && !tlog) session.contestFailed = true;
+      if (tq === session && session.stage === 'quiz') renderTq();
+    }
+
+    // ---- THE FACT-CHECK CHECKBOX (Mike, 2026-09-28: "off for now, but ... obvious") ----
+    // ONE control, drawn wherever it is offered (beside "Make questions"; in a quiz whose questions
+    // were not checked). It writes the module's own `factCheck` through `state` — exactly what the
+    // gear-menu row writes — and every copy of it follows `cfg` (see `syncFactBoxes`), so the two
+    // can never disagree. A real <input type="checkbox"> inside its <label>: pointer, keyboard and
+    // screen readers get it for free; a switch user reaches the same setting through the gear row.
+    function factBoxHTML() {
+      return `<label class="l-fc-opt"><input type="checkbox" data-tq-factcheck${cfg.factCheck ? ' checked' : ''}>
+        Also check the answers on Wikipedia
+        <span class="l-fc-note">(sends only each question and its answer to Wikipedia; a question it disagrees with waits for a person)</span></label>`;
+    }
+
+    function syncFactBoxes() {
+      for (const b of tqEl.querySelectorAll('[data-tq-factcheck]')) b.checked = !!cfg.factCheck;
+    }
+
+    function setFactCheck(on, session) {
+      try {
+        state.set({ factCheck: !!on });
+        Promise.resolve(state.flush && state.flush()).catch(() => {});
+      } catch (err) { console.error('lessons: could not save the fact-check setting', err); }
+      // Ticked beside questions that were NOT checked: that is a yes for these too, so check them
+      // now. Unticked while a check runs: stop it — the same as "Stop checking".
+      if (!session || tq !== session || !(session.stage === 'quiz' || session.stage === 'done')) return;
+      if (on && !session.fact && session.lqs && session.lqs.length) {
+        startFactCheck(session, session.lqs, session.model).catch((err) => console.error('lessons: fact check', err));
+        renderTq();
+      } else if (!on && session.fact && session.fact.running) {
+        session.fact.controller.abort();
+      }
+    }
+
+    // ---- CONTESTS FROM THE GAMES (../contests.js) ----
+    // A transcript question contested in Trivia or Word Forge must be FLAGGED here too — the pool is
+    // built from this log, and a flag is the one mechanism every hold already goes through. The
+    // games cannot write this log (it is Lessons'), so whichever Lessons panel is open does it.
+    // Each contest raises AT MOST ONE flag, ever: the flag carries the contest's id, and a contest
+    // whose id is already on a flag (cleared or not) is not flagged again — so a device that has not
+    // yet seen a Clear cannot put back a flag a person just removed.
+    const pendingFlags = new Set();
+    function syncContestFlags() {
+      if (!tlog || !contests) return;
+      const byKey = new Map(contests.list().filter((c) => c.status === CONTEST_STATUS.HELD).map((c) => [c.key, c]));
+      if (!byKey.size) return;
+      for (const i of generatedItems()) {
+        const c = byKey.get(contestKey(i.question, i.correct));
+        if (!c || i.status === 'rejected' || pendingFlags.has(i.id)) continue;
+        const used = new Set(i.flags.map((f) => f.contestId).filter(Boolean));
+        const fresh = c.contests.filter((x) => x.cid && !used.has(x.cid));
+        if (!fresh.length || i.flagged) continue;
+        const last = fresh[fresh.length - 1];
+        pendingFlags.add(i.id);
+        tlog.append(REVIEW_KINDS.FLAG, { id: i.id, by: 'player', contest: true, contestId: last.cid, module: last.module })
+          .catch((err) => console.error('lessons: contest flag', err))
+          .finally(() => pendingFlags.delete(i.id));
+      }
     }
 
     // PAY ONCE per topic+transcript. The points ledger is the record (tagged with the key) and the
@@ -1076,15 +1193,28 @@ registerModule(
     }
 
     // ---- §0h: the review list ----
+    // Also lists every question CONTESTED while playing (../contests.js) — transcript questions in
+    // their own rows (they are flagged, so they wait here already), and any other question (a
+    // Trivia bank row, a pack question, a Word Forge word) in a "Contested while playing" group.
+    // Both get the same two answers: Clear (put it back) and Keep out.
+    const SCREEN_NAMES = { trivia: 'Trivia', wordforge: 'Word Forge', lessons: 'the Lessons quiz' };
+    const screens = (mods) => [...new Set(mods)].map((m) => SCREEN_NAMES[m] || m).join(' and ');
     function renderReview() {
       const box = el('[data-review]');
       if (!box) return;
       const items = generatedItems();
+      const cList = contests ? contests.list() : [];
       const sig = JSON.stringify([cfg.questionsTo, items.map((i) => [i.id, i.status, i.flagged, i.flags.length,
-        i.check && i.check.verdict])]);
+        i.check && i.check.verdict, i.awaitingCheck]), cList.map((c) => [c.key, c.status, c.contests.length])]);
       if (sig === reviewSig) return;
       reviewSig = sig;
-      if (!items.length) { box.hidden = true; box.innerHTML = ''; return; }
+      const keyOf = (i) => contestKey(i.question, i.correct);
+      const itemKeys = new Set(items.map(keyOf));
+      const contestOf = new Map(cList.map((c) => [c.key, c]));
+      const others = cList.filter((c) => !itemKeys.has(c.key));
+      const othersHeld = others.filter((c) => c.status === CONTEST_STATUS.HELD);
+      const othersOut = others.filter((c) => c.status === CONTEST_STATUS.KEPT_OUT);
+      if (!items.length && !othersHeld.length && !othersOut.length) { box.hidden = true; box.innerHTML = ''; return; }
       box.hidden = false;
       const waiting = items.filter((i) => i.status !== 'rejected' && (i.status === 'pending' || i.flagged));
       const inGames = poolFrom(items);
@@ -1110,23 +1240,34 @@ registerModule(
             return `<p class="l-rq-fact" data-rq-fact="not-checked">Not checked on Wikipedia. ${esc(c.reason)}</p>`;
         }
       };
+      const contestedLine = (mods) => `<p class="l-rq-flag l-rq-contested">Contested while playing${mods.length
+        ? ` (in ${esc(screens(mods))})` : ''}. It stays out of the games until someone clears it.</p>`;
       const row = (i, { review }) => {
         const current = i.flags.slice(i.flagsCleared || 0);
-        const people = [...new Set(current.map((f) => f.by).filter((b) => b !== 'fact-check'))];
+        const c = contestOf.get(keyOf(i));
+        const heldContest = c && c.status === CONTEST_STATUS.HELD ? c : null;
+        const contestFlags = current.filter((f) => f.contest);
+        const contested = i.flagged && (contestFlags.length > 0 || !!heldContest);
+        const people = [...new Set(current.filter((f) => !f.contest).map((f) => f.by).filter((b) => b !== 'fact-check'))];
         const byCheck = current.some((f) => f.by === 'fact-check');
+        const mods = [...contestFlags.map((f) => f.module).filter(Boolean), ...(heldContest ? heldContest.modules : [])];
         return `
         <div class="l-rq${i.flagged ? ' is-flagged' : ''}" data-rq="${esc(i.id)}">
           <p class="l-rq-q">${esc(i.question)}</p>
           <p class="l-rq-a">Answer: <b>${esc(i.correct)}</b> · also offered: ${esc((i.answers || []).filter((x) => x !== i.correct).join(', '))}</p>
           <blockquote class="l-rq-src">“${esc(i.source)}”</blockquote>
           ${factHTML(i.check)}
-          ${i.flagged ? `<p class="l-rq-flag">${people.length ? `Marked “this looks wrong” by ${esc(people.join(' and '))}. ` : ''}${byCheck
+          ${i.awaitingCheck ? '<p class="l-rq-fact" data-rq-awaiting>Waiting for its Wikipedia check. It joins the games when the check finishes; Approve adds it now.</p>' : ''}
+          ${contested ? contestedLine(mods) : ''}
+          ${i.flagged && (people.length || byCheck) ? `<p class="l-rq-flag">${people.length ? `Marked “this looks wrong” by ${esc(people.join(' and '))}. ` : ''}${byCheck
             ? 'Held back because Wikipedia seems to disagree with the video. ' : ''}It stays out of the games until someone clears the mark.</p>` : ''}
           <div class="l-actions">
             ${review && i.status === 'pending' ? `<button type="button" class="l-btn l-primary" data-rq-approve>Approve</button>
               <button type="button" class="l-btn" data-rq-reject>Reject</button>` : ''}
-            ${i.flagged ? '<button type="button" class="l-btn" data-rq-unflag>Clear the mark</button>'
-              : '<button type="button" class="l-btn" data-rq-flag>This looks wrong</button>'}
+            ${contested ? `<button type="button" class="l-btn" data-rq-clear>Clear (put it back)</button>
+              <button type="button" class="l-btn" data-rq-keepout>Keep out</button>`
+              : i.flagged ? '<button type="button" class="l-btn" data-rq-unflag>Clear the mark</button>'
+                : '<button type="button" class="l-btn" data-rq-flag>This looks wrong</button>'}
           </div>
         </div>`;
       };
@@ -1134,21 +1275,46 @@ registerModule(
         const shown = batch.filter((i) => waiting.includes(i));
         if (!shown.length) return '';
         const tells = lengthTellsFor(batch);
+        // "Not checked on Wikipedia", ONCE per set, only when the set was made with the check off
+        // and nothing in it has been checked since — not on every row, and not a nag.
+        const unchecked = !batch[0].factChecked && batch.every((i) => !i.check);
         return `<div class="l-rv-group">
             <p class="l-rv-topic">${esc(batch[0].topicLabel || batch[0].topic)}</p>
+            ${unchecked ? '<p class="l-tq-help" data-rv-unchecked>Not checked on Wikipedia.</p>' : ''}
             ${tells.map((w) => `<p class="l-tq-warn">Worth a look: ${esc(w)}.</p>`).join('')}
             ${shown.map((i) => row(i, { review: true })).join('')}
           </div>`;
       }).join('');
+      // Questions contested in a game that are not transcript questions: a bank row, a pack question.
+      const otherRow = (c, { out }) => `
+        <div class="l-rq is-flagged" data-contested-key="${esc(c.key)}">
+          <p class="l-rq-q">${esc(c.question)}</p>
+          ${c.answer ? `<p class="l-rq-a">Answer: <b>${esc(c.answer)}</b></p>` : ''}
+          ${c.source ? `<blockquote class="l-rq-src">“${esc(c.source)}”</blockquote>` : ''}
+          ${out ? '<p class="l-rq-flag">Kept out of the games.</p>' : contestedLine(c.modules)}
+          <div class="l-actions">
+            <button type="button" class="l-btn" data-rq-clear>Clear (put it back)</button>
+            ${out ? '' : '<button type="button" class="l-btn" data-rq-keepout>Keep out</button>'}
+          </div>
+        </div>`;
+      const contestedGroup = othersHeld.length ? `<div class="l-rv-group" data-rv-contested>
+          <p class="l-rv-topic">Contested while playing</p>
+          ${othersHeld.map((c) => otherRow(c, { out: false })).join('')}
+        </div>` : '';
       box.innerHTML = `
-        <h3 class="l-rv-title">Transcript questions to check (${waiting.length})</h3>
-        <p class="l-tq-help">A model wrote these, and each one passed a check: its answer is in the transcript
-          line shown. That does not mean the video is right; where a question was looked up on Wikipedia,
-          what was found is shown with it.
-          ${target ? `Approved questions join ${target}.` : 'This screen sends lesson questions to neither game.'}</p>
-        ${groups || '<p class="l-tq-help">Nothing is waiting.</p>'}
+        <h3 class="l-rv-title">Questions to check (${waiting.length + othersHeld.length})</h3>
+        ${items.length ? `<p class="l-tq-help">A model wrote the transcript questions, and each one passed a check: its
+          answer is in the transcript line shown. That does not mean the video is right; where a question was
+          looked up on Wikipedia, what was found is shown with it.
+          ${target ? `Approved questions join ${target}.` : 'This screen sends lesson questions to neither game.'}</p>` : ''}
+        ${othersHeld.length || othersOut.length || cList.length ? `<p class="l-tq-help">A question somebody contested while playing is
+          held out of every game on this profile until someone clears it.</p>` : ''}
+        ${contestedGroup}
+        ${groups || (contestedGroup ? '' : '<p class="l-tq-help">Nothing is waiting.</p>')}
         ${inGames.length ? `<details class="l-rv-in"><summary>In the games (${inGames.length})</summary>
-          ${inGames.map((i) => row(i, { review: false })).join('')}</details>` : ''}`;
+          ${inGames.map((i) => row(i, { review: false })).join('')}</details>` : ''}
+        ${othersOut.length ? `<details class="l-rv-in"><summary>Kept out (${othersOut.length})</summary>
+          ${othersOut.map((c) => otherRow(c, { out: true })).join('')}</details>` : ''}`;
       const act = (sel, kind, data) => {
         for (const b of box.querySelectorAll(sel)) {
           b.addEventListener('click', () => {
@@ -1164,10 +1330,32 @@ registerModule(
       // No accounts or roles exist to tell a caregiver from a player (row 2.21's guardian lock is
       // unbuilt), so `by` records WHICH SURFACE raised the flag: the review list, or the quiz.
       act('[data-rq-flag]', REVIEW_KINDS.FLAG, { by: 'caregiver' });
-      act('[data-rq-unflag]', REVIEW_KINDS.UNFLAG, {});
+      // Clear / Keep out / Clear the mark. For a transcript question the CONTEST is settled FIRST and
+      // the review log second, so no panel can see "unflagged but still contested" and flag it again.
+      const itemById = new Map(items.map((i) => [i.id, i]));
+      for (const b of box.querySelectorAll('[data-rq-clear], [data-rq-keepout], [data-rq-unflag]')) {
+        b.addEventListener('click', async () => {
+          const keep = b.hasAttribute('data-rq-keepout');
+          const tRow = b.closest('[data-rq]');
+          const i = tRow ? itemById.get(tRow.dataset.rq) : null;
+          const key = i ? keyOf(i) : b.closest('[data-contested-key]')?.dataset.contestedKey;
+          const c = key ? contestOf.get(key) : null;
+          b.disabled = true;
+          try {
+            if (c && contests && (keep || c.status !== CONTEST_STATUS.CLEARED)) {
+              await (keep ? contests.keepOut(key) : contests.clear(key));
+            }
+            if (i && tlog) {
+              await tlog.append(keep ? REVIEW_KINDS.REVIEW : REVIEW_KINDS.UNFLAG,
+                keep ? { id: i.id, verdict: 'rejected' } : { id: i.id });
+            }
+          } catch (err) { b.disabled = false; console.error('lessons: review', err); }
+        });
+      }
     }
 
     function onLog() {
+      syncContestFlags();
       if (routedOnce && poolSignature() !== poolSig) routeQuestions(lastPack);
       renderReview();
     }
@@ -1191,6 +1379,15 @@ registerModule(
           tlog.subscribe(onLog);
           tlogReady = tlog.load().catch(() => {});
           tlogReady.then(() => tlog && tlog.startPolling());
+          // Contests raised in any game on this profile: listed in the review list, and a contested
+          // transcript question is flagged here (`syncContestFlags`). Polled as slowly as the review
+          // log; a contest from a panel on this same screen arrives at once through the bus.
+          try {
+            contests = createContests({ makeEvents: ctx.makeEvents, bus });
+            contests.subscribe(onLog);
+            contests.load().catch(() => {}).then(() => contests && contests.startPolling());
+            bus.subscribe(CONTEST_TOPIC, () => { contests?.load().catch(() => {}); });
+          } catch (err) { contests = null; console.error('lessons: no contests log', err); }
         }
 
         // Another device unlocked something — reflect it.
@@ -1218,7 +1415,10 @@ registerModule(
             requireBy: snap.requireBy === 'points' ? 'points' : DEFAULTS.requireBy,
             perMinutes: num('perMinutes', (n) => n > 0),
             minAnswers: num('minAnswers', (n) => n >= 1),
-            autoApprove: snap.autoApprove === true || snap.autoApprove === 'true',
+            // Default ON since 2026-09-28, so — like `factCheck` below — only an explicit false
+            // turns it off, and never set reads as the default.
+            autoApprove: snap.autoApprove === false || snap.autoApprove === 'false' ? false
+              : snap.autoApprove === true || snap.autoApprove === 'true' ? true : DEFAULTS.autoApprove,
             // Only an explicit false turns it off; never set reads as the default.
             factCheck: snap.factCheck === false || snap.factCheck === 'false' ? false
               : snap.factCheck === true || snap.factCheck === 'true' ? true : DEFAULTS.factCheck,
@@ -1228,6 +1428,7 @@ registerModule(
           };
           resolveTopics(snap);
           if (tq && tq.stage === 'paste') updatePasteInfo();
+          syncFactBoxes();                        // the gear row changed it: every checkbox follows
           renderReview();
         });
 
@@ -1248,6 +1449,7 @@ registerModule(
         tq = null;
         if (lessons) { lessons.destroy(); lessons = null; }
         if (tlog) { tlog.destroy(); tlog = null; }
+        if (contests) { contests.destroy(); contests = null; }
         if (ledger) { ledger.destroy(); ledger = null; }
       },
       // LIVE OPTIONS for `aiModel` — photos.js's `settingsChoices` pattern. Empty until somebody

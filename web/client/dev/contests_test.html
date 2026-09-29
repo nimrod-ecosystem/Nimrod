@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>contests — "I think this question is wrong", held until a person looks</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>contests — the shared per-profile "this question is wrong" log</h1>
+<p>Mike, 2026-09-28: <i>"Maybe add a contest button to the questions? In case you think it's wrong
+when you're playing."</i> Lessons, Trivia and Word Forge all write to ONE append-only stream per
+profile. A contested question is held out of that profile's decks until a person clears it.
+Contesting costs nothing and changes nothing already recorded. Pure logic and the handle over a
+fake stream: no server needed.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  CONTESTS_STREAM, CONTEST_KINDS, CONTEST_STATUS, CONTEST_TOPIC, contestKey, contestsFrom, heldKeys,
+  createContests,
+} from '../contests.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+
+// An in-memory append-only stream with events.js's shape (load/append/get/subscribe/...). Rows get
+// an increasing `id`, as the server's do.
+function memStream() {
+  let events = []; let n = 0; const subs = new Set();
+  return {
+    rows: () => events,
+    load: async () => ({ events }), startPolling() {}, destroy() {},
+    get: () => ({ events }),
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    append: async (kind, data) => { events = [...events, { id: ++n, kind, data }]; for (const f of subs) f({ events }); },
+  };
+}
+
+(async () => {
+  try {
+    section('the key: which question a contest holds back');
+    const k = contestKey('What is the capital of France?', 'Paris');
+    check('a key is a short stable string', typeof k === 'string' && /^c-[0-9a-z]+$/.test(k), k);
+    check('*** case, punctuation and spacing do not make a different question ***',
+      contestKey('what is  the capital of FRANCE', 'paris.') === k, contestKey('what is  the capital of FRANCE', 'paris.'));
+    check('*** the answer is part of the key: the same prompt with a different answer is a different question ***',
+      contestKey('Which sentence is better writing?', 'A.') !== contestKey('Which sentence is better writing?', 'B.'));
+    check('...so a bank row whose wrong answer is FIXED comes back on its own, without anyone clearing it',
+      contestKey('How many legs does a spider have?', 'Six') !== contestKey('How many legs does a spider have?', 'Eight'));
+    check('no question, no key', contestKey('', 'x') === '' && contestKey(null, 'x') === '');
+
+    section('the derivation: latest word wins, and "kept out" is not undone by another contest');
+    const ev = (id, kind, data) => ({ id, kind, data });
+    const kA = contestKey('Q A?', 'a'); const kB = contestKey('Q B?', 'b');
+    const log = [
+      ev(1, CONTEST_KINDS.CONTEST, { key: kA, question: 'Q A?', answer: 'a', module: 'trivia', at: 't1', cid: 'x1' }),
+      ev(2, CONTEST_KINDS.CONTEST, { key: kB, question: 'Q B?', answer: 'b', module: 'wordforge', at: 't2', cid: 'x2', source: 'a line' }),
+      ev(3, CONTEST_KINDS.CONTEST, { key: kA, question: 'Q A?', answer: 'a', module: 'lessons', at: 't3', cid: 'x3' }),
+      ev(4, CONTEST_KINDS.CLEAR, { key: kA }),
+      ev(5, CONTEST_KINDS.KEEP_OUT, { key: kB }),
+      ev(6, CONTEST_KINDS.CONTEST, { key: kB, question: 'Q B?', answer: 'b', module: 'trivia', at: 't6', cid: 'x6' }),
+      ev(7, 'nonsense', { key: kA }),
+    ];
+    const by = Object.fromEntries(contestsFrom(log).map((c) => [c.key, c]));
+    check('two contested questions', Object.keys(by).length === 2, J(Object.keys(by)));
+    check('A: contested twice, then cleared -> back in play', by[kA].status === CONTEST_STATUS.CLEARED, by[kA].status);
+    check('...and its record keeps BOTH contests and which screens raised them',
+      by[kA].contests.length === 2 && J(by[kA].modules) === J(['trivia', 'lessons']), J(by[kA]));
+    check('B: kept out, and a later contest leaves it kept out (a person already decided)',
+      by[kB].status === CONTEST_STATUS.KEPT_OUT, by[kB].status);
+    check('the source line is kept when a question has one', by[kB].source === 'a line', J(by[kB]));
+    check('an unknown kind is ignored', by[kA].status === CONTEST_STATUS.CLEARED);
+    check('*** events are read in server-id order, whatever order the cache holds ***',
+      J(contestsFrom([...log].reverse())) === J(contestsFrom(log)));
+    const held = heldKeys(log);
+    check('held = still waiting OR kept out; a cleared one is not held', held.has(kB) && !held.has(kA), J([...held]));
+    check('a clear then a NEW contest holds it again',
+      heldKeys([...log, ev(8, CONTEST_KINDS.CONTEST, { key: kA, question: 'Q A?', answer: 'a', module: 'trivia', cid: 'x8' })]).has(kA));
+    check('garbage in is nothing out, never a throw',
+      contestsFrom(null).length === 0 && contestsFrom([null, 1, { kind: 'contest' }, { kind: 'contest', data: {} }]).length === 0);
+
+    section('the handle — the only thing the three games call');
+    check('it needs ctx.makeEvents, like every other shared log', (() => { try { createContests({}); return false; } catch { return true; } })());
+    const streams = {};
+    const opened = [];
+    const makeEvents = (name, opts) => { opened.push([name, opts]); return (streams[name] ||= memStream()); };
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe(CONTEST_TOPIC, (p) => heard.push(p));
+    const c = createContests({ makeEvents, bus });
+    check('*** it opens ONE per-profile stream, by name — nothing else (no points, no trials) ***',
+      opened.length === 1 && opened[0][0] === CONTESTS_STREAM && CONTESTS_STREAM === 'contests', J(opened));
+    check('append-only: there is nothing to edit or delete a contest with',
+      !['remove', 'delete', 'edit', 'set', 'update'].some((m) => typeof c[m] === 'function'));
+    await c.load();
+    check('nothing is held on a fresh profile', c.held().size === 0 && !c.isHeld('What is 2+2?', '4'));
+
+    const rec = await c.contest({ module: 'trivia', question: 'What is 2+2?', answer: '4', chosen: '4', source: '' });
+    const row = streams.contests.rows()[0];
+    check('*** a contest is one row: the key, which screen, the question, its answer, a time ***',
+      row.kind === CONTEST_KINDS.CONTEST && row.data.key === contestKey('What is 2+2?', '4') && row.data.module === 'trivia'
+        && row.data.question === 'What is 2+2?' && row.data.answer === '4' && typeof row.data.at === 'string' && row.data.at.length > 10,
+      J(row));
+    check('...and a unique contest id, so one contest raises at most one flag anywhere', typeof row.data.cid === 'string' && row.data.cid.length >= 6, J(row.data));
+    check('*** no "who": there are no accounts or roles to say, so it does not pretend to ***',
+      !('by' in row.data) && !('user' in row.data) && !('who' in row.data), J(row.data));
+    check('the call returns what it recorded', rec && rec.key === row.data.key, J(rec));
+    check('it is held straight away', c.isHeld('what is 2 + 2', '4') && c.held().has(row.data.key));
+    check('other panels on the same screen are told at once', heard.length === 1 && heard[0].key === row.data.key, J(heard));
+    check('the list shows it as held', c.list().length === 1 && c.list()[0].status === CONTEST_STATUS.HELD, J(c.list()));
+
+    await c.contest({ module: 'wordforge', question: 'Which word means brief?', answer: 'Concise', source: 'Concise means brief.', qid: 'tq-1' });
+    check('a transcript question keeps its source line and its id', c.list()[1].source === 'Concise means brief.' && c.list()[1].qid === 'tq-1', J(c.list()[1]));
+
+    await c.clear(row.data.key);
+    check('*** Clear puts it back ***', !c.isHeld('What is 2+2?', '4') && c.list()[0].status === CONTEST_STATUS.CLEARED);
+    await c.keepOut(contestKey('Which word means brief?', 'Concise'));
+    check('Keep out keeps it out', c.isHeld('Which word means brief?', 'Concise') && c.list()[1].status === CONTEST_STATUS.KEPT_OUT);
+    check('...and the log only ever grew', streams.contests.rows().length === 4, String(streams.contests.rows().length));
+
+    check('a contest with no screen named is refused, not recorded as nobody',
+      (await c.contest({ question: 'Q?', answer: 'a' })) === null && streams.contests.rows().length === 4);
+    check('a contest with no question is refused', (await c.contest({ module: 'trivia', question: '', answer: 'a' })) === null);
+    const wordKey = contestKey('obsolete', 'no longer used');
+    const w = await c.contest({ module: 'wordforge', question: 'What does “obsolete” mean?', answer: 'no longer used', key: wordKey });
+    check('a game may name the key itself (Word Forge keys a WORD, however it was asked)',
+      w && w.key === wordKey && w.question === 'What does “obsolete” mean?' && c.held().has(wordKey), J(w));
+
+    // A stream that cannot write (offline) must not throw into a game.
+    const broken = createContests({ makeEvents: () => ({ ...memStream(), append: async () => { throw new Error('offline'); } }) });
+    let threw = false; let got;
+    try { got = await broken.contest({ module: 'trivia', question: 'Q?', answer: 'a' }); } catch { threw = true; }
+    check('*** a failed write resolves to null rather than throwing into the game ***', !threw && got === null, String(got));
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>
