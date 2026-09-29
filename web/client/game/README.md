@@ -31,13 +31,42 @@ The name sign and the picture are two instances of one module, `modules/button.j
 the AAC board's card (`card_face.js`). That is Mike's call: *"the PFP/Name sign are basically
 instances of buttons."*
 
+## Nimrod the cat, the guide
+
+**Show me how** on the game page starts a 13-step walk narrated by Nimrod the cat: the four
+buttons above, then — on the profile itself, in the real kiosk — the transport bar, **Panel ▸**
+to choose the picture or the sign, the gear (the settings menu), the picture's **Picture** and
+**Frame** rows, the sign's **Words**, and **Colours** for the room. The steps are data in
+`cat_steps.js`; the cat is `../cat_guide.js`, which runs on the guided tour's own engine
+(`../tour.js`) rather than a second one.
+
+What Mike decided (2026-09-29), and where it is enforced:
+
+- **Only when asked.** He appears when "Show me how" is pressed (or a later quest step calls
+  `mountCat({ start: true })`), and on a later page only if a walk was started in that browser.
+  Nothing makes him pop up by himself; a paired bedside screen never sees him.
+- **Always dismissible.** A **Close** button, and **Escape**. Escape inside the open settings menu
+  closes the menu first; the next Escape closes him.
+- **Never a gate.** No scrim, no focus grab; everything under him keeps working, and Next alone
+  always ends the walk. Nobody touching the page for 10 minutes (a setting) closes him.
+- **How chatty is a setting.** "A few", "Some" (default) or "Lots" — on his own panel (one press)
+  and under **Nimrod's settings** on the game page, with **read aloud**, **move on by himself**
+  and the **rest** time.
+- **He is heard as well as read.** His words go to the page's output bus as `say` — on the
+  profile, the kiosk's own bus, so he queues with everything else that talks there.
+
+He notices what you do (a step already done is skipped; opening the menu moves him on), but he
+never does anything for you. His settings and his place in the walk are kept in this browser, like
+the site tour's.
+
+The profile's screen id is remembered in this browser (`nimrod:catProfile`) so the kiosk can tell
+it is on the profile; on any other screen he waits with a link to it.
+
 ## What is deliberately not here yet
 
-- **Nimrod the cat, the guide who walks you through it** — waits on the cat's design. The steps
-  above are the walkthrough's skeleton; the cat will narrate them, appear when asked or at a quest
-  step, and always be dismissible.
-- **Designed sign styles and frames** — the ones in `button.js` are simple placeholders until the
-  designed ones arrive. They replace the CSS; the stored choices stay.
+(The designed sign styles and frames that used to be listed here arrived on 2026-09-29 and are in
+`button.js`.)
+
 - **Prefabs** — "a sign" and "a picture" are just `button` instances with their own settings until
   prefabs exist.
 - **The AI sidekick, points and currencies, 3D rooms, and the later sections** of the outline.
@@ -59,3 +88,5 @@ It works signed out too, on the browser's own storage, the same way the Home pag
 
 - `index.html` — the checklist page.
 - `game.js` — the steps, as functions over any backend (tested in `dev/game_test.html`).
+- `cat_steps.js` — Nimrod's walk, as data (tested, with `../cat_guide.js`, in
+  `dev/cat_guide_test.html`, which mounts a real kiosk on a real profile to check every target).

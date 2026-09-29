@@ -108,7 +108,7 @@ async function bootLocal() {
   const list = await backend.profiles.list();
   const wanted = wantProfile && list.find((p) => p.id === wantProfile);
   const profileId = (wanted || list[0]).id;
-  await mountKiosk(root, {
+  const kiosk = await mountKiosk(root, {
     user: null,
     profileId,
     profiles: backend.profiles,
@@ -120,7 +120,7 @@ async function bootLocal() {
     sources: createLocalMediaSources(),
   });
   boot.remove();
-  offerTour();
+  offerTour(kiosk);
 
   // THE ONLY PLACE THAT DECIDES A STRANGER IS LOOKING. `mountDemoStrip` renders when asked
   // and never decides for itself, so this branch — signed out, no device key — is the whole
@@ -172,11 +172,29 @@ async function bootLocal() {
 // panel is still there. It is dismissable, it blocks nothing, and the page underneath stays
 // live — so it is untidy rather than unsafe — but it is real, and the fix if it ever bites is a
 // clear-on-pairing rather than another branch here.
-function offerTour() {
+function offerTour(kiosk = null) {
   import('./tour.js').then(async ({ mountTour }) => {
     const { STEPS } = await import('./steps.js');
     mountTour(document.body, { steps: STEPS, path: '/kiosk.html' });
   }).catch((e) => console.warn('tour', e));
+  offerCat(kiosk);
+}
+
+// NIMROD THE CAT (game step 1's walkthrough), on exactly the tour's terms: `mountCat` returns null
+// unless somebody pressed "Show me how" on the game page in THIS browser, so a paired bedside
+// screen never sees him. His words go to this screen's own output bus, so they queue with, and
+// duck under, everything else that talks here. `catPathOnKiosk` says whether this screen is the
+// profile the walk is about; on any other screen he waits with a link to it.
+function offerCat(kiosk) {
+  Promise.all([import('./cat_guide.js'), import('./game/cat_steps.js')])
+    .then(([{ mountCat }, { CAT_STEPS, catGoThere, catPathOnKiosk }]) => {
+      mountCat(document.body, {
+        steps: CAT_STEPS,
+        path: catPathOnKiosk(kiosk?.screenId?.()),
+        goThere: catGoThere(),
+        output: kiosk?.output?.() || null,
+      });
+    }).catch((e) => console.warn('cat', e));
 }
 
 (async () => {
@@ -236,9 +254,9 @@ function offerTour() {
   try {
     const profiles = createProfilesClient({ user: who.user });
     const profileId = await ensureProfile(profiles, who.user, wantProfile);
-    await mountKiosk(root, { user: who.user, profileId, profiles });
+    const kiosk = await mountKiosk(root, { user: who.user, profileId, profiles });
     boot.remove();
-    offerTour();
+    offerTour(kiosk);
   } catch (e) {
     boot.textContent = 'Could not reach the dashboard server. It will retry when the connection returns.';
     console.error('kiosk boot failed', e);

@@ -376,7 +376,10 @@ export function mountSettings(root, {
       // cursor row shows it too and a sighted switch user sees what "Blue" means.
       const chip = it.color && it.color.value
         ? `<span class="st-chip" style="--sw:${esc(it.color.value)}" aria-hidden="true"></span>` : '';
-      const row = `<button class="st-item${on ? ' on' : ''}" data-n="${n}" type="button"${dis}
+      // `data-id` is the row's stable name (`set:label`, `close`...). `data-n` is its position,
+      // which moves whenever a row appears above it; a guide pointing at "the Words row" (the
+      // cat, `game/cat_steps.js`) needs the name.
+      const row = `<button class="st-item${on ? ' on' : ''}" data-n="${n}" data-id="${esc(it.id)}" type="button"${dis}
         aria-current="${on ? 'true' : 'false'}"${it.edit ? ` aria-expanded="${isEditing ? 'true' : 'false'}"` : ''}>
         <span class="st-label">${esc(it.label)}</span>
         ${it.hint || chip ? `<span class="st-hint">${chip}${esc(it.hint || '')}</span>` : ''}
