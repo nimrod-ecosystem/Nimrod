@@ -35,8 +35,9 @@ import { AMPLIFY_FIELDS } from '../amplify.js';
 import { createTryHost } from '../module_try.js';
 import {
   createAutomation, normalizeBinding, normalizeSource, normalizeMap, applyCurve, clockValue, lfoValue,
-  readNumber, bindable, bindableSettings, AUTOMATION_DEFAULTS, LFO_MIN_PERIOD_MS, DEFAULT_GUARDS,
+  readNumber, bindable, bindableSettings, AUTOMATION_DEFAULTS, LFO_MIN_PERIOD_MS, DEFAULT_GUARDS, lfoMinPeriodMs,
 } from '../automation.js';
+import { worstInAnySecond } from '../flash_limit.js';
 import { mountAutomationPanel } from '../automation_panel.js';
 import { shiftColor } from '../modules/button.js';
 import '../modules/algebra.js';
@@ -340,6 +341,84 @@ try {
     eng.remove('lf');
     check('*** removed: no timer left ***', eng.activeTimers() === 0 && clk.pending() === 0, `${eng.activeTimers()} / ${clk.pending()}`);
     eng.destroy();
+  }
+
+  section('*** THE SCREEN\'S FLASH LIMIT (flash_limit.js): an LFO never swings more often than the limit, counted peak by peak ***');
+  {
+    check('at the ceiling (3) and at 2 the one-second floor is still the stricter', lfoMinPeriodMs(3) === LFO_MIN_PERIOD_MS
+      && lfoMinPeriodMs(2) === LFO_MIN_PERIOD_MS && lfoMinPeriodMs() === LFO_MIN_PERIOD_MS);
+    check('at 1 a second the limit wins: a second, plus one 100 ms tick, plus a frame',
+      Math.abs(lfoMinPeriodMs(1, 100) - (1100 + 1000 / 60)) < 1e-9, String(lfoMinPeriodMs(1, 100)));
+    check('a limit above 3 is read as 3', lfoMinPeriodMs(10) === LFO_MIN_PERIOD_MS);
+    // A FLASH is one swing up then down: count the PEAKS of the value on screen, read every 16 ms
+    // frame. A peak is a run of equal values higher than both neighbours; its time is the MIDDLE of
+    // the run (rounding makes the top of a wave flat, and the middle is where the wave really peaks).
+    const peaks = (samples) => {
+      const runs = [];
+      for (const s of samples) {
+        const last = runs[runs.length - 1];
+        if (last && last.v === s.v) last.t1 = s.t; else runs.push({ v: s.v, t0: s.t, t1: s.t });
+      }
+      const out = [];
+      for (let i = 1; i < runs.length - 1; i++) {
+        if (runs[i].v > runs[i - 1].v && runs[i].v > runs[i + 1].v) out.push((runs[i].t0 + runs[i].t1) / 2);
+      }
+      return out;
+    };
+    const runLfo = ({ limit, periodMs, tickMs, ms = 20000, shape = 'sine' }) => {
+      const bus = createBus(); const clk = fakeClock();
+      const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer,
+        ...(limit !== undefined ? { flashLimit: limit } : {}) });
+      const st = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+      eng.add({ id: 'w', target: { instance: 'p1', key: 'level' }, source: { kind: 'lfo', periodMs, shape, ...(tickMs ? { tickMs } : {}) } });
+      const period = eng.lfoPeriod('w');
+      const samples = [];
+      for (let s = 0; s < ms; s += 16) { clk.advance(16); samples.push({ t: clk.now(), v: st.get().level }); }
+      const p = peaks(samples);
+      eng.destroy();
+      return { p, period, worst: worstInAnySecond(p), samples };
+    };
+    for (const L of [3, 2, 1]) {
+      for (const [periodMs, tickMs] of [[50, undefined], [1000, undefined], [1000, 16], [334, 250]]) {
+        const r = runLfo({ limit: L, periodMs, tickMs });
+        check(`limit ${L}, asked for ${periodMs} ms on a ${tickMs || 100} ms tick: runs at ${Math.round(r.period)} ms; `
+          + `peaks in any closed second: at most ${r.worst} (${r.p.length} in 20 s)`, r.worst <= L && r.p.length >= 10, `${r.worst}`);
+      }
+    }
+    {
+      // WITHOUT the limit at 1 a second, a 1000 ms wave on a 100 ms tick CAN put two peaks in one
+      // closed second - the jitter the margin exists for. Proves the check can go red.
+      const base = [];
+      for (let t = 0; t <= 3000; t += 100) base.push({ t, v: 0.5 - 0.5 * Math.cos(2 * Math.PI * t / 1000) });
+      check('CONTROL: an unslowed 1000 ms wave sampled every 100 ms has 2 peaks in a closed second', worstInAnySecond(peaks(base)) === 2);
+    }
+    {
+      // The limit is read LIVE, and a change does not make the value jump.
+      let L = 3;
+      const bus = createBus(); const clk = fakeClock();
+      const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer, flashLimit: () => L });
+      const st = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+      eng.add({ id: 'w', target: { instance: 'p1', key: 'level' }, source: { kind: 'lfo', periodMs: 1000, shape: 'triangle' } });
+      clk.advance(1250);
+      check('limit 3: runs at its own 1000 ms', eng.lfoPeriod('w') === 1000 && eng.flashLimit() === 3);
+      const before = st.get().level;
+      L = 1;
+      clk.advance(100);
+      const after = st.get().level;
+      check('*** the limit lowered: the running wave slows to lfoMinPeriodMs(1) on its next tick ***',
+        eng.lfoPeriod('w') === lfoMinPeriodMs(1) && eng.lfoPeriod('w') > 1100, String(eng.lfoPeriod('w')));
+      check('...without a jump: one tick moves the value by at most one tick\'s worth', Math.abs(after - before) <= 20 + 1e-9, `${before} -> ${after}`);
+      check('the stored binding is NOT rewritten (it runs at its own speed again when the limit rises)', eng.get('w').source.periodMs === 1000);
+      L = 3; clk.advance(100);
+      check('limit back to 3: its own 1000 ms again', eng.lfoPeriod('w') === 1000);
+      eng.destroy();
+    }
+    {
+      const r = runLfo({ limit: () => { throw new Error('broken'); }, periodMs: 50 });
+      check('a limit that throws reads as the ceiling: the one-second floor, never faster', r.period === LFO_MIN_PERIOD_MS && r.worst <= 3);
+      const d = runLfo({ periodMs: 50 });
+      check('no limit given: the ceiling', d.period === LFO_MIN_PERIOD_MS);
+    }
   }
 
   section('smoothing glides and then STOPS; a rate limit sends the latest value');

@@ -27,6 +27,9 @@
 // tempo is capped at 175 bpm (see rhythm_beat.js for why not 180). A hit shows as a mark INSIDE the
 // tile that is already lit - never a second light - and the line under the tiles changes at most
 // three times a second too (STATUS_GAP_MS). `dev/rhythm_test.html` counts every onset.
+// THE LIMIT IS THE SCREEN'S, not this file's: `flashLimit(ctx)` (flash_limit.js) - 3 unless the host
+// says lower (the "Flashing can cause seizures" starting default, or a setting). A lower limit slows
+// the beat, the words and the hit mark to fit, and a limit changed mid-game restarts the beat at once.
 //
 // HITS ARE SHOWN WITH MORE THAN COLOUR: a lit tile carries a big dot; a hit puts "✓ Hit!" in it; early
 // and late say "◀ A little early" / "A little late ▶" under the tiles; the tally is a number.
@@ -48,16 +51,20 @@ import { createPointsLedger } from '../points.js';
 import { createGameTones } from '../game_tones.js';
 import { TEMPO_TOPIC, normalizeTempo } from '../tempo.js';
 import {
-  MAX_BPM, TEMPOS, WINDOWS, LIT_FRACTION, PATTERNS, clampBpm, lightEvery, intervalFor, windowMs, judge,
-  roundOf, createPattern,
+  MAX_BPM, TEMPOS, WINDOWS, LIT_FRACTION, PATTERNS, clampBpm, lightEvery, windowMs, judge,
+  roundOf, createPattern, maxBpmFor,
 } from '../rhythm_beat.js';
+import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 
 export const GAME = 'rhythm';
 export const SCORE_LABEL = 'Rhythm: on the beat';
 
 // The line under the tiles changes no more often than this (three a second, with a margin), so a
 // burst of presses cannot make text flicker. The last word is shown when the gap allows.
+// At a LOWER flash limit the gap grows with it (`statusGapMs`): the words and the hit mark are
+// visible changes too, and keep the same limit as the lights.
 export const STATUS_GAP_MS = 350;
+export const statusGapMs = (limit) => Math.max(STATUS_GAP_MS, minFlashPeriodMs(limit));
 // Clicks are scheduled this far ahead on the audio clock, so a late frame does not make a late click.
 const LOOKAHEAD_MS = 120;
 // Endless play (no rounds): the beat stops after this many beats with no press. Argued, not a setting.
@@ -96,7 +103,8 @@ const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'Beats hit this round. A Scoreboard on the same screen can show it instead.' }),
   { key: 'tempo', label: 'Speed of the beat', kind: 'choice', default: 60, level: 'essential',
     options: TEMPOS.map((b) => ({ value: b, label: `${b} a minute${b === 60 ? ' (one a second)' : ''}` })),
-    note: `Never faster than ${MAX_BPM} a minute: the tiles must not flash more than three times a second.` },
+    note: `Never faster than ${MAX_BPM} a minute: the tiles must not flash more than three times a second. `
+      + `A screen set to fewer flashes a second slows the beat to fit (2 a second: ${maxBpmFor(2)}; 1 a second: ${maxBpmFor(1)}).` },
   { key: 'window', label: 'How close to the beat counts', kind: 'choice', default: 'generous', level: 'essential',
     options: [
       { value: 'tight', label: 'Close (a tenth of a second)' }, { value: 'normal', label: 'Fairly close' },
@@ -190,12 +198,15 @@ registerModule(
 
     const now = () => clock.now();
     const beatAt = (k) => run.origin + k * run.interval;
+    // THE SCREEN'S FLASH LIMIT, read fresh each time (the kiosk supplies a getter).
+    const limitNow = () => flashLimit(ctx);
     const tempoNow = () => {
+      const limit = limitNow();
       if (cfg.beatFrom === 'screen' && screenTempo) {
-        const every = lightEvery(screenTempo.bpm);
-        return { bpm: screenTempo.bpm / every, origin: screenTempo.origin, meter: screenTempo.meter || 4, every };
+        const every = lightEvery(screenTempo.bpm, limit);
+        return { bpm: screenTempo.bpm / every, origin: screenTempo.origin, meter: screenTempo.meter || 4, every, limit };
       }
-      return { bpm: clampBpm(cfg.tempo), origin: null, meter: 4, every: 1 };
+      return { bpm: clampBpm(cfg.tempo, limit), origin: null, meter: 4, every: 1, limit };
     };
 
     // ---- the line under the tiles, never more than three changes a second ----------------------
@@ -206,7 +217,7 @@ registerModule(
     function flushStatus() {
       if (statusWant === status || !sayEl) return;
       const t = now();
-      if (t - statusAt < STATUS_GAP_MS) return;          // shown on a later frame
+      if (t - statusAt < statusGapMs(limitNow())) return;   // shown on a later frame
       status = statusWant; statusAt = t;
       sayEl.textContent = status;
     }
@@ -241,7 +252,7 @@ registerModule(
         // Follow the screen's grid: this run's first beat is the next of ITS beats (every nth).
         origin = tp.origin; k0 = Math.floor((t - origin) / interval) + 1;
       } else { origin = t + interval; k0 = 0; }   // own beat: the first one a beat from now
-      run = { origin, interval, k0, meter: Math.max(1, Math.round(tp.meter / tp.every)) || 4,
+      run = { origin, interval, k0, limit: tp.limit, meter: Math.max(1, Math.round(tp.meter / tp.every)) || 4,
         tileOf: createPattern(cfg.pattern, cfg.tiles, Math.floor(rand() * 1e9) + 1) };
       lastSeen = k0 - 1; lastSounded = k0 - 1;
       judged = new Map(); round = null; lit = null; streak = 0; quietBeats = 0;
@@ -276,6 +287,9 @@ registerModule(
     }
 
     function tick(t) {
+      // A limit lowered (or raised) while the beat runs: the beat is re-made at the new cap at once,
+      // rather than finishing the round too fast for the person the new limit is for.
+      if (run && limitNow() !== run.limit) restart();
       if (run) {
         const win = windowMs(cfg.window, run.interval);
         // beats that have started since the last look
@@ -388,7 +402,7 @@ registerModule(
       // the lights: at the fastest tempos a hit whose mark would come too soon after the last one is
       // still counted, sounded and tallied - it just does not draw a mark.
       const tNow = now();
-      if (lit && judged.get(lit.k) === 'hit' && markedK !== lit.k && tNow - lastMarkAt >= STATUS_GAP_MS) {
+      if (lit && judged.get(lit.k) === 'hit' && markedK !== lit.k && tNow - lastMarkAt >= statusGapMs(limitNow())) {
         markedK = lit.k; lastMarkAt = tNow;
       }
       tileEls.forEach((el, i) => {

@@ -17,10 +17,21 @@
 // kind of absolute this project allows (CLAUDE.md, "Design absolutes"): nobody's preference is
 // served by a screen that can trigger a seizure, so no setting goes above it and a faster tempo
 // from elsewhere on the screen is halved until it fits (`lightEvery`).
-export const FLASH_LIMIT_PER_SEC = 3;
-export const MAX_BPM = 175;
-// Below 30 a "beat" is two seconds of nothing: not a rhythm any more, and too slow to feel.
+//
+// *** THE CAP IS DERIVED FROM THE SCREEN'S FLASH LIMIT, NOT A SEPARATE CONSTANT (2026-09-30). ***
+// `flash_limit.js`'s `maxPerMinute(limit)` is the one formula: at the WCAG ceiling (3) it is 175, the
+// number this file always used; a person whose limit is 2 gets 115, at 1 gets 55. Every function
+// below takes the limit as an optional last argument and defaults to the ceiling.
+import { FLASH_LIMIT_MAX, maxPerMinute, normalizeFlashLimit } from './flash_limit.js';
+
+export const FLASH_LIMIT_PER_SEC = FLASH_LIMIT_MAX;
+export const MAX_BPM = maxPerMinute(FLASH_LIMIT_MAX);
+// Below 30 a "beat" is two seconds of nothing: not a rhythm any more, and too slow to feel. The flash
+// limit's own floor (1 a second) caps tempo at 55, so this floor never overrides the limit.
 export const MIN_BPM = 30;
+
+/** The fastest tempo at this flash limit (default: the ceiling, 175). */
+export const maxBpmFor = (limit = FLASH_LIMIT_MAX) => maxPerMinute(normalizeFlashLimit(limit));
 
 // The tempo setting's choices. Top choice 150, well inside the limit; the slow end is where a switch
 // user starts (the module's default is 60: one beat a second).
@@ -37,22 +48,25 @@ export const WINDOW_MAX_FRACTION = 0.4;
 export const LIT_FRACTION = 0.5;
 export const PATTERNS = Object.freeze(['walk', 'bounce', 'random']);
 
-export function clampBpm(bpm) {
+export function clampBpm(bpm, limit = FLASH_LIMIT_MAX) {
+  const top = maxBpmFor(limit);
   const n = Number(bpm);
-  if (!Number.isFinite(n) || n <= 0) return 60;
-  return Math.max(MIN_BPM, Math.min(MAX_BPM, n));
+  if (!Number.isFinite(n) || n <= 0) return Math.min(60, top);
+  // The flash cap is applied LAST, so it wins over the floor if they ever cross.
+  return Math.min(top, Math.max(MIN_BPM, n));
 }
 
 /** For a tempo from elsewhere: light every nth beat, n a power of two, so the lights stay under the limit. */
-export function lightEvery(bpm) {
+export function lightEvery(bpm, limit = FLASH_LIMIT_MAX) {
+  const top = maxBpmFor(limit);
   const b = Number(bpm);
   if (!Number.isFinite(b) || b <= 0) return 1;
   let n = 1;
-  while (b / n > MAX_BPM && n < 64) n *= 2;
+  while (b / n > top && n < 64) n *= 2;
   return n;
 }
 
-export const intervalFor = (bpm) => 60000 / clampBpm(bpm);
+export const intervalFor = (bpm, limit = FLASH_LIMIT_MAX) => 60000 / clampBpm(bpm, limit);
 
 /** The window actually used at this interval: the setting, capped at WINDOW_MAX_FRACTION of the gap. */
 export function windowMs(setting, intervalMs) {

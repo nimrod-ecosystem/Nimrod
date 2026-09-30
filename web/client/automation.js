@@ -62,6 +62,7 @@ import { verbTopic } from './actions.js';
 import { MASTER_DEFAULTS } from './master_volume.js';
 import { floorKey } from './mixer.js';
 import { CHANNELS } from './audio_bus.js';
+import { FLASH_LIMIT_MAX, FRAME_MS, minFlashPeriodMs, normalizeFlashLimit } from './flash_limit.js';
 
 const ID_RE = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 
@@ -147,7 +148,23 @@ export const DEFAULT_GUARDS = Object.freeze({
 // a party screen - is real; on a product whose first screen is at a bedside, that is a decision for
 // Mike, not a default (on his list). A fast BUS source (a sensor flapping) is NOT covered by this;
 // see `minIntervalMs`.
+//
+// *** AND THE SCREEN'S FLASH LIMIT ON TOP (2026-09-30). *** One LFO period is one full swing - one
+// flash - so the period a running LFO may have is ALSO bounded by the screen's `flashLimitPerSecond`
+// (flash_limit.js): `lfoMinPeriodMs(limit, tickMs)`. The jitter is the LFO's own tick (it re-reads on
+// a 100 ms tick, so a peak can land up to a tick early or late). At the ceiling (3) and at 2 the
+// one-second floor above is still the stricter; at 1 a second the limit wins (about 1117 ms at the
+// default tick: a second, plus a tick, plus a frame). A stored binding is NEVER rewritten by this - it runs slower while the limit is lower, and
+// at its own speed again when the limit rises.
 export const LFO_MIN_PERIOD_MS = 1000;
+
+/** The shortest LFO period allowed at this flash limit and tick. */
+export function lfoMinPeriodMs(limit = FLASH_LIMIT_MAX, tickMs = AUTOMATION_DEFAULTS.lfoTickMs) {
+  // The jitter: the wave's own tick (a peak is read up to a tick from where it really is), plus the
+  // frame the change is then drawn on. A tick is capped at a second - a slower tick is its own limit.
+  const jitterMs = Math.min(1000, Math.max(0, Number(tickMs) || 0)) + FRAME_MS;
+  return Math.max(LFO_MIN_PERIOD_MS, minFlashPeriodMs(limit, { jitterMs }));
+}
 
 const num = (v, d) => { const n = Number(v); return v !== null && v !== '' && Number.isFinite(n) ? n : d; };
 const clamp01 = (t) => Math.max(0, Math.min(1, t));
@@ -362,7 +379,14 @@ export function createAutomation({
   guards = DEFAULT_GUARDS,
   onChange = null,
   onStatus = null,
+  // The screen's flash limit (flash_limit.js): a number or a function read on every LFO tick, so a
+  // changed setting applies to a running wave. Missing or broken reads as the ceiling, 3.
+  flashLimit = FLASH_LIMIT_MAX,
 } = {}) {
+  const limitNow = () => {
+    try { return normalizeFlashLimit(typeof flashLimit === 'function' ? flashLimit() : flashLimit); }
+    catch { return FLASH_LIMIT_MAX; }
+  };
   const bindings = new Map();     // id -> normalized binding
   const targets = new Map();      // instance -> { fields, raw, handle, overlay, listeners }
   const runners = new Map();      // binding id -> runner
@@ -522,9 +546,18 @@ export function createAutomation({
       };
       read();
     } else if (src.kind === 'lfo') {
-      const origin = now();
+      // The period actually run: the binding's, slowed to the screen's flash limit when that is
+      // stricter. When it changes mid-wave the ORIGIN moves so the phase carries on from where it
+      // was - a limit changing must not make the value jump (a jump is itself a flash).
+      const periodNow = () => Math.max(src.periodMs, lfoMinPeriodMs(limitNow(), src.tickMs));
+      let period = periodNow();
+      let origin = now();
       const read = () => {
-        input(lfoValue(src.shape, (now() - origin) / src.periodMs));
+        const t = now();
+        const p = periodNow();
+        if (p !== period) { origin = t - ((t - origin) / period) * p; period = p; }
+        r.periodMs = period;
+        input(lfoValue(src.shape, (t - origin) / period));
         r.tick = after(read, src.tickMs);
       };
       read();
@@ -681,5 +714,8 @@ export function createAutomation({
     // For teardown tests: every timer this engine has armed and not yet seen fire or cancelled.
     activeTimers: () => timers.size,
     running: () => runners.size,
+    // The period an LFO binding is ACTUALLY running at (its own, or slower under the flash limit).
+    lfoPeriod: (id) => runners.get(id)?.periodMs ?? null,
+    flashLimit: () => limitNow(),
   };
 }

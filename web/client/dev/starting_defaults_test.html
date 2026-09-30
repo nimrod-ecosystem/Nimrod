@@ -36,6 +36,10 @@ import { createPresetLibrary } from '../presets.js';
 import { LEVELS } from '../settings_fields.js';
 import { THEMES, contrast } from '../theme.js';
 import { SUBTITLES_FIELDS } from '../subtitles.js';
+import {
+  FLASH_LIMIT_KEY, FLASH_LIMIT_MAX, FLASH_LIMIT_MIN, FLASH_LIMIT_DEFAULT, FLASH_LIMIT_FIELD,
+  normalizeFlashLimit, flashLimit, flashLimitFrom, minFlashPeriodMs, maxPerMinute, worstInAnySecond,
+} from '../flash_limit.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -441,6 +445,43 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
         btn('condition', 'motion').getAttribute('aria-pressed') === 'true'
           && btn('condition', 'stroke').getAttribute('aria-pressed') === 'true');
       reopened.destroy();
+    }
+
+    section('*** flashLimitPerSecond IS READ (flash_limit.js) - no longer a value nothing looks at ***');
+    {
+      const ph = defaultsFor({ conditions: ['photosensitive'] });
+      check('the photosensitive layer, read by the host helper, is 3', flashLimitFrom([{}], ph.layer) === 3);
+      check('no layer and no setting: the ceiling (3)', flashLimitFrom([{}], {}) === FLASH_LIMIT_DEFAULT && FLASH_LIMIT_DEFAULT === 3);
+      check('*** a chosen value wins over the layer (defaults, never locks) ***', flashLimitFrom([{ flashLimitPerSecond: 1 }], ph.layer) === 1);
+      check('the layer fills only a row that did not choose', flashLimitFrom([{ theme: 'warm' }], { flashLimitPerSecond: 2 }) === 2);
+      check('*** two rows (screen, person) that both chose: the stricter wins ***',
+        flashLimitFrom([{ flashLimitPerSecond: 3 }, { flashLimitPerSecond: 1 }], {}) === 1
+          && flashLimitFrom([{ flashLimitPerSecond: 2 }, {}], {}) === 2);
+      check('*** NOTHING goes above 3: not a setting, not a layer ***',
+        flashLimitFrom([{ flashLimitPerSecond: 10 }], {}) === 3 && flashLimitFrom([{}], { flashLimitPerSecond: 60 }) === 3
+          && normalizeFlashLimit(4) === FLASH_LIMIT_MAX);
+      check('below the floor reads as the floor (1)', normalizeFlashLimit(0) === FLASH_LIMIT_MIN && normalizeFlashLimit(-5) === 1
+        && FLASH_LIMIT_MIN === 1);
+      check('garbage reads as the default, never as 0 or "unlimited"', [null, undefined, '', 'lots', NaN, true, {}].every((v) => normalizeFlashLimit(v) === 3));
+      check('a module reads it off ctx - a value or a getter', flashLimit({ flashLimitPerSecond: 2 }) === 2
+        && flashLimit({ flashLimitPerSecond: () => 1 }) === 1
+        && flashLimit({ get flashLimitPerSecond() { return 1; } }) === 1);
+      check('a host that supplies nothing, or throws, gets 3', flashLimit({}) === 3 && flashLimit(null) === 3
+        && flashLimit({ flashLimitPerSecond: () => { throw new Error('x'); } }) === 3);
+      check('the key is the one starting_defaults.js sets', FLASH_LIMIT_KEY === 'flashLimitPerSecond'
+        && CONDITIONS.find((c) => c.id === 'photosensitive').sets.some((s) => s.key === FLASH_LIMIT_KEY));
+      check('the shortest period at 3 is a third of (a second plus a frame)', Math.abs(minFlashPeriodMs(3) - (1000 + 1000 / 60) / 3) < 1e-9);
+      check('per minute: 175 / 115 / 55 at 3 / 2 / 1', maxPerMinute(3) === 175 && maxPerMinute(2) === 115 && maxPerMinute(1) === 55);
+      for (const L of [1, 2, 3]) {
+        const p = 60000 / maxPerMinute(L);
+        check(`at ${L}: ${L} gaps exceed a second plus a frame (${(L * p).toFixed(1)} ms)`, L * p > 1000 + 1000 / 60);
+      }
+      check('worstInAnySecond counts a CLOSED second (1000 ms apart is the same second)',
+        worstInAnySecond([0, 1000]) === 2 && worstInAnySecond([0, 1000.1]) === 1 && worstInAnySecond([]) === 0
+          && worstInAnySecond([0, 300, 600, 900, 1200]) === 4);
+      check('the settings row only offers 3 and below, defaults to 3, and cannot be driven by an automation',
+        FLASH_LIMIT_FIELD.options.every((o) => o.value <= 3 && o.value >= 1) && FLASH_LIMIT_FIELD.default === 3
+          && FLASH_LIMIT_FIELD.automatable === false && FLASH_LIMIT_FIELD.key === FLASH_LIMIT_KEY);
     }
 
   } catch (e) {

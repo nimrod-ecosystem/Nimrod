@@ -41,7 +41,9 @@ import {
   FLASH_LIMIT_PER_SEC, MAX_BPM, MIN_BPM, TEMPOS, WINDOWS, WINDOW_MAX_FRACTION, clampBpm, lightEvery, windowMs,
   judge, roundOf, createPattern,
 } from '../rhythm_beat.js';
-import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS } from '../modules/rhythm.js';
+import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS, statusGapMs } from '../modules/rhythm.js';
+import { maxBpmFor } from '../rhythm_beat.js';
+import { worstInAnySecond, maxPerMinute, FRAME_MS } from '../flash_limit.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -94,12 +96,14 @@ function scratch(w = 960, h = 540) {
 }
 let n = 0;
 function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, audio = createAudioBus(),
-                 points = fakeStream(), clock = manualClock(), injectClock = true, contexts = [] } = {}) {
+                 points = fakeStream(), clock = manualClock(), injectClock = true, contexts = [],
+                 flashLimitPerSecond } = {}) {
   const state = fakeState(saved);
   const inst = mountModule(GAME, {
     mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
     instanceId: `rh${++n}`, reducedMotion, rand: () => 0.42, audio,
     ...(injectClock ? { clock } : {}),
+    ...(flashLimitPerSecond !== undefined ? { flashLimitPerSecond } : {}),
     makeAudioContext: () => { const c = createFakeAudioContext(); contexts.push(c); return c; },
     makeEvents: (k) => (k === 'points' ? points : fakeStream()),
   });
@@ -346,6 +350,99 @@ try {
     check(`hit marks in any one second: at most ${worst(markOn.map((m) => m.now))}`, worst(markOn.map((m) => m.now)) <= 3);
     check(`*** the words under the tiles: at most ${worst(statusAt)} changes in any second (limit 3) ***`, worst(statusAt) <= 3, String(worst(statusAt)));
     t.inst.destroy();
+  }
+
+  // =====================================================================
+  section('*** THE SCREEN\'S FLASH LIMIT (flash_limit.js): the cap is derived from it, and a lower limit is honoured, onset by onset ***');
+  {
+    check('*** 175 is DERIVED, not a constant: MAX_BPM === maxPerMinute(3) === maxBpmFor() === 175 ***',
+      MAX_BPM === 175 && maxPerMinute(3) === 175 && maxBpmFor() === 175 && maxBpmFor(3) === 175);
+    check('a lower limit lowers the cap: 2 a second -> 115, 1 a second -> 55', maxBpmFor(2) === 115 && maxBpmFor(1) === 55,
+      `${maxBpmFor(2)} / ${maxBpmFor(1)}`);
+    for (const L of [1, 2, 3]) {
+      const iv = 60000 / maxBpmFor(L);
+      check(`at limit ${L}: ${L + 1} lights span more than a second plus a 60 Hz frame (${(L * iv).toFixed(1)} ms)`, L * iv > 1000 + FRAME_MS);
+    }
+    check('a limit above 3 is read as 3 - the ceiling is not a choice', maxBpmFor(10) === 175 && clampBpm(400, 10) === 175);
+    check('clampBpm and lightEvery take the limit', clampBpm(150, 1) === 55 && lightEvery(240, 1) === 8 && 240 / lightEvery(240, 1) <= 55);
+    check('the words under the tiles slow with the limit', statusGapMs(3) === STATUS_GAP_MS && statusGapMs(1) > 1000);
+
+    // Play for 20 s at the fastest saved tempo, pressing at random, and count every onset.
+    const flashRun = (t, ms = 20000) => {
+      const tiles = [...t.host.querySelectorAll('.rh-tile')];
+      let prev = tiles.map(() => ({ lit: false, mark: false }));
+      const litOn = [], markOn = [], statusAt = [];
+      let lastStatus = t.say();
+      let seed = 11;
+      const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      let nextPress = t.clock.now() + 200;
+      const end = t.clock.now() + ms;
+      while (t.clock.now() < end) {
+        t.clock.tick(1000 / 60);
+        if (t.clock.now() >= nextPress) { t.pub('select'); nextPress = t.clock.now() + 20 + rnd() * 300; }
+        const now = t.clock.now();
+        tiles.forEach((el, i) => {
+          const lit = el.dataset.lit === '1', mark = !!el.dataset.mark;
+          if (lit && !prev[i].lit) litOn.push(now);
+          if (mark && !prev[i].mark) markOn.push(now);
+          prev[i] = { lit, mark };
+        });
+        if (t.say() !== lastStatus) { statusAt.push(now); lastStatus = t.say(); }
+      }
+      return { litOn, markOn, statusAt };
+    };
+    for (const L of [3, 2, 1]) {
+      const t = mount({ saved: { tempo: MAX_BPM, stopWhenIdle: false }, flashLimitPerSecond: L });
+      t.pub('select');
+      check(`limit ${L}: the beat runs at ${maxBpmFor(L)} a minute, whatever the saved tempo (${MAX_BPM})`,
+        Math.abs(t.probe().run.interval - 60000 / maxBpmFor(L)) < 1e-9, String(t.probe().run.interval));
+      const r = flashRun(t);
+      const wl = worstInAnySecond(r.litOn), wm = worstInAnySecond(r.markOn), ws = worstInAnySecond(r.statusAt);
+      check(`limit ${L}: 20 s played (${r.litOn.length} lights, ${r.markOn.length} marks, ${r.statusAt.length} word changes)`,
+        r.litOn.length > 10 && r.markOn.length >= 1);
+      check(`*** limit ${L}: lights in any closed second: at most ${wl} ***`, wl <= L, String(wl));
+      check(`*** limit ${L}: hit marks in any closed second: at most ${wm} ***`, wm <= L, String(wm));
+      check(`*** limit ${L}: changes of the words in any closed second: at most ${ws} ***`, ws <= L, String(ws));
+      t.inst.destroy();
+    }
+    {
+      const bus = createBus();
+      const clock = manualClock();
+      const t = mount({ bus, clock, saved: { beatFrom: 'screen', stopWhenIdle: false }, flashLimitPerSecond: 1 });
+      bus.publish(TEMPO_TOPIC, { bpm: 240, origin: clock.now() - 10, meter: 4 });
+      t.pub('select');
+      check('limit 1, a screen tempo of 240: every 8th beat lights (30 a minute)', Math.abs(t.probe().run.interval - 2000) < 1e-9,
+        String(t.probe().run.interval));
+      const r = flashRun(t, 10000);
+      check(`...and lights in any second: at most ${worstInAnySecond(r.litOn)} (limit 1)`, worstInAnySecond(r.litOn) <= 1 && r.litOn.length >= 4);
+      t.inst.destroy();
+    }
+    {
+      // The limit is a GETTER on the kiosk: lowering it mid-game re-makes the beat at once.
+      let L = 3;
+      const t = mount({ saved: { tempo: 150, stopWhenIdle: false }, flashLimitPerSecond: () => L });
+      t.pub('select');
+      t.clock.run(3000);
+      check('running at 150 under limit 3', Math.abs(t.probe().run.interval - 400) < 1e-9);
+      L = 1;
+      const changedAt = t.clock.now();
+      const r = flashRun(t, 10000);
+      check('*** the limit lowered mid-game: the beat is re-made at 55 on the next frame ***',
+        Math.abs(t.probe().run.interval - 60000 / 55) < 1e-9 && t.probe().running, String(t.probe().run?.interval));
+      check(`...and from then on, lights in any second: at most ${worstInAnySecond(r.litOn.filter((x) => x > changedAt))} (limit 1)`,
+        worstInAnySecond(r.litOn.filter((x) => x > changedAt)) <= 1);
+      t.inst.destroy();
+    }
+    {
+      const t = mount({ flashLimitPerSecond: () => { throw new Error('broken host'); } });
+      t.pub('select');
+      check('a host whose limit throws gets the ceiling, not a crash', t.probe().running && t.probe().run.limit === 3);
+      t.inst.destroy();
+      const u = mount();
+      u.pub('select');
+      check('a host that supplies no limit gets the ceiling (3)', u.probe().run.limit === 3);
+      u.inst.destroy();
+    }
   }
 
   section('the beat from the screen (tempo.js)');
