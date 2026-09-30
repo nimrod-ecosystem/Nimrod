@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>starting_defaults.js — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #stage{max-width:640px;margin-top:16px}
+</style>
+<link rel="stylesheet" href="../starting_defaults.css">
+</head>
+<body>
+<h1>starting_defaults.js — test</h1>
+<p>Starting settings by need and age (MIKE_CHANGE_LIST.md rows 2.43 + 2.48): a difficulty-style
+level, condition checkboxes and an age band, each filling in DEFAULTS — never locks, never over a
+setting somebody already chose. Kept on the device unless somebody explicitly saves it online,
+after a plain warning. Only published guidance sets anything; every other box is "to be filled"
+and changes nothing yet, but is recorded as asked.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stage"></div>
+
+<script type="module">
+import {
+  SOURCES, CONDITIONS, AGE_BANDS, LEVEL_OPTIONS, SETTING_WORDS,
+  normalizeAnswers, defaultsFor, combineValues, planChanges, describePlan, withStartingDefaults,
+  createDeviceStore, DEVICE_KEY, DEVICE_NOTE, ONLINE_WARNING, STARTING_DEFAULTS_PRESET_TYPE,
+  onlinePayload, saveOnline, recordFromOnline,
+} from '../starting_defaults.js';
+import { mountStartingDefaults } from '../starting_defaults_panel.js';
+import { createPresetLibrary } from '../presets.js';
+import { LEVELS } from '../settings_fields.js';
+import { THEMES, contrast } from '../theme.js';
+import { SUBTITLES_FIELDS } from '../subtitles.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function fatal(what, err) {
+  failed++;
+  const d = document.createElement('div');
+  d.className = 'fail';
+  d.textContent = `FAIL  ${what}: ${err && err.stack ? err.stack : err}`;
+  out.append(d);
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed (aborted)`;
+  sum.className = 'fail';
+}
+window.addEventListener('error', (e) => fatal('uncaught', e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => fatal('unhandled rejection', e.reason));
+
+// A fake Storage (the localStorage shape), so nothing here touches this browser's real one.
+function fakeStorage() {
+  const m = new Map();
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); },
+    _map: m,
+  };
+}
+// A storage that refuses everything — a private window, blocked site data.
+const brokenStorage = {
+  getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); },
+  removeItem() { throw new Error('denied'); },
+};
+// The same fake per-person state presets_test.html uses, plus a write counter so "nothing went
+// online" is a count, not a hope.
+function fakeState(initial = {}) {
+  let stored = { ...initial };
+  const subs = new Set();
+  const h = {
+    writes: 0,
+    get: () => stored,
+    set: (patch) => { h.writes += 1; stored = { ...stored, ...patch }; for (const fn of subs) fn(stored); },
+    load: () => Promise.resolve(),
+    startPolling() {},
+    flush: () => Promise.resolve(),
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    destroy() {},
+  };
+  return h;
+}
+const cond = (id) => CONDITIONS.find((c) => c.id === id);
+const entry = (res, key) => res.entries.find((e) => e.key === key);
+
+(async () => {
+  try {
+    // ------------------------------------------------------------------ the catalogue
+    section('the catalogue — every default names its source, or sets nothing');
+    check('there are condition boxes, and ids are unique',
+      CONDITIONS.length > 0 && new Set(CONDITIONS.map((c) => c.id)).size === CONDITIONS.length);
+    check('*** every box Mike named is present: colour blindness, epilepsy, stroke, TBI, Parkinson\'s, autism ***',
+      ['colourVision', 'photosensitive', 'stroke', 'tbi', 'parkinsons', 'autism'].every((id) => !!cond(id)),
+      CONDITIONS.map((c) => c.id).join(','));
+    check('every box is either "published" or "to-be-filled" — nothing in between',
+      CONDITIONS.every((c) => c.status === 'published' || c.status === 'to-be-filled'));
+    check('*** a published box sets something, and EVERY setting it makes names a known source ***',
+      CONDITIONS.filter((c) => c.status === 'published').every((c) => c.sets.length > 0
+        && c.sets.every((s) => s.sources.length > 0 && s.sources.every((id) => !!SOURCES[id]))));
+    check('*** a "to be filled" box sets NOTHING — no invented clinical claim hides in one ***',
+      CONDITIONS.filter((c) => c.status === 'to-be-filled').every((c) => c.sets.length === 0));
+    check('every source says where it comes from (provenance), what it is, and what it says',
+      Object.values(SOURCES).every((s) => s.name && s.says && s.provenance));
+    check('every published-guidance source is marked [training knowledge] — none claims in-repo verification it does not have',
+      Object.values(SOURCES).filter((s) => s.kind === 'published').every((s) => /training knowledge/.test(s.provenance)));
+    check('every setting a box can make has plain words to show it with',
+      CONDITIONS.every((c) => c.sets.every((s) => SETTING_WORDS[s.key] && typeof SETTING_WORDS[s.key].say === 'function'))
+        && !!SETTING_WORDS.complexity);
+    check('*** the labels say what a box is ABOUT in plain words, not only a diagnosis ***',
+      CONDITIONS.filter((c) => c.status === 'published').every((c) => c.label && c.label !== c.aka));
+    check('*** the level is the menu\'s OWN complexity levels — not a second, parallel scale ***',
+      LEVEL_OPTIONS.filter((o) => o.value).every((o) => LEVELS.includes(o.value))
+        && LEVELS.every((l) => LEVEL_OPTIONS.some((o) => o.value === l)));
+    check('the level and the age both have a "leave it / not saying" choice, first',
+      LEVEL_OPTIONS[0].value === '' && AGE_BANDS[0].value === '');
+    check('*** every age band sets NOTHING yet (no published per-age UI defaults found) ***',
+      AGE_BANDS.every((b) => (b.sets || []).length === 0));
+
+    // ------------------------------------------------------------------ defaultsFor
+    section('defaultsFor — published rules applied');
+    {
+      const none = defaultsFor({});
+      check('no answers -> no defaults at all', none.entries.length === 0 && Object.keys(none.layer).length === 0);
+
+      const ph = defaultsFor({ conditions: ['photosensitive'] });
+      const e = entry(ph, 'flashLimitPerSecond');
+      check('*** photosensitive epilepsy sets the no-flash default: at most 3 flashes a second (WCAG 2.3.1) ***',
+        e && e.value === 3 && e.sources.some((s) => s.id === 'wcag-2.3.1'), JSON.stringify(ph.entries));
+      check('...and the layer carries exactly that value', ph.layer.flashLimitPerSecond === 3);
+      check('...and the entry says which box set it', e && e.from.includes('photosensitive'));
+
+      const cb = defaultsFor({ conditions: ['colourVision'] });
+      check('colour blindness sets "never colour alone" (WCAG 1.4.1)',
+        entry(cb, 'colourNotAlone')?.value === true
+          && entry(cb, 'colourNotAlone').sources.some((s) => s.id === 'wcag-1.4.1'));
+
+      const mo = defaultsFor({ conditions: ['motion'] });
+      check('motion sensitivity sets reduced motion (WCAG 2.3.3 / prefers-reduced-motion)',
+        entry(mo, 'reduceMotion')?.value === true);
+
+      const tr = defaultsFor({ conditions: ['tremor'] });
+      check('tremor sets 44px targets (WCAG 2.5.5)',
+        entry(tr, 'minTargetPx')?.value === 44 && entry(tr, 'minTargetPx').sources.some((s) => s.id === 'wcag-2.5.5'));
+
+      const hh = defaultsFor({ conditions: ['hearing'] });
+      check('hard of hearing turns subtitles on as a starting default (WCAG 1.2.4)',
+        entry(hh, 'subtitlesOn')?.value === true);
+      check('*** ...and `subtitlesOn` is a key subtitles.js actually declares (catches a rename) ***',
+        SUBTITLES_FIELDS.some((f) => f.key === 'subtitlesOn'));
+
+      const lv = defaultsFor({ conditions: ['lowVision'] });
+      check('low vision picks the High contrast theme (WCAG 1.4.6)', entry(lv, 'theme')?.value === 'contrast');
+      const t = THEMES.contrast?.vars || {};
+      const pairs = ['--text', '--text-strong', '--text-soft', '--text-muted']
+        .flatMap((fg) => ['--bg', '--surface'].map((bg) => [fg, bg, contrast(t[fg], t[bg])]));
+      const worst = Math.min(...pairs.map((p) => p[2]));
+      check('*** ...and that theme MEASURES at least 7:1 for every text colour on its backgrounds, so the claim is true ***',
+        worst >= 7, pairs.map((p) => `${p[0]}/${p[1]}=${p[2].toFixed(2)}`).join(' '));
+      check('...and the plain words for it match theme.js\'s own label',
+        SETTING_WORDS.theme.say('contrast') === THEMES.contrast.label, SETTING_WORDS.theme.say('contrast'));
+
+      const lvl = defaultsFor({ level: 'essential' });
+      check('*** the level sets the menu\'s complexity, and names Mike\'s ruling as its source ***',
+        entry(lvl, 'complexity')?.value === 'essential'
+          && entry(lvl, 'complexity').sources.some((s) => s.id === 'mike-2.48'));
+
+      const all = defaultsFor({ level: 'essential', conditions: ['photosensitive', 'colourVision', 'motion'] });
+      check('boxes combine: three boxes plus a level give four settings, each from its own box',
+        all.entries.length === 4 && entry(all, 'reduceMotion').from[0] === 'motion'
+          && entry(all, 'colourNotAlone').from[0] === 'colourVision', JSON.stringify(all.layer));
+      check('*** nothing reaches the layer without a source ***',
+        all.entries.every((x) => x.sources.length > 0));
+    }
+
+    section('defaultsFor — "to be filled" changes nothing, but is recorded as asked');
+    {
+      const st = defaultsFor({ conditions: ['stroke', 'autism'], age: 'older' });
+      check('*** stroke + autism + an age band change NO settings yet ***',
+        st.entries.length === 0 && Object.keys(st.layer).length === 0, JSON.stringify(st.layer));
+      check('*** ...but the answers keep them — recorded as asked ***',
+        st.answers.conditions.includes('stroke') && st.answers.conditions.includes('autism') && st.answers.age === 'older');
+      check('...and each is listed as "to be filled", so the preview can say so',
+        ['stroke', 'autism', 'age:older'].every((id) => st.unfilled.some((u) => u.id === id)),
+        JSON.stringify(st.unfilled));
+      const mix = defaultsFor({ conditions: ['stroke', 'photosensitive'] });
+      check('a to-be-filled box next to a published one: only the published one sets anything',
+        mix.entries.length === 1 && mix.entries[0].key === 'flashLimitPerSecond');
+    }
+
+    section('normalizeAnswers / combineValues');
+    {
+      const a = normalizeAnswers({ level: 'bogus', conditions: ['stroke', 'nope', 'stroke', 42], age: 'ancient' });
+      check('an unknown level or age reads as "not given", not as garbage', a.level === '' && a.age === '');
+      check('unknown and duplicate boxes are dropped, known ones kept once',
+        a.conditions.length === 1 && a.conditions[0] === 'stroke', JSON.stringify(a.conditions));
+      check('null answers are an empty answer, not a throw',
+        normalizeAnswers(null).conditions.length === 0);
+      check('*** combining two limits keeps the STRICTER (min) for a flash cap ***', combineValues('min', 3, 2) === 2);
+      check('...the larger for a size floor (max)', combineValues('max', 44, 24) === 44);
+      check('...and any "yes" for an on/off (or)', combineValues('or', false, true) === true);
+    }
+
+    // ------------------------------------------------------------------ planChanges
+    section('planChanges — a chosen setting is never overridden');
+    {
+      const next = defaultsFor({ conditions: ['lowVision', 'photosensitive'] });
+      const current = { theme: 'warm' };
+      const plan = planChanges({ current, next });
+      check('*** the person\'s own theme choice is KEPT, not changed ***',
+        plan.kept.some((k) => k.key === 'theme' && k.current === 'warm')
+          && !plan.changes.some((c) => c.key === 'theme'), JSON.stringify(plan));
+      check('...while an unset setting is a change', plan.changes.some((c) => c.key === 'flashLimitPerSecond' && c.after === 3));
+      const eff = withStartingDefaults(current, next.layer);
+      check('*** withStartingDefaults: the chosen value wins, the default only fills the gap ***',
+        eff.theme === 'warm' && eff.flashLimitPerSecond === 3, JSON.stringify(eff));
+      check('withStartingDefaults does not mutate what it was given', current.flashLimitPerSecond === undefined);
+
+      const eff2 = withStartingDefaults({ theme: null }, next.layer);
+      check('a null value is "not chosen" (the same rule readWithLegacy uses), so the default fills it',
+        eff2.theme === 'contrast');
+      const plan3 = planChanges({ current: { theme: '' }, next });
+      check('*** an EMPTY STRING is a real choice (somebody cleared it) and is kept ***',
+        plan3.kept.some((k) => k.key === 'theme'));
+
+      const old = defaultsFor({ conditions: ['photosensitive'] }).layer;
+      const unticked = planChanges({ current: {}, oldLayer: old, next: defaultsFor({}) });
+      check('unticking a box plans the setting back to the usual',
+        unticked.changes.some((c) => c.key === 'flashLimitPerSecond' && c.before === 3 && c.after === undefined),
+        JSON.stringify(unticked.changes));
+      const same = planChanges({ current: {}, oldLayer: old, next: defaultsFor({ conditions: ['photosensitive'] }) });
+      check('re-applying the same answers changes nothing', same.changes.length === 0 && same.unchanged.length === 1);
+
+      const words = describePlan(planChanges({ current: { theme: 'warm' },
+        next: defaultsFor({ conditions: ['lowVision', 'photosensitive', 'stroke'] }) })).join('\n');
+      check('*** the preview is plain words: what changes, and why ***',
+        /no more than 3 flashes a second/i.test(words) && /because/i.test(words), words);
+      check('...it says when a choice is being left alone', /already chose/i.test(words), words);
+      check('...and names the box that has nothing yet', /stroke/i.test(words) && /to be filled|not filled in yet/i.test(words), words);
+      check('...and says so when nothing would change',
+        /nothing would change/i.test(describePlan(planChanges({ current: {}, next: defaultsFor({}) })).join(' ')));
+    }
+
+    // ------------------------------------------------------------------ the device store
+    section('createDeviceStore — on this device, by default');
+    {
+      const storage = fakeStorage();
+      const store = createDeviceStore({ storage });
+      check('a fresh device has no layer and nothing to put back', Object.keys(store.layer()).length === 0 && !store.canPutBack());
+      check('the store works (persisted)', store.persisted === true);
+      const d1 = defaultsFor({ conditions: ['photosensitive', 'stroke'] });
+      store.apply(d1);
+      const raw = JSON.parse(storage.getItem(DEVICE_KEY) || '{}');
+      check('*** applying writes to THIS DEVICE\'s storage under its own key ***',
+        raw.layer?.flashLimitPerSecond === 3 && raw.where === 'device', JSON.stringify(raw));
+      check('*** the to-be-filled box is stored as asked, on the device ***',
+        raw.answers?.conditions?.includes('stroke'));
+      check('the record remembers which box set each setting and from what source',
+        raw.why?.flashLimitPerSecond?.from?.includes('photosensitive')
+          && raw.why.flashLimitPerSecond.sources.includes('wcag-2.3.1'), JSON.stringify(raw.why));
+      check('now there is something to put back', store.canPutBack());
+
+      store.apply(defaultsFor({ conditions: ['motion'] }));
+      check('a second apply replaces the layer', store.layer().reduceMotion === true && store.layer().flashLimitPerSecond === undefined);
+      check('*** put back undoes the last apply ***', store.putBack() === true && store.layer().flashLimitPerSecond === 3
+        && store.layer().reduceMotion === undefined, JSON.stringify(store.layer()));
+      check('...and its answers come back with it', store.get().answers.conditions.includes('photosensitive'));
+      check('put back once more returns to the empty start', store.putBack() === true && Object.keys(store.layer()).length === 0);
+      check('...and after that there is nothing left to put back', store.putBack() === false);
+
+      store.apply(d1);
+      store.forgetAnswers();
+      check('"forget what was ticked" clears the answers but keeps the settings',
+        store.get().answers.conditions.length === 0 && store.layer().flashLimitPerSecond === 3);
+      store.clear();
+      check('clear empties the device record', storage.getItem(DEVICE_KEY) === null && Object.keys(store.layer()).length === 0);
+
+      const reopened = createDeviceStore({ storage });
+      reopened.apply(d1);
+      const again = createDeviceStore({ storage });
+      check('a new store on the same device reads what was saved (survives a reload)',
+        again.layer().flashLimitPerSecond === 3 && again.canPutBack());
+
+      const junk = fakeStorage(); junk.setItem(DEVICE_KEY, '{not json');
+      check('a corrupt record reads as empty, not a crash', Object.keys(createDeviceStore({ storage: junk }).layer()).length === 0);
+
+      const broken = createDeviceStore({ storage: brokenStorage });
+      broken.apply(d1);
+      check('*** a browser that refuses storage still works for this page, and SAYS it will not keep it ***',
+        broken.persisted === false && broken.layer().flashLimitPerSecond === 3);
+
+      check('the device note says it does not follow the person, and that clearing the browser loses it',
+        /other screen|another screen/i.test(DEVICE_NOTE) && /clear/i.test(DEVICE_NOTE), DEVICE_NOTE);
+    }
+
+    // ------------------------------------------------------------------ online save
+    section('saveOnline — only by explicit choice, after the warning');
+    {
+      check('*** the warning carries Mike\'s own words ***',
+        /don't intend to use it/i.test(ONLINE_WARNING) && /no one can guarantee the security of anything/i.test(ONLINE_WARNING),
+        ONLINE_WARNING);
+      const state = fakeState();
+      const library = createPresetLibrary({ makeState: () => state });
+      const store = createDeviceStore({ storage: fakeStorage() });
+      store.apply(defaultsFor({ conditions: ['photosensitive', 'stroke'] }));
+      check('*** applying on the device wrote NOTHING online ***', state.writes === 0);
+
+      const refused = await saveOnline({ record: store.get(), library })
+        .then(() => 'resolved').catch((e) => e.message);
+      check('*** without the warning acknowledged, the online save is REFUSED ***', /warning/i.test(refused), refused);
+      check('...and nothing was written online', state.writes === 0 && library.listPresets().length === 0);
+      const refused2 = await saveOnline({ record: store.get(), library, acknowledged: 'yes' })
+        .then(() => 'resolved').catch((e) => e.message);
+      check('a truthy-but-not-true acknowledgement is refused too (it has to be meant)', refused2 !== 'resolved');
+
+      const saved = await saveOnline({ record: store.get(), library, acknowledged: true });
+      check('acknowledged: it saves, as a preset of its own type', saved.type === STARTING_DEFAULTS_PRESET_TYPE
+        && library.listPresets(STARTING_DEFAULTS_PRESET_TYPE).length === 1);
+      check('*** by default only the SETTINGS go online — not which boxes were ticked ***',
+        saved.settings.layer?.flashLimitPerSecond === 3 && saved.settings.answers === undefined, JSON.stringify(saved.settings));
+      const saved2 = await saveOnline({ record: store.get(), library, acknowledged: true, includeAnswers: true });
+      check('the ticked boxes go online only when that is chosen too',
+        saved2.settings.answers?.conditions?.includes('stroke'));
+      check('saving again updates the same one, not a second copy',
+        saved2.id === saved.id && library.listPresets(STARTING_DEFAULTS_PRESET_TYPE).length === 1);
+      check('onlinePayload is the same rule, pure', onlinePayload(store.get()).answers === undefined
+        && onlinePayload(store.get(), { includeAnswers: true }).answers.conditions.includes('photosensitive'));
+      const back = recordFromOnline(saved2);
+      check('what was saved online reads back into a record another device could apply',
+        back.layer.flashLimitPerSecond === 3 && back.answers.conditions.includes('stroke'));
+      check('a record saved without answers reads back with empty answers, not a crash',
+        recordFromOnline(saved).answers.conditions.length === 0 || recordFromOnline({ settings: { layer: {} } }).answers.conditions.length === 0);
+    }
+
+    // ------------------------------------------------------------------ the panel
+    section('mountStartingDefaults — the picker, one switch at a time');
+    {
+      const stage = document.getElementById('stage');
+      const storage = fakeStorage();
+      const store = createDeviceStore({ storage });
+      const state = fakeState();
+      const library = createPresetLibrary({ makeState: () => state });
+      let current = { theme: 'warm' };
+      const changes = [];
+      const panel = mountStartingDefaults(stage, {
+        store, library, getCurrent: () => current, onChange: (layer) => changes.push(layer),
+      });
+      const q = (sel) => stage.querySelector(sel);
+      const btn = (act, id) => stage.querySelector(`[data-act="${act}"]${id ? `[data-id="${id}"]` : ''}`);
+      check('it mounts, with a button per box, a level and an age',
+        stage.querySelectorAll('[data-act="condition"]').length === CONDITIONS.length
+          && !!btn('level') && !!btn('age'));
+      check('the device note is on screen from the start', q('.sd-device-note')?.textContent.includes(DEVICE_NOTE));
+      check('every box is a real toggle button (aria-pressed), not a bare checkbox a switch cannot reach',
+        [...stage.querySelectorAll('[data-act="condition"]')].every((b) => b.tagName === 'BUTTON' && b.getAttribute('aria-pressed') === 'false'));
+      check('the online warning is NOT shown until somebody asks to save online', q('.sd-warning').hidden === true);
+      check('"put back" is disabled while there is nothing to put back', btn('putBack').disabled === true);
+
+      // Walk every stop with `next` alone.
+      const stops = panel.stops();
+      const seen = new Set();
+      for (let i = 0; i < stops.length; i++) { panel.next(); seen.add(panel.cursor()); }
+      check('*** `next` alone reaches every enabled control ***', seen.size === stops.length, `${seen.size}/${stops.length}`);
+      panel.next();
+      check('*** ...and wraps back to the first (one switch only travels one way) ***', panel.cursor() === stops[0] || seen.has(panel.cursor()));
+      check('disabled controls are not stops', !stops.includes(btn('putBack')));
+
+      // Tick "photosensitive" by moving the cursor onto it and pressing select.
+      const target = btn('condition', 'photosensitive');
+      let guard = 0;
+      while (panel.cursor() !== target && guard++ < 100) panel.next();
+      panel.select();
+      check('*** select on a box ticks it ***', target.getAttribute('aria-pressed') === 'true');
+      check('*** the preview says what it would change, in plain words, before anything is applied ***',
+        /no more than 3 flashes a second/i.test(q('.sd-preview').textContent), q('.sd-preview').textContent);
+      check('...and nothing has been applied yet', Object.keys(store.layer()).length === 0 && changes.length === 0);
+
+      btn('condition', 'lowVision').click();
+      check('the preview leaves the person\'s own theme alone, and says so', /already chose/i.test(q('.sd-preview').textContent));
+      btn('condition', 'stroke').click();
+      check('a to-be-filled box shows as "to be filled" in the preview', /stroke/i.test(q('.sd-preview').textContent)
+        && /not filled in yet|to be filled/i.test(q('.sd-preview').textContent));
+
+      const levelBefore = btn('level').textContent;
+      btn('level').click();
+      check('the level cycles on select', btn('level').textContent !== levelBefore);
+      for (let i = 0; i < LEVEL_OPTIONS.length - 1; i++) btn('level').click();
+      check('*** ...and wraps back round to where it started ***', btn('level').textContent === levelBefore);
+
+      btn('apply').click();
+      check('*** "use these" writes the layer to THIS DEVICE and tells the host ***',
+        store.layer().flashLimitPerSecond === 3 && changes.length === 1 && changes[0].flashLimitPerSecond === 3);
+      check('...online stayed untouched', state.writes === 0);
+      check('...the layer holds the default theme, but the person\'s own choice still wins where it is read',
+        withStartingDefaults(current, store.layer()).theme === 'warm');
+      check('"put back" is now enabled', btn('putBack').disabled === false);
+
+      btn('online').click();
+      check('*** asking to save online SHOWS THE WARNING first ***',
+        q('.sd-warning').hidden === false && q('.sd-warning').textContent.includes(ONLINE_WARNING));
+      check('...the warning also says device-only does not follow the person', q('.sd-warning').textContent.includes('other screen'));
+      check('*** ...and has written nothing online yet ***', state.writes === 0);
+      btn('onlineNo').click();
+      check('"no, keep it on this device" hides the warning and writes nothing', q('.sd-warning').hidden === true && state.writes === 0);
+      btn('online').click();
+      btn('onlineYes').click();
+      await new Promise((r) => setTimeout(r, 0));
+      check('*** only "yes, save online" writes online — once ***',
+        state.writes === 1 && library.listPresets(STARTING_DEFAULTS_PRESET_TYPE).length === 1, String(state.writes));
+      check('by default the ticked boxes did not go with it',
+        library.listPresets(STARTING_DEFAULTS_PRESET_TYPE)[0].settings.answers === undefined);
+
+      btn('putBack').click();
+      check('*** "put back how it was" undoes the apply and tells the host ***',
+        Object.keys(store.layer()).length === 0 && changes.length === 2 && Object.keys(changes[1]).length === 0);
+
+      panel.destroy();
+      check('destroy removes the panel', stage.children.length === 0);
+
+      const noLib = mountStartingDefaults(stage, { store: createDeviceStore({ storage: fakeStorage() }) });
+      check('with nowhere online to save, the online button is disabled with a reason, not missing',
+        btn('online').disabled === true && /no account|not available|nowhere/i.test(btn('online').textContent + (btn('online').title || '')));
+      check('...and is not a stop', !noLib.stops().includes(btn('online')));
+      noLib.destroy();
+
+      const reopenStore = createDeviceStore({ storage });
+      reopenStore.apply(defaultsFor({ conditions: ['motion', 'stroke'] }));
+      const reopened = mountStartingDefaults(stage, { store: reopenStore });
+      check('reopening shows what was ticked last time on this device',
+        btn('condition', 'motion').getAttribute('aria-pressed') === 'true'
+          && btn('condition', 'stroke').getAttribute('aria-pressed') === 'true');
+      reopened.destroy();
+    }
+
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

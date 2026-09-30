@@ -59,7 +59,7 @@ export const SUITES = [
   'keyboard', 'input_pointer', 'input_facegesture', 'button', 'pressable', 'choice_card', 'color_picker',
   // Modules as things: the module contract, try-before-add, prefabs, presets, the editor windows,
   // and data links with the wire transforms and tempo values that ride on them.
-  'module', 'module_try', 'prefab', 'presets', 'settings_module', 'edit_windows', 'links', 'conditioning', 'tempo',
+  'module', 'module_try', 'prefab', 'presets', 'starting_defaults', 'settings_module', 'edit_windows', 'links', 'conditioning', 'tempo',
   // Content packs, AAC data and a hosted photo source.
   'pack_library', 'pack_loader', 'user_packs', 'aac_sets', 'board_symbols', 'learn_cma_source',
   // Games, scoring and the reward side.
