@@ -25,8 +25,25 @@ export const SHELL_HELP = 'shell/help';
 
 // What the shell tells placed chrome after it acted, so a placed bar can show the same state the
 // plain bar shows (Hush lit while it is on). Payload: { hushed } and/or { help } (whether the Nimrod
-// button is offered: the person's "Cat help" setting, read by the shell).
+// button is offered: the person's "Cat help" setting, read by the shell) and/or { barHeld } (something
+// above the modules -- Nimrod the cat -- is pointing at the bar, so a placed bar must not tuck away).
 export const SHELL_STATE = 'shell/state';
+
+// *** A HOST PAGE'S OWN ACTIONS, ON THE ONE BAR (Home, rows 2.29/2.30 follow-up, 2026-09-30). ***
+// Design's home-dashboard handoff put Modules, Save, Save as and History INSIDE the real transport bar,
+// not on a page bar above it. The page that hosts an embedded kiosk hands it a `host` (kiosk.js); the
+// placed bar draws the host's buttons and, like every other button on it, SAYS what was pressed. The
+// shell answers by calling the host's `press(act)` -- the same function the page's own fallback bar
+// and the ⚙ menu's rows call, so Save is one thing however it is reached. Payload: { act, from }.
+export const SHELL_HOST = 'shell/host';
+
+// *** IN FULL SCREEN, A PLACED BAR TUCKS ITSELF AWAY (Design: "the bar hides itself after 6 seconds").
+// Any press, key, switch edge or pointer near it brings it back; a tucked bar hides nothing behind it
+// and waits on nobody, so there is no state here only an input can leave -- the content goes on
+// showing whether the bar ever comes back or not. The delay is a person's setting (Home: "Hide the bar
+// in full screen"); 0 = never tuck. 6 s is Design's number, argued in home_dashboard.js.
+export const FULLSCREEN_BAR_HIDE_DEFAULT_MS = 6000;
+export const FULLSCREEN_BAR_HIDE_CHOICES_MS = Object.freeze([0, 3000, 6000, 10000, 30000]);
 
 // *** THE PLAIN BAR. *** The screen's own bar, which no dashboard can restyle or remove (Design,
 // room-is-the-screen, "The plain bar (the invariant)"). Published to summon it: by Escape, by a long

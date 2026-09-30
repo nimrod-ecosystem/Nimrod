@@ -251,13 +251,19 @@
   .welcome p{margin:0 0 12px;color:var(--text-soft);max-width:70ch}
   .hbtns{display:flex;flex-wrap:wrap;gap:8px}
 
-  .home-settings{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
-  .home-settings[hidden]{display:none}
-  .home-settings h2{margin:0 0 8px;font-size:1.02rem}
-  .hs-rows{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-bottom:8px}
-  .hs-row{display:flex;justify-content:space-between;gap:12px;text-align:left}
-  .hs-row .v{font-weight:800}
-  .hs-note{margin:8px 0 0;font-size:.88rem;color:var(--text-muted)}
+  /* HOME'S ACTIONS, ON THE REAL BAR (2026-09-30 follow-up): the kiosk's placed transport bar draws them
+     from the page's host as its first group (`.tb-host`, modules/transport_bar.js). Dimmed when they
+     cannot act, never hidden; the status is words, lit amber while there is something unsaved. */
+  .trystage .tb-host button:disabled{opacity:.45;cursor:not-allowed}
+  .trystage .tb-host button[data-primary="1"]{background:#F7C948;border-color:#F7C948;color:#1a1408}
+  .trystage .tb-host button[aria-expanded="true"]{outline:2px solid #F7C948;outline-offset:1px}
+  .trystage .tb-status{font-size:.82rem;font-weight:650;color:#cfe0d6;padding:0 4px}
+  .trystage .tb-status.dirty{color:#F7C948}
+  /* The ⚙ menu is docked down the left of the stage as a drawer over it. Open (edit view, the default
+     on the profile), it covered the left end of the bar -- which is where Modules is. So while it is
+     open the bar moves over beside it rather than under it: Design's desktop layout docks settings
+     BESIDE the module, and a button hidden behind the menu is a button nobody can find. */
+  .trystage .view:has(> .v-dock-left .st-scrim:not([hidden])) > .v-dock-bottom{padding-left:calc(min(420px,60%) + 1vmin)}
 
   /* Dialogs are always SOLID (Design: a question you have to answer should not be see-through), and
      Cancel comes first so a scan lands on the safe choice. A native <dialog>: Escape closes it. */
@@ -278,8 +284,10 @@
     max-width:min(640px,92vw)}
   .home-toast[hidden]{display:none}
 
-  /* FULL SCREEN, AS A DASHBOARD: the stage fills the screen; the real bar inside it stays (its ⛶
-     leaves full screen too, and so does Escape). */
+  /* FULL SCREEN, AS A DASHBOARD: the stage fills the screen. The real bar inside it tucks itself away
+     after "In full screen, tuck the bar away after" (6 s by default) and any press, key, switch or the
+     pointer near it brings it back (modules/transport_bar.js); its ⛶ ("Leave full screen") and Escape
+     leave. The content never waits on the bar coming back. */
   .trystage:fullscreen{width:100vw;height:100vh;border:0;border-radius:0}
 
   /* THE MENU AND BAR BACKGROUND (Home setting, "Menu and bar background"). Only the placed bar
@@ -356,17 +364,18 @@
   </div>
 
   <section class="browser">
-    <!-- HOME (signed in only; rows 2.29 / 2.30). Hidden, and inert, for a signed-out visitor. The
-         bar is Design's order: pick, edit/live, Save, Save as, History, Full screen, this page's
-         settings; then what state the module is in, in words. -->
+    <!-- HOME (signed in only; rows 2.29 / 2.30). Hidden, and inert, for a signed-out visitor.
+         *** THIS BAR IS THE FALLBACK, NOT THE BAR. *** Since the 2026-09-30 follow-up, Modules, Save,
+         Save as and History are drawn INSIDE the real transport bar in the stage (the kiosk's placed
+         bar, from this page's host), Edit / Done editing is that bar's ⚙ and Full screen its ⛶, and the
+         page's settings are a section of the one ⚙ menu. This strip shows only when there is no placed
+         bar carrying them -- the module would not start, or its bar did not -- because that is exactly
+         when somebody needs Modules to get away from it. Same `press`, so Save is still one thing. -->
     <div class="stage-bar" id="stage-bar" role="toolbar" aria-label="The module you are looking at" hidden>
       <button type="button" class="hbtn" data-home="picker" aria-expanded="false">Modules: <span id="hb-name">…</span></button>
-      <button type="button" class="hbtn" data-home="view" aria-pressed="false">Edit</button>
       <button type="button" class="hbtn" data-home="save">Save</button>
       <button type="button" class="hbtn" data-home="saveas">Save as…</button>
       <button type="button" class="hbtn" data-home="history">History</button>
-      <button type="button" class="hbtn" data-home="full">Full screen</button>
-      <button type="button" class="hbtn" data-home="settings" aria-expanded="false">Page settings</button>
       <span class="hb-status" id="hb-status" role="status" aria-live="polite"></span>
     </div>
     <section class="welcome" id="welcome" aria-labelledby="welcome-h" hidden>
@@ -377,14 +386,9 @@
       <div class="hbtns">
         <button type="button" class="hbtn primary" data-home="skip">Skip for now</button>
         <button type="button" class="hbtn" data-home="setup">Set up my profile</button>
+        <button type="button" class="hbtn" data-home="cat">Show me how</button>
         <button type="button" class="hbtn" data-home="nomore">Don’t show this again</button>
       </div>
-    </section>
-    <section class="home-settings" id="home-settings" aria-labelledby="hs-h" hidden>
-      <h2 id="hs-h">This page</h2>
-      <div class="hs-rows" id="hs-rows"></div>
-      <button type="button" class="hbtn" data-home="rewelcome">Show the welcome again</button>
-      <p class="hs-note">A module’s own settings are in its ⚙ menu, on the bar under it.</p>
     </section>
     <aside class="pick">
       <label class="sr" for="q">Search the parts</label>
@@ -494,6 +498,7 @@ import { createState } from './state.js';
 import { pickCurrent, readLastPerson } from './people.js';
 import * as HD from './home_dashboard.js';
 import { createGame, profileSetup, kioskURL } from './game/game.js';
+import { CAT_STEPS, HOME_PAGE as CAT_HOME, CAT_BAR_SELECTOR, catGoThere, rememberCatProfile } from './game/cat_steps.js';
 
 // *** THE BRAND LINK WENT TO "/", NOT BACK TO YOUR OWN DASHBOARDS. *** Mike, live, 2026-09-08:
 // "I hit the Nimrod up top to go back to the home page and it took me to the landing page
@@ -589,6 +594,7 @@ const HOME = {
   settings: HD.readHomeSettings(null), settingsRow: null, defaultSurface: undefined,
   subject: null, target: null, draft: null, doc: null, docRow: null, restoredFrom: null,
   welcome: false, busy: false, dlg: null,
+  profileMade: false, catStart: false,
 };
 const PROFILE_TITLE = 'Your profile';
 
@@ -838,7 +844,9 @@ let lastInputAt = 0;
 // module is outside it, and the module setting itself up just after that click is not an edit.
 for (const ev of ['pointerdown', 'keydown', 'click', 'input', 'change']) {
   document.addEventListener(ev, (e) => {
-    if (e.target instanceof Element && e.target.closest('#stage')) lastInputAt = Date.now();
+    // ...except this page's own buttons on the bar (Save, Modules...): pressing Save is not an edit, and
+    // counting it would hold the fresh module's start-up writes as "Unsaved changes" right after a save.
+    if (e.target instanceof Element && e.target.closest('#stage') && !e.target.closest('.tb-host')) lastInputAt = Date.now();
   }, true);
 }
 const isUserEdit = () => Date.now() - lastInputAt < HOME_EDIT_WINDOW_MS;
@@ -856,6 +864,9 @@ const currentView = () => (menuOpen() ? 'edit' : 'live');
 
 function toast(msg) {
   const t = $h('home-toast');
+  // In full screen only the full-screen element is painted: the toast goes inside it, and back out after.
+  const into = document.fullscreenElement || document.body;
+  if (t.parentNode !== into) into.append(t);
   t.textContent = msg; t.hidden = false;
   clearTimeout(toast.timer);
   toast.timer = setTimeout(() => { t.hidden = true; }, 3600);
@@ -864,8 +875,8 @@ function toast(msg) {
 function noteFor(t) {
   if (t.kind === 'profile' && !t.live) {
     return 'Your profile is optional, and it does not exist yet: nothing is made on your account until '
-      + 'you press Save. The bar below and its ⚙ menu work as they will on a real screen. Or choose '
-      + 'anything else from Modules.';
+      + 'you press Save on the bar below. The bar and its ⚙ menu work as they will on a real screen. Or '
+      + 'choose anything else from Modules.';
   }
   if (t.kind === 'profile') {
     return `Your profile, live. The bar below and its ⚙ menu are the real ones, and settings you change `
@@ -873,8 +884,8 @@ function noteFor(t) {
       + `in <a href="/home.html">My dashboards</a>.`;
   }
   if (!t.live) {
-    return 'Not on your screen yet. Try it here with the bar below and its ⚙ menu; Save adds it to your '
-      + 'screen with the settings you chose.';
+    return 'Not on your screen yet. Try it here with the bar below and its ⚙ menu; Save, on the bar, adds '
+      + 'it to your screen with the settings you chose.';
   }
   return 'This is live on your screen: the bar below and its ⚙ settings menu are the real ones. '
     + 'Settings you change here wait for Save; anything else saves as it happens.';
@@ -932,6 +943,8 @@ async function openSubject(subject, { view = null } = {}) {
       const st = await HOME.game.status();
       const { mountEmbeddedScreen } = await import('./home_embed.js');
       if (mine !== pickSeq) return;
+      HOME.profileMade = !!st.profileId;
+      rememberCatProfile(st.profileId);
       if (st.profileId) {
         const screen = await profiles.get(st.profileId);
         if (mine !== pickSeq) return;
@@ -939,7 +952,7 @@ async function openSubject(subject, { view = null } = {}) {
         target = { live: true, kind: 'profile', profileId: st.profileId,
                    docPid: st.profileId, docKey: HD.PROFILE_HISTORY_KEY };
         const stage = renderHomeDetail(subject, target);
-        e = await mountEmbeddedScreen({ stage, user, profileId: st.profileId,
+        e = await mountEmbeddedScreen({ stage, user, profileId: st.profileId, host: HOME_HOST,
           wrapState: (h, key) => wrapRow(draft, h, key, typeOf) });
       } else {
         // EXACTLY what game.js would make (profileSetup), held in the draft as its starting point.
@@ -952,7 +965,7 @@ async function openSubject(subject, { view = null } = {}) {
         const typeOf = new Map(record.modules.map((x) => [x.id, x.type]));
         target = { live: false, kind: 'profile' };
         const stage = renderHomeDetail(subject, target);
-        e = await mountEmbeddedScreen({ stage, record,
+        e = await mountEmbeddedScreen({ stage, record, host: HOME_HOST,
           layout: { preset: setup.preset, slots: [PREVIEW_PICTURE, PREVIEW_SIGN] },
           wrapState: (h, key) => wrapRow(draft, h, key, typeOf) });
       }
@@ -967,7 +980,7 @@ async function openSubject(subject, { view = null } = {}) {
         : { live: false, kind: 'module', type: subject, previewKey: key };
       const stage = renderHomeDetail(subject, target);
       const isSet = HD.settingKeysFor(getManifest(subject));
-      e = await mountEmbeddedKiosk({ stage, user: mod ? user : null, type: subject,
+      e = await mountEmbeddedKiosk({ stage, user: mod ? user : null, type: subject, host: HOME_HOST,
         wrapState: (h, k) => (k === key ? draft.wrap(h, k, isSet) : h) });
     }
     if (mine !== pickSeq) { e?.destroy(); return; }
@@ -984,8 +997,18 @@ async function openSubject(subject, { view = null } = {}) {
     console.error(`home: ${subject} would not open`, err);
     const note = $h('stagenote');
     if (note) note.textContent = 'This one would not start here — usually it wants a camera, a microphone or your own files.';
+    // Nothing on the stage means no bar in it: the way to something else is the picker, so it opens.
+    if (mine === pickSeq) document.body.classList.add('pick-open');
   }
-  if (mine === pickSeq) paintHome();
+  if (mine !== pickSeq) return;
+  paintHome();
+  // A placed bar is given 2 s to mount before the plain bar stands in (kiosk.js); look again after that,
+  // so the page's fallback bar comes up if no bar in the stage is carrying this page's buttons.
+  setTimeout(() => { if (mine === pickSeq) paintHome(); }, 2500);
+  // Nimrod: a walk somebody asked for starts on the profile; one already going follows the page along
+  // (a new stage is a new bar and a new bus to point at).
+  if (HOME.catStart && subject === HD.PROFILE_SUBJECT) { HOME.catStart = false; mountHomeCat({ start: true }); }
+  else mountHomeCat();
 }
 
 /** Switching away from unsaved changes asks first (a page dialog, for a person at a computer). */
@@ -994,44 +1017,106 @@ function requestSubject(subject) {
   return openSubject(subject);
 }
 
-// ---- the bar, the status line, the settings rows ----------------------------------------------------
+// ---- THE HOST: this page's actions and settings, drawn by the kiosk's own bar and ⚙ menu -------------
+//
+// Design's home-dashboard handoff: Modules, Save, Save as and History go INSIDE the real transport bar,
+// and the page settings INSIDE the one settings menu. So the page does not draw a bar: it hands every
+// kiosk it embeds this host (kiosk.js's `host` option), the bar and the menu draw from it
+// (`home_dashboard.js` builds what they show, so it is tested without a page), and every press -- bar,
+// menu row, fallback bar, a switch or a room object saying SHELL_HOST -- lands in ONE `homePress`.
+// Mike: "several ways in, but they should all really just be the same thing."
+const hostSubs = new Set();
+function homeView() {
+  return {
+    title: subjectTitle(HOME.subject), target: HOME.target, dirty: !!HOME.draft?.dirty(), busy: HOME.busy,
+    pickerOpen: document.body.classList.contains('pick-open'), docCurrent: HOME.doc?.current || null,
+    settings: HOME.settings,
+  };
+}
+const HOME_HOST = {
+  barItems: () => (HOME.on ? HD.homeBarItems(homeView()) : []),
+  label: (act, state) => (HOME.on ? HD.homeShellLabel(act, state) : null),
+  press: (act) => homePress(act),
+  menuItems: () => (HOME.on
+    ? HD.homeMenuModel(homeView()).map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
+    : []),
+  barHideMs: () => HOME.settings.barHideMs,
+  subscribe(fn) { hostSubs.add(fn); return () => { hostSubs.delete(fn); }; },
+};
+function hostChanged() {
+  for (const fn of [...hostSubs]) { try { fn(); } catch (err) { console.error('home: host listener', err); } }
+}
+
+/** THE ONE PRESS. Whatever pressed it; a press that cannot act right now does nothing. */
+function homePress(act) {
+  if (!HOME.on || !act) return;
+  const t = HOME.target;
+  switch (act) {
+    case 'picker': togglePicker(); break;
+    case 'save': doSave(); break;
+    case 'saveas': if (t && !HOME.busy) openDialog('saveAs', { name: defaultSaveName() }); break;
+    case 'history': if (t?.live && !HOME.busy) openDialog('history'); break;
+    case 'view': applyView(menuOpen() ? 'live' : 'edit'); break;
+    case 'rewelcome':
+      saveHomeSettings({ welcomeDone: false });
+      HOME.welcome = true;
+      leaveFullScreen();                      // the card is above the stage, which full screen hides
+      if (HOME.subject !== HD.PROFILE_SUBJECT) requestSubject(HD.PROFILE_SUBJECT);
+      break;
+    case 'cat': startWalk(); break;
+    default:
+      if (act.startsWith('set:')) {
+        const k = act.slice(4);
+        if (HD.HOME_SETTINGS.some((r) => r.key === k)) saveHomeSettings({ [k]: HD.cycleHomeSetting(HOME.settings, k)[k] });
+      }
+  }
+  paintHome();
+}
+
+function leaveFullScreen() {
+  try { if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); } catch { /* not in it */ }
+}
+// The picker is on the page, above the stage; in full screen only the stage is painted, so Modules leaves
+// full screen first rather than opening something nobody can see.
+function togglePicker() {
+  leaveFullScreen();
+  const open = document.body.classList.toggle('pick-open');
+  if (open) qEl.focus();
+}
+
+// ---- the page around the stage: the fallback bar, the welcome, the menu and bar background -----------
 function paintHome() {
   if (!HOME.on) return;
-  const t = HOME.target;
-  const dirty = !!HOME.draft?.dirty();
+  const v = homeView();
+  // The fallback bar: only while no bar in the stage carries this page's buttons (see the markup).
+  const carried = !!document.querySelector('#stage .tb-bar .tb-host');
   const bar = $h('stage-bar');
-  const btn = (k) => bar.querySelector(`[data-home="${k}"]`);
-  $h('hb-name').textContent = subjectTitle(HOME.subject);
-  btn('picker').setAttribute('aria-expanded', String(document.body.classList.contains('pick-open')));
-  const open = menuOpen();
-  btn('view').textContent = open ? 'Done editing' : 'Edit';
-  btn('view').setAttribute('aria-pressed', String(open));
-  btn('view').disabled = !embed?.kiosk?.menu;
-  btn('save').disabled = !t || HOME.busy;
-  btn('save').classList.toggle('primary', !!t && (dirty || !t.live));
-  btn('saveas').disabled = !t || HOME.busy;
-  btn('history').disabled = !t || !t.live || HOME.busy;       // dimmed, never hidden (Design)
-  btn('full').disabled = !$h('stage');
-  btn('settings').setAttribute('aria-expanded', String(!$h('home-settings').hidden));
-  const st = $h('hb-status');
-  st.textContent = !t ? ''
-    : !t.live ? (t.kind === 'profile' ? 'Not made yet — Save makes it' : 'Not on your screen yet — Save adds it')
-    : dirty ? 'Unsaved changes'
-    : HOME.doc?.current ? `Saved as “${HOME.doc.current}”` : 'Not saved under a name yet';
-  st.classList.toggle('dirty', dirty);
+  bar.hidden = carried;
+  const items = HD.homeBarItems(v);
+  for (const it of items) {
+    if (it.kind === 'status') {
+      const st = $h('hb-status');
+      st.textContent = it.text;
+      st.classList.toggle('dirty', !!it.dirty);
+      continue;
+    }
+    const b = bar.querySelector(`[data-home="${it.act}"]`);
+    if (!b) continue;
+    b.disabled = !!it.disabled;                                  // dimmed, never hidden (Design)
+    b.classList.toggle('primary', !!it.primary);
+    if (it.expanded != null) b.setAttribute('aria-expanded', String(!!it.expanded));
+  }
+  $h('hb-name').textContent = v.title;
   $h('welcome').hidden = !(HOME.welcome && HOME.subject === HD.PROFILE_SUBJECT);
+  // What Nimrod's first step watches for: the profile exists (cat_steps.js PROFILE_MADE).
+  document.body.dataset.homeProfile = HOME.profileMade ? 'made' : 'preview';
   const stage = $h('stage');
   if (stage) {
     const screenSurface = HOME.subject === HD.PROFILE_SUBJECT
       ? HOME.draft?.snapshot().settings?.panelSurface : HOME.defaultSurface;
     stage.dataset.chrome = HD.chromeSurfaceFor(HOME.settings, screenSurface);
   }
-}
-
-function paintSettings() {
-  $h('hs-rows').innerHTML = HD.HOME_SETTINGS.map((r) => `
-    <button type="button" class="hbtn hs-row" data-home="set" data-k="${esc(r.key)}">
-      <span>${esc(r.label)}</span><span class="v">${esc(HD.homeSettingLabel(HOME.settings, r.key))}</span></button>`).join('');
+  hostChanged();
 }
 
 /** The page's own settings save as they change: they are not the module's, and nothing is waiting. */
@@ -1039,9 +1124,51 @@ function saveHomeSettings(patch) {
   HOME.settings = HD.readHomeSettings({ ...HOME.settings, ...patch });
   try { HOME.settingsRow?.set(patch); HOME.settingsRow?.flush?.().catch(() => {}); }
   catch (err) { console.error('home: settings', err); }
-  paintSettings();
   paintHome();
 }
+
+// ---- NIMROD THE CAT, walking Home (game/cat_steps.js) --------------------------------------------------
+// Only when asked: `mountCat` returns null unless a walk was started in this browser ("Show me how" in
+// the ⚙ menu, on the welcome card, or on the game page). His path is Home only while the profile is on
+// the stage; anywhere else he waits with a link back to it (which this page answers without a reload).
+// His words go to the stage's own output bus, his Next / Back / Close answer `nimrod-cat/*` on its bus
+// (so a switch bound to them drives him), and while he points at the bar the kiosk holds it -- placed
+// bar included, which matters in full screen, where it tucks itself away.
+let cat = null;
+let catLoad = null;
+async function mountHomeCat({ start = false } = {}) {
+  if (!HOME.on) return;
+  const mine = pickSeq;
+  catLoad = catLoad || import('./cat_guide.js');
+  let mountCat;
+  try { ({ mountCat } = await catLoad); } catch (err) { console.warn('home: no cat', err); return; }
+  if (mine !== pickSeq) return;
+  try { cat?.destroy(); } catch { /* already gone */ }
+  cat = null;
+  const k = embed?.kiosk || null;
+  cat = mountCat(document.body, {
+    steps: CAT_STEPS,
+    path: HOME.subject === HD.PROFILE_SUBJECT ? CAT_HOME : 'home:another-module',
+    goThere: catGoThere(),
+    start,
+    output: k?.output?.() || null,
+    bus: k?.bus?.() || null,
+    holdBar: typeof k?.holdBar === 'function' ? (on) => { try { k.holdBar(on); } catch { /* gone */ } } : null,
+    barSelector: CAT_BAR_SELECTOR,
+  });
+}
+function startWalk() {
+  if (HOME.subject === HD.PROFILE_SUBJECT) { mountHomeCat({ start: true }); return; }
+  HOME.catStart = true;
+  requestSubject(HD.PROFILE_SUBJECT);
+}
+// His "Open my profile" link, on this page, is a subject change rather than a page load.
+document.addEventListener('click', (e) => {
+  const a = e.target instanceof Element ? e.target.closest('[data-tour-go]') : null;
+  if (!a || !HOME.on || !/\/modules\.html/.test(a.getAttribute('href') || '')) return;
+  e.preventDefault();
+  requestSubject(HD.PROFILE_SUBJECT);
+}, true);
 
 // ---- Save, Save as, the overwrite warning, history ----------------------------------------------------
 function defaultSaveName() {
@@ -1154,7 +1281,7 @@ function dialogHTML(d) {
   if (d.kind === 'history') {
     const vs = (HOME.doc?.versions || []);
     return `<h2 id="home-dlg-h">History</h2>
-      <p>Your last ${keep} saves are kept (change how many in Page settings). Restoring one deletes
+      <p>Your last ${keep} saves are kept (change how many in the ⚙ menu, under This page). Restoring one deletes
         nothing: it opens it as unsaved changes, and saving it adds a new version.</p>
       <div class="vers">${vs.length ? vs.map((v, i) => `<div class="ver"><span>${esc(v.name)}
         <small>${esc(when(v.at))}${i === 0 ? ' · newest' : ''}${v.restoredFrom ? ' · a restored version' : ''}</small></span>
@@ -1200,7 +1327,8 @@ hdlg().addEventListener('click', (e) => {
   if (!b) return;
   const d = HOME.dlg || {};
   switch (b.dataset.homeDlg) {
-    case 'cancel': case 'close': closeDialog(); break;
+    // (Cancel on "leave unsaved changes?" also cancels a walk that was waiting for the profile to open.)
+    case 'cancel': case 'close': if (d.kind === 'leave') HOME.catStart = false; closeDialog(); break;
     case 'over': closeDialog(); commitSave(d.name); break;
     case 'toSaveAs': openDialog('saveAs', { name: `${d.name} (copy)` }); break;
     case 'name': doSave({ saveAs: true, name: b.dataset.n }); break;
@@ -1216,35 +1344,14 @@ hdlg().addEventListener('keydown', (e) => {
 });
 hdlg().addEventListener('close', () => { HOME.dlg = null; });
 
-// ---- the bar's buttons, the welcome card, the page settings -----------------------------------------
+// ---- the fallback bar's buttons and the welcome card ---------------------------------------------------
+// The fallback bar's buttons are the host's acts, so they go through the same `homePress` as the real
+// bar's. The welcome card's own three are the card's.
 document.addEventListener('click', (e) => {
   if (!HOME.on) return;
-  const b = e.target.closest('[data-home]');
-  // Anything clicked (the kiosk's own ⚙ included) can open or close the menu: repaint after it acts.
-  setTimeout(paintHome, 0);
+  const b = e.target instanceof Element ? e.target.closest('[data-home]') : null;
   if (!b || b.disabled) return;
   switch (b.dataset.home) {
-    case 'picker': {
-      const open = document.body.classList.toggle('pick-open');
-      if (open) qEl.focus();
-      break;
-    }
-    case 'view': applyView(menuOpen() ? 'live' : 'edit'); break;
-    case 'save': doSave(); break;
-    case 'saveas': openDialog('saveAs', { name: defaultSaveName() }); break;
-    case 'history': openDialog('history'); break;
-    case 'full': {
-      const stage = $h('stage');
-      try { stage?.requestFullscreen?.().catch(() => {}); } catch { /* not allowed here */ }
-      break;
-    }
-    case 'settings': $h('home-settings').hidden = !$h('home-settings').hidden; break;
-    case 'set': saveHomeSettings({ [b.dataset.k]: HD.cycleHomeSetting(HOME.settings, b.dataset.k)[b.dataset.k] }); break;
-    case 'rewelcome':
-      saveHomeSettings({ welcomeDone: false });
-      HOME.welcome = true;
-      if (HOME.subject !== HD.PROFILE_SUBJECT) requestSubject(HD.PROFILE_SUBJECT);
-      break;
     case 'skip':
       HOME.welcome = false;
       document.body.classList.add('pick-open');
@@ -1255,9 +1362,9 @@ document.addEventListener('click', (e) => {
       HOME.welcome = false;
       saveHomeSettings({ welcomeDone: true, openIn: 'live' });
       applyView('live');
-      toast('Your profile will open in live view from now on. Change it in Page settings.');
+      toast('Your profile will open in live view from now on. Change it in the ⚙ menu, under This page.');
       break;
-    default: break;
+    default: homePress(b.dataset.home); return;
   }
   paintHome();
 }, true);
@@ -1299,17 +1406,18 @@ async function bootHome(wanted) {
   HOME.welcome = land.welcome && !!game;
   document.body.classList.add('is-home');
   document.title = 'Nimrod — Home';
-  $h('stage-bar').hidden = false;
-  paintSettings();
+  if (game) {
+    try { HOME.profileMade = !!(await game.status()).profileId; } catch { HOME.profileMade = false; }
+  }
   await openSubject(subject, { view: land.view });
 }
 
 function undoHome() {
   HOME.on = false;
   document.body.classList.remove('is-home', 'pick-open');
+  delete document.body.dataset.homeProfile;
   $h('stage-bar').hidden = true;
   $h('welcome').hidden = true;
-  $h('home-settings').hidden = true;
 }
 
 // ---- RUN THEM ALL --------------------------------------------------------------------

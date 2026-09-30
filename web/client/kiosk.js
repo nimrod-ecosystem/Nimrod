@@ -39,7 +39,7 @@ import { barModel, drawChips, drawHelpButton, mountBarHelp, helpOn } from './tra
 import { createLongPress } from './input_longpress.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
-  SHELL_STATE, SHELL_HELP, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
+  SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
   PLAIN_BAR_HOLD_DEFAULT_MS,
 } from './shell_verbs.js';
 import { SYSTEM_TOPICS } from './actions.js';
@@ -215,6 +215,21 @@ export async function mountKiosk(root, {
   // last touch while a placed bar carries it -- a seam for the suites, like `burnInIdleMs`.
   dashboardChrome = undefined,
   plainBarSummonMs = 6000,
+  // *** `host` -- THE PAGE HOSTING THIS EMBED, AND ITS OWN ACTIONS (Home, 2026-09-30). *** Read only on
+  // the dashboard path (`embedded` + `dashboardModule`); null everywhere else, so no real screen draws a
+  // page's buttons. Design put Home's Modules / Save / Save as / History INSIDE the real transport bar and
+  // Home's page settings INSIDE the one ⚙ menu. The contract (all optional, all read fresh):
+  //   barItems()          the placed bar's first group: [{ act, label, title, disabled, primary }, ...]
+  //                       and at most one { kind: 'status', text, dirty }
+  //   label(act, state)   words for the bar's own ⚙ and ⛶ ({ menuOpen, full }) -- Edit IS the gear
+  //   press(act, p)       what a press of one of those does. Called for SHELL_HOST, whichever thing
+  //                       said it: the placed bar, a switch binding, a room object. ONE Save.
+  //   menuItems()         a section of the ⚙ menu (settings.js items; `run` for a press)
+  //   barHideMs()         how long a placed bar waits in full screen before tucking away (0 = never)
+  //   subscribe(fn)       the host's state changed: the bar and the menu redraw
+  // `fullscreenElement` is a seam for the suites (a real full screen needs a person's gesture).
+  host = null,
+  fullscreenElement = () => (typeof document !== 'undefined' ? document.fullscreenElement : null),
   // *** THE SPEECH RECOGNISER, BY WHICH ENGINE THE PERSON CHOSE (2026-09-30). *** Called ONLY when a
   // person's row turns spoken commands (or subtitles) on - never at boot. `null` means "none here", and
   // the screen says so. 'browser' is the browser's own, which sends the room's sound to its maker
@@ -231,6 +246,8 @@ export async function mountKiosk(root, {
   makeOnlineCaptioner = ({ lang } = {}) => browserRecognizer({ lang }),
 } = {}) {
   const useDashboard = !!embedded && !!dashboardModule;
+  // The host page's actions (see the option): only on the dashboard path, only if it is an object.
+  const hostPage = useDashboard && host && typeof host === 'object' ? host : null;
   bus = bus || createBus();
   // Read before anything else renders: if this screen is not where the device is meant to
   // come back to, the cheapest possible outcome is to leave before mounting a whole kiosk.
@@ -2044,6 +2061,13 @@ export async function mountKiosk(root, {
       },
     },
     extras: () => [
+      // THE HOST PAGE'S SECTION (Home: its Save / Save as / History and its page settings), first in
+      // the menu's middle: they are what somebody on that page came to the menu for. A host that throws
+      // costs its own rows, never the menu -- the menu is the tool for repairing the broken thing.
+      ...(() => {
+        if (!hostPage || typeof hostPage.menuItems !== 'function') return [];
+        try { return hostPage.menuItems() || []; } catch (err) { console.error('kiosk: host menu', err); return []; }
+      })(),
       ...(runtime ? CONTROL_ITEMS : []),
       ...CONNECTION_ITEMS,
       // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used
@@ -2436,6 +2460,9 @@ export async function mountKiosk(root, {
     if (want === barHeld) return barHeld;
     barHeld = want;
     poke();
+    // A PLACED bar is held the same way (Home, 2026-09-30): in full screen it tucks itself away, and the
+    // cat saying "this is the bar" must not ring empty space there either. It hears it as state.
+    if (useDashboard) bus.publish(SHELL_STATE, { barHeld });
     return barHeld;
   }
   function poke() {
@@ -2688,6 +2715,34 @@ export async function mountKiosk(root, {
     on(PLAIN_BAR_RING_END, () => { hideRing(); });
     // Touching the plain bar keeps it up; letting it be puts a summoned one away again.
     controlsEl.addEventListener('pointerdown', () => { if (plainSummoned) summonPlainBar(); }, { passive: true });
+    // THE HOST PAGE'S ACTIONS (Home): whatever said SHELL_HOST, the host's one `press` does it.
+    on(SHELL_HOST, (p) => {
+      if (!hostPage || typeof hostPage.press !== 'function' || !p?.act) return;
+      try { hostPage.press(p.act, p); } catch (err) { console.error('kiosk: host press', err); }
+    });
+    // The host's state changed (a save finished, a setting cycled): the menu shows its rows' new values.
+    if (hostPage && typeof hostPage.subscribe === 'function') {
+      try {
+        const offHost = hostPage.subscribe(() => { if (!torn) { try { menu.refresh(); } catch { /* not up */ } } });
+        if (typeof offHost === 'function') offsShell.push(offHost);
+      } catch (err) { console.error('kiosk: host subscribe', err); }
+    }
+    // WHETHER THE ONE MENU IS OPEN, told to placed chrome (the gear reads "Done editing" on Home). The
+    // menu opens by the gear, by M, by a switch's Menu verb, by a room's door and by the host; watching
+    // its one `hidden` attribute catches every one of them without a hook in each.
+    const scrimEl = menuHostEl?.querySelector('[data-scrim]');
+    const MO = typeof MutationObserver !== 'undefined' ? MutationObserver : null;
+    if (scrimEl && MO) {
+      let was = !scrimEl.hidden;
+      const mo = new MO(() => {
+        const now = !scrimEl.hidden;
+        if (now === was) return;
+        was = now;
+        bus.publish(SHELL_STATE, { menuOpen: now });
+      });
+      mo.observe(scrimEl, { attributes: true, attributeFilter: ['hidden'] });
+      offsShell.push(() => mo.disconnect());
+    }
   }
   // *** THE SCREEN'S OWN CONTROLS, ANSWERED FOR WHATEVER PRESSES THEM (2026-09-30). *** A room's flower
   // pot, door, bookshelf and dashboard picker publish `system/*` (room_scene.js ROOM_ACTIONS) and wait to
@@ -2759,7 +2814,12 @@ export async function mountKiosk(root, {
         router: runtime.router, health, storage, embedded: true,
         // Stage 3b: what it places besides its panels, and the shell's one menu to dock.
         chrome: Array.isArray(dashboardChrome) ? dashboardChrome : DEFAULT_DASHBOARD_CHROME,
-        shell: { dockMenu, helpOn: () => helpOn(storage) },
+        shell: {
+          dockMenu, helpOn: () => helpOn(storage),
+          // Home (2026-09-30): the host page's actions for the placed bar, and what its words need.
+          host: hostPage, menuOpen: () => !!menu.isOpen(), barHeld: () => barHeld,
+          fullscreenElement: () => { try { return fullscreenElement(); } catch { return null; } },
+        },
       }));
       dash.impl.onChange?.(() => { renderMods(); syncPlainBar(); });
       await dash.init();
@@ -2897,6 +2957,9 @@ export async function mountKiosk(root, {
     micPill: () => micPill,
     // Nimrod on the bar: explain what is picked, as the bar's button does.
     help: () => explainHelp(),
+    // This screen's bus, for something ABOVE the modules that answers verbs on it -- Home's walkthrough
+    // (Nimrod the cat hears `nimrod-cat/next|prev|skip` here, so a switch bound to them drives him).
+    bus: () => bus,
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
       clearTimeout(plainSummonT); clearTimeout(barGraceT);

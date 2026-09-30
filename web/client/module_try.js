@@ -409,7 +409,9 @@ export function memoryStorage() {
 // `wrapState(handle, key)` (Home, rows 2.29/2.30, 2026-09-30): when given, every state handle the kiosk
 // opens is passed through it first -- how `modules.html` holds a module's SETTINGS as a draft until Save
 // (home_dashboard.js `createDraft`). Omitted, nothing changes: the kiosk builds its handles itself.
-export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState = null }) {
+// `host` (Home, 2026-09-30 follow-up): the page's own actions and settings, drawn in the kiosk's bar and
+// ⚙ menu (kiosk.js's `host` option). Omitted, nothing changes.
+export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState = null, host = null }) {
   // Dynamic, so the two hosts above (and every page that only wants THEM) do not drag in the
   // whole kiosk and, with it, every module registration -- `modules.html` deliberately does not
   // register `settings` or `keyboard`.
@@ -436,6 +438,7 @@ export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState =
       // kiosk shell keeps the bar and the menu. This page is where it is proven first -- a public page,
       // not a screen anybody sits at. Stage 4 makes it the default on a real screen.
       dashboardModule: true,
+      ...(host ? { host } : {}),
     };
     if (user) {
       const real = createProfilesClient({ user });

@@ -10,23 +10,26 @@ out later if it ever earns its own release cycle.
 ## Step 1: your profile (what is here today)
 
 Your profile is your first dashboard. Since 2026-09-30 (row 2.29) it lives on **Home** (the
-modules page): a signed-in person lands there on it, as a preview, and **Save** runs the three steps
-below (`profileSetup()` is the same setup as data, so the preview and the real thing cannot drift).
-`/game/` is still a short checklist that drives the real product:
+modules page): a signed-in person lands there on it, as a preview, and **Save** (on the real
+transport bar) runs the three steps below (`profileSetup()` is the same setup as data, so the preview
+and the real thing cannot drift). `/game/`'s four buttons that ran them one at a time were retired
+the same day (the follow-up to rows 2.29/2.30): they were a second way to do what Save does, and
+Nimrod's walk now points at Home. The page keeps what the game is, a link to the profile on Home,
+"Show me how", and Nimrod's settings.
 
-1. **Make my profile** — makes one screen called "My profile" for the current person. It starts
-   **empty**, with a room as its background (the Cozy live theme) and see-through panels
+1. **Make my profile** (`makeProfile`) — one screen called "My profile" for the current person. It
+   starts **empty**, with a room as its background (the Cozy live theme) and see-through panels
    (`PROFILE_SURFACE`; clear until 2026-09-30, Mike: "Make see through the default") so the room
    shows around whatever goes on the wall.
-2. **Hang your picture** — adds a `button` module set up as a picture frame, in the first spot.
-   The picture itself is chosen by the person, in its settings, from their own Media.
-3. **Put up your name sign** — adds a second `button`, set up as a sign with the person's name
-   (or "Your name"), in the second spot.
-4. **Open my profile** — opens that screen in the real kiosk (`/kiosk.html?profile=<id>`), where
-   the person uses the real transport bar and settings menu: pick a room under **Colours**, select
-   the sign and change its **Words**, **Font** and **Colour of the words**.
+2. **Hang your picture** (`hangPicture`) — a `button` module set up as a picture frame, in the
+   first spot. The picture itself is chosen by the person, in its settings, from their own Media.
+3. **Put up your name sign** (`putUpSign`) — a second `button`, set up as a sign with the person's
+   name (or "Your name"), in the second spot.
 
-Every step is safe to press again. The screen and the two buttons are remembered in the person's
+Then the person uses the real transport bar and settings menu on Home: pick a room under
+**Colours**, select the sign and change its **Words**, **Font** and **Colour of the words**, Save.
+
+Every step is safe to run again. The screen and the two buttons are remembered in the person's
 own state, so a refresh, a second visit or a double press never makes anything twice, and the
 person's own changes (a different room, the sign moved, new words) are never put back. It only
 ever writes to the one screen it made.
@@ -37,12 +40,14 @@ instances of buttons."*
 
 ## Nimrod the cat, the guide
 
-**Show me how** on the game page starts a 13-step walk narrated by Nimrod the cat: the four
-buttons above, then — on the profile itself, in the real kiosk — the transport bar, **Panel ▸**
-to choose the picture or the sign, the gear (the settings menu), the picture's **Picture** and
-**Frame** rows, the sign's **Words**, and **Colours** for the room. The steps are data in
-`cat_steps.js`; the cat is `../cat_guide.js`, which runs on the guided tour's own engine
-(`../tour.js`) rather than a second one.
+**Show me how** — in Home's ⚙ menu (This page), on Home's welcome card, or on the game page —
+starts an 11-step walk narrated by Nimrod the cat, all of it on Home, on the profile: **Save** to
+make it, the transport bar, **Modules**, **Panel ▸** to choose the picture or the sign, **⚙ Edit**
+(the settings menu), the picture's **Picture** and **Frame** rows, the sign's **Words**, **Colours**
+for the room, and **Save** again. The steps are data in `cat_steps.js`; the cat is
+`../cat_guide.js`, which runs on the guided tour's own engine (`../tour.js`) rather than a second
+one. Started anywhere else (the game page, a kiosk), he waits with a link to the profile on Home.
+On Home his Next / Back / Close also answer `nimrod-cat/next|prev|skip` on the stage's own bus.
 
 What Mike decided (2026-09-29), and where it is enforced:
 
@@ -63,8 +68,8 @@ He notices what you do (a step already done is skipped; opening the menu moves h
 never does anything for you. His settings and his place in the walk are kept in this browser, like
 the site tour's.
 
-The profile's screen id is remembered in this browser (`nimrod:catProfile`) so the kiosk can tell
-it is on the profile; on any other screen he waits with a link to it.
+While he points at the bar, the kiosk holds it on screen (`holdBar`) — including Home's placed bar
+in full screen, where it otherwise tucks itself away after a few seconds.
 
 ## What is deliberately not here yet
 
@@ -90,7 +95,9 @@ It works signed out too, on the browser's own storage, the same way the Home pag
 
 ## Files
 
-- `index.html` — the checklist page.
-- `game.js` — the steps, as functions over any backend (tested in `dev/game_test.html`).
+- `index.html` — the game's page: what it is, the link to Home, "Show me how", Nimrod's settings.
+- `game.js` — the steps, as functions over any backend (tested in `dev/game_test.html`); Home's Save
+  calls them.
 - `cat_steps.js` — Nimrod's walk, as data (tested, with `../cat_guide.js`, in
-  `dev/cat_guide_test.html`, which mounts a real kiosk on a real profile to check every target).
+  `dev/cat_guide_test.html`, which mounts a real embedded kiosk with Home's buttons on its bar, on a
+  real profile, to check every target).

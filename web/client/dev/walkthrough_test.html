@@ -271,6 +271,27 @@ try {
 }
 
 // =====================================================================================
+section('*** NO WALK POINTS AT A RETIRED CONTROL (2026-09-30: the game page’s four buttons) ***');
+{
+  // Home makes the profile now (rows 2.29/2.30), so /game/'s Make it / Hang it / Put it up / Open it
+  // were retired and Nimrod's walk re-pointed at Home's real controls. A walk still naming one of them
+  // would ring empty space -- the failure Mike saw live on 2026-09-29 with the bar. Both walks, here.
+  const { CAT_STEPS, HOME_PAGE } = await import('../game/cat_steps.js');
+  const sel = (s) => (Array.isArray(s.target) ? s.target : [s.target]).filter(Boolean).join(' ');
+  // The game page's own selectors (home.html has a `[data-open]` of its own, which is not retired), and
+  // Home's retired page-bar buttons (Edit, Full screen and Page settings moved onto the real bar and menu).
+  const RETIRED = /data-do=|\[data-open\]|data-step=|#stage-bar|data-home="(view|full|settings)"/;
+  const onGame = (s) => /^\/game\//.test(s.page || '');
+  const bad = [...STEPS.filter(onGame), ...CAT_STEPS.filter((s) => onGame(s) || RETIRED.test(sel(s)) || RETIRED.test(s.doneWhen || ''))];
+  check('*** neither the site tour nor the cat names a retired control ***', bad.length === 0, bad.map((s) => s.id).join());
+  const homeBar = STEPS.filter((s) => /#stage-bar|data-home="(view|full|settings)"/.test(sel(s)));
+  check('...nor Home’s retired page-bar buttons, anywhere', homeBar.length === 0, homeBar.map((s) => s.id).join());
+  check('the cat’s walk lives on Home, whole', CAT_STEPS.length > 0 && CAT_STEPS.every((s) => s.page === HOME_PAGE));
+  const html = await (await fetch('../game/index.html')).text();
+  check('...and the game page no longer carries the buttons', !/data-do=|data-open/.test(html));
+}
+
+// =====================================================================================
 section('*** THE SEED IS MEASURED, NOT DESCRIBED ***');
 {
   // demoSeed() is the data gate's answer to "was anything real in frame?" — the point of it is

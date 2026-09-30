@@ -31,7 +31,10 @@ export function layoutFor(settings, modules) {
   return isArranged(lay) ? lay : null;
 }
 
-export async function mountEmbeddedScreen({ stage, user = null, profileId = null, record = null, layout = null, wrapState = null }) {
+// `host` (2026-09-30 follow-up): the page's own actions and settings, handed to the kiosk so they are
+// drawn in ITS bar and ITS ⚙ menu (kiosk.js's `host` option). Kept across rebuilds: it is the page's.
+export async function mountEmbeddedScreen({ stage, user = null, profileId = null, record = null, layout = null,
+  wrapState = null, host = null }) {
   const { mountKiosk } = await import('./kiosk.js');
   const wrap = wrapState || ((h) => h);
   let kiosk = null;
@@ -48,6 +51,7 @@ export async function mountEmbeddedScreen({ stage, user = null, profileId = null
       sources: createLocalMediaSources(),
       embedded: true,
       dashboardModule: true,
+      ...(host ? { host } : {}),
     };
     if (user && profileId) {
       const real = createProfilesClient({ user });

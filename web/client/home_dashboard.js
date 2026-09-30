@@ -29,6 +29,20 @@
 //                           reads the screen's own panel background; a screen that never chose one
 //                           gets see-through here (see `chromeSurfaceFor`).
 //   welcomeDone false       the welcome card shows until somebody says "Don't show this again".
+//   barHideMs 6000          in full screen the bar tucks itself away after this long (Design: 6 s). FOR
+//                           6: entering full screen is itself a press on the bar, and the next thing
+//                           somebody new wants is often the way back out, so the bar should still be
+//                           there to be read; the kiosk's own bar uses 3 s for a screen nobody is at.
+//                           AGAINST: 6 s of bar over a full-screen photo is 6 s of the photo covered.
+//                           Design's number wins until somebody sits at it; 0 ("Never") is one press
+//                           away for anybody who wants the bar to stay.
+//
+// *** WHERE THE PAGE'S ACTIONS LIVE (2026-09-30 follow-up). *** Design put Modules, Save, Save as and
+// History INSIDE the real transport bar, and the page settings INSIDE the one ⚙ menu. The page hands the
+// embedded kiosk a `host` (kiosk.js); what that host shows is built here (`homeBarItems`, `homeMenuModel`,
+// `homeShellLabel`) so the bar and the menu can be checked without a page. Every one of them names an
+// `act`, and the page's ONE `press(act)` does it -- Save is the same thing from the bar, the menu, the
+// fallback bar and a switch.
 
 import { fieldsFor } from './settings_fields.js';
 
@@ -44,8 +58,12 @@ export const INSTANCE_SURFACE_KEY = 'instancePanelSurface';
 // (composer.js owns it, and it autosaves there), the links between modules, and /game/'s stamp.
 export const SCREEN_ROW_NOT_SETTINGS = Object.freeze(['kiosk', 'links', 'game']);
 
+// Full screen's bar delay: the choices, in ms (0 = never tuck). Kept in step with shell_verbs.js's.
+export const BAR_HIDE_CHOICES = Object.freeze([0, 3000, 6000, 10000, 30000]);
+
 export const HOME_DEFAULTS = Object.freeze({
   openIn: 'edit', keepVersions: 20, warnOverwrite: true, chromeSurface: 'follow', welcomeDone: false,
+  barHideMs: 6000,
 });
 
 // What the page's settings panel shows, in order. Each row CYCLES on a press and wraps (Design, and
@@ -59,6 +77,8 @@ export const HOME_SETTINGS = Object.freeze([
     options: [[true, 'On'], [false, 'Off']] },
   { key: 'chromeSurface', label: 'Menu and bar background',
     options: [['follow', 'Follow the screen'], ['solid', 'Solid'], ['veil', 'See-through'], ['clear', 'Fully clear']] },
+  { key: 'barHideMs', label: 'In full screen, tuck the bar away after',
+    options: BAR_HIDE_CHOICES.map((ms) => [ms, ms ? `${ms / 1000} seconds` : 'Never']) },
 ]);
 
 const clone = (o) => (o == null ? o : JSON.parse(JSON.stringify(o)));
@@ -94,6 +114,68 @@ export function chromeSurfaceFor(settings, screenPanelSurface) {
   const pick = settings && settings.chromeSurface;
   if (CHROME_SURFACES.includes(pick)) return pick;
   return CHROME_SURFACES.includes(screenPanelSurface) ? screenPanelSurface : 'veil';
+}
+
+// ---------------------------------------------------------------------------------------------------
+// WHAT THE BAR AND THE MENU SHOW (the host, 2026-09-30 follow-up).
+//
+// `view` is what the page knows right now: { title, target, dirty, busy, pickerOpen, docCurrent,
+// settings }. `target` is the page's HOME.target (null while nothing is open, `{ live, kind }` after).
+// ---------------------------------------------------------------------------------------------------
+/** The status, in words (Design: "what state the module is in, in words"). */
+export function homeStatusText({ target = null, dirty = false, docCurrent = null } = {}) {
+  if (!target) return '';
+  if (!target.live) return target.kind === 'profile' ? 'Not made yet — Save makes it' : 'Not on your screen yet — Save adds it';
+  if (dirty) return 'Unsaved changes';
+  return docCurrent ? `Saved as “${docCurrent}”` : 'Not saved under a name yet';
+}
+
+/**
+ * The bar's first group, in Design's order. Every button is always there; one that cannot act now is
+ * DISABLED (dimmed), never left out. Save is the primary button while there is something to save.
+ * Edit / Done editing and Full screen are NOT here: they are the bar's own ⚙ and ⛶ (`homeShellLabel`).
+ */
+export function homeBarItems({ title = '', target = null, dirty = false, busy = false, pickerOpen = false,
+  docCurrent = null } = {}) {
+  const t = target;
+  return [
+    { act: 'picker', label: `Modules: ${title || '…'}`, title: 'choose what you are looking at', expanded: !!pickerOpen },
+    { act: 'save', label: 'Save', title: 'keep what you changed', disabled: !t || busy, primary: !!t && (dirty || !t.live) },
+    { act: 'saveas', label: 'Save as…', title: 'keep a copy under a new name', disabled: !t || busy },
+    { act: 'history', label: 'History', title: 'your last saves; restoring deletes nothing', disabled: !t || !t.live || busy },
+    { kind: 'status', text: homeStatusText({ target: t, dirty, docCurrent }), dirty: !!dirty },
+  ];
+}
+
+/** Words for the bar's own gear and full-screen buttons on Home: the gear IS Edit (edit view is the
+ *  menu open), and ⛶ IS Full screen. Null = leave that button as it is. */
+export function homeShellLabel(act, { menuOpen = false, full = false } = {}) {
+  if (act === 'settings') return menuOpen ? '⚙ Done editing' : '⚙ Edit';
+  if (act === 'fs') return full ? '⛶ Leave full screen' : '⛶ Full screen';
+  return null;
+}
+
+/**
+ * The ⚙ menu's section for this page (settings.js items, each with the `act` the page's press does).
+ * The same actions as the bar, so they are reachable even when no placed bar is there (the plain bar's
+ * ⚙ opens this menu), then the page's settings -- each row cycles on a press and wraps -- then the
+ * welcome and Nimrod's walk. Rows that cannot act are disabled (the menu's scan skips them).
+ */
+export function homeMenuModel({ title = '', target = null, dirty = false, busy = false, docCurrent = null,
+  settings = HOME_DEFAULTS, catReady = true } = {}) {
+  const s = readHomeSettings(settings);
+  const t = target;
+  const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
+  return [
+    { kind: 'heading', id: 'home-head', label: 'This page (Home)' },
+    item('picker', `Modules: ${title || '…'}`, { hint: 'choose what you are looking at' }),
+    item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent }) || 'nothing open', disabled: !t || busy }),
+    item('saveas', 'Save as…', { hint: 'a copy under a new name', disabled: !t || busy }),
+    item('history', 'History…', { hint: `your last ${s.keepVersions} saves`, disabled: !t || !t.live || busy }),
+    ...HOME_SETTINGS.map((r) => item(`set:${r.key}`, r.label, { hint: homeSettingLabel(s, r.key) })),
+    item('rewelcome', 'Show the welcome again'),
+    item('cat', 'Show me how', { hint: 'Nimrod the cat walks you through this page', disabled: !catReady }),
+  ];
 }
 
 // ---------------------------------------------------------------------------------------------------

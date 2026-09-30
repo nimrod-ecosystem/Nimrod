@@ -25,7 +25,9 @@ import {
   homeSettingLabel, chromeSurfaceFor, homeLanding, emptyHistory, readHistory, wouldOverwrite,
   saveDecision, commitVersion, versionSnapshot, suggestNames, settingKeysFor, isScreenSetting,
   createDraft, remapSnapshot, INSTANCE_SURFACE_KEY, cleanName,
+  homeBarItems, homeShellLabel, homeMenuModel, homeStatusText, BAR_HIDE_CHOICES,
 } from '../home_dashboard.js';
+import { FULLSCREEN_BAR_HIDE_CHOICES_MS, FULLSCREEN_BAR_HIDE_DEFAULT_MS } from '../shell_verbs.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -235,6 +237,72 @@ try {
     pressing = true;
     qh.set({ album: 'Summer' });
     check('...one written while somebody is editing is held for Save', qr.get().album === undefined && q.dirty() && qh.get().album === 'Summer');
+  }
+
+  // ============================================================================================
+  section('*** Home’s actions on the REAL bar, and its settings in the ⚙ menu (2026-09-30 follow-up) ***');
+  {
+    const live = { live: true, kind: 'profile' };
+    const preview = { live: false, kind: 'profile' };
+    const acts = (items) => items.filter((i) => i.act).map((i) => i.act).join(',');
+    const b0 = homeBarItems({ title: 'Your profile', target: null });
+    check('*** Design’s order on the bar: Modules, Save, Save as, History, then the status ***',
+      acts(b0) === 'picker,save,saveas,history' && b0.at(-1).kind === 'status', J(b0.map((i) => i.act || i.kind)));
+    check('Modules names what is being looked at', b0[0].label === 'Modules: Your profile', b0[0].label);
+    check('*** nothing open: every button still THERE, the ones that cannot act DISABLED (dimmed, never hidden) ***',
+      b0.length === 5 && b0.find((i) => i.act === 'save').disabled && b0.find((i) => i.act === 'saveas').disabled
+      && b0.find((i) => i.act === 'history').disabled && !b0[0].disabled);
+    const bp = homeBarItems({ title: 'Your profile', target: preview });
+    check('a preview: Save is live and primary, History dimmed (nothing saved yet)',
+      !bp.find((i) => i.act === 'save').disabled && bp.find((i) => i.act === 'save').primary
+      && bp.find((i) => i.act === 'history').disabled);
+    check('...and says so in words', bp.at(-1).text === 'Not made yet — Save makes it', bp.at(-1).text);
+    const bl = homeBarItems({ title: 'Your profile', target: live, docCurrent: 'My profile' });
+    check('live and saved: History available, Save not primary, status names the save',
+      !bl.find((i) => i.act === 'history').disabled && !bl.find((i) => i.act === 'save').primary
+      && bl.at(-1).text === 'Saved as “My profile”' && !bl.at(-1).dirty);
+    const bd = homeBarItems({ title: 'Your profile', target: live, docCurrent: 'My profile', dirty: true });
+    check('unsaved: Save is primary and the status says so, marked dirty',
+      bd.find((i) => i.act === 'save').primary && bd.at(-1).text === 'Unsaved changes' && bd.at(-1).dirty);
+    const bb = homeBarItems({ title: 'x', target: live, busy: true });
+    check('while a save is running, Save / Save as / History are dimmed (a second press cannot double it)',
+      ['save', 'saveas', 'history'].every((a) => bb.find((i) => i.act === a).disabled));
+    check('Modules reports whether the picker is open', homeBarItems({ pickerOpen: true })[0].expanded === true);
+    check('*** Edit and Full screen are NOT extra buttons: they are the bar’s own ⚙ and ⛶, in words ***',
+      !b0.some((i) => ['view', 'full', 'edit', 'fs', 'settings'].includes(i.act))
+      && homeShellLabel('settings', { menuOpen: false }) === '⚙ Edit'
+      && homeShellLabel('settings', { menuOpen: true }) === '⚙ Done editing'
+      && homeShellLabel('fs', { full: false }) === '⛶ Full screen'
+      && homeShellLabel('fs', { full: true }) === '⛶ Leave full screen'
+      && homeShellLabel('next', {}) === null);
+
+    const m = homeMenuModel({ title: 'Trivia', target: { live: false, kind: 'module' }, settings: { keepVersions: 50 } });
+    check('the ⚙ menu section starts with a heading saying whose it is', m[0].kind === 'heading' && /This page/.test(m[0].label));
+    const ids = m.filter((i) => i.kind === 'item').map((i) => i.act);
+    check('*** it carries the SAME actions as the bar (so the plain bar’s ⚙ still reaches Save) ***',
+      ['picker', 'save', 'saveas', 'history'].every((a) => ids.includes(a)), ids.join());
+    check('*** ...and every page setting, as a row that cycles (was a separate page dialog) ***',
+      HOME_SETTINGS.every((r) => ids.includes(`set:${r.key}`)), ids.join());
+    check('...showing its current value', m.find((i) => i.act === 'set:keepVersions').hint === '50 saved versions');
+    check('...then Show the welcome again, and Nimrod’s walk (Show me how) — reachable by a switch, being menu rows',
+      ids.includes('rewelcome') && ids.at(-1) === 'cat');
+    check('every row has a stable id the cat and the suites can name', m.filter((i) => i.kind === 'item').every((i) => i.id === `home:${i.act}`));
+    check('History is disabled on something not saved yet; the menu’s scan skips it',
+      m.find((i) => i.act === 'history').disabled === true);
+    check('no row says "her screen", Christine or Cici', !J(m).match(/her screen|Christine|Cici/i));
+
+    // The full-screen delay: a setting, default Design's 6 s, with Never as a choice.
+    check('*** in full screen the bar tucks away after 6 s by default (Design) ***', HOME_DEFAULTS.barHideMs === 6000
+      && readHomeSettings(null).barHideMs === 6000);
+    check('the choices include Never (0) and are the shell’s own', J(BAR_HIDE_CHOICES) === J([0, 3000, 6000, 10000, 30000])
+      && J(BAR_HIDE_CHOICES) === J(FULLSCREEN_BAR_HIDE_CHOICES_MS) && FULLSCREEN_BAR_HIDE_DEFAULT_MS === HOME_DEFAULTS.barHideMs);
+    check('its row reads in words', homeSettingLabel({ barHideMs: 0 }, 'barHideMs') === 'Never'
+      && homeSettingLabel({ barHideMs: 6000 }, 'barHideMs') === '6 seconds');
+    let s = readHomeSettings(null);
+    const seen = [];
+    for (let i = 0; i < BAR_HIDE_CHOICES.length; i++) { s = cycleHomeSetting(s, 'barHideMs'); seen.push(s.barHideMs); }
+    check('a press cycles it and wraps (one switch never stranded at the end)', seen.at(-1) === 6000 && seen.includes(0), J(seen));
+    check('junk falls back to 6 s', readHomeSettings({ barHideMs: 7 }).barHideMs === 6000);
   }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));

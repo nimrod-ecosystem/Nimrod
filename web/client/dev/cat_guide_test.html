@@ -14,14 +14,16 @@
 </style>
 </head>
 <body>
-<h1>Nimrod the cat (game step 1's walkthrough)</h1>
+<h1>Nimrod the cat (the walk through your profile, on Home)</h1>
 
 <div class="warn">
   Mike, 2026-09-29: the cat appears only when asked, never uninvited; always dismissible (Close and
   Escape); how chatty he is is a setting; his words also go to the output bus. And the project's
   invariant: <i>a screen must never enter a state that only an input can leave, when the person in
   front of it cannot give that input.</i> The gate checks carry negative controls: the guard is
-  removed, the check is confirmed to go red, and it is restored.
+  removed, the check is confirmed to go red, and it is restored. Since 2026-09-30 the walk points at
+  HOME's real controls (the embedded kiosk's placed bar, the page's buttons on it, the docked ⚙ menu);
+  the game page's four buttons are retired.
 </div>
 
 <div id="sandbox"></div>
@@ -32,14 +34,16 @@
 import { mountCat, startCat, catStarted, resetCat, readCatPrefs, writeCatPrefs, catWords, poseToward,
          catImageURL, CAT_KEYS, CAT_PREFS_KEY, CAT_SOURCE, CHATTINESS, DEFAULT_CAT_PREFS, POSES,
          REST_CHOICES } from '../cat_guide.js';
-import { CAT_STEPS, GAME_PAGE, PROFILE_PAGE, CAT_PROFILE_KEY, catGoThere, catPathOnKiosk,
-         rememberCatProfile } from '../game/cat_steps.js';
+import { CAT_STEPS, GAME_PAGE, HOME_PAGE, HOME_PROFILE_URL, PROFILE_PAGE, CAT_PROFILE_KEY, CAT_BAR_SELECTOR,
+         PROFILE_MADE, catGoThere, catPathOnKiosk, rememberCatProfile } from '../game/cat_steps.js';
 import { startTour, mountTour, findTarget, TOUR_KEYS, allTourSteps } from '../tour.js';
 import { STEPS } from '../steps.js';
 import { createOutputBus } from '../output.js';
 import { createLocalBackend, createLocalMediaSources } from '../local_store.js';
-import { createGame, kioskURL } from '../game/game.js';
+import { createGame } from '../game/game.js';
 import { mountKiosk } from '../kiosk.js';
+import { layoutFor } from '../home_embed.js';
+import { homeBarItems, homeShellLabel, homeMenuModel } from '../home_dashboard.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -52,6 +56,7 @@ function check(name, cond, detail = '') {
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 3000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (fn()) return true; } catch { /* not yet */ } await tick(40); } return false; };
 
 // A storage that is a plain object, so a test never touches the real one.
 function fakeStore(seed = {}) {
@@ -84,29 +89,38 @@ function fakeTimers() {
 const hosts = [];
 const host = () => { const d = document.createElement('div'); document.body.append(d); hosts.push(d); return d; };
 const mount = (opts = {}) => mountCat(host(), {
-  steps: CAT_STEPS, storage: fakeStore(), path: GAME_PAGE, start: true, reducedMotion: true, ...opts,
+  steps: CAT_STEPS, storage: fakeStore(), path: HOME_PAGE, start: true, reducedMotion: true, ...opts,
 });
 const catsInDom = () => document.querySelectorAll('[data-cat]').length;
 const WALK = allTourSteps(CAT_STEPS);
-const GAME_STEPS = WALK.filter((s) => s.page === GAME_PAGE);
-const PROFILE_STEPS = WALK.filter((s) => s.page === PROFILE_PAGE);
+const stepById = (id) => WALK.find((s) => s.id === id);
 const sandbox = document.getElementById('sandbox');
 const resetSandbox = () => {
   sandbox.replaceChildren();
   sandbox.style.cssText = 'position:relative;height:1px;overflow:hidden';
 };
+// A stand-in for Home's stage: the placed bar with the page's buttons and the bar's own, as the real
+// embedded kiosk draws them (the real one is checked in "THE STEPS POINT AT THE REAL CONTROLS").
+function fakeHomeBar() {
+  sandbox.innerHTML = '<div id="stage"><div class="tb-bar" style="height:40px;display:flex">'
+    + '<div class="tb-actions tb-host"><button data-host="picker" style="width:60px">Modules</button>'
+    + '<button data-host="save" style="width:60px">Save</button></div>'
+    + '<div class="tb-actions"><button data-act="panel" style="width:60px">Panel</button>'
+    + '<button data-act="settings" style="width:60px">⚙ Edit</button></div></div></div>';
+  return sandbox.querySelector('#stage');
+}
 
 try {
 // =====================================================================================
 section('*** NEVER SHOWN WITHOUT A REQUEST ***');
 {
-  for (const p of [GAME_PAGE, PROFILE_PAGE, '/kiosk.html']) {
+  for (const p of [HOME_PAGE, GAME_PAGE, PROFILE_PAGE, '/kiosk.html']) {
     const c = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore(), path: p, reducedMotion: true });
     check(`a browser that never asked gets no cat on ${p}`, c === null && catsInDom() === 0);
   }
   // NEGATIVE CONTROL: the check above must be able to go red. With the start gate removed, the
   // same call DOES render — so the null above is the gate, not a mount that silently failed.
-  const ungated = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore(), path: GAME_PAGE,
+  const ungated = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore(), path: HOME_PAGE,
     reducedMotion: true, requireStarted: false });
   check('NEGATIVE CONTROL: without the start gate the same call renders a cat', !!ungated && catsInDom() === 1);
   ungated?.destroy();
@@ -115,12 +129,12 @@ section('*** NEVER SHOWN WITHOUT A REQUEST ***');
   const store = fakeStore();
   startCat(CAT_STEPS, store);
   check('startCat (the "Show me how" press) begins a walk', catStarted(store));
-  const resumed = mountCat(host(), { steps: CAT_STEPS, storage: store, path: GAME_PAGE, reducedMotion: true });
+  const resumed = mountCat(host(), { steps: CAT_STEPS, storage: store, path: HOME_PAGE, reducedMotion: true });
   check('once asked, a plain mount picks the walk up (it survives a page change)', !!resumed && resumed.index() === 0);
   resumed.close();
   check('closed means closed: a plain mount afterwards shows nothing',
-    mountCat(host(), { steps: CAT_STEPS, storage: store, path: GAME_PAGE, reducedMotion: true }) === null);
-  const again = mountCat(host(), { steps: CAT_STEPS, storage: store, path: GAME_PAGE, reducedMotion: true, start: true });
+    mountCat(host(), { steps: CAT_STEPS, storage: store, path: HOME_PAGE, reducedMotion: true }) === null);
+  const again = mountCat(host(), { steps: CAT_STEPS, storage: store, path: HOME_PAGE, reducedMotion: true, start: true });
   check('...but asking again works', !!again && again.index() === 0);
   again.destroy();
 
@@ -128,7 +142,7 @@ section('*** NEVER SHOWN WITHOUT A REQUEST ***');
   const both = fakeStore();
   startTour(STEPS, both);
   check('starting the SITE tour does not summon the cat',
-    mountCat(host(), { steps: CAT_STEPS, storage: both, path: GAME_PAGE, reducedMotion: true }) === null);
+    mountCat(host(), { steps: CAT_STEPS, storage: both, path: HOME_PAGE, reducedMotion: true }) === null);
   const only = fakeStore();
   startCat(CAT_STEPS, only);
   check('starting the cat does not summon the site tour',
@@ -243,8 +257,6 @@ section('*** DISMISS: Close, and Escape — and the page is fully usable after *
   esc(document.body);
   check('NEGATIVE CONTROL: with no cat, Escape reaches the page as before', seen === 1);
 
-  // Escape that belongs to something else. The settings menu is aria-modal and closes on its own
-  // Escape; a text box uses Escape to cancel typing. He steps aside for both.
   const modal = document.createElement('div');
   modal.setAttribute('aria-modal', 'true');
   const inModal = document.createElement('button');
@@ -265,42 +277,35 @@ section('*** DISMISS: Close, and Escape — and the page is fully usable after *
 // =====================================================================================
 section('*** EVERY STEP’S WORDS GO TO THE OUTPUT BUS ***');
 {
-  // The whole walk, both pages, at the default chattiness.
+  // The whole walk, on Home, at the default chattiness.
   const o = fakeOutput();
-  const g = mount({ output: o, goThere: catGoThere(fakeStore()) });
-  while (g.shown() && !g.waiting()) g.next();
-  const heardGame = o.said.map((x) => x.text);
-  check('each game-page step was said, in order',
-    GAME_STEPS.every((s, k) => heardGame[k] === catWords(s, 'some')), JSON.stringify(heardGame));
-  check('...and so was the holding line (where to go next)',
-    heardGame.at(-1) === catGoThere(fakeStore())(PROFILE_PAGE).say, heardGame.at(-1));
+  const g = mount({ output: o });
+  while (g.shown()) g.next();
+  const heard = o.said.map((x) => x.text);
+  check('*** each step was said, in order, all of them, on Home ***',
+    heard.length === WALK.length && WALK.every((s, k) => heard[k] === catWords(s, 'some')), JSON.stringify(heard));
   check('every one is marked as his', o.said.every((x) => x.source === CAT_SOURCE));
   check('each superseded line was taken back when he moved on',
     o.said.slice(0, -1).every((x) => o.cancelled.includes(x.id)));
-  g.destroy();
 
+  // Asked for somewhere else (the game page's "Show me how", a kiosk): he says where the walk is.
   const o2 = fakeOutput();
-  const p = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
-    path: PROFILE_PAGE, reducedMotion: true, output: o2 });
-  while (p.shown()) p.next();
-  check('each profile step was said, in order',
-    PROFILE_STEPS.every((s, k) => o2.said[k]?.text === catWords(s, 'some')), JSON.stringify(o2.said.map((x) => x.text)));
-  check(`all ${WALK.length} steps, between the two pages`,
-    o.said.length - 1 + o2.said.length === WALK.length);
+  const w = mount({ output: o2, path: GAME_PAGE, goThere: catGoThere() });
+  check('asked on the game page, he holds and says the walk is on Home',
+    w.waiting() && o2.said.at(-1)?.text === catGoThere()(HOME_PAGE).say, o2.said.at(-1)?.text);
+  w.destroy();
 
-  // THROUGH THE REAL BUS, to a channel: not just "say was called" but "a channel was handed it".
-  const heard = [];
+  const heardBus = [];
   const bus = createOutputBus({ channels: {
-    speech: { concurrency: 1, present(item, { done }) { heard.push(item); done(); return null; } } } });
+    speech: { concurrency: 1, present(item, { done }) { heardBus.push(item); done(); return null; } } } });
   const r = mount({ output: bus });
   check('*** through a real output bus, his first line reaches the speech channel ***',
-    heard.length === 1 && heard[0].text === catWords(WALK[0], 'some') && heard[0].verb === 'say'
-      && heard[0].source === CAT_SOURCE, JSON.stringify(heard));
+    heardBus.length === 1 && heardBus[0].text === catWords(WALK[0], 'some') && heardBus[0].verb === 'say'
+      && heardBus[0].source === CAT_SOURCE, JSON.stringify(heardBus));
   r.next();
-  check('...and the next one too', heard.length === 2 && heard[1].text === catWords(WALK[1], 'some'));
+  check('...and the next one too', heardBus.length === 2 && heardBus[1].text === catWords(WALK[1], 'some'));
   r.destroy();
 
-  // Not reading aloud: the words still show; nothing is sent.
   const o3 = fakeOutput();
   const quiet = mount({ output: o3, storage: fakeStore({ [CAT_PREFS_KEY]: JSON.stringify({ speak: false }) }) });
   check('with "read aloud" off, nothing is sent', o3.said.length === 0);
@@ -371,7 +376,6 @@ section('*** REDUCED MOTION USES THE STILL DRAWING ***');
 
   const urls = [];
   const svgText = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" onload="window.__catPwned=1">'
-    // Split so the HTML parser does not read a closing script tag inside this one.
     + '<scr' + 'ipt>window.__catPwned=1</scr' + 'ipt><g class="lid"><circle r="4" onclick="x()"/></g>'
     + '<a href="https://example.com"><rect width="1" height="1"/></a></svg>';
   const moving = mount({ reducedMotion: false, loadSvg: async (u) => { urls.push(u); return svgText; } });
@@ -391,7 +395,6 @@ section('*** REDUCED MOTION USES THE STILL DRAWING ***');
       && !window.__catPwned);
   moving.destroy();
 
-  // The files themselves, as served.
   let bad = [];
   for (const p of POSES) {
     for (const animated of [false, true]) {
@@ -422,24 +425,21 @@ section('he points at what he is talking about');
   check('no target: talking', poseToward(R(0, 0), null) === 'talking');
 
   const c = mount();
-  check('the walk opens on Make my profile (no hello slide), and he talks', c.step().id === 'cat-profile'
+  check('the walk opens on making the profile (no hello slide), and he talks', c.step().id === 'cat-profile'
     && c.pose() !== 'wave', `${c.step().id} ${c.pose()}`);
   c.destroy();
   const d = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-done' }),
-    path: PROFILE_PAGE, reducedMotion: true });
+    path: HOME_PAGE, reducedMotion: true });
   check('the last step is happy', d.pose() === 'happy', d.pose());
   d.destroy();
 
-  // A real target at the top-left; his panel is at the bottom.
-  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:120px;height:40px';
-  const b = document.createElement('button');
-  b.setAttribute('data-do', 'profile');
-  b.style.cssText = 'width:100%;height:100%';
-  sandbox.replaceChildren(b);
+  // Home's Save, at the top-left; his panel is at the bottom.
+  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:300px;height:40px';
+  fakeHomeBar();
   const s = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-profile' }),
-    path: GAME_PAGE, reducedMotion: true });
+    path: HOME_PAGE, reducedMotion: true });
   if (innerHeight > 200) {
-    check('a target up and to the left: his paw points up at it (panel below)', s.pose() === 'point-up', s.pose());
+    check('Save up and to the left: his paw points up at it (panel below)', s.pose() === 'point-up', s.pose());
     check('...and the ring is drawn around it', !s.el.querySelector('[data-tour-ring]').hidden);
   } else {
     check(`NOT RUN: pointing needs a real viewport (${innerWidth}×${innerHeight})`, true);
@@ -451,110 +451,108 @@ section('he points at what he is talking about');
 // =====================================================================================
 section('following along: he notices what you did, and never does it for you');
 {
-  // Already done on arrival: skipped, and not said.
-  const done = document.createElement('li');
-  done.setAttribute('data-step', 'profile');
-  done.setAttribute('data-done', '');
-  sandbox.replaceChildren(done);
+  // Already done on arrival (the profile exists): skipped, and not said.
+  const made = document.createElement('div');
+  made.setAttribute('data-home-profile', 'made');
+  sandbox.replaceChildren(made);
   const o = fakeOutput();
   const c = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-profile' }),
-    path: GAME_PAGE, reducedMotion: true, output: o });
+    path: HOME_PAGE, reducedMotion: true, output: o });
   await tick(0);
-  check('a step already done is passed over', c.step().id === 'cat-picture', c.step().id);
-  check('...without saying it', !o.said.some((x) => x.text === catWords(WALK.find((s) => s.id === 'cat-profile'), 'some')));
+  check('*** a profile that already exists: "make it" is passed over ***', c.step().id === 'cat-bar', c.step().id);
+  check('...without saying it', !o.said.some((x) => x.text === catWords(stepById('cat-profile'), 'some')));
   c.destroy();
 
-  // Done while he watches.
-  sandbox.replaceChildren();
+  // Done while he watches: Save made it.
+  made.setAttribute('data-home-profile', 'preview');
   const c2 = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-profile' }),
-    path: GAME_PAGE, reducedMotion: true });
-  const li = document.createElement('li');
-  li.setAttribute('data-step', 'profile');
-  sandbox.append(li);
+    path: HOME_PAGE, reducedMotion: true });
   await tick(150);
-  check('nothing done yet: he waits', c2.step().id === 'cat-profile');
-  li.setAttribute('data-done', '');
+  check('a preview (nothing made yet): he waits on Save', c2.step().id === 'cat-profile');
+  made.setAttribute('data-home-profile', 'made');
   await tick(200);
-  check('*** the person does it: he moves on by himself ***', c2.step().id === 'cat-picture', c2.step().id);
+  check('*** the person saves, the profile is made: he moves on by himself ***', c2.step().id === 'cat-bar', c2.step().id);
   c2.destroy();
 
   // Off: he waits for Next.
-  li.removeAttribute('data-done');
-  const c3 = mountCat(host(), { steps: CAT_STEPS, path: GAME_PAGE, reducedMotion: true,
+  made.setAttribute('data-home-profile', 'preview');
+  const c3 = mountCat(host(), { steps: CAT_STEPS, path: HOME_PAGE, reducedMotion: true,
     storage: fakeStore({ [CAT_KEYS.pos]: 'cat-profile', [CAT_PREFS_KEY]: JSON.stringify({ follow: false }) }) });
-  li.setAttribute('data-done', '');
+  made.setAttribute('data-home-profile', 'made');
   await tick(200);
   check('with "move on by himself" off, he waits', c3.step().id === 'cat-profile');
   c3.destroy();
+  resetSandbox();
 
-  // Pressing the target itself, where it leaves the page: position saved in the same click.
+  // The mechanisms no step of this walk uses today, kept honest on a walk of their own: pressing a
+  // step's target where that leaves the page, and jumping forward to the page you arrived on.
+  const TWO = [{ id: 'x-open', page: '/one', target: '[data-open]', action: 'click', advanceOn: 'click',
+    brief: 'a', say: 'aa', more: 'aaa' },
+  { id: 'x-there', page: '/two', target: null, action: 'none', brief: 'b', say: 'bb', more: 'bbb' }];
   const open = document.createElement('a');
   open.setAttribute('data-open', '');
   open.setAttribute('aria-disabled', 'true');
-  open.textContent = 'Open it';
   sandbox.replaceChildren(open);
-  const store = fakeStore({ [CAT_KEYS.pos]: 'cat-open' });
-  const c4 = mountCat(host(), { steps: CAT_STEPS, storage: store, path: GAME_PAGE, reducedMotion: true });
+  const store = fakeStore({ [CAT_KEYS.pos]: 'x-open' });
+  const c4 = mountCat(host(), { steps: TWO, storage: store, path: '/one', reducedMotion: true });
   open.click();
-  check('a disabled Open does not move him on', c4.step().id === 'cat-open');
+  check('a disabled target does not move him on', c4.step().id === 'x-open');
   open.setAttribute('aria-disabled', 'false');
   open.click();
-  check('pressing Open moves him on in the same click', c4.step().id === 'cat-bar' && c4.waiting());
-  check('...with the position already saved for the next page', store.getItem(CAT_KEYS.pos) === 'cat-bar');
+  check('pressing a leave-the-page target moves him on in the same click', c4.step().id === 'x-there' && c4.waiting());
+  check('...with the position already saved for the next page', store.getItem(CAT_KEYS.pos) === 'x-there');
   c4.destroy();
   resetSandbox();
-
-  // Already on the page he was sending you to: jump forward, never back.
-  const s1 = fakeStore({ [CAT_KEYS.pos]: 'cat-profile' });
-  const j = mountCat(host(), { steps: CAT_STEPS, storage: s1, path: PROFILE_PAGE, reducedMotion: true });
-  check('on the profile with the walk still on the game page: he jumps to the profile’s first step',
-    j.step().id === 'cat-bar' && !j.waiting(), j.step().id);
+  const j = mountCat(host(), { steps: TWO, storage: fakeStore({ [CAT_KEYS.pos]: 'x-open' }), path: '/two', reducedMotion: true });
+  check('arriving on the page he was sending you to: he jumps forward to it', j.step().id === 'x-there' && !j.waiting());
   j.destroy();
-  const s2 = fakeStore({ [CAT_KEYS.pos]: 'cat-words' });
-  const k = mountCat(host(), { steps: CAT_STEPS, storage: s2, path: GAME_PAGE, reducedMotion: true });
-  check('back on the game page mid-profile: no jump backwards, he holds with a link', k.step().id === 'cat-words' && k.waiting());
+  const k = mountCat(host(), { steps: TWO, storage: fakeStore({ [CAT_KEYS.pos]: 'x-there' }), path: '/one', reducedMotion: true });
+  check('never backwards: on the earlier page he holds with a link', k.step().id === 'x-there' && k.waiting());
   k.destroy();
 }
 
 // =====================================================================================
-section('which screen is the profile');
+section('*** the walk is on Home; everywhere else he offers the way there ***');
 {
+  const go = catGoThere()(HOME_PAGE);
+  check('*** the link to carry on opens the profile on Home ***', go.href === HOME_PROFILE_URL && HOME_PROFILE_URL === '/modules.html?m=profile', go.href);
+  check('...from the profile’s own kiosk token too', catGoThere()(PROFILE_PAGE).href === HOME_PROFILE_URL);
   const s = fakeStore();
-  check('nothing remembered: any screen will do', catPathOnKiosk('abc', s) === PROFILE_PAGE);
+  check('the kiosk still names its screen (kiosk.html is unchanged)', catPathOnKiosk('abc', s) === PROFILE_PAGE);
   rememberCatProfile('p1', s);
   check('the remembered profile is the profile', catPathOnKiosk('p1', s) === PROFILE_PAGE);
   check('another screen is not', catPathOnKiosk('p2', s) === '/kiosk.html');
-  const go = catGoThere(s)(PROFILE_PAGE);
-  check('the link to carry on opens that profile on the kiosk', go.href === kioskURL('p1'), go.href);
-  check('with no profile yet, the link goes to the game page', catGoThere(fakeStore())(PROFILE_PAGE).href === GAME_PAGE);
-  const w = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar', [CAT_PROFILE_KEY]: 'p1' }),
-    path: '/kiosk.html', reducedMotion: true, goThere: catGoThere(fakeStore({ [CAT_PROFILE_KEY]: 'p1' })) });
-  const a = w.el.querySelector('[data-tour-go]');
-  check('on another screen he holds, with a link to the profile', w.waiting() && a?.getAttribute('href') === kioskURL('p1'),
-    a?.getAttribute('href'));
-  check('...and draws no ring around this screen’s bar (it is not the one he means)',
-    w.el.querySelector('[data-tour-ring]').hidden);
-  w.destroy();
+  for (const p of [PROFILE_PAGE, '/kiosk.html', GAME_PAGE, 'home:another-module']) {
+    const w = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+      path: p, reducedMotion: true, goThere: catGoThere() });
+    const a = w.el.querySelector('[data-tour-go]');
+    check(`on ${p} he holds, with a link to the profile on Home`, w.waiting() && a?.getAttribute('href') === HOME_PROFILE_URL,
+      a?.getAttribute('href'));
+    check('...and draws no ring (what he means is not on this page)', w.el.querySelector('[data-tour-ring]').hidden);
+    w.destroy();
+  }
 }
 
 // =====================================================================================
-section('*** THE STEPS POINT AT THE REAL CONTROLS ***');
+section('*** THE STEPS POINT AT HOME’S REAL CONTROLS ***');
 {
-  // The game page, as served.
+  check('*** every step is on Home ***', WALK.every((s) => s.page === HOME_PAGE), WALK.map((s) => s.page).join());
+  // The game page, as served: its four buttons are retired; it keeps "Show me how" and a way to Home.
   const html = await (await fetch('../game/index.html')).text();
   const gdoc = new DOMParser().parseFromString(html, 'text/html');
-  const gameTargets = GAME_STEPS.filter((s) => s.target);
-  check('every game-page step’s target is on the real game page',
-    gameTargets.every((s) => gdoc.querySelector(s.target)), gameTargets.filter((s) => !gdoc.querySelector(s.target)).map((s) => s.id).join());
-  check('...and every "done" marker names a real step row',
-    GAME_STEPS.filter((s) => s.doneWhen).every((s) => gdoc.querySelector(s.doneWhen.replace('[data-done]', ''))));
-  check('the game page has the visible "Show me how"', !!gdoc.querySelector('[data-cat-ask]'));
+  check('*** the game page’s four buttons are gone (Make it, Hang it, Put it up, Open it) ***',
+    !gdoc.querySelector('[data-do]') && !gdoc.querySelector('[data-open]') && !gdoc.querySelector('.g-steps'));
+  check('...it keeps the visible "Show me how", and links to the profile on Home',
+    !!gdoc.querySelector('[data-cat-ask]') && gdoc.querySelector('[data-home-link]')?.getAttribute('href') === HOME_PROFILE_URL);
 
-  // THE REAL KIOSK, on a real profile made by the real game, signed out (browser storage).
+  // THE REAL EMBEDDED KIOSK, as Home mounts it: the dashboard path, Home's host (the page's buttons on
+  // the placed bar, its section in the menu), on a real profile made by the real game (browser storage).
   const backend = createLocalBackend();
   const { profiles } = backend;
   const person = await profiles.addPerson('Robin Cat-Test');
-  let kroot = null, k = null, cat = null;
+  const mem = () => { const m = new Map(); return { getItem: (x) => (m.has(x) ? m.get(x) : null), setItem: (x, v) => { m.set(x, String(v)); }, removeItem: (x) => { m.delete(x); } }; };
+  let kroot = null, k = null, cat = null, marker = null;
+  let fullEl = null;
   try {
     const game = createGame({ profiles, makeSettings: (pid) => backend.makeSettings(pid),
       makeInstanceState: (pid, id) => backend.makeState(id, {}, pid),
@@ -562,77 +560,111 @@ section('*** THE STEPS POINT AT THE REAL CONTROLS ***');
     const { profileId } = await game.makeProfile();
     await game.hangPicture();
     await game.putUpSign();
+    const set = backend.makeSettings(profileId);
+    const saved = await set.load();
+    const screen = await profiles.get(profileId);
     kroot = document.createElement('div');
+    kroot.id = 'stage';
     kroot.style.cssText = 'position:fixed;inset:0;z-index:0';
     document.body.append(kroot);
+    const view = { title: 'Your profile', target: { live: true, kind: 'profile' }, docCurrent: 'My profile' };
+    const hostObj = {
+      barItems: () => homeBarItems(view),
+      label: (act, st) => homeShellLabel(act, st),
+      press: () => {},
+      menuItems: () => homeMenuModel(view),
+      barHideMs: () => 150,
+      subscribe: () => () => {},
+    };
     k = await mountKiosk(kroot, { user: null, profileId, profiles, makeState: backend.makeState,
-      makeEvents: backend.makeEvents, sources: createLocalMediaSources() });
-    check('the kiosk mounted the game’s profile', k.screenId() === profileId && k.slotCount() === 2, k.slotCount());
+      makeEvents: backend.makeEvents, sources: createLocalMediaSources(), embedded: true, dashboardModule: true,
+      embedLayout: layoutFor(saved, screen.modules), storage: mem(), session: mem(), navigate: () => {},
+      reloadPage: () => {}, host: hostObj, fullscreenElement: () => fullEl });
+    await settled(() => !!kroot.querySelector('.tb-bar .tb-host [data-host="save"]'), 4000);
+    check('the embedded kiosk mounted the game’s profile, with Home’s buttons on its placed bar',
+      k.screenId() === profileId && !!kroot.querySelector('.tb-bar .tb-host [data-host="save"]'));
 
-    const unresolved = PROFILE_STEPS.filter((s) => s.target && !findTarget(document, s.target)).map((s) => s.id);
-    check('menu closed: every profile step points at something real on the kiosk', unresolved.length === 0, unresolved.join());
-    check('the bar step rings the transport bar', findTarget(document, WALK.find((s) => s.id === 'cat-bar').target)?.matches('[data-controls]'));
-    check('the panel step rings Panel ▸', findTarget(document, WALK.find((s) => s.id === 'cat-panel').target)?.matches('[data-act="panel"]'));
-    check('the gear step rings the gear', findTarget(document, WALK.find((s) => s.id === 'cat-gear').target)?.matches('[data-act="settings"]'));
-    const gear = WALK.find((s) => s.id === 'cat-gear');
-    check('...and is not "done" while the menu is shut', !document.querySelector(gear.doneWhen));
+    const unresolved = WALK.filter((s) => s.target && !findTarget(document, s.target)).map((s) => s.id);
+    check('*** menu closed: every step points at something real on Home’s stage ***', unresolved.length === 0, unresolved.join());
+    const at = (id) => findTarget(document, stepById(id).target);
+    check('making the profile rings Home’s Save, ON the transport bar', at('cat-profile')?.matches('.tb-bar .tb-host [data-host="save"]'));
+    check('the bar step rings the placed transport bar', at('cat-bar')?.matches('.tb-bar'));
+    check('Modules rings Modules, on the bar', at('cat-modules')?.matches('.tb-bar [data-host="picker"]'));
+    check('the panel step rings Panel ▸', at('cat-panel')?.matches('.tb-bar [data-act="panel"]'));
+    check('the gear step rings the gear, which reads "⚙ Edit"', at('cat-gear')?.matches('.tb-bar [data-act="settings"]')
+      && at('cat-gear').textContent === '⚙ Edit', at('cat-gear')?.textContent);
+    check('the last Save step rings Save', at('cat-save')?.matches('[data-host="save"]'));
+    const gear = stepById('cat-gear');
+    check('...and "open the menu" is not done while the menu is shut', !document.querySelector(gear.doneWhen));
+    marker = document.createElement('div');
+    marker.dataset.homeProfile = 'made';
+    document.body.append(marker);
+    check('"make the profile" is done once Home says the profile exists', !!document.querySelector(PROFILE_MADE));
 
-    // Choose a panel the way the step says to, then open the menu.
-    document.querySelector('[data-act="panel"]').click();
-    const opened = k.menu.open();
-    check('the settings menu opens', opened !== false && k.menu.isOpen());
-    check('the gear step’s "done" matches the menu being open', !!document.querySelector(gear.doneWhen));
-    const rowFor = (id) => findTarget(document, WALK.find((s) => s.id === id).target);
-    check('Words: the real "Words" row', rowFor('cat-words')?.matches('.st-item[data-id="set:label"]'), rowFor('cat-words')?.outerHTML?.slice(0, 80));
-    check('Colours: the real "Colours" row', rowFor('cat-room')?.matches('.st-item[data-id="set:theme"]'));
-    check('Close: the real "Close menu" row', rowFor('cat-close')?.matches('.st-item[data-id="close"]'));
+    kroot.querySelector('.tb-bar [data-act="panel"]').click();
+    kroot.querySelector('.tb-bar [data-act="settings"]').click();
+    await settled(() => k.menu.isOpen(), 1500);
+    check('the gear opens the one menu, docked beside the stage', k.menu.isOpen() && !!kroot.querySelector('.sm-dock [data-settings] [data-scrim]:not([hidden])'));
+    check('*** the gear step’s "done" matches the docked menu being open ***', !!document.querySelector(gear.doneWhen));
+    check('Words: the real "Words" row', at('cat-words')?.matches('.st-item[data-id="set:label"]'), at('cat-words')?.outerHTML?.slice(0, 80));
+    check('Colours: the real "Colours" row', at('cat-room')?.matches('.st-item[data-id="set:theme"]'));
     check('Picture: the real "Picture" or "Picture from" row',
-      rowFor('cat-picture-rows')?.matches('.st-item[data-id="set:image"], .st-item[data-id="set:imageFrom"]'),
-      rowFor('cat-picture-rows')?.outerHTML?.slice(0, 80));
+      at('cat-picture-rows')?.matches('.st-item[data-id="set:image"], .st-item[data-id="set:imageFrom"]'),
+      at('cat-picture-rows')?.outerHTML?.slice(0, 80));
     check('the labels he names are the labels on those rows',
-      /Words/.test(rowFor('cat-words')?.textContent) && /Colours/.test(rowFor('cat-room')?.textContent)
-        && /Close menu/.test(rowFor('cat-close')?.textContent));
+      /Words/.test(at('cat-words')?.textContent) && /Colours/.test(at('cat-room')?.textContent));
+    check('*** "Show me how" is a row of the one ⚙ menu (reachable by a switch, like every row) ***',
+      !!kroot.querySelector('.st-item[data-id="home:cat"]'));
 
-    // The cat on the kiosk, speaking through the kiosk's own bus.
-    check('the kiosk hands out its output bus', typeof k.output?.()?.say === 'function');
+    // The cat on Home, speaking through the kiosk's own bus.
+    check('the kiosk hands out its output bus and its bus', typeof k.output?.()?.say === 'function' && typeof k.bus?.()?.publish === 'function');
     cat = mountCat(document.body, { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-words' }),
-      path: catPathOnKiosk(k.screenId(), fakeStore()), reducedMotion: true, output: k.output() });
-    check('on the kiosk he shows the step, with the menu still open underneath', cat.shown() && k.menu.isOpen());
+      path: HOME_PAGE, reducedMotion: true, output: k.output(), bus: k.bus(), barSelector: CAT_BAR_SELECTOR });
+    check('on Home he shows the step, with the menu still open underneath', cat.shown() && k.menu.isOpen());
     check('...his words went to the kiosk’s bus (it gave back an id)', typeof cat.lastSaid() === 'string', String(cat.lastSaid()));
-    if (innerHeight > 200) {
-      check('...and the ring is on the Words row', !cat.el.querySelector('[data-tour-ring]').hidden);
-    }
-    // Escape with focus in the menu: the MENU closes, he stays.
-    const inMenu = document.querySelector('.kiosk [data-panel]');
+    if (innerHeight > 200) check('...and the ring is on the Words row', !cat.el.querySelector('[data-tour-ring]').hidden);
+    k.bus().publish('nimrod-cat/next', {});
+    check('*** a switch saying nimrod-cat/next on the screen’s bus moves him on ***', cat.step().id === 'cat-room', cat.step().id);
+    k.bus().publish('nimrod-cat/prev', {});
+    check('...and nimrod-cat/prev back', cat.step().id === 'cat-words');
+    const inMenu = kroot.querySelector('[data-settings] [data-panel]');
     inMenu.focus();
     inMenu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await tick(30);
     check('Escape in the open menu closes the menu, not him', !k.menu.isOpen() && cat.shown());
     document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
     check('the next Escape closes him — and does not open the menu behind him', !cat.shown() && !k.menu.isOpen());
 
-    // *** THE BAR IS SHOWN WHILE HE POINTS AT IT, through the kiosk's own seam. ***
-    const bar = document.querySelector('.kiosk [data-controls]');
-    bar.classList.add('hidden');
-    check('the real bar starts this check hidden', bar.classList.contains('hidden') && !k.barHeld());
+    // *** THE BAR IS SHOWN WHILE HE POINTS AT IT, in full screen too, where the placed bar tucks away. ***
+    const bar = kroot.querySelector('.tb-bar');
+    fullEl = kroot;
+    document.dispatchEvent(new Event('fullscreenchange'));
+    await settled(() => bar.dataset.tucked === '1', 1500);
+    check('(setup) in full screen the placed bar has tucked itself away', bar.dataset.tucked === '1');
     cat = mountCat(document.body, { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
-      path: PROFILE_PAGE, reducedMotion: true, holdBar: (on) => k.holdBar(on) });
-    check('*** "This is the bar": the real bar is showing, and held ***', !bar.classList.contains('hidden') && k.barHeld(),
-      bar.className);
+      path: HOME_PAGE, reducedMotion: true, holdBar: (on) => k.holdBar(on), barSelector: CAT_BAR_SELECTOR });
+    await tick(30);
+    check('*** "This is the bar": the placed bar is back, and held ***', bar.dataset.tucked !== '1' && k.barHeld());
+    await tick(300);
+    check('...and it stays while he points at it (longer than its delay)', bar.dataset.tucked !== '1');
     cat.next();
-    check('Panel ▸ is on the bar: still held', cat.step().id === 'cat-panel' && k.barHeld());
-    cat.next();
-    check('the gear is on the bar: still held', cat.step().id === 'cat-gear' && k.barHeld());
+    check('Modules is on the bar: still held', cat.step().id === 'cat-modules' && k.barHeld());
     cat.close();
-    check('*** he closes: the bar is let go, back to its own auto-hide ***', !k.barHeld());
+    check('*** he closes: the bar is let go ***', !k.barHeld());
+    await tick(300);
+    check('...and tucks itself away again on its own delay', bar.dataset.tucked === '1');
     cat = mountCat(document.body, { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
-      path: PROFILE_PAGE, reducedMotion: true, holdBar: (on) => k.holdBar(on) });
+      path: HOME_PAGE, reducedMotion: true, holdBar: (on) => k.holdBar(on), barSelector: CAT_BAR_SELECTOR });
     check('held again for a second walk', k.barHeld());
     cat.destroy();
     check('*** the page tears him down: the bar is let go too ***', !k.barHeld());
+    fullEl = null;
+    document.dispatchEvent(new Event('fullscreenchange'));
   } finally {
     try { cat?.destroy(); } catch { /* already gone */ }
     try { k?.destroy(); } catch (e) { console.warn(e); }
     kroot?.remove();
+    marker?.remove();
     for (const p of await profiles.list(person.id)) await profiles.remove(p.id);
     await profiles.removePerson(person.id);
   }
@@ -641,26 +673,25 @@ section('*** THE STEPS POINT AT THE REAL CONTROLS ***');
 // =====================================================================================
 section('*** NO OPENING SLIDE; NOTHING SAID WHERE IT IS NOT TRUE ***');
 {
-  // Mike, 2026-09-29: "He says every screen has a menu and bar and there is no menu or bar. That
-  // first slide is kind of unnecessary. Start with the make my profile."
-  check('the walk starts at Make my profile', WALK[0].id === 'cat-profile' && WALK[0].target === '[data-do="profile"]', WALK[0].id);
-  check('there is no hello slide any more', !WALK.some((s) => s.id === 'cat-hello'));
+  check('the walk starts at making the profile, on Save', WALK[0].id === 'cat-profile' && /data-host="save"/.test(WALK[0].target), WALK[0].id);
+  check('there is no hello slide', !WALK.some((s) => s.id === 'cat-hello'));
+  check('no step lives on the game page any more', !WALK.some((s) => s.page === GAME_PAGE));
   const all = (s) => ['brief', 'say', 'more'].map((k) => s[k] || '').join(' ');
-  const claims = GAME_STEPS.filter((s) => /every screen|this is the (bar|menu)|settings menu|the gear/i.test(all(s)));
-  check('no game-page step talks about a bar or a menu as if it were on that page (it has neither)',
-    claims.length === 0, claims.map((s) => s.id).join());
-  check('no step says "her screen"', !WALK.some((s) => /her screen/i.test(all(s))));
+  check('no step says "her screen", Christine or Cici', !WALK.some((s) => /her screen|Christine|Cici/i.test(all(s))));
+  check('no step tells you to press a game-page button (Make it, Hang it, Put it up, Open it)',
+    !WALK.some((s) => /Make it|Hang it|Put it up|Open it/.test(all(s))));
+  check('*** his goodbye says where to find him again: Show me how, in the ⚙ menu ***',
+    /Show me how/.test(all(stepById('cat-done'))) && /⚙/.test(all(stepById('cat-done'))));
 }
 
 // =====================================================================================
 section('*** BACK: one step back, re-said, never doing the step ***');
 {
-  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:120px;height:40px';
-  const b = document.createElement('button');
-  b.setAttribute('data-do', 'profile');
+  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:300px;height:40px';
+  const stage = fakeHomeBar();
+  const save = stage.querySelector('[data-host="save"]');
   let pressed = 0;
-  b.addEventListener('click', () => { pressed++; });
-  sandbox.replaceChildren(b);
+  save.addEventListener('click', () => { pressed++; });
 
   const o = fakeOutput();
   const c = mount({ output: o });
@@ -672,53 +703,35 @@ section('*** BACK: one step back, re-said, never doing the step ***');
     !!(next().compareDocumentPosition(back()) & Node.DOCUMENT_POSITION_FOLLOWING));
   check('Next is still labelled Next', next().textContent.trim() === 'Next');
   c.next();
-  check('one step on', c.step().id === 'cat-picture' && !back().disabled);
+  check('one step on', c.step().id === 'cat-bar' && !back().disabled);
   const before = o.said.at(-1);
   back().focus();
   back().click();
   check('*** Back goes to the step before ***', c.step().id === 'cat-profile');
   check('...and says its words again', o.said.at(-1).text === catWords(WALK[0], 'some'), o.said.at(-1)?.text);
   check('...having taken back what he was saying first', o.cancelled.includes(before.id));
-  check('*** ...and never presses the step’s button for you ***', pressed === 0);
+  check('*** ...and never presses Save for you ***', pressed === 0);
   check('focus stays in his panel for a keyboard user (not dropped to the page)', c.el.contains(document.activeElement),
     document.activeElement?.outerHTML?.slice(0, 60));
   c.destroy();
 
   // Back to a step that is already done: he does not bounce straight forward again.
-  const done = document.createElement('li');
-  done.setAttribute('data-step', 'profile');
-  done.setAttribute('data-done', '');
-  sandbox.replaceChildren(done);
-  const d = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-picture' }),
-    path: GAME_PAGE, reducedMotion: true });
+  const made = document.createElement('div');
+  made.setAttribute('data-home-profile', 'made');
+  sandbox.append(made);
+  const d = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+    path: HOME_PAGE, reducedMotion: true });
   d.prev();
   await tick(0);
-  // A change on the page, so the follow-along check runs while he stands on the done step.
-  done.removeAttribute('data-done'); await tick(0); done.setAttribute('data-done', '');
+  made.setAttribute('data-home-profile', 'preview'); await tick(0); made.setAttribute('data-home-profile', 'made');
   await tick(200);
   check('*** Back to a step you already did stays there (it does not skip you forward again) ***',
     d.step().id === 'cat-profile', d.step().id);
   d.next();
-  check('...and Next moves on from it as usual', d.step().id === 'cat-picture');
+  check('...and Next moves on from it as usual', d.step().id === 'cat-bar');
   d.destroy();
   resetSandbox();
 
-  // Back across pages: from the profile's first step, the step before is on the game page.
-  const o2 = fakeOutput();
-  const p = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
-    path: PROFILE_PAGE, reducedMotion: true, output: o2, goThere: catGoThere(fakeStore()) });
-  p.el.querySelector('[data-tour-back]').click();
-  const go = p.el.querySelector('[data-tour-go]');
-  check('*** Back from the profile: he holds, with a link to the game page ***',
-    p.step().id === 'cat-open' && p.waiting() && go?.getAttribute('href') === GAME_PAGE, go?.getAttribute('href'));
-  check('...and what he says there does not call it "the next part"', !/next/i.test(o2.said.at(-1)?.text || ''),
-    o2.said.at(-1)?.text);
-  p.next();
-  check('...and Next brings him forward to the bar again, rather than ending the walk',
-    p.shown() && p.step().id === 'cat-bar' && !p.waiting());
-  p.destroy();
-
-  // The bus verb works the same.
   const subs = new Map();
   const bus = { subscribe: (t, fn) => { subs.set(t, fn); return () => subs.delete(t); } };
   const q = mount({ bus });
@@ -731,47 +744,44 @@ section('*** BACK: one step back, re-said, never doing the step ***');
 // =====================================================================================
 section('*** THE BAR IS HELD ONLY WHILE HE POINTS AT IT ***');
 {
-  // A stand-in bar with the real selectors inside it; the real kiosk is checked above.
   sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:300px;height:40px';
-  sandbox.innerHTML = '<div data-controls style="height:40px"><button data-act="panel">Panel</button>'
-    + '<button data-act="settings">⚙</button></div>';
+  fakeHomeBar();
   const calls = [];
   const holdBar = (on) => { calls.push(!!on); };
   const held = () => calls.at(-1) === true;
-  const c = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
-    path: PROFILE_PAGE, reducedMotion: true, holdBar });
+  const hmount = (pos, extra = {}) => mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: pos }),
+    path: HOME_PAGE, reducedMotion: true, holdBar, barSelector: CAT_BAR_SELECTOR, ...extra });
+  const c = hmount('cat-bar');
   check('"This is the bar": held', held(), JSON.stringify(calls));
   c.next(); c.next();
-  check('Panel ▸ and the gear are inside it: still held, and asked once, not every step',
+  check('Modules and Panel ▸ are inside it: still held, and asked once, not every step',
     held() && calls.filter(Boolean).length === 1, JSON.stringify(calls));
   while (c.step().id !== 'cat-done') c.next();
   check('*** the last step points at nothing: let go ***', calls.at(-1) === false, JSON.stringify(calls));
   c.prev();
-  check('back onto a step that points at the gear: held again', held(), JSON.stringify(calls));
+  check('back onto a step that points at Save, on the bar: held again', held(), JSON.stringify(calls));
   c.close();
   check('*** closed: let go ***', calls.at(-1) === false);
 
   calls.length = 0;
   const w = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
-    path: '/kiosk.html', reducedMotion: true, holdBar });
-  check('on another screen (holding with a link), this screen’s bar is not held', !calls.includes(true), JSON.stringify(calls));
+    path: '/kiosk.html', reducedMotion: true, holdBar, barSelector: CAT_BAR_SELECTOR });
+  check('on another page (holding with a link), no bar is held', !calls.includes(true), JSON.stringify(calls));
   w.destroy();
   const g = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore(), path: GAME_PAGE, start: true,
-    reducedMotion: true, holdBar });
+    reducedMotion: true, holdBar, barSelector: CAT_BAR_SELECTOR });
   check('on the game page nothing is held', !calls.includes(true));
   g.destroy();
 
-  // Every way he goes away lets go: close, Escape, resting, and the page tearing him down.
   const t = fakeTimers();
   for (const [how, end] of [
-    ['Escape', (x) => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))],
+    ['Escape', () => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))],
     ['resting', () => t.fireAll()],
     ['destroy', (x) => x.destroy()],
     ['Next to the end', (x) => { while (x.shown()) x.next(); }],
   ]) {
     calls.length = 0;
-    const x = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
-      path: PROFILE_PAGE, reducedMotion: true, holdBar, setTimer: t.setTimer, clearTimer: t.clearTimer });
+    const x = hmount('cat-bar', { setTimer: t.setTimer, clearTimer: t.clearTimer });
     end(x);
     check(`*** ${how}: the bar is let go ***`, calls[0] === true && calls.at(-1) === false, JSON.stringify(calls));
     x.destroy();
