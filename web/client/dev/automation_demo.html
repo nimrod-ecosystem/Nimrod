@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hidden writing</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  :root{--bg:#F7F4D5;--fg:#0A3323;--muted:#4b5b52}
+  @media (prefers-color-scheme: dark){:root{--bg:#12181c;--fg:#e8efe9;--muted:#a9b7ae}}
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:16px;color:var(--fg);background:var(--bg);max-width:960px}
+  h1{font-size:1.2rem} p{max-width:70ch;color:var(--muted)}
+  .row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+  #sign{position:relative;width:min(480px,100%);height:200px}
+  .dial{display:flex;flex-direction:column;gap:6px;min-width:240px}
+  .dial input[type=range]{width:100%}
+  .auto-field{display:flex;flex-direction:column;margin:4px 0}
+  .auto-panel{max-width:420px}
+  .auto-panel h3{font-size:1rem;margin:8px 0}
+</style>
+</head>
+<body>
+<h1>Hidden writing</h1>
+<p>A sign whose words are the same colour as the board, so they cannot be seen. The dial drives the
+words' lightness through <code>automation.js</code>: turn it to the right place and the words
+appear. Press <b>N</b> (or bind any switch to the <code>turn-dial</code> verb) to step the dial.
+The panel below edits what drives what; removing the binding puts the sign back exactly as set.</p>
+<div class="row">
+  <div id="sign"></div>
+  <div class="dial">
+    <label for="dial">The dial</label>
+    <input id="dial" type="range" min="0" max="1" step="0.01" value="0">
+    <output id="dialv">0.00</output>
+  </div>
+</div>
+<div id="panel"></div>
+
+<script type="module">
+import { getManifest } from '../module.js';
+import '../modules/button.js';
+import { createTryHost } from '../module_try.js';
+import { createAutomation } from '../automation.js';
+import { mountAutomationPanel } from '../automation_panel.js';
+
+const th = await createTryHost();
+const engine = createAutomation({ bus: th.bus });
+const base = th.backend.makeState('hidden-sign-demo', {}, th.profileId);
+await base.load().catch(() => {});
+base.set({ label: 'The key is under the mat', style: 'plain', color: '#000000', background: '#000000' });
+const state = engine.wrapState('button-try', base, { manifest: getManifest('button') });
+th.mount('button', document.getElementById('sign'), { state });
+
+engine.add({ id: 'hidden-writing', target: { instance: 'button-try', key: 'inkLightness' },
+  source: { kind: 'bus', topic: 'puzzle/dial' },
+  map: { outMin: 0, outMax: 60, curve: 'peak', center: 0.73, width: 0.08 } });
+
+const dial = document.getElementById('dial');
+const shown = document.getElementById('dialv');
+const send = () => { shown.textContent = Number(dial.value).toFixed(2); th.bus.publish('puzzle/dial', Number(dial.value)); };
+dial.addEventListener('input', send);
+// A verb steps the same dial, so a switch can solve it too.
+th.bus.subscribe('verb/turn-dial', () => {
+  let v = Number(dial.value) + 0.05; if (v > 1.0001) v = 0;
+  dial.value = String(v); send();
+});
+window.addEventListener('keydown', (e) => { if (e.key === 'n' || e.key === 'N') th.bus.publish('verb/turn-dial'); });
+send();
+
+mountAutomationPanel(document.getElementById('panel'), {
+  engine,
+  panels: () => [{ id: 'button-try', title: 'The sign', manifest: getManifest('button') }],
+  verbs: ['turn-dial'],
+});
+</script>
+</body>
+</html>

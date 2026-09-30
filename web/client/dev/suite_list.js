@@ -27,7 +27,7 @@ export const SUITES = [
   'marker', 'mic_owner', 'modules_catalog', 'output',
   'output_panel',
   'output_remote', 'pair', 'pairing', 'panel_fit', 'people', 'personal', 'photos', 'pond',
-  'audio_bus', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'pressgame', 'records', 'rules',
+  'audio_bus', 'automation', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'pressgame', 'records', 'rules',
   // FIRST-ISH ON PURPOSE would be better still, but the list is alphabetical-ish and this is
   // close enough: `imports` proves every client module PARSES, and it is the check that tells
   // you which file is broken when half this page reports `no summary`. A module that will not
