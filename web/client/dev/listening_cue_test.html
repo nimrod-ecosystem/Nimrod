@@ -65,10 +65,10 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
     const stage = document.getElementById('stage');
     const under = document.getElementById('under');
 
-    section('*** the defaults are settings, and all three are ON ***');
+    section('*** the defaults are settings: the visual cue and the duck ON, the tone OFF ***');
     check('the visual cue is on by default', LISTENING_DEFAULTS.visual === true);
-    check('the tone is on by default (row 2.36 asks whether ON for everyone; shipped ON, flagged)',
-      LISTENING_DEFAULTS.tone === true);
+    check('*** the tone is OFF by default (Mike, 2026-09-30: it "would more likely confuse her") ***',
+      LISTENING_DEFAULTS.tone === false);
     check('ducking the video while listening is on by default', LISTENING_DEFAULTS.duck === true);
     check('...to the bus’s own duck depth unless somebody sets another', LISTENING_DEFAULTS.duckTo === DUCK_TO);
     const keys = LISTENING_FIELDS.map((f) => f.key).join(',');
@@ -232,7 +232,7 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
       all.destroy();
       const all2 = attachListening({ bus: b, audio, host: stage, play: () => played.push(1), settings: {} });
       b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
-      check('nothing set: all three on', played.length === 1 && stage.querySelector('.listen-cue')?.hidden === false
+      check('nothing set: the cue and the duck on, the tone OFF (Mike 2026-09-30)', played.length === 0 && stage.querySelector('.listen-cue')?.hidden === false
         && near(lv[lv.length - 1], DUCK_TO), `${played.length} ${lv}`);
       b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
       all2.destroy();
@@ -245,12 +245,13 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
       const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, running: false };
       const input = { down() {}, up() {} };
       const played = [];
-      const all = attachListening({ bus: b, host: stage, play: () => played.push(1), settings: {} });
+      // The tone turned on explicitly here -- it is OFF by default, and this checks the path end to end.
+      const all = attachListening({ bus: b, host: stage, play: () => played.push(1), settings: { listenTone: true } });
       const speech = attachSpeech(input, { recognizer: rec, bus: b, confirm: 'off', tone: () => {} });
       speech.start();
       feed('Computer, please.');
       const el2 = stage.querySelector('.listen-cue');
-      check('*** “computer please” on its own: a tone and the cue ***', played.length === 1 && el2 && el2.hidden === false);
+      check('*** “computer please” on its own: the cue (and the tone, when it is turned on) ***', played.length === 1 && el2 && el2.hidden === false);
       feed('pause');
       check('*** the command fires and the cue goes ***', el2.hidden === true);
       speech.destroy(); all.destroy();

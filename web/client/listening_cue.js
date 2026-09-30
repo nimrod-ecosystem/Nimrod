@@ -35,7 +35,9 @@ import { createSoundChannel } from './output_channels.js';
 
 export const LISTENING_DEFAULTS = Object.freeze({
   visual: true,
-  tone: true,
+  // OFF by default -- Mike, 2026-09-30 (row 2.39): "I feel like the tone would more likely confuse
+  // her or throw her off." The visual cue carries "I heard you"; the tone stays one setting away.
+  tone: false,
   duck: true,
   // How far the video drops while listening: the bus's own duck depth (Mike chose 0.5 on Cici for
   // a voice over a music bed). Whether that is enough for a Pi's recogniser to hear somebody over
