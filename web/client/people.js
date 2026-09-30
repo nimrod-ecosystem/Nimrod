@@ -27,6 +27,8 @@
 // also the field's own word — Matching Person & Technology — and it is what gets said out
 // loud in a room with the person in it, which is the test Mike applies to this vocabulary.
 
+import { avatarHtml } from './avatar_display.js';
+
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -58,11 +60,19 @@ export function writeLastPerson(id, storage = globalThis.localStorage) {
 //
 // `storage` is injectable so the test can run several independent bars without them
 // fighting over one real localStorage key.
-export function mountPeople(root, { profiles, onChange = null, storage = globalThis.localStorage } = {}) {
+//
+// `avatars` (row 2.37 item 5): an `avatar_display.js` cache, owned by the host. With one, each
+// person's face sits before their name — in a chip, and in the one-person sentence. Without one,
+// or for anybody who has not made an avatar, the bar is byte-for-byte what it was before avatars
+// existed (`people_test.html` holds that markup). `avatarOptions` goes to `avatarHtml` (size,
+// animate, round); its defaults are argued there — chips are small, so they do not move.
+export function mountPeople(root, { profiles, onChange = null, storage = globalThis.localStorage,
+                                    avatars = null, avatarOptions = {} } = {}) {
   let list = [];
   let current = null;
   let busy = false;
   let editing = false;
+  let lastRow = '';
 
   root.innerHTML = '<div class="p-bar" data-bar></div>';
   const bar = root.querySelector('[data-bar]');
@@ -72,6 +82,9 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
   const listeners = new AbortController();
   const on = (type, fn) => root.addEventListener(type, fn, { signal: listeners.signal });
 
+  const face = (p) => (avatars && p && p.id
+    ? avatarHtml(avatars.get(p.id), { ...avatarOptions, personId: p.id }) : '');
+
   const say = (text, bad = false) => {
     const el = root.querySelector('[data-msg]');
     if (!el) return;
@@ -79,25 +92,54 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
     el.classList.toggle('bad', !!bad);
   };
 
-  function render() {
+  // The who-line on its own, so a face arriving late can redraw it without touching the
+  // manage form underneath (somebody may be typing a name into it).
+  function rowHtml() {
     const many = list.length > 1;
     // ONE PERSON: a sentence, not a control. TWO OR MORE: a chooser. The difference is
     // the whole reason this is bearable for a family and still works for a clinic.
     const who = many
       ? `<div class="p-chips">${list.map((p) => `
           <button class="p-chip${p.id === (current || {}).id ? ' on' : ''}" data-person="${esc(p.id)}"
-                  aria-pressed="${p.id === (current || {}).id}">${esc(p.name)}</button>`).join('')}
+                  aria-pressed="${p.id === (current || {}).id}">${face(p)}${esc(p.name)}</button>`).join('')}
          </div>`
-      : `<span class="p-one">Setting up for <b>${esc((current || {}).name || '…')}</b></span>`;
+      : `<span class="p-one">Setting up for ${face(current)}<b>${esc((current || {}).name || '…')}</b></span>`;
 
-    bar.innerHTML = `
-      <div class="p-row">
+    return `<div class="p-row">
         ${many ? '<span class="p-lead">Setting up for</span>' : ''}
         ${who}
         <div class="p-tools">
           <button class="h-btn p-small" data-edit>${editing ? 'Done' : 'Manage people'}</button>
         </div>
-      </div>
+      </div>`;
+  }
+
+  // A face arrived or changed: only the who-line is redrawn, only when it actually differs
+  // (a person with no avatar loading changes nothing, so nothing is replaced), and a chip that
+  // had the keyboard focus keeps it.
+  function repaintRow() {
+    const row = bar.querySelector('.p-row');
+    if (!row) return;
+    const html = rowHtml();
+    if (html === lastRow) return;
+    const doc = root.ownerDocument || document;
+    const had = row.contains(doc.activeElement) ? doc.activeElement : null;
+    const focusPerson = had?.closest?.('[data-person]')?.dataset.person || null;
+    const focusEdit = !!had?.closest?.('[data-edit]');
+    const t = doc.createElement('template');
+    t.innerHTML = html;
+    const next = t.content.firstElementChild;
+    row.replaceWith(next);
+    lastRow = html;
+    const back = focusPerson ? [...next.querySelectorAll('[data-person]')].find((b) => b.dataset.person === focusPerson)
+      : focusEdit ? next.querySelector('[data-edit]') : null;
+    try { back?.focus?.(); } catch { /* not focusable */ }
+  }
+
+  function render() {
+    lastRow = rowHtml();
+    bar.innerHTML = `
+      ${lastRow}
       ${editing ? `
         <div class="p-manage">
           <p class="h-hint">A <b>person</b> is who a screen is for. Their screens, their input
@@ -209,10 +251,18 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
     });
   });
 
+  // Only for the people on this bar; the cache itself belongs to the host and outlives the bar.
+  const offAvatar = avatars?.subscribe?.((pid) => { if (list.some((p) => p.id === pid)) repaintRow(); }) || null;
+  const offAvatarErrors = avatars?.bindErrors?.(root) || null;
+
   return {
     refresh,
     current: () => current,
     list: () => list.slice(),
-    destroy() { listeners.abort(); },
+    destroy() {
+      listeners.abort();
+      try { offAvatar?.(); } catch { /* gone */ }
+      try { offAvatarErrors?.(); } catch { /* gone */ }
+    },
   };
 }

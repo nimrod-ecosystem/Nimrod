@@ -61,6 +61,7 @@ import { STAGE, ROOM_SHELLS, WALL_FINISHES, FLOOR_FINISHES, FURNITURE, ROOM_LIGH
 import { mountScene } from './livescene.js';
 import { iconSvg } from './weather_icons.js';
 import { getManifest } from './module.js';
+import { renderAvatar, normalizeRecord } from './avatar.js';
 
 export const W = STAGE.w;
 export const H = STAGE.h;
@@ -765,10 +766,14 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
           v.className = 'rs-visit';
           v.setAttribute('role', 'img');
           v.setAttribute('aria-label', visitNow.label);
-          // No avatar art yet (Design has not drawn the parts library): a plain speech mark, and the
-          // words in a toast. An avatar is one `src` away (`visit({ src })`).
+          // A picture (`visit({ src })`), or a drawn avatar record (`visit({ drawn })`, the maker's
+          // record, row 2.37 item 5), or else a plain speech mark; the words are in a toast. The drawn
+          // one is markup made only from a repaired record (ids and checked colours), never from text.
           if (visitNow.src) { const img = doc.createElement('img'); img.src = visitNow.src; img.alt = ''; v.append(img); }
-          else v.textContent = '…';
+          else if (visitNow.drawn) {
+            v.dataset.avatar = 'drawn';
+            v.innerHTML = renderAvatar(visitNow.drawn, { size: '100%', animate: visitNow.animate && motion() === 'gentle', title: '' });
+          } else v.textContent = '…';
           p.append(v);
         } else if (kind === 'weather' && weatherNow) {
           p.dataset.overlay = 'weather';
@@ -1604,8 +1609,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   }
   /**
    * YOUR AI, AT THE WINDOW (Mike, §7.2.1; Design §4: "appears in a pane only when it has something to
-   * say, and never at night unless asked"). `{ text, label?, src?, ms? }`. The words show as a note;
-   * the pane shows a speech mark (or `src`, an avatar picture, when there is one). It goes by itself
+   * say, and never at night unless asked"). `{ text, label?, src?, drawn?, animate?, ms? }`. The words
+   * show as a note; the pane shows a speech mark (or `src`, an avatar picture, or `drawn`, an avatar
+   * record from `avatar.js`, when there is one). It goes by itself
    * after `ms` (default notifyMs). Returns false when the setting says no, or there is no window.
    */
   function visit(p = {}) {
@@ -1613,7 +1619,10 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     const text = typeof p.text === 'string' ? p.text.trim().slice(0, 200) : '';
     const label = typeof p.label === 'string' && p.label.trim() ? p.label.trim().slice(0, 40) : 'Your assistant';
     const src = typeof p.src === 'string' && /^(https?:|\/|data:image\/|\.)/.test(p.src) ? p.src : null;
-    visitNow = { text, label, src };
+    const drawn = p.drawn && typeof p.drawn === 'object' ? normalizeRecord(p.drawn) : null;
+    // A drawn visitor blinks and breathes when the room itself moves gently (it is the one thing to
+    // look at while it is there, and it goes by itself); `animate: false` keeps it still regardless.
+    visitNow = { text, label, src, drawn, animate: p.animate !== false };
     paintPanes();
     const ms = Number(p.ms) > 0 ? Math.min(60000, Number(p.ms)) : o.notifyMs;
     if (text) toast(`${label}: ${text}`, ms);

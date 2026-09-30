@@ -627,7 +627,7 @@ function extraSvg(rec, face, topHex, line) {
 
 /**
  * The avatar as an SVG string. `record` is repaired first, so anything renders.
- *   size      width/height attributes (the viewBox is always 200); null for none (fills its box)
+ *   size      width/height attributes in pixels, or '100%' (the viewBox is always 200); null for none
  *   animate   true: blinks and breathes (inside prefers-reduced-motion: no-preference); false: still
  *   title     the accessible name; defaults to `describeAvatar`
  *   delay     seconds into the cycle, so two avatars side by side do not blink in step; defaults to
@@ -649,7 +649,9 @@ export function renderAvatar(record, { size = null, animate = true, title = null
   const name = title == null ? describeAvatar(rec) : String(title);
   const ears = rec.hair === 'scarf' ? ''
     : [100 - face.w + 1, 100 + face.w - 1].map((cx) => `<circle cx="${cx}" cy="92" r="10" fill="${skin}" ${st}/>`).join('');
-  const dims = size ? ` width="${Number(size) || 0}" height="${Number(size) || 0}"` : '';
+  // A number is pixels; '100%' fills whatever box it is put in (`avatar_display.js`'s small faces).
+  const dim = size === '100%' ? '100%' : String(Number(size) || 0);
+  const dims = size ? ` width="${dim}" height="${dim}"` : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}"${dims} role="img" aria-label="${escText(name)}"`
     + ` class="nav${animate ? ' nav-anim' : ''}" data-avatar="1" data-motion="${animate ? 'on' : 'off'}" style="--nav-delay:-${f1(d)}s">`
     + `<title>${escText(name)}</title>`
