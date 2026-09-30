@@ -26,6 +26,7 @@ a false activation. Fake clock, fake channels, no speaking out loud.</p>
 import { createOutputBus, VERBS, CHANNELS, DROPS, DEFAULT_ROUTING, priorityOf, DELIVERY_TOPIC } from '../output.js';
 import { createScreenChannel, createSpeechChannel, createSoundChannel, defaultChannels } from '../output_channels.js';
 import { createBus } from '../bus.js';
+import { createAudioBus } from '../audio_bus.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -441,6 +442,50 @@ function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
       bare.present({ text: 'no bus' }, { done() {} });
       check('...and no audio bus at all leaves the volume alone', uts[2] && uts[2].volume === undefined,
         String(uts[2] && uts[2].volume));
+    }
+    {
+      // ROW 2.35: THE AAC BOARD'S WORDS ARE THEIR OWN MIXER CHANNEL, WITH A 60% MINIMUM. On the
+      // kiosk the board speaks through this channel (`output.say(text, { source: 'board' })`), so
+      // this is the one place that can tell her words apart from a spoken prompt. Real bus.
+      const clock = fakeClock();
+      const uts = [];
+      const fakeSynth = { speak: (u) => uts.push(u), cancel: () => {}, getVoices: () => [] };
+      function FakeUtterance(text) { this.text = text; }
+      const audio = createAudioBus();
+      audio.setMaster(0.1);
+      const speech = createSpeechChannel({ synth: fakeSynth, Utterance: FakeUtterance, audio,
+        maxMs: 5000, pollMs: 0, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      speech.present({ text: 'yes', source: 'board' }, { done() {} });
+      check('*** a board word at a 10% master still speaks at the AAC channel’s 60% minimum ***',
+        uts[0] && Math.abs(uts[0].volume - 0.6) < 1e-9, String(uts[0] && uts[0].volume));
+      check('...and is on the aac channel while it speaks, so the bus knows her voice is sounding',
+        Object.values(audio.state()).some((s) => s.channel === 'aac' && s.active), JSON.stringify(audio.state()));
+      speech.present({ text: 'time for lunch', source: 'clock' }, { done() {} });
+      check('a spoken prompt follows the master (no floor on prompts)', uts[1] && Math.abs(uts[1].volume - 0.1) < 1e-9,
+        String(uts[1] && uts[1].volume));
+      audio.setFader('aac', 0.8); audio.setMaster(1);
+      speech.present({ text: 'no', source: 'board' }, { done() {} });
+      speech.present({ text: 'prompt', source: 'x' }, { done() {} });
+      check('the AAC fader moves only her words', uts[2] && Math.abs(uts[2].volume - 0.8) < 1e-9
+        && uts[3] && Math.abs(uts[3].volume - 1) < 1e-9,
+        `${uts[2] && uts[2].volume} / ${uts[3] && uts[3].volume}`);
+      audio.setFader('aac', 0.3);
+      speech.present({ text: 'no', source: 'board' }, { done() {} });
+      check('...and a fader set under the floor stops at the floor', Math.abs(uts[4].volume - 0.6) < 1e-9,
+        String(uts[4] && uts[4].volume));
+      // An older bus with only master(): the board still speaks, at the master.
+      const old = { register() {}, setActive() {}, master: () => 0.3 };
+      const s2 = createSpeechChannel({ synth: fakeSynth, Utterance: FakeUtterance, audio: old,
+        maxMs: 5000, pollMs: 0, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      s2.present({ text: 'yes', source: 'board' }, { done() {} });
+      check('a bus with no channels still works: the master, as before', Math.abs(uts[uts.length - 1].volume - 0.3) < 1e-9,
+        String(uts[uts.length - 1].volume));
+      const bad = { register() {}, setActive() {}, master: () => 0.3, channelLevel: () => { throw new Error('boom'); } };
+      const s3 = createSpeechChannel({ synth: fakeSynth, Utterance: FakeUtterance, audio: bad,
+        maxMs: 5000, pollMs: 0, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      s3.present({ text: 'yes', source: 'board' }, { done() {} });
+      check('*** a mixer that throws is full volume for her words, never silence ***',
+        uts[uts.length - 1].volume === 1, String(uts[uts.length - 1].volume));
     }
     {
       // ROW 2.27: an engine that reports `speaking` frees the channel when it goes quiet, even

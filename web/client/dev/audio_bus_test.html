@@ -26,8 +26,9 @@
 <div id="summary">running…</div>
 
 <script type="module">
-import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY, CALL_MODES,
-  MASTER_FLOOR } from '../audio_bus.js';
+import * as AB from '../audio_bus.js';
+const { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY, CALL_MODES,
+  MASTER_FLOOR, CHANNEL_IDS, CHANNEL_FLOORS, TIER_CHANNEL } = AB;
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -357,6 +358,150 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
       r.bus.setActive('listen', true);
       check('a broken duck depth is the bus’s own, never silence', near(r.last('video'), DUCK_TO),
         String(r.last('video')));
+    }
+
+    // =====================================================================================
+    // ROW 2.35 — THE MIXER. Mike, 2026-09-30: "the audio bus needs busses like a mixer. Because
+    // you probably wouldn't want incoming calls dropping too low. Maybe have minimums for certain
+    // channels." A fader per channel, a minimum per channel, and the arbiter's rules underneath.
+    // Every call below is optional-chained so a missing method FAILS A CHECK rather than
+    // throwing and hiding every check after it.
+    section('*** the mixer — channels, faders and minimums (row 2.35) ***');
+    {
+      check('the channels are today’s tiers plus the AAC voice as its own',
+        Array.isArray(CHANNEL_IDS) && ['call', 'aac', 'voice', 'media', 'sfx'].every((c) => CHANNEL_IDS.includes(c))
+        && CHANNEL_IDS.length === 5, JSON.stringify(CHANNEL_IDS));
+      check('the default minimums: calls 60%, the AAC voice 60%, everything else none',
+        CHANNEL_FLOORS && near(CHANNEL_FLOORS.call, 0.6) && near(CHANNEL_FLOORS.aac, 0.6)
+        && CHANNEL_FLOORS.voice === 0 && CHANNEL_FLOORS.media === 0 && CHANNEL_FLOORS.sfx === 0,
+        JSON.stringify(CHANNEL_FLOORS));
+      check('a tier finds its channel: talk and voice share one, the rest are their own',
+        TIER_CHANNEL && TIER_CHANNEL.talk === 'voice' && TIER_CHANNEL.voice === 'voice'
+        && TIER_CHANNEL.call === 'call' && TIER_CHANNEL.media === 'media' && TIER_CHANNEL.sfx === 'sfx',
+        JSON.stringify(TIER_CHANNEL));
+      const r = rig();
+      r.src('video', video);
+      r.src('aacv', { tier: 'voice', channel: 'aac' });
+      check('a source joins its tier’s channel unless it names one',
+        r.bus.channelOf?.('video') === 'media' && r.bus.channelOf?.('aacv') === 'aac',
+        `${r.bus.channelOf?.('video')} / ${r.bus.channelOf?.('aacv')}`);
+      check('...and the state reports it', r.bus.state().video?.channel === 'media', JSON.stringify(r.bus.state()));
+      check('every fader starts at full', !!CHANNEL_IDS && CHANNEL_IDS.every((c) => r.bus.fader?.(c) === 1));
+    }
+    {
+      const r = rig();
+      r.src('video', video);
+      r.src('beep', { tier: 'sfx' });
+      r.bus.setActive('video', true);
+      r.bus.setActive('beep', true);
+      r.bus.setFader?.('media', 0.5);
+      check('*** a fader turns its own channel down ***', near(r.last('video'), 0.5), String(r.last('video')));
+      check('*** ...and only its own ***', near(r.last('beep'), 1) || near(r.last('beep'), DUCK_TO),
+        String(r.last('beep')));
+      r.bus.setMaster(0.6);
+      check('fader and master MULTIPLY', near(r.last('video'), 0.3), String(r.last('video')));
+      r.bus.setFader?.('media', 'loud');
+      check('*** a BROKEN fader is full, never silence ***', r.bus.fader?.('media') === 1 && near(r.last('video'), 0.6),
+        `${r.bus.fader?.('media')} / ${r.last('video')}`);
+      r.bus.setFader?.('media', 4);
+      check('...and a fader never goes above full', r.bus.fader?.('media') === 1);
+      r.bus.setFader?.('media', 0);
+      check('a fader CAN reach zero on a channel with no minimum (somebody who wants no game beeps is '
+        + 'entitled to that, and it is a deliberate settings row, not a spoken "quieter")',
+        r.bus.fader?.('media') === 0 && r.last('video') === 0, String(r.last('video')));
+    }
+
+    section('*** the minimums — a call is never turned down below its floor ***');
+    {
+      const r = rig();
+      r.src('call', { tier: 'call' });
+      r.bus.setActive('call', true);
+      r.bus.setMaster(0.1);
+      check('*** the master at its lowest leaves a call at its 60% minimum ***',
+        near(r.bus.levelOf('call'), 0.6), String(r.bus.levelOf('call')));
+      r.bus.setFader?.('call', 0);
+      check('*** ...and so does its own fader pulled all the way down ***',
+        near(r.bus.levelOf('call'), 0.6), String(r.bus.levelOf('call')));
+      r.bus.setFader?.('call', 1);
+      r.bus.setMaster(1);
+      check('above the floor it is the ordinary arithmetic', near(r.bus.levelOf('call'), 1));
+      r.bus.setMaster(0.8);
+      check('...e.g. 80% master is an 80% call', near(r.bus.levelOf('call'), 0.8), String(r.bus.levelOf('call')));
+    }
+    {
+      // The AAC voice under a call: a lower tier, so it is ducked - but its floor holds.
+      const r = rig();
+      r.src('call', { tier: 'call' });
+      r.src('aacv', { tier: 'voice', channel: 'aac' });
+      r.bus.setActive('aacv', true);
+      r.bus.setActive('call', true);
+      r.bus.setMaster(0.2);
+      check('*** her AAC voice DURING A CALL, at a low master, still speaks at its 60% minimum — '
+        + 'a duck is a volume change, and the floor outranks volume ***',
+        near(r.last('aacv'), 0.6), String(r.last('aacv')));
+      check('...while the spoken-prompts channel (no floor) would be at duck × master',
+        (() => { r.src('prompt', { tier: 'voice' }); r.bus.setActive('prompt', true);
+          return near(r.last('prompt'), DUCK_TO * 0.2); })(), String(r.last('prompt')));
+    }
+    {
+      // A deliberate silence is NOT a volume, and the floor does not undo it.
+      const r = rig();
+      r.bus.setFloor?.('media', 0.5);
+      r.src('game', game); r.src('video', video); r.src('call', { tier: 'call' });
+      r.bus.setActive('game', true);
+      r.bus.setActive('video', true);
+      check('*** a floor does not un-silence the losing music (exclusivity is a decision, not a volume) ***',
+        r.last('game') === 0, String(r.last('game')));
+      r.bus.hush(true);
+      check('*** ...nor a hush ***', r.last('video') === 0, String(r.last('video')));
+      r.bus.hush(false);
+      r.bus.setActive('call', true);
+      check('*** ...nor a call set to pause ***', r.last('video') === 0, String(r.last('video')));
+      r.bus.setActive('call', false);
+      r.bus.setActive('video', false);
+      check('*** ...nor a source that stopped ***', r.last('video') === 0, String(r.last('video')));
+      r.bus.setActive('video', true);
+      r.bus.setMaster(0.1);
+      check('but a floored channel that IS meant to be heard sits at its floor', near(r.last('video'), 0.5),
+        String(r.last('video')));
+    }
+    {
+      const r = rig();
+      check('the floors are readable', near(r.bus.floor?.('call'), 0.6) && near(r.bus.floor?.('aac'), 0.6)
+        && r.bus.floor?.('media') === 0, `${r.bus.floor?.('call')} ${r.bus.floor?.('aac')} ${r.bus.floor?.('media')}`);
+      r.bus.setFloor?.('call', 'x');
+      check('*** a broken floor is the channel’s DEFAULT, not zero ***', near(r.bus.floor?.('call'), 0.6),
+        String(r.bus.floor?.('call')));
+      r.bus.setFloor?.('call', 2);
+      check('...and a floor above full is refused the same way', near(r.bus.floor?.('call'), 0.6));
+      r.bus.setFloor?.('call', 0);
+      check('a floor of zero IS allowed on a channel: "no minimum" is honest, unlike a master of zero',
+        r.bus.floor?.('call') === 0);
+      const b2 = createAudioBus({ faders: { media: 0.4 }, floors: { sfx: 0.2 } });
+      check('faders and floors can be given at creation',
+        near(b2.fader?.('media'), 0.4) && near(b2.floor?.('sfx'), 0.2) && near(b2.floor?.('call'), 0.6));
+    }
+    {
+      // The speech channel has no onGain, so it asks the channel what level it would play at.
+      const r = rig();
+      r.bus.setMaster(0.1);
+      check('*** channelLevel: what a source on that channel plays at — the AAC voice at 60% while the '
+        + 'master is at 10% ***', near(r.bus.channelLevel?.('aac'), 0.6), String(r.bus.channelLevel?.('aac')));
+      check('...and the prompts channel follows the master', near(r.bus.channelLevel?.('voice'), 0.1),
+        String(r.bus.channelLevel?.('voice')));
+      r.bus.setMaster(0.5); r.bus.setFader?.('voice', 0.5);
+      check('...times its fader', near(r.bus.channelLevel?.('voice'), 0.25), String(r.bus.channelLevel?.('voice')));
+      check('an unknown channel is full-fader, no floor: master only', near(r.bus.channelLevel?.('nope'), 0.5),
+        String(r.bus.channelLevel?.('nope')));
+    }
+    {
+      // The one-number summary the settings row shows.
+      const r = rig();
+      r.bus.setFader?.('sfx', 0.3);
+      const m = r.bus.mix?.();
+      check('mix() reports every channel’s fader and floor, and the master',
+        m && m.master === 1 && near(m.channels?.sfx?.fader, 0.3) && near(m.channels?.call?.floor, 0.6),
+        JSON.stringify(m));
     }
 
     document.getElementById('summary').textContent =

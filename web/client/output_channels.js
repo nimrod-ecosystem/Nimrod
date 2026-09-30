@@ -37,6 +37,11 @@ export function createSpeechChannel({
   // Optional: no bus means no ducking, never no speech.
   audio = null,
   audioId = 'speech',
+  // *** ROW 2.35: THE AAC BOARD'S WORDS ARE THEIR OWN MIXER CHANNEL. *** A message whose `source` is
+  // listed here is a person talking through the board, not the screen prompting, so it plays on the
+  // audio bus's `aac` channel - with that channel's fader and its minimum (60% by default), so a
+  // "quieter" meant for the video can never bury her words. Everything else stays on `voice`.
+  aacSources = ['board'],
   // A hard stop, because speechSynthesis does not always fire `onend` - a canceled or
   // interrupted utterance can leave the channel believing it is still speaking forever,
   // and then nothing is ever said again. Same disease as the input bus's stuck switch,
@@ -53,6 +58,19 @@ export function createSpeechChannel({
   // The voice tier itself makes no sound of its own - it exists so everything else can hear
   // that it is talking. No onGain: nothing ducks a voice.
   audio?.register?.(audioId, { tier: 'voice' });
+  const aacId = `${audioId}-aac`;
+  audio?.register?.(aacId, { tier: 'voice', channel: 'aac' });
+  const isAac = (item) => !!(item && item.source && Array.isArray(aacSources) && aacSources.includes(item.source));
+
+  // The level to speak at. The mixer's channel level when the bus has one (fader x master, lifted
+  // to the channel's floor); the master alone on an older bus. Anything that goes wrong is full
+  // volume - for her words above all.
+  function levelFor(aac) {
+    try {
+      if (typeof audio.channelLevel === 'function') return Number(audio.channelLevel(aac ? 'aac' : 'voice'));
+      return Number(audio.master());
+    } catch { return 1; }
+  }
 
   return {
     name: 'speech',
@@ -66,9 +84,11 @@ export function createSpeechChannel({
       // voice), so it reads the master here instead - otherwise "quieter" would turn the video
       // down and leave the voice as loud as ever. The bus has already applied its floor; anything
       // that goes wrong reading it is full volume.
-      if (audio && typeof audio.master === 'function') {
-        let m = 1;
-        try { m = Number(audio.master()); } catch { m = 1; }
+      // Row 2.35: the mixer's channel level instead, when the bus has channels - see levelFor.
+      const aac = isAac(item);
+      const sid = aac ? aacId : audioId;
+      if (audio && (typeof audio.channelLevel === 'function' || typeof audio.master === 'function')) {
+        const m = levelFor(aac);
         opts.volume = Number.isFinite(m) ? m : 1;
       }
       // A caller's OWN voice choice, carried through `data.voice`, wins over the person's
@@ -85,13 +105,13 @@ export function createSpeechChannel({
       // A voice tier left active because an utterance never fired `onend` would hold the
       // music down forever, which is the same stuck-switch disease the input bus has a
       // watchdog for, pointed at the speaker.
-      audio?.setActive?.(audioId, true);
+      audio?.setActive?.(sid, true);
 
       let finished = false;
       let watch = null;
       const stopWatch = () => { if (watch != null) { clearTimer(watch); watch = null; } };
-      const guard = setTimer(() => { if (!finished) { finished = true; stopWatch(); audio?.setActive?.(audioId, false); done(); } }, maxMs);
-      const end = () => { if (finished) return; finished = true; clearTimer(guard); stopWatch(); audio?.setActive?.(audioId, false); done(); };
+      const guard = setTimer(() => { if (!finished) { finished = true; stopWatch(); audio?.setActive?.(sid, false); done(); } }, maxMs);
+      const end = () => { if (finished) return; finished = true; clearTimer(guard); stopWatch(); audio?.setActive?.(sid, false); done(); };
       u.onend = end;
       u.onerror = end;
 
@@ -114,7 +134,7 @@ export function createSpeechChannel({
         finished = true;
         clearTimer(guard);
         stopWatch();
-        audio?.setActive?.(audioId, false);
+        audio?.setActive?.(sid, false);
         cancelSpeech(synth || undefined);
       };
     },
