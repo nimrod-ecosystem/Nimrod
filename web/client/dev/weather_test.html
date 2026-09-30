@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>weather — now, the next hours and days, for a place somebody set — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../weather.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .live{display:inline-block;vertical-align:top;margin:12px 12px 0 0;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>weather — row 2.37 item 4 (the weather behind the room's window)</h1>
+<p>Every request goes to a FAKE fetch; nothing here touches the network. Checks the rules (codes in
+words, the place setting, units, the request), then the panel: no place sends nothing, a position,
+a typed name with a pick, a failure that keeps the last weather, a reload with no connection, a unit
+switch with no request, the switch verbs, and that teardown leaves no timer behind.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (fake data): a panel, a quarter, a room window</h2>
+<div class="live" id="big" style="width:720px;height:520px"></div>
+<div class="live" id="quarter" style="width:360px;height:300px"></div>
+<div class="live" id="window" style="width:200px;height:160px"></div>
+
+<script type="module">
+import '../modules/weather.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor } from '../health.js';
+import { iconSvg, ICON_KINDS } from '../weather_icons.js';
+import {
+  OPEN_METEO_FORECAST, OPEN_METEO_GEOCODE, CREDIT, DEFAULTS, REFRESH_OPTIONS, MAX_REFRESH_MIN, MATCHES, FETCH_TIMEOUT_MS,
+  describeCode, resolvePlace, resolveUnits, temp, windWords, forecastUrl, geocodeUrl, placesFrom, normalizeForecast,
+  spokenNow, spokenDay, hourLabel, dayLabel, roundCoord,
+} from '../modules/weather.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const flush = async () => { for (let i = 0; i < 6; i++) await sleep(0); };
+const T0 = new Date(2026, 8, 30, 14, 20).getTime();
+
+// ---- fakes ---------------------------------------------------------------------------------
+function sample({ tempC = 20, code = 2, isDay = 1 } = {}) {
+  const hourly = { time: [], temperature_2m: [], weather_code: [], precipitation_probability: [], is_day: [] };
+  for (let h = 0; h < 48; h++) {
+    const hh = h % 24;
+    hourly.time.push(`${h < 24 ? '2026-09-30' : '2026-10-01'}T${String(hh).padStart(2, '0')}:00`);
+    hourly.temperature_2m.push(10 + hh / 2);
+    hourly.weather_code.push(hh === 16 ? 63 : 2);
+    hourly.precipitation_probability.push(hh === 16 ? 80 : 10);
+    hourly.is_day.push(hh >= 7 && hh < 19 ? 1 : 0);
+  }
+  return {
+    current: { time: '2026-09-30T14:15', interval: 900, temperature_2m: tempC, apparent_temperature: tempC - 2,
+      weather_code: code, is_day: isDay, wind_speed_10m: 16.1 },
+    hourly,
+    daily: { time: ['2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06'],
+      weather_code: [2, 63, 73, 0, 3, 45, 95], temperature_2m_max: [22, 18, 1, 25, 20, 15, 28],
+      temperature_2m_min: [12, 10, -3, 14, 11, 9, 19], precipitation_probability_max: [10, 80, 90, 0, 20, 30, 70] },
+  };
+}
+const SPRINGFIELDS = { results: [
+  { name: 'Springfield', admin1: 'Illinois', country: 'United States', latitude: 39.80172, longitude: -89.64371 },
+  { name: 'Springfield', admin1: 'Missouri', country: 'United States', latitude: 37.21533, longitude: -93.29824 },
+  { name: 'Springfield', admin1: 'Massachusetts', country: 'United States', latitude: 42.10148, longitude: -72.58981 },
+] };
+const okJson = (j) => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(j) });
+const offline = () => Promise.reject(new TypeError('Failed to fetch'));
+const hang = () => new Promise(() => {});
+
+function fakeNet() {
+  const calls = [];
+  const net = {
+    calls,
+    forecast: () => okJson(sample()),
+    geo: () => okJson({ results: [] }),
+    fetch: (url, opts) => { calls.push(url); return url.startsWith(OPEN_METEO_GEOCODE) ? net.geo(url, opts) : net.forecast(url, opts); },
+    forecasts: () => calls.filter((u) => u.startsWith(OPEN_METEO_FORECAST)),
+    geos: () => calls.filter((u) => u.startsWith(OPEN_METEO_GEOCODE)),
+  };
+  return net;
+}
+function fakeTimers() {
+  let id = 0;
+  const live = new Map();
+  return {
+    live,
+    set: (f, ms) => { const i = ++id; live.set(i, { f, ms }); return i; },
+    clear: (i) => { live.delete(i); },
+    count: () => live.size,
+    refreshes: () => [...live.values()].filter((t) => t.ms >= 60000),
+    // Fire the pending timers that match, as if their time had come.
+    async fire(pred = () => true) {
+      for (const [i, t] of [...live.entries()]) if (pred(t)) { live.delete(i); t.f(); }
+      await flush();
+    },
+  };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v, set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }, flush() {}, load: async () => {}, destroy() {},
+  };
+}
+function scratch(w = 560, h = 520) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+let n = 0;
+function mount({ saved = {}, net = fakeNet(), timers = fakeTimers(), lang = 'en-US', host = scratch(), output = true, clock = { t: T0 } } = {}) {
+  const bus = createBus();
+  const said = [];
+  const beats = [];
+  bus.subscribe('weather/state', (p, _t, meta) => beats.push({ ...p, meta }));
+  const state = fakeState(saved);
+  const inst = mountModule('weather', {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null, instanceId: `wx${++n}`,
+    fetch: net.fetch, setTimeout: timers.set, clearTimeout: timers.clear, now: () => clock.t, lang,
+    ...(output ? { output: { say: (t) => { said.push(t); return `u${said.length}`; }, cancel() {} } } : {}),
+  });
+  inst.init();
+  return {
+    inst, host, bus, net, timers, state, said, beats, clock,
+    probe: () => inst.impl.__probe(),
+    q: (sel) => host.querySelector(sel),
+    qa: (sel) => [...host.querySelectorAll(sel)],
+    text: (sel) => host.querySelector(sel)?.textContent.trim() || '',
+    press: (sel) => host.querySelector(sel)?.dispatchEvent(new MouseEvent('click', { bubbles: true })),
+    pub: (v) => bus.publish(`weather/${v}`),
+  };
+}
+
+(async () => {
+try {
+  // =====================================================================
+  section('the rules, pure');
+  {
+    check('clear by day is the sun, by night the moon, and both say "Clear"', describeCode(0, true).icon === 'sun'
+      && describeCode(0, false).icon === 'moon' && describeCode(0, 0).words === 'Clear');
+    check('partly cloudy gets the sun-and-cloud picture by day', describeCode(2, 1).icon === 'partly-day' && describeCode(2, 0).icon === 'partly-night');
+    check('codes read as plain words', describeCode(63).words === 'Rain' && describeCode(75).words === 'Heavy snow'
+      && describeCode(95).words === 'Thunderstorm' && describeCode(45).words === 'Fog');
+    check('*** a code nobody listed is "Unknown weather" with a picture, never a blank ***', describeCode(12345).words === 'Unknown weather'
+      && describeCode(null).icon === 'unknown');
+    check('snow codes know they are snow (so the chance says snow)', describeCode(73).snow && !describeCode(63).snow);
+
+    check('an empty place is no place', resolvePlace('').kind === 'none' && resolvePlace('   ').kind === 'none' && resolvePlace(null).kind === 'none');
+    const c = resolvePlace(' 40.7128, -74.0060 ');
+    check('*** "lat, lon" is a position, rounded to one decimal before it goes anywhere ***', c.kind === 'coords' && c.lat === 40.7 && c.lon === -74, JSON.stringify(c));
+    check('"lat lon" with a space works too', resolvePlace('51.5074 -0.1278').kind === 'coords');
+    check('a position off the globe is treated as a name, not sent as a position', resolvePlace('95, 200').kind === 'search');
+    check('a town name is something to look up', resolvePlace('Springfield').kind === 'search' && resolvePlace('Springfield').query === 'Springfield');
+    const picked = { query: 'Springfield', name: 'Springfield, Missouri, United States', lat: 37.21533, lon: -93.29824 };
+    check('a remembered pick is used while the setting still says that name', resolvePlace('Springfield', picked).kind === 'chosen'
+      && resolvePlace('Springfield', picked).lat === 37.2);
+    check('...and forgotten the moment the name changes', resolvePlace('Shelbyville', picked).kind === 'search');
+    check('rounding: one decimal', roundCoord(-89.64371) === -89.6 && roundCoord(42.15) === 42.2);
+
+    check('units "auto": United States English reads °F', resolveUnits('auto', 'en-US') === 'f');
+    check('units "auto": British English, German, plain French read °C', resolveUnits('auto', 'en-GB') === 'c'
+      && resolveUnits('auto', 'de-DE') === 'c' && resolveUnits('auto', 'fr') === 'c');
+    check('units chosen outright are kept whatever the language', resolveUnits('c', 'en-US') === 'c' && resolveUnits('f', 'de-DE') === 'f');
+    check('Celsius to Fahrenheit', temp(0, 'f') === 32 && temp(100, 'f') === 212 && temp(20, 'f') === 68 && temp(20, 'c') === 20);
+    check('no reading is no number (not "NaN°")', temp(null, 'f') === null && temp(undefined, 'c') === null);
+    check('wind follows the temperature units', windWords(16.1, 'f') === '10 mph' && windWords(16.1, 'c') === '16 km/h' && windWords(null, 'f') === '');
+
+    const fu = forecastUrl({ lat: 40.71284, lon: -74.00601 }, 5);
+    check('the forecast request is Open-Meteo, with the rounded position', fu.startsWith(OPEN_METEO_FORECAST)
+      && /latitude=40\.7&/.test(fu) && /longitude=-74(&|$)/.test(fu), fu);
+    check('...asks for now, hours and days, in the place’s own time zone', /current=/.test(fu) && /hourly=/.test(fu)
+      && /daily=/.test(fu) && /timezone=auto/.test(fu));
+    check('*** ...always metric, so a unit switch needs no new request ***', !/temperature_unit|wind_speed_unit/.test(fu));
+    check('...at least two days, so hours can cross midnight', /forecast_days=2/.test(forecastUrl({ lat: 1, lon: 1 }, 1))
+      && /forecast_days=5/.test(fu));
+    const gu = geocodeUrl('Saint-Étienne & co', 'fr-FR');
+    check('the place lookup is Open-Meteo’s geocoder, the name encoded, five matches, the screen’s language',
+      gu.startsWith(OPEN_METEO_GEOCODE) && gu.includes(encodeURIComponent('Saint-Étienne & co')) && gu.includes(`count=${MATCHES}`) && gu.includes('language=fr'), gu);
+    check('matches: name, region and country, rounded', placesFrom(SPRINGFIELDS)[0].name === 'Springfield, Illinois, United States'
+      && placesFrom(SPRINGFIELDS)[0].lat === 39.8 && placesFrom(SPRINGFIELDS).length === 3);
+    check('the geocoder finding nothing is an empty list (it leaves "results" out)', placesFrom({ generationtime_ms: 1 }).length === 0 && placesFrom(null).length === 0);
+
+    const m = normalizeForecast(sample());
+    check('*** the hours start AFTER now, in the place’s own clock ***', m.hours[0].time === '2026-09-30T15:00' && m.hours.length === 12, m.hours[0]?.time);
+    check('the days are kept, with high, low and chance', m.days.length === 7 && m.days[2].maxC === 1 && m.days[1].rainPct === 80);
+    check('*** a malformed answer throws (a failed update), never a blank forecast ***', (() => {
+      try { normalizeForecast({ current: { time: 'x' } }); return false; } catch { return true; } })() && (() => {
+      try { normalizeForecast({ error: true, reason: 'bad' }); return false; } catch { return true; } })());
+
+    const s = spokenNow(m, 'f', { place: 'Springfield, Illinois, United States' });
+    check('read aloud: where, the temperature, the words, feels like, today', /^Now in Springfield: 68 degrees, partly cloudy\. Feels like 64\. Today: /.test(s), s);
+    check('...a stale reading says when it is from, first', spokenNow(m, 'c', { staleSince: '9:00 AM' }).startsWith('This is from 9:00 AM. '));
+    check('a snowy day says "chance of snow"', /90 percent chance of snow/.test(spokenDay(m, 2, 'c')), spokenDay(m, 2, 'c'));
+    check('a dry day says "no chance of rain"', /no chance of rain/.test(spokenDay(m, 3, 'f')));
+    check('no weather at all has something to say', /no weather/i.test(spokenNow(null, 'f')));
+    check('hours and days get labels', hourLabel('2026-09-30T15:00').length > 0 && dayLabel('2026-09-30', 0) === 'Today'
+      && dayLabel('2026-10-01', 1) === 'Tomorrow' && dayLabel('2026-10-02', 2).length >= 2);
+  }
+
+  // =====================================================================
+  section('the pictures: a shape and a label, coloured only by the theme');
+  {
+    const all = ICON_KINDS.map((k) => iconSvg(k, { label: `label ${k}` }));
+    check('every kind draws an SVG with a label', all.every((s, i) => s.startsWith('<svg') && s.includes(`aria-label="label ${ICON_KINDS[i]}"`) && s.includes('role="img"')));
+    check('*** no colour is written into a picture: only --wx-* tokens ***', all.every((s) => !/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i.test(s))
+      && all.every((s) => /var\(--wx-/.test(s)));
+    check('an unknown kind still draws (the "?" cloud)', /data-icon="unknown"/.test(iconSvg('nonsense')));
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest('weather');
+    check('registered, on the new core', !!m && m.core === 'new');
+    check('dependsOn network (it cannot update without one)', m?.dependsOn === 'network');
+    const place = m.settings.find((r) => r.key === 'place');
+    check('*** the place setting says the place is sent to Open-Meteo, and has NO default ***', /Open-Meteo/.test(place?.label) && place?.default === '');
+    check('every setting is labelled and has a default', m.settings.every((r) => r.key && r.label && r.default !== undefined));
+    check('defaults: automatic units, every 30 minutes, 6 hours, 5 days', DEFAULTS.units === 'auto' && DEFAULTS.refreshMin === 30
+      && DEFAULTS.hours === 6 && DEFAULTS.days === 5 && REFRESH_OPTIONS.includes(DEFAULTS.refreshMin));
+    check('catalog: absent (row pending) or described', !CATALOG.some((c) => c.type === 'weather') || CATALOG.some((c) => c.type === 'weather' && c.lead));
+    const h = expectFor('weather');
+    check('health: absent (row pending) or allows twice the slowest refresh', h.idle || h.expectMs >= 2 * MAX_REFRESH_MIN * 60000
+      || h.expectMs === 15 * 60 * 1000, JSON.stringify(h));
+    const verbs = verbsFor('weather');
+    check('MODULE_VERBS: absent (row pending) or exactly next / prev / select / back',
+      verbs.length === 0 || (['next', 'prev', 'select', 'back'].every((v) => verbs.includes(v))
+        && verbTarget('weather', 'select').topic === 'weather/select'), verbs.join(','));
+    check('*** mounting without a personId key is refused (core:new contract) ***', (() => {
+      try { mountModule('weather', { mount: scratch(), bus: createBus(), instanceId: 'x' }); return false; } catch { return true; }
+    })());
+  }
+
+  // =====================================================================
+  section('*** no place: says how to set one, and sends NOTHING ***');
+  {
+    const t = mount();
+    await flush();
+    check('no request of any kind', t.net.calls.length === 0, t.net.calls.join(' '));
+    check('the panel says how to set a place, and that it goes to Open-Meteo', /No place set/.test(t.text('[data-weather-msg]'))
+      && /Open-Meteo/.test(t.text('[data-weather-msg]')));
+    check('it is never blank', t.text('[data-weather]').length > 20);
+    check('it still says it is alive (health), tagged with its own panel', t.beats.length >= 1 && t.beats[0].status === 'none'
+      && /^weather:wx\d+$/.test(t.beats[0].meta?.panel || ''), JSON.stringify(t.beats[0]));
+    check('a refresh is scheduled at the default 30 minutes', t.timers.refreshes().length === 1 && t.timers.refreshes()[0].ms === 30 * 60000);
+    await t.timers.fire();
+    check('...and when it comes: still no request, another heartbeat', t.net.calls.length === 0 && t.beats.length >= 2);
+    t.pub('select');
+    check('select with no place says so aloud', /No place/.test(t.said[0] || ''), t.said.join('|'));
+    t.inst.destroy();
+  }
+
+  // =====================================================================
+  section('a position: the weather now, the hours and the days');
+  {
+    const t = mount();
+    await flush();
+    t.state.set({ place: '40.7128, -74.0060' });
+    await flush();
+    check('one forecast request, with the ROUNDED position, and no place lookup', t.net.forecasts().length === 1
+      && /latitude=40\.7&longitude=-74&/.test(t.net.forecasts()[0]) && t.net.geos().length === 0, t.net.calls.join(' '));
+    check('*** now: the temperature in °F (screen language en-US) ***', t.text('[data-weather-temp]') === '68°F', t.text('[data-weather-temp]'));
+    check('*** a picture AND words ***', !!t.q('[data-weather-now] svg[role="img"][aria-label="Partly cloudy"]') && t.text('[data-weather-words]') === 'Partly cloudy');
+    check('feels like and wind', /Feels like 64°/.test(t.text('[data-weather-detail]')) && /Wind 10 mph/.test(t.text('[data-weather-detail]')));
+    check('the next 6 hours, each with a picture and words', t.qa('.wx-hour').length === 6 && t.qa('.wx-hour').every((li) => li.querySelector('svg') && li.querySelector('.wx-hwords').textContent.trim()));
+    check('the 16:00 hour says rain and its chance', t.qa('.wx-hour')[1].textContent.includes('Rain') && t.qa('.wx-hour')[1].textContent.includes('80%'));
+    check('5 days, starting Today, each with high / low and words', t.qa('.wx-day').length === 5 && t.qa('.wx-day')[0].textContent.includes('Today')
+      && t.qa('.wx-day')[2].textContent.includes('Snow') && /34°/.test(t.qa('.wx-day')[2].textContent));
+    check('the Open-Meteo credit is shown (CC BY 4.0)', t.text('.wx-credit') === CREDIT);
+    check('no stale notice on fresh data', !t.q('[data-weather-stale]') && t.probe().status === 'ok');
+    check('heartbeat says ok', t.beats[t.beats.length - 1].status === 'ok');
+    check('the good forecast is kept in the panel’s state (for a reload with no connection)', t.state.get().lastGood?.key === '40.7,-74');
+    t.state.set({ hours: 0, days: 2 });
+    await flush();
+    check('hours 0 hides the hours; days is a setting', !t.q('[data-weather-hours]') && t.qa('.wx-day').length === 2);
+    t.inst.destroy();
+  }
+
+  // =====================================================================
+  section('a typed name: looked up once, and picked when there are several');
+  {
+    const net = fakeNet();
+    net.geo = () => okJson(SPRINGFIELDS);
+    const t = mount({ net, saved: { place: 'Springfield' } });
+    await flush();
+    check('one place lookup, and NO forecast until a place is picked', net.geos().length === 1 && net.forecasts().length === 0);
+    check('*** the matches are listed to pick from ***', t.qa('[data-act="pick"]').length === 3 && /Which “Springfield”/.test(t.text('[data-weather-msg]')));
+    await t.timers.fire((x) => x.ms >= 60000);
+    check('a refresh does not look the same name up again', net.geos().length === 1);
+    t.pub('select');
+    check('the first select only lights the first match', t.probe().lit === 0 && net.forecasts().length === 0);
+    t.pub('next');
+    t.pub('select');
+    await flush();
+    check('*** next + select picks Missouri, remembered with the name it was picked for ***', t.state.get().chosenPlace?.name === 'Springfield, Missouri, United States'
+      && t.state.get().chosenPlace?.query === 'Springfield', JSON.stringify(t.state.get().chosenPlace));
+    check('...and the forecast is fetched for it, rounded', net.forecasts().length === 1 && /latitude=37\.2&longitude=-93\.3&/.test(net.forecasts()[0]), net.forecasts()[0]);
+    check('the place name shows over the weather', /Springfield, Missouri/.test(t.text('[data-weather-place]')));
+    t.inst.destroy();
+
+    const again = mount({ net, saved: t.state.get() });
+    await flush();
+    check('a reload with the pick remembered does not look the name up again', net.geos().length === 1 && net.forecasts().length === 2);
+    again.inst.destroy();
+
+    const one = fakeNet();
+    one.geo = () => okJson({ results: [SPRINGFIELDS.results[2]] });
+    const u = mount({ net: one, saved: { place: 'Springfield MA' } });
+    await flush();
+    check('one match is picked by itself', u.state.get().chosenPlace?.lat === 42.1 && one.forecasts().length === 1);
+    u.inst.destroy();
+
+    const none = fakeNet();
+    none.geo = () => okJson({ generationtime_ms: 0.4 });
+    const v = mount({ net: none, saved: { place: 'Xyzzyville' } });
+    await flush();
+    check('nothing found: says so, and how to fix it', /No place called “Xyzzyville”/.test(v.text('[data-weather-msg]')) && none.forecasts().length === 0);
+    v.state.set({ place: 'X' });
+    await flush();
+    check('one letter: asks for more, and sends nothing', /a little more/.test(v.text('[data-weather-msg]')) && none.geos().length === 1);
+    v.inst.destroy();
+
+    const down = fakeNet();
+    down.geo = offline;
+    const w = mount({ net: down, saved: { place: 'Springfield' } });
+    await flush();
+    check('the lookup failing says so (never blank) and offers to try again', /Could not look up/.test(w.text('[data-weather-msg]')) && !!w.q('[data-act="retry"]'));
+    down.geo = () => okJson(SPRINGFIELDS);
+    await w.timers.fire((x) => x.ms >= 60000);
+    check('...and the next refresh tries the name again', down.geos().length === 2 && w.qa('[data-act="pick"]').length === 3);
+    w.inst.destroy();
+  }
+
+  // =====================================================================
+  section('*** a failed update keeps the last good weather, and says it is old ***');
+  {
+    const net = fakeNet();
+    const t = mount({ net, saved: { place: '51.5, -0.1' } });
+    await flush();
+    check('fresh first', t.probe().status === 'ok' && !t.q('[data-weather-stale]'));
+    net.forecast = offline;
+    t.clock.t += 30 * 60000;
+    await t.timers.fire((x) => x.ms >= 60000);
+    check('the update was attempted', net.forecasts().length === 2);
+    check('*** the weather is still shown ***', t.text('[data-weather-temp]') === '68°F');
+    check('*** with a notice saying since when, and "Last known" instead of "Now" ***', /Not updated since/.test(t.text('[data-weather-stale]'))
+      && /^Last known/.test(t.text('[data-weather-place]')) && t.probe().status === 'stale');
+    check('the heartbeat says stale (still alive)', t.beats[t.beats.length - 1].status === 'stale');
+    t.pub('select');
+    check('read aloud, it says when the weather is from', /^This is from /.test(t.said[t.said.length - 1] || ''), t.said[t.said.length - 1]);
+    net.forecast = () => okJson(sample({ tempC: 10 }));
+    t.press('[data-weather-stale] [data-act="retry"]');
+    await flush();
+    check('"Try again now" fetches at once, and a good answer clears the notice', net.forecasts().length === 3 && !t.q('[data-weather-stale]')
+      && t.text('[data-weather-temp]') === '50°F');
+    check('...and exactly one refresh is still scheduled (no doubled timers)', t.timers.refreshes().length === 1, String(t.timers.refreshes().length));
+    net.forecast = () => okJson({ error: true, reason: 'Parameter is invalid' });
+    await t.timers.fire((x) => x.ms >= 60000);
+    check('a malformed answer is a failure too: last weather kept, marked old', t.text('[data-weather-temp]') === '50°F' && !!t.q('[data-weather-stale]'));
+    t.inst.destroy();
+  }
+
+  section('no connection and no data yet: a message, never a blank panel');
+  {
+    const net = fakeNet();
+    net.forecast = offline;
+    const t = mount({ net, saved: { place: '51.5, -0.1' } });
+    await flush();
+    check('*** says it could not reach the service and when it will try again ***', /Could not reach the weather service/.test(t.text('[data-weather-msg]'))
+      && /30 minutes/.test(t.text('[data-weather-msg]')));
+    check('with a button to try again now', !!t.q('[data-act="retry"]'));
+    t.inst.destroy();
+
+    const slow = fakeNet();
+    slow.forecast = hang;
+    const s = mount({ net: slow, saved: { place: '51.5, -0.1' } });
+    await flush();
+    check('a request that never answers is given a timeout', [...s.timers.live.values()].some((x) => x.ms === FETCH_TIMEOUT_MS));
+    check('while it waits: "Getting the weather…", not blank', /Getting the weather/.test(s.text('[data-weather-msg]')));
+    await s.timers.fire((x) => x.ms === FETCH_TIMEOUT_MS);
+    check('*** ...and when the timeout passes it counts as failed ***', /Could not reach/.test(s.text('[data-weather-msg]')));
+    s.inst.destroy();
+  }
+
+  section('a reload with no connection shows the kept weather');
+  {
+    const first = mount({ saved: { place: '51.5, -0.1' } });
+    await flush();
+    const kept = first.state.get();
+    first.inst.destroy();
+    const net = fakeNet();
+    net.forecast = offline;
+    const t = mount({ net, saved: kept, clock: { t: T0 + 3 * 3600000 } });
+    await flush();
+    check('*** the kept weather is shown, marked old ***', t.text('[data-weather-temp]') === '68°F' && !!t.q('[data-weather-stale]'));
+    t.inst.destroy();
+    const other = mount({ net, saved: { ...kept, place: '48.9, 2.4' } });
+    await flush();
+    check('...but not for a DIFFERENT place (Paris does not get London’s weather)', !other.q('[data-weather-temp]')
+      && /Could not reach/.test(other.text('[data-weather-msg]')));
+    other.inst.destroy();
+  }
+
+  // =====================================================================
+  section('units switch at once, with no new request');
+  {
+    const t = mount({ saved: { place: '51.5, -0.1' } });
+    await flush();
+    const before = t.net.calls.length;
+    t.state.set({ units: 'c' });
+    await flush();
+    check('*** °C now, and nothing was fetched for it ***', t.text('[data-weather-temp]') === '20°C' && t.net.calls.length === before);
+    check('wind follows: km/h', /16 km\/h/.test(t.text('[data-weather-detail]')));
+    t.state.set({ units: 'f' });
+    await flush();
+    check('and back to °F', t.text('[data-weather-temp]') === '68°F' && t.net.calls.length === before);
+    t.inst.destroy();
+    const uk = mount({ saved: { place: '51.5, -0.1' }, lang: 'en-GB' });
+    await flush();
+    check('"Automatic" on a British-English screen is °C', uk.text('[data-weather-temp]') === '20°C');
+    uk.inst.destroy();
+    const t2 = mount({ saved: { place: '51.5, -0.1', refreshMin: 60 } });
+    await flush();
+    check('the refresh interval is the setting', t2.timers.refreshes()[0]?.ms === 60 * 60000);
+    t2.inst.destroy();
+  }
+
+  // =====================================================================
+  section('one switch: select hears now, next/prev walk the days');
+  {
+    const t = mount({ saved: { place: '51.5, -0.1' } });
+    await flush();
+    check('nothing lit to start', t.probe().lit === -1 && !t.q('[data-on="1"]'));
+    t.pub('select');
+    check('*** select with nothing lit reads the weather now ***', /^Now: 68 degrees, partly cloudy\./.test(t.said[0] || ''), t.said[0]);
+    t.pub('next');
+    check('next lights Today', t.probe().lit === 0 && t.q('[data-on="1"]')?.textContent.includes('Today'));
+    t.pub('select');
+    check('select reads the lit day', /^Today: partly cloudy, high 72, low 54/.test(t.said[1] || ''), t.said[1]);
+    t.pub('next'); t.pub('select');
+    check('next, select: Tomorrow', /^Tomorrow: rain, high 64, low 50, 80 percent chance of rain\./.test(t.said[2] || ''), t.said[2]);
+    t.pub('prev'); t.pub('prev'); t.pub('prev');
+    check('the walk wraps both ways', t.probe().lit === 3, String(t.probe().lit));
+    t.pub('back');
+    check('back returns to now', t.probe().lit === -1 && !t.q('[data-on="1"]'));
+    t.press('[data-weather-now]');
+    check('touching "now" reads it aloud', t.said.length === 4 && /^Now:/.test(t.said[3]));
+    t.press('.wx-day[data-i="2"]');
+    check('touching a day lights it and reads it', t.probe().lit === 2 && /snow/.test(t.said[4] || ''));
+    t.inst.destroy();
+    const mute = mount({ saved: { place: '51.5, -0.1' }, output: false });
+    await flush();
+    check('no speech output on the screen: select does nothing harmful', (() => { mute.pub('select'); mute.pub('next'); mute.pub('select'); return true; })());
+    mute.inst.destroy();
+  }
+
+  // =====================================================================
+  section('*** teardown leaves nothing running ***');
+  {
+    const t = mount({ saved: { place: '51.5, -0.1' } });
+    await flush();
+    check('one refresh pending while mounted', t.timers.count() === 1);
+    t.inst.destroy();
+    check('*** destroy clears every timer ***', t.timers.count() === 0, String(t.timers.count()));
+    const calls = t.net.calls.length;
+    await flush();
+    check('and nothing is fetched afterwards', t.net.calls.length === calls);
+
+    let release;
+    const net = fakeNet();
+    net.forecast = () => new Promise((r) => { release = r; });
+    const s = mount({ net, saved: { place: '51.5, -0.1' } });
+    await flush();
+    s.inst.destroy();
+    check('destroy mid-request clears the timeout timer too', s.timers.count() === 0, String(s.timers.count()));
+    release({ ok: true, status: 200, json: () => Promise.resolve(sample()) });
+    await flush();
+    check('a late answer after destroy is dropped (no timer, nothing drawn)', s.timers.count() === 0 && !s.q('[data-weather-temp]'));
+
+    const p = mount({ saved: { place: '51.5, -0.1' } });
+    await flush();
+    p.state.set({ place: '48.9, 2.4' });
+    await flush();
+    check('changing the place restarts with exactly one refresh pending', p.timers.refreshes().length === 1 && p.net.forecasts().length === 2
+      && /latitude=48\.9/.test(p.net.forecasts()[1]));
+    p.inst.destroy();
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+
+// The live look, with fake data: three sizes.
+for (const id of ['big', 'quarter', 'window']) {
+  const net = fakeNet();
+  const inst = mountModule('weather', { mount: document.getElementById(id), bus: createBus(), state: fakeState({ place: '39.8, -89.6' }),
+    personId: null, instanceId: `live-${id}`, fetch: net.fetch, lang: 'en-US', setTimeout: () => 0, clearTimeout: () => {} });
+  inst.init();
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

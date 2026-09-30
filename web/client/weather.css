@@ -1,0 +1,77 @@
+/* weather.css — the look of `modules/weather.js`. Loaded by the module itself, from a <link> inside
+   its own mount, the way note.css is.
+
+   COLOUR: none written here. The icon tokens (--wx-*) are declarations pointing at theme tokens, so
+   every theme, light or dark, colours the pictures; each has a second theme token as its fallback.
+
+   SIZE: container units throughout, so the same panel reads as a whole screen, a quarter, or a
+   small window in a room. A short box drops the days first, then the hours: "now" is what matters. */
+
+.wx-wrap{
+  --wx-sun: var(--accent-warm, var(--accent));
+  --wx-moon: var(--text-soft, var(--text-muted));
+  --wx-cloud: var(--text-muted, var(--text));
+  --wx-rain: var(--link, var(--accent));
+  --wx-snow: var(--text-strong, var(--text));
+  --wx-bolt: var(--accent-warm-deep, var(--accent));
+  --wx-fog: var(--text-muted, var(--text));
+  --wx-text: var(--text);
+  width:100%;height:100%;min-height:0;container-type:size;color:var(--text);font-family:var(--font);
+}
+.wx-wrap *{box-sizing:border-box}
+.wx{height:100%;display:flex;flex-direction:column;gap:clamp(6px, 2cqmin, 18px);padding:clamp(6px, 2.5cqmin, 24px);overflow:auto}
+/* Nothing is squashed to fit: a box too short scrolls (and the queries below drop rows first). */
+.wx > *{flex:none}
+
+.wx-icon{display:block;width:clamp(28px, 9cqmin, 72px);height:auto;flex:none}
+.wx-icon-now{width:clamp(56px, 22cqmin, 220px)}
+
+/* NOW: one big button, so a touch anywhere on it reads the weather aloud. */
+.wx-now{display:flex;align-items:center;gap:clamp(8px, 3cqmin, 32px);width:100%;padding:clamp(4px, 1.5cqmin, 14px);
+  border:0;border-radius:14px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.wx-now-text{display:flex;flex-direction:column;min-width:0}
+.wx-place{font-size:clamp(13px, 3.6cqmin, 30px);font-weight:600;color:var(--text-muted);overflow-wrap:anywhere}
+.wx-temp{font-size:clamp(34px, 15cqmin, 170px);font-weight:800;line-height:1;color:var(--text-strong)}
+.wx-unit{font-size:.4em;font-weight:700;vertical-align:super;margin-left:.1em}
+.wx-words{font-size:clamp(18px, 6cqmin, 60px);font-weight:700}
+.wx-detail{font-size:clamp(13px, 3.8cqmin, 32px);color:var(--text-muted)}
+
+.wx-hours,.wx-days{list-style:none;margin:0;padding:0;display:flex;gap:clamp(4px, 1.4cqmin, 12px)}
+.wx-hours{overflow-x:auto}
+.wx-hour,.wx-day{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:clamp(56px, 13cqmin, 130px);
+  padding:clamp(4px, 1.2cqmin, 12px);border:2px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);
+  font:inherit;text-align:center}
+.wx-days{flex-wrap:wrap}
+.wx-days li{display:flex}
+.wx-day{cursor:pointer;width:100%}
+.wx-hlabel,.wx-dlabel{font-size:clamp(13px, 3.4cqmin, 28px);font-weight:700}
+.wx-htemp,.wx-dtemps{font-size:clamp(15px, 4.6cqmin, 40px);font-weight:800}
+.wx-dlow{font-weight:600;color:var(--text-muted)}
+.wx-hwords,.wx-dwords,.wx-hrain,.wx-drain{font-size:clamp(12px, 3cqmin, 24px)}
+.wx-hrain,.wx-drain{color:var(--text-muted)}
+
+.wx-stale{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:8px 12px;border:2px dashed var(--border);
+  border-radius:12px;background:var(--surface-alt)}
+.wx-stale p{margin:0;font-size:clamp(13px, 3.4cqmin, 28px);font-weight:700;color:var(--text-strong)}
+
+.wx-msg{margin:auto 0;display:flex;flex-direction:column;gap:clamp(6px, 2cqmin, 16px)}
+.wx-msg-title{margin:0;font-size:clamp(17px, 6cqmin, 52px);font-weight:700;color:var(--text-strong)}
+.wx-msg-body{margin:0;font-size:clamp(14px, 3.8cqmin, 30px);color:var(--text-muted);max-width:60ch}
+.wx-picks{display:flex;flex-direction:column;gap:clamp(4px, 1.4cqmin, 12px)}
+.wx-btn{min-height:44px;padding:0 clamp(10px, 2cqmin, 20px);border:2px solid var(--border);border-radius:12px;
+  background:var(--surface);color:var(--text);font:inherit;font-weight:700;font-size:clamp(14px, 3.4cqmin, 28px);cursor:pointer;text-align:left}
+.wx-btn-small{min-height:36px;font-size:clamp(12px, 3cqmin, 22px)}
+.wx-credit{margin:auto 0 0;font-size:clamp(10px, 2.2cqmin, 16px);color:var(--text-muted)}
+
+/* THE SWITCH CURSOR: an outline AND a marker, so the lit item reads without colour. */
+.wx [data-on="1"]{outline:max(3px, .8cqmin) solid var(--link);outline-offset:2px}
+.wx-btn[data-on="1"]::before,.wx-day[data-on="1"] .wx-dlabel::before{content:"\25B8\00a0"}
+
+/* Short boxes: the days go first, then the hours; "now" always stays. */
+@container (max-height: 380px){ .wx-days{display:none} }
+@container (max-height: 220px){ .wx-hours,.wx-detail{display:none} }
+@container (max-height: 200px){
+  .wx-icon-now{width:24cqh} .wx-temp{font-size:24cqh} .wx-words{font-size:max(13px, 10cqh)} .wx-place{font-size:max(11px, 7cqh)}
+  .wx-now{padding:0} .wx{gap:4px;padding:6px}
+}
+@container (max-width: 260px) and (min-height: 201px){ .wx-now{flex-direction:column;text-align:center} .wx-now-text{align-items:center} }
