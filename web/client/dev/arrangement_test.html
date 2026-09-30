@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>arrangement — what is on a screen, and where</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host{position:fixed;left:0;top:0;width:800px;height:520px;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>arrangement — the kiosk's arrangement, on its own</h1>
+
+<div class="note">
+  Step 6, Stage 1 moved the arrangement-owner half of <code>kiosk.js</code> into
+  <code>arrangement.js</code> as a plain factory. The kiosk suites already prove the kiosk still
+  behaves (they ran at unchanged counts). This suite drives the factory <b>with no kiosk around
+  it</b> -- fake mounts, a fake router, a fake health watch -- which is what Stage 2
+  (<code>view.js</code> over it) and Stage 3 (the modules page mounting it) will need to rely on:
+  building it does nothing, every getter it was handed is read when used and not before, and
+  each rule it carries (orphan repair, failed-slot notices, the empty-screen sentences, the
+  unplaced swap, recovery's hands, the corners) holds without the shell.
+</div>
+
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createArrangement } from '../arrangement.js';
+import { createBus } from '../bus.js';
+import { readConfig } from '../restart.js';
+import '../modules/ambient_drift.js';     // a real `mount: 'ambient'` manifest for partition()
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+const M = {
+  p1: { id: 'p1', type: 'photos' }, t1: { id: 't1', type: 'trivia' }, w1: { id: 'w1', type: 'wordforge' },
+  c1: { id: 'c1', type: 'camera' }, k1: { id: 'k1', type: 'clock' }, a1: { id: 'a1', type: 'ambient_drift' },
+};
+
+// Everything the shell would hand over, faked and recorded.
+function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false } = {}) {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
+  const kioskEl = el('kiosk'), stageEl = el('k-stage'), mirrorEl = el('k-mirror'),
+        clockEl = el('k-clock'), ambientEl = el('k-ambient');
+  mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
+  const log = { mounts: [], destroyed: [], watched: [], renders: 0, setFocus: [], forgot: [] };
+  let focused = null;
+  const router = {
+    focused: () => focused,
+    setFocus: (id) => { focused = { id }; log.setFocus.push(id); },
+    focusNext() {}, reachable: () => [],
+  };
+  let data = { kiosk: { layout: { preset: 'full', slots: ['x'] } } };
+  const settings = { get: () => data, set: (p) => { data = { ...data, ...p }; } };
+  const store = new Map();
+  const storage = { getItem: (k) => (store.has(k) ? store.get(k) : null),
+                    setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
+  const ids = { profileId: 'scr-A' };
+  const thrower = (what) => () => { throw new Error(`${what} read too early`); };
+  const arr = createArrangement({
+    bus: createBus(), user: 'u', storage, embedded, settings,
+    kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+    mountInstance: async (def, h) => {
+      if (failTypes.includes(def.type)) throw new Error(`${def.type} will not start`);
+      log.mounts.push(def.id);
+      h.textContent = def.id;
+      return { id: def.id, type: def.type, title: def.type.toUpperCase(), el: h,
+               instance: { manifest: { title: def.type }, destroy: () => log.destroyed.push(def.id), onResize() {} },
+               state: { get: () => ({}), set() {}, destroy() {} }, events: { destroy() {} } };
+    },
+    destroyRec: (rec) => { if (!rec) return; rec.instance.destroy(); },
+    watchRec: (rec) => { if (rec) log.watched.push(rec.id); return rec; },
+    renderMods: () => { log.renders++; },
+    runtime: throwingGetters ? thrower('runtime') : () => ({ router }),
+    health: throwingGetters ? thrower('health') : () => ({ forget: (id) => log.forgot.push(id) }),
+    profileId: throwingGetters ? thrower('profileId') : () => ids.profileId,
+  });
+  arr.setProfile({ id: 'scr-A', name: 'A', modules });
+  return { arr, log, kioskEl, stageEl, mirrorEl, clockEl, ambientEl, settings, storage, ids,
+           focus: (id) => { focused = id ? { id } : null; }, getData: () => data };
+}
+const cells = (stageEl) => [...stageEl.querySelectorAll('.k-cell')];
+
+(async () => {
+try {
+  section('a plain factory: building it does nothing');
+  {
+    const host = document.getElementById('host'); host.innerHTML = '';
+    let threw = null, arr = null;
+    try {
+      arr = createArrangement({
+        kioskEl: document.createElement('div'), stageEl: document.createElement('div'),
+        mirrorEl: document.createElement('div'), clockEl: document.createElement('div'),
+        ambientEl: document.createElement('div'), settings: { get: () => ({}), set() {} }, bus: createBus(),
+        mountInstance: () => { throw new Error('mounted at build'); }, destroyRec() {},
+        runtime: () => { throw new Error('runtime read at build'); },
+        health: () => { throw new Error('health read at build'); },
+        profileId: () => { throw new Error('profileId read at build'); },
+      });
+    } catch (e) { threw = e; }
+    check('*** building it reads no getter and mounts nothing (the TDZ rule kiosk.js lives by) ***',
+      !threw && arr, String(threw));
+    check('no layout and no profile until the shell sets one', arr && arr.layout() === null && arr.profile() === null);
+    check('slotRecs is the live (empty) array', arr && Array.isArray(arr.slotRecs) && arr.slotRecs.length === 0);
+    const want = ['profile', 'layout', 'stageDefs', 'primary', 'stageRec', 'slotRecs', 'cameraRec', 'clockRec',
+      'ambientRec', 'screenLinks', 'setProfile', 'resolve', 'partition', 'mountOverlays', 'mountLayout',
+      'showPrimary', 'applyModules', 'focusedRec', 'focusPlaced', 'focusRing', 'paintFocus', 'unplacedDefs',
+      'showUnplaced', 'showModule', 'instanceTitle', 'recFor', 'remountPanel', 'swapPanel', 'applyLayout',
+      'patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner', 'destroy'];
+    const got = arr ? Object.keys(arr) : [];
+    check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
+      want.length === got.length && want.every((k) => got.includes(k)),
+      `missing ${want.filter((k) => !got.includes(k))} extra ${got.filter((k) => !want.includes(k))}`);
+  }
+
+  section('resolve + partition, no layout: the one-at-a-time stage and the HUD');
+  {
+    const t = make({ modules: [M.p1, M.c1, M.k1, M.a1, M.t1], throwingGetters: true });
+    t.arr.resolve(undefined);
+    t.arr.partition();
+    check('no saved layout -> no layout', t.arr.layout() === null);
+    check('the stage gets every module that is not a HUD piece, in order',
+      t.arr.stageDefs().map((d) => d.id).join() === 'p1,t1', t.arr.stageDefs().map((d) => d.id).join());
+    let threw = null;
+    try { await t.arr.mountOverlays(); } catch (e) { threw = e; }
+    check('*** the overlays mount before the runtime/health exist (boot order) without reading either ***',
+      !threw, String(threw));
+    check('camera -> mirror, clock -> corner clock, ambient -> the ambient layer',
+      t.arr.cameraRec()?.id === 'c1' && t.arr.clockRec()?.id === 'k1' && t.arr.ambientRec()?.id === 'a1');
+    check('...and each host is shown', !t.mirrorEl.hidden && !t.clockEl.hidden && !t.ambientEl.hidden);
+    check('nothing on the stage was mounted by mountOverlays', !t.log.mounts.includes('p1'));
+  }
+
+  section('a failed overlay leaves no trace');
+  {
+    const t = make({ modules: [M.c1, M.p1], failTypes: ['camera'] });
+    t.arr.resolve(undefined); t.arr.partition(); await t.arr.mountOverlays();
+    check('no camera record', t.arr.cameraRec() === null);
+    check('the mirror host is hidden and empty again', t.mirrorEl.hidden && !t.mirrorEl.children.length);
+  }
+
+  section('resolve with a layout, and the orphan repair (G1-G3) through the arrangement');
+  {
+    const t = make({ modules: [M.p1, M.t1, M.c1] });
+    t.arr.resolve({ preset: 'side', slots: ['GONE', 't1'] });
+    check('an orphaned slot is given the spare module', t.arr.layout()?.slots.join() === 'p1,t1',
+      JSON.stringify(t.arr.layout()));
+    t.arr.partition();
+    check('with a layout the stage is off', t.arr.stageDefs().length === 0);
+    await t.arr.mountOverlays();
+    check('an unplaced camera is still the mirror', t.arr.cameraRec()?.id === 'c1');
+  }
+
+  section('mountLayout: cells, names, focus');
+  {
+    const t = make({ modules: [M.p1, M.t1] });
+    t.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); t.arr.partition();
+    await t.arr.mountLayout();
+    const cs = cells(t.stageEl);
+    check('one cell per slot, a grid', cs.length === 2 && t.stageEl.classList.contains('k-grid'));
+    check('cells are named by slot and by kind, not by position',
+      cs[0].dataset.slot === '0' && cs[0].dataset.kind === 'photos' && cs[1].dataset.kind === 'trivia');
+    check('the cell is a mod-box (modules size against it)', cs[0].classList.contains('mod-box'));
+    check('every slot record is watched', t.log.watched.join() === 'p1,t1', t.log.watched.join());
+    check('focus starts on the first slot, and the ring is painted there',
+      t.log.setFocus[0] === 'p1' && cs[0].dataset.focused === '1' && !cs[1].dataset.focused);
+    check('the bar was redrawn', t.log.renders > 0);
+    check('focusRing lists the slots', t.arr.focusRing().map((m) => m.id).join() === 'p1,t1');
+    t.focus('t1');
+    check('focusedRec follows the router', t.arr.focusedRec()?.id === 't1');
+    t.focus('nope');
+    check('...and falls back to the first slot when focus names nothing on screen', t.arr.focusedRec()?.id === 'p1');
+  }
+
+  section('one panel that will not start is one broken rectangle');
+  {
+    const t = make({ modules: [M.p1, M.t1], failTypes: ['trivia'] });
+    t.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); t.arr.partition();
+    await t.arr.mountLayout();
+    const note = t.stageEl.querySelector('[data-panel-failed="trivia"]');
+    check('the failed cell says which panel, in that cell',
+      note && note.textContent === 'trivia could not start. The rest of this screen is fine.', note?.textContent);
+    check('every other slot still mounts', t.arr.slotRecs.map((r) => r.id).join() === 'p1');
+    check('no empty-screen sentence while something is up', !t.stageEl.querySelector('[data-empty]'));
+  }
+
+  section('the empty-screen sentences');
+  {
+    const t = make({ modules: [M.p1, M.t1], failTypes: ['photos', 'trivia'] });
+    t.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); t.arr.partition();
+    await t.arr.mountLayout();
+    const e = t.stageEl.querySelector('[data-empty]');
+    check('everything failed: it says what could not start',
+      e && e.textContent === 'Nothing on this screen could start (photos, trivia). Press Home to check it.', e?.textContent);
+    const t2 = make({ modules: [M.p1, M.t1] });
+    t2.arr.resolve({ preset: 'side', slots: ['p1', 't1'] });
+    t2.arr.setProfile({ id: 'scr-A', modules: [] });      // the modules went; the arrangement stayed
+    t2.arr.partition();
+    await t2.arr.mountLayout();
+    const e2 = t2.stageEl.querySelector('[data-empty]');
+    check('slots whose modules are gone: it says they were removed',
+      e2 && e2.textContent === 'This screen’s panels were removed. Press Home to add some again.', e2?.textContent);
+  }
+
+  section('showPrimary: the one-at-a-time stage');
+  {
+    const t = make({ modules: [M.p1, M.t1] });
+    t.arr.resolve(undefined); t.arr.partition();
+    await t.arr.showPrimary(3);
+    check('the index wraps', t.arr.primary() === 1 && t.arr.stageRec()?.id === 't1');
+    check('exactly one panel on the stage', t.stageEl.querySelectorAll('.k-mod').length === 1);
+    check('focus follows the stage', t.log.setFocus.at(-1) === 't1');
+    check('*** the position is written for the screen id read AT THE CALL ***',
+      readConfig('u', t.storage).positions['scr-A'] === 1, JSON.stringify(readConfig('u', t.storage)));
+    t.ids.profileId = 'scr-B';
+    await t.arr.showPrimary(0);
+    check('...so a swapped screen id is the one written, not the boot one',
+      readConfig('u', t.storage).positions['scr-B'] === 0 && t.log.destroyed.includes('t1'));
+    check('focusedRec on a stage screen is the mounted one', t.arr.focusedRec()?.id === 'p1');
+    check('focusRing on a stage screen is the stage list', t.arr.focusRing().map((m) => m.id).join() === 'p1,t1');
+    const f = make({ modules: [M.p1, M.t1], failTypes: ['trivia'] });
+    f.arr.resolve(undefined); f.arr.partition();
+    await f.arr.showPrimary(1);
+    const n = f.stageEl.querySelector('[data-panel-failed="trivia"]');
+    check('a stage module that will not start says so, and leaves no record',
+      n && /could not start/.test(n.textContent) && f.arr.stageRec() === null);
+  }
+
+  section('the unplaced swap (G9) and showModule');
+  {
+    const t = make({ modules: [M.p1, M.t1, M.w1, M.c1] });
+    t.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); t.arr.partition();
+    await t.arr.mountLayout();
+    check('unplaced: what no slot shows, minus the HUD pair',
+      t.arr.unplacedDefs().map((d) => d.id).join() === 'w1', t.arr.unplacedDefs().map((d) => d.id).join());
+    t.focus('t1');
+    await t.arr.showUnplaced(M.w1);
+    check('it takes the focused slot, and the one it replaced is torn down',
+      t.arr.layout().slots.join() === 'p1,w1' && t.log.destroyed.includes('t1'));
+    check('the cell says what is in it now, and focus moved there',
+      cells(t.stageEl)[1].dataset.kind === 'wordforge' && t.log.setFocus.at(-1) === 'w1');
+    check('showModule: a placed type is focused', (await t.arr.showModule('photos')) === true && t.log.setFocus.at(-1) === 'p1');
+    check('showModule: an unplaced camera is not a panel', (await t.arr.showModule('camera')) === false);
+    check('showModule: an unplaced panel type is brought into a slot',
+      (await t.arr.showModule('trivia')) === true && t.arr.layout().slots.includes('t1'));
+    check('showModule: a type the screen does not have', (await t.arr.showModule('youtube')) === false);
+    check('showModule: no type', (await t.arr.showModule('')) === false);
+  }
+
+  section('applyModules: the rebuild a screen swap runs');
+  {
+    const t = make({ modules: [M.p1, M.c1] });
+    t.arr.resolve(undefined); t.arr.partition(); await t.arr.mountOverlays(); await t.arr.showPrimary(0);
+    t.arr.setProfile({ id: 'scr-B', modules: [M.t1, M.w1, M.k1] });
+    t.arr.resolve({ preset: 'side', slots: ['w1', 't1'] });
+    await t.arr.applyModules();
+    check('every old record is torn down', ['p1', 'c1'].every((id) => t.log.destroyed.includes(id)));
+    check('the incoming screen is mounted in its own arrangement',
+      t.arr.slotRecs.map((r) => r.id).join() === 'w1,t1');
+    check('its HUD is its own: no camera, a clock', t.arr.cameraRec() === null && t.arr.clockRec()?.id === 'k1');
+    check('the mirror host was cleared and hidden', t.mirrorEl.hidden && !t.mirrorEl.children.length);
+  }
+
+  section("recovery's hands");
+  {
+    const t = make({ modules: [M.p1, M.t1] });
+    t.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); t.arr.partition(); await t.arr.mountLayout();
+    const before = t.arr.recFor('p1');
+    check('recFor finds a slot record', before?.id === 'p1');
+    check('recFor: nothing by that id', t.arr.recFor('zz') === null);
+    check('remountPanel remounts in the same host', (await t.arr.remountPanel('p1')) === true
+      && t.arr.recFor('p1') !== before && t.arr.recFor('p1').el === before.el);
+    check('remountPanel: nothing to remount', (await t.arr.remountPanel('zz')) === false);
+    check('swapPanel puts another type in that slot and forgets its health',
+      (await t.arr.swapPanel('p1', 'clock')) === true && t.arr.recFor('p1')?.type === 'clock'
+      && t.log.forgot.includes('p1'));
+    check('swapPanel with no type does nothing', (await t.arr.swapPanel('t1', '')) === false);
+  }
+
+  section('the mirror/clock corners');
+  {
+    const t = make({ modules: [] });
+    t.arr.applyLayout({});
+    check('defaults: a large mirror top-right, the clock bottom-left',
+      t.kioskEl.dataset.mirrorSize === 'lg' && t.kioskEl.dataset.mirrorCorner === 'tr' && t.kioskEl.dataset.clockCorner === 'bl');
+    t.arr.applyLayout({ kiosk: { mirror: { size: 'huge', corner: 'xx' }, clock: { corner: 'tl' } } });
+    check('a bad value falls back, a good one is used',
+      t.kioskEl.dataset.mirrorSize === 'lg' && t.kioskEl.dataset.mirrorCorner === 'tr' && t.kioskEl.dataset.clockCorner === 'tl');
+    t.arr.patchMirror({ size: 'sm' });
+    const k = t.getData().kiosk;
+    check('patchMirror merges into settings.kiosk and keeps the layout beside it',
+      k.mirror.size === 'sm' && k.mirror.corner === 'tr' && k.layout?.preset === 'full', JSON.stringify(k));
+    t.arr.cycleMirrorSize(1);
+    check('cycleMirrorSize clamps at the largest', t.getData().kiosk.mirror.size === 'lg');
+    t.arr.cycleMirrorSize(-1);
+    check('...and steps down', t.getData().kiosk.mirror.size === 'md');
+    t.kioskEl.dataset.mirrorCorner = 'tl';
+    t.arr.cycleMirrorCorner();
+    check('cycleMirrorCorner wraps round', t.getData().kiosk.mirror.corner === 'tr');
+  }
+
+  section("the screen's links, and destroy");
+  {
+    const e = make({ modules: [M.p1], embedded: true });
+    check('an embed has no links runner', e.arr.screenLinks === null);
+    const t = make({ modules: [M.p1, M.c1, M.t1] });
+    check('a real screen has one, idle while there are no links',
+      t.arr.screenLinks && typeof t.arr.screenLinks.sync === 'function' && t.arr.screenLinks.status() === null);
+    t.arr.resolve({ preset: 'full', slots: ['p1'] }); t.arr.partition(); await t.arr.mountOverlays();
+    await t.arr.mountLayout();
+    t.arr.destroy();
+    check('destroy tears down every record, overlays included',
+      ['p1', 'c1'].every((id) => t.log.destroyed.includes(id)) && t.arr.slotRecs.length === 0);
+  }
+} catch (e) {
+  check('the suite threw', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = `${passed} passed, ${failed} failed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

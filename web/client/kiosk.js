@@ -33,7 +33,7 @@ import { createAudioBus } from './audio_bus.js';
 import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
-import { normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle } from './layout.js';
+import { createArrangement } from './arrangement.js';
 import { mountSettings } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
@@ -43,20 +43,19 @@ import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
 import { createHealthWatch } from './health.js';
 import { nextAction, applied, cleared, chooseFallback, DEFAULT_POLICY,
          RECOVERY_SETTINGS } from './recovery.js';
-import { listManifests, getManifest } from './module.js';
+import { listManifests } from './module.js';
 import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
 import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS, isTyping } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
 import { createCallTransport } from './call_transport.js';
-import { readConfig, writeConfig, writePosition, bootPlan, markHopped, hasHopped,
+import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
          restartItems } from './restart.js';
 import { takePreviewLayout } from './preview.js';
 import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
 import { syncScene } from './livescene.js';
 import { cachedFetch } from './cache.js';
-import { createScreenLinks } from './screen_links.js';
 import './modules/clock.js';
 import './modules/keyboard.js';
 import './modules/camera.js';
@@ -95,11 +94,6 @@ import './modules/ambient_drift.js';
 // feature, not just proof the ambient band works (MIKE_CHANGE_LIST.md §comet-headless-toggle-
 // proposal). Wired into home.html/modules.html's composer and modules_catalog.js as well.
 import './modules/comet_ambient.js';
-
-const MIRROR_SIZES = ['sm', 'md', 'lg'];
-const CORNERS = ['tr', 'br', 'bl', 'tl'];
-const KDEF = { mirror: { size: 'lg', corner: 'tr' }, clock: { corner: 'bl' } };
-const wrap = (i, n) => ((i % n) + n) % n;
 
 // Swapping the whole screen. `kiosk/show` takes a screen id (or {profileId}); `kiosk/back`
 // returns to the one before it. A state machine drives these from a state's `enter`.
@@ -629,6 +623,33 @@ export async function mountKiosk(root, {
 
   // ---- per-profile settings: theme + the kiosk LAYOUT (data-driven) --------
   const settings = stateFor('settings');
+  // ---- THE ARRANGEMENT: what is on this screen, and where (step 6 of the port, Stage 1) ------
+  //
+  // Resolving and partitioning the layout, the HUD overlays, the slots and the one-at-a-time stage,
+  // focus and the unplaced swap, the rebuild a screen swap runs, `showModule`, recovery's hands, the
+  // mirror/clock corners and the screen's links live in `arrangement.js` now -- moved verbatim, so
+  // their long comments (and their history) went with them. This file keeps the shell. Built HERE,
+  // before the first `settings.subscribe` below, because `applyLayout` runs from it; building it does
+  // nothing else (no awaits, no mounts, no DOM). What it needs that the shell builds LATER is handed
+  // over as a getter -- the input runtime, the health watch, the screen id a swap changes -- the same
+  // reason `childCtx` uses getters. (`health` is a `const` further down: its getter is only called by
+  // `swapPanel`, which only recovery calls, long after it exists.)
+  const arr = createArrangement({
+    bus, user, storage, embedded, settings,
+    kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+    mountInstance, destroyRec, watchRec, renderMods,
+    runtime: () => runtime,
+    health: () => health,
+    profileId: () => profileId,
+  });
+  // Its functions, under the names this file always called them by, so the shell reads as it did.
+  // Its STATE is not destructured: a swap replaces it, so it is read through `arr.layout()`,
+  // `arr.stageRec()` and the rest, every time.
+  const {
+    applyLayout, patchMirror, cycleMirrorSize, cycleMirrorCorner,
+    focusedRec, focusPlaced, showUnplaced, showPrimary, paintFocus, mountLayout, applyModules,
+    showModule, focusRing, instanceTitle, remountPanel, swapPanel,
+  } = arr;
   // Declared here, ahead of `settings.subscribe` below, rather than down with the rest of the
   // burn-in code. `subscribe` calls its callback IMMEDIATELY if settings are already loaded
   // (state.js's `subscribe`: `if (loaded) fn(snapshot())`), and `settings.load()` a few lines
@@ -641,14 +662,6 @@ export async function mountKiosk(root, {
   // beside the subscribe call argued this callback "only ever runs later", which is true for a
   // setting a person actually changes but not for the immediate replay `subscribe` performs.
   let burnInT = null;
-  function applyLayout(s) {
-    const k = (s && s.kiosk) || {};
-    const m = { ...KDEF.mirror, ...(k.mirror || {}) };
-    const c = { ...KDEF.clock, ...(k.clock || {}) };
-    kioskEl.dataset.mirrorSize = MIRROR_SIZES.includes(m.size) ? m.size : KDEF.mirror.size;
-    kioskEl.dataset.mirrorCorner = CORNERS.includes(m.corner) ? m.corner : KDEF.mirror.corner;
-    kioskEl.dataset.clockCorner = CORNERS.includes(c.corner) ? c.corner : KDEF.clock.corner;
-  }
   // *** PANEL BACKGROUNDS, HOST-LEVEL. *** Mike, 2026-09-23, looking at the live kiosk: "I would
   // make the backgrounds transparent/translucent wherever possible. Like the clock and trivia."
   // Every panel in the grid gets its background from ONE rule (`.k-stage .k-mod`, kiosk.css) --
@@ -697,7 +710,6 @@ export async function mountKiosk(root, {
   // picked module in one cell of it is not "the module, large".
   const savedLayout = previewLayout
     || (embedded ? (embedLayout || null) : (settings.get().kiosk || {}).layout);
-  let layout = null;
 
   // *** STALE-CACHE CORRECTION FOR THE ARRANGEMENT. ***
   //
@@ -746,292 +758,34 @@ export async function mountKiosk(root, {
     });
   }
 
-  // persist a mirror change into the profile settings (merges with theme/voice/clock)
-  function patchMirror(patch) {
-    const cur = settings.get().kiosk || {};
-    settings.set({ kiosk: { ...cur, mirror: { ...KDEF.mirror, ...(cur.mirror || {}), ...patch } } });
-  }
-
   // ---- partition modules: camera -> mirror, clock -> clock HUD, rest -> stage
   // cached so a server blip at boot still yields the last-known dashboard layout.
-  // *** `let`, NOT `const`: THE SCREEN CAN BE SWAPPED IN PLACE. *** See `showScreen` below.
+  // *** THE ARRANGEMENT HOLDS IT, AND A SWAP REPLACES IT IN PLACE (`arr.setProfile`). *** See `showScreen` below.
   // (An embed skips the cache, and it is not a nicety: `module_try.js` hands it a profile scoped to
   // ONE module, and that must never be written into `profile:<user>:<id>`, the last-known-good the
   // real kiosk falls back to when the server is down.)
-  let profile = (makeState || embedded)
+  arr.setProfile((makeState || embedded)
     ? await profiles.get(profileId)        // local backend: it IS the source of truth
-    : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId));
+    : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId)));
 
-  // *** THIS SCREEN'S LINKS (2026-09-28, port-order step 5). *** A link joins one module instance's
-  // port to another's, and per the 2026-09-17 ruling (a dashboard is a module that contains modules)
-  // it is the CONTAINING screen's own structure: an array `links` beside `layout` on this screen's
-  // settings doc, `settings.kiosk.links`, written with real instance ids. `screen_links.js` reads it and
-  // owns the runner; THE RUNNER EXISTS ONLY WHILE THAT ARRAY IS NON-EMPTY, so a screen with no links
-  // creates nothing and behaves exactly as it always has. There is no patch-bay UI; links are authored
-  // by data. NOT in an embed: an embed is a preview host on somebody else's page showing one panel, and
-  // wiring a visitor's preview into a real screen's links is not what it is for. Composition
-  // identity (does a link enter a screen's fingerprint?) is deliberately untouched: NEW_CORE_SPEC.md
-  // §1/§2 still lists it as [design]. `settings` is read lazily, at each `sync()`, never here.
-  const screenLinks = embedded ? null : createScreenLinks({
-    rootBus: bus, settings: () => settings.get(), modules: () => profile.modules, manifestOf: getManifest,
-  });
+  // This screen's links (port-order step 5): built and owned by the arrangement, with the reasoning
+  // beside it in arrangement.js. The shell only syncs them once the modules exist, and unhooks them.
+  const screenLinks = arr.screenLinks;
 
-  // *** A SLOT WHOSE MODULE NO LONGER EXISTS IS AN ORPHAN, AND ORPHANS USED TO EAT PANELS. ***
-  //
-  // `normalizeLayout` nulls any slot holding an id that is not in the profile — correctly, it
-  // cannot render a module that is gone. But two things downstream then conspired:
-  //
-  //   * `mountLayout` skips a null slot with a bare `continue`, silently; and
-  //   * `partition()` only fills `stageDefs` when there is NO layout at all.
-  //
-  // So a module that exists but whose slot was orphaned renders NOWHERE. Not in its slot, and
-  // not on the stage either, because the stage is switched off whenever a layout is present.
-  // A screen composed of Photos, Comet and Clock came up with no Photos panel anywhere and no
-  // error, and a screen whose ONLY module was Photos came up announcing "This screen's panels
-  // were removed" — while the panel sat in the profile, un-removed and unrendered.
-  //
-  // `isArranged` is checked against the RAW saved layout, which is why an all-orphaned layout
-  // still counted as arranged and switched the stage off on its way to rendering nothing.
-  //
-  // Two repairs, and both are repairs rather than preferences:
-  // The resolve-and-repair lives in layout.js, because the kiosk resolves a layout twice (boot
-  // and screen swap) and view.js renders them too — one copy, or they drift.
-  layout = resolveLayout(savedLayout, profile.modules);
+  // Resolve the saved arrangement against the modules that exist, repairing orphaned slots (G1-G3;
+  // the whole story is beside `resolve` in arrangement.js).
+  arr.resolve(savedLayout);
 
-  if (previewLayout && layout) showPreviewBadge();
+  if (previewLayout && arr.layout()) showPreviewBadge();
 
-  let stageDefs = [];
-  let cameraDef = null, clockDef = null, ambientDef = null;
+  arr.partition();
 
-  // The partition, as a FUNCTION so a swapped-in screen goes through exactly the same rules
-  // as one mounted at boot. Two code paths deciding where a camera goes is how a swapped
-  // screen ends up subtly different from the same screen opened directly.
-  function partition() {
-    const placedIds = new Set(layout ? layout.slots.filter(Boolean) : []);
-    stageDefs = [];
-    cameraDef = null; clockDef = null; ambientDef = null;
-    for (const mod of profile.modules) {
-      if (placedIds.has(mod.id)) continue;                    // it lives in a slot
-      if (mod.type === 'camera') cameraDef = mod;
-      else if (mod.type === 'clock') clockDef = mod;
-      // A HEADLESS MOUNT, not a third hardcoded type -- a module DECLARES `mount: 'ambient'`
-      // on its own manifest rather than kiosk.js naming it, so any future module can opt in
-      // without this file changing again.
-      else if (getManifest(mod.type)?.mount === 'ambient') ambientDef = mod;
-      else if (!layout) stageDefs.push(mod);                  // no layout: the old stage
-    }
-  }
-  partition();
+  // The HUD overlays -- the mirror, the corner clock, the ambient layer: mounted once, left running.
+  // (`mountOverlay` in arrangement.js says why one that throws must leave no trace.)
+  await arr.mountOverlays();
 
-  // persistent HUD overlays (mounted once, left running)
-  // The HUD overlays — the mirror and the corner clock. Same rule as the slots below, and here
-  // it is worse if broken: this runs during BOOT, so a camera that throws on a machine with no
-  // webcam used to reject before the stage was ever built and leave the whole kiosk on its
-  // loading screen. An overlay is decoration on top of the screen; it cannot be allowed to
-  // prevent the screen.
-  async function mountOverlay(def, el) {
-    const host = document.createElement('div'); host.className = 'k-mod';
-    el.append(host); el.hidden = false;
-    try {
-      return await mountInstance(def, host);
-    } catch (err) {
-      console.error(`kiosk: ${def.type} overlay failed to start`, err);
-      // Put the corner back the way it was. A HUD that cannot draw should leave no trace —
-      // an empty translucent rectangle in the corner of a bedside screen is a thing somebody
-      // has to wonder about, and there is nothing they could do about it.
-      host.remove(); el.hidden = true;
-      return null;
-    }
-  }
-  let cameraRec = cameraDef ? await mountOverlay(cameraDef, mirrorEl) : null;
-  let clockRec = clockDef ? await mountOverlay(clockDef, clockEl) : null;
-  let ambientRec = ambientDef ? await mountOverlay(ambientDef, ambientEl) : null;
-
-  // ---- a LAID-OUT stage: every slot mounted at once, in its grid position ----
-  const slotRecs = [];
-  // Which panels threw on mount, so the empty-screen message below can tell "nothing was ever
-  // put here" apart from "what was put here would not start" — two situations that need
-  // completely different things from the person reading them.
-  const failedSlots = [];
-  // A human name for a module WITHOUT mounting it — the manifest is readable from the registry
-  // for exactly this reason. A panel that failed to start has no instance to ask for a title.
-  const instanceTitle = (def) => getManifest(def.type)?.title || def.type;
-  async function mountLayout() {
-    stageEl.classList.add('k-grid');
-    stageEl.setAttribute('style', gridStyle(layout.preset));
-    for (let i = 0; i < layout.slots.length; i++) {
-      const cell = document.createElement('div');
-      // `mod-box` lets the module size itself against this cell (see modules.css).
-      cell.className = 'k-cell mod-box';
-      cell.setAttribute('style', slotStyle(layout.preset, i));
-      // *** NAME THE CELL, so anything that needs to find one does not count children. ***
-      // Added for the guided tour, which has a beat about the live-view corner and had no way
-      // to say so: the only selector available was `.k-cell:nth-child(2)`, which points at a
-      // POSITION rather than at that panel. Move the layout and a positional selector keeps
-      // resolving and starts highlighting the wrong quadrant — silently, which is worse than
-      // highlighting nothing. `data-kind` breaks loudly instead, and `record_walkthrough.py`
-      // is what hears it.
-      cell.setAttribute('data-slot', String(i));
-      stageEl.append(cell);
-      const id = layout.slots[i];
-      if (!id) continue;                                      // an empty slot is allowed
-      const def = profile.modules.find((m) => m.id === id);
-      if (!def) continue;
-      cell.setAttribute('data-kind', def.type);
-      const host = document.createElement('div'); host.className = 'k-mod';
-      cell.append(host);
-      // *** ONE PANEL MUST NOT BE ABLE TO TAKE THE SCREEN DOWN. ***
-      //
-      // This `await` used to be bare, and that single missing try/catch produced three of the
-      // bugs reported off the live site at once. `mountInstance` calls `instance.init()`
-      // unguarded, so ANY module throwing on mount rejected here — which aborted the whole
-      // loop. Everything in a LATER slot was never built, and `slotRecs` stayed empty, so the
-      // check below then announced *"This screen's panels were removed"* on a screen whose
-      // panels had not been removed at all. A screen with one module that failed to start
-      // rendered as a screen with nothing on it and a message blaming the person for it.
-      //
-      // Now: the cell says which panel could not start, in that cell, and every other slot
-      // still mounts. That is the honest failure — a broken panel is one broken rectangle,
-      // not a broken screen — and it is the same rule the Devices tab already follows, where
-      // a camera that will not open must not take the switch bindings down with it.
-      //
-      // Deliberately not a modal, never a gate, and it says what to do rather than reporting a
-      // stack trace: this can appear in front of a patient.
-      try {
-        slotRecs.push(watchRec(await mountInstance(def, host)));
-      } catch (err) {
-        console.error(`kiosk: ${def.type} failed to start`, err);
-        failedSlots.push(def.type);
-        host.remove();
-        const oops = document.createElement('div');
-        oops.setAttribute('data-panel-failed', def.type);
-        oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
-          + 'justify-content:center;text-align:center;padding:4vmin;'
-          + 'font:500 clamp(14px,1.9vmin,20px)/1.5 -apple-system,BlinkMacSystemFont,'
-          + 'Segoe UI,Roboto,sans-serif;color:var(--text-soft,#5d7064)';
-        oops.textContent = `${instanceTitle(def)} could not start. The rest of this screen is fine.`;
-        cell.append(oops);
-      }
-    }
-
-    // *** A SCREEN WITH NOTHING ON IT MUST SAY SO. ***
-    //
-    // Mike, 2026-09-02: *"Pressing play on the landing page kiosk literally shows nothing."*
-    // A saved layout keeps the IDS of the modules that were in its slots. Remove those modules
-    // in the composer and the layout still names three slots, so this loop built three cells,
-    // found no module for any of them, skipped each one — and produced a perfectly black
-    // full-screen page with a control bar at the bottom and no explanation anywhere.
-    //
-    // Nothing was broken in a way any log would show. Every `continue` above was correct. The
-    // defect is that the correct behavior for one slot, repeated for all of them, adds up to a
-    // screen that looks like a crash.
-    //
-    // The composer already guards this — it greys out Open with "a screen needs at least one
-    // module to open" — but the kiosk is reachable directly, and the landing page's demo frame
-    // reaches it that way. A guard on one door is not a guard.
-    //
-    // Deliberately NOT a modal and NOT a gate: it is text in the middle of the screen, the
-    // control bar stays live, and Screens still gets you out. This can appear in front of a
-    // patient, so it says what to do rather than reporting a fault, and it never blocks.
-    if (!slotRecs.length) {
-      const empty = document.createElement('div');
-      empty.setAttribute('data-empty', '');
-      empty.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
-        + 'justify-content:center;text-align:center;padding:8vmin;'
-        + 'font:500 clamp(18px,2.6vmin,28px)/1.5 -apple-system,BlinkMacSystemFont,'
-        + 'Segoe UI,Roboto,sans-serif;color:#cfe0d6';
-      // THREE DIFFERENT SITUATIONS, THREE DIFFERENT SENTENCES. They used to be two, and the
-      // "removed" one was being shown for the case where nothing had been removed at all —
-      // every panel had failed to start. Telling somebody their panels were removed when they
-      // were not sends them to fix the wrong thing.
-      // *** THEY SAY "Home" BECAUSE THAT IS THE BUTTON ON THE BAR IN FRONT OF THEM. ***
-      // All three used to say "Open Screens", and BOTH halves of that went stale in one day:
-      // the bar's button is now `Home` (Mike's call) and the tab it leads to is now
-      // `Dashboards` (PRIORITY.md #4). So the sentence named a control that exists nowhere.
-      // A message that sends somebody to a label they cannot find is worse than no message,
-      // and it is the third piece of stale copy this session -- after Lessons pointing at a
-      // settings panel that was never built, and the catalog claiming lessons to watch.
-      empty.textContent = failedSlots.length
-        ? `Nothing on this screen could start (${failedSlots.join(', ')}). Press Home to check it.`
-        : layout.slots.length
-          ? 'This screen’s panels were removed. Press Home to add some again.'
-          : 'Nothing has been added to this screen yet. Press Home to add something.';
-      stageEl.append(empty);
-    }
-
-    // *** PAINT THE RING, HERE, BECAUSE onFocus ONLY FIRES WHEN FOCUS MOVES. ***
-    //
-    // Focus starts unset and `focused()` falls back to the first panel — so a grid kiosk came
-    // up with a switch already pointed at a panel and no ring anywhere, and the only way to
-    // find out where it pointed was to press something and watch what happened. Naming it up
-    // front is the entire point of naming it.
-    //
-    // It lives at the end of `mountLayout` rather than after the input runtime is built,
-    // because `mountLayout` runs LATER than that — the first version put it there and painted
-    // nothing, since `slotRecs` was still empty. Here it also covers a screen SWAP, which
-    // re-runs this function and would otherwise leave the ring on a cell that no longer exists.
-    if (slotRecs.length) {
-      try { runtime?.router?.setFocus?.(slotRecs[0].id); } catch { /* focus is not load-bearing */ }
-      paintFocus(slotRecs[0].id);
-      renderMods();
-    }
-  }
-
-  // ---- the stage: one module at a time, mounted lazily --------------------
-  let primary = 0;
-  let stageRec = null;
-  async function showPrimary(i) {
-    if (!stageDefs.length) { renderMods(); return; }
-    primary = wrap(i, stageDefs.length);
-    destroyRec(stageRec); stageRec = null;
-    stageEl.innerHTML = '';
-    const host = document.createElement('div'); host.className = 'k-mod';
-    stageEl.append(host);
-    // Guarded for the same reason as the slots: `mountInstance` runs `init()` unguarded, so a
-    // module that throws used to reject out of here — leaving a blank stage, no message, and a
-    // rejected promise in whatever called this. On a one-module screen that is the entire
-    // display gone. Now the panel says so and the controls below still work, so somebody can
-    // press Screens and get out.
-    try {
-      stageRec = watchRec(await mountInstance(stageDefs[primary], host));
-    } catch (err) {
-      const def = stageDefs[primary];
-      console.error(`kiosk: ${def.type} failed to start`, err);
-      stageRec = null;
-      host.remove();
-      const oops = document.createElement('div');
-      oops.setAttribute('data-panel-failed', def.type);
-      oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
-        + 'justify-content:center;text-align:center;padding:8vmin;'
-        + 'font:500 clamp(18px,2.6vmin,28px)/1.5 -apple-system,BlinkMacSystemFont,'
-        + 'Segoe UI,Roboto,sans-serif;color:#cfe0d6';
-      oops.textContent = `${instanceTitle(def)} could not start. Open Screens to check this screen.`;
-      stageEl.append(oops);
-    }
-    // Keep the focus ring in step when the stage was changed by a number key or a dot,
-    // or the next switch press would resume from wherever focus was last left.
-    runtime?.router.setFocus(stageDefs[primary].id);
-    // Where she is, remembered on the device. Written whatever the restart mode is, so
-    // turning "pick up where she left off" on later does not start by forgetting.
-    writePosition(user, profileId, primary, storage);
-    renderMods();
-  }
-  // *** WHAT THE BAR IS ABOUT: THE FOCUSED INSTANCE. ***
-  //
-  // One function, because the bar, the ring on the panel and the settings menu must never
-  // disagree about which panel they mean. Mike's call, 2026-09-05: input focus and the bar's
-  // subject are ONE concept — *a bar pointing at one panel while the switch drives another is
-  // worse than no bar.* So this reads `router.focused()` rather than keeping a second idea of
-  // it alongside.
-  //
-  // On a laid-out screen every panel is mounted, so focus picks between the slots. On a stage
-  // screen only one panel is mounted at a time, so the focused one IS the mounted one.
-  function focusedRec() {
-    if (!layout) return stageRec;
-    if (!slotRecs.length) return null;
-    const id = runtime?.router?.focused?.()?.id;
-    return slotRecs.find((r) => r.id === id) || slotRecs[0];
-  }
+  // The slots, the one-at-a-time stage and which panel the bar is about (`mountLayout`,
+  // `showPrimary`, `focusedRec`, the unplaced swap, `paintFocus`) live in arrangement.js.
 
   // *** THE TRANSPORT BAR. ***
   //
@@ -1046,89 +800,11 @@ export async function mountKiosk(root, {
   // stage, because on a grid there is nothing to swap. Same button, two meanings, and the
   // difference is a property of the screen rather than of the control — which is what keeps it
   // one bar instead of two.
-  /**
-   * *** THE MODULES ON THE SCREEN THAT NO SLOT IS SHOWING. ***
-   *
-   * G9, from Mike testing the live site: *"I added more than three modules to a screen. Only
-   * three appear on the bar and the rest are unreachable."* Measured in `transport_test`: a
-   * `main` preset has three slots, five modules on the profile, and two of them — Quests and
-   * Pond — appear in NO slot, on NO stage and on NO button. `partition()` fills `stageDefs`
-   * only when there is no layout at all, so an unplaced module on an arranged screen is not
-   * hidden, it is absent. (That is also the whole of *"Quests did not appear on the bar"*:
-   * Quests was one of the unplaced ones. With no layout it gets a button like everything else.)
-   *
-   * Leaving a module unplaced is a legitimate thing to do — the composer treats placed and
-   * unplaced as first-class, and "I am not using that one right now" is a real answer. What is
-   * not legitimate is that there was then no way back to it from the screen itself.
-   */
-  function unplacedDefs() {
-    if (!layout) return [];
-    const placed = new Set(layout.slots.filter(Boolean));
-    return profile.modules.filter((m) => !placed.has(m.id)
-      // The HUD pair are not panels. An unplaced camera is the mirror overlay and an unplaced
-      // clock is the corner clock — both already on screen, neither belonging in a slot.
-      && m.type !== 'camera' && m.type !== 'clock');
-  }
-
-  /**
-   * Put an unplaced module into the slot that has focus, and let the one that was there become
-   * unplaced in its turn. Nothing is saved: this is what the screen is showing NOW, and a
-   * reload comes back to the arrangement somebody actually made.
-   *
-   * Swapping rather than adding a slot, because the arrangement is the person's — growing a
-   * `quad` into a five-panel grid on a button press would rewrite a decision they made in the
-   * composer. Swapping says "show me that one instead", which is what pressing its name means.
-   */
-  async function showUnplaced(def) {
-    if (!layout) return;
-    const focused = focusedRec();
-    let i = focused ? layout.slots.indexOf(focused.id) : -1;
-    if (i < 0) i = layout.slots.findIndex(Boolean);
-    if (i < 0) i = 0;
-    const cell = stageEl.querySelector(`[data-slot="${i}"]`);
-    if (!cell) return;
-
-    const outgoingId = layout.slots[i];
-    const outgoing = slotRecs.find((r) => r.id === outgoingId);
-    if (outgoing) {
-      destroyRec(outgoing);
-      slotRecs.splice(slotRecs.indexOf(outgoing), 1);
-    }
-    cell.innerHTML = '';
-    cell.setAttribute('data-kind', def.type);
-    const host = document.createElement('div');
-    host.className = 'k-mod';
-    cell.append(host);
-    layout.slots[i] = def.id;
-    try {
-      slotRecs.push(watchRec(await mountInstance(def, host)));
-      try { runtime?.router?.setFocus?.(def.id); } catch { /* focus is not load-bearing */ }
-      paintFocus(def.id);
-    } catch (err) {
-      // Same rule as the mount loop: a panel that will not start is one broken rectangle, not
-      // a broken screen — and here somebody pressed a button, so it has to say what happened.
-      console.error(`kiosk: ${def.type} failed to start`, err);
-      const oops = document.createElement('div');
-      oops.setAttribute('data-panel-failed', def.type);
-      oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
-        + 'justify-content:center;text-align:center;padding:4vmin;'
-        + 'font:500 clamp(14px,1.9vmin,20px)/1.5 -apple-system,BlinkMacSystemFont,'
-        + 'Segoe UI,Roboto,sans-serif;color:var(--text-soft,#5d7064)';
-      oops.textContent = `${instanceTitle(def)} could not start. The rest of this screen is fine.`;
-      cell.append(oops);
-    }
-    renderMods();
-  }
-
-  // What pressing a PLACED panel's chip does: move focus there and repaint the ring and the bar.
-  // A function so `showModule` (below) does exactly the same thing rather than a look-alike.
-  function focusPlaced(id) {
-    try { runtime?.router?.setFocus?.(id); } catch { /* focus is not load-bearing */ }
-    paintFocus(id);
-    renderMods();
-  }
-
   function renderMods() {
+    // What the bar lists is the arrangement's (arrangement.js); the bar itself is the shell's. Read
+    // fresh on every draw, because a swap replaces all of it.
+    const layout = arr.layout(), profile = arr.profile(), slotRecs = arr.slotRecs;
+    const stageDefs = arr.stageDefs(), primary = arr.primary();
     // The panel button lives or dies with the same facts the bar is drawn from, so it is
     // refreshed here rather than at each of the four call sites that redraw the bar.
     try { syncPanelBtn?.(); } catch { /* declared later; harmless before first render */ }
@@ -1229,17 +905,6 @@ export async function mountKiosk(root, {
     });
   }
 
-  // The ring on the panel. Split out of `onFocus` so the bar can call it too — pressing a
-  // button on the bar and cycling focus with a switch have to leave the screen in the same
-  // state, or the two controls are describing different screens.
-  function paintFocus(id) {
-    if (!layout) return;
-    for (const cell of stageEl.querySelectorAll('.k-cell')) delete cell.dataset.focused;
-    const rec = slotRecs.find((r) => r.id === id);
-    const cell = rec?.el?.closest?.('.k-cell');
-    if (cell) cell.dataset.focused = '1';
-  }
-
   // ---------------------------------------------------------------------------------
   // *** SWAPPING THE WHOLE SCREEN, IN PLACE. ***
   //
@@ -1262,29 +927,6 @@ export async function mountKiosk(root, {
   let swapping = false;
   const screenStack = [];          // where to go back to
 
-  async function applyModules() {
-    // Only the MODULES are torn down. Their state/events handles go with them, which is right:
-    // those are per-instance and the incoming screen has its own.
-    destroyRec(stageRec); stageRec = null;
-    destroyRec(cameraRec); cameraRec = null;
-    destroyRec(clockRec); clockRec = null;
-    destroyRec(ambientRec); ambientRec = null;
-    while (slotRecs.length) destroyRec(slotRecs.pop());
-    stageEl.innerHTML = ''; stageEl.className = 'k-stage'; stageEl.removeAttribute('style');
-    mirrorEl.innerHTML = ''; mirrorEl.hidden = true;
-    clockEl.innerHTML = ''; clockEl.hidden = true;
-    ambientEl.innerHTML = ''; ambientEl.hidden = true;
-
-    partition();
-    cameraRec = cameraDef ? await mountOverlay(cameraDef, mirrorEl) : null;
-    clockRec = clockDef ? await mountOverlay(clockDef, clockEl) : null;
-    ambientRec = ambientDef ? await mountOverlay(ambientDef, ambientEl) : null;
-    if (layout) await mountLayout(); else await showPrimary(0);
-    renderMods();
-    // The instances just changed, so every link's two ends may now resolve differently.
-    screenLinks?.sync();
-  }
-
   /** Show another screen here, keeping everything that is not a module.
    *  `remember: false` on the return leg, so going back does not stack up forever. */
   async function showScreen(nextId, { remember = true } = {}) {
@@ -1298,7 +940,7 @@ export async function mountKiosk(root, {
       if (!next || !Array.isArray(next.modules)) throw new Error('that screen has no modules');
       if (remember) screenStack.push(from);
       profileId = nextId;
-      profile = next;
+      arr.setProfile(next);
       // The incoming screen's own arrangement. A PREVIEW layout is a one-shot for the screen
       // it was handed to and must never follow a swap.
       //
@@ -1315,7 +957,7 @@ export async function mountKiosk(root, {
       try { await incoming.load(); sl = (incoming.get().kiosk || {}).layout; }
       catch { sl = undefined; }      // unreadable: no arrangement, not the previous screen's
       finally { try { incoming.destroy(); } catch { /* already gone */ } }
-      layout = resolveLayout(sl, profile.modules);
+      arr.resolve(sl);
       await applyModules();
       bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
       return nextId;
@@ -1353,32 +995,6 @@ export async function mountKiosk(root, {
   }));
   offsScreen.push(bus.subscribe(SCREEN_BACK, () => { showPreviousScreen().catch(() => {}); }));
 
-  // *** BRING THE MODULE OF THIS TYPE FORWARD, EXACTLY AS PRESSING ITS CHIP DOES. ***
-  // For a host that knows a TYPE ("Trivia") rather than an instance id - `modules.html`'s embed.
-  // Resolves true if a panel of that type is now the one the bar is about, false if this screen
-  // has no such PANEL. The HUD pair and ambient modules are not panels and have no chip, so they
-  // are false here on purpose rather than "handled" by pretending.
-  async function showModule(type) {
-    if (!type) return false;
-    // A module PLACED in a slot is a panel whatever its type -- that is `partition()`'s own rule --
-    // so it is looked for first. Only an UNPLACED camera/clock/ambient module is not a panel here.
-    if (layout) {
-      const rec = slotRecs.find((r) => r.type === type);
-      if (rec) { focusPlaced(rec.id); return true; }
-    }
-    if (type === 'camera' || type === 'clock' || getManifest(type)?.mount === 'ambient') return false;
-    if (layout) {
-      const def = unplacedDefs().find((d) => d.type === type);
-      if (!def) return false;
-      await showUnplaced(def);
-      return true;
-    }
-    const j = stageDefs.findIndex((d) => d.type === type);
-    if (j < 0) return false;
-    if (j !== primary || !stageRec) await showPrimary(j);   // already showing: do not remount it
-    return true;
-  }
-
   // "next" within the current stage module — the director advances via segment/done,
   // everything else via <type>/next. Only the visible module is mounted, so this
   // never nudges a hidden one.
@@ -1388,7 +1004,7 @@ export async function mountKiosk(root, {
   // Next skipped the FIRST panel's photo. The button and the ring described different screens,
   // which is the one thing `paintFocus` exists to prevent.
   function nextInPrimary() {
-    const rec = layout ? focusedRec() : stageRec;
+    const rec = arr.layout() ? focusedRec() : arr.stageRec();
     if (!rec) return;
     if (rec.type === 'director') bus.publish('segment/done', { reason: 'skipped' });
     else bus.publish(`${rec.type}/next`);
@@ -1417,7 +1033,7 @@ export async function mountKiosk(root, {
   // prevent elsewhere in the product — the way to honor that here, without touching
   // director.js, is to not make the press at all.
   function prevInPrimary() {
-    const rec = layout ? focusedRec() : stageRec;
+    const rec = arr.layout() ? focusedRec() : arr.stageRec();
     if (!rec || rec.type === 'director') return;
     bus.publish(`${rec.type}/prev`);
   }
@@ -1436,7 +1052,7 @@ export async function mountKiosk(root, {
   // Only on an arranged screen. Without a layout there is one panel on the stage, `Next` moves
   // between the modules already, and a second button would be two names for one thing.
   function panelNext() {
-    if (!layout) return;
+    if (!arr.layout()) return;
     try { runtime?.router?.focusNext?.(); } catch { /* focus is not load-bearing */ }
     const id = focusedRec()?.id;
     if (id) paintFocus(id);
@@ -1447,24 +1063,14 @@ export async function mountKiosk(root, {
   // expands over the stage; press again to return). The camera stream stays mounted.
   let mirrorFull = false;
   function toggleMirrorFull() {
-    if (!cameraRec) return;
+    if (!arr.cameraRec()) return;
     mirrorFull = !mirrorFull;
     kioskEl.classList.toggle('mirror-full', mirrorFull);
-    try { cameraRec.instance.onResize?.(); } catch { /* noop */ }
+    try { arr.cameraRec().instance.onResize?.(); } catch { /* noop */ }
   }
   function toggleFs() {
     if (!document.fullscreenElement) root.requestFullscreen?.().catch(() => {});
     else document.exitFullscreen?.().catch(() => {});
-  }
-  // live bedside tuning of the mirror -> persisted to the profile settings
-  function cycleMirrorSize(dir) {
-    const i = MIRROR_SIZES.indexOf(kioskEl.dataset.mirrorSize);
-    const j = Math.max(0, Math.min(MIRROR_SIZES.length - 1, (i < 0 ? MIRROR_SIZES.length - 1 : i) + dir));
-    patchMirror({ size: MIRROR_SIZES[j] });
-  }
-  function cycleMirrorCorner() {
-    const i = CORNERS.indexOf(kioskEl.dataset.mirrorCorner);
-    patchMirror({ corner: CORNERS[wrap((i < 0 ? 0 : i) + 1, CORNERS.length)] });
   }
 
   // A way OUT. The browser back button was the only route home, which is fine for a
@@ -1550,7 +1156,7 @@ export async function mountKiosk(root, {
   // between — a button that cycles a set of one is a press somebody spends finding that out.
   function syncPanelBtn() {
     const n = (runtime?.router?.reachable?.() || []).length;
-    panelBtn.hidden = !layout || n < 2;
+    panelBtn.hidden = !arr.layout() || n < 2;
   }
   controlsEl.querySelector('[data-act="mirror"]').addEventListener('click', toggleMirrorFull);
 
@@ -1749,8 +1355,8 @@ export async function mountKiosk(root, {
     // of the inheritance chain — the same place the theme, the layout and the recovery policy
     // already live, so this adds a control over existing storage rather than a new home.
     screenItems: () => [
-      ...(profile?.name ? [{ kind: 'item', id: 'screen-name', disabled: true,
-          label: `This screen: ${profile.name}`, hint: 'renamed in Dashboards, on the home page' }] : []),
+      ...(arr.profile()?.name ? [{ kind: 'item', id: 'screen-name', disabled: true,
+          label: `This screen: ${arr.profile().name}`, hint: 'renamed in Dashboards, on the home page' }] : []),
       ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
         values: () => settings.get() || {},
         // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
@@ -1781,10 +1387,10 @@ export async function mountKiosk(root, {
       // live in, not of any one panel. Empty array (today's only OTHER ambient module,
       // `ambient_drift`, declares no settings) is a silent no-op, so this costs nothing when
       // there is nothing to show.
-      ...(ambientRec ? fieldItems(fieldsFor(ambientRec.instance.manifest, ambientRec.instance), {
-        values: () => ambientRec.state.get() || {},
+      ...(arr.ambientRec() ? fieldItems(fieldsFor(arr.ambientRec().instance.manifest, arr.ambientRec().instance), {
+        values: () => arr.ambientRec().state.get() || {},
         level: complexity(),
-        onStep: (key, value) => { ambientRec.state.set({ [key]: value }); },
+        onStep: (key, value) => { arr.ambientRec().state.set({ [key]: value }); },
       }) : []),
     ],
     // In a laid-out screen every panel is visible at once and the kiosk has no focus
@@ -1950,7 +1556,7 @@ export async function mountKiosk(root, {
         },
       }),
       ...restartItems(restart, {
-      screenName: profile?.name ? `“${profile.name}”` : 'this screen',
+      screenName: arr.profile()?.name ? `“${arr.profile().name}”` : 'this screen',
       onChange: ({ mode }) => {
         // Choosing "always come back here" names THE SCREEN YOU ARE STANDING ON. That is
         // the gesture: walk to the one that works, and say come back here.
@@ -2062,14 +1668,6 @@ export async function mountKiosk(root, {
   // until a fetch returns is undriveable exactly when the network is the thing that broke.
   // The person's own bindings replace them when they arrive, and again whenever they
   // change — which is what makes a clinician editing on a laptop land here within a poll.
-  //
-  // FOCUS IS THE STAGE. In single-stage mode one module is mounted at a time, so "focus
-  // the next panel" and "show the next module" are the same act; wiring onChange to
-  // showPrimary is what lets ONE switch reach every module on the screen. In a laid-out
-  // screen everything is already visible, so focus merely moves.
-  const focusRing = () => (layout
-    ? slotRecs.map((r) => ({ id: r.id, type: r.type }))
-    : stageDefs.map((d) => ({ id: d.id, type: d.type })));
 
   // *** A REAL BOUND SWITCH/MOUSE HIJACKED THE KIOSK'S OWN CHROME, NOT JUST A MODULE'S. ***
   // Found 2026-09-21: Mike, on the real kiosk (not a preview page this time) — "Clicking on
@@ -2113,7 +1711,7 @@ export async function mountKiosk(root, {
       // This is NOT the transport bar (F19/G4/D9) and does not build toward it here. No module
       // list, no buttons, no switching controls — it marks the panel the EXISTING focus concept
       // already points at. Nothing new was invented to draw it.
-      if (layout) {
+      if (arr.layout()) {
         // `paintFocus` and `renderMods` together, because the ring and the bar are two views of
         // one fact. Moving focus with a switch has to light the same button a press on the bar
         // would have lit, or the two controls are describing different screens.
@@ -2121,8 +1719,8 @@ export async function mountKiosk(root, {
         renderMods();
         return;
       }
-      const i = stageDefs.findIndex((d) => d.id === m.id);
-      if (i >= 0 && i !== primary) showPrimary(i);
+      const i = arr.stageDefs().findIndex((d) => d.id === m.id);
+      if (i >= 0 && i !== arr.primary()) showPrimary(i);
     },
   });
   await runtime.load();
@@ -2165,7 +1763,6 @@ export async function mountKiosk(root, {
   let recoveryHistory = {};
   let recoveryTimer = null;
   let currentFault = null;
-  const swappedBack = new Map();          // module id -> the def it replaced
 
   const recoveryCfg = () => ({ on: false, ...DEFAULT_POLICY,
                                ...((settings.get() || {}).recovery || {}) });
@@ -2199,49 +1796,9 @@ export async function mountKiosk(root, {
   // Swapping YouTube for the photos she is already looking at would change nothing and look
   // like the recovery did nothing.
   function fallbackFor(faultType) {
-    const onScreen = new Set([stageRec?.type, ...slotRecs.map((r) => r.type)].filter(Boolean));
+    const onScreen = new Set([arr.stageRec()?.type, ...arr.slotRecs.map((r) => r.type)].filter(Boolean));
     return chooseFallback(recoveryCfg().fallbacks, listManifests(),
                           { exclude: [faultType, ...onScreen] });
-  }
-
-  function recFor(id) {
-    if (stageRec?.id === id) return stageRec;
-    return slotRecs.find((r) => r.id === id) || null;
-  }
-
-  async function remountPanel(id) {
-    const rec = recFor(id);
-    if (!rec) return false;
-    const def = profile.modules.find((m) => m.id === id) || { id, type: rec.type };
-    const host = rec.el;
-    destroyRec(rec);
-    host.innerHTML = '';
-    const fresh = watchRec(await mountInstance(def, host));
-    if (stageRec?.id === id) stageRec = fresh;
-    else {
-      const at = slotRecs.findIndex((r) => r.id === id);
-      if (at >= 0) slotRecs[at] = fresh;
-    }
-    return true;
-  }
-
-  async function swapPanel(id, toType) {
-    const rec = recFor(id);
-    if (!rec || !toType) return false;
-    const host = rec.el;
-    // Remembered so the panel can come BACK. A module that recovers should get its slot
-    // again without anybody driving there, and without this the swap is permanent.
-    swappedBack.set(id, { id, type: rec.type });
-    health.forget(id);
-    destroyRec(rec);
-    host.innerHTML = '';
-    const fresh = watchRec(await mountInstance({ id, type: toType }, host));
-    if (stageRec?.id === id) stageRec = fresh;
-    else {
-      const at = slotRecs.findIndex((r) => r.id === id);
-      if (at >= 0) slotRecs[at] = fresh;
-    }
-    return true;
   }
 
   async function recoveryStep() {
@@ -2448,7 +2005,7 @@ export async function mountKiosk(root, {
     // "c" typed into a text box toggled the camera mirror, an "h" opened the screen picker, and
     // a digit switched panels -- out from under the very field somebody was typing in.
     if (isTyping(e.target)) return;
-    if (e.key >= '1' && e.key <= '9') { const i = Number(e.key) - 1; if (i < stageDefs.length) showPrimary(i); else return; }
+    if (e.key >= '1' && e.key <= '9') { const i = Number(e.key) - 1; if (i < arr.stageDefs().length) showPrimary(i); else return; }
     else if (e.key.toLowerCase() === 'h') { toggleScreens(); return; }
     else if (e.key.toLowerCase() === 'c') toggleMirrorFull();
     else if (e.key.toLowerCase() === 'f') toggleFs();
@@ -2466,7 +2023,7 @@ export async function mountKiosk(root, {
   const plan = bootPlan({
     config: restart,
     currentProfileId: profileId,
-    stageCount: stageDefs.length,
+    stageCount: arr.stageDefs().length,
     hopped: hasHopped(session),
   });
   if (plan.redirectTo) {
@@ -2474,7 +2031,7 @@ export async function mountKiosk(root, {
     navigate(`kiosk.html?profile=${encodeURIComponent(plan.redirectTo)}`);
   }
 
-  if (layout) await mountLayout(); else await showPrimary(plan.stageIndex);
+  if (arr.layout()) await mountLayout(); else await showPrimary(plan.stageIndex);
 
   // Links, once the modules exist: sync now, and again whenever the settings doc changes (links
   // written after boot are picked up without a reload, since they are not part of the layout). The
@@ -2512,19 +2069,19 @@ export async function mountKiosk(root, {
     showScreen,
     showPreviousScreen,
     screenStack: () => [...screenStack],
-    stageCount: () => stageDefs.length,
+    stageCount: () => arr.stageDefs().length,
     // NOTE: `layout()` was already taken by the mirror/clock HUD positions below. A second
     // `layout:` key in this same object literal is silently shadowed by it — which is
     // exactly what happened first time. This one is the composed SLOT layout.
-    slotLayout: () => (layout ? { ...layout } : null),
-    slotCount: () => slotRecs.length,
-    slotTypes: () => slotRecs.map((r) => r.type),
+    slotLayout: () => (arr.layout() ? { ...arr.layout() } : null),
+    slotCount: () => arr.slotRecs.length,
+    slotTypes: () => arr.slotRecs.map((r) => r.type),
     // One row per link on this screen, carrying or not, each with `ok` and (if not) a `reason`.
     // NULL means no runner exists: the screen has no links, or this is an embed. See screen_links.js.
     linkStatus: () => (screenLinks ? screenLinks.status() : null),
-    hasCamera: () => !!cameraRec,
-    hasClock: () => !!clockRec,
-    hasAmbient: () => !!ambientRec,
+    hasCamera: () => !!arr.cameraRec(),
+    hasClock: () => !!arr.clockRec(),
+    hasAmbient: () => !!arr.ambientRec(),
     // The raw element, for a test that needs to dispatch a real event at it (a press in the
     // gap between panels) rather than only asking whether something is mounted there.
     ambientEl: () => ambientEl,
@@ -2533,12 +2090,12 @@ export async function mountKiosk(root, {
     // said "photos" while the screen showed a clock, which is precisely the class of quiet
     // lie the rest of this project keeps rooting out. `stageDefs` is the plan, `stageRec` is
     // the truth, and a caller asking what is on the stage wants the truth.
-    primaryType: () => stageRec?.type ?? stageDefs[primary]?.type ?? null,
+    primaryType: () => arr.stageRec()?.type ?? arr.stageDefs()[arr.primary()]?.type ?? null,
     // The focused panel's own saved settings. Exposed so a test can assert WHAT LANDED in
     // storage rather than what the menu says it stored - a row can read "8 seconds" while
     // holding the string "8", and the difference only shows up much later, when somebody
     // tries to compare or group settings across panels.
-    stageState: () => ({ ...(stageRec?.state.get() || {}) }),
+    stageState: () => ({ ...(arr.stageRec()?.state.get() || {}) }),
     mirrorFull: () => mirrorFull,
     layout: () => ({ mirrorSize: kioskEl.dataset.mirrorSize, mirrorCorner: kioskEl.dataset.mirrorCorner, clockCorner: kioskEl.dataset.clockCorner }),
     showPrimary,
@@ -2584,9 +2141,7 @@ export async function mountKiosk(root, {
       clearInterval(recoveryTimer);
       health.destroy();
       try { offLinks?.(); } catch { /* already gone */ }
-      screenLinks?.destroy();
-      destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
-      while (slotRecs.length) destroyRec(slotRecs.pop());
+      arr.destroy();
       settings.destroy();
       menu.destroy();
       try { personOff?.(); } catch { /* already gone */ }
