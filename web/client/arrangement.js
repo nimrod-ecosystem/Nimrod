@@ -33,11 +33,30 @@
 // IN THE SCENE (x/y, rotation, layer, wall: Design's room recipe, `kind: "module"` items) beside the
 // snapped slots -- arrives as one more field on `layout` (`layout.placed`), one more record list beside
 // `slotRecs`, and one more place that `partition()`'s placed ids, `recFor()` and `focusRing()` look.
-// No caller's shape changes for it. NOT BUILT HERE. (What it needs OUTSIDE this file -- layout.js
-// drops unknown keys, the composer's save does too, the 09-12 reload watch would reload the screen on
-// every drag -- is listed in the step 6 plan's 2026-09-30 revision.)
+// No caller's shape changes for it. (What it needed OUTSIDE this file -- layout.js dropped unknown
+// keys, the composer's save did too, the 09-12 reload watch would reload the screen on every drag --
+// is listed in the step 6 plan's 2026-09-30 revision.)
+//
+// *** STAGE R (2026-09-30): BUILT. *** `layout.placed` (layout.js says what an entry is) is mounted by
+// `mountPlaced()` into three layers this file adds to the dashboard, each on the one depth scale
+// (layers.css): the SCENE (behind the grid -- the room, when the dashboard's `layout.scene` is one, and
+// a module in one of its slots or freely on its walls), the SCREEN (flat, above the grid) and the
+// OVERLAY (above everything but the bar and the menus). `placedRecs` sits beside `slotRecs`;
+// `partition()`, `unplacedDefs()`, `focusRing()`, `focusedRec()`, `paintFocus()`, `recFor()`,
+// `showModule()`, recovery's hands, `applyModules()` and `destroy()` all look there too, and every
+// placed record is `watchRec`-ed like a slot. A placement change is applied IN PLACE by
+// `applyPlaced()`: the moved module is re-styled (or re-parented onto another layer) -- the same
+// instance, nothing remounted -- which is what lets the 09-12 watch leave placement-only changes alone
+// (`layoutChange` in layout.js). A layout with nothing placed creates none of it: no layer, no import
+// of the room renderer (it is loaded only when a layout names a room), no change to any ring.
 
-import { normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle } from './layout.js';
+import {
+  normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle, placedGeometry, layoutChange,
+} from './layout.js';
+
+// Re-exported so the shell (kiosk.js already imports this file) can classify a change without a new
+// import line.
+export { layoutChange };
 import { getManifest } from './module.js';
 import { writePosition } from './restart.js';
 import { createScreenLinks } from './screen_links.js';
@@ -127,8 +146,16 @@ export function createArrangement({
   // and screen swap) and view.js renders them too — one copy, or they drift.
   // Called at boot and by a screen swap -- the same one line both used, so one copy.
   function resolve(savedLayout) {
+    // Stage R: a PLACEMENT change that arrived before anything was mounted (the shell's boot gap,
+    // between reading the saved layout and resolving it) is what gets resolved, so the screen comes up
+    // with the move rather than without it. Only a placement change: a grid change is the shell's.
+    if (lateLayout !== undefined) {
+      if (layoutChange(savedLayout, lateLayout) === 'placement') savedLayout = lateLayout;
+      lateLayout = undefined;
+    }
     layout = resolveLayout(savedLayout, profile.modules);
   }
+  let lateLayout;                           // see `applyPlaced`, before the first mount
 
   let stageDefs = [];
   let cameraDef = null, clockDef = null, ambientDef = null;
@@ -137,7 +164,10 @@ export function createArrangement({
   // as one mounted at boot. Two code paths deciding where a camera goes is how a swapped
   // screen ends up subtly different from the same screen opened directly.
   function partition() {
-    const placedIds = new Set(layout ? layout.slots.filter(Boolean) : []);
+    // Stage R: a module PLACED freely is placed, exactly as one in a slot is -- so a camera placed in
+    // the scene is a panel, not the HUD mirror.
+    const placedIds = new Set(layout
+      ? [...layout.slots.filter(Boolean), ...(layout.placed || []).map((p) => p.id)] : []);
     stageDefs = [];
     cameraDef = null; clockDef = null; ambientDef = null;
     for (const mod of profile.modules) {
@@ -271,7 +301,12 @@ export function createArrangement({
     // Deliberately NOT a modal and NOT a gate: it is text in the middle of the screen, the
     // control bar stays live, and Screens still gets you out. This can appear in front of a
     // patient, so it says what to do rather than reporting a fault, and it never blocks.
-    if (!slotRecs.length) {
+    //
+    // Stage R: the modules placed freely are mounted HERE, before this check, so a screen whose panels
+    // are all placed in the scene is not announced as empty -- and one whose placed modules all failed
+    // names them, the same as failed slots.
+    await mountPlaced();
+    if (!slotRecs.length && !placedRecs.length) {
       const empty = document.createElement('div');
       empty.setAttribute('data-empty', '');
       empty.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
@@ -308,9 +343,12 @@ export function createArrangement({
     // because `mountLayout` runs LATER than that — the first version put it there and painted
     // nothing, since `slotRecs` was still empty. Here it also covers a screen SWAP, which
     // re-runs this function and would otherwise leave the ring on a cell that no longer exists.
-    if (slotRecs.length) {
-      try { runtime()?.router?.setFocus?.(slotRecs[0].id); } catch { /* focus is not load-bearing */ }
-      paintFocus(slotRecs[0].id);
+    // (Stage R: the first stop of the RING, which is the first slot unless something is placed as an
+    // overlay -- an overlay takes the scan first. With nothing placed, exactly `slotRecs[0]` as before.)
+    const first = panelRecs()[0];
+    if (first) {
+      try { runtime()?.router?.setFocus?.(first.id); } catch { /* focus is not load-bearing */ }
+      paintFocus(first.id);
       renderMods();
     }
   }
@@ -366,9 +404,11 @@ export function createArrangement({
   // screen only one panel is mounted at a time, so the focused one IS the mounted one.
   function focusedRec() {
     if (!layout) return stageRec;
-    if (!slotRecs.length) return null;
+    // Stage R: every panel -- slots and placed -- in ring order. With nothing placed, `slotRecs`.
+    const all = panelRecs();
+    if (!all.length) return null;
     const id = runtime()?.router?.focused?.()?.id;
-    return slotRecs.find((r) => r.id === id) || slotRecs[0];
+    return all.find((r) => r.id === id) || all[0];
   }
 
   /**
@@ -388,7 +428,7 @@ export function createArrangement({
    */
   function unplacedDefs() {
     if (!layout) return [];
-    const placed = new Set(layout.slots.filter(Boolean));
+    const placed = new Set([...layout.slots.filter(Boolean), ...(layout.placed || []).map((p) => p.id)]);
     return profile.modules.filter((m) => !placed.has(m.id)
       // The HUD pair are not panels. An unplaced camera is the mirror overlay and an unplaced
       // clock is the corner clock — both already on screen, neither belonging in a slot.
@@ -406,6 +446,9 @@ export function createArrangement({
    */
   async function showUnplaced(def) {
     if (!layout) return;
+    // Stage R: a module PLACED freely is already on the screen. Pressing its name focuses it, as a
+    // placed slot's chip does -- it must never be swapped into a slot, which would mount it twice.
+    if (def && placedRecs.some((r) => r.id === def.id)) { focusPlaced(def.id); return; }
     const focused = focusedRec();
     let i = focused ? layout.slots.indexOf(focused.id) : -1;
     if (i < 0) i = layout.slots.findIndex(Boolean);
@@ -459,9 +502,276 @@ export function createArrangement({
   function paintFocus(id) {
     if (!layout) return;
     for (const cell of stageEl.querySelectorAll('.k-cell')) delete cell.dataset.focused;
+    // Stage R: the placed boxes carry the ring too. Their outline is drawn inline (kiosk.css's ring
+    // rule is for `.k-cell`), in the same colour and offset.
+    for (const m of placedMeta.values()) { delete m.wrap.dataset.focused; m.wrap.style.outline = ''; }
     const rec = slotRecs.find((r) => r.id === id);
     const cell = rec?.el?.closest?.('.k-cell');
     if (cell) cell.dataset.focused = '1';
+    const pm = placedMeta.get(id);
+    if (pm && placedRecs.some((r) => r.id === id)) {
+      pm.wrap.dataset.focused = '1';
+      pm.wrap.style.outline = '3px solid var(--accent,#839958)';
+      pm.wrap.style.outlineOffset = '2px';
+    }
+  }
+
+  // =================================================================================================
+  // *** STAGE R: MODULES PLACED FREELY -- in the scene, flat on the screen, or an overlay. ***
+  //
+  // Mike, 2026-09-30: "free placement is back". Design's model (room-is-the-screen §1): a dashboard has
+  // a scene (a room, a ground, or plain) and every module has a place. The grid above is the SNAPPED
+  // kind; this is the PLACED kind, beside it, from `layout.placed` (layout.js says what an entry is).
+  //
+  // THREE LAYERS, each created only when something is placed there, each on the one depth scale
+  // (layers.css -- no module invents a z-index):
+  //   scene    ambient + 50: behind the grid, above the ambient drift. The room is drawn here.
+  //   screen   panels + 50: flat, above the grid's panels.
+  //   overlay  floating: above everything on the screen, BELOW the bar (500) and the menus (600) --
+  //            the way out must stay on top of anything a person places.
+  // Each layer passes presses through (`pointer-events:none`); the placed boxes take them back.
+  //
+  // IN A ROOM, a module placed with a `slot` mounts in that slot of the room (room_scene.js `slots()`:
+  // a `kind:'module'` wall mount, or a display object's slot -- the cabinet, the bookshelf). One placed
+  // freely sits on the room's own 960x540 stage, so it scales with the room, at the box `itemBox()`
+  // gives a `kind:'module'` item there: a side wall's perspective matrix included.
+  //
+  // NO ROOM (no scene, or a plain one): a scene-placed module sits on the scene layer at x/y.
+  // =================================================================================================
+  const placedRecs = [];                    // the live array, like `slotRecs`
+  const placedMeta = new Map();             // id -> { entry, wrap, where }
+  const placedLayers = {};                  // place -> the layer element
+  let roomScene = null;                     // the room renderer's handle, while the scene is a room
+  let roomFree = null;                      // the layer on the room's stage for freely placed modules
+  let placedMounted = false;                // mountPlaced ran for this arrangement (applyPlaced's guard)
+  const LAYER_Z = {
+    scene: 'calc(var(--z-ambient, 100) + 50)',
+    screen: 'calc(var(--z-panels, 200) + 50)',
+    overlay: 'var(--z-floating, 400)',
+  };
+  const placedOf = () => (layout && layout.placed) || [];
+
+  // Every panel on a laid-out screen, in RING ORDER: overlays first (Design: an overlay "takes the scan
+  // first"), then the slots, then flat-on-screen, then the scene. With nothing placed: `slotRecs`.
+  function panelRecs() {
+    if (!placedRecs.length) return slotRecs.slice();
+    const by = (place) => placedOf().filter((e) => e.place === place)
+      .map((e) => placedRecs.find((r) => r.id === e.id)).filter(Boolean);
+    return [...by('overlay'), ...slotRecs, ...by('screen'), ...by('scene')];
+  }
+
+  function layerFor(place) {
+    if (placedLayers[place]) return placedLayers[place];
+    const el = document.createElement('div');
+    el.className = `k-placed k-placed-${place}`;
+    el.dataset.place = place;
+    el.style.cssText = `position:absolute;inset:0;pointer-events:none;z-index:${LAYER_Z[place]}`;
+    kioskEl.append(el);
+    placedLayers[place] = el;
+    return el;
+  }
+
+  // The dashboard's scene, when it is a room. Loaded on demand: a screen with no room never imports
+  // the renderer (its art, its live window) at all.
+  async function mountRoom() {
+    const scene = layout && layout.scene;
+    if (!scene || scene.kind !== 'room' || roomScene) return;
+    try {
+      const [rs, { presetRecipe }, { ROOM_SHELLS }] = await Promise.all([
+        import('./room_scene.js'), import('./room_presets.js'), import('./room_parts.js')]);
+      const { mountRoomScene } = rs;
+      // What a module placed freely on a wall needs to be drawn the way the room draws its own mounts.
+      roomItemBox = rs.itemBox; roomShells = ROOM_SHELLS; roomW = rs.W; roomH = rs.H;
+      const host = document.createElement('div');
+      host.className = 'k-room';
+      host.style.cssText = 'position:absolute;inset:0;pointer-events:auto';
+      layerFor('scene').append(host);
+      roomScene = mountRoomScene(host, scene.recipe || presetRecipe(scene.preset), { bus });
+    } catch (err) {
+      // A room that will not draw leaves the screen's own backdrop; the modules still mount (flat).
+      console.error('arrangement: the room could not be drawn', err);
+      roomScene = null;
+    }
+  }
+
+  // Where one entry goes: `{ el, where }`, where is 'slot' | 'room' | 'flat'.
+  function containerFor(entry) {
+    if (entry.place === 'scene' && roomScene) {
+      const slot = entry.slot ? roomScene.slots().get(entry.slot) : null;
+      if (slot && slot.el) return { el: slot.el, where: 'slot' };
+      if (!roomFree) {
+        roomFree = document.createElement('div');
+        roomFree.className = 'k-placed-room';
+        roomFree.style.cssText = 'position:absolute;inset:0;pointer-events:none';
+        roomScene.stage.append(roomFree);
+      }
+      return { el: roomFree, where: 'room' };
+    }
+    return { el: layerFor(entry.place), where: 'flat' };
+  }
+
+  // The box's geometry, for where it is. Nothing here mounts or remounts anything.
+  let roomItemBox = null, roomShells = null, roomW = 960, roomH = 540;
+  function styleWrap(wrap, entry, where) {
+    const g = placedGeometry(entry);
+    const s = wrap.style;
+    s.position = 'absolute';
+    s.pointerEvents = 'auto';
+    // Shown/Hidden (the Layers window): a hidden module is not drawn, and is still mounted.
+    s.display = entry.shown === false ? 'none' : 'flex';
+    s.zIndex = String(g.layer);
+    for (const k of ['inset', 'left', 'top', 'width', 'height', 'transform', 'transformOrigin']) s[k] = '';
+    const turn = g.rot ? ` rotate(${g.rot}deg)` : '';
+    if (where === 'slot') {
+      s.inset = '0';
+      if (turn) s.transform = turn.trim();
+      return;
+    }
+    if (where === 'room' && roomItemBox) {
+      const wall = entry.surface === 'left' || entry.surface === 'right' ? entry.surface : undefined;
+      const shell = roomShells?.[roomScene?.recipe?.()?.shell] || undefined;
+      const box = roomItemBox({ kind: 'module', x: g.x, y: g.y, w: (g.w / 100) * roomW, h: (g.h / 100) * roomH,
+        wall, scale: g.scale / 100 }, shell);
+      s.left = `${box.left}%`; s.top = `${box.top}%`;
+      s.width = `${box.w}px`; s.height = `${box.h}px`;
+      s.transform = `${box.transform}${turn}`;
+      s.transformOrigin = box.origin;
+      return;
+    }
+    s.left = `${g.x}%`; s.top = `${g.y}%`; s.width = `${g.w}%`; s.height = `${g.h}%`;
+    s.transform = `translate(-50%, -50%)${turn}${g.scale !== 100 ? ` scale(${g.scale / 100})` : ''}`;
+  }
+
+  async function mountPlacedOne(entry) {
+    const def = profile.modules.find((m) => m.id === entry.id);
+    if (!def) return null;
+    const wrap = document.createElement('div');
+    // `mod-box` so the module sizes itself against this box, as a slot's cell does.
+    wrap.className = 'k-pcell mod-box';
+    wrap.dataset.placed = def.id;
+    wrap.dataset.place = entry.place;
+    wrap.dataset.kind = def.type;
+    const { el, where } = containerFor(entry);
+    styleWrap(wrap, entry, where);
+    el.append(wrap);
+    placedMeta.set(def.id, { entry, wrap, where });
+    const host = document.createElement('div'); host.className = 'k-mod';
+    host.style.cssText = 'flex:1;min-width:0;min-height:0';
+    wrap.append(host);
+    // The same rule as a slot: one module that will not start is one broken box, not a broken screen.
+    try {
+      const rec = watchRec(await mountInstance(def, host));
+      placedRecs.push(rec);
+      return rec;
+    } catch (err) {
+      console.error(`kiosk: ${def.type} (placed) failed to start`, err);
+      failedSlots.push(def.type);
+      host.remove();
+      const oops = document.createElement('div');
+      oops.setAttribute('data-panel-failed', def.type);
+      oops.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
+        + 'justify-content:center;text-align:center;padding:2vmin;'
+        + 'font:500 clamp(14px,1.9vmin,20px)/1.5 -apple-system,BlinkMacSystemFont,'
+        + 'Segoe UI,Roboto,sans-serif;color:var(--text-soft,#5d7064)';
+      oops.textContent = `${instanceTitle(def)} could not start. The rest of this screen is fine.`;
+      wrap.append(oops);
+      return null;
+    }
+  }
+
+  async function mountPlaced() {
+    placedMounted = true;
+    if (!layout) return;
+    if (!placedOf().length && !(layout.scene && layout.scene.kind === 'room')) return;
+    await mountRoom();
+    for (const entry of placedOf()) await mountPlacedOne(entry);
+  }
+
+  function removePlaced(id) {
+    const at = placedRecs.findIndex((r) => r.id === id);
+    if (at >= 0) destroyRec(placedRecs.splice(at, 1)[0]);
+    placedMeta.get(id)?.wrap.remove();
+    placedMeta.delete(id);
+  }
+
+  function teardownPlaced() {
+    while (placedRecs.length) destroyRec(placedRecs.pop());
+    placedMeta.clear();
+    try { roomScene?.destroy(); } catch { /* already gone */ }
+    roomScene = null; roomFree = null;
+    for (const k of Object.keys(placedLayers)) { placedLayers[k].remove(); delete placedLayers[k]; }
+    placedMounted = false;
+  }
+
+  /**
+   * *** A PLACEMENT CHANGE, APPLIED IN PLACE. ***
+   *
+   * `next` is a saved layout (raw, as `settings.kiosk.layout` holds it). If it differs from what is
+   * mounted only in its free placement (`layoutChange` says 'placement'), each placed module is
+   * brought to its new place WITHOUT a remount: moved (re-styled), moved to another layer (the same
+   * element re-parented), added (only it mounts), removed (only it is torn down). Nothing else on the
+   * screen is touched and nothing reloads -- which is the whole reason the 09-12 watch can leave a
+   * placement change alone.
+   *
+   * Anything else -- a grid change -- is refused (`applied: false`): the caller does what it always did
+   * (the kiosk reloads; a dashboard module rebuilds). Before the first mount, the layout is only
+   * recorded, and `resolve` / `mountLayout` use it.
+   *
+   * Resolves `{ applied, moved, added, removed }` (id lists), or `{ applied: false, reason }`.
+   */
+  async function applyPlaced(next) {
+    const none = { applied: false, moved: [], added: [], removed: [] };
+    if (!profile) { lateLayout = next; return { ...none, applied: true, deferred: true }; }
+    const r = resolveLayout(next, profile.modules);
+    const cur = layout;
+    // Refused when the SHAPE differs: no layout on either side, another preset, another scene. The
+    // slots are not compared: the caller classified the saved values already (`layoutChange`), and the
+    // mounted slots may differ from the saved ones on purpose -- the unplaced swap is "what the screen
+    // shows NOW" and is never saved -- so a move must not undo it, or be refused because of it.
+    if (!r || !cur || r.preset !== cur.preset || JSON.stringify(r.scene || null) !== JSON.stringify(cur.scene || null)) {
+      return { ...none, reason: 'grid' };
+    }
+    // The mounted slots, with the new placement (one place per instance: a placed id in a slot is dropped).
+    const inSlots = new Set(cur.slots.filter(Boolean));
+    const nextPlaced = (r.placed || []).filter((e) => !inSlots.has(e.id));
+    const l = { ...cur };
+    delete l.placed;
+    if (nextPlaced.length) l.placed = nextPlaced;
+    if (!isArranged(l)) return { ...none, reason: 'grid' };
+    if (!placedMounted) { layout = l; return { ...none, applied: true, deferred: true }; }
+    const before = new Map(placedOf().map((e) => [e.id, e]));
+    const after = l.placed || [];
+    const keep = new Set(after.map((e) => e.id));
+    const out = { applied: true, moved: [], added: [], removed: [] };
+    for (const id of before.keys()) if (!keep.has(id)) { removePlaced(id); out.removed.push(id); }
+    layout = l;
+    if (after.length || (l.scene && l.scene.kind === 'room')) await mountRoom();
+    for (const entry of after) {
+      const meta = placedMeta.get(entry.id);
+      if (!meta) { await mountPlacedOne(entry); out.added.push(entry.id); continue; }
+      if (JSON.stringify(meta.entry) === JSON.stringify(entry)) continue;
+      const { el, where } = containerFor(entry);
+      if (meta.wrap.parentNode !== el) el.append(meta.wrap);          // re-parented, not remounted
+      meta.wrap.dataset.place = entry.place;
+      styleWrap(meta.wrap, entry, where);
+      const rec = placedRecs.find((r) => r.id === entry.id);
+      const wasShown = meta.entry.shown !== false, isShown = entry.shown !== false;
+      if (rec && wasShown !== isShown) {
+        try { (isShown ? rec.instance?.onShow : rec.instance?.onHide)?.call(rec.instance); } catch { /* not load-bearing */ }
+      }
+      try { rec?.instance?.onResize?.(); } catch { /* not load-bearing */ }
+      meta.entry = entry; meta.where = where;
+      out.moved.push(entry.id);
+    }
+    // Empty layers go, so a screen whose last overlay was removed has no empty overlay layer.
+    for (const k of Object.keys(placedLayers)) {
+      if (k === 'scene' && roomScene) continue;
+      if (!placedLayers[k].children.length) { placedLayers[k].remove(); delete placedLayers[k]; }
+    }
+    const f = focusedRec();
+    if (f) paintFocus(f.id);
+    renderMods();
+    return out;
   }
 
   async function applyModules() {
@@ -472,6 +782,7 @@ export function createArrangement({
     destroyRec(clockRec); clockRec = null;
     destroyRec(ambientRec); ambientRec = null;
     while (slotRecs.length) destroyRec(slotRecs.pop());
+    teardownPlaced();                       // Stage R: placed modules, the room, and their layers
     stageEl.innerHTML = ''; stageEl.className = 'k-stage'; stageEl.removeAttribute('style');
     mirrorEl.innerHTML = ''; mirrorEl.hidden = true;
     clockEl.innerHTML = ''; clockEl.hidden = true;
@@ -497,7 +808,8 @@ export function createArrangement({
     // A module PLACED in a slot is a panel whatever its type -- that is `partition()`'s own rule --
     // so it is looked for first. Only an UNPLACED camera/clock/ambient module is not a panel here.
     if (layout) {
-      const rec = slotRecs.find((r) => r.type === type);
+      // (Stage R: a module placed freely is a panel too.)
+      const rec = slotRecs.find((r) => r.type === type) || placedRecs.find((r) => r.type === type);
       if (rec) { focusPlaced(rec.id); return true; }
     }
     if (type === 'camera' || type === 'clock' || getManifest(type)?.mount === 'ambient') return false;
@@ -517,8 +829,10 @@ export function createArrangement({
   // the next panel" and "show the next module" are the same act; wiring onChange to
   // showPrimary is what lets ONE switch reach every module on the screen. In a laid-out
   // screen everything is already visible, so focus merely moves.
+  // (Stage R: on a laid-out screen the ring is every panel -- `panelRecs()`, overlays first. With
+  // nothing placed it is the slots, exactly as it was.)
   const focusRing = () => (layout
-    ? slotRecs.map((r) => ({ id: r.id, type: r.type }))
+    ? panelRecs().map((r) => ({ id: r.id, type: r.type }))
     : stageDefs.map((d) => ({ id: d.id, type: d.type })));
 
   // ---- recovery's hands. The ladder that decides when to use them (kiosk.js `recoveryStep`) stays
@@ -527,7 +841,16 @@ export function createArrangement({
 
   function recFor(id) {
     if (stageRec?.id === id) return stageRec;
-    return slotRecs.find((r) => r.id === id) || null;
+    return slotRecs.find((r) => r.id === id) || placedRecs.find((r) => r.id === id) || null;
+  }
+
+  // Put a fresh record where the old one was: the stage, a slot, or (Stage R) a placed module.
+  function replaceRec(id, fresh) {
+    if (stageRec?.id === id) { stageRec = fresh; return; }
+    for (const list of [slotRecs, placedRecs]) {
+      const at = list.findIndex((r) => r.id === id);
+      if (at >= 0) { list[at] = fresh; return; }
+    }
   }
 
   async function remountPanel(id) {
@@ -538,11 +861,7 @@ export function createArrangement({
     destroyRec(rec);
     host.innerHTML = '';
     const fresh = watchRec(await mountInstance(def, host));
-    if (stageRec?.id === id) stageRec = fresh;
-    else {
-      const at = slotRecs.findIndex((r) => r.id === id);
-      if (at >= 0) slotRecs[at] = fresh;
-    }
+    replaceRec(id, fresh);
     return true;
   }
 
@@ -557,11 +876,7 @@ export function createArrangement({
     destroyRec(rec);
     host.innerHTML = '';
     const fresh = watchRec(await mountInstance({ id, type: toType }, host));
-    if (stageRec?.id === id) stageRec = fresh;
-    else {
-      const at = slotRecs.findIndex((r) => r.id === id);
-      if (at >= 0) slotRecs[at] = fresh;
-    }
+    replaceRec(id, fresh);
     return true;
   }
 
@@ -570,6 +885,7 @@ export function createArrangement({
     screenLinks?.destroy();
     destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
     while (slotRecs.length) destroyRec(slotRecs.pop());
+    teardownPlaced();
   }
 
   return {
@@ -580,6 +896,10 @@ export function createArrangement({
     primary: () => primary,
     stageRec: () => stageRec,
     slotRecs,                          // the live array: mutated in place, never replaced
+    placedRecs,                        // Stage R: the same, for modules placed freely
+    placed: () => placedOf().map((e) => ({ ...e })),
+    panelRecs,                         // every panel on a laid-out screen, in ring order
+    roomScene: () => roomScene,        // the room renderer, while the dashboard's scene is a room
     cameraRec: () => cameraRec,
     clockRec: () => clockRec,
     ambientRec: () => ambientRec,
@@ -593,6 +913,8 @@ export function createArrangement({
     partition,
     mountOverlays,
     mountLayout,
+    mountPlaced,
+    applyPlaced,
     showPrimary,
     applyModules,
     // ---- focus: which panel the bar, the ring and the menu are about ----

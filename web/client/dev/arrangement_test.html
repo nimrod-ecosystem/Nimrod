@@ -124,7 +124,9 @@ try {
       'ambientRec', 'screenLinks', 'hudDefs', 'setProfile', 'resolve', 'partition', 'mountOverlays', 'mountLayout',
       'showPrimary', 'applyModules', 'focusedRec', 'focusPlaced', 'focusRing', 'paintFocus', 'unplacedDefs',
       'showUnplaced', 'showModule', 'instanceTitle', 'recFor', 'remountPanel', 'swapPanel', 'applyLayout',
-      'patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner', 'destroy'];
+      'patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner', 'destroy',
+      // Stage R (2026-09-30): free placement -- placement_test.html drives these.
+      'placedRecs', 'placed', 'panelRecs', 'roomScene', 'mountPlaced', 'applyPlaced'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),

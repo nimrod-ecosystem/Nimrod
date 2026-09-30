@@ -99,6 +99,10 @@ import { registerModule, mountModule, extendCtx, getManifest } from '../module.j
 import './transport_bar.js';
 import './settings_menu.js';
 import { createArrangement } from '../arrangement.js';
+import { layoutChange, placedGeometry } from '../layout.js';
+// Stage R: the edit windows, bound to this dashboard's modules placed freely (`edit()` below).
+import { createEditModel } from '../edit_model.js';
+import { mountTransformWindow, mountLayersWindow } from '../edit_windows.js';
 
 // The same defaults the kiosk has always used, so a view mounted from an existing
 // arrangement looks exactly as it did before it became a module. (arrangement.js's own copy is the
@@ -324,6 +328,107 @@ registerModule(
       return true;
     }
 
+    // ---- STAGE R: FREE PLACEMENT, APPLIED IN PLACE, AND THE EDIT WINDOWS OVER IT ---------------------
+    //
+    // `rawLayout` is the layout as SAVED (or as the host handed it in), which is what `layoutChange`
+    // compares -- the same comparison the kiosk's 09-12 watch makes. A change that is only a placement
+    // change is applied by the arrangement in place (`arr.applyPlaced`): the moved module moves, nothing
+    // is remounted. A grid change does what a dashboard always did with one after boot: nothing, until
+    // it is rebuilt (the kiosk reloads; Stage 4 is where a dashboard rebuilds itself).
+    const overridden = 'layoutOverride' in ctx;
+    let rawLayout = null;
+    let editor = null;                           // the open edit windows, if any
+    async function applyPlacedHere(next) {
+      if (!arr) return { applied: false, reason: 'not mounted' };
+      const r = await arr.applyPlaced(next);
+      if (r && r.applied) { rawLayout = next; changed(); }
+      return r;
+    }
+
+    // *** THE EDIT WINDOWS, BOUND TO THE MODULES PLACED FREELY. *** (edit_model.js / edit_windows.js,
+    // 01a4c69: "whatever owns the real things builds a model from its own records, subscribes, and
+    // applies what changes".) Opened by whoever is editing this dashboard -- today the modules page
+    // (Stage 3's dashboard path) or a test; a `chrome: 'edit'` menu module is where a switch reaches
+    // it, once there is one. The windows are solid and non-modal with Close first (their own promise),
+    // so an open editor is never a gate: nothing waits on it, and Close or Escape always ends it.
+    //
+    // Every 'items' change is written back THROUGH THE ARRANGEMENT (in place), and -- only when this
+    // dashboard reads its own saved layout -- saved to its settings doc. A host that handed the layout
+    // in (`layoutOverride`: the modules page) is held in memory only, as that page promises.
+    //
+    // NOT BUILT: a copy/paste/duplicate of a module. A copy needs a module INSTANCE of its own on this
+    // screen (profiles.addModule), not just a second box; the model's copy is taken back out and the
+    // editor says so in `notes()`, rather than showing a box that is not on the screen.
+    function openEdit({ windows = ['transform', 'layers'], host: winHost = null } = {}) {
+      if (!arr || !root) return null;
+      if (editor) return editor;
+      const notes = [];
+      const known = () => new Set((arrangement?.modules || []).map((m) => m.id));
+      const toItem = (e) => {
+        const g = placedGeometry(e);
+        const rec = arr.recFor(e.id);
+        return { id: e.id, name: rec?.title || rec?.type || e.id, x: g.x, y: g.y, scale: g.scale, rot: g.rot,
+          layer: g.layer, place: e.place, surface: g.surface, shown: e.shown !== false, locked: e.locked === true };
+      };
+      const fromItem = (it, prev) => {
+        const e = { ...(prev || { id: it.id }), place: it.place, x: it.x, y: it.y, scale: it.scale, rot: it.rot, layer: it.layer };
+        if (it.place === 'scene') e.surface = it.surface; else delete e.surface;
+        if (it.shown === false) e.shown = false; else delete e.shown;
+        if (it.locked) e.locked = true; else delete e.locked;
+        return e;
+      };
+      const model = createEditModel({ items: arr.placed().map(toItem) });
+      let syncing = false;
+      const unsub = model.subscribe((evt) => {
+        if (!evt || evt.type !== 'items' || syncing || !arr) return;
+        const ok = known();
+        const ghosts = model.items().filter((it) => !ok.has(it.id));
+        if (ghosts.length) {
+          notes.push('A copy of a module needs a module of its own on this screen. That is not built yet, so the copy was not placed.');
+          syncing = true;
+          try { for (const g of ghosts) model.remove(g.id); } finally { syncing = false; }
+        }
+        const prev = new Map(arr.placed().map((e) => [e.id, e]));
+        const placed = model.items().filter((it) => ok.has(it.id)).map((it) => fromItem(it, prev.get(it.id)));
+        const base = rawLayout || arr.layout() || { preset: 'full', slots: [] };
+        const next = { ...base, placed };
+        applyPlacedHere(next).catch((err) => console.error('view: edit', err));
+        if (!overridden && settingsHandle?.set) {
+          try {
+            const cur = settingsHandle.get?.()?.kiosk || {};
+            settingsHandle.set({ kiosk: { ...cur, layout: next } });
+          } catch (err) { console.error('view: saving the placement', err); }
+        }
+      });
+      const box = winHost || document.createElement('div');
+      if (!winHost) {
+        box.className = 'v-edit';
+        box.style.cssText = 'position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:8px;'
+          + 'max-height:calc(100% - 16px);overflow:auto;z-index:var(--z-menus,600);pointer-events:auto';
+        root.append(box);
+      }
+      const opened = {};
+      const close = () => {
+        if (!editor || editor.model !== model) return;
+        editor = null;
+        for (const w of Object.values(opened)) { try { w.destroy(); } catch { /* gone */ } }
+        try { unsub(); } catch { /* gone */ }
+        if (!winHost) box.remove();
+        changed();
+      };
+      // Closing any one window ends the editing (one way out, not a hunt for the last window).
+      const mounts = { transform: mountTransformWindow, layers: mountLayersWindow };
+      for (const k of windows) {
+        if (!mounts[k]) continue;
+        const h = document.createElement('div');
+        box.append(h);
+        opened[k] = mounts[k](h, model, { onClose: close });
+      }
+      editor = { model, windows: opened, notes: () => notes.slice(), close };
+      changed();
+      return editor;
+    }
+
     // Declared, not returned directly, so the chrome modules can be handed THIS object as their
     // container (`ctx.container`).
     const self = {
@@ -331,6 +436,7 @@ registerModule(
         viewId, ready: !!arrangement, hasLayout: !!arr?.layout(), primary: arr ? arr.primary() : 0,
         stage: arr ? arr.stageDefs().map((d) => d.type) : [],
         slots: arr ? arr.slotRecs.map((r) => r.type) : [],
+        placed: arr ? arr.placedRecs.map((r) => r.type) : [],
         overlays: arr ? [['mirror', arr.cameraRec()], ['clock', arr.clockRec()], ['ambient', arr.ambientRec()]]
           .filter(([, r]) => r).map(([k]) => k) : [],
         chrome: root ? { ...root.dataset } : null,
@@ -339,14 +445,20 @@ registerModule(
 
       // ---- the container contract -------------------------------------------------------
       container: true,
-      panels: () => (!arr ? [] : arr.layout() ? arr.slotRecs.map(brief) : [arr.stageRec()].filter(Boolean).map(brief)),
+      // (Stage R: on a laid-out dashboard, every panel -- slotted AND placed freely -- in ring order.)
+      panels: () => (!arr ? [] : arr.layout() ? arr.panelRecs().map(brief) : [arr.stageRec()].filter(Boolean).map(brief)),
       focusRing: () => (arr ? arr.focusRing() : []),
       focused: () => (arr ? brief(arr.focusedRec()) : null),
       modules: () => (arrangement ? arrangement.modules.map((m) => ({ ...m })) : []),
+      // Stage R: where the modules placed freely are (layout.js's entries), and the in-place move.
+      placed: () => (arr ? arr.placed() : []),
+      applyPlaced: (layout) => applyPlacedHere(layout),
+      edit: (opts) => openEdit(opts),
+      editing: () => editor,
       async focus(id) {
         if (!arr || !id) return false;
         if (arr.layout()) {
-          if (!arr.slotRecs.some((r) => r.id === id)) return false;
+          if (!arr.panelRecs().some((r) => r.id === id)) return false;
           arr.focusPlaced(id);
           return true;
         }
@@ -426,7 +538,8 @@ registerModule(
         // is not even a shared function call: it is the arrangement's own.
         // `ctx.layoutOverride` (Stage 3): a host that knows the arrangement it wants -- the modules page
         // shows ONE picked module, never the screen's saved grid -- hands it in, `null` included.
-        arr.resolve('layoutOverride' in ctx ? ctx.layoutOverride : (settings.get().kiosk || {}).layout);
+        rawLayout = overridden ? ctx.layoutOverride : (settings.get().kiosk || {}).layout;
+        arr.resolve(rawLayout);
         arr.partition();
         await arr.mountOverlays();
         if (torn) return;
@@ -437,6 +550,18 @@ registerModule(
         if (arr.screenLinks) {
           arr.screenLinks.sync();
           const off = settingsHandle?.subscribe?.(() => { if (!torn) arr.screenLinks.sync(); });
+          if (typeof off === 'function') offs.push(off);
+        }
+        // Stage R: a PLACEMENT change saved to this dashboard's own settings (another device, an edit
+        // window) is applied in place. Not for a layout the host handed in: that one is the host's.
+        if (!overridden && settingsHandle?.subscribe) {
+          const off = settingsHandle.subscribe((s) => {
+            if (torn || !arr) return;
+            const next = ((s || {}).kiosk || {}).layout;
+            if (layoutChange(rawLayout, next) === 'placement') {
+              applyPlacedHere(next).catch((err) => console.error('view: placement', err));
+            }
+          });
           if (typeof off === 'function') offs.push(off);
         }
         // The placed chrome, once there are panels for a bar to name. Started, not awaited: see
@@ -452,6 +577,8 @@ registerModule(
 
       destroy() {
         torn = true;
+        try { editor?.close(); } catch { /* already gone */ }
+        editor = null;
         offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
         listeners.clear();
         for (const id of [...chromeRecs.keys()]) removeChrome(id);
