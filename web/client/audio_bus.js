@@ -157,6 +157,11 @@ export const CHANNELS = Object.freeze([
   Object.freeze({ id: 'voice', label: 'Spoken prompts',       floor: 0,   effects: false }),
   Object.freeze({ id: 'media', label: 'Videos and music',     floor: 0,   effects: true }),
   Object.freeze({ id: 'sfx',   label: 'Game sounds',          floor: 0,   effects: true }),
+  // AMPLIFY (row 2.42, 2026-09-30 wiring): the room's microphone played louder, on its own fader so it
+  // can be set apart from everything else. No minimum: it is a hearing aid somebody turns on, not a
+  // voice that must never be buried, and a floor on a live microphone would fight its howl guard.
+  // No effects: amplify.js runs its own chain (gain -> limiter -> meter), not mixer_fx's.
+  Object.freeze({ id: 'amplify', label: 'Amplified microphone', floor: 0, effects: false }),
 ]);
 export const CHANNEL_IDS = CHANNELS.map((c) => c.id);
 export const CHANNEL_FLOORS = Object.freeze(Object.fromEntries(CHANNELS.map((c) => [c.id, c.floor])));

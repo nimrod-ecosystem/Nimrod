@@ -38,9 +38,8 @@
 // so the MASTER and a FADER turn it down, a call ducks it, and the bus's level is multiplied into
 // the gain. Registered on the `talk` tier with a duck depth of 1: while it plays, nothing under it
 // is ducked or silenced - amplifying the room is not a reason for the video to go quiet.
-// `audio_bus.js` does not list `amplify` among its CHANNELS yet, so the mixer menu shows no fader
-// row for it; the bus handles a named channel it does not list (fader 1, no minimum). Adding the
-// row is a one-line change there (for Mike's list).
+// `audio_bus.js` lists `amplify` among its CHANNELS since the kiosk wiring (2026-09-30), so the mixer
+// menu has a fader row for it ("Amplified microphone", no minimum, advanced).
 
 import { PROFILES as MIC_PROFILES } from './mic_owner.js';
 
@@ -323,6 +322,10 @@ export function createAmplifier({
       if (!opts.on) { if (state !== 'off' && state !== 'tripped') stop('off'); return api.status(); }
       if (state === 'running' && before.source !== opts.source) { stop('off'); await start(); }
       else if (state === 'off' || state === 'no-source') await start();
+      // TURNED ON AGAIN IN THE ROW after the guard tripped: the reset `setOn` gives, through the path
+      // a screen actually uses (the kiosk hands every change of the person's row to `update`). Only
+      // on an off -> on change: any other edit to the row leaves a tripped amplifier off.
+      else if (state === 'tripped' && !before.on) await start();
       applyGain();
       return api.status();
     },

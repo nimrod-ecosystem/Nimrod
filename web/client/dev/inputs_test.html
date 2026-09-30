@@ -143,6 +143,14 @@ const logText = (r) => r.q('[data-log]').textContent;
     check('a verb a module has no answer for resolves to nothing, which is not an error',
       verbTarget('photos', 'select') === null);
     check('payload verbs carry their payload', verbTarget('counter', 'down').payload === -1);
+    // 2026-09-30: the row 2.45 games (public e42cc92). Absent from MODULE_VERBS a module is never
+    // focused and no switch press reaches it, the same gap the board and the room had.
+    check('*** a switch reaches the row 2.45 games: spelling, simple math and name-that walk, answer and skip ***',
+      ['spelling', 'simple_math', 'name_that'].every((t) => verbTarget(t, 'next')?.topic === `${t}/next`
+        && verbTarget(t, 'prev')?.topic === `${t}/prev` && verbTarget(t, 'select')?.topic === `${t}/select`
+        && verbTarget(t, 'back')?.topic === `${t}/skip`));
+    check('*** ...and karaoke moves through songs and plays / pauses ***',
+      ['next', 'prev', 'play', 'pause'].every((v) => verbTarget('karaoke', v)?.topic === `karaoke/${v}`));
     check('a clock answers nothing at all', !respondsToVerbs('clock'));
     check('moving focus is itself bindable — with one switch it has to be',
       FOCUS_VERBS.some((v) => v.id === 'focus-next'));
@@ -352,13 +360,45 @@ const logText = (r) => r.q('[data-log]').textContent;
         r.qa('.i-tab input[type=number]').map((i) => i.value).join(','));
 
       const opts = r.qa('[data-new-action] option');
-      check('the "does what" list is FLAT — no groups to open',
-        r.qa('[data-new-action] optgroup').length === 0);
+      // 2026-09-30, second wiring pass: the EVERYDAY list stays flat and first (no group around it,
+      // nothing to open); the actions added that day follow it under labels. A native select's
+      // group label is not an option, so it is not a stop on anybody's walk through the list.
+      const flat = r.qa('[data-new-action] > option');
+      check('the everyday "does what" list is FLAT and first — no group around it',
+        flat.length > 0 && r.q('[data-new-action]').firstElementChild?.tagName === 'OPTION');
       // Mike, 2026-09-30 (row 2.28 call 1): "Adding audio shouldn't take away any other controls.
       // It's just in addition to them." So Play, Pause, Louder and Quieter can be bound to a switch
       // here too - the list grows from twelve to sixteen, still flat.
       check('and short: the verbs, the focus controls, the media four, and the gate',
-        opts.length === VERBS.length + FOCUS_VERBS.length + MEDIA_VERBS.length + 1, String(opts.length));
+        flat.length === VERBS.length + FOCUS_VERBS.length + MEDIA_VERBS.length + 1, String(flat.length));
+      {
+        const { SYSTEM_TOPICS, ROOM_HOLD_ACTION } = await import('../actions.js');
+        const { NEAR_MISS_ACTIONS, SPEECH_ACTIONS } = await import('../input_speech.js');
+        const groups = r.qa('[data-new-action] optgroup');
+        const inGroup = (label) => groups.find((g) => g.label === label);
+        const vals = (g) => (g ? [...g.querySelectorAll('option')].map((o) => o.value) : []);
+        check('*** the screen’s own controls are pickable: full screen, the menu, the bar, the screen picker ***',
+          Object.values(SYSTEM_TOPICS).every((t) => vals(inGroup('The screen')).includes(t)),
+          JSON.stringify(vals(inGroup('The screen'))));
+        check('*** a switch can answer “Did you mean that?” — Yes and No are pickable ***',
+          NEAR_MISS_ACTIONS.every((a) => vals(inGroup('Answering “Did you mean that?”')).includes(a.id)));
+        check('*** the voice games’ “play …” routes are pickable ***',
+          SPEECH_ACTIONS.length > 0 && SPEECH_ACTIONS.every((a) => vals(inGroup('Voice games')).includes(a.id)));
+        check('*** holding on a room object (pet an animal) is pickable ***',
+          vals(inGroup('Room')).includes(ROOM_HOLD_ACTION.id));
+        check('the groups come AFTER the everyday list, never before it',
+          groups.length === 4 && groups.every((g) => g.previousElementSibling !== null));
+        r.q('[data-new-action]').value = 'speech/near-miss-yes';
+        r.q('[data-add]').click();
+        r.press(XAC, 'button:5', 10);
+        const nb = r.panel.bindings().find((b) => b.device === XAC && b.control === 'button:5');
+        check('*** a switch bound to “Yes, I meant that” here is a real binding ***',
+          nb?.actionId === 'speech/near-miss-yes', JSON.stringify(nb || null));
+        r.press(XAC, 'button:5', 10);
+        check('*** ...and pressing it FIRES on this page (registered here, not refused as unknown) ***',
+          /Yes, I meant that/.test(logText(r)) && !/unknown/i.test(logText(r)), logText(r).slice(0, 300));
+        r.q('[data-new-action]').value = verbTopic('select');   // as the page left it, for the next check
+      }
       check('*** Play, Pause, Louder and Quieter can be bound to a switch ***',
         MEDIA_VERBS.every((m) => opts.some((o) => o.value === verbTopic(m.id))),
         opts.map((o) => o.value).join(','));

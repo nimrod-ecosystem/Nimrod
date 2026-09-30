@@ -368,9 +368,11 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
     // throwing and hiding every check after it.
     section('*** the mixer — channels, faders and minimums (row 2.35) ***');
     {
-      check('the channels are today’s tiers plus the AAC voice as its own',
-        Array.isArray(CHANNEL_IDS) && ['call', 'aac', 'voice', 'media', 'sfx'].every((c) => CHANNEL_IDS.includes(c))
-        && CHANNEL_IDS.length === 5, JSON.stringify(CHANNEL_IDS));
+      check('the channels are today’s tiers plus the AAC voice as its own, and amplify (row 2.42)',
+        Array.isArray(CHANNEL_IDS) && ['call', 'aac', 'voice', 'media', 'sfx', 'amplify'].every((c) => CHANNEL_IDS.includes(c))
+        && CHANNEL_IDS.length === 6, JSON.stringify(CHANNEL_IDS));
+      check('*** amplify has its own channel, with no minimum and no effects row (it runs its own chain) ***',
+        CHANNEL_FLOORS?.amplify === 0 && AB.CHANNELS.find((c) => c.id === 'amplify')?.effects === false);
       check('the default minimums: calls 60%, the AAC voice 60%, everything else none',
         CHANNEL_FLOORS && near(CHANNEL_FLOORS.call, 0.6) && near(CHANNEL_FLOORS.aac, 0.6)
         && CHANNEL_FLOORS.voice === 0 && CHANNEL_FLOORS.media === 0 && CHANNEL_FLOORS.sfx === 0,

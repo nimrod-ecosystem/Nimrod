@@ -257,11 +257,39 @@ registerModule(
       } else {
         // Connected. A remote VIDEO fills the stage; audio-only shows who it is, because a
         // black rectangle tells her nothing and she cannot read a status line.
-        stage.innerHTML = who?.video
-          ? '<video class="call-remote" autoplay playsinline></video>'
-          : personCard({ ...who, note: 'On a call' });
+        //
+        // *** THE FAR END'S SOUND NEEDS AN ELEMENT, AND IT NEEDS TO BE THE SAME ONE ALL CALL. ***
+        // (2026-09-30, second wiring pass.) An audio-only call drew the person card and NO media
+        // element, so the transport had nothing to play the other person into: a call with no
+        // sound. It now carries a plain <audio> (no controls, so nothing is drawn). And a render
+        // mid-call (a settings change on this panel) used to replace the element the transport was
+        // attached to - the picture and the sound stopped while the call carried on - so an element
+        // of the right kind already on the stage is KEPT.
+        const want = who?.video ? 'VIDEO' : 'AUDIO';
+        const have = stage.querySelector('.call-remote');
+        if (!have || have.tagName !== want) {
+          stage.innerHTML = who?.video
+            ? '<video class="call-remote" autoplay playsinline></video>'
+            : `${personCard({ ...who, note: 'On a call' })}<audio class="call-remote" autoplay></audio>`;
+        }
+        applyCallGain();
       }
       root.dataset.phase = phase;
+    }
+
+    // *** THE CALL ON THE MIXER (row 2.35). *** The bus decides how loud the call is heard - the
+    // Calls fader x the master, never under the Calls minimum (60% by default) while it sounds -
+    // and hands the number to `onGain`; this puts it on the element that plays the other person.
+    // Before this the call registered with no `onGain`, so none of the three reached it. A level
+    // that is missing or not a number is FULL volume (the bus's own rule: broken is never silence),
+    // and an element that refuses a volume is left as it is, which is also full.
+    let callLevel = null;          // null = the bus has not said; full volume
+    function applyCallGain() {
+      const el = root?.querySelector('.call-remote');
+      if (!el) return;
+      const n = callLevel === null || callLevel === undefined ? NaN : Number(callLevel);
+      const v = Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 1;
+      try { el.volume = v; } catch { /* a media element with no volume: it plays as it is */ }
     }
 
     // ------------------------------------------------------------------------------------
@@ -318,8 +346,11 @@ registerModule(
     function takeSpeaker(on) {
       if (!audio) return;
       // `call` tier. The bus decides what that means - by default it silences media outright
-      // rather than leaving a bed murmuring under a conversation.
-      audio.register(AUDIO_ID, { tier: 'call' });
+      // rather than leaving a bed murmuring under a conversation. `onGain`: see applyCallGain.
+      audio.register(AUDIO_ID, {
+        tier: 'call',
+        onGain: (level) => { callLevel = level; applyCallGain(); },
+      });
       audio.setActive(AUDIO_ID, on);
     }
 
@@ -472,11 +503,16 @@ registerModule(
       takeSpeaker(true);
       // BOTH, and in parallel: two sequential permission-gated opens is two round trips
       // before anybody can speak, on a screen where the caller is already waiting.
-      const [track] = await Promise.all([takeCamera(), takeMic()]);
+      const [track, mic] = await Promise.all([takeCamera(), takeMic()]);
       render();
       const v = el('.call-remote');
+      // *** THE ROOM'S MICROPHONE GOES TO THE CALL. *** (Found 2026-09-30.) `takeMic` opened it and
+      // nothing handed it over: the transport's `audio` was never passed, so the far end heard
+      // nothing from this room. No track (no microphone, a failed open) is still an answered call.
+      let micTrack = null;
+      try { micTrack = mic?.getAudioTracks?.()?.[0] || null; } catch { micTrack = null; }
       bindTransport();              // a ring can arrive by the bus before any "ready"; look once more
-      try { await transport?.answer?.({ from: who, outgoing: track, remoteVideo: v }); }
+      try { await transport?.answer?.({ from: who, outgoing: track, remoteVideo: v, ...(micTrack ? { audio: micTrack } : {}) }); }
       catch (err) { console.error('call: transport failed to answer', err); end('failed'); }
     }
 

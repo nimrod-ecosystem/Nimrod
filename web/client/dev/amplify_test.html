@@ -222,6 +222,27 @@ try {
     amp.destroy();
   }
 
+  // 2026-09-30, second wiring pass. On a screen the mode is a SETTINGS ROW (the kiosk calls
+  // `update(row)` whenever the person's row changes), not `setOn`. "Turning it on again is how a
+  // person resets a guard that tripped" has to hold through that path too: off then on in the menu.
+  section('*** turned off and on again FROM THE SETTINGS ROW, a tripped guard resets ***');
+  {
+    const cf = fakeContextFactory(); const tk = fakeTicks();
+    const amp = createAmplifier({ micOwner: fakeMic(), makeContext: cf.make, now: tk.now,
+      setTick: tk.setTick, clearTick: tk.clearTick });
+    await amp.update({ amplifyOn: true });
+    check('(setup) the row turns it on', amp.status().state === 'running');
+    cf.meterLevel.v = 0.6; tk.advance(1000);
+    check('(setup) it howled and tripped', amp.status().state === 'tripped');
+    cf.meterLevel.v = 0;
+    await amp.update({ amplifyOn: true, amplifyGain: 250 });
+    check('an unrelated change to the row does NOT restart a tripped amplifier', amp.status().state === 'tripped');
+    await amp.update({ amplifyOn: false });
+    await amp.update({ amplifyOn: true });
+    check('*** off, then on again in the row: it is running again ***', amp.status().state === 'running', amp.status().state);
+    amp.destroy();
+  }
+
   section('*** a phone as the microphone ***');
   {
     const cf = fakeContextFactory(); const tk = fakeTicks(); const mic = fakeMic();

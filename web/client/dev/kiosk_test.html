@@ -340,8 +340,11 @@ const ds = () => root.querySelector('.kiosk').dataset;
       // next row added here doesn't silently fail this same way again.
       // 18 (2026-09-30): the screen's Volume row (master_volume.js, `essential`) is one more stop ahead of
       // Home, and it ran out the margin. The mixer's rows are advanced, so they are not on this walk.
+      // 21 (2026-09-30, second wiring pass): the person's Voice section adds THREE stops at "The usual"
+      // while everything in it is off -- Spoken commands, Subtitles, Amplify (kiosk.js voiceItems argues
+      // the count); none at "Just the essentials". Their detail rows appear only when a mode is on.
       const stops = new Set();
-      for (let i = 0; i < 18; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
+      for (let i = 0; i < 21; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
       check('the cycleable field rows are stops on the one-button walk',
         stops.has('set:intervalMs') && stops.has('set:fit'), [...stops].join(','));
       check('the disabled ones are NOT stops',
@@ -1849,6 +1852,16 @@ const ds = () => root.querySelector('.kiosk').dataset;
       // somebody clicks down the list, counting listeners the code explicitly adds and removes.
       // (Listeners bound with an AbortController signal are counted on neither side.)
       ek.destroy(); eBox.innerHTML = '';
+      // *** EVERY OTHER KIOSK GOES FIRST, OR THIS COUNTS THEIR TIMERS AS THE CYCLED ONE'S. *** The
+      // interval spy below is PAGE-WIDE. The kiosk nk (above) still had a YouTube panel on it (the showModule
+      // check), and YouTube's own player script (www-widgetapi.js) starts a 250 ms handshake interval
+      // that it clears only when the YouTube iframe answers - measured 2026-09-30: that interval was
+      // created inside this window on every instrumented run, and how long it lives depends on YouTube's
+      // network. That was the ~1-in-5 "no polling interval left running": a third-party player on a
+      // DIFFERENT, still-live kiosk, not a leak in the one being cycled (whose own intervals - the
+      // recovery tick, once per mount - were cleared every time). So nk is torn down before the spy
+      // goes in, and a failure now names what made the survivor.
+      try { nk.destroy(); } catch { /* already gone */ }
       const net = new Map(); let intervals = 0;
       const wrap = (el) => {
         const a = el.addEventListener.bind(el), r = el.removeEventListener.bind(el);
@@ -1859,7 +1872,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
       const lBox = mkBox(); const lProfile = await eProfiles.create('TEST-embedded-leak'); await eProfiles.addModule(lProfile.id, 'trivia');
       const unwrapRoot = wrap(lBox), unwrapWin = wrap(window);
       const oSet = window.setInterval, oClear = window.clearInterval; const ids = new Set();
-      window.setInterval = (f, ms, ...a) => { const id = oSet(f, ms, ...a); ids.add(id); return id; };
+      const STACKS = new Map();   // id -> where it was made, for the failure message
+      window.setInterval = (f, ms, ...a) => { const id = oSet(f, ms, ...a); ids.add(id); STACKS.set(id, `ms=${ms} ` + (new Error().stack || '').split('\n').slice(2, 9).map((s) => s.trim().replace(/https?:\/\/[^/]+\//, '')).join(' | ')); return id; };
       window.clearInterval = (id) => { ids.delete(id); return oClear(id); };
       try {
         for (let i = 0; i < 3; i += 1) {
@@ -1872,7 +1886,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
         .map((k) => `${k}:${net.get(k)}`);
       check('*** three mount/destroy cycles into the same root leave no listener behind (root and window) ***',
         leaked.length === 0, leaked.join(' '));
-      check('...and no polling interval left running', ids.size === 0, String(ids.size));
+      check('...and no polling interval left running', ids.size === 0, String(ids.size) + ' :: ' + [...ids].map((i) => STACKS.get(i)).join(' ##### '));
       check('...and nothing is left in the box', lBox.innerHTML === '');
       check('...and the drawn-cursor flag on <body> is not left set', !document.body.dataset.hideSystemCursor);
 
@@ -2602,6 +2616,238 @@ const ds = () => root.querySelector('.kiosk').dataset;
     } finally {
       try { wk?.destroy(); } catch { /* already gone */ }
       try { dk?.destroy(); } catch { /* already gone */ }
+      boxes.forEach((b) => b.remove());
+    }
+  }
+
+  // *** 2026-09-30, SECOND WIRING PASS: THE VOICE. *** Spoken commands (5263a56, 7bf59ef), subtitles,
+  // amplify and a phone as a microphone (0636797) were built and tested on their own; these checks are
+  // about the KIOSK constructing them from the person's own row -- and above all that nothing opens a
+  // microphone until that row says so.
+  {
+    const { verbTopic } = await import('../actions.js');
+    const { NEAR_MISS_YES_TOPIC } = await import('../input_speech.js');
+    const { MISSES_KEY } = await import('../speech_misses.js');
+    const { PHONE_MIC_TOPIC } = await import('../phone_mic.js');
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const vUser = USER + '-voice';
+    const vProfiles = createProfilesClient({ user: vUser });
+    const boxes = [];
+    const box = () => { const b = document.createElement('div'); b.style.cssText = 'position:relative;width:640px;height:420px;margin:8px 0'; document.body.append(b); boxes.push(b); return b; };
+    // THE SPIES, installed before anything mounts: every microphone open, and every browser recogniser.
+    const gum = { n: 0 };
+    const md = navigator.mediaDevices;
+    const origGum = md && md.getUserMedia ? md.getUserMedia.bind(md) : null;
+    if (md && origGum) md.getUserMedia = (...a) => { gum.n += 1; return origGum(...a); };
+    const recog = { made: 0, started: 0 };
+    const origSR = window.SpeechRecognition, origWSR = window.webkitSpeechRecognition;
+    class FakeSR { constructor() { recog.made += 1; } start() { recog.started += 1; } stop() {} }
+    window.SpeechRecognition = FakeSR; window.webkitSpeechRecognition = FakeSR;
+    let vk = null, vk2 = null;
+    try {
+      const vp = await vProfiles.create('TEST-voice');
+      await vProfiles.addModule(vp.id, 'photos');       // no camera: nothing else here opens a device
+      const vFull = await vProfiles.get(vp.id);
+      check('(setup) the voice screen has a person behind it', !!vFull.person_id);
+      const setRow = async (patch) => {
+        const s = createState({ url: vProfiles.personStateURL(vFull.person_id, INPUTS_KEY), user: vUser });
+        await s.load().catch(() => {}); s.set(patch); await s.flush(); s.destroy();
+      };
+      const vbox = box();
+      vk = await mountKiosk(vbox, { user: vUser, profileId: vp.id, profiles: vProfiles, bus: createBus(),
+        storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {} });
+      const item = (k, id) => k.menu.items().find((r) => r.id === id);
+      const walkTo = (k, id) => { for (let i = 0; i < 120 && k.menu.focusId() !== id; i += 1) k.menu.next(); return k.menu.focusId() === id; };
+      const stepTo = (k, id, hint, max = 30) => { for (let i = 0; i < max && item(k, id)?.hint !== hint; i += 1) k.menu.select(); return item(k, id)?.hint === hint; };
+      check('(setup) the person’s row has arrived (the Voice section is in the menu)',
+        await settled(() => !!item(vk, 'set:speechOn'), 9000), vk.menu.items().map((r) => r.id).join(','));
+      await sleep(300);
+
+      // ---- 1. NOTHING LISTENS BY DEFAULT ----
+      check('*** voice, default: no microphone opened (no getUserMedia) and no recogniser made or started ***',
+        gum.n === 0 && recog.made === 0 && recog.started === 0, JSON.stringify({ gum: gum.n, ...recog }));
+      check('voice, default: no speech handle, and the screen says it is off', vk.speech() === null && vk.speechStatus() === 'off');
+      check('*** voice, menu: at "The usual" the section is three switches -- Spoken commands, Subtitles, Amplify ***',
+        !!item(vk, 'set:speechOn') && !!item(vk, 'set:subtitlesOn') && !!item(vk, 'set:amplifyOn') && !!item(vk, 'voice-head'));
+      check('*** voice, menu: a mode’s own rows are not stops while it is off ***',
+        !item(vk, 'set:speechEngine') && !item(vk, 'set:speechConfirm') && !item(vk, 'set:listenVisual')
+        && !item(vk, 'set:subtitlesLines') && !item(vk, 'set:amplifyGain'),
+        vk.menu.items().map((r) => r.id).filter((x) => /^set:(speech|listen|subtitles|amplify)/.test(x || '')).join(','));
+      vk.menu.open();
+      walkTo(vk, 'set:complexity');
+      stepTo(vk, 'set:complexity', 'Just the essentials');
+      check('*** voice, menu: at "Just the essentials" it adds NO stop to the one-switch walk ***',
+        !item(vk, 'set:speechOn') && !item(vk, 'set:subtitlesOn') && !item(vk, 'set:amplifyOn') && !item(vk, 'voice-head'));
+      stepTo(vk, 'set:complexity', 'The usual');
+
+      // ---- 2. TURNED ON WITH THE DEFAULT RECOGNISER: STILL NOTHING LEAVES THE ROOM ----
+      check('(setup) the Spoken commands row is on the walk', walkTo(vk, 'set:speechOn'));
+      vk.menu.select();
+      check('*** voice: the menu row writes the PERSON’s row, and the screen follows it ***',
+        await settled(() => vk.speechStatus() === 'no-local', 5000), vk.speechStatus());
+      check('*** voice: on, with the default recogniser (on this screen, none yet): still no microphone, no browser recogniser ***',
+        gum.n === 0 && recog.made === 0, JSON.stringify({ gum: gum.n, ...recog }));
+      check('voice: ...and the menu says why it is not listening (not a row you can press)',
+        /no recogniser on this screen/i.test(item(vk, 'voice-status')?.label || '') && item(vk, 'voice-status')?.disabled === true,
+        JSON.stringify(item(vk, 'voice-status') || null));
+      check('voice: with spoken commands on, their rows appear -- the recogniser, the confirmation, the listening cue',
+        !!item(vk, 'set:speechEngine') && !!item(vk, 'set:speechConfirm') && !!item(vk, 'set:listenVisual') && !!item(vk, 'set:speechWindowMs'));
+      vk.menu.close();
+      await setRow({ speechEngine: 'browser' });
+      check('*** voice: the browser’s recogniser is made and started ONLY when it is chosen by name ***',
+        await settled(() => vk.speechStatus() === 'listening', 9000) && recog.made === 1 && recog.started >= 1,
+        `${vk.speechStatus()} ${JSON.stringify(recog)}`);
+      check('voice: ...and the status says where the room’s sound goes', /maker/.test(item(vk, 'voice-status')?.hint || ''),
+        JSON.stringify(item(vk, 'voice-status') || null));
+      await setRow({ speechOn: false });
+      check('*** voice: turned off, the recogniser stops and the handle goes ***',
+        await settled(() => vk.speech() === null && vk.speechStatus() === 'off', 9000), vk.speechStatus());
+      vk.destroy(); vk = null;
+
+      // ---- 3. WHAT IT DOES, WITH A RECOGNISER STANDING IN FOR A MICROPHONE ----
+      const fake = { onText: null, starts: 0, stops: 0, running: false,
+        start(cb) { this.onText = cb; this.starts += 1; this.running = true; },
+        stop() { this.stops += 1; this.running = false; this.onText = null; } };
+      const say = (t) => fake.onText?.(t);
+      const engines = [];
+      const store2 = mem();
+      const bus2 = createBus();
+      const vbox2 = box();
+      vk2 = await mountKiosk(vbox2, { user: vUser, profileId: vp.id, profiles: vProfiles, bus: bus2,
+        storage: store2, session: mem(), navigate: () => {}, reloadPage: () => {},
+        makeRecognizer: ({ engine }) => { engines.push(engine); return fake; } });
+      await settled(() => !!item(vk2, 'set:speechOn'), 9000);
+      await sleep(200);
+      check('voice: a screen whose person has it off never asks for a recogniser', engines.length === 0 && fake.starts === 0);
+      await setRow({ speechOn: true });
+      check('*** voice: the person turns it on -- the recogniser for THEIR chosen engine starts ***',
+        await settled(() => fake.starts === 1, 9000) && engines[0] === 'browser', JSON.stringify(engines));
+      check('voice: the speech actions are registered (routes, and the switch answers to "Did you mean that?")',
+        ['speech/play-opposites', 'speech/near-miss-yes', 'speech/near-miss-no'].every((a) => vk2.runtime.actions.has(a)));
+      say('computer please quieter');
+      check('*** voice: "computer please quieter" moves the master (speech -> input bus -> binding -> verb) ***',
+        Math.abs(vk2.audio().master() - 0.8) < 1e-9, String(vk2.audio().master()));
+      const plays = [];
+      const offPlay = bus2.subscribe('word_games/play', (p) => plays.push(p));
+      say('computer please play opposites');
+      offPlay();
+      check('*** voice: "computer please play opposites" opens the opposites game (a spoken route) ***',
+        plays.length === 1 && plays[0]?.game === 'opposites', JSON.stringify(plays));
+      const saidQ = [];
+      const o2 = vk2.output();
+      const origSay = o2.say.bind(o2);
+      o2.say = (t, opt) => { saidQ.push(t); return origSay(t, opt); };
+      const pauses = [];
+      const offPause = bus2.subscribe(verbTopic('pause'), () => pauses.push(1));
+      say('computer please paws');
+      check('*** voice: a near miss ASKS, out loud, through the screen’s output ***',
+        vk2.speech()?.nearMissPending()?.phrase === 'pause' && saidQ.some((t) => /Did you mean that/.test(t)) && pauses.length === 0,
+        JSON.stringify(saidQ));
+      bus2.publish(NEAR_MISS_YES_TOPIC);
+      check('*** voice: ...and a Yes (what a switch bound to "Yes, I meant that" sends) fires it ***', pauses.length === 1);
+      offPause();
+      o2.say = origSay;
+      // A person who saved a switch setup: their record replaced the fallback, spoken phrases included.
+      await setRow({ [INPUTS_KEY]: { v: RECORD_VERSION, gate: 'both', speak: false, devices: [],
+        bindings: [{ id: 'saved-voice-x', actionId: 'verb/next', device: 'keyboard', control: 'key:x',
+          edge: 'press', role: 'universal', holdMs: null, debounceMs: null, lockoutMs: null, label: '' }] } });
+      await settled(() => vk2.runtime.record().bindings.some((b) => b.id === 'saved-voice-x'), 9000);
+      say('computer please quieter');
+      check('*** voice: a person with a SAVED switch setup still has the spoken commands (their record had none) ***',
+        Math.abs(vk2.audio().master() - 0.6) < 1e-9 && vk2.runtime.record().bindings.some((b) => b.device === 'speech'),
+        String(vk2.audio().master()));
+      // The miss log.
+      say('computer please banana split');
+      check('*** voice: the miss log is OFF unless the person’s row turns it on -- nothing written ***',
+        vk2.misses() === null && store2.getItem(MISSES_KEY) === null);
+      await setRow({ speechMissLog: true });
+      check('(setup) the miss log is on', await settled(() => vk2.misses() !== null, 9000));
+      say('computer please banana split');
+      check('*** voice: on, a command it did not understand is written down, on this device ***',
+        /banana split/.test(store2.getItem(MISSES_KEY) || ''), String(store2.getItem(MISSES_KEY)));
+
+      // ---- 4. SUBTITLES ----
+      await setRow({ subtitlesOn: true });
+      check('(setup) subtitles on', await settled(() => vk2.subtitles()?.isOn() === true, 9000));
+      say('hello there');
+      check('*** subtitles: what the recogniser heard in the room is on the screen, marked Unknown (nobody identified) ***',
+        vk2.subtitles().lines().some((l) => l.text === 'hello there' && l.who.kind === 'unknown')
+        && /Unknown:\s*hello there/.test(vbox2.querySelector('.kiosk .subs')?.textContent || ''),
+        JSON.stringify(vk2.subtitles().lines()));
+      if (window.speechSynthesis) {
+        // `alert`, not `say`: the speech channel is one at a time and the near-miss question above may
+        // still hold it (a headless speech engine does not always say when it finished); an alert
+        // takes the channel, which is what reaches the tap now rather than after a hard-stop timer.
+        vk2.output().alert('The screen is talking');
+        check('*** subtitles: what the SCREEN says is written too (the output bus’s speech channel is tapped) ***',
+          await settled(() => vk2.subtitles().lines().some((l) => l.source === 'screen' && /screen is talking/.test(l.text)), 4000),
+          JSON.stringify(vk2.subtitles().lines()));
+      }
+      await setRow({ speechOn: false });
+      check('*** subtitles on, spoken commands off: the room is still written down (subtitles-only) ***',
+        await settled(() => vk2.speechStatus() === 'subtitles-only', 9000), vk2.speechStatus());
+      const mBefore = vk2.audio().master();
+      say('computer please louder');
+      check('*** ...and a command said then does NOTHING -- subtitles never drive the screen ***',
+        vk2.audio().master() === mBefore && vk2.subtitles().lines().some((l) => /computer please louder/.test(l.text)),
+        `${mBefore} -> ${vk2.audio().master()}`);
+      const stage2 = vbox2.querySelector('.kiosk > .k-stage');
+      document.documentElement.style.setProperty('--subtitles-reserve', '80px');
+      check('*** subtitles: when they ask for room (--subtitles-reserve), the panels make it ***',
+        getComputedStyle(stage2).bottom === '80px', getComputedStyle(stage2).bottom);
+      document.documentElement.style.removeProperty('--subtitles-reserve');
+      check('...and give it back', getComputedStyle(stage2).bottom === '0px', getComputedStyle(stage2).bottom);
+
+      // ---- 5. AMPLIFY ----
+      check('amplify: on the audio bus on its own channel, and off', vk2.audio().channelOf('amplify') === 'amplify'
+        && vk2.amplifier()?.status().state === 'off');
+      await setRow({ amplifyOn: true });
+      check('*** amplify: the person’s row turns it on ***',
+        await settled(() => vk2.amplifier()?.status().on === true && ['running', 'no-source'].includes(vk2.amplifier().status().state), 9000),
+        JSON.stringify(vk2.amplifier()?.status()));
+      vk2.menu.open();
+      walkTo(vk2, 'set:complexity');
+      stepTo(vk2, 'set:complexity', 'Everything');
+      check('amplify: its channel has a volume row in the mixer ("Everything")', !!item(vk2, 'set:faderAmplify'));
+      check('amplify: ...and its own rows are in the Voice section while it is on', !!item(vk2, 'set:amplifyGain') && !!item(vk2, 'set:amplifySource'));
+      stepTo(vk2, 'set:complexity', 'The usual');
+      vk2.menu.close();
+      await setRow({ amplifyOn: false, subtitlesOn: false });
+      check('*** amplify: off again, it lets go ***', await settled(() => vk2.amplifier()?.status().state === 'off', 9000),
+        JSON.stringify(vk2.amplifier()?.status()));
+
+      // ---- 6. A PHONE AS A MICROPHONE ----
+      check('*** phone mic: the screen’s receiver is built once the drive socket exists ***',
+        await settled(() => !!vk2.phoneMic() && !!vk2.micPill(), 6000));
+      await settled(() => vk2.speechStatus() === 'off' && vk2.subtitles()?.isOn() === false, 9000);
+      const amp = vk2.amplifier();
+      let changed = 0;
+      const origSC = amp.sourceChanged;
+      amp.sourceChanged = (...a) => { changed += 1; return origSC(...a); };
+      const pill = () => vbox2.querySelector('.kiosk .mic-live');
+      check('phone mic: no phone, no notice', !!pill() && pill().hidden);
+      bus2.publish(PHONE_MIC_TOPIC, { phones: [{ name: 'Bedside phone', phase: 'live' }] });
+      check('*** phone mic: a phone joined -- "Microphone on" shows, with every voice setting off (no setting hides it) ***',
+        !!pill() && !pill().hidden && /Microphone on: Bedside phone/.test(pill().textContent), pill()?.textContent);
+      check('*** phone mic: ...and amplify is told its source changed ***', changed === 1);
+      bus2.publish(PHONE_MIC_TOPIC, { phones: [] });
+      check('phone mic: the phone leaves, the notice goes', pill().hidden);
+      amp.sourceChanged = origSC;
+
+      // ---- teardown ----
+      await setRow({ speechOn: true });
+      await settled(() => fake.running, 9000);
+      vk2.destroy(); vk2 = null;
+      check('*** voice, teardown: the recogniser is stopped, and subtitles and the notice are gone ***',
+        !fake.running && !vbox2.querySelector('.subs') && !vbox2.querySelector('.mic-live'));
+      await setRow({ speechOn: false, speechMissLog: false, speechEngine: 'local' });
+    } catch (e) {
+      check('the voice wiring section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { vk?.destroy(); } catch { /* already gone */ }
+      try { vk2?.destroy(); } catch { /* already gone */ }
+      if (md && origGum) md.getUserMedia = origGum;
+      window.SpeechRecognition = origSR; window.webkitSpeechRecognition = origWSR;
       boxes.forEach((b) => b.remove());
     }
   }
