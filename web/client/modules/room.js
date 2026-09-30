@@ -22,13 +22,32 @@
 // *** NOTIFICATIONS. *** The lamp lights and the cat's ears perk up when the wake phrase is heard
 // (`speech/listening`, the same event listening_cue.js answers — the on-screen cue still comes; the
 // room only adds to it). Anything else can make the room react by publishing `room/notify` with
-// `{ event: 'message' | 'call' | 'visitor' | 'timer' | 'wake', ms? }`.
+// `{ event: 'message' | 'call' | 'visitor' | 'timer' | 'wake' | <a custom name>, ms?, text?, cueShown? }`.
+// *** THE ON-SCREEN CUE ALWAYS COMES TOO (room-add-ons §6). *** For a `room/notify` the room shows the
+// event in words itself (a note at the top of the panel, `room_notify.js` CUES, or `text`) unless the
+// publisher says `cueShown: true` — it drew its own, like the listening cue does for the wake phrase.
+// WHICH OBJECT DOES WHAT is the room's own list of rules (`../room_notify.js`), stored in this
+// instance's state row as `notify` (nothing stored = Design's defaults). `room/reactions` opens the
+// editor (`../room_notify_editor.js`) inside the room; while it is open, room/next, room/prev,
+// room/select and room/back drive it, and it closes by itself after "Put a lifted panel back after".
+//
+// *** NIMROD, THE HELP BUTTON (room-add-ons §2; Mike, room_as_home §7.1.2). *** Pressing the room's
+// cat explains whatever was picked last — the object the scan landed on or the pointer rested on —
+// or, with nothing picked, the room itself (`../cat_help.js`). He is out of the way of the thing he
+// explains, and the room's own sleeping cat steps away while he talks. Petting him is the stroke
+// (a pointer drawn across him) or holding the switch on him (`room/hold`); with "Cat help" off in
+// his settings, a plain press pets him as it always did. WHY PRESS = HELP AND NOT A ROOM SETTING
+// "pressing Nimrod: explains / pets": that setting would be a second switch for the same choice
+// "Cat help: on/off" already makes, and two switches for one thing is how they end up disagreeing.
 
 import { registerModule } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { mountRoomScene, RENDER_DEFAULTS } from '../room_scene.js';
 import { listPresets, presetRecipe, DEFAULT_PRESET } from '../room_presets.js';
 import { LISTENING_TOPIC } from '../input_speech.js';
+import { mountCatHelp } from '../cat_help.js';
+import { readRules, objectsIn, cueFor, playSound } from '../room_notify.js';
+import { mountNotifyEditor } from '../room_notify_editor.js';
 
 // Every default argued (Rule 1), and every one of them a setting:
 //   preset 'theRoom'   the room whose furniture carries the controls: it is the one that shows what
@@ -124,9 +143,55 @@ registerModule(
     const { mount, state } = ctx;
     let cfg = configFrom({});
     let scene = null;
+    let help = null;
     let host = null;
     let torn = false;
+    let editor = null;          // the reactions editor, while it is open
+    let editorIdle = null;
     const offs = [];
+    const setT = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
+    const clearT = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (id) => clearTimeout(id);
+
+    // The room's notification rules, from its state row: null = Design's defaults.
+    const rulesFrom = (row) => { const { rules, custom } = readRules(row || {}); return custom ? rules : null; };
+
+    // ---- the reactions editor ----------------------------------------------------------------
+    // THE INVARIANT'S WAY OUT, the same one a lifted panel has: nobody touching it for "Put a lifted
+    // panel back after" closes it (0 = never, the person's own choice there already).
+    function armEditor() {
+      if (editorIdle != null) { clearT(editorIdle); editorIdle = null; }
+      if (editor && cfg.liftReturnMs > 0) editorIdle = setT(() => { editorIdle = null; closeEditor(); }, cfg.liftReturnMs);
+    }
+    function closeEditor() {
+      if (editorIdle != null) { clearT(editorIdle); editorIdle = null; }
+      editor?.destroy();
+      editor = null;
+      return true;
+    }
+    function openEditor() {
+      if (torn || !host || !scene) return null;
+      if (editor) { armEditor(); return editor; }
+      const row = state?.get?.() || {};
+      editor = mountNotifyEditor(host, {
+        rules: readRules(row).rules,
+        objects: objectsIn(scene.recipe()),
+        onChange: (rules) => { armEditor(); try { state?.set?.({ notify: rules }); } catch (err) { console.error('room: save rules', err); } },
+        onTest: (rule) => {
+          armEditor();
+          scene?.testRule(rule);
+          // The cue comes with the test too: a test shows exactly what the real thing will.
+          scene?.toast(`Test: ${cueFor(rule)}`);
+        },
+        onDone: () => closeEditor(),
+      });
+      for (const ev of ['pointerdown', 'keydown']) editor?.el.addEventListener(ev, armEditor);
+      armEditor();
+      return editor;
+    }
+    function onSound(name) {
+      const level = Number(ctx.audio?.master?.());
+      playSound(name, { level: Number.isFinite(level) ? level : 1 });
+    }
 
     // A press nobody on the page answered. See the header for why each of these is the honest one.
     function onUnclaimed(action, { api } = {}) {
@@ -150,11 +215,16 @@ registerModule(
       if (!scene) return;
       if (presetChanged) scene.setRecipe(presetRecipe(cfg.preset));
       scene.setOptions(renderOpts(cfg));
+      // The rules ride on the room as placed here, not on the preset: a new room keeps them.
+      scene.setNotify(rulesFrom(row));
     }
 
     return {
       // For a test: the renderer, so a suite can look at what it drew without re-deriving it.
       __scene: () => scene,
+      __editor: () => editor,
+      // The reactions editor, for a host that offers it (a settings row, an edit window).
+      openReactions: () => openEditor(),
       init() {
         mount.innerHTML = '';
         host = document.createElement('div');
@@ -163,16 +233,31 @@ registerModule(
         host.style.cssText = 'position:relative;width:100%;height:100%;min-height:120px;overflow:hidden';
         mount.append(host);
         cfg = configFrom(state?.get?.() || {});
-        scene = mountRoomScene(host, presetRecipe(cfg.preset), { ...renderOpts(cfg), bus: ctx.bus, onUnclaimed });
+        // Nimrod's help. Draws nothing until he is pressed (cat_help.js), so mounting it is free.
+        help = mountCatHelp(host, {
+          output: ctx.output || null,
+          screen: 'room',
+          onShow: () => scene?.catAway(true),
+          onClose: () => scene?.catAway(false),
+        });
+        const onCatPress = ({ selected }) => !!help?.explain(selected || { kind: 'screen', screen: 'room' });
+        scene = mountRoomScene(host, presetRecipe(cfg.preset), { ...renderOpts(cfg), bus: ctx.bus, onUnclaimed, onCatPress, onSound });
+        scene.setNotify(rulesFrom(state?.get?.() || {}));
         const sub = state?.subscribe?.((row) => apply(row));
         if (typeof sub === 'function') offs.push(sub);
         // THE VERBS. `next`/`prev` walk the room's objects in Design's scan order, `select` presses
         // the one the cursor is on, `back` puts a lifted panel back. Through `ctx.bus`, so each also
-        // answers on this instance's own scoped alias (bus.js `scope`).
-        ctx.bus?.subscribe?.('room/next', () => scene?.focusNext());
-        ctx.bus?.subscribe?.('room/prev', () => scene?.focusPrev());
-        ctx.bus?.subscribe?.('room/select', () => scene?.select());
-        ctx.bus?.subscribe?.('room/back', () => scene?.back());
+        // answers on this instance's own scoped alias (bus.js `scope`). While the reactions editor
+        // is open, they drive it instead (its first stop, and `back`, is Done).
+        const drive = (inEditor, inRoom) => () => { if (editor) { armEditor(); inEditor(editor); } else inRoom(); };
+        ctx.bus?.subscribe?.('room/next', drive((e) => e.next(), () => scene?.focusNext()));
+        ctx.bus?.subscribe?.('room/prev', drive((e) => e.prev(), () => scene?.focusPrev()));
+        ctx.bus?.subscribe?.('room/select', drive((e) => e.select(), () => scene?.select()));
+        ctx.bus?.subscribe?.('room/back', drive(() => closeEditor(), () => scene?.back()));
+        ctx.bus?.subscribe?.('room/reactions', () => openEditor());
+        // Holding the switch on an animal pets it (room-add-ons §9). Whatever turns a held switch
+        // into a verb (input_longpress.js) publishes this; a press on Nimrod is his help instead.
+        ctx.bus?.subscribe?.('room/hold', () => scene?.hold());
         // Objects react alongside the on-screen cue, never instead of it.
         ctx.bus?.subscribe?.(LISTENING_TOPIC, (p) => {
           if (!scene) return;
@@ -181,7 +266,15 @@ registerModule(
         });
         ctx.bus?.subscribe?.('room/notify', (p) => {
           const event = typeof p === 'string' ? p : p?.event;
-          if (scene && event) scene.notify(event, Number(p?.ms) > 0 ? { ms: Number(p.ms) } : {});
+          if (!scene || !event) return;
+          scene.notify(event, Number(p?.ms) > 0 ? { ms: Number(p.ms) } : {});
+          // The cue ALWAYS comes too — even when no object in this room reacts to it.
+          if (!p?.cueShown) {
+            const known = ['wake', 'message', 'call', 'visitor', 'timer'].includes(event);
+            const text = typeof p?.text === 'string' && p.text.trim() ? p.text.trim()
+              : cueFor(known ? event : { on: 'custom', name: event });
+            scene.toast(text, Number(p?.ms) > 0 ? Math.min(30000, Number(p.ms)) : undefined);
+          }
         });
       },
       onResize() { scene?.fit(); },
@@ -191,6 +284,9 @@ registerModule(
       destroy() {
         torn = true;
         while (offs.length) { try { offs.pop()(); } catch { /* gone */ } }
+        closeEditor();
+        help?.destroy();
+        help = null;
         scene?.destroy();
         scene = null;
         mount.innerHTML = '';

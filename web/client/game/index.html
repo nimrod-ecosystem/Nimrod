@@ -73,6 +73,11 @@
     <label><input type="checkbox" data-cat-pref="follow"> Move on by himself when you have done a step</label>
     <label>If nobody touches the page, he closes after
       <select data-cat-pref="restMinutes"></select></label>
+    <label><input type="checkbox" data-cat-pref="help"> Cat help: press him and he explains what you picked</label>
+    <label>Where he sits when he explains
+      <select data-cat-pref="where"></select></label>
+    <label>His explanation closes after
+      <select data-cat-pref="helpCloseSec"></select></label>
   </details>
   <ol class="g-steps">
     <li class="g-step" data-step="profile">
@@ -120,7 +125,7 @@ import { createLocalBackend } from '../local_store.js';
 import { authHeaders } from '../auth.js';
 import { pickCurrent, readLastPerson } from '../people.js';
 import { createGame, signWords } from './game.js';
-import { mountCat, readCatPrefs, writeCatPrefs, CHATTINESS, REST_CHOICES } from '../cat_guide.js';
+import { mountCat, readCatPrefs, writeCatPrefs, CHATTINESS, REST_CHOICES, WHERE, HELP_CLOSE_CHOICES } from '../cat_guide.js';
 import { CAT_STEPS, GAME_PAGE, catGoThere, rememberCatProfile } from './cat_steps.js';
 import { createOutputBus } from '../output.js';
 import { defaultChannels } from '../output_channels.js';
@@ -153,11 +158,18 @@ document.querySelector('[data-cat-ask]').addEventListener('click', () => {
   restSel.value = String(prefs.restMinutes);
   document.querySelector('[data-cat-pref="speak"]').checked = prefs.speak;
   document.querySelector('[data-cat-pref="follow"]').checked = prefs.follow;
+  document.querySelector('[data-cat-pref="help"]').checked = prefs.help;
+  const whereSel = document.querySelector('[data-cat-pref="where"]');
+  whereSel.innerHTML = WHERE.map((w) => `<option value="${w.value}">${w.label}</option>`).join('');
+  whereSel.value = prefs.where;
+  const closeSel = document.querySelector('[data-cat-pref="helpCloseSec"]');
+  closeSel.innerHTML = HELP_CLOSE_CHOICES.map((s) => `<option value="${s}">${s ? `${s} seconds` : 'never (close it yourself)'}</option>`).join('');
+  closeSel.value = String(prefs.helpCloseSec);
   document.querySelector('.g-cat-set').addEventListener('change', (e) => {
     const key = e.target.dataset?.catPref;
     if (!key) return;
     const value = e.target.type === 'checkbox' ? e.target.checked
-      : key === 'restMinutes' ? Number(e.target.value) : e.target.value;
+      : key === 'restMinutes' || key === 'helpCloseSec' ? Number(e.target.value) : e.target.value;
     if (cat?.shown()) cat.setPrefs({ [key]: value }); else writeCatPrefs(undefined, { [key]: value });
   });
 }
