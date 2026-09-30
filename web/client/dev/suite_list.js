@@ -64,6 +64,8 @@ export const SUITES = [
   'pack_library', 'pack_loader', 'user_packs', 'aac_sets', 'board_symbols', 'learn_cma_source',
   // Games, scoring and the reward side.
   'game', 'points', 'scoreboard', 'contests', 'word_games', 'transcript_quiz', 'reading_log',
+  // Row 2.45: the shared miss-flow engine and the games on it, and the sing-along frame.
+  'quiz_flow', 'spelling', 'simple_math', 'name_that', 'karaoke',
   // The room, the cat, ambient motion and sound.
   'room', 'room_scene', 'room_notify', 'cat_guide', 'cat_help', 'comet_ambient', 'ambient_drift', 'mixer',
   // The QR encoder checked against a reference decoder.

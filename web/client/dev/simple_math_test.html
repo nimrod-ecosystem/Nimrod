@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>simple math — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>simple math (row 2.45)</h1>
+<p>Plus, minus and times within a range that is a setting. Answer by switch (one number offered at a
+time: "Is it 7?"), on a number pad, or aloud. Hints: how to count it (with dots), then a range.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep } from './quiz_test_rig.js';
+import { getManifest } from '../module.js';
+import '../modules/simple_math.js';
+import { GAME, LINES, DEFAULTS, makeProblems, padBoard } from '../modules/simple_math.js';
+import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const { check, section, finish } = harness();
+const R = (saved = {}, opts = {}) => rig('simple_math', { saved, ...opts });
+let seed = 7;
+const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+try {
+  section('the problems stay inside the range they were asked for');
+  {
+    const add = makeProblems({ ops: 'add', maxNumber: 10 }, rand, 200);
+    check('plus within 10: every sum is 10 or less, no zeros', add.every((p) => p.op === 'add' && p.answer <= 10 && p.a >= 1 && p.b >= 1),
+      JSON.stringify(add.find((p) => p.answer > 10 || p.a < 1 || p.b < 1)));
+    const sub = makeProblems({ ops: 'sub', maxNumber: 10 }, rand, 200);
+    check('minus within 10: never below one, never above ten', sub.every((p) => p.op === 'sub' && p.answer >= 1 && p.a <= 10 && p.answer === p.a - p.b));
+    const mul = makeProblems({ ops: 'mul', maxNumber: 5 }, rand, 200);
+    check('times within 5: both numbers 5 or less', mul.every((p) => p.op === 'mul' && p.a <= 5 && p.b <= 5 && p.answer === p.a * p.b));
+    const mix = makeProblems({ ops: 'addsub', maxNumber: 10 }, rand, 200);
+    check('plus and minus: both turn up', mix.some((p) => p.op === 'add') && mix.some((p) => p.op === 'sub'));
+    const all = makeProblems({ ops: 'all', maxNumber: 12 }, rand, 300);
+    check('all three: all three turn up', ['add', 'sub', 'mul'].every((o) => all.some((p) => p.op === o)));
+    check('an unknown setting falls back to the default, not to nothing',
+      makeProblems({ ops: 'banana', maxNumber: 'x' }, rand, 20).length === 20);
+  }
+
+  section('the settings');
+  {
+    const m = getManifest(GAME);
+    check('built on the new core, nothing to fetch', m.core === 'new' && m.dependsOn === 'local');
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('which sums is a setting (plus / minus / times / mixes)', (f('ops')?.options || []).length >= 4);
+    check('how big the numbers get is a setting', (f('maxNumber')?.options || []).map((o) => o.value).join(',') === '5,10,12,20');
+    check('answer by offers or a number pad is a setting', (f('answerWith')?.options || []).map((o) => o.value).join(',') === 'offer,pad');
+    check('dots with the hint is a setting', !!f('dots'));
+    const all = { ...FLOW_LINES, ...LINES };
+    const missing = Object.keys(all).filter((k) => { const s = f(k); return !s || s.kind !== 'text' || s.default !== all[k]; });
+    check('*** every spoken line is an editable text setting ***', missing.length === 0, missing.join(','));
+    const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: GAME }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+    check('no line says she / her', !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ')));
+  }
+
+  // =====================================================================================
+  section('asking, and the switch path: one number at a time');
+  {
+    const r = R();
+    const it = r.probe().item;
+    const sym = { add: '+', sub: '−', mul: '×' }[it.op];
+    check('the sum on screen', r.host.querySelector('.wg-ask')?.textContent.replace(/\s/g, '') === `${it.a}${sym}${it.b}=?`,
+      r.host.querySelector('.wg-ask')?.textContent);
+    const word = { add: 'plus', sub: 'minus', mul: 'times' }[it.op];
+    check('...and said, with the first number offered', r.said[0].startsWith(`What is ${it.a} ${word} ${it.b}?`) && /Is it \d+\?$/.test(r.said[0]), r.said[0]);
+    const cands = r.probe().candidates;
+    check('three numbers are offered, one of them right, none below zero, none the same',
+      cands.length === 3 && cands.includes(String(it.answer)) && new Set(cands).size === 3 && cands.every((c) => Number(c) >= 0), cands.join(','));
+    let guard = 0;
+    while (r.probe().candidate !== String(it.answer) && guard++ < 5) r.host.querySelector('[data-act="no"]').click();
+    r.host.querySelector('[data-act="yes"]').click();
+    check('No, No, Yes on the right one: right', r.phase() === 'celebrate');
+    check('...the pair says it', r.last() === `Yes! ${it.a} ${word} ${it.b} is ${it.answer}.`, r.last());
+    await sleep(10);
+    check('...one School point', r.points().length === 1);
+    r.inst.destroy();
+  }
+
+  section('*** the miss flow and the hints (with dots) ***');
+  {
+    const r = R({ ops: 'add', maxNumber: 5 });
+    const it = r.probe().item;
+    check('no dots before a hint (the default is dots WITH the hint)', !r.host.querySelector('.qz-dot'));
+    r.eng.hear({ text: String(it.answer + 1), confidence: 0.95 });
+    check('a confident wrong number: Mike’s line, then how to count it',
+      r.last().startsWith(`It sounded like you said ${it.answer + 1}. That is incorrect. Here is a hint: start at ${it.a} and count on ${it.b} more.`), r.last());
+    check('...and the dots appear: one row for each number', r.host.querySelectorAll('.qz-dotrow').length === 2
+      && r.host.querySelectorAll('.qz-dot').length === it.a + it.b);
+    r.eng.hear({ text: String(it.answer + 1), confidence: 0.95 });
+    r.eng.hear({ text: 'try again', confidence: 0.9 });
+    const h = r.probe().hints[1];
+    check('try again: the second hint is a range', /^it is more than \d+ and less than \d+$/.test(h), h);
+    check('*** ...which never names the answer ***', !new RegExp(`\\b${it.answer}\\b`).test(h), h);
+    r.inst.destroy();
+
+    const s = R({ ops: 'sub', maxNumber: 10, dots: 'always' });
+    const is = s.probe().item;
+    check('"always": dots from the start; minus shows the ones taken away hollow',
+      s.host.querySelectorAll('.qz-dot').length === is.a && s.host.querySelectorAll('.qz-dot[data-away]').length === is.b);
+    s.inst.destroy();
+
+    const m = R({ ops: 'mul', maxNumber: 5, dots: 'always' });
+    const im = m.probe().item;
+    check('times: rows of dots', m.host.querySelectorAll('.qz-dotrow').length === im.a && m.host.querySelectorAll('.qz-dot').length === im.a * im.b);
+    m.inst.destroy();
+  }
+
+  section('by voice');
+  {
+    const r = R({ ops: 'add', maxNumber: 10 });
+    const it = r.probe().item;
+    const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+    r.eng.hear({ text: `it's ${words[it.answer]}`, confidence: 0.9 });
+    check('"it\'s seven": right', r.phase() === 'celebrate');
+    r.inst.destroy();
+    const u = R();
+    const iu = u.probe().item;
+    u.eng.hear({ text: String(iu.answer), confidence: 0.3 });
+    check('unsure below the threshold, even when right', u.phase() === 'unsure');
+    u.eng.press('confirm');
+    check('...Yes: right', u.phase() === 'celebrate');
+    u.inst.destroy();
+    const n = R();
+    n.eng.hear({ text: 'banana', confidence: 0.9 });
+    check('a word that is not a number: not caught, not a miss', n.probe().misses === 0 && n.phase() === 'asking');
+    const g = n.lastGrammar();
+    check('the grammar: number words, and [unk]', g.open && g.words.includes('seven') && g.words.includes(UNKNOWN));
+    n.inst.destroy();
+  }
+
+  section('the number pad (a setting)');
+  {
+    check('the pad: 1-9, then 0, Delete, Check', padBoard().map((row) => row.map((k) => k.key ?? k.cmd).join('')).join('|')
+      === '123|456|789|0erasecheck', JSON.stringify(padBoard()));
+    const r = R({ ops: 'mul', maxNumber: 12, answerWith: 'pad' }, { rand: () => 0.99 });
+    const it = r.probe().item;
+    check('no Yes/No on the pad', !r.host.querySelector('[data-act="yes"]') && r.host.querySelectorAll('[data-letter]').length === 10);
+    for (const d of String(it.answer)) r.host.querySelector(`[data-letter="${d}"]`).click();
+    check('typing the answer checks it: right', r.phase() === 'celebrate', `${it.a}x${it.b} ${r.probe().entry}`);
+    r.inst.destroy();
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

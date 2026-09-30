@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>name that — state, animal, person — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>name that (row 2.45)</h1>
+<p>Name that state (text clues, no map download), animal, or PERSON — built from the family's own
+recorded messages: the clip plays, then "Who is this?", answered by switch from a few names or
+aloud. Person's miss flow is gentle by default and a setting.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep } from './quiz_test_rig.js';
+import { getManifest } from '../module.js';
+import '../modules/name_that.js';
+import { GAME, GAMES, STATES, ANIMALS, LINES, personFromFileName } from '../modules/name_that.js';
+import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const { check, section, finish } = harness();
+
+// A fake media source: flat files and/or one folder per person. Every seam is injected, so nothing
+// here reaches a network, a folder, or a real <video>.
+function media({ flat = [], albums = {}, sources = null } = {}) {
+  const src = { id: 's1', label: 'Family', kind: 'agent', base_url: 'http://agent.test' };
+  const played = [];
+  let handlers = null;
+  const released = [];
+  return {
+    played, released,
+    end: () => { const h = handlers; handlers = null; h?.onEnded?.(); },
+    fail: () => { const h = handlers; handlers = null; h?.onError?.(new Error('nope')); },
+    playing: () => !!handlers,
+    ctx: {
+      sources: { list: async () => (sources || [src]) },
+      resolveListing: async (s, album) => ({ album, albums: album ? [] : Object.keys(albums), items: [] }),
+      listItemNames: async (s, album) => (album ? (albums[album.split('/').pop()] || []) : flat)
+        .map((n) => ({ path: album ? `${album}/${n}` : n, name: n,
+          kind: /\.(mp3|m4a|wav|ogg)$/i.test(n) ? 'audio' : /\.(jpg|png)$/i.test(n) ? 'image'
+            : /\.(mp4|webm|mov|m4v)$/i.test(n) ? 'video' : null })),
+      resolveItemUrl: async (s, path) => ({ url: `blob:${path}`, release: () => released.push(path) }),
+      playClip: (host, clip, h) => { handlers = h; played.push(clip); return { stop: () => { handlers = null; } }; },
+    },
+  };
+}
+const R = (saved = {}, extra = {}, opts = {}) => rig('name_that', { saved, extra, ...opts });
+const waitFor = async (fn, ms = 1500) => { const t0 = Date.now(); while (!fn() && Date.now() - t0 < ms) await sleep(10); return fn(); };
+
+try {
+  // =====================================================================================
+  section('the data: fifty states, and the animals; no hint gives the answer away');
+  {
+    check('fifty states', STATES.length === 50 && new Set(STATES.map((s) => s.answer)).size === 50);
+    check('each has a nickname, a capital and a region', STATES.every((s) => s.nickname && s.capital && s.region));
+    const give = STATES.filter((s) => [1, 2].some((n) => {
+      const h = s.hints?.[n - 1] || '';
+      return h.toLowerCase().includes(s.answer.toLowerCase());
+    }));
+    check('*** no state hint names the state (Oklahoma City, Indianapolis) ***', give.length === 0, give.map((s) => s.answer).join(','));
+    check('no nickname names its state either', STATES.every((s) => !s.nickname.toLowerCase().includes(s.answer.toLowerCase())),
+      STATES.filter((s) => s.nickname.toLowerCase().includes(s.answer.toLowerCase())).map((s) => s.answer).join(','));
+    check('a real list of animals', ANIMALS.length >= 15);
+    check('each animal: a question, a hint, an explanation', ANIMALS.every((a) => a.ask && a.hint && a.explain));
+    const aGive = ANIMALS.filter((a) => new RegExp(`\\b${a.answer}`, 'i').test(`${a.ask} ${a.hint}`));
+    check('*** no animal question or hint names the animal ***', aGive.length === 0, aGive.map((a) => a.answer).join(','));
+    check('no line says she / her', !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ')
+      + JSON.stringify(ANIMALS) + JSON.stringify(STATES)));
+  }
+
+  section('names from file names');
+  {
+    check('"Annie - how we met.mp4" -> Annie', personFromFileName('Annie - how we met.mp4') === 'Annie');
+    check('"Uncle Bob 2.mp4" -> Uncle Bob', personFromFileName('Uncle Bob 2.mp4') === 'Uncle Bob');
+    check('"carol_smith.webm" -> carol smith', personFromFileName('carol_smith.webm') === 'carol smith');
+    check('"Dave.MOV" -> Dave', personFromFileName('Dave.MOV') === 'Dave');
+  }
+
+  section('the settings');
+  {
+    const m = getManifest(GAME);
+    check('built on the new core; its media is local', m.core === 'new' && m.dependsOn === 'local');
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('which game: animal, state, person', (f('game')?.options || []).map((o) => o.value).join(',') === GAMES.join(','));
+    check('*** the gentler miss flow for PERSON is a setting, gentle by default ***',
+      f('personMiss')?.default === 'gentle' && (f('personMiss')?.options || []).map((o) => o.value).join(',') === 'gentle,standard');
+    check('where the messages are: a source and a folder', f('sourceId')?.kind === 'choice' && f('album')?.kind === 'text');
+    const all = { ...FLOW_LINES, ...LINES };
+    const missing = Object.keys(all).filter((k) => { const s = f(k); return !s || s.kind !== 'text' || s.default !== all[k]; });
+    check('*** every spoken line is an editable text setting ***', missing.length === 0, missing.join(','));
+    const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: GAME })
+      .filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+  }
+
+  // =====================================================================================
+  section('name that animal: the standard flow');
+  {
+    const r = R({ game: 'animal' });
+    const it = r.probe().item;
+    check('the question is asked, with one animal offered', r.said[0].startsWith(it.ask) && /Is it (a |an )?[a-z ]+\?$/i.test(r.said[0]), r.said[0]);
+    const wrong = r.probe().candidates.find((c) => c !== it.answer);
+    r.eng.hear({ text: `it's a ${wrong}`, confidence: 0.95 });
+    check('"it\'s a pig" is heard as pig; wrong: Mike’s line and the hint',
+      r.last().startsWith(`It sounded like you said ${wrong}. That is incorrect. Here is a hint: ${it.hint}.`), r.last());
+    r.eng.hear({ text: it.answer, confidence: 0.95 });
+    check('right: the explanation', r.phase() === 'celebrate' && r.last() === `Yes! ${it.explain}`, r.last());
+    r.inst.destroy();
+    const s = R({ game: 'animal' });
+    let guard = 0;
+    while (s.probe().candidate !== s.probe().item.answer && guard++ < 5) s.eng.press('no');
+    s.eng.press('yes');
+    check('by switch: No, No, Yes', s.phase() === 'celebrate');
+    s.inst.destroy();
+  }
+
+  section('name that state');
+  {
+    const r = R({ game: 'state' });
+    const it = r.probe().item;
+    check('asked by its nickname, with a state offered', r.said[0].startsWith(`Which state is known as ${it.nickname}?`), r.said[0]);
+    check('the nickname is on a card on screen', r.host.querySelector('.qz-card')?.textContent.includes(it.nickname));
+    r.eng.hear({ text: `I think it is ${it.answer}`, confidence: 0.95 });
+    check('a two-word state inside a sentence is found; the capital is in the explanation',
+      r.phase() === 'celebrate' && r.last().includes(it.capital), r.last());
+    r.inst.destroy();
+    const n = R({ game: 'state' });
+    const words = n.lastGrammar().words;
+    check('the grammar has every state, and [unk]', STATES.every((s) => words.includes(s.answer.toLowerCase())) && words.includes(UNKNOWN));
+    n.inst.destroy();
+    const p = R({ game: 'animal' });
+    p.publish('name_that/play', { game: 'state' });
+    check('"play name that state" switches game (name_that/play)', p.probe().game === 'state' && p.stored().game === 'state');
+    p.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** name that person: no messages yet is said plainly ***');
+  {
+    const none = media({ sources: [] });
+    const r = R({ game: 'person' }, none.ctx);
+    await waitFor(() => r.phase() === 'empty');
+    check('no source: "empty", with what to do about it', r.phase() === 'empty'
+      && /media source/i.test(r.host.textContent), r.host.textContent.slice(0, 200));
+    check('...and nothing said aloud to the room', r.said.length === 0);
+    r.inst.destroy();
+
+    const one = media({ flat: ['Annie - hello.mp4', 'Annie - again.mp4'] });
+    const o = R({ game: 'person' }, one.ctx);
+    await waitFor(() => o.phase() === 'empty');
+    check('one person: needs at least two, and says so', o.phase() === 'empty' && /two people/i.test(o.host.textContent), o.host.textContent.slice(0, 200));
+    o.inst.destroy();
+  }
+
+  section('*** name that person: the clip plays FIRST, and nothing talks over it ***');
+  {
+    const m = media({ flat: ['Annie - how we met.mp4', 'Bob - hello.mp4', 'Bob 2.mp4', 'notes.txt'], albums: { Carol: ['birthday.mp4'] } });
+    const r = R({ game: 'person' }, m.ctx);
+    await waitFor(() => m.played.length === 1);
+    const it = r.probe().item;
+    check('people from file names AND from a folder per person', ['Annie', 'Bob', 'Carol'].includes(it?.answer), it?.answer);
+    check('a clip of that person is playing', m.played.length === 1 && String(m.played[0].path).includes(it.answer === 'Carol' ? 'Carol/' : it.answer));
+    check('*** the question is NOT said while the clip plays ***', r.said.length === 0, r.said.join(' | '));
+    check('*** and the grammar is closed while it plays (it would hear the clip) ***', r.lastGrammar()?.open === false);
+    check('"Who is this?" is on screen already', /Who is this\?/.test(r.host.textContent));
+    m.end();
+    check('the clip ends: the question is said, with a name offered', /^Who is this\? Is it [A-Za-z ]+\?$/.test(r.last()), r.last());
+    check('...and the grammar opens, with every name in it', r.lastGrammar().open && ['annie', 'bob', 'carol'].every((n) => r.lastGrammar().words.includes(n)));
+    const wrong = r.probe().candidates.find((c) => c !== it.answer);
+    r.eng.hear({ text: wrong, confidence: 0.95 });
+    check('*** a miss is GENTLE by default: whose message it was, and listen again ***',
+      r.phase() === 'gentle' && r.last() === `That was ${it.answer}'s message. Let's listen again?`, r.last());
+    check('*** never "incorrect" ***', !r.said.join(' ').includes('incorrect'));
+    const before = r.said.length;
+    r.host.querySelector('[data-act="replay"]').click();
+    await waitFor(() => m.played.length === 2);   // the clip's address is resolved first
+    check('"Listen again" plays the clip again', m.played.length === 2);
+    check('...and holds "another one?" until it has finished', r.said.length === before && r.phase() === 'another');
+    m.end();
+    check('...then asks it', r.last() === FLOW_LINES.anotherLine, r.last());
+    await sleep(10);
+    check('nothing paid for a miss', r.points().length === 0);
+    r.eng.press('more');
+    await waitFor(() => m.played.length === 3);
+    m.end();
+    const it2 = r.probe().item;
+    r.eng.hear({ text: it2.answer, confidence: 0.95 });
+    check('right: "That was X."', r.phase() === 'celebrate' && r.last() === `Yes! That was ${it2.answer}.`, r.last());
+    await sleep(10);
+    const pts = r.points();
+    check('one point, and *** the points log does not carry anybody\'s name ***', pts.length === 1
+      && !/annie|bob|carol/i.test(JSON.stringify(pts)), JSON.stringify(pts));
+    r.inst.destroy();
+    check('destroy stops the clip', !m.playing());
+  }
+
+  section('name that person set to the standard flow, and a clip that fails');
+  {
+    const m = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol.mp4'] });
+    const r = R({ game: 'person', personMiss: 'standard' }, m.ctx);
+    await waitFor(() => m.played.length === 1);
+    m.fail();
+    check('a clip that will not play does not strand the question: it is asked', /Who is this\?/.test(r.last()), r.last());
+    const it = r.probe().item;
+    const wrong = r.probe().candidates.find((c) => c !== it.answer);
+    r.eng.hear({ text: wrong, confidence: 0.95 });
+    check('"standard": Mike’s line, the hint (first letter)',
+      r.last().startsWith(`It sounded like you said ${wrong}. That is incorrect. Here is a hint: it starts with ${it.answer[0].toUpperCase()}.`), r.last());
+    r.eng.hear({ text: it.answer.toLowerCase(), confidence: 0.95 });
+    check('...a name said in lower case is still right', r.phase() === 'celebrate');
+    r.inst.destroy();
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

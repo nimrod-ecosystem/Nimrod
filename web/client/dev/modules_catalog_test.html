@@ -57,6 +57,10 @@ import '../modules/bank.js';      // registers 'bank' (the shared questions + wo
 import '../modules/wordforge.js';
 import '../modules/youtube.js';
 import '../modules/word_games.js';
+import '../modules/spelling.js';
+import '../modules/simple_math.js';
+import '../modules/name_that.js';
+import '../modules/karaoke.js';
 // `wallpaper` was already reaching the registry, but only because `director.js` imports it —
 // a transitive registration this suite would lose the moment the director stopped mounting an
 // overlay. Both are listed explicitly now. Worth noting what that says about the check itself:
@@ -153,8 +157,10 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-09-30: `word_games` (row 2.31) is built on the new core, like `button`.
   // 2026-09-30: `room` (rows 2.33/2.34/2.37, the room renderer) is built on the new core.
   // 2026-09-30: `scoreboard` (row 2.40) is built on the new core.
-  const PORTED = ['button', 'calculator', 'room', 'scoreboard', 'word_games'];
-  check('exactly five modules in today’s real registry are on the new core: button, calculator, room, scoreboard and word_games',
+  // 2026-09-30: row 2.45's `karaoke`, `name_that`, `simple_math` and `spelling` are built on the new core.
+  const PORTED = ['button', 'calculator', 'karaoke', 'name_that', 'room', 'scoreboard', 'simple_math',
+    'spelling', 'word_games'];
+  check('exactly nine modules in today’s real registry are on the new core: button, calculator, karaoke, name_that, room, scoreboard, simple_math, spelling and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length
