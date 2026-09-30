@@ -9,10 +9,14 @@ out later if it ever earns its own release cycle.
 
 ## Step 1: your profile (what is here today)
 
-Your profile is your first dashboard. `/game/` is a short checklist that drives the real product:
+Your profile is your first dashboard. Since 2026-09-30 (row 2.29) it lives on **Home** (the
+modules page): a signed-in person lands there on it, as a preview, and **Save** runs the three steps
+below (`profileSetup()` is the same setup as data, so the preview and the real thing cannot drift).
+`/game/` is still a short checklist that drives the real product:
 
 1. **Make my profile** — makes one screen called "My profile" for the current person. It starts
-   **empty**, with a room as its background (the Cozy live theme) and clear panels so the room
+   **empty**, with a room as its background (the Cozy live theme) and see-through panels
+   (`PROFILE_SURFACE`; clear until 2026-09-30, Mike: "Make see through the default") so the room
    shows around whatever goes on the wall.
 2. **Hang your picture** — adds a `button` module set up as a picture frame, in the first spot.
    The picture itself is chosen by the person, in its settings, from their own Media.

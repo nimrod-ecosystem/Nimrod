@@ -203,6 +203,101 @@
   .v-ran{background:#dff0e4;color:#1d5c38}
   .v-empty{background:#fdf0d5;color:#7a5a12}
   .v-threw{background:#fbe0dc;color:#8d2a1c}
+
+  /* ---- HOME: THIS PAGE, SIGNED IN, IS A DASHBOARD (rows 2.29 / 2.30, 2026-09-30) ----------
+   * Design's home-dashboard handoff: the module as large as the page allows, a module picker behind
+   * "Modules: <name>", Save / Save as / History / Full screen, and the real transport bar and
+   * settings menu inside the stage. `is-home` is set only for a signed-in visitor; signed out, every
+   * rule below is inert and the page is the parts page it always was. */
+  body.is-home .wrap{max-width:1600px}
+  body.is-home header.hero, body.is-home .legend, body.is-home .gaps{display:none}
+  body.is-home .browser{grid-template-columns:1fr;gap:12px;margin-top:14px}
+  body.is-home .pick{position:static;max-height:none;display:none}
+  body.is-home.pick-open .pick{display:flex}
+  body.is-home .picklist{max-height:44vh}
+  body.is-home .pickgroup{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+  body.is-home .pickgroup h3{grid-column:1/-1}
+  body.is-home .pickrow{border-color:var(--border);background:var(--surface-alt)}
+  /* A screen with a live theme paints its scene behind the whole page, so every piece of the page's
+     own text sits on a surface of its own (measured: the title was unreadable over the cozy room). */
+  body.is-home .detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+  body.is-home .detail h2{font-size:1.25rem;margin-bottom:2px}
+  body.is-home .detail .lead{font-weight:500;color:var(--text-soft);margin-bottom:10px}
+  body.is-home .detail .why, body.is-home .detail .note, body.is-home .detail dl{display:none}
+  body.is-home .trystage{height:calc(100vh - 250px);min-height:440px}
+  .pill.opt{background:var(--surface-alt);color:var(--text-soft);border:1px solid var(--border)}
+  .vb.opt{background:var(--surface-alt);color:var(--text-soft);border:1px solid var(--border)}
+  .pickrow[aria-current="true"] .vb.opt{background:transparent;color:var(--on-link);border-color:var(--on-link)}
+
+  /* The bar above the stage. Buttons are at least 44px (Design's desktop floor), and a button that
+     cannot do anything right now is DIMMED, never hidden (Design: a vanishing button costs a switch
+     user a press to find out it is gone). */
+  .stage-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+  .stage-bar[hidden]{display:none}
+  .hbtn{border:1px solid var(--border);background:var(--surface-alt);color:var(--text);
+    border-radius:10px;padding:9px 14px;font:650 .92rem var(--font);cursor:pointer;min-height:44px}
+  .hbtn:hover:not(:disabled){background:var(--surface)}
+  .hbtn:disabled{opacity:.45;cursor:not-allowed}
+  .hbtn.primary{background:var(--link);color:var(--on-link,#fff);border-color:var(--link)}
+  .hbtn[aria-pressed="true"],.hbtn[aria-expanded="true"]{outline:3px solid var(--link);outline-offset:1px}
+  .hbtn:focus-visible{outline:4px solid var(--link);outline-offset:2px}
+  .hb-status{margin-left:auto;font-size:.9rem;color:var(--text-soft);font-weight:650}
+  .hb-status.dirty{color:var(--accent-warm-deep)}
+
+  .welcome{background:var(--surface);border:2px solid var(--link);border-radius:var(--radius);padding:16px 18px}
+  .welcome[hidden]{display:none}
+  .welcome h2{margin:0 0 4px;font-size:1.2rem}
+  .welcome p{margin:0 0 12px;color:var(--text-soft);max-width:70ch}
+  .hbtns{display:flex;flex-wrap:wrap;gap:8px}
+
+  .home-settings{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+  .home-settings[hidden]{display:none}
+  .home-settings h2{margin:0 0 8px;font-size:1.02rem}
+  .hs-rows{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));margin-bottom:8px}
+  .hs-row{display:flex;justify-content:space-between;gap:12px;text-align:left}
+  .hs-row .v{font-weight:800}
+  .hs-note{margin:8px 0 0;font-size:.88rem;color:var(--text-muted)}
+
+  /* Dialogs are always SOLID (Design: a question you have to answer should not be see-through), and
+     Cancel comes first so a scan lands on the safe choice. A native <dialog>: Escape closes it. */
+  .home-dlg{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);
+    padding:18px 20px;max-width:min(560px,92vw);font:16px/1.5 var(--font)}
+  .home-dlg::backdrop{background:rgba(10,26,20,.5)}
+  .home-dlg h2{margin:0 0 6px;font-size:1.15rem}
+  .home-dlg p{margin:0 0 12px;color:var(--text-soft)}
+  .home-dlg .field{width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;
+    font:inherit;background:var(--surface-alt);color:var(--text);margin-bottom:10px}
+  .home-dlg .vers{display:grid;gap:6px;max-height:50vh;overflow:auto;margin-bottom:12px}
+  .home-dlg .ver{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 8px;
+    border:1px solid var(--border);border-radius:10px}
+  .home-dlg .ver small{display:block;color:var(--text-muted)}
+  .home-dlg .hbtns + .hbtns{margin-top:8px}
+  .home-toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:1000;
+    background:var(--text-strong);color:var(--on-dark);padding:10px 16px;border-radius:12px;font-weight:650;
+    max-width:min(640px,92vw)}
+  .home-toast[hidden]{display:none}
+
+  /* FULL SCREEN, AS A DASHBOARD: the stage fills the screen; the real bar inside it stays (its ⛶
+     leaves full screen too, and so does Escape). */
+  .trystage:fullscreen{width:100vw;height:100vh;border:0;border-radius:0}
+
+  /* THE MENU AND BAR BACKGROUND (Home setting, "Menu and bar background"). Only the placed bar
+     (.tb-bar) and the docked menu: the shell's PLAIN bar (.k-plain) is solid by design and nothing
+     here may restyle it. See-through is Design's 80% with a 14px blur; Fully clear drops the ground
+     and gives every word a halo and every control an outline (a button with no edge and no fill
+     cannot be found). */
+  .trystage[data-chrome="solid"] .tb-bar{background:#07120d}
+  .trystage[data-chrome="veil"] .tb-bar{background:rgba(7,18,13,.62);backdrop-filter:blur(14px)}
+  .trystage[data-chrome="veil"] .v-dock-left .st-scrim,.trystage[data-chrome="clear"] .v-dock-left .st-scrim{background:transparent}
+  .trystage[data-chrome="veil"] .v-dock-left .st-panel{background:color-mix(in srgb,var(--surface,#fff) 80%,transparent);
+    backdrop-filter:blur(14px)}
+  .trystage[data-chrome="clear"] .tb-bar{background:transparent;border-color:transparent}
+  .trystage[data-chrome="clear"] .v-dock-left .st-panel{background:transparent;box-shadow:none;border-color:transparent}
+  .trystage[data-chrome="clear"] .tb-bar,.trystage[data-chrome="clear"] .v-dock-left .st-panel{
+    text-shadow:0 0 2px #000,0 0 3px #000,0 0 5px #000,0 0 8px #000,0 1px 1px #000;color:#fff}
+  .trystage[data-chrome="clear"] .tb-bar button,.trystage[data-chrome="clear"] .v-dock-left .st-item{
+    outline:1.5px solid currentColor;outline-offset:-1.5px;color:#fff}
 </style>
 </head>
 <body>
@@ -261,6 +356,36 @@
   </div>
 
   <section class="browser">
+    <!-- HOME (signed in only; rows 2.29 / 2.30). Hidden, and inert, for a signed-out visitor. The
+         bar is Design's order: pick, edit/live, Save, Save as, History, Full screen, this page's
+         settings; then what state the module is in, in words. -->
+    <div class="stage-bar" id="stage-bar" role="toolbar" aria-label="The module you are looking at" hidden>
+      <button type="button" class="hbtn" data-home="picker" aria-expanded="false">Modules: <span id="hb-name">…</span></button>
+      <button type="button" class="hbtn" data-home="view" aria-pressed="false">Edit</button>
+      <button type="button" class="hbtn" data-home="save">Save</button>
+      <button type="button" class="hbtn" data-home="saveas">Save as…</button>
+      <button type="button" class="hbtn" data-home="history">History</button>
+      <button type="button" class="hbtn" data-home="full">Full screen</button>
+      <button type="button" class="hbtn" data-home="settings" aria-expanded="false">Page settings</button>
+      <span class="hb-status" id="hb-status" role="status" aria-live="polite"></span>
+    </div>
+    <section class="welcome" id="welcome" aria-labelledby="welcome-h" hidden>
+      <h2 id="welcome-h">This is your profile. Setting it up is optional.</h2>
+      <p>It is a screen of your own: a room behind it, your picture on the wall and your name on a
+        sign. Change it if you like, or skip it and go straight to anything else. It is always here
+        under Modules, and nothing is made until you press Save.</p>
+      <div class="hbtns">
+        <button type="button" class="hbtn primary" data-home="skip">Skip for now</button>
+        <button type="button" class="hbtn" data-home="setup">Set up my profile</button>
+        <button type="button" class="hbtn" data-home="nomore">Don’t show this again</button>
+      </div>
+    </section>
+    <section class="home-settings" id="home-settings" aria-labelledby="hs-h" hidden>
+      <h2 id="hs-h">This page</h2>
+      <div class="hs-rows" id="hs-rows"></div>
+      <button type="button" class="hbtn" data-home="rewelcome">Show the welcome again</button>
+      <p class="hs-note">A module’s own settings are in its ⚙ menu, on the bar under it.</p>
+    </section>
     <aside class="pick">
       <label class="sr" for="q">Search the parts</label>
       <input type="search" id="q" placeholder="Search — “photos”, “switch”, “game”…"
@@ -269,6 +394,8 @@
     </aside>
     <div class="detail" id="detail"></div>
   </section>
+  <dialog class="home-dlg" id="home-dlg" aria-labelledby="home-dlg-h"></dialog>
+  <p class="home-toast" id="home-toast" role="status" aria-live="polite" hidden></p>
 
   <!-- THE "run every one of them" BUTTON IS GONE FROM THIS PAGE, and the machinery is not.
 
@@ -309,7 +436,7 @@
 </div>
 
 <script type="module">
-import { listManifests } from './module.js';
+import { listManifests, getManifest } from './module.js';
 import { GROUPS, USE, groupItems, reconcile, titleFor } from './modules_catalog.js';
 // Importing the modules is what REGISTERS them. This page reads the same registry the home
 // page and the kiosk read, so it cannot describe a build that is not the one running.
@@ -359,8 +486,13 @@ import './modules/bank.js';
 // Settings is a caregiver/admin tool, the same reason keyboard.js was pulled from this page
 // earlier this session; both stay registered and placeable from home.html's composer.
 import { authHeaders } from './auth.js';
-import { createProfilesClient, resolveTheme } from './profile.js';
+import { createProfilesClient, resolveTheme, ensureProfile } from './profile.js';
 import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+// HOME (rows 2.29 / 2.30): what this page is for a signed-in visitor. See the HOME block below.
+import { createState } from './state.js';
+import { pickCurrent, readLastPerson } from './people.js';
+import * as HD from './home_dashboard.js';
+import { createGame, profileSetup, kioskURL } from './game/game.js';
 
 // *** THE BRAND LINK WENT TO "/", NOT BACK TO YOUR OWN DASHBOARDS. *** Mike, live, 2026-09-08:
 // "I hit the Nimrod up top to go back to the home page and it took me to the landing page
@@ -388,7 +520,9 @@ const signedIn = (async () => {
     currentUser = me.user;
     const brand = document.querySelector('.top a.brand');
     const signIn = document.querySelector('.top nav a.solid');
-    if (brand) brand.href = '/home.html';
+    // Home is THIS page for a signed-in visitor since 2026-09-30 (row 2.29); their list of screens
+    // stays one link away.
+    if (brand) brand.href = '/modules.html';
     if (signIn) { signIn.textContent = 'My dashboards'; signIn.href = '/home.html'; }
   } catch { /* offline or blocked -- the signed-out header is still correct in that case */ }
 })();
@@ -447,6 +581,15 @@ const detailEl = document.getElementById('detail');
 const qEl = document.getElementById('q');
 const verdicts = new Map();      // type -> verdict state, drawn as a badge on the row
 let selected = null;
+// HOME's state, declared up here because `renderList` (below, and called at once) reads it. Every
+// function that uses it is in the HOME block further down. `on` stays false for a signed-out visitor.
+const HOME = {
+  on: false, user: null, profiles: null, defaultId: null, person: null, game: null,
+  settings: HD.readHomeSettings(null), settingsRow: null, defaultSurface: undefined,
+  subject: null, target: null, draft: null, doc: null, docRow: null, restoredFrom: null,
+  welcome: false, busy: false, dlg: null,
+};
+const PROFILE_TITLE = 'Your profile';
 
 /** Free text over the words somebody would actually type. Includes the ACCESS label, so
  *  searching "switch" finds the things a switch can drive — the question the legend says
@@ -459,13 +602,20 @@ function haystack(m) {
 function renderList() {
   const q = (qEl.value || '').trim().toLowerCase();
   const hits = q ? ITEMS.filter((m) => haystack(m).includes(q)) : ITEMS;
+  // HOME: the person's own profile comes first, and says it is optional (Design: "Your room is first
+  // and marked Optional"; Mike: "It should be clear that you don't need to setup your profile").
+  const yours = HOME.on && HOME.game && (!q || 'your profile optional room picture name sign'.includes(q))
+    ? `<div class="pickgroup"><h3>Yours</h3>
+        <button type="button" class="pickrow" data-pick="${HD.PROFILE_SUBJECT}" aria-current="${selected === HD.PROFILE_SUBJECT}">
+          <span class="nm">${PROFILE_TITLE}</span><span class="vb opt">Optional</span></button></div>`
+    : '';
   if (!hits.length) {
-    listEl.innerHTML = `<p class="pickempty">Nothing matches “${esc(qEl.value)}”.</p>`;
+    listEl.innerHTML = yours || `<p class="pickempty">Nothing matches “${esc(qEl.value)}”.</p>`;
     return;
   }
   const byGroup = GROUPS.map((g) => [g, hits.filter((m) => m.group.id === g.id)])
     .filter(([, xs]) => xs.length);
-  listEl.innerHTML = byGroup.map(([g, xs]) => `
+  listEl.innerHTML = yours + byGroup.map(([g, xs]) => `
     <div class="pickgroup">
       <h3>${esc(g.title)}</h3>
       ${xs.map((m) => {
@@ -572,7 +722,8 @@ async function select(type, { forceDemo = false } = {}) {
 qEl.addEventListener('input', renderList);
 listEl.addEventListener('click', (e) => {
   const b = e.target.closest('[data-pick]');
-  if (b) select(b.dataset.pick);
+  if (!b) return;
+  if (HOME.on) requestSubject(b.dataset.pick); else select(b.dataset.pick);
 });
 
 renderList();
@@ -622,10 +773,12 @@ let auditing = false;
 // The embedding helper, loaded once before the first pick (see the bottom of the file), so
 // `select` can decide synchronously whether the kiosk is available at all.
 let mountEmbeddedKiosk = null;
+let ensureModuleInstance = null;
 let embeddingReady = false;
 async function loadEmbedding() {
   const mt = await import('./module_try.js');
   mountEmbeddedKiosk = mt.mountEmbeddedKiosk;
+  ensureModuleInstance = mt.ensureModuleInstance;
   embeddingReady = true;
 }
 
@@ -643,6 +796,519 @@ async function liveHost() {
       .then(({ createLiveHost }) => createLiveHost({ user: currentUser }));
   }
   return liveHostPromise;
+}
+
+// =====================================================================================================
+// HOME — THIS PAGE, SIGNED IN (rows 2.29 / 2.30, 2026-09-30).
+//
+// Mike: "what is currently the modules tab should just be the home page", opening on the person's
+// profile "in the edit view", with "An option to save that module ... save as or maybe a warning popup
+// if you're going to overwrite ... save history ... save last X versions ... A way to select which
+// module your viewing". Design's home-dashboard handoff says how it looks and in what order; the logic
+// that can be tested without a page is `home_dashboard.js` (and `dev/home_dashboard_test.html`), and
+// the page itself is proven by `dev/home_page_test.html`.
+//
+// WHAT IS BEING LOOKED AT (`HOME.target`), four ways:
+//   a module ON your screen        live: the real instance; its settings wait for Save (the draft)
+//   a module NOT on your screen    a preview; Save adds it to your screen with the settings chosen
+//   your profile, made             live: the whole "My profile" screen as a dashboard (home_embed.js)
+//   your profile, not made yet     a preview of exactly what game.js would make; Save makes it
+// So nothing is added to anybody's screen just by looking -- which used to happen on this page (a pick
+// added the module for real). With an explicit Save, adding is part of what Save does.
+//
+// *** NOTHING HERE CAN STRAND ANYBODY. *** The welcome card sits above the stage, never over it, and the
+// bar and the module work under it. Dialogs are the browser's own <dialog>: Escape and Cancel close
+// them, and Cancel is first. The "you have unsaved changes" question is asked only of a person
+// leaving this page at a computer; the real kiosk never loads any of this and saves as it always did.
+// =====================================================================================================
+const $h = (id) => document.getElementById(id);
+const hdlg = () => $h('home-dlg');
+// "Is somebody editing right now?" -- a press, a click or a key in the last two seconds. A setting a
+// module writes with nobody touching anything (Photos choosing its only source as it starts) is the
+// module setting itself up, not an edit, so it saves as it always did (home_dashboard.js createDraft).
+// Two seconds: long enough for a settings row's write after the press that made it (it is the same
+// tick) and a typed value's Enter; short enough that a module's own start-up writes a moment after
+// opening are not caught. NOT a person's preference, so not a page setting: it is how the page tells
+// a person's change from a module's, and a wrong number shows up as a stray "Unsaved changes" (too
+// long) or a change saved without Save (too short) -- both visible, neither loses anything.
+const HOME_EDIT_WINDOW_MS = 2000;
+let lastInputAt = 0;
+// Only input INSIDE the stage counts (the module, its bar, its docked ⚙ menu): the click that picked a
+// module is outside it, and the module setting itself up just after that click is not an edit.
+for (const ev of ['pointerdown', 'keydown', 'click', 'input', 'change']) {
+  document.addEventListener(ev, (e) => {
+    if (e.target instanceof Element && e.target.closest('#stage')) lastInputAt = Date.now();
+  }, true);
+}
+const isUserEdit = () => Date.now() - lastInputAt < HOME_EDIT_WINDOW_MS;
+const PREVIEW_PROFILE_ID = 'home-profile-preview';
+const PREVIEW_PICTURE = 'home-picture';
+const PREVIEW_SIGN = 'home-sign';
+
+const subjectTitle = (s) => (s === HD.PROFILE_SUBJECT
+  ? PROFILE_TITLE
+  : titleFor(ITEMS.find((m) => m.type === s) || { type: s }, manifests));
+const when = (t) => new Date(t).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short',
+  hour: 'numeric', minute: '2-digit' });
+const menuOpen = () => { try { return !!embed?.kiosk?.menu?.isOpen?.(); } catch { return false; } };
+const currentView = () => (menuOpen() ? 'edit' : 'live');
+
+function toast(msg) {
+  const t = $h('home-toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => { t.hidden = true; }, 3600);
+}
+
+function noteFor(t) {
+  if (t.kind === 'profile' && !t.live) {
+    return 'Your profile is optional, and it does not exist yet: nothing is made on your account until '
+      + 'you press Save. The bar below and its ⚙ menu work as they will on a real screen. Or choose '
+      + 'anything else from Modules.';
+  }
+  if (t.kind === 'profile') {
+    return `Your profile, live. The bar below and its ⚙ menu are the real ones, and settings you change `
+      + `wait for Save. <a href="${esc(kioskURL(t.profileId))}">Open it as a screen</a> · move things around `
+      + `in <a href="/home.html">My dashboards</a>.`;
+  }
+  if (!t.live) {
+    return 'Not on your screen yet. Try it here with the bar below and its ⚙ menu; Save adds it to your '
+      + 'screen with the settings you chose.';
+  }
+  return 'This is live on your screen: the bar below and its ⚙ settings menu are the real ones. '
+    + 'Settings you change here wait for Save; anything else saves as it happens.';
+}
+
+function renderHomeDetail(subject, target) {
+  const m = ITEMS.find((x) => x.type === subject);
+  const pill = subject === HD.PROFILE_SUBJECT
+    ? '<span class="pill opt">Optional</span>'
+    : m ? `<span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span>` : '';
+  const lead = subject === HD.PROFILE_SUBJECT
+    ? 'A screen of your own: a room behind it, your picture on the wall and your name on a sign.'
+    : (m?.lead || '');
+  detailEl.innerHTML = `
+    <h2>${esc(subjectTitle(subject))} ${pill}</h2>
+    <p class="lead">${esc(lead)}</p>
+    <div class="trystage mod-box" id="stage"></div>
+    <p class="stagenote" id="stagenote">${noteFor(target)}</p>`;
+  return $h('stage');
+}
+
+/** Which rows of a dashboard are drafted: the screen's settings, and each of its panels' settings. */
+function wrapRow(draft, handle, key, typeOf) {
+  if (key === 'settings') return draft.wrap(handle, key, HD.isScreenSetting);
+  const type = typeOf.get(key);
+  return type ? draft.wrap(handle, key, HD.settingKeysFor(getManifest(type))) : handle;
+}
+
+function applyView(v) {
+  const menu = embed?.kiosk?.menu;
+  if (!menu) return;
+  try {
+    if (v === 'edit') { if (!menu.isOpen()) menu.open(); } else if (menu.isOpen()) menu.close();
+  } catch (err) { console.error('home: view', err); }
+}
+
+async function openSubject(subject, { view = null } = {}) {
+  if (openStage) { host?.unmount(openStage); openStage = null; }
+  if (embed) { embed.destroy(); embed = null; }
+  HOME.docRow?.destroy?.(); HOME.docRow = null; HOME.doc = null; HOME.restoredFrom = null;
+  const mine = ++pickSeq;
+  // A NEW draft per subject, not a reset one: an older pick still booting wraps its handles into ITS
+  // draft, never into this one.
+  const draft = HD.createDraft({ onChange: () => { if (HOME.draft === draft) paintHome(); }, isUserEdit });
+  Object.assign(HOME, { draft, subject, target: null });
+  selected = subject;
+  renderList();
+  document.body.classList.remove('pick-open');
+  paintHome();
+  const { profiles, user } = HOME;
+  try {
+    let e = null;
+    let target = null;
+    if (subject === HD.PROFILE_SUBJECT) {
+      const st = await HOME.game.status();
+      const { mountEmbeddedScreen } = await import('./home_embed.js');
+      if (mine !== pickSeq) return;
+      if (st.profileId) {
+        const screen = await profiles.get(st.profileId);
+        if (mine !== pickSeq) return;
+        const typeOf = new Map((screen.modules || []).map((x) => [x.id, x.type]));
+        target = { live: true, kind: 'profile', profileId: st.profileId,
+                   docPid: st.profileId, docKey: HD.PROFILE_HISTORY_KEY };
+        const stage = renderHomeDetail(subject, target);
+        e = await mountEmbeddedScreen({ stage, user, profileId: st.profileId,
+          wrapState: (h, key) => wrapRow(draft, h, key, typeOf) });
+      } else {
+        // EXACTLY what game.js would make (profileSetup), held in the draft as its starting point.
+        const setup = profileSetup(HOME.person?.name);
+        const record = { id: PREVIEW_PROFILE_ID, name: 'My profile', person_id: null, modules: [
+          { id: PREVIEW_PICTURE, type: 'button', position: 0 }, { id: PREVIEW_SIGN, type: 'button', position: 1 }] };
+        draft.seed('settings', setup.screen);
+        draft.seed(PREVIEW_PICTURE, setup.picture);
+        draft.seed(PREVIEW_SIGN, setup.sign);
+        const typeOf = new Map(record.modules.map((x) => [x.id, x.type]));
+        target = { live: false, kind: 'profile' };
+        const stage = renderHomeDetail(subject, target);
+        e = await mountEmbeddedScreen({ stage, record,
+          layout: { preset: setup.preset, slots: [PREVIEW_PICTURE, PREVIEW_SIGN] },
+          wrapState: (h, key) => wrapRow(draft, h, key, typeOf) });
+      }
+    } else {
+      const prof = await profiles.get(HOME.defaultId);
+      if (mine !== pickSeq) return;
+      const mod = (prof.modules || []).find((x) => x.type === subject);
+      const key = mod ? mod.id : `${subject}-try`;
+      target = mod
+        ? { live: true, kind: 'module', type: subject, instanceId: mod.id,
+            docPid: HOME.defaultId, docKey: HD.HISTORY_PREFIX + mod.id }
+        : { live: false, kind: 'module', type: subject, previewKey: key };
+      const stage = renderHomeDetail(subject, target);
+      const isSet = HD.settingKeysFor(getManifest(subject));
+      e = await mountEmbeddedKiosk({ stage, user: mod ? user : null, type: subject,
+        wrapState: (h, k) => (k === key ? draft.wrap(h, k, isSet) : h) });
+    }
+    if (mine !== pickSeq) { e?.destroy(); return; }
+    embed = e;
+    HOME.target = target;
+    if (target.live) {
+      const row = createState({ url: profiles.stateURL(target.docPid, target.docKey), user });
+      HOME.docRow = row;
+      try { HOME.doc = HD.readHistory(await row.load()); } catch { HOME.doc = HD.emptyHistory(); }
+      if (mine !== pickSeq) return;
+    }
+    applyView(view || (subject === HD.PROFILE_SUBJECT ? HOME.settings.openIn : 'live'));
+  } catch (err) {
+    console.error(`home: ${subject} would not open`, err);
+    const note = $h('stagenote');
+    if (note) note.textContent = 'This one would not start here — usually it wants a camera, a microphone or your own files.';
+  }
+  if (mine === pickSeq) paintHome();
+}
+
+/** Switching away from unsaved changes asks first (a page dialog, for a person at a computer). */
+function requestSubject(subject) {
+  if (HOME.draft?.dirty() && subject !== HOME.subject) return openDialog('leave', { next: subject });
+  return openSubject(subject);
+}
+
+// ---- the bar, the status line, the settings rows ----------------------------------------------------
+function paintHome() {
+  if (!HOME.on) return;
+  const t = HOME.target;
+  const dirty = !!HOME.draft?.dirty();
+  const bar = $h('stage-bar');
+  const btn = (k) => bar.querySelector(`[data-home="${k}"]`);
+  $h('hb-name').textContent = subjectTitle(HOME.subject);
+  btn('picker').setAttribute('aria-expanded', String(document.body.classList.contains('pick-open')));
+  const open = menuOpen();
+  btn('view').textContent = open ? 'Done editing' : 'Edit';
+  btn('view').setAttribute('aria-pressed', String(open));
+  btn('view').disabled = !embed?.kiosk?.menu;
+  btn('save').disabled = !t || HOME.busy;
+  btn('save').classList.toggle('primary', !!t && (dirty || !t.live));
+  btn('saveas').disabled = !t || HOME.busy;
+  btn('history').disabled = !t || !t.live || HOME.busy;       // dimmed, never hidden (Design)
+  btn('full').disabled = !$h('stage');
+  btn('settings').setAttribute('aria-expanded', String(!$h('home-settings').hidden));
+  const st = $h('hb-status');
+  st.textContent = !t ? ''
+    : !t.live ? (t.kind === 'profile' ? 'Not made yet — Save makes it' : 'Not on your screen yet — Save adds it')
+    : dirty ? 'Unsaved changes'
+    : HOME.doc?.current ? `Saved as “${HOME.doc.current}”` : 'Not saved under a name yet';
+  st.classList.toggle('dirty', dirty);
+  $h('welcome').hidden = !(HOME.welcome && HOME.subject === HD.PROFILE_SUBJECT);
+  const stage = $h('stage');
+  if (stage) {
+    const screenSurface = HOME.subject === HD.PROFILE_SUBJECT
+      ? HOME.draft?.snapshot().settings?.panelSurface : HOME.defaultSurface;
+    stage.dataset.chrome = HD.chromeSurfaceFor(HOME.settings, screenSurface);
+  }
+}
+
+function paintSettings() {
+  $h('hs-rows').innerHTML = HD.HOME_SETTINGS.map((r) => `
+    <button type="button" class="hbtn hs-row" data-home="set" data-k="${esc(r.key)}">
+      <span>${esc(r.label)}</span><span class="v">${esc(HD.homeSettingLabel(HOME.settings, r.key))}</span></button>`).join('');
+}
+
+/** The page's own settings save as they change: they are not the module's, and nothing is waiting. */
+function saveHomeSettings(patch) {
+  HOME.settings = HD.readHomeSettings({ ...HOME.settings, ...patch });
+  try { HOME.settingsRow?.set(patch); HOME.settingsRow?.flush?.().catch(() => {}); }
+  catch (err) { console.error('home: settings', err); }
+  paintSettings();
+  paintHome();
+}
+
+// ---- Save, Save as, the overwrite warning, history ----------------------------------------------------
+function defaultSaveName() {
+  if (HOME.doc?.current) return `${HOME.doc.current} (copy)`;
+  return HOME.subject === HD.PROFILE_SUBJECT ? 'My profile' : subjectTitle(HOME.subject);
+}
+
+async function doSave({ saveAs = false, name = null } = {}) {
+  if (!HOME.target || HOME.busy) return;
+  const dec = HD.saveDecision({ doc: HOME.doc || HD.emptyHistory(), name, warn: HOME.settings.warnOverwrite, saveAs });
+  if (dec.action === 'name') return openDialog('saveAs', { name: saveAs ? (name || defaultSaveName()) : defaultSaveName() });
+  if (dec.action === 'warn') return openDialog('saveOver', { name: dec.name });
+  closeDialog();
+  return commitSave(dec.name);
+}
+
+async function writeRows(pid, rows) {
+  for (const [key, values] of Object.entries(rows)) {
+    const h = createState({ url: HOME.profiles.stateURL(pid, key), user: HOME.user });
+    await h.load().catch(() => {});
+    h.set(values);
+    await h.flush();
+    h.destroy();
+  }
+}
+
+async function writeHistory(pid, key, change) {
+  const live = HOME.docRow && HOME.target?.live && HOME.target.docPid === pid && HOME.target.docKey === key;
+  const h = live ? HOME.docRow : createState({ url: HOME.profiles.stateURL(pid, key), user: HOME.user });
+  if (!live) await h.load().catch(() => {});
+  const next = change(HD.readHistory(h.get()));
+  h.set(next);
+  await h.flush();
+  if (live) HOME.doc = next; else h.destroy();
+  return next;
+}
+
+async function commitSave(name) {
+  const t = HOME.target;
+  const draft = HOME.draft;
+  const keep = HOME.settings.keepVersions;
+  HOME.busy = true;
+  paintHome();
+  try {
+    if (t.live) {
+      const snapshot = draft.snapshot();
+      await draft.commitLive();
+      const restoredFrom = HOME.restoredFrom;
+      await writeHistory(t.docPid, t.docKey, (doc) => HD.commitVersion(doc, { name, snapshot, keep, restoredFrom }));
+      HOME.restoredFrom = null;
+      toast(`Saved as “${name}”.`);
+    } else if (t.kind === 'module') {
+      const snapshot = draft.snapshot();
+      const prof = await HOME.profiles.get(HOME.defaultId);
+      const mod = await ensureModuleInstance(HOME.profiles, HOME.defaultId, prof, t.type);
+      const rows = HD.remapSnapshot(snapshot, { [t.previewKey]: mod.id });
+      await writeRows(HOME.defaultId, rows);
+      await writeHistory(HOME.defaultId, HD.HISTORY_PREFIX + mod.id,
+        (doc) => HD.commitVersion(doc, { name, snapshot: rows, keep }));
+      draft.reset();
+      const view = currentView();
+      HOME.busy = false;
+      await openSubject(t.type, { view });
+      toast(`${subjectTitle(t.type)} is on your screen now, saved as “${name}”.`);
+    } else {
+      // The profile, made for real: game.js's own steps (re-entrant: nothing is made twice), then
+      // whatever was changed in the preview on top.
+      const snapshot = draft.snapshot();
+      const made = await HOME.game.makeProfile();
+      const pic = await HOME.game.hangPicture();
+      const sign = await HOME.game.putUpSign();
+      const rows = HD.remapSnapshot(snapshot, { settings: 'settings', [PREVIEW_PICTURE]: pic.id, [PREVIEW_SIGN]: sign.id });
+      await writeRows(made.profileId, rows);
+      await writeHistory(made.profileId, HD.PROFILE_HISTORY_KEY,
+        (doc) => HD.commitVersion(doc, { name, snapshot: rows, keep }));
+      draft.reset();
+      const view = currentView();
+      HOME.busy = false;
+      await openSubject(HD.PROFILE_SUBJECT, { view });
+      toast(`Your profile is made, and saved as “${name}”.`);
+    }
+  } catch (err) {
+    console.error('home: save failed', err);
+    toast('That did not save — check your connection and press Save again (that is safe).');
+  } finally {
+    HOME.busy = false;
+    paintHome();
+  }
+}
+
+function dialogHTML(d) {
+  const b = (act, label, extra = '') => `<button type="button" class="hbtn${extra}" data-home-dlg="${act}">${label}</button>`;
+  const keep = HOME.settings.keepVersions;
+  if (d.kind === 'saveOver') {
+    return `<h2 id="home-dlg-h">Save over “${esc(d.name)}”?</h2>
+      <p>What you have now replaces it. The one you are replacing stays in History, which keeps your last
+        ${keep} saves, so you can get it back.</p>
+      <div class="hbtns">${b('cancel', 'Cancel')}${b('toSaveAs', 'Save as a new name')}${b('over', 'Save over it', ' primary')}</div>`;
+  }
+  if (d.kind === 'saveAs') {
+    const day = new Date().toLocaleDateString([], { weekday: 'long' });
+    const names = HD.suggestNames(HOME.doc || HD.emptyHistory(), { base: d.name, day });
+    return `<h2 id="home-dlg-h">Save as</h2>
+      <p>Type a name, or choose one. A name that is already used asks before saving over it. This keeps a
+        copy under that name, with this ${HOME.subject === HD.PROFILE_SUBJECT ? 'profile' : 'module'}.</p>
+      <input class="field" id="saveas-name" aria-label="Name" maxlength="60" value="${esc(d.name)}">
+      <div class="hbtns">${names.map((n) => `<button type="button" class="hbtn" data-home-dlg="name" data-n="${esc(n)}">${esc(n)}${HOME.doc?.saved?.[n] ? ' <small>(saved)</small>' : ''}</button>`).join('')}</div>
+      <div class="hbtns">${b('cancel', 'Cancel')}${b('dosaveas', 'Save with this name', ' primary')}</div>`;
+  }
+  if (d.kind === 'history') {
+    const vs = (HOME.doc?.versions || []);
+    return `<h2 id="home-dlg-h">History</h2>
+      <p>Your last ${keep} saves are kept (change how many in Page settings). Restoring one deletes
+        nothing: it opens it as unsaved changes, and saving it adds a new version.</p>
+      <div class="vers">${vs.length ? vs.map((v, i) => `<div class="ver"><span>${esc(v.name)}
+        <small>${esc(when(v.at))}${i === 0 ? ' · newest' : ''}${v.restoredFrom ? ' · a restored version' : ''}</small></span>
+        <button type="button" class="hbtn" data-home-dlg="restore" data-i="${i}">Restore</button></div>`).join('')
+        : '<p>Nothing saved yet.</p>'}</div>
+      <div class="hbtns">${b('close', 'Close')}</div>`;
+  }
+  if (d.kind === 'leave') {
+    return `<h2 id="home-dlg-h">Unsaved changes</h2>
+      <p>Your changes to ${esc(subjectTitle(HOME.subject))} are not saved.</p>
+      <div class="hbtns">${b('cancel', 'Cancel')}${b('leave', 'Leave without saving')}${b('save', 'Save', ' primary')}</div>`;
+  }
+  return '';
+}
+
+function openDialog(kind, data = {}) {
+  HOME.dlg = { kind, ...data };
+  const dlg = hdlg();
+  dlg.innerHTML = dialogHTML(HOME.dlg);
+  if (!dlg.open) { try { dlg.showModal(); } catch { dlg.setAttribute('open', ''); } }
+  // The way out first: the scan (and the Tab key) lands on Cancel / Close.
+  dlg.querySelector('[data-home-dlg="cancel"],[data-home-dlg="close"]')?.focus();
+  if (kind === 'saveAs') { const f = $h('saveas-name'); f?.focus(); f?.select(); }
+}
+function closeDialog() {
+  HOME.dlg = null;
+  const dlg = hdlg();
+  if (dlg.open) dlg.close();
+}
+
+function restoreVersion(i) {
+  const v = HOME.doc?.versions?.[i];
+  const snap = HD.versionSnapshot(HOME.doc, i);
+  if (!v || !snap) return;
+  HOME.draft.restore(snap);
+  HOME.restoredFrom = v.at;
+  closeDialog();
+  toast(`Restored the ${when(v.at)} version. Save to keep it.`);
+}
+
+hdlg().addEventListener('click', (e) => {
+  const b = e.target.closest('[data-home-dlg]');
+  if (!b) return;
+  const d = HOME.dlg || {};
+  switch (b.dataset.homeDlg) {
+    case 'cancel': case 'close': closeDialog(); break;
+    case 'over': closeDialog(); commitSave(d.name); break;
+    case 'toSaveAs': openDialog('saveAs', { name: `${d.name} (copy)` }); break;
+    case 'name': doSave({ saveAs: true, name: b.dataset.n }); break;
+    case 'dosaveas': doSave({ saveAs: true, name: $h('saveas-name')?.value }); break;
+    case 'restore': restoreVersion(Number(b.dataset.i)); break;
+    case 'leave': { const next = d.next; closeDialog(); HOME.draft?.discard(); openSubject(next); break; }
+    case 'save': closeDialog(); doSave(); break;
+    default: break;
+  }
+});
+hdlg().addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.id === 'saveas-name') { e.preventDefault(); doSave({ saveAs: true, name: e.target.value }); }
+});
+hdlg().addEventListener('close', () => { HOME.dlg = null; });
+
+// ---- the bar's buttons, the welcome card, the page settings -----------------------------------------
+document.addEventListener('click', (e) => {
+  if (!HOME.on) return;
+  const b = e.target.closest('[data-home]');
+  // Anything clicked (the kiosk's own ⚙ included) can open or close the menu: repaint after it acts.
+  setTimeout(paintHome, 0);
+  if (!b || b.disabled) return;
+  switch (b.dataset.home) {
+    case 'picker': {
+      const open = document.body.classList.toggle('pick-open');
+      if (open) qEl.focus();
+      break;
+    }
+    case 'view': applyView(menuOpen() ? 'live' : 'edit'); break;
+    case 'save': doSave(); break;
+    case 'saveas': openDialog('saveAs', { name: defaultSaveName() }); break;
+    case 'history': openDialog('history'); break;
+    case 'full': {
+      const stage = $h('stage');
+      try { stage?.requestFullscreen?.().catch(() => {}); } catch { /* not allowed here */ }
+      break;
+    }
+    case 'settings': $h('home-settings').hidden = !$h('home-settings').hidden; break;
+    case 'set': saveHomeSettings({ [b.dataset.k]: HD.cycleHomeSetting(HOME.settings, b.dataset.k)[b.dataset.k] }); break;
+    case 'rewelcome':
+      saveHomeSettings({ welcomeDone: false });
+      HOME.welcome = true;
+      if (HOME.subject !== HD.PROFILE_SUBJECT) requestSubject(HD.PROFILE_SUBJECT);
+      break;
+    case 'skip':
+      HOME.welcome = false;
+      document.body.classList.add('pick-open');
+      qEl.focus();
+      break;
+    case 'setup': HOME.welcome = false; applyView('edit'); break;
+    case 'nomore':
+      HOME.welcome = false;
+      saveHomeSettings({ welcomeDone: true, openIn: 'live' });
+      applyView('live');
+      toast('Your profile will open in live view from now on. Change it in Page settings.');
+      break;
+    default: break;
+  }
+  paintHome();
+}, true);
+
+// Leaving the page with unsaved changes: the browser's own "leave this page?". A person at a computer
+// answers it; the kiosk never loads this page.
+window.addEventListener('beforeunload', (e) => {
+  if (HOME.on && HOME.draft?.dirty()) { e.preventDefault(); e.returnValue = ''; }
+});
+
+async function bootHome(wanted) {
+  const user = currentUser;
+  const profiles = createProfilesClient({ user });
+  const defaultId = await ensureProfile(profiles, user);
+  let person = null;
+  try { person = pickCurrent(await profiles.people(), readLastPerson()); } catch { person = null; }
+  let settingsRow = null;
+  let settings = HD.readHomeSettings(null);
+  if (person && profiles.personStateURL) {
+    settingsRow = createState({ url: profiles.personStateURL(person.id, HD.HOME_STATE_KEY), user });
+    try { settings = HD.readHomeSettings(await settingsRow.load()); } catch { /* the defaults stand */ }
+  }
+  let defaultSurface;
+  try {
+    const s = createState({ url: profiles.stateURL(defaultId, 'settings'), user });
+    defaultSurface = (await s.load()).panelSurface;
+    s.destroy();
+  } catch { defaultSurface = undefined; }
+  const game = person ? createGame({
+    profiles,
+    makeSettings: (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user }),
+    makeInstanceState: (pid, id) => createState({ url: profiles.stateURL(pid, id), user }),
+    makePersonState: (pid, key) => createState({ url: profiles.personStateURL(pid, key), user }),
+    personId: person.id, personName: person.name,
+  }) : null;
+  Object.assign(HOME, { on: true, user, profiles, defaultId, person, settings, settingsRow, defaultSurface, game });
+  const land = HD.homeLanding({ signedIn: true, wanted, known: (t) => ITEMS.some((m) => m.type === t), settings });
+  const subject = land.subject === HD.PROFILE_SUBJECT && !game ? ITEMS[0]?.type : land.subject;
+  HOME.welcome = land.welcome && !!game;
+  document.body.classList.add('is-home');
+  document.title = 'Nimrod — Home';
+  $h('stage-bar').hidden = false;
+  paintSettings();
+  await openSubject(subject, { view: land.view });
+}
+
+function undoHome() {
+  HOME.on = false;
+  document.body.classList.remove('is-home', 'pick-open');
+  $h('stage-bar').hidden = true;
+  $h('welcome').hidden = true;
+  $h('home-settings').hidden = true;
 }
 
 // ---- RUN THEM ALL --------------------------------------------------------------------
@@ -731,12 +1397,24 @@ const wanted = new URLSearchParams(location.search).get('m');
 // synchronously whether the kiosk is available. A failed import leaves `embeddingReady` false,
 // i.e. the page as it was before the kiosk was embedded: bare modules, no bar. Worse than the new
 // page, and still a page.
-loadEmbedding().catch((err) => console.error('modules: embedded kiosk unavailable', err))
-  .finally(() => {
-    if (ITEMS.length) select(ITEMS.some((m) => m.type === wanted) ? wanted : ITEMS[0].type);
-  });
+// HOME (rows 2.29 / 2.30): a signed-in visitor gets the page as their Home, which needs the embedding
+// helper AND the answer to "who is this". If Home cannot start (offline, an old account with no
+// person), the page falls back to what it was, rather than showing nothing.
+const auditMode = new URLSearchParams(location.search).get('all') === '1';
+Promise.allSettled([
+  loadEmbedding().catch((err) => { console.error('modules: embedded kiosk unavailable', err); }),
+  signedIn,
+]).then(async () => {
+  if (currentUser && embeddingReady && !auditMode) {
+    try { await bootHome(wanted); return; } catch (err) {
+      console.error('home: could not start; showing the parts page instead', err);
+      undoHome();
+    }
+  }
+  if (ITEMS.length) select(ITEMS.some((m) => m.type === wanted) ? wanted : ITEMS[0].type);
+});
 
-if (new URLSearchParams(location.search).get('all') === '1') {
+if (auditMode) {
   runAll(document.getElementById('runall') || document.createElement('button'));
 }
 </script>

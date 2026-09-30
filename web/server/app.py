@@ -1306,8 +1306,10 @@ async def auth_callback(request: Request):
     # other way.
     dest = _safe_next(request.session.pop("after_login", None))
     # Otherwise land on HOME: a person who just signed in needs their screens, not a
-    # full-screen kiosk they have no way to compose.
-    return RedirectResponse(url=dest or "/home.html")
+    # full-screen kiosk they have no way to compose. Home is the modules page since
+    # 2026-09-30 (row 2.29: "what is currently the modules tab should just be the home
+    # page"); it opens on the person's profile. Their screens are one link away.
+    return RedirectResponse(url=dest or HOME_PAGE)
 
 
 @app.get("/auth/logout")
@@ -1323,10 +1325,19 @@ def auth_logout(request: Request):
 # Previously "/" went straight to the kiosk, so signing in dropped you on a full-screen
 # display with no way to add anything to it. index.html stays the DEV HARNESS, reachable
 # at /index.html and unchanged.
+#
+# Row 2.29 (2026-09-30): a SIGNED-IN visitor's Home is the modules page (a dashboard: the module
+# you are looking at, Save, history, full screen), not the list of screens -- that list,
+# home.html, is still one link away ("My dashboards"). A signed-OUT visitor keeps the landing
+# page: Mike's question (a) is open, and the landing is what explains the product to somebody
+# who has never seen it.
+HOME_PAGE = "/modules.html"
+
+
 @app.get("/")
 def root(request: Request):
     if optional_user(request):
-        return RedirectResponse(url="/home.html")
+        return RedirectResponse(url=HOME_PAGE)
     return FileResponse(CLIENT_DIR / "landing.html")
 
 

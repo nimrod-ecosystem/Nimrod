@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>home dashboard — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>home dashboard — test</h1>
+<p>Rows 2.29 and 2.30: where a signed-in person lands, the page's settings, Save / Save as / the
+overwrite warning, the save history and restore, and the DRAFT that holds settings until Save.
+Pure — no server. The page itself is <code>home_page_test.html</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  HOME_DEFAULTS, HOME_SETTINGS, KEEP_CHOICES, PROFILE_SUBJECT, readHomeSettings, cycleHomeSetting,
+  homeSettingLabel, chromeSurfaceFor, homeLanding, emptyHistory, readHistory, wouldOverwrite,
+  saveDecision, commitVersion, versionSnapshot, suggestNames, settingKeysFor, isScreenSetting,
+  createDraft, remapSnapshot, INSTANCE_SURFACE_KEY, cleanName,
+} from '../home_dashboard.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const J = (x) => JSON.stringify(x);
+
+// A state handle with state.js's shape, in memory: what the kiosk and every module get.
+function fakeState(initial = {}) {
+  let data = { ...initial };
+  const subs = new Set();
+  const writes = [];
+  let flushed = 0;
+  const notify = () => { for (const fn of [...subs]) fn({ ...data }); };
+  return {
+    writes, flushedCount: () => flushed,
+    async load() { return { ...data }; },
+    get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; writes.push({ ...p }); notify(); },
+    subscribe(fn) { subs.add(fn); fn({ ...data }); return () => subs.delete(fn); },
+    async flush() { flushed++; },
+    startPolling() {}, destroy() {}, getVersion: () => 1, stale: () => false, staleSinceMs: () => null,
+    serverChange(p) { data = { ...data, ...p }; notify(); },   // what a poll bringing news looks like
+  };
+}
+
+try {
+  // ============================================================================================
+  section('the page settings: defaults, each one a setting (Rule 1)');
+  {
+    const s = readHomeSettings(null);
+    check('opens the profile in EDIT view by default (Mike, 2.29)', s.openIn === 'edit');
+    check('keeps the last 20 versions by default (Mike’s question, 2.30)', s.keepVersions === 20);
+    check('warns before saving over by default (Design)', s.warnOverwrite === true);
+    check('the menu and bar follow the screen by default', s.chromeSurface === 'follow');
+    check('the welcome has not been dismissed', s.welcomeDone === false);
+    check('keep choices are Design’s 5 / 10 / 20 / 50', J(KEEP_CHOICES) === '[5,10,20,50]');
+    check('every default is one of its own options',
+      HOME_SETTINGS.every((r) => r.options.some(([v]) => v === HOME_DEFAULTS[r.key])));
+    const bad = readHomeSettings({ openIn: 'sideways', keepVersions: 7, warnOverwrite: 'yes', chromeSurface: 'x', welcomeDone: 1 });
+    check('junk falls back to the defaults, never to junk', J(bad) === J(HOME_DEFAULTS), J(bad));
+    const good = readHomeSettings({ openIn: 'live', keepVersions: 50, warnOverwrite: false, chromeSurface: 'clear', welcomeDone: true });
+    check('valid values are kept', good.openIn === 'live' && good.keepVersions === 50 && good.warnOverwrite === false
+      && good.chromeSurface === 'clear' && good.welcomeDone === true);
+    let c = readHomeSettings({});
+    const seen = [];
+    for (let i = 0; i < 5; i++) { seen.push(c.keepVersions); c = cycleHomeSetting(c, 'keepVersions'); }
+    check('a press cycles "Keep the last" and WRAPS (one switch travels one way)', J(seen) === '[20,50,5,10,20]', J(seen));
+    check('cycling one setting leaves the others alone', c.openIn === 'edit' && c.warnOverwrite === true);
+    check('labels read as words', homeSettingLabel(readHomeSettings({}), 'openIn') === 'Edit view'
+      && homeSettingLabel(readHomeSettings({}), 'keepVersions') === '20 saved versions');
+  }
+
+  section('menu and bar background');
+  {
+    check('follow + a screen that chose see-through -> see-through', chromeSurfaceFor({ chromeSurface: 'follow' }, 'veil') === 'veil');
+    check('follow + a screen that chose solid -> solid (existing screens keep what they have)',
+      chromeSurfaceFor({ chromeSurface: 'follow' }, 'solid') === 'solid');
+    check('follow + a screen that never chose -> SEE-THROUGH (Mike: the default)',
+      chromeSurfaceFor({ chromeSurface: 'follow' }, undefined) === 'veil');
+    check('an explicit choice wins over the screen', chromeSurfaceFor({ chromeSurface: 'clear' }, 'solid') === 'clear');
+  }
+
+  // ============================================================================================
+  section('*** where a person lands (row 2.29) ***');
+  {
+    const known = (t) => ['photos', 'trivia'].includes(t);
+    const out1 = homeLanding({ signedIn: false, wanted: null, known });
+    check('signed OUT: not Home — the parts page as it was, first module', out1.home === false && out1.subject === null && !out1.welcome);
+    check('signed OUT with ?m=photos: that module', homeLanding({ signedIn: false, wanted: 'photos', known }).subject === 'photos');
+    check('signed OUT never gets the profile or the welcome',
+      homeLanding({ signedIn: false, wanted: PROFILE_SUBJECT, known }).subject === null);
+    const first = homeLanding({ signedIn: true, known, settings: {} });
+    check('*** first sign-in: Home, on the PROFILE, in EDIT view, with the welcome ***',
+      first.home && first.subject === PROFILE_SUBJECT && first.view === 'edit' && first.welcome === true, J(first));
+    const live = homeLanding({ signedIn: true, known, settings: { openIn: 'live' } });
+    check('the setting "Open my profile in: Live view" is obeyed', live.view === 'live');
+    const later = homeLanding({ signedIn: true, known, settings: { welcomeDone: true } });
+    check('once dismissed, the welcome stays away', later.subject === PROFILE_SUBJECT && later.welcome === false);
+    const link = homeLanding({ signedIn: true, wanted: 'trivia', known, settings: {} });
+    check('a link to one module (?m=trivia) opens it live, no welcome', link.subject === 'trivia' && link.view === 'live' && !link.welcome);
+    check('?m=<nonsense> signed in falls back to the profile',
+      homeLanding({ signedIn: true, wanted: 'nope', known, settings: {} }).subject === PROFILE_SUBJECT);
+  }
+
+  // ============================================================================================
+  section('*** Save, Save as and the overwrite warning ***');
+  {
+    let doc = emptyHistory();
+    check('nothing saved yet: Save asks for a name first', saveDecision({ doc }).action === 'name');
+    check('Save as with a blank name asks for a name', saveDecision({ doc, saveAs: true, name: '   ' }).action === 'name');
+    check('Save as a NEW name commits', saveDecision({ doc, saveAs: true, name: 'My room' }).action === 'commit');
+    doc = commitVersion(doc, { name: 'My room', snapshot: { a: { x: 1 } }, at: 1000 });
+    check('after a save it has a current name', doc.current === 'My room' && doc.versions.length === 1);
+    const again = saveDecision({ doc, warn: true });
+    check('*** Save again over "My room" WARNS (it would replace it) ***', again.action === 'warn' && again.name === 'My room', J(again));
+    check('...unless "Warn before saving over" is off', saveDecision({ doc, warn: false }).action === 'commit');
+    check('Save as an EXISTING name warns too', saveDecision({ doc, saveAs: true, name: ' My   room ' }).action === 'warn');
+    check('Save as a different name does not', saveDecision({ doc, saveAs: true, name: 'Evening' }).action === 'commit');
+    check('names are tidied (spaces) before they are compared', cleanName('  My   room ') === 'My room' && wouldOverwrite(doc, 'My  room'));
+    let threw = false; try { commitVersion(doc, { name: '' }); } catch { threw = true; }
+    check('committing with no name refuses rather than saving under ""', threw);
+  }
+
+  section('*** the history: newest first, pruned to "keep", restore deletes nothing ***');
+  {
+    let doc = emptyHistory();
+    for (let i = 1; i <= 25; i++) doc = commitVersion(doc, { name: 'My room', snapshot: { r: { n: i } }, at: i, keep: 20 });
+    check('the last 20 are kept by default', doc.versions.length === 20);
+    check('newest first', doc.versions[0].snapshot.r.n === 25 && doc.versions[19].snapshot.r.n === 6);
+    doc = commitVersion(doc, { name: 'Evening', snapshot: { r: { n: 99 } }, at: 100, keep: 5 });
+    check('a save with a smaller "keep" trims to it', doc.versions.length === 5);
+    check('named "Save as" copies are kept apart from the version log',
+      J(Object.keys(doc.saved).sort()) === J(['Evening', 'My room']) && doc.current === 'Evening');
+    const snap = versionSnapshot(doc, 2);
+    check('a version’s snapshot is a copy, not a reference', snap && (snap.r.n = -1) && doc.versions[2].snapshot.r.n !== -1);
+    const before = J(doc);
+    versionSnapshot(doc, 0);
+    check('*** reading a version to restore it changes nothing in the history ***', J(doc) === before);
+    const restored = commitVersion(doc, { name: 'Evening', snapshot: versionSnapshot(doc, 3), at: 200, keep: 20, restoredFrom: doc.versions[3].at });
+    check('*** saving a restored version ADDS a version (nothing replaced) ***',
+      restored.versions.length === doc.versions.length + 1 && restored.versions[0].restoredFrom === doc.versions[3].at
+      && J(restored.versions.slice(1)) === J(doc.versions));
+    const junk = readHistory({ current: 'ghost', saved: 'x', versions: [{ name: 1 }, null, { name: 'ok', at: 5, snapshot: {} }] });
+    check('a damaged history reads as what survives, not an exception',
+      junk.current === null && J(junk.saved) === '{}' && junk.versions.length === 1);
+    const names = suggestNames(doc, { base: 'My room', day: 'Wednesday' });
+    check('Save as offers ready-made names (one press instead of typing)', names.includes('My room') && names.includes('Evening')
+      && names.includes('Evening (copy)') && names.length <= 7, J(names));
+  }
+
+  // ============================================================================================
+  section('which keys are settings');
+  {
+    const isSet = settingKeysFor({ settings: [{ key: 'label', kind: 'text', default: '' }, { key: 'frame', kind: 'choice', options: ['a', 'b'], default: 'a' }] });
+    check('a declared setting is a setting', isSet('label') && isSet('frame'));
+    check('the per-panel background is a setting', isSet(INSTANCE_SURFACE_KEY));
+    check('a score is not a setting', !isSet('score') && !isSet('lastIndex'));
+    check('a screen’s theme is a setting; its arrangement, links and the game’s stamp are not',
+      isScreenSetting('theme') && isScreenSetting('panelSurface') && !isScreenSetting('kiosk') && !isScreenSetting('links') && !isScreenSetting('game'));
+  }
+
+  section('*** the draft: settings wait for Save, everything else saves as it always did ***');
+  {
+    let changes = 0;
+    const d = createDraft({ onChange: () => { changes++; } });
+    const real = fakeState({ label: 'Old', score: 3 });
+    const isSet = (k) => k === 'label' || k === 'frame';
+    const h = d.wrap(real, 'inst1', isSet);
+    const seen = [];
+    h.subscribe((v) => seen.push(v.label));
+    check('the wrapped handle has state.js’s whole shape',
+      ['load', 'get', 'set', 'subscribe', 'flush', 'startPolling', 'destroy', 'getVersion', 'stale', 'staleSinceMs'].every((k) => typeof h[k] === 'function'));
+    h.set({ label: 'New', score: 4 });
+    check('*** a setting is held: the real row still says "Old" ***', real.get().label === 'Old');
+    check('...a score is not: it reached the real row', real.get().score === 4);
+    check('the module and the menu see the new value at once', h.get().label === 'New' && seen[seen.length - 1] === 'New', J(seen));
+    check('the page is told, and the draft is dirty', changes > 0 && d.dirty());
+    real.serverChange({ score: 9 });
+    check('news from the server still arrives, with the draft on top', h.get().score === 9 && h.get().label === 'New');
+    check('the snapshot is the row’s SETTINGS with the draft on top (no score)', J(d.snapshot()) === J({ inst1: { label: 'New' } }), J(d.snapshot()));
+    check('pending() is only what changed', J(d.pending()) === J({ inst1: { label: 'New' } }));
+    await d.commitLive();
+    check('*** Save writes the draft to the real row and flushes ***', real.get().label === 'New' && real.flushedCount() === 1);
+    check('...and the draft is clean', !d.dirty() && J(d.pending()) === '{}');
+
+    h.set({ label: 'Oops' });
+    d.discard();
+    check('discard drops a change and shows the saved value again', h.get().label === 'New' && !d.dirty());
+
+    const h2 = d.wrap(fakeState({ label: 'New' }), 'inst1', isSet);   // the embed rebuilt itself
+    h2.set({ frame: 'b' });
+    const h3 = d.wrap(fakeState({ label: 'New' }), 'inst1', isSet);
+    check('a rebuilt embed keeps the draft (it is kept by key, not by handle)', h3.get().frame === 'b');
+
+    d.restore({ inst1: { label: 'From a week ago' } });
+    check('*** restore puts an old version back AS UNSAVED CHANGES ***', h3.get().label === 'From a week ago' && d.dirty());
+
+    const p = createDraft();
+    const loc = fakeState({});
+    const ph = p.wrap(loc, 'home-sign', () => true);
+    p.seed('home-sign', { label: 'Your name', style: 'plate' });
+    check('seed: a preview starts with its setup, and that is not a change', ph.get().label === 'Your name' && !p.dirty());
+    ph.set({ label: 'Sam’s mum' });
+    check('...a change after it is', p.dirty());
+    const mapped = remapSnapshot(p.snapshot(), { 'home-sign': 'real-sign-id' });
+    check('a preview’s snapshot maps onto the real ids it became', J(mapped) === J({ 'real-sign-id': { label: 'Sam’s mum', style: 'plate' } }), J(mapped));
+    p.reset();
+    check('reset forgets every row and writes nothing', !p.dirty() && J(p.pending()) === '{}' && loc.writes.length === 0);
+
+    // A module setting itself up (photos choosing its only source as it starts) is not an edit.
+    let pressing = false;
+    const q = createDraft({ isUserEdit: () => pressing });
+    const qr = fakeState({});
+    const qh = q.wrap(qr, 'photos1', (k) => k === 'sourceId' || k === 'album');
+    qh.set({ sourceId: 'only-one' });
+    check('*** a setting written with nobody editing goes straight through (autosave, as before) ***',
+      qr.get().sourceId === 'only-one' && !q.dirty());
+    pressing = true;
+    qh.set({ album: 'Summer' });
+    check('...one written while somebody is editing is held for Save', qr.get().album === undefined && q.dirty() && qh.get().album === 'Summer');
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
