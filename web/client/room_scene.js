@@ -278,10 +278,18 @@ function matchesObject(it, object) {
   if (it.kind !== 'furniture') return false;
   return (FAMILY[object] || [object]).includes(it.part);
 }
-/** Which items react to `event`, and how: [{ index, id, does }]. */
-export function reactionsFor(recipe = {}, event) {
+// A rule answers an event by its kind, or — `on:'custom'` — by its own name (room-add-ons §6: the
+// mapping store and editor are `room_notify.js`, `room_notify_editor.js`).
+const ruleAnswers = (r, event) => r?.on === event || (r?.on === 'custom' && typeof r.name === 'string' && r.name === event);
+/**
+ * Which items react to `event`, and how: [{ index, id, does }], plus a `{ index: -1, id: null,
+ * does: 'sound', sound }` for each sound a rule asks for (the host plays it: `onSound`).
+ *   rules  use these instead of the recipe's (Test in the editor: one rule, alone)
+ *   only   leave out objects that react to everything (`reacts`) — also for Test
+ */
+export function reactionsFor(recipe = {}, event, { rules: over = null, only = false } = {}) {
   const items = recipe.items || [];
-  const rules = Array.isArray(recipe.notify) ? recipe.notify : DEFAULT_NOTIFY_RULES;
+  const rules = Array.isArray(over) ? over : Array.isArray(recipe.notify) ? recipe.notify : DEFAULT_NOTIFY_RULES;
   const out = [];
   const seen = new Set();
   const add = (index, does) => {
@@ -290,12 +298,15 @@ export function reactionsFor(recipe = {}, event) {
     seen.add(index + ':' + d);
     out.push({ index, id: items[index].id, does: d });
   };
+  const sounds = [];
   for (const r of rules) {
-    if (r?.on !== event) continue;
+    if (!ruleAnswers(r, event)) continue;
     items.forEach((it, i) => { if (matchesObject(it, r.object)) add(i, r.does); });
+    if (typeof r.sound === 'string' && r.sound && !sounds.includes(r.sound)) sounds.push(r.sound);
   }
   // `reacts` on an object: it reacts to every event (room-is-the-screen §4).
-  items.forEach((it, i) => { if (it.reacts) add(i, it.reacts); });
+  if (!only) items.forEach((it, i) => { if (it.reacts) add(i, it.reacts); });
+  for (const s of sounds) out.push({ index: -1, id: null, does: 'sound', sound: s });
   return out;
 }
 
@@ -358,8 +369,17 @@ export const assetBase = () => new URL('./design-assets/', import.meta.url).href
 //                        can always press Put it back may want that).
 //   notifyMs 8000        how long an object reacts: Design's "didn't catch it" cue closes after 8 s.
 //   petMs 2600           how long the happy pose lasts: about two of the sparkle's slow cycles.
+//   restMs 300           Design (room-add-ons §1): "Cursor over fires on pointer rest (after 300 ms)
+//                        and when the switch scan lands on the object. They're the same event."
+//                        Resting that long on an object PICKS it, for Nimrod's help; passing over
+//                        it on the way to him does not.
+//   onCatPress null      (room-add-ons §2, Mike §7.1.2) pressing Nimrod asks the host to explain
+//                        what is picked: `({ id, selected, api }) => handled`. Handled = help; not
+//                        handled (no host, or the person turned cat help off) = he is petted, as
+//                        before. Stroking him or holding the switch on him always pets (§9).
 export const RENDER_DEFAULTS = Object.freeze({
   labels: 'always', motion: 'gentle', liftReturnMs: 60000, notifyMs: 8000, petMs: 2600, zoom: null, showSlots: false,
+  restMs: 300, onCatPress: null,
 });
 
 export function mountRoomScene(host, recipeIn = {}, opts = {}) {
@@ -417,6 +437,8 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   let reactTimer = null;
   let toastEl = null, toastTimer = null;
   let tickTimer = null;
+  let pickedId = null;       // the last object the scan landed on, the pointer rested on, or pressed
+  let lastPress = null;      // what the last press did (for a host, and a test)
 
   // ------------------------------------------------------------------ fitting the stage
   let scale = 1;
@@ -579,8 +601,14 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       btn.dataset.scan = '';
       btn.dataset.row = rowOf(it);
       btn.dataset.id = it.id;
-      btn.setAttribute('aria-label', role.role === 'pet' ? 'Pet Nimrod' : role.label);
-      btn.addEventListener('click', () => press(it.id));
+      btn.setAttribute('aria-label', role.role === 'pet'
+        ? (it.kind === 'cat' && typeof o.onCatPress === 'function' ? 'Nimrod: press for help, stroke to pet' : 'Pet Nimrod')
+        : role.label);
+      btn.addEventListener('click', () => {
+        // A stroke that already petted him ends in a click; that click is the same gesture.
+        if (btn.dataset.stroked) { delete btn.dataset.stroked; return; }
+        press(it.id);
+      });
       if (role.role === 'pet') wireStroke(btn, it.id);
       wrap.append(btn);
       rec.button = btn;
@@ -615,6 +643,12 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       wrap.addEventListener('focusin', on); wrap.addEventListener('focusout', off);
       rec.zoomOn = on; rec.zoomOff = off;
     }
+    // Resting the pointer on it picks it (Design's "cursor over"), for Nimrod to explain.
+    if (role.role !== 'pet') {
+      let rest = null;
+      wrap.addEventListener('pointerenter', () => { cancel(rest); rest = later(() => { rest = null; pickedId = it.id; }, Math.max(0, Number(o.restMs) || 0)); });
+      wrap.addEventListener('pointerleave', () => { cancel(rest); rest = null; });
+    }
     overL.append(wrap);
     rec.wrap = wrap;
     if (role.role !== 'pet') {
@@ -645,12 +679,12 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   // pressed on him; a plain press is a press, handled by the click.
   function wireStroke(btn, id) {
     let down = null, travelled = 0;
-    btn.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; travelled = 0; });
+    btn.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; travelled = 0; delete btn.dataset.stroked; });
     btn.addEventListener('pointermove', (e) => {
       if (!down) return;
       travelled += Math.hypot(e.clientX - down.x, e.clientY - down.y);
       down = { x: e.clientX, y: e.clientY };
-      if (travelled >= 30) { travelled = -1e9; pet(id); }
+      if (travelled >= 30) { travelled = -1e9; btn.dataset.stroked = '1'; pet(id); lastPress = { did: 'pet', via: 'stroke' }; }
     });
     const up = () => { down = null; };
     btn.addEventListener('pointerup', up); btn.addEventListener('pointerleave', up); btn.addEventListener('pointercancel', up);
@@ -677,6 +711,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     for (const r of recs) { try { r.scene?.destroy(); } catch { /* gone */ } }
     if (lifted) putBack();
     recs = [];
+    pickedId = null;
     contentL.replaceChildren(); overL.replaceChildren(); glowL.replaceChildren();
     light = currentLight();
     drawShell();
@@ -778,10 +813,16 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
 
   /** Press a role object, exactly as a click on it does. Returns what happened. */
   function press(id) {
+    const r = pressInner(id);
+    if (r) lastPress = r;
+    return r;
+  }
+  function pressInner(id) {
     const rec = recOf(id);
     if (!rec || !rec.role || destroyed) return null;
     const { role, it } = rec;
     flashPressed(rec);
+    if (role.role !== 'pet') pickedId = it.id;
     publish(ROOM_TOPICS.pressed, { id: it.id, role: role.role, action: role.action || null });
     switch (role.role) {
       case 'button': {
@@ -793,7 +834,18 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       }
       case 'display': lift(it.id); return { did: 'lift' };
       case 'keys': publish(ROOM_TOPICS.key, { id: it.id, group: role.group, key: role.key }); return { did: 'key', key: role.key };
-      case 'pet': pet(it.id); return { did: 'pet' };
+      case 'pet': {
+        // NIMROD IS THE HELP BUTTON (Mike, §7.1.2). Only the cat, only on a press — never when the
+        // scan merely lands on him — and only if the host answers; otherwise he is petted.
+        if (it.kind === 'cat' && typeof o.onCatPress === 'function') {
+          let handled = false;
+          try { handled = !!o.onCatPress({ id: it.id, selected: pickedId ? describe(pickedId) : null, api }); }
+          catch (err) { console.error('room: onCatPress', err); }
+          if (handled) return { did: 'help', selected: pickedId };
+        }
+        pet(it.id);
+        return { did: 'pet' };
+      }
       default: return { did: 'nothing' };
     }
   }
@@ -894,8 +946,49 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     const t = list[focusIdx];
     const wrap = t.closest('.rs-obj-wrap');
     (wrap || t).classList.add('is-scan');
-    if (wrap) recOf(wrap.dataset.id)?.zoomOn?.();
+    if (wrap) {
+      const rec = recOf(wrap.dataset.id);
+      rec?.zoomOn?.();
+      // The scan landing on a thing picks it for Nimrod; landing on an animal does not (he is how
+      // you ASK about what is picked, so scanning past him must not forget it).
+      if (rec && rec.role?.role !== 'pet') pickedId = rec.it.id;
+    }
     return t;
+  }
+
+  // ------------------------------------------------------------------ Nimrod's help, and petting by holding
+  /** An object, described for whoever explains it (cat_help.js explainObject). */
+  function describe(id) {
+    const rec = recOf(id);
+    if (!rec) return null;
+    const { it, role } = rec;
+    const el = rec.wrap || rec.el;
+    let rect = null;
+    try { const r = el.getBoundingClientRect(); rect = { left: r.left, top: r.top, width: r.width, height: r.height, right: r.right, bottom: r.bottom }; } catch { rect = null; }
+    return {
+      kind: 'object', id: it.id,
+      role: role?.role || null, label: role?.label || FURNITURE[it.part]?.label || MOUNT_KINDS[it.kind]?.label || it.id,
+      module: role?.module || null, moduleLabel: role?.module ? (MODULE_LABELS[role.module] || role.label) : null,
+      action: role?.action || null, actionLabel: ROOM_ACTIONS[role?.action]?.label || null,
+      key: role?.key ?? null, group: role?.group || null,
+      part: it.part || it.kind, partLabel: FURNITURE[it.part]?.label || MOUNT_KINDS[it.kind]?.label || null,
+      help: typeof it.help === 'string' && it.help ? it.help : null,
+      rect, el,
+    };
+  }
+  /** Holding the switch on an animal pets it (room-add-ons §9), whatever a press on it does. */
+  function hold() {
+    const list = scanTargets();
+    if (focusIdx < 0 || !list.length) return false;
+    const rec = recOf(list[focusIdx % list.length].dataset.id);
+    if (!rec || rec.role?.role !== 'pet') return false;
+    const ok = pet(rec.it.id);
+    if (ok) lastPress = { did: 'pet', via: 'hold' };
+    return ok;
+  }
+  /** While Nimrod is out explaining something, the room's own cat steps away (he "moves"). */
+  function catAway(on) {
+    for (const r of recs) if (r.it.kind === 'cat' && r.el) r.el.style.visibility = on ? 'hidden' : '';
   }
   function focusStep(d) {
     const list = scanTargets();
@@ -917,11 +1010,16 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     for (const undo of reactions) { try { undo(); } catch { /* gone */ } }
     reactions = [];
   }
-  function notify(event, { ms = o.notifyMs } = {}) {
+  function notify(event, { ms = o.notifyMs, rules = null, only = false } = {}) {
     if (destroyed) return [];
     clearReactions();
-    const list = reactionsFor(recipe, event);
-    for (const { index, does } of list) {
+    const list = reactionsFor(recipe, event, { rules, only });
+    for (const { index, does, sound } of list) {
+      if (does === 'sound') {
+        // Sound is the host's (the room module scales it by the screen's master volume).
+        try { o.onSound?.(sound, { event }); } catch (err) { console.error('room: onSound', err); }
+        continue;
+      }
       const rec = recs[index];
       if (!rec) continue;
       const b = rec.box;
@@ -1006,12 +1104,26 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     lifted: () => (lifted ? lifted.id : null),
     notify, clearReactions,
     reactions: () => reactions.length,
+    /** The room's notification rules (room_notify.js); null = Design's defaults. No rebuild. */
+    setNotify(rules) {
+      clearReactions();
+      recipe = { ...recipe, notify: Array.isArray(rules) ? rules.slice() : undefined };
+    },
+    /** The editor's Test: that one rule, alone, as if its event had happened. */
+    testRule(rule, { ms } = {}) {
+      if (!rule) return [];
+      const event = rule.on === 'custom' ? rule.name : rule.on;
+      return notify(event, { rules: [rule], only: true, ...(ms != null ? { ms } : {}) });
+    },
     scanTargets,
     focusNext: () => focusStep(1),
     focusPrev: () => focusStep(-1),
     focused: () => { const l = scanTargets(); return focusIdx < 0 || !l.length ? null : l[focusIdx % l.length]; },
     select,
     back: () => (lifted ? putBack() : false),
+    describe, hold, catAway,
+    picked: () => pickedId,
+    lastPress: () => lastPress,
     toast,
     fit,
     timers: () => timers.size,

@@ -79,8 +79,25 @@ export const CHATTINESS = Object.freeze([
 //   restMinutes 10  nobody touching the page for this long closes him (0 = never). Long enough to
 //                   read, choose a photo and come back; short enough that a walk abandoned on a
 //                   screen somebody watches does not sit there all night. Re-opening is one press.
-export const DEFAULT_CAT_PREFS = Object.freeze({ chat: 'some', speak: true, follow: true, restMinutes: 10 });
+//
+// AND HIS CONTEXT HELP (room add-ons §2, `cat_help.js`) — one cat, so one place for his settings:
+//   help true       "Cat help: on". Safe on by default because he only ever comes when pressed; off
+//                   is for somebody who would rather a press on him just petted him (in a room).
+//   where 'beside'  Design's sheet: "Where he sits: Beside it". He points at the thing from its far
+//                   side; 'corner' is for somebody who finds a cat arriving next to things busy.
+//   helpCloseSec 30 he goes by himself after this long (0 = he stays until closed). Long enough to
+//                   read two sentences slowly or hear them read; short enough that a bubble left on a
+//                   screen nobody is watching goes. He is never a gate either way (cat_help.js).
+//   "Read it aloud" is `speak`, above — the same voice for the walk and the help. Argued: one cat
+//   with two separate "talk" switches would be two settings for one thing; split it if anybody asks.
+export const DEFAULT_CAT_PREFS = Object.freeze({ chat: 'some', speak: true, follow: true, restMinutes: 10,
+  help: true, where: 'beside', helpCloseSec: 30 });
 export const REST_CHOICES = Object.freeze([0, 5, 10, 30]);
+export const WHERE = Object.freeze([
+  { value: 'beside', label: 'Beside it' },
+  { value: 'corner', label: 'In the corner' },
+]);
+export const HELP_CLOSE_CHOICES = Object.freeze([0, 15, 30, 60]);
 
 export const POSES = Object.freeze(['idle', 'wave', 'talking', 'thinking', 'happy',
   'point-up', 'point-down', 'point-left', 'point-right']);
@@ -105,6 +122,9 @@ export function readCatPrefs(storage = (hasStorage() ? localStorage : null)) {
   if (typeof raw.speak === 'boolean') out.speak = raw.speak;
   if (typeof raw.follow === 'boolean') out.follow = raw.follow;
   if (Number.isFinite(raw.restMinutes) && raw.restMinutes >= 0) out.restMinutes = raw.restMinutes;
+  if (typeof raw.help === 'boolean') out.help = raw.help;
+  if (WHERE.some((w) => w.value === raw.where)) out.where = raw.where;
+  if (Number.isFinite(raw.helpCloseSec) && raw.helpCloseSec >= 0) out.helpCloseSec = raw.helpCloseSec;
   return out;
 }
 

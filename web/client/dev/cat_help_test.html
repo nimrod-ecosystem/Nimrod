@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nimrod as context help — press him, he explains what is picked — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  .box{position:relative;width:800px;height:500px;border:1px solid #e4e0c2;margin-top:10px}
+  .stage{position:relative;margin-top:12px;width:640px;height:360px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>Nimrod as context help (room add-ons §2)</h1>
+<div class="warn">
+  Mike, 2026-09-30: <i>"It tells you about whatever you selected when you click on him."</i> Design: he
+  moves to the far side of the target and points at it with his paw, so his body never covers it;
+  the words come from the module catalog, the object's role, and the setting's own help. And the
+  rules the walk already keeps: he never appears uninvited (press only — the scan landing on him is
+  not a press), and he is always dismissible (Close, Escape, and on his own after a while).
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import { PAW_TIP, placeGuide, placeCat, placeBubble, rectsOverlap, explain, explainModule, explainObject,
+         explainSetting, explainScreen, selectionFrom, mountCatHelp, WHERE, HELP_CLOSE_CHOICES,
+         SCREEN_HELP } from '../cat_help.js';
+import { readCatPrefs, writeCatPrefs, CAT_PREFS_KEY, CAT_SOURCE, DEFAULT_CAT_PREFS } from '../cat_guide.js';
+import { CATALOG } from '../modules_catalog.js';
+import { registerModule, mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+import { mountRoomScene } from '../room_scene.js';
+import { presetRecipe } from '../room_presets.js';
+import '../modules/room.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeStore(seed = {}) {
+  const m = new Map(Object.entries(seed));
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
+}
+function fakeOutput() {
+  let n = 0;
+  const o = { said: [], cancelled: [],
+    say(text, opts = {}) { const id = `s${++n}`; o.said.push({ id, text, source: opts.source }); return id; },
+    cancel(id) { o.cancelled.push(id); return true; } };
+  return o;
+}
+function fakeTimers() {
+  let n = 0; const live = new Map();
+  return {
+    setTimer: (fn, ms) => { const id = ++n; live.set(id, { fn, ms }); return id; },
+    clearTimer: (id) => { live.delete(id); },
+    fireAll: () => { for (const [id, t] of [...live]) { live.delete(id); t.fn(); } },
+    pending: () => [...live.values()].map((t) => t.ms),
+  };
+}
+const R = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height });
+const catRect = (p) => R(p.left, p.top, p.size, p.size);
+const inside = (a, b) => a.left >= b.left - 0.5 && a.top >= b.top - 0.5 && a.right <= b.right + 0.5 && a.bottom <= b.bottom + 0.5;
+const box = () => { const d = document.createElement('div'); d.className = 'box'; document.getElementById('stages').append(d); return d; };
+const domRect = (el) => { const r = el.getBoundingClientRect(); return R(r.left, r.top, r.width, r.height); };
+
+function fakeState(initial = {}) {
+  let row = { ...initial };
+  const subs = new Set();
+  return { get: () => row, set(p) { row = { ...row, ...p }; subs.forEach((f) => f(row)); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, load: async () => {}, destroy() { subs.clear(); } };
+}
+
+try {
+// =====================================================================================
+section('placeGuide — Design’s maths, ported value for value');
+{
+  check('PAW_TIP is Design’s (viewBox -4 -4 208 208)',
+    PAW_TIP['point-right'][0] === 201 / 208 && PAW_TIP['point-right'][1] === 113 / 208
+    && PAW_TIP['point-left'][0] === 7 / 208 && PAW_TIP['point-up'][0] === 166 / 208
+    && PAW_TIP['point-up'][1] === 25 / 208 && PAW_TIP['point-down'][0] === 112 / 208
+    && PAW_TIP['point-down'][1] === 201 / 208);
+  const t = R(300, 200, 120, 60);
+  for (const dir of ['left', 'right', 'up', 'down']) {
+    const p = placeGuide(t, dir, 96, 6);
+    const [tx, ty] = PAW_TIP['point-' + dir];
+    const paw = { x: p.left + 96 * tx, y: p.top + 96 * ty };
+    const cx = t.left + t.width / 2, cy = t.top + t.height / 2;
+    const want = { left: { x: t.right + 6, y: cy }, right: { x: t.left - 6, y: cy }, up: { x: cx, y: t.bottom + 6 }, down: { x: cx, y: t.top - 6 } }[dir];
+    check(`pointing ${dir}: the paw tip lands ${6}px off the target’s edge, on its middle`,
+      Math.abs(paw.x - want.x) < 1e-6 && Math.abs(paw.y - want.y) < 1e-6 && p.pose === 'point-' + dir, JSON.stringify({ paw, want }));
+    if (dir !== 'up') check(`pointing ${dir}: his box does not overlap the target`, !rectsOverlap(R(p.left, p.top, 96, 96), t));
+    // Design's numbers, kept exactly: pointing UP, the box's empty top margin (25/208 of it, above
+    // the paw) reaches into the target. The drawing does not; placeCat widens the gap so the BOX
+    // clears as well, and the sweep below proves it on the box, not on knowing the art.
+    else check('pointing up: Design’s box reaches into the target by its empty top margin (why placeCat widens the gap)', rectsOverlap(R(p.left, p.top, 96, 96), t));
+  }
+}
+
+// =====================================================================================
+section('placeCat — which side, and never on top of it');
+{
+  const B = R(0, 0, 800, 500);
+  const near = (x, y, w = 80, h = 50) => placeCat(R(x, y, w, h), B, { size: 84, gap: 6, where: 'beside' });
+  check('a target at the left edge: he sits to its right and points left', near(4, 220).direction === 'left');
+  check('a target at the right edge: he sits to its left and points right', near(716, 220).direction === 'right');
+  check('a full-width target at the top: he sits below and points up', placeCat(R(0, 10, 800, 60), B, { size: 84, where: 'beside' }).direction === 'up');
+  check('a full-width target at the bottom: he sits above and points down', placeCat(R(0, 430, 800, 60), B, { size: 84, where: 'beside' }).direction === 'down');
+  // The sweep: every target that leaves room for him somewhere.
+  let bad = 0, outside = 0, n = 0; let first = '';
+  for (let x = 0; x <= 720; x += 45) for (let y = 0; y <= 450; y += 37) for (const [w, h] of [[80, 50], [200, 40], [40, 200], [300, 300]]) {
+    if (x + w > 800 || y + h > 500) continue;
+    n++;
+    const t = R(x, y, w, h);
+    const p = placeCat(t, B, { size: 84, gap: 6, where: 'beside' });
+    if (rectsOverlap(catRect(p), t)) { bad++; first = first || JSON.stringify({ t, p }); }
+    if (!inside(catRect(p), B)) { outside++; first = first || JSON.stringify({ t, p, why: 'outside' }); }
+  }
+  check(`over ${n} targets, beside: he never covers the target`, bad === 0, `${bad} covered · ${first}`);
+  check(`...and he is always inside the screen`, outside === 0, `${outside} outside · ${first}`);
+  // Corner.
+  let cbad = 0;
+  for (let x = 0; x <= 720; x += 60) for (let y = 0; y <= 450; y += 50) {
+    const t = R(x, y, 80, 50);
+    const p = placeCat(t, B, { size: 84, gap: 6, where: 'corner' });
+    if (!p.corner || rectsOverlap(catRect(p), t) || !inside(catRect(p), B)) cbad++;
+  }
+  check('corner: he sits in a corner, never on the target, always on screen', cbad === 0, String(cbad));
+  const cp = placeCat(R(40, 40, 80, 50), B, { size: 84, where: 'corner' });
+  check('corner: the corner farthest from the target (bottom right, for a top-left target)', cp.left > 600 && cp.top > 350, JSON.stringify(cp));
+  check('corner: he still turns his paw toward it', /^point-/.test(cp.pose), cp.pose);
+  const none = placeCat(null, B, { size: 84, where: 'beside' });
+  check('nothing picked: a corner, talking', none.corner && none.pose === 'talking' && inside(catRect(none), B));
+  const huge = placeCat(R(0, 0, 800, 500), B, { size: 84, where: 'beside' });
+  check('a target that IS the whole screen: he goes to a corner and says he covers it (nothing else is possible)', huge.corner && huge.covers === true);
+}
+
+// =====================================================================================
+section('placeBubble — the words do not cover the target either');
+{
+  const B = R(0, 0, 800, 500);
+  let bad = 0, n = 0, first = '';
+  for (let x = 0; x <= 720; x += 60) for (let y = 0; y <= 450; y += 50) {
+    const t = R(x, y, 80, 50);
+    const cat = placeCat(t, B, { size: 84, gap: 6, where: 'beside' });
+    const b = placeBubble(cat, t, B, { w: 300, h: 110, gap: 8 });
+    n++;
+    const br = R(b.left, b.top, 300, 110);
+    if (rectsOverlap(br, t) || !inside(br, B)) { bad++; first = first || JSON.stringify({ t, cat, b }); }
+  }
+  check(`over ${n} targets the bubble never covers the target and stays on screen`, bad === 0, `${bad} · ${first}`);
+}
+
+// =====================================================================================
+section('The words — catalog, object roles, settings, the screen');
+{
+  const photos = CATALOG.find((e) => e.type === 'photos');
+  const few = explainModule('photos', { chat: 'few' });
+  const some = explainModule('photos', { chat: 'some' });
+  const lots = explainModule('photos', { chat: 'lots' });
+  check('a module: "a few" words is the catalog’s lead', few.text === photos.lead, few.text);
+  check('"some" adds the first sentence of why', some.text.startsWith(photos.lead) && some.text.length > few.text.length && some.text.length < lots.text.length, some.text);
+  check('"lots" carries the whole why', lots.text.includes(photos.why.slice(0, 40)), lots.text);
+  check('the title is the module’s', /photo/i.test(some.title), some.title);
+  const unknown = explainModule('nosuchmodule', { chat: 'some', manifest: { title: 'Gizmo', description: 'Does gizmo things.' } });
+  check('a module the catalog does not know: its own manifest description, no throw', unknown.text.includes('Does gizmo things') && unknown.title === 'Gizmo', JSON.stringify(unknown));
+  const bare = explainModule('nosuchmodule', {});
+  check('...and with nothing at all, still a sentence', typeof bare.text === 'string' && bare.text.length > 5, bare.text);
+
+  const cab = explainObject({ kind: 'object', role: 'display', module: 'transport', label: 'Transport bar', part: 'cabinet', partLabel: 'Low cabinet' }, { chat: 'some' });
+  check('an object: Design’s own line — "This cabinet holds the transport bar…"', cab.text.startsWith('This cabinet holds the transport bar. Press it to lift it out, flat and full size.'), cab.text);
+  const door = explainObject({ kind: 'object', role: 'button', action: 'settings.open', label: 'Settings', part: 'door', partLabel: 'Door' }, { chat: 'some' });
+  check('a button object says what pressing it does', /door/i.test(door.text) && /Settings/.test(door.text) && /Press/.test(door.text), door.text);
+  const lamp = explainObject({ kind: 'object', role: 'label', label: 'Table lamp', part: 'tableLamp', partLabel: 'Table lamp' }, { chat: 'some' });
+  check('a label object says there is nothing to press', /lamp/.test(lamp.text) && /nothing/i.test(lamp.text), lamp.text);
+  const key = explainObject({ kind: 'object', role: 'keys', key: '7', group: 'calc', label: '7' }, {});
+  check('a key object names its key', key.text.includes('7'), key.text);
+  const photoShelf = explainObject({ kind: 'object', role: 'display', module: 'photos', label: 'Photos', part: 'bookshelf', partLabel: 'Bookshelf' }, { chat: 'lots' });
+  check('"lots" on an object adds what its module is for, from the catalog', photoShelf.text.includes(photos.lead), photoShelf.text);
+
+  const s1 = explainSetting({ kind: 'setting', label: 'Light', value: 'Follows the clock', field: { label: 'Light', help: 'Day, evening and night follow the real time.' } }, { chat: 'some' });
+  check('a setting: its name, what it is set to, and its own help', s1.text.includes('Light') && s1.text.includes('Follows the clock') && s1.text.includes('follow the real time'), s1.text);
+  const s2 = explainSetting({ kind: 'setting', label: 'Words', value: 'Hello', field: { label: 'Words', note: 'Shown on the sign.' } }, { chat: 'some' });
+  check('...or its note when it has no help', s2.text.includes('Shown on the sign'), s2.text);
+  const s3 = explainSetting({ kind: 'setting', id: 'fullscreen', label: 'Full screen', value: 'Off' }, { chat: 'some' });
+  check('a screen row the shell owns has words of its own', /whole/i.test(s3.text), s3.text);
+
+  for (const k of ['kiosk', 'room', 'settings', 'page']) {
+    const s = explainScreen(k, { chat: 'some' });
+    check(`the screen "${k}" has words`, typeof s.text === 'string' && s.text.length > 20 && !/\bher\b/i.test(s.text), s.text);
+  }
+  check('SCREEN_HELP never says "her screen" (site copy rule)', !Object.values(SCREEN_HELP).some((s) => /her screen/i.test(s)));
+  const ex = explain({ kind: 'object', help: 'Explicit words win.', role: 'label', label: 'x' });
+  check('an explicit `help` on the selection beats everything', ex.text === 'Explicit words win.');
+  check('explain(null) explains the screen', explain(null, { screen: 'room' }).text === explainScreen('room', {}).text);
+}
+
+// =====================================================================================
+section('What is selected — read off the page, never guessed');
+{
+  const host = box();
+  host.innerHTML = `
+    <div class="kiosk">
+      <div class="k-cell" data-slot="0" data-kind="clock"></div>
+      <div class="k-cell" data-slot="1" data-kind="photos" data-focused="1"></div>
+      <div data-settings><div data-scrim hidden><button class="st-item on" data-id="set:light"><span class="st-label">Light</span><span class="st-hint">Day</span></button></div></div>
+    </div>`;
+  const doc = document;
+  const scope = host;
+  let sel = selectionFrom(doc, { scope });
+  check('a focused panel is the selection: its module', sel.kind === 'module' && sel.type === 'photos' && sel.el?.dataset.kind === 'photos', JSON.stringify({ k: sel.kind, t: sel.type }));
+  host.querySelector('[data-scrim]').hidden = false;
+  const lookup = (type, key) => (type === 'photos' && key === 'light' ? { key: 'light', label: 'Light', help: 'Photos help text.' } : null);
+  sel = selectionFrom(doc, { scope, fieldLookup: lookup });
+  check('an open settings menu: the cursor row wins over the panel', sel.kind === 'setting' && sel.label === 'Light' && sel.value === 'Day', JSON.stringify({ k: sel.kind, l: sel.label, v: sel.value }));
+  check('...and its field is looked up on the focused panel’s module (for the help text)', sel.field?.help === 'Photos help text.');
+  check('...so the words carry it', explain(sel, { chat: 'some' }).text.includes('Photos help text.'));
+  host.querySelector('[data-scrim]').hidden = true;
+  const ew = document.createElement('div');
+  ew.setAttribute('data-help', 'Transform: where it sits, how big, which way it turns.');
+  ew.setAttribute('aria-current', 'true');
+  host.querySelector('.kiosk').append(ew);
+  sel = selectionFrom(doc, { scope });
+  check('anything selected that carries `data-help` (an edit window field) explains itself', sel.help === ew.getAttribute('data-help'), JSON.stringify(sel.help));
+  ew.remove();
+  host.querySelector('[data-focused]').removeAttribute('data-focused');
+  sel = selectionFrom(doc, { scope });
+  check('nothing selected: the screen', sel.kind === 'screen' && sel.screen === 'kiosk', JSON.stringify(sel));
+  host.remove();
+}
+
+// =====================================================================================
+section('*** NEVER UNINVITED, ALWAYS DISMISSIBLE ***');
+{
+  const host = box();
+  const tm = fakeTimers();
+  const o = fakeOutput();
+  const store = fakeStore();
+  const h = mountCatHelp(host, { storage: store, output: o, setTimer: tm.setTimer, clearTimer: tm.clearTimer, reducedMotion: true });
+  check('mounting him draws nothing and starts no timer', !host.querySelector('[data-cat-help]') && tm.pending().length === 0 && !h.shown());
+  const target = document.createElement('div');
+  target.style.cssText = 'position:absolute;left:40px;top:200px;width:120px;height:70px;background:#ccd';
+  host.append(target);
+  const r = h.explain({ kind: 'module', type: 'photos', el: target });
+  const layer = host.querySelector('[data-cat-help]');
+  check('a press shows him', !!r && h.shown() && !!layer);
+  check('no scrim, no modal, no focus trap: the layer lets pointer events through', layer && getComputedStyle(layer).pointerEvents === 'none' && !layer.querySelector('[aria-modal]') && layer.getAttribute('aria-modal') == null);
+  const bubble = layer.querySelector('[data-cat-help-bubble]');
+  check('only the bubble takes pointer events', bubble && getComputedStyle(bubble).pointerEvents === 'auto');
+  check('the bubble says the words', bubble.textContent.includes(r.text));
+  check('his figure is decoration (aria-hidden); the words are the content', layer.querySelector('[data-cat-help-figure]')?.getAttribute('aria-hidden') === 'true');
+  const fig = domRect(layer.querySelector('[data-cat-help-figure]'));
+  const tg = domRect(target);
+  check('his body does not cover the target (measured on the page)', !rectsOverlap(fig, tg), JSON.stringify({ fig, tg }));
+  check('neither does the bubble', !rectsOverlap(domRect(bubble), tg), JSON.stringify(domRect(bubble)));
+  check('he points at it', /^point-/.test(h.pose()), h.pose());
+  check('the words went to the output bus, as Nimrod', o.said.length === 1 && o.said[0].text === r.text && o.said[0].source === CAT_SOURCE);
+  check(`he closes on his own after ${DEFAULT_CAT_PREFS.helpCloseSec} s (the default)`, tm.pending().includes(DEFAULT_CAT_PREFS.helpCloseSec * 1000), JSON.stringify(tm.pending()));
+  bubble.querySelector('[data-cat-help-close]').click();
+  check('Close closes him, and takes back his words', !h.shown() && !host.querySelector('[data-cat-help]') && o.cancelled.includes(o.said[0].id));
+  check('...and leaves no timer', tm.pending().length === 0);
+  h.explain({ kind: 'module', type: 'photos', el: target });
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  check('Escape closes him', !h.shown());
+  h.explain({ kind: 'module', type: 'photos', el: target });
+  tm.fireAll();
+  check('nobody closing him: he goes by himself', !h.shown());
+  h.explain({ kind: 'module', type: 'photos', el: target });
+  h.explain({ kind: 'module', type: 'clock', el: target });
+  check('a second press replaces the first: one cat at a time', host.querySelectorAll('[data-cat-help]').length === 1);
+  h.close();
+
+  // Settings.
+  h.setPrefs({ helpCloseSec: 0 });
+  h.explain(null);
+  check('"closes after: never" arms no timer (he is still not a gate: nothing is waiting on him)', tm.pending().length === 0 && h.shown());
+  h.close();
+  h.setPrefs({ speak: false });
+  const before = o.said.length;
+  h.explain({ kind: 'module', type: 'photos', el: target });
+  check('"Read it aloud" off: the bubble only', o.said.length === before && h.shown());
+  h.close();
+  h.setPrefs({ where: 'corner' });
+  h.explain({ kind: 'module', type: 'photos', el: target });
+  check('"Where he sits: corner" puts him in a corner', h.placement().cat.corner === true);
+  check('...still not on the target', !rectsOverlap(domRect(host.querySelector('[data-cat-help-figure]')), domRect(target)));
+  h.close();
+  h.setPrefs({ help: false });
+  check('"Cat help: off": a press shows nothing and returns null', h.explain({ kind: 'module', type: 'photos', el: target }) === null && !host.querySelector('[data-cat-help]'));
+  h.destroy();
+  check('destroy leaves nothing behind', !host.querySelector('[data-cat-help]') && tm.pending().length === 0);
+  host.remove();
+}
+
+// =====================================================================================
+section('His settings are the cat’s settings (one cat, one place)');
+{
+  const p = readCatPrefs(fakeStore());
+  check('defaults: help on, beside it, closes after 30 s', p.help === true && p.where === 'beside' && p.helpCloseSec === 30, JSON.stringify(p));
+  check('WHERE is Design’s two', WHERE.map((w) => w.value).join() === 'beside,corner' && WHERE[0].label === 'Beside it');
+  check('the close choices include "never" (0)', HELP_CLOSE_CHOICES.includes(0) && HELP_CLOSE_CHOICES.includes(30));
+  const bad = readCatPrefs(fakeStore({ [CAT_PREFS_KEY]: '{"help":"yes","where":"on top","helpCloseSec":-4}' }));
+  check('bad values fall back to the defaults', bad.help === true && bad.where === 'beside' && bad.helpCloseSec === 30, JSON.stringify(bad));
+  const w = writeCatPrefs(fakeStore(), { where: 'corner' });
+  check('writing one keeps the walk’s own', w.where === 'corner' && w.chat === 'some' && w.follow === true);
+}
+
+// =====================================================================================
+section('In the room: press = help, stroke / hold = pet');
+{
+  const s = document.createElement('div'); s.className = 'stage'; document.getElementById('stages').append(s);
+  const calls = [];
+  let answer = true;
+  const scene = mountRoomScene(s, presetRecipe('theRoom'), { light: 'day', reducedMotion: true,
+    onCatPress: (info) => { calls.push(info); return answer; } });
+  // Scan to the cabinet, then on to the cat, then press.
+  let guard = 0;
+  while (scene.focused()?.dataset.id !== 'cab' && guard++ < 20) scene.focusNext();
+  check('the scan reaches the cabinet', scene.focused()?.dataset.id === 'cab');
+  check('...which is now what is picked', scene.picked() === 'cab');
+  guard = 0;
+  while (scene.focused()?.dataset.id !== 'cat' && guard++ < 20) scene.focusNext();
+  check('the scan landing on the cat does NOT call him (auto-scan would summon him every lap)', calls.length === 0);
+  check('...and does not change what is picked', scene.picked() === 'cab');
+  const res = scene.select();
+  check('pressing him hands the host what was picked', calls.length === 1 && calls[0].selected?.id === 'cab' && calls[0].selected?.role === 'display' && calls[0].selected?.module === 'transport', JSON.stringify(calls[0]?.selected));
+  check('...with its rect on the page', calls[0].selected?.rect?.width > 0);
+  check('the host answered it, so he was not petted', !s.querySelector('.rs-item[data-id="cat"]')?.dataset.petted && scene.lastPress()?.did === 'help', JSON.stringify(scene.lastPress()));
+  answer = false;
+  scene.select();
+  check('a host that does not answer (cat help off): the press pets him, as before', scene.lastPress()?.did === 'pet');
+  answer = true;
+  check('holding the switch on him pets him, whatever help is set to', scene.hold() === true && scene.lastPress()?.did === 'pet');
+  scene.catAway(true);
+  check('while he is out explaining, the room’s own cat steps away', getComputedStyle(s.querySelector('.rs-item[data-id="cat"]')).visibility === 'hidden');
+  scene.catAway(false);
+  check('...and comes back', getComputedStyle(s.querySelector('.rs-item[data-id="cat"]')).visibility !== 'hidden');
+  const d = scene.describe('door');
+  check('describe(): a button object, its action and its part', d.kind === 'object' && d.role === 'button' && d.action === 'settings.open' && d.part === 'door' && d.partLabel === 'Door', JSON.stringify(d));
+  scene.destroy();
+  s.remove();
+}
+
+// =====================================================================================
+section('The room module: the whole path');
+{
+  // The room module keeps his settings where the walk does (this browser); start from the defaults.
+  try { localStorage.removeItem(CAT_PREFS_KEY); } catch { /* private mode: the defaults anyway */ }
+  const s = document.createElement('div'); s.className = 'stage'; document.getElementById('stages').append(s);
+  const bus = createBus();
+  const o = fakeOutput();
+  const inst = mountModule('room', { mount: s, bus, output: o, state: fakeState({ preset: 'theRoom', light: 'day' }), personId: null, instanceId: 'ch1' });
+  inst.init();
+  await sleep(30);
+  const scene = inst.impl.__scene();
+  let guard = 0;
+  while (scene.focused()?.dataset.id !== 'cab' && guard++ < 20) bus.publish('room/next', {});
+  guard = 0;
+  while (scene.focused()?.dataset.id !== 'cat' && guard++ < 20) bus.publish('room/next', {});
+  bus.publish('room/select', {});
+  await sleep(10);
+  const layer = s.querySelector('[data-cat-help]');
+  check('room/next to the cabinet, on to the cat, room/select: he explains the cabinet', !!layer && /cabinet holds the transport bar/.test(layer.textContent), layer?.textContent);
+  check('...read aloud through the output bus', o.said.some((x) => /cabinet/.test(x.text)));
+  check('...and the room’s own cat has stepped away', getComputedStyle(s.querySelector('.rs-item[data-id="cat"]')).visibility === 'hidden');
+  layer.querySelector('[data-cat-help-close]').click();
+  check('Close: gone, and the room’s cat is back', !s.querySelector('[data-cat-help]') && getComputedStyle(s.querySelector('.rs-item[data-id="cat"]')).visibility !== 'hidden');
+  bus.publish('room/hold', {});
+  check('room/hold on the cat pets him', scene.lastPress()?.did === 'pet');
+  inst.destroy();
+  check('teardown takes him too', !s.querySelector('[data-cat-help]'));
+  s.remove();
+}
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

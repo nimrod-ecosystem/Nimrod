@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>room notifications — event → object → does, each with a Test — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:82ch}
+  .stage{position:relative;margin-top:12px;width:640px;height:360px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>Room notifications: event → object → does (room add-ons §6)</h1>
+<div class="warn">
+  Design: rules are <b>event → object → does</b>, each with a <b>Test</b> button; defaults wake → lamp
+  and cat, message → speaker, call → fireplace, visitor → door. <b>The on-screen cue always comes
+  too; objects only add to it.</b> The editor is switch-reachable (one button per control, the way
+  out first), and a room with it open puts itself back after the lifted-panel time with nobody
+  touching it — the product's invariant.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import { NOTIFY_EVENTS_LIST, REACTIONS, SOUNDS, CUES, DEFAULT_RULES, normalizeRule, readRules, objectsIn,
+         doesFor, stepRule, describeRule, cueFor } from '../room_notify.js';
+import { mountNotifyEditor } from '../room_notify_editor.js';
+import { mountRoomScene, reactionsFor, DEFAULT_NOTIFY_RULES } from '../room_scene.js';
+import { presetRecipe } from '../room_presets.js';
+import { mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+import '../modules/room.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const stage = () => { const s = document.createElement('div'); s.className = 'stage'; document.getElementById('stages').append(s); return s; };
+function fakeState(initial = {}) {
+  let row = { ...initial };
+  const subs = new Set();
+  return { get: () => row, set(p) { row = { ...row, ...p }; subs.forEach((f) => f(row)); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, load: async () => {}, destroy() { subs.clear(); } };
+}
+function fakeTimers() {
+  let n = 0; const live = new Map();
+  return {
+    setTimer: (fn, ms) => { const id = ++n; live.set(id, { fn, ms }); return id; },
+    clearTimer: (id) => { live.delete(id); },
+    fire: (ms) => { for (const [id, t] of [...live]) if (t.ms === ms) { live.delete(id); t.fn(); } },
+    pending: () => [...live.values()].map((t) => t.ms),
+  };
+}
+const key = (rs) => rs.map((r) => `${r.on}>${r.object}>${r.does}`).join(' ');
+
+try {
+// =====================================================================================
+section('The rules, and Design’s defaults');
+{
+  check('the events are Design’s six', NOTIFY_EVENTS_LIST.map((e) => e.value).join() === 'wake,message,call,visitor,timer,custom');
+  check('the reactions are Design’s six', REACTIONS.map((e) => e.value).join() === 'light,fire,pulse,perk,open,sound');
+  check('the defaults are room_scene’s (one list, not two)', DEFAULT_RULES === DEFAULT_NOTIFY_RULES);
+  check('...and they are Design’s: wake → lamp + cat, message → speaker, call → fireplace, visitor → door',
+    key(DEFAULT_RULES) === 'wake>lamp>light wake>cat>perk message>speaker>pulse call>fireplace>fire visitor>door>open', key(DEFAULT_RULES));
+  check('no default makes a sound (the tone is off by default; the visual cue carries it)', DEFAULT_RULES.every((r) => !r.sound && r.does !== 'sound'));
+  check('a rule with a bad event is dropped', normalizeRule({ on: 'shout', object: 'lamp', does: 'light' }) === null);
+  check('...and one with a bad reaction', normalizeRule({ on: 'wake', object: 'lamp', does: 'explode' }) === null);
+  const fixed = normalizeRule({ on: 'wake', object: 'lamp', does: 'perk' });
+  check('a reaction the object cannot do becomes the first it can (a lamp has no ears)', fixed && fixed.does === 'light', JSON.stringify(fixed));
+  check('a sound-only rule needs no object', normalizeRule({ on: 'timer', object: null, does: 'sound', sound: 'chime-soft' })?.sound === 'chime-soft');
+  check('...but a light needs one', normalizeRule({ on: 'timer', object: null, does: 'light' }) === null);
+  check('an unknown sound is no sound', normalizeRule({ on: 'message', object: 'speaker', does: 'pulse', sound: 'airhorn' })?.sound === null);
+  const c = normalizeRule({ on: 'custom', name: '  Dinner  ', object: 'lamp', does: 'light' });
+  check('a custom event keeps its (trimmed) name', c && c.name === 'Dinner', JSON.stringify(c));
+  check('a custom event with no name is dropped', normalizeRule({ on: 'custom', object: 'lamp', does: 'light' }) === null);
+  const d0 = readRules({});
+  check('no rules stored: Design’s defaults, marked as defaults', !d0.custom && key(d0.rules) === key(DEFAULT_RULES));
+  const d1 = readRules({ notify: [{ on: 'message', object: 'lamp', does: 'light' }, 'junk', { on: 'nope' }] });
+  check('stored rules are read, junk dropped', d1.custom && key(d1.rules) === 'message>lamp>light', key(d1.rules));
+  const d2 = readRules({ notify: [] });
+  check('an EMPTY list is somebody who removed every rule — not the defaults', d2.custom && d2.rules.length === 0);
+  check('describeRule reads as a sentence', /Wake phrase/.test(describeRule(DEFAULT_RULES[0])) && /lamp/i.test(describeRule(DEFAULT_RULES[0])), describeRule(DEFAULT_RULES[0]));
+  check('every event has an on-screen cue in words', ['wake', 'message', 'call', 'visitor', 'timer'].every((e) => CUES[e]) && cueFor({ on: 'custom', name: 'Dinner' }) === 'Dinner');
+}
+
+// =====================================================================================
+section('Which objects a room offers, and what each can do');
+{
+  const room = objectsIn(presetRecipe('theRoom')).map((o) => o.value);
+  check('the room offers its lamp, its cat, its speaker and its door', ['lamp', 'cat', 'speaker', 'door'].every((v) => room.includes(v)), room.join());
+  check('...and not a fireplace it does not have', !room.includes('fireplace'));
+  check('a fireside room offers its fireplace', objectsIn(presetRecipe('fireside')).some((o) => o.value === 'fireplace'));
+  check('two lamps are ONE choice, "Lamp" (a family)', objectsIn({ items: [{ kind: 'furniture', part: 'tableLamp' }, { kind: 'furniture', part: 'floorLamp' }] }).filter((o) => o.value === 'lamp').length === 1);
+  check('a lamp lights, pulses or sounds', doesFor('lamp').join() === 'light,pulse,sound');
+  check('the fire lights as fire', doesFor('fireplace')[0] === 'fire');
+  check('the cat perks', doesFor('cat')[0] === 'perk');
+  check('the door opens', doesFor('door')[0] === 'open');
+  check('anything else pulses', doesFor('sofa').join() === 'pulse,sound');
+  check('no object: only a sound', doesFor(null).join() === 'sound');
+  const objs = objectsIn(presetRecipe('theRoom'));
+  let r = { on: 'wake', object: 'lamp', does: 'light' };
+  r = stepRule(r, 'on', objs);
+  check('stepping the event goes to the next one', r.on === 'message');
+  r = stepRule({ on: 'custom', name: 'x', object: 'lamp', does: 'light' }, 'on', objs);
+  check('...and round from the last to the first', r.on === 'wake' && !('name' in r && r.name));
+  r = stepRule({ on: 'wake', object: 'lamp', does: 'light' }, 'object', objs);
+  check('stepping the object keeps the reaction if it can, else takes the first it has', normalizeRule(r) && doesFor(r.object).includes(r.does), JSON.stringify(r));
+  let seen = new Set(); let s = { on: 'wake', object: 'lamp', does: 'light' };
+  for (let i = 0; i < 12; i++) { s = stepRule(s, 'object', objs); seen.add(s.object); }
+  check('stepping the object walks every object in the room, and "no object"', [...objs.map((o) => o.value), null].every((v) => seen.has(v)), [...seen].join());
+  let dd = { on: 'wake', object: 'lamp', does: 'light' }; const ds = new Set();
+  for (let i = 0; i < 6; i++) { dd = stepRule(dd, 'does', objs); ds.add(dd.does); }
+  check('stepping the reaction walks what that object can do', [...ds].sort().join() === 'light,pulse,sound');
+  let snd = { on: 'message', object: 'speaker', does: 'pulse', sound: null }; const ss = new Set();
+  for (let i = 0; i < 8; i++) { snd = stepRule(snd, 'sound', objs); ss.add(String(snd.sound)); }
+  check('stepping the sound walks every sound and back to none', SOUNDS.every((x) => ss.has(String(x.value))), [...ss].join());
+}
+
+// =====================================================================================
+section('The scene honours the mapping');
+{
+  const sounds = [];
+  const s = stage();
+  const scene = mountRoomScene(s, presetRecipe('theRoom'), { light: 'day', notifyMs: 0, reducedMotion: true, onSound: (name, info) => sounds.push([name, info?.event]) });
+  scene.setNotify([{ on: 'message', object: 'lamp', does: 'light' }]);
+  scene.notify('message');
+  check('mapped: a message lights the lamp', !!scene.root.querySelector('.rs-react-glow[data-react-for="lamp"]'));
+  check('...and the speaker, no longer mapped, does not pulse', !scene.root.querySelector('.rs-react-ring[data-react-for="spk"]'));
+  scene.clearReactions();
+  check('an event with no rule does nothing', scene.notify('visitor').length === 0 && scene.reactions() === 0);
+  scene.setNotify(null);
+  scene.notify('message');
+  check('setNotify(null): Design’s defaults again — the speaker pulses', !!scene.root.querySelector('.rs-react-ring[data-react-for="spk"]'));
+  scene.clearReactions();
+  scene.setNotify([{ on: 'timer', object: null, does: 'sound', sound: 'chime-soft' }, { on: 'message', object: 'speaker', does: 'pulse', sound: 'knock' }]);
+  scene.notify('timer');
+  check('a sound-only rule plays its sound (through the host)', sounds.length === 1 && sounds[0][0] === 'chime-soft' && sounds[0][1] === 'timer', JSON.stringify(sounds));
+  scene.notify('message');
+  check('a rule with a reaction AND a sound does both', !!scene.root.querySelector('.rs-react-ring[data-react-for="spk"]') && sounds.some((x) => x[0] === 'knock'));
+  scene.clearReactions();
+  scene.setNotify([{ on: 'custom', name: 'Dinner', object: 'lamp', does: 'light' }]);
+  scene.notify('Dinner');
+  check('a custom event answers to its name', !!scene.root.querySelector('.rs-react-glow[data-react-for="lamp"]'));
+  scene.clearReactions();
+  // Test fires exactly the one rule.
+  scene.setNotify(null);
+  const got = scene.testRule({ on: 'wake', object: 'cat', does: 'perk' });
+  check('testRule fires that rule only (the cat perks; the lamp, also on wake, does not light)',
+    got.length === 1 && got[0].does === 'perk' && !scene.root.querySelector('.rs-react-glow[data-react-for="lamp"]'), JSON.stringify(got));
+  scene.clearReactions();
+  check('reactionsFor with the defaults is unchanged by any of this', reactionsFor(presetRecipe('theRoom'), 'wake').length === 2);
+  scene.destroy(); s.remove();
+}
+
+// =====================================================================================
+section('The editor: one button per control, the way out first');
+{
+  const s = stage();
+  const changes = [], tests = []; let done = 0;
+  const objects = objectsIn(presetRecipe('theRoom'));
+  const ed = mountNotifyEditor(s, { rules: DEFAULT_RULES.map((r) => ({ ...r })), objects,
+    onChange: (rs) => changes.push(rs), onTest: (r) => tests.push(r), onDone: () => done++ });
+  const btns = [...ed.el.querySelectorAll('button')];
+  check('every control is a button and a scan stop', btns.length > 0 && btns.every((b) => b.hasAttribute('data-scan')));
+  check('the first stop is Done — the way out', btns[0].hasAttribute('data-rn-done') && /Done/.test(btns[0].textContent));
+  check('a row per rule, each with Event, Object, Does, Sound, Test, Remove',
+    ed.el.querySelectorAll('[data-rn-rule]').length === 5
+    && [...ed.el.querySelectorAll('[data-rn-rule]')].every((row) => ['on', 'object', 'does', 'sound', 'test', 'remove'].every((f) => row.querySelector(`[data-rn="${f}"]`))));
+  check('it says the on-screen cue always comes too', /always/i.test(ed.el.textContent) && /on-screen/i.test(ed.el.textContent));
+  check('no modal, no trap', !ed.el.querySelector('[aria-modal]') && ed.el.getAttribute('aria-modal') == null);
+  check('buttons are at least 44px tall (Design’s floor for a target)', btns.every((b) => b.getBoundingClientRect().height >= 44), String(Math.min(...btns.map((b) => b.getBoundingClientRect().height))));
+  const row1 = ed.el.querySelector('[data-rn-rule]');
+  check('the first row reads Wake phrase heard / Lamp / Lights up / No sound',
+    /Wake phrase/.test(row1.querySelector('[data-rn="on"]').textContent) && /Lamp/.test(row1.querySelector('[data-rn="object"]').textContent)
+    && /Lights up/.test(row1.querySelector('[data-rn="does"]').textContent) && /No sound/.test(row1.querySelector('[data-rn="sound"]').textContent));
+  // Drive it the way a switch does: next ... select.
+  ed.next();
+  check('next: the cursor is on the first row’s Event', ed.focused()?.getAttribute('data-rn') === 'on' && ed.focused().classList.contains('on'));
+  ed.select();
+  check('select steps it (one press, one change) and reports the new rules', changes.length === 1 && changes[0][0].on === 'message', JSON.stringify(changes[0]?.[0]));
+  check('...and the cursor stays where it was', ed.focused()?.getAttribute('data-rn') === 'on' && ed.focused().closest('[data-rn-rule]') === ed.el.querySelector('[data-rn-rule]'));
+  for (let i = 0; i < 4; i++) ed.next();
+  check('four more: the Test button', ed.focused()?.getAttribute('data-rn') === 'test');
+  ed.select();
+  check('Test fires that rule', tests.length === 1 && tests[0].on === 'message' && tests[0].object === 'lamp');
+  ed.next(); ed.select();
+  check('Remove takes the rule out', ed.rules().length === 4 && changes.at(-1).length === 4);
+  ed.el.querySelector('[data-rn-add]').click();
+  check('+ Add a rule adds one (a wake rule on the first object that can react)', ed.rules().length === 5 && normalizeRule(ed.rules()[4]));
+  ed.el.querySelector('[data-rn-defaults]').click();
+  check('Put back Design’s defaults reports null (= defaults) and shows them', changes.at(-1) === null && ed.rules().length === 5 && key(ed.rules()) === key(DEFAULT_RULES));
+  ed.back();
+  check('back is Done', done === 1);
+  const cust = mountNotifyEditor(s, { rules: [{ on: 'custom', name: 'Dinner', object: 'lamp', does: 'light' }], objects, onChange: (rs) => changes.push(rs) });
+  const nameBox = cust.el.querySelector('[data-rn-name]');
+  check('a custom event shows its name in a box (it needs a keyboard, and says so)', nameBox && nameBox.value === 'Dinner' && /keyboard/i.test(cust.el.textContent));
+  nameBox.value = 'Tea'; nameBox.dispatchEvent(new Event('change', { bubbles: true }));   // as a browser sends it
+  check('changing the name changes the rule', changes.at(-1)[0].name === 'Tea');
+  const gone = mountNotifyEditor(s, { rules: [{ on: 'call', object: 'fireplace', does: 'fire' }], objects });
+  check('a rule for an object this room lacks says so, and is kept', /not in this room/i.test(gone.el.querySelector('[data-rn="object"]').textContent) && gone.rules().length === 1);
+  ed.destroy(); cust.destroy(); gone.destroy();
+  check('destroy removes it', !s.querySelector('[data-rn-editor]'));
+  s.remove();
+}
+
+// =====================================================================================
+section('The room module: stored, honoured, tested, and the cue always comes');
+{
+  const s = stage();
+  const bus = createBus();
+  const tm = fakeTimers();
+  const state = fakeState({ preset: 'theRoom', light: 'day' });
+  const inst = mountModule('room', { mount: s, bus, state, personId: null, instanceId: 'rn1', setTimer: tm.setTimer, clearTimer: tm.clearTimer });
+  inst.init();
+  await sleep(30);
+  const scene = inst.impl.__scene();
+  bus.publish('room/notify', { event: 'message' });
+  check('room/notify message: the speaker pulses (Design’s default)', !!s.querySelector('.rs-react-ring[data-react-for="spk"]'));
+  const toast = s.querySelector('.rs-toast');
+  check('...AND the on-screen cue comes too, in words', !!toast && toast.textContent.includes(CUES.message), toast?.textContent);
+  scene.clearReactions();
+  s.querySelector('.rs-toast')?.remove();
+  bus.publish('room/notify', { event: 'message', cueShown: true });
+  check('a publisher that already drew its own cue says so, and the room only adds the object', !s.querySelector('.rs-toast') && !!s.querySelector('.rs-react-ring[data-react-for="spk"]'));
+  scene.clearReactions();
+  state.set({ notify: [{ on: 'message', object: 'lamp', does: 'light' }] });
+  bus.publish('room/notify', { event: 'message', cueShown: true });
+  check('rules stored on the room are honoured (the lamp now, not the speaker)', !!s.querySelector('.rs-react-glow[data-react-for="lamp"]') && !s.querySelector('.rs-react-ring[data-react-for="spk"]'));
+  scene.clearReactions();
+  bus.publish('room/reactions', {});
+  const ed = s.querySelector('[data-rn-editor]');
+  check('room/reactions opens the editor inside the room', !!ed);
+  check('...showing the stored rules', ed?.querySelectorAll('[data-rn-rule]').length === 1);
+  check('...and arms the way out: it closes itself after the lifted-panel time', tm.pending().includes(60000), JSON.stringify(tm.pending()));
+  bus.publish('room/next', {});
+  bus.publish('room/select', {});
+  check('room/next + room/select drive the editor (the first row’s event stepped), and it is stored', state.get().notify?.[0]?.on === 'call', JSON.stringify(state.get().notify));
+  for (let i = 0; i < 4; i++) bus.publish('room/next', {});
+  bus.publish('room/select', {});
+  check('Test fires the reaction in the room', !!s.querySelector('.rs-react-glow[data-react-for="lamp"]'));
+  check('...with the on-screen cue beside it', /Test/.test(s.querySelector('.rs-toast')?.textContent || ''), s.querySelector('.rs-toast')?.textContent);
+  bus.publish('room/back', {});
+  check('room/back closes the editor (Done)', !s.querySelector('[data-rn-editor]'));
+  check('...and its timer with it', !tm.pending().includes(60000));
+  bus.publish('room/reactions', {});
+  tm.fire(60000);
+  check('nobody touching it: it closes by itself (the invariant)', !s.querySelector('[data-rn-editor]'));
+  bus.publish('room/reactions', {});
+  s.querySelector('[data-rn-defaults]').click();
+  check('Put back the defaults clears the stored rules', state.get().notify == null);
+  inst.destroy();
+  check('teardown removes the editor', !s.querySelector('[data-rn-editor]'));
+  s.remove();
+}
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
