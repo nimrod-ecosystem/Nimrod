@@ -70,8 +70,8 @@ export const GAME_MUSIC_PRIORITY = 0;
 
 // ---------------------------------------------------------------------------------------
 // *** THE MASTER (row 2.28, Mike 2026-09-30: "louder" "would control the audio busses master
-// volume"). An INTERIM master, until row 2.35 turns this arbiter into a mixer with a fader per
-// channel and a minimum per channel. ***
+// volume"). Now the master of row 2.35's mixer (below): a fader per channel and a minimum per
+// channel sit under it. ***
 //
 // ONE NUMBER, 0..1, THAT EVERY REGISTERED SOURCE'S LEVEL IS MULTIPLIED BY. It multiplies, never
 // replaces: a ducked video is ducked AND turned down, and nothing the arbiter silenced (the losing
@@ -107,15 +107,106 @@ function floorValue(v) {
   return Number.isFinite(n) && n > 0 && n <= 1 ? n : MASTER_FLOOR;
 }
 
+// ---------------------------------------------------------------------------------------
+// *** THE MIXER (row 2.35, Mike 2026-09-30: "the audio bus needs busses like a mixer. Because you
+// probably wouldn't want incoming calls dropping too low. Maybe have minimums for certain
+// channels."). ***
+//
+// A CHANNEL IS A FADER AND A MINIMUM. Every source sits on one: its tier's, unless it names another.
+// The arbiter's rules above are unchanged and run FIRST; the mixer only changes how loud a source
+// that the arbiter says should sound actually sounds:
+//
+//     heard = arbiter level (duck, exclusivity, hush, call) x channel fader x master
+//     then, IF THE ARBITER SAYS IT SHOULD SOUND AT ALL (level > 0), never under the channel's floor.
+//
+// *** THE INTERACTION, AND WHY IT IS THIS ONE. ***
+//   * A DUCK, THE MASTER AND A FADER ARE VOLUMES. The floor outranks all three. That is the whole
+//     point of a floor: "calls shouldn't drop too low" has to survive a "quieter" from somebody
+//     passing through, a fader somebody set last week, AND a duck. The case that decides it is her
+//     AAC voice DURING A CALL: the call tier ducks the voice tier, and that is exactly the moment
+//     her words have to reach the person on the other end.
+//   * EXCLUSIVITY, HUSH, A CALL SET TO PAUSE AND A STOPPED SOURCE ARE DECISIONS, NOT VOLUMES. They
+//     give 0, and the floor never lifts a 0. A floor that un-silenced the losing game music, or a
+//     video under a hush, would turn "never too quiet" into "can never be stopped", and stopping
+//     things has its own honest controls. So a floor is "when this is heard, at least this loud" -
+//     never "always heard".
+//   * The person who wants the opposite - a call that follows the master all the way down - sets
+//     the call floor to "no minimum". A channel floor of 0 is allowed, unlike the master's, because
+//     it removes a guarantee rather than creating an invisible mute: the master's floor still holds.
+//
+// A FADER CAN REACH 0, UNLIKE THE MASTER. The master is moved by a spoken "quieter" from anybody in
+// the room, so it keeps its floor. A fader is a settings row somebody chose deliberately, and "no
+// game beeps at all" is a legitimate thing to choose. On a floored channel the floor still wins.
+//
+// A BROKEN fader is full volume; a BROKEN floor is that channel's default floor - never 0, never
+// silence. Same rule as everything else in this file.
+// ---------------------------------------------------------------------------------------
+
+// The channels, in the order a mixer shows them. `effects`: whether anything on this channel is
+// played through Web Audio, so an insert (reverb, compressor, a plugin) can reach it at all - see
+// mixer_fx.js. Calls (WebRTC, played by a media element) and the spoken prompts (the browser's own
+// speech engine) can only be given a volume.
+export const CHANNELS = Object.freeze([
+  Object.freeze({ id: 'call',  label: 'Calls',                floor: 0.6, effects: false }),
+  // *** THE AAC VOICE IS ITS OWN CHANNEL. *** It is the one sound on the screen that is a person
+  // talking, and it must never be buried - so it gets its own floor, apart from the spoken prompts
+  // it used to share the voice tier with.
+  Object.freeze({ id: 'aac',   label: 'Talking board voice',  floor: 0.6, effects: true }),
+  Object.freeze({ id: 'voice', label: 'Spoken prompts',       floor: 0,   effects: false }),
+  Object.freeze({ id: 'media', label: 'Videos and music',     floor: 0,   effects: true }),
+  Object.freeze({ id: 'sfx',   label: 'Game sounds',          floor: 0,   effects: true }),
+]);
+export const CHANNEL_IDS = CHANNELS.map((c) => c.id);
+export const CHANNEL_FLOORS = Object.freeze(Object.fromEntries(CHANNELS.map((c) => [c.id, c.floor])));
+// Which channel a tier lands on when a source does not name one. `talk` (push-to-talk, a listening
+// window) and `voice` share one: both are the screen speaking or listening, not a person.
+export const TIER_CHANNEL = Object.freeze({ call: 'call', talk: 'voice', voice: 'voice', media: 'media', sfx: 'sfx' });
+
+// `v` as a fader: finite inside [0, 1], or full when it is not a number.
+function faderValue(v) {
+  if (v === null || v === undefined || v === '') return 1;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(0, Math.min(1, n));
+}
+// `v` as a channel floor: finite inside [0, 1], or the channel's own default when it is not.
+function channelFloorValue(v, dflt) {
+  if (v === null || v === undefined || v === '') return dflt;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 && n <= 1 ? n : dflt;
+}
+const defaultFloorOf = (ch) => (CHANNEL_FLOORS[ch] != null ? CHANNEL_FLOORS[ch] : 0);
+
 export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pause',
-                                 master = 1, masterFloor = MASTER_FLOOR } = {}) {
-  const sources = new Map();      // id -> {id, tier, tierP, group, gp, duck, onGain, active, seq, level}
+                                 master = 1, masterFloor = MASTER_FLOOR,
+                                 faders = {}, floors = {} } = {}) {
+  const sources = new Map();      // id -> {id, tier, tierP, channel, group, gp, duck, onGain, active, seq, level}
   let seq = 0;
   let hushed = false;
   let inRecompute = false;
   let onCall = CALL_MODES.includes(callMode) ? callMode : 'pause';
   let floor = floorValue(masterFloor);
   let masterGain = masterValue(master, floor);
+  // The mixer. Only channels somebody has touched are stored; everything else reads its default.
+  const faderOf = new Map();
+  const floorOf = new Map();
+  for (const [ch, v] of Object.entries(faders || {})) if (ch) faderOf.set(ch, faderValue(v));
+  for (const [ch, v] of Object.entries(floors || {})) if (ch) floorOf.set(ch, channelFloorValue(v, defaultFloorOf(ch)));
+  const faderFor = (ch) => (faderOf.has(ch) ? faderOf.get(ch) : 1);
+  const floorFor = (ch) => (floorOf.has(ch) ? floorOf.get(ch) : defaultFloorOf(ch));
+
+  // The mixer's half of a level: fader x master, lifted to the floor when the arbiter says the
+  // source should sound. Guarded: anything that goes wrong here is the arbiter's level untouched.
+  function mixed(level, ch, g) {
+    if (!(level > 0)) return 0;
+    try {
+      let out = level * faderValue(faderFor(ch)) * g;
+      const fl = channelFloorValue(floorFor(ch), defaultFloorOf(ch));
+      if (out < fl) out = fl;
+      if (!Number.isFinite(out)) return level;
+      return Math.max(0, Math.min(1, out));
+    } catch { return level; }
+  }
 
   const tierP = (t) => (tiers[t] != null ? tiers[t] : 0);
   // A source's own duck depth, when it declared a usable one; the bus's otherwise. Never 0 -
@@ -170,7 +261,7 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
         // 4. a call, when set to pause. Same shape as hush and for the same reason: this is
         // a conversation, not a cue, and half-volume music under it helps nobody.
         if (inCall && onCall === 'pause' && s.tier === 'media') level = 0;
-        apply(s, level * g);                                                   // 5. the master
+        apply(s, mixed(level, s.channel, g));                  // 5. fader x master, then the floor
       }
     } finally {
       inRecompute = false;
@@ -181,8 +272,10 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     // Idempotent by id, so a module can call it on every mount.
     // `duck`: how far THIS source ducks the tiers under it while it is active (0..1, default the
     // bus's DUCK_TO). A depth, not a switch - it can never silence anything.
+    // `channel`: which mixer channel it sits on (row 2.35). Default: its tier's (TIER_CHANNEL), so
+    // every source registered before the mixer existed lands where it belongs with no change.
     register(id, { tier = 'media', group = null, groupPriority = null, onGain = null,
-                   duck = null } = {}) {
+                   duck = null, channel = null } = {}) {
       if (!id) return null;
       let s = sources.get(id);
       if (!s) {
@@ -195,6 +288,9 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       }
       s.tier = tier || s.tier || 'media';
       s.tierP = tierP(s.tier);
+      // A named channel sticks across re-registers; an unnamed one follows the tier.
+      if (channel && typeof channel === 'string') s.namedChannel = channel;
+      s.channel = s.namedChannel || TIER_CHANNEL[s.tier] || 'media';
       if (group !== null) s.group = group;
       if (groupPriority !== null) s.gp = groupPriority;
       if (s.gp == null) s.gp = 0;
@@ -258,6 +354,41 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     },
     masterFloor: () => floor,
 
+    // ---- THE MIXER (row 2.35) --------------------------------------------------------
+    // A fader, 0..1, per channel. Returns what is now in force (a broken value is full).
+    setFader(ch, v) {
+      if (!ch || typeof ch !== 'string') return null;
+      faderOf.set(ch, faderValue(v));
+      recompute();
+      return faderOf.get(ch);
+    },
+    fader: (ch) => faderValue(faderFor(ch)),
+    // A minimum, 0..1, per channel. Returns what is now in force (a broken value is the default).
+    setFloor(ch, v) {
+      if (!ch || typeof ch !== 'string') return null;
+      floorOf.set(ch, channelFloorValue(v, defaultFloorOf(ch)));
+      recompute();
+      return floorOf.get(ch);
+    },
+    floor: (ch) => channelFloorValue(floorFor(ch), defaultFloorOf(ch)),
+    channelOf: (id) => (sources.has(id) ? sources.get(id).channel : null),
+    // What a source on `ch` would be heard at with nothing ducking it: fader x master, lifted to the
+    // floor. For a sound that has no `onGain` and reads its level when it starts - the speech
+    // channel. Anything that goes wrong is full volume.
+    channelLevel(ch) {
+      let g = 1;
+      try { g = masterValue(masterGain, floor); } catch { g = 1; }
+      const v = mixed(1, ch, g);
+      return Number.isFinite(v) ? v : 1;
+    },
+    // Everything a mixer screen shows, in one read.
+    mix() {
+      const chans = new Set([...CHANNEL_IDS, ...faderOf.keys(), ...floorOf.keys()]);
+      const channels = {};
+      for (const ch of chans) channels[ch] = { fader: this.fader(ch), floor: this.floor(ch), level: this.channelLevel(ch) };
+      return { master: this.master(), masterFloor: floor, channels };
+    },
+
     isActive: (id) => !!sources.get(id)?.active,
     levelOf: (id) => (sources.has(id) ? sources.get(id).level : null),
     duckTo: () => duckTo,
@@ -265,7 +396,7 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     state() {
       const out = {};
       for (const [id, s] of sources) {
-        out[id] = { tier: s.tier, group: s.group ?? null, gp: s.gp, active: s.active, level: s.level };
+        out[id] = { tier: s.tier, channel: s.channel, group: s.group ?? null, gp: s.gp, active: s.active, level: s.level };
       }
       return out;
     },

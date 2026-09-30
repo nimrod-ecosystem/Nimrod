@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>mixer — channels, effects and a plugin slot — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#5d7064}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+</style>
+</head>
+<body>
+<h1>mixer — row 2.35</h1>
+<div class="note">
+  The audio bus does the arithmetic (faders, minimums, master — see <code>audio_bus_test</code>).
+  This page tests the other two halves: <b>the settings</b> that drive it (<code>mixer.js</code>) and
+  <b>the effects</b> (<code>mixer_fx.js</code>): a per-channel insert chain with a compressor, a
+  scene-matched reverb and a plugin slot. The graph is checked against a fake that traces
+  connections, and then <b>rendered for real</b> in an <code>OfflineAudioContext</code>, because
+  "a failing effect is bypassed, never silencing" is a claim about sound, not about wiring.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import * as MX from '../mixer.js';
+import * as FX from '../mixer_fx.js';
+import { createAudioBus, CHANNELS, CHANNEL_IDS } from '../audio_bus.js';
+import { MASTER_FIELDS } from '../master_volume.js';
+import { auditFields, normalizeField } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function info(t) { const d = document.createElement('div'); d.className = 'info'; d.textContent = `      ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const near = (a, b, e = 1e-9) => typeof a === 'number' && Math.abs(a - b) < e;
+
+// ---------------------------------------------------------------------------------------
+// A FAKE AudioContext THAT TRACES THE GRAPH. Every node records where it connects; a "signal"
+// placed on a node reaches whatever is downstream of it, so an analyser reads a level only when
+// sound can actually get to it. A plugin that swallows its input is silent HERE for the same
+// reason it would be silent in a real browser: nothing connects its input to its output.
+// ---------------------------------------------------------------------------------------
+function fakeCtx({ state = 'running', noCompressor = false } = {}) {
+  const edges = new Map();
+  const signals = [];
+  let n = 0;
+  const ctx = { state, sampleRate: 48000, currentTime: 0, nodes: [] };
+  function node(kind, extra = {}) {
+    const nd = {
+      kind, nid: ++n, context: ctx, ...extra,
+      connect(t) {
+        if (!t || typeof t !== 'object') throw new Error('no target');
+        if (t.context && t.context !== ctx) throw new Error('InvalidAccessError: different context');
+        if (!edges.has(nd)) edges.set(nd, new Set());
+        edges.get(nd).add(t);
+        return t;
+      },
+      disconnect(t) { if (t) edges.get(nd)?.delete(t); else edges.delete(nd); },
+    };
+    ctx.nodes.push(nd);
+    return nd;
+  }
+  const reaches = (from, to, avoid = null, seen = new Set()) => {
+    if (from === avoid) return false;
+    if (from === to) return true;
+    if (seen.has(from)) return false;
+    seen.add(from);
+    for (const t of edges.get(from) || []) if (reaches(t, to, avoid, seen)) return true;
+    return false;
+  };
+  ctx.destination = node('destination');
+  ctx.createGain = () => node('gain', { gain: { value: 1 } });
+  ctx.createDynamicsCompressor = () => {
+    if (noCompressor) throw new Error('NotSupportedError');
+    return node('compressor', { threshold: { value: -24 }, knee: { value: 30 }, ratio: { value: 12 },
+      attack: { value: 0.003 }, release: { value: 0.25 } });
+  };
+  ctx.createConvolver = () => node('convolver', { buffer: null, normalize: true });
+  ctx.createBuffer = (ch, len, sr) => {
+    const data = [...Array(ch)].map(() => new Float32Array(len));
+    return { numberOfChannels: ch, length: len, sampleRate: sr, getChannelData: (i) => data[i] };
+  };
+  ctx.createAnalyser = () => node('analyser', {
+    fftSize: 2048,
+    getFloatTimeDomainData(a) {
+      let lvl = 0;
+      for (const s of signals) if (reaches(s.node, this)) lvl = Math.max(lvl, s.level);
+      for (let i = 0; i < a.length; i++) a[i] = i % 2 ? lvl : -lvl;
+    },
+  });
+  ctx.createMediaElementSource = (el) => node('mediasrc', { el });
+  ctx.resume = () => Promise.resolve();
+  ctx.signal = (nd, level) => { signals.length = 0; if (nd) signals.push({ node: nd, level }); };
+  ctx.reaches = reaches;
+  ctx.edges = edges;
+  ctx.of = (kind) => ctx.nodes.filter((x) => x.kind === kind);
+  return ctx;
+}
+const gainPlugin = (id = 'tilt', hook = {}) => ({
+  id, label: 'A plain gain',
+  create(c) { const g = c.createGain(); hook.node = g; return { input: g, output: g, destroy() { hook.destroyed = true; } }; },
+});
+// Valid shape, but its input goes nowhere: it eats the sound.
+const swallowPlugin = (id = 'swallow', hook = {}) => ({
+  id,
+  create(c) { const a = c.createGain(); const b = c.createGain(); hook.in = a; hook.out = b; return { input: a, output: b }; },
+});
+
+(async () => {
+  try {
+    // =====================================================================================
+    section('mixer.js — the settings a menu can show');
+    const FIELDS = MX.MIXER_FIELDS || [];
+    const keys = FIELDS.map((f) => f.key);
+    check('there is a fader row for every channel', CHANNEL_IDS.every((c) => keys.includes(MX.faderKey?.(c))),
+      keys.join(','));
+    check('...and a minimum row for every channel', CHANNEL_IDS.every((c) => keys.includes(MX.floorKey?.(c))));
+    const fxChans = CHANNELS.filter((c) => c.effects).map((c) => c.id);
+    check('effects rows only on channels effects can reach (Web Audio), none on calls or prompts',
+      fxChans.every((c) => keys.includes(MX.compressKey?.(c)) && keys.includes(MX.reverbKey?.(c)))
+      && !keys.includes(MX.compressKey?.('call')) && !keys.includes(MX.reverbKey?.('voice')),
+      JSON.stringify(fxChans));
+    check('no key is declared twice', new Set(keys).size === keys.length);
+    const byKey = Object.fromEntries(FIELDS.map((f) => [f.key, f]));
+    check('*** default minimums: calls 60%, the AAC voice 60%, the rest none ***',
+      byKey[MX.floorKey?.('call')]?.default === 60 && byKey[MX.floorKey?.('aac')]?.default === 60
+      && byKey[MX.floorKey?.('media')]?.default === 0 && byKey[MX.floorKey?.('sfx')]?.default === 0
+      && byKey[MX.floorKey?.('voice')]?.default === 0);
+    check('every fader defaults to 100%', CHANNEL_IDS.every((c) => byKey[MX.faderKey?.(c)]?.default === 100));
+    check('*** the compressor defaults ON for the AAC voice and OFF elsewhere ***',
+      byKey[MX.compressKey?.('aac')]?.default === true
+      && byKey[MX.compressKey?.('media')]?.default === false && byKey[MX.compressKey?.('sfx')]?.default === false);
+    check('reverb defaults to none everywhere', fxChans.every((c) => byKey[MX.reverbKey?.(c)]?.default === 'none'));
+    check('reverb offers room, hall, outdoor, none and "match the scene"',
+      ['none', 'room', 'hall', 'outdoor', 'scene'].every((v) =>
+        (byKey[MX.reverbKey?.('media')]?.options || []).some((o) => (o.value ?? o) === v)));
+    {
+      // The settings audit, over the whole "sound" group: the master's rows and the mixer's.
+      const norm = [...MASTER_FIELDS, ...FIELDS].map((f) => normalizeField(f)).filter(Boolean);
+      const found = auditFields(norm, { type: 'sound', declared: [...MASTER_FIELDS, ...FIELDS] });
+      const errs = found.filter((f) => f.severity === 'error');
+      check('*** the settings audit finds NO errors (every row bounded and reachable with one switch) ***',
+        FIELDS.length > 0 && errs.length === 0, JSON.stringify(errs));
+      const warns = found.filter((f) => f.severity === 'warn');
+      if (warns.length) info(`audit warnings: ${warns.map((w) => w.code + ':' + (w.key || '')).join(', ')}`);
+    }
+
+    section('attachMixer — settings in, bus and effects out');
+    const fxSpy = () => {
+      const calls = [];
+      return { calls,
+        setCompressor: (c, on) => calls.push(['comp', c, on]),
+        setReverb: (c, p) => calls.push(['rev', c, p]),
+        setScene: (s) => calls.push(['scene', s]),
+        last(kind, c) { return [...calls].reverse().find((x) => x[0] === kind && x[1] === c)?.[2]; } };
+    };
+    {
+      const audio = createAudioBus();
+      const fx = fxSpy();
+      const m = MX.attachMixer?.({ audio, fx, read: () => ({}) });
+      check('nothing saved: every fader full, the default floors, compressor on the AAC voice only',
+        m && CHANNEL_IDS.every((c) => audio.fader(c) === 1) && near(audio.floor('call'), 0.6)
+        && near(audio.floor('aac'), 0.6) && audio.floor('media') === 0
+        && fx.last('comp', 'aac') === true && fx.last('comp', 'media') === false
+        && fx.last('rev', 'media') === 'none', JSON.stringify({ mix: audio.mix(), calls: fx.calls }));
+    }
+    {
+      const audio = createAudioBus();
+      const fx = fxSpy();
+      let row = { [MX.faderKey?.('media')]: 50, [MX.floorKey?.('call')]: 40, [MX.compressKey?.('aac')]: false,
+        [MX.reverbKey?.('media')]: 'hall' };
+      const m = MX.attachMixer?.({ audio, fx, read: () => row });
+      check('*** a saved fader, floor and effect all reach the bus and the effects ***',
+        near(audio.fader('media'), 0.5) && near(audio.floor('call'), 0.4)
+        && fx.last('comp', 'aac') === false && fx.last('rev', 'media') === 'hall',
+        JSON.stringify({ mix: audio.mix(), calls: fx.calls }));
+      row = { ...row, [MX.faderKey?.('media')]: 80 };
+      m?.sync();
+      check('sync() re-reads the row', near(audio.fader('media'), 0.8));
+      m?.setScene?.('steampunk');
+      check('the scene is passed to the effects (for "match the scene")', fx.calls.some((c) => c[0] === 'scene' && c[1] === 'steampunk'));
+    }
+    {
+      const audio = createAudioBus();
+      const fx = fxSpy();
+      const writes = [];
+      MX.attachMixer?.({ audio, fx, write: (p) => writes.push(p), read: () => ({
+        [MX.faderKey?.('media')]: 'loud', [MX.floorKey?.('call')]: 'x', [MX.floorKey?.('aac')]: -5,
+        [MX.reverbKey?.('media')]: 'cathedral', [MX.compressKey?.('aac')]: 'yes please' }) });
+      check('*** a BROKEN fader is full volume ***', audio.fader('media') === 1, String(audio.fader('media')));
+      check('*** a BROKEN floor is the channel’s default, never zero ***',
+        near(audio.floor('call'), 0.6) && near(audio.floor('aac'), 0.6), `${audio.floor('call')} ${audio.floor('aac')}`);
+      check('an unknown reverb is none', fx.last('rev', 'media') === 'none');
+      check('a broken compressor switch is its default (on for the AAC voice)', fx.last('comp', 'aac') === true);
+    }
+    {
+      const audio = createAudioBus();
+      const m = MX.attachMixer?.({ audio, fx: null, read: () => { throw new Error('no row'); } });
+      check('a settings read that throws is the defaults, and no effects object is fine',
+        !!m && CHANNEL_IDS.every((c) => audio.fader(c) === 1) && near(audio.floor('aac'), 0.6));
+      const angry = { setFader() { throw new Error('x'); }, setFloor() { throw new Error('y'); } };
+      let ok = true;
+      try { MX.attachMixer?.({ audio: angry, fx: { setCompressor() { throw new Error('z'); } }, read: () => ({}) }); }
+      catch { ok = false; }
+      check('a bus or effects object that throws does not stop the mixer attaching', ok);
+    }
+
+    // =====================================================================================
+    section('mixer_fx.js — the insert chain, against a graph that traces connections');
+    const F = FX.createMixerFx;
+    {
+      const fx = F?.({ makeContext: () => null });
+      check('*** no Web Audio at all: input() is null (the source plays direct), and nothing throws ***',
+        fx && fx.input('media') === null && fx.context() === null);
+    }
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      const inMedia = fx?.input('media');
+      check('a channel input reaches the speakers', inMedia && ctx.reaches(inMedia, ctx.destination));
+      check('an unknown channel is refused, not invented', fx?.input('bogus') === null);
+      check('with no effects there is no compressor or convolver on the way', ctx.of('compressor').length === 0
+        && ctx.of('convolver').length === 0);
+    }
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      fx?.setCompressor('aac', true);
+      const comp = ctx.of('compressor')[0];
+      const inA = fx?.input('aac');
+      check('*** compressor ON: the AAC voice goes THROUGH it ***',
+        comp && ctx.reaches(inA, comp) && ctx.reaches(comp, ctx.destination)
+        && !ctx.reaches(inA, ctx.destination, comp), `${ctx.of('compressor').length}`);
+      fx?.setCompressor('aac', false);
+      check('...and OFF, it does not', !ctx.reaches(inA, comp) && ctx.reaches(inA, ctx.destination));
+      check('the state names the chain', JSON.stringify(fx?.state().aac?.chain) === '[]');
+    }
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      fx?.setReverb('media', 'hall');
+      const conv = ctx.of('convolver')[0];
+      const inM = fx?.input('media');
+      check('*** reverb: a convolver on the wet path ***', conv && ctx.reaches(inM, conv) && ctx.reaches(conv, ctx.destination));
+      check('...AND a dry path around it — reverb is added to the sound, never replaces it',
+        conv && ctx.reaches(inM, ctx.destination, conv));
+      check('the impulse is generated here, sized to the preset (no file to fetch)',
+        conv?.buffer && conv.buffer.length === Math.round(FX.REVERB_PRESETS.hall.seconds * ctx.sampleRate)
+        && conv.buffer.getChannelData(0).some((v) => v !== 0), String(conv?.buffer?.length));
+      fx?.setReverb('media', 'cathedral');
+      check('an unknown preset is none, not an error', !ctx.reaches(inM, conv) && fx?.state().media.reverb === 'none');
+    }
+    {
+      check('the presets: none, room, hall, outdoor', ['room', 'hall', 'outdoor'].every((p) => FX.REVERB_PRESETS?.[p]?.seconds > 0)
+        && FX.REVERB_PRESETS?.none === null);
+      check('scenes map to a preset (indoor looks to a room, the big ones to a hall, the outdoor ones outside)',
+        FX.reverbForScene?.('cozy') === 'room' && FX.reverbForScene?.('steampunk') === 'hall'
+        && FX.reverbForScene?.('fall') === 'outdoor');
+      check('an unknown scene is none', FX.reverbForScene?.('nope') === 'none' && FX.reverbForScene?.(null) === 'none');
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      fx?.setReverb('sfx', 'scene');
+      fx?.setScene('steampunk');
+      check('*** "match the scene" follows the scene ***', fx?.state().sfx.reverb === 'hall', JSON.stringify(fx?.state().sfx));
+      fx?.setScene('cozy');
+      check('...and changes with it', fx?.state().sfx.reverb === 'room');
+      fx?.setScene('nope');
+      check('...and an unknown scene is none', fx?.state().sfx.reverb === 'none' && ctx.of('convolver')
+        .every((c) => !ctx.reaches(fx.input('sfx'), c)));
+    }
+    {
+      // ORDER: compressor, then plugins, then reverb (a reverb tail is not squashed by the compressor).
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      const h = {};
+      fx?.setCompressor('aac', true);
+      fx?.setReverb('aac', 'room');
+      const r = fx?.addPlugin('aac', gainPlugin('tilt', h));
+      const comp = ctx.of('compressor')[0];
+      const conv = ctx.of('convolver')[0];
+      check('a plugin is accepted', r && r.ok === true, JSON.stringify(r));
+      check('*** order: compressor -> plugin -> reverb ***',
+        comp && h.node && conv && ctx.reaches(comp, h.node) && ctx.reaches(h.node, conv) && !ctx.reaches(conv, comp),
+        JSON.stringify(fx?.state().aac));
+      check('the state lists the chain in that order', JSON.stringify(fx?.state().aac.chain) === '["compressor","tilt","reverb"]',
+        JSON.stringify(fx?.state().aac.chain));
+      fx?.removePlugin('aac', 'tilt');
+      check('removing it takes it out and destroys it', h.destroyed === true && !ctx.reaches(fx.input('aac'), h.node)
+        && ctx.reaches(fx.input('aac'), ctx.destination));
+    }
+
+    section('*** a failing effect is BYPASSED, never silencing ***');
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      const r = fx?.addPlugin('media', { id: 'boom', create() { throw new Error('boom'); } });
+      check('*** a plugin whose create() throws is bypassed and the channel still reaches the speakers ***',
+        r && r.ok === false && ctx.reaches(fx.input('media'), ctx.destination)
+        && fx.state().media.bypassed.some((b) => b.id === 'boom' && /boom|threw/.test(b.why)), JSON.stringify(fx?.state().media));
+    }
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      const r1 = fx?.addPlugin('media', { id: 'noout', create: (c) => ({ input: c.createGain() }) });
+      const r2 = fx?.addPlugin('media', { id: 'junk', create: () => 42 });
+      check('a plugin that hands back the wrong shape is bypassed', r1?.ok === false && r2?.ok === false
+        && ctx.reaches(fx.input('media'), ctx.destination), JSON.stringify(fx?.state().media));
+    }
+    {
+      const ctx = fakeCtx();
+      const other = fakeCtx();
+      const fx = F?.({ context: ctx });
+      const r = fx?.addPlugin('media', { id: 'alien', create: () => { const g = other.createGain(); return { input: g, output: g }; } });
+      check('a plugin built in ANOTHER audio context is bypassed', r?.ok === false && ctx.reaches(fx.input('media'), ctx.destination));
+    }
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      const r = fx?.addPlugin('media', { id: 'grumpy', create: (c) => {
+        const g = c.createGain(); g.connect = () => { throw new Error('nope'); }; return { input: g, output: g }; } });
+      check('*** a plugin that throws while being wired in is bypassed, and the chain is rebuilt around it ***',
+        ctx.reaches(fx.input('media'), ctx.destination) && fx.state().media.bypassed.some((b) => b.id === 'grumpy'),
+        JSON.stringify(fx?.state().media));
+      check('...and it is reported as not ok', r?.ok === false);
+    }
+    {
+      const ctx = fakeCtx({ noCompressor: true });
+      const fx = F?.({ context: ctx });
+      fx?.setCompressor('aac', true);
+      check('*** a BUILT-IN that fails (no compressor on this browser) is bypassed the same way ***',
+        ctx.reaches(fx.input('aac'), ctx.destination) && fx.state().aac.bypassed.some((b) => b.id === 'compressor'),
+        JSON.stringify(fx?.state().aac));
+    }
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      check('*** NO NETWORK LOADING: a URL is refused ***', fx?.addPlugin('media', 'https://example.com/fx.js')?.ok === false);
+      check('...so is a create that is a URL', fx?.addPlugin('media', { id: 'u', create: 'https://example.com/fx.js' })?.ok === false);
+      check('a plugin may not take a built-in’s name', fx?.addPlugin('media', gainPlugin('compressor'))?.ok === false
+        && fx?.addPlugin('media', gainPlugin('reverb'))?.ok === false);
+      check('an id is required, and a short plain one', fx?.addPlugin('media', gainPlugin(''))?.ok === false
+        && fx?.addPlugin('media', gainPlugin('<script>'))?.ok === false);
+      check('an unknown channel is refused', fx?.addPlugin('bogus', gainPlugin())?.ok === false);
+      check('checkPlugin says why', typeof FX.checkPlugin?.({})?.why === 'string' && FX.checkPlugin?.(gainPlugin()).ok === true);
+      fx?.addPlugin('media', gainPlugin('same'));
+      const again = fx?.addPlugin('media', gainPlugin('same'));
+      check('adding the same id twice replaces it rather than stacking two', again?.ok === true
+        && fx.state().media.chain.filter((x) => x === 'same').length === 1);
+      const h = {};
+      fx?.addPlugin('media', { id: 'nodestroy', create: (c) => { const g = c.createGain(); h.g = g;
+        return { input: g, output: g, destroy() { throw new Error('bad destroy'); } }; } });
+      let ok = true;
+      try { fx?.removePlugin('media', 'nodestroy'); } catch { ok = false; }
+      check('a plugin whose destroy() throws is still removed', ok && !fx.state().media.chain.includes('nodestroy'));
+    }
+
+    section('*** the silence watchdog — a plugin that EATS the sound is taken out ***');
+    {
+      const ctx = fakeCtx();
+      const events = [];
+      const fx = F?.({ context: ctx, onEvent: (e) => events.push(e) });
+      const h = {};
+      const r = fx?.addPlugin('aac', swallowPlugin('swallow', h));
+      check('a plugin that swallows its input has a valid shape, so it is accepted at first', r?.ok === true);
+      const inA = fx?.input('aac');
+      check('...and with it in, nothing reaches the speakers', !ctx.reaches(inA, ctx.destination));
+      ctx.signal(inA, 0.3);                       // sound is going in
+      fx?.checkSilence(); fx?.checkSilence();
+      check('two checks of silence-out-while-sound-in are not yet enough (a gap is not a fault)',
+        fx.state().aac.chain.includes('swallow'));
+      fx?.checkSilence();
+      check('*** the third takes the WHOLE chain out and the sound reaches the speakers again ***',
+        ctx.reaches(inA, ctx.destination) && !fx.state().aac.chain.includes('swallow')
+        && fx.state().aac.bypassed.some((b) => b.id === 'swallow' && /silent/.test(b.why)), JSON.stringify(fx?.state().aac));
+      check('...and says so', events.some((e) => e.type === 'bypass' && e.channel === 'aac'), JSON.stringify(events));
+    }
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      fx?.addPlugin('media', gainPlugin('fine'));
+      const inM = fx?.input('media');
+      ctx.signal(null, 0);                       // nothing playing
+      for (let i = 0; i < 6; i++) fx?.checkSilence();
+      check('CONTROL: silence in, silence out is not a fault', fx.state().media.chain.includes('fine'));
+      ctx.signal(inM, 0.3);
+      for (let i = 0; i < 6; i++) fx?.checkSilence();
+      check('CONTROL: a plugin that passes sound is left alone', fx.state().media.chain.includes('fine'));
+    }
+    {
+      // The timer drives it on its own.
+      const ctx = fakeCtx();
+      const timers = [];
+      const fx = F?.({ context: ctx, watchMs: 500, setTimer: (fn, ms) => { timers.push(fn); return timers.length; },
+        clearTimer: () => {} });
+      fx?.addPlugin('aac', swallowPlugin());
+      ctx.signal(fx?.input('aac'), 0.3);
+      for (let i = 0; i < 4 && timers.length; i++) { const t = timers.shift(); t(); }
+      check('the watchdog runs on its own timer', ctx.reaches(fx.input('aac'), ctx.destination), String(timers.length));
+      fx?.destroy();
+    }
+
+    section('routeElement — only when it cannot silence the element');
+    {
+      const ctx = fakeCtx({ state: 'suspended' });
+      const fx = F?.({ context: ctx });
+      const el = { src: new URL('/aac/audio/yes.wav', location.href).href, currentSrc: '' };
+      check('*** a SUSPENDED context refuses: an element routed into it would be silent until a tap ***',
+        fx?.routeElement(el, 'aac') === false);
+      ctx.state = 'running';
+      check('running, same origin: routed', fx?.routeElement(el, 'aac') === true
+        && ctx.of('mediasrc').some((s) => ctx.reaches(s, fx.input('aac'))));
+      check('the same element twice is fine (one source per element)', fx?.routeElement(el, 'aac') === true
+        && ctx.of('mediasrc').length === 1);
+      const foreign = { src: 'https://videos.example.org/clip.mp4', currentSrc: '' };
+      check('*** another origin with no CORS refuses: Web Audio would hear it as silence ***',
+        fx?.routeElement(foreign, 'media') === false);
+      check('no element, no channel: refused', fx?.routeElement(null, 'aac') === false && fx?.routeElement(el, 'bogus') === false);
+    }
+
+    // =====================================================================================
+    section('*** REAL SOUND — the same claims, rendered in an OfflineAudioContext ***');
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const rms = (buf, from = 0, to = null) => {
+      const d = buf.getChannelData(0);
+      const a = Math.floor(from * buf.sampleRate), b = to == null ? d.length : Math.floor(to * buf.sampleRate);
+      let s = 0; for (let i = a; i < b; i++) s += d[i] * d[i];
+      return Math.sqrt(s / Math.max(1, b - a));
+    };
+    function tone(c, amp, dest, start = 0, stop = null) {
+      const o = c.createOscillator(); o.frequency.value = 440;
+      const g = c.createGain(); g.gain.value = amp;
+      o.connect(g); g.connect(dest); o.start(start); if (stop != null) o.stop(stop);
+    }
+    if (!OAC) {
+      check('this browser has OfflineAudioContext', false);
+    } else {
+      {
+        const c = new OAC(1, 48000, 48000);
+        const fx = F?.({ context: c });
+        fx?.setCompressor('aac', true);
+        fx?.addPlugin('aac', { id: 'boom', create() { throw new Error('boom'); } });
+        fx?.addPlugin('aac', { id: 'grumpy', create: () => ({ input: {}, output: {} }) });
+        tone(c, 0.5, fx?.input('aac') || c.destination);
+        const buf = await c.startRendering();
+        const lvl = rms(buf);
+        check('*** real render: with two broken plugins on it, the AAC voice is still heard ***', lvl > 0.1, lvl.toFixed(4));
+        info(`output RMS ${lvl.toFixed(3)} for a 0.5-amplitude tone (0.354 RMS) through the compressor`);
+      }
+      {
+        // A plugin that swallows the sound, and the watchdog finding it in the middle of a render.
+        const c = new OAC(1, 48000 * 2, 48000);
+        const fx = F?.({ context: c, minLevel: 0.001 });
+        fx?.addPlugin('aac', swallowPlugin());
+        tone(c, 0.5, fx?.input('aac') || c.destination);
+        for (const t of [0.25, 0.5, 0.75, 1.0]) {
+          c.suspend(t).then(() => { fx?.checkSilence(); c.resume(); });
+        }
+        const buf = await c.startRendering();
+        const early = rms(buf, 0, 0.2), late = rms(buf, 1.2, 2);
+        check('*** real render: a swallowing plugin silences the start... ***', early < 0.001, early.toFixed(4));
+        check('*** ...and the watchdog takes it out mid-render, so the rest is heard ***', late > 0.1,
+          `${late.toFixed(4)} ${JSON.stringify(fx?.state().aac)}`);
+      }
+      {
+        // THE COMPRESSOR, MEASURED rather than assumed: a quiet and a loud tone through it.
+        const through = async (amp, on) => {
+          const c = new OAC(1, 48000, 48000);
+          const fx = F?.({ context: c });
+          fx?.setCompressor('aac', on);
+          tone(c, amp, fx?.input('aac') || c.destination);
+          const b = await c.startRendering();
+          return rms(b, 0.3, 1);                  // after the attack has settled
+        };
+        const qOff = await through(0.03, false), lOff = await through(0.9, false);
+        const qOn = await through(0.03, true), lOn = await through(0.9, true);
+        const spreadOff = lOff / qOff, spreadOn = lOn / qOn;
+        check('*** measured: the compressor narrows the gap between loud and quiet ***', spreadOn < spreadOff * 0.5,
+          `off ${spreadOff.toFixed(1)}x, on ${spreadOn.toFixed(1)}x`);
+        check('...and the quiet sound is NOT made quieter by it (makeup gain) — it cannot bury a soft word',
+          qOn >= qOff * 0.95, `${qOff.toFixed(4)} -> ${qOn.toFixed(4)}`);
+        check('...and nothing clips', lOn <= 1, lOn.toFixed(4));
+        info(`quiet ${qOff.toFixed(4)} -> ${qOn.toFixed(4)} RMS; loud ${lOff.toFixed(4)} -> ${lOn.toFixed(4)}; `
+          + `loud:quiet ${spreadOff.toFixed(1)}x -> ${spreadOn.toFixed(1)}x`);
+      }
+      {
+        const tail = async (preset) => {
+          const c = new OAC(1, 48000, 48000);
+          const fx = F?.({ context: c });
+          fx?.setReverb('media', preset);
+          tone(c, 0.5, fx?.input('media') || c.destination, 0, 0.05);
+          const b = await c.startRendering();
+          return rms(b, 0.15, 0.6);
+        };
+        const none = await tail('none'), hall = await tail('hall'), outdoor = await tail('outdoor');
+        check('*** measured: a hall leaves a tail after the sound stops, none leaves nothing ***',
+          hall > 0.002 && none < 1e-4, `hall ${hall.toFixed(5)} none ${none.toExponential(2)}`);
+        check('...and outdoors leaves less than a hall', outdoor < hall, `outdoor ${outdoor.toFixed(5)} hall ${hall.toFixed(5)}`);
+      }
+    }
+
+    // THE BUS AND THE EFFECTS NEVER DOUBLE-COUNT: the graph carries no fader and no master.
+    section('the graph applies no volume of its own');
+    {
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      fx?.input('media'); fx?.setReverb('media', 'hall');
+      const gains = ctx.of('gain').filter((g) => !/wet|dry/.test(g.role || ''));
+      check('*** every plain gain node in the graph is at 1: levels are the bus’s job, once ***',
+        gains.every((g) => g.gain.value === 1), JSON.stringify(gains.map((g) => [g.role, g.gain.value])));
+    }
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+  }
+  const s = document.getElementById('summary');
+  s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+  s.className = failed === 0 ? 'pass' : 'fail';
+})();
+</script>
+</body>
+</html>
