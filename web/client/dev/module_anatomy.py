@@ -123,8 +123,11 @@ def verb_map():
                 d -= 1
                 if d == 0:
                     inner = body[m.end():k]
-                    out[name] = sorted(set(re.findall(r'([A-Za-z_$][\w$]*)\s*:', inner))
-                                       - {'topic', 'payload'})
+                    # QUOTED KEYS TOO: a verb id with a hyphen ('volume-up', row 2.28) has to be
+                    # quoted in JS, and the bare-identifier pattern alone silently dropped it.
+                    keys = {a or b for a, b in
+                            re.findall(r"""(?:['"]([\w$-]+)['"]|([A-Za-z_$][\w$]*))\s*:""", inner)}
+                    out[name] = sorted(keys - {'topic', 'payload'})
                     break
     return out
 

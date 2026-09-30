@@ -27,7 +27,7 @@
 // and the module at the other end never learns that a verb was involved. That is what
 // let this ship without touching a single module.
 
-import { VERBS, FOCUS_VERBS, MODULE_VERBS, verbTopic, verbTarget, respondsToVerbs } from './actions.js';
+import { VERBS, FOCUS_VERBS, MEDIA_VERBS, MODULE_VERBS, verbTopic, verbTarget, respondsToVerbs } from './actions.js';
 
 export function createVerbRouter({
   bus,
@@ -41,6 +41,13 @@ export function createVerbRouter({
   onUnhandled = null,        // "the focused panel has nothing for that verb" - the UI says so
 } = {}) {
   if (!bus) throw new Error('createVerbRouter: bus is required');
+
+  // THE MEDIA VERBS RIDE ALONG WHATEVER VOCABULARY WAS PASSED (row 2.28). They are shipped and
+  // global like the nine, but kept out of `VERBS` so the binder's list stays short - see
+  // MEDIA_VERBS in actions.js. Added here rather than to the `verbs` default so a caller that
+  // passes its own list (the nine plus custom verbs) still routes play/pause/volume.
+  const routed = [...verbs];
+  for (const m of MEDIA_VERBS) if (!routed.some((v) => v.id === m.id)) routed.push(m);
 
   let focusId = null;
   const offs = [];
@@ -116,7 +123,7 @@ export function createVerbRouter({
     const m = focused();
     if (!m) return {};
     const out = {};
-    for (const v of verbs) {
+    for (const v of routed) {
       const t = verbTarget(m.type, v.id, maps);
       if (t) out[v.id] = t;
     }
@@ -153,7 +160,7 @@ export function createVerbRouter({
     return { ...target, module: { ...m } };
   }
 
-  for (const v of verbs) {
+  for (const v of routed) {
     offs.push(bus.subscribe(verbTopic(v.id), (_p, _t, meta) => dispatch(v.id, meta)));
   }
   for (const v of FOCUS_VERBS) {
