@@ -104,9 +104,11 @@ export const FOCUS_VERBS = [
 //     fires), routed to the focused panel exactly like the nine, and shadow-proof against custom
 //     verbs - and nothing that lists "the nine" changes.
 //
-// Whether they should ALSO appear in the binder's flat list, so a switch can be bound to Pause
-// from the page, is Mike's call - it is a one-line change in `inputs.js verbOptions` and the
-// "short" check there, and the cost is the list growing from twelve to sixteen.
+// *** THEY ARE ALSO IN THE BINDER'S FLAT LIST NOW (Mike, 2026-09-30, row 2.28 call 1: "Adding
+// audio shouldn't take away any other controls. It's just in addition to them.") *** So a switch
+// can be bound to Pause or Louder from the page; the list grew from twelve to sixteen. `VERBS`
+// itself is unchanged, so every surface that lists "the nine" (the remote, the press overlay, the
+// keyboard module) and the remote-drive wire list (`drive.js`, frozen at eleven) are untouched.
 //
 // *** NO `toggle-play`. *** Considered and left out: a spoken command should be IDEMPOTENT.
 // "Pause" said twice (or heard twice, or echoed by the room) leaves it paused; "toggle" heard
@@ -117,9 +119,16 @@ export const FOCUS_VERBS = [
 export const MEDIA_VERBS = [
   { id: 'play',        label: 'Play',    hint: 'carry on with whatever is paused' },
   { id: 'pause',       label: 'Pause',   hint: '' },
-  { id: 'volume-up',   label: 'Louder',  hint: 'one step, on the panel in front of you' },
-  { id: 'volume-down', label: 'Quieter', hint: 'one step, on the panel in front of you' },
+  { id: 'volume-up',   label: 'Louder',  hint: 'one step, on the whole screen’s volume' },
+  { id: 'volume-down', label: 'Quieter', hint: 'one step, on the whole screen’s volume' },
 ];
+
+// *** LOUDER AND QUIETER ARE THE MASTER'S, NOT A PANEL'S (Mike, 2026-09-30, row 2.28 call 4:
+// "louder" "would control the audio busses master volume"). *** The router does not send these
+// to the focused panel; `master_volume.js` answers them by moving the audio bus's master, so
+// "louder" works whichever panel has focus - including a clock, or nothing. A panel's own volume
+// (YouTube's "How loud the video is") stays a per-source level in that panel's settings.
+export const MASTER_VERBS = ['volume-up', 'volume-down'];
 
 export const verbTopic = (id) => `verb/${id}`;
 
@@ -240,14 +249,12 @@ export const MODULE_VERBS = {
   photos:        { next: 'photos/next', prev: 'photos/prev' },
   personal:      { next: 'personal/next', prev: 'personal/prev' },
   educational:   { next: 'educational/next', prev: 'educational/prev', back: 'educational/skip' },
-  // PLAY, PAUSE AND VOLUME (row 2.28). Volume is the VIDEO'S OWN, one step either way - the
-  // payload is a direction and never an amount; the size of a step is the module's
-  // `volumeStep` setting. Why the panel's own volume and not a screen-wide master: see the
-  // `volume` note in modules/youtube.js.
+  // PLAY AND PAUSE (row 2.28). NOT volume-up/volume-down any more: Mike ruled 2026-09-30 that
+  // "louder" moves the audio bus's MASTER (see MASTER_VERBS), so no panel answers them. The
+  // video's own volume is still a setting, and `youtube/volume` still steps it for anything that
+  // publishes it directly (a screen's own verb map can point a verb there).
   youtube:       { next: 'youtube/next', prev: 'youtube/prev',
-                   play: 'youtube/play', pause: 'youtube/pause',
-                   'volume-up':   { topic: 'youtube/volume', payload: 1 },
-                   'volume-down': { topic: 'youtube/volume', payload: -1 } },
+                   play: 'youtube/play', pause: 'youtube/pause' },
   // THE DIRECTOR WAS MISSING, and it is on a real bedside screen — the starter
   // "Bedside" profile is photos + camera + clock + director. Absent from this table it is
   // never focusable and answers no verb, so a switch could not skip a segment on the one

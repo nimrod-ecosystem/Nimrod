@@ -68,14 +68,62 @@ export const MUSIC_GROUP = 'music';
 export const VIDEO_PRIORITY = 10;
 export const GAME_MUSIC_PRIORITY = 0;
 
-export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pause' } = {}) {
-  const sources = new Map();      // id -> {id, tier, tierP, group, gp, onGain, active, seq, level}
+// ---------------------------------------------------------------------------------------
+// *** THE MASTER (row 2.28, Mike 2026-09-30: "louder" "would control the audio busses master
+// volume"). An INTERIM master, until row 2.35 turns this arbiter into a mixer with a fader per
+// channel and a minimum per channel. ***
+//
+// ONE NUMBER, 0..1, THAT EVERY REGISTERED SOURCE'S LEVEL IS MULTIPLIED BY. It multiplies, never
+// replaces: a ducked video is ducked AND turned down, and nothing the arbiter silenced (the losing
+// music, hush, a call set to pause) can be un-silenced by turning the master up. The speech channel
+// has no `onGain`, so it reads `master()` when it speaks (output_channels.js) - otherwise "quieter"
+// would turn the video down and leave the voice as loud as ever, a master that is not.
+//
+// *** IT HAS A FLOOR, AND A BROKEN ONE PLAYS AT FULL VOLUME. *** Both follow from the rule at the
+// top of this file - a failure never silences her:
+//   * THE FLOOR, 10% BY DEFAULT, A SETTING. The same number YouTube's own volume floor already
+//     uses and Mike OK'd for it (row 2.28 call 3), for the same reason: a "quieter" that can reach
+//     zero leaves a screen playing with no sound, which to the next person in the room looks
+//     exactly like broken audio. Making it silent is a different act with its own controls (Hush
+//     on the bar, "pause"). The person who wants it HIGHER - a caregiver who never wants a
+//     "quieter" from somebody passing through to bury the screen - raises it (master_volume.js
+//     offers 10/20/30%); the person who finds 10% too loud at night turns the machine's own
+//     volume down. A floor of zero is refused rather than honoured, because it would make a
+//     volume control into a mute that no one can see, and mute already has honest controls.
+//   * A BROKEN MASTER (NaN, a string, a corrupt saved value) IS FULL VOLUME. "Too loud" is
+//     annoying and fixable by the next person in the room; "silent" is the product gone.
+// ---------------------------------------------------------------------------------------
+export const MASTER_FLOOR = 0.1;
+
+// `v` as a master gain: finite and inside [floor, 1], or full volume when it is not a number.
+function masterValue(v, floor) {
+  if (v === null || v === undefined || v === '') return 1;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(floor, Math.min(1, n));
+}
+function floorValue(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 && n <= 1 ? n : MASTER_FLOOR;
+}
+
+export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pause',
+                                 master = 1, masterFloor = MASTER_FLOOR } = {}) {
+  const sources = new Map();      // id -> {id, tier, tierP, group, gp, duck, onGain, active, seq, level}
   let seq = 0;
   let hushed = false;
   let inRecompute = false;
   let onCall = CALL_MODES.includes(callMode) ? callMode : 'pause';
+  let floor = floorValue(masterFloor);
+  let masterGain = masterValue(master, floor);
 
   const tierP = (t) => (tiers[t] != null ? tiers[t] : 0);
+  // A source's own duck depth, when it declared a usable one; the bus's otherwise. Never 0 -
+  // a duck that silences is not a duck, and silence has its own rules below.
+  const duckOf = (s) => {
+    const n = Number(s.duck);
+    return s.duck != null && Number.isFinite(n) && n > 0 && n <= 1 ? n : duckTo;
+  };
 
   // Enact a level, but only when it actually changed — and never re-enter recompute from
   // inside an onGain, because a callback that toggles activity would otherwise recurse.
@@ -102,15 +150,27 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
         if (!w || s.gp > w.gp || (s.gp === w.gp && s.seq > w.seq)) winners.set(s.group, s);
       }
 
+      // 0. the master, read once per pass. Guarded like everything else here: whatever goes
+      // wrong reading it, the answer is full volume.
+      let g = 1;
+      try { g = masterValue(masterGain, floor); } catch { g = 1; }
+
       for (const s of active) {
         let level = 1;
-        if (s.tierP < topP) level *= duckTo;                                  // 1. duck
+        if (s.tierP < topP) {                                                 // 1. duck
+          // The deepest duck among the active sources ABOVE this one. Every one of them uses
+          // the bus's depth unless it declared its own (a listening window ducks further than
+          // a spoken cue: the microphone is trying to hear a person over the video).
+          let depth = 1;
+          for (const o of active) if (o.tierP > s.tierP) depth = Math.min(depth, duckOf(o));
+          level *= depth;
+        }
         if (s.group && winners.get(s.group)?.id !== s.id) level = 0;          // 2. exclusivity
         if (hushed && s.tier === 'media') level = 0;                          // 3. hush
         // 4. a call, when set to pause. Same shape as hush and for the same reason: this is
         // a conversation, not a cue, and half-volume music under it helps nobody.
         if (inCall && onCall === 'pause' && s.tier === 'media') level = 0;
-        apply(s, level);
+        apply(s, level * g);                                                   // 5. the master
       }
     } finally {
       inRecompute = false;
@@ -119,7 +179,10 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
 
   return {
     // Idempotent by id, so a module can call it on every mount.
-    register(id, { tier = 'media', group = null, groupPriority = null, onGain = null } = {}) {
+    // `duck`: how far THIS source ducks the tiers under it while it is active (0..1, default the
+    // bus's DUCK_TO). A depth, not a switch - it can never silence anything.
+    register(id, { tier = 'media', group = null, groupPriority = null, onGain = null,
+                   duck = null } = {}) {
       if (!id) return null;
       let s = sources.get(id);
       if (!s) {
@@ -135,6 +198,7 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       if (group !== null) s.group = group;
       if (groupPriority !== null) s.gp = groupPriority;
       if (s.gp == null) s.gp = 0;
+      if (duck !== null) s.duck = duck;
       if (onGain) s.onGain = onGain;
       return s;
     },
@@ -177,6 +241,22 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       return onCall;
     },
     callMode: () => onCall,
+
+    // THE MASTER. `setMaster` takes 0..1 and returns what is now in force: clamped to
+    // [floor, 1], or 1 when handed something that is not a number (see MASTER_FLOOR).
+    setMaster(v) {
+      masterGain = masterValue(v, floor);
+      recompute();
+      return masterGain;
+    },
+    master: () => masterValue(masterGain, floor),
+    setMasterFloor(v) {
+      floor = floorValue(v);
+      masterGain = masterValue(masterGain, floor);
+      recompute();
+      return floor;
+    },
+    masterFloor: () => floor,
 
     isActive: (id) => !!sources.get(id)?.active,
     levelOf: (id) => (sources.has(id) ? sources.get(id).level : null),

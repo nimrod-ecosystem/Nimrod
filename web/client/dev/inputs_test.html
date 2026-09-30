@@ -26,8 +26,9 @@ import { mountInputs, INPUTS_KEY, RECORD_VERSION, suggestHold } from '../inputs.
 import { createInputBus } from '../input.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
-import { VERBS, FOCUS_VERBS, MEDIA_VERBS, verbTopic, verbTarget, respondsToVerbs, ROLE_CYCLE_ACTION,
-         createDefaultRegistry, normalizeVerb } from '../actions.js';
+import { VERBS, FOCUS_VERBS, MEDIA_VERBS, MASTER_VERBS, MODULE_VERBS, verbTopic, verbTarget,
+         respondsToVerbs, ROLE_CYCLE_ACTION, createDefaultRegistry, normalizeVerb } from '../actions.js';
+import { DRIVE_VERBS } from '../drive.js';
 import { DEFAULT_BINDINGS } from '../input_keyboard.js';
 
 const out = document.getElementById('results');
@@ -220,11 +221,17 @@ const logText = (r) => r.q('[data-log]').textContent;
         normalizeVerb({ id: 'pause' }) === null && normalizeVerb({ id: 'volume-up' }) === null);
       check('youtube answers play and pause', verbTarget('youtube', 'pause')?.topic === 'youtube/pause'
         && verbTarget('youtube', 'play')?.topic === 'youtube/play');
-      check('...and louder/quieter as one step either way, on its own volume',
-        verbTarget('youtube', 'volume-up')?.topic === 'youtube/volume'
-          && verbTarget('youtube', 'volume-up')?.payload === 1
-          && verbTarget('youtube', 'volume-down')?.payload === -1,
+      // MIKE, 2026-09-30 (row 2.28 call 4): "louder" moves the audio bus's MASTER, not the focused
+      // panel. So louder/quieter are MASTER verbs: no panel answers them, the master does
+      // (master_volume.js), and the video's own volume stays a per-source level in its settings.
+      check('*** louder and quieter are the MASTER’s verbs, not a panel’s ***',
+        JSON.stringify(MASTER_VERBS) === '["volume-up","volume-down"]', JSON.stringify(MASTER_VERBS));
+      check('...so the video no longer answers them itself',
+        verbTarget('youtube', 'volume-up') === null && verbTarget('youtube', 'volume-down') === null,
         JSON.stringify([verbTarget('youtube', 'volume-up'), verbTarget('youtube', 'volume-down')]));
+      check('...and no module does', Object.entries(MODULE_VERBS)
+        .every(([, m]) => !MASTER_VERBS.some((v) => m[v])),
+        Object.entries(MODULE_VERBS).filter(([, m]) => MASTER_VERBS.some((v) => m[v])).map(([t]) => t).join(','));
       check('...and its next and prev did not move', verbTarget('youtube', 'next')?.topic === 'youtube/next'
         && verbTarget('youtube', 'prev')?.topic === 'youtube/prev');
 
@@ -245,13 +252,22 @@ const logText = (r) => r.q('[data-log]').textContent;
       router.setFocus('m-yt');
       bus.publish(verbTopic('pause'));
       bus.publish(verbTopic('volume-down'));
-      check('the router routes them to the focused video',
-        JSON.stringify(fired) === JSON.stringify([['m-yt', 'youtube/pause', null], ['m-yt', 'youtube/volume', -1]]),
+      check('the router routes play/pause to the focused video, and leaves the volume to the master',
+        JSON.stringify(fired) === JSON.stringify([['m-yt', 'youtube/pause', null]]),
         JSON.stringify(fired));
-      check('...and lists them among what this panel answers',
-        ['play', 'pause', 'volume-up', 'volume-down'].every((v) => router.targets()[v]),
+      check('...without reporting "this panel has nothing for that" for a verb no panel is meant to answer',
+        unhandled.length === 1, JSON.stringify(unhandled));
+      check('...and lists play and pause among what this panel answers, the volume not',
+        ['play', 'pause'].every((v) => router.targets()[v])
+          && !router.targets()['volume-up'] && !router.targets()['volume-down'],
         JSON.stringify(Object.keys(router.targets())));
       router.destroy();
+
+      // THE REMOTE-CONTROL LIST'S FIXED NAMES. Making the media four bindable to a switch must not
+      // widen the remote-drive wire: `drive.js` holds its own frozen copy of the eleven on purpose.
+      check('*** the remote-drive wire list is still exactly the eleven, with no media verb ***',
+        DRIVE_VERBS.length === 11 && !MEDIA_VERBS.some((m) => DRIVE_VERBS.includes(m.id)),
+        JSON.stringify(DRIVE_VERBS));
     }
 
     // ================= instance addressing =================
@@ -338,8 +354,14 @@ const logText = (r) => r.q('[data-log]').textContent;
       const opts = r.qa('[data-new-action] option');
       check('the "does what" list is FLAT — no groups to open',
         r.qa('[data-new-action] optgroup').length === 0);
-      check('and short: the verbs, the focus controls, and the gate',
-        opts.length === VERBS.length + FOCUS_VERBS.length + 1, String(opts.length));
+      // Mike, 2026-09-30 (row 2.28 call 1): "Adding audio shouldn't take away any other controls.
+      // It's just in addition to them." So Play, Pause, Louder and Quieter can be bound to a switch
+      // here too - the list grows from twelve to sixteen, still flat.
+      check('and short: the verbs, the focus controls, the media four, and the gate',
+        opts.length === VERBS.length + FOCUS_VERBS.length + MEDIA_VERBS.length + 1, String(opts.length));
+      check('*** Play, Pause, Louder and Quieter can be bound to a switch ***',
+        MEDIA_VERBS.every((m) => opts.some((o) => o.value === verbTopic(m.id))),
+        opts.map((o) => o.value).join(','));
       check('it offers Primary select by default, not something obscure',
         r.q('[data-new-action]').value === verbTopic('select'));
 
@@ -486,6 +508,21 @@ const logText = (r) => r.q('[data-log]').textContent;
       // The worst outcome in the whole feature: the switch worked, and nothing happened.
       check('a verb the focused panel ignores is called out, not left as silence',
         /photos has nothing for that/.test(logText(r)), logText(r));
+      r.panel.destroy();
+    }
+    {
+      // A switch bound to Louder, pressed with photos focused: the master answers it, so the
+      // log must NOT say "photos has nothing for that" - the switch did something.
+      const r = rig();
+      await r.panel.refresh();
+      r.q('[data-new-action]').value = verbTopic('volume-up');
+      r.q('[data-add]').click();
+      r.panel.router().focusNext();
+      r.press(XAC, 'button:1');
+      r.press(XAC, 'button:1');
+      check('*** a switch bound to Louder says it moved the screen’s volume, not "nothing for that" ***',
+        /Louder/.test(logText(r)) && /whole screen/.test(logText(r)) && !/nothing for that/.test(logText(r)),
+        logText(r));
       r.panel.destroy();
     }
 

@@ -146,23 +146,18 @@ export const SETTINGS = [
     emptyLabel: 'No preset — this instance’s own playlist, schedule and shuffle' },
   // *** VOLUME (row 2.28: "volume up, volume down ... mostly for Youtube right now"). ***
   //
-  // WHERE LOUDER AND QUIETER ACT: THIS PANEL'S OWN VOLUME, NOT A SCREEN-WIDE MASTER. Both were
-  // read against how volume works today, and the code decides it:
-  //   * There IS no master. `audio_bus.js` arbitrates LEVELS between sources (duck, one-at-a-time,
-  //     hush) and hands each source a 0..1 to enact; it has no user volume at all. Every volume
-  //     a person can set today belongs to a source - `game_music.js` enacts `vol x gain`, and
-  //     `pressgame`'s "How loud the music is" is a setting on that module. This does the same.
-  //   * A master in the arbiter would not even be one: the speech channel registers with no
-  //     `onGain`, so spoken words would ignore it, and "louder" would make the video louder and
-  //     the voice not - a master that is not.
-  //   * And verbs already go to the FOCUSED panel. A panel with no volume ignores the verb
-  //     (the router reports `no-mapping`), exactly like `select` on photos.
-  // The cost, said plainly: "louder" does nothing while focus is on a different panel. The real
-  // master is the machine's own volume (and the speakerphone's buttons), which this page does
-  // not own and should not.
+  // *** THIS IS THE VIDEO'S OWN LEVEL, AND IT IS NO LONGER WHAT "LOUDER" MOVES. *** The first
+  // cut (0024a29) pointed the spoken "louder"/"quieter" here, because the audio bus had no
+  // master. Mike ruled 2026-09-30 (row 2.28 call 4) that they move the bus's MASTER instead, and
+  // `audio_bus.js` now has one (read by the speech channel too, so the voice follows it). So
+  // this setting is a per-source level - "this video a bit quieter than everything else" - the
+  // way `pressgame`'s "How loud the music is" is for its music, and the `youtube/volume` topic
+  // still steps it for anything that publishes it directly. Row 2.35's mixer is where per-channel
+  // faders go; this stays until then.
   //
-  // IT MULTIPLIES WITH THE ARBITER, never replaces it: a ducked video stays ducked, and
-  // "louder" cannot un-silence a video the arbiter silenced for a call.
+  // IT MULTIPLIES WITH THE ARBITER, never replaces it: the level the bus hands this panel
+  // already includes the master and any duck, so a ducked video stays ducked and nothing here
+  // can un-silence a video the arbiter silenced for a call.
   //
   // *** THE FLOOR IS 10%, NOT SILENCE. *** A "quieter" that can reach zero leaves a video
   // playing with no sound, which to the next person in the room looks exactly like broken
@@ -172,12 +167,14 @@ export const SETTINGS = [
   // so a switch can walk it.
   { key: 'volume', label: 'How loud the video is', kind: 'number', default: 100,
     min: VOLUME_MIN, max: 100, step: 10, unit: '%', level: 'standard' },
-  // *** HOW FAR ONE "LOUDER" GOES. *** A setting rather than a buried number (Rule 1). Default a
+  // *** HOW FAR ONE STEP OF THIS VIDEO'S OWN VOLUME GOES (a `youtube/volume` publish). The spoken
+  // "louder" now steps the master, whose step is the screen's `masterStep` (master_volume.js),
+  // same default for the same reason: *** A setting rather than a buried number (Rule 1). Default a
   // fifth of the range, because every spoken step costs a whole sentence ("computer please,
   // louder"): a step small enough that nobody can hear it is a command that seems not to work,
   // and five steps from quietest to full is few enough to say. A tenth is there for somebody who
   // wants finer control; a quarter for somebody who wants it in four.
-  { key: 'volumeStep', label: 'How much “louder” or “quieter” changes it', kind: 'choice',
+  { key: 'volumeStep', label: 'How much one step changes this video’s volume', kind: 'choice',
     default: 20, level: 'advanced',
     options: [
       { value: 10, label: 'a little' },

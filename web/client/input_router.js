@@ -27,7 +27,8 @@
 // and the module at the other end never learns that a verb was involved. That is what
 // let this ship without touching a single module.
 
-import { VERBS, FOCUS_VERBS, MEDIA_VERBS, MODULE_VERBS, verbTopic, verbTarget, respondsToVerbs } from './actions.js';
+import { VERBS, FOCUS_VERBS, MEDIA_VERBS, MASTER_VERBS, MODULE_VERBS, verbTopic, verbTarget,
+         respondsToVerbs } from './actions.js';
 
 export function createVerbRouter({
   bus,
@@ -46,8 +47,14 @@ export function createVerbRouter({
   // global like the nine, but kept out of `VERBS` so the binder's list stays short - see
   // MEDIA_VERBS in actions.js. Added here rather than to the `verbs` default so a caller that
   // passes its own list (the nine plus custom verbs) still routes play/pause/volume.
-  const routed = [...verbs];
-  for (const m of MEDIA_VERBS) if (!routed.some((v) => v.id === m.id)) routed.push(m);
+  //
+  // EXCEPT LOUDER AND QUIETER (MASTER_VERBS): Mike ruled they move the audio bus's master, not
+  // the focused panel, so the router does not touch them at all - `master_volume.js` answers them.
+  // Routing them too would report "this panel has nothing for that" for a verb that worked.
+  const routed = [...verbs].filter((v) => !MASTER_VERBS.includes(v.id));
+  for (const m of MEDIA_VERBS) {
+    if (!MASTER_VERBS.includes(m.id) && !routed.some((v) => v.id === m.id)) routed.push(m);
+  }
 
   let focusId = null;
   const offs = [];

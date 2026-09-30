@@ -119,6 +119,10 @@ export function speak(text, pref = {}, opts = {}) {
   else if (pref.lang) { u.lang = pref.lang; }
   u.rate = clamp(pref.rate, 0.5, 2, 1);
   u.pitch = clamp(pref.pitch, 0, 2, 1);
+  // The audio bus's MASTER (row 2.28/2.35), handed in by the speech channel. Only when given, so
+  // a caller that knows nothing of it leaves the engine's own volume alone; a broken value is
+  // full volume, never silence.
+  if (opts.volume !== undefined) u.volume = clamp(opts.volume, 0, 1, 1);
 
   if (!opts.legacy) {
     heldUtterance = u;                                                         // (3)

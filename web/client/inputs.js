@@ -51,7 +51,8 @@
 // WHY a press was refused in plain words. A person tunes by watching.
 
 import { createBus } from './bus.js';
-import { createDefaultRegistry, VERBS, FOCUS_VERBS, verbTopic, MODULE_VERBS } from './actions.js';
+import { createDefaultRegistry, VERBS, FOCUS_VERBS, MEDIA_VERBS, MASTER_VERBS, verbTopic,
+         MODULE_VERBS } from './actions.js';
 import { createInputBus, normalizeBinding, GATES, ROLES, EDGES } from './input.js';
 import { normalizeRecord, INPUTS_KEY, RECORD_VERSION,
   exportBindings, parseBindingsImport } from './input_runtime.js';
@@ -75,8 +76,9 @@ const GATE_LABEL = { both: 'Everyone', moderator: 'Moderator only', participant:
 const ROLE_LABEL = { universal: 'Anyone', moderator: 'Moderator', participant: 'Participant' };
 const EDGE_LABEL = { press: 'on press', release: 'on release' };
 
-const VERB_LABEL = Object.fromEntries([...VERBS, ...FOCUS_VERBS].map((v) => [v.id, v.label]));
+const VERB_LABEL = Object.fromEntries([...VERBS, ...FOCUS_VERBS, ...MEDIA_VERBS].map((v) => [v.id, v.label]));
 const isFocusVerb = (verb) => FOCUS_VERBS.some((v) => v.id === verb);
+const isMasterVerb = (verb) => MASTER_VERBS.includes(verb);
 
 // This page, as a focus target. Not a module type — it never appears on a screen — so it
 // is added to the router's map rather than to MODULE_VERBS, which stays the table of what
@@ -353,7 +355,9 @@ export function mountInputs(root, {
 
   function verbOptions(selected) {
     const one = (v) => `<option value="${verbTopic(v.id)}"${verbTopic(v.id) === selected ? ' selected' : ''}>${esc(v.label)}</option>`;
-    return `${VERBS.map(one).join('')}${FOCUS_VERBS.map(one).join('')}` +
+    // The media four ride after the focus pair (Mike, row 2.28: "Adding audio shouldn't take
+    // away any other controls. It's just in addition to them."). Still one flat list.
+    return `${VERBS.map(one).join('')}${FOCUS_VERBS.map(one).join('')}${MEDIA_VERBS.map(one).join('')}` +
       `<option value="system/role-cycle"${selected === 'system/role-cycle' ? ' selected' : ''}>Cycle who may act</option>`;
   }
 
@@ -715,6 +719,10 @@ export function mountInputs(root, {
       what = REASON_TEXT[rec.reason] || rec.reason;
     } else if (verb && isFocusVerb(verb)) {
       what = `focus moved to ${router?.focused()?.type || 'nothing'}`;
+    } else if (verb && isMasterVerb(verb)) {
+      // Louder/quieter move the whole screen's volume, whatever has focus - so this is not the
+      // "panel has nothing for that" case below, and saying so would be wrong.
+      what = 'the whole screen’s volume';
     } else if (verb) {
       const target = router?.targets()[verb];
       const panel = router?.focused()?.type;

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>master volume — louder and quieter move the whole screen</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>master volume</h1>
+<p>Mike, 2026-09-30 (row 2.28 call 4): "louder" "would control the audio busses master volume".
+The verbs <code>verb/volume-up</code> and <code>verb/volume-down</code> - from a spoken phrase or a
+switch - move the audio bus's master one step, whatever panel has focus, and the value is kept with
+the screen's settings like a TV keeps its volume.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { attachMasterVolume, MASTER_DEFAULTS, MASTER_FIELDS } from '../master_volume.js';
+import { createAudioBus, MASTER_FLOOR } from '../audio_bus.js';
+import { createBus } from '../bus.js';
+import { verbTopic, MASTER_VERBS } from '../actions.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const near = (a, b) => typeof a === 'number' && Math.abs(a - b) < 1e-9;
+
+// A screen settings row, as the kiosk's `settings.get()/set()` would hold it.
+function rig(saved = {}, { audio = createAudioBus(), write = null } = {}) {
+  const bus = createBus();
+  let row = { ...saved };
+  const writes = [];
+  const levels = [];
+  audio?.register?.('video', { tier: 'media', onGain: (l) => levels.push(l) });
+  audio?.setActive?.('video', true);
+  const mv = attachMasterVolume({ bus, audio, read: () => row,
+    write: write || ((patch) => { writes.push(patch); row = { ...row, ...patch }; }) });
+  return { bus, audio, mv, writes, levels, row: () => row, set: (p) => { row = { ...row, ...p }; },
+           up: () => bus.publish(verbTopic('volume-up')), down: () => bus.publish(verbTopic('volume-down')),
+           last: () => levels[levels.length - 1] };
+}
+
+(async () => {
+  try {
+    section('*** the defaults, and why each is a setting ***');
+    check('full volume out of the box, like a TV', MASTER_DEFAULTS.volume === 100);
+    check('one step is 20%, the step Mike OK’d for the video (row 2.28 call 3)', MASTER_DEFAULTS.step === 20);
+    check('the floor is 10%, the audio bus’s own', MASTER_DEFAULTS.floor === 10
+      && near(MASTER_FLOOR, MASTER_DEFAULTS.floor / 100));
+    check('it answers exactly the master verbs', JSON.stringify(MASTER_VERBS) === '["volume-up","volume-down"]');
+    const f = Object.fromEntries(MASTER_FIELDS.map((x) => [x.key, x]));
+    check('the volume, the step and the floor are all settings',
+      f.masterVolume && f.masterStep && f.masterFloor, Object.keys(f).join(','));
+    check('...defaulting to the defaults', f.masterVolume.default === 100 && f.masterStep.default === 20
+      && f.masterFloor.default === 10, JSON.stringify([f.masterVolume.default, f.masterStep.default, f.masterFloor.default]));
+    check('*** no floor option is zero — "quieter" is never silence ***',
+      f.masterFloor.options.every((o) => Number(o.value) > 0), JSON.stringify(f.masterFloor.options));
+    const bad = auditFields(MASTER_FIELDS.map(normalizeField).filter(Boolean), { type: 'screen' })
+      .filter((x) => x.severity === 'error');
+    check('they pass the settings audit (reachable with one switch)', bad.length === 0, JSON.stringify(bad));
+
+    section('*** louder and quieter move the master, one step ***');
+    {
+      const r = rig();
+      check('nothing saved: full volume', r.mv.level() === 100 && r.audio.master() === 1);
+      r.down();
+      check('*** "quieter" is one step down on the master ***', r.mv.level() === 80 && near(r.audio.master(), 0.8),
+        `${r.mv.level()} / ${r.audio.master()}`);
+      check('...and a playing source follows it', near(r.last(), 0.8), JSON.stringify(r.levels));
+      r.up();
+      check('"louder" is one step up', r.mv.level() === 100 && near(r.last(), 1));
+      r.up();
+      check('...and stops at full', r.mv.level() === 100);
+      for (let i = 0; i < 10; i++) r.down();
+      check('*** and stops at the floor, never silence ***', r.mv.level() === 10 && near(r.audio.master(), 0.1),
+        `${r.mv.level()} / ${r.audio.master()}`);
+      r.bus.publish(verbTopic('volume-up'), 500);
+      check('a payload is a direction at most, never an amount', r.mv.level() === 30, String(r.mv.level()));
+    }
+
+    section('*** remembered with the screen, like a TV’s volume ***');
+    {
+      const r = rig();
+      r.down(); r.down();
+      check('each step is written to the screen’s settings', r.writes.length === 2
+        && r.writes[1].masterVolume === 60, JSON.stringify(r.writes));
+      const again = rig(r.row());
+      check('*** a screen that restarts comes back at the volume it was left at ***',
+        again.mv.level() === 60 && near(again.audio.master(), 0.6), `${again.mv.level()}`);
+    }
+    {
+      const r = rig({ masterVolume: 'loud' });
+      check('*** a broken saved volume is FULL volume, never silence ***',
+        r.mv.level() === 100 && r.audio.master() === 1, `${r.mv.level()} / ${r.audio.master()}`);
+      const z = rig({ masterVolume: 0 });
+      check('a saved zero is the floor', z.mv.level() === 10 && near(z.audio.master(), 0.1), String(z.mv.level()));
+    }
+    {
+      const r = rig({ masterStep: 10, masterFloor: 30 });
+      r.down();
+      check('the step is the screen’s own setting', r.mv.level() === 90, String(r.mv.level()));
+      for (let i = 0; i < 20; i++) r.down();
+      check('...and so is the floor', r.mv.level() === 30 && near(r.audio.master(), 0.3), String(r.mv.level()));
+      r.set({ masterVolume: 70, masterStep: 25 });
+      r.mv.sync();
+      check('a change from the settings menu takes effect on sync', r.mv.level() === 70
+        && near(r.audio.master(), 0.7), `${r.mv.level()} / ${r.audio.master()}`);
+      r.down();
+      check('...step included', r.mv.level() === 45, String(r.mv.level()));
+      r.set({ masterVolume: 10 });
+      r.mv.sync();
+      check('*** a value under the floor from the menu is lifted to the floor, and saved that way ***',
+        r.mv.level() === 30 && r.row().masterVolume === 30, `${r.mv.level()} / ${r.row().masterVolume}`);
+    }
+
+    section('*** nothing here can silence the screen or break the verbs ***');
+    {
+      const r = rig({}, { write: () => { throw new Error('offline'); } });
+      r.down();
+      check('a settings write that fails still changes the volume', r.mv.level() === 80 && near(r.audio.master(), 0.8));
+    }
+    {
+      const r = rig({}, { audio: null });
+      r.down();
+      check('no audio bus: the level is still tracked and nothing throws', r.mv.level() === 80);
+    }
+    {
+      const r = rig();
+      r.mv.destroy();
+      r.down();
+      check('destroyed, it stops answering', r.mv.level() === 100 && r.audio.master() === 1);
+    }
+
+    document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+  } catch (e) {
+    console.error(e);
+    document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+  }
+})();
+</script>
+</body>
+</html>

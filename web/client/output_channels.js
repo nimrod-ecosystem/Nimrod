@@ -62,6 +62,15 @@ export function createSpeechChannel({
       const opts = {};
       if (synth) opts.synth = synth;
       if (Utterance) opts.Utterance = Utterance;
+      // THE MASTER VOLUME (row 2.28/2.35). The voice registers with no `onGain` (nothing ducks a
+      // voice), so it reads the master here instead - otherwise "quieter" would turn the video
+      // down and leave the voice as loud as ever. The bus has already applied its floor; anything
+      // that goes wrong reading it is full volume.
+      if (audio && typeof audio.master === 'function') {
+        let m = 1;
+        try { m = Number(audio.master()); } catch { m = 1; }
+        opts.volume = Number.isFinite(m) ? m : 1;
+      }
       // A caller's OWN voice choice, carried through `data.voice`, wins over the person's
       // general preference — same shape `board.js`'s AAC voice picker already needs and
       // `educational.js`/`sprint.js` already had before this channel existed (a per-instance

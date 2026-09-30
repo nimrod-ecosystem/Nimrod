@@ -27,7 +27,10 @@ not.</p>
 import {
   PHRASES, SPEECH_DEVICE, DEFAULT_BINDINGS, normalize, verbFor, duplicatePhrases,
   phraseControl, attachSpeech, SPEECH_DEFAULTS, CONFIRM_MODES, usableWakePhrases, splitWake,
+  LISTENING_TOPIC, SPEECH_FIELDS, wakeFrom,
 } from '../input_speech.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
 import { VERBS, MEDIA_VERBS, verbTopic, createDefaultRegistry } from '../actions.js';
 import { createBus } from '../bus.js';
 import { createInputBus } from '../input.js';
@@ -134,9 +137,30 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 
   section('*** the wake phrase ***');
   // DECISIONS.md 2026-08-30: "Wake phrase default is 'Computer please', and it is a setting."
-  check('the shipped wake phrase is “computer please”, and only that',
-    JSON.stringify(SPEECH_DEFAULTS.wake) === JSON.stringify(['computer please']),
+  // Mike, 2026-09-30 (register 276): "Nimrod please will be a default for everyone else. Computer
+  // please will also be a default." A person's own name for the screen goes on THEIR profile.
+  check('*** the shipped wake phrases are “computer please” AND “nimrod please” ***',
+    JSON.stringify(SPEECH_DEFAULTS.wake) === JSON.stringify(['computer please', 'nimrod please']),
     JSON.stringify(SPEECH_DEFAULTS.wake));
+  check('*** and no person’s name is a site default (hers goes on her own profile) ***',
+    !SPEECH_DEFAULTS.wake.some((w) => /cici|christine/i.test(w))
+      && !SPEECH_FIELDS.some((f) => /cici|christine/i.test(String(f.default))),
+    JSON.stringify(SPEECH_FIELDS.map((f) => f.default)));
+  check('the wake phrases are settings, one per phrase, defaulting to the shipped two',
+    wakeFrom({}).join('|') === SPEECH_DEFAULTS.wake.join('|'), JSON.stringify(wakeFrom({})));
+  check('...a person’s own second phrase replaces the second default',
+    JSON.stringify(wakeFrom({ speechWake2: 'hey screen' })) === '["computer please","hey screen"]',
+    JSON.stringify(wakeFrom({ speechWake2: 'hey screen' })));
+  check('...and clearing one leaves just the other', JSON.stringify(wakeFrom({ speechWake2: '' }))
+    === '["computer please"]', JSON.stringify(wakeFrom({ speechWake2: '' })));
+  check('...and clearing BOTH falls back to the defaults, rather than a screen that cannot wake',
+    wakeFrom({ speechWake1: '', speechWake2: ' ' }).join('|') === SPEECH_DEFAULTS.wake.join('|'),
+    JSON.stringify(wakeFrom({ speechWake1: '', speechWake2: ' ' })));
+  {
+    const bad = auditFields(SPEECH_FIELDS.map(normalizeField).filter(Boolean), { type: 'speech' })
+      .filter((f) => f.severity === 'error');
+    check('the settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+  }
   check('the wake phrase is required by default', SPEECH_DEFAULTS.requireWake === true);
   const wakeClash = usableWakePhrases(SPEECH_DEFAULTS.wake).length === SPEECH_DEFAULTS.wake.length;
   check('*** the shipped wake phrase is not itself a command ***', wakeClash,
@@ -337,6 +361,11 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     }
     const unhandled = [];
     const router = createVerbRouter({ bus, modules: () => modules, onUnhandled: (u) => unhandled.push(u) });
+    // Louder/quieter are the MASTER's (Mike, row 2.28 call 4): they arrive as the plain verb
+    // topics, where master_volume.js answers them, and never reach the video's own volume.
+    const masterHeard = [];
+    bus.subscribe(verbTopic('volume-up'), () => masterHeard.push('up'));
+    bus.subscribe(verbTopic('volume-down'), () => masterHeard.push('down'));
     let feed = null;
     const rec = { start(cb) { feed = cb; this.running = true; }, stop() {}, running: false };
     attachSpeech(input, { recognizer: rec, confirm: 'off' }).start();
@@ -347,12 +376,14 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     feed('computer please keep going');
     check('“keep going” plays it', got[1] && got[1][0] === 'youtube/play', JSON.stringify(got));
     feed('computer please turn it up');
-    check('“turn it up” is one step up', got[2] && got[2][0] === 'youtube/volume' && got[2][1] === 1,
-      JSON.stringify(got));
+    check('*** “turn it up” is one step up on the MASTER, not the video’s own volume ***',
+      JSON.stringify(masterHeard) === '["up"]' && got.length === 2, `${JSON.stringify(masterHeard)} ${JSON.stringify(got)}`);
     feed('computer please too loud');
-    check('“too loud” is one step down', got[3] && got[3][1] === -1, JSON.stringify(got));
-    feed('computer please skip');
-    check('“skip” still skips', got[4] && got[4][0] === 'youtube/next', JSON.stringify(got));
+    check('“too loud” is one step down on the master', JSON.stringify(masterHeard) === '["up","down"]'
+      && got.length === 2, `${JSON.stringify(masterHeard)} ${JSON.stringify(got)}`);
+    feed('Nimrod, please skip.');
+    check('“nimrod please” wakes it too, and “skip” still skips', got[2] && got[2][0] === 'youtube/next',
+      JSON.stringify(got));
 
     router.setFocus('ph-1');
     const before = got.length;
@@ -363,6 +394,147 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
       unhandled.length === 1 && unhandled[0].reason === 'no-mapping' && unhandled[0].verb === 'pause',
       JSON.stringify(unhandled));
     router.destroy(); input.destroy();
+  }
+
+  // A rig with a fake clock that ALSO runs timers, a fake pub/sub bus and a fake miss store.
+  function lrig(opts = {}) {
+    const calls = [];
+    const input = { down: (d, c) => calls.push(['down', d, c]), up: (d, c) => calls.push(['up', d, c]) };
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; },
+                  running: false };
+    let t = 1000; let nextId = 1; const timers = new Map();
+    const setTimer = (fn, ms) => { const id = nextId++; timers.set(id, { at: t + ms, fn }); return id; };
+    const clearTimer = (id) => { timers.delete(id); };
+    const advance = (ms) => {
+      t += ms;
+      for (const [id, tm] of [...timers]) if (tm.at <= t) { timers.delete(id); tm.fn(); }
+    };
+    const events = [];
+    const bus = opts.bus || { publish: (topic, p) => events.push([topic, p]) };
+    const missed = [];
+    const misses = opts.misses === undefined ? { add: (x) => { missed.push(x); return true; } } : opts.misses;
+    const o = { ...opts }; delete o.bus; delete o.misses;
+    const speech = attachSpeech(input, { recognizer: rec, now: () => t, tone: () => {}, confirm: 'off',
+      bus, misses, setTimer, clearTimer, ...o });
+    speech.start();
+    const pressed = () => calls.filter((c) => c[0] === 'down').map((c) => c[2]);
+    const listen = () => events.filter((e) => e[0] === LISTENING_TOPIC).map((e) => e[1]);
+    return { speech, say: (x) => feed(x), pressed, events, listen, missed, advance, timers };
+  }
+
+  section('*** the listening window is an EVENT: anything can show it (row 2.36) ***');
+  check('the topic is speech/listening', LISTENING_TOPIC === 'speech/listening', LISTENING_TOPIC);
+  {
+    const r = lrig();
+    r.say('computer please');
+    check('*** the wake phrase on its own opens the window, as an event ***',
+      r.listen().length === 1 && r.listen()[0].on === true && r.listen()[0].reason === 'wake',
+      JSON.stringify(r.listen()));
+    check('...carrying how long it stays open, so a cue can time itself out on its own',
+      r.listen()[0].ms === SPEECH_DEFAULTS.wakeWindowMs, JSON.stringify(r.listen()[0]));
+    r.say('the weather is nice');
+    check('an unrecognised phrase leaves it open (say it again)', r.listen().length === 1,
+      JSON.stringify(r.listen()));
+    r.say('pause');
+    check('*** a command closes it: the cue goes away the moment a command fires ***',
+      r.listen().length === 2 && r.listen()[1].on === false && r.listen()[1].reason === 'command'
+        && JSON.stringify(r.pressed()) === '["phrase:pause"]', JSON.stringify(r.listen()));
+    check('...and no timer is left behind to close it twice', r.timers.size === 0, String(r.timers.size));
+  }
+  {
+    const r = lrig();
+    r.say('computer please');
+    r.advance(SPEECH_DEFAULTS.wakeWindowMs - 1);
+    check('still open just before the window ends', r.listen().length === 1);
+    r.advance(1);
+    check('*** and closed by itself when the window runs out ***',
+      r.listen().length === 2 && r.listen()[1].on === false && r.listen()[1].reason === 'timeout',
+      JSON.stringify(r.listen()));
+    r.say('pause');
+    check('...after which a bare command does nothing, exactly as before', r.pressed().length === 0);
+  }
+  {
+    const r = lrig();
+    r.say('computer please');
+    r.advance(5000);
+    r.say('nimrod please');
+    r.advance(5000);
+    check('the wake phrase said again restarts the window rather than letting the first one close it',
+      r.listen().length === 2 && r.listen().every((e) => e.on === true), JSON.stringify(r.listen()));
+    r.say('louder');
+    check('...and the command still lands inside it', JSON.stringify(r.pressed()) === '["phrase:volume-up"]',
+      JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please pause');
+    check('wake phrase and command in one breath: no window was ever open, so no event',
+      r.listen().length === 0 && r.pressed().length === 1, JSON.stringify(r.listen()));
+    r.say('pause');
+    check('a bare phrase with no wake: no event either', r.listen().length === 0);
+  }
+  {
+    const r = lrig();
+    r.say('computer please');
+    r.speech.stop();
+    check('*** stopping the microphone closes an open window, so no cue is left on screen ***',
+      r.listen().length === 2 && r.listen()[1].on === false && r.listen()[1].reason === 'stopped',
+      JSON.stringify(r.listen()));
+    check('...and leaves no timer running', r.timers.size === 0);
+  }
+  {
+    const r = lrig({ bus: { publish() { throw new Error('bus down'); } } });
+    r.say('computer please');
+    r.say('pause');
+    check('a bus that throws does not stop the command', JSON.stringify(r.pressed()) === '["phrase:pause"]',
+      JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig({ bus: null });
+    r.say('computer please');
+    r.say('pause');
+    check('no bus at all is fine: the gate works exactly as before', JSON.stringify(r.pressed()) === '["phrase:pause"]');
+  }
+
+  section('*** the miss log: ONLY what followed a wake phrase and matched nothing ***');
+  {
+    const r = lrig();
+    r.say('computer please the weather is nice');
+    check('*** a wake phrase followed by words that are not a command is logged — the words, not the wake phrase ***',
+      JSON.stringify(r.missed) === '["the weather is nice"]', JSON.stringify(r.missed));
+    r.say('computer please');
+    check('the wake phrase on its own is not a miss', r.missed.length === 1, JSON.stringify(r.missed));
+    r.say('put on the cooking show');
+    check('...but what follows it, inside the window, is', r.missed[1] === 'put on the cooking show',
+      JSON.stringify(r.missed));
+    r.say('pause');
+    check('a recognised command is never logged', r.missed.length === 2, JSON.stringify(r.missed));
+    r.say('i was telling her about the weekend');
+    check('*** anything said WITHOUT a wake phrase is never logged — not a word of it ***',
+      r.missed.length === 2, JSON.stringify(r.missed));
+    r.say('computer please');
+    r.advance(SPEECH_DEFAULTS.wakeWindowMs + 1);
+    r.say('and then we went home');
+    check('...nor after the window has closed', r.missed.length === 2, JSON.stringify(r.missed));
+  }
+  {
+    const r = lrig({ requireWake: false });
+    r.say('hello there');
+    check('*** with the wake gate turned off, a bare sentence is STILL not logged: no wake phrase, no log ***',
+      r.missed.length === 0, JSON.stringify(r.missed));
+    r.say('computer please hello there');
+    check('...but one after a wake phrase is', JSON.stringify(r.missed) === '["hello there"]',
+      JSON.stringify(r.missed));
+  }
+  {
+    const r = lrig({ misses: null });
+    r.say('computer please the weather is nice');
+    check('no store, no log - and nothing breaks', r.pressed().length === 0);
+    const r2 = lrig({ misses: { add() { throw new Error('storage full'); } } });
+    r2.say('computer please the weather is nice');
+    r2.say('computer please pause');
+    check('a store that throws does not stop the next command', JSON.stringify(r2.pressed()) === '["phrase:pause"]');
   }
 
   section('*** the shipped bindings ***');

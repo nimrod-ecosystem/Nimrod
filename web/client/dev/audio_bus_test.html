@@ -26,8 +26,8 @@
 <div id="summary">running…</div>
 
 <script type="module">
-import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY, CALL_MODES }
-  from '../audio_bus.js';
+import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY, CALL_MODES,
+  MASTER_FLOOR } from '../audio_bus.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -240,6 +240,123 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
       check('announcing an unknown source is a no-op rather than a crash',
         bus.levelOf('never-registered') === null);
       check('registering with no id is refused', bus.register('') === null);
+    }
+
+    // =====================================================================================
+    // ROW 2.28 / 2.35 — THE MASTER. Mike, 2026-09-30: "louder" "would control the audio busses
+    // master volume." An interim master gain until row 2.35's mixer: every source's level is
+    // multiplied by it, it has a floor, and a broken one plays at full volume.
+    section('*** the master volume — every source, times one number ***');
+    const near = (a, b) => typeof a === 'number' && Math.abs(a - b) < 1e-9;
+    {
+      const r = rig();
+      check('the master starts at full', r.bus.master() === 1, String(r.bus.master()));
+      check('...and the floor is the documented default', r.bus.masterFloor() === MASTER_FLOOR
+        && MASTER_FLOOR > 0 && MASTER_FLOOR < 1, `${r.bus.masterFloor()} / ${MASTER_FLOOR}`);
+      r.src('video', video);
+      r.bus.setActive('video', true);
+      r.bus.setMaster(0.6);
+      check('*** turning the master down turns a playing source down with it ***',
+        near(r.last('video'), 0.6), JSON.stringify(r.seen.video));
+      r.src('voice', { tier: 'voice' });
+      r.bus.setActive('voice', true);
+      check('...and a ducked source is ducked AND turned down: the two multiply',
+        near(r.last('video'), 0.6 * DUCK_TO), String(r.last('video')));
+      r.bus.setActive('voice', false);
+      r.bus.setMaster(1);
+      check('back to full, back to full', near(r.last('video'), 1), String(r.last('video')));
+    }
+    {
+      const r = rig();
+      r.src('game', game);
+      r.src('video', video);
+      r.bus.setActive('game', true);
+      r.bus.setActive('video', true);
+      r.bus.setMaster(0.5);
+      check('*** the master cannot un-silence what the arbiter silenced (the losing music stays at 0) ***',
+        r.last('game') === 0, String(r.last('game')));
+      r.bus.hush(true);
+      check('...nor what hush silenced', r.last('video') === 0, String(r.last('video')));
+    }
+    {
+      const r = rig();
+      r.src('video', video);
+      r.bus.setActive('video', true);
+      r.bus.setMaster(0);
+      check('*** the master never goes below its floor — "quieter" is never silence ***',
+        near(r.bus.master(), MASTER_FLOOR) && near(r.last('video'), MASTER_FLOOR),
+        `${r.bus.master()} / ${r.last('video')}`);
+      r.bus.setMaster(-3);
+      check('...not even asked for a negative', near(r.bus.master(), MASTER_FLOOR), String(r.bus.master()));
+      r.bus.setMaster(7);
+      check('...and never above full', r.bus.master() === 1, String(r.bus.master()));
+    }
+    {
+      const r = rig();
+      r.src('video', video);
+      r.bus.setActive('video', true);
+      r.bus.setMaster(0.4);
+      r.bus.setMaster('loud');
+      check('*** a BROKEN master plays at full volume, never silence ***',
+        r.bus.master() === 1 && near(r.last('video'), 1), `${r.bus.master()} / ${r.last('video')}`);
+      r.bus.setMaster(0.4);
+      r.bus.setMaster(NaN);
+      check('...NaN too', r.bus.master() === 1);
+      r.bus.setMaster(0.4);
+      r.bus.setMaster(undefined);
+      check('...and nothing saved is full, like a TV out of the box', r.bus.master() === 1);
+    }
+    {
+      const r = rig();
+      r.bus.setMasterFloor(0.3);
+      r.bus.setMaster(0.1);
+      check('the floor is a setting: raise it and the master stops there', near(r.bus.master(), 0.3),
+        String(r.bus.master()));
+      r.bus.setMasterFloor(0);
+      check('*** a floor of zero is refused — silence is hush or pause, not a volume ***',
+        r.bus.masterFloor() === MASTER_FLOOR, String(r.bus.masterFloor()));
+      r.bus.setMasterFloor('x');
+      check('...and a broken floor is the default floor', r.bus.masterFloor() === MASTER_FLOOR);
+      const b2 = createAudioBus({ master: 0.5, masterFloor: 0.2 });
+      check('both can be given at creation', near(b2.master(), 0.5) && near(b2.masterFloor(), 0.2));
+    }
+    {
+      // A source whose onGain throws must not stop the master reaching the others.
+      const bus = createAudioBus();
+      const seen = [];
+      bus.register('bad', { tier: 'sfx', onGain: () => { throw new Error('boom'); } });
+      bus.register('good', { tier: 'sfx', onGain: (l) => seen.push(l) });
+      bus.setActive('bad', true); bus.setActive('good', true);
+      bus.setMaster(0.5);
+      check('a source that throws on the master does not stop the others hearing it',
+        near(seen[seen.length - 1], 0.5), JSON.stringify(seen));
+    }
+
+    section('*** a source can say how far it ducks what is under it ***');
+    {
+      const r = rig();
+      r.src('video', video);
+      r.src('listen', { tier: 'talk', duck: 0.2 });
+      r.bus.setActive('video', true);
+      r.bus.setActive('listen', true);
+      check('a listening window can duck the video further than a spoken cue does',
+        near(r.last('video'), 0.2), String(r.last('video')));
+      r.src('voice', { tier: 'voice' });
+      r.bus.setActive('voice', true);
+      check('...and with two duckers the deeper one holds', near(r.last('video'), 0.2), String(r.last('video')));
+      r.bus.setActive('listen', false);
+      check('...and the ordinary one takes over when it ends', near(r.last('video'), DUCK_TO), String(r.last('video')));
+      r.bus.setActive('voice', false);
+      check('...and it comes all the way back', near(r.last('video'), 1), String(r.last('video')));
+    }
+    {
+      const r = rig();
+      r.src('video', video);
+      r.src('listen', { tier: 'talk', duck: 'deep' });
+      r.bus.setActive('video', true);
+      r.bus.setActive('listen', true);
+      check('a broken duck depth is the bus’s own, never silence', near(r.last('video'), DUCK_TO),
+        String(r.last('video')));
     }
 
     document.getElementById('summary').textContent =
