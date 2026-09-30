@@ -302,7 +302,11 @@ export function onColor(bg) {
 // The accents that carry text. Each gets an `--on-*` companion computed from it.
 export const ACCENT_VARS = ['--accent', '--link', '--accent-warm-deep'];
 
-export function applyTheme(rootEl, id) {
+// `flashLimit` (a number or a getter, flash_limit.js): the host's flash limit for the live scene's own
+// flicker. A kiosk passes its `flashLimitNow`. OMITTED, it is not sent at all: a scene mounted fresh
+// gets flash_limit.js's default (3, the ceiling), and a scene already running KEEPS the limit its host
+// gave it - so a settings panel re-applying the theme on the same page cannot loosen a stricter one.
+export function applyTheme(rootEl, id, { flashLimit } = {}) {
   const resolved = resolveThemeId(id);
   const theme = THEMES[resolved];
   const vars = theme.vars;
@@ -323,7 +327,7 @@ export function applyTheme(rootEl, id) {
   // A live theme's animated world, behind whatever `rootEl` is -- <html> for the whole page, or
   // any element carrying `data-scene-host` for a single panel wearing its own theme. Safe on
   // every other call site: `syncScene` itself checks for that marker and no-ops otherwise.
-  syncScene(rootEl, theme);
+  syncScene(rootEl, theme, flashLimit !== undefined ? { flashLimit } : {});
   return resolved;
 }
 

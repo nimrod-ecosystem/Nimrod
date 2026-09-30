@@ -86,7 +86,24 @@ export const INTERCOM_DEFAULTS = Object.freeze({
   //   phone left on a table cannot listen to a room all night; AGAINST - a long conversation is cut
   //   (the phone opens it again with one press). 0 = no limit, a choice somebody makes.
   maxMs: 30 * 60000,
+  // A CALL THAT ARRIVES WHILE AN INTERCOM IS OPEN. (The other direction is settled: a live call makes
+  // the intercom busy.) Argued, 2026-09-30:
+  //   'ring' (DEFAULT) - the call rings exactly as it would otherwise: named out loud, the usual
+  //     countdown, declinable by anybody in the room. If it is ANSWERED, the intercom ends and the
+  //     phone is told "the room answered a call"; if it is declined, the intercom carries on.
+  //     FOR: an intercom is short, sound-only and easy to reopen with one press; a call is the thing
+  //     the screen exists for, and it is the caller who cannot see that the room is busy. A phone
+  //     left open on a table (up to the 30-minute limit, or forever at "Never") would otherwise turn
+  //     away every family call for that whole time, silently, and the room would never know anybody
+  //     rang. AGAINST: somebody mid-sentence on the intercom is cut off when the countdown runs out
+  //     and nobody in the room declines.
+  //   'busy' - the caller is told the room is busy and nothing rings; the intercom is untouched.
+  //     FOR: symmetric with call -> intercom, and nobody is ever cut off. AGAINST: the forgotten-
+  //     intercom case above. Right for a household that uses the intercom for long conversations
+  //     and would rather the caller try again.
+  callDuringIntercom: 'ring',
 });
+const CALL_DURING = ['ring', 'busy'];
 
 const WARN_CHOICES = [0, 3000, 10000];
 const MAX_CHOICES = [0, 10 * 60000, 30 * 60000, 60 * 60000];
@@ -112,6 +129,13 @@ export const INTERCOM_FIELDS = [
       { value: 60 * 60000, label: 'An hour' },
       { value: 0, label: 'Never - only when somebody ends it' },
     ] },
+  { key: 'callDuringIntercom', label: 'A call while the intercom is open', kind: 'choice',
+    default: INTERCOM_DEFAULTS.callDuringIntercom, level: 'advanced',
+    options: [
+      { value: 'ring', label: 'Ring as usual - answering it ends the intercom' },
+      { value: 'busy', label: 'Tell the caller the room is busy' },
+    ],
+    note: 'Ringing means a phone left open on the intercom never turns a call away. Busy means nobody on the intercom is cut off.' },
 ];
 
 /** The approved list, cleaned: [{ account, name }], one per account. Pure. */
@@ -139,6 +163,7 @@ export function intercomOptionsFrom(values = {}) {
     chime: typeof v.intercomChime === 'boolean' ? v.intercomChime : INTERCOM_DEFAULTS.chime,
     announce: typeof v.intercomAnnounce === 'boolean' ? v.intercomAnnounce : INTERCOM_DEFAULTS.announce,
     maxMs: pick('intercomMaxMs', MAX_CHOICES, INTERCOM_DEFAULTS.maxMs),
+    callDuringIntercom: CALL_DURING.includes(v.callDuringIntercom) ? v.callDuringIntercom : INTERCOM_DEFAULTS.callDuringIntercom,
   };
 }
 
@@ -161,6 +186,7 @@ export const END_REASONS = Object.freeze({
   busy: 'The intercom is already open with somebody else.',
   'room-ended': 'The room ended the intercom.',
   'time-limit': 'The intercom ended itself after its time limit.',
+  call: 'The room answered a call, so the intercom ended. Open it again once the call is over.',
   'video-refused': 'The intercom only carries sound.',
   'no-audio': 'The intercom needs this phone’s microphone.',
   stopped: 'The intercom is closed.',

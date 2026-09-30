@@ -385,6 +385,26 @@ try {
     await c.s.start(); await flush();
     check('while the room is busy (a call): refused, no chime', c.s.reason() === 'busy' && busyR.chimes.length === 0);
     busyR.recv.destroy();
+    // A call that ARRIVES while an intercom is open (the other direction). The rule is the screen's
+    // (kiosk.js + call_transport.js `busy`); this file carries the person's choice and the words.
+    check('*** a call during an intercom: default "ring" (answering it ends the intercom) ***',
+      INTERCOM_DEFAULTS.callDuringIntercom === 'ring' && intercomOptionsFrom({}).callDuringIntercom === 'ring');
+    check('..."busy" is a choice somebody can make, and garbage reads as the default',
+      intercomOptionsFrom({ callDuringIntercom: 'busy' }).callDuringIntercom === 'busy'
+      && intercomOptionsFrom({ callDuringIntercom: 'hang up' }).callDuringIntercom === 'ring'
+      && intercomOptionsFrom({ callDuringIntercom: true }).callDuringIntercom === 'ring');
+    const cf = INTERCOM_FIELDS.find((f) => f.key === 'callDuringIntercom');
+    check('...it is a setting, with both choices', !!cf && cf.default === 'ring' && cf.options.map((o) => o.value).join() === 'ring,busy', JSON.stringify(cf));
+    check('the phone is told why when a call takes the room', /answered a call/.test(END_REASONS.call || ''));
+    {
+      const cr = rig();
+      const cp = cr.phone('mike@x');
+      await cp.s.start(); await flush(); cr.clock.advance(3000); await flush();
+      check('(open)', cr.recv.open());
+      check('*** endAll("call"): the intercom ends and the phone hears "call" ***',
+        cr.recv.endAll('call') === true && !cr.recv.open() && cr.mic.held.size === 0 && (await flush(), cp.s.reason() === 'call'), cp.s.reason());
+      cr.recv.destroy();
+    }
     // Warn 0: straight after the chime.
     const z = rig({ row: { intercomWarnMs: 0, intercomChime: false, intercomAnnounce: false } });
     const zp = z.phone('mike@x');

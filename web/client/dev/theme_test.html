@@ -484,6 +484,28 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       check('a host that passes no limit gets 3 a second at most', worstInAnySecond(onsetsOf(h)) <= 3);
       s.destroy(); h.remove();
     }
+    // theme.js's OWN syncScene call (applyTheme) carries the host's limit too (2026-09-30): a page
+    // that passes one gets it; a page that passes none gets 3 (flash_limit.js's default); and a later
+    // applyTheme with NO limit (a settings panel on the same page) must not loosen a stricter one.
+    {
+      check('the cyberpunk theme exists (the flicker checks below need it)', !!THEMES.cyberpunk?.scene);
+      const h = document.createElement('div'); h.setAttribute('data-scene-host', ''); h.style.position = 'relative'; document.body.append(h);
+      applyTheme(h, 'cyberpunk');
+      check('applyTheme with no limit: 3 a second at most', h.querySelectorAll(FLICKER_SELECTOR).length > 0 && worstInAnySecond(onsetsOf(h)) <= 3);
+      let L = 1;
+      applyTheme(h, 'cyberpunk', { flashLimit: () => L });
+      check('*** applyTheme passes the host’s limit to the scene: at 1, every dip >= 1017 ms apart ***',
+        minGap(onsetsOf(h)) >= 1017 - 1e-6, `gap ${minGap(onsetsOf(h))}`);
+      applyTheme(h, 'cyberpunk');
+      check('a later applyTheme with no limit keeps the stricter one (does not reset to 3)',
+        minGap(onsetsOf(h)) >= 1017 - 1e-6, `gap ${minGap(onsetsOf(h))}`);
+      L = 2; applyTheme(h, 'cyberpunk', { flashLimit: () => L });
+      const g2 = minGap(onsetsOf(h));
+      check('the limit is a getter, followed on the next apply', g2 >= minFlashPeriodMs(2) - 0.01 && g2 < 1017, `gap ${g2}`);
+      applyTheme(h, 'default');
+      check('switching to a theme with no scene removes it', h.querySelectorAll(FLICKER_SELECTOR).length === 0);
+      h.remove();
+    }
     // Scenes with nothing flickering are untouched.
     {
       const h = document.createElement('div'); document.body.append(h);

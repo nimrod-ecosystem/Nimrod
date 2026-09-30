@@ -368,6 +368,74 @@ try {
   }
 
   // =====================================================================================
+  section('*** onLive: the screen hears a call go live and end (voice recording holds on it) ***');
+  {
+    const { PC, last } = fakePeer();
+    const link = fakeLink(); const clock = fakeClock();
+    const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const a = [], b = [];
+    const offA = t.onLive((on) => a.push(on));
+    t.onLive((on) => b.push(on));
+    t.onEnded(() => {});   // the call panel's own listener is separate and unaffected
+    link.deliver({ kind: 'offer', sdp: 'O1' });
+    check('a call only RINGING is not reported live', a.length === 0, JSON.stringify(a));
+    await t.answer({ outgoing: { kind: 'video' } });
+    check('*** answered: every listener hears live=true, once ***', a.join() === 'true' && b.join() === 'true', `${a} | ${b}`);
+    last().fire('failed');
+    link.deliver({ kind: 'offer', sdp: 'O2' });
+    await sleep(5);
+    check('a reconnect is not a second "live"', a.join() === 'true', JSON.stringify(a));
+    link.deliver({ kind: 'bye' });
+    check('*** the call ending: live=false ***', a.join() === 'true,false' && b.join() === 'true,false', `${a} | ${b}`);
+    offA();
+    link.deliver({ kind: 'offer', sdp: 'O3' });
+    await t.answer({ outgoing: { kind: 'video' } });
+    check('letting go removes only THAT listener', a.join() === 'true,false' && b.join() === 'true,false,true', `${a} | ${b}`);
+    t.onLive(() => { throw new Error('a broken listener'); });
+    t.destroy();
+    check('destroy mid-call reports live=false, and a throwing listener breaks nothing', b.join() === 'true,false,true,false' && t.isLive() === false, JSON.stringify(b));
+    // A ring that is declined never went live, so nothing is reported.
+    const link2 = fakeLink();
+    const t2 = createCallTransport({ link: link2, role: 'screen', PeerConnection: PC, Stream: FakeStream });
+    const c = []; t2.onLive((on) => c.push(on));
+    link2.deliver({ kind: 'offer', sdp: 'O' });
+    t2.hangup('declined');
+    check('a declined ring reports nothing (it was never live)', c.length === 0, JSON.stringify(c));
+    t2.destroy();
+  }
+
+  // =====================================================================================
+  section('*** busy: the screen can refuse a new call (an intercom open, when the person chose "busy") ***');
+  {
+    const { PC } = fakePeer();
+    const link = fakeLink();
+    let busyNow = true;
+    const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream, busy: () => busyNow });
+    const rings = []; t.onIncoming((f) => rings.push(f));
+    link.deliver({ kind: 'offer', sdp: 'O', from: 'Ann' });
+    check('*** busy: the offer does NOT ring ***', rings.length === 0 && t.__probe().pendingOffer === false, JSON.stringify(rings));
+    check('*** ...and the caller is told "busy" (a bye, so they are not left ringing) ***',
+      link.sent.length === 1 && link.sent[0].kind === 'bye' && link.sent[0].reason === 'busy', JSON.stringify(link.sent));
+    busyNow = false;
+    link.deliver({ kind: 'offer', sdp: 'O2', from: 'Ann' });
+    check('not busy: it rings as before', rings.length === 1);
+    await t.answer({ outgoing: { kind: 'video' } });
+    busyNow = true;
+    link.deliver({ kind: 'offer', sdp: 'O3' });
+    await sleep(5);
+    check('a RECONNECT of a live call is answered even while busy (busy is for new calls)',
+      link.sent.filter((s) => s.kind === 'answer').length === 2 && t.isLive(), JSON.stringify(link.sent.map((s) => s.kind)));
+    t.destroy();
+    const link3 = fakeLink();
+    const t3 = createCallTransport({ link: link3, role: 'screen', PeerConnection: PC, Stream: FakeStream, busy: () => { throw new Error('broken'); } });
+    const r3 = []; t3.onIncoming((f) => r3.push(f));
+    link3.deliver({ kind: 'offer', sdp: 'O' });
+    check('a busy check that throws is NOT busy: a family call still rings', r3.length === 1);
+    t3.destroy();
+  }
+
+  // =====================================================================================
   section('*** a signal is not a verb, and can never become one ***');
   {
     // The whole reason signals may travel both ways on a socket where verbs may not.
