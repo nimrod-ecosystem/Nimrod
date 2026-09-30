@@ -241,6 +241,34 @@ function jsonCandidates(text) {
  * of the common field-name variants models drift into. Anything malformed is left out; garbage
  * gives `[]`. Never throws.
  */
+// Every complete `{...}` in `text` that parses and looks like a question (has a `question` or
+// `q`), innermost first — the outer `{"questions": [` of a cut-off answer never closes, so only
+// the finished items come back. Quotes and escapes are tracked so a brace inside a string is text.
+function completeObjects(text) {
+  const out = [];
+  const starts = [];
+  let inStr = false, esc = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === '\\') esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') inStr = true;
+    else if (ch === '{') starts.push(i);
+    else if (ch === '}' && starts.length) {
+      const from = starts.pop();
+      try {
+        const o = JSON.parse(text.slice(from, i + 1));
+        if (o && typeof o === 'object' && !Array.isArray(o) && ('question' in o || 'q' in o)) out.push(o);
+      } catch { /* not a finished object */ }
+    }
+  }
+  return out;
+}
+
 export function parseQuestions(text) {
   if (typeof text !== 'string' || !text.trim()) return [];
   // The first candidate that parses AND holds a list wins — "Sure! [ {...} ]" must not stop at
@@ -253,6 +281,11 @@ export function parseQuestions(text) {
       : (data && typeof data === 'object' && Array.isArray(data.questions)) ? data.questions : null;
     if (l) { list = l; break; }
   }
+  // *** A CUT-OFF ANSWER (measured 2026-09-29). *** Asked for as many questions as a piece
+  // supports, qwen2.5:7b wrote 1,000+ tokens for one 900-word piece, and prompt + answer share a
+  // 4,096-token window here — so an answer can end mid-JSON and nothing above parses. Every
+  // question object that did FINISH is still a good question: keep those.
+  if (!list.length) list = completeObjects(text);
   const out = [];
   for (const it of list) {
     if (!it || typeof it !== 'object') continue;

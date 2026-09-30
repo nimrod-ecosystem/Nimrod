@@ -174,6 +174,22 @@ That is why a strong hive grows so quickly.`;
       'not an object',
     ] }));
     check('only well-formed items survive', mixed.length === 1 && mixed[0].answer === 'Six', J(mixed));
+    {
+      // MEASURED 2026-09-29: asked for "as many as the transcript supports", qwen2.5:7b wrote 1,000+
+      // tokens for one 900-word piece; prompt + answer share a 4,096-token window here, so an answer
+      // can be CUT OFF mid-JSON. Every complete question before the cut must still be kept.
+      const second = { ...good, question: 'How many wings does a worker bee have?', answer: 'Four',
+        wrong: ['Two', 'Six', 'Eight'] };
+      const whole = J({ questions: [good, second, { ...good, question: 'Cut off' }] });
+      const cut = whole.slice(0, whole.lastIndexOf('"Cut off"') + 12);           // ends mid-object
+      check('(the cut answer is not valid JSON)', (() => { try { JSON.parse(cut); return false; } catch { return true; } })());
+      const got = parseQuestions(cut);
+      check('*** a CUT-OFF answer keeps every complete question before the cut ***',
+        got.length === 2 && got[0].answer === 'Six' && got[1].answer === 'Four', J(got));
+      check('...fenced and cut off too', parseQuestions('```json\n' + cut).length === 2);
+      check('...and a brace inside a string does not confuse it',
+        parseQuestions(J({ questions: [{ ...good, question: 'What is {this}?' }] }).slice(0, -2)).length === 1);
+    }
     const aliased = parseQuestions(J([{ question: 'Q?', correct: 'Six', distractors: ['a', 'b', 'c', 'd'], source: 'six legs' }]));
     check('common field-name variants are accepted, and extra wrong options trimmed to three',
       aliased.length === 1 && aliased[0].answer === 'Six' && aliased[0].wrong.length === 3 && aliased[0].source_line === 'six legs',
