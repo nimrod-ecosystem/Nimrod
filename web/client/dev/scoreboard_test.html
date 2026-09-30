@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>scoreboard — one board for any count, and the score contract — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:420px;margin-top:12px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:12px}
+</style>
+</head>
+<body>
+<h1>scoreboard — row 2.40</h1>
+<p>Mike, 2026-09-30: <i>"Scoreboard will have to be a module ... we probably have a bunch of
+modules drawing their own scoreboards. We shouldn't have that."</i> This suite covers the module
+(counters, targets, periods, overlay, switch verbs, clean-up), the <b>score contract</b> in
+<code>score_source.js</code> that lets a game's score show up here without the game drawing it,
+and the one line that must never move: <b>a target is a fact, not a verdict</b>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/scoreboard.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbTarget, verbsFor } from '../actions.js';
+import { expectFor } from '../health.js';
+import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC, normalizeScore, createScoreSource,
+         watchShown, ownScoreField, ownScoreMode, showOwnScore, OWN_SCORE_MODES } from '../score_source.js';
+import { localDay, periodKey, rollCounter, bump, stepTarget, cyclePeriod, describe, earnedIn,
+         newCounter, BUILTIN_SOURCES, SCOREBOARD_STATE } from '../modules/scoreboard.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Words that would turn a count into a verdict. None may ever be on a card.
+const VERDICT = /behind|short of|only \d|missed|fail|below|under target|not enough|to go|left to|keep trying|too few|low/i;
+
+// A state handle with the real shape (get/set/subscribe/flush/load/startPolling/destroy). `set`
+// MERGES, as state.js does. Two mounts handed the same row are two panels on one profile.
+function fakeRow(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(patch) { v = { ...v, ...patch }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
+    flush: async () => {}, load: async () => {}, startPolling() {}, destroy() {},
+    peek: () => v,
+  };
+}
+function fakeStream(seed = []) {
+  let events = [...seed];
+  const subs = new Set();
+  const snap = () => ({ events: [...events], total: events.length });
+  return {
+    append(kind, data) { events = [{ id: events.length + 1, kind, data, created_at: new Date().toISOString() }, ...events];
+      for (const fn of [...subs]) fn(snap()); return Promise.resolve(); },
+    load: () => { for (const fn of [...subs]) fn(snap()); return Promise.resolve(); },
+    get: snap, subscribe(fn) { subs.add(fn); fn(snap()); return () => subs.delete(fn); },
+    startPolling() {}, destroy() {},
+  };
+}
+
+let n = 0;
+function scratch() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:420px;height:600px;overflow:auto';
+  document.body.append(el);
+  return el;
+}
+function mount({ host = scratch(), bus = createBus(), row = fakeRow(), own = fakeRow(), now = () => Date.now(),
+                 makeEvents = undefined, id = `sb${++n}` } = {}) {
+  const inst = mountModule('scoreboard', {
+    mount: host, bus, state: own, events: null, user: 'u', profileId: 'p',
+    personId: null, instanceId: id, now,
+    makeState: (key) => (key === SCOREBOARD_STATE ? row : fakeRow()),
+    ...(makeEvents ? { makeEvents } : {}),
+  });
+  inst.init();
+  return { inst, host, bus, row, own, probe: () => inst.impl.__probe() };
+}
+const press = (host, sel) => host.querySelector(sel)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+const actBtn = (host, act, i = 0) => host.querySelectorAll(`[data-act="${act}"]`)[i];
+const click = (host, act, i = 0) => actBtn(host, act, i)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+const value = (host, i = 0) => host.querySelectorAll('[data-value]')[i]?.textContent;
+const cardText = (host, i = 0) => host.querySelectorAll('[data-counter]')[i]?.textContent.replace(/\s+/g, ' ').trim() || '';
+
+(async () => {
+try {
+  // =====================================================================
+  section('the rules, pure');
+  {
+    const mon = new Date(2026, 8, 28, 10).getTime();       // Monday 28 Sep 2026, local
+    const tue = new Date(2026, 8, 29, 0, 5).getTime();
+    const nextMon = new Date(2026, 9, 5, 9).getTime();
+    check('a day is the LOCAL calendar day, not UTC', localDay(new Date(2026, 8, 28, 23, 30).getTime()) === '2026-09-28');
+    check('a week is keyed by its Monday', periodKey('week', tue) === periodKey('week', mon)
+      && periodKey('week', nextMon) !== periodKey('week', mon), `${periodKey('week', mon)} / ${periodKey('week', nextMon)}`);
+    check('"none" has no period key', periodKey('none', mon) === null);
+
+    const c0 = newCounter({ label: 'Glasses of water', period: 'day' }, [], mon);
+    const c2 = bump(bump(c0, 1, mon), 1, mon);
+    check('+1 twice is 2', c2.value === 2, JSON.stringify(c2));
+    const rolled = rollCounter(c2, tue);
+    check('*** a per-day counter starts again at 0 the next day ***', rolled.value === 0, JSON.stringify(rolled));
+    check('...and keeps what yesterday was, rather than throwing it away',
+      rolled.last && rolled.last.value === 2 && rolled.last.key === '2026-09-28', JSON.stringify(rolled.last));
+    check('the same day does not roll', rollCounter(c2, mon + 1000) === c2);
+    const wk = bump(newCounter({ label: 'Books', period: 'week' }, [], mon), 3, mon);
+    check('a per-week counter survives into Tuesday', rollCounter(wk, tue).value === 3);
+    check('...and starts again the next Monday', rollCounter(wk, nextMon).value === 0);
+    const none = bump(newCounter({ label: 'Ever' }, [], mon), 5, mon);
+    check('"all the time" never rolls', rollCounter(none, nextMon).value === 5);
+
+    check('*** −1 stops at 0 — a count of things done is never below none ***',
+      bump(newCounter({ label: 'x' }, [], mon), -1, mon).value === 0);
+    check('a followed counter cannot be bumped (its number is the source’s)',
+      bump(newCounter({ label: 't', source: 'trivia' }, [], mon), 1, mon).value === 0);
+
+    let t = { target: null };
+    t = stepTarget(t, 1);  check('from no target, +1 is a target of 1', t.target === 1);
+    t = stepTarget(t, 10); check('+10 steps by ten', t.target === 11);
+    t = stepTarget(t, -10); check('−10 steps back', t.target === 1);
+    t = stepTarget(t, -1); check('*** below 1 means "no target", not a target of 0 ***', t.target === null);
+    check('+10 from no target is 10', stepTarget({ target: null }, 10).target === 10);
+
+    let p = { period: 'none' };
+    const seen = [];
+    for (let i = 0; i < 4; i++) { p = cyclePeriod(p, mon); seen.push(p.period); }
+    check('the period cycles and WRAPS (one switch travels one way)', seen.join(',') === 'day,week,none,day', seen.join(','));
+
+    check('new counters with no name get one, so a person who cannot type can still add one',
+      newCounter({}, [], mon).label === 'Counter 1' && newCounter({}, [{ id: 'c1' }], mon).label === 'Counter 2');
+    check('ids never collide', newCounter({}, [{ id: 'c1' }, { id: 'c2' }], mon).id === 'c3');
+  }
+
+  section('*** a fact, not a verdict ***');
+  {
+    const under = describe(2, 5, 'week'), over = describe(7, 5, 'week'), at = describe(5, 5), bare = describe(3, null);
+    check('under the target reads as the plain fact', `${under.value} ${under.of} ${under.period}` === '2 of 5 this week');
+    check('under the target is NOT marked in any way', under.reached === false && !VERDICT.test(JSON.stringify(under)));
+    check('reaching it says so', at.reached === true && over.reached === true);
+    check('over the target is just the number, too', `${over.value} ${over.of}` === '7 of 5');
+    check('the meter never goes past full or below empty', under.fraction === 0.4 && over.fraction === 1);
+    check('no target: no "of", no meter', bare.of === '' && bare.fraction === null);
+  }
+
+  section('points earned, from the ledger — earned, not the balance');
+  {
+    const now = new Date(2026, 8, 30, 15).getTime();
+    const iso = (d, h) => new Date(2026, 8, d, h).toISOString();
+    const evs = [
+      { kind: 'points', created_at: iso(30, 9), data: { amount: 3, type: 'School', source: 'trivia' } },
+      { kind: 'points', created_at: iso(30, 10), data: { amount: 0.75, type: 'Bonus', source: 'trivia' } },
+      { kind: 'points', created_at: iso(30, 11), data: { amount: -10, type: 'Reward', source: 'quests' } },
+      { kind: 'points', created_at: iso(30, 12), data: { amount: 5, type: 'Exchange', from: 'school', to: 'play', rate: 2, source: 'quests' } },
+      { kind: 'points', created_at: iso(29, 12), data: { amount: 4, type: 'Play', source: 'comet' } },
+      { kind: 'points', created_at: iso(20, 12), data: { amount: 100, type: 'School', source: 'sprint' } },
+      { kind: 'other', created_at: iso(30, 12), data: { amount: 99 } },
+    ];
+    check('today = what was earned today (a spend does not make the number drop)', earnedIn(evs, 'day', now) === 3.75, String(earnedIn(evs, 'day', now)));
+    check('this week counts from Monday', earnedIn(evs, 'week', now) === 7.75, String(earnedIn(evs, 'week', now)));
+    check('all time is all of it', earnedIn(evs, 'none', now) === 107.75, String(earnedIn(evs, 'none', now)));
+    check('three built-in points sources, one per period', BUILTIN_SOURCES.map((b) => b.period).join(',') === 'day,week,none');
+  }
+
+  // =====================================================================
+  section('the score contract (score_source.js)');
+  {
+    check('a good payload is kept', normalizeScore({ source: 'trivia', label: 'Trivia', value: 3 })?.value === 3);
+    check('a non-number value is refused, not shown as 0', normalizeScore({ source: 'trivia', value: 'three' }) === null);
+    check('a missing or odd source id is refused', normalizeScore({ value: 1 }) === null
+      && normalizeScore({ source: 'Has Spaces', value: 1 }) === null);
+    check('a zero or negative suggested target is no target', normalizeScore({ source: 'a', value: 1, target: 0 }).target === null);
+    check('`gone` is allowed with no value', normalizeScore({ source: 'a', gone: true })?.gone === true);
+
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe(SCORE_TOPIC, (p) => heard.push(p));
+    let flips = [];
+    const src = createScoreSource(bus, { source: 'game', label: 'A game', instance: 'g1', onShownChange: (s) => flips.push(s) });
+    check('set publishes once', src.set(2) === true && heard.length === 1 && heard[0].value === 2 && heard[0].label === 'A game');
+    check('*** the same value again publishes nothing (no chatter on every render) ***', src.set(2) === false && heard.length === 1);
+    check('a changed detail is a change', src.set(2, { detail: '3 in a row' }) === true && heard.length === 2);
+    bus.publish(SCORE_ASK_TOPIC, {});
+    check('score/ask makes it say its score again', heard.length === 3 && heard[2].value === 2);
+    check('not shown anywhere yet', src.shownElsewhere() === false);
+    bus.publish(SCORE_SHOWN_TOPIC, { source: 'game', by: 'sbA', on: true });
+    bus.publish(SCORE_SHOWN_TOPIC, { source: 'game', by: 'sbB', on: true });
+    bus.publish(SCORE_SHOWN_TOPIC, { source: 'other', by: 'sbC', on: true });
+    check('a scoreboard saying "I show it" is heard — and only for its own source', src.shownElsewhere() === true && flips.join() === 'true');
+    bus.publish(SCORE_SHOWN_TOPIC, { source: 'game', by: 'sbA', on: false });
+    check('one of two scoreboards letting go still leaves it shown', src.shownElsewhere() === true);
+    bus.publish(SCORE_SHOWN_TOPIC, { source: 'game', by: 'sbB', on: false });
+    check('...the last one letting go flips it back', src.shownElsewhere() === false && flips.join() === 'true,false');
+    src.destroy();
+    check('destroy says `gone`', heard[heard.length - 1].gone === true);
+    check('...and a destroyed source publishes nothing more', src.set(9) === false);
+    check('an unusable bus gives an inert handle, never a throw', (() => {
+      try { const s = createScoreSource(null, { source: 'x' }); s.set(1); s.destroy(); return true; } catch { return false; }
+    })());
+
+    check('the setting: three modes, default auto', OWN_SCORE_MODES.join() === 'auto,always,off'
+      && ownScoreField().default === 'auto' && ownScoreField().options.length === 3);
+    check('*** somebody who had turned the old `showScore` off keeps it off ***', ownScoreMode({ showScore: false }) === 'off');
+    check('an explicit choice wins over the old key', ownScoreMode({ showScore: false, ownScore: 'always' }) === 'always');
+    check('nothing saved is auto', ownScoreMode({}) === 'auto' && ownScoreMode(null) === 'auto');
+    check('auto: shown here unless a scoreboard shows it', showOwnScore('auto', false) === true && showOwnScore('auto', true) === false);
+    check('always / off do what they say', showOwnScore('always', true) === true && showOwnScore('off', false) === false);
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest('scoreboard');
+    check('registered', !!m);
+    check('built on the new core', m.core === 'new');
+    check('dependsOn local — counting needs no server', m.dependsOn === 'local');
+    check('described in the catalog, under keeping track', CATALOG.some((c) => c.type === 'scoreboard' && c.group === 'record'));
+    check('it has decided what its silence means', expectFor('scoreboard').idle === true);
+    check('a switch reaches it: next / prev / select / up / down', ['next', 'prev', 'select', 'up', 'down'].every((v) => verbsFor('scoreboard').includes(v)),
+      verbsFor('scoreboard').join(','));
+    check('up is +1 and down is −1', verbTarget('scoreboard', 'up').payload === 1 && verbTarget('scoreboard', 'down').payload === -1);
+    check('*** mounting without a personId key is refused (core:new contract) ***', (() => {
+      try { mountModule('scoreboard', { mount: scratch(), bus: createBus(), instanceId: 'x' }); return false; } catch { return true; }
+    })());
+  }
+
+  // =====================================================================
+  section('counting: add, +1, −1, empty state');
+  {
+    const t = mount();
+    check('empty state says what to do', /Nothing counted yet/.test(t.host.textContent));
+    t.host.querySelector('[data-new-label]').value = 'Books read';
+    click(t.host, 'add');
+    check('a counter is added with its label', t.probe().counters.length === 1 && t.probe().counters[0].label === 'Books read');
+    check('...into the SHARED per-profile row, not this panel’s own', (t.row.peek().counters || []).length === 1
+      && !(t.own.peek().counters));
+    check('the label field is cleared for the next one', t.host.querySelector('[data-new-label]').value === '');
+    click(t.host, 'inc'); click(t.host, 'inc'); click(t.host, 'inc');
+    check('+1 three times shows 3', value(t.host) === '3', value(t.host));
+    click(t.host, 'dec');
+    check('−1 shows 2', value(t.host) === '2');
+    click(t.host, 'dec'); click(t.host, 'dec'); click(t.host, 'dec');
+    check('*** and stops at 0 ***', value(t.host) === '0');
+    click(t.host, 'add');
+    check('adding with no name still works, as "Counter 2"', t.probe().counters[1]?.label === 'Counter 2', JSON.stringify(t.probe().counters.map((c) => c.label)));
+    t.inst.destroy(); t.host.remove();
+  }
+
+  section('targets, and nothing negative about being under one');
+  {
+    const t = mount();
+    click(t.host, 'add');
+    click(t.host, 'target');
+    check('Set the target opens its row', !!t.host.querySelector('.sb-edit'));
+    click(t.host, 't+1'); click(t.host, 't+1'); click(t.host, 't+1'); click(t.host, 't+1'); click(t.host, 't+1');
+    check('the target is 5', t.probe().counters[0].target === 5);
+    click(t.host, 'tdone');
+    check('Done closes the row', !t.host.querySelector('.sb-edit'));
+    click(t.host, 'inc'); click(t.host, 'inc');
+    const underText = cardText(t.host);
+    check('under the target: "2 of 5"', /2\s*of 5/.test(underText), underText);
+    check('*** no verdict words anywhere on the card ***', !VERDICT.test(underText), underText);
+    check('*** no "reached" mark while under ***', !t.host.querySelector('[data-reached]'));
+    const clsUnder = [...t.host.querySelector('[data-counter]').querySelectorAll('*')].map((e) => e.className).join('|');
+    await sleep(150);   // the stylesheet is a <link> inside the mount
+    const colorUnder = getComputedStyle(t.host.querySelector('.sb-meter-fill')).backgroundColor;
+    for (let i = 0; i < 5; i++) click(t.host, 'inc');
+    const clsOver = [...t.host.querySelector('[data-counter]').querySelectorAll('*')].map((e) => e.className).join('|');
+    const colorOver = getComputedStyle(t.host.querySelector('.sb-meter-fill')).backgroundColor;
+    check('over it: "Target reached", as words', !!t.host.querySelector('[data-reached]') && /Target reached/.test(cardText(t.host)));
+    check('*** the meter is the SAME colour under the target as over it ***', colorUnder === colorOver && !!colorUnder,
+      `${colorUnder} vs ${colorOver}`);
+    check('*** no class anywhere on the card names a shortfall ***',
+      !/under|behind|short|low|warn|danger|bad|red/i.test(clsUnder), clsUnder);
+    check('the only thing reaching the target ADDS is the "reached" line', clsOver.replace('|sb-reached', '').length <= clsOver.length
+      && /sb-reached/.test(clsOver) && !/sb-reached/.test(clsUnder));
+    click(t.host, 'target'); click(t.host, 'tnone');
+    check('"No target" clears it', t.probe().counters[0].target === null && !t.host.querySelector('.sb-meter'));
+    t.inst.destroy(); t.host.remove();
+  }
+
+  section('periods: a per-day counter starts again tomorrow, and says what yesterday was');
+  {
+    let clock = new Date(2026, 8, 28, 20).getTime();
+    const t = mount({ now: () => clock });
+    click(t.host, 'add');
+    click(t.host, 'target');
+    check('the target row offers the period', /Counts: all the time/.test(actBtn(t.host, 'period')?.textContent || ''));
+    click(t.host, 'period');
+    check('one press: per day', t.probe().counters[0].period === 'day' && /per day/.test(actBtn(t.host, 'period').textContent));
+    click(t.host, 'tdone');
+    click(t.host, 'inc'); click(t.host, 'inc');
+    check('2 today', /2\s*today/.test(cardText(t.host)), cardText(t.host));
+    clock = new Date(2026, 8, 29, 8).getTime();
+    t.bus.publish(SCORE_TOPIC, { source: 'nudge', value: 1 });   // anything that makes it redraw
+    check('*** the next morning it reads 0, with nobody pressing anything ***', value(t.host) === '0', value(t.host));
+    check('...and "Last time: 2" is shown, not lost', /Last time: 2/.test(cardText(t.host)), cardText(t.host));
+    click(t.host, 'inc');
+    check('counting carries on from 0 today', t.probe().counters[0].value === 1 && t.probe().counters[0].last?.value === 2,
+      JSON.stringify(t.probe().counters[0]));
+    check('a minute ticker keeps it honest overnight', t.probe().ticking === true);
+    t.inst.destroy(); t.host.remove();
+  }
+
+  section('show as overlay — one counter, large — and back');
+  {
+    const t = mount();
+    click(t.host, 'add'); click(t.host, 'add');
+    click(t.host, 'inc', 1); click(t.host, 'inc', 1); click(t.host, 'inc', 1);
+    click(t.host, 'overlay', 1);
+    check('overlay mode', t.host.querySelector('[data-sb]').dataset.mode === 'overlay');
+    check('...shows only that counter', t.host.querySelectorAll('[data-counter]').length === 1
+      && t.host.querySelector('[data-counter]').dataset.counter === t.probe().counters[1].id);
+    check('...large, with its number', value(t.host) === '3' && !!t.host.querySelector('.sb-ov'));
+    check('...and the add/follow controls are out of the way', t.host.querySelector('[data-add-area]').hidden === true);
+    check('the choice is THIS panel’s, saved in its own state', t.own.peek().mode === 'overlay'
+      && t.own.peek().focus === t.probe().counters[1].id && !t.row.peek().mode);
+    check('*** there is always a way back ***', !!actBtn(t.host, 'panel'));
+    click(t.host, 'panel');
+    check('back to the whole board', t.host.querySelector('[data-sb]').dataset.mode === 'panel'
+      && t.host.querySelectorAll('[data-counter]').length === 2);
+    t.inst.destroy(); t.host.remove();
+  }
+
+  section('removing takes two presses, and one press is never a trap');
+  {
+    const t = mount();
+    click(t.host, 'add');
+    click(t.host, 'remove');
+    check('first press only asks', t.probe().counters.length === 1 && /Press again to remove/.test(actBtn(t.host, 'remove').textContent));
+    click(t.host, 'inc');
+    check('any other press cancels the ask', /^Remove$/.test(actBtn(t.host, 'remove').textContent.trim()));
+    click(t.host, 'remove'); click(t.host, 'remove');
+    check('two presses remove it', t.probe().counters.length === 0);
+    t.inst.destroy(); t.host.remove();
+  }
+
+  // =====================================================================
+  section('*** following a score: a game speaks, the scoreboard shows it, the game steps aside ***');
+  {
+    const bus = createBus();
+    let shownFlips = [];
+    // A game already on the screen before the scoreboard arrives.
+    const game = createScoreSource(bus, { source: 'trivia', label: 'Trivia: right answers', instance: 'tv1',
+      onShownChange: (s) => shownFlips.push(s) });
+    game.set(4, { detail: '2 in a row' });
+    const t = mount({ bus });
+    const follow = [...t.host.querySelectorAll('[data-act="follow"]')].find((b) => b.dataset.source === 'trivia');
+    check('*** a game already on the screen is offered, with no wiring (score/ask) ***', !!follow, t.host.textContent.slice(0, 200));
+    follow.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    check('following adds a card with the game’s label', t.probe().counters[0]?.source === 'trivia'
+      && t.probe().counters[0].label === 'Trivia: right answers');
+    check('...showing the game’s number and detail', value(t.host) === '4' && /2 in a row/.test(cardText(t.host)));
+    check('...with no −1 / +1 (the number is the game’s)', !actBtn(t.host, 'inc') && !actBtn(t.host, 'dec'));
+    check('*** the game hears that it is being shown ***', game.shownElsewhere() === true && shownFlips.join() === 'true');
+    game.set(5);
+    check('the card moves when the game scores', value(t.host) === '5');
+    click(t.host, 'target'); click(t.host, 't+10');
+    check('the person can still set a target on a followed score', /5\s*of 10/.test(cardText(t.host)), cardText(t.host));
+    check('...and a followed card offers no period (the game’s score is per sitting)', !actBtn(t.host, 'period'));
+    click(t.host, 'tdone');
+    click(t.host, 'overlay');
+    check('in overlay it is still shown', game.shownElsewhere() === true);
+    click(t.host, 'panel');
+    game.destroy();
+    check('*** a game that leaves keeps its last score, marked as not live ***', value(t.host) === '5'
+      && /Not on this screen right now/.test(cardText(t.host)), cardText(t.host));
+    t.inst.destroy(); t.host.remove();
+  }
+  {
+    // The other order: the scoreboard is already following, then the game mounts.
+    const bus = createBus();
+    const row = fakeRow({ counters: [newCounter({ label: 'Comet: hearts caught', source: 'comet' }, [])] });
+    const t = mount({ bus, row });
+    check('before the game arrives, the card waits and says why', /Waiting for it to be on this screen/.test(cardText(t.host)));
+    const game = createScoreSource(bus, { source: 'comet', label: 'Comet: hearts caught' });
+    check('*** a game that arrives AFTER learns it is already being shown ***', game.shownElsewhere() === true);
+    game.set(2);
+    check('...and its score lands on the card', value(t.host) === '2');
+    t.inst.destroy();
+    check('*** destroying the scoreboard lets go, so the game draws its own again ***', game.shownElsewhere() === false);
+    game.destroy(); t.host.remove();
+  }
+  {
+    // Removing the followed card also lets go.
+    const bus = createBus();
+    const game = createScoreSource(bus, { source: 'algebra', label: 'Math' });
+    game.set(1);
+    const row = fakeRow({ counters: [newCounter({ label: 'Math', source: 'algebra' }, [])] });
+    const t = mount({ bus, row });
+    check('following from saved state claims it', game.shownElsewhere() === true);
+    click(t.host, 'remove'); click(t.host, 'remove');
+    check('removing the card releases it', game.shownElsewhere() === false);
+    t.inst.destroy(); game.destroy(); t.host.remove();
+  }
+  {
+    // A readout that mirrors a built-in source (sprint's "points today").
+    const bus = createBus();
+    const w = watchShown(bus, 'points:today');
+    const t = mount({ bus, makeEvents: () => fakeStream() });
+    check('points sources are offered when the ledger is reachable', !![...t.host.querySelectorAll('[data-act="follow"]')].find((b) => b.dataset.source === 'points:today'));
+    [...t.host.querySelectorAll('[data-act="follow"]')].find((b) => b.dataset.source === 'points:today')
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    check('a built-in source is claimed like any other', w.shown() === true);
+    t.inst.destroy(); w.destroy(); t.host.remove();
+  }
+
+  section('the points ledger as a source — earned today, moving when a point is paid');
+  {
+    const today = new Date().toISOString();
+    const stream = fakeStream([
+      { id: 1, kind: 'points', created_at: today, data: { amount: 2, type: 'Play', source: 'comet' } },
+      { id: 2, kind: 'points', created_at: today, data: { amount: -5, type: 'Reward', source: 'quests' } },
+    ]);
+    const row = fakeRow({ counters: [newCounter({ label: 'Points earned today', source: 'points:today' }, [])] });
+    const t = mount({ row, makeEvents: () => stream });
+    await sleep(10);
+    check('shows points EARNED today (the reward spent does not take it down)', value(t.host) === '2', value(t.host));
+    await stream.append('points', { amount: 3, type: 'School', source: 'algebra' });
+    check('a point paid moves it', value(t.host) === '5', value(t.host));
+    t.inst.destroy(); t.host.remove();
+  }
+  {
+    const row = fakeRow({ counters: [newCounter({ label: 'Points earned today', source: 'points:today' }, [])] });
+    const t = mount({ row });
+    check('with no ledger it says why instead of showing a made-up 0', /signed in/.test(cardText(t.host)), cardText(t.host));
+    check('...and does not offer to follow points it cannot read',
+      ![...t.host.querySelectorAll('[data-act="follow"]')].some((b) => b.dataset.source.startsWith('points:')));
+    t.inst.destroy(); t.host.remove();
+  }
+
+  // =====================================================================
+  section('*** one switch reaches every button ***');
+  {
+    const t = mount({ id: 'sbSwitch' });
+    click(t.host, 'add');
+    const lit = () => t.host.querySelector('[data-on="1"]');
+    check('nothing is lit until a verb arrives', !lit());
+    t.bus.publish('scoreboard/select');
+    check('*** the first select only reveals the highlight — no count changes ***', !!lit() && t.probe().counters[0].value === 0);
+    check('the highlight is marked with more than colour (aria-current)', lit().getAttribute('aria-current') === 'true');
+    // Walk to +1 and press it.
+    let guard = 0;
+    while (lit()?.dataset.act !== 'inc' && guard++ < 30) t.bus.publish('scoreboard/next');
+    check('next walks to +1', lit()?.dataset.act === 'inc');
+    t.bus.publish('scoreboard/select');
+    check('select presses the lit button', t.probe().counters[0].value === 1);
+    // The router publishes on the INSTANCE-scoped topic; the scoped bus answers there too.
+    t.bus.publish(t.bus.instanceTopic('sbSwitch', 'scoreboard/select'));
+    check('...and on this instance’s own scoped topic, which is where the router sends it', t.probe().counters[0].value === 2);
+    const total = t.host.querySelectorAll('[data-walk]').length;
+    const start = t.probe().lit;
+    for (let i = 0; i < total; i++) t.bus.publish('scoreboard/next');
+    check('*** the walk WRAPS — a full lap comes back to the same button ***', t.probe().lit === start, `${start} -> ${t.probe().lit}`);
+    t.bus.publish('scoreboard/prev');
+    check('prev walks back', t.probe().lit === (start - 1 + total) % total);
+    t.bus.publish('scoreboard/delta', 1); t.bus.publish('scoreboard/delta', 1);
+    check('up (+1) needs no walk at all', t.probe().counters[0].value === 4);
+    t.bus.publish('scoreboard/delta', -1);
+    check('down (−1) too', t.probe().counters[0].value === 3);
+    // Every button is a walk stop: the target row's too.
+    click(t.host, 'target');
+    const acts = [...t.host.querySelectorAll('[data-walk]')].map((b) => b.dataset.act);
+    check('the target row’s buttons are all walk stops', ['t-10', 't-1', 't+1', 't+10', 'tnone', 'period', 'tdone'].every((a) => acts.includes(a)), acts.join(','));
+    check('Add and every Follow are walk stops', acts.includes('add'));
+    t.inst.destroy(); t.host.remove();
+  }
+
+  section('two panels on one profile share the counters');
+  {
+    const row = fakeRow();
+    const a = mount({ row }), b = mount({ row });
+    click(a.host, 'add'); click(a.host, 'inc');
+    check('*** a counter added on one panel is on the other ***', b.probe().counters.length === 1 && value(b.host) === '1', value(b.host));
+    click(b.host, 'overlay');
+    check('...but overlay is per panel', a.host.querySelector('[data-sb]').dataset.mode === 'panel'
+      && b.host.querySelector('[data-sb]').dataset.mode === 'overlay');
+    a.inst.destroy(); b.inst.destroy(); a.host.remove(); b.host.remove();
+  }
+
+  section('destroy cleans up');
+  {
+    const bus = createBus();
+    const shown = [];
+    bus.subscribe(SCORE_SHOWN_TOPIC, (p) => shown.push(p));
+    const row = fakeRow({ counters: [newCounter({ label: 'x', source: 'trivia' }, [])] });
+    const t = mount({ bus, row });
+    check('it claimed the source it shows', shown.some((p) => p.source === 'trivia' && p.on === true));
+    let threw = false;
+    try { t.inst.destroy(); } catch { threw = true; }
+    check('no throw', !threw);
+    check('the minute ticker is stopped', t.probe().ticking === false);
+    check('*** it says it is no longer showing anything ***', shown[shown.length - 1].on === false && shown[shown.length - 1].source === 'trivia');
+    const before = shown.length;
+    bus.publish(SCORE_ASK_TOPIC, {});
+    bus.publish(SCORE_TOPIC, { source: 'trivia', value: 9 });
+    check('*** and a destroyed scoreboard answers nothing afterwards ***', shown.length === before);
+    t.host.remove();
+  }
+
+  // One to look at.
+  {
+    const bus = createBus();
+    const game = createScoreSource(bus, { source: 'trivia', label: 'Trivia: right answers' });
+    game.set(3, { detail: '2 in a row' });
+    const row = fakeRow({ counters: [
+      { ...bump(bump(newCounter({ label: 'Books read', period: 'week' }, []), 2, Date.now()), 0, Date.now()), target: 5 },
+      newCounter({ label: 'Trivia: right answers', source: 'trivia' }, [{ id: 'c1' }]),
+    ] });
+    mount({ host: document.getElementById('host'), bus, row });
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

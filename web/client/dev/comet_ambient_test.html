@@ -31,6 +31,7 @@ import { fieldsFor } from '../settings_fields.js';
 import { createBus } from '../bus.js';
 import { AIM_TOPIC } from '../aim.js';
 import { CATALOG } from '../modules_catalog.js';
+import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -134,6 +135,46 @@ const steps = (inst, n, dt = 16) => { for (let i = 0; i < n; i++) inst.impl.__st
     check('*** Play, not Bonus (Mike, 2026-09-28, register 250/257: "Arcade only" -- Play points '
       + 'must not be able to buy screen time the way an unset/unrecognized type silently would) ***',
       awardCalls.some((c) => c.kind === 'points' && c.data.type === 'Play'), JSON.stringify(awardCalls));
+    inst.destroy(); host.remove();
+  }
+
+  section('*** row 2.40: the count is published, and a Scoreboard can take it over ***');
+  {
+    const host = scratch();
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe(SCORE_TOPIC, (p) => { if (p.source === 'comet_ambient') heard.push(p); });
+    const inst = mount(host, { bus, settings: { mode: 'interactive', count: 1 } });
+    await sleep(20);
+    check('interactive mode publishes its count (0 to start)', heard.length && heard[heard.length - 1].value === 0);
+    bus.publish('comet_ambient/seek');
+    steps(inst, 60);
+    check('*** a catch is published, the same number the corner draws ***', heard[heard.length - 1].value === probe(inst).caught
+      && probe(inst).caught === 1, JSON.stringify(heard));
+    bus.publish(SCORE_SHOWN_TOPIC, { source: 'comet_ambient', by: 'sb1', on: true });
+    check('*** with a Scoreboard showing it, the corner steps aside ***', probe(inst).scoreVisible === false);
+    bus.publish(SCORE_SHOWN_TOPIC, { source: 'comet_ambient', by: 'sb1', on: false });
+    check('...and comes back when it lets go', probe(inst).scoreVisible === true);
+    inst.destroy();
+    check('destroy says it is gone', heard[heard.length - 1].gone === true);
+    host.remove();
+  }
+  {
+    const host = scratch();
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe(SCORE_TOPIC, (p) => { if (p.source === 'comet_ambient' && !p.gone) heard.push(p); });
+    const inst = mount(host, { bus, settings: { count: 1 } });
+    await sleep(20);
+    bus.publish(SCORE_ASK_TOPIC, {});
+    check('decorative mode publishes nothing — there is nothing to count', heard.length === 0, JSON.stringify(heard));
+    inst.destroy(); host.remove();
+  }
+  {
+    const host = scratch();
+    const inst = mount(host, { settings: { mode: 'interactive', count: 1, ownScore: 'off' } });
+    await sleep(20);
+    check('"off": the corner never draws it', probe(inst).scoreVisible === false);
     inst.destroy(); host.remove();
   }
 

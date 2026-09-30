@@ -119,6 +119,9 @@ export const HEALTH_EXPECT = {
   // A form plus a list. It publishes nothing on the bus, and nobody typing into it for a
   // while is not a fault — the same reasoning as `quests`/`sprint` just above.
   reading_log: { idle: true },
+  // Counters and followed scores. It publishes nothing but "which scores am I showing", and a
+  // scoreboard nobody has pressed all day is a scoreboard doing its job.
+  scoreboard:  { idle: true },
   // A keypad and a display. It sends on its ports only when somebody presses a key, and nobody
   // pressing one for a while is not a fault - the same reasoning as `algebra` above.
   calculator:  { idle: true },

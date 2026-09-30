@@ -56,6 +56,7 @@ import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
+import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 
 export const GAME = 'wordforge';
 
@@ -241,6 +242,8 @@ export const DEFAULTS = {
   dailyCap: 0,
   // Which subject a point of credit discharges.
   subject: 'English language arts',
+  // Row 2.40: draw "N this round" here unless a Scoreboard on the screen shows it. See SETTINGS.
+  ownScore: 'auto',
 };
 
 export const CONCEPT_PAIRS = 'sentence quality';
@@ -521,6 +524,14 @@ const SETTINGS = [
   { key: 'subject', label: 'Credit counts toward', kind: 'text',
     default: 'English language arts', level: 'advanced',
     note: 'which subject a point of credit discharges' },
+  // Row 2.40 (Mike, 2026-09-30: "we probably have a bunch of modules drawing their own
+  // scoreboards. We shouldn't have that."). "N this round" and the streak are PUBLISHED on the
+  // score contract (`../score_source.js`); this row decides whether the panel draws them too.
+  // `auto` by default, for the reason trivia and comet give (Mike, 2026-09-22: games show a score
+  // by default). The round position ("3 / 10") and the daily-cap notice are NOT the score and are
+  // always shown: one is where you are, the other is something the person needs to be told.
+  ownScoreField({ level: 'standard',
+    note: 'Points this round and the streak. A Scoreboard on the same screen can show them instead.' }),
 ];
 
 registerModule(
@@ -581,6 +592,7 @@ registerModule(
     let contested = false;
     let contestFailed = false;
     const heldSet = () => (contests ? contests.held() : new Set());
+    let score = null;         // the score contract (row 2.40), made in init()
 
     const el = (sel) => mount.querySelector(sel);
 
@@ -763,10 +775,14 @@ registerModule(
     function render() {
       const host = el('[data-body]');
       if (!host) return;
+      // Row 2.40: the score goes out on the contract first; the panel draws it only when asked.
+      score?.set?.(earned, { detail: streak >= 2 ? `${streak} in a row` : '' });
+      const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore }), !!score?.shownElsewhere());
+      el('[data-score]').style.display = own ? '' : 'none';
       el('[data-score]').textContent = `${earned} this round`;
       el('[data-streak]').textContent = capped
         ? 'daily points reached — still counts for practice'
-        : (streak >= 2 ? `${streak} in a row` : '');
+        : (own && streak >= 2 ? `${streak} in a row` : '');
       el('[data-progress]').textContent = deck.length ? `${Math.min(at + 1, deck.length)} / ${deck.length}` : '';
       // Never let the deck just be quietly shorter — name what's waiting and why.
       const heldEl = el('[data-held]');
@@ -905,6 +921,11 @@ registerModule(
             <div class="wf-body" data-body></div>
             <div class="wf-held" data-held></div>
           </div>`;
+
+        // Before any round renders, so the first render already knows whether a Scoreboard on this
+        // screen is showing Word Forge.
+        score = createScoreSource(bus, { source: GAME, label: 'Word Forge: points this round',
+          instance: ctx.instanceId || null, onShownChange: () => render() });
 
         // FIRST, so no round is dealt without it (see trivia.js's identical line).
         try {
@@ -1070,7 +1091,11 @@ registerModule(
             roundLength: Number(snap.roundLength) > 0 ? Number(snap.roundLength) : DEFAULTS.roundLength,
             dailyCap: Number(snap.dailyCap) >= 0 ? Number(snap.dailyCap) : DEFAULTS.dailyCap,
             subject: typeof snap.subject === 'string' && snap.subject ? snap.subject : DEFAULTS.subject,
+            ownScore: ownScoreMode(snap),
           };
+          // The score row is live, not only on the next answer. Only with a question up: before the
+          // first round is dealt, render() would draw the end-of-round screen.
+          if (q) render();
           // Fire-and-forget, same as Trivia's bare `readBank()` inside its own subscribe
           // callback — nothing here needs to await a network fetch.
           resolveWords(snap).catch(() => {});
@@ -1082,6 +1107,7 @@ registerModule(
       onResize() {},
       onHide() { state.flush(); },
       destroy() {
+        if (score) { score.destroy(); score = null; }
         if (contests) { contests.destroy(); contests = null; }
         if (ledger) { ledger.destroy(); ledger = null; }
         if (tel) { tel.destroy(); tel = null; }

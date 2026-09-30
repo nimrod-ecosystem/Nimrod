@@ -496,6 +496,19 @@ export const CATALOG = [
       + 'material a later feature can build questions from — not built yet, so today this '
       + 'only keeps the log.',
   },
+  {
+    type: 'scoreboard',
+    group: 'record',
+    // `touch`: it asks nothing and waits on nobody. A followed score moves by itself; a counter
+    // only moves when somebody presses +1, and one that is never pressed is still just a number.
+    use: 'touch',
+    lead: 'Any count worth keeping, against a target you choose.',
+    needs: 'Nothing. Or a game on the same screen whose score it can follow.',
+    why: 'Books read this week, glasses of water today, questions right in Trivia: one board for '
+      + 'all of them, instead of every game drawing its own. A target is a fact, not a verdict, '
+      + 'so nothing turns red for being under it. It can also show a single count, large, on its '
+      + 'own.',
+  },
 ];
 
 // Modules that exist in the registry but are deliberately not offered on THIS page: dev

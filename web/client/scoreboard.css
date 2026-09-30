@@ -1,0 +1,51 @@
+/* scoreboard.css — the look of `modules/scoreboard.js`. Loaded by the module itself, from a
+   <link> inside its own mount (a module never reaches outside ctx.mount, so not <head>).
+
+   THEME TOKENS ONLY, and no literal colour anywhere in this file, so Dusk and every other theme
+   reach it and `check_hardcoded_colors.py` counts nothing new.
+
+   *** NO COLOUR MEANS "BEHIND". *** The meter is the same accent under the target as over it;
+   reaching the target ADDS the words "Target reached" and changes nothing else. There is no rule
+   in this file keyed to being under a target, and `dev/scoreboard_test.html` checks that the meter
+   looks the same either side of it. */
+
+.sb{display:flex;flex-direction:column;gap:12px;width:100%;box-sizing:border-box;color:var(--text)}
+.sb *{box-sizing:border-box}
+.sb [hidden]{display:none !important}
+
+.sb-list{display:flex;flex-direction:column;gap:10px}
+.sb-empty{margin:0;padding:16px;text-align:center;font-size:.9rem;color:var(--text-muted)}
+
+.sb-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px 12px;
+  display:flex;flex-direction:column;gap:6px}
+.sb-label{margin:0;font-weight:700;font-size:.95rem;color:var(--text-strong)}
+.sb-figure{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
+.sb-value{font-size:clamp(28px,9cqmin,72px);font-weight:800;line-height:1;color:var(--text-strong);
+  font-variant-numeric:tabular-nums}
+.sb-of,.sb-period{font-size:1rem;color:var(--text-soft)}
+.sb-meter{height:10px;border-radius:999px;background:var(--surface-alt);border:1px solid var(--border);overflow:hidden}
+.sb-meter-fill{display:block;height:100%;background:var(--accent)}
+.sb-reached{margin:0;font-weight:700;color:var(--text-strong)}
+.sb-reached::before{content:"\2713\00a0"}
+.sb-note,.sb-last{margin:0;font-size:.8rem;color:var(--text-muted)}
+
+.sb-btns,.sb-edit,.sb-follow-row,.sb-add-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sb-edit{padding-top:6px;border-top:1px dashed var(--border)}
+.sb-btn{min-height:44px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface-alt);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.sb-btn:hover{border-color:var(--accent)}
+/* THE SWITCH CURSOR — the same treatment the quizzes use: an outline AND a leading marker, so the
+   lit button reads without colour. */
+.sb-btn[data-on="1"]{outline:3px solid var(--link);outline-offset:2px}
+.sb-btn[data-on="1"]::before{content:"\25B8\00a0"}
+
+.sb-input{flex:1 1 12em;min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface-alt);color:var(--text);font:inherit}
+.sb-follow-head{margin:6px 0 4px;font-size:.8rem;color:var(--text-muted)}
+
+/* OVERLAY: one counter, large, with no card around it. */
+.sb[data-mode="overlay"]{height:100%;justify-content:center;align-items:center;text-align:center}
+.sb-ov{display:flex;flex-direction:column;align-items:center;gap:6px}
+.sb-ov-figure{margin:0;display:flex;align-items:baseline;gap:8px}
+.sb-ov .sb-value{font-size:clamp(40px,22cqmin,200px)}
+.sb-ov-label{margin:0;font-weight:700;font-size:clamp(14px,4cqmin,36px);color:var(--text-strong)}

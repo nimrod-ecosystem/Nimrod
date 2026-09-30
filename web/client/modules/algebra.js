@@ -29,6 +29,7 @@ import { createLessons, gate, lockedTopics, LESSON_TOPIC,
          createQuestMode, ALL_UNLOCKED } from '../lessons.js';
 import { CALC_KEYS, calcInit, calcPress, calcValue } from '../calc.js';
 import { createPorts } from '../ports.js';
+import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 
 export const GAME = 'algebra';
 
@@ -195,6 +196,13 @@ const SETTINGS = [
   // `photos.js` handles `album`. Nobody types a subject name with one switch.
   { key: 'subject', label: 'Credit counts toward', kind: 'text', default: 'Math',
     level: 'advanced', note: 'which subject a point of credit discharges' },
+  // Row 2.40 (Mike, 2026-09-30: "we probably have a bunch of modules drawing their own
+  // scoreboards. We shouldn't have that."). The points-solved-streak line is PUBLISHED on the score
+  // contract (`../score_source.js`); this row decides whether the panel draws it too. `auto` by
+  // default — shown until a Scoreboard on the same screen shows it — for the reason trivia and
+  // comet give: Mike ruled 2026-09-22 that games show a score by default.
+  ownScoreField({ level: 'standard',
+    note: 'Points this sitting, problems solved, and the streak. A Scoreboard on the same screen can show it instead.' }),
 ];
 
 // THE ONE PORT THIS MODULE DECLARES, and it is a SINK (2026-09-28: the calculator became its own
@@ -239,6 +247,7 @@ registerModule(
     let askedAt = 0;
     let held = [];
     let ports = null;
+    let score = null;          // the score contract (row 2.40), made in init()
 
     const el = (sel) => mount.querySelector(sel);
 
@@ -325,6 +334,13 @@ registerModule(
     function render() {
       const host = el('[data-body]');
       if (!host || !problem) return;
+      // Row 2.40: the score goes out on the contract first; the panel's own line only when asked.
+      score?.set?.(earned, { detail: [solved ? `${solved} solved` : '', streak >= 2 ? `${streak} in a row` : '']
+        .filter(Boolean).join(' · ') });
+      const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore }), !!score?.shownElsewhere());
+      // Inline `display`, and '' to hand it back: '' lets modules.css's own cramped-cell rule keep
+      // hiding the line in a tiny panel (panel_fit_test), where `hidden` would be overridden by it.
+      el('.al-top').style.display = own ? '' : 'none';
       el('[data-earned]').textContent = `${earned} pts`;
       el('[data-solved]').textContent = solved ? `${solved} solved` : '';
       el('[data-streak]').textContent = streak >= 2 ? `${streak} in a row` : '';
@@ -402,6 +418,11 @@ registerModule(
         ports = createPorts({ rootBus: ctx.rootBus, instanceId: ctx.instanceId, manifest: { ports: ALGEBRA_PORTS } });
         ports.on('answer', fillAnswer);
 
+        // Before the first problem renders, so the first render already knows whether a Scoreboard
+        // on this screen is showing Math.
+        score = createScoreSource(bus, { source: GAME, label: 'Math: points this sitting',
+          instance: ctx.instanceId || null, onShownChange: () => render() });
+
         // A keypad, a switch, or a companion can drive it without touching this module.
         bus.subscribe('algebra/key', (k) => press(String(k)));
         bus.subscribe('algebra/submit', () => submit(false));
@@ -417,7 +438,9 @@ registerModule(
             subject: typeof snap.subject === 'string' && snap.subject ? snap.subject : DEFAULTS.subject,
             pool: POOLS[snap.pool] ? snap.pool : DEFAULTS.pool,
             topics: Array.isArray(snap.topics) ? snap.topics : [],
+            ownScore: snap.ownScore,
           };
+          render();   // the score row is live, not only on the next answer
         });
 
         // Like wordforge: wait for the unlock log (AND the mode — see trivia.js's identical
@@ -432,6 +455,7 @@ registerModule(
       onResize() {},
       onHide() { state.flush(); },
       destroy() {
+        if (score) { score.destroy(); score = null; }
         if (ports) { ports.dispose(); ports = null; }
         if (ledger) { ledger.destroy(); ledger = null; }
         if (tel) { tel.destroy(); tel = null; }

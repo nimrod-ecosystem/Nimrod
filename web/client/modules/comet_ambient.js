@@ -40,6 +40,7 @@ import { registerModule } from '../module.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
 import { hitCircle, nearest, createHoverTracker } from '../pressable.js';
 import { createPointsLedger } from '../points.js';
+import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 
 const DEFAULTS = {
   mode: 'decorative',  // 'decorative' | 'interactive' — Mike's own two words for it
@@ -70,6 +71,12 @@ const SETTINGS = [
     min: 0, max: 10, step: 0.5 },
   { key: 'calm', label: 'Motion', default: false, level: 'standard',
     onLabel: 'Calm — less movement', offLabel: 'Normal' },
+  // Row 2.40: the corner count is published (`../score_source.js`), and this row decides whether
+  // the corner draws it too. `auto` by default: Mike asked for the balloons' score to "show
+  // somewhere" (2026-09-27), and a Scoreboard is exactly somewhere — when one shows it, the corner
+  // steps aside. Only ever live in 'interactive' mode, the same honesty as `points` above.
+  ownScoreField({ level: 'standard',
+    note: 'Balloons caught, in "Something to catch" mode. A Scoreboard on the same screen can show it instead.' }),
 ];
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -129,9 +136,15 @@ registerModule(
     // if you could have the ambient balloons score show somewhere" — only shown in interactive
     // mode, since decorative mode never catches anything and a "0 caught" nobody can ever
     // increase would just be noise sitting over the scenery.
+    //
+    // Row 2.40: in interactive mode the count is PUBLISHED as well (`../score_source.js`), so a
+    // Scoreboard can show it; the corner draws it only when `ownScore` says so.
+    let score = null;
     function paintScore() {
+      if (cfg.mode === 'interactive') score?.set?.(caught);
       if (!scoreEl) return;
-      scoreEl.hidden = cfg.mode !== 'interactive';
+      const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore }), !!score?.shownElsewhere());
+      scoreEl.hidden = cfg.mode !== 'interactive' || !own;
       scoreEl.textContent = `${caught} caught`;
     }
 
@@ -295,6 +308,8 @@ registerModule(
         cfg = { ...DEFAULTS, ...(ctx.state?.get?.() || {}) };
         resize();
         buildHearts();
+        score = createScoreSource(bus, { source: 'comet_ambient', label: 'Balloons caught',
+          instance: ctx.instanceId || null, onShownChange: () => paintScore() });
         paintScore();
 
         try { ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus }); ledger.load().catch(() => {}); }
@@ -327,6 +342,7 @@ registerModule(
         offs.forEach((f) => { try { f(); } catch { /* nothing to do */ } });
         offs.length = 0;
         ledger?.destroy?.();
+        score?.destroy?.(); score = null;
         canvas = null; c2d = null; scoreEl = null; hearts = [];
       },
     };

@@ -36,6 +36,7 @@ import { mountModule, getManifest } from '../module.js';
 import { normalizeField } from '../settings_fields.js';
 import { createPointsLedger, sumBySource, fmtPoints } from '../points.js';
 import { createTelemetry, byConcept, byBand, bands as bandsOf, summarize } from '../telemetry.js';
+import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
 import {
   GAME, DEFAULTS, DEFAULT_WORDS, DEFAULT_PAIRS, CONCEPT_PAIRS,
   shuffle, buildDeck, makeQuestion, scoreFor, parseWords, parsePairs, bandOf, packToWordBank,
@@ -296,6 +297,25 @@ a || b || c`);
 
     check('a question is showing', opts().length >= 2, String(opts().length));
     check('the round counter starts at 1', /^1 \//.test(txt('[data-progress]') || ''), txt('[data-progress]'));
+
+    // --- row 2.40: the score is published, and a Scoreboard can take it over ---
+    {
+      const heard = [];
+      const offScore = bus.subscribe(SCORE_TOPIC, (p) => { if (p.source === 'wordforge') heard.push(p); });
+      bus.publish(SCORE_ASK_TOPIC, {});
+      check('row 2.40: it answers score/ask with its points this round',
+        heard.length > 0 && `${heard[heard.length - 1].value} this round` === txt('[data-score]'),
+        `${JSON.stringify(heard[heard.length - 1])} vs ${txt('[data-score]')}`);
+      check('...drawn here by default (auto, no Scoreboard on this screen)', q('[data-score]').style.display !== 'none');
+      bus.publish(SCORE_SHOWN_TOPIC, { source: 'wordforge', by: 'sb1', on: true });
+      check('*** with a Scoreboard showing it, the panel does not draw it twice ***', q('[data-score]').style.display === 'none');
+      check('...but the round position stays (it is where you are, not a score)', /^1 \//.test(txt('[data-progress]') || ''));
+      bus.publish(SCORE_SHOWN_TOPIC, { source: 'wordforge', by: 'sb1', on: false });
+      check('...and it is drawn again when the Scoreboard lets go', q('[data-score]').style.display === '');
+      offScore();
+      const row = (getManifest('wordforge').settings || []).find((f) => f.key === 'ownScore');
+      check('the row is declared, default auto, matching DEFAULTS', !!row && row.default === 'auto' && DEFAULTS.ownScore === 'auto');
+    }
 
     // --- answer WRONG on purpose ---
     const ledger = createPointsLedger({ makeEvents });
