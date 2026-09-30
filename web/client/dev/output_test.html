@@ -418,6 +418,31 @@ function rig({ routing = DEFAULT_ROUTING, channels = null, ...rest } = {}) {
       check('and the channel works again after the watchdog fired', spoken.length === 3);
     }
     {
+      // ROW 2.28 / 2.35: "louder" and "quieter" move the audio bus's MASTER, and the spoken voice
+      // registers with no onGain - so it has to READ the master when it speaks, or "quieter"
+      // would turn the video down and leave the voice as loud as ever.
+      const clock = fakeClock();
+      const uts = [];
+      const fakeSynth = { speak: (u) => uts.push(u), cancel: () => {}, getVoices: () => [] };
+      function FakeUtterance(text) { this.text = text; }
+      let m = 0.4;
+      const audio = { register() {}, setActive() {}, master: () => m };
+      const speech = createSpeechChannel({ synth: fakeSynth, Utterance: FakeUtterance, audio,
+        maxMs: 5000, pollMs: 0, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      speech.present({ text: 'quieter now' }, { done() {} });
+      check('*** the voice speaks at the master volume ***', uts[0] && uts[0].volume === 0.4,
+        String(uts[0] && uts[0].volume));
+      m = 'broken';
+      speech.present({ text: 'broken master' }, { done() {} });
+      check('...and a broken master is full volume, never silence', uts[1] && uts[1].volume === 1,
+        String(uts[1] && uts[1].volume));
+      const bare = createSpeechChannel({ synth: fakeSynth, Utterance: FakeUtterance, maxMs: 5000,
+        pollMs: 0, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      bare.present({ text: 'no bus' }, { done() {} });
+      check('...and no audio bus at all leaves the volume alone', uts[2] && uts[2].volume === undefined,
+        String(uts[2] && uts[2].volume));
+    }
+    {
       // ROW 2.27: an engine that reports `speaking` frees the channel when it goes quiet, even
       // though `onend` never comes -- well before the 30 s watchdog. And never before it was seen
       // speaking, so a slow start is not taken for an end.

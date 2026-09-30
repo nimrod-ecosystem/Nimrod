@@ -7,7 +7,8 @@
 // an aide, a visiting relative, somebody who needs the video to stop and does not know there is
 // a transport bar. They get a handful of words that work and nothing to learn - the nine
 // navigation verbs, plus play, pause, louder and quieter (row 2.28) - each said after the wake
-// phrase, "computer please" by default (DECISIONS.md, 2026-08-30).
+// phrase, "computer please" or "nimrod please" by default (DECISIONS.md, 2026-08-30; Mike,
+// 2026-09-30).
 //
 // ---------------------------------------------------------------------------------------
 // *** READ THIS BEFORE TURNING IT ON: THE BROWSER'S RECOGNISER IS NOT ON THE MACHINE. ***
@@ -55,6 +56,20 @@ import { verbTopic } from './actions.js';
 import { createSoundChannel } from './output_channels.js';
 
 export const SPEECH_DEVICE = 'speech';
+
+// *** THE LISTENING WINDOW IS AN EVENT, NOT A UI (row 2.36). *** Mike: the "I heard you" cue is
+// "a setting", "a visual que on the screen also", and "another thing you could set objects for.
+// Lights and things that turn on for any sort of visual notification." So this file SAYS the
+// window opened or closed and draws nothing: a tone, an on-screen cue, the video ducking, and one
+// day a lamp in the room each subscribe on their own (`listening_cue.js` has the first three).
+//
+//   { on: true,  reason: 'wake',    ms }   the wake phrase was heard on its own; `ms` is how long
+//                                          the window stays open, so a subscriber can time itself
+//                                          out even if the closing event never reaches it
+//   { on: false, reason: 'command' }      a command fired (one wake, one command)
+//   { on: false, reason: 'timeout' }      nobody said a command in time
+//   { on: false, reason: 'stopped' }      the microphone was turned off
+export const LISTENING_TOPIC = 'speech/listening';
 
 /**
  * *** THE PHRASE TABLE. MANY PHRASINGS, ONE VERB. ***
@@ -224,12 +239,18 @@ export function browserRecognizer({ view = typeof window !== 'undefined' ? windo
 export const CONFIRM_MODES = ['tone', 'word', 'off'];
 
 export const SPEECH_DEFAULTS = Object.freeze({
-  // *** "COMPUTER PLEASE", AND ONLY THAT. *** DECISIONS 08-30: the default wake phrase, and a
-  // setting. "Computer" is nobody's name, so it cannot collide with a person in the room, and it
-  // cleared the parroting check recorded there. A SECOND phrase is supported and ships EMPTY: a
-  // person's own second phrase belongs on their own profile, not in a site default everybody
-  // gets (Mike's open question, row 2.28 (a)).
-  wake: Object.freeze(['computer please']),
+  // *** "COMPUTER PLEASE" AND "NIMROD PLEASE". *** DECISIONS 08-30 made "Computer please" the
+  // default and a setting; Mike, 2026-09-30 (register 276): "Nimrod please will be a default for
+  // everyone else. Computer please will also be a default." Neither is a person's name, so neither
+  // collides with somebody in the room, and both are settings (SPEECH_FIELDS below).
+  //   * A PERSON'S OWN PHRASE GOES ON THEIR OWN PROFILE, NEVER HERE. A name somebody calls the
+  //     screen is set as that person's second phrase; a site default everybody gets must never
+  //     carry one (the suite checks).
+  //   * TWO KNOWN COLLISIONS, both answered by the setting rather than by dropping a default:
+  //     "Nimrod" is the name of Mike's own household cat, so his profile changes it; and Amazon
+  //     Echo devices can be set to wake on "Computer" [training knowledge, not verified here], so
+  //     in a room with such an Echo "computer please" would wake it too.
+  wake: Object.freeze(['computer please', 'nimrod please']),
   // *** REQUIRED BY DEFAULT. *** The screen's own speaker is in the room: without a gate, a
   // video in which somebody says "stop" or "next" drives the screen it is playing on, and so
   // does any conversation that happens to be a bare command. The person who wants the opposite
@@ -254,6 +275,41 @@ export const SPEECH_DEFAULTS = Object.freeze({
   // queueing behind a long sentence on the output bus.
   confirmTtlMs: 3000,
 });
+
+/**
+ * THE SETTINGS, declared the way every module declares its own (settings_fields.js), for the
+ * host to put in the menu at the PERSON level: a wake phrase somebody says is theirs, and follows
+ * them to any screen. One field per phrase because a field is one value; `wakeFrom` turns them
+ * back into the list `attachSpeech` takes. Text fields need a keyboard to edit, which is right for
+ * these: nobody sets a wake phrase with one switch, and the defaults work without anybody doing so.
+ */
+export const SPEECH_FIELDS = [
+  { key: 'speechWake1', label: 'Wake phrase', kind: 'text', default: SPEECH_DEFAULTS.wake[0],
+    level: 'advanced' },
+  { key: 'speechWake2', label: 'Second wake phrase', kind: 'text', default: SPEECH_DEFAULTS.wake[1],
+    level: 'advanced' },
+  { key: 'speechConfirm', label: 'When a spoken command is heard', kind: 'choice',
+    default: SPEECH_DEFAULTS.confirm, level: 'standard',
+    options: [
+      { value: 'tone', label: 'Play a short tone' },
+      { value: 'word', label: `Say “${SPEECH_DEFAULTS.confirmWord}”` },
+      { value: 'off', label: 'Nothing' },
+    ] },
+];
+
+/**
+ * The wake list from a settings row. A field never set is its default; a field set to blank is
+ * NO phrase in that slot. Both blank falls back to the defaults, because a screen whose owner
+ * turned voice on and cleared every phrase cannot be woken at all - and "the setting ate the
+ * wake phrase" is not a state anybody in the room could diagnose.
+ */
+export function wakeFrom(values = {}) {
+  const v = values || {};
+  const pick = (key, dflt) => (typeof v[key] === 'string' ? v[key] : dflt);
+  const list = usableWakePhrases([pick('speechWake1', SPEECH_DEFAULTS.wake[0]),
+                                  pick('speechWake2', SPEECH_DEFAULTS.wake[1])]);
+  return list.length ? list : [...SPEECH_DEFAULTS.wake];
+}
 
 /**
  * The wake phrases that can actually work, normalised: empties dropped (a blank second phrase
@@ -325,6 +381,15 @@ export function attachSpeech(input, {
   output = null,           // the output bus, for `word` mode (it ducks the video for the word)
   tone = null,             // injected for tests; default is the output layer's status earcon
   now = () => Date.now(),
+  // The pub/sub bus the listening window is announced on (LISTENING_TOPIC). Optional: with no
+  // bus the gate works exactly as before and simply tells nobody.
+  bus = null,
+  // THE MISS LOG (row 2.28 (b), Mike: yes). Anything with `add(text)` - `speech_misses.js` is
+  // the real one. Told ONLY the words that followed a wake phrase and matched no command; null
+  // (the default) logs nothing. Which screens pass one is the host's setting, not this file's.
+  misses = null,
+  setTimer = (fn, ms) => setTimeout(fn, ms),
+  clearTimer = (id) => clearTimeout(id),
 } = {}) {
   if (!input) throw new Error('attachSpeech: an input bus is required');
   const rec = recognizer || browserRecognizer({ view, lang });
@@ -334,6 +399,41 @@ export function attachSpeech(input, {
   const mode = CONFIRM_MODES.includes(confirm) ? confirm : 'tone';
   const playTone = typeof tone === 'function' ? tone : defaultTone;
   let armedUntil = null;   // set by the wake phrase said on its own
+  let closeTimer = null;   // closes the window as an EVENT; `armedUntil` stays the gate itself
+  let open = false;
+
+  function announce(payload) {
+    if (!bus || typeof bus.publish !== 'function') return;
+    try { bus.publish(LISTENING_TOPIC, payload); } catch (err) { console.error('speech: listening event', err); }
+  }
+  function clearClose() {
+    if (closeTimer !== null) { try { clearTimer(closeTimer); } catch { /* already gone */ } closeTimer = null; }
+  }
+  function openWindow(ms) {
+    armedUntil = now() + ms;
+    open = true;
+    clearClose();
+    // The timer only ANNOUNCES the close. The gate itself is `armedUntil` against `now()`, so a
+    // timer that never fires cannot keep the gate open - and every subscriber has its own
+    // watchdog from `ms` in case this announcement never arrives.
+    if (bus) {
+      try { closeTimer = setTimer(() => { closeTimer = null; closeWindow('timeout'); }, ms); }
+      catch { closeTimer = null; }
+    }
+    announce({ on: true, reason: 'wake', ms });
+  }
+  function closeWindow(reason) {
+    armedUntil = null;
+    clearClose();
+    if (!open) return;
+    open = false;
+    announce({ on: false, reason });
+  }
+
+  function logMiss(text) {
+    if (!misses || typeof misses.add !== 'function' || !text) return;
+    try { misses.add(text); } catch (err) { console.error('speech: miss log', err); }
+  }
 
   function confirmed(verb) {
     if (mode === 'off') return;
@@ -353,23 +453,25 @@ export function attachSpeech(input, {
 
   function heard(text) {
     const w = splitWake(text, wakes);
-    let rest = w.rest;
-    if (requireWake && !w.woke) {
-      const inWindow = armedUntil !== null && now() <= armedUntil;
-      if (!inWindow) { report({ text, verb: null, woke: false }); return; }
-    }
+    const rest = w.rest;
+    const inWindow = armedUntil !== null && now() <= armedUntil;
+    // A window whose time is up is closed now, whether or not its timer has fired yet.
+    if (armedUntil !== null && !inWindow) closeWindow('timeout');
+    if (requireWake && !w.woke && !inWindow) { report({ text, verb: null, woke: false }); return; }
     if (w.woke && !rest) {
       // The wake phrase on its own: the command may follow as its own utterance.
-      armedUntil = now() + Math.max(0, Number(wakeWindowMs) || 0);
+      openWindow(Math.max(0, Number(wakeWindowMs) || 0));
       report({ text, verb: null, woke: true });
       return;
     }
     const verb = verbFor(rest, table);
     report({ text, verb, woke: w.woke });
     // An unrecognised phrase does nothing - and does not close an open window, so somebody who
-    // is mis-heard once can simply say it again.
-    if (!verb) return;
-    armedUntil = null;     // one wake, one command
+    // is mis-heard once can simply say it again. It is logged ONLY when it followed a wake
+    // phrase (in the same breath, or inside the window): with the gate turned off, a bare
+    // sentence still is not a thing anybody said to the screen, and it is not written down.
+    if (!verb) { if (w.woke || inWindow) logMiss(rest); return; }
+    closeWindow('command');    // one wake, one command
     const control = phraseControl(verb);
     // Down then straight up: a spoken phrase has no duration anybody is measuring, and holding
     // it open would arm the max-hold watchdog for something that is already over.
@@ -382,8 +484,9 @@ export function attachSpeech(input, {
     available: () => !!rec,
     get listening() { return !!rec && !!rec.running; },
     wakePhrases: () => [...wakes],
+    get windowOpen() { return open; },
     start() { if (!rec) return false; rec.start(heard); return true; },
-    stop() { rec?.stop(); armedUntil = null; },
-    destroy() { rec?.stop(); armedUntil = null; },
+    stop() { rec?.stop(); closeWindow('stopped'); },
+    destroy() { rec?.stop(); closeWindow('stopped'); },
   };
 }

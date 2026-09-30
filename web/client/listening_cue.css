@@ -1,0 +1,41 @@
+/* listening_cue.css — the look of `listening_cue.js`. Loaded by the component itself, once per page.
+
+   NON-MODAL, AND IT CANNOT BLOCK ANYTHING: `pointer-events:none`, so a press on it lands on
+   whatever is underneath, and the component never takes focus. It sits at the top middle, away
+   from the transport bar at the foot of the screen, and above the menus in the depth scale
+   (layers.css) because it is about the whole screen and is gone in a few seconds.
+
+   NO LITERAL COLOURS: the screen's own theme, so it is readable wherever the theme is (the suite
+   measures the rendered words against the rendered pill on every theme). Solid, never
+   see-through: a cue that is only readable on some backgrounds is not a cue.
+
+   Sized in px for somebody across the room, not for a pointer. */
+.listen-cue{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  z-index:calc(var(--z-menus) + 50);
+  pointer-events:none;user-select:none;
+  display:flex;align-items:center;gap:12px;box-sizing:border-box;
+  max-width:calc(100vw - 32px);
+  padding:10px 20px 10px 16px;
+  background:var(--surface);
+  color:var(--text);
+  border:3px solid var(--accent);
+  border-radius:999px;
+  font:600 22px/1.2 var(--font, system-ui, sans-serif);
+}
+.listen-cue[hidden]{display:none}
+.listen-cue .lc-dot{
+  flex:0 0 auto;width:16px;height:16px;border-radius:50%;
+  background:var(--accent);
+  animation:lc-pulse 1.6s ease-in-out infinite;
+}
+@keyframes lc-pulse{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.3);opacity:.7}
+}
+/* Still, not gone: the cue stays, only the pulse stops. Both the person's own setting (the class)
+   and the system's. */
+.listen-cue.lc-still .lc-dot{animation:none}
+@media (prefers-reduced-motion: reduce){
+  .listen-cue .lc-dot{animation:none}
+}

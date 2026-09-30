@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>speech misses — what was said to the screen and not understood</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>speech misses — the miss log</h1>
+<p>Row 2.28 (b), Mike: yes. Text only, only the words that followed a wake phrase and matched no
+command, kept on this device and nowhere else, deleted on a schedule, readable and clearable by a
+caregiver. <code>speech_test</code> proves only those words ever reach it; this proves what it keeps.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createMissStore, readMisses, clearMisses, MISSES_KEY, MISS_DEFAULTS, MISS_FIELDS }
+  from '../speech_misses.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+// An in-memory stand-in for localStorage that records every key written.
+function fakeStorage() {
+  const m = new Map(); const writes = [];
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => { writes.push(k); m.set(k, String(v)); },
+    removeItem: (k) => { writes.push(k); m.delete(k); },
+    keys: () => [...m.keys()], writes, raw: (k) => m.get(k),
+  };
+}
+const DAY = 24 * 3600 * 1000;
+
+(async () => {
+  // Nothing here may touch the network. Any fetch during the suite is a failure.
+  let fetched = 0;
+  const realFetch = window.fetch;
+  window.fetch = (...a) => { fetched++; return realFetch(...a); };
+
+  section('*** it keeps text, on this device, under one key ***');
+  {
+    const st = fakeStorage(); let t = 10 * DAY;
+    const log = createMissStore({ storage: st, now: () => t });
+    check('it starts empty', log.list().length === 0);
+    check('adding a miss keeps it', log.add('put on the cooking show') === true
+      && log.list().length === 1 && log.list()[0].text === 'put on the cooking show', JSON.stringify(log.list()));
+    check('...with when it was said', log.list()[0].at === t, JSON.stringify(log.list()[0]));
+    check('*** and ONLY the text and the time — nothing else about the moment ***',
+      JSON.stringify(Object.keys(log.list()[0]).sort()) === '["at","text"]', JSON.stringify(log.list()[0]));
+    check('it lives under one key on this device', st.keys().length === 1 && st.keys()[0] === MISSES_KEY,
+      JSON.stringify(st.keys()));
+    t += 1000;
+    log.add('turn on the news');
+    check('oldest first, so it reads like a diary', log.list().map((e) => e.text).join('|')
+      === 'put on the cooking show|turn on the news');
+    check('an empty or blank miss is not a miss', log.add('') === false && log.add('   ') === false
+      && log.list().length === 2);
+  }
+
+  section('*** never audio ***');
+  {
+    const st = fakeStorage();
+    const log = createMissStore({ storage: st, now: () => DAY });
+    check('*** a recording is refused, not stored ***',
+      log.add(new Blob(['RIFF....'], { type: 'audio/wav' })) === false, JSON.stringify(log.list()));
+    check('...so is raw sound data', log.add(new Float32Array(16)) === false && log.add(new ArrayBuffer(8)) === false);
+    check('...and any other object', log.add({ text: 'x' }) === false && log.add(42) === false);
+    check('nothing was written for any of them', st.writes.length === 0, JSON.stringify(st.writes));
+  }
+
+  section('*** deleted on a schedule ***');
+  {
+    check('the default is fourteen days', MISS_DEFAULTS.keepDays === 14, String(MISS_DEFAULTS.keepDays));
+    const st = fakeStorage(); let t = 100 * DAY;
+    const log = createMissStore({ storage: st, now: () => t });
+    log.add('old one');
+    t += 14 * DAY - 1;
+    check('still there just inside fourteen days', log.list().length === 1);
+    t += 2;
+    check('*** gone once it is older than the keep time ***', log.list().length === 0, JSON.stringify(log.list()));
+    check('...and gone from storage too, not just hidden', !String(st.raw(MISSES_KEY) || '').includes('old one'),
+      String(st.raw(MISSES_KEY)));
+  }
+  {
+    const st = fakeStorage(); let t = 100 * DAY;
+    const log = createMissStore({ storage: st, now: () => t, keepDays: 3 });
+    log.add('three day one');
+    t += 4 * DAY;
+    check('the keep time is a setting', log.list().length === 0);
+    const bad = createMissStore({ storage: fakeStorage(), now: () => t, keepDays: 'forever' });
+    check('...and a broken one is the default, not "keep forever"', bad.keepDays() === MISS_DEFAULTS.keepDays,
+      String(bad.keepDays()));
+  }
+  {
+    // A screen that is up for weeks and never hears another miss must still delete the old ones -
+    // pruning only when something new arrives would keep them forever in a quiet room.
+    const st = fakeStorage(); let t = 100 * DAY;
+    const timers = []; let cleared = 0;
+    const log = createMissStore({ storage: st, now: () => t,
+      setInterval: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+      clearInterval: () => { cleared++; } });
+    log.add('left alone');
+    const stop = log.startSchedule();
+    check('the schedule runs on its own timer', timers.length === 1 && timers[0].ms > 0 && timers[0].ms <= DAY,
+      JSON.stringify(timers.map((x) => x.ms)));
+    t += 15 * DAY;
+    timers[0].fn();
+    check('*** and deletes old entries with nobody reading the log ***',
+      !String(st.raw(MISSES_KEY) || '').includes('left alone'), String(st.raw(MISSES_KEY)));
+    stop();
+    check('...and stops when told', cleared === 1);
+  }
+  {
+    const st = fakeStorage(); let t = DAY;
+    const log = createMissStore({ storage: st, now: () => t, maxEntries: 3 });
+    for (const w of ['a one', 'b two', 'c three', 'd four']) { t += 1; log.add(w); }
+    check('it is capped, dropping the oldest', log.list().map((e) => e.text).join('|') === 'b two|c three|d four',
+      JSON.stringify(log.list()));
+    const long = 'word '.repeat(200);
+    log.add(long);
+    check('...and a very long miss is cut short, not stored whole',
+      log.list()[log.list().length - 1].text.length <= MISS_DEFAULTS.maxChars, String(log.list().pop().text.length));
+  }
+
+  section('*** a caregiver can read it and clear it ***');
+  {
+    const st = fakeStorage();
+    const log = createMissStore({ storage: st, now: () => 5 * DAY });
+    log.add('where is my sister');
+    check('readMisses reads what this device kept', readMisses({ storage: st, now: () => 5 * DAY })
+      .map((e) => e.text).join() === 'where is my sister');
+    check('clearMisses empties it', clearMisses({ storage: st }) === true
+      && readMisses({ storage: st, now: () => 5 * DAY }).length === 0 && st.raw(MISSES_KEY) === undefined);
+    check('...and the store sees it cleared too', log.list().length === 0);
+    log.add('again');
+    check('the store method clears as well', log.clear() === true && log.list().length === 0);
+  }
+
+  section('*** a failing store never breaks anything ***');
+  {
+    const broken = { getItem() { throw new Error('denied'); }, setItem() { throw new Error('full'); },
+                     removeItem() { throw new Error('denied'); } };
+    const log = createMissStore({ storage: broken, now: () => DAY });
+    check('adding to a store that throws returns false', log.add('hello there') === false);
+    check('...listing it returns nothing', Array.isArray(log.list()) && log.list().length === 0);
+    check('...and clearing it returns false', log.clear() === false);
+    const none = createMissStore({ storage: null, now: () => DAY });
+    check('no storage at all behaves the same way', none.add('hi there') === false && none.list().length === 0);
+    const st = fakeStorage(); st.setItem(MISSES_KEY, '{not json');
+    const log2 = createMissStore({ storage: st, now: () => DAY });
+    check('a corrupt saved log reads as empty', log2.list().length === 0);
+    check('...and the next miss replaces it cleanly', log2.add('fresh start') === true
+      && log2.list().map((e) => e.text).join() === 'fresh start');
+  }
+
+  section('*** the settings ***');
+  {
+    const on = MISS_FIELDS.find((f) => f.key === 'speechMissLog');
+    const days = MISS_FIELDS.find((f) => f.key === 'speechMissKeepDays');
+    check('keeping the log is a setting', on && on.kind === 'toggle', JSON.stringify(on));
+    check('*** OFF unless somebody turns it on for this person ***', on && on.default === false);
+    check('how long to keep it is a setting, defaulting to the store’s own default',
+      days && days.kind === 'choice' && days.default === MISS_DEFAULTS.keepDays
+        && days.options.some((o) => o.value === MISS_DEFAULTS.keepDays), JSON.stringify(days));
+    check('...and "forever" is not one of the choices', days && days.options.every((o) => Number(o.value) > 0 && Number(o.value) <= 90));
+    const bad = auditFields(MISS_FIELDS.map(normalizeField).filter(Boolean), { type: 'speech' })
+      .filter((f) => f.severity === 'error');
+    check('they pass the settings audit', bad.length === 0, JSON.stringify(bad));
+  }
+
+  window.fetch = realFetch;
+  check('*** and nothing in this suite touched the network ***', fetched === 0, String(fetched));
+
+  document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+})().catch((e) => {
+  console.error(e);
+  document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+});
+</script>
+</body>
+</html>

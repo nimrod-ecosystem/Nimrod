@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>listening cue — the screen shows it heard its name</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #stage{position:relative;width:600px;height:300px;margin:12px 0}
+  #under{position:absolute;inset:0;width:100%;height:100%}
+</style>
+</head>
+<body>
+<h1>listening cue</h1>
+<p>Rows 2.28 and 2.36. When the wake phrase is heard on its own, <code>input_speech.js</code> announces
+<code>speech/listening</code>; three things subscribe on their own - a tone, an on-screen cue, and a
+duck of the video so the microphone can hear the person over it. Each is a setting, each is ON by
+default, and none of them can be left behind: every one has its own watchdog.</p>
+<div id="stage"><button id="under" type="button">a control under the cue</button></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mountListeningCue, attachListeningTone, attachListeningDuck, attachListening,
+         LISTENING_DEFAULTS, LISTENING_FIELDS } from '../listening_cue.js';
+import { attachSpeech, LISTENING_TOPIC } from '../input_speech.js';
+import { createAudioBus, DUCK_TO } from '../audio_bus.js';
+import { createBus } from '../bus.js';
+import { applyTheme, listThemes, contrast } from '../theme.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const near = (a, b) => typeof a === 'number' && Math.abs(a - b) < 1e-9;
+
+function fakeClock() {
+  let t = 0; let n = 1; const timers = new Map();
+  return {
+    setTimer: (fn, ms) => { const id = n++; timers.set(id, { at: t + ms, fn }); return id; },
+    clearTimer: (id) => { timers.delete(id); },
+    advance(ms) { t += ms; for (const [id, x] of [...timers]) if (x.at <= t) { timers.delete(id); x.fn(); } },
+    pending: () => timers.size,
+  };
+}
+const rgb = (s) => { const m = String(s).match(/rgba?\(([^)]+)\)/); if (!m) return null;
+  const p = m[1].split(',').map((x) => parseFloat(x)); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+
+(async () => {
+  try {
+    const stage = document.getElementById('stage');
+    const under = document.getElementById('under');
+
+    section('*** the defaults are settings, and all three are ON ***');
+    check('the visual cue is on by default', LISTENING_DEFAULTS.visual === true);
+    check('the tone is on by default (row 2.36 asks whether ON for everyone; shipped ON, flagged)',
+      LISTENING_DEFAULTS.tone === true);
+    check('ducking the video while listening is on by default', LISTENING_DEFAULTS.duck === true);
+    check('...to the bus’s own duck depth unless somebody sets another', LISTENING_DEFAULTS.duckTo === DUCK_TO);
+    const keys = LISTENING_FIELDS.map((f) => f.key).join(',');
+    check('each is a setting', ['listenVisual', 'listenTone', 'listenDuck'].every((k) => keys.includes(k)), keys);
+    const bad = auditFields(LISTENING_FIELDS.map(normalizeField).filter(Boolean), { type: 'speech' })
+      .filter((f) => f.severity === 'error');
+    check('they pass the settings audit', bad.length === 0, JSON.stringify(bad));
+
+    section('*** the on-screen cue ***');
+    const bus = createBus();
+    const clock = fakeClock();
+    const cue = mountListeningCue(stage, { bus, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const el = stage.querySelector('.listen-cue');
+    // The component loads its own stylesheet; wait for it rather than guessing.
+    for (let i = 0; i < 50 && getComputedStyle(el).position !== 'fixed'; i++) await sleep(50);
+    check('it mounts, hidden', el && el.hidden === true && cue.shown() === false);
+    check('its stylesheet arrived', getComputedStyle(el).position === 'fixed', getComputedStyle(el).position);
+    check('it is announced politely to a screen reader, never as an alert',
+      el.getAttribute('role') === 'status' && el.getAttribute('aria-live') === 'polite');
+    under.focus();
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+    check('*** the wake phrase shows it ***', el.hidden === false && cue.shown() === true);
+    check('...saying so in a word', /listening/i.test(el.textContent), el.textContent);
+    check('*** it takes no focus — it is not modal ***', document.activeElement === under,
+      document.activeElement && document.activeElement.id);
+    const box = el.getBoundingClientRect();
+    check('it has a real size on screen', box.width > 40 && box.height > 20, `${box.width}x${box.height}`);
+    // Put the control right under the cue and aim at the cue's middle.
+    under.style.position = 'fixed'; under.style.inset = '0';
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    check('*** it never blocks input: a press on it reaches whatever is underneath ***',
+      hit === under, hit && (hit.id || hit.className));
+    under.style.position = ''; under.style.inset = '';
+    bus.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+    check('*** a command hides it at once ***', el.hidden === true && cue.shown() === false);
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+    bus.publish(LISTENING_TOPIC, { on: false, reason: 'timeout' });
+    check('the window running out hides it', el.hidden === true);
+
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 1000 });
+    clock.advance(1000 + LISTENING_DEFAULTS.graceMs - 1);
+    check('with no closing event, it stays up a little past the window', el.hidden === false);
+    clock.advance(1);
+    check('*** and then hides itself: a lost event never leaves it on screen ***', el.hidden === true);
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake' });
+    clock.advance(LISTENING_DEFAULTS.maxMs);
+    check('...even an event with no length on it', el.hidden === true);
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 1e9 });
+    clock.advance(LISTENING_DEFAULTS.maxMs);
+    check('...or an absurd one', el.hidden === true);
+    check('no timer is left running', clock.pending() === 0, String(clock.pending()));
+
+    section('*** reduced motion, and every theme ***');
+    {
+      bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      const dot = el.querySelector('.lc-dot');
+      const moving = getComputedStyle(dot).animationName;
+      cue.setReducedMotion(true);
+      check('it has a gentle pulse normally', moving && moving !== 'none', moving);
+      check('*** and none at all when motion is reduced ***',
+        getComputedStyle(dot).animationName === 'none', getComputedStyle(dot).animationName);
+      check('...still showing, just still', el.hidden === false);
+      cue.setReducedMotion(false);
+      const css = [...document.styleSheets].find((s) => /listening_cue\.css/.test(s.href || ''));
+      let mq = false;
+      try { mq = [...css.cssRules].some((r) => r.media && /prefers-reduced-motion:\s*reduce/.test(r.media.mediaText)); } catch { mq = false; }
+      check('...and the system’s own reduced-motion setting is honoured in the stylesheet', mq);
+
+      const low = [];
+      const lowDot = [];
+      for (const t of listThemes()) {
+        applyTheme(document.documentElement, t.id);
+        const cs = getComputedStyle(el);
+        const fg = rgb(cs.color); const bg = rgb(cs.backgroundColor);
+        const dc = rgb(getComputedStyle(dot).backgroundColor);
+        if (!fg || !bg || bg.a < 1) { low.push(`${t.id}: bg ${cs.backgroundColor}`); continue; }
+        const c = contrast(hex(fg), hex(bg));
+        if (c < 4.5) low.push(`${t.id} ${c.toFixed(2)}`);
+        const d = dc ? contrast(hex(dc), hex(bg)) : 0;
+        if (d < 3) lowDot.push(`${t.id} ${d.toFixed(2)}`);
+      }
+      // Measured 2026-09-30: lowest words 10.34:1 (fall), lowest dot 3.15:1 (default) - the dot
+      // is the theme's own accent on its own surface, so it moves only if a palette does.
+      applyTheme(document.documentElement, 'default');
+      check(`*** its words are readable on every theme (4.5:1 or better, measured on the rendered cue, ${listThemes().length} themes) ***`,
+        low.length === 0, low.join(' · '));
+      check('...and its dot stands out from it (3:1, the bar for a non-text signal)', lowDot.length === 0, lowDot.join(' · '));
+      bus.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+    }
+    cue.destroy();
+    check('destroyed, it is gone from the page', !stage.querySelector('.listen-cue'));
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+    check('...and a later event does not bring it back', !stage.querySelector('.listen-cue'));
+
+    section('*** the tone ***');
+    {
+      const b = createBus(); const played = [];
+      const tone = attachListeningTone({ bus: b, play: () => played.push(1) });
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      check('the wake phrase plays one tone', played.length === 1);
+      b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+      check('...and the window closing plays none (the command has its own confirmation)', played.length === 1);
+      tone.destroy();
+      const b2 = createBus();
+      attachListeningTone({ bus: b2, play: () => { throw new Error('no audio'); } });
+      let ok = true;
+      try { b2.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 }); } catch { ok = false; }
+      check('a tone that fails is not an error anybody sees', ok);
+    }
+
+    section('*** the duck: the video drops while the microphone listens, and always comes back ***');
+    {
+      const b = createBus(); const audio = createAudioBus(); const c = fakeClock();
+      const lv = [];
+      audio.register('video', { tier: 'media', onGain: (l) => lv.push(l) });
+      audio.setActive('video', true);
+      const duck = attachListeningDuck({ bus: b, audio, setTimer: c.setTimer, clearTimer: c.clearTimer });
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      check('*** listening ducks the video ***', near(lv[lv.length - 1], DUCK_TO), JSON.stringify(lv));
+      b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+      check('...and a command brings it straight back', near(lv[lv.length - 1], 1), JSON.stringify(lv));
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      c.advance(8000 + LISTENING_DEFAULTS.graceMs);
+      check('*** a closing event that never arrives cannot leave it ducked: the watchdog restores it ***',
+        near(lv[lv.length - 1], 1), JSON.stringify(lv));
+      check('...and leaves no timer behind', c.pending() === 0, String(c.pending()));
+      duck.destroy();
+      check('destroyed, it unregisters from the bus', !('speech-listening' in audio.state()),
+        JSON.stringify(Object.keys(audio.state())));
+    }
+    {
+      const b = createBus(); const audio = createAudioBus(); const lv = [];
+      audio.register('video', { tier: 'media', onGain: (l) => lv.push(l) });
+      audio.setActive('video', true);
+      attachListeningDuck({ bus: b, audio, duckTo: 0.2 });
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      check('how far it ducks is a setting (measured on the bench, not guessed)', near(lv[lv.length - 1], 0.2),
+        JSON.stringify(lv));
+      b.publish(LISTENING_TOPIC, { on: false, reason: 'timeout' });
+    }
+    {
+      const b = createBus();
+      attachListeningDuck({ bus: b, audio: { register() { throw new Error('x'); }, setActive() { throw new Error('y'); } } });
+      let ok = true;
+      try { b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 }); } catch { ok = false; }
+      check('a broken audio bus is not an error, and not silence', ok);
+    }
+
+    section('*** each one is a setting ***');
+    {
+      const b = createBus(); const audio = createAudioBus(); const played = []; const lv = [];
+      audio.register('video', { tier: 'media', onGain: (l) => lv.push(l) });
+      audio.setActive('video', true);
+      const all = attachListening({ bus: b, audio, host: stage, play: () => played.push(1),
+        settings: { listenTone: false, listenVisual: false, listenDuck: false } });
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      check('all three off: no tone, no cue, no duck',
+        played.length === 0 && !stage.querySelector('.listen-cue') && near(lv[lv.length - 1], 1),
+        `${played.length} ${!!stage.querySelector('.listen-cue')} ${lv}`);
+      b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+      all.destroy();
+      const all2 = attachListening({ bus: b, audio, host: stage, play: () => played.push(1), settings: {} });
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      check('nothing set: all three on', played.length === 1 && stage.querySelector('.listen-cue')?.hidden === false
+        && near(lv[lv.length - 1], DUCK_TO), `${played.length} ${lv}`);
+      b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+      all2.destroy();
+      check('destroying the lot removes the cue', !stage.querySelector('.listen-cue'));
+    }
+
+    section('*** end to end: a real wake phrase through input_speech ***');
+    {
+      const b = createBus(); let feed = null;
+      const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, running: false };
+      const input = { down() {}, up() {} };
+      const played = [];
+      const all = attachListening({ bus: b, host: stage, play: () => played.push(1), settings: {} });
+      const speech = attachSpeech(input, { recognizer: rec, bus: b, confirm: 'off', tone: () => {} });
+      speech.start();
+      feed('Computer, please.');
+      const el2 = stage.querySelector('.listen-cue');
+      check('*** “computer please” on its own: a tone and the cue ***', played.length === 1 && el2 && el2.hidden === false);
+      feed('pause');
+      check('*** the command fires and the cue goes ***', el2.hidden === true);
+      speech.destroy(); all.destroy();
+    }
+
+    document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+  } catch (e) {
+    console.error(e);
+    document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+  }
+})();
+</script>
+</body>
+</html>
