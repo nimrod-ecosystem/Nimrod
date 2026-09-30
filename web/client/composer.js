@@ -95,6 +95,10 @@ export function mountComposer(root, {
     }
 
     const { unplaced } = placement(layout, modules());
+    // Stage R: modules PLACED freely (in the scene, flat on screen, overlay) are not in this grid and
+    // this composer does not edit them (the edit windows do) -- but it names them, so nothing sits on
+    // a screen that the page arranging that screen does not mention.
+    const freely = (layout.placed || []).map((p) => modules().find((m) => m.id === p.id)).filter(Boolean);
     body.innerHTML = `
       <div class="c-presets" data-presets>
         ${PRESETS.map((p) =>
@@ -106,6 +110,8 @@ export function mountComposer(root, {
       <p class="c-note">${unplaced.length
         ? `Not on screen: ${unplaced.map((m) => esc(titleOf(m.type))).join(', ')} — still saved, just not shown.`
         : 'Every module is placed.'}</p>
+      ${freely.length ? `<p class="c-note" data-freely>Placed freely: ${freely.map((m) => esc(titleOf(m.type))).join(', ')}
+        — moved with the edit windows, not in this grid.</p>` : ''}
       <div class="c-actions">
         ${autosave ? '' : `<button class="c-btn c-primary" data-save ${dirty ? '' : 'disabled'}>Save layout</button>`}
         <button class="c-btn" data-open>${autosave ? 'Open' : 'Save &amp; open'}</button>
@@ -117,7 +123,9 @@ export function mountComposer(root, {
       b.addEventListener('click', () => {
         // Keep what still fits when the shape changes; a narrower preset drops the tail
         // rather than silently reshuffling everything the person just arranged.
-        layout = normalizeLayout({ preset: b.dataset.preset, slots: layout.slots }, modules().map((m) => m.id));
+        // `...layout`: the placed list and the scene ride along (Stage R) -- this line used to rebuild
+        // the layout from preset + slots alone, which dropped them on the next autosave.
+        layout = normalizeLayout({ ...layout, preset: b.dataset.preset, slots: layout.slots }, modules().map((m) => m.id));
         dirty = true; render(); queueSave();
       });
     }
@@ -129,7 +137,9 @@ export function mountComposer(root, {
         // One instance can only be in one place: clear it wherever else it sat.
         if (id) for (let k = 0; k < slots.length; k++) if (slots[k] === id) slots[k] = null;
         slots[i] = id;
-        layout = normalizeLayout({ preset: layout.preset, slots }, modules().map((m) => m.id));
+        // A module put in a slot leaves the free placement (one place per instance: normalizeLayout's
+        // rule, the slot wins); everything else placed freely rides along.
+        layout = normalizeLayout({ ...layout, slots }, modules().map((m) => m.id));
         dirty = true; render(); queueSave();
       });
     }
@@ -156,7 +166,10 @@ export function mountComposer(root, {
       open(current.id);
     });
     el('[data-clear]').addEventListener('click', () => {
-      layout = normalizeLayout({ preset: layout.preset, slots: [] }, []);
+      // Clear empties the GRID. What is placed freely stays: this composer does not show it as
+      // something Clear would remove, and removing what a button does not show is a surprise. (Stage R;
+      // on Mike's list with the other side argued.) The ids are re-checked against the modules.
+      layout = normalizeLayout({ ...layout, slots: [] }, modules().map((m) => m.id));
       dirty = true; render(); queueSave();
     });
   }

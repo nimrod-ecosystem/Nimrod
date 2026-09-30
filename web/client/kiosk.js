@@ -33,7 +33,7 @@ import { createAudioBus } from './audio_bus.js';
 import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
-import { createArrangement } from './arrangement.js';
+import { createArrangement, layoutChange } from './arrangement.js';
 import { barModel, drawChips, drawHelpButton, mountBarHelp, helpOn } from './transport_bar.js';
 import { createLongPress } from './input_longpress.js';
 import {
@@ -1042,12 +1042,30 @@ export async function mountKiosk(root, {
   // differs from the one I booted with" is true of every real screen that has one, and the reaction
   // is a rebuild, which boots with no layout, which differs again. That is a loop, and it was one.
   if (!previewLayout && !embedded) {
+    // *** STAGE R (2026-09-30): A PLACEMENT-ONLY CHANGE IS APPLIED IN PLACE, NOT BY A RELOAD. ***
+    // With free placement every saved drag, typed X or snap changes `layout.placed`, and this watch
+    // would reload the screen under somebody's finger on every move. `layoutChange` (layout.js) says
+    // which kind of change it is: 'placement' goes to the arrangement's `applyPlaced` (the moved module
+    // moves; nothing is remounted, nothing reloads); anything else reloads exactly as before -- and so
+    // does a placement change the arrangement refuses. 'none' is exactly the old signature equality.
+    // (`bootLayoutSig` keeps its name: kiosk_test's 09-15 structural check anchors on it. The watch
+    // now compares against a COPY of the boot value, advanced by each placement applied in place.)
     const bootLayoutSig = JSON.stringify(savedLayout || null);
+    let mountedLayout = JSON.parse(bootLayoutSig);
     let reloadedForLayout = false;
     settings.subscribe((s) => {
       if (reloadedForLayout) return;
-      const nowSig = JSON.stringify((s.kiosk || {}).layout || null);
-      if (nowSig !== bootLayoutSig) { reloadedForLayout = true; reloadPage(); }
+      const now = (s.kiosk || {}).layout || null;
+      const change = layoutChange(mountedLayout, now);
+      if (change === 'none') return;
+      if (change === 'placement') {
+        mountedLayout = now;
+        Promise.resolve(arr.applyPlaced(now)).then((r) => {
+          if (r && r.applied === false && !reloadedForLayout) { reloadedForLayout = true; reloadPage(); }
+        }).catch((err) => console.error('kiosk: placement', err));
+        return;
+      }
+      reloadedForLayout = true; reloadPage();
     });
   }
 
@@ -1545,7 +1563,7 @@ export async function mountKiosk(root, {
   function roomRec() {
     const f = focusedRec();
     if (f?.type === 'room') return f;
-    return [arr.stageRec(), ...(arr.slotRecs || [])].find((r) => r?.type === 'room') || null;
+    return [arr.stageRec(), ...(arr.slotRecs || []), ...(arr.placedRecs || [])].find((r) => r?.type === 'room') || null;
   }
   // "Room reactions…": the room's own editor (room_notify_editor.js), opened in THAT room -- addressed to
   // its instance (bus.js `instanceTopic`), so a screen with two rooms opens one. The menu closes first:
@@ -2169,7 +2187,8 @@ export async function mountKiosk(root, {
   // Swapping YouTube for the photos she is already looking at would change nothing and look
   // like the recovery did nothing.
   function fallbackFor(faultType) {
-    const onScreen = new Set([arr.stageRec()?.type, ...arr.slotRecs.map((r) => r.type)].filter(Boolean));
+    const onScreen = new Set([arr.stageRec()?.type, ...arr.slotRecs.map((r) => r.type),
+      ...(arr.placedRecs || []).map((r) => r.type)].filter(Boolean));
     return chooseFallback(recoveryCfg().fallbacks, listManifests(),
                           { exclude: [faultType, ...onScreen] });
   }

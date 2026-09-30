@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>placement — modules placed freely: in the scene, flat on screen, overlay</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host{position:fixed;left:0;top:0;width:800px;height:520px;visibility:hidden;pointer-events:none}
+  .box{position:relative;width:640px;height:420px;margin:8px 0;border:1px solid #999}
+  .box .kiosk{position:absolute}
+</style>
+</head>
+<body>
+<h1>placement — step 6 Stage R: free placement</h1>
+
+<div class="note">
+  Mike, 2026-09-30: free placement is back. A module is either <b>snapped</b> (a grid slot, today's
+  <code>layout.slots</code>) or <b>placed</b> (<code>layout.placed</code>: in the scene, flat on the
+  screen, or an overlay pinned above everything). This suite proves the three breakers the plan names
+  are gone (layout.js dropped the key, the composer's save dropped it, the 09-12 watch reloaded on every
+  move), that the arrangement mounts, focuses, watches, recovers and removes placed modules the way it
+  does slotted ones, that a placement change is applied IN PLACE (the moved module moves; nothing is
+  remounted, nothing reloads), and that the edit windows drive placed modules through the dashboard.
+</div>
+
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  normalizeLayout, isArranged, resolveLayout, placement, layoutChange, PLACED_DEFAULTS, placedGeometry,
+} from '../layout.js';
+import { createArrangement } from '../arrangement.js';
+import { mountComposer } from '../composer.js';
+import { createBus } from '../bus.js';
+import { mountModule, registerModule } from '../module.js';
+import '../modules/view.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { mountKiosk } from '../kiosk.js';
+import { barModel, drawChips } from '../transport_bar.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 4000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { if (fn()) return true; await sleep(25); }
+  return false;
+};
+const J = (v) => JSON.stringify(v);
+
+const M = {
+  p1: { id: 'p1', type: 'photos' }, t1: { id: 't1', type: 'trivia' }, w1: { id: 'w1', type: 'wordforge' },
+  c1: { id: 'c1', type: 'camera' }, k1: { id: 'k1', type: 'clock' },
+};
+
+// The shell's hands, faked and recorded (the same shape arrangement_test uses).
+function make({ modules = [], failTypes = [] } = {}) {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
+  const kioskEl = el('kiosk'), stageEl = el('k-stage'), mirrorEl = el('k-mirror'),
+        clockEl = el('k-clock'), ambientEl = el('k-ambient');
+  kioskEl.style.cssText = 'position:absolute;inset:0';
+  kioskEl.append(stageEl, mirrorEl, clockEl, ambientEl);
+  mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
+  const log = { mounts: [], destroyed: [], watched: [], renders: 0, setFocus: [], forgot: [] };
+  let focused = null;
+  const router = { focused: () => focused, setFocus: (id) => { focused = { id }; log.setFocus.push(id); },
+                   focusNext() {}, reachable: () => [] };
+  let data = {};
+  const settings = { get: () => data, set: (p) => { data = { ...data, ...p }; } };
+  const bus = createBus();
+  const arr = createArrangement({
+    bus, user: 'u', storage: { getItem: () => null, setItem() {}, removeItem() {} }, embedded: true, settings,
+    kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+    mountInstance: async (def, h) => {
+      if (failTypes.includes(def.type)) throw new Error(`${def.type} will not start`);
+      log.mounts.push(def.id);
+      h.textContent = def.id;
+      return { id: def.id, type: def.type, title: def.type.toUpperCase(), el: h,
+               instance: { manifest: { title: def.type }, destroy: () => log.destroyed.push(def.id), onResize() {} },
+               state: { get: () => ({}), set() {}, destroy() {} }, events: { destroy() {} } };
+    },
+    destroyRec: (rec) => { if (!rec) return; rec.instance.destroy(); },
+    watchRec: (rec) => { if (rec) log.watched.push(rec.id); return rec; },
+    renderMods: () => { log.renders++; },
+    runtime: () => ({ router }), health: () => ({ forget: (id) => log.forgot.push(id) }), profileId: () => 'scr',
+  });
+  arr.setProfile({ id: 'scr', modules });
+  return { arr, log, kioskEl, stageEl, mirrorEl, bus, focus: (id) => { focused = id ? { id } : null; } };
+}
+async function boot(t, saved) {
+  t.arr.resolve(saved); t.arr.partition(); await t.arr.mountOverlays();
+  if (t.arr.layout()) await t.arr.mountLayout(); else await t.arr.showPrimary(0);
+}
+const wrapOf = (t, id) => t.kioskEl.querySelector(`[data-placed="${id}"]`);
+
+(async () => {
+try {
+  // =====================================================================================================
+  section('1. layout.js keeps `placed` (breaker 1), and a placed-only layout is a real layout');
+  {
+    const ids = ['p1', 't1', 'w1', 'k1'];
+    const l = normalizeLayout({ preset: 'full', slots: ['p1'], placed: [
+      { id: 't1', place: 'screen', x: 20, y: 30, w: 25, h: 40, layer: 2, junk: 'x' },
+      { id: 'w1', place: 'overlay', x: 150, y: -4, rot: 190, scale: 9999 },
+      { id: 'k1', place: 'scene', x: 10, y: 60, surface: 'left', slot: 'cab' },
+      { id: 'GONE', place: 'screen' },
+      { id: 't1', place: 'overlay' },                          // twice: the first one wins
+      { id: 'p1', place: 'screen' },                           // already in a slot: the slot wins
+    ] }, ids);
+    check('*** normalizeLayout keeps the placed list ***', Array.isArray(l.placed) && l.placed.length === 3, J(l));
+    check('placed ids are kept in order; unknown, duplicate and slotted ids are dropped',
+      l.placed?.map((p) => p.id).join() === 't1,w1,k1', l.placed?.map((p) => p.id).join());
+    check('only known keys are kept (no junk rides along into the saved doc)',
+      l.placed && !('junk' in l.placed[0]) && l.placed[0].w === 25 && l.placed[0].layer === 2, J(l.placed?.[0]));
+    check('numbers are brought into range: x/y 0-100, rotation wraps, scale 10-400',
+      l.placed?.[1].x === 100 && l.placed[1].y === 0 && l.placed[1].rot === -170 && l.placed[1].scale === 400, J(l.placed?.[1]));
+    check('a scene entry keeps its surface and its slot', l.placed?.[2].surface === 'left' && l.placed[2].slot === 'cab', J(l.placed?.[2]));
+    check('an unknown place is flat on the screen, not dropped',
+      normalizeLayout({ preset: 'full', slots: [], placed: [{ id: 't1', place: 'wall' }] }, ids).placed?.[0].place === 'screen');
+    check('*** a layout with no placed list is exactly {preset, slots}, as it always was ***',
+      J(normalizeLayout({ preset: 'side', slots: ['p1', 't1'] }, ids)) === J({ preset: 'side', slots: ['p1', 't1'] }));
+    check('a scene is kept when it is a room', J(normalizeLayout({ slots: ['p1'], scene: { kind: 'room', preset: 'theRoom', x: 1 } }, ids).scene)
+      === J({ kind: 'room', preset: 'theRoom' }));
+    check('*** isArranged: a layout with ONLY placed modules is arranged ***',
+      isArranged({ preset: 'full', slots: [null], placed: [{ id: 't1' }] }) === true);
+    check('isArranged: empty slots and an empty placed list is still "no layout"',
+      isArranged({ preset: 'full', slots: [null], placed: [] }) === false);
+    const r = resolveLayout({ preset: 'full', slots: [null], placed: [{ id: 't1', place: 'screen' }] }, [M.p1, M.t1]);
+    check('*** resolveLayout: a placed-only layout resolves to a layout, not to null (the stage fallback) ***',
+      r && r.placed?.[0]?.id === 't1', J(r));
+    const r2 = resolveLayout({ preset: 'side', slots: ['GONE', 'p1'], placed: [{ id: 't1', place: 'screen' }] }, [M.p1, M.t1, M.w1]);
+    check('the orphan repair never takes a PLACED module as the spare',
+      r2?.slots.join() === 'w1,p1' && r2.placed?.[0].id === 't1', J(r2));
+    const pl = placement({ preset: 'full', slots: ['p1'], placed: [{ id: 't1' }] }, [M.p1, M.t1, M.w1]);
+    check('placement(): a placed module is not "unplaced"', pl.unplaced.map((m) => m.id).join() === 'w1');
+    const g = placedGeometry({ id: 'x', place: 'screen' });
+    check('placedGeometry fills the defaults it does not store',
+      g.x === PLACED_DEFAULTS.x && g.w === PLACED_DEFAULTS.w && g.scale === 100 && g.rot === 0 && g.layer === 0, J(g));
+  }
+
+  section('1b. layoutChange: which changes may be applied in place');
+  {
+    const A = { preset: 'side', slots: ['p1', 't1'], placed: [{ id: 'w1', place: 'screen', x: 10, y: 10 }] };
+    const moved = { ...A, placed: [{ id: 'w1', place: 'screen', x: 40, y: 10 }] };
+    check('the same layout: none', layoutChange(A, JSON.parse(J(A))) === 'none');
+    check('null and null: none', layoutChange(null, undefined) === 'none');
+    check('*** a placed module moved: placement ***', layoutChange(A, moved) === 'placement');
+    check('a placed module added or removed: placement',
+      layoutChange(A, { ...A, placed: [] }) === 'placement'
+      && layoutChange(A, { ...A, placed: [...A.placed, { id: 'k1' }] }) === 'placement');
+    check('a slot changed: grid', layoutChange(A, { ...A, slots: ['t1', 'p1'] }) === 'grid');
+    check('the preset changed: grid', layoutChange(A, { ...A, preset: 'stack' }) === 'grid');
+    check('the scene changed: grid (a different room is a rebuild)', layoutChange(A, { ...A, scene: { kind: 'room' } }) === 'grid');
+    check('*** no layout -> a placed-only layout: grid (the stage goes away) ***',
+      layoutChange(null, { preset: 'full', slots: [null], placed: [{ id: 'w1' }] }) === 'grid');
+    check('a placed-only layout -> its last placed module removed: grid (the stage comes back)',
+      layoutChange({ preset: 'full', slots: [null], placed: [{ id: 'w1' }] }, { preset: 'full', slots: [null], placed: [] }) === 'grid');
+  }
+
+  // =====================================================================================================
+  section('2. the composer keeps `placed` through every change and every save (breaker 2)');
+  {
+    const host = document.getElementById('host'); host.innerHTML = '';
+    let saved = { kiosk: { layout: { preset: 'full', slots: [null], placed: [{ id: 't1', place: 'screen', x: 30, y: 30 }] } } };
+    const handle = { load: () => Promise.resolve(), get: () => saved, set: (p) => { saved = { ...saved, ...p }; },
+                     flush: () => Promise.resolve(), destroy() {} };
+    const prof = { id: 'scr', name: 'S', modules: [M.p1, M.t1] };
+    const c = mountComposer(host, { profiles: { list: async () => [prof], get: async () => prof },
+      makeSettings: () => handle, autosave: true, saveDelayMs: 1, embedded: true });
+    await c.refresh();
+    check('the composer loads the placed list', c.layout().placed?.[0]?.id === 't1', J(c.layout()));
+    host.querySelector('[data-preset="side"]').click();
+    check('changing the preset keeps it', c.layout().placed?.[0]?.id === 't1', J(c.layout()));
+    await c.settle();
+    check('*** a save keeps it: the saved layout still places t1 ***',
+      saved.kiosk.layout?.placed?.[0]?.id === 't1', J(saved.kiosk.layout));
+    const sel = host.querySelector('[data-assign="0"]'); sel.value = 'p1'; sel.dispatchEvent(new Event('change'));
+    await c.settle();
+    check('assigning a slot keeps it', saved.kiosk.layout?.placed?.[0]?.id === 't1' && saved.kiosk.layout.slots[0] === 'p1',
+      J(saved.kiosk.layout));
+    host.querySelector('[data-clear]').click();
+    await c.settle();
+    check('*** Clear empties the GRID and keeps what was placed, so the screen is still arranged (not null) ***',
+      saved.kiosk.layout && saved.kiosk.layout.placed?.[0]?.id === 't1' && !saved.kiosk.layout.slots.some(Boolean),
+      J(saved.kiosk.layout));
+    check('the composer names the placed module, so nothing is placed out of sight',
+      /Placed freely: trivia/.test(host.textContent), host.textContent.slice(0, 400));
+    c.destroy();
+  }
+
+  // =====================================================================================================
+  section('3. the arrangement mounts placed modules: flat on screen, overlay, and on a plain scene');
+  {
+    const t = make({ modules: [M.p1, M.t1, M.w1, M.k1] });
+    await boot(t, { preset: 'full', slots: ['p1'], placed: [
+      { id: 't1', place: 'screen', x: 25, y: 40, w: 30, h: 20, layer: 3 },
+      { id: 'w1', place: 'overlay', x: 50, y: 10, w: 60, h: 12 },
+      { id: 'k1', place: 'scene', x: 80, y: 70 },
+    ] });
+    check('the slot and all three placed modules mounted', ['p1', 't1', 'w1', 'k1'].every((id) => t.log.mounts.includes(id)),
+      t.log.mounts.join());
+    check('placedRecs lists them', t.arr.placedRecs.map((r) => r.id).sort().join() === 'k1,t1,w1');
+    const layer = (p) => t.kioskEl.querySelector(`.k-placed[data-place="${p}"]`);
+    check('*** each place has its own layer on the dashboard ***', layer('screen') && layer('overlay') && layer('scene'));
+    check('flat-on-screen is on the screen layer', layer('screen')?.contains(wrapOf(t, 't1')));
+    check('overlay is on the overlay layer', layer('overlay')?.contains(wrapOf(t, 'w1')));
+    check('scene (no room) is on the scene layer', layer('scene')?.contains(wrapOf(t, 'k1')));
+    const z = (p) => getComputedStyle(layer(p)).zIndex;
+    check('*** depth: scene < the grid < screen < overlay, on the one depth scale (layers.css) ***',
+      Number(z('scene')) < 200 && Number(z('screen')) > 200 && Number(z('overlay')) > Number(z('screen'))
+      && Number(z('overlay')) < 500, `scene=${z('scene')} screen=${z('screen')} overlay=${z('overlay')}`);
+    const w = wrapOf(t, 't1');
+    check('geometry: x/y is the CENTRE, in % of the dashboard; w/h in %',
+      w?.style.left === '25%' && w.style.top === '40%' && w.style.width === '30%' && w.style.height === '20%'
+      && /translate\(-50%, -50%\)/.test(w.style.transform), `${w?.style.cssText}`);
+    check('layer orders it within its layer', w?.style.zIndex === '3');
+    check('the placed box is a mod-box with a .k-mod host (modules size against it)',
+      w?.classList.contains('mod-box') && w.querySelector(':scope > .k-mod'));
+    check('it is named by kind, like a cell', w?.dataset.kind === 'trivia');
+    check('*** every placed record is health-watched ***', ['t1', 'w1', 'k1'].every((id) => t.log.watched.includes(id)));
+    check('*** the grid still mounts its slot beside them ***', t.arr.slotRecs.map((r) => r.id).join() === 'p1');
+  }
+
+  section('3b. focus, partition, recFor, showModule, recovery include placed modules');
+  {
+    const t = make({ modules: [M.p1, M.t1, M.w1, M.c1] });
+    await boot(t, { preset: 'full', slots: ['p1'], placed: [
+      { id: 't1', place: 'screen' }, { id: 'w1', place: 'overlay' }, { id: 'c1', place: 'screen', x: 80 },
+    ] });
+    check('*** a camera PLACED is a panel, not the HUD mirror (the rule slots follow) ***',
+      t.arr.cameraRec() === null && t.arr.recFor('c1')?.type === 'camera', `camera=${t.arr.cameraRec()?.id}`);
+    const ring = t.arr.focusRing().map((m) => m.id).join();
+    check('*** focusRing: the overlay first (it takes the scan first), then the slots, then the screen ***',
+      ring === 'w1,p1,t1,c1', ring);
+    check('focus starts on the first stop of the ring, and the ring is painted there',
+      t.log.setFocus[0] === 'w1' && wrapOf(t, 'w1')?.dataset.focused === '1', `${t.log.setFocus[0]}`);
+    t.focus('t1');
+    check('focusedRec follows the router onto a placed module', t.arr.focusedRec()?.id === 't1');
+    t.arr.focusPlaced('t1');
+    check('focusPlaced paints a placed module and clears the others',
+      wrapOf(t, 't1')?.dataset.focused === '1' && !wrapOf(t, 'w1')?.dataset.focused);
+    check('unplacedDefs: a placed module is not unplaced', t.arr.unplacedDefs().length === 0);
+    check('showModule finds a placed type', (await t.arr.showModule('trivia')) === true && t.log.setFocus.at(-1) === 't1');
+    await t.arr.showUnplaced(M.w1);
+    check('*** showUnplaced on a PLACED module focuses it instead of swapping it into a slot ***',
+      t.arr.layout().slots.join() === 'p1' && t.log.setFocus.at(-1) === 'w1' && !t.log.destroyed.includes('w1'));
+    const before = t.arr.recFor('t1');
+    check('recFor finds a placed record', before?.id === 't1');
+    check('remountPanel remounts a placed module in the same host',
+      (await t.arr.remountPanel('t1')) === true && t.arr.recFor('t1') !== before && t.arr.recFor('t1').el === before.el);
+    check('swapPanel puts another type in a placed module\'s place and forgets its health',
+      (await t.arr.swapPanel('t1', 'clock')) === true && t.arr.recFor('t1')?.type === 'clock' && t.log.forgot.includes('t1'));
+    check('panelRecs is every panel, in ring order', t.arr.panelRecs().map((r) => r.id).join() === 'w1,p1,t1,c1');
+    // The bar (transport_bar.js, both bars draw from it): a placed module's chip is a PLACED chip --
+    // pressing it focuses the module -- not the "not in this screen's arrangement" (k-off) chip.
+    const mods = document.createElement('div');
+    drawChips(mods, barModel(t.arr, { router: { reachable: () => [] } }));
+    const chip = (id) => mods.querySelector(`[data-id="${id}"]`);
+    check('*** the bar draws a placed module as ON the screen (not k-off) ***',
+      chip('w1') && !chip('w1').classList.contains('k-off') && chip('t1') && !chip('t1').classList.contains('k-off'),
+      mods.innerHTML.slice(0, 300));
+    chip('w1')?.click();
+    check('...and pressing it focuses that module', t.log.setFocus.at(-1) === 'w1');
+  }
+
+  section('3c. failures, the empty sentence, applyModules and destroy');
+  {
+    const t = make({ modules: [M.t1, M.w1], failTypes: ['wordforge'] });
+    await boot(t, { preset: 'full', slots: [null], placed: [{ id: 't1', place: 'screen' }, { id: 'w1', place: 'overlay' }] });
+    const n = wrapOf(t, 'w1')?.querySelector('[data-panel-failed="wordforge"]');
+    check('a placed module that will not start says so in its own box', n && /could not start/.test(n.textContent));
+    check('*** a placed-only screen is NOT an empty screen: no "panels were removed" sentence ***',
+      !t.stageEl.querySelector('[data-empty]'), t.stageEl.querySelector('[data-empty]')?.textContent);
+    const f = make({ modules: [M.w1], failTypes: ['wordforge'] });
+    await boot(f, { preset: 'full', slots: [null], placed: [{ id: 'w1', place: 'screen' }] });
+    const e = f.stageEl.querySelector('[data-empty]');
+    check('...but when every placed module failed, it says what could not start',
+      e && e.textContent === 'Nothing on this screen could start (wordforge). Press Home to check it.', e?.textContent);
+    t.arr.setProfile({ id: 'scr-B', modules: [M.p1] });
+    t.arr.resolve({ preset: 'full', slots: ['p1'] });
+    await t.arr.applyModules();
+    check('applyModules tears placed modules down and removes their layers',
+      t.log.destroyed.includes('t1') && t.arr.placedRecs.length === 0 && !t.kioskEl.querySelector('.k-placed'));
+    const d = make({ modules: [M.t1] });
+    await boot(d, { preset: 'full', slots: [null], placed: [{ id: 't1', place: 'screen' }] });
+    d.arr.destroy();
+    check('destroy tears them down too', d.log.destroyed.includes('t1') && d.arr.placedRecs.length === 0
+      && !d.kioskEl.querySelector('.k-placed'));
+    const none = make({ modules: [M.p1, M.t1] });
+    await boot(none, { preset: 'side', slots: ['p1', 't1'] });
+    check('*** a layout with nothing placed creates no placed layer at all (the kiosk as it was) ***',
+      !none.kioskEl.querySelector('.k-placed') && none.arr.placedRecs.length === 0
+      && none.arr.focusRing().map((m) => m.id).join() === 'p1,t1');
+  }
+
+  section('4. in the scene: a room, its slots, and free placement on its walls');
+  {
+    const t = make({ modules: [M.p1, M.t1, M.w1] });
+    await boot(t, { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'theRoom' }, placed: [
+      { id: 't1', place: 'scene', slot: 'cab' },
+      { id: 'w1', place: 'scene', x: 12, y: 40, surface: 'left', w: 20, h: 20 },
+      { id: 'p1', place: 'screen' },
+    ] });
+    const room = t.arr.roomScene();
+    check('*** the dashboard\'s scene is the room ***', room && t.kioskEl.querySelector('.k-placed[data-place="scene"] [data-room]'));
+    const slotEl = room?.slots().get('cab')?.el;
+    check('*** a module placed in a room slot mounts IN that slot (room_scene slots()) ***',
+      slotEl && slotEl.contains(t.arr.recFor('t1')?.el), `slot=${!!slotEl}`);
+    const free = wrapOf(t, 'w1');
+    check('a module placed freely in the room sits on the room\'s own stage (it scales with the room)',
+      free && room.stage.contains(free));
+    check('*** on a side wall it gets the wall\'s perspective matrix ***', /matrix\(/.test(free?.style.transform || ''),
+      free?.style.transform);
+    check('flat-on-screen still sits above the room', t.kioskEl.querySelector('.k-placed[data-place="screen"]')?.contains(wrapOf(t, 'p1')));
+    const layout2 = { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'theRoom' }, placed: [
+      { id: 't1', place: 'scene', slot: 'cab' },
+      { id: 'w1', place: 'scene', x: 60, y: 40, surface: 'back', w: 20, h: 20 },
+      { id: 'p1', place: 'screen' },
+    ] };
+    const mountsBefore = t.log.mounts.length;
+    const res = await t.arr.applyPlaced(layout2);
+    check('moving it to the back wall: in place, no mount', res?.applied && t.log.mounts.length === mountsBefore);
+    check('...the wall matrix is gone and it is at 60%', !/matrix\(/.test(wrapOf(t, 'w1')?.style.transform || '')
+      && wrapOf(t, 'w1')?.style.left === '60%', wrapOf(t, 'w1')?.style.cssText);
+    t.arr.destroy();
+    check('destroy takes the room down too', t.arr.roomScene() === null && !t.kioskEl.querySelector('[data-room]'));
+  }
+
+  // =====================================================================================================
+  section('5. a placement change is applied IN PLACE: only the moved module moves');
+  {
+    const t = make({ modules: [M.p1, M.t1, M.w1, M.k1] });
+    const L = { preset: 'full', slots: ['p1'], placed: [
+      { id: 't1', place: 'screen', x: 25, y: 40 }, { id: 'w1', place: 'overlay', x: 50, y: 10 },
+    ] };
+    await boot(t, L);
+    const recT = t.arr.recFor('t1'), recW = t.arr.recFor('w1'), recP = t.arr.recFor('p1');
+    const mounts = t.log.mounts.length, destroyed = t.log.destroyed.length;
+    const r = await t.arr.applyPlaced({ ...L, placed: [{ id: 't1', place: 'screen', x: 70, y: 40 }, L.placed[1]] });
+    check('*** moved: the same instance, nothing mounted, nothing destroyed ***',
+      r?.applied && t.arr.recFor('t1') === recT && t.log.mounts.length === mounts && t.log.destroyed.length === destroyed,
+      J(r));
+    check('...and it is at its new x', wrapOf(t, 't1')?.style.left === '70%');
+    check('it reports what moved', r?.moved?.join() === 't1' && !r.added.length && !r.removed.length, J(r));
+    check('the modules that did not move were not touched', t.arr.recFor('w1') === recW && t.arr.recFor('p1') === recP);
+    check('the arrangement\'s layout is the new one', t.arr.layout().placed[0].x === 70);
+    await t.arr.applyPlaced({ ...L, placed: [{ id: 't1', place: 'overlay', x: 70, y: 40 }, L.placed[1]] });
+    check('*** a change of PLACE re-parents the same instance onto the other layer ***',
+      t.arr.recFor('t1') === recT && t.kioskEl.querySelector('.k-placed[data-place="overlay"]').contains(recT.el));
+    const r2 = await t.arr.applyPlaced({ ...L, placed: [{ id: 't1', place: 'overlay', x: 70, y: 40 }, L.placed[1], { id: 'k1', place: 'screen' }] });
+    check('an added placed module is mounted (only it)', r2?.added?.join() === 'k1' && t.log.mounts.at(-1) === 'k1'
+      && t.log.mounts.length === mounts + 1 && t.log.watched.includes('k1'));
+    const r3 = await t.arr.applyPlaced({ ...L, placed: [L.placed[1], { id: 'k1', place: 'screen' }] });
+    check('a removed one is torn down (only it) and leaves the ring',
+      r3?.removed?.join() === 't1' && t.log.destroyed.includes('t1') && !t.arr.focusRing().some((m) => m.id === 't1'));
+    const r4 = await t.arr.applyPlaced({ preset: 'side', slots: ['p1', null], placed: [] });
+    check('*** a GRID change is refused here (applied:false): the caller keeps today\'s behaviour ***',
+      r4 && r4.applied === false && t.arr.layout().preset === 'full', J(r4));
+    const hid = await t.arr.applyPlaced({ ...L, placed: [{ ...L.placed[1], shown: false }, { id: 'k1', place: 'screen' }] });
+    check('Shown/Hidden: a hidden placed module is not drawn, and still mounted',
+      hid.applied && wrapOf(t, 'w1')?.style.display === 'none' && t.arr.recFor('w1') === recW);
+    // The unplaced swap is "what the screen shows NOW", never saved: a move must neither undo it nor be refused by it.
+    const u = make({ modules: [M.p1, M.t1, M.w1] });
+    const U = { preset: 'full', slots: ['p1'], placed: [{ id: 't1', place: 'screen', x: 10 }] };
+    await boot(u, U);
+    await u.arr.showUnplaced(M.w1);                      // w1 now shows in the slot p1 had
+    const ru = await u.arr.applyPlaced({ ...U, placed: [{ id: 't1', place: 'screen', x: 55 }] });
+    check('*** a move after an unplaced swap is applied, and the swap stays on screen ***',
+      ru.applied && u.arr.layout().slots.join() === 'w1' && wrapOf(u, 't1')?.style.left === '55%', J(ru));
+    // Before anything has mounted (the kiosk's boot gap): nothing is mounted early, and the change is kept.
+    const g = make({ modules: [M.t1] });
+    g.arr.resolve({ preset: 'full', slots: [null], placed: [{ id: 't1', place: 'screen', x: 10 }] });
+    const early = await g.arr.applyPlaced({ preset: 'full', slots: [null], placed: [{ id: 't1', place: 'screen', x: 90 }] });
+    check('*** a placement change BEFORE the first mount mounts nothing early, and is what then mounts ***',
+      early.applied && !g.log.mounts.length && (g.arr.partition(), await g.arr.mountLayout(), wrapOf(g, 't1')?.style.left === '90%'),
+      wrapOf(g, 't1')?.style.left);
+  }
+
+  // =====================================================================================================
+  section('6. the dashboard module: its container contract and the edit windows over placed modules');
+  {
+    const TYPE = 'placement_probe';
+    const counts = { init: 0, destroy: 0 };
+    registerModule({ type: TYPE, title: 'Probe', settings: [] }, (ctx) => ({
+      init() { counts.init++; ctx.mount.textContent = 'probe'; }, destroy() { counts.destroy++; },
+    }));
+    const mk = () => ({ load: () => Promise.resolve(), get: () => ({}), set: () => Promise.resolve(),
+                        subscribe: () => () => {}, startPolling() {}, destroy() {} });
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:800px;height:450px';
+    document.getElementById('host').append(host);
+    const bus = createBus();
+    const arrangement = { id: 'dash', modules: [{ id: 'a', type: TYPE }, { id: 'b', type: TYPE }, { id: 'c', type: TYPE }] };
+    const inst = mountModule('view', {
+      mount: host, bus, rootBus: bus, viewId: 'dash', arrangement, user: 'u', personId: null,
+      makeState: () => mk(), makeEvents: () => mk(), storage: { getItem: () => null, setItem() {}, removeItem() {} },
+      state: mk(), embedded: true,
+      layoutOverride: { preset: 'full', slots: ['a'], placed: [{ id: 'b', place: 'screen', x: 30, y: 30 }, { id: 'c', place: 'overlay', x: 50, y: 12 }] },
+    });
+    const v = inst.impl || inst;
+    await v.init();
+    check('the dashboard mounted all three', counts.init === 3, `init=${counts.init}`);
+    check('*** panels() includes the placed modules ***', v.panels().map((p) => p.id).sort().join() === 'a,b,c',
+      J(v.panels()));
+    check('focusRing(): overlay first', v.focusRing().map((m) => m.id).join() === 'c,a,b', J(v.focusRing()));
+    check('focus(id) accepts a placed module', (await v.focus('b')) === true && v.focused()?.id === 'b');
+    check('placed() reads the placement', v.placed().map((p) => p.id).join() === 'b,c');
+    const ed = v.edit();
+    check('*** edit() binds an edit model to the placed modules ***',
+      ed && ed.model.items().map((i) => i.id).join() === 'b,c' && ed.model.item('b').x === 30
+      && ed.model.item('c').place === 'overlay', J(ed?.model.items()));
+    check('...and opens the Transform and Layers windows inside the dashboard',
+      host.querySelectorAll('[role="dialog"]').length >= 2 && v.editing() === ed);
+    const recB = v.arrangement().recFor('b');
+    ed.model.select('b');
+    ed.model.set('x', 64);
+    await sleep(0);
+    check('*** a typed X moves the module, in place: the same instance, no init, no destroy ***',
+      v.arrangement().recFor('b') === recB && counts.init === 3 && counts.destroy === 0
+      && host.querySelector('[data-placed="b"]')?.style.left === '64%', host.querySelector('[data-placed="b"]')?.style.left);
+    ed.model.setPlace('overlay');
+    await sleep(0);
+    check('Place: Overlay moves it to the overlay layer, same instance',
+      v.arrangement().recFor('b') === recB && host.querySelector('.k-placed[data-place="overlay"] [data-placed="b"]'));
+    ed.model.undo(); ed.model.undo();
+    await sleep(0);
+    check('undo puts it back where it was', host.querySelector('[data-placed="b"]')?.style.left === '30%'
+      && host.querySelector('.k-placed[data-place="screen"] [data-placed="b"]'));
+    ed.model.duplicate('b');
+    await sleep(0);
+    check('*** a duplicate (a module with no instance of its own yet) is not placed, and says so ***',
+      v.placed().length === 2 && ed.model.items().length === 2 && /not built/.test(ed.notes().join(' ')), J(ed.notes()));
+    ed.close();
+    check('close() takes the windows away and the model is let go', !host.querySelector('[role="dialog"]') && v.editing() === null);
+    v.destroy();
+    check('destroy tears down every placed module', counts.destroy === 3, `destroy=${counts.destroy}`);
+  }
+
+  // =====================================================================================================
+  section('7. on a real screen: placed modules, and the 09-12 watch does NOT reload for a move');
+  {
+    const USER = 'placement-test-' + Math.floor(performance.now());
+    const profiles = createProfilesClient({ user: USER });
+    const p = await profiles.create('TEST-placement');
+    const clock = await profiles.addModule(p.id, 'clock');
+    const photos = await profiles.addModule(p.id, 'photos');
+    const s = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
+    await s.load();
+    const layout = { preset: 'full', slots: [photos.id], placed: [{ id: clock.id, place: 'screen', x: 20, y: 20, w: 20, h: 20 }] };
+    s.set({ kiosk: { layout } });
+    await s.flush();
+    const box = document.createElement('div'); box.className = 'box'; document.body.append(box);
+    let reloads = 0;
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+    const k = await mountKiosk(box, { user: USER, profileId: p.id, profiles, bus: createBus(),
+      storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => { reloads++; } });
+    const wrap = () => box.querySelector(`[data-placed="${clock.id}"]`);
+    check('a real kiosk mounts a placed clock as a panel (not the corner clock)',
+      !!wrap() && !k.hasClock(), `placed=${!!wrap()} hud=${k.hasClock()}`);
+    const inst = wrap()?.querySelector('.k-mod')?.firstElementChild;
+    const s2 = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
+    await s2.load();
+    s2.set({ kiosk: { ...(s2.get().kiosk || {}), layout: { ...layout, placed: [{ ...layout.placed[0], x: 75 }] } } });
+    await s2.flush();
+    const movedLive = await settled(() => wrap()?.style.left === '75%', 8000);
+    check('*** a saved move reaches the screen IN PLACE ***', movedLive, wrap()?.style.left);
+    check('*** ...and the 09-12 watch did NOT reload the screen for it ***', reloads === 0, `reloads=${reloads}`);
+    check('...the clock was not remounted (the same element)', wrap()?.querySelector('.k-mod')?.firstElementChild === inst);
+    s2.set({ kiosk: { ...(s2.get().kiosk || {}), layout: { ...layout, preset: 'side', slots: [photos.id, null] } } });
+    await s2.flush();
+    check('a GRID change still reloads, exactly once (today\'s behaviour)', await settled(() => reloads === 1, 8000)
+      && (await sleep(500), reloads === 1), `reloads=${reloads}`);
+    s2.destroy(); s.destroy();
+    try { k.destroy(); } catch { /* gone */ }
+    box.remove();
+  }
+
+  section('8. the modules page path (Stage 3, dashboardModule): placed modules in the embedded dashboard');
+  {
+    const TYPE = 'placement_probe2';
+    registerModule({ type: TYPE, title: 'Probe two', settings: [] }, (ctx) => ({
+      init() { ctx.mount.textContent = 'probe two'; }, destroy() {},
+    }));
+    const box = document.createElement('div'); box.className = 'box'; document.body.append(box);
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+    const store = new Map();
+    const mkState = (key) => ({ load: () => Promise.resolve(), get: () => store.get(key) || {},
+      set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); }, subscribe: () => () => {},
+      startPolling() {}, flush: () => Promise.resolve(), destroy() {} });
+    const screen = { id: 'try-place', name: 'Try', person_id: null,
+      modules: [{ id: 'x1', type: TYPE, position: 0 }, { id: 'x2', type: TYPE, position: 1 }] };
+    let reloads = 0;
+    const k = await mountKiosk(box, { user: null, profileId: screen.id,
+      profiles: { list: async () => [], get: async () => JSON.parse(J(screen)), stateURL: (a, b) => `local:${a}::${b}`, eventsURL: (a, b) => `local:${a}::${b}` },
+      makeState: mkState, makeEvents: () => ({ load: () => Promise.resolve(), get: () => ({ events: [] }), subscribe: () => () => {}, startPolling() {}, destroy() {} }),
+      storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => { reloads++; },
+      embedded: true, dashboardModule: true,
+      embedLayout: { preset: 'full', slots: ['x1'], placed: [{ id: 'x2', place: 'overlay', x: 50, y: 20, w: 40, h: 20 }] } });
+    const dash = k.dashboard();
+    check('the embedded kiosk mounted a dashboard module', !!dash && !!box.querySelector('.k-dash .view'));
+    check('*** the dashboard placed x2 as an overlay ***',
+      !!box.querySelector('.k-dash .k-placed[data-place="overlay"] [data-placed="x2"]'));
+    check('the shell reads it through the same arrangement (recFor)', k.dashboard().arrangement().recFor('x2')?.id === 'x2');
+    const ed = dash.edit();
+    ed.model.select('x2'); ed.model.set('y', 80);
+    await sleep(0);
+    check('*** the edit windows move it on the modules page, in place, with no rebuild ***',
+      box.querySelector('[data-placed="x2"]')?.style.top === '80%' && reloads === 0, `${box.querySelector('[data-placed="x2"]')?.style.top} reloads=${reloads}`);
+    check('an embed never writes the layout back (held in memory only, as the modules page promises)',
+      !J([...store.values()]).includes('"placed"'), J([...store.values()]).slice(0, 200));
+    ed.close();
+    try { k.destroy(); } catch { /* gone */ }
+    box.remove();
+  }
+} catch (e) {
+  check('the suite threw', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = `${passed} passed, ${failed} failed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

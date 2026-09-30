@@ -91,6 +91,7 @@ export function barModel(arr, runtime) {
   if (!arr) return null;
   return {
     layout: arr.layout(), profile: arr.profile() || { modules: [] }, slotRecs: arr.slotRecs,
+    placedRecs: arr.placedRecs || [],             // Stage R: modules placed freely are panels too
     stageDefs: arr.stageDefs(), primary: arr.primary(), focusId: arr.focusedRec()?.id,
     runtime: runtime || null,
     focusPlaced: arr.focusPlaced, showUnplaced: arr.showUnplaced, showPrimary: arr.showPrimary,
@@ -114,7 +115,7 @@ export function barModel(arr, runtime) {
 /** Draw the chips into `modsEl` (emptied first). `m` is a `barModel`. */
 export function drawChips(modsEl, m) {
   if (!modsEl || !m) return;
-  const { layout, profile, slotRecs, stageDefs, primary, focusId, runtime,
+  const { layout, profile, slotRecs, placedRecs = [], stageDefs, primary, focusId, runtime,
           focusPlaced, showUnplaced, showPrimary, instanceTitle } = m;
   modsEl.innerHTML = '';
   if (layout) {
@@ -165,14 +166,15 @@ export function drawChips(modsEl, m) {
     // honesty problem the original filter existed for -- a button must not lie about what it
     // can do -- and that is answered by SAYING SO on the chip rather than by removing it.
     const focusable = new Set((runtime?.router?.reachable?.() || []).map((m) => m.id));
-    const placedIds = new Set(layout.slots.filter(Boolean));
+    // Stage R: placed in a slot OR placed freely -- both are on the screen, both are focused by a press.
+    const placedIds = new Set([...layout.slots.filter(Boolean), ...(layout.placed || []).map((p) => p.id)]);
     for (const def of profile.modules) {
       // The HUD pair are not panels, the same exclusion `unplacedDefs` makes: an unplaced
       // camera is the mirror overlay and an unplaced clock is the corner clock.
       if (def.type === 'camera' || def.type === 'clock') continue;
       const placed = placedIds.has(def.id);
       if (placed) {
-        const rec = slotRecs.find((r) => r.id === def.id);
+        const rec = slotRecs.find((r) => r.id === def.id) || placedRecs.find((r) => r.id === def.id);
         if (!rec) continue;
         // NOT `continue` any more -- see D16 above. The chip is drawn either way, and says
         // which kind of chip it is instead of disappearing.
