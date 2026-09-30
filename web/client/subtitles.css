@@ -1,0 +1,42 @@
+/* subtitles.css — the look of `subtitles.js`. Loaded by the component itself, once per page.
+   The caption pairing is the theme's own `--on-dark` over `--letterbox` (the pair talk.html's
+   spoken-word banner already uses), so every theme reads it and no colour is chosen here.
+   Measured per theme in dev/subtitles_test.html. */
+.subs {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 1400px);
+  z-index: var(--z-floating, 900);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .22em;
+  margin: 0;
+  font: 600 var(--subs-size, clamp(24px, 4.4vmin, 64px))/1.25 var(--font, system-ui, sans-serif);
+}
+.subs[hidden] { display: none; }
+.subs[data-place="bottom"], .subs[data-place="dock"] { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
+.subs[data-place="top"] { top: calc(env(safe-area-inset-top, 0px) + 12px); }
+
+.subs-line {
+  margin: 0;
+  max-width: 100%;
+  padding: .18em .55em;
+  border-radius: .3em;
+  background: var(--letterbox);
+  color: var(--on-dark);
+  text-align: center;
+  overflow-wrap: anywhere;
+  animation: subs-in .18s ease-out;
+}
+.subs-who { font-weight: 800; }
+/* A guess is marked in the words ("Unsure (maybe ...)") AND in the shape, never by colour alone. */
+.subs-unsure .subs-who { font-style: italic; font-weight: 700; }
+.subs-unknown .subs-who { font-weight: 600; }
+.subs-screen .subs-who { font-weight: 600; }
+
+@keyframes subs-in { from { opacity: 0; transform: translateY(.25em); } }
+.subs-still .subs-line { animation: none; transition: none; }
+@media (prefers-reduced-motion: reduce) { .subs-line { animation: none; transition: none; } }

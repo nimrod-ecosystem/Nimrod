@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>phone as a microphone — a one-way call — test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>phone as a microphone</h1>
+<p>Row 2.42. A phone opens <code>phone_mic.html</code> and becomes a microphone for a screen: sound
+only, one way, shown as live at BOTH ends, over the same drive socket a call uses - so only people who
+may drive that person's screens can join.</p>
+<div class="note"><b>Not covered here:</b> a real phone, a real network, a real WebRTC connection.
+The relay below is a fake of the server's fan-out (a driver's signal reaches every screen, a screen's
+reaches every driver). Whether an Android phone on the facility wifi reaches the Pi, and whether
+recognition from the pillow is better than from the webcam, are bench measurements not yet made.</div>
+<div id="host"></div>
+<div id="page"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createPhoneMicSender, createPhoneMicReceiver, mountMicLiveIndicator, micLiveText,
+  offerIsAudioOnly, isPhoneMicSignal, newSession, PHONE_MIC_PURPOSE, PHONE_MIC_TOPIC, PHONE_MIC_CONSTRAINTS,
+} from '../phone_mic.js';
+import { mountPhoneMic } from '../phone_mic_page.js';
+import { createCallTransport, STALL_MS } from '../call_transport.js';
+import { SIGNAL_KINDS } from '../drive.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const flush = async () => { for (let i = 0; i < 6; i++) await sleep(0); };
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    pending: () => armed.length,
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// The server's relay, faked: a driver's signal reaches every screen, a screen's every driver.
+function fakeRoom() {
+  const screens = new Set(), drivers = new Set();
+  function join(role) {
+    const subs = new Set();
+    const me = {
+      role, sent: [], subs,
+      sendSignal(s) {
+        if (!SIGNAL_KINDS.includes(s.kind)) return false;
+        me.sent.push(s);
+        const copy = JSON.parse(JSON.stringify(s));
+        for (const l of (role === 'screen' ? drivers : screens)) for (const cb of [...l.subs]) cb(copy);
+        return true;
+      },
+      onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+      state: () => 'connected',
+      close() { (role === 'screen' ? screens : drivers).delete(me); subs.clear(); },
+      deliver(sig) { for (const cb of [...subs]) cb(sig); },
+    };
+    (role === 'screen' ? screens : drivers).add(me);
+    return me;
+  }
+  return { join };
+}
+
+const AUDIO_SDP = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendonly\r\n';
+const VIDEO_SDP = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n';
+function fakePeers({ offerSdp = AUDIO_SDP } = {}) {
+  const made = [];
+  class PC {
+    constructor(cfg) {
+      this.cfg = cfg; this.transceivers = []; this.senders = []; this.closed = false;
+      this.iceGatheringState = 'complete'; this.connectionState = 'new';
+      this.localDescription = null; this.remote = null;
+      made.push(this);
+    }
+    addTransceiver(t, init) { this.transceivers.push({ track: t, init }); return {}; }
+    addTrack(t, s) { this.senders.push({ track: t, stream: s }); return {}; }
+    getSenders() { return this.senders; }
+    addEventListener() {}
+    async setRemoteDescription(d) { this.remote = d; }
+    async createOffer() { return { type: 'offer', sdp: offerSdp }; }
+    async createAnswer() { return { type: 'answer', sdp: 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=recvonly\r\n' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    close() { this.closed = true; }
+    fire(st) { this.connectionState = st; this.onconnectionstatechange?.(); }
+    fireTrack(track, streams) { this.ontrack?.({ track, streams }); }
+  }
+  return { PC, made, last: () => made[made.length - 1] };
+}
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { this.tracks.push(t); }
+  removeTrack(t) { this.tracks = this.tracks.filter((x) => x !== t); }
+  getTracks() { return this.tracks; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+function fakeMedia({ fail = false } = {}) {
+  const asked = [];
+  const tracks = [];
+  return {
+    asked, tracks,
+    getUserMedia: async (c) => {
+      asked.push(c);
+      if (fail) { const e = new Error('denied'); e.name = 'NotAllowedError'; throw e; }
+      const t = { kind: 'audio', stopped: false, stop() { this.stopped = true; } };
+      tracks.push(t);
+      return new FakeStream([t]);
+    },
+  };
+}
+const mediaEls = () => document.querySelectorAll('audio, video').length;
+
+function rig({ maxPhones = 1, offerSdp } = {}) {
+  const room = fakeRoom();
+  const clock = fakeClock();
+  const bus = createBus();
+  const screenLink = room.join('screen');
+  const screenPeers = fakePeers();
+  const recv = createPhoneMicReceiver({ link: screenLink, PeerConnection: screenPeers.PC, Stream: FakeStream,
+    maxPhones, bus, now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+  function phone(from = { name: 'Phone' }, opts = {}) {
+    const link = room.join('driver');
+    const peers = fakePeers({ offerSdp: opts.offerSdp || offerSdp });
+    const media = fakeMedia(opts);
+    const states = [];
+    const s = createPhoneMicSender({ link, from, getUserMedia: media.getUserMedia, PeerConnection: peers.PC,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onState: (st, why) => states.push([st, why]) });
+    return { s, link, peers, media, states };
+  }
+  return { room, clock, bus, screenLink, screenPeers, recv, phone };
+}
+
+(async () => {
+try {
+  section('the wire');
+  check('*** an offer carrying VIDEO is refused ***', offerIsAudioOnly(VIDEO_SDP).ok === false && offerIsAudioOnly(VIDEO_SDP).why === 'video-refused');
+  check('an audio-only offer is accepted', offerIsAudioOnly(AUDIO_SDP).ok === true);
+  check('an offer with no audio is refused', offerIsAudioOnly('v=0\r\n').ok === false);
+  check('a phone-microphone signal is marked with its purpose', isPhoneMicSignal({ kind: 'offer', purpose: PHONE_MIC_PURPOSE })
+    && !isPhoneMicSignal({ kind: 'offer' }) && !isPhoneMicSignal(null));
+  check('*** the phone asks for sound and never a camera ***', PHONE_MIC_CONSTRAINTS.video === false && !!PHONE_MIC_CONSTRAINTS.audio);
+  check('sessions are distinct', newSession() !== newSession() && /^pm-[0-9a-f]{16}$/.test(newSession()));
+
+  section('*** a phone joins: one way, sound only ***');
+  {
+    const els = mediaEls();
+    const r = rig();
+    const host = document.getElementById('host');
+    const pill = mountMicLiveIndicator(host, { receiver: r.recv, bus: r.bus });
+    check('nothing joined: the screen shows no notice', pill.shown() === false);
+    const p = r.phone({ name: 'Bedside phone', near: 'Alex' });
+    await p.s.start();
+    await flush();
+    check('the phone asked for its microphone with video OFF',
+      p.media.asked.length === 1 && p.media.asked[0].video === false, JSON.stringify(p.media.asked));
+    const phonePc = p.peers.last();
+    check('*** the phone SENDS ONLY ***', phonePc.transceivers.length === 1 && phonePc.transceivers[0].init.direction === 'sendonly',
+      JSON.stringify(phonePc.transceivers.map((t) => t.init)));
+    const offer = p.link.sent.find((s) => s.kind === 'offer');
+    check('the offer names its purpose, its session and the phone',
+      offer && offer.purpose === PHONE_MIC_PURPOSE && offer.session === p.s.session && offer.from.name === 'Bedside phone');
+    const screenPc = r.screenPeers.last();
+    check('*** the screen answered, and added NOTHING to send back ***',
+      !!screenPc && screenPc.senders.length === 0 && screenPc.transceivers.length === 0
+      && r.screenLink.sent.some((s) => s.kind === 'answer' && s.session === p.s.session));
+    check('the phone took the answer', phonePc.remote && phonePc.remote.type === 'answer');
+    check('*** the screen shows it before it is even connected ("connecting") ***',
+      pill.shown() === true && /Microphone connecting: Bedside phone/.test(pill.text()), pill.text());
+    check('the phone says it is on, waiting for the screen', p.s.state() === 'waiting' && p.s.micOpen() === true);
+    phonePc.fire('connected'); screenPc.fire('connected');
+    const track = { kind: 'audio' }; const remote = new FakeStream([track]);
+    screenPc.fireTrack(track, [remote]);
+    check('*** live: the phone says so ***', p.s.state() === 'live');
+    check('*** live: the SCREEN says so ***', /Microphone on: Bedside phone/.test(pill.text()), pill.text());
+    check('the screen’s bus hears it', r.recv.live().length === 1);
+    check('the phone’s audio is there for amplify or a recogniser', r.recv.stream() === remote && r.recv.streams().length === 1);
+    check('who the phone is usually with travels with it (subtitles show it as a guess)', r.recv.fromOf(p.s.session).near === 'Alex');
+    check('*** nothing on either end plays anything: no audio or video element was made ***', mediaEls() === els);
+
+    section('*** it never touches a call ***');
+    const callPeers = fakePeers();
+    const rings = [];
+    const call = createCallTransport({ link: r.screenLink, role: 'screen', PeerConnection: callPeers.PC, Stream: FakeStream });
+    call.onIncoming((f) => rings.push(f));
+    const p2 = r.phone({ name: 'Second phone' });
+    await p2.s.start(); await flush();
+    check('*** a phone offering does not ring the Call panel ***', rings.length === 0);
+    check('*** one phone at a time: a second is told the screen is busy ***',
+      p2.s.state() === 'ended' && p2.s.reason() === 'busy' && r.recv.phones().length === 1, JSON.stringify(p2.states));
+    check('...and its microphone is let go', p2.media.tracks.every((t) => t.stopped));
+    call.destroy();
+
+    section('the same phone again is a reconnect, not a second phone');
+    await p.s.reconnect(); await flush();
+    check('*** a re-offer on the same session is answered, not refused ***',
+      r.recv.phones().length === 1 && r.screenLink.sent.filter((s) => s.kind === 'answer').length === 2
+      && p.s.state() !== 'ended', JSON.stringify(r.screenLink.sent.map((s) => s.kind)));
+    check('...and the notice stays up throughout', pill.shown() === true);
+
+    section('*** the screen can turn it off, and the phone respects it ***');
+    const sess = p.s.session;
+    r.recv.stop(sess);
+    await flush();
+    check('the screen’s notice goes', pill.shown() === false && r.recv.phones().length === 0);
+    check('*** the phone is told, and its microphone is let go ***',
+      p.s.state() === 'ended' && p.s.reason() === 'stopped' && p.media.tracks.every((t) => t.stopped));
+    const offersBefore = p.link.sent.filter((s) => s.kind === 'offer').length;
+    r.clock.advance(120000);
+    check('...and it does NOT offer again by itself', p.link.sent.filter((s) => s.kind === 'offer').length === offersBefore);
+    pill.destroy();
+  }
+
+  section('*** the phone stops ***');
+  {
+    const r = rig();
+    const pill = mountMicLiveIndicator(document.getElementById('host'), { bus: r.bus });
+    const p = r.phone({ name: 'P' });
+    await p.s.start(); await flush();
+    p.peers.last().fire('connected'); r.screenPeers.last().fire('connected');
+    check('(live)', pill.shown() && r.recv.live().length === 1);
+    p.s.stop();
+    await flush();
+    check('*** stopping on the phone ends it on the screen ***', r.recv.phones().length === 0 && pill.shown() === false);
+    check('the phone let its microphone go', p.media.tracks.every((t) => t.stopped) && p.s.micOpen() === false);
+    pill.destroy();
+  }
+
+  section('*** a phone that vanishes does not leave a notice up ***');
+  {
+    const r = rig();
+    const p = r.phone();
+    await p.s.start(); await flush();
+    const spc = r.screenPeers.last();
+    spc.fire('connected');
+    spc.fire('failed');
+    r.clock.advance(STALL_MS - 1);
+    check('a drop waits for the phone to come back', r.recv.phones().length === 1);
+    r.clock.advance(1);
+    check('*** ...then releases: the screen does not claim a microphone that is gone ***', r.recv.phones().length === 0);
+  }
+
+  section('the screen is not there yet');
+  {
+    const r = fakeRoom();
+    const clock = fakeClock();
+    const link = r.join('driver');
+    const peers = fakePeers();
+    const media = fakeMedia();
+    const s = createPhoneMicSender({ link, getUserMedia: media.getUserMedia, PeerConnection: peers.PC,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, retryMs: 15000 });
+    await s.start(); await flush();
+    check('no screen answers: it waits', s.state() === 'waiting' && link.sent.filter((x) => x.kind === 'offer').length === 1);
+    clock.advance(15000); await flush();
+    check('*** ...and tries again by itself (a phone in a stand for days finds a screen that restarted) ***',
+      link.sent.filter((x) => x.kind === 'offer').length === 2);
+    s.stop();
+    check('stopped, it says goodbye', link.sent.some((x) => x.kind === 'bye' && x.purpose === PHONE_MIC_PURPOSE));
+  }
+
+  section('refused, and denied');
+  {
+    const r = rig({ offerSdp: VIDEO_SDP });
+    const p = r.phone();
+    await p.s.start(); await flush();
+    check('*** a phone offering video is refused by the SCREEN, whatever the page claims ***',
+      p.s.state() === 'ended' && p.s.reason() === 'video-refused' && r.recv.phones().length === 0);
+    const r2 = rig();
+    const q = r2.phone({ name: 'Q' }, { fail: true });
+    await q.s.start();
+    check('a phone that refuses its microphone says so, and sends nothing',
+      q.s.state() === 'no-mic' && q.link.sent.length === 0);
+    const r3 = rig();
+    r3.screenLink.deliver({ kind: 'offer', sdp: AUDIO_SDP });
+    await flush();
+    check('a CALL offer is not the receiver’s business', r3.recv.phones().length === 0 && r3.screenLink.sent.length === 0);
+    r3.screenLink.deliver({ kind: 'offer', purpose: PHONE_MIC_PURPOSE, sdp: AUDIO_SDP });
+    await flush();
+    check('an offer with no session is ignored', r3.recv.phones().length === 0);
+  }
+
+  section('two phones, when somebody chooses it');
+  {
+    const r = rig({ maxPhones: 2 });
+    const a = r.phone({ name: 'A' }); const b = r.phone({ name: 'B' });
+    await a.s.start(); await b.s.start(); await flush();
+    for (const pc of r.screenPeers.made) pc.fire('connected');
+    check('both are on the screen’s notice', r.recv.phones().length === 2
+      && micLiveText(r.recv.phones()) === 'Microphones on: A, B', micLiveText(r.recv.phones()));
+    check('a phone’s answer goes to that phone only', a.peers.last().remote && b.peers.last().remote
+      && a.link.sent[0].session !== b.link.sent[0].session);
+    r.recv.destroy();
+    await flush();
+    check('the screen going away tells every phone', a.s.state() === 'ended' && b.s.state() === 'ended');
+  }
+
+  section('the notice, on screen');
+  {
+    const bus = createBus();
+    const pill = mountMicLiveIndicator(document.getElementById('host'), { bus });
+    bus.publish(PHONE_MIC_TOPIC, { phones: [{ session: 'x', name: 'Stand phone', phase: 'live' }] });
+    const el = document.querySelector('.mic-live');
+    for (let i = 0; i < 50 && getComputedStyle(el).position !== 'fixed'; i++) await sleep(50);
+    check('it shows, with the phone’s name', pill.shown() && pill.text() === 'Microphone on: Stand phone');
+    check('it is a polite status, not an alert', el.getAttribute('role') === 'status' && el.getAttribute('aria-live') === 'polite');
+    check('*** it takes no presses ***', getComputedStyle(el).pointerEvents === 'none');
+    check('live and connecting look different in shape (a filled dot vs a ring)', el.dataset.phase === 'live');
+    bus.publish(PHONE_MIC_TOPIC, { phones: [] });
+    check('gone when nobody is joined', pill.shown() === false);
+    pill.destroy();
+  }
+
+  section('*** the phone page ***');
+  {
+    const els = mediaEls();
+    const root = document.getElementById('page');
+    const calls = [];
+    const people = { '/api/people': { people: [{ id: 'P1', name: 'Alex' }] },
+                     '/api/drive/shared': { people: [{ person_id: 'P2', name: 'Sam', owner_id: 'o' }] } };
+    let ticketStatus = 200;
+    const fetchImpl = async (url, init = {}) => {
+      calls.push({ url, method: init.method || 'GET' });
+      if (url.startsWith('/api/drive/ticket/')) return { ok: ticketStatus === 200, status: ticketStatus, json: async () => ({ ticket: 't' }) };
+      const body = people[url];
+      return body ? { ok: true, status: 200, json: async () => body } : { ok: false, status: 404, json: async () => ({}) };
+    };
+    const room = fakeRoom();
+    const screenLink = room.join('screen');
+    const screenPeers = fakePeers();
+    const recv = createPhoneMicReceiver({ link: screenLink, PeerConnection: screenPeers.PC, Stream: FakeStream });
+    const phonePeers = fakePeers();
+    const media = fakeMedia();
+    let connected = null;
+    const connect = (o) => { connected = o; const l = room.join('driver'); l.close0 = l.close; return l; };
+    const makeSender = (o) => createPhoneMicSender({ ...o, getUserMedia: media.getUserMedia, PeerConnection: phonePeers.PC });
+    const mem = new Map(); const storage = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)) };
+    const page = await mountPhoneMic(root, { fetchImpl, connect, makeSender, storage, search: '?person=P2',
+      nav: { wakeLock: { request: async () => ({ release() {} }) } } });
+    const sel = root.querySelector('[data-person]');
+    check('*** the screens offered are the ones this account may use: its own and the shared ***',
+      sel && [...sel.options].map((o) => o.value).join() === 'P1,P2', sel && [...sel.options].map((o) => o.value).join());
+    check('a link can choose the screen', sel.value === 'P2');
+    check('off: the page is not in its live state', root.dataset.live === '0');
+
+    ticketStatus = 403;
+    root.querySelector('[data-start]').click();
+    await flush();
+    check('*** an account the server refuses is told so, and nothing is opened ***',
+      /not allowed/.test(root.textContent) && media.asked.length === 0 && connected === null, root.textContent.slice(0, 200));
+
+    ticketStatus = 200;
+    root.querySelector('[data-name]').value = 'Bedside';
+    root.querySelector('[data-start]').click();
+    await flush();
+    check('it joins the chosen person’s room as a driver (the drive socket, the same gate as a call)',
+      connected && connected.personId === 'P2' && connected.role === 'driver');
+    check('*** the phone page is in its LIVE state the moment the microphone is open ***',
+      root.dataset.live === '1' && /Microphone on/.test(root.textContent), root.textContent.slice(0, 200));
+    phonePeers.last().fire('connected');
+    await flush();
+    check('*** ...and names the screen that can hear it ***', /Sam’s screen can hear this phone/.test(root.textContent),
+      root.textContent.slice(0, 200));
+    check('the screen sees the phone by the name given', recv.phones()[0]?.name === 'Bedside');
+    check('*** no audio or video element anywhere on the page ***', mediaEls() === els && !root.querySelector('audio,video'));
+    root.querySelector('[data-stop]').click();
+    await flush();
+    check('*** Stop turns it off: the microphone is let go and the screen is told ***',
+      root.dataset.live === '0' && media.tracks.every((t) => t.stopped) && recv.phones().length === 0);
+    page.destroy();
+
+    const root2 = document.createElement('div'); document.body.append(root2);
+    await mountPhoneMic(root2, { fetchImpl: async () => ({ ok: false, status: 401, json: async () => ({}) }), storage, search: '' });
+    check('signed out: it asks for a sign-in rather than failing', /Sign in/.test(root2.textContent) && !root2.querySelector('[data-start]'));
+    root2.remove();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

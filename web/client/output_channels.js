@@ -235,14 +235,22 @@ export function createSoundChannel({ context = null, gain = 0.12 } = {}) {
 // Everything this device can actually do. A channel whose adapter reports unavailable is
 // left out entirely, so output.js drops to `no-adapter` and SAYS SO in the log, rather
 // than a message vanishing into a channel that was never going to work.
-export function defaultChannels({ mount = null, pref = () => ({}), events = null, audio = null } = {}) {
+//
+// `captions` (row 2.42): a subtitles controller (subtitles.js). When given, what the SPEECH channel
+// says is also written as a subtitle line, at the moment it is said - so a sentence the person's
+// routing sends to "Spoken" is captioned, and one that is muted or dropped is not. Only speech is
+// tapped: the screen channel is already on screen, and a tone has no words.
+export function defaultChannels({ mount = null, pref = () => ({}), events = null, audio = null,
+                                  captions = null } = {}) {
   const out = {};
   // Signed out there is no account, so there are no "other devices" and no mailbox.
   // The channel is absent rather than present-and-broken, which is what makes
   // output.js report `no-adapter` instead of a message vanishing.
   if (events) out.remote = createRemoteChannel({ events });
   const speech = createSpeechChannel({ pref, audio });
-  if (speech.available()) out.speech = speech;
+  if (speech.available()) {
+    out.speech = captions && typeof captions.tap === 'function' ? captions.tap(speech) : speech;
+  }
   const sound = createSoundChannel();
   if (sound.available()) out.sound = sound;
   if (mount) out.screen = createScreenChannel({ mount });

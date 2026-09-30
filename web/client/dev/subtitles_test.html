@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>subtitles — what is said near the screen, written on it — test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #under{position:fixed;inset:0;opacity:0}
+  .answers{position:fixed;left:0;right:0;height:120px}
+</style>
+</head>
+<body>
+<h1>subtitles</h1>
+<p>Row 2.42. Subtitles is a MODE, off by default. Each line has words and a speaker; the speaker is a
+guess that changes the LABEL and never whether the line is shown. Mike: <i>"My worry is that it won't
+always pick her up as her so some things will be missed."</i></p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createSubtitles, speakerLabel, placeSubtitles, devicePrior, subtitlesOptionsFrom,
+  SUBTITLES_DEFAULTS, SUBTITLES_FIELDS, SUBTITLE_SIZES, ANSWER_AREA_SELECTORS,
+} from '../subtitles.js';
+import { createOutputBus } from '../output.js';
+import { defaultChannels } from '../output_channels.js';
+import { THEMES, applyTheme, contrast } from '../theme.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function fakeClock() {
+  let t = 0; let n = 1; const timers = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = n++; timers.set(id, { at: t + ms, fn }); return id; },
+    clearTimer: (id) => { timers.delete(id); },
+    advance(ms) { t += ms; for (const [id, x] of [...timers].sort((a, b) => a[1].at - b[1].at)) if (x.at <= t) { timers.delete(id); x.fn(); } },
+    pending: () => timers.size,
+  };
+}
+const rgb = (s) => { const m = String(s).match(/rgba?\(([^)]+)\)/); if (!m) return null;
+  const p = m[1].split(',').map((x) => parseFloat(x)); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+const host = document.getElementById('host');
+
+(async () => {
+try {
+  section('*** a MODE: off by default, and its settings pass the audit ***');
+  check('*** subtitles are OFF by default (a profile turns them on; this file never does) ***',
+    SUBTITLES_DEFAULTS.on === false && SUBTITLES_FIELDS.find((f) => f.key === 'subtitlesOn').default === false);
+  const bad = auditFields(SUBTITLES_FIELDS.map(normalizeField).filter(Boolean), { type: 'subtitles' })
+    .filter((f) => f.severity === 'error');
+  check('the settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+  check('a duration is stored in ms', SUBTITLES_FIELDS.some((f) => f.key === 'subtitlesHoldMs'));
+  check('the options read from a settings row, broken values falling back',
+    subtitlesOptionsFrom({ subtitlesOn: true, subtitlesLines: 99, subtitlesSize: 'huge' }).on === true
+    && subtitlesOptionsFrom({ subtitlesLines: 99 }).lines === SUBTITLES_DEFAULTS.lines
+    && subtitlesOptionsFrom({ subtitlesSize: 'huge' }).size === 'large'
+    && subtitlesOptionsFrom({ subtitlesOn: 'yes' }).on === false);
+
+  section('*** the speaker display rule ***');
+  check('no speaker is Unknown', speakerLabel(null).label === 'Unknown' && speakerLabel(undefined).kind === 'unknown');
+  check('a confident match is named', speakerLabel({ name: 'Alex', confidence: 0.95 }).label === 'Alex');
+  check('*** an unsure match is marked unsure, with the guess ***',
+    speakerLabel({ name: 'Alex', confidence: 0.6 }).label === 'Unsure (maybe Alex)'
+    && speakerLabel({ name: 'Alex', confidence: 0.6 }).kind === 'unsure');
+  check('a very weak match is Unknown', speakerLabel({ name: 'Alex', confidence: 0.1 }).kind === 'unknown');
+  check('*** a name with no confidence is never shown plainly ***',
+    speakerLabel({ name: 'Alex' }).kind === 'unsure' && speakerLabel({ name: 'Alex', confidence: 'x' }).kind === 'unsure');
+  check('*** only people who set themselves up are named: a name off the list is Unknown ***',
+    speakerLabel({ name: 'Stranger', confidence: 0.99 }, { enrolled: ['Alex', 'Sam'] }).kind === 'unknown'
+    && speakerLabel({ name: 'sam', confidence: 0.99 }, { enrolled: ['Alex', 'Sam'] }).kind === 'named');
+  check('the screen’s own lines are labelled as the screen', speakerLabel({ self: true }).kind === 'screen');
+  check('garbage is Unknown, not an error',
+    speakerLabel(42).kind === 'unknown' && speakerLabel({ name: 7, confidence: 1 }).kind === 'unknown');
+  check('the threshold is a setting', speakerLabel({ name: 'Alex', confidence: 0.7 }, { sureAt: 0.6 }).kind === 'named');
+  check('a phone usually with somebody makes them likely, never certain',
+    speakerLabel(devicePrior({ near: 'Alex' })).label === 'Unsure (maybe Alex)' && devicePrior({}) === null);
+
+  section('*** THE RULE: a line is never dropped because of who said it ***');
+  {
+    const clock = fakeClock();
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true }, now: clock.now,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, reducedMotion: false });
+    const a = subs.add({ text: 'I want some water', source: 'phone', speaker: { name: 'Alex', confidence: 0.5 } });
+    check('*** an UNSURE match is SHOWN — the words, with the name marked as a guess ***',
+      !!a && subs.lines().length === 1 && /I want some water/.test(subs.element().textContent)
+      && /Unsure \(maybe Alex\)/.test(subs.element().textContent), subs.element().textContent);
+    const b = subs.add({ text: 'still here', speaker: { name: 'Alex', confidence: 0.01 } });
+    check('*** a match too weak to guess is still SHOWN, as Unknown ***', !!b && b.who.kind === 'unknown'
+      && /still here/.test(subs.element().textContent));
+    const c = subs.add({ text: 'and again', speaker: { garbage: true, confidence: NaN } });
+    check('*** a broken speaker is still SHOWN ***', !!c && /and again/.test(subs.element().textContent));
+    subs.update({ subtitlesOn: true, subtitlesLines: 6 });
+    const d = subs.add({ text: 'named', speaker: { name: 'Nobody', confidence: 1 } });
+    check('a speaker off the enrolled list is shown too', !!d);
+    let dropped = 0;
+    for (const conf of [0, 0.2, 0.39, 0.4, 0.5, 0.79, 0.8, 1, NaN, -1, 2, null, undefined, 'x']) {
+      if (!subs.add({ text: `line ${conf}`, speaker: { name: 'Alex', confidence: conf } })) dropped++;
+    }
+    check('*** swept every kind of confidence: not one line dropped ***', dropped === 0, `dropped ${dropped}`);
+    check('what the recogniser could not make out is shown, not lost',
+      subs.add({ text: '[unk]' })?.text === SUBTITLES_DEFAULTS.unclearText);
+    check('empty text is the one thing that shows nothing', subs.add({ text: '   ' }) === null && subs.add({}) === null);
+    subs.destroy();
+  }
+
+  section('*** a mode: off keeps nothing ***');
+  {
+    const subs = createSubtitles(host, { reducedMotion: false });
+    check('*** with the mode off a line is not shown and not kept ***',
+      subs.add({ text: 'private' }) === null && subs.lines().length === 0 && subs.element().hidden === true);
+    subs.setOn(true);
+    subs.add({ text: 'hello' });
+    check('turned on, it shows', subs.lines().length === 1 && subs.element().hidden === false);
+    subs.setOn(false);
+    check('*** turned off, the screen is cleared and nothing is kept ***',
+      subs.lines().length === 0 && subs.element().hidden === true && subs.element().children.length === 0);
+    subs.destroy();
+    check('destroy takes its element with it', !host.querySelector('.subs'));
+  }
+
+  section('a few lines of history, each going by itself');
+  {
+    const clock = fakeClock();
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesLines: 3, subtitlesHoldMs: 15000 },
+      now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer, reducedMotion: false });
+    for (const t of ['one', 'two', 'three', 'four']) subs.add({ text: t });
+    check('only the last few lines are on screen', subs.lines().map((l) => l.text).join() === 'two,three,four',
+      subs.lines().map((l) => l.text).join());
+    check('...oldest first, newest at the bottom', subs.element().lastElementChild.textContent.includes('four'));
+    clock.advance(14999);
+    check('a line stays for its time', subs.lines().length === 3);
+    clock.advance(1);
+    check('*** ...then goes by itself — nothing waits for a press ***', subs.lines().length === 0 && subs.element().hidden === true);
+    subs.update({ subtitlesOn: true, subtitlesHoldMs: 0 });
+    subs.add({ text: 'kept' });
+    clock.advance(10 * 60000);
+    check('"until newer lines replace it" keeps a line', subs.lines().length === 1);
+    subs.destroy();
+  }
+
+  section('*** the site’s own speech: tapped from the speech channel ***');
+  {
+    const spoken = [];
+    const fakeSpeech = { name: 'speech', concurrency: 1, available: () => true,
+      present(item, { done }) { spoken.push(item.text); done(); return null; } };
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesLines: 6, subtitlesHoldMs: 0 },
+      boardSpeaker: () => ({ name: 'Alex' }), reducedMotion: false });
+    const bus = createOutputBus({ channels: { speech: subs.tap(fakeSpeech) }, routing: { status: [], say: ['speech'], notify: [], alert: ['speech'] } });
+    bus.say('Good morning');
+    check('*** what the screen says is written as it is said ***',
+      spoken.join() === 'Good morning' && subs.lines().some((l) => l.text === 'Good morning' && l.who.kind === 'screen'),
+      JSON.stringify(subs.lines()));
+    bus.emit({ verb: 'say', text: 'I love you', source: 'board' });
+    check('*** the talking board’s words are the PERSON’s, named ***',
+      subs.lines().some((l) => l.text === 'I love you' && l.who.kind === 'named' && l.who.label === 'Alex'));
+    bus.setMuted('speech', true);
+    bus.say('not said');
+    check('what is muted is not said, so it is not written', !subs.lines().some((l) => l.text === 'not said'));
+    bus.setMuted('speech', false);
+    subs.update({ subtitlesOn: true, subtitlesScreen: false, subtitlesHoldMs: 0, subtitlesLines: 6 });
+    bus.say('quiet one');
+    check('"include what the screen says" off: spoken, not written',
+      spoken.includes('quiet one') && !subs.lines().some((l) => l.text === 'quiet one'));
+    const tapped = [];
+    const spy = { tap: (a) => { tapped.push(a); return a; } };
+    const ch = defaultChannels({ captions: spy });
+    check('defaultChannels taps the speech channel when handed subtitles',
+      !ch.speech || (tapped.length === 1 && tapped[0].name === 'speech'));
+    check('...and nothing else', tapped.every((a) => a.name === 'speech'));
+    bus.destroy(); subs.destroy();
+  }
+
+  section('the recogniser’s words');
+  {
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0 }, reducedMotion: false });
+    const a = subs.heard({ text: 'hello there', verb: null, woke: false });
+    check('*** what the recogniser heard is shown, as Unknown when nobody is identified ***',
+      a && a.who.kind === 'unknown' && a.source === 'room');
+    const b = subs.heard({ text: 'water please' }, { source: 'phone', speaker: devicePrior({ near: 'Alex' }) });
+    check('from the pillow phone: shown, marked "Unsure (maybe …)"', b && b.who.label === 'Unsure (maybe Alex)' && b.source === 'phone');
+    subs.destroy();
+  }
+
+  section('*** non-modal, large, still when asked ***');
+  {
+    const under = document.createElement('button');
+    under.id = 'under'; under.textContent = 'a control under the subtitles';
+    document.body.append(under);
+    under.focus();
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0 }, reducedMotion: true });
+    const el = subs.element();
+    for (let i = 0; i < 50 && getComputedStyle(el).position !== 'fixed'; i++) await sleep(50);
+    subs.add({ text: 'Can you hear me?' });
+    check('its stylesheet arrived', getComputedStyle(el).position === 'fixed', getComputedStyle(el).position);
+    check('it is a polite log to a screen reader, never an alert',
+      el.getAttribute('role') === 'log' && el.getAttribute('aria-live') === 'polite');
+    check('*** it takes no focus ***', document.activeElement === under);
+    check('*** it takes no presses ***', getComputedStyle(el).pointerEvents === 'none');
+    const box = el.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    check('*** a press on it reaches whatever is underneath ***', hit === under, hit && (hit.id || hit.className));
+    const px = parseFloat(getComputedStyle(el.querySelector('.subs-line')).fontSize);
+    check('*** large: at least 24px ***', px >= 24, String(px));
+    check('*** reduced motion: no animation ***', el.classList.contains('subs-still')
+      && getComputedStyle(el.querySelector('.subs-line')).animationName === 'none',
+      getComputedStyle(el.querySelector('.subs-line')).animationName);
+    subs.setReducedMotion(false);
+    check('...and it can be turned back', !el.classList.contains('subs-still'));
+    subs.update({ subtitlesOn: true, subtitlesSize: 'largest', subtitlesHoldMs: 0 });
+    const px2 = parseFloat(getComputedStyle(el.querySelector('.subs-line')).fontSize);
+    check('a bigger size is bigger', px2 > px, `${px} -> ${px2}`);
+
+    section('*** readable on every theme (measured) ***');
+    const worst = [];
+    for (const [id, t] of Object.entries(THEMES)) {
+      const v = t.vars || {};
+      const r = contrast(v['--on-dark'], v['--letterbox']);
+      if (!(r >= 7)) worst.push(`${id} ${r.toFixed(2)}`);
+    }
+    check(`*** every theme’s caption pair clears 7:1 (AAA) — ${Object.keys(THEMES).length} themes ***`,
+      worst.length === 0, worst.join('; '));
+    const measured = [];
+    for (const id of Object.keys(THEMES)) {
+      applyTheme(document.documentElement, id);
+      const line = el.querySelector('.subs-line');
+      const fg = rgb(getComputedStyle(line).color); const bg = rgb(getComputedStyle(line).backgroundColor);
+      const r = fg && bg && bg.a === 1 ? contrast(hex(fg), hex(bg)) : 0;
+      measured.push({ id, r });
+    }
+    const lowest = measured.reduce((m, x) => (x.r < m.r ? x : m), measured[0]);
+    check('*** ...and measured on the rendered line, in the browser, on every theme ***',
+      measured.every((x) => x.r >= 7), `lowest ${lowest.id} ${lowest.r.toFixed(2)}`);
+    applyTheme(document.documentElement, 'default');
+    subs.destroy(); under.remove();
+  }
+
+  section('*** it stays out of a game’s answers ***');
+  {
+    check('bottom when nothing is in the way', placeSubtitles({ viewportH: 800, boxH: 100, avoid: [] }) === 'bottom');
+    check('*** top when the bottom would cover an answer ***',
+      placeSubtitles({ viewportH: 800, boxH: 100, avoid: [{ top: 650, bottom: 780, width: 400, height: 130 }] }) === 'top');
+    check('*** dock when both would — it asks for room rather than cover them ***',
+      placeSubtitles({ viewportH: 800, boxH: 100, avoid: [{ top: 0, bottom: 800, width: 400, height: 800 }] }) === 'dock');
+    check('something invisible is not in the way',
+      placeSubtitles({ viewportH: 800, boxH: 100, avoid: [{ top: 650, bottom: 780, width: 0, height: 0 }] }) === 'bottom');
+    check('the known answer rows are looked for, and anything marked data-answer-area',
+      ANSWER_AREA_SELECTORS.includes('[data-answer-area]') && ANSWER_AREA_SELECTORS.includes('.choice-card'));
+
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0 }, reducedMotion: true });
+    const el = subs.element();
+    const bottomAns = document.createElement('div');
+    bottomAns.className = 'answers'; bottomAns.setAttribute('data-answer-area', ''); bottomAns.style.bottom = '0';
+    document.body.append(bottomAns);
+    subs.add({ text: 'Which one is bigger?' });
+    check('*** a game’s answers at the bottom: the subtitles go to the top ***', el.dataset.place === 'top', el.dataset.place);
+    const lb = el.getBoundingClientRect(); const ab = bottomAns.getBoundingClientRect();
+    check('...and really do not overlap them on screen', lb.bottom <= ab.top, `${lb.bottom} vs ${ab.top}`);
+    const topAns = document.createElement('div');
+    topAns.className = 'answers'; topAns.setAttribute('data-answer-area', ''); topAns.style.top = '0';
+    document.body.append(topAns);
+    subs.add({ text: 'Both rows taken' });
+    check('answers at both ends: dock, and the screen is asked to make room',
+      el.dataset.place === 'dock' && !!document.documentElement.style.getPropertyValue('--subtitles-reserve'),
+      document.documentElement.style.getPropertyValue('--subtitles-reserve'));
+    bottomAns.remove(); topAns.remove();
+    subs.add({ text: 'clear again' });
+    check('gone again: back to the bottom, and the room is given back',
+      el.dataset.place === 'bottom' && !document.documentElement.style.getPropertyValue('--subtitles-reserve'));
+    subs.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+/* phone_mic.css — the screen's "Microphone on" notice (`mountMicLiveIndicator`). Loaded by the
+   component itself. The theme's caption pair (`--on-dark` over `--letterbox`), like the subtitles,
+   so it reads on every theme and chooses no colour of its own. */
+.mic-live {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  z-index: var(--z-floating, 900);
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .5em;
+  padding: .35em .8em;
+  border-radius: 999px;
+  background: var(--letterbox);
+  color: var(--on-dark);
+  font: 700 clamp(16px, 2.4vmin, 28px)/1.2 var(--font, system-ui, sans-serif);
+}
+.mic-live[hidden] { display: none; }
+/* The dot is a shape, not a colour: filled while live, a ring while connecting. */
+.mic-live .ml-dot {
+  width: .7em; height: .7em; border-radius: 50%;
+  border: .14em solid currentColor; box-sizing: border-box;
+}
+.mic-live[data-phase="live"] .ml-dot { background: currentColor; }

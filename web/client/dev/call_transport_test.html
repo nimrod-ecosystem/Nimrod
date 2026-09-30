@@ -339,6 +339,32 @@ try {
   }
 
   // =====================================================================================
+  section('*** a phone joining as a microphone is not a call (row 2.42) ***');
+  {
+    const { PC } = fakePeer();
+    const link = fakeLink();
+    const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream });
+    const rings = [], ended = [];
+    t.onIncoming((f) => rings.push(f));
+    t.onEnded((r) => ended.push(r));
+    link.deliver({ kind: 'offer', purpose: 'phone-mic', session: 'pm-1', sdp: 'm=audio 9 x' });
+    check('*** a phone-microphone offer does NOT ring the screen ***',
+      rings.length === 0 && t.__probe().pendingOffer === false, JSON.stringify(rings));
+    link.deliver({ kind: 'offer', sdp: 'O' });
+    await t.answer({ outgoing: { kind: 'video' } });
+    check('(a real call is live)', t.__probe().live === true && rings.length === 1);
+    link.deliver({ kind: 'bye', purpose: 'phone-mic', session: 'pm-1' });
+    check('*** ...and a phone leaving does NOT hang up the call ***',
+      t.__probe().live === true && ended.length === 0, JSON.stringify(ended));
+    link.deliver({ kind: 'offer', purpose: 'phone-mic', session: 'pm-2', sdp: 'm=audio 9 x' });
+    check('a phone offer mid-call is not taken for a reconnect',
+      link.sent.filter((s) => s.kind === 'answer').length === 1, JSON.stringify(link.sent.map((s) => s.kind)));
+    link.deliver({ kind: 'bye', purpose: 'call' });
+    check('a signal that says it IS a call is still a call', ended.join() === 'remote');
+    t.destroy();
+  }
+
+  // =====================================================================================
   section('*** a signal is not a verb, and can never become one ***');
   {
     // The whole reason signals may travel both ways on a socket where verbs may not.
