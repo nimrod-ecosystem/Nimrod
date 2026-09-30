@@ -132,6 +132,13 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
         <ul class="s-nav s-out">
           <li><a class="s-navb s-link" href="/modules.html"
             title="what each part does, and a live one to try">What you can add ↗</a></li>
+          <!-- THE GAME HAD NO WAY IN (Mike, 2026-09-29: "I don't see anything for the game or
+               profiles... I don't see Nimrod anywhere"). Game step 1 and Nimrod the cat's
+               walkthrough both live on /game/, which nothing linked to - reachable only by typing
+               the address. Beside "What you can add" for the same reason that link is here: it is
+               what a new person needs first. -->
+          <li><a class="s-navb s-link" href="/game/"
+            title="make your own profile screen, with Nimrod the cat to show you how">Make your profile ↗</a></li>
         </ul>
         <ul class="s-nav">
           ${VISIBLE_TABS.map((t) => `<li><button class="s-navb" data-tab="${t.id}" title="${t.hint}">${t.label}</button></li>`).join('')}

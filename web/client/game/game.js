@@ -30,7 +30,8 @@
 //     the second, and the composer (Home -> the screen -> arrange) moves either. 'quad' or 'main'
 //     would leave empty cells that read as something missing on a first screen.
 //   * The sign starts as Design's name plate with the person's name (or "Your name"); the picture
-//     starts in Design's classic picture frame captioned "My picture" with NO picture chosen —
+//     starts in Design's classic picture frame with NO words and NO picture chosen (2026-09-29; it
+//     was captioned "My picture" until Mike ruled the name lives only on the sign) —
 //     choosing one is the person's first real use of the settings menu, and the game cannot know
 //     which photo is them. (Until 2026-09-29 these were the placeholder `plaque` and `picture`;
 //     profiles made then still read as `plate` and `classic` — button.js's LEGACY_* maps.)
@@ -44,7 +45,10 @@ export const PROFILE_STAMP = 'profile';         // settings.game on the screen t
 export const ROOM_THEME = 'cozy';
 export const PROFILE_LAYOUT = 'side';
 export const SLOT = Object.freeze({ picture: 0, sign: 1 });
-export const PICTURE_START = Object.freeze({ label: 'My picture', frame: 'classic', style: 'plain' });
+// NO WORDS on the picture (Mike, 2026-09-29: "yes" to "should the picture start with no words at
+// all, so the name only lives on the sign?"). The two are separate objects; the empty classic frame
+// is the whole picture until one is chosen.
+export const PICTURE_START = Object.freeze({ label: '', frame: 'classic', style: 'plain' });
 export const SIGN_START = Object.freeze({ style: 'plate', frame: 'none' });
 
 // "Me" is what BOTH backends call an account's first person before anybody names them
