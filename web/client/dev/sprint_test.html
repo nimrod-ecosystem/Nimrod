@@ -32,6 +32,7 @@ import { createState } from '../state.js';
 import { createEvents } from '../events.js';
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
+import { SCORE_SHOWN_TOPIC } from '../score_source.js';
 import {
   POINTS_STREAM, POINTS_TOPIC, POINTS_KIND,
   pointsValue, sumPoints, sumBySource, dayKey, sumPointsOn, createPointsLedger,
@@ -163,6 +164,21 @@ const MIN = 60000;
 
     check('idle shows the work duration', clockText() === '25:00', clockText());
     check('idle phase label', phaseText() === 'Ready', phaseText());
+
+    // Row 2.40: "N points today" is the whole ledger's day, which a Scoreboard following "Points
+    // earned today" shows. With `auto` (the default) the line steps aside while one does.
+    {
+      const todayWrap = () => host.querySelector('[data-today-wrap]');
+      check('row 2.40: "points today" is under the timer by default', todayWrap() && todayWrap().hidden === false);
+      bus.publish(SCORE_SHOWN_TOPIC, { source: 'points:today', by: 'sb1', on: true });
+      check('*** with a Scoreboard showing the day’s points, the line steps aside ***', todayWrap().hidden === true);
+      check('...but what THIS sprint is worth stays (it is not a tally)', /worth \+/.test(host.querySelector('[data-worth]').textContent));
+      bus.publish(SCORE_SHOWN_TOPIC, { source: 'points:today', by: 'sb1', on: false });
+      check('...and it comes back when the Scoreboard lets go', todayWrap().hidden === false);
+      bus.publish(SCORE_SHOWN_TOPIC, { source: 'trivia', by: 'sb1', on: true });
+      check('a Scoreboard showing something ELSE changes nothing here', todayWrap().hidden === false);
+      bus.publish(SCORE_SHOWN_TOPIC, { source: 'trivia', by: 'sb1', on: false });
+    }
 
     // start via the BUS (not the buttons) — proves the input seam
     bus.publish('sprint/control', 'start');

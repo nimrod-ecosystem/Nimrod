@@ -48,6 +48,7 @@ import '../modules/pond.js';
 import '../modules/progress.js';
 import '../modules/quests.js';
 import '../modules/reading_log.js';
+import '../modules/scoreboard.js';
 import '../modules/calculator.js';
 import '../modules/button.js';
 import '../modules/sprint.js';
@@ -151,8 +152,9 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // the list is named, so a third arrival has to be added here on purpose.
   // 2026-09-30: `word_games` (row 2.31) is built on the new core, like `button`.
   // 2026-09-30: `room` (rows 2.33/2.34/2.37, the room renderer) is built on the new core.
-  const PORTED = ['button', 'calculator', 'room', 'word_games'];
-  check('exactly four modules in today’s real registry are on the new core: button, calculator, room and word_games',
+  // 2026-09-30: `scoreboard` (row 2.40) is built on the new core.
+  const PORTED = ['button', 'calculator', 'room', 'scoreboard', 'word_games'];
+  check('exactly five modules in today’s real registry are on the new core: button, calculator, room, scoreboard and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length

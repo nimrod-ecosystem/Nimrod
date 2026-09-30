@@ -100,7 +100,8 @@ try {
       host.querySelector('[data-page] .st-head')?.textContent === 'Comet',
       host.querySelector('[data-page] .st-head')?.textContent);
 
-    // showScore is a toggle field on comet, default true (this session's own earlier flip).
+    // The 'Score' row on comet. It was the `showScore` toggle; since 2026-09-30 (row 2.40) it is the
+    // three-way `ownScore` choice (auto -> always -> off), so one press steps auto to always.
     await sleep(150);   // the page's own async state load
     const showScoreRow = () => [...host.querySelectorAll('[data-page-body] [data-n]')]
       .find((b) => b.querySelector('.st-label')?.textContent === 'Score');
@@ -113,7 +114,7 @@ try {
     const direct = createState({ url: profiles.stateURL(profile.id, cometMod.id), user: USER });
     await direct.load();
     check('*** the write landed on the SIBLING\'S OWN saved state, not a second copy ***',
-      direct.get()?.showScore === false, JSON.stringify(direct.get()));
+      direct.get()?.ownScore === 'always', JSON.stringify(direct.get()));
   }
 
   section('*** THEME scope — the same per-profile theme every screen reads ***');

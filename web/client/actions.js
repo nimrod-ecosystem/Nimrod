@@ -320,6 +320,14 @@ export const MODULE_VERBS = {
   counter:       { select: { topic: 'counter/delta', payload: 1 },
                    up:     { topic: 'counter/delta', payload: 1 },
                    down:   { topic: 'counter/delta', payload: -1 } },
+  // THE SCOREBOARD (row 2.40). `next`/`prev` walk a highlight through every button on it and
+  // `select` presses the lit one - the calculator's shape, so every button (−1, +1, Set the target,
+  // Show as overlay, Remove, Follow ...) is reachable by one switch. `up`/`down` are the counter's
+  // own +1 / −1 on whichever counter is in front of you, the `counter` shape above, so the thing a
+  // switch user does most costs one press instead of a walk. No `back`: there is nothing to leave.
+  scoreboard:    { next: 'scoreboard/next', prev: 'scoreboard/prev', select: 'scoreboard/select',
+                   up:   { topic: 'scoreboard/delta', payload: 1 },
+                   down: { topic: 'scoreboard/delta', payload: -1 } },
 };
 
 // What a verb does on a given module type, normalized to {topic, payload}.

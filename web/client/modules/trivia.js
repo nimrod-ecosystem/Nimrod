@@ -78,6 +78,7 @@ import { packsFor, packById } from '../pack_library.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
          TRIVIA_LESSON_QUESTIONS, createQuestMode, ALL_UNLOCKED } from '../lessons.js';
 import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
+import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 
 export const GAME = 'trivia';
 
@@ -87,9 +88,15 @@ export const DEFAULTS = {
   // someone can't walk away from not show a score? Games have scores. That's pretty standard."
   // The earlier off-by-default was itself already a correction of a misquote (see the SETTINGS
   // row below) -- this is a second, later, direct ruling on top of that, not a reopening of
-  // the misquote question. Still a real `showScore` setting either way, so anyone who wants it
-  // off still can.
-  showScore: true,
+  // the misquote question. Still a real setting either way, so anyone who wants it off still can.
+  //
+  // *** 2026-09-30 (row 2.40): THE SCORE IS PUBLISHED, AND A SCOREBOARD CAN TAKE IT OVER. *** Mike:
+  // "we probably have a bunch of modules drawing their own scoreboards. We shouldn't have that."
+  // The row is now `ownScore` (auto / always / off, `../score_source.js`); `auto` keeps the score on
+  // screen by default — the 09-22 ruling — and steps it aside the moment a Scoreboard on the same
+  // screen shows it. A saved `showScore: false` still means off (`ownScoreMode`). DELIBERATELY NOT
+  // a key in DEFAULTS: `cfg` spreads DEFAULTS under the saved state, and a default `ownScore` here
+  // would hide an old saved `showScore: false` from `ownScoreMode` and turn the score back on.
   // *** ONE POINT, QUARTERED BY GUESS: 1 / 0.75 / 0.5 / 0.25. *** Chat's #5, and the
   // calibration behind it is Mike's atom -- "a point is roughly a minute of effort", which is
   // what `points.js` already means by one point. Two points for answering a four-choice
@@ -331,9 +338,11 @@ const SETTINGS = [
   // cannot walk away from should not keep a running tally unless somebody decided it should) --
   // he decided it should. `comet` gets the identical reversal for the identical reason; see
   // its own SETTINGS row.
-  { key: 'showScore', label: 'Score', default: true, level: 'essential',
-    onLabel: 'Show how many are right so far', offLabel: 'No score on screen',
-    note: 'How many trivia answers were right — never anything about how somebody spoke.' },
+  //
+  // *** 2026-09-30, row 2.40: `showScore` (on/off) became `ownScore` (auto/always/off). *** See
+  // DEFAULTS. Same label, same level, so the row is where it always was.
+  ownScoreField({ note: 'How many trivia answers were right — never anything about how somebody '
+    + 'spoke. A Scoreboard on the same screen can show it instead.' }),
   { key: 'correctPoints', label: 'Points for a first-guess answer', kind: 'number', default: 1,
     level: 'advanced', min: 0, max: 10, step: 1,
     note: 'Each further guess is worth a quarter less, down to a quarter of this.' },
@@ -413,6 +422,14 @@ registerModule(
 
     const el = (s) => mount.querySelector(s);
 
+    // *** THE SCORE, PUBLISHED (row 2.40, `../score_source.js`). *** The same count `.tv-score`
+    // draws, so a Scoreboard following Trivia and this panel can never disagree. Made in init();
+    // when a Scoreboard starts or stops showing it, this panel redraws to step its own aside.
+    let score = null;
+    function publishScore() {
+      score?.set?.(rightCount, { detail: askedCount ? `${askedCount} asked` : '' });
+    }
+
     // Never let the deck just be quietly shorter (or, at the extreme, entirely empty) —
     // name what's waiting and why, the same rule Word Forge follows for the same reason.
     const heldNote = () => held.length
@@ -440,9 +457,13 @@ registerModule(
         return;
       }
       const done = answered !== null;
+      // THE SCORE GOES OUT FIRST, drawn here or not: a Scoreboard shows it from this (row 2.40).
+      publishScore();
+      const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore, showScore: cfg.showScore }),
+        !!score?.shownElsewhere());
       mount.innerHTML = `
         <div class="tv">
-          <p class="tv-count">${at + 1} of ${deck.length}${cfg.showScore
+          <p class="tv-count">${at + 1} of ${deck.length}${own
             ? ` <span class="tv-score">· ${rightCount} right</span>` : ''}</p>
           ${held.length ? `<p class="tv-held" data-held>${heldNote()}</p>` : ''}
           <h3 class="tv-q">${esc(q.question)}</h3>
@@ -712,6 +733,10 @@ registerModule(
         highlight, streak, deck: deck.length, after, contested,
                         question: q ? { ...q } : null, bank: bank.length }),
       init() {
+        // Before anything renders, so the first render already knows whether a Scoreboard on this
+        // screen is showing Trivia (a Scoreboard that is already here answers the source's ask).
+        score = createScoreSource(bus, { source: GAME, label: 'Trivia: right answers',
+          instance: ctx.instanceId || null, onShownChange: () => { if (q) render(); } });
         // FIRST, so the very first round is dealt without contested questions in it.
         try {
           contests = typeof ctx.makeEvents === 'function' ? createContests({ makeEvents: ctx.makeEvents, bus }) : null;
@@ -823,6 +848,7 @@ registerModule(
       onHide() { state?.flush?.(); },
       destroy() {
         recorder = null;
+        if (score) { score.destroy(); score = null; }
         if (contests) { contests.destroy(); contests = null; }
         if (lessons) { lessons.destroy(); lessons = null; }
         if (mode) { mode.destroy(); mode = null; }

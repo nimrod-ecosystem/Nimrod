@@ -34,6 +34,7 @@ import { createBus } from '../bus.js';
 import { verbTarget, verbsFor } from '../actions.js';
 import { expectFor } from '../health.js';
 import { CATALOG } from '../modules_catalog.js';
+import { SCORE_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -258,6 +259,40 @@ section('*** the start screen, and the score ***');
   check('and it says what was caught',
         /1 caught/.test(host.querySelector('.cm-score').textContent),
         host.querySelector('.cm-score').textContent);
+  inst.destroy(); host.remove();
+}
+{
+  // *** ROW 2.40: THE COUNT IS PUBLISHED, AND A SCOREBOARD CAN TAKE IT OVER. *** `showScore` became
+  // the three-way `ownScore` (score_source.js); the two blocks above still pass because an old
+  // saved `showScore: false` still means off, and `true` reads as the default.
+  const row = (getManifest('comet').settings || []).find((f) => f.key === 'ownScore');
+  check('the Score row is the three-way ownScore row, default auto', !!row && row.default === 'auto' && row.label === 'Score'
+    && !(getManifest('comet').settings || []).some((f) => f.key === 'showScore'));
+  const host = scratch();
+  const bus = createBus();
+  const heard = [];
+  bus.subscribe(SCORE_TOPIC, (p) => { if (p.source === 'comet') heard.push(p); });
+  const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1 }) } });
+  await sleep(20);
+  bus.publish('comet/seek');
+  steps(inst, 12);
+  check('*** a catch is published on the score contract ***', heard.length && heard[heard.length - 1].value === probe(inst).caught
+    && probe(inst).caught === 1, JSON.stringify(heard));
+  bus.publish(SCORE_SHOWN_TOPIC, { source: 'comet', by: 'sb1', on: true });
+  check('*** with a Scoreboard showing it, the corner readout steps aside ***', !!host.querySelector('.cm-score[hidden]'));
+  bus.publish(SCORE_SHOWN_TOPIC, { source: 'comet', by: 'sb1', on: false });
+  check('...and comes back when the Scoreboard lets go', !!host.querySelector('.cm-score:not([hidden])'));
+  inst.destroy();
+  check('destroy says the source is gone', heard[heard.length - 1].gone === true);
+  host.remove();
+}
+{
+  const host = scratch();
+  const bus = createBus();
+  const inst = mount(host, { bus, state: { get: () => ({ steerMs: 32, hearts: 1, ownScore: 'always' }) } });
+  await sleep(20);
+  bus.publish(SCORE_SHOWN_TOPIC, { source: 'comet', by: 'sb1', on: true });
+  check('"always" keeps the corner readout even with a Scoreboard showing it', !!host.querySelector('.cm-score:not([hidden])'));
   inst.destroy(); host.remove();
 }
 

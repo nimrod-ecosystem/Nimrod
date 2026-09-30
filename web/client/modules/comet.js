@@ -46,6 +46,7 @@ import { mountSettings } from '../settings.js';
 import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
 import { hitCircle, nearest } from '../pressable.js';
+import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 
 const DEFAULTS = {
   hearts: 4,        // how many balloons are up at once
@@ -63,8 +64,14 @@ const DEFAULTS = {
   // turns a yes into a number that could read as decline on a bad day. Mike, 2026-09-22, on
   // reconsidering it directly: "I think comet should probably show a score by default too" — the
   // hedge is exactly as easy to reverse as it was to add; that concern is not gone, only no
-  // longer the default. `showScore` stays a real, reachable setting either way.
-  showScore: true,
+  // longer the default. The score stays a real, reachable setting either way.
+  //
+  // *** 2026-09-30 (row 2.40): `showScore` (on/off) became `ownScore` (auto / always / off). ***
+  // Mike: "we probably have a bunch of modules drawing their own scoreboards. We shouldn't have
+  // that." The count is now PUBLISHED (`../score_source.js`) and a Scoreboard on the same screen can
+  // show it; `auto` keeps it in this corner by default (the 09-22 ruling above) and steps it aside
+  // only while a Scoreboard is showing it. Not a key here, on purpose: `cfg` spreads DEFAULTS under
+  // the saved state, and a default `ownScore` would hide an old saved `showScore: false`.
   // Open to a start screen rather than mid-flight. See pressgame.js for the same setting and
   // the same argument; a bedside panel that is meant to be already running turns it off.
   openToMenu: true,
@@ -88,8 +95,8 @@ function readTheme(el) {
 }
 
 const SETTINGS = [
-  { key: 'showScore', label: 'Score', default: true, level: 'essential',
-    onLabel: 'Show hearts caught', offLabel: 'No score on screen' },
+  // Same label and level as the `showScore` row it replaces, so it is where it always was.
+  ownScoreField({ note: 'How many hearts were caught. A Scoreboard on the same screen can show it instead.' }),
   { key: 'openToMenu', label: 'When the panel opens', default: true, level: 'essential',
     onLabel: 'Show a start screen first', offLabel: 'Start straight away' },
   { key: 'hearts', label: 'Hearts floating up', kind: 'choice', default: 4, level: 'essential',
@@ -275,9 +282,16 @@ registerModule(
     // ---- the score, and starting ------------------------------------------------------
     // DOM rather than canvas: it is text, so it should be text — selectable, readable by a
     // screen reader, and scaling with the panel instead of with a hand-tuned font size.
+    //
+    // PUBLISHED FIRST (row 2.40): once a game has started, the count goes out on the score contract
+    // whether or not this corner draws it, so a Scoreboard can show it instead.
+    let score = null;
     function paintScore() {
+      if (started) score?.set?.(caught);
       if (!scoreEl) return;
-      scoreEl.hidden = !cfg.showScore || !started;
+      const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore, showScore: cfg.showScore }),
+        !!score?.shownElsewhere());
+      scoreEl.hidden = !own || !started;
       scoreEl.textContent = `${caught} caught`;
     }
 
@@ -669,7 +683,13 @@ registerModule(
         // against, which is the one thing `pressgame` and `call` each had to protect.
         offs.push(state?.subscribe?.(() => {
           cfg = { ...DEFAULTS, ...(state.get() || {}) };
+          paintScore();   // the score row is live too, not only on the next catch
         }) || (() => {}));
+        // The score contract (row 2.40). Released in destroy() through `offs`, which also says the
+        // source is gone so a Scoreboard following Comet stops calling it live.
+        score = createScoreSource(bus, { source: 'comet', label: 'Comet: hearts caught',
+          instance: ctx.instanceId || null, onShownChange: () => paintScore() });
+        offs.push(() => { score?.destroy(); score = null; });
         offs.push(bus.subscribe(AIM_TOPIC, onAim));
         // Place it on whatever the last aim was, so a comet mounted mid-session starts under
         // her hand rather than waiting for a movement she may take a while to make.

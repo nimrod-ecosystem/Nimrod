@@ -72,6 +72,7 @@ import './modules/calculator.js';
 import './modules/button.js';     // registers 'button' (the game's name sign and picture)
 import './modules/wordforge.js';
 import './modules/trivia.js';    // registers 'trivia'
+import './modules/scoreboard.js';      // registers 'scoreboard'
 import './modules/room.js';            // registers 'room'
 import './modules/word_games.js';      // registers 'word_games'
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)

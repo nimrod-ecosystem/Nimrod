@@ -37,6 +37,7 @@ import {
   calcInit, calcPress, calcValue, CALC_KEYS,
 } from '../modules/algebra.js';
 import '../modules/algebra.js';
+import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('alg-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -206,6 +207,25 @@ const type = (keys) => keys.split('').reduce((st, k) => calcPress(st, k), calcIn
     await ledger.load();
     check('acknowledging pays the try', ledger.total() === beforeIdk + DEFAULTS.tryPoints,
       `${beforeIdk} -> ${ledger.total()}`);
+
+    // ================= row 2.40 =================
+    section('*** row 2.40: the points line is published, and a Scoreboard can take it over ***');
+    {
+      const heard = [];
+      const offScore = bus.subscribe(SCORE_TOPIC, (p) => { if (p.source === 'algebra') heard.push(p); });
+      bus.publish(SCORE_ASK_TOPIC, {});
+      const last = heard[heard.length - 1];
+      check('it answers score/ask with the same points the panel draws',
+        !!last && `${last.value} pts` === q('[data-earned]').textContent, `${JSON.stringify(last)} vs ${q('[data-earned]').textContent}`);
+      check('...with problems solved as the detail line', /1 solved/.test(last?.detail || ''), last?.detail);
+      check('the line is drawn by default (auto, and no Scoreboard here)', q('.al-top').style.display !== 'none');
+      bus.publish(SCORE_SHOWN_TOPIC, { source: 'algebra', by: 'sb1', on: true });
+      check('*** with a Scoreboard showing it, the points line steps aside ***', q('.al-top').style.display === 'none');
+      check('...and everything a person uses stays', !!q('.al-prompt') && !!q('.al-pad') && !!q('[data-submit]'));
+      bus.publish(SCORE_SHOWN_TOPIC, { source: 'algebra', by: 'sb1', on: false });
+      check('...and it comes back, handing display back to the stylesheet', q('.al-top').style.display === '');
+      offScore();
+    }
 
     // ================= both streams =================
     section('both streams, again');

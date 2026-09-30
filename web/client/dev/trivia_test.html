@@ -44,6 +44,8 @@ import '../modules/comet.js';
 import { parseBank, buildDeck, makeQuestion, shuffle, DEFAULTS, packToTriviaBank } from '../modules/trivia.js';
 import { worth as mcqWorth } from '../mcq_scoring.js';
 import '../modules/trivia.js';
+import '../modules/scoreboard.js';
+import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -136,16 +138,18 @@ try {
     // which PROPOSES a trivia score. The file had talked itself into the opposite of its own
     // argument, and then cited a person for it.
     const keys = (getManifest('trivia').settings || []).map((f) => f.key);
-    check('*** a score is at least available now ***', keys.includes('showScore'),
+    // 2026-09-30, row 2.40: the on/off `showScore` row became the three-way `ownScore` row
+    // (auto / always / off, score_source.js) so a Scoreboard can take the score over.
+    check('*** a score is at least available now ***', keys.includes('ownScore') && !keys.includes('showScore'),
       JSON.stringify(keys));
     // *** ON BY DEFAULT, REVERSED 2026-09-22 — Mike: "Why should a screen someone can't walk
     // away from not show a score? Games have scores. That's pretty standard." *** `comet` gets
     // the identical reversal, for the identical reason — still matching each other, just at
-    // the opposite value.
-    const row = (getManifest('trivia').settings || []).find((f) => f.key === 'showScore');
-    const cometRow = (getManifest('comet').settings || []).find((f) => f.key === 'showScore');
-    check('...on by default, per Mike’s direct ruling',
-      row.default === true);
+    // the opposite value. `auto` keeps that ruling: shown unless a Scoreboard is showing it.
+    const row = (getManifest('trivia').settings || []).find((f) => f.key === 'ownScore');
+    const cometRow = (getManifest('comet').settings || []).find((f) => f.key === 'ownScore');
+    check('...on by default (auto: on this panel unless a scoreboard shows it), per Mike’s direct ruling',
+      row.default === 'auto' && row.label === 'Score');
     check('*** ...and matching comet rather than inventing a second answer ***',
       !!cometRow && cometRow.default === row.default && cometRow.level === row.level,
       JSON.stringify({ trivia: [row.default, row.level], comet: [cometRow?.default, cometRow?.level] }));
@@ -179,6 +183,65 @@ try {
     check('*** what a wrong guess cost is still not put in front of them ***',
       !/point|0\.75|0\.5/i.test(on.host.textContent), on.host.textContent.slice(0, 120));
     on.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** row 2.40: the score is PUBLISHED, and a Scoreboard can take it over ***');
+  {
+    // Mike, 2026-09-30: "we probably have a bunch of modules drawing their own scoreboards. We
+    // shouldn't have that." Trivia now says its score on the bus (score_source.js); a Scoreboard on
+    // the same screen shows it, and this panel's own `.tv-score` steps aside while it does.
+    const t = rig({});
+    const heard = [];
+    t.bus.subscribe(SCORE_TOPIC, (p) => heard.push(p));
+    t.bus.publish(SCORE_ASK_TOPIC, {});
+    const last = () => heard.filter((p) => p.source === 'trivia').pop();
+    check('it answers score/ask with its score', last()?.value === 0 && /Trivia/.test(last()?.label || ''),
+      JSON.stringify(last()));
+    t.host.querySelectorAll('[data-opt]')[t.probe().question.correctIndex].click();
+    await sleep(10);
+    check('*** a right answer is published — the same number .tv-score draws ***', last()?.value === 1
+      && /1 right/.test(t.host.querySelector('.tv-score')?.textContent || ''), JSON.stringify(last()));
+    t.bus.publish(SCORE_SHOWN_TOPIC, { source: 'trivia', by: 'sb1', on: true });
+    check('*** with a Scoreboard showing it, the panel does not draw it twice ***', !t.host.querySelector('.tv-score'),
+      t.host.querySelector('.tv-count')?.textContent);
+    check('...and the question count stays (it is where you are, not a score)', /1 of \d/.test(t.host.querySelector('.tv-count')?.textContent || ''));
+    t.bus.publish(SCORE_SHOWN_TOPIC, { source: 'trivia', by: 'sb1', on: false });
+    check('when the Scoreboard lets go, the panel draws it again', !!t.host.querySelector('.tv-score'));
+    t.inst.destroy();
+    check('destroy says the source is gone', last()?.gone === true);
+
+    const always = rig({ saved: { ownScore: 'always' } });
+    always.bus.publish(SCORE_SHOWN_TOPIC, { source: 'trivia', by: 'sb1', on: true });
+    check('"always": drawn here even with a Scoreboard showing it', !!always.host.querySelector('.tv-score'));
+    always.inst.destroy();
+
+    const off = rig({ saved: { ownScore: 'off' } });
+    const offHeard = [];
+    off.bus.subscribe(SCORE_TOPIC, (p) => offHeard.push(p));
+    off.bus.publish(SCORE_ASK_TOPIC, {});
+    check('"off": never drawn here — but still published, so a Scoreboard can show it',
+      !off.host.querySelector('.tv-score') && offHeard.some((p) => p.source === 'trivia'));
+    off.inst.destroy();
+
+    // End to end with the real Scoreboard, on one bus.
+    const e2e = rig({});
+    const sbHost = document.createElement('div');
+    document.body.append(sbHost);
+    const sb = mountModule('scoreboard', { mount: sbHost, bus: e2e.bus, state: null, personId: null,
+      instanceId: 'sbE2E', makeState: () => null });
+    sb.init();
+    const follow = [...sbHost.querySelectorAll('[data-act="follow"]')].find((b) => b.dataset.source === 'trivia');
+    check('the real Scoreboard offers to follow Trivia', !!follow);
+    follow?.click();
+    check('*** following it removes Trivia’s own score from its panel ***', !e2e.host.querySelector('.tv-score'));
+    e2e.host.querySelectorAll('[data-opt]')[e2e.probe().question.correctIndex].click();
+    await sleep(10);
+    check('...and the Scoreboard shows the right answer', sbHost.querySelector('[data-value]')?.textContent === '1',
+      sbHost.querySelector('[data-value]')?.textContent);
+    sb.destroy(); sbHost.remove();
+    check('with the Scoreboard gone, Trivia draws its own score again', !!e2e.host.querySelector('.tv-score'));
+    e2e.inst.destroy();
   }
 
   // =====================================================================================

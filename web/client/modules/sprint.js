@@ -33,6 +33,7 @@
 import { registerModule } from '../module.js';
 import { speak as speakDefault, cancel as cancelSpeak } from '../voice.js';
 import { createPointsLedger } from '../points.js';
+import { watchShown, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 
 export const SOURCE = 'sprint';
 // MIKE_CHANGE_LIST.md §0a item 6, sprint fourth in priority order.
@@ -171,6 +172,13 @@ const SETTINGS = [
     level: 'advanced',
     options: [{ value: 0, label: 'Never — start fresh' }, { value: 15, label: '15 minutes' },
               { value: 60, label: 'An hour' }, { value: 240, label: 'Four hours' }] },
+  // Row 2.40 (Mike, 2026-09-30: "we probably have a bunch of modules drawing their own
+  // scoreboards. We shouldn't have that."). The "N points today" line is the WHOLE ledger's day,
+  // not this timer's own score, which is exactly what a Scoreboard following "Points earned today"
+  // shows. `auto` by default: the line stays until a Scoreboard on the same screen shows it.
+  // "worth +N" stays regardless — that is what the sprint in front of you is worth, not a tally.
+  ownScoreField({ label: 'Points today', level: 'advanced',
+    note: 'The day’s points under the timer. A Scoreboard following "Points earned today" can show them instead.' }),
 ];
 
 registerModule(
@@ -235,6 +243,7 @@ registerModule(
       mult:             num(s.mult, DEFAULTS.mult),
       resumeGraceMin:   num(s.resumeGraceMin, DEFAULTS.resumeGraceMin),
       task:             typeof s.task === 'string' ? s.task : DEFAULTS.task,
+      ownScore:         ownScoreMode(s),
     });
 
     const isRunning = () => run.phase !== 'idle' && run.endsAt != null;
@@ -425,9 +434,13 @@ registerModule(
       el('[data-worth]').textContent = `worth +${Math.round(sprintPoints(cfg) * cfg.mult)}`;
     }
 
+    // Row 2.40: is a Scoreboard on this screen showing the day's points? (`../score_source.js`)
+    let todayShown = null;
     function renderTotals() {
       const t = el('[data-today]');
       if (t && ledger) t.textContent = `${ledger.totalToday(now())} points today`;
+      const wrap = el('[data-today-wrap]');
+      if (wrap) wrap.hidden = !showOwnScore(cfg.ownScore || 'auto', !!todayShown?.shown());
     }
 
     return {
@@ -449,7 +462,7 @@ registerModule(
               </select>
               <span class="s-worth" data-worth></span>
             </div>
-            <div class="s-foot"><span data-cycle></span> · <span data-today>0 points today</span></div>
+            <div class="s-foot"><span data-cycle></span><span data-today-wrap> · <span data-today>0 points today</span></span></div>
           </div>`;
 
         // ONE sink. Anything that can publish here can drive the timer.
@@ -481,6 +494,8 @@ registerModule(
         // The shared, profile-scoped ledger — the same stream every game will write to.
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });
         ledger.subscribe(renderTotals);
+        // Not a score source of its own: the line mirrors the Scoreboard's built-in 'points:today'.
+        todayShown = watchShown(bus, 'points:today', () => renderTotals());
         ledger.load().then(() => ledger.startPolling()).catch(() => {});
 
         // Voice is a per-profile render setting, read the same way educational.js reads it.
@@ -500,6 +515,7 @@ registerModule(
             cycle: Number(snap.cycle) > 0 ? Number(snap.cycle) : 0,
           };
           render();
+          renderTotals();   // the "Points today" row is live too
         });
 
         render();
@@ -517,6 +533,7 @@ registerModule(
         if (ticker != null) { clearTicker(ticker); ticker = null; }
         cancelSay();
         if (ledger) { ledger.destroy(); ledger = null; }
+        if (todayShown) { todayShown.destroy(); todayShown = null; }
         if (settings) { settings.destroy(); settings = null; }
         resumeStream?.destroy?.();
       },
