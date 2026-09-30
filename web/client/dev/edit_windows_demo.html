@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit windows — demo</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  /* A dev page: the stage is a picture of a room, so its paint is literal; everything else is tokens. */
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--text);font:14px/1.4 var(--font, system-ui, sans-serif);padding:16px;box-sizing:border-box;min-height:100vh}
+  *{box-sizing:border-box}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .bar button,.bar select{min-height:44px;padding:0 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font:inherit;font-weight:700;cursor:pointer}
+  .wrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:14px;align-items:start}
+  @media (max-width: 900px){ .wrap{grid-template-columns:1fr} }
+  .stage{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;perspective:900px;
+    background:linear-gradient(180deg,#cfd8cf 0 62%,#8f9c7a 62% 64%,#8f9c7a 64% 78%,#b9aa94 78%)}
+  .grid{position:absolute;inset:0;pointer-events:none;z-index:2000;
+    background-image:linear-gradient(rgba(16,86,102,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(16,86,102,.28) 1px,transparent 1px)}
+  .guide{position:absolute;pointer-events:none;background:var(--accent-warm-deep);z-index:2001}
+  .o{position:absolute;cursor:pointer;user-select:none}
+  .o.sel{outline:2px dashed var(--link);outline-offset:6px}
+  .o.sign{padding:.2em .6em;border-radius:12px;font:800 clamp(24px,5vw,64px)/1 var(--font, system-ui, sans-serif)}
+  .o.pic{width:18%;aspect-ratio:1;border:10px solid #6b4a32;background:repeating-linear-gradient(45deg,#2d4a3a 0 12px,#35574a 12px 24px)}
+  .o.mod{width:22%;aspect-ratio:16/10;border-radius:10px;background:#1b1d22;border:6px solid #2a2d33;color:#e8eef0;display:grid;place-items:center;font-weight:800;font-size:clamp(14px,2.4vw,28px)}
+  .o .tag{position:absolute;left:0;top:100%;margin-top:4px;font:600 11px/1.2 var(--font, system-ui, sans-serif);color:var(--text);background:var(--surface);padding:2px 6px;border-radius:6px;white-space:nowrap;
+    -webkit-text-stroke:0;text-shadow:none}
+  .panes{display:grid;gap:12px}
+  .note{color:var(--text-soft);font-size:.85rem;margin:8px 0 0}
+  #log{font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--text-muted);margin-top:8px;min-height:1.5em}
+</style>
+</head>
+<body>
+<div class="bar">
+  <label>Theme <select id="theme"></select></label>
+  <label>Switch drives <select id="drive"><option value="transform">Transform</option><option value="snap">Snap</option><option value="layers">Layers</option><option value="fx">Text effects</option></select></label>
+  <button id="next" type="button">Switch: next</button>
+  <button id="pick" type="button">Switch: select</button>
+  <button id="reopen" type="button">Open all windows</button>
+  <button id="ink" type="button">Sign text: swap colour</button>
+</div>
+<div class="wrap">
+  <div>
+    <div class="stage" id="stage"><div class="grid" id="grid" hidden></div>
+      <div class="guide" id="gx" hidden style="left:50%;top:0;bottom:0;width:2px;margin-left:-1px"></div>
+      <div class="guide" id="gy" hidden style="top:50%;left:0;right:0;height:2px;margin-top:-1px"></div></div>
+    <p class="note">Click something to select it, or step through the Layers list. Nothing here needs a
+    drag. Every number has − and +, so a single switch can set it, and <b>Fine steps</b> makes the steps
+    smaller. Hotkeys: Ctrl+C, Ctrl+V, Ctrl+D (duplicate), Delete, Ctrl+Z, Ctrl+Y — ignored while typing
+    in a box. Escape closes the window you are in.</p>
+    <div id="log"></div>
+  </div>
+  <div class="panes" id="panes"></div>
+</div>
+
+<script type="module">
+import { THEMES, applyTheme } from '../theme.js';
+import { createEditModel, textEffectsCss, bindEditHotkeys } from '../edit_model.js';
+import { mountTransformWindow, mountSnapWindow, mountLayersWindow, mountTextEffectsWindow } from '../edit_windows.js';
+
+const themeSel = document.getElementById('theme');
+for (const [id, t] of Object.entries(THEMES)) themeSel.append(new Option(t.label || id, id));
+themeSel.onchange = () => applyTheme(document.documentElement, themeSel.value);
+themeSel.value = new URLSearchParams(location.search).get('theme') || 'default';
+applyTheme(document.documentElement, themeSel.value);
+
+const model = createEditModel({
+  selectedId: 'sign',
+  items: [
+    { id: 'sign', name: 'Name sign', kind: 'sign', text: 'Hello', ink: '#fbf3e2', ground: '#8a5f3c',
+      x: 50, y: 24, scale: 100, rot: 0, layer: 3, place: 'scene', surface: 'back',
+      fx: { outline: { on: true, w: 3, c: '#3a2614' }, bevel: { on: true, d: 2 } } },
+    { id: 'pic', name: 'Picture frame', kind: 'pic', x: 24, y: 40, scale: 100, rot: -4, layer: 2, place: 'scene', surface: 'back' },
+    { id: 'clock', name: 'Clock module', kind: 'mod', x: 76, y: 44, scale: 100, rot: 0, layer: 1, place: 'screen' },
+  ],
+});
+
+// ---- the stage: a plain picture of the model -------------------------------------------
+const stage = document.getElementById('stage');
+const SURFACE_TILT = { back: '', left: 'rotateY(35deg)', right: 'rotateY(-35deg)', floor: 'rotateX(55deg)' };
+const PLACE_Z = { scene: 0, screen: 500, overlay: 1000 };
+function draw() {
+  stage.querySelectorAll('.o').forEach((e) => e.remove());
+  const sel = model.selectedId();
+  for (const it of model.items()) {
+    if (!it.shown) continue;
+    const el = document.createElement('div');
+    el.className = `o ${it.kind || 'mod'}${it.id === sel ? ' sel' : ''}`;
+    const tilt = it.place === 'scene' ? SURFACE_TILT[it.surface] : '';
+    el.style.cssText = `left:${it.x}%;top:${it.y}%;z-index:${PLACE_Z[it.place] + it.layer};`
+      + `transform:translate(-50%,-50%) ${tilt} rotate(${it.rot}deg) scale(${it.scale / 100});`
+      + (it.kind === 'sign' ? `color:${it.ink};background:${it.ground};${textEffectsCss(it.fx).css}` : '');
+    el.textContent = it.kind === 'sign' ? it.text : it.kind === 'mod' ? '10:38' : '';
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = `${it.name}${it.locked ? ' (locked)' : ''}`;
+    el.append(tag);
+    el.onclick = () => model.select(it.id);
+    stage.append(el);
+  }
+  const s = model.snap();
+  const g = document.getElementById('grid');
+  g.hidden = !s.showGrid;
+  g.style.backgroundSize = `${s.gridSize}% ${s.gridSize * 16 / 9}%`;
+  const gd = model.guides();
+  document.getElementById('gx').hidden = !gd.x;
+  document.getElementById('gy').hidden = !gd.y;
+}
+model.subscribe((e) => { draw(); document.getElementById('log').textContent = `last change: ${e.type}${e.history ? ' (' + e.history + ')' : ''}`; });
+draw();
+
+// ---- the windows ---------------------------------------------------------------------
+const panes = document.getElementById('panes');
+const open = {};
+const MOUNTS = { transform: mountTransformWindow, snap: mountSnapWindow, layers: mountLayersWindow, fx: mountTextEffectsWindow };
+function openAll() {
+  for (const [k, mount] of Object.entries(MOUNTS)) {
+    if (open[k]?.isOpen()) continue;
+    open[k] = mount(panes, model, { onClose: () => { delete open[k]; } });
+  }
+  // Keep Design's order however many were reopened.
+  for (const k of Object.keys(MOUNTS)) if (open[k]) panes.append(open[k].el);
+}
+openAll();
+document.getElementById('reopen').onclick = openAll;
+
+// ---- a switch, for trying the walk -----------------------------------------------------
+const drive = () => open[document.getElementById('drive').value];
+document.getElementById('next').onclick = () => drive()?.focusStep(1);
+document.getElementById('pick').onclick = () => drive()?.select();
+
+// ---- the contrast warning, on demand -------------------------------------------------
+document.getElementById('ink').onclick = () => {
+  const it = model.item('sign');
+  model.setTextColors({ ink: it.ink === '#fbf3e2' ? '#6b4a32' : '#fbf3e2' }, { id: 'sign' });
+};
+
+bindEditHotkeys(document, model);
+</script>
+</body>
+</html>
