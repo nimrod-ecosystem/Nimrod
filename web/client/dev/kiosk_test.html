@@ -3122,6 +3122,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
     document.body.append(wbox);
     let wk = null;
     let driver = null;
+    let wBus = null;
+    const { CALL_DECLINE } = await import('../modules/call.js');
     try {
       const wp = await wProfiles.create('TEST-wiring-244');
       // The call panel first (so it is on the stage and builds the screen's call transport), then photos,
@@ -3158,7 +3160,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
         rk.ufns.forEach((f) => f({ type: 'end', uid, t: t + 100 }));
         rk.cfns.forEach((f) => f({ id: gid, ear: 'room', text, final: true, confidence: 0.9, engine: 'fake' }));
       };
-      wk = await mountKiosk(wbox, { user: wUser, profileId: wp.id, profiles: wProfiles, bus: createBus(),
+      wBus = createBus();
+      wk = await mountKiosk(wbox, { user: wUser, profileId: wp.id, profiles: wProfiles, bus: wBus,
         storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {}, makeRecognizer: () => rk });
       const item = (id) => wk.menu.items().find((r) => r.id === id);
       const walkTo = (id) => { for (let i = 0; i < 160 && wk.menu.focusId() !== id; i += 1) wk.menu.next(); return wk.menu.focusId() === id; };
@@ -3226,6 +3229,64 @@ const ds = () => root.querySelector('.kiosk').dataset;
           await settled(() => back.some((s) => s.purpose === 'intercom' && s.session === 'ic-wire-2' && s.kind === 'bye' && s.reason === 'busy'), 6000)
           && note().hidden && vr.state().held === null, JSON.stringify(back));
         ct.isLive = origLive;
+      }
+      // ---- 2b. A CALL AND THE ROOM (2026-09-30): a real call offer through the server, answered by the
+      // screen's own transport with a real peer connection and no media (the panel's own answer would
+      // open the camera). A live call holds voice recording; an answered call ends an open intercom
+      // (default "ring"); with "busy" chosen, a call during an intercom is refused and nothing rings.
+      if (ct) {
+        const callPhase = () => wbox.querySelector('.m-call')?.dataset.phase;
+        const realOffer = async () => {
+          const pc = new RTCPeerConnection(); pc.addTransceiver('audio');
+          const o = await pc.createOffer(); await pc.setLocalDescription(o); return { pc, sdp: o.sdp };
+        };
+        driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-4', sdp: SDP });
+        check('(setup) an intercom is opening', await settled(() => !!note() && !note().hidden, 6000), note()?.textContent);
+        const o1 = await realOffer();
+        const mark1 = back.length;
+        driver.sendSignal({ kind: 'offer', sdp: o1.sdp, from: { name: 'Ann' } });
+        check('*** a call during an intercom (default "ring"): the call panel RINGS, and the intercom stays open while it only rings ***',
+          await settled(() => callPhase() === 'ringing', 6000) && !note().hidden
+          && !back.slice(mark1).some((s) => s.session === 'ic-wire-4' && s.kind === 'bye'), `${callPhase()} ${JSON.stringify(back.slice(mark1))}`);
+        check('(while it only rings, recording is held for the intercom alone)', JSON.stringify(vr.state().held) === '["intercom"]', JSON.stringify(vr.state().held));
+        const answered = await ct.answer({});
+        check('(setup) the screen’s transport answered it (live)', answered === true && ct.isLive() === true);
+        check('*** a LIVE call holds voice recording, under its own reason ("call") ***',
+          vr.state().held?.includes('call') && vr.state().recording === false, JSON.stringify(vr.state()));
+        check('*** ...and the open intercom gives the room to it: the phone is told "call", the notice goes ***',
+          await settled(() => back.some((s) => s.purpose === 'intercom' && s.session === 'ic-wire-4' && s.kind === 'bye' && s.reason === 'call'), 6000)
+          && await settled(() => note().hidden, 3000), JSON.stringify(back.slice(mark1)));
+        check('...the intercom’s hold is released and the call’s is not (neither releases the other)',
+          JSON.stringify(vr.state().held) === '["call"]', JSON.stringify(vr.state().held));
+        utter('the caller through the speaker, on a call');
+        await vr.settle(); await sleep(150);
+        check('*** an utterance during the call is NOT kept ***', (await pairs()) === 1, String(await pairs()));
+        ct.hangup('done');
+        check('*** the call ends: the hold goes and recording resumes by itself ***',
+          await settled(() => vr.state().held === null && vr.state().recording === true, 4000), JSON.stringify(vr.state()));
+        check('...and the call panel is back to idle', await settled(() => callPhase() === 'idle', 4000), callPhase());
+        try { o1.pc.close(); } catch { /* closed */ }
+
+        await setRow({ callDuringIntercom: 'busy' });
+        check('(setup) the person chose "busy"', await settled(() => probeCtx?.personRow?.()?.callDuringIntercom === 'busy', 9000));
+        driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-5', sdp: SDP });
+        check('(setup) an intercom is opening again', await settled(() => !!note() && !note().hidden, 6000), note()?.textContent);
+        const o2 = await realOffer();
+        const mark2 = back.length;
+        driver.sendSignal({ kind: 'offer', sdp: o2.sdp, from: { name: 'Ann' } });
+        check('*** "busy": a call during an intercom is refused - the caller hears "busy", nothing rings, the intercom is untouched ***',
+          await settled(() => back.slice(mark2).some((s) => !s.purpose && s.kind === 'bye' && s.reason === 'busy'), 6000)
+          && callPhase() === 'idle' && !note().hidden && ct.isLive() === false, `${callPhase()} ${JSON.stringify(back.slice(mark2))}`);
+        driver.sendSignal({ kind: 'bye', purpose: 'intercom', session: 'ic-wire-5' });
+        await settled(() => note().hidden, 6000);
+        const o3 = await realOffer();
+        driver.sendSignal({ kind: 'offer', sdp: o3.sdp, from: { name: 'Ann' } });
+        check('"busy" only while an intercom is open: with none open, the call rings',
+          await settled(() => callPhase() === 'ringing', 6000), callPhase());
+        wBus.publish(CALL_DECLINE, {});
+        check('(the room declines it; the panel is idle again)', await settled(() => callPhase() === 'idle', 4000), callPhase());
+        for (const o of [o2, o3]) { try { o.pc.close(); } catch { /* closed */ } }
+        await setRow({ callDuringIntercom: null });
       }
       // Taken off the list: an offer is refused (the list is read at every offer).
       await setRow({ intercomAllowed: [] });

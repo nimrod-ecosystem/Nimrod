@@ -387,7 +387,7 @@ export async function mountKiosk(root, {
     // An embed lives on somebody's page, which already has a theme (its own picker, or the
     // signed-in profile's). A screen that has never picked one must not reset that to default.
     if (embedded && !id) return null;
-    const resolved = applyTheme(document.documentElement, id);
+    const resolved = applyTheme(document.documentElement, id, { flashLimit: flashLimitNow });
     // The scene's own flashes (neon signs, lightning) follow the screen's flash limit, read every render.
     syncScene(kioskEl, THEMES[resolved], { flashLimit: flashLimitNow });
     // The mixer's "sounds like: match the scene" follows the scene the screen is actually showing.
@@ -586,6 +586,26 @@ export async function mountKiosk(root, {
   let recPill = null;            // "Recording voice for training"
   let intercomRx = null;         // the room's half of the intercom, once the drive socket exists
   let intercomNote = null;       // "Intercom opening / open: <name>", with End
+  // A CALL AND THE ROOM (2026-09-30). The call transport reports a call going live and ending (its
+  // `onLive`), and the screen does two things with it:
+  //   * VOICE RECORDING IS HELD for the whole live call, for the intercom's reason: the recogniser would
+  //     hear the caller through the speaker. Its own reason ('call'), so an intercom and a call cannot
+  //     release each other's hold.
+  //   * AN OPEN INTERCOM GIVES THE ROOM TO AN ANSWERED CALL, and its phone is told why ('call'). A call
+  //     only RINGING leaves it alone - the room can still decline and carry on talking.
+  // And a NEW call while an intercom is open is refused as busy only if the person's row chose 'busy'
+  // (intercom.js `callDuringIntercom`; the default 'ring' is argued there). Function declarations, so
+  // the transport's getter can name them before this line runs; they only ever run on a call.
+  function onCallLive(on) {
+    try { voiceRec?.hold('call', !!on); } catch (err) { console.error('kiosk: voice recording hold', err); }
+    if (on) { try { intercomRx?.endAll('call'); } catch (err) { console.error('kiosk: intercom', err); } }
+  }
+  function callRefusedForIntercom() {
+    try {
+      return (intercomRx?.sessions?.() || []).length > 0
+        && intercomOptionsFrom(personRow || {}).callDuringIntercom === 'busy';
+    } catch { return false; }
+  }
   // ---- THE FLASH LIMIT (rows 2.43/2.48; flash_limit.js) -------------------------------------------------
   // The screen's row and the person's row (the stricter wins), with the starting-defaults layer on THIS
   // device filling only what nobody chose. A module reads it as `ctx.flashLimitPerSecond` (a getter, so a
@@ -1010,7 +1030,13 @@ export async function mountKiosk(root, {
           // not. See call_transport.js for why that is the right default rather than a gap.
           config: (settings.get() || {}).call || {},
           onLog: (...a) => console.debug('call:', ...a),
+          // A NEW call while an intercom is open: refused as busy only if the person's row chose that
+          // (intercom.js `callDuringIntercom`, default 'ring' - argued there).
+          busy: () => callRefusedForIntercom(),
         });
+        // A call going live (answered) or ending: voice recording holds for it, and an open intercom
+        // gives the room to it. See `onCallLive`.
+        callTransport.onLive((on) => onCallLive(on));
       }
       return callTransport;
     },

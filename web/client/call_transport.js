@@ -158,6 +158,11 @@ export function createCallTransport({
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   onLog = null,
+  // A NEW call is refused as busy while this says so (the screen's choice: an intercom is open and the
+  // person's row says "a call during an intercom: busy" - see kiosk.js). The caller gets a `bye` with
+  // reason 'busy' rather than ringing into nothing. A reconnect of a LIVE call is never refused, and a
+  // check that throws is NOT busy - failing toward a family call ringing, not toward it vanishing.
+  busy = () => false,
 } = {}) {
   if (!link) throw new Error('createCallTransport: a drive link is required');
 
@@ -170,8 +175,17 @@ export function createCallTransport({
   let destroyed = false;
   let attached = null;                // the <video> the module handed us
   let live = false;
+  // Who hears `live` change (the screen: voice recording holds for a call, an open intercom ends when
+  // one goes live). A SET, unlike onIncoming/onEnded: those belong to the one call panel; these belong
+  // to the screen, and more than one part of it listens.
+  const liveCbs = new Set();
 
   const log = (...a) => { try { onLog?.(...a); } catch { /* a logger must not break a call */ } };
+  function setLive(on) {
+    if (live === on) return;
+    live = on;
+    for (const cb of [...liveCbs]) { try { cb(on); } catch (e) { log('onLive threw', e); } }
+  }
   const ice = () => iceServers(config);
 
   function clearStall() { if (stallTimer != null) { clearTimer(stallTimer); stallTimer = null; } }
@@ -193,7 +207,7 @@ export function createCallTransport({
     remoteStream = null;
     if (attached) { try { attached.srcObject = null; } catch { /* gone */ } attached = null; }
     const was = live;
-    live = false;
+    setLive(false);
     pendingOffer = null;
     if (was) { try { endedCb?.(reason); } catch (e) { log('onEnded threw', e); } }
   }
@@ -256,6 +270,14 @@ export function createCallTransport({
       // Answer it with the media we already hold rather than treating it as a new call,
       // or a blip would ring at her a second time.
       if (live) { answerWith(sig.sdp, currentTracks()).catch((e) => log('re-answer failed', e)); return; }
+      let refuse = false;
+      try { refuse = !!busy(); } catch (e) { log('busy check threw', e); refuse = false; }
+      if (refuse) {
+        log('busy: refused a new call');
+        pendingOffer = null;
+        try { link.sendSignal({ kind: 'bye', reason: 'busy' }); } catch { /* socket gone */ }
+        return;
+      }
       pendingOffer = sig.sdp;
       try { incomingCb?.(sig.from || null); } catch (e) { log('onIncoming threw', e); }
       return;
@@ -277,7 +299,7 @@ export function createCallTransport({
     const a = await pc.createAnswer();
     await pc.setLocalDescription(a);
     await sendDescription('answer');
-    live = true;
+    setLive(true);
     log('answer sent');
   }
 
@@ -313,7 +335,7 @@ export function createCallTransport({
       makePc(tracks);
       const o = await pc.createOffer();
       await pc.setLocalDescription(o);
-      live = true;
+      setLive(true);
       await gatheringDone(pc, { setTimer });
       if (destroyed || !pc) return false;
       return link.sendSignal({ kind: 'offer', sdp: pc.localDescription?.sdp, from });
@@ -330,6 +352,8 @@ export function createCallTransport({
     // `busy`): a live call is never talked over. A call only RINGING is not counted - an offer
     // whose caller gave up without a `bye` is never cleared, and would block the intercom for good.
     isLive: () => live,
+    /** `cb(true)` when a call goes live, `cb(false)` when it ends (not on ringing, not on a reconnect). */
+    onLive(cb) { if (typeof cb !== 'function') return () => {}; liveCbs.add(cb); return () => { liveCbs.delete(cb); }; },
 
     // For the panel and for tests. `live` is the honest one: a peer connection can exist
     // and be connecting, which is not the same as a call.
