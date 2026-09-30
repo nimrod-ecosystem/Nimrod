@@ -54,6 +54,7 @@ import { createBus } from './bus.js';
 import { createDefaultRegistry, VERBS, FOCUS_VERBS, MEDIA_VERBS, MASTER_VERBS, verbTopic,
          MODULE_VERBS, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION, ROOM_HOLD_ACTION } from './actions.js';
 import { SPEECH_ACTIONS, NEAR_MISS_ACTIONS } from './input_speech.js';
+import { SUBTITLE_ACTIONS } from './subtitles.js';
 import { createInputBus, normalizeBinding, GATES, ROLES, EDGES } from './input.js';
 import { normalizeRecord, INPUTS_KEY, RECORD_VERSION,
   exportBindings, parseBindingsImport } from './input_runtime.js';
@@ -117,6 +118,8 @@ const EXTRA_ACTION_GROUPS = [
   { label: 'The screen', actions: SYSTEM_ACTIONS.filter((a) => a.id !== ROLE_CYCLE_ACTION) },
   { label: 'Answering “Did you mean that?”', actions: NEAR_MISS_ACTIONS },
   { label: 'Voice games', actions: SPEECH_ACTIONS },
+  // Row 2.47: scroll the subtitles back and return to the latest line - a switch can read back too.
+  { label: 'Subtitles', actions: SUBTITLE_ACTIONS },
   { label: 'Room', actions: [ROOM_HOLD_ACTION] },
 ];
 export const EXTRA_ACTIONS = EXTRA_ACTION_GROUPS.flatMap((g) => g.actions);
@@ -187,7 +190,7 @@ export function mountInputs(root, {
   // The speech actions are the speech layer's (input_speech.js), not the default registry's - a
   // screen registers them where it attaches speech. This page offers them (EXTRA_ACTION_GROUPS), so
   // it registers them too, or a switch bound to one here would be refused as an unknown action.
-  actions.registerAll([...NEAR_MISS_ACTIONS, ...SPEECH_ACTIONS]);
+  actions.registerAll([...NEAR_MISS_ACTIONS, ...SPEECH_ACTIONS, ...SUBTITLE_ACTIONS]);
   // home.js remounts a panel onto the SAME element, so listeners hung on `root` outlive
   // the panel that added them - one dead handler per visit to the tab.
   const listeners = new AbortController();
