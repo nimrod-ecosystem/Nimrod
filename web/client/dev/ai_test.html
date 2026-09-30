@@ -140,6 +140,12 @@ const MODELS = { object: 'list', data: [{ id: 'qwen2.5:7b' }, { id: 'nomic-embed
         && Number.isFinite(r.ms), J(r));
       const r2 = await createAI({ fetchImpl: f, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], {});
       check('with no model given, it resolves one first (list, then chat)', r2.ok || /model/i.test(r2.reason || ''), J(r2));
+      // 2026-09-29: a cap on the ANSWER's length (a model asked for "as many as it supports" wrote
+      // 15+ minutes and ran into the context window).
+      check('no maxTokens -> no max_tokens sent (the server decides, as before)', !('max_tokens' in c.body));
+      const f3 = fakeFetch(() => resp(200, { choices: [{ message: { content: '{}' } }] }));
+      await createAI({ fetchImpl: f3, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], { model: 'qwen2.5:7b', maxTokens: 1200 });
+      check('*** maxTokens -> OpenAI max_tokens in the body ***', f3.calls[0].body.max_tokens === 1200, J(f3.calls[0].body));
     }
 
     section('chat — failures come back as a plain reason, never a throw');

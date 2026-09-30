@@ -85,6 +85,7 @@ export const DEFAULTS = {
   // How many questions are WRITTEN is not tied to the requirement (Mike, same day). 0 = no limit.
   maxQuestions: 0,
   pieceWords: 900,
+  answerLength: 1200,
   autoApprove: true,     // flipped 2026-09-28 (Mike: "Flip review."); see its settings row
   factCheck: false,
   aiModel: '',
@@ -246,6 +247,16 @@ const SETTINGS = [
   { key: 'pieceWords', label: 'Send the transcript in pieces of', kind: 'choice', default: 900, level: 'advanced',
     options: [{ value: 600, label: '600 words' }, { value: 900, label: '900 words' },
               { value: 1500, label: '1,500 words' }, { value: 3000, label: '3,000 words' }] },
+  // *** HOW LONG ONE PIECE'S ANSWER MAY RUN (measured 2026-09-29). *** Asked for "as many good
+  // questions as this supports", qwen2.5:7b on this CPU (3.4 tokens a second) wrote 2,000+ tokens for
+  // one 900-word piece — 15+ minutes — until the 4,096-token window cut the answer mid-JSON. This is a
+  // limit on the model's RAMBLING, not on the content: 1,200 tokens is about 9 questions (~130 each)
+  // and about 6 minutes here, per ~6 minutes of video — above what Mike's rate asks the student to get
+  // right (one a minute for the first 5, then one per 2.5). A setting, because a faster machine or a
+  // bigger window can afford more; "No limit" restores the old behaviour. Flagged to Mike (Rule 1).
+  { key: 'answerLength', label: 'Longest answer per piece', kind: 'choice', default: 1200, level: 'advanced',
+    options: [{ value: 800, label: 'Short (about 6 questions)' }, { value: 1200, label: 'Medium (about 9)' },
+              { value: 2000, label: 'Long (about 15)' }, { value: 0, label: 'No limit' }] },
   // §0h, agreed 2026-09-17: the review queue is ON by default; skipping it is opt-in.
   // *** FLIPPED 2026-09-28 — Mike: "Flip review." *** Auto-approve is the DEFAULT now: a question that
   // passes `grounded` (and, when the fact check is on, is not flagged by it) joins the games with no
@@ -897,7 +908,8 @@ registerModule(
         if (tq === session) renderTq();
         const left = ceiling ? ceiling - parsed.length : null;
         const one = await ai().chat(buildPrompt(pieces[i], left, { part: i + 1, parts: pieces.length }),
-          { model: m.model, json: true, temperature: 0.2, timeoutMs: cfg.aiTimeoutMs, signal });
+          { model: m.model, json: true, temperature: 0.2, timeoutMs: cfg.aiTimeoutMs, signal,
+            maxTokens: cfg.answerLength });
         if (tq !== session) return;
         if (!one.ok) {
           if (one.cancelled) { failWith(session, one); return; }
@@ -1472,6 +1484,9 @@ registerModule(
             maxQuestions: snap.maxQuestions == null || snap.maxQuestions === '' ? DEFAULTS.maxQuestions
               : num('maxQuestions', (n) => n >= 0),
             pieceWords: num('pieceWords', (n) => n >= 50),
+            // 0 is real here too ("No limit"), so an unset null/'' falls to the default.
+            answerLength: snap.answerLength == null || snap.answerLength === '' ? DEFAULTS.answerLength
+              : num('answerLength', (n) => n >= 0),
             // Default ON since 2026-09-28, so — like `factCheck` below — only an explicit false
             // turns it off, and never set reads as the default.
             autoApprove: snap.autoApprove === false || snap.autoApprove === 'false' ? false
