@@ -1211,6 +1211,19 @@ def api_dev_client_modules():
     return out
 
 
+# *** THE SUITE LIST FOR `dev/run_all.html`, WALKED FOR THE SAME REASON AS THE ONE ABOVE. ***
+#
+# `run_all.html` names its suites by hand, and on 2026-09-30 that hand list had 103 names against
+# 148 `dev/*_test.html` files on disk: 45 suites, including `auth`, `bus` and `keyboard`, had
+# never once run on that page, and nothing said so. A browser cannot list a directory, so the
+# check that catches this (`dev/suite_list.js`, run by `run_all.html` and `suite_list_test.html`)
+# needs the server to do it. Same exposure as `client-modules`: bare names of files this
+# directory already serves to anybody.
+@app.get("/api/dev/test-pages")
+def api_dev_test_pages():
+    return sorted(p.name for p in (CLIENT_DIR / "dev").glob("*_test.html"))
+
+
 # Serve the client app from the same origin. Registered LAST so /api/* wins.
 # --------------------------------------------------------------- auth (login)
 # Who am I? The client checks this on boot: 200 -> signed in (mount the dashboard),

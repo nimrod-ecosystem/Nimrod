@@ -26,12 +26,13 @@ window throttles every tab to about one timer per second, and suites that mount 
 in short waits. Measured: <code>youtube_test</code> finishes in 2.0s in one iframe and
 <code>soak_test</code> in 23s alongside three others — both report <code>no summary</code> when the
 window is hidden. <b>Check a suite on its own before believing this page about it.</b></p>
-<p><b>This page is not the complete check.</b> Its <code>SUITES</code> list below is hand-kept and is
-missing suites that exist on disk, and a browser cannot list a directory to find them. The
-complete run is <code>py -3.13 web/tools/run_suite.py</code> from <code>web/</code>, which also runs
-<code>web/tools/check_bare_topic_subscribers.py</code> first over every
-<code>dev/*_test.html</code> &mdash; the one copy of that rule. It is deliberately not repeated
-here.</p>
+<p><b>Which suites run is <code>SUITES</code> in <code>dev/suite_list.js</code></b>, and anything
+deliberately left out is in <code>EXCLUDED</code> there with its reason. The hand list once drifted 45
+suites short with nobody noticing, so the first row below is now a check: it asks the server for
+every <code>dev/*_test.html</code> and <b>turns this page red</b> if one is in neither list, in both,
+or listed with no file (<code>suite_list_test.html</code> is the same check as a suite). The
+bare-topic lint, <code>web/tools/check_bare_topic_subscribers.py</code>, runs only in
+<code>run_suite.py</code> &mdash; the one copy of that rule, deliberately not repeated here.</p>
 <p>Needs the server:<code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.
 Suites listed as <span class="skip">no summary</span> did not finish inside the timeout, which
 is usually a real hang and worth opening on its own.</p>
@@ -39,40 +40,10 @@ is usually a real hang and worth opening on its own.</p>
 <div id="summary">running…</div>
 
 <script type="module">
-// Every *_test.html in this folder, minus the pages that are targets rather than suites.
-const SUITES = [
-  'adulting', 'aim', 'algebra', 'calc', 'calculator', 'calculator_link', 'link_runner', 'ports', 'bank', 'board', 'board_editor', 'camera', 'clock', 'comet', 'layers', 'packs', 'composer', 'connections', 'controls_view', 'demo_strip',
-  'composer_reach', 'device_pick', 'director', 'drive',
-  'educational', 'events', 'fs_sink', 'health', 'home', 'input', 'input_runtime', 'inputs', 'interstitials',
-  'input_dwell', 'input_scan', 'longpress',
-  'kiosk', 'arrangement', 'lessons', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
-  'marker', 'mic_owner', 'modules_catalog', 'output',
-  'output_panel',
-  'output_remote', 'pair', 'pairing', 'panel_fit', 'people', 'personal', 'photos', 'pond',
-  'audio_bus', 'call', 'call_transport', 'camera_owner', 'view', 'game_music', 'pressgame', 'records', 'rules',
-  // FIRST-ISH ON PURPOSE would be better still, but the list is alphabetical-ish and this is
-  // close enough: `imports` proves every client module PARSES, and it is the check that tells
-  // you which file is broken when half this page reports `no summary`. A module that will not
-  // parse takes down every suite that imports it and names none of them.
-  'imports',
-  // Does every module fit the box it is given, and re-fit when the box changes? (G6)
-  'fit',
-  // Is every panel on a screen reachable from the transport bar? (G9) Mounts real kiosks.
-  'transport',
-  'press_overlay', 'preview', 'progress', 'record_panel', 'recorder', 'qr', 'quests', 'recovery', 'resilience',
-  'restart', 'rng', 'screen_pair', 'segment_heartbeat', 'sender', 'settings', 'settings_audit',
-  // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
-  'soak',
-  // PRIORITY.md #8's voice-command set. Opens no microphone: the matcher is a pure function
-  // over text and the recogniser is injected, which is the same seam that lets a local engine
-  // replace the browser's one.
-  'speech',
-  // Row 2.28 follow-ups: the miss log, the listening cue/tone/duck, and the master volume.
-  'speech_misses', 'listening_cue', 'master_volume',
-  'sprint',
-  'statemachine', 'talk', 'theme', 'tour', 'trivia', 'voice', 'walkthrough', 'wallpaper', 'watchdog', 'wordforge', 'youtube',
-  'youtube_watchdog',
-];
+// *** THE LIST IS IN suite_list.js NOW, NEXT TO `EXCLUDED` AND THE CHECK THAT KEEPS BOTH HONEST. ***
+// A new suite goes into SUITES there; one that cannot run on this page goes into EXCLUDED there,
+// with a one-line reason. Forget both and the first row of this page says so in red.
+import { SUITES, EXCLUDED, suiteListProblems, fetchTestPages } from './suite_list.js';
 
 // *** IF YOU SEE `no summary` HERE, SUSPECT YOUR BROWSER BEFORE YOU SUSPECT THE SUITE. ***
 //
@@ -94,7 +65,7 @@ const SUITES = [
 // and not a property of this repo, and the wrong version of this comment would have sent somebody
 // to fix three suites with nothing wrong with them.
 //
-// `soak` was pulled from the list below on the strength of the wrong explanation and is back,
+// `soak` was pulled from the list (now in suite_list.js) on the strength of the wrong explanation and is back,
 // because 23 seconds fits the budget with room to spare. **Guessing at a cause is how it got
 // removed, and measuring is how it came back.**
 //
@@ -222,6 +193,33 @@ function runOne(name) {
 
 (async () => {
   const results = [];
+  // THE LIST CHECK FIRST, AS ITS OWN ROW. It is not a suite, so it is not counted in the suite
+  // totals - but a problem here makes the whole page fail, because a green page that skipped
+  // forty suites is the exact lie this row exists to stop. No file list (a static server, or a
+  // server started before `/api/dev/test-pages` existed) is also red: "could not check" is not
+  // "nothing wrong".
+  const files = await fetchTestPages();
+  const listProblems = files ? suiteListProblems(files) : null;
+  const listFailed = !files || listProblems.length > 0;
+  {
+    const row = table.insertRow();
+    row.insertCell().textContent = 'suite list';
+    const cell = row.insertCell();
+    const nEx = Object.keys(EXCLUDED).length;
+    if (!files) {
+      cell.className = 'fail';
+      cell.textContent = 'COULD NOT CHECK — no file list from GET /api/dev/test-pages (restart the server?)';
+    } else if (listProblems.length) {
+      cell.className = 'fail';
+      cell.textContent = `${listProblems.length} PROBLEM(S) in dev/suite_list.js:\n`
+        + listProblems.map((p) => '  ' + p.text).join('\n');
+      cell.style.whiteSpace = 'pre-wrap';
+    } else {
+      cell.className = 'pass';
+      cell.textContent = `${files.length} on disk = ${SUITES.length} run + ${nEx} excluded`
+        + (nEx ? ` (${Object.entries(EXCLUDED).map(([n, why]) => `${n}: ${why}`).join('; ')})` : '');
+    }
+  }
   for (let i = 0; i < SUITES.length; i += BATCH) {
     const batch = await Promise.all(SUITES.slice(i, i + BATCH).map(runOne));
     for (const r of batch) {
@@ -246,10 +244,15 @@ function runOne(name) {
   const skipNote = skipped.length
     ? ` · ${skipped.length} SKIPPED (${skipped.map((r) => r.name).join(', ')}) — needs something that is not running`
     : '';
-  s.textContent = ((failed || stalled)
+  // A list problem is prefixed rather than folded into the suite counts - it is not a suite - and
+  // it keeps the words `ALL PASS` off the page, so nothing reading this summary can call it green.
+  const listNote = listFailed
+    ? (files ? `SUITE LIST WRONG (${listProblems.length} problem(s), see the first row) — ` : 'SUITE LIST NOT CHECKED — ')
+    : '';
+  s.textContent = listNote + ((failed || stalled)
     ? `${failed} suite(s) failing, ${stalled} without a summary — ${checks} checks ran`
-    : `ALL PASS — ${results.length - skipped.length} suites, ${checks} checks`) + skipNote;
-  s.className = (failed || stalled) ? 'fail' : 'pass';
+    : `${listFailed ? 'suites pass' : 'ALL PASS'} — ${results.length - skipped.length} suites, ${checks} checks`) + skipNote;
+  s.className = (failed || stalled || listFailed) ? 'fail' : 'pass';
   s.dataset.done = 'true';
 })();
 </script>

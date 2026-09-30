@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>suite_list — run_all.html runs every suite, or says why not</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+</style>
+</head>
+<body>
+<h1>suite_list — <code>run_all.html</code> runs every suite, or says why not</h1>
+<p>Every <code>dev/*_test.html</code> must be in <code>SUITES</code> or in <code>EXCLUDED</code> (with a
+reason) in <code>dev/suite_list.js</code> — not neither, not both — and every listed name must have a
+file. On 2026-09-30 the hand list was 45 suites short and nothing noticed; this is the thing that
+notices.</p>
+<p>Needs the server (the file list comes from <code>GET /api/dev/test-pages</code>, because a browser
+cannot list a directory): <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { SUITES, EXCLUDED, suiteListProblems, fetchTestPages } from './suite_list.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, ok, detail = '') {
+  ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+const kinds = (p) => p.map((x) => `${x.kind}:${x.name}`).sort().join(' ');
+
+// The checker itself, on lists made up here, so a checker that always says "fine" cannot pass.
+check('agreeing lists: no problems',
+  suiteListProblems(['a_test.html', 'b_test.html'], ['a'], { b: 'needs a thing' }).length === 0);
+check('a file in neither list is reported',
+  kinds(suiteListProblems(['a_test.html', 'c_test.html'], ['a'], {})) === 'unlisted:c');
+check('a name in both lists is reported',
+  kinds(suiteListProblems(['a_test.html'], ['a'], { a: 'why' })) === 'both:a');
+check('a listed name with no file is reported (SUITES and EXCLUDED)',
+  kinds(suiteListProblems(['a_test.html'], ['a', 'gone'], { old: 'why' })) === 'no-file:gone no-file:old');
+check('a name twice in SUITES is reported',
+  kinds(suiteListProblems(['a_test.html'], ['a', 'a'], {})) === 'duplicate:a');
+check('an exclusion with no reason is reported',
+  kinds(suiteListProblems(['a_test.html', 'b_test.html'], ['a'], { b: ' ' })) === 'no-reason:b');
+check('files that are not *_test.html are ignored',
+  suiteListProblems(['a_test.html', 'run_all.html', 'suite_list.js'], ['a'], {}).length === 0);
+
+// The real thing: the lists in suite_list.js against what is on disk.
+const files = await fetchTestPages();
+if (!files) {
+  // NOT a pass. A check that goes quiet when it cannot see the disk is the drift it exists to stop.
+  check('the server listed dev/*_test.html', false,
+    'no file list — needs the dev server with GET /api/dev/test-pages (restart it if it predates that route)');
+} else {
+  check(`the server listed dev/*_test.html (${files.length} files)`, true);
+  const problems = suiteListProblems(files);
+  for (const p of problems) check(p.text, false);
+  check(`SUITES (${SUITES.length}) + EXCLUDED (${Object.keys(EXCLUDED).length}) cover every suite on disk, once each`,
+    problems.length === 0, `${problems.length} problem(s) above`);
+}
+
+document.getElementById('summary').textContent = failed
+  ? `${failed} FAILED / ${passed} passed`
+  : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>
