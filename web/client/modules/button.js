@@ -192,7 +192,63 @@ export const INK_PALETTE = Object.freeze([
 export const DEFAULTS = Object.freeze({
   label: 'Your words', imageFrom: '', image: '', frame: 'none', font: 'theme', style: 'plain',
   color: DEFAULT_INK, background: DEFAULT_GROUND, whenPressed: 'nothing',
+  inkHue: 0, inkSaturation: 0, inkLightness: 0,
 });
+
+// ---------------------------------------------------------------------------------------
+// *** HUE, SATURATION AND LIGHTNESS OF THE WORDS, AS NUMBERS (row 2.41, 2026-09-30). ***
+//
+// Mike: *"Kind of like midi automations add things like hue, lightness, saturation as parameters
+// that can receive input from something else. Could be cool for escape room type puzzles with
+// hidden writing."* A colour is not a number, so nothing could drive it; these three are, so
+// anything `automation.js` can bind (a dial, a verb, the clock, a game's score) can move them.
+//
+// *** OFFSETS FROM THE CHOSEN COLOUR, NOT ABSOLUTE VALUES. *** Argued both ways:
+//   * FOR absolute (lightness 0..100): it is what a colour picker's slider shows.
+//   * AGAINST, and it wins: an absolute lightness would OVERRIDE the colour picker the moment it
+//     had any value, so it would need a "not set" state a number row cannot show or walk. An
+//     offset's default is 0, which means "exactly the colour chosen" - every sign that exists
+//     today is unchanged, and the colour picker stays the meaning.
+// Hidden writing is then: words the same colour as the ground, and "lighter" driven by a puzzle.
+//
+// `advanced`, because on a plain sign nobody needs them; they are there to be driven.
+// The shift is in HSL, percentage points for saturation and lightness and degrees for hue. At all
+// three 0 the colour passes through UNTOUCHED (same string), so nothing downstream can tell.
+// ---------------------------------------------------------------------------------------
+function hexToHsl(hex) {
+  const n = normalizeHex(hex);
+  if (!n) return null;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(n.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l * 100];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h;
+  if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+  else if (max === g) h = (b - r) / d + 2;
+  else h = (r - g) / d + 4;
+  return [h * 60, s * 100, l * 100];
+}
+function hslToHex(h, s, l) {
+  const S = Math.max(0, Math.min(100, s)) / 100;
+  const L = Math.max(0, Math.min(100, l)) / 100;
+  const H = ((h % 360) + 360) % 360;
+  const k = (n) => (n + H / 30) % 12;
+  const a = S * Math.min(L, 1 - L);
+  const f = (n) => L - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return `#${[0, 8, 4].map((n) => Math.round(f(n) * 255).toString(16).padStart(2, '0')).join('')}`;
+}
+export function shiftColor(hex, { hue = 0, saturation = 0, lightness = 0 } = {}) {
+  const dh = Number(hue) || 0, ds = Number(saturation) || 0, dl = Number(lightness) || 0;
+  if (!dh && !ds && !dl) return hex;
+  const hsl = hexToHsl(hex);
+  if (!hsl) return hex;
+  return hslToHex(hsl[0] + dh, hsl[1] + ds, hsl[2] + dl);
+}
+/** The words' colour actually painted: the colour in force, shifted by the three offsets. */
+export const inkInForce = (cfg) => shiftColor(cfg.color,
+  { hue: cfg.inkHue, saturation: cfg.inkSaturation, lightness: cfg.inkLightness });
 
 const SIGN_BY_ID = new Map(SIGNS.map((s) => [s.value, s]));
 const FRAME_BY_ID = new Map(FRAME_ART.map((f) => [f.value, f]));
@@ -288,6 +344,15 @@ export const SETTINGS = [
     appliesWhen: (row) => { const c = configFrom(row); return c.style === 'plain' || c.frame !== 'none'; } },
   { key: 'whenPressed', label: 'When pressed', kind: 'choice', default: DEFAULTS.whenPressed,
     level: 'standard', options: WHEN_PRESSED.map(({ value, label }) => ({ value, label })) },
+  // The three offsets (see "HUE, SATURATION AND LIGHTNESS" above). Steps: 10 points / 30 degrees,
+  // so each walks round in about twenty presses - they are here to be DRIVEN (automation.js), and
+  // an automation is not limited to the step; the step is only what a press does.
+  { key: 'inkLightness', label: 'Words: lighter or darker', kind: 'number', default: DEFAULTS.inkLightness,
+    min: -100, max: 100, step: 10, unit: 'points', level: 'advanced' },
+  { key: 'inkSaturation', label: 'Words: more or less colourful', kind: 'number', default: DEFAULTS.inkSaturation,
+    min: -100, max: 100, step: 10, unit: 'points', level: 'advanced' },
+  { key: 'inkHue', label: 'Words: turn the colour round the wheel', kind: 'number', default: DEFAULTS.inkHue,
+    min: -180, max: 180, step: 30, unit: 'degrees', level: 'advanced' },
 ];
 
 const FIELDS = Object.fromEntries(SETTINGS.map(normalizeField).filter(Boolean).map((f) => [f.key, f]));
@@ -507,7 +572,7 @@ registerModule(
       faceEl.dataset.style = cfg.style;
       faceEl.dataset.frame = cfg.frame;
       flag('inkChosen', cfg.inkChosen);
-      faceEl.style.setProperty('--nb-ink', cfg.color);
+      faceEl.style.setProperty('--nb-ink', inkInForce(cfg));
       faceEl.style.setProperty('--nb-bg', cfg.background);
       faceEl.style.setProperty('--nb-font', fontStack(cfg.font));
       const key = JSON.stringify([words, ref]);
@@ -541,8 +606,25 @@ registerModule(
       fitWords();
     }
 
+    // *** A CHANGE TO COLOUR ONLY REPAINTS COLOUR. *** An automation (automation.js) can move the
+    // words' lightness ten times a second; a full `paint` re-fits the words each time, and fitting
+    // is a layout measurement in a loop. Nothing about the words' SIZE depends on these keys, so
+    // when they are all that changed, only the two custom properties are set.
+    const COLOUR_ONLY = ['color', 'background', 'inkChosen', 'inkHue', 'inkSaturation', 'inkLightness'];
+    function onlyColourChanged(prev, next) {
+      if (!faceEl || !faceKey) return false;
+      return Object.keys(next).every((k) => COLOUR_ONLY.includes(k) || prev[k] === next[k]);
+    }
+
     function apply(row) {
+      const prev = cfg;
       cfg = configFrom(row || {});
+      if (onlyColourChanged(prev, cfg)) {
+        flag('inkChosen', cfg.inkChosen);
+        faceEl.style.setProperty('--nb-ink', inkInForce(cfg));
+        faceEl.style.setProperty('--nb-bg', cfg.background);
+        return;
+      }
       const src = effectiveSource();
       const known = knownSources.find((s) => s.id === src);
       if (known && !namesBySource.has(src)) listNames(known).then(() => { if (!torn) paint(); });

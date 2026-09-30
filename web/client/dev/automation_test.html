@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>automation — any numeric setting driven by an input</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-10000px;top:0;width:640px;height:420px}
+</style>
+</head>
+<body>
+<h1>automation — any numeric setting driven by an input (row 2.41)</h1>
+<p>The engine (<code>automation.js</code>), the restore-exactly property, clamping, the product's
+floors, teardown, the hidden-writing sign on a real <code>button</code>, every module mounted through
+a wrapped state handle, and the editor panel.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { wrapValue, linkTopic } from '../links.js';
+import { listManifests, getManifest } from '../module.js';
+import { fieldsFor } from '../settings_fields.js';
+import { contrast } from '../color_picker.js';
+import { createAudioBus } from '../audio_bus.js';
+import { MASTER_FIELDS, attachMasterVolume } from '../master_volume.js';
+import { MIXER_FIELDS, attachMixer, faderKey, floorKey } from '../mixer.js';
+import { AMPLIFY_FIELDS } from '../amplify.js';
+import { createTryHost } from '../module_try.js';
+import {
+  createAutomation, normalizeBinding, normalizeSource, normalizeMap, applyCurve, clockValue, lfoValue,
+  readNumber, bindable, bindableSettings, AUTOMATION_DEFAULTS, LFO_MIN_PERIOD_MS, DEFAULT_GUARDS,
+} from '../automation.js';
+import { mountAutomationPanel } from '../automation_panel.js';
+import { shiftColor } from '../modules/button.js';
+import '../modules/algebra.js';
+import '../modules/camera.js';
+import '../modules/clock.js';
+import '../modules/comet.js';
+import '../modules/pressgame.js';
+import '../modules/call.js';
+import '../modules/director.js';
+import '../modules/educational.js';
+import '../modules/lessons.js';
+import '../modules/personal.js';
+import '../modules/photos.js';
+import '../modules/pond.js';
+import '../modules/wallpaper.js';
+import '../modules/board.js';
+import '../modules/progress.js';
+import '../modules/quests.js';
+import '../modules/sprint.js';
+import '../modules/wordforge.js';
+import '../modules/youtube.js';
+import '../modules/trivia.js';
+import '../modules/bank.js';
+import '../modules/solitaire.js';
+import '../modules/word_games.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function note(t) { const d = document.createElement('div'); d.textContent = `      ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A clock run by hand: nothing here waits on real time.
+function fakeClock(start = Date.UTC(2026, 8, 30, 12, 0, 0)) {
+  let t = start, n = 0;
+  const q = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++n; q.set(id, { at: t + Math.max(0, ms), fn }); return id; },
+    clearTimer: (id) => { q.delete(id); },
+    advance(ms) {
+      const end = t + ms;
+      for (;;) {
+        let next = null;
+        for (const [id, x] of q) if (x.at <= end && (!next || x.at < next[1].at)) next = [id, x];
+        if (!next) break;
+        q.delete(next[0]); t = next[1].at; next[1].fn();
+      }
+      t = end;
+    },
+    pending: () => q.size,
+  };
+}
+// A state handle that behaves like state.js (subscribe replays when loaded) and records writes.
+function memState(initial = {}) {
+  let row = { ...initial };
+  const subs = new Set();
+  const writes = [];
+  return {
+    writes,
+    load: () => Promise.resolve(row),
+    get: () => row,
+    set: (patch) => { writes.push({ ...patch }); row = { ...row, ...patch }; subs.forEach((f) => f(row)); return Promise.resolve(); },
+    subscribe: (f) => { subs.add(f); try { f(row); } catch (e) { console.error(e); } return () => subs.delete(f); },
+    flush: () => Promise.resolve(), startPolling() {}, destroy() { subs.clear(); },
+    subCount: () => subs.size,
+  };
+}
+// A bus that counts live subscriptions, so teardown can be asserted rather than hoped for.
+function countingBus() {
+  const b = createBus();
+  let live = 0;
+  return { ...b, live: () => live,
+    subscribe(topic, h) {
+      live += 1; const off = b.subscribe(topic, h); let done = false;
+      return () => { if (!done) { done = true; live -= 1; off(); } };
+    } };
+}
+const NUM_FIELDS = [
+  { key: 'level', label: 'Level', kind: 'number', default: 50, min: 0, max: 100, step: 10 },
+  { key: 'fine', label: 'Fine', kind: 'number', default: 1, min: 0, max: 2, step: 0.5 },
+  { key: 'mode', label: 'Mode', kind: 'choice', default: 'a', options: ['a', 'b'] },
+  { key: 'on', label: 'On', kind: 'toggle', default: false },
+  { key: 'ink', label: 'Ink', kind: 'color', default: '#000000' },
+  { key: 'name', label: 'Name', kind: 'text', default: '' },
+  { key: 'free', label: 'Unbounded', kind: 'number', default: 3 },
+  { key: 'optout', label: 'Opted out', kind: 'number', default: 1, min: 0, max: 5, automatable: false },
+];
+
+try {
+  // ================= shapes =================
+  section('bindings are structural, and a bad one is dropped, not thrown');
+  {
+    const b = normalizeBinding({ id: 'b1', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'room/light' } });
+    check('a good binding normalizes', b && b.id === 'b1' && b.source.topic === 'room/light', JSON.stringify(b));
+    check('its input range defaults to 0..1', b.source.range[0] === 0 && b.source.range[1] === 1);
+    check('its map carries every default', b.map.curve === 'linear' && b.map.whenQuiet === 'hold' && b.map.quietMs === 0);
+    check('no target is dropped', normalizeBinding({ source: { kind: 'bus', topic: 'x' } }) === null);
+    check('no source is dropped', normalizeBinding({ target: { instance: 'p', key: 'k' } }) === null);
+    check('an unknown source kind is dropped', normalizeSource({ kind: 'telepathy' }) === null);
+    check('a bus source with no topic is dropped', normalizeSource({ kind: 'bus' }) === null);
+    check('a verb source needs a valid verb id', normalizeSource({ kind: 'verb', up: 'Not A Verb!' }) === null);
+    check('a missing id is generated, not refused',
+      /^auto-/.test(normalizeBinding({ target: { instance: 'p', key: 'k' }, source: { kind: 'clock' } }).id));
+    check('an unknown curve reads as straight', normalizeMap({ curve: 'wiggle' }).curve === 'linear');
+    check('*** an LFO can never be faster than once a second (the photosensitivity line) ***',
+      normalizeSource({ kind: 'lfo', periodMs: 50 }).periodMs === LFO_MIN_PERIOD_MS && LFO_MIN_PERIOD_MS >= 334);
+    check('every default is a named value on AUTOMATION_DEFAULTS',
+      ['lfoPeriodMs', 'lfoTickMs', 'clockTickMs', 'clockPoints', 'verbStep', 'smoothMs', 'whenQuiet', 'quietMs', 'peakWidth']
+        .every((k) => k in AUTOMATION_DEFAULTS));
+  }
+
+  section('the curve, the clock, the wave, and reading a payload');
+  {
+    const m = (x) => normalizeMap(x);
+    check('straight is identity', applyCurve(0.3, m({})) === 0.3);
+    check('invert flips it', Math.abs(applyCurve(0.3, m({ invert: true })) - 0.7) < 1e-9);
+    check('ease-in is slow first', applyCurve(0.5, m({ curve: 'ease-in' })) === 0.25);
+    check('steps quantize (4 steps: 0.6 -> 2/3)', Math.abs(applyCurve(0.6, m({ curve: 'steps', steps: 4 })) - 2 / 3) < 1e-9);
+    const pk = m({ curve: 'peak', center: 0.73, width: 0.08 });
+    check('peak is full at the right answer', applyCurve(0.73, pk) === 1);
+    check('peak is nothing away from it', applyCurve(0.5, pk) === 0 && applyCurve(0.9, pk) === 0);
+    check('peak is partial close to it ("warmer")', applyCurve(0.7, pk) > 0.5 && applyCurve(0.7, pk) < 1);
+    check('the curve clamps its input', applyCurve(5, m({})) === 1 && applyCurve(-5, m({})) === 0);
+    const pts = AUTOMATION_DEFAULTS.clockPoints;
+    check('the clock is low at 3am', clockValue(pts, 3) === 0);
+    check('the clock is high at noon', clockValue(pts, 12) === 1);
+    check('the clock is half way up at 8am', Math.abs(clockValue(pts, 8) - 0.5) < 1e-9);
+    check('the clock wraps round midnight', clockValue([[6, 1], [18, 0]], 0) === 0.5);
+    check('a sine starts at 0 and peaks half way', lfoValue('sine', 0) === 0 && Math.abs(lfoValue('sine', 0.5) - 1) < 1e-9);
+    check('a triangle is linear', lfoValue('triangle', 0.25) === 0.5);
+    check('a bare number reads', readNumber(0.4) === 0.4);
+    check('a links.js envelope reads as its value', readNumber(wrapValue({ value: 0.6, class: 'continuous' })) === 0.6);
+    check('a path reads inside a payload', readNumber({ reading: { lux: 300 } }, 'reading.lux') === 300);
+    check('garbage is not a number', Number.isNaN(readNumber('abc')) && Number.isNaN(readNumber(null)));
+  }
+
+  section('only numbers with a range can be driven - and every refusal says why');
+  {
+    const rows = bindableSettings(null, null, { fields: NUM_FIELDS });
+    const by = Object.fromEntries(rows.map((r) => [r.key, r]));
+    check('a bounded number is bindable', by.level.ok && by.fine.ok);
+    check('a choice is not, and says so', !by.mode.ok && /only numbers/.test(by.mode.why), by.mode.why);
+    check('a toggle is not, and says so', !by.on.ok && /yes\/no/.test(by.on.why), by.on.why);
+    check('a colour is not, and says so', !by.ink.ok && /color setting/.test(by.ink.why), by.ink.why);
+    check('text is not, and says so', !by.name.ok && /text setting/.test(by.name.why));
+    check('an unbounded number is not: nothing to map onto', !by.free.ok && /no range/.test(by.free.why));
+    check('a declaration can opt out with automatable:false', !by.optout.ok);
+    check('every refusal carries a reason', rows.filter((r) => !r.ok).every((r) => r.why));
+  }
+
+  // ================= the engine =================
+  section('a bus value drives a setting, clamped to its range and the binding\'s own range');
+  {
+    const bus = countingBus(); const clk = fakeClock();
+    const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    const base = memState({ level: 30 });
+    const st = eng.wrapState('p1', base, { fields: NUM_FIELDS });
+    const seen = [];
+    st.subscribe((row) => seen.push(row.level));
+    const res = eng.add({ id: 'a', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'room/light' } });
+    check('added', res.ok, JSON.stringify(res));
+    check('nothing is driven until a value arrives: the base is in force', st.get().level === 30);
+    bus.publish('room/light', 0.25);
+    check('0.25 of 0..1 drives level to 25', st.get().level === 25, st.get().level);
+    check('the module was TOLD (its subscriber saw 25)', seen.at(-1) === 25, JSON.stringify(seen));
+    bus.publish('room/light', 7);
+    check('an input past its range is clamped (links.mapRange): 100, not 700', st.get().level === 100);
+    bus.publish('room/light', 'nonsense');
+    check('a non-number is ignored, not applied', st.get().level === 100);
+    bus.publish('room/light', wrapValue({ value: 0.5, class: 'continuous' }));
+    check('another module\'s link envelope drives it too', st.get().level === 50);
+    check('*** the base in storage never saw any of it ***', base.get().level === 30 && base.writes.length === 0);
+    eng.remove('a');
+    // Output range narrower than the field, and wider than the field.
+    eng.add({ id: 'b', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 't' }, map: { outMin: 20, outMax: 40 } });
+    bus.publish('t', 1);
+    check('a binding\'s own output range is honoured (0..1 -> 20..40)', st.get().level === 40);
+    eng.remove('b');
+    eng.add({ id: 'c', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 't' }, map: { outMin: -500, outMax: 900 } });
+    bus.publish('t', 0);
+    check('*** an output range past the field is clamped to the field (min 0) ***', st.get().level === 0);
+    bus.publish('t', 1);
+    check('*** ...and at the top (max 100) ***', st.get().level === 100);
+    eng.remove('c');
+    eng.add({ id: 'd', target: { instance: 'p1', key: 'fine' }, source: { kind: 'bus', topic: 't' } });
+    bus.publish('t', 0.333);
+    check('a value lands on the field\'s own decimals (step 0.5 -> 1 place): 0.7', st.get().fine === 0.7, st.get().fine);
+    eng.destroy();
+  }
+
+  section('*** removing a binding restores the base EXACTLY ***');
+  {
+    const bus = createBus(); const clk = fakeClock();
+    const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    const base = memState({ level: 42, fine: 1.5, other: 'kept' });
+    const before = base.get();
+    const snapshot = JSON.stringify(before);
+    const st = eng.wrapState('p1', base, { fields: NUM_FIELDS });
+    let last = null;
+    st.subscribe((row) => { last = row; });
+    check('with nothing bound, get() IS the base row (same object)', st.get() === before);
+    eng.add({ id: 'x', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'k' } });
+    bus.publish('k', 0.9);
+    check('driven: 90', st.get().level === 90 && last.level === 90);
+    // The person changes the SAME setting by hand while it is driven: that is the base.
+    st.set({ level: 60 });
+    check('a hand edit while driven goes to the BASE', base.get().level === 60);
+    check('...and the driven value stays on screen', st.get().level === 90);
+    // A module (or the menu) echoing the driven value back must NOT make it the base.
+    st.set({ level: 90 });
+    check('*** an echo of the driven value is not persisted ***', base.get().level === 60 && base.writes.length === 1,
+      JSON.stringify(base.writes));
+    eng.remove('x');
+    check('after removal, get() IS the base row again (identity, not a copy)', st.get() === base.get());
+    check('the subscriber was handed the base value', last.level === 60);
+    check('every other key is untouched', st.get().fine === 1.5 && st.get().other === 'kept');
+    // And the untouched case: bind, drive, remove, with no hand edit - storage exactly as before.
+    const base2 = memState({ level: 42, fine: 1.5 });
+    const snap2 = JSON.stringify(base2.get());
+    const st2 = eng.wrapState('p2', base2, { fields: NUM_FIELDS });
+    eng.add({ id: 'y', target: { instance: 'p2', key: 'level' }, source: { kind: 'bus', topic: 'k' } });
+    eng.add({ id: 'z', target: { instance: 'p2', key: 'fine' }, source: { kind: 'bus', topic: 'k' } });
+    bus.publish('k', 0.1);
+    st2.set({ level: st2.get().level, fine: st2.get().fine });     // a module writing back what it was shown
+    eng.remove('y'); eng.remove('z');
+    check('*** bind, drive, echo, remove: storage is byte-for-byte what it was ***',
+      JSON.stringify(base2.get()) === snap2 && base2.writes.length === 0, JSON.stringify(base2.get()));
+    check('(the first handle\'s original snapshot was a real row)', snapshot.includes('"level":42'));
+    eng.destroy();
+  }
+
+  section('one driver per setting; a setting that cannot be driven is refused with its reason');
+  {
+    const bus = createBus();
+    const eng = createAutomation({ bus });
+    eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+    check('first binding on level: ok', eng.add({ id: 'one', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'a' } }).ok);
+    const two = eng.add({ id: 'two', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'b' } });
+    check('a second on the same setting is refused (cardinality one)', !two.ok && two.reason === 'already-bound' && two.existing === 'one');
+    const col = eng.add({ target: { instance: 'p1', key: 'ink' }, source: { kind: 'bus', topic: 'a' } });
+    check('binding a colour is refused, with why', !col.ok && col.reason === 'not-bindable' && /only numbers/.test(col.why));
+    check('a binding to a panel not mounted yet is kept, waiting',
+      eng.add({ id: 'later', target: { instance: 'nope', key: 'level' }, source: { kind: 'bus', topic: 'a' } }).ok
+      && eng.status('later') === 'waiting for its panel');
+    eng.destroy();
+  }
+
+  section('verbs step a dial, and wrap (one switch can only go one way)');
+  {
+    const bus = createBus();
+    const eng = createAutomation({ bus });
+    const st = eng.wrapState('p1', memState({ level: 50 }), { fields: NUM_FIELDS });
+    eng.add({ target: { instance: 'p1', key: 'level' }, source: { kind: 'verb', up: 'dial-up', down: 'dial-down', step: 0.25 } });
+    check('the dial has a position from the start (0 -> level 0)', st.get().level === 0);
+    bus.publish('verb/dial-up'); bus.publish('verb/dial-up');
+    check('two presses up: 0.5 -> 50', st.get().level === 50);
+    bus.publish('verb/dial-up'); bus.publish('verb/dial-up');
+    check('at the top: 100', st.get().level === 100);
+    bus.publish('verb/dial-up');
+    check('one more press WRAPS to the bottom', st.get().level === 0);
+    bus.publish('verb/dial-down');
+    check('down from the bottom wraps to the top', st.get().level === 100);
+    eng.destroy();
+    const eng2 = createAutomation({ bus });
+    const st2 = eng2.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+    eng2.add({ target: { instance: 'p1', key: 'level' }, source: { kind: 'verb', up: 'u', step: 0.5, wrap: false } });
+    bus.publish('verb/u'); bus.publish('verb/u'); bus.publish('verb/u');
+    check('wrap:false stops at the top', st2.get().level === 100);
+    eng2.destroy();
+  }
+
+  section('another module\'s declared port (links.js linkTopic), the clock, the LFO');
+  {
+    const bus = createBus(); const clk = fakeClock(new Date(2026, 8, 30, 3, 0, 0).getTime());
+    const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    const st = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+    eng.add({ id: 'lk', target: { instance: 'p1', key: 'level' }, source: { kind: 'link', instance: 'calc-1', port: 'result', range: [0, 10] } });
+    bus.publish(linkTopic(bus, { instance: 'calc-1', port: 'result' }), wrapValue({ value: 4, class: 'continuous' }));
+    check('a link value on calc-1\'s result port drives it: 4 of 0..10 -> 40', st.get().level === 40);
+    eng.remove('lk');
+    eng.add({ id: 'ck', target: { instance: 'p1', key: 'level' }, source: { kind: 'clock' } });
+    check('the clock at 3am: 0', st.get().level === 0);
+    clk.advance(5 * 3600 * 1000);
+    check('the clock at 8am (re-read once a minute): 50', st.get().level === 50, st.get().level);
+    eng.remove('ck');
+    eng.add({ id: 'lf', target: { instance: 'p1', key: 'level' }, source: { kind: 'lfo', periodMs: 4000, shape: 'triangle' } });
+    check('the LFO starts at 0', st.get().level === 0);
+    clk.advance(1000);
+    check('a quarter period in: 50', st.get().level === 50, st.get().level);
+    clk.advance(1000);
+    check('half way: 100', st.get().level === 100);
+    check('an LFO keeps exactly one timer running', eng.activeTimers() === 1, eng.activeTimers());
+    eng.remove('lf');
+    check('*** removed: no timer left ***', eng.activeTimers() === 0 && clk.pending() === 0, `${eng.activeTimers()} / ${clk.pending()}`);
+    eng.destroy();
+  }
+
+  section('smoothing glides and then STOPS; a rate limit sends the latest value');
+  {
+    const bus = createBus(); const clk = fakeClock();
+    const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    const st = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+    eng.add({ id: 's', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'k' }, map: { smoothMs: 200 } });
+    bus.publish('k', 0);
+    check('the first value lands at once', st.get().level === 0);
+    bus.publish('k', 1);
+    clk.advance(50);
+    const mid = st.get().level;
+    check('a moment later it is on its way, not there', mid > 0 && mid < 100, mid);
+    clk.advance(3000);
+    check('it arrives exactly', st.get().level === 100);
+    check('*** and the glide timer has stopped ***', eng.activeTimers() === 0, eng.activeTimers());
+    eng.remove('s');
+    eng.add({ id: 'r', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'k' }, map: { minIntervalMs: 500 } });
+    bus.publish('k', 0.1);
+    bus.publish('k', 0.2); bus.publish('k', 0.3);
+    check('inside the interval, the first value stands', st.get().level === 10);
+    clk.advance(500);
+    check('after it, the LATEST value lands (not the one in between)', st.get().level === 30, st.get().level);
+    check('...and no trailing timer is left', eng.activeTimers() === 0);
+    eng.destroy();
+  }
+
+  section('when the source goes quiet: hold (default) or go back to the person\'s own value');
+  {
+    const bus = createBus(); const clk = fakeClock();
+    const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    const st = eng.wrapState('p1', memState({ level: 33 }), { fields: NUM_FIELDS });
+    eng.add({ id: 'h', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'k' }, map: { quietMs: 1000 } });
+    bus.publish('k', 0.8);
+    clk.advance(5000);
+    check('hold: still 80 after the source went quiet', st.get().level === 80);
+    eng.remove('h');
+    check('removed: 33 again', st.get().level === 33);
+    eng.add({ id: 'q', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'k' }, map: { quietMs: 1000, whenQuiet: 'release' } });
+    bus.publish('k', 0.8);
+    clk.advance(999);
+    check('release: still driven just before the quiet time', st.get().level === 80);
+    clk.advance(2);
+    check('release: back to the person\'s own 33 once quiet', st.get().level === 33);
+    bus.publish('k', 0.8);
+    check('a new value drives it again (the unchanged guard was reset)', st.get().level === 80);
+    eng.destroy();
+    check('*** engine destroyed: no timers ***', eng.activeTimers() === 0 && clk.pending() === 0);
+  }
+
+  section('teardown: a panel going away stops its runners; its bindings wait for it');
+  {
+    const bus = countingBus(); const clk = fakeClock();
+    const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    const st = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+    eng.add({ id: 'l', target: { instance: 'p1', key: 'level' }, source: { kind: 'lfo' } });
+    eng.add({ id: 'b', target: { instance: 'p1', key: 'fine' }, source: { kind: 'bus', topic: 'x' } });
+    check('running: one timer and one bus subscription', eng.activeTimers() === 1 && bus.live() === 1);
+    st.destroy();
+    check('*** panel destroyed: no timers, no subscriptions ***', eng.activeTimers() === 0 && bus.live() === 0 && clk.pending() === 0,
+      `${eng.activeTimers()} timers, ${bus.live()} subs`);
+    check('the bindings themselves survive (they are the screen\'s)', eng.list().length === 2 && eng.status('l') === 'waiting for its panel');
+    const st2 = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+    check('remounted: they run again', eng.activeTimers() === 1 && bus.live() === 1 && st2.get().level === 0);
+    eng.destroy();
+    check('*** engine destroyed: nothing left at all ***', eng.activeTimers() === 0 && bus.live() === 0 && clk.pending() === 0);
+  }
+
+  section('load() replaces the list but only touches what CHANGED (an LFO keeps its phase)');
+  {
+    const bus = createBus(); const clk = fakeClock();
+    let saved = null;
+    const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer, onChange: (l) => { saved = l; } });
+    const st = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+    const list = [{ id: 'l', target: { instance: 'p1', key: 'level' }, source: { kind: 'lfo', periodMs: 4000, shape: 'triangle' } }];
+    eng.load(list);
+    check('load does not call onChange (it came FROM storage)', saved === null);
+    clk.advance(1000);
+    const was = st.get().level;
+    eng.load(JSON.parse(JSON.stringify(eng.list())));
+    clk.advance(100);
+    check('re-loading the same list keeps the wave where it was', st.get().level >= was, `${was} -> ${st.get().level}`);
+    eng.load([]);
+    check('loading an empty list removes it and restores the base', eng.list().length === 0 && st.get().level === undefined);
+    eng.add({ target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'k' } });
+    check('a hand add calls onChange with a JSON-safe list', Array.isArray(saved) && saved.length === 1 && JSON.stringify(saved));
+    eng.destroy();
+  }
+
+  // ================= safety =================
+  section('*** SAFETY: automation cannot go past a floor the product enforces ***');
+  {
+    const bus = createBus();
+    const eng = createAutomation({ bus });
+    const base = memState({ masterVolume: 80, masterFloor: 30 });
+    const screen = eng.wrapState('screen', base, { fields: [...MASTER_FIELDS, ...MIXER_FIELDS, ...AMPLIFY_FIELDS] });
+    const audio = createAudioBus();
+    const mv = attachMasterVolume({ bus: null, audio, read: () => screen.get(), write: (p) => screen.set(p) });
+    const mix = attachMixer({ audio, read: () => screen.get() });
+    screen.subscribe(() => { mv.sync(); mix.sync(); });
+    check('before: the master is at 80%', Math.abs(audio.master() - 0.8) < 1e-9);
+    eng.add({ id: 'mv', target: { instance: 'screen', key: 'masterVolume' }, source: { kind: 'bus', topic: 'room/noise' }, map: { invert: true } });
+    bus.publish('room/noise', 1);   // loud room, inverted: drive the master to the bottom
+    check('*** driven to the bottom, the master stops at the screen\'s own floor (30%) ***',
+      screen.get().masterVolume === 30 && Math.abs(audio.master() - 0.3) < 1e-9, `${screen.get().masterVolume} / ${audio.master()}`);
+    check('...and nothing was written back to the screen\'s settings', base.writes.length === 0 && base.get().masterVolume === 80,
+      JSON.stringify(base.writes));
+    base.set({ masterFloor: 10 });
+    bus.publish('room/noise', 0.99);
+    check('with the floor at 10%, the field\'s own min (10) still holds', screen.get().masterVolume >= 10 && audio.master() >= 0.1);
+    for (const key of ['masterFloor', floorKey('call'), floorKey('aac')]) {
+      const r = eng.add({ target: { instance: 'screen', key }, source: { kind: 'bus', topic: 'x' } });
+      check(`*** ${key} cannot be bound: "${r.why}" ***`, !r.ok && r.reason === 'not-bindable' && /safety minimum/.test(r.why || ''));
+    }
+    const amp = eng.add({ target: { instance: 'screen', key: 'amplifyGain' }, source: { kind: 'bus', topic: 'x' } });
+    check('the live microphone\'s gain cannot be bound (a guess, on Mike\'s list)', !amp.ok && /howl/.test(amp.why || ''));
+    eng.add({ id: 'fc', target: { instance: 'screen', key: faderKey('call') }, source: { kind: 'bus', topic: 'f' } });
+    eng.add({ id: 'fa', target: { instance: 'screen', key: faderKey('aac') }, source: { kind: 'bus', topic: 'f' } });
+    bus.publish('f', 0);
+    check('a fader CAN be driven to 0 (as a person can set it)', audio.fader('call') === 0 && audio.fader('aac') === 0);
+    check('*** ...and a call still plays at its 60% floor (audio_bus applies it downstream) ***',
+      audio.channelLevel('call') >= 0.6 - 1e-9, audio.channelLevel('call'));
+    check('*** ...and so does the AAC voice ***', audio.channelLevel('aac') >= 0.6 - 1e-9, audio.channelLevel('aac'));
+    // YouTube's own floor is its declared min - the clamp enforces it.
+    const yt = getManifest('youtube');
+    const ytVol = fieldsFor(yt).find((f) => f.key === 'volume');
+    const ys = eng.wrapState('yt-1', memState({}), { manifest: yt });
+    eng.add({ target: { instance: 'yt-1', key: 'volume' }, source: { kind: 'bus', topic: 'v' } });
+    bus.publish('v', 0);
+    check(`*** a video's volume driven to 0 stops at its declared floor (${ytVol.min}%) ***`, ys.get().volume === ytVol.min);
+    check('DEFAULT_GUARDS names what it locks', DEFAULT_GUARDS.locked.size >= 3);
+    mv.destroy(); eng.destroy();
+  }
+
+  // ================= the demo =================
+  section('THE DEMO: hidden writing - the words appear only when the dial is right');
+  const th = await createTryHost();
+  const host = document.getElementById('host');
+  {
+    const bus = th.bus;
+    const eng = createAutomation({ bus });
+    const base = th.backend.makeState('hidden-sign', {}, th.profileId);
+    await base.load().catch(() => {});
+    base.set({ label: 'The key is under the mat', style: 'plain', color: '#000000', background: '#000000' });
+    const state = eng.wrapState('button-try', base, { manifest: getManifest('button') });
+    const box = document.createElement('div');
+    box.style.cssText = 'position:relative;width:480px;height:240px';
+    host.append(box);
+    th.mount('button', box, { state });
+    await sleep(30);
+    const face = box.querySelector('[data-face]');
+    const ink = () => face.style.getPropertyValue('--nb-ink');
+    const word = () => box.querySelector('.ab-word');
+    check('the sign mounted, words black on black', face && ink() === '#000000' && word());
+    check('hidden: the words do not show (contrast 1:1)', contrast(ink(), '#000000') < 1.1);
+    const r = eng.add({ id: 'dial', target: { instance: 'button-try', key: 'inkLightness' },
+      source: { kind: 'bus', topic: 'puzzle/dial' }, map: { outMin: 0, outMax: 60, curve: 'peak', center: 0.73, width: 0.08 } });
+    check('the lightness of the words is bindable and bound', r.ok, JSON.stringify(r));
+    bus.publish('puzzle/dial', 0.2);
+    await sleep(10);
+    check('dial wrong: still hidden', contrast(ink(), '#000000') < 1.1, ink());
+    bus.publish('puzzle/dial', 0.70);
+    await sleep(10);
+    const warm = contrast(ink(), '#000000');
+    check('dial close: faintly there ("warmer")', warm > 1.5 && warm < 4.5, `${ink()} ${warm.toFixed(2)}`);
+    bus.publish('puzzle/dial', 0.73);
+    await sleep(10);
+    check('*** dial right: the words READ (4.5:1 or better) ***', contrast(ink(), '#000000') >= 4.5, `${ink()}`);
+    check('the painted colour really is the words\' colour (computed style)',
+      getComputedStyle(word()).color === 'rgb(153, 153, 153)', getComputedStyle(word()).color);
+    check('the stored row never held the lightness', base.get().inkLightness === undefined);
+    eng.remove('dial');
+    await sleep(10);
+    check('*** binding removed: exactly the chosen colour again ***', ink() === '#000000');
+    // Driven by a verb instead: a switch steps a dial round, and the fourth press is the answer.
+    eng.add({ id: 'sw', target: { instance: 'button-try', key: 'inkLightness' },
+      source: { kind: 'verb', up: 'turn-dial', step: 0.25 }, map: { outMin: 0, outMax: 60, curve: 'peak', center: 0.75, width: 0.1 } });
+    bus.publish('verb/turn-dial'); bus.publish('verb/turn-dial');
+    await sleep(10);
+    check('two presses: hidden', contrast(ink(), '#000000') < 1.1);
+    bus.publish('verb/turn-dial');
+    await sleep(10);
+    check('three presses: the words appear', contrast(ink(), '#000000') >= 4.5, ink());
+    bus.publish('verb/turn-dial');
+    await sleep(10);
+    check('four: gone again (the dial moved past)', contrast(ink(), '#000000') < 1.1);
+    th.unmount(box);
+    check('*** sign unmounted: no timers, no runners ***', eng.activeTimers() === 0 && eng.running() === 0);
+    check('shiftColor at 0,0,0 returns the colour untouched', shiftColor('#D32F2F', {}) === '#D32F2F');
+    eng.destroy();
+    box.remove();
+  }
+
+  // ================= every module =================
+  section('every module mounts through a wrapped handle, and hears a driven setting - no module changes');
+  {
+    const eng = createAutomation({ bus: th.bus });
+    const withSettings = listManifests().filter((m) => (typeof m.settings === 'function' ? m.settings() : m.settings || []).length);
+    const bindableBy = [];
+    let judged = 0, told = 0, drivable = 0;
+    const deaf = [], broke = [];
+    for (const m of withSettings) {
+      const rows = bindableSettings(m).filter((r) => r.ok);
+      if (rows.length) bindableBy.push(`${m.type} (${rows.map((r) => r.key).join(', ')})`);
+      const base = memState({});
+      const state = eng.wrapState(`${m.type}-try`, base, { manifest: m });
+      let calls = 0;
+      const sub = state.subscribe;
+      state.subscribe = (fn) => sub((row) => { calls += 1; return fn(row); });
+      const box = document.createElement('div');
+      box.style.cssText = 'position:relative;width:640px;height:420px';
+      host.append(box);
+      try {
+        th.mount(m.type, box, { state });
+        await sleep(20);
+        judged += 1;
+        if (rows.length) {
+          drivable += 1;
+          const k = rows[0];
+          const r = eng.add({ id: `m-${m.type}`, target: { instance: `${m.type}-try`, key: k.key }, source: { kind: 'bus', topic: `probe/${m.type}` } });
+          const before = calls;
+          try { th.bus.publish(`probe/${m.type}`, 1); } catch (err) { broke.push(`${m.type}: ${err.message}`); }
+          await sleep(10);
+          if (!r.ok) broke.push(`${m.type}: ${r.reason}`);
+          else if (calls > before && state.get()[k.key] === k.max) told += 1;
+          else deaf.push(`${m.type}.${k.key}`);
+          eng.remove(`m-${m.type}`);
+        }
+      } catch (err) {
+        console.warn('automation: could not mount', m.type, err);
+      }
+      try { th.unmount(box); } catch { /* gone */ }
+      box.remove();
+    }
+    check('most modules with settings mounted through the wrapper', judged >= Math.ceil(withSettings.length * 0.7), `${judged} of ${withSettings.length}`);
+    check('some modules have a drivable setting, so this measured something', drivable >= 5, String(drivable));
+    check('*** every module with a drivable setting was told when it was driven ***', deaf.length === 0 && told === drivable,
+      `told ${told} of ${drivable}; deaf: ${deaf.join(', ')}`);
+    check('...and none fell over', broke.length === 0, broke.join(' | '));
+    check('*** after all of that: no timers, no runners left ***', eng.activeTimers() === 0 && eng.running() === 0);
+    note(`drivable today: ${bindableBy.join('; ')}`);
+    eng.destroy();
+  }
+
+  // ================= the editor =================
+  section('the editor panel: lists what can be driven, says why not, adds and removes');
+  {
+    const eng = createAutomation({ bus: th.bus });
+    const base = memState({});
+    const state = eng.wrapState('sign-1', base, { manifest: getManifest('button') });
+    const root = document.createElement('div');
+    host.append(root);
+    const panel = mountAutomationPanel(root, { engine: eng, panels: () => [{ id: 'sign-1', title: 'The sign', manifest: getManifest('button') }] });
+    const opts = [...root.querySelectorAll('[data-a="key"] option')];
+    const light = opts.find((o) => o.value === 'inkLightness');
+    const words = opts.find((o) => o.value === 'label');
+    check('the lightness of the words is offered', light && !light.disabled);
+    check('the words (text) are listed, disabled, WITH the reason', words && words.disabled && /only numbers/.test(words.textContent), words?.textContent);
+    check('the first drivable setting is preselected, with its range', root.querySelector('[data-a="outMin"]').value !== '');
+    root.querySelector('[data-a="key"]').value = 'inkLightness';
+    root.querySelector('[data-a="key"]').dispatchEvent(new Event('change'));
+    root.querySelector('[data-a="topic"]').value = 'puzzle/dial';
+    root.querySelector('[data-a="curve"]').value = 'peak';
+    root.querySelector('[data-a="curve"]').dispatchEvent(new Event('change'));
+    panel.form.requestSubmit();
+    check('Add made a binding', eng.list().length === 1 && eng.list()[0].target.key === 'inkLightness' && eng.list()[0].map.curve === 'peak',
+      JSON.stringify(eng.list()));
+    check('the list shows it', root.querySelectorAll('[data-binding]').length === 1);
+    panel.form.requestSubmit();
+    check('adding a second driver to the same setting says why not', /already driven/.test(root.querySelector('[data-status]').textContent));
+    th.bus.publish('puzzle/dial', 0.5);
+    check('it drives the setting (peak at the default 0.5 -> the field\'s own top, 100)', state.get().inkLightness === 100,
+      String(state.get().inkLightness));
+    root.querySelector('[data-remove]').click();
+    check('Remove takes it away and the setting is its own again', eng.list().length === 0 && state.get().inkLightness === undefined);
+    panel.destroy(); root.remove(); eng.destroy();
+  }
+  th.destroy();
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+</script>
+</body>
+</html>
