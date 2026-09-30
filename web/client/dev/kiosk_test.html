@@ -1162,7 +1162,26 @@ const ds = () => root.querySelector('.kiosk').dataset;
     const gear = troot.querySelector('[data-act="settings"]');
     check('*** and the gear that opens the settings menu is on it ***', !!gear);
 
+    // *** HOLDING THE BAR (2026-09-29). *** Mike, live: Nimrod the cat said "This is the bar" and
+    // ringed empty space — it starts hidden and hides itself after 3 s. So the kiosk gained one
+    // explicit seam, `holdBar(on)`: while held the bar is shown and the 3 s timer is not armed;
+    // released, it goes back to the ordinary auto-hide. The hide waits below are real (the 3 s is
+    // the kiosk's own timer), which is why this costs about seven seconds.
+    check('the kiosk handle has holdBar and barHeld', typeof tk.holdBar === 'function' && typeof tk.barHeld === 'function');
+    bar.classList.add('hidden');
+    tk.holdBar(true);
+    check('*** holdBar(true) shows the bar ***', !bar.classList.contains('hidden') && tk.barHeld() === true, bar.className);
+    troot.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));   // an ordinary poke while held
+    await sleep(3400);
+    check('*** ...and it is still showing after the 3 s it would normally hide at ***',
+      !bar.classList.contains('hidden'), bar.className);
+    tk.holdBar(false);
+    check('holdBar(false) releases it (still showing for the moment)', tk.barHeld() === false && !bar.classList.contains('hidden'));
+    await sleep(3400);
+    check('*** released, the ordinary auto-hide takes it away again ***', bar.classList.contains('hidden'), bar.className);
+    tk.holdBar(true);
     try { tk?.destroy?.(); } catch { /* already gone */ }
+    check('destroying the kiosk drops a hold (nothing stays held forever)', tk.barHeld() === false);
     troot.remove();
   } catch (e) {
     check('the touch-bar section threw', false, String((e && e.stack) || e));

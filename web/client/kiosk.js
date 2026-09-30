@@ -2316,9 +2316,27 @@ export async function mountKiosk(root, {
 
   // auto-hide the control bar
   let hideT = null;
+  // HELD: something above the modules is pointing at the bar and needs it on screen while it does
+  // — Nimrod the cat saying "This is the bar" (Mike, 2026-09-29, live: he rang empty space, because
+  // the bar starts hidden and hides itself after 3 s). One explicit seam, `holdBar(on)` on the
+  // handle, rather than the cat reaching in and editing this bar's classes: the kiosk stays the only
+  // thing that decides whether its bar shows. Held, the bar is shown and the timer is not armed;
+  // let go, it gets an ordinary poke — shown, then the ordinary 3 s — rather than vanishing from
+  // under the eyes of somebody who was just looking at it. Whoever holds it lets it go: the cat does
+  // on every way it leaves (close, Escape, resting, Next to the end, the page tearing it down), and
+  // `destroy()` below drops any hold, so nothing keeps this bar up forever.
+  let barHeld = false;
+  function holdBar(on) {
+    const want = !!on && !torn;       // a torn-down kiosk has no bar to hold
+    if (want === barHeld) return barHeld;
+    barHeld = want;
+    poke();
+    return barHeld;
+  }
   function poke() {
     controlsEl.classList.remove('hidden');
     clearTimeout(hideT);
+    if (barHeld) return;
     hideT = setTimeout(() => {
       if (!embedded) controlsEl.classList.add('hidden');    // an embed's bar stays: see kiosk.css
       // The picker goes with the bar it hangs off. This is the "what if nobody answers"
@@ -2476,6 +2494,10 @@ export async function mountKiosk(root, {
     // (`cat_guide.js`, mounted by kiosk.html). Same bus, same one pair of ears: his words queue and
     // yield like any module's instead of talking over them. Null if the bus failed to build.
     output: () => output,
+    // Keep the transport bar on screen while something points at it (the cat), and let it go.
+    // See `holdBar` beside `poke()`.
+    holdBar,
+    barHeld: () => barHeld,
     cameraOwner: () => cameraOwner,
     micOwner: () => micOwner,
     // WHAT THE MIC ARBITER WOULD ACTUALLY FALL BACK TO RIGHT NOW — exposed so a test can prove
@@ -2553,6 +2575,7 @@ export async function mountKiosk(root, {
       root.removeEventListener('pointerdown', poke);
       root.removeEventListener('keydown', poke);
       clearTimeout(hideT);
+      barHeld = false;
       // The burn-in trio was never detached, and its timer never cleared. Invisible on a page that
       // mounts one kiosk for its whole life; an embed mounts and destroys into the SAME root every
       // time somebody picks another module, so each cycle stacked three more listeners on it.
