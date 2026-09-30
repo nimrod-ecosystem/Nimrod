@@ -2710,6 +2710,19 @@ export async function mountKiosk(root, {
   if (!embedded) {
     offsScreen.push(bus.subscribe(SYSTEM_TOPICS.dashboards, (p) => { claimed(p); poke(); toggleScreens(true); }));
   }
+  // Row 2.37: a room's book or window opens ONE module by type (room_scene.js MODULE_TOPIC) -- claimed only
+  // when this screen has it, so an unclaimed press lets the room say so instead of doing nothing.
+  offsScreen.push(bus.subscribe('system/module', (p) => {
+    const type = p?.module;
+    if (!type || !(arr.profile()?.modules || []).some((m) => m.type === type)) return;
+    claimed(p);
+    Promise.resolve(showModule(type)).catch((err) => console.error('kiosk: open module', err));
+  }));
+  // ...and which modules this screen has, for a library's books (room_scene.js MODULE_LIST_TOPIC).
+  offsScreen.push(bus.subscribe('system/module-list', (p) => {
+    claimed(p);
+    try { p?.reply?.((arr.profile()?.modules || []).map((m) => m.type)); } catch { /* a room's reply must not stop the screen */ }
+  }));
   // A phone joined or left (phone_mic.js): an amplifier set to play "a phone" follows it.
   offsScreen.push(bus.subscribe(PHONE_MIC_TOPIC, () => {
     try { amplifier?.sourceChanged?.()?.catch?.((err) => console.error('kiosk: amplify', err)); }

@@ -73,6 +73,8 @@ export const SUITES = [
   'solitaire', 'note', 'weather', 'brickbreaker', 'rhythm', 'avatar',
   // The room, the cat, ambient motion and sound.
   'room', 'room_scene', 'room_notify', 'cat_guide', 'cat_help', 'comet_ambient', 'ambient_drift', 'mixer',
+  // Row 2.37, second pass: the window's weather, the library, petting, close-ups, zoom on focus.
+  'room_objects',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the

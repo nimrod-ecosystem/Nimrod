@@ -206,7 +206,12 @@ const VOICES = {
   'chime-soft': [[523.25, 0, 0.5, 'triangle'], [659.25, 0.16, 0.5, 'triangle']],
   'chime-bright': [[880, 0, 0.45, 'sine'], [1318.5, 0.12, 0.45, 'sine']],
   knock: [[180, 0, 0.09, 'square'], [180, 0.22, 0.09, 'square']],
+  // Petting the cat (row 2.37 item 11): two low, soft, overlapping notes — a purr, not a chime. Not in
+  // SOUNDS, so the notification editor does not offer it; it is the room's own answer to a stroke.
+  purr: [[98, 0, 0.7, 'triangle'], [110, 0.18, 0.7, 'triangle'], [98, 0.4, 0.6, 'triangle']],
 };
+/** The sounds playSound knows, notification ones and the room's own (a purr). */
+export const SOUND_NAMES = Object.freeze(Object.keys(VOICES));
 let actx = null;
 export function playSound(name, { level = 1, win = (typeof window !== 'undefined' ? window : null) } = {}) {
   const notes = VOICES[name];
