@@ -128,12 +128,12 @@ export const HEALTH_EXPECT = {
   // A sign or a framed picture. It publishes nothing unless somebody presses it, and a sign
   // nobody has pressed all week is a sign doing its job.
   button:      { idle: true },
-};
-
-export function expectFor(type, table = HEALTH_EXPECT) {
   // A room: scenery with a clock on the wall. It publishes only when somebody presses a piece of
   // its furniture, and a room nobody has touched all day is a room doing its job.
   room:        { idle: true },
+};
+
+export function expectFor(type, table = HEALTH_EXPECT) {
   const row = table[type] || {};
   return {
     idle: !!row.idle,

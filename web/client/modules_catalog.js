@@ -408,6 +408,14 @@ export const CATALOG = [
   },
   {
     type: 'algebra',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Solve for x, with a calculator on screen.',
+    needs: 'Nothing.',
+    why: 'The calculator is on screen on purpose. Somebody whose arithmetic is slower than '
+      + 'it used to be has not lost the method, and being made to do sums by hand tests the '
+      + 'wrong thing and is demoralising.',
+  },
   {
     type: 'word_games',
     title: 'Word games',
@@ -420,14 +428,6 @@ export const CATALOG = [
       + 'the answer. Built so a spoken answer can be added later without changing the game.',
     note: 'It does not listen to the room yet. When voice is added, a word it is unsure of is '
       + 'checked with the person first, never marked wrong.',
-  },
-    group: 'practice',
-    use: 'answer',
-    lead: 'Solve for x, with a calculator on screen.',
-    needs: 'Nothing.',
-    why: 'The calculator is on screen on purpose. Somebody whose arithmetic is slower than '
-      + 'it used to be has not lost the method, and being made to do sums by hand tests the '
-      + 'wrong thing and is demoralising.',
   },
   {
     type: 'sprint',
