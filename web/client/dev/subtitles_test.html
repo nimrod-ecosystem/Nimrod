@@ -27,6 +27,7 @@ always pick her up as her so some things will be missed."</i></p>
 import {
   createSubtitles, speakerLabel, placeSubtitles, devicePrior, subtitlesOptionsFrom,
   SUBTITLES_DEFAULTS, SUBTITLES_FIELDS, SUBTITLE_SIZES, ANSWER_AREA_SELECTORS,
+  captionPieces, earLabel, SUBTITLE_ACTIONS,
 } from '../subtitles.js';
 import { createOutputBus } from '../output.js';
 import { defaultChannels } from '../output_channels.js';
@@ -285,6 +286,110 @@ try {
     subs.add({ text: 'clear again' });
     check('gone again: back to the bottom, and the room is given back',
       el.dataset.place === 'bottom' && !document.documentElement.style.getPropertyValue('--subtitles-reserve'));
+    subs.destroy();
+  }
+
+  // ==== ROW 2.47: SUBTITLES THAT REFINE ====
+  section('row 2.47: a fast guess, corrected in place; unsure words marked; scroll back; the crawl; the online route');
+  {
+    const o = subtitlesOptionsFrom({});
+    check('*** defaults: plain captions, unsure words marked, both ears shown, the route LOCAL ***',
+      o.style === 'plain' && o.lowAt === SUBTITLES_DEFAULTS.lowAt && o.lowAt > 0 && o.ears === 'both' && o.route === 'local');
+    check('*** the online route is on ONLY for the exact word "online" - anything broken is local ***',
+      subtitlesOptionsFrom({ subtitlesRoute: 'online' }).route === 'online'
+      && ['Online', 'cloud', true, 1, null].every((x) => subtitlesOptionsFrom({ subtitlesRoute: x }).route === 'local'));
+    const rf = SUBTITLES_FIELDS.find((f) => f.key === 'subtitlesRoute');
+    check('...its choice says where the sound goes, and the field defaults to local',
+      rf && rf.default === 'local' && rf.options.some((x) => x.value === 'online' && /sends the room’s sound/.test(x.label)));
+    check('captionPieces: a word under the threshold is low; one with no number is NOT (no number is not doubt)',
+      JSON.stringify(captionPieces({ words: [{ w: 'a', conf: 0.9 }, { w: 'b', conf: 0.2 }, { w: 'c' }] }, { lowAt: 0.6 }).map((p) => p.low)) === '[false,true,false]');
+    check('captionPieces: "do not mark" (0) marks nothing',
+      captionPieces({ words: [{ w: 'b', conf: 0.1 }] }, { lowAt: 0 })[0].low === false);
+    check('captionPieces: a changed word is flagged against what was there',
+      JSON.stringify(captionPieces({ text: 'turn it up' }, { before: [{ w: 'turn' }, { w: 'it' }, { w: 'off' }] }).map((p) => p.changed)) === '[false,false,true]');
+
+    const clock = fakeClock();
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 15000, subtitlesLines: 3 },
+      now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer, reducedMotion: false });
+    const box = subs.element();
+    subs.caption({ id: 'g1', ear: 'room', text: 'computer please', partial: true, words: [] });
+    const p1 = box.querySelector('[data-caption="g1"]');
+    check('*** a partial shows at once, marked as still being heard ***', !!p1 && p1.classList.contains('subs-partial'));
+    subs.caption({ id: 'g1', ear: 'room', text: 'computer please turn it off', words: [
+      { w: 'computer', conf: 0.9 }, { w: 'please', conf: 0.9 }, { w: 'turn', conf: 0.5 }, { w: 'it', conf: 0.9 }, { w: 'off', conf: 0.4 }] });
+    const low = [...box.querySelectorAll('[data-caption="g1"] .subs-low')].map((e) => e.textContent);
+    check('*** the fast guess: its unsure words are marked ***', low.join() === 'turn,off', low.join());
+    const lowEl = box.querySelector('.subs-low');
+    const cs = getComputedStyle(lowEl);
+    check('*** ...by SHAPE, not colour alone: dotted underline and italics, and "not sure" in words ***',
+      /dotted/.test(cs.textDecorationStyle || cs.textDecoration) && cs.fontStyle === 'italic' && lowEl.title === 'not sure'
+      && cs.color === getComputedStyle(box.querySelector('[data-caption="g1"] .subs-text')).color, `${cs.textDecoration} ${cs.fontStyle}`);
+    const before = box.getBoundingClientRect();
+    subs.caption({ id: 'g2', ear: 'room', text: 'hello there', words: [{ w: 'hello', conf: 0.9 }, { w: 'there', conf: 0.9 }] });
+    const p2 = box.querySelector('[data-caption="g2"]');
+    const top1 = p1.getBoundingClientRect().top;
+    subs.caption({ id: 'g1', ear: 'room', text: 'computer please turn it up', revised: true, words: [
+      { w: 'computer', conf: 0.9 }, { w: 'please', conf: 0.9 }, { w: 'turn', conf: 0.9 }, { w: 'it', conf: 0.9 }, { w: 'up', conf: 0.95 }] });
+    const p1b = box.querySelector('[data-caption="g1"]');
+    check('*** a later pass corrects the SAME line: same element, same place, nothing re-ordered ***',
+      p1b === p1 && box.firstElementChild === p1 && p1.nextElementSibling === p2 && Math.abs(p1.getBoundingClientRect().top - top1) < 1
+      && subs.lines().length === 2 && subs.lines()[0].text === 'computer please turn it up' && subs.lines()[0].revised === true);
+    check('*** ...the changed word flashes once; the rest does not ***',
+      [...p1.querySelectorAll('.subs-fixed')].map((e) => e.textContent).join() === 'up' && !p1.querySelector('.subs-low'));
+    subs.caption({ id: 'g1', ear: 'room', text: 'computer please turn it up', revised: true, words: [
+      { w: 'computer', conf: 0.9 }, { w: 'please', conf: 0.9 }, { w: 'turn', conf: 0.9 }, { w: 'it', conf: 0.9 }, { w: 'up', conf: 0.95 }] });
+    check('the same words again (the line closing) redraw nothing: the highlight is not lost', !!p1.querySelector('.subs-fixed'));
+    subs.caption({ id: 'g1', ear: 'room', text: '' });
+    check('a later pass that heard NOTHING keeps what was shown (words are never taken away by a blank)',
+      subs.lines()[0].text === 'computer please turn it up');
+    // Two ears.
+    subs.caption({ id: 'g3', ear: 'room', text: 'I would like some water', agreed: false,
+      others: [{ ear: 'phone1', text: 'I would like some coffee', confidence: 0.6 }] });
+    const alt = box.querySelector('[data-caption="g3"] .subs-alt');
+    check('*** two ears disagree: both are shown, the other introduced in words ("Phone heard: ...") ***',
+      !!alt && alt.textContent === 'Phone heard: I would like some coffee', alt?.textContent);
+    subs.caption({ id: 'g4', ear: 'room', text: 'yes', agreed: true, others: [] });
+    check('two ears agree: one line, marked agreed', box.querySelector('[data-caption="g4"]').classList.contains('subs-agreed'));
+    check('the line from a phone ear is sourced "phone"', subs.caption({ id: 'g5', ear: 'phone1', text: 'from the pillow' }).source === 'phone');
+    check('earLabel names what a person would call it', earLabel('phone2') === 'Phone' && earLabel('room') === 'Room microphone');
+    // Scroll back.
+    check('only the last three are on screen', subs.lines().length === 3);
+    check('*** everything since the mode came on is kept (in memory) to scroll back through ***', subs.history().length === 5);
+    const n = subs.earlier();
+    const hist = box.querySelector('.subs-hist');
+    check('*** earlier(): the older lines are drawn, the live ones step aside ***',
+      n === 3 && !!hist && box.classList.contains('subs-back') && /computer please turn it up/.test(hist.textContent)
+      && /lines? back|The start/.test(hist.textContent) && getComputedStyle(box.querySelector('[data-caption="g5"]')).display === 'none', hist?.textContent);
+    subs.caption({ id: 'g6', ear: 'room', text: 'something new' });
+    check('a new line while looking back does not yank the view', subs.scrolledBack() === 4 && /computer please/.test(box.querySelector('.subs-hist').textContent));
+    clock.advance(SUBTITLES_DEFAULTS.backMs + 1);
+    check('*** NEVER A STATE ONLY AN INPUT CAN LEAVE: back to the latest lines by itself ***',
+      subs.scrolledBack() === 0 && !box.querySelector('.subs-hist') && !box.classList.contains('subs-back'));
+    subs.earlier(); subs.latest();
+    check('latest() returns at once', subs.scrolledBack() === 0);
+    check('the scroll-back actions exist for a switch, bound to nothing by default',
+      SUBTITLE_ACTIONS.map((a) => a.id).join() === 'subtitles/earlier,subtitles/latest' && SUBTITLE_ACTIONS.every((a) => a.topic));
+    subs.setOn(false);
+    check('*** turned off: the history is gone too (nothing kept, nothing to scroll back to) ***',
+      subs.history().length === 0 && subs.earlier() === 0);
+    subs.setOn(true);
+    // The crawl.
+    subs.update({ subtitlesOn: true, subtitlesStyle: 'crawl' });
+    check('*** the crawl is a style: a class on the box, off by default ***', box.classList.contains('subs-crawl') && box.dataset.style === 'crawl');
+    subs.caption({ id: 'c1', text: 'a long time ago' });
+    const tr = getComputedStyle(box.querySelector('[data-caption="c1"]')).transform;
+    check('...its lines lean back (a 3-D transform)', tr && tr !== 'none', tr);
+    subs.setReducedMotion(true);
+    check('*** with reduced motion the crawl is drawn as plain captions ***', !box.classList.contains('subs-crawl'));
+    subs.setReducedMotion(false);
+    subs.update({ subtitlesOn: true });
+    check('back to plain', !box.classList.contains('subs-crawl'));
+    const off = createSubtitles(host, { settings: {} });
+    check('*** a caption with the mode off is not shown and not kept ***', off.caption({ id: 'x', text: 'private' }) === null
+      && off.history().length === 0);
+    off.destroy();
+    const bad = auditFields(SUBTITLES_FIELDS.map(normalizeField).filter(Boolean), { type: 'subtitles' }).filter((f) => f.severity === 'error');
+    check('the new fields pass the settings audit', bad.length === 0, JSON.stringify(bad));
     subs.destroy();
   }
 } catch (e) {

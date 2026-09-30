@@ -47,6 +47,9 @@ export const SUITES = [
   'speech',
   // Row 2.28 follow-ups: the miss log, the listening cue/tone/duck, and the master volume.
   'speech_misses', 'listening_cue', 'master_volume',
+  // Rows 2.46/2.47: ranked recognisers and two ears, against fake sockets (plus the real capture path
+  // on the browser's fake microphone). Needs no speech service running.
+  'speech_engines',
   'sprint',
   'statemachine', 'talk', 'theme', 'tour', 'trivia', 'voice', 'walkthrough', 'wallpaper', 'watchdog', 'wordforge', 'youtube',
   'youtube_watchdog',

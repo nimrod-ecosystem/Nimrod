@@ -51,6 +51,32 @@
 // Colours are the theme's own `--on-dark` over `--letterbox` - the caption pairing talk.html
 // already uses - so every theme is readable and no theme is hard-coded here (measured in
 // dev/subtitles_test.html).
+//
+// ---------------------------------------------------------------------------------------
+// *** SUBTITLES THAT REFINE (row 2.47). ***
+// ---------------------------------------------------------------------------------------
+//
+// Mike, 2026-09-30: *"It starts with a faster guess. Gradually adding more refinement ... The words
+// updating on the screen as they're corrected. Show lower confidence scores on words and other
+// phrases ... Then you could scroll back up if you need to."* So `caption(c)` (fed by
+// speech_engines.js's ranker) is keyed by the utterance: the fast guess makes a line, and every later
+// pass REPLACES THAT LINE'S WORDS IN PLACE - the line does not move, nothing below it jumps, and a
+// word that changed gets a brief highlight (none when motion is reduced). Around it:
+//   * UNSURE WORDS ARE MARKED BY SHAPE, not colour alone: a dotted underline and italics
+//     (`subs-low`), below the person's own threshold (`subtitlesLowAt`, "do not mark" is a choice).
+//   * TWO EARS THAT DISAGREE SHOW BOTH (row 2.46): the surer ear's words, the other's underneath
+//     ("Phone heard: ..."). A person can choose "only the surer one".
+//   * SCROLL BACK: `earlier()` / `latest()` (and the two actions a switch can bind) page through what
+//     was said since the mode came on - kept in memory only, cleared when the mode goes off, never
+//     written anywhere. It goes back to the latest lines by itself (`backMs`), so it is never a state
+//     only an input can leave.
+//   * THE STAR WARS CRAWL is a STYLE (`subtitlesStyle: 'crawl'`); plain captions are the default,
+//     because slanted, shrinking text is harder to read for low vision or tired eyes (chat's note on
+//     2.47). With reduced motion the crawl is drawn plain.
+//   * THE ONLINE ROUTE (`subtitlesRoute`) is a setting whose default is 'local'. Mike said "maybe"
+//     to an online model for subtitle mode; nothing here turns it on. What 'online' means on the
+//     kiosk: the browser's own recogniser (which sends the room's sound to the browser's maker) ALSO
+//     writes lines, marked as online. It never drives a command.
 
 export const SUBTITLE_SIZES = Object.freeze({
   large: 'clamp(24px, 4.4vmin, 64px)',
@@ -78,7 +104,35 @@ export const SUBTITLES_DEFAULTS = Object.freeze({
   screenLabel: 'Screen',
   // What a line the recogniser could not make out says, rather than vanishing.
   unclearText: '(not clear)',
+  // Row 2.47. Plain captions; the crawl is a choice.
+  style: 'plain',
+  // Words below this confidence are marked as unsure. 0.6: in the desktop measurement (2026-09-30)
+  // right words mostly came back at 0.7+ and the misheard single words ("Vogue" for "book", 0.28)
+  // well below; 0 turns the marks off.
+  lowAt: 0.6,
+  // Two ears that disagree: show both (Mike: "reach consensus or show both"), or only the surer.
+  ears: 'both',
+  // Where the words come from for this mode: 'local' (the recognisers the person ranked) or 'online'
+  // (also the browser's own). Local by default; the online route is NOT approved (Mike: "maybe").
+  route: 'local',
+  // Lines kept to scroll back through, while the mode is on. 200 lines is a long conversation and a
+  // few tens of kilobytes; in memory only.
+  history: 200,
+  // Scrolled back, it returns to the latest lines by itself after this long with no further scroll.
+  backMs: 20000,
 });
+
+export const SUBTITLE_STYLES = ['plain', 'crawl'];
+export const SUBTITLE_ROUTES = ['local', 'online'];
+export const SUBTITLE_EARS = ['both', 'surer'];
+
+// Scroll back from a switch: two ordinary actions on the bus. Nothing binds them by default.
+export const SUBTITLES_EARLIER_TOPIC = 'subtitles/earlier';
+export const SUBTITLES_LATEST_TOPIC = 'subtitles/latest';
+export const SUBTITLE_ACTIONS = [
+  { id: 'subtitles/earlier', label: 'Subtitles: show earlier lines', topic: SUBTITLES_EARLIER_TOPIC, group: 'Spoken' },
+  { id: 'subtitles/latest', label: 'Subtitles: back to the latest', topic: SUBTITLES_LATEST_TOPIC, group: 'Spoken' },
+];
 
 // The settings, for the host's menu. The person level: how this person wants the room shown.
 export const SUBTITLES_FIELDS = [
@@ -111,6 +165,35 @@ export const SUBTITLES_FIELDS = [
       { value: 0.8, label: 'sure' },
       { value: 0.9, label: 'very sure' },
     ] },
+  { key: 'subtitlesStyle', label: 'Subtitles: style', kind: 'choice',
+    default: SUBTITLES_DEFAULTS.style, level: 'standard',
+    options: [
+      { value: 'plain', label: 'Plain captions' },
+      { value: 'crawl', label: 'A crawl, like the start of a space film' },
+    ],
+    note: 'The crawl slants and shrinks older lines; plain is easier to read.' },
+  { key: 'subtitlesLowAt', label: 'Subtitles: mark words it is unsure of', kind: 'choice',
+    default: SUBTITLES_DEFAULTS.lowAt, level: 'standard',
+    options: [
+      { value: 0, label: 'Do not mark' },
+      { value: 0.4, label: 'Only very unsure words' },
+      { value: 0.6, label: 'Unsure words' },
+      { value: 0.8, label: 'Anything it is not sure of' },
+    ],
+    note: 'Marked with a dotted underline, and corrected in place when a better check hears it.' },
+  { key: 'subtitlesEars', label: 'Subtitles: when two microphones hear different words', kind: 'choice',
+    default: SUBTITLES_DEFAULTS.ears, level: 'advanced',
+    options: [
+      { value: 'both', label: 'Show both' },
+      { value: 'surer', label: 'Show only the surer one' },
+    ] },
+  { key: 'subtitlesRoute', label: 'Subtitles: what writes the words down', kind: 'choice',
+    default: SUBTITLES_DEFAULTS.route, level: 'advanced',
+    options: [
+      { value: 'local', label: 'The recognisers chosen for spoken commands (the room’s sound stays where they are)' },
+      { value: 'online', label: 'Also an online recogniser (sends the room’s sound to the browser’s maker)' },
+    ],
+    note: 'Online: tell everyone in the room first. Anything said near the screen is sent.' },
 ];
 
 /** A settings row -> this file's options. Each unset or broken key is its default. */
@@ -127,7 +210,43 @@ export function subtitlesOptionsFrom(values = {}) {
     size: SUBTITLE_SIZES[v.subtitlesSize] ? v.subtitlesSize : SUBTITLES_DEFAULTS.size,
     screen: typeof v.subtitlesScreen === 'boolean' ? v.subtitlesScreen : SUBTITLES_DEFAULTS.screen,
     sureAt: num(v.subtitlesSureAt, 0.01, 1, SUBTITLES_DEFAULTS.sureAt),
+    style: SUBTITLE_STYLES.includes(v.subtitlesStyle) ? v.subtitlesStyle : SUBTITLES_DEFAULTS.style,
+    lowAt: num(v.subtitlesLowAt, 0, 1, SUBTITLES_DEFAULTS.lowAt),
+    ears: SUBTITLE_EARS.includes(v.subtitlesEars) ? v.subtitlesEars : SUBTITLES_DEFAULTS.ears,
+    // Only the exact string 'online' is online. Anything else - missing, broken, a typo - is local.
+    route: v.subtitlesRoute === 'online' ? 'online' : 'local',
+    history: SUBTITLES_DEFAULTS.history,
+    backMs: SUBTITLES_DEFAULTS.backMs,
   };
+}
+
+/** How a caption's ear is named when two ears disagree. */
+export function earLabel(ear) {
+  const e = String(ear || '');
+  if (e.startsWith('phone')) return 'Phone';
+  if (e === 'room') return 'Room microphone';
+  if (e === 'online') return 'Online';
+  return 'Other microphone';
+}
+
+/**
+ * The words of a caption as display pieces: { w, low, changed }. `low` when the word's confidence is
+ * under `lowAt` (never when lowAt is 0 or the word has no confidence - a missing number is not
+ * evidence of doubt); `changed` when the word differs from the one at the same position before.
+ * Pure. Falls back to the plain text's words when the engine gave none.
+ */
+export function captionPieces(c, { lowAt = SUBTITLES_DEFAULTS.lowAt, before = null } = {}) {
+  const ws = Array.isArray(c?.words) && c.words.length
+    ? c.words.map((x) => ({ w: String(x?.w ?? x?.word ?? '').trim(), conf: x?.conf ?? x?.confidence }))
+      .filter((x) => x.w)
+    : String(c?.text || '').split(/\s+/).filter(Boolean).map((w) => ({ w, conf: null }));
+  const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9']+/g, '');
+  const prev = Array.isArray(before) ? before.map((p) => norm(p.w ?? p)) : null;
+  return ws.map((x, i) => {
+    const n = Number(x.conf);
+    const low = lowAt > 0 && x.conf != null && x.conf !== '' && Number.isFinite(n) && n < lowAt;
+    return { w: x.w, low, changed: !!prev && prev[i] !== norm(x.w) };
+  });
 }
 
 // The answer rows of the games that exist today, so the rule works before every game marks
@@ -219,6 +338,8 @@ const prefersStill = (view) => {
  * THE SUBTITLES. Mounted once into `host` (the screen's root, so it wears the screen's theme).
  *
  *   add(line)        show a line (returns the stored line, or null when off / no words)
+ *   caption(c)       a recogniser pass (speech_engines.js): a new line, or the SAME line corrected
+ *   earlier(n) / latest()   scroll back through what was said since the mode came on, and return
  *   heard(h, extra)  the adapter for input_speech.js's `onHeard` - what the recogniser wrote down
  *   tap(adapter)     wrap an output channel (the speech one) so what the screen says is written
  *   setOn(bool)      the mode; off clears the screen and keeps nothing
@@ -241,7 +362,10 @@ export function createSubtitles(host, {
   ensureStyles(doc);
   let opts = subtitlesOptionsFrom(settings);
   let seq = 0;
-  let lines = [];                          // { id, at, text, source, speaker, who, el, timer }
+  let lines = [];                          // { id, at, text, source, speaker, who, el, timer, cid, pieces, others, ... }
+  let hist = [];                           // every line since the mode came on (the same objects), for scroll back
+  let back = 0;                            // lines scrolled back from the latest; 0 = live
+  let backTimer = null;
 
   const box = doc.createElement('div');
   box.className = 'subs';
@@ -251,11 +375,18 @@ export function createSubtitles(host, {
   box.setAttribute('aria-label', 'Subtitles');
   box.dataset.place = 'bottom';
   host.append(box);
+  // The scroll-back view: drawn in its own container, so the live lines (and their timers) are never
+  // touched by looking back. In the box only while looking back.
+  const histEl = doc.createElement('div');
+  histEl.className = 'subs-hist';
 
   function applyLook() {
     box.style.setProperty('--subs-size', SUBTITLE_SIZES[opts.size] || SUBTITLE_SIZES.large);
     const still = reducedMotion == null ? prefersStill(view) : !!reducedMotion;
     box.classList.toggle('subs-still', still);
+    // The crawl is motion: with reduced motion it is drawn as plain captions.
+    box.classList.toggle('subs-crawl', opts.style === 'crawl' && !still);
+    box.dataset.style = opts.style;
   }
   applyLook();
 
@@ -292,23 +423,78 @@ export function createSubtitles(host, {
   function drop(line) {
     if (line.timer != null) { try { clearTimer(line.timer); } catch { /* gone */ } line.timer = null; }
     line.el?.remove();
+    line.el = null;
     lines = lines.filter((l) => l !== line);
-    if (!lines.length) box.hidden = true;
+    if (!lines.length && !back) box.hidden = true;
     place();
   }
 
-  function render(line) {
-    const p = doc.createElement('p');
-    p.className = `subs-line subs-${line.who.kind}`;
+  // The inside of a line: who, the words (unsure ones marked), and what another ear heard.
+  function fill(p, line, { fresh = false } = {}) {
+    p.className = `subs-line subs-${line.who.kind}${line.partial ? ' subs-partial' : ''}`
+      + `${line.agreed ? ' subs-agreed' : ''}${line.revised ? ' subs-revised' : ''}`;
+    if (line.cid) p.dataset.caption = line.cid;
+    p.textContent = '';
     const who = doc.createElement('span');
     who.className = 'subs-who';
     who.textContent = `${line.who.label}:`;
     const said = doc.createElement('span');
     said.className = 'subs-text';
-    said.textContent = line.text;
+    if (line.pieces && line.pieces.length) {
+      line.pieces.forEach((pc, i) => {
+        if (i) said.append(' ');
+        if (!pc.low && !(pc.changed && !fresh)) { said.append(pc.w); return; }
+        const s = doc.createElement('span');
+        s.className = `${pc.low ? 'subs-low' : ''}${pc.changed && !fresh ? ' subs-fixed' : ''}`.trim();
+        // The mark is also said in words, for a screen reader and for anybody who cannot see a
+        // dotted line: "not sure".
+        if (pc.low) s.title = 'not sure';
+        s.textContent = pc.w;
+        said.append(s);
+      });
+    } else said.textContent = line.text;
     p.append(who, ' ', said);
+    for (const o of line.others || []) {
+      const alt = doc.createElement('span');
+      alt.className = 'subs-alt';
+      alt.textContent = `${earLabel(o.ear)} heard: ${o.text}`;
+      p.append(alt);
+    }
     return p;
   }
+  function render(line) { return fill(doc.createElement('p'), line, { fresh: true }); }
+
+  function whoOf(speaker) {
+    try {
+      return speakerLabel(speaker, { sureAt: opts.sureAt, maybeAt: SUBTITLES_DEFAULTS.maybeAt,
+                                     enrolled, screenLabel: SUBTITLES_DEFAULTS.screenLabel });
+    } catch { return { kind: 'unknown', label: 'Unknown', name: null }; }
+  }
+  function arm(line) {
+    if (line.timer != null) { try { clearTimer(line.timer); } catch { /* gone */ } line.timer = null; }
+    if (opts.holdMs > 0) {
+      try { line.timer = setTimer(() => { line.timer = null; drop(line); }, opts.holdMs); } catch { line.timer = null; }
+    }
+  }
+  function remember(line) {
+    hist.push(line);
+    while (hist.length > opts.history) hist.shift();
+    if (back) { back += 1; drawBack(); }       // looking back: the view stays on the same lines
+  }
+  function show(line) {
+    line.el = render(line);
+    box.insertBefore(line.el, histEl.parentNode === box ? histEl : null);
+    lines.push(line);
+    while (lines.length > opts.lines) drop(lines[0]);
+    box.hidden = false;
+    arm(line);
+    remember(line);
+    place();
+  }
+  const pub = (line) => ({ id: line.id, at: line.at, text: line.text, source: line.source, speaker: line.speaker,
+                           who: { ...line.who }, ...(line.cid ? { caption: line.cid, partial: !!line.partial,
+                           revised: !!line.revised, agreed: !!line.agreed, others: (line.others || []).map((o) => ({ ...o })),
+                           low: (line.pieces || []).filter((x) => x.low).map((x) => x.w) } : {}) });
 
   function add(input = {}) {
     if (!opts.on) return null;                 // a mode that is off keeps nothing
@@ -317,26 +503,97 @@ export function createSubtitles(host, {
     if (!text) return null;                    // no words: nothing to show
     if (text.toLowerCase() === '[unk]') text = SUBTITLES_DEFAULTS.unclearText;
     // THE SPEAKER IS LOOKED AT FOR THE LABEL ONLY. Nothing below this line can return null.
-    let who;
-    try {
-      who = speakerLabel(raw.speaker, { sureAt: opts.sureAt, maybeAt: SUBTITLES_DEFAULTS.maybeAt,
-                                        enrolled, screenLabel: SUBTITLES_DEFAULTS.screenLabel });
-    } catch { who = { kind: 'unknown', label: 'Unknown', name: null }; }
+    const who = whoOf(raw.speaker);
     const line = { id: `s${++seq}`, at: now(), text, source: raw.source || null,
                    speaker: raw.speaker || null, who, el: null, timer: null };
-    line.el = render(line);
-    box.append(line.el);
-    lines.push(line);
-    while (lines.length > opts.lines) drop(lines[0]);
-    box.hidden = false;
-    if (opts.holdMs > 0) {
-      try { line.timer = setTimer(() => { line.timer = null; drop(line); }, opts.holdMs); } catch { line.timer = null; }
-    }
-    place();
-    return { id: line.id, at: line.at, text: line.text, source: line.source, speaker: line.speaker, who: { ...who } };
+    show(line);
+    return pub(line);
   }
 
-  function clear() { for (const l of [...lines]) drop(l); }
+  /**
+   * A recogniser pass (speech_engines.js's caption): { id, text, words, ear, partial, revised,
+   * agreed, others, speaker? }. The first pass for an id makes a line; every later pass for the same
+   * id CORRECTS THAT LINE IN PLACE - same element, same position - and its changed words flash once.
+   * The same rule as `add`: only the words decide whether it shows; who said it is only the label.
+   */
+  function caption(c = {}) {
+    if (!opts.on || !c || typeof c !== 'object') return null;
+    const cid = String(c.id || '');
+    let text = String(c.text == null ? '' : c.text).trim();
+    const known = cid ? hist.find((l) => l.cid === cid) : null;
+    if (!text && !known) return null;          // nothing heard yet, nothing to show
+    if (text.toLowerCase() === '[unk]') text = SUBTITLES_DEFAULTS.unclearText;
+    const others = opts.ears === 'both' && Array.isArray(c.others)
+      ? c.others.filter((o) => o && String(o.text || '').trim()).map((o) => ({ ear: o.ear, text: String(o.text).trim(), confidence: o.confidence ?? null }))
+      : [];
+    if (known) {
+      if (!text) return pub(known);            // a later pass heard nothing: keep what was shown
+      const pieces = captionPieces({ ...c, text }, { lowAt: opts.lowAt, before: known.pieces });
+      // THE SAME WORDS AGAIN (a pass confirming, or the line closing): nothing is redrawn, so a word
+      // that was just corrected keeps its highlight and nothing on screen flickers.
+      const sig = JSON.stringify([text, pieces.map((x) => [x.w, x.low]), others, !!c.partial, !!c.agreed]);
+      if (sig === known.sig) return pub(known);
+      known.sig = sig;
+      const changedWords = known.text !== text;
+      Object.assign(known, { text, pieces, others, partial: !!c.partial, agreed: !!c.agreed,
+                             revised: known.revised || (!!c.revised && changedWords) });
+      if (c.speaker) { known.speaker = c.speaker; known.who = whoOf(c.speaker); }
+      if (known.el) { fill(known.el, known); arm(known); place(); }
+      if (back) drawBack();
+      return pub(known);
+    }
+    const line = { id: `s${++seq}`, at: now(), text, source: c.ear && String(c.ear).startsWith('phone') ? 'phone' : (c.source || 'room'),
+                   speaker: c.speaker || null, who: whoOf(c.speaker), el: null, timer: null, cid: cid || null,
+                   pieces: captionPieces({ ...c, text }, { lowAt: opts.lowAt }), others,
+                   partial: !!c.partial, agreed: !!c.agreed, revised: false };
+    line.sig = JSON.stringify([text, line.pieces.map((x) => [x.w, x.low]), others, line.partial, line.agreed]);
+    show(line);
+    return pub(line);
+  }
+
+  // ---- scroll back ------------------------------------------------------------------------
+  function clearBackTimer() {
+    if (backTimer !== null) { try { clearTimer(backTimer); } catch { /* gone */ } backTimer = null; }
+  }
+  function drawBack() {
+    const end = Math.max(0, hist.length - back);
+    const start = Math.max(0, end - opts.lines);
+    histEl.textContent = '';
+    const mark = doc.createElement('p');
+    mark.className = 'subs-line subs-mark';
+    mark.textContent = start > 0 ? `Earlier - ${back} line${back === 1 ? '' : 's'} back` : 'The start';
+    histEl.append(mark);
+    for (const l of hist.slice(start, end)) histEl.append(render(l));
+    place();
+  }
+  function earlier(n = opts.lines) {
+    if (!opts.on || !hist.length) return 0;
+    const max = Math.max(0, hist.length - 1);
+    back = Math.min(max, back + Math.max(1, Math.round(Number(n) || 1)));
+    if (!back) return 0;
+    box.classList.add('subs-back');
+    if (histEl.parentNode !== box) box.append(histEl);
+    box.hidden = false;
+    drawBack();
+    clearBackTimer();
+    // NEVER A STATE ONLY AN INPUT CAN LEAVE: back to the latest lines by itself.
+    if (opts.backMs > 0) {
+      try { backTimer = setTimer(() => { backTimer = null; latest(); }, opts.backMs); } catch { backTimer = null; }
+    }
+    return back;
+  }
+  function latest() {
+    clearBackTimer();
+    back = 0;
+    box.classList.remove('subs-back');
+    histEl.remove();
+    histEl.textContent = '';
+    if (!lines.length) box.hidden = true;
+    place();
+    return 0;
+  }
+
+  function clear() { latest(); for (const l of [...lines]) drop(l); hist = []; }
 
   function speakerForItem(item) {
     const src = item && item.source;
@@ -352,6 +609,13 @@ export function createSubtitles(host, {
 
   return {
     add,
+    caption,
+    earlier,
+    latest,
+    /** Lines scrolled back from the latest (0 = showing the latest). */
+    scrolledBack: () => back,
+    /** What was said since the mode came on (in memory only), oldest first. */
+    history: () => hist.map(pub),
     clear,
     place,
     /** The adapter for input_speech.js's `onHeard`: everything the recogniser wrote down. */
@@ -391,8 +655,7 @@ export function createSubtitles(host, {
       return { ...opts };
     },
     setReducedMotion(v) { reducedMotion = v == null ? null : !!v; applyLook(); },
-    lines: () => lines.map((l) => ({ id: l.id, at: l.at, text: l.text, source: l.source,
-                                      speaker: l.speaker, who: { ...l.who } })),
+    lines: () => lines.map(pub),
     options: () => ({ ...opts }),
     element: () => box,
     destroy() { clear(); setReserve(0); box.remove(); },
