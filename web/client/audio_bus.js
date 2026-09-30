@@ -28,8 +28,10 @@
 //      `groupPriority` wins — VIDEO OUTRANKS GAME MUSIC (Mike, 2026-07-26) — and ties break
 //      to the most recently activated, so opening a second game preempts the first.
 //
-// Plus two things that SILENCE rather than duck, because they are conversations and not cues:
-// HUSH (somebody talking in the room, on a button) and a CALL (see CALL_MODES). A duck is
+// Plus three things that SILENCE rather than duck, because they are conversations and not cues:
+// HUSH (somebody talking in the room, on a button), a CALL (see CALL_MODES), and a source that
+// registered with `silence: true` (a person talking TO the screen - `listening_cue.js`'s "pause
+// everything" mode, and a voice game that is waiting for an answer; row 2.28). A duck is
 // right for a sentence and wrong for five minutes — a bed murmuring under a conversation is
 // not a bed, it is a distraction nobody chose.
 //
@@ -261,6 +263,11 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
         // 4. a call, when set to pause. Same shape as hush and for the same reason: this is
         // a conversation, not a cue, and half-volume music under it helps nobody.
         if (inCall && onCall === 'pause' && s.tier === 'media') level = 0;
+        // 4b. a source ABOVE it that asked to silence media while it is active. The same "pause"
+        // the call mode means - level 0, not a stopped player - and the same reason: somebody is
+        // talking to the screen. Owned by that source rather than by the hush button, so turning
+        // it off can never un-hush a room somebody hushed by hand.
+        if (s.tier === 'media' && active.some((o) => o.silence && o.tierP > s.tierP)) level = 0;
         apply(s, mixed(level, s.channel, g));                  // 5. fader x master, then the floor
       }
     } finally {
@@ -274,8 +281,10 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     // bus's DUCK_TO). A depth, not a switch - it can never silence anything.
     // `channel`: which mixer channel it sits on (row 2.35). Default: its tier's (TIER_CHANNEL), so
     // every source registered before the mixer existed lands where it belongs with no change.
+    // `silence`: while this source is active, every MEDIA source under it goes to 0 instead of
+    // ducking (4b above). Off unless asked for; a source registered without it is unchanged.
     register(id, { tier = 'media', group = null, groupPriority = null, onGain = null,
-                   duck = null, channel = null } = {}) {
+                   duck = null, channel = null, silence = null } = {}) {
       if (!id) return null;
       let s = sources.get(id);
       if (!s) {
@@ -295,6 +304,7 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       if (groupPriority !== null) s.gp = groupPriority;
       if (s.gp == null) s.gp = 0;
       if (duck !== null) s.duck = duck;
+      if (silence !== null) s.silence = !!silence;
       if (onGain) s.onGain = onGain;
       return s;
     },

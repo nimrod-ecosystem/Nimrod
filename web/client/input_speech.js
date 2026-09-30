@@ -71,6 +71,27 @@ export const SPEECH_DEVICE = 'speech';
 //   { on: false, reason: 'stopped' }      the microphone was turned off
 export const LISTENING_TOPIC = 'speech/listening';
 
+// *** THE VOICE GAMES' TWO TOPICS (row 2.31), named here so the input layer does not import a
+// module. *** `modules/word_games.js` declares the same two strings (ANSWER_TOPIC, GRAMMAR_TOPIC)
+// and the suite checks they agree.
+//   speech/grammar   a game says what it can accept right now:
+//                    { source, instanceId, open, words, phase }
+//   speech/answer    what was heard, sent to that game (to `speech/answer#<instanceId>` when the
+//                    game said which instance it is): { text, confidence?, alternatives?, reason? }
+export const SPEECH_GRAMMAR_TOPIC = 'speech/grammar';
+export const SPEECH_ANSWER_TOPIC = 'speech/answer';
+// *** A VOICE GAME IS LISTENING FOR AN ANSWER (Mike, 2026-09-30, note AN: "Pause everything if you
+// go into a voice activated game"). *** Announced ONLY while the microphone is on AND a game has an
+// open grammar - a game played by switch is not a voice game, and pausing a video beside it would
+// be a cost with no reason. `listening_cue.js` pauses media on it.
+//   { on: true,  source, instanceId, phase }   (re-sent on every change, so a subscriber's
+//                                               watchdog is re-armed while the game is live)
+//   { on: false, reason: 'closed' | 'stopped' }
+export const ANSWERING_TOPIC = 'speech/answering';
+// A grammar-limited recogniser's "none of these" word (Vosk). Always in every grammar built here:
+// row 2.28's bench found that a grammar without an out ALWAYS hears one of its phrases.
+export const UNKNOWN_WORD = '[unk]';
+
 /**
  * *** THE PHRASE TABLE. MANY PHRASINGS, ONE VERB. ***
  *
@@ -132,6 +153,41 @@ export const PHRASES = {
 };
 
 /**
+ * *** SPOKEN ROUTES: A PHRASE THAT OPENS SOMETHING RATHER THAN DRIVING A VERB (row 2.31). ***
+ *
+ * Mike, 2026-09-30: *"Computer please play the whatever game."* "Play opposites" is not a verb -
+ * it names a thing, and a verb means "whatever is in front of you" - so it is not a row in
+ * `PHRASES` (which the suite keeps to exactly the verb vocabulary). It is the SAME kind of row
+ * all the same: exact whole-utterance match, after the wake phrase, through the input bus as a
+ * press on `phrase:<id>`, so it is rebindable and gated exactly like "pause". Each route is an
+ * ordinary action (`SPEECH_ACTIONS`, carrying its payload) that the host registers next to the
+ * verb actions.
+ *
+ * *** NO PHRASE UNDER TWO MEANINGS, ACROSS BOTH TABLES. *** `duplicatePhrases()` checks the verbs
+ * and the routes together by default. "play" is a verb and "play opposites" a route; both are
+ * whole utterances, so neither can fire the other.
+ *
+ * Vocabulary [unverified on the bench]: every word here should be one the small Vosk model knows
+ * ("unpause" was not); "rhyming" and "quiz" are the ones to check first.
+ */
+export const ROUTES = {
+  'play-opposites': { topic: 'word_games/play', payload: { game: 'opposites' }, label: 'Play Opposites',
+    phrases: ['play opposites', 'play the opposites game', 'the opposites game', 'opposites'] },
+  'play-rhyming':   { topic: 'word_games/play', payload: { game: 'rhyming' }, label: 'Play Rhyming',
+    phrases: ['play rhyming', 'play rhymes', 'play the rhyming game', 'the rhyming game', 'rhyming'] },
+  'play-yesno':     { topic: 'word_games/play', payload: { game: 'yesno' }, label: 'Play Yes or No',
+    phrases: ['play yes or no', 'play yes no', 'play the quiz', 'yes or no quiz'] },
+};
+
+// Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the
+// route id; the suite checks no route id is also a verb id, so the two cannot collide.
+export function spokenTable(table = PHRASES, routes = ROUTES) {
+  const out = { ...table };
+  for (const [id, r] of Object.entries(routes || {})) out[id] = Array.isArray(r?.phrases) ? r.phrases : [];
+  return out;
+}
+
+/**
  * Normalise what a recogniser handed back so the table can be a plain lookup.
  *
  * Recognisers punctuate, capitalise and pad differently between engines and between releases,
@@ -164,8 +220,21 @@ export function verbFor(text, table = PHRASES) {
   return null;
 }
 
-/** Any phrase listed under more than one verb. Must always be empty — see the table's note. */
-export function duplicatePhrases(table = PHRASES) {
+/** Which spoken route, if any, was said: the route id or null. Same exact whole-utterance rule. */
+export function routeFor(text, routes = ROUTES) {
+  const said = normalize(text);
+  if (!said) return null;
+  for (const [id, r] of Object.entries(routes || {})) {
+    for (const p of (r?.phrases || [])) if (normalize(p) === said) return id;
+  }
+  return null;
+}
+
+/**
+ * Any phrase listed under more than one meaning. Must always be empty — see the table's note.
+ * By default over the WHOLE spoken table: the verbs AND the routes.
+ */
+export function duplicatePhrases(table = spokenTable()) {
   const seen = new Map();
   const dupes = [];
   for (const [verb, phrases] of Object.entries(table)) {
@@ -199,6 +268,78 @@ export const DEFAULT_BINDINGS = Object.keys(PHRASES).map((verb) => ({
   label: `Say “${PHRASES[verb][0]}”`,
 }));
 
+/** The action a spoken route presses. Stable, because bindings persist against it. */
+export const routeAction = (id) => `speech/${id}`;
+
+/**
+ * THE ROUTES AS ACTIONS, for the host to register next to the verbs:
+ * `registry.registerAll(SPEECH_ACTIONS)`. Each carries its topic and payload (actions.js already
+ * supports a payload), so "play opposites" publishes `word_games/play { game: 'opposites' }`.
+ * An input bus refuses an unregistered action, so a host that adds `ROUTE_BINDINGS` without these
+ * gets an `unknown-action` report per phrase, never a wrong action.
+ */
+export const SPEECH_ACTIONS = Object.entries(ROUTES).map(([id, r]) => ({
+  id: routeAction(id), label: r.label, topic: r.topic, payload: r.payload, group: 'Spoken',
+}));
+
+/** The routes' shipped bindings, the same shape as the verbs'. */
+export const ROUTE_BINDINGS = Object.entries(ROUTES).map(([id, r]) => ({
+  id: `default/speech-${id}`,
+  actionId: routeAction(id),
+  device: SPEECH_DEVICE,
+  control: phraseControl(id),
+  edge: 'press',
+  role: 'universal',
+  holdMs: 0, debounceMs: 0, lockoutMs: 0,
+  label: `Say “${r.phrases[0]}”`,
+}));
+
+/** Everything a host adds to the input bus for speech: the verbs, then the routes. */
+export const SPEECH_BINDINGS = [...DEFAULT_BINDINGS, ...ROUTE_BINDINGS];
+
+// ---------------------------------------------------------------------------------------
+// WHAT A RECOGNISER MAY SAY BESIDES THE TEXT (row 2.31)
+// ---------------------------------------------------------------------------------------
+//
+// `onText(text, detail)`. `detail` is optional and every field in it is optional:
+//
+//   confidence    0..1, how sure the engine was of `text`
+//   alternatives  other readings it considered, best first (strings)
+//   reason        WHY it is unsure: 'quiet' | 'noise' | 'cutoff' | 'alternative' — ONLY when the
+//                 engine actually knows. A voice game reads this back to a person ("because it was
+//                 very quiet"), so a guessed reason is a lie told to somebody about their own
+//                 voice. Anything outside the four is dropped here rather than passed on.
+export const RECOGNITION_REASONS = ['quiet', 'noise', 'cutoff', 'alternative'];
+
+/** Keep only what a recogniser really said, in the shape the games take. Never invents a field. */
+export function cleanDetail(detail) {
+  const out = {};
+  if (!detail || typeof detail !== 'object') return out;
+  const c = Number(detail.confidence);
+  if (detail.confidence != null && Number.isFinite(c)) out.confidence = Math.max(0, Math.min(1, c));
+  if (Array.isArray(detail.alternatives)) {
+    const alts = detail.alternatives.map((a) => (typeof a === 'string' ? a : a?.text ?? a?.transcript))
+      .filter((a) => typeof a === 'string' && a.trim());
+    if (alts.length) out.alternatives = alts;
+  }
+  const r = String(detail.reason || '').toLowerCase().replace(/[\s_-]+/g, '');
+  if (RECOGNITION_REASONS.includes(r)) out.reason = r;
+  return out;
+}
+
+// The browser's result list, read as a `detail`. Chrome reports a confidence of 0 when it has none
+// [training knowledge], so 0 is treated as "not reported" - a game then asks to confirm, which is
+// what it does for any engine that cannot say how sure it is.
+function detailFromBrowser(r) {
+  const d = {};
+  const c = Number(r?.[0]?.confidence);
+  if (Number.isFinite(c) && c > 0) d.confidence = c;
+  const alts = [];
+  for (let k = 1; k < (r?.length || 0); k++) if (r[k]?.transcript) alts.push(r[k].transcript);
+  if (alts.length) d.alternatives = alts;
+  return d;
+}
+
 /**
  * The browser's recogniser, wrapped to the seam `attachSpeech` wants: `start`, `stop`, and an
  * `onText` callback. Returns null where the API does not exist, which is Firefox and every
@@ -214,14 +355,20 @@ export function browserRecognizer({ view = typeof window !== 'undefined' ? windo
   // FINAL RESULTS ONLY. Interim results change as somebody keeps talking, so acting on them
   // fires a verb from half a word and then possibly a second from the rest.
   rec.interimResults = false;
+  // A few alternatives, so a voice game can say "it could also be Z" when the engine offered one.
+  rec.maxAlternatives = 3;
   let onText = null;
   let want = false;
   rec.onresult = (e) => {
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
-      if (r.isFinal && onText) onText(r[0]?.transcript || '');
+      if (!r.isFinal || !onText) continue;
+      onText(r[0]?.transcript || '', detailFromBrowser(r));
     }
   };
+  // No grammar here: Chrome ignores `SpeechGrammarList` [training knowledge], so the browser's
+  // engine is always OPEN recognition - which is the mode `recognitionMode()` asks for in the two
+  // places a grammar is dangerous anyway. It has no `setMode`, and `attachSpeech` does not need one.
   // A continuous recogniser stops itself on silence, on a network hiccup, and on some engines
   // every minute or so. Without this it dies quietly and the microphone appears to stop working
   // for no reason anybody in the room can see.
@@ -240,6 +387,10 @@ export function browserRecognizer({ view = typeof window !== 'undefined' ? windo
 // Every value here is a DEFAULT that `attachSpeech` takes as an option, and each carries its
 // argument, because a hard-coded number is an absolute wearing a disguise.
 export const CONFIRM_MODES = ['tone', 'word', 'off'];
+// How the recogniser is asked to listen: 'open' (any words, the engine's whole vocabulary) or
+// 'grammar' (only a list - Vosk's grammar mode). See `recognitionMode()` in attachSpeech.
+export const RECOGNITION_MODES = ['open', 'grammar'];
+export const ANSWER_MATCHES = ['exact', 'any'];
 
 export const SPEECH_DEFAULTS = Object.freeze({
   // *** "COMPUTER PLEASE" AND "NIMROD PLEASE". *** DECISIONS 08-30 made "Computer please" the
@@ -259,12 +410,41 @@ export const SPEECH_DEFAULTS = Object.freeze({
   // does any conversation that happens to be a bare command. The person who wants the opposite
   // - a quiet room, one user, no preamble - turns it off; nothing else changes.
   requireWake: true,
+  // *** THE TWO-STEP PATH: THE WAKE PHRASE ON ITS OWN, THEN THE COMMAND. ON BY DEFAULT. ***
+  // The bench (row 2.28) recommended one breath only, because the armed window was the only
+  // source of false fires. Mike, 2026-09-30 (note AN), overruled it for the right reason: *"I can't
+  // get her to always say everything in one breath in her condition. She'll probably stop to think
+  // a lot."* So the window stays, and the false fire is fixed where it came from - the GRAMMAR (see
+  // `armedRecognition`). The person who wants one breath only (a busy room, a TV that talks a lot)
+  // turns this off; the wake phrase alone then opens nothing.
+  twoStep: true,
   // How long after the wake phrase ON ITS OWN a command may follow as a separate utterance.
   // Eight seconds: long enough for somebody who needs a moment between "computer please" and
   // the word (a recogniser also ends an utterance at the pause, so "computer please ... pause"
   // arrives as two), short enough that a command-shaped word in a later, unrelated sentence
   // is not taken as one. One wake, one command: the window closes the moment a command fires.
+  // A SETTING (`speechWindowMs`): somebody who stops to think wants longer on their own profile
+  // (her profile: try 15 s - Code's suggestion, not measured).
   wakeWindowMs: 8000,
+  // *** HOW TO LISTEN INSIDE THE ARMED WINDOW: OPEN BY DEFAULT. *** The bench fault, exactly: with
+  // the recogniser limited to the command list, "hello there" said inside the window came back as
+  // "louder" at confidence 1.0 - a grammar can only answer with one of its own phrases, and [unk]
+  // did not reliably stop it. OPEN recognition writes "hello there" down as it is, and the exact
+  // phrase match below then matches nothing. Chat's suggestion (note AN) [inferred - measure it on
+  // the bench: open mode is slower and less accurate on short words than grammar mode]. 'grammar'
+  // is kept as the option for a quiet room where the open model mishears commands.
+  armedRecognition: 'open',
+  // *** HOW TO LISTEN WHILE A VOICE GAME WAITS FOR AN ANSWER: OPEN, THE SAME REASON. *** A grammar
+  // of the game's words hears one of the game's words in every cough (row 2.31's trap - and why the
+  // game's own grammar carries wrong answers and [unk]). 'grammar' is the option for an engine that
+  // cannot do open recognition at all.
+  answerRecognition: 'open',
+  // *** WHAT COUNTS AS AN ANSWER: 'exact' BY DEFAULT. *** Open recognition hears the whole room, so
+  // only an utterance that IS one of the words the game said it can accept (after normalising) goes
+  // to the game; "no, she's asleep" said to a nurse is not an answer. 'any' sends every utterance,
+  // which lets the game's own "I don't know that word" and "I didn't catch that" lines speak - the
+  // option for a quiet room with one player in it.
+  answerMatch: 'exact',
   // *** A TONE, NOT A WORD, BY DEFAULT. *** DECISIONS 08-30: confirm with a tone or a short word,
   // never read content back. The tone wins the default because it is honest about what is known
   // - the phrase was HEARD, not that the panel did it (a panel with no pause ignores the verb) -
@@ -298,7 +478,52 @@ export const SPEECH_FIELDS = [
       { value: 'word', label: `Say “${SPEECH_DEFAULTS.confirmWord}”` },
       { value: 'off', label: 'Nothing' },
     ] },
+  { key: 'speechTwoStep', label: 'The wake phrase on its own waits for a command', kind: 'toggle',
+    default: SPEECH_DEFAULTS.twoStep, level: 'standard', onLabel: 'On', offLabel: 'Off',
+    note: 'Off: the command has to be said in the same breath as the wake phrase.' },
+  { key: 'speechWindowMs', label: 'How long it waits for the command', kind: 'number',
+    default: SPEECH_DEFAULTS.wakeWindowMs, level: 'standard', min: 3000, max: 30000, step: 1000,
+    displayScale: 1000, unit: 'seconds', unitOne: 'second' },
+  { key: 'speechArmedHearing', label: 'While it waits for a command, listen for', kind: 'choice',
+    default: SPEECH_DEFAULTS.armedRecognition, level: 'advanced',
+    options: [
+      { value: 'open', label: 'Anything, then match the command exactly' },
+      { value: 'grammar', label: 'Only the command words' },
+    ],
+    note: '“Only the command words” turns ordinary talk into commands; use it only in a quiet room.' },
+  { key: 'speechAnswerHearing', label: 'While a voice game waits for an answer, listen for', kind: 'choice',
+    default: SPEECH_DEFAULTS.answerRecognition, level: 'advanced',
+    options: [
+      { value: 'open', label: 'Anything, then match the answer words' },
+      { value: 'grammar', label: 'Only the game’s words' },
+    ] },
+  { key: 'speechAnswerMatch', label: 'What a voice game treats as an answer', kind: 'choice',
+    default: SPEECH_DEFAULTS.answerMatch, level: 'advanced',
+    options: [
+      { value: 'exact', label: 'Only one of the game’s words' },
+      { value: 'any', label: 'Anything said' },
+    ] },
 ];
+
+const pickChoice = (v, allowed, dflt) => (allowed.includes(v) ? v : dflt);
+
+/**
+ * `attachSpeech` options from a settings row (SPEECH_FIELDS), each unset key its default. The one
+ * call a host makes, so the field keys and the option names cannot drift apart.
+ */
+export function speechOptionsFrom(values = {}) {
+  const v = values || {};
+  const ms = Number(v.speechWindowMs);
+  return {
+    wake: wakeFrom(v),
+    confirm: pickChoice(v.speechConfirm, CONFIRM_MODES, SPEECH_DEFAULTS.confirm),
+    twoStep: typeof v.speechTwoStep === 'boolean' ? v.speechTwoStep : SPEECH_DEFAULTS.twoStep,
+    wakeWindowMs: Number.isFinite(ms) && ms > 0 ? ms : SPEECH_DEFAULTS.wakeWindowMs,
+    armedRecognition: pickChoice(v.speechArmedHearing, RECOGNITION_MODES, SPEECH_DEFAULTS.armedRecognition),
+    answerRecognition: pickChoice(v.speechAnswerHearing, RECOGNITION_MODES, SPEECH_DEFAULTS.answerRecognition),
+    answerMatch: pickChoice(v.speechAnswerMatch, ANSWER_MATCHES, SPEECH_DEFAULTS.answerMatch),
+  };
+}
 
 /**
  * The wake list from a settings row. A field never set is its default; a field set to blank is
@@ -319,7 +544,7 @@ export function wakeFrom(values = {}) {
  * is simply no second phrase), duplicates dropped, and ANY PHRASE THAT IS ALSO A COMMAND REFUSED
  * - "okay" cannot both wake the screen and select, or every "okay" would do one of them at random.
  */
-export function usableWakePhrases(list, table = PHRASES) {
+export function usableWakePhrases(list, table = spokenTable()) {
   const commands = new Set(Object.values(table).flat().map(normalize));
   const out = [];
   for (const raw of Array.isArray(list) ? list : [list]) {
@@ -345,6 +570,44 @@ export function splitWake(text, wakes) {
   return { woke: false, rest: said };
 }
 
+// ---------------------------------------------------------------------------------------
+// THE GRAMMARS A GRAMMAR-LIMITED RECOGNISER LOADS (Vosk; row 2.28)
+// ---------------------------------------------------------------------------------------
+
+const uniq = (list) => [...new Set(list.filter(Boolean))];
+
+/**
+ * THE COMMAND GRAMMAR, for the one-breath path: every wake phrase alone, every wake phrase +
+ * every phrase, every phrase ALONE, and [unk].
+ *
+ * *** THE BARE PHRASES ARE IN IT ON PURPOSE. *** Leave them out and a video saying "pause" has
+ * nowhere to land but "computer please pause" - the grammar would ADD the wake phrase the gate
+ * relies on. With them in, a bare "pause" comes back bare and the gate refuses it.
+ */
+export function commandGrammar(wakes = SPEECH_DEFAULTS.wake, table = spokenTable()) {
+  const ws = usableWakePhrases(wakes, table);
+  const phrases = uniq(Object.values(table).flat().map(normalize));
+  return uniq([...ws, ...ws.flatMap((w) => phrases.map((p) => `${w} ${p}`)), ...phrases, UNKNOWN_WORD]);
+}
+
+/** Inside the armed window, when somebody chose 'grammar' there: the phrases alone, and [unk]. */
+export function armedGrammar(wakes = SPEECH_DEFAULTS.wake, table = spokenTable()) {
+  const ws = usableWakePhrases(wakes, table);
+  return uniq([...ws, ...Object.values(table).flat().map(normalize), UNKNOWN_WORD]);
+}
+
+/**
+ * While a game waits, when somebody chose 'grammar' there: the game's own words (which it already
+ * fills with wrong answers and [unk]), plus the wake phrase and wake + command, so "computer please
+ * back" still leaves the game. [unk] is added even if the game forgot it.
+ */
+export function answerGrammar(words = [], wakes = SPEECH_DEFAULTS.wake, table = spokenTable()) {
+  const ws = usableWakePhrases(wakes, table);
+  const phrases = uniq(Object.values(table).flat().map(normalize));
+  const game = (Array.isArray(words) ? words : []).map((w) => (w === UNKNOWN_WORD ? w : normalize(w)));
+  return uniq([...game, ...ws, ...ws.flatMap((w) => phrases.map((p) => `${w} ${p}`)), UNKNOWN_WORD]);
+}
+
 // The tone: the output layer's own `status` earcon (output_channels.js), the shortest and
 // quietest sound the product already makes. Reused rather than a new sound invented.
 let sharedSound = null;
@@ -366,10 +629,25 @@ function defaultTone() {
  *
  * IT DOES NOT START. `start()` is the caller's to call, and `available()` says whether there is
  * anything to start.
+ *
+ * THE RECOGNISER SEAM: `start(onText)`, `stop()`, `running`, and optionally `setMode(mode)`.
+ * `onText(text, detail?)` - see `cleanDetail` for what `detail` may carry. `setMode` is told
+ * `{ mode: 'open' | 'grammar', grammar: string[] | null, why: 'command' | 'armed' | 'answer' }`
+ * every time how it should listen changes; an engine without it can read `recognitionMode()` or
+ * `currentGrammar()` (null = open) whenever it likes.
+ *
+ * THREE STATES, in the order they win:
+ *   armed    the wake phrase was said on its own; the next utterance is matched EXACTLY against
+ *            the phrase table. Open recognition by default (SPEECH_DEFAULTS.armedRecognition).
+ *   answer   a voice game has an open grammar (SPEECH_GRAMMAR_TOPIC on `bus`): anything that does
+ *            not start with a wake phrase goes to THAT game as `speech/answer`, not to the phrase
+ *            table. A wake phrase still means a command, so "computer please back" leaves a game.
+ *   command  otherwise: the one-breath path, over the command grammar.
  */
 export function attachSpeech(input, {
   recognizer = null,
   table = PHRASES,
+  routes = ROUTES,
   device = SPEECH_DEVICE,
   onHeard = null,          // told every utterance, matched or not — for a settings panel
   view = typeof window !== 'undefined' ? window : null,
@@ -377,15 +655,20 @@ export function attachSpeech(input, {
   // Row 2.28 — see SPEECH_DEFAULTS for the argument behind each default.
   wake = SPEECH_DEFAULTS.wake,
   requireWake = SPEECH_DEFAULTS.requireWake,
+  twoStep = SPEECH_DEFAULTS.twoStep,
   wakeWindowMs = SPEECH_DEFAULTS.wakeWindowMs,
+  armedRecognition = SPEECH_DEFAULTS.armedRecognition,
+  answerRecognition = SPEECH_DEFAULTS.answerRecognition,
+  answerMatch = SPEECH_DEFAULTS.answerMatch,
   confirm = SPEECH_DEFAULTS.confirm,
   confirmWord = SPEECH_DEFAULTS.confirmWord,
   confirmTtlMs = SPEECH_DEFAULTS.confirmTtlMs,
   output = null,           // the output bus, for `word` mode (it ducks the video for the word)
   tone = null,             // injected for tests; default is the output layer's status earcon
   now = () => Date.now(),
-  // The pub/sub bus the listening window is announced on (LISTENING_TOPIC). Optional: with no
-  // bus the gate works exactly as before and simply tells nobody.
+  // The pub/sub bus the listening window is announced on (LISTENING_TOPIC), the games' grammars
+  // are heard on and their answers sent on. Optional: with no bus the gate works exactly as
+  // before, tells nobody, and there is no answer mode (no game can be heard announcing itself).
   bus = null,
   // THE MISS LOG (row 2.28 (b), Mike: yes). Anything with `add(text)` - `speech_misses.js` is
   // the real one. Told ONLY the words that followed a wake phrase and matched no command; null
@@ -396,19 +679,32 @@ export function attachSpeech(input, {
 } = {}) {
   if (!input) throw new Error('attachSpeech: an input bus is required');
   const rec = recognizer || browserRecognizer({ view, lang });
+  const spoken = spokenTable(table, routes);
   // A wake list with nothing usable in it leaves the gate SHUT - nothing fires - rather than
   // falling open. Inaction is the safe failure for a thing that drives somebody's screen.
-  const wakes = usableWakePhrases(wake, table);
+  const wakes = usableWakePhrases(wake, spoken);
   const mode = CONFIRM_MODES.includes(confirm) ? confirm : 'tone';
+  const armedHow = RECOGNITION_MODES.includes(armedRecognition) ? armedRecognition : SPEECH_DEFAULTS.armedRecognition;
+  const answerHow = RECOGNITION_MODES.includes(answerRecognition) ? answerRecognition : SPEECH_DEFAULTS.answerRecognition;
+  const matchHow = ANSWER_MATCHES.includes(answerMatch) ? answerMatch : SPEECH_DEFAULTS.answerMatch;
   const playTone = typeof tone === 'function' ? tone : defaultTone;
+  const canPush = () => !!rec && typeof rec.setMode === 'function';
   let armedUntil = null;   // set by the wake phrase said on its own
   let closeTimer = null;   // closes the window as an EVENT; `armedUntil` stays the gate itself
   let open = false;
+  let running = false;     // start() called and not stopped: the answer event needs a live microphone
+  // THE GAMES THAT HAVE SAID WHAT THEY CAN HEAR, by instance. The newest OPEN one is the one an
+  // answer goes to: the game somebody most recently started or moved on is the one being played.
+  const games = new Map();   // key -> { source, instanceId, words, phase, seq }
+  let gameSeq = 0;
+  let answering = null;      // the key the last `on: true` answering event was about, or null
+  let lastModeKey = '';
 
-  function announce(payload) {
+  function publish(topic, payload) {
     if (!bus || typeof bus.publish !== 'function') return;
-    try { bus.publish(LISTENING_TOPIC, payload); } catch (err) { console.error('speech: listening event', err); }
+    try { bus.publish(topic, payload); } catch (err) { console.error(`speech: ${topic}`, err); }
   }
+  const announce = (payload) => publish(LISTENING_TOPIC, payload);
   function clearClose() {
     if (closeTimer !== null) { try { clearTimer(closeTimer); } catch { /* already gone */ } closeTimer = null; }
   }
@@ -418,19 +714,99 @@ export function attachSpeech(input, {
     clearClose();
     // The timer only ANNOUNCES the close. The gate itself is `armedUntil` against `now()`, so a
     // timer that never fires cannot keep the gate open - and every subscriber has its own
-    // watchdog from `ms` in case this announcement never arrives.
-    if (bus) {
+    // watchdog from `ms` in case this announcement never arrives. It also tells a recogniser that
+    // takes `setMode` to go back to the command grammar.
+    if (bus || canPush()) {
       try { closeTimer = setTimer(() => { closeTimer = null; closeWindow('timeout'); }, ms); }
       catch { closeTimer = null; }
     }
     announce({ on: true, reason: 'wake', ms });
+    pushMode();
   }
   function closeWindow(reason) {
     armedUntil = null;
     clearClose();
-    if (!open) return;
-    open = false;
-    announce({ on: false, reason });
+    if (open) {
+      open = false;
+      announce({ on: false, reason });
+    }
+    pushMode();
+  }
+
+  // ---- answer mode ------------------------------------------------------------------
+  function currentGame() {
+    let best = null;
+    for (const g of games.values()) if (!best || g.seq > best.seq) best = g;
+    return best;
+  }
+  function answerTopic(g) {
+    if (!g.instanceId) return SPEECH_ANSWER_TOPIC;
+    return typeof bus?.instanceTopic === 'function'
+      ? bus.instanceTopic(g.instanceId, SPEECH_ANSWER_TOPIC)
+      : `${SPEECH_ANSWER_TOPIC}#${g.instanceId}`;
+  }
+  function syncAnswering() {
+    const g = running ? currentGame() : null;
+    if (g) {
+      answering = g.key;
+      publish(ANSWERING_TOPIC, { on: true, source: g.source, instanceId: g.instanceId, phase: g.phase });
+    } else if (answering !== null) {
+      answering = null;
+      publish(ANSWERING_TOPIC, { on: false, reason: running ? 'closed' : 'stopped' });
+    }
+  }
+  function onGrammar(p) {
+    if (!p || typeof p !== 'object') return;
+    const key = p.instanceId ? `#${p.instanceId}` : `@${p.source || ''}`;
+    const words = Array.isArray(p.words) ? p.words.filter((w) => typeof w === 'string' && w) : [];
+    const isOpen = p.open !== false && words.length > 0;
+    if (isOpen) {
+      const had = games.get(key);
+      // A game re-announcing (a new phase) keeps its place; a newly opened one goes to the front.
+      games.set(key, { key, source: p.source || null, instanceId: p.instanceId || null, words,
+                       phase: p.phase || null, seq: had ? had.seq : ++gameSeq });
+    } else games.delete(key);
+    syncAnswering();
+    pushMode();
+  }
+  const offGrammar = bus && typeof bus.subscribe === 'function'
+    ? bus.subscribe(SPEECH_GRAMMAR_TOPIC, onGrammar) : () => {};
+
+  function answer(g, text, detail) {
+    const said = normalize(text);
+    const unk = String(text || '').trim().toLowerCase() === UNKNOWN_WORD;
+    const known = unk || g.words.some((w) => (w === UNKNOWN_WORD ? false : normalize(w) === said));
+    const sent = !!said && (matchHow === 'any' || known);
+    report({ text, verb: null, woke: false, answer: true, sent });
+    // Not one of the game's words, with exact matching: room talk, not an answer. Nothing is sent
+    // and nothing is logged - an answer to a game is not a command anybody missed.
+    if (!sent && !unk) return;
+    publish(answerTopic(g), { text: unk ? UNKNOWN_WORD : text, ...detail });
+  }
+
+  // ---- how the recogniser should listen -------------------------------------------------
+  function recognitionMode() {
+    const armed = armedUntil !== null && now() <= armedUntil;
+    if (armed) {
+      return armedHow === 'grammar'
+        ? { mode: 'grammar', grammar: armedGrammar(wakes, spoken), why: 'armed' }
+        : { mode: 'open', grammar: null, why: 'armed' };
+    }
+    const g = currentGame();
+    if (g) {
+      return answerHow === 'grammar'
+        ? { mode: 'grammar', grammar: answerGrammar(g.words, wakes, spoken), why: 'answer' }
+        : { mode: 'open', grammar: null, why: 'answer' };
+    }
+    return { mode: 'grammar', grammar: commandGrammar(wakes, spoken), why: 'command' };
+  }
+  function pushMode() {
+    if (!canPush()) return;
+    const m = recognitionMode();
+    const key = `${m.why}|${m.mode}|${m.grammar ? m.grammar.join('\u0001') : ''}`;
+    if (key === lastModeKey) return;
+    lastModeKey = key;
+    try { rec.setMode(m); } catch (err) { console.error('speech: setMode', err); }
   }
 
   function logMiss(text) {
@@ -454,33 +830,48 @@ export function attachSpeech(input, {
     try { onHeard?.(h); } catch (err) { console.error('speech: onHeard', err); }
   }
 
-  function heard(text) {
+  function heard(text, rawDetail) {
+    const detail = cleanDetail(rawDetail);
     const w = splitWake(text, wakes);
     const rest = w.rest;
     const inWindow = armedUntil !== null && now() <= armedUntil;
     // A window whose time is up is closed now, whether or not its timer has fired yet.
     if (armedUntil !== null && !inWindow) closeWindow('timeout');
+    // ANSWER MODE: a game is waiting, and this was not said to the screen as a command (no wake
+    // phrase, no command window open). It goes to the game, not the phrase table - "next" said to
+    // a quiz is an answer, and with the gate turned off it would otherwise skip the video too.
+    const g = !w.woke && !inWindow ? currentGame() : null;
+    if (g) { answer(g, text, detail); return; }
     if (requireWake && !w.woke && !inWindow) { report({ text, verb: null, woke: false }); return; }
     if (w.woke && !rest) {
-      // The wake phrase on its own: the command may follow as its own utterance.
-      openWindow(Math.max(0, Number(wakeWindowMs) || 0));
+      // The wake phrase on its own: the command may follow as its own utterance - unless the
+      // two-step path is turned off, when it opens nothing (and nothing is announced or ducked).
+      if (twoStep) openWindow(Math.max(0, Number(wakeWindowMs) || 0));
       report({ text, verb: null, woke: true });
       return;
     }
     const verb = verbFor(rest, table);
-    report({ text, verb, woke: w.woke });
+    const route = verb ? null : routeFor(rest, routes);
+    report(route ? { text, verb: null, route, woke: w.woke } : { text, verb, woke: w.woke });
     // An unrecognised phrase does nothing - and does not close an open window, so somebody who
     // is mis-heard once can simply say it again. It is logged ONLY when it followed a wake
     // phrase (in the same breath, or inside the window): with the gate turned off, a bare
     // sentence still is not a thing anybody said to the screen, and it is not written down.
-    if (!verb) { if (w.woke || inWindow) logMiss(rest); return; }
+    if (!verb && !route) { if (w.woke || inWindow) logMiss(rest); return; }
     closeWindow('command');    // one wake, one command
-    const control = phraseControl(verb);
+    const control = phraseControl(verb || route);
     // Down then straight up: a spoken phrase has no duration anybody is measuring, and holding
     // it open would arm the max-hold watchdog for something that is already over.
     input.down(device, control);
     input.up(device, control);
-    confirmed(verb);
+    confirmed(verb || route);
+  }
+
+  function halt() {
+    rec?.stop();
+    running = false;
+    closeWindow('stopped');
+    syncAnswering();
   }
 
   return {
@@ -488,8 +879,21 @@ export function attachSpeech(input, {
     get listening() { return !!rec && !!rec.running; },
     wakePhrases: () => [...wakes],
     get windowOpen() { return open; },
-    start() { if (!rec) return false; rec.start(heard); return true; },
-    stop() { rec?.stop(); closeWindow('stopped'); },
-    destroy() { rec?.stop(); closeWindow('stopped'); },
+    // How the recogniser should listen right now, and the grammar to load (null = open).
+    recognitionMode,
+    currentGrammar: () => recognitionMode().grammar,
+    // The game an answer would go to right now, or null.
+    answerTarget: () => { const x = currentGame(); return x ? { source: x.source, instanceId: x.instanceId, phase: x.phase } : null; },
+    start() {
+      if (!rec) return false;
+      running = true;
+      lastModeKey = '';
+      pushMode();
+      rec.start(heard);
+      syncAnswering();
+      return true;
+    },
+    stop() { halt(); },
+    destroy() { halt(); try { offGrammar(); } catch { /* gone */ } games.clear(); },
   };
 }

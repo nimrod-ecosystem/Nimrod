@@ -28,7 +28,13 @@ import {
   PHRASES, SPEECH_DEVICE, DEFAULT_BINDINGS, normalize, verbFor, duplicatePhrases,
   phraseControl, attachSpeech, SPEECH_DEFAULTS, CONFIRM_MODES, usableWakePhrases, splitWake,
   LISTENING_TOPIC, SPEECH_FIELDS, wakeFrom,
+  ROUTES, routeFor, spokenTable, SPEECH_ACTIONS, ROUTE_BINDINGS, SPEECH_BINDINGS, routeAction,
+  SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC, ANSWERING_TOPIC, UNKNOWN_WORD, cleanDetail,
+  browserRecognizer, commandGrammar, armedGrammar, answerGrammar, speechOptionsFrom,
+  RECOGNITION_MODES,
 } from '../input_speech.js';
+import { ANSWER_TOPIC as WG_ANSWER, GRAMMAR_TOPIC as WG_GRAMMAR, PLAY_TOPIC as WG_PLAY, GAMES as WG_GAMES }
+  from '../modules/word_games.js';
 import { normalizeField } from '../settings_fields.js';
 import { auditFields } from '../settings_audit.js';
 import { VERBS, MEDIA_VERBS, verbTopic, createDefaultRegistry } from '../actions.js';
@@ -246,7 +252,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
       output, onHeard: (h) => heard.push(h), ...opts });
     speech.start();
     const pressed = () => calls.filter((c) => c[0] === 'down').map((c) => c[2]);
-    return { speech, say: (x) => feed(x), pressed, tones, said, heard,
+    return { speech, say: (x, d) => feed(x, d), pressed, tones, said, heard,
              advance: (ms) => { t += ms; } };
   }
 
@@ -420,7 +426,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     speech.start();
     const pressed = () => calls.filter((c) => c[0] === 'down').map((c) => c[2]);
     const listen = () => events.filter((e) => e[0] === LISTENING_TOPIC).map((e) => e[1]);
-    return { speech, say: (x) => feed(x), pressed, events, listen, missed, advance, timers };
+    return { speech, say: (x, d) => feed(x, d), pressed, events, listen, missed, advance, timers };
   }
 
   section('*** the listening window is an EVENT: anything can show it (row 2.36) ***');
@@ -535,6 +541,356 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     r2.say('computer please the weather is nice');
     r2.say('computer please pause');
     check('a store that throws does not stop the next command', JSON.stringify(r2.pressed()) === '["phrase:pause"]');
+  }
+
+  // =====================================================================================
+  // ROW 2.31 HOOKS: THE WORD GAMES, AND NOTE AN (two-step stays; the false fire is fixed in the
+  // grammar, not by dropping the window)
+  // =====================================================================================
+  section('*** the two-step path stays ON by default (Mike, note AN: “she’ll probably stop to think a lot”) ***');
+  check('*** two-step is on by default ***', SPEECH_DEFAULTS.twoStep === true);
+  check('...with an eight-second window by default', SPEECH_DEFAULTS.wakeWindowMs === 8000);
+  check('*** inside the window the recogniser listens OPEN by default, not to the command list ***',
+    SPEECH_DEFAULTS.armedRecognition === 'open', SPEECH_DEFAULTS.armedRecognition);
+  check('...and so it does while a game waits for an answer', SPEECH_DEFAULTS.answerRecognition === 'open');
+  check('...and only one of the game’s own words counts as an answer by default', SPEECH_DEFAULTS.answerMatch === 'exact');
+  check('the recognition modes are open and grammar', JSON.stringify(RECOGNITION_MODES) === '["open","grammar"]');
+  {
+    const keys = SPEECH_FIELDS.map((f) => f.key);
+    const need = ['speechTwoStep', 'speechWindowMs', 'speechArmedHearing', 'speechAnswerHearing', 'speechAnswerMatch'];
+    check('each is a setting', need.every((k) => keys.includes(k)), keys.join(','));
+    const win = normalizeField(SPEECH_FIELDS.find((f) => f.key === 'speechWindowMs'));
+    check('the window length is stored in ms and shown in seconds (the house rule for durations)',
+      win && win.displayScale === 1000 && win.default === 8000, JSON.stringify(win));
+    const o = speechOptionsFrom({});
+    check('a settings row with nothing set gives every default',
+      o.twoStep === true && o.wakeWindowMs === 8000 && o.armedRecognition === 'open'
+        && o.answerRecognition === 'open' && o.answerMatch === 'exact' && o.confirm === 'tone'
+        && o.wake.join('|') === SPEECH_DEFAULTS.wake.join('|'), JSON.stringify(o));
+    const o2 = speechOptionsFrom({ speechWindowMs: 15000, speechTwoStep: false, speechArmedHearing: 'grammar',
+      speechAnswerMatch: 'any', speechConfirm: 'word', speechWake2: 'cici please' });
+    check('...and a profile’s own values come through (her profile: a longer window, her own phrase)',
+      o2.wakeWindowMs === 15000 && o2.twoStep === false && o2.armedRecognition === 'grammar'
+        && o2.answerMatch === 'any' && o2.confirm === 'word' && o2.wake[1] === 'cici please', JSON.stringify(o2));
+    const o3 = speechOptionsFrom({ speechArmedHearing: 'psychic', speechWindowMs: -5 });
+    check('...and nonsense falls back to the default rather than breaking',
+      o3.armedRecognition === 'open' && o3.wakeWindowMs === 8000, JSON.stringify(o3));
+  }
+  {
+    const r = rig({ wakeWindowMs: 15000 });
+    r.say('computer please');
+    r.advance(12000);
+    r.say('pause');
+    check('a longer window (her profile) still takes the command after twelve seconds of thinking',
+      JSON.stringify(r.pressed()) === '["phrase:pause"]', JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig({ twoStep: false });
+    r.say('computer please');
+    check('*** two-step turned off: the wake phrase alone opens no window and announces nothing ***',
+      r.listen().length === 0 && r.speech.windowOpen === false, JSON.stringify(r.listen()));
+    r.say('pause');
+    check('...so a bare command after it does nothing', r.pressed().length === 0);
+    r.say('computer please pause');
+    check('...and one breath still works', JSON.stringify(r.pressed()) === '["phrase:pause"]');
+  }
+
+  section('*** how the recogniser should listen: the grammar for one breath, OPEN inside the window ***');
+  {
+    const g = commandGrammar();
+    check('the command grammar has the wake phrase + command in one breath',
+      g.includes('computer please pause') && g.includes('nimrod please louder'), g.length);
+    check('*** ...and every command ALONE, so a video saying “pause” lands on bare “pause” and the gate '
+      + 'refuses it, instead of the grammar adding the wake phrase for it ***', g.includes('pause') && g.includes('louder'));
+    check('*** ...and [unk], always ***', g.includes(UNKNOWN_WORD));
+    check('...and the spoken routes', g.includes('computer please play opposites'));
+    check('...and nothing twice', new Set(g).size === g.length);
+    const a = armedGrammar();
+    check('the armed grammar (for somebody who chose it) is the commands alone, and [unk]',
+      a.includes('pause') && a.includes(UNKNOWN_WORD) && !a.includes('computer please pause'));
+  }
+  {
+    const modes = [];
+    // A recogniser that takes setMode, driven by the same fake clock.
+    const calls = []; let feed = null; let t = 0; let nextId = 1; const timers = new Map();
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, running: false,
+                  setMode(m) { modes.push(m); } };
+    const sp = attachSpeech({ down: (d, c) => calls.push(c), up() {} }, { recognizer: rec, confirm: 'off',
+      now: () => t, setTimer: (fn, ms) => { const id = nextId++; timers.set(id, { at: t + ms, fn }); return id; },
+      clearTimer: (id) => timers.delete(id) });
+    const adv = (ms) => { t += ms; for (const [id, x] of [...timers]) if (x.at <= t) { timers.delete(id); x.fn(); } };
+    check('before anything is heard: the command grammar', sp.recognitionMode().mode === 'grammar'
+      && sp.recognitionMode().why === 'command' && Array.isArray(sp.currentGrammar()), JSON.stringify(sp.recognitionMode().why));
+    sp.start();
+    check('starting tells a recogniser that takes setMode', modes.length === 1 && modes[0].why === 'command', JSON.stringify(modes.map((m) => m.why)));
+    feed('computer please');
+    check('*** the wake phrase alone: OPEN recognition, no grammar at all ***',
+      sp.recognitionMode().mode === 'open' && sp.currentGrammar() === null && modes[modes.length - 1].mode === 'open',
+      JSON.stringify(sp.recognitionMode()));
+    feed('pause');
+    check('a command closes the window and goes back to the command grammar',
+      sp.recognitionMode().why === 'command' && modes[modes.length - 1].why === 'command' && calls[0] === 'phrase:pause',
+      JSON.stringify(modes.map((m) => m.why)));
+    feed('computer please');
+    adv(8000);
+    check('*** the window running out goes back to the command grammar too, even with no pub/sub bus ***',
+      modes[modes.length - 1].why === 'command' && timers.size === 0, JSON.stringify(modes.map((m) => m.why)));
+    const n = modes.length;
+    feed('the weather is nice');
+    check('nothing that changes nothing is pushed twice', modes.length === n, String(modes.length - n));
+    sp.destroy();
+  }
+
+  section('*** THE BENCH TRAP, reproduced: a grammar turns “hello there” into “louder” ***');
+  {
+    // A FAKE ENGINE that behaves the way Vosk did on the bench (row 2.28): given a grammar, it can
+    // only answer with one of its phrases - so words that are not in it come back as the nearest
+    // listed phrase, at full confidence. Open, it writes down what was said.
+    function vosky(opts) {
+      let feed = null; let m = { mode: 'grammar', grammar: [] };
+      const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; },
+                    running: false, setMode(x) { m = x; } };
+      const r = rig({ recognizer: rec, ...opts });
+      const speak = (words) => {
+        if (m.mode === 'grammar' && !m.grammar.includes(words)) feed('louder', { confidence: 1 });
+        else feed(words, { confidence: 0.9 });
+      };
+      return { ...r, speak, mode: () => m };
+    }
+    const bad = vosky({ armedRecognition: 'grammar' });
+    bad.speak('computer please');
+    bad.speak('hello there');
+    check('with the command list inside the window (the old way), “hello there” fires louder - the bench fault',
+      JSON.stringify(bad.pressed()) === '["phrase:volume-up"]', JSON.stringify(bad.pressed()));
+    const good = vosky({});
+    good.speak('computer please');
+    check('by default the window listens open', good.mode().mode === 'open', JSON.stringify(good.mode()));
+    good.speak('hello there');
+    check('*** OPEN inside the window: “hello there” is written down as it is and matches nothing ***',
+      good.pressed().length === 0, JSON.stringify(good.pressed()));
+    good.speak('louder');
+    check('...while the real command, said next, still fires (one mis-hearing does not close the window)',
+      JSON.stringify(good.pressed()) === '["phrase:volume-up"]', JSON.stringify(good.pressed()));
+  }
+
+  section('*** richer results: confidence, alternatives, and a reason ONLY when the engine knows it ***');
+  check('cleanDetail keeps what was said', JSON.stringify(cleanDetail({ confidence: 0.42, alternatives: ['cold', 'gold'], reason: 'quiet' }))
+    === '{"confidence":0.42,"alternatives":["cold","gold"],"reason":"quiet"}',
+    JSON.stringify(cleanDetail({ confidence: 0.42, alternatives: ['cold', 'gold'], reason: 'quiet' })));
+  check('*** ...and invents nothing: no confidence, no alternatives, no reason ***',
+    JSON.stringify(cleanDetail({})) === '{}' && JSON.stringify(cleanDetail(undefined)) === '{}');
+  check('*** a reason outside quiet / noise / cutoff / alternative is dropped, never passed on to be read out ***',
+    !('reason' in cleanDetail({ reason: 'you mumbled' })), JSON.stringify(cleanDetail({ reason: 'you mumbled' })));
+  check('...spelling is forgiven (“cut-off”)', cleanDetail({ reason: 'Cut-off' }).reason === 'cutoff');
+  check('a confidence out of range is clamped, a nonsense one dropped',
+    cleanDetail({ confidence: 7 }).confidence === 1 && !('confidence' in cleanDetail({ confidence: 'very' })));
+  check('alternatives given as objects are read as their text',
+    JSON.stringify(cleanDetail({ alternatives: [{ text: 'hot' }, { transcript: 'hat' }, 3, ''] }).alternatives) === '["hot","hat"]');
+  {
+    // The browser's engine, driven by a fake SpeechRecognition.
+    let inst = null;
+    function FakeSR() { inst = this; this.start = () => {}; this.stop = () => {}; }
+    const br = browserRecognizer({ view: { SpeechRecognition: FakeSR } });
+    const got = [];
+    br.start((t, d) => got.push([t, d]));
+    check('the browser engine asks for a few alternatives', inst.maxAlternatives === 3, String(inst.maxAlternatives));
+    const res = (alts, final = true) => Object.assign(alts.map(([transcript, confidence]) => ({ transcript, confidence })), { isFinal: final });
+    inst.onresult({ resultIndex: 0, results: [res([['cold', 0.8], ['gold', 0.1]])] });
+    check('*** its final result arrives with confidence and alternatives ***',
+      got[0] && got[0][0] === 'cold' && got[0][1].confidence === 0.8 && JSON.stringify(got[0][1].alternatives) === '["gold"]',
+      JSON.stringify(got));
+    inst.onresult({ resultIndex: 0, results: [res([['hot', 0]])] });
+    check('*** a confidence of 0 (Chrome’s “none”) is not reported as 0 ***',
+      got[1] && !('confidence' in got[1][1]), JSON.stringify(got[1]));
+    check('...and the browser never claims a reason', got.every(([, d]) => !('reason' in d)));
+    br.stop();
+  }
+
+  section('*** answer mode: while a game has an open grammar, what is heard goes to the game ***');
+  check('*** the topics are the ones word_games.js listens on ***',
+    SPEECH_ANSWER_TOPIC === WG_ANSWER && SPEECH_GRAMMAR_TOPIC === WG_GRAMMAR, `${SPEECH_ANSWER_TOPIC} ${WG_ANSWER}`);
+  // A rig on a REAL pub/sub bus, so grammars are heard and answers can be subscribed to.
+  function arig(opts = {}) {
+    const bus = createBus();
+    const r = lrig({ bus, ...opts });
+    const answers = []; const bare = []; const answering = [];
+    bus.subscribe(`${SPEECH_ANSWER_TOPIC}#wg-1`, (p) => answers.push(['wg-1', p]));
+    bus.subscribe(`${SPEECH_ANSWER_TOPIC}#wg-2`, (p) => answers.push(['wg-2', p]));
+    bus.subscribe(SPEECH_ANSWER_TOPIC, (p) => bare.push(p));
+    bus.subscribe(ANSWERING_TOPIC, (p) => answering.push(p));
+    const grammar = (instanceId, open, words = ['cold', 'hot', 'warm', UNKNOWN_WORD], phase = 'asking') =>
+      bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId, open, words: open ? words : [], phase });
+    return { ...r, bus, answers, bare, answering, grammar };
+  }
+  {
+    const r = arig();
+    r.grammar('wg-1', true);
+    r.say('cold');
+    check('*** a word said with no wake phrase goes to the game, addressed to that one instance ***',
+      r.answers.length === 1 && r.answers[0][0] === 'wg-1' && r.answers[0][1].text === 'cold', JSON.stringify(r.answers));
+    check('...and presses nothing on the input bus', r.pressed().length === 0);
+    check('...and is not written to the miss log (an answer is not a command anybody missed)', r.missed.length === 0);
+    r.say('Hot.', { confidence: 0.55, alternatives: ['hat'], reason: 'noise' });
+    check('*** the recogniser’s detail travels with it: confidence, alternatives, reason ***',
+      r.answers[1] && r.answers[1][1].confidence === 0.55 && r.answers[1][1].alternatives[0] === 'hat'
+        && r.answers[1][1].reason === 'noise', JSON.stringify(r.answers[1]));
+    r.say('warm');
+    check('*** and a recogniser that said nothing about confidence has none invented for it ***',
+      r.answers[2] && !('confidence' in r.answers[2][1]) && !('reason' in r.answers[2][1]), JSON.stringify(r.answers[2]));
+    r.say('no she is asleep');
+    check('*** room talk that is not one of the game’s words is NOT sent (exact matching) ***',
+      r.answers.length === 3, JSON.stringify(r.answers.slice(3)));
+    r.say('[unk]');
+    check('a grammar engine’s [unk] is passed on, so the game can say it did not catch that',
+      r.answers[3] && r.answers[3][1].text === UNKNOWN_WORD, JSON.stringify(r.answers[3]));
+    r.say('computer please pause');
+    check('*** a wake phrase still means a command, even mid-game ***',
+      JSON.stringify(r.pressed()) === '["phrase:pause"]' && r.answers.length === 4, JSON.stringify(r.pressed()));
+    r.say('computer please');
+    r.say('next');
+    check('*** and inside the command window, a word is a command, not an answer ***',
+      JSON.stringify(r.pressed()) === '["phrase:pause","phrase:next"]' && r.answers.length === 4, JSON.stringify(r.pressed()));
+    r.say('cold');
+    check('...after which answers go to the game again', r.answers.length === 5);
+    r.grammar('wg-1', false);
+    r.say('cold');
+    check('*** the grammar closed (celebrating, hidden, gone): nothing goes to the game ***',
+      r.answers.length === 5 && r.pressed().length === 2, JSON.stringify(r.answers.length));
+    check('nothing ever went to the bare topic when the game said which instance it is', r.bare.length === 0);
+  }
+  {
+    const r = arig({ answerMatch: 'any' });
+    r.grammar('wg-1', true);
+    r.say('no she is asleep');
+    check('answerMatch “any”: everything said goes to the game, so its own “I don’t know that word” can speak',
+      r.answers.length === 1 && r.answers[0][1].text === 'no she is asleep', JSON.stringify(r.answers));
+  }
+  {
+    const r = arig({ requireWake: false });
+    r.grammar('wg-1', true, ['yes', 'no', UNKNOWN_WORD]);
+    r.say('next');
+    check('*** with the wake gate off, a bare “next” during a game is NOT a command (it would skip the video) ***',
+      r.pressed().length === 0, JSON.stringify(r.pressed()));
+    r.grammar('wg-1', false);
+    r.say('next');
+    check('...and is one again once the game stops listening', JSON.stringify(r.pressed()) === '["phrase:next"]');
+  }
+  {
+    const r = arig();
+    r.grammar('wg-1', true);
+    r.grammar('wg-2', true);
+    r.say('cold');
+    check('two games: the one that opened most recently gets it', r.answers[0] && r.answers[0][0] === 'wg-2', JSON.stringify(r.answers));
+    r.grammar('wg-1', true, ['yes', 'no', UNKNOWN_WORD], 'another');
+    r.say('hot');
+    check('...a game moving to its next phase keeps its place rather than jumping the queue',
+      r.answers[1] && r.answers[1][0] === 'wg-2', JSON.stringify(r.answers));
+    r.grammar('wg-2', false);
+    r.say('yes');
+    check('...and when it closes, the other one gets the next answer', r.answers[2] && r.answers[2][0] === 'wg-1', JSON.stringify(r.answers));
+    check('the recogniser is told what the target is', r.speech.answerTarget()?.instanceId === 'wg-1');
+  }
+  {
+    const r = arig();
+    r.grammar(null, true);
+    r.say('hot');
+    check('a game that gave no instance id is answered on the bare topic', r.bare.length === 1 && r.bare[0].text === 'hot', JSON.stringify(r.bare));
+  }
+  {
+    const bus = createBus();
+    const ans = []; bus.subscribe(ANSWERING_TOPIC, (p) => ans.push(p));
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, running: false };
+    const sp = attachSpeech({ down() {}, up() {} }, { recognizer: rec, bus, confirm: 'off' });
+    bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: true, words: ['yes', UNKNOWN_WORD], phase: 'asking' });
+    check('*** a game played by switch, microphone OFF: no “answering” event (nothing to pause for) ***', ans.length === 0, JSON.stringify(ans));
+    sp.start();
+    check('*** the microphone on and a game listening: “answering” goes out ***',
+      ans.length === 1 && ans[0].on === true && ans[0].instanceId === 'wg-1', JSON.stringify(ans));
+    bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: true, words: ['yes', 'no', UNKNOWN_WORD], phase: 'another' });
+    check('...re-sent on every change, so a subscriber’s watchdog stays armed while the game is live',
+      ans.length === 2 && ans[1].on === true && ans[1].phase === 'another', JSON.stringify(ans));
+    bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: false, words: [], phase: 'celebrate' });
+    check('the game stops listening: “answering” off', ans.length === 3 && ans[2].on === false && ans[2].reason === 'closed', JSON.stringify(ans));
+    bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: true, words: ['yes', UNKNOWN_WORD], phase: 'asking' });
+    sp.stop();
+    check('*** the microphone turned off mid-game: “answering” off, so nothing stays paused ***',
+      ans[ans.length - 1].on === false && ans[ans.length - 1].reason === 'stopped', JSON.stringify(ans));
+    check('while a game listens, the recogniser is asked to listen OPEN', sp.recognitionMode().why === 'answer'
+      && sp.recognitionMode().mode === 'open', JSON.stringify(sp.recognitionMode()));
+    sp.destroy();
+    bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-2', open: true, words: ['yes'], phase: 'asking' });
+    check('destroyed, it stops hearing grammars', sp.answerTarget() === null);
+  }
+  {
+    const bus = createBus();
+    const rec = { start() { this.running = true; }, stop() {}, running: false, setMode() {} };
+    const sp = attachSpeech({ down() {}, up() {} }, { recognizer: rec, bus, confirm: 'off', answerRecognition: 'grammar' });
+    bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: true,
+      words: ['cold', 'hot', 'dog'], phase: 'asking' });
+    const g = sp.currentGrammar();
+    check('answerRecognition “grammar”: the game’s own words, wrong answers and all', g.includes('cold') && g.includes('dog'), JSON.stringify(g));
+    check('*** ...with [unk] even when the game forgot it ***', g.includes(UNKNOWN_WORD));
+    check('...and wake + command, so “computer please back” can still leave the game', g.includes('computer please back'));
+    check('...but no bare command, which the game would never be asked about', !g.includes('pause'));
+    check('answerGrammar is the same function the host can call', JSON.stringify(answerGrammar(['cold'])).includes('cold'));
+    sp.destroy();
+  }
+
+  section('*** spoken routes: “play opposites”, “play rhyming”, “play yes or no” (row 2.31) ***');
+  check('“play opposites” is the opposites route', routeFor('play opposites') === 'play-opposites');
+  check('“play rhyming” is the rhyming route', routeFor('Play rhyming.') === 'play-rhyming');
+  check('“play yes or no” is the yes/no route', routeFor('play yes or no') === 'play-yesno');
+  check('Mike’s own words, “play the opposites game”', routeFor('play the opposites game') === 'play-opposites');
+  check('*** “play” on its own is still the play VERB — whole utterances, so neither fires the other ***',
+    verbFor('play') === 'play' && routeFor('play') === null && verbFor('play opposites') === null);
+  check('every route opens a game the word games know',
+    Object.values(ROUTES).every((r) => r.topic === WG_PLAY && WG_GAMES.includes(r.payload.game)),
+    JSON.stringify(Object.values(ROUTES).map((r) => [r.topic, r.payload])));
+  check('no route id is also a verb id (they share the control names)',
+    Object.keys(ROUTES).every((id) => !(id in PHRASES)));
+  {
+    const planted = duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, 'x-route': { phrases: ['Pause!'] } }));
+    check('*** the whole-table duplicate check covers the routes: a route phrase that is also a verb phrase is caught ***',
+      planted.length === 1, JSON.stringify(planted));
+    const odd = Object.values(ROUTES).flatMap((r) => r.phrases).filter((p) => p !== normalize(p) || p.split(' ').length > 4);
+    check('route phrases are plain lowercase words, four at most, like the rest', odd.length === 0, odd.join(', '));
+    check('a route phrase cannot be a wake phrase either',
+      JSON.stringify(usableWakePhrases(['computer please', 'play opposites'])) === '["computer please"]');
+  }
+  check('each route is an action carrying its payload, for the host to register',
+    SPEECH_ACTIONS.length === Object.keys(ROUTES).length
+      && SPEECH_ACTIONS.every((a) => a.id === routeAction(a.id.slice('speech/'.length)) && a.topic === WG_PLAY && a.payload?.game),
+    JSON.stringify(SPEECH_ACTIONS));
+  check('...with one ordinary binding each', ROUTE_BINDINGS.length === SPEECH_ACTIONS.length
+    && ROUTE_BINDINGS.every((b) => b.device === SPEECH_DEVICE && b.edge === 'press' && SPEECH_ACTIONS.some((a) => a.id === b.actionId)));
+  check('SPEECH_BINDINGS is the verbs, then the routes', SPEECH_BINDINGS.length === DEFAULT_BINDINGS.length + ROUTE_BINDINGS.length
+    && new Set(SPEECH_BINDINGS.map((b) => b.id)).size === SPEECH_BINDINGS.length);
+  {
+    const bus = createBus();
+    const reg = createDefaultRegistry();
+    reg.registerAll(SPEECH_ACTIONS);
+    const input = createInputBus({ bus, actions: reg });
+    SPEECH_BINDINGS.forEach((b) => input.addBinding(b));
+    const plays = []; const verbs = [];
+    bus.subscribe(WG_PLAY, (p) => plays.push(p));
+    bus.subscribe(verbTopic('play'), () => verbs.push('play'));
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() {}, running: false };
+    const sp = attachSpeech(input, { recognizer: rec, confirm: 'off' });
+    sp.start();
+    feed('Computer please, play opposites.');
+    check('*** end to end: “computer please play opposites” publishes word_games/play { game: opposites } ***',
+      plays.length === 1 && plays[0]?.game === 'opposites', JSON.stringify(plays));
+    feed('nimrod please play the quiz');
+    feed('computer please play rhyming');
+    check('...and the quiz and rhyming', plays[1]?.game === 'yesno' && plays[2]?.game === 'rhyming', JSON.stringify(plays));
+    check('...without touching the play verb', verbs.length === 0);
+    feed('computer please play');
+    check('while “computer please play” is still the verb', verbs.length === 1 && plays.length === 3);
+    feed('play opposites');
+    check('*** a route is behind the wake gate like everything else ***', plays.length === 3);
+    sp.destroy(); input.destroy();
   }
 
   section('*** the shipped bindings ***');

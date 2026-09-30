@@ -18,8 +18,10 @@
 //     { text, confidence, alternatives, reason }
 //
 // and is also reachable on the bus as `speech/answer` (or this instance's own `speech/answer#id`).
-// Nothing publishes there yet: the recogniser plugs in later (see the report for the hook
-// `input_speech.js` needs). The game publishes the words it can accept right now on
+// `input_speech.js` publishes there (answer mode, row 2.31 hooks): while this game has an open
+// grammar and the microphone is on, what is heard without a wake phrase comes here instead of
+// going to the phrase table, and "computer please play opposites" arrives on `word_games/play`.
+// The game publishes the words it can accept right now on
 // `speech/grammar`, and *** THAT LIST ALWAYS CARRIES WRONG ANSWERS AND "[unk]" *** — row 2.28's
 // bench measurement: a grammar made only of right answers ALWAYS hears a right answer.
 //
@@ -63,7 +65,7 @@ export const GAMES = ['opposites', 'rhyming', 'yesno'];
 export const ANSWER_TOPIC = 'speech/answer';
 // What this game can accept right now, for a grammar-limited recogniser (Vosk).
 export const GRAMMAR_TOPIC = 'speech/grammar';
-// "Computer please play opposites" lands here once a phrase row routes it: `{ game }`.
+// "Computer please play opposites" lands here (input_speech.js ROUTES): `{ game }`.
 export const PLAY_TOPIC = `${GAME}/play`;
 export const UNKNOWN = '[unk]';
 
@@ -739,6 +741,24 @@ registerModule(
       } catch (err) { console.error('word_games: say', err); }
     }
 
+    // *** A HIDDEN OR REMOVED GAME IS NOT LISTENING. *** `input_speech.js` sends answers to the
+    // game that most recently opened a grammar, and while one is open (and the microphone is on)
+    // the screen's media is paused (listening_cue.js). A game left open on a page nobody is
+    // looking at would take every word said in the room and keep the video silent, so hiding it
+    // and destroying it both say "closed", and showing it again says what it can hear.
+    let hidden = false;
+    function announceGrammar(g) {
+      const closed = hidden || dead;
+      try {
+        bus.publish(GRAMMAR_TOPIC, { source: GAME, instanceId: ctx.instanceId || null, ...g,
+          ...(closed ? { open: false, words: [] } : {}) });
+      } catch { /* nobody listening */ }
+    }
+    function reannounce() {
+      const words = engine.grammar();
+      announceGrammar({ open: words.length > 0, words, phase: engine.snapshot().phase });
+    }
+
     function award({ amount, game, item, answer }) {
       if (!ledger || !(amount > 0)) return;
       Promise.resolve(ledger.award({ amount, source: GAME, type: 'School', tags: [GAME, game],
@@ -756,7 +776,7 @@ registerModule(
     const engine = createEngine({
       cfg: () => cfg, rand, say, award, chime,
       onChange: () => render(),
-      publishGrammar: (g) => { try { bus.publish(GRAMMAR_TOPIC, { source: GAME, instanceId: ctx.instanceId || null, ...g }); } catch { /* nobody listening */ } },
+      publishGrammar: (g) => announceGrammar(g),
       setTimer: typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms),
       clearTimer: typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (id) => clearTimeout(id),
     });
@@ -879,9 +899,11 @@ registerModule(
         if (!started) { started = true; engine.start(); }
       },
       onResize() {},
-      onHide() { state?.flush?.(); },
+      onHide() { hidden = true; reannounce(); state?.flush?.(); },
+      onShow() { hidden = false; reannounce(); },
       destroy() {
         dead = true;
+        reannounce();
         engine.destroy();
         try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }
         lastSpeech = null;

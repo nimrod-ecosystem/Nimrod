@@ -26,8 +26,8 @@ default, and none of them can be left behind: every one has its own watchdog.</p
 
 <script type="module">
 import { mountListeningCue, attachListeningTone, attachListeningDuck, attachListening,
-         LISTENING_DEFAULTS, LISTENING_FIELDS } from '../listening_cue.js';
-import { attachSpeech, LISTENING_TOPIC } from '../input_speech.js';
+         LISTENING_DEFAULTS, LISTENING_FIELDS, LISTENING_EFFECTS, effectFrom, attachGamePause } from '../listening_cue.js';
+import { attachSpeech, LISTENING_TOPIC, ANSWERING_TOPIC, SPEECH_GRAMMAR_TOPIC } from '../input_speech.js';
 import { createAudioBus, DUCK_TO } from '../audio_bus.js';
 import { createBus } from '../bus.js';
 import { applyTheme, listThemes, contrast } from '../theme.js';
@@ -72,7 +72,14 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
     check('ducking the video while listening is on by default', LISTENING_DEFAULTS.duck === true);
     check('...to the bus’s own duck depth unless somebody sets another', LISTENING_DEFAULTS.duckTo === DUCK_TO);
     const keys = LISTENING_FIELDS.map((f) => f.key).join(',');
-    check('each is a setting', ['listenVisual', 'listenTone', 'listenDuck'].every((k) => keys.includes(k)), keys);
+    check('each is a setting', ['listenVisual', 'listenTone', 'listenEffect', 'listenGamePause'].every((k) => keys.includes(k)), keys);
+    check('*** what the wake phrase does to other sound: duck (default), pause, or nothing (Mike, note AN) ***',
+      JSON.stringify(LISTENING_EFFECTS) === '["duck","pause","nothing"]' && LISTENING_DEFAULTS.effect === 'duck');
+    check('*** a voice game pauses media by default (Mike: “pause everything if you go into a voice activated game”) ***',
+      LISTENING_DEFAULTS.gamePause === true);
+    check('the effect reads from its setting', effectFrom({ listenEffect: 'pause' }) === 'pause' && effectFrom({}) === 'duck');
+    check('...and an old saved “turn videos down: off” still means nothing', effectFrom({ listenDuck: false }) === 'nothing');
+    check('...and nonsense is the default', effectFrom({ listenEffect: 'explode' }) === 'duck');
     const bad = auditFields(LISTENING_FIELDS.map(normalizeField).filter(Boolean), { type: 'speech' })
       .filter((f) => f.severity === 'error');
     check('they pass the settings audit', bad.length === 0, JSON.stringify(bad));
@@ -217,6 +224,49 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
       check('a broken audio bus is not an error, and not silence', ok);
     }
 
+    section('*** “pause everything”: media silent while listening, and always back ***');
+    {
+      const b = createBus(); const audio = createAudioBus(); const c = fakeClock(); const lv = []; const vv = [];
+      audio.register('video', { tier: 'media', onGain: (l) => lv.push(l) });
+      audio.register('aac', { tier: 'voice', onGain: (l) => vv.push(l) });
+      audio.setActive('video', true); audio.setActive('aac', true);
+      const p = attachListeningDuck({ bus: b, audio, mode: 'pause', setTimer: c.setTimer, clearTimer: c.clearTimer });
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      check('*** the wake phrase, set to pause: the video goes silent ***', lv[lv.length - 1] === 0, JSON.stringify(lv));
+      check('...a voice is left alone', vv[vv.length - 1] > 0, JSON.stringify(vv));
+      check('...and the room is not marked hushed (that is the hush button’s, not this)', audio.isHushed() === false);
+      b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+      check('a command brings it back', lv[lv.length - 1] > 0, JSON.stringify(lv));
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      c.advance(8000 + LISTENING_DEFAULTS.graceMs);
+      check('*** a lost closing event cannot leave it silent: the same watchdog as the duck ***',
+        lv[lv.length - 1] > 0 && c.pending() === 0, JSON.stringify(lv));
+      p.destroy();
+    }
+
+    section('*** a voice game waiting for an answer pauses media ***');
+    {
+      const b = createBus(); const audio = createAudioBus(); const c = fakeClock(); const lv = [];
+      audio.register('video', { tier: 'media', onGain: (l) => lv.push(l) });
+      audio.setActive('video', true);
+      const gp = attachGamePause({ bus: b, audio, setTimer: c.setTimer, clearTimer: c.clearTimer });
+      b.publish(ANSWERING_TOPIC, { on: true, source: 'word_games', instanceId: 'wg-1', phase: 'asking' });
+      check('*** a game listening: the video goes silent ***', lv[lv.length - 1] === 0, JSON.stringify(lv));
+      c.advance(LISTENING_DEFAULTS.gamePauseMaxMs - 1000);
+      b.publish(ANSWERING_TOPIC, { on: true, source: 'word_games', instanceId: 'wg-1', phase: 'another' });
+      c.advance(LISTENING_DEFAULTS.gamePauseMaxMs - 1000);
+      check('...and stays silent while the game keeps talking (each change re-arms the watchdog)',
+        lv[lv.length - 1] === 0, JSON.stringify(lv));
+      b.publish(ANSWERING_TOPIC, { on: false, reason: 'closed' });
+      check('the game stops listening: the video comes back', lv[lv.length - 1] === 1, JSON.stringify(lv));
+      b.publish(ANSWERING_TOPIC, { on: true, source: 'word_games', instanceId: 'wg-1', phase: 'asking' });
+      c.advance(LISTENING_DEFAULTS.gamePauseMaxMs);
+      check('*** a game that never says it closed cannot keep the room silent: the watchdog gives up ***',
+        lv[lv.length - 1] === 1 && c.pending() === 0, JSON.stringify(lv));
+      gp.destroy();
+      check('destroyed, it unregisters', !('speech-answering' in audio.state()));
+    }
+
     section('*** each one is a setting ***');
     {
       const b = createBus(); const audio = createAudioBus(); const played = []; const lv = [];
@@ -237,6 +287,18 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
       b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
       all2.destroy();
       check('destroying the lot removes the cue', !stage.querySelector('.listen-cue'));
+      const all3 = attachListening({ bus: b, audio, settings: { listenEffect: 'pause' } });
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      check('listenEffect “pause”: the video goes silent', lv[lv.length - 1] === 0, JSON.stringify(lv));
+      b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+      all3.destroy();
+      const all4 = attachListening({ bus: b, audio, settings: { listenEffect: 'nothing', listenGamePause: false } });
+      b.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+      b.publish(ANSWERING_TOPIC, { on: true, instanceId: 'wg-1' });
+      check('listenEffect “nothing” and the game pause off: the video carries on', lv[lv.length - 1] === 1, JSON.stringify(lv));
+      b.publish(LISTENING_TOPIC, { on: false, reason: 'command' });
+      b.publish(ANSWERING_TOPIC, { on: false, reason: 'closed' });
+      all4.destroy();
     }
 
     section('*** end to end: a real wake phrase through input_speech ***');
@@ -254,6 +316,33 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
       check('*** “computer please” on its own: the cue (and the tone, when it is turned on) ***', played.length === 1 && el2 && el2.hidden === false);
       feed('pause');
       check('*** the command fires and the cue goes ***', el2.hidden === true);
+      speech.destroy(); all.destroy();
+    }
+    {
+      // Note AN: "one breath never ducks" still holds, and a voice game pauses — end to end.
+      const b = createBus(); const audio = createAudioBus(); const lv = []; let feed = null;
+      audio.register('video', { tier: 'media', onGain: (l) => lv.push(l) });
+      audio.setActive('video', true);
+      const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, running: false };
+      const all = attachListening({ bus: b, audio, settings: {} });
+      const speech = attachSpeech({ down() {}, up() {} }, { recognizer: rec, bus: b, confirm: 'off', tone: () => {} });
+      b.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: true, words: ['cold', '[unk]'], phase: 'asking' });
+      check('*** a game on screen with the microphone OFF (played by switch): the video is left alone ***',
+        lv[lv.length - 1] === 1, JSON.stringify(lv));
+      b.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: false, words: [], phase: 'celebrate' });
+      speech.start();
+      const before = lv.length;
+      feed('computer please pause');
+      check('*** “computer please pause” in one breath never ducks or pauses anything ***',
+        lv.length === before && lv[lv.length - 1] === 1, JSON.stringify(lv.slice(before)));
+      b.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: true, words: ['cold', '[unk]'], phase: 'asking' });
+      check('*** the microphone on and the game waiting for an answer: the video is paused ***',
+        lv[lv.length - 1] === 0, JSON.stringify(lv));
+      b.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: false, words: [], phase: 'gone' });
+      check('...and back the moment the game stops listening', lv[lv.length - 1] === 1, JSON.stringify(lv));
+      b.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: true, words: ['cold', '[unk]'], phase: 'asking' });
+      speech.stop();
+      check('...or the moment the microphone is turned off', lv[lv.length - 1] === 1, JSON.stringify(lv));
       speech.destroy(); all.destroy();
     }
 
