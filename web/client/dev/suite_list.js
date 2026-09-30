@@ -70,7 +70,7 @@ export const SUITES = [
   // Row 2.45: the shared miss-flow engine and the games on it, and the sing-along frame.
   'quiz_flow', 'spelling', 'simple_math', 'name_that', 'karaoke',
   // Row 2.37: Klondike on one switch, and a note from someone.
-  'solitaire', 'note', 'weather', 'brickbreaker', 'rhythm',
+  'solitaire', 'note', 'weather', 'brickbreaker', 'rhythm', 'avatar',
   // The room, the cat, ambient motion and sound.
   'room', 'room_scene', 'room_notify', 'cat_guide', 'cat_help', 'comet_ambient', 'ambient_drift', 'mixer',
   // The QR encoder checked against a reference decoder.

@@ -152,6 +152,8 @@ export const HEALTH_EXPECT = {
   // Music by name (row 2.32): a row of favourites nobody has asked for is a panel doing its job. What it
   // plays is watched where it plays (the YouTube panel's own watchdog, the audio bus).
   music:       { idle: true },
+  // The avatar maker (row 2.37 item 5): a face nobody is editing is a face, not a stalled panel.
+  avatar:      { idle: true },
 };
 
 export function expectFor(type, table = HEALTH_EXPECT) {

@@ -390,6 +390,8 @@ export const MODULE_VERBS = {
   // stops or starts the gliding paddle (follow: changes the angle), back pauses. Rhythm: every press verb is a tap on the beat.
   brickbreaker:  { next: 'brickbreaker/next', prev: 'brickbreaker/prev', select: 'brickbreaker/select', back: 'brickbreaker/back' },
   rhythm:        { next: 'rhythm/next', prev: 'rhythm/prev', select: 'rhythm/select', back: 'rhythm/back' },
+  // Row 2.37 item 5. Avatar maker: next / prev walk the parts (or a part's options), select opens / keeps, back undoes / cancels.
+  avatar:        { next: 'avatar/next', prev: 'avatar/prev', select: 'avatar/select', back: 'avatar/back' },
   // Row 2.32. Music: next / prev walk the favourites, select plays the lit one, back stops; play/pause resume/pause.
   music:         { next: 'music/next', prev: 'music/prev', select: 'music/select', back: 'music/back', play: 'music/resume', pause: 'music/pause' },
   // The weather: select reads now (or the lit day), next / prev walk the days, back returns to now.

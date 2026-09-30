@@ -113,6 +113,7 @@ import './modules/weather.js';         // registers 'weather' (row 2.37, the wea
 import './modules/music.js';           // registers 'music' (row 2.32, favourites by name)
 import './modules/brickbreaker.js';    // registers 'brickbreaker' (row 2.37 item 10)
 import './modules/rhythm.js';          // registers 'rhythm' (row 2.37 item 10)
+import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
 import './modules/lessons.js';
 import './modules/algebra.js';
