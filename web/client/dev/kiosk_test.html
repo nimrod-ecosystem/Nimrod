@@ -964,6 +964,52 @@ const ds = () => root.querySelector('.kiosk').dataset;
       lRoot.remove();
     }
 
+    // *** G1-G3: AN ORPHANED SLOT MUST NOT EAT THE PANEL THAT WAS IN IT -- ON THE REAL KIOSK. ***
+    // (Stage 0 of the step-6 plan, 2026-09-29.) `composer_test` proves `resolveLayout` repairs an
+    // orphan; nothing proved the KIOSK calls it. Watched: with kiosk.js's one line put back to the old
+    // `isArranged(saved) ? normalizeLayout(...) : null`, only the checks below went red. A saved slot
+    // naming a module that is gone (deleted in the composer) used to render its neighbour NOWHERE
+    // (G1/G2), and an arrangement whose every slot was orphaned announced "This screen's panels
+    // were removed" over a screen whose panel sat in the profile, un-removed (G3).
+    {
+      const oRoot = document.createElement('div');
+      document.body.append(oRoot);
+      const setSaved = async (screen, layout) => {
+        const st = createState({ url: profiles.stateURL(screen.id, 'settings'), user: USER });
+        await st.load();
+        st.set({ kiosk: { layout } });
+        await st.flush();
+        st.destroy();
+      };
+      const noReload = { reloadPage: () => {} };
+      // G1/G2: photos is on the screen and in no slot; slot 0 names a module that no longer exists.
+      const O = await profiles.create('TEST-orphan-slot');
+      await profiles.addModule(O.id, 'photos');
+      const oTrivia = await profiles.addModule(O.id, 'trivia');
+      await setSaved(O, { preset: 'main', slots: ['GONE-was-deleted', oTrivia.id, null] });
+      const ko = await mountKiosk(oRoot, { user: USER, profileId: O.id, profiles, bus: createBus(), ...noReload });
+      await sleep(250);
+      check('G1-G3 (setup): the screen is arranged', ko.slotLayout() !== null, JSON.stringify(ko.slotLayout()));
+      check('*** G1/G2: a module whose slot was orphaned is still rendered in a slot (photos refills the orphan) ***',
+        ko.slotTypes().includes('photos') && !!oRoot.querySelector('.k-cell[data-kind="photos"] .photos'),
+        `slots=${JSON.stringify(ko.slotTypes())}`);
+      ko.destroy(); oRoot.innerHTML = '';
+
+      // G3: EVERY slot orphaned, one real module on the screen.
+      const O3 = await profiles.create('TEST-orphan-all');
+      await profiles.addModule(O3.id, 'photos');
+      await setSaved(O3, { preset: 'quad', slots: ['GONE-1', 'GONE-2', null, null] });
+      const ko3 = await mountKiosk(oRoot, { user: USER, profileId: O3.id, profiles, bus: createBus(), ...noReload });
+      await sleep(250);
+      const emptyMsg = oRoot.querySelector('[data-empty]')?.textContent || '';
+      check('*** G3: an all-orphaned arrangement does not announce "panels were removed" over a panel that exists ***',
+        !emptyMsg, emptyMsg);
+      check('*** G3: ...the photos panel is on screen, somewhere ***', !!oRoot.querySelector('.k-stage .photos'),
+        oRoot.querySelector('.k-stage')?.innerHTML.slice(0, 80));
+      ko3.destroy();
+      oRoot.remove();
+    }
+
     // ---- THE BACK BUTTON: the reverse of Next, proven on the real wiring -----------------
     //
     // `photos` — the module the rest of this suite mounts — needs a connected media source
@@ -1639,6 +1685,13 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('embedded: the camera (a HUD, not a panel) is not on the stage', ek.stageCount() === 3 && ek.primaryType() === 'photos');
       check('embedded: the bar is a toolbar that STAYS (never auto-hidden)',
         !eBox.querySelector('.k-controls').classList.contains('hidden'));
+      // *** THE LOOP STARTS AT BOOT, NOT AT THE NEXT CHANGE. *** (Stage 0, 2026-09-29.) An embed boots
+      // with NO layout on purpose while this profile HAS one saved, so with the `!embedded` guard
+      // reverted the watch's immediate replay already differs and asks for a reload during mountKiosk
+      // itself -- after which its once-only latch makes the "after boot" check below pass. Watched: with
+      // the guard removed, that check stayed green and only this one went red.
+      check('*** embedded: it never asked for a reload at all, from boot on (the rebuild loop) ***',
+        reloads.length === 0, `reloads=${reloads.length}`);
       // A layout correction arriving after boot reloads a real kiosk and must NOT loop an embed.
       const eSettings2 = createState({ url: eProfiles.stateURL(ep.id, 'settings'), user: USER });
       await eSettings2.load();
@@ -2116,6 +2169,72 @@ const ds = () => root.querySelector('.kiosk').dataset;
       try { bk?.destroy(); } catch { /* already gone */ }
       bbox.remove();
     }
+  }
+
+  // *** THE TEMPORAL-DEAD-ZONE CLASS: A BOOT MUST LOG NO ReferenceError. *** (Stage 0, 2026-09-29.)
+  // Three times a `let` that a boot-time path reads was declared below that path: `runtime` and
+  // `callTransport` (read by `childCtx`'s getters, which the `...childCtx(mod)` spread in
+  // `mountInstance` INVOKES on every mount) and `burnInT` (read by `settings.subscribe`'s immediate
+  // replay). None of the three takes the kiosk down any more, which is exactly why this is needed:
+  // `mountOverlay` catches the first two (the camera, clock and ambient layer silently do not mount)
+  // and state.js's `subscribe` catches the third (the ONLY trace is a console error on every boot --
+  // watched: with `let burnInT` moved back down, every other check in this suite stayed green). So
+  // the console is what is asserted: a boot with a camera, a clock and an ambient module on it.
+  try {
+    const tProfiles = createProfilesClient({ user: USER });
+    const tp = await tProfiles.create('TEST-tdz-boot');
+    await tProfiles.addModule(tp.id, 'photos');
+    await tProfiles.addModule(tp.id, 'camera');
+    await tProfiles.addModule(tp.id, 'clock');
+    await tProfiles.addModule(tp.id, 'ambient_drift');
+    const troot2 = document.createElement('div');
+    troot2.style.cssText = 'position:relative;width:400px;height:300px';
+    document.body.append(troot2);
+    const logged = [];
+    const origErr = console.error;
+    console.error = (...a) => { logged.push(a); return origErr.apply(console, a); };
+    let tk2 = null;
+    try {
+      tk2 = await mountKiosk(troot2, { user: USER, profileId: tp.id, profiles: tProfiles, bus: createBus(), reloadPage: () => {} });
+      await sleep(200);
+    } finally { console.error = origErr; }
+    const tdz = logged.filter((a) => a.some((x) => x instanceof ReferenceError
+      || /before initialization/.test(String(x && (x.message || x)))));
+    check('*** TDZ: booting a screen with camera, clock and ambient logs no ReferenceError (runtime / callTransport / burnInT) ***',
+      tdz.length === 0, tdz.map((a) => a.map((x) => String(x && (x.message || x))).join(' ')).join(' | '));
+    check('TDZ: ...and all three overlays actually mounted',
+      !!tk2 && tk2.hasCamera() && tk2.hasClock() && tk2.hasAmbient(),
+      tk2 ? `camera=${tk2.hasCamera()} clock=${tk2.hasClock()} ambient=${tk2.hasAmbient()}` : 'no kiosk');
+    try { tk2?.destroy(); } catch { /* already gone */ }
+    troot2.remove();
+  } catch (e) {
+    check('the TDZ boot section threw', false, String((e && e.stack) || e));
+  }
+
+  // *** 2026-09-15: ZERO AWAITS BETWEEN READING THE BOOT LAYOUT AND REGISTERING THE WATCH. ***
+  // (Stage 0 of the step-6 plan, 2026-09-29.) A STRUCTURAL check, and it says so: the reload watch
+  // (the 2026-09-12 stale-layout fix) compares every later settings value with the layout this kiosk
+  // booted on, and bb79ab9 fixed a gap between reading that layout and subscribing. No behavioural
+  // check here can fail on that revert: with an await in the gap, a change landing in it is replayed
+  // by `subscribe` the moment the watch registers, so the kiosk reloads exactly as it does without
+  // the gap (the gap-free code reloads too, on the notify). What the gap changes is only WHEN, which a
+  // suite cannot pin without faking state.js's timing. So the source is read instead: between
+  // `const savedLayout =` and the watch's `settings.subscribe(` there must be no `await` in code
+  // (comments stripped). If the anchors cannot be found the check FAILS rather than passing blind.
+  try {
+    const src = await (await fetch('../kiosk.js', { cache: 'no-store' })).text();
+    const a = src.indexOf('const savedLayout =');
+    const sig = src.indexOf('const bootLayoutSig', a);
+    const sub = sig < 0 ? -1 : src.indexOf('settings.subscribe(', sig);
+    const gap = (a >= 0 && sub > a) ? src.slice(a, sub) : null;
+    const code = gap === null ? '' : gap.split(/\r?\n/).map((l) => l.replace(/\/\/.*$/, '')).join('\n');
+    check('(setup) found savedLayout, bootLayoutSig and the watch in kiosk.js, in that order',
+      gap !== null, `savedLayout@${a} bootLayoutSig@${sig} subscribe@${sub}`);
+    check('*** 09-15: no await between reading the boot layout and registering the reload watch ***',
+      gap !== null && !/\bawait\b/.test(code),
+      (code.match(/^.*\bawait\b.*$/m) || [''])[0].trim());
+  } catch (e) {
+    check('the 09-15 structural section threw', false, String((e && e.stack) || e));
   }
 
   const sum = document.getElementById('summary');
