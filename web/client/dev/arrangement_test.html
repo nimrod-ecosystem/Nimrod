@@ -121,7 +121,7 @@ try {
     check('no layout and no profile until the shell sets one', arr && arr.layout() === null && arr.profile() === null);
     check('slotRecs is the live (empty) array', arr && Array.isArray(arr.slotRecs) && arr.slotRecs.length === 0);
     const want = ['profile', 'layout', 'stageDefs', 'primary', 'stageRec', 'slotRecs', 'cameraRec', 'clockRec',
-      'ambientRec', 'screenLinks', 'setProfile', 'resolve', 'partition', 'mountOverlays', 'mountLayout',
+      'ambientRec', 'screenLinks', 'hudDefs', 'setProfile', 'resolve', 'partition', 'mountOverlays', 'mountLayout',
       'showPrimary', 'applyModules', 'focusedRec', 'focusPlaced', 'focusRing', 'paintFocus', 'unplacedDefs',
       'showUnplaced', 'showModule', 'instanceTitle', 'recFor', 'remountPanel', 'swapPanel', 'applyLayout',
       'patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner', 'destroy'];
@@ -137,6 +137,9 @@ try {
     t.arr.resolve(undefined);
     t.arr.partition();
     check('no saved layout -> no layout', t.arr.layout() === null);
+    const hud = t.arr.hudDefs();
+    check('hudDefs says where the HUD pieces go, before anything mounts',
+      hud.camera?.id === 'c1' && hud.clock?.id === 'k1' && hud.ambient?.id === 'a1' && !t.log.mounts.length);
     check('the stage gets every module that is not a HUD piece, in order',
       t.arr.stageDefs().map((d) => d.id).join() === 'p1,t1', t.arr.stageDefs().map((d) => d.id).join());
     let threw = null;

@@ -61,31 +61,61 @@
 // (`layout` is NOT the free name: it already means the GRID - which preset, which slot.
 // A view HAS a layout.)
 
-import { registerModule, mountModule } from '../module.js';
-import { resolveLayout, gridStyle, slotStyle } from '../layout.js';
+// *** VOCABULARY, SUPERSEDED 2026-09-30 (DECISIONS.md, "The room is the screen..."). *** "Scene"
+// now means THE BACKDROP a dashboard sits in (the room, fall, a castle, a live theme) -- the word the
+// person using the site already uses -- and the Home-Assistant sense above is renamed "PRESET". The
+// paragraph above is left as it was written. And Mike's word for this file's thing is "dashboard" ("the
+// dashboard itself is a type of module ... a container module"); the registered type stays `view`
+// for now because several suites enumerate registered types, and the rename is its own commit.
+//
+// ---------------------------------------------------------------------------------------
+// STEP 6 STAGE 2 (2026-09-30): A THIN MODULE OVER `arrangement.js`
+// ---------------------------------------------------------------------------------------
+// This file used to carry its own copy of what the kiosk does -- and, being a copy, it had fallen
+// behind: no ambient layer, unnamed cells, no empty-screen sentence, no per-panel background, nothing
+// handed to a health watch, no focus and no unplaced swap -- and it leaked: the settings handle it
+// opened was never closed, so every destroyed view kept polling. Now the arrangement itself is the
+// ONE copy (`createArrangement`, moved out of kiosk.js at Stage 1), and this module only supplies
+// what differs about being a module: its own DOM, its own per-child state scope, and the container
+// contract below.
+//
+// *** THE CONTAINER CONTRACT (the step 6 plan's seam). *** `container: true`, and synchronous reads so
+// a bar can call them while it draws: `panels()`, `focusRing()`, `focused()`, `modules()`; and the
+// moves: `focus(id)`, `bring(type)`, `remount(id)`, `swap(id, type)`; `onChange(fn)` fires whenever what
+// those return may have changed. From Stage 3b the bar and the settings menu are modules placed IN a
+// dashboard (Mike, 2026-09-30) and this is what they read.
+//
+// WHAT THE HOST MAY HAND IN, all optional: `ctx.router` (the input router, so a switch and this view
+// agree on focus -- without one the view keeps its own), `ctx.health` (a health watch: every panel
+// is `watch`ed, a swapped one `forget`-ed), `ctx.storage` (where the one-at-a-time stage remembers its
+// position), `ctx.embedded` (true: no links runner -- a preview is not a screen).
 
-const MIRROR_SIZES = ['sm', 'md', 'lg'];
-const CORNERS = ['tr', 'br', 'bl', 'tl'];
+import { registerModule, mountModule } from '../module.js';
+import { createArrangement } from '../arrangement.js';
+
 // The same defaults the kiosk has always used, so a view mounted from an existing
-// arrangement looks exactly as it did before it became a module.
+// arrangement looks exactly as it did before it became a module. (arrangement.js's own copy is the
+// one applied; view_test's "falls back to the shipped default" check fails if the two drift.)
 export const VIEW_DEFAULTS = { mirror: { size: 'lg', corner: 'tr' }, clock: { corner: 'bl' } };
 
-// A module type that is pulled OUT of the flow into its own overlay. Kept as data rather than
-// an `if`, because the next one (a call's picture-in-picture) is the same shape.
+// A module type that is pulled OUT of the flow into its own overlay, and which overlay.
 export const OVERLAY_TYPES = { camera: 'mirror', clock: 'clock' };
 
-/** Which modules go where, given an arrangement and its layout. PURE, and exported because
- *  it is the one place that decides — two code paths deciding where a camera goes is how a
- *  swapped scene ends up subtly different from the same scene opened directly. */
+/** Which modules go where, given an arrangement and its layout. PURE, and exported because a
+ *  caller may want to ask without mounting anything. Since Stage 2 it is ANSWERED BY THE
+ *  ARRANGEMENT -- the same resolve and partition the view and the kiosk run -- rather than by a
+ *  second copy: two code paths deciding where a camera goes is how a swapped screen ends up subtly
+ *  different from the same screen opened directly. (So a slot whose module is gone is repaired here
+ *  exactly as it is on screen.) An ambient module is reported as `overlays.ambient`. */
 export function partition(modules = [], layout = null) {
-  const placed = new Set(layout ? layout.slots.filter(Boolean) : []);
-  const out = { slots: layout ? layout.slots.slice() : [], stage: [], overlays: {} };
-  for (const mod of modules) {
-    if (placed.has(mod.id)) continue;                       // it lives in a slot
-    const overlay = OVERLAY_TYPES[mod.type];
-    if (overlay) out.overlays[overlay] = mod;
-    else if (!layout) out.stage.push(mod);                  // no layout: the one-at-a-time stage
-  }
+  const a = createArrangement({ embedded: true });      // no DOM, no links, nothing mounted
+  a.setProfile({ modules });
+  a.resolve(layout);
+  a.partition();
+  const out = { slots: a.layout() ? a.layout().slots.slice() : [], stage: a.stageDefs().slice(), overlays: {} };
+  const hud = a.hudDefs();
+  for (const def of [hud.camera, hud.clock]) if (def) out.overlays[OVERLAY_TYPES[def.type]] = def;
+  if (hud.ambient) out.overlays.ambient = hud.ambient;
   return out;
 }
 
@@ -97,19 +127,20 @@ registerModule(
     // `viewId` is which arrangement to show. It is a ctx value rather than a setting because
     // a view is mounted BY something that already knows which one it wants — a surface at
     // boot, or a state machine switching.
-    const viewId = ctx.viewId || ctx.viewId || ctx.profileId;
+    const viewId = ctx.viewId || ctx.profileId;
     const { mount, user } = ctx;
     const rootBus = ctx.rootBus || ctx.bus;      // children mount here; mountModule re-scopes
     const profiles = ctx.profiles || null;
     const makeState = ctx.makeState || null;
     const makeEvents = ctx.makeEvents || null;
 
-    let root = null, stageEl = null, mirrorEl = null, clockEl = null;
-    let arrangement = null, layout = null, parts = null;
-    let primary = 0;
-    let stageRec = null;
-    const slotRecs = [];
-    const overlayRecs = {};
+    let root = null, stageEl = null, mirrorEl = null, clockEl = null, ambientEl = null;
+    let arrangement = null;
+    let arr = null;
+    let settingsHandle = null;
+    const offs = [];                             // every subscription this view made, undone on destroy
+    const listeners = new Set();                 // onChange
+    let torn = false;
 
     // Per-CHILD handles, keyed to this view's arrangement rather than to whatever the
     // surface was mounted with. A view shown somewhere else must still find its own data.
@@ -141,20 +172,10 @@ registerModule(
       try { rec.events?.destroy?.(); } catch { /* noop */ }
     }
 
-    // What a slot shows when its module would not start. Deliberately plain and calm: this can
-    // appear in front of a patient, so it names the panel and says the rest of the view is fine
-    // rather than reporting a fault at somebody. Chat is designing a wallpaper-based version of
-    // this (see the inbox); until that lands, saying SOMETHING beats a silent hole.
-    function failedNotice(def) {
-      const el = document.createElement('div');
-      el.setAttribute('data-panel-failed', def.type);
-      el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;'
-        + 'justify-content:center;text-align:center;padding:4vmin;'
-        + 'font:500 clamp(14px,1.9vmin,20px)/1.5 system-ui,sans-serif;color:var(--text-soft,#5d7064)';
-      el.textContent = `${def.type} could not start. The rest of this view is fine.`;
-      return el;
-    }
-
+    // How one child is mounted: the arrangement's `mountInstance` hand. Throws if the child does, and
+    // the arrangement turns that into the in-cell notice (it is the one that knows where the cell is).
+    // Returns the record shape the kiosk's `mountInstance` returns, so the arrangement cannot tell the
+    // two hosts apart.
     async function mountChild(def, host) {
       const state = childState(def.id);
       const events = childEvents(def.id);
@@ -164,110 +185,100 @@ registerModule(
       });
       await state?.load?.().catch(() => {});
       await events?.load?.().catch(() => {});
+      // THIS PANEL'S OWN BACKGROUND (`instancePanelSurface`), the same reserved key on the panel's own
+      // state row that kiosk.js's `mountInstance` reads, for the same reason: a pick made for one
+      // panel reaches that panel's host, and anything else leaves the screen-wide rule in charge.
+      state?.subscribe?.((s) => {
+        const v = s && s.instancePanelSurface;
+        if (v === 'solid' || v === 'veil' || v === 'clear') host.dataset.panelSurface = v;
+        else delete host.dataset.panelSurface;
+      });
       instance.init();
       state?.startPolling?.();
       events?.startPolling?.();
-      return { instance, state, events, def };
+      return { instance, state, events, type: def.type, id: def.id,
+               title: instance.manifest?.title, el: host };
     }
 
-    async function showStage(i) {
-      if (!parts.stage.length) return;
-      primary = ((i % parts.stage.length) + parts.stage.length) % parts.stage.length;
-      destroyRec(stageRec); stageRec = null;
-      stageEl.innerHTML = '';
-      const host = document.createElement('div');
-      host.className = 'k-mod';
-      stageEl.append(host);
-      stageRec = await mountChild(parts.stage[primary], host).catch((err) => {
-        console.error(`view: ${parts.stage[primary].type} failed to start`, err);
-        return null;
-      });
-      if (!stageRec) { host.remove(); stageEl.append(failedNotice(parts.stage[primary])); }
-      rootBus.publish('view/stage', { viewId, moduleId: parts.stage[primary].id, index: primary });
+    // THE HOST'S HEALTH WATCH, if it handed one in. A watch must never break a mount.
+    function watchRec(rec) {
+      if (!rec) return rec;
+      try { ctx.health?.watch?.(rec.id, rec.type); } catch { /* not load-bearing */ }
+      return rec;
     }
 
-    async function build() {
-      // A GRID, if this arrangement has one; otherwise the one-at-a-time stage. Both shapes
-      // already existed on the kiosk; a view is where they now live.
-      if (layout) {
-        stageEl.className = 'k-stage k-grid';
-        stageEl.setAttribute('style', gridStyle(layout.preset));
-        for (let i = 0; i < layout.slots.length; i++) {
-          const cell = document.createElement('div');
-          cell.className = 'k-cell mod-box';
-          cell.setAttribute('style', slotStyle(layout.preset, i));
-          stageEl.append(cell);
-          const id = layout.slots[i];
-          if (!id) continue;                                 // an empty slot is allowed
-          const def = arrangement.modules.find((m) => m.id === id);
-          if (!def) continue;
-          const host = document.createElement('div');
-          host.className = 'k-mod';
-          cell.append(host);
-          // *** A PANEL THAT WILL NOT START SAYS SO, IN ITS OWN SLOT. ***
-          //
-          // Mike, 2026-09-05: fix the SILENT part, not the kiosk part — silent failure is not
-          // kiosk-specific, it is how a module HOST reacts to a mount that throws, and that
-          // behaviour survives whatever the container ends up being called. `mountChild` runs
-          // `init()` unguarded, so one module throwing rejected out of this loop: every later
-          // slot was never built, and the view came up missing panels with nothing said.
-          const rec = await mountChild(def, host).catch((err) => {
-            console.error(`view: ${def.type} failed to start`, err);
-            return null;
-          });
-          if (rec) slotRecs.push(rec);
-          else { host.remove(); cell.append(failedNotice(def)); }
+    // FOCUS WITHOUT A ROUTER. On a screen, focus lives in the input router, and the host hands it in
+    // (`ctx.router`) so a switch and this view mean the same panel. A view mounted with none (a test,
+    // a preview) still needs a "which panel": this is the smallest router the arrangement reads.
+    let localFocus = null;
+    const localRouter = {
+      focused: () => localFocus,
+      setFocus: (id) => { localFocus = id ? { id } : null; },
+      focusNext() {},
+      reachable: () => [],
+    };
+    const router = ctx.router || localRouter;
+
+    let lastStage = null;
+    function changed() {
+      // The one-at-a-time stage says what it is showing, as this view always has.
+      if (arr && !arr.layout() && arr.stageRec()) {
+        const key = arr.stageRec().id;
+        if (key !== lastStage) {
+          lastStage = key;
+          rootBus.publish('view/stage', { viewId, moduleId: key, index: arr.primary() });
         }
-      } else {
-        await showStage(0);
       }
-
-      for (const [slot, def] of Object.entries(parts.overlays)) {
-        const el = slot === 'mirror' ? mirrorEl : clockEl;
-        const host = document.createElement('div');
-        host.className = 'k-mod';
-        el.append(host);
-        el.hidden = false;
-        // An overlay is decoration ON TOP of the view; it cannot be allowed to prevent one.
-        // A camera on a machine with no webcam is the everyday case.
-        const rec = await mountChild(def, host).catch((err) => {
-          console.error(`view: ${def.type} overlay failed to start`, err);
-          return null;
-        });
-        if (rec) overlayRecs[slot] = rec;
-        else { host.remove(); el.hidden = true; }
-      }
+      for (const fn of listeners) { try { fn(); } catch (err) { console.error('view: onChange', err); } }
     }
 
-    function applyChrome(settings = {}) {
-      // *** THE SCENE'S OWN CHROME, WHICH IS THE POINT. *** Where the picture-in-picture sits
-      // belongs to the arrangement, not to whatever was mounted before it. This is the gap the
-      // in-place swap had, closed by construction.
-      const k = settings.kiosk || {};
-      const m = { ...VIEW_DEFAULTS.mirror, ...(k.mirror || {}) };
-      const c = { ...VIEW_DEFAULTS.clock, ...(k.clock || {}) };
-      root.dataset.mirrorSize = MIRROR_SIZES.includes(m.size) ? m.size : VIEW_DEFAULTS.mirror.size;
-      root.dataset.mirrorCorner = CORNERS.includes(m.corner) ? m.corner : VIEW_DEFAULTS.mirror.corner;
-      root.dataset.clockCorner = CORNERS.includes(c.corner) ? c.corner : VIEW_DEFAULTS.clock.corner;
-    }
+    const brief = (rec) => (rec ? { id: rec.id, type: rec.type, title: rec.title || rec.type } : null);
 
     return {
       __probe: () => ({
-        viewId, ready: !!arrangement, hasLayout: !!layout, primary,
-        stage: parts ? parts.stage.map((d) => d.type) : [],
-        slots: slotRecs.map((r) => r.def.type),
-        overlays: Object.keys(overlayRecs),
+        viewId, ready: !!arrangement, hasLayout: !!arr?.layout(), primary: arr ? arr.primary() : 0,
+        stage: arr ? arr.stageDefs().map((d) => d.type) : [],
+        slots: arr ? arr.slotRecs.map((r) => r.type) : [],
+        overlays: arr ? [['mirror', arr.cameraRec()], ['clock', arr.clockRec()], ['ambient', arr.ambientRec()]]
+          .filter(([, r]) => r).map(([k]) => k) : [],
         chrome: root ? { ...root.dataset } : null,
       }),
-      __showStage: (i) => showStage(i),
+      __showStage: (i) => arr?.showPrimary(i),
+
+      // ---- the container contract -------------------------------------------------------
+      container: true,
+      panels: () => (!arr ? [] : arr.layout() ? arr.slotRecs.map(brief) : [arr.stageRec()].filter(Boolean).map(brief)),
+      focusRing: () => (arr ? arr.focusRing() : []),
+      focused: () => (arr ? brief(arr.focusedRec()) : null),
+      modules: () => (arrangement ? arrangement.modules.map((m) => ({ ...m })) : []),
+      async focus(id) {
+        if (!arr || !id) return false;
+        if (arr.layout()) {
+          if (!arr.slotRecs.some((r) => r.id === id)) return false;
+          arr.focusPlaced(id);
+          return true;
+        }
+        const j = arr.stageDefs().findIndex((d) => d.id === id);
+        if (j < 0) return false;
+        await arr.showPrimary(j);
+        return true;
+      },
+      bring: (type) => (arr ? arr.showModule(type) : Promise.resolve(false)),
+      remount: (id) => (arr ? arr.remountPanel(id) : Promise.resolve(false)),
+      swap: (id, type) => (arr ? arr.swapPanel(id, type) : Promise.resolve(false)),
+      onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
 
       async init() {
         root = document.createElement('div');
         root.className = 'view';
+        // The same four hosts, in the same order, as the kiosk's own template: the ambient layer
+        // behind everything, the stage, and the two HUD corners.
+        ambientEl = document.createElement('div'); ambientEl.className = 'k-ambient'; ambientEl.hidden = true;
+        ambientEl.setAttribute('aria-hidden', 'true');
         stageEl = document.createElement('div'); stageEl.className = 'k-stage';
         mirrorEl = document.createElement('div'); mirrorEl.className = 'k-mirror'; mirrorEl.hidden = true;
         clockEl = document.createElement('div'); clockEl.className = 'k-clock'; clockEl.hidden = true;
-        root.append(stageEl, mirrorEl, clockEl);
+        root.append(ambientEl, stageEl, mirrorEl, clockEl);
         mount.append(root);
 
         try {
@@ -276,35 +287,58 @@ registerModule(
           console.error('view: could not load', viewId, err);
           arrangement = null;
         }
+        if (torn) return;
         if (!arrangement || !Array.isArray(arrangement.modules)) {
-          // *** A SCENE THAT CANNOT LOAD SAYS SO RATHER THAN RENDERING NOTHING. *** A blank
+          // *** A VIEW THAT CANNOT LOAD SAYS SO RATHER THAN RENDERING NOTHING. *** A blank
           // region on a screen somebody is sitting at is indistinguishable from a crash.
           stageEl.innerHTML = '<p class="view-empty">This view could not be loaded.</p>';
           return;
         }
 
-        // Its OWN settings — theme and chrome travel with the arrangement.
-        const settingsHandle = childState('settings');
+        // Its OWN settings — theme and chrome travel with the arrangement. KEPT, so `destroy()`
+        // can close it: this handle used to be opened, set polling, and never closed.
+        settingsHandle = childState('settings');
         await settingsHandle?.load?.().catch(() => {});
-        const settings = settingsHandle?.get?.() || {};
-        applyChrome(settings);
+        if (torn) { try { settingsHandle?.destroy?.(); } catch { /* gone */ } settingsHandle = null; return; }
+        const settings = {
+          get: () => settingsHandle?.get?.() || {},
+          set: (p) => settingsHandle?.set?.(p),
+        };
+
+        arr = createArrangement({
+          bus: rootBus, user, storage: ctx.storage, embedded: ctx.embedded === true, settings,
+          kioskEl: root, stageEl, mirrorEl, clockEl, ambientEl,
+          mountInstance: mountChild, destroyRec, watchRec, renderMods: changed,
+          runtime: () => ({ router }),
+          health: () => ctx.health || { forget() {} },
+          profileId: () => viewId,
+        });
+
+        arr.applyLayout(settings.get());
         if (settingsHandle?.subscribe) {
-          settingsHandle.subscribe((s) => applyChrome(s || {}));
+          const off = settingsHandle.subscribe((s) => { if (!torn) arr.applyLayout(s || {}); });
+          if (typeof off === 'function') offs.push(off);
           settingsHandle.startPolling?.();
         }
 
-        const saved = (settings.kiosk || {}).layout;
-        // *** THE SAME RESOLVE THE KIOSK USES, AND THIS IS THE POINT OF SHARING IT. ***
-        //
-        // This was `isArranged(saved) ? normalizeLayout(...) : null` — a second copy of what
-        // `kiosk.js` did, which meant it also carried the same defect: a slot whose module id
-        // is gone gets nulled, the cell is skipped in silence, and the module renders NOWHERE,
-        // because the fallback stage only runs when there is no layout at all. That was G1, G2
-        // and G3 on the live site. It was fixed in the kiosk on 2026-09-04 and left broken
-        // here, which is exactly what two implementations of one job produce.
-        layout = resolveLayout(saved, arrangement.modules);
-        parts = partition(arrangement.modules, layout);
-        await build();
+        arr.setProfile(arrangement);
+        // *** THE SAME RESOLVE THE KIOSK USES, AND THIS IS THE POINT OF SHARING IT. *** (It was a
+        // second copy here once, and carried G1-G3 for a week after the kiosk's was fixed.) Now it
+        // is not even a shared function call: it is the arrangement's own.
+        arr.resolve((settings.get().kiosk || {}).layout);
+        arr.partition();
+        await arr.mountOverlays();
+        if (torn) return;
+        if (arr.layout()) await arr.mountLayout(); else await arr.showPrimary(0);
+        if (torn) return;
+        // Links, once the modules exist -- and again whenever the settings change, exactly as the
+        // kiosk does. The runner exists only while there are links, so a view with none costs nothing.
+        if (arr.screenLinks) {
+          arr.screenLinks.sync();
+          const off = settingsHandle?.subscribe?.(() => { if (!torn) arr.screenLinks.sync(); });
+          if (typeof off === 'function') offs.push(off);
+        }
+        changed();
         rootBus.publish('view/ready', { viewId, modules: arrangement.modules.length });
       },
 
@@ -312,12 +346,17 @@ registerModule(
       onHide() {},
 
       destroy() {
-        destroyRec(stageRec); stageRec = null;
-        while (slotRecs.length) destroyRec(slotRecs.pop());
-        for (const k of Object.keys(overlayRecs)) { destroyRec(overlayRecs[k]); delete overlayRecs[k]; }
+        torn = true;
+        offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
+        listeners.clear();
+        try { arr?.destroy(); } catch { /* already gone */ }
+        // THE LEAK (step 6 plan): opened, set polling, and never closed. Closed here, last, after
+        // everything that might read it.
+        try { settingsHandle?.destroy?.(); } catch { /* already gone */ }
+        settingsHandle = null;
         root?.remove(); root = null;
-        stageEl = mirrorEl = clockEl = null;
-        arrangement = null; layout = null; parts = null;
+        stageEl = mirrorEl = clockEl = ambientEl = null;
+        arrangement = null; arr = null;
       },
     };
   },
