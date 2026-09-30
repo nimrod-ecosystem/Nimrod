@@ -251,7 +251,11 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
    * `json: true` asks for a JSON object (`response_format`) — standard OpenAI, honoured by Ollama;
    * the caller still parses tolerantly, because not every server enforces it.
    */
-  async function chat(messages, { model = '', json = false, temperature = 0.2, timeoutMs: t, signal } = {}) {
+  // `maxTokens` caps how long the ANSWER may be (OpenAI's `max_tokens`; Ollama honours it). Absent =
+  // the server's own limit, as before. Measured 2026-09-29: asked for "as many questions as this
+  // supports", qwen2.5:7b on this CPU wrote 2,000+ tokens for one 900-word piece — 15+ minutes — and
+  // ran into the 4,096-token window, which cuts the answer mid-JSON.
+  async function chat(messages, { model = '', json = false, temperature = 0.2, timeoutMs: t, signal, maxTokens = 0 } = {}) {
     const started = Date.now();
     let use = model;
     if (!use) {
@@ -261,6 +265,7 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
     }
     const body = { model: use, messages, temperature, stream: false };
     if (json) body.response_format = { type: 'json_object' };
+    if (Number(maxTokens) > 0) body.max_tokens = Math.floor(Number(maxTokens));
     const r = await request(`${settings().baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

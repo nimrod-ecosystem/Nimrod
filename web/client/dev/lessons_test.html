@@ -1145,6 +1145,7 @@ Say it once and move on.`;
       const pieceAI = { ...fakeAI(ROOTS_QS),
         chat: async (messages, opts = {}) => {
           calls.push(messages[1].content);
+          calls.caps = [...(calls.caps || []), opts.maxTokens];
           if (calls.length === 2) return { ok: false, reason: 'The model gave up on this one.' };
           return { ok: true, model: opts.model, ms: 5, text: JSON.stringify({ questions: ROOTS_QS }) };
         } };
@@ -1161,6 +1162,8 @@ Say it once and move on.`;
       check('*** several model calls, one per piece ***', n >= 5, String(n));
       check('each piece is told which part it is', calls.every((c, i) => c.includes(`part ${i + 1} of ${n}`)), calls.map((c) => c.slice(0, 160)).join(' || '));
       check('*** and none is given a number of questions derived from the video ***', calls.every((c) => !/up to \d/i.test(c)));
+      check('*** every piece carries the answer-length cap (default 1,200 tokens) ***',
+        (calls.caps || []).length === n && calls.caps.every((x) => x === 1200), JSON.stringify(calls.caps));
       check('the quiz still starts from the pieces that worked', !!xhost.querySelector('[data-tq-progress]'), tqText('.l-tq'));
       check('...and says plainly that one part could not be read', /1 part of the transcript could not be read/.test(tqText('[data-tq-pieces-failed]')),
         tqText('.l-tq'));
@@ -1179,6 +1182,8 @@ Say it once and move on.`;
       check('*** how many are WRITTEN is its own choice, defaulting to no limit (the hard-coded 40 is gone) ***',
         f.maxQuestions?.kind === 'choice' && f.maxQuestions.default === 0 && f.maxQuestions.options[0].label === 'No limit');
       check('the transcript piece size is a choice (900 words by default)', f.pieceWords?.kind === 'choice' && f.pieceWords.default === 900);
+      check('the longest answer per piece is a choice (1,200 tokens by default, No limit available)',
+        f.answerLength?.kind === 'choice' && f.answerLength.default === 1200 && f.answerLength.options.some((o) => o.value === 0));
       check('subject is text, default General, advanced (algebra.js\'s pattern)',
         f.subject?.kind === 'text' && f.subject.default === 'General' && f.subject.level === 'advanced');
       check('the AI model is a live choice with no options baked in', f.aiModel?.kind === 'choice' && !(f.aiModel.options || []).length);
