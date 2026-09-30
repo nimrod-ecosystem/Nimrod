@@ -26,6 +26,7 @@
 import { authHeaders, httpError } from './auth.js';
 import { cachedFetch } from './cache.js';
 import { createState } from './state.js';
+import { getManifest, seedFromSibling } from './module.js';
 import { MODE_KEY, DEFAULT_MODE, PROFILE_SETTINGS_KEY } from './lessons.js';
 
 // A starter profile so a fresh account "just works": photos, the camera mirror, the
@@ -159,10 +160,24 @@ export function createProfilesClient({ user, baseURL = '' }) {
         method: 'DELETE', headers: authHeaders(user),
       }).then(json),
 
-    addModule: (pid, type) =>
-      fetch(`${baseURL}/api/profiles/${pid}/modules`, {
+    // A new panel starts from a sibling of its type on this screen, for the keys its module
+    // declares (`copyFromSibling`, see module.js `seedFromSibling`). No declaration, no extra
+    // request; a failed copy still returns the panel.
+    addModule: async (pid, type) => {
+      const m = await fetch(`${baseURL}/api/profiles/${pid}/modules`, {
         method: 'POST', headers: jsonHeaders(), body: JSON.stringify({ type }),
-      }).then(json),
+      }).then(json);
+      if (getManifest(type)?.copyFromSibling?.length && m && m.id) {
+        try {
+          const p = await fetch(`${baseURL}/api/profiles/${pid}`, { headers: authHeaders(user) }).then(json);
+          await seedFromSibling({
+            type, newId: m.id, siblings: p.modules || [],
+            makeState: (key) => createState({ url: `${baseURL}/api/profiles/${pid}/state/${key}`, user }),
+          });
+        } catch (err) { console.error('addModule: copying from a sibling', err); }
+      }
+      return m;
+    },
 
     removeModule: (pid, mid) =>
       fetch(`${baseURL}/api/profiles/${pid}/modules/${mid}`, {

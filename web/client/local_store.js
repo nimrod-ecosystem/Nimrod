@@ -24,6 +24,7 @@
 
 import { listFolderSources, removeFolderSource } from './folder_source.js';
 import { STARTER_MODULES } from './modules_catalog.js';
+import { getManifest, seedFromSibling } from './module.js';
 
 const DB_NAME = 'nimrod-local';
 // Bumped for the PEOPLE store. `onupgradeneeded` creates any store that is missing, so an
@@ -208,6 +209,11 @@ function createLocalProfilesClient() {
     const m = { id: newId(), type, position: mods.length };
     mods.push(m);
     await putRow(PROFILES, row);
+    // Same as the server client: a new panel starts from a sibling of its type on this screen,
+    // for the keys its module declares. See module.js `seedFromSibling`.
+    if (getManifest(type)?.copyFromSibling?.length) {
+      await seedFromSibling({ type, newId: m.id, siblings: mods, makeState: (key) => createLocalState(pid, key) });
+    }
     return m;
   }
 

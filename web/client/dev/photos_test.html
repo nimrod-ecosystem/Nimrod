@@ -39,6 +39,11 @@ import { mountModule } from '../module.js';
 import { pressRetry } from './press_controls.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import '../modules/photos.js';   // registers 'photos'
+import '../modules/youtube.js';  // a module with no copyFromSibling, as the control
+import '../modules/settings.js'; // the Settings module - one of the three doors
+import { getManifest } from '../module.js';
+import { normalizeField, fieldValue, displayValue, fieldItems, fieldsFor } from '../settings_fields.js';
+import { createLocalBackend } from '../local_store.js';
 import { listingFailure } from '../modules/photos.js';
 import { folderError } from '../folder_source.js';
 
@@ -201,6 +206,237 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
 
     inst.destroy();
     host.remove();
+  }
+
+  // *** "SETTING PHOTOS TO 30 SECONDS DOESN'T SEEM TO WORK NOW." *** (Mike, 2026-09-29, live.)
+  //
+  // The setting was stored and read correctly the whole time. Measured on the real kiosk with
+  // two photos panels on one grid: the panel set to 30 s changed every 8 s, because every
+  // module gets a SCOPE of the screen's one bus and the other panel's timer published a bare
+  // `photos/next` that both panels obeyed. Same bus, fake timers, no server: two panels, one at
+  // 8 s and one at 30 s, and the 8 s panel's timer must move only the 8 s panel.
+  {
+    section('two photos panels on one screen keep their own intervals');
+    const bus = createBus();
+    const ITEMS = [1, 2, 3, 4, 5, 6].map((i) => ({ id: 'p' + i, path: 'a/p' + i + '.jpg', name: 'p' + i,
+                                                 kind: 'image', url: 'data:,p' + i }));
+    const source = { id: 'src-1', label: 'Test source', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+    function panel(id, intervalMs) {
+      const host = document.createElement('div');
+      host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+      document.body.append(host);
+      const timers = [];      // every timer this panel armed: { fn, ms, live }
+      let cfg = { sourceId: 'src-1', intervalMs };
+      const subs = [];
+      const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+                      subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+      const inst = mountModule('photos', {
+        mount: host, bus, state, instanceId: id,
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+        user: USER, profileId: 'p',
+        sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+        resolveListing: async () => ({ items: ITEMS.map((it) => ({ ...it })), albums: [], album: '', count: ITEMS.length }),
+        setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
+        clearTimer: (t) => { if (t) t.live = false; },
+      });
+      inst.init();
+      const armed = () => timers.filter((t) => t.ms >= 2000);   // slideshow timers, not the stall watchdog
+      return { host, inst, state, timers, armed, pending: () => armed().filter((t) => t.live),
+               fire: () => { const t = armed().filter((x) => x.live).pop(); if (t) { t.live = false; t.fn(); } } };
+    }
+    const fast = panel('photos-fast', 8000);
+    const slow = panel('photos-slow', 30000);
+    await sleep(120);
+    check('PRECONDITION: each panel armed its own interval',
+      fast.pending().map((t) => t.ms).join() === '8000' && slow.pending().map((t) => t.ms).join() === '30000',
+      `fast=${fast.pending().map((t) => t.ms)} slow=${slow.pending().map((t) => t.ms)}`);
+
+    const slowShows = slow.armed().length;
+    fast.fire();            // the 8-second panel's timer runs out
+    await sleep(20);
+    check('*** the 8 s panel running out of time does NOT move the 30 s panel ***',
+      slow.armed().length === slowShows, `the 30 s panel advanced ${slow.armed().length - slowShows} time(s)`);
+    check('...and the 8 s panel itself did move on, with its own 8 s',
+      fast.pending().map((t) => t.ms).join() === '8000', fast.pending().map((t) => t.ms).join());
+    check('...and the 30 s panel still has its 30 s timer running',
+      slow.pending().map((t) => t.ms).join() === '30000', slow.pending().map((t) => t.ms).join());
+
+    // The arrow under one panel is that panel's arrow. Both panels bound one source name, so a
+    // press fanned out through both bindings and moved every photos panel - twice.
+    const fastShows = fast.armed().length;
+    const slowShows2 = slow.armed().length;
+    fast.host.querySelector('[data-next]').click();
+    await sleep(20);
+    check('*** the next arrow under one panel moves that panel once, and the other not at all ***',
+      fast.armed().length === fastShows + 1 && slow.armed().length === slowShows2,
+      `this panel +${fast.armed().length - fastShows}, other panel +${slow.armed().length - slowShows2}`);
+
+    // CONTROL: an untagged next (a switch, a voice command, a test publishing the topic) still
+    // reaches every photos panel, exactly as it always did. The fix is about who a panel's OWN
+    // messages are for, not a new rule about the topic.
+    const f3 = fast.armed().length, s3 = slow.armed().length;
+    bus.publish('photos/next');
+    await sleep(20);
+    check('CONTROL: a plain photos/next from outside still reaches both panels',
+      fast.armed().length === f3 + 1 && slow.armed().length === s3 + 1);
+
+    // A CHANGED INTERVAL APPLIES TO THE PHOTO ON SCREEN. Before, the timer already running kept
+    // its old length, so 60 -> 30 left the photo up for the old minute.
+    slow.state.set({ intervalMs: 60000 });
+    await sleep(20);
+    check('changing the interval re-arms the photo on screen with the new value',
+      slow.pending().map((t) => t.ms).join() === '60000', slow.pending().map((t) => t.ms).join());
+    const s4 = slow.armed().length;
+    slow.state.set({ fit: 'cover' });
+    await sleep(20);
+    check('...and a change to something else does not restart its clock',
+      slow.armed().length === s4, `re-armed ${slow.armed().length - s4} time(s)`);
+
+    fast.inst.destroy(); slow.inst.destroy();
+    fast.host.remove(); slow.host.remove();
+  }
+
+  // *** 15 SECONDS BY DEFAULT, AND A NEW PANEL STARTS FROM ONE ALREADY ON THE SCREEN. ***
+  // Mike, 2026-09-29: "8 seconds is too short for the default though. Make it 15." and "keep it
+  // per panel, copy from existing". Both backends: the server's profile client and the signed-out
+  // local one, because a new panel comes through `addModule` on either.
+  {
+    section('the default, and a new panel copying its sibling');
+    const interval = normalizeField(getManifest('photos').settings.find((s) => s.key === 'intervalMs'));
+    check('the declared default is 15 seconds', fieldValue(interval, {}) === 15000
+      && displayValue(interval, fieldValue(interval, {})) === '15 seconds',
+      `${fieldValue(interval, {})}`);
+
+    // SIGNED OUT: the local backend (IndexedDB), no server involved.
+    {
+      const backend = createLocalBackend();
+      const scr = await backend.profiles.create('TEST-copy-local');
+      const a = await backend.profiles.addModule(scr.id, 'photos');
+      const sa = backend.makeState(a.id, {}, scr.id); await sa.load();
+      sa.set({ intervalMs: 30000 }); await sa.flush();
+      const b = await backend.profiles.addModule(scr.id, 'photos');
+      const sb = backend.makeState(b.id, {}, scr.id); await sb.load();
+      check('*** signed out: a new photos panel on a screen whose photos panel is 30 s starts at 30 s ***',
+        sb.get().intervalMs === 30000, JSON.stringify(sb.get()));
+      sb.set({ intervalMs: 4000 }); await sb.flush();
+      await sa.load();
+      check('...and it is a starting value, not a link: changing the new one leaves the old one alone',
+        sa.get().intervalMs === 30000, JSON.stringify(sa.get()));
+      const other = await backend.profiles.create('TEST-copy-local-empty');
+      const c = await backend.profiles.addModule(other.id, 'photos');
+      const sc = backend.makeState(c.id, {}, other.id); await sc.load();
+      check('signed out: on a screen with no photos panel it starts on the default (15 s), not the '
+        + 'other screen’s 30', sc.get().intervalMs === undefined && fieldValue(interval, sc.get()) === 15000,
+        JSON.stringify(sc.get()));
+      await backend.profiles.remove(scr.id); await backend.profiles.remove(other.id);
+    }
+
+    // SIGNED IN: the server's profile client. Needs the app server, not a media agent.
+    let serverUp = false;
+    try { await createProfilesClient({ user: USER }).list(); serverUp = true; } catch { serverUp = false; }
+    if (!serverUp) {
+      skip('signed-in copy and the three doors', 'no app server answering');
+    } else {
+      const profiles = createProfilesClient({ user: USER });
+      const scr = await profiles.create('TEST-copy-server');
+      const a = await profiles.addModule(scr.id, 'photos');
+      const sa = createState({ url: profiles.stateURL(scr.id, a.id), user: USER }); await sa.load();
+      sa.set({ intervalMs: 30000 }); await sa.flush();
+      const b = await profiles.addModule(scr.id, 'photos');
+      const sb = createState({ url: profiles.stateURL(scr.id, b.id), user: USER }); await sb.load();
+      check('*** signed in: a new photos panel on a screen whose photos panel is 30 s starts at 30 s ***',
+        sb.get().intervalMs === 30000, JSON.stringify(sb.get()));
+      const other = await profiles.create('TEST-copy-server-empty');
+      const c = await profiles.addModule(other.id, 'photos');
+      const sc = createState({ url: profiles.stateURL(other.id, c.id), user: USER }); await sc.load();
+      check('signed in: on a screen with no photos panel it starts on the default (15 s)',
+        sc.get().intervalMs === undefined && fieldValue(interval, sc.get()) === 15000, JSON.stringify(sc.get()));
+      // A module that declares nothing copies nothing (and costs no extra request).
+      const y1 = await profiles.addModule(other.id, 'youtube');
+      const sy = createState({ url: profiles.stateURL(other.id, y1.id), user: USER }); await sy.load();
+      sy.set({ muted: true }); await sy.flush();
+      const y2 = await profiles.addModule(other.id, 'youtube');
+      const sy2 = createState({ url: profiles.stateURL(other.id, y2.id), user: USER }); await sy2.load();
+      check('CONTROL: a module with no copyFromSibling starts empty', Object.keys(sy2.get()).length === 0,
+        JSON.stringify(sy2.get()));
+
+      // *** EVERY DOOR WRITES THE ONE VALUE THE RUNNING PANEL OBEYS. *** Mike: "Should there be
+      // three independent sources to control those settings? I would think setting it anywhere
+      // should be the same." There are three doors and ONE stored value per panel. Each door
+      // below writes, then the row is read back FRESH from the server, and the running panel's
+      // next timer is checked - so a door that wrote a different key, a different row or a
+      // different type fails here, not on somebody's screen.
+      section('three doors, one stored value');
+      const timers = [];
+      const host = document.createElement('div');
+      host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+      document.body.append(host);
+      const live = createState({ url: profiles.stateURL(scr.id, a.id), user: USER, pollMs: 200 });
+      await live.load();
+      const ITEMS = [1, 2, 3].map((i) => ({ id: 'd' + i, path: 'd' + i + '.jpg', name: 'd' + i, kind: 'image', url: 'data:,d' + i }));
+      const inst = mountModule('photos', {
+        mount: host, bus: createBus(), state: live, instanceId: a.id,
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+        user: USER, profileId: scr.id,
+        sources: { list: async () => [{ id: 'src-1', label: 'S', kind: 'agent', base_url: 'http://127.0.0.1:9' }] },
+        resolveListing: async () => ({ items: ITEMS.map((x) => ({ ...x })), albums: [], album: '', count: 3 }),
+        setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
+        clearTimer: (t) => { if (t) t.live = false; },
+      });
+      inst.init();
+      live.startPolling();
+      await sleep(150);
+      const armedNow = () => timers.filter((t) => t.live && t.ms >= 2000).map((t) => t.ms).join();
+      const rowNow = async () => { const r = createState({ url: profiles.stateURL(scr.id, a.id), user: USER }); await r.load(); return r.get(); };
+
+      // Door 1: the panel's own control.
+      const sel = host.querySelector('[data-opt="intervalMs"]');
+      sel.value = '60000'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      await live.flush();
+      const r1 = await rowNow();
+      check('door 1, the panel’s own control: the row holds the NUMBER 60000 under intervalMs',
+        r1.intervalMs === 60000 && r1.intervalSec === undefined, JSON.stringify(r1));
+      check('...and the running panel is now on 60 s', armedNow() === '60000', armedNow());
+
+      // Door 2: the kiosk's settings menu - the same `fieldItems(fieldsFor(manifest, instance))`
+      // + `state.set` composition kiosk.js builds for the focused panel (kiosk_test drives the
+      // real menu; this checks where its write LANDS).
+      const menuRow = () => fieldItems(fieldsFor(getManifest('photos'), inst), {
+        values: () => live.get() || {}, onStep: (k, v) => live.set({ [k]: v }),
+      }).find((i) => i.id === 'set:intervalMs');
+      check('door 2 reads what door 1 wrote', menuRow().hint === '60 seconds', menuRow().hint);
+      menuRow().run();                     // 60 wraps to 4
+      await live.flush();
+      const r2 = await rowNow();
+      check('door 2, the settings menu: the same row, the same key, a number', r2.intervalMs === 4000, JSON.stringify(r2));
+      check('...and the running panel is now on 4 s', armedNow() === '4000', armedNow());
+
+      // Door 3: the Settings module (Home's "edit another module's settings"), which opens its
+      // OWN state handle on the panel's row - the running panel hears it through polling.
+      const shost = document.createElement('div');
+      shost.style.cssText = 'position:absolute;left:-9999px;width:400px;height:500px';
+      document.body.append(shost);
+      const sm = mountModule('settings', { mount: shost, bus: createBus(), user: USER, profileId: scr.id,
+        instanceId: 'settings-door-test', personId: null,
+        state: { get: () => ({}), set() {}, subscribe: () => () => {}, load: async () => ({}), flush: async () => {} },
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() } });
+      await sm.init();
+      await sleep(300);
+      shost.querySelector(`[data-id="mod-${a.id}"]`)?.click();
+      await sleep(400);
+      const doorBtn = [...shost.querySelectorAll('.st-item')].find((b) => /Change photo every/.test(b.textContent));
+      check('door 3 reads what door 2 wrote', !!doorBtn && /4 seconds/.test(doorBtn.textContent), doorBtn?.textContent);
+      doorBtn?.click();                    // 4 -> 8
+      await sleep(700);                    // its handle debounces the write
+      const r3 = await rowNow();
+      check('door 3, the Settings module: the same row, the same key, a number', r3.intervalMs === 8000, JSON.stringify(r3));
+      let heard = false;
+      for (let i = 0; i < 30 && !heard; i++) { await sleep(100); heard = armedNow() === '8000'; }
+      check('...and the running panel picks it up without a reload', heard, armedNow());
+
+      sm.destroy(); shost.remove(); inst.destroy(); host.remove();
+      await profiles.remove(scr.id); await profiles.remove(other.id);
+    }
   }
 
   // *** CONNECT FROM HERE, NOT ONLY FROM MEDIA / SOURCES. *** 2026-09-08, Mike's "sources
