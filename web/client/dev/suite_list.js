@@ -73,6 +73,8 @@ export const SUITES = [
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the
   // new check flagged both within minutes - which is the check doing its job. Both pass on their own.
   'amplify', 'subtitles', 'phone_mic',
+  // Row 2.44: the phone that is the microphone shows a module (the clock) under a bar nothing covers.
+  'phone_mic_show',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];

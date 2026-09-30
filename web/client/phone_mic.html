@@ -8,6 +8,8 @@
 <title>Phone microphone — Nimrod</title>
 <link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
 <link rel="stylesheet" href="./layers.css">
+<!-- The module stylesheet: this page can show a module (the clock) beside the microphone. -->
+<link rel="stylesheet" href="./modules.css">
 <style>
   /* Theme variables only; nothing here chooses a colour. The LIVE state is the accent pair the
      theme derives (`--accent-warm-deep` with its computed `--on-accent-warm-deep`), so "on" reads
@@ -30,11 +32,51 @@
     font:700 1rem/1.2 inherit; cursor:pointer; text-decoration:none; }
   .pm-primary { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
   .pm-big { min-height:72px; font-size:1.15rem; width:100%; }
-  .pm-live { display:flex; flex-direction:column; gap:10px; text-align:center; padding:8vh 0 4vh; }
+  .pm-help { border:1px solid var(--border); border-radius:12px; padding:10px 12px; background:var(--surface); }
+  .pm-help summary { font-weight:700; cursor:pointer; min-height:32px; }
+  .pm-help p { margin:.6em 0 0; }
+
+  /* ---- live ------------------------------------------------------------------------------
+     THE BAR AND THE FRAME. One element, shown in the TOP LAYER (popover="manual", no light
+     dismiss) so no module can draw over it. It is a frame around the whole screen that takes no
+     presses, with the bar across its top that does. Where popovers are unsupported it is simply
+     fixed at the highest band. FIXED SIZES, ARGUED: the frame (8px) and the bar's Stop (56px tall)
+     are what "unmistakable" and "one press" mean on a phone across a room; they are not a taste
+     somebody tunes, and a setting that could make the frame 0px would undo the point. Listed for
+     Mike rather than made a setting. */
+  #app[data-view="live"] { padding-top:calc(var(--pm-bar-h, 76px) + 12px); }
+  #app[data-view="live"] .pm { max-width:none; min-height:calc(100vh - var(--pm-bar-h, 76px) - 44px); }
+  .pm-onair { position:fixed; inset:0; width:auto; height:auto; margin:0; padding:0; overflow:visible;
+    background:transparent; color:var(--on-accent-warm-deep); pointer-events:none;
+    border:8px solid var(--accent-warm-deep); box-sizing:border-box;
+    z-index:calc(var(--z-cursor, 700) + 100); }
+  .pm-onair:not([popover]), .pm-onair:popover-open { display:block; }
+  .pm-bar { pointer-events:auto; display:flex; align-items:center; gap:12px;
+    padding:calc(env(safe-area-inset-top,0px) + 6px) 12px 10px; margin:-8px -8px 0;
+    background:var(--accent-warm-deep); color:var(--on-accent-warm-deep); }
+  .pm-dot { flex:0 0 auto; width:18px; height:18px; border-radius:50%; border:3px solid currentColor;
+    box-sizing:border-box; background:currentColor; }
+  #app[data-live="0"] .pm-dot { background:transparent; }
+  .pm-bar-text { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; line-height:1.2; }
+  .pm-bar-word { font-size:1.2rem; font-weight:800; }
+  .pm-bar-who { font-size:.95rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pm-stop { flex:0 0 auto; min-height:56px; min-width:96px; font-size:1.1rem;
+    background:var(--surface); color:var(--text); border-color:var(--surface); }
+
+  .pm-stage { display:flex; flex-direction:column; gap:10px; flex:1 1 auto; min-height:0; }
+  /* THE MODULE'S BOX. `contain: layout paint` makes it the containing block even for a module's
+     `position:fixed` children and clips everything it draws to the box; `isolation` keeps its
+     z-indexes inside. An ordinary surface, so the module looks like itself inside the warm frame. */
+  .pm-show { position:relative; flex:1 1 auto; min-height:220px; border-radius:14px; overflow:hidden;
+    contain:layout paint; isolation:isolate; background:var(--surface); color:var(--text); }
+  .pm-show > .pm-mod { position:absolute; inset:0; }
+  .pm-show > .pm-note, .pm-mod-failed { margin:0; padding:24px 16px; text-align:center; color:var(--text); font-weight:600; }
+  .pm-notes { display:flex; flex-direction:column; gap:6px; }
+  .pm-notes p { margin:0; }
+  .pm-live { display:flex; flex-direction:column; gap:10px; text-align:center; padding:6vh 0 4vh; }
   .pm-live-word { font-size:clamp(34px, 11vw, 64px); font-weight:800; line-height:1.05; }
   .pm-live-who { font-size:1.25rem; font-weight:700; }
-  .pm-live-note { font-size:1rem; }
-  .pm-stop { background:var(--surface); color:var(--text); border-color:var(--surface); }
+  .pm-live-note { font-size:1rem; font-weight:600; }
 </style>
 </head>
 <body>

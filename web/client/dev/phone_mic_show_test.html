@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>phone microphone showing a module — test</title>
+<link rel="stylesheet" href="../layers.css">
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #box{width:360px;height:240px;position:relative}
+  /* The phone page's own live styles, loaded from the page itself below so this checks THOSE. */
+</style>
+</head>
+<body>
+<h1>phone microphone showing a module</h1>
+<p>Row 2.44. The phone that is the room's microphone can show a module (the clock by default) while it
+is the microphone. The "microphone on" bar and Stop sit where no module can cover them; the screen is
+kept awake; a module that fails leaves a plain message and the microphone carries on.</p>
+<div class="note"><b>Not covered here:</b> a real phone. Whether an Android phone's browser honours the
+wake lock while charging in a stand, how screen pinning behaves on Mike's phone, and whether the clock
+is readable across the room are bench checks, not made. getUserMedia, the wake lock, the drive socket
+and WebRTC are all fakes below.</div>
+<div id="box"></div>
+<div id="app" data-live="0"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  SHOW_CHOICES, DEFAULT_SHOW, MODULE_FILES, showChoice, labelOf, FAILED_TEXT,
+  mountShownModule, createWakeHold, wakeNote, WAKE_STATUSES, KEEP_ON_HELP,
+} from '../phone_mic_show.js';
+import { mountPhoneMic } from '../phone_mic_page.js';
+import { createPhoneMicSender, createPhoneMicReceiver } from '../phone_mic.js';
+import { registerModule } from '../module.js';
+import { SIGNAL_KINDS } from '../drive.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const flush = async () => { for (let i = 0; i < 8; i++) await sleep(0); };
+
+// The phone page's own <style>, pulled from phone_mic.html so the layout checks test the real rules.
+async function loadPageStyles() {
+  const html = await fetch('../phone_mic.html', { cache: 'no-store' }).then((r) => r.text());
+  const m = html.match(/<style>([\s\S]*?)<\/style>/);
+  const st = document.createElement('style');
+  st.textContent = m ? m[1] : '';
+  document.head.append(st);
+  return !!m;
+}
+
+// ---- fakes ---------------------------------------------------------------------------------
+function memState() {
+  let data = {}; let loaded = false; const subs = new Set();
+  return {
+    load: async () => { loaded = true; for (const f of subs) f({ ...data }); return { ...data }; },
+    get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; for (const f of subs) f({ ...data }); },
+    subscribe(f) { subs.add(f); if (loaded) f({ ...data }); return () => subs.delete(f); },
+    flush: async () => {}, destroy() { subs.clear(); },
+  };
+}
+function memEvents() { return { load: async () => [], append: async () => {}, list: () => [], subscribe: () => () => {}, destroy() {} }; }
+const made = [];
+const mem = { makeState: (k) => { const s = memState(); made.push(k); return s; }, makeEvents: () => memEvents() };
+
+function fakeDoc(hidden = false) {
+  const t = new EventTarget();
+  t.hidden = hidden;
+  t.set = (h) => { t.hidden = h; t.dispatchEvent(new Event('visibilitychange')); };
+  return t;
+}
+function fakeWakeNav({ refuse = false } = {}) {
+  const locks = [];
+  return {
+    locks,
+    wakeLock: {
+      request: async (kind) => {
+        if (refuse) { const e = new Error('no'); e.name = 'NotAllowedError'; throw e; }
+        const l = new EventTarget();
+        l.kind = kind; l.released = false;
+        l.release = async () => { l.released = true; l.dispatchEvent(new Event('release')); };
+        l.dropByBrowser = () => { l.released = true; l.dispatchEvent(new Event('release')); };
+        locks.push(l);
+        return l;
+      },
+    },
+  };
+}
+
+function fakeRoom() {
+  const screens = new Set(), drivers = new Set();
+  function join(role) {
+    const subs = new Set();
+    const me = {
+      role, sent: [], subs,
+      sendSignal(s) {
+        if (!SIGNAL_KINDS.includes(s.kind)) return false;
+        me.sent.push(s);
+        const copy = JSON.parse(JSON.stringify(s));
+        for (const l of (role === 'screen' ? drivers : screens)) for (const cb of [...l.subs]) cb(copy);
+        return true;
+      },
+      onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+      state: () => 'connected',
+      close() { (role === 'screen' ? screens : drivers).delete(me); subs.clear(); },
+    };
+    (role === 'screen' ? screens : drivers).add(me);
+    return me;
+  }
+  return { join };
+}
+const AUDIO_SDP = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendonly\r\n';
+function fakePeers() {
+  const all = [];
+  class PC {
+    constructor() { this.transceivers = []; this.senders = []; this.iceGatheringState = 'complete'; this.connectionState = 'new'; this.localDescription = null; all.push(this); }
+    addTransceiver(t, init) { this.transceivers.push({ track: t, init }); return {}; }
+    addTrack(t, s) { this.senders.push({ track: t, stream: s }); return {}; }
+    addEventListener() {}
+    async setRemoteDescription(d) { this.remote = d; }
+    async createOffer() { return { type: 'offer', sdp: AUDIO_SDP }; }
+    async createAnswer() { return { type: 'answer', sdp: 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=recvonly\r\n' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    close() { this.closed = true; }
+    fire(st) { this.connectionState = st; this.onconnectionstatechange?.(); }
+  }
+  return { PC, all, last: () => all[all.length - 1] };
+}
+class FakeStream {
+  constructor(t = []) { this.tracks = [...t]; }
+  addTrack(t) { this.tracks.push(t); } removeTrack(t) { this.tracks = this.tracks.filter((x) => x !== t); }
+  getTracks() { return this.tracks; } getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+function fakeMedia() {
+  const asked = [], tracks = [];
+  return { asked, tracks, getUserMedia: async (c) => { asked.push(c); const t = { kind: 'audio', stopped: false, stop() { this.stopped = true; } }; tracks.push(t); return new FakeStream([t]); } };
+}
+
+// Test-only modules, registered here, handed to the host through an injected file map.
+const destroyed = [];
+registerModule({ type: 'pmt_ok', title: 'ok' }, (ctx) => ({
+  init() { ctx.mount.innerHTML = '<div class="pmt-ok">fine</div>'; }, destroy() { destroyed.push('pmt_ok'); } }));
+registerModule({ type: 'pmt_boom', title: 'boom' }, () => ({
+  init() { throw new Error('init went wrong'); }, destroy() { destroyed.push('pmt_boom'); } }));
+registerModule({ type: 'pmt_badfactory', title: 'bad' }, () => { throw new Error('factory went wrong'); });
+let asked = null;
+registerModule({ type: 'pmt_greedy', title: 'greedy' }, (ctx) => ({
+  init() {
+    asked = Promise.allSettled([ctx.cameraOwner.acquire('me'), ctx.micOwner.acquire('me'), ctx.cameraOwner.acquireTrack('me')]);
+  } }));
+// Tries to cover everything: a fixed full-screen sheet inside its box at the highest z-index, and
+// another appended straight to <body> (which the module contract forbids, and which is tried anyway).
+const escaped = [];
+registerModule({ type: 'pmt_cover', title: 'cover' }, (ctx) => ({
+  init() {
+    ctx.mount.innerHTML = '<div class="pmt-sheet" style="position:fixed;inset:0;z-index:2147483647;background:red"></div>';
+    const e = document.createElement('div');
+    e.className = 'pmt-escape';
+    e.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:blue';
+    document.body.append(e); escaped.push(e);
+  },
+  destroy() { for (const e of escaped.splice(0)) e.remove(); } }));
+const testFiles = { pmt_ok: './modules/pmt_ok.js', pmt_boom: './modules/pmt_boom.js', pmt_badfactory: './modules/pmt_badfactory.js',
+  pmt_greedy: './modules/pmt_greedy.js', pmt_cover: './modules/pmt_cover.js', clock: MODULE_FILES.clock };
+const noImport = async () => {};
+
+(async () => {
+try {
+  const stylesLoaded = await loadPageStyles();
+
+  section('the choices');
+  check('*** the clock is the default (Mike: "put the clock ... on it while it charges") ***', DEFAULT_SHOW === 'clock');
+  check('"nothing else" keeps the full-page microphone view as a choice', SHOW_CHOICES.some((c) => c.value === 'none'));
+  check('an unknown or missing choice falls back to the default', showChoice('camera') === 'clock' && showChoice(undefined) === 'clock' && showChoice('none') === 'none');
+  check('*** the camera is not a choice, and neither is anything that plays sound ***',
+    !SHOW_CHOICES.some((c) => ['camera', 'youtube', 'personal', 'karaoke', 'call', 'photos'].includes(c.value)));
+  check('every module choice has a file; "none" has none', SHOW_CHOICES.every((c) => c.value === 'none' ? !MODULE_FILES.none : !!MODULE_FILES[c.value]));
+  check('labels read as words', labelOf('clock') === 'The clock');
+
+  section('*** the screen wake lock ***');
+  {
+    const nav = fakeWakeNav(); const doc = fakeDoc(false); const seen = [];
+    const w = createWakeHold({ nav, doc, onChange: (s) => seen.push(s) });
+    check('off until wanted', w.status() === 'off' && nav.locks.length === 0);
+    await w.hold();
+    check('*** held: asks for a SCREEN lock ***', w.status() === 'held' && nav.locks.length === 1 && nav.locks[0].kind === 'screen');
+    check('nothing to say while held', wakeNote('held') === '');
+    doc.set(true);
+    nav.locks[0].dropByBrowser();
+    check('the page hides: the browser lets go, and it is "paused"', w.status() === 'paused');
+    doc.set(false); await flush();
+    check('*** the page comes back: it asks again by itself ***', w.status() === 'held' && nav.locks.length === 2);
+    nav.locks[1].dropByBrowser();
+    check('let go while showing (battery saver): "lost", said, not re-asked in a loop', w.status() === 'lost' && nav.locks.length === 2 && wakeNote('lost') !== '');
+    doc.set(false); await flush();
+    check('...and asked again the next time the page is shown', w.status() === 'held' && nav.locks.length === 3);
+    w.release();
+    check('*** released when the microphone goes off ***', w.status() === 'off' && nav.locks[2].released === true);
+    check('every status is one the page knows', seen.every((s) => WAKE_STATUSES.includes(s)), seen.join());
+    w.destroy();
+  }
+  {
+    const w = createWakeHold({ nav: {}, doc: fakeDoc(false) });
+    await w.hold();
+    check('*** no wake lock in this browser: "unsupported", and the page says what to do ***',
+      w.status() === 'unsupported' && /screen timeout/.test(wakeNote('unsupported')));
+    const r = createWakeHold({ nav: fakeWakeNav({ refuse: true }), doc: fakeDoc(false) });
+    await r.hold();
+    check('the browser refuses: "refused", and it says so (battery saver)', r.status() === 'refused' && /battery saver/.test(wakeNote('refused')));
+    const nav = fakeWakeNav(); const doc = fakeDoc(true);
+    const h = createWakeHold({ nav, doc });
+    await h.hold();
+    check('a hidden page does not ask (it would be refused); it waits', h.status() === 'paused' && nav.locks.length === 0);
+    const nav2 = fakeWakeNav(); const s = createWakeHold({ nav: nav2, doc: fakeDoc(false) });
+    const p = s.hold(); s.release(); await p; await flush();
+    check('stopped while asking: the lock that arrives late is let go at once', nav2.locks.length === 1 && nav2.locks[0].released && s.status() === 'off');
+  }
+  check('the help explains Android screen pinning and the stand', /Pin/.test(KEEP_ON_HELP) && /App pinning/.test(KEEP_ON_HELP) && /Stay awake/.test(KEEP_ON_HELP));
+
+  section('*** a module, in a box ***');
+  const box = document.getElementById('box');
+  {
+    const win = new EventTarget();
+    const h = await mountShownModule(box, 'clock', { ...mem, win });
+    check('*** the clock mounts through the ordinary module contract ***', h.ok() && !!box.querySelector('.clock') && box.querySelector('.pm-mod.mod-box.mod-host'),
+      box.innerHTML.slice(0, 160));
+    check('its settings are kept on the phone under its own instance', made.includes('phone-mic-clock'));
+    const other = new ErrorEvent('error', { message: 'x', filename: 'http://h/client/modules/pond.js' });
+    win.dispatchEvent(other);
+    check('an error from some other file does not take it down', h.ok() && !!box.querySelector('.clock'));
+    h.destroy();
+    check('destroyed: the box is empty', box.childElementCount === 0);
+  }
+  for (const [type, why, label] of [
+    ['pmt_boom', 'failed', 'init throws'],
+    ['pmt_badfactory', 'failed', 'the factory throws'],
+    ['pmt_nofile', 'unknown', 'no such module'],
+  ]) {
+    const h = await mountShownModule(box, type, { ...mem, files: testFiles, importModule: noImport, win: new EventTarget() });
+    check(`*** ${label}: a plain message, never a throw ***`, !h.ok() && h.why() === why && box.textContent.trim() === FAILED_TEXT, `${h.why()} / ${box.textContent}`);
+    h.destroy();
+  }
+  {
+    const h = await mountShownModule(box, 'clock', { ...mem, importModule: async () => { throw new Error('offline'); }, win: new EventTarget() });
+    check('*** its file will not load: a plain message ***', !h.ok() && box.textContent.trim() === FAILED_TEXT);
+    h.destroy();
+  }
+  {
+    destroyed.length = 0;
+    const win = new EventTarget();
+    const h = await mountShownModule(box, 'pmt_ok', { ...mem, files: testFiles, importModule: noImport, win });
+    check('(mounted)', h.ok() && !!box.querySelector('.pmt-ok'));
+    win.dispatchEvent(new ErrorEvent('error', { message: 'boom later', filename: 'http://h/client/modules/pmt_ok.js' }));
+    check('*** it crashes LATER (an uncaught error from its file): taken down, a plain message ***',
+      !h.ok() && h.why() === 'crashed' && box.textContent.trim() === FAILED_TEXT && destroyed.includes('pmt_ok'));
+    h.destroy();
+    const h2 = await mountShownModule(box, 'pmt_ok', { ...mem, files: testFiles, importModule: noImport, win });
+    const err = new Error('rejected later'); err.stack = 'Error: rejected later\n    at http://h/client/modules/pmt_ok.js:3:9';
+    const ev = new Event('unhandledrejection'); ev.reason = err;
+    win.dispatchEvent(ev);
+    check('...and an unhandled rejection from its file, the same', h2.why() === 'crashed');
+    h2.destroy();
+    const h3 = await mountShownModule(box, 'pmt_ok', { ...mem, files: testFiles, importModule: noImport, win });
+    h3.destroy();
+    win.dispatchEvent(new ErrorEvent('error', { message: 'x', filename: 'http://h/client/modules/pmt_ok.js' }));
+    check('taken down, it stops listening (a later error does not write into a box it left)', box.childElementCount === 0);
+  }
+  {
+    const h = await mountShownModule(box, 'pmt_greedy', { ...mem, files: testFiles, importModule: noImport, win: new EventTarget() });
+    const r = await asked;
+    check('*** a module here asking for the camera or a microphone is REFUSED by the host ***',
+      r.length === 3 && r.every((x) => x.status === 'rejected' && x.reason?.name === 'NotAllowedError'), JSON.stringify(r.map((x) => x.status)));
+    h.destroy();
+  }
+
+  section('*** the phone page ***');
+  function pageRig({ nav = fakeWakeNav(), showOpts = { ...mem }, mountShown, show = null } = {}) {
+    const root = document.getElementById('app');
+    const people = { '/api/people': { people: [{ id: 'P1', name: 'Alex' }] }, '/api/drive/shared': { people: [] } };
+    const fetchImpl = async (url) => {
+      if (url.startsWith('/api/drive/ticket/')) return { ok: true, status: 200, json: async () => ({ ticket: 't' }) };
+      const body = people[url];
+      return body ? { ok: true, status: 200, json: async () => body } : { ok: false, status: 404, json: async () => ({}) };
+    };
+    const room = fakeRoom();
+    const screenLink = room.join('screen');
+    const recv = createPhoneMicReceiver({ link: screenLink, PeerConnection: fakePeers().PC, Stream: FakeStream });
+    const phonePeers = fakePeers();
+    const media = fakeMedia();
+    const store = new Map(); if (show) store.set('nimrod:phoneMic:show', show);
+    const storage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)) };
+    const doc = fakeDoc(false);
+    const connect = () => room.join('driver');
+    const makeSender = (o) => createPhoneMicSender({ ...o, getUserMedia: media.getUserMedia, PeerConnection: phonePeers.PC });
+    return { root, recv, phonePeers, media, store, doc, nav,
+      mount: () => mountPhoneMic(root, { fetchImpl, connect, makeSender, storage, search: '', nav, doc, showOpts,
+        ...(mountShown ? { mountShown } : {}) }) };
+  }
+  const onair = () => document.querySelector('#app [data-onair]');
+
+  {
+    const r = pageRig();
+    const page = await r.mount();
+    const sel = r.root.querySelector('[data-show]');
+    check('*** setup offers what to show, with the clock chosen ***', sel && sel.value === 'clock' && sel.options.length === SHOW_CHOICES.length);
+    check('setup carries the keep-it-on help (pinning, the stand)', /App pinning/.test(r.root.querySelector('[data-help]')?.textContent || ''));
+    r.root.querySelector('[data-start]').click();
+    await flush();
+    const o = onair();
+    check('*** the bar is up the moment the microphone opens: "Microphone on", and Stop beside it ***',
+      o && /Microphone on/.test(o.textContent) && !!o.querySelector('[data-stop]') && r.root.dataset.live === '1', o?.textContent);
+    const top = typeof o.showPopover === 'function';
+    check('*** the bar is in the browser\'s TOP LAYER (above anything a module can draw) ***',
+      !top || o.matches(':popover-open'), top ? 'popover not open' : 'no popovers here: fixed fallback');
+    await flush(); await sleep(30);
+    const clockEl = r.root.querySelector('[data-show-box] .clock');
+    check('*** the clock shows below the bar while the microphone is on ***', !!clockEl && page.shown()?.type === 'clock' && page.shown()?.ok === true,
+      r.root.querySelector('[data-show-box]')?.innerHTML.slice(0, 120));
+    check('*** the screen is kept awake ***', page.wake() === 'held' && r.nav.locks.length === 1);
+    check('no wake note while it is held', r.root.querySelector('[data-wake-note]').hidden === true);
+    r.phonePeers.last().fire('connected');
+    await flush();
+    check('live: the bar names the screen that can hear it', /Alex’s screen can hear this phone/.test(o.textContent));
+    check('*** the microphone changing state does NOT remount the module ***', r.root.querySelector('[data-show-box] .clock') === clockEl);
+    check('the screen sees the phone', r.recv.phones().length === 1);
+    r.doc.set(true);
+    check('hidden: the page says to keep it open', r.root.querySelector('[data-hidden-note]').hidden === false);
+    r.doc.set(false);
+    check('the choice is remembered on this phone', r.store.get('nimrod:phoneMic:show') === 'clock');
+
+    // Layout: the bar and Stop cannot be covered, the frame takes no presses.
+    const bar = o.querySelector('.pm-bar');
+    check('(the page\'s own styles are loaded for these checks)', stylesLoaded);
+    check('the frame takes no presses; the bar does', getComputedStyle(o).pointerEvents === 'none' && getComputedStyle(bar).pointerEvents === 'auto');
+    const showBox = r.root.querySelector('[data-show-box]');
+    const cs = getComputedStyle(showBox);
+    check('*** the module\'s box contains its paint (a fixed child cannot leave it) ***', /paint/.test(cs.contain) && cs.isolation === 'isolate', `${cs.contain} ${cs.isolation}`);
+
+    const stopBtn = o.querySelector('[data-stop]');
+    stopBtn.click();
+    await flush();
+    check('*** Stop is ONE press: the microphone is let go and the screen is told ***',
+      r.media.tracks.every((t) => t.stopped) && r.recv.phones().length === 0 && r.root.dataset.live === '0');
+    check('*** ...the bar is gone, the module is taken down, and the screen may sleep again ***',
+      !onair() && !r.root.querySelector('.clock') && page.shown() === null && page.wake() === 'off' && r.nav.locks[0].released);
+    check('back on the setup page, saying the microphone is off', /The microphone is off/.test(r.root.textContent));
+    page.destroy();
+  }
+
+  section('*** nothing can cover the bar ***');
+  {
+    const r = pageRig({ mountShown: (box, _t, o) => mountShownModule(box, 'pmt_cover', { ...o, files: testFiles, importModule: noImport }) });
+    const page = await r.mount();
+    r.root.querySelector('[data-start]').click();
+    await flush(); await sleep(30);
+    const o = onair();
+    const stop = o.querySelector('[data-stop]');
+    const rc = stop.getBoundingClientRect();
+    const measurable = rc.width > 0 && rc.height > 0 && document.querySelector('.pmt-escape');
+    if (measurable) {
+      const hit = document.elementFromPoint(rc.left + rc.width / 2, rc.top + rc.height / 2);
+      check('*** a module drawing a full-screen sheet at the highest z-index, even onto <body>, does not cover Stop ***',
+        hit === stop || stop.contains(hit), hit ? `${hit.tagName}.${hit.className}` : 'nothing');
+      const bar = o.querySelector('.pm-bar').getBoundingClientRect();
+      const word = document.elementFromPoint(bar.left + 30, bar.top + bar.height / 2);
+      check('...nor the "Microphone on" bar', !!word && o.contains(word), word ? `${word.tagName}.${word.className}` : 'nothing');
+      const sheet = document.querySelector('.pmt-sheet').getBoundingClientRect();
+      const boxR = r.root.querySelector('[data-show-box]').getBoundingClientRect();
+      check('*** the in-box sheet is held to the module\'s box, not the whole screen ***',
+        Math.abs(sheet.width - boxR.width) < 2 && Math.abs(sheet.top - boxR.top) < 2, `${JSON.stringify(sheet)} vs ${JSON.stringify(boxR)}`);
+    } else {
+      check('layout measurable in this browser (needed for the covering checks)', false, `stop ${rc.width}x${rc.height}`);
+    }
+    o.querySelector('[data-stop]').click();
+    await flush();
+    check('stopped: the module that escaped onto <body> is taken down with it', !document.querySelector('.pmt-escape'));
+    page.destroy();
+  }
+
+  section('*** a module that fails: the microphone carries on ***');
+  {
+    const r = pageRig({ mountShown: (box, _t, o) => mountShownModule(box, 'pmt_boom', { ...o, files: testFiles, importModule: noImport }) });
+    const page = await r.mount();
+    r.root.querySelector('[data-start]').click();
+    await flush(); await sleep(20);
+    r.phonePeers.last().fire('connected');
+    await flush();
+    check('*** the module area shows a plain message ***', r.root.querySelector('[data-show-box]').textContent.trim() === FAILED_TEXT);
+    check('*** ...and the microphone is live, with its bar ***', page.state() === 'live' && r.recv.phones().length === 1 && /Microphone on/.test(onair().textContent));
+    page.stop(); await flush();
+    page.destroy();
+  }
+  {
+    let win = new EventTarget();
+    const r = pageRig({ mountShown: (box, _t, o) => mountShownModule(box, 'pmt_ok', { ...o, files: testFiles, importModule: noImport, win }) });
+    const page = await r.mount();
+    r.root.querySelector('[data-start]').click();
+    await flush(); await sleep(20);
+    r.phonePeers.last().fire('connected'); await flush();
+    win.dispatchEvent(new ErrorEvent('error', { message: 'later', filename: 'http://h/client/modules/pmt_ok.js' }));
+    check('*** it crashes while live: message in its box, microphone untouched ***',
+      r.root.querySelector('[data-show-box]').textContent.trim() === FAILED_TEXT && page.state() === 'live' && r.recv.phones().length === 1
+      && r.media.tracks.every((t) => !t.stopped));
+    page.stop(); await flush(); page.destroy();
+  }
+  {
+    const r = pageRig({ mountShown: async () => { throw new Error('host broke'); } });
+    const page = await r.mount();
+    r.root.querySelector('[data-start]').click();
+    await flush(); await sleep(20);
+    check('even a host that throws leaves a message and a working microphone',
+      /could not be shown/.test(r.root.querySelector('[data-show-box]').textContent) && page.state() === 'waiting');
+    page.stop(); await flush(); page.destroy();
+  }
+
+  section('choosing "nothing else", and no wake lock');
+  {
+    const r = pageRig({ nav: {}, show: 'none' });
+    const page = await r.mount();
+    check('the remembered choice is chosen', r.root.querySelector('[data-show]').value === 'none');
+    r.root.querySelector('[data-start]').click();
+    await flush();
+    check('*** the whole page says "Microphone on", and no module is mounted ***',
+      /Microphone on/.test(r.root.querySelector('[data-big-word]')?.textContent || '') && !r.root.querySelector('[data-show-box]') && page.shown() === null);
+    check('*** a browser with no wake lock: the page says what to do instead ***',
+      page.wake() === 'unsupported' && r.root.querySelector('[data-wake-note]').hidden === false && /screen timeout/.test(r.root.querySelector('[data-wake-note]').textContent));
+    check('Stop is still in the bar', !!onair()?.querySelector('[data-stop]'));
+    onair().querySelector('[data-stop]').click(); await flush();
+    check('one press, off', r.media.tracks.every((t) => t.stopped) && r.root.dataset.live === '0');
+    page.destroy();
+  }
+  {
+    const r = pageRig();
+    const page = await r.mount();
+    r.root.querySelector('[data-show]').value = 'pond';
+    r.root.querySelector('[data-start]').click();
+    await flush(); await sleep(30);
+    check('another choice (pond) mounts and is remembered', page.shown()?.type === 'pond' && page.shown()?.ok && r.store.get('nimrod:phoneMic:show') === 'pond',
+      JSON.stringify(page.shown()));
+    check('*** no audio or video element anywhere on the page ***', !document.querySelector('#app audio, #app video'));
+    page.stop(); await flush(); page.destroy();
+  }
+  {
+    // Stopped before the module finished mounting: the late module is taken down, not left behind.
+    let release;
+    const gate = new Promise((res) => { release = res; });
+    const r = pageRig({ mountShown: async (box, _t, o) => { await gate; return mountShownModule(box, 'pmt_ok', { ...o, files: testFiles, importModule: noImport, win: new EventTarget() }); } });
+    const page = await r.mount();
+    r.root.querySelector('[data-start]').click();
+    await flush();
+    page.stop(); await flush();
+    destroyed.length = 0;
+    release(); await flush();
+    check('stopped while the module was still loading: it is not left on the setup page', !r.root.querySelector('.pmt-ok') && page.shown() === null);
+    page.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
