@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>room_scene — a room from a recipe, and the slots in it</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .host{position:relative;width:960px;height:540px;margin:8px 0;border:1px solid #e4e0c2}
+  p{max-width:80ch}
+</style>
+</head>
+<body>
+<h1>room_scene — a room from a recipe, and the slots in it</h1>
+<p>Change list rows 2.33, 2.34 and 2.37: Claude Design's room renderer, ported to plain modules
+(<code>room_parts.js</code>, <code>room_scene.js</code>, <code>room_presets.js</code>). Covers the pure
+maths (depth, side walls, the wall under a point, light by the clock, the window's view, draw order,
+grid units, grow-to-fit, roles, notification rules), every preset rendering, content above the
+lighting at night, reduced motion, the slots handed to a host with their sizes, a button object
+publishing its verb, a display object lifting flat and putting itself back, notification reactions,
+petting, a label chip per role object, contrast of the chips on every theme (measured, a warning
+never a failure), the served cat files, and a clean teardown.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="pen"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { THEMES, applyTheme, contrast } from '../theme.js';
+import { ROOM_SHELLS, FURNITURE, FRAME_SPECS, CLOCK_FACE, CALENDAR_FACE, SIGN_LOOKS, lightFor as partsLight } from '../room_parts.js';
+import { depthScale, sideWallTransform, wallAt, viewFor, lightFor, drawOrder, itemBox, gridUnits, growToFit,
+  normalizeRole, normalizeRecipe, reactionsFor, DEFAULT_NOTIFY_RULES, ROOM_ACTIONS, topicForAction, ROOM_TOPICS,
+  SCAN_ROWS, GRID_UNIT, LIFT_UNIT, GROW_CAP, mountRoomScene, ensureRoomCss } from '../room_scene.js';
+import { ROOM_PRESETS, presetRecipe, listPresets, DEFAULT_PRESET } from '../room_presets.js';
+import { FRAME_ART } from '../modules/button.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+// A measured number worth reading on a PASS too (contrast ratios), not counted.
+function note(t) { const d = document.createElement('div'); d.textContent = `      ${t}`; out.append(d); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const near = (a, b, tol = 1e-6) => Math.abs(a - b) <= tol;
+const at = (h, m = 0) => new Date(2026, 8, 30, h, m, 0);
+function makeHost() {
+  const h = document.createElement('div');
+  h.className = 'host';
+  document.getElementById('pen').append(h);
+  return h;
+}
+// A computed colour as #rrggbb (alpha ignored: the chips are opaque).
+function hexOf(css) {
+  const m = String(css).match(/rgba?\(([^)]+)\)/);
+  if (!m) return null;
+  const [r, g, b] = m[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+  return '#' + [r, g, b].map((n) => Math.round(n).toString(16).padStart(2, '0')).join('');
+}
+function listen(bus, topic) {
+  const got = [];
+  bus.subscribe(topic, (p) => got.push(p));
+  return got;
+}
+
+(async () => {
+try {
+  const cssOk = await ensureRoomCss(document);
+  check('the room stylesheet loads', cssOk === true);
+  const room = ROOM_SHELLS.room;
+
+  // =====================================================================================
+  section('the maths: depth (Design rule 3)');
+  check('depthScale(66) is 0.72 — the back-wall line', near(depthScale(66), 0.72));
+  check('depthScale(100) is 1.22 — the front of the floor', near(depthScale(100), 1.22));
+  check('depthScale clamps at 55 (a thing cannot shrink past the far end)', near(depthScale(40), depthScale(55)) && near(depthScale(55), 0.72 - 11 / 34 * 0.5));
+  check('depthScale clamps at 106', near(depthScale(130), depthScale(106)));
+  check('further back is smaller', depthScale(70) < depthScale(90));
+
+  section('the maths: side walls (Design rule 4)');
+  {
+    const t = sideWallTransform(room, { x: 8, y: 55, wall: 'left' });
+    // u = 8/16 = .5; h = 100 + .5*(66-100) = 83; s = 83/66; vp = (50, 29.7)
+    const s = 83 / 66;
+    check('squashed across by 0.56 (sx / sy)', near(t.sx / t.sy, 0.56), `${t.sx / t.sy}`);
+    check('the scale Design’s formula gives at x=8', near(t.sy, s), `${t.sy} vs ${s}`);
+    check('the shear points at the vanishing point', near(t.shear, ((29.7 - 55) * 540) / ((50 - 8) * 960)), String(t.shear));
+    check('a thing at eye height (45% of the way to the floor line) sits level', near(sideWallTransform(room, { x: 8, y: 66 * 0.45, wall: 'left' }).shear, 0));
+    const front = sideWallTransform(room, { x: 2, y: 40, wall: 'left' }), back = sideWallTransform(room, { x: 14, y: 40, wall: 'left' });
+    check('larger toward the front of the room', front.sy > back.sy, `${front.sy} vs ${back.sy}`);
+    check('capped at 1.45', sideWallTransform(room, { x: 0, y: 40, wall: 'left' }).sy <= 1.45);
+    const r = sideWallTransform(room, { x: 92, y: 55, wall: 'right' });
+    check('the right wall mirrors the left (same scale, opposite shear)', near(r.sy, t.sy) && near(r.shear, -t.shear), `${r.sy}/${r.shear}`);
+  }
+  section('the maths: which wall, which light, which view');
+  check('wallAt: left of the back wall is the left wall', wallAt(room, 10) === 'left');
+  check('wallAt: right of it is the right wall', wallAt(room, 90) === 'right');
+  check('wallAt: in the middle is the back wall', wallAt(room, 50) === 'back');
+  check('wallAt: a corner room has no right wall', wallAt(ROOM_SHELLS.corner, 99) === 'back');
+  check('wallAt: a flat room is all back wall', wallAt(ROOM_SHELLS.flat, 2) === 'back');
+  check('light auto: 06:59 is night', lightFor('auto', at(6, 59)) === 'night');
+  check('light auto: 07:00 is day', lightFor('auto', at(7)) === 'day');
+  check('light auto: 16:59 is day', lightFor('auto', at(16, 59)) === 'day');
+  check('light auto: 17:00 is evening', lightFor('auto', at(17)) === 'evening');
+  check('light auto: 19:59 is evening', lightFor('auto', at(19, 59)) === 'evening');
+  check('light auto: 20:00 is night', lightFor('auto', at(20)) === 'night');
+  check('a fixed light passes through', lightFor('evening', at(12)) === 'evening');
+  check('an unknown light reads as day', lightFor('purple', at(23)) === 'day');
+  check('the renderer and the parts agree on light', partsLight === lightFor);
+  check('view auto by night is the night scene', viewFor('auto', 'night') === 'night');
+  check('view auto by evening is fall', viewFor('auto', 'evening') === 'fall');
+  check('view auto by day is cozy', viewFor('auto', 'day') === 'cozy');
+  check('a named view stays itself', viewFor('winter', 'night') === 'winter');
+
+  section('the maths: draw order, units, grow-to-fit');
+  {
+    const items = [
+      { kind: 'furniture', part: 'sofa', x: 40, y: 90 },
+      { kind: 'furniture', part: 'rug', x: 50, y: 95 },
+      { kind: 'furniture', part: 'window', x: 30, y: 30 },
+      { kind: 'furniture', part: 'tableLamp', x: 18, y: 75, ground: 88 },
+      { kind: 'furniture', part: 'bookshelf', x: 80, y: 70 },
+      { kind: 'frame', x: 60, y: 20 },
+      { kind: 'cat', x: 50, y: 70, ground: 86 },
+    ];
+    const o = drawOrder(items);
+    check('wall furniture draws with the walls', o.wall.join() === '2', o.wall.join());
+    check('floor things: rugs first, then back to front by ground ?? y', o.floor.join() === '1,4,6,3,0', o.floor.join());
+    check('content goes in its own layer', o.content.join() === '5', o.content.join());
+  }
+  check('gridUnits: 1u = 40px, whole units only', gridUnits(160, 80).join() === '4,2' && gridUnits(79.9, 39.9).join() === '1,0');
+  check('GRID_UNIT is Design’s 40px', GRID_UNIT === 40);
+  {
+    const fits = growToFit(200, 60, [3, 1]);
+    check('grow-to-fit: a slot that already fits does not grow', fits.scale === 1 && !fits.capped);
+    const g = growToFit(80, 40, [3, 1]);
+    check('grow-to-fit: a slot too small grows just enough', near(g.scale, 1.5, 1e-3) && gridUnits(80 * g.scale, 40 * g.scale).join() === '3,1', JSON.stringify(g));
+    const c = growToFit(20, 20, [3, 2]);
+    check('grow-to-fit: capped at 2.5×, and says so', c.scale === GROW_CAP && c.capped && GROW_CAP === 2.5, JSON.stringify(c));
+  }
+  {
+    const b = itemBox({ kind: 'furniture', part: 'sofa', x: 50, y: 100 }, room);
+    check('itemBox: a floor thing is its box × depth, anchored at its foot', near(b.w, 270 * 1.22) && near(b.visible.top + b.visible.h, 540) && b.floor);
+    const s = itemBox({ kind: 'clock', x: 92, y: 30, wall: 'right', size: 64 }, room);
+    check('itemBox: a side-wall thing carries the matrix', !!s.side && /matrix\(/.test(s.transform));
+    const m = itemBox({ kind: 'module', x: 44, y: 34, w: 240, h: 140 }, room);
+    check('itemBox: a module mount is its own w×h, centred', m.w === 240 && m.h === 140 && !m.side && near(m.visible.left, 0.44 * 960 - 120));
+  }
+
+  section('the maths: roles and notifications');
+  {
+    check('a plain sofa has no role', normalizeRole({ kind: 'furniture', part: 'sofa', x: 1, y: 1 }) === null);
+    const b = normalizeRole({ kind: 'furniture', part: 'plant', role: 'button', action: 'fullscreen.toggle' });
+    check('a button role keeps its action, and its label defaults to the action’s', b.role === 'button' && b.action === 'fullscreen.toggle' && b.label === 'Full screen on/off');
+    const ia = normalizeRole({ kind: 'furniture', part: 'desk', interactive: { module: { mode: 'shows', id: 'photos' }, hover: { zoom: 3 } } });
+    check('room-add-ons’ `interactive` block reads as a role (shows -> display)', ia.role === 'display' && ia.module === 'photos' && ia.label === 'Photos');
+    check('zoom on focus is clamped to Design’s 1.1–1.5', ia.zoom === 1.5);
+    const act = normalizeRole({ kind: 'furniture', part: 'door', interactive: { select: { do: 'action', action: 'settings.open' } } });
+    check('`interactive.select.do: action` is a button', act.role === 'button' && act.action === 'settings.open');
+    check('every cat can be petted, unless told not to', normalizeRole({ kind: 'cat', x: 1, y: 1 }).role === 'pet' && normalizeRole({ kind: 'cat', pet: false }) === null);
+    check('ROOM_ACTIONS: full screen and settings are system topics', ROOM_ACTIONS['fullscreen.toggle'].topic === 'system/fullscreen' && ROOM_ACTIONS['settings.open'].topic === 'system/settings');
+    check('an action with a slash IS a topic (a decoration can send any verb)', topicForAction('photos/next') === 'photos/next' && topicForAction('nonsense') === null);
+    const rec = normalizeRecipe(presetRecipe('theRoom'));
+    const wake = reactionsFor(rec, 'wake').map((r) => `${r.id}:${r.does}`).sort().join();
+    check('Design’s default: wake -> the lamp lights and the cat perks up', wake === 'cat:perk,lamp:light', wake);
+    const msg = reactionsFor(rec, 'message').map((r) => `${r.id}:${r.does}`).join();
+    check('Design’s default: message -> the speaker pulses', msg === 'spk:pulse', msg);
+    const own = reactionsFor({ items: [{ id: 'a', kind: 'furniture', part: 'sofa', reacts: 'glow' }] }, 'timer');
+    check('an object with `reacts` reacts to every event', own.length === 1 && own[0].does === 'light');
+    const custom = reactionsFor({ notify: [{ on: 'call', object: 'sofa', does: 'pulse' }], items: [{ id: 's', kind: 'furniture', part: 'sofa' }, { id: 'f', kind: 'furniture', part: 'fireplace' }] }, 'call');
+    check('a recipe’s own rules replace the defaults', custom.length === 1 && custom[0].id === 's', JSON.stringify(custom));
+    check('the defaults are Design’s five', DEFAULT_NOTIFY_RULES.length === 5);
+    const n = normalizeRecipe({ items: [{ kind: 'frame', x: '5', y: 3 }, { id: 'a', kind: 'cat' }, { id: 'a', kind: 'cat' }] });
+    check('normalizeRecipe gives every item a unique id and a number position, and defaults the rest',
+      n.items.map((i) => i.id).join() === 'frame0,a,a_' && n.items[0].x === 5 && n.shell === 'room' && n.light === 'auto' && n.view === 'auto');
+  }
+
+  section('the parts: ported values');
+  {
+    // FRAME_SPECS is Design's PictureFrame table; button.js MEASURED the same windows out of the SVGs.
+    const mismatch = [];
+    for (const f of FRAME_ART) {
+      for (const [shape, aspect] of [['4x3', '4:3'], ['square', '1:1']]) {
+        const v = f.variants[shape], s = FRAME_SPECS[f.value]?.[aspect];
+        if (!s || s.w !== v.viewBox[0] || s.h !== v.viewBox[1] || s.win.x !== v.window[0] || s.win.y !== v.window[1] || s.win.w !== v.window[2] || s.win.h !== v.window[3]) mismatch.push(`${f.value} ${aspect}`);
+      }
+    }
+    check('every frame window agrees with the one button.js measured from the files', mismatch.length === 0, mismatch.join(', '));
+    check('the door and the speaker are in the kit (room-is-the-screen)', FURNITURE.door?.on === 'wall' && FURNITURE.speaker?.on === 'floor');
+    check('Design’s box sizes, spot-checked', FURNITURE.sofa.box.join() === '270,118' && FURNITURE.cabinet.box.join() === '230,76' && FURNITURE.fireplace.glow.r === 220);
+  }
+
+  // =====================================================================================
+  section('every preset renders');
+  {
+    const keys = listPresets().map((p) => p.value);
+    check('five presets: the room with controls plus Design’s four', keys.join() === 'theRoom,living,bedroom,study,fireside', keys.join());
+    check('the default preset is the room with controls', DEFAULT_PRESET === 'theRoom');
+    const words = Object.values(ROOM_PRESETS).flatMap((p) => p.recipe.items.filter((i) => i.kind === 'sign').map((i) => i.name)).join(' ');
+    check('no preset sign carries a real person’s name', !/\b(Cici|Christine|Mike|Rosemary)\b/i.test(words), words);
+    const srcs = new Set();
+    for (const key of keys) {
+      const host = makeHost();
+      const scene = mountRoomScene(host, presetRecipe(key), { now: () => at(12) });
+      await sleep(60);
+      const r = presetRecipe(key);
+      const drawn = scene.root.querySelectorAll('.rs-item').length;
+      check(`${key}: every item is drawn (${r.items.length})`, drawn === r.items.length, `${drawn} drawn`);
+      const hasWindow = r.items.some((i) => i.part === 'window');
+      if (hasWindow) check(`${key}: the window has a live scene in it`, !!scene.root.querySelector('.rs-view .ls'));
+      check(`${key}: the stage fits the host`, near(scene.scale, 1, 0.01), String(scene.scale));
+      scene.root.querySelectorAll('img').forEach((i) => srcs.add(i.getAttribute('src')));
+      scene.destroy();
+      host.remove();
+    }
+    const bad = [];
+    for (const s of srcs) { try { const res = await fetch(s); if (!res.ok) bad.push(`${s} ${res.status}`); } catch (e) { bad.push(`${s} ${e}`); } }
+    check(`every picture a preset draws is served (${srcs.size})`, bad.length === 0 && srcs.size > 5, bad.join('; '));
+  }
+
+  // =====================================================================================
+  section('*** content stays readable at night (Design rule 1) ***');
+  {
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('living'), { light: 'night', now: () => at(12) });
+    await sleep(60);
+    const layers = [...scene.stage.children].map((e) => e.dataset.layer).filter(Boolean).join(',');
+    check('the layers stack room, light, glow, content, overlay — in that order', layers === 'room,light,glow,content,over', layers);
+    const veil = scene.root.querySelector('[data-layer="light"]');
+    check('by night the veil is Design’s night gradient', /rgba\(8, 14, 34, 0\.56\)/.test(getComputedStyle(veil).backgroundImage), getComputedStyle(veil).backgroundImage);
+    check('the light option overrides the recipe’s auto', scene.light === 'night' && scene.root.dataset.light === 'night');
+    const content = scene.root.querySelector('[data-layer="content"]');
+    const kinds = ['frame', 'sign', 'clock', 'calendar'];
+    const misplaced = kinds.filter((k) => ![...scene.root.querySelectorAll(`.rs-item[data-item="${k}"]`)].every((e) => content.contains(e)));
+    check('every frame, sign, clock and calendar is in the content layer, above the veil', misplaced.length === 0, misplaced.join());
+    const furniture = [...scene.root.querySelectorAll('.rs-item[data-item^="furniture"], .rs-item[data-item="cat"]')];
+    check('furniture and the cat are under the veil (they dim)', furniture.length > 0 && furniture.every((e) => scene.root.querySelector('[data-layer="room"]').contains(e)));
+    const cs = (e) => getComputedStyle(e);
+    check('nothing between the content and the screen dims it (no opacity or filter on its layer)', cs(content).opacity === '1' && cs(content).filter === 'none');
+    check('the veil takes no press', cs(veil).pointerEvents === 'none');
+    const glows = scene.root.querySelectorAll('[data-layer="glow"] .rm-glow');
+    check('the lamp’s glow is drawn above the veil, blended with screen', glows.length === 1 && cs(glows[0]).mixBlendMode === 'screen');
+    scene.setOptions({ light: 'day' });
+    check('by day there is no veil and no lamp glow', veil.hidden && !scene.root.querySelector('[data-layer="glow"] .rm-glow'));
+    scene.setOptions({ light: 'auto' });
+    check('light auto follows the injected clock (noon is day)', scene.light === 'day');
+    // A study with a module slot: the slot is content too.
+    const s2 = mountRoomScene(makeHost(), presetRecipe('study'), { light: 'night' });
+    const slot = s2.slots().get('photos');
+    check('a module slot sits in the content layer, above the lighting', slot && slot.layer === 'content' && s2.root.querySelector('[data-layer="content"]').contains(slot.el));
+    s2.destroy();
+    scene.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('reduced motion, and motion when it is allowed');
+  {
+    const cssText = await (await fetch('../room_scene.css')).text();
+    const guarded = cssText.split('@media (prefers-reduced-motion: no-preference)');
+    const outside = guarded[0] + (guarded[1] || '').replace(/^\{[\s\S]*?\n\}/, '');
+    const loose = [...outside.matchAll(/animation\s*:\s*([^;}]+)/g)].map((m) => m[1].trim()).filter((v) => !/^none/.test(v));
+    check('every animation in the stylesheet sits inside the no-preference guard', guarded.length === 2 && loose.length === 0, loose.join(' | '));
+    const host = makeHost();
+    const moving = mountRoomScene(host, presetRecipe('fireside'), { now: () => at(21) });
+    await sleep(120);
+    const running = document.getAnimations().filter((a) => moving.root.contains(a.effect?.target));
+    const systemReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!systemReduced) check('with motion allowed, the fire breathes (the guard is not just killing everything)', running.length > 0, `${running.length} animations`);
+    const sec = moving.root.querySelector('.rs-sec');
+    if (!systemReduced) check('with motion allowed, the clock has a second hand', sec && getComputedStyle(sec).display !== 'none');
+    moving.destroy();
+    const still = mountRoomScene(host, presetRecipe('fireside'), { reducedMotion: true, now: () => at(21) });
+    await sleep(120);
+    const anims = document.getAnimations().filter((a) => still.root.contains(a.effect?.target) && a.playState === 'running');
+    check('reduced motion: nothing in the room animates', anims.length === 0, `${anims.length} running`);
+    check('reduced motion: the second hand is hidden', getComputedStyle(still.root.querySelector('.rs-sec')).display === 'none');
+    check('reduced motion: the hour and minute hands are still there (they are information)',
+      getComputedStyle(still.root.querySelector('.rs-hour')).display !== 'none' && getComputedStyle(still.root.querySelector('.rs-min')).display !== 'none');
+    check('reduced motion: the window scene is still', !!still.root.querySelector('.ls.ls-still'));
+    check('reduced motion: the cat is the still drawing', still.root.querySelector('.rs-cat')?.dataset.motion === 'still' && !!still.root.querySelector('.rs-cat img'));
+    const hands = still.root.querySelector('.rs-min').style.transform;
+    check('the minute hand shows the injected time (21:00 -> 0deg)', /rotate\(0deg\)/.test(hands), hands);
+    still.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('*** slots: where a host mounts real modules (Design rule 2) ***');
+  {
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { now: () => at(12) });
+    await sleep(60);
+    const slots = scene.slots();
+    check('every role object with a slot is returned (door, shelf, pot, cabinet)', ['door', 'shelf', 'pot', 'cab'].every((id) => slots.has(id)), [...slots.keys()].join());
+    const cab = slots.get('cab');
+    check('the cabinet is the transport bar’s display slot', cab.kind === 'display' && cab.module === 'transport' && cab.needs.join() === '3,1');
+    check('the cabinet’s slot size is in grid units, and it fits (4×1 for 3×1)', cab.units.join() === '4,1' && cab.fits, `${cab.units} ${JSON.stringify(cab.size)}`);
+    const shelf = slots.get('shelf');
+    check('the bookshelf holds the edit menus and fits 2×3', shelf.module === 'edit' && shelf.fits && shelf.units[0] >= 2 && shelf.units[1] >= 3, shelf.units.join());
+    const door = slots.get('door');
+    check('the door’s slot is on a side wall, in perspective', door.side === true && door.kind === 'button');
+    check('a slot element is empty until the host fills it', cab.el.childElementCount === 0 && cab.el.classList.contains('rs-slot'));
+    const study = mountRoomScene(makeHost(), presetRecipe('study'));
+    const ph = study.slots().get('photos');
+    check('a module slot reports its size: 240×140 is 6×3 units', ph.kind === 'module' && ph.units.join() === '6,3' && ph.size.w === 240, ph.units.join());
+    const card = study.root.querySelector('.rs-slot-card');
+    check('an empty module slot shows Design’s labelled card', card && getComputedStyle(card).display !== 'none' && /Photos/.test(card.textContent));
+    const filler = document.createElement('div'); filler.textContent = 'a real module';
+    ph.el.append(filler);
+    check('...and the card goes when the host mounts something there', getComputedStyle(card).display === 'none');
+    study.destroy();
+    // Grow to fit: a pot asked to show a 3×2 module grows (capped) instead of refusing.
+    const grow = mountRoomScene(makeHost(), { items: [{ id: 'pot', kind: 'furniture', part: 'plant', x: 40, y: 88, role: 'display', module: 'photos', needs: [3, 2], slot: [0.22, 0.64, 0.56, 0.36] }] });
+    const g = grow.slots().get('pot');
+    check('too big a module grows the object (room-add-ons), capped at 2.5×', g.grew > 1 && g.grew <= GROW_CAP, `grew ${g.grew}`);
+    grow.destroy();
+    scene.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('*** a button object publishes its verb ***');
+  {
+    const bus = createBus();
+    const host = makeHost();
+    const unclaimed = [];
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { bus, onUnclaimed: (a) => unclaimed.push(a) });
+    await sleep(30);
+    const fs = listen(bus, 'system/fullscreen');
+    const settings = listen(bus, 'system/settings');
+    const pressed = listen(bus, ROOM_TOPICS.pressed);
+    scene.root.querySelector('.rs-obj[data-id="pot"]').click();
+    check('pressing the flower pot publishes system/fullscreen', fs.length === 1 && fs[0].action === 'fullscreen.toggle' && fs[0].objectId === 'pot', JSON.stringify(fs));
+    check('...and room/pressed, for anything watching the room', pressed.length === 1 && pressed[0].id === 'pot' && pressed[0].role === 'button');
+    check('nobody claimed it, so the host was told', unclaimed.join() === 'fullscreen.toggle');
+    bus.subscribe('system/settings', (p) => p.claim());
+    scene.root.querySelector('.rs-obj[data-id="door"]').click();
+    check('pressing the side-wall door publishes system/settings', settings.length === 1 && settings[0].action === 'settings.open');
+    check('a claimed action is not reported unclaimed', unclaimed.length === 1);
+    // keys
+    const keys = mountRoomScene(makeHost(), { items: ['7', '8'].map((k, i) => ({ id: 'k' + k, kind: 'frame', x: 60 + i * 8, y: 20, width: 46, role: 'keys', group: 'calc', key: k })) }, { bus });
+    const kgot = listen(bus, ROOM_TOPICS.key);
+    keys.root.querySelector('.rs-obj[data-id="k8"]').click();
+    check('a key object publishes room/key with its group and key', kgot.length === 1 && kgot[0].key === '8' && kgot[0].group === 'calc');
+    check('a key object’s chip is its key', keys.root.querySelector('.rs-chip[data-chip-for="k7"]').textContent === '7');
+    check('pictures are scanned as the pictures row', keys.scanTargets()[0].dataset.row === 'pictures');
+    keys.destroy();
+    scene.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('*** a display object lifts flat, and always comes back ***');
+  {
+    const bus = createBus();
+    const host = makeHost();
+    const liftEv = listen(bus, ROOM_TOPICS.lift);
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { bus, liftReturnMs: 250 });
+    await sleep(30);
+    const cabSlot = scene.slots().get('cab').el;
+    const mod = document.createElement('div'); mod.textContent = 'transport'; cabSlot.append(mod);
+    scene.root.querySelector('.rs-obj[data-id="cab"]').click();
+    const panel = scene.root.querySelector('.rs-lift');
+    check('pressing the cabinet lifts its slot flat', !!panel && scene.lifted() === 'cab' && panel.contains(cabSlot));
+    check('the mounted module moves with it (the same element, still mounted)', cabSlot.contains(mod));
+    const first = panel.querySelector('button');
+    check('its way out comes first: "Put it back"', first && first.textContent === 'Put it back');
+    check('the lifted panel takes over the scan, way out first', scene.scanTargets()[0] === first && scene.scanTargets().length === 1);
+    const body = panel.querySelector('.rs-lift-body').getBoundingClientRect();
+    check(`lifted full size: 3×1 at ${LIFT_UNIT}px a unit (real pixels, not the room’s scale)`, near(body.width, 240, 1) && near(body.height, 80, 1), `${body.width}x${body.height}`);
+    check('the way out is a real target (44px or more)', first.getBoundingClientRect().height >= 44, String(first.getBoundingClientRect().height));
+    check('room/lift says so', liftEv.at(-1)?.id === 'cab' && liftEv.at(-1)?.lifted === true);
+    await sleep(420);
+    check('*** nobody touching it: it puts itself back (the invariant) ***', scene.lifted() === null && !scene.root.querySelector('.rs-lift'));
+    check('...and the slot is home again, module and all', scene.root.querySelector('.rs-obj-wrap[data-id="cab"]').contains(cabSlot) && cabSlot.contains(mod));
+    scene.lift('cab');
+    scene.root.querySelector('.rs-lift-back').click();
+    check('"Put it back" puts it back', scene.lifted() === null);
+    scene.setOptions({ liftReturnMs: 0 });
+    scene.lift('cab');
+    await sleep(350);
+    check('liftReturnMs 0 means it stays until somebody puts it back', scene.lifted() === 'cab');
+    check('the back verb puts it back too', scene.back() === true && scene.lifted() === null);
+    scene.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('scanning and the switch verbs');
+  {
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { labels: 'pointed' });
+    await sleep(30);
+    const order = scene.scanTargets().map((b) => b.dataset.id).join();
+    check('the room’s things scan left to right: door, shelf, pot, cabinet, cat', order === 'door,shelf,pot,cab,cat', order);
+    const chip = scene.root.querySelector('.rs-chip[data-chip-for="door"]');
+    check('labels "when pointed at": the chip is hidden until then', getComputedStyle(chip).visibility === 'hidden');
+    const t = scene.focusNext();
+    check('focusNext lands on the first thing, drawn on the object', t?.dataset.id === 'door' && t.closest('.rs-obj-wrap').classList.contains('is-scan'));
+    check('...and its chip shows while the scan is on it', getComputedStyle(chip).visibility === 'visible');
+    scene.focusPrev();
+    check('focusPrev wraps to the last', scene.focused()?.dataset.id === 'cat');
+    scene.focusPrev(); scene.focusPrev();
+    check('select presses whatever the scan is on', scene.focused()?.dataset.id === 'pot' && scene.select() === true);
+    scene.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('*** a label chip for every role object ***');
+  {
+    const host = makeHost();
+    const scene = mountRoomScene(host, { items: [
+      { id: 'b', kind: 'furniture', part: 'plant', x: 20, y: 90, role: 'button', action: 'fullscreen.toggle' },
+      { id: 'l', kind: 'furniture', part: 'sofa', x: 50, y: 90, role: 'label', label: 'Where we sit' },
+      { id: 'd', kind: 'furniture', part: 'cabinet', x: 80, y: 90, role: 'display', module: 'photos' },
+      { id: 'k', kind: 'frame', x: 50, y: 20, role: 'keys', key: 'A' },
+      { id: 'n', kind: 'furniture', part: 'rug', x: 50, y: 95 },
+    ] });
+    await sleep(30);
+    const chips = [...scene.root.querySelectorAll('.rs-chip')];
+    check('exactly one chip per role object (four of five items have a role)', chips.length === 4, String(chips.length));
+    const text = Object.fromEntries(chips.map((c) => [c.dataset.chipFor, c.textContent]));
+    check('each chip names its object', text.b === 'Full screen on/off' && text.l === 'Where we sit' && text.d === 'Photos' && text.k === 'A', JSON.stringify(text));
+    check('labels "always" (the default): every chip shows', chips.every((c) => getComputedStyle(c).visibility === 'visible'));
+    check('a label object has no button (nothing to press)', !scene.root.querySelector('.rs-obj[data-id="l"]'));
+    const lx = chips.find((c) => c.dataset.chipFor === 'l');
+    check('a chip is flat: no perspective transform of its own', !/matrix/.test(getComputedStyle(lx).transform) || /matrix\(1, 0, 0, 1,/.test(getComputedStyle(lx).transform));
+    scene.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('*** notifications through objects ***');
+  {
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { notifyMs: 200, now: () => at(12) });
+    await sleep(30);
+    const cat = scene.root.querySelector('.rs-cat');
+    check('the cat starts asleep', cat.dataset.pose === 'sleeping');
+    const got = scene.notify('wake');
+    check('wake: two reactions', got.length === 2);
+    const glow = scene.root.querySelector('[data-layer="glow"] .rs-react-glow[data-react-for="lamp"]');
+    check('wake: the lamp lights, above the lighting layer, even by day', !!glow && getComputedStyle(glow).mixBlendMode === 'screen');
+    check('wake: the cat’s ears perk up (asleep becomes sitting)', cat.dataset.pose === 'idle');
+    await sleep(320);
+    check('afterwards the glow goes and he settles again', !scene.root.querySelector('.rs-react-glow') && cat.dataset.pose === 'sleeping' && scene.reactions() === 0);
+    scene.notify('message');
+    const ring = scene.root.querySelector('.rs-react-ring[data-react-for="spk"]');
+    check('message: the speaker pulses', !!ring);
+    const sys = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!sys) check('the pulse repeats at most once every 1.4 s', /1\.4s/.test(getComputedStyle(ring).animationDuration) || getComputedStyle(ring).animationDuration === '1.4s', getComputedStyle(ring).animationDuration);
+    scene.clearReactions();
+    scene.destroy();
+    const still = mountRoomScene(host, presetRecipe('theRoom'), { reducedMotion: true });
+    still.notify('message');
+    const r2 = still.root.querySelector('.rs-react-ring');
+    check('under reduced motion the ring is static (still shown, not animated)', !!r2 && r2.getAnimations().length === 0);
+    still.destroy();
+    const fire = mountRoomScene(host, presetRecipe('fireside'), { notifyMs: 0 });
+    fire.notify('call');
+    check('call: the fire is lit up', !!fire.root.querySelector('.rs-react-glow.fire[data-react-for="fire"]'));
+    fire.destroy();
+    const door = mountRoomScene(host, presetRecipe('theRoom'), { notifyMs: 0 });
+    door.notify('visitor');
+    check('visitor: the door opens a crack', door.root.querySelector('.rs-item[data-id="door"]').classList.contains('rs-open'));
+    door.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('petting (room-add-ons §9)');
+  {
+    const bus = createBus();
+    const host = makeHost();
+    const pets = listen(bus, ROOM_TOPICS.pet);
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { bus, petMs: 150 });
+    await sleep(30);
+    const btn = scene.root.querySelector('.rs-obj[data-id="cat"]');
+    check('the cat has a press target named for what it does', btn?.getAttribute('aria-label') === 'Pet Nimrod');
+    btn.click();
+    const cat = scene.root.querySelector('.rs-cat');
+    check('petting him: the happy pose', cat.dataset.pose === 'happy' && pets.length === 1);
+    await sleep(260);
+    check('...and back to sleep after', cat.dataset.pose === 'sleeping');
+    // A stroke with a pointer counts too.
+    const r = btn.getBoundingClientRect();
+    const ev = (type, x) => btn.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: r.top + r.height / 2, pointerId: 1 }));
+    ev('pointerdown', r.left + 4); ev('pointermove', r.left + 20); ev('pointermove', r.left + 40); ev('pointerup', r.left + 40);
+    check('a stroke across him counts as petting', pets.length === 2, String(pets.length));
+    scene.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
+  section('contrast: measured on every theme — a warning, never a blocker (Mike, 2026-09-30)');
+  {
+    const wrap = document.createElement('div');
+    document.getElementById('pen').append(wrap);
+    const host = makeHost(); wrap.append(host);
+    const scene = mountRoomScene(host, presetRecipe('theRoom'));
+    await sleep(30);
+    const chip = scene.root.querySelector('.rs-chip');
+    let measured = 0, low = [];
+    for (const id of Object.keys(THEMES)) {
+      applyTheme(wrap, id);
+      const cs = getComputedStyle(chip);
+      const fg = hexOf(cs.color), bg = hexOf(cs.backgroundColor);
+      if (!fg || !bg) continue;
+      measured++;
+      const ratio = contrast(fg, bg);
+      if (ratio < 4.5) low.push(`${id} ${ratio.toFixed(2)}`);
+    }
+    check(`label chips measured on all ${Object.keys(THEMES).length} themes`, measured === Object.keys(THEMES).length, `${measured} measured`);
+    note(low.length ? `WARNING below 4.5:1 — ${low.join(', ')}` : 'every theme’s chip is at or above 4.5:1');
+    // Design asked for these too: the clock face, the calendar, the empty slot’s label, the sign defaults.
+    note(`clock hands on the face ${contrast(CLOCK_FACE.ink, CLOCK_FACE.face).toFixed(2)}:1`);
+    note(`calendar month ${contrast(CALENDAR_FACE.bandInk, CALENDAR_FACE.band).toFixed(2)}:1, date ${contrast(CALENDAR_FACE.date, CALENDAR_FACE.page).toFixed(2)}:1, weekday ${contrast(CALENDAR_FACE.day, CALENDAR_FACE.page).toFixed(2)}:1`);
+    note(`empty module slot label ${contrast('#e8eef0', '#1b1d22').toFixed(2)}:1`);
+    const signs = Object.entries(SIGN_LOOKS).map(([k, v]) => `${k} ${Math.min(...v.ground.map((g) => contrast(v.text.color, g))).toFixed(2)}`);
+    note(`sign default words, worst stop: ${signs.join(', ')}`);
+    check('a low ratio is reported, not failed (the check above is the measurement)', true);
+    scene.destroy();
+    wrap.remove();
+  }
+
+  // =====================================================================================
+  section('the served cat files');
+  {
+    const bad = [];
+    for (const f of ['sleeping.svg', 'sleeping-animated.svg']) {
+      const r = await fetch(`../design-assets/nimrod-cat/${f}`);
+      const t = r.ok ? await r.text() : '';
+      if (!r.ok) { bad.push(`${f}: ${r.status}`); continue; }
+      if (/<script|\son[a-z]+\s*=|href\s*=|url\(\s*(?!#)|<text|<foreignObject|<image|Cici|Christine/i.test(t)) bad.push(`${f}: content`);
+    }
+    check('the sleeping pose is served, with no script, handler, outside link or text', bad.length === 0, bad.join('; '));
+  }
+
+  // =====================================================================================
+  section('teardown');
+  {
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('living'), { now: () => at(12) });
+    await sleep(30);
+    scene.notify('wake'); scene.pet('cat'); scene.toast('hello');
+    check('a live room holds its timers', scene.timers() > 0);
+    scene.destroy();
+    check('destroy leaves no timer behind', scene.timers() === 0, String(scene.timers()));
+    check('destroy removes the room and its window scene', !host.querySelector('.rs') && !host.querySelector('.ls'));
+    scene.destroy();
+    check('destroying twice is harmless', true);
+    host.remove();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>

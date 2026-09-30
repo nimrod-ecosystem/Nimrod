@@ -118,7 +118,7 @@ record here — this entry is the credit.
 | **What** | Nimrod the cat, the site's guide, in nine poses (idle, wave, talking, thinking, happy, and pointing up, down, left and right), each as a still drawing and an animated one, plus `motion.css` (the blink, tail, ears, mouth and paw movements, every one inside a `prefers-reduced-motion: no-preference` guard). Used by `cat_guide.js`, the walkthrough of game step 1; the still is what is shown when motion is reduced |
 | **Made by** | [Claude Design](https://claude.ai), for this project, delivered 2026-09-28 |
 | **Provenance** | Each SVG carries its C2PA content credential in `<metadata>`; it is kept, not stripped |
-| **Changed** | Nothing — byte-for-byte what was delivered. Every file was checked on the way in (no script, handler, external reference, drawn text or name), and the served copies are re-checked by `dev/cat_guide_test.html`. Design also delivered a sleeping pose and four head-only poses; they are not used yet, so they were not copied |
+| **Changed** | Nothing — byte-for-byte what was delivered. Every file was checked on the way in (no script, handler, external reference, drawn text or name), and the served copies are re-checked by `dev/cat_guide_test.html`. Design also delivered a sleeping pose and four head-only poses. The sleeping pose (still and animated) was copied 2026-09-30, byte for byte, for the room renderer (`room_scene.js`), whose starter rooms have him asleep, and is re-checked by `dev/room_scene_test.html`; the head-only poses are not used yet, so they were not copied |
 
 Made for this project, so there is no third-party licence to record here — this entry is the
 credit.
