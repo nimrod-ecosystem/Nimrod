@@ -80,6 +80,8 @@ export const SUITES = [
   'amplify', 'subtitles', 'phone_mic',
   // Row 2.44: the phone that is the microphone shows a module (the clock) under a bar nothing covers.
   'phone_mic_show',
+  // Rows 2.29 / 2.30: Home is the modules page (save, save as, history, the first sign-in).
+  'home_dashboard', 'home_page',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];

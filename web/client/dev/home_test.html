@@ -68,14 +68,18 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('the landing has no dead CTAs left', !/href="#"\s+class="btn/.test(landing));
     check('the landing signs you in through Google', /href="\/auth\/login"/.test(landing));
 
+    // Row 2.29 (2026-09-30): Home, for a signed-in visitor, is the MODULES page (a dashboard that
+    // opens on their profile). Their list of screens is still here, one link away.
     const signedIn = await fetch(`/?user=${encodeURIComponent(USER)}`);
-    check('/ sends a signed-IN visitor to HOME, not the kiosk',
-      new URL(signedIn.url).pathname === '/home.html', signedIn.url);
+    check('/ sends a signed-IN visitor to HOME (the modules page, row 2.29), not the kiosk',
+      new URL(signedIn.url).pathname === '/modules.html', signedIn.url);
     const homeBody = await signedIn.text();
+    check('...and that really is the modules page', /id="stage-bar"/.test(homeBody) && /id="list"/.test(homeBody));
+    check('...and NOT the kiosk', !/id="kiosk"/.test(homeBody));
+    const screensBody = await (await fetch(`/home.html?user=${encodeURIComponent(USER)}`)).text();
     // the visible list is rendered by home.js at runtime; the served HTML identifies
     // itself by its title, which is what a raw fetch can actually see.
-    check('...and that really is the home page', /<title>[^<]*your screens/i.test(homeBody));
-    check('...and NOT the kiosk', !/id="kiosk"/.test(homeBody));
+    check('the list of screens is still served at /home.html', /<title>[^<]*your screens/i.test(screensBody));
 
     check('the dev harness is still reachable at /index.html',
       (await fetch('/index.html')).ok);

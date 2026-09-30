@@ -113,7 +113,8 @@ try {
     check('*** it starts EMPTY — no modules at all ***', (p.modules || []).length === 0, JSON.stringify(p.modules));
     const s = await settingsOf(pid);
     check('its background is the room theme', s.theme === ROOM_THEME, JSON.stringify(s));
-    check('its panels are clear, so the room shows around what goes on the wall', s.panelSurface === 'clear');
+    // 'clear' until 2026-09-30; Mike, row 2.30: "Make see through the default."
+    check('its panels are see-through, so the room shows around what goes on the wall', s.panelSurface === 'veil');
     check('no arrangement yet (an empty screen, not an empty grid)', !(s.kiosk && s.kiosk.layout));
     check('it carries the game’s stamp, so it can be recognised again', s.game === 'profile');
     const gs = await gameStateOf(person.id);

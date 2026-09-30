@@ -367,7 +367,7 @@ export function isKioskPanel(type) {
 // An in-memory stand-in for localStorage/sessionStorage. The kiosk remembers "where she left off"
 // and "which screen to come back to" in device storage; an embed on a public page must not write
 // either into the visitor's real browser storage, where the actual kiosk would later read it.
-function memoryStorage() {
+export function memoryStorage() {
   const m = new Map();
   return {
     getItem: (k) => (m.has(k) ? m.get(k) : null),
@@ -406,7 +406,10 @@ function memoryStorage() {
  * reload rung, for a corrected layout arriving after boot, and after handing the screen to another
  * person. Reloading the modules page would be the wrong reading of any of them.
  */
-export async function mountEmbeddedKiosk({ stage, user = null, type }) {
+// `wrapState(handle, key)` (Home, rows 2.29/2.30, 2026-09-30): when given, every state handle the kiosk
+// opens is passed through it first -- how `modules.html` holds a module's SETTINGS as a draft until Save
+// (home_dashboard.js `createDraft`). Omitted, nothing changes: the kiosk builds its handles itself.
+export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState = null }) {
   // Dynamic, so the two hosts above (and every page that only wants THEM) do not drag in the
   // whole kiosk and, with it, every module registration -- `modules.html` deliberately does not
   // register `settings` or `keyboard`.
@@ -449,7 +452,10 @@ export async function mountEmbeddedKiosk({ stage, user = null, type }) {
           return { ...p, modules: (p.modules || []).filter((m) => m.type === pick) };
         },
       };
-      kiosk = await mountKiosk(stage, { ...seams, user, profileId, profiles, embedLayout: placeFor(mod.id) });
+      const wrapped = wrapState
+        ? { makeState: (key, opts = {}, pid = profileId) => wrapState(createState({ url: real.stateURL(pid, key), user, ...opts }), key) }
+        : {};
+      kiosk = await mountKiosk(stage, { ...seams, user, profileId, profiles, embedLayout: placeFor(mod.id), ...wrapped });
     } else {
       const backend = createLocalBackend();
       const profileId = `try-${current}`;
@@ -463,7 +469,8 @@ export async function mountEmbeddedKiosk({ stage, user = null, type }) {
       };
       kiosk = await mountKiosk(stage, {
         ...seams, user: null, profileId, profiles,
-        makeState: backend.makeState, makeEvents: backend.makeEvents,
+        makeState: wrapState ? (key, opts, pid) => wrapState(backend.makeState(key, opts, pid), key) : backend.makeState,
+        makeEvents: backend.makeEvents,
         embedLayout: placeFor(screen.modules[0].id),
       });
     }

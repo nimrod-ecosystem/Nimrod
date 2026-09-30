@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>home page (the modules page as a dashboard) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>home page (the modules page as a dashboard) — test</h1>
+<p>Rows 2.29 and 2.30, end to end against the dev server: a FRESH account signs in and lands on its
+profile (a preview, nothing made) in edit view with the welcome card; Save makes it; a setting changed
+waits for Save; Save over warns; History restores without deleting; leaving with unsaved changes asks;
+a module not on the screen is added only by Save; the page's own settings persist; signed out, the page
+is the parts page it was. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { authHeaders } from '../auth.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('home-page-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(60); } return false; };
+
+const profiles = createProfilesClient({ user: USER });
+async function row(pid, key) {
+  const h = createState({ url: profiles.stateURL(pid, key), user: USER });
+  try { return await h.load(); } finally { h.destroy(); }
+}
+async function personRow(key) {
+  const people = await profiles.people();
+  const h = createState({ url: profiles.personStateURL(people[0].id, key), user: USER });
+  try { return await h.load(); } finally { h.destroy(); }
+}
+const profileScreens = async () => (await profiles.list()).filter((p) => p.name === 'My profile');
+
+let ifr = null, doc = null, win = null;
+async function open(query) {
+  ifr?.remove();
+  ifr = document.createElement('iframe');
+  ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1300px;height:950px';
+  document.body.append(ifr);
+  await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}`; });
+  doc = ifr.contentDocument; win = ifr.contentWindow;
+}
+const $ = (s) => doc.querySelector(s);
+const hb = (k) => $(`#stage-bar [data-home="${k}"]`);
+const status = () => $('#hb-status')?.textContent || '';
+const dlgOpen = () => $('#home-dlg')?.open;
+const dlgBtns = () => [...doc.querySelectorAll('#home-dlg [data-home-dlg]')].map((b) => b.textContent.trim());
+const dlgBtn = (act) => $(`#home-dlg [data-home-dlg="${act}"]`);
+const menuShown = () => !!$('#stage [data-settings] .st-scrim:not([hidden])');
+const menuRow = (label) => [...doc.querySelectorAll('#stage .st-item')].find((b) => b.textContent.includes(label));
+const kiosks = () => doc.querySelectorAll('.kiosk').length;
+
+try {
+  // ============================================================================================
+  section('*** first sign-in: Home, on the profile, in edit view, and it says the profile is optional ***');
+  await open(`user=${encodeURIComponent(USER)}`);
+  check('Home is on: the bar above the stage is showing', await until(() => $('#stage-bar') && !$('#stage-bar').hidden));
+  check('the page is titled Home', doc.title.includes('Home'), doc.title);
+  check('the parts-page header and legend are out of the way', win.getComputedStyle($('.legend')).display === 'none');
+  check('*** it opens on "Your profile" ***', await until(() => $('#hb-name')?.textContent === 'Your profile'), $('#hb-name')?.textContent);
+  check('*** the real kiosk is in the stage, the whole profile: two panels (picture and sign) ***',
+    await until(() => kiosks() === 1 && doc.querySelectorAll('#stage [data-nbtn]').length >= 2), `kiosks=${kiosks()}`);
+  check('*** in EDIT view: its settings menu is open ***', await until(menuShown));
+  check('the view button says how to leave it', hb('view').textContent === 'Done editing' && hb('view').getAttribute('aria-pressed') === 'true');
+  const w = $('#welcome');
+  check('*** the welcome card is up and says the profile is OPTIONAL ***', !w.hidden && /optional/i.test(w.textContent));
+  const wb = [...w.querySelectorAll('button')].map((b) => b.textContent.trim());
+  check('its buttons: Skip for now (first, and primary), Set up my profile, Don’t show this again',
+    wb[0] === 'Skip for now' && w.querySelector('button').classList.contains('primary') && wb.includes('Set up my profile') && wb.some((t) => /show this again/.test(t)), wb.join(' | '));
+  check('the welcome sits ABOVE the stage, never over it (nothing is blocked)',
+    w.getBoundingClientRect().bottom <= $('#stage').getBoundingClientRect().top + 1);
+  check('the picker’s first row is Your profile, marked Optional',
+    /Your profile/.test(doc.querySelector('#list .pickrow')?.textContent) && /Optional/.test(doc.querySelector('#list .pickrow')?.textContent));
+  check('status says nothing is made yet', /not made yet/i.test(status()), status());
+  check('*** nothing was made on the account by looking ***', (await profileScreens()).length === 0);
+  check('History is DIMMED (nothing saved), not hidden', hb('history').disabled && !hb('history').hidden);
+  check('the menu and bar are see-through: following a new profile, whose panels are see-through',
+    $('#stage').dataset.chrome === 'veil', $('#stage').dataset.chrome);
+
+  // Skip for now opens the picker; Set up my profile keeps edit view
+  $('#welcome [data-home="skip"]').click();
+  check('Skip for now opens the module picker and closes the card', await until(() => doc.body.classList.contains('pick-open') && $('#welcome').hidden));
+  hb('picker').click();
+  check('the Modules button closes it again', await until(() => !doc.body.classList.contains('pick-open')));
+
+  // ============================================================================================
+  section('*** Save on the preview makes the profile for real ***');
+  hb('save').click();
+  check('Save with no name yet asks for one (Save as)', await until(() => dlgOpen() && /Save as/.test($('#home-dlg h2').textContent)));
+  check('Cancel is the first button in the dialog', dlgBtns().filter((t) => ['Cancel', 'Save with this name'].includes(t))[0] === 'Cancel', dlgBtns().join(' | '));
+  check('the name is filled in already ("My profile")', $('#saveas-name').value === 'My profile');
+  check('ready-made names are offered (one press instead of typing)', doc.querySelectorAll('#home-dlg [data-home-dlg="name"]').length >= 2);
+  dlgBtn('dosaveas').click();
+  check('*** the profile now exists: one "My profile" screen ***', await until(() => /Saved as/.test(status()), 15000) && (await profileScreens()).length === 1, status());
+  const prof = (await profileScreens())[0];
+  const full = await profiles.get(prof.id);
+  check('...with the picture and the sign on it', full.modules.filter((m) => m.type === 'button').length === 2);
+  const pset = await row(prof.id, 'settings');
+  check('*** its panels are SEE-THROUGH (Mike: the default, for new profiles) ***', pset.panelSurface === 'veil', JSON.stringify(pset));
+  const hist1 = await row(prof.id, 'history');
+  check('*** the history has one version, named "My profile" ***', hist1.versions?.length === 1 && hist1.current === 'My profile', JSON.stringify(hist1).slice(0, 200));
+  check('the stage is now the LIVE profile (one kiosk, the same two panels)',
+    await until(() => kiosks() === 1 && doc.querySelectorAll('#stage [data-nbtn]').length >= 2 && /live/i.test($('#stagenote').textContent)));
+  check('History is available now', await until(() => !hb('history').disabled));
+
+  // ============================================================================================
+  section('*** a setting changed waits for Save; Save over warns; History restores and deletes nothing ***');
+  if (!menuShown()) hb('view').click();
+  await until(menuShown);
+  const panelRow = () => menuRow('Panel backgrounds');
+  check('(setup) the screen’s "Panel backgrounds" row is in the menu', await until(() => !!panelRow()));
+  panelRow()?.click();
+  check('*** the change shows at once: status says Unsaved changes ***', await until(() => /unsaved/i.test(status())), status());
+  check('...and the menu and bar FOLLOW it (their background changed with the screen’s)',
+    await until(() => $('#stage').dataset.chrome !== 'veil'), $('#stage').dataset.chrome);
+  const changedTo = $('#stage').dataset.chrome;
+  await sleep(600);
+  check('*** ...but the server still has the saved value (it is a draft) ***', (await row(prof.id, 'settings')).panelSurface === 'veil');
+  const ev = new win.Event('beforeunload', { cancelable: true });
+  win.dispatchEvent(ev);
+  check('leaving the page now would ask first (beforeunload is refused)', ev.defaultPrevented === true);
+  hb('save').click();
+  check('*** Save over a saved name WARNS: "Save over “My profile”?" ***', await until(() => dlgOpen() && /Save over/.test($('#home-dlg h2').textContent)));
+  check('its buttons in order: Cancel, Save as a new name, Save over it', dlgBtns().join('|') === 'Cancel|Save as a new name|Save over it', dlgBtns().join('|'));
+  check('it says the replaced one stays in History', /History/.test($('#home-dlg p').textContent));
+  dlgBtn('cancel').click();
+  check('Cancel changes nothing', !dlgOpen() && /unsaved/i.test(status()) && (await row(prof.id, 'settings')).panelSurface === 'veil');
+  hb('save').click();
+  await until(() => dlgOpen());
+  dlgBtn('over').click();
+  check('*** Save over it: written to the real screen ***', await (async () => {
+    const t = Date.now() + 8000;
+    while (Date.now() < t) { if ((await row(prof.id, 'settings')).panelSurface === changedTo) return true; await sleep(150); }
+    return false;
+  })(), changedTo);
+  const hist2 = await row(prof.id, 'history');
+  check('...and a second version is in the history', hist2.versions?.length === 2);
+  check('the status is clean again', await until(() => /Saved as “My profile”/.test(status())), status());
+
+  hb('history').click();
+  check('History lists both, newest first', await until(() => dlgOpen() && doc.querySelectorAll('#home-dlg .ver').length === 2));
+  check('Close is offered', !!dlgBtn('close'));
+  doc.querySelectorAll('#home-dlg [data-home-dlg="restore"]')[1].click();   // the older one
+  check('*** restore opens the older version AS UNSAVED CHANGES ***', await until(() => !dlgOpen() && /unsaved/i.test(status())), status());
+  check('...and shows it (the menu and bar are see-through again)', await until(() => $('#stage').dataset.chrome === 'veil'));
+  check('*** ...and deleted nothing: the server history still has 2 ***', (await row(prof.id, 'history')).versions.length === 2);
+  hb('save').click();
+  await until(() => dlgOpen());
+  dlgBtn('over').click();
+  const hist3 = await (async () => { const t = Date.now() + 8000; let h; while (Date.now() < t) { h = await row(prof.id, 'history'); if (h.versions?.length === 3) break; await sleep(150); } return h; })();
+  check('*** saving the restored one ADDS a third version, marked as restored ***',
+    hist3.versions.length === 3 && !!hist3.versions[0].restoredFrom
+    && JSON.stringify(hist3.versions.slice(1)) === JSON.stringify(hist2.versions), JSON.stringify(hist3.versions?.map((v) => v.restoredFrom || '-')));
+  check('the server has the restored value', (await row(prof.id, 'settings')).panelSurface === 'veil');
+
+  // ============================================================================================
+  section('*** leaving unsaved changes asks; a module not on the screen is added only by Save ***');
+  await until(() => !!panelRow());
+  panelRow()?.click();
+  await until(() => /unsaved/i.test(status()));
+  doc.querySelector('[data-pick="trivia"]').click();
+  check('*** switching modules with unsaved changes asks first ***', await until(() => dlgOpen() && /Unsaved/.test($('#home-dlg h2').textContent)));
+  check('Cancel first', dlgBtns()[0] === 'Cancel', dlgBtns().join('|'));
+  dlgBtn('cancel').click();
+  check('Cancel keeps you where you were, changes intact', $('#hb-name').textContent === 'Your profile' && /unsaved/i.test(status()));
+  doc.querySelector('[data-pick="trivia"]').click();
+  await until(() => dlgOpen());
+  dlgBtn('leave').click();
+  check('Leave without saving goes to Trivia', await until(() => $('#hb-name').textContent === 'Trivia' && !!$('#stage .k-mods .k-dot')));
+  check('...and the profile’s change was dropped, not saved', (await row(prof.id, 'settings')).panelSurface === 'veil');
+  const defaultId = (await profiles.list()).find((p) => p.name !== 'My profile').id;
+  const countTrivia = async () => (await profiles.get(defaultId)).modules.filter((m) => m.type === 'trivia').length;
+  check('*** Trivia is NOT added to your screen by looking at it ***', (await countTrivia()) === 0);
+  check('the status says Save adds it', /not on your screen/i.test(status()), status());
+  check('a module opens in LIVE view (menu closed)', !menuShown() && hb('view').textContent === 'Edit');
+  check('no welcome card on a module', $('#welcome').hidden);
+  hb('save').click();
+  await until(() => dlgOpen());
+  check('Save asks for a name, filled with the module’s', $('#saveas-name').value === 'Trivia', $('#saveas-name').value);
+  dlgBtn('dosaveas').click();
+  check('*** Save added Trivia to your screen, once ***', await (async () => { const t = Date.now() + 10000; while (Date.now() < t) { if ((await countTrivia()) === 1) return true; await sleep(150); } return false; })());
+  const tid = (await profiles.get(defaultId)).modules.find((m) => m.type === 'trivia').id;
+  check('...with a history of its own', (await row(defaultId, `history-${tid}`)).versions?.length === 1);
+  check('...and the stage is now the live one', await until(() => /Saved as “Trivia”/.test(status()) && /live/i.test($('#stagenote').textContent)), status());
+
+  // ============================================================================================
+  section('the page’s own settings persist; the welcome can be turned off and back on');
+  hb('settings').click();
+  check('Page settings opens', await until(() => !$('#home-settings').hidden));
+  const keepRow = () => $('#hs-rows [data-k="keepVersions"]');
+  check('"Keep the last" shows 20 by default', /20/.test(keepRow().textContent), keepRow().textContent);
+  keepRow().click();
+  check('a press cycles it to 50', await until(() => /50/.test(keepRow().textContent)));
+  check('...and it is saved on the person', await (async () => { const t = Date.now() + 6000; while (Date.now() < t) { if ((await personRow('home')).keepVersions === 50) return true; await sleep(150); } return false; })());
+  doc.querySelector('[data-pick="profile"]').click();
+  await until(() => $('#hb-name').textContent === 'Your profile' && !$('#welcome').hidden);
+  $('#welcome [data-home="nomore"]').click();
+  check('*** "Don’t show this again" hides the card and switches the profile to LIVE view ***',
+    await until(() => $('#welcome').hidden && !menuShown()));
+  check('...saved on the person: welcomeDone, openIn live', await (async () => { const t = Date.now() + 6000; while (Date.now() < t) { const r = await personRow('home'); if (r.welcomeDone === true && r.openIn === 'live') return true; await sleep(150); } return false; })());
+
+  await open(`user=${encodeURIComponent(USER)}`);
+  check('*** next visit: the profile, in LIVE view, no welcome ***',
+    await until(() => $('#hb-name')?.textContent === 'Your profile' && kiosks() === 1 && /Saved as/.test(status())) && $('#welcome').hidden && !menuShown());
+  hb('settings').click();
+  $('#home-settings [data-home="rewelcome"]').click();
+  check('"Show the welcome again" brings it back', await until(() => !$('#welcome').hidden));
+
+  // ============================================================================================
+  section('a link to one module, and signed out');
+  await open(`user=${encodeURIComponent(USER)}&m=photos`);
+  check('?m=photos opens Photos, live view, no welcome',
+    await until(() => $('#hb-name')?.textContent === 'Photos' && kiosks() === 1) && $('#welcome').hidden && !menuShown());
+  await sleep(2500);
+  // Photos picks its only source by itself as it starts (a setting, written with nobody touching
+  // anything). That is the module setting itself up, not an edit: no "Unsaved changes", no question.
+  check('*** a module setting itself up is not "Unsaved changes" ***', !/unsaved/i.test(status()), status());
+  const r = await fetch(`/?user=${encodeURIComponent(USER)}`, { headers: authHeaders(USER) });
+  check('*** / sends a signed-in visitor to the modules page (Home) ***', new URL(r.url).pathname === '/modules.html', r.url);
+
+  const anon = await fetch('/api/me');
+  if (anon.status === 401) {
+    await open('m=photos');
+    check('*** signed OUT: no Home bar; the parts page as it was ***',
+      await until(() => kiosks() === 1) && $('#stage-bar').hidden && !doc.body.classList.contains('is-home')
+      && win.getComputedStyle($('.legend')).display !== 'none');
+  } else {
+    check('(skipped) this server signs everybody in, so there is no signed-out visitor to test', true);
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+  console.error(err);
+}
+ifr?.remove();
+
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

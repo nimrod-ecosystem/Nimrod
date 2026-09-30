@@ -22,9 +22,12 @@
 //     than a landscape (fall, winter), a street (cyberpunk), a tank (aquarium) or a sky (night);
 //     Mike: "some of those being rooms", and a profile is "like your room". Light, too, so black
 //     words on a white sign read on it. Falls back to the default theme if it is ever removed.
-//   * panelSurface 'clear' on the profile screen only — so the room shows around the sign and the
-//     picture and they read as things ON the wall, not two white boxes in front of it. Each button
-//     brings its own ground, so nothing loses contrast. One menu row away ("Panel backgrounds").
+//   * panelSurface — PROFILE_SURFACE, 'veil' (see-through) since 2026-09-30, on the profile screen
+//     only. It was 'clear' (so the room shows around the sign and the picture and they read as things
+//     ON the wall; each button brings its own ground). Mike, row 2.30: "Make see through the default."
+//     See-through still shows the room, and keeps a ground under anything that has none of its own.
+//     Profiles made before stay as they were (nothing here rewrites a screen it already made). One
+//     menu row away ("Panel backgrounds").
 //   * PROFILE_LAYOUT 'side' — two things, two spots, nothing left over. Mike: "maybe there's already
 //     a spot for it, but you can move it if you want": the picture's spot is the first, the sign's
 //     the second, and the composer (Home -> the screen -> arrange) moves either. 'quad' or 'main'
@@ -44,6 +47,7 @@ export const PROFILE_NAME = 'My profile';
 export const PROFILE_STAMP = 'profile';         // settings.game on the screen this game made
 export const ROOM_THEME = 'cozy';
 export const PROFILE_LAYOUT = 'side';
+export const PROFILE_SURFACE = 'veil';
 export const SLOT = Object.freeze({ picture: 0, sign: 1 });
 // NO WORDS on the picture (Mike, 2026-09-29: "yes" to "should the picture start with no words at
 // all, so the name only lives on the sign?"). The two are separate objects; the empty classic frame
@@ -62,6 +66,18 @@ export function signWords(name) {
 export const kioskURL = (profileId) => `/kiosk.html?profile=${encodeURIComponent(profileId)}`;
 
 export const roomTheme = () => (THEMES[ROOM_THEME] ? ROOM_THEME : DEFAULT_THEME);
+
+/** The default profile, as data: what `makeProfile` + `hangPicture` + `putUpSign` together make. The
+ *  Home page previews exactly this before anything exists (rows 2.29/2.30), so the preview and the
+ *  real thing cannot drift apart. */
+export function profileSetup(personName = '') {
+  return {
+    screen: { theme: roomTheme(), panelSurface: PROFILE_SURFACE },
+    picture: { ...PICTURE_START },
+    sign: { ...SIGN_START, label: signWords(personName) },
+    preset: PROFILE_LAYOUT,
+  };
+}
 
 /**
  * The game, for one person, over one backend. The backend is four factories — the same ones
@@ -146,7 +162,7 @@ export function createGame({ profiles, makeSettings, makeInstanceState, makePers
     const made = await profiles.create(PROFILE_NAME, personId);
     // Stamp first, remember second: the stamp is what makes the gap between the two harmless.
     await withState(makeSettings(made.id), (h) => {
-      h.set({ theme: roomTheme(), panelSurface: 'clear', game: PROFILE_STAMP });
+      h.set({ theme: roomTheme(), panelSurface: PROFILE_SURFACE, game: PROFILE_STAMP });
     });
     await remember({ screenId: made.id, pictureId: null, signId: null });
     return { profileId: made.id, created: true };
