@@ -227,6 +227,24 @@ export const CATALOG = [
       + 'reduced motion.',
   },
   {
+    // Rows 2.33/2.34/2.37: Claude Design's rooms, rendered by `room_scene.js`. `touch`: left alone
+    // it is a room with a clock on the wall and nothing waits on anybody; pressing its furniture
+    // does things (the flower pot is full screen, the door is settings, the cabinet lifts the bar).
+    type: 'room',
+    group: 'comfort',
+    use: 'touch',
+    lead: 'A room to look into, with a window, a clock and a calendar on the wall.',
+    needs: 'Nothing.',
+    why: 'A familiar place instead of a flat screen: a sofa, a lamp, a window onto a live scene, '
+      + 'and the time and date on the wall where anybody would look for them. It follows the real '
+      + 'clock, so the lamp comes on in the evening and the window goes dark at night, while the '
+      + 'clock, the calendar and the pictures stay bright enough to read. The furniture can hold '
+      + 'the screen’s own controls: every piece that does something carries a label, and a switch '
+      + 'can walk them one at a time.',
+    note: 'Five rooms to start from, drawn with Claude Design. Movement can be slowed or stopped, '
+      + 'and stops by itself if the device asks for reduced motion.',
+  },
+  {
     type: 'pond',
     group: 'comfort',
     use: 'touch',

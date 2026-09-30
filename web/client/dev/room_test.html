@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>room — the room renderer as a module</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{position:relative;margin-top:12px;width:640px;height:360px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>room — the room renderer as a module</h1>
+<p>Change list rows 2.33, 2.34, 2.37. Covers: the manifest (<code>core:'new'</code>, declared settings),
+mounting through <code>mountModule</code>, the settings reaching the renderer (which room, the light,
+labels, motion), the verbs (<code>room/next</code>, <code>room/select</code>, <code>room/back</code>),
+a button object's verb landing on the bus and the honest fallback when nobody answers it, the wake
+phrase making the lamp light, and a clean teardown with no timer left running.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { fieldsFor } from '../settings_fields.js';
+import { configFrom, DEFAULTS, SETTINGS } from '../modules/room.js';
+import { listPresets } from '../room_presets.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fakeState(initial = {}) {
+  let row = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => row,
+    set(p) { row = { ...row, ...p }; subs.forEach((f) => f(row)); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    load: async () => {},
+    destroyed: false,
+    destroy() { this.destroyed = true; subs.clear(); },
+  };
+}
+function stage() {
+  const s = document.createElement('div');
+  s.className = 'stage';
+  document.getElementById('stages').append(s);
+  return s;
+}
+
+// *** TIMER ACCOUNTING. *** Every setTimeout / setInterval made while a room is alive is recorded,
+// and each is crossed off when it fires or is cleared. What is left after destroy() is a leak.
+const pending = new Map();
+const realSet = window.setTimeout, realClear = window.clearTimeout;
+const realSetI = window.setInterval, realClearI = window.clearInterval;
+let recording = false;
+window.setTimeout = function (fn, ms, ...a) {
+  const id = realSet.call(window, (...x) => { pending.delete(id); if (typeof fn === 'function') fn(...x); }, ms, ...a);
+  if (recording) pending.set(id, new Error().stack);
+  return id;
+};
+window.clearTimeout = function (id) { pending.delete(id); return realClear.call(window, id); };
+window.setInterval = function (fn, ms, ...a) { const id = realSetI.call(window, fn, ms, ...a); if (recording) pending.set(id, 'interval'); return id; };
+window.clearInterval = function (id) { pending.delete(id); return realClearI.call(window, id); };
+
+(async () => {
+try {
+  section('the manifest');
+  const m = getManifest('room');
+  check('registered as `room`, on the new core', m && m.core === 'new' && m.title === 'Room');
+  check('it needs nothing: no server, no files, no network', m.dependsOn === 'none');
+  check('its settings are declared as data', Array.isArray(m.settings) && m.settings === SETTINGS && SETTINGS.length >= 6);
+  check('which room offers every preset', SETTINGS.find((s) => s.key === 'preset').options.length === listPresets().length);
+  const lr = SETTINGS.find((s) => s.key === 'liftReturnMs');
+  check('the lifted-panel timeout is a duration in ms with a "never" choice', lr && lr.options.some((o) => o.value === 0) && lr.default === 60000);
+  check('the essentials: which room, the light, the labels', SETTINGS.filter((s) => s.level === 'essential').map((s) => s.key).join() === 'preset,light,labels');
+  const c = configFrom({ preset: 'nope', light: 'purple', liftReturnMs: '30000', zoom: '1.25' });
+  check('configFrom: garbage reads as the defaults, a stored string reads as its number', c.preset === DEFAULTS.preset && c.light === 'auto' && c.liftReturnMs === 30000 && c.zoom === '1.25');
+
+  section('mounting');
+  const bus = createBus();
+  // Count the subscriptions a module opens through its scoped bus, and how many are still open.
+  let openSubs = 0;
+  const realScope = bus.scope;
+  bus.scope = (id) => { const s = realScope(id); const sub = s.subscribe; s.subscribe = (topic, fn) => { openSubs++; const off = sub(topic, fn); return () => { openSubs--; off(); }; }; const disp = s.dispose; s.dispose = () => { openSubs = 0; disp(); }; return s; };
+  const state = fakeState();
+  const host = stage();
+  recording = true;
+  const inst = mountModule('room', { mount: host, bus, state, personId: null, instanceId: 'room1' });
+  inst.init();
+  await sleep(80);
+  const scene = inst.impl.__scene();
+  check('it draws a room into its panel', !!host.querySelector('[data-room-mod] .rs') && !!scene);
+  check('the default is the room with controls in the furniture', !!host.querySelector('.rs-obj[data-id="cab"]') && !!host.querySelector('.rs-obj[data-id="door"]'));
+  const r = host.querySelector('.rs').getBoundingClientRect();
+  check('the room fills its panel', Math.round(r.width) === host.clientWidth && Math.round(r.height) === host.clientHeight,
+    `${r.width}x${r.height} in ${host.clientWidth}x${host.clientHeight}`);
+  check('it opened its verbs and its notification listeners', openSubs >= 6, String(openSubs));
+  check('...and the stage is scaled to fit it', Math.abs(scene.scale - Math.min(host.clientWidth / 960, host.clientHeight / 540)) < 0.001, String(scene.scale));
+
+  section('the settings reach the room');
+  state.set({ light: 'night' });
+  check('Light: Night dims the room', scene.light === 'night' && !host.querySelector('[data-layer="light"]').hidden);
+  state.set({ labels: 'pointed' });
+  check('Labels: when pointed at', host.querySelector('.rs').dataset.labels === 'pointed');
+  state.set({ motion: 'still' });
+  check('Movement: still', host.querySelector('.rs').dataset.motion === 'still');
+  state.set({ preset: 'study' });
+  check('Which room: a new room is drawn in place', !!host.querySelector('.rs-item[data-item="module"]') && !host.querySelector('.rs-obj[data-id="cab"]'));
+  const photos = scene.slots().get('photos');
+  check('the study’s module slot is offered to the host', photos && photos.kind === 'module' && photos.units.join() === '6,3');
+  state.set({ signWords: 'Our den' });
+  check('Words on the signs: every sign says them', host.querySelector('.rs-sign-text')?.textContent === 'Our den');
+  state.set({ preset: 'theRoom', labels: 'always', motion: 'gentle', light: 'auto', signWords: '' });
+
+  section('the verbs');
+  const got = [];
+  bus.subscribe('system/fullscreen', (p) => got.push(p));
+  bus.publish('room/next');
+  check('room/next puts the cursor on the first thing (the door)', scene.focused()?.dataset.id === 'door');
+  bus.publish('room/next'); bus.publish('room/next');
+  check('...and walks on (shelf, then the flower pot)', scene.focused()?.dataset.id === 'pot');
+  bus.publish('room/select');
+  check('room/select presses it: system/fullscreen is published', got.length === 1 && got[0].objectId === 'pot', JSON.stringify(got));
+  bus.publish(bus.instanceTopic('room1', 'room/next'));
+  check('the verbs answer on this instance’s own address too', scene.focused()?.dataset.id === 'cab');
+  bus.publish('room/select');
+  check('selecting the cabinet lifts the transport bar’s slot flat', scene.lifted() === 'cab');
+  bus.publish('room/back');
+  check('room/back puts it back', scene.lifted() === null);
+
+  section('a press nobody answers');
+  host.querySelector('.rs-obj[data-id="door"]').click();
+  const toast = host.querySelector('.rs-toast');
+  check('the door says where settings open, for a moment', toast && /Settings/.test(toast.textContent));
+  check('...as a note, not a dialog: it takes no press', toast && getComputedStyle(toast).pointerEvents === 'none' && toast.getAttribute('role') === 'status');
+  bus.subscribe('system/settings', (p) => p.claim());
+  host.querySelector('.rs-toast')?.remove();
+  host.querySelector('.rs-obj[data-id="door"]').click();
+  check('when something claims the press, there is no note', !host.querySelector('.rs-toast'));
+
+  section('notifications');
+  bus.publish('speech/listening', { on: true, ms: 4000 });
+  check('the wake phrase: the lamp lights', !!host.querySelector('.rs-react-glow[data-react-for="lamp"]'));
+  check('...and the cat’s ears perk up', host.querySelector('.rs-cat')?.dataset.pose === 'idle');
+  bus.publish('speech/listening', { on: false });
+  check('when listening ends, the room settles', !host.querySelector('.rs-react-glow') && host.querySelector('.rs-cat')?.dataset.pose === 'sleeping');
+  bus.publish('room/notify', { event: 'message', ms: 500 });
+  check('room/notify: a message makes the speaker pulse', !!host.querySelector('.rs-react-ring[data-react-for="spk"]'));
+
+  section('the settings menu builds its rows');
+  const rows = fieldsFor(m, inst.impl);
+  check('every declared setting has a row', rows.length === SETTINGS.length, String(rows.length));
+
+  section('*** teardown: clean, and no timer left behind ***');
+  inst.onHide(); inst.onShow();
+  inst.destroy();
+  recording = false;
+  await sleep(20);
+  check('destroy empties the panel', host.childElementCount === 0);
+  check('the state handle is released', state.destroyed === true);
+  const left = [...pending.values()];
+  check('no timer the room started is still pending', left.length === 0, `${left.length} left: ${String(left[0]).split('\n').slice(1, 4).join(' | ')}`);
+  check('every subscription it opened is closed', openSubs === 0, String(openSubs));
+  // mount/destroy several times: nothing accumulates.
+  recording = true;
+  for (let i = 0; i < 5; i++) {
+    const again = mountModule('room', { mount: host, bus, state: fakeState({ preset: ['living', 'fireside'][i % 2] }), personId: null, instanceId: 'r' + i });
+    again.init();
+    await sleep(10);
+    again.destroy();
+  }
+  recording = false;
+  await sleep(20);
+  check('five mounts and destroys leave no timer and no room', pending.size === 0 && !document.querySelector('#stages .rs'), `${pending.size} pending`);
+  check('...and no stray window scene', !document.querySelector('#stages .ls'));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>

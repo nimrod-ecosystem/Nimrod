@@ -1,0 +1,148 @@
+/* room_scene.css — the room renderer's stylesheet (room_scene.js). Loaded by the renderer itself,
+   once per page, so no page has to remember it.
+
+   *** WHAT IS HERE AND WHAT IS NOT. *** The room ART (every part's shape and colour) is drawn inline
+   by room_parts.js from Design's values, so a room draws correctly before this file arrives. This
+   file holds only: MOTION (every animation inside the reduced-motion guard, as Design ruled), the
+   interface pieces laid over the room (hit areas, label chips, the lifted panel, reactions), and the
+   layer order that keeps content readable at night.
+
+   *** NO LITERAL COLOUR OUTSIDE A CUSTOM-PROPERTY DECLARATION. *** Each colour below is declared once
+   on `.rs`, and the interface ones FOLLOW THE THEME (`var(--surface)`, `var(--text)`) with Design's
+   own colour as the fallback for a page with no theme. The chip on every theme is measured by
+   dev/room_scene_test.html (a warning, never a blocker: Mike, 2026-09-30). */
+
+.rs{
+  --rs-backdrop: #1b1d22;                       /* Design: the stage surround */
+  --rs-chip-bg: var(--surface, #fbf9ef);        /* Design's chip: cream... */
+  --rs-chip-ink: var(--text, #0A3323);          /* ...with deep-green words */
+  --rs-chip-shadow: 0 2px 6px rgba(0,0,0,.3);
+  --rs-ring: var(--link, #105666);              /* the switch cursor on an object */
+  --rs-ring-halo: rgba(255,211,110,.65);
+  --rs-lift-bg: var(--surface, #ffffff);
+  --rs-lift-ink: var(--text, #0A3323);
+  --rs-lift-edge: var(--border, #0A3323);
+  --rs-lift-shade: 0 18px 60px rgba(0,0,0,.45);
+  --rs-react-glow: rgba(255,214,140,.7);        /* Design: the lamp lights */
+  --rs-react-fire: rgba(255,150,60,.75);        /* Design's fire glow, stronger */
+  --rs-react-ring: rgba(255,211,110,.9);        /* Design: the speaker pulses */
+  --rs-slot-ok: #105666;
+  --rs-slot-no: #9e5449;
+  --rs-slot-ok-fill: rgba(16,86,102,.12);
+  --rs-slot-no-fill: rgba(158,84,73,.14);
+  --rs-card-bg: #1b1d22;                        /* Design's empty module slot: a dark screen */
+  --rs-card-edge: #2a2d33;
+  --rs-card-ink: #e8eef0;
+  --rs-card-sub: #b9c4c7;
+  --rs-card-shade: 0 4px 12px rgba(0,0,0,.3);
+  --rs-press-wash: rgba(255,255,255,.12);
+  --rs-slow: 1;                                 /* 'calm' stretches every loop (see room_scene.js) */
+  position: absolute; inset: 0; overflow: hidden;
+  background: var(--rs-backdrop);
+  font-family: var(--font, system-ui, sans-serif);
+  -webkit-user-select: none; user-select: none;
+}
+.rs[data-motion="calm"]{ --rs-slow: 1.8; }
+.rs-stage{ position: absolute; left: 0; top: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+.rs-layer{ position: absolute; inset: 0; }
+/* The veil, the glows and the interface layers never take a press; their children opt back in. */
+.rs-veil, .rs-glows, .rs-content, .rs-over{ pointer-events: none; }
+.rs-item{ position: absolute; }
+.rs-item.is-zoomed, .rs-obj-wrap.is-zoomed{ scale: var(--rs-zoom, 1); }
+
+/* ---------- MOTION: all of it inside the guard (Design, rule 6). Durations are Design's. ---------- */
+.rm-flame, .rm-leaf{ transform-origin: 50% 100%; }
+.rm-curtain{ transform-origin: 50% 0; }
+@media (prefers-reduced-motion: no-preference){
+  .rs .rm-flame{ animation: rmFlame calc(2.6s * var(--rs-slow)) ease-in-out infinite alternate; }
+  .rs .rm-flame.b{ animation-duration: calc(3.4s * var(--rs-slow)); animation-delay: -1.2s; }
+  .rs .rm-flame.c{ animation-duration: calc(2.1s * var(--rs-slow)); animation-delay: -.7s; }
+  .rs .rm-glow{ animation: rmGlow calc(7s * var(--rs-slow)) ease-in-out infinite alternate; }
+  .rs .rm-curtain{ animation: rmSway calc(9s * var(--rs-slow)) ease-in-out infinite alternate; }
+  .rs .rm-curtain.b{ animation-duration: calc(11s * var(--rs-slow)); animation-delay: -3s; }
+  .rs .rm-leaf{ animation: rmLeaf calc(8s * var(--rs-slow)) ease-in-out infinite alternate; }
+  .rs .rm-leaf.b{ animation-duration: calc(10s * var(--rs-slow)); animation-delay: -4s; }
+  .rs .rm-steam{ animation: rmSteam calc(6s * var(--rs-slow)) ease-out infinite; }
+  .rs .rm-steam.b{ animation-delay: -3s; }
+  /* the speaker pulses at most once every 1.4 s, fading out, never flashing */
+  .rs .rs-react-ring{ animation: rsRing 1.4s ease-out infinite; }
+  .rs .rs-item, .rs .rs-obj-wrap{ transition: scale .15s ease-out; }
+  .rs .rm-door-leaf, .rs .rm-door-panel{ transition: transform .4s ease-out; }
+}
+/* Motion OFF by the setting as well as by the device: nothing moves, and the second hand goes. */
+.rs[data-motion="still"] *, .rs[data-motion="still"] *::before, .rs[data-motion="still"] *::after{
+  animation: none !important; transition: none !important;
+}
+.rs[data-motion="still"] .rs-sec{ display: none; }
+@media (prefers-reduced-motion: reduce){ .rs .rs-sec{ display: none; } }
+@keyframes rmFlame{ from{ transform: scale(1,1); } to{ transform: scale(.9,1.1); } }
+@keyframes rmGlow{ from{ opacity: .62; } to{ opacity: .86; } }
+@keyframes rmSway{ from{ transform: skewX(-1.2deg); } to{ transform: skewX(1.4deg); } }
+@keyframes rmLeaf{ from{ transform: rotate(-2.5deg); } to{ transform: rotate(2.5deg); } }
+@keyframes rmSteam{ 0%{ opacity: 0; transform: translateY(0) scale(.8); } 30%{ opacity: .55; } 100%{ opacity: 0; transform: translateY(-26px) scale(1.5); } }
+@keyframes rsRing{ from{ transform: scale(.6); opacity: .95; } to{ transform: scale(1.5); opacity: 0; } }
+
+/* ---------- ROLE OBJECTS: invisible hit areas that sit exactly on the art (Design's prototype). ---------- */
+.rs-obj-wrap{ position: absolute; pointer-events: auto; }
+.rs-obj{ position: absolute; inset: 0; margin: 0; padding: 0; border: 0; background: transparent;
+  border-radius: 4px; cursor: pointer; font: inherit; color: inherit; }
+.rs-obj:focus-visible, .rs-obj:hover, .rs-obj-wrap.is-scan > .rs-obj{
+  outline: 4px solid var(--rs-ring); outline-offset: 3px; box-shadow: 0 0 0 10px var(--rs-ring-halo);
+}
+.rs-obj.is-pressed{ box-shadow: 0 0 0 10px var(--rs-ring-halo), inset 0 0 0 999px var(--rs-press-wash); }
+.rs-slot{ position: absolute; overflow: hidden; pointer-events: none; }
+.rs-slot-card{ position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  font-weight: 800; font-size: 11px; line-height: 1.1; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--rs-card-ink); pointer-events: none; }
+.rs-slot:not(:empty) + .rs-slot-card, .rs-mount:has(> .rs-slot:not(:empty)) > .rs-slot-card{ display: none; }
+
+/* ---------- LABEL CHIPS: flat, so they read the same on every wall. ---------- */
+.rs-chip{ position: absolute; transform: translate(-50%, -100%); white-space: nowrap; pointer-events: none;
+  padding: 3px 10px; border-radius: 999px; background: var(--rs-chip-bg); color: var(--rs-chip-ink);
+  font: 700 12px/1.3 var(--font, system-ui, sans-serif); box-shadow: var(--rs-chip-shadow); }
+.rs[data-labels="pointed"] .rs-chip{ visibility: hidden; }
+.rs[data-labels="pointed"] .rs-obj-wrap:is(:hover, :focus-within, .is-scan) + .rs-chip{ visibility: visible; }
+
+/* ---------- SLOT SIZES (an editing aid: "Show slot sizes"). ---------- */
+.rs-slotline{ position: absolute; border: 2px dashed var(--rs-slot-ok); background: var(--rs-slot-ok-fill); border-radius: 3px; pointer-events: none; }
+.rs-slotline.no{ border-color: var(--rs-slot-no); background: var(--rs-slot-no-fill); }
+.rs-badge{ position: absolute; transform: translate(-50%, -50%); display: grid; gap: 1px; justify-items: center;
+  text-align: center; padding: 5px 9px; border-radius: 9px; background: var(--rs-chip-bg); color: var(--rs-chip-ink);
+  font: 600 10.5px/1.25 var(--font, system-ui, sans-serif); box-shadow: var(--rs-chip-shadow); max-width: 170px; pointer-events: none; }
+.rs-badge b{ font-size: 18px; line-height: 1; }
+
+/* ---------- EMPTY MODULE SLOT: Design's labelled card, until the host mounts a module. ---------- */
+.rs-mount{ position: relative; display: block; border-radius: 10px; overflow: hidden; }
+.rs-mount > .rs-slot{ inset: 0; pointer-events: auto; }
+.rs-mount > .rs-slot-card{ background: var(--rs-card-bg); border: 6px solid var(--rs-card-edge); box-sizing: border-box;
+  box-shadow: var(--rs-card-shade); border-radius: 10px; text-transform: none; letter-spacing: 0; }
+.rs-mount > .rs-slot-card b{ display: block; font-size: 18px; color: var(--rs-card-ink); }
+.rs-mount > .rs-slot-card small{ display: block; font-size: 11px; font-weight: 400; color: var(--rs-card-sub); }
+
+/* ---------- REACTIONS: the lamp lights, the speaker pulses, the door opens a crack. ---------- */
+.rs-react-glow{ position: absolute; border-radius: 50%; mix-blend-mode: screen; pointer-events: none;
+  background: radial-gradient(circle, var(--rs-react-glow), transparent 68%); }
+.rs-react-glow.fire{ background: radial-gradient(circle, var(--rs-react-fire), transparent 70%); }
+.rs-react-ring{ position: absolute; width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--rs-react-ring);
+  box-sizing: border-box; pointer-events: none; }
+.rs-item.rs-open .rm-door-leaf, .rs-item.rs-open .rm-door-panel{ transform: perspective(300px) rotateY(-16deg); transform-origin: 8% 50%; }
+
+/* ---------- THE LIFTED PANEL: flat, solid, full size, and its way out first. It is NOT inside the
+   scaled stage, so its buttons are real pixels (44px and up) however small the room is drawn. ---------- */
+.rs-lift{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5;
+  max-width: 94%; max-height: 92%; overflow: auto; box-sizing: border-box; display: grid; gap: 10px; padding: 14px;
+  border-radius: 16px; background: var(--rs-lift-bg); color: var(--rs-lift-ink); border: 2px solid var(--rs-lift-edge);
+  box-shadow: var(--rs-lift-shade); pointer-events: auto; }
+.rs-lift-head{ display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.rs-lift-title{ margin: 0; font-size: 1.1em; font-weight: 800; }
+.rs-lift-back{ min-height: 48px; padding: 8px 16px; border-radius: 10px; border: 2px solid var(--rs-lift-edge);
+  background: var(--rs-lift-bg); color: var(--rs-lift-ink); font: inherit; font-weight: 700; cursor: pointer; }
+.rs-lift-back:focus-visible, .rs-lift-back.is-scan{ outline: 4px solid var(--rs-ring); outline-offset: 3px; }
+.rs-lift-body{ position: relative; max-width: 100%; }
+.rs-lift-body > .rs-slot{ position: relative; inset: auto; width: 100%; height: 100%; pointer-events: auto; overflow: auto; }
+.rs-lift-body > .rs-slot:empty::before{ content: attr(data-empty); display: grid; place-items: center; height: 100%; font-weight: 700; }
+
+/* A note the renderer may show for a moment: flat, solid, top centre, never a gate. */
+.rs-toast{ position: absolute; left: 50%; top: 4%; transform: translateX(-50%); z-index: 6; max-width: 90%;
+  padding: 8px 16px; border-radius: 999px; background: var(--rs-lift-bg); color: var(--rs-lift-ink);
+  border: 2px solid var(--rs-lift-edge); font-weight: 700; box-shadow: var(--rs-chip-shadow); pointer-events: none; }
