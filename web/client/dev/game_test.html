@@ -173,7 +173,8 @@ try {
     const p = await profiles.get(pid);
     check('exactly two modules now, both buttons', p.modules.length === 2 && p.modules.every((m) => m.type === 'button'));
     const s = await stateOf(pid, picId);
-    check('it starts in Design’s classic picture frame, captioned', s.frame === 'classic' && s.label === 'My picture', JSON.stringify(s));
+    check('*** it starts in Design’s classic picture frame with NO words — the name lives only on the sign (Mike, 2026-09-29) ***',
+      s.frame === 'classic' && s.label === '', JSON.stringify(s));
     check('...a REAL designed frame of the button, with a plain caption',
       FRAMES.some((o) => o.value === s.frame) && !!frameOf(s.frame) && s.style === 'plain');
     check('...with no picture chosen yet (that is the person’s to pick, in the menu)', !s.image);
