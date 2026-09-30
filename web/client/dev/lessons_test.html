@@ -1142,11 +1142,19 @@ Say it once and move on.`;
       const filler = Array.from({ length: 30 }, (_, i) => `This is filler sentence number ${i} about nothing much.`).join('\n');
       const LONG = `${ROOTS_TRANSCRIPT}\n3:00\n${filler}`;
       const calls = [];
+      // Part 2 fails on BOTH tries (2026-09-29: a piece that gives nothing is asked once more).
+      // Part 3 gives nothing readable the first time and good questions on the retry.
+      const tries = {};
       const pieceAI = { ...fakeAI(ROOTS_QS),
         chat: async (messages, opts = {}) => {
-          calls.push(messages[1].content);
+          const c = messages[1].content;
+          calls.push(c);
           calls.caps = [...(calls.caps || []), opts.maxTokens];
-          if (calls.length === 2) return { ok: false, reason: 'The model gave up on this one.' };
+          calls.temps = [...(calls.temps || []), opts.temperature];
+          const part = Number((/part (\d+) of/.exec(c) || [])[1]);
+          tries[part] = (tries[part] || 0) + 1;
+          if (part === 2) return { ok: false, reason: 'The model gave up on this one.' };
+          if (part === 3 && tries[3] === 1) return { ok: true, model: opts.model, ms: 5, text: '{"questions": [ {"que' };
           return { ok: true, model: opts.model, ms: 5, text: JSON.stringify({ questions: ROOTS_QS }) };
         } };
       xinst = await mountX(pieceAI);
@@ -1158,12 +1166,20 @@ Say it once and move on.`;
       await sleep(50);
       xhost.querySelector('[data-tq-make]').click();
       await sleep(900);
-      const n = calls.length;
+      const n = Object.keys(tries).length;
       check('*** several model calls, one per piece ***', n >= 5, String(n));
-      check('each piece is told which part it is', calls.every((c, i) => c.includes(`part ${i + 1} of ${n}`)), calls.map((c) => c.slice(0, 160)).join(' || '));
+      check('each piece is told which part it is, in order', calls.every((c) => new RegExp(`part \\d+ of ${n}`).test(c))
+        && Object.keys(tries).map(Number).join() === Array.from({ length: n }, (_, i) => i + 1).join(),
+        calls.map((c) => c.slice(0, 160)).join(' || '));
+      check('*** a piece that gave nothing is asked ONCE more (2 tries), never more ***',
+        tries[2] === 2 && tries[3] === 2 && Object.entries(tries).every(([p, k]) => (p === '2' || p === '3') ? k === 2 : k === 1),
+        JSON.stringify(tries));
+      check('...and the retry is drawn less deterministically (a higher temperature)',
+        calls.temps[calls.findIndex((c) => /part 2 of/.test(c))] === 0.2
+        && calls.temps[calls.findLastIndex((c) => /part 2 of/.test(c))] > 0.2, JSON.stringify(calls.temps));
       check('*** and none is given a number of questions derived from the video ***', calls.every((c) => !/up to \d/i.test(c)));
       check('*** every piece carries the answer-length cap (default 1,200 tokens) ***',
-        (calls.caps || []).length === n && calls.caps.every((x) => x === 1200), JSON.stringify(calls.caps));
+        (calls.caps || []).length === calls.length && calls.caps.every((x) => x === 1200), JSON.stringify(calls.caps));
       check('the quiz still starts from the pieces that worked', !!xhost.querySelector('[data-tq-progress]'), tqText('.l-tq'));
       check('...and says plainly that one part could not be read', /1 part of the transcript could not be read/.test(tqText('[data-tq-pieces-failed]')),
         tqText('.l-tq'));
