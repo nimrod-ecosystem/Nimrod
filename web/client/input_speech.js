@@ -116,7 +116,10 @@ export const PHRASES = {
   right:  ['right', 'go right', 'move right'],
   menu:   ['menu', 'settings', 'open the menu', 'show the menu', 'options'],
   // The media four (MEDIA_VERBS in actions.js).
-  play:   ['play', 'play it', 'play the video', 'resume', 'unpause', 'keep going', 'carry on',
+  // No 'unpause': measured 2026-09-30 on the bench Pi, it is not in the Vosk small model's
+  // vocabulary, so the local recogniser can never return it — a dead row that only looks like
+  // coverage. Every phrase here should be one the local model can actually hear.
+  play:   ['play', 'play it', 'play the video', 'resume', 'keep going', 'carry on',
            'continue'],
   pause:  ['pause', 'pause it', 'pause the video', 'stop', 'stop it', 'stop that',
            'stop the video', 'wait', 'hold on', 'hang on'],
