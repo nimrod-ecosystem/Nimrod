@@ -243,6 +243,12 @@ export function createCallTransport({
   // ---- inbound -------------------------------------------------------------------------
   function onSignal(sig) {
     if (destroyed || !sig || !SIGNAL_KINDS.includes(sig.kind)) return;
+    // *** A SIGNAL WITH ANOTHER PURPOSE IS NOT A CALL. *** (Row 2.42.) The same socket now also
+    // carries a phone joining as a microphone (`phone_mic.js`, `purpose: 'phone-mic'`). Its offer
+    // must never RING this screen, and its `bye` must never hang up a call that is running. A
+    // signal with no purpose is a call, exactly as before; a named purpose other than 'call' is
+    // somebody else's.
+    if (sig.purpose != null && sig.purpose !== 'call') return;
     if (sig.kind === 'bye') { log('peer hung up'); finish('remote'); return; }
     if (role === 'screen' && sig.kind === 'offer') {
       clearStall();

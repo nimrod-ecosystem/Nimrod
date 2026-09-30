@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>amplify — the microphone, louder, without howling — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>amplify</h1>
+<p>Row 2.42. The room's microphone (or a phone by the bed) played louder through the screen's speaker,
+for somebody hard of hearing. Off by default; a gain with a ceiling; the mixer's master and fader
+apply; a guard that turns it off when the output runs away.</p>
+<div class="note"><b>Not covered here:</b> a real microphone, a real speaker, a real howl. Every node
+below is a fake. Whether the guard's numbers catch a real howl on the bench speakerphone - and do not
+trip on somebody raising their voice - is a bench measurement that has not been made.</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  createAmplifier, createFeedbackGuard, sameDeviceWarning, amplifyOptionsFrom, rms,
+  AMPLIFY_DEFAULTS, AMPLIFY_FIELDS, AMPLIFY_ID, AMPLIFY_CHANNEL,
+} from '../amplify.js';
+import { createAudioBus } from '../audio_bus.js';
+import { PROFILES } from '../mic_owner.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const near = (a, b) => typeof a === 'number' && Math.abs(a - b) < 1e-6;
+
+// ---- fakes ----------------------------------------------------------------------------
+function fakeContextFactory() {
+  const made = [];
+  const meterLevel = { v: 0, jitter: 0 };
+  function make() {
+    const links = [];
+    const node = (kind, extra = {}) => ({
+      kind, connected: [], disconnected: false,
+      connect(to) { this.connected.push(to); links.push([this.kind, to.kind]); return to; },
+      disconnect() { this.disconnected = true; },
+      ...extra,
+    });
+    const param = (v) => ({ value: v, setTargetAtTime(x) { this.value = x; } });
+    const ctx = {
+      state: 'running', currentTime: 0, closed: false, sink: '', links,
+      destination: { kind: 'destination' },
+      createMediaStreamSource(stream) { return node('source', { stream }); },
+      createGain() { return node('gain', { gain: param(1) }); },
+      createDynamicsCompressor() {
+        return node('limiter', { threshold: param(-24), knee: param(30), ratio: param(12), attack: param(0.003), release: param(0.25) });
+      },
+      createAnalyser() {
+        return node('meter', { fftSize: 2048,
+          getFloatTimeDomainData(buf) {
+            const j = meterLevel.jitter ? (Math.random() * 2 - 1) * meterLevel.jitter : 0;
+            const a = Math.max(0, meterLevel.v + j) * Math.SQRT2;          // a sine of this RMS
+            for (let i = 0; i < buf.length; i++) buf[i] = a * Math.sin(i / 3);
+          } });
+      },
+      close() { this.closed = true; return Promise.resolve(); },
+      setSinkId(id) { this.sink = id; return Promise.resolve(); },
+    };
+    made.push(ctx);
+    return ctx;
+  }
+  return { make, made, last: () => made[made.length - 1], meterLevel };
+}
+function fakeMic() {
+  const calls = [];
+  return {
+    calls, held: new Set(),
+    async acquire(id, want) { calls.push({ id, want }); this.held.add(id); return { id: 'room-stream', getTracks: () => [] }; },
+    release(id) { this.held.delete(id); },
+  };
+}
+function fakeTicks() {
+  let t = 0; let fn = null; let n = 0;
+  return {
+    now: () => t,
+    setTick: (f) => { fn = f; return ++n; },
+    clearTick: () => { fn = null; },
+    running: () => !!fn,
+    advance(ms, step = 50) { for (let x = 0; x < ms; x += step) { t += step; fn?.(); } },
+  };
+}
+const gainOf = (ctx) => ctx.links && ctx._gain ? ctx._gain.gain.value : null;
+
+(async () => {
+try {
+  section('*** OFF by default, and its settings pass the audit ***');
+  check('*** amplify is OFF by default ***', AMPLIFY_DEFAULTS.on === false
+    && AMPLIFY_FIELDS.find((f) => f.key === 'amplifyOn').default === false);
+  const bad = auditFields(AMPLIFY_FIELDS.map(normalizeField).filter(Boolean), { type: 'amplify' })
+    .filter((f) => f.severity === 'error');
+  check('the settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+  check('*** the gain has a ceiling, whatever is asked for ***',
+    amplifyOptionsFrom({ amplifyGain: 5000 }).gain === AMPLIFY_DEFAULTS.maxGain);
+  check('broken values are the defaults', amplifyOptionsFrom({ amplifyGain: 'loud', amplifySource: 'moon' }).gain === 200
+    && amplifyOptionsFrom({ amplifySource: 'moon' }).source === 'room');
+  check('the guard is on by default', AMPLIFY_DEFAULTS.guard === true);
+
+  section('*** constructed, it opens nothing ***');
+  {
+    const cf = fakeContextFactory(); const mic = fakeMic(); const tk = fakeTicks();
+    const audio = createAudioBus();
+    const amp = createAmplifier({ audio, micOwner: mic, makeContext: cf.make, now: tk.now,
+      setTick: tk.setTick, clearTick: tk.clearTick });
+    check('*** no microphone is opened until somebody turns it on ***', mic.calls.length === 0 && cf.made.length === 0);
+    check('it is on the audio bus, on its own mixer channel', audio.channelOf(AMPLIFY_ID) === AMPLIFY_CHANNEL);
+    check('...and not playing', audio.isActive(AMPLIFY_ID) === false && amp.status().state === 'off');
+
+    section('*** on: microphone -> gain -> limiter -> meter -> speaker ***');
+    await amp.setOn(true);
+    const ctx = cf.last();
+    check('it runs', amp.status().state === 'running', JSON.stringify(amp.status()));
+    check('the path is source -> gain -> limiter -> meter -> the speaker',
+      JSON.stringify(ctx.links) === JSON.stringify([['source', 'gain'], ['gain', 'limiter'], ['limiter', 'meter'], ['meter', 'destination']]),
+      JSON.stringify(ctx.links));
+    check('it asked for the raw microphone (the same stream a recogniser wants)',
+      mic.calls.length === 1 && JSON.stringify(mic.calls[0].want) === JSON.stringify(PROFILES.raw));
+    check('it is active on the audio bus', audio.isActive(AMPLIFY_ID) === true);
+    check('*** the gain is the setting (200% = 2x) ***', near(amp.status().gain, 2), String(amp.status().gain));
+
+    section('*** the mixer’s master and fader apply ***');
+    audio.setMaster(0.5);
+    check('*** the master halves it ***', near(amp.status().gain, 1), String(amp.status().gain));
+    audio.setMaster(0);
+    check('...and the master’s floor holds (10%)', near(amp.status().gain, 0.2), String(amp.status().gain));
+    audio.setMaster(1);
+    audio.setFader(AMPLIFY_CHANNEL, 0.5);
+    check('its own fader turns it down', near(amp.status().gain, 1), String(amp.status().gain));
+    audio.setFader(AMPLIFY_CHANNEL, 1);
+
+    section('amplifying the room does not quiet the video');
+    const lv = []; audio.register('video', { tier: 'media', onGain: (l) => lv.push(l) });
+    audio.setActive('video', true);
+    check('*** a video playing under amplify is not ducked ***', audio.levelOf('video') === 1, String(audio.levelOf('video')));
+    audio.register('call:1', { tier: 'call' }); audio.setActive('call:1', true);
+    check('a call ducks amplify (a conversation on the call outranks it)', near(amp.status().gain, 1), String(amp.status().gain));
+    audio.setActive('call:1', false);
+    check('...and gives it back', near(amp.status().gain, 2));
+
+    section('*** the guard: loud and steady is a howl ***');
+    cf.meterLevel.v = 0.5; cf.meterLevel.jitter = 0;
+    tk.advance(300);
+    check('not yet — it must hold', amp.status().state === 'running');
+    const notes = [];
+    tk.advance(600);
+    check('*** a steady loud output turns it OFF ***', amp.status().state === 'tripped', amp.status().state);
+    check('...the path is torn down, the context closed', ctx.closed === true);
+    check('...the microphone is let go', !mic.held.has(AMPLIFY_ID));
+    check('...and the bus knows it is quiet', audio.isActive(AMPLIFY_ID) === false);
+    tk.advance(5000);
+    check('*** nobody answers: it stays off — silence is the safe direction ***', amp.status().state === 'tripped' && cf.made.length === 1);
+    cf.meterLevel.v = 0.01;
+    await amp.setOn(true);
+    check('a person turning it on again is the reset', amp.status().state === 'running' && cf.made.length === 2);
+    amp.destroy();
+    check('destroy unregisters it from the bus', audio.channelOf(AMPLIFY_ID) === null && !mic.held.has(AMPLIFY_ID));
+  }
+
+  section('*** the guard itself (pure) ***');
+  {
+    const g = createFeedbackGuard({ threshold: 0.3, holdMs: 600, steadiness: 0.25 });
+    let t = 0, tripped = false;
+    for (let i = 0; i < 20 && !tripped; i++) { t += 50; tripped = g.sample(0.5, t); }
+    check('*** steady and loud trips it ***', tripped === true);
+    g.reset(); t = 0; tripped = false;
+    // Speech: loud in bursts, swinging far more than a quarter between frames.
+    const speech = [0.35, 0.8, 0.4, 0.9, 0.33, 0.7, 0.36, 0.85, 0.5, 0.95, 0.34, 0.75, 0.4, 0.9, 0.35, 0.8, 0.45, 0.9, 0.38, 0.7];
+    for (const v of speech) { t += 50; tripped = tripped || g.sample(v, t); }
+    check('*** loud speech that swings does not ***', tripped === false);
+    g.reset(); t = 0; tripped = false;
+    for (let i = 0; i < 40; i++) { t += 50; tripped = tripped || g.sample(i % 10 === 9 ? 0.05 : 0.5, t); }
+    check('a break for breath starts the watch over', tripped === false);
+    g.reset(); t = 0; tripped = false;
+    for (let i = 0; i < 40; i++) { t += 50; tripped = tripped || g.sample(0.1, t); }
+    check('quiet never trips it', tripped === false);
+    check('garbage never trips it', g.sample(NaN, 1) === false && g.sample('x', 2) === false);
+    check('rms of a full-scale sine is 1/sqrt(2)', Math.abs(rms(Float32Array.from({ length: 1000 }, (_, i) => Math.sin(i / 7))) - Math.SQRT1_2) < 0.02);
+  }
+
+  section('the guard is a setting');
+  {
+    const cf = fakeContextFactory(); const tk = fakeTicks();
+    const amp = createAmplifier({ micOwner: fakeMic(), makeContext: cf.make, now: tk.now,
+      setTick: tk.setTick, clearTick: tk.clearTick, settings: { amplifyGuard: false } });
+    await amp.setOn(true);
+    cf.meterLevel.v = 0.5;
+    tk.advance(3000);
+    check('turned off, it does not trip (somebody chose that)', amp.status().state === 'running');
+    amp.destroy();
+  }
+
+  section('it says why it stopped');
+  {
+    const cf = fakeContextFactory(); const tk = fakeTicks(); const said = [];
+    const output = { notify: (text, o) => said.push({ text, o }) };
+    const amp = createAmplifier({ micOwner: fakeMic(), makeContext: cf.make, output, now: tk.now,
+      setTick: tk.setTick, clearTick: tk.clearTick });
+    await amp.setOn(true);
+    cf.meterLevel.v = 0.6; tk.advance(1000);
+    check('*** a trip is told to the room, through the person’s own routing ***',
+      said.length === 1 && /howl/.test(said[0].text) && said[0].o.source === 'amplify', JSON.stringify(said));
+    amp.destroy();
+  }
+
+  section('*** a phone as the microphone ***');
+  {
+    const cf = fakeContextFactory(); const tk = fakeTicks(); const mic = fakeMic();
+    let phone = null; const kept = [];
+    const amp = createAmplifier({ micOwner: mic, phoneStream: () => phone, makeContext: cf.make,
+      makeKeepAlive: (s) => { kept.push(s); return { pause() {}, srcObject: s }; },
+      now: tk.now, setTick: tk.setTick, clearTick: tk.clearTick, settings: { amplifySource: 'phone' } });
+    await amp.setOn(true);
+    check('no phone joined: nothing to play, and the room microphone is NOT opened instead',
+      amp.status().state === 'no-source' && mic.calls.length === 0);
+    phone = { id: 'phone-stream', getTracks: () => [] };
+    await amp.sourceChanged();
+    check('*** the phone joins: it plays the phone ***', amp.status().state === 'running'
+      && cf.last().links[0][0] === 'source' && mic.calls.length === 0);
+    check('the remote stream is kept flowing (Chrome plays a WebRTC stream into Web Audio only when an element holds it)',
+      kept.length === 1 && kept[0] === phone);
+    phone = null;
+    await amp.sourceChanged();
+    check('the phone leaves: it stops', amp.status().state === 'no-source');
+    amp.destroy();
+  }
+
+  section('the speaker of your choice, and the warning');
+  {
+    const cf = fakeContextFactory(); const tk = fakeTicks();
+    const amp = createAmplifier({ micOwner: fakeMic(), makeContext: cf.make, now: tk.now, setTick: tk.setTick, clearTick: tk.clearTick });
+    await amp.setOn(true);
+    check('a chosen speaker is applied', (await amp.setSink('spk-2')) === true && cf.last().sink === 'spk-2');
+    await amp.setOn(false);
+    check('turned off, it lets everything go', cf.last().closed === true && amp.status().state === 'off');
+    await amp.setOn(true);
+    check('...and the chosen speaker is used next time', cf.last().sink === 'spk-2');
+    amp.destroy();
+    check('*** microphone and speaker in one box (a speakerphone): it warns ***',
+      /howl/.test(sameDeviceWarning({ groupId: 'g1' }, { groupId: 'g1' }) || ''));
+    check('different devices: no warning', sameDeviceWarning({ groupId: 'g1' }, { groupId: 'g2' }) === null
+      && sameDeviceWarning({}, {}) === null);
+  }
+
+  section('turned off while opening');
+  {
+    const cf = fakeContextFactory(); const tk = fakeTicks();
+    let resolve; const slow = { acquire: () => new Promise((r) => { resolve = r; }), release() { this.released = true; } };
+    const amp = createAmplifier({ micOwner: slow, makeContext: cf.make, now: tk.now, setTick: tk.setTick, clearTick: tk.clearTick });
+    const p = amp.setOn(true);
+    await amp.setOn(false);
+    resolve({ getTracks: () => [] });
+    await p;
+    check('*** a microphone that arrives after it was turned off is let go, not played ***',
+      amp.status().state === 'off' && cf.made.length === 0 && slow.released === true);
+    amp.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
