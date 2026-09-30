@@ -184,6 +184,7 @@ export const newSession = (rand) => newPhoneSession(rand).replace(/^pm-/, 'ic-')
 export const END_REASONS = Object.freeze({
   'not-approved': 'This room has not added you to its intercom. Whoever looks after the screen can add you.',
   busy: 'The intercom is already open with somebody else.',
+  'in-a-call': 'The room is on a call right now. Try the intercom again once the call is over.',
   'room-ended': 'The room ended the intercom.',
   'time-limit': 'The intercom ended itself after its time limit.',
   call: 'The room answered a call, so the intercom ended. Open it again once the call is over.',
@@ -488,7 +489,9 @@ export function createIntercomReceiver({
       else s.sdp = sig.sdp;
       return;
     }
-    if (s || busy()) { send(session, 'bye', { reason: 'busy' }); return; }
+    // Two different "no"s, so the phone says the true one: another intercom is open, or the room is on a call.
+    if (s) { send(session, 'bye', { reason: 'busy' }); return; }
+    if (busy()) { send(session, 'bye', { reason: 'in-a-call' }); return; }
     const sess = { session, by: sig.by, name: entry.name, phase: 'warning', since: now(), sdp: sig.sdp,
                    pc: null, mic: null, micHeld: false, el: null, warn: null, stall: null, limit: null };
     s = sess;
