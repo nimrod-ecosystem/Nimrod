@@ -37,6 +37,7 @@ import { CALL_INCOMING, CALL_ENDED, CALL_ANSWER, CALL_HANGUP, CALL_DECLINE, ANSW
 import { createMachine } from '../statemachine.js';
 import { withCallRule } from '../rules.js';
 import '../modules/call.js';
+import { CALL_TRANSPORT_READY } from '../call_transport.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -678,6 +679,81 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         r.events.rows.length === 1 && r.events.rows[0].data.latencyMs === 800,
         JSON.stringify(r.events.rows));
       r.inst.destroy();
+    }
+
+    // =====================================================================================
+    // *** 2026-09-30: THE TRANSPORT IS THE SCREEN'S, AND IT ARRIVES LATE. ***
+    // The kiosk builds ONE transport, lazily, from a socket that opens after the person lookup --
+    // usually after this panel has mounted. This panel read `ctx.callTransport` once, at mount, so
+    // it held null for good and could never ring; and on destroy it DESTROYED the screen's shared
+    // transport, so a call screen swapped away and back found a dead one.
+    const lateTransport = (log) => {
+      let inc = null, endCb = null;
+      return {
+        onIncoming(cb) { inc = cb; log.push('onIncoming'); return () => { if (inc === cb) inc = null; }; },
+        onEnded(cb) { endCb = cb; return () => { if (endCb === cb) endCb = null; }; },
+        answer: async () => true,
+        hangup(r) { log.push(`hangup:${r}`); },
+        destroy() { log.push('destroy'); },
+        ring: (from) => inc?.(from),
+        listening: () => !!inc,
+      };
+    };
+    const mountLive = (getT, bus = createBus()) => {
+      const host = document.createElement('div');
+      document.getElementById('host').append(host);
+      const clock = fakeClock();
+      const inst = mountModule('call', {
+        mount: host, bus, instanceId: 'c-late', callIO: clock.io, events: fakeEvents(),
+        output: { alert() {}, say() {}, notify() {}, status() {}, destroy() {} },
+        get callTransport() { return getT(); },
+        state: { get: () => ({ demo: false }), set: () => Promise.resolve(), subscribe: () => () => {},
+                 load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+      });
+      inst.init();
+      return { host, bus, inst, impl: inst.impl || inst };
+    };
+    section('*** a transport that arrives AFTER the panel mounted still rings it ***');
+    {
+      const log = [];
+      let t = null;
+      const r = mountLive(() => t);
+      check('(setup) mounted with no transport yet, idle', r.impl.__probe().phase === 'idle');
+      t = lateTransport(log);
+      r.bus.publish(CALL_TRANSPORT_READY);
+      check('*** once the screen says its transport is ready, the panel listens on it ***', t.listening(),
+        JSON.stringify(log));
+      t.ring({ name: 'Mike' });
+      check('*** ...and a ring on that transport reaches the panel ***', r.impl.__probe().phase === 'ringing',
+        r.impl.__probe().phase);
+      r.bus.publish(CALL_TRANSPORT_READY);
+      check('a second "ready" does not bind twice', log.filter((x) => x === 'onIncoming').length === 1);
+      r.impl.__end('hangup');
+      r.inst.destroy();
+      check('*** destroying the panel does NOT destroy the screen’s transport ***', !log.includes('destroy'),
+        JSON.stringify(log));
+      check('...it stops listening on it instead', !t.listening());
+    }
+    {
+      const log = [];
+      const t = lateTransport(log);
+      const r = mountLive(() => t);
+      check('(setup) a transport there at mount is bound at once', t.listening());
+      t.ring({ name: 'Mike' });
+      r.inst.destroy();
+      check('*** a panel torn down mid-call hangs the call up, rather than leaving it open with no screen ***',
+        log.includes('hangup:destroyed') && !log.includes('destroy'), JSON.stringify(log));
+    }
+    {
+      // Two panels on one transport (a swap that mounts the new screen before destroying the old,
+      // which is step 6 Stage 4's order): the old one leaving must not deafen the new one.
+      const log = [];
+      const t = lateTransport(log);
+      const a = mountLive(() => t);
+      const b = mountLive(() => t);
+      a.inst.destroy();
+      check('*** the panel that left does not unhook the one that replaced it ***', t.listening());
+      b.inst.destroy();
     }
 
     document.getElementById('summary').textContent =

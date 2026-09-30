@@ -65,6 +65,7 @@
 import { registerModule } from '../module.js';
 import { MUSIC_GROUP } from '../audio_bus.js';
 import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
+import { CALL_TRANSPORT_READY } from '../call_transport.js';
 
 // What a CALL wants from the microphone, as opposed to what a recognizer wants. Named here so
 // the intent is readable at the acquire site rather than being three booleans.
@@ -168,7 +169,15 @@ registerModule(
     const now = ctx.now || (() => Date.now());
     // The transport is injected. Absent, everything else still works and the stage says so —
     // which is what makes the rest of this testable before any of it exists.
-    const transport = ctx.callTransport || null;
+    //
+    // *** READ IT WHEN IT IS NEEDED, NOT ONCE AT MOUNT. *** (2026-09-30.) The screen builds ONE
+    // transport, lazily, from a socket that opens after the person lookup -- usually after this panel
+    // has mounted. Read once here, it was null for good and the panel could never ring. Now `transport`
+    // is whatever this panel has BOUND to (see `bindTransport`), and binding is retried when the
+    // screen publishes CALL_TRANSPORT_READY. And the transport is the SCREEN'S: this panel no longer
+    // destroys it on the way out (see `destroy`).
+    let transport = null;
+    const transportOffs = [];
     // *** THE CLOCK IS INJECTED, like every other timed thing in this repo. *** A countdown
     // driven by the real setInterval cannot be tested honestly: a hidden or backgrounded tab
     // throttles timers, so the test either sleeps for real and is slow, or races and is flaky.
@@ -466,6 +475,7 @@ registerModule(
       const [track] = await Promise.all([takeCamera(), takeMic()]);
       render();
       const v = el('.call-remote');
+      bindTransport();              // a ring can arrive by the bus before any "ready"; look once more
       try { await transport?.answer?.({ from: who, outgoing: track, remoteVideo: v }); }
       catch (err) { console.error('call: transport failed to answer', err); end('failed'); }
     }
@@ -518,6 +528,27 @@ registerModule(
       // state machine's `$back` is what returns the screen, and it only fires on this topic,
       // so a path that forgets to publish is a screen stuck on a dead call.
       if (was !== 'idle') bus.publish(CALL_ENDED, { reason });
+    }
+
+    // Listen on the screen's transport, once it exists. Idempotent: a second "ready" for the same
+    // transport changes nothing; a DIFFERENT transport (the screen rebuilt it) is re-bound.
+    function bindTransport() {
+      const next = ctx.callTransport || null;
+      if (!next || next === transport) return;
+      unbindTransport();
+      transport = next;
+      const a = transport.onIncoming?.((from) => incoming(from));
+      // THE TRANSPORT'S OWN REASON, NOT A HARDCODED ONE. It was `() => end('remote')`,
+      // discarding whatever `call_transport.js`'s `finish(reason)` actually reported — so a
+      // stalled/dropped connection was indistinguishable from an ordinary hangup. `'remote'`
+      // (a real `bye`) and `'destroyed'` (this end tearing itself down) stay silent, same as
+      // before; `'stalled'`/`'failed'` now say so.
+      const b = transport.onEnded?.((reason) =>
+        end(reason === 'stalled' || reason === 'failed' ? 'connection-lost' : 'remote'));
+      for (const off of [a, b]) if (typeof off === 'function') transportOffs.push(off);
+    }
+    function unbindTransport() {
+      transportOffs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
     }
 
     return {
@@ -645,14 +676,8 @@ registerModule(
         offs.push(bus.subscribe(CALL_ANSWER, () => answer()));
         offs.push(bus.subscribe(CALL_HANGUP, () => end('hangup')));
         offs.push(bus.subscribe(CALL_DECLINE, () => decline()));
-        transport?.onIncoming?.((from) => incoming(from));
-        // THE TRANSPORT'S OWN REASON, NOT A HARDCODED ONE. It was `() => end('remote')`,
-        // discarding whatever `call_transport.js`'s `finish(reason)` actually reported — so a
-        // stalled/dropped connection was indistinguishable from an ordinary hangup. `'remote'`
-        // (a real `bye`) and `'destroyed'` (this end tearing itself down) stay silent, same as
-        // before; `'stalled'`/`'failed'` now say so.
-        transport?.onEnded?.((reason) =>
-          end(reason === 'stalled' || reason === 'failed' ? 'connection-lost' : 'remote'));
+        bindTransport();
+        offs.push(bus.subscribe(CALL_TRANSPORT_READY, () => bindTransport()));
       },
 
       onResize() {},
@@ -661,13 +686,20 @@ registerModule(
       onHide() {},
 
       destroy() {
+        // A call still going when the panel goes is HUNG UP -- not left open with nothing on screen
+        // to end it. (This used to happen by destroying the transport, which also killed it for
+        // every later call panel on this screen: the transport is the screen's, built once, and
+        // destroyed by the screen. 2026-09-30.)
+        const live = phase !== 'idle';
         clearRing();
         stopDemo();
         dropCamera();
         dropMic();
         takeSpeaker(false);
         try { audio?.unregister?.(AUDIO_ID); } catch { /* already gone */ }
-        try { transport?.destroy?.(); } catch { /* already gone */ }
+        if (live) { try { transport?.hangup?.('destroyed'); } catch { /* already down */ } }
+        unbindTransport();
+        transport = null;
         offs.forEach((off) => { try { off(); } catch { /* already gone */ } });
         offs.length = 0;
         root?.remove(); root = null;

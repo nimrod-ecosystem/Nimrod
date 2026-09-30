@@ -109,7 +109,7 @@ function mountCounted(viewId, arrangement, stores, extra = {}) {
   const host = document.createElement('div');
   document.getElementById('host').append(host);
   const bus = createBus();
-  const inst = mountModule('view', {
+  const inst = mountModule('view', Object.defineProperties({
     mount: host, bus, rootBus: bus, viewId, arrangement, user: 'u',
     makeState: stores.makeState, makeEvents: stores.makeEvents,
     // Every real host supplies the key (kiosk.js's childCtx); `core: 'new'` modules such as
@@ -118,8 +118,7 @@ function mountCounted(viewId, arrangement, stores, extra = {}) {
     storage: { getItem: () => null, setItem() {}, removeItem() {} },
     state: { get: () => ({}), set: () => Promise.resolve(), subscribe: () => () => {},
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
-    ...extra,
-  });
+  }, Object.getOwnPropertyDescriptors(extra)));   // descriptors, so a getter in `extra` stays one
   return { host, inst, impl: inst.impl || inst, bus };
 }
 
@@ -349,6 +348,24 @@ const PLAIN = {
       const e = r.host.querySelector('[data-empty]');
       check('*** a view where nothing could start says so, in the middle, rather than a blank grid ***',
         !!e && /could start/.test(e.textContent), e?.textContent);
+      r.inst.destroy();
+    }
+
+    section('*** a child sees a value the HOST learns after it mounted (live getters, 2026-09-30) ***');
+    {
+      let childCtx = null;
+      registerModule({ type: 'probe_view_ctx', title: 'Probe', settings: [] },
+        (ctx) => { childCtx = ctx; return { init() {}, destroy() {} }; });
+      let pid = null;
+      const s = makeCounted();
+      const r = mountCounted('pv', { id: 'pv', modules: [{ id: 'pv-1', type: 'probe_view_ctx' }] }, s,
+        { get personId() { return pid; } });
+      r.inst.init();
+      await sleep(200);
+      check('(setup) the child mounted while the person was unknown', childCtx && childCtx.personId === null);
+      pid = 'person-late';
+      check('*** ...and sees the person once the host knows (through the view, not a copy) ***',
+        childCtx?.personId === 'person-late', String(childCtx?.personId));
       r.inst.destroy();
     }
 

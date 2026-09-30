@@ -198,6 +198,30 @@ function observeBox(el, notify) {
   };
 }
 
+/**
+ * *** A ctx WITH SOME KEYS ADDED OR REPLACED -- AND EVERY GETTER STILL A GETTER. ***
+ *
+ * The host's ctx carries GETTERS for things that arrive after a module mounts (kiosk.js's
+ * `childCtx`: `personId`, `output`, `callTransport`, `aim`). An object spread (`{ ...ctx, bus }`)
+ * READS each getter once and stores the value, so a module mounted before the value arrived kept
+ * null for good -- the call panel's transport among them (found 2026-09-30, module_test and
+ * kiosk_test "live getters"). This copies property DESCRIPTORS instead, so a getter stays a getter
+ * through any number of hosts. Chosen over a prototype chain (`Object.create(ctx)`) because a
+ * container that spreads its ctx for a child (view.js, director.js) would silently drop every
+ * inherited key; an own accessor survives that spread as a value, exactly as before, and survives
+ * THIS function as an accessor. A module that destructures ctx at mount gets plain values, unchanged.
+ * `extra` is copied the same way, and wins.
+ */
+export function extendCtx(ctx = {}, extra = {}) {
+  const out = {};
+  for (const src of [ctx, extra]) {
+    const d = Object.getOwnPropertyDescriptors(src || {});
+    for (const k of Object.keys(d)) d[k].configurable = true;   // so `extra` may replace any of them
+    Object.defineProperties(out, d);
+  }
+  return out;
+}
+
 // Mount one instance. `state` and `events` are the instance's own handles; the
 // runtime disposes them (and the bus scope) on destroy, so nothing leaks.
 export function mountModule(type, ctx) {
@@ -224,7 +248,9 @@ export function mountModule(type, ctx) {
   // every subscription this module makes a second, instance-scoped alias for free, with no
   // change to this module's own topic strings. See bus.js `scope`/`instanceTopic`.
   const scoped = ctx.bus.scope(ctx.instanceId || null);
-  const instance = entry.factory({ ...ctx, bus: scoped });
+  // NOT `{ ...ctx, bus: scoped }`: that turned every getter the host supplied into the value it
+  // had at this instant. See `extendCtx`.
+  const instance = entry.factory(extendCtx(ctx, { bus: scoped }));
 
   // The fitting contract, applied by the host rather than asked of the module. `mod-host` is
   // what makes the mount a positioned, scrolling box (see modules.css) — so a full-bleed

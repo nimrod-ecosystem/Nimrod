@@ -2192,11 +2192,83 @@ const ds = () => root.querySelector('.kiosk').dataset;
 
   // *** THE TEMPORAL-DEAD-ZONE CLASS: A BOOT MUST LOG NO ReferenceError. *** (Stage 0, 2026-09-29.)
   // Three times a `let` that a boot-time path reads was declared below that path: `runtime` and
-  // `callTransport` (read by `childCtx`'s getters, which the `...childCtx(mod)` spread in
-  // `mountInstance` INVOKES on every mount) and `burnInT` (read by `settings.subscribe`'s immediate
+  // `callTransport` (read by `childCtx`'s getters -- until 2026-09-30 the `...childCtx(mod)` spread in
+  // `mountInstance` invoked them on every mount; since the live-getters fix only a module that READS
+  // one at mount does, which is why the probe above is on this screen) and `burnInT` (read by `settings.subscribe`'s immediate
   // replay). None of the three takes the kiosk down any more, which is exactly why this is needed:
   // `mountOverlay` catches the first two (the camera, clock and ambient layer silently do not mount)
   // and state.js's `subscribe` catches the third (the ONLY trace is a console error on every boot --
+  // *** 2026-09-30: childCtx's GETTERS STAY LIVE THROUGH THE KIOSK'S OWN MOUNTING. ***
+  // `personId`, `aim` and `callTransport` are getters on `childCtx` so that a module mounted before
+  // the value exists sees it when it arrives. Two object spreads (kiosk.js `mountInstance`, module.js
+  // `mountModule`) read each getter ONCE and stored the value, so a module mounted early kept null
+  // for good. This probe is an AMBIENT module, so it mounts with the HUD -- before the input runtime
+  // is built -- and the person lookup is held back until it has mounted, so all three are null at
+  // mount by construction and every check below is about what happens when they ARRIVE.
+  // It also READS all four at mount, the way call.js reads its transport: that read is what the
+  // TDZ section below needs a module to do (a `let` declared too late only throws when read).
+  let probeCtx = null;
+  let probeAtMount = null;
+  registerModule({ type: 'ctxprobetest', title: 'Ctx probe', description: 'test only', mount: 'ambient',
+                   settings: [] },
+    (ctx) => {
+      probeCtx = ctx;
+      probeAtMount = { aim: ctx.aim, callTransport: ctx.callTransport, personId: ctx.personId, output: ctx.output };
+      return { init() {}, destroy() {} };
+    });
+  {
+    let gk = null;
+    const gbox = document.createElement('div');
+    gbox.style.cssText = 'position:relative;width:400px;height:300px';
+    document.body.append(gbox);
+    let release = () => {};
+    try {
+      const gUser = USER + '-livectx';
+      const gReal = createProfilesClient({ user: gUser });
+      const gp = await gReal.create('TEST-live-ctx');
+      await gReal.addModule(gp.id, 'photos');
+      await gReal.addModule(gp.id, 'ctxprobetest');
+      const gFull = await gReal.get(gp.id);
+      // Hold the BACKGROUND person lookup at its `people()` step -- the one the drive socket waits on --
+      // until the kiosk has booted. (The probe mounts with the HUD, before that lookup even starts, so
+      // the person is null at its mount by boot order.) Only `people` is held: holding every `get`
+      // would also hold any extra `get` a regression put into the boot itself, and hang the suite
+      // instead of failing the check that regression is for (the 09-15 revert did exactly that).
+      const gate = new Promise((r) => { release = r; });
+      const gProfiles = Object.create(gReal);
+      gProfiles.people = async () => { await gate; return gReal.people(); };
+      const gBus = createBus();
+      const readies = [];
+      gBus.subscribe('call/transport-ready', () => readies.push(gk ? gk.drive() : 'before-handle'));
+      gk = await mountKiosk(gbox, { user: gUser, profileId: gp.id, profiles: gProfiles, bus: gBus,
+        storage: { getItem: () => null, setItem() {}, removeItem() {} },
+        session: { getItem: () => null, setItem() {}, removeItem() {} },
+        navigate: () => {}, reloadPage: () => {} });
+      check('(setup) the probe mounted as the ambient layer, with the person, the aim and the transport all still null',
+        gk.hasAmbient() && probeAtMount && probeAtMount.personId === null && probeAtMount.aim === null
+        && probeAtMount.callTransport === null && !!gFull.person_id, JSON.stringify(probeAtMount && {
+          personId: probeAtMount.personId, aim: !!probeAtMount.aim, callTransport: !!probeAtMount.callTransport }));
+      release();
+      check('(setup) the person lookup finished and the drive socket attached',
+        await settled(() => gk.drive() !== null, 6000));
+      check('*** a module mounted before the person was known now sees whose screen it is ***',
+        probeCtx?.personId === gFull.person_id, `${probeCtx?.personId} vs ${gFull.person_id}`);
+      check('*** ...and the aim, once the input runtime exists ***', !!probeCtx?.aim && typeof probeCtx.aim.latest === 'function');
+      const t = probeCtx?.callTransport;
+      check('*** ...and THE CALL TRANSPORT: a call panel mounted early can ring ***',
+        !!t && typeof t.onIncoming === 'function', String(t));
+      check('the same one every time (one transport per screen, not one per read)', probeCtx?.callTransport === t);
+      check('*** the screen says its transport is ready, once, after the socket is attached ***',
+        readies.length === 1 && readies[0] !== null, JSON.stringify(readies.map((x) => (x ? 'drive' : x))));
+    } catch (e) {
+      check('the live-getters section threw', false, String((e && e.stack) || e));
+    } finally {
+      release();
+      try { gk?.destroy(); } catch { /* already gone */ }
+      gbox.remove();
+    }
+  }
+
   // watched: with `let burnInT` moved back down, every other check in this suite stayed green). So
   // the console is what is asserted: a boot with a camera, a clock and an ambient module on it.
   try {
@@ -2213,6 +2285,11 @@ const ds = () => root.querySelector('.kiosk').dataset;
     const origErr = console.error;
     console.error = (...a) => { logged.push(a); return origErr.apply(console, a); };
     let tk2 = null;
+    // 2026-09-30: and the probe above, which takes the ambient layer and READS the getters at mount.
+    // Since the getters stay live through the spreads, nothing reads them at mount unless a module
+    // does -- so a module has to, or a `let runtime` / `let callTransport` declared too late would
+    // pass this section while still crashing any module that reads its transport at mount (call.js).
+    await tProfiles.addModule(tp.id, 'ctxprobetest');
     try {
       tk2 = await mountKiosk(troot2, { user: USER, profileId: tp.id, profiles: tProfiles, bus: createBus(), reloadPage: () => {} });
       await sleep(200);
