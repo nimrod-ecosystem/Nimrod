@@ -52,13 +52,13 @@
 // stream. Feeding the phone to recognition needs a local recogniser that reads a stream (Vosk in
 // an AudioWorklet, or a server on the Pi) - the same engine speaker identification needs.
 //
-// Extending this to an INTERCOM (row 2.44, not built): the same session with the screen adding
-// its own microphone track (two-way), or the phone adding a receive direction (screen -> phone).
-// The protocol already carries `purpose`, so an intercom is a second purpose with its own rules,
-// and the pill on the screen becomes "Intercom open" - it should stay limited to approved people
-// and shown at both ends, exactly as here.
+// THE INTERCOM (row 2.44) is built beside this, in `intercom.js`: a second purpose ('intercom') on
+// the same wire, two-way, admitted only for people on the room's approved list, with its own notice.
+// A phone joined as a microphone never becomes an intercom, and an intercom offer never reaches
+// this receiver (`isPhoneMicSignal`).
 
 import { iceServers, gatheringDone, STALL_MS } from './call_transport.js';
+import { noticeStack } from './live_notices.js';
 
 export const PHONE_MIC_PURPOSE = 'phone-mic';
 // Published on the screen's bus whenever the set of phones changes: { phones: [...] }.
@@ -396,7 +396,9 @@ export function mountMicLiveIndicator(host, {
   const word = doc.createElement('span');
   word.className = 'ml-word';
   el.append(dot, word);
-  host.append(el);
+  // In the screen's notice column (live_notices.js), so it never sits on top of the recording or the
+  // intercom notice - or they on it.
+  noticeStack(host, doc).append(el);
 
   function show(phones) {
     const text = micLiveText(phones || []);

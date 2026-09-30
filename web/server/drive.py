@@ -218,3 +218,19 @@ def parse_message(raw: dict) -> dict | None:
     if kind == "ping":
         return {"type": "pong"}
     return None
+
+
+def stamp_signal(msg: dict, user: str) -> dict:
+    """Stamp WHO sent a signal, as the server knows it (the account the ticket was issued to).
+
+    Row 2.44, the intercom. Until now `from` on a signal was whatever the sending page said about
+    itself, which is fine for a label and useless for a permission. The intercom admits only the
+    people on a room's approved list, so the room needs a sender it can TRUST: `by`, written here,
+    OVERWRITING anything the client put in that field. A client cannot forge it, because the relay
+    always replaces it. PURE; a non-signal passes through untouched.
+    """
+    if not isinstance(msg, dict) or msg.get("type") != "signal" or not isinstance(msg.get("signal"), dict):
+        return msg
+    sig = dict(msg["signal"])
+    sig["by"] = user
+    return {"type": "signal", "signal": sig}

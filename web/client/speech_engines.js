@@ -692,6 +692,9 @@ export function rankedRecognizer({
   const captionFns = new Set();
   const statusFns = new Set();
   const revisionFns = new Set();
+  // Row 2.44: the utterances as they are cut ({ type, ear, uid, group, t, pcm? }), for voice_recording.js.
+  // Nothing listens unless a person turned recording on; this opens nothing and sends nothing anywhere.
+  const utteranceFns = new Set();
   const emit = (set, x) => { for (const fn of [...set]) { try { fn(x); } catch (err) { console.error('speech recogniser', err); } } };
 
   let onText = null;
@@ -775,7 +778,13 @@ export function rankedRecognizer({
         e.open = null;
         ranker.cancel(ear, uid);
       }
+      if (utteranceFns.size) tapUtterance(ear, uid, ev);
     }
+  }
+  function tapUtterance(ear, uid, ev) {
+    const u = { type: ev.type, ear, uid, group: ranker?.groupOf(ear, uid) || null, t: ev.t ?? now(),
+                ...(ev.type === 'audio' ? { pcm: ev.pcm } : {}) };
+    emit(utteranceFns, u);
   }
   // ---- the connections ------------------------------------------------------------------
   function connectEar(ear) {
@@ -841,6 +850,7 @@ export function rankedRecognizer({
       const uid = `${ear}:${ev.id}`;
       if (e.open?.uid === uid) for (const en of e.open.asked) (ev.type === 'end' ? en.end(uid) : en.cancel(uid));
       if (ev.type === 'end') ranker?.end(ear, uid, ev.t); else ranker?.cancel(ear, uid);
+      if (utteranceFns.size) tapUtterance(ear, uid, ev);
     }
     try { e.node?.port?.postMessage({ type: 'stop' }); } catch { /* gone */ }
     for (const n of [e.src, e.node, e.mute]) { try { n?.disconnect?.(); } catch { /* gone */ } }
@@ -934,6 +944,8 @@ export function rankedRecognizer({
     onStatus(fn) { statusFns.add(fn); return () => statusFns.delete(fn); },
     onCaption(fn) { captionFns.add(fn); return () => captionFns.delete(fn); },
     onRevision(fn) { revisionFns.add(fn); return () => revisionFns.delete(fn); },
+    /** Row 2.44: each utterance as it is cut - begin, its 16 kHz audio frames, end or cancel. */
+    onUtterance(fn) { utteranceFns.add(fn); return () => utteranceFns.delete(fn); },
     sourcesChanged() { syncPhones(); },
     feed(ear, frame, t) { onFrame(ear, frame, t); },
     /** Per ear: frames heard, the room's noise floor (dB), whether somebody is talking. Never audio. */

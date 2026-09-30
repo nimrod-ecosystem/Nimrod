@@ -143,7 +143,8 @@ export async function mountPhoneMic(root, {
         <select data-show>${SHOW_CHOICES.map((c) => `<option value="${esc(c.value)}"${c.value === wantShow ? ' selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
       </label>
       <button type="button" class="pm-btn pm-primary pm-big" data-start>Turn the microphone on</button>
-      <details class="pm-help" data-help><summary>Keeping a phone on as a microphone</summary>${KEEP_ON_HELP}</details>`
+      <details class="pm-help" data-help><summary>Keeping a phone on as a microphone</summary>${KEEP_ON_HELP}</details>
+      <p class="pm-note" data-intercom-link>To talk to the room and hear it back, <a href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead.</p>`
       : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
   }
 

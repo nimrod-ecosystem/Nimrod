@@ -9,7 +9,7 @@ standing anything up.
 import sys
 
 from drive import (DRIVE_VERBS, MAX_SIGNAL_BYTES, ROLES, SIGNAL_KINDS, Rooms,
-                   Tickets, parse_message)
+                   Tickets, parse_message, stamp_signal)
 
 passed = failed = 0
 
@@ -193,6 +193,20 @@ class _Unserialisable:
 check("something unserialisable is dropped rather than thrown",
       parse_message({"type": "signal",
                      "signal": {"kind": "offer", "sdp": _Unserialisable()}}) is None)
+
+section("who sent a signal is stamped by the server (row 2.44, the intercom)")
+forged = parse_message({"type": "signal", "signal": {"kind": "offer", "sdp": "v=0", "by": "someone-else"}})
+stamped = stamp_signal(forged, "alice@example.com")
+check("*** the relay stamps the sender's own account as `by` ***",
+      stamped["signal"]["by"] == "alice@example.com", str(stamped))
+check("*** a `by` the client wrote is OVERWRITTEN, so it cannot be forged ***",
+      stamped["signal"]["by"] != "someone-else")
+check("the rest of the signal is carried unchanged",
+      stamped["signal"]["kind"] == "offer" and stamped["signal"]["sdp"] == "v=0" and stamped["type"] == "signal")
+check("the original message is not mutated (the stamp is a copy)", forged["signal"]["by"] == "someone-else")
+check("a verb passes through untouched (nothing but signals is stamped)",
+      stamp_signal({"type": "verb", "verb": "select"}, "alice") == {"type": "verb", "verb": "select"})
+check("a pong passes through untouched", stamp_signal({"type": "pong"}, "alice") == {"type": "pong"})
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)
