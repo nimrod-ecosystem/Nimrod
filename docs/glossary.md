@@ -29,7 +29,8 @@ nothing uses it yet.
 | **store** | Persistent per-profile overwrite storage. **Renamed from `state` / `createState`** because the word was needed elsewhere and because the name suggested a state machine, which it is not. | A state machine. |
 | **machine state** | A node in the state machine. `statemachine.js`. | Stored settings. |
 | **view** | An arrangement of modules on one display. `view.js`. | A read-only UI panel — those are `*_view.js` and that is a second sense worth watching. |
-| **scene** | **Reserved, not built.** One verb setting many views across many devices — the Home-Assistant sense. Claimed in `view.js`. | The old `scene.js`, which is now `view.js`. The file was freed; the word was not. |
+| **scene** | **The backdrop a dashboard sits in** — a room, fall, winter, castle, a live theme (`livescene.js`). Settled 2026-09-30 (DECISIONS.md): the person using the site already says it this way. | The old `scene.js`, which is now `view.js` (a layout). Until 2026-09-30 the word was reserved for the Home-Assistant sense, now called **preset**.
+| **preset** | **Not built.** One command setting many things across many devices at once — what Home Assistant calls a scene. Renamed 2026-09-30 so "scene" can mean the backdrop. | Home Assistant's "scene". |
 | **the small bang** | The one thing that is not a module: whatever boots and mounts the first module, and hands out the bus. Kept as small as possible. | The bus, the kiosk, or the shell's features — all of those are modules. |
 | **aim** | Where on the screen somebody is pointing, normalized 0..1 of the viewport, from whatever is driving it — a mouse, a head pointer, a hand in front of a camera. `aim.js`, topic `input/aim`. **Claimed 2026-08-30.** | An action. It carries no binding, no timing and no role gate; what somebody DOES at that spot is a press and still goes through `input.js`. |
 | **marker** | A brightly colored object somebody wears or holds — a sock, a wristband, a glove — that the camera finds by hue. `input_marker.js`, device `marker:color`. **Claimed 2026-08-30.** | A landmark, a skeleton joint, or anything a model recognizes. The whole point of a marker is that nothing has to recognize it. |
@@ -71,7 +72,7 @@ sign a word is the right one. It is in §1; do not reuse it.
 | **condition** | **Medical.** `README.md` and `AGENTS.md` both use it for the people this project serves — "brain injury, stroke and similar conditions". It is a clinical term in the two files every reader and every agent opens first. |
 | **mode** | Overloaded five ways already: restart target, QR encoding mode, game variant (calm/challenge/practice), mirror mode, file/agent modes. |
 | **phase** | Overloaded three ways: sprint work/break, pressgame round, input press phase. |
-| **scene** | Reserved for the multi-device Home-Assistant sense in `view.js`. Taking it rebuilds the exact collision that file was written to dissolve. |
+| **scene** | ~~Reserved for the multi-device Home-Assistant sense in `view.js`.~~ Given to the backdrop 2026-09-30 (DECISIONS.md); the Home-Assistant sense is **preset**. Still never a synonym for a layout (`view`). |
 | **state** | See §1. Being narrowed to the state machine; storage is moving to **store**. |
 | **session** | See §1. Being split into **session (roster)** and **login session**. |
 
