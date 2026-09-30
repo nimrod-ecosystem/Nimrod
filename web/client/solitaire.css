@@ -1,0 +1,118 @@
+/* solitaire.css — the look of `modules/solitaire.js` (Klondike). Loaded by the module itself, from a
+   <link> inside its own mount (a module never reaches outside ctx.mount), the way scoreboard.css is.
+
+   *** THE FOUR SUIT COLOURS ARE TOKENS, DECLARED ONCE, HERE. *** Design's spec: "the suits use four
+   colours AND their symbols". Theme tokens cover text and surfaces but have nothing for "hearts", so
+   each suit gets its own custom property, which a theme can set (`--suit-hearts` ...) and otherwise
+   falls back to the value on the declaration line. That is the only place a literal colour appears
+   in this file, and `check_hardcoded_colors.py` counts declarations as the right place for one.
+   The fallbacks are the usual four-colour deck (black spades, red hearts, blue diamonds, green clubs),
+   each chosen to read at better than 4.5:1 on the card face; `dev/solitaire_test.html` measures it.
+   The colour is never the only signal: every card carries its suit symbol in the corner and large in
+   the middle, and its name for a screen reader.
+
+   SIZE: cards are sized from the panel (container units), wide as the panel allows and short enough
+   that a column still fits. At a quarter of a 1080p kiosk (960 x 540) that is about 125px wide; at a
+   whole 1280 x 720 panel, about 165px. Design asks for 110px+ on the kiosk, and the suite checks it at
+   960 x 540. A panel much smaller than that gets smaller cards rather than a scrolling table. */
+
+/* Registered, so each is worked out ONCE on `.sol` (against the panel) and inherited as a length.
+   Unregistered, a card inside the columns would resolve `cqw` against the columns' own container
+   and come out a different size from the same card in the top row. */
+@property --sol-cw{syntax:'<length>';inherits:true;initial-value:100px}
+@property --sol-ch{syntax:'<length>';inherits:true;initial-value:140px}
+@property --sol-gap{syntax:'<length>';inherits:true;initial-value:8px}
+@property --sol-bar{syntax:'<length>';inherits:true;initial-value:48px}
+
+.sol-wrap{
+  --sol-face: var(--card-face, #fffdf7);
+  --sol-edge: var(--card-edge, #8a8578);
+  --sol-spades: var(--suit-spades, #1c1c1c);
+  --sol-hearts: var(--suit-hearts, #b3261e);
+  --sol-diamonds: var(--suit-diamonds, #1f4fd1);
+  --sol-clubs: var(--suit-clubs, #17692f);
+  width:100%;height:100%;min-height:0;container-type:size;color:var(--text);
+}
+.sol-wrap *{box-sizing:border-box}
+.sol{
+  --sol-gap: clamp(4px, 1.1cqw, 16px);
+  --sol-bar: clamp(44px, 9cqh, 96px);
+  --sol-cw: clamp(36px, min(calc((100cqw - 8 * var(--sol-gap)) / 7), calc((100cqh - var(--sol-bar) - 3 * var(--sol-gap)) / 3.3)), 220px);
+  --sol-ch: calc(var(--sol-cw) * 1.4);
+  --sol-rad: calc(var(--sol-cw) * .08);
+  height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:var(--sol-gap);
+  padding:var(--sol-gap);background:var(--surface-alt);font-family:var(--font);
+}
+.sol [hidden]{display:none !important}
+
+/* ---- the top row: stock, waste, then the four foundations on the right ---- */
+.sol-top{display:grid;grid-template-columns:repeat(7,var(--sol-cw));gap:var(--sol-gap);justify-content:center}
+.sol-cols{display:grid;grid-template-columns:repeat(7,var(--sol-cw));gap:var(--sol-gap);justify-content:center;
+  min-height:0;container-type:size}
+.sol-slot,.sol-col{position:relative;width:var(--sol-cw);min-height:var(--sol-ch)}
+.sol-col{height:100%}
+.sol-waste{position:relative;width:var(--sol-cw);height:var(--sol-ch)}
+.sol-waste .sol-card{position:absolute;top:0;left:calc(var(--sol-k, 0) * var(--sol-cw) * .22)}
+.sol-stock,.sol-empty{width:var(--sol-cw);height:var(--sol-ch);border-radius:var(--sol-rad)}
+.sol-empty{border:max(2px, calc(var(--sol-cw) * .025)) dashed var(--border);display:grid;place-items:center;
+  color:var(--text-soft);font-size:calc(var(--sol-cw) * .42);font-weight:700;line-height:1;text-align:center}
+.sol-empty small{display:block;font-size:calc(var(--sol-cw) * .11);font-weight:600}
+.sol-stock{display:grid;place-items:center;padding:0;border:0;background:none;cursor:pointer;font:inherit;color:inherit}
+.sol-stock .sol-count{position:absolute;inset:auto 0 calc(var(--sol-ch) * -.02) 0;text-align:center;
+  font-size:calc(var(--sol-cw) * .16);font-weight:800;color:var(--on-dark)}
+
+/* ---- a card ---- */
+.sol-card{
+  position:absolute;left:0;top:calc(var(--sol-y, 0) * var(--sol-step, 0px));
+  width:var(--sol-cw);height:var(--sol-ch);border-radius:var(--sol-rad);padding:0;margin:0;
+  border:max(1px, calc(var(--sol-cw) * .012)) solid var(--sol-edge);background:var(--sol-face);
+  box-shadow:0 calc(var(--sol-cw) * .02) calc(var(--sol-cw) * .05) color-mix(in srgb, var(--text) 30%, transparent);
+  font:inherit;text-align:left;overflow:hidden;cursor:default;display:block;
+}
+.sol-slot > .sol-card,.sol-stock > .sol-card{position:relative;top:0}
+button.sol-card{cursor:pointer}
+.sol-card[data-suit="S"]{color:var(--sol-spades)}
+.sol-card[data-suit="H"]{color:var(--sol-hearts)}
+.sol-card[data-suit="D"]{color:var(--sol-diamonds)}
+.sol-card[data-suit="C"]{color:var(--sol-clubs)}
+.sol-idx{position:absolute;top:calc(var(--sol-cw) * .04);left:calc(var(--sol-cw) * .07);
+  font-size:calc(var(--sol-cw) * .3);font-weight:800;line-height:1;letter-spacing:-.02em;white-space:nowrap}
+.sol-pip{position:absolute;left:0;right:0;bottom:calc(var(--sol-ch) * .12);text-align:center;
+  font-size:calc(var(--sol-cw) * .56);line-height:1}
+.sol-card[data-up="0"]{
+  background-color:var(--accent);
+  background-image:repeating-linear-gradient(45deg, transparent 0 calc(var(--sol-cw) * .06),
+    color-mix(in srgb, var(--sol-face) 28%, transparent) calc(var(--sol-cw) * .06) calc(var(--sol-cw) * .09));
+  border-color:var(--sol-face);
+}
+
+/* ---- the columns: cards fan down, closer together when a column gets long ---- */
+.sol-col .sol-card{
+  --sol-step: min(calc(var(--sol-ch) * .28), calc((100cqh - var(--sol-ch)) / max(var(--sol-span, 1), 1)));
+}
+
+/* ---- picking and placing ---- */
+.sol-card[data-picked="1"]{outline:max(3px, calc(var(--sol-cw) * .04)) solid var(--accent-warm);outline-offset:1px;
+  transform:translateY(calc(var(--sol-cw) * -.06));z-index:2}
+[data-target]{outline:max(3px, calc(var(--sol-cw) * .035)) dashed var(--accent);outline-offset:2px;border-radius:var(--sol-rad)}
+/* THE SWITCH CURSOR: a thick outline AND a marker, so the lit thing reads without colour. */
+.sol [data-on="1"]{outline:max(4px, calc(var(--sol-cw) * .05)) solid var(--link);outline-offset:2px;z-index:3}
+.sol-card[data-on="1"]::after,.sol-stock[data-on="1"]::after{content:"\25B8";position:absolute;right:calc(var(--sol-cw) * .06);
+  top:calc(var(--sol-cw) * .02);font-size:calc(var(--sol-cw) * .26);color:var(--link);line-height:1}
+
+/* ---- the bar: what is happening, and the buttons ---- */
+.sol-bar{display:flex;flex-wrap:wrap;align-items:center;gap:calc(var(--sol-gap) * .8);min-height:var(--sol-bar)}
+.sol-say{margin:0;font-size:clamp(14px, 2.6cqmin, 30px);font-weight:700;color:var(--text-strong);flex:1 1 14em}
+.sol-stats{margin:0;font-size:clamp(12px, 2cqmin, 22px);color:var(--text-muted)}
+.sol-btns{display:flex;flex-wrap:wrap;gap:calc(var(--sol-gap) * .6)}
+.sol-btn{min-height:max(44px, calc(var(--sol-bar) * .7));padding:0 clamp(10px, 1.6cqw, 22px);border:2px solid var(--border);
+  border-radius:12px;background:var(--surface);color:var(--text);font:inherit;font-weight:700;
+  font-size:clamp(14px, 2.4cqmin, 28px);cursor:pointer}
+.sol-btn[data-on="1"]::before{content:"\25B8\00a0"}
+.sol-won{font-size:clamp(16px, 3.4cqmin, 40px)}
+
+.sol[data-motion="full"] .sol-card{transition:transform .15s ease-out}
+@media (prefers-reduced-motion: no-preference){
+  .sol[data-motion="full"] .sol-won{animation:sol-glow 1.6s ease-in-out 2}
+}
+@keyframes sol-glow{50%{color:var(--accent)}}

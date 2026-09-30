@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>note — a note from someone, who wrote it, when, and every earlier one — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../note.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .live{display:inline-block;vertical-align:top;margin:12px 12px 0 0;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>note — row 2.37 (a note from someone)</h1>
+<p>Design's spec §12: <i>"a visitor leaves or changes it from their own screen or the kiosk. It shows
+the author and the time. Every change is kept in the note's history. Buttons: Read it aloud / Change
+the note. It fits a sticky note, a desk close-up, or the fridge."</i> This suite checks the rules
+(<code>noteRows</code>, <code>currentNote</code>, the ink on any paper), then the panel: a change by
+keyboard, a change by one switch with nothing typed, the history and putting an old note back, two
+panels on one note, and reading it aloud only when asked.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at: a panel, a sticky-note slot, the fridge</h2>
+<div class="live" id="big" style="width:520px;height:360px"></div>
+<div class="live" id="sticky" style="width:220px;height:220px"></div>
+<div class="live" id="fridge" style="width:160px;height:200px"></div>
+
+<script type="module">
+import '../modules/note.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor } from '../health.js';
+import {
+  NOTE_STREAM, NOTE_KIND, SOMEONE, MAX_TEXT, READY_NOTES, DEFAULTS, DEFAULT_PAPER, noteRows, currentNote,
+  knownAuthors, parseReady, whenWords, sizeFor, inkFor, contrastRatio, spoken, authorOf, cleanText,
+} from '../modules/note.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const T0 = new Date(2026, 8, 30, 11, 2).getTime();   // "today" for the time words
+
+// A shared store: every handle for the same stream sees the same rows, like two panels on one
+// profile. Rows are stamped by the "server" (created_at), oldest first, as events.js keeps them.
+function streams() {
+  const data = {};
+  const subs = {};
+  let id = 0;
+  let clock = T0;
+  let failNext = false;
+  const make = (key) => {
+    const list = () => (data[key] ||= []);
+    const set = () => (subs[key] ||= new Set());
+    const snap = () => ({ events: [...list()], total: list().length });
+    return {
+      key,
+      append(kind, d) {
+        if (failNext) { failNext = false; return Promise.reject(new Error('offline')); }
+        clock += 60000;
+        list().push({ id: ++id, kind, data: d, created_at: new Date(clock).toISOString() });
+        for (const fn of [...set()]) fn(snap());
+        return Promise.resolve();
+      },
+      load: () => Promise.resolve(), get: snap,
+      subscribe(fn) { set().add(fn); return () => set().delete(fn); },
+      startPolling() {}, destroy() { this.destroyed = true; },
+    };
+  };
+  return { make, data, failOnce: () => { failNext = true; } };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v, set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }, flush() {}, load: async () => {}, destroy() {},
+  };
+}
+let n = 0;
+function scratch(w = 480, h = 420) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+function mount({ host = scratch(), bus = createBus(), s = streams(), saved = {}, author = undefined, noEvents = false } = {}) {
+  const said = [];
+  const made = [];
+  const inst = mountModule('note', {
+    mount: host, bus, state: fakeState(saved), events: null, user: 'u', profileId: 'p', personId: null,
+    instanceId: `note${++n}`, now: () => T0 + 3600000,
+    output: { say: (t) => { said.push(t); return `u${said.length}`; }, cancel() {} },
+    ...(noEvents ? {} : { makeEvents: (k, o) => { made.push({ k, o }); return s.make(k); } }),
+    ...(author !== undefined ? { author } : {}),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  const click = (sel) => host.querySelector(sel)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  return { inst, host, bus, s, said, made, probe, click,
+    btn: (act, i = 0) => host.querySelectorAll(`[data-act="${act}"]`)[i],
+    press: (act, i = 0) => host.querySelectorAll(`[data-act="${act}"]`)[i]?.dispatchEvent(new MouseEvent('click', { bubbles: true })),
+    text: () => host.querySelector('[data-note-text]')?.textContent || '',
+    who: () => host.querySelector('[data-note-who]')?.textContent || '',
+    pub: (v) => bus.publish(`note/${v}`) };
+}
+const row = (text, author, at, id) => ({ id, kind: NOTE_KIND, data: { text, author }, created_at: new Date(at).toISOString() });
+const tick = () => sleep(0);
+
+(async () => {
+try {
+  // =====================================================================
+  section('the rules, pure');
+  {
+    const rows = [row('second', 'Ann', T0 + 2000, 2), row('first', 'Mike', T0 + 1000, 1), { id: 9, kind: 'other', data: { text: 'x' } },
+      row('   ', 'Bo', T0 + 5000, 5), row('third', '', T0 + 3000, 3)];
+    check('rows are put in time order whatever order they arrived in', noteRows(rows).map((e) => e.data.text).join() === 'first,second,third');
+    check('a row that is not a note, or has no words, is ignored', noteRows(rows).length === 3);
+    check('*** the note on show is the newest ***', currentNote(rows).data.text === 'third');
+    check('no rows is no note (not a crash)', currentNote([]) === null && currentNote(null) === null);
+    check('*** a note nobody signed is from "Someone" ***', authorOf(currentNote(rows)) === SOMEONE && SOMEONE === 'Someone');
+    check('names already used are offered, newest first, "Someone" left out, no repeats',
+      knownAuthors([...rows, row('again', 'mike', T0 + 4000, 4)]).join() === 'mike,Ann', knownAuthors(rows).join());
+    check('words are trimmed and kept to a sticky-note length', cleanText('  hi  ') === 'hi' && cleanText('x'.repeat(999)).length === MAX_TEXT);
+
+    check('today', whenWords(T0, T0 + 3600000).startsWith('today '), whenWords(T0, T0 + 3600000));
+    check('yesterday', whenWords(T0 - 86400000, T0).startsWith('yesterday '));
+    check('older: the day and the time', !/today|yesterday/.test(whenWords(T0 - 5 * 86400000, T0)) && whenWords(T0 - 5 * 86400000, T0).length > 6);
+    check('no time is no words (not "1970")', whenWords(0) === '');
+
+    check('short notes are big, long ones smaller', sizeFor('Back at 3.') === 'big' && sizeFor('x'.repeat(80)) === 'mid' && sizeFor('x'.repeat(200)) === 'small');
+    check('ready-made notes come from one line, split on |', parseReady('Hello | Back soon |  ').join('/') === 'Hello/Back soon');
+    check('an empty ready-made line falls back to the built-in list (never an empty list)', parseReady('').length === READY_NOTES.length);
+    check('*** the built-in list is short (a switch walks it) and every one fits a sticky note ***',
+      READY_NOTES.length >= 4 && READY_NOTES.length <= 8 && READY_NOTES.every((t) => t.length <= 40));
+
+    const papers = [DEFAULT_PAPER, '#ffffff', '#000000', '#1d4ed8', '#f4a3c0', '#2e7d32', '#ffeb3b', '#7b1fa2'];
+    const worst = papers.map((p) => contrastRatio(p, inkFor(p)));
+    check('*** whatever paper is chosen, the ink reads at 4.5:1 or better ***', worst.every((r) => r >= 4.5), worst.map((r) => r.toFixed(1)).join(', '));
+    check('a broken colour falls back to the default paper, not to black on black', inkFor('nonsense') === inkFor(DEFAULT_PAPER));
+
+    const mike = row('Back at 3. The soup is in the fridge.', 'Mike', T0, 1);
+    check('read aloud: who it is from, then the note', spoken(mike) === 'A note from Mike: Back at 3. The soup is in the fridge.');
+    check('..."A note:" when nobody signed it', spoken(row('Hi', '', T0, 2)) === 'A note: Hi');
+    check('...only the note when the setting says so', spoken(mike, { readAuthor: false }) === 'Back at 3. The soup is in the fridge.');
+    check('...and something to say when there is no note', /no note/.test(spoken(null)));
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest('note');
+    check('registered', !!m);
+    check('built on the new core', m?.core === 'new');
+    check('dependsOn local: a note shows with no server', m?.dependsOn === 'local');
+    check('described in the catalog, under something to look at (it asks nothing)',
+      CATALOG.some((c) => c.type === 'note' && c.group === 'comfort' && c.use !== 'answer'));
+    check('it has decided what its silence means', expectFor('note').idle === true);
+    check('*** mounting without a personId key is refused (core:new contract) ***', (() => {
+      try { mountModule('note', { mount: scratch(), bus: createBus(), instanceId: 'x' }); return false; } catch { return true; }
+    })());
+    const verbs = verbsFor('note');
+    check('MODULE_VERBS: absent (row pending) or exactly next / prev / select / back',
+      verbs.length === 0 || (['next', 'prev', 'select', 'back'].every((v) => verbs.includes(v))
+        && verbTarget('note', 'select').topic === 'note/select' && verbTarget('note', 'back').topic === 'note/back'), verbs.join(','));
+    check('defaults: says who wrote it, does not speak by itself, can be changed here, tilted yellow paper',
+      DEFAULTS.readAuthor === true && DEFAULTS.announceNew === false && DEFAULTS.allowChange === true
+      && DEFAULTS.tilt === true && DEFAULTS.paper === DEFAULT_PAPER && DEFAULTS.which === 'note');
+  }
+
+  // =====================================================================
+  section('no note yet, then one left from the keyboard');
+  {
+    const t = mount();
+    await tick();
+    check('the stream is the shared per-profile one, not this panel’s own', t.made[0]?.k === NOTE_STREAM);
+    check('empty: says so, and offers to leave one', !!t.host.querySelector('[data-note-empty]') && t.btn('change')?.textContent === 'Leave a note');
+    check('no "Read it aloud" when there is nothing to read', !t.btn('read'));
+    t.press('change');
+    check('the change form opens', t.probe().view === 'edit' && !!t.host.querySelector('[data-note-input]'));
+    t.press('save');
+    await tick();
+    check('*** an empty note cannot be saved (and nothing is written) ***', !!t.host.querySelector('[data-note-err]') && !(t.s.data.note || []).length);
+    const input = t.host.querySelector('[data-note-input]');
+    input.value = 'Back at 3. The soup is in the fridge.';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const name = t.host.querySelector('[data-note-name]');
+    name.value = 'Mike';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    t.press('save');
+    await tick();
+    check('saved: one row in the stream, with the words and the name', (t.s.data.note || []).length === 1
+      && t.s.data.note[0].data.text === 'Back at 3. The soup is in the fridge.' && t.s.data.note[0].data.author === 'Mike');
+    check('*** the note shows its words, its author and its time ***', t.text() === 'Back at 3. The soup is in the fridge.'
+      && /^Mike · (today|yesterday) /.test(t.who()), t.who());
+    check('the buttons are Read it aloud and Change the note', t.btn('read')?.textContent === 'Read it aloud' && t.btn('change')?.textContent === 'Change the note');
+    t.inst.destroy();
+  }
+
+  section('Cancel writes nothing; a failed save keeps the words');
+  {
+    const s = streams();
+    const t = mount({ s });
+    await tick();
+    t.press('change');
+    const input = t.host.querySelector('[data-note-input]');
+    input.value = 'not this'; input.dispatchEvent(new Event('input', { bubbles: true }));
+    t.press('close');
+    check('Cancel: nothing written, back to the note', !(s.data.note || []).length && t.probe().view === 'note');
+    t.press('change');
+    const i2 = t.host.querySelector('[data-note-input]');
+    i2.value = 'Keep this'; i2.dispatchEvent(new Event('input', { bubbles: true }));
+    s.failOnce();
+    t.press('save');
+    await tick(); await tick();
+    check('*** a save that fails says so and keeps the form open with the words in it ***', t.probe().view === 'edit'
+      && t.host.querySelector('[data-note-input]').value === 'Keep this' && /did not save/.test(t.host.textContent));
+    t.press('save');
+    await tick();
+    check('...and Save again works', (s.data.note || []).length === 1 && t.text() === 'Keep this');
+    t.inst.destroy();
+  }
+
+  section('*** one switch changes the note, typing nothing ***');
+  {
+    const s = streams();
+    await s.make('note').append('note', { text: 'Old note', author: 'Ann' });
+    const t = mount({ s });
+    await tick();
+    check('nothing is lit until the first verb', t.probe().lit === -1 && !t.host.querySelector('[data-on="1"]'));
+    t.pub('select');
+    check('the first select only reveals the highlight', t.probe().lit === 0 && t.probe().view === 'note');
+    let presses = 1;
+    const walkTo = (pred) => { for (let i = 0; i < 40 && !pred(t.probe()); i++) { t.pub('next'); presses++; } t.pub('select'); presses++; };
+    walkTo((p) => p.litAct === 'change');
+    check('Change the note opened the form', t.probe().view === 'edit');
+    walkTo((p) => p.litAct === 'ready' && p.litLabel === 'I love you.');
+    check('a ready-made note fills the words', t.probe().draft.text === 'I love you.');
+    walkTo((p) => p.litAct === 'author' && p.litLabel === 'Ann');
+    check('a name from the history is one choice', t.probe().draft.author === 'Ann');
+    walkTo((p) => p.litAct === 'save');
+    await tick();
+    check('*** saved, from next and select alone ***', t.text() === 'I love you.' && /^Ann · /.test(t.who()) && s.data.note.length === 2);
+    check(`it took ${presses} presses`, presses > 0 && presses < 40);
+    t.pub('prev'); t.pub('prev'); t.pub('prev');
+    check('the walk wraps both ways (never strands anybody at an end)', t.probe().lit >= 0);
+    t.inst.destroy();
+  }
+
+  section('who it is from: a signed-in name when the host knows one, otherwise "Someone"');
+  {
+    const t = mount();
+    await tick();
+    t.press('change');
+    check('with no name known, the form starts on "Someone" (never on the last writer)', t.probe().draft.author === SOMEONE
+      && t.host.querySelector('[data-act="author"][aria-pressed="true"]')?.textContent.includes(SOMEONE));
+    t.press('ready');
+    t.press('save');
+    await tick();
+    check('saved as from Someone', /^Someone · /.test(t.who()));
+    t.inst.destroy();
+    const m2 = mount({ author: 'Jo' });
+    await tick();
+    m2.press('change');
+    check('*** a host that hands in ctx.author starts the form on that name ***', m2.probe().draft.author === 'Jo');
+    m2.inst.destroy();
+  }
+
+  section('every change is kept, and an old note can be put back');
+  {
+    const s = streams();
+    const w = s.make('note');
+    await w.append('note', { text: 'First', author: 'Mike' });
+    await w.append('note', { text: 'Second', author: 'Ann' });
+    await w.append('note', { text: 'Third', author: '' });
+    const t = mount({ s });
+    await tick();
+    check('the newest is on show', t.text() === 'Third' && /^Someone · /.test(t.who()));
+    check('"Earlier notes" says how many', t.btn('history')?.textContent === 'Earlier notes (2)');
+    t.press('history');
+    const items = [...t.host.querySelectorAll('[data-note-history] li')];
+    check('*** the history lists every note, newest first, each with who and when ***', items.length === 3
+      && items[0].textContent.includes('Third') && items[2].textContent.includes('First')
+      && items.every((li) => /· (today|yesterday|\w)/.test(li.querySelector('.nt-hwho').textContent)));
+    check('the one on show says so, and cannot be "put back"', items[0].hasAttribute('data-current') && !items[0].querySelector('[data-act="putback"]'));
+    items[2].querySelector('[data-act="putback"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+    check('*** putting one back is a NEW change: four rows now, nothing edited or removed ***', s.data.note.length === 4
+      && s.data.note.map((e) => e.data.text).join() === 'First,Second,Third,First');
+    check('the old words are on show again, still under the name of who wrote them', t.text() === 'First' && /^Mike · /.test(t.who()));
+    t.press('history');
+    check('and the history says it was put back', /put back/.test(t.host.querySelector('[data-note-history] li').textContent));
+    t.pub('back');
+    check('back closes the history', t.probe().view === 'note');
+    t.inst.destroy();
+  }
+
+  section('two panels on one note agree; a second note is separate');
+  {
+    const s = streams();
+    const a = mount({ s });
+    const b = mount({ s });
+    const c = mount({ s, saved: { which: 'note2' } });
+    await tick();
+    a.press('change'); a.press('ready'); a.press('save');
+    await tick();
+    check('*** a change on one panel shows on the other ***', b.text() === a.text() && a.text() === READY_NOTES[0]);
+    check('a panel set to "a second note" is not changed by it', !c.text() && c.made[0]?.k === 'note2');
+    [a, b, c].forEach((x) => x.inst.destroy());
+  }
+
+  section('reading aloud: when asked, and not otherwise');
+  {
+    const s = streams();
+    await s.make('note').append('note', { text: 'Back at 3.', author: 'Mike' });
+    const t = mount({ s });
+    await tick();
+    check('mounting says nothing', t.said.length === 0);
+    t.press('read');
+    check('*** "Read it aloud" says who it is from and the note ***', t.said[0] === 'A note from Mike: Back at 3.', t.said.join(' | '));
+    await s.make('note').append('note', { text: 'Dinner at 6.', author: 'Ann' });
+    check('a new note arriving from elsewhere shows at once', t.text() === 'Dinner at 6.');
+    check('*** but is NOT read aloud by default ***', t.said.length === 1);
+    t.inst.destroy();
+    const loud = mount({ s, saved: { announceNew: true } });
+    await tick();
+    check('announce on: nothing said for the note already there', loud.said.length === 0);
+    await s.make('note').append('note', { text: 'Home soon.', author: 'Jo' });
+    check('announce on: a new note is read out when it arrives', loud.said[loud.said.length - 1] === 'A note from Jo: Home soon.');
+    loud.press('change'); loud.press('ready'); loud.press('save');
+    await tick();
+    check('...but not the one this panel just saved itself', loud.said.length === 1);
+    loud.inst.destroy();
+  }
+
+  section('a panel that must not change it');
+  {
+    const s = streams();
+    await s.make('note').append('note', { text: 'Back at 3.', author: 'Mike' });
+    const t = mount({ s, saved: { allowChange: false } });
+    await tick();
+    check('no Change button; the note and Read it aloud are still there', !t.btn('change') && t.text() === 'Back at 3.' && !!t.btn('read'));
+    await s.make('note').append('note', { text: 'Changed elsewhere', author: 'Ann' });
+    check('it still follows a change made from another panel or screen', t.text() === 'Changed elsewhere');
+    t.press('history');
+    check('the history has no "put back" on this panel either', !t.host.querySelector('[data-act="putback"]'));
+    t.inst.destroy();
+  }
+
+  section('with no server: it still works, kept on this panel');
+  {
+    const t = mount({ noEvents: true });
+    t.press('change'); t.press('ready'); t.press('save');
+    await tick();
+    check('saved and shown with no events stream', t.text() === READY_NOTES[0]);
+    t.inst.destroy();
+  }
+
+  section('the look: a sticky note, at any size');
+  {
+    const t = mount({ host: scratch(220, 220) });
+    const s2 = t.s.make('note'); await s2.append('note', { text: 'Back at 3.', author: 'Mike' });
+    const paper = t.host.querySelector('.nt-paper');
+    check('the paper is the setting’s colour, and the ink is picked to read on it', paper.style.getPropertyValue('--note-paper') === DEFAULT_PAPER
+      && paper.style.getPropertyValue('--note-ink') === inkFor(DEFAULT_PAPER));
+    check('short words are drawn big', t.host.querySelector('[data-note-text]').dataset.size === 'big');
+    t.inst.destroy();
+    const blue = mount({ saved: { paper: '#1d4ed8', tilt: false } });
+    await blue.s.make('note').append('note', { text: 'x', author: '' });
+    const p2 = blue.host.querySelector('.nt-paper');
+    check('a dark paper gets light ink', p2.style.getPropertyValue('--note-ink') === inkFor('#1d4ed8') && inkFor('#1d4ed8') !== inkFor(DEFAULT_PAPER));
+    check('the tilt is a setting', p2.dataset.tilt === '0');
+    blue.inst.destroy();
+    const g = mount();
+    check('destroy lets go of the stream', (() => { g.inst.destroy(); return true; })());
+  }
+
+  section('settings');
+  {
+    const rows = getManifest('note').settings;
+    check('every row is labelled', rows.every((r) => r.key && r.label));
+    check('the ready-made notes are a setting (not hard-coded), holding the built-in list',
+      rows.find((r) => r.key === 'readyNotes')?.default === READY_NOTES.join(' | '));
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+
+// The live look: one note in three sizes.
+const s = streams();
+await s.make('note').append('note', { text: 'Back at 3. The soup is in the fridge. Love, M.', author: 'Mike' });
+for (const id of ['big', 'sticky', 'fridge']) {
+  const inst = mountModule('note', { mount: document.getElementById(id), bus: createBus(), state: fakeState({}), personId: null,
+    instanceId: `live-${id}`, makeEvents: (k) => s.make(k), now: () => T0 + 3600000 });
+  inst.init();
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
