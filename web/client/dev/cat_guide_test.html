@@ -422,7 +422,8 @@ section('he points at what he is talking about');
   check('no target: talking', poseToward(R(0, 0), null) === 'talking');
 
   const c = mount();
-  check('the first step waves hello', c.pose() === 'wave', c.pose());
+  check('the walk opens on Make my profile (no hello slide), and he talks', c.step().id === 'cat-profile'
+    && c.pose() !== 'wave', `${c.step().id} ${c.pose()}`);
   c.destroy();
   const d = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-done' }),
     path: PROFILE_PAGE, reducedMotion: true });
@@ -460,7 +461,7 @@ section('following along: he notices what you did, and never does it for you');
     path: GAME_PAGE, reducedMotion: true, output: o });
   await tick(0);
   check('a step already done is passed over', c.step().id === 'cat-picture', c.step().id);
-  check('...without saying it', !o.said.some((x) => x.text === catWords(WALK[1], 'some')));
+  check('...without saying it', !o.said.some((x) => x.text === catWords(WALK.find((s) => s.id === 'cat-profile'), 'some')));
   c.destroy();
 
   // Done while he watches.
@@ -608,6 +609,26 @@ section('*** THE STEPS POINT AT THE REAL CONTROLS ***');
     check('Escape in the open menu closes the menu, not him', !k.menu.isOpen() && cat.shown());
     document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
     check('the next Escape closes him — and does not open the menu behind him', !cat.shown() && !k.menu.isOpen());
+
+    // *** THE BAR IS SHOWN WHILE HE POINTS AT IT, through the kiosk's own seam. ***
+    const bar = document.querySelector('.kiosk [data-controls]');
+    bar.classList.add('hidden');
+    check('the real bar starts this check hidden', bar.classList.contains('hidden') && !k.barHeld());
+    cat = mountCat(document.body, { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+      path: PROFILE_PAGE, reducedMotion: true, holdBar: (on) => k.holdBar(on) });
+    check('*** "This is the bar": the real bar is showing, and held ***', !bar.classList.contains('hidden') && k.barHeld(),
+      bar.className);
+    cat.next();
+    check('Panel ▸ is on the bar: still held', cat.step().id === 'cat-panel' && k.barHeld());
+    cat.next();
+    check('the gear is on the bar: still held', cat.step().id === 'cat-gear' && k.barHeld());
+    cat.close();
+    check('*** he closes: the bar is let go, back to its own auto-hide ***', !k.barHeld());
+    cat = mountCat(document.body, { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+      path: PROFILE_PAGE, reducedMotion: true, holdBar: (on) => k.holdBar(on) });
+    check('held again for a second walk', k.barHeld());
+    cat.destroy();
+    check('*** the page tears him down: the bar is let go too ***', !k.barHeld());
   } finally {
     try { cat?.destroy(); } catch { /* already gone */ }
     try { k?.destroy(); } catch (e) { console.warn(e); }
@@ -615,6 +636,147 @@ section('*** THE STEPS POINT AT THE REAL CONTROLS ***');
     for (const p of await profiles.list(person.id)) await profiles.remove(p.id);
     await profiles.removePerson(person.id);
   }
+}
+
+// =====================================================================================
+section('*** NO OPENING SLIDE; NOTHING SAID WHERE IT IS NOT TRUE ***');
+{
+  // Mike, 2026-09-29: "He says every screen has a menu and bar and there is no menu or bar. That
+  // first slide is kind of unnecessary. Start with the make my profile."
+  check('the walk starts at Make my profile', WALK[0].id === 'cat-profile' && WALK[0].target === '[data-do="profile"]', WALK[0].id);
+  check('there is no hello slide any more', !WALK.some((s) => s.id === 'cat-hello'));
+  const all = (s) => ['brief', 'say', 'more'].map((k) => s[k] || '').join(' ');
+  const claims = GAME_STEPS.filter((s) => /every screen|this is the (bar|menu)|settings menu|the gear/i.test(all(s)));
+  check('no game-page step talks about a bar or a menu as if it were on that page (it has neither)',
+    claims.length === 0, claims.map((s) => s.id).join());
+  check('no step says "her screen"', !WALK.some((s) => /her screen/i.test(all(s))));
+}
+
+// =====================================================================================
+section('*** BACK: one step back, re-said, never doing the step ***');
+{
+  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:120px;height:40px';
+  const b = document.createElement('button');
+  b.setAttribute('data-do', 'profile');
+  let pressed = 0;
+  b.addEventListener('click', () => { pressed++; });
+  sandbox.replaceChildren(b);
+
+  const o = fakeOutput();
+  const c = mount({ output: o });
+  const back = () => c.el.querySelector('[data-tour-back]');
+  const next = () => c.el.querySelector('[data-tour-next]');
+  check('his panel has a Back button', !!back() && back().textContent.trim() === 'Back', back()?.textContent);
+  check('...disabled on the first step', back().disabled);
+  check('...placed after Next, so Next is still the first thing a switch reaches',
+    !!(next().compareDocumentPosition(back()) & Node.DOCUMENT_POSITION_FOLLOWING));
+  check('Next is still labelled Next', next().textContent.trim() === 'Next');
+  c.next();
+  check('one step on', c.step().id === 'cat-picture' && !back().disabled);
+  const before = o.said.at(-1);
+  back().focus();
+  back().click();
+  check('*** Back goes to the step before ***', c.step().id === 'cat-profile');
+  check('...and says its words again', o.said.at(-1).text === catWords(WALK[0], 'some'), o.said.at(-1)?.text);
+  check('...having taken back what he was saying first', o.cancelled.includes(before.id));
+  check('*** ...and never presses the step’s button for you ***', pressed === 0);
+  check('focus stays in his panel for a keyboard user (not dropped to the page)', c.el.contains(document.activeElement),
+    document.activeElement?.outerHTML?.slice(0, 60));
+  c.destroy();
+
+  // Back to a step that is already done: he does not bounce straight forward again.
+  const done = document.createElement('li');
+  done.setAttribute('data-step', 'profile');
+  done.setAttribute('data-done', '');
+  sandbox.replaceChildren(done);
+  const d = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-picture' }),
+    path: GAME_PAGE, reducedMotion: true });
+  d.prev();
+  await tick(0);
+  // A change on the page, so the follow-along check runs while he stands on the done step.
+  done.removeAttribute('data-done'); await tick(0); done.setAttribute('data-done', '');
+  await tick(200);
+  check('*** Back to a step you already did stays there (it does not skip you forward again) ***',
+    d.step().id === 'cat-profile', d.step().id);
+  d.next();
+  check('...and Next moves on from it as usual', d.step().id === 'cat-picture');
+  d.destroy();
+  resetSandbox();
+
+  // Back across pages: from the profile's first step, the step before is on the game page.
+  const o2 = fakeOutput();
+  const p = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+    path: PROFILE_PAGE, reducedMotion: true, output: o2, goThere: catGoThere(fakeStore()) });
+  p.el.querySelector('[data-tour-back]').click();
+  const go = p.el.querySelector('[data-tour-go]');
+  check('*** Back from the profile: he holds, with a link to the game page ***',
+    p.step().id === 'cat-open' && p.waiting() && go?.getAttribute('href') === GAME_PAGE, go?.getAttribute('href'));
+  check('...and what he says there does not call it "the next part"', !/next/i.test(o2.said.at(-1)?.text || ''),
+    o2.said.at(-1)?.text);
+  p.next();
+  check('...and Next brings him forward to the bar again, rather than ending the walk',
+    p.shown() && p.step().id === 'cat-bar' && !p.waiting());
+  p.destroy();
+
+  // The bus verb works the same.
+  const subs = new Map();
+  const bus = { subscribe: (t, fn) => { subs.set(t, fn); return () => subs.delete(t); } };
+  const q = mount({ bus });
+  q.next();
+  subs.get('nimrod-cat/prev')();
+  check('nimrod-cat/prev is the same Back', q.index() === 0);
+  q.destroy();
+}
+
+// =====================================================================================
+section('*** THE BAR IS HELD ONLY WHILE HE POINTS AT IT ***');
+{
+  // A stand-in bar with the real selectors inside it; the real kiosk is checked above.
+  sandbox.style.cssText = 'position:fixed;left:8px;top:8px;width:300px;height:40px';
+  sandbox.innerHTML = '<div data-controls style="height:40px"><button data-act="panel">Panel</button>'
+    + '<button data-act="settings">⚙</button></div>';
+  const calls = [];
+  const holdBar = (on) => { calls.push(!!on); };
+  const held = () => calls.at(-1) === true;
+  const c = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+    path: PROFILE_PAGE, reducedMotion: true, holdBar });
+  check('"This is the bar": held', held(), JSON.stringify(calls));
+  c.next(); c.next();
+  check('Panel ▸ and the gear are inside it: still held, and asked once, not every step',
+    held() && calls.filter(Boolean).length === 1, JSON.stringify(calls));
+  while (c.step().id !== 'cat-done') c.next();
+  check('*** the last step points at nothing: let go ***', calls.at(-1) === false, JSON.stringify(calls));
+  c.prev();
+  check('back onto a step that points at the gear: held again', held(), JSON.stringify(calls));
+  c.close();
+  check('*** closed: let go ***', calls.at(-1) === false);
+
+  calls.length = 0;
+  const w = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+    path: '/kiosk.html', reducedMotion: true, holdBar });
+  check('on another screen (holding with a link), this screen’s bar is not held', !calls.includes(true), JSON.stringify(calls));
+  w.destroy();
+  const g = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore(), path: GAME_PAGE, start: true,
+    reducedMotion: true, holdBar });
+  check('on the game page nothing is held', !calls.includes(true));
+  g.destroy();
+
+  // Every way he goes away lets go: close, Escape, resting, and the page tearing him down.
+  const t = fakeTimers();
+  for (const [how, end] of [
+    ['Escape', (x) => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))],
+    ['resting', () => t.fireAll()],
+    ['destroy', (x) => x.destroy()],
+    ['Next to the end', (x) => { while (x.shown()) x.next(); }],
+  ]) {
+    calls.length = 0;
+    const x = mountCat(host(), { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-bar' }),
+      path: PROFILE_PAGE, reducedMotion: true, holdBar, setTimer: t.setTimer, clearTimer: t.clearTimer });
+    end(x);
+    check(`*** ${how}: the bar is let go ***`, calls[0] === true && calls.at(-1) === false, JSON.stringify(calls));
+    x.destroy();
+  }
+  resetSandbox();
 }
 
 // =====================================================================================

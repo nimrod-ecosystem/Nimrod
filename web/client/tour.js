@@ -105,6 +105,14 @@ export const TOUR_KEYS = Object.freeze({ pos: TOUR_POS_KEY, done: TOUR_DONE_KEY 
 //   onPlace(rect) told where the ring landed, or null (the cat points his paw at it).
 //   escapeCloses  Escape closes the walk. OFF by default because the kiosk already binds Escape
 //                 to its settings menu, and the site tour never promised it; see `onEscape`.
+//   backButton    a visible Back button beside Next (Mike, 2026-09-29, on the cat: "There should
+//                 also be a previous button in case you want to go back"). OFF by default, so the
+//                 site tour keeps its one-button panel; see `prev()` for what it does and why it
+//                 sits AFTER Next in the row.
+//
+// `onStep` and `decorate` are also told `via`: 'start' | 'next' | 'back' — how this step was
+// reached. The cat needs it: a step reached by Back must not be auto-skipped as already done, or
+// Back would bounce straight forward again.
 //
 // A `target` may now also be a LIST of selectors: the first one that is on the page and has a
 // size wins. That is how a step points at a row inside the settings menu when the menu is open
@@ -229,6 +237,8 @@ export function mountTour(root, {
   decorate = null,
   onPlace = null,
   escapeCloses = false,
+  backButton = false,
+  backLabel = 'Back',
 } = {}) {
   if (!root || !doc) return null;
 
@@ -294,6 +304,9 @@ export function mountTour(root, {
   // built for page boundaries the tour created; this is the same state reached by the person
   // wandering off, and it needs no new machinery.
   let waiting = !samePage(all[i].page, path);
+  // A hold that BACK made (see `prev()`): Next from it goes forward again instead of ending.
+  let backWait = false;
+  let via = 'start';
   let done = false;
   let off = [];
 
@@ -403,7 +416,7 @@ export function mountTour(root, {
     const n = i + 1;
     const go = waiting ? whereTo(step.page) : null;
     const text = go ? go.say : wordsFor(step);
-    const label = waiting ? 'End the tour' : n >= all.length ? 'Done' : 'Next';
+    const label = waiting && !backWait ? 'End the tour' : n >= all.length ? 'Done' : 'Next';
     const primary = 'flex:0 0 auto;background:#F7C948;color:#0A3323;border:0;border-radius:9px;'
       + 'padding:9px 16px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none';
     const quiet = 'flex:0 0 auto;background:transparent;color:#cfe0d6;'
@@ -415,15 +428,32 @@ export function mountTour(root, {
       <div data-tour-row style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
         ${go ? `<a data-tour-go href="${esc(go.href || step.page)}" style="${primary}">${esc(go.label)} →</a>` : ''}
         <button type="button" data-tour-next style="${go ? quiet : primary}">${esc(label)}</button>
+        ${backButton ? `<button type="button" data-tour-back style="${quiet}"${i === 0 ? ' disabled' : ''}>${esc(backLabel)}</button>` : ''}
         <button type="button" data-tour-skip style="${quiet}">${esc(skipLabel)}</button>
         <span data-tour-count style="margin-left:auto;opacity:.6;font-size:.86rem">${n} of ${all.length}</span>
       </div>`;
     panel.querySelector('[data-tour-next]').addEventListener('click', next);
     panel.querySelector('[data-tour-skip]').addEventListener('click', skip);
-    try { decorate?.(panel, step, { waiting, n, total: all.length, text, go }); }
+    const backBtn = panel.querySelector('[data-tour-back]');
+    if (backBtn) {
+      if (i === 0) backBtn.style.opacity = '.45';
+      backBtn.addEventListener('click', pressBack);
+    }
+    try { decorate?.(panel, step, { waiting, n, total: all.length, text, go, via }); }
     catch (err) { console.error('tour: decorate', err); }
     place();
-    try { onStep?.(step, n, { waiting, text }); } catch (err) { console.error('tour: onStep', err); }
+    try { onStep?.(step, n, { waiting, text, via }); } catch (err) { console.error('tour: onStep', err); }
+  }
+
+  // PRESSING BACK KEEPS THE KEYBOARD WHERE IT WAS. Re-rendering the panel replaces its buttons, so
+  // focus would otherwise fall to the page and a keyboard user would have to Tab all the way back
+  // in to press Back twice. Back again if it is still there to press; Next if Back just became the
+  // disabled one on the first step. Only for this button: Next's behaviour is the site tour's.
+  function pressBack() {
+    prev();
+    if (done) return;
+    const to = panel.querySelector('[data-tour-back]:not([disabled])') || panel.querySelector('[data-tour-next]');
+    try { to?.focus(); } catch { /* not focusable here */ }
   }
 
   // ------------------------------------------------------------------------------------
@@ -432,11 +462,16 @@ export function mountTour(root, {
   // ------------------------------------------------------------------------------------
   function next() {
     if (done) return;
-    // Second Next at a boundary: they pressed forward with nothing ahead of them here.
-    if (waiting) { finish('done'); return; }
+    // Second Next at a boundary: they pressed forward with nothing ahead of them here. NOT when
+    // Back made this hold — then the step ahead is the one they just came from, and Next goes
+    // there (below), because a mistaken Back must not cost somebody the whole walk. Termination
+    // still holds: that branch moves `i` forward, and a hold it lands in is an ordinary one.
+    if (waiting && !backWait) { finish('done'); return; }
     if (i >= all.length - 1) { finish('done'); return; }
 
     i += 1;
+    backWait = false;
+    via = 'next';
     // The position is saved to the step they are being sent to, so arriving on that page
     // resumes exactly here rather than at the top of it.
     write(TOUR_POS_KEY, current().id);
@@ -449,10 +484,23 @@ export function mountTour(root, {
   // Back is a convenience, not a way out, and it is allowed to stop at the first step: the
   // escape guarantee is carried entirely by `next()` and by Skip, both of which are always
   // available. A one-verb user never has this bound.
+  //
+  // WHAT BACK DOES, and does not (the visible button, `backButton`, and `${topic}/prev`):
+  //   * one step back, and the step is SHOWN again — words, ring, `onStep` (so the cat re-says
+  //     them, taking back what he was saying first). It never performs the step's action; nothing
+  //     here ever does.
+  //   * the step before is on another page: the same holding state Next makes, with the link.
+  //     Next from THAT hold goes forward again (see `next()`).
+  //   * on the first step the button is DISABLED rather than absent, so Next and Close do not
+  //     jump sideways under somebody's finger between step 1 and step 2.
+  //   * it sits AFTER Next in the row: a switch that scans the panel reaches Next first, exactly
+  //     as it did before Back existed, so the one-verb way through costs nothing more.
   function prev() {
     if (done || i === 0) return;
     i -= 1;
     waiting = !samePage(current().page, path);
+    backWait = waiting;
+    via = 'back';
     write(TOUR_POS_KEY, current().id);
     render();
   }

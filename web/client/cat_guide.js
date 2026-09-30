@@ -30,6 +30,12 @@
 //                      skips it on arrival), and `advanceOn: 'click'` moves on as the target is
 //                      pressed. The person still does every step; the cat only notices.
 //   resting            nobody touching the page for `restMinutes` closes him (see below).
+//   Back               `backButton` (Mike, 2026-09-29: "There should also be a previous button in
+//                      case you want to go back"). A step reached by Back is NOT auto-skipped as
+//                      done, or Back would bounce straight forward again.
+//   holding the bar    while the step he is on points at something inside the kiosk's transport
+//                      bar, he asks the host to keep the bar on screen (`holdBar`, the kiosk
+//                      handle's own seam), and lets go the moment he points elsewhere or leaves.
 //
 // ---------------------------------------------------------------------------------------
 // THE SAFETY INVARIANT, AND WHY THIS SHAPE HOLDS IT
@@ -163,6 +169,9 @@ function inlineSvg(doc, text) {
  *   path       which page this is, as the steps name pages
  *   output     the page's output bus (`createOutputBus`); his words go to its `say`
  *   goThere    (page) -> { say, label, href } for the link when the next step is elsewhere
+ *   holdBar    (on) -> void: keep the host's transport bar on screen (true) or let it go (false).
+ *              Called only on a change. The kiosk passes its handle's `holdBar`; elsewhere omit it.
+ *   barSelector  what "inside the bar" means for `holdBar`: the kiosk's `[data-controls]`.
  */
 export function mountCat(root, {
   steps = [],
@@ -175,6 +184,8 @@ export function mountCat(root, {
   requireStarted = true,
   reducedMotion = null,          // null = ask the system, and keep asking
   goThere = null,
+  holdBar = null,
+  barSelector = '[data-controls]',
   onFinish = null,
   onStep: hostOnStep = null,
   loadSvg = defaultLoadSvg,
@@ -212,6 +223,8 @@ export function mountCat(root, {
   let rested = false;
   let restTimer = null;
   let handle = null;
+  let backedTo = null;           // the step Back brought him to: not auto-skipped while he is on it
+  let barHeld = false;
   const svgCache = new Map();
   const offs = [];
 
@@ -303,7 +316,25 @@ export function mountCat(root, {
     }
   }
 
+  // ---- holding the bar -------------------------------------------------------------------------
+  // Worked out from the element the step actually resolves to, not from the step's id: a step whose
+  // target is a list points at a row in the open menu (not the bar: let go) or at the gear when the
+  // menu is shut (the bar: hold), and this follows that as it changes. The element, not the ring:
+  // Panel ▸ has no size when a screen has one panel, and the bar still has to show for that step.
+  function setHold(on) {
+    if (on === barHeld || typeof holdBar !== 'function') return;
+    barHeld = on;
+    try { holdBar(on); } catch (err) { console.error('cat: holdBar', err); }
+  }
+  function updateHold() {
+    if (finished || curWaiting || !curStep?.target) { setHold(false); return; }
+    let inBar = false;
+    try { inBar = !!findTarget(doc, curStep.target)?.closest?.(barSelector); } catch { inBar = false; }
+    setHold(inBar);
+  }
+
   function onPlace(rect) {
+    updateHold();
     if (!fig || !curStep || curWaiting) return;
     if (curStep.pose && curStep.pose !== 'point') return;
     if (!curStep.target || !rect) { setPose('talking'); return; }
@@ -326,9 +357,12 @@ export function mountCat(root, {
   function onStep(step, n, info) {
     try { hostOnStep?.(step, n, info); } catch (err) { console.error('cat: onStep', err); }
     resetRest();
+    // Reached by Back: he stays on it even if it is done — going back to look is the point.
+    // (A repaint keeps `via`, so changing his chattiness on that step does not skip it either.)
+    backedTo = info.via === 'back' ? step : null;
     // Done already (the profile was made last week): move on without saying it. After the tour
     // has finished rendering, never from inside its render.
-    if (!info.waiting && prefs.follow && step.doneWhen && matches(step.doneWhen)) {
+    if (!info.waiting && prefs.follow && step !== backedTo && step.doneWhen && matches(step.doneWhen)) {
       Promise.resolve().then(() => { if (!finished && handle && handle.step() === step && !handle.waiting()) handle.next(); });
       return;
     }
@@ -363,6 +397,8 @@ export function mountCat(root, {
     if (restTimer != null) { clearTimer(restTimer); restTimer = null; }
     offs.splice(0).forEach((f) => { try { f(); } catch { /* already gone */ } });
     hush();
+    // Every way he leaves comes through here, so this is the one place the bar is let go.
+    setHold(false);
   }
 
   handle = mountTour(root, {
@@ -372,6 +408,7 @@ export function mountCat(root, {
     label: 'Nimrod the cat',
     skipLabel: 'Close',
     escapeCloses: true,
+    backButton: true,
     goThere,
     // A set width, not just a cap: a fixed box at left:50% otherwise shrinks to the half of the
     // screen to its right, and the bubble came out a tall narrow column.
@@ -397,7 +434,9 @@ export function mountCat(root, {
     pending = null;
     if (finished || !handle) return;
     const step = handle.step();
-    if (!handle.waiting() && prefs.follow && step?.doneWhen && matches(step.doneWhen)) { handle.next(); return; }
+    if (!handle.waiting() && prefs.follow && step !== backedTo && step?.doneWhen && matches(step.doneWhen)) {
+      handle.next(); return;
+    }
     handle.refresh();
   }
   const MO = win?.MutationObserver;

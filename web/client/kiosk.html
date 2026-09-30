@@ -184,7 +184,8 @@ function offerTour(kiosk = null) {
 // unless somebody pressed "Show me how" on the game page in THIS browser, so a paired bedside
 // screen never sees him. His words go to this screen's own output bus, so they queue with, and
 // duck under, everything else that talks here. `catPathOnKiosk` says whether this screen is the
-// profile the walk is about; on any other screen he waits with a link to it.
+// profile the walk is about; on any other screen he waits with a link to it. While he points at the
+// transport bar, the kiosk keeps it showing (`holdBar`, the kiosk's own seam) and he lets it go.
 function offerCat(kiosk) {
   Promise.all([import('./cat_guide.js'), import('./game/cat_steps.js')])
     .then(([{ mountCat }, { CAT_STEPS, catGoThere, catPathOnKiosk }]) => {
@@ -193,6 +194,7 @@ function offerCat(kiosk) {
         path: catPathOnKiosk(kiosk?.screenId?.()),
         goThere: catGoThere(),
         output: kiosk?.output?.() || null,
+        holdBar: typeof kiosk?.holdBar === 'function' ? (on) => kiosk.holdBar(on) : null,
       });
     }).catch((e) => console.warn('cat', e));
 }

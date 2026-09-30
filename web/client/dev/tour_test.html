@@ -532,6 +532,75 @@ section('*** THE PANEL DOES NOT SIT ON WHAT IT IS POINTING AT ***');
 }
 
 // =====================================================================================
+section('a Back button, opt-in (the cat has it; the site tour does not)');
+{
+  // Mike, 2026-09-29, on the cat: "There should also be a previous button in case you want to go
+  // back." `backButton` is OFF by default so the site tour, its three hosts and everything above
+  // see no change.
+  const plain = mountTour(host(), { steps: STEPS, storage: fakeStore(), path: P_LAND, start: true });
+  check('*** the site tour has no Back button (the option defaults off) ***',
+    !plain.el.querySelector('[data-tour-back]'));
+  plain.destroy();
+
+  // A small walk that crosses a page and comes back: A and C on /, B on /home.html.
+  const W = [
+    { id: 'a', page: P_LAND, target: null, say: 'Step A.' },
+    { id: 'b', page: P_HOME, target: null, say: 'Step B.' },
+    { id: 'c', page: P_LAND, target: null, say: 'Step C.' },
+  ];
+  const seen = [];
+  const t = mountTour(host(), { steps: W, storage: fakeStore(), path: P_LAND, start: true, backButton: true,
+    onStep: (s, n, info) => seen.push(`${s.id}:${info.via}`) });
+  const back = () => t.el.querySelector('[data-tour-back]');
+  const nextBtn = () => t.el.querySelector('[data-tour-next]');
+  check('with backButton on, there is a Back button', !!back() && back().textContent.trim() === 'Back',
+    back()?.textContent);
+  check('...disabled on the first step, where there is nothing behind', back().disabled);
+  check('...and AFTER Next in the row, so a switch scanning the panel reaches Next first, as before',
+    !!(nextBtn().compareDocumentPosition(back()) & Node.DOCUMENT_POSITION_FOLLOWING));
+  check('...and it is a real button, so a keyboard reaches it', back().tagName === 'BUTTON' && back().type === 'button'
+    && back().tabIndex >= 0);
+  t.next();
+  check('Next into another page: holding', t.waiting() && t.index() === 1);
+  check('...where Back is enabled', !back().disabled);
+  back().click();
+  check('*** Back returns to the step before, on this page, not holding ***', t.index() === 0 && !t.waiting());
+  check('...and onStep is told it was a step back', seen.at(-1) === 'a:back', seen.join(' '));
+  t.destroy();
+
+  // Back INTO another page: it holds with a link, like Next does — and Next from THAT hold goes
+  // forward again rather than ending the walk (a mistaken Back must not cost the walk).
+  const u = mountTour(host(), { steps: W, storage: fakeStore({ [TOUR_POS_KEY]: 'b' }), path: P_HOME, backButton: true });
+  check('on /home.html at B', u.index() === 1 && !u.waiting());
+  u.el.querySelector('[data-tour-back]').click();
+  check('Back to a step on another page: holding, with a link to that page',
+    u.waiting() && u.index() === 0 && u.el.querySelector('[data-tour-go]')?.getAttribute('href') === P_LAND);
+  check('...and the Next button there says Next, not End the tour',
+    u.el.querySelector('[data-tour-next]').textContent.trim() === 'Next', u.el.querySelector('[data-tour-next]').textContent);
+  u.next();
+  check('*** Next from a hold that Back made goes forward again, it does not end the walk ***',
+    u.shown() && u.index() === 1 && !u.waiting());
+  // NEGATIVE CONTROL: a hold that NEXT made still ends on a second Next, exactly as before.
+  u.next();
+  check('NEGATIVE CONTROL: a hold made by Next still ends on the second Next', u.waiting() && u.index() === 2);
+  u.next();
+  check('...and does', !u.shown());
+
+  // Next alone still ends it from anywhere, Back or no Back.
+  let stuck = null;
+  for (let s = 0; s < W.length; s++) {
+    for (const p of [P_LAND, P_HOME]) {
+      const w = mountTour(host(), { steps: W, storage: fakeStore({ [TOUR_POS_KEY]: W[s].id }), path: p, backButton: true });
+      if (s > 0) w.prev();
+      let n = 0;
+      while (w.shown() && n < W.length * 4) { w.next(); n++; }
+      if (w.shown()) { stuck = `${W[s].id} on ${p}`; w.destroy(); }
+    }
+  }
+  check('*** with Back pressed first, Next alone still ends the walk from every step and page ***', !stuck, stuck || '');
+}
+
+// =====================================================================================
 // THE SUMMARY GOES LAST, AND STAYS LAST. Twice in this project a section was appended below a
 // summary that had already been computed: it ran, it passed, and it was not counted — the tell
 // was a total that did not move. Anything added goes ABOVE this line.

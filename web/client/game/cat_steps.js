@@ -26,10 +26,17 @@
 // kiosk's own bar and menu (`kiosk.js`, `settings.js`); `dev/cat_guide_test.html` mounts a real
 // kiosk on a real profile and checks each one resolves.
 //
-// HOW MANY STEPS (13) IS A DEFAULT, NOT A RULE: five on the game page (hello, then its four
-// buttons, which auto-skip when already done) and eight on the profile (the bar, choosing a panel,
-// the gear, the picture's rows, closing, the sign's words, the room, goodbye). Each teaches one
-// move. Fewer would put two moves in one sentence; the "lots" level is where the extra words go.
+// HOW MANY STEPS (12) IS A DEFAULT, NOT A RULE: four on the game page (its four buttons, which
+// auto-skip when already done) and eight on the profile (the bar, choosing a panel, the gear, the
+// picture's rows, closing, the sign's words, the room, goodbye). Each teaches one move. Fewer would
+// put two moves in one sentence; the "lots" level is where the extra words go.
+//
+// *** NO HELLO SLIDE (Mike, 2026-09-29, live): *** "He says every screen has a menu and bar and
+// there is no menu or bar. That first slide is kind of unnecessary. Start with the make my
+// profile." The opening line promised "the two controls every screen shares" on the one page that
+// has neither. So the walk opens on the first thing to press, and every line is said where it is
+// true: the bar and the menu are only named once he is on the profile, where they are.
+// `dev/cat_guide_test.html` checks no game-page line talks about the bar or menu as if it were here.
 
 import { kioskURL } from './game.js';
 
@@ -52,19 +59,14 @@ const row = (id) => `${MENU_OPEN} .st-item[data-id="${id}"]`;
 
 export const CAT_STEPS = [
   // ---- on the game page ----------------------------------------------------------------------
-  { id: 'cat-hello', page: GAME_PAGE, target: null, action: 'none', pose: 'wave',
-    brief: 'Hi, I’m Nimrod. I’ll show you around.',
-    say: 'Hi, I’m Nimrod. I’ll show you the two controls every screen shares: the bar along the '
-       + 'bottom, and the settings menu.',
-    more: 'You can close me any time with Close or the Escape key. Nothing on the page waits for me.',
-    note: 'The first line says what the walk is FOR, and the "lots" level says how to leave it.' },
-
   { id: 'cat-profile', page: GAME_PAGE, target: '[data-do="profile"]', action: 'click',
     doneWhen: '[data-step="profile"][data-done]',
     brief: 'Press Make it.',
     say: 'First, your profile. Press Make it and you get an empty screen of your own, with a room '
        + 'behind it.',
-    more: 'Every button here is safe to press twice. It finds what it made instead of making another.' },
+    more: 'Every button here is safe to press twice. It finds what it made instead of making another. '
+        + 'You can close me any time with Close or the Escape key.',
+    note: 'The first step now. The "lots" line carries what the old hello slide said about leaving.' },
 
   { id: 'cat-picture', page: GAME_PAGE, target: '[data-do="picture"]', action: 'click',
     doneWhen: '[data-step="picture"][data-done]',
@@ -88,10 +90,13 @@ export const CAT_STEPS = [
 
   // ---- on the profile (the real kiosk) ------------------------------------------------------
   { id: 'cat-bar', page: PROFILE_PAGE, target: BAR, action: 'none',
-    brief: 'This is the bar. Every screen has it.',
-    say: 'This is the bar. Every screen has one, with the same buttons in the same places. If it '
-       + 'has tucked itself away, move the mouse or press a key.',
-    more: 'Most of its buttons have a key as well. Rest the mouse on one to see which.' },
+    brief: 'This is the bar. Every one of your screens has it.',
+    say: 'This is the bar. Every one of your screens has one, with the same buttons in the same '
+       + 'places. When nobody is using it, it tucks itself away: touch the screen, press a key or '
+       + 'move the mouse near it to bring it back.',
+    more: 'Most of its buttons have a key as well. Rest the mouse on one to see which.',
+    note: 'The kiosk keeps the bar showing while he points at it (`holdBar`), so "this is the bar" '
+        + 'never rings empty space; the tucking-away line is about afterwards, and it is true.' },
 
   { id: 'cat-panel', page: PROFILE_PAGE, target: PANEL_BTN, action: 'click',
     brief: 'Press Panel until your picture is outlined.',
@@ -147,7 +152,8 @@ export function catGoThere(storage = (typeof localStorage !== 'undefined' ? loca
         : { say: 'Make your profile on the game page first, then open it.', label: 'The game', href: GAME_PAGE };
     }
     if (page === GAME_PAGE) {
-      return { say: 'The next part is on the game page.', label: 'The game', href: GAME_PAGE };
+      // "This part", not "the next part": Back from the profile's first step lands here too.
+      return { say: 'This part is on the game page.', label: 'The game', href: GAME_PAGE };
     }
     return null;
   };
