@@ -1689,6 +1689,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('default: showModule exists on the handle', typeof nk.showModule === 'function');
       check('*** stage 3: dashboardModule is ignored off the embedded path — no dashboard module on a real screen ***',
         !nBox.querySelector('.k-dash') && !nBox.querySelector('.view') && !!nBox.querySelector('.kiosk > .k-stage .k-mod'));
+      check('*** stage 3b: ...nor a plain bar -- a real screen’s bar is exactly what it was ***',
+        !nBox.querySelector('.k-controls.k-plain') && !nBox.querySelector('.k-ring') && !nk.plainBar?.());
 
       // ================= EMBEDDED TURNS EXACTLY THOSE THINGS OFF =================
       const eBox = mkBox();
@@ -2265,6 +2267,124 @@ const ds = () => root.querySelector('.kiosk').dataset;
       release();
       try { gk?.destroy(); } catch { /* already gone */ }
       gbox.remove();
+    }
+  }
+
+  // *** STEP 6 STAGE 3b (2026-09-30): THE BAR AND THE MENU ARE PLACED; THE PLAIN BAR IS THE SHELL'S. ***
+  // On the dashboard path (embedded + dashboardModule -- the modules page), the transport bar and the
+  // settings menu are modules the dashboard places, and the shell's own bar becomes the PLAIN bar:
+  // solid, not restylable, and up whenever no placed module carries the bar (none placed, removed,
+  // failed, or still not mounted after 2 s), or when summoned -- by Escape, or by holding a switch
+  // for the long-press time (Design, room-is-the-screen; Mike's defaults, 2026-09-30).
+  {
+    registerModule({ type: 'boombar3btest', title: 'Broken bar', chrome: 'bar', settings: [] },
+      () => ({ init() { throw new Error('this bar will not start'); }, destroy() {} }));
+    registerModule({ type: 'hangbar3btest', title: 'Slow bar', chrome: 'bar', settings: [] },
+      () => ({ init() { return new Promise(() => {}); }, destroy() {} }));
+    const { EDGE_TOPIC } = await import('../input.js');
+    const pUser = USER + '-plainbar';
+    const pProfiles = createProfilesClient({ user: pUser });
+    const pp = await pProfiles.create('TEST-plain-bar');
+    await pProfiles.addModule(pp.id, 'photos');
+    await pProfiles.addModule(pp.id, 'trivia');
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const boxes = [];
+    const mountDash = async (extra = {}) => {
+      const b = document.createElement('div');
+      b.style.cssText = 'position:relative;width:640px;height:420px;margin:8px 0';
+      document.body.append(b); boxes.push(b);
+      const bus = createBus();
+      const k = await mountKiosk(b, { user: pUser, profileId: pp.id, profiles: pProfiles, bus,
+        embedded: true, dashboardModule: true, storage: mem(), session: mem(), navigate: () => {},
+        reloadPage: () => {}, plainBarSummonMs: 400, ...extra });
+      return { b, k, bus, controls: () => b.querySelector('.kiosk > .k-controls') };
+    };
+    const shown = (c) => !!c && !c.classList.contains('k-plain-off');
+    let dk = null;
+    try {
+      // ---- the default dashboard: bar and menu placed --------------------------------------------
+      const d = await mountDash();
+      dk = d.k;
+      await settled(() => d.k.dashboard?.()?.chrome?.().bar === 'carried', 3000);
+      check('*** stage 3b: the dashboard places a transport bar and a settings menu, and both are carried ***',
+        !!d.b.querySelector('.k-dash .view .v-dock-bottom .tb-bar')
+        && JSON.stringify(d.k.dashboard?.()?.chrome?.()) === JSON.stringify({ bar: 'carried', menu: 'carried', edit: 'none' }),
+        JSON.stringify(d.k.dashboard?.()?.chrome?.()));
+      check('*** ...so the shell’s own bar is the PLAIN bar, and it is out of the way ***',
+        d.controls().classList.contains('k-plain') && !shown(d.controls()) && d.k.plainBar() === 'off', d.k.plainBar());
+      // Escape, from inside the box (an embed only answers keys that land in it).
+      d.b.querySelector('.kiosk').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      d.b.querySelector('.kiosk').dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true }));
+      await sleep(60);
+      check('*** Escape summons the plain bar ***', shown(d.controls()) && d.k.plainBar() === 'summoned', d.k.plainBar());
+      check('...and on this path Escape is the plain bar, not the menu (M and the gear still open the menu)',
+        d.k.menu.isOpen() === false);
+      await sleep(600);
+      check('a summoned plain bar puts itself away again while a placed bar carries it',
+        !shown(d.controls()) && d.k.plainBar() === 'off', d.k.plainBar());
+      // The placed bar's buttons are the shell's buttons.
+      const bar = d.b.querySelector('.tb-bar');
+      const nexts = [];
+      const type0 = d.k.primaryType();
+      d.bus.subscribe(`${type0}/next`, () => nexts.push(1));
+      bar.querySelector('[data-act="next"]').click();
+      await sleep(40);
+      check('*** the placed bar’s Next does what the plain bar’s Next does (the focused panel’s next) ***',
+        nexts.length === 1, `${type0}: ${nexts.length}`);
+      bar.querySelector('[data-act="settings"]').click();
+      await sleep(60);
+      check('*** its gear opens THE menu -- inside the dashboard’s left dock, where the menu module placed it ***',
+        d.k.menu.isOpen() && !!d.b.querySelector('.view .v-dock-left [data-settings] .st-scrim.st-inline:not([hidden])'));
+      d.k.menu.close();
+      bar.querySelector('[data-act="hush"]').click();
+      await sleep(40);
+      check('its Hush hushes the screen, and BOTH bars say so',
+        d.k.audio().isHushed() === true && bar.querySelector('[data-act="hush"]').textContent === 'Sound off'
+        && d.controls().querySelector('[data-act="hush"]').textContent === 'Sound off');
+      bar.querySelector('[data-act="hush"]').click();
+      await sleep(40);
+      // The long press: a bound switch held down, as the input bus reports it.
+      const edge = (phase) => d.bus.publish(EDGE_TOPIC, { at: Date.now(), pressId: 9001, phase, device: 'switch:0',
+        deviceClass: 'switch', control: 'button:0', bound: true, auto: false });
+      edge('down');
+      await sleep(450);
+      const ring = d.b.querySelector('.kiosk > .k-ring');
+      check('*** holding a switch: after 250 ms a ring says "Keep holding for the plain bar" ***',
+        !!ring && !ring.hidden && /Keep holding for the plain bar/.test(ring.textContent) && !shown(d.controls()));
+      await sleep(1200);
+      check('*** at 1.5 s the plain bar is up, and the ring is gone ***',
+        shown(d.controls()) && d.k.plainBar() === 'summoned' && (!ring || ring.hidden), d.k.plainBar());
+      edge('up');
+      await sleep(500);
+      // Take the placed bar away: the plain bar comes up by itself, and stays.
+      d.k.dashboard().removeChrome('chrome-bar');
+      await sleep(40);
+      check('*** the placed bar removed: the plain bar comes up BY ITSELF ***', shown(d.controls()) && d.k.plainBar() === 'auto',
+        d.k.plainBar());
+      await sleep(700);
+      check('...and stays, however long nobody touches it', shown(d.controls()) && d.k.plainBar() === 'auto');
+      d.k.destroy(); dk = null;
+
+      // ---- no bar placed, a bar that fails, a bar that never finishes -------------------------------
+      const n = await mountDash({ dashboardChrome: [] });
+      await sleep(60);
+      check('*** a dashboard that placed no bar: the plain bar is up from the start ***', shown(n.controls()) && n.k.plainBar() === 'auto');
+      n.k.destroy();
+      const f = await mountDash({ dashboardChrome: [{ id: 'bb', type: 'boombar3btest', dock: 'bottom' }] });
+      await sleep(100);
+      check('*** a placed bar that failed to start: the plain bar is up ***', shown(f.controls()) && f.k.plainBar() === 'auto', f.k.plainBar());
+      f.k.destroy();
+      const h = await mountDash({ dashboardChrome: [{ id: 'hb', type: 'hangbar3btest', dock: 'bottom' }] });
+      await sleep(300);
+      check('a placed bar still mounting is given its 2 s (no flash of the plain bar)', !shown(h.controls()), h.k.plainBar());
+      await sleep(2000);
+      check('*** ...and after 2 s without it, the plain bar is up ***', shown(h.controls()) && h.k.plainBar() === 'auto', h.k.plainBar());
+      h.k.destroy();
+    } catch (e) {
+      check('the stage 3b plain-bar section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { dk?.destroy(); } catch { /* already gone */ }
+      boxes.forEach((b) => b.remove());
     }
   }
 

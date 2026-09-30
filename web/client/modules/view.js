@@ -92,7 +92,12 @@
 // `ctx.embedded` (true: no links runner -- a preview is not a screen), `ctx.layoutOverride` (use this
 // arrangement, `null` included, instead of the one saved in the view's settings).
 
-import { registerModule, mountModule, extendCtx } from '../module.js';
+import { registerModule, mountModule, extendCtx, getManifest } from '../module.js';
+// The chrome a dashboard can place (Stage 3b): registered here, with the thing that places them, so a
+// page that can mount a dashboard can mount its bar and its menu. Not in modules_catalog.js: they are
+// not something a caregiver picks from the modules page, they are what every dashboard starts with.
+import './transport_bar.js';
+import './settings_menu.js';
 import { createArrangement } from '../arrangement.js';
 
 // The same defaults the kiosk has always used, so a view mounted from an existing
@@ -238,7 +243,90 @@ registerModule(
 
     const brief = (rec) => (rec ? { id: rec.id, type: rec.type, title: rec.title || rec.type } : null);
 
-    return {
+    // ---- CHROME: the bar, the menu and the edit menus, PLACED in this dashboard (Stage 3b) -----------
+    //
+    // Mike, 2026-09-30: *"They are modules. They're not being drawn by a module. They're being placed
+    // in the dashboard."* `ctx.chrome` is the list: `[{ id, type, dock }]`, a module whose manifest
+    // declares `chrome: 'bar' | 'menu' | 'edit'`, docked along one edge (`bottom`, `top`, `left`,
+    // `right`). Docking is the first placement there is; placing them IN THE SCENE (the room's
+    // cabinet, its door) is the scene-placement stage, and changes where they are drawn, not this.
+    //
+    // NOT PANELS: they are not in the arrangement's module list, so they get no chip, are never
+    // focused, never partitioned into the HUD and never offered as a recovery fallback (recovery.js
+    // filters `chrome`). Nor are they health-watched: a bar publishes no heartbeat, and a watch that
+    // expects one would call it stalled.
+    //
+    // *** WHAT THE SHELL NEEDS FROM THIS: WHETHER ANYTHING CARRIES EACH ROLE. *** `chrome()` answers,
+    // per role, 'carried' (mounted), 'pending' (still mounting), 'failed' (threw) or 'none' (nothing
+    // placed, or it was removed). The shell's PLAIN bar is shown by that answer -- "automatically, when
+    // no object carries the transport bar: it was removed, or its module failed to mount within 2 s"
+    // (Design) -- and the 2 s is the SHELL's clock, not this: the dashboard only says what it knows.
+    // A chrome module that never finishes mounting must not hold up the dashboard either, so they are
+    // started and NOT awaited by `init`.
+    const CHROME_ROLES = ['bar', 'menu', 'edit'];
+    const chromeRecs = new Map();              // id -> { def, role, status, instance, host }
+    const docks = {};
+    function dockFor(where) {
+      const w = ['bottom', 'top', 'left', 'right'].includes(where) ? where : 'bottom';
+      if (!docks[w]) {
+        docks[w] = document.createElement('div');
+        docks[w].className = `v-dock v-dock-${w}`;
+        root.append(docks[w]);
+        root.classList.add('v-docked', `v-has-${w}`);
+      }
+      return docks[w];
+    }
+    function chromeStatus() {
+      const out = {};
+      for (const role of CHROME_ROLES) {
+        const recs = [...chromeRecs.values()].filter((r) => r.role === role);
+        out[role] = !recs.length ? 'none'
+          : recs.some((r) => r.status === 'carried') ? 'carried'
+            : recs.some((r) => r.status === 'pending') ? 'pending' : 'failed';
+      }
+      return out;
+    }
+    async function mountChrome(def) {
+      const role = getManifest(def.type)?.chrome || def.role || null;
+      const host = document.createElement('div');
+      host.className = 'v-chrome';
+      host.dataset.chrome = role || '';
+      dockFor(def.dock).append(host);
+      const rec = { def, role, status: 'pending', instance: null, host };
+      chromeRecs.set(def.id, rec);
+      try {
+        // No per-instance state: nothing about a placed bar or menu is saved yet. The container is
+        // THIS dashboard (`self`), so the bar can read its panels and hear when they change.
+        rec.instance = mountModule(def.type, extendCtx(ctx, {
+          ...childMakes, mount: host, bus: rootBus, state: null, events: null,
+          profileId: viewId, instanceId: def.id, container: self,
+        }));
+        await rec.instance.init();
+        if (torn || chromeRecs.get(def.id) !== rec) { try { rec.instance.destroy(); } catch { /* gone */ } return; }
+        rec.status = 'carried';
+      } catch (err) {
+        console.error(`view: ${def.type} (placed ${role || 'chrome'}) failed to start`, err);
+        if (chromeRecs.get(def.id) !== rec) return;
+        rec.status = 'failed';
+        try { rec.instance?.destroy(); } catch { /* gone */ }
+        rec.instance = null;
+        host.remove();
+      }
+      changed();
+    }
+    function removeChrome(id) {
+      const rec = chromeRecs.get(id);
+      if (!rec) return false;
+      chromeRecs.delete(id);
+      try { rec.instance?.destroy(); } catch { /* already gone */ }
+      rec.host.remove();
+      changed();
+      return true;
+    }
+
+    // Declared, not returned directly, so the chrome modules can be handed THIS object as their
+    // container (`ctx.container`).
+    const self = {
       __probe: () => ({
         viewId, ready: !!arrangement, hasLayout: !!arr?.layout(), primary: arr ? arr.primary() : 0,
         stage: arr ? arr.stageDefs().map((d) => d.type) : [],
@@ -271,12 +359,13 @@ registerModule(
       remount: (id) => (arr ? arr.remountPanel(id) : Promise.resolve(false)),
       swap: (id, type) => (arr ? arr.swapPanel(id, type) : Promise.resolve(false)),
       onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
-      // THE SHELL'S READ ACCESS, Stage 3 to 3b. The kiosk shell mounting this view on the embedded path
-      // still draws the bar and the menu itself, from the same arrangement functions it always read
-      // (arrangement.js), so it reads THIS view's arrangement rather than a reshaped copy. Null until
-      // `init` has built it. When the bar and menu become modules placed in the dashboard (Stage 3b)
-      // they read the contract above instead, and this goes.
+      // THIS DASHBOARD'S ARRANGEMENT (arrangement.js), read-only by convention. Read by the kiosk
+      // shell (its plain bar, its menu, recovery's hands) and by the placed transport bar, so both
+      // bars draw from the same functions rather than a reshaped copy. Null until `init` built it.
       arrangement: () => arr,
+      // ---- chrome (Stage 3b; see above) ----
+      chrome: () => chromeStatus(),
+      removeChrome,
 
       async init() {
         root = document.createElement('div');
@@ -350,6 +439,10 @@ registerModule(
           const off = settingsHandle?.subscribe?.(() => { if (!torn) arr.screenLinks.sync(); });
           if (typeof off === 'function') offs.push(off);
         }
+        // The placed chrome, once there are panels for a bar to name. Started, not awaited: see
+        // CHROME above. Every role it will carry is 'pending' from this moment.
+        const placed = Array.isArray(ctx.chrome) ? ctx.chrome.filter((d) => d && d.id && d.type) : [];
+        for (const def of placed) mountChrome(def).catch((err) => console.error('view: chrome', err));
         changed();
         rootBus.publish('view/ready', { viewId, modules: arrangement.modules.length });
       },
@@ -361,6 +454,7 @@ registerModule(
         torn = true;
         offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
         listeners.clear();
+        for (const id of [...chromeRecs.keys()]) removeChrome(id);
         try { arr?.destroy(); } catch { /* already gone */ }
         // THE LEAK (step 6 plan): opened, set polling, and never closed. Closed here, last, after
         // everything that might read it.
@@ -371,5 +465,6 @@ registerModule(
         arrangement = null; arr = null;
       },
     };
+    return self;
   },
 );

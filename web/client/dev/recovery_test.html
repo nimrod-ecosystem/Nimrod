@@ -334,6 +334,18 @@ section('rankFallbacks — NOTHING is failure-free, so it ranks by exposure');
     JSON.stringify(rankFallbacks(withAmbient)));
   check('...an ordinary module at the same exposure level is unaffected',
     rankFallbacks(withAmbient).some((r) => r.type === 'clock'));
+
+  // *** NOR A PIECE OF CHROME (step 6 Stage 3b, 2026-09-30). *** The transport bar and the settings
+  // menu are modules now (`chrome: 'bar'|'menu'`), need nothing (dependsOn 'none') and matter most
+  // (critical) -- which, unfiltered, puts them at the very TOP: a stalled photo frame "recovered" into
+  // a copy of the transport bar. They are placed in a dashboard's docks, never in a panel's place.
+  const withChrome = [
+    { type: 'transport_bar', title: 'Transport bar', dependsOn: 'none', importance: 'critical', chrome: 'bar' },
+    { type: 'settings_menu', title: 'Settings menu', dependsOn: 'none', importance: 'critical', chrome: 'menu' },
+    { type: 'clock', title: 'Clock', dependsOn: 'none' },
+  ];
+  check('*** a chrome module (the bar, the menu) never appears in the fallback ranking ***',
+    rankFallbacks(withChrome).map((r) => r.type).join() === 'clock', JSON.stringify(rankFallbacks(withChrome)));
 }
 
 // =====================================================================

@@ -286,6 +286,11 @@ export function rankFallbacks(manifests = [], { exclude = [], allowNetwork = fal
     // panel at all; kiosk.js's own `partition()` never lets it occupy a normal slot on
     // purpose, and a recovery swap must not do what ordinary placement already refuses to.
     .filter((m) => m?.mount !== 'ambient')
+    // NOR A PIECE OF CHROME (step 6 Stage 3b, 2026-09-30): the transport bar and the settings menu
+    // are modules now (`chrome: 'bar'|'menu'`) that need nothing and matter most, so unfiltered they
+    // topped this ranking -- a stalled panel "recovered" into a copy of the bar. They live in a
+    // dashboard's docks, never in a panel's place.
+    .filter((m) => !m?.chrome)
     .filter((m) => allowNetwork || (DEPENDS.includes(m.dependsOn) ? m.dependsOn : 'server') !== 'network')
     .map((m) => ({
       type: m.type,
