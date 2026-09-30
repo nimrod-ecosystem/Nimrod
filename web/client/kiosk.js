@@ -158,7 +158,15 @@ export async function mountKiosk(root, {
   // writes its layout back (its one write to `settings.kiosk`, `patchMirror`, spreads the STORED
   // value), so a signed-in visitor's real arrangement is untouched.
   embedLayout = null,
+  // *** `dashboardModule` -- STEP 6 STAGE 3 (2026-09-30). Default false, and ONLY read when `embedded` is
+  // true: no real screen can be switched onto it by passing this. When on, the panels are not mounted
+  // by this file's own arrangement: the shell mounts ONE dashboard module (`modules/view.js`, a thin
+  // module over the same `arrangement.js`) and draws its bar and menu from THAT module's arrangement.
+  // `modules.html` turns it on (module_try.js), so it is proven on a public page before any screen
+  // anybody sits at. Stage 4 makes it the default on a real screen; until then nothing else changes.
+  dashboardModule = false,
 } = {}) {
+  const useDashboard = !!embedded && !!dashboardModule;
   bus = bus || createBus();
   // Read before anything else renders: if this screen is not where the device is meant to
   // come back to, the cheapest possible outcome is to leave before mounting a whole kiosk.
@@ -637,7 +645,7 @@ export async function mountKiosk(root, {
   // over as a getter -- the input runtime, the health watch, the screen id a swap changes -- the same
   // reason `childCtx` uses getters. (`health` is a `const` further down: its getter is only called by
   // `swapPanel`, which only recovery calls, long after it exists.)
-  const arr = createArrangement({
+  const ownArr = createArrangement({
     bus, user, storage, embedded, settings,
     kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
     mountInstance, destroyRec, watchRec, renderMods,
@@ -645,6 +653,25 @@ export async function mountKiosk(root, {
     health: () => health,
     profileId: () => profileId,
   });
+  // *** WHICH ARRANGEMENT THE SHELL IS READING (step 6 Stage 3). *** Normally this file's own. With
+  // `dashboardModule` on (embedded only), the panels are mounted by a dashboard MODULE, and the bar,
+  // the menu, focus and recovery's hands must all be about ITS panels -- so every read below goes
+  // through `arr`, which forwards to the dashboard's arrangement once it exists and to this file's own
+  // otherwise. Same functions (arrangement.js) either way: nothing is reshaped between the two.
+  // The mirror/clock corner functions are NOT forwarded: they are screen settings applied to `.kiosk`,
+  // and the dashboard applies the same settings doc to its own root itself.
+  let dash = null;                         // the mounted dashboard module, when there is one
+  let dashHost = null;                     // ...and the element it is mounted into
+  const arrNow = () => dash?.impl?.arrangement?.() || ownArr;
+  const OWN_ONLY = new Set(['applyLayout', 'patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner']);
+  const arr = {};
+  for (const k of Object.keys(ownArr)) {
+    if (typeof ownArr[k] === 'function') {
+      arr[k] = OWN_ONLY.has(k) ? ownArr[k] : (...a) => arrNow()[k](...a);
+    } else {
+      Object.defineProperty(arr, k, { enumerable: true, get: () => arrNow()[k] });
+    }
+  }
   // Its functions, under the names this file always called them by, so the shell reads as it did.
   // Its STATE is not destructured: a swap replaces it, so it is read through `arr.layout()`,
   // `arr.stageRec()` and the rest, every time.
@@ -785,7 +812,8 @@ export async function mountKiosk(root, {
 
   // The HUD overlays -- the mirror, the corner clock, the ambient layer: mounted once, left running.
   // (`mountOverlay` in arrangement.js says why one that throws must leave no trace.)
-  await arr.mountOverlays();
+  // (With a dashboard module, it mounts its own HUD, into its own hosts.)
+  if (!useDashboard) await arr.mountOverlays();
 
   // The slots, the one-at-a-time stage and which panel the bar is about (`mountLayout`,
   // `showPrimary`, `focusedRec`, the unplaced swap, `paintFocus`) live in arrangement.js.
@@ -934,6 +962,10 @@ export async function mountKiosk(root, {
    *  `remember: false` on the return leg, so going back does not stack up forever. */
   async function showScreen(nextId, { remember = true } = {}) {
     if (!nextId || nextId === profileId || swapping) return null;
+    // A dashboard module (Stage 3, embedded only) is not swapped in place: the swap that loads and
+    // mounts the NEW dashboard before destroying the old is Stage 4's. An embed has no other screens
+    // to go to (its `list()` is empty), so this refuses rather than half-swapping inside the module.
+    if (useDashboard) return null;
     swapping = true;
     const from = profileId;
     try {
@@ -1631,6 +1663,10 @@ export async function mountKiosk(root, {
             remoteEl.hidden = !(drivers > 0);
           },
         });
+        // A call transport can exist from now on (`childCtx`'s getter builds it from `drive`). The
+        // panels mounted before this moment -- usually all of them -- are told, so a call panel that
+        // found no transport at mount binds to it now instead of never ringing. 2026-09-30.
+        if (!torn) bus.publish(CALL_TRANSPORT_READY);
       }
       if (makeState || embedded || !profiles.personStateURL) return;
       if (torn) return;
@@ -1663,10 +1699,6 @@ export async function mountKiosk(root, {
   //
   // This is the half that was missing. Modules were never the problem: a module subscribes
   // to `photos/next` on its scoped bus and has no idea a switch exists, which is exactly
-        // A call transport can exist from now on (`childCtx`'s getter builds it from `drive`). The
-        // panels mounted before this moment -- usually all of them -- are told, so a call panel that
-        // found no transport at mount binds to it now instead of never ringing. 2026-09-30.
-        if (!torn) bus.publish(CALL_TRANSPORT_READY);
   // why the same module runs here, on the home page, or anywhere else. What did not exist
   // was anybody CONSTRUCTING the device half on this surface — so a person's switch drove
   // the binder on a clinician's laptop and nothing at all on the screen they actually use.
@@ -2038,7 +2070,39 @@ export async function mountKiosk(root, {
     navigate(`kiosk.html?profile=${encodeURIComponent(plan.redirectTo)}`);
   }
 
-  if (arr.layout()) await mountLayout(); else await showPrimary(plan.stageIndex);
+  // *** THE DASHBOARD AS A MODULE (step 6 Stage 3; `dashboardModule`, embedded only). ***
+  // One `view` module, mounted like any other module (`mountModule`, `childCtx`), into a host that
+  // takes the stage's place. It is handed what the kiosk's own arrangement would have used: the same
+  // screen record, the arrangement this embed wants (never the saved grid -- see `savedLayout`), the
+  // input router (so a switch and the dashboard mean the same panel), the health watch, and THIS
+  // kiosk's storage seam (the preview's in-memory one -- never the device's restart record).
+  // *** A DASHBOARD THAT WILL NOT START MUST STILL LEAVE SOMETHING ON SCREEN. *** If it throws, it is
+  // taken down and this file's own arrangement mounts the panels exactly as it would have without it.
+  async function mountDashboard() {
+    dashHost = document.createElement('div');
+    dashHost.className = 'k-dash';
+    stageEl.style.display = 'none';
+    stageEl.after(dashHost);
+    try {
+      dash = mountModule('view', extendCtx(childCtx({ id: `dashboard:${profileId}`, type: 'view' }), {
+        mount: dashHost, state: null, events: null,
+        viewId: profileId, arrangement: ownArr.profile(), layoutOverride: savedLayout || null,
+        router: runtime.router, health, storage, embedded: true,
+      }));
+      dash.impl.onChange?.(() => renderMods());
+      await dash.init();
+      if (!dash.impl.arrangement?.()) throw new Error('the dashboard module did not build an arrangement');
+      renderMods();
+    } catch (err) {
+      console.error('kiosk: the dashboard module failed; showing the panels directly', err);
+      try { dash?.destroy(); } catch { /* already gone */ }
+      dash = null; dashHost?.remove(); dashHost = null;
+      stageEl.style.display = '';
+      if (arr.layout()) await mountLayout(); else await showPrimary(0);
+    }
+  }
+  if (useDashboard) await mountDashboard();
+  else if (arr.layout()) await mountLayout(); else await showPrimary(plan.stageIndex);
 
   // Links, once the modules exist: sync now, and again whenever the settings doc changes (links
   // written after boot are picked up without a reload, since they are not part of the layout). The
@@ -2148,6 +2212,10 @@ export async function mountKiosk(root, {
       clearInterval(recoveryTimer);
       health.destroy();
       try { offLinks?.(); } catch { /* already gone */ }
+      // The dashboard module first: it tears down its own panels and its own arrangement. After it is
+      // gone `arr` forwards to this file's own, which has nothing mounted on that path.
+      try { dash?.destroy(); } catch { /* already gone */ }
+      dash = null; dashHost?.remove(); dashHost = null;
       arr.destroy();
       settings.destroy();
       menu.destroy();

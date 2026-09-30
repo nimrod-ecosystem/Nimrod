@@ -232,6 +232,30 @@
      camera, which the kiosk draws as an overlay), so it would be a button that does nothing --
      the one thing the bar's own comments say it must never have. */
   .kiosk.k-embed [data-act="mirror"]{display:none}
+  /* *** THE DASHBOARD AS A MODULE (step 6 Stage 3, `dashboardModule`, embedded only). *** The kiosk
+     shell mounts ONE `view` module into `.k-dash`, which takes the stage's place (the kiosk's own
+     `.k-stage` is hidden on that path). `.kiosk >` because `mountModule` also gives the host
+     `.mod-host{position:relative}`, and this must win wherever the two files load. The view's own
+     root is positioned so its `.k-stage` / `.k-mirror` / `.k-clock` / `.k-ambient` resolve against it
+     exactly as the kiosk's do against `.kiosk`; `isolation` so a view standing on its own keeps its
+     HUD and its ambient layer in one scale, as `.kiosk` does. */
+  .kiosk > .k-dash{position:absolute;inset:0}
+  .kiosk.k-embed > .k-dash{position:relative;inset:auto;flex:1;min-height:0}
+  .view{position:absolute;inset:0;isolation:isolate}
+  /* The corner settings, on the VIEW'S root too. Inside a kiosk the `.kiosk[...]` rules above already
+     reach a view's HUD (descendant selectors) and both roots carry the same values, from the same
+     settings doc; these are for a view that stands anywhere else (a slot, a page). */
+  .view[data-mirror-size="sm"] .k-mirror{width:18vw}
+  .view[data-mirror-size="md"] .k-mirror{width:24vw}
+  .view[data-mirror-size="lg"] .k-mirror{width:32vw}
+  .view[data-mirror-corner="tr"] .k-mirror{top:2.5vmin;right:2.5vmin}
+  .view[data-mirror-corner="tl"] .k-mirror{top:2.5vmin;left:2.5vmin}
+  .view[data-mirror-corner="br"] .k-mirror{bottom:2.5vmin;right:2.5vmin}
+  .view[data-mirror-corner="bl"] .k-mirror{bottom:2.5vmin;left:2.5vmin}
+  .view[data-clock-corner="bl"] .k-clock{bottom:2.5vmin;left:2.5vmin}
+  .view[data-clock-corner="br"] .k-clock{bottom:2.5vmin;right:2.5vmin}
+  .view[data-clock-corner="tl"] .k-clock{top:2.5vmin;left:2.5vmin}
+  .view[data-clock-corner="tr"] .k-clock{top:2.5vmin;right:2.5vmin}
   /* auto-hiding control bar */
   /* *** THE BAR WRAPS. IT USED TO RUN OFF THE SCREEN. ***
    *

@@ -429,6 +429,10 @@ export async function mountEmbeddedKiosk({ stage, user = null, type }) {
       storage: memoryStorage(), session: memoryStorage(),
       sources: createLocalMediaSources(),
       embedded: true,
+      // STEP 6 STAGE 3 (2026-09-30): the panels are drawn by a DASHBOARD MODULE (modules/view.js), the
+      // kiosk shell keeps the bar and the menu. This page is where it is proven first -- a public page,
+      // not a screen anybody sits at. Stage 4 makes it the default on a real screen.
+      dashboardModule: true,
     };
     if (user) {
       const real = createProfilesClient({ user });

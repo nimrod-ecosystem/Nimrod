@@ -337,6 +337,13 @@ const host = document.getElementById('host');
       check('no camera or clock overlay, no other panels — the page never asked for them',
         !e.kiosk.hasCamera() && !e.kiosk.hasClock() && e.kiosk.stageCount() === 1);
       check('*** no remote-drive socket: a page in a tab is not somebody’s screen ***', e.kiosk.drive() === null);
+      // STEP 6 STAGE 3 (2026-09-30): this page turns on `dashboardModule`, so the kiosk shell mounts a
+      // DASHBOARD MODULE (modules/view.js) and the panels are drawn by it, not by the kiosk's own stage.
+      check('*** stage 3: the picked module is drawn by a dashboard module, not by the kiosk’s own stage ***',
+        !!eStage.querySelector('.kiosk.k-embed > .k-dash .view .k-stage .k-mod')
+        && !eStage.querySelector('.kiosk > .k-stage .k-mod'), eStage.querySelector('.kiosk')?.innerHTML.slice(0, 160));
+      check('stage 3: ...and the bar still names it and lights it (the shell reads the dashboard’s arrangement)',
+        eStage.querySelector('.k-mods .k-dot.on')?.textContent === 'trivia');
       check('the settings menu opens, inside the box',
         (() => { e.kiosk.menu.open(); const s = eStage.querySelector('.kiosk > [data-settings] .st-scrim');
           const b = s?.getBoundingClientRect(), o = eStage.getBoundingClientRect();
@@ -376,6 +383,8 @@ const host = document.getElementById('host');
         k.slotCount() === 1 && k.slotTypes()[0] === type && !!eStage.querySelector(`.k-stage ${sel}`)
         && !k.hasCamera() && !k.hasClock() && !k.hasAmbient(),
         JSON.stringify({ slots: k.slotTypes(), cam: k.hasCamera(), clock: k.hasClock(), amb: k.hasAmbient() }));
+      check(`stage 3: ${type} is placed by the dashboard module, in ITS one slot`,
+        !!eStage.querySelector(`.k-dash .view .k-stage .k-cell[data-slot="0"] ${sel}`));
       k.menu.open();
       const labels = k.menu.items().map((i) => i.label);
       check(`*** ${type}: the gear menu names ITS OWN settings -- the thing that was unreachable ***`,
@@ -423,6 +432,8 @@ const host = document.getElementById('host');
       check('*** ...so no camera overlay opens on a public page just because somebody picked YouTube ***',
         !e.kiosk.hasCamera() && !e.kiosk.hasClock() && e.kiosk.stageCount() === 1);
       check('...and it did not add a second instance', (await countType('youtube')) === 1);
+      check('*** stage 3, signed in: the real instance is drawn by the dashboard module ***',
+        !!eStage.querySelector('.k-dash .view .k-stage .youtube') && !eStage.querySelector('.kiosk > .k-stage .youtube'));
       check('*** no remote-drive socket, signed in either ***', e.kiosk.drive() === null);
       e.kiosk.menu.open();
       check('"hand this screen to another person" is withheld from a preview (it would move somebody’s real screen)',

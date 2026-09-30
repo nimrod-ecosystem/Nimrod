@@ -88,7 +88,9 @@
 // WHAT THE HOST MAY HAND IN, all optional: `ctx.router` (the input router, so a switch and this view
 // agree on focus -- without one the view keeps its own), `ctx.health` (a health watch: every panel
 // is `watch`ed, a swapped one `forget`-ed), `ctx.storage` (where the one-at-a-time stage remembers its
-// position), `ctx.embedded` (true: no links runner -- a preview is not a screen).
+// position -- a preview host MUST pass its own, or the real device's restart record is written),
+// `ctx.embedded` (true: no links runner -- a preview is not a screen), `ctx.layoutOverride` (use this
+// arrangement, `null` included, instead of the one saved in the view's settings).
 
 import { registerModule, mountModule, extendCtx } from '../module.js';
 import { createArrangement } from '../arrangement.js';
@@ -269,6 +271,12 @@ registerModule(
       remount: (id) => (arr ? arr.remountPanel(id) : Promise.resolve(false)),
       swap: (id, type) => (arr ? arr.swapPanel(id, type) : Promise.resolve(false)),
       onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+      // THE SHELL'S READ ACCESS, Stage 3 to 3b. The kiosk shell mounting this view on the embedded path
+      // still draws the bar and the menu itself, from the same arrangement functions it always read
+      // (arrangement.js), so it reads THIS view's arrangement rather than a reshaped copy. Null until
+      // `init` has built it. When the bar and menu become modules placed in the dashboard (Stage 3b)
+      // they read the contract above instead, and this goes.
+      arrangement: () => arr,
 
       async init() {
         root = document.createElement('div');
@@ -327,7 +335,9 @@ registerModule(
         // *** THE SAME RESOLVE THE KIOSK USES, AND THIS IS THE POINT OF SHARING IT. *** (It was a
         // second copy here once, and carried G1-G3 for a week after the kiosk's was fixed.) Now it
         // is not even a shared function call: it is the arrangement's own.
-        arr.resolve((settings.get().kiosk || {}).layout);
+        // `ctx.layoutOverride` (Stage 3): a host that knows the arrangement it wants -- the modules page
+        // shows ONE picked module, never the screen's saved grid -- hands it in, `null` included.
+        arr.resolve('layoutOverride' in ctx ? ctx.layoutOverride : (settings.get().kiosk || {}).layout);
         arr.partition();
         await arr.mountOverlays();
         if (torn) return;
