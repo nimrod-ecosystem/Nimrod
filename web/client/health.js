@@ -82,6 +82,13 @@ export const HEALTH_EXPECT = {
   algebra:     { idle: true },
   trivia:      { idle: true },
   word_games:  { idle: true },
+  // Row 2.45's three answer games: the same reasoning as word_games. Sing along is a video
+  // player (it mounts youtube inside) and says its heartbeat as `karaoke/progress`, so it gets
+  // youtube's own bound.
+  spelling:    { idle: true },
+  simple_math: { idle: true },
+  name_that:   { idle: true },
+  karaoke:     { expectMs: 90 * 60 * 1000 },
   // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
   //
   // `trivia`, `bank`, `wallpaper` and `board` shipped without rows, so they fell to the

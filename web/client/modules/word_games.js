@@ -60,44 +60,56 @@ import {
   OPPOSITES, RHYMING, YES_NO, YES_WORDS, NO_WORDS, PRONUNCIATIONS, RHYME_OFFER_POOL,
   rhymes, rhymesFor, hasPicture,
 } from '../word_games_words.js';
+// *** THE PURE HELPERS LIVE IN quiz_flow.js NOW (row 2.45), and are re-exported below. *** Three
+// more answer games arrived with "the same miss flow as row 2.31", so the wording, `reasonFor`
+// (Y only ever a true signal), the chime and the stars have one home instead of four. Moved, not
+// changed: word_games_test and quiz_flow_test both check these are the same functions.
+import {
+  ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, FLOW_LINES,
+  normalize, fill, esc, fillHtml, shuffle, isYes, isNo, isAgain, isReveal, isDone, reasonFor,
+  defaultChime as sharedChime, STARS, CAT_URL,
+} from '../quiz_flow.js';
+
+export { ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, normalize, fill, shuffle, isYes, isNo, reasonFor };
 
 export const GAME = 'word_games';
 export const GAMES = ['opposites', 'rhyming', 'yesno'];
-// The recogniser seam on the bus. The scoped bus also answers `speech/answer#<instanceId>`, so a
-// recogniser that knows which panel asked can address that one panel only.
-export const ANSWER_TOPIC = 'speech/answer';
-// What this game can accept right now, for a grammar-limited recogniser (Vosk).
-export const GRAMMAR_TOPIC = 'speech/grammar';
+// The recogniser seam on the bus is ANSWER_TOPIC ('speech/answer'); the scoped bus also answers
+// `speech/answer#<instanceId>`, so a recogniser that knows which panel asked can address that one
+// panel only. GRAMMAR_TOPIC ('speech/grammar') is what this game can accept right now, for a
+// grammar-limited recogniser (Vosk). Both are declared once, in quiz_flow.js.
 // "Computer please play opposites" lands here (input_speech.js ROUTES): `{ game }`.
 export const PLAY_TOPIC = `${GAME}/play`;
-export const UNKNOWN = '[unk]';
 
 // *** THE SPOKEN LINES. *** Mike's wording where he gave it (wrongLine, unsureLine, twoMissLine,
 // anotherLine), Design's copy for the rest (voice.html). `{placeholders}` are filled per question;
 // an unknown one is left empty rather than read out as a brace.
+// The shared lines are read from FLOW_LINES (one copy of Mike's wording); the order here is the
+// order the settings menu lists them in, unchanged.
+const F = FLOW_LINES;
 export const LINES = Object.freeze({
   askOpposites: 'What is the opposite of {word}?',
   askRhyming: 'Which word rhymes with {word}?',
   candidateOpposites: 'Is it {candidate}?',
   candidateRhyming: 'Does {candidate} rhyme with {word}?',
-  wrongLine: 'It sounded like you said {heard}. That is incorrect.',
-  switchWrongLine: 'That is incorrect.',
-  unsureLine: "It sounds like you might be saying {heard}, but I'm not sure because {reason}.",
-  unsureNoReasonLine: "It sounds like you might be saying {heard}, but I'm not sure.",
-  reasonQuiet: 'it was very quiet',
-  reasonNoise: 'there was other noise',
-  reasonCutoff: 'it was cut off',
-  reasonAlternative: 'it could also be {alt}',
-  hintLine: 'Here is a hint: {hint}.',
+  wrongLine: F.wrongLine,
+  switchWrongLine: F.switchWrongLine,
+  unsureLine: F.unsureLine,
+  unsureNoReasonLine: F.unsureNoReasonLine,
+  reasonQuiet: F.reasonQuiet,
+  reasonNoise: F.reasonNoise,
+  reasonCutoff: F.reasonCutoff,
+  reasonAlternative: F.reasonAlternative,
+  hintLine: F.hintLine,
   hintRhyming: 'it ends with the same sound: {sound}',
-  twoMissLine: 'Would you like to try again, or hear the answer?',
-  rightLine: 'Yes! {explain}',
+  twoMissLine: F.twoMissLine,
+  rightLine: F.rightLine,
   explainOpposites: '{answer} is the opposite of {word}.',
   explainRhyming: '{answer} rhymes with {word}.',
-  answerLine: 'Here is the answer. {explain}',
-  anotherLine: 'Would you like to do another one?',
-  doneLine: 'Thanks for playing.',
-  notCaughtLine: "I didn't catch that. Say it again, or press your switch.",
+  answerLine: F.answerLine,
+  anotherLine: F.anotherLine,
+  doneLine: F.doneLine,
+  notCaughtLine: F.notCaughtLine,
   unknownWordLine: "I heard {heard}, but I don't know that word well enough to check it. Try another word.",
   yesNoOnlyLine: 'I heard {heard}. This one is a yes or a no.',
 });
@@ -173,67 +185,10 @@ const SETTINGS = [
 ];
 
 // ---------------------------------------------------------------------------------------
-// SMALL PURE HELPERS
+// SMALL PURE HELPERS — normalize, fill, fillHtml, esc, shuffle, isYes/isNo/isAgain/isReveal/
+// isDone and reasonFor (THE REASON Y: only a reason the recogniser reported, never made up) are
+// imported from quiz_flow.js above. `reasonFor`'s default lines are the same shared wording.
 // ---------------------------------------------------------------------------------------
-
-export function normalize(text) {
-  return String(text == null ? '' : text).toLowerCase()
-    .replace(/[‘’]/g, "'").replace(/[^a-z' ]+/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-/** Fill `{name}` placeholders. Missing values become empty, and the spacing is tidied. */
-export function fill(template, vals = {}) {
-  return String(template == null ? '' : template)
-    .replace(/\{(\w+)\}/g, (_, k) => (vals[k] == null ? '' : String(vals[k])))
-    .replace(/\s+([.,?!])/g, '$1').replace(/\s{2,}/g, ' ').trim();
-}
-
-const esc = (s) => String(s == null ? '' : s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
-/** The same fill, for the SCREEN: template text escaped, values given as ready HTML. */
-function fillHtml(template, htmlVals = {}) {
-  const parts = String(template == null ? '' : template).split(/(\{\w+\})/);
-  return parts.map((p) => {
-    const m = /^\{(\w+)\}$/.exec(p);
-    return m ? (htmlVals[m[1]] == null ? '' : htmlVals[m[1]]) : esc(p);
-  }).join('').replace(/\s{2,}/g, ' ').trim();
-}
-
-export function shuffle(items, rand = Math.random) {
-  const a = items.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-const firstToken = (t) => t.split(' ')[0] || '';
-export const isYes = (t) => YES_WORDS.includes(t) || YES_WORDS.includes(firstToken(t));
-export const isNo = (t) => NO_WORDS.includes(t) || NO_WORDS.includes(firstToken(t));
-const isAgain = (t) => /\b(again|try|repeat)\b/.test(t);
-const isReveal = (t) => /\b(answer|tell me|hear it)\b/.test(t);
-const isDone = (t) => /\b(done|finished|stop|enough)\b/.test(t);
-
-/**
- * THE REASON Y, OR NULL. Only a reason the recogniser reported: `reason` of quiet / noise /
- * cutoff, or an alternative word it handed back that differs from what it heard. Anything else
- * — no reason, an unknown one, an "alternative" with no word to name — is null, and the unsure
- * line is said without "because".
- */
-export function reasonFor(result = {}, heard = '', lines = LINES) {
-  const r = String(result?.reason || '').toLowerCase().replace(/[\s_-]+/g, '');
-  if (r === 'quiet') return lines.reasonQuiet;
-  if (r === 'noise') return lines.reasonNoise;
-  if (r === 'cutoff') return lines.reasonCutoff;
-  const alts = Array.isArray(result?.alternatives) ? result.alternatives : [];
-  const alt = alts.map((a) => normalize(typeof a === 'string' ? a : a?.text))
-    .find((a) => a && a !== normalize(heard) && a !== normalize(UNKNOWN));
-  if (alt && (r === '' || r === 'alternative')) return fill(lines.reasonAlternative, { alt });
-  return null;
-}
 
 // ---------------------------------------------------------------------------------------
 // THE ENGINE — the states and the miss flow, with no DOM. The module below draws it.
@@ -682,39 +637,11 @@ export function createEngine({
 }
 
 // ---------------------------------------------------------------------------------------
-// THE CHIME — warm, two notes, once. Scaled by the audio bus's master volume so a screen
-// somebody turned down stays down.
+// THE CHIME — warm, two notes, once, scaled by the audio bus's master volume so a screen
+// somebody turned down stays down — and the celebration's six STARS and happy cat (CAT_URL):
+// shared with the row 2.45 games, from quiz_flow.js.
 // ---------------------------------------------------------------------------------------
-let chimeCtx = null;
-function defaultChime(level = 1) {
-  try {
-    const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
-    if (!AC) return;
-    chimeCtx = chimeCtx || new AC();
-    const a = chimeCtx;
-    if (a.state === 'suspended') a.resume?.().catch(() => {});
-    const peak = 0.1 * Math.max(0, Math.min(1, Number(level)));
-    if (!(peak > 0)) return;
-    for (const [freq, at] of [[523.25, 0], [659.25, 0.16]]) {
-      const o = a.createOscillator();
-      const v = a.createGain();
-      o.type = 'triangle';
-      o.frequency.value = freq;
-      const s = a.currentTime + at;
-      v.gain.setValueAtTime(0, s);
-      v.gain.linearRampToValueAtTime(peak, s + 0.02);
-      v.gain.exponentialRampToValueAtTime(0.0001, s + 0.5);
-      o.connect(v).connect(a.destination);
-      o.start(s);
-      o.stop(s + 0.52);
-    }
-  } catch (err) { console.error('word_games: chime', err); }
-}
-
-// Six stars, placed once (Design: "about 6 stars ... over 1.6 s"), as % of the game's box.
-// Kept off the top centre, where "Yes!" is.
-const STARS = [[9, 14], [85, 17], [16, 74], [78, 70], [28, 42], [92, 48]];
-const CAT_URL = '/design-assets/nimrod-cat/happy.svg';
+const defaultChime = (level = 1) => sharedChime(level, 'word_games');
 
 const up = (w) => String(w == null ? '' : w).toUpperCase();
 

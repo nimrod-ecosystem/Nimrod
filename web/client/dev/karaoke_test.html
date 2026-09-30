@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>karaoke (sing along) — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>karaoke — sing along, first version (row 2.45)</h1>
+<p>A sing-along frame around the EXISTING YouTube module: karaoke videos carry their own words, the
+search adds "karaoke" to what is typed, the player joins the mixer the way any video does, and
+nothing here stores a single line of lyrics.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep } from './quiz_test_rig.js';
+import { createBus } from '../bus.js';
+import { getManifest } from '../module.js';
+import '../modules/youtube.js';
+import '../modules/karaoke.js';
+import { GAME, DEFAULTS, karaokeQuery } from '../modules/karaoke.js';
+import { SETTINGS as YT_SETTINGS } from '../modules/youtube.js';
+import { auditFields, auditAcross } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const { check, section, finish } = harness();
+
+function stubPlayer() {
+  let handlers = {};
+  const loaded = [];
+  const out = {
+    loaded, destroyed: 0, gains: [],
+    current: () => loaded[loaded.length - 1] ?? null,
+    progress: () => handlers.onPlaying?.(),
+    factory(mountEl, h) {
+      handlers = h || {};
+      return {
+        load: (id) => loaded.push(id), cueList() {}, resume() {}, pause() {}, stop() {},
+        currentTime: () => 1, setGain: (g) => out.gains.push(g),
+        destroy: () => { out.destroyed += 1; },
+      };
+    },
+  };
+  return out;
+}
+function fakeAudio() {
+  const regs = [];
+  return { regs, register: (id, o) => { regs.push({ id, ...o }); return () => {}; }, master: () => 1 };
+}
+const SONGS = [{ id: 'aaaaaaaaaaa', title: 'Song One (Karaoke)' }, { id: 'bbbbbbbbbbb', title: 'Song Two (Karaoke)' }];
+
+try {
+  section('the manifest');
+  {
+    const m = getManifest(GAME);
+    check('called "Sing along", on the new core', m.title === 'Sing along' && m.core === 'new');
+    check('it needs the network, and says so', m.dependsOn === 'network');
+    check('*** marked as a first version ***', /first version/i.test(m.description), m.description);
+    const keys = m.settings.map((s) => s.key);
+    check('the YouTube key is the SAME setting as the YouTube panel’s (reused, not a second one)',
+      keys.includes('apiKey') && JSON.stringify(m.settings.find((s) => s.key === 'apiKey'))
+        === JSON.stringify(YT_SETTINGS.find((s) => s.key === 'apiKey')));
+    check('the word added to searches is a setting, "karaoke" by default', DEFAULTS.searchWord === 'karaoke' && keys.includes('searchWord'));
+    check('*** no setting stores lyrics ***', !keys.some((k) => /lyric/i.test(k)));
+    const fields = m.settings.map(normalizeField).filter(Boolean);
+    const errs = auditFields(fields, { type: GAME }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+    const yt = YT_SETTINGS.map(normalizeField).filter(Boolean);
+    const clash = auditAcross({ youtube: yt, karaoke: fields }).filter((x) => x.severity === 'error');
+    check('no shared key declared two ways', clash.length === 0, JSON.stringify(clash));
+  }
+
+  section('the search word');
+  {
+    check('"moon river" -> "moon river karaoke"', karaokeQuery('moon river', 'karaoke') === 'moon river karaoke');
+    check('not added twice', karaokeQuery('Moon River Karaoke', 'karaoke') === 'Moon River Karaoke');
+    check('an empty word adds nothing', karaokeQuery('moon river', '') === 'moon river');
+    check('an empty search stays empty', karaokeQuery('  ', 'karaoke') === '');
+  }
+
+  // =====================================================================================
+  section('*** it mounts the real YouTube module inside a sing-along frame ***');
+  {
+    const p = stubPlayer();
+    const audio = fakeAudio();
+    const queries = [];
+    const r = rig(GAME, { saved: { playlist: SONGS }, extra: { playerFactory: p.factory, audio,
+      searchVideos: async (q) => { queries.push(q); return { items: [{ id: 'ccccccccccc', title: 'Found' }], error: null }; } } });
+    await sleep(30);
+    check('the frame says "Sing along" and "first version"', /Sing along/.test(r.host.textContent) && /first version/i.test(r.host.textContent));
+    check('*** and that the words come from the video itself ***', /words come from the video/i.test(r.host.textContent), r.host.textContent.slice(0, 300));
+    check('the YouTube panel is inside it', !!r.host.querySelector('[data-karaoke-stage] .youtube'));
+    check('it plays a song from the playlist', SONGS.some((s) => s.id === p.current()), String(p.current()));
+    check('*** the player joined the speaker arbiter, so the mixer\'s media fader reaches it ***',
+      audio.regs.length === 1 && audio.regs[0].tier === 'media', JSON.stringify(audio.regs));
+
+    const find = r.host.querySelector('[data-find]');
+    find.value = 'moon river';
+    r.host.querySelector('[data-find-go]').click();
+    await sleep(20);
+    check('*** searching from the panel adds "karaoke" ***', queries[0] === 'moon river karaoke', JSON.stringify(queries));
+    r.host.querySelector('[data-results] button')?.click();
+    check('adding a result puts it in THIS panel\'s playlist', (r.stored().playlist || []).some((v) => v.id === 'ccccccccccc'));
+    check('*** nothing saved anywhere mentions lyrics ***', !/lyric/i.test(JSON.stringify(r.stored())));
+
+    const before = p.loaded.length;
+    r.publish('karaoke/next');
+    check('karaoke/next moves to another song (the verb reaches the inner player)', p.loaded.length === before + 1);
+
+    const beats = [];
+    r.bus.subscribe('karaoke/progress', (x) => beats.push(x));
+    r.bus.subscribe('segment/progress', () => {});
+    p.progress();
+    check('its heartbeat is heard under its own name (health watches karaoke/…)', beats.length >= 1, String(beats.length));
+
+    r.inst.destroy();
+    check('destroy takes the player down', p.destroyed === 1);
+    check('...and the inner player does not close the panel’s state: only the host does, once',
+      r.state.destroyCount === 1, String(r.state.destroyCount));
+  }
+
+  section('mounted the way the kiosk mounts it (with the root bus)');
+  {
+    const p = stubPlayer();
+    const bus = createBus();
+    const r = rig(GAME, { bus, saved: { playlist: SONGS }, extra: { playerFactory: p.factory, rootBus: bus } });
+    await sleep(20);
+    const before = p.loaded.length;
+    bus.publish(bus.instanceTopic(`${GAME}-1`, 'karaoke/next'));
+    check('an instance-addressed karaoke/next reaches its own player', p.loaded.length === before + 1);
+    bus.publish(bus.instanceTopic('somebody-else-player', 'youtube/next'));
+    check('...and another panel’s player verb does not', p.loaded.length === before + 1);
+    const beats = [];
+    bus.subscribe('karaoke/progress', (x) => beats.push(x));
+    p.progress();
+    check('the heartbeat is still said as karaoke/progress', beats.length >= 1);
+    r.inst.destroy();
+    check('destroy takes the player down', p.destroyed === 1);
+  }
+
+  section('an empty karaoke panel says what to do');
+  {
+    const p = stubPlayer();
+    const r = rig(GAME, { saved: {}, extra: { playerFactory: p.factory } });
+    await sleep(20);
+    check('no songs yet: it says how to add some', /add/i.test(r.host.textContent) && /karaoke/i.test(r.host.textContent));
+    r.setCfg({ framing: false });
+    check('the heading can be turned off (a setting)', !r.host.querySelector('[data-karaoke-head]') || r.host.querySelector('[data-karaoke-head]').hidden);
+    r.inst.destroy();
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

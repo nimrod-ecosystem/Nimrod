@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>spelling — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>spelling (row 2.45)</h1>
+<p>Say a word (with its picture where the board's drawings have one); the player spells it on a
+scanned letter board, by touch, or by saying the letters. Hints: the first letter, then how many
+letters. Mike's miss flow, points once, the score on the shared contract.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep } from './quiz_test_rig.js';
+import { getManifest } from '../module.js';
+import '../modules/spelling.js';
+import { GAME, WORDS, LINES, DEFAULTS, lettersBoard } from '../modules/spelling.js';
+import { hasPicture } from '../word_games_words.js';
+import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const { check, section, finish } = harness();
+const R = (saved = {}, opts = {}) => rig('spelling', { saved, ...opts });
+
+// Walk the board by switch alone to one letter: Next through the rows, Select into the row,
+// Next along it, Select. Returns the number of presses.
+function switchTo(r, letter) {
+  const rows = lettersBoard();
+  const ri = rows.findIndex((row) => row.some((k) => k.key === letter));
+  const ci = rows[ri].findIndex((k) => k.key === letter);
+  let presses = 0;
+  const b = r.board.snapshot();
+  let at = b.row;
+  while (at !== ri) { r.publish('spelling/next'); presses++; at = r.board.snapshot().row; }
+  if (rows[ri].length > 1) { r.publish('spelling/select'); presses++; }
+  for (let i = 0; i < ci; i++) { r.publish('spelling/next'); presses++; }
+  r.publish('spelling/select'); presses++;
+  return presses;
+}
+
+try {
+  // =====================================================================================
+  section('the words');
+  {
+    check('a real list', WORDS.length >= 30, String(WORDS.length));
+    check('every word is plain a to z, three to six letters', WORDS.every((w) => /^[a-z]{3,6}$/.test(w.word)),
+      WORDS.filter((w) => !/^[a-z]{3,6}$/.test(w.word)).map((w) => w.word).join(','));
+    check('no word twice', new Set(WORDS.map((w) => w.word)).size === WORDS.length);
+    const pictured = WORDS.filter((w) => hasPicture(w.word));
+    check('the words the board draws are in the list, with their picture', pictured.length >= 15, String(pictured.length));
+    check('no line or word says she / her (site copy rule)',
+      !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ') + WORDS.map((w) => w.word).join(' ')));
+  }
+
+  section('the settings: every line, and every number a caregiver might want different');
+  {
+    const m = getManifest(GAME);
+    check('built on the new core', m.core === 'new');
+    check('nothing to fetch: local', m.dependsOn === 'local');
+    const keys = (m.settings || []).map((s) => s.key);
+    for (const k of ['showWord', 'checkWhenFull', 'boardScan', 'wordLength', 'ownScore', 'missesBeforeOffer',
+      'unsureBelow', 'correctPoints', 'speak', 'sound']) check(`${k} is a setting`, keys.includes(k));
+    const all = { ...FLOW_LINES, ...LINES };
+    const missing = Object.keys(all).filter((k) => {
+      const f = m.settings.find((s) => s.key === k);
+      return !f || f.kind !== 'text' || f.default !== all[k];
+    });
+    check('*** every spoken line is an editable text setting ***', missing.length === 0, missing.join(','));
+    const fields = m.settings.map(normalizeField).filter(Boolean);
+    const errs = auditFields(fields, { type: GAME }).filter((f) => f.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+  }
+
+  // =====================================================================================
+  section('asking');
+  {
+    const r = R();
+    const it = r.probe().item;
+    check('the word is said aloud', r.said[0] === `Spell ${it.word}.`, r.said[0]);
+    check('*** the word is NOT on screen by default (that would be copying, not spelling) ***',
+      !r.host.querySelector('.wg-ask').textContent.toUpperCase().includes(it.word.toUpperCase()), r.host.querySelector('.wg-ask').textContent);
+    check('the letter board is on screen: six rows, A to Z, Delete, Check, Hear it',
+      r.host.querySelectorAll('.qz-row').length === 6 && r.host.querySelectorAll('[data-letter]').length === 26
+      && !!r.host.querySelector('[data-cmd="erase"]') && !!r.host.querySelector('[data-cmd="check"]')
+      && !!r.host.querySelector('[data-cmd="repeat"]'));
+    check('the first row is highlighted, with an outline and an arrow (never colour alone)',
+      r.host.querySelector('.qz-row[data-on="1"]')?.dataset.row === '0');
+    r.inst.destroy();
+
+    const p = R({ wordLength: 'longer' }, { rand: () => 0.999 });
+    let found = null;
+    for (let i = 0; i < WORDS.length && !found; i++) {
+      const w = p.probe().item;
+      if (hasPicture(w.word)) found = w; else p.eng.skip();
+    }
+    check('a word the board draws shows its picture', !!found && !!p.host.querySelector('.wg-pic svg'), found?.word);
+    p.inst.destroy();
+
+    const s = R({ showWord: true });
+    check('"Show the word" puts it on screen', s.host.querySelector('.wg-ask').textContent.toUpperCase()
+      .includes(s.probe().item.word.toUpperCase()));
+    s.inst.destroy();
+
+    const q = R({ speak: false });
+    check('*** with speech off the word is shown anyway: nobody can spell a word never given ***',
+      q.host.querySelector('.wg-ask').textContent.toUpperCase().includes(q.probe().item.word.toUpperCase()));
+    q.inst.destroy();
+
+    const short = R({ wordLength: 'short' });
+    const seen = new Set();
+    for (let i = 0; i < 40; i++) { seen.add(short.probe().item.word); short.eng.skip(); }
+    check('"short words" deals only words of up to four letters', [...seen].every((w) => w.length <= 4), [...seen].join(','));
+    short.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a whole word by switch alone ***');
+  {
+    const r = R();
+    const word = r.probe().item.word;
+    let presses = 0;
+    for (const l of word) presses += switchTo(r, l);
+    check(`"${word}" spelled on one switch and checked by itself: right`, r.phase() === 'celebrate', r.phase());
+    check('...in a sane number of presses (row, then letter)', presses <= word.length * 9, String(presses));
+    await sleep(10);
+    check('...one School point', r.points().length === 1 && r.points()[0].data?.type === 'School', JSON.stringify(r.points()));
+    r.timers.flush();
+    check('then "Would you like to do another one?"', r.phase() === 'another' && r.last() === FLOW_LINES.anotherLine);
+    r.inst.destroy();
+  }
+
+  section('by touch: tap the letters');
+  {
+    const r = R({ checkWhenFull: false });
+    const word = r.probe().item.word;
+    for (const l of word) r.host.querySelector(`[data-letter="${l}"]`).click();
+    check('the letters build up on screen', r.host.querySelector('[data-entry]')?.textContent.replace(/\s/g, '') === word.toUpperCase(),
+      r.host.querySelector('[data-entry]')?.textContent);
+    check('checkWhenFull off: waits', r.phase() === 'asking');
+    r.host.querySelector('[data-cmd="erase"]').click();
+    check('Delete takes one off', r.probe().entry === word.slice(0, -1));
+    r.host.querySelector(`[data-letter="${word.slice(-1)}"]`).click();
+    r.host.querySelector('[data-cmd="check"]').click();
+    check('Check judges it: right', r.phase() === 'celebrate');
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the miss flow, and the two hints: the first letter, then how many letters ***');
+  {
+    const r = R();
+    const word = r.probe().item.word;
+    const wrong = word.split('').map((l) => (l === 'z' ? 'y' : 'z')).join('');
+    for (const l of wrong) r.host.querySelector(`[data-letter="${l}"]`).click();
+    check('a wrong spelling by touch: "That is incorrect." then the first letter, then the word again',
+      r.last() === `That is incorrect. Here is a hint: it starts with ${word[0].toUpperCase()}. Spell ${word}.`, r.last());
+    check('...the hint on screen', r.host.querySelector('[data-hint]')?.textContent.includes(word[0].toUpperCase()));
+    for (const l of wrong) r.host.querySelector(`[data-letter="${l}"]`).click();
+    check('the second miss offers the answer', r.phase() === 'twoMiss'
+      && r.last() === `That is incorrect. ${FLOW_LINES.twoMissLine}`, r.last());
+    r.host.querySelector('[data-act="again"]').click();
+    check('*** "Try again" gives the second hint: how many letters ***',
+      r.last().startsWith(`Here is a hint: it has ${word.length} letters.`), r.last());
+    check('...and shows a blank for each one', r.host.querySelectorAll('[data-entry] .qz-blank').length === word.length,
+      r.host.querySelector('[data-entry]')?.innerHTML);
+    r.host.querySelector(`[data-letter="${word[0]}"]`).click();
+    check('...a typed letter fills the first blank', r.host.querySelectorAll('[data-entry] .qz-blank').length === word.length - 1);
+    for (const l of wrong.slice(1)) r.host.querySelector(`[data-letter="${l}"]`).click();
+    r.host.querySelector('[data-act="reveal"]').click();
+    check('"Hear the answer": the word spelled out, then another one?',
+      r.last() === `Here is the answer. ${word} is spelled ${word.toUpperCase().split('').join(', ')}. ${FLOW_LINES.anotherLine}`, r.last());
+    await sleep(10);
+    check('*** nothing paid for any of it ***', r.points().length === 0);
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('by voice: letter by letter, through the hear() seam');
+  {
+    const r = R();
+    const word = r.probe().item.word;
+    r.eng.hear({ text: word.split('').join(' '), confidence: 0.9 });
+    check('"C A T" said: right', r.phase() === 'celebrate');
+    r.inst.destroy();
+
+    const a = R();
+    const w2 = a.probe().item.word;
+    a.eng.hear({ text: w2[0], confidence: 0.9 });
+    check('one letter at a time works too', a.probe().entry === w2[0]);
+    a.eng.hear({ text: 'delete', confidence: 0.9 });
+    check('"delete" takes it off', a.probe().entry === '');
+    a.eng.hear({ text: w2.split('').join(' '), confidence: 0.4 });
+    check('below the threshold: asked, never judged', a.phase() === 'unsure'
+      && a.last().includes(w2.toUpperCase().split('').join(', ')), a.last());
+    a.eng.hear({ text: 'yes', confidence: 0.9 });
+    check('...yes confirms the letters: right', a.phase() === 'celebrate');
+    a.inst.destroy();
+
+    const b = R();
+    const w3 = b.probe().item.word;
+    b.eng.hear({ text: w3, confidence: 0.95 });
+    check('*** saying the WORD is not spelling it: a note, not a miss ***', b.phase() === 'asking'
+      && b.probe().misses === 0 && /one letter at a time/.test(b.last()), b.last());
+    const wrong = w3.split('').map((l) => (l === 'z' ? 'y' : 'z')).join(' ');
+    b.eng.hear({ text: wrong, confidence: 0.95 });
+    check('a confident wrong spelling: Mike’s line, with the letters',
+      b.last().startsWith(`It sounded like you said ${w3.split('').map((l) => (l === 'z' ? 'Y' : 'Z')).join(', ')}. That is incorrect.`), b.last());
+    const g = b.lastGrammar();
+    check('the grammar: letter names, the commands, and [unk]', g.open && g.words.includes('see')
+      && g.words.includes('delete') && g.words.includes(UNKNOWN));
+    b.inst.destroy();
+  }
+
+  section('the score, on the shared contract');
+  {
+    const r = R();
+    r.eng.type(r.probe().item.word, 'switch');
+    const sc = r.scores.filter((s) => s.source === 'spelling' && !s.gone).pop();
+    check('published on score/update as "spelling"', sc?.value === 1, JSON.stringify(sc));
+    r.timers.flush();
+    check('drawn here when no scoreboard shows it', /1 right so far/.test(r.host.textContent));
+    r.inst.destroy();
+    check('destroy says the score is gone', r.scores.some((s) => s.source === 'spelling' && s.gone));
+  }
+
+  section('one key at a time (a setting) and a hidden game stops listening');
+  {
+    const r = R({ boardScan: 'keys' });
+    r.publish('spelling/next'); r.publish('spelling/next');
+    check('"one key at a time": Next walks keys, not rows', r.host.querySelector('[data-letter="c"]')?.dataset.on === '1');
+    r.publish('spelling/select');
+    check('...Select types that key', r.probe().entry === 'c');
+    r.inst.onHide();
+    check('hidden: the grammar is closed', r.lastGrammar().open === false);
+    r.inst.onShow();
+    check('shown again: open', r.lastGrammar().open === true);
+    r.inst.destroy();
+    check('destroyed: closed', r.lastGrammar().open === false);
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

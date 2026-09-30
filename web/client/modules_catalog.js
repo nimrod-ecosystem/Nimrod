@@ -134,6 +134,20 @@ export const CATALOG = [
       + 'a bias against repeating itself, and you can set different playlists for different '
       + 'times of day so mornings and evenings are not the same.',
   },
+  // Row 2.45. A first version, and the catalog says so.
+  {
+    type: 'karaoke',
+    title: 'Sing along',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'Karaoke videos from YouTube, with the words on screen, to sing along with.',
+    needs: 'Some karaoke videos (search for them in the panel, or paste links), and a working '
+      + 'internet connection. Searching needs your own YouTube key.',
+    why: 'A song somebody has known for years can be easier to join in with than a conversation. '
+      + 'The words come from the videos themselves, so nothing here has to store them.',
+    note: 'A first version: it plays and shuffles the songs. There is no scoring and no song list '
+      + 'chosen for you.',
+  },
   {
     type: 'director',
     title: 'Lineup',
@@ -428,6 +442,38 @@ export const CATALOG = [
       + 'the answer. Built so a spoken answer can be added later without changing the game.',
     note: 'It does not listen to the room yet. When voice is added, a word it is unsure of is '
       + 'checked with the person first, never marked wrong.',
+  },
+  // Row 2.45: three more answer games on the same miss flow as word games, and a sing-along.
+  {
+    type: 'spelling',
+    group: 'practice',
+    use: 'answer',
+    lead: 'A word is said out loud, with its picture where there is one, and the player spells it.',
+    needs: 'Nothing. The words and pictures are built in.',
+    why: 'The letters are on a board that one switch can walk (a row, then a letter), and they '
+      + 'can be touched or said aloud too. A miss gets the first letter as a hint, then how many '
+      + 'letters there are, never a buzzer.',
+  },
+  {
+    type: 'simple_math',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Plus, minus and times on small numbers: "What is 3 plus 4?"',
+    needs: 'Nothing. How big the numbers get is a setting.',
+    why: 'The near end of the scale from Solve for x. On one switch it offers one number at a '
+      + 'time ("Is it 7?"); there is a number pad for working it out, and dots to count with the hint.',
+  },
+  {
+    type: 'name_that',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Name that animal, state, or person. Person plays the family’s own recorded messages and '
+      + 'asks who it is.',
+    needs: 'Nothing for animals and states. For people: videos of at least two people, named after '
+      + 'the person in them, in a connected media source.',
+    why: 'The people game is the messages from the family with a question on top, so the answer '
+      + 'is also the reward. A missed name is met gently by default: it says whose message it was '
+      + 'and offers to play it again.',
   },
   {
     type: 'sprint',

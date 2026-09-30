@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quiz flow — the miss flow every answer game shares — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>quiz flow (row 2.45)</h1>
+<p>The engine spelling, simple math and name-that run on: Mike's miss flow (row 2.31), the next
+hint on each "try again", the gentle flow a game may choose, the entry buffer, the scan board, and
+the spoken letters and numbers a recogniser hands back.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { harness } from './quiz_test_rig.js';
+import * as QF from '../quiz_flow.js';
+import * as WG from '../modules/word_games.js';
+import { auditFields, auditAcross } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+import { getManifest } from '../module.js';
+
+const { check, section, finish } = harness();
+const { createQuizEngine, createScanBoard, parseLetters, parseNumber, numberWord, numberWords,
+  FLOW_LINES, UNKNOWN } = QF;
+
+// A toy game: "What is the colour of the sky?" answer blue; offers blue / red / green.
+const TOY = {
+  items: () => ITEMS,
+  ask: (it) => it.q,
+  candidates: (it) => it.offers.slice(),
+  offer: (it, c) => `Is it ${c}?`,
+  judge: (it, v) => (QF.normalize(v) === it.a ? true : (QF.normalize(v) ? false : null)),
+  hint: (it, n) => (n === 1 ? 'it is up above' : n === 2 ? 'it starts with b' : ''),
+  answer: (it) => it.a,
+  explain: (it, a) => `${a} is right.`,
+  vocab: (it) => it.offers,
+  fromVoice: (it, { text }) => ({ value: text }),
+};
+// Both open on a WRONG offer ('red'), and each has one more wrong word, so the checks below read
+// the same whichever question the shuffle deals first.
+const ITEMS = [{ q: 'What colour is the sky?', a: 'blue', wrong2: 'green', offers: ['red', 'blue', 'green'] },
+  { q: 'What colour is grass?', a: 'green', wrong2: 'blue', offers: ['red', 'green', 'blue'] }];
+
+function eng(extra = {}, cfgExtra = {}, games = { toy: TOY }) {
+  const said = []; const paid = []; const grams = []; const replays = []; const chimes = [];
+  let tid = 0; const pending = new Map();
+  let cfg = { ...cfgExtra };
+  const e = createQuizEngine({
+    games, cfg: () => cfg, rand: () => 0,
+    say: (lines) => said.push(lines.filter(Boolean).join(' ')),
+    award: (p) => paid.push(p), chime: () => chimes.push(1),
+    publishGrammar: (g) => grams.push(g), onReplay: (it) => replays.push(it),
+    setTimer: (fn) => { tid += 1; pending.set(tid, fn); return tid; },
+    clearTimer: (id) => pending.delete(id), ...extra,
+  });
+  return { e, said, paid, grams, replays, chimes, last: () => said[said.length - 1] || '',
+    flush: () => { for (const [id, fn] of [...pending]) { pending.delete(id); fn(); } },
+    set: (p) => { cfg = { ...cfg, ...p }; }, phase: () => e.snapshot().phase };
+}
+
+try {
+  // =====================================================================================
+  section('the helpers moved out of word_games are the SAME functions (one home for the wording)');
+  {
+    check('fill', WG.fill === QF.fill);
+    check('normalize', WG.normalize === QF.normalize);
+    check('reasonFor', WG.reasonFor === QF.reasonFor);
+    check('shuffle', WG.shuffle === QF.shuffle);
+    check("Mike's five lines are word for word the same in both",
+      ['wrongLine', 'unsureLine', 'twoMissLine', 'anotherLine', 'unsureNoReasonLine', 'switchWrongLine']
+        .every((k) => WG.LINES[k] === FLOW_LINES[k]));
+    check('wrong: Mike’s words', FLOW_LINES.wrongLine === 'It sounded like you said {heard}. That is incorrect.');
+    check('another: Mike’s words', FLOW_LINES.anotherLine === 'Would you like to do another one?');
+    check('no line says she / her (site copy rule)', !/\b(she|her|hers|herself)\b/i.test(Object.values(FLOW_LINES).join(' ')));
+  }
+
+  // =====================================================================================
+  section('spoken letters: every word must be a letter, or it is not a spelling');
+  {
+    check('"C A T" -> cat', parseLetters('C A T') === 'cat');
+    check('"see ay tee" -> cat (letter NAMES)', parseLetters('see ay tee') === 'cat', parseLetters('see ay tee'));
+    check('"c. a. t." -> cat', parseLetters('c. a. t.') === 'cat');
+    check('"double u" is one letter', parseLetters('double u oh') === 'wo', parseLetters('double u oh'));
+    check('*** the WORD "cat" is not a spelling of it ***', parseLetters('cat') === null);
+    check('a sentence is not letters', parseLetters('it is c a t') === null);
+    check('nothing is nothing', parseLetters('') === null);
+    check('every letter a to z has at least one spoken name',
+      'abcdefghijklmnopqrstuvwxyz'.split('').every((l) => parseLetters(l) === l));
+  }
+
+  section('spoken numbers: digits, words, and the four homophones only when said alone');
+  {
+    check('"7" -> 7', parseNumber('7') === 7);
+    check('"seven" -> 7', parseNumber('seven') === 7);
+    check('"it\'s twenty one" -> 21', parseNumber("it's twenty one") === 21);
+    check('"twenty-one" -> 21', parseNumber('twenty-one') === 21);
+    check('"one hundred and five" -> 105', parseNumber('one hundred and five') === 105);
+    check('"zero" -> 0 (a real answer, not "nothing")', parseNumber('zero') === 0);
+    check('"for" alone -> 4', parseNumber('for') === 4);
+    check('*** "for" inside a sentence is a word, not a four ***', parseNumber('I am waiting for you') === null);
+    check('"banana" -> null', parseNumber('banana') === null);
+    check('numberWord(21) = "twenty one"', numberWord(21) === 'twenty one');
+    check('numberWord(40) = "forty"', numberWord(40) === 'forty');
+    check('numberWord(105) round-trips', parseNumber(numberWord(105)) === 105);
+    check('numberWords(12) is 0..12', numberWords(12).length === 13 && numberWords(12)[12] === 'twelve');
+  }
+
+  // =====================================================================================
+  section('the scan board: rows, then keys, and a way back');
+  {
+    const R = [[{ key: 'a' }, { key: 'b' }, { key: 'c' }], [{ key: 'd' }, { key: 'e' }], [{ cmd: 'check' }]];
+    let mode = 'rows';
+    const b = createScanBoard(() => R, { mode: () => mode });
+    check('starts on the first row', b.snapshot().level === 'rows' && b.snapshot().row === 0);
+    b.next();
+    check('Next walks the rows', b.snapshot().row === 1);
+    check('Select on a row goes into it and presses nothing', b.select() === null && b.snapshot().level === 'keys');
+    b.next();
+    const k = b.select();
+    check('Select on a key presses it', k?.key === 'e', JSON.stringify(k));
+    check('...and goes back to the rows, on the SAME row', b.snapshot().level === 'rows' && b.snapshot().row === 1);
+    b.select(); b.next(); b.next();
+    check('the last stop in a row is "back to the rows"', b.snapshot().col === 2);
+    check('...and selecting it presses nothing and goes back', b.select() === null && b.snapshot().level === 'rows');
+    b.next();
+    check('a one-key row presses on the first Select', b.select()?.cmd === 'check');
+    b.next(); b.prev(); b.prev();
+    check('Prev walks back and wraps', b.snapshot().row === 1, JSON.stringify(b.snapshot()));
+    mode = 'keys';
+    b.reset();
+    b.next(); b.next(); b.next();
+    check('"one key at a time" walks every key in order', b.select()?.key === 'd');
+    for (let i = 0; i < 3; i++) b.next();
+    check('...and wraps', b.snapshot().index === 0);
+  }
+
+  // =====================================================================================
+  section('*** Mike’s miss flow, on the shared engine ***');
+  {
+    const t = eng();
+    t.e.start('toy');
+    const it = t.e.snapshot().item;
+    check('asks the question with the first offer', t.said[0] === `${it.q} Is it red?`, t.said[0]);
+    t.e.hear({ text: 'red', confidence: 0.95 });
+    const s = t.last();
+    check('(1) "It sounded like you said red. That is incorrect." then the hint, then the question',
+      s === `It sounded like you said red. That is incorrect. Here is a hint: it is up above. ${it.q} Is it red?`, s);
+    t.e.hear({ text: it.wrong2, confidence: 0.95 });
+    check('(3) after the second miss: the offer', t.phase() === 'twoMiss'
+      && t.last() === `It sounded like you said ${it.wrong2}. That is incorrect. Would you like to try again, or hear the answer?`, t.last());
+    t.e.hear({ text: 'try again', confidence: 0.9 });
+    check('*** trying again gives the NEXT hint, then the question ***',
+      t.last().startsWith('Here is a hint: it starts with b.') && t.last().includes(it.q), t.last());
+    check('...and the snapshot lists both hints given', t.e.snapshot().hints.join('|') === 'it is up above|it starts with b');
+    t.e.hear({ text: 'red', confidence: 0.95 });
+    t.e.hear({ text: 'answer', confidence: 0.9 });
+    check('(4) hear the answer, then "another one?"', t.phase() === 'another'
+      && t.last() === `Here is the answer. ${it.a} is right. Would you like to do another one?`, t.last());
+    check('*** nothing paid for any of it ***', t.paid.length === 0);
+    t.e.press('more');
+    const it2 = t.e.snapshot().item;
+    t.e.hear({ text: it2.a, confidence: 0.3 });
+    check('(2) below the threshold: unsure, EVEN FOR THE RIGHT ANSWER', t.phase() === 'unsure');
+    check('...said without a made-up "because"', t.last() === `It sounds like you might be saying ${it2.a}, but I'm not sure.`, t.last());
+    t.e.hear({ text: 'yes', confidence: 0.9 });
+    check('"yes" confirms it: right', t.phase() === 'celebrate' && t.paid.length === 1 && t.chimes.length === 1);
+    t.e.hear({ text: it2.a, confidence: 1 });
+    t.e.press('continue');
+    check('paid once, whatever arrives twice', t.paid.length === 1);
+    check('the celebration hands on to "another one?"', t.phase() === 'another');
+    t.e.press('more');
+    const it3 = t.e.snapshot().item;
+    t.e.hear({ text: it3.a, confidence: 0.99, nearMiss: true });
+    check('a near miss is always asked about, never judged', t.phase() === 'unsure');
+    t.e.press('reject');
+    t.e.hear({ text: it3.a });
+    check('no confidence at all: unsure', t.phase() === 'unsure');
+    t.e.press('reject');
+    t.e.hear({ text: UNKNOWN, confidence: 1 });
+    check('"[unk]": not caught, not a miss', t.e.snapshot().misses === 0 && t.last() === FLOW_LINES.notCaughtLine);
+  }
+
+  section('the switch path: one candidate at a time, like word games');
+  {
+    const t = eng();
+    t.e.start('toy');
+    const it = t.e.snapshot().item;
+    t.e.press('no');
+    check('No to a wrong offer: next offer, not a miss', t.e.snapshot().misses === 0 && t.last() === `Is it ${it.a}?`, t.last());
+    t.e.press('yes');
+    check('Yes to the right one: right', t.phase() === 'celebrate');
+    const t2 = eng();
+    t2.e.start('toy');
+    t2.e.press('yes');
+    check('Yes to a wrong offer: "That is incorrect." (no "you said" for a switch)',
+      t2.last().startsWith('That is incorrect. Here is a hint'), t2.last());
+    const t3 = eng({}, { twoSwitch: 'yesno' });
+    t3.e.start('toy');
+    t3.e.next();
+    check('two switches: Next is No', t3.e.snapshot().candidate === t3.e.snapshot().item.a);
+    t3.e.select();
+    check('...Select is Yes', t3.phase() === 'celebrate');
+  }
+
+  section('the grammar: right AND wrong words, and always [unk]; closed while celebrating');
+  {
+    const t = eng();
+    t.e.start('toy');
+    const g = t.grams[t.grams.length - 1];
+    check('open while asking', g.open && g.words.includes('blue') && g.words.includes('red'));
+    check('*** always carries [unk] ***', g.words.includes(UNKNOWN));
+    t.e.press('no'); t.e.press('yes');
+    check('closed while celebrating', t.grams[t.grams.length - 1].open === false);
+  }
+
+  // =====================================================================================
+  section('an ENTRY game: the buffer, checked when it is long enough (a setting)');
+  {
+    const SPELL = { ...TOY, entry: () => 'letters', items: () => [{ q: 'Spell cat.', a: 'cat', offers: [] }],
+      hint: (it, n) => (n === 1 ? 'it starts with C' : n === 2 ? 'it has 3 letters' : '') };
+    const t = eng({}, {}, { s: SPELL });
+    t.e.start('s');
+    check('no Yes/No stops on an entry game (the board is the switch path)', t.e.stops().length === 0);
+    t.e.type('c'); t.e.type('a');
+    check('letters build up', t.e.snapshot().entry === 'ca' && t.phase() === 'asking');
+    t.e.erase();
+    check('Delete takes one off', t.e.snapshot().entry === 'c');
+    t.e.type('o'); t.e.type('t');
+    check('*** three letters for a three-letter word: checked by itself ***', t.phase() === 'asking' && t.e.snapshot().misses === 1);
+    check('...a switch answer: "That is incorrect." then the first hint', t.last().startsWith('That is incorrect. Here is a hint: it starts with C.'), t.last());
+    check('...and the buffer is cleared for another go', t.e.snapshot().entry === '');
+    t.e.type('cat', 'voice');
+    check('a voice spelling lands in the same buffer and is judged', t.phase() === 'celebrate');
+    const t2 = eng({}, { checkWhenFull: false }, { s: SPELL });
+    t2.e.start('s');
+    t2.e.type('c'); t2.e.type('a'); t2.e.type('t');
+    check('checkWhenFull off: waits for Check', t2.phase() === 'asking' && t2.e.snapshot().entry === 'cat');
+    t2.e.press('check');
+    check('...and Check judges it', t2.phase() === 'celebrate');
+  }
+
+  section('*** the GENTLE flow a game may choose: no "incorrect", and the clip again ***');
+  {
+    const GENTLE = { ...TOY, canReplay: true, missStyle: (c) => c.personMiss || 'gentle',
+      gentle: (it) => `That was ${it.a}'s message. Let's listen again?` };
+    const t = eng({}, {}, { g: GENTLE });
+    t.e.start('g');
+    check('the switch path offers "Listen again" too', t.e.stops().some((s) => s.act === 'replay'));
+    const ga = t.e.snapshot().item.a;
+    t.e.hear({ text: 'red', confidence: 0.95 });
+    check('a miss says whose message it was', t.phase() === 'gentle' && t.last() === `That was ${ga}'s message. Let's listen again?`, t.last());
+    check('*** never "incorrect" ***', !t.said.join(' ').includes('incorrect'));
+    check('...and pays nothing', t.paid.length === 0);
+    t.e.hear({ text: 'yes', confidence: 0.9 });
+    check('"yes" plays it again', t.replays.length === 1);
+    check('...then asks "another one?"', t.phase() === 'another' && t.last() === FLOW_LINES.anotherLine);
+    t.e.press('replay');
+    check('"Listen again" is on the another-one screen too', t.replays.length === 2);
+    const t2 = eng({}, { personMiss: 'standard' }, { g: GENTLE });
+    t2.e.start('g');
+    t2.e.hear({ text: 'red', confidence: 0.95 });
+    check('the same game set to "standard": Mike’s flow', t2.last().startsWith('It sounded like you said red. That is incorrect.'), t2.last());
+    const t3 = eng({}, {}, { g: GENTLE });
+    t3.e.start('g');
+    t3.e.press('yes');
+    t3.e.press('onward');
+    check('"Not now" goes on to "another one?"', t3.phase() === 'another');
+  }
+
+  section('nothing to ask: said plainly; still loading: waits; then asks');
+  {
+    let items = null;
+    const LATE = { ...TOY, items: () => items, empty: () => 'Nothing to ask yet.' };
+    const t = eng({}, {}, { l: LATE });
+    t.e.start('l');
+    check('null items: loading, nothing said', t.phase() === 'loading' && t.said.length === 0);
+    items = [];
+    t.e.refresh();
+    check('no items: "empty", with the reason on screen', t.phase() === 'empty' && t.e.snapshot().feedback.text === 'Nothing to ask yet.');
+    check('...and not spoken (it is for whoever sets it up)', t.said.length === 0);
+    items = ITEMS;
+    t.e.refresh();
+    check('items arrive: it asks', t.phase() === 'asking' && t.said.length === 1);
+    t.e.hear({ text: 'hello', confidence: 1 });
+    items = ITEMS.slice(1);
+    t.e.refresh();
+    check('*** a refresh never snatches a question somebody is answering ***', t.phase() === 'asking' && t.e.snapshot().serial === 1);
+  }
+
+  section('the shared settings are declared the way word games declares them');
+  {
+    const fields = QF.flowSettings().map(normalizeField).filter(Boolean);
+    const errs = auditFields(fields, { type: 'quiz' }).filter((f) => f.severity === 'error');
+    check('no audit errors in the shared rows', errs.length === 0, JSON.stringify(errs));
+    const wg = (getManifest('word_games').settings || []).map(normalizeField).filter(Boolean);
+    const clash = auditAcross({ word_games: wg, quiz: fields }).filter((f) => f.severity === 'error');
+    check('*** no key is declared as a different kind than word games declares it ***', clash.length === 0, JSON.stringify(clash));
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>
