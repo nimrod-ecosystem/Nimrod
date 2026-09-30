@@ -221,7 +221,8 @@ export function explainObject(d = {}, { chat = 'some', catalog = CATALOG } = {})
       lines = [`This ${thing} holds the ${name}.`, 'Press it to lift it out, flat and full size.'];
       break;
     case 'button': {
-      const does = ACTION_DOES[d.action] || `does “${d.actionLabel || d.label || d.action || 'its job'}”`;
+      const does = (d.action === 'module.open' && d.module ? `opens the ${lowerName(d.moduleLabel || d.module)}` : ACTION_DOES[d.action])
+        || `does “${d.actionLabel || d.label || d.action || 'its job'}”`;
       lines = [`Press this ${thing} and it ${does}.`, 'It is a button, like the ones on the bar.'];
       break;
     }
@@ -230,6 +231,12 @@ export function explainObject(d = {}, { chat = 'some', catalog = CATALOG } = {})
       break;
     case 'pet':
       lines = [`This is ${d.label || 'an animal'}.`, 'Stroke it, or hold the switch on it, to pet it.'];
+      break;
+    case 'library':
+      lines = [`This ${thing} is a library: each book is a module.`, 'Press a book to open it, or press the shelf for the list.'];
+      break;
+    case 'closeup':
+      lines = [`Press the ${thing} to look closer.`, 'Back returns to the whole room, and it goes back by itself after a while.'];
       break;
     default:
       lines = [`This is the ${thing}.`, 'It is here to look at; pressing it does nothing.'];
@@ -457,7 +464,7 @@ export function mountCatHelp(root, {
     figure.replaceChildren(img);
   }
 
-  function render(sel, words) {
+  function render(sel, words, actions = []) {
     teardown();
     layer = doc.createElement('div');
     layer.setAttribute('data-cat-help', '');
@@ -493,6 +500,20 @@ export function mountCatHelp(root, {
       <b data-cat-help-title style="display:block">${esc(words.title)}</b>
       <p data-cat-help-say style="margin:4px 0 0">${esc(words.text)}</p>`;
     bubble.querySelector('[data-cat-help-close]').addEventListener('click', () => close('close'));
+    // A host's own actions, after Close (the way out stays first). The room offers "Pet Nimrod" here, so
+    // a ONE-switch user can pet him too: press him (help), then this — no hold binding needed. The
+    // bubble closes first, so the room's own cat is back before he is petted.
+    const row = bubble.firstElementChild;
+    for (const a of actions) {
+      const b = doc.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-cat-help-action', a.id);
+      b.setAttribute('data-scan', '');
+      b.style.cssText = btn;
+      b.textContent = a.label;
+      b.addEventListener('click', () => { close('action'); try { a.run(); } catch (err) { console.error('cat help: action', err); } });
+      row.insertBefore(b, row.children[1] || null);
+    }
     bubble.querySelector('[data-cat-help-chat]').addEventListener('click', () => {
       const i = CHATTINESS.findIndex((c) => c.value === prefs.chat);
       setPrefs({ chat: CHATTINESS[(i + 1) % CHATTINESS.length].value });
@@ -525,8 +546,9 @@ export function mountCatHelp(root, {
     try { onShow?.({ sel, words }); } catch (err) { console.error('cat help: onShow', err); }
   }
 
-  /** Explain the selection (or what is selected on the page). Null when cat help is off. */
-  function explainNow(sel = null) {
+  /** Explain the selection (or what is selected on the page). Null when cat help is off.
+      `actions`: [{ id, label, run }] — extra buttons in the bubble, after Close. */
+  function explainNow(sel = null, { actions = [] } = {}) {
     if (destroyed) return null;
     prefs = readCatPrefs(storage);
     if (!prefs.help) return null;
@@ -535,8 +557,9 @@ export function mountCatHelp(root, {
     if (!s) s = selectionFrom(doc, { scope: root === doc.body ? doc : root, fieldLookup });
     const sk = screenKey();
     const words = explain(s, { chat: prefs.chat, screen: sk || (s?.kind === 'screen' ? s.screen : 'page') });
-    render(s, words);          // a second press replaces the first: one cat at a time
-    current = { sel: s, words };
+    const acts = (Array.isArray(actions) ? actions : []).filter((a) => a && a.id && a.label && typeof a.run === 'function');
+    render(s, words, acts);    // a second press replaces the first: one cat at a time
+    current = { sel: s, words, actions: acts };
     return { ...words, sel: s };
   }
 
@@ -544,8 +567,8 @@ export function mountCatHelp(root, {
     prefs = writeCatPrefs(storage, patch);
     if (layer && current && ('chat' in patch || 'where' in patch)) {
       const words = explain(current.sel, { chat: prefs.chat, screen: screenKey() || 'page' });
-      current = { sel: current.sel, words };
-      render(current.sel, words);
+      current = { ...current, sel: current.sel, words };
+      render(current.sel, words, current.actions || []);
     } else if (layer) arm();
     return { ...prefs };
   }

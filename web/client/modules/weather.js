@@ -536,6 +536,18 @@ registerModule(
       const g = shown();
       rootEl.innerHTML = `<div class="wx" data-weather data-status="${isStale() ? 'stale' : status}">${g ? forecastHtml(g) : setupHtml()}</div>`;
       paintLit();
+      // Row 2.37: the room's window shows the weather it is told (room_scene.js listens for `weather/now`
+      // and asks with `weather/ask`); the room itself never goes to the network. A typed position is not
+      // spoken as numbers, the same rule as `readNow`.
+      try {
+        const n = g?.model?.now;
+        if (n) {
+          const c = describeCode(n.code, n.isDay);
+          const p = place();
+          bus.publish('weather/now', { icon: c.icon, words: c.words, temp: deg(n.tempC), stale: isStale(), at: g.at,
+            spoken: spokenNow(g.model, units(), { place: p.kind === 'chosen' ? p.name : '' }) }, OWN);
+        }
+      } catch { /* the room's window can wait */ }
     }
 
     // ---- the walk ----------------------------------------------------------------------------
@@ -583,6 +595,7 @@ registerModule(
         bus.subscribe('weather/prev', () => moveLit(-1));
         bus.subscribe('weather/select', () => selectLit());
         bus.subscribe('weather/back', () => { lit = -1; paintLit(); });
+        bus.subscribe('weather/ask', () => render());   // a room's window, just mounted, wants the weather now
         render();
         onSettings();
       },

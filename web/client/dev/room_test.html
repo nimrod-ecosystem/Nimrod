@@ -137,7 +137,11 @@ try {
   bus.publish('room/select');
   check('room/select presses it: system/fullscreen is published', got.length === 1 && got[0].objectId === 'pot', JSON.stringify(got));
   bus.publish(bus.instanceTopic('room1', 'room/next'));
-  check('the verbs answer on this instance’s own address too', scene.focused()?.dataset.id === 'cab');
+  // (Row 2.37: the window is a button now — "Pressing the window: Opens the weather" — between the pot
+  // and the cabinet, left to right.)
+  check('the verbs answer on this instance’s own address too', scene.focused()?.dataset.id === 'window');
+  bus.publish('room/next');
+  check('...and on to the cabinet', scene.focused()?.dataset.id === 'cab');
   bus.publish('room/select');
   check('selecting the cabinet lifts the transport bar’s slot flat', scene.lifted() === 'cab');
   bus.publish('room/back');

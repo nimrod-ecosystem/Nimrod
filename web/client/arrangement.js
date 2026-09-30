@@ -586,7 +586,9 @@ export function createArrangement({
       host.className = 'k-room';
       host.style.cssText = 'position:absolute;inset:0;pointer-events:auto';
       layerFor('scene').append(host);
-      roomScene = mountRoomScene(host, scene.recipe || presetRecipe(scene.preset), { bus });
+      // Row 2.37: the same objects (library shelf, weather window, close-ups) as the room module turns on.
+      roomScene = mountRoomScene(host, scene.recipe || presetRecipe(scene.preset),
+        { bus, ...rs.OBJECT_DEFAULTS, ...(scene.options || {}) });
     } catch (err) {
       // A room that will not draw leaves the screen's own backdrop; the modules still mount (flat).
       console.error('arrangement: the room could not be drawn', err);

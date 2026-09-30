@@ -41,11 +41,26 @@
 // plus, automatically, `pet` on every animal part (Mike, §7.2: "You should definitely be able to pet
 // any animals."). Every role object carries a flat LABEL CHIP: an object's meaning is never only its
 // picture.
+//
+// *** THE SECOND PASS (row 2.37 items 4, 6, 7, 11, 13; room-add-ons §1, §4, §5, §8, §9). ***
+//   library  a bookshelf whose BOOKS ARE MODULES: press a book and that module opens (the same
+//            `system/module` verb anything else would send; see MODULE_TOPIC). The shelf itself lifts
+//            a flat list of its books, so a switch walks shelf -> books, Back first.
+//   closeup  a desk, sofa, armchair or bed: pressing it zooms the room into that area. BACK is the first
+//            thing in the scan, `back()` leaves it, and it returns by itself after `closeupReturnMs`.
+//   the window  can carry the WEATHER in a pane (from `weather/now`, weather_icons.js pictures), an
+//            AI VISIT in another (`visit()`), and be a button that opens the weather.
+//   pet      now ANY item with `pet` (not only the cat): a hop that honours reduced motion, a mark that
+//            shows either way, and an optional sound the host plays (`onSound(name, { event:'pet' })`).
+// These are OPTIONS ON THE EXISTING PIECES (`applyRoomOptions`), not new kinds of thing: a room recipe
+// with none of them set draws exactly as before.
 
 import { STAGE, ROOM_SHELLS, WALL_FINISHES, FLOOR_FINISHES, FURNITURE, ROOM_LIGHTS, lightFor as partsLightFor,
   MOUNT_KINDS, MODULE_LABELS, frameSpec, buildFurniture, buildPictureFrame, buildNameSign, buildWallClock,
   buildWallCalendar, buildCat, applyStyle } from './room_parts.js';
 import { mountScene } from './livescene.js';
+import { iconSvg } from './weather_icons.js';
+import { getManifest } from './module.js';
 
 export const W = STAGE.w;
 export const H = STAGE.h;
@@ -197,6 +212,55 @@ export const ROOM_ACTIONS = Object.freeze({
   'modules.open': { topic: 'system/modules', label: 'Modules' },
   'dashboards.open': { topic: 'system/dashboards', label: 'Dashboards' },
 });
+
+// *** OPEN ONE MODULE, BY TYPE: action `module.open`, topic `system/module` { module, claim }. *** A book,
+// or the window's weather. The kiosk answers it with its own `arr.showModule(type)` — exactly what
+// pressing that panel's chip does — and claims it only when this screen HAS that module, so a book for a
+// module the screen lacks is answered honestly by the room. NOT in ROOM_ACTIONS on purpose: that table
+// is the set of screen controls the kiosk answers one-for-one with actions.js SYSTEM_TOPICS (kiosk_test
+// checks the two are equal), and "open the module named in the payload" is not a bindable screen
+// control with no argument. Until the kiosk's lines land (see the report), nobody claims it and the
+// room says what the press would do.
+export const MODULE_TOPIC = 'system/module';
+// *** WHICH MODULES ARE ON THIS SCREEN: `system/module-list` { reply(list) }. *** A library with no
+// books of its own asks; the kiosk replies with the screen's modules (types, or { module, label }).
+// Nobody answering (the modules page, a test) leaves DEFAULT_BOOKS.
+export const MODULE_LIST_TOPIC = 'system/module-list';
+// The weather module's "what it is like now" (see the report for weather.js's two lines), and the
+// room's request for it when a room mounts after the last one went by.
+export const WEATHER_NOW_TOPIC = 'weather/now';
+export const WEATHER_ASK_TOPIC = 'weather/ask';
+
+// *** THE BOOKS A LIBRARY HAS WHEN NOTHING SAYS WHICH (Rule 1: argued, and a setting in modules/room.js).
+// A few of the modules most people have: photos first (photos outrank every game), then the clock, the
+// weather, videos and the AAC board. FOR: a shelf is never empty, and every book is a real module.
+// AGAINST: they may not be THIS person's modules — which is why a library asks the screen first, and a
+// book for a module the screen lacks says so instead of doing nothing.
+export const DEFAULT_BOOKS = Object.freeze(['photos', 'clock', 'weather', 'youtube', 'board']);
+// Design's bookshelf has four shelves of seven books (room_parts.js `bookshelf`). Geometry, not a
+// preference: a 29th book has no place on the drawing. The flat list (lifted) shows them all anyway.
+export const BOOKS_PER_SHELF = 7;
+export const SHELVES = 4;
+export const MAX_BOOKS = BOOKS_PER_SHELF * SHELVES;
+
+// Which parts a close-up works on (Mike, §7.2.13: "the desk or couch"; Design §8). A bed and an armchair
+// are the same kind of place. A part not listed here can still be given `role:'closeup'` in a recipe.
+export const CLOSEUP_PARTS = Object.freeze(['desk', 'sofa', 'armchair', 'bed']);
+// *** HOW FAR A CLOSE-UP ZOOMS. *** Not settings, argued (Rule 1) — both are framing, the way a
+// stylesheet's margins are: the area is shown with PAD of its own size around it on every side, so the
+// thing and what is on and around it are in view; and never more than MAX_ZOOM, past which the room's
+// art (drawn at 960×540) turns to blobs. A bigger pad shows less of the desk; a bigger cap shows mush.
+export const CLOSEUP_PAD = 0.35;
+export const CLOSEUP_MAX_ZOOM = 3;
+// Design (room-add-ons §8): "a 400 ms scale toward the object, or an instant cut under reduced motion".
+export const CLOSEUP_MOVE_MS = 400;
+
+// The window's four panes, as fractions of its box (the mullions in room_parts.js `window`).
+export const WINDOW_PANES = Object.freeze([
+  [0.04, 0.04, 0.445, 0.43], [0.515, 0.04, 0.445, 0.43],
+  [0.04, 0.50, 0.445, 0.46], [0.515, 0.50, 0.445, 0.46],
+]);
+export const PANE_OVERLAYS = Object.freeze(['weather', 'visit']);
 export const topicForAction = (action) => ROOM_ACTIONS[action]?.topic
   || (typeof action === 'string' && /^[a-z0-9_-]+\/[a-z0-9_./#-]+$/i.test(action) ? action : null);
 
@@ -206,14 +270,86 @@ export const ROOM_TOPICS = Object.freeze({
   key: 'room/key',           // { id, group, key }   — a key object
   pet: 'room/pet',           // { id }               — an animal was petted
   lift: 'room/lift',         // { id, module, lifted }
+  closeup: 'room/closeup',   // { id, on }           — the room zoomed into an area, or came back
+  book: 'room/book',         // { id, module, claimed } — a book was pressed
 });
 
 // The scan rows, in Design's order (room-is-the-screen, "Scanning in a room"). The overlay, plain
 // bar and flat bar belong to the host; the room fills the three in the middle.
 export const SCAN_ROWS = Object.freeze(['overlay', 'plain', 'things', 'pictures', 'floor', 'bar']);
 
-const ROLES = new Set(['button', 'label', 'display', 'keys', 'pet']);
+const ROLES = new Set(['button', 'label', 'display', 'keys', 'pet', 'library', 'closeup']);
 const DEFAULT_SLOT = [0.05, 0.05, 0.9, 0.9];
+// Roles that are a PLACE or a CREATURE, not a holder: no module slot, no grow-to-fit.
+const NO_SLOT = new Set(['pet', 'library', 'closeup']);
+
+/** Is this item an animal someone can pet? The cat, anything with `pet` set, or a part declared one. */
+export const isAnimal = (it) => !!it && it.pet !== false
+  && (it.kind === 'cat' || (it.pet && typeof it.pet === 'object') || it.pet === true || !!FURNITURE[it.part]?.animal);
+
+/** A module type's name for a book spine or a chip: the room's own labels, the manifest, or the type. */
+export function moduleLabel(type) {
+  if (!type) return '';
+  if (MODULE_LABELS[type]) return MODULE_LABELS[type];
+  try { const t = getManifest(type)?.title; if (t) return String(t); } catch { /* no registry */ }
+  return String(type).replace(/[_-]+/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+}
+
+/** A list of books from anything a setting, a recipe or a reply may say: types, or { module, label }.
+    Unknown shapes are dropped, duplicates kept once, at most MAX_BOOKS. */
+export function normalizeBooks(list) {
+  if (!Array.isArray(list)) return null;
+  const out = [];
+  const seen = new Set();
+  for (const b of list) {
+    const module = typeof b === 'string' ? b.trim() : typeof b?.module === 'string' ? b.module.trim() : typeof b?.type === 'string' ? b.type.trim() : '';
+    if (!module || seen.has(module)) continue;
+    seen.add(module);
+    const label = typeof b === 'object' && typeof (b.label || b.title) === 'string' && (b.label || b.title).trim() ? (b.label || b.title).trim() : moduleLabel(module);
+    out.push({ module, label });
+    if (out.length >= MAX_BOOKS) break;
+  }
+  return out;
+}
+
+// *** THE SECOND-PASS OPTIONS, applied to a recipe as data (the renderer and the room module both
+// read them; a Stage R dashboard can pass the same object). *** Each value's own default is in
+// RENDER_DEFAULTS below ('recipe' = do what the recipe says, which is how every room drew before);
+// the room MODULE's defaults are argued in modules/room.js.
+//   shelf        'recipe' | 'library'   every bookshelf becomes a library (over a role it had)
+//   windowShows  'recipe' | 'view' | 'weather'   the weather in the window's lower-right pane, or none
+//   windowPress  'recipe' | 'weather' | 'nothing'  a window with no role opens the weather module
+//   closeups     'recipe' | 'on' | 'off'  desks, sofas, armchairs and beds zoom into their area
+export function applyRoomOptions(recipe = {}, opts = {}) {
+  const items = (Array.isArray(recipe.items) ? recipe.items : []).map((it0) => {
+    if (!it0 || typeof it0 !== 'object') return it0;
+    let it = it0;
+    const part = it.kind === 'furniture' ? it.part : null;
+    if (part === 'bookshelf' && opts.shelf === 'library' && it.role !== 'library') {
+      const { role, module, needs, slot, action, interactive, ...rest } = it;
+      void role; void module; void needs; void slot; void action; void interactive;
+      it = { ...rest, role: 'library', label: it.role ? 'Books' : (it.label || 'Books') };
+    }
+    if (FURNITURE[part]?.view) {
+      if (opts.windowShows === 'weather' || opts.windowShows === 'view') {
+        const panes = Array.isArray(it.panes) ? it.panes.slice(0, 4) : [];
+        while (panes.length < 4) panes.push(null);
+        for (let i = 0; i < 4; i++) if (panes[i] === 'weather') panes[i] = null;
+        if (opts.windowShows === 'weather') panes[3] = 'weather';
+        it = { ...it, panes };
+      }
+      if (!it.role && !it.interactive && opts.windowPress === 'weather') {
+        it = { ...it, role: 'button', action: 'module.open', module: 'weather', label: it.label || 'Weather' };
+      }
+    }
+    if (CLOSEUP_PARTS.includes(part)) {
+      if (opts.closeups === 'on' && !it.role && !it.interactive) it = { ...it, role: 'closeup' };
+      else if (opts.closeups === 'off' && it.role === 'closeup') { const { role, ...rest } = it; void role; it = rest; }
+    }
+    return it;
+  });
+  return { ...recipe, items };
+}
 
 /**
  * An item's role, read from either of Design's two shapes: room-is-the-screen's flat fields
@@ -233,25 +369,32 @@ export function normalizeRole(it) {
     if (mode === 'keys') role = 'keys';
     else if (mode === 'holds' || mode === 'shows' || mode === 'opens') role = 'display';
     else if (does === 'action') role = 'button';
+    else if (mode === 'library') role = 'library';
     else if (does === 'pet') role = 'pet';
+    else if (does === 'closeup') role = 'closeup';
     else role = 'label';
     action = action || ia.select?.action || null;
   }
-  if (!role && it.kind === 'cat' && it.pet !== false) role = 'pet';
+  if (!role && isAnimal(it)) role = 'pet';
   if (!role) return null;
   const zoomRaw = Number(it.zoom ?? ia?.hover?.zoom);
   const zoom = Number.isFinite(zoomRaw) && zoomRaw > 1 ? clamp(zoomRaw, ZOOM_RANGE[0], ZOOM_RANGE[1]) : null;
   const def = it.kind === 'furniture' ? FURNITURE[it.part] : null;
-  const fallbackLabel = role === 'pet' ? 'Nimrod'
-    : (role === 'button' && ROOM_ACTIONS[action]?.label) || MODULE_LABELS[module] || module
-      || it.key || def?.label || MOUNT_KINDS[it.kind]?.label || 'Object';
+  const fallbackLabel = role === 'pet' ? (it.kind === 'cat' ? 'Nimrod' : def?.label || 'Animal')
+    : role === 'library' ? 'Books'
+      : (role === 'button' && action !== 'module.open' && ROOM_ACTIONS[action]?.label) || MODULE_LABELS[module] || (module ? moduleLabel(module) : null)
+        || it.key || def?.label || MOUNT_KINDS[it.kind]?.label || 'Object';
   const needs = Array.isArray(it.needs) && it.needs.length === 2 ? it.needs.map((n) => Math.max(0, Number(n) || 0)) : [1, 1];
   const slot = Array.isArray(it.slot) && it.slot.length === 4 ? it.slot.map(Number) : DEFAULT_SLOT;
+  const petRaw = it.pet && typeof it.pet === 'object' ? it.pet : (FURNITURE[it.part]?.animal && typeof FURNITURE[it.part].animal === 'object' ? FURNITURE[it.part].animal : {});
   return {
     role, action, module, needs, slot, zoom,
     label: String(it.label || fallbackLabel),
     group: it.group || null, key: it.key ?? null,
-    grow: it.grow !== false && !!module,
+    grow: it.grow !== false && !!module && !NO_SLOT.has(role) && action !== 'module.open',
+    // What petting it sounds like: the cat purrs; another animal says what it says, or nothing.
+    petSound: role === 'pet' ? (typeof petRaw.sound === 'string' ? petRaw.sound || null : it.kind === 'cat' ? 'purr' : null) : null,
+    books: role === 'library' ? normalizeBooks(it.books) : null,
   };
 }
 
@@ -377,10 +520,32 @@ export const assetBase = () => new URL('./design-assets/', import.meta.url).href
 //                        what is picked: `({ id, selected, api }) => handled`. Handled = help; not
 //                        handled (no host, or the person turned cat help off) = he is petted, as
 //                        before. Stroking him or holding the switch on him always pets (§9).
+//   shelf / windowShows / windowPress / closeups  'recipe'  — see applyRoomOptions: the renderer's own
+//                        default changes nothing about a recipe; the room module turns them on.
+//   books null           a library with no books of its own asks the screen (MODULE_LIST_TOPIC), then
+//                        falls back to DEFAULT_BOOKS.
+//   closeupReturnMs 120000  a close-up goes back to the whole room by itself after two minutes with
+//                        nobody touching it. Longer than a lifted panel's minute because a close-up is a
+//                        PLACE to be (sitting at the desk), not a control reached for; short enough that
+//                        an unattended screen is the whole room again soon. 0 = never.
+//   aiVisits 'news'      Design: "AI visits: Never / Sometimes / When it has news". An avatar appears in
+//                        a pane only when something publishes a visit, and never at night unless
+//                        'anytime' was chosen (Design: "never at night unless asked").
+//   petSound true        petting plays the animal's sound through the host (`onSound`), which scales it
+//                        by the screen's master volume. It answers the person's OWN press — unlike the
+//                        wake tone Mike turned off, which sounds unasked.
+//   weather null         what the window's weather pane shows until `weather/now` says otherwise.
 export const RENDER_DEFAULTS = Object.freeze({
   labels: 'always', motion: 'gentle', liftReturnMs: 60000, notifyMs: 8000, petMs: 2600, zoom: null, showSlots: false,
   restMs: 300, onCatPress: null,
+  shelf: 'recipe', windowShows: 'recipe', windowPress: 'recipe', closeups: 'recipe', books: null,
+  closeupReturnMs: 120000, aiVisits: 'news', petSound: true, weather: null,
 });
+const OPTION_KEYS = ['shelf', 'windowShows', 'windowPress', 'closeups'];
+// *** THE SECOND PASS, TURNED ON: what a room a PERSON sees uses (the room module's defaults, argued in
+// modules/room.js). A Stage R dashboard room passes these too — `mountRoomScene(host, recipe,
+// { bus, ...OBJECT_DEFAULTS })` — so the room on a real screen and the room on the modules page agree.
+export const OBJECT_DEFAULTS = Object.freeze({ shelf: 'library', windowShows: 'weather', windowPress: 'weather', closeups: 'on' });
 
 export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   if (!host) throw new Error('mountRoomScene: a host element is required');
@@ -407,7 +572,10 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   const motion = () => (o.reducedMotion || systemReduced ? 'still' : (['gentle', 'calm', 'still'].includes(o.motion) ? o.motion : 'gentle'));
   const animated = () => motion() !== 'still';
 
-  let recipe = normalizeRecipe(recipeIn);
+  // The recipe as given, and the recipe as drawn (the second-pass options applied to it as data).
+  let baseRecipe = normalizeRecipe(recipeIn);
+  const derive = () => normalizeRecipe(applyRoomOptions(baseRecipe, o));
+  let recipe = derive();
   let shell = ROOM_SHELLS[recipe.shell];
   let light = 'day';
   let destroyed = false;
@@ -439,6 +607,14 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   let tickTimer = null;
   let pickedId = null;       // the last object the scan landed on, the pointer rested on, or pressed
   let lastPress = null;      // what the last press did (for a host, and a test)
+  let cam = null;            // a close-up: { id, z, cx, cy, idle, back }
+  let camMoveTimer = null;
+  let screenBooks = null;    // what the screen said its modules are (MODULE_LIST_TOPIC), or null
+  let weatherNow = null;     // set from o.weather below, once readWeather exists
+  let visitNow = null;       // { text, label } while an AI visit is showing
+  let visitTimer = null;
+  const petTimers = new Map();
+  const busOffs = [];
 
   // ------------------------------------------------------------------ fitting the stage
   let scale = 1;
@@ -447,7 +623,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     const k = Math.min(r.width / W, r.height / H);
     if (!(k > 0)) return scale;
     scale = k;
-    stage.style.transform = `translate(${(r.width - W * k) / 2}px, ${(r.height - H * k) / 2}px) scale(${k})`;
+    // A close-up is one more transform after the fit: the area's centre to the stage's centre, grown.
+    const camT = cam ? ` translate(${W / 2}px, ${H / 2}px) scale(${cam.z}) translate(${-cam.cx}px, ${-cam.cy}px)` : '';
+    stage.style.transform = `translate(${(r.width - W * k) / 2}px, ${(r.height - H * k) / 2}px) scale(${k})${camT}`;
     return scale;
   }
   const ro = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { if (!destroyed) fit(); }) : null;
@@ -524,6 +702,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       }
       rec.art = buildFurniture(doc, it.part, it.color || def.color);
       el.append(rec.art);
+      if (def.view) rec.panes = buildPanes(it, box);
     } else if (it.kind === 'cat') {
       applyStyle(el, { width: box.w, height: box.h });
       rec.cat = buildCat(doc, { pose: it.pose || 'sleeping', size: box.w, base: `${base}nimrod-cat/`, animated });
@@ -536,6 +715,87 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     rec.el = el;
     rec.box = box;
     return rec;
+  }
+
+  // ------------------------------------------------------------------ the window's panes
+  // Each pane can hold an overlay (room-add-ons §4: `panes: [{ overlay: 'weather' }, …]`; here a pane is
+  // just its overlay's name, or `{ overlay }`). They draw in the CONTENT layer, above the lighting, so the
+  // weather reads at night like every other piece of content (Design rule 1), placed with the window's
+  // own transform so a window on a side wall carries them in perspective.
+  const paneKind = (p) => (typeof p === 'string' ? p : p && typeof p === 'object' ? p.overlay : null);
+  function buildPanes(it, box) {
+    const host = doc.createElement('span');
+    host.className = 'rs-panes';          // not an .rs-item: it is the window's, not a thing of its own
+    host.dataset.panesFor = it.id;
+    placeEl(host, box);
+    applyStyle(host, { width: box.w, height: box.h, pointerEvents: 'none' });
+    const panes = WINDOW_PANES.map(([l, t, w, h], i) => {
+      const p = doc.createElement('span');
+      p.className = 'rs-pane';
+      p.dataset.pane = String(i);
+      applyStyle(p, { left: l * 100 + '%', top: t * 100 + '%', width: w * 100 + '%', height: h * 100 + '%' });
+      host.append(p);
+      return p;
+    });
+    contentL.append(host);
+    return { host, panes };
+  }
+  /** Where the visit goes: the first pane marked 'visit', else the first pane with nothing in it. */
+  function visitPane(it) {
+    const kinds = [0, 1, 2, 3].map((i) => paneKind((it.panes || [])[i]));
+    const marked = kinds.indexOf('visit');
+    return marked >= 0 ? marked : Math.max(0, kinds.findIndex((k) => !k));
+  }
+  function visitAllowed() {
+    if (o.aiVisits === 'never') return false;
+    if (o.aiVisits === 'anytime') return true;
+    return light !== 'night';
+  }
+  function paintPanes() {
+    for (const r of recs) {
+      if (!r?.panes) continue;
+      const vp = visitNow && visitAllowed() ? visitPane(r.it) : -1;
+      r.panes.panes.forEach((p, i) => {
+        p.replaceChildren();
+        delete p.dataset.overlay;
+        const kind = paneKind((r.it.panes || [])[i]);
+        if (i === vp) {
+          p.dataset.overlay = 'visit';
+          const v = doc.createElement('span');
+          v.className = 'rs-visit';
+          v.setAttribute('role', 'img');
+          v.setAttribute('aria-label', visitNow.label);
+          // No avatar art yet (Design has not drawn the parts library): a plain speech mark, and the
+          // words in a toast. An avatar is one `src` away (`visit({ src })`).
+          if (visitNow.src) { const img = doc.createElement('img'); img.src = visitNow.src; img.alt = ''; v.append(img); }
+          else v.textContent = '…';
+          p.append(v);
+        } else if (kind === 'weather' && weatherNow) {
+          p.dataset.overlay = 'weather';
+          const w = doc.createElement('span');
+          w.className = 'rs-wx';
+          w.dataset.weather = weatherNow.icon;
+          if (weatherNow.stale) w.dataset.stale = '1';
+          w.innerHTML = iconSvg(weatherNow.icon, { label: weatherNow.words, cls: 'rs-wx-icon' });
+          const t = doc.createElement('b');
+          t.className = 'rs-wx-temp';
+          t.textContent = weatherNow.temp;
+          w.append(t);
+          p.append(w);
+        }
+      });
+    }
+  }
+  /** What `weather/now` said, made safe to draw: { icon, words, temp, spoken, stale } or null. */
+  function readWeather(p) {
+    if (!p || typeof p !== 'object') return null;
+    const icon = typeof p.icon === 'string' && p.icon ? p.icon : 'unknown';
+    const words = typeof p.words === 'string' ? p.words.slice(0, 60) : '';
+    const tv = p.temp == null ? '' : String(p.temp).slice(0, 8);
+    const temp = tv ? (/°/.test(tv) ? tv : `${tv}°`) : '';
+    const spoken = typeof p.spoken === 'string' && p.spoken ? p.spoken.slice(0, 200)
+      : [temp, words.toLowerCase()].filter(Boolean).join(' and ');
+    return { icon, words, temp, spoken, stale: !!p.stale };
   }
 
   function buildMount(it, rec) {
@@ -602,8 +862,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       btn.dataset.row = rowOf(it);
       btn.dataset.id = it.id;
       btn.setAttribute('aria-label', role.role === 'pet'
-        ? (it.kind === 'cat' && typeof o.onCatPress === 'function' ? 'Nimrod: press for help, stroke to pet' : 'Pet Nimrod')
-        : role.label);
+        ? (it.kind === 'cat' && typeof o.onCatPress === 'function' ? `${role.label}: press for help, stroke to pet` : `Pet ${role.label}`)
+        : role.role === 'library' ? `${role.label}: press for the list of books`
+          : role.role === 'closeup' ? `${role.label}: look closer` : role.label);
       btn.addEventListener('click', () => {
         // A stroke that already petted him ends in a click; that click is the same gesture.
         if (btn.dataset.stroked) { delete btn.dataset.stroked; return; }
@@ -613,7 +874,8 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       wrap.append(btn);
       rec.button = btn;
     }
-    if (role.role !== 'pet') {
+    if (role.role === 'library') buildSpines(rec, wrap);
+    if (!NO_SLOT.has(role.role)) {
       const [sx, sy, sw, sh] = role.slot;
       if (!rec.slotEl) {
         const slot = doc.createElement('div');
@@ -660,7 +922,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       overL.append(chip);
       rec.chip = chip;
     }
-    if (o.showSlots && role.role !== 'pet') {
+    if (o.showSlots && !NO_SLOT.has(role.role)) {
       const info = slotInfo(rec);
       const badge = doc.createElement('span');
       badge.className = 'rs-badge';
@@ -673,6 +935,77 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       applyStyle(badge, { left: box.visible.left + box.visible.w / 2, top: Math.min(H - 40, box.visible.top + box.visible.h * (role.slot[1] + role.slot[3] / 2)) });
       overL.append(badge);
     }
+  }
+
+  // ------------------------------------------------------------------ the library's books
+  /** The books on a library: its own, else the host's, else what the screen said, else DEFAULT_BOOKS. */
+  function booksFor(rec) {
+    return rec.role?.books || normalizeBooks(Array.isArray(o.books) ? o.books : null) || screenBooks
+      || normalizeBooks(DEFAULT_BOOKS.slice());
+  }
+  // Each book is a spine on Design's shelves (room_parts.js `bookshelf`: seven books across at
+  // 10 + i × 11.4 %, 9.4 % wide; shelves at 5 + row × 23.5 % from the bottom), top shelf first, so the
+  // drawing and the list read in the same order. A spine is for a POINTER: pressing one opens its module
+  // at once (Mike, §7.2.4: "Click on the book and the module opens"). It is too narrow to be a 44px
+  // target, so it is not in the scan — the shelf is, and it lifts the same books as a flat list.
+  function buildSpines(rec, wrap) {
+    const books = booksFor(rec);
+    const shelf = doc.createElement('span');
+    shelf.className = 'rs-books';
+    books.forEach((b, i) => {
+      const row = SHELVES - 1 - Math.floor(i / BOOKS_PER_SHELF);
+      const col = i % BOOKS_PER_SHELF;
+      const spine = doc.createElement('button');
+      spine.type = 'button';
+      spine.className = 'rs-book';
+      spine.dataset.book = b.module;
+      spine.dataset.tint = String((col + row * 2) % 7);
+      spine.setAttribute('aria-label', `Open ${b.label}`);
+      spine.title = b.label;
+      applyStyle(spine, { left: 10 + col * 11.4 + '%', width: '9.4%', bottom: 5 + row * 23.5 + '%', height: '19%' });
+      const t = doc.createElement('span');
+      t.className = 'rs-book-name';
+      t.textContent = b.label;
+      spine.append(t);
+      spine.addEventListener('click', (e) => { e.stopPropagation(); lastPress = openBook(rec.it.id, b.module) || lastPress; });
+      shelf.append(spine);
+    });
+    wrap.append(shelf);
+    rec.books = books;
+  }
+  /** Open a book's module: the one verb (MODULE_TOPIC) — the kiosk answers with `showModule`. */
+  function openBook(id, module) {
+    const rec = recOf(id);
+    if (!rec || destroyed || !module) return null;
+    if (lifted?.id === id) putBack();
+    pickedId = id;
+    publish(ROOM_TOPICS.pressed, { id, role: rec.role?.role || 'library', action: 'module.open', module });
+    const claimed = openModule(module, id);
+    publish(ROOM_TOPICS.book, { id, module, claimed });
+    return { did: 'book', module, claimed };
+  }
+  /** Publish `system/module` for a type; the host's onUnclaimed hears it when nobody answered. */
+  function openModule(module, id) {
+    let claimed = false;
+    publish(MODULE_TOPIC, { action: 'module.open', module, source: 'room', objectId: id, claim: () => { claimed = true; } });
+    if (!claimed) { try { o.onUnclaimed?.('module.open', { id, module, topic: MODULE_TOPIC, api }); } catch (err) { console.error('room: onUnclaimed', err); } }
+    return claimed;
+  }
+  /** Ask the screen which modules it has (once per build, and only for a library that needs it). */
+  function askForBooks() {
+    if (!o.bus || Array.isArray(o.books)) return;
+    if (!recs.some((r) => r.role?.role === 'library' && !r.role.books)) return;
+    // A reply may come now or later; either way a CHANGED list redraws the shelf, an unchanged one
+    // does nothing (so a rebuild asking again cannot loop).
+    let sync = true, again = false;
+    publish(MODULE_LIST_TOPIC, { claim: () => {}, reply: (list) => {
+      const a = normalizeBooks(list);
+      if (destroyed || !a || !a.length || JSON.stringify(a) === JSON.stringify(screenBooks)) return;
+      screenBooks = a;
+      if (sync) again = true; else build();
+    } });
+    sync = false;
+    if (again) build();
   }
 
   // Petting with a pointer: a stroke across him counts (room-add-ons §9). 30px of travel while
@@ -710,6 +1043,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   function build() {
     for (const r of recs) { try { r.scene?.destroy(); } catch { /* gone */ } }
     if (lifted) putBack();
+    if (cam) closeupExit();
+    for (const id of petTimers.values()) cancel(id);
+    petTimers.clear();
     recs = [];
     pickedId = null;
     contentL.replaceChildren(); overL.replaceChildren(); glowL.replaceChildren();
@@ -732,8 +1068,10 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     applyLight(true, false);
     // The overlay needs the art's measured size (a sign's), so it is built after the art is in.
     for (const r of recs) buildOverlay(r);
+    paintPanes();
     focusIdx = -1;
     fit();
+    askForBooks();
   }
 
   // ------------------------------------------------------------------ light
@@ -767,6 +1105,8 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     }
     const view = viewFor(recipe.view, light);
     if (views) for (const r of recs) if (r.scene) { try { r.scene.set({ scene: view, motion: motion() }); } catch { /* keep the old view */ } }
+    // A visit is not shown at night unless 'anytime' was chosen: the light changing can hide or show it.
+    if (views) paintPanes();
   }
 
   function applyMotion() {
@@ -826,6 +1166,11 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     publish(ROOM_TOPICS.pressed, { id: it.id, role: role.role, action: role.action || null });
     switch (role.role) {
       case 'button': {
+        // Open a module (the window's weather): the same one verb a book sends.
+        if (role.action === 'module.open') {
+          const claimed = role.module ? openModule(role.module, it.id) : false;
+          return { did: 'action', action: role.action, topic: MODULE_TOPIC, module: role.module, claimed };
+        }
         const topic = topicForAction(role.action);
         let claimed = false;
         if (topic) publish(topic, { action: role.action, source: 'room', objectId: it.id, claim: () => { claimed = true; } });
@@ -833,6 +1178,8 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         return { did: 'action', action: role.action, topic, claimed };
       }
       case 'display': lift(it.id); return { did: 'lift' };
+      case 'library': lift(it.id); return { did: 'lift', library: true };
+      case 'closeup': return closeup(it.id) ? { did: 'closeup' } : { did: 'nothing' };
       case 'keys': publish(ROOM_TOPICS.key, { id: it.id, group: role.group, key: role.key }); return { did: 'key', key: role.key };
       case 'pet': {
         // NIMROD IS THE HELP BUTTON (Mike, §7.1.2). Only the cat, only on a press — never when the
@@ -851,23 +1198,50 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   }
 
   // ------------------------------------------------------------------ petting
-  let petTimer = null;
+  // ANY ANIMAL (Mike, §7.2.11; Design §9). The cat takes his happy pose; another animal HOPS (a
+  // decoration, so inside the motion guard: under reduced motion it does not move at all). Either way a
+  // small heart shows above it for as long as the petting lasts — the still signal that it happened,
+  // which is the one a person who asked for no motion gets. The sound is the host's (`onSound`), scaled
+  // by the screen's master volume; `petSound: false` keeps petting silent.
   function catRestPose(rec) { return rec.perked ? 'idle' : (rec.it.pose || 'sleeping'); }
   function pet(id) {
     const rec = recOf(id);
-    if (!rec?.cat) return false;
+    if (!rec || !isAnimal(rec.it) || destroyed) return false;
     rec.petting = true;
-    rec.cat.setPose('happy');
+    if (rec.cat) rec.cat.setPose('happy');
+    else if (animated()) rec.el.classList.add('rs-petted');
+    rec.el.dataset.petted = '1';
+    let mark = overL.querySelector(`.rs-pet-mark[data-pet-for="${rec.it.id}"]`);
+    if (!mark) {
+      mark = doc.createElement('span');
+      mark.className = 'rs-pet-mark';
+      mark.dataset.petFor = rec.it.id;
+      mark.setAttribute('aria-hidden', 'true');
+      const b = rec.box.visible;
+      applyStyle(mark, { left: b.left + b.w / 2, top: b.top });
+      overL.append(mark);
+    }
     publish(ROOM_TOPICS.pet, { id });
-    cancel(petTimer);
-    petTimer = later(() => { rec.petting = false; rec.cat?.setPose(catRestPose(rec)); }, o.petMs);
+    const sound = rec.role?.petSound;
+    if (o.petSound !== false && sound) { try { o.onSound?.(sound, { event: 'pet', id }); } catch (err) { console.error('room: onSound', err); } }
+    cancel(petTimers.get(id));
+    petTimers.set(id, later(() => {
+      petTimers.delete(id);
+      rec.petting = false;
+      rec.cat?.setPose(catRestPose(rec));
+      rec.el?.classList.remove('rs-petted');
+      if (rec.el) delete rec.el.dataset.petted;
+      mark.remove();
+    }, o.petMs));
     return true;
   }
 
   // ------------------------------------------------------------------ lifting a display flat
   function lift(id) {
     const rec = recOf(id);
-    if (!rec?.slotEl || destroyed) return false;
+    if (!rec || destroyed) return false;
+    if (rec.role?.role === 'library') return liftLibrary(rec);
+    if (!rec.slotEl) return false;
     if (lifted) putBack();
     const panel = doc.createElement('div');
     panel.className = 'rs-lift';
@@ -910,11 +1284,71 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     paintScan();
     return true;
   }
+  /**
+   * THE LIBRARY, LIFTED: the shelf's books as a flat list of full-size buttons, the way out first.
+   * The same panel, the same "goes back by itself" and the same scan takeover as any lifted display
+   * (so it can never be a state only an input can leave), with books where a module's slot would be.
+   */
+  function liftLibrary(rec) {
+    if (lifted) putBack();
+    const id = rec.it.id;
+    const panel = doc.createElement('div');
+    panel.className = 'rs-lift rs-lift-library';
+    panel.setAttribute('role', 'group');
+    panel.setAttribute('aria-label', rec.role.label);
+    panel.dataset.liftFor = id;
+    const head = doc.createElement('div');
+    head.className = 'rs-lift-head';
+    const back = doc.createElement('button');
+    back.type = 'button';
+    back.className = 'rs-lift-back';
+    back.dataset.scan = '';
+    back.dataset.row = 'overlay';
+    back.textContent = 'Put it back';
+    back.addEventListener('click', () => putBack());
+    const title = doc.createElement('h3');
+    title.className = 'rs-lift-title';
+    title.textContent = rec.role.label;
+    head.append(back, title);
+    const list = doc.createElement('div');
+    list.className = 'rs-booklist';
+    for (const b of rec.books || booksFor(rec)) {
+      const btn = doc.createElement('button');
+      btn.type = 'button';
+      btn.className = 'rs-booklist-book';
+      btn.dataset.scan = '';
+      btn.dataset.row = 'overlay';
+      btn.dataset.book = b.module;
+      btn.textContent = b.label;
+      btn.addEventListener('click', () => { lastPress = openBook(id, b.module) || lastPress; });
+      list.append(btn);
+    }
+    panel.append(head, list);
+    liftL.append(panel);
+    lifted = { id, panel, slotEl: null, home: null, next: null, idle: null };
+    const arm = () => { cancel(lifted?.idle); if (lifted && o.liftReturnMs > 0) lifted.idle = later(() => putBack(), o.liftReturnMs); };
+    for (const ev of ['pointerdown', 'keydown', 'focusin', 'wheel']) panel.addEventListener(ev, arm);
+    lifted.arm = arm;
+    arm();
+    focusIdx = -1;
+    publish(ROOM_TOPICS.lift, { id, module: null, lifted: true, library: true });
+    paintScan();
+    return true;
+  }
+
   function putBack() {
     if (!lifted) return false;
     const { id, panel, slotEl, home, next } = lifted;
     cancel(lifted.idle);
     lifted = null;
+    if (!slotEl) {
+      // The library's list: nothing of the room's was moved into it.
+      panel.remove();
+      focusIdx = -1;
+      publish(ROOM_TOPICS.lift, { id, module: null, lifted: false, library: true });
+      paintScan();
+      return true;
+    }
     delete slotEl.dataset.empty;
     if (home) home.insertBefore(slotEl, next && next.parentNode === home ? next : null);
     panel.remove();
@@ -925,10 +1359,99 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     return true;
   }
 
+  // ------------------------------------------------------------------ a close-up (a point of view)
+  /** Where a close-up looks, and how far: the area around the object, fitted to the stage, kept inside it. */
+  function camFor(rec) {
+    const b = rec.box.visible;
+    const w = Math.max(1, b.w * (1 + 2 * CLOSEUP_PAD)), h = Math.max(1, b.h * (1 + 2 * CLOSEUP_PAD));
+    const z = clamp(Math.min(W / w, H / h), 1, CLOSEUP_MAX_ZOOM);
+    const hw = W / (2 * z), hh = H / (2 * z);
+    return { z, cx: clamp(b.left + b.w / 2, hw, W - hw), cy: clamp(b.top + b.h / 2, hh, H - hh) };
+  }
+  /** The part of the stage a close-up shows, in stage px. */
+  function camView() {
+    if (!cam) return { left: 0, top: 0, right: W, bottom: H };
+    const hw = W / (2 * cam.z), hh = H / (2 * cam.z);
+    return { left: cam.cx - hw, top: cam.cy - hh, right: cam.cx + hw, bottom: cam.cy + hh };
+  }
+  function animateCam() {
+    // Design: 400 ms toward the object, an instant cut under reduced motion. The class is only on while
+    // the camera moves, so a resize never animates.
+    root.classList.remove('rs-cam-move');
+    cancel(camMoveTimer);
+    if (!animated()) return;
+    root.classList.add('rs-cam-move');
+    camMoveTimer = later(() => { camMoveTimer = null; root.classList.remove('rs-cam-move'); }, CLOSEUP_MOVE_MS + 50);
+  }
+  /**
+   * Zoom into an area (Mike, §7.2.13; Design §8). THE WAY BACK IS THERE THREE WAYS: a flat Back button,
+   * first in the scan; `back()` (the room/back verb); and by itself after `closeupReturnMs` with nobody
+   * touching the room. Never a state only an input can leave.
+   */
+  function closeup(id) {
+    const rec = recOf(id);
+    if (!rec || destroyed) return false;
+    if (lifted) putBack();
+    const was = cam;
+    if (was) cancel(was.idle);
+    cam = { id, ...camFor(rec), idle: null, back: was?.back || null };
+    if (!cam.back) {
+      const back = doc.createElement('button');
+      back.type = 'button';
+      back.className = 'rs-closeup-back';
+      back.dataset.scan = '';
+      back.dataset.row = 'overlay';
+      back.textContent = 'Back to the room';
+      back.addEventListener('click', () => closeupExit());
+      liftL.append(back);
+      cam.back = back;
+    }
+    cam.back.setAttribute('aria-label', `Back to the room from the ${rec.role?.label || 'close-up'}`);
+    root.dataset.closeup = id;
+    animateCam();
+    fit();
+    armCloseup();
+    focusIdx = -1;
+    publish(ROOM_TOPICS.closeup, { id, on: true });
+    paintScan();
+    return true;
+  }
+  function armCloseup() {
+    if (!cam) return;
+    cancel(cam.idle);
+    cam.idle = o.closeupReturnMs > 0 ? later(() => closeupExit(), o.closeupReturnMs) : null;
+  }
+  function closeupExit() {
+    if (!cam) return false;
+    const { id, idle, back } = cam;
+    cancel(idle);
+    cam = null;
+    back?.remove();
+    delete root.dataset.closeup;
+    if (!destroyed) { animateCam(); fit(); }
+    focusIdx = -1;
+    publish(ROOM_TOPICS.closeup, { id, on: false });
+    paintScan();
+    return true;
+  }
+  // Anything a person does in the room keeps a close-up open (the idle clock starts again).
+  const onActivity = () => { if (cam) armCloseup(); };
+  for (const ev of ['pointerdown', 'keydown', 'wheel']) root.addEventListener(ev, onActivity, { passive: true });
+
   // ------------------------------------------------------------------ scanning
-  /** The things a switch walks, in Design's order. A lifted panel takes over, its way out first. */
+  /** The things a switch walks, in Design's order. A lifted panel takes over, its way out first;
+      in a close-up, Back comes first and then only what is in view. */
   function scanTargets() {
     if (lifted) return [...lifted.panel.querySelectorAll('[data-scan]')];
+    if (cam) {
+      const v = camView();
+      const inView = recs.filter((r) => r.button && r.it.id !== cam.id).filter((r) => {
+        const b = r.box.visible;
+        return b.left < v.right && b.left + b.w > v.left && b.top < v.bottom && b.top + b.h > v.top;
+      });
+      inView.sort((a, c) => (SCAN_ROWS.indexOf(a.button.dataset.row) - SCAN_ROWS.indexOf(c.button.dataset.row)) || (a.it.x - c.it.x));
+      return [cam.back, ...inView.map((r) => r.button)];
+    }
     // Row by row in Design's order; inside a row, left to right (a wall of pictures reads like a
     // page: top row first, then left to right).
     const btns = recs.filter((r) => r.button);
@@ -995,6 +1518,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     if (!list.length) return null;
     focusIdx = focusIdx < 0 ? (d > 0 ? 0 : list.length - 1) : (focusIdx + d + list.length) % list.length;
     lifted?.arm?.();
+    onActivity();
     return paintScan();
   }
   function select() {
@@ -1072,6 +1596,43 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     return toastEl;
   }
 
+  // ------------------------------------------------------------------ the window: weather and visits
+  function setWeather(p) {
+    weatherNow = readWeather(p);
+    paintPanes();
+    return weatherNow;
+  }
+  /**
+   * YOUR AI, AT THE WINDOW (Mike, §7.2.1; Design §4: "appears in a pane only when it has something to
+   * say, and never at night unless asked"). `{ text, label?, src?, ms? }`. The words show as a note;
+   * the pane shows a speech mark (or `src`, an avatar picture, when there is one). It goes by itself
+   * after `ms` (default notifyMs). Returns false when the setting says no, or there is no window.
+   */
+  function visit(p = {}) {
+    if (destroyed || !visitAllowed() || !recs.some((r) => r?.panes)) return false;
+    const text = typeof p.text === 'string' ? p.text.trim().slice(0, 200) : '';
+    const label = typeof p.label === 'string' && p.label.trim() ? p.label.trim().slice(0, 40) : 'Your assistant';
+    const src = typeof p.src === 'string' && /^(https?:|\/|data:image\/|\.)/.test(p.src) ? p.src : null;
+    visitNow = { text, label, src };
+    paintPanes();
+    const ms = Number(p.ms) > 0 ? Math.min(60000, Number(p.ms)) : o.notifyMs;
+    if (text) toast(`${label}: ${text}`, ms);
+    cancel(visitTimer);
+    visitTimer = later(() => { visitTimer = null; visitNow = null; paintPanes(); }, ms);
+    return true;
+  }
+  // The weather module says what it is like out; the room keeps it for its window. Only when a window
+  // shows the weather, so a room without one opens no listener.
+  function listen() {
+    while (busOffs.length) { try { busOffs.pop()(); } catch { /* gone */ } }
+    if (!o.bus?.subscribe) return;
+    const wants = recs.some((r) => r?.panes && (r.it.panes || []).some((k) => paneKind(k) === 'weather'));
+    if (!wants) return;
+    const off = o.bus.subscribe(WEATHER_NOW_TOPIC, (p) => { if (!destroyed) setWeather(p); });
+    if (typeof off === 'function') busOffs.push(off);
+    if (!weatherNow) publish(WEATHER_ASK_TOPIC, { from: 'room' });
+  }
+
   // ------------------------------------------------------------------ the slots, for the host
   function slots() {
     const map = new Map();
@@ -1107,7 +1668,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     /** The room's notification rules (room_notify.js); null = Design's defaults. No rebuild. */
     setNotify(rules) {
       clearReactions();
-      recipe = { ...recipe, notify: Array.isArray(rules) ? rules.slice() : undefined };
+      const notify = Array.isArray(rules) ? rules.slice() : undefined;
+      baseRecipe = { ...baseRecipe, notify };
+      recipe = { ...recipe, notify };
     },
     /** The editor's Test: that one rule, alone, as if its event had happened. */
     testRule(rule, { ms } = {}) {
@@ -1120,19 +1683,31 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     focusPrev: () => focusStep(-1),
     focused: () => { const l = scanTargets(); return focusIdx < 0 || !l.length ? null : l[focusIdx % l.length]; },
     select,
-    back: () => (lifted ? putBack() : false),
+    // Back, in the order a person would expect: a lifted panel first, then a close-up.
+    back: () => (lifted ? putBack() : cam ? closeupExit() : false),
     describe, hold, catAway,
     picked: () => pickedId,
     lastPress: () => lastPress,
     toast,
     fit,
     timers: () => timers.size,
-    setRecipe(next) { recipe = normalizeRecipe(next); shell = ROOM_SHELLS[recipe.shell]; build(); scheduleTick(); },
+    // The second pass.
+    closeup, closeupExit,
+    closedUp: () => (cam ? cam.id : null),
+    camera: () => (cam ? { id: cam.id, z: cam.z, cx: cam.cx, cy: cam.cy } : null),
+    openBook, books: (id) => (recOf(id)?.books || []).map((b) => ({ ...b })),
+    /** Ask the screen again which modules it has (its modules changed). */
+    refreshBooks() { screenBooks = null; askForBooks(); if (!screenBooks) build(); },
+    setWeather, weather: () => (weatherNow ? { ...weatherNow } : null),
+    visit, visiting: () => !!visitNow && visitAllowed(),
+    setRecipe(next) { baseRecipe = normalizeRecipe(next); recipe = derive(); shell = ROOM_SHELLS[recipe.shell]; build(); listen(); scheduleTick(); },
     setOptions(next = {}) {
-      const rebuild = ['showSlots', 'signWords', 'zoom', 'pictureFor', 'assetBase'].some((k) => k in next && next[k] !== o[k]);
+      const rebuild = ['showSlots', 'signWords', 'zoom', 'pictureFor', 'assetBase', 'books', ...OPTION_KEYS].some((k) => k in next && JSON.stringify(next[k]) !== JSON.stringify(o[k]));
       Object.assign(o, next);
       root.dataset.labels = o.labels === 'pointed' ? 'pointed' : 'always';
-      if (rebuild) build();
+      if ('weather' in next) weatherNow = readWeather(next.weather);
+      if (rebuild) { recipe = derive(); build(); listen(); }
+      if ('closeupReturnMs' in next) armCloseup();
       applyMotion();
       applyLight(true);
       scheduleTick();
@@ -1140,8 +1715,11 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     destroy() {
       if (destroyed) return;
       putBack();
+      closeupExit();
       clearReactions();
       destroyed = true;
+      while (busOffs.length) { try { busOffs.pop()(); } catch { /* gone */ } }
+      for (const ev of ['pointerdown', 'keydown', 'wheel']) root.removeEventListener(ev, onActivity);
       for (const id of [...timers]) cancel(id);
       mq?.removeEventListener?.('change', onMq);
       ro?.disconnect();
@@ -1153,7 +1731,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
 
   root.dataset.labels = o.labels === 'pointed' ? 'pointed' : 'always';
   root.dataset.motion = motion();
+  weatherNow = readWeather(o.weather);
   build();
+  listen();
   scheduleTick();
   return api;
 }

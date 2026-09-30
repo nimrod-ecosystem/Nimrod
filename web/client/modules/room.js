@@ -40,9 +40,20 @@
 // "pressing Nimrod: explains / pets": that setting would be a second switch for the same choice
 // "Cat help: on/off" already makes, and two switches for one thing is how they end up disagreeing.
 
-import { registerModule } from '../module.js';
+//
+// *** THE SECOND PASS (row 2.37 items 4, 6, 7, 11, 13). *** All settings on the pieces that exist:
+//   the window    shows the weather in a pane and opens the weather when pressed; your AI can visit
+//                 (`room/visit` { text, src? }), never at night unless "any time" was chosen
+//   the bookshelf is a library: each book a module, pressed = that module opens (`system/module`)
+//   the desk, sofa, armchair and bed zoom into their area, with Back first and a return by itself
+//   any animal    can be petted: the cat purrs (a setting); "Pet Nimrod" is also in his help bubble, so
+//                 one switch can pet him — press him, then Pet — without a hold binding
+//   zoom on focus stays this module's "Grow what the cursor is on" (off by default); the screen-wide
+//                 version for panels is `../zoom_focus.js`.
+
+import { registerModule, listManifests } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
-import { mountRoomScene, RENDER_DEFAULTS } from '../room_scene.js';
+import { mountRoomScene, RENDER_DEFAULTS, OBJECT_DEFAULTS, DEFAULT_BOOKS, MAX_BOOKS, moduleLabel } from '../room_scene.js';
 import { listPresets, presetRecipe, DEFAULT_PRESET } from '../room_presets.js';
 import { LISTENING_TOPIC } from '../input_speech.js';
 import { mountCatHelp } from '../cat_help.js';
@@ -62,9 +73,27 @@ import { mountNotifyEditor } from '../room_notify_editor.js';
 //   zoom 'off'         Design (room-add-ons §1): zoom on focus is off by default, 1.1–1.5×.
 //   signWords ''       empty keeps each room's own words; anything typed goes on every sign in it.
 //   showSlots false    an editing aid (Design's "Show slot sizes"), not something a room shows.
+// The second pass (every one on Mike's list, for and against):
+//   shelf 'library'    Mike's own words for the bookshelf (§7.2.4) are newer than the prototype's "edit
+//                      menus on the shelf", and the edit menus are not a module yet (the shelf lifted an
+//                      EMPTY slot). "As the room has it" keeps the prototype's shelf.
+//   books 'screen'     the modules on this screen (asked of the kiosk), else a few common ones.
+//   windowShows 'weather'  the weather sits in one pane when the weather module has any; with no weather
+//                      module or no place set, the window is exactly the view it was. Sends nothing.
+//   windowPress 'weather'  pressing the window opens the weather (Mike: "Click the window for the
+//                      weather"). Against: one more stop in the scan; "Nothing" removes it.
+//   aiVisits 'news'    Design's middle choice: only when something has something to say, never at night.
+//   closeups 'on'      desks, sofas, armchairs and beds zoom in (Mike, §7.2.13). Against: more stops in
+//                      the scan for a switch user; "Off" removes them.
+//   closeupReturnMs 120000  room_scene.js RENDER_DEFAULTS says why two minutes.
+//   petSound true      room_scene.js RENDER_DEFAULTS says why: it answers the person's own press.
 export const DEFAULTS = Object.freeze({
   preset: DEFAULT_PRESET, light: 'auto', labels: 'always', motion: 'gentle',
   liftReturnMs: RENDER_DEFAULTS.liftReturnMs, zoom: 'off', signWords: '', showSlots: false,
+  shelf: OBJECT_DEFAULTS.shelf, books: 'screen', bookList: '', windowShows: OBJECT_DEFAULTS.windowShows,
+  windowPress: OBJECT_DEFAULTS.windowPress,
+  aiVisits: RENDER_DEFAULTS.aiVisits, closeups: OBJECT_DEFAULTS.closeups, closeupReturnMs: RENDER_DEFAULTS.closeupReturnMs,
+  petSound: RENDER_DEFAULTS.petSound,
 });
 
 export const SETTINGS = [
@@ -107,7 +136,72 @@ export const SETTINGS = [
     ] },
   { key: 'showSlots', label: 'Show slot sizes', kind: 'toggle', default: DEFAULTS.showSlots, level: 'advanced',
     onLabel: 'Shown', offLabel: 'Hidden' },
+  // ---- the second pass ----
+  { key: 'shelf', label: 'The bookshelf', kind: 'choice', default: DEFAULTS.shelf, level: 'standard',
+    help: 'A library: each book is a module, and pressing a book opens it.',
+    options: [
+      { value: 'library', label: 'A library of modules' },
+      { value: 'recipe', label: 'As the room has it' },
+    ] },
+  { key: 'books', label: 'Books on the shelf', kind: 'choice', default: DEFAULTS.books, level: 'standard',
+    options: [
+      { value: 'screen', label: 'This screen’s modules' },
+      { value: 'few', label: 'A few common ones' },
+      { value: 'named', label: 'The ones named below' },
+    ] },
+  { key: 'bookList', label: 'Name the books', kind: 'text', default: DEFAULTS.bookList, level: 'advanced',
+    placeholder: 'Photos, Clock, Weather', maxLength: 300,
+    help: 'Module names, separated by commas. Used when "Books on the shelf" is "The ones named below".' },
+  { key: 'windowShows', label: 'The window shows', kind: 'choice', default: DEFAULTS.windowShows, level: 'standard',
+    help: 'The weather comes from the Weather module, once it has a place. The room sends nothing itself.',
+    options: [
+      { value: 'weather', label: 'The view and the weather' },
+      { value: 'view', label: 'Just the view' },
+    ] },
+  { key: 'windowPress', label: 'Pressing the window', kind: 'choice', default: DEFAULTS.windowPress, level: 'standard',
+    options: [
+      { value: 'weather', label: 'Opens the weather' },
+      { value: 'nothing', label: 'Does nothing' },
+    ] },
+  { key: 'aiVisits', label: 'Your assistant visits the window', kind: 'choice', default: DEFAULTS.aiVisits, level: 'standard',
+    options: [
+      { value: 'never', label: 'Never' },
+      { value: 'news', label: 'When it has news (not at night)' },
+      { value: 'anytime', label: 'When it has news, night too' },
+    ] },
+  { key: 'closeups', label: 'Look closer at a desk or sofa', kind: 'choice', default: DEFAULTS.closeups, level: 'standard',
+    options: [
+      { value: 'on', label: 'On: pressing one zooms in' },
+      { value: 'off', label: 'Off' },
+    ] },
+  { key: 'closeupReturnMs', label: 'Go back to the whole room after', kind: 'choice', default: DEFAULTS.closeupReturnMs,
+    level: 'standard',
+    options: [
+      { value: 30000, label: '30 seconds' },
+      { value: 60000, label: '1 minute' },
+      { value: 120000, label: '2 minutes' },
+      { value: 300000, label: '5 minutes' },
+      { value: 0, label: 'Never (press Back yourself)' },
+    ] },
+  { key: 'petSound', label: 'Sound when an animal is petted', kind: 'toggle', default: DEFAULTS.petSound, level: 'standard',
+    onLabel: 'On', offLabel: 'Off' },
 ];
+
+/** "Photos, weather, AAC board" -> module types, matched by type or by title. Unknown names dropped. */
+export function booksFromList(text = '', manifests = null) {
+  let all = manifests;
+  if (!all) { try { all = listManifests(); } catch { all = []; } }
+  const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const out = [];
+  for (const raw of String(text || '').split(',')) {
+    const n = norm(raw);
+    if (!n) continue;
+    const m = all.find((x) => norm(x.type) === n) || all.find((x) => norm(x.title) === n);
+    if (m && !out.includes(m.type)) out.push(m.type);
+    if (out.length >= MAX_BOOKS) break;
+  }
+  return out;
+}
 
 const FIELDS = Object.fromEntries(SETTINGS.map(normalizeField).filter(Boolean).map((f) => [f.key, f]));
 
@@ -115,19 +209,33 @@ const FIELDS = Object.fromEntries(SETTINGS.map(normalizeField).filter(Boolean).m
 export function configFrom(row = {}) {
   const cfg = {};
   for (const f of Object.values(FIELDS)) cfg[f.key] = fieldValue(f, row || {});
-  for (const k of ['preset', 'light', 'labels', 'motion', 'zoom']) {
+  for (const k of ['preset', 'light', 'labels', 'motion', 'zoom', 'shelf', 'books', 'windowShows', 'windowPress', 'aiVisits', 'closeups']) {
     if (!FIELDS[k].options.some((x) => x.value === cfg[k])) cfg[k] = DEFAULTS[k];
   }
-  if (!FIELDS.liftReturnMs.options.some((x) => x.value === cfg.liftReturnMs)) cfg.liftReturnMs = DEFAULTS.liftReturnMs;
+  for (const k of ['liftReturnMs', 'closeupReturnMs']) {
+    if (!FIELDS[k].options.some((x) => x.value === cfg[k])) cfg[k] = DEFAULTS[k];
+  }
   cfg.signWords = String(cfg.signWords ?? '').slice(0, 40);
+  cfg.bookList = String(cfg.bookList ?? '').slice(0, 300);
   cfg.showSlots = !!cfg.showSlots;
+  cfg.petSound = !!cfg.petSound;
   return cfg;
+}
+
+/** The books the renderer is given: null = ask the screen (then a few common ones). */
+export function booksOption(cfg) {
+  if (cfg.books === 'few') return DEFAULT_BOOKS.slice();
+  if (cfg.books === 'named') { const named = booksFromList(cfg.bookList); return named.length ? named : DEFAULT_BOOKS.slice(); }
+  return null;
 }
 
 // What the renderer is told, from what the settings say.
 const renderOpts = (cfg) => ({
   light: cfg.light, labels: cfg.labels, motion: cfg.motion, liftReturnMs: cfg.liftReturnMs,
   zoom: cfg.zoom === 'off' ? null : Number(cfg.zoom), signWords: cfg.signWords, showSlots: cfg.showSlots,
+  shelf: cfg.shelf, books: booksOption(cfg), windowShows: cfg.windowShows,
+  windowPress: cfg.windowPress === 'nothing' ? 'recipe' : cfg.windowPress, aiVisits: cfg.aiVisits,
+  closeups: cfg.closeups, closeupReturnMs: cfg.closeupReturnMs, petSound: cfg.petSound,
 });
 
 registerModule(
@@ -194,7 +302,8 @@ registerModule(
     }
 
     // A press nobody on the page answered. See the header for why each of these is the honest one.
-    function onUnclaimed(action, { api } = {}) {
+    function onUnclaimed(action, info = {}) {
+      const { api } = info || {};
       if (torn) return;
       if (action === 'fullscreen.toggle') {
         const doc = mount.ownerDocument;
@@ -205,6 +314,17 @@ registerModule(
         return;
       }
       if (action === 'settings.open') { api?.toast('On a screen, this door opens Settings.'); return; }
+      if (action === 'module.open') {
+        const { module } = info || {};
+        // The window's weather: what the room already knows says itself, even with no Weather panel here.
+        if (module === 'weather') {
+          const w = api?.weather?.();
+          api?.toast(w?.spoken ? `Now: ${w.spoken}` : 'Add the Weather module to this screen and set a place, and the weather shows here.');
+          return;
+        }
+        api?.toast(`${moduleLabel(module)} is not on this screen. Add it, and this book opens it.`);
+        return;
+      }
       api?.toast('Nothing here answers that yet.');
     }
 
@@ -240,7 +360,11 @@ registerModule(
           onShow: () => scene?.catAway(true),
           onClose: () => scene?.catAway(false),
         });
-        const onCatPress = ({ selected }) => !!help?.explain(selected || { kind: 'screen', screen: 'room' });
+        // Press Nimrod: help. The bubble also offers "Pet Nimrod", so ONE switch can pet him (press him,
+        // then Pet) without a hold binding; a pointer can still stroke him, a held switch still pets.
+        const onCatPress = ({ id, selected }) => !!help?.explain(selected || { kind: 'screen', screen: 'room' }, {
+          actions: [{ id: 'pet', label: 'Pet Nimrod', run: () => scene?.pet(id) }],
+        });
         scene = mountRoomScene(host, presetRecipe(cfg.preset), { ...renderOpts(cfg), bus: ctx.bus, onUnclaimed, onCatPress, onSound });
         scene.setNotify(rulesFrom(state?.get?.() || {}));
         const sub = state?.subscribe?.((row) => apply(row));
@@ -258,6 +382,8 @@ registerModule(
         // Holding the switch on an animal pets it (room-add-ons §9). Whatever turns a held switch
         // into a verb (input_longpress.js) publishes this; a press on Nimrod is his help instead.
         ctx.bus?.subscribe?.('room/hold', () => scene?.hold());
+        // Your AI at the window (row 2.37 item 4): { text, label?, src?, ms? }. The setting decides.
+        ctx.bus?.subscribe?.('room/visit', (p) => { scene?.visit(p && typeof p === 'object' ? p : { text: String(p || '') }); });
         // Objects react alongside the on-screen cue, never instead of it.
         ctx.bus?.subscribe?.(LISTENING_TOPIC, (p) => {
           if (!scene) return;

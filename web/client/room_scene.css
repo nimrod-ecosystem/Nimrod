@@ -36,7 +36,18 @@
   --rs-card-sub: #b9c4c7;
   --rs-card-shade: 0 4px 12px rgba(0,0,0,.3);
   --rs-press-wash: rgba(255,255,255,.12);
-  --rs-slow: 1;                                 /* 'calm' stretches every loop (see room_scene.js) */
+  /* Second pass (row 2.37): the window's weather pane, a visit, book spines, the pet heart. */
+  --rs-wx-bg: rgba(251,249,239,.82);            /* a card on the glass, cream like the chips */
+  --rs-wx-ink: var(--text, #0A3323);
+  --rs-wx-sun: #e0a526; --rs-wx-cloud: #7d8b93; --rs-wx-rain: #2f6f9a; --rs-wx-snow: #5b7a8c;
+  --rs-wx-bolt: #c9a24a; --rs-wx-fog: #8a949a; --rs-wx-moon: #c9b77a;
+  --rs-visit-bg: var(--surface, #fbf9ef);
+  --rs-visit-edge: var(--link, #105666);
+  --rs-book-ink: #fbf9ef;                       /* spine words: light on Design's dark book colours */
+  --rs-book-0: #9e5449; --rs-book-1: #4d6730; --rs-book-2: #14636A; --rs-book-3: #7a5a1e;
+  --rs-book-4: #7a5a8a; --rs-book-5: #8a5a34; --rs-book-6: #3f5a72;
+  --rs-pet-heart: #c0485a;
+  --rs-slow: 1;                                /* 'calm' stretches every loop (see room_scene.js) */
   position: absolute; inset: 0; overflow: hidden;
   background: var(--rs-backdrop);
   font-family: var(--font, system-ui, sans-serif);
@@ -68,6 +79,9 @@
   .rs .rs-react-ring{ animation: rsRing 1.4s ease-out infinite; }
   .rs .rs-item, .rs .rs-obj-wrap{ transition: scale .15s ease-out; }
   .rs .rm-door-leaf, .rs .rm-door-panel{ transition: transform .4s ease-out; }
+  /* row 2.37: a close-up's camera (Design: 400 ms toward the object), and a petted animal's hop */
+  .rs.rs-cam-move .rs-stage{ transition: transform calc(.4s * var(--rs-slow)) ease-in-out; }
+  .rs .rs-item.rs-petted{ animation: rsHop .5s ease-out 2; }
 }
 /* Motion OFF by the setting as well as by the device: nothing moves, and the second hand goes. */
 .rs[data-motion="still"] *, .rs[data-motion="still"] *::before, .rs[data-motion="still"] *::after{
@@ -141,6 +155,53 @@
 .rs-lift-body{ position: relative; max-width: 100%; }
 .rs-lift-body > .rs-slot{ position: relative; inset: auto; width: 100%; height: 100%; pointer-events: auto; overflow: auto; }
 .rs-lift-body > .rs-slot:empty::before{ content: attr(data-empty); display: grid; place-items: center; height: 100%; font-weight: 700; }
+
+/* ---------- SECOND PASS (row 2.37) ---------- */
+/* The window's panes: content, above the lighting. A pane with nothing in it is just glass. */
+.rs-panes{ pointer-events: none; }
+.rs-pane{ position: absolute; display: grid; place-items: center; overflow: hidden; }
+.rs-wx{ display: grid; justify-items: center; gap: 0; padding: 3px 5px; border-radius: 8px;
+  background: var(--rs-wx-bg); color: var(--rs-wx-ink); line-height: 1;
+  --wx-sun: var(--rs-wx-sun); --wx-cloud: var(--rs-wx-cloud); --wx-rain: var(--rs-wx-rain); --wx-snow: var(--rs-wx-snow);
+  --wx-bolt: var(--rs-wx-bolt); --wx-fog: var(--rs-wx-fog); --wx-moon: var(--rs-wx-moon); --wx-text: var(--rs-wx-ink); }
+.rs-wx-icon{ width: 34px; height: 34px; display: block; }
+.rs-wx-temp{ font: 800 17px/1 var(--font, system-ui, sans-serif); }
+.rs-wx[data-stale] .rs-wx-temp::after{ content: '?'; font-weight: 400; }
+.rs-visit{ display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+  background: var(--rs-visit-bg); border: 3px solid var(--rs-visit-edge); color: var(--rs-visit-edge);
+  font: 800 20px/1 var(--font, system-ui, sans-serif); }
+.rs-visit img{ width: 100%; height: 100%; object-fit: cover; }
+
+/* A library's books: spines laid on Design's shelves, each a pointer target that opens its module. */
+.rs-books{ position: absolute; inset: 0; pointer-events: none; }
+.rs-book{ position: absolute; margin: 0; padding: 0; border: 0; border-radius: 2px 2px 0 0; cursor: pointer;
+  pointer-events: auto; overflow: hidden; background: var(--rs-book-0); color: var(--rs-book-ink); }
+.rs-book[data-tint="1"]{ background: var(--rs-book-1); } .rs-book[data-tint="2"]{ background: var(--rs-book-2); }
+.rs-book[data-tint="3"]{ background: var(--rs-book-3); } .rs-book[data-tint="4"]{ background: var(--rs-book-4); }
+.rs-book[data-tint="5"]{ background: var(--rs-book-5); } .rs-book[data-tint="6"]{ background: var(--rs-book-6); }
+.rs-book-name{ display: block; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
+  font: 700 7px/1 var(--font, system-ui, sans-serif); margin: 2px auto; max-height: calc(100% - 4px); overflow: hidden; }
+.rs-book:hover, .rs-book:focus-visible{ outline: 3px solid var(--rs-ring); outline-offset: 1px; }
+/* The library, lifted: every book a full-size button, the way out first. */
+.rs-booklist{ display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.rs-booklist-book{ min-height: 48px; padding: 8px 12px; border-radius: 10px; border: 2px solid var(--rs-lift-edge);
+  background: var(--rs-lift-bg); color: var(--rs-lift-ink); font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
+.rs-booklist-book:focus-visible, .rs-booklist-book.is-scan{ outline: 4px solid var(--rs-ring); outline-offset: 3px; }
+
+/* A close-up's way back: flat, solid, real pixels (it is not inside the zoomed stage), top left. */
+.rs-closeup-back{ position: absolute; left: 12px; top: 12px; z-index: 5; min-height: 48px; padding: 8px 16px;
+  border-radius: 10px; border: 2px solid var(--rs-lift-edge); background: var(--rs-lift-bg); color: var(--rs-lift-ink);
+  font: inherit; font-weight: 800; cursor: pointer; pointer-events: auto; box-shadow: var(--rs-chip-shadow); }
+.rs-closeup-back:focus-visible, .rs-closeup-back.is-scan{ outline: 4px solid var(--rs-ring); outline-offset: 3px; }
+
+/* Petting: a heart that shows whatever the motion setting (the still signal), and a hop that is decoration. */
+.rs-pet-mark{ position: absolute; width: 18px; height: 18px; transform: translate(-50%, -120%) rotate(45deg);
+  background: var(--rs-pet-heart); pointer-events: none; border-radius: 3px 0 3px 3px; }
+.rs-pet-mark::before, .rs-pet-mark::after{ content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--rs-pet-heart); }
+.rs-pet-mark::before{ left: -9px; top: 0; } .rs-pet-mark::after{ left: 0; top: -9px; }
+/* (their motion — the close-up's camera and the hop — is inside the one no-preference guard above) */
+@keyframes rsHop{ 0%, 100%{ translate: 0 0; } 40%{ translate: 0 -10px; } }
 
 /* A note the renderer may show for a moment: flat, solid, top centre, never a gate. */
 .rs-toast{ position: absolute; left: 50%; top: 4%; transform: translateX(-50%); z-index: 6; max-width: 90%;

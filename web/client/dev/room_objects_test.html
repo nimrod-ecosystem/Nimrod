@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>room objects — the window, the library, petting, close-ups, zoom on focus</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .host{position:relative;width:960px;height:540px;margin:8px 0;border:1px solid #e4e0c2}
+  p{max-width:80ch}
+</style>
+</head>
+<body>
+<h1>room objects — the window, the library, petting, close-ups, zoom on focus</h1>
+<p>Change list row 2.37, the second pass: items 4 (the window shows the weather and your AI visits),
+6 (zoom on focus), 7 (the bookshelf is a quick module library), 11 (pet any animal, and how petting
+shares a press with Nimrod's help) and 13 (a desk or sofa zooms into its point of view, with a way back
+that a switch reaches and that comes by itself). All of it as options on the existing room pieces
+(<code>applyRoomOptions</code>), so a room with none of them draws as before.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="pen"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { applyRoomOptions, normalizeRole, normalizeBooks, moduleLabel, isAnimal, mountRoomScene, ensureRoomCss,
+  ROOM_ACTIONS, ROOM_TOPICS, MODULE_TOPIC, MODULE_LIST_TOPIC, WEATHER_NOW_TOPIC, WEATHER_ASK_TOPIC,
+  DEFAULT_BOOKS, MAX_BOOKS, OBJECT_DEFAULTS, RENDER_DEFAULTS, CLOSEUP_MAX_ZOOM, W, H } from '../room_scene.js';
+import { presetRecipe } from '../room_presets.js';
+import { configFrom, DEFAULTS, SETTINGS, booksFromList, booksOption } from '../modules/room.js';
+import { SOUND_NAMES } from '../room_notify.js';
+import { CAT_PREFS_KEY } from '../cat_guide.js';
+import { applyZoomFocus, zoomFocusScale, ZOOM_FOCUS_FIELD, ZOOM_FOCUS_DEFAULT } from '../zoom_focus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function makeHost() {
+  const h = document.createElement('div');
+  h.className = 'host';
+  document.getElementById('pen').append(h);
+  return h;
+}
+function listen(bus, topic) { const got = []; bus.subscribe(topic, (p) => got.push(p)); return got; }
+const find = (recipe, id) => recipe.items.find((i) => i.id === id);
+function fakeState(initial = {}) {
+  let row = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => row,
+    set(p) { row = { ...row, ...p }; subs.forEach((f) => f(row)); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    load: async () => {}, destroyed: false,
+    destroy() { this.destroyed = true; subs.clear(); },
+  };
+}
+
+(async () => {
+try {
+  try { localStorage.removeItem(CAT_PREFS_KEY); } catch { /* private */ }
+  await ensureRoomCss(document);
+
+  // =====================================================================================
+  section('options as data: applyRoomOptions (a recipe with none of them draws as before)');
+  {
+    const r = presetRecipe('theRoom');
+    const same = applyRoomOptions(r, {});
+    check('no options: every item is unchanged', JSON.stringify(same.items) === JSON.stringify(r.items));
+    const lib = applyRoomOptions(r, { shelf: 'library' });
+    const shelf = find(lib, 'shelf');
+    check('shelf: library turns the bookshelf into a library (over the role it had)', shelf.role === 'library' && !shelf.module && !shelf.slot && shelf.label === 'Books', JSON.stringify(shelf));
+    check('...and leaves everything else alone', find(lib, 'cab').role === 'display' && find(lib, 'door').action === 'settings.open');
+    check('...and never edits the recipe it was given', find(r, 'shelf').role === 'display');
+    const wx = applyRoomOptions(r, { windowShows: 'weather', windowPress: 'weather' });
+    const win = find(wx, 'window');
+    check('windowShows: weather puts the weather in the lower-right pane', Array.isArray(win.panes) && win.panes[3] === 'weather' && win.panes.filter(Boolean).length === 1, JSON.stringify(win.panes));
+    check('windowPress: weather makes the window a button that opens the weather module', win.role === 'button' && win.action === 'module.open' && win.module === 'weather' && win.label === 'Weather');
+    const view = applyRoomOptions({ items: [{ id: 'w', kind: 'furniture', part: 'window', panes: ['weather', 'visit'] }] }, { windowShows: 'view' });
+    check('windowShows: view takes the weather out and keeps any other pane', view.items[0].panes.join() === ',visit,,');
+    const roled = applyRoomOptions({ items: [{ id: 'w', kind: 'furniture', part: 'window', role: 'label', label: 'Mine' }] }, { windowPress: 'weather' });
+    check('a window that already has a role keeps it', roled.items[0].role === 'label');
+    const liv = applyRoomOptions(presetRecipe('living'), { closeups: 'on' });
+    check('closeups: on — the sofa becomes a close-up', find(liv, 'sofa').role === 'closeup');
+    check('...and the side table does not (only desks, sofas, armchairs and beds)', !find(liv, 'table').role);
+    const off = applyRoomOptions({ items: [{ id: 'd', kind: 'furniture', part: 'desk', role: 'closeup' }] }, { closeups: 'off' });
+    check('closeups: off removes it again', !off.items[0].role);
+    check('the kiosk-facing table is unchanged: module.open is NOT a screen control in ROOM_ACTIONS',
+      !('module.open' in ROOM_ACTIONS) && MODULE_TOPIC === 'system/module' && MODULE_LIST_TOPIC === 'system/module-list');
+    check('the room module and a Stage R room share one set of defaults', OBJECT_DEFAULTS.shelf === DEFAULTS.shelf && OBJECT_DEFAULTS.windowShows === DEFAULTS.windowShows && OBJECT_DEFAULTS.closeups === DEFAULTS.closeups);
+    check('the renderer on its own turns none of them on', ['shelf', 'windowShows', 'windowPress', 'closeups'].every((k) => RENDER_DEFAULTS[k] === 'recipe'));
+  }
+
+  section('roles');
+  {
+    check('library is a role', normalizeRole({ kind: 'furniture', part: 'bookshelf', role: 'library' }).role === 'library');
+    check('a library has no module slot and never grows', normalizeRole({ kind: 'furniture', part: 'bookshelf', role: 'library' }).grow === false);
+    check('interactive select.do: closeup is a close-up', normalizeRole({ kind: 'furniture', part: 'desk', interactive: { select: { do: 'closeup' } } }).role === 'closeup');
+    const dog = normalizeRole({ kind: 'furniture', part: 'plant', pet: { sound: 'knock' }, label: 'Rex' });
+    check('ANY item with `pet` can be petted, with its own sound', dog.role === 'pet' && dog.petSound === 'knock' && dog.label === 'Rex');
+    check('the cat purrs by default', normalizeRole({ kind: 'cat' }).petSound === 'purr');
+    check('`pet: false` means not an animal', !isAnimal({ kind: 'cat', pet: false }) && normalizeRole({ kind: 'cat', pet: false }) === null);
+    check('a plain thing is still not an animal', !isAnimal({ kind: 'furniture', part: 'sofa' }));
+    check('the purr is a sound the room can play', SOUND_NAMES.includes('purr'));
+    const b = normalizeBooks(['photos', { module: 'clock', label: 'The time' }, 'photos', { type: 'weather' }, 42, '']);
+    check('books: types or {module,label}, duplicates and junk dropped', b.map((x) => x.module).join() === 'photos,clock,weather' && b[1].label === 'The time' && b[0].label === 'Photos', JSON.stringify(b));
+    check('books: at most one full shelf-case', normalizeBooks(Array.from({ length: 40 }, (_, i) => 'm' + i)).length === MAX_BOOKS);
+    check('a module with no room label is named from its type', moduleLabel('word_forge') === 'Word forge');
+  }
+
+  // =====================================================================================
+  section('the library: every book is a module (item 7)');
+  {
+    const bus = createBus();
+    const opened = listen(bus, MODULE_TOPIC);
+    const books = listen(bus, ROOM_TOPICS.book);
+    const unclaimed = [];
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('living'), { ...OBJECT_DEFAULTS, bus, light: 'day', reducedMotion: true,
+      onUnclaimed: (a, info) => unclaimed.push([a, info?.module]) });
+    const spines = [...host.querySelectorAll('.rs-book')];
+    check('with nobody answering which modules the screen has, the shelf holds a few common ones', spines.map((s) => s.dataset.book).join() === DEFAULT_BOOKS.join(), spines.map((s) => s.dataset.book).join());
+    check('each book carries its name, so it reads without colour', spines[0].textContent === 'Photos' && spines[0].getAttribute('aria-label') === 'Open Photos');
+    check('the first book is on the TOP shelf (the list and the drawing read in the same order)', parseFloat(spines[0].style.bottom) > 70, spines[0].style.bottom);
+    spines[1].click();
+    check('pressing a book publishes system/module with its type', opened.length === 1 && opened[0].module === 'clock' && typeof opened[0].claim === 'function', JSON.stringify(opened));
+    check('...nobody claimed it, so the host hears it (and says so)', unclaimed.length === 1 && unclaimed[0][0] === 'module.open' && unclaimed[0][1] === 'clock');
+    check('...and room/book says what happened', books.length === 1 && books[0].module === 'clock' && books[0].claimed === false);
+    bus.subscribe(MODULE_TOPIC, (p) => { if (p.module === 'photos') p.claim(); });
+    host.querySelector('.rs-book[data-book="photos"]').click();
+    check('a book the screen has is claimed: no fallback', unclaimed.length === 1 && scene.lastPress()?.claimed === true);
+
+    // The shelf lifts the books as a flat list, the way out first.
+    scene.press('bookshelf');
+    check('pressing the shelf lifts its books as a flat list', scene.lifted() === 'bookshelf' && !!host.querySelector('.rs-lift-library'));
+    const t = scene.scanTargets();
+    check('...the scan walks Put it back first, then every book', t[0].textContent === 'Put it back' && t.length === 1 + DEFAULT_BOOKS.length);
+    check('...each a full-size target (48px or more)', [...host.querySelectorAll('.rs-booklist-book')].every((b) => b.getBoundingClientRect().height >= 47.5));
+    scene.focusNext(); scene.focusNext(); scene.select();
+    check('one switch: next, next, select opens the first book and puts the list away', opened.at(-1).module === 'photos' && scene.lifted() === null);
+    scene.press('bookshelf');
+    scene.back();
+    check('back puts the list away', scene.lifted() === null);
+    scene.destroy();
+
+    // The screen says which modules it has.
+    const bus2 = createBus();
+    bus2.subscribe(MODULE_LIST_TOPIC, (p) => { p.claim(); p.reply(['photos', { module: 'trivia', label: 'Trivia night' }, 'calculator']); });
+    const h2 = makeHost();
+    const s2 = mountRoomScene(h2, presetRecipe('study'), { ...OBJECT_DEFAULTS, bus: bus2, light: 'day', reducedMotion: true });
+    check('a library asks the screen and shelves ITS modules', [...h2.querySelectorAll('.rs-book')].map((b) => b.dataset.book).join() === 'photos,trivia,calculator');
+    check('...with the names the screen gave', h2.querySelector('.rs-book[data-book="trivia"]').textContent === 'Trivia night');
+    s2.setOptions({ books: ['clock'] });
+    check('books named by the host win over the screen', [...h2.querySelectorAll('.rs-book')].map((b) => b.dataset.book).join() === 'clock');
+    s2.destroy();
+
+    const h3 = makeHost();
+    const s3 = mountRoomScene(h3, presetRecipe('living'), { ...OBJECT_DEFAULTS, liftReturnMs: 60, light: 'day', reducedMotion: true });
+    s3.press('bookshelf');
+    await sleep(160);
+    check('*** the lifted list goes away by itself (never a state only an input can leave) ***', s3.lifted() === null);
+    s3.destroy();
+  }
+
+  // =====================================================================================
+  section('the window: the weather, and your AI visiting (item 4)');
+  {
+    const bus = createBus();
+    const asks = listen(bus, WEATHER_ASK_TOPIC);
+    const opened = listen(bus, MODULE_TOPIC);
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('living'), { ...OBJECT_DEFAULTS, bus, light: 'day', reducedMotion: true, notifyMs: 80 });
+    const panes = host.querySelector('.rs-panes[data-panes-for="window"]');
+    check('the window has four panes, in the CONTENT layer (above the lighting, readable at night)', panes && panes.querySelectorAll('.rs-pane').length === 4 && panes.closest('[data-layer]')?.dataset.layer === 'content');
+    check('with no weather yet, the panes are just glass', !host.querySelector('.rs-wx'));
+    check('a room that shows the weather asks for it once when it mounts', asks.length === 1);
+    bus.publish(WEATHER_NOW_TOPIC, { icon: 'rain', words: 'Light rain', temp: '14°', units: 'C', spoken: '14 degrees and light rain' });
+    const wx = host.querySelector('.rs-pane[data-pane="3"] .rs-wx');
+    check('weather/now: the lower-right pane shows the picture and the temperature', wx && wx.querySelector('svg[data-icon="rain"]') && wx.textContent.includes('14°'));
+    check('...the picture is named, never the only way it is said', wx.querySelector('svg').getAttribute('aria-label') === 'Light rain');
+    check('...and the room keeps what it heard', scene.weather()?.spoken === '14 degrees and light rain');
+    bus.publish(WEATHER_NOW_TOPIC, { icon: '<script>', words: 'x', temp: 12 });
+    check('something odd from the bus draws the "unknown" picture, not markup', !!host.querySelector('.rs-wx svg[data-icon="unknown"]') && host.querySelector('.rs-wx').textContent.includes('12°'));
+    scene.press('window');
+    check('pressing the window opens the weather module (the same verb a book sends)', opened.length === 1 && opened[0].module === 'weather');
+    check('the window is in the scan, as a button', scene.scanTargets().some((b) => b.dataset.id === 'window'));
+
+    check('a visit shows in a pane and says its words', scene.visit({ text: 'It will rain after four.' }) === true
+      && !!host.querySelector('.rs-pane[data-pane="0"] .rs-visit') && /rain after four/.test(host.querySelector('.rs-toast')?.textContent || ''));
+    await sleep(160);
+    check('...and goes by itself', !host.querySelector('.rs-visit'));
+    scene.setOptions({ light: 'night' });
+    check('"when it has news": never at night', scene.visit({ text: 'hi' }) === false && !host.querySelector('.rs-visit'));
+    scene.setOptions({ aiVisits: 'anytime' });
+    check('"night too" allows it', scene.visit({ text: 'hi', ms: 5000 }) === true && !!host.querySelector('.rs-visit'));
+    scene.setOptions({ aiVisits: 'never', light: 'day' });
+    check('"never" hides a visit already showing, and allows no new one', !host.querySelector('.rs-visit') && scene.visit({ text: 'hi' }) === false);
+    check('a visit with an avatar picture shows it', (scene.setOptions({ aiVisits: 'news' }), scene.visit({ src: '/demo-media/files/garden.svg', ms: 5000 })) && !!host.querySelector('.rs-visit img'));
+    scene.setOptions({ windowShows: 'view' });
+    check('"Just the view": the weather is gone, and nothing listens for it', !host.querySelector('.rs-wx'));
+    scene.destroy();
+    const before = asks.length;
+    bus.publish(WEATHER_NOW_TOPIC, { icon: 'sun', words: 'Clear', temp: 20 });
+    check('a destroyed room hears nothing and asks nothing', asks.length === before && !host.querySelector('.rs'));
+  }
+
+  // =====================================================================================
+  section('petting any animal (item 11)');
+  {
+    const sounds = [];
+    const pets = [];
+    const bus = createBus();
+    bus.subscribe(ROOM_TOPICS.pet, (p) => pets.push(p.id));
+    const recipe = { shell: 'room', light: 'day', items: [
+      { id: 'rex', kind: 'furniture', part: 'plant', x: 30, y: 90, pet: { sound: 'knock' }, label: 'Rex' },
+      { id: 'cat', kind: 'cat', x: 70, y: 92, pose: 'sleeping', size: 90 },
+    ] };
+    const host = makeHost();
+    const scene = mountRoomScene(host, recipe, { bus, light: 'day', motion: 'gentle', petMs: 80, onSound: (n, i) => sounds.push([n, i?.event]) });
+    check('another animal is a pet target, labelled', host.querySelector('.rs-obj[data-id="rex"]')?.getAttribute('aria-label') === 'Pet Rex');
+    const r = scene.press('rex');
+    check('pressing it pets it', r?.did === 'pet' && pets.includes('rex'));
+    const el = host.querySelector('.rs-item[data-id="rex"]');
+    check('...it hops (motion allowed)', el.classList.contains('rs-petted'));
+    check('...a heart shows above it', !!host.querySelector('.rs-pet-mark[data-pet-for="rex"]'));
+    check('...and its own sound goes to the host', sounds.some(([n, e]) => n === 'knock' && e === 'pet'));
+    scene.pet('cat');
+    check('the cat: happy pose, and a purr', host.querySelector('.rs-cat')?.dataset.pose === 'happy' && sounds.some(([n]) => n === 'purr'));
+    check('two animals can be petted at once', !!host.querySelector('.rs-pet-mark[data-pet-for="cat"]') && !!host.querySelector('.rs-pet-mark[data-pet-for="rex"]'));
+    await sleep(160);
+    check('it all settles by itself', !host.querySelector('.rs-pet-mark') && !el.classList.contains('rs-petted') && host.querySelector('.rs-cat')?.dataset.pose === 'sleeping');
+    scene.setOptions({ petSound: false });
+    const n = sounds.length;
+    scene.pet('rex');
+    check('"Sound when petted: Off" keeps it silent', sounds.length === n);
+    scene.setOptions({ reducedMotion: true });
+    await sleep(160);
+    scene.pet('rex');
+    check('*** reduced motion: it does not hop, and the heart still shows ***', !el.classList.contains('rs-petted') && !!host.querySelector('.rs-pet-mark[data-pet-for="rex"]'));
+    scene.focusNext();
+    check('holding the switch on an animal pets it', scene.focused()?.dataset.id === 'rex' && scene.hold() === true);
+    scene.destroy();
+  }
+
+  // =====================================================================================
+  section('Nimrod: press = help, and "Pet Nimrod" in his bubble (help and petting share a press)');
+  {
+    const bus = createBus();
+    const host = makeHost();
+    const sounds = [];
+    const inst = mountModule('room', { mount: host, bus, state: fakeState({ preset: 'living', light: 'day', motion: 'still' }), personId: null, instanceId: 'rp' });
+    inst.init();
+    await sleep(40);
+    const scene = inst.impl.__scene();
+    scene.setOptions({ onSound: (nm) => sounds.push(nm) });
+    const r = scene.press('cat');
+    const bubble = host.querySelector('[data-cat-help-bubble]');
+    check('pressing Nimrod explains (help), it does not pet', r?.did === 'help' && !!bubble);
+    const btns = [...bubble.querySelectorAll('button[data-scan]')];
+    check('his bubble: Close first, then Pet Nimrod — so ONE switch can pet him', btns[0].hasAttribute('data-cat-help-close') && btns[1].dataset.catHelpAction === 'pet' && btns[1].textContent === 'Pet Nimrod');
+    btns[1].click();
+    check('Pet Nimrod: the bubble goes, the room’s cat is back, and he is petted', !host.querySelector('[data-cat-help]') && host.querySelector('.rs-cat')?.dataset.pose === 'happy'
+      && host.querySelector('.rs-item[data-item="cat"]').style.visibility !== 'hidden');
+    check('...with his purr', sounds.includes('purr'));
+    bus.publish('room/hold');
+    inst.destroy();
+  }
+
+  // =====================================================================================
+  section('the point of view: a desk or sofa zooms in, and the way back (item 13)');
+  {
+    const bus = createBus();
+    const cu = listen(bus, ROOM_TOPICS.closeup);
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('study'), { ...OBJECT_DEFAULTS, bus, light: 'day', reducedMotion: true });
+    check('the desk is a close-up', host.querySelector('.rs-obj[data-id="desk"]')?.getAttribute('aria-label') === 'Desk: look closer');
+    const before = scene.root.querySelector('.rs-stage').style.transform;
+    scene.press('desk');
+    const cam = scene.camera();
+    check('pressing it zooms the room into the desk', scene.closedUp() === 'desk' && cam.z > 1 && cam.z <= CLOSEUP_MAX_ZOOM, JSON.stringify(cam));
+    check('...the stage carries the zoom after its fit', scene.root.querySelector('.rs-stage').style.transform !== before && (scene.root.querySelector('.rs-stage').style.transform.match(/scale\(/g) || []).length === 2);
+    const hw = W / (2 * cam.z), hh = H / (2 * cam.z);
+    check('...and never looks past the edge of the room', cam.cx - hw >= -0.01 && cam.cx + hw <= W + 0.01 && cam.cy - hh >= -0.01 && cam.cy + hh <= H + 0.01);
+    check('room/closeup says so', cu.length === 1 && cu[0].id === 'desk' && cu[0].on === true);
+    const back = host.querySelector('.rs-closeup-back');
+    check('a flat Back button, full size (48px), outside the zoomed stage', back && back.getBoundingClientRect().height >= 47.5 && !back.closest('.rs-stage'));
+    const t = scene.scanTargets();
+    check('*** Back is the FIRST thing in the scan ***', t[0] === back);
+    check('...then only what is in view, never the desk itself', t.slice(1).every((b) => b.dataset.id !== 'desk'));
+    scene.focusNext();
+    check('one switch: next lands on Back', scene.focused() === back);
+    scene.select();
+    check('select on Back: the whole room again', scene.closedUp() === null && !host.querySelector('.rs-closeup-back') && cu.at(-1).on === false);
+    scene.press('desk');
+    check('back() leaves it too (the room/back verb)', scene.back() === true && scene.closedUp() === null);
+    check('with nothing lifted or zoomed, back() does nothing', scene.back() === false);
+    scene.press('desk');
+    host.querySelector('.rs-obj[data-id="bookshelf"]')?.click();
+    check('pressing the library while in a close-up still works (it lifts over it)', scene.lifted() === 'bookshelf');
+    scene.back();
+    check('back puts the list away first, the close-up stays', scene.lifted() === null && scene.closedUp() === 'desk');
+    scene.back();
+    scene.destroy();
+
+    const h2 = makeHost();
+    const s2 = mountRoomScene(h2, presetRecipe('living'), { ...OBJECT_DEFAULTS, light: 'day', reducedMotion: true, closeupReturnMs: 60 });
+    s2.press('sofa');
+    check('the sofa zooms in', s2.closedUp() === 'sofa');
+    await sleep(160);
+    check('*** nobody touching it: it goes back to the whole room by itself ***', s2.closedUp() === null && !h2.querySelector('.rs-closeup-back'));
+    s2.setOptions({ closeupReturnMs: 0 });
+    const n0 = s2.timers();
+    s2.closeup('sofa');
+    check('"Never": no return timer is armed', s2.closedUp() === 'sofa' && s2.timers() === n0, `${s2.timers()} vs ${n0}`);
+    check('...and no movement class under reduced motion (an instant cut)', !s2.root.classList.contains('rs-cam-move'));
+    s2.back();
+    s2.setOptions({ reducedMotion: false, motion: 'gentle' });
+    s2.press('sofa');
+    check('with motion allowed, the camera moves (Design: 400 ms)', s2.root.classList.contains('rs-cam-move'));
+    s2.destroy();
+    check('destroy mid-close-up leaves nothing', !h2.querySelector('.rs') && s2.timers() === 0);
+  }
+
+  // =====================================================================================
+  section('the room module: the settings, and the scan with the new objects');
+  {
+    check('every new setting is declared, with its argued default', ['shelf', 'books', 'bookList', 'windowShows', 'windowPress', 'aiVisits', 'closeups', 'closeupReturnMs', 'petSound']
+      .every((k) => SETTINGS.some((s) => s.key === k && s.default === DEFAULTS[k])));
+    check('a close-up can be told never to return by itself', SETTINGS.find((s) => s.key === 'closeupReturnMs').options.some((o) => o.value === 0));
+    const c = configFrom({ shelf: 'x', windowShows: 1, closeupReturnMs: '300000', petSound: 0 });
+    check('configFrom: garbage reads as the defaults; a stored string reads as its number', c.shelf === 'library' && c.windowShows === 'weather' && c.closeupReturnMs === 300000 && c.petSound === false);
+    const mans = [{ type: 'photos', title: 'Photos' }, { type: 'board', title: 'AAC board' }, { type: 'clock', title: 'Clock' }];
+    check('"Name the books": by type or by title, unknown names dropped', booksFromList('photos, AAC Board, nope, clock, Photos', mans).join() === 'photos,board,clock');
+    check('books option: this screen (ask) / a few / named', booksOption({ books: 'screen' }) === null && booksOption({ books: 'few' }).join() === DEFAULT_BOOKS.join()
+      && booksOption({ books: 'named', bookList: 'nothing real' }).join() === DEFAULT_BOOKS.join());
+
+    const bus = createBus();
+    const host = makeHost();
+    const state = fakeState({ light: 'day', motion: 'still' });
+    const inst = mountModule('room', { mount: host, bus, state, personId: null, instanceId: 'rm' });
+    inst.init();
+    await sleep(40);
+    const scene = inst.impl.__scene();
+    check('the default room: the bookshelf is a library, the window a button', !!host.querySelector('.rs-book') && scene.scanTargets().some((b) => b.dataset.id === 'window'));
+    const order = scene.scanTargets().map((b) => b.dataset.id).join();
+    check('the scan: door, shelf, pot, window, cabinet, cat', order === 'door,shelf,pot,window,cab,cat', order);
+    host.querySelector('.rs-obj[data-id="window"]').click();
+    check('pressing the window with no weather yet says how to get it', /Weather module/.test(host.querySelector('.rs-toast')?.textContent || ''));
+    bus.publish(WEATHER_NOW_TOPIC, { icon: 'sun', words: 'Clear', temp: '20°', spoken: '20 degrees and clear' });
+    host.querySelector('.rs-obj[data-id="window"]').click();
+    check('...and with it, says the weather now', /20 degrees and clear/.test(host.querySelector('.rs-toast')?.textContent || ''));
+    host.querySelector('.rs-book[data-book="clock"]').click();
+    check('a book for a module that is not here says so', /Clock is not on this screen/.test(host.querySelector('.rs-toast')?.textContent || ''));
+    bus.publish('room/visit', { text: 'Good morning.', ms: 5000 });
+    check('room/visit: your assistant appears at the window', !!host.querySelector('.rs-visit'));
+    state.set({ aiVisits: 'never' });
+    check('...and "Never" takes it away', !host.querySelector('.rs-visit'));
+    state.set({ preset: 'living' });
+    bus.publish('room/next');
+    const sofaAt = scene.scanTargets().findIndex((b) => b.dataset.id === 'sofa');
+    for (let i = 0; i < sofaAt; i++) bus.publish('room/next');
+    bus.publish('room/select');
+    check('the switch reaches the sofa and zooms in', scene.closedUp() === 'sofa');
+    bus.publish('room/back');
+    check('room/back comes out', scene.closedUp() === null);
+    state.set({ closeups: 'off', shelf: 'recipe', windowPress: 'nothing' });
+    check('turned off: no close-up, a plain shelf, a plain window', !host.querySelector('.rs-obj[data-id="sofa"]') && !host.querySelector('.rs-book') && !host.querySelector('.rs-obj[data-id="window"]'));
+    inst.destroy();
+    await sleep(20);
+    check('destroy empties the panel', host.childElementCount === 0);
+  }
+
+  // =====================================================================================
+  section('zoom on focus, for a whole screen (item 6)');
+  {
+    check('off by default', ZOOM_FOCUS_DEFAULT === 'off' && ZOOM_FOCUS_FIELD.default === 'off' && zoomFocusScale('off') === null);
+    check('its steps are small (a panel is big): 1.05 / 1.1 / 1.2', ZOOM_FOCUS_FIELD.options.map((o) => o.value).join() === 'off,1.05,1.1,1.2');
+    check('anything unknown is off', zoomFocusScale('3') === null && zoomFocusScale(undefined) === null);
+    const kiosk = document.createElement('div');
+    kiosk.innerHTML = '<div class="k-cell" data-focused="1">a</div><div class="k-cell">b</div><div data-placed="x">c</div>';
+    document.getElementById('pen').append(kiosk);
+    check('applied: the root says so', applyZoomFocus(kiosk, '1.1') === 1.1 && kiosk.dataset.zoomFocus === '1.1');
+    const [a, b, c] = kiosk.children;
+    check('the focused panel grows', getComputedStyle(a).scale === '1.1', getComputedStyle(a).scale);
+    check('the others do not', getComputedStyle(b).scale === 'none' && getComputedStyle(c).scale === 'none');
+    c.dataset.focused = '1';
+    await sleep(300);   // it grows over 150 ms (motion allowed here); read it after
+    check('a module placed freely grows too', getComputedStyle(c).scale === '1.1', getComputedStyle(c).scale);
+    applyZoomFocus(kiosk, '1.2');
+    check('one stylesheet, however often it is applied', document.querySelectorAll('#zoom-focus-style').length === 1);
+    applyZoomFocus(kiosk, 'off');
+    check('off: nothing grows and nothing is left behind', !('zoomFocus' in kiosk.dataset) && getComputedStyle(a).scale === 'none' && !kiosk.style.getPropertyValue('--zoom-focus'));
+    kiosk.remove();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>
