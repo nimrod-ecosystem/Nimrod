@@ -504,6 +504,35 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
         JSON.stringify(m));
     }
 
+    section('*** a source that asks to SILENCE media (row 2.28: somebody talking to the screen) ***');
+    {
+      const r = rig();
+      r.src('video', video);
+      r.src('voice', { tier: 'voice' });
+      r.src('listen', { tier: 'talk', silence: true });
+      r.bus.setActive('video', true); r.bus.setActive('voice', true);
+      r.bus.setActive('listen', true);
+      check('*** while it is active, media goes to 0 — the same “pause” a call means ***',
+        r.last('video') === 0, JSON.stringify(r.seen.video));
+      check('...and a voice (the game asking, her AAC) is left audible', r.bus.levelOf('voice') > 0,
+        String(r.bus.levelOf('voice')));
+      check('*** it is not the hush button: the room is not marked hushed ***', r.bus.isHushed() === false);
+      r.bus.setActive('listen', false);
+      check('and it comes straight back when the source goes quiet', r.last('video') === DUCK_TO,
+        `${r.last('video')} (still ducked by the voice, as before)`);
+      r.bus.setActive('voice', false);
+      check('...to full once the voice has finished too', r.last('video') === 1, String(r.last('video')));
+      r.bus.hush(true); r.bus.setActive('listen', true); r.bus.setActive('listen', false);
+      check('*** a silence ending never un-hushes a room somebody hushed by hand ***',
+        r.bus.isHushed() === true && r.last('video') === 0, `${r.bus.isHushed()} ${r.last('video')}`);
+      r.bus.hush(false);
+      const r2 = rig();
+      r2.src('video', video); r2.src('cue', { tier: 'talk' });
+      r2.bus.setActive('video', true); r2.bus.setActive('cue', true);
+      check('a talk source that did NOT ask to silence still only ducks', r2.last('video') === DUCK_TO,
+        String(r2.last('video')));
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

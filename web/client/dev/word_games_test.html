@@ -28,6 +28,7 @@ import { mountModule, getManifest } from '../module.js';
 import '../modules/word_games.js';
 import { LINES, DEFAULTS, GAMES, ANSWER_TOPIC, GRAMMAR_TOPIC, PLAY_TOPIC, UNKNOWN,
          reasonFor, fill, normalize, createEngine } from '../modules/word_games.js';
+import { attachSpeech } from '../input_speech.js';
 import { OPPOSITES, RHYMING, YES_NO, PRONUNCIATIONS, RHYME_OFFER_POOL, rhymes, rhymesFor,
          rhymePart, hasPicture } from '../word_games_words.js';
 
@@ -565,6 +566,50 @@ try {
 
     check('fill leaves no braces and tidies spaces', fill('A {x} B {y}.', { x: 'one' }) === 'A one B.');
     check('normalize lowercases and drops punctuation', normalize(' Cold!  ') === 'cold');
+  }
+
+  // =====================================================================================
+  section('*** voice end to end: input_speech.js, a real bus, the real game (row 2.31 hooks) ***');
+  {
+    const bus = createBus();
+    const grams = [];
+    bus.subscribe(GRAMMAR_TOPIC, (g) => grams.push(g));
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, running: false };
+    const presses = [];
+    const speech = attachSpeech({ down: (d, c) => presses.push(c), up() {} }, { recognizer: rec, bus, confirm: 'off' });
+    speech.start();
+    const r = rig({ saved: { game: 'opposites' }, bus });
+    const it = r.probe().item;
+    check('the speech layer sees the game’s grammar and would send it answers', speech.answerTarget()?.instanceId === 'wg-1',
+      JSON.stringify(speech.answerTarget()));
+    feed(wrongFor(it), { confidence: 0.95 });
+    check('*** a wrong word said aloud (no wake phrase) reaches the game as a miss ***', r.probe().misses === 1,
+      JSON.stringify(r.probe().feedback));
+    check('...and is not a command', presses.length === 0);
+    feed('she had a good lunch today', { confidence: 0.95 });
+    check('*** room talk that is none of the game’s words is not sent: no miss, nothing said about it ***',
+      r.probe().misses === 1, String(r.probe().misses));
+    feed(it.accept[0], { confidence: 0.4, reason: 'quiet' });
+    check('*** an unsure hearing arrives WITH its reason, and the game asks rather than judging ***',
+      r.phase() === 'unsure' && /very quiet/.test(r.last()), r.last());
+    feed('yes', { confidence: 0.95 });
+    check('...“yes” confirms it, and the game celebrates', r.phase() === 'celebrate', r.phase());
+    r.timers.flush();
+    r.inst.onHide();
+    check('*** a hidden game says its grammar is closed, so it stops taking the room’s words ***',
+      grams[grams.length - 1].open === false && speech.answerTarget() === null, JSON.stringify(grams[grams.length - 1]));
+    r.eng.next();
+    check('...and stays closed while hidden, even if it changes', grams[grams.length - 1].open === false);
+    r.inst.onShow();
+    check('shown again, it says what it can hear', grams[grams.length - 1].open === true && speech.answerTarget()?.instanceId === 'wg-1');
+    feed('computer please play rhyming');
+    check('“computer please play rhyming” is a command even mid-game (it presses the route)',
+      presses[presses.length - 1] === 'phrase:play-rhyming', JSON.stringify(presses));
+    r.inst.destroy();
+    check('*** a destroyed game says its grammar is closed ***', grams[grams.length - 1].open === false
+      && speech.answerTarget() === null, JSON.stringify(grams[grams.length - 1]));
+    speech.destroy();
   }
 
   // =====================================================================================

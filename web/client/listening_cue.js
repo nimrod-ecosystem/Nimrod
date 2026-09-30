@@ -29,16 +29,43 @@
 // or only for her; it ships ON and is one setting either way. The duck ON because without it the
 // video the command is ABOUT is the loudest thing the microphone hears.
 
-import { LISTENING_TOPIC } from './input_speech.js';
+//
+// *** WHAT THE WAKE PHRASE DOES TO OTHER SOUND IS A CHOICE, AND A VOICE GAME PAUSES (note AN). ***
+// Mike, 2026-09-30: *"The wake word should pause everything temporarily or at least duck volumes.
+// User settings. I guess duck everything by default. Pause everything if you go into a voice
+// activated game or anything like that."* So `effect` is 'duck' (default) | 'pause' | 'nothing',
+// and a fourth subscriber pauses media while a voice game is waiting for an answer
+// (`speech/answering`, which input_speech.js sends only while the microphone is on).
+//
+// *** "PAUSE" HERE IS THE AUDIO BUS'S PAUSE: MEDIA GOES SILENT, IT DOES NOT STOP. *** The same thing
+// a call "set to pause" does (audio_bus.js CALL_MODES) - level 0 on every media source, through a
+// source that asked for `silence`. A video keeps running under it and comes back where it has got
+// to, not where it was. A true stop-and-resume needs each media module to honour a pause signal
+// and resume only what IT paused - not built; on Mike's list. A command said in one breath
+// ("computer please pause") opens no window, so it still never ducks or pauses anything.
+
+import { LISTENING_TOPIC, ANSWERING_TOPIC } from './input_speech.js';
 import { DUCK_TO } from './audio_bus.js';
 import { createSoundChannel } from './output_channels.js';
+
+export const LISTENING_EFFECTS = ['duck', 'pause', 'nothing'];
 
 export const LISTENING_DEFAULTS = Object.freeze({
   visual: true,
   // OFF by default -- Mike, 2026-09-30 (row 2.39): "I feel like the tone would more likely confuse
   // her or throw her off." The visual cue carries "I heard you"; the tone stays one setting away.
   tone: false,
+  // Kept for anything that still reads it: `effect` below is the setting now, and duck is its default.
   duck: true,
+  // Mike: "duck everything by default".
+  effect: 'duck',
+  // Mike: "Pause everything if you go into a voice activated game". ON.
+  gamePause: true,
+  // A game that never says it closed (a crash, a lost event) cannot keep the room silent: the pause
+  // gives up this long after the game last said anything. Ten minutes: every question and every
+  // phase change re-announces, so a game in play refreshes it far more often than this; a stuck one
+  // is ten quiet minutes, not an afternoon. A guess - no measurement - and a setting.
+  gamePauseMaxMs: 600000,
   // How far the video drops while listening: the bus's own duck depth (Mike chose 0.5 on Cici for
   // a voice over a music bed). Whether that is enough for a Pi's recogniser to hear somebody over
   // a video is a BENCH measurement (row 2.28 test order), not something to guess here - so it is
@@ -60,9 +87,25 @@ export const LISTENING_FIELDS = [
     default: LISTENING_DEFAULTS.visual, level: 'standard' },
   { key: 'listenTone', label: 'Play a tone when the wake phrase is heard', kind: 'toggle',
     default: LISTENING_DEFAULTS.tone, level: 'standard' },
-  { key: 'listenDuck', label: 'Turn videos down while listening', kind: 'toggle',
-    default: LISTENING_DEFAULTS.duck, level: 'advanced' },
+  // Replaces the old `listenDuck` toggle: a saved `listenDuck: false` still reads as 'nothing'.
+  { key: 'listenEffect', label: 'When the wake phrase is heard, other sound', kind: 'choice',
+    default: LISTENING_DEFAULTS.effect, level: 'standard',
+    options: [
+      { value: 'duck', label: 'Turns down' },
+      { value: 'pause', label: 'Goes silent' },
+      { value: 'nothing', label: 'Carries on' },
+    ] },
+  { key: 'listenGamePause', label: 'Silence videos and music while a voice game waits for an answer',
+    kind: 'toggle', default: LISTENING_DEFAULTS.gamePause, level: 'standard' },
 ];
+
+/** The wake phrase's effect from a settings row: `listenEffect`, else the old `listenDuck`, else duck. */
+export function effectFrom(values = {}) {
+  const s = values || {};
+  if (LISTENING_EFFECTS.includes(s.listenEffect)) return s.listenEffect;
+  if (s.listenDuck === false) return 'nothing';
+  return LISTENING_DEFAULTS.effect;
+}
 
 const clampLimit = (ms, graceMs, maxMs) => {
   const n = Number(ms);
@@ -170,12 +213,15 @@ export function attachListeningDuck({
   audio,
   id = 'speech-listening',
   duckTo = LISTENING_DEFAULTS.duckTo,
+  // 'duck' (default) or 'pause': the same source, the same watchdog; 'pause' asks the bus to
+  // silence media under it rather than duck it.
+  mode = 'duck',
   graceMs = LISTENING_DEFAULTS.graceMs,
   maxMs = LISTENING_DEFAULTS.maxMs,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id2) => clearTimeout(id2),
 } = {}) {
-  try { audio?.register?.(id, { tier: 'talk', duck: duckTo }); } catch (err) { console.error('listening duck', err); }
+  try { audio?.register?.(id, { tier: 'talk', duck: duckTo, silence: mode === 'pause' }); } catch (err) { console.error('listening duck', err); }
   const release = () => { try { audio?.setActive?.(id, false); } catch (err) { console.error('listening duck', err); } };
   const dog = watchdog({ onExpire: release, setTimer, clearTimer, graceMs, maxMs });
   const off = subscribe(bus, (p) => {
@@ -198,7 +244,44 @@ export function attachListeningDuck({
 }
 
 /**
- * All three at once, each following its setting (LISTENING_FIELDS; unset = the default, ON).
+ * THE VOICE-GAME PAUSE: media silent while a voice game waits for an answer (`speech/answering`),
+ * back the moment it stops waiting, the microphone goes off, or - if neither is ever said - the
+ * watchdog runs out `maxMs` after the game last said anything.
+ */
+export function attachGamePause({
+  bus,
+  audio,
+  id = 'speech-answering',
+  maxMs = LISTENING_DEFAULTS.gamePauseMaxMs,
+  setTimer = (fn, ms) => setTimeout(fn, ms),
+  clearTimer = (id2) => clearTimeout(id2),
+} = {}) {
+  try { audio?.register?.(id, { tier: 'talk', silence: true }); } catch (err) { console.error('game pause', err); }
+  const release = () => { try { audio?.setActive?.(id, false); } catch (err) { console.error('game pause', err); } };
+  // graceMs 0: the limit is `maxMs` itself, counted from the last announcement.
+  const dog = watchdog({ onExpire: release, setTimer, clearTimer, graceMs: 0, maxMs });
+  const off = bus && typeof bus.subscribe === 'function'
+    ? bus.subscribe(ANSWERING_TOPIC, (p) => {
+      try {
+        if (p && p.on) {
+          dog.arm(maxMs);
+          audio?.setActive?.(id, true);
+        } else { dog.disarm(); release(); }
+      } catch (err) { console.error('game pause', err); }
+    })
+    : () => {};
+  return {
+    destroy() {
+      try { off(); } catch { /* gone */ }
+      dog.disarm();
+      release();
+      try { audio?.unregister?.(id); } catch { /* gone */ }
+    },
+  };
+}
+
+/**
+ * All of them at once, each following its setting (LISTENING_FIELDS; unset = its default).
  * The one call the kiosk makes.
  */
 export function attachListening({ bus, audio = null, host = null, settings = {}, play,
@@ -212,8 +295,12 @@ export function attachListening({ bus, audio = null, host = null, settings = {},
   if (want('listenTone', LISTENING_DEFAULTS.tone)) {
     parts.push(attachListeningTone(play ? { bus, play } : { bus }));
   }
-  if (want('listenDuck', LISTENING_DEFAULTS.duck) && audio) {
-    parts.push(attachListeningDuck(duckTo !== undefined ? { bus, audio, duckTo } : { bus, audio }));
+  const effect = effectFrom(s);
+  if (effect !== 'nothing' && audio) {
+    parts.push(attachListeningDuck({ bus, audio, mode: effect, ...(duckTo !== undefined ? { duckTo } : {}) }));
+  }
+  if (want('listenGamePause', LISTENING_DEFAULTS.gamePause) && audio) {
+    parts.push(attachGamePause({ bus, audio }));
   }
   return { destroy() { parts.forEach((p) => { try { p.destroy(); } catch { /* gone */ } }); parts.length = 0; } };
 }
