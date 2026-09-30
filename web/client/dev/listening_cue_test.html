@@ -128,6 +128,22 @@ const hex = ({ r, g, b }) => '#' + [r, g, b].map((v) => Math.round(v).toString(1
     check('...or an absurd one', el.hidden === true);
     check('no timer is left running', clock.pending() === 0, String(clock.pending()));
 
+    // NOTE AO: a near miss opens a window with the question on it. The cue shows the question, so
+    // somebody who did not hear it (or cannot hear) can read what they are being asked.
+    const q = "It sounded like 'pause'. Did you mean that?";
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'confirm', ms: 6000, phrase: 'pause', question: q });
+    check('*** a “did you mean” window shows the question instead of “Listening” ***',
+      el.hidden === false && el.textContent === q, el.textContent);
+    bus.publish(LISTENING_TOPIC, { on: false, reason: 'confirmed' });
+    check('...and hides when it is answered', el.hidden === true);
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });
+    check('*** the next plain wake says “Listening” again, not the old question ***',
+      el.hidden === false && /^listening$/i.test(el.textContent.trim()), el.textContent);
+    bus.publish(LISTENING_TOPIC, { on: true, reason: 'confirm', ms: 6000, question: '<b>x</b>' });
+    check('the question is shown as text, never as markup', el.querySelector('b') === null && el.textContent === '<b>x</b>', el.innerHTML);
+    bus.publish(LISTENING_TOPIC, { on: false, reason: 'timeout' });
+    check('...and still takes no focus', document.activeElement !== el);
+
     section('*** reduced motion, and every theme ***');
     {
       bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 });

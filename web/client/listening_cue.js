@@ -167,15 +167,25 @@ export function mountListeningCue(host, {
   dot.setAttribute('aria-hidden', 'true');
   const word = doc.createElement('span');
   word.className = 'lc-word';
-  word.textContent = String(label || LISTENING_DEFAULTS.label);
+  word.textContent = String(label || LISTENING_DEFAULTS.label);   // replaced per window below
   el.append(dot, word);
   el.classList.toggle('lc-still', !!reducedMotion);
   host.append(el);
 
   const hide = () => { el.hidden = true; };
   const dog = watchdog({ onExpire: hide, setTimer, clearTimer, graceMs, maxMs });
+  const plain = String(label || LISTENING_DEFAULTS.label);
+  // *** A "DID YOU MEAN" WINDOW SHOWS ITS QUESTION (note AO). *** input_speech.js asks aloud when
+  // what it heard was one word off a command, and the window carries the question, so somebody who
+  // did not hear it - or cannot - can read what they are being asked. Set as TEXT, never markup.
+  // The cue stays non-modal: the answer is a spoken yes, or a switch bound to Yes.
   const off = subscribe(bus, (p) => {
-    if (p.on) { el.hidden = false; dog.arm(p.ms); } else { dog.disarm(); hide(); }
+    if (p.on) {
+      word.textContent = p.reason === 'confirm' && typeof p.question === 'string' && p.question.trim()
+        ? p.question : plain;
+      el.hidden = false;
+      dog.arm(p.ms);
+    } else { dog.disarm(); hide(); }
   });
 
   return {

@@ -29,6 +29,7 @@ import '../modules/word_games.js';
 import { LINES, DEFAULTS, GAMES, ANSWER_TOPIC, GRAMMAR_TOPIC, PLAY_TOPIC, UNKNOWN,
          reasonFor, fill, normalize, createEngine } from '../modules/word_games.js';
 import { attachSpeech } from '../input_speech.js';
+import * as SP from '../input_speech.js';
 import { OPPOSITES, RHYMING, YES_NO, PRONUNCIATIONS, RHYME_OFFER_POOL, rhymes, rhymesFor,
          rhymePart, hasPicture } from '../word_games_words.js';
 
@@ -609,6 +610,49 @@ try {
     r.inst.destroy();
     check('*** a destroyed game says its grammar is closed ***', grams[grams.length - 1].open === false
       && speech.answerTarget() === null, JSON.stringify(grams[grams.length - 1]));
+    speech.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a near miss is an UNSURE hearing, never a verdict (note AO) ***');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    const it = r.probe().item;
+    r.eng.hear({ text: it.accept[0], confidence: 0.95, nearMiss: true, heard: `${it.accept[0]}s` });
+    check('*** a near miss of the RIGHT answer, even “95% sure”, asks rather than celebrating ***',
+      r.phase() === 'unsure' && r.probe().unsure?.heard === it.accept[0], `${r.phase()} ${JSON.stringify(r.probe().unsure)}`);
+    check('...and pays nothing yet', r.points().length === 0);
+    r.eng.press('reject');
+    r.eng.hear({ text: wrongFor(it), confidence: 0.95, nearMiss: true });
+    check('*** a near miss of a WRONG answer is not a miss either: it asks ***', r.phase() === 'unsure' && r.probe().misses === 0,
+      `${r.phase()} misses=${r.probe().misses}`);
+    r.inst.destroy();
+  }
+  {
+    // End to end: open recognition writes down a word one sound off one of the game's words.
+    const bus = createBus();
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, running: false };
+    const presses = [];
+    const speech = attachSpeech({ down: (d, c) => presses.push(c), up() {} }, { recognizer: rec, bus, confirm: 'off' });
+    speech.start();
+    const grams = [];
+    bus.subscribe(GRAMMAR_TOPIC, (g) => grams.push(g));
+    const r = rig({ saved: { game: 'opposites' }, bus });
+    const it = r.probe().item;
+    const words = Object.fromEntries(grams[grams.length - 1].words.filter((w) => w !== UNKNOWN).map((w) => [w, [w]]));
+    const mut = [`${it.accept[0]}s`, `${it.accept[0]}y`, it.accept[0].slice(0, -1), `${it.accept[0]}ed`]
+      .find((m) => !(m in words) && SP.nearMiss?.(m, words)?.id === it.accept[0]);
+    check('a word one sound off the right answer exists for this question', !!mut, it.accept[0]);
+    if (mut) {
+      feed(mut, { confidence: 0.95 });
+      check(`*** “${mut}” said aloud reaches the game as an unsure “${it.accept[0]}” - it asks ***`,
+        r.phase() === 'unsure' && r.probe().unsure?.heard === it.accept[0] && presses.length === 0,
+        `${r.phase()} ${JSON.stringify(r.probe().unsure)}`);
+      feed('yes', { confidence: 0.95 });
+      check('...“yes” confirms it', r.phase() === 'celebrate', r.phase());
+    }
+    r.inst.destroy();
     speech.destroy();
   }
 

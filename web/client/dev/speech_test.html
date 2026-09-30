@@ -33,6 +33,9 @@ import {
   browserRecognizer, commandGrammar, armedGrammar, answerGrammar, speechOptionsFrom,
   RECOGNITION_MODES,
 } from '../input_speech.js';
+// Note AO's additions, read through the namespace so a missing export fails ITS checks rather than
+// the whole page's import.
+import * as SP from '../input_speech.js';
 import { ANSWER_TOPIC as WG_ANSWER, GRAMMAR_TOPIC as WG_GRAMMAR, PLAY_TOPIC as WG_PLAY, GAMES as WG_GAMES }
   from '../modules/word_games.js';
 import { normalizeField } from '../settings_fields.js';
@@ -550,31 +553,47 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   section('*** the two-step path stays ON by default (Mike, note AN: “she’ll probably stop to think a lot”) ***');
   check('*** two-step is on by default ***', SPEECH_DEFAULTS.twoStep === true);
   check('...with an eight-second window by default', SPEECH_DEFAULTS.wakeWindowMs === 8000);
-  check('*** inside the window the recogniser listens OPEN by default, not to the command list ***',
-    SPEECH_DEFAULTS.armedRecognition === 'open', SPEECH_DEFAULTS.armedRecognition);
-  check('...and so it does while a game waits for an answer', SPEECH_DEFAULTS.answerRecognition === 'open');
+  // NOTE AO (Mike, 2026-09-30): "Even without a pause." OPEN recognition is the default EVERYWHERE -
+  // the one-breath path too - and grammar mode is one per-person option.
+  check('*** the recogniser listens OPEN by default, EVERYWHERE (note AO: “even without a pause”) ***',
+    SPEECH_DEFAULTS.recognition === 'open', String(SPEECH_DEFAULTS.recognition));
   check('...and only one of the game’s own words counts as an answer by default', SPEECH_DEFAULTS.answerMatch === 'exact');
   check('the recognition modes are open and grammar', JSON.stringify(RECOGNITION_MODES) === '["open","grammar"]');
   {
     const keys = SPEECH_FIELDS.map((f) => f.key);
-    const need = ['speechTwoStep', 'speechWindowMs', 'speechArmedHearing', 'speechAnswerHearing', 'speechAnswerMatch'];
+    const need = ['speechTwoStep', 'speechWindowMs', 'speechHearing', 'speechAnswerMatch',
+      'speechNearMiss', 'speechNearMissLine', 'speechNearMissWindowMs'];
     check('each is a setting', need.every((k) => keys.includes(k)), keys.join(','));
+    check('*** ONE hearing setting for the person, not one per state (grammar is for a person, not a moment) ***',
+      !keys.includes('speechArmedHearing') && !keys.includes('speechAnswerHearing'), keys.join(','));
+    const hearing = SPEECH_FIELDS.find((f) => f.key === 'speechHearing');
+    check('...defaulting to open, with grammar as the option',
+      hearing && hearing.default === 'open' && hearing.options.map((o) => o.value).join('|') === 'open|grammar',
+      JSON.stringify(hearing));
     const win = normalizeField(SPEECH_FIELDS.find((f) => f.key === 'speechWindowMs'));
     check('the window length is stored in ms and shown in seconds (the house rule for durations)',
       win && win.displayScale === 1000 && win.default === 8000, JSON.stringify(win));
+    const nmw = normalizeField(SPEECH_FIELDS.find((f) => f.key === 'speechNearMissWindowMs'));
+    check('the “did you mean” window is a duration setting too', nmw && nmw.displayScale === 1000
+      && nmw.default === SPEECH_DEFAULTS.nearMissWindowMs, JSON.stringify(nmw));
     const o = speechOptionsFrom({});
     check('a settings row with nothing set gives every default',
-      o.twoStep === true && o.wakeWindowMs === 8000 && o.armedRecognition === 'open'
-        && o.answerRecognition === 'open' && o.answerMatch === 'exact' && o.confirm === 'tone'
+      o.twoStep === true && o.wakeWindowMs === 8000 && o.recognition === 'open'
+        && o.answerMatch === 'exact' && o.confirm === 'tone' && o.nearMiss === true
+        && o.nearMissLine === SPEECH_DEFAULTS.nearMissLine && o.nearMissWindowMs === SPEECH_DEFAULTS.nearMissWindowMs
         && o.wake.join('|') === SPEECH_DEFAULTS.wake.join('|'), JSON.stringify(o));
-    const o2 = speechOptionsFrom({ speechWindowMs: 15000, speechTwoStep: false, speechArmedHearing: 'grammar',
-      speechAnswerMatch: 'any', speechConfirm: 'word', speechWake2: 'cici please' });
-    check('...and a profile’s own values come through (her profile: a longer window, her own phrase)',
-      o2.wakeWindowMs === 15000 && o2.twoStep === false && o2.armedRecognition === 'grammar'
-        && o2.answerMatch === 'any' && o2.confirm === 'word' && o2.wake[1] === 'cici please', JSON.stringify(o2));
-    const o3 = speechOptionsFrom({ speechArmedHearing: 'psychic', speechWindowMs: -5 });
-    check('...and nonsense falls back to the default rather than breaking',
-      o3.armedRecognition === 'open' && o3.wakeWindowMs === 8000, JSON.stringify(o3));
+    const o2 = speechOptionsFrom({ speechWindowMs: 15000, speechTwoStep: false, speechHearing: 'grammar',
+      speechAnswerMatch: 'any', speechConfirm: 'word', speechWake2: 'cici please', speechNearMiss: false,
+      speechNearMissLine: 'Did you say {phrase}?', speechNearMissWindowMs: 12000 });
+    check('...and a profile’s own values come through (a longer window, their own phrase, grammar mode)',
+      o2.wakeWindowMs === 15000 && o2.twoStep === false && o2.recognition === 'grammar'
+        && o2.answerMatch === 'any' && o2.confirm === 'word' && o2.wake[1] === 'cici please'
+        && o2.nearMiss === false && o2.nearMissLine === 'Did you say {phrase}?' && o2.nearMissWindowMs === 12000,
+      JSON.stringify(o2));
+    const o3 = speechOptionsFrom({ speechHearing: 'psychic', speechWindowMs: -5, speechNearMissLine: '  ' });
+    check('...and nonsense falls back to the default rather than breaking (a blank question is the default question)',
+      o3.recognition === 'open' && o3.wakeWindowMs === 8000 && o3.nearMissLine === SPEECH_DEFAULTS.nearMissLine,
+      JSON.stringify(o3));
   }
   {
     const r = rig({ wakeWindowMs: 15000 });
@@ -595,7 +614,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     check('...and one breath still works', JSON.stringify(r.pressed()) === '["phrase:pause"]');
   }
 
-  section('*** how the recogniser should listen: the grammar for one breath, OPEN inside the window ***');
+  section('*** how the recogniser should listen: OPEN everywhere by default; grammar only when a person chose it ***');
   {
     const g = commandGrammar();
     check('the command grammar has the wake phrase + command in one breath',
@@ -609,24 +628,48 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     check('the armed grammar (for somebody who chose it) is the commands alone, and [unk]',
       a.includes('pause') && a.includes(UNKNOWN_WORD) && !a.includes('computer please pause'));
   }
-  {
+  // A recogniser that takes setMode, driven by a fake clock that runs timers.
+  function mrig(opts = {}) {
     const modes = [];
-    // A recogniser that takes setMode, driven by the same fake clock.
     const calls = []; let feed = null; let t = 0; let nextId = 1; const timers = new Map();
     const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, running: false,
                   setMode(m) { modes.push(m); } };
     const sp = attachSpeech({ down: (d, c) => calls.push(c), up() {} }, { recognizer: rec, confirm: 'off',
       now: () => t, setTimer: (fn, ms) => { const id = nextId++; timers.set(id, { at: t + ms, fn }); return id; },
-      clearTimer: (id) => timers.delete(id) });
+      clearTimer: (id) => timers.delete(id), ...opts });
     const adv = (ms) => { t += ms; for (const [id, x] of [...timers]) if (x.at <= t) { timers.delete(id); x.fn(); } };
-    check('before anything is heard: the command grammar', sp.recognitionMode().mode === 'grammar'
-      && sp.recognitionMode().why === 'command' && Array.isArray(sp.currentGrammar()), JSON.stringify(sp.recognitionMode().why));
+    return { sp, modes, calls, feed: (x, d) => feed(x, d), adv, timers };
+  }
+  {
+    const { sp, modes, calls, feed, adv } = mrig();
+    check('*** before anything is heard: OPEN recognition, no grammar - the one-breath path too ***',
+      sp.recognitionMode().mode === 'open' && sp.recognitionMode().why === 'command' && sp.currentGrammar() === null,
+      JSON.stringify(sp.recognitionMode()));
+    sp.start();
+    check('starting tells a recogniser that takes setMode', modes.length === 1 && modes[0].why === 'command'
+      && modes[0].mode === 'open' && modes[0].grammar === null, JSON.stringify(modes));
+    feed('computer please');
+    check('the wake phrase alone: still open', sp.recognitionMode().mode === 'open' && sp.recognitionMode().why === 'armed'
+      && sp.currentGrammar() === null, JSON.stringify(sp.recognitionMode()));
+    feed('pause');
+    check('a command closes the window and goes back to the command state (open)',
+      sp.recognitionMode().why === 'command' && sp.recognitionMode().mode === 'open' && calls[0] === 'phrase:pause',
+      JSON.stringify(modes.map((m) => m.why)));
+    sp.destroy();
+  }
+  {
+    // GRAMMAR MODE, the per-person option: the three grammars it always had.
+    const { sp, modes, calls, feed, adv, timers } = mrig({ recognition: 'grammar' });
+    check('grammar mode, before anything is heard: the command grammar', sp.recognitionMode().mode === 'grammar'
+      && sp.recognitionMode().why === 'command' && Array.isArray(sp.currentGrammar())
+      && sp.currentGrammar().includes('computer please pause'), JSON.stringify(sp.recognitionMode().why));
     sp.start();
     check('starting tells a recogniser that takes setMode', modes.length === 1 && modes[0].why === 'command', JSON.stringify(modes.map((m) => m.why)));
     feed('computer please');
-    check('*** the wake phrase alone: OPEN recognition, no grammar at all ***',
-      sp.recognitionMode().mode === 'open' && sp.currentGrammar() === null && modes[modes.length - 1].mode === 'open',
-      JSON.stringify(sp.recognitionMode()));
+    check('grammar mode, the wake phrase alone: the armed grammar (the commands alone, and [unk])',
+      sp.recognitionMode().mode === 'grammar' && sp.recognitionMode().why === 'armed'
+        && sp.currentGrammar().includes('pause') && !sp.currentGrammar().includes('computer please pause')
+        && modes[modes.length - 1].why === 'armed', JSON.stringify(sp.recognitionMode()));
     feed('pause');
     check('a command closes the window and goes back to the command grammar',
       sp.recognitionMode().why === 'command' && modes[modes.length - 1].why === 'command' && calls[0] === 'phrase:pause',
@@ -640,8 +683,14 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     check('nothing that changes nothing is pushed twice', modes.length === n, String(modes.length - n));
     sp.destroy();
   }
+  {
+    const { sp } = mrig({ recognition: 'grammar', armedRecognition: 'open' });
+    check('a host can still override one state (armedRecognition) without a menu field for it',
+      sp.recognitionMode().mode === 'grammar', JSON.stringify(sp.recognitionMode()));
+    sp.destroy();
+  }
 
-  section('*** THE BENCH TRAP, reproduced: a grammar turns “hello there” into “louder” ***');
+  section('*** THE BENCH TRAP, reproduced: a grammar turns “hello there” into “louder”; open recognition does not ***');
   {
     // A FAKE ENGINE that behaves the way Vosk did on the bench (row 2.28): given a grammar, it can
     // only answer with one of its phrases - so words that are not in it come back as the nearest
@@ -651,26 +700,299 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
       const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; },
                     running: false, setMode(x) { m = x; } };
       const r = rig({ recognizer: rec, ...opts });
-      const speak = (words) => {
-        if (m.mode === 'grammar' && !m.grammar.includes(words)) feed('louder', { confidence: 1 });
+      const speak = (words, snapTo = 'louder') => {
+        if (m.mode === 'grammar' && !m.grammar.includes(words)) feed(snapTo, { confidence: 1 });
         else feed(words, { confidence: 0.9 });
       };
       return { ...r, speak, mode: () => m };
     }
-    const bad = vosky({ armedRecognition: 'grammar' });
+    const bad = vosky({ recognition: 'grammar' });
     bad.speak('computer please');
     bad.speak('hello there');
-    check('with the command list inside the window (the old way), “hello there” fires louder - the bench fault',
+    check('GRAMMAR mode, inside the window: “hello there” fires louder - the bench fault, still there in the option',
       JSON.stringify(bad.pressed()) === '["phrase:volume-up"]', JSON.stringify(bad.pressed()));
+    const bad1 = vosky({ recognition: 'grammar' });
+    bad1.speak('computer please hello there', 'computer please louder');
+    check('*** GRAMMAR mode, one breath: “computer please hello there” snaps to “computer please louder” and fires (Mike: '
+      + '“force it into picking one of the options”) ***', JSON.stringify(bad1.pressed()) === '["phrase:volume-up"]',
+      JSON.stringify(bad1.pressed()));
     const good = vosky({});
     good.speak('computer please');
     check('by default the window listens open', good.mode().mode === 'open', JSON.stringify(good.mode()));
     good.speak('hello there');
     check('*** OPEN inside the window: “hello there” is written down as it is and matches nothing ***',
       good.pressed().length === 0, JSON.stringify(good.pressed()));
+    check('...and it is not close enough to any command to be asked about', good.said.length === 0, JSON.stringify(good.said));
     good.speak('louder');
     check('...while the real command, said next, still fires (one mis-hearing does not close the window)',
       JSON.stringify(good.pressed()) === '["phrase:volume-up"]', JSON.stringify(good.pressed()));
+    const good1 = vosky({});
+    check('by default the one-breath path listens open too', good1.mode().mode === 'open', JSON.stringify(good1.mode()));
+    good1.speak('computer please hello there', 'computer please louder');
+    check('*** OPEN, one breath: “computer please hello there” fires nothing and asks nothing ***',
+      good1.pressed().length === 0 && good1.said.length === 0, `${JSON.stringify(good1.pressed())} ${JSON.stringify(good1.said)}`);
+  }
+
+  // =====================================================================================
+  // NOTE AO: A NEAR MISS ASKS; IT NEVER ACTS WITHOUT THE YES
+  // =====================================================================================
+  section('*** the near-miss rule: one word off, from exactly one meaning ***');
+  {
+    const nm = (x, t) => { try { return SP.nearMiss(x, t); } catch (e) { return `threw ${e.message}`; } };
+    const id = (x, t) => { const r = nm(x, t); return r && typeof r === 'object' ? r.id : r; };
+    check('nearMiss is exported', typeof SP.nearMiss === 'function');
+    check('*** a word that sounds alike: “paws” is near “pause” ***', id('paws') === 'pause', JSON.stringify(nm('paws')));
+    check('...and says WHICH phrase it was near, for the question', nm('paws')?.phrase === 'pause', JSON.stringify(nm('paws')));
+    check('“loud” is not near anything on its own: it is one word from “louder” AND from “too loud” - two meanings, so nothing',
+      nm('loud') === null, JSON.stringify(nm('loud')));
+    check('“lauder” is near “louder”', id('lauder') === 'volume-up', JSON.stringify(nm('lauder')));
+    check('*** one word more: “pause please” is near “pause” ***', id('pause please') === 'pause', JSON.stringify(nm('pause please')));
+    check('...and “please pause”', id('please pause') === 'pause', JSON.stringify(nm('please pause')));
+    check('one word less: “more” is near “more volume”', id('more') === 'volume-up', JSON.stringify(nm('more')));
+    check('*** an exact phrase is not a near miss (it simply fires) ***', nm('pause') === null && nm('louder') === null);
+    check('*** “hello there” is near nothing (the bench sentence) ***', nm('hello there') === null, JSON.stringify(nm('hello there')));
+    check('...nor is “the weather is nice”', nm('the weather is nice') === null, JSON.stringify(nm('the weather is nice')));
+    check('*** close to TWO meanings is close to none: “go” (go up / go down / go back ...) ***', nm('go') === null, JSON.stringify(nm('go')));
+    check('...“turn” (turn up / turn down)', nm('turn') === null, JSON.stringify(nm('turn')));
+    check('...“volume” (volume up / volume down)', nm('volume') === null, JSON.stringify(nm('volume')));
+    check('...and “play opposite” (play, and play opposites) - it is asked about by neither', nm('play opposite') === null,
+      JSON.stringify(nm('play opposite')));
+    check('*** a different FIRST sound is not alike: “text” is not “next” ***', nm('text') === null, JSON.stringify(nm('text')));
+    check('*** short words never count as alike: “cup” is not “up” ***', nm('cup') === null, JSON.stringify(nm('cup')));
+    check('two words changed is not one word off: “paws it now”', nm('paws it now') === null, JSON.stringify(nm('paws it now')));
+    check('empty and nonsense are safe', nm('') === null && nm(null) === null && nm('   ') === null);
+    check('it takes any table (the game’s words)', id('colt', { cold: ['cold'], hot: ['hot'] }) === 'cold',
+      JSON.stringify(nm('colt', { cold: ['cold'], hot: ['hot'] })));
+    check('soundsAlike is exported and honest about its limits',
+      typeof SP.soundsAlike === 'function' && SP.soundsAlike('paws', 'pause') && !SP.soundsAlike('text', 'next')
+        && !SP.soundsAlike('up', 'cup') && !SP.soundsAlike('pause', 'pause'));
+    // THE TABLE MUST NOT BE ITS OWN NEAR MISS: every shipped phrase is exact for itself, so nothing
+    // in the table can ever ask "did you mean" about another phrase in the table.
+    const self = Object.values(spokenTable()).flat().filter((p) => nm(p) !== null);
+    check('no shipped phrase is a near miss of another (each one simply fires)', self.length === 0, self.join(', '));
+  }
+
+  section('*** the near miss ASKS: “It sounded like ‘pause’. Did you mean that?” ***');
+  check('*** the question is Mike’s wording, and a setting ***',
+    SPEECH_DEFAULTS.nearMissLine === "It sounded like '{phrase}'. Did you mean that?", String(SPEECH_DEFAULTS.nearMissLine));
+  check('asking is on by default', SPEECH_DEFAULTS.nearMiss === true);
+  check('the question is not itself a command or a wake phrase (the screen must not command itself)',
+    verbFor(SPEECH_DEFAULTS.nearMissLine) === null && !splitWake(SPEECH_DEFAULTS.nearMissLine, SPEECH_DEFAULTS.wake).woke);
+  check('the yes words include “yes” and “yeah”', Array.isArray(SP.NEAR_MISS_YES)
+    && SP.NEAR_MISS_YES.includes('yes') && SP.NEAR_MISS_YES.includes('yeah'), JSON.stringify(SP.NEAR_MISS_YES));
+  check('*** no yes word is a wake phrase, and none but “yes” is a command (it would fire twice) ***',
+    Array.isArray(SP.NEAR_MISS_YES) && SP.NEAR_MISS_YES.every((y) => y === 'yes' || verbFor(y) === null)
+      && usableWakePhrases(SP.NEAR_MISS_YES, {}).every((y) => !SPEECH_DEFAULTS.wake.includes(y)));
+  {
+    const said = [];
+    const r = lrig({ output: { say: (t, o) => { said.push([t, o]); return `o${said.length}`; } } });
+    r.say('computer please paws');
+    check('*** “computer please paws” fires NOTHING ***', r.pressed().length === 0, JSON.stringify(r.pressed()));
+    check('*** ...and asks, aloud, in Mike’s words ***', said.length === 1
+      && said[0][0] === "It sounded like 'pause'. Did you mean that?", JSON.stringify(said));
+    check('...marked as coming from speech', said[0] && said[0][1] && said[0][1].source === 'speech', JSON.stringify(said[0]));
+    const lst = r.listen();
+    check('*** ...and opens a listening window for the answer, carrying the question for the on-screen cue ***',
+      lst.length === 1 && lst[0].on === true && lst[0].reason === 'confirm' && lst[0].phrase === 'pause'
+        && lst[0].question === "It sounded like 'pause'. Did you mean that?" && lst[0].ms === SPEECH_DEFAULTS.nearMissWindowMs,
+      JSON.stringify(lst));
+    check('the recogniser is told why it is listening', r.speech.recognitionMode().why === 'confirm'
+      && r.speech.recognitionMode().mode === 'open', JSON.stringify(r.speech.recognitionMode()));
+    check('the question is visible to a host', r.speech.nearMissPending?.()?.phrase === 'pause',
+      JSON.stringify(r.speech.nearMissPending?.()));
+    r.say('yes');
+    check('*** “yes” fires it: pause, and NOT select (“yes” is a select phrase) ***',
+      JSON.stringify(r.pressed()) === '["phrase:pause"]', JSON.stringify(r.pressed()));
+    check('...and the window closes as confirmed', r.listen().length === 2 && r.listen()[1].on === false
+      && r.listen()[1].reason === 'confirmed', JSON.stringify(r.listen()));
+    r.say('yes');
+    check('one question, one answer: a second “yes” does nothing', r.pressed().length === 1, JSON.stringify(r.pressed()));
+    check('the miss log still has what was heard, so the table can grow', r.missed.includes('paws'), JSON.stringify(r.missed));
+  }
+  {
+    const r = lrig();
+    r.say('computer please paws');
+    r.say('Yeah.');
+    check('“yeah” is a yes too', JSON.stringify(r.pressed()) === '["phrase:pause"]', JSON.stringify(r.pressed()));
+  }
+  {
+    const tones = [];
+    const r = lrig({ confirm: 'tone', tone: (v) => tones.push(v) });
+    r.say('computer please paws');
+    check('asking is not confirming: no “got it” tone yet', tones.length === 0);
+    r.say('yes');
+    check('...the tone comes when the confirmed command fires', tones.length === 1, JSON.stringify(tones));
+  }
+  {
+    const r = lrig();
+    r.say('computer please paws');
+    r.say('no');
+    check('*** “no” drops it: nothing fires ***', r.pressed().length === 0, JSON.stringify(r.pressed()));
+    check('...and the window closes as declined', r.listen()[r.listen().length - 1].on === false
+      && r.listen()[r.listen().length - 1].reason === 'declined', JSON.stringify(r.listen()));
+    r.say('yes');
+    check('...after which “yes” is just a bare word (the wake gate refuses it)', r.pressed().length === 0, JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please paws');
+    r.say('never mind');
+    check('“never mind” to the question drops it - and does NOT also go back', r.pressed().length === 0, JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please paws');
+    r.say('the weather is nice');
+    check('*** anything else drops it ***', r.pressed().length === 0 && r.speech.nearMissPending?.() === null,
+      `${JSON.stringify(r.pressed())} ${JSON.stringify(r.speech.nearMissPending?.())}`);
+    r.say('yes');
+    check('...so a “yes” after that fires nothing', r.pressed().length === 0, JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please paws');
+    r.say('computer please next');
+    check('*** a new command, with the wake phrase, drops the question and is heard as itself ***',
+      JSON.stringify(r.pressed()) === '["phrase:next"]', JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please paws');
+    r.advance(SPEECH_DEFAULTS.nearMissWindowMs + 1);
+    check('*** nobody answers: the question closes on its own (inaction, never a stuck screen) ***',
+      r.listen()[r.listen().length - 1].on === false && r.listen()[r.listen().length - 1].reason === 'timeout'
+        && r.timers.size === 0, JSON.stringify(r.listen()));
+    r.say('yes');
+    check('...and a late “yes” fires nothing', r.pressed().length === 0, JSON.stringify(r.pressed()));
+  }
+  {
+    // THE SCREEN HEARS ITS OWN QUESTION. Its speaker is in the room; an open recogniser writes the
+    // question down. That must not count as "anything else" and drop the question.
+    const r = lrig();
+    r.say('computer please paws');
+    r.say('it sounded like pause');
+    r.say('did you mean that');
+    check('*** the screen hearing its own question does not drop it ***', r.speech.nearMissPending?.()?.phrase === 'pause',
+      JSON.stringify(r.speech.nearMissPending?.()));
+    r.say('yes');
+    check('...and the yes after it still fires', JSON.stringify(r.pressed()) === '["phrase:pause"]', JSON.stringify(r.pressed()));
+  }
+  {
+    const r = lrig();
+    r.say('computer please');
+    r.say('lauder');
+    check('*** inside the armed window, a near miss asks too ***', r.speech.nearMissPending?.()?.phrase === 'louder'
+      && r.pressed().length === 0, JSON.stringify(r.speech.nearMissPending?.()));
+    r.say('yes');
+    check('...and yes fires it', JSON.stringify(r.pressed()) === '["phrase:volume-up"]', JSON.stringify(r.pressed()));
+  }
+  {
+    const said = [];
+    const r = lrig({ nearMissLine: 'Did you say {phrase}?', output: { say: (t) => { said.push(t); return 'x'; } } });
+    r.say('computer please paws');
+    check('the question is editable', said[0] === 'Did you say pause?', JSON.stringify(said));
+  }
+  {
+    const r = lrig({ nearMissWindowMs: 20000 });
+    r.say('computer please paws');
+    r.advance(15000);
+    r.say('yes');
+    check('a longer answer window (a setting) still takes a slow yes', JSON.stringify(r.pressed()) === '["phrase:pause"]',
+      JSON.stringify(r.pressed()));
+  }
+  {
+    const said = [];
+    const r = lrig({ nearMiss: false, output: { say: (t) => { said.push(t); return 'x'; } } });
+    r.say('computer please paws');
+    check('*** asking turned off: a near miss does nothing at all ***', r.pressed().length === 0 && said.length === 0
+      && r.listen().length === 0, `${JSON.stringify(said)} ${JSON.stringify(r.listen())}`);
+  }
+  {
+    const said = [];
+    const r = lrig({ requireWake: false, output: { say: (t) => { said.push(t); return 'x'; } } });
+    r.say('paws');
+    check('*** with the gate off, a near miss said WITHOUT a wake phrase is not asked about (it was not said to the screen) ***',
+      said.length === 0 && r.pressed().length === 0, JSON.stringify(said));
+    r.say('computer please paws');
+    check('...but one after a wake phrase is', said.length === 1, JSON.stringify(said));
+  }
+  {
+    const r = lrig();
+    r.say('computer please go');
+    check('*** ambiguous (“go”): nothing asked, nothing fired ***', r.speech.nearMissPending?.() === null
+      && r.pressed().length === 0 && r.listen().length === 0, JSON.stringify(r.listen()));
+  }
+  {
+    // A SWITCH YES: the bus topics an ordinary binding drives, and the host API.
+    const bus = createBus();
+    const r = lrig({ bus });
+    check('the yes/no actions are exported for a host to register and bind to a switch',
+      Array.isArray(SP.NEAR_MISS_ACTIONS) && SP.NEAR_MISS_ACTIONS.length === 2
+        && SP.NEAR_MISS_ACTIONS.every((a) => a.topic && a.label), JSON.stringify(SP.NEAR_MISS_ACTIONS));
+    r.say('computer please paws');
+    bus.publish(SP.NEAR_MISS_YES_TOPIC, {});
+    check('*** a switch Yes fires it ***', JSON.stringify(r.pressed()) === '["phrase:pause"]', JSON.stringify(r.pressed()));
+    r.say('computer please lauder');
+    bus.publish(SP.NEAR_MISS_NO_TOPIC, {});
+    check('a switch No drops it', r.pressed().length === 1 && r.speech.nearMissPending?.() === null, JSON.stringify(r.pressed()));
+    bus.publish(SP.NEAR_MISS_YES_TOPIC, {});
+    check('*** a switch Yes with no question up does nothing ***', r.pressed().length === 1, JSON.stringify(r.pressed()));
+    r.say('computer please lauder');
+    check('the host API answers it too', r.speech.answerNearMiss?.(true) === true
+      && JSON.stringify(r.pressed()) === '["phrase:pause","phrase:volume-up"]', JSON.stringify(r.pressed()));
+    check('...and says false when there was nothing to answer', r.speech.answerNearMiss?.(true) === false);
+  }
+  {
+    // End to end: the yes action registered, a switch bound to it on the REAL input bus.
+    const bus = createBus();
+    const reg = createDefaultRegistry();
+    let registered = true;
+    try { reg.registerAll(SP.NEAR_MISS_ACTIONS || []); } catch { registered = false; }
+    const input = createInputBus({ bus, actions: reg });
+    SPEECH_BINDINGS.forEach((b) => input.addBinding(b));
+    input.addBinding({ id: 'test/switch-yes', actionId: 'speech/near-miss-yes', device: 'switch', control: 'a',
+      edge: 'press', role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0, label: 'Yes' });
+    const heardVerbs = [];
+    bus.subscribe(verbTopic('pause'), () => heardVerbs.push('pause'));
+    bus.subscribe(verbTopic('select'), () => heardVerbs.push('select'));
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() {}, running: false };
+    const sp = attachSpeech(input, { recognizer: rec, bus, confirm: 'off' });
+    sp.start();
+    feed('computer please paws');
+    check('the yes/no actions register as ordinary actions', registered);
+    check('nothing fired on the near miss', heardVerbs.length === 0, JSON.stringify(heardVerbs));
+    input.down('switch', 'a'); input.up('switch', 'a');
+    check('*** a switch bound to Yes, pressed: pause fires, through the real input bus ***',
+      JSON.stringify(heardVerbs) === '["pause"]', JSON.stringify(heardVerbs));
+    sp.destroy(); input.destroy();
+  }
+  {
+    const r = lrig();
+    r.say('computer please paws');
+    r.speech.stop();
+    check('stopping the microphone drops the question and closes its window', r.speech.nearMissPending?.() === null
+      && r.listen()[r.listen().length - 1].reason === 'stopped' && r.timers.size === 0, JSON.stringify(r.listen()));
+  }
+  {
+    // GRAMMAR MODE: a grammar only hands back its own phrases, so near misses cannot arise from the
+    // engine - but if one is asked (the host fed text), the answer grammar has the yes and no in it.
+    const { sp, feed } = mrig({ recognition: 'grammar' });
+    sp.start();
+    feed('computer please paws');
+    const g = sp.currentGrammar() || [];
+    check('grammar mode while asking: the yes and no words, [unk], and wake + command',
+      sp.recognitionMode().why === 'confirm' && g.includes('yes') && g.includes('no') && g.includes(UNKNOWN_WORD)
+        && g.includes('computer please next'), JSON.stringify(sp.recognitionMode().why));
+    sp.destroy();
+  }
+  {
+    // THE RULE, as a sweep: never a press between the near miss and the yes, whatever is said.
+    const r = lrig();
+    const said = ['computer please paws', 'hello', 'computer please', 'lauder', 'the one', 'computer please pause please'];
+    said.forEach((s) => r.say(s));
+    check('*** a run of near misses and room talk presses NOTHING until somebody says yes ***', r.pressed().length === 0,
+      JSON.stringify(r.pressed()));
   }
 
   section('*** richer results: confidence, alternatives, and a reason ONLY when the engine knows it ***');
@@ -758,6 +1080,35 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
       r.answers.length === 5 && r.pressed().length === 2, JSON.stringify(r.answers.length));
     check('nothing ever went to the bare topic when the game said which instance it is', r.bare.length === 0);
   }
+  section('*** a near miss to one of the game’s words goes to the game as an UNSURE hearing (note AO) ***');
+  {
+    const r = arig();
+    r.grammar('wg-1', true);
+    r.say('colt', { confidence: 0.95, alternatives: ['bolt'], reason: 'noise' });
+    const a = r.answers[0] && r.answers[0][1];
+    check('*** “colt” reaches the game as “cold”, marked as a near miss, with what was really heard ***',
+      a && a.text === 'cold' && a.nearMiss === true && a.heard === 'colt', JSON.stringify(r.answers));
+    check('*** ...and WITHOUT the engine’s confidence: the game’s rule is “no confidence = ask”, so it cannot be judged as sure ***',
+      a && !('confidence' in a), JSON.stringify(a));
+    check('...the engine’s true signals still travel (alternatives, reason)', a && a.reason === 'noise'
+      && a.alternatives?.[0] === 'bolt', JSON.stringify(a));
+    check('...and it is not decided here: nothing pressed, no question asked by the speech layer',
+      r.pressed().length === 0 && r.speech.nearMissPending?.() === null);
+    r.say('no she is asleep');
+    check('room talk is still not sent', r.answers.length === 1, JSON.stringify(r.answers));
+  }
+  {
+    const r = arig();
+    r.grammar('wg-1', true, ['hot', 'hat', 'cold', UNKNOWN_WORD]);
+    r.say('hit');
+    check('*** near TWO of the game’s words (hot, hat): nothing is sent ***', r.answers.length === 0, JSON.stringify(r.answers));
+  }
+  {
+    const r = arig({ nearMiss: false });
+    r.grammar('wg-1', true);
+    r.say('colt');
+    check('asking turned off: a near miss is not sent to the game either', r.answers.length === 0, JSON.stringify(r.answers));
+  }
   {
     const r = arig({ answerMatch: 'any' });
     r.grammar('wg-1', true);
@@ -825,11 +1176,11 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   {
     const bus = createBus();
     const rec = { start() { this.running = true; }, stop() {}, running: false, setMode() {} };
-    const sp = attachSpeech({ down() {}, up() {} }, { recognizer: rec, bus, confirm: 'off', answerRecognition: 'grammar' });
+    const sp = attachSpeech({ down() {}, up() {} }, { recognizer: rec, bus, confirm: 'off', recognition: 'grammar' });
     bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'word_games', instanceId: 'wg-1', open: true,
       words: ['cold', 'hot', 'dog'], phase: 'asking' });
-    const g = sp.currentGrammar();
-    check('answerRecognition “grammar”: the game’s own words, wrong answers and all', g.includes('cold') && g.includes('dog'), JSON.stringify(g));
+    const g = sp.currentGrammar() || [];
+    check('grammar mode while a game waits: the game’s own words, wrong answers and all', g.includes('cold') && g.includes('dog'), JSON.stringify(g));
     check('*** ...with [unk] even when the game forgot it ***', g.includes(UNKNOWN_WORD));
     check('...and wake + command, so “computer please back” can still leave the game', g.includes('computer please back'));
     check('...but no bare command, which the game would never be asked about', !g.includes('pause'));
