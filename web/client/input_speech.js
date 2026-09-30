@@ -39,9 +39,22 @@
 //      with nothing else changing — which is the whole reason the matching below is a pure
 //      function over TEXT rather than anything to do with audio.
 //   3. **THE MATCHING IS LOCAL AND DUMB, ON PURPOSE.** A phrase table, exact after
-//      normalisation. No model, no fuzzy scoring, no "did you mean". A command set that
-//      sometimes guesses is worse than one that sometimes does not fire: this drives somebody's
-//      screen, and a wrong verb is a video that stops or a board that jumps.
+//      normalisation. No model and no guessing: a command set that sometimes guesses is worse
+//      than one that sometimes does not fire - this drives somebody's screen, and a wrong verb is
+//      a video that stops or a board that jumps. *** A NEAR MISS ASKS; IT NEVER ACTS. *** (Mike,
+//      2026-09-30, note AO.) When what was heard is one word off exactly one command, the screen
+//      says "It sounded like 'pause'. Did you mean that?" and fires ONLY on a yes. See
+//      `nearMiss()` for the rule and its argument.
+//
+// *** OPEN RECOGNITION IS THE DEFAULT, EVERYWHERE (note AO). *** Mike: *"Wouldn't what you're
+// saying force it into picking one of the options on a multiple choice question and pretty much
+// any answer for rhyming/opposites."* - yes, for a GRAMMAR: a recogniser limited to a list can only
+// answer with something on the list (the bench turned "hello there" into "louder" at confidence
+// 1.0). Open recognition writes down what was said, and the exact match above then matches
+// nothing. Asked whether that should be only inside the pause after the wake phrase, Mike: *"Even
+// without a pause."* So the recogniser is told OPEN on the one-breath path, in the armed window,
+// and while a game waits for an answer. GRAMMAR mode stays as a per-person option (`speechHearing`)
+// for somebody whose speech open recognition cannot write down and who only needs a few commands.
 //
 // ---------------------------------------------------------------------------------------
 // WHY A TABLE AND NOT A MODEL
@@ -111,9 +124,9 @@ export const UNKNOWN_WORD = '[unk]';
 // *** ROW 2.28 ADDED PLAY, PAUSE AND VOLUME, AND MORE WAYS TO SAY THE OLD ONES. *** Mike asked
 // for "a fuzzy search type thing where we just make other ways people might phrase it" - and
 // that is exactly this table growing, not the matching getting loose. The matching stays exact
-// (rule 3 in the header). The fuzzy half belongs to the RECOGNISER: a local engine limited to
-// a grammar of exactly these phrases snaps whatever it heard to the nearest one. So every phrase
-// here is plain, common, lowercase words, four at most - a phrase a small engine can know.
+// (rule 3 in the header); the one fuzzy thing is the near-miss QUESTION, which never acts on its
+// own. Every phrase here is plain, common, lowercase words, four at most - a phrase a small engine
+// can know, and a grammar (the per-person option) can list.
 //
 // THE DANGEROUS WORDS, and where they went:
 //   * "stop" -> pause. Said to a playing video it means pause, and pause cannot END anything.
@@ -367,8 +380,8 @@ export function browserRecognizer({ view = typeof window !== 'undefined' ? windo
     }
   };
   // No grammar here: Chrome ignores `SpeechGrammarList` [training knowledge], so the browser's
-  // engine is always OPEN recognition - which is the mode `recognitionMode()` asks for in the two
-  // places a grammar is dangerous anyway. It has no `setMode`, and `attachSpeech` does not need one.
+  // engine is always OPEN recognition - which is the default `recognitionMode()` asks for anyway
+  // (note AO). It has no `setMode`, and `attachSpeech` does not need one.
   // A continuous recogniser stops itself on silence, on a network hiccup, and on some engines
   // every minute or so. Without this it dies quietly and the microphone appears to stop working
   // for no reason anybody in the room can see.
@@ -415,7 +428,7 @@ export const SPEECH_DEFAULTS = Object.freeze({
   // source of false fires. Mike, 2026-09-30 (note AN), overruled it for the right reason: *"I can't
   // get her to always say everything in one breath in her condition. She'll probably stop to think
   // a lot."* So the window stays, and the false fire is fixed where it came from - the GRAMMAR (see
-  // `armedRecognition`). The person who wants one breath only (a busy room, a TV that talks a lot)
+  // `recognition`). The person who wants one breath only (a busy room, a TV that talks a lot)
   // turns this off; the wake phrase alone then opens nothing.
   twoStep: true,
   // How long after the wake phrase ON ITS OWN a command may follow as a separate utterance.
@@ -426,19 +439,22 @@ export const SPEECH_DEFAULTS = Object.freeze({
   // A SETTING (`speechWindowMs`): somebody who stops to think wants longer on their own profile
   // (her profile: try 15 s - Code's suggestion, not measured).
   wakeWindowMs: 8000,
-  // *** HOW TO LISTEN INSIDE THE ARMED WINDOW: OPEN BY DEFAULT. *** The bench fault, exactly: with
-  // the recogniser limited to the command list, "hello there" said inside the window came back as
-  // "louder" at confidence 1.0 - a grammar can only answer with one of its own phrases, and [unk]
-  // did not reliably stop it. OPEN recognition writes "hello there" down as it is, and the exact
-  // phrase match below then matches nothing. Chat's suggestion (note AN) [inferred - measure it on
-  // the bench: open mode is slower and less accurate on short words than grammar mode]. 'grammar'
-  // is kept as the option for a quiet room where the open model mishears commands.
-  armedRecognition: 'open',
-  // *** HOW TO LISTEN WHILE A VOICE GAME WAITS FOR AN ANSWER: OPEN, THE SAME REASON. *** A grammar
-  // of the game's words hears one of the game's words in every cough (row 2.31's trap - and why the
-  // game's own grammar carries wrong answers and [unk]). 'grammar' is the option for an engine that
-  // cannot do open recognition at all.
-  answerRecognition: 'open',
+  // *** HOW THE RECOGNISER LISTENS: OPEN, EVERYWHERE, BY DEFAULT (note AO). *** The bench fault,
+  // exactly: with the recogniser limited to the command list, "hello there" came back as "louder"
+  // at confidence 1.0 - a grammar can only answer with one of its own phrases, and [unk] did not
+  // reliably stop it; a grammar of a game's words hears one of the game's words in every cough
+  // (row 2.31's trap). OPEN recognition writes "hello there" down as it is, and the exact match
+  // then matches nothing. Mike: "Even without a pause" - so this covers the one-breath path, the
+  // armed window, a game's answer and the "did you mean" answer alike.
+  //   * 'grammar' is the PER-PERSON option: somebody whose speech the open model cannot write down
+  //     and who only needs a few commands. It keeps every grammar this file builds.
+  //   * [inferred - measure on the bench]: the small open model is slower and less accurate on
+  //     short single words than the same engine given a grammar. That cost is what the near-miss
+  //     question below is for: a command heard one sound off is asked about, not lost.
+  //   * `attachSpeech` still takes `armedRecognition` / `answerRecognition` to override one state
+  //     for a host that needs to; they follow this unless set, and are not menu fields - a way of
+  //     hearing belongs to a person, not to a moment.
+  recognition: 'open',
   // *** WHAT COUNTS AS AN ANSWER: 'exact' BY DEFAULT. *** Open recognition hears the whole room, so
   // only an utterance that IS one of the words the game said it can accept (after normalising) goes
   // to the game; "no, she's asleep" said to a nurse is not an answer. 'any' sends every utterance,
@@ -457,7 +473,140 @@ export const SPEECH_DEFAULTS = Object.freeze({
   // A confirmation more than a few seconds late confirms nothing, so it expires rather than
   // queueing behind a long sentence on the output bus.
   confirmTtlMs: 3000,
+  // *** A NEAR MISS ASKS (note AO). ON by default. *** Mike's wording for the question; `{phrase}`
+  // is the command it thinks it heard. Off: a near miss does nothing at all, exactly like any other
+  // unrecognised phrase - for the person who finds being asked worse than saying it again.
+  nearMiss: true,
+  nearMissLine: "It sounded like '{phrase}'. Did you mean that?",
+  // How long the question waits for a yes. The same eight seconds as the command window, for the
+  // same reason (somebody may need a moment); a setting, longer on a profile that needs it. Nobody
+  // answering is INACTION: the question closes and nothing fires.
+  nearMissWindowMs: 8000,
 });
+
+/**
+ * *** THE ANSWERS TO "DID YOU MEAN THAT?" ***
+ *
+ * A yes fires the command asked about. A no, or anything else, drops it (Mike: "anything else to
+ * drop it"); the no words are listed only so they are CONSUMED - "never mind" and "cancel" said to
+ * the question mean "not that", not "go back" - and so a grammar (the per-person option) can hear
+ * them. "yes" is also a select phrase: while a question is up, the question has it, so it cannot
+ * fire twice. No yes word is a wake phrase or any other command (the suite checks).
+ */
+export const NEAR_MISS_YES = ['yes', 'yeah', 'yep', 'yup', 'yes please', 'correct', 'that is right',
+  "that's right"];
+export const NEAR_MISS_NO = ['no', 'nope', 'no thanks', 'no thank you', 'wrong', 'not that', 'cancel',
+  'never mind', 'nevermind'];
+// A switch can answer the question too: an ordinary binding to one of these actions publishes the
+// topic, and `attachSpeech` answers on it. Nothing here binds a switch by default - which switch is
+// Yes is the person's own binding - so the host registers the actions and the binder offers them.
+export const NEAR_MISS_YES_TOPIC = 'speech/near-miss/yes';
+export const NEAR_MISS_NO_TOPIC = 'speech/near-miss/no';
+export const NEAR_MISS_ACTIONS = [
+  { id: 'speech/near-miss-yes', label: 'Yes, I meant that', topic: NEAR_MISS_YES_TOPIC, group: 'Spoken' },
+  { id: 'speech/near-miss-no', label: 'No, I did not mean that', topic: NEAR_MISS_NO_TOPIC, group: 'Spoken' },
+];
+
+// ---------------------------------------------------------------------------------------
+// THE NEAR-MISS RULE (note AO)
+// ---------------------------------------------------------------------------------------
+//
+// *** ONE WORD OFF, FROM EXACTLY ONE MEANING. *** What was said (normalised) is a near miss of a
+// phrase when it differs by exactly ONE of:
+//
+//   * ONE WORD MORE OR LESS    "pause please", "please pause" -> "pause"; "more" -> "more volume"
+//   * ONE WORD SOUNDING ALIKE  the same words but one, and that one `soundsAlike`: same first
+//                              letter, both at least three letters, and at most 1 letter edit
+//                              apart (2 when the longer word has five letters or more) -
+//                              "paws" -> "pause", "lauder" -> "louder"
+//
+// ...and it counts ONLY when every phrase it is near belongs to ONE meaning (a verb or a route).
+// Near two meanings is near none: "go" is one word short of go up / go down / go back, "loud" is
+// near both "louder" and "too loud", "play opposite" is near both "play" and "play opposites" -
+// and the screen asks about none of them. (Mike: never when it is close to two.)
+//
+// WHY THIS AND NOT A SCORE. Open recognisers write REAL WORDS, so their mistakes are a word that
+// sounds like the right one, a filler word added ("please pause"), or a word dropped - and those
+// are exactly the two shapes above. A similarity score would need a threshold nobody can argue
+// for; "one word off" is something anybody can check by reading it. The costs, stated:
+//   * Spelling is a rough stand-in for sound: "necks" is NOT near "next" (3 letters apart) and
+//     "text" is not either (a different first letter, on purpose - a first sound is rarely the one
+//     misheard, and allowing it makes every rhyme a near miss). The miss log catches what this
+//     misses; a phrasing that keeps turning up goes into the table as an exact phrase.
+//   * Two-letter words ("up", "ok") never count as alike: one letter changed is a different word.
+//   * A near miss is only ever ASKED about, and only when it was said to the screen (after the
+//     wake phrase, or inside the window) - so a loose rule costs a question, never an action.
+//
+// Letter edit distance (insert, delete or change one letter), small and exact.
+function editDistance(a, b) {
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+/** Two different words that could be one misheard as the other (the rule above). */
+export function soundsAlike(a, b) {
+  const x = normalize(a);
+  const y = normalize(b);
+  if (!x || !y || x === y || x.includes(' ') || y.includes(' ')) return false;
+  if (x[0] !== y[0] || Math.min(x.length, y.length) < 3) return false;
+  return editDistance(x, y) <= (Math.max(x.length, y.length) >= 5 ? 2 : 1);
+}
+
+// `said` and `phrase` as word arrays: exactly one word added, dropped, or sounding alike.
+function oneWordOff(said, phrase) {
+  if (said.length === phrase.length) {
+    let at = -1;
+    for (let i = 0; i < said.length; i++) {
+      if (said[i] === phrase[i]) continue;
+      if (at >= 0) return false;
+      at = i;
+    }
+    return at >= 0 && soundsAlike(said[at], phrase[at]);
+  }
+  const [long, short] = said.length > phrase.length ? [said, phrase] : [phrase, said];
+  if (long.length - short.length !== 1 || !short.length) return false;
+  const target = short.join(' ');
+  for (let i = 0; i < long.length; i++) {
+    if ([...long.slice(0, i), ...long.slice(i + 1)].join(' ') === target) return true;
+  }
+  return false;
+}
+
+/**
+ * Is `text` a near miss of exactly one meaning in `table` (`{ id: [phrases] }`, the spoken table by
+ * default)? `{ id, phrase }` - the meaning and the phrase it was near, for the question - or null:
+ * for an exact phrase (that is a match, not a miss), for nothing near, and for near two meanings.
+ */
+export function nearMiss(text, table = spokenTable()) {
+  const said = normalize(text);
+  if (!said) return null;
+  const words = said.split(' ');
+  const hits = new Map();
+  for (const [id, phrases] of Object.entries(table || {})) {
+    for (const p of Array.isArray(phrases) ? phrases : []) {
+      const k = normalize(p);
+      if (!k) continue;
+      if (k === said) return null;
+      if (!hits.has(id) && oneWordOff(words, k.split(' '))) hits.set(id, k);
+    }
+  }
+  if (hits.size !== 1) return null;
+  const [[id, phrase]] = [...hits];
+  return { id, phrase };
+}
+
+// The question with its phrase filled in; a blank template is the default question.
+function nearMissQuestion(template, phrase) {
+  const t = typeof template === 'string' && template.trim() ? template : SPEECH_DEFAULTS.nearMissLine;
+  return t.replace(/\{phrase\}/g, phrase).replace(/\s{2,}/g, ' ').trim();
+}
 
 /**
  * THE SETTINGS, declared the way every module declares its own (settings_fields.js), for the
@@ -484,19 +633,23 @@ export const SPEECH_FIELDS = [
   { key: 'speechWindowMs', label: 'How long it waits for the command', kind: 'number',
     default: SPEECH_DEFAULTS.wakeWindowMs, level: 'standard', min: 3000, max: 30000, step: 1000,
     displayScale: 1000, unit: 'seconds', unitOne: 'second' },
-  { key: 'speechArmedHearing', label: 'While it waits for a command, listen for', kind: 'choice',
-    default: SPEECH_DEFAULTS.armedRecognition, level: 'advanced',
+  { key: 'speechHearing', label: 'How it listens', kind: 'choice',
+    default: SPEECH_DEFAULTS.recognition, level: 'advanced',
     options: [
-      { value: 'open', label: 'Anything, then match the command exactly' },
-      { value: 'grammar', label: 'Only the command words' },
+      { value: 'open', label: 'Writes down anything said, then matches it exactly' },
+      { value: 'grammar', label: 'Listens only for its own words' },
     ],
-    note: '“Only the command words” turns ordinary talk into commands; use it only in a quiet room.' },
-  { key: 'speechAnswerHearing', label: 'While a voice game waits for an answer, listen for', kind: 'choice',
-    default: SPEECH_DEFAULTS.answerRecognition, level: 'advanced',
-    options: [
-      { value: 'open', label: 'Anything, then match the answer words' },
-      { value: 'grammar', label: 'Only the game’s words' },
-    ] },
+    note: '“Only its own words” is for speech it cannot write down, when only a few commands are needed. '
+      + 'It can turn other talk into a command, and it cannot ask “did you mean”.' },
+  { key: 'speechNearMiss', label: 'When what it heard is one word off a command', kind: 'toggle',
+    default: SPEECH_DEFAULTS.nearMiss, level: 'standard', onLabel: 'Ask “did you mean”', offLabel: 'Do nothing',
+    note: 'It only ever acts after a yes.' },
+  { key: 'speechNearMissLine', label: 'The question it asks', kind: 'text',
+    default: SPEECH_DEFAULTS.nearMissLine, level: 'advanced',
+    note: '{phrase} is the command it thinks it heard.' },
+  { key: 'speechNearMissWindowMs', label: 'How long it waits for the yes', kind: 'number',
+    default: SPEECH_DEFAULTS.nearMissWindowMs, level: 'standard', min: 3000, max: 30000, step: 1000,
+    displayScale: 1000, unit: 'seconds', unitOne: 'second' },
   { key: 'speechAnswerMatch', label: 'What a voice game treats as an answer', kind: 'choice',
     default: SPEECH_DEFAULTS.answerMatch, level: 'advanced',
     options: [
@@ -514,14 +667,18 @@ const pickChoice = (v, allowed, dflt) => (allowed.includes(v) ? v : dflt);
 export function speechOptionsFrom(values = {}) {
   const v = values || {};
   const ms = Number(v.speechWindowMs);
+  const nms = Number(v.speechNearMissWindowMs);
   return {
     wake: wakeFrom(v),
     confirm: pickChoice(v.speechConfirm, CONFIRM_MODES, SPEECH_DEFAULTS.confirm),
     twoStep: typeof v.speechTwoStep === 'boolean' ? v.speechTwoStep : SPEECH_DEFAULTS.twoStep,
     wakeWindowMs: Number.isFinite(ms) && ms > 0 ? ms : SPEECH_DEFAULTS.wakeWindowMs,
-    armedRecognition: pickChoice(v.speechArmedHearing, RECOGNITION_MODES, SPEECH_DEFAULTS.armedRecognition),
-    answerRecognition: pickChoice(v.speechAnswerHearing, RECOGNITION_MODES, SPEECH_DEFAULTS.answerRecognition),
+    recognition: pickChoice(v.speechHearing, RECOGNITION_MODES, SPEECH_DEFAULTS.recognition),
     answerMatch: pickChoice(v.speechAnswerMatch, ANSWER_MATCHES, SPEECH_DEFAULTS.answerMatch),
+    nearMiss: typeof v.speechNearMiss === 'boolean' ? v.speechNearMiss : SPEECH_DEFAULTS.nearMiss,
+    nearMissLine: typeof v.speechNearMissLine === 'string' && v.speechNearMissLine.trim()
+      ? v.speechNearMissLine : SPEECH_DEFAULTS.nearMissLine,
+    nearMissWindowMs: Number.isFinite(nms) && nms > 0 ? nms : SPEECH_DEFAULTS.nearMissWindowMs,
   };
 }
 
@@ -608,6 +765,17 @@ export function answerGrammar(words = [], wakes = SPEECH_DEFAULTS.wake, table = 
   return uniq([...game, ...ws, ...ws.flatMap((w) => phrases.map((p) => `${w} ${p}`)), UNKNOWN_WORD]);
 }
 
+/**
+ * While "did you mean" waits, when somebody chose 'grammar': the yes and no words, [unk], and the
+ * wake phrase + every command, so a fresh command can still be given instead of answering.
+ */
+export function confirmGrammar(wakes = SPEECH_DEFAULTS.wake, table = spokenTable()) {
+  const ws = usableWakePhrases(wakes, table);
+  const phrases = uniq(Object.values(table).flat().map(normalize));
+  return uniq([...NEAR_MISS_YES.map(normalize), ...NEAR_MISS_NO.map(normalize), ...ws,
+    ...ws.flatMap((w) => phrases.map((p) => `${w} ${p}`)), UNKNOWN_WORD]);
+}
+
 // The tone: the output layer's own `status` earcon (output_channels.js), the shortest and
 // quietest sound the product already makes. Reused rather than a new sound invented.
 let sharedSound = null;
@@ -632,17 +800,22 @@ function defaultTone() {
  *
  * THE RECOGNISER SEAM: `start(onText)`, `stop()`, `running`, and optionally `setMode(mode)`.
  * `onText(text, detail?)` - see `cleanDetail` for what `detail` may carry. `setMode` is told
- * `{ mode: 'open' | 'grammar', grammar: string[] | null, why: 'command' | 'armed' | 'answer' }`
+ * `{ mode: 'open' | 'grammar', grammar: string[] | null, why: 'command' | 'armed' | 'answer' | 'confirm' }`
  * every time how it should listen changes; an engine without it can read `recognitionMode()` or
- * `currentGrammar()` (null = open) whenever it likes.
+ * `currentGrammar()` (null = open) whenever it likes. OPEN in every state by default (note AO);
+ * `recognition: 'grammar'` (a person's setting) gives each state its grammar.
  *
- * THREE STATES, in the order they win:
+ * FOUR STATES, in the order they win:
+ *   confirm  a near miss was asked about ("It sounded like 'pause'. Did you mean that?"): a yes
+ *            fires it, a no or anything else drops it, nobody answering drops it too.
  *   armed    the wake phrase was said on its own; the next utterance is matched EXACTLY against
- *            the phrase table. Open recognition by default (SPEECH_DEFAULTS.armedRecognition).
+ *            the phrase table (and a near miss is asked about).
  *   answer   a voice game has an open grammar (SPEECH_GRAMMAR_TOPIC on `bus`): anything that does
  *            not start with a wake phrase goes to THAT game as `speech/answer`, not to the phrase
- *            table. A wake phrase still means a command, so "computer please back" leaves a game.
- *   command  otherwise: the one-breath path, over the command grammar.
+ *            table - exactly one of its words, or a near miss of exactly one sent as an UNSURE
+ *            hearing for the game's own "did you mean". A wake phrase still means a command, so
+ *            "computer please back" leaves a game.
+ *   command  otherwise: the one-breath path.
  */
 export function attachSpeech(input, {
   recognizer = null,
@@ -657,9 +830,13 @@ export function attachSpeech(input, {
   requireWake = SPEECH_DEFAULTS.requireWake,
   twoStep = SPEECH_DEFAULTS.twoStep,
   wakeWindowMs = SPEECH_DEFAULTS.wakeWindowMs,
-  armedRecognition = SPEECH_DEFAULTS.armedRecognition,
-  answerRecognition = SPEECH_DEFAULTS.answerRecognition,
+  recognition = SPEECH_DEFAULTS.recognition,
+  armedRecognition = null,  // null = follow `recognition`
+  answerRecognition = null, // null = follow `recognition`
   answerMatch = SPEECH_DEFAULTS.answerMatch,
+  nearMiss: askNearMiss = SPEECH_DEFAULTS.nearMiss,
+  nearMissLine = SPEECH_DEFAULTS.nearMissLine,
+  nearMissWindowMs = SPEECH_DEFAULTS.nearMissWindowMs,
   confirm = SPEECH_DEFAULTS.confirm,
   confirmWord = SPEECH_DEFAULTS.confirmWord,
   confirmTtlMs = SPEECH_DEFAULTS.confirmTtlMs,
@@ -684,14 +861,23 @@ export function attachSpeech(input, {
   // falling open. Inaction is the safe failure for a thing that drives somebody's screen.
   const wakes = usableWakePhrases(wake, spoken);
   const mode = CONFIRM_MODES.includes(confirm) ? confirm : 'tone';
-  const armedHow = RECOGNITION_MODES.includes(armedRecognition) ? armedRecognition : SPEECH_DEFAULTS.armedRecognition;
-  const answerHow = RECOGNITION_MODES.includes(answerRecognition) ? answerRecognition : SPEECH_DEFAULTS.answerRecognition;
+  const how = RECOGNITION_MODES.includes(recognition) ? recognition : SPEECH_DEFAULTS.recognition;
+  const armedHow = RECOGNITION_MODES.includes(armedRecognition) ? armedRecognition : how;
+  const answerHow = RECOGNITION_MODES.includes(answerRecognition) ? answerRecognition : how;
   const matchHow = ANSWER_MATCHES.includes(answerMatch) ? answerMatch : SPEECH_DEFAULTS.answerMatch;
+  const asking = askNearMiss !== false;
+  const askMs = Math.max(0, Number(nearMissWindowMs) || 0);
+  const yesWords = new Set(NEAR_MISS_YES.map(normalize));
+  const noWords = new Set(NEAR_MISS_NO.map(normalize));
   const playTone = typeof tone === 'function' ? tone : defaultTone;
   const canPush = () => !!rec && typeof rec.setMode === 'function';
   let armedUntil = null;   // set by the wake phrase said on its own
   let closeTimer = null;   // closes the window as an EVENT; `armedUntil` stays the gate itself
   let open = false;
+  // THE "DID YOU MEAN" QUESTION: { id, phrase, question, until } while one is up. `until` is the
+  // gate (a timer that never fires cannot keep it up); `askTimer` only announces its end.
+  let pending = null;
+  let askTimer = null;
   let running = false;     // start() called and not stopped: the answer event needs a live microphone
   // THE GAMES THAT HAVE SAID WHAT THEY CAN HEAR, by instance. The newest OPEN one is the one an
   // answer goes to: the game somebody most recently started or moved on is the one being played.
@@ -709,6 +895,8 @@ export function attachSpeech(input, {
     if (closeTimer !== null) { try { clearTimer(closeTimer); } catch { /* already gone */ } closeTimer = null; }
   }
   function openWindow(ms) {
+    clearAsk();
+    pending = null;
     armedUntil = now() + ms;
     open = true;
     clearClose();
@@ -732,6 +920,75 @@ export function attachSpeech(input, {
     }
     pushMode();
   }
+
+  // ---- the near-miss question --------------------------------------------------------
+  function clearAsk() {
+    if (askTimer !== null) { try { clearTimer(askTimer); } catch { /* already gone */ } askTimer = null; }
+  }
+  const pendingLive = () => !!pending && now() <= pending.until;
+  // Ask. The command window (if one was open) becomes the question's window: one wake, one
+  // command - or one question. Announced as a listening window carrying the question, so the
+  // on-screen cue can show it to somebody who did not hear it.
+  function ask(nm) {
+    armedUntil = null;
+    clearClose();
+    clearAsk();
+    const question = nearMissQuestion(nearMissLine, nm.phrase);
+    pending = { id: nm.id, phrase: nm.phrase, question, until: now() + askMs };
+    open = true;
+    if (bus || canPush()) {
+      try { askTimer = setTimer(() => { askTimer = null; endPending('timeout'); }, askMs); }
+      catch { askTimer = null; }
+    }
+    announce({ on: true, reason: 'confirm', ms: askMs, phrase: nm.phrase, question });
+    pushMode();
+    if (output && typeof output.say === 'function') {
+      try { output.say(question, { source: 'speech', ttlMs: confirmTtlMs }); }
+      catch (err) { console.error('speech: near-miss question', err); }
+    }
+  }
+  function endPending(reason) {
+    clearAsk();
+    if (!pending) return;
+    pending = null;
+    if (open) { open = false; announce({ on: false, reason }); }
+    pushMode();
+  }
+  // Answer the question: true fires what was asked about, false drops it. False when there was
+  // nothing to answer.
+  function answerNearMiss(yes, text = null, woke = false) {
+    if (pending && !pendingLive()) endPending('timeout');
+    if (!pending) return false;
+    const p = pending;
+    endPending(yes ? 'confirmed' : 'declined');
+    if (yes) {
+      const isVerb = Object.prototype.hasOwnProperty.call(table || {}, p.id);
+      report({ text, verb: isVerb ? p.id : null, ...(isVerb ? {} : { route: p.id }), woke,
+               nearMiss: p.phrase, confirmed: true });
+      fire(p.id);
+    } else report({ text, verb: null, woke, nearMiss: p.phrase, declined: true });
+    return true;
+  }
+  // THE SCREEN HEARING ITS OWN QUESTION. Its speaker is in the room and an open recogniser writes
+  // the question down; a run of the question's own words is not somebody answering it.
+  function isEcho(t) {
+    return !!t && !!pending && ` ${normalize(pending.question)} `.includes(` ${t} `);
+  }
+  // An utterance while the question is up. True when it was the answer (and is used up).
+  function heardWhileAsking(text, w) {
+    const t = w.rest;
+    if (w.woke && !t) { endPending('other'); return false; }   // the wake phrase alone: start over
+    if (yesWords.has(t)) return answerNearMiss(true, text, w.woke);
+    if (noWords.has(t)) return answerNearMiss(false, text, w.woke);
+    if (!w.woke && isEcho(t)) { report({ text, verb: null, woke: false, echo: true }); return true; }
+    // Anything else drops it, and is then heard as itself - "computer please next" still works.
+    endPending('other');
+    return false;
+  }
+
+  const sub = (topic, fn) => (bus && typeof bus.subscribe === 'function' ? bus.subscribe(topic, fn) : () => {});
+  const offYes = sub(NEAR_MISS_YES_TOPIC, () => { answerNearMiss(true); });
+  const offNo = sub(NEAR_MISS_NO_TOPIC, () => { answerNearMiss(false); });
 
   // ---- answer mode ------------------------------------------------------------------
   function currentGame() {
@@ -776,6 +1033,22 @@ export function attachSpeech(input, {
     const said = normalize(text);
     const unk = String(text || '').trim().toLowerCase() === UNKNOWN_WORD;
     const known = unk || g.words.some((w) => (w === UNKNOWN_WORD ? false : normalize(w) === said));
+    // *** A NEAR MISS OF EXACTLY ONE OF THE GAME'S WORDS (note AO) goes to the game as an UNSURE
+    // hearing - it is not decided here. *** The game already has "It sounds like you might be
+    // saying X... Yes / No". It goes WITHOUT the engine's confidence: the answer seam's rule is that
+    // no confidence means "ask", so even a game that has never heard of `nearMiss` cannot treat
+    // "colt" heard at 0.95 as a sure "cold". What was really heard travels as `heard`.
+    if (said && !known && matchHow === 'exact' && asking) {
+      const words = {};
+      for (const w of g.words) { const k = w === UNKNOWN_WORD ? '' : normalize(w); if (k) words[k] = [k]; }
+      const nm = nearMiss(said, words);
+      if (nm) {
+        report({ text, verb: null, woke: false, answer: true, sent: true, nearMiss: nm.phrase });
+        const { confidence, ...rest } = detail;   // eslint-disable-line no-unused-vars
+        publish(answerTopic(g), { text: nm.phrase, heard: text, nearMiss: true, ...rest });
+        return;
+      }
+    }
     const sent = !!said && (matchHow === 'any' || known);
     report({ text, verb: null, woke: false, answer: true, sent });
     // Not one of the game's words, with exact matching: room talk, not an answer. Nothing is sent
@@ -786,6 +1059,11 @@ export function attachSpeech(input, {
 
   // ---- how the recogniser should listen -------------------------------------------------
   function recognitionMode() {
+    if (pendingLive()) {
+      return how === 'grammar'
+        ? { mode: 'grammar', grammar: confirmGrammar(wakes, spoken), why: 'confirm' }
+        : { mode: 'open', grammar: null, why: 'confirm' };
+    }
     const armed = armedUntil !== null && now() <= armedUntil;
     if (armed) {
       return armedHow === 'grammar'
@@ -798,7 +1076,9 @@ export function attachSpeech(input, {
         ? { mode: 'grammar', grammar: answerGrammar(g.words, wakes, spoken), why: 'answer' }
         : { mode: 'open', grammar: null, why: 'answer' };
     }
-    return { mode: 'grammar', grammar: commandGrammar(wakes, spoken), why: 'command' };
+    return how === 'grammar'
+      ? { mode: 'grammar', grammar: commandGrammar(wakes, spoken), why: 'command' }
+      : { mode: 'open', grammar: null, why: 'command' };
   }
   function pushMode() {
     if (!canPush()) return;
@@ -830,10 +1110,25 @@ export function attachSpeech(input, {
     try { onHeard?.(h); } catch (err) { console.error('speech: onHeard', err); }
   }
 
+  // A spoken phrase as a momentary press, and its confirmation.
+  function fire(id) {
+    const control = phraseControl(id);
+    // Down then straight up: a spoken phrase has no duration anybody is measuring, and holding
+    // it open would arm the max-hold watchdog for something that is already over.
+    input.down(device, control);
+    input.up(device, control);
+    confirmed(id);
+  }
+
   function heard(text, rawDetail) {
     const detail = cleanDetail(rawDetail);
     const w = splitWake(text, wakes);
     const rest = w.rest;
+    // A QUESTION IS UP: this may be its answer, and the answer comes before anything else.
+    if (pending) {
+      if (!pendingLive()) endPending('timeout');
+      else if (heardWhileAsking(text, w)) return;
+    }
     const inWindow = armedUntil !== null && now() <= armedUntil;
     // A window whose time is up is closed now, whether or not its timer has fired yet.
     if (armedUntil !== null && !inWindow) closeWindow('timeout');
@@ -852,24 +1147,28 @@ export function attachSpeech(input, {
     }
     const verb = verbFor(rest, table);
     const route = verb ? null : routeFor(rest, routes);
-    report(route ? { text, verb: null, route, woke: w.woke } : { text, verb, woke: w.woke });
     // An unrecognised phrase does nothing - and does not close an open window, so somebody who
     // is mis-heard once can simply say it again. It is logged ONLY when it followed a wake
     // phrase (in the same breath, or inside the window): with the gate turned off, a bare
     // sentence still is not a thing anybody said to the screen, and it is not written down.
-    if (!verb && !route) { if (w.woke || inWindow) logMiss(rest); return; }
+    // *** A NEAR MISS ASKS, and only when it was said to the screen, for the same reason. ***
+    if (!verb && !route) {
+      const toScreen = w.woke || inWindow;
+      if (toScreen) logMiss(rest);
+      const nm = toScreen && asking ? nearMiss(rest, spoken) : null;
+      report(nm ? { text, verb: null, woke: w.woke, nearMiss: nm.phrase } : { text, verb: null, woke: w.woke });
+      if (nm) ask(nm);
+      return;
+    }
+    report(route ? { text, verb: null, route, woke: w.woke } : { text, verb, woke: w.woke });
     closeWindow('command');    // one wake, one command
-    const control = phraseControl(verb || route);
-    // Down then straight up: a spoken phrase has no duration anybody is measuring, and holding
-    // it open would arm the max-hold watchdog for something that is already over.
-    input.down(device, control);
-    input.up(device, control);
-    confirmed(verb || route);
+    fire(verb || route);
   }
 
   function halt() {
     rec?.stop();
     running = false;
+    endPending('stopped');
     closeWindow('stopped');
     syncAnswering();
   }
@@ -884,6 +1183,11 @@ export function attachSpeech(input, {
     currentGrammar: () => recognitionMode().grammar,
     // The game an answer would go to right now, or null.
     answerTarget: () => { const x = currentGame(); return x ? { source: x.source, instanceId: x.instanceId, phase: x.phase } : null; },
+    // The "did you mean" question up right now ({ id, phrase, question }), or null.
+    nearMissPending: () => (pendingLive() ? { id: pending.id, phrase: pending.phrase, question: pending.question } : null),
+    // Answer it from a host's own control (an on-screen Yes, a switch the host wired itself):
+    // true = yes, fire it; false = no, drop it. Returns false when there was nothing to answer.
+    answerNearMiss: (yes) => answerNearMiss(!!yes),
     start() {
       if (!rec) return false;
       running = true;
@@ -894,6 +1198,10 @@ export function attachSpeech(input, {
       return true;
     },
     stop() { halt(); },
-    destroy() { halt(); try { offGrammar(); } catch { /* gone */ } games.clear(); },
+    destroy() {
+      halt();
+      for (const off of [offGrammar, offYes, offNo]) { try { off(); } catch { /* gone */ } }
+      games.clear();
+    },
   };
 }

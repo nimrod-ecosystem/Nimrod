@@ -24,6 +24,9 @@
 // The game publishes the words it can accept right now on
 // `speech/grammar`, and *** THAT LIST ALWAYS CARRIES WRONG ANSWERS AND "[unk]" *** — row 2.28's
 // bench measurement: a grammar made only of right answers ALWAYS hears a right answer.
+// (Note AO made OPEN recognition the default: the list is then what an utterance is matched
+// against, exactly, and a word one sound off exactly one of them arrives here as an UNSURE hearing
+// (`nearMiss`). The wrong answers and "[unk]" still matter for somebody on grammar mode.)
 //
 // ---------------------------------------------------------------------------------------
 // MIKE'S MISS FLOW, EXACTLY (row 2.31, 2026-09-30)
@@ -531,10 +534,12 @@ export function createEngine({
   }
 
   /**
-   * THE RECOGNISER SEAM. `{ text, confidence, alternatives, reason }`.
+   * THE RECOGNISER SEAM. `{ text, confidence, alternatives, reason, nearMiss, heard }`.
    *   confidence  0..1; MISSING COUNTS AS UNSURE — a recogniser that cannot say how sure it is
    *               gets asked to confirm, never a verdict.
    *   reason      'quiet' | 'noise' | 'cutoff' | 'alternative', only when the recogniser knows.
+   *   nearMiss    true when `text` is the game word that what was heard (`heard`) was one sound
+   *               off (input_speech.js, note AO). Always unsure: asked about, never judged.
    */
   function hear(result = {}) {
     if (dead || !game || !result || typeof result !== 'object') return;
@@ -545,7 +550,10 @@ export function createEngine({
     const text = normalize(raw);
     if (!text || raw.toLowerCase() === UNKNOWN || text === 'unk') return notCaught();
     const conf = Number(result.confidence);
-    const confident = result.confidence != null && Number.isFinite(conf) && conf >= Number(c().unsureBelow);
+    // A NEAR MISS (note AO: what was heard was one sound off one of this game's words, and
+    // input_speech.js sent the word it was near) is never sure, whatever the engine said.
+    const confident = !result.nearMiss && result.confidence != null && Number.isFinite(conf)
+      && conf >= Number(c().unsureBelow);
     switch (phase) {
       case 'asking': return answerFrom(text, result, confident);
       case 'unsure':
