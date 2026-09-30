@@ -78,6 +78,8 @@ export function createArrangement({
   // runtime, the health watch, the screen id a swap changes -- so a value captured here would be null
   // (or the boot screen's) forever. The same reason kiosk.js's `childCtx` hands modules getters.
   runtime = () => null, health = () => null, profileId = () => null,
+  // The screen's flash limit (flash_limit.js), a getter, for the dashboard's room. Absent: the room uses 3.
+  flashLimit = undefined,
 } = {}) {
   // THE ARRANGEMENT'S OWN STATE (see the header). Set by `setProfile` and `resolve`, read by every
   // caller through `arr.profile()` / `arr.layout()`.
@@ -588,7 +590,7 @@ export function createArrangement({
       layerFor('scene').append(host);
       // Row 2.37: the same objects (library shelf, weather window, close-ups) as the room module turns on.
       roomScene = mountRoomScene(host, scene.recipe || presetRecipe(scene.preset),
-        { bus, ...rs.OBJECT_DEFAULTS, ...(scene.options || {}) });
+        { bus, ...rs.OBJECT_DEFAULTS, ...(scene.options || {}), ...(flashLimit !== undefined ? { flashLimit } : {}) });
     } catch (err) {
       // A room that will not draw leaves the screen's own backdrop; the modules still mount (flat).
       console.error('arrangement: the room could not be drawn', err);

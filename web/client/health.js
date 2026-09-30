@@ -154,6 +154,8 @@ export const HEALTH_EXPECT = {
   music:       { idle: true },
   // The avatar maker (row 2.37 item 5): a face nobody is editing is a face, not a stalled panel.
   avatar:      { idle: true },
+  // The voice recordings (row 2.44): a list nobody is reviewing is a list, not a stalled panel.
+  voice_review: { idle: true },
 };
 
 export function expectFor(type, table = HEALTH_EXPECT) {

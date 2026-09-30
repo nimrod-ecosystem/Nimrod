@@ -200,6 +200,7 @@ try {
     check('*** ...and it does NOT answer on its own ***',
       t.__probe().hasPc === false && link.sent.length === 0, JSON.stringify(link.sent));
     check('the offer is held, waiting', t.__probe().pendingOffer === true);
+    check('*** isLive(): a call only RINGING is not live (what the room’s intercom asks before it opens) ***', t.isLive() === false);
 
     const track = { kind: 'video' };
     const video = {};
@@ -209,6 +210,7 @@ try {
       link.sent.length === 1 && link.sent[0].kind === 'answer' && link.sent[0].sdp === 'ANSWER-SDP',
       JSON.stringify(link.sent));
     check('the call is live', t.__probe().live === true);
+    check('*** isLive(): an ANSWERED call is live (the intercom says busy) ***', t.isLive() === true);
     check('the STUN servers were actually handed to the connection',
       last().cfg.iceServers.length >= 2, JSON.stringify(last().cfg));
 
@@ -224,6 +226,7 @@ try {
     check('answering with no offer waiting does nothing',
       (await t.answer({ outgoing: track })) === false);
     t.destroy();
+    check('isLive(): not after the screen lets go', t.isLive() === false);
   }
 
   // =====================================================================================

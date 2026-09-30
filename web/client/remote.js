@@ -43,6 +43,19 @@
 
 import { connectDrive, DRIVE_VERBS } from './drive.js';
 import { VERBS, FOCUS_VERBS, verbTopic } from './actions.js';
+import { mountIntercomApprovals } from './intercom_approvals.js';
+import { INPUTS_KEY } from './input_runtime.js';
+import { authHeaders } from './auth.js';
+
+// Who is signed in, as the SERVER names them (`/api/me`'s `user`): the same name it stamps on every
+// relayed signal (`by`, drive.py), which is what the intercom's approved list is checked against.
+async function whoamiFromServer(user) {
+  try {
+    const r = await fetch('/api/me', { headers: authHeaders(user), credentials: 'same-origin' });
+    if (!r.ok) return null;
+    return (await r.json())?.user || null;
+  } catch { return null; }
+}
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -81,6 +94,11 @@ export function mountRemote(root, {
   bus = null,                 // this machine's verb bus, for the forwarding half
   profiles = null,            // for the grant halves; absent -> driving only
   connect = connectDrive,
+  // THE INTERCOM'S APPROVED LIST (row 2.44), for a person this account owns: the person's own row
+  // (`makePersonState(personId, key)`, the one their bindings and voice settings live in), and who is
+  // signed in. Absent `makePersonState` -> no approvals block (a local backend has nowhere to keep it).
+  makePersonState = null,
+  whoami = () => whoamiFromServer(user),
 } = {}) {
   let link = null;
   let grants = [];
@@ -110,6 +128,7 @@ export function mountRemote(root, {
       </label>
       <p class="h-hint" data-fwd-note></p>
       <div class="r-grants" data-grants></div>
+      <div class="r-grants" data-intercom-approvals></div>
     </div>`;
 
   const el = (sel) => root.querySelector(sel);
@@ -153,6 +172,40 @@ export function mountRemote(root, {
           <button class="h-btn h-danger p-small" data-revoke="${esc(g.id)}">Revoke</button>
         </li>`).join('')}</ul>`
         : '<p class="h-hint">Nobody yet. Only you can drive these screens.</p>'}`;
+  }
+
+  // WHO MAY OPEN THE INTERCOM (row 2.44). Owner-only, for the owner's own person, exactly like the
+  // grants above - the list lives on the PERSON's row, which only their owner can write. Its candidates
+  // are the owner and the grants just listed, so it is redrawn whenever they change. Nobody is on it
+  // until somebody is ticked here (intercom_approvals.js).
+  let approvals = null;
+  let approvalsState = null;
+  let approvalsSeq = 0;
+  let me = null;
+  let torn = false;
+  const whoamiOnce = async () => { if (me == null) { try { me = await whoami(); } catch { me = null; } } return me; };
+  function dropApprovals({ state: dropState = false } = {}) {
+    try { approvals?.destroy(); } catch { /* already gone */ }
+    approvals = null;
+    if (dropState && approvalsState) { try { approvalsState.destroy?.(); } catch { /* already gone */ } approvalsState = null; }
+  }
+  async function renderApprovals() {
+    const my = ++approvalsSeq;
+    const host = el('[data-intercom-approvals]');
+    const want = !!(profiles && personId && target.mine && typeof makePersonState === 'function');
+    if (!want) { dropApprovals({ state: true }); if (host) host.innerHTML = ''; return; }
+    if (!approvalsState) {
+      let st = null;
+      try { st = makePersonState(personId, INPUTS_KEY) || null; } catch (err) { console.error('remote: intercom approvals', err); st = null; }
+      if (!st) { dropApprovals(); if (host) host.innerHTML = ''; return; }
+      approvalsState = st;
+      try { await st.load?.(); } catch { /* offline: it shows the list as last known, empty by default */ }
+    }
+    if (torn || my !== approvalsSeq || !host) return;
+    dropApprovals();
+    approvals = mountIntercomApprovals(host, {
+      personName, state: approvalsState, loadGrants: async () => grants, whoami: whoamiOnce,
+    });
   }
 
   function renderStatus() {
@@ -234,6 +287,7 @@ export function mountRemote(root, {
     if (!profiles || !personId) return;
     try { grants = await profiles.driveGrants(personId); } catch { grants = []; }
     renderGrants();
+    await renderApprovals();
   }
 
   function openLink(id) {
@@ -261,6 +315,7 @@ export function mountRemote(root, {
     if (forwarding) { forwarding = false; stopForwarding(); renderForward(); }
     renderShared();
     renderGrants();
+    renderApprovals().catch((err) => console.error('remote: intercom approvals', err));
     openLink(target.id);
   }
 
@@ -298,7 +353,11 @@ export function mountRemote(root, {
     shared: () => shared.map((p) => ({ ...p })),
     target: () => ({ ...target }),
     retarget,
+    // The intercom approvals block (null unless shown), for a test.
+    approvals: () => approvals,
     destroy() {
+      torn = true;
+      dropApprovals({ state: true });
       stopForwarding();
       listeners.abort();
       try { link?.close(); } catch { /* already gone */ }

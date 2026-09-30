@@ -99,6 +99,7 @@ import { registerModule, mountModule, extendCtx, getManifest } from '../module.j
 import './transport_bar.js';
 import './settings_menu.js';
 import { createArrangement } from '../arrangement.js';
+import { flashLimit } from '../flash_limit.js';
 import { layoutChange, placedGeometry } from '../layout.js';
 // Stage R: the edit windows, bound to this dashboard's modules placed freely (`edit()` below).
 import { createEditModel } from '../edit_model.js';
@@ -523,6 +524,8 @@ registerModule(
           runtime: () => ({ router }),
           health: () => ctx.health || { forget() {} },
           profileId: () => viewId,
+          // The host screen's flash limit (flash_limit.js), for this dashboard's room, read live.
+          flashLimit: () => flashLimit(ctx),
         });
 
         arr.applyLayout(settings.get());

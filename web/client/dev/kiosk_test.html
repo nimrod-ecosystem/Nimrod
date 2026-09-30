@@ -343,8 +343,11 @@ const ds = () => root.querySelector('.kiosk').dataset;
       // 21 (2026-09-30, second wiring pass): the person's Voice section adds THREE stops at "The usual"
       // while everything in it is off -- Spoken commands, Subtitles, Amplify (kiosk.js voiceItems argues
       // the count); none at "Just the essentials". Their detail rows appear only when a mode is on.
+      // 24 (2026-09-30, row 2.44 wiring): "Record this person's voice for training" (the switch is always
+      // shown, off) in the Voice section, and "Movement and flashing" - zoom on focus and the flash limit -
+      // in the screen's rows (kiosk.js MOTION_FIELDS argues both).
       const stops = new Set();
-      for (let i = 0; i < 21; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
+      for (let i = 0; i < 24; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
       check('the cycleable field rows are stops on the one-button walk',
         stops.has('set:intervalMs') && stops.has('set:fit'), [...stops].join(','));
       check('the disabled ones are NOT stops',
@@ -3099,6 +3102,194 @@ const ds = () => root.querySelector('.kiosk').dataset;
     } finally {
       try { rk3?.destroy(); } catch { /* already gone */ }
       rbox.remove();
+    }
+  }
+
+  // *** 2026-09-30, THE ROW 2.44 / 2.37 / 2.43 WIRING PASS. *** Voice recording, the intercom, the flash
+  // limit, zoom on focus and avatars in the who page were committed as pieces with their own suites;
+  // these checks are about the KIOSK constructing and connecting them. The intercom is driven for real:
+  // a second socket joins as a driver and sends an intercom offer, and the SERVER stamps who sent it.
+  {
+    const { connectDrive } = await import('../drive.js');
+    const { DEFAULT_RECORD } = await import('../avatar.js');
+    const { AVATAR_CHANGED_EVENT } = await import('../avatar_display.js');
+    const { getManifest } = await import('../module.js');
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const wUser = USER + '-wire';
+    const wProfiles = createProfilesClient({ user: wUser });
+    const wbox = document.createElement('div');
+    wbox.style.cssText = 'position:relative;width:640px;height:420px;margin:8px 0';
+    document.body.append(wbox);
+    let wk = null;
+    let driver = null;
+    try {
+      const wp = await wProfiles.create('TEST-wiring-244');
+      // The call panel first (so it is on the stage and builds the screen's call transport), then photos,
+      // then the ctx probe (ambient), which shows what every module is handed.
+      await wProfiles.addModule(wp.id, 'call');
+      await wProfiles.addModule(wp.id, 'photos');
+      await wProfiles.addModule(wp.id, 'ctxprobetest');
+      const wFull = await wProfiles.get(wp.id);
+      const pid = wFull.person_id;
+      check('(setup) the wiring screen has a person behind it', !!pid);
+      const setP = async (key, patch) => {
+        const s = createState({ url: wProfiles.personStateURL(pid, key), user: wUser });
+        await s.load().catch(() => {}); s.set(patch); await s.flush(); s.destroy();
+      };
+      const setRow = (patch) => setP(INPUTS_KEY, patch);
+      await setRow({ speechOn: true, speechEngine: 'local', voiceRecording: true,
+        intercomAllowed: [{ account: wUser, name: 'Bea' }], intercomWarnMs: 10000, intercomChime: false, intercomAnnounce: false });
+      await setP('avatar', { use: 'drawn', drawn: { ...DEFAULT_RECORD } });
+      // A RANKED recogniser stand-in: it cuts utterances (onUtterance) as the real one does, which is
+      // what voice recording hears. It opens nothing.
+      const rk = { sfns: new Set(), cfns: new Set(), ufns: new Set(), running: false, cb: null,
+        st: { state: 'listening', engines: [{ slot: 'local', name: 'This screen', state: 'ready' }], skipped: [], ears: ['room'] },
+        start(cb) { this.cb = cb; this.running = true; }, stop() { this.running = false; this.cb = null; },
+        status() { return this.st; },
+        onStatus(fn) { this.sfns.add(fn); return () => this.sfns.delete(fn); },
+        onCaption(fn) { this.cfns.add(fn); return () => this.cfns.delete(fn); },
+        onUtterance(fn) { this.ufns.add(fn); return () => this.ufns.delete(fn); },
+        sourcesChanged() {} };
+      let uttN = 0;
+      const utter = (text) => {
+        uttN += 1; const uid = `wu${uttN}`, gid = `wg${uttN}`, t = Date.now();
+        rk.ufns.forEach((f) => f({ type: 'begin', uid, group: gid, ear: 'room', t }));
+        rk.ufns.forEach((f) => f({ type: 'audio', uid, pcm: new Int16Array(1600).fill(1200) }));
+        rk.ufns.forEach((f) => f({ type: 'end', uid, t: t + 100 }));
+        rk.cfns.forEach((f) => f({ id: gid, ear: 'room', text, final: true, confidence: 0.9, engine: 'fake' }));
+      };
+      wk = await mountKiosk(wbox, { user: wUser, profileId: wp.id, profiles: wProfiles, bus: createBus(),
+        storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {}, makeRecognizer: () => rk });
+      const item = (id) => wk.menu.items().find((r) => r.id === id);
+      const walkTo = (id) => { for (let i = 0; i < 160 && wk.menu.focusId() !== id; i += 1) wk.menu.next(); return wk.menu.focusId() === id; };
+      check('(setup) the person’s row has arrived and the recogniser is running',
+        await settled(() => rk.running && wk.voiceRecording()?.state().attached === true, 9000),
+        JSON.stringify(wk.voiceRecording()?.state()));
+
+      // ---- 1. VOICE RECORDING ----
+      check('voice_review is registered on the kiosk (on the new core)', getManifest('voice_review')?.core === 'new');
+      const vr = wk.voiceRecording();
+      const pill = () => wbox.querySelector('.kiosk .rec-live');
+      check('*** recording: the person’s row turned it on, a ranked recogniser is listening -> "Recording voice for training" shows ***',
+        await settled(() => vr.state().recording === true && !!pill() && !pill().hidden && /Recording voice for training/.test(pill().textContent), 4000),
+        JSON.stringify(vr.state()));
+      const pairs = async () => (await wk.voiceStore().list({ personId: pid })).length;
+      for (const p of await wk.voiceStore().list({ personId: pid })) await wk.voiceStore().remove(p.id);
+      utter('computer please louder');
+      await vr.settle();
+      let kept = 0;
+      for (let i = 0; i < 40 && kept !== 1; i += 1) { kept = await pairs(); if (kept !== 1) await sleep(50); }
+      check('*** an utterance the recogniser cut is kept as a pair, for THIS person (setPersonId), on this device ***',
+        kept === 1, String(kept));
+      check('the review module is handed the recorder’s own store, and the person’s row', await settled(() => probeCtx?.voiceStore === wk.voiceStore()
+        && probeCtx?.personRow?.()?.voiceRecording === true, 4000));
+      check('the recording rows are in the Voice section (and its retention row, since it is on)',
+        !!item('set:voiceRecording') && !!item('set:voiceRecordingKeepDays'));
+
+      // ---- 2. THE INTERCOM, THROUGH THE REAL SERVER ----
+      check('*** intercom: the room’s half is built once the drive socket exists, with its notice ***',
+        await settled(() => !!wk.intercom() && !!wk.intercomNotice(), 9000));
+      check('intercom: "Intercom: end it" is a registered action (a switch or phrase can end it)', wk.runtime.actions.has('intercom/end'));
+      check('intercom: its rows are in the Voice section once somebody is on the approved list (the time limit is an "Everything" row)',
+        !!item('set:intercomWarnMs') && !!item('set:intercomChime') && !item('set:intercomMaxMs'));
+      driver = connectDrive({ personId: pid, role: 'driver', user: wUser });
+      const back = [];
+      driver.onSignal((s) => back.push(s));
+      check('(setup) a driver socket joins the room', await settled(() => driver.state() === 'connected' && driver.presence().screens >= 1, 9000),
+        `${driver.state()} ${JSON.stringify(driver.presence())}`);
+      const SDP = 'v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n';
+      const note = () => wbox.querySelector('.kiosk .ic-live');
+      driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-1', sdp: SDP, from: { name: 'typed by the phone' } });
+      check('*** intercom: an offer from somebody ON the approved list (the server’s stamp) -> "Intercom opening: Bea" ***',
+        await settled(() => !!note() && !note().hidden && /Intercom opening: Bea/.test(note().textContent), 6000), note()?.textContent);
+      check('...and the call panel did NOT ring (an intercom is not a call)', wbox.querySelector('.m-call')?.dataset.phase === 'idle',
+        wbox.querySelector('.m-call')?.dataset.phase);
+      check('*** while it is opening, VOICE RECORDING IS HELD: not recording, and its notice goes ***',
+        vr.state().held?.includes('intercom') && vr.state().recording === false && pill().hidden, JSON.stringify(vr.state()));
+      utter('this is the caller through the speaker');
+      await vr.settle();
+      await sleep(150);
+      check('*** ...an utterance while it is open is NOT kept (the caller through the speaker) ***', (await pairs()) === 1, String(await pairs()));
+      driver.sendSignal({ kind: 'bye', purpose: 'intercom', session: 'ic-wire-1' });
+      check('intercom: the phone hangs up -> the notice goes', await settled(() => note().hidden, 6000), note()?.textContent);
+      check('*** ...and recording resumes by itself, its notice back ***',
+        vr.state().held === null && vr.state().recording === true && !pill().hidden, JSON.stringify(vr.state()));
+      // A LIVE CALL blocks the intercom. The screen's transport says whether a call is live (call_transport.js
+      // isLive); it is stood in for here - answering a real call needs a real peer.
+      const ct = await settled(() => !!wk.callTransport(), 6000) ? wk.callTransport() : null;
+      check('(setup) the call panel asked for the screen’s call transport', !!ct);
+      if (ct) {
+        const origLive = ct.isLive;
+        ct.isLive = () => true;
+        driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-2', sdp: SDP });
+        check('*** intercom: a LIVE CALL -> the phone is told "busy", and nothing opens in the room ***',
+          await settled(() => back.some((s) => s.purpose === 'intercom' && s.session === 'ic-wire-2' && s.kind === 'bye' && s.reason === 'busy'), 6000)
+          && note().hidden && vr.state().held === null, JSON.stringify(back));
+        ct.isLive = origLive;
+      }
+      // Taken off the list: an offer is refused (the list is read at every offer).
+      await setRow({ intercomAllowed: [] });
+      await settled(() => !item('set:intercomWarnMs'), 9000);
+      driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-3', sdp: SDP });
+      check('intercom: with nobody on the list, the same sender is refused ("not-approved") and its rows leave the menu',
+        await settled(() => back.some((s) => s.session === 'ic-wire-3' && s.reason === 'not-approved'), 6000) && note().hidden && !item('set:intercomWarnMs'),
+        JSON.stringify(back.slice(-2)));
+
+      // ---- 3. THE FLASH LIMIT ----
+      check('flash limit: 3 when nobody chose (the ceiling)', wk.flashLimit() === 3 && probeCtx?.flashLimitPerSecond === 3
+        && wk.automation().flashLimit() === 3, `${wk.flashLimit()} ${probeCtx?.flashLimitPerSecond}`);
+      wk.menu.open();
+      check('*** flash limit and zoom on focus: in the menu under "Movement and flashing" ***',
+        !!item('motion-head') && !!item('set:flashLimitPerSecond') && !!item('set:zoomFocus')
+        && wk.menu.items().findIndex((r) => r.id === 'motion-head') < wk.menu.items().findIndex((r) => r.id === 'set:zoomFocus'));
+      check('(setup) the flash row is on the walk', walkTo('set:flashLimitPerSecond'));
+      wk.menu.select();
+      check('*** flash limit: set to 2 from the menu -> every reader follows (kiosk, a module’s ctx, automation) ***',
+        await settled(() => wk.flashLimit() === 2 && probeCtx?.flashLimitPerSecond === 2 && wk.automation().flashLimit() === 2, 4000),
+        `${wk.flashLimit()} ${probeCtx?.flashLimitPerSecond} ${wk.automation().flashLimit()}`);
+      wk.menu.close();
+      await setRow({ flashLimitPerSecond: 1 });
+      check('*** flash limit: the PERSON chose 1 -> the stricter of the two wins ***', await settled(() => wk.flashLimit() === 1, 9000), String(wk.flashLimit()));
+      await setRow({ flashLimitPerSecond: null });
+      await settled(() => wk.flashLimit() === 2, 9000);
+
+      // ---- 4. ZOOM ON FOCUS ----
+      const kEl = wbox.querySelector('.kiosk');
+      check('zoom on focus: off by default', !('zoomFocus' in kEl.dataset));
+      wk.menu.open();
+      walkTo('set:zoomFocus');
+      wk.menu.select();
+      check('*** zoom on focus: stepped from the menu -> the screen grows its focused panel (1.05) ***',
+        await settled(() => kEl.dataset.zoomFocus === '1.05', 4000), String(kEl.dataset.zoomFocus));
+      for (let i = 0; i < 3; i += 1) wk.menu.select();
+      check('...and back to off leaves nothing behind', await settled(() => !('zoomFocus' in kEl.dataset), 4000));
+      walkTo('set:flashLimitPerSecond');
+      wk.menu.select(); wk.menu.select();
+      await settled(() => wk.flashLimit() === 3, 4000);
+      wk.menu.close();
+
+      // ---- 5. AVATARS IN "WHO THIS SCREEN IS FOR" ----
+      check('avatars: nothing is read until the who page is drawn', wk.avatars() === null);
+      wk.menu.open();
+      wk.menu.openPage('who');
+      const btnFor = () => [...wbox.querySelectorAll('[data-page-body] [data-person]')].find((b) => b.dataset.person === pid);
+      check('*** avatars: the person’s drawn avatar is beside their name, before it ***',
+        await settled(() => !!btnFor()?.querySelector('.st-label > [data-avatar-slot]:first-child .nav-av[data-avatar-shown="drawn"]'), 6000),
+        btnFor()?.innerHTML.slice(0, 200));
+      check('avatars: one cache, made on first draw', !!wk.avatars() && wk.avatars().size() >= 1);
+      window.dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: pid, row: { use: 'none' } } }));
+      check('*** avatars: a change rewrites that person’s slot (no avatar = the name exactly as before) ***',
+        await settled(() => btnFor() && btnFor().querySelector('[data-avatar-slot]').innerHTML === '', 3000), btnFor()?.innerHTML.slice(0, 200));
+      wk.menu.close();
+      wk.destroy(); wk = null;
+      check('*** teardown: the recording and intercom notices are gone ***', !wbox.querySelector('.rec-live') && !wbox.querySelector('.ic-live'));
+      await setRow({ speechOn: false, voiceRecording: false, intercomAllowed: [] });
+    } catch (e) {
+      check('the row 2.44 wiring section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { wk?.destroy(); } catch { /* already gone */ }
+      try { driver?.close(); } catch { /* already gone */ }
+      wbox.remove();
     }
   }
 

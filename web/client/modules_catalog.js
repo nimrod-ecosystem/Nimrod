@@ -632,6 +632,20 @@ export const CATALOG = [
       + 'so nothing turns red for being under it. It can also show a single count, large, on its '
       + 'own.',
   },
+  // Row 2.44: the recordings voice_recording.js kept on this device, reviewed a pair at a time. `touch`: it
+  // plays nothing until somebody presses Play, and left alone it is a list.
+  {
+    type: 'voice_review',
+    title: 'Voice recordings',
+    group: 'record',
+    use: 'touch',
+    lead: 'The voice recordings this screen kept, to say what was meant.',
+    needs: 'Voice recording turned on for a person, and speech listening.',
+    why: 'Each recording is a pair: what was said, and what the recogniser wrote. Playing one and '
+      + 'typing what was meant is how a recogniser can learn a voice it keeps getting wrong. The '
+      + 'recordings stay on this screen, and leave it only when somebody exports them to a folder.',
+    note: 'Recording is off unless it is turned on for one person, and the screen shows whenever it records.',
+  },
 ];
 
 // Modules that exist in the registry but are deliberately not offered on THIS page: dev

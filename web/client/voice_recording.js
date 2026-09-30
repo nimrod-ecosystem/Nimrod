@@ -385,13 +385,20 @@ export function createVoiceRecorder({
   let paused = null;
   let sweepTimer = null;
   let destroyed = false;
+  // *** HELD: SOMETHING ELSE IS TALKING THROUGH THIS ROOM'S SPEAKER. *** (Kiosk wiring, 2026-09-30.)
+  // While an intercom is open the recogniser hears the CALLER through the speaker, and a training
+  // pair of somebody who is not the person - somebody who never agreed to be recorded - is exactly the
+  // pair this file must not keep. `hold(reason, on)`: while any reason holds, nothing new is begun and
+  // anything half-heard is DROPPED (not saved - it may already have the caller in it). Reasons, so two
+  // holders (an intercom, later a call) cannot release each other's hold.
+  const holds = new Set();
   const clips = new Map();          // uid -> { ear, group, frames: [], samples, t0, done, endT }
   const groups = new Map();         // gid -> { caption, final, firstT, uids: Set }
   const writes = new Set();
 
   const state = () => ({
-    on: opts.on, attached: !!rec, listening, recording: opts.on && !!rec && listening && !paused,
-    saved, paused, pending: groups.size, count,
+    on: opts.on, attached: !!rec, listening, recording: opts.on && !!rec && listening && !paused && !holds.size,
+    saved, paused, pending: groups.size, count, held: holds.size ? [...holds] : null,
   });
   let lastSig = '';
   function changed() {
@@ -413,6 +420,8 @@ export function createVoiceRecorder({
 
   function onUtterance(u) {
     if (destroyed || !opts.on || !u || !u.uid) return;
+    // Held: nothing begun now is kept, and an utterance that began before the hold was dropped by it.
+    if (holds.size) return;
     if (u.type === 'begin') {
       const gid = u.group || `solo:${u.uid}`;
       clips.set(u.uid, { ear: u.ear || 'room', group: gid, frames: [], samples: 0, t0: Number(u.t) || now(), done: false, endT: null });
@@ -443,7 +452,7 @@ export function createVoiceRecorder({
   }
 
   function onCaption(c) {
-    if (destroyed || !opts.on || !c || !c.id) return;
+    if (destroyed || !opts.on || !c || !c.id || holds.size) return;
     const g = groups.get(c.id);
     if (!g) return;                     // a group begun before recording came on, or already saved
     g.caption = c;
@@ -585,6 +594,19 @@ export function createVoiceRecorder({
       listening = false;
       changed();
     },
+    /**
+     * Stop keeping anything while `reason` holds (an open intercom: the recogniser would hear the
+     * caller). Taking a hold DROPS whatever is half-heard; releasing the last one resumes. The notice
+     * goes while held - it is not recording - and comes back by itself.
+     */
+    hold(reason = 'hold', on = true) {
+      const r = String(reason || 'hold');
+      const had = holds.size;
+      if (on) holds.add(r); else holds.delete(r);
+      if (!had && holds.size) dropAll();
+      changed();
+      return holds.size > 0;
+    },
     /** Whose recordings these are (the screen learns its person after it starts). */
     setPersonId(id) {
       if ((id || null) === personId) return;
@@ -610,6 +632,8 @@ export function recordingText(s = {}) {
   if (!s.on || !s.attached) return '';
   if (s.paused === 'full') return 'Voice recording paused: this screen has kept as many as it may';
   if (s.paused === 'failed') return 'Voice recording could not save';
+  // Held (an intercom is open): not recording, so nothing to say - the intercom's own notice is up.
+  if (s.held && s.held.length) return '';
   if (!s.listening) return '';
   return 'Recording voice for training';
 }

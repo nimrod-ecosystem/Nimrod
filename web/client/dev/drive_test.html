@@ -486,7 +486,66 @@ section('grants — who may drive, and whose screens I may drive');
     !/Driving for/.test(el.textContent), el.textContent.slice(0, 200));
   check('but the owner still sees the empty who-may-drive list',
     /Nobody yet/.test(el.textContent));
+  check('no person-state seam: no intercom approvals block (nowhere to keep the list)',
+    !el.querySelector('[data-intercom-approvals] .ia') && panel.approvals() === null);
   panel.destroy();
+}
+
+// =====================================================================
+section('*** who may open the intercom (row 2.44): the approved list, on the person’s own row ***');
+
+{
+  sockets.length = 0;
+  const el = document.createElement('div'); host.append(el);
+  // The person's row, as a state handle (the one their bindings and voice settings live in).
+  const made = [];
+  const makePersonState = (pid, key) => {
+    let row = { speechOn: false };
+    const subs = new Set();
+    const h = { pid, key, destroyed: false, sets: [],
+      load: async () => {}, get: () => row,
+      set(p) { this.sets.push(p); row = { ...row, ...p }; subs.forEach((f) => f(row)); return Promise.resolve(); },
+      subscribe(f) { subs.add(f); return () => subs.delete(f); },
+      destroy() { this.destroyed = true; subs.clear(); } };
+    made.push(h);
+    return h;
+  };
+  const panel = mountRemote(el, { personId: 'p1', personName: 'Robin',
+    profiles: { driveGrants: async () => [{ id: 'g1', subject_id: 'bea@x.com', subject_kind: 'account', label: 'Bea (daughter)', expires_at: null }],
+                grantDrive: async () => ({}), revokeDrive: async () => ({}),
+                sharedWithMe: async () => [{ person_id: 'p9', name: 'Someone Else', owner_id: 'other', grant_id: 'g9', expires_at: null }] },
+    makePersonState, whoami: async () => 'owner@x.com',
+    connect: (o) => connectDrive({ ...o, fetchImpl: fakeFetch(), SocketImpl: FakeSocket }) });
+  await panel.refresh();
+  await panel.approvals()?.ready;
+  await sleep(0);
+  const block = el.querySelector('[data-intercom-approvals]');
+  check('*** the owner sees who may open the intercom into their person, after the grants ***',
+    !!block && /Who may open the intercom into Robin/.test(block.textContent)
+    && block.previousElementSibling === el.querySelector('[data-grants]'), block?.textContent.slice(0, 120));
+  check('it reads and writes the PERSON’s row (their bindings key), not the screen’s',
+    made.length === 1 && made[0].pid === 'p1' && made[0].key === 'input-bindings', JSON.stringify(made.map((h) => [h.pid, h.key])));
+  check('*** nobody is on it until somebody ticks them ***', ![...block.querySelectorAll('[data-allow]')].some((c) => c.checked));
+  check('the candidates are the owner and the people with a grant', !!block.querySelector('[data-account="owner@x.com"]')
+    && !!block.querySelector('[data-account="bea@x.com"]'));
+  const bea = block.querySelector('[data-account="bea@x.com"] [data-allow]');
+  bea.checked = true;
+  bea.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(0);
+  check('*** ticking writes the approved list to the person’s row, named from the grant’s note ***',
+    JSON.stringify(made[0].get().intercomAllowed) === JSON.stringify([{ account: 'bea@x.com', name: 'Bea (daughter)' }])
+    && made[0].get().speechOn === false, JSON.stringify(made[0].get()));
+  await panel.retarget('p9');
+  await sleep(0);
+  check('*** a person I do not own: no approvals block (only their owner can write their row) ***',
+    !el.querySelector('[data-intercom-approvals] .ia') && made[0].destroyed === true);
+  await panel.retarget('p1');
+  await sleep(0);
+  await panel.approvals()?.ready;
+  check('back to mine: the block returns, on a fresh read of the row',
+    !!el.querySelector('[data-intercom-approvals] [data-account="bea@x.com"] [data-allow]') && made.length === 2);
+  panel.destroy();
+  check('teardown: the block and its state handle go', made[1].destroyed === true && el.innerHTML === '');
 }
 
 // =====================================================================

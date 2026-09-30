@@ -443,7 +443,10 @@ try {
   section('*** notifications through objects ***');
   {
     const host = makeHost();
-    const scene = mountRoomScene(host, presetRecipe('theRoom'), { notifyMs: 200, now: () => at(12) });
+    // Noon, a second later at every read: each notify is past one flash period after the last (a
+    // reaction is re-lit no faster than the screen's flash limit - room_objects_test).
+    let tick = 0;
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { notifyMs: 200, now: () => new Date(+at(12) + (tick += 1000)) });
     await sleep(30);
     const cat = scene.root.querySelector('.rs-cat');
     check('the cat starts asleep', cat.dataset.pose === 'sleeping');
