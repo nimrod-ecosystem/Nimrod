@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>word games — Opposites, Rhyming, Yes/No — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>word games (row 2.31)</h1>
+<p>Switch and screen first, voice-ready. Mike's miss flow step by step; the unsure line only below
+the threshold; the reason Y only when the recogniser gave one; a whole round by switch alone;
+points once per right answer and never for a miss; the celebration never flashes.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import '../modules/word_games.js';
+import { LINES, DEFAULTS, GAMES, ANSWER_TOPIC, GRAMMAR_TOPIC, PLAY_TOPIC, UNKNOWN,
+         reasonFor, fill, normalize, createEngine } from '../modules/word_games.js';
+import { OPPOSITES, RHYMING, YES_NO, PRONUNCIATIONS, RHYME_OFFER_POOL, rhymes, rhymesFor,
+         rhymePart, hasPicture } from '../word_games_words.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function rig({ saved = {}, reducedMotion = false, rand = () => 0, store = {}, bus = null, output } = {}) {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  bus = bus || createBus();
+  const said = [];
+  const cancelled = [];
+  const out = output === null ? null : {
+    say: (t) => { said.push(t); return `u${said.length}`; },
+    cancel: (id) => { cancelled.push(id); },
+  };
+  let tid = 0;
+  const pending = new Map();
+  const timers = {
+    set: (fn, ms) => { tid += 1; pending.set(tid, { fn, ms }); return tid; },
+    clear: (id) => { pending.delete(id); },
+    count: () => pending.size,
+    flush: () => { for (const [id, t] of [...pending]) { pending.delete(id); t.fn(); } },
+  };
+  const chimes = [];
+  let stored = { ...saved };
+  let sub = null;
+  let nextId = 0;
+  const inst = mountModule('word_games', {
+    mount: host, bus, rand, output: out, reducedMotion, instanceId: 'wg-1', personId: null,
+    chime: (lv) => chimes.push(lv), setTimer: timers.set, clearTimer: timers.clear,
+    state: { get: () => stored, set: (p) => { stored = { ...stored, ...p }; sub?.(stored); },
+             flush: () => {}, subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } },
+    makeEvents: (name) => ({ name,
+      append: async (k, d) => { (store[name] ||= []).push({ id: ++nextId, kind: k, data: d }); },
+      load: async () => {}, flush: async () => {}, get: () => ({ events: store[name] || [] }),
+      subscribe: () => () => {}, startPolling() {}, destroy() {} }),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  return {
+    inst, host, bus, said, cancelled, timers, chimes, store, probe,
+    eng: inst.impl.__engine, last: () => said[said.length - 1] || '',
+    points: () => (store.points || []),
+    setCfg: (p) => { stored = { ...stored, ...p }; sub?.(stored); },
+    phase: () => probe().phase,
+  };
+}
+const wrongFor = (it) => it.wrong[0];
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the words: rhymes() is decided from sound, and "unknown" is not "no"');
+  {
+    check('GO rhymes with NO', rhymes('go', 'no') === true);
+    check('GO rhymes with KNOW (a different spelling, the same ending)', rhymes('go', 'know') === true);
+    check('*** NO and KNOW sound the same, so they are NOT a rhyme ***', rhymes('no', 'know') === false);
+    check('HERE and HEAR are not a rhyme either', rhymes('here', 'hear') === false);
+    check('a word does not rhyme with itself', rhymes('go', 'go') === false);
+    check('HOT and WHAT do not rhyme (different vowels, as the CMU dictionary has them)', rhymes('hot', 'what') === false);
+    check('stress decides where the rhyme starts: OKAY rhymes with DAY', rhymes('okay', 'day') === true);
+    check('ABOUT rhymes with OUT', rhymes('about', 'out') === true);
+    check('*** a word not in the table is NULL — not judged — never false ***',
+      rhymes('go', 'zebra') === null && rhymes('zebra', 'go') === null);
+    check('rhymePart strips stress marks', rhymePart('little') === 'IH T AH L', rhymePart('little'));
+    check('the table has about two hundred words', Object.keys(PRONUNCIATIONS).length >= 150,
+      String(Object.keys(PRONUNCIATIONS).length));
+
+    const badPrompts = RHYMING.filter((r) => !PRONUNCIATIONS[r.word] || rhymes(r.word, r.example) !== true);
+    check('every rhyming prompt is in the table and its example really rhymes', badPrompts.length === 0,
+      badPrompts.map((r) => r.word).join(','));
+    const noOffers = RHYMING.filter((r) => RHYME_OFFER_POOL.filter((w) => rhymes(r.word, w) === false).length < 2);
+    check('every rhyming prompt has at least two non-rhymes the switch path can offer', noOffers.length === 0,
+      noOffers.map((r) => r.word).join(','));
+    check('...and at least one rhyme in the table', RHYMING.every((r) => rhymesFor(r.word).length >= 1));
+    // The ending sound on its own may happen to be a word (c-OLD, h-EAR); the hint must still
+    // never name the example that "hear the answer" gives.
+    const giveaway = RHYMING.filter((r) => new RegExp(`\\b${r.example}\\b`, 'i').test(r.sound));
+    check('a rhyme hint never names the example answer', giveaway.length === 0, giveaway.map((r) => r.word).join(','));
+
+    const oppBad = OPPOSITES.filter((o) => !o.accept.length || o.accept.includes(o.word)
+      || (o.wrong || []).some((w) => o.accept.includes(w)) || (o.wrong || []).length < 2);
+    check('every opposite has an answer, two wrong offers, and none overlaps the answer', oppBad.length === 0,
+      oppBad.map((o) => o.word).join(','));
+    const hintNames = OPPOSITES.filter((o) => o.accept.some((a) => new RegExp(`\\b${a}\\b`, 'i').test(o.hint)));
+    check('*** an opposites hint never says the answer ***', hintNames.length === 0,
+      hintNames.map((o) => o.word).join(','));
+    check('yes/no answers are only yes or no', YES_NO.every((q) => q.answer === 'yes' || q.answer === 'no'));
+    check('the yes/no quiz is not all one answer', YES_NO.some((q) => q.answer === 'yes') && YES_NO.some((q) => q.answer === 'no'));
+    check('pictures come from the AAC set where a word exists (hot) and not where it does not (lemon)',
+      hasPicture('hot') && !hasPicture('lemon'));
+    const pictured = OPPOSITES.filter((o) => hasPicture(o.word)).length;
+    check('most opposites prompts have a picture', pictured >= 12, String(pictured));
+    const pictureNamed = YES_NO.filter((q) => q.picture && !hasPicture(q.picture));
+    check('a yes/no picture is never named that the set does not draw', pictureNamed.length === 0,
+      pictureNamed.map((q) => q.picture).join(','));
+  }
+
+  // =====================================================================================
+  section('Mike’s wording is the default, and every spoken line is a setting');
+  {
+    check('wrong: Mike’s words', LINES.wrongLine === 'It sounded like you said {heard}. That is incorrect.');
+    check('unsure: Mike’s words', LINES.unsureLine === "It sounds like you might be saying {heard}, but I'm not sure because {reason}.");
+    check('after two misses: Mike’s words', LINES.twoMissLine === 'Would you like to try again, or hear the answer?');
+    check('another: Mike’s words', LINES.anotherLine === 'Would you like to do another one?');
+    const m = getManifest('word_games');
+    const keys = (m.settings || []).map((s) => s.key);
+    const missing = Object.keys(LINES).filter((k) => {
+      const f = m.settings.find((s) => s.key === k);
+      return !f || f.kind !== 'text' || f.default !== LINES[k];
+    });
+    check('*** every spoken line is an editable text setting defaulting to its wording ***', missing.length === 0, missing.join(','));
+    check('which game is a setting with all three', (m.settings.find((s) => s.key === 'game')?.options || [])
+      .map((o) => o.value).join(',') === GAMES.join(','));
+    for (const k of ['unsureBelow', 'missesBeforeOffer', 'correctPoints', 'celebrateMs', 'sound', 'twoSwitch'])
+      check(`${k} is a setting, not a constant`, keys.includes(k));
+    check('built on the new core', m.core === 'new');
+    const copy = Object.values(LINES).join(' ') + JSON.stringify([OPPOSITES, RHYMING, YES_NO]);
+    check('no line says she / her (site copy rule)', !/\b(she|her|hers|herself)\b/i.test(copy));
+  }
+
+  // =====================================================================================
+  section('every state is drawn');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    const it = r.probe().item;
+    check('asking: the question, the word and its picture', r.phase() === 'asking'
+      && r.host.querySelector('.wg-ask em')?.textContent === it.word.toUpperCase()
+      && !!r.host.querySelector('.wg-pic b'));
+    check('asking: the yes/no switch path is on screen', r.host.querySelectorAll('.wg-foot [data-act]').length === 2);
+    check('asking: the question was said aloud', r.said[0]?.startsWith(`What is the opposite of ${it.word}?`), r.said[0]);
+    check('...with the one candidate being offered', /Is it \w+\?$/.test(r.said[0]), r.said[0]);
+    check('before any voice arrives it does not claim to be listening', !/Say your answer/.test(r.host.textContent));
+    r.eng.hear({ text: wrongFor(it), confidence: 0.2, reason: 'quiet' });
+    check('unsure: drawn, with Yes "X" / No / Say it again', r.phase() === 'unsure'
+      && r.host.querySelectorAll('[data-act]').length === 3
+      && r.host.querySelector('[data-act="confirm"] q')?.textContent === wrongFor(it),
+      r.host.textContent.slice(0, 200));
+    r.eng.press('reject');
+    r.eng.hear({ text: wrongFor(it), confidence: 0.95 });
+    check('wrong: drawn with the hint', r.phase() === 'asking' && !!r.host.querySelector('[data-feedback="wrong"]')
+      && !!r.host.querySelector('[data-hint]'));
+    check('...and now that a voice has been heard, it says so', /Say your answer|Or press your switch/.test(r.host.textContent));
+    r.eng.hear({ text: wrongFor(it), confidence: 0.95 });
+    check('after two misses: drawn with Try again / Hear the answer', r.phase() === 'twoMiss'
+      && !!r.host.querySelector('[data-act="again"]') && !!r.host.querySelector('[data-act="reveal"]'));
+    r.eng.press('again');
+    r.eng.hear({ text: it.accept[0], confidence: 0.95 });
+    check('right: the check ring and the pair', r.phase() === 'celebrate' && !!r.host.querySelector('[data-ring]')
+      && r.host.querySelector('[data-pair]')?.textContent.includes('↔'));
+    check('...about six stars, and the happy cat', r.host.querySelectorAll('.wg-star').length === 6
+      && !!r.host.querySelector('img.wg-cat[src*="happy"]'));
+    check('...and no confetti', !r.host.querySelector('[class*="confetti"]'));
+    r.timers.flush();
+    check('another one?: Yes / No, I’m done, and the running count', r.phase() === 'another'
+      && !!r.host.querySelector('[data-act="more"]') && !!r.host.querySelector('[data-act="finish"]')
+      && /1 right so far/.test(r.host.textContent), r.host.textContent.slice(0, 200));
+    r.eng.press('finish');
+    check('done: says thanks and offers another go', r.phase() === 'done' && !!r.host.querySelector('[data-act="restart"]'));
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the miss flow, step by step (Mike, row 2.31) ***');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    const it = r.probe().item;
+    const w = wrongFor(it);
+    const ask = `What is the opposite of ${it.word}?`;
+    r.eng.hear({ text: w, confidence: 0.95 });
+    let s = r.last();
+    const iWrong = s.indexOf(`It sounded like you said ${w}. That is incorrect.`);
+    const iHint = s.indexOf(`Here is a hint: ${it.hint}.`);
+    const iAsk = s.indexOf(ask);
+    check('(1) a confident wrong answer: "It sounded like you said X. That is incorrect."', iWrong === 0, s);
+    check('(1) ...THEN a hint', iHint > iWrong, s);
+    check('(1) ...THEN the question again', iAsk > iHint, s);
+    check('one miss counted, question still open', r.probe().misses === 1 && r.phase() === 'asking');
+    r.eng.hear({ text: w, confidence: 0.95 });
+    s = r.last();
+    check('(3) after the second miss: wrong line, then "Would you like to try again, or hear the answer?"',
+      s === `It sounded like you said ${w}. That is incorrect. Would you like to try again, or hear the answer?`, s);
+    check('...no second hint, and the question is not repeated over the offer', !s.includes('hint') && !s.includes(ask));
+    check('...the state is the two-miss offer', r.phase() === 'twoMiss');
+    r.eng.hear({ text: 'try again', confidence: 0.9 });
+    check('"try again" asks the question again', r.phase() === 'asking' && r.last().startsWith(ask), r.last());
+    r.eng.hear({ text: w, confidence: 0.95 });
+    check('a third miss offers again (never a dead end)', r.phase() === 'twoMiss');
+    r.eng.hear({ text: 'hear the answer', confidence: 0.9 });
+    s = r.last();
+    check('(4) hearing the answer says it, then "Would you like to do another one?"',
+      s.startsWith('Here is the answer.') && s.includes(`${it.accept[0]} is the opposite of ${it.word}.`)
+      && s.endsWith('Would you like to do another one?'), s);
+    check('...and shows the pair', r.phase() === 'another' && !!r.host.querySelector('[data-revealed]'));
+    check('*** nothing was paid for any of it ***', r.points().length === 0, JSON.stringify(r.points()));
+    const serial = r.probe().serial;
+    r.eng.hear({ text: 'yes', confidence: 0.9 });
+    check('"yes" to another one: a new question, misses back to zero', r.probe().serial === serial + 1
+      && r.probe().misses === 0 && r.phase() === 'asking');
+    const it2 = r.probe().item;
+    r.eng.hear({ text: `it's ${it2.accept[0]}`, confidence: 0.9 });
+    check('a right answer inside a sentence is found ("it’s cold")', r.phase() === 'celebrate');
+    check('(4) the right answer says Yes! and the pair', r.last() === `Yes! ${it2.accept[0]} is the opposite of ${it2.word}.`, r.last());
+    check('...plays the chime once, at the bus master volume (1 when there is no bus)', r.chimes.length === 1 && r.chimes[0] === 1);
+    r.timers.flush();
+    check('(4) ...then "Would you like to do another one?"', r.last() === 'Would you like to do another one?' && r.phase() === 'another');
+    r.eng.hear({ text: 'no', confidence: 0.9 });
+    check('"no" ends it with the thanks line', r.phase() === 'done' && r.last() === LINES.doneLine);
+    r.eng.hear({ text: 'yes', confidence: 0.9 });
+    check('"yes" from done plays again', r.phase() === 'asking');
+    r.inst.destroy();
+
+    const one = rig({ saved: { game: 'opposites', missesBeforeOffer: 1 } });
+    one.eng.hear({ text: wrongFor(one.probe().item), confidence: 0.95 });
+    check('misses-before-offer is a setting: at 1, the first miss offers the answer', one.phase() === 'twoMiss');
+    one.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the unsure line only below the threshold — and it is never a miss ***');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    const it = r.probe().item;
+    r.eng.hear({ text: it.accept[0], confidence: 0.69 });
+    check('0.69 under a 0.7 threshold: unsure, EVEN FOR THE RIGHT ANSWER', r.phase() === 'unsure', r.phase());
+    check('...not a miss, not paid', r.probe().misses === 0 && r.points().length === 0);
+    r.eng.press('reject');
+    r.eng.hear({ text: it.accept[0], confidence: 0.7 });
+    check('0.7 at a 0.7 threshold: judged (right)', r.phase() === 'celebrate');
+    r.inst.destroy();
+
+    const a = rig({ saved: { game: 'opposites' } });
+    a.eng.hear({ text: 'cold' });
+    check('*** a recogniser that reports no confidence gets the unsure line, never a verdict ***', a.phase() === 'unsure');
+    a.eng.press('reject');
+    a.eng.hear({ text: 'cold', confidence: 'loud' });
+    check('...and so does a confidence that is not a number', a.phase() === 'unsure');
+    a.inst.destroy();
+
+    const b = rig({ saved: { game: 'opposites', unsureBelow: 0.5 } });
+    b.eng.hear({ text: wrongFor(b.probe().item), confidence: 0.6 });
+    check('the threshold is a setting: at 0.5, a 0.6 hearing is judged', b.phase() === 'asking' && b.probe().misses === 1);
+    b.inst.destroy();
+
+    const c = rig({ saved: { game: 'opposites' } });
+    const ci = c.probe().item;
+    c.eng.hear({ text: ci.accept[0], confidence: 0.3 });
+    c.eng.hear({ text: 'yes', confidence: 0.9 });
+    check('unsure + "yes" confirms: right, and paid once', c.phase() === 'celebrate');
+    await sleep(10);
+    check('...one point row', c.points().length === 1, JSON.stringify(c.points()));
+    c.inst.destroy();
+
+    const d = rig({ saved: { game: 'opposites' } });
+    const di = d.probe().item;
+    d.eng.hear({ text: wrongFor(di), confidence: 0.3 });
+    d.eng.press('confirm');
+    check('unsure + Yes on a wrong word: THEN it is a miss, with Mike’s wrong line',
+      d.probe().misses === 1 && d.last().startsWith(`It sounded like you said ${wrongFor(di)}. That is incorrect.`), d.last());
+    d.eng.hear({ text: wrongFor(di), confidence: 0.3 });
+    d.eng.hear({ text: 'say it again', confidence: 0.9 });
+    check('"say it again" in unsure: asked again, no miss added', d.phase() === 'asking' && d.probe().misses === 1);
+    d.eng.hear({ text: wrongFor(di), confidence: 0.3 });
+    d.eng.hear({ text: 'yes', confidence: 0.2 });
+    check('a low-confidence "yes" does NOT confirm', d.phase() === 'unsure');
+    d.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** Y only from a reason the recogniser really gave ***');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    const seen = (res) => { r.eng.press('reject'); r.eng.hear(res); const s = r.last(); return s; };
+    r.eng.hear({ text: 'old', confidence: 0.3, reason: 'quiet' });
+    check('quiet', r.last() === "It sounds like you might be saying old, but I'm not sure because it was very quiet.", r.last());
+    check('noise', seen({ text: 'old', confidence: 0.3, reason: 'noise' }).endsWith('because there was other noise.'));
+    check('cut off (any spelling)', seen({ text: 'old', confidence: 0.3, reason: 'cut off' }).endsWith('because it was cut off.'));
+    check('an alternative the recogniser handed back: "it could also be Z"',
+      seen({ text: 'cold', confidence: 0.3, alternatives: ['code'] }).endsWith('because it could also be code.'), r.last());
+    check('alternatives in {text} form work too',
+      seen({ text: 'cold', confidence: 0.3, alternatives: [{ text: 'gold', confidence: 0.2 }] }).endsWith('it could also be gold.'));
+    check('*** no reason: the line WITHOUT "because" ***',
+      seen({ text: 'old', confidence: 0.3 }) === "It sounds like you might be saying old, but I'm not sure.", r.last());
+    check('an unknown reason is not repeated as if it were true', !/because/.test(seen({ text: 'old', confidence: 0.3, reason: 'banana' })));
+    check('"alternative" with no word to name: no because', !/because/.test(seen({ text: 'old', confidence: 0.3, reason: 'alternative' })));
+    check('an alternative that is the same word is not an alternative', !/because/.test(seen({ text: 'old', confidence: 0.3, alternatives: ['Old'] })));
+    check('an alternative of [unk] is not a word', !/because/.test(seen({ text: 'old', confidence: 0.3, alternatives: [UNKNOWN] })));
+    check('reasonFor is exported and pure', reasonFor({ reason: 'quiet' }) === LINES.reasonQuiet && reasonFor({}) === null);
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('nothing heard is not a miss');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    r.eng.hear({ text: UNKNOWN, confidence: 1 });
+    check('"[unk]" says it did not catch that, and offers the switch', r.last() === LINES.notCaughtLine && r.probe().misses === 0);
+    r.eng.hear({ text: '   ', confidence: 1 });
+    check('empty is the same', r.last() === LINES.notCaughtLine && r.probe().misses === 0);
+    r.inst.destroy();
+
+    const y = rig({ saved: { game: 'yesno' } });
+    y.eng.hear({ text: 'maybe', confidence: 0.95 });
+    check('yes/no quiz: a word that is neither is not a miss', y.probe().misses === 0
+      && y.last() === 'I heard maybe. This one is a yes or a no.', y.last());
+    const yi = y.probe().item;
+    const wrong = yi.answer === 'yes' ? 'nope' : 'yeah';
+    y.eng.hear({ text: wrong, confidence: 0.95 });
+    check('yes/no quiz: a wrong answer uses Mike’s line with the plain word',
+      y.last().startsWith(`It sounded like you said ${yi.answer === 'yes' ? 'no' : 'yes'}. That is incorrect.`), y.last());
+    y.inst.destroy();
+
+    const rh = rig({ saved: { game: 'rhyming' } });
+    const ri = rh.probe().item;
+    rh.eng.hear({ text: 'zebra', confidence: 0.95 });
+    check('rhyming: a word not in the table is NOT judged wrong', rh.probe().misses === 0
+      && rh.last().startsWith("I heard zebra, but I don't know that word well enough"), rh.last());
+    rh.eng.hear({ text: ri.word, confidence: 0.95 });
+    check('rhyming: saying the word itself is a miss (it does not rhyme with itself)', rh.probe().misses === 1);
+    check('rhyming hint: "it ends with the same sound"', rh.last().includes(`Here is a hint: it ends with the same sound: ${ri.sound}.`), rh.last());
+    const other = rhymesFor(ri.word).find((w) => w !== ri.example) || ri.example;
+    rh.eng.hear({ text: other, confidence: 0.95 });
+    check(`rhyming: ANY rhyme counts, not only the listed example (${ri.word} / ${other})`, rh.phase() === 'celebrate');
+    rh.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a whole round by switch alone, every game ***');
+  for (const game of GAMES) {
+    const r = rig({ saved: { game } });
+    let presses = 0;
+    const pub = (v) => { presses += 1; r.bus.publish(`word_games/${v}`); };
+    const it = r.probe().item;
+    // Walk it the way a one-switch scan would: Select on Yes when it is right, else Next to No and
+    // Select (which moves to the next candidate).
+    let guard = 0;
+    while (r.phase() === 'asking' && guard++ < 12) {
+      const s = r.probe();
+      const right = game === 'yesno' ? it.answer === 'yes'
+        : game === 'opposites' ? it.accept.includes(s.candidate) : rhymes(it.word, s.candidate) === true;
+      if (!right) { if (s.highlight !== 1) pub('next'); pub('select'); }
+      else { if (s.highlight !== 0) pub('prev'); pub('select'); }
+    }
+    check(`${game}: answered right with the switch alone`, r.phase() === 'celebrate', `${r.phase()} after ${presses}`);
+    check(`${game}: with no miss on the way`, r.probe().misses === 0);
+    pub('select');
+    check(`${game}: a press skips the celebration to "Another one?"`, r.phase() === 'another');
+    pub('select');
+    check(`${game}: Select on Yes deals the next question`, r.phase() === 'asking' && r.probe().serial === 2);
+    // End it: a wrong press first, to prove a switch miss follows the same flow.
+    if (game !== 'yesno') {
+      const s = r.probe();
+      const it2 = s.item;
+      const wrongCand = s.candidates.find((c) => (game === 'opposites' ? !it2.accept.includes(c) : rhymes(it2.word, c) === false));
+      while (r.probe().candidate !== wrongCand) { pub('next'); pub('select'); }
+      const before = r.probe().candidate;
+      pub('select');
+      check(`${game}: Yes on a wrong offer is a switch miss: "That is incorrect." + hint`,
+        r.probe().misses === 1 && r.last().startsWith('That is incorrect. Here is a hint:'), r.last());
+      check(`${game}: ...and the next offer is a different one`, r.probe().candidate !== before);
+    }
+    r.eng.skip();
+    r.eng.press('yes'); r.eng.press('no');
+    await sleep(10);
+    r.inst.destroy();
+  }
+  {
+    // Two switches, one each: Select is Yes, Next is No.
+    const r = rig({ saved: { game: 'opposites', twoSwitch: 'yesno' } });
+    const it = r.probe().item;
+    let guard = 0;
+    while (r.phase() === 'asking' && guard++ < 6) {
+      r.bus.publish(it.accept.includes(r.probe().candidate) ? 'word_games/select' : 'word_games/next');
+    }
+    check('two switches (Select = Yes, Next = No): a right answer', r.phase() === 'celebrate' && r.probe().misses === 0);
+    r.bus.publish('word_games/select');
+    r.bus.publish('word_games/next');
+    check('...and Next is "No, I’m done" on the Another-one screen', r.phase() === 'done');
+    r.inst.destroy();
+  }
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    const it = r.probe().item;
+    while (!it.accept.includes(r.probe().candidate)) r.eng.press('no');
+    r.eng.press('no');
+    check('No to the right offer is a miss (it was the answer)', r.probe().misses === 1);
+    const clicks = r.host.querySelector('[data-act="yes"]');
+    clicks.click();
+    check('the on-screen buttons work for a pointer', r.phase() === 'celebrate');
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** points: once per right answer, never for a miss ***');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    const it = r.probe().item;
+    r.eng.hear({ text: wrongFor(it), confidence: 0.95 });
+    r.eng.hear({ text: wrongFor(it), confidence: 0.3 });
+    r.eng.press('confirm');
+    await sleep(10);
+    check('two misses and an unsure: no points', r.points().length === 0);
+    r.eng.press('again');
+    r.eng.hear({ text: it.accept[0], confidence: 0.95 });
+    r.eng.hear({ text: it.accept[0], confidence: 0.95 });
+    r.eng.press('yes');
+    r.bus.publish('word_games/select');
+    r.bus.publish('word_games/select');
+    await sleep(10);
+    const rows = r.points();
+    check('*** exactly one row, however many presses and hearings followed ***', rows.length === 1, JSON.stringify(rows));
+    check('...School points, from word_games, one point', rows[0]?.data.type === 'School'
+      && rows[0]?.data.source === 'word_games' && rows[0]?.data.amount === 1, JSON.stringify(rows[0]?.data));
+    check('the right count went up once', r.probe().rightCount === 1);
+    r.inst.destroy();
+
+    const z = rig({ saved: { game: 'opposites', correctPoints: 0 } });
+    z.eng.hear({ text: z.probe().item.accept[0], confidence: 0.95 });
+    await sleep(10);
+    check('points per answer is a setting (0 writes nothing)', z.points().length === 0 && z.phase() === 'celebrate');
+    z.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the celebration: reduced motion, and never a flash ***');
+  {
+    const full = rig({ saved: { game: 'opposites' }, reducedMotion: false });
+    full.eng.hear({ text: full.probe().item.accept[0], confidence: 0.95 });
+    const star = full.host.querySelector('.wg-star');
+    const cs = star && getComputedStyle(star);
+    check('with motion: the stars drift ONCE', cs && cs.animationName === 'wg-drift' && cs.animationIterationCount === '1',
+      cs && `${cs.animationName} x${cs.animationIterationCount}`);
+    check('...over about 1.6 s', cs && cs.animationDuration === '1.6s', cs?.animationDuration);
+    const ring = getComputedStyle(full.host.querySelector('[data-ring]'));
+    check('...and nothing else on the right screen animates', ring.animationName === 'none');
+    full.inst.destroy();
+
+    const still = rig({ saved: { game: 'opposites' }, reducedMotion: true });
+    still.eng.hear({ text: still.probe().item.accept[0], confidence: 0.95 });
+    const s2 = still.host.querySelector('.wg-star');
+    check('*** reduced motion: the stars just appear (no animation at all) ***',
+      still.host.querySelector('.wg')?.dataset.motion === 'reduce' && getComputedStyle(s2).animationName === 'none');
+    check('...and they are still there — the celebration is not taken away', still.host.querySelectorAll('.wg-star').length === 6);
+    still.inst.destroy();
+
+    const css = await (await fetch('../modules.css')).text();
+    const a = css.indexOf('/* ---- WORD GAMES');
+    const b = css.indexOf('end WORD GAMES');
+    const block = a >= 0 && b > a ? css.slice(a, b) : '';
+    check('the word-games block is found in modules.css', block.length > 200);
+    const rules = block.replace(/\/\*[\s\S]*?\*\//g, '');
+    check('*** no infinite or alternating animation anywhere in it ***', !/infinite|alternate/i.test(rules));
+    const kf = /@keyframes\s+wg-drift\s*\{([\s\S]*?\})\s*\}/.exec(rules);
+    const steps = kf ? kf[1].match(/(from|to|\d+%)\s*\{/g) || [] : [];
+    check('the only keyframes: from and to (no blink in between)', steps.length === 2, steps.join(' '));
+    check('opacity only rises: 0 to 1', kf && /from\s*\{[^}]*opacity:\s*0/.test(kf[1]) && /to\s*\{[^}]*opacity:\s*1/.test(kf[1]));
+    check('only one @keyframes in the block', (rules.match(/@keyframes/g) || []).length === 1);
+  }
+
+  // =====================================================================================
+  section('the recogniser seam: hear(), the bus, and a grammar that can hear a wrong answer');
+  {
+    const bus = createBus();
+    const grams = [];
+    bus.subscribe(GRAMMAR_TOPIC, (g) => grams.push(g));
+    const r = rig({ saved: { game: 'opposites' }, bus });
+    const it = r.probe().item;
+    const g = grams[grams.length - 1];
+    check('the grammar is published for the question', g && g.open && g.source === 'word_games' && g.instanceId === 'wg-1');
+    check('*** it carries WRONG answers (row 2.28: right-only always hears a right answer) ***',
+      g.words.includes(wrongFor(it)) && g.words.includes(it.accept[0]));
+    check('*** and "[unk]", always ***', g.words.includes(UNKNOWN));
+    check('...and other questions’ words too, so a guess from another pair can be heard',
+      OPPOSITES.filter((o) => o !== it).every((o) => g.words.includes(o.accept[0])));
+    bus.publish(ANSWER_TOPIC, { text: wrongFor(it), confidence: 0.95 });
+    check('speech/answer on the bus reaches hear()', r.probe().misses === 1);
+    bus.publish(`${ANSWER_TOPIC}#wg-1`, { text: it.accept[0], confidence: 0.95 });
+    check('...and so does this instance’s own address', r.phase() === 'celebrate');
+    check('celebrating: the grammar closes (not listening over the chime)', grams[grams.length - 1].open === false);
+    const n = r.said.length;
+    bus.publish(ANSWER_TOPIC, { text: 'cold', confidence: 0.95 });
+    check('...and a hearing now says nothing', r.said.length === n);
+    r.timers.flush();
+    const ga = grams[grams.length - 1].words;
+    check('"another one?" listens for yes / no / done', ga.includes('yes') && ga.includes('no') && ga.includes('done') && ga.includes(UNKNOWN));
+    r.inst.destroy();
+
+    const rb = createBus();
+    const rg = [];
+    rb.subscribe(GRAMMAR_TOPIC, (x) => rg.push(x));
+    const rr = rig({ saved: { game: 'rhyming' }, bus: rb });
+    const words = rg[rg.length - 1].words;
+    check('rhyming grammar: the whole table, rhymes AND non-rhymes', words.length >= Object.keys(PRONUNCIATIONS).length);
+    rr.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('which game, speech and settings');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    r.bus.publish(PLAY_TOPIC, { game: 'rhyming' });
+    check('"play rhyming" on the bus switches game and asks', r.probe().game === 'rhyming' && r.phase() === 'asking'
+      && r.last().startsWith('Which word rhymes with'), r.last());
+    r.bus.publish(PLAY_TOPIC, { game: 'chess' });
+    check('an unknown game is ignored', r.probe().game === 'rhyming');
+    check('each new line cancels the one before it (the newest is the one worth hearing)', r.cancelled.length >= 1);
+    r.setCfg({ wrongLine: 'Not quite: {heard}.' });
+    const nonRhyme = Object.keys(PRONUNCIATIONS).find((w) => rhymes(r.probe().item.word, w) === false);
+    r.eng.hear({ text: nonRhyme, confidence: 0.95 });
+    check('an edited line is the one spoken', r.last().startsWith('Not quite: '), r.last());
+    r.setCfg({ game: 'yesno' });
+    check('changing the game setting deals that game', r.probe().game === 'yesno' && r.phase() === 'asking');
+    r.inst.destroy();
+
+    const q = rig({ saved: { game: 'opposites', speak: false } });
+    q.eng.hear({ text: 'xyz', confidence: 0.95 });
+    check('with speaking off nothing is said, and the screen still shows it', q.said.length === 0
+      && !!q.host.querySelector('[data-feedback="wrong"]'));
+    q.inst.destroy();
+
+    const quiet = rig({ saved: { game: 'opposites', sound: false } });
+    quiet.eng.hear({ text: quiet.probe().item.accept[0], confidence: 0.95 });
+    check('the chime is a setting', quiet.chimes.length === 0 && quiet.phase() === 'celebrate');
+    quiet.inst.destroy();
+
+    check('fill leaves no braces and tidies spaces', fill('A {x} B {y}.', { x: 'one' }) === 'A one B.');
+    check('normalize lowercases and drops punctuation', normalize(' Cold!  ') === 'cold');
+  }
+
+  // =====================================================================================
+  section('*** destroy cleans up ***');
+  {
+    const r = rig({ saved: { game: 'opposites' } });
+    r.eng.hear({ text: r.probe().item.accept[0], confidence: 0.95 });
+    check('a celebration timer is pending', r.timers.count() === 1);
+    const n = r.said.length;
+    r.inst.destroy();
+    check('*** destroy clears it ***', r.timers.count() === 0);
+    check('...and cancels the line it was saying', r.cancelled.includes(`u${n}`), r.cancelled.join(','));
+    r.bus.publish('word_games/select');
+    r.bus.publish(ANSWER_TOPIC, { text: 'yes', confidence: 1 });
+    r.inst.impl.hear({ text: 'yes', confidence: 1 });
+    check('after destroy nothing more is said or drawn', r.said.length === n);
+
+    const e = createEngine({ setTimer: () => 7, clearTimer: () => {} });
+    e.start();
+    e.destroy();
+    e.press('yes');
+    check('a destroyed engine ignores presses', e.snapshot().phase === 'asking' && e.snapshot().rightCount === 0);
+  }
+} catch (err) {
+  check('the suite ran without throwing', false, String(err && err.stack || err));
+}
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

@@ -1686,3 +1686,57 @@ html[data-live-scene] body{background:transparent}
   width:calc(var(--fr-w) * 1%);height:calc(var(--fr-h) * 1%);object-fit:cover}
 .nbtn[data-frame-art][data-has-img]:not([data-sign]) .ab-word{box-sizing:border-box;width:100%;
   height:calc(var(--nb-fw) * var(--nb-cap));display:flex;align-items:center;justify-content:center}
+
+/* ---- WORD GAMES (Opposites, Rhyming, Yes/No) ----
+ * Design's voice.html, sized by the game's own box (container units), so the same markup reads
+ * in a grid cell and full screen. The yes/no switch path is on every asking screen. See
+ * modules/word_games.js.
+ *
+ * *** THE CELEBRATION NEVER FLASHES. *** One fade-and-settle per star, played ONCE (iteration
+ * count 1, never infinite), opacity only ever rising; under reduced motion there is no animation
+ * at all and the stars simply appear. dev/word_games_test.html reads this block to hold that.
+ */
+.wg{position:absolute;inset:0;container-type:size;display:grid;grid-template-rows:auto 1fr auto;
+  gap:2cqmin;padding:3cqmin 4cqmin;box-sizing:border-box;overflow:hidden;
+  background:var(--bg);color:var(--text);font-family:var(--font)}
+.wg-ask{margin:0;text-align:center;font-size:clamp(18px,7cqmin,84px);font-weight:800;line-height:1.1}
+.wg-ask em{font-style:normal;color:var(--accent-warm-deep)}
+.wg-mid{display:grid;grid-template-columns:auto 1fr;gap:4cqmin;align-items:center;min-height:0}
+.wg-mid.wg-one{grid-template-columns:1fr}
+@container (max-aspect-ratio: 1/1){.wg-mid{grid-template-columns:1fr;justify-items:center}}
+.wg-pic{margin:0;display:grid;justify-items:center;gap:1cqmin;padding:2.5cqmin;
+  border:max(2px,.5cqmin) solid var(--border);border-radius:3cqmin;background:var(--surface);color:var(--text)}
+.wg-pic svg{width:clamp(48px,26cqmin,300px);height:auto;aspect-ratio:1}
+.wg-pic b{font-size:clamp(18px,8cqmin,92px);line-height:1;letter-spacing:.02em}
+.wg-st{display:grid;gap:2cqmin;align-content:center;min-width:0}
+.wg-say{margin:0;font-size:clamp(15px,4.8cqmin,58px);font-weight:700;line-height:1.25}
+.wg-say q{color:var(--accent-warm-deep)}
+.wg-soft{color:var(--text-soft);font-weight:600}
+.wg-hint{margin:0;font-size:clamp(14px,4cqmin,50px);padding:1.6cqmin 2.4cqmin;border-radius:2cqmin;
+  background:var(--surface-alt);border-left:max(4px,1.1cqmin) solid var(--accent-warm)}
+.wg-btns{display:flex;gap:2cqmin;flex-wrap:wrap;justify-content:center}
+.wg-btn{min-height:max(48px,11cqmin);min-width:max(96px,22cqmin);padding:0 3.5cqmin;
+  border-radius:2.4cqmin;border:max(2px,.5cqmin) solid var(--border);background:var(--surface);
+  color:var(--text);font:800 clamp(16px,5cqmin,62px)/1 var(--font);cursor:pointer;white-space:nowrap}
+.wg-btn[data-act="yes"],.wg-btn[data-act="confirm"],.wg-btn[data-act="more"]{border-color:var(--accent)}
+/* THE HIGHLIGHT IS AN OUTLINE AND AN ARROW, never colour alone (module-input-spec). */
+.wg-btn[data-on="1"]{outline:max(3px,1cqmin) solid var(--link);outline-offset:max(2px,.6cqmin)}
+.wg-btn[data-on="1"]::before{content:"\25B8\00a0"}
+.wg-foot{display:flex;align-items:center;justify-content:space-between;gap:2cqmin;flex-wrap:wrap;
+  font-size:clamp(13px,3.2cqmin,40px);color:var(--text-soft)}
+.wg-right{justify-items:center;text-align:center}
+.wg-count{margin:0;font-size:clamp(13px,3.4cqmin,44px);color:var(--text-soft)}
+.wg-ring{width:clamp(60px,20cqmin,250px);aspect-ratio:1;box-sizing:border-box;border-radius:50%;
+  border:max(4px,1.8cqmin) solid var(--accent);display:grid;place-items:center}
+.wg-ring::after{content:"";width:28%;height:48%;border:solid var(--accent);
+  border-width:0 max(4px,2cqmin) max(4px,2cqmin) 0;transform:rotate(45deg) translate(-10%,-12%)}
+.wg-pair{display:flex;align-items:center;gap:2cqmin;font-size:clamp(18px,6cqmin,70px);font-weight:800}
+.wg-pair svg{width:clamp(36px,12cqmin,150px);height:auto;aspect-ratio:1}
+.wg-star{position:absolute;width:clamp(12px,3cqmin,34px);aspect-ratio:1;pointer-events:none;
+  background:var(--highlight);
+  clip-path:polygon(50% 0,61% 38%,100% 38%,68% 60%,80% 100%,50% 76%,20% 100%,32% 60%,0 38%,39% 38%)}
+.wg-cat{position:absolute;right:3cqmin;bottom:2cqmin;width:clamp(60px,20cqmin,250px);pointer-events:none}
+@keyframes wg-drift{from{opacity:0;transform:translateY(3cqmin) scale(.6)}to{opacity:1;transform:none}}
+.wg[data-motion="full"] .wg-star{animation:wg-drift 1.6s ease-out 1 both}
+.wg[data-motion="reduce"] .wg-star{animation:none}
+/* ---- end WORD GAMES ---- */
