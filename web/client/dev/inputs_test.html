@@ -386,8 +386,11 @@ const logText = (r) => r.q('[data-log]').textContent;
           SPEECH_ACTIONS.length > 0 && SPEECH_ACTIONS.every((a) => vals(inGroup('Voice games')).includes(a.id)));
         check('*** holding on a room object (pet an animal) is pickable ***',
           vals(inGroup('Room')).includes(ROOM_HOLD_ACTION.id));
+        const { SUBTITLE_ACTIONS } = await import('../subtitles.js');
+        check('*** the subtitles’ scroll-back (earlier / back to the latest) is pickable ***',
+          SUBTITLE_ACTIONS.length === 2 && SUBTITLE_ACTIONS.every((a) => vals(inGroup('Subtitles')).includes(a.id)));
         check('the groups come AFTER the everyday list, never before it',
-          groups.length === 4 && groups.every((g) => g.previousElementSibling !== null));
+          groups.length === 5 && groups.every((g) => g.previousElementSibling !== null));
         r.q('[data-new-action]').value = 'speech/near-miss-yes';
         r.q('[data-add]').click();
         r.press(XAC, 'button:5', 10);
