@@ -54,7 +54,7 @@ import { mountCursor, CURSOR_DEFAULTS, STYLES, SIZE_MIN, SIZE_MAX, SIZE_STEP } f
 import { createDwell, DWELL_DEFAULTS } from './input_dwell.js';
 import { SCAN_DEFAULTS } from './input_scan.js';
 import { speak, cancel as cancelSpeech, waitForVoices, listVoices } from './voice.js';
-import { BOARD_TOPIC } from './modules/board.js';
+import { BOARD_TOPIC, THEME_PICKED_TOPIC } from './modules/board.js';
 import './modules/board.js';
 import { mountThemePicker } from './theme.js';
 
@@ -697,10 +697,14 @@ export function startTalk({
         // The OS status-bar tint (mobile home-screen / PWA chrome) cannot read a CSS var, so
         // a picked theme has to push it directly too, the same as the initial load does in
         // talk.html's own script.
-        onChange: () => {
+        onChange: (id) => {
           const meta = doc.getElementById('theme-color-meta');
           const bg = doc.defaultView?.getComputedStyle(doc.documentElement).getPropertyValue('--bg').trim();
           if (meta && bg) meta.content = bg;
+          // A theme picked HERE, by somebody at this page — the same announcement the kiosk's
+          // own menu makes, so the board's symbol-set choice card is offered from either door
+          // (Mike, 2026-09-29: several ways in "should all really just be the same thing").
+          bus.publish(THEME_PICKED_TOPIC, { theme: id });
         },
       });
     }
