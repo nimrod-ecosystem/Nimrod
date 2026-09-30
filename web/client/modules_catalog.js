@@ -271,6 +271,17 @@ export const CATALOG = [
       + 'note, the fridge, a desk. It can be read aloud, and changed by typing or, with no keyboard, '
       + 'by picking a ready-made note. Every earlier note is kept and can be put back.',
   },
+  // Row 2.37 item 4 (the weather behind the room's window). `touch`: it updates by itself; a touch reads it aloud.
+  {
+    type: 'weather',
+    group: 'comfort',
+    use: 'touch',
+    lead: 'The weather now, the next few hours and the next few days, in big words and pictures.',
+    needs: 'A place, typed once in its settings: a town, or a latitude and longitude. It is sent to '
+      + 'Open-Meteo, a free weather service. Nothing is sent until a place is set.',
+    why: 'A window on the day outside, with the words next to every picture. A touch or one switch '
+      + 'press reads it aloud. When the connection drops it keeps the last weather it had and says how old it is.',
+  },
   {
     type: 'pond',
     group: 'comfort',

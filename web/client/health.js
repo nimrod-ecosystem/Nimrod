@@ -143,6 +143,9 @@ export const HEALTH_EXPECT = {
   // A note on the wall (row 2.37). It publishes nothing, and a note nobody has changed all week is a
   // note doing its job.
   note:        { idle: true },
+  // The weather (row 2.37). It publishes `weather/state` on every scheduled check, place or no place, so
+  // silence means its timer stopped. Twice the slowest refresh on offer (3 h).
+  weather:     { expectMs: 6 * 60 * 60 * 1000 },
 };
 
 export function expectFor(type, table = HEALTH_EXPECT) {

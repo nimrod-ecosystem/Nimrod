@@ -386,6 +386,8 @@ export const MODULE_VERBS = {
   solitaire:     { next: 'solitaire/next', prev: 'solitaire/prev', select: 'solitaire/select', back: 'solitaire/back' },
   // The note: next / prev walk its buttons, select presses the lit one, back closes the change form or the history.
   note:          { next: 'note/next', prev: 'note/prev', select: 'note/select', back: 'note/back' },
+  // The weather: select reads now (or the lit day), next / prev walk the days, back returns to now.
+  weather:       { next: 'weather/next', prev: 'weather/prev', select: 'weather/select', back: 'weather/back' },
 };
 
 // What a verb does on a given module type, normalized to {topic, payload}.
