@@ -1,0 +1,78 @@
+/* edit_windows.css — the look of `edit_windows.js`. Loaded by the component itself, once per page.
+
+   NO LITERAL COLOURS: every colour is a theme token, so a dark theme or the contrast theme reaches
+   the windows for free. Design's prototype look (`room-is-the-screen/edit-windows.html`), translated
+   to tokens.
+
+   SOLID, LIKE A DIALOG — a window over a busy room has to be readable whatever is behind it, so it
+   is an opaque `--surface`, never glass. Its depth is `--ew-z` when the host sets one, else the
+   menus band. Every target is at least 44px, the floor for anything somebody presses on purpose. */
+.ew-win{
+  position:relative;z-index:var(--ew-z, var(--z-menus));
+  box-sizing:border-box;width:100%;max-width:400px;
+  background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  /* --letterbox is the near-black every theme keeps; --text would turn into a light halo on a dark theme. */
+  box-shadow:0 10px 30px color-mix(in srgb, var(--letterbox) 40%, transparent);
+  font:14px/1.4 var(--font, system-ui, sans-serif);
+}
+.ew-win *{box-sizing:border-box}
+.ew-head{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 14px;
+  background:var(--surface-alt);border-bottom:1px solid var(--border)}
+.ew-head h3{margin:0;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase}
+.ew-sub{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-weight:600;color:var(--text-soft)}
+.ew-in{padding:10px 14px;display:grid;gap:8px}
+
+.ew-win button{min-height:44px;min-width:44px;padding:0 10px;cursor:pointer;
+  border:1px solid var(--border);border-radius:9px;
+  background:var(--surface);color:var(--text);font:inherit;font-weight:700}
+.ew-win button:hover:not(:disabled){background:var(--surface-alt)}
+.ew-win button:disabled{opacity:.45;cursor:default}
+.ew-win .ew-close{flex:0 0 auto}
+
+/* One number: label, −, box, +, unit. */
+.ew-f{display:grid;grid-template-columns:78px 44px minmax(0,1fr) 44px 26px;gap:6px;align-items:center}
+.ew-f.ew-f-bare{grid-template-columns:44px minmax(0,1fr) 44px 26px}
+.ew-f label{font-weight:700}
+.ew-f input{min-width:0;height:44px;border:1px solid var(--border);border-radius:9px;
+  background:var(--surface);color:var(--text);text-align:center;
+  font:600 15px ui-monospace, Menlo, Consolas, monospace}
+.ew-f input:disabled{opacity:.6}
+.ew-win .ew-st{font-size:18px;padding:0}
+.ew-u{color:var(--text-muted);font-size:.8rem}
+
+/* Toggles and one-of-several rows. Pressed is shown by fill AND by aria-pressed, never colour alone:
+   the label of a toggle does not change, the fill does, and a screen reader hears "pressed". */
+.ew-tgs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ew-win .ew-tg{text-align:left;padding:0 12px}
+.ew-win .ew-tg[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.ew-seg{display:flex;flex-wrap:wrap;gap:4px}
+.ew-seg button{flex:1 1 0}
+.ew-win .ew-seg button[aria-pressed="true"]{background:var(--link);border-color:var(--link);color:var(--on-link)}
+
+/* Layers. */
+.ew-ly{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px 72px 72px;gap:4px;align-items:center;
+  padding:4px;border-radius:10px}
+.ew-ly.is-sel{background:color-mix(in oklab, var(--link) 14%, transparent)}
+.ew-win .ew-pick{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ew-win .ew-pick[aria-pressed="true"]{border-color:var(--link);border-width:2px}
+.ew-win .ew-ly button[data-ew^="shown:"][aria-pressed="false"]{font-style:italic;color:var(--text-muted)}
+.ew-win .ew-ly button[data-ew^="lock:"][aria-pressed="true"]{background:var(--surface-alt);border-color:var(--text)}
+.ew-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px;
+  padding-top:8px;border-top:1px solid var(--border)}
+
+/* Text effects. (Not `.ew-fx`: that is the window's own kind class, `ew-win ew-fx`.) */
+.ew-fxrow{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center}
+
+.ew-note{margin:0;color:var(--text-soft);font-size:.8rem}
+.ew-warn{margin:0;padding:6px 8px;border-radius:8px;font-size:.8rem;font-weight:600;
+  background:var(--bad-surface);color:var(--text);border-left:4px solid var(--accent-warm-deep)}
+
+/* The switch cursor, and keyboard focus: a thick link-coloured ring outside the control. */
+.ew-win .is-scan,
+.ew-win :is(button,input):focus-visible{outline:4px solid var(--link);outline-offset:2px}
+
+@media (prefers-reduced-motion: no-preference){
+  .ew-win button{transition:background-color .12s}
+}

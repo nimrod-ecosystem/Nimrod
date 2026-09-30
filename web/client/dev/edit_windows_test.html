@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>edit_windows — transform, snap, layers, text effects — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{margin-top:12px;max-width:420px}
+</style>
+</head>
+<body>
+<h1>edit_windows — Design's edit windows as reusable pieces over a headless model</h1>
+<p>No server state, no network. The model (<code>edit_model.js</code>) is tested as arithmetic; the
+windows (<code>edit_windows.js</code>) are tested by pressing their buttons, typing in their boxes,
+walking them with a switch, and pressing Escape.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail !== '' ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const summary = document.getElementById('summary');
+function finish() {
+  summary.textContent = `${passed} passed, ${failed} failed`;
+  summary.className = failed ? 'fail' : 'pass';
+}
+
+let M, W;
+try {
+  M = await import('../edit_model.js');
+  W = await import('../edit_windows.js');
+} catch (err) {
+  check('edit_model.js and edit_windows.js load', false, String(err));
+  finish();
+  throw err;
+}
+const {
+  EDIT_DEFAULTS, SNAP_DEFAULTS, createEditModel, clampValue, resolveValue, nextGridLine,
+  layerOrder, moveLayer, sendLayer, textEffectsCss, measureText, editKeyAction, handleEditKey,
+  bindEditHotkeys, normalizeFx,
+} = M;
+const { mountTransformWindow, mountSnapWindow, mountLayersWindow, mountTextEffectsWindow } = W;
+const host = document.getElementById('host');
+
+const ITEMS = () => ([
+  { id: 'sign', name: 'Name sign', text: 'Hello', ink: '#fbf3e2', ground: '#8a5f3c', x: 50, y: 24, scale: 100, rot: 0, layer: 3, place: 'scene', surface: 'back',
+    fx: { outline: { on: true, w: 3 }, bevel: { on: true, d: 2 } } },
+  { id: 'pic', name: 'Picture frame', x: 24, y: 40, scale: 100, rot: -4, layer: 2, place: 'scene', surface: 'back' },
+  { id: 'clock', name: 'Clock module', x: 76, y: 44, scale: 100, rot: 0, layer: 1, place: 'screen' },
+]);
+const fresh = (o = {}) => createEditModel({ items: ITEMS(), selectedId: 'pic', ...o });
+const key = (k, extra = {}, target = document.body) => {
+  const e = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...extra });
+  target.dispatchEvent(e);
+  return e;
+};
+const q = (el, k) => el.querySelector(`[data-ew="${k}"]`);
+
+// =====================================================================
+section('defaults are data, and Design\'s numbers');
+{
+  check('fine steps: 1% becomes 0.1%, 5° becomes 1°',
+    EDIT_DEFAULTS.steps.x[0] === 1 && EDIT_DEFAULTS.steps.x[1] === 0.1
+    && EDIT_DEFAULTS.steps.rot[0] === 5 && EDIT_DEFAULTS.steps.rot[1] === 1);
+  check('grid sizes are 2.5 / 5 / 10%', JSON.stringify(EDIT_DEFAULTS.gridSizes) === '[2.5,5,10]');
+  check('snap to centre within 2%', EDIT_DEFAULTS.centreWithin === 2);
+  check('a glow wider than 20px warns', EDIT_DEFAULTS.glowWarnPx === 20);
+  check('the defaults cannot be mutated by a caller', Object.isFrozen(EDIT_DEFAULTS) && Object.isFrozen(EDIT_DEFAULTS.steps.x));
+  const m = createEditModel({ items: ITEMS(), config: { steps: { x: [2, 0.5] }, centreWithin: 1 } });
+  check('and every one of them can be overridden per model (Rule 1)',
+    m.config().steps.x[0] === 2 && m.config().steps.rot[0] === 5 && m.config().centreWithin === 1);
+}
+
+// =====================================================================
+section('numeric entry, steppers and fine steps');
+{
+  check('clamp: X stays in 0..100', clampValue('x', 140) === 100 && clampValue('x', -3) === 0);
+  check('clamp: scale stays in 10..400', clampValue('scale', 5) === 10 && clampValue('scale', 900) === 400);
+  check('rotation WRAPS rather than clamps: 190° is -170°', clampValue('rot', 190) === -170, clampValue('rot', 190));
+  check('layer is a whole number', clampValue('layer', 2.6) === 3);
+  check('garbage is null, never a guess', clampValue('x', 'abc') === null && clampValue('x', NaN) === null);
+
+  const m = fresh({ snap: { snapGrid: false, snapCenter: false } });
+  check('a typed X is taken as typed', m.set('x', 33.3) && m.selected().x === 33.3, m.selected().x);
+  check('a typed value that is not a number changes nothing', m.set('x', 'twelve') === false && m.selected().x === 33.3);
+  check('typing the value it already has is not a change (no empty undo step)', m.set('x', 33.3) === false);
+  m.step('x', 1);
+  check('+ on X moves it 1%', m.selected().x === 34.3, m.selected().x);
+  m.step('rot', -1);
+  check('− on rotation moves it 5°', m.selected().rot === -9, m.selected().rot);
+  m.setSnap({ fine: true });
+  m.step('x', 1); m.step('rot', 1);
+  check('Fine steps: X moves 0.1%, rotation 1°', m.selected().x === 34.4 && m.selected().rot === -8, `${m.selected().x} ${m.selected().rot}`);
+  m.step('scale', 1);
+  check('Fine steps: scale moves 1%', m.selected().scale === 101);
+  const before = m.selected().scale;
+  m.set('scale', 400); m.step('scale', 1);
+  check('a + at the limit stays at the limit', m.selected().scale === 400 && before === 101);
+}
+
+// =====================================================================
+section('snap: grid, centre and the guide line');
+{
+  const s = { ...SNAP_DEFAULTS, snapGrid: true, gridSize: 5, snapCenter: false, fine: false };
+  check('a step with grid snap goes to the NEXT grid line: 33 +  -> 35', resolveValue('x', { from: 33, dir: 1, via: 'step', snap: s }) === 35);
+  check('...and 33 −  -> 30', resolveValue('x', { from: 33, dir: -1, via: 'step', snap: s }) === 30);
+  check('A STEPPER MUST MOVE: on a grid line, + goes to the next line, not back to itself (the prototype stuck here)',
+    resolveValue('x', { from: 40, dir: 1, via: 'step', snap: s }) === 45);
+  check('grid 2.5: 40 + -> 42.5', resolveValue('x', { from: 40, dir: 1, via: 'step', snap: { ...s, gridSize: 2.5 } }) === 42.5);
+  check('nextGridLine never returns its start', [0, 2.5, 5, 7.5, 50, 97.5].every((v) => nextGridLine(v, 1, 2.5) > v && nextGridLine(v, -1, 2.5) < v));
+  check('FINE STEPS BYPASS THE GRID: 40 + fine -> 40.1',
+    resolveValue('x', { from: 40, dir: 1, via: 'step', snap: { ...s, fine: true } }) === 40.1);
+  check('grid applies to X and Y only: scale steps 5 whatever the grid',
+    resolveValue('scale', { from: 100, dir: 1, via: 'step', snap: { ...s, gridSize: 10 } }) === 105);
+  check('a typed value is exact by default (snapTyped off)', resolveValue('x', { value: 33, via: 'type', snap: s }) === 33);
+  check('...and snaps when snapTyped is set', resolveValue('x', { value: 33, via: 'type', snap: s, config: { snapTyped: true } }) === 35);
+  check('a drag snaps to the grid', resolveValue('x', { value: 33, via: 'drag', snap: s }) === 35);
+
+  const c = { ...s, snapGrid: false, snapCenter: true };
+  check('centre catches a step moving toward it within 2%: 47 + -> 48 -> 50',
+    resolveValue('x', { from: 47, dir: 1, via: 'step', snap: c }) === 50);
+  check('...outside 2% it does not: 46 + -> 47', resolveValue('x', { from: 46, dir: 1, via: 'step', snap: c }) === 47);
+  check('A STEP AWAY FROM THE CENTRE IS NOT HELD: 50 + fine -> 50.1 (the prototype snapped it back to 50)',
+    resolveValue('x', { from: 50, dir: 1, via: 'step', snap: { ...c, fine: true } }) === 50.1);
+  check('a step that CROSSES the centre lands on it: 49.5 + -> 50',
+    resolveValue('x', { from: 49.5, dir: 1, via: 'step', snap: c }) === 50);
+  check('a drag within 2% of the centre lands on it', resolveValue('y', { value: 51.5, via: 'drag', snap: c }) === 50);
+
+  const m = fresh({ snap: { snapGrid: false, snapCenter: true } });
+  m.set('x', 48); m.step('x', 1);
+  check('the model: X at the centre shows the vertical guide', m.selected().x === 50 && m.guides().x === true && m.guides().y === false);
+  m.step('x', 1);
+  check('...and stepping off it hides the guide', m.selected().x === 51 && m.guides().x === false);
+  m.set('x', 50); m.setSnap({ snapCenter: false });
+  check('no guide when snap to centre is off', m.guides().x === false);
+  m.setSnap({ gridSize: 7 });
+  check('a grid size that is not on the list is refused', m.snap().gridSize === 5);
+  const n = createEditModel({ items: ITEMS() });
+  check('snap defaults: grid on (5%), centre on, grid hidden, fine off',
+    JSON.stringify(n.snap()) === JSON.stringify({ snapGrid: true, showGrid: false, gridSize: 5, snapCenter: true, fine: false }));
+  check('with nothing selected first, the top layer is selected', n.selectedId() === 'sign');
+}
+
+// =====================================================================
+section('place and surface');
+{
+  const m = fresh();
+  check('place: In the scene / Flat on screen / Overlay', m.setPlace('overlay') && m.selected().place === 'overlay');
+  check('a place that is not one of the three is refused', m.setPlace('ceiling') === false);
+  m.setPlace('scene');
+  check('surface: Back wall / Left wall / Right wall / Floor', m.setSurface('floor') && m.selected().surface === 'floor');
+  check('an unknown surface is refused', m.setSurface('roof') === false);
+}
+
+// =====================================================================
+section('layers: order, reorder, hide, lock');
+{
+  const m = fresh();
+  check('top first', JSON.stringify(m.order()) === '["sign","pic","clock"]', JSON.stringify(m.order()));
+  check('▲ on the picture swaps it above the sign', m.moveLayer('pic', 1) && JSON.stringify(m.order()) === '["pic","sign","clock"]');
+  check('...by swapping numbers, so the set of layer numbers is unchanged',
+    JSON.stringify(m.items().map((i) => i.layer).sort()) === '[1,2,3]');
+  check('▲ on the top one does nothing', m.moveLayer('pic', 1) === false);
+  check('▼ on the bottom one does nothing', m.moveLayer('clock', -1) === false);
+  const tie = [{ id: 'a', layer: 3 }, { id: 'b', layer: 2 }, { id: 'c', layer: 2 }];
+  check('a tie is broken by list order (later on top)', JSON.stringify(layerOrder(tie).map((i) => i.id)) === '["a","c","b"]');
+  const t2 = moveLayer(tie, 'b', 1);
+  check('moving within a tie swaps exactly those two and invents no number',
+    JSON.stringify(layerOrder(t2).map((i) => i.id)) === '["a","b","c"]' && JSON.stringify(t2.map((i) => i.layer).sort()) === '[2,2,3]');
+  const t3 = sendLayer([{ id: 'a', layer: 3 }, { id: 'b', layer: 2 }, { id: 'c', layer: 1 }], 'c', 1);
+  check('send to front', layerOrder(t3)[0].id === 'c');
+
+  const n = fresh();
+  n.toggleShown('clock');
+  check('Shown/Hidden', n.item('clock').shown === false);
+  n.toggleLocked('pic');
+  check('Lock', n.item('pic').locked === true);
+  check('a LOCKED thing cannot be moved, stepped, reordered, re-placed or deleted',
+    !n.set('x', 10, { id: 'pic' }) && !n.step('x', 1, { id: 'pic' }) && !n.moveLayer('pic', 1)
+    && !n.setPlace('overlay', { id: 'pic' }) && !n.remove('pic'));
+  check('...but it can be hidden and unlocked — otherwise nothing could ever unlock it',
+    n.toggleShown('pic') && n.toggleLocked('pic') && n.item('pic').locked === false);
+  check('another thing can still move past a locked one', (n.toggleLocked('pic'), n.moveLayer('sign', -1)));
+}
+
+// =====================================================================
+section('undo / redo');
+{
+  const m = fresh({ snap: { snapGrid: false, snapCenter: false } });
+  check('nothing to undo at the start', !m.canUndo() && m.undo() === false);
+  m.set('x', 10); m.set('x', 20); m.moveLayer('pic', 1);
+  check('undo reverses the last change (layer)', m.undo() && JSON.stringify(m.order()) === '["sign","pic","clock"]');
+  check('undo again: X back to 10', m.undo() && m.selected().x === 10);
+  check('redo: X to 20', m.redo() && m.selected().x === 20);
+  m.set('x', 30);
+  check('a new change clears redo', !m.canRedo());
+  m.remove('pic');
+  check('delete removes it and selects the next one down', m.item('pic') === null && m.selectedId() === 'clock');
+  check('undo puts it back, selected again', m.undo() && m.item('pic')?.x === 30 && m.selectedId() === 'pic');
+  m.select('sign');
+  check('selection is not an undo step', m.undo() && m.item('pic').x === 20);
+  const h = createEditModel({ items: ITEMS(), config: { historyMax: 3 } });
+  for (let i = 0; i < 6; i++) h.set('scale', 100 + i + 1);
+  let n = 0; while (h.undo()) n++;
+  check('history keeps historyMax steps', n === 3, n);
+}
+
+// =====================================================================
+section('copy / paste / duplicate');
+{
+  const m = fresh();
+  check('duplicate adds a copy, selected, on top, offset', m.duplicate());
+  const d = m.selected();
+  check('...with a new id and a name that says it is a copy', d.id !== 'pic' && d.name === 'Picture frame copy', d.id);
+  check('...on top of everything', m.order()[0] === d.id);
+  check('...offset so it is visibly a second thing', d.x === 24 + EDIT_DEFAULTS.pasteOffset && d.y === 40 + EDIT_DEFAULTS.pasteOffset);
+  check('paste with nothing copied does nothing', m.paste() === false);
+  m.select('sign'); m.copy();
+  check('copy then paste makes another sign', m.paste() && m.selected().text === 'Hello' && m.items().length === 5);
+  check('the copy has its own effects, not a shared reference', (m.toggleEffect('glow'), m.item('sign').fx.glow.on === false));
+  const clip = { v: null, get() { return this.v; }, set(x) { this.v = x; } };
+  const a = createEditModel({ items: ITEMS(), clipboard: clip, selectedId: 'clock' });
+  const b = createEditModel({ items: [], clipboard: clip });
+  a.copy();
+  check('a shared clipboard carries a copy from one model to another (one dashboard to another)', b.paste() && b.items()[0].name === 'Clock module copy');
+  const locked = fresh(); locked.toggleLocked('pic'); locked.duplicate('pic');
+  check('a copy of a locked thing is unlocked, so it can be moved', locked.selected().locked === false);
+}
+
+// =====================================================================
+section('hotkeys — and ignored while typing');
+{
+  const ev = (k, o = {}) => ({ key: k, ctrlKey: false, metaKey: false, shiftKey: false, altKey: false, target: document.body, ...o });
+  check('Ctrl+C copy', editKeyAction(ev('c', { ctrlKey: true })) === 'copy');
+  check('Ctrl+V paste', editKeyAction(ev('v', { ctrlKey: true })) === 'paste');
+  check('Ctrl+D duplicate', editKeyAction(ev('d', { ctrlKey: true })) === 'duplicate');
+  check('Delete', editKeyAction(ev('Delete')) === 'remove');
+  check('Ctrl+Z undo', editKeyAction(ev('z', { ctrlKey: true })) === 'undo');
+  check('Ctrl+Y redo, and Ctrl+Shift+Z too', editKeyAction(ev('y', { ctrlKey: true })) === 'redo' && editKeyAction(ev('Z', { ctrlKey: true, shiftKey: true })) === 'redo');
+  check('Cmd counts as Ctrl', editKeyAction(ev('d', { metaKey: true })) === 'duplicate');
+  check('a bare letter is not an edit', editKeyAction(ev('d')) === null && editKeyAction(ev('Backspace')) === null);
+  const inp = document.createElement('input'), ta = document.createElement('textarea'), ce = document.createElement('div');
+  ce.contentEditable = 'true'; host.append(inp, ta, ce);
+  check('IGNORED WHILE TYPING: Delete in an input is a character, not the thing',
+    editKeyAction(ev('Delete', { target: inp })) === null);
+  check('...Ctrl+Z in a textarea is the textarea\'s own undo', editKeyAction(ev('z', { ctrlKey: true, target: ta })) === null);
+  check('...and in contenteditable', editKeyAction(ev('c', { ctrlKey: true, target: ce })) === null);
+
+  const m = fresh();
+  const hk = bindEditHotkeys(document, m);
+  const e1 = key('d', { ctrlKey: true });
+  check('bound: Ctrl+D duplicates, and the browser\'s bookmark key is claimed', m.items().length === 4 && e1.defaultPrevented);
+  key('z', { ctrlKey: true });
+  check('bound: Ctrl+Z undoes it', m.items().length === 3);
+  key('Delete', {}, inp);
+  check('bound: Delete while typing in a box deletes nothing', m.items().length === 3);
+  const e2 = key('q', { ctrlKey: true });
+  check('an unrelated Ctrl key is left to the page', !e2.defaultPrevented);
+  hk.destroy();
+  key('Delete');
+  check('destroy unbinds: Delete after it does nothing', m.items().length === 3);
+  inp.remove(); ta.remove(); ce.remove();
+}
+
+// =====================================================================
+section('text effects: CSS, and contrast measured with every effect off');
+{
+  const none = textEffectsCss({});
+  check('no effects: text-shadow none, no stroke', none.props.textShadow === 'none' && !none.props.webkitTextStroke);
+  const o = textEffectsCss({ outline: { on: true, w: 3, c: '#112233' } });
+  check('outline: a stroke drawn UNDER the fill (paint-order: stroke fill), doubled',
+    o.props.webkitTextStroke === '6px #112233' && o.props.paintOrder === 'stroke fill' && o.css.includes('paint-order:stroke fill'));
+  const g = textEffectsCss({ glow: { on: true, r: 10, c: '#ffd36e' } });
+  check('glow: two shadows, r and 2r', g.props.textShadow === '0 0 10px #ffd36e, 0 0 20px #ffd36e', g.props.textShadow);
+  const b = textEffectsCss({ bevel: { on: true, d: 2 } });
+  check('bevel: a light shadow up-left, a dark one down-right',
+    b.props.textShadow.startsWith('-2px -2px 0 rgba(255,255,255') && b.props.textShadow.includes('2px 2px 0 rgba(0,0,0'));
+  const e = textEffectsCss({ emboss: { on: true, d: 3 } });
+  check('emboss: the pair the other way round', e.props.textShadow.startsWith('3px 3px 0 rgba(255,255,255') && e.props.textShadow.includes('-3px -3px 0 rgba(0,0,0'));
+  check('an effect that is OFF contributes nothing', textEffectsCss({ glow: { on: false, r: 30 } }).props.textShadow === 'none');
+
+  // The rule.
+  const base = { ink: '#333333', ground: '#222222' };
+  const all = { outline: { on: true, w: 4, c: '#ffffff' }, glow: { on: true, r: 12, c: '#ffffff' }, bevel: { on: true }, emboss: { on: true } };
+  const rOff = measureText({ ...base, fx: {} }).ratio;
+  const rOn = measureText({ ...base, fx: all }).ratio;
+  check('EFFECTS NEVER CARRY THE CONTRAST: the ratio is identical with every effect on or off', rOff === rOn && rOff > 0, `${rOff} ${rOn}`);
+  const w = measureText({ ...base, fx: all });
+  check('dark text on a dark ground WARNS even with a bright outline that makes it look readable',
+    w.ok === false && w.warnings.some((x) => x.code === 'contrast'));
+  check('good contrast: no contrast warning', !measureText({ ink: '#000000', ground: '#ffffff' }).warnings.length);
+  check('a glow of 20px does not warn', !measureText({ fx: { glow: { on: true, r: 20 } } }).warnings.length);
+  check('A GLOW WIDER THAN 20px WARNS', measureText({ fx: { glow: { on: true, r: 21 } } }).warnings.some((x) => x.code === 'glow-wide'));
+  check('...but not when the glow is off', !measureText({ fx: { glow: { on: false, r: 30 } } }).warnings.length);
+  check('with nothing to measure against, the ratio is unknown, not a pass', measureText({ ink: '#000' }).ratio === null && measureText({}).ok === null);
+
+  const m = fresh({ selectedId: 'sign' });
+  check('CONTRAST IS A WARNING, NEVER A BLOCKER: a failing colour is accepted',
+    m.setTextColors({ ink: '#8a5f3c' }) && m.selected().ink === '#8a5f3c' && m.measure().ok === false);
+  check('setting an effect amount turns it on', m.setEffect('glow', 25) && m.selected().fx.glow.on && m.selected().fx.glow.r === 25);
+  check('effect amounts clamp to 0..40', (m.setEffect('glow', 90), m.selected().fx.glow.r === 40) && (m.setEffect('bevel', -3), m.selected().fx.bevel.d === 0));
+  check('a thing without text takes no text effect', m.toggleEffect('glow', { id: 'pic' }) === false);
+  check('normalizeFx fills every effect', Object.keys(normalizeFx({})).join() === 'outline,glow,bevel,emboss');
+}
+
+// =====================================================================
+section('the Transform window');
+{
+  const m = fresh({ snap: { snapGrid: true, snapCenter: true } });
+  let closed = 0;
+  const w = mountTransformWindow(host, m, { onClose: () => closed++ });
+  const el = w.el;
+  check('it is a non-modal dialog', el.getAttribute('role') === 'dialog' && el.getAttribute('aria-modal') === 'false');
+  check('its word is "Transform" (never "transport")', /Transform/.test(el.textContent) && !/transport/i.test(el.textContent));
+  check('it names the selected thing', el.textContent.includes('Picture frame'));
+  for (const k of ['x', 'y', 'scale', 'rot', 'layer']) {
+    check(`${k}: a typed box with − and + either side`, q(el, `input:${k}`) && q(el, `step:${k}:-1`) && q(el, `step:${k}:1`));
+  }
+  check('every stepper has a spoken name', [...el.querySelectorAll('[data-ew^="step:"]')].every((b) => b.getAttribute('aria-label')));
+  check('X box shows the value', q(el, 'input:x').value === '24');
+  q(el, 'step:x:1').click();
+  check('pressing + on X steps it to the next grid line (24 -> 25)', m.selected().x === 25 && q(el, 'input:x').value === '25', m.selected().x);
+  const inp = q(el, 'input:x');
+  inp.value = '33.3'; inp.dispatchEvent(new Event('change', { bubbles: true }));
+  check('typing 33.3 and committing sets 33.3 (typed is exact)', m.selected().x === 33.3);
+  const inp2 = q(el, 'input:x');
+  inp2.value = 'abc'; inp2.dispatchEvent(new Event('change', { bubbles: true }));
+  check('typing garbage changes nothing and the box shows the real value again', m.selected().x === 33.3 && q(el, 'input:x').value === '33.3');
+  const inp3 = q(el, 'input:rot');
+  inp3.value = '12'; inp3.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  check('Enter commits too', m.selected().rot === 12);
+  q(el, 'toggle:fine').click();
+  check('Fine steps is here as well as in Snap, and is pressed', m.snap().fine && q(el, 'toggle:fine').getAttribute('aria-pressed') === 'true');
+  q(el, 'step:rot:1').click();
+  check('with fine steps, rotation + moves 1°', m.selected().rot === 13);
+  q(el, 'place:overlay').click();
+  check('Place: Overlay', m.selected().place === 'overlay' && q(el, 'place:overlay').getAttribute('aria-pressed') === 'true');
+  check('the surface row is only there in the scene', !q(el, 'surface:floor'));
+  q(el, 'place:scene').click();
+  q(el, 'surface:left').click();
+  check('Surface: Left wall', m.selected().surface === 'left' && /Left wall/.test(el.textContent));
+  m.toggleLocked('pic');
+  check('locked: it says so, and the steppers are disabled', /locked/i.test(el.textContent) && q(el, 'step:x:1').disabled);
+  m.toggleLocked('pic');
+  m.select(null);
+  check('nothing selected: it says how to choose something, and nothing to press but Close',
+    /Layers/.test(el.textContent) && w.scanTargets().length === 1);
+  m.select('pic');
+
+  // switch walk
+  const t = w.scanTargets();
+  check('SWITCH WALK: the way out, Close, is first', t[0] === q(el, 'close'), t[0]?.dataset.ew);
+  check('every control a switch can press is in the walk (5 fields × − + , Fine steps, 3 places, 4 surfaces, Close)',
+    t.length === 1 + 10 + 1 + 3 + 4, t.length);
+  check('the typed boxes are NOT stops — a switch cannot type, and each stop costs a scan step',
+    !t.some((b) => b.tagName === 'INPUT'));
+  check('the walk has no disabled control in it', t.every((b) => !b.disabled));
+  check('focusStep(1) lands on Close first', w.focusStep(1) === q(el, 'close') && q(el, 'close').classList.contains('is-scan'));
+  w.focusStep(1);
+  check('...then walks in reading order: X −', w.current()?.dataset.ew === 'step:x:-1');
+  w.focusStep(1);
+  const xBefore = m.selected().x;
+  w.select();
+  check('select() presses the current one (X +), and the cursor stays on it after the redraw',
+    m.selected().x > xBefore && w.current()?.dataset.ew === 'step:x:1');
+  w.focusStep(-1); w.focusStep(-1);
+  check('backwards: X −, then Close', w.current()?.dataset.ew === 'close');
+  w.focusStep(-1);
+  check('the walk wraps backwards', w.current()?.dataset.ew === t[t.length - 1].dataset.ew, w.current()?.dataset.ew);
+
+  // Escape
+  const inside = q(el, 'step:x:1');
+  const esc = key('Escape', {}, inside);
+  check('ESCAPE CLOSES the window', closed === 1 && !host.contains(el));
+  check('...and is claimed, so the page\'s own Escape (the plain bar) is not fired twice', esc.defaultPrevented);
+  check('closing destroys: the window no longer listens to the model', m.listenerCount() === 0);
+}
+
+// =====================================================================
+section('the Snap window');
+{
+  const m = fresh();
+  const w = mountSnapWindow(host, m);
+  const el = w.el;
+  check('four toggles: Snap to grid, Show grid, Snap to centre, Fine steps',
+    ['snapGrid', 'showGrid', 'snapCenter', 'fine'].every((k) => q(el, `toggle:${k}`)));
+  check('grid sizes 2.5 / 5 / 10%, 5 pressed', ['2.5', '5', '10'].every((g) => q(el, `grid:${g}`)) && q(el, 'grid:5').getAttribute('aria-pressed') === 'true');
+  q(el, 'toggle:showGrid').click();
+  check('Show grid toggles the model', m.snap().showGrid === true && q(el, 'toggle:showGrid').getAttribute('aria-pressed') === 'true');
+  q(el, 'grid:10').click();
+  check('Grid 10%', m.snap().gridSize === 10);
+  check('Close is first in the walk', w.scanTargets()[0] === q(el, 'close'));
+  const other = createEditModel({ items: ITEMS() });
+  const t = mountTransformWindow(host, m);
+  m.setSnap({ fine: true });
+  check('one model, two windows: Fine steps pressed in both', q(el, 'toggle:fine').getAttribute('aria-pressed') === 'true'
+    && q(t.el, 'toggle:fine').getAttribute('aria-pressed') === 'true');
+  t.destroy(); w.destroy();
+  check('destroy empties it out of the page', !host.querySelector('.ew-win') && m.listenerCount() === 0 && other);
+}
+
+// =====================================================================
+section('the Layers window');
+{
+  const m = fresh();
+  const w = mountLayersWindow(host, m);
+  const el = w.el;
+  const names = [...el.querySelectorAll('[data-ew^="pick:"]')].map((b) => b.dataset.ew.slice(5));
+  check('top first', JSON.stringify(names) === '["sign","pic","clock"]', JSON.stringify(names));
+  check('each row: ▲ ▼ Shown/Hidden Lock', ['up', 'down', 'shown', 'lock'].every((k) => q(el, `${k}:pic`)));
+  check('▲ and ▼ say what they move', q(el, 'up:pic').getAttribute('aria-label') === 'Move Picture frame up a layer');
+  check('the selected row is marked', q(el, 'pick:pic').getAttribute('aria-pressed') === 'true');
+  q(el, 'pick:clock').click();
+  check('SELECTING A ROW SELECTS THE THING — no canvas click needed', m.selectedId() === 'clock' && q(el, 'pick:clock').getAttribute('aria-pressed') === 'true');
+  q(el, 'up:clock').click();
+  check('▲ moves it up', JSON.stringify(m.order()) === '["sign","clock","pic"]');
+  check('▲ on the top row is disabled, and out of the walk', q(el, 'up:sign').disabled && !w.scanTargets().includes(q(el, 'up:sign')));
+  q(el, 'shown:clock').click();
+  check('Shown -> Hidden', m.item('clock').shown === false && /Hidden/.test(q(el, 'shown:clock').textContent));
+  q(el, 'lock:clock').click();
+  check('Lock -> Locked', m.item('clock').locked === true && /Locked/.test(q(el, 'lock:clock').textContent));
+  check('a locked row\'s ▲ ▼ are disabled', q(el, 'up:clock').disabled && q(el, 'down:clock').disabled);
+  q(el, 'lock:clock').click();
+  check('the actions are buttons too, for a switch: Undo Redo Duplicate Copy Paste Delete',
+    ['undo', 'redo', 'duplicate', 'copy', 'paste', 'remove'].every((a) => q(el, `act:${a}`)));
+  q(el, 'act:duplicate').click();
+  check('Duplicate', m.items().length === 4);
+  q(el, 'act:undo').click();
+  check('Undo', m.items().length === 3);
+  check('Redo is enabled once there is something to redo', !q(el, 'act:redo').disabled);
+  check('Paste is disabled with nothing copied', q(el, 'act:paste').disabled);
+  q(el, 'act:remove').click();
+  check('Delete', m.item('clock') === null);
+  check('Close is first in the walk', w.scanTargets()[0] === q(el, 'close'));
+  w.focusStep(1);
+  const esc = key('Escape', {}, q(el, 'close'));
+  check('Escape closes', !host.contains(el) && esc.defaultPrevented);
+}
+
+// =====================================================================
+section('the Text effects window');
+{
+  const m = fresh({ selectedId: 'pic' });
+  const w = mountTextEffectsWindow(host, m);
+  const el = w.el;
+  check('a thing without text: it says what to do, nothing to press but Close', /text/i.test(el.textContent) && w.scanTargets().length === 1);
+  m.select('sign');
+  check('the name sign: Outline, Glow, Bevel, Emboss', ['outline', 'glow', 'bevel', 'emboss'].every((k) => q(el, `fx:${k}`)));
+  check('outline and bevel start on (pressed)', q(el, 'fx:outline').getAttribute('aria-pressed') === 'true' && q(el, 'fx:glow').getAttribute('aria-pressed') === 'false');
+  q(el, 'fx:glow').click();
+  check('pressing Glow turns it on', m.selected().fx.glow.on === true);
+  for (let i = 0; i < 9; i++) q(el, 'fxstep:glow:1').click();
+  check('a glow of 21px shows the warning', m.selected().fx.glow.r === 21 && /blur the letter shapes/.test(el.textContent));
+  q(el, 'fxstep:glow:-1').click();
+  check('...and 20px does not', !/blur the letter shapes/.test(el.textContent));
+  const fi = q(el, 'fxinput:outline');
+  fi.value = '6'; fi.dispatchEvent(new Event('change', { bubbles: true }));
+  check('typing an outline width', m.selected().fx.outline.w === 6);
+  check('the contrast line reads the text\'s own colour, effects off', /with every effect off/i.test(el.textContent));
+  m.setTextColors({ ink: '#8a5f3c' });
+  check('a failing colour shows a WARNING, and the colour stays (never a blocker)',
+    el.querySelector('[data-ew-warn="contrast"]') && m.selected().ink === '#8a5f3c');
+  const r1 = el.querySelector('[data-ew-ratio]')?.textContent;
+  q(el, 'fx:outline').click();
+  const r2 = el.querySelector('[data-ew-ratio]')?.textContent;
+  check('switching an effect off does not change the measured contrast', r1 && r1 === r2, `${r1} / ${r2}`);
+  // LAYOUT, measured (headless Chrome is not a hidden document, so layout is real here). The
+  // window's kind class once collided with the effect-row class and laid the whole window out as
+  // a two-column grid: header squeezed into a side column, number boxes zero wide. Wait for the
+  // stylesheet so this cannot pass on an unstyled page.
+  const link = document.querySelector('link[data-edit-windows-css]');
+  if (link && !link.sheet) await new Promise((r) => { link.addEventListener('load', r, { once: true }); setTimeout(r, 3000); });
+  check('the component loaded its own stylesheet', !!link?.sheet);
+  const head = el.querySelector('.ew-head').getBoundingClientRect();
+  const body = el.querySelector('.ew-in').getBoundingClientRect();
+  check('LAYOUT: the header sits above the body, full width', head.bottom <= body.top + 1 && head.width >= el.getBoundingClientRect().width - 2,
+    `head ${Math.round(head.bottom)}/${Math.round(head.width)} body ${Math.round(body.top)}`);
+  check('LAYOUT: every effect\'s number box is wide enough to read', [...el.querySelectorAll('[data-ew^="fxinput:"]')].every((n) => n.getBoundingClientRect().width >= 40),
+    [...el.querySelectorAll('[data-ew^="fxinput:"]')].map((n) => Math.round(n.getBoundingClientRect().width)).join(','));
+  check('LAYOUT: every button a switch can land on is at least 44px tall',
+    w.scanTargets().every((b) => b.getBoundingClientRect().height >= 44 - 0.5));
+  const t = w.scanTargets();
+  check('Close first; then each effect\'s toggle, −, + (4 × 3)', t[0] === q(el, 'close') && t.length === 1 + 4 * 3, t.length);
+  w.destroy();
+}
+
+// =====================================================================
+section('destroy cleans up');
+{
+  const m = fresh();
+  const wins = [mountTransformWindow(host, m), mountSnapWindow(host, m), mountLayersWindow(host, m), mountTextEffectsWindow(host, m)];
+  check('four windows subscribe', m.listenerCount() === 4);
+  let closes = 0;
+  const w = mountTransformWindow(host, m, { onClose: () => closes++ });
+  const el = w.el;
+  wins.forEach((x) => x.destroy());
+  w.destroy();
+  check('after destroy, nothing listens to the model', m.listenerCount() === 0);
+  check('...every window is gone from the page', !host.querySelector('.ew-win'));
+  key('Escape', {}, el);
+  check('...and a stray Escape on a destroyed window calls nobody', closes === 0);
+  check('destroy twice is harmless', (w.destroy(), true));
+  m.set('x', 70);
+  check('...and a model change draws nothing', host.children.length === 0);
+}
+
+finish();
+</script>
+</body>
+</html>
