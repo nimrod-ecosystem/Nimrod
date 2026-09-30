@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>music — favourites by name (row 2.32)</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host,#host2,#yhost{width:360px;height:420px;margin-top:12px;position:relative}
+</style>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../music.css">
+</head>
+<body>
+<h1>music — "computer please play &lt;name&gt;"</h1>
+<div class="note">
+  Row 2.32. One favourites list; one verb, <code>music/play { name }</code>; three players behind it:
+  the YouTube panel (or the music panel's own YouTube player), music files through the audio bus, and
+  Spotify on a device that is already on. <b>No network and no Spotify account:</b> the YouTube player,
+  the audio element, the media sources and Spotify's API are all fakes. Nothing here has been run
+  against real Spotify.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div><div id="host2"></div><div id="yhost"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { fieldsFor } from '../settings_fields.js';
+import { createAudioBus, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY } from '../audio_bus.js';
+import { PHRASES, ROUTES, spokenTable, duplicatePhrases, attachSpeech, routeAction, phraseControl } from '../input_speech.js';
+import { createActionRegistry } from '../actions.js';
+import {
+  parseSource, parseSpotifyUri, normalizeFavourites, findFavourite, musicSpeechRoutes, musicSpeechActions,
+  musicSpeechBindings, startersFrom, watchFavourites, FAVOURITES_KEY, STOP_ROUTE_ID,
+} from '../music_favourites.js';
+import { createLocalMusic } from '../music_local.js';
+import {
+  createSpotify, completeLogin, playBody, pickDevice, base64url, PENDING_KEY, tokenKey,
+  SPOTIFY_SCOPES, SPOTIFY_AUTHORIZE_URL, SPOTIFY_TOKEN_URL, safeReturn,
+} from '../music_spotify.js';
+import { createMusicRouter } from '../music_player.js';
+import '../modules/music.js';
+import '../modules/youtube.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const J = (v) => JSON.stringify(v);
+
+// ---- fakes ------------------------------------------------------------------------------------
+function fakeState(initial = {}) {
+  let cfg = { ...initial };
+  const subs = new Set();
+  return {
+    load: async () => {}, get: () => cfg,
+    set: (p) => { cfg = { ...cfg, ...p }; for (const f of [...subs]) f(cfg); },
+    subscribe: (fn) => { subs.add(fn); fn(cfg); return () => subs.delete(fn); },
+    flush: async () => {}, destroy: () => { subs.clear(); }, startPolling() {},
+  };
+}
+function fakeAudioFactory(log) {
+  return (src) => {
+    const h = {};
+    const a = {
+      src, volume: 1, paused: true, plays: 0,
+      addEventListener: (k, fn) => { h[k] = fn; },
+      play() { this.paused = false; this.plays++; log.push(`play:${src}`); return Promise.resolve(); },
+      pause() { this.paused = true; log.push(`pause:${src}`); },
+      removeAttribute(k) { if (k === 'src') this.src = ''; }, load() {},
+      fire: (k) => h[k]?.(),
+    };
+    log.els = log.els || []; log.els.push(a); log.last = a;
+    return a;
+  };
+}
+function stubPlayer() {
+  const rec = { loaded: [], cued: [], made: 0, stopped: 0, destroyed: 0, gains: [], h: null };
+  rec.factory = (el, h) => {
+    rec.made++; rec.h = h;
+    return {
+      load: (id) => rec.loaded.push(id), cueList: (l) => rec.cued.push(l),
+      stop: () => { rec.stopped++; }, pause() {}, resume() {}, setGain: (g) => rec.gains.push(g),
+      currentTime: () => null, destroy: () => { rec.destroyed++; },
+    };
+  };
+  return rec;
+}
+// Timers the modules are handed, so "nothing left running" is an assertion.
+function timers() {
+  const live = new Set();
+  return {
+    live,
+    setTimer: (fn, ms) => { const id = setTimeout(() => { live.delete(id); fn(); }, ms); live.add(id); return id; },
+    clearTimer: (id) => { clearTimeout(id); live.delete(id); },
+  };
+}
+
+const YT = 'dQw4w9WgXcQ';
+const FAVS = normalizeFavourites([
+  { id: 'fbeatles', name: 'the Beatles', source: `https://www.youtube.com/watch?v=${YT}` },
+  { id: 'fjazz', name: 'Jazz', aliases: ['some jazz'], source: { kind: 'folder', sourceId: 's1', album: 'Jazz' } },
+  { id: 'fhymn', name: 'Morning hymn', source: { kind: 'file', sourceId: 's1', path: 'Hymns/morning.mp3' } },
+  { id: 'fspot', name: 'Dinner music', source: 'https://open.spotify.com/playlist/37i9dQZF1DX4xuWVBs4FgJ?si=abc' },
+]);
+
+(async () => {
+  try {
+    // ============================================================================================
+    section('the list: what a favourite can point at');
+    check('a YouTube watch link is a video', J(parseSource(`https://youtu.be/${YT}`)) === J({ kind: 'youtube', videoId: YT }));
+    check('a YouTube playlist link is a playlist',
+      J(parseSource('https://www.youtube.com/playlist?list=PLR0lG5yo6NRE')) === J({ kind: 'youtube', playlistId: 'PLR0lG5yo6NRE' }));
+    check('an open.spotify.com link (with intl- and ?si=) is a Spotify URI',
+      parseSpotifyUri('https://open.spotify.com/intl-de/album/4aawyAB9vmqN3uQ7FjRGTy?si=x') === 'spotify:album:4aawyAB9vmqN3uQ7FjRGTy');
+    check('a spotify: URI is kept', J(parseSource('spotify:track:6rqhFgbbKwnb9MLmUQDhG6')) === J({ kind: 'spotify', uri: 'spotify:track:6rqhFgbbKwnb9MLmUQDhG6' }));
+    check('junk is nothing', parseSource('play something nice') === null && parseSpotifyUri('https://evil.example/track/abcdefghijk') === '');
+    check('four good entries survive, in order', FAVS.map((f) => f.id).join() === 'fbeatles,fjazz,fhymn,fspot', J(FAVS.map((f) => f.id)));
+    {
+      const n = normalizeFavourites([{ name: 'X', source: 'nope' }, { name: '', source: `${YT}` },
+        { name: 'Jazz', source: YT }, { name: 'jazz', source: YT }, { name: 'Lullaby', source: { kind: 'file', sourceId: 's1', path: '' } }]);
+      check('rows with no source, no name, a repeated name or an empty path are dropped', n.length === 1 && n[0].name === 'Jazz', J(n));
+    }
+
+    section('finding one by name — exact first, a near miss only when it is near exactly one');
+    check('exact, any case', findFavourite(FAVS, 'THE BEATLES').entry?.id === 'fbeatles');
+    check('"beatles" finds "the Beatles" (a leading the/some/my/a is not the name)', findFavourite(FAVS, 'beatles').status === 'exact');
+    check('an alias finds its entry', findFavourite(FAVS, 'some jazz').entry?.id === 'fjazz');
+    {
+      const n = findFavourite(FAVS, 'the beetles');
+      check('*** one word off one favourite is NEAR, not exact — it is never played from here ***',
+        n.status === 'near' && n.entry.id === 'fbeatles', J(n));
+    }
+    {
+      const two = normalizeFavourites([{ name: 'Jazz one', source: YT }, { name: 'Jazz two', source: YT }]);
+      check('*** near two favourites is nothing — a guess between two is a coin flip ***',
+        findFavourite(two, 'jazz three').status === 'none', J(findFavourite(two, 'jazz three')));
+    }
+    check('nothing like any name is none', findFavourite(FAVS, 'polka').status === 'none');
+
+    // ============================================================================================
+    section('speech: the favourites as routes, in input_speech\'s own shape');
+    {
+      const { routes, skipped } = musicSpeechRoutes(FAVS);
+      const b = routes['music-fbeatles'];
+      check('each favourite is a route to music/play { name, id }', b && b.topic === 'music/play' && b.payload.name === 'the Beatles' && b.payload.id === 'fbeatles', J(b));
+      check('"play <name>" and "put on <name>" are its phrases', b.phrases.includes('play the beatles') && b.phrases.includes('put on the beatles'), J(b.phrases));
+      check('an alias gets its own phrases', routes['music-fjazz'].phrases.includes('play some jazz'), J(routes['music-fjazz'].phrases));
+      check('a stop route names the music', routes[STOP_ROUTE_ID]?.topic === 'music/stop' && routes[STOP_ROUTE_ID].phrases.includes('stop the music'));
+      check('*** nothing made here collides with a command or another route (duplicatePhrases stays empty) ***',
+        duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes })).length === 0, J(duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes }))));
+      check('no skips for an ordinary list', skipped.length === 0, J(skipped));
+    }
+    {
+      const odd = normalizeFavourites([{ id: 'fit', name: 'it', source: YT }, { id: 'fitt', name: 'the video', source: YT },
+        { id: 'ftop', name: 'Top 40', source: YT }, { id: 'fopp', name: 'opposites', source: YT }]);
+      const { routes, skipped } = musicSpeechRoutes(odd);
+      const why = Object.fromEntries(skipped.map((s) => [s.phrase || s.name, s.why]));
+      check('*** "play the video" is the play verb already, so it is not made ***', why['play the video'] === 'taken' && !routes['music-fitt']?.phrases.includes('play the video'), J(skipped));
+      check('"play opposites" is the word game\'s route already', why['play opposites'] === 'taken', J(skipped));
+      check('a name with digits is skipped with a reason (say "top forty")', why['Top 40'] === 'digits', J(skipped));
+      check('a two-letter name is too short to say reliably', why.it === 'short', J(skipped));
+      check('and still no collision anywhere', duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes })).length === 0);
+    }
+    check('starters come from the setting, blank is the default', startersFrom('play | put on | spin').join() === 'play,put on,spin' && startersFrom('  ').join() === 'play,put on');
+    {
+      const { routes } = musicSpeechRoutes(FAVS);
+      const reg = createActionRegistry();
+      let threw = null;
+      try { reg.registerAll(musicSpeechActions(routes)); } catch (e) { threw = e; }
+      const a = reg.get(routeAction('music-fbeatles'));
+      check('the routes register as actions (ids pass the registry\'s rule)', !threw && a && a.topic === 'music/play' && a.payload.id === 'fbeatles', String(threw));
+      const binds = musicSpeechBindings(routes);
+      check('...and bind on the speech device, one press per phrase', binds.every((x) => x.device === 'speech' && x.control.startsWith('phrase:music-')), J(binds[0]));
+
+      // The real speech layer with a fake recogniser: the wake phrase plus a favourite presses its route.
+      const pressed = [];
+      const input = { down: (d, c) => pressed.push(`${d}:${c}`), up() {} };
+      let say = null;
+      const rec = { start(fn) { say = fn; this.running = true; }, stop() { this.running = false; } };
+      const sp = attachSpeech(input, { recognizer: rec, routes: { ...ROUTES, ...routes }, confirm: 'off', bus: null });
+      sp.start();
+      say('computer please play the beatles');
+      check('*** "computer please play the beatles" presses that favourite\'s route ***',
+        pressed.includes(`speech:${phraseControl('music-fbeatles')}`), J(pressed));
+      say('computer please stop the music');
+      check('"computer please stop the music" presses the stop route', pressed.includes(`speech:${phraseControl(STOP_ROUTE_ID)}`), J(pressed));
+      say('computer please play');
+      check('bare "play" is still the play verb', pressed.includes('speech:phrase:play'), J(pressed));
+      say('computer please play the beetles');
+      check('*** "play the beetles" asks rather than playing (input_speech\'s near miss, over the favourites too) ***',
+        sp.nearMissPending()?.id === 'music-fbeatles', J(sp.nearMissPending()));
+      sp.destroy();
+    }
+
+    // ============================================================================================
+    section('local files: through the audio bus, on its own source');
+    const SOURCES = { list: async () => [{ id: 's1', label: 'Family music', kind: 'folder' }] };
+    const released = [];
+    const resolveItem = async (s, path) => ({ url: `blob:${path}`, release: () => released.push(path) });
+    const resolve = async (s, album) => ({ items: [
+      { path: `${album}/b.mp3`, url: `u:${album}/b.mp3` }, { path: `${album}/a.mp3`, url: `u:${album}/a.mp3` },
+      { path: `${album}/cover.jpg`, url: `u:${album}/cover.jpg` }] });
+    {
+      const bus = createAudioBus();
+      const log = [];
+      const m = createLocalMusic({ audio: bus, audioId: 'loc', sources: SOURCES, resolve, resolveItem, makeAudio: fakeAudioFactory(log) });
+      check('it registers on the audio bus: media tier, music group, VIDEO priority',
+        bus.state().loc && bus.state().loc.tier === 'media' && bus.state().loc.group === MUSIC_GROUP && bus.state().loc.channel === 'media', J(bus.state()));
+      const r = await m.playFile({ sourceId: 's1', path: 'Hymns/morning.mp3' });
+      check('a file favourite plays the file', r.ok && log.includes('play:blob:Hymns/morning.mp3'), J({ r, log }));
+      check('...and tells the bus it is making sound', bus.isActive('loc') && bus.levelOf('loc') === 1);
+      // A game's music bed yields to it.
+      bus.register('game', { tier: 'media', group: MUSIC_GROUP, groupPriority: GAME_MUSIC_PRIORITY });
+      bus.setActive('game', true);
+      check('a game\'s music bed yields to a song somebody asked for', bus.levelOf('game') === 0 && bus.levelOf('loc') === 1);
+      bus.setActive('game', false);
+      // A video started after it takes the speaker; the song PAUSES and comes back.
+      bus.register('video', { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY });
+      bus.setActive('video', true);
+      check('*** a video put on afterwards takes the speaker, and the song PAUSES (not plays silently) ***',
+        bus.levelOf('loc') === 0 && log.last.paused === true, J({ lvl: bus.levelOf('loc'), paused: log.last.paused }));
+      bus.setActive('video', false);
+      check('*** ...and carries on from where it was when the video stops ***', bus.levelOf('loc') === 1 && log.last.paused === false);
+      bus.register('cue', { tier: 'voice' }); bus.setActive('cue', true);
+      check('a spoken prompt ducks it', log.last.volume === bus.levelOf('loc') && bus.levelOf('loc') < 1 && bus.levelOf('loc') > 0, J({ v: log.last.volume }));
+      bus.setActive('cue', false);
+      m.setVolume(0.5);
+      check('its own volume multiplies with the bus', log.last.volume === 0.5);
+      m.stop();
+      check('stop releases the file and hands the speaker back', released.includes('Hymns/morning.mp3') && !bus.isActive('loc') && !m.state().hasElement);
+      const f = await m.playFolder({ sourceId: 's1', album: 'Jazz' });
+      check('a folder plays only its music files', f.ok && f.tracks === 2, J(f));
+      m.destroy();
+      check('*** destroy leaves no source on the bus and no element playing ***', !('loc' in bus.state()) && log.els.every((e) => e.paused), J(bus.state()));
+    }
+    {
+      const log = [];
+      const m = createLocalMusic({ sources: SOURCES, resolve: async () => ({ items: [{ path: 'x.jpg', url: 'u' }] }), resolveItem, makeAudio: fakeAudioFactory(log) });
+      check('a folder with no music says so', (await m.playFolder({ sourceId: 's1', album: '' })).reason === 'no-audio');
+      check('a source that is not connected here says so', (await m.playFile({ sourceId: 'nope', path: 'a.mp3' })).reason === 'not-connected');
+      const none = createLocalMusic({});
+      check('no media sources at all says so', (await none.playFile({ sourceId: 's1', path: 'a.mp3' })).reason === 'no-sources');
+      const ok = createLocalMusic({ sources: SOURCES, resolveItem, makeAudio: fakeAudioFactory(log) });
+      await ok.playFile({ sourceId: 's1', path: 'a.mp3' });
+      log.last.fire('error');
+      check('a file that will not play stops and says why', ok.state().reason === 'unplayable' && !ok.state().wanted);
+      [m, none, ok].forEach((x) => x.destroy());
+      check('with no bus at all it still plays (a missing arbiter is loud, never silent)', true);
+    }
+
+    // ============================================================================================
+    section('Spotify: PKCE in the browser, the household\'s own client ID, tokens on this device');
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m }; };
+    function fakeSpotifyFetch(script = {}) {
+      const calls = [];
+      const fn = async (url, init = {}) => {
+        calls.push({ url, method: init.method || 'GET', headers: init.headers || {}, body: init.body || null });
+        const u = new URL(url);
+        const key = `${init.method || 'GET'} ${u.origin}${u.pathname}`;
+        const h = script[key];
+        const r = typeof h === 'function' ? h(url, init, calls) : h;
+        const { status = 200, json = {} } = r || {};
+        return { ok: status >= 200 && status < 300, status, json: async () => json };
+      };
+      fn.calls = calls;
+      return fn;
+    }
+    {
+      const sp = createSpotify({ clientId: '' });
+      check('*** with no client ID it is UNAVAILABLE, and the message says how to get one ***',
+        !sp.available() && (await sp.play({ uri: 'spotify:track:6rqhFgbbKwnb9MLmUQDhG6' })).reason === 'no-client-id');
+    }
+    {
+      const storage = mem();
+      let went = null;
+      const sp = createSpotify({ clientId: 'abc123', redirectUri: 'https://nimrod.test/spotify_callback.html', storage,
+        navigate: (u) => { went = u; }, fetchFn: fakeSpotifyFetch() });
+      const r = await sp.beginLogin({ returnTo: '/kiosk.html?key=zzz' });
+      const u = new URL(went);
+      const pending = JSON.parse(storage.getItem(PENDING_KEY));
+      const expect = base64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pending.verifier))));
+      check('sign-in goes to accounts.spotify.com/authorize', r.ok && `${u.origin}${u.pathname}` === SPOTIFY_AUTHORIZE_URL);
+      check('with response_type=code, S256, the two scopes, the redirect and a state',
+        u.searchParams.get('response_type') === 'code' && u.searchParams.get('code_challenge_method') === 'S256'
+        && u.searchParams.get('scope') === SPOTIFY_SCOPES.join(' ') && u.searchParams.get('redirect_uri') === 'https://nimrod.test/spotify_callback.html'
+        && u.searchParams.get('state') === pending.state && u.searchParams.get('client_id') === 'abc123', went);
+      check('*** the challenge is base64url(SHA-256(verifier)) and the verifier itself never leaves ***',
+        u.searchParams.get('code_challenge') === expect && !went.includes(pending.verifier) && pending.verifier.length >= 43 && pending.verifier.length <= 128);
+      check('no client secret anywhere', !/secret/i.test(went));
+
+      // The callback page's half.
+      const f = fakeSpotifyFetch({ [`POST ${SPOTIFY_TOKEN_URL}`]: { json: { access_token: 'AT1', refresh_token: 'RT1', expires_in: 3600 } } });
+      const bad = await completeLogin(`?code=c1&state=WRONG`, { storage: mem(), fetchFn: f });
+      check('a callback with no matching sign-in on this device is refused', !bad.ok && bad.reason === 'state-mismatch' && f.calls.length === 0);
+      const done = await completeLogin(`?code=c1&state=${pending.state}`, { storage, fetchFn: f });
+      const body = new URLSearchParams(f.calls[0]?.body || '');
+      check('the code is traded at the token endpoint with the verifier, form-encoded',
+        done.ok && body.get('grant_type') === 'authorization_code' && body.get('code_verifier') === pending.verifier
+        && body.get('client_id') === 'abc123' && f.calls[0].headers['Content-Type'] === 'application/x-www-form-urlencoded', J(f.calls[0]));
+      check('it goes back to the page it started from, same site only', done.returnTo === '/kiosk.html?key=zzz' && safeReturn('//evil.example') === '/' && safeReturn('https://evil.example') === '/');
+      check('tokens are kept in this browser, and the pending verifier is gone', JSON.parse(storage.getItem(tokenKey('abc123'))).access === 'AT1' && storage.getItem(PENDING_KEY) === null);
+      check('the sign-in cannot be replayed', (await completeLogin(`?code=c1&state=${pending.state}`, { storage, fetchFn: f })).reason === 'state-mismatch');
+    }
+    {
+      const storage = mem();
+      storage.setItem(tokenKey('abc'), JSON.stringify({ access: 'OLD', refresh: 'R', expiresAt: Date.now() + 3600e3 }));
+      let first401 = true;
+      const DEV = { devices: [{ id: 'd1', name: 'Kitchen speaker', type: 'Speaker', is_active: false }, { id: 'd2', name: 'Phone', type: 'Smartphone', is_active: true }] };
+      const f = fakeSpotifyFetch({
+        'GET https://api.spotify.com/v1/me/player/devices': (u, init) => (init.headers.Authorization === 'Bearer OLD' && first401 ? (first401 = false, { status: 401 }) : { json: DEV }),
+        [`POST ${SPOTIFY_TOKEN_URL}`]: { json: { access_token: 'NEW', expires_in: 3600 } },
+        'PUT https://api.spotify.com/v1/me/player/play': { status: 204 },
+        'PUT https://api.spotify.com/v1/me/player/pause': { status: 204 },
+      });
+      const logs = [];
+      const orig = { log: console.log, error: console.error, warn: console.warn, info: console.info, debug: console.debug };
+      for (const k of Object.keys(orig)) console[k] = (...a) => { logs.push(a.map(String).join(' ')); orig[k](...a); };
+      const sp = createSpotify({ clientId: 'abc', storage, fetchFn: f });
+      const r = await sp.play({ uri: 'spotify:playlist:37i9dQZF1DX4xuWVBs4FgJ', device: 'kitchen speaker' });
+      const put = f.calls.find((c) => c.method === 'PUT');
+      check('*** "play on the kitchen speaker": the device is found by name and the play goes to it ***',
+        r.ok && r.device === 'Kitchen speaker' && put && put.url === 'https://api.spotify.com/v1/me/player/play?device_id=d1', J({ r, put }));
+      check('a playlist is sent as context_uri', put && J(JSON.parse(put.body)) === J({ context_uri: 'spotify:playlist:37i9dQZF1DX4xuWVBs4FgJ' }));
+      check('a track is sent as uris', J(playBody('spotify:track:6rqhFgbbKwnb9MLmUQDhG6')) === J({ uris: ['spotify:track:6rqhFgbbKwnb9MLmUQDhG6'] }));
+      const refresh = f.calls.find((c) => c.url === SPOTIFY_TOKEN_URL);
+      const rb = new URLSearchParams(refresh?.body || '');
+      check('a 401 refreshes once (grant_type=refresh_token, client_id, no secret) and retries',
+        rb.get('grant_type') === 'refresh_token' && rb.get('refresh_token') === 'R' && rb.get('client_id') === 'abc' && !rb.has('client_secret'));
+      check('when Spotify sends no new refresh token the old one is kept', JSON.parse(storage.getItem(tokenKey('abc'))).refresh === 'R');
+      check('no device named: the active one', pickDevice(DEV.devices, '').id === 'd2');
+      check('*** every request went to Spotify, none to this site ***', f.calls.every((c) => /^https:\/\/(accounts|api)\.spotify\.com\//.test(c.url)), J(f.calls.map((c) => c.url)));
+      check('pause goes to the same device', (await sp.pause()).ok && f.calls.at(-1).url.endsWith('/me/player/pause?device_id=d1'));
+      for (const k of Object.keys(orig)) console[k] = orig[k];
+      check('*** no token was ever written to the console ***', !logs.some((l) => /OLD|NEW|Bearer/.test(l)), J(logs));
+    }
+    {
+      const storage = mem();
+      storage.setItem(tokenKey('abc'), JSON.stringify({ access: 'A', refresh: 'R', expiresAt: Date.now() + 3600e3 }));
+      const one = (script) => createSpotify({ clientId: 'abc', storage, fetchFn: fakeSpotifyFetch(script) });
+      const DEV = { json: { devices: [{ id: 'd1', name: 'Speaker', is_active: true }] } };
+      check('403 is "needs Premium", in words', (await one({ 'GET https://api.spotify.com/v1/me/player/devices': DEV, 'PUT https://api.spotify.com/v1/me/player/play': { status: 403 } }).play({ uri: 'spotify:album:4aawyAB9vmqN3uQ7FjRGTy' })).reason === 'premium-needed');
+      check('no device switched on says so', (await one({ 'GET https://api.spotify.com/v1/me/player/devices': { json: { devices: [] } } }).play({ uri: 'spotify:album:4aawyAB9vmqN3uQ7FjRGTy' })).reason === 'no-device');
+      check('a speaker name nobody has says so', (await one({ 'GET https://api.spotify.com/v1/me/player/devices': DEV }).play({ uri: 'spotify:album:4aawyAB9vmqN3uQ7FjRGTy', device: 'garage' })).reason === 'device-not-found');
+      check('not signed in on this device says so', (await createSpotify({ clientId: 'zzz', storage: mem(), fetchFn: fakeSpotifyFetch() }).play({ uri: 'spotify:album:4aawyAB9vmqN3uQ7FjRGTy' })).reason === 'signed-out');
+    }
+
+    // ============================================================================================
+    section('the router: one verb, the right player, one answer per screen');
+    {
+      const bus = createBus();
+      const loads = [];
+      // A YouTube panel, as far as the router can tell: it answers who, and takes a load on its own address.
+      bus.subscribe('youtube/who', () => bus.publish('youtube/here', { instanceId: 'yt1' }));
+      bus.subscribe('youtube/load#yt1', (p) => loads.push(p));
+      const pauses = [];
+      bus.subscribe('youtube/pause#yt1', () => pauses.push(1));
+      const r1 = createMusicRouter({ bus, favourites: () => FAVS });
+      const r2 = createMusicRouter({ bus, favourites: () => FAVS });
+      bus.publish('music/play', { name: 'the beatles' });
+      await tick();
+      check('*** music/play reaches the YouTube panel, at ITS address, once — not once per music panel ***',
+        loads.length === 1 && loads[0].videoId === YT, J(loads));
+      check('the first router answers; the second stands by', r1.isLeader() && !r2.isLeader());
+      bus.publish('music/stop');
+      await tick();
+      check('music/stop pauses that panel', pauses.length === 1 && !r1.status().playing);
+      r1.destroy();
+      check('when the first goes, the second takes over', r2.isLeader());
+      bus.publish('music/play', 'The Beatles');
+      await tick();
+      check('...and answers', loads.length === 2);
+      r2.destroy();
+    }
+    {
+      const bus = createBus();
+      const spoke = [];
+      const r = createMusicRouter({ bus, favourites: () => FAVS, say: (t) => spoke.push(t) });
+      let res = await r.play({ name: 'the beatles' });
+      check('*** no YouTube panel and no player of its own: it says there is nowhere to play it ***',
+        !res.ok && res.reason === 'no-youtube' && /no YouTube panel/.test(spoke.at(-1) || ''), J({ res, spoke }));
+      res = await r.play({ name: 'polka' });
+      check('an unknown name says so, naming it', res.reason === 'not-found' && /polka/.test(spoke.at(-1)));
+      const asked = [];
+      bus.subscribe('music/did-you-mean', (p) => asked.push(p));
+      res = await r.play({ name: 'the beetles' });
+      check('*** a near miss ASKS and plays nothing ***', res.reason === 'did-you-mean' && asked[0]?.name === 'the Beatles' && r.status().asking === 'the Beatles', J({ res, asked }));
+      res = await r.confirm();
+      check('...and a yes plays the one it asked about', res.reason === 'no-youtube' && r.status().asking === null, J(res));
+      res = await r.play({ name: 'Dinner music' });
+      check('a Spotify favourite with Spotify off says so', res.reason === 'spotify-off');
+      r.destroy();
+      const r2 = createMusicRouter({ bus, favourites: () => FAVS, nearMatch: () => 'play', ownYoutube: { play() {}, stop() {} } });
+      check('with "play the close one", a near miss plays', (await r2.play('the beetles')).ok);
+      r2.destroy();
+    }
+
+    // ============================================================================================
+    section('the panel: the list, the buttons, and where things play');
+    const T = timers();
+    const rootBus = createBus();
+    const audio = createAudioBus();
+    const person = new Map();
+    const makePersonState = (pid, key) => { const k = `${pid}:${key}`; if (!person.has(k)) person.set(k, fakeState({})); return person.get(k); };
+    const alog = [];
+    const yp = stubPlayer();
+    const ctxFor = (el, id, extra = {}) => ({
+      mount: el, bus: rootBus, rootBus, instanceId: id, state: fakeState({}), events: { append: async () => {}, subscribe() {} },
+      user: 'u', profileId: 'p', personId: 'p1', makePersonState, audio,
+      sources: SOURCES, resolveItem, resolveListing: resolve, makeAudio: fakeAudioFactory(alog),
+      playerFactory: yp.factory, setTimer: T.setTimer, clearTimer: T.clearTimer, ...extra,
+    });
+    const host = document.getElementById('host');
+    const m1 = mountModule('music', ctxFor(host, 'mu1'));
+    m1.init();
+    await tick();
+    const probe = () => m1.impl.__probe();
+    const q = (s) => host.querySelector(s);
+    check('the settings are declared as data, Spotify OFF by default', fieldsFor(getManifest('music')).find((f) => f.key === 'spotifyOn')?.default === false);
+    check('the list is kept for the PERSON when the host says whose screen it is', probe().personList === true);
+    check('it starts empty and says how to add one', /No favourites yet/.test(host.textContent));
+
+    // Change the list, by pressing the buttons a person presses.
+    q('[data-act="edit"]').click();
+    await tick();
+    const type = (sel, v) => { const el = q(sel); el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); };
+    type('[data-fav-name]', 'the Beatles');
+    type('[data-fav-link]', `https://www.youtube.com/watch?v=${YT}`);
+    q('[data-act="add"]').click();
+    await tick();
+    type('[data-fav-name]', 'Morning hymn');
+    const sel = q('[data-fav-source]'); sel.value = 's1'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    type('[data-fav-path]', 'Hymns/morning.mp3');
+    q('[data-act="add"]').click();
+    await tick();
+    const saved = person.get(`p1:${FAVOURITES_KEY}`)?.get()?.favourites || [];
+    check('*** two favourites added with the panel\'s own inputs, and saved for the person ***',
+      saved.length === 2 && saved[0].source.kind === 'youtube' && saved[1].source.kind === 'file' && saved[1].source.path === 'Hymns/morning.mp3', J(saved));
+    check('the editor shows what to say', /Say “play the beatles”/.test(host.textContent), host.textContent.slice(0, 300));
+    q('[data-act="close"]').click();
+    await tick();
+
+    // A second music panel on the same screen: same list, and it does not answer.
+    const host2 = document.getElementById('host2');
+    const m2 = mountModule('music', ctxFor(host2, 'mu2'));
+    m2.init();
+    await Promise.resolve(); await tick();
+    check('a second music panel shows the same list', m2.impl.__probe().favs.length === 2, J(m2.impl.__probe().favs));
+    check('...and stands by', m1.impl.__probe().leader && !m2.impl.__probe().leader);
+
+    // No YouTube panel on screen: a YouTube favourite plays in the music panel itself.
+    const beatlesBtn = [...host.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'the Beatles');
+    beatlesBtn.click();
+    await tick();
+    check('*** pressing a favourite with no YouTube panel plays it HERE, once ***',
+      yp.made === 1 && yp.loaded.join() === YT && !q('[data-stage]').hidden, J(yp));
+    yp.h.onPlaying();
+    check('the panel\'s own player is on the audio bus (music group, video priority)', audio.state()['music:mu1:youtube']?.active === true && audio.state()['music:mu1:youtube'].group === MUSIC_GROUP);
+    check('the panel says what is playing', /Playing: the Beatles/.test(q('[data-now]').textContent));
+
+    // The local file, pressed.
+    [...host.querySelectorAll('[data-act="play"]')].find((b) => b.textContent === 'Morning hymn').click();
+    await tick(); await tick();
+    check('*** pressing a music-file favourite plays it through the audio bus, and stops the video ***',
+      alog.includes('play:blob:Hymns/morning.mp3') && audio.state()['music:mu1:local']?.active === true
+      && audio.state()['music:mu1:youtube']?.active === false && yp.stopped >= 1, J({ alog, st: audio.state() }));
+
+    // The switch walk.
+    rootBus.publish('music/select');
+    check('the first select only shows the highlight', probe().lit === 0);
+    rootBus.publish('music/next'); rootBus.publish('music/next');
+    check('next walks the buttons', probe().litAct === 'stop', probe().litAct);
+    rootBus.publish('music/select');
+    await tick();
+    check('select presses the lit one (Stop)', !probe().status.playing && audio.state()['music:mu1:local']?.active === false && alog.at(-1).startsWith('pause:'), J(probe().status));
+
+    // With a real YouTube panel on the screen, the favourite goes THERE.
+    const yhost = document.getElementById('yhost');
+    const ys = stubPlayer();
+    const ym = mountModule('youtube', { ...ctxFor(yhost, 'yt9'), state: fakeState({ playlist: [{ id: 'vidA000001' }] }), playerFactory: ys.factory });
+    ym.init();
+    await tick();
+    const before = yp.loaded.length;
+    rootBus.publish('music/play', { name: 'beatles' });
+    await tick();
+    check('*** with a YouTube panel on the screen, the favourite plays in THAT panel ***',
+      ys.loaded.at(-1) === YT && yp.loaded.length === before, J({ ys: ys.loaded, yp: yp.loaded }));
+    rootBus.publish('music/stop');
+    await tick();
+    check('"stop the music" reaches it too', !probe().status.playing);
+
+    // Teardown.
+    ym.destroy(); m2.destroy(); m1.destroy();
+    await tick();
+    check('*** teardown: no timers left running ***', T.live.size === 0, `${T.live.size} left`);
+    const left = Object.keys(audio.state()).filter((k) => k.startsWith('music:'));
+    check('*** teardown: nothing of the music panels left on the audio bus ***', left.length === 0, J(left));
+    check('*** teardown: no audio element left playing ***', (alog.els || []).every((e) => e.paused));
+    check('the panel\'s own YouTube player was destroyed', yp.destroyed === 1);
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

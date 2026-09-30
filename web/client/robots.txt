@@ -11,6 +11,7 @@ Disallow: /home.html
 Disallow: /modules.html
 Disallow: /pair.html
 Disallow: /phone_mic.html
+Disallow: /spotify_callback.html
 Disallow: /dev/
 Disallow: /api/
 

@@ -376,7 +376,9 @@ function loadIframeApi() {
 // BUFFERING is included deliberately. It is the honest version of the same hang — a video
 // that buffers forever after having played once is indistinguishable, from the chair, from
 // one that paused. Both mean "stopped, and not coming back on its own".
-function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }) {
+// Exported for the music panel (row 2.32), which plays a YouTube favourite in its own panel when no
+// YouTube panel is on the screen - the same player, not a second copy of it.
+export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }) {
   let player = null, ready = false, pending = null, pendingList = null, destroyed = false;
   const host = document.createElement('div');
   mountEl.append(host);
@@ -1321,7 +1323,7 @@ registerModule(
           if (stallReason === 'held' && stall?.armed()) stall.beat();
         };
         for (const topic of ['input/device', 'youtube/next', 'youtube/prev',
-                             'youtube/play', 'youtube/pause', 'youtube/volume']) {
+                             'youtube/play', 'youtube/pause', 'youtube/volume', 'youtube/load']) {
           bus.subscribe(topic, heldBeat);
         }
         mount.addEventListener('pointerdown', heldBeat, { passive: true });
@@ -1340,6 +1342,26 @@ registerModule(
           try { player?.pause?.(); } catch (e) { console.error('youtube: pause', e); }
         });
         bus.subscribe('youtube/volume', (dir) => stepVolume(dir));
+        // *** "PLAY THIS ONE" (row 2.32, the music favourites). *** `youtube/who` is answered at
+        // once with `youtube/here { instanceId }`, so the music router can find ONE panel and address
+        // it (`youtube/load#<instanceId>`) rather than start the song on every YouTube panel at once.
+        // `youtube/load { videoId }` plays that video now; it joins this panel's pool for the session,
+        // so what plays after it is this panel's own playlist as usual. `{ playlistId }` cues that
+        // playlist, and the picker draws from it (plus any pinned videos) until this panel's own
+        // settings or schedule next change it back.
+        bus.subscribe('youtube/who', () => bus.publish('youtube/here', { instanceId: ctx.instanceId || null }));
+        bus.subscribe('youtube/load', (p) => {
+          const vid = parseVideoId((p && p.videoId) || '');
+          const list = vid ? '' : parsePlaylistId((p && p.playlistId) || '');
+          if (vid) {
+            if (!byId[vid]) { fromList = [...fromList, vid]; indexPlaylist(); }
+            show(vid, true);
+          } else if (list && player?.cueList) {
+            activeList = list; activePart = null; fromList = [];
+            setStatus('Loading playlist…');
+            player.cueList(list);
+          }
+        });
 
         // its own buttons are just another source
         const nav = bus.createSource('youtube-nav');
