@@ -65,6 +65,8 @@ import '../modules/solitaire.js';
 import '../modules/note.js';
 import '../modules/weather.js';
 import '../modules/music.js';
+import '../modules/brickbreaker.js';
+import '../modules/rhythm.js';
 // `wallpaper` was already reaching the registry, but only because `director.js` imports it —
 // a transitive registration this suite would lose the moment the director stopped mounting an
 // overlay. Both are listed explicitly now. Worth noting what that says about the check itself:
@@ -163,10 +165,11 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-09-30: `scoreboard` (row 2.40) is built on the new core.
   // 2026-09-30: row 2.45's `karaoke`, `name_that`, `simple_math` and `spelling` are built on the new core.
   // 2026-09-30: row 2.37's `note` and `solitaire` are built on the new core.
-  const PORTED = ['button', 'calculator', 'karaoke', 'name_that', 'note', 'room', 'scoreboard', 'simple_math',
-    'solitaire', 'spelling', 'weather', 'word_games'];
+  // 2026-09-30: row 2.37 item 10's `brickbreaker` and `rhythm` are built on the new core.
+  const PORTED = ['brickbreaker', 'button', 'calculator', 'karaoke', 'name_that', 'note', 'rhythm', 'room', 'scoreboard',
+    'simple_math', 'solitaire', 'spelling', 'weather', 'word_games'];
   // 2026-09-30: row 2.37's `weather` is built on the new core.
-  check('exactly twelve modules in today’s real registry are on the new core: button, calculator, karaoke, name_that, note, room, scoreboard, simple_math, solitaire, spelling, weather and word_games',
+  check('exactly fourteen modules in today’s real registry are on the new core: brickbreaker, button, calculator, karaoke, name_that, note, rhythm, room, scoreboard, simple_math, solitaire, spelling, weather and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length
