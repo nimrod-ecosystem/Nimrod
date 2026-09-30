@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>rhythm — tiles that light to a beat, one switch, never more than three flashes a second — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../rhythm.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>rhythm — row 2.37 item 10</h1>
+<p>Floor tiles light to a beat; a press on the beat is a hit. This suite checks the arithmetic
+(<code>rhythm_beat.js</code>), then the panel (<code>modules/rhythm.js</code>): a round played on one
+switch, a generous window that still refuses mashing, a press offset for a slow switch, the beat
+following a tempo on the screen, <b>no more than three flashes in any second (WCAG 2.3.1), counted
+onset by onset</b>, hits shown with a shape and words, sound only through the speaker arbiter, and a
+teardown that leaves no timer and no sound. Time is stepped through an injected clock.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540, a quarter of a 1080p kiosk)</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/rhythm.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { createAudioBus } from '../audio_bus.js';
+import { createFakeAudioContext } from '../game_tones.js';
+import { TEMPO_TOPIC } from '../tempo.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor, HEALTH_EXPECT } from '../health.js';
+import {
+  FLASH_LIMIT_PER_SEC, MAX_BPM, MIN_BPM, TEMPOS, WINDOWS, WINDOW_MAX_FRACTION, clampBpm, lightEvery, windowMs,
+  judge, roundOf, createPattern,
+} from '../rhythm_beat.js';
+import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS } from '../modules/rhythm.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function manualClock(start = 100000) {
+  let t = start, cb = null, id = 0;
+  return {
+    now: () => t,
+    request(f) { cb = f; return ++id; },
+    cancel(h) { if (h === id) cb = null; },
+    pending: () => !!cb,
+    tick(ms) { t += ms; const f = cb; cb = null; if (f) f(t); },
+    to(T, frame = 16) { while (t < T - 1e-9) this.tick(Math.min(frame, T - t)); },
+    run(ms, frame = 16) { this.to(t + ms, frame); },
+  };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); fn(v); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+function fakeStream() {
+  let events = [];
+  const snap = () => ({ events: [...events], total: events.length });
+  return {
+    append(kind, data) { events = [...events, { id: events.length + 1, kind, data }]; return Promise.resolve(); },
+    load: () => Promise.resolve(), get: snap, subscribe() { return () => {}; }, startPolling() {}, destroy() {},
+    peek: () => events,
+  };
+}
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+let n = 0;
+function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, audio = createAudioBus(),
+                 points = fakeStream(), clock = manualClock(), injectClock = true, contexts = [] } = {}) {
+  const state = fakeState(saved);
+  const inst = mountModule(GAME, {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
+    instanceId: `rh${++n}`, reducedMotion, rand: () => 0.42, audio,
+    ...(injectClock ? { clock } : {}),
+    makeAudioContext: () => { const c = createFakeAudioContext(); contexts.push(c); return c; },
+    makeEvents: (k) => (k === 'points' ? points : fakeStream()),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  return { inst, host, bus, state, points, probe, clock, audio, contexts, id: `rh${n}`,
+    pub: (verb) => bus.publish(`${GAME}/${verb}`),
+    say: () => host.querySelector('.rh-say')?.textContent || '',
+    beat: (k) => { const r = probe().run; return r.origin + k * r.interval; },
+    // the absolute beat index of play-beat `i` of round `r`, with the default 4 / 16 / 4
+    playK: (i, r = 0, { countIn = 4, roundBeats = 16, restBeats = 4 } = {}) => probe().run.k0 + r * (countIn + roundBeats + restBeats) + countIn + i };
+}
+async function cssReady(host) {
+  const link = host.querySelector('link[data-rh-css]');
+  if (link && !link.sheet) await new Promise((r) => { link.addEventListener('load', r); link.addEventListener('error', r); setTimeout(r, 3000); });
+}
+// Play a round: press `lag` ms after each play beat (a switch closing a little late).
+function playRound(t, { lag = 80, r = 0, skip = () => false, beats = 16 } = {}) {
+  for (let i = 0; i < beats; i++) {
+    if (skip(i)) continue;
+    t.clock.to(t.beat(t.playK(i, r)) + lag);
+    t.pub('select');
+  }
+}
+
+(async () => {
+try {
+  // =====================================================================
+  section('the flash limit, as arithmetic');
+  {
+    const iv = 60000 / MAX_BPM;
+    check(`*** at the fastest tempo (${MAX_BPM}), four lights span more than a second plus a 60 Hz frame ***`,
+      3 * iv > 1000 + 1000 / 60, `${(3 * iv).toFixed(1)} ms`);
+    check('the tempo is clamped to the limit, and to a floor', clampBpm(400) === MAX_BPM && clampBpm(5) === MIN_BPM && clampBpm('x') === 60);
+    check('every tempo offered is inside the limit', TEMPOS.every((b) => b <= MAX_BPM && b >= MIN_BPM));
+    check('a faster tempo from the screen lights every 2nd or 4th beat', lightEvery(240) === 2 && lightEvery(175) === 1
+      && lightEvery(400) === 4 && 400 / lightEvery(400) <= MAX_BPM);
+    check('WCAG\'s number is three', FLASH_LIMIT_PER_SEC === 3);
+  }
+
+  section('the judge');
+  {
+    const o = { origin: 0, interval: 1000, window: 250 };
+    check('on the beat is a hit', judge(3000, o).verdict === 'hit' && judge(3000, o).k === 3);
+    check('within the window either side is a hit', judge(3240, o).verdict === 'hit' && judge(2760, o).verdict === 'hit');
+    check('outside it is early or late, against the NEAREST beat', judge(2700, o).verdict === 'early' && judge(3300, o).verdict === 'late'
+      && judge(3300, o).k === 3);
+    check('an offset moves the centre (a switch that lands 200 ms late)', judge(3300, { ...o, offset: 200 }).verdict === 'hit');
+    check('the window is capped at 40% of the gap between beats', windowMs('very-generous', 400) === 160
+      && windowMs('generous', 1000) === 250 && WINDOW_MAX_FRACTION === 0.4);
+    check('generous is a quarter of a second', WINDOWS.generous === 250);
+  }
+
+  section('rounds and patterns');
+  {
+    const r = { countIn: 4, roundBeats: 16, restBeats: 4 };
+    check('count-in, then play, then rest', roundOf(0, r).phase === 'count' && roundOf(0, r).left === 4
+      && roundOf(4, r).phase === 'play' && roundOf(4, r).beat === 0 && roundOf(19, r).beat === 15 && roundOf(20, r).phase === 'rest');
+    check('...and round two begins with its own count-in', roundOf(24, r).phase === 'count' && roundOf(24, r).round === 1);
+    check('no rounds: count-in, then play forever', roundOf(1000, { countIn: 4, roundBeats: 0 }).phase === 'play');
+    const walk = createPattern('walk', 4), bounce = createPattern('bounce', 4);
+    check('walk: 0 1 2 3 0', [0, 1, 2, 3, 4].map(walk).join('') === '01230');
+    check('bounce: 0 1 2 3 2 1 0 1', [0, 1, 2, 3, 4, 5, 6, 7].map(bounce).join('') === '01232101');
+    const a = createPattern('random', 5, 7), b = createPattern('random', 5, 7);
+    const seqA = Array.from({ length: 300 }, (_, i) => a(i)), seqB = Array.from({ length: 300 }, (_, i) => b(i));
+    check('random: never the same tile twice in a row', seqA.every((t, i) => i === 0 || t !== seqA[i - 1]));
+    check('random: the same seed is the same sequence, and every tile is used', seqA.join() === seqB.join() && new Set(seqA).size === 5);
+    check('random: asking out of order gives the same answer', createPattern('random', 5, 7)(250) === seqA[250]);
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(GAME);
+    check('registered, on the new core, dependsOn local', m && m.core === 'new' && m.dependsOn === 'local');
+    check('*** mounting without a personId key is refused (core:new contract) ***', (() => {
+      try { mountModule(GAME, { mount: scratch(), bus: createBus(), instanceId: 'x' }); return false; } catch { return true; }
+    })());
+    const cat = CATALOG.find((c) => c.type === GAME);
+    check('catalog: absent (row pending) or listed as something to do', !cat || cat.group === 'practice');
+    check('health: absent (row pending) or idle is fine', !(GAME in HEALTH_EXPECT) || expectFor(GAME).idle === true);
+    const verbs = verbsFor(GAME);
+    check('MODULE_VERBS: absent (row pending) or exactly next / prev / select / back', verbs.length === 0
+      || (['next', 'prev', 'select', 'back'].every((v) => verbs.includes(v)) && verbTarget(GAME, 'select').topic === `${GAME}/select`), verbs.join(','));
+    check('defaults: 60 a minute, generous window, starts on a press, a round pays nothing', DEFAULTS.tempo === 60
+      && DEFAULTS.window === 'generous' && DEFAULTS.startOn === 'press' && DEFAULTS.roundPoints === 0);
+    check('every setting row is labelled', m.settings.every((r) => r.key && r.label));
+    check('the tempo setting never offers a flash rate over the limit', m.settings.find((r) => r.key === 'tempo').options.every((o) => o.value <= MAX_BPM));
+  }
+
+  section('at rest until somebody presses');
+  {
+    const t = mount();
+    check('it says press to start', t.say() === 'Press to start the beat.', t.say());
+    check('*** nothing is lit, no loop is running ***', !t.host.querySelector('[data-lit="1"]') && !t.clock.pending());
+    t.clock.run(10000);
+    check('ten seconds later, still nothing, and no sound prepared', !t.probe().running && t.contexts.every((c) => c.made.oscillators.length === 0));
+    t.pub('select');
+    check('the first press starts the beat', t.probe().running && t.clock.pending());
+    t.clock.to(t.beat(t.probe().run.k0) + 20);
+    check('the count-in lights the first tile and says so', t.host.querySelector('[data-lit="1"]')?.dataset.tile === '0'
+      && /Get ready: 4/.test(t.say()), t.say());
+    t.inst.destroy();
+  }
+
+  section('*** one switch plays a whole round ***');
+  {
+    const bus = createBus();
+    const scores = [];
+    bus.subscribe('score/update', (p) => scores.push(p));
+    const t = mount({ bus });
+    t.pub('select');
+    playRound(t, { lag: 80 });
+    check('16 of 16 on the beat, pressing 80 ms after each beat', t.probe().round.hits === 16, JSON.stringify(t.probe().round));
+    check('on the score contract: 16 of a target of 16', scores.some((s) => s.source === GAME && s.value === 16 && s.target === 16));
+    check('a streak is counted', t.probe().streak === 16);
+    t.clock.to(t.beat(t.playK(16)) + 400);
+    check('the rest says how it went, beside the tiles', /16 of 16 on the beat/.test(t.say()) && !t.host.querySelector('[role="dialog"],[aria-modal]'), t.say());
+    t.clock.to(t.beat(t.playK(0, 1) - 4) + 20);
+    check('*** the next round counts itself in ***', /Get ready: 4/.test(t.say()) && t.probe().running, t.say());
+    playRound(t, { r: 1, skip: (i) => i % 2 === 1 });
+    t.clock.to(t.beat(t.playK(16, 1)) + 400);
+    check('a round with every other beat pressed: 8 of 16', /8 of 16/.test(t.say()), t.say());
+    check('rounds are counted and saved', t.state.get().stats?.rounds === 2 && t.state.get().stats?.bestRound === 16);
+    t.inst.destroy();
+    check('destroying it tells the scoreboard it is gone', scores[scores.length - 1]?.gone === true);
+  }
+
+  section('a round nobody plays stops the beat');
+  {
+    const t = mount();
+    t.pub('select');
+    t.clock.to(t.beat(t.playK(16)) + 100);
+    check('*** the beat stopped: no loop, nothing lit ***', !t.probe().running && !t.clock.pending() && !t.host.querySelector('[data-lit="1"]'));
+    check('and it says so, with how it went', /0 of 16 on the beat\. Press to play again\./.test(t.say()), t.say());
+    t.inst.destroy();
+    const k = mount({ saved: { stopWhenIdle: false } });
+    k.pub('select');
+    k.clock.to(k.beat(k.playK(0, 2)) + 100);
+    check('with "keeps going" set, it keeps going', k.probe().running);
+    k.inst.destroy();
+    const e = mount({ saved: { roundBeats: 0 } });
+    e.pub('select');
+    e.clock.to(e.beat(e.probe().run.k0 + 4 + IDLE_BEATS + 2) + 50);
+    check(`no rounds: the beat stops after ${IDLE_BEATS} beats with no press`, !e.probe().running);
+    e.inst.destroy();
+  }
+
+  section('one answer per beat: mashing does not score');
+  {
+    const t = mount();
+    t.pub('select');
+    const end = t.beat(t.playK(16));
+    t.clock.to(t.beat(t.playK(0)) - 600);
+    while (t.clock.now() < end) { t.clock.run(50); t.pub('select'); }
+    check(`*** a press every 50 ms for a whole round: ${t.probe().round?.hits ?? '?'} hits ***`, (t.probe().round?.hits ?? 99) <= 1);
+    t.inst.destroy();
+    const d = mount();
+    d.pub('select');
+    d.clock.to(d.beat(d.playK(0)) + 10); d.pub('select');
+    d.clock.run(30); d.pub('select');
+    check('two presses on one beat count once', d.probe().round.hits === 1 && d.probe().round.presses === 2);
+    d.inst.destroy();
+  }
+
+  section('early, late, and a switch that lands late');
+  {
+    const t = mount();
+    t.pub('select');
+    t.clock.to(t.beat(t.playK(0)) - 350); t.pub('select');
+    t.clock.run(STATUS_GAP_MS + 20);
+    check('early is said with an arrow and words', t.say() === VERDICT_WORDS.early && /◀/.test(t.say()), t.say());
+    t.clock.to(t.beat(t.playK(1)) + 320); t.pub('select');
+    t.clock.run(STATUS_GAP_MS + 20);
+    check('late likewise', t.say() === VERDICT_WORDS.late && /▶/.test(t.say()), t.say());
+    check('neither is a hit', t.probe().round.hits === 0);
+    t.inst.destroy();
+    const o = mount({ saved: { pressOffset: 200 } });
+    o.pub('select');
+    playRound(o, { lag: 330 });
+    check('*** "my presses land 200 ms late": 330 ms after every beat is 16 of 16 ***', o.probe().round.hits === 16, String(o.probe().round.hits));
+    o.inst.destroy();
+    const w = mount();
+    w.pub('select');
+    playRound(w, { lag: 330 });
+    check('...and without the offset, the same presses are all late', w.probe().round.hits === 0);
+    w.inst.destroy();
+  }
+
+  section('a hit is a shape and words, in the tile already lit');
+  {
+    const t = mount({ host: scratch(960, 540) });
+    await cssReady(t.host);
+    t.pub('select');
+    t.clock.to(t.beat(t.playK(0)) + 20);
+    const lit = t.host.querySelector('[data-lit="1"]');
+    const dot = getComputedStyle(lit.querySelector('.rh-dot')).opacity;
+    check('a lit tile carries a big dot, not only a colour', dot === '1');
+    t.pub('select');
+    check('*** a hit writes "✓ Hit!" in the lit tile ***', lit.dataset.mark === 'hit' && lit.textContent.includes('✓ Hit!'));
+    check('and the tally is a number', /✓ 1 of 16 on the beat/.test(t.host.querySelector('[data-score]').textContent));
+    t.clock.to(t.beat(t.playK(0)) + t.probe().run.interval * 0.6);
+    check('the mark goes with the light', !t.host.querySelector('[data-mark]'));
+    const w = t.host.querySelector('.rh-tile').getBoundingClientRect().width;
+    check(`tiles are big at a quarter of a 1080p screen (${Math.round(w)}px)`, w >= 150);
+    t.inst.destroy();
+  }
+
+  section('*** WCAG 2.3.1: never more than three flashes in any second, at the fastest tempo, with presses landing everywhere ***');
+  {
+    const t = mount({ saved: { tempo: MAX_BPM, stopWhenIdle: false } });
+    check(`the saved tempo is the limit (${MAX_BPM})`, t.probe().cfg.tempo === MAX_BPM);
+    t.pub('select');
+    const tiles = [...t.host.querySelectorAll('.rh-tile')];
+    let prev = tiles.map(() => ({ lit: false, mark: false }));
+    const litOn = [], markOn = [], statusAt = [];
+    let lastStatus = t.say();
+    let maxLit = 0, markOffLit = 0;
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    let nextPress = t.clock.now() + 200;
+    const end = t.clock.now() + 20000;
+    while (t.clock.now() < end) {
+      t.clock.tick(1000 / 60);
+      if (t.clock.now() >= nextPress) { t.pub('select'); nextPress = t.clock.now() + 20 + rnd() * 300; }
+      const now = t.clock.now();
+      let litCount = 0;
+      tiles.forEach((el, i) => {
+        const lit = el.dataset.lit === '1', mark = !!el.dataset.mark;
+        if (lit) litCount++;
+        if (lit && !prev[i].lit) litOn.push(now);
+        if (mark && !prev[i].mark) markOn.push({ now, lit });
+        if (mark && !lit) markOffLit++;
+        prev[i] = { lit, mark };
+      });
+      maxLit = Math.max(maxLit, litCount);
+      if (t.say() !== lastStatus) { statusAt.push(now); lastStatus = t.say(); }
+    }
+    const worst = (times) => { let w = 0; for (let i = 0, j = 0; i < times.length; i++) { while (times[i] - times[j] >= 1000) j++; w = Math.max(w, i - j + 1); } return w; };
+    check(`20 seconds: ${litOn.length} lights, ${markOn.length} hit marks, ${statusAt.length} changes of the words`, litOn.length > 40 && markOn.length > 10);
+    check(`*** lights in any one second: at most ${worst(litOn)} (limit 3) ***`, worst(litOn) <= 3, String(worst(litOn)));
+    check('never more than one tile lit at once', maxLit <= 1);
+    check('*** a hit mark only ever appears in a tile that is already lit (it is never a second light) ***', markOn.every((m) => m.lit) && markOffLit === 0);
+    check(`hit marks in any one second: at most ${worst(markOn.map((m) => m.now))}`, worst(markOn.map((m) => m.now)) <= 3);
+    check(`*** the words under the tiles: at most ${worst(statusAt)} changes in any second (limit 3) ***`, worst(statusAt) <= 3, String(worst(statusAt)));
+    t.inst.destroy();
+  }
+
+  section('the beat from the screen (tempo.js)');
+  {
+    const bus = createBus();
+    const clock = manualClock();
+    const t = mount({ bus, clock, saved: { beatFrom: 'screen' } });
+    bus.publish(TEMPO_TOPIC, { bpm: 240, origin: clock.now() - 10, meter: 4 });
+    t.pub('select');
+    check('*** a screen tempo of 240 lights every second beat: 120 a minute ***', Math.abs(t.probe().run.interval - 500) < 1e-9, String(t.probe().run.interval));
+    check('and the lights land on the screen\'s own beats', Math.abs(((t.beat(t.probe().run.k0) - (clock.now() - 10)) % 250)) < 1e-6);
+    bus.publish(TEMPO_TOPIC, { bpm: 90, origin: clock.now(), meter: 4 });
+    check('a new tempo on the screen is followed at once', Math.abs(t.probe().run.interval - 60000 / 90) < 1e-9);
+    t.inst.destroy();
+    const own = mount({ saved: { beatFrom: 'own', tempo: 72 } });
+    own.bus.publish(TEMPO_TOPIC, { bpm: 150, origin: 0 });
+    own.pub('select');
+    check('with its own metronome, a screen tempo is ignored', Math.abs(own.probe().run.interval - 60000 / 72) < 1e-9);
+    own.inst.destroy();
+  }
+
+  section('"touching the lit tile" for a pointer');
+  {
+    const t = mount({ host: scratch(960, 540), saved: { target: 'tile' } });
+    t.pub('select');
+    t.clock.to(t.beat(t.playK(0)) + 30);
+    const litTile = Number(t.host.querySelector('[data-lit="1"]').dataset.tile);
+    const other = t.host.querySelector(`[data-tile="${(litTile + 1) % 4}"]`);
+    other.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('a touch on the wrong tile is not a hit, and says why', t.probe().round.hits === 0 && [...t.probe().judged.values()].includes('wrong'));
+    t.clock.to(t.beat(t.playK(1)) + 30);
+    t.host.querySelector('[data-lit="1"]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('a touch on the lit one is', t.probe().round.hits === 1);
+    t.clock.to(t.beat(t.playK(2)) + 30);
+    t.pub('select');
+    check('a switch still counts wherever it is', t.probe().round.hits === 2);
+    t.inst.destroy();
+    const a = mount({ saved: { target: 'any' } });
+    a.pub('select');
+    a.clock.to(a.beat(a.playK(0)) + 30);
+    a.host.querySelector('.rh-bar').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('with "any press", a tap anywhere on the panel counts', a.probe().round.hits === 1);
+    a.inst.destroy();
+  }
+
+  section('points: a good round pays only when a setting says so');
+  {
+    const a = mount();
+    a.pub('select'); playRound(a); a.clock.to(a.beat(a.playK(16)) + 50);
+    await sleep(10);
+    check('a perfect round, roundPoints 0: nothing paid', a.points.peek().length === 0);
+    a.inst.destroy();
+    const b = mount({ saved: { roundPoints: 3 } });
+    b.pub('select'); playRound(b); b.clock.to(b.beat(b.playK(16)) + 50);
+    await sleep(10);
+    const ev = b.points.peek();
+    check('roundPoints 3: one award of 3 Play points', ev.length === 1 && ev[0].data.amount === 3 && ev[0].data.type === 'Play'
+      && ev[0].data.source === GAME, JSON.stringify(ev.map((e) => e.data)));
+    b.inst.destroy();
+    const c = mount({ saved: { roundPoints: 3 } });
+    c.pub('select'); playRound(c, { skip: (i) => i % 2 === 0 }); c.clock.to(c.beat(c.playK(16)) + 50);
+    await sleep(10);
+    check('half a round (under 75%): nothing', c.points.peek().length === 0);
+    c.inst.destroy();
+  }
+
+  section('sound: through the speaker arbiter, only after a press');
+  {
+    const audio = createAudioBus();
+    const t = mount({ audio });
+    const src = `${GAME}:${t.id}`;
+    check('registered on the "Game sounds" channel, not active at rest', audio.channelOf(src) === 'sfx' && !audio.isActive(src));
+    t.pub('select');
+    check('active while the beat runs', audio.isActive(src));
+    t.clock.to(t.beat(t.playK(4)) + 20);
+    const osc = t.contexts.flatMap((c) => c.made.oscillators);
+    const clicks = osc.filter((o) => o.frequency.value === 1175 || o.frequency.value === 880);
+    check(`a click for each beat so far (${clicks.length} for 8 or 9 beats)`, clicks.length >= 8 && clicks.length <= 10);
+    check('the first beat of each bar is the accented click', clicks[0].frequency.value === 1175 && clicks[1].frequency.value === 880
+      && clicks[4].frequency.value === 1175);
+    check('clicks are scheduled ahead on the audio clock, never in the past', clicks.every((o) => o.started >= 0));
+    audio.setFader('sfx', 0);
+    const before = t.contexts.flatMap((c) => c.made.oscillators).length;
+    t.clock.run(3000);
+    check('*** with the Game sounds fader at 0, nothing is even started ***', t.contexts.flatMap((c) => c.made.oscillators).length === before);
+    audio.setFader('sfx', 1);
+    t.pub('back');
+    check('back stops the beat, and the game goes quiet on the arbiter', !t.probe().running && !audio.isActive(src));
+    t.inst.destroy();
+    check('*** destroyed: unregistered, its context closed ***', !(src in audio.state()) && t.contexts.every((c) => c.made.closed));
+    const q = mount({ saved: { sound: 'off', hitSound: false } });
+    q.pub('select'); playRound(q);
+    check('sound off: lights only, silent', q.contexts.every((c) => c.made.oscillators.length === 0) && q.probe().round.hits === 16);
+    q.inst.destroy();
+    const nt = mount({ saved: { sound: 'notes' } });
+    nt.pub('select'); nt.clock.to(nt.beat(nt.playK(0)) + 20);
+    const f = nt.contexts.flatMap((c) => c.made.oscillators).map((o) => o.frequency.value);
+    check('"a note for each tile": the walk plays a rising tune', f[0] < f[1] && f[1] < f[2] && f[2] < f[3], f.join(','));
+    nt.inst.destroy();
+  }
+
+  section('teardown leaves no timers (the real clock)');
+  {
+    const real = { raf: window.requestAnimationFrame, caf: window.cancelAnimationFrame, si: window.setInterval, ci: window.clearInterval };
+    const live = new Set();
+    window.requestAnimationFrame = (cb) => { const h = real.raf.call(window, (ts) => { live.delete(`r${h}`); cb(ts); }); live.add(`r${h}`); return h; };
+    window.cancelAnimationFrame = (h) => { live.delete(`r${h}`); real.caf.call(window, h); };
+    window.setInterval = (cb, ms) => { const h = real.si.call(window, cb, ms); live.add(`i${h}`); return h; };
+    window.clearInterval = (h) => { live.delete(`i${h}`); real.ci.call(window, h); };
+    try {
+      const t = mount({ injectClock: false, saved: { tempo: 150 } });
+      t.pub('select');
+      check('a running beat on the real clock asks for frames', live.size > 0);
+      await sleep(600);
+      check('...and the real clock does light tiles', t.probe().running);
+      t.inst.destroy();
+      check('*** after destroy: no frame and no interval left ***', live.size === 0, [...live].join(','));
+    } finally {
+      Object.assign(window, { requestAnimationFrame: real.raf, cancelAnimationFrame: real.caf, setInterval: real.si, clearInterval: real.ci });
+    }
+  }
+
+  section('drawing: tiles from theme properties; reduced motion');
+  {
+    const host = scratch(960, 540);
+    host.style.setProperty('--floor-tile', 'rgb(40, 50, 60)');
+    host.style.setProperty('--floor-tile-lit', 'rgb(250, 240, 200)');
+    const t = mount({ host });
+    await cssReady(host);
+    check('*** a room that sets --floor-tile gets its own tiles ***', getComputedStyle(host.querySelector('.rh-tile')).backgroundColor === 'rgb(40, 50, 60)');
+    t.pub('select'); t.clock.to(t.beat(t.probe().run.k0) + 20);
+    await sleep(150);   // the 60 ms softening of the change has finished (the injected clock is standing still)
+    check('...and --floor-tile-lit for the lit one', getComputedStyle(host.querySelector('[data-lit="1"]')).backgroundColor === 'rgb(250, 240, 200)');
+    check('no colour is written into the markup', !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(host.querySelector('[data-rh-root]').innerHTML));
+    t.inst.destroy();
+    const r = mount({ host: scratch(960, 540), reducedMotion: true });
+    await cssReady(r.host);
+    check('reduced motion is marked', r.host.querySelector('.rh')?.dataset.motion === 'reduce');
+    const tr = getComputedStyle(r.host.querySelector('.rh-tile')).transitionDuration;
+    check('and no tile has a transition', tr.split(',').every((d) => parseFloat(d) === 0), tr);
+    r.inst.destroy();
+    const six = mount({ saved: { tiles: 6 } });
+    check('the number of tiles is a setting', six.host.querySelectorAll('.rh-tile').length === 6);
+    six.inst.destroy();
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const live = document.getElementById('host');
+const clock = manualClock();
+const liveBus = createBus();
+const show = mountModule(GAME, { mount: live, bus: liveBus, state: fakeState({}), personId: null, instanceId: 'live',
+  clock, makeAudioContext: createFakeAudioContext });
+show.init();
+// Shown mid-round with a hit on the lit tile, the way a player sees it (the clock stays stopped there).
+liveBus.publish(`${GAME}/select`);
+{ const r = show.impl.__probe().run; clock.to(r.origin + (r.k0 + 5) * r.interval + 30); liveBus.publish(`${GAME}/select`); }
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

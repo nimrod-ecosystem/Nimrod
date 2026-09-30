@@ -522,6 +522,25 @@ export const CATALOG = [
       + 'can play a whole game, and so can a touch or a mouse; nothing needs a drag. There is no '
       + 'timer and no losing screen: when nothing helps, it offers Undo or a new deal.',
   },
+  // Row 2.37 item 10: games on the room's bricks and floor tiles, standalone first.
+  {
+    type: 'brickbreaker',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Knock down a wall of bricks with a ball and a paddle.',
+    needs: 'Nothing. The wall, the ball and the sounds are built in.',
+    why: 'One switch can play: the paddle glides by itself and a press stops it where the ball will land. '
+      + 'The ball is slow by default and a missed ball just comes back; there is no losing screen.',
+  },
+  {
+    type: 'rhythm',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Tiles light up to a beat; press on the beat.',
+    needs: 'Nothing. The beat is built in, or it can follow a tempo on the screen.',
+    why: 'One press is the whole game, so one switch plays it. Slow and forgiving by default, it never '
+      + 'flashes more than three times a second, and a hit shows as a mark and words, not only a colour.',
+  },
   {
     type: 'sprint',
     // NO `title` OVERRIDE HERE, and that is deliberate after `composer_reach` caught one.

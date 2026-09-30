@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>brickbreaker — one-switch brick-breaker, slow by default, nothing that blocks — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../brickbreaker.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>brickbreaker — row 2.37 item 10</h1>
+<p><i>"Floor tiles and bricks can be used for rhythm and brick-breaker games."</i> This suite checks the
+physics on their own (<code>breakout.js</code>), then the panel (<code>modules/brickbreaker.js</code>):
+a wall knocked down with <b>one switch and nothing else</b>, a paddle that catches everything in
+<code>follow</code>, no screen that blocks, a game nobody plays coming to rest, sound only through the
+speaker arbiter, bricks drawn from theme properties, and a teardown that leaves no timer and no sound.
+Time is <b>stepped</b>, never waited for: the game is driven through an injected clock.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540, a quarter of a 1080p kiosk)</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/brickbreaker.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { createAudioBus } from '../audio_bus.js';
+import { createFakeAudioContext } from '../game_tones.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor, HEALTH_EXPECT } from '../health.js';
+import {
+  FIELD_W, FIELD_H, BALL_R, PADDLE_Y, BALL_SPEEDS, PADDLE_WIDTHS, MIN_VX_FRAC, MIN_VY_FRAC,
+  makeWall, newGame, launch, step, setPaddleX, landingX, togglePause, aliveCount,
+} from '../breakout.js';
+import { GAME, DEFAULTS, REST_MS, IDLE_BALLS, statusFor } from '../modules/brickbreaker.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---- the injected clock: nothing here waits for an animation frame -------------------------
+function manualClock() {
+  let t = 1000, cb = null, id = 0;
+  return {
+    now: () => t,
+    request(f) { cb = f; return ++id; },
+    cancel(h) { if (h === id) cb = null; },
+    pending: () => !!cb,
+    tick(ms) { t += ms; const f = cb; cb = null; if (f) f(t); },
+    run(ms, stepMs = 33) { for (let e = 0; e < ms; e += stepMs) this.tick(stepMs); },
+  };
+}
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); fn(v); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+function fakeStream() {
+  let events = [];
+  const subs = new Set();
+  const snap = () => ({ events: [...events], total: events.length });
+  return {
+    append(kind, data) { events = [...events, { id: events.length + 1, kind, data, created_at: new Date().toISOString() }];
+      for (const fn of [...subs]) fn(snap()); return Promise.resolve(); },
+    load: () => Promise.resolve(), get: snap,
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }, startPolling() {}, destroy() {},
+    peek: () => events,
+  };
+}
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+let n = 0;
+function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, audio = createAudioBus(),
+                 points = fakeStream(), rand = () => 0.3, clock = manualClock(), injectClock = true, contexts = [] } = {}) {
+  const state = fakeState(saved);
+  const inst = mountModule(GAME, {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
+    instanceId: `bb${++n}`, reducedMotion, rand, audio,
+    ...(injectClock ? { clock } : {}),
+    makeAudioContext: () => { const c = createFakeAudioContext(); contexts.push(c); return c; },
+    makeEvents: (k) => (k === 'points' ? points : fakeStream()),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  return { inst, host, bus, state, points, probe, clock, audio, contexts, id: `bb${n}`,
+    pub: (verb) => bus.publish(`${GAME}/${verb}`),
+    say: () => host.querySelector('.bb-say')?.textContent || '' };
+}
+async function cssReady(host) {
+  const link = host.querySelector('link[data-bb-css]');
+  if (link && !link.sheet) await new Promise((r) => { link.addEventListener('load', r); link.addEventListener('error', r); setTimeout(r, 3000); });
+}
+const O = (extra = {}) => ({ speed: BALL_SPEEDS.slow, sweep: 22, control: 'sweep', autoLaunchMs: 0, restMs: 3000, rand: () => 0.3, ...extra });
+
+(async () => {
+try {
+  // =====================================================================
+  section('the wall: a running bond, like real bricks');
+  {
+    const w = makeWall({ rows: 4, cols: 8 });
+    const row = (r) => w.filter((b) => b.row === r);
+    check('even rows have 8 whole bricks', row(0).length === 8 && row(2).length === 8, String(row(0).length));
+    check('odd rows are shifted half a brick, with a half brick at each end', row(1).length === 9
+      && Math.abs(row(1)[0].w - row(0)[0].w / 2) < 1 && Math.abs(row(1)[8].w - row(0)[0].w / 2) < 1,
+      row(1).map((b) => b.w.toFixed(1)).join(','));
+    check('every brick is inside the field', w.every((b) => b.x >= 0 && b.x + b.w <= FIELD_W && b.y >= 0 && b.y + b.h < PADDLE_Y));
+    const overlap = w.some((a, i) => w.some((b, j) => j > i && a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h));
+    check('no two bricks overlap', !overlap);
+    check('rows and columns are clamped to something playable', makeWall({ rows: 99, cols: 1 }).length > 0
+      && Math.max(...makeWall({ rows: 99, cols: 1 }).map((b) => b.row)) === 7);
+  }
+
+  section('a new game is at rest');
+  {
+    const g = newGame();
+    check('the ball rests on the paddle, nothing moving', g.phase === 'ready' && g.ball.vx === 0 && g.ball.vy === 0
+      && !g.paddle.moving && Math.abs(g.ball.y - (PADDLE_Y - BALL_R)) < 1e-9);
+    const ev = step(g, 5000, O());
+    check('five seconds with auto-launch off: still resting', g.phase === 'ready' && ev.length === 0);
+    step(g, 5000, O({ autoLaunchMs: 3000, idle: true }));
+    check('auto-launch waits while nobody has pressed (idle)', g.phase === 'ready');
+    const ev2 = []; for (let i = 0; i < 20; i++) ev2.push(...step(g, 200, O({ autoLaunchMs: 3000 })));
+    check('...and once somebody has, the ball goes by itself after the wait', g.phase === 'play' && ev2.includes('launch'));
+  }
+
+  section('physics');
+  {
+    const g = newGame();
+    launch(g, { speed: 28, rand: () => 0.3 });
+    check('a launch goes up, at the set speed, leaning off vertical', g.ball.vy < 0
+      && Math.abs(Math.hypot(g.ball.vx, g.ball.vy) - 28) < 1e-6 && Math.abs(g.ball.vx) > 0);
+    // side wall
+    const s = newGame(); s.phase = 'play'; s.bricks = []; s.bricks.push({ id: 'far', row: 0, col: 0, x: 90, y: 0, w: 1, h: 1, alive: true });
+    s.ball = { x: 3, y: 30, vx: -20, vy: -20, r: BALL_R };
+    step(s, 200, O());
+    check('the side wall sends it back', s.ball.vx > 0);
+    // paddle: where it lands on the paddle sets the angle
+    const angleAt = (off) => {
+      const p = newGame(); p.phase = 'play'; p.bricks = [{ id: 'x', row: 0, col: 0, x: 0, y: 0, w: 1, h: 1, alive: true }];
+      p.paddle.x = 50; p.ball = { x: 50 + off * p.paddle.w / 2, y: PADDLE_Y - BALL_R - 0.5, vx: 0, vy: 28, r: BALL_R };
+      const ev = step(p, 40, O());
+      return { ev, vx: p.ball.vx, vy: p.ball.vy };
+    };
+    const mid = angleAt(0), right = angleAt(0.8), left = angleAt(-0.8);
+    check('the paddle catches a ball coming down onto it', mid.ev.includes('paddle') && mid.vy < 0);
+    check('the right end sends it right, the left end left', right.vx > 0 && left.vx < 0 && right.ev.includes('paddle'));
+    check('*** dead centre still leans a little: a straight up-and-down loop is refused ***',
+      Math.abs(mid.vx) >= MIN_VX_FRAC * 28 - 1e-6, String(mid.vx));
+    // bricks
+    const b = newGame(); b.phase = 'play';
+    const target = b.bricks.find((k) => k.row === 3 && k.col === 3);
+    b.ball = { x: target.x + target.w / 2, y: target.y + target.h + BALL_R + 1, vx: 3, vy: -27, r: BALL_R };
+    const before = aliveCount(b);
+    const ev = []; for (let i = 0; i < 10 && !ev.includes('brick'); i++) ev.push(...step(b, 33, O()));
+    check('a ball hitting a brick from below breaks it and comes back down', ev.includes('brick') && aliveCount(b) === before - 1
+      && !target.alive && b.ball.vy > 0 && b.broken === 1);
+    // tunnelling
+    const f = newGame(); f.phase = 'play';
+    f.ball = { x: 50, y: 33, vx: 0.01, vy: -60, r: BALL_R };
+    step(f, 250, O({ speed: 60 }));
+    check('*** a fast ball in a long frame cannot pass through a row of bricks ***', f.broken === 1 && f.ball.vy > 0, `broken ${f.broken}`);
+    // miss
+    const m = newGame(); m.phase = 'play';
+    m.ball = { x: 5, y: FIELD_H - 2, vx: 0, vy: 28, r: BALL_R }; m.paddle.x = 80;
+    const mev = step(m, 200, O());
+    check('*** a missed ball comes back to rest on the paddle (lives off: no end) ***', mev.includes('miss') && m.phase === 'ready'
+      && Math.abs(m.ball.x - m.paddle.x) < 1e-9 && m.livesLeft === null);
+    // flat skim refused
+    const k = newGame(); k.phase = 'play'; k.paddle.x = 50;
+    k.ball = { x: 50 + k.paddle.w / 2 * 1, y: PADDLE_Y - BALL_R - 0.3, vx: 0, vy: 28, r: BALL_R };
+    step(k, 40, O());
+    check('even the paddle\'s very end sends it up steeply enough to matter', Math.abs(k.ball.vy) >= MIN_VY_FRAC * 28 - 1e-6);
+  }
+
+  section('lives, a cleared wall, and pause: nothing needs a press to go on');
+  {
+    const g = newGame({ lives: 2 });
+    for (let i = 0; i < 2; i++) { g.phase = 'play'; g.ball = { x: 5, y: FIELD_H - 1, vx: 0, vy: 28, r: BALL_R }; g.paddle.x = 80; step(g, 200, O()); }
+    check('lives on: the last ball lost says "again"', g.phase === 'again' && g.livesLeft === 0);
+    for (let i = 0; i < REST_MS / 100 + 1; i++) step(g, 100, O());
+    check(`*** and a new game starts by itself after ${REST_MS} ms ***`, g.phase === 'ready' && g.livesLeft === 2 && aliveCount(g) === g.bricks.length);
+    const c = newGame(); c.phase = 'play';
+    c.bricks.forEach((b, i) => { b.alive = i === 0; });
+    const b0 = c.bricks[0];
+    c.ball = { x: b0.x + b0.w / 2, y: b0.y + b0.h + BALL_R + 0.5, vx: 0.5, vy: -28, r: BALL_R };
+    const ev = []; for (let i = 0; i < 10; i++) ev.push(...step(c, 33, O()));
+    check('the last brick down: "cleared", one wall counted', ev.includes('cleared') && c.walls === 1 && c.phase === 'cleared');
+    for (let i = 0; i < REST_MS / 100 + 1; i++) step(c, 100, O());
+    check('*** and the next wall goes up by itself ***', c.phase === 'ready' && aliveCount(c) === c.bricks.length && c.walls === 1);
+    const p = newGame(); launch(p, { speed: 28, rand: () => 0.3 });
+    togglePause(p); const at = { ...p.ball };
+    step(p, 2000, O());
+    check('paused: nothing moves', p.ball.x === at.x && p.ball.y === at.y && p.phase === 'paused');
+    togglePause(p);
+    check('and it goes on from where it was', p.phase === 'play');
+  }
+
+  section('landingX predicts where a falling ball meets the paddle line');
+  {
+    const g = newGame(); g.phase = 'play'; g.bricks = [{ id: 'x', row: 0, col: 0, x: 0, y: 0, w: 1, h: 1, alive: true }];
+    g.ball = { x: 20, y: 10, vx: -25, vy: 12, r: BALL_R }; g.paddle.x = 95; g.paddle.w = 1;
+    const guess = landingX(g);
+    let x = null; for (let i = 0; i < 400 && x == null; i++) { step(g, 16, O({ speed: Math.hypot(25, 12) })); if (g.ball.y >= PADDLE_Y - BALL_R - 0.05) x = g.ball.x; }
+    check('within half a unit of where it really lands (after a wall bounce)', x != null && Math.abs(guess - x) < 0.6, `${guess} vs ${x}`);
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(GAME);
+    check('registered, on the new core, dependsOn local', m && m.core === 'new' && m.dependsOn === 'local');
+    check('*** mounting without a personId key is refused (core:new contract) ***', (() => {
+      try { mountModule(GAME, { mount: scratch(), bus: createBus(), instanceId: 'x' }); return false; } catch { return true; }
+    })());
+    const cat = CATALOG.find((c) => c.type === GAME);
+    check('catalog: absent (row pending) or listed as something to do', !cat || cat.group === 'practice', JSON.stringify(cat));
+    check('health: absent (row pending) or idle is fine', !(GAME in HEALTH_EXPECT) || expectFor(GAME).idle === true);
+    const verbs = verbsFor(GAME);
+    check('MODULE_VERBS: absent (row pending) or exactly next / prev / select / back', verbs.length === 0
+      || (['next', 'prev', 'select', 'back'].every((v) => verbs.includes(v)) && verbTarget(GAME, 'select').topic === `${GAME}/select`), verbs.join(','));
+    check('defaults: sweep, slow ball, wide paddle, lives off, a wall pays nothing', DEFAULTS.control === 'sweep'
+      && DEFAULTS.ballSpeed === 'slow' && DEFAULTS.paddleWidth === 'wide' && DEFAULTS.lives === 0 && DEFAULTS.wallPoints === 0);
+    check('the slow default is the second-slowest of four speeds (there is a slower one)', BALL_SPEEDS['very-slow'] < BALL_SPEEDS.slow
+      && BALL_SPEEDS.slow < BALL_SPEEDS.medium);
+    const rows = m.settings;
+    check('every setting row is labelled', rows.every((r) => r.key && r.label));
+    check('every choice a switch can reach is a short list', rows.filter((r) => r.kind === 'choice').every((r) => r.options.length >= 2 && r.options.length <= 6));
+  }
+
+  section('at rest until somebody presses');
+  {
+    const t = mount();
+    check('status says press to play', t.say() === 'Press to play.', t.say());
+    check('*** no loop is running: a still panel costs nothing ***', !t.clock.pending() && !t.probe().looping);
+    t.clock.run(10000);
+    check('ten seconds later nothing has moved', t.probe().game.phase === 'ready' && !t.probe().game.paddle.moving);
+    check('and no sound was made or even prepared', t.contexts.length === 0 || t.contexts.every((c) => c.made.oscillators.length === 0));
+    t.pub('select');
+    check('the first press launches, and the sweep starts', t.probe().game.phase === 'play' && t.probe().game.paddle.moving && t.clock.pending());
+    t.inst.destroy();
+  }
+
+  section('*** one switch knocks down a whole wall: select and nothing else ***');
+  {
+    const bus = createBus();
+    const scores = [];
+    bus.subscribe('score/update', (p) => scores.push(p));
+    const t = mount({ bus });
+    // A switch player: stop the paddle when it is under where the ball will land; start it again
+    // (it heads toward the ball) when it is not. At most one press every 400 ms - a switch is not a mouse.
+    let presses = 0, lastPress = -1e9, now = 0;
+    const press = () => { if (now - lastPress < 400) return; lastPress = now; presses++; t.pub('select'); };
+    const limit = 20 * 60 * 1000;
+    const t0 = performance.now();
+    while (now < limit && t.probe().game.walls < 1) {
+      t.clock.tick(33); now += 33;
+      const g = t.probe().game;
+      if (g.phase === 'ready') { press(); continue; }
+      if (g.phase !== 'play') continue;
+      const land = landingX(g);
+      if (land == null) continue;
+      const off = Math.abs(land - g.paddle.x);
+      if (g.paddle.moving && off < g.paddle.w * 0.3) press();
+      else if (!g.paddle.moving && off > g.paddle.w * 0.45) press();
+    }
+    const g = t.probe().game;
+    check(`*** the wall came down in ${(now / 60000).toFixed(1)} simulated minutes ***`, g.walls === 1, `bricks left ${aliveCount(g)}`);
+    check(`${presses} presses; ${g.catches} catches to ${g.misses} misses`, g.catches > g.misses, `${g.catches}/${g.misses}`);
+    check(`(stepped ${Math.round(now / 33)} frames in ${Math.round(performance.now() - t0)} ms)`, true);
+    check('the score went up on the score contract', scores.some((s) => s.source === GAME && s.value > 10));
+    check('"Wall down!" beside the field, not over it', /Wall down/.test(t.say()) && !t.host.querySelector('[role="dialog"],[aria-modal]'));
+    t.clock.run(REST_MS + 100);
+    check('the next wall went up by itself', t.probe().game.phase === 'ready' && aliveCount(t.probe().game) === t.probe().game.bricks.length);
+    t.inst.destroy();
+  }
+
+  section('follow: the paddle catches everything, and a press steers');
+  {
+    const t = mount({ saved: { control: 'follow', autoLaunch: 2 } });
+    t.pub('select');
+    t.clock.run(3 * 60 * 1000);
+    const g = t.probe().game;
+    check('*** three minutes, no misses at all ***', g.misses === 0 && g.catches > 5, `${g.catches} catches, ${g.misses} misses`);
+    const aim = () => t.host.querySelector('[data-aim]')?.textContent;
+    check('the aim is shown as an arrow and a word', aim() === '↑ straight', aim());
+    t.pub('select');
+    check('select changes it: right', t.probe().game.aim === 1 && aim() === '↗ right');
+    t.pub('select');
+    check('...then left', t.probe().game.aim === -1 && aim() === '↖ left');
+    t.pub('next');
+    check('next and previous set it directly', t.probe().game.aim === 1);
+    t.inst.destroy();
+  }
+
+  section('steps: next and previous move the paddle; select launches');
+  {
+    const t = mount({ saved: { control: 'steps', stepSize: 'medium' } });
+    const x0 = t.probe().game.paddle.x;
+    t.pub('next');
+    check('next moves it right one step', Math.abs(t.probe().game.paddle.x - (x0 + 10)) < 1e-9);
+    t.pub('prev'); t.pub('prev');
+    check('prev moves it left', Math.abs(t.probe().game.paddle.x - (x0 - 10)) < 1e-9);
+    check('the resting ball goes with it', Math.abs(t.probe().game.ball.x - t.probe().game.paddle.x) < 1e-9);
+    t.clock.run(500);
+    check('nothing glides on its own', !t.probe().game.paddle.moving);
+    t.pub('select');
+    check('select launches', t.probe().game.phase === 'play');
+    for (let i = 0; i < 20; i++) t.pub('next');
+    check('the paddle stops at the edge', Math.abs(t.probe().game.paddle.x - (FIELD_W - t.probe().game.paddle.w / 2)) < 1e-9);
+    t.inst.destroy();
+  }
+
+  section('a game nobody is playing comes to rest');
+  {
+    const t = mount({ saved: { control: 'steps', autoLaunch: 2 } });
+    t.pub('prev'); for (let i = 0; i < 8; i++) t.pub('prev');   // paddle hard left; the ball will be missed
+    t.pub('select');
+    let tries = 0;
+    while (t.probe().game.misses < IDLE_BALLS && tries++ < 5000) {
+      t.clock.tick(33);
+      // keep the paddle out of the way without a press: move it directly
+      const g = t.probe().game; g.paddle.x = g.ball.x > 50 ? g.paddle.w / 2 : FIELD_W - g.paddle.w / 2;
+    }
+    check(`${IDLE_BALLS} balls lost with no press between them`, t.probe().game.misses >= IDLE_BALLS);
+    t.clock.run(20000);
+    check('*** it stops launching, and the loop stops ***', t.probe().idle && t.probe().game.phase === 'ready' && !t.clock.pending());
+    check('and says press to play', t.say() === 'Press to play.', t.say());
+    t.pub('select');
+    check('the next press picks it up again', t.probe().game.phase === 'play' && !t.probe().idle && t.clock.pending());
+    t.inst.destroy();
+  }
+
+  section('lives on: "Again!" beside the field, and it starts again by itself');
+  {
+    const t = mount({ saved: { control: 'steps', lives: 3, autoLaunch: 2 } });
+    t.pub('select');
+    let tries = 0;
+    while (t.probe().game.phase !== 'again' && tries++ < 20000) {
+      t.clock.tick(33);
+      const g = t.probe().game; g.paddle.x = g.ball.x > 50 ? g.paddle.w / 2 : FIELD_W - g.paddle.w / 2;
+      if (g.phase === 'ready') t.pub('select');   // a press each ball keeps it from coming to rest
+    }
+    check('three balls lost: Again!', t.probe().game.phase === 'again' && /Again/.test(t.say()), t.say());
+    check('nothing is laid over the field', !t.host.querySelector('[role="dialog"],[aria-modal]') && !!t.host.querySelector('.bb-field'));
+    t.clock.run(REST_MS + 100);
+    check('*** a new game started by itself: three balls again ***', t.probe().game.phase === 'ready' && t.probe().game.livesLeft === 3);
+    t.inst.destroy();
+    const s = mount({ saved: { control: 'steps', lives: 3 } });
+    s.probe().game.phase = 'again';
+    s.pub('select');
+    check('a press during "Again!" starts at once', s.probe().game.phase === 'ready');
+    s.inst.destroy();
+  }
+
+  section('the score contract, and points');
+  {
+    const bus = createBus();
+    const scores = [];
+    bus.subscribe('score/update', (p) => scores.push(p));
+    const t = mount({ bus });
+    check('published: bricks broken', scores.some((p) => p.source === GAME && p.value === 0));
+    check('drawn on the panel when no scoreboard shows it', !t.host.querySelector('[data-score]').hidden);
+    bus.publish('score/shown', { source: GAME, by: 'sb1', on: true });
+    check('...and steps aside when a scoreboard does', t.host.querySelector('[data-score]').hidden);
+    t.inst.destroy();
+    check('destroying it tells the scoreboard it is gone', scores[scores.length - 1]?.gone === true);
+
+    const clearOne = async (saved) => {
+      const u = mount({ saved });
+      u.pub('select');
+      const g = u.probe().game;
+      g.bricks.forEach((b, i) => { b.alive = i === 0; });
+      const b0 = g.bricks[0];
+      g.ball = { x: b0.x + b0.w / 2, y: b0.y + b0.h + BALL_R + 0.5, vx: 0.5, vy: -28, r: BALL_R };
+      u.clock.run(400);
+      await sleep(10);
+      return u;
+    };
+    const a = await clearOne({});
+    check('a wall down with wallPoints 0: nothing paid', a.probe().game.walls === 1 && a.points.peek().length === 0);
+    a.inst.destroy();
+    const b = await clearOne({ wallPoints: 5 });
+    const ev = b.points.peek();
+    check('with wallPoints 5: one award of 5 Play points', ev.length === 1 && ev[0].data.amount === 5 && ev[0].data.type === 'Play'
+      && ev[0].data.source === GAME, JSON.stringify(ev.map((e) => e.data)));
+    check('walls down are counted and saved', b.state.get().stats?.walls === 1);
+    b.inst.destroy();
+  }
+
+  section('sound: only through the speaker arbiter, and only after a press');
+  {
+    const audio = createAudioBus();
+    const t = mount({ audio });
+    const src = `${GAME}:${t.id}`;
+    check('registered on the arbiter, on the "Game sounds" channel', audio.channelOf(src) === 'sfx');
+    check('not active before anybody presses', !audio.isActive(src));
+    t.pub('select');
+    check('active while a ball is in play', audio.isActive(src));
+    let tries = 0; while (t.probe().tones.live === 0 && tries++ < 400) t.clock.tick(33);
+    check('a bounce made a tone, in a context this game made', t.contexts.some((c) => c.made.oscillators.length > 0));
+    audio.setFader('sfx', 0);
+    const before = t.contexts.reduce((s, c) => s + c.made.oscillators.length, 0);
+    t.clock.run(8000);
+    const after = t.contexts.reduce((s, c) => s + c.made.oscillators.length, 0);
+    check('*** with the Game sounds fader at 0, no tone is even started ***', after === before, `${before} -> ${after}`);
+    audio.setFader('sfx', 1);
+    const musicSrc = `${GAME}-music:${t.id}`;
+    check('the music bed is in the music group on the arbiter, and playing', audio.state()[musicSrc]?.group === 'music' && audio.isActive(musicSrc));
+    t.pub('back');
+    check('pause: the bed stops and the game sounds go quiet', !audio.isActive(musicSrc) && !audio.isActive(src));
+    t.pub('back');
+    t.inst.destroy();
+    check('*** destroyed: unregistered, every context it made closed ***', !(src in audio.state()) && !(musicSrc in audio.state())
+      && t.contexts.every((c) => c.made.closed));
+    const q = mount({ saved: { sounds: false, music: 'off' } });
+    q.pub('select'); q.clock.run(10000);
+    check('bounce sounds off and music off: silent', q.contexts.every((c) => c.made.oscillators.length === 0));
+    q.inst.destroy();
+  }
+
+  section('teardown leaves no timers (the real clock, not the injected one)');
+  {
+    const real = { raf: window.requestAnimationFrame, caf: window.cancelAnimationFrame, st: window.setTimeout, ct: window.clearTimeout,
+      si: window.setInterval, ci: window.clearInterval };
+    const live = new Set();
+    window.requestAnimationFrame = (cb) => { const h = real.raf.call(window, (ts) => { live.delete(`r${h}`); cb(ts); }); live.add(`r${h}`); return h; };
+    window.cancelAnimationFrame = (h) => { live.delete(`r${h}`); real.caf.call(window, h); };
+    window.setInterval = (cb, ms) => { const h = real.si.call(window, cb, ms); live.add(`i${h}`); return h; };
+    window.clearInterval = (h) => { live.delete(`i${h}`); real.ci.call(window, h); };
+    let t;
+    try {
+      t = mount({ injectClock: false });
+      t.pub('select');
+      check('playing on the real clock asks for animation frames', live.size > 0, String(live.size));
+      await sleep(120);
+      t.inst.destroy();
+      check('*** after destroy: no frame, no interval left behind ***', live.size === 0, [...live].join(','));
+      const g0 = JSON.stringify(t.probe().game.ball);
+      await sleep(120);
+      check('and the ball does not move again', JSON.stringify(t.probe().game.ball) === g0);
+    } finally {
+      Object.assign(window, { requestAnimationFrame: real.raf, cancelAnimationFrame: real.caf, setInterval: real.si, clearInterval: real.ci });
+    }
+  }
+
+  section('drawing: the bricks come from theme properties, and reduced motion is honoured');
+  {
+    const host = scratch(960, 540);
+    host.style.setProperty('--wall-brick', 'rgb(10, 20, 30)');
+    const t = mount({ host });
+    await cssReady(host);
+    const b0 = host.querySelector('.bb-brick[data-row="0"]');
+    check('*** a room that sets --wall-brick gets its own bricks ***', getComputedStyle(b0).backgroundColor === 'rgb(10, 20, 30)',
+      getComputedStyle(b0).backgroundColor);
+    const b1 = host.querySelector('.bb-brick[data-row="1"]');
+    check('the next row is a shade of the same brick, not a different colour', getComputedStyle(b1).backgroundColor !== getComputedStyle(b0).backgroundColor);
+    check('no colour is written into the markup', !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(host.querySelector('[data-bb-root]').innerHTML));
+    const f = host.querySelector('.bb-field').getBoundingClientRect();
+    check(`the field keeps its 16:10 shape (${Math.round(f.width)} × ${Math.round(f.height)})`, Math.abs(f.width / f.height - 1.6) < 0.02);
+    const ball = host.querySelector('.bb-ball').getBoundingClientRect();
+    check(`the ball is big enough to follow (${Math.round(ball.width)}px)`, ball.width >= 20);
+    // pointer
+    const x = f.left + f.width * 0.25;
+    host.querySelector('.bb-field').dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: x, clientY: f.top + 10 }));
+    check('a pointer moves the paddle under it', Math.abs(t.probe().game.paddle.x - 25) < 1, String(t.probe().game.paddle.x));
+    host.querySelector('.bb-field').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: x, clientY: f.top + 10 }));
+    check('a click launches, and the paddle stays under the pointer', t.probe().game.phase === 'play' && !t.probe().game.paddle.moving);
+    t.inst.destroy();
+    const r = mount({ host: scratch(960, 540), reducedMotion: true });
+    await cssReady(r.host);
+    check('reduced motion is marked on the panel', r.host.querySelector('.bb')?.dataset.motion === 'reduce');
+    const tr = getComputedStyle(r.host.querySelector('.bb-brick')).transitionDuration;
+    check('and nothing on it has a transition', tr.split(',').every((d) => parseFloat(d) === 0), tr);
+    r.inst.destroy();
+  }
+
+  section('the words under the field');
+  {
+    const g = newGame();
+    check('ready and idle', statusFor(g, { idle: true }) === 'Press to play.');
+    check('ready, auto-launch on', statusFor(g, { autoLaunch: 3 }) === 'Press to launch, or it goes by itself.');
+    g.phase = 'play'; g.paddle.moving = true;
+    check('sweep, moving', statusFor(g, { control: 'sweep' }) === 'Press to stop the paddle.');
+    g.paddle.moving = false;
+    check('sweep, stopped', statusFor(g, { control: 'sweep' }) === 'Press to move the paddle.');
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const live = document.getElementById('host');
+const show = mountModule(GAME, { mount: live, bus: createBus(), state: fakeState({}), personId: null, instanceId: 'live', rand: () => 0.4,
+  makeAudioContext: createFakeAudioContext });
+show.init();
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

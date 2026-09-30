@@ -1,0 +1,45 @@
+/* rhythm.css — the look of `modules/rhythm.js`. Loaded by the module from a <link> inside its own mount.
+
+   *** THE TILES ARE THE ROOM'S FLOOR TILES, LATER. *** Every colour is a custom property with a
+   fallback, and the literal appears only on the declaration line (check_hardcoded_colors.py counts a
+   declaration as the right place). The hooks a room or a theme sets:
+     --floor-tile       a tile at rest     (fallback: the room's default floorboard brown, room_parts.js)
+     --floor-tile-lit   a lit tile         (fallback: the theme's highlight)
+     --floor-grout      between the tiles  (fallback: the theme's surface-alt)
+   A lit tile is never told apart by colour alone: it also carries a big dot, and a hit writes
+   "✓ Hit!" in it.
+
+   *** NOTHING HERE ANIMATES A FLASH. *** The only transition softens a tile's change of colour (a
+   softer edge is gentler, never faster); with reduced motion asked for there is none at all. */
+
+.rh-wrap{
+  --rh-tile: var(--floor-tile, #9a6a42);
+  --rh-lit: var(--floor-tile-lit, var(--highlight, #f2c14e));
+  --rh-grout: var(--floor-grout, var(--surface-alt, #e8e2cf));
+  --rh-ink: var(--text-strong, #1c1c1c);
+  --rh-edge: var(--border, #c9c3ad);
+  width:100%;height:100%;min-height:0;color:var(--text);
+}
+.rh-wrap *{box-sizing:border-box}
+.rh{height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5rem;padding:.6rem;
+  background:var(--rh-grout);font-family:var(--font);container-type:size}
+.rh [hidden]{display:none !important}
+
+.rh-tiles{display:flex;gap:clamp(4px, 1.4cqw, 18px);align-items:center;justify-content:center;min-height:0;cursor:pointer;
+  touch-action:manipulation}
+.rh-tile{position:relative;flex:1 1 0;max-width:min(30cqw, 70cqh);aspect-ratio:1;border-radius:8px;
+  background:var(--rh-tile);border:3px solid var(--rh-edge);display:grid;place-items:center;overflow:hidden}
+.rh-tile[data-lit="1"]{background:var(--rh-lit);border-color:var(--rh-ink);border-width:6px}
+.rh-dot{width:34%;aspect-ratio:1;border-radius:50%;background:var(--rh-ink);opacity:0}
+.rh-tile[data-lit="1"] .rh-dot{opacity:1}
+.rh-mark{position:absolute;inset:auto 0 8%;text-align:center;font-weight:800;color:var(--rh-ink);
+  font-size:clamp(14px, 5cqh, 40px)}
+.rh-tile[data-mark="hit"] .rh-dot{opacity:0}
+.rh-tile[data-mark="hit"] .rh-mark{inset:0;display:grid;place-items:center;font-size:clamp(18px, 8cqh, 64px)}
+
+.rh-bar{display:flex;flex-wrap:wrap;gap:.2rem 1.2rem;align-items:baseline;justify-content:center;min-height:2.2em}
+.rh-say{margin:0;font-size:clamp(16px, 5cqh, 36px);font-weight:700;color:var(--rh-ink)}
+.rh-score{margin:0;font-size:clamp(14px, 4cqh, 28px);color:var(--text)}
+
+.rh[data-motion="full"] .rh-tile{transition:background-color 60ms linear}
+.rh[data-motion="reduce"] *{transition:none !important;animation:none !important}

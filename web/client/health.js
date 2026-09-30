@@ -90,6 +90,9 @@ export const HEALTH_EXPECT = {
   name_that:   { idle: true },
   // Row 2.37's card game: a table nobody is playing is a table, not a stalled panel.
   solitaire:   { idle: true },
+  // Row 2.37 item 10's two games come to rest when nobody plays: a still wall or a stopped beat is not a stall.
+  brickbreaker: { idle: true },
+  rhythm:      { idle: true },
   karaoke:     { expectMs: 90 * 60 * 1000 },
   // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
   //
