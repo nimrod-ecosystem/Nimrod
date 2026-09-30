@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>Connecting Spotify</title>
+<!-- WHERE SPOTIFY SENDS SOMEBODY BACK after they allow the music panel to control their speakers
+     (music_spotify.js). It trades the one-time code for tokens IN THIS BROWSER and keeps them here;
+     nothing is sent to this site's server. Then it goes back to the page the sign-in started from. -->
+<style>
+  :root{--bg:#F7F4D5;--fg:#0A3323;--muted:#4a5a50}
+  @media (prefers-color-scheme: dark){:root{--bg:#10201a;--fg:#eef2e6;--muted:#b7c4b9}}
+  body{font:18px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:0;padding:32px 16px;background:var(--bg);color:var(--fg)}
+  main{max-width:36rem;margin:0 auto}
+  p{margin:0 0 12px}
+  .quiet{color:var(--muted);font-size:.9em}
+  a{color:inherit}
+</style>
+</head>
+<body>
+<main>
+  <h1>Spotify</h1>
+  <p data-msg>Connecting…</p>
+  <p class="quiet">Your Spotify sign-in is kept in this browser only.</p>
+  <p><a data-back href="/">Go back</a></p>
+</main>
+<script type="module">
+import { completeLogin, SPOTIFY_MESSAGES, safeReturn } from './music_spotify.js';
+
+const search = location.search;
+// The code is spent below; take it out of the address bar and the history straight away, so it is
+// not left sitting where a screenshot or a Back press would show it.
+try { history.replaceState(null, '', location.pathname); } catch { /* fine */ }
+const msg = document.querySelector('[data-msg]');
+const back = document.querySelector('[data-back]');
+const r = await completeLogin(search);
+const to = safeReturn(r.returnTo);
+back.href = to;
+if (r.ok) {
+  msg.textContent = 'Spotify is connected on this device. Going back…';
+  setTimeout(() => location.replace(to), 1200);
+} else {
+  msg.textContent = SPOTIFY_MESSAGES[r.reason] || SPOTIFY_MESSAGES.failed;
+}
+</script>
+</body>
+</html>

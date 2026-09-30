@@ -134,6 +134,18 @@ export const CATALOG = [
       + 'a bias against repeating itself, and you can set different playlists for different '
       + 'times of day so mornings and evenings are not the same.',
   },
+  // Row 2.32: music by name, by voice, switch or touch - one list, every way in ends at `music/play`.
+  {
+    type: 'music',
+    title: 'Music',
+    group: 'comfort',
+    use: 'watch',
+    lead: 'Their favourite music, by name.',
+    needs: 'A few favourites: YouTube links, music files in a connected folder, or Spotify '
+      + '(Premium, optional).',
+    why: 'Say “computer please play” and a name, or press it. The family writes the list once; '
+      + 'the same names work by voice, by switch and by touch.',
+  },
   // Row 2.45. A first version, and the catalog says so.
   {
     type: 'karaoke',

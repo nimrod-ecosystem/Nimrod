@@ -146,6 +146,9 @@ export const HEALTH_EXPECT = {
   // The weather (row 2.37). It publishes `weather/state` on every scheduled check, place or no place, so
   // silence means its timer stopped. Twice the slowest refresh on offer (3 h).
   weather:     { expectMs: 6 * 60 * 60 * 1000 },
+  // Music by name (row 2.32): a row of favourites nobody has asked for is a panel doing its job. What it
+  // plays is watched where it plays (the YouTube panel's own watchdog, the audio bus).
+  music:       { idle: true },
 };
 
 export function expectFor(type, table = HEALTH_EXPECT) {

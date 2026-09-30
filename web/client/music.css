@@ -1,0 +1,33 @@
+/* music.css — the look of `modules/music.js` (music by name, row 2.32). Loaded by the module itself,
+   from a <link> inside its own mount, the way note.css is. Every colour is a theme token. */
+
+.mu-wrap{width:100%;height:100%;min-height:0;display:flex;flex-direction:column;container-type:size;
+  color:var(--text);font-family:var(--font)}
+.mu-wrap *{box-sizing:border-box}
+.mu-stage{flex:0 0 auto;width:100%;aspect-ratio:16/9;max-height:55%;background:var(--surface-alt);border-radius:10px;overflow:hidden}
+.mu-stage[hidden]{display:none}
+.mu-root{flex:1 1 auto;min-height:0;overflow:auto}
+.mu{display:flex;flex-direction:column;gap:clamp(6px, 1.8cqmin, 16px);padding:clamp(6px, 2.2cqmin, 22px)}
+.mu [hidden]{display:none !important}
+.mu p{margin:0}
+.mu-now{font-size:clamp(16px, 5cqmin, 40px);font-weight:700;color:var(--text-strong)}
+.mu-msg,.mu-hint,.mu-empty{font-size:clamp(12px, 3cqmin, 22px);color:var(--text-muted)}
+.mu-msg{color:var(--text-strong);font-weight:600}
+.mu-ask{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:2px solid var(--accent);border-radius:12px;background:var(--surface)}
+.mu-list,.mu-btns{display:flex;flex-wrap:wrap;gap:clamp(4px, 1.4cqmin, 12px)}
+.mu-btn{min-height:44px;padding:0 clamp(10px, 2cqmin, 20px);border:2px solid var(--border);border-radius:12px;
+  background:var(--surface);color:var(--text);font:inherit;font-weight:700;font-size:clamp(14px, 3.4cqmin, 28px);cursor:pointer}
+.mu-btn[disabled]{opacity:.5;cursor:default}
+/* THE SWITCH CURSOR: an outline AND a marker, so the lit button reads without colour. */
+.mu [data-on="1"]{outline:max(3px, .8cqmin) solid var(--link);outline-offset:2px}
+.mu-btn[data-on="1"]::before{content:"\25B8\00a0"}
+.mu-head{font-size:clamp(14px, 3.8cqmin, 30px);font-weight:700;color:var(--text-strong)}
+.mu-field{display:flex;flex-direction:column;gap:4px;font-size:clamp(13px, 3cqmin, 22px)}
+.mu-field input,.mu-row input,.mu-row select{font:inherit;font-size:clamp(14px, 3.4cqmin, 26px);padding:6px 10px;border-radius:10px;
+  border:2px solid var(--border);background:var(--surface);color:var(--text);min-width:0}
+.mu-row{display:flex;flex-wrap:wrap;gap:8px}
+.mu-row input{flex:1 1 12em}
+.mu-favs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.mu-favs li{display:flex;flex-direction:column;gap:4px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.mu-spot{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--border)}
+.mu-devs{margin:0;padding-left:1.2em}
