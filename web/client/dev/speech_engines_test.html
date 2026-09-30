@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>speech_engines - ranked recognisers and two ears - test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>speech_engines</h1>
+<p>Rows 2.46 and 2.47. The microphone is captured once, cut into utterances once, and each utterance goes
+to every recogniser the person ranked. The first SURE answer acts, once; later passes only correct the
+words on screen. Two ears agree, or both are shown. No microphone opens until a recogniser answers.
+Everything here runs against fake sockets; add <code>?live=&lt;16 kHz wav url&gt;</code> with the speech
+service running on 127.0.0.1:8797 to send a real clip to a real recogniser.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  createSegmenter, createRanker, connectEngine, rankedRecognizer, enginePlanFrom, levelDb, sameWords,
+  SPEECH_PASS_FIELDS, ENGINE_DEFAULTS, SEGMENT_DEFAULTS, LOCAL_URL, PASS_CHOICES, RETRY_MS,
+} from '../speech_engines.js';
+import { createDownsampler, CAPTURE_RATE, FRAME_MS } from '../speech_capture.js';
+import { attachSpeech, SPEECH_ON_FIELDS, speechSwitchFrom, phraseControl, meansSomething } from '../input_speech.js';
+import { createSubtitles } from '../subtitles.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settle = () => new Promise((r) => setTimeout(r, 0));
+function fakeClock() {
+  let t = 0; let n = 1; const timers = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = n++; timers.set(id, { at: t + ms, fn }); return id; },
+    clearTimer: (id) => { timers.delete(id); },
+    advance(ms) {
+      const end = t + ms;
+      for (;;) {
+        const due = [...timers].filter(([, x]) => x.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+        if (!due) break;
+        timers.delete(due[0]); t = Math.max(t, due[1].at); due[1].fn();
+      }
+      t = end;
+    },
+    pending: () => timers.size,
+  };
+}
+// 20 ms frames of a tone (speech stand-in) or near-silence.
+const SPF = CAPTURE_RATE * FRAME_MS / 1000;
+function frame(amp, k = 0) {
+  const f = new Int16Array(SPF);
+  for (let i = 0; i < SPF; i++) f[i] = Math.round(amp * Math.sin(2 * Math.PI * 300 * (k * SPF + i) / CAPTURE_RATE));
+  return f;
+}
+const QUIET = 30, LOUD = 8000;
+
+// ---- a fake speech service, speaking web/speech_service's protocol ----------------------------------
+function makeServers() {
+  const servers = {};
+  const sockets = [];
+  class FakeWS {
+    constructor(url) {
+      this.url = url; this.readyState = 0; this.sent = []; this.bufferedAmount = 0;
+      sockets.push(this);
+      const srv = servers[url];
+      queueMicrotask(() => {
+        if (!srv || srv.down) { this.readyState = 3; this.onclose?.({ code: 1006 }); return; }
+        this.readyState = 1; srv.conns.add(this); this.onopen?.();
+      });
+    }
+    send(data) {
+      if (this.readyState !== 1) throw new Error('not open');
+      this.sent.push(data);
+      servers[this.url]?.receive(this, data);
+    }
+    close() {
+      if (this.readyState === 3) return;
+      this.readyState = 3; servers[this.url]?.conns.delete(this);
+      queueMicrotask(() => this.onclose?.({ code: 1000 }));
+    }
+  }
+  function server(url, { engine = 'fake', secret = null, answer = () => ({ text: '' }), hold = false, partials = false } = {}) {
+    const s = { url, engine, secret, answer, hold, partials, down: false, conns: new Set(), held: [], utts: new Map(),
+                modes: [], begun: [], ended: [], audioBytes: 0, hellos: [] };
+    const reply = (ws, m) => queueMicrotask(() => { if (ws.readyState === 1) ws.onmessage?.({ data: JSON.stringify(m) }); });
+    s.receive = (ws, data) => {
+      if (typeof data !== 'string') {
+        s.audioBytes += data.byteLength;
+        const u = ws.cur && s.utts.get(ws.cur); if (u) u.bytes += data.byteLength;
+        if (u && s.partials) reply(ws, { kind: 'partial', utteranceId: ws.cur, text: 'partial', engine });
+        return;
+      }
+      const m = JSON.parse(data);
+      if (m.type === 'hello') {
+        s.hellos.push(m);
+        if (secret && m.secret !== secret) { reply(ws, { kind: 'error', error: 'secret' }); queueMicrotask(() => ws.close()); return; }
+        reply(ws, { kind: 'hello', engine, grammar: true, partials, protocol: 1 });
+      } else if (m.type === 'mode') s.modes.push(m);
+      else if (m.type === 'begin') { ws.cur = m.utteranceId; s.begun.push(m.utteranceId); s.utts.set(m.utteranceId, { bytes: 0 }); }
+      else if (m.type === 'end') {
+        s.ended.push(m.utteranceId); ws.cur = null;
+        const a = { kind: 'final', utteranceId: m.utteranceId, engine, words: [], ...s.answer(m.utteranceId, s.utts.get(m.utteranceId)) };
+        if (s.hold) s.held.push(() => reply(ws, a)); else reply(ws, a);
+      } else if (m.type === 'cancel') { ws.cur = null; s.utts.delete(m.utteranceId); }
+    };
+    s.flush = () => { const h = s.held; s.held = []; h.forEach((f) => f()); };
+    s.kill = () => { s.down = true; for (const ws of [...s.conns]) { ws.readyState = 3; s.conns.delete(ws); queueMicrotask(() => ws.onclose?.({ code: 1006 })); } };
+    servers[url] = s;
+    return s;
+  }
+  return { FakeWS, server, servers, sockets };
+}
+
+(async () => {
+try {
+  // ======================================================================================
+  section('the settings: default = only the recogniser on this screen');
+  {
+    const p = enginePlanFrom({});
+    check('*** by default ONE pass, on this machine (127.0.0.1): nothing is sent anywhere else ***',
+      p.passes.length === 1 && p.passes[0].slot === 'local' && p.passes[0].url === LOCAL_URL && /127\.0\.0\.1/.test(LOCAL_URL)
+      && !p.browser, JSON.stringify(p));
+    const f2 = SPEECH_PASS_FIELDS.find((f) => f.key === 'speechPass2');
+    check('*** the other computers are OFF by default: pass 2 and 3 are "nothing more", addresses empty ***',
+      f2.default === 'none' && SPEECH_PASS_FIELDS.find((f) => f.key === 'speechPass3').default === 'none'
+      && SPEECH_PASS_FIELDS.find((f) => f.key === 'speechRemote1Url').default === ''
+      && SPEECH_PASS_FIELDS.find((f) => f.key === 'speechRemote2Url').default === '');
+    check('...and every choice that sends the room’s sound elsewhere says so in its label',
+      f2.options.filter((o) => o.value.startsWith('remote')).every((o) => /sends the room’s sound/.test(o.label))
+      && SPEECH_ON_FIELDS.find((f) => f.key === 'speechEngine').options.filter((o) => o.value !== 'local').every((o) => /sends/.test(o.label)));
+    check('the first pass may be another computer, by choice (a broken value is still local)',
+      speechSwitchFrom({ speechEngine: 'remote1' }).engine === 'remote1' && speechSwitchFrom({ speechEngine: 'x' }).engine === 'local');
+    const q = enginePlanFrom({ speechPass2: 'remote1', speechRemote1Url: 'ws://100.64.0.2:8797/speech',
+      speechRemote1Name: 'Desk', speechRemote1Key: 'k', speechPass3: 'remote2' });
+    check('*** ranked: this screen, then the chosen computer; one with no address is left out and SAID ***',
+      q.passes.map((x) => x.slot).join() === 'local,remote1' && q.passes[1].name === 'Desk' && q.passes[1].key === 'k'
+      && q.skipped.length === 1 && q.skipped[0].slot === 'remote2' && q.skipped[0].why === 'no address', JSON.stringify(q));
+    check('a slot chosen twice is asked once', enginePlanFrom({ speechPass2: 'local' }).passes.length === 1);
+    check('the browser’s own is never part of a ranked list (it takes no audio from here)',
+      enginePlanFrom({ speechEngine: 'browser', speechPass2: 'remote1' }).browser === true);
+    check('an address that is not a websocket is refused, not guessed at',
+      enginePlanFrom({ speechEngine: 'remote1', speechRemote1Url: 'http://x' }).passes.length === 0);
+    check('the numbers: defaults when unset, a person’s value when sane',
+      enginePlanFrom({}).sureAt === ENGINE_DEFAULTS.sureAt && enginePlanFrom({ speechSureAt: 0.85 }).sureAt === 0.85
+      && enginePlanFrom({ speechEndMs: 'x' }).endSilenceMs === ENGINE_DEFAULTS.endSilenceMs
+      && enginePlanFrom({ speechEars: 'phone' }).ears === 'phone' && enginePlanFrom({ speechEars: 'x' }).ears === 'both');
+    check('PASS_CHOICES: none, this screen, two other computers', PASS_CHOICES.join() === 'none,local,remote1,remote2');
+    const bad = auditFields(SPEECH_PASS_FIELDS.map(normalizeField).filter(Boolean), { type: 'speech' }).filter((x) => x.severity === 'error');
+    check('the new settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+    check('sameWords: case and punctuation do not make a disagreement', sameWords('Pause.', 'pause') && !sameWords('pause', 'play'));
+  }
+
+  // ======================================================================================
+  section('capture: 16 kHz from whatever the sound card runs at');
+  {
+    const d = createDownsampler(48000);
+    const one = new Float32Array(4800).fill(0.5);
+    const o = d(one);
+    check('48 kHz -> 16 kHz: a third as many samples', o.length === 1600, o.length);
+    check('a steady level stays the same level', Math.abs(o[10] - Math.round(0.5 * 32767)) <= 1, o[10]);
+    // Streaming: the same signal in odd-sized blocks gives the same samples as in one block.
+    const sig = Float32Array.from({ length: 44100 }, (_, i) => Math.sin(2 * Math.PI * 440 * i / 44100) * 0.4);
+    const whole = createDownsampler(44100)(sig);
+    const dd = createDownsampler(44100); const parts = [];
+    for (let i = 0; i < sig.length; i += 127) parts.push(...dd(sig.subarray(i, Math.min(sig.length, i + 127))));
+    const diff = Math.max(...whole.slice(0, parts.length).map((v, i) => Math.abs(v - parts[i])));
+    check('*** block by block (a worklet sees 128 samples at a time) = all at once: nothing clicks at block edges ***',
+      Math.abs(parts.length - whole.length) <= 1 && diff <= 1, `${parts.length} vs ${whole.length}, max diff ${diff}`);
+    check('44.1 kHz -> 16 kHz keeps the length', Math.abs(whole.length - 16000) <= 1, whole.length);
+    check('16 kHz in is 16 kHz out', createDownsampler(16000)(new Float32Array(320)).length === 320);
+    check('full scale is clipped, not wrapped', createDownsampler(16000)(Float32Array.of(2, -2)).join() === '32767,-32768');
+    check('frames are 20 ms', FRAME_MS === 20 && SPF === 320);
+  }
+
+  // ======================================================================================
+  section('the segmenter: where an utterance starts and ends, decided once');
+  {
+    const seg = createSegmenter({ endSilenceMs: 600 });
+    let ev = []; let t = 0; let k = 0;
+    const run = (amp, ms) => { for (let i = 0; i < ms / 20; i++) { ev.push(...seg.push(frame(amp, k++), t)); t += 20; } };
+    run(QUIET, 1000);
+    check('a quiet room: nothing', ev.length === 0);
+    run(LOUD, 800);
+    const b = ev.find((e) => e.type === 'begin');
+    check('*** talking: begin, under one id ***', !!b && /^u\d+$/.test(b.id), JSON.stringify(ev.slice(0, 2).map((e) => e.type)));
+    const pre = ev.filter((e) => e.type === 'audio' && e.id === b.id).length;
+    check('the pre-roll is sent: the first consonant is not cut off', b.t < 1000 && pre >= 40, `${b.t} ${pre}`);
+    run(QUIET, 400);
+    check('a short pause (under the end silence) does not end it', !ev.some((e) => e.type === 'end'));
+    run(LOUD, 200); run(QUIET, 700);
+    const end = ev.find((e) => e.type === 'end');
+    check('*** a pause as long as the setting ends it ***', !!end && end.id === b.id && !end.cut, JSON.stringify(end));
+    ev = [];
+    run(LOUD, 60); run(QUIET, 700);
+    check('*** a click (shorter than the minimum) is cancelled, never transcribed ***',
+      ev.some((e) => e.type === 'cancel') && !ev.some((e) => e.type === 'end'), ev.map((e) => e.type).join());
+    const seg2 = createSegmenter({ endSilenceMs: 600, maxUtteranceMs: 3000 });
+    ev = []; t = 0;
+    for (let i = 0; i < 25; i++) { ev.push(...seg2.push(frame(QUIET, i), t)); t += 20; }
+    for (let i = 0; i < 200; i++) { ev.push(...seg2.push(frame(LOUD, i), t)); t += 20; }
+    const cut = ev.find((e) => e.type === 'end');
+    check('*** nobody talks for ever: past the maximum it ends (marked cut) and a new one starts ***',
+      !!cut && cut.cut === true && ev.filter((e) => e.type === 'begin').length >= 2, ev.filter((e) => e.type !== 'audio').map((e) => e.type).join());
+    // A steady hum switched on: the floor follows it, so it is not an endless utterance.
+    const seg3 = createSegmenter({});
+    ev = []; t = 0;
+    for (let i = 0; i < 50; i++) { ev.push(...seg3.push(frame(QUIET, i), t)); t += 20; }
+    for (let i = 0; i < 3000; i++) { ev.push(...seg3.push(frame(1500, i), t)); t += 20; }
+    const begins = ev.filter((e) => e.type === 'begin').length;
+    check('*** a hum that switches on and stays: the floor follows it, and it stops being "talking" ***',
+      begins <= 2 && !seg3.speaking, `${begins} begins, speaking=${seg3.speaking}, floor ${seg3.floorDb.toFixed(1)}`);
+    check('levelDb: silence is very low, full scale ~ -3 dB', levelDb(new Int16Array(320)) < -150 && Math.abs(levelDb(frame(32767)) + 3) < 0.5);
+    check('flush ends what is open (the microphone went away)', (() => { const s = createSegmenter({}); let tt = 0;
+      for (let i = 0; i < 5; i++) { s.push(frame(QUIET, i), tt); tt += 20; } for (let i = 0; i < 30; i++) { s.push(frame(LOUD, i), tt); tt += 20; }
+      const f = s.flush(tt); return f.length === 1 && f[0].type === 'end' && f[0].cut; })());
+  }
+
+  // ======================================================================================
+  section('the ranker: the first sure answer acts, once; later passes only correct the words');
+  {
+    const mk = (opts = {}) => {
+      const c = fakeClock(); const cmds = []; const caps = []; const revs = [];
+      const r = createRanker({ passes: ['local', 'remote1'], sureAt: 0.7, waitMs: 4000, now: c.now, setTimer: c.setTimer,
+        clearTimer: c.clearTimer, onCommand: (t, d, m) => cmds.push({ t, d, m }), onCaption: (x) => caps.push(x),
+        onRevision: (x) => revs.push(x), ...opts });
+      return { c, r, cmds, caps, revs };
+    };
+    // 1. The fast guess is sure.
+    let { c, r, cmds, caps, revs } = mk();
+    r.begin('room', 'u1', 0); r.end('room', 'u1', 1000);
+    r.result('room', { slot: 'local', utteranceId: 'u1', kind: 'final', text: 'computer please pause', confidence: 0.9 });
+    check('*** a SURE fast guess acts at once - no waiting for the desktop ***', cmds.length === 1 && cmds[0].t === 'computer please pause'
+      && cmds[0].m.why === 'sure' && cmds[0].d.confidence === 0.9, JSON.stringify(cmds));
+    check('...and is on screen as the guess (not final: a better pass may still come)',
+      caps.at(-1)?.text === 'computer please pause' && caps.at(-1)?.final === false && caps.at(-1)?.pass === 0);
+    r.result('room', { slot: 'remote1', utteranceId: 'u1', kind: 'final', text: 'Computer please pause.', confidence: 0.95 });
+    check('*** a revision that AGREES does not fire again ***', cmds.length === 1 && revs.length === 0);
+    check('...the line is final now, from the later pass', caps.at(-1)?.final === true && caps.at(-1)?.pass === 1 && caps.at(-1)?.revised === false);
+    // 2. A revision that disagrees after the command acted.
+    ({ c, r, cmds, caps, revs } = mk());
+    r.begin('room', 'u2', 0); r.end('room', 'u2', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u2', kind: 'final', text: 'computer please pause', confidence: 0.8 });
+    r.result('room', { slot: 'remote1', utteranceId: 'u2', kind: 'final', text: 'computer please play', confidence: 0.9 });
+    check('*** a revision that DISAGREES after the command acted: the command stands, nothing else fires ***',
+      cmds.length === 1 && cmds[0].t === 'computer please pause', JSON.stringify(cmds));
+    check('...it is reported (evidence for raising "how sure"), and the words on screen are corrected in place',
+      revs.length === 1 && revs[0].acted === 'computer please pause' && revs[0].heard === 'computer please play'
+      && caps.at(-1).text === 'computer please play' && caps.at(-1).revised === true && caps.at(-1).id === caps[0].id);
+    // 3. The fast guess is unsure: it waits for the better one.
+    ({ c, r, cmds, caps, revs } = mk());
+    r.begin('room', 'u3', 0); r.end('room', 'u3', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u3', kind: 'final', text: 'computer please turn it off', confidence: 0.63 });
+    check('*** an UNSURE fast guess does not act - it waits for the next pass ***', cmds.length === 0);
+    c.advance(2000);
+    r.result('room', { slot: 'remote1', utteranceId: 'u3', kind: 'final', text: 'computer please turn it up', confidence: 0.93 });
+    check('*** ...and the better pass decides ***', cmds.length === 1 && cmds[0].t === 'computer please turn it up', JSON.stringify(cmds));
+    c.advance(10000);
+    check('...exactly once (the wait timer was cancelled)', cmds.length === 1);
+    // 4. The better pass never comes.
+    ({ c, r, cmds, caps, revs } = mk());
+    r.begin('room', 'u4', 0); r.end('room', 'u4', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u4', kind: 'final', text: 'quieter', confidence: 0.65 });
+    c.advance(3999);
+    check('the wait is the setting, not forever: nothing yet at 3.999 s', cmds.length === 0);
+    c.advance(1);
+    check('*** a desktop that has gone quiet cannot hold a command hostage: at the wait, the best so far acts ***',
+      cmds.length === 1 && cmds[0].t === 'quieter' && cmds[0].m.why === 'waited');
+    // 5. The better pass went away mid-utterance.
+    ({ c, r, cmds, caps, revs } = mk());
+    r.begin('room', 'u5', 0); r.end('room', 'u5', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u5', kind: 'final', text: 'go back', confidence: 0.6 });
+    r.lost('remote1');
+    check('*** the better engine dropped: nobody left to ask, so it acts now ***', cmds.length === 1 && cmds[0].t === 'go back');
+    // 6. Only one pass asked (the other was down at the start): unsure still acts - it is the last word.
+    ({ c, r, cmds, caps, revs } = mk());
+    r.begin('room', 'u6', 0, ['local']); r.end('room', 'u6', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u6', kind: 'final', text: 'play', confidence: 0.5 });
+    check('an unsure answer from the only engine asked acts (the phrase table still decides what it means)', cmds.length === 1);
+    // 7. Partials show, never act.
+    ({ c, r, cmds, caps, revs } = mk());
+    r.begin('room', 'u7', 0);
+    r.result('room', { slot: 'local', utteranceId: 'u7', kind: 'partial', text: 'computer please' });
+    check('*** a partial is shown (marked partial) and NEVER acts ***', cmds.length === 0 && caps.at(-1)?.partial === true && caps.at(-1)?.text === 'computer please');
+    r.end('room', 'u7', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u7', kind: 'final', text: 'computer please next', confidence: 0.9 });
+    check('...the final replaces it in the same line', caps.at(-1).id === caps[0].id && caps.at(-1).partial === false);
+    // 8. Nothing heard.
+    ({ c, r, cmds, caps, revs } = mk({ passes: ['local'] }));
+    r.begin('room', 'u8', 0); r.end('room', 'u8', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u8', kind: 'final', text: '', confidence: null });
+    check('an engine that heard nothing: no command, no line', cmds.length === 0 && !caps.some((x) => x.text));
+    // 8b. Sure but meaningless (Vosk's "computer please pass" at 1.0): waits for the better pass.
+    ({ c, r, cmds, caps, revs } = mk({ actsOn: (t) => meansSomething(t) }));
+    r.begin('room', 'u8b', 0); r.end('room', 'u8b', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u8b', kind: 'final', text: 'computer please pass', confidence: 1 });
+    check('*** a SURE guess that MEANS NOTHING ("computer please pass" at 1.0) waits for the better pass ***', cmds.length === 0);
+    r.result('room', { slot: 'remote1', utteranceId: 'u8b', kind: 'final', text: 'computer please pause', confidence: 0.9 });
+    check('...which acts', cmds.length === 1 && cmds[0].t === 'computer please pause');
+    ({ c, r, cmds, caps, revs } = mk({ actsOn: (t) => meansSomething(t) }));
+    r.begin('room', 'u8c', 0); r.end('room', 'u8c', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u8c', kind: 'final', text: 'computer please pause', confidence: 1 });
+    check('a sure guess that IS a command acts at once, as before', cmds.length === 1);
+    check('meansSomething: the wake phrase alone, wake + command, a bare command - and not room talk',
+      meansSomething('computer please') && meansSomething('Nimrod please, next.') && meansSomething('pause')
+      && !meansSomething('computer please pass') && !meansSomething('hello there') && !meansSomething(''));
+    // 9. A group whose engine never answers is closed (the caption goes final).
+    ({ c, r, cmds, caps, revs } = mk());
+    r.begin('room', 'u9', 0); r.end('room', 'u9', 900);
+    r.result('room', { slot: 'local', utteranceId: 'u9', kind: 'final', text: 'hello there', confidence: 0.9 });
+    c.advance(20000);
+    check('a line whose better pass never came is closed after the give-up time (final on screen)',
+      caps.at(-1)?.final === true && r.groups().every((g) => g.done));
+  }
+
+  // ======================================================================================
+  section('two ears: agree, or show both - and still one command');
+  {
+    const c = fakeClock(); const cmds = []; const caps = [];
+    const r = createRanker({ passes: ['local'], sureAt: 0.7, waitMs: 4000, now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer,
+      onCommand: (t, d) => cmds.push({ t, d }), onCaption: (x) => caps.push(x) });
+    const g1 = r.begin('room', 'a1', 0);
+    const g2 = r.begin('phone1', 'b1', 150);
+    check('*** two microphones hearing the same moment are ONE group ***', g1 === g2);
+    r.end('room', 'a1', 1000); r.end('phone1', 'b1', 1100);
+    r.result('room', { slot: 'local', utteranceId: 'a1', kind: 'final', text: 'computer please pause', confidence: 0.6 });
+    check('an unsure ear waits for the other ear', cmds.length === 0);
+    r.result('phone1', { slot: 'local', utteranceId: 'b1', kind: 'final', text: 'Computer, please pause.', confidence: 0.92 });
+    check('*** both answered: ONE command, from the surer ear ***', cmds.length === 1 && /pause/i.test(cmds[0].t) && cmds[0].d.confidence === 0.92, JSON.stringify(cmds));
+    check('*** they agree: one line, marked agreed, nothing shown twice ***', caps.at(-1).agreed === true && caps.at(-1).others.length === 0
+      && caps.at(-1).ears.length === 2);
+    const g3 = r.begin('room', 'a2', 5000); const g4 = r.begin('phone1', 'b2', 5100);
+    r.end('room', 'a2', 6000); r.end('phone1', 'b2', 6000);
+    r.result('room', { slot: 'local', utteranceId: 'a2', kind: 'final', text: 'I would like some water', confidence: 0.9 });
+    r.result('phone1', { slot: 'local', utteranceId: 'b2', kind: 'final', text: 'I would like some coffee', confidence: 0.7 });
+    check('*** they disagree: the surer ear’s words, and the other ear’s underneath (show both) ***',
+      g3 === g4 && caps.at(-1).text === 'I would like some water' && caps.at(-1).agreed === false
+      && caps.at(-1).others.length === 1 && caps.at(-1).others[0].ear === 'phone1' && caps.at(-1).others[0].text === 'I would like some coffee',
+      JSON.stringify(caps.at(-1)));
+    check('...the command path acted once, on the first sure answer (it does not wait to hear the other ear)',
+      cmds.length === 2 && cmds[1].t === 'I would like some water', JSON.stringify(cmds));
+    const g7 = r.begin('room', 'a4', 9000); r.begin('phone1', 'b4', 9050);
+    r.end('room', 'a4', 9800); r.end('phone1', 'b4', 9800);
+    r.result('room', { slot: 'local', utteranceId: 'a4', kind: 'final', text: 'computer please next', confidence: 0.5 });
+    r.result('phone1', { slot: 'local', utteranceId: 'b4', kind: 'final', text: 'computer please text', confidence: 0.6 });
+    check('both ears unsure: the surer one acts, and the command path is told the other reading',
+      cmds.length === 3 && cmds[2].t === 'computer please text' && (cmds[2].d.alternatives || []).includes('computer please next'),
+      JSON.stringify(cmds[2]));
+    const g5 = r.begin('room', 'a3', 20000); r.end('room', 'a3', 21000);
+    const g6 = r.begin('phone1', 'b3', 23000);
+    check('utterances seconds apart are separate groups (two people taking turns)', g5 !== g6);
+  }
+
+  // ======================================================================================
+  section('one engine: the protocol over a socket');
+  {
+    const { FakeWS, server } = makeServers();
+    const c = fakeClock();
+    const srv = server('ws://desk:8797/speech', { engine: 'whisper:small.en', secret: 'pw', answer: () => ({ text: 'hi', confidence: 0.9 }) });
+    const results = []; const states = [];
+    const en = connectEngine({ slot: 'remote1', name: 'Desk', url: 'ws://desk:8797/speech', key: 'pw', WebSocketImpl: FakeWS,
+      setTimer: c.setTimer, clearTimer: c.clearTimer, onResult: (x) => results.push(x), onState: (s) => states.push(s) });
+    en.setMode({ mode: 'grammar', grammar: ['pause', 'play'] });
+    await settle(); await settle();
+    check('*** hello first, with the pass phrase in the MESSAGE (never in the address) ***',
+      srv.hellos.length === 1 && srv.hellos[0].secret === 'pw' && srv.hellos[0].rate === 16000 && !/pw/.test(en.url));
+    check('ready once the service says hello; its engine is known', en.ready() && en.info().engine === 'whisper:small.en' && states.includes('ready'));
+    check('how to listen is sent once ready', srv.modes.length === 1 && srv.modes[0].grammar.join() === 'pause,play');
+    en.begin('room:u1'); en.audio('room:u1', frame(LOUD)); en.audio('room:u1', frame(LOUD)); en.end('room:u1');
+    await settle(); await settle();
+    check('*** begin, binary audio, end -> one final, tagged with this engine’s slot ***',
+      srv.begun.join() === 'room:u1' && srv.audioBytes === 1280 && results.length === 1 && results[0].slot === 'remote1'
+      && results[0].text === 'hi' && results[0].utteranceId === 'room:u1', JSON.stringify(results));
+    check('audio for an utterance this socket never began is not sent', en.audio('room:u9', frame(LOUD)) === false);
+    srv.kill();
+    await settle(); await settle();
+    check('*** the service goes away: "down", and a retry is scheduled (not a busy loop) ***', en.state() === 'down' && c.pending() === 1);
+    srv.down = false;
+    c.advance(RETRY_MS[0]);
+    await settle(); await settle();
+    check('...it comes back by itself', en.ready() && srv.hellos.length === 2);
+    en.close();
+    check('closed: no retry left running', c.pending() === 0 && en.state() === 'closed');
+    const wrong = connectEngine({ slot: 'remote1', url: 'ws://desk:8797/speech', key: 'nope', WebSocketImpl: FakeWS,
+      setTimer: c.setTimer, clearTimer: c.clearTimer });
+    await settle(); await settle(); await settle();
+    check('a wrong pass phrase: "refused" - nothing is sent', wrong.state() === 'refused' && wrong.begin('x') === false);
+    wrong.close();
+  }
+
+  // ======================================================================================
+  section('the recogniser: no microphone until something answers; one command per utterance');
+  {
+    const { FakeWS, server } = makeServers();
+    const c = fakeClock();
+    // No service at all.
+    let gum = 0;
+    const none = rankedRecognizer({ plan: enginePlanFrom({}), WebSocketImpl: FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer,
+      now: c.now, getUserMedia: () => { gum += 1; return Promise.reject(new Error('no')); } });
+    none.start(() => {});
+    await settle(); await settle();
+    check('*** nothing answers on this screen: NO microphone opened, and the status says "waiting" ***',
+      gum === 0 && none.status().state === 'waiting' && none.status().engines[0].state === 'down', JSON.stringify(none.status()));
+    none.stop();
+    check('stopped: nothing left scheduled', c.pending() === 0);
+    // A fake audio context proves the gate on the REAL capture path: the microphone is asked for only after hello.
+    const srvL = server(LOCAL_URL, { engine: 'vosk:small', answer: () => ({ text: 'computer please pause', confidence: 0.95,
+      words: [{ w: 'computer', conf: 0.9 }, { w: 'please', conf: 0.95 }, { w: 'pause', conf: 1 }] }) });
+    const fakeCtx = { state: 'running', audioWorklet: { addModule: () => Promise.resolve() }, destination: {},
+      createMediaStreamSource: () => ({ connect() {}, disconnect() {} }), createGain: () => ({ gain: {}, connect() {}, disconnect() {} }), close() {} };
+    let gum2 = 0;
+    const gated = rankedRecognizer({ plan: enginePlanFrom({}), WebSocketImpl: FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now,
+      makeContext: () => fakeCtx, getUserMedia: () => { gum2 += 1; return Promise.resolve({ getTracks: () => [] }); } });
+    const origErr = console.error; console.error = () => {};
+    gated.start(() => {});
+    check('before the service says hello: no microphone yet', gum2 === 0);
+    await settle(); await settle(); await sleep(10);
+    console.error = origErr;
+    check('*** the service said hello: NOW the microphone is opened ***', gum2 === 1, gum2);
+    gated.stop();
+
+    // End to end, frames fed in: two passes, input_speech on top, subtitles underneath.
+    srvL.answer = () => ({ text: 'computer please turn it off', confidence: 0.63, words: [{ w: 'computer', conf: 0.8 }, { w: 'please', conf: 0.9 },
+      { w: 'turn', conf: 0.5 }, { w: 'it', conf: 0.9 }, { w: 'off', conf: 0.4 }] });
+    const srvD = server('ws://desk:8797/speech', { engine: 'whisper:small.en', hold: true, answer: () => ({ text: 'computer please turn it up',
+      confidence: 0.93, words: [{ w: 'computer', conf: 0.9 }, { w: 'please', conf: 0.9 }, { w: 'turn', conf: 0.9 }, { w: 'it', conf: 0.9 }, { w: 'up', conf: 0.95 }] }) });
+    const plan = enginePlanFrom({ speechPass2: 'remote1', speechRemote1Url: 'ws://desk:8797/speech', speechRemote1Name: 'Desk' });
+    const rec = rankedRecognizer({ plan, WebSocketImpl: FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now, capture: false });
+    const presses = [];
+    const input = { down: (d, ctl) => presses.push(ctl), up() {} };
+    const host = document.getElementById('host');
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0 }, reducedMotion: true });
+    rec.onCaption((cap) => subs.caption(cap));
+    const statuses = [];
+    rec.onStatus((s) => statuses.push(s.state));
+    const sp = attachSpeech(input, { recognizer: rec, confirm: 'off', nearMiss: false, now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer });
+    sp.start();
+    await settle(); await settle(); await settle();
+    check('both passes answer: listening', rec.status().state === 'listening' && rec.status().engines.every((e) => e.state === 'ready'),
+      JSON.stringify(rec.status()));
+    const say = (ear, ms) => { let t = c.now(); for (let i = 0; i < 25; i++) { rec.feed(ear, frame(QUIET, i), t); t += 20; }
+      for (let i = 0; i < ms / 20; i++) { rec.feed(ear, frame(LOUD, i), t); t += 20; }
+      for (let i = 0; i < 60; i++) { rec.feed(ear, frame(QUIET, i), t); t += 20; } c.advance(t - c.now()); };
+    say('room', 800);
+    await settle(); await settle();
+    check('*** ONE utterance went to BOTH engines under ONE id ***',
+      srvL.begun.length === 1 && srvD.begun.length === 1 && srvL.begun[0] === srvD.begun[0] && srvL.ended[0] === srvD.ended[0], `${srvL.begun} / ${srvD.begun}`);
+    check('...with the same audio', srvL.audioBytes === srvD.audioBytes && srvL.audioBytes > 0);
+    check('*** the fast guess was unsure ("turn it off" at 0.63): nothing pressed yet ***', presses.length === 0, presses.join());
+    const line = subs.lines()[0];
+    check('*** ...but it is on screen at once, its unsure words marked ***', !!line && line.text === 'computer please turn it off'
+      && line.low.join() === 'turn,off', JSON.stringify(line));
+    const el = subs.element().querySelector('[data-caption]');
+    check('the marks are a shape (dotted underline), not a colour alone', !!el?.querySelector('.subs-low')
+      && /dotted/.test(getComputedStyle(el.querySelector('.subs-low')).textDecorationStyle || getComputedStyle(el.querySelector('.subs-low')).textDecoration));
+    srvD.flush();
+    await settle(); await settle();
+    check('*** the desktop answered: "turn it up" acts - louder, not the wrong guess ***',
+      presses.length === 1 && presses[0] === phraseControl('volume-up'), presses.join());
+    const el2 = subs.element().querySelector('[data-caption]');
+    check('*** the SAME line was corrected in place (same element), the changed word flagged ***',
+      el2 === el && subs.lines().length === 1 && subs.lines()[0].text === 'computer please turn it up' && subs.lines()[0].revised === true
+      && !!el2.querySelector('.subs-fixed') && el2.querySelector('.subs-fixed').textContent === 'up', el2?.outerHTML);
+    c.advance(10000);
+    check('...and nothing fired twice', presses.length === 1);
+    // The desktop goes away: the next unsure guess waits no longer than the service is up.
+    srvD.kill();
+    await settle(); await settle();
+    say('room', 600);
+    await settle(); await settle();
+    check('*** the desktop is off: the guess is the last word, and acts (the phrase table decides "turn it off" is nothing) ***',
+      presses.length === 1 && subs.lines().length === 2, `${presses.join()} ${subs.lines().length}`);
+    check('status still listening (this screen answers); the desktop is down', rec.status().state === 'listening'
+      && rec.status().engines.find((e) => e.slot === 'remote1').state === 'down');
+    // Two ears: a phone fed at the same moment.
+    srvL.answer = () => ({ text: 'computer please pause', confidence: 0.95, words: [] });
+    srvD.down = false; c.advance(RETRY_MS[0]); await settle(); await settle(); await settle();
+    srvD.hold = false;
+    srvD.answer = () => ({ text: 'computer please pause', confidence: 0.97, words: [] });
+    let t = c.now();
+    for (let i = 0; i < 25; i++) { rec.feed('room', frame(QUIET, i), t); rec.feed('phone1', frame(QUIET, i), t); t += 20; }
+    await settle(); await settle(); await settle();
+    check('*** a second ear gets its OWN connection to each engine (one microphone per socket) ***',
+      rec.connections().filter((x) => x.ear === 'phone1' && x.state === 'ready').length === 2, JSON.stringify(rec.connections()));
+    for (let i = 0; i < 40; i++) { rec.feed('room', frame(LOUD, i), t); rec.feed('phone1', frame(LOUD, i), t); t += 20; }
+    for (let i = 0; i < 60; i++) { rec.feed('room', frame(QUIET, i), t); rec.feed('phone1', frame(QUIET, i), t); t += 20; }
+    c.advance(t - c.now());
+    await settle(); await settle(); await settle();
+    check('*** two ears, four answers (2 ears x 2 engines), ONE pause pressed ***',
+      presses.filter((p) => p === phraseControl('pause')).length === 1, presses.join());
+    check('...and one line, marked agreed', subs.lines().at(-1).agreed === true && subs.lines().length === 3, JSON.stringify(subs.lines().at(-1)));
+    check('stats: frames per ear, never audio', rec.stats().room.frames > 0 && rec.stats().phone1.frames > 0 && !('pcm' in rec.stats().room));
+    check('grammar mode reaches every engine', (() => { rec.setMode({ mode: 'grammar', grammar: ['pause'], why: 'command' });
+      return true; })());
+    await settle(); await settle();
+    check('...(both services were told)', srvL.modes.at(-1)?.grammar?.join() === 'pause' && srvD.modes.at(-1)?.grammar?.join() === 'pause');
+    sp.destroy();
+    check('*** stopped: every socket closed, nothing scheduled ***', !rec.running && c.pending() === 0 && rec.status().state === 'stopped');
+    subs.destroy();
+  }
+
+  // ======================================================================================
+  section('the real microphone path (a fake device in this browser): frames arrive through the worklet');
+  {
+    const { FakeWS, server } = makeServers();
+    server(LOCAL_URL, { answer: () => ({ text: '' }) });
+    const rec = rankedRecognizer({ plan: enginePlanFrom({ speechEars: 'room' }), WebSocketImpl: FakeWS });
+    rec.start(() => {});
+    let ok = false;
+    for (let i = 0; i < 40 && !ok; i++) { await sleep(100); ok = (rec.stats().room?.frames || 0) > 10; }
+    const st = rec.status();
+    if (st.state === 'no-mic') check('(skipped: this browser has no microphone to open)', true);
+    else if (st.state === 'blocked') check('(not measured: this browser holds sound until the page is touched - and the status SAYS so: "blocked")', !ok);
+    else check('*** a real microphone -> AudioWorklet -> 16 kHz frames reach the segmenter ***', ok, JSON.stringify({ st, stats: rec.stats() }));
+    rec.stop();
+    check('stopped: the capture is gone', !rec.stats().room);
+  }
+
+  // ======================================================================================
+  const qs = new URLSearchParams(location.search);
+  const live = qs.get('live');
+  if (live) {
+    // `&url=` points it at a service on another port, so a live run never collides with a kiosk suite
+    // (which expects NOTHING answering on the default address).
+    const liveUrl = qs.get('url') || LOCAL_URL;
+    section(`LIVE: ${live} -> a real recogniser on ${liveUrl}`);
+    const buf = await (await fetch(live)).arrayBuffer();
+    // The WAV's 'data' chunk, found rather than assumed at byte 44 (Windows' own writer adds chunks).
+    const dv = new DataView(buf);
+    let off = 12, pcm = new Int16Array(0);
+    while (off + 8 <= buf.byteLength) {
+      const id = String.fromCharCode(dv.getUint8(off), dv.getUint8(off + 1), dv.getUint8(off + 2), dv.getUint8(off + 3));
+      const len = dv.getUint32(off + 4, true);
+      if (id === 'data') { pcm = new Int16Array(buf.slice(off + 8, off + 8 + len - (len % 2))); break; }
+      off += 8 + len + (len % 2);
+    }
+    const plan = enginePlanFrom({ speechLocalUrl: liveUrl });
+    const rec = rankedRecognizer({ plan, capture: false });
+    const heard = []; const caps = [];
+    rec.onCaption((x) => caps.push(x));
+    const presses = [];
+    const sp = attachSpeech({ down: (d, ctl) => presses.push(ctl), up() {} }, { recognizer: rec, confirm: 'off', nearMiss: false,
+      onHeard: (h) => heard.push(h.text) });
+    sp.start();
+    for (let i = 0; i < 50 && rec.status().state !== 'listening'; i++) await sleep(100);
+    check('a real service answered hello', rec.status().state === 'listening', JSON.stringify(rec.status()));
+    const t0 = performance.now();
+    let t = 0;
+    const pad = new Int16Array(SPF * 25);
+    const all = new Int16Array(pad.length * 2 + pcm.length + SPF * 60);
+    all.set(pad, 0); all.set(pcm, pad.length);
+    for (let i = 0; i + SPF <= all.length; i += SPF) { rec.feed('room', all.slice(i, i + SPF), t); t += 20; }
+    for (let i = 0; i < 100 && !caps.some((x) => x.final); i++) await sleep(100);
+    const ms = Math.round(performance.now() - t0);
+    const last = caps.at(-1) || {};
+    check(`LIVE: heard "${last.text}" (conf ${last.confidence?.toFixed?.(2)}, ${last.engine}) in ${ms} ms; pressed [${presses.join()}]`,
+      !!last.text, JSON.stringify(caps));
+    sp.destroy();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS - ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

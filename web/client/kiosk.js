@@ -48,11 +48,18 @@ import { createMixerFx } from './mixer_fx.js';
 import { attachMixer, MIXER_FIELDS } from './mixer.js';
 import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
 import {
-  attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, SPEECH_FIELDS, SPEECH_ON_FIELDS,
-  SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE,
+  attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, meansSomething, SPEECH_FIELDS, SPEECH_ON_FIELDS,
+  SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE, PHRASES, ROUTES,
 } from './input_speech.js';
+import {
+  watchFavourites, musicSpeechRoutes, musicSpeechActions, musicSpeechBindings, favouritesSignature,
+} from './music_favourites.js';
 import { createMissStore, MISS_FIELDS } from './speech_misses.js';
-import { createSubtitles, SUBTITLES_FIELDS } from './subtitles.js';
+import {
+  createSubtitles, subtitlesOptionsFrom, SUBTITLES_FIELDS, SUBTITLE_ACTIONS, SUBTITLES_EARLIER_TOPIC,
+  SUBTITLES_LATEST_TOPIC,
+} from './subtitles.js';
+import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS } from './speech_engines.js';
 import { createAmplifier, AMPLIFY_FIELDS } from './amplify.js';
 import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from './phone_mic.js';
 import { mountSettings } from './settings.js';
@@ -209,10 +216,18 @@ export async function mountKiosk(root, {
   plainBarSummonMs = 6000,
   // *** THE SPEECH RECOGNISER, BY WHICH ENGINE THE PERSON CHOSE (2026-09-30). *** Called ONLY when a
   // person's row turns spoken commands (or subtitles) on - never at boot. `null` means "none here", and
-  // the screen says so. 'local' has no engine yet (a Vosk/whisper service on the device plugs in HERE);
-  // 'browser' is the browser's own, which sends the room's sound to its maker (input_speech.js header),
-  // so it is only ever made when somebody chose it by name. A seam for the suites, too.
-  makeRecognizer = ({ engine, lang } = {}) => (engine === 'browser' ? browserRecognizer({ lang }) : null),
+  // the screen says so. 'browser' is the browser's own, which sends the room's sound to its maker
+  // (input_speech.js header), so it is only ever made when somebody chose it by name. Everything else is
+  // the RANKED list (rows 2.46/2.47, speech_engines.js): a service on this machine ('local'), then the
+  // other computers the person chose - it opens no microphone until one of them answers, and until then
+  // the screen says "no recogniser on this screen". A seam for the suites, too.
+  makeRecognizer = ({ engine, lang, values, micOwner: mo, phoneStreams, actsOn } = {}) => (engine === 'browser'
+    ? browserRecognizer({ lang })
+    : rankedRecognizer({ plan: enginePlanFrom({ ...(values || {}), speechEngine: engine }), micOwner: mo,
+                         phoneStreams, actsOn })),
+  // Subtitles' ONLINE route (row 2.47, NOT approved - Mike said "maybe"): made only when a person's row
+  // sets `subtitlesRoute: 'online'`, and it only ever writes lines. Off by default.
+  makeOnlineCaptioner = ({ lang } = {}) => browserRecognizer({ lang }),
 } = {}) {
   const useDashboard = !!embedded && !!dashboardModule;
   bus = bus || createBus();
@@ -510,12 +525,16 @@ export async function mountKiosk(root, {
   //
   // *** NOTHING OPENS A MICROPHONE BY DEFAULT. *** The recogniser is made only when the row says
   // `speechOn` (or `subtitlesOn`, which needs the room's words written down), and only by the engine
-  // the row names - 'local' by default, which does not exist yet, so the screen says "no recogniser on
-  // this screen" instead of listening somewhere else. kiosk_test proves no getUserMedia and no
-  // recogniser start without the setting.
+  // the row names - 'local' by default: the ranked recogniser (speech_engines.js), which opens no
+  // microphone until a speech service on this machine (web/speech_service) answers, and until then the
+  // screen says "no recogniser on this screen" instead of listening somewhere else. kiosk_test proves no
+  // getUserMedia and no recogniser start without the setting.
   let speech = null;             // attachSpeech's handle while a recogniser is running, else null
+  let speechRec = null;          // the recogniser itself (the ranked one has a status and captions)
+  let speechOffs = [];           // its status / caption subscriptions
+  let onlineCap = null;          // subtitles' online route, only when a row chose it
   let speechSig = null;
-  let speechStatus = 'off';      // off | no-local | no-browser | listening | subtitles-only
+  let speechStatus = 'off';      // off | no-local | no-browser | no-mic | blocked | listening | subtitles-only
   let missStore = null;          // speech_misses.js, only while `speechMissLog` is on
   let offMissSchedule = null;
   let subtitles = null;          // subtitles.js: built once (the output bus taps it), a mode off by default
@@ -526,15 +545,28 @@ export async function mountKiosk(root, {
   let micPill = null;            // "Microphone on: <phone>" -- NO SETTING HIDES IT (see where it is mounted)
   let personRow = null;          // the person's row as last seen; null = no person row on this screen
   let onVoiceChange = null;      // the menu's refresh, once the menu exists (it is built further down)
+  // THE PERSON'S MUSIC FAVOURITES AS SPOKEN ROUTES (music_favourites.js): "computer please play <name>".
+  // Their routes join input_speech's own when speech attaches; their actions are registered and their
+  // bindings added at runtime (never written into the person's bindings record).
+  let musicFavs = null;
+  let musicRoutes = {};
+  let offMusicActions = null;
   const SILENT_INPUT = { down() {}, up() {} };   // subtitles-only: the room is heard, nothing is pressed
-  const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...MISS_FIELDS].map((f) => f.key);
+  // `subtitlesRoute` is here too: the online captioner starts and stops with the recogniser.
+  const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...SPEECH_PASS_FIELDS, ...MISS_FIELDS]
+    .map((f) => f.key).concat('subtitlesRoute');
   const AMP_KEYS = AMPLIFY_FIELDS.map((f) => f.key);
   const SUBS_KEYS = SUBTITLES_FIELDS.map((f) => f.key);
   const sigOf = (r, keys) => JSON.stringify(keys.map((k) => (r && k in r ? r[k] : null)));
 
   function stopSpeech() {
+    for (const off of speechOffs) { try { off(); } catch { /* gone */ } }
+    speechOffs = [];
     try { speech?.destroy(); } catch (err) { console.error('kiosk: speech', err); }
     speech = null;
+    speechRec = null;
+    try { onlineCap?.stop(); } catch { /* already stopped */ }
+    onlineCap = null;
     try { offMissSchedule?.(); } catch { /* already stopped */ }
     offMissSchedule = null;
     missStore = null;
@@ -546,15 +578,46 @@ export async function mountKiosk(root, {
     const sw = speechSwitchFrom(r);
     const subsOn = r.subtitlesOn === true;
     const want = sw.on || subsOn;
-    const sig = JSON.stringify([want, !!runtime, torn, sigOf(r, SPEECH_KEYS)]);
+    const sig = JSON.stringify([want, !!runtime, torn, sigOf(r, SPEECH_KEYS),
+      favouritesSignature(musicFavs?.list?.() || [])]);
     if (sig === speechSig) return;
     speechSig = sig;
     stopSpeech();
     speechStatus = 'off';
     if (torn || !want || !runtime) { onVoiceChange?.(); return; }
     let rec = null;
-    try { rec = makeRecognizer({ engine: sw.engine, lang: 'en-US' }); } catch (err) { console.error('kiosk: recogniser', err); rec = null; }
+    const routes = { ...ROUTES, ...musicRoutes };
+    try {
+      const wakes = speechOptionsFrom(r).wake;
+      rec = makeRecognizer({ engine: sw.engine, lang: 'en-US', values: r, micOwner,
+                             phoneStreams: () => phoneRx?.streams?.() || [],
+                             // Subtitles-only has no commands, so every sure guess is as good as any.
+                             actsOn: sw.on ? (t) => meansSomething(t, wakes, PHRASES, routes) : null });
+    } catch (err) { console.error('kiosk: recogniser', err); rec = null; }
     if (!rec) { speechStatus = sw.engine === 'browser' ? 'no-browser' : 'no-local'; onVoiceChange?.(); return; }
+    speechRec = rec;
+    // THE RANKED RECOGNISER SAYS WHETHER ANYTHING IS ANSWERING (rows 2.46/2.47). Until an engine says
+    // hello it has opened no microphone, and the menu says "no recogniser on this screen".
+    const fromRec = (st) => {
+      const s = st && st.state;
+      if (s === 'waiting' || s === 'stopped') return 'no-local';
+      if (s === 'no-mic') return 'no-mic';
+      if (s === 'blocked') return 'blocked';
+      return sw.on ? 'listening' : 'subtitles-only';
+    };
+    if (typeof rec.onStatus === 'function') {
+      speechOffs.push(rec.onStatus((st) => {
+        if (speechRec !== rec) return;
+        const next = fromRec(st);
+        if (next !== speechStatus) { speechStatus = next; onVoiceChange?.(); }
+      }));
+    }
+    // Captions: every pass of every utterance, corrected in place (row 2.47). With them, `onHeard` does
+    // not also write lines - one utterance, one line.
+    const captions = typeof rec.onCaption === 'function';
+    if (captions) {
+      speechOffs.push(rec.onCaption((c) => { try { subtitles?.caption(c); } catch (err) { console.error('kiosk: subtitles', err); } }));
+    }
     const opts = speechOptionsFrom(r);
     // THE MISS LOG: only while spoken commands are on AND the person's row asks for it (OFF site-wide;
     // Mike, row 2.28 (b)). On this device, text only, pruned on a schedule that stops with the speech.
@@ -568,22 +631,57 @@ export async function mountKiosk(root, {
       speech = attachSpeech(sw.on ? runtime.input : SILENT_INPUT, {
         recognizer: rec,
         ...opts,
+        routes,
         // Subtitles-only: no commands, so nothing is confirmed, asked, logged or announced -- the
         // recogniser is there to write the room down, and a wake phrase does nothing.
         ...(sw.on ? {} : { confirm: 'off', nearMiss: false }),
         output: sw.on ? output : null,
         bus: sw.on ? bus : null,
         misses: sw.on ? missStore : null,
-        onHeard: (h) => { try { subtitles?.heard(h); } catch (err) { console.error('kiosk: subtitles', err); } },
+        onHeard: (h) => { if (captions) return; try { subtitles?.heard(h); } catch (err) { console.error('kiosk: subtitles', err); } },
       });
       speech.start();
-      speechStatus = sw.on ? 'listening' : 'subtitles-only';
+      speechStatus = typeof rec.status === 'function' ? fromRec(rec.status()) : (sw.on ? 'listening' : 'subtitles-only');
+      // SUBTITLES' ONLINE ROUTE: only when the row chose it, only while subtitles are on, never a
+      // command (its words go straight to the subtitles), and never twice when the browser's own is
+      // already the recogniser.
+      if (subsOn && sw.engine !== 'browser' && subtitlesOptionsFrom(r).route === 'online') {
+        try {
+          onlineCap = makeOnlineCaptioner({ lang: 'en-US' });
+          onlineCap?.start((text) => {
+            try { subtitles?.add({ text, source: 'online' }); } catch (err) { console.error('kiosk: subtitles', err); }
+          });
+        } catch (err) { console.error('kiosk: online captions', err); onlineCap = null; }
+      }
     } catch (err) {
       console.error('kiosk: speech', err);
       stopSpeech();
       speechStatus = 'off';
     }
     onVoiceChange?.();
+  }
+  // The person's music favourites, kept current: each change rebuilds the "play <name>" routes, swaps
+  // their actions and runtime bindings, and re-attaches speech (only if the spoken names changed - the
+  // signature above). No person, no favourites: `watchFavourites` returns null and nothing is added.
+  function applyMusic(list) {
+    let made = {};
+    try { made = musicSpeechRoutes(list || []).routes || {}; } catch (err) { console.error('kiosk: music routes', err); made = {}; }
+    musicRoutes = made;
+    try { offMusicActions?.(); } catch { /* gone */ }
+    offMusicActions = null;
+    try {
+      const off = runtime?.actions?.registerAll?.(musicSpeechActions(musicRoutes));
+      offMusicActions = typeof off === 'function' ? off : null;
+    } catch (err) { console.error('kiosk: music actions', err); }
+    try { runtime?.setExtraBindings?.(musicSpeechBindings(musicRoutes)); } catch (err) { console.error('kiosk: music bindings', err); }
+    if (personRow) syncSpeech(personRow);
+  }
+  function watchMusic(personId) {
+    if (musicFavs || torn || !personId) return;
+    try {
+      musicFavs = watchFavourites({ makePersonState: childCtx({ id: 'music' }).makePersonState, personId,
+                                    onChange: (list) => { if (!torn) applyMusic(list); } });
+    } catch (err) { console.error('kiosk: music favourites', err); musicFavs = null; }
   }
   // Everything the person's row drives, in one place: the listening cue, subtitles, amplify, speech.
   function applyPerson(row) {
@@ -1637,19 +1735,59 @@ export async function mountKiosk(root, {
     speechNearMissLine: (r) => speechOptionsFrom(r).nearMiss,
     speechNearMissWindowMs: (r) => speechOptionsFrom(r).nearMiss,
     speechMissKeepDays: (r) => r.speechMissLog === true,
+    // The ranked list's rows (rows 2.46/2.47): none for the browser's own; a computer's rows only while
+    // a pass uses it; the third pass only after a second.
+    speechPass2: (r) => !usesBrowser(r),
+    speechPass3: (r) => !usesBrowser(r) && passUses(r).length > 1,
+    speechRemote1Name: (r) => passUses(r).includes('remote1'),
+    speechRemote1Url: (r) => passUses(r).includes('remote1'),
+    speechRemote1Key: (r) => passUses(r).includes('remote1'),
+    speechRemote2Name: (r) => passUses(r).includes('remote2'),
+    speechRemote2Url: (r) => passUses(r).includes('remote2'),
+    speechRemote2Key: (r) => passUses(r).includes('remote2'),
+    speechLocalUrl: (r) => passUses(r).includes('local'),
+    speechSureAt: (r) => !usesBrowser(r),
+    speechWaitMs: (r) => !usesBrowser(r),
+    speechEndMs: (r) => !usesBrowser(r),
+    speechEars: (r) => !usesBrowser(r),
   };
+  const usesBrowser = (r) => speechSwitchFrom(r).engine === 'browser';
+  // Every slot the person put in the list, with or without an address (so the address row can appear).
+  function passUses(r) {
+    if (usesBrowser(r)) return [];
+    const list = [speechSwitchFrom(r).engine, r.speechPass2, r.speechPass3];
+    return [...new Set(list.filter((s) => ['local', 'remote1', 'remote2'].includes(s)))];
+  }
   function voiceStatusItem() {
     const r = personRow || {};
     const browser = speechSwitchFrom(r).engine === 'browser';
     const row = (label, hint) => ({ kind: 'item', id: 'voice-status', disabled: true, label, ...(hint ? { hint } : {}) });
-    if (speechStatus === 'no-local') return row('Not listening: there is no recogniser on this screen yet', 'the room’s sound is not sent anywhere');
-    if (speechStatus === 'no-browser') return row('Not listening: this browser has no recogniser of its own');
-    if (speechStatus === 'listening') {
-      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`,
-        browser ? 'the room’s sound goes to the browser’s maker' : '');
+    // What the ranked recogniser reports (rows 2.46/2.47): which engines answer, and where the sound goes.
+    let st = null;
+    try { st = speechRec?.status?.() || null; } catch { st = null; }
+    const ready = (st?.engines || []).filter((e) => e.state === 'ready');
+    const firstPass = (st?.engines || [])[0] || null;
+    const away = ready.filter((e) => e.slot !== 'local').map((e) => e.name);
+    const goes = browser ? 'the room’s sound goes to the browser’s maker'
+      : away.length ? `the room’s sound goes to: ${away.join(', ')}` : '';
+    const online = onlineCap ? 'subtitles also send the room’s sound to the browser’s maker' : '';
+    const hints = (...xs) => xs.filter(Boolean).join('; ');
+    if (speechStatus === 'no-local') {
+      if (st && !(st.engines || []).length && (st.skipped || []).length) {
+        return row(`Not listening: ${st.skipped[0].name} has no address yet`, 'the room’s sound is not sent anywhere');
+      }
+      if (firstPass && firstPass.slot !== 'local') {
+        return row(`Not listening: ${firstPass.name} is not answering`, 'nothing is recorded until it answers');
+      }
+      return row('Not listening: no recogniser on this screen is answering', hints('the room’s sound is not sent anywhere', online));
     }
-    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)',
-      browser ? 'the room’s sound goes to the browser’s maker' : '');
+    if (speechStatus === 'no-browser') return row('Not listening: this browser has no recogniser of its own');
+    if (speechStatus === 'no-mic') return row('Not listening: the microphone could not be opened');
+    if (speechStatus === 'blocked') return row('Not listening yet: the browser is holding sound until the screen is touched');
+    if (speechStatus === 'listening') {
+      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`, hints(goes, online));
+    }
+    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)', hints(goes, online));
     return null;
   }
   function voiceItems() {
@@ -1662,6 +1800,7 @@ export async function mountKiosk(root, {
     const fields = [
       ...SPEECH_ON_FIELDS.filter((f) => f.key === 'speechOn'),
       ...(sw.on || subsOn ? SPEECH_ON_FIELDS.filter((f) => f.key !== 'speechOn') : []),
+      ...(sw.on || subsOn ? SPEECH_PASS_FIELDS.filter(keep) : []),
       ...(sw.on ? [...SPEECH_FIELDS, ...LISTENING_FIELDS, ...MISS_FIELDS].filter(keep) : []),
       ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || subsOn),
       ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
@@ -2033,6 +2172,8 @@ export async function mountKiosk(root, {
       // subtitles and amplify, each re-attached only when one of its own settings changed.
       offListenPerson = personInputs.subscribe?.((s) => applyPerson(s || {})) || null;
       if (!offListenPerson) applyPerson(personInputs.get?.() || {});
+      // The person's music favourites become spoken "play <name>" routes (music_favourites.js).
+      watchMusic(p.person_id);
       await startMarkerTracking(p.person_id);
       await startDevicePreference(p.person_id);
     } catch {
@@ -2124,7 +2265,7 @@ export async function mountKiosk(root, {
   // THE SPEECH LAYER'S ACTIONS: the spoken routes ("play opposites" -> word_games/play) and the
   // switch answers to "Did you mean that?". An input bus refuses an unregistered action, so without
   // these a route phrase or a Yes switch would be logged as unknown and do nothing.
-  try { runtime.actions.registerAll([...SPEECH_ACTIONS, ...NEAR_MISS_ACTIONS]); }
+  try { runtime.actions.registerAll([...SPEECH_ACTIONS, ...NEAR_MISS_ACTIONS, ...SUBTITLE_ACTIONS]); }
   catch (err) { console.error('kiosk: speech actions', err); }
   await runtime.load();
   // The menu takes the verbs while it is open and hands them back when it closes.
@@ -2572,7 +2713,12 @@ export async function mountKiosk(root, {
   offsScreen.push(bus.subscribe(PHONE_MIC_TOPIC, () => {
     try { amplifier?.sourceChanged?.()?.catch?.((err) => console.error('kiosk: amplify', err)); }
     catch (err) { console.error('kiosk: amplify', err); }
+    // ...and a ranked recogniser listening to "a phone when one is joined" (row 2.46, two ears).
+    try { speechRec?.sourcesChanged?.(); } catch (err) { console.error('kiosk: speech ears', err); }
   }));
+  // Subtitles' scroll back, from a switch bound to either action (row 2.47).
+  offsScreen.push(bus.subscribe(SUBTITLES_EARLIER_TOPIC, (p) => { claimed(p); try { subtitles?.earlier(); } catch { /* none */ } }));
+  offsScreen.push(bus.subscribe(SUBTITLES_LATEST_TOPIC, (p) => { claimed(p); try { subtitles?.latest(); } catch { /* none */ } }));
 
   // The long press itself, on the input bus's physical edges. Its length is a screen setting.
   const longPress = useDashboard ? createLongPress({
@@ -2723,6 +2869,11 @@ export async function mountKiosk(root, {
     // unless a recogniser is running), why it is or is not listening, the miss store (null unless on),
     // subtitles, amplify, and the phone-microphone receiver and its notice (null until the drive).
     speech: () => speech,
+    speechRecognizer: () => speechRec,
+    // The person's music favourites watch (null with no person), and the spoken routes made from it.
+    musicFavourites: () => musicFavs,
+    musicRoutes: () => ({ ...musicRoutes }),
+    onlineCaptioner: () => onlineCap,
     speechStatus: () => speechStatus,
     misses: () => missStore,
     subtitles: () => subtitles,
@@ -2788,6 +2939,9 @@ export async function mountKiosk(root, {
       try { output?.destroy(); } catch { /* already gone */ }
       // After the output bus (whose speech channel it taps): clears its lines and any room it reserved.
       try { subtitles?.destroy(); } catch { /* already gone */ } subtitles = null;
+      // The music favourites' watch (its poll) and the actions it registered.
+      try { offMusicActions?.(); } catch { /* already gone */ } offMusicActions = null;
+      try { musicFavs?.destroy(); } catch { /* already gone */ } musicFavs = null;
       try { audio?.destroy(); } catch { /* already gone */ }
       try { cameraOwner?.destroy(); } catch { /* already gone */ }
       try { cursor?.destroy(); } catch { /* already gone */ }

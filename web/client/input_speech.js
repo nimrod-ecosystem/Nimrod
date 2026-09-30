@@ -685,7 +685,14 @@ const pickChoice = (v, allowed, dflt) => (allowed.includes(v) ? v : dflt);
 //     kiosk says "no recogniser on this screen yet" rather than quietly listening elsewhere.
 //   * The local engine plugs in behind the same seam (a Vosk or whisper service on the device, or
 //     the desktop Mike ruled acceptable as an OPTION for her audio, row 2.46) with nothing here moving.
-export const SPEECH_ENGINES = ['local', 'browser'];
+//
+// *** ROWS 2.46/2.47: 'local' NOW WORKS WHEN A SERVICE ANSWERS ON THIS MACHINE. *** speech_engines.js
+// connects to web/speech_service on 127.0.0.1 and opens no microphone until it says hello; nothing
+// answering, the kiosk still says "no recogniser on this screen". 'remote1' / 'remote2' are ANOTHER
+// COMPUTER as the first pass (Mike: her audio to his desktop "is fine for an option", Oscar's GPU box
+// another) - labelled with where the sound goes, OFF unless chosen, and doing nothing until an address
+// is set. The later passes of the ranked list are speech_engines.js's SPEECH_PASS_FIELDS.
+export const SPEECH_ENGINES = ['local', 'remote1', 'remote2', 'browser'];
 export const SPEECH_ON_FIELDS = [
   { key: 'speechOn', label: 'Spoken commands', kind: 'toggle', default: false, level: 'standard',
     onLabel: 'On', offLabel: 'Off',
@@ -694,6 +701,8 @@ export const SPEECH_ON_FIELDS = [
     level: 'standard',
     options: [
       { value: 'local', label: 'A recogniser on this screen (the room’s sound stays here)' },
+      { value: 'remote1', label: 'Another computer (sends the room’s sound there)' },
+      { value: 'remote2', label: 'A second other computer (sends the room’s sound there)' },
       { value: 'browser', label: 'The browser’s own (sends the room’s sound to the browser’s maker)' },
     ] },
 ];
@@ -769,6 +778,20 @@ export function splitWake(text, wakes) {
     if (said.startsWith(`${w} `)) return { woke: true, rest: said.slice(w.length + 1) };
   }
   return { woke: false, rest: said };
+}
+
+/**
+ * WOULD THESE WORDS DO ANYTHING? The wake phrase alone, a command after a wake phrase, or a bare
+ * command (the armed window's case). For a ranked recogniser (speech_engines.js, row 2.46): a fast
+ * guess that is "sure" but means nothing - Vosk on the bench wrote "computer please pass" for "pause"
+ * at confidence 1.0 - waits for the better pass instead of acting, because acting on it could only
+ * ever be a "did you mean" or nothing. Pure, and deliberately generous: it errs toward acting.
+ */
+export function meansSomething(text, wakes = SPEECH_DEFAULTS.wake, table = PHRASES, routes = ROUTES) {
+  const w = splitWake(text, wakes);
+  if (w.woke && !w.rest) return true;
+  const rest = w.rest;
+  return !!(rest && (verbFor(rest, table) || routeFor(rest, routes)));
 }
 
 // ---------------------------------------------------------------------------------------

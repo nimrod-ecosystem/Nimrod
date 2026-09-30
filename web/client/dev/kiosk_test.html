@@ -2852,6 +2852,107 @@ const ds = () => root.querySelector('.kiosk').dataset;
     }
   }
 
+  // *** ROWS 2.46/2.47: THE RANKED RECOGNISER IN THE KIOSK, AND MUSIC FAVOURITES AS SPOKEN ROUTES. ***
+  // The recogniser here is a stand-in with the ranked one's extra surface (status, captions, sources);
+  // speech_engines_test covers the real one against fake sockets.
+  {
+    const { PHONE_MIC_TOPIC } = await import('../phone_mic.js');
+    const { FAVOURITES_KEY, MUSIC_PLAY_TOPIC } = await import('../music_favourites.js');
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const rUser = USER + '-ranked';
+    const rProfiles = createProfilesClient({ user: rUser });
+    let rk3 = null;
+    const rbox = document.createElement('div');
+    rbox.style.cssText = 'position:relative;width:640px;height:420px;margin:8px 0';
+    document.body.append(rbox);
+    try {
+      const rp = await rProfiles.create('TEST-ranked');
+      await rProfiles.addModule(rp.id, 'photos');
+      const rFull = await rProfiles.get(rp.id);
+      const setP = async (key, patch) => {
+        const s = createState({ url: rProfiles.personStateURL(rFull.person_id, key), user: rUser });
+        await s.load().catch(() => {}); s.set(patch); await s.flush(); s.destroy();
+      };
+      const setRow = (patch) => setP(INPUTS_KEY, patch);
+      await setP(FAVOURITES_KEY, { favourites: [] });
+      await setRow({ speechOn: false, subtitlesOn: false, speechEngine: 'local', speechPass2: 'none' });
+      const rk = { cb: null, running: false, srcN: 0, sfns: new Set(), cfns: new Set(),
+        st: { state: 'waiting', engines: [{ slot: 'local', name: 'This screen', state: 'down' }, { slot: 'remote1', name: 'Desk', state: 'down' }], skipped: [], ears: [] },
+        start(cb) { this.cb = cb; this.running = true; }, stop() { this.running = false; this.cb = null; },
+        status() { return this.st; },
+        onStatus(fn) { this.sfns.add(fn); return () => this.sfns.delete(fn); },
+        onCaption(fn) { this.cfns.add(fn); return () => this.cfns.delete(fn); },
+        setStatus(s) { this.st = s; this.sfns.forEach((f) => f(s)); }, cap(c) { this.cfns.forEach((f) => f(c)); },
+        sourcesChanged() { this.srcN += 1; } };
+      const made = [];
+      const rbus = createBus();
+      rk3 = await mountKiosk(rbox, { user: rUser, profileId: rp.id, profiles: rProfiles, bus: rbus,
+        storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {},
+        makeRecognizer: (a) => { made.push(a); return rk; } });
+      const item = (id) => rk3.menu.items().find((r) => r.id === id);
+      await settled(() => !!item('set:speechOn'), 9000);
+      await setRow({ speechOn: true, subtitlesOn: true, speechPass2: 'remote1', speechRemote1Url: 'ws://desk:8797/speech',
+        speechRemote1Name: 'Desk' });
+      check('*** ranked: nothing answering yet -> "no-local", and the menu says no recogniser answers ***',
+        await settled(() => rk3.speechStatus() === 'no-local' && rk.running, 9000)
+        && /no recogniser on this screen/i.test(item('voice-status')?.label || ''), `${rk3.speechStatus()} ${item('voice-status')?.label}`);
+      check('ranked: the recogniser was handed the person’s row, the microphone owner and the phone streams',
+        made.length >= 1 && made.at(-1).values?.speechPass2 === 'remote1' && !!made.at(-1).micOwner && typeof made.at(-1).phoneStreams === 'function');
+      check('*** ranked: a "sure" guess that means nothing does not act at once (actsOn is the phrase table) ***',
+        made.at(-1).actsOn?.('computer please pause') === true && made.at(-1).actsOn?.('computer please pass') === false);
+      check('ranked: the pass rows are in the Voice section while it is on (and the second computer’s rows are not)',
+        !!item('set:speechPass2') && !item('set:speechRemote2Url'), rk3.menu.items().map((r) => r.id).filter((x) => /speech(Pass|Remote|Ears|End)/.test(x || '')).join());
+      rk.setStatus({ state: 'listening', engines: [{ slot: 'local', name: 'This screen', state: 'ready' }, { slot: 'remote1', name: 'Desk', state: 'ready' }], skipped: [], ears: ['room'] });
+      check('*** ranked: an engine answers -> listening, and the status says the sound goes to Desk ***',
+        await settled(() => rk3.speechStatus() === 'listening', 4000) && /Desk/.test(item('voice-status')?.hint || ''),
+        `${rk3.speechStatus()} ${JSON.stringify(item('voice-status'))}`);
+      rk.setStatus({ ...rk.st, state: 'blocked' });
+      check('ranked: sound held by the browser is said, not left silent', rk3.speechStatus() === 'blocked'
+        && /touched/.test(item('voice-status')?.label || ''));
+      rk.setStatus({ ...rk.st, state: 'listening' });
+      // Captions: the fast guess, then the correction, in ONE line.
+      rk.cap({ id: 'g1', ear: 'room', text: 'computer please turn it off', words: [{ w: 'computer', conf: 0.9 }, { w: 'please', conf: 0.9 },
+        { w: 'turn', conf: 0.5 }, { w: 'it', conf: 0.9 }, { w: 'off', conf: 0.3 }] });
+      rk.cap({ id: 'g1', ear: 'room', text: 'computer please turn it up', revised: true, words: [] });
+      const m0 = rk3.audio().master();
+      rk.cb('computer please turn it up', { confidence: 0.93 });
+      check('*** ranked: captions refine ONE line in place; the command acts; onHeard adds no second line ***',
+        rk3.subtitles().lines().length === 1 && rk3.subtitles().lines()[0].text === 'computer please turn it up'
+        && rk3.subtitles().lines()[0].revised === true && rk3.audio().master() >= m0, JSON.stringify(rk3.subtitles().lines()));
+      rbus.publish(PHONE_MIC_TOPIC, { phones: [{ name: 'Pillow phone', phase: 'live' }] });
+      check('*** two ears: a phone joining tells the recogniser (it listens to it too) ***', rk.srcN >= 1);
+      rbus.publish(PHONE_MIC_TOPIC, { phones: [] });
+      rk3.subtitles().earlier();
+      check('subtitles scroll back is wired (the actions are registered)', rk3.runtime.actions.has('subtitles/earlier')
+        && rk3.runtime.actions.has('subtitles/latest'));
+      rbus.publish('subtitles/latest');
+      check('...and "latest" on the bus returns to the latest lines', rk3.subtitles().scrolledBack() === 0);
+      // Music favourites become "play <name>".
+      await setP(FAVOURITES_KEY, { favourites: [{ id: 'fbeatles', name: 'The Beatles', source: { kind: 'youtube', videoId: 'dQw4w9WgXcQ' } }] });
+      check('(setup) the favourites arrive and become a spoken route',
+        await settled(() => Object.keys(rk3.musicRoutes()).some((k) => k === 'music-fbeatles'), 12000), JSON.stringify(rk3.musicRoutes()));
+      check('...speech re-attached with the new route (a new recogniser start)', await settled(() => rk.running && !!rk.cb, 6000));
+      const plays = [];
+      const offPlay = rbus.subscribe(MUSIC_PLAY_TOPIC, (p) => plays.push(p));
+      rk.cb('computer please play the beatles', { confidence: 0.95 });
+      offPlay();
+      check('*** music: "computer please play the beatles" publishes music/play with the favourite’s name ***',
+        plays.length === 1 && plays[0]?.name === 'The Beatles', JSON.stringify(plays));
+      check('music: its binding is a runtime extra, never written into the person’s record',
+        rk3.runtime.extraBindings().some((b) => b.actionId === 'speech/music-fbeatles')
+        && !rk3.runtime.record().bindings.some((b) => b.actionId === 'speech/music-fbeatles'));
+      rk3.destroy(); rk3 = null;
+      check('ranked teardown: the recogniser is stopped', !rk.running);
+      await setRow({ speechOn: false, subtitlesOn: false, speechPass2: 'none', speechRemote1Url: '' });
+      await setP(FAVOURITES_KEY, { favourites: [] });
+    } catch (e) {
+      check('the ranked-recogniser section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { rk3?.destroy(); } catch { /* already gone */ }
+      rbox.remove();
+    }
+  }
+
   // *** THE TEMPORAL-DEAD-ZONE CLASS: A BOOT MUST LOG NO ReferenceError. *** (Stage 0, 2026-09-29.)
   // Three times a `let` that a boot-time path reads was declared below that path: `runtime` and
   // `callTransport` (read by `childCtx`'s getters -- until 2026-09-30 the `...childCtx(mod)` spread in

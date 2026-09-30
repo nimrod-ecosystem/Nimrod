@@ -183,9 +183,17 @@ export function mountInputRuntime({
   const aim = createAim({ bus });
   const router = createVerbRouter({ bus, modules, maps, onChange: onFocus, onUnhandled });
 
+  // BINDINGS A HOST ADDS AT RUNTIME, beside the person's record and never written into it: the spoken
+  // "play <favourite>" routes (music_favourites.js), which change whenever the person edits their
+  // favourites. Merged UNDER the person's own - a binding id the record already has is theirs.
+  let extra = [];
   function apply(rec) {
     record = rec;
-    input.setBindings(record.bindings);
+    const own = new Set(record.bindings.map((b) => b.id));
+    const add = extra.length
+      ? normalizeRecord({ v: RECORD_VERSION, bindings: extra.filter((b) => b && !own.has(b.id)) }).bindings
+      : [];
+    input.setBindings(add.length ? [...record.bindings, ...add] : record.bindings);
     input.setDevices(record.devices);
     input.setGate(record.gate);
   }
@@ -266,6 +274,9 @@ export function mountInputRuntime({
     load,
     useState,
     record: () => ({ ...record, bindings: record.bindings.map((b) => ({ ...b })) }),
+    /** Replace the host's runtime-only bindings (see `extra` above). The record is untouched. */
+    setExtraBindings(list) { extra = Array.isArray(list) ? list.filter(Boolean) : []; apply(record); },
+    extraBindings: () => extra.map((b) => ({ ...b })),
     recentActivity: () => activity.map((r) => ({ ...r })),
     gate: () => record.gate,
     speaks: () => record.speak,
