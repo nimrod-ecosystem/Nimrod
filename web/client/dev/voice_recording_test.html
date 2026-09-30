@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>voice recording for training - test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>voice recording for training</h1>
+<p>Row 2.44. When a person's <code>voiceRecording</code> setting is on, each utterance the speech path
+already cuts is kept ON THIS DEVICE with what the recogniser wrote, as a training pair a family member
+completes with what was meant. Off for everybody by default; never opens a microphone; always shown.</p>
+<div class="note"><b>Not covered here:</b> a real microphone, a real speech service, or the kiosk's
+browser profile (whether IndexedDB survives a restart on the Pis is on Mike's list). The recogniser
+below is the REAL ranked recogniser fed frames through <code>feed</code>, against fake sockets.</div>
+<div id="host"></div>
+<div id="panel"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  VOICE_RECORDING_DEFAULTS, VOICE_RECORDING_FIELDS, VOICE_RECORDING_TOPIC, voiceRecordingOptionsFrom, encodeWav16,
+  buildPair, pairExpired, withMeant, createMemoryPairStore, createIdbPairStore, createVoiceRecorder,
+  recordingText, mountRecordingIndicator, exportPairs, pairFolderName, CLIP_RATE,
+} from '../voice_recording.js';
+import { mountVoiceReview, saidLine, reviewSummary } from '../voice_review.js';
+import { rankedRecognizer, enginePlanFrom } from '../speech_engines.js';
+import { CAPTURE_RATE, FRAME_MS } from '../speech_capture.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settle = async (n = 4) => { for (let i = 0; i < n; i++) await sleep(0); };
+function fakeClock(start = 1_760_000_000_000) {
+  let t = start; let n = 1; const timers = new Map();
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = n++; timers.set(id, { at: t + ms, fn }); return id; },
+    clearTimer: (id) => { timers.delete(id); },
+    advance(ms) {
+      const end = t + ms;
+      for (;;) {
+        const due = [...timers].filter(([, x]) => x.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+        if (!due) break;
+        timers.delete(due[0]); t = Math.max(t, due[1].at); due[1].fn();
+      }
+      t = end;
+    },
+    pending: () => timers.size,
+  };
+}
+const SPF = CAPTURE_RATE * FRAME_MS / 1000;
+function frame(amp, k = 0) {
+  const f = new Int16Array(SPF);
+  for (let i = 0; i < SPF; i++) f[i] = Math.round(amp * Math.sin(2 * Math.PI * 300 * (k * SPF + i) / CAPTURE_RATE));
+  return f;
+}
+const QUIET = 30, LOUD = 8000;
+
+// A fake speech service (web/speech_service's protocol), trimmed from speech_engines_test.
+function makeServer() {
+  let answer = () => ({ text: '' });
+  const conns = new Set();
+  class FakeWS {
+    constructor(url) {
+      this.url = url; this.readyState = 0; this.bufferedAmount = 0;
+      queueMicrotask(() => { this.readyState = 1; conns.add(this); this.onopen?.(); });
+    }
+    send(data) {
+      if (this.readyState !== 1) throw new Error('not open');
+      if (typeof data !== 'string') return;
+      const m = JSON.parse(data);
+      const reply = (x) => queueMicrotask(() => { if (this.readyState === 1) this.onmessage?.({ data: JSON.stringify(x) }); });
+      if (m.type === 'hello') reply({ kind: 'hello', engine: 'fake:1', grammar: true, partials: false, protocol: 1 });
+      else if (m.type === 'end') reply({ kind: 'final', utteranceId: m.utteranceId, engine: 'fake:1', words: [], ...answer(m.utteranceId) });
+    }
+    close() { if (this.readyState === 3) return; this.readyState = 3; conns.delete(this); queueMicrotask(() => this.onclose?.({ code: 1000 })); }
+  }
+  return { FakeWS, setAnswer: (f) => { answer = f; } };
+}
+
+(async () => {
+try {
+  // ======================================================================================
+  section('*** off for everybody by default; a per-person setting ***');
+  {
+    const o = voiceRecordingOptionsFrom({});
+    check('*** OFF when the row says nothing ***', o.on === false && VOICE_RECORDING_DEFAULTS.on === false);
+    check('*** only a literal true turns it on (not "yes", not 1) ***',
+      voiceRecordingOptionsFrom({ voiceRecording: true }).on === true && voiceRecordingOptionsFrom({ voiceRecording: 'yes' }).on === false
+      && voiceRecordingOptionsFrom({ voiceRecording: 1 }).on === false);
+    check('retention: 30 days by default; 0 = until deleted; nonsense = default',
+      o.keepDays === 30 && voiceRecordingOptionsFrom({ voiceRecordingKeepDays: 0 }).keepDays === 0
+      && voiceRecordingOptionsFrom({ voiceRecordingKeepDays: 'x' }).keepDays === 30 && voiceRecordingOptionsFrom({ voiceRecordingKeepDays: -3 }).keepDays === 30);
+    check('the ceiling and keep-unclear have defaults', o.maxPairs === 1000 && o.keepUnclear === true
+      && voiceRecordingOptionsFrom({ voiceRecordingMaxPairs: 50 }).maxPairs === 50);
+    const f = VOICE_RECORDING_FIELDS.find((x) => x.key === 'voiceRecording');
+    check('*** the menu field defaults OFF, and its note says it is kept on this screen and shown ***',
+      f.default === false && /ON THIS SCREEN/.test(f.note) && /shows when it is recording/.test(f.note));
+    const bad = auditFields(VOICE_RECORDING_FIELDS.map(normalizeField).filter(Boolean), { type: 'voice' }).filter((x) => x.severity === 'error');
+    check('the settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+    const copy = JSON.stringify(VOICE_RECORDING_FIELDS);
+    check('site copy never names the person it was first built for, nor "her screen"', !/Christine|Cici|her screen/i.test(copy));
+  }
+
+  // ======================================================================================
+  section('the file format: a training pair (what was said, what was meant)');
+  {
+    const wav = encodeWav16(Int16Array.of(0, 1000, -1000, 32767), CLIP_RATE);
+    const dv = new DataView(wav);
+    const tag = (o) => String.fromCharCode(dv.getUint8(o), dv.getUint8(o + 1), dv.getUint8(o + 2), dv.getUint8(o + 3));
+    check('WAV header: RIFF/WAVE/fmt/data, 16 kHz mono 16-bit', tag(0) === 'RIFF' && tag(8) === 'WAVE' && tag(12) === 'fmt '
+      && tag(36) === 'data' && dv.getUint32(24, true) === 16000 && dv.getUint16(22, true) === 1 && dv.getUint16(34, true) === 16
+      && dv.getUint32(40, true) === 8 && wav.byteLength === 52);
+    check('the samples are written as they are', dv.getInt16(46, true) === 1000 && dv.getInt16(50, true) === 32767);
+    // Decoded by the browser's own decoder, not by my reading of my own header (recorder.js's rule).
+    let decoded = null;
+    try {
+      const ac = new OfflineAudioContext(1, 16000, 16000);
+      const long = new Int16Array(1600).map((_, i) => Math.round(8000 * Math.sin(i / 5)));
+      decoded = await ac.decodeAudioData(encodeWav16(long, 16000));
+    } catch (e) { decoded = String(e); }
+    check('*** the browser\'s own decoder reads it: 1600 samples at 16 kHz ***',
+      decoded && decoded.length === 1600 && decoded.sampleRate === 16000, String(decoded && decoded.length));
+    const p = buildPair({ personId: 'p1', at: 1000, keepDays: 30,
+      caption: { text: ' turn it up ', confidence: 0.82, engine: 'whisper', slot: 'local', ear: 'room',
+                 others: [{ ear: 'phone1', text: 'turn it off', confidence: 0.5 }] },
+      clips: [{ ear: 'room', durationMs: 800 }, { ear: 'phone1', durationMs: 780, offsetMs: 40 }] });
+    check('*** "said" carries the words, the confidence and the engine; "meant" starts EMPTY ***',
+      p.said.text === 'turn it up' && p.said.confidence === 0.82 && p.said.engine === 'whisper' && p.meant === '' && p.reviewed === false);
+    check('the other ear\'s words travel with it (a reviewer sees both)', p.said.others[0].text === 'turn it off');
+    check('one clip per ear, named by ear', p.clips.map((c) => c.file).join() === 'room.wav,phone1.wav' && p.clips[1].offsetMs === 40);
+    check('*** the keep-until date is IN the pair (a setting changed later cannot reach a pair written today) ***',
+      p.keepUntil === 1000 + 30 * 86400000 && p.keepDays === 30);
+    check('keep 0 = keepUntil null, and a pair with no date is never expired',
+      buildPair({ at: 5, keepDays: 0 }).keepUntil === null && !pairExpired(buildPair({ at: 5, keepDays: 0 }), 1e15));
+    check('expired exactly at its date', pairExpired(p, p.keepUntil) && !pairExpired(p, p.keepUntil - 1));
+    check('no words = marked unclear, still a pair', buildPair({ at: 1, caption: { text: '' } }).unclear === true);
+    const m = withMeant(p, '  louder please  ', 2000);
+    check('what was meant: trimmed, stamped, reviewed', m.meant === 'louder please' && m.meantAt === 2000 && m.reviewed === true && p.meant === '');
+  }
+
+  // ======================================================================================
+  section('the recorder, on the REAL ranked recogniser');
+  {
+    const c = fakeClock();
+    const { FakeWS, setAnswer } = makeServer();
+    setAnswer(() => ({ text: 'computer please pause', confidence: 0.91 }));
+    const rec = rankedRecognizer({ plan: enginePlanFrom({}), WebSocketImpl: FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer,
+                                   now: c.now, capture: false });
+    const store = createMemoryPairStore();
+    const bus = createBus();
+    const vr = createVoiceRecorder({ store, personId: 'p1', now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer, bus });
+    const host = document.getElementById('host');
+    const pill = mountRecordingIndicator(host, { recorder: vr, bus });
+    rec.start(() => {});
+    await settle(6);
+    check('the recogniser is listening (a fake service said hello)', rec.status().state === 'listening', JSON.stringify(rec.status()));
+    const say = (ms, ears = ['room']) => {
+      let t = c.now();
+      for (let i = 0; i < 25; i++) { for (const e of ears) rec.feed(e, frame(QUIET, i), t); t += 20; }
+      for (let i = 0; i < ms / 20; i++) { for (const e of ears) rec.feed(e, frame(LOUD, i), t); t += 20; }
+      for (let i = 0; i < 60; i++) { for (const e of ears) rec.feed(e, frame(QUIET, i), t); t += 20; }
+      c.advance(t - c.now());
+    };
+
+    vr.attach(rec);
+    say(600);
+    await settle(6); await vr.settle();
+    check('*** setting OFF: attached, something was said, NOTHING kept ***', (await store.count({})) === 0 && vr.state().recording === false);
+    check('*** ...and no notice (nothing is being recorded) ***', pill.shown() === false);
+
+    vr.update({ voiceRecording: true, voiceRecordingKeepDays: 7 });
+    await settle(4);
+    check('*** setting ON while listening: the notice says so ***', pill.shown() && pill.text() === 'Recording voice for training', pill.text());
+    const el = host.querySelector('.rec-live');
+    for (let i = 0; i < 40 && getComputedStyle(el.parentElement).position !== 'fixed'; i++) await sleep(50);
+    check('it sits in the screen\'s notice column, takes no presses, and is a polite status',
+      el.parentElement.classList.contains('live-notices') && getComputedStyle(el).pointerEvents === 'none' && el.getAttribute('role') === 'status');
+    say(800);
+    await settle(8); await vr.settle();
+    const pairs = await store.list({ personId: 'p1' });
+    check('*** one utterance -> one pair ***', pairs.length === 1, String(pairs.length));
+    const p = pairs[0] || {};
+    check('*** with the transcript, its confidence and its engine ***',
+      p.said?.text === 'computer please pause' && p.said?.confidence === 0.91 && p.said?.engine === 'fake:1', JSON.stringify(p.said));
+    check('for the right person, at the utterance\'s own time, kept 7 days', p.personId === 'p1' && p.keepDays === 7
+      && p.keepUntil === p.at + 7 * 86400000 && p.at <= c.now());
+    const wav = await store.audio(p.id, 'room');
+    const samples = wav ? (wav.byteLength - 44) / 2 : 0;
+    // 800 ms voiced + pre-roll (300 ms) + the silence until the end was heard (900 ms) = about 2 s.
+    check('*** the audio is the utterance the recogniser heard (about 2 s at 16 kHz) ***',
+      wav && samples > 1.5 * CLIP_RATE && samples < 2.5 * CLIP_RATE && p.clips[0].sampleRate === 16000, String(samples));
+    check('*** the LOUD part is in it (it is the real audio, not silence) ***',
+      wav && new Int16Array(wav, 44).some((v) => Math.abs(v) > 7000));
+    check('the pair counts toward the notice\'s state', vr.state().saved === 1);
+    vr.setPersonId('p2');
+    say(600);
+    await settle(8); await vr.settle();
+    check('the screen\'s person changes: new recordings are theirs', (await store.list({ personId: 'p2' })).length === 1);
+    const moved = (await store.list({ personId: 'p2' }))[0];
+    await store.remove(moved.id);
+    vr.setPersonId('p1');
+
+    // A cough: shorter than the segmenter's minimum: cancelled, never kept.
+    say(60);
+    await settle(6); await vr.settle();
+    check('a knock (cancelled by the cut) is never kept', (await store.count({})) === 1);
+
+    // Unclear: the engine made out no words. Kept by default...
+    setAnswer(() => ({ text: '', confidence: 0.2 }));
+    say(600);
+    await settle(8); await vr.settle();
+    const all = await store.list({});
+    check('*** words nobody could make out are KEPT by default (they are what training is for) ***',
+      all.length === 2 && all[0].unclear === true, JSON.stringify(all.map((x) => x.said.text)));
+    // ...and dropped when the person chose so.
+    vr.update({ voiceRecording: true, voiceRecordingKeepUnclear: false });
+    say(600);
+    await settle(8); await vr.settle();
+    check('...and not kept when the person turned that off', (await store.count({})) === 2);
+
+    // Two ears: one group, one pair with both clips.
+    setAnswer(() => ({ text: 'hello', confidence: 0.95 }));
+    vr.update({ voiceRecording: true });
+    let t = c.now();
+    say(700, ['room', 'phone1']);
+    await settle(10); await vr.settle();
+    const two = (await store.list({}))[0];
+    check('*** two ears hearing one sentence -> ONE pair, a clip from each ear ***',
+      two && two.clips.length === 2 && two.clips.map((x) => x.ear).sort().join() === 'phone1,room', JSON.stringify(two && two.clips));
+    check('...both clips stored', !!(await store.audio(two.id, 'room')) && !!(await store.audio(two.id, 'phone1')));
+
+    // The ceiling: at the limit it PAUSES and SAYS SO; it never deletes to make room.
+    const before = await store.count({});
+    vr.update({ voiceRecording: true, voiceRecordingMaxPairs: before });
+    await vr.sweep();
+    say(600);
+    await settle(8); await vr.settle();
+    check('*** at the ceiling: nothing new kept, nothing old deleted ***', (await store.count({})) === before);
+    check('*** ...and the notice says it is paused rather than going quiet ***', vr.state().paused === 'full'
+      && pill.shown() && /paused/.test(pill.text()), pill.text());
+    vr.update({ voiceRecording: true, voiceRecordingMaxPairs: 1000 });
+    check('raising the ceiling un-pauses it', vr.state().paused === null);
+
+    // Turning it off drops what is half-heard and hides the notice.
+    let tt = c.now();
+    for (let i = 0; i < 25; i++) { rec.feed('room', frame(QUIET, i), tt); tt += 20; }
+    for (let i = 0; i < 30; i++) { rec.feed('room', frame(LOUD, i), tt); tt += 20; }
+    c.advance(tt - c.now());
+    vr.update({ voiceRecording: false });
+    for (let i = 0; i < 60; i++) { rec.feed('room', frame(QUIET, i), tt); tt += 20; }
+    c.advance(tt - c.now());
+    await settle(8); await vr.settle();
+    check('*** turned off mid-sentence: the half-heard sentence is dropped, not saved ***', (await store.count({})) === before);
+    check('*** off: no notice ***', pill.shown() === false);
+
+    // The recogniser stops: the notice goes (nothing is listening, so nothing can be recorded).
+    vr.update({ voiceRecording: true });
+    await settle(2);
+    check('on again, listening: shown', pill.shown());
+    rec.stop();
+    await settle(4);
+    check('*** the recogniser stopped: no notice, because nothing is recording ***', pill.shown() === false && vr.state().listening === false);
+
+    // A recogniser with no utterances (the browser's own) is never attached to - and letting go of the
+    // real one disarms the recorder's retention sweep (its only timer).
+    const p0 = c.pending();
+    vr.attach({ start() {}, stop() {}, running: true });
+    check('a recogniser that does not cut utterances (the browser\'s own) is not attached: no notice, no claim',
+      vr.state().attached === false && pill.shown() === false);
+    check('*** detaching disarms the recorder\'s sweep timer (nothing left running) ***', c.pending() === p0 - 1, `${p0} -> ${c.pending()}`);
+
+    // Teardown.
+    vr.destroy(); pill.destroy();
+    check('teardown: the notice is gone from the page', !host.querySelector('.rec-live'));
+  }
+
+  // ======================================================================================
+  section('*** it never opens a microphone by itself ***');
+  {
+    // The recorder has no code path that asks for a microphone; prove it: fail loudly if anything asks.
+    const orig = navigator.mediaDevices?.getUserMedia;
+    let asked = 0;
+    try { if (navigator.mediaDevices) navigator.mediaDevices.getUserMedia = async () => { asked += 1; throw new Error('no'); }; } catch { /* read-only */ }
+    const vr = createVoiceRecorder({ store: createMemoryPairStore() });
+    vr.update({ voiceRecording: true });
+    vr.attach(null);
+    await settle(4);
+    check('*** on, with no recogniser: no microphone asked for, no notice state ***', asked === 0 && vr.state().recording === false);
+    vr.destroy();
+    try { if (navigator.mediaDevices && orig) navigator.mediaDevices.getUserMedia = orig; } catch { /* read-only */ }
+  }
+
+  // ======================================================================================
+  section('the store on this device (IndexedDB, for real)');
+  {
+    const name = `nimrod-voice-test-${Date.now()}`;
+    const st = createIdbPairStore({ name });
+    const a = buildPair({ id: 'a', personId: 'p1', at: 100, keepDays: 1, caption: { text: 'one' }, clips: [{ ear: 'room', durationMs: 10 }] });
+    const b = buildPair({ id: 'b', personId: 'p1', at: 200, keepDays: 0, caption: { text: 'two' }, clips: [{ ear: 'room', durationMs: 10 }] });
+    const x = buildPair({ id: 'x', personId: 'p2', at: 300, keepDays: 0, caption: { text: 'other person' }, clips: [] });
+    await st.add(a, [{ ear: 'room', wav: encodeWav16(Int16Array.of(1, 2, 3)) }]);
+    await st.add(b, [{ ear: 'room', wav: encodeWav16(Int16Array.of(4)) }]);
+    await st.add(x, []);
+    const l = await st.list({ personId: 'p1' });
+    check('listed newest first, only this person\'s', l.map((p) => p.id).join() === 'b,a');
+    check('the audio comes back byte for byte', (await st.audio('a', 'room')).byteLength === 50);
+    await st.update('a', { meant: 'won', reviewed: true });
+    check('what was meant is saved', (await st.get('a')).meant === 'won');
+    const gone = await st.sweep(100 + 86400000);
+    check('*** the sweep removes what is past its own date, and keeps a pair with no date ***',
+      gone.join() === 'a' && (await st.count({ personId: 'p1' })) === 1 && !(await st.audio('a', 'room')));
+    check('*** a delete takes the pair AND its audio together ***', (await st.remove('b')) === true
+      && !(await st.get('b')) && !(await st.audio('b', 'room')));
+    check('deleting twice is not an error', (await st.remove('b')) === false);
+    st.close();
+    await new Promise((r) => { const q = indexedDB.deleteDatabase(name); q.onsuccess = q.onerror = q.onblocked = () => r(); });
+  }
+
+  // ======================================================================================
+  section('the review panel: play, see what was written, say what was meant, delete');
+  {
+    const store = createMemoryPairStore();
+    const mk = (id, at, text, conf) => buildPair({ id, personId: 'p1', at, caption: { text, confidence: conf },
+      clips: [{ ear: 'room', durationMs: 900 }] });
+    await store.add(mk('p-a', 1000, 'turn it up', 0.82), [{ ear: 'room', wav: encodeWav16(Int16Array.of(1)) }]);
+    await store.add(mk('p-b', 2000, '', null), [{ ear: 'room', wav: encodeWav16(Int16Array.of(2)) }]);
+    await store.add(buildPair({ id: 'p-c', personId: 'p2', at: 3000, caption: { text: 'not mine' }, clips: [] }), []);
+    const played = [];
+    const root = document.getElementById('panel');
+    const panel = mountVoiceReview(root, { store, personId: 'p1', keepDays: () => 30, now: () => 5000,
+      play: (wav) => { played.push(wav.byteLength); return { stop() {} }; } });
+    await panel.ready;
+    check('only this person\'s recordings, newest first', [...root.querySelectorAll('[data-id]')].map((li) => li.dataset.id).join() === 'p-b,p-a');
+    check('the summary counts them and says how long new ones are kept (never "deleted after")',
+      /2 voice recordings kept on this screen, 2 still need what was meant/.test(root.textContent) && /tidied up whenever this screen is running/.test(root.textContent)
+      && !/deleted after/i.test(root.textContent));
+    check('what the recogniser wrote, with how sure it was', saidLine({ said: { text: 'turn it up', confidence: 0.82 } }) === 'Heard: “turn it up” (sure: 82%)'
+      && /Heard: nothing it could make out/.test(root.querySelector('[data-id="p-b"]').textContent));
+    root.querySelector('[data-id="p-a"] [data-play="room"]').click();
+    await settle(4);
+    check('Play plays that clip', played.length === 1 && played[0] === 46);
+    check('an unclear one has no "It heard it right"', !root.querySelector('[data-id="p-b"] [data-right]'));
+    root.querySelector('[data-id="p-a"] [data-right]').click();
+    await settle(4);
+    check('*** "It heard it right": what was meant = what was said, reviewed ***',
+      (await store.get('p-a')).meant === 'turn it up' && (await store.get('p-a')).reviewed === true && (await store.get('p-a')).meantAt === 5000);
+    check('...and it leaves the "To review" list', !root.querySelector('[data-id="p-a"]'));
+    root.querySelector('[data-id="p-b"] [data-meant]').value = 'I want a drink';
+    root.querySelector('[data-id="p-b"] [data-save]').click();
+    await settle(4);
+    check('*** typed: what was meant is saved against the recording ***', (await store.get('p-b')).meant === 'I want a drink');
+    root.querySelector('[data-filter="all"]').click();
+    check('"All" shows the reviewed ones', root.querySelectorAll('[data-id]').length === 2);
+    root.querySelector('[data-id="p-a"] [data-del]').click();
+    check('*** delete asks once more (it cannot be undone) and deletes nothing yet ***',
+      !!root.querySelector('[data-id="p-a"] [data-del-yes]') && !!(await store.get('p-a')));
+    root.querySelector('[data-id="p-a"] [data-del-no]').click();
+    check('Keep keeps it', !!(await store.get('p-a')) && !root.querySelector('[data-del-yes]'));
+    root.querySelector('[data-id="p-a"] [data-del]').click();
+    root.querySelector('[data-id="p-a"] [data-del-yes]').click();
+    await settle(4);
+    check('*** "Delete for good" removes the recording and its sound ***', !(await store.get('p-a')) && !(await store.audio('p-a', 'room'))
+      && !root.querySelector('[data-id="p-a"]'));
+    check('reviewSummary when empty', reviewSummary([]) === 'No voice recordings on this screen.');
+    panel.destroy();
+    check('teardown empties the panel', root.innerHTML === '');
+  }
+
+  // ======================================================================================
+  section('the review panel as a module (voice_review)');
+  {
+    await import('../modules/voice_review.js');
+    const store = createMemoryPairStore();
+    await store.add(buildPair({ id: 'm1', personId: 'p9', at: 10, caption: { text: 'hi there' }, clips: [] }), []);
+    const box = document.createElement('div');
+    box.style.cssText = 'position:relative;width:480px;height:320px';
+    document.body.append(box);
+    const bus = createBus();
+    const inst = mountModule('voice_review', { mount: box, bus, rootBus: bus, personId: 'p9', instanceId: 'vr1', voiceStore: store,
+      state: null, events: null, makeState: () => null, makeEvents: () => null });
+    inst.init();
+    await settle(6);
+    check('the module mounts, and lists this person\'s recordings from the store it was given',
+      !!box.querySelector('.m-voice-review [data-id="m1"]'), box.textContent.slice(0, 200));
+    check('it opens no microphone and plays nothing by itself', !box.querySelector('audio, video'));
+    inst.destroy();
+    check('destroy leaves nothing behind', box.innerHTML === '');
+    box.remove();
+  }
+
+  // ======================================================================================
+  section('export: into a folder somebody picked, the manifest last');
+  {
+    const files = [];
+    const dir = {
+      async getDirectoryHandle(name) {
+        return { async getFileHandle(f) { return { async createWritable() {
+          return { async write(d) { files.push(`${name}/${f}:${typeof d === 'string' ? 'json' : d.byteLength}`); }, async close() {} };
+        } }; } };
+      },
+    };
+    const store = createMemoryPairStore();
+    const p = buildPair({ id: 'vp-x-12345678', personId: 'p1', at: new Date(2026, 8, 30, 14, 3, 7).getTime(), caption: { text: 'hi' },
+      clips: [{ ear: 'room', durationMs: 5 }] });
+    await store.add(p, [{ ear: 'room', wav: encodeWav16(Int16Array.of(1, 2)) }]);
+    const r = await exportPairs(dir, store, { personId: 'p1' });
+    const folder = pairFolderName(p);
+    check('one folder per recording, named by its time', folder === 'voice-20260930-140307-12345678', folder);
+    check('*** the audio first, pair.json LAST (an interrupted export never leaves a manifest promising missing audio) ***',
+      r.written.length === 1 && files.join() === `${folder}/room.wav:48,${folder}/pair.json:json`, files.join());
+  }
+
+  // ======================================================================================
+  section('the words on the notice');
+  {
+    check('off -> nothing', recordingText({ on: false, attached: true, listening: true }) === '');
+    check('on, attached, not listening -> nothing (nothing can be recorded)', recordingText({ on: true, attached: true, listening: false }) === '');
+    check('recording', recordingText({ on: true, attached: true, listening: true }) === 'Recording voice for training');
+    check('*** full: says it is paused rather than vanishing ***', /paused/.test(recordingText({ on: true, attached: true, listening: true, paused: 'full' })));
+    check('*** a failed save is said ***', /could not save/.test(recordingText({ on: true, attached: true, listening: false, paused: 'failed' })));
+    check('the topic is namespaced', VOICE_RECORDING_TOPIC === 'voice-recording/state');
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

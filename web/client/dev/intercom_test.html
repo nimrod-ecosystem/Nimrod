@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>intercom - a phone and a room, both ways - test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>intercom</h1>
+<p>Row 2.44. A family member's phone talks into a room and hears it back - only if the room's approved
+list has them (by the account the SERVER stamps on the offer), only after the room hears a chime and
+their name, shown the whole time, and ended by the room with one press.</p>
+<div class="note"><b>Not covered here:</b> a real phone, a real network, real WebRTC, a real chime. The
+relay below is a fake of the server's fan-out that stamps <code>by</code> the way
+<code>drive.py stamp_signal</code> does (server tests: <code>web/server/test_drive.py</code>).</div>
+<div id="host"></div>
+<div id="page"></div>
+<div id="appr"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  createIntercomSender, createIntercomReceiver, mountIntercomNotice, intercomText, intercomOptionsFrom, normalizeAllowed,
+  admits, isIntercomSignal, newSession, INTERCOM_PURPOSE, INTERCOM_TOPIC, INTERCOM_END_TOPIC, INTERCOM_ACTIONS,
+  INTERCOM_DEFAULTS, INTERCOM_FIELDS, INTERCOM_CONSTRAINTS, END_REASONS,
+} from '../intercom.js';
+import { mountIntercomApprovals, approvalCandidates } from '../intercom_approvals.js';
+import { mountIntercomPage } from '../intercom_page.js';
+import { createPhoneMicReceiver } from '../phone_mic.js';
+import { createCallTransport } from '../call_transport.js';
+import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
+import { SIGNAL_KINDS } from '../drive.js';
+import { createBus } from '../bus.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const flush = async () => { for (let i = 0; i < 8; i++) await sleep(0); };
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    pending: () => armed.length,
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// The server's relay, faked - INCLUDING the stamp: every relayed signal carries `by` = the account the
+// socket's ticket was issued to, overwriting whatever the sender wrote (drive.py stamp_signal).
+function fakeRoom({ stamp = true } = {}) {
+  const screens = new Set(), drivers = new Set();
+  function join(role, account = 'owner@x') {
+    const subs = new Set();
+    const me = {
+      role, account, sent: [], subs,
+      sendSignal(s) {
+        if (!SIGNAL_KINDS.includes(s.kind)) return false;
+        me.sent.push(s);
+        const copy = JSON.parse(JSON.stringify(s));
+        if (stamp) copy.by = account; else delete copy.by;
+        for (const l of (role === 'screen' ? drivers : screens)) for (const cb of [...l.subs]) cb(copy);
+        return true;
+      },
+      onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+      state: () => 'connected',
+      close() { (role === 'screen' ? screens : drivers).delete(me); subs.clear(); },
+    };
+    (role === 'screen' ? screens : drivers).add(me);
+    return me;
+  }
+  return { join };
+}
+
+const AUDIO_SDP = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendrecv\r\n';
+const VIDEO_SDP = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n';
+function fakePeers({ offerSdp = AUDIO_SDP } = {}) {
+  const made = [];
+  class PC {
+    constructor(cfg) {
+      this.cfg = cfg; this.transceivers = []; this.senders = []; this.closed = false;
+      this.iceGatheringState = 'complete'; this.connectionState = 'new';
+      this.localDescription = null; this.remote = null;
+      made.push(this);
+    }
+    addTransceiver(t, init) { this.transceivers.push({ track: t, init }); return {}; }
+    addTrack(t, s) { this.senders.push({ track: t, stream: s }); return {}; }
+    getSenders() { return this.senders; }
+    addEventListener() {}
+    async setRemoteDescription(d) { this.remote = d; }
+    async createOffer() { return { type: 'offer', sdp: offerSdp }; }
+    async createAnswer() { return { type: 'answer', sdp: AUDIO_SDP }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    close() { this.closed = true; }
+    fire(st) { this.connectionState = st; this.onconnectionstatechange?.(); }
+    fireTrack(track, streams) { this.ontrack?.({ track, streams }); }
+  }
+  return { PC, made, last: () => made[made.length - 1] };
+}
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { this.tracks.push(t); }
+  removeTrack(t) { this.tracks = this.tracks.filter((x) => x !== t); }
+  getTracks() { return this.tracks; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+const track = (kind = 'audio') => ({ kind, stopped: false, stop() { this.stopped = true; } });
+function fakeMicOwner() {
+  const o = { acquired: [], released: [], held: new Set(),
+    async acquire(id, profile) { o.acquired.push([id, profile]); o.held.add(id); return new FakeStream([track()]); },
+    release(id) { o.released.push(id); o.held.delete(id); } };
+  return o;
+}
+function fakeAudioBus() {
+  const b = { reg: {}, active: {}, unreg: [],
+    register(id, opts) { b.reg[id] = opts; }, setActive(id, on) { b.active[id] = on; }, unregister(id) { b.unreg.push(id); } };
+  return b;
+}
+function fakeAudioEl() { return { srcObject: null, playing: 0, paused: 0, volume: 1, play() { this.playing++; return Promise.resolve(); }, pause() { this.paused++; } }; }
+
+const ALLOWED = [{ account: 'mike@x', name: 'Mike' }];
+
+function rig({ allowed = ALLOWED, row = {}, stamp = true, busy = () => false } = {}) {
+  const room = fakeRoom({ stamp });
+  const clock = fakeClock();
+  const bus = createBus();
+  const screenLink = room.join('screen', 'owner@x');
+  const peers = fakePeers();
+  const mic = fakeMicOwner();
+  const audio = fakeAudioBus();
+  const said = [];
+  const chimes = [];
+  const els = [];
+  let current = { intercomAllowed: allowed, ...row };
+  const recv = createIntercomReceiver({ link: screenLink, options: () => intercomOptionsFrom(current), micOwner: mic, audio,
+    output: { alert: (t) => said.push(t) }, chime: () => chimes.push(clock.now()), busy, bus, PeerConnection: peers.PC,
+    makeAudio: () => { const e = fakeAudioEl(); els.push(e); return e; },
+    now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+  function phone(account = 'mike@x', opts = {}) {
+    const link = room.join('driver', account);
+    const pp = fakePeers({ offerSdp: opts.offerSdp });
+    const media = { asked: [], async getUserMedia(c) { media.asked.push(c); if (opts.noMic) { const e = new Error('no'); e.name = 'NotAllowedError'; throw e; } return new FakeStream([track()]); } };
+    const states = [];
+    const remote = [];
+    const s = createIntercomSender({ link, from: { name: opts.claim || 'My phone' }, getUserMedia: media.getUserMedia,
+      PeerConnection: pp.PC, Stream: FakeStream, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      onState: (st, why) => states.push([st, why]), onRemote: (x) => remote.push(x) });
+    return { s, link, peers: pp, media, states, remote };
+  }
+  return { room, clock, bus, screenLink, peers, mic, audio, said, chimes, els, recv, phone,
+           setRow: (r) => { current = r; } };
+}
+
+(async () => {
+try {
+  // ======================================================================================
+  section('*** the approved list: empty by default, checked against the SERVER\'s stamp ***');
+  {
+    check('*** nobody is approved by default ***', INTERCOM_DEFAULTS.allowed.length === 0 && intercomOptionsFrom({}).allowed.length === 0);
+    check('the list is cleaned: one per account, a name for each',
+      JSON.stringify(normalizeAllowed([{ account: ' a@x ', name: '' }, { account: 'a@x', name: 'dup' }, { name: 'no account' }, null, { account: 'b@x', name: 'Bea' }]))
+      === JSON.stringify([{ account: 'a@x', name: 'a' }, { account: 'b@x', name: 'Bea' }]));
+    check('*** admits: the stamped account must be on the list ***', admits(ALLOWED, 'mike@x')?.name === 'Mike' && admits(ALLOWED, 'eve@x') === null);
+    check('*** no stamp at all (an older server) is REFUSED: it fails closed ***', admits(ALLOWED, undefined) === null && admits(ALLOWED, '') === null);
+    check('defaults: a 3 s warning, a chime, the name said, 30 minutes',
+      INTERCOM_DEFAULTS.warnMs === 3000 && INTERCOM_DEFAULTS.chime === true && INTERCOM_DEFAULTS.announce === true && INTERCOM_DEFAULTS.maxMs === 30 * 60000);
+    check('options: unknown values fall back to the defaults',
+      intercomOptionsFrom({ intercomWarnMs: 7000, intercomMaxMs: 'x' }).warnMs === 3000 && intercomOptionsFrom({ intercomMaxMs: 0 }).maxMs === 0);
+    const bad = auditFields(INTERCOM_FIELDS.map(normalizeField).filter(Boolean), { type: 'intercom' }).filter((x) => x.severity === 'error');
+    check('the settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+    check('the room\'s one-press end is an ordinary action', INTERCOM_ACTIONS[0].topic === INTERCOM_END_TOPIC);
+    check('*** two-way sound asks for echo cancellation, and never a camera ***',
+      INTERCOM_CONSTRAINTS.video === false && INTERCOM_CONSTRAINTS.audio.echoCancellation === true);
+    check('sessions are distinct and marked', newSession() !== newSession() && /^ic-[0-9a-f]{16}$/.test(newSession()));
+    const copy = JSON.stringify([INTERCOM_FIELDS, END_REASONS]);
+    check('site copy never names the person it was first built for, nor "her screen"', !/Christine|Cici|her screen/i.test(copy));
+  }
+
+  // ======================================================================================
+  section('*** somebody NOT on the list ***');
+  {
+    const r = rig();
+    const p = r.phone('eve@x', { claim: 'Mike' });            // says it is Mike; the server says eve
+    await p.s.start();
+    await flush();
+    check('*** refused: the name a phone types is not who it is ***', p.s.state() === 'ended' && p.s.reason() === 'not-approved', JSON.stringify(p.states));
+    check('*** the room\'s microphone was never opened, no chime, nothing said, nothing shown ***',
+      r.mic.acquired.length === 0 && r.chimes.length === 0 && r.said.length === 0 && r.recv.sessions().length === 0);
+    check('the phone let go of its own microphone', p.s.micOpen() === false);
+    check('the words the phone shows say how to be added', /has not added you/.test(END_REASONS['not-approved']));
+    r.recv.destroy();
+  }
+  {
+    const r = rig({ stamp: false });
+    const p = r.phone('mike@x');
+    await p.s.start(); await flush();
+    check('*** an offer with no server stamp (an older server) is refused, even from somebody on the list ***',
+      p.s.state() === 'ended' && p.s.reason() === 'not-approved' && r.mic.acquired.length === 0);
+    r.recv.destroy();
+  }
+  {
+    const r = rig({ allowed: [] });
+    const p = r.phone('owner@x');
+    await p.s.start(); await flush();
+    check('*** an empty list refuses even the owner: nobody until somebody is added ***', p.s.reason() === 'not-approved');
+    r.recv.destroy();
+  }
+
+  // ======================================================================================
+  section('*** somebody on the list: the room is told first, then it opens ***');
+  {
+    const r = rig();
+    const host = document.getElementById('host');
+    const notice = mountIntercomNotice(host, { receiver: r.recv, bus: r.bus });
+    check('nothing open: no notice', notice.shown() === false);
+    const p = r.phone('mike@x', { claim: 'Definitely not Mike' });
+    await p.s.start();
+    await flush();
+    check('the phone asked for sound only, with echo cancellation', p.media.asked[0].video === false && p.media.asked[0].audio.echoCancellation === true);
+    check('*** the phone sends AND receives ***', p.peers.last().transceivers[0].init.direction === 'sendrecv');
+    const offer = p.link.sent.find((s) => s.kind === 'offer');
+    check('the offer names its purpose and session', offer.purpose === INTERCOM_PURPOSE && offer.session === p.s.session);
+    check('*** a chime, and the name said, BEFORE anything opens ***', r.chimes.length === 1 && r.said[0] === 'Intercom from Mike', JSON.stringify(r.said));
+    check('*** the room shows "Intercom opening: Mike" - the LIST\'s name, not what the phone typed ***',
+      notice.shown() && notice.text() === 'Intercom opening: Mike', notice.text());
+    check('*** during the warning the room\'s microphone is NOT open, and nothing was answered ***',
+      r.mic.acquired.length === 0 && !r.screenLink.sent.some((s) => s.kind === 'answer') && p.s.state() === 'asking');
+    r.clock.advance(2999); await flush();
+    check('still not open at 2.999 s', r.mic.acquired.length === 0);
+    r.clock.advance(1); await flush();
+    check('*** after the warning: the room\'s microphone opens, with the CALL profile (echo cancellation) ***',
+      r.mic.acquired.length === 1 && r.mic.acquired[0][0] === 'intercom' && r.mic.acquired[0][1] === MIC_PROFILES.call);
+    const screenPc = r.peers.last();
+    check('*** the room sends its microphone back (two-way) ***', screenPc.senders.length === 1 && screenPc.senders[0].track.kind === 'audio');
+    check('the answer went to the phone', r.screenLink.sent.some((s) => s.kind === 'answer' && s.session === p.s.session));
+    check('*** "Intercom open: Mike", for the whole time ***', notice.text() === 'Intercom open: Mike' && r.recv.open());
+    check('*** the caller\'s voice is on the CALL tier (music pauses under it) ***', r.audio.reg.intercom?.tier === 'call' && r.audio.active.intercom === true);
+    screenPc.fireTrack(track(), [new FakeStream()]);
+    check('the caller is played in the room', r.els.length === 1 && !!r.els[0].srcObject && r.els[0].playing === 1);
+    r.audio.reg.intercom.onGain(0.4);
+    check('the mixer\'s level reaches it', r.els[0].volume === 0.4);
+    screenPc.fireTrack(track('video'), [new FakeStream()]);
+    check('a video track is ignored (sound only)', r.els.length === 1);
+    p.peers.last().fire('connected');
+    const phoneRemote = new FakeStream();
+    p.peers.last().fireTrack(track(), [phoneRemote]);
+    check('the phone is open and hears the room', p.s.state() === 'open' && p.remote.at(-1) === phoneRemote);
+    // The notice's button: the room ends it with ONE press.
+    const el = host.querySelector('.ic-live');
+    for (let i = 0; i < 40 && getComputedStyle(el.parentElement).position !== 'fixed'; i++) await sleep(50);
+    check('it sits in the notice column; the END button is the one thing that takes a press',
+      el.parentElement.classList.contains('live-notices') && getComputedStyle(el).pointerEvents === 'none'
+      && getComputedStyle(notice.button()).pointerEvents === 'auto');
+    check('the button is big enough to press', notice.button().getBoundingClientRect().height >= 44);
+    notice.button().click();
+    await flush();
+    check('*** ONE press ends it: the phone is told "the room ended it" ***', p.s.state() === 'ended' && p.s.reason() === 'room-ended');
+    check('*** ...the room\'s microphone is released, the caller stops, the call tier lets go ***',
+      r.mic.released.includes('intercom') && r.els[0].srcObject === null && r.audio.active.intercom === false && screenPc.closed);
+    check('*** ...and the notice is gone ***', notice.shown() === false);
+    check('no timers left behind', r.clock.pending() === 0, String(r.clock.pending()));
+    notice.destroy(); r.recv.destroy();
+  }
+
+  // ======================================================================================
+  section('ending, from every side');
+  {
+    const r = rig();
+    const p = r.phone('mike@x');
+    await p.s.start(); await flush();
+    r.bus.publish(INTERCOM_END_TOPIC, {});
+    await flush();
+    check('*** ended DURING the warning: the room\'s microphone never opened ***', p.s.reason() === 'room-ended' && r.mic.acquired.length === 0);
+    r.clock.advance(10000); await flush();
+    check('...and the warning timer does not open it later', r.mic.acquired.length === 0 && r.recv.sessions().length === 0);
+    // By a switch/speech binding: the action topic.
+    const q = r.phone('mike@x');
+    await q.s.start(); await flush(); r.clock.advance(3000); await flush();
+    check('open again', r.recv.open());
+    r.bus.publish(INTERCOM_END_TOPIC, {});
+    await flush();
+    check('*** the intercom/end action ends an OPEN intercom too ***', q.s.reason() === 'room-ended' && !r.recv.open());
+    // The phone hangs up.
+    const s3 = r.phone('mike@x');
+    await s3.s.start(); await flush(); r.clock.advance(3000); await flush();
+    s3.s.stop();
+    await flush();
+    check('the phone hanging up ends it in the room, and releases the microphone',
+      r.recv.sessions().length === 0 && r.mic.held.size === 0 && r.audio.active.intercom === false);
+    // Time limit.
+    r.setRow({ intercomAllowed: ALLOWED, intercomMaxMs: 10 * 60000 });
+    const s4 = r.phone('mike@x');
+    await s4.s.start(); await flush(); r.clock.advance(3000); await flush();
+    s4.peers.last().fire('connected');
+    r.peers.last().fire('connected');
+    r.clock.advance(10 * 60000); await flush();
+    check('*** a forgotten intercom ends itself at its time limit ***', s4.s.reason() === 'time-limit' && r.recv.sessions().length === 0);
+    // Stalled connection.
+    const s5 = r.phone('mike@x');
+    await s5.s.start(); await flush(); r.clock.advance(3000); await flush();
+    r.peers.last().fire('failed');
+    r.clock.advance(30000); await flush();
+    check('*** a phone that vanished does not leave "Intercom open" on the screen ***', r.recv.sessions().length === 0 && r.mic.held.size === 0);
+    // Answered but never connected (a second screen of the same person answered too, and lost).
+    const s6 = r.phone('mike@x');
+    await s6.s.start(); await flush(); r.clock.advance(3000); await flush();
+    s6.peers.last().fire('connected');          // the phone connected - to the OTHER screen
+    check('answered, not yet connected: shown as open', r.recv.open() && r.mic.held.size === 1);
+    r.clock.advance(29999); await flush();
+    check('still open just before the stall window', r.recv.open());
+    r.clock.advance(1); await flush();
+    check('*** an answer that never connects ends after the stall window, and lets go of the microphone ***',
+      r.recv.sessions().length === 0 && r.mic.held.size === 0);
+    r.recv.destroy();
+  }
+
+  // ======================================================================================
+  section('one at a time, reconnects, and the list changing');
+  {
+    const r = rig({ allowed: [...ALLOWED, { account: 'bea@x', name: 'Bea' }] });
+    const a = r.phone('mike@x');
+    await a.s.start(); await flush(); r.clock.advance(3000); await flush();
+    const b = r.phone('bea@x');
+    await b.s.start(); await flush();
+    check('*** a second person while one is open: busy, and the first is untouched ***', b.s.reason() === 'busy' && r.recv.open() && r.chimes.length === 1);
+    // A reconnect: same session, no second chime, no second microphone.
+    const acq = r.mic.acquired.length;
+    await a.s.reconnect(); await flush();
+    check('*** a reconnect re-answers without a second chime or a second microphone ***',
+      r.chimes.length === 1 && r.mic.acquired.length === acq && r.recv.open()
+      && r.screenLink.sent.filter((s) => s.kind === 'answer' && s.session === a.s.session).length === 2);
+    // Taken off the list: a reconnect is refused.
+    r.setRow({ intercomAllowed: [{ account: 'bea@x', name: 'Bea' }] });
+    await a.s.reconnect(); await flush();
+    check('*** taken off the list: the next offer (even a reconnect) is refused, and the open intercom ends ***',
+      a.s.reason() === 'not-approved' && r.recv.sessions().length === 0 && r.mic.held.size === 0, `${a.s.reason()} ${r.recv.sessions().length}`);
+    // Taken off while talking, with no new offer: the host's recheck cuts it off at once.
+    const b2 = r.phone('bea@x');
+    await b2.s.start(); await flush(); r.clock.advance(3000); await flush();
+    check('Bea is open', r.recv.open());
+    check('recheck with Bea still listed changes nothing', r.recv.recheck() === false && r.recv.open());
+    r.setRow({ intercomAllowed: [] });
+    check('*** taken off the list mid-intercom: recheck ends it now ***', r.recv.recheck() === true && !r.recv.open());
+    await flush();
+    check('...and the phone is told why', b2.s.reason() === 'not-approved');
+    r.setRow({ intercomAllowed: [{ account: 'bea@x', name: 'Bea' }] });
+    // Video is refused.
+    const v = r.phone('bea@x', { offerSdp: VIDEO_SDP });
+    await v.s.start(); await flush();
+    check('*** an offer carrying video is refused ***', v.s.reason() === 'video-refused' && r.recv.sessions().length === 0);
+    // A call is live: refused rather than talking over it.
+    const busyR = rig({ busy: () => true });
+    const c = busyR.phone('mike@x');
+    await c.s.start(); await flush();
+    check('while the room is busy (a call): refused, no chime', c.s.reason() === 'busy' && busyR.chimes.length === 0);
+    busyR.recv.destroy();
+    // Warn 0: straight after the chime.
+    const z = rig({ row: { intercomWarnMs: 0, intercomChime: false, intercomAnnounce: false } });
+    const zp = z.phone('mike@x');
+    await zp.s.start(); await flush();
+    check('warning 0: opens straight away; chime and name can be turned off', z.mic.acquired.length === 1 && z.chimes.length === 0 && z.said.length === 0);
+    check('...but the notice STILL shows (no setting hides it)', intercomText(z.recv.sessions()) === 'Intercom open: Mike');
+    z.recv.destroy();
+    check('destroy ends it and tells the phone', zp.s.reason() === 'room-ended' && z.mic.held.size === 0);
+    r.recv.destroy();
+  }
+
+  // ======================================================================================
+  section('*** the purposes stay apart ***');
+  {
+    const room = fakeRoom();
+    const screen = room.join('screen');
+    const rings = [];
+    const call = createCallTransport({ link: screen, PeerConnection: fakePeers().PC, Stream: FakeStream });
+    call.onIncoming((f) => rings.push(f));
+    const pm = createPhoneMicReceiver({ link: screen, PeerConnection: fakePeers().PC, Stream: FakeStream });
+    const ic = createIntercomReceiver({ link: screen, options: () => intercomOptionsFrom({ intercomAllowed: ALLOWED }),
+      micOwner: fakeMicOwner(), PeerConnection: fakePeers().PC, makeAudio: fakeAudioEl, chime: () => {} });
+    const phone = room.join('driver', 'mike@x');
+    phone.sendSignal({ kind: 'offer', purpose: INTERCOM_PURPOSE, session: 'ic-1', sdp: AUDIO_SDP });
+    await flush();
+    check('*** an intercom offer does not ring a call, and is not taken as a phone microphone ***',
+      rings.length === 0 && pm.phones().length === 0 && ic.sessions().length === 1);
+    phone.sendSignal({ kind: 'offer', purpose: 'phone-mic', session: 'pm-1', sdp: AUDIO_SDP });
+    await flush();
+    check('a phone-microphone offer is not taken as an intercom', ic.sessions().length === 1 && ic.sessions()[0].session === 'ic-1');
+    check('isIntercomSignal', isIntercomSignal({ purpose: 'intercom' }) && !isIntercomSignal({ purpose: 'phone-mic' }) && !isIntercomSignal({}));
+    ic.destroy(); pm.destroy(); call.destroy();
+  }
+
+  // ======================================================================================
+  section('the notice\'s words');
+  {
+    check('none', intercomText([]) === '');
+    check('opening', intercomText([{ name: 'Mike', phase: 'warning' }]) === 'Intercom opening: Mike');
+    check('open', intercomText([{ name: 'Mike', phase: 'open' }]) === 'Intercom open: Mike');
+    const bus = createBus();
+    const n = mountIntercomNotice(document.getElementById('host'), { bus });
+    bus.publish(INTERCOM_TOPIC, { sessions: [{ name: 'Bea', phase: 'open' }] });
+    check('driven by the bus topic too', n.shown() && n.text() === 'Intercom open: Bea');
+    let ended = 0;
+    const off = bus.subscribe(INTERCOM_END_TOPIC, () => { ended += 1; });
+    n.button().click();
+    check('with no receiver, the button publishes the end action', ended === 1);
+    off(); n.destroy();
+  }
+
+  // ======================================================================================
+  section('who may open it: the approvals panel');
+  {
+    let row = {};
+    const subs = new Set();
+    const state = { get: () => row, set: async (patch) => { row = { ...row, ...patch }; subs.forEach((f) => f(row)); }, subscribe: (f) => { subs.add(f); return () => subs.delete(f); } };
+    const grants = [
+      { subject_id: 'bea@x', subject_kind: 'account', label: 'Bea (daughter)', expires_at: null },
+      { subject_id: 'ot@x', subject_kind: 'account', label: '', expires_at: '2000-01-01T00:00:00Z' },
+    ];
+    const cands = approvalCandidates({ owner: 'owner@x', grants, allowed: [{ account: 'gone@x', name: 'Gone' }], now: '2026-09-30T00:00:00Z' });
+    check('candidates: you, each person who may use these screens, and anybody listed who no longer may',
+      cands.map((c) => c.account).join() === 'owner@x,bea@x,ot@x,gone@x' && cands[2].current === false && cands[3].current === false);
+    const root = document.getElementById('appr');
+    const panel = mountIntercomApprovals(root, { personName: 'Alex', state, loadGrants: async () => grants, whoami: async () => 'owner@x',
+                                                 now: () => '2026-09-30T00:00:00Z' });
+    await panel.ready;
+    check('*** nobody is ticked to begin with ***', [...root.querySelectorAll('[data-allow]')].every((b) => !b.checked) && panel.allowed().length === 0);
+    check('an expired grant cannot be ticked', root.querySelector('[data-account="ot@x"] [data-allow]').disabled === true);
+    const box = root.querySelector('[data-account="bea@x"] [data-allow]');
+    box.checked = true; box.dispatchEvent(new Event('change', { bubbles: true }));
+    await flush();
+    check('*** ticking adds them, named from the grant\'s note ***', JSON.stringify(row.intercomAllowed) === JSON.stringify([{ account: 'bea@x', name: 'Bea (daughter)' }]));
+    const name = root.querySelector('[data-account="bea@x"] [data-name]');
+    name.value = 'Bea'; name.dispatchEvent(new Event('change', { bubbles: true }));
+    await flush();
+    check('the name the room shows can be set here', row.intercomAllowed[0].name === 'Bea');
+    const box2 = root.querySelector('[data-account="bea@x"] [data-allow]');
+    box2.checked = false; box2.dispatchEvent(new Event('change', { bubbles: true }));
+    await flush();
+    check('*** unticking removes them ***', row.intercomAllowed.length === 0);
+    check('site copy never says "her screen"', !/her screen|Christine|Cici/i.test(root.textContent));
+    panel.destroy();
+  }
+
+  // ======================================================================================
+  section('the phone\'s page');
+  {
+    const fetchImpl = async (url) => ({ ok: true, status: 200,
+      json: async () => (/\/api\/people$/.test(url) ? { people: [{ id: 'p1', name: 'Alex' }] } : { people: [] }) });
+    const room = fakeRoom();
+    const clock = fakeClock();
+    const screen = room.join('screen');
+    const ic = createIntercomReceiver({ link: screen, options: () => intercomOptionsFrom({ intercomAllowed: [] }), micOwner: fakeMicOwner(),
+      PeerConnection: fakePeers().PC, makeAudio: fakeAudioEl, chime: () => {}, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const root = document.getElementById('page');
+    const page = await mountIntercomPage(root, {
+      fetchImpl, storage: null, search: '', nav: {}, makeAudio: fakeAudioEl,
+      connect: () => room.join('driver', 'mike@x'),
+      makeSender: (o) => createIntercomSender({ ...o, getUserMedia: async () => new FakeStream([track()]), PeerConnection: fakePeers().PC,
+        Stream: FakeStream, setTimer: clock.setTimer, clearTimer: clock.clearTimer }),
+    });
+    check('setup: pick the room, one big button, and the room is told first', !!root.querySelector('[data-start]') && /chime/.test(root.textContent));
+    root.querySelector('[data-start]').click();
+    await flush(); await flush();
+    check('*** not on the list: the page says so plainly, and is back at setup ***',
+      page.state() === 'idle' && /has not added you/.test(root.textContent) && root.dataset.live === '0', root.textContent.slice(0, 200));
+    page.destroy(); ic.destroy();
+  }
+  {
+    const fetchImpl = async (url) => ({ ok: true, status: 200,
+      json: async () => (/\/api\/people$/.test(url) ? { people: [{ id: 'p1', name: 'Alex' }] } : { people: [] }) });
+    const room = fakeRoom();
+    const clock = fakeClock();
+    const screen = room.join('screen');
+    const rp = fakePeers();
+    const ic = createIntercomReceiver({ link: screen, options: () => intercomOptionsFrom({ intercomAllowed: ALLOWED }), micOwner: fakeMicOwner(),
+      PeerConnection: rp.PC, makeAudio: fakeAudioEl, chime: () => {}, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const root = document.getElementById('page');
+    const pp = fakePeers();
+    const els = [];
+    const page = await mountIntercomPage(root, {
+      fetchImpl, storage: null, search: '', nav: {}, makeAudio: () => { const e = fakeAudioEl(); els.push(e); return e; },
+      connect: () => room.join('driver', 'mike@x'),
+      makeSender: (o) => createIntercomSender({ ...o, getUserMedia: async () => new FakeStream([track()]), PeerConnection: pp.PC,
+        Stream: FakeStream, setTimer: clock.setTimer, clearTimer: clock.clearTimer }),
+    });
+    root.querySelector('[data-start]').click();
+    await flush(); await flush();
+    check('asking: the bar says the room hears a chime first', page.state() === 'asking' && /chime/.test(root.querySelector('[data-word]').textContent));
+    clock.advance(3000); await flush();
+    pp.last().fire('connected');
+    pp.last().fireTrack(track(), [new FakeStream()]);
+    await flush();
+    check('*** open: the bar says so, and the phone plays the room ***',
+      page.state() === 'open' && root.querySelector('[data-word]').textContent === 'Intercom open' && els.length === 1 && !!els[0].srcObject);
+    check('Stop is one press away, in the bar', !!root.querySelector('.pm-bar [data-stop]'));
+    root.querySelector('[data-stop]').click();
+    await flush();
+    check('*** Stop ends it at BOTH ends ***', page.state() === 'idle' && ic.sessions().length === 0 && els[0].srcObject === null);
+    page.destroy(); ic.destroy();
+  }
+
+  section('the phone page is not indexed');
+  {
+    const txt = await fetch('../robots.txt', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).catch(() => '');
+    check('robots.txt disallows /intercom.html', /^Disallow:\s*\/intercom\.html\s*$/m.test(txt), txt.slice(0, 400));
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

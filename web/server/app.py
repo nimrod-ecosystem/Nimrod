@@ -29,7 +29,7 @@ from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
-from drive import ROLES, Rooms, Tickets, parse_message
+from drive import ROLES, Rooms, Tickets, parse_message, stamp_signal
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
@@ -1034,7 +1034,9 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             # THE OTHER ROLE only: two screens cannot signal each other, and neither can two
             # drivers, so this adds no path between bedside screens.
             if msg["type"] == "signal":
-                await _tell(room.drivers if role == "screen" else room.screens, msg)
+                # `by` = the account this socket's ticket was issued to, stamped here so a room can
+                # trust who sent it (the intercom's approved list, row 2.44). drive.py stamp_signal.
+                await _tell(room.drivers if role == "screen" else room.screens, stamp_signal(msg, user))
             elif role == "driver":
                 await _tell(room.screens, msg)
     except WebSocketDisconnect:

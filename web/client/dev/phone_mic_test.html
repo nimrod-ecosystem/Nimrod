@@ -333,7 +333,10 @@ try {
     const pill = mountMicLiveIndicator(document.getElementById('host'), { bus });
     bus.publish(PHONE_MIC_TOPIC, { phones: [{ session: 'x', name: 'Stand phone', phase: 'live' }] });
     const el = document.querySelector('.mic-live');
-    for (let i = 0; i < 50 && getComputedStyle(el).position !== 'fixed'; i++) await sleep(50);
+    for (let i = 0; i < 50 && getComputedStyle(el.parentElement).position !== 'fixed'; i++) await sleep(50);
+    check('it sits in the screen’s notice column (live_notices.js), which is fixed in the corner',
+      el.parentElement.classList.contains('live-notices') && getComputedStyle(el.parentElement).position === 'fixed'
+      && getComputedStyle(el).position === 'static');
     check('it shows, with the phone’s name', pill.shown() && pill.text() === 'Microphone on: Stand phone');
     check('it is a polite status, not an alert', el.getAttribute('role') === 'status' && el.getAttribute('aria-live') === 'polite');
     check('*** it takes no presses ***', getComputedStyle(el).pointerEvents === 'none');
