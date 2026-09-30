@@ -19,9 +19,13 @@ export const SHELL_MENU = 'shell/menu';            // the settings menu, open/cl
 export const SHELL_FULLSCREEN = 'shell/fullscreen';
 export const SHELL_HOME = 'shell/home';            // the screen picker
 export const SHELL_MIRROR = 'shell/mirror';        // the camera full screen
+// Nimrod, the context help (row 2.37): the shell's one cat explains whatever is picked. One cat per
+// screen, whichever bar was pressed -- two bars each bringing their own would be two cats.
+export const SHELL_HELP = 'shell/help';
 
 // What the shell tells placed chrome after it acted, so a placed bar can show the same state the
-// plain bar shows (Hush lit while it is on). Payload: { hushed }.
+// plain bar shows (Hush lit while it is on). Payload: { hushed } and/or { help } (whether the Nimrod
+// button is offered: the person's "Cat help" setting, read by the shell).
 export const SHELL_STATE = 'shell/state';
 
 // *** THE PLAIN BAR. *** The screen's own bar, which no dashboard can restyle or remove (Design,

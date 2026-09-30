@@ -34,6 +34,20 @@ const ID_RE = /^[a-z0-9][a-z0-9._/-]{0,63}$/;
 export const ROLE_CYCLE_ACTION = 'system/role-cycle';
 export const ROLE_CYCLE_TOPIC  = 'system/role-cycle';
 
+// *** THE SCREEN'S OWN CONTROLS, AS TOPICS (2026-09-30, rows 2.33/2.34/2.37). *** A room's flower pot,
+// door, bookshelf and picker publish these (room_scene.js ROOM_ACTIONS, with `payload.claim()`), and
+// the kiosk answers them with the functions its own bar calls: full screen, the settings menu, the
+// bar's panel buttons, the screen picker. Registered below as actions so a SWITCH can be bound to them
+// too -- a decoration that is a control is an input device (room doc §3.1), and so is a switch.
+// NOT on the remote-drive allowlist (drive.js stays frozen at eleven): "open this screen's menu" is not
+// something a person at the far end of a socket gets by accident.
+export const SYSTEM_TOPICS = Object.freeze({
+  fullscreen: 'system/fullscreen',
+  settings: 'system/settings',
+  modules: 'system/modules',
+  dashboards: 'system/dashboards',
+});
+
 export const SYSTEM_ACTIONS = [
   {
     id: ROLE_CYCLE_ACTION,
@@ -41,7 +55,25 @@ export const SYSTEM_ACTIONS = [
     topic: ROLE_CYCLE_TOPIC,
     group: 'System',
   },
+  { id: SYSTEM_TOPICS.fullscreen, label: 'Full screen on or off', topic: SYSTEM_TOPICS.fullscreen, group: 'System' },
+  { id: SYSTEM_TOPICS.settings, label: 'Open the settings menu', topic: SYSTEM_TOPICS.settings, group: 'System' },
+  { id: SYSTEM_TOPICS.modules, label: 'Show the panels on this screen (the bar)', topic: SYSTEM_TOPICS.modules, group: 'System' },
+  { id: SYSTEM_TOPICS.dashboards, label: 'Choose a screen (Home)', topic: SYSTEM_TOPICS.dashboards, group: 'System' },
 ];
+
+// *** HOLDING ON A ROOM OBJECT (pet an animal, room-add-ons §9) IS ITS OWN ACTION, NOT A LONG PRESS. ***
+// Argued both ways (2026-09-30):
+//   * FOR turning a held switch on a focused room into `room/hold`: it is the gesture Design drew, and
+//     it needs no binding.
+//   * AGAINST, and it wins: on the dashboard path a long press is ALREADY the plain bar -- the way back
+//     when a dashboard has gone wrong (input_longpress.js), which must mean one thing on every screen.
+//     One hold meaning "pet the dog" on a room and "give me my controls back" everywhere else is the
+//     gesture a switch user cannot predict; and when Stage 4 moves every screen onto the dashboard path
+//     the two would fire together. So the long press stays the plain bar, and petting is a separate,
+//     bindable action -- off until somebody binds it, like every other one.
+export const ROOM_HOLD_ACTION = Object.freeze({
+  id: 'room/hold', label: 'Hold on a room object (pet an animal)', topic: 'room/hold', group: 'Room',
+});
 
 // ---------------------------------------------------------------------------------
 // THE VERB VOCABULARY - the thing a person binds to.
@@ -328,6 +360,17 @@ export const MODULE_VERBS = {
   scoreboard:    { next: 'scoreboard/next', prev: 'scoreboard/prev', select: 'scoreboard/select',
                    up:   { topic: 'scoreboard/delta', payload: 1 },
                    down: { topic: 'scoreboard/delta', payload: -1 } },
+  // THE ROOM (rows 2.33/2.37, 2026-09-30). Missing, so a switch could not reach a room at all: absent
+  // from this table it is never focused (`respondsToVerbs`), and a press went nowhere. `next`/`prev`
+  // walk its objects in Design's scan order, `select` presses the one the cursor is on, `back` puts a
+  // lifted panel back (or closes the reactions editor) -- the four the module already subscribes to.
+  // Holding on an animal is NOT here: see ROOM_HOLD_ACTION above.
+  room:          { next: 'room/next', prev: 'room/prev', select: 'room/select', back: 'room/back' },
+  // THE WORD GAMES (row 2.31). Also missing: `word_games.js` answers next / prev / select / skip and no
+  // verb could reach them. `back` is skip, exactly as trivia's is. (The spoken routes --
+  // SPEECH_ACTIONS / SPEECH_BINDINGS -- are the speech wiring's, not this table's.)
+  word_games:    { next: 'word_games/next', prev: 'word_games/prev', select: 'word_games/select',
+                   back: 'word_games/skip' },
 };
 
 // What a verb does on a given module type, normalized to {topic, payload}.
@@ -358,6 +401,7 @@ export function createDefaultRegistry() {
     id: verbTopic(v.id), label: v.label, topic: verbTopic(v.id), group: 'Media',
   })));
   reg.registerAll(SYSTEM_ACTIONS);
+  reg.register(ROOM_HOLD_ACTION);
   return reg;
 }
 

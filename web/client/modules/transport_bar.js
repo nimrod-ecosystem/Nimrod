@@ -20,10 +20,10 @@
 // lands as settings.
 
 import { registerModule } from '../module.js';
-import { barModel, drawChips } from '../transport_bar.js';
+import { barModel, drawChips, drawHelpButton, helpOn } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
-  SHELL_MIRROR, SHELL_STATE,
+  SHELL_MIRROR, SHELL_STATE, SHELL_HELP,
 } from '../shell_verbs.js';
 
 // The buttons, in the plain bar's order. `embedOnly: false` = hidden on a preview (an embed has no
@@ -50,6 +50,13 @@ registerModule(
     const say = ctx.rootBus || ctx.bus;
     let root = null, modsEl = null;
     let hushed = !!ctx.audio?.isHushed?.();
+    // Whether the Nimrod button is offered: the shell's reading of the person's "Cat help" when there
+    // is a shell (it re-reads and says so on SHELL_STATE), else this device's own.
+    let helpShown = (() => {
+      try { return typeof ctx.shell?.helpOn === 'function' ? !!ctx.shell.helpOn() : helpOn(ctx.storage); }
+      catch { return true; }
+    })();
+    let helpEl = null;
     const offs = [];
 
     function arrangement() { return ctx.container?.arrangement?.() || null; }
@@ -69,6 +76,7 @@ registerModule(
         h.textContent = hushed ? 'Sound off' : 'Hush';
         h.setAttribute('aria-pressed', hushed ? 'true' : 'false');
       }
+      if (helpEl) helpEl.hidden = !helpShown;
     }
 
     return {
@@ -91,11 +99,20 @@ registerModule(
           el.addEventListener('click', () => say?.publish(b.verb, { from: 'transport_bar' }));
           actions.append(el);
         }
+        // Nimrod: the same button the plain bar has (transport_bar.js), just before the gear. It says
+        // SHELL_HELP and the shell's one cat answers.
+        helpEl = drawHelpButton(actions, { before: actions.querySelector('[data-act="settings"]'),
+          onPress: () => say?.publish(SHELL_HELP, { from: 'transport_bar' }) });
         root.append(modsEl, actions);
         mount.append(root);
         const off = ctx.container?.onChange?.(() => draw());
         if (typeof off === 'function') offs.push(off);
-        const off2 = say?.subscribe?.(SHELL_STATE, (s) => { if (s && 'hushed' in s) { hushed = !!s.hushed; draw(); } });
+        const off2 = say?.subscribe?.(SHELL_STATE, (s) => {
+          if (!s) return;
+          if ('hushed' in s) hushed = !!s.hushed;
+          if ('help' in s) helpShown = !!s.help;
+          if ('hushed' in s || 'help' in s) draw();
+        });
         if (typeof off2 === 'function') offs.push(off2);
         draw();
       },
@@ -103,7 +120,7 @@ registerModule(
       onHide() {},
       destroy() {
         offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
-        root?.remove(); root = null; modsEl = null;
+        root?.remove(); root = null; modsEl = null; helpEl = null;
       },
     };
   },

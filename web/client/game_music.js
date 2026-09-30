@@ -53,7 +53,21 @@ export function createGameMusic({
     return A ? new A() : null;
   },
   makeAudio = (src) => (typeof Audio === 'function' ? new Audio(src) : null),
+  // *** THE MIXER'S EFFECTS (row 2.35, 2026-09-30). *** When the screen has an effects chain
+  // (mixer_fx.js), the synthesised bed is built in ITS audio context and plays into its `media`
+  // channel -- so the screen's reverb and plugins reach it, and one screen runs one audio context
+  // instead of one per game. The kiosk hangs the chain on the audio bus handle every module is already
+  // given (`audio.effects()`), so a game that passes `audio` gets it with no change. Absent, broken, or
+  // a channel it will not hand over: the bed makes its own context and plays direct, as it always did.
+  // *** A SHARED CONTEXT IS NEVER CLOSED HERE *** -- it belongs to the screen, and closing it would
+  // silence every other thing on it. Only a context this file made is closed.
+  fx = undefined,
 } = {}) {
+  const effectsOf = () => {
+    if (fx !== undefined) return fx;
+    try { return typeof audio?.effects === 'function' ? audio.effects() || null : null; } catch { return null; }
+  };
+  let ownsContext = false;
   let mode = 'ambient';
   let vol = clamp01(volume);
   // What the arbiter last told us to play at. 1 until it says otherwise, so a missing bus
@@ -80,7 +94,16 @@ export function createGameMusic({
   function ambientStart() {
     if (ac) return true;
     try {
-      ac = makeContext();
+      // The screen's chain first: its context, and its `media` channel as where the bed goes.
+      let dest = null;
+      const chain = effectsOf();
+      let shared = null;
+      try { shared = chain?.context?.() || null; } catch { shared = null; }
+      if (shared) {
+        try { dest = chain.input?.('media') || null; } catch { dest = null; }
+        if (dest) { ac = shared; ownsContext = false; }
+      }
+      if (!ac) { ac = makeContext(); ownsContext = true; dest = null; }
       if (!ac) return false;
       master = ac.createGain();
       master.gain.value = vol * 0.28 * gain;   // a BED. Loud ambient is not ambient.
@@ -89,7 +112,7 @@ export function createGameMusic({
       filter.frequency.value = 700;
       filter.Q.value = 0.6;
       filter.connect(master);
-      master.connect(ac.destination);
+      master.connect(dest || ac.destination);
 
       // A low fifth, slightly detuned so it beats gently instead of sitting still. Chosen
       // to sit UNDER speech rather than compete with it - the cues have to stay audible.
@@ -112,7 +135,9 @@ export function createGameMusic({
       lfo.start();
       return true;
     } catch (err) {
-      ac = null;
+      try { master?.disconnect?.(); } catch { /* never connected */ }
+      if (ownsContext) { try { ac?.close?.(); } catch { /* already closed */ } }
+      ac = null; master = null; voices = []; lfo = null; filter = null;
       return false;
     }
   }
@@ -120,9 +145,12 @@ export function createGameMusic({
   function ambientStop() {
     try { voices.forEach(({ o }) => o.stop()); } catch { /* already stopped */ }
     try { lfo?.stop(); } catch { /* already stopped */ }
+    // Off the screen's channel either way; the CONTEXT is closed only if this file made it.
+    try { master?.disconnect?.(); } catch { /* already disconnected */ }
     voices = []; lfo = null; filter = null; master = null;
-    try { ac?.close?.(); } catch { /* already closed */ }
+    if (ownsContext) { try { ac?.close?.(); } catch { /* already closed */ } }
     ac = null;
+    ownsContext = false;
   }
 
   // ---- the folder path -------------------------------------------------------------

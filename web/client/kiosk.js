@@ -34,13 +34,18 @@ import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
 import { createArrangement } from './arrangement.js';
-import { barModel, drawChips } from './transport_bar.js';
+import { barModel, drawChips, drawHelpButton, mountBarHelp, helpOn } from './transport_bar.js';
 import { createLongPress } from './input_longpress.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
-  SHELL_STATE, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
+  SHELL_STATE, SHELL_HELP, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
   PLAIN_BAR_HOLD_DEFAULT_MS,
 } from './shell_verbs.js';
+import { SYSTEM_TOPICS } from './actions.js';
+import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
+import { createMixerFx } from './mixer_fx.js';
+import { attachMixer, MIXER_FIELDS } from './mixer.js';
+import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
 import { mountSettings } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
@@ -315,6 +320,9 @@ export async function mountKiosk(root, {
     if (embedded && !id) return null;
     const resolved = applyTheme(document.documentElement, id);
     syncScene(kioskEl, THEMES[resolved]);
+    // The mixer's "sounds like: match the scene" follows the scene the screen is actually showing.
+    soundScene = THEMES[resolved]?.scene || null;
+    try { mixer?.setScene(soundScene); } catch (err) { console.error('kiosk: mixer scene', err); }
     return resolved;
   }
   const stageEl = root.querySelector('[data-stage]');
@@ -410,6 +418,63 @@ export async function mountKiosk(root, {
   // cycles. It is the same race `director.js` had, and it is a shape worth recognising —
   // *anything built after an await needs to ask whether it is still wanted.*
   let torn = false;
+
+  // ---- THE SOUND OF THE SCREEN: master, mixer, effects, the listening cue (2026-09-30) ---------
+  //
+  // Built and tested on their own today (rows 2.28, 2.35, 2.36); this is where the screen constructs
+  // them. The master and the mixer read the SCREEN's settings row (like a TV keeps its volume: the two
+  // bedside units get swapped, and a mix saved per browser would reset on every swap -- master_volume.js
+  // and mixer.js both say why). The listening cue reads the PERSON's row (it is about how that person
+  // wants to be answered). Declared here with the rest of the early state, because modules reach the
+  // effects through the audio bus handle below and a module can mount before the settings load.
+  let master = null;             // master_volume.js: "louder"/"quieter" and the Volume row
+  let mixer = null;              // mixer.js: faders and minimums on the bus, compressor/reverb on the effects
+  let soundScene = null;         // the theme's live scene id, which "sounds like: match the scene" follows
+  let listening = null;          // listening_cue.js: the cue, the tone, the duck, the voice-game pause
+  let listenSig = null;
+  let offListenPerson = null;
+  let personInputs = null;       // the person's own row (bindings, and the listening settings beside them)
+  // *** THE EFFECTS CHAIN IS MADE ON FIRST USE, NOT AT BOOT. *** mixer_fx.js makes an AudioContext the
+  // moment anything touches a channel, and applying the saved mix at boot (the talking-board compressor
+  // is on by default) would make one on every screen -- an audio thread running on a Pi 400 for a chain
+  // nothing on the kiosk sends sound through yet (the board speaks through the browser's voice, which no
+  // effect can reach). So the chain is built when a module first asks for it (game_music.js, through
+  // `audio.effects()`), and the saved mix is replayed onto it then. Until that moment the mixer's effect
+  // settings are remembered in the settings row and applied to nothing, which is exactly what they did.
+  let fxReal = null;
+  function effects() {
+    if (fxReal || torn) return fxReal;
+    try { fxReal = createMixerFx(); } catch (err) { console.error('kiosk: no mixer effects', err); fxReal = null; return null; }
+    try { mixer?.sync(); mixer?.setScene(soundScene); } catch (err) { console.error('kiosk: mixer effects', err); }
+    return fxReal;
+  }
+  const fxLazy = {
+    setCompressor: (ch, on) => fxReal?.setCompressor(ch, on),
+    setReverb: (ch, v) => fxReal?.setReverb(ch, v),
+    setScene: (id) => fxReal?.setScene(id),
+    state: () => (fxReal ? fxReal.state() : null),
+  };
+  // HOW A MODULE REACHES THE EFFECTS: through the audio bus handle it is already given (`ctx.audio`),
+  // so game_music.js needs one optional read and no module had to change what it passes. A missing or
+  // broken chain is `null`, and the caller plays direct, as it always did.
+  audio.effects = effects;
+
+  // The listening cue, (re)attached from the person's row -- only when one of ITS settings changed, so
+  // a poll that brings nothing new does not remount the cue under somebody who is mid-sentence.
+  const LISTEN_KEYS = [...LISTENING_FIELDS.map((f) => f.key), 'listenDuck'];
+  const reducedMotion = () => { try { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; } catch { return false; } };
+  function attachListen(row = {}) {
+    const r = row || {};
+    const sig = JSON.stringify(LISTEN_KEYS.map((k) => (k in r ? r[k] : null)));
+    if (listening && sig === listenSig) return;
+    try { listening?.destroy(); } catch (err) { console.error('kiosk: listening cue', err); }
+    listening = null;
+    listenSig = sig;
+    if (torn) return;
+    try {
+      listening = attachListening({ bus, audio, host: kioskEl, settings: r, reducedMotion: reducedMotion() });
+    } catch (err) { console.error('kiosk: listening cue', err); }
+  }
 
   // ---- MARKER TRACKING AT THE BEDSIDE -------------------------------------------------
   //
@@ -727,13 +792,28 @@ export async function mountKiosk(root, {
     kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : 'solid';
   }
   await settings.load().catch(() => {});
+  // THE MASTER AND THE MIXER, on the screen's settings row. Attached before the first theme is applied
+  // so the scene reaches the mixer, and before the subscribe below so its first replay syncs them.
+  // Each is guarded: a sound control that throws must never stop the screen coming up.
+  const readScreen = () => settings.get() || {};
+  const writeScreen = (patch) => settings.set(patch);
+  try { master = attachMasterVolume({ bus, audio, read: readScreen, write: writeScreen }); }
+  catch (err) { console.error('kiosk: master volume', err); master = null; }
+  try { mixer = attachMixer({ audio, fx: fxLazy, read: readScreen, write: writeScreen }); }
+  catch (err) { console.error('kiosk: mixer', err); mixer = null; }
   applyKioskTheme(settings.get().theme);
   applyLayout(settings.get());
   applyPanelSurface(settings.get());
+  // The listening cue starts on its defaults (the visual cue on, the tone off, duck): the person's own
+  // row replaces them once whoever this screen is for has been resolved (below).
+  attachListen({});
   settings.subscribe((s) => {
     applyKioskTheme(s.theme);
     applyLayout(s);
     applyPanelSurface(s);
+    // A volume or a mix changed from the menu, or from another device, is heard now.
+    try { master?.sync(); } catch (err) { console.error('kiosk: master volume', err); }
+    try { mixer?.sync(); } catch (err) { console.error('kiosk: mixer', err); }
     // A change made through the menu (turning burn-in protection on, off, or switching mode)
     // takes effect immediately — re-arming rather than waiting for the next activity event,
     // so switching it off actually clears an already-dimmed/drifting screen right away.
@@ -1130,6 +1210,32 @@ export async function mountKiosk(root, {
   renderHush();
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
+  // *** NIMROD, ON THE BAR (row 2.37, 2026-09-30). *** Press him and the cat explains whatever is
+  // picked: the menu's cursor row when the menu is open, else the focused panel, else the screen. ONE
+  // cat for the screen (`mountBarHelp`, transport_bar.js): the plain bar calls it, a placed bar says
+  // SHELL_HELP and this answers. With "Cat help" off there is no button at all -- re-read whenever the
+  // bar is brought up, since the setting lives with the cat's other preferences on this device.
+  const barHelp = mountBarHelp(kioskEl, { output: () => output, storage, focused: () => focusedRec() });
+  const helpBtn = drawHelpButton(controlsEl.querySelector('.k-actions'), {
+    before: controlsEl.querySelector('[data-act="settings"]'),
+    onPress: () => { explainHelp(); },
+  });
+  let helpShown = null;
+  function syncHelp() {
+    const on = helpOn(storage);
+    if (helpBtn) helpBtn.hidden = !on;
+    if (on === helpShown) return;
+    helpShown = on;
+    if (useDashboard) bus.publish(SHELL_STATE, { help: on });
+  }
+  function explainHelp() {
+    if (torn) return null;
+    const said = barHelp.explain();
+    if (!said) syncHelp();           // turned off since the bar was drawn: the button goes
+    return said;
+  }
+  syncHelp();
+
   // ---- the universal settings menu ----------------------------------------
   //
   // The menu is driven by the INPUT BUS below, so opening it is a bindable verb and works
@@ -1254,6 +1360,39 @@ export async function mountKiosk(root, {
       options: [1000, 1500, 2000, 2500, 3000].map((ms) => ({ value: ms, label: `${ms / 1000} seconds` })) }] : []),
   ];
 
+  // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
+  // `essential`: on a patient screen it is the one sound control), then the mixer. THE MIXER'S ROWS ARE
+  // ALL SHOWN AT "EVERYTHING" (advanced) HERE, though mixer.js declares the faders `standard`. Argued:
+  //   * FOR standard (mixer.js's reading): a caregiver who wants the game beeps quieter should not have
+  //     to know a menu has levels.
+  //   * AGAINST, and it wins for now: five faders on "The usual" is five more stops on a one-switch walk
+  //     through the menu every time, for a control set once; the master is already there for "too loud";
+  //     and the mix is new today, unheard on a real screen. Moving the faders back to `standard` is one
+  //     line here once somebody has used them. On Mike's list.
+  const SOUND_FIELDS = () => [
+    ...MASTER_FIELDS,
+    ...MIXER_FIELDS.map((f) => ({ ...f, level: 'advanced' })),
+  ];
+
+  // THE ROOM ON THIS SCREEN, if any: the focused panel when it is a room, else the first room mounted.
+  // Only a MOUNTED room -- its reactions editor opens inside it, so a room that is not on the screen
+  // has nowhere to open one.
+  function roomRec() {
+    const f = focusedRec();
+    if (f?.type === 'room') return f;
+    return [arr.stageRec(), ...(arr.slotRecs || [])].find((r) => r?.type === 'room') || null;
+  }
+  // "Room reactions…": the room's own editor (room_notify_editor.js), opened in THAT room -- addressed to
+  // its instance (bus.js `instanceTopic`), so a screen with two rooms opens one. The menu closes first:
+  // the editor is in the room, under where the menu was.
+  function openRoomReactions() {
+    const rec = roomRec();
+    if (!rec) return;
+    try { menu.close(); } catch { /* already closed */ }
+    const topic = typeof bus.instanceTopic === 'function' ? bus.instanceTopic(rec.id, 'room/reactions') : 'room/reactions';
+    bus.publish(topic, { from: 'menu' });
+  }
+
   // *** THE SAME SETTING, ONE LEVEL MORE SPECIFIC. *** Mike, 2026-09-23, on the screen-wide
   // version above: "You should be able to change it at different levels like if you only want
   // it for certain modules." This is the instance level of the inheritance chain this file's
@@ -1329,6 +1468,18 @@ export async function mountKiosk(root, {
           if (key === 'theme') bus.publish('screen/theme-picked', { theme: value });
         },
       }),
+      // THE SCREEN'S SOUND: written to the same screen row, heard at once (the settings subscribe above
+      // re-syncs the master and the mixer on every change).
+      { kind: 'heading', id: 'sound-head', label: 'Sound' },
+      ...fieldItems(SOUND_FIELDS().map(normalizeField).filter(Boolean), {
+        values: () => settings.get() || {},
+        level: complexity(),
+        onStep: (key, value) => { settings.set({ [key]: value }); },
+      }),
+      // THE ROOM'S REACTIONS (rows 2.36/2.37): which object lights, rings or pulses for which event. Only
+      // while a room is on the screen -- a row that opens nothing is a row that lies.
+      ...(roomRec() ? [{ kind: 'item', id: 'room-reactions', label: 'Room reactions…',
+          hint: 'what the room’s things do when something happens', run: () => openRoomReactions() }] : []),
       // *** AN AMBIENT MODULE'S OWN SETTINGS, FOUND MISSING ENTIRELY 2026-09-27. ***
       //
       // `mount:'ambient'` content is never `focusedRec()` — it has no stage slot, so it never
@@ -1591,7 +1742,7 @@ export async function mountKiosk(root, {
       }
       if (makeState || embedded || !profiles.personStateURL) return;
       if (torn) return;
-      personOff = await runtime.useState(createState({
+      personInputs = createState({
         url: profiles.personStateURL(p.person_id, INPUTS_KEY),
         user,
         cacheKey: `person:${user}:${p.person_id}:${INPUTS_KEY}`,
@@ -1599,11 +1750,16 @@ export async function mountKiosk(root, {
         // reloading anything" is the input runtime's own stated contract — now lands here
         // near-instantly when push is up, instead of waiting out a poll interval.
         push,
-      }));
+      });
+      personOff = await runtime.useState(personInputs);
       // `useState` guards itself too (see `input_runtime.js`), so this is belt and braces on
       // purpose: the unsubscribe it hands back is the thing `destroy()` would have called, and
       // `destroy()` is already past that line.
       if (torn) { try { personOff?.(); } catch { /* already gone */ } personOff = null; return; }
+      // THE LISTENING CUE FOLLOWS THE PERSON (2026-09-30): its settings (LISTENING_FIELDS) are about how
+      // this person wants to be answered, so they are read off the person's own row -- the one their
+      // bindings already live in, beside the bindings record -- and re-attached when they change.
+      offListenPerson = personInputs.subscribe?.((s) => attachListen(s || {})) || null;
       await startMarkerTracking(p.person_id);
       await startDevicePreference(p.person_id);
     } catch {
@@ -1855,6 +2011,7 @@ export async function mountKiosk(root, {
   }
   function poke() {
     controlsEl.classList.remove('hidden');
+    try { syncHelp(); } catch { /* declared above; never a reason for the bar not to come up */ }
     clearTimeout(hideT);
     if (barHeld) return;
     hideT = setTimeout(() => {
@@ -2043,6 +2200,7 @@ export async function mountKiosk(root, {
   }
   function summonPlainBar() {
     if (!useDashboard || torn) return;
+    try { syncHelp(); } catch { /* never a reason for the plain bar not to come up */ }
     plainSummoned = true;
     syncPlainBar();
     clearTimeout(plainSummonT);
@@ -2095,12 +2253,35 @@ export async function mountKiosk(root, {
     on(SHELL_FULLSCREEN, () => { toggleFs(); });
     on(SHELL_HOME, () => { toggleScreens(); });
     on(SHELL_MIRROR, () => { toggleMirrorFull(); });
+    on(SHELL_HELP, () => { explainHelp(); });
     on(PLAIN_BAR_SHOW, () => { summonPlainBar(); });
     on(PLAIN_BAR_RING, (p) => { showRing(p); });
     on(PLAIN_BAR_RING_END, () => { hideRing(); });
     // Touching the plain bar keeps it up; letting it be puts a summoned one away again.
     controlsEl.addEventListener('pointerdown', () => { if (plainSummoned) summonPlainBar(); }, { passive: true });
   }
+  // *** THE SCREEN'S OWN CONTROLS, ANSWERED FOR WHATEVER PRESSES THEM (2026-09-30). *** A room's flower
+  // pot, door, bookshelf and dashboard picker publish `system/*` (room_scene.js ROOM_ACTIONS) and wait to
+  // hear whether anybody claimed the press -- unclaimed, the room does the nearest honest thing itself
+  // (full screen for just that panel, a note saying where settings open). So the kiosk claims what it
+  // does, with its own bar's functions, and a switch bound to one of these actions (actions.js
+  // SYSTEM_ACTIONS) arrives here the same way. Every path, not only the dashboard's: a room can be a
+  // panel on any screen.
+  //   fullscreen   the screen, as the bar's ⛶ does
+  //   settings     THE menu (opened, never toggled shut: a door that closes the menu is not "open")
+  //   modules      the bar, whose panel buttons ARE this screen's modules -- the nearest thing a kiosk
+  //                has to "open Modules"; on the dashboard path, the plain bar
+  //   dashboards   the screen picker (Home). Not on an embed: it has no other screens, and its last row
+  //                navigates the host page away -- left unclaimed there, so the room says so instead.
+  const claimed = (p) => { try { p?.claim?.(); } catch { /* a publisher's claim must not stop the press */ } };
+  const revealBar = () => { if (useDashboard) summonPlainBar(); else poke(); };
+  offsScreen.push(bus.subscribe(SYSTEM_TOPICS.fullscreen, (p) => { claimed(p); toggleFs(); }));
+  offsScreen.push(bus.subscribe(SYSTEM_TOPICS.settings, (p) => { claimed(p); if (!menu.isOpen()) menu.open(); }));
+  offsScreen.push(bus.subscribe(SYSTEM_TOPICS.modules, (p) => { claimed(p); revealBar(); }));
+  if (!embedded) {
+    offsScreen.push(bus.subscribe(SYSTEM_TOPICS.dashboards, (p) => { claimed(p); poke(); toggleScreens(true); }));
+  }
+
   // The long press itself, on the input bus's physical edges. Its length is a screen setting.
   const longPress = useDashboard ? createLongPress({
     bus, holdMs: () => (settings.get() || {}).plainBarHoldMs,
@@ -2126,7 +2307,7 @@ export async function mountKiosk(root, {
         router: runtime.router, health, storage, embedded: true,
         // Stage 3b: what it places besides its panels, and the shell's one menu to dock.
         chrome: Array.isArray(dashboardChrome) ? dashboardChrome : DEFAULT_DASHBOARD_CHROME,
-        shell: { dockMenu },
+        shell: { dockMenu, helpOn: () => helpOn(storage) },
       }));
       dash.impl.onChange?.(() => { renderMods(); syncPlainBar(); });
       await dash.init();
@@ -2239,6 +2420,15 @@ export async function mountKiosk(root, {
     // up by itself ('auto') or summoned, and the dashboard module's contract (its chrome, its panels).
     plainBar: () => plainBarState,
     dashboard: () => dash?.impl || null,
+    // The screen's sound (2026-09-30), for a test and a diagnostic page: the master's handle, the
+    // mixer's, the effects chain (null until something asked for one) and the scene the mix follows.
+    master: () => master,
+    mixer: () => mixer,
+    effects: () => fxReal,
+    soundScene: () => soundScene,
+    listening: () => listening,
+    // Nimrod on the bar: explain what is picked, as the bar's button does.
+    help: () => explainHelp(),
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
       clearTimeout(plainSummonT); clearTimeout(barGraceT);
@@ -2273,6 +2463,14 @@ export async function mountKiosk(root, {
       // Before the socket, so the far end is told rather than left watching a frozen frame.
       try { callTransport?.destroy(); } catch { /* already gone */ } callTransport = null;
       try { drive?.close(); } catch { /* already gone */ }
+      // The screen's sound: the cue and its audio sources, the master's two verbs, the mixer, and the
+      // effects chain (which closes the audio context it made). Before the audio bus they register on.
+      try { offListenPerson?.(); } catch { /* already gone */ } offListenPerson = null;
+      try { listening?.destroy(); } catch { /* already gone */ } listening = null;
+      try { master?.destroy(); } catch { /* already gone */ } master = null;
+      try { mixer?.destroy(); } catch { /* already gone */ } mixer = null;
+      try { fxReal?.destroy(); } catch { /* already gone */ } fxReal = null;
+      try { barHelp.destroy(); } catch { /* already gone */ }
       // Silences anything mid-sentence as well as clearing the queue. A screen that is being
       // torn down must not keep talking.
       try { output?.destroy(); } catch { /* already gone */ }
