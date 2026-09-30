@@ -256,6 +256,53 @@
   .view[data-clock-corner="br"] .k-clock{bottom:2.5vmin;right:2.5vmin}
   .view[data-clock-corner="tl"] .k-clock{top:2.5vmin;left:2.5vmin}
   .view[data-clock-corner="tr"] .k-clock{top:2.5vmin;right:2.5vmin}
+  /* *** STAGE 3b: THE CHROME A DASHBOARD PLACES, AND THE PLAIN BAR. ***
+     A dashboard docks its placed chrome (the transport bar, the settings menu) along its edges. The
+     bottom dock is a ROW of the dashboard, not an overlay on it: the stage takes the room the bar
+     leaves, as the embed's own bar always did, so nothing at the bottom of a panel is covered. The
+     side docks are drawers over the stage that only take the pointer where something is showing. */
+  .view.v-docked{display:grid;grid-template-rows:auto 1fr auto}
+  .view.v-docked > .k-stage{position:relative;inset:auto;grid-row:2;min-height:0}
+  .view > .v-dock-top{grid-row:1;position:relative}
+  .view > .v-dock-bottom{grid-row:3;position:relative;display:flex;justify-content:center;
+    padding:0 1vmin 1vmin;z-index:var(--z-transport)}
+  .view > .v-dock-left,.view > .v-dock-right{position:absolute;top:0;bottom:0;width:min(420px,60%);
+    z-index:var(--z-transport);pointer-events:none}
+  .view > .v-dock-left{left:0}
+  .view > .v-dock-right{right:0}
+  .view > .v-dock-left .st-scrim:not([hidden]),.view > .v-dock-right .st-scrim:not([hidden]){pointer-events:auto}
+  .v-chrome,.sm-dock{position:relative;height:100%}
+  /* The placed transport bar: the plain bar's own look, as a flat row in its dock. */
+  .tb-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;align-items:center;
+    background:rgba(7,18,13,.82);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px 12px}
+  .tb-mods{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-width:0}
+  .tb-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+  .tb-mods:not(:empty) + .tb-actions{border-left:1px solid rgba(255,255,255,.15);padding-left:12px}
+  .tb-actions button{font-size:.82rem;color:#cfe0d6;background:transparent;
+    border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer;min-height:36px}
+  .tb-actions button:hover{background:rgba(255,255,255,.10)}
+  .tb-actions button[data-on="1"]{background:var(--highlight);border-color:var(--highlight);color:#1a1408;font-weight:700}
+  /* THE PLAIN BAR -- the shell's own bar on the dashboard path. SOLID and flat on purpose, whatever the
+     theme or the panel backgrounds say (Design: "solid, flat, and it can't be restyled or removed"):
+     it is the way back when a dashboard has gone wrong, so nothing a dashboard sets may make it hard
+     to see. Hidden (`k-plain-off`) only while a placed bar carries the bar and nobody summoned it. */
+  .kiosk > .k-controls.k-plain{background:#07120d;border:2px solid #cfe0d6;opacity:1;backdrop-filter:none}
+  .kiosk > .k-controls.k-plain-off{display:none}
+  /* THE RING while a switch is held for the plain bar: words and a fill, never colour alone. */
+  .k-ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:var(--z-transport);
+    display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:14px;
+    background:#07120d;color:#f3f7f4;border:2px solid #cfe0d6;font:600 1rem/1.3 system-ui,sans-serif;
+    pointer-events:none}
+  .k-ring[hidden]{display:none}
+  .k-ring-fill{width:34px;height:34px;border-radius:50%;flex:none;
+    background:conic-gradient(#cfe0d6 var(--k-ring-p,0%),rgba(255,255,255,.18) 0)}
+  @property --k-ring-p{syntax:'<percentage>';inherits:false;initial-value:0%}
+  @media (prefers-reduced-motion:no-preference){
+    .k-ring.k-ring-go .k-ring-fill{animation:k-ring-fill var(--k-ring-ms,1250ms) linear forwards}
+  }
+  /* Reduced motion: no animation -- the ring shows half full, and the words carry the meaning. */
+  @media (prefers-reduced-motion:reduce){ .k-ring .k-ring-fill{--k-ring-p:50%} }
+  @keyframes k-ring-fill{from{--k-ring-p:0%}to{--k-ring-p:100%}}
   /* auto-hiding control bar */
   /* *** THE BAR WRAPS. IT USED TO RUN OFF THE SCREEN. ***
    *

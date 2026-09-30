@@ -369,6 +369,94 @@ const PLAIN = {
       r.inst.destroy();
     }
 
+    // ---- STEP 6 STAGE 3b (2026-09-30): the bar and the menu are MODULES PLACED in the dashboard ----
+    // Mike: "They are modules. They're not being drawn by a module. They're being placed in the
+    // dashboard." `ctx.chrome` places them (docked, for now: the bar along the bottom, the menu down the
+    // left); they are not panels (no chip, no focus, no fallback), and the dashboard says, per role,
+    // whether anything is carrying it -- which is what the shell's plain bar is shown by.
+    section('*** stage 3b: the transport bar and the settings menu, placed in the dashboard ***');
+    {
+      registerModule({ type: 'boom_bar_view_test', title: 'Broken bar', chrome: 'bar', settings: [] },
+        () => ({ init() { throw new Error('this bar will not start'); }, destroy() {} }));
+      registerModule({ type: 'hang_bar_view_test', title: 'Slow bar', chrome: 'bar', settings: [] },
+        () => ({ init() { return new Promise(() => {}); }, destroy() {} }));
+      const PANELS = { id: 'cv', modules: [{ id: 'cv-word', type: 'wordforge' }, { id: 'cv-photos', type: 'photos' }] };
+      const docked = [];
+      const shell = { dockMenu: (el) => { docked.push(el); return () => { docked.push('undocked'); }; } };
+      const heard = [];
+      const r = mountCounted('cv', PANELS, makeCounted(), {
+        shell,
+        chrome: [{ id: 'cv-bar', type: 'transport_bar', dock: 'bottom' },
+                 { id: 'cv-menu', type: 'settings_menu', dock: 'left' }],
+      });
+      for (const t of ['shell/next', 'shell/prev', 'shell/menu', 'shell/hush', 'shell/fullscreen']) {
+        r.bus.subscribe(t, () => heard.push(t));
+      }
+      r.inst.init();
+      await sleep(300);
+      const impl = r.impl;
+      check('*** the dashboard says the bar and the menu are CARRIED ***',
+        impl.chrome?.()?.bar === 'carried' && impl.chrome?.()?.menu === 'carried', JSON.stringify(impl.chrome?.()));
+      const bar = r.host.querySelector('.view > .v-dock-bottom .tb-bar');
+      check('the placed bar is in the bottom dock of the dashboard', !!bar, r.host.innerHTML.slice(0, 200));
+      check('*** it draws the SAME chips the plain bar draws (transport_bar.js): the panel is named and lit ***',
+        bar?.querySelector('.tb-mods .k-dot.on')?.textContent === 'wordforge'
+        && [...(bar?.querySelectorAll('.tb-mods .k-dot') || [])].map((b) => b.textContent).join() === 'wordforge,photos',
+        [...(bar?.querySelectorAll('.tb-mods .k-dot') || [])].map((b) => b.textContent).join());
+      check('*** the bar and the menu are not panels: no chip, not in the focus ring, not in modules() ***',
+        !impl.focusRing().some((m) => /^cv-(bar|menu)$/.test(m.id))
+        && !impl.modules().some((m) => /^cv-(bar|menu)$/.test(m.id)));
+      for (const [act, topic] of [['next', 'shell/next'], ['back', 'shell/prev'], ['settings', 'shell/menu'],
+                                   ['hush', 'shell/hush'], ['fs', 'shell/fullscreen']]) {
+        bar?.querySelector(`[data-act="${act}"]`)?.click();
+        check(`its ${act} button SAYS what was pressed, for the shell to do (${topic})`, heard.includes(topic),
+          JSON.stringify(heard));
+      }
+      bar?.querySelectorAll('.tb-mods .k-dot')[1]?.click();
+      await sleep(150);
+      check('*** pressing a chip on the placed bar moves the dashboard’s own stage to that panel ***',
+        impl.focused()?.id === 'cv-photos' && !!r.host.querySelector('.view .k-stage .photos'),
+        JSON.stringify(impl.focused()));
+      check('...and the placed bar redraws with it lit (it listens to its dashboard)',
+        r.host.querySelector('.tb-bar .tb-mods .k-dot.on')?.textContent === 'photos');
+      check('*** the menu module asked the shell to dock THE menu into its own box, inside the left dock ***',
+        docked[0] instanceof Element && !!docked[0].closest('.view > .v-dock-left'));
+      const changes = [];
+      impl.onChange(() => changes.push(impl.chrome().bar));
+      check('removeChrome(id) takes the bar away', impl.removeChrome?.('cv-bar') === true);
+      check('*** ...and the dashboard says nothing carries the bar now, and says so to its listeners ***',
+        impl.chrome().bar === 'none' && changes.includes('none') && !r.host.querySelector('.tb-bar'));
+      r.inst.destroy();
+      check('destroying the dashboard hands the menu back (undock)', docked.includes('undocked'));
+    }
+    {
+      const r = mountCounted('cv2', { id: 'cv2', modules: [{ id: 'cv2-p', type: 'photos' }] }, makeCounted(),
+        { chrome: [{ id: 'cv2-bar', type: 'boom_bar_view_test', dock: 'bottom' }] });
+      r.inst.init();
+      await sleep(250);
+      check('*** a placed bar that will not start: the dashboard says FAILED (the shell shows its plain bar) ***',
+        r.impl.chrome().bar === 'failed', JSON.stringify(r.impl.chrome()));
+      check('...and the panels are still up', !!r.host.querySelector('.view .k-stage .photos'));
+      r.inst.destroy();
+    }
+    {
+      const r = mountCounted('cv3', { id: 'cv3', modules: [{ id: 'cv3-p', type: 'photos' }] }, makeCounted(),
+        { chrome: [{ id: 'cv3-bar', type: 'hang_bar_view_test', dock: 'bottom' }] });
+      r.inst.init();
+      await sleep(250);
+      check('*** a placed bar still mounting says PENDING, and does not hold up the dashboard ***',
+        r.impl.chrome().bar === 'pending' && !!r.host.querySelector('.view .k-stage .photos'),
+        JSON.stringify(r.impl.chrome()));
+      r.inst.destroy();
+    }
+    {
+      const r = mountCounted('cv4', { id: 'cv4', modules: [{ id: 'cv4-p', type: 'photos' }] }, makeCounted());
+      r.inst.init();
+      await sleep(200);
+      check('a dashboard that placed no bar says NONE', r.impl.chrome().bar === 'none' && r.impl.chrome().menu === 'none');
+      r.inst.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

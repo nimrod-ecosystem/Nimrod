@@ -344,8 +344,19 @@ const host = document.getElementById('host');
         && !eStage.querySelector('.kiosk > .k-stage .k-mod'), eStage.querySelector('.kiosk')?.innerHTML.slice(0, 160));
       check('stage 3: ...and the bar still names it and lights it (the shell reads the dashboard’s arrangement)',
         eStage.querySelector('.k-mods .k-dot.on')?.textContent === 'trivia');
+      // STAGE 3b: on this page the bar and the menu are PLACED in the dashboard, and the kiosk's own
+      // bar is the plain bar, out of the way while the placed one carries it.
+      await settled(() => e.kiosk.dashboard?.()?.chrome?.().bar === 'carried', 3000);
+      check('*** stage 3b: the modules page shows a PLACED transport bar, lit on the picked module ***',
+        eStage.querySelector('.k-dash .v-dock-bottom .tb-bar .tb-mods .k-dot.on')?.textContent === 'trivia');
+      check('*** ...and a placed settings menu (the one menu, docked in the dashboard) ***',
+        e.kiosk.dashboard().chrome().menu === 'carried' && !!eStage.querySelector('.k-dash .v-dock-left [data-settings]'));
+      check('...so the kiosk’s own bar is the plain bar, out of the way until it is needed',
+        e.kiosk.plainBar() === 'off' && eStage.querySelector('.kiosk > .k-controls').classList.contains('k-plain-off'));
       check('the settings menu opens, inside the box',
-        (() => { e.kiosk.menu.open(); const s = eStage.querySelector('.kiosk > [data-settings] .st-scrim');
+        // `.kiosk [data-settings]`, not `.kiosk > ...`: since Stage 3b the menu lives where the
+        // dashboard's menu module placed it (a dock inside the box) -- still the one menu, still in the box.
+        (() => { e.kiosk.menu.open(); const s = eStage.querySelector('.kiosk [data-settings] .st-scrim');
           const b = s?.getBoundingClientRect(), o = eStage.getBoundingClientRect();
           return !!s && !s.hidden && b.left >= o.left - 1 && b.right <= o.right + 1 && b.top >= o.top - 1 && b.bottom <= o.bottom + 1; })());
       e.kiosk.menu.close();

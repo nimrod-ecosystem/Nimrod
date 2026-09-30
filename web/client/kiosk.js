@@ -34,6 +34,13 @@ import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
 import { createArrangement } from './arrangement.js';
+import { barModel, drawChips } from './transport_bar.js';
+import { createLongPress } from './input_longpress.js';
+import {
+  SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
+  SHELL_STATE, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
+  PLAIN_BAR_HOLD_DEFAULT_MS,
+} from './shell_verbs.js';
 import { mountSettings } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
@@ -168,6 +175,14 @@ export async function mountKiosk(root, {
   // `modules.html` turns it on (module_try.js), so it is proven on a public page before any screen
   // anybody sits at. Stage 4 makes it the default on a real screen; until then nothing else changes.
   dashboardModule = false,
+  // STEP 6 STAGE 3b -- both read only on the dashboard path (`embedded` + `dashboardModule`).
+  // `dashboardChrome`: what the dashboard PLACES besides its panels -- by default the transport bar
+  // along the bottom and the settings menu down the side (Mike, 2.33: the default dashboard "will
+  // start out with the settings/edit menus and transport bar as open modules"). `[]` places none, and
+  // then the plain bar is the bar. `plainBarSummonMs`: how long a SUMMONED plain bar stays after the
+  // last touch while a placed bar carries it -- a seam for the suites, like `burnInIdleMs`.
+  dashboardChrome = undefined,
+  plainBarSummonMs = 6000,
 } = {}) {
   const useDashboard = !!embedded && !!dashboardModule;
   bus = bus || createBus();
@@ -821,122 +836,17 @@ export async function mountKiosk(root, {
   // The slots, the one-at-a-time stage and which panel the bar is about (`mountLayout`,
   // `showPrimary`, `focusedRec`, the unplaced swap, `paintFocus`) live in arrangement.js.
 
-  // *** THE TRANSPORT BAR. ***
-  //
-  // This used to return immediately whenever a layout was present, on the reasoning that there
-  // is "nothing to switch between — it's all visible". That was true of SWITCHING and wrong
-  // about the bar: what Mike saw on the live site was `Screens · Next · Mirror · Hush · ⚙ · ⛶`
-  // with no per-module buttons at all (G4), on exactly the screens where naming a panel matters
-  // most — and it is why the gear could not show panel settings either, since both were reading
-  // the same missing concept.
-  //
-  // So on a grid the buttons still exist; pressing one MOVES FOCUS rather than swapping the
-  // stage, because on a grid there is nothing to swap. Same button, two meanings, and the
-  // difference is a property of the screen rather than of the control — which is what keeps it
-  // one bar instead of two.
+  // *** THE TRANSPORT BAR. *** Its chips -- which panels, which is lit, what pressing one does -- are
+  // drawn by `transport_bar.js` (step 6 Stage 3b), the ONE implementation shared with the transport
+  // bar a dashboard places; the comments on why each chip behaves as it does moved with that code.
+  // This is the shell's own PLAIN bar drawing them.
   function renderMods() {
-    // What the bar lists is the arrangement's (arrangement.js); the bar itself is the shell's. Read
-    // fresh on every draw, because a swap replaces all of it.
-    const layout = arr.layout(), profile = arr.profile(), slotRecs = arr.slotRecs;
-    const stageDefs = arr.stageDefs(), primary = arr.primary();
     // The panel button lives or dies with the same facts the bar is drawn from, so it is
     // refreshed here rather than at each of the four call sites that redraw the bar.
     try { syncPanelBtn?.(); } catch { /* declared later; harmless before first render */ }
-    modsEl.innerHTML = '';
-    const focusId = focusedRec()?.id;
-
-    if (layout) {
-      // *** ONE STABLE ORDER, FROM `profile.modules`, WHETHER A PANEL IS PLACED OR NOT. ***
-      //
-      // PRIORITY.md #3: "panels rearranging when focus changes, which violates the same-position
-      // rule the whole product depends on."
-      //
-      // This used to draw every PLACED panel first and then every unplaced one, so the moment a
-      // panel moved between those two groups the whole bar reshuffled. Measured on a five-panel
-      // screen, pressing one off-screen chip:
-      //
-      //     Photos, Trivia, Word Forge, Quests, Pond  ->  Trivia, Word Forge, Photos, Pond
-      //
-      // Three buttons that had nothing to do with the swap moved under the finger. For somebody
-      // scanning this bar with one switch, a button that moves is a press spent on the wrong
-      // thing -- which is exactly what the same-position rule exists to prevent.
-      //
-      // `profile.modules` is the stable identity order both halves were already derived from,
-      // so ordering by it costs nothing and cannot reshuffle: being placed or unplaced becomes
-      // a STATE the chip carries (`k-off`), not a position it moves to.
-      //
-      // *** ONLY PANELS THE ROUTER WILL ACTUALLY FOCUS GET A BUTTON. ***
-      //
-      // `reachable()` is the router's own list -- a module type absent from the verb map is
-      // never focused, which is deliberate and documented there. The CLOCK is the standing
-      // example: it declares no verbs, so nothing can be done to it, so focusing it would
-      // strand a switch on a panel with nothing to press.
-      //
-      // My first version listed every slot and produced a Clock button that did nothing when
-      // pressed -- a control that lies about what it can do, which on this bar is worse than a
-      // missing one: somebody with one switch spends a press finding out.
-      //
-      // *** D16, AND IT IS FIXED RATHER THAN ASKED ABOUT. ***
-      //
-      // A module with no verbs (quests, trivia, word forge...) HAD a chip while it was
-      // unplaced, because pressing it did something real -- it brought the panel on screen.
-      // The moment it landed it stopped being `reachable`, and its chip disappeared. **So
-      // pressing a button deleted that button, and there was no way to send the panel back.**
-      //
-      // Chat, and this is the whole of it: *"a control that removes itself when pressed is the
-      // failure mode Nimrod exists to prevent. Somebody using one switch cannot recover from
-      // it, and on a bedside screen nobody is there to undo it... An empty control area is a
-      // correct answer. A vanishing button is not."*
-      //
-      // So the chip STAYS, and `input_router.setFocus` now accepts any panel on the screen
-      // while switch-cycling still visits only panels that answer a verb. What remains is the
-      // honesty problem the original filter existed for -- a button must not lie about what it
-      // can do -- and that is answered by SAYING SO on the chip rather than by removing it.
-      const focusable = new Set((runtime?.router?.reachable?.() || []).map((m) => m.id));
-      const placedIds = new Set(layout.slots.filter(Boolean));
-      for (const def of profile.modules) {
-        // The HUD pair are not panels, the same exclusion `unplacedDefs` makes: an unplaced
-        // camera is the mirror overlay and an unplaced clock is the corner clock.
-        if (def.type === 'camera' || def.type === 'clock') continue;
-        const placed = placedIds.has(def.id);
-        if (placed) {
-          const rec = slotRecs.find((r) => r.id === def.id);
-          if (!rec) continue;
-          // NOT `continue` any more -- see D16 above. The chip is drawn either way, and says
-          // which kind of chip it is instead of disappearing.
-          const noControls = focusable.size && !focusable.has(rec.id);
-          const b = document.createElement('button');
-          b.className = 'k-dot' + (rec.id === focusId ? ' on' : '')
-            + (noControls ? ' k-nover' : '');
-          if (noControls) {
-            b.title = 'nothing on this panel answers a button \u2014 pressing it puts the '
-              + 'outline here, and the controls stay empty';
-          }
-          b.textContent = rec.title || rec.type;
-          b.dataset.id = rec.id;
-          b.addEventListener('click', () => focusPlaced(rec.id));
-          modsEl.append(b);
-        } else {
-          const b = document.createElement('button');
-          b.className = 'k-dot k-off';
-          b.textContent = instanceTitle(def);
-          b.dataset.id = def.id;
-          b.title = 'not in this screen\u2019s arrangement \u2014 show it in the panel that has focus';
-          b.addEventListener('click', () => { showUnplaced(def); });
-          modsEl.append(b);
-        }
-      }
-      return;
-    }
-
-    stageDefs.forEach((d, j) => {
-      const b = document.createElement('button');
-      b.className = 'k-dot' + (j === primary ? ' on' : '');
-      b.textContent = d.type;
-      b.dataset.i = j;
-      b.addEventListener('click', () => showPrimary(j));
-      modsEl.append(b);
-    });
+    // What the bar lists is the arrangement's (arrangement.js); the bar itself is the shell's. Read
+    // fresh on every draw, because a swap replaces all of it.
+    drawChips(modsEl, barModel(arr, runtime));
   }
 
   // ---------------------------------------------------------------------------------
@@ -1213,6 +1123,8 @@ export async function mountKiosk(root, {
     hushBtn.title = on
       ? 'the music and video are paused — press to bring them back'
       : 'pause the music and video so you can talk (voices and speech are still heard)';
+    // A placed transport bar shows the same state (Stage 3b): told, whichever bar was pressed.
+    if (useDashboard) bus.publish(SHELL_STATE, { hushed: on });
   }
   hushBtn.addEventListener('click', () => { audio?.hush?.(!audio.isHushed()); renderHush(); });
   renderHush();
@@ -1334,6 +1246,12 @@ export async function mountKiosk(root, {
         { value: 'veil', label: 'See-through' },
         { value: 'clear', label: 'Fully clear' },
       ] },
+    // HOW LONG TO HOLD A SWITCH FOR THE PLAIN BAR (Stage 3b; only where there is a plain bar -- the
+    // dashboard path). Design's 1.5 s, settable 1-3 s (Rule 1: a setting, not a constant). `essential`:
+    // like the complexity row, it is part of the way OUT, and a way out that a level can hide is not one.
+    ...(useDashboard ? [{ key: 'plainBarHoldMs', label: 'Hold a switch this long for the plain bar',
+      kind: 'choice', level: 'essential', default: PLAIN_BAR_HOLD_DEFAULT_MS,
+      options: [1000, 1500, 2000, 2500, 3000].map((ms) => ({ value: ms, label: `${ms / 1000} seconds` })) }] : []),
   ];
 
   // *** THE SAME SETTING, ONE LEVEL MORE SPECIFIC. *** Mike, 2026-09-23, on the screen-wide
@@ -1736,7 +1654,10 @@ export async function mountKiosk(root, {
   runtime = mountInputRuntime({
     bus,
     modules: focusRing,
-    fallback: DEFAULT_BINDINGS,
+    // On the dashboard path (Stage 3b) ESCAPE IS THE PLAIN BAR (Design: "Escape, from anywhere"), so
+    // its menu binding is left out there; M still opens the menu, and the menu's own panel still closes
+    // on Escape. Every other screen keeps Escape as the menu, exactly as it was.
+    fallback: useDashboard ? DEFAULT_BINDINGS.filter((b) => b.control !== 'key:escape') : DEFAULT_BINDINGS,
     ignore: isKioskChrome,
     onFocus: (m) => {
       // *** ON A GRID, SHOW WHICH PANEL THE NEXT PRESS WILL ACT ON. ***
@@ -2040,6 +1961,16 @@ export async function mountKiosk(root, {
   // MIRROR MOVED FROM M TO C, because M is the menu now and C was the better mnemonic
   // anyway: it is the CAMERA mirror.
   const onKey = (e) => {
+    // ESCAPE, ON THE DASHBOARD PATH, IS THE PLAIN BAR (Stage 3b; Design: "Escape, from anywhere").
+    // From anywhere means with the menu open too: it closes the menu on the way (the menu's own panel
+    // closes itself on Escape when it has the keyboard, and never lets the key reach here). Not while
+    // typing, and on an embed not for a key that landed outside the box -- the same two rules below.
+    if (useDashboard && e.key === 'Escape' && (e.target instanceof Node && root.contains(e.target))
+        && !isTyping(e.target)) {
+      if (menu.isOpen()) menu.close();
+      summonPlainBar();
+      return;
+    }
     if (menu.isOpen()) return;               // the menu is driven by the bus, not from here
     // (`window` and `document` can be an event's target and are not Nodes: `contains` throws on them.)
     if (embedded && !(e.target instanceof Node && root.contains(e.target))) return;   // a host page's keystrokes are not ours
@@ -2073,6 +2004,108 @@ export async function mountKiosk(root, {
     navigate(`kiosk.html?profile=${encodeURIComponent(plan.redirectTo)}`);
   }
 
+  // *** THE PLAIN BAR (step 6 Stage 3b; the dashboard path only). ***
+  //
+  // Mike, 2026-09-30: the transport bar and the settings menu are modules PLACED in the dashboard, and
+  // the 2026-09-11 reason for keeping them in the core -- a broken module must never take the
+  // controls away -- is kept by a different route: *"the plain bar is always one hotkey, or one long
+  // switch press, away"* ("That sounds good"). Design's spec (room-is-the-screen, "The plain bar (the
+  // invariant)"): it is the system's own layer -- solid, flat, not restylable, not removable -- and it
+  // opens by Escape, by a long switch press (1.5 s default, 1-3 s, a ring after 250 ms), and BY ITSELF
+  // "when no object carries the transport bar: it was removed, or its module failed to mount within
+  // 2 s. It stays until an object carries the bar again." Q7 (Mike's list, the guess in force): yes
+  // on failure, never otherwise -- a dashboard carrying its bar does not also get this one.
+  //
+  // This file's own bar (`.k-controls`) IS the plain bar: the same buttons and the same chips
+  // (transport_bar.js) it has always had, so nothing about it had to be rebuilt to be trustworthy.
+  // *** WHAT IF NOBODY ANSWERS *** (CLAUDE.md's gate test): a summoned plain bar puts itself away after
+  // `plainBarSummonMs` untouched, while a placed bar carries the bar; an automatic one never does. It is
+  // never a gate -- nothing behind it stops, and it covers only the strip it sits in.
+  const DEFAULT_DASHBOARD_CHROME = [
+    { id: 'chrome-bar', type: 'transport_bar', dock: 'bottom' },
+    { id: 'chrome-menu', type: 'settings_menu', dock: 'left' },
+  ];
+  let plainSummoned = false;
+  let plainSummonT = null;
+  let barGraceT = null;
+  let barGraceOver = false;
+  let plainBarState = null;                // 'off' | 'auto' | 'summoned', or null off this path
+  function syncPlainBar() {
+    if (!useDashboard) return;
+    const s = dash?.impl?.chrome?.()?.bar;  // 'carried' | 'pending' | 'failed' | 'none' | undefined
+    if (s === 'pending' && !barGraceOver && !barGraceT) {
+      barGraceT = setTimeout(() => { barGraceT = null; barGraceOver = true; syncPlainBar(); }, PLAIN_BAR_MOUNT_GRACE_MS);
+    }
+    const auto = !dash || !(s === 'carried' || (s === 'pending' && !barGraceOver));
+    plainBarState = auto ? 'auto' : plainSummoned ? 'summoned' : 'off';
+    controlsEl.classList.toggle('k-plain-off', plainBarState === 'off');
+    kioskEl.dataset.plainBar = plainBarState;
+  }
+  function summonPlainBar() {
+    if (!useDashboard || torn) return;
+    plainSummoned = true;
+    syncPlainBar();
+    clearTimeout(plainSummonT);
+    plainSummonT = setTimeout(() => { plainSummoned = false; syncPlainBar(); }, plainBarSummonMs);
+  }
+  // THE RING while a switch is held (input_longpress.js). Words and a fill, never colour alone, and it
+  // moves only if motion is allowed (kiosk.css). `aria-live` so a screen reader hears the instruction.
+  let ringEl = null;
+  function showRing(p) {
+    if (!ringEl) {
+      ringEl = document.createElement('div');
+      ringEl.className = 'k-ring';
+      ringEl.setAttribute('role', 'status');
+      ringEl.setAttribute('aria-live', 'polite');
+      ringEl.innerHTML = '<span class="k-ring-fill" aria-hidden="true"></span>'
+        + '<span class="k-ring-text">Keep holding for the plain bar</span>';
+      kioskEl.append(ringEl);
+    }
+    ringEl.style.setProperty('--k-ring-ms', `${Math.max(0, (p?.holdMs || 1500) - (p?.ringAfterMs || 250))}ms`);
+    ringEl.hidden = false;
+    ringEl.classList.remove('k-ring-go');
+    void ringEl.offsetWidth;                // restart the fill for this hold
+    ringEl.classList.add('k-ring-go');
+  }
+  function hideRing() { if (ringEl) { ringEl.hidden = true; ringEl.classList.remove('k-ring-go'); } }
+  // THE ONE MENU, docked where the dashboard's menu module sits (modules/settings_menu.js): moved into
+  // its box and scoped to it (settings.js inline mode), and handed back to the shell when the module
+  // goes. One menu -- one cursor, one bus attachment -- wherever it is drawn.
+  const menuHostEl = kioskEl.querySelector(':scope > [data-settings]');
+  function dockMenu(el) {
+    if (!el || torn) return () => {};
+    el.append(menuHostEl);
+    menuHostEl.querySelector('[data-scrim]')?.classList.add('st-inline');
+    return () => {
+      if (menuHostEl.parentNode !== el) return;
+      menuHostEl.querySelector('[data-scrim]')?.classList.remove('st-inline');
+      if (!torn) kioskEl.append(menuHostEl);
+    };
+  }
+  // WHAT A PLACED BAR'S BUTTONS SAY (shell_verbs.js), done with the plain bar's own functions.
+  const offsShell = [];
+  if (useDashboard) {
+    controlsEl.classList.add('k-plain');
+    const on = (topic, fn) => offsShell.push(bus.subscribe(topic, fn));
+    on(SHELL_NEXT, () => { nextInPrimary(); });
+    on(SHELL_PREV, () => { prevInPrimary(); });
+    on(SHELL_PANEL, () => { panelNext(); });
+    on(SHELL_HUSH, () => { audio?.hush?.(!audio.isHushed()); renderHush(); });
+    on(SHELL_MENU, () => { menu.toggle(); });
+    on(SHELL_FULLSCREEN, () => { toggleFs(); });
+    on(SHELL_HOME, () => { toggleScreens(); });
+    on(SHELL_MIRROR, () => { toggleMirrorFull(); });
+    on(PLAIN_BAR_SHOW, () => { summonPlainBar(); });
+    on(PLAIN_BAR_RING, (p) => { showRing(p); });
+    on(PLAIN_BAR_RING_END, () => { hideRing(); });
+    // Touching the plain bar keeps it up; letting it be puts a summoned one away again.
+    controlsEl.addEventListener('pointerdown', () => { if (plainSummoned) summonPlainBar(); }, { passive: true });
+  }
+  // The long press itself, on the input bus's physical edges. Its length is a screen setting.
+  const longPress = useDashboard ? createLongPress({
+    bus, holdMs: () => (settings.get() || {}).plainBarHoldMs,
+  }) : null;
+
   // *** THE DASHBOARD AS A MODULE (step 6 Stage 3; `dashboardModule`, embedded only). ***
   // One `view` module, mounted like any other module (`mountModule`, `childCtx`), into a host that
   // takes the stage's place. It is handed what the kiosk's own arrangement would have used: the same
@@ -2091,17 +2124,22 @@ export async function mountKiosk(root, {
         mount: dashHost, state: null, events: null,
         viewId: profileId, arrangement: ownArr.profile(), layoutOverride: savedLayout || null,
         router: runtime.router, health, storage, embedded: true,
+        // Stage 3b: what it places besides its panels, and the shell's one menu to dock.
+        chrome: Array.isArray(dashboardChrome) ? dashboardChrome : DEFAULT_DASHBOARD_CHROME,
+        shell: { dockMenu },
       }));
-      dash.impl.onChange?.(() => renderMods());
+      dash.impl.onChange?.(() => { renderMods(); syncPlainBar(); });
       await dash.init();
       if (!dash.impl.arrangement?.()) throw new Error('the dashboard module did not build an arrangement');
       renderMods();
+      syncPlainBar();
     } catch (err) {
       console.error('kiosk: the dashboard module failed; showing the panels directly', err);
       try { dash?.destroy(); } catch { /* already gone */ }
       dash = null; dashHost?.remove(); dashHost = null;
       stageEl.style.display = '';
       if (arr.layout()) await mountLayout(); else await showPrimary(0);
+      syncPlainBar();                       // no dashboard, so the plain bar is THE bar
     }
   }
   if (useDashboard) await mountDashboard();
@@ -2197,8 +2235,16 @@ export async function mountKiosk(root, {
     prev: prevInPrimary,
     toggleMirrorFull,
     setMirror: patchMirror,
+    // Step 6 Stage 3b, the dashboard path only (null elsewhere): whether the plain bar is 'off',
+    // up by itself ('auto') or summoned, and the dashboard module's contract (its chrome, its panels).
+    plainBar: () => plainBarState,
+    dashboard: () => dash?.impl || null,
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
+      clearTimeout(plainSummonT); clearTimeout(barGraceT);
+      try { longPress?.destroy(); } catch { /* already gone */ }
+      offsShell.forEach((off) => { try { off(); } catch { /* already gone */ } });
+      ringEl?.remove();
       window.removeEventListener('keydown', onKey);
       root.removeEventListener('mousemove', pokeIfNearBar);
       // The pointerdown/keydown pair were never detached here even before today - a real,
