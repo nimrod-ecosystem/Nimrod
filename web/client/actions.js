@@ -371,6 +371,16 @@ export const MODULE_VERBS = {
   // SPEECH_ACTIONS / SPEECH_BINDINGS -- are the speech wiring's, not this table's.)
   word_games:    { next: 'word_games/next', prev: 'word_games/prev', select: 'word_games/select',
                    back: 'word_games/skip' },
+  // THE ROW 2.45 GAMES (public e42cc92). The three quiz games share word games' view (quiz_view.js), so
+  // they answer the same four: next / prev walk the choices, select answers, back skips. Karaoke is a
+  // sing-along over the video player: next / prev move through songs, play / pause are the media verbs.
+  spelling:      { next: 'spelling/next', prev: 'spelling/prev', select: 'spelling/select',
+                   back: 'spelling/skip' },
+  simple_math:   { next: 'simple_math/next', prev: 'simple_math/prev', select: 'simple_math/select',
+                   back: 'simple_math/skip' },
+  name_that:     { next: 'name_that/next', prev: 'name_that/prev', select: 'name_that/select',
+                   back: 'name_that/skip' },
+  karaoke:       { next: 'karaoke/next', prev: 'karaoke/prev', play: 'karaoke/play', pause: 'karaoke/pause' },
 };
 
 // What a verb does on a given module type, normalized to {topic, payload}.

@@ -756,6 +756,112 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       b.inst.destroy();
     }
 
+    // =====================================================================================
+    // *** 2026-09-30, SECOND WIRING PASS: THE CALL ON THE MIXER, AND THE CALL'S OWN SOUND. ***
+    // The mixer (row 2.35) gave calls a fader and a 60% minimum, and nothing reached the thing that
+    // plays the other person: the call registered on the bus with no `onGain`, so the master, the
+    // Calls fader and the floor all stopped at the bus. Found on the way: an AUDIO-ONLY call had no
+    // media element at all (the far end's sound was attached to nothing), and the screen's own
+    // microphone was opened but never handed to the transport.
+    const capT = (log) => {
+      let inc = null;
+      return {
+        onIncoming(cb) { inc = cb; return () => { if (inc === cb) inc = null; }; },
+        onEnded() { return () => {}; },
+        answer: async (o) => { log.push(o); return true; },
+        hangup() {}, ring: (from) => inc?.(from),
+      };
+    };
+    const mountMixed = ({ audio, micTrack = null, saved = { declineSeconds: 0, demo: false } } = {}) => {
+      const log = [];
+      const t = capT(log);
+      const host = document.createElement('div');
+      document.getElementById('host').append(host);
+      const clock = fakeClock();
+      let sub = null;
+      const micOwner = {
+        acquire: () => Promise.resolve(micTrack ? { getAudioTracks: () => [micTrack] } : { id: 'no-tracks' }),
+        release() {}, status: () => ({ mismatch: [] }),
+      };
+      const inst = mountModule('call', {
+        mount: host, bus: createBus(), instanceId: 'c-mix', callIO: clock.io, events: fakeEvents(),
+        output: { alert() {}, say() {}, notify() {}, status() {}, destroy() {} },
+        audio, micOwner, callTransport: t,
+        state: { get: () => saved, set: () => Promise.resolve(), subscribe: (fn) => { sub = fn; return () => {}; },
+                 load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+      });
+      inst.init();
+      return { host, inst, impl: inst.impl || inst, t, log, rerender: () => sub?.(saved), remote: () => host.querySelector('.call-remote') };
+    };
+    section('*** the call on the mixer: the far end’s sound follows the master, the Calls fader and the floor ***');
+    {
+      const audio = createAudioBus();
+      const micTrack = { kind: 'audio', id: 'her-mic' };
+      const m = mountMixed({ audio, micTrack });
+      m.t.ring({ name: 'Mike' });                      // audio-only: no `video`
+      await sleep(30);
+      const el = m.remote();
+      check('*** an AUDIO-ONLY call has a media element for the far end’s sound ***',
+        !!el && el.tagName === 'AUDIO', el ? el.outerHTML : 'none');
+      check('*** ...and it is the element the transport plays the call into ***',
+        m.log.length === 1 && m.log[0].remoteVideo === el, String(m.log[0]?.remoteVideo?.tagName));
+      check('*** the screen’s own microphone track is handed to the transport (the far end can hear the room) ***',
+        m.log[0]?.audio === micTrack, JSON.stringify(m.log[0]?.audio || null));
+      check('it plays at full volume with nothing turned down', el?.volume === 1, String(el?.volume));
+      audio.setMaster(0.5);
+      check('*** the master turned to half: the call does not go under its 60% minimum ***',
+        Math.abs((el?.volume ?? -1) - 0.6) < 1e-9, String(el?.volume));
+      audio.setFloor('call', 0);
+      check('*** with the Calls minimum at none, it follows the master ***',
+        Math.abs((el?.volume ?? -1) - 0.5) < 1e-9, String(el?.volume));
+      audio.setFader('call', 0.5);
+      check('*** ...and the Calls fader ***', Math.abs((el?.volume ?? -1) - 0.25) < 1e-9, String(el?.volume));
+      m.rerender();
+      check('*** a settings change mid-call keeps the SAME element (the transport stays attached to it) ***',
+        m.remote() === el && Math.abs(el.volume - 0.25) < 1e-9, String(m.remote() === el));
+      audio.setMaster(1); audio.setFader('call', 1); audio.setFloor('call', 0.6);
+      check('back up, it is back to full', el?.volume === 1, String(el?.volume));
+      m.impl.__end('hangup');
+      m.inst.destroy();
+    }
+    {
+      // A VIDEO call: the same, on the <video> the far end is shown in.
+      const audio = createAudioBus();
+      const m = mountMixed({ audio });
+      m.t.ring({ name: 'Mike', video: true });
+      await sleep(30);
+      const el = m.remote();
+      check('a video call plays through its <video>, which is the element the transport got',
+        !!el && el.tagName === 'VIDEO' && m.log[0]?.remoteVideo === el);
+      audio.setMaster(0.5);
+      check('*** ...and it is on the mixer too (the floor holds) ***', Math.abs((el?.volume ?? -1) - 0.6) < 1e-9, String(el?.volume));
+      check('no microphone track, none handed over (a call with no mic is still answered)', !('audio' in (m.log[0] || {})) || m.log[0].audio == null);
+      m.impl.__end('hangup');
+      m.inst.destroy();
+    }
+    {
+      // A BROKEN level is full volume, never silence -- the bus's rule, applied at the element.
+      let onGain = null;
+      const fakeAudio = { register: (id, o) => { if (o?.onGain) onGain = o.onGain; }, setActive() {}, unregister() {} };
+      const m = mountMixed({ audio: fakeAudio });
+      m.t.ring({ name: 'Mike' });
+      await sleep(30);
+      const el = m.remote();
+      check('(setup) the call registered a gain callback on the bus', typeof onGain === 'function');
+      onGain?.(0.3);
+      check('a level from the bus is the element’s volume', Math.abs((el?.volume ?? -1) - 0.3) < 1e-9, String(el?.volume));
+      onGain?.(NaN);
+      check('*** a level that is not a number plays at FULL volume ***', el?.volume === 1, String(el?.volume));
+      onGain?.(7);
+      check('...and one over 1 is full, not an error', el?.volume === 1, String(el?.volume));
+      let threw = false;
+      try { Object.defineProperty(el, 'volume', { set() { throw new Error('no volume here'); }, get() { return 1; }, configurable: true }); onGain?.(0.4); }
+      catch { threw = true; }
+      check('an element that refuses a volume does not break the call', !threw && m.impl.__probe().phase === 'connected');
+      m.impl.__end('hangup');
+      m.inst.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

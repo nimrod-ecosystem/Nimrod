@@ -52,7 +52,8 @@
 
 import { createBus } from './bus.js';
 import { createDefaultRegistry, VERBS, FOCUS_VERBS, MEDIA_VERBS, MASTER_VERBS, verbTopic,
-         MODULE_VERBS } from './actions.js';
+         MODULE_VERBS, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION, ROOM_HOLD_ACTION } from './actions.js';
+import { SPEECH_ACTIONS, NEAR_MISS_ACTIONS } from './input_speech.js';
 import { createInputBus, normalizeBinding, GATES, ROLES, EDGES } from './input.js';
 import { normalizeRecord, INPUTS_KEY, RECORD_VERSION,
   exportBindings, parseBindingsImport } from './input_runtime.js';
@@ -94,6 +95,31 @@ const BINDER_VERBS = {
   },
 };
 const ROUTER_MAPS = { ...MODULE_VERBS, ...BINDER_VERBS };
+
+// *** THE ACTIONS THAT ARE BINDABLE BUT WERE NOT PICKABLE (2026-09-30, second wiring pass). ***
+// The screen's own controls (full screen, the menu, the bar, the screen picker), holding on a room
+// object, answering the voice's "Did you mean that?" by switch, and the voice games' "play ..."
+// routes were all registered actions - a binding to one fires - and none could be chosen here, so
+// the only way to bind a switch to one was an import file. Now they are offered, AFTER the
+// everyday list, in labelled groups. Argued, because the list's length is a real cost:
+//   * FOR one flat list (as the everyday part is): nothing to learn, and this panel said "no
+//     grouping" on purpose.
+//   * FOR grouping, and it wins for these: nine more rows of mixed kinds in one flat list is harder
+//     to scan than the same rows under four labels, and a group label is NOT a stop - a native
+//     <select> steps options only, whether by arrow key or by a switch driving it - so the labels
+//     cost a reader nothing and cost a switch walk nothing. The everyday part stays flat and first,
+//     so the thing reached for most is where it was, and still what is offered.
+//   * AGAINST hiding them behind a "More…" control: that is a second thing to find, for actions
+//     Mike asked to be ADDED alongside the rest (row 2.28: "It's just in addition to them").
+// Every action here is also registered on this page's own registry below, so a binding made here
+// is live on the page's test bus, exactly as it will be on a screen.
+const EXTRA_ACTION_GROUPS = [
+  { label: 'The screen', actions: SYSTEM_ACTIONS.filter((a) => a.id !== ROLE_CYCLE_ACTION) },
+  { label: 'Answering “Did you mean that?”', actions: NEAR_MISS_ACTIONS },
+  { label: 'Voice games', actions: SPEECH_ACTIONS },
+  { label: 'Room', actions: [ROOM_HOLD_ACTION] },
+];
+export const EXTRA_ACTIONS = EXTRA_ACTION_GROUPS.flatMap((g) => g.actions);
 
 // A measured hold turned into a threshold worth suggesting: comfortably under what they
 // managed, rounded to something a person would type, never so low it is meaningless.
@@ -158,6 +184,10 @@ export function mountInputs(root, {
 
   const localBus = createBus();
   const actions = createDefaultRegistry();
+  // The speech actions are the speech layer's (input_speech.js), not the default registry's - a
+  // screen registers them where it attaches speech. This page offers them (EXTRA_ACTION_GROUPS), so
+  // it registers them too, or a switch bound to one here would be refused as an unknown action.
+  actions.registerAll([...NEAR_MISS_ACTIONS, ...SPEECH_ACTIONS]);
   // home.js remounts a panel onto the SAME element, so listeners hung on `root` outlive
   // the panel that added them - one dead handler per visit to the tab.
   const listeners = new AbortController();
@@ -355,10 +385,15 @@ export function mountInputs(root, {
 
   function verbOptions(selected) {
     const one = (v) => `<option value="${verbTopic(v.id)}"${verbTopic(v.id) === selected ? ' selected' : ''}>${esc(v.label)}</option>`;
+    const act = (a) => `<option value="${esc(a.id)}"${a.id === selected ? ' selected' : ''}>${esc(a.label)}</option>`;
+    const group = (g) => `<optgroup label="${esc(g.label)}">${g.actions.map(act).join('')}</optgroup>`;
     // The media four ride after the focus pair (Mike, row 2.28: "Adding audio shouldn't take
-    // away any other controls. It's just in addition to them."). Still one flat list.
+    // away any other controls. It's just in addition to them."). The everyday list stays FLAT and
+    // FIRST - it is what an OT reaches for, and Primary select is still what is offered - and the
+    // actions added 2026-09-30 follow it in labelled groups (EXTRA_ACTION_GROUPS, argued there).
     return `${VERBS.map(one).join('')}${FOCUS_VERBS.map(one).join('')}${MEDIA_VERBS.map(one).join('')}` +
-      `<option value="system/role-cycle"${selected === 'system/role-cycle' ? ' selected' : ''}>Cycle who may act</option>`;
+      `<option value="system/role-cycle"${selected === 'system/role-cycle' ? ' selected' : ''}>Cycle who may act</option>` +
+      EXTRA_ACTION_GROUPS.map(group).join('');
   }
 
   function renderScreens() {

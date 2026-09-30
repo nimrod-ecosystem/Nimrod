@@ -190,6 +190,13 @@ export const ROUTES = {
     phrases: ['play rhyming', 'play rhymes', 'play the rhyming game', 'the rhyming game', 'rhyming'] },
   'play-yesno':     { topic: 'word_games/play', payload: { game: 'yesno' }, label: 'Play Yes or No',
     phrases: ['play yes or no', 'play yes no', 'play the quiz', 'yes or no quiz'] },
+  // ROW 2.45's "name that" games (public e42cc92): one module, a `game` setting, the same /play shape.
+  'play-name-animal': { topic: 'name_that/play', payload: { game: 'animal' }, label: 'Play Name that animal',
+    phrases: ['play name that animal', 'name that animal'] },
+  'play-name-state':  { topic: 'name_that/play', payload: { game: 'state' }, label: 'Play Name that state',
+    phrases: ['play name that state', 'name that state'] },
+  'play-name-person': { topic: 'name_that/play', payload: { game: 'person' }, label: 'Play Name that person',
+    phrases: ['play name that person', 'name that person'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the
@@ -659,6 +666,43 @@ export const SPEECH_FIELDS = [
 ];
 
 const pickChoice = (v, allowed, dflt) => (allowed.includes(v) ? v : dflt);
+
+// ---------------------------------------------------------------------------------------
+// *** ON OR OFF, AND WHAT WRITES IT DOWN (2026-09-30, the kiosk wiring). ***
+// ---------------------------------------------------------------------------------------
+//
+// Rule 1 of this file's header ("IT SHIPS OFF") as two settings a host reads, at the PERSON level
+// beside SPEECH_FIELDS. The kiosk opens no microphone for speech until `speechOn` is true.
+//
+// *** THE RECOGNISER DEFAULTS TO 'local': ONE ON THIS SCREEN. *** Argued, because it means that
+// today, turning spoken commands on does nothing at all on most screens:
+//   * FOR 'browser' as the default: it exists in Chrome now, so "turn it on" would simply work.
+//   * AGAINST, and it wins: the browser's engine sends the ROOM'S SOUND to the browser's maker
+//     (this file's header), the room may hold somebody who cannot consent, and the product's
+//     promise is that it stays on your own hardware (CICI spec: her audio stays fully local). A
+//     default that uploads a room is not a default anybody chose. So 'browser' is one explicit
+//     choice, labelled with where the sound goes, and 'local' is honest about not existing yet: the
+//     kiosk says "no recogniser on this screen yet" rather than quietly listening elsewhere.
+//   * The local engine plugs in behind the same seam (a Vosk or whisper service on the device, or
+//     the desktop Mike ruled acceptable as an OPTION for her audio, row 2.46) with nothing here moving.
+export const SPEECH_ENGINES = ['local', 'browser'];
+export const SPEECH_ON_FIELDS = [
+  { key: 'speechOn', label: 'Spoken commands', kind: 'toggle', default: false, level: 'standard',
+    onLabel: 'On', offLabel: 'Off',
+    note: 'Say the wake phrase, then a command. Off: no microphone is opened for this.' },
+  { key: 'speechEngine', label: 'What writes down what is said', kind: 'choice', default: 'local',
+    level: 'standard',
+    options: [
+      { value: 'local', label: 'A recogniser on this screen (the room’s sound stays here)' },
+      { value: 'browser', label: 'The browser’s own (sends the room’s sound to the browser’s maker)' },
+    ] },
+];
+
+/** `{ on, engine }` from a settings row. Only a real `true` turns it on; a broken engine is 'local'. */
+export function speechSwitchFrom(values = {}) {
+  const v = values || {};
+  return { on: v.speechOn === true, engine: pickChoice(v.speechEngine, SPEECH_ENGINES, 'local') };
+}
 
 /**
  * `attachSpeech` options from a settings row (SPEECH_FIELDS), each unset key its default. The one

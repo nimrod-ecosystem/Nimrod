@@ -142,6 +142,11 @@
      as clickable as before, and only the space that is NOT a panel -- this padding, and the
      grid gap between cells -- passes a press through to `.k-ambient` underneath. */
   .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex;z-index:var(--z-panels);pointer-events:none}
+  /* SUBTITLES THAT HAVE NOWHERE TO GO (2026-09-30, row 2.42). When a game's answers sit at both the
+     bottom and the top, subtitles.js asks the page for room by setting --subtitles-reserve on the
+     root; the panels shrink up by that much, so the lines never cover an answer. 0 (unset) is today's
+     layout exactly. The dashboard host (.k-dash, below) takes the stage's place and gets the same. */
+  .kiosk > .k-stage{bottom:var(--subtitles-reserve,0px)}
   /* THE AMBIENT LAYER (band 100) -- see kiosk.js's own header comment on `data-ambient` for
      what mounts here. `pointer-events:auto`, DELIBERATELY differing from the board's own
      `.ab-surface` (which is `none`, because it sits UNDER cards that are somebody's voice):
@@ -239,7 +244,7 @@
      root is positioned so its `.k-stage` / `.k-mirror` / `.k-clock` / `.k-ambient` resolve against it
      exactly as the kiosk's do against `.kiosk`; `isolation` so a view standing on its own keeps its
      HUD and its ambient layer in one scale, as `.kiosk` does. */
-  .kiosk > .k-dash{position:absolute;inset:0}
+  .kiosk > .k-dash{position:absolute;inset:0;bottom:var(--subtitles-reserve,0px)}
   .kiosk.k-embed > .k-dash{position:relative;inset:auto;flex:1;min-height:0}
   .view{position:absolute;inset:0;isolation:isolate}
   /* The corner settings, on the VIEW'S root too. Inside a kiosk the `.kiosk[...]` rules above already

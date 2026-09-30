@@ -46,6 +46,14 @@ import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
 import { createMixerFx } from './mixer_fx.js';
 import { attachMixer, MIXER_FIELDS } from './mixer.js';
 import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
+import {
+  attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, SPEECH_FIELDS, SPEECH_ON_FIELDS,
+  SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE,
+} from './input_speech.js';
+import { createMissStore, MISS_FIELDS } from './speech_misses.js';
+import { createSubtitles, SUBTITLES_FIELDS } from './subtitles.js';
+import { createAmplifier, AMPLIFY_FIELDS } from './amplify.js';
+import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from './phone_mic.js';
 import { mountSettings } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
@@ -56,7 +64,7 @@ import { createHealthWatch } from './health.js';
 import { nextAction, applied, cleared, chooseFallback, DEFAULT_POLICY,
          RECOVERY_SETTINGS } from './recovery.js';
 import { listManifests } from './module.js';
-import { mountInputRuntime, INPUTS_KEY } from './input_runtime.js';
+import { mountInputRuntime, INPUTS_KEY, RECORD_VERSION } from './input_runtime.js';
 import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS, isTyping } from './input_keyboard.js';
@@ -87,6 +95,10 @@ import './modules/trivia.js';    // registers 'trivia'
 import './modules/scoreboard.js';      // registers 'scoreboard'
 import './modules/room.js';            // registers 'room'
 import './modules/word_games.js';      // registers 'word_games'
+import './modules/spelling.js';        // registers 'spelling' (row 2.45)
+import './modules/simple_math.js';     // registers 'simple_math'
+import './modules/name_that.js';       // registers 'name_that' (animal / state / person)
+import './modules/karaoke.js';         // registers 'karaoke'
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
 import './modules/lessons.js';
 import './modules/algebra.js';
@@ -188,6 +200,12 @@ export async function mountKiosk(root, {
   // last touch while a placed bar carries it -- a seam for the suites, like `burnInIdleMs`.
   dashboardChrome = undefined,
   plainBarSummonMs = 6000,
+  // *** THE SPEECH RECOGNISER, BY WHICH ENGINE THE PERSON CHOSE (2026-09-30). *** Called ONLY when a
+  // person's row turns spoken commands (or subtitles) on - never at boot. `null` means "none here", and
+  // the screen says so. 'local' has no engine yet (a Vosk/whisper service on the device plugs in HERE);
+  // 'browser' is the browser's own, which sends the room's sound to its maker (input_speech.js header),
+  // so it is only ever made when somebody chose it by name. A seam for the suites, too.
+  makeRecognizer = ({ engine, lang } = {}) => (engine === 'browser' ? browserRecognizer({ lang }) : null),
 } = {}) {
   const useDashboard = !!embedded && !!dashboardModule;
   bus = bus || createBus();
@@ -476,6 +494,132 @@ export async function mountKiosk(root, {
     } catch (err) { console.error('kiosk: listening cue', err); }
   }
 
+  // ---- THE VOICE: spoken commands, subtitles, amplify, a phone as a microphone (2026-09-30) ---------
+  //
+  // Second wiring pass (rows 2.28, 2.42; public 5263a56, 7bf59ef, 0636797). ALL OFF BY DEFAULT, and all
+  // read off the PERSON's row (the one their bindings and listening settings already live in): how
+  // somebody wants to be heard and shown follows them to any screen. A screen with no person (an
+  // embed, signed out, not handed to anybody) has no row, so every one of these stays off there.
+  //
+  // *** NOTHING OPENS A MICROPHONE BY DEFAULT. *** The recogniser is made only when the row says
+  // `speechOn` (or `subtitlesOn`, which needs the room's words written down), and only by the engine
+  // the row names - 'local' by default, which does not exist yet, so the screen says "no recogniser on
+  // this screen" instead of listening somewhere else. kiosk_test proves no getUserMedia and no
+  // recogniser start without the setting.
+  let speech = null;             // attachSpeech's handle while a recogniser is running, else null
+  let speechSig = null;
+  let speechStatus = 'off';      // off | no-local | no-browser | listening | subtitles-only
+  let missStore = null;          // speech_misses.js, only while `speechMissLog` is on
+  let offMissSchedule = null;
+  let subtitles = null;          // subtitles.js: built once (the output bus taps it), a mode off by default
+  let amplifier = null;          // amplify.js: built once (inert until the row turns it on)
+  let ampSig = null;
+  let subsSig = null;
+  let phoneRx = null;            // phone_mic.js: the screen's half, once the drive socket exists
+  let micPill = null;            // "Microphone on: <phone>" -- NO SETTING HIDES IT (see where it is mounted)
+  let personRow = null;          // the person's row as last seen; null = no person row on this screen
+  let onVoiceChange = null;      // the menu's refresh, once the menu exists (it is built further down)
+  const SILENT_INPUT = { down() {}, up() {} };   // subtitles-only: the room is heard, nothing is pressed
+  const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...MISS_FIELDS].map((f) => f.key);
+  const AMP_KEYS = AMPLIFY_FIELDS.map((f) => f.key);
+  const SUBS_KEYS = SUBTITLES_FIELDS.map((f) => f.key);
+  const sigOf = (r, keys) => JSON.stringify(keys.map((k) => (r && k in r ? r[k] : null)));
+
+  function stopSpeech() {
+    try { speech?.destroy(); } catch (err) { console.error('kiosk: speech', err); }
+    speech = null;
+    try { offMissSchedule?.(); } catch { /* already stopped */ }
+    offMissSchedule = null;
+    missStore = null;
+  }
+  // (Re)attach speech from the person's row -- only when one of ITS settings changed, so a poll that
+  // brings nothing new never restarts a recogniser under somebody who is mid-sentence.
+  function syncSpeech(row) {
+    const r = row || {};
+    const sw = speechSwitchFrom(r);
+    const subsOn = r.subtitlesOn === true;
+    const want = sw.on || subsOn;
+    const sig = JSON.stringify([want, !!runtime, torn, sigOf(r, SPEECH_KEYS)]);
+    if (sig === speechSig) return;
+    speechSig = sig;
+    stopSpeech();
+    speechStatus = 'off';
+    if (torn || !want || !runtime) { onVoiceChange?.(); return; }
+    let rec = null;
+    try { rec = makeRecognizer({ engine: sw.engine, lang: 'en-US' }); } catch (err) { console.error('kiosk: recogniser', err); rec = null; }
+    if (!rec) { speechStatus = sw.engine === 'browser' ? 'no-browser' : 'no-local'; onVoiceChange?.(); return; }
+    const opts = speechOptionsFrom(r);
+    // THE MISS LOG: only while spoken commands are on AND the person's row asks for it (OFF site-wide;
+    // Mike, row 2.28 (b)). On this device, text only, pruned on a schedule that stops with the speech.
+    if (sw.on && r.speechMissLog === true) {
+      try {
+        missStore = createMissStore({ keepDays: r.speechMissKeepDays, ...(storage ? { storage } : {}) });
+        offMissSchedule = missStore.startSchedule();
+      } catch (err) { console.error('kiosk: miss log', err); missStore = null; }
+    }
+    try {
+      speech = attachSpeech(sw.on ? runtime.input : SILENT_INPUT, {
+        recognizer: rec,
+        ...opts,
+        // Subtitles-only: no commands, so nothing is confirmed, asked, logged or announced -- the
+        // recogniser is there to write the room down, and a wake phrase does nothing.
+        ...(sw.on ? {} : { confirm: 'off', nearMiss: false }),
+        output: sw.on ? output : null,
+        bus: sw.on ? bus : null,
+        misses: sw.on ? missStore : null,
+        onHeard: (h) => { try { subtitles?.heard(h); } catch (err) { console.error('kiosk: subtitles', err); } },
+      });
+      speech.start();
+      speechStatus = sw.on ? 'listening' : 'subtitles-only';
+    } catch (err) {
+      console.error('kiosk: speech', err);
+      stopSpeech();
+      speechStatus = 'off';
+    }
+    onVoiceChange?.();
+  }
+  // Everything the person's row drives, in one place: the listening cue, subtitles, amplify, speech.
+  function applyPerson(row) {
+    const r = row || {};
+    personRow = r;
+    attachListen(r);
+    const ss = sigOf(r, SUBS_KEYS);
+    if (ss !== subsSig) {
+      subsSig = ss;
+      try { subtitles?.update(r); } catch (err) { console.error('kiosk: subtitles', err); }
+    }
+    const as = sigOf(r, AMP_KEYS);
+    if (as !== ampSig) {
+      ampSig = as;
+      try { amplifier?.update(r)?.catch?.((err) => console.error('kiosk: amplify', err)); }
+      catch (err) { console.error('kiosk: amplify', err); }
+    }
+    syncSpeech(r);
+  }
+
+  // A DEVICE'S SHIPPED BINDINGS STAND UNTIL THE PERSON BINDS THAT DEVICE THEMSELVES. The runtime's
+  // `fallback` only covers somebody with NOTHING saved; a person who saved a switch setup has a record,
+  // and it replaced every default - including the spoken ones, so "computer please pause" would fire
+  // nothing for exactly the people most likely to have set things up. So the person's handle is read
+  // through this: a saved record with no binding on the speech device gets SPEECH_BINDINGS added (in
+  // memory only - never written back). Binding any phrase yourself takes over the whole device.
+  function withSpeechBindings(handle) {
+    const add = (s) => {
+      const rec = s && s[INPUTS_KEY];
+      if (!rec || rec.v !== RECORD_VERSION || !Array.isArray(rec.bindings)) return s;
+      if (rec.bindings.some((b) => b && b.device === SPEECH_DEVICE)) return s;
+      return { ...s, [INPUTS_KEY]: { ...rec, bindings: [...rec.bindings, ...SPEECH_BINDINGS] } };
+    };
+    return {
+      load: (...a) => handle.load(...a),
+      get: () => add(handle.get()),
+      subscribe: handle.subscribe ? (fn) => handle.subscribe((s) => fn(add(s))) : undefined,
+      startPolling: (...a) => handle.startPolling?.(...a),
+      destroy: (...a) => handle.destroy?.(...a),
+      set: (...a) => handle.set?.(...a),
+    };
+  }
+
   // ---- MARKER TRACKING AT THE BEDSIDE -------------------------------------------------
   //
   // OFF UNLESS SOMEBODY TURNED IT ON. Not "started and idle": a screen that opens the webcam
@@ -551,6 +695,17 @@ export async function mountKiosk(root, {
     if (torn) { try { deviceState.destroy?.(); } catch { /* already gone */ } deviceState = null; return; }
     deviceState.startPolling?.();
   }
+  // SUBTITLES, built BEFORE the output bus (0636797's list, step 1) because the bus's speech channel is
+  // handed to it to tap: what the screen says is written as it is said, and nothing muted is written.
+  // A mode, OFF until the person's row turns it on (`update`); off, it keeps nothing. The board's words
+  // are the person this screen is for talking, so they are labelled with that person's name.
+  try {
+    subtitles = createSubtitles(kioskEl, {
+      boardSpeaker: () => {
+        try { return whoState && whoState.name ? { name: whoState.name } : null; } catch { return null; }
+      },
+    });
+  } catch (err) { console.error('kiosk: subtitles', err); subtitles = null; }
   try {
     // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
     // kiosk root has never been tried on this surface and could land on top of her photos.
@@ -587,12 +742,20 @@ export async function mountKiosk(root, {
         // while answering Mike's "does this scale to other users" question about the
         // Neon-quota polling default.
         events: createEvents({ url: `/api/user-events/${REMOTE_STREAM}`, user, push }),
+        captions: subtitles,
       }),
     });
   } catch (err) {
     // A screen that cannot speak is still a screen. Modules treat `output` as optional.
     console.error('kiosk: no output bus', err);
   }
+
+  // AMPLIFY (row 2.42): built once, inert until the person's row turns it on. On its own mixer channel
+  // under the master; its source is this screen's microphone (through the arbiter) or a phone joined
+  // as a microphone. It says why when its howl guard turns it off (through `output`).
+  try {
+    amplifier = createAmplifier({ audio, micOwner, output, phoneStream: () => phoneRx?.stream?.() || null });
+  } catch (err) { console.error('kiosk: amplify', err); amplifier = null; }
 
   const ck = (key) => `${user}:${profileId}:${key}`;   // resilience cache key per handle
 
@@ -1419,6 +1582,66 @@ export async function mountKiosk(root, {
       ] },
   ];
 
+  // *** THE VOICE, IN THE MENU (2026-09-30, second wiring pass). *** The PERSON's settings, so they sit
+  // under the who heading ("Setting up for ...") and write to that person's own row -- only when this
+  // screen has one (a person, signed in, not an embed); a row that could save nowhere is not offered.
+  //
+  // THE ONE-SWITCH WALK, argued, because every row here is a stop on it:
+  //   * "Just the essentials": NOTHING added. That level is the handful of rows that make a screen
+  //     readable and get somebody out (colours, how much the menu shows, volume). These are set once,
+  //     by whoever sets a person up, who can pick "The usual" for it. FOR putting Subtitles there: it
+  //     is a legibility control, like Colours. It loses for now because it is also a mode that writes
+  //     down a room; on Mike's list.
+  //   * "The usual": THREE stops while everything is off -- Spoken commands, Subtitles, Amplify. A
+  //     mode's own rows appear only while that mode is on (and a row that tunes something else that is
+  //     off -- the wait for a command with the two-step path off, the question's wording with "did you
+  //     mean" off, how long misses are kept with the list off -- only while that is on). A row tuning a
+  //     thing that is off is a stop that changes nothing anybody can see.
+  //   * "Everything": the same rule, plus each file's own advanced rows (wake phrases, grammar mode...).
+  const VOICE_DEPENDS = {
+    speechWindowMs: (r) => speechOptionsFrom(r).twoStep,
+    speechNearMissLine: (r) => speechOptionsFrom(r).nearMiss,
+    speechNearMissWindowMs: (r) => speechOptionsFrom(r).nearMiss,
+    speechMissKeepDays: (r) => r.speechMissLog === true,
+  };
+  function voiceStatusItem() {
+    const r = personRow || {};
+    const browser = speechSwitchFrom(r).engine === 'browser';
+    const row = (label, hint) => ({ kind: 'item', id: 'voice-status', disabled: true, label, ...(hint ? { hint } : {}) });
+    if (speechStatus === 'no-local') return row('Not listening: there is no recogniser on this screen yet', 'the room’s sound is not sent anywhere');
+    if (speechStatus === 'no-browser') return row('Not listening: this browser has no recogniser of its own');
+    if (speechStatus === 'listening') {
+      return row(`Listening for “${speech?.wakePhrases?.()?.[0] || 'the wake phrase'}”`,
+        browser ? 'the room’s sound goes to the browser’s maker' : '');
+    }
+    if (speechStatus === 'subtitles-only') return row('Writing down what is said (spoken commands are off)',
+      browser ? 'the room’s sound goes to the browser’s maker' : '');
+    return null;
+  }
+  function voiceItems() {
+    if (!personInputs || !personRow || embedded) return [];
+    const r = personInputs.get?.() || personRow || {};
+    const sw = speechSwitchFrom(r);
+    const subsOn = r.subtitlesOn === true;
+    const ampOn = r.amplifyOn === true;
+    const keep = (f) => !VOICE_DEPENDS[f.key] || VOICE_DEPENDS[f.key](r);
+    const fields = [
+      ...SPEECH_ON_FIELDS.filter((f) => f.key === 'speechOn'),
+      ...(sw.on || subsOn ? SPEECH_ON_FIELDS.filter((f) => f.key !== 'speechOn') : []),
+      ...(sw.on ? [...SPEECH_FIELDS, ...LISTENING_FIELDS, ...MISS_FIELDS].filter(keep) : []),
+      ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || subsOn),
+      ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
+    ];
+    const items = fieldItems(fields.map(normalizeField).filter(Boolean), {
+      values: () => personInputs?.get?.() || {},
+      level: complexity(),
+      onStep: (key, value) => { try { personInputs?.set?.({ [key]: value }); } catch (err) { console.error('kiosk: voice setting', err); } },
+    });
+    if (!items.length) return [];
+    const status = voiceStatusItem();
+    return [{ kind: 'heading', id: 'voice-head', label: 'Voice' }, ...(status ? [status] : []), ...items];
+  }
+
   // `:scope >` is not decoration. The camera module draws its OWN hidden `[data-settings]` inline
   // panel inside the mirror overlay, which comes EARLIER in document order, so a bare
   // `querySelector('[data-settings]')` mounted this menu inside it: open, but hidden by its
@@ -1426,8 +1649,8 @@ export async function mountKiosk(root, {
   const menu = mountSettings(kioskEl.querySelector(':scope > [data-settings]'), {
     person: () => whoState,
     // The row under the who heading. It says what is true and, where the account has people
-    // to choose between, opens the picker.
-    whoItems: () => {
+    // to choose between, opens the picker. Then the person's Voice section (voiceItems, above).
+    whoItems: () => [...((() => {
       if (!canPickPerson()) {
         // Nothing to pick from and nowhere to save it. Say which, rather than showing a
         // control that cannot do what it says — the rule `settings_fields.js` states for
@@ -1445,7 +1668,7 @@ export async function mountKiosk(root, {
           ? 'nobody yet — their bindings and voice come with them'
           : `now: ${whoState?.name || '…'}`,
       }];
-    },
+    })()), ...voiceItems()],
     // SCREEN-LEVEL SETTINGS. Written to the profile settings blob, which IS the screen level
     // of the inheritance chain — the same place the theme, the layout and the recovery policy
     // already live, so this adds a control over existing storage rather than a new home.
@@ -1739,6 +1962,19 @@ export async function mountKiosk(root, {
         // panels mounted before this moment -- usually all of them -- are told, so a call panel that
         // found no transport at mount binds to it now instead of never ringing. 2026-09-30.
         if (!torn) bus.publish(CALL_TRANSPORT_READY);
+        // A PHONE AS A MICROPHONE (row 2.42): the screen's half rides the same socket, so only people
+        // the server already lets drive this screen can join one. Joining plays nothing by itself --
+        // amplify (source "a phone") is what plays it -- and the screen SAYS a phone microphone is on
+        // for as long as one is joined or joining. *** NO SETTING HIDES THAT NOTICE. *** It is a
+        // listening device in somebody's room, the same kind of promise as "someone is helping from
+        // another screen" (Mike's consent invariant, 2026-08-26). Code's recommendation; on Mike's list
+        // to confirm as an invariant.
+        if (!torn) {
+          try {
+            phoneRx = createPhoneMicReceiver({ link: drive, bus, config: (settings.get() || {}).call || {} });
+            micPill = mountMicLiveIndicator(kioskEl, { receiver: phoneRx, bus });
+          } catch (err) { console.error('kiosk: phone microphone', err); }
+        }
       }
       if (makeState || embedded || !profiles.personStateURL) return;
       if (torn) return;
@@ -1751,7 +1987,7 @@ export async function mountKiosk(root, {
         // near-instantly when push is up, instead of waiting out a poll interval.
         push,
       });
-      personOff = await runtime.useState(personInputs);
+      personOff = await runtime.useState(withSpeechBindings(personInputs));
       // `useState` guards itself too (see `input_runtime.js`), so this is belt and braces on
       // purpose: the unsubscribe it hands back is the thing `destroy()` would have called, and
       // `destroy()` is already past that line.
@@ -1759,7 +1995,10 @@ export async function mountKiosk(root, {
       // THE LISTENING CUE FOLLOWS THE PERSON (2026-09-30): its settings (LISTENING_FIELDS) are about how
       // this person wants to be answered, so they are read off the person's own row -- the one their
       // bindings already live in, beside the bindings record -- and re-attached when they change.
-      offListenPerson = personInputs.subscribe?.((s) => attachListen(s || {})) || null;
+      // 2026-09-30, second pass: the same row now drives the voice as well (applyPerson) -- speech,
+      // subtitles and amplify, each re-attached only when one of its own settings changed.
+      offListenPerson = personInputs.subscribe?.((s) => applyPerson(s || {})) || null;
+      if (!offListenPerson) applyPerson(personInputs.get?.() || {});
       await startMarkerTracking(p.person_id);
       await startDevicePreference(p.person_id);
     } catch {
@@ -1813,7 +2052,13 @@ export async function mountKiosk(root, {
     // On the dashboard path (Stage 3b) ESCAPE IS THE PLAIN BAR (Design: "Escape, from anywhere"), so
     // its menu binding is left out there; M still opens the menu, and the menu's own panel still closes
     // on Escape. Every other screen keeps Escape as the menu, exactly as it was.
-    fallback: useDashboard ? DEFAULT_BINDINGS.filter((b) => b.control !== 'key:escape') : DEFAULT_BINDINGS,
+    // The spoken phrases ride with the keyboard's defaults (a phrase is a press on the `speech` device,
+    // so the gate, the log and rebinding all apply). They fire nothing until a recogniser is running,
+    // which only a person's own setting starts. A person with a saved record: see withSpeechBindings.
+    fallback: [
+      ...(useDashboard ? DEFAULT_BINDINGS.filter((b) => b.control !== 'key:escape') : DEFAULT_BINDINGS),
+      ...SPEECH_BINDINGS,
+    ],
     ignore: isKioskChrome,
     onFocus: (m) => {
       // *** ON A GRID, SHOW WHICH PANEL THE NEXT PRESS WILL ACT ON. ***
@@ -1842,9 +2087,16 @@ export async function mountKiosk(root, {
       if (i >= 0 && i !== arr.primary()) showPrimary(i);
     },
   });
+  // THE SPEECH LAYER'S ACTIONS: the spoken routes ("play opposites" -> word_games/play) and the
+  // switch answers to "Did you mean that?". An input bus refuses an unregistered action, so without
+  // these a route phrase or a Yes switch would be logged as unknown and do nothing.
+  try { runtime.actions.registerAll([...SPEECH_ACTIONS, ...NEAR_MISS_ACTIONS]); }
+  catch (err) { console.error('kiosk: speech actions', err); }
   await runtime.load();
   // The menu takes the verbs while it is open and hands them back when it closes.
   menu.attachBus(bus, runtime.router);
+  // The Voice section's status row follows the recogniser (listening / none on this screen).
+  onVoiceChange = () => { try { if (!torn) menu.refresh(); } catch { /* a menu that cannot repaint is not a reason to stop */ } };
 
   // ---- THE CURSOR -------------------------------------------------------------------
   // Shell-level rather than a module, because it draws on top of whichever module is under
@@ -2281,6 +2533,11 @@ export async function mountKiosk(root, {
   if (!embedded) {
     offsScreen.push(bus.subscribe(SYSTEM_TOPICS.dashboards, (p) => { claimed(p); poke(); toggleScreens(true); }));
   }
+  // A phone joined or left (phone_mic.js): an amplifier set to play "a phone" follows it.
+  offsScreen.push(bus.subscribe(PHONE_MIC_TOPIC, () => {
+    try { amplifier?.sourceChanged?.()?.catch?.((err) => console.error('kiosk: amplify', err)); }
+    catch (err) { console.error('kiosk: amplify', err); }
+  }));
 
   // The long press itself, on the input bus's physical edges. Its length is a screen setting.
   const longPress = useDashboard ? createLongPress({
@@ -2427,6 +2684,16 @@ export async function mountKiosk(root, {
     effects: () => fxReal,
     soundScene: () => soundScene,
     listening: () => listening,
+    // The voice (2026-09-30, second pass), for a test and a diagnostic page: the speech handle (null
+    // unless a recogniser is running), why it is or is not listening, the miss store (null unless on),
+    // subtitles, amplify, and the phone-microphone receiver and its notice (null until the drive).
+    speech: () => speech,
+    speechStatus: () => speechStatus,
+    misses: () => missStore,
+    subtitles: () => subtitles,
+    amplifier: () => amplifier,
+    phoneMic: () => phoneRx,
+    micPill: () => micPill,
     // Nimrod on the bar: explain what is picked, as the bar's button does.
     help: () => explainHelp(),
     destroy() {
@@ -2460,9 +2727,17 @@ export async function mountKiosk(root, {
       menu.destroy();
       try { personOff?.(); } catch { /* already gone */ }
       offsScreen.forEach((off) => { try { off(); } catch { /* already gone */ } });
+      // The recogniser first: no microphone left open, no miss-log schedule left pruning.
+      onVoiceChange = null;
+      stopSpeech();
       // Before the socket, so the far end is told rather than left watching a frozen frame.
       try { callTransport?.destroy(); } catch { /* already gone */ } callTransport = null;
+      // A phone joined as a microphone is told the screen has gone (before the socket closes).
+      try { phoneRx?.destroy(); } catch { /* already gone */ } phoneRx = null;
+      try { micPill?.destroy(); } catch { /* already gone */ } micPill = null;
       try { drive?.close(); } catch { /* already gone */ }
+      // Amplify lets go of its microphone and its audio context, before the audio bus it is on.
+      try { amplifier?.destroy(); } catch { /* already gone */ } amplifier = null;
       // The screen's sound: the cue and its audio sources, the master's two verbs, the mixer, and the
       // effects chain (which closes the audio context it made). Before the audio bus they register on.
       try { offListenPerson?.(); } catch { /* already gone */ } offListenPerson = null;
@@ -2474,6 +2749,8 @@ export async function mountKiosk(root, {
       // Silences anything mid-sentence as well as clearing the queue. A screen that is being
       // torn down must not keep talking.
       try { output?.destroy(); } catch { /* already gone */ }
+      // After the output bus (whose speech channel it taps): clears its lines and any room it reserved.
+      try { subtitles?.destroy(); } catch { /* already gone */ } subtitles = null;
       try { audio?.destroy(); } catch { /* already gone */ }
       try { cameraOwner?.destroy(); } catch { /* already gone */ }
       try { cursor?.destroy(); } catch { /* already gone */ }

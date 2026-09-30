@@ -406,6 +406,15 @@ try {
     check('signed out: it asks for a sign-in rather than failing', /Sign in/.test(root2.textContent) && !root2.querySelector('[data-start]'));
     root2.remove();
   }
+
+  // 2026-09-30, second wiring pass (0636797's list, step 9): the phone's page is an application
+  // surface like the kiosk, not content, and a search result pointing strangers at "turn your phone
+  // into a microphone" for somebody's room is not something to be found by.
+  section('the phone page is not indexed');
+  {
+    const txt = await fetch('../robots.txt', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).catch(() => '');
+    check('*** robots.txt disallows /phone_mic.html ***', /^Disallow:\s*\/phone_mic\.html\s*$/m.test(txt), txt.slice(0, 400));
+  }
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

@@ -170,6 +170,26 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
       .filter((f) => f.severity === 'error');
     check('the settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
   }
+  // *** 2026-09-30, second wiring pass: ON OR OFF, AND WHAT WRITES IT DOWN. *** The kiosk starts a
+  // recogniser only when a person's row says so. Two settings, both declared here so the field keys
+  // and what the host reads cannot drift apart.
+  {
+    const on = (SP.SPEECH_ON_FIELDS || []).find((f) => f.key === 'speechOn');
+    const eng = (SP.SPEECH_ON_FIELDS || []).find((f) => f.key === 'speechEngine');
+    check('*** spoken commands are OFF by default (nothing opens a microphone until somebody turns it on) ***',
+      !!on && on.default === false && SP.speechSwitchFrom?.({}).on === false, JSON.stringify(on || null));
+    check('*** the recogniser defaults to one ON THIS SCREEN: the room’s sound stays here unless somebody chooses otherwise ***',
+      !!eng && eng.default === 'local' && SP.speechSwitchFrom?.({}).engine === 'local', JSON.stringify(eng || null));
+    check('...the browser’s own is a choice, and its label says where the sound goes',
+      !!eng && eng.options.some((o) => o.value === 'browser' && /maker|sends/i.test(o.label)), JSON.stringify(eng?.options));
+    check('only a real true turns it on; a broken engine is the local one',
+      SP.speechSwitchFrom?.({ speechOn: 'yes' }).on === false && SP.speechSwitchFrom?.({ speechOn: true }).on === true
+        && SP.speechSwitchFrom?.({ speechEngine: 'cloud' }).engine === 'local'
+        && SP.speechSwitchFrom?.({ speechEngine: 'browser' }).engine === 'browser');
+    const bad = auditFields((SP.SPEECH_ON_FIELDS || []).map(normalizeField).filter(Boolean), { type: 'speech' })
+      .filter((f) => f.severity === 'error');
+    check('they pass the settings audit', (SP.SPEECH_ON_FIELDS || []).length === 2 && bad.length === 0, JSON.stringify(bad));
+  }
   check('the wake phrase is required by default', SPEECH_DEFAULTS.requireWake === true);
   const wakeClash = usableWakePhrases(SPEECH_DEFAULTS.wake).length === SPEECH_DEFAULTS.wake.length;
   check('*** the shipped wake phrase is not itself a command ***', wakeClash,
@@ -1195,9 +1215,17 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   check('Mike’s own words, “play the opposites game”', routeFor('play the opposites game') === 'play-opposites');
   check('*** “play” on its own is still the play VERB — whole utterances, so neither fires the other ***',
     verbFor('play') === 'play' && routeFor('play') === null && verbFor('play opposites') === null);
-  check('every route opens a game the word games know',
-    Object.values(ROUTES).every((r) => r.topic === WG_PLAY && WG_GAMES.includes(r.payload.game)),
+  // 2026-09-30: the "name that" games (row 2.45, public e42cc92) joined, on their own module's /play.
+  const { GAMES: NT_GAMES } = await import('../modules/name_that.js');
+  const gamesOf = { [WG_PLAY]: WG_GAMES, 'name_that/play': NT_GAMES };
+  check('every route opens a game its module knows (the word games, or "name that")',
+    Object.values(ROUTES).every((r) => (gamesOf[r.topic] || []).includes(r.payload.game)),
     JSON.stringify(Object.values(ROUTES).map((r) => [r.topic, r.payload])));
+  check('*** “play name that animal / state / person” are routes to the name-that game ***',
+    routeFor('play name that animal') === 'play-name-animal' && routeFor('name that state') === 'play-name-state'
+      && routeFor('play name that person') === 'play-name-person'
+      && ['animal', 'state', 'person'].every((g) => ROUTES[`play-name-${g}`]?.topic === 'name_that/play'
+        && ROUTES[`play-name-${g}`]?.payload?.game === g));
   check('no route id is also a verb id (they share the control names)',
     Object.keys(ROUTES).every((id) => !(id in PHRASES)));
   {
@@ -1211,7 +1239,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   }
   check('each route is an action carrying its payload, for the host to register',
     SPEECH_ACTIONS.length === Object.keys(ROUTES).length
-      && SPEECH_ACTIONS.every((a) => a.id === routeAction(a.id.slice('speech/'.length)) && a.topic === WG_PLAY && a.payload?.game),
+      && SPEECH_ACTIONS.every((a) => a.id === routeAction(a.id.slice('speech/'.length)) && !!gamesOf[a.topic] && a.payload?.game),
     JSON.stringify(SPEECH_ACTIONS));
   check('...with one ordinary binding each', ROUTE_BINDINGS.length === SPEECH_ACTIONS.length
     && ROUTE_BINDINGS.every((b) => b.device === SPEECH_DEVICE && b.edge === 'press' && SPEECH_ACTIONS.some((a) => a.id === b.actionId)));
