@@ -27,7 +27,7 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createPush } from './push.js';
 import { createProfilesClient } from './profile.js';
-import { mountModule } from './module.js';
+import { mountModule, extendCtx } from './module.js';
 import { createOutputBus } from './output.js';
 import { createAudioBus } from './audio_bus.js';
 import { createCameraOwner } from './camera_owner.js';
@@ -49,7 +49,7 @@ import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS, isTyping } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
-import { createCallTransport } from './call_transport.js';
+import { createCallTransport, CALL_TRANSPORT_READY } from './call_transport.js';
 import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
          restartItems } from './restart.js';
 import { takePreviewLayout } from './preview.js';
@@ -357,7 +357,7 @@ export async function mountKiosk(root, {
   // *** DECLARED HERE, NOT WHERE THEY ARE ASSIGNED, AND THIS IS THE SECOND TIME. ***
   //
   // `childCtx` hands modules a `get callTransport()` that reads both of these. A getter runs
-  // whenever a module is mounted, and the first mount happens well before the async person
+  // whenever a module reads it -- at mount, for call.js -- and the first mount happens well before the async person
   // lookup further down builds them — so with `let` sitting beside the assignment, the getter
   // hit the temporal dead zone and threw `Cannot access 'callTransport' before initialization`
   // on the very first mount. Not a null, not a warning: the whole kiosk failed to start.
@@ -595,7 +595,10 @@ export async function mountKiosk(root, {
   async function mountInstance(mod, host) {
     const state = stateFor(mod.id);
     const events = eventsFor(mod.id);
-    const instance = mountModule(mod.type, { mount: host, state, events, ...childCtx(mod) });
+    // `extendCtx`, NOT `{ ..., ...childCtx(mod) }`: a spread reads every getter on `childCtx` once and
+    // hands the module the value it had at this instant, which is exactly what the getters exist to
+    // avoid (a call panel mounted before the drive socket kept a null transport for good). 2026-09-30.
+    const instance = mountModule(mod.type, extendCtx(childCtx(mod), { mount: host, state, events }));
     await state.load().catch(() => {});
     await events.load().catch(() => {});
     // THIS PANEL'S OWN `panelSurface`, read off the SAME state row the module's own settings
@@ -1660,6 +1663,10 @@ export async function mountKiosk(root, {
   //
   // This is the half that was missing. Modules were never the problem: a module subscribes
   // to `photos/next` on its scoped bus and has no idea a switch exists, which is exactly
+        // A call transport can exist from now on (`childCtx`'s getter builds it from `drive`). The
+        // panels mounted before this moment -- usually all of them -- are told, so a call panel that
+        // found no transport at mount binds to it now instead of never ringing. 2026-09-30.
+        if (!torn) bus.publish(CALL_TRANSPORT_READY);
   // why the same module runs here, on the home page, or anywhere else. What did not exist
   // was anybody CONSTRUCTING the device half on this surface — so a person's switch drove
   // the binder on a clinician's laptop and nothing at all on the screen they actually use.

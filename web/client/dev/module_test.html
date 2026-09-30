@@ -240,6 +240,41 @@ try {
       !threw && ran);
   }
 
+  section('*** a getter on the host’s ctx stays LIVE inside the module (found 2026-09-30) ***');
+  {
+    // kiosk.js hands modules `personId`, `output`, `callTransport` and `aim` as GETTERS, so a module
+    // mounted before the value exists sees it when it arrives. But `mountModule` built the module's
+    // ctx with an object spread, and a spread READS a getter once and stores the value: a module
+    // mounted early kept null forever. The call panel is the one that matters: no transport, no ring.
+    const type = uniqueType('live-getters');
+    let seen = null;
+    registerModule({ type, title: 'Live' }, (ctx) => { seen = ctx; return {}; });
+    let pid = null, transport = null, reads = 0;
+    const hostBus = createBus();
+    mountModule(type, {
+      mount: document.createElement('div'), bus: hostBus,
+      get personId() { return pid; },
+      get callTransport() { reads++; return transport; },
+    });
+    check('(setup) mounted with both still null', seen && seen.personId === null && seen.callTransport === null);
+    pid = 'person-late'; transport = { name: 'the transport' };
+    check('*** the module sees a personId that arrived AFTER it mounted ***', seen.personId === 'person-late',
+      String(seen.personId));
+    check('*** ...and a call transport that arrived after it mounted ***', seen.callTransport === transport,
+      String(seen.callTransport));
+    const before = reads;
+    void seen.callTransport; void seen.callTransport;
+    check('...read through the host’s getter every time, not a copy', reads === before + 2);
+    check('the module still gets its OWN scoped bus, not the host’s',
+      seen.bus !== hostBus && typeof seen.bus.subscribe === 'function');
+    const { personId: destructured } = seen;
+    check('a module that destructures ctx at mount still gets a plain value (unchanged behaviour)',
+      destructured === 'person-late');
+    const copy = { ...seen };
+    check('a spread of the module’s ctx still has every key (a container that spreads ctx for a child)',
+      'personId' in copy && 'callTransport' in copy && 'bus' in copy);
+  }
+
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

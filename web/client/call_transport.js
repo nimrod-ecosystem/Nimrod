@@ -130,6 +130,15 @@ export function gatheringDone(pc, { timeoutMs = GATHER_TIMEOUT_MS, setTimer = se
 }
 
 /**
+ * *** PUBLISHED BY THE SCREEN WHEN A TRANSPORT CAN EXIST. *** (2026-09-30.) The kiosk builds its one
+ * transport lazily from the drive socket, and the socket only opens once the background person
+ * lookup finishes -- usually AFTER the panels have mounted. A call panel that looked once, at mount,
+ * found nothing and never looked again: it could not ring. The kiosk publishes this the moment the
+ * socket is attached, and `modules/call.js` binds to `ctx.callTransport` when it hears it.
+ */
+export const CALL_TRANSPORT_READY = 'call/transport-ready';
+
+/**
  * The transport.
  *
  * Implements exactly what `modules/call.js` asks for — `onIncoming`, `answer`, `hangup`,
@@ -270,8 +279,11 @@ export function createCallTransport({
 
   return {
     // What `modules/call.js` calls, and nothing else is part of the contract.
-    onIncoming(cb) { incomingCb = cb; },
-    onEnded(cb) { endedCb = cb; },
+    // Each returns a way to let go that only lets go of ITS OWN callback. The transport belongs to
+    // the screen and outlives any one call panel; a panel that leaves must not deafen the one that
+    // replaced it (a swap may mount the new screen before destroying the old). 2026-09-30.
+    onIncoming(cb) { incomingCb = cb; return () => { if (incomingCb === cb) incomingCb = null; }; },
+    onEnded(cb) { endedCb = cb; return () => { if (endedCb === cb) endedCb = null; }; },
 
     /**
      * Answer the offer that is waiting. `outgoing` is the camera track the module already

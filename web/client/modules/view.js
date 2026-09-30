@@ -90,7 +90,7 @@
 // is `watch`ed, a swapped one `forget`-ed), `ctx.storage` (where the one-at-a-time stage remembers its
 // position), `ctx.embedded` (true: no links runner -- a preview is not a screen).
 
-import { registerModule, mountModule } from '../module.js';
+import { registerModule, mountModule, extendCtx } from '../module.js';
 import { createArrangement } from '../arrangement.js';
 
 // The same defaults the kiosk has always used, so a view mounted from an existing
@@ -179,10 +179,12 @@ registerModule(
     async function mountChild(def, host) {
       const state = childState(def.id);
       const events = childEvents(def.id);
-      const instance = mountModule(def.type, {
-        ...ctx, ...childMakes, mount: host, bus: rootBus, state, events,
+      // `extendCtx`, not a spread: the host's getters (`personId`, `callTransport`, `aim`...) stay
+      // getters for the child, so a child mounted before a value arrives still sees it. 2026-09-30.
+      const instance = mountModule(def.type, extendCtx(ctx, {
+        ...childMakes, mount: host, bus: rootBus, state, events,
         profileId: viewId, instanceId: def.id,
-      });
+      }));
       await state?.load?.().catch(() => {});
       await events?.load?.().catch(() => {});
       // THIS PANEL'S OWN BACKGROUND (`instancePanelSurface`), the same reserved key on the panel's own
