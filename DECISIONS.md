@@ -1893,3 +1893,58 @@ so many words anywhere yet, and should be, before the port needs an answer.
 **Port order: dependency-based, not Mike's own priority list.** Both existed as candidates in
 `docs/from_chat/work_order_consolidation_and_new_core_20260911.md`; Mike picked chat's
 dependency-ordered sequence over his own priority-ordered one, 2026-09-17.
+
+## The room is the screen: the bar, menu and editors are modules PLACED in a dashboard; free placement is back; three prebuilt dashboards; "scene" means the backdrop -- 2026-09-30
+
+Mike's rulings (change list rows 2.33 and 2.34; `docs/from_chat/room_as_home_20260930.md` in the
+private repo holds his full words and chat's notes). Logged by Code at his request.
+
+**SUPERSEDES, from the 2026-09-11 entry above (left as written):** *"The transport bar and the
+settings menu live high up, in the core, never drawn by a module."* And, from the step 6 plan
+(`docs/for_chat/step6_dashboard_module_plan_20260929.md`, private): *"Dropped: Dockview/free tiling."*
+
+**Mike, 2026-09-30:** *"They are modules. They're not being drawn by a module. They're being placed in
+the dashboard. The room or whatever scene (fall, winter, castle, farm, steampunk, whatever else we think
+of) you want is a dashboard. The dashboard itself is a type of module though. It's a container module
+though."* On free placement: *"Bring it back."* On chat's reconciliation (the plain bar is always one
+hotkey or long switch press away): *"That sounds good."*
+
+So:
+1. The transport bar, the settings menu and the edit menus are **modules placed in a dashboard**. A
+   dashboard is a **container module** (the 2026-09-17 entry: no separate "kiosk" layer).
+2. **The 2026-09-11 reason survives by a different route.** That ruling kept the controls in the core so
+   a broken module could never take them away. Now: **the plain bar is always one hotkey, or one long
+   switch press, away** (the key and the press length are settings), whatever the dashboard places or
+   fails to place.
+3. **Free placement is back.** The room fills the screen; any module can live in the scene, snap to the
+   screen, or overlay (pin to screen); alignment, grid, snapping, rotation, typed transforms,
+   copy/paste/duplicate hotkeys, layer depths and text effects are wanted (row 2.33).
+
+**Row 2.34, Mike, 2026-09-30:** *"We should just have multiple prebuilt dashboards. The room being one.
+Another being just a very basic like the original Nimrod theme. Another being like what we currently
+have before rooms. The 2d with options for transparency and live backgrounds. Maybe have a dashboard
+select part in the transport bar where you can jump between them. Make it so you can swap and
+add/remove modules easily. I think all of the scene objects are really modules too. Have the option to
+make them buttons and maybe be able to label them or have displays on them where applicable. I guess
+that kind of makes the state machine/node/module editor just some edit windows you can open in any
+dashboard/module."*
+
+So:
+4. **Three prebuilt dashboards** to start: the room; a very basic one like the original Nimrod theme;
+   today's 2D dashboard (panel transparency, live backgrounds).
+5. A **dashboard picker in the transport bar** jumps between them; swapping, adding and removing modules
+   is easy.
+6. **Every scene object is a module**, with options to be a button, carry a label, or carry a display.
+7. The state-machine, node and module **editors are edit windows** that open in any dashboard or module.
+8. **Follows from 4 (Code, flagged):** each dashboard carries its own theme, so the step 6 plan's
+   question 3 answer ("theme from the outermost dashboard only, for now") becomes per-dashboard themes.
+
+**"Scene" -- settled by Code at chat's request (row 2.34), revisable.** `docs/glossary.md` reserved
+"scene" for the Home-Assistant sense (one command setting many things across many devices) -- never
+built. Mike uses "scene" for the backdrop a dashboard sits in (fall, winter, castle, farm, a room), and
+so do the live themes (`livescene.js`) and Design's rooms. The word goes to **the backdrop**; the unbuilt
+Home-Assistant idea is renamed **"preset"**. Why this way round: the person using the site already says
+"scene" for the backdrop, and a word a user already uses one way cannot be reserved for another; the
+Home-Assistant sense has no code and no user yet, so renaming it costs nothing. The glossary is updated
+to match.
+
