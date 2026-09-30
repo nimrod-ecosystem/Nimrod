@@ -27,7 +27,8 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createPush } from './push.js';
 import { createProfilesClient } from './profile.js';
-import { mountModule, extendCtx } from './module.js';
+import { mountModule, extendCtx, getManifest } from './module.js';
+import { createAutomation } from './automation.js';
 import { createOutputBus } from './output.js';
 import { createAudioBus } from './audio_bus.js';
 import { createCameraOwner } from './camera_owner.js';
@@ -768,6 +769,13 @@ export async function mountKiosk(root, {
   const eventsFor = (key, opts = {}) => (makeEvents
     ? makeEvents(key, opts, profileId)
     : createEvents({ url: profiles.eventsURL(profileId, key), user, push, ...opts }));
+  // ROW 2.41: any numeric setting can be driven by an input. Bindings are the screen's (settings
+  // `automations`); the values they drive are an in-memory layer over each panel's own state
+  // (automation.js). `settings` is only read inside the callback, long after it exists.
+  const automation = createAutomation({
+    bus,
+    onChange: (list) => { try { settings.set({ automations: list }); } catch (err) { console.error('kiosk: automations save', err); } },
+  });
 
   const childCtx = (mod) => ({
     bus, user, profileId,
@@ -824,6 +832,7 @@ export async function mountKiosk(root, {
     // panel mounted mid-session can start under her hand instead of blank.
     get aim() { return runtime?.aim || null; },
     cameraOwner,
+    automation,
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
@@ -850,7 +859,7 @@ export async function mountKiosk(root, {
   });
 
   async function mountInstance(mod, host) {
-    const state = stateFor(mod.id);
+    const state = automation.wrapState(mod.id, stateFor(mod.id), { manifest: getManifest(mod.type) });
     const events = eventsFor(mod.id);
     // `extendCtx`, NOT `{ ..., ...childCtx(mod) }`: a spread reads every getter on `childCtx` once and
     // hands the module the value it had at this instant, which is exactly what the getters exist to
@@ -883,6 +892,7 @@ export async function mountKiosk(root, {
 
   // ---- per-profile settings: theme + the kiosk LAYOUT (data-driven) --------
   const settings = stateFor('settings');
+  settings.subscribe((s) => { try { automation.load(s?.automations || []); } catch (err) { console.error('kiosk: automations', err); } });
   // ---- THE ARRANGEMENT: what is on this screen, and where (step 6 of the port, Stage 1) ------
   //
   // Resolving and partitioning the layout, the HUD overlays, the slots and the one-at-a-time stage,
@@ -2714,6 +2724,7 @@ export async function mountKiosk(root, {
     misses: () => missStore,
     subtitles: () => subtitles,
     amplifier: () => amplifier,
+    automation: () => automation,
     phoneMic: () => phoneRx,
     micPill: () => micPill,
     // Nimrod on the bar: explain what is picked, as the bar's button does.
@@ -2739,6 +2750,7 @@ export async function mountKiosk(root, {
       clearBurnIn();
       clearInterval(recoveryTimer);
       health.destroy();
+      try { automation.destroy(); } catch { /* already gone */ }
       try { offLinks?.(); } catch { /* already gone */ }
       // The dashboard module first: it tears down its own panels and its own arrangement. After it is
       // gone `arr` forwards to this file's own, which has nothing mounted on that path.
