@@ -47,6 +47,8 @@
 //   ctx.instanceId  REQUIRED and must be a real, non-empty value - every module is an instance of
 //                   something, and per-instance state/events keying depends on this existing
 
+import { readWithLegacy } from './settings_fields.js';
+
 const registry = new Map(); // type -> { manifest, factory }
 
 export function registerModule(manifest, factory) {
@@ -58,6 +60,75 @@ export function registerModule(manifest, factory) {
 
 export function getManifest(type) { return registry.get(type)?.manifest; }
 export function listManifests() { return [...registry.values()].map((e) => e.manifest); }
+
+// ---------------------------------------------------------------------------------------
+// *** A NEW PANEL STARTS FROM A SIBLING, FOR THE KEYS ITS MODULE NAMES. ***
+//
+// Mike, 2026-09-29, on the photos interval: *"keep it per panel, copy from existing."* The
+// setting stays PER PANEL - two photos panels on one screen may still run at different speeds -
+// but a NEW photos panel on a screen that already has one starts at that one's interval rather
+// than at the module default, because the value somebody already chose on this screen is a
+// better guess than the value nobody chose.
+//
+//   manifest.copyFromSibling   [key, ...]   the keys a NEW instance copies, once, at creation,
+//                                           from an existing instance of the SAME TYPE on the
+//                                           SAME SCREEN (the lowest-positioned one that has a
+//                                           stored value). Absent = nothing is copied, which is
+//                                           every module but photos today.
+//
+// WHY A DECLARED LIST AND NOT A PHOTOS SPECIAL CASE: YouTube (and anything else with a pace or a
+// look) will want the same, and the answer should be one line in its own manifest, not another
+// branch in whoever creates panels. WHY ONLY THE SAME SCREEN: "which of this account's other
+// screens is the one to copy" has no good answer (the bedside screen and a grandchild's tablet
+// are both "existing"), and Mike wants the per-panel vs account-wide question settled with the
+// prefab/instance design, not decided here by accident. WHY ONLY AT CREATION: it is a starting
+// value, not a link - change either panel afterwards and the other does not follow.
+//
+// Only a STORED value is copied. A sibling still on the default has nothing to hand on, and the
+// new panel gets the (same) default by the ordinary route. An old key the declared setting
+// migrated from (`legacy: { key, scale }`) is read through `readWithLegacy`, the one reader of
+// it, so a sibling that still holds `intervalSec` hands on the right number of milliseconds.
+//
+// `makeState(key)` returns a state handle (`load`/`get`/`set`/`flush`/`destroy`) for one
+// instance on this screen - `state.js` signed in, `local_store.js` signed out. Called by both
+// profile clients' `addModule`, which is the one door every new panel comes through on either
+// backend. NEVER THROWS: a copy that fails leaves the new panel on its default, and a panel
+// that exists is worth more than a panel that failed to be created over a starting value.
+// ---------------------------------------------------------------------------------------
+export async function seedFromSibling({ type, newId, siblings = [], makeState }) {
+  try {
+    const manifest = getManifest(type);
+    const keys = Array.isArray(manifest?.copyFromSibling) ? manifest.copyFromSibling : [];
+    if (!keys.length || typeof makeState !== 'function' || !newId) return null;
+    let decls = manifest.settings;
+    if (typeof decls === 'function') { try { decls = decls(); } catch { decls = []; } }
+    const legacyOf = (key) => {
+      const lg = (Array.isArray(decls) ? decls : []).find((d) => d && d.key === key)?.legacy;
+      return lg && typeof lg.key === 'string' ? { key: lg.key, scale: Number(lg.scale) || 1 } : null;
+    };
+    const read = (values, key) => readWithLegacy(values, key, legacyOf(key));
+    const others = (siblings || []).filter((m) => m && m.type === type && m.id !== newId)
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    for (const sib of others) {
+      let values = {};
+      const h = makeState(sib.id);
+      try { await h.load(); values = h.get() || {}; } catch { values = {}; } finally { h.destroy?.(); }
+      const patch = {};
+      for (const key of keys) { const v = read(values, key); if (v !== undefined) patch[key] = v; }
+      if (!Object.keys(patch).length) continue;
+      const mine = makeState(newId);
+      try {
+        await mine.load().catch(() => {});
+        mine.set(patch);
+        await mine.flush?.();
+      } finally { mine.destroy?.(); }
+      return { from: sib.id, patch };
+    }
+  } catch (err) {
+    console.error(`seedFromSibling(${type})`, err);
+  }
+  return null;
+}
 
 /**
  * *** A MODULE MUST FIT THE BOX IT IS GIVEN, AND RE-FIT WHEN THAT BOX CHANGES. ***

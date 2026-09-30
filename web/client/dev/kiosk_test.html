@@ -319,7 +319,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
         !!byId['set:intervalMs'] && !!byId['set:fit'], rows.map((r) => r.id).join(','));
       check('a field row STORES milliseconds and SHOWS seconds — the house rule for every '
         + 'duration, so one number is comparable and the other is readable',
-        byId['set:intervalMs'].hint === '8 seconds', byId['set:intervalMs'].hint);
+        // 15, the default since 2026-09-29 (Mike: "8 seconds is too short for the default").
+        byId['set:intervalMs'].hint === '15 seconds', byId['set:intervalMs'].hint);
       check('a choice row shows the LABEL, never the raw enum key',
         byId['set:fit'].hint === 'Show the whole photo', byId['set:fit'].hint);
 
@@ -369,10 +370,10 @@ const ds = () => root.querySelector('.kiosk').dataset;
         walk.push(kiosk.menu.items().find((i2) => i2.id === 'set:intervalMs').hint);
       }
       check('one lap of the interval is FIVE presses and every value is on it',
-        walk.join(',') === '15 seconds,30 seconds,60 seconds,4 seconds,8 seconds',
+        walk.join(',') === '30 seconds,60 seconds,4 seconds,8 seconds,15 seconds',
         walk.join(' | '));
       check('and it comes home, so nobody is stranded past the end',
-        walk[walk.length - 1] === '8 seconds', walk.join(' | '));
+        walk[walk.length - 1] === '15 seconds', walk.join(' | '));
 
       // WHAT TYPE ACTUALLY LANDED IN STORAGE. A menu that displays "8 seconds" while storing
       // the string "8" is a menu that looks right and cannot be compared - and comparing is
@@ -383,8 +384,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('the value written by the menu is the DECLARED type, not the DOM\u2019s',
         typeof stored.intervalMs === 'number',
         `${typeof stored.intervalMs} ${JSON.stringify(stored.intervalMs)}`);
-      check('STORAGE IS MILLISECONDS while the row said "8 seconds" — the whole point of the '
-        + 'unit rule in one assertion', stored.intervalMs === 8000,
+      check('STORAGE IS MILLISECONDS while the row said "15 seconds" — the whole point of the '
+        + 'unit rule in one assertion', stored.intervalMs === 15000,
         JSON.stringify(stored.intervalMs));
       check('and the OLD key is not being written any more — one release from now its read '
         + 'goes away, and anything still holding it falls back to the default rather than to '

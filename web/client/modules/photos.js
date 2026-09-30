@@ -39,7 +39,10 @@ import { pick, statsFromEvents } from '../rng.js';
 // filling the gap (the common photo-frame convention); dropped now that themes are a
 // real, live per-account choice this session built out — a plain themed fill sits behind
 // every photo consistently, instead of each one growing its own soft-focus background.
-const DEFAULTS = { sourceId: '', album: '', intervalMs: 8000, fit: 'contain' };
+// `intervalMs` 15 s BY DEFAULT, not 8 (Mike, 2026-09-29: "8 seconds is too short for the
+// default though. Make it 15."). A default only: a panel with a stored choice keeps it, and 8
+// is still one of the options for anybody who wants it.
+const DEFAULTS = { sourceId: '', album: '', intervalMs: 15000, fit: 'contain' };
 // How long a video may go without reporting progress before the slideshow moves on. It is
 // NOT `intervalMs` — that is how long a still photo is shown, and a video is allowed to be
 // much longer than that. Fifteen seconds of a video that is supposedly playing saying
@@ -76,7 +79,7 @@ const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 
 // otherwise. This one says otherwise because the album is a pick over LIVE data owned in Media /
 // Sources - typing a name here that the source does not have would be a way to break the panel.
 const SETTINGS = [
-  { key: 'intervalMs', label: 'Change photo every', kind: 'choice', default: 8000,
+  { key: 'intervalMs', label: 'Change photo every', kind: 'choice', default: DEFAULTS.intervalMs,
     level: 'essential',
     legacy: { key: 'intervalSec', scale: 1000 },
     options: [
@@ -152,7 +155,11 @@ registerModule(
     // question is what the thing does. The argument still exists where it belongs, in the
     // catalog's `why` on the parts page.
     description: 'Their own photos, on a loop. Reads them straight off your machine.',
-    importance: 'critical', dependsOn: 'local', settings: SETTINGS },
+    importance: 'critical', dependsOn: 'local', settings: SETTINGS,
+    // A new photos panel starts at the interval of one already on the same screen (Mike,
+    // 2026-09-29: "keep it per panel, copy from existing"). Only the interval, and only once,
+    // at creation - see module.js `seedFromSibling`.
+    copyFromSibling: ['intervalMs'] },
   (ctx) => {
     const { mount, bus, state, events, user } = ctx;
     // `ctx.sources` is injectable so a page can supply its own registry — signed out, the
@@ -193,6 +200,27 @@ registerModule(
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
     const videoStallMs = () => Number(ctx.videoStallMs ?? VIDEO_STALL_MS);
+
+    // *** WHICH SLIDESHOW A "NEXT" CAME FROM. *** (Mike, 2026-09-29: "Setting photos to 30
+    // seconds doesn't seem to work now.")
+    //
+    // Every module on a screen is handed a SCOPE of the screen's one bus, and a scope's
+    // `publish` is the root bus's own - so the bare `photos/next` this module publishes when
+    // ITS timer runs out reaches EVERY photos panel on the screen, and each of them obeyed it.
+    // Measured on the real kiosk, two photos panels on one grid: the panel set to 30 seconds
+    // changed every 8 seconds, on the other panel's clock. The setting was stored and read
+    // correctly the whole time; something else was pressing "next" for it. The arrow under a
+    // photo did the same, twice over: both panels bound the same source name, so one press
+    // fanned out through both bindings and advanced every photos panel twice.
+    //
+    // So what this module publishes FOR ITSELF - its timer, the end of a video, the stall
+    // watchdog, its own arrows - carries this tag in `meta`, and a tagged message from another
+    // slideshow is not this one's to act on. The topic stays bare on purpose: `health.js`
+    // counts it as the heartbeat. An UNTAGGED next - a switch, a voice command, a test, the
+    // verb router's instance-addressed alias - still reaches whoever it always reached.
+    const ownTag = `photos:${ctx.instanceId || Math.random().toString(36).slice(2)}`;
+    const OWN = { slideshow: ownTag };
+    const isMine = (meta) => !meta || !meta.slideshow || meta.slideshow === ownTag;
     let lastSourceRef = null;       // to reload only when sourceId/album change
     // The account's sources, cached from the listing call `reload` already makes. THE MENU
     // PAINTS SYNCHRONOUSLY, so `settingsChoices` cannot go to the network: a row that waits
@@ -262,7 +290,7 @@ registerModule(
       stallMs: videoStallMs,
       retries: 1,
       onRetry: () => { try { currentVideo?.play?.().catch(() => {}); } catch { /* gone */ } },
-      onGiveUp: () => { bus.publish('photos/next'); },
+      onGiveUp: () => { bus.publish('photos/next', undefined, OWN); },
     });
 
     function clearAdvance() {
@@ -279,7 +307,7 @@ registerModule(
       // from a group-apply that has not been validated yet, must not turn the slideshow into
       // a strobe in front of somebody with a brain injury.
       const ms = Math.max(2000, Number(cfg.intervalMs) || DEFAULTS.intervalMs);
-      advanceTimer = setTimer(() => bus.publish('photos/next'), ms);
+      advanceTimer = setTimer(() => bus.publish('photos/next', undefined, OWN), ms);
     }
 
     function render(item) {
@@ -293,9 +321,9 @@ registerModule(
         // rotation is wallpaper; `modules/personal.js` is where a voice is the point.
         el.src = item.url; el.muted = true; el.autoplay = true; el.playsInline = true;
         currentVideo = el;
-        const onEnded = () => { videoStall.disarm(); bus.publish('photos/next'); };
+        const onEnded = () => { videoStall.disarm(); bus.publish('photos/next', undefined, OWN); };
         // An explicit failure needs no waiting out: move on now.
-        const onError = () => { videoStall.disarm(); bus.publish('photos/next'); };
+        const onError = () => { videoStall.disarm(); bus.publish('photos/next', undefined, OWN); };
         const onBeat = () => videoStall.beat();
         el.addEventListener('ended', onEnded);
         el.addEventListener('error', onError);
@@ -560,15 +588,19 @@ registerModule(
           </div>`;
 
         // the module's two sinks — any source pointed at these topics drives it
-        bus.subscribe('photos/next', () => advance());
-        bus.subscribe('photos/prev', () => prev());
+        // ...but not a next another slideshow sent itself (see `ownTag` above).
+        bus.subscribe('photos/next', (_p, _t, meta) => { if (isMine(meta)) advance(); });
+        bus.subscribe('photos/prev', (_p, _t, meta) => { if (isMine(meta)) prev(); });
 
-        // its own buttons are just another source
-        const nav = bus.createSource('photos-nav');
-        bus.addBinding({ source: 'photos-nav', signal: 'next', topic: 'photos/next' });
-        bus.addBinding({ source: 'photos-nav', signal: 'prev', topic: 'photos/prev' });
-        mount.querySelector('[data-next]').addEventListener('click', () => nav.emit('next'));
-        mount.querySelector('[data-prev]').addEventListener('click', () => nav.emit('prev'));
+        // its own buttons are just another source - ONE PER PANEL. Bindings live on the
+        // screen's shared bus, so a source name two panels both bind fans a single press out
+        // through both bindings.
+        const navName = `photos-nav:${ownTag}`;
+        const nav = bus.createSource(navName);
+        bus.addBinding({ source: navName, signal: 'next', topic: 'photos/next' });
+        bus.addBinding({ source: navName, signal: 'prev', topic: 'photos/prev' });
+        mount.querySelector('[data-next]').addEventListener('click', () => nav.emit('next', undefined, OWN));
+        mount.querySelector('[data-prev]').addEventListener('click', () => nav.emit('prev', undefined, OWN));
 
         mount.querySelector('[data-gear]').addEventListener('click', () => {
           const s = mount.querySelector('[data-settings]');
@@ -595,6 +627,7 @@ registerModule(
           // seconds-to-milliseconds migration, the type coercion and the option matching in
           // one line - and it is what guarantees the module and the settings menu are looking
           // at the same number rather than two readings of the same storage.
+          const wasInterval = cfg.intervalMs;
           cfg = { ...DEFAULTS, ...s };
           for (const f of Object.values(FIELDS)) cfg[f.key] = fieldValue(f, s || {});
           syncControls();
@@ -608,12 +641,27 @@ registerModule(
           // the backdrop, leaving bare letterbox bars until the next photo happened to load.
           // Re-rendering is the only thing that gets both the fit and the backdrop right,
           // and it is cheap - the bytes are already in cache.
-          else if (currentId && byId[currentId]) render(byId[currentId]);
+          else if (currentId && byId[currentId]) {
+            const item = byId[currentId];
+            // A NEW INTERVAL APPLIES TO THE PHOTO ON SCREEN, not only from the next one. The
+            // timer already running was armed with the old value, so picking 30 seconds while
+            // a photo had 60 to go left that photo up for the full minute - the choice looked
+            // ignored for exactly as long as somebody was watching to see if it worked. The
+            // photo on screen now gets the new interval, counted from the change. Videos keep
+            // running to their own end, as they always have.
+            if (cfg.intervalMs !== wasInterval && advanceTimer && item.kind !== 'video') {
+              scheduleAdvance(item);
+            }
+            render(item);
+          }
         });
       },
       onResize() {},
       onHide() { videoStall.disarm(); state.flush(); },
-      destroy() { clearAdvance(); },
+      // `loadSeq` moves on so a listing still in flight lands on nothing: without it a panel
+      // destroyed mid-load (a remount, a screen swapped in place) went on to show a photo and
+      // arm a timer after it was gone.
+      destroy() { loadSeq += 1; clearAdvance(); },
 
       // LIVE OPTIONS for a declared field. The manifest stays static - it is the contract, and
       // a modules tab will want to read it off a module that is not even running - while the
