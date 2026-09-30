@@ -253,7 +253,17 @@ export function createHealthWatch({ bus, now = () => Date.now() } = {}) {
       // MODULE_VERBS already relies on that.
       for (const topic of [`${prefix}/next`, `${prefix}/prev`, `${prefix}/shown`,
                            `${prefix}/state`, 'segment/done', 'segment/progress']) {
-        offs.push(bus.subscribe(topic, () => beat(id)));
+        offs.push(bus.subscribe(topic, (payload, _topic, meta) => {
+          // *** A MESSAGE THAT NAMES ITS PANEL IS THAT PANEL'S HEARTBEAT ONLY (2026-09-29). ***
+          // Two photos panels on one screen used to count each other's `photos/next`, so a
+          // frozen slideshow beside a working one never looked frozen. photos.js now tags its
+          // own advances (`meta.slideshow = 'photos:<panel id>'`); a tag naming another panel
+          // is not this one's pulse. An untagged message (a switch, the verb router) still
+          // counts for every panel of the type, as before.
+          const owner = meta && (meta.panel || meta.slideshow);
+          if (owner && owner !== id && owner !== `${type}:${id}`) return;
+          beat(id);
+        }));
       }
     }
     return rec;

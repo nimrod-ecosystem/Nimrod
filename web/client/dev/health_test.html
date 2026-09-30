@@ -195,6 +195,25 @@ section('the watch — no module had to change');
   w.destroy();
   check('destroy releases the subscriptions', (bus.publish('photos/next'), w.panels().length === 0));
 }
+{
+  // 2026-09-29: TWO PHOTOS PANELS ON ONE SCREEN. photos.js tags its own advances with
+  // `meta.slideshow = 'photos:<id>'`; a tagged beat belongs to the panel it names only, so a
+  // frozen slideshow beside a working one is still seen as frozen.
+  const bus = createBus();
+  let t = T0;
+  const w = createHealthWatch({ bus, now: () => t });
+  w.watch('a', 'photos'); w.watch('b', 'photos');
+  const seen = (id) => w.panels().find((p) => p.id === id).lastSeenAt;
+  t += 1000;
+  bus.publish('photos/next', undefined, { slideshow: 'photos:a' });
+  check('*** a tagged advance is a heartbeat for ITS panel ***', seen('a') === t);
+  check('*** ...and NOT for the other photos panel (it could be frozen) ***', seen('b') === 0, String(seen('b')));
+  t += 1000;
+  bus.publish('photos/next');
+  check('an untagged next (a switch, the verb router) still counts for every photos panel',
+    seen('a') === t && seen('b') === t);
+  w.destroy();
+}
 
 {
   // A heartbeat for a panel nobody is watching must not throw or invent one.
