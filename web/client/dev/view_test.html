@@ -38,6 +38,7 @@ import '../modules/photos.js';
 import '../modules/clock.js';
 import '../modules/camera.js';
 import '../modules/wordforge.js';
+import '../modules/ambient_drift.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -78,6 +79,48 @@ function mountView(viewId, arrangement, { seed = {}, bus = createBus() } = {}) {
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
   });
   return { host, inst, impl: inst.impl || inst, bus, stores };
+}
+
+// ---- Stage 2 helpers: a store that COUNTS (opened / polling / destroyed) and replays on subscribe,
+// the way state.js does once loaded -- the kiosk's per-panel background subscription relies on that.
+const BOOM = 'boom_view_test';
+registerModule({ type: BOOM, title: 'Boom', settings: [] },
+  () => ({ init() { throw new Error('will not start'); }, destroy() {} }));
+function makeCounted(seed = {}) {
+  const n = { opened: {}, polling: {}, destroyed: {} };
+  const bump = (k, key) => { n[k][key] = (n[k][key] || 0) + 1; };
+  const makeState = (key, opts, forPid) => {
+    const k = `${forPid}:${key}`;
+    bump('opened', k);
+    let data = (seed[forPid] || {})[key] || {};
+    const subs = new Set();
+    return { load: () => Promise.resolve(), get: () => data,
+             set: (p) => { data = { ...data, ...p }; subs.forEach((f) => f(data)); return Promise.resolve(); },
+             subscribe: (f) => { subs.add(f); f(data); return () => subs.delete(f); },
+             startPolling() { bump('polling', k); }, destroy() { bump('destroyed', k); } };
+  };
+  const makeEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }),
+                              append: () => Promise.resolve(), subscribe: () => () => {},
+                              startPolling() {}, destroy() {} });
+  return { makeState, makeEvents,
+           opened: (k) => n.opened[k] || 0, polling: (k) => n.polling[k] || 0, destroyed: (k) => n.destroyed[k] || 0 };
+}
+function mountCounted(viewId, arrangement, stores, extra = {}) {
+  const host = document.createElement('div');
+  document.getElementById('host').append(host);
+  const bus = createBus();
+  const inst = mountModule('view', {
+    mount: host, bus, rootBus: bus, viewId, arrangement, user: 'u',
+    makeState: stores.makeState, makeEvents: stores.makeEvents,
+    // Every real host supplies the key (kiosk.js's childCtx); `core: 'new'` modules such as
+    // ambient_drift refuse to mount without it, and the view passes its ctx down to its children.
+    personId: null,
+    storage: { getItem: () => null, setItem() {}, removeItem() {} },
+    state: { get: () => ({}), set: () => Promise.resolve(), subscribe: () => () => {},
+             load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+    ...extra,
+  });
+  return { host, inst, impl: inst.impl || inst, bus };
 }
 
 const GRID = {
@@ -228,6 +271,85 @@ const PLAIN = {
         + 'at is indistinguishable from a crash ***',
         /could not be loaded/i.test(host.textContent), host.textContent.slice(0, 80));
       inst.destroy();
+    }
+
+    // ---- STEP 6 STAGE 2 (2026-09-30): the view is a thin module over arrangement.js ------------
+    // Everything below was a thing the kiosk's own copy did and this one did not (the step 6 plan's
+    // list), plus the settings-handle leak. Written before the change and watched failing on it.
+    section('*** stage 2: destroy() closes the view’s own settings handle (it polled forever) ***');
+    {
+      const s = makeCounted({ call: { settings: { kiosk: {} } } });
+      const r = mountCounted('call', GRID, s);
+      r.inst.init();
+      await sleep(300);
+      check('(setup) the settings handle was opened and is polling',
+        // >= 1, not 1: a child (the camera) opens the same row for itself, and closes its own.
+        s.opened('call:settings') >= 1 && s.polling('call:settings') >= 1,
+        `opened=${s.opened('call:settings')} polling=${s.polling('call:settings')} destroyed=${s.destroyed('call:settings')}`);
+      r.inst.destroy();
+      check('*** after destroy it is closed, not left polling a view that is gone ***',
+        s.destroyed('call:settings') === s.opened('call:settings'),
+        `opened=${s.opened('call:settings')} destroyed=${s.destroyed('call:settings')}`);
+    }
+
+    section('stage 2: what the kiosk’s copy did and this one did not');
+    {
+      const AMB = { id: 'amb', modules: [{ id: 'a-photos', type: 'photos' }, { id: 'a-drift', type: 'ambient_drift' }] };
+      const r = mountCounted('amb', AMB, makeCounted());
+      r.inst.init();
+      await sleep(300);
+      check('*** an ambient module is mounted in the ambient layer, not dropped ***',
+        !!r.host.querySelector('.k-ambient .k-mod') && r.host.querySelector('.k-ambient').hidden === false);
+      r.inst.destroy();
+    }
+    {
+      const L = { id: 'lay', modules: [{ id: 'l-word', type: 'wordforge' }, { id: 'l-boom', type: BOOM },
+                                        { id: 'l-photos', type: 'photos' }] };
+      const watched = [];
+      const s = makeCounted({ lay: { settings: { kiosk: { layout: { preset: 'side', slots: ['l-word', 'l-boom'] } } },
+                                     'l-word': { instancePanelSurface: 'veil' } } });
+      const r = mountCounted('lay', L, s, { health: { watch: (id, type) => watched.push(`${id}:${type}`), forget() {} } });
+      r.inst.init();
+      await sleep(300);
+      const c0 = r.host.querySelector('.k-cell[data-slot="0"]');
+      check('*** cells are named by slot and by kind (a positional selector breaks silently) ***',
+        c0?.dataset.kind === 'wordforge' && r.host.querySelector('.k-cell[data-slot="1"]')?.dataset.kind === BOOM);
+      check('a panel that will not start says so in its own cell, and the other still mounts',
+        !!r.host.querySelector(`[data-panel-failed="${BOOM}"]`) && !!r.host.querySelector('.k-cell .wordforge'));
+      check('*** a panel’s own background setting reaches its host (per-instance panelSurface) ***',
+        c0?.querySelector('.k-mod')?.dataset.panelSurface === 'veil', c0?.innerHTML.slice(0, 120));
+      check('*** every panel it mounts is handed to the host’s health watch ***',
+        watched.includes('l-word:wordforge'), JSON.stringify(watched));
+
+      const impl = r.impl;
+      check('*** it declares itself a container ***', impl.container === true);
+      const changes = [];
+      const off = impl.onChange?.(() => changes.push(1));
+      check('focusRing lists the mounted panels', (impl.focusRing?.() || []).map((m) => m.id).join() === 'l-word',
+        JSON.stringify(impl.focusRing?.()));
+      check('focused() starts on the first panel', impl.focused?.()?.id === 'l-word', JSON.stringify(impl.focused?.()));
+      check('modules() is the arrangement’s module list',
+        (impl.modules?.() || []).map((m) => m.id).join() === 'l-word,l-boom,l-photos');
+      const brought = await impl.bring?.('photos');
+      check('*** bring(type) puts an UNPLACED module into the focused slot (G9) ***',
+        brought === true && !!r.host.querySelector('.k-cell[data-slot="0"] .photos'));
+      check('...and tells whoever is listening (the bar will be)', changes.length > 0);
+      check('remount(id) remounts a panel', (await impl.remount?.('l-photos')) === true);
+      check('swap(id, type) puts another type in its place', (await impl.swap?.('l-photos', 'clock')) === true
+        && !!r.host.querySelector('.k-cell[data-slot="0"] .clock'));
+      off?.();
+      r.inst.destroy();
+    }
+    {
+      const ALLBAD = { id: 'bad', modules: [{ id: 'b1', type: BOOM }] };
+      const r = mountCounted('bad', ALLBAD,
+        makeCounted({ bad: { settings: { kiosk: { layout: { preset: 'full', slots: ['b1'] } } } } }));
+      r.inst.init();
+      await sleep(300);
+      const e = r.host.querySelector('[data-empty]');
+      check('*** a view where nothing could start says so, in the middle, rather than a blank grid ***',
+        !!e && /could start/.test(e.textContent), e?.textContent);
+      r.inst.destroy();
     }
 
     document.getElementById('summary').textContent =

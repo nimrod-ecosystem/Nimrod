@@ -584,6 +584,9 @@ export function createArrangement({
     clockRec: () => clockRec,
     ambientRec: () => ambientRec,
     screenLinks,                       // null on an embed, or never built
+    // What `partition()` decided would be the HUD, before anything mounts (Stage 2: view.js's pure
+    // `partition` export answers from this rather than keeping a second copy of the rule).
+    hudDefs: () => ({ camera: cameraDef, clock: clockDef, ambient: ambientDef }),
     // ---- changing what is on the screen ----
     setProfile(next) { profile = next; },
     resolve,
