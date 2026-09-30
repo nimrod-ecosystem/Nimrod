@@ -1346,6 +1346,60 @@ try {
     inst.destroy();
   }
 
+  // =====================================================================================
+  section('*** the press ring is rate-limited to the flash limit; the press still counts ***');
+  {
+    const { worstInAnySecond } = await import('../flash_limit.js');
+    const { PRESS_RING_MS } = await import('../modules/board.js');
+    // Taps every `gap` ms for ten seconds, alternating two cards or on one. Sample the ring every
+    // 5 ms and count RISING edges (a ring lighting = one flash onset), per closed second.
+    const tapRun = (L, gap, alternate) => {
+      const host = document.getElementById('host');
+      const clock = fakeClock();
+      const said = [];
+      const inst = mountModule('board', {
+        mount: host, bus: createBus(), events: fakeEvents(), state: fakeState({ boardId: 'yesno' }),
+        output: { say: (t) => said.push(t) }, speak: () => {},
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now,
+        ...(L !== undefined ? { flashLimitPerSecond: () => L } : {}),
+      });
+      inst.init();
+      const cards = () => host.querySelectorAll('.ab-card');
+      const lit = () => [...cards()].some((c) => c.classList.contains('ab-press'));
+      const onsets = []; let was = false, taps = 0;
+      for (let t = 0; t <= 10000; t += 5) {
+        if (t % gap === 0) {
+          cards()[alternate ? taps % 2 : 0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+          taps++;
+        }
+        const now = lit();
+        if (now && !was) onsets.push(clock.now());
+        was = now;
+        clock.advance(5);
+      }
+      const stuck = [...cards()].filter((c) => c.classList.contains('ab-press')).length;
+      clock.advance(2000);
+      const after = [...cards()].filter((c) => c.classList.contains('ab-press')).length;
+      inst.destroy();
+      return { worst: worstInAnySecond(onsets), onsets, taps, said: said.length, stuck, after };
+    };
+    for (const L of [3, 1]) {
+      for (const [gap, alt] of [[250, false], [250, true], [100, true], [400, false]]) {
+        const r = tapRun(L, gap, alt);
+        check(`limit ${L}, a tap every ${gap} ms${alt ? ' on two cards' : ''}: worst second ${r.worst} (<= ${L}), every tap spoken`,
+          r.worst <= L && r.worst >= 1 && r.said === r.taps, `${r.said}/${r.taps} spoken, onsets ${r.onsets.slice(0, 6)}`);
+        check(`...and no ring is left on afterwards`, r.after === 0 && r.stuck <= 1);
+      }
+    }
+    const def = tapRun(undefined, 250, true);
+    check('*** a host with no limit gets 3 a second at most ***', def.worst <= 3 && def.said === def.taps);
+    // A tap slower than the floor is untouched: every tap lights the ring.
+    const slow = tapRun(3, 1500, false);
+    check('*** a tap every 1.5 s lights the ring every time (normal use unchanged) ***',
+      slow.onsets.length === slow.taps, `${slow.onsets.length}/${slow.taps}`);
+    check('the ring is shorter than the shortest flash period', PRESS_RING_MS < 339);
+  }
+
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

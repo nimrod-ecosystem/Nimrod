@@ -64,6 +64,7 @@ import { cardFaceHTML, createCardImages } from '../card_face.js';
 import { mountBoardEditor, blankBoard } from '../board_editor.js';
 import { speak as speakDefault } from '../voice.js';
 import { mountScene, listScenes, listOverlays } from '../livescene.js';
+import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 import { SYMBOL_SETS, setForTheme, symbolSet, pickSymbol, symbolUrl, themeIdFromRoot,
          parseColour, setHas, setColours, drawingContrast, SYMBOL_MIN_CONTRAST } from '../aac_sets.js';
 import { showChoiceCard, createChoiceMemory, CHOICE_TIMEOUT_MS } from '../choice_card.js';
@@ -120,6 +121,9 @@ const CUSTOM_ID = 'custom';
 const BOARD_LABELS = { yesno: 'Yes / No / Other', core: 'Core words (36)',
                        care: 'Care board (example)' };
 export const SELECT_KIND = 'select';           // the durable record's event kind
+// How long a pressed card's ring stays on. Shorter than the shortest flash period (339 ms at 3 a
+// second), so the ring is always dark again before the flash limit lets it light once more.
+export const PRESS_RING_MS = 200;
 
 const DEFAULTS = {
   // *** THE DEFAULT IS THE 16-CARD BOARD, NOT YES / NO / OTHER. ***
@@ -512,6 +516,8 @@ registerModule(
     const listen = (target, type, fn, opts) =>
       target.addEventListener(type, fn, { ...(opts || {}), signal: gone.signal });
     let pressTimer = null;
+    let pressEl = null;       // the card whose ring is on, so a new press can turn it off
+    let lastFlashAt = null;   // when the ring last LIT - the flash limit counts from here
     let ro = null;
     // An aim is resting on the card at `lit`. Separate from `scan` because the two are
     // different reasons for the same highlight, and a screen can have both.
@@ -852,12 +858,23 @@ registerModule(
       if (scan) scan.select();
     }
 
+    // *** THE PRESS STILL COUNTS; ONLY THE FLASH IS RATE-LIMITED. *** (Photosensitivity audit,
+    // 2026-09-30.) Somebody tapping four times a second made the card ring light and go dark four
+    // times a second - over the screen's flash limit. The choice above is spoken, published and
+    // logged every time; only the ring's re-lighting waits for `minFlashPeriodMs(flashLimit(ctx))`
+    // since the last one (339 ms at 3 a second, 1017 ms at 1). It also fixes a stale ring: a
+    // second card pressed inside 200 ms used to leave the first card's ring on for good.
     function flash(i) {
       const b = cardEls[i];
       if (!b) return;
-      b.classList.add('ab-press');
+      const t = now();
+      if (lastFlashAt != null && t - lastFlashAt < minFlashPeriodMs(flashLimit(ctx))) return;
+      lastFlashAt = t;
       if (pressTimer != null) clearTimer(pressTimer);
-      pressTimer = setTimer(() => { pressTimer = null; b.classList.remove('ab-press'); }, 200);
+      if (pressEl && pressEl !== b) pressEl.classList.remove('ab-press');
+      pressEl = b;
+      b.classList.add('ab-press');
+      pressTimer = setTimer(() => { pressTimer = null; b.classList.remove('ab-press'); }, PRESS_RING_MS);
     }
 
     // ------------------------------------------------------------------------------------
@@ -887,6 +904,7 @@ registerModule(
         settings: () => ({ stepMs: cfg.stepMs, pauseMs: cfg.pauseMs, restart: 'first' }),
         onStep: (i) => { lit = i; litAt = now(); paint(); },
         setTimer, clearTimer,
+        flashLimit: () => flashLimit(ctx),   // the step floor (input_scan.js scanStepFloorMs)
       });
       scan.start();
     }
@@ -920,7 +938,7 @@ registerModule(
         .concat(cfg.weather && cfg.weather !== 'none' && cfg.weather !== 'live' ? [cfg.weather] : []);
       if (want && sceneId && surf) {
         if (boardScene) boardScene.set({ scene: sceneId, overlays });
-        else boardScene = mountScene(surf, { scene: sceneId, overlays });
+        else boardScene = mountScene(surf, { scene: sceneId, overlays, flashLimit: () => flashLimit(ctx) });
         // A panel-level scene brings its own board tokens, so the cards match the world they
         // sit on even when the screen's own theme is something else.
         for (const [k, v] of Object.entries(boardScene.tokens || {})) {

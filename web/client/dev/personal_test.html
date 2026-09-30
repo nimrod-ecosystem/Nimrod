@@ -101,6 +101,56 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     host.remove();
   }
 
+  // *** A FOLDER OF BROKEN CLIPS MUST NOT SPIN (flash-limit audit, 2026-09-30). *** No agent
+  // needed: a fake source, a listing of clips that really fail to load (real `error` events), and
+  // fake time. Every failure used to hand back and advance AT ONCE.
+  {
+    const { worstInAnySecond, failureBackoffMs } = await import('../flash_limit.js');
+    for (const L of [3, 1]) {
+      const host = document.createElement('div');
+      document.body.append(host);
+      let fakeNow = 5_000_000; const timers = [], shows = [], dones = [];
+      let cfg = { sourceId: 's1', autoAdvance: true };
+      const source = { id: 's1', label: 'broken', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+      const bus = createBus();
+      bus.subscribe('segment/done', (p) => dones.push({ t: fakeNow, reason: p?.reason }));
+      const inst = mountModule('personal', {
+        mount: host, bus, state: { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; }, subscribe: (f) => { f(cfg); return () => {}; }, flush() {} },
+        events: { append: (k) => { if (k === 'play') shows.push(fakeNow); return Promise.resolve(); }, subscribe() {}, load: () => Promise.resolve() },
+        user: 'personal-test-broken', profileId: 'p',
+        sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+        resolveListing: async () => ({ items: [1, 2, 3, 4].map((i) => ({ id: 'b' + i, path: 'b' + i + '.mp4', name: 'b' + i, kind: 'video', url: 'data:,broken' + i })), albums: [], album: '' }),
+        setTimer: (fn, ms) => { const t = { fn, ms, at: fakeNow + ms, live: true }; timers.push(t); return t; },
+        clearTimer: (t) => { if (t) t.live = false; },
+        now: () => fakeNow, flashLimitPerSecond: () => L, progressMs: 1e9,
+      });
+      inst.init();
+      await sleep(150);
+      // Fire only the failure waits (the stall watchdog and progress tick are far longer).
+      const waits = () => timers.filter((t) => t.live && t.ms <= 30000);
+      for (let k = 0; k < 12; k++) {
+        await sleep(60);
+        const t = waits().sort((a, b) => a.at - b.at)[0];
+        if (t) { fakeNow = t.at; t.live = false; t.fn(); }
+      }
+      const rel = shows.map((t) => t - shows[0]);
+      const gaps = rel.slice(1).map((t, i) => t - rel[i]);
+      const worst = worstInAnySecond(rel);
+      check(`limit ${L}: a folder of broken clips - ${shows.length} shown, worst second ${worst} (<= ${L}), gaps ${gaps.join(',')}`,
+        shows.length >= 5 && worst <= L && gaps[0] >= failureBackoffMs(1, L) && gaps.slice(1).every((g, i) => g >= gaps[i]),
+        JSON.stringify(gaps));
+      check('...every failure still hands back to a director (segment/done error), each at the moment it moved on',
+        dones.filter((d) => d.reason === 'error').length >= shows.length - 1);
+      // A clip that PLAYED (five seconds) and ended is handed back at that same instant, as before.
+      const b = shows.length, d0 = dones.length;
+      fakeNow += 5000;
+      host.querySelector('video')?.dispatchEvent(new Event('ended'));
+      check(`limit ${L}: a clip that played and ended moves on at once (normal timing unchanged)`,
+        shows.length === b + 1 && shows.at(-1) === fakeNow && dones.slice(d0).some((x) => x.reason === 'ended' && x.t === fakeNow));
+      inst.destroy(); host.remove();
+    }
+  }
+
   // *** PREFLIGHT: the API half needs an agent, and "cannot run" must not print as "failed". ***
   // Without this, seven assertions about a real video from a real agent failed on 2026-09-06 for
   // the single reason that nothing was listening on 8771. The control presses above need no
@@ -155,7 +205,9 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     const before = vidSrc(host);
     const segBefore = segDone.length;
     vid(host).dispatchEvent(new Event('ended'));
-    await sleep(30);
+    // 400, not 30: this clip appeared ~20 ms ago, and a clip that "ends" inside one flash period
+    // (339 ms) of appearing is treated as a broken file and held that long (FAILURE BACKOFF).
+    await sleep(400);
     check('clip ENDED emits segment/done{provider:personal}', segDone.length > segBefore && segDone[segDone.length - 1]?.provider === 'personal',
       JSON.stringify(segDone[segDone.length - 1] || null));
     check('standalone (autoAdvance) advances to the next clip on ended', vidSrc(host) !== before || seen.size === 2, `before=${before} now=${vidSrc(host)}`);

@@ -14,6 +14,7 @@
 import { registerModule } from '../module.js';
 import { mountScene, listScenes, listOverlays } from '../livescene.js';
 import { followWeather } from '../live_weather.js';
+import { flashLimit } from '../flash_limit.js';
 
 const DEFAULTS = { scene: 'theme', motion: 'gentle', weather: 'none' };
 
@@ -60,6 +61,8 @@ registerModule(
     const opts = () => ({
       scene: cfg.scene === 'theme' ? themeScene() : cfg.scene,
       motion: cfg.motion,
+      // The screen's flash limit (flash_limit.js), read on every render so a changed setting lands.
+      flashLimit: () => flashLimit(ctx),
       overlays: [
         cfg.weather === 'live' ? liveKey : (cfg.weather !== 'none' ? cfg.weather : null),
         ...listOverlays().filter((o) => o.group !== 'weather' && cfg[o.value]).map((o) => o.value),

@@ -842,6 +842,53 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       vinst.destroy(); stv.destroy(); evv.destroy(); vhost.remove();
     }
 
+    // ── A POOL WHERE EVERY VIDEO FAILS MUST NOT SPIN (flash-limit audit, 2026-09-30) ──────
+    // A player error used to hand back and advance AT ONCE: a pool of removed / region-blocked
+    // videos was replaced one after another as fast as the API refused them. Fake time; the stub
+    // player errors synchronously the moment it is asked to load, the worst case.
+    {
+      const { worstInAnySecond, failureBackoffMs } = await import('../flash_limit.js');
+      for (const L of [3, 1]) {
+        const pb = await profiles.create(`TEST-youtube-broken-${L}`);
+        const mb = await profiles.addModule(pb.id, 'youtube');
+        const stb = createState({ url: profiles.stateURL(pb.id, mb.id), user: USER });
+        const evb = createEvents({ url: profiles.eventsURL(pb.id, mb.id), user: USER });
+        await stb.load(); await evb.load();
+        stb.set({ playlist: PLAYLIST, autoAdvance: true });
+        await stb.flush();
+        let fakeNow = 9_000_000; const timers = [], loads = [], dones = [];
+        let h = {};
+        const factory = (el, handlers) => { h = handlers || {};
+          return { load: (id) => { loads.push(fakeNow); queueMicrotask(() => h.onError?.(150)); }, cueList() {}, stop() {}, destroy() {} }; };
+        const bb = createBus();
+        bb.subscribe('segment/done', (p) => dones.push({ t: fakeNow, reason: p?.reason }));
+        const hb = document.createElement('div'); document.body.append(hb);
+        const ib = mountModule('youtube', {
+          mount: hb, bus: bb, state: stb, events: evb, user: USER, profileId: pb.id, playerFactory: factory,
+          setTimer: (fn, ms) => { const t = { fn, ms, at: fakeNow + ms, live: true }; timers.push(t); return t; },
+          clearTimer: (t) => { if (t) t.live = false; },
+          now: () => fakeNow, flashLimitPerSecond: () => L,
+        });
+        ib.init();
+        await sleep(80);
+        // Fire only the failure waits (<= 30 s); the watchdog/poll/schedule clocks are left alone.
+        for (let k = 0; k < 10; k++) {
+          await sleep(5);
+          const t = timers.filter((x) => x.live && x.ms <= 30000 && x.ms !== 60000).sort((a, b) => a.at - b.at)[0];
+          if (!t) break;
+          fakeNow = t.at; t.live = false; t.fn();
+        }
+        const rel = loads.map((t) => t - loads[0]);
+        const gaps = rel.slice(1).map((t, i) => t - rel[i]);
+        const worst = worstInAnySecond(rel);
+        check(`limit ${L}: a pool where every video fails - ${loads.length} asked for, worst second ${worst} (<= ${L}), gaps ${gaps.join(',')}`,
+          loads.length >= 5 && worst <= L && gaps[0] >= failureBackoffMs(1, L) && gaps.slice(1).every((g, i) => g >= gaps[i]),
+          JSON.stringify(gaps));
+        check('...each failure still reaches the director as segment/done error', dones.filter((d) => d.reason === 'error').length >= loads.length - 1);
+        ib.destroy(); stb.destroy(); evb.destroy(); hb.remove();
+      }
+    }
+
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));
   }

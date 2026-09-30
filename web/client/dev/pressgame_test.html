@@ -716,6 +716,54 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
         /already matches/i.test(body.textContent) && !body.querySelector('[data-apply]'), body.textContent);
     }
 
+    // ================= photosensitivity: the spark bloom =================
+    section('*** the spark bloom is rate-limited to the flash limit; every press still counts ***');
+    {
+      const { worstInAnySecond } = await import('../flash_limit.js');
+      // Presses every `gap` ms for ten seconds of sim time in the WAIT phase (each is a commission
+      // and asks for a bloom), frames of 16 ms. Count bursts per closed second.
+      const mash = (L, gap) => {
+        const r = rig({ waitMs: 60000, calm: false }, null, L !== undefined ? { flashLimitPerSecond: () => L } : {});
+        r.impl.__step(16);
+        let pressed = 0;
+        for (let t = 0; t < 10000; t += 16) {
+          if (Math.floor(t / gap) !== Math.floor((t - 16) / gap)) { r.impl.__press('verb'); pressed++; }
+          r.impl.__step(16);
+        }
+        const p = r.impl.__probe();
+        const commissions = rowsOf(r.appended, 'commission').length;
+        r.inst.destroy();
+        return { worst: worstInAnySecond(p.blooms), n: p.blooms.length, pressed, commissions, phase: p.phase };
+      };
+      for (const L of [3, 1]) {
+        for (const gap of [100, 250]) {
+          const m = mash(L, gap);
+          check(`limit ${L}, a press every ${gap} ms: worst second ${m.worst} bursts (<= ${L}); ${m.commissions}/${m.pressed} presses recorded`,
+            m.worst <= L && m.worst >= 1 && m.commissions === m.pressed && m.phase === 'wait', JSON.stringify(m));
+        }
+      }
+      const d = mash(undefined, 100);
+      check('*** a host with no limit gets 3 bursts a second at most ***', d.worst <= 3 && d.commissions === d.pressed);
+      // Normal pace: a press every 1.5 s blooms every time, the same instant as before.
+      const slow = mash(3, 1500);
+      check('*** a press every 1.5 s bursts every time (normal play unchanged) ***', slow.n === slow.pressed,
+        JSON.stringify(slow));
+      // DEFERRED, NOT DROPPED: the hit's payoff fires; an echo right after it waits its turn.
+      const r = rig({ waitMs: 4000 }, null, { flashLimitPerSecond: () => 1 });
+      r.impl.__step(4000); r.impl.__step(16);
+      r.impl.__press('verb');                          // the hit: bursts now
+      const hitAt = r.impl.__probe().simT;
+      r.impl.__step(50); r.impl.__press('verb');      // an echo 50 ms later: deferred
+      const mid = r.impl.__probe();
+      check('the hit bursts at once', mid.blooms.includes(hitAt) && mid.pendingBloom > 0, JSON.stringify(mid.blooms));
+      for (let i = 0; i < 80; i++) r.impl.__step(16);
+      const end = r.impl.__probe();
+      check('*** the deferred burst fires once the period is up (never dropped), >= 1017 ms after the hit ***',
+        end.pendingBloom === 0 && end.blooms.length === mid.blooms.length + 1
+        && end.blooms[end.blooms.length - 1] - hitAt >= 1016.6, JSON.stringify(end.blooms));
+      r.inst.destroy();
+    }
+
     // ================= teardown =================
     section('teardown');
     {

@@ -63,6 +63,8 @@
 // because a caregiver watching the count go up is real information, but nothing here acts on
 // it. A scanner that runs all afternoon and is never answered is behaving correctly.
 
+import { FLASH_LIMIT_DEFAULT, normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
+
 export const SCAN_DEFAULTS = {
   // See the header. Carried from a real deployment, and it is not a UI default.
   stepMs: 15000,
@@ -76,6 +78,25 @@ export const SCAN_DEFAULTS = {
 };
 
 export const RESTARTS = ['first', 'here'];
+
+// ---------------------------------------------------------------------------------------
+// THE STEP FLOOR (photosensitivity audit, 2026-09-30)
+// ---------------------------------------------------------------------------------------
+//
+// Each step lights one option and darkens another: a flash. `stepMs` had no floor at all - a
+// hand-edited row or a host passing 50 moved the highlight twenty times a second. The floor is
+// `minFlashPeriodMs(limit)` rounded up: 339 ms at 3 a second, 1017 ms at 1.
+//
+// WHY NOT HIGHER (say 500 ms, or a second, "nobody can use a scan that fast"): true, and the
+// board's own menu already starts at 5 seconds. But how fast is too fast to USE is a person's
+// setting, not this file's safety floor - and a second hard-coded number here would be a UI
+// preference dressed as a safety rule (CLAUDE.md, porting rule 1). The floor is the one number
+// that is not a preference: what the screen may flash. WHY NOT LOWER: then it is not a floor.
+// `next()` (a second switch) is NOT floored - that is the person's own press, and dropping it
+// would break the switch; `pauseMs` is a one-off hold after a choice, not a repeat.
+export function scanStepFloorMs(limit = FLASH_LIMIT_DEFAULT) {
+  return Math.ceil(minFlashPeriodMs(limit));
+}
 
 /**
  * The scan loop.
@@ -94,6 +115,7 @@ export function createScan({
   onSelect = null,        // (item, index) — somebody chose
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
+  flashLimit = FLASH_LIMIT_DEFAULT,   // the screen's flash limit: a number or a getter (flash_limit.js)
 } = {}) {
   let list = [...items];
   let idx = 0;
@@ -103,10 +125,16 @@ export function createScan({
   let running = false;
   let destroyed = false;
 
+  const limitNow = () => {
+    try { return normalizeFlashLimit(typeof flashLimit === 'function' ? flashLimit() : flashLimit); }
+    catch { return normalizeFlashLimit(undefined); }
+  };
   const cfg = () => {
     const s = { ...SCAN_DEFAULTS, ...(settings() || {}) };
     if (!RESTARTS.includes(s.restart)) s.restart = SCAN_DEFAULTS.restart;
     s.stepMs = Math.max(0, Number(s.stepMs) || 0) || SCAN_DEFAULTS.stepMs;
+    // The floor (see STEP FLOOR above): never faster than the screen's flash limit allows.
+    s.stepMs = Math.max(s.stepMs, scanStepFloorMs(limitNow()));
     s.pauseMs = Math.max(0, Number(s.pauseMs) || 0);
     return s;
   };

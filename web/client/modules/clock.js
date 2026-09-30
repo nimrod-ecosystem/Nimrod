@@ -26,6 +26,18 @@
 // a mode to a different module. Recorded in NOTES_FROM_CODE.md rather than resolved here.
 
 import { registerModule } from '../module.js';
+import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
+
+// *** THE ALERT PULSE AND THE FLASH LIMIT (photosensitivity audit, 2026-09-30). *** The finished
+// timer's number pulses (opacity 1 > .3 > 1): one flash a period. Design's period is one second;
+// it never goes faster than that, and it goes SLOWER when the screen's limit asks - at 1 a second
+// a 1000 ms pulse puts two onsets in one closed second, so it becomes minFlashPeriodMs(1), 1017 ms.
+// And it sits behind `prefers-reduced-motion`: the status line ("Time's up") and the chime still
+// carry the alert for somebody who asked for no movement.
+export const ALERT_PULSE_DESIGN_MS = 1000;
+export function alertPulseMs(limit) {
+  return Math.max(ALERT_PULSE_DESIGN_MS, Math.ceil(minFlashPeriodMs(limit)));
+}
 
 const DEFAULTS = {
   hour12: true, seconds: false, showDate: true, size: 'm', tz: '',
@@ -436,6 +448,9 @@ registerModule(
         toggleBtn.setAttribute('aria-pressed', running ? 'true' : 'false');
         const alerted = nowMs < alertUntil;
         root.dataset.alerted = alerted ? '1' : '0';
+        // The pulse's period follows the screen's flash limit (read now, so a changed setting lands).
+        const pulse = `${alertPulseMs(flashLimit(ctx))}ms`;
+        if (root.style.getPropertyValue('--clock-pulse') !== pulse) root.style.setProperty('--clock-pulse', pulse);
         mount.querySelector('[data-cd-status]').textContent =
           alerted ? (alertKind === 'timer' ? "Time's up" : `${pomoPhase === 'work' ? 'Work' : 'Break'} time`)
           : '';
@@ -532,7 +547,9 @@ registerModule(
           .clock .cd-value{font-weight:800;color:var(--text-strong);font-variant-numeric:tabular-nums;
             font-size:clamp(2.2rem, 12cqw, 4.6rem); line-height:1}
           .clock .cd-status{min-height:1.3em;font-size:1rem;font-weight:700;color:var(--accent-warm-deep, #a85f52)}
-          .clock[data-alerted="1"] .cd-value{animation:clockAlertPulse 1s ease-in-out infinite}
+          @media (prefers-reduced-motion: no-preference){
+            .clock[data-alerted="1"] .cd-value{animation:clockAlertPulse var(--clock-pulse, ${ALERT_PULSE_DESIGN_MS}ms) ease-in-out infinite}
+          }
           @keyframes clockAlertPulse{0%,100%{opacity:1}50%{opacity:.3}}
           .clock .cd-controls{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
           .clock .cd-controls button{min-width:120px;min-height:64px;font-size:1.15rem;font-weight:700;

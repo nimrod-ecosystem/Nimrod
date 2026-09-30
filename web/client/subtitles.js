@@ -78,6 +78,12 @@
 //     kiosk: the browser's own recogniser (which sends the room's sound to the browser's maker) ALSO
 //     writes lines, marked as online. It never drives a command.
 
+import { FLASH_LIMIT_DEFAULT, normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
+
+// How long a corrected word's outline lasts: subtitles.css `.subs-fixed { animation: subs-fix 1.2s }`.
+// The two must agree (the suite reads the stylesheet and checks).
+export const SUBS_FIX_MS = 1200;
+
 export const SUBTITLE_SIZES = Object.freeze({
   large: 'clamp(24px, 4.4vmin, 64px)',
   larger: 'clamp(30px, 5.6vmin, 80px)',
@@ -357,8 +363,13 @@ export function createSubtitles(host, {
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
+  flashLimit = FLASH_LIMIT_DEFAULT,   // the screen's flash limit (flash_limit.js): a number or a getter
 } = {}) {
   if (!host || !doc) throw new Error('createSubtitles: a host element is required');
+  const limitNow = () => {
+    try { return normalizeFlashLimit(typeof flashLimit === 'function' ? flashLimit() : flashLimit); }
+    catch { return FLASH_LIMIT_DEFAULT; }
+  };
   ensureStyles(doc);
   let opts = subtitlesOptionsFrom(settings);
   let seq = 0;
@@ -429,6 +440,25 @@ export function createSubtitles(host, {
     place();
   }
 
+  // *** OUTLINE: ONE FLASH PER FLASH PERIOD, NOT ONE PER RECOGNISER PASS. *** (Photosensitivity
+  // audit, 2026-09-30.) A corrected word gets a brief outline (subtitles.css `subs-fixed`, 1.2 s).
+  // A recogniser can correct a line several times a second, and every redraw RESTARTED the outline
+  // - a new flash each pass. Now a new outline starts only when `minFlashPeriodMs(flashLimit)` has
+  // passed since the last one began on that line (339 ms at 3, 1017 ms at 1). A correction inside
+  // that window is outlined at the RUNNING outline's phase (a negative animation-delay), so the word
+  // is still marked and nothing restarts. Which words are outlined is unchanged (the ones this pass
+  // changed); the words themselves are corrected at once either way.
+  function outlineFor(line) {
+    const words = new Set((line.pieces || []).map((pc, i) => (pc.changed ? i : -1)).filter((i) => i >= 0));
+    if (!words.size) return { words, intoMs: 0 };
+    const t = now();
+    const since = line.fixAt == null ? Infinity : t - line.fixAt;
+    if (since < minFlashPeriodMs(limitNow())) return { words, intoMs: since };
+    line.fixAt = t;
+    line.fixCount = (line.fixCount || 0) + 1;
+    return { words, intoMs: 0 };
+  }
+
   // The inside of a line: who, the words (unsure ones marked), and what another ear heard.
   function fill(p, line, { fresh = false } = {}) {
     p.className = `subs-line subs-${line.who.kind}${line.partial ? ' subs-partial' : ''}`
@@ -440,12 +470,17 @@ export function createSubtitles(host, {
     who.textContent = `${line.who.label}:`;
     const said = doc.createElement('span');
     said.className = 'subs-text';
+    // The corrected-word outline, rate-limited (see OUTLINE, below): which words carry it on this
+    // draw, and how far into its fade it already is (0 = a new outline, one flash onset).
+    const fix = fresh ? null : outlineFor(line);
     if (line.pieces && line.pieces.length) {
       line.pieces.forEach((pc, i) => {
         if (i) said.append(' ');
-        if (!pc.low && !(pc.changed && !fresh)) { said.append(pc.w); return; }
+        const fixed = !!fix && fix.words.has(i);
+        if (!pc.low && !fixed) { said.append(pc.w); return; }
         const s = doc.createElement('span');
-        s.className = `${pc.low ? 'subs-low' : ''}${pc.changed && !fresh ? ' subs-fixed' : ''}`.trim();
+        s.className = `${pc.low ? 'subs-low' : ''}${fixed ? ' subs-fixed' : ''}`.trim();
+        if (fixed && fix.intoMs > 0) s.style.animationDelay = `-${Math.round(fix.intoMs)}ms`;
         // The mark is also said in words, for a screen reader and for anybody who cannot see a
         // dotted line: "not sure".
         if (pc.low) s.title = 'not sure';

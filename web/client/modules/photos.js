@@ -27,6 +27,7 @@ import { normalizeField, fieldValue } from '../settings_fields.js';
 import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
 import { createWatchdog } from '../watchdog.js';
 import { pick, statsFromEvents } from '../rng.js';
+import { flashLimit, minFlashPeriodMs, failureBackoffMs } from '../flash_limit.js';
 
 // `fit: contain` — SHOW THE WHOLE PHOTO. It defaulted to `cover`, which crops to fill:
 // a 1200x800 photo in a 775x423 panel lost 18% of its height, off the top and bottom,
@@ -213,6 +214,10 @@ registerModule(
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
     const videoStallMs = () => Number(ctx.videoStallMs ?? VIDEO_STALL_MS);
+    // Only the failure backoff reads this clock; the slideshow's own timing does not.
+    const now = ctx.now || (() => Date.now());
+    let failStreak = 0;             // items in a row that failed (FAILURE BACKOFF)
+    let lastShownAt = 0;            // when the item on screen appeared
 
     // *** WHICH SLIDESHOW A "NEXT" CAME FROM. *** (Mike, 2026-09-29: "Setting photos to 30
     // seconds doesn't seem to work now.")
@@ -323,7 +328,24 @@ registerModule(
       advanceTimer = setTimer(() => bus.publish('photos/next', undefined, OWN), ms);
     }
 
+    // *** FAILURE BACKOFF (photosensitivity audit, 2026-09-30). *** A failed item used to move on
+    // at once, so a folder where EVERY clip is broken replaced one with the next as fast as the
+    // browser could fail them. Now the n-th failure in a row stays up `failureBackoffMs(n, limit)`
+    // from when it appeared (one flash period, then 2 s doubling to 30 s). Held on `advanceTimer`,
+    // so a person's own next (the arrow, a switch) still moves on at once and cancels the wait.
+    // PHOTOS AND WORKING CLIPS ARE UNTOUCHED: the photo timer is not involved, and the streak resets
+    // the moment a photo is shown or a clip plays through.
+    function failedItem() {
+      failStreak += 1;
+      const wait = Math.max(0, failureBackoffMs(failStreak, flashLimit(ctx)) - (now() - lastShownAt));
+      if (!wait) { bus.publish('photos/next', undefined, OWN); return; }
+      if (advanceTimer) clearTimer(advanceTimer);
+      advanceTimer = setTimer(() => { advanceTimer = null; bus.publish('photos/next', undefined, OWN); }, wait);
+    }
+
     function render(item) {
+      lastShownAt = now();
+      if (item.kind !== 'video') failStreak = 0;   // a photo is shown for its interval: the run is over
       const st = stage();
       if (!st) return;
       st.innerHTML = '';
@@ -334,9 +356,18 @@ registerModule(
         // rotation is wallpaper; `modules/personal.js` is where a voice is the point.
         el.src = item.url; el.muted = true; el.autoplay = true; el.playsInline = true;
         currentVideo = el;
-        const onEnded = () => { videoStall.disarm(); bus.publish('photos/next', undefined, OWN); };
-        // An explicit failure needs no waiting out: move on now.
-        const onError = () => { videoStall.disarm(); bus.publish('photos/next', undefined, OWN); };
+        const shownAt = now();
+        // A clip that plays through to its end moves on at once, exactly as it always did. One
+        // that ENDS inside one flash period of appearing (a zero-length or truncated file) is
+        // treated like an error - see failedItem. A one-second Live Photo still plays normally.
+        const onEnded = () => {
+          videoStall.disarm();
+          if (now() - shownAt >= minFlashPeriodMs(flashLimit(ctx))) { failStreak = 0; bus.publish('photos/next', undefined, OWN); }
+          else failedItem();
+        };
+        // An explicit failure moves on after one flash period; a RUN of them backs off
+        // (flash_limit.js failureBackoffMs), so a folder of broken clips cannot spin.
+        const onError = () => { videoStall.disarm(); failedItem(); };
         const onBeat = () => videoStall.beat();
         el.addEventListener('ended', onEnded);
         el.addEventListener('error', onError);

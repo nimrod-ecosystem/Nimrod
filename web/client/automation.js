@@ -166,6 +166,33 @@ export function lfoMinPeriodMs(limit = FLASH_LIMIT_MAX, tickMs = AUTOMATION_DEFA
   return Math.max(LFO_MIN_PERIOD_MS, minFlashPeriodMs(limit, { jitterMs }));
 }
 
+// *** THE EVENT FLOOR: A BUS, LINK OR VERB SOURCE MOVES A SETTING AT MOST ONCE A FLASH PERIOD. ***
+// (Photosensitivity audit, 2026-09-30.) `minIntervalMs` defaults to 0, so a flapping sensor on a
+// colour or a lightness flashed as fast as it flapped - the LFO had a floor, the event sources had
+// none. Now on every bus/link/verb binding a REVERSAL of direction (or the first move from rest) -
+// the thing that makes a flash, WCAG's "pair of opposing changes" - lands at most once every
+// `minFlashPeriodMs(limit)` (339 ms at 3, 1017 ms at 1), latest value wins. A change in the same
+// direction is never held: a ramp is not a flash, and a dial clicked up three times shows each
+// click. Gated on the MAPPED value (so a `peak` curve's turn counts) before any `smoothMs` glide,
+// so a glide stays smooth (gating its 50 ms ticks would turn a glide into steps).
+//
+// ALL NUMBER TARGETS, NOT ONLY "VISIBLE" ONES - argued both ways:
+//   FOR visible-only: a volume following a sensor has no reason to wait a third of a second.
+//   AGAINST, and it wins: nothing declares which numbers are visible. A key-name guess (hue,
+//   opacity, bright...) fails OPEN on the first module that calls its brightness `level`, and this
+//   is a safety floor; it has to fail shut. The cost is small - the newest value always lands within
+//   one period - and a field that is genuinely not visible opts out with `visual: false` on its
+//   declaration (a fact about the field, like `automatable: false`, not a preference).
+// clock (once a minute) and lfo (its own floor, lfoMinPeriodMs) are not gated again. An explicit
+// `minIntervalMs` still applies on top, exactly as before.
+export function eventFloorMs(limit = FLASH_LIMIT_MAX) {
+  return Math.ceil(minFlashPeriodMs(limit));
+}
+export function eventFloorApplies(source, rawDecl = null) {
+  if (!source || !['bus', 'link', 'verb'].includes(source.kind)) return false;
+  return !(rawDecl && rawDecl.visual === false);
+}
+
 const num = (v, d) => { const n = Number(v); return v !== null && v !== '' && Number.isFinite(n) ? n : d; };
 const clamp01 = (t) => Math.max(0, Math.min(1, t));
 const roundTo = (v, d) => { const p = 10 ** Math.max(0, Math.min(6, d | 0)); return Math.round(v * p) / p; };
@@ -451,6 +478,7 @@ export function createAutomation({
     const floorFn = guards?.floorFrom?.get(b.target.key) || null;
 
     const r = { offs: [], tick: null, smooth: null, trail: null, quiet: null,
+                gateAt: null, gateTrail: null, gatePending: undefined, gateLast: null, gateDir: 0, onsets: [],
                 cond: createContinuousConditioner({ minIntervalMs: m.minIntervalMs }),
                 applied: null, goal: null, verbValue: src.start };
 
@@ -499,12 +527,44 @@ export function createAutomation({
       }
     }
 
+    // *** THE EVENT FLOOR (photosensitivity audit, 2026-09-30). *** See the block at eventFloorMs:
+    // on a bus, link or verb source, a REVERSAL of the value's direction (up then down: half of
+    // WCAG's "pair of opposing changes") may land at most once a flash period, counted from the last
+    // reversal or the first move from rest. A change in the SAME direction lands at once - a ramp is
+    // not a flash, and a dial turned three clicks up shows each click. LATEST WINS: a reversal
+    // arriving too soon is held and the newest value lands the moment the period is up (or at once,
+    // if a newer value turns back the way it was already going).
+    const floored = eventFloorApplies(src, t.raw.get(b.target.key));
+    function gate(v) {
+      if (!floored) { push(v); return; }
+      const period = eventFloorMs(limitNow());
+      const t0 = now();
+      const dir = r.gateLast == null || v === r.gateLast ? 0 : Math.sign(v - r.gateLast);
+      const onset = dir !== 0 && dir !== r.gateDir;          // a reversal, or the first move from rest
+      if (!onset || r.gateAt == null || t0 - r.gateAt >= period) {
+        cancel(r.gateTrail); r.gateTrail = null; r.gatePending = undefined;
+        if (onset) { r.gateAt = t0; r.onsets.push(t0); if (r.onsets.length > 64) r.onsets.shift(); }
+        if (dir !== 0) r.gateDir = dir;
+        r.gateLast = v;
+        push(v);
+        return;
+      }
+      r.gatePending = v;
+      if (r.gateTrail == null) {
+        r.gateTrail = after(() => {
+          r.gateTrail = null;
+          const p = r.gatePending; r.gatePending = undefined;
+          if (p !== undefined) gate(p);
+        }, Math.max(0, r.gateAt + period - t0));
+      }
+    }
+
     function input(raw) {
       const n = Number(raw);
       if (!Number.isFinite(n)) return;           // not a number is not an input
       const x = mapRange(n, inRange, [0, 1]);    // links.js: clamped
       const y = applyCurve(x, m);
-      push(lo + y * (hi - lo));
+      gate(lo + y * (hi - lo));                  // the event floor (a no-op for clock and lfo)
       if ((src.kind === 'bus' || src.kind === 'link') && m.quietMs > 0) {
         cancel(r.quiet);
         r.quiet = after(() => {
@@ -532,7 +592,7 @@ export function createAutomation({
       const step = (dir) => {
         let next = stepValue(dial, r.verbValue, dir);
         if (!src.wrap) next = Math.max(vlo, Math.min(vhi, r.verbValue + src.step * dir));
-        r.verbValue = next;
+        r.verbValue = next;                      // the press counts at once; only a reversal is gated
         input(next);
       };
       r.offs.push(bus.subscribe(verbTopic(src.up), () => step(1)));
@@ -566,7 +626,7 @@ export function createAutomation({
     r.stop = () => {
       r.offs.forEach((off) => { try { off(); } catch { /* gone */ } });
       r.offs.length = 0;
-      for (const k of ['tick', 'smooth', 'trail', 'quiet']) { cancel(r[k]); r[k] = null; }
+      for (const k of ['tick', 'smooth', 'trail', 'quiet', 'gateTrail']) { cancel(r[k]); r[k] = null; }
     };
     runners.set(b.id, r);
     setStatus(b.id, 'running');

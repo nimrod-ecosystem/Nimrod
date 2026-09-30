@@ -399,6 +399,103 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       worstWash >= 4.5, `worst = ${worstWash.toFixed(2)} (${worstWashWhere})`);
   }
 
+  // --- LIVE SCENES AND THE FLASH LIMIT (photosensitivity audit, 2026-09-30) -----------------
+  // The cyberpunk street's neon signs and the UFO's running lights flicker. The WHOLE SCENE is
+  // counted as one source: every dip of every flickering element, onsets per closed second
+  // (flash_limit.js worstInAnySecond). Read from the rendered inline timing, so what is counted is
+  // what the browser is told to draw.
+  try {
+    const { mountScene, FLICKER_SELECTOR, FLICKER_DIP_AT } = await import('../livescene.js');
+    const { worstInAnySecond, minFlashPeriodMs } = await import('../flash_limit.js');
+    const ms = (v) => (/ms$/.test(v) ? parseFloat(v) : parseFloat(v) * 1000);
+    const HORIZON = 120000;
+    const onsetsOf = (host) => {
+      const t = [];
+      for (const el of host.querySelectorAll(FLICKER_SELECTOR)) {
+        const d = ms(el.style.animationDuration), delay = ms(el.style.animationDelay || '0s');
+        let first = (delay + FLICKER_DIP_AT * d) % d; if (first < 0) first += d;
+        for (let x = first; x <= HORIZON; x += d) t.push(x);
+      }
+      return t.sort((a, b) => a - b);
+    };
+    const minGap = (t) => t.slice(1).reduce((m, x, i) => Math.min(m, x - t[i]), Infinity);
+
+    // BEFORE, modelled from the old code so the counter is shown to catch it: ten signs of
+    // 5 + (i%5)*1.7 s, delay -1.1i s, and the UFO strip at 1.6 s / speed 3, each dipping TWICE a
+    // cycle (the old keyframe's 90% and 96%).
+    const oldOnsets = [];
+    const oldEl = (d, delay) => { for (const f of [0.90, 0.96]) {
+      let first = (delay + f * d) % d; if (first < 0) first += d;
+      for (let x = first; x <= HORIZON; x += d) oldOnsets.push(x);
+    } };
+    for (let i = 0; i < 10; i++) oldEl((5 + (i % 5) * 1.7) * 1000, -i * 1100);
+    oldEl(1600 / 3, 0);
+    const oldWorst = worstInAnySecond(oldOnsets);
+    check(`(the old flicker, modelled: ${oldWorst} flashes in the worst second, min gap ${minGap(oldOnsets.sort((a, b) => a - b)).toFixed(0)} ms - over the limit)`,
+      oldWorst > 3);
+
+    const css = document.getElementById('livescene-css')?.textContent
+      || (() => { const h = document.createElement('div'); document.body.append(h); const s = mountScene(h, { scene: 'cyberpunk' }); s.destroy(); h.remove(); return document.getElementById('livescene-css')?.textContent || ''; })();
+    check('*** the flicker keyframe is ONE dip, at the fraction the scheduler assumes ***',
+      css.includes('@keyframes ngFlicker{0%,98%{opacity:.85}98.5%,100%{opacity:.45}}') && FLICKER_DIP_AT === 0.985);
+    check('...and it lives inside the reduced-motion query, like every other keyframe use',
+      /prefers-reduced-motion: no-preference\)\{[^@]*\.ng-bar,\.ng-sign\{animation:ngFlicker/.test(css));
+
+    const worstRows = [];
+    for (const L of [3, 2, 1]) {
+      for (const motion of ['gentle', 'calm']) {
+        for (const overlays of [[], ['ufo'], [{ id: 'ufo', speed: 3 }]]) {
+          const h = document.createElement('div'); h.style.position = 'relative'; document.body.append(h);
+          const s = mountScene(h, { scene: 'cyberpunk', overlays, motion, flashLimit: () => L });
+          const els = h.querySelectorAll(FLICKER_SELECTOR);
+          const t = onsetsOf(h);
+          const worst = worstInAnySecond(t), gap = minGap(t);
+          const tag = `limit ${L}, ${motion}, overlays ${JSON.stringify(overlays)}`;
+          check(`${tag}: ${els.length} flickering elements, worst second ${worst}, min gap ${gap.toFixed(0)} ms`,
+            els.length >= 10 && worst <= L && gap >= minFlashPeriodMs(L) - 0.01);
+          if (motion === 'gentle' && overlays.length && overlays[0].speed) worstRows.push(`${L}:${worst}`);
+          check(`${tag}: no inline ngFlicker survives (it would ignore reduced motion)`,
+            ![...h.querySelectorAll('[style]')].some((e) => /ngFlicker/.test(e.style.animation || '')));
+          s.destroy(); h.remove();
+        }
+      }
+    }
+    check(`*** at limit 1 every dip in the scene is at least 1017 ms (a second and a frame) from the next ***`,
+      (() => { const h = document.createElement('div'); document.body.append(h);
+        const s = mountScene(h, { scene: 'cyberpunk', overlays: [{ id: 'ufo', speed: 3 }], flashLimit: 1 });
+        const g = minGap(onsetsOf(h)); s.destroy(); h.remove(); return g >= 1017 - 1e-6; })());
+    // A getter is re-read on every render, so a changed setting lands on the next set().
+    {
+      let L = 3;
+      const h = document.createElement('div'); document.body.append(h);
+      const s = mountScene(h, { scene: 'cyberpunk', flashLimit: () => L });
+      const g3 = minGap(onsetsOf(h));
+      L = 1; s.set({});
+      const g1 = minGap(onsetsOf(h));
+      check('a changed limit is honoured on the next render', g3 >= 338 && g1 >= 1017 - 1e-6, `${g3} -> ${g1}`);
+      s.set({ flashLimit: () => { throw new Error('broken host'); } });
+      check('a host whose getter throws gets 3, not a crash', worstInAnySecond(onsetsOf(h)) <= 3);
+      s.destroy(); h.remove();
+    }
+    // No limit passed at all (theme.js / kiosk.js syncScene today): the ceiling, 3.
+    {
+      const h = document.createElement('div'); document.body.append(h);
+      const s = mountScene(h, { scene: 'cyberpunk', overlays: [{ id: 'ufo', speed: 3 }] });
+      check('a host that passes no limit gets 3 a second at most', worstInAnySecond(onsetsOf(h)) <= 3);
+      s.destroy(); h.remove();
+    }
+    // Scenes with nothing flickering are untouched.
+    {
+      const h = document.createElement('div'); document.body.append(h);
+      const s = mountScene(h, { scene: 'fall', flashLimit: 1 });
+      check('a scene with no flicker gets no flicker timing', h.querySelectorAll(FLICKER_SELECTOR).length === 0);
+      s.destroy(); h.remove();
+    }
+    console.log('livescene worst flashes/s (ufo speed 3):', worstRows.join(' '), 'old:', oldWorst);
+  } catch (e) {
+    check('live scene flash-limit checks ran', false, String(e && e.stack || e));
+  }
+
   const sum = document.getElementById('summary');
   sum.textContent = `${passed} passed, ${failed} failed`;
   sum.className = failed ? 'fail' : 'pass';

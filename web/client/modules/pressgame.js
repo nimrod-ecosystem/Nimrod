@@ -74,6 +74,7 @@ import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { EDGE_TOPIC } from '../input.js';
 import { createGameMusic } from '../game_music.js';
 import { createMediaSourcesClient } from '../media_sources.js';
+import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 
 // *** BUMP THIS WHENEVER A RECORDED FIELD IS ADDED OR CHANGES MEANING. ***
 // It rides on every row as `producer_version`, and it is what lets a reader in two years tell
@@ -343,6 +344,9 @@ registerModule(
     let lastStopCueAt = -1e9;
     let saidStop = false;            // has "you can stop" been said this round
     let sparks = [];
+    let lastBloomAt = -Infinity;     // simT of the last spark burst (the flash limit counts from here)
+    let pendingBloom = 0;            // a burst asked for too soon, waiting for the period to pass
+    const bloomTimes = [];           // simT of recent bursts, for the suite's per-second count
     let trialSeq = 0;
 
     // ---- the machine as a confound ---------------------------------------------------
@@ -834,7 +838,22 @@ registerModule(
       textEl.className = `pg-text${cls ? ` ${cls}` : ''}`;
     }
 
+    // *** THE PRESS STILL COUNTS; ONLY THE BLOOM IS RATE-LIMITED. *** (Photosensitivity audit,
+    // 2026-09-30.) Every press burst sparks, so somebody pressing four times a second got four
+    // bursts a second - over the screen's flash limit. The press is recorded, scored and sounded
+    // exactly as before; a bloom asked for inside `minFlashPeriodMs(flashLimit(ctx))` of the last
+    // one is DEFERRED (the strongest one asked for wins) and bursts the moment the period is up.
+    // Deferred, not dropped, so the payoff for a hit is never lost - at worst it is one period late.
     function bloom(strength) {
+      if (simT - lastBloomAt < minFlashPeriodMs(flashLimit(ctx))) {
+        pendingBloom = Math.max(pendingBloom, strength);
+        return;
+      }
+      burst(strength);
+    }
+    function burst(strength) {
+      lastBloomAt = simT; pendingBloom = 0;
+      bloomTimes.push(simT); if (bloomTimes.length > 200) bloomTimes.shift();
       if (calm()) { sparks.push(...spawn(Math.round(12 * strength), strength)); return; }
       sparks.push(...spawn(Math.round(70 * strength), strength));
       if (sparks.length > MAX_SPARKS) sparks.splice(0, sparks.length - MAX_SPARKS);
@@ -854,6 +873,7 @@ registerModule(
     // *** THE ONLY PLACE TIME ADVANCES. *** Called by the rAF loop and, in a test, directly.
     function step(dt) {
       simT += dt;
+      if (pendingBloom > 0 && simT - lastBloomAt >= minFlashPeriodMs(flashLimit(ctx))) burst(pendingBloom);
       // Frame health, for the machine-as-confound record. Capped: a tab that was hidden for
       // a minute would otherwise report a 60-second "frame".
       const d = Math.min(dt, 500);
@@ -965,6 +985,7 @@ registerModule(
       __probe: () => ({
         phase, simT, charge: phase === 'wait' ? liveCharge() : frozenCharge,
         payoffDone, echoes, curWaitMs, sparks: sparks.length, running,
+        blooms: bloomTimes.slice(), pendingBloom,
         rows: sessionRows.length, sessionId, calm: calm(), cfg: { ...cfg },
         askingExit,
         goPaintedAt, machine: machine(),
@@ -1239,7 +1260,7 @@ registerModule(
         try { ac?.close?.(); } catch { /* already closed */ }
         ac = null; sfx = null;
         root?.remove(); root = null; canvas = null; c2d = null; textEl = null; menuEl = null;
-        sparks = [];
+        sparks = []; pendingBloom = 0;
       },
     };
   },
