@@ -27,6 +27,8 @@ driven against a FAKE profiles client (no server, no network), and the real
 <script type="module">
 import { mountPeople, pickCurrent, readLastPerson, writeLastPerson, LAST_PERSON_KEY } from '../people.js';
 import { createProfilesClient } from '../profile.js';
+import { createAvatarCache, AVATAR_CHANGED_EVENT } from '../avatar_display.js';
+import { surprise } from '../avatar.js';
 
 const ACCOUNT = 'people-test-' + Math.floor(Math.random() * 1e9);
 const out = document.getElementById('results');
@@ -177,6 +179,136 @@ function fakePeopleClient(initial = [{ id: 'p1', name: 'Me', created_at: '1' }])
     await tick();
     check('a destroyed bar stops listening', one.calls.length === stale);
     host.innerHTML = '';
+
+    // ---------- avatars (row 2.37 item 5) ----------
+    section('the bar with avatars: anybody without one sees exactly what they saw before');
+    {
+      // THE BAR AS IT WAS BEFORE AVATARS EXISTED — captured from people.js at 62600e8 (serialized
+      // innerHTML), not rebuilt from the new code, so a change in bytes shows here.
+      const G = {
+        one: "<div class=\"p-bar\" data-bar=\"\">\n      <div class=\"p-row\">\n        \n        <span class=\"p-one\">Setting up for <b>Robin &lt;&amp;&gt;</b></span>\n        <div class=\"p-tools\">\n          <button class=\"h-btn p-small\" data-edit=\"\">Manage people</button>\n        </div>\n      </div>\n      </div>",
+        two: "<div class=\"p-bar\" data-bar=\"\">\n      <div class=\"p-row\">\n        <span class=\"p-lead\">Setting up for</span>\n        <div class=\"p-chips\">\n          <button class=\"p-chip\" data-person=\"p1\" aria-pressed=\"false\">Robin</button>\n          <button class=\"p-chip on\" data-person=\"p2\" aria-pressed=\"true\">Sam \"S\"</button>\n         </div>\n        <div class=\"p-tools\">\n          <button class=\"h-btn p-small\" data-edit=\"\">Manage people</button>\n        </div>\n      </div>\n      </div>",
+        twoEdit: "<div class=\"p-bar\" data-bar=\"\">\n      <div class=\"p-row\">\n        <span class=\"p-lead\">Setting up for</span>\n        <div class=\"p-chips\">\n          <button class=\"p-chip\" data-person=\"p1\" aria-pressed=\"false\">Robin</button>\n          <button class=\"p-chip on\" data-person=\"p2\" aria-pressed=\"true\">Sam \"S\"</button>\n         </div>\n        <div class=\"p-tools\">\n          <button class=\"h-btn p-small\" data-edit=\"\">Done</button>\n        </div>\n      </div>\n      \n        <div class=\"p-manage\">\n          <p class=\"h-hint\">A <b>person</b> is who a screen is for. Their screens, their input\n            bindings and their output routing follow them to every device — set them up once,\n            ever. The account is who signs in; it can hold as many people as you look after.</p>\n          <form class=\"h-new\" data-new=\"\">\n            <input type=\"text\" data-name=\"\" placeholder=\"Add a person (e.g. Robin)\" aria-label=\"new person name\" maxlength=\"64\" required=\"\">\n            <button type=\"submit\" class=\"h-btn h-primary\">Add</button>\n          </form>\n          <ul class=\"p-list\">\n            \n              <li>\n                <input type=\"text\" class=\"p-name\" value=\"Robin\" maxlength=\"64\" data-rename=\"p1\" aria-label=\"name\">\n                <button class=\"h-btn h-danger p-small\" data-remove=\"p1\">Remove</button>\n              </li>\n              <li>\n                <input type=\"text\" class=\"p-name\" value=\"Sam &quot;S&quot;\" maxlength=\"64\" data-rename=\"p2\" aria-label=\"name\">\n                <button class=\"h-btn h-danger p-small\" data-remove=\"p2\">Remove</button>\n              </li>\n          </ul>\n          <div class=\"h-msg\" data-msg=\"\"></div>\n        </div></div>",
+      };
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const settle = async () => { for (let i = 0; i < 8; i++) await tick(); };
+      const ONE = [{ id: 'p1', name: 'Robin <&>' }];
+      const TWO = [{ id: 'p1', name: 'Robin' }, { id: 'p2', name: 'Sam "S"' }];
+      const listOnly = (people) => ({ people: async () => people.slice() });
+      // Per-person state stand-in: counts handles and reads, so "one read per person" is measured.
+      function fakePersonStates(rows = {}) {
+        const made = [];
+        let loads = 0;
+        const make = (pid, key) => {
+          made.push(`${pid}:${key}`);
+          let data = rows[pid] ? structuredClone(rows[pid]) : {};
+          const subs = new Set();
+          return {
+            load: async () => { loads++; return structuredClone(data); },
+            get: () => structuredClone(data),
+            set(patch) { data = { ...data, ...patch }; for (const f of subs) f(structuredClone(data)); },
+            subscribe(f) { subs.add(f); return () => subs.delete(f); },
+            flush: async () => {}, destroy() {},
+          };
+        };
+        return { make, made, loads: () => loads };
+      }
+      const mount = async (people, { want = null, avatars = null } = {}) => {
+        const b = mountPeople(host, { profiles: listOnly(people), storage: fakeStorage(), avatars });
+        await b.refresh(want ? { want } : {});
+        await settle();
+        return b;
+      };
+
+      let b = await mount(ONE);
+      check('*** no cache: one person, byte-for-byte the bar before avatars ***', host.innerHTML === G.one, host.innerHTML);
+      b.destroy();
+      b = await mount(TWO, { want: 'p2' });
+      check('*** no cache: two people, byte-for-byte ***', host.innerHTML === G.two, host.innerHTML);
+      host.querySelector('[data-edit]').click();
+      check('*** no cache: managing, byte-for-byte ***', host.innerHTML === G.twoEdit);
+      b.destroy();
+
+      const nobody = fakePersonStates({ p1: { use: 'none', drawn: surprise('x') }, p2: {} });
+      let cache = createAvatarCache({ makePersonState: nobody.make, refreshOnVisible: false });
+      b = await mount(TWO, { want: 'p2', avatars: cache });
+      check('*** a cache, and nobody has made one ("none", and no row): byte-for-byte ***', host.innerHTML === G.two, host.innerHTML);
+      host.querySelector('[data-edit]').click();
+      check('*** ...and managing, byte-for-byte ***', host.innerHTML === G.twoEdit);
+      b.destroy(); cache.destroy();
+      cache = createAvatarCache({ makePersonState: fakePersonStates({ p1: { use: 'none' } }).make, refreshOnVisible: false });
+      b = await mount(ONE, { avatars: cache });
+      check('*** one person with "none": byte-for-byte ***', host.innerHTML === G.one, host.innerHTML);
+      b.destroy(); cache.destroy();
+
+      section('the bar with avatars: a face before the name of anybody who made one');
+      const REC = surprise('sam');
+      const fs = fakePersonStates({ p2: { use: 'drawn', drawn: REC } });
+      cache = createAvatarCache({ makePersonState: fs.make, refreshOnVisible: false });
+      b = await mount(TWO, { want: 'p2', avatars: cache });
+      const chip = (id) => host.querySelector(`.p-chip[data-person="${id}"]`);
+      const goldenP1 = '<button class="p-chip" data-person="p1" aria-pressed="false">Robin</button>';
+      check('Sam’s chip starts with the drawn face', chip('p2')?.firstElementChild?.matches('.nav-av[data-avatar-shown="drawn"]')
+        && !!chip('p2').querySelector('svg[data-avatar]'));
+      check('...and still says only the name (the face is hidden from a screen reader, not read twice)',
+        chip('p2').textContent.trim() === 'Sam "S"' && chip('p2').firstElementChild.getAttribute('aria-hidden') === 'true');
+      check('...a chip is small, so the face does not move by default', chip('p2').querySelector('svg[data-avatar]').dataset.motion === 'off');
+      check('Robin, with no avatar, is the same chip as before', chip('p1').outerHTML === goldenP1, chip('p1').outerHTML);
+      check('one face on the bar', host.querySelectorAll('.nav-av').length === 1);
+
+      // A face that arrives while somebody is typing a new name must not wipe what they typed.
+      host.querySelector('[data-edit]').click();
+      host.querySelector('[data-name]').value = 'Jo';
+      dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'p1', row: { use: 'drawn', drawn: surprise('robin') } } }));
+      await settle();
+      check('the maker saving Robin’s avatar on this page adds the face to Robin’s chip', !!chip('p1').querySelector('.nav-av svg'));
+      check('...without a read (the row came with the news)', fs.loads() === 2, String(fs.loads()));
+      check('...and what was being typed into "Add a person" is still there', host.querySelector('[data-name]').value === 'Jo');
+
+      chip('p1').focus();
+      dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'p1', row: { use: 'none' } } }));
+      await settle();
+      check('taking an avatar away puts back the chip as it was', chip('p1').outerHTML === goldenP1, chip('p1').outerHTML);
+      check('...and the chip that had the keyboard focus keeps it', document.activeElement?.dataset?.person === 'p1');
+      await b.refresh(); await b.refresh(); await settle();
+      check('*** ONE handle per person, however often the bar redraws ***', fs.made.join() === 'p1:avatar,p2:avatar', fs.made.join());
+      b.destroy();
+      const htmlAfter = host.innerHTML;
+      dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'p1', row: { use: 'drawn', drawn: REC } } }));
+      await settle();
+      check('a destroyed bar no longer redraws for the cache', host.innerHTML === htmlAfter);
+      cache.destroy();
+
+      cache = createAvatarCache({ makePersonState: fakePersonStates({ p1: { use: 'drawn', drawn: REC } }).make, refreshOnVisible: false });
+      b = await mount(ONE, { avatars: cache });
+      const one1 = host.querySelector('.p-one');
+      check('one person: the sentence carries the face just before the name',
+        one1.querySelector('.nav-av + b')?.textContent === 'Robin <&>' && /^Setting up for\s*Robin/.test(one1.textContent.trim()));
+      b.destroy(); cache.destroy();
+
+      section('the bar with avatars: a picture that will not show is never a broken image');
+      const released = [];
+      const picCache = (url) => createAvatarCache({
+        makePersonState: fakePersonStates({ p2: { use: 'picture', picture: { sourceId: 's1', path: 'me.png' }, drawn: REC } }).make,
+        sourcesFor: () => ({ list: async () => [{ id: 's1', kind: 'agent', base_url: 'http://x' }] }),
+        resolveUrl: async () => ({ url, release: () => released.push(1) }),
+        refreshOnVisible: false,
+      });
+      cache = picCache('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+      b = await mount(TWO, { want: 'p2', avatars: cache });
+      await sleep(120); await settle();
+      check('a picture avatar shows the picture', !!chip('p2').querySelector('.nav-av[data-avatar-shown="picture"] img')
+        && !chip('p2').querySelector('svg'));
+      b.destroy(); cache.destroy(); released.length = 0;
+      cache = picCache('data:image/png;base64,bm90IGEgcGljdHVyZQ==');
+      b = await mount(TWO, { want: 'p2', avatars: cache });
+      await sleep(120); await settle();
+      check('*** it did not decode: the drawn one shows instead, and no <img> is left ***',
+        !host.querySelector('img') && !!chip('p2').querySelector('.nav-av[data-avatar-shown="drawn"] svg'));
+      check('...and the picture’s URL was let go', released.length === 1);
+      b.destroy(); cache.destroy();
+      host.innerHTML = '';
+    }
 
     // ---------- the server contract ----------
     section('server: /api/people');

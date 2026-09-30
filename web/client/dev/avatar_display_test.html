@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>avatar_display — a person's avatar beside their name — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>avatar_display — row 2.37 item 5: the avatar shows where the name shows</h1>
+<p>What to show for a person (<code>avatarView</code>), the small face as markup (<code>avatarHtml</code>:
+nothing at all for no avatar), and the page's one cache: one state handle and one read per person however
+often anything redraws, a change from the maker on the same page with no read, a picture resolved once and
+falling back to the drawn avatar (or to nothing) when it cannot show, and nothing left behind after it
+is taken down. Also: the maker announces a save.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stage"></div>
+<script>
+  window.addEventListener('error', (e) => { const s = document.getElementById('summary'); if (s && !s.dataset.done && e.message) s.textContent = `threw: ${e.message} (${e.filename || ''}:${e.lineno || ''})`; });
+  window.addEventListener('unhandledrejection', (e) => { const s = document.getElementById('summary'); if (s && !s.dataset.done) s.textContent = `threw: ${e.reason && (e.reason.stack || e.reason.message) || e.reason}`; });
+</script>
+<script type="module">
+import {
+  avatarView, avatarHtml, createAvatarCache, AVATAR_CHANGED_EVENT, DISPLAY_DEFAULTS,
+} from '../avatar_display.js';
+import { surprise, normalizeRecord, renderAvatar } from '../avatar.js';
+import '../modules/avatar.js';
+import { mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const settle = async () => { for (let i = 0; i < 8; i++) await tick(); };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A per-person state stand-in that counts handles, reads and teardown.
+function fakePersonStates(rows = {}, { failFor = [] } = {}) {
+  const made = [];
+  const handles = new Map();
+  let loads = 0;
+  const make = (pid, key) => {
+    made.push(`${pid}:${key}`);
+    let data = rows[pid] ? structuredClone(rows[pid]) : {};
+    const subs = new Set();
+    const h = {
+      destroyed: false, polling: false,
+      load: async () => { loads++; if (failFor.includes(pid)) throw new Error('404'); return structuredClone(data); },
+      get: () => structuredClone(data),
+      set(patch) { data = { ...data, ...patch }; for (const f of subs) f(structuredClone(data)); },
+      subscribe(f) { subs.add(f); return () => subs.delete(f); },
+      subs: () => subs.size,
+      flush: async () => {}, destroy() { h.destroyed = true; }, startPolling() { h.polling = true; },
+      replace(next) { data = structuredClone(next); },   // a change made somewhere else (another tab)
+    };
+    handles.set(pid, h);
+    return h;
+  };
+  return { make, made, handles, loads: () => loads };
+}
+
+(async () => {
+try {
+  const REC = surprise('display');
+  const PIC = { sourceId: 's1', path: 'people/me.png' };
+
+  // ===================================================================================
+  section('avatarView: what to show, from the row on the person');
+  check('no row: nothing', avatarView(null).show === 'none' && avatarView(undefined).show === 'none' && avatarView('x').show === 'none');
+  check('an empty row: nothing', avatarView({}).show === 'none');
+  check('"none": nothing, even with a drawing kept', avatarView({ use: 'none', drawn: REC }).show === 'none');
+  const dv = avatarView({ use: 'drawn', drawn: REC });
+  check('"drawn": the drawing, repaired', dv.show === 'drawn' && JSON.stringify(dv.drawn) === JSON.stringify(normalizeRecord(REC)));
+  check('a person who asked for still: `still` says so', avatarView({ use: 'drawn', drawn: REC, animate: false }).still === true && dv.still === false);
+  check('"picture", resolved: the picture', avatarView({ use: 'picture', picture: PIC }, { picture: { status: 'ok', url: 'blob:x' } }).show === 'picture');
+  check('"picture", still resolving: nothing yet (no flash of a drawing it is about to replace)',
+    avatarView({ use: 'picture', picture: PIC, drawn: REC }, { picture: { status: 'pending' } }).show === 'none');
+  check('"picture" that failed, with a drawing: the drawing', avatarView({ use: 'picture', picture: PIC, drawn: REC }, { picture: { status: 'failed' } }).show === 'drawn');
+  check('"picture" that failed, no drawing: nothing', avatarView({ use: 'picture', picture: PIC }, { picture: { status: 'failed' } }).show === 'none');
+  check('"picture" with no picture kept: falls to the drawing (readAvatar)', avatarView({ use: 'picture', drawn: REC }).show === 'drawn');
+  check('a second try at a failed picture keeps the drawing up meanwhile',
+    avatarView({ use: 'picture', picture: PIC, drawn: REC }, { picture: { status: 'pending', retry: true } }).show === 'drawn');
+
+  // ===================================================================================
+  section('avatarHtml: the small face — and NOTHING AT ALL for no avatar');
+  check('*** none: the empty string, not an empty frame ***', avatarHtml({ show: 'none' }) === '' && avatarHtml(null) === '' && avatarHtml(undefined) === '');
+  const h = avatarHtml(dv, { reducedMotion: false });
+  const box = document.createElement('div'); box.innerHTML = h;
+  const span = box.firstElementChild;
+  check('drawn: one span, hidden from a screen reader (the name beside it says who)', box.children.length === 1 && span.matches('span.nav-av[data-avatar-shown="drawn"][aria-hidden="true"]'));
+  check('...holding the drawing, filling its box', span.querySelector('svg[data-avatar]')?.getAttribute('width') === '100%');
+  check('...at the default size, in em so it grows with the text', span.style.width === DISPLAY_DEFAULTS.size && DISPLAY_DEFAULTS.size.endsWith('em'));
+  check('...round by default, square on request', span.style.borderRadius === '50%'
+    && (() => { const b = document.createElement('div'); b.innerHTML = avatarHtml(dv, { round: false }); return b.firstElementChild.style.borderRadius !== '50%'; })());
+  check('*** small faces do not move by default ***', DISPLAY_DEFAULTS.animate === false && span.querySelector('svg').dataset.motion === 'off' && !span.querySelector('style'));
+  const moveBox = document.createElement('div');
+  moveBox.innerHTML = avatarHtml(dv, { animate: true, reducedMotion: false });
+  check('a big face asked to move, moves', moveBox.querySelector('svg').dataset.motion === 'on');
+  moveBox.innerHTML = avatarHtml(dv, { animate: true, reducedMotion: true });
+  check('...but not under reduced motion', moveBox.querySelector('svg').dataset.motion === 'off');
+  moveBox.innerHTML = avatarHtml({ ...dv, still: true }, { animate: true, reducedMotion: false });
+  check('...and not when the person asked for still', moveBox.querySelector('svg').dataset.motion === 'off');
+  moveBox.innerHTML = avatarHtml(dv, { size: '3rem' });
+  check('a size in rem is used', moveBox.firstElementChild.style.width === '3rem');
+  moveBox.innerHTML = avatarHtml(dv, { size: '1em;background:url(x)' });
+  check('anything that is not a plain length is ignored (the default is used)', moveBox.firstElementChild.style.width === DISPLAY_DEFAULTS.size && !moveBox.innerHTML.includes('url(x)'));
+  const pb = document.createElement('div');
+  pb.innerHTML = avatarHtml({ show: 'picture', url: 'blob:"><script>x<\/script>' }, { personId: 'p"1' });
+  check('picture: an <img> with an empty alt, marked with whose it is', pb.querySelector('img')?.getAttribute('alt') === '' && pb.querySelector('img').dataset.avatarPerson === 'p"1');
+  check('...and nothing in a URL escapes into the markup', !pb.querySelector('script') && pb.querySelectorAll('*').length === 2);
+  check('renderAvatar still takes pixels as before', renderAvatar(REC, { size: 64 }).includes('width="64" height="64"')
+    && !renderAvatar(REC, { size: 'x' }).includes('width="x"'));
+
+  // ===================================================================================
+  section('the cache: one handle and one read per person, whatever redraws');
+  {
+    const fs = fakePersonStates({ a: { use: 'drawn', drawn: REC }, b: { use: 'none' } });
+    const cache = createAvatarCache({ makePersonState: fs.make, refreshOnVisible: false });
+    const heard = [];
+    cache.subscribe((pid) => heard.push(pid));
+    const first = cache.get('a');
+    check('before the row arrives: nothing (today’s display), marked pending', first.show === 'none' && first.pending === true);
+    for (let i = 0; i < 50; i++) { cache.get('a'); cache.get('b'); }
+    await settle();
+    check('the drawing, once it arrives', cache.get('a').show === 'drawn');
+    check('"none" is nothing', cache.get('b').show === 'none');
+    check('*** a hundred and two asks: two handles, two reads ***', fs.made.join() === 'a:avatar,b:avatar' && fs.loads() === 2, `${fs.made.join()} / ${fs.loads()}`);
+    check('each person announced once when their row arrived', heard.sort().join() === 'a,b', heard.join());
+    check('no polling unless asked (argued: a request per person every 1.5 s on a setup page)', !fs.handles.get('a').polling);
+
+    heard.length = 0;
+    dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'b', row: { use: 'drawn', drawn: surprise('b') } } }));
+    await settle();
+    check('the maker saving on this page: the new face, with no read', cache.get('b').show === 'drawn' && fs.loads() === 2 && heard.join() === 'b');
+    dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'zz', row: { use: 'drawn', drawn: REC } } }));
+    check('...news about somebody not shown opens nothing', cache.size() === 2 && !fs.made.includes('zz:avatar'));
+    heard.length = 0;
+    dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'b', row: { use: 'drawn', drawn: surprise('b'), at: 5 } } }));
+    await settle();
+    check('the same avatar again (only the time changed) redraws nothing', heard.length === 0);
+    fs.handles.get('a').set({ use: 'none' });
+    await settle();
+    check('a change through the handle itself is heard', cache.get('a').show === 'none' && heard.join() === 'a');
+
+    fs.handles.get('a').replace({ use: 'drawn', drawn: REC });
+    cache.refresh();
+    await settle();
+    check('refresh(): one read per person, and a change made elsewhere arrives', fs.loads() === 4 && cache.get('a').show === 'drawn', String(fs.loads()));
+    cache.forget('a');
+    check('forget(): that person’s handle is let go', fs.handles.get('a').destroyed && cache.size() === 1);
+    cache.destroy();
+    check('destroy(): every handle let go, every subscription dropped', fs.handles.get('b').destroyed && fs.handles.get('b').subs() === 0);
+    heard.length = 0;
+    dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'b', row: { use: 'none' } } }));
+    check('...and a destroyed cache hears nothing', heard.length === 0 && cache.get('b').show === 'none');
+  }
+  {
+    const fs = fakePersonStates({}, { failFor: ['other-account'] });
+    const cache = createAvatarCache({ makePersonState: fs.make, refreshOnVisible: false, poll: true });
+    cache.get('other-account');
+    await settle();
+    check('a row that cannot be read (another account’s person, no server) is no avatar, not an error', cache.get('other-account').show === 'none');
+    check('poll: true asks the handle to poll', fs.handles.get('other-account').polling === true);
+    cache.destroy();
+    const bare = createAvatarCache({});
+    check('no per-person state at all: everybody is "none"', bare.get('x').show === 'none' && avatarHtml(bare.get('x')) === '');
+    check('a person with no id is nobody, and opens nothing', bare.get('').show === 'none' && bare.size() === 1);
+    bare.destroy();
+    let threw = false;
+    try { const c = createAvatarCache({ makePersonState: () => { throw new Error('no'); } }); c.get('p'); c.destroy(); } catch { threw = true; }
+    check('a state seam that throws does not throw here', !threw);
+  }
+  {
+    const fs = fakePersonStates({ a: { use: 'drawn', drawn: REC } });
+    const cache = createAvatarCache({ makePersonState: fs.make });
+    cache.get('a'); await settle();
+    const before = fs.loads();
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    await settle();
+    check('the page shown again: each person read once more (a change from another tab arrives)', fs.loads() === before + 1);
+    cache.destroy();
+    document.dispatchEvent(new Event('visibilitychange'));
+    await settle();
+    check('...not after the cache is gone', fs.loads() === before + 1);
+    delete document.visibilityState;
+  }
+
+  // ===================================================================================
+  section('the cache: a picture, resolved ONCE through the person’s Media, never shown broken');
+  {
+    const lists = [], resolves = [], released = [];
+    let sources = [{ id: 's1', kind: 'agent', base_url: 'http://agent' }];
+    let urlN = 0;
+    const fs = fakePersonStates({ a: { use: 'picture', picture: PIC, drawn: REC }, b: { use: 'picture', picture: { sourceId: 'gone', path: 'x.png' } } });
+    const cache = createAvatarCache({
+      makePersonState: fs.make, refreshOnVisible: false,
+      sourcesFor: (pid) => ({ list: async () => { lists.push(pid); return sources; } }),
+      resolveUrl: async (src, path) => { resolves.push(`${src.id}/${path}`); const n = ++urlN; return { url: `blob:pic-${n}`, release: () => released.push(n) }; },
+    });
+    const heard = [];
+    cache.subscribe((pid) => heard.push(pid));
+    cache.get('a'); cache.get('b');
+    await settle();
+    for (let i = 0; i < 30; i++) { cache.get('a'); cache.get('b'); }
+    await settle();
+    const va = cache.get('a');
+    check('the picture shows once it resolves', va.show === 'picture' && va.url === 'blob:pic-1');
+    check('*** thirty-two asks: the sources listed once per person, the file resolved once ***',
+      lists.join() === 'a,b' && resolves.join() === 's1/people/me.png', `${lists.join()} | ${resolves.join()}`);
+    check('a folder not connected on this device: no picture, and no drawing to fall to: nothing', cache.get('b').show === 'none');
+    cache.markBroken('a');
+    check('a picture that will not decode: the drawing instead, and its URL let go', cache.get('a').show === 'drawn' && released.join() === '1');
+    check('...announced, so the chip redraws', heard.filter((x) => x === 'a').length >= 2);
+    dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'a', row: { use: 'picture', picture: { sourceId: 's1', path: 'people/new.png' }, drawn: REC } } }));
+    cache.get('a'); await settle();
+    check('a different picture chosen: resolved afresh', cache.get('a').url === 'blob:pic-2' && resolves.length === 2);
+    dispatchEvent(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: 'a', row: { use: 'drawn', drawn: REC } } }));
+    await settle();
+    check('back to the drawing: the picture’s URL is let go', cache.get('a').show === 'drawn' && released.join() === '1,2');
+
+    // A folder that connects later (a media agent switched back on): a deliberate re-read tries again.
+    sources = [...sources, { id: 'gone', kind: 'agent', base_url: 'http://agent2' }];
+    cache.refresh('b');
+    await settle();
+    check('refresh(): a picture that failed is tried again, and now shows', cache.get('b').show === 'picture' && lists.join() === 'a,b,b');
+    cache.destroy();
+    check('destroy(): every picture URL let go', released.join() === '1,2,3', released.join());
+  }
+  {
+    // A real <img> that fails to decode, found by the capture-phase listener.
+    const stage = document.getElementById('stage');
+    const fs = fakePersonStates({ a: { use: 'picture', picture: PIC, drawn: REC } });
+    const cache = createAvatarCache({
+      makePersonState: fs.make, refreshOnVisible: false,
+      sourcesFor: () => ({ list: async () => [{ id: 's1' }] }),
+      resolveUrl: async () => ({ url: 'data:image/png;base64,bm90IGEgcGljdHVyZQ==', release() {} }),
+    });
+    let sawImg = false;
+    const draw = () => {
+      stage.innerHTML = `<span>${avatarHtml(cache.get('a'), { personId: 'a' })}Robin</span>`;
+      if (stage.querySelector('img[data-avatar-person="a"]')) sawImg = true;
+    };
+    cache.subscribe(draw);
+    const off = cache.bindErrors(stage);
+    cache.get('a'); await settle();
+    // (It can fail to decode within the same few ticks, so this asks whether it was put up at all.)
+    check('the picture was put on the page', sawImg);
+    await sleep(120); await settle();
+    check('*** it failed to decode: the drawing replaced it, no broken image left ***', !stage.querySelector('img') && !!stage.querySelector('.nav-av svg'));
+    off(); cache.destroy(); stage.innerHTML = '';
+  }
+
+  // ===================================================================================
+  section('the maker announces a save, so a face on the same page redraws without a read');
+  {
+    const fs = fakePersonStates({});
+    const heard = [];
+    const onEv = (e) => heard.push(e.detail);
+    addEventListener(AVATAR_CHANGED_EVENT, onEv);
+    const mount = document.createElement('div');
+    mount.style.cssText = 'width:600px;height:480px';
+    document.body.append(mount);
+    const inst = mountModule('avatar', { mount, bus: createBus(), state: { get: () => ({}), set() {}, subscribe() {} },
+      personId: 'p7', instanceId: 'announce', makePersonState: fs.make, sources: { list: async () => [] } });
+    inst.init();
+    await settle();
+    mount.querySelector('[data-act="make"]').click();
+    mount.querySelector('[data-act="save"]').click();
+    await settle();
+    check('Save sends the news, with whose avatar and the row itself', heard.length === 1 && heard[0].personId === 'p7' && heard[0].row.use === 'drawn' && !!heard[0].row.drawn);
+    const cache = createAvatarCache({ makePersonState: fakePersonStates({}).make, refreshOnVisible: false });
+    cache.get('p7'); await settle();
+    mount.querySelector('[data-act="no-avatar"]').click();
+    await settle();
+    check('"No avatar" sends it too', heard.length === 2 && heard[1].row.use === 'none');
+    inst.destroy?.(); mount.remove(); cache.destroy();
+    removeEventListener(AVATAR_CHANGED_EVENT, onEv);
+    // With no person (a panel signed out) the avatar is the panel's own; nothing to announce.
+    const m2 = document.createElement('div'); document.body.append(m2);
+    const i2 = mountModule('avatar', { mount: m2, bus: createBus(), state: { get: () => ({}), set() {}, subscribe() {} }, personId: null, instanceId: 'quiet' });
+    i2.init();
+    const n = heard.length;
+    addEventListener(AVATAR_CHANGED_EVENT, onEv);
+    m2.querySelector('[data-act="make"]').click(); m2.querySelector('[data-act="save"]').click();
+    await settle();
+    check('...but not for an avatar kept only on the panel (no person)', heard.length === n);
+    removeEventListener(AVATAR_CHANGED_EVENT, onEv);
+    i2.destroy?.(); m2.remove();
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

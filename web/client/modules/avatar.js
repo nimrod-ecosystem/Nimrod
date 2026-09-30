@@ -36,6 +36,7 @@ import {
   renderAvatar, surprise, normalizeRecord, readAvatar, avatarWarnings, PARTS, partOf, optionFor,
   describeAvatar, AVATAR_KEY, DEFAULT_WARN_BELOW,
 } from '../avatar.js';
+import { AVATAR_CHANGED_EVENT } from '../avatar_display.js';
 import { createCardImages } from '../card_face.js';
 import { createMediaSourcesClient, listItemNames } from '../media_sources.js';
 import { normalizeHex } from '../color_picker.js';
@@ -147,8 +148,14 @@ registerModule(
     function writeRow(patch) {
       ensureStore();
       const row = { ...readAvatar(savedRow()), ...patch, at: now() };
-      if (personStore) { personStore.set(row); try { personStore.flush?.(); } catch { /* retried by the handle */ } }
-      else state?.set?.({ [AVATAR_KEY]: row });
+      if (personStore) {
+        personStore.set(row); try { personStore.flush?.(); } catch { /* retried by the handle */ }
+        // Tell any face on this page showing this person (`avatar_display.js`), with the row itself,
+        // so it redraws without asking the server.
+        try {
+          globalThis.dispatchEvent?.(new CustomEvent(AVATAR_CHANGED_EVENT, { detail: { personId: personStoreFor, row: { ...row } } }));
+        } catch { /* no window: nothing on the page to tell */ }
+      } else state?.set?.({ [AVATAR_KEY]: row });
     }
 
     // ---- the picture path (reused, not rebuilt) --------------------------------------------

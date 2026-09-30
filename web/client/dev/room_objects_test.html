@@ -207,6 +207,25 @@ try {
     scene.setOptions({ aiVisits: 'never', light: 'day' });
     check('"never" hides a visit already showing, and allows no new one', !host.querySelector('.rs-visit') && scene.visit({ text: 'hi' }) === false);
     check('a visit with an avatar picture shows it', (scene.setOptions({ aiVisits: 'news' }), scene.visit({ src: '/demo-media/files/garden.svg', ms: 5000 })) && !!host.querySelector('.rs-visit img'));
+    // Row 2.37 item 5: the maker's record can visit too (`visit({ drawn })`).
+    check('a visit with a drawn avatar record draws it', scene.visit({ drawn: { hair: 'bun', skin: 's9' }, ms: 5000 }) === true
+      && !!host.querySelector('.rs-visit[data-avatar="drawn"] svg[data-avatar]') && !host.querySelector('.rs-visit img'));
+    check('...still, in a room asked for reduced motion', host.querySelector('.rs-visit svg[data-avatar]')?.dataset.motion === 'off');
+    check('...and made from a repaired record: nothing odd in one reaches the markup',
+      scene.visit({ drawn: { hair: '"><script>alert(1)<\/script>', skin: 'red;x', bg: 'url(x)' }, ms: 5000 }) === true
+      && !host.querySelector('.rs-visit script') && !!host.querySelector('.rs-visit svg[data-avatar]'));
+    check('...and a picture still wins over a drawing',
+      scene.visit({ src: '/demo-media/files/garden.svg', drawn: {}, ms: 5000 }) === true
+      && !!host.querySelector('.rs-visit img') && !host.querySelector('.rs-visit svg[data-avatar]'));
+    {
+      const host2 = makeHost();
+      const moving = mountRoomScene(host2, presetRecipe('living'), { ...OBJECT_DEFAULTS, light: 'day', reducedMotion: false, motion: 'gentle', notifyMs: 5000 });
+      moving.visit({ drawn: {} });
+      check('a drawn visitor in a gently moving room blinks and breathes', host2.querySelector('.rs-visit svg[data-avatar]')?.dataset.motion === 'on');
+      moving.visit({ drawn: {}, animate: false });
+      check('...unless the visit says animate: false', host2.querySelector('.rs-visit svg[data-avatar]')?.dataset.motion === 'off');
+      moving.destroy();
+    }
     scene.setOptions({ windowShows: 'view' });
     check('"Just the view": the weather is gone, and nothing listens for it', !host.querySelector('.rs-wx'));
     scene.destroy();

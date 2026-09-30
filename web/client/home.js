@@ -23,6 +23,7 @@
 // Changing person remounts the active panel; see `show()`.
 
 import { mountPeople } from './people.js';
+import { createAvatarCache } from './avatar_display.js';
 import { createBus } from './bus.js';
 import { mountPackLoader } from './pack_loader.js';
 
@@ -427,9 +428,13 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
   // The bar reports the current person once on mount and again on every change. The first
   // report is what makes `personId` valid before any panel is built, which is why the
   // first `show()` waits for it below rather than racing it.
+  // Each person's avatar beside their name (row 2.37 item 5): ONE cache for the page, one read
+  // per person, whatever redraws (`avatar_display.js`). No per-person state seam, no faces.
+  const avatars = makePersonState ? createAvatarCache({ makePersonState, user }) : null;
   const people = mountPeople(root.querySelector('[data-people]'), {
     profiles,
     storage,
+    avatars,
     onChange: (person) => {
       personId = (person && person.id) || '';
       personName = (person && person.name) || '';
@@ -448,6 +453,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
     person: () => people.current(),
     destroy() {
       people.destroy();
+      avatars?.destroy();
       if (panel && panel.destroy) panel.destroy();
     },
   };
