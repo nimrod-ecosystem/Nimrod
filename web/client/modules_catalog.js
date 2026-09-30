@@ -283,6 +283,17 @@ export const CATALOG = [
       + 'note, the fridge, a desk. It can be read aloud, and changed by typing or, with no keyboard, '
       + 'by picking a ready-made note. Every earlier note is kept and can be put back.',
   },
+  // Row 2.37 item 5: an optional drawn avatar for a person ("kind of like Miis"), or a picture instead.
+  {
+    type: 'avatar',
+    title: 'Avatar maker',
+    group: 'comfort',
+    use: 'touch',
+    lead: 'A drawn avatar for a person, made a part at a time, or a picture instead.',
+    needs: 'Nothing. A picture folder in Media to use a picture.',
+    why: 'A friendly face for a person on any screen, like a game character. Optional; it moves gently, '
+      + 'and stays still when motion is turned down.',
+  },
   // Row 2.37 item 4 (the weather behind the room's window). `touch`: it updates by itself; a touch reads it aloud.
   {
     type: 'weather',

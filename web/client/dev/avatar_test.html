@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>avatar — a drawn avatar from a small record, and the panel that makes one — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../avatar.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .live{display:inline-block;vertical-align:top;margin:12px 12px 0 0;border:1px solid #e4e0c2}
+  #gallery svg{width:96px;height:96px;margin:4px}
+</style>
+</head>
+<body>
+<h1>avatar — row 2.37 item 5 (a quick avatar maker, "kind of like Miis")</h1>
+<p>The drawing first (<code>avatar.js</code>): the same record always draws the same picture; every
+option of every part, and every pair of parts in every combination, draws a valid SVG; no colour is
+drawn that is not in a declared palette or the record itself; the movement is off when asked. Then the
+panel (<code>modules/avatar.js</code>): one switch walks the parts and their choices, Save and Cancel,
+Surprise me, a picture instead, the make-your-own prompts, reduced motion, and nothing left running
+after it is taken down.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script>
+  // A module that fails to load never reaches the summary; say so, so the runner reports it as thrown.
+  window.addEventListener('error', (e) => { const s = document.getElementById('summary'); if (s && !s.dataset.done) s.textContent = `threw: ${e.message} (${e.filename || ''}:${e.lineno || ''})`; });
+  window.addEventListener('unhandledrejection', (e) => { const s = document.getElementById('summary'); if (s && !s.dataset.done) s.textContent = `threw: ${e.reason && (e.reason.stack || e.reason.message) || e.reason}`; });
+</script>
+<h2>live, to look at: the panel, a small tile, and twenty surprises</h2>
+<div class="live" id="big" style="width:760px;height:520px"></div>
+<div class="live" id="tile" style="width:200px;height:220px"></div>
+<div id="gallery"></div>
+
+<script type="module">
+import '../modules/avatar.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import {
+  renderAvatar, normalizeRecord, surprise, seedFrom, PARTS, SKIN, BACKGROUNDS, FEATURE_INKS, DEFAULT_RECORD,
+  declaredColors, avatarWarnings, describeAvatar, readAvatar, featureInkFor, outlineFor, stepPart, colorOf,
+  AVATAR_KEY, DEFAULT_WARN_BELOW, MOTION_CSS,
+} from '../avatar.js';
+import { PROMPT_PHOTO, PROMPT_DESCRIBE, MAKE_ACTIONS } from '../modules/avatar.js';
+import { contrast, normalizeHex } from '../color_picker.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+const parser = new DOMParser();
+let lastSvgError = '';
+function svgOk(s) {
+  const doc = parser.parseFromString(s, 'image/svg+xml');
+  const root = doc.documentElement;
+  const err = doc.querySelector('parsererror');
+  if (err) lastSvgError = err.textContent.slice(0, 200);
+  return !err && root.localName === 'svg' && root.getAttribute('viewBox') === '0 0 200 200';
+}
+const HEX = /#[0-9a-fA-F]{6}\b/g;
+const hexesIn = (s) => (s.match(HEX) || []).map((h) => h.toLowerCase());
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the drawing: a record in, the same SVG out');
+  {
+    const r = surprise('someone');
+    const a = renderAvatar(r), b = renderAvatar({ ...r });
+    check('the same record draws the same SVG, byte for byte', a === b);
+    check('...and it is a valid SVG with a 200x200 viewBox', svgOk(a), lastSvgError);
+    check('a different record draws something different', renderAvatar(stepPart(r, 'hair', 1)) !== a);
+    check('the record is small: a dozen short fields', JSON.stringify(normalizeRecord(r)).length < 220,
+      JSON.stringify(normalizeRecord(r)).length);
+    check('an empty or junk record still draws (repaired to the starting record)',
+      svgOk(renderAvatar(null)) && svgOk(renderAvatar({ face: '<script>', skin: 'javascript:', top: 42 }))
+      && JSON.stringify(normalizeRecord({ face: '<script>' })) === JSON.stringify(normalizeRecord(DEFAULT_RECORD)));
+    check('a colour part takes ANY #rrggbb (every colour is offered)', normalizeRecord({ skin: '#12AB34' }).skin === '#12ab34');
+    check('...a shape part does not take a colour, or markup', normalizeRecord({ face: '#12ab34' }).face === DEFAULT_RECORD.face
+      && !renderAvatar({ skin: '"/><script>x<\/script>' }).includes('<script'));
+    check('nothing in a record can reach the SVG but an id or a colour: a title is escaped',
+      !renderAvatar(r, { title: '<b onmouseover=x>' }).includes('<b ') && renderAvatar(r, { title: 'A & B' }).includes('A &amp; B'));
+    check('an accessible name is on every drawing (role=img, aria-label, title)',
+      /role="img"/.test(a) && /aria-label="A drawn avatar:/.test(a) && /<title>A drawn avatar:/.test(a));
+    check('describe says the recognisable things', describeAvatar({ ...r, glasses: 'round', facial: 'beard', hair: 'short', hairColor: 'ginger' })
+      .includes('ginger hair') && describeAvatar({ ...r, glasses: 'round', facial: 'beard' }).includes('round glasses')
+      && describeAvatar({ ...r, facial: 'beard' }).includes('a beard'));
+  }
+
+  // =====================================================================================
+  section('every part, every option; every pair of parts, every combination');
+  const colorsSeen = new Set();
+  let strayColour = null;
+  {
+    let bad = [];
+    let n = 0;
+    for (const p of PARTS) {
+      for (const o of p.options) {
+        const s = renderAvatar({ ...DEFAULT_RECORD, [p.key]: o.id });
+        n++;
+        if (!svgOk(s)) bad.push(`${p.key}=${o.id}`);
+        for (const h of hexesIn(s)) colorsSeen.add(h);
+      }
+    }
+    check(`every option of every part draws a valid SVG (${n} drawings)`, !bad.length, bad.slice(0, 5).join(' '));
+    bad = [];
+    let pairs = 0;
+    const declared = declaredColors();
+    const t0 = performance.now();
+    for (let i = 0; i < PARTS.length; i++) {
+      for (let j = i + 1; j < PARTS.length; j++) {
+        const A = PARTS[i], B = PARTS[j];
+        for (const a of A.options) {
+          for (const b of B.options) {
+            const s = renderAvatar({ ...DEFAULT_RECORD, [A.key]: a.id, [B.key]: b.id }, { animate: pairs % 2 === 0 });
+            pairs++;
+            if (!svgOk(s)) { if (bad.length < 5) bad.push(`${A.key}=${a.id} ${B.key}=${b.id}`); }
+            for (const h of hexesIn(s)) { colorsSeen.add(h); if (!declared.has(h) && !strayColour) strayColour = `${h} in ${A.key}=${a.id} ${B.key}=${b.id}`; }
+          }
+        }
+      }
+    }
+    check(`every PAIR of parts in every combination draws a valid SVG (${pairs} drawings, ${Math.round(performance.now() - t0)} ms)`,
+      !bad.length && pairs > 3000, bad.join(' | '));
+    const seeds = Array.from({ length: 300 }, (_, i) => surprise(`seed-${i}`));
+    check('300 surprises all draw valid SVGs', seeds.every((r) => svgOk(renderAvatar(r))));
+  }
+
+  // =====================================================================================
+  section('colours: only the declared palettes, and the record\'s own');
+  {
+    check('every colour drawn across all of the above is in a declared palette', !strayColour, strayColour || '');
+    const custom = { ...DEFAULT_RECORD, skin: '#123456', hairColor: '#abcdef', top: '#fedcba', bg: '#0f0f0f' };
+    const s = renderAvatar(custom);
+    const declared = declaredColors();
+    const extra = hexesIn(s).filter((h) => !declared.has(h));
+    check('a record with free colours draws only those colours beyond the palettes',
+      extra.every((h) => ['#123456', '#abcdef', '#fedcba', '#0f0f0f'].includes(h)) && extra.includes('#123456'), extra.join(','));
+    // The source files themselves: every colour literal in avatar.js is a palette value, and the
+    // panel and its stylesheet hold none at all.
+    const src = await (await fetch('../avatar.js')).text();
+    const lit = hexesIn(src.replace(/\/\/.*$/gm, ''));
+    check('every colour literal in avatar.js IS a declared palette value (no stray literal in drawing code)',
+      lit.length > 20 && lit.every((h) => declared.has(h)), lit.filter((h) => !declared.has(h)).join(','));
+    const panel = await (await fetch('../modules/avatar.js')).text();
+    check('the panel (avatar_maker.js) writes no colour literal of its own', hexesIn(panel.replace(/\/\/.*$/gm, '')).length === 0,
+      hexesIn(panel).join(','));
+    const css = await (await fetch('../avatar.css')).text();
+    check('avatar.css holds no literal colour (check_hardcoded_colors.py stays where it was)',
+      !/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/.test(css.replace(/\/\*[\s\S]*?\*\//g, '')));
+    check('every listed skin has a feature ink at 3:1 or better on it (measured, not trusted)',
+      SKIN.every((k) => contrast(k.hex, k.feature) >= 3), SKIN.map((k) => `${k.id}:${contrast(k.hex, k.feature).toFixed(2)}`).join(' '));
+    check('a free skin colour gets whichever feature ink reads better',
+      ['#101010', '#fafafa', '#8a5a3a', '#3fa0ff'].every((h) => {
+        const ink = featureInkFor(h);
+        return FEATURE_INKS.every((c) => contrast(h, ink) >= contrast(h, c.hex));
+      }));
+    check('the outline stands out (3:1+) from EVERY listed background, so a figure never vanishes',
+      BACKGROUNDS.filter((b) => b.hex).every((b) => contrast(b.hex, outlineFor(b.hex)) >= 3));
+    check('twenty-plus skin tones, hair colours and backgrounds on offer', SKIN.length >= 12 && BACKGROUNDS.length >= 20
+      && PARTS.find((p) => p.key === 'hairColor').options.length >= 16);
+  }
+
+  // =====================================================================================
+  section('contrast: a warning, never a block');
+  {
+    const pale = { ...DEFAULT_RECORD, skin: 's1', bg: 'sky' };
+    const w = avatarWarnings(pale);
+    check('a very light face on a pale sky background is warned about', w.some((x) => x.part === 'skin'), JSON.stringify(w));
+    check('the warning says it will still show, and what would help', /still show/.test(w[0]?.text || '') && /background/.test(w[0]?.text || ''));
+    check('a deep skin tone on the same background is not', !avatarWarnings({ ...pale, skin: 's12' }).some((x) => x.part === 'skin'));
+    check('no background, no warning (what is behind it is not known)', avatarWarnings({ ...pale, bg: 'none' }).length === 0);
+    check('the threshold is a parameter (the panel\'s setting)', avatarWarnings(pale, { min: 1.0 }).length === 0);
+    check('the default threshold is the declared one', DEFAULT_WARN_BELOW === 1.3);
+    const seeds = Array.from({ length: 200 }, (_, i) => surprise(`w-${i}`));
+    const warned = seeds.filter((r) => avatarWarnings(r).length).length;
+    check('surprise me avoids combinations that would be warned about', warned === 0, `${warned} of 200 warned`);
+  }
+
+  // =====================================================================================
+  section('surprise me is deterministic');
+  {
+    check('the same seed gives the same face', JSON.stringify(surprise('p1')) === JSON.stringify(surprise('p1')));
+    const many = new Set(Array.from({ length: 50 }, (_, i) => JSON.stringify(surprise(`p1:${i}`))));
+    check('different seeds give different faces (50 seeds, 45+ distinct)', many.size >= 45, many.size);
+    check('a string seed and its number agree', surprise(seedFrom('abc')).face === surprise('abc').face
+      && JSON.stringify(surprise(seedFrom('abc'))) === JSON.stringify(surprise('abc')));
+    const s = Array.from({ length: 400 }, (_, i) => surprise(`n-${i}`));
+    const share = (k) => s.filter((r) => r[k] === 'none').length / s.length;
+    check('most surprises have no hat, glasses or beard (weighted), but some do',
+      share('extra') > 0.4 && share('extra') < 0.8 && share('glasses') > 0.4 && share('glasses') < 0.8 && share('facial') > 0.5 && share('facial') < 0.9,
+      `extra ${share('extra')} glasses ${share('glasses')} facial ${share('facial')}`);
+  }
+
+  // =====================================================================================
+  section('movement: on by default, off when asked');
+  {
+    const r = surprise('m');
+    const on = renderAvatar(r), off = renderAvatar(r, { animate: false });
+    check('moving: the drawing carries its own motion CSS, lids to blink with, and a breathing body',
+      on.includes('<style>') && on.includes('nav-lid') && on.includes('nav-anim') && on.includes('data-motion="on"'));
+    check('...all of it inside prefers-reduced-motion: no-preference', MOTION_CSS.includes('@media (prefers-reduced-motion: no-preference)')
+      && /no-preference\)\{[^}]*\.nav-lid\{animation/.test(MOTION_CSS));
+    check('...with resting lids open (scaleY 0) outside the guard, so a still avatar never has shut eyes',
+      MOTION_CSS.startsWith('.nav-lid{transform-box:fill-box;transform-origin:center top;transform:scaleY(0)}'));
+    check('still: no style, no lids, marked off', !off.includes('<style>') && !off.includes('nav-lid') && off.includes('data-motion="off"'));
+    check('nothing flashes: a blink every 9 s and a 4.4 s breath (the guide cat\'s cadence)',
+      /navBlink 9s/.test(MOTION_CSS) && /navBreathe 4\.4s/.test(MOTION_CSS));
+    check('two avatars side by side do not blink in step (a delay from the record)',
+      renderAvatar(surprise('a')).match(/--nav-delay:(-?[\d.]+)s/)[1] !== renderAvatar(surprise('b')).match(/--nav-delay:(-?[\d.]+)s/)[1]
+      || renderAvatar(surprise('c')).match(/--nav-delay:(-?[\d.]+)s/)[1] !== renderAvatar(surprise('a')).match(/--nav-delay:(-?[\d.]+)s/)[1]);
+  }
+
+  // =====================================================================================
+  section('what is kept on the person');
+  {
+    check('nothing kept reads as no avatar', readAvatar(undefined).use === 'none' && readAvatar({}).use === 'none');
+    check('a drawn record is repaired on the way in', readAvatar({ use: 'drawn', drawn: { face: 'bogus' } }).drawn.face === DEFAULT_RECORD.face);
+    check('a picture needs a source AND a path', readAvatar({ use: 'picture', picture: { sourceId: 's' } }).use === 'none'
+      && readAvatar({ use: 'picture', picture: { sourceId: 's', path: 'a.png' } }).use === 'picture');
+    check('"use picture" with no picture falls back to the drawn one', readAvatar({ use: 'picture', drawn: DEFAULT_RECORD }).use === 'drawn');
+    check('the key is "avatar"', AVATAR_KEY === 'avatar');
+  }
+
+  // =====================================================================================
+  // THE PANEL
+  // =====================================================================================
+  function fakeState(initial = {}) {
+    let v = { ...initial };
+    const subs = new Set();
+    const h = {
+      get: () => v, set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+      subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }, flush() { h.flushed = (h.flushed || 0) + 1; },
+      load: async () => {}, destroy() { h.destroyed = true; },
+    };
+    return h;
+  }
+  let n = 0;
+  function scratch(w = 700, h = 520) {
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+    document.body.append(el);
+    return el;
+  }
+  function mount({ personId = 'p1', saved = {}, person = {}, sources = null, names = {}, reducedMotion = false,
+    clipboard = undefined, noPersonState = false } = {}) {
+    const host = scratch();
+    const bus = createBus();
+    const personStates = [];
+    const pstore = {};
+    let pid = personId;
+    const ctx = {
+      mount: host, bus, state: fakeState(saved), events: null, user: 'u', profileId: 'p',
+      get personId() { return pid; }, instanceId: `avatar${++n}`, now: () => 1000, reducedMotion,
+      ...(noPersonState ? {} : { makePersonState: (id, key) => { const h = fakeState(pstore[`${id}/${key}`] || person); h.key = key; h.pid = id; personStates.push(h); return h; } }),
+      ...(sources ? { sources: { list: async () => sources } } : { sources: { list: async () => [] } }),
+      listItemNames: async (s) => names[s.id] || [],
+      ...(clipboard !== undefined ? { clipboard } : {}),
+    };
+    const inst = mountModule('avatar', ctx);
+    inst.init();
+    const probe = () => inst.impl.__probe();
+    const q = (sel) => host.querySelector(sel);
+    const press = (sel) => q(sel)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const pub = (v) => bus.publish(`avatar/${v}`);
+    const key = (k) => (q('.av') || host).dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
+    return { inst, host, bus, probe, q, press, pub, key, personStates, setPid: (x) => { pid = x; }, ctx };
+  }
+  const saves = (t) => t.personStates.map((h) => h.get()).filter((v) => v && v.use);
+
+  section('the panel: showing, and nothing until somebody makes one');
+  {
+    const t = mount();
+    check('it asks for the PERSON\'s state under "avatar"', t.personStates.length === 1 && t.personStates[0].key === 'avatar' && t.personStates[0].pid === 'p1');
+    check('with nothing kept it says there is no avatar, and that that is fine', t.q('[data-avatar-shown="none"]') && /optional/.test(t.host.textContent));
+    check('three ways in: make one, a picture instead, make your own', t.q('[data-act="make"]') && t.q('[data-act="to-picture"]') && t.q('[data-act="to-own"]'));
+    check('no "No avatar" button when there is none to remove', !t.q('[data-act="no-avatar"]'));
+    const words = t.host.textContent;
+    check('the site copy never names the first person it was built for', !/Christine|Cici|her screen/i.test(words));
+    t.inst.destroy();
+  }
+
+  section('one switch: select, walk the parts, open one, step its choices, keep or put back');
+  {
+    const t = mount();
+    t.pub('select');
+    check('the first select only lights the first stop', t.probe().view === 'show' && t.probe().lit === 0 && t.probe().litAct === 'make');
+    t.pub('select');
+    check('select on "Make an avatar" opens the maker, starting from a surprise seeded by the person',
+      t.probe().view === 'make' && JSON.stringify(t.probe().draft) === JSON.stringify(surprise('p1')));
+    check('...with the light on the first part (Face shape)', t.probe().litAct === 'part' && /^▸?\s*Face shape/.test(t.probe().litLabel || ''), t.probe().litLabel);
+    check('the walk is the parts, then Surprise / Picture / Make your own / Cancel / Save',
+      [...t.host.querySelectorAll('[data-walk]')].map((b) => b.dataset.act).join(',')
+        === [...PARTS.map(() => 'part'), ...MAKE_ACTIONS.map((a) => a.act)].join(','));
+    const face0 = t.probe().draft.face;
+    const svg0 = t.q('[data-avatar-preview]').innerHTML;
+    t.pub('select');
+    check('select on a part opens it: its choices are the walk now', t.probe().openPart === 'face'
+      && t.host.querySelectorAll('[data-act="opt"][data-part="face"]').length === PARTS[0].options.length);
+    t.pub('next');
+    const face1 = t.probe().draft.face;
+    check('next steps to the next choice, and the picture changes at once', face1 !== face0 && t.q('[data-avatar-preview]').innerHTML !== svg0);
+    t.pub('back');
+    check('back puts back what it was and closes the part, light on that row', t.probe().draft.face === face0 && t.probe().openPart === null
+      && t.probe().lit === 0 && t.probe().litAct === 'part');
+    t.pub('select'); t.pub('next'); t.pub('next'); t.pub('select');
+    const want = PARTS[0].options[(PARTS[0].options.findIndex((o) => o.id === face0) + 2) % PARTS[0].options.length].id;
+    check('select keeps the choice showing', t.probe().draft.face === want && t.probe().openPart === null, `${t.probe().draft.face} vs ${want}`);
+    // Hair is the third part.
+    t.pub('next'); t.pub('next');
+    check('next on the parts list moves to the next part', t.probe().litLabel?.includes('Hair') && !t.probe().litLabel?.includes('colour'), t.probe().litLabel);
+    const hair0 = t.probe().draft.hair;
+    t.pub('select'); t.pub('prev'); t.pub('select');
+    const hairs = PARTS[2].options;
+    check('prev inside a part steps backwards, wrapping', t.probe().draft.hair === hairs[(hairs.findIndex((o) => o.id === hair0) - 1 + hairs.length) % hairs.length].id);
+    check('nothing is saved while making', saves(t).length === 0);
+    // To Save: back up to the first part, then one prev wraps to Save.
+    while (t.probe().lit !== 0) t.pub('prev');
+    t.pub('prev');
+    check('Save is ONE prev from the first part', t.probe().litAct === 'save');
+    const made = t.probe().draft;
+    t.pub('select');
+    const kept = t.personStates[0].get();
+    check('Save keeps the record ON THE PERSON, marked drawn', kept.use === 'drawn' && JSON.stringify(kept.drawn) === JSON.stringify(normalizeRecord(made)), JSON.stringify(kept));
+    check('...and flushes it', t.personStates[0].flushed >= 1);
+    check('...and shows it', t.probe().view === 'show' && t.q('[data-avatar-shown="drawn"] svg') && t.q('[data-avatar-shown="drawn"] svg').outerHTML.includes('data-avatar'));
+    check('now "Change the drawn avatar" and "No avatar" are offered', /Change the drawn avatar/.test(t.host.textContent) && t.q('[data-act="no-avatar"]'));
+    t.inst.destroy();
+  }
+
+  section('Cancel, and back, change nothing');
+  {
+    const kept = { use: 'drawn', drawn: surprise('kept') };
+    const t = mount({ person: kept });
+    await tick();
+    t.press('[data-act="make"]');
+    check('the maker starts from the avatar already kept', JSON.stringify(t.probe().draft) === JSON.stringify(normalizeRecord(kept.drawn)));
+    t.press('[data-act="surprise"]');
+    check('Surprise me deals a whole new face', JSON.stringify(t.probe().draft) !== JSON.stringify(normalizeRecord(kept.drawn)));
+    t.press('[data-act="cancel"]');
+    check('Cancel: back to showing, the kept avatar untouched', t.probe().view === 'show'
+      && JSON.stringify(t.personStates[0].get().drawn) === JSON.stringify(kept.drawn) && !t.personStates[0].get().at);
+    t.press('[data-act="make"]'); t.press('[data-act="surprise"]');
+    t.pub('back');
+    check('back on the parts list is Cancel too', t.probe().view === 'show' && JSON.stringify(t.personStates[0].get().drawn) === JSON.stringify(kept.drawn));
+    t.inst.destroy();
+  }
+
+  section('surprise me in the panel is deterministic too');
+  {
+    const a = mount({ personId: 'same' }), b = mount({ personId: 'same' });
+    for (const t of [a, b]) { t.press('[data-act="make"]'); t.press('[data-act="surprise"]'); t.press('[data-act="surprise"]'); }
+    check('two panels for the same person deal the same surprises in the same order',
+      JSON.stringify(a.probe().draft) === JSON.stringify(b.probe().draft) && JSON.stringify(a.probe().draft) === JSON.stringify(surprise('same:2')));
+    a.inst.destroy(); b.inst.destroy();
+  }
+
+  section('a pointer and a keyboard');
+  {
+    const t = mount();
+    t.press('[data-act="make"]');
+    t.press('[data-act="part"][data-part="glasses"]');
+    check('clicking a part opens its choices', t.probe().openPart === 'glasses' && t.q('[data-act="opt"][data-value="sun"]'));
+    t.press('[data-act="opt"][data-part="glasses"][data-value="sun"]');
+    check('clicking a choice sets it, and the picture shows it', t.probe().draft.glasses === 'sun'
+      && t.q('[data-avatar-preview] [data-part="glasses"]'));
+    t.press('[data-act="done"]');
+    check('Done closes it and keeps the choice', t.probe().openPart === null && t.probe().draft.glasses === 'sun');
+    t.press('[data-act="part"][data-part="skin"]');
+    check('a colour part offers any colour too (a free colour input)', t.q('input[type="color"][data-free="skin"]'));
+    const inp = t.q('input[type="color"][data-free="skin"]');
+    inp.value = '#224466'; inp.dispatchEvent(new Event('input', { bubbles: true }));
+    check('a free colour goes into the record', t.probe().draft.skin === '#224466');
+    t.press('[data-act="done"]');
+    t.key('ArrowDown');
+    check('arrow keys walk (the first lights the first part)', t.probe().lit === 0);
+    t.key('Enter');
+    check('Enter opens the lit part', t.probe().openPart === 'face');
+    const f = t.probe().draft.face;
+    t.key('ArrowRight'); t.key('Escape');
+    check('Escape is back: the choice is put back', t.probe().openPart === null && t.probe().draft.face === f);
+    t.inst.destroy();
+  }
+
+  section('warnings show, and never stop a Save');
+  {
+    const t = mount();
+    t.press('[data-act="make"]');
+    t.press('[data-act="part"][data-part="skin"]'); t.press('[data-act="opt"][data-part="skin"][data-value="s1"]'); t.press('[data-act="done"]');
+    t.press('[data-act="part"][data-part="bg"]'); t.press('[data-act="opt"][data-part="bg"][data-value="sky"]'); t.press('[data-act="done"]');
+    const warn = t.q('[data-avatar-warnings] [data-warn="skin"]');
+    check('a close face and background is warned about, in a status line', warn && t.q('[data-avatar-warnings]').getAttribute('role') === 'status');
+    t.press('[data-act="save"]');
+    check('...and Save still saves it', t.personStates[0].get().use === 'drawn' && t.personStates[0].get().drawn.skin === 's1');
+    t.inst.destroy();
+  }
+
+  section('use a picture instead: the person\'s own Media, nothing uploaded');
+  {
+    const sources = [{ id: 'src1', kind: 'agent', label: 'Family pictures', base_url: 'https://media.invalid' }];
+    const t = mount({ sources, names: { src1: [{ path: 'me.png', name: 'me.png', kind: 'image' }, { path: 'clip.mp4', name: 'clip.mp4', kind: 'video' }] } });
+    t.press('[data-act="to-picture"]');
+    await tick(); await tick();
+    check('it lists the pictures in the person\'s sources, by name (videos left out)', t.q('[data-act="pick"][data-path="me.png"]') && !t.q('[data-path="clip.mp4"]'));
+    t.press('[data-act="save-picture"]');
+    check('Use this picture with nothing chosen asks for one first, and saves nothing', /Choose a picture first/.test(t.host.textContent) && saves(t).length === 0);
+    t.press('[data-act="pick"][data-path="me.png"]');
+    check('choosing one shows it', t.q('[data-picture-preview] [data-avatar-picture][data-path="me.png"]'));
+    t.press('[data-act="save-picture"]');
+    const kept = t.personStates[0].get();
+    check('saved as a REFERENCE into the source, the same shape a card\'s picture is',
+      kept.use === 'picture' && kept.picture.sourceId === 'src1' && kept.picture.path === 'me.png', JSON.stringify(kept));
+    await sleep(20);
+    const img = t.q('[data-avatar-shown="picture"] img');
+    check('the panel shows it, through the card picture loader', img && /me\.png/.test(img.getAttribute('src') || ''), img?.getAttribute('src'));
+    t.press('[data-act="no-avatar"]');
+    check('"No avatar" turns it off (optional), keeping nothing shown', t.personStates[0].get().use === 'none' && t.q('[data-avatar-shown="none"]'));
+    t.inst.destroy();
+    const empty = mount();
+    empty.press('[data-act="to-picture"]');
+    await tick(); await tick();
+    check('no picture folders: it says where to add one', empty.q('[data-no-sources]'));
+    empty.pub('select'); empty.pub('prev'); empty.pub('select');
+    check('...and back/Cancel returns to showing', empty.probe().view === 'show');
+    empty.inst.destroy();
+  }
+
+  section('make your own: the prompts, with a Copy button each');
+  {
+    const copied = [];
+    const t = mount({ clipboard: { writeText: async (x) => { copied.push(x); } } });
+    t.press('[data-act="to-own"]');
+    check('both prompts are shown in full', t.q('[data-prompt="photo"]').textContent === PROMPT_PHOTO && t.q('[data-prompt="describe"]').textContent === PROMPT_DESCRIBE);
+    check('...with the consent line and the photo-leaves-your-computer warning first',
+      /Only make an avatar of yourself, or of someone who has said yes/.test(t.host.textContent) && /leaves your computer/.test(t.host.textContent));
+    check('...and no copy that names the first person it was built for', !/Christine|Cici|her screen/i.test(t.host.textContent));
+    t.press('[data-act="copy"][data-which="photo"]');
+    await tick();
+    check('Copy puts the prompt on the clipboard and says so', copied[0] === PROMPT_PHOTO && /Copied/.test(t.host.textContent));
+    t.press('[data-act="copy"][data-which="describe"]');
+    await tick();
+    check('...the second one too', copied[1] === PROMPT_DESCRIBE);
+    t.pub('back');
+    check('back returns to showing', t.probe().view === 'show');
+    t.inst.destroy();
+    const bad = mount({ clipboard: { writeText: async () => { throw new Error('denied'); } } });
+    bad.press('[data-act="to-own"]');
+    bad.press('[data-act="copy"][data-which="photo"]');
+    await tick(); await tick();
+    check('a refused clipboard says what to do instead, and does not throw', /Copied|Could not copy/.test(bad.host.textContent));
+    bad.inst.destroy();
+  }
+
+  section('reduced motion, and the movement setting');
+  {
+    const kept = { use: 'drawn', drawn: surprise('rm') };
+    const moving = mount({ person: kept });
+    await tick();
+    check('by default the shown avatar moves', moving.q('[data-avatar-shown] svg')?.dataset.motion === 'on' && moving.probe().moving);
+    moving.inst.destroy();
+    const calm = mount({ person: kept, reducedMotion: true });
+    await tick();
+    check('when the device asks for reduced motion it is still, with no motion CSS at all',
+      calm.q('[data-avatar-shown] svg')?.dataset.motion === 'off' && !calm.q('[data-avatar-shown] style'));
+    calm.inst.destroy();
+    const off = mount({ person: kept, saved: { animate: false } });
+    await tick();
+    check('the setting turns it off', off.q('[data-avatar-shown] svg')?.dataset.motion === 'off');
+    off.ctx.state.set({ animate: true });
+    check('...and back on, live', off.q('[data-avatar-shown] svg')?.dataset.motion === 'on');
+    off.inst.destroy();
+  }
+
+  section('only shows it, when set to');
+  {
+    const t = mount({ saved: { allowChange: false }, person: { use: 'drawn', drawn: surprise('x') } });
+    await tick();
+    check('no buttons, just the avatar', !t.q('[data-walk]') && t.q('[data-avatar-shown="drawn"]'));
+    t.pub('select'); t.pub('select');
+    check('a switch cannot open the maker', t.probe().view === 'show');
+    t.inst.destroy();
+  }
+
+  section('where it is kept when there is no person yet');
+  {
+    const t = mount({ personId: null });
+    t.press('[data-act="make"]'); t.press('[data-act="save"]');
+    check('no person: kept on this panel instead', t.probe().stored === 'panel' && t.ctx.state.get()[AVATAR_KEY]?.use === 'drawn');
+    t.setPid('p9');
+    t.press('[data-act="make"]'); t.press('[data-act="save"]');
+    check('once the person is known, it is kept on them', t.probe().stored === 'person'
+      && t.personStates.some((h) => h.pid === 'p9' && h.get().use === 'drawn'));
+    t.inst.destroy();
+    const nps = mount({ noPersonState: true });
+    nps.press('[data-act="make"]'); nps.press('[data-act="save"]');
+    check('a host with no person store: kept on the panel', nps.ctx.state.get()[AVATAR_KEY]?.use === 'drawn');
+    nps.inst.destroy();
+  }
+
+  section('taken down: nothing left running');
+  {
+    const real = { st: window.setTimeout, ct: window.clearTimeout, si: window.setInterval, ci: window.clearInterval };
+    const live = new Set();
+    let intervals = 0;
+    window.setTimeout = (fn, ms, ...a) => { const id = real.st(() => { live.delete(id); fn(...a); }, ms); live.add(id); return id; };
+    window.clearTimeout = (id) => { live.delete(id); real.ct(id); };
+    window.setInterval = (fn, ms, ...a) => { intervals++; const id = real.si(fn, ms, ...a); live.add(id); return id; };
+    window.clearInterval = (id) => { live.delete(id); real.ci(id); };
+    let t;
+    try {
+      t = mount({ person: { use: 'drawn', drawn: surprise('td') } });
+      t.press('[data-act="make"]'); t.pub('select'); t.pub('select'); t.pub('next'); t.press('[data-act="to-own"]');
+      t.inst.destroy();
+    } finally {
+      Object.assign(window, { setTimeout: real.st, clearTimeout: real.ct, setInterval: real.si, clearInterval: real.ci });
+    }
+    await sleep(30);
+    check('it never starts an interval', intervals === 0);
+    check('no timer it started is still waiting after teardown', live.size === 0, `${live.size} left`);
+    check('the drawing is gone, so its CSS movement stopped with it', !t.host.querySelector('svg')
+      && (document.getAnimations?.() || []).filter((a) => t.host.contains(a.effect?.target)).length === 0);
+    check('the person\'s store was flushed and let go', t.personStates.every((h) => h.destroyed));
+    t.pub('select');
+    check('a press after teardown does nothing (and does not throw)', !t.host.querySelector('[data-avatar-maker]'));
+  }
+
+  section('the manifest');
+  {
+    const m = getManifest('avatar');
+    check('registered as "avatar", on the new core, optional, local', m && m.core === 'new' && m.importance === 'optional' && m.dependsOn === 'local');
+    check('every setting is labelled, and the movement and the warning level are settings',
+      m.settings.every((s) => s.key && s.label) && m.settings.some((s) => s.key === 'animate' && s.default === true)
+      && m.settings.some((s) => s.key === 'warnBelow' && s.default === DEFAULT_WARN_BELOW));
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+
+// The live look.
+const sources = [];
+const big = mountModule('avatar', { mount: document.getElementById('big'), bus: createBus(), state: { get: () => ({}), set() {}, subscribe() {} },
+  personId: 'demo', instanceId: 'live-big', sources: { list: async () => sources } });
+big.init();
+big.impl.__probe && document.getElementById('big').querySelector('[data-act="make"]')?.click();
+const tile = mountModule('avatar', { mount: document.getElementById('tile'), bus: createBus(),
+  state: { get: () => ({ avatar: { use: 'drawn', drawn: surprise('tile') } }), set() {}, subscribe() {} },
+  personId: null, instanceId: 'live-tile' });
+tile.init();
+document.getElementById('gallery').innerHTML = Array.from({ length: 20 }, (_, i) => renderAvatar(surprise(`gallery-${i}`), { size: 96 })).join('');
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

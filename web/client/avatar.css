@@ -1,0 +1,62 @@
+/* avatar.css — the look of `modules/avatar_maker.js` (make an avatar). Loaded by the module itself, from a
+   <link> inside its own mount, the way note.css is.
+
+   NO LITERAL COLOURS. The avatar draws its own colours (they are data, `avatar.js`'s palettes); a swatch
+   shows the colour it stands for, set inline from that data. Everything else here is a theme token, so
+   `web/tools/check_hardcoded_colors.py` finds nothing in this file.
+
+   The avatar's MOVEMENT is not here either: it travels inside each drawing (`MOTION_CSS` in avatar.js),
+   so it moves the same inline, as an <img>, or on another page that never loads this file.
+
+   SIZE: container units, so the same panel works full screen or as a small tile. */
+
+.av-wrap{width:100%;height:100%;min-height:0;container-type:size;color:var(--text);font-family:var(--font)}
+.av-wrap *{box-sizing:border-box}
+.av{height:100%;overflow:auto;padding:clamp(6px, 2.4cqmin, 22px)}
+.av [hidden]{display:none !important}
+
+.av-show{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px, 2cqmin, 18px)}
+.av-face{display:flex;align-items:center;justify-content:center}
+.av-show .av-face{width:min(70cqmin, 100%);aspect-ratio:1}
+.av-face svg,.av-pic{width:100%;height:100%;display:block;border-radius:18%;overflow:hidden}
+.av-pic .ab-img,.av-pic img{display:block;width:100%;height:100%;object-fit:cover}
+.av-empty{border:2px dashed var(--border);border-radius:18%;padding:6%;text-align:center;color:var(--text-muted);
+  font-size:clamp(13px, 3.4cqmin, 26px)}
+
+.av-make{display:grid;grid-template-columns:minmax(0, 2fr) minmax(0, 3fr);gap:clamp(8px, 2.4cqmin, 24px);align-items:start}
+@container (max-aspect-ratio: 1/1){ .av-make{grid-template-columns:1fr} }
+.av-preview{position:sticky;top:0;display:flex;flex-direction:column;gap:8px}
+.av-preview .av-face{width:100%;aspect-ratio:1}
+.av-desc{margin:0;font-size:clamp(12px, 2.6cqmin, 20px);color:var(--text-muted)}
+.av-warn p{margin:0;padding:6px 8px;border-left:4px solid var(--accent-warm, var(--accent));background:var(--surface-alt);
+  font-size:clamp(12px, 2.6cqmin, 20px)}
+
+.av-parts{display:flex;flex-direction:column;gap:clamp(4px, 1cqmin, 10px)}
+.av-row{width:100%;min-height:44px;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:6px clamp(8px, 1.6cqmin, 16px);border:2px solid var(--border);border-radius:12px;background:var(--surface);
+  color:var(--text);font:inherit;font-size:clamp(14px, 3cqmin, 24px);cursor:pointer;text-align:left}
+.av-label{font-weight:700}
+.av-val{display:inline-flex;align-items:center;gap:6px;color:var(--text-soft)}
+.av-open .av-row{border-color:var(--accent)}
+.av-choices{display:flex;flex-wrap:wrap;gap:clamp(4px, 1cqmin, 10px);padding:8px 0}
+.av-opt,.av-btn{min-height:44px;padding:0 clamp(10px, 1.8cqmin, 18px);border:2px solid var(--border);border-radius:12px;
+  background:var(--surface);color:var(--text);font:inherit;font-weight:700;font-size:clamp(13px, 2.8cqmin, 22px);
+  cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.av-opt[aria-pressed="true"],.av-btn[aria-pressed="true"]{border-color:var(--accent);background:var(--surface-alt)}
+.av-opt[aria-pressed="true"]::after,.av-btn[aria-pressed="true"]::after{content:"\00a0\2713"}
+.av-sw{display:inline-block;width:1.1em;height:1.1em;border-radius:50%;border:1px solid var(--border)}
+.av-sw-none{background:repeating-linear-gradient(45deg, var(--surface) 0 3px, var(--border) 3px 6px)}
+.av-free{display:inline-flex;align-items:center;gap:6px;font-size:clamp(12px, 2.6cqmin, 20px)}
+.av-btns{display:flex;flex-wrap:wrap;gap:clamp(4px, 1.2cqmin, 12px);justify-content:center}
+.av-parts .av-btns{justify-content:flex-start;padding-top:6px}
+
+/* THE SWITCH CURSOR: an outline AND a marker, so the lit stop reads without colour (note.css's rule). */
+.av [data-on="1"]{outline:max(3px, .8cqmin) solid var(--link);outline-offset:2px}
+.av-btn[data-on="1"]::before,.av-opt[data-on="1"]::before,.av-row[data-on="1"] .av-label::before{content:"\25B8\00a0"}
+
+.av-head{margin:8px 0 4px;font-size:clamp(14px, 3.2cqmin, 26px);font-weight:700;color:var(--text-strong)}
+.av-hint,.av-msg{margin:4px 0;font-size:clamp(12px, 2.6cqmin, 20px);color:var(--text-muted)}
+.av-msg{color:var(--text-strong);font-weight:700}
+.av-picture .av-face{width:min(40cqmin, 220px);aspect-ratio:1;margin:8px auto}
+.av-prompt{white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0 8px;padding:10px 12px;border:1px solid var(--border);
+  border-radius:10px;background:var(--surface);font-size:clamp(11px, 2.4cqmin, 18px);user-select:all}
