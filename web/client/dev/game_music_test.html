@@ -259,6 +259,81 @@ const RESOLVE = (items) => async () => ({ items, count: items.length });
         + 'loud, never silent ***', m.state().gain === 1 && m.state().playing);
     }
 
+    section('*** the screen’s mixer: the bed plays through its media channel, in its context (row 2.35) ***');
+    {
+      // A context whose nodes remember where they were connected, and a mixer chain around it.
+      const mk = () => {
+        const f = fakeContext();
+        const wrap = (n) => { n.to = []; n.connect = (d) => { n.to.push(d); }; n.disconnect = () => { n.to = []; }; return n; };
+        const cg = f.ctx.createGain.bind(f.ctx);
+        f.gainsMade = [];
+        f.ctx.createGain = () => { const g = wrap(cg()); f.gainsMade.push(g); return g; };
+        return f;
+      };
+      const shared = mk();
+      const media = { name: 'media-in', connect() {}, disconnect() {} };
+      const asked = [];
+      const fx = { context: () => shared.ctx, input: (ch) => { asked.push(ch); return media; } };
+      let own = 0;
+      const m = createGameMusic({ fx, makeContext: () => { own += 1; return fakeContext().ctx; } });
+      m.play();
+      check('*** it builds the bed in the screen’s context, not a new one of its own ***',
+        own === 0 && shared.built.oscillators >= 3, JSON.stringify({ own, built: shared.built }));
+      check('*** ...and asks for the MEDIA channel ***', asked.includes('media'), JSON.stringify(asked));
+      // The bed's own gain (the first one it makes) is what goes out; it must go to the channel.
+      const out0 = shared.gainsMade[0];
+      check('*** ...and connects into it rather than straight to the speakers ***',
+        !!out0 && out0.to.includes(media) && !out0.to.includes(shared.ctx.destination),
+        out0 ? JSON.stringify(out0.to.map((d) => d.name || (d === shared.ctx.destination ? 'destination' : '?'))) : 'no gain');
+      m.pause();
+      check('*** pausing never closes a shared context: it belongs to the screen ***',
+        shared.built.closed === false && shared.built.stopped >= 4, JSON.stringify(shared.built));
+      m.play();
+      check('...and playing again reuses it', own === 0 && shared.built.oscillators >= 6);
+      m.destroy();
+      check('...nor does destroying the game', shared.built.closed === false);
+    }
+    {
+      // Through the audio bus handle, as the kiosk hands it to every module.
+      const shared = fakeContext();
+      const audio = createAudioBus();
+      const asked = [];
+      audio.effects = () => ({ context: () => shared.ctx, input: (ch) => { asked.push(ch); return { connect() {}, disconnect() {} }; } });
+      const m = createGameMusic({ audio, audioId: 'gfx', makeContext: () => { throw new Error('should not make one'); } });
+      m.play();
+      check('*** a game that passes only `audio` gets the screen’s chain from it (audio.effects()) ***',
+        asked.includes('media') && shared.built.oscillators >= 3 && m.state().playing, JSON.stringify(asked));
+      m.destroy();
+      check('...and still never closes it', shared.built.closed === false);
+    }
+    {
+      // No chain, a chain with no context, a chain that throws: the bed makes its own and plays.
+      const own = fakeContext();
+      const m = createGameMusic({ makeContext: () => own.ctx });
+      m.play(); m.pause();
+      check('with no chain it makes its own context, and closes THAT one when it stops', own.built.closed === true);
+      const own2 = fakeContext();
+      const m2 = createGameMusic({ fx: { context: () => null, input: () => null }, makeContext: () => own2.ctx });
+      m2.play();
+      check('*** a chain with no audio context: plays direct in its own ***', own2.built.oscillators >= 3 && m2.state().playing);
+      m2.destroy();
+      const own3 = fakeContext();
+      const shared3 = fakeContext();
+      const m3 = createGameMusic({ fx: { context: () => shared3.ctx, input: () => { throw new Error('boom'); } },
+        makeContext: () => own3.ctx });
+      m3.play();
+      check('*** a chain that will not hand over its channel: plays direct, in its OWN context (never silent) ***',
+        own3.built.oscillators >= 3 && shared3.built.oscillators === 0 && m3.state().playing,
+        JSON.stringify({ own: own3.built, shared: shared3.built }));
+      m3.destroy();
+      const own4 = fakeContext();
+      const m4 = createGameMusic({ audio: { register() {}, setActive() {}, unregister() {}, effects() { throw new Error('boom'); } },
+        makeContext: () => own4.ctx });
+      m4.play();
+      check('a bus whose effects() throws: plays direct', own4.built.oscillators >= 3 && m4.state().playing);
+      m4.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

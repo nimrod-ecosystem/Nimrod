@@ -57,6 +57,8 @@ import { speak, cancel as cancelSpeech, waitForVoices, listVoices } from './voic
 import { BOARD_TOPIC, THEME_PICKED_TOPIC } from './modules/board.js';
 import './modules/board.js';
 import { mountThemePicker } from './theme.js';
+import { createMixerFx } from './mixer_fx.js';
+import { MIXER_DEFAULTS } from './mixer.js';
 
 const STORE_KEY = 'nimrod.talk.v1';
 const LOG_KEY = 'nimrod.talk.log.v1';
@@ -307,8 +309,29 @@ export function startTalk({
   openEl = document.getElementById('open'),
   view = window,
   doc = document,
+  // *** THE RECORDED WORDS GO THROUGH THE MIXER'S TALKING-BOARD CHANNEL (row 2.35, 2026-09-30). ***
+  // `fx` is a mixer_fx.js chain (made here, on the first word, when none is passed); each recorded
+  // clip is routed through its `aac` channel, where the compressor evens a soft word and a loud one
+  // (MIXER_DEFAULTS: on for the talking-board voice). `routeElement` REFUSES whenever routing could
+  // silence the clip -- no Web Audio, an audio context not yet allowed to run (before the first tap), a
+  // recording from another origin without CORS -- and a refused clip plays direct, exactly as before.
+  // The synthesised voice cannot be routed at all (the browser's speech engine has no audio output a
+  // page can reach), so it is untouched. `makeAudio` is the seam a suite uses instead of a real <audio>.
+  fx = undefined,
+  makeAudio = () => new Audio(),
 } = {}) {
   let cfg = normalizeCfg({ ...readStore(STORE_KEY, {}), ...fromQuery(view.location?.search) });
+  // The chain, made on the first word rather than at load: making it makes an audio context, and one
+  // made before anybody has touched the page starts suspended (and would refuse every clip anyway).
+  let chain = fx === undefined ? null : fx;
+  function effectsChain() {
+    if (chain || fx !== undefined) return chain;
+    try {
+      chain = createMixerFx();
+      chain.setCompressor('aac', !!MIXER_DEFAULTS.compress.aac);
+    } catch (err) { console.error('talk: no mixer effects', err); chain = null; }
+    return chain;
+  }
 
   const bus = createBus();
   const aim = createAim({ bus });
@@ -387,12 +410,15 @@ export function startTalk({
     // decode. Both land in the same place, which is the point — from the room, "the file is
     // absent" and "the file would not play" are one problem.
     try {
-      const a = new Audio();
+      const a = makeAudio();
       let fellBack = false;
       const fallBack = () => { if (fellBack) return; fellBack = true; playing = null; synthesise(word); };
       a.addEventListener('error', fallBack);
       a.addEventListener('ended', () => { playing = null; });
       a.src = url;
+      // Through the talking-board channel when the mixer will take it; direct when it will not. Nothing
+      // about routing may stop the word being said, so a throw here is a refusal.
+      try { effectsChain()?.routeElement?.(a, 'aac'); } catch (err) { console.error('talk: route clip', err); }
       playing = a;
       lastHeard = 'a recording';
       const p = a.play();
@@ -789,7 +815,13 @@ export function startTalk({
     board: inst,
     keys: KEYS.map(([k, what]) => ({ key: k, what })),
     openSheet, closeSheet,
+    // Say a word as a card press does (the written word, then a recording or the device voice).
+    say: (text) => sayIt(text),
+    // The mixer chain the recordings go through, once the first word has made it (null before).
+    effects: () => chain,
     destroy() {
+      // Only a chain this page made is taken down; one handed in belongs to whoever passed it.
+      if (fx === undefined) { try { chain?.destroy?.(); } catch { /* already gone */ } chain = null; }
       view.removeEventListener('keydown', onKey);
       root.removeEventListener('pointermove', onPointer);
       root.removeEventListener('pointerdown', onPointer);

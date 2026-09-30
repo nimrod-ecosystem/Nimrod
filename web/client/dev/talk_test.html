@@ -430,6 +430,63 @@ try {
   }
 
   // =====================================================================================
+  section('*** a recording goes through the mixer’s talking-board channel, and never goes silent for it (row 2.35) ***');
+  {
+    const host = document.createElement('div');
+    host.innerHTML = '<div data-b></div><div data-s hidden></div><div data-o></div><div data-say></div><div data-t></div><div data-c></div>';
+    document.body.append(host);
+    const q = (s) => host.querySelector(s);
+    const saved = localStorage.getItem('nimrod.talk.v1');
+    const made = [];
+    const makeAudio = () => {
+      const h = {};
+      const a = { src: '', played: 0, addEventListener: (k, fn) => { h[k] = fn; }, pause() {},
+        play() { a.played += 1; return Promise.resolve(); } };
+      made.push(a);
+      return a;
+    };
+    const start = (fx) => startTalk({ root: q('[data-b]'), sheetEl: q('[data-s]'), openEl: q('[data-o]'),
+      bannerEl: q('[data-say]'), toastEl: q('[data-t]'), cursorRoot: q('[data-c]'), fx, makeAudio });
+    try {
+      localStorage.setItem('nimrod.talk.v1', JSON.stringify({ speakAloud: true, useClips: true, clipBase: './aac/audio' }));
+      const routed = [];
+      let answer = true;
+      const fx = { routeElement: (el, ch) => { routed.push([el, ch]); if (answer === 'throw') throw new Error('boom'); return answer; } };
+      const t = start(fx);
+      t.say('Yes');
+      const a1 = made[made.length - 1];
+      check('*** a recorded word is routed through the mixer’s AAC channel ***',
+        routed.length === 1 && routed[0][0] === a1 && routed[0][1] === 'aac', JSON.stringify(routed.map(([, c]) => c)));
+      check('...with its source set first (the mixer checks where the file is from)', /yes\.wav$/.test(routed[0]?.[0]?.src || ''),
+        String(routed[0]?.[0]?.src));
+      check('...and it plays', a1.played === 1);
+      answer = false;
+      t.say('No');
+      check('*** the mixer REFUSES (no Web Audio, not running yet, another origin): it still plays, direct ***',
+        routed.length === 2 && made[made.length - 1].played === 1);
+      answer = 'throw';
+      t.say('Yes');
+      check('*** the mixer THROWS: it still plays ***', routed.length === 3 && made[made.length - 1].played === 1);
+      t.destroy?.();
+      t.board?.destroy?.();
+      // No chain handed in: the page makes one on the first word, the talking-board compressor on.
+      const t2 = start(undefined);
+      check('no chain is made before anything is said (a context made before a tap starts suspended)', t2.effects() === null);
+      t2.say('Yes');
+      check('*** the first word makes the page’s own chain, with the AAC compressor on (the mixer’s default) ***',
+        !!t2.effects() && t2.effects().state().aac.compressor === true, JSON.stringify(t2.effects()?.state?.().aac));
+      check('...and the word is still played either way', made[made.length - 1].played === 1);
+      const chain = t2.effects();
+      t2.destroy?.();
+      t2.board?.destroy?.();
+      check('closing the page takes its own chain down', chain.context() === null);
+    } finally {
+      if (saved == null) localStorage.removeItem('nimrod.talk.v1'); else localStorage.setItem('nimrod.talk.v1', saved);
+      host.remove();
+    }
+  }
+
+  // =====================================================================================
   section('*** a theme picked on this page is announced, as the kiosk menu announces one ***');
   {
     // Mike, 2026-09-29: several ways in "should all really just be the same thing". The board's

@@ -338,8 +338,10 @@ const ds = () => root.querySelector('.kiosk').dataset;
       // 16, not 14 — the burn-in field (2.18) added one more screen-level row ahead of Home in
       // this same walk. Bumped with a little margin rather than the exact new count, so the
       // next row added here doesn't silently fail this same way again.
+      // 18 (2026-09-30): the screen's Volume row (master_volume.js, `essential`) is one more stop ahead of
+      // Home, and it ran out the margin. The mixer's rows are advanced, so they are not on this walk.
       const stops = new Set();
-      for (let i = 0; i < 16; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
+      for (let i = 0; i < 18; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
       check('the cycleable field rows are stops on the one-button walk',
         stops.has('set:intervalMs') && stops.has('set:fit'), [...stops].join(','));
       check('the disabled ones are NOT stops',
@@ -2383,6 +2385,222 @@ const ds = () => root.querySelector('.kiosk').dataset;
     } catch (e) {
       check('the stage 3b plain-bar section threw', false, String((e && e.stack) || e));
     } finally {
+      try { dk?.destroy(); } catch { /* already gone */ }
+      boxes.forEach((b) => b.remove());
+    }
+  }
+
+  // *** 2026-09-30: TODAY'S PIECES, WIRED INTO THE KIOSK. *** Built and committed on their own
+  // (master_volume.js, mixer.js + mixer_fx.js, listening_cue.js, the room's system/* buttons,
+  // cat_help.js), each with its own suite -- and none of it reachable from a real screen until the
+  // kiosk constructs it. These checks are about THAT: the kiosk builds each one, feeds it the
+  // screen's (or the person's) settings, follows a change, and takes it down again.
+  {
+    const { verbTopic, SYSTEM_TOPICS, verbTarget } = await import('../actions.js');
+    const { ROOM_ACTIONS } = await import('../room_scene.js');
+    const { LISTENING_TOPIC } = await import('../input_speech.js');
+    const { writeCatPrefs } = await import('../cat_guide.js');
+    const { THEMES, listThemes } = await import('../theme.js');
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const wUser = USER + '-wiring';
+    const wProfiles = createProfilesClient({ user: wUser });
+    const boxes = [];
+    const box = () => { const b = document.createElement('div'); b.style.cssText = 'position:relative;width:640px;height:420px;margin:8px 0'; document.body.append(b); boxes.push(b); return b; };
+    let wk = null, dk = null;
+    try {
+      const wp = await wProfiles.create('TEST-wiring');
+      await wProfiles.addModule(wp.id, 'photos');
+      await wProfiles.addModule(wp.id, 'room');
+      const wFull = await wProfiles.get(wp.id);
+      const wStore = mem();
+      const wBus = createBus();
+      const wbox = box();
+      wk = await mountKiosk(wbox, { user: wUser, profileId: wp.id, profiles: wProfiles, bus: wBus,
+        storage: wStore, session: mem(), navigate: () => {}, reloadPage: () => {} });
+      await sleep(150);
+      const item = (id) => wk.menu.items().find((r) => r.id === id);
+      const walkTo = (id) => { for (let i = 0; i < 90 && wk.menu.focusId() !== id; i += 1) wk.menu.next(); return wk.menu.focusId() === id; };
+      const stepTo = (id, hint, max = 30) => { for (let i = 0; i < max && item(id)?.hint !== hint; i += 1) wk.menu.select(); return item(id)?.hint === hint; };
+
+      // ---- 1. THE MASTER VOLUME (row 2.28 call 4 / row 2.35) ----
+      check('*** wiring, master: the screen starts at full volume ***', wk.audio().master() === 1, String(wk.audio().master()));
+      wBus.publish(verbTopic('volume-down'));
+      check('*** wiring, master: "quieter" (verb/volume-down) moves the audio bus master one step ***',
+        Math.abs(wk.audio().master() - 0.8) < 1e-9, String(wk.audio().master()));
+      wk.menu.open();
+      check('wiring, master: ...saved on the screen’s own settings row (the Volume row now reads 80)',
+        /80/.test(item('set:masterVolume')?.hint || ''), String(item('set:masterVolume')?.hint));
+      check('wiring, master: the Volume row is a stop on the one-button walk', walkTo('set:masterVolume'));
+      wk.menu.select();
+      check('*** wiring, master: stepping the row moves the master (the sync on a settings change) ***',
+        Math.abs(wk.audio().master() - 0.9) < 1e-9, `${item('set:masterVolume')?.hint} / ${wk.audio().master()}`);
+      check('wiring, master: how big a step is, and the floor, are advanced rows (not on "The usual")',
+        !item('set:masterStep') && !item('set:masterFloor'));
+
+      // ---- 2. THE MIXER (row 2.35) ----
+      check('wiring, mixer: its rows are advanced (not on "The usual")', !item('set:faderMedia') && !item('set:floorCall'));
+      walkTo('set:complexity');
+      stepTo('set:complexity', 'Everything');
+      check('*** wiring, mixer: at "Everything" every channel has a volume row and a minimum row ***',
+        ['Call', 'Aac', 'Voice', 'Media', 'Sfx'].every((c) => item(`set:fader${c}`) && item(`set:floor${c}`)),
+        wk.menu.items().map((r) => r.id).filter((x) => /^set:(fader|floor)/.test(x || '')).join(','));
+      check('wiring, mixer: ...and the step and floor of the master', !!item('set:masterStep') && !!item('set:masterFloor'));
+      walkTo('set:faderSfx');
+      wk.menu.select();
+      const sfxHint = item('set:faderSfx')?.hint || '';
+      check('*** wiring, mixer: stepping a channel’s volume reaches the audio bus ***',
+        wk.audio().fader('sfx') < 1 && Math.abs(wk.audio().fader('sfx') * 100 - parseInt(sfxHint, 10)) < 1e-6,
+        `${sfxHint} / ${wk.audio().fader('sfx')}`);
+      for (let i = 0; i < 12 && wk.audio().fader('sfx') !== 1; i += 1) wk.menu.select();
+      check('(setup) the game-sounds volume is back to full', wk.audio().fader('sfx') === 1, String(wk.audio().fader('sfx')));
+      walkTo('set:complexity');
+      stepTo('set:complexity', 'The usual');
+      check('wiring, mixer: no effects chain -- no audio context -- until something asks for one', wk.effects() === null);
+      const fx = wk.audio().effects?.();
+      check('*** wiring, mixer: a module asking the audio bus for its effects gets the one chain, made then ***',
+        !!fx && wk.effects() === fx);
+      check('*** wiring, mixer: ...and the saved mix is applied the moment it exists (the talking-board compressor, on by default) ***',
+        fx?.state?.().aac?.compressor === true, JSON.stringify(fx?.state?.().aac));
+      const CYBER = 'Cyberpunk — a street at night';
+      walkTo('set:theme');
+      const wasTheme = item('set:theme')?.hint;
+      stepTo('set:theme', CYBER, 25);
+      const tid = listThemes().find((t) => t.label === CYBER)?.id;
+      check('*** wiring, mixer: the screen’s scene follows the theme (for "sounds like: match the scene") ***',
+        !!THEMES[tid]?.scene && wk.soundScene() === THEMES[tid].scene, `${tid} -> ${wk.soundScene()}`);
+      stepTo('set:theme', wasTheme, 25);
+      wk.menu.close();
+
+      // ---- 3. THE LISTENING CUE (rows 2.28, 2.36) ----
+      const cue = () => wbox.querySelector('.kiosk .listen-cue');
+      check('*** wiring, listening: the "Listening" cue is mounted on the kiosk, hidden ***', !!cue() && cue().hidden);
+      wk.audio().register('wiring-bed', { tier: 'sfx' });
+      wk.audio().setActive('wiring-bed', true);
+      const bedAt = wk.audio().levelOf('wiring-bed');
+      wBus.publish(LISTENING_TOPIC, { on: true, ms: 4000 });
+      check('*** wiring, listening: the wake phrase shows it ***', !!cue() && !cue().hidden);
+      check('*** wiring, listening: ...and turns other sound down while the window is open (duck, the default) ***',
+        wk.audio().levelOf('wiring-bed') > 0 && wk.audio().levelOf('wiring-bed') < bedAt, `${bedAt} -> ${wk.audio().levelOf('wiring-bed')}`);
+      wBus.publish(LISTENING_TOPIC, { on: false });
+      check('wiring, listening: ...both undone when the window closes', cue()?.hidden && wk.audio().levelOf('wiring-bed') === bedAt);
+      wk.audio().unregister('wiring-bed');
+      check('(setup) the screen has a person behind it', !!wFull.person_id);
+      const lState = createState({ url: wProfiles.personStateURL(wFull.person_id, INPUTS_KEY), user: wUser });
+      await lState.load().catch(() => {});
+      lState.set({ listenVisual: false });
+      await lState.flush();
+      lState.destroy();
+      check('*** wiring, listening: the person’s own row turns the cue off, and the kiosk re-attaches with no reload ***',
+        await settled(() => !cue(), 9000));
+
+      // ---- 4. THE ROOM'S SYSTEM BUTTONS, AND THE VERBS ----
+      const claimOf = (topic) => { let c = false; wBus.publish(topic, { action: 'test', claim: () => { c = true; } }); return c; };
+      check('*** wiring, room: the kiosk answers system/fullscreen, and claims it ***', claimOf(SYSTEM_TOPICS.fullscreen));
+      check('*** wiring, room: system/settings -- claimed, and the menu opens ***', claimOf(SYSTEM_TOPICS.settings) && wk.menu.isOpen());
+      wk.menu.close();
+      const screensEl = wbox.querySelector('[data-screens]');
+      check('*** wiring, room: system/dashboards -- claimed, and the screen picker (Home) opens ***',
+        claimOf(SYSTEM_TOPICS.dashboards) && screensEl.hidden === false);
+      wbox.querySelector('[data-act="home"]').click();
+      const ctl = wbox.querySelector('.kiosk > .k-controls');
+      ctl.classList.add('hidden');
+      check('*** wiring, room: system/modules -- claimed, and the bar with its panel buttons comes up ***',
+        claimOf(SYSTEM_TOPICS.modules) && !ctl.classList.contains('hidden'));
+      check('wiring, room: the kiosk answers exactly the topics a room’s buttons send',
+        JSON.stringify(Object.values(ROOM_ACTIONS).map((a) => a.topic).sort()) === JSON.stringify(Object.values(SYSTEM_TOPICS).sort()),
+        JSON.stringify(SYSTEM_TOPICS));
+      check('*** wiring, room: the system/* actions are bindable (they are in the registry a switch binds to) ***',
+        Object.values(SYSTEM_TOPICS).every((t) => wk.runtime.actions.has(t)));
+      check('wiring, room: holding on the room (room/hold, pet an animal) is its own bindable action',
+        wk.runtime.actions.has('room/hold'));
+      check('*** wiring, verbs: the room answers next / prev / select / back ***',
+        ['next', 'prev', 'select', 'back'].every((v) => verbTarget('room', v)?.topic === `room/${v}`));
+      check('wiring, verbs: ...and the word games (back skips, like trivia)',
+        ['next', 'prev', 'select'].every((v) => verbTarget('word_games', v)?.topic === `word_games/${v}`)
+        && verbTarget('word_games', 'back')?.topic === 'word_games/skip');
+
+      // ---- 6. THE ROOM'S REACTIONS, FROM THE MENU ----
+      wk.menu.open();
+      check('wiring, reactions: no "Room reactions…" row while no room is on the screen', !item('room-reactions'));
+      wk.menu.close();
+      await wk.showPrimary(1);
+      await settled(() => !!wbox.querySelector('.rs-obj[data-id="door"]'), 5000);
+      check('(setup) the room is on the stage', wk.primaryType() === 'room', String(wk.primaryType()));
+      wbox.querySelector('.rs-obj[data-id="door"]')?.click();
+      await sleep(60);
+      check('*** wiring, room: a real room’s door opens the real menu (claimed: no "on a screen" note) ***',
+        wk.menu.isOpen() && !wbox.querySelector('.rs-toast'));
+      check('*** wiring, reactions: "Room reactions…" is in the menu now a room is on the screen ***', !!item('room-reactions'));
+      walkTo('room-reactions');
+      wk.menu.select();
+      await sleep(60);
+      check('*** wiring, reactions: pressing it opens the room’s reactions editor, and the menu gets out of the way ***',
+        !!wbox.querySelector('[data-rn-editor]') && !wk.menu.isOpen());
+      wBus.publish('room/back');
+      await sleep(40);
+
+      // ---- 5. NIMROD, FROM THE BAR ----
+      const helpBtn = wbox.querySelector('.kiosk > .k-controls [data-act="help"]');
+      check('*** wiring, Nimrod: the plain bar has a help button ***', !!helpBtn && !helpBtn.hidden);
+      helpBtn?.click();
+      await sleep(80);
+      check('*** wiring, Nimrod: pressing it, he explains the picked panel (the room) ***',
+        !!wbox.querySelector('.kiosk [data-cat-help]') && /room/i.test(wbox.querySelector('[data-cat-help-title]')?.textContent || ''),
+        wbox.querySelector('[data-cat-help-title]')?.textContent || 'no cat');
+      wbox.querySelector('[data-cat-help-close]')?.click();
+      writeCatPrefs(wStore, { help: false });
+      wbox.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', bubbles: true }));
+      await sleep(20);
+      check('*** wiring, Nimrod: Cat help off -- no button ***', !!helpBtn && helpBtn.hidden);
+      writeCatPrefs(wStore, { help: true });
+
+      // the verbs, with the room in front of the switch
+      wBus.publish(verbTopic('next'));
+      await sleep(60);
+      check('*** wiring, verbs: a switch’s Next reaches the room -- its scan cursor lands on an object ***',
+        !!wbox.querySelector('.room-mod .is-scan'));
+
+      // ---- teardown ----
+      // The cue back on first (the person's row again, and the kiosk follows it back), so its removal
+      // at teardown is something the destroy did rather than something the setting already did.
+      const lState2 = createState({ url: wProfiles.personStateURL(wFull.person_id, INPUTS_KEY), user: wUser });
+      await lState2.load().catch(() => {});
+      lState2.set({ listenVisual: true });
+      await lState2.flush();
+      lState2.destroy();
+      check('wiring, listening: ...and back on again when the person’s row says so', await settled(() => !!cue(), 9000));
+      const fxRef = wk.effects();
+      const mv = wk.master();
+      const lvl = mv?.level();
+      wk.destroy(); wk = null;
+      wBus.publish(verbTopic('volume-down'));
+      check('*** wiring, teardown: the master stops answering "quieter" ***', !!mv && mv.level() === lvl, `${lvl} -> ${mv?.level()}`);
+      check('*** wiring, teardown: the listening cue and the effects chain are gone ***',
+        !wbox.querySelector('.listen-cue') && !!fxRef && fxRef.context() === null);
+
+      // ---- the PLACED bar (step 6 Stage 3b) has the same Nimrod button, and it brings the same one ----
+      const dStore = mem();
+      const dbox = box();
+      dk = await mountKiosk(dbox, { user: wUser, profileId: wp.id, profiles: wProfiles, bus: createBus(),
+        embedded: true, dashboardModule: true, storage: dStore, session: mem(), navigate: () => {}, reloadPage: () => {} });
+      await settled(() => dk.dashboard?.()?.chrome?.().bar === 'carried', 3000);
+      // An embed never reads a person, so this cue is the one attached at boot, on its defaults.
+      check('*** wiring, listening: a screen with no person still gets the cue, on its defaults (attached at boot) ***',
+        !!dbox.querySelector('.kiosk .listen-cue'));
+      const ph = dbox.querySelector('.tb-bar [data-act="help"]');
+      check('*** wiring, Nimrod: the PLACED transport bar has the same help button ***', !!ph && !ph.hidden);
+      ph?.click();
+      await sleep(80);
+      check('*** wiring, Nimrod: ...and it brings the shell’s one Nimrod ***', !!dbox.querySelector('.kiosk [data-cat-help]'));
+      dbox.querySelector('[data-cat-help-close]')?.click();
+      writeCatPrefs(dStore, { help: false });
+      dbox.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', bubbles: true }));
+      await sleep(40);
+      check('wiring, Nimrod: Cat help off -- the placed bar’s button goes too', !!ph && ph.hidden);
+    } catch (e) {
+      check('the wiring section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { wk?.destroy(); } catch { /* already gone */ }
       try { dk?.destroy(); } catch { /* already gone */ }
       boxes.forEach((b) => b.remove());
     }

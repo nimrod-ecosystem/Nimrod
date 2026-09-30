@@ -9,6 +9,79 @@
 // kiosk's own code, comments and all, apart from being at module level. The documented fixes it
 // carries (G4 grid chips, G9 unplaced reachable, D16 no self-deleting chip, PRIORITY.md #3 stable
 // order) are pinned by transport_test and re-proven by the step 6 revert harness against THIS file.
+//
+// *** AND THE NIMROD BUTTON (row 2.37, 2026-09-30), ALSO ONCE, FOR BOTH BARS. *** Mike (room_as_home
+// §7.1.2): Nimrod the cat *"tells you about whatever you selected when you click on him."* On a room
+// the room's own cat is that button; everywhere else it is this one, on the bar. `drawHelpButton` makes
+// the button both bars show; `mountBarHelp` is the one cat a SHELL brings for it (the placed bar says
+// SHELL_HELP and the shell's cat answers -- one cat per screen, not one per bar). "Cat help" off (the
+// person's own setting, cat_guide.js) = NO BUTTON, not a button that does nothing.
+
+import { readCatPrefs } from './cat_guide.js';
+import { mountCatHelp, selectionFrom } from './cat_help.js';
+
+export const HELP_ACT = 'help';
+
+/** Is the Nimrod button offered? The person's "Cat help" (on by default). Unreadable = on. */
+export function helpOn(storage) {
+  try { return readCatPrefs(storage).help !== false; } catch { return true; }
+}
+
+/**
+ * The Nimrod button, the same on both bars: put into `parent` before `before` (the gear, so the way
+ * out stays last). `onPress` is what the bar does with it. Returns the button.
+ */
+export function drawHelpButton(parent, { before = null, onPress = null, doc = parent?.ownerDocument } = {}) {
+  if (!parent || !doc) return null;
+  const b = doc.createElement('button');
+  b.type = 'button';
+  b.dataset.act = HELP_ACT;
+  b.className = 'k-help';
+  b.textContent = 'Nimrod';
+  b.title = 'Nimrod explains what is picked: pick a panel or a setting, then press';
+  b.setAttribute('aria-label', 'Nimrod: explain what is picked');
+  b.addEventListener('click', () => { try { onPress?.(); } catch (err) { console.error('transport bar: help', err); } });
+  if (before && before.parentNode === parent) parent.insertBefore(b, before);
+  else parent.append(b);
+  return b;
+}
+
+/**
+ * The shell's cat, for the bar's button: explains the picked thing -- an open menu's cursor row, a
+ * selected thing that carries `data-help`, else the focused panel (`focused()`: an arrangement record,
+ * `{ type, el }`), else the screen. Made on the first press (cat_help draws nothing until then anyway).
+ * `output` is a getter: the shell's output bus can arrive after the bar does.
+ */
+export function mountBarHelp(host, { output = () => null, storage, focused = () => null, doc = host?.ownerDocument } = {}) {
+  let cat = null;
+  const proxy = {
+    say: (...a) => output()?.say?.(...a),
+    cancel: (...a) => output()?.cancel?.(...a),
+  };
+  function getSelection() {
+    let s = null;
+    try { s = selectionFrom(doc, { scope: host }); } catch { s = null; }
+    if (s && s.kind !== 'screen') return s;
+    let r = null;
+    try { r = focused?.() || null; } catch { r = null; }
+    return r ? { kind: 'module', type: r.type, el: r.el || null } : s;
+  }
+  return {
+    /** Explain what is picked. Null when "Cat help" is off (or there is nowhere to stand). */
+    explain() {
+      if (!host) return null;
+      if (!cat) {
+        const opts = { output: proxy, screen: 'kiosk', getSelection, doc };
+        if (storage !== undefined) opts.storage = storage;
+        cat = mountCatHelp(host, opts);
+      }
+      return cat ? cat.explain() : null;
+    },
+    shown: () => !!cat?.shown(),
+    close: () => cat?.close(),
+    destroy() { try { cat?.destroy(); } catch { /* already gone */ } cat = null; },
+  };
+}
 
 /**
  * The model both bars draw from, read fresh from an arrangement (`arrangement.js`) and an input

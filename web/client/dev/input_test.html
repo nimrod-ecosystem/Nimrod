@@ -162,7 +162,7 @@ const last = (a) => a[a.length - 1];
       a.register({ id: 'photos/prev', label: 'Previous photo', topic: 'photos/prev', group: 'Photos' });
       a.registerAll(SYSTEM_ACTIONS);
       check('it lists what is bindable, grouped for display',
-        a.size() === 3 && [...a.groups().keys()].join(',') === 'Photos,System',
+        a.size() === 2 + SYSTEM_ACTIONS.length && [...a.groups().keys()].join(',') === 'Photos,System',
         [...a.groups().keys()].join(','));
       check('an action carries its topic, so a binding never names one', a.get('photos/next').topic === 'photos/next');
       off();
