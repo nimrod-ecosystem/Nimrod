@@ -216,6 +216,9 @@ try {
     bus.publish('room/light', 'nonsense');
     check('a non-number is ignored, not applied', st.get().level === 100);
     bus.publish('room/light', wrapValue({ value: 0.5, class: 'continuous' }));
+    // 100 -> 50 is a reversal inside one flash period of the first move: held, then it lands.
+    check('(a reversal inside one flash period is held...)', st.get().level === 100);
+    clk.advance(340);
     check('another module\'s link envelope drives it too', st.get().level === 50);
     check('*** the base in storage never saw any of it ***', base.get().level === 30 && base.writes.length === 0);
     eng.remove('a');
@@ -305,7 +308,12 @@ try {
     bus.publish('verb/dial-up'); bus.publish('verb/dial-up');
     check('at the top: 100', st.get().level === 100);
     bus.publish('verb/dial-up');
+    // THE EVENT FLOOR (flash limit, 2026-09-30): the wrap is a REVERSAL (up, then all the way
+    // down), so it lands one flash period (339 ms at 3) after the last one, not in the same instant.
+    check('a wrap straight after climbing is held for the flash period, not dropped', st.get().level === 100);
+    await sleep(400);
     check('one more press WRAPS to the bottom', st.get().level === 0);
+    await sleep(400);
     bus.publish('verb/dial-down');
     check('down from the bottom wraps to the top', st.get().level === 100);
     eng.destroy();
@@ -418,6 +426,72 @@ try {
       check('a limit that throws reads as the ceiling: the one-second floor, never faster', r.period === LFO_MIN_PERIOD_MS && r.worst <= 3);
       const d = runLfo({ periodMs: 50 });
       check('no limit given: the ceiling', d.period === LFO_MIN_PERIOD_MS);
+    }
+  }
+
+  section('*** the event floor: a flapping bus/link/verb source cannot flash a setting past the limit ***');
+  {
+    // Reversals of the SHOWN value (up then down) are the flash onsets; count them per closed second.
+    const reversals = (samples) => {
+      const out = []; let last = null, dir = 0;
+      for (const s of samples) {
+        if (last !== null && s.v !== last) {
+          const d = Math.sign(s.v - last);
+          if (d !== dir) out.push(s.t);
+          dir = d;
+        }
+        last = s.v;
+      }
+      return out;
+    };
+    const flap = ({ limit, gap = 50, ms = 20000, fields = NUM_FIELDS, values = (i) => (i % 2) }) => {
+      const bus = createBus(); const clk = fakeClock();
+      const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer,
+        ...(limit !== undefined ? { flashLimit: limit } : {}) });
+      const st = eng.wrapState('p1', memState({}), { fields });
+      eng.add({ id: 'f', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 'sensor/x' } });
+      const samples = []; let i = 0, lastSent = null;
+      const t0 = clk.now();
+      for (let s = 0; s < ms; s += 5) {
+        if (s % gap === 0) { lastSent = values(i++); bus.publish('sensor/x', lastSent); }
+        samples.push({ t: clk.now() - t0, v: st.get().level });
+        clk.advance(5);
+      }
+      clk.advance(2000);
+      const final = st.get().level;
+      const timers = eng.activeTimers();
+      eng.destroy();
+      return { r: reversals(samples), worst: worstInAnySecond(reversals(samples)), final, lastSent, timers, n: samples.length };
+    };
+    // CONTROL: the same flapping with no floor would be 20 reversals a second.
+    const ctl = []; for (let t = 0; t <= 2000; t += 50) ctl.push({ t, v: (t / 50) % 2 });
+    check('CONTROL: a sensor flapping every 50 ms is 21 reversals in a closed second (before: shown as fast)',
+      worstInAnySecond(reversals(ctl)) === 21);
+    for (const L of [3, 2, 1]) {
+      for (const gap of [50, 200]) {
+        const f = flap({ limit: L, gap });
+        check(`limit ${L}, flapping every ${gap} ms: worst second ${f.worst} reversals (<= ${L}); the LAST value lands`,
+          f.worst <= L && f.worst >= 1 && f.final === f.lastSent * 100 && f.timers === 0, JSON.stringify({ w: f.worst, final: f.final, last: f.lastSent, timers: f.timers }));
+      }
+    }
+    const def = flap({});
+    check('*** no limit given: the ceiling, 3 ***', def.worst <= 3);
+    // A RAMP IS NOT A FLASH: a sensor climbing every 50 ms is shown every step, at once.
+    {
+      const bus = createBus(); const clk = fakeClock();
+      const eng = createAutomation({ bus, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer, flashLimit: 1 });
+      const st = eng.wrapState('p1', memState({}), { fields: NUM_FIELDS });
+      eng.add({ id: 'ramp', target: { instance: 'p1', key: 'level' }, source: { kind: 'bus', topic: 's/r' } });
+      let every = true;
+      for (let k = 1; k <= 10; k++) { bus.publish('s/r', k / 10); if (st.get().level !== k * 10) every = false; clk.advance(50); }
+      check('*** a ramp (same direction) lands every step immediately, even at limit 1 ***', every, String(st.get().level));
+      eng.destroy();
+    }
+    // A field that is genuinely not visible opts out with `visual: false` on its declaration.
+    {
+      const fields = [{ key: 'level', label: 'Volume', kind: 'number', default: 50, min: 0, max: 100, visual: false }];
+      const f = flap({ limit: 1, fields });
+      check('`visual: false` on the declaration: no floor (a volume following a sensor)', f.worst > 3, String(f.worst));
     }
   }
 
@@ -603,8 +677,10 @@ try {
     bus.publish('verb/turn-dial');
     await sleep(10);
     check('three presses: the words appear', contrast(ink(), '#000000') >= 4.5, ink());
+    // The peak's far side is a reversal (bright, then dark again): it waits out the flash period.
+    await sleep(400);
     bus.publish('verb/turn-dial');
-    await sleep(10);
+    await sleep(400);
     check('four: gone again (the dial moved past)', contrast(ink(), '#000000') < 1.1);
     th.unmount(box);
     check('*** sign unmounted: no timers, no runners ***', eng.activeTimers() === 0 && eng.running() === 0);

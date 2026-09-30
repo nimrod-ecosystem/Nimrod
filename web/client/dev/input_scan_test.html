@@ -273,6 +273,58 @@ try {
     bad.scan.destroy();
   }
 
+  // =====================================================================================
+  section('*** the step has a floor: the screen\'s flash limit ***');
+  {
+    const { worstInAnySecond, minFlashPeriodMs } = await import('../flash_limit.js');
+    const { scanStepFloorMs } = await import('../input_scan.js');
+    // Each step lights one option and darkens another. Count onsets per closed second over a minute.
+    const run = (stepMs, flashLimit) => {
+      const clock = fakeClock();
+      const at = [];
+      const scan = createScan({ items: ['a', 'b', 'c', 'd'], settings: () => ({ stepMs }),
+        onStep: () => at.push(clock.now()), setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+        ...(flashLimit !== undefined ? { flashLimit } : {}) });
+      scan.start();
+      clock.advance(60000);
+      scan.destroy();
+      return { at, worst: worstInAnySecond(at.slice(1)) };   // the first is start(), not a repeat
+    };
+    check('(before: a 50 ms step would have been 21 steps in a closed second)', worstInAnySecond(
+      Array.from({ length: 100 }, (_, k) => k * 50)) === 21);
+    check('the floor is minFlashPeriodMs rounded up: 339 at 3, 1017 at 1',
+      scanStepFloorMs(3) === 339 && scanStepFloorMs(1) === 1017 && scanStepFloorMs(2) === Math.ceil(minFlashPeriodMs(2)));
+    for (const L of [3, 2, 1]) {
+      for (const stepMs of [50, 200, 1]) {
+        const r = run(stepMs, () => L);
+        check(`limit ${L}, asked for ${stepMs} ms: worst second ${r.worst} (<= ${L})`, r.worst <= L && r.worst > 0);
+      }
+    }
+    const def = run(50);
+    check('*** a host that passes no limit gets 3 a second at most ***', def.worst <= 3 && def.worst > 0);
+    const thrown = run(50, () => { throw new Error('broken host'); });
+    check('a getter that throws is read as 3, not a crash', thrown.worst <= 3 && thrown.worst > 0);
+    // Normal timing untouched: a real step is far above every floor.
+    const normal = run(15000, () => 1);
+    check('*** the 15-second default is unchanged at every limit ***',
+      normal.at.length === 5 && normal.at[1] === 15000 && normal.at[4] === 60000, JSON.stringify(normal.at));
+    // The limit is read when the step is armed, so a changed setting lands on the next step.
+    let L = 3;
+    const clock = fakeClock(); const at = [];
+    const scan = createScan({ items: ['a', 'b'], settings: () => ({ stepMs: 10 }), onStep: () => at.push(clock.now()),
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, flashLimit: () => L });
+    scan.start(); clock.advance(3000); L = 1; const n = at.length; clock.advance(10000);
+    const tail = at.slice(n);
+    check('a changed limit lands on the next step', tail.length >= 2 && tail.slice(1).every((t, i) => t - tail[i] >= 1017),
+      JSON.stringify(tail));
+    scan.destroy();
+    // `next()` is the person's own press and is not floored.
+    const nx = mk({ settings: () => ({ stepMs: 15000 }) });
+    nx.scan.start(); nx.scan.next(); nx.scan.next();
+    check('a second switch\'s next() is not held back by the floor', nx.scan.index() === 2);
+    nx.scan.destroy();
+  }
+
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

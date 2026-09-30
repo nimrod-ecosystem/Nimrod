@@ -392,6 +392,51 @@ try {
     check('the new fields pass the settings audit', bad.length === 0, JSON.stringify(bad));
     subs.destroy();
   }
+
+  section('*** a corrected word\'s outline restarts at most once a flash period ***');
+  {
+    const { worstInAnySecond } = await import('../flash_limit.js');
+    const { SUBS_FIX_MS } = await import('../subtitles.js');
+    const cssText = await fetch('../subtitles.css').then((r) => r.text());
+    check('the outline length in JS matches the stylesheet (1.2 s)', SUBS_FIX_MS === 1200 && /\.subs-fixed\s*\{\s*animation:\s*subs-fix 1\.2s/.test(cssText));
+    // A recogniser flipping the last word every `gap` ms for ten seconds. An ONSET is a draw whose
+    // outlined words start their outline fresh (no negative delay).
+    const churn = (L, gap) => {
+      const clock = fakeClock();
+      const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0 },
+        now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer, reducedMotion: false,
+        ...(L !== undefined ? { flashLimit: () => L } : {}) });
+      const box = subs.element();
+      const onsets = []; let marked = 0, passes = 0, right = true;
+      for (let t = 0; t <= 10000; t += gap) {
+        const text = `turn it ${passes % 2 ? 'up' : 'off'}`;
+        subs.caption({ id: 'x', ear: 'room', text });
+        passes++;
+        const p = box.querySelector('[data-caption="x"]');
+        if (p.querySelector('.subs-text').textContent !== text) right = false;
+        const fx = [...p.querySelectorAll('.subs-fixed')];
+        if (fx.length) marked++;
+        if (fx.length && fx.every((e) => !e.style.animationDelay)) onsets.push(clock.now());
+        clock.advance(gap);
+      }
+      subs.destroy();
+      return { worst: worstInAnySecond(onsets), onsets, marked, passes, right };
+    };
+    check('(before: a pass every 100 ms restarted the outline 11 times in a closed second)',
+      worstInAnySecond(Array.from({ length: 101 }, (_, k) => k * 100)) === 11);
+    for (const L of [3, 1]) {
+      for (const gap of [100, 250]) {
+        const c = churn(L, gap);
+        check(`limit ${L}, a correction every ${gap} ms: worst second ${c.worst} fresh outlines (<= ${L}); every pass corrected and marked`,
+          c.worst <= L && c.worst >= 1 && c.right && c.marked === c.passes - 1, JSON.stringify({ w: c.worst, m: c.marked, p: c.passes }));
+      }
+    }
+    const d = churn(undefined, 100);
+    check('*** a host with no limit gets 3 a second at most ***', d.worst <= 3);
+    const slow = churn(3, 1500);
+    check('*** a correction every 1.5 s gets a fresh outline every time (normal use unchanged) ***',
+      slow.onsets.length === slow.passes - 1, JSON.stringify(slow));
+  }
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

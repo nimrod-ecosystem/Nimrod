@@ -31,6 +31,7 @@ import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { createHeldSignal } from '../held.js';
 import { createPresetLibrary } from '../presets.js';
+import { flashLimit, failureBackoffMs } from '../flash_limit.js';
 
 // `stallMs` is the STOPPED-VIDEO WATCHDOG (see the header). 20s is long enough that a
 // slow-but-working load on facility wifi isn't cut off, short enough that nobody sits in
@@ -520,6 +521,9 @@ registerModule(
     const search = ctx.searchVideos || searchVideos;
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
+    // Only the failure backoff reads this clock.
+    const now = ctx.now || (() => Date.now());
+    let failStreak = 0, failTimer = null, shownAt = 0;
     let stall = null;
 
     // WHY the reason is tracked: the recovery for "never started loading" and the recovery
@@ -725,6 +729,7 @@ registerModule(
     }
 
     function onPlaying() {
+      failStreak = 0;                // a video that plays ends a failure run (FAILURE BACKOFF)
       audio?.setActive?.(AUDIO_ID, true);
       stallReason = 'playing';
       setHeld(false);
@@ -806,8 +811,25 @@ registerModule(
 
     // Show a video by id. `record` distinguishes a forward play (counts, logs a play
     // event, extends history) from a prev()/replay (neither) — identical to photos.
+    // *** FAILURE BACKOFF (photosensitivity audit, 2026-09-30). *** A player error handed back and
+    // advanced AT ONCE, so a pool where every video is unavailable (removed, region-blocked, embeds
+    // off) replaced one with the next as fast as the API could refuse them. The n-th failure in a
+    // row now reacts `failureBackoffMs(n, limit)` after the video was asked for (one flash period,
+    // then 2 s doubling to 30 s; flash_limit.js). The streak resets the moment a video plays, so a
+    // video that plays is handled exactly as before; a person's own next/prev cancels the wait.
+    function afterFailure(fn) {
+      failStreak += 1;
+      clearFailWait();
+      const wait = Math.max(0, failureBackoffMs(failStreak, flashLimit(ctx)) - (now() - shownAt));
+      if (!wait) { fn(); return; }
+      failTimer = setTimer(() => { failTimer = null; if (!destroyed) fn(); }, wait);
+    }
+    function clearFailWait() { if (failTimer != null) { clearTimer(failTimer); failTimer = null; } }
+
     function show(id, record = true) {
       if (!byId[id] || !player) return;
+      clearFailWait();               // whatever asked for this video, a held failure is superseded
+      shownAt = now();
       currentId = id;
       active = true;                 // something asked for a video: this instance is on screen
       player.load(id);
@@ -1283,6 +1305,9 @@ registerModule(
           },
           onEnded: () => {
             clearStall();
+            // A video that ENDED played (YouTube reports a broken one through onError, never
+            // ENDED), so this is never held: it ends a failure run and moves on at once.
+            failStreak = 0;
             // A daypart boundary crossed while this was playing: now is the moment to
             // change over, not mid-video.
             const switched = applyPendingPart();
@@ -1290,8 +1315,15 @@ registerModule(
             if (!switched && cfg.autoAdvance) bus.publish('youtube/next');
           },
           // An explicit player/API error already ends the segment; just stop the watchdog
-          // so it can't fire a second `segment/done` for the same video.
-          onError: () => { clearStall(); bus.publish('segment/done', { provider: 'youtube', reason: 'error' }); if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next'); },
+          // so it can't fire a second `segment/done` for the same video. A RUN of errors backs
+          // off (afterFailure) rather than spinning through the pool.
+          onError: () => {
+            clearStall();
+            afterFailure(() => {
+              bus.publish('segment/done', { provider: 'youtube', reason: 'error' });
+              if (cfg.autoAdvance && ids.length > 1) bus.publish('youtube/next');
+            });
+          },
           onPlaying,
           onIdle,
         });
@@ -1445,6 +1477,7 @@ registerModule(
         clearTimer(pollTimer); pollTimer = null;
         clearTimer(tickTimer); tickTimer = null;
         clearTimer(graceTimer); graceTimer = null;
+        clearFailWait();
         clearStall();
         try { audio?.unregister?.(AUDIO_ID); } catch { /* already gone */ }
         // A module torn down while held must publish its end, or whatever reacted to the hold

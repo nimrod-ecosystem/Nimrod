@@ -123,6 +123,31 @@ export function worstInAnySecond(times, windowMs = 1000) {
 }
 
 /**
+ * *** FAILURE BACKOFF: A RUN OF BROKEN ITEMS MUST NOT BECOME A STROBE. *** (Photosensitivity audit,
+ * 2026-09-30.) Photos, personal videos and YouTube all move on the moment an item errors - right for
+ * one broken file, and a strobe when EVERY file is broken: each new item appears, fails in a few
+ * milliseconds, and the next replaces it, as fast as the browser can go. This is how long the
+ * `streak`-th failure IN A ROW must stay up (from when it appeared) before the next item replaces it:
+ *
+ *   1st         one flash period - 339 ms at 3, 1017 ms at 1 (was: at once)
+ *   2nd, 3rd... BASE, doubling, capped: 2 s, 4 s, 8 s, 16 s, 30 s, 30 s ...
+ *
+ * NUMBERS ARGUED (defaults, on Mike's list): BASE 2 s is the photo slideshow's own floor
+ * (photos.js scheduleAdvance), so a broken run is never faster than the fastest a working slideshow
+ * may go. CAP 30 s: long enough that a dead folder is not a spinner on a Pi 400; short enough that
+ * one good item among many broken ones is still reached within a few minutes. The streak resets the
+ * moment anything plays properly, so NORMAL TIMING NEVER CHANGES - only a failure is ever held.
+ */
+export const FAIL_BACKOFF_BASE_MS = 2000;
+export const FAIL_BACKOFF_CAP_MS = 30000;
+export function failureBackoffMs(streak, limit = FLASH_LIMIT_DEFAULT) {
+  const first = Math.ceil(minFlashPeriodMs(limit));
+  const n = Math.max(1, Math.floor(Number(streak) || 1));
+  if (n === 1) return first;
+  return Math.max(first, Math.min(FAIL_BACKOFF_CAP_MS, FAIL_BACKOFF_BASE_MS * 2 ** (n - 2)));
+}
+
+/**
  * The settings row a host's menu shows (the screen's or the person's). Options only go DOWN from 3:
  * the ceiling is not a choice. Level 'standard' - it is a safety setting, but a caregiver's one.
  */

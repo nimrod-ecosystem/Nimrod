@@ -23,6 +23,8 @@
 //   3. THE SCENE SERVES WHAT IS ON TOP OF IT. Each scene carries board tokens tuned so cards stay
 //      legible over it. Those numbers are Design's ESTIMATES; Code measures them (PRIORITY.md #2).
 
+import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
+
 // ---------------------------------------------------------------------------------------------
 // __lsh() — the whole "framework". JSX compiled with pragma `__lsh` lands here. Deliberately NOT
 // `h`: the scene bodies use `h` as a local (a tree's height), which shadowed a pragma of that name.
@@ -197,7 +199,12 @@ const CSS = `
 @keyframes ngSpin{to{transform:rotate(360deg)}}
 @keyframes ngRise{0%{transform:translateY(20%) scale(.7);opacity:0}30%{opacity:.5}100%{transform:translateY(-140%) scale(1.6);opacity:0}}
 @keyframes ngGlint{from{opacity:.3}to{opacity:.9}}
-@keyframes ngFlicker{0%,88%,100%{opacity:.85}90%{opacity:.3}93%{opacity:1}96%{opacity:.38}}
+/* ONE DIP A CYCLE, NOT A STUTTER (photosensitivity audit, 2026-09-30). The old flicker went
+   .85 > .3 > 1 > .38 > .85 inside 10% of its cycle: two flashes in half a second per sign, ten signs
+   out of phase adding up, and the UFO's 1.6 s strip at speed 3 near four a second. Now one shallower
+   dip (the last 1.5% of the cycle), and scheduleFlicker() spaces every flickering element in a
+   scene on ONE shared clock, so the whole scene - not each sign - stays under the flash limit. */
+@keyframes ngFlicker{0%,98%{opacity:.85}98.5%,100%{opacity:.45}}
 @keyframes ngBreathe{0%,100%{opacity:.4}50%{opacity:.8}}
 @keyframes ngDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(var(--dx,30px),var(--dy,-22px)) scale(1.16)}}
 @keyframes ngFloat{from{transform:translateY(0)}to{transform:translateY(var(--dy,-16px))}}
@@ -2222,6 +2229,9 @@ const OVERLAYS = {
         background: 'radial-gradient(circle closest-side,#d8e4f4,#7f8db0)'
       }
     }), __lsh("span", {
+      /* The running lights. `ng-bar`, not an inline `animation:` - an inline animation ignored the
+         reduced-motion query AND sat outside the scene's flicker schedule (scheduleFlicker). */
+      className: "ng-bar",
       style: {
         position: 'absolute',
         left: '10%',
@@ -2230,7 +2240,7 @@ const OVERLAYS = {
         height: 4,
         borderRadius: 3,
         background: 'repeating-linear-gradient(90deg,#8bd8a8 0 3px,transparent 3px 9px)',
-        animation: 'ngFlicker 1.6s steps(1,end) infinite'
+        animationDuration: '1.6s'
       }
     }), __lsh("span", {
       style: {
@@ -2767,6 +2777,52 @@ function retime(root, speed, every) {
   }
 }
 
+/* *** THE WHOLE SCENE IS ONE FLASH SOURCE. *** (Photosensitivity audit, 2026-09-30.)
+   A flicker is a flash, and the published limit is about what a person SEES in a second - so ten
+   signs each under the limit can still add up to over it. scheduleFlicker() puts every flickering
+   element in a rendered scene (neon signs, the UFO's running lights, anything a regenerated body
+   gives an inline ngFlicker) on ONE shared cycle, each on its own evenly spaced slot:
+     cycle = max(the mean of the durations the scene asked for, N x minFlashPeriodMs(limit))
+     slot  = cycle / N   (>= minFlashPeriodMs, so the whole scene's dips are that far apart)
+   At 3 a second the cyberpunk street (10 signs, + the UFO) keeps roughly Design's pace; at 1 a
+   second every dip in the scene is > 1017 ms from the next. An overlay's `speed` still shortens
+   what the scene asks for, but never below that floor - that is the clamp. `calm` stretches the
+   ask like every other duration. The dip sits at FLICKER_DIP_AT of each element's cycle (the
+   ngFlicker keyframe above; the suite checks the two agree). */
+export const FLICKER_SELECTOR = '.ng-sign,.ng-bar,[style*="ngFlicker"]';
+export const FLICKER_DIP_AT = 0.985;
+export function flickerSchedule(askedMs, limit) {
+  const n = askedMs.length;
+  if (!n) return { cycleMs: 0, slotMs: 0 };
+  const asked = askedMs.reduce((a, b) => a + b, 0) / n;
+  // Whole milliseconds, rounded UP: a slot is never a fraction short of the floor (1017 at 1).
+  const slotMs = Math.ceil(Math.max(Number.isFinite(asked) && asked > 0 ? asked / n : 0, minFlashPeriodMs(limit)));
+  return { cycleMs: slotMs * n, slotMs };
+}
+function scheduleFlicker(root, limit) {
+  const els = [...root.querySelectorAll(FLICKER_SELECTOR)];
+  if (!els.length) return;
+  const asked = els.map((el) => {
+    // An inline `animation: ngFlicker 1.6s ...` shorthand: keep its duration, drop the shorthand so
+    // the class rule (inside the reduced-motion query) is the only thing that animates it.
+    if (/ngFlicker/.test(el.style.animation || el.style.animationName || '')) {
+      el.style.animation = '';
+      el.classList.add('ng-bar');
+    }
+    const d = parseFloat(el.style.animationDuration);
+    return Number.isFinite(d) && d > 0 ? d * (/ms$/.test(el.style.animationDuration) ? 1 : 1000) : 1000;
+  });
+  const { cycleMs, slotMs } = flickerSchedule(asked, limit);
+  // One common offset, whole milliseconds (a browser keeps about six significant digits of a
+  // time, so a fractional delay drifts; the SAME offset for every element keeps the spacing exact).
+  const dipAt = Math.round(FLICKER_DIP_AT * cycleMs);
+  els.forEach((el, i) => {
+    el.style.animationDuration = cycleMs + 'ms';
+    // Dip i lands at i x slot (then every cycle): delay = i*slot - dipAt, always negative.
+    el.style.animationDelay = (i * slotMs - dipAt) + 'ms';
+  });
+}
+
 const MOTION_CSS = `
 .ls{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:var(--z-world,0)}
 .ls .ng{position:absolute;inset:0}
@@ -2790,7 +2846,7 @@ function injectCss(doc) {
  *
  * `tokens` is the scene's board token set (--ab-*), for a host that wants to apply it.
  */
-export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'gentle' } = {}) {
+export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'gentle', flashLimit } = {}) {
   const doc = host.ownerDocument || document;
   injectCss(doc);
   const root = doc.createElement('div');
@@ -2800,7 +2856,13 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
 
   const mq = doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)');
   let systemReduced = !!mq?.matches;
-  let cfg = { scene, overlays: [].concat(overlays || []), motion };
+  // `flashLimit`: the screen's limit (flash_limit.js) - a number or a getter, read on every render.
+  // A host that passes nothing gets 3, the published ceiling.
+  let cfg = { scene, overlays: [].concat(overlays || []), motion, flashLimit };
+  const limitNow = () => {
+    try { return normalizeFlashLimit(typeof cfg.flashLimit === 'function' ? cfg.flashLimit() : cfg.flashLimit); }
+    catch { return normalizeFlashLimit(undefined); }
+  };
 
   function render() {
     const s = SCENES[cfg.scene] || SCENES.nimrod;
@@ -2824,6 +2886,8 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
         if (Number.isFinite(d) && d > 0) el.style.animationDuration = (d * CALM_STRETCH) + 's';
       }
     }
+    // LAST, after speed and calm: the whole scene's flicker on one clock, under the flash limit.
+    scheduleFlicker(ng, limitNow());
     root.replaceChildren(ng);
   }
   const onMq = (e) => { systemReduced = e.matches; render(); };
@@ -2859,7 +2923,8 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
 //   * anything else                       -> variables only, exactly as today
 const hosts = new WeakMap();
 
-export function syncScene(rootEl, theme, { motion } = {}) {
+// `flashLimit` (a number or a getter) is the screen's flash limit; omitted, the scene uses 3.
+export function syncScene(rootEl, theme, { motion, flashLimit } = {}) {
   if (!rootEl) return;
   const doc = rootEl.ownerDocument || document;
   const isPage = rootEl === doc.documentElement;
@@ -2874,7 +2939,8 @@ export function syncScene(rootEl, theme, { motion } = {}) {
     if (isPage) doc.documentElement.removeAttribute('data-live-scene');
     return;
   }
-  const opts = { scene: want, overlays: theme.overlays || [], ...(motion ? { motion } : {}) };
+  const opts = { scene: want, overlays: theme.overlays || [], ...(motion ? { motion } : {}),
+    ...(flashLimit !== undefined ? { flashLimit } : {}) };
   if (had) had.set(opts);
   else {
     const s = mountScene(host, opts);

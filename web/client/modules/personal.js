@@ -61,6 +61,7 @@ import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { createHeldSignal } from '../held.js';
+import { flashLimit, minFlashPeriodMs, failureBackoffMs } from '../flash_limit.js';
 
 // `stallMs` matches youtube's for the same reason: long enough that a big clip loading off
 // a media agent over facility wifi is not cut off, short enough that nobody sits in front
@@ -193,6 +194,9 @@ registerModule(
     // Injectable so the tests drive this against a fake clock, exactly as youtube's does.
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
+    // Only the failure backoff reads this clock.
+    const now = ctx.now || (() => Date.now());
+    let failStreak = 0, failTimer = null, shownAt = 0;
     let stall = null;
 
     function clearStall() { stall?.disarm(); setHeld(false); }
@@ -261,6 +265,7 @@ registerModule(
     // It is playing. Keep the clock running rather than standing it down, and tell any
     // container that this segment is alive.
     function onPlaying() {
+      failStreak = 0;               // a clip that plays ends a failure run (FAILURE BACKOFF)
       stallReason = 'playing';
       setHeld(false);
       heartbeat();
@@ -294,9 +299,32 @@ registerModule(
     // autoAdvance=false, so only segment/done fires.
     function onClipEnded() {
       clearStall();
-      bus.publish('segment/done', { provider: 'personal', reason: 'ended' });
-      if (cfg.autoAdvance) bus.publish('personal/next');
+      const finish = () => {
+        bus.publish('segment/done', { provider: 'personal', reason: 'ended' });
+        if (cfg.autoAdvance) bus.publish('personal/next');
+      };
+      // A clip that ENDS inside one flash period of appearing (zero-length, truncated) is a
+      // failure, not a message: it takes the FAILURE BACKOFF. One that played is handled at once.
+      if (now() - shownAt < minFlashPeriodMs(flashLimit(ctx))) { afterFailure(finish); return; }
+      failStreak = 0;
+      finish();
     }
+
+    // *** FAILURE BACKOFF (photosensitivity audit, 2026-09-30). *** An error handed back and
+    // advanced AT ONCE, so a folder where every clip is broken (or a director that keeps choosing
+    // this provider) replaced clip after clip as fast as the browser could fail them. The n-th
+    // failure in a row now reacts `failureBackoffMs(n, limit)` after the clip appeared (one flash
+    // period, then 2 s doubling to 30 s; flash_limit.js). The streak resets the moment a clip
+    // plays, so a working message is handled exactly as before. A person's own next/prev cancels
+    // the wait (show() clears it).
+    function afterFailure(fn) {
+      failStreak += 1;
+      clearFailWait();
+      const wait = Math.max(0, failureBackoffMs(failStreak, flashLimit(ctx)) - (now() - shownAt));
+      if (!wait) { fn(); return; }
+      failTimer = setTimer(() => { failTimer = null; if (!destroyed) fn(); }, wait);
+    }
+    function clearFailWait() { if (failTimer != null) { clearTimer(failTimer); failTimer = null; } }
 
     function render(item, { muted = false } = {}) {
       const st = stage();
@@ -363,13 +391,17 @@ registerModule(
 
     function onClipError() {
       clearStall();
-      bus.publish('segment/done', { provider: 'personal', reason: 'error' });
-      if (cfg.autoAdvance && ids.length > 1) bus.publish('personal/next');
+      afterFailure(() => {
+        bus.publish('segment/done', { provider: 'personal', reason: 'error' });
+        if (cfg.autoAdvance && ids.length > 1) bus.publish('personal/next');
+      });
     }
 
     function show(id, record = true) {
       const item = byId[id];
       if (!item) return;
+      clearFailWait();              // whatever asked for this clip, a held failure is superseded
+      shownAt = now();
       currentId = id;
       active = true;                // something asked for a clip: this instance is on screen
       beatWindow = true;            // a new clip announces itself on its first beat
@@ -452,7 +484,7 @@ registerModule(
         items = ids = []; byId = {}; return;
       }
       let listing;
-      try { listing = await resolveListing(source, cfg.album); }
+      try { listing = await (ctx.resolveListing || resolveListing)(source, cfg.album); }
       catch (e) { if (seq === loadSeq) setStatus(`Source “${source.label}” unreachable`, true); return; }
       if (seq !== loadSeq) return;
       sourceLabel = source.label;
@@ -570,6 +602,7 @@ registerModule(
       destroy() {
         destroyed = true;
         clearTimer(pollTimer); pollTimer = null;
+        clearFailWait();
         active = false; clearStall(); clearVideoEnd(); currentVideo = null;
         // Destroyed while held: publish the end on the way out — `held.js` rule 3.
         heldSignal.release();
