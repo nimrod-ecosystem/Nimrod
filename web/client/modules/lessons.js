@@ -907,16 +907,28 @@ registerModule(
         session.part = i + 1;
         if (tq === session) renderTq();
         const left = ceiling ? ceiling - parsed.length : null;
-        const one = await ai().chat(buildPrompt(pieces[i], left, { part: i + 1, parts: pieces.length }),
-          { model: m.model, json: true, temperature: 0.2, timeoutMs: cfg.aiTimeoutMs, signal,
-            maxTokens: cfg.answerLength });
-        if (tq !== session) return;
-        if (!one.ok) {
-          if (one.cancelled) { failWith(session, one); return; }
-          lastFail = one; piecesFailed += 1; continue;
+        // *** ONE RETRY FOR A PIECE THAT GAVE NOTHING (measured 2026-09-29). *** On a real 36-minute
+        // transcript, 2 of 7 pieces came back empty: one ran to the length cap with nothing readable,
+        // one was stopped by Ollama itself ("token repeat limit reached" — the model looping). Each
+        // left a hole in the middle of the video. A looping sample often recovers when drawn again a
+        // little less deterministically, so an empty or failed piece is asked once more at a higher
+        // temperature. Once, not until it works: on this CPU each try is minutes.
+        let got = [];
+        let one = null;
+        for (let attempt = 0; attempt < 2 && !got.length; attempt++) {
+          one = await ai().chat(buildPrompt(pieces[i], left, { part: i + 1, parts: pieces.length }),
+            { model: m.model, json: true, temperature: attempt ? 0.6 : 0.2, timeoutMs: cfg.aiTimeoutMs, signal,
+              maxTokens: cfg.answerLength });
+          if (tq !== session) return;
+          if (!one.ok && one.cancelled) { failWith(session, one); return; }
+          if (one.ok) { r.ms += Number(one.ms) || 0; got = parseQuestions(one.text); }
         }
-        r.ms += Number(one.ms) || 0;
-        parsed.push(...parseQuestions(one.text));
+        if (!got.length) {
+          if (!one.ok) lastFail = one;
+          piecesFailed += 1;
+          continue;
+        }
+        parsed.push(...got);
       }
       if (!parsed.length && lastFail) { failWith(session, lastFail); return; }
       if (ceiling && parsed.length > ceiling) parsed.length = ceiling;
