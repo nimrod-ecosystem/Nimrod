@@ -192,6 +192,9 @@ export function createArrangement({
   // for exactly this reason. A panel that failed to start has no instance to ask for a title.
   const instanceTitle = (def) => getManifest(def.type)?.title || def.type;
   async function mountLayout() {
+    // Each mount reports on its OWN panels. This list was filled here and never emptied, so after a
+    // screen swap the empty-screen sentence below named the previous screen's failures as well.
+    failedSlots.length = 0;
     stageEl.classList.add('k-grid');
     stageEl.setAttribute('style', gridStyle(layout.preset));
     for (let i = 0; i < layout.slots.length; i++) {

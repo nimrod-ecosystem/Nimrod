@@ -279,6 +279,21 @@ try {
     check('the mirror host was cleared and hidden', t.mirrorEl.hidden && !t.mirrorEl.children.length);
   }
 
+  section('a swap does not carry the previous screen’s failed panels');
+  {
+    // Found during Stage 1 (2026-09-30): `failedSlots` was filled by every `mountLayout` and never
+    // emptied, so after a screen swap the empty-screen sentence named panels from the screen before.
+    const t = make({ modules: [M.p1, M.t1], failTypes: ['trivia', 'wordforge'] });
+    t.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); t.arr.partition();
+    await t.arr.mountLayout();                           // trivia fails here, photos is up
+    t.arr.setProfile({ id: 'scr-B', modules: [M.w1] });
+    t.arr.resolve({ preset: 'full', slots: ['w1'] });
+    await t.arr.applyModules();                          // only wordforge, and it fails
+    const e = t.stageEl.querySelector('[data-empty]');
+    check('*** the sentence names only THIS screen’s failed panels ***',
+      e && e.textContent === 'Nothing on this screen could start (wordforge). Press Home to check it.', e?.textContent);
+  }
+
   section("recovery's hands");
   {
     const t = make({ modules: [M.p1, M.t1] });
