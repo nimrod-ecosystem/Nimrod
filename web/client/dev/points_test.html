@@ -27,6 +27,8 @@ import {
   currencyOf, balancesByCurrency, totalOfBalances, exchangeParts, findExchange, checkExchange,
   pointsValue, sumPoints, sumEarned, sumSpent, sumBySource, sumMinutes, minutesBySubject,
   sumPointsOn, sumPointsOnBySource, dayKey, fmtPoints, createPointsLedger,
+  INFLATION_DEFAULTS, INFLATION_PERIODS, addPeriods, periodsBetween, inflatedPrice, priceHistory,
+  inflationConfig,
 } from '../points.js';
 
 const out = document.getElementById('results');
@@ -276,6 +278,71 @@ function memoryEvents(seed = []) {
     const aw = await led.award({ amount: 5, source: 'x', type: 'Exchange' });
     check('award() will not write an Exchange (it cannot say from/to) — nothing recorded',
       aw === null && led.events().length === n1);
+
+    // =====================================================================================
+    section('*** inflation (row 2.40): OFF by default; prices rise, points never shrink ***');
+    {
+      const T0 = new Date(2026, 0, 15, 9, 0, 0).getTime();          // 15 Jan 2026, local
+      const month = (n) => addPeriods(T0, n, 'month');
+      const on = { on: true, ratePct: 2, period: 'month', sinceMs: T0 };
+      check('*** inflation is OFF by default ***', INFLATION_DEFAULTS.on === false);
+      check('...and the defaults are 2% a month', INFLATION_DEFAULTS.ratePct === 2 && INFLATION_DEFAULTS.period === 'month');
+      check('the periods are week, month and year', J(INFLATION_PERIODS) === '["week","month","year"]');
+      check('*** off: every price is unchanged, however much time passes ***',
+        inflatedPrice(60, {}, month(40)) === 60 && inflatedPrice(60, { ...on, on: false }, month(40)) === 60);
+      check('...and on with no start date is off too (nothing to count from)', inflatedPrice(60, { on: true }, month(40)) === 60);
+      check('on: nothing changes before the first period ends', inflatedPrice(100, on, month(1) - 1) === 100);
+      check('*** on: 100 becomes 102 after one month at 2% ***', inflatedPrice(100, on, month(1)) === 102, String(inflatedPrice(100, on, month(1))));
+      check('...and 104 after two (compounded on the EXACT price: 104.04)', inflatedPrice(100, on, month(2)) === 104);
+      check('...and 127 after a year (1.02^12 = 1.268)', inflatedPrice(100, on, month(12)) === 127, String(inflatedPrice(100, on, month(12))));
+      // THE ROUNDING ARGUMENT, as tests.
+      check('*** a small price rises when the true price has moved half a point: 10 -> 10 -> 10 -> 11 ***',
+        J([1, 2, 3].map((n) => inflatedPrice(10, on, month(n)))) === '[10,10,11]',
+        J([1, 2, 3].map((n) => inflatedPrice(10, on, month(n)))));
+      {
+        // The rejected alternative: rounding each month and compounding on that never moves at all.
+        let p = 10; for (let n = 0; n < 12; n++) p = Math.round(p * 1.02);
+        check('(the rejected way - round, then compound on the rounded price - leaves 10 at 10 forever)',
+          p === 10 && inflatedPrice(10, on, month(12)) === 13, `${p} vs ${inflatedPrice(10, on, month(12))}`);
+      }
+      check('*** a price never goes BELOW its list price ***', inflatedPrice(3, { ...on, ratePct: 1 }, month(1)) === 3);
+      check('*** a clock that runs backwards never raises a price ***', inflatedPrice(100, on, T0 - 86400000 * 90) === 100);
+      check('the rate and period are settings: 5% a week', inflatedPrice(100, { ...on, ratePct: 5, period: 'week' }, addPeriods(T0, 2, 'week')) === 110);
+      check('...10% a year', inflatedPrice(100, { ...on, ratePct: 10, period: 'year' }, addPeriods(T0, 1, 'year')) === 110
+        && inflatedPrice(100, { ...on, ratePct: 10, period: 'year' }, addPeriods(T0, 1, 'year') - 1) === 100);
+      check('nonsense settings fall back to the defaults', J(inflationConfig({ on: true, ratePct: 'lots', period: 'decade', sinceMs: T0 }))
+        === J({ on: true, ratePct: 2, period: 'month', sinceMs: T0 }));
+      check('years of a high rate give a big number, never Infinity',
+        Number.isFinite(inflatedPrice(100, { ...on, ratePct: 10, period: 'week' }, addPeriods(T0, 5000, 'week'))));
+      // Calendar months, not 30-day blocks.
+      const jan31 = new Date(2026, 0, 31, 12).getTime();
+      check('a month from 31 January is the last day of February', new Date(addPeriods(jan31, 1)).getDate() === 28
+        && new Date(addPeriods(jan31, 1)).getMonth() === 1);
+      check('periodsBetween counts WHOLE calendar months', periodsBetween(T0, month(3) - 1, 'month') === 2
+        && periodsBetween(T0, month(3), 'month') === 3);
+      check('...and weeks and years', periodsBetween(T0, addPeriods(T0, 5, 'week') + 1, 'week') === 5
+        && periodsBetween(T0, addPeriods(T0, 2, 'year') - 1, 'year') === 1);
+
+      section('*** the price history says it plainly: "was 10, now 11" ***');
+      const h0 = priceHistory(10, on, month(2));
+      check('before the price has moved there is no "was"', h0.was === null && h0.now === 10 && h0.steps.length === 0, J(h0));
+      const h = priceHistory(10, on, month(5));
+      check('*** once it has: was 10, now 11, and when ***', h.was === 10 && h.now === 11 && h.changedAt === month(3), J(h));
+      const h2 = priceHistory(10, on, month(12));
+      check('every change is listed, oldest first', h2.steps.length >= 2 && h2.steps[0].price === 11
+        && h2.steps.every((s, i) => i === 0 || s.price > h2.steps[i - 1].price), J(h2.steps));
+      check('...and the last one is the "was / now"', h2.was === h2.steps.at(-1).was && h2.now === inflatedPrice(10, on, month(12)));
+      check('off: no history at all', priceHistory(10, {}, month(12)).was === null && priceHistory(10, {}, month(12)).now === 10);
+
+      section('*** inflation never touches a point already earned ***');
+      const evs = [earn(500, 'School'), earn(40, 'Play'), spendEv(60, 'school')];
+      const before = J(balancesByCurrency(evs));
+      // Nothing in the inflation functions takes the ledger - and computing prices changes nothing in it.
+      [1, 12, 120].forEach((n) => inflatedPrice(60, on, month(n)));
+      check('*** balances are the same with inflation on for ten years ***', J(balancesByCurrency(evs)) === before
+        && sumPoints(evs) === 480, `${before} -> ${J(balancesByCurrency(evs))}`);
+      check('...and a past purchase keeps the price it was bought at', pointsValue(evs[2]) === -60);
+    }
     led.destroy();
   } catch (err) {
     check('unexpected error', false, String((err && err.stack) || err));

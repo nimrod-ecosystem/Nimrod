@@ -237,6 +237,124 @@ export function checkExchange({ from, to, amount } = {}, events = [],
   return { ok: true, reason: null, rate: row.rate, gets: n * row.rate, have };
 }
 
+// ---------- inflation (row 2.40): PRICES rise over time, POINTS never shrink ----------
+//
+// Mike, 2026-09-30: *"inflation as an option to the overall game."* OFF by default, and when it is
+// on it does exactly one thing: a reward's PRICE in the store goes up by a rate per period. It is a
+// lesson about money - what a point buys changes, so saving has a cost as well as a reward.
+//
+// *** IT NEVER TOUCHES A POINT ALREADY EARNED. *** Row 2.20's rule: nothing may take away earned
+// School points without the person choosing it. So inflation is a function of (base price, rate,
+// periods elapsed) that the STORE reads, and nothing here writes to the ledger. The alternative -
+// shrinking balances each month - is the same arithmetic for the learner and a very different
+// thing to do to them: it would be the ledger taking points away on a timer.
+//
+// *** WHOLE PERIODS, NOT A CREEP. *** Prices change on a date (a calendar month, week or year after
+// inflation was turned on), the way a shop reprices, so there is a before and an after to point at:
+// "was 10, now 11". A price that crept every second would have no "was".
+//
+// *** ROUNDING, ARGUED. *** The exact price compounds (base x (1 + rate)^periods) and is rounded to
+// the NEAREST whole point only when shown or charged. The two alternatives both lie:
+//   - rounding each period and compounding on the rounded price: at 2% a 10-point reward rounds
+//     back to 10 every month and NEVER rises (or, rounding up, rises 10% a month, five times the
+//     rate that was set);
+//   - rounding up the final price: a 10-point reward jumps to 11 in month one - a 10% rise for a
+//     2% setting - which teaches the wrong number.
+// Nearest keeps every price within half a point of the true one, and a small price moves when the
+// true price has really moved by half a point (10 -> 11 in month three at 2%), which is itself the
+// lesson: small prices move in steps. Never below the base price: inflation only rises.
+export const INFLATION_PERIODS = ['week', 'month', 'year'];
+export const INFLATION_DEFAULTS = Object.freeze({
+  on: false,
+  // 2% a month: the example the request gave. Real inflation is nearer 2-3% a YEAR [training
+  // knowledge], which a learner would take years to notice; a month makes it visible in a season.
+  // Both are one setting apart.
+  ratePct: 2,
+  period: 'month',
+});
+
+// A local calendar step from `ms`: `n` weeks, months or years. A month from 31 January is the last
+// day of February, not 3 March.
+export function addPeriods(ms, n, period = 'month') {
+  const d = new Date(ms);
+  if (period === 'week') { d.setDate(d.getDate() + 7 * n); return d.getTime(); }
+  const months = period === 'year' ? 12 * n : n;
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  return d.getTime();
+}
+
+// How many WHOLE periods have passed from `sinceMs` to `nowMs` (0 before the first one ends, and 0
+// for a clock that runs backwards - a clock error must never raise a price).
+export function periodsBetween(sinceMs, nowMs, period = 'month') {
+  const s = Number(sinceMs); const t = Number(nowMs);
+  if (!Number.isFinite(s) || !Number.isFinite(t) || t <= s) return 0;
+  if (period === 'week') {
+    let n = Math.floor((t - s) / (7 * 86400000)) + 1;
+    while (n > 0 && addPeriods(s, n, 'week') > t) n -= 1;
+    return n;
+  }
+  const a = new Date(s); const b = new Date(t);
+  let n = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+  if (period === 'year') n = Math.floor(n / 12);
+  n += 1;
+  while (n > 0 && addPeriods(s, n, period) > t) n -= 1;
+  return Math.max(0, n);
+}
+
+// The inflation settings as numbers this file can trust. Anything unusable is "off".
+export function inflationConfig({ on, ratePct, period, sinceMs } = {}) {
+  const r = Number(ratePct);
+  const since = Number(sinceMs);
+  return {
+    on: on === true && Number.isFinite(since),
+    ratePct: Number.isFinite(r) && r > 0 ? r : INFLATION_DEFAULTS.ratePct,
+    period: INFLATION_PERIODS.includes(period) ? period : INFLATION_DEFAULTS.period,
+    sinceMs: Number.isFinite(since) ? since : null,
+  };
+}
+
+const priceAfter = (base, ratePct, n) => {
+  const b = Number(base);
+  if (!Number.isFinite(b) || b <= 0) return Number.isFinite(b) ? b : 0;
+  // Capped so years of a high rate give a very large number rather than Infinity on screen.
+  return Math.min(1e12, Math.max(b, Math.round(b * (1 + ratePct / 100) ** n)));
+};
+
+/** A reward's price at `nowMs`. Off (or no start date): the base price, unchanged. */
+export function inflatedPrice(base, cfg = {}, nowMs = Date.now()) {
+  const c = inflationConfig(cfg);
+  if (!c.on) return Number(base) || 0;
+  return priceAfter(base, c.ratePct, periodsBetween(c.sinceMs, nowMs, c.period));
+}
+
+/**
+ * THE PRICE HISTORY, for "was 10, now 11": `{ base, now, was, changedAt, steps }`. `was` is the
+ * price before the most recent change and `changedAt` when that change happened; both null while
+ * the price has not moved. `steps` lists every change `{ at, price }`, oldest first (capped at the
+ * last 24, so a price that has been rising for years does not become a page).
+ */
+export function priceHistory(base, cfg = {}, nowMs = Date.now()) {
+  const c = inflationConfig(cfg);
+  const b = Number(base) || 0;
+  const out = { base: b, now: b, was: null, changedAt: null, steps: [] };
+  if (!c.on) return out;
+  const periods = Math.min(periodsBetween(c.sinceMs, nowMs, c.period), 10000);
+  let prev = b;
+  for (let n = 1; n <= periods; n++) {
+    const p = priceAfter(b, c.ratePct, n);
+    if (p !== prev) { out.steps.push({ at: addPeriods(c.sinceMs, n, c.period), price: p, was: prev }); prev = p; }
+  }
+  if (out.steps.length > 24) out.steps = out.steps.slice(-24);
+  const last = out.steps[out.steps.length - 1];
+  out.now = prev;
+  if (last) { out.was = last.was; out.changedAt = last.at; }
+  return out;
+}
+
 export const POINTS_STREAM = 'points';        // well-known shared stream key
 export const POINTS_TOPIC  = 'points/award';  // bus topic — live nudge, NOT the record
 export const POINTS_KIND   = 'points';        // event kind within the stream

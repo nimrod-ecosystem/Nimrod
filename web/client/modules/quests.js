@@ -45,6 +45,7 @@ import {
   sumEarned, sumSpent, sumMinutes, sumPoints, weekStart,
   DEFAULT_CURRENCIES, DEFAULT_EXCHANGES, EXCHANGE_TYPE,
   checkExchange, exchangeParts, currencyOf,
+  INFLATION_DEFAULTS, INFLATION_PERIODS, inflationConfig, inflatedPrice, priceHistory,
 } from '../points.js';
 
 export const SOURCE = 'quests';
@@ -126,11 +127,48 @@ const [HOME_CUR, PLAY_CUR] = DEFAULT_CURRENCIES;
 const rateLabel = (rate) => (rate >= 1
   ? `1 ${HOME_CUR.name} for ${rate} ${PLAY_CUR.name}`
   : `${1 / rate} ${HOME_CUR.name} for 1 ${PLAY_CUR.name}`);
+// INFLATION (row 2.40) - three more settings, `advanced` for the same reason as the rate: they
+// price the economy. The math and the argument for it live in points.js ("inflation").
+const PERIOD_WORD = { week: 'week', month: 'month', year: 'year' };
+export const INFLATION_RATES = [1, 2, 5, 10];
 export const QUESTS_SETTINGS = [
   { key: 'exchangeRate', label: `Trading ${HOME_CUR.name} for ${PLAY_CUR.name} points`,
     kind: 'choice', default: 1, level: 'advanced',
     options: [0.5, 1, 2].map((value) => ({ value, label: rateLabel(value) })) },
+  { key: 'inflation', label: 'Inflation: reward prices rise over time', kind: 'toggle',
+    default: INFLATION_DEFAULTS.on, level: 'advanced', onLabel: 'On', offLabel: 'Off',
+    note: 'Only prices change. Points already earned are never touched.' },
+  { key: 'inflationRate', label: 'How much prices rise each time', kind: 'choice',
+    default: INFLATION_DEFAULTS.ratePct, level: 'advanced',
+    options: INFLATION_RATES.map((value) => ({ value, label: `${value}%` })) },
+  { key: 'inflationPeriod', label: 'How often prices rise', kind: 'choice',
+    default: INFLATION_DEFAULTS.period, level: 'advanced',
+    options: INFLATION_PERIODS.map((value) => ({ value, label: `Every ${PERIOD_WORD[value]}` })) },
 ];
+
+// The one sentence the store says while inflation is on. Plain, and the same everywhere.
+export function inflationLine(cfg) {
+  const c = inflationConfig(cfg);
+  if (!c.on) return '';
+  return `Prices rise ${c.ratePct}% every ${PERIOD_WORD[c.period]}. Points you already have are not touched.`;
+}
+
+// "was 10, now 11": the plain history line for one reward, or '' while its price has not moved.
+export function priceLine(base, cfg, nowMs) {
+  const h = priceHistory(base, cfg, nowMs);
+  if (h.was == null) return '';
+  const when = new Date(h.changedAt);
+  const date = Number.isNaN(when.getTime()) ? '' : ` since ${when.getMonth() + 1}/${when.getDate()}`;
+  return `was ${h.was}, now ${h.now}${date}${h.base !== h.was ? ` (first ${h.base})` : ''}`;
+}
+
+/** The rewards with today's price in `cost` and the list price kept in `baseCost`. */
+export function pricedRewards(rewards, cfg, nowMs) {
+  return (rewards || []).map((r) => {
+    const base = Number(r && r.cost) || 0;
+    return { ...r, baseCost: base, cost: inflatedPrice(base, cfg, nowMs) };
+  });
+}
 
 // The exchange data with the setting applied. Today there is ONE exchange row (School -> Play)
 // and the setting prices it; when there are more, each needs its own setting, and this is the
@@ -288,14 +326,20 @@ registerModule(
     let pendingBuyAt = null;      // when it was armed — MIKE_CHANGE_LIST.md §0a item 6
     let pendingBuyCurrency = null; // the currency the confirm tap was TOLD it would pay with
     let pendingEx = null;         // 'from>to:amount' of a trade awaiting its confirm tap
+    let pendingBuyPrice = null;   // the price the confirm tap was TOLD (inflation can move it)
     let flash = '';
+    // Inflation (row 2.40): off unless the setting is on. `sinceMs` is when it was turned on - the
+    // date every price step counts from - kept in this module's own state, never in the ledger.
+    let inflation = { on: false, ratePct: INFLATION_DEFAULTS.ratePct, period: INFLATION_DEFAULTS.period, sinceMs: null };
+    let localSince = null;        // the start this instance wrote, until the saved row echoes it back
+    const priced = () => pricedRewards(rewards, inflation, now());
 
     const currencies = DEFAULT_CURRENCIES;
     const el = (sel) => mount.querySelector(sel);
     const events = () => (ledger ? ledger.events() : []);
     const balances = () => (ledger ? ledger.balances() : Object.fromEntries(currencies.map((c) => [c.id, 0])));
     const exchanges = () => exchangesAt(exchangeRate);
-    const disarm = () => { pendingBuy = null; pendingBuyAt = null; pendingBuyCurrency = null; pendingEx = null; };
+    const disarm = () => { pendingBuy = null; pendingBuyAt = null; pendingBuyCurrency = null; pendingEx = null; pendingBuyPrice = null; };
 
     // ---- actions (both APPEND; nothing is ever edited) ----
 
@@ -328,19 +372,28 @@ registerModule(
     // (another device, a nudge) and it no longer covers the cost, nothing is spent and the
     // flash says why — quietly paying with a different currency than the one the person
     // confirmed would be spending something they did not agree to spend.
+    //
+    // WITH INFLATION ON, THE PRICE IS TODAY'S (`priced()`), and the confirm pays the price the first
+    // tap showed or nothing: a price that rose between the two taps (a month turned over) is said,
+    // not quietly charged - the same rule as the currency.
     async function buy(i) {
-      const r = rewards[i];
+      const r = priced()[i];
       if (!r) return;
       if (pendingBuy !== i) {
         const pick = chooseCurrency(r, balances(), { currencies });
         if (!pick.currency) { disarm(); flash = pick.why; render(); return; }
         disarm();
-        pendingBuy = i; pendingBuyAt = now(); pendingBuyCurrency = pick.currency;
+        pendingBuy = i; pendingBuyAt = now(); pendingBuyCurrency = pick.currency; pendingBuyPrice = r.cost;
         flash = `Tap again to buy with ${nameOf(pick.currency)} points — ${r.reward}`; render(); return;
       }
       const latencyMs = pendingBuyAt != null ? Math.max(0, now() - pendingBuyAt) : null;
       const cur = pendingBuyCurrency;
+      const agreed = pendingBuyPrice;
       disarm();
+      if (agreed != null && agreed !== r.cost) {
+        flash = `The price of ${r.reward} went up from ${agreed} to ${r.cost} — nothing was spent. Tap again to buy at the new price.`;
+        render(); return;
+      }
       if (!cur || !((Number(balances()[cur]) || 0) >= (Number(r.cost) || 0))) {
         flash = `Not enough ${nameOf(cur)} points any more — nothing was spent.`;
         render(); return;
@@ -528,6 +581,9 @@ registerModule(
 
     function renderRewards() {
       const bal = balances();
+      const t = now();
+      const shown = priced();
+      const infl = inflationLine(inflation);
       // Rewards first — buying is what the store is for; trading is below it.
       const restricted = choiceAsked ? [] : restrictedRewards();
       const notice = restricted.length ? `
@@ -542,11 +598,13 @@ registerModule(
       const choices = acceptChoices(currencies);
       return `
         ${notice}
+        ${infl ? `<p class="q-inflation" data-inflation>${esc(infl)}</p>` : ''}
         <div class="q-list">
-          ${rewards.map((r, i) => {
+          ${shown.map((r, i) => {
             const pick = chooseCurrency(r, bal, { currencies });
             const afford = !!pick.currency;
             const paid = choices[choiceIndexOf(r, currencies)].label;
+            const history = infl ? priceLine(r.baseCost, inflation, t) : '';
             return `
             <div class="q-reward-row">
             <button class="q-accepts" data-accepts="${i}" aria-label="${esc(r.reward)}: paid with ${esc(paid)}. Press to change.">Paid with: ${esc(paid)}</button>
@@ -554,9 +612,10 @@ registerModule(
               <span class="q-item-main">
                 <span class="q-item-name">${esc(r.reward)}</span>
                 <span class="q-item-note">${esc(r.kind)}${r.note ? ' · ' + esc(r.note) : ''}${afford ? ` · pays with ${esc(nameOf(pick.currency))}` : ''}</span>
+                ${history ? `<span class="q-item-note q-price-was" data-price-history>${esc(history)}</span>` : ''}
                 ${afford ? '' : `<span class="q-item-why" data-why>${esc(pick.why)}</span>`}
               </span>
-              <span class="q-item-pts">${pendingBuy === i ? 'confirm?' : '-' + esc(r.cost)}</span>
+              <span class="q-item-pts" data-price="${esc(r.cost)}">${pendingBuy === i ? 'confirm?' : '-' + esc(r.cost)}</span>
             </button>
             </div>`;
           }).join('')}
@@ -688,6 +747,26 @@ registerModule(
           const rate = Number(snap.exchangeRate);
           exchangeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
           choiceAsked = snap.currencyChoiceAsked === true;
+          // INFLATION. Turned on with no start date: the start is NOW, written once. Turned off:
+          // the start is cleared, so turning it on again starts from the list prices rather than
+          // jumping to wherever the old clock had got to.
+          const on = snap.inflation === true;
+          const saved = snap.inflationSince != null && Number.isFinite(Number(snap.inflationSince))
+            ? Number(snap.inflationSince) : null;
+          let sinceMs = null;
+          if (on) {
+            sinceMs = saved ?? localSince;
+            if (sinceMs == null) { sinceMs = localSince = now(); state.set({ inflationSince: sinceMs }); }
+          } else {
+            localSince = null;
+            if (snap.inflationSince != null) state.set({ inflationSince: null });
+          }
+          inflation = {
+            on,
+            ratePct: Number(snap.inflationRate) || INFLATION_DEFAULTS.ratePct,
+            period: INFLATION_PERIODS.includes(snap.inflationPeriod) ? snap.inflationPeriod : INFLATION_DEFAULTS.period,
+            sinceMs,
+          };
           render();
         });
 
