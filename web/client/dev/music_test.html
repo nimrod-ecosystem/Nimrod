@@ -40,6 +40,7 @@ import {
   musicSpeechBindings, startersFrom, watchFavourites, FAVOURITES_KEY, STOP_ROUTE_ID,
 } from '../music_favourites.js';
 import { createLocalMusic } from '../music_local.js';
+import { kindOf } from '../folder_source.js';
 import {
   createSpotify, completeLogin, playBody, pickDevice, base64url, PENDING_KEY, tokenKey,
   SPOTIFY_SCOPES, SPOTIFY_AUTHORIZE_URL, SPOTIFY_TOKEN_URL, safeReturn,
@@ -260,6 +261,22 @@ const FAVS = normalizeFavourites([
       check('a file that will not play stops and says why', ok.state().reason === 'unplayable' && !ok.state().wanted);
       [m, none, ok].forEach((x) => x.destroy());
       check('with no bus at all it still plays (a missing arbiter is loud, never silent)', true);
+    }
+    {
+      // *** A FOLDER OF MUSIC IS NOT EMPTY (2026-09-30). *** The listers now return audio, classified
+      // by the real `kindOf`; a mixed folder - songs, their cover art, a video - plays only the songs.
+      const names = ['01 Track.MP3', '02 Track.m4a', '03 Track.flac', 'cover.jpg', 'clip.mp4', 'notes.txt'];
+      const items = names.map((n) => ({ path: `Mixed/${n}`, name: n, kind: kindOf(n), url: `u:${n}` }))
+        .filter((it) => it.kind);                       // what a lister returns: non-media is dropped there
+      check('PRECONDITION: the lister calls the three songs audio',
+        items.filter((it) => it.kind === 'audio').length === 3, J(items.map((it) => it.kind)));
+      const log = [];
+      const m = createLocalMusic({ sources: SOURCES, resolve: async () => ({ items }), resolveItem,
+        makeAudio: fakeAudioFactory(log), order: 'inorder' });
+      const f = await m.playFolder({ sourceId: 's1', album: 'Mixed' });
+      check('*** a folder favourite over a mixed listing plays its three songs, not the cover or the video ***',
+        f.ok && f.tracks === 3 && /01 Track\.MP3/.test(log.find((l) => l.startsWith('play:')) || ''), J({ f, log }));
+      m.destroy();
     }
 
     // ============================================================================================

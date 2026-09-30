@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -59,7 +60,49 @@ def get_json(url: str):
     return status, headers, json.loads(body.decode("utf-8"))
 
 
+CLIENT = HERE.parent / "client"
+KINDS_TABLE = CLIENT / "dev" / "media_kinds.json"
+FOLDER_SOURCE = CLIENT / "folder_source.js"
+
+
+def js_exts(src: str, name: str) -> set:
+    """The extensions in `export const NAME = [...]` in folder_source.js, as '.ext' strings."""
+    m = re.search(r"export const " + name + r"\s*=\s*\[([^\]]*)\]", src)
+    if not m:
+        return set()
+    return {"." + e for e in re.findall(r"'([a-z0-9]+)'", m.group(1))}
+
+
+def check_kinds_agree():
+    """PURE - no agent process. The media agent and the browser's folder lister must classify
+    every file the same way, or a song plays from one kind of source and not the other.
+
+    Two checks: the agent's `kind_of` against the ONE shared table (which the browser side,
+    dev/media_sources_test.html, checks `kindOf` against too), and the agent's extension sets
+    against the arrays in folder_source.js itself, so an extension added on one side only fails
+    here even if nobody added it to the table."""
+    sys.path.insert(0, str(HERE))
+    import agent  # noqa: E402  (the module, not the process; main() is not run)
+
+    table = json.loads(KINDS_TABLE.read_text(encoding="utf-8"))
+    wrong = [f"{n}: want {k}, got {agent.kind_of(n)}" for n, k in table["cases"] if agent.kind_of(n) != k]
+    check(f"agent kind_of agrees with every row of media_kinds.json ({len(table['cases'])})",
+          not wrong, detail="; ".join(wrong))
+
+    src = FOLDER_SOURCE.read_text(encoding="utf-8")
+    for js_name, py_set in (("IMAGE_EXTS", agent.IMAGE_EXTS), ("VIDEO_EXTS", agent.VIDEO_EXTS),
+                            ("AUDIO_EXTS", agent.AUDIO_EXTS)):
+        js_set = js_exts(src, js_name)
+        check(f"{js_name}: agent.py and folder_source.js list the same extensions",
+              bool(js_set) and js_set == py_set,
+              detail=f"only in js={sorted(js_set - py_set)} only in agent={sorted(py_set - js_set)}")
+    check("the agent lists audio as media (MEDIA_EXTS includes AUDIO_EXTS)",
+          agent.AUDIO_EXTS <= agent.MEDIA_EXTS)
+
+
 def main():
+    check_kinds_agree()
+
     tmp = Path(tempfile.mkdtemp(prefix="nimrod_media_"))
     root = tmp / "photos"
     root.mkdir()
@@ -69,6 +112,7 @@ def main():
     (root / "apple.jpg").write_bytes(b"\xff\xd8\xff\xe0JPEGDATA")           # image
     (root / "Banana.JPG").write_bytes(b"\xff\xd8\xff\xe0UPPERCASE")         # image, upper ext
     (root / "clip.MP4").write_bytes(b"\x00\x00\x00\x18ftypmp42")            # video, upper ext
+    (root / "song.MP3").write_bytes(b"ID3\x03\x00MP3DATA")                  # audio, upper ext
     (root / "notes.txt").write_bytes(b"not media")                         # excluded
     (root / ".hidden.jpg").write_bytes(b"hidden")                          # excluded (dotfile)
     album = root / "trip"
@@ -110,12 +154,15 @@ def main():
         # /list (root)
         s, h, j = get_json(f"{base}/list")
         names = sorted(i["name"] for i in j.get("items", []))
-        check("/list returns exactly the 3 media files (case-insensitive)",
-              names == ["Banana.JPG", "apple.jpg", "clip.MP4"], detail=repr(names))
+        check("/list returns exactly the 4 media files (case-insensitive)",
+              names == ["Banana.JPG", "apple.jpg", "clip.MP4", "song.MP3"], detail=repr(names))
         check("/list excludes non-media and dotfiles", "notes.txt" not in names and ".hidden.jpg" not in names)
         kinds = {i["name"]: i["kind"] for i in j["items"]}
-        check("kinds classified (image/video)",
-              kinds.get("apple.jpg") == "image" and kinds.get("clip.MP4") == "video", detail=repr(kinds))
+        check("kinds classified (image/video/audio)",
+              kinds.get("apple.jpg") == "image" and kinds.get("clip.MP4") == "video"
+              and kinds.get("song.MP3") == "audio", detail=repr(kinds))
+        s, _, body = get(f"{base}/files/song.MP3")
+        check("/files serves an audio file's bytes", s == 200 and body.startswith(b"ID3"), detail=f"status={s}")
         check("/list surfaces the subfolder as an album", "trip" in j.get("albums", []), detail=repr(j.get("albums")))
         check("items carry relative path as id", all(i["id"] == i["path"] for i in j["items"]))
 
