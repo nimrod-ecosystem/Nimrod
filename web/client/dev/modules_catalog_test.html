@@ -55,6 +55,7 @@ import '../modules/trivia.js';
 import '../modules/bank.js';      // registers 'bank' (the shared questions + words)
 import '../modules/wordforge.js';
 import '../modules/youtube.js';
+import '../modules/word_games.js';
 // `wallpaper` was already reaching the registry, but only because `director.js` imports it —
 // a transitive registration this suite would lose the moment the director stopped mounting an
 // overlay. Both are listed explicitly now. Worth noting what that says about the check itself:
@@ -147,8 +148,9 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // Updated again the same day: `button` (change list row 2.26, the game's name sign and picture)
   // was BUILT on the new core rather than ported to it, and it counts the same way. Still strict —
   // the list is named, so a third arrival has to be added here on purpose.
-  const PORTED = ['button', 'calculator'];
-  check('exactly two modules in today’s real registry are on the new core: button and calculator',
+  // 2026-09-30: `word_games` (row 2.31) is built on the new core, like `button`.
+  const PORTED = ['button', 'calculator', 'word_games'];
+  check('exactly three modules in today’s real registry are on the new core: button, calculator and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length

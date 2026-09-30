@@ -81,6 +81,7 @@ export const HEALTH_EXPECT = {
   wordforge:   { idle: true },
   algebra:     { idle: true },
   trivia:      { idle: true },
+  word_games:  { idle: true },
   // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
   //
   // `trivia`, `bank`, `wallpaper` and `board` shipped without rows, so they fell to the

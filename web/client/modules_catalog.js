@@ -390,6 +390,19 @@ export const CATALOG = [
   },
   {
     type: 'algebra',
+  {
+    type: 'word_games',
+    title: 'Word games',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Opposites, rhyming and yes-or-no questions, asked out loud with a picture.',
+    needs: 'Nothing. The words and pictures are built in.',
+    why: 'Every question can be answered with one switch: it offers one answer at a time and '
+      + 'asks "is it this one?". A miss gets a hint rather than a buzzer, and after two it offers '
+      + 'the answer. Built so a spoken answer can be added later without changing the game.',
+    note: 'It does not listen to the room yet. When voice is added, a word it is unsure of is '
+      + 'checked with the person first, never marked wrong.',
+  },
     group: 'practice',
     use: 'answer',
     lead: 'Solve for x, with a calculator on screen.',
