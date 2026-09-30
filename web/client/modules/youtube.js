@@ -66,7 +66,15 @@ const DEFAULTS = {
   // rule for a changed unit (AGENTS.md) applies just as well to a changed meaning: rename
   // the key, so an un-migrated value reads as ABSENT and picks up the new default.
   heldNotifyMs: 21600000,        // six hours
+  // *** THE VIDEO'S OWN VOLUME, IN PERCENT (row 2.28). *** 100 is exactly what every screen did
+  // before this existed: the player at full, with the speaker arbiter's duck on top. See the
+  // VOLUME note in SETTINGS for why it is this panel's and not a screen-wide master.
+  volume: 100,
+  volumeStep: 20,
 };
+
+// The quietest a "quieter" can make it. See the VOLUME note below for why it is not zero.
+export const VOLUME_MIN = 10;
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 
 // How often a playing video is asked where it has got to. NOT a setting: nobody is served by
@@ -136,6 +144,46 @@ export const SETTINGS = [
   // #255) needs no new bus wiring here: this menu is already switch- and input-bus-operable.
   { key: 'presetId', label: 'Use a saved preset', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No preset — this instance’s own playlist, schedule and shuffle' },
+  // *** VOLUME (row 2.28: "volume up, volume down ... mostly for Youtube right now"). ***
+  //
+  // WHERE LOUDER AND QUIETER ACT: THIS PANEL'S OWN VOLUME, NOT A SCREEN-WIDE MASTER. Both were
+  // read against how volume works today, and the code decides it:
+  //   * There IS no master. `audio_bus.js` arbitrates LEVELS between sources (duck, one-at-a-time,
+  //     hush) and hands each source a 0..1 to enact; it has no user volume at all. Every volume
+  //     a person can set today belongs to a source - `game_music.js` enacts `vol x gain`, and
+  //     `pressgame`'s "How loud the music is" is a setting on that module. This does the same.
+  //   * A master in the arbiter would not even be one: the speech channel registers with no
+  //     `onGain`, so spoken words would ignore it, and "louder" would make the video louder and
+  //     the voice not - a master that is not.
+  //   * And verbs already go to the FOCUSED panel. A panel with no volume ignores the verb
+  //     (the router reports `no-mapping`), exactly like `select` on photos.
+  // The cost, said plainly: "louder" does nothing while focus is on a different panel. The real
+  // master is the machine's own volume (and the speakerphone's buttons), which this page does
+  // not own and should not.
+  //
+  // IT MULTIPLIES WITH THE ARBITER, never replaces it: a ducked video stays ducked, and
+  // "louder" cannot un-silence a video the arbiter silenced for a call.
+  //
+  // *** THE FLOOR IS 10%, NOT SILENCE. *** A "quieter" that can reach zero leaves a video
+  // playing with no sound, which to the next person in the room looks exactly like broken
+  // audio. Making it silent is a different act with its own control (Hush on the bar, pause
+  // here). The person who wants the opposite - true mute by voice - is served by "pause" today.
+  // A NUMBER, not a choice, so a step of 25 landing on 35% is a value the row can show; bounded,
+  // so a switch can walk it.
+  { key: 'volume', label: 'How loud the video is', kind: 'number', default: 100,
+    min: VOLUME_MIN, max: 100, step: 10, unit: '%', level: 'standard' },
+  // *** HOW FAR ONE "LOUDER" GOES. *** A setting rather than a buried number (Rule 1). Default a
+  // fifth of the range, because every spoken step costs a whole sentence ("computer please,
+  // louder"): a step small enough that nobody can hear it is a command that seems not to work,
+  // and five steps from quietest to full is few enough to say. A tenth is there for somebody who
+  // wants finer control; a quarter for somebody who wants it in four.
+  { key: 'volumeStep', label: 'How much “louder” or “quieter” changes it', kind: 'choice',
+    default: 20, level: 'advanced',
+    options: [
+      { value: 10, label: 'a little' },
+      { value: 20, label: 'a step you can hear' },
+      { value: 25, label: 'a big step' },
+    ] },
 ];
 
 // Parse a YouTube video id from a URL or a bare id. Accepts youtu.be/<id>,
@@ -377,6 +425,10 @@ function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlayli
     // The cheap first move when a video has stopped on its own: ask it to carry on from
     // where it is, rather than reloading and losing the place. `load` remains the fallback.
     resume() { if (destroyed) return; try { player?.playVideo?.(); } catch { /* not ready */ } },
+    // A spoken or switched "pause" (row 2.28). The player then reports PAUSED, which lands in
+    // `onIdle` exactly like somebody pressing the player's own pause button - and is HELD, the
+    // same way, because it was.
+    pause() { if (destroyed) return; try { player?.pauseVideo?.(); } catch { /* not ready */ } },
     // *** WHERE THE VIDEO HAS GOT TO, IN SECONDS — or null if it cannot say. ***
     //
     // The IFrame API has no `timeupdate`. It has STATES, and a state is not progress: a
@@ -642,11 +694,45 @@ registerModule(
     const pauseIsReachable = true;
     const holdNotifyMs = () => Math.max(0, Number(cfg.heldNotifyMs) || 0);
 
+    // ---- volume (row 2.28) — see the VOLUME note on SETTINGS ----------------------------
+    // `arbiterGain` is what the speaker arbiter last asked for (1 when there is no arbiter);
+    // the player gets that TIMES this panel's own volume, so neither can override the other.
+    let arbiterGain = 1;
+    let pushedGain = null;          // null = this module has never set the player's volume
+    const clampNum = (v, lo, hi, dflt) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : dflt;
+    };
+    const volumePct = () => clampNum(cfg.volume, VOLUME_MIN, 100, DEFAULTS.volume);
+    const volumeStep = () => clampNum(cfg.volumeStep, 1, 100, DEFAULTS.volumeStep);
+    // `force` is the arbiter's path, which always enacted its level and still does. Otherwise a
+    // screen nobody has made louder or quieter is LEFT ALONE - the player keeps whatever it had,
+    // exactly as before this existed.
+    function pushGain(force = false) {
+      const g = arbiterGain * (volumePct() / 100);
+      if (!force && pushedGain === null && g === 1) return;
+      pushedGain = g;
+      try { player?.setGain?.(g); } catch { /* not ready */ }
+    }
+    function stepVolume(dir) {
+      // A DIRECTION, NEVER AN AMOUNT: the size of a step is this panel's setting, not whatever
+      // a sender put in the payload.
+      const d = Number(dir) < 0 ? -1 : 1;
+      const next = clampNum(volumePct() + d * volumeStep(), VOLUME_MIN, 100, DEFAULTS.volume);
+      // Local first, so three quick "louder"s compound before the saved row echoes back.
+      cfg = { ...cfg, volume: next };
+      state.set({ volume: next });
+      pushGain(true);
+    }
+
     function onPlaying() {
       audio?.setActive?.(AUDIO_ID, true);
       stallReason = 'playing';
       setHeld(false);
       setStatus('');
+      // A volume set before the player was ready was swallowed by it; say it again now. A no-op
+      // on a screen that has never been made louder or quieter.
+      pushGain();
       lastTime = readTime() ?? -1;
       // beat(), NOT ok(). `ok()` stops the clock for good and a video that freezes afterwards
       // is then watched by nothing — see the heartbeat note above and watchdog.js.
@@ -1017,6 +1103,8 @@ registerModule(
     }
 
     function applyConfig() {
+      // The volume from the settings menu (or a saved row) takes effect straight away.
+      pushGain();
       syncPlaylistSource();
       syncScheduleWatch();
       indexPlaylist();
@@ -1213,7 +1301,10 @@ registerModule(
         // it takes the slot from a game's music; `media` tier, so a spoken cue still ducks it.
         audio?.register?.(AUDIO_ID, {
           tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY,
-          onGain: (level) => { try { player?.setGain?.(level); } catch { /* not ready */ } },
+          onGain: (level) => {
+            arbiterGain = Math.max(0, Math.min(1, Number(level) || 0));
+            pushGain(true);
+          },
         });
 
         // ANY SIGN OF A PERSON RESTARTS THE HOLD. This is what makes four hours the right
@@ -1232,14 +1323,26 @@ registerModule(
           activity.note();
           if (stallReason === 'held' && stall?.armed()) stall.beat();
         };
-        for (const topic of ['input/device', 'youtube/next', 'youtube/prev']) {
+        for (const topic of ['input/device', 'youtube/next', 'youtube/prev',
+                             'youtube/play', 'youtube/pause', 'youtube/volume']) {
           bus.subscribe(topic, heldBeat);
         }
         mount.addEventListener('pointerdown', heldBeat, { passive: true });
 
-        // the module's two sinks — any source pointed at these topics drives it
+        // the module's sinks — any source pointed at these topics drives it
         bus.subscribe('youtube/next', () => advance());
         bus.subscribe('youtube/prev', () => prev());
+        // PLAY, PAUSE, LOUDER, QUIETER (row 2.28). Play carries on from where it stopped rather
+        // than reloading; with nothing loaded yet it starts one, which is what "play" means to
+        // somebody looking at an empty panel.
+        bus.subscribe('youtube/play', () => {
+          if (!currentId) { advance(); return; }
+          try { player?.resume?.(); } catch (e) { console.error('youtube: play', e); }
+        });
+        bus.subscribe('youtube/pause', () => {
+          try { player?.pause?.(); } catch (e) { console.error('youtube: pause', e); }
+        });
+        bus.subscribe('youtube/volume', (dir) => stepVolume(dir));
 
         // its own buttons are just another source
         const nav = bus.createSource('youtube-nav');

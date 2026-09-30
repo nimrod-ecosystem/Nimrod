@@ -749,6 +749,99 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       lib.destroy();
     }
 
+    // ── ROW 2.28: PLAY, PAUSE, LOUDER, QUIETER ────────────────────────────────
+    //
+    // Mike, 2026-09-30: "Pause, play, skip, volume up, volume down ... Mostly for Youtube right
+    // now." The verbs arrive from the router as these topics; this drives the topics directly,
+    // exactly as the rest of this file drives youtube/next.
+    {
+      const fields = fieldsFor(getManifest('youtube'));
+      const vol = fields.find((f) => f.key === 'volume');
+      const step = fields.find((f) => f.key === 'volumeStep');
+      check('the video has its own volume, as a setting', vol && vol.kind === 'number'
+        && vol.default === 100 && vol.max === 100 && vol.min === 10, JSON.stringify(vol));
+      check('...and how far one “louder” goes is a setting too, not a buried number',
+        step && step.kind === 'choice' && step.default === 20, JSON.stringify(step));
+
+      const pv = await profiles.create('TEST-youtube-voice');
+      const mv = await profiles.addModule(pv.id, 'youtube');
+      const stv = createState({ url: profiles.stateURL(pv.id, mv.id), user: USER });
+      const evv = createEvents({ url: profiles.eventsURL(pv.id, mv.id), user: USER });
+      await stv.load(); await evv.load();
+      stv.set({ playlist: PLAYLIST, autoAdvance: false });
+      await stv.flush();
+
+      const rec = { paused: 0, resumed: 0, gains: [], loaded: [], handlers: null };
+      const factory = (el, h) => {
+        rec.handlers = h;
+        return { load: (id) => rec.loaded.push(id), cueList() {}, stop() {}, destroy() {},
+                 pause() { rec.paused++; }, resume() { rec.resumed++; },
+                 setGain(l) { rec.gains.push(l); } };
+      };
+      let onGain = null;
+      const audio = { register(id, spec) { if (spec && spec.onGain) onGain = spec.onGain; },
+                      setActive() {}, unregister() {} };
+      const vbus = createBus();
+      const vhost = document.createElement('div');
+      document.body.append(vhost);
+      const vinst = mountModule('youtube', {
+        mount: vhost, bus: vbus, state: stv, events: evv, user: USER, profileId: pv.id,
+        playerFactory: factory, audio,
+      });
+      vinst.init();
+      await sleep(80);
+      const last = () => rec.gains[rec.gains.length - 1];
+      const near = (a, b) => typeof a === 'number' && Math.abs(a - b) < 1e-9;
+
+      check('*** a screen nobody has asked to be louder or quieter is not touched ***',
+        rec.gains.length === 0, JSON.stringify(rec.gains));
+
+      vbus.publish('youtube/pause');
+      check('pause pauses the player', rec.paused === 1 && rec.resumed === 0);
+      vbus.publish('youtube/play');
+      check('play carries on from where it was — not a reload', rec.resumed === 1
+        && rec.loaded.length === 1, `resumed=${rec.resumed} loaded=${rec.loaded.length}`);
+
+      vbus.publish('youtube/volume', -1);
+      await sleep(30);
+      check('quieter is one step down from full', near(last(), 0.8), JSON.stringify(rec.gains));
+      await stv.flush();
+      check('...and it is remembered, like a TV remembers its volume', stv.get().volume === 80,
+        JSON.stringify(stv.get().volume));
+
+      for (let i = 0; i < 6; i++) vbus.publish('youtube/volume', -1);
+      await sleep(30);
+      check('*** “quieter” stops at the quietest step and never reaches silence ***',
+        near(last(), 0.1), JSON.stringify(rec.gains.slice(-3)));
+
+      vbus.publish('youtube/volume', 5);
+      await sleep(30);
+      check('a payload is a direction, never an amount', near(last(), 0.3), JSON.stringify(rec.gains.slice(-2)));
+
+      onGain(0.5);
+      check('*** it multiplies with the speaker arbiter rather than fighting it — ducked, it stays ducked ***',
+        near(last(), 0.15), JSON.stringify(rec.gains.slice(-2)));
+      onGain(0);
+      vbus.publish('youtube/volume', 1);
+      await sleep(30);
+      check('...and “louder” cannot un-silence what the arbiter silenced', near(last(), 0),
+        JSON.stringify(rec.gains.slice(-2)));
+      onGain(1);
+      check('...while the step still counted, for when it comes back', near(last(), 0.5),
+        JSON.stringify(rec.gains.slice(-2)));
+
+      stv.set({ volumeStep: 10 });
+      await sleep(30);
+      vbus.publish('youtube/volume', 1);
+      await sleep(30);
+      check('the step size is the setting', near(last(), 0.6), JSON.stringify(rec.gains.slice(-2)));
+      for (let i = 0; i < 8; i++) vbus.publish('youtube/volume', 1);
+      await sleep(30);
+      check('louder stops at full', near(last(), 1), JSON.stringify(rec.gains.slice(-2)));
+
+      vinst.destroy(); stv.destroy(); evv.destroy(); vhost.remove();
+    }
+
   } catch (e) {
     check('unexpected error', false, String(e && e.stack || e));
   }

@@ -26,7 +26,8 @@ import { mountInputs, INPUTS_KEY, RECORD_VERSION, suggestHold } from '../inputs.
 import { createInputBus } from '../input.js';
 import { createVerbRouter } from '../input_router.js';
 import { createBus } from '../bus.js';
-import { VERBS, FOCUS_VERBS, verbTopic, verbTarget, respondsToVerbs, ROLE_CYCLE_ACTION } from '../actions.js';
+import { VERBS, FOCUS_VERBS, MEDIA_VERBS, verbTopic, verbTarget, respondsToVerbs, ROLE_CYCLE_ACTION,
+         createDefaultRegistry, normalizeVerb } from '../actions.js';
 import { DEFAULT_BINDINGS } from '../input_keyboard.js';
 
 const out = document.getElementById('results');
@@ -198,6 +199,59 @@ const logText = (r) => r.q('[data-log]').textContent;
       modules = SCREENS.p1.modules;
       bus.publish(verbTopic('next'));
       check('a destroyed router stops listening', fired.length === 2);
+    }
+
+    // ================= row 2.28: the media verbs =================
+    section('the media verbs — play, pause, louder, quieter');
+    {
+      check('there are four, with the ids the phrase table and the modules use',
+        JSON.stringify(MEDIA_VERBS.map((v) => v.id)) === '["play","pause","volume-up","volume-down"]',
+        JSON.stringify(MEDIA_VERBS.map((v) => v.id)));
+      // The binder's flat list is the nine, the focus pair and the gate ON PURPOSE (see the
+      // "short" check below). The media four are a separate shipped list, like FOCUS_VERBS,
+      // so they do not quietly grow it.
+      check('*** they are NOT in the nine — the list a person reads stays short ***',
+        MEDIA_VERBS.every((m) => !VERBS.some((v) => v.id === m.id)));
+      const reg = createDefaultRegistry();
+      check('...but they are real actions, so a spoken binding to one can actually fire',
+        MEDIA_VERBS.every((m) => reg.has(verbTopic(m.id))),
+        MEDIA_VERBS.filter((m) => !reg.has(verbTopic(m.id))).map((m) => m.id).join(','));
+      check('a custom verb cannot shadow one — `pause` means pause on every screen',
+        normalizeVerb({ id: 'pause' }) === null && normalizeVerb({ id: 'volume-up' }) === null);
+      check('youtube answers play and pause', verbTarget('youtube', 'pause')?.topic === 'youtube/pause'
+        && verbTarget('youtube', 'play')?.topic === 'youtube/play');
+      check('...and louder/quieter as one step either way, on its own volume',
+        verbTarget('youtube', 'volume-up')?.topic === 'youtube/volume'
+          && verbTarget('youtube', 'volume-up')?.payload === 1
+          && verbTarget('youtube', 'volume-down')?.payload === -1,
+        JSON.stringify([verbTarget('youtube', 'volume-up'), verbTarget('youtube', 'volume-down')]));
+      check('...and its next and prev did not move', verbTarget('youtube', 'next')?.topic === 'youtube/next'
+        && verbTarget('youtube', 'prev')?.topic === 'youtube/prev');
+
+      const bus = createBus();
+      const fired = [];
+      ['youtube/pause', 'youtube/play', 'youtube/volume', 'photos/next', 'photos/prev']
+        .forEach((t) => ['m-photos', 'm-yt'].forEach((id) =>
+          bus.subscribe(bus.instanceTopic(id, t), (p) => fired.push([id, t, p]))));
+      const unhandled = [];
+      const router = createVerbRouter({ bus, modules: () => SCREENS.p1.modules,
+                                        onUnhandled: (u) => unhandled.push(u) });
+      bus.publish(verbTopic('pause'));
+      check('*** a panel that does not answer pause ignores it — nothing is published ***',
+        fired.length === 0, JSON.stringify(fired));
+      check('...and it is reported as no-mapping, like any other verb',
+        unhandled.length === 1 && unhandled[0].reason === 'no-mapping' && unhandled[0].verb === 'pause',
+        JSON.stringify(unhandled));
+      router.setFocus('m-yt');
+      bus.publish(verbTopic('pause'));
+      bus.publish(verbTopic('volume-down'));
+      check('the router routes them to the focused video',
+        JSON.stringify(fired) === JSON.stringify([['m-yt', 'youtube/pause', null], ['m-yt', 'youtube/volume', -1]]),
+        JSON.stringify(fired));
+      check('...and lists them among what this panel answers',
+        ['play', 'pause', 'volume-up', 'volume-down'].every((v) => router.targets()[v]),
+        JSON.stringify(Object.keys(router.targets())));
+      router.destroy();
     }
 
     // ================= instance addressing =================

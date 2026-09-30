@@ -26,9 +26,12 @@ not.</p>
 <script type="module">
 import {
   PHRASES, SPEECH_DEVICE, DEFAULT_BINDINGS, normalize, verbFor, duplicatePhrases,
-  phraseControl, attachSpeech,
+  phraseControl, attachSpeech, SPEECH_DEFAULTS, CONFIRM_MODES, usableWakePhrases, splitWake,
 } from '../input_speech.js';
-import { VERBS, verbTopic } from '../actions.js';
+import { VERBS, MEDIA_VERBS, verbTopic, createDefaultRegistry } from '../actions.js';
+import { createBus } from '../bus.js';
+import { createInputBus } from '../input.js';
+import { createVerbRouter } from '../input_router.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -75,22 +78,94 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   check('...or the start', verbFor('next week she is home') === null);
   check('null and undefined are safe', verbFor(null) === null && verbFor(undefined) === null);
 
+  section('*** row 2.28: play, pause and volume, said the ways people say them ***');
+  // Mike, 2026-09-30: "Pause, play, skip, volume up, volume down. Things like that. Mostly for
+  // Youtube right now. Could we ... make other ways people might phrase it commands too?"
+  check('“pause” is pause', verbFor('pause') === 'pause', String(verbFor('pause')));
+  check('...and so are “stop”, “hold on” and “wait”',
+    ['stop', 'hold on', 'wait'].every((p) => verbFor(p) === 'pause'),
+    ['stop', 'hold on', 'wait'].map((p) => `${p}=${verbFor(p)}`).join(' '));
+  check('“play” is play', verbFor('play') === 'play', String(verbFor('play')));
+  check('...and so are “resume” and “keep going”',
+    verbFor('resume') === 'play' && verbFor('keep going') === 'play');
+  check('“louder”, “volume up” and “turn it up” are volume-up',
+    ['louder', 'volume up', 'turn it up'].every((p) => verbFor(p) === 'volume-up'),
+    ['louder', 'volume up', 'turn it up'].map((p) => `${p}=${verbFor(p)}`).join(' '));
+  check('“quieter”, “volume down”, “turn it down” and “too loud” are volume-down',
+    ['quieter', 'volume down', 'turn it down', 'too loud'].every((p) => verbFor(p) === 'volume-down'),
+    ['quieter', 'volume down', 'turn it down', 'too loud'].map((p) => `${p}=${verbFor(p)}`).join(' '));
+  check('“skip” STILL means next — nothing that already worked moved',
+    verbFor('skip') === 'next' && verbFor('skip this') === 'next' && verbFor('next one') === 'next');
+  check('“go back” still means back', verbFor('go back') === 'back');
+  // *** MOVED, ON PURPOSE. *** "stop that" used to be `back`, and on a call `back` is HANG UP.
+  // Now that "stop" means pause, "stop that" ending somebody's call is the one reading of it
+  // nobody intends — so it goes with its neighbour, to the verb that cannot end anything.
+  check('*** “stop that” is pause, not back — on a call, back hangs up ***',
+    verbFor('stop that') === 'pause', String(verbFor('stop that')));
+
   section('*** the table itself ***');
   const dupes = duplicatePhrases();
-  check('*** no phrase means two different verbs ***', dupes.length === 0, dupes.join(' · '));
-  const verbIds = VERBS.map((v) => v.id);
+  check('*** no phrase means two different verbs — over the WHOLE table ***',
+    dupes.length === 0, dupes.join(' · '));
+  // THE CHECKER HAS TO BE ABLE TO FAIL, or the line above proves nothing. Plant one, in a
+  // spelling that only matches after normalising, and it must be caught.
+  check('...and the checker really catches one, even spelled differently',
+    duplicatePhrases({ ...PHRASES, pause: [...PHRASES.pause, 'Next!'] }).length === 1,
+    JSON.stringify(duplicatePhrases({ ...PHRASES, pause: [...PHRASES.pause, 'Next!'] })));
+  const spoken = [...VERBS, ...MEDIA_VERBS].map((v) => v.id);
   const tableIds = Object.keys(PHRASES);
-  check('every verb in the vocabulary can be spoken',
-    verbIds.every((v) => tableIds.includes(v)),
-    verbIds.filter((v) => !tableIds.includes(v)).join(', ') || 'none missing');
+  check('every verb in the vocabulary can be spoken — the nine and the media four',
+    spoken.every((v) => tableIds.includes(v)),
+    spoken.filter((v) => !tableIds.includes(v)).join(', ') || 'none missing');
   check('...and the table invents no verb the vocabulary does not have',
-    tableIds.every((v) => verbIds.includes(v)),
-    tableIds.filter((v) => !verbIds.includes(v)).join(', ') || 'none extra');
+    tableIds.every((v) => spoken.includes(v)),
+    tableIds.filter((v) => !spoken.includes(v)).join(', ') || 'none extra');
   const short = Object.entries(PHRASES)
     .flatMap(([v, ps]) => ps.filter((p) => normalize(p).replace(/\s/g, '').length < 2)
       .map((p) => `${v}:"${p}"`));
   check('no phrase is short enough for a mis-heard syllable to fire it', short.length === 0,
     short.join(', '));
+  // THESE BECOME A RECOGNISER GRAMMAR LATER (a small local engine limited to exactly this list),
+  // so they are kept to plain lowercase words and short. A phrase with punctuation in it is a
+  // phrase the grammar spells differently from the table.
+  const odd = Object.entries(PHRASES).flatMap(([v, ps]) => ps
+    .filter((p) => p !== normalize(p) || p.split(' ').length > 4).map((p) => `${v}:"${p}"`));
+  check('every phrase is plain lowercase words, four at most', odd.length === 0, odd.join(', '));
+
+  section('*** the wake phrase ***');
+  // DECISIONS.md 2026-08-30: "Wake phrase default is 'Computer please', and it is a setting."
+  check('the shipped wake phrase is “computer please”, and only that',
+    JSON.stringify(SPEECH_DEFAULTS.wake) === JSON.stringify(['computer please']),
+    JSON.stringify(SPEECH_DEFAULTS.wake));
+  check('the wake phrase is required by default', SPEECH_DEFAULTS.requireWake === true);
+  const wakeClash = usableWakePhrases(SPEECH_DEFAULTS.wake).length === SPEECH_DEFAULTS.wake.length;
+  check('*** the shipped wake phrase is not itself a command ***', wakeClash,
+    JSON.stringify(usableWakePhrases(SPEECH_DEFAULTS.wake)));
+  check('a wake phrase that IS a command is refused — “okay” cannot wake AND select',
+    JSON.stringify(usableWakePhrases(['computer please', 'okay'])) === JSON.stringify(['computer please']),
+    JSON.stringify(usableWakePhrases(['computer please', 'okay'])));
+  check('an empty second phrase is simply no second phrase',
+    JSON.stringify(usableWakePhrases(['computer please', '', '  '])) === JSON.stringify(['computer please']));
+  check('splitWake: wake phrase and command in one breath',
+    JSON.stringify(splitWake('Computer, please pause.', ['computer please']))
+      === JSON.stringify({ woke: true, rest: 'pause' }),
+    JSON.stringify(splitWake('Computer, please pause.', ['computer please'])));
+  check('splitWake: the wake phrase on its own',
+    JSON.stringify(splitWake('computer please', ['computer please'])) === JSON.stringify({ woke: true, rest: '' }));
+  check('splitWake: no wake phrase at the start is no wake at all',
+    splitWake('i told the computer please pause', ['computer please']).woke === false);
+  check('splitWake: a word that merely STARTS with the phrase is not it',
+    splitWake('computer pleased me', ['computer please']).woke === false);
+
+  section('*** the confirmation: a tone or one short word, never the content ***');
+  check('the confirm modes are tone, word and off', JSON.stringify(CONFIRM_MODES) === '["tone","word","off"]');
+  check('a tone is the default', SPEECH_DEFAULTS.confirm === 'tone');
+  // THE SCREEN MUST NOT BE ABLE TO COMMAND ITSELF. If the spoken confirmation were a phrase in
+  // the table, a speaker the microphone can hear would fire a verb every time it confirmed one.
+  check('*** the confirmation word is not a command or a wake phrase ***',
+    verbFor(SPEECH_DEFAULTS.confirmWord) === null
+      && !splitWake(SPEECH_DEFAULTS.confirmWord, SPEECH_DEFAULTS.wake).woke,
+    `${SPEECH_DEFAULTS.confirmWord} -> ${verbFor(SPEECH_DEFAULTS.confirmWord)}`);
 
   section('*** it reaches the bus as an ordinary device ***');
   {
@@ -105,14 +180,15 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; },
                   running: false };
     const heard = [];
-    const speech = attachSpeech(input, { recognizer: rec, onHeard: (h) => heard.push(h) });
+    const speech = attachSpeech(input, { recognizer: rec, onHeard: (h) => heard.push(h),
+                                         confirm: 'off' });
 
     check('it does not start on its own', rec.running === false);
     check('...and says it has an engine available', speech.available() === true);
     speech.start();
     check('...and starts when told', rec.running === true && speech.listening === true);
 
-    feed('next');
+    feed('computer please next');
     check('*** a phrase presses and releases, like any other control ***',
       calls.length === 2 && calls[0][0] === 'down' && calls[1][0] === 'up',
       JSON.stringify(calls));
@@ -129,6 +205,164 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 
     speech.stop();
     check('stopping stops the engine', rec.running === false);
+  }
+
+  // A rig: a fake input bus, a fake recogniser, a fake clock, and fake confirm outputs.
+  function rig(opts = {}) {
+    const calls = [];
+    const input = { down: (d, c) => calls.push(['down', d, c]), up: (d, c) => calls.push(['up', d, c]) };
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; },
+                  running: false };
+    let t = 1000;
+    const tones = []; const said = [];
+    const output = { say: (text, o) => { said.push([text, o]); return 'o1'; } };
+    const heard = [];
+    const speech = attachSpeech(input, { recognizer: rec, now: () => t, tone: (v) => tones.push(v),
+      output, onHeard: (h) => heard.push(h), ...opts });
+    speech.start();
+    const pressed = () => calls.filter((c) => c[0] === 'down').map((c) => c[2]);
+    return { speech, say: (x) => feed(x), pressed, tones, said, heard,
+             advance: (ms) => { t += ms; } };
+  }
+
+  section('*** the wake gate, as the recogniser meets it ***');
+  {
+    const r = rig();
+    r.say('pause');
+    check('*** a bare command does nothing — the video saying “pause” cannot pause itself ***',
+      r.pressed().length === 0, JSON.stringify(r.pressed()));
+    r.say('computer please pause');
+    check('wake phrase + command in one breath fires it', JSON.stringify(r.pressed()) === '["phrase:pause"]',
+      JSON.stringify(r.pressed()));
+    r.say('play');
+    check('*** one wake, one command: the next bare phrase does nothing ***',
+      r.pressed().length === 1, JSON.stringify(r.pressed()));
+
+    r.say('computer please');
+    check('the wake phrase alone presses nothing', r.pressed().length === 1);
+    check('...but is reported as heard and woken',
+      r.heard[r.heard.length - 1].woke === true && r.heard[r.heard.length - 1].verb === null,
+      JSON.stringify(r.heard[r.heard.length - 1]));
+    r.advance(3000);
+    r.say('the weather is nice');
+    r.say('louder');
+    check('*** said separately, inside the window, the command fires — an unrecognised phrase in '
+      + 'between does not close it ***', r.pressed()[1] === 'phrase:volume-up', JSON.stringify(r.pressed()));
+
+    r.say('computer please');
+    r.advance(SPEECH_DEFAULTS.wakeWindowMs + 1);
+    r.say('quieter');
+    check('...and after the window has run out it does nothing', r.pressed().length === 2,
+      JSON.stringify(r.pressed()));
+
+    r.say('computer please i do not want to go back');
+    check('a sentence after the wake phrase is still a sentence, not a command', r.pressed().length === 2);
+  }
+  {
+    const r = rig({ wake: ['computer please', 'hey screen'] });
+    r.say('hey screen next');
+    check('a second wake phrase, when somebody sets one, works the same',
+      JSON.stringify(r.pressed()) === '["phrase:next"]', JSON.stringify(r.pressed()));
+    check('...and the live list says which phrases are in force',
+      JSON.stringify(r.speech.wakePhrases()) === '["computer please","hey screen"]',
+      JSON.stringify(r.speech.wakePhrases()));
+  }
+  {
+    const r = rig({ requireWake: false });
+    r.say('pause');
+    check('with the gate turned off, a bare command fires', JSON.stringify(r.pressed()) === '["phrase:pause"]');
+    r.say('computer please play');
+    check('...and saying the wake phrase anyway still works', r.pressed()[1] === 'phrase:play',
+      JSON.stringify(r.pressed()));
+  }
+  {
+    const r = rig({ wake: ['okay'] });
+    r.say('okay');
+    check('*** a wake list with nothing usable left does NOTHING, rather than firing everything ***',
+      r.pressed().length === 0 && r.speech.wakePhrases().length === 0, JSON.stringify(r.pressed()));
+  }
+
+  section('*** the confirmation ***');
+  {
+    const r = rig();
+    r.say('computer please pause');
+    check('a command that fired gets one tone', r.tones.length === 1 && r.said.length === 0,
+      `tones=${r.tones.length} said=${JSON.stringify(r.said)}`);
+    r.say('computer please the weather is nice');
+    r.say('computer please');
+    r.say('hello');
+    check('...and nothing that did not fire gets one', r.tones.length === 1, `tones=${r.tones.length}`);
+  }
+  {
+    const r = rig({ confirm: 'word' });
+    r.say('computer please louder');
+    check('word mode says ONE short word, through the output bus',
+      r.said.length === 1 && r.said[0][0] === SPEECH_DEFAULTS.confirmWord && r.tones.length === 0,
+      JSON.stringify(r.said));
+    check('...marked as coming from speech', r.said[0][1] && r.said[0][1].source === 'speech',
+      JSON.stringify(r.said[0][1]));
+    check('*** and never the content: not the phrase, not the verb ***',
+      !/louder|volume/i.test(r.said[0][0]), r.said[0][0]);
+  }
+  {
+    const r = rig({ confirm: 'off' });
+    r.say('computer please pause');
+    check('off is silent', r.tones.length === 0 && r.said.length === 0);
+  }
+  {
+    const r = rig({ confirm: 'word', output: null });
+    r.say('computer please pause');
+    check('word mode with no output bus falls back to the tone, rather than confirming nothing',
+      r.tones.length === 1, `tones=${r.tones.length}`);
+  }
+  {
+    const r = rig({ confirm: 'shout' });
+    r.say('computer please pause');
+    check('an unknown mode is a tone, not silence and not an error', r.tones.length === 1);
+  }
+
+  section('*** end to end: spoken, through the real input bus and router, to the focused panel ***');
+  {
+    const bus = createBus();
+    const input = createInputBus({ bus, actions: createDefaultRegistry() });
+    DEFAULT_BINDINGS.forEach((b) => input.addBinding(b));
+    const got = [];
+    const modules = [{ id: 'yt-1', type: 'youtube', position: 0 },
+                     { id: 'ph-1', type: 'photos', position: 1 }];
+    for (const [id, t] of [['yt-1', 'youtube/pause'], ['yt-1', 'youtube/play'],
+                           ['yt-1', 'youtube/volume'], ['yt-1', 'youtube/next'],
+                           ['ph-1', 'photos/next']]) {
+      bus.subscribe(bus.instanceTopic(id, t), (p) => got.push([t, p]));
+    }
+    const unhandled = [];
+    const router = createVerbRouter({ bus, modules: () => modules, onUnhandled: (u) => unhandled.push(u) });
+    let feed = null;
+    const rec = { start(cb) { feed = cb; this.running = true; }, stop() {}, running: false };
+    attachSpeech(input, { recognizer: rec, confirm: 'off' }).start();
+
+    feed('Computer please, pause.');
+    check('*** “computer please pause” pauses the focused video ***',
+      got.length === 1 && got[0][0] === 'youtube/pause', JSON.stringify(got));
+    feed('computer please keep going');
+    check('“keep going” plays it', got[1] && got[1][0] === 'youtube/play', JSON.stringify(got));
+    feed('computer please turn it up');
+    check('“turn it up” is one step up', got[2] && got[2][0] === 'youtube/volume' && got[2][1] === 1,
+      JSON.stringify(got));
+    feed('computer please too loud');
+    check('“too loud” is one step down', got[3] && got[3][1] === -1, JSON.stringify(got));
+    feed('computer please skip');
+    check('“skip” still skips', got[4] && got[4][0] === 'youtube/next', JSON.stringify(got));
+
+    router.setFocus('ph-1');
+    const before = got.length;
+    feed('computer please pause');
+    check('*** a panel with no pause ignores it — nothing published, nothing broken ***',
+      got.length === before, JSON.stringify(got.slice(before)));
+    check('...and the router says so rather than looking like a dead microphone',
+      unhandled.length === 1 && unhandled[0].reason === 'no-mapping' && unhandled[0].verb === 'pause',
+      JSON.stringify(unhandled));
+    router.destroy(); input.destroy();
   }
 
   section('*** the shipped bindings ***');
