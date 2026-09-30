@@ -1948,3 +1948,30 @@ Home-Assistant idea is renamed **"preset"**. Why this way round: the person usin
 Home-Assistant sense has no code and no user yet, so renaming it costs nothing. The glossary is updated
 to match.
 
+## Contrast warns and never blocks; the "I heard you" tone is off; theme at every level; objects grow to fit -- 2026-09-30
+
+Mike's rulings, second pass (change-list rows 2.37 and 2.39; `docs/from_chat/room_as_home_20260930.md`
+§7.1 in the private repo). Logged by Code at his request.
+
+1. **Contrast is a warning, never a blocker.** *"don't make contrast a blocker. Maybe just a warning."*
+   Every colour stays on offer; one that fails is marked with its ratio and offers the nearest readable
+   colour. This answers Design's sign-colour question (should the picker only offer passing colours?):
+   no. Existing checks that *choose a default* (the button's suggested ink, the AAC set fallback when
+   following a theme) are defaults, not blocks, and stay.
+2. **The "I heard you" tone is OFF by default.** *"I feel like the tone would more likely confuse her
+   or throw her off."* The visual cue carries it; the tone is one setting away. (Built: public `193015b`.)
+3. **Theme at every level.** *"you can change the theme at any level just like anything else. Ex.
+   user, account, dashboard, module, button."* Theme joins the settings inheritance chain (instance,
+   module, screen/dashboard, device, person, account); each level is "follow" or its own, and the
+   nearest one set wins. Resolves the step 6 plan's question 3.
+4. **An object too small for a chosen module grows to fit.** *"making it larger could fit different
+   modules, Maybe if it has to scale up for something it does."* Design capped it at 2.5x; per chat
+   (note AM), the cap is a **default setting**, not part of the ruling.
+5. **"Transform" is the word on screen** for position, scale and rotation (Mike had said "transport";
+   the usual name in Godot/Blender/Unity is transform, and it can't be confused with the transport bar).
+6. **Nimrod the cat is context help:** *"It tells you about whatever you selected when you click on
+   him."*
+7. **Step 6 Stages 1-6 are all go** (note AM): Stage 4 changes every real *Nimrod* screen, not
+   Christine's -- her Pi still runs the Cici dashboard (*"Her Pi is still on the old site. Not
+   Nimrod."*). The plan's own gates stand (the bench soak before Stage 4).
+
