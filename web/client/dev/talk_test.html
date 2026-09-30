@@ -50,12 +50,12 @@ import { createBus } from '../bus.js';
 import { mountModule } from '../module.js';
 import { tierOf } from '../aac_vocab.js';
 import { fromQuery, normalizeCfg, boardStateFrom, localEvents, DEFAULTS,
-         clipSlug, clipUrl,
+         clipSlug, clipUrl, startTalk,
          SCAN_MIN, SCAN_MAX, DWELL_MIN, DWELL_MAX } from '../talk.js';
 import { CURSOR_DEFAULTS, STYLES, SIZE_MIN, SIZE_MAX } from '../cursor.js';
 import { applyTheme, listThemes } from '../theme.js';
 import { createDwell } from '../input_dwell.js';
-import { BOARD_TOPIC, SELECT_KIND } from '../modules/board.js';
+import { BOARD_TOPIC, SELECT_KIND, THEME_PICKED_TOPIC } from '../modules/board.js';
 import '../modules/board.js';
 
 const out = document.getElementById('results');
@@ -427,6 +427,41 @@ try {
       fromQuery('?clips=').useClips === false);
     check('*** the written word is on by default, WITH a voice and not only without one ***',
       DEFAULTS.sayBanner === true && DEFAULTS.speakAloud === true);
+  }
+
+  // =====================================================================================
+  section('*** a theme picked on this page is announced, as the kiosk menu announces one ***');
+  {
+    // Mike, 2026-09-29: several ways in "should all really just be the same thing". The board's
+    // symbol-set choice card is offered when somebody HERE picks a theme; the kiosk's menu said
+    // so and this page's own picker did not.
+    const host = document.createElement('div');
+    host.innerHTML = '<div data-b></div><div data-s hidden></div><div data-o></div><div data-say></div><div data-t></div><div data-c></div>';
+    document.body.append(host);
+    const q = (s) => host.querySelector(s);
+    const saved = localStorage.getItem('nimrod.talk.v1');
+    const savedTheme = document.documentElement.getAttribute('data-theme');
+    try {
+      localStorage.setItem('nimrod.talk.v1', JSON.stringify({ followTheme: true }));
+      const t = startTalk({ root: q('[data-b]'), sheetEl: q('[data-s]'), openEl: q('[data-o]'),
+        bannerEl: q('[data-say]'), toastEl: q('[data-t]'), cursorRoot: q('[data-c]') });
+      const heard = [];
+      t.bus.subscribe(THEME_PICKED_TOPIC, (p) => heard.push(p && p.theme));
+      t.openSheet();
+      const sel = q('[data-theme-pick]');
+      check('(the sheet offers a theme picker when the board follows the theme)', !!sel && sel.options.length > 1);
+      const other = [...sel.options].map((o) => o.value).find((v) => v !== sel.value);
+      sel.value = other;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      check('*** picking a theme here publishes screen/theme-picked with that theme ***',
+        heard.length === 1 && heard[0] === other, JSON.stringify(heard));
+      t.closeSheet();
+      t.board?.destroy?.();
+    } finally {
+      if (saved == null) localStorage.removeItem('nimrod.talk.v1'); else localStorage.setItem('nimrod.talk.v1', saved);
+      if (savedTheme) applyTheme(savedTheme);
+      host.remove();
+    }
   }
 
   // =====================================================================================
