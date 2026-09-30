@@ -163,6 +163,9 @@ try {
   check('...and the cat’s ears perk up', host.querySelector('.rs-cat')?.dataset.pose === 'idle');
   bus.publish('speech/listening', { on: false });
   check('when listening ends, the room settles', !host.querySelector('.rs-react-glow') && host.querySelector('.rs-cat')?.dataset.pose === 'sleeping');
+  // A reaction is re-lit no faster than the screen's flash limit (3 a second; room_objects_test): the
+  // wake reaction above lit the lamp a moment ago, so wait past one flash period first.
+  await sleep(400);
   bus.publish('room/notify', { event: 'message', ms: 500 });
   check('room/notify: a message makes the speaker pulse', !!host.querySelector('.rs-react-ring[data-react-for="spk"]'));
 

@@ -38,6 +38,7 @@ import { createMachine } from '../statemachine.js';
 import { withCallRule } from '../rules.js';
 import '../modules/call.js';
 import { CALL_TRANSPORT_READY } from '../call_transport.js';
+import { DEFAULT_RECORD } from '../avatar.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -82,7 +83,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
                           // only fires callbacks on request). `nowRef.t` is mutable so a test
                           // can move time forward between `incoming()` and `answer()` without
                           // touching the ring/countdown timer mock at all.
-                          nowRef = { t: 1000 }, events = fakeEvents() } = {}) {
+                          nowRef = { t: 1000 }, events = fakeEvents(), makePersonState = null } = {}) {
   const clock = fakeClock();
   const host = document.createElement('div');
   document.getElementById('host').append(host);
@@ -117,6 +118,7 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
   const inst = mountModule('call', {
     mount: host, bus, audio, cameraOwner, micOwner, output, instanceId: 'c1', callIO: clock.io,
     callTransport, events, now: () => nowRef.t,
+    ...(makePersonState ? { makePersonState } : {}),
     state: { get: () => saved, set: () => Promise.resolve(), subscribe: () => () => {},
              load: () => Promise.resolve(), startPolling() {}, destroy() {} },
   });
@@ -186,6 +188,45 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       check('a ringing call names the caller', /Mike is calling/.test(r.host.textContent),
         r.host.textContent.slice(0, 80));
       check('and it has NOT answered', r.impl.__probe().phase === 'ringing');
+    }
+
+    section('*** the caller’s avatar, when the call says who they are (row 2.37 item 5) ***');
+    {
+      // The person-state seam: one handle per (person, key), its row delivered after a load, like the server.
+      const rows = { p7: { use: 'drawn', drawn: { ...DEFAULT_RECORD } } };
+      const opened = [];
+      const subs = new Map();
+      const makePersonState = (pid, key) => {
+        opened.push([pid, key]);
+        return { load: () => new Promise((r) => setTimeout(r, 30)), get: () => rows[pid] || {},
+                 subscribe(fn) { subs.set(pid, fn); return () => subs.delete(pid); }, destroy() {} };
+      };
+      const r = rig({ declineSeconds: null }, { makePersonState });
+      await r.impl.__incoming({ name: 'Mike', personId: 'p7' });
+      const slot = () => r.host.querySelector('.call-who .call-avatar');
+      check('ringing, before the avatar has loaded: the initial, as always', /^M$/.test(slot()?.textContent || ''), slot()?.innerHTML);
+      await sleep(80);
+      check('*** once it loads, the caller’s drawn avatar is IN the initial’s circle, before the name ***',
+        !!slot()?.querySelector('.nav-av[data-avatar-shown="drawn"] svg') && !/^M$/.test(slot()?.textContent || '')
+        && slot().nextElementSibling?.classList.contains('call-name'), slot()?.innerHTML.slice(0, 120));
+      check('it fills the circle (2.2em of the circle’s own font), not a fixed size',
+        /width:2\.2em/.test(slot()?.querySelector('.nav-av')?.getAttribute('style') || ''));
+      check('one read for the caller, from the avatar key', opened.length === 1 && opened[0][0] === 'p7' && opened[0][1] === 'avatar', JSON.stringify(opened));
+      rows.p7 = { use: 'none' };
+      subs.get('p7')?.(rows.p7);
+      check('*** they take their avatar away: the initial comes back (no avatar = exactly as before) ***', /^M$/.test(slot()?.textContent || ''), slot()?.innerHTML);
+      r.impl.__end('hangup');
+      r.inst.destroy?.();
+    }
+    {
+      const opened = [];
+      const r = rig({ declineSeconds: null }, { makePersonState: (pid, key) => { opened.push([pid, key]); return null; } });
+      await r.impl.__incoming({ name: 'Ellen' });
+      await sleep(40);
+      check('*** a call with no person id reads nothing and shows the initial, exactly as before ***',
+        opened.length === 0 && /^E$/.test(r.host.querySelector('.call-avatar')?.textContent || '')
+        && !r.host.querySelector('.nav-av'), JSON.stringify(opened));
+      r.impl.__end('hangup');
     }
 
     section('*** the decline window — announced, counted down, refusable ***');

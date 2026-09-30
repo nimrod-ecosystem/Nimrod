@@ -264,6 +264,37 @@ try {
     vr.update({ voiceRecording: true, voiceRecordingMaxPairs: 1000 });
     check('raising the ceiling un-pauses it', vr.state().paused === null);
 
+    // *** HELD (kiosk wiring, 2026-09-30): an open intercom plays the CALLER through the room's speaker,
+    // and the recogniser hears them. Nothing is kept while held; what was half-heard is dropped. ***
+    {
+      const n0 = await store.count({});
+      let th = c.now();
+      for (let i = 0; i < 25; i++) { rec.feed('room', frame(QUIET, i), th); th += 20; }
+      for (let i = 0; i < 30; i++) { rec.feed('room', frame(LOUD, i), th); th += 20; }
+      c.advance(th - c.now());
+      vr.hold('intercom', true);
+      check('*** held: not recording, and the notice goes (the intercom\'s own notice is up) ***',
+        vr.state().recording === false && vr.state().held?.join() === 'intercom' && pill.shown() === false, JSON.stringify(vr.state()));
+      for (let i = 0; i < 60; i++) { rec.feed('room', frame(QUIET, i), th); th += 20; }
+      c.advance(th - c.now());
+      await settle(8); await vr.settle();
+      check('*** an utterance half-heard when the hold began is DROPPED, not saved ***', (await store.count({})) === n0);
+      say(600);
+      await settle(8); await vr.settle();
+      check('*** held: a whole utterance (the caller through the speaker) is NOT kept ***', (await store.count({})) === n0);
+      vr.hold('call', true);
+      vr.hold('intercom', false);
+      check('two holders: releasing one does not release the other', vr.state().held?.join() === 'call' && vr.state().recording === false);
+      vr.hold('call', false);
+      check('*** released: recording again, and the notice is back by itself ***',
+        vr.state().recording === true && vr.state().held === null && pill.shown() && pill.text() === 'Recording voice for training', JSON.stringify(vr.state()));
+      say(600);
+      await settle(8); await vr.settle();
+      check('...and the next utterance is kept', (await store.count({})) === n0 + 1);
+      const extra = (await store.list({}))[0];
+      await store.remove(extra.id);
+    }
+
     // Turning it off drops what is half-heard and hides the notice.
     let tt = c.now();
     for (let i = 0; i < 25; i++) { rec.feed('room', frame(QUIET, i), tt); tt += 20; }
@@ -439,6 +470,7 @@ try {
     check('off -> nothing', recordingText({ on: false, attached: true, listening: true }) === '');
     check('on, attached, not listening -> nothing (nothing can be recorded)', recordingText({ on: true, attached: true, listening: false }) === '');
     check('recording', recordingText({ on: true, attached: true, listening: true }) === 'Recording voice for training');
+    check('held (an intercom is open) -> nothing: it is not recording', recordingText({ on: true, attached: true, listening: true, held: ['intercom'] }) === '');
     check('*** full: says it is paused rather than vanishing ***', /paused/.test(recordingText({ on: true, attached: true, listening: true, paused: 'full' })));
     check('*** a failed save is said ***', /could not save/.test(recordingText({ on: true, attached: true, listening: false, paused: 'failed' })));
     check('the topic is namespaced', VOICE_RECORDING_TOPIC === 'voice-recording/state');

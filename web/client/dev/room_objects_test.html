@@ -35,6 +35,7 @@ import { configFrom, DEFAULTS, SETTINGS, booksFromList, booksOption } from '../m
 import { SOUND_NAMES } from '../room_notify.js';
 import { CAT_PREFS_KEY } from '../cat_guide.js';
 import { applyZoomFocus, zoomFocusScale, ZOOM_FOCUS_FIELD, ZOOM_FOCUS_DEFAULT } from '../zoom_focus.js';
+import { worstInAnySecond } from '../flash_limit.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -398,6 +399,87 @@ try {
     inst.destroy();
     await sleep(20);
     check('destroy empties the panel', host.childElementCount === 0);
+  }
+
+  // =====================================================================================
+  section('the screen’s flash limit: a held switch or a burst of events never strobes the room (rows 2.43/2.48)');
+  {
+    const host = makeHost();
+    let t = 1_760_000_000_000;
+    let limit = 3;
+    const sounds = [];
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { light: 'day', reducedMotion: true, notifyMs: 0,
+      now: () => new Date(t), flashLimit: () => limit, setTimer: () => 0, clearTimer: () => {},
+      onSound: (n) => sounds.push(n) });
+    const btn = scene.root.querySelector('button.rs-obj[data-id="door"]');
+    check('(setup) the door is a pressable object', !!btn);
+    // A switch held down on the door: a press every 50 ms for 3 s.
+    const pressOnsets = () => {
+      const on = [];
+      for (let i = 0; i < 60; i++) {
+        t += 50;
+        btn.classList.remove('is-pressed');
+        scene.press('door');
+        if (btn.classList.contains('is-pressed')) on.push(t);
+      }
+      return on;
+    };
+    const p3 = pressOnsets();
+    check('*** pressed-object flash at 3: never more than 3 in any second, and it does flash ***',
+      worstInAnySecond(p3) <= 3 && p3.length >= 6, `${worstInAnySecond(p3)} worst, ${p3.length} onsets`);
+    t += 5000; limit = 1;
+    const p1 = pressOnsets();
+    check('*** ...at 1: never more than 1 in any second ***', worstInAnySecond(p1) <= 1 && p1.length >= 2,
+      `${worstInAnySecond(p1)} worst, ${p1.length} onsets`);
+    // A burst of events: every 50 ms for 3 s. The lamp is re-lit no faster than the limit; the sound every time.
+    scene.setNotify([{ on: 'message', object: 'lamp', does: 'light' }, { on: 'message', object: null, does: 'sound', sound: 'knock' }]);
+    const notifyOnsets = () => {
+      const on = [];
+      let last = scene.root.querySelector('.rs-react-glow');
+      for (let i = 0; i < 60; i++) {
+        t += 50;
+        scene.notify('message');
+        const g = scene.root.querySelector('.rs-react-glow[data-react-for="lamp"]');
+        if (g && g !== last) on.push(t);
+        last = g;
+      }
+      return on;
+    };
+    t += 5000; limit = 3; sounds.length = 0;
+    const n3 = notifyOnsets();
+    check('*** a reaction at 3: re-lit never more than 3 times in any second ***',
+      worstInAnySecond(n3) <= 3 && n3.length >= 6, `${worstInAnySecond(n3)} worst, ${n3.length} onsets`);
+    check('*** ...and its SOUND still plays on every event (only the light waits) ***', sounds.length === 60, String(sounds.length));
+    check('...the lamp stays lit between (a held light is not a flash)', !!scene.root.querySelector('.rs-react-glow[data-react-for="lamp"]'));
+    t += 5000; limit = 1;
+    const n1 = notifyOnsets();
+    check('*** ...at 1: never more than once in any second ***', worstInAnySecond(n1) <= 1 && n1.length >= 2,
+      `${worstInAnySecond(n1)} worst, ${n1.length} onsets`);
+    scene.destroy(); host.remove();
+
+    // The room MODULE hands the screen's limit (ctx.flashLimitPerSecond) to its renderer, read live.
+    const h2 = makeHost();
+    let ctxLimit = 1;
+    const inst = mountModule('room', { mount: h2, bus: createBus(), state: fakeState({ preset: 'theRoom', light: 'day' }),
+      personId: null, instanceId: 'fl1', get flashLimitPerSecond() { return ctxLimit; } });
+    inst.init();
+    await sleep(30);
+    const b2 = h2.querySelector('button.rs-obj[data-id="door"]');
+    const flashes = async () => {
+      b2.classList.remove('is-pressed'); inst.impl.__scene().press('door');
+      const a = b2.classList.contains('is-pressed');
+      await sleep(450);
+      b2.classList.remove('is-pressed'); inst.impl.__scene().press('door');
+      return [a, b2.classList.contains('is-pressed')];
+    };
+    const at1 = await flashes();
+    check('*** the room module: at the screen’s 1 a second, a second press 450 ms later does not re-flash ***',
+      at1[0] === true && at1[1] === false, JSON.stringify(at1));
+    ctxLimit = 3;
+    await sleep(1100);
+    const at3 = await flashes();
+    check('...and when the screen’s limit changes to 3 it does (read live, no remount)', at3[0] === true && at3[1] === true, JSON.stringify(at3));
+    inst.destroy(); h2.remove();
   }
 
   // =====================================================================================

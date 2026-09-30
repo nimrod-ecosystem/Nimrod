@@ -66,6 +66,7 @@ import { registerModule } from '../module.js';
 import { MUSIC_GROUP } from '../audio_bus.js';
 import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
 import { CALL_TRANSPORT_READY } from '../call_transport.js';
+import { createAvatarCache, avatarHtml } from '../avatar_display.js';
 
 // What a CALL wants from the microphone, as opposed to what a recognizer wants. Named here so
 // the intent is readable at the acquire site rather than being three booleans.
@@ -146,11 +147,13 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
 
 // Their name, big, when there is no video to show. An initial rather than an icon: it is the
 // same shape whoever calls, and it reads at the far end of a room.
-function personCard(who = {}) {
+// `face`: the caller's avatar markup (avatar_display.js), when a person id came with the call and they
+// have one - it takes the initial's place, in the same circle. Empty: the initial, exactly as before.
+function personCard(who = {}, face = '') {
   const name = who.name || 'Someone';
   const initial = (name.trim()[0] || '?').toUpperCase();
   return `<div class="call-who">
-    <div class="call-avatar" aria-hidden="true">${esc(initial)}</div>
+    <div class="call-avatar" aria-hidden="true">${face || esc(initial)}</div>
     <div class="call-name">${esc(name)}</div>
     <div class="call-sub">${esc(who.note || 'Audio call')}</div>
   </div>`;
@@ -230,6 +233,40 @@ registerModule(
 
     const el = (sel) => root?.querySelector(sel);
 
+    // *** THE CALLER'S AVATAR, WHEN THE CALL SAYS WHO THEY ARE (row 2.37 item 5; wired 2026-09-30). ***
+    // Only when a person id came with the call (`from.personId`) - nothing sends one yet, so today every
+    // call shows the initial exactly as before. The face is drawn in the initial's own circle, so a card
+    // with one and a card without are the same shape. Its size is the circle: 2.2em of the circle's own
+    // font (10cqmin) is its 22cqmin, and it scales with the panel like everything else here (a fixed
+    // 4em would be twice the circle). It MOVES (a big face you look at - avatar_display.js's argument),
+    // unless motion is reduced or the person chose still. One cache for this panel, made on the first
+    // call that names somebody; a face that arrives mid-call is painted into the circle, nothing else.
+    const CALLER_FACE_SIZE = '2.2em';
+    let avatars = null;
+    let offAvatars = null;
+    const callerId = () => String((who && (who.personId || who.person_id)) || '');
+    function avatarCache() {
+      if (avatars || typeof ctx.makePersonState !== 'function') return avatars;
+      try {
+        avatars = createAvatarCache({ makePersonState: ctx.makePersonState, user: ctx.user || null });
+        offAvatars = avatars.subscribe((pid) => { if (pid && pid === callerId()) paintFace(); });
+      } catch (err) { console.error('call: avatars', err); avatars = null; }
+      return avatars;
+    }
+    function face() {
+      const pid = callerId();
+      if (!pid) return '';
+      const c = avatarCache();
+      return c ? avatarHtml(c.get(pid), { size: CALLER_FACE_SIZE, animate: true, personId: pid }) : '';
+    }
+    function paintFace() {
+      if (phase === 'idle') return;
+      const slot = root?.querySelector('.call-who .call-avatar');
+      if (!slot) return;
+      const name = who?.name || 'Someone';
+      slot.innerHTML = face() || esc((name.trim()[0] || '?').toUpperCase());
+    }
+
     function render() {
       if (!root) return;
       const stage = el('[data-stage]');
@@ -247,7 +284,7 @@ registerModule(
             : '');
       } else if (phase === 'ringing') {
         const counting = remaining > 0;
-        stage.innerHTML = personCard({ ...who, note: `${who?.name || 'Someone'} is calling` })
+        stage.innerHTML = personCard({ ...who, note: `${who?.name || 'Someone'} is calling` }, face())
           + (counting ? `<div class="call-count" aria-live="off">${remaining}</div>` : '')
           // THE WAY OUT IS ON THE SCREEN, ALWAYS. Somebody who missed the spoken line - a
           // caregiver who walked in mid-countdown - can still see that this can be refused.
@@ -270,7 +307,7 @@ registerModule(
         if (!have || have.tagName !== want) {
           stage.innerHTML = who?.video
             ? '<video class="call-remote" autoplay playsinline></video>'
-            : `${personCard({ ...who, note: 'On a call' })}<audio class="call-remote" autoplay></audio>`;
+            : `${personCard({ ...who, note: 'On a call' }, face())}<audio class="call-remote" autoplay></audio>`;
         }
         applyCallGain();
       }
@@ -638,7 +675,9 @@ registerModule(
           + '.m-call .call-who{display:flex;flex-direction:column;align-items:center;gap:2cqmin}'
           + '.m-call .call-avatar{width:22cqmin;height:22cqmin;border-radius:50%;'
           + 'background:rgba(255,255,255,.10);display:flex;align-items:center;'
-          + 'justify-content:center;font:600 10cqmin/1 system-ui,sans-serif;color:#fff3d9}'
+          + 'justify-content:center;font:600 10cqmin/1 system-ui,sans-serif;color:#fff3d9;overflow:hidden}'
+          // The caller's avatar fills the circle; the display helper's gap before a name is not wanted here.
+          + '.m-call .call-avatar .nav-av{margin:0!important}'
           + '.m-call .call-name{font:600 5cqmin/1.1 system-ui,sans-serif}'
           + '.m-call .call-sub{font:400 2.6cqmin/1.2 system-ui,sans-serif;opacity:.7}'
           + '.m-call .call-count{font:600 9cqmin/1 system-ui,sans-serif;order:-1;'
@@ -738,6 +777,9 @@ registerModule(
         transport = null;
         offs.forEach((off) => { try { off(); } catch { /* already gone */ } });
         offs.length = 0;
+        // The caller avatars this panel read: the subscription, and one state handle per caller.
+        try { offAvatars?.(); } catch { /* already gone */ } offAvatars = null;
+        try { avatars?.destroy(); } catch { /* already gone */ } avatars = null;
         root?.remove(); root = null;
       },
     };

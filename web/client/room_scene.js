@@ -62,6 +62,7 @@ import { mountScene } from './livescene.js';
 import { iconSvg } from './weather_icons.js';
 import { getManifest } from './module.js';
 import { renderAvatar, normalizeRecord } from './avatar.js';
+import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
 
 export const W = STAGE.w;
 export const H = STAGE.h;
@@ -557,6 +558,16 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   const now = typeof o.now === 'function' ? o.now : () => new Date();
   const setT = o.setTimer || ((fn, ms) => win.setTimeout(fn, ms));
   const clearT = o.clearTimer || ((id) => win.clearTimeout(id));
+  // *** THE SCREEN'S FLASH LIMIT (flash_limit.js; `o.flashLimit`, a number or a getter, read each time).
+  // *** Two things here repeat a visible change on demand: the pressed-object flash (a switch held down
+  // repeats a press) and a room reaction (a light, a ring, a glow - events can arrive in bursts). Each
+  // starts no sooner than one flash period after the last; a press or an event inside that is still
+  // ACTED ON (and its sound still plays) - only the light is not re-lit. Missing = 3, the ceiling.
+  const flashLimitNow = () => {
+    try { return normalizeFlashLimit(typeof o.flashLimit === 'function' ? o.flashLimit() : o.flashLimit); } catch { return 3; }
+  };
+  let lastPressFlashAt = -Infinity;
+  let lastNotifyAt = -Infinity;
   ensureRoomCss(doc);
 
   // Every pending timer, so destroy() can prove it left none behind.
@@ -699,7 +710,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         pane.append(vh);
         el.append(pane);
         rec.viewHost = vh;
-        try { rec.scene = mountScene(vh, { scene: viewFor(recipe.view, light), motion: motion() }); } catch (err) { console.error('room: window view', err); }
+        try { rec.scene = mountScene(vh, { scene: viewFor(recipe.view, light), motion: motion(), flashLimit: o.flashLimit }); } catch (err) { console.error('room: window view', err); }
       }
       rec.art = buildFurniture(doc, it.part, it.color || def.color);
       el.append(rec.art);
@@ -1152,6 +1163,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
 
   function flashPressed(rec) {
     if (!rec.button) return;
+    const t = +now();
+    if (t - lastPressFlashAt < minFlashPeriodMs(flashLimitNow())) return;
+    lastPressFlashAt = t;
     rec.button.classList.add('is-pressed');
     later(() => rec.button?.classList.remove('is-pressed'), 180);
   }
@@ -1541,7 +1555,11 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   }
   function notify(event, { ms = o.notifyMs, rules = null, only = false } = {}) {
     if (destroyed) return [];
-    clearReactions();
+    // Inside one flash period of the last reaction: the sound still plays, the light is not re-lit
+    // (what is lit stays lit until its own timer), so a burst of events cannot strobe the room.
+    const t = +now();
+    const visualOk = t - lastNotifyAt >= minFlashPeriodMs(flashLimitNow());
+    if (visualOk) { lastNotifyAt = t; clearReactions(); }
     const list = reactionsFor(recipe, event, { rules, only });
     for (const { index, does, sound } of list) {
       if (does === 'sound') {
@@ -1549,6 +1567,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         try { o.onSound?.(sound, { event }); } catch (err) { console.error('room: onSound', err); }
         continue;
       }
+      if (!visualOk) continue;
       const rec = recs[index];
       if (!rec) continue;
       const b = rec.box;
@@ -1584,7 +1603,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       rec.el.dataset.react = does;
       reactions.push(() => { delete rec.el.dataset.react; });
     }
-    if (ms > 0 && reactions.length) reactTimer = later(clearReactions, ms);
+    if (visualOk && ms > 0 && reactions.length) reactTimer = later(clearReactions, ms);
     return list;
   }
 

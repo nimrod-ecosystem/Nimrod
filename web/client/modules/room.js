@@ -59,6 +59,7 @@ import { LISTENING_TOPIC } from '../input_speech.js';
 import { mountCatHelp } from '../cat_help.js';
 import { readRules, objectsIn, cueFor, playSound } from '../room_notify.js';
 import { mountNotifyEditor } from '../room_notify_editor.js';
+import { flashLimit } from '../flash_limit.js';
 
 // Every default argued (Rule 1), and every one of them a setting:
 //   preset 'theRoom'   the room whose furniture carries the controls: it is the one that shows what
@@ -365,7 +366,10 @@ registerModule(
         const onCatPress = ({ id, selected }) => !!help?.explain(selected || { kind: 'screen', screen: 'room' }, {
           actions: [{ id: 'pet', label: 'Pet Nimrod', run: () => scene?.pet(id) }],
         });
-        scene = mountRoomScene(host, presetRecipe(cfg.preset), { ...renderOpts(cfg), bus: ctx.bus, onUnclaimed, onCatPress, onSound });
+        // The screen's flash limit (flash_limit.js): a getter, so a changed setting reaches the pressed-object
+        // flash, the reactions and the window's scene without a remount.
+        scene = mountRoomScene(host, presetRecipe(cfg.preset), { ...renderOpts(cfg), bus: ctx.bus, onUnclaimed, onCatPress, onSound,
+          flashLimit: () => flashLimit(ctx) });
         scene.setNotify(rulesFrom(state?.get?.() || {}));
         const sub = state?.subscribe?.((row) => apply(row));
         if (typeof sub === 'function') offs.push(sub);

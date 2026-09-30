@@ -406,6 +406,8 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       const { mountRemote } = await import('./remote.js');
       const r = mountRemote(host, {
         personId, personName, user, bus, profiles,
+        // The intercom's approved list lives on the person's own row (row 2.44).
+        makePersonState,
       });
       await r.refresh();
       return r;

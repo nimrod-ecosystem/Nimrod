@@ -326,6 +326,11 @@ export function createCallTransport({
       finish(reason);
     },
 
+    // Is a call ANSWERED and running? What the room's intercom asks before it opens (intercom.js
+    // `busy`): a live call is never talked over. A call only RINGING is not counted - an offer
+    // whose caller gave up without a `bye` is never cleared, and would block the intercom for good.
+    isLive: () => live,
+
     // For the panel and for tests. `live` is the honest one: a peer connection can exist
     // and be connecting, which is not the same as a call.
     __probe: () => ({ live, hasPc: !!pc, pendingOffer: !!pendingOffer,

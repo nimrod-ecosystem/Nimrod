@@ -134,7 +134,11 @@ section('The scene honours the mapping');
 {
   const sounds = [];
   const s = stage();
-  const scene = mountRoomScene(s, presetRecipe('theRoom'), { light: 'day', notifyMs: 0, reducedMotion: true, onSound: (name, info) => sounds.push([name, info?.event]) });
+  // A clock a second on at every read: each notify below is a second after the last, so the screen's flash
+  // limit (a reaction is re-lit no faster than 3 a second; room_objects_test) never holds one back here.
+  let clockT = Date.parse('2026-09-30T12:00:00');
+  const scene = mountRoomScene(s, presetRecipe('theRoom'), { light: 'day', notifyMs: 0, reducedMotion: true, onSound: (name, info) => sounds.push([name, info?.event]),
+    now: () => new Date(clockT += 1000) });
   scene.setNotify([{ on: 'message', object: 'lamp', does: 'light' }]);
   scene.notify('message');
   check('mapped: a message lights the lamp', !!scene.root.querySelector('.rs-react-glow[data-react-for="lamp"]'));
@@ -233,10 +237,15 @@ section('The room module: stored, honoured, tested, and the cue always comes');
   check('...AND the on-screen cue comes too, in words', !!toast && toast.textContent.includes(CUES.message), toast?.textContent);
   scene.clearReactions();
   s.querySelector('.rs-toast')?.remove();
+  // The room re-lights a reaction no faster than the screen's flash limit (3 a second; room_objects_test).
+  // This module uses the real clock, so each re-notify here waits past one flash period.
+  const FLASH_GAP_MS = 400;
+  await sleep(FLASH_GAP_MS);
   bus.publish('room/notify', { event: 'message', cueShown: true });
   check('a publisher that already drew its own cue says so, and the room only adds the object', !s.querySelector('.rs-toast') && !!s.querySelector('.rs-react-ring[data-react-for="spk"]'));
   scene.clearReactions();
   state.set({ notify: [{ on: 'message', object: 'lamp', does: 'light' }] });
+  await sleep(FLASH_GAP_MS);
   bus.publish('room/notify', { event: 'message', cueShown: true });
   check('rules stored on the room are honoured (the lamp now, not the speaker)', !!s.querySelector('.rs-react-glow[data-react-for="lamp"]') && !s.querySelector('.rs-react-ring[data-react-for="spk"]'));
   scene.clearReactions();
@@ -249,6 +258,7 @@ section('The room module: stored, honoured, tested, and the cue always comes');
   bus.publish('room/select', {});
   check('room/next + room/select drive the editor (the first row’s event stepped), and it is stored', state.get().notify?.[0]?.on === 'call', JSON.stringify(state.get().notify));
   for (let i = 0; i < 4; i++) bus.publish('room/next', {});
+  await sleep(FLASH_GAP_MS);
   bus.publish('room/select', {});
   check('Test fires the reaction in the room', !!s.querySelector('.rs-react-glow[data-react-for="lamp"]'));
   check('...with the on-screen cue beside it', /Test/.test(s.querySelector('.rs-toast')?.textContent || ''), s.querySelector('.rs-toast')?.textContent);

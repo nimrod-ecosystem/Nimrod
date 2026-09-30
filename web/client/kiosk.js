@@ -62,6 +62,16 @@ import {
 import { rankedRecognizer, enginePlanFrom, SPEECH_PASS_FIELDS } from './speech_engines.js';
 import { createAmplifier, AMPLIFY_FIELDS } from './amplify.js';
 import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from './phone_mic.js';
+import {
+  createVoiceRecorder, createIdbPairStore, createMemoryPairStore, mountRecordingIndicator, VOICE_RECORDING_FIELDS,
+} from './voice_recording.js';
+import {
+  createIntercomReceiver, mountIntercomNotice, intercomOptionsFrom, normalizeAllowed, INTERCOM_ACTIONS, INTERCOM_FIELDS,
+} from './intercom.js';
+import { createDeviceStore } from './starting_defaults.js';
+import { flashLimitFrom, FLASH_LIMIT_DEFAULT, FLASH_LIMIT_FIELD } from './flash_limit.js';
+import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
+import { createAvatarCache, avatarHtml } from './avatar_display.js';
 import { mountSettings } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
@@ -114,6 +124,7 @@ import './modules/music.js';           // registers 'music' (row 2.32, favourite
 import './modules/brickbreaker.js';    // registers 'brickbreaker' (row 2.37 item 10)
 import './modules/rhythm.js';          // registers 'rhythm' (row 2.37 item 10)
 import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)
+import './modules/voice_review.js';    // registers 'voice_review' (row 2.44, the voice recordings kept here)
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
 import './modules/lessons.js';
 import './modules/algebra.js';
@@ -377,7 +388,8 @@ export async function mountKiosk(root, {
     // signed-in profile's). A screen that has never picked one must not reset that to default.
     if (embedded && !id) return null;
     const resolved = applyTheme(document.documentElement, id);
-    syncScene(kioskEl, THEMES[resolved]);
+    // The scene's own flashes (neon signs, lightning) follow the screen's flash limit, read every render.
+    syncScene(kioskEl, THEMES[resolved], { flashLimit: flashLimitNow });
     // The mixer's "sounds like: match the scene" follows the scene the screen is actually showing.
     soundScene = THEMES[resolved]?.scene || null;
     try { mixer?.setScene(soundScene); } catch (err) { console.error('kiosk: mixer scene', err); }
@@ -563,6 +575,37 @@ export async function mountKiosk(root, {
   let micPill = null;            // "Microphone on: <phone>" -- NO SETTING HIDES IT (see where it is mounted)
   let personRow = null;          // the person's row as last seen; null = no person row on this screen
   let onVoiceChange = null;      // the menu's refresh, once the menu exists (it is built further down)
+  // ---- VOICE RECORDING FOR TRAINING, AND THE INTERCOM (row 2.44; wired 2026-09-30) ---------------------
+  // Built as pieces in bbd206a; constructed here. Both OFF for everybody: recording keeps nothing unless
+  // the person's row says `voiceRecording: true` AND a ranked recogniser is running (it opens no
+  // microphone of its own), and the intercom admits nobody until somebody is on the person's approved
+  // list (`intercomAllowed`, edited on the home page's Remote tab). Each says so on the screen whenever
+  // it is live, and NO SETTING HIDES EITHER NOTICE (voice_recording.js / intercom.js headers).
+  let voiceStore = null;         // the pair store (this browser's IndexedDB; memory if there is none)
+  let voiceRec = null;           // the recorder: follows the person's row and the running recogniser
+  let recPill = null;            // "Recording voice for training"
+  let intercomRx = null;         // the room's half of the intercom, once the drive socket exists
+  let intercomNote = null;       // "Intercom opening / open: <name>", with End
+  // ---- THE FLASH LIMIT (rows 2.43/2.48; flash_limit.js) -------------------------------------------------
+  // The screen's row and the person's row (the stricter wins), with the starting-defaults layer on THIS
+  // device filling only what nobody chose. A module reads it as `ctx.flashLimitPerSecond` (a getter, so a
+  // changed setting is followed); automation's slow wave and the live scene read it every tick.
+  // `screenRowNow` is a stand-in until the screen's settings row exists (it is built further down): a
+  // reader that runs before then gets 3, the ceiling - never a ReferenceError from a `const` not reached.
+  let screenRowNow = () => ({});
+  // The starting-defaults layer, read ONCE, on first use (flashLimitNow can run every frame; this parses
+  // a record out of storage). A layer applied on another page of this device lands at the next boot.
+  let startingStore = null;
+  function startingLayer() {
+    if (!startingStore) {
+      try { startingStore = createDeviceStore(storage ? { storage } : {}); } catch { return {}; }
+    }
+    try { return startingStore.layer() || {}; } catch { return {}; }
+  }
+  function flashLimitNow() {
+    try { return flashLimitFrom([screenRowNow() || {}, personRow || {}], startingLayer()); }
+    catch { return FLASH_LIMIT_DEFAULT; }
+  }
   // THE PERSON'S MUSIC FAVOURITES AS SPOKEN ROUTES (music_favourites.js): "computer please play <name>".
   // Their routes join input_speech's own when speech attaches; their actions are registered and their
   // bindings added at runtime (never written into the person's bindings record).
@@ -575,11 +618,16 @@ export async function mountKiosk(root, {
     .map((f) => f.key).concat('subtitlesRoute');
   const AMP_KEYS = AMPLIFY_FIELDS.map((f) => f.key);
   const SUBS_KEYS = SUBTITLES_FIELDS.map((f) => f.key);
+  // The keys whose change adds or removes rows in the Voice section without restarting speech.
+  const REC_MENU_KEYS = ['voiceRecording', 'intercomAllowed'];
+  let recMenuSig = null;
   const sigOf = (r, keys) => JSON.stringify(keys.map((k) => (r && k in r ? r[k] : null)));
 
   function stopSpeech() {
     for (const off of speechOffs) { try { off(); } catch { /* gone */ } }
     speechOffs = [];
+    // The recorder lets go of the recogniser first (it saves what it has already heard whole).
+    try { voiceRec?.detach(); } catch (err) { console.error('kiosk: voice recording', err); }
     try { speech?.destroy(); } catch (err) { console.error('kiosk: speech', err); }
     speech = null;
     speechRec = null;
@@ -614,6 +662,9 @@ export async function mountKiosk(root, {
     } catch (err) { console.error('kiosk: recogniser', err); rec = null; }
     if (!rec) { speechStatus = sw.engine === 'browser' ? 'no-browser' : 'no-local'; onVoiceChange?.(); return; }
     speechRec = rec;
+    // VOICE RECORDING hears what this recogniser already cut (a ranked one; the browser's own cuts
+    // nothing and is never attached). It keeps nothing unless the person's row turned it on.
+    try { voiceRec?.attach(rec); } catch (err) { console.error('kiosk: voice recording', err); }
     // THE RANKED RECOGNISER SAYS WHETHER ANYTHING IS ANSWERING (rows 2.46/2.47). Until an engine says
     // hello it has opened no microphone, and the menu says "no recogniser on this screen".
     const fromRec = (st) => {
@@ -717,7 +768,18 @@ export async function mountKiosk(root, {
       try { amplifier?.update(r)?.catch?.((err) => console.error('kiosk: amplify', err)); }
       catch (err) { console.error('kiosk: amplify', err); }
     }
+    // Recording follows the row BEFORE speech (re)attaches, so a recogniser attached below is heard
+    // with the row's own options. Its keys are not speech's: turning it on never restarts a recogniser.
+    try { voiceRec?.update(r); } catch (err) { console.error('kiosk: voice recording', err); }
+    // Somebody taken off the approved list while talking is cut off now, not at the next offer.
+    try { intercomRx?.recheck(); } catch (err) { console.error('kiosk: intercom', err); }
+    // Their rows come and go in the Voice section with these settings (and speech may not restart to
+    // repaint it): the menu is redrawn when one of them changed.
+    const rs = sigOf(r, REC_MENU_KEYS);
+    const menuDue = recMenuSig !== null && rs !== recMenuSig;
+    recMenuSig = rs;
     syncSpeech(r);
+    if (menuDue) onVoiceChange?.();
   }
 
   // A DEVICE'S SHIPPED BINDINGS STAND UNTIL THE PERSON BINDS THAT DEVICE THEMSELVES. The runtime's
@@ -827,8 +889,18 @@ export async function mountKiosk(root, {
       boardSpeaker: () => {
         try { return whoState && whoState.name ? { name: whoState.name } : null; } catch { return null; }
       },
+      // A new outline starts no faster than the screen's flash limit (subtitles.js).
+      flashLimit: flashLimitNow,
     });
   } catch (err) { console.error('kiosk: subtitles', err); subtitles = null; }
+  // VOICE RECORDING (row 2.44): built once, inert. Its store is THIS browser's IndexedDB (opened on first
+  // use, which is never while recording is off), or memory where there is none. Its notice is mounted now
+  // and stays hidden until it records; nothing hides it while it does.
+  try {
+    try { voiceStore = createIdbPairStore(); } catch { voiceStore = createMemoryPairStore(); }
+    voiceRec = createVoiceRecorder({ store: voiceStore, bus });
+    recPill = mountRecordingIndicator(kioskEl, { recorder: voiceRec, bus });
+  } catch (err) { console.error('kiosk: voice recording', err); voiceRec = null; recPill = null; }
   try {
     // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
     // kiosk root has never been tried on this surface and could land on top of her photos.
@@ -893,6 +965,8 @@ export async function mountKiosk(root, {
   // (automation.js). `settings` is only read inside the callback, long after it exists.
   const automation = createAutomation({
     bus,
+    // The slow wave's shortest period follows the screen's flash limit, re-read every tick.
+    flashLimit: flashLimitNow,
     onChange: (list) => { try { settings.set({ automations: list }); } catch (err) { console.error('kiosk: automations save', err); } },
   });
 
@@ -952,6 +1026,13 @@ export async function mountKiosk(root, {
     get aim() { return runtime?.aim || null; },
     cameraOwner,
     automation,
+    // THE SCREEN'S FLASH LIMIT (flash_limit.js `flashLimit(ctx)`): a getter, so a module that reads it
+    // when it needs it follows a changed setting. 3 unless somebody chose lower.
+    get flashLimitPerSecond() { return flashLimitNow(); },
+    // The voice recordings this screen keeps (modules/voice_review.js): the recorder's own store, so the
+    // review panel sees what was just kept, and the person's row for its retention wording.
+    get voiceStore() { return voiceStore; },
+    personRow: () => personRow,
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
@@ -1011,6 +1092,8 @@ export async function mountKiosk(root, {
 
   // ---- per-profile settings: theme + the kiosk LAYOUT (data-driven) --------
   const settings = stateFor('settings');
+  // The flash limit reads the screen's row from here on (see `flashLimitNow`).
+  screenRowNow = () => settings.get() || {};
   settings.subscribe((s) => { try { automation.load(s?.automations || []); } catch (err) { console.error('kiosk: automations', err); } });
   // ---- THE ARRANGEMENT: what is on this screen, and where (step 6 of the port, Stage 1) ------
   //
@@ -1030,6 +1113,7 @@ export async function mountKiosk(root, {
     runtime: () => runtime,
     health: () => health,
     profileId: () => profileId,
+    flashLimit: flashLimitNow,
   });
   // *** WHICH ARRANGEMENT THE SHELL IS READING (step 6 Stage 3). *** Normally this file's own. With
   // `dashboardModule` on (embedded only), the panels are mounted by a dashboard MODULE, and the bar,
@@ -1099,6 +1183,8 @@ export async function mountKiosk(root, {
   applyKioskTheme(settings.get().theme);
   applyLayout(settings.get());
   applyPanelSurface(settings.get());
+  // ZOOM ON FOCUS (row 2.37 item 6): the focused panel grows a little. Off unless the screen's row says.
+  applyZoomFocus(kioskEl, settings.get()?.zoomFocus);
   // The listening cue starts on its defaults (the visual cue on, the tone off, duck): the person's own
   // row replaces them once whoever this screen is for has been resolved (below).
   attachListen({});
@@ -1106,6 +1192,7 @@ export async function mountKiosk(root, {
     applyKioskTheme(s.theme);
     applyLayout(s);
     applyPanelSurface(s);
+    try { applyZoomFocus(kioskEl, s?.zoomFocus); } catch (err) { console.error('kiosk: zoom on focus', err); }
     // A volume or a mix changed from the menu, or from another device, is heard now.
     try { master?.sync(); } catch (err) { console.error('kiosk: master volume', err); }
     try { mixer?.sync(); } catch (err) { console.error('kiosk: mixer', err); }
@@ -1606,6 +1693,22 @@ export async function mountKiosk(root, {
   // like a permanent wait.
   let whoState = null;                 // null = looking · false = nobody · { name } = somebody
   let peopleList = null;               // the account's people, fetched once the menu asks
+  // The people's avatars for the "Who this screen is for" page: made on first draw, never at boot.
+  // Null where there is no per-person state (a local backend): then nobody has a face and the page is
+  // exactly what it was.
+  let avatars = null;
+  let whoAvatarOffs = [];
+  function whoAvatars() {
+    if (avatars || torn) return avatars;
+    try {
+      const mps = childCtx({ id: 'avatars' }).makePersonState;
+      if (profiles.personStateURL) avatars = createAvatarCache({ makePersonState: mps, user });
+    } catch (err) { console.error('kiosk: avatars', err); avatars = null; }
+    return avatars;
+  }
+  function offWhoAvatars() {
+    for (const off of whoAvatarOffs.splice(0)) { try { off?.(); } catch { /* gone */ } }
+  }
   // A LOCAL BACKEND HAS NO PEOPLE ENDPOINT (the dev harness, `makeState`). There is nothing to
   // pick from and no way to save a pick, so the row is not offered rather than offered and
   // broken.
@@ -1686,6 +1789,18 @@ export async function mountKiosk(root, {
     ...MASTER_FIELDS,
     ...MIXER_FIELDS.map((f) => ({ ...f, level: 'advanced' })),
   ];
+  // *** MOVEMENT AND FLASHING (2026-09-30): zoom on focus (row 2.37 item 6) and the flash limit (rows
+  // 2.43/2.48), under their own heading after the screen's rows and before Sound. *** Argued:
+  //   * WHY TOGETHER: both are about what moves or changes on this screen, and the person looking for
+  //     "things flash" is the person who also wants to know whether things grow when focused.
+  //   * WHY THE SCREEN'S ROW, not the person's: a screen in a room is seen by everybody in it, so the
+  //     limit belongs to the place (flashLimitFrom also reads the person's row, and the stricter of the
+  //     two wins - a person's own lower choice still protects them on any screen). AGAINST: somebody
+  //     who needs 1 a second has to set it on each screen they use. On Mike's list.
+  //   * WHY `standard` (as both files declare it), not `essential`: neither is a way out or a legibility
+  //     control, and "Just the essentials" is kept to those. The flash limit's default IS the safe
+  //     published limit, so a screen nobody set up is already protected.
+  const MOTION_FIELDS = () => [ZOOM_FOCUS_FIELD, FLASH_LIMIT_FIELD];
 
   // THE ROOM ON THIS SCREEN, if any: the focused panel when it is a room, else the first room mounted.
   // Only a MOUNTED room -- its reactions editor opens inside it, so a room that is not on the screen
@@ -1822,6 +1937,12 @@ export async function mountKiosk(root, {
       ...(sw.on ? [...SPEECH_FIELDS, ...LISTENING_FIELDS, ...MISS_FIELDS].filter(keep) : []),
       ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || subsOn),
       ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
+      // VOICE RECORDING (row 2.44): the switch always (so anybody can SEE it is off, and a guardian
+      // can find it); its retention rows only while it is on - the same rule as every mode above.
+      ...VOICE_RECORDING_FIELDS.filter((f) => f.key === 'voiceRecording' || r.voiceRecording === true),
+      // THE INTERCOM'S rows only once somebody is on its approved list (edited on the home page, where
+      // the grants are): with nobody approved there is no intercom to tune.
+      ...(normalizeAllowed(r.intercomAllowed).length ? INTERCOM_FIELDS : []),
     ];
     const items = fieldItems(fields.map(normalizeField).filter(Boolean), {
       values: () => personInputs?.get?.() || {},
@@ -1882,6 +2003,16 @@ export async function mountKiosk(root, {
           if (key === 'theme') bus.publish('screen/theme-picked', { theme: value });
         },
       }),
+      // MOVEMENT AND FLASHING (argued at MOTION_FIELDS): written to the screen's row, seen at once (the
+      // settings subscribe applies zoom; the flash limit is read live by everything that repeats).
+      ...(() => {
+        const rows = fieldItems(MOTION_FIELDS().map(normalizeField).filter(Boolean), {
+          values: () => settings.get() || {},
+          level: complexity(),
+          onStep: (key, value) => { settings.set({ [key]: value }); },
+        });
+        return rows.length ? [{ kind: 'heading', id: 'motion-head', label: 'Movement and flashing' }, ...rows] : [];
+      })(),
       // THE SCREEN'S SOUND: written to the same screen row, heard at once (the settings subscribe above
       // re-syncs the master and the mixer on every change).
       { kind: 'heading', id: 'sound-head', label: 'Sound' },
@@ -1925,6 +2056,8 @@ export async function mountKiosk(root, {
       return r ? { type: r.type, title: r.title || r.type } : null;
     },
     fullscreenTarget: root,
+    // The who page's avatar subscription lets go with the menu (see the page).
+    onClose: () => offWhoAvatars(),
     // The menu's own Home row opens the same picker rather than navigating, so there are not
     // two controls with the same name doing different things. Leaving is the picker's last row.
     onHome: () => { try { menu.close?.(); } catch { /* noop */ } toggleScreens(true); },
@@ -2024,13 +2157,34 @@ export async function mountKiosk(root, {
                   + 'Add one on the home page.</div>';
                 return;
               }
+              // EACH PERSON'S AVATAR BESIDE THEIR NAME (row 2.37 item 5; avatar_display.js). One cache
+              // for the screen, made the first time this page is drawn (not at boot: nobody may ever
+              // open it), one read per person. Somebody with no avatar gets an empty slot and the
+              // name exactly as before.
+              const av = whoAvatars();
+              const face = (id) => (av ? avatarHtml(av.get(id), { personId: id }) : '');
               el.innerHTML = peopleList.map((who) => {
                 const on = personId && who.id === personId;
                 return `<button class="st-item" type="button" data-person="${esc(who.id)}">
-                  <span class="st-label">${esc(who.name)}</span>
+                  <span class="st-label"><span data-avatar-slot>${face(who.id)}</span>${esc(who.name)}</span>
                   ${on ? '<span class="st-hint">this screen is theirs</span>' : ''}
                 </button>`;
               }).join('');
+              // A face that arrives (or changes) later rewrites ONLY that person's slot; a picture that
+              // will not decode falls back (bindErrors). Both let go when this page is gone - the next
+              // change after the menu closes finds the page detached and unsubscribes, and closing the
+              // menu lets go at once (`onClose`).
+              if (av) {
+                offWhoAvatars();
+                const offErr = av.bindErrors(el);
+                const offSub = av.subscribe((pid) => {
+                  if (!el.isConnected) { offWhoAvatars(); return; }
+                  const slot = [...el.querySelectorAll('[data-person]')].find((b) => b.dataset.person === pid)
+                    ?.querySelector('[data-avatar-slot]');
+                  if (slot) slot.innerHTML = face(pid);
+                });
+                whoAvatarOffs = [offErr, offSub];
+              }
               el.querySelectorAll('[data-person]').forEach((b) => {
                 b.addEventListener('click', async () => {
                   const id = b.dataset.person;
@@ -2122,6 +2276,8 @@ export async function mountKiosk(root, {
       // who row offers to fix it.
       if (!p?.person_id) { whoState = false; menu.refresh(); return; }
       personId = p.person_id;
+      // Whose voice recordings these are (they are kept per person, on this device).
+      try { voiceRec?.setPersonId(p.person_id); } catch (err) { console.error('kiosk: voice recording', err); }
       if (profiles.people) {
         const who = (await profiles.people()).find((x) => x.id === p.person_id);
         // A person_id pointing at somebody who is gone is ALSO a finished answer.
@@ -2172,6 +2328,27 @@ export async function mountKiosk(root, {
             phoneRx = createPhoneMicReceiver({ link: drive, bus, config: (settings.get() || {}).call || {} });
             micPill = mountMicLiveIndicator(kioskEl, { receiver: phoneRx, bus });
           } catch (err) { console.error('kiosk: phone microphone', err); }
+          // THE INTERCOM (row 2.44): same socket, so only somebody the server lets drive this screen
+          // reaches it at all, and then only if the SERVER-STAMPED sender is on the person's approved
+          // list (read at every offer, so a removal bites at once). It warns the room first, shows
+          // "Intercom open: <name>" with End the whole time (NO SETTING HIDES IT), and:
+          //   * a LIVE CALL makes it busy - an intercom never talks over a call (call_transport.js
+          //     `isLive`; a call only ringing does not count, see there);
+          //   * while one is opening or open, VOICE RECORDING IS HELD: the recogniser would hear the
+          //     caller through the speaker, and a training pair of somebody else is not kept.
+          try {
+            intercomRx = createIntercomReceiver({
+              link: drive, bus,
+              config: (settings.get() || {}).call || {},
+              options: () => intercomOptionsFrom(personRow || {}),
+              micOwner, audio, output,
+              busy: () => { try { return !!callTransport?.isLive?.(); } catch { return false; } },
+              onChange: (sessions) => {
+                try { voiceRec?.hold('intercom', (sessions || []).length > 0); } catch (err) { console.error('kiosk: voice recording hold', err); }
+              },
+            });
+            intercomNote = mountIntercomNotice(kioskEl, { receiver: intercomRx, bus });
+          } catch (err) { console.error('kiosk: intercom', err); }
         }
       }
       if (makeState || embedded || !profiles.personStateURL) return;
@@ -2290,7 +2467,8 @@ export async function mountKiosk(root, {
   // THE SPEECH LAYER'S ACTIONS: the spoken routes ("play opposites" -> word_games/play) and the
   // switch answers to "Did you mean that?". An input bus refuses an unregistered action, so without
   // these a route phrase or a Yes switch would be logged as unknown and do nothing.
-  try { runtime.actions.registerAll([...SPEECH_ACTIONS, ...NEAR_MISS_ACTIONS, ...SUBTITLE_ACTIONS]); }
+  // (And "Intercom: end it": a switch or a phrase bound to it ends an open intercom, one press.)
+  try { runtime.actions.registerAll([...SPEECH_ACTIONS, ...NEAR_MISS_ACTIONS, ...SUBTITLE_ACTIONS, ...INTERCOM_ACTIONS]); }
   catch (err) { console.error('kiosk: speech actions', err); }
   await runtime.load();
   // The menu takes the verbs while it is open and hands them back when it closes.
@@ -2955,6 +3133,19 @@ export async function mountKiosk(root, {
     automation: () => automation,
     phoneMic: () => phoneRx,
     micPill: () => micPill,
+    // Row 2.44 (wired 2026-09-30): the voice recorder (always built, off unless the person's row says),
+    // its store and notice, and the intercom's room half and notice (null until the drive socket).
+    voiceRecording: () => voiceRec,
+    voiceStore: () => voiceStore,
+    recordingPill: () => recPill,
+    intercom: () => intercomRx,
+    intercomNotice: () => intercomNote,
+    // The call transport, if a call panel has asked for one (the intercom's busy check reads it).
+    callTransport: () => callTransport,
+    // The screen's flash limit as everything on it reads it, and the who page's avatar cache (null
+    // until that page is first drawn).
+    flashLimit: () => flashLimitNow(),
+    avatars: () => avatars,
     // Nimrod on the bar: explain what is picked, as the bar's button does.
     help: () => explainHelp(),
     // This screen's bus, for something ABOVE the modules that answers verbs on it -- Home's walkthrough
@@ -3000,6 +3191,16 @@ export async function mountKiosk(root, {
       // A phone joined as a microphone is told the screen has gone (before the socket closes).
       try { phoneRx?.destroy(); } catch { /* already gone */ } phoneRx = null;
       try { micPill?.destroy(); } catch { /* already gone */ } micPill = null;
+      // An open intercom is ended and its phone told (before the socket closes), and its notice goes.
+      try { intercomRx?.destroy(); } catch { /* already gone */ } intercomRx = null;
+      try { intercomNote?.destroy(); } catch { /* already gone */ } intercomNote = null;
+      // Voice recording: detached already (stopSpeech, above); its notice goes and its store closes.
+      try { voiceRec?.destroy(); } catch { /* already gone */ } voiceRec = null;
+      try { recPill?.destroy(); } catch { /* already gone */ } recPill = null;
+      try { voiceStore?.close?.(); } catch { /* already gone */ } voiceStore = null;
+      // The who page's avatars: its subscription, and one state handle per person it read.
+      offWhoAvatars();
+      try { avatars?.destroy(); } catch { /* already gone */ } avatars = null;
       try { drive?.close(); } catch { /* already gone */ }
       // Amplify lets go of its microphone and its audio context, before the audio bus it is on.
       try { amplifier?.destroy(); } catch { /* already gone */ } amplifier = null;
