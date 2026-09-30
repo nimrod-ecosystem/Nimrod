@@ -1671,7 +1671,10 @@ const ds = () => root.querySelector('.kiosk').dataset;
 
       // ================= THE DEFAULT IS UNCHANGED =================
       const nBox = mkBox();
-      const nk = await mountKiosk(nBox, { user: USER, profileId: ep.id, profiles: eProfiles, bus: createBus(), ...seams(nReloads) });
+      // `dashboardModule: true` on a NON-embedded kiosk (step 6 Stage 3): the option is honoured on the
+      // embedded path ONLY, so every "default" check below doubles as proof that it changes nothing here.
+      const nk = await mountKiosk(nBox, { user: USER, profileId: ep.id, profiles: eProfiles, bus: createBus(),
+        dashboardModule: true, ...seams(nReloads) });
       const nKiosk = nBox.querySelector('.kiosk');
       check('default: no k-embed class on the kiosk', !nKiosk.classList.contains('k-embed'));
       check('default: the kiosk is still position:fixed (the bedside screen, not a box)',
@@ -1684,12 +1687,16 @@ const ds = () => root.querySelector('.kiosk').dataset;
         await settled(() => nk.runtime.record().bindings.some((b) => b.id === 'saved-x-next'), 4000));
       check('*** default: the remote-drive socket is attached ***', await settled(() => nk.drive() !== null, 4000));
       check('default: showModule exists on the handle', typeof nk.showModule === 'function');
+      check('*** stage 3: dashboardModule is ignored off the embedded path — no dashboard module on a real screen ***',
+        !nBox.querySelector('.k-dash') && !nBox.querySelector('.view') && !!nBox.querySelector('.kiosk > .k-stage .k-mod'));
 
       // ================= EMBEDDED TURNS EXACTLY THOSE THINGS OFF =================
       const eBox = mkBox();
       let ek = await mountKiosk(eBox, { user: USER, profileId: ep.id, profiles: eProfiles, bus: createBus(), embedded: true, ...seams() });
       let eKiosk = eBox.querySelector('.kiosk');
       check('embedded: the kiosk carries k-embed', eKiosk.classList.contains('k-embed'));
+      check('*** stage 3: an embed WITHOUT the option draws its own panels (dashboardModule is off by default) ***',
+        !eBox.querySelector('.k-dash') && !eBox.querySelector('.view'));
       // Long enough that the background person lookup (which is what loads bindings and opens the
       // socket) has certainly finished — the default kiosk above got both inside its wait.
       await sleep(1500);
@@ -2190,14 +2197,6 @@ const ds = () => root.querySelector('.kiosk').dataset;
     }
   }
 
-  // *** THE TEMPORAL-DEAD-ZONE CLASS: A BOOT MUST LOG NO ReferenceError. *** (Stage 0, 2026-09-29.)
-  // Three times a `let` that a boot-time path reads was declared below that path: `runtime` and
-  // `callTransport` (read by `childCtx`'s getters -- until 2026-09-30 the `...childCtx(mod)` spread in
-  // `mountInstance` invoked them on every mount; since the live-getters fix only a module that READS
-  // one at mount does, which is why the probe above is on this screen) and `burnInT` (read by `settings.subscribe`'s immediate
-  // replay). None of the three takes the kiosk down any more, which is exactly why this is needed:
-  // `mountOverlay` catches the first two (the camera, clock and ambient layer silently do not mount)
-  // and state.js's `subscribe` catches the third (the ONLY trace is a console error on every boot --
   // *** 2026-09-30: childCtx's GETTERS STAY LIVE THROUGH THE KIOSK'S OWN MOUNTING. ***
   // `personId`, `aim` and `callTransport` are getters on `childCtx` so that a module mounted before
   // the value exists sees it when it arrives. Two object spreads (kiosk.js `mountInstance`, module.js
@@ -2269,6 +2268,14 @@ const ds = () => root.querySelector('.kiosk').dataset;
     }
   }
 
+  // *** THE TEMPORAL-DEAD-ZONE CLASS: A BOOT MUST LOG NO ReferenceError. *** (Stage 0, 2026-09-29.)
+  // Three times a `let` that a boot-time path reads was declared below that path: `runtime` and
+  // `callTransport` (read by `childCtx`'s getters -- until 2026-09-30 the `...childCtx(mod)` spread in
+  // `mountInstance` invoked them on every mount; since the live-getters fix only a module that READS
+  // one at mount does, which is why the probe above is on this screen) and `burnInT` (read by `settings.subscribe`'s immediate
+  // replay). None of the three takes the kiosk down any more, which is exactly why this is needed:
+  // `mountOverlay` catches the first two (the camera, clock and ambient layer silently do not mount)
+  // and state.js's `subscribe` catches the third (the ONLY trace is a console error on every boot --
   // watched: with `let burnInT` moved back down, every other check in this suite stayed green). So
   // the console is what is asserted: a boot with a camera, a clock and an ambient module on it.
   try {
@@ -2278,6 +2285,11 @@ const ds = () => root.querySelector('.kiosk').dataset;
     await tProfiles.addModule(tp.id, 'camera');
     await tProfiles.addModule(tp.id, 'clock');
     await tProfiles.addModule(tp.id, 'ambient_drift');
+    // 2026-09-30: and the probe above, which takes the ambient layer and READS the getters at mount.
+    // Since the getters stay live through the spreads, nothing reads them at mount unless a module
+    // does -- so a module has to, or a `let runtime` / `let callTransport` declared too late would
+    // pass this section while still crashing any module that reads its transport at mount (call.js).
+    await tProfiles.addModule(tp.id, 'ctxprobetest');
     const troot2 = document.createElement('div');
     troot2.style.cssText = 'position:relative;width:400px;height:300px';
     document.body.append(troot2);
@@ -2285,11 +2297,6 @@ const ds = () => root.querySelector('.kiosk').dataset;
     const origErr = console.error;
     console.error = (...a) => { logged.push(a); return origErr.apply(console, a); };
     let tk2 = null;
-    // 2026-09-30: and the probe above, which takes the ambient layer and READS the getters at mount.
-    // Since the getters stay live through the spreads, nothing reads them at mount unless a module
-    // does -- so a module has to, or a `let runtime` / `let callTransport` declared too late would
-    // pass this section while still crashing any module that reads its transport at mount (call.js).
-    await tProfiles.addModule(tp.id, 'ctxprobetest');
     try {
       tk2 = await mountKiosk(troot2, { user: USER, profileId: tp.id, profiles: tProfiles, bus: createBus(), reloadPage: () => {} });
       await sleep(200);
