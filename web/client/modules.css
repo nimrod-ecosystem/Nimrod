@@ -835,6 +835,8 @@
 .quests .q-ex-head{font-size:.85rem;font-weight:700;color:var(--text-soft);margin-bottom:2px}
 .quests .q-ex-head span{font-weight:400;color:var(--text-muted)}
 .quests .q-ex-why{font-size:.76rem;color:var(--text-muted);min-height:1em;margin-bottom:4px}
+.quests .q-inflation{font-size:.8rem;color:var(--text-soft);margin:0 0 6px}
+.quests .q-price-was{color:var(--text-soft);font-weight:600}
 .quests .q-log .q-cur-tag{display:inline-block;margin-left:6px;font-size:.68rem;color:var(--text-soft);font-weight:600}
 
 /* progress (gameplay measurement — accuracy, concepts, sessions) */

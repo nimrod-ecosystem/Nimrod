@@ -392,7 +392,19 @@ const MIN = 60000;
     check('a few options, 1 among them',
       rateF && rateF.options.length >= 3 && rateF.options.length <= 5 && rateF.options.some((o) => o.value === 1),
       rateF && J(rateF.options));
-    check('no other setting was invented', qFields.length === 1, qFields.map((f) => f.key).join());
+    // Row 2.40 added three (inflation, its rate, its period) - every other setting is still absent.
+    check('no other setting was invented: the rate, and inflation’s three',
+      J(qFields.map((f) => f.key)) === J(['exchangeRate', 'inflation', 'inflationRate', 'inflationPeriod']),
+      qFields.map((f) => f.key).join());
+    {
+      const inf = qFields.find((f) => f.key === 'inflation');
+      check('*** inflation is a setting, OFF by default ***', inf && inf.kind === 'toggle' && fieldValue(inf, {}) === false, J(inf));
+      const rt = qFields.find((f) => f.key === 'inflationRate');
+      const pd = qFields.find((f) => f.key === 'inflationPeriod');
+      check('...at 2% a month by default, each a short cycleable choice',
+        rt && fieldValue(rt, {}) === 2 && rt.cycleable && pd && fieldValue(pd, {}) === 'month' && pd.cycleable,
+        `${J(rt)} ${J(pd)}`);
+    }
     check('the exchange steps are a few fixed whole amounts',
       EXCHANGE_STEPS.length >= 2 && EXCHANGE_STEPS.length <= 4 && EXCHANGE_STEPS.every((n) => Number.isInteger(n) && n > 0),
       J(EXCHANGE_STEPS));
@@ -661,6 +673,91 @@ const MIN = 60000;
       b.inst.destroy();
     }
     seed.destroy();
+
+    // ============ inflation (row 2.40), mounted, with an injected clock ============
+    section('*** inflation, mounted: off = list prices; on = prices rise; points untouched ***');
+    {
+      let t = new Date(2026, 2, 10, 10, 0, 0).getTime();       // 10 March 2026, local
+      // An in-memory points stream seeded with 500 School, and an in-memory state that echoes.
+      const evs = [{ id: 1, kind: 'points', created_at: new Date(t).toISOString(),
+                     data: { amount: 500, mult: 1, type: 'Bonus', source: 'test', tags: [], note: '' } }];
+      const esubs = [];
+      const memEvents = () => ({
+        get: () => ({ events: evs }),
+        append: async (kind, data) => { evs.push({ id: evs.length + 1, kind, created_at: new Date(t).toISOString(), data }); esubs.forEach((f) => f({ events: evs })); },
+        load: async () => { esubs.forEach((f) => f({ events: evs })); },
+        subscribe: (f) => { esubs.push(f); return () => {}; }, startPolling() {}, flush: async () => {}, destroy() {},
+      });
+      let stored = {}; let sub = null;
+      const st = { get: () => stored, set: (p) => { stored = { ...stored, ...p }; sub?.(stored); },
+                   flush: () => {}, subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } };
+      const host = newHost('inflationHost');
+      const inst = mountModule('quests', { mount: host, bus: createBus(), state: st, now: () => t,
+        makeEvents: memEvents, user: USER, profileId: 'mem' });
+      inst.init();
+      await sleep(50);
+      const openStore = async () => { [...host.querySelectorAll('[data-tab]')].find((b) => b.dataset.tab === 'rewards').click(); await sleep(30); };
+      await openStore();
+      const buys = () => [...host.querySelectorAll('[data-buy]')];
+      const price = (i) => Number(buys()[i].querySelector('[data-price]')?.dataset.price);
+      const school = () => Number(host.querySelector('[data-currency="school"] [data-amount]')?.textContent);
+      const flashT = () => host.querySelector('[data-flash]')?.textContent || '';
+      const monthLater = (n) => { const d = new Date(t); d.setMonth(d.getMonth() + n); return d.getTime(); };
+      const listed = DEFAULT_REWARDS.map((r) => r.cost);
+
+      check('*** off by default: every price is its list price ***', J(buys().map((_, i) => price(i))) === J(listed),
+        J(buys().map((_, i) => price(i))));
+      check('...and nothing says inflation', !host.querySelector('[data-inflation]') && !host.querySelector('[data-price-history]'));
+      t = monthLater(6); await openStore();
+      check('off, six months on: still list prices', J(buys().map((_, i) => price(i))) === J(listed));
+
+      st.set({ inflation: true });
+      await openStore();
+      check('*** turning it on writes WHEN, from the injected clock ***', stored.inflationSince === t, `${stored.inflationSince} vs ${t}`);
+      check('...and changes no price yet', J(buys().map((_, i) => price(i))) === J(listed));
+      check('*** the store says so plainly: the rate, and that points are not touched ***',
+        /Prices rise 2% every month\. Points you already have are not touched\./.test(host.querySelector('[data-inflation]')?.textContent || ''),
+        host.querySelector('[data-inflation]')?.textContent);
+      const before = school();
+      t = monthLater(1); await openStore();
+      check('*** a month later, prices are up 2% (rounded to the nearest point) ***',
+        J(buys().map((_, i) => price(i))) === J(listed.map((c) => Math.max(c, Math.round(c * 1.02)))),
+        `${J(buys().map((_, i) => price(i)))} vs ${J(listed)}`);
+      check('*** ...and the School balance is exactly what it was ***', school() === before && before === 500, `${before} -> ${school()}`);
+      check('...and the ledger has no new event (inflation writes nothing)', evs.length === 1, String(evs.length));
+      const TREAT_I = DEFAULT_REWARDS.findIndex((r) => /Treat/.test(r.reward));
+      const hist = buys()[TREAT_I].querySelector('[data-price-history]')?.textContent || '';
+      check('*** the row shows the history: "was 50, now 51" ***', /was 50, now 51/.test(hist), hist);
+
+      buys()[TREAT_I].click(); await sleep(30);
+      buys()[TREAT_I].click(); await sleep(60);
+      const last = evs[evs.length - 1];
+      check('*** buying pays TODAY’S price ***', last.data.type === 'Reward' && last.data.amount === -51 && school() === 449,
+        `${J(last.data)} school=${school()}`);
+
+      const n = evs.length;
+      buys()[TREAT_I].click(); await sleep(30);
+      const asked = price(TREAT_I);
+      t = monthLater(3); await sleep(10);
+      buys()[TREAT_I].click(); await sleep(60);
+      check('*** a price that rose between the two taps is SAID, and nothing is spent ***',
+        evs.length === n && /went up from 51 to/.test(flashT()) && school() === 449, `${flashT()} / ${evs.length - n}`);
+      check('...the new price shows', price(TREAT_I) > asked, `${asked} -> ${price(TREAT_I)}`);
+
+      st.set({ inflationRate: 10, inflationPeriod: 'year' });
+      await openStore();
+      check('the rate and period are settings: 10% a year, four months in, is still the list price',
+        price(TREAT_I) === 50 && /10% every year/.test(host.querySelector('[data-inflation]')?.textContent || ''),
+        `${price(TREAT_I)} ${host.querySelector('[data-inflation]')?.textContent}`);
+
+      st.set({ inflation: false });
+      await openStore();
+      check('*** turned off: list prices again, and the start date is cleared ***',
+        J(buys().map((_, i) => price(i))) === J(listed) && stored.inflationSince == null && !host.querySelector('[data-inflation]'),
+        J(stored));
+      check('...and still nothing earned was taken', school() === 449);
+      inst.destroy();
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
