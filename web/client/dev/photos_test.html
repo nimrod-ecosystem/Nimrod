@@ -44,8 +44,8 @@ import '../modules/settings.js'; // the Settings module - one of the three doors
 import { getManifest } from '../module.js';
 import { normalizeField, fieldValue, displayValue, fieldItems, fieldsFor } from '../settings_fields.js';
 import { createLocalBackend } from '../local_store.js';
-import { listingFailure } from '../modules/photos.js';
-import { folderError } from '../folder_source.js';
+import { listingFailure, slideshowItems } from '../modules/photos.js';
+import { folderError, kindOf } from '../folder_source.js';
 
 const params = new URLSearchParams(location.search);
 const AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
@@ -296,6 +296,78 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     fast.host.remove(); slow.host.remove();
   }
 
+  // *** SONGS IN THE FOLDER ARE NOT PHOTOS (2026-09-30). ***
+  //
+  // The listers (folder_source.js, media_agent) learned `kind: 'audio'` so a music folder is not
+  // empty. `render` draws an <img> for anything that is not a video, so without `slideshowItems`
+  // every .mp3 beside the photos would have been a broken image on the panel that outranks
+  // everything. The listing below is classified by the REAL `kindOf`, the way a folder returns it.
+  {
+    section('a mixed folder: the slideshow shows the photos and skips the songs');
+    const names = ['a.jpg', 'song1.mp3', 'b.PNG', 'song2.m4a', 'c.webp', 'song3.flac', 'd.jpeg', 'voice.opus'];
+    const mixed = names.map((n) => ({ id: n, path: n, name: n, kind: kindOf(n), url: 'data:,' + n }));
+    check('PRECONDITION: the lister really does return the songs, as audio',
+      mixed.filter((it) => it.kind === 'audio').length === 4, JSON.stringify(mixed.map((it) => it.kind)));
+    const pure = slideshowItems([...mixed, { id: 'v', path: 'v.mp4', kind: 'video' }, { id: 'x', path: 'x' },
+                                 { id: 'y', path: 'y.pdf', kind: 'document' }, null]);
+    check('slideshowItems keeps images and videos only - no audio, no unknown kind, no kind at all',
+      pure.map((it) => it.id).join() === 'a.jpg,b.PNG,c.webp,d.jpeg,v', pure.map((it) => it.id).join());
+
+    function mountWith(items) {
+      const host = document.createElement('div');
+      host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+      document.body.append(host);
+      const timers = [];
+      let cfg = { sourceId: 'src-1', intervalMs: 8000 };
+      const subs = [];
+      const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+                      subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+      const source = { id: 'src-1', label: 'Mixed folder', kind: 'folder' };
+      const inst = mountModule('photos', {
+        mount: host, bus: createBus(), state,
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+        user: USER, profileId: 'p',
+        sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+        resolveListing: async () => ({ items: items.map((it) => ({ ...it })), albums: [], album: '', count: items.length }),
+        setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
+        clearTimer: (t) => { if (t) t.live = false; },
+      });
+      inst.init();
+      const fire = () => { const t = timers.filter((x) => x.live && x.ms >= 2000).pop(); if (t) { t.live = false; t.fn(); } };
+      return { host, inst, fire, timers };
+    }
+
+    const p = mountWith(mixed);
+    await sleep(120);
+    const seen = [];
+    const shown = () => p.host.querySelector('.stage')?.firstChild;
+    for (let i = 0; i < 24; i++) {
+      const el = shown();
+      if (el) seen.push(`${el.tagName.toLowerCase()}:${String(el.src).replace(/^data:,/, '')}`);
+      p.fire();
+      await sleep(10);
+    }
+    check('it kept moving: many slides were shown', seen.length >= 20, `${seen.length} shown`);
+    check('*** twenty-odd slides of a mixed folder: not one of them is a song ***',
+      seen.length > 0 && seen.every((s) => /^img:[a-d]\./.test(s)), seen.filter((s) => !/^img:[a-d]\./.test(s)).join(', '));
+    check('...and every photo in the folder came up', ['a.jpg', 'b.PNG', 'c.webp', 'd.jpeg'].every((n) => seen.includes(`img:${n}`)),
+      [...new Set(seen)].join(', '));
+    const label = p.host.querySelector('[data-source-label]')?.textContent || '';
+    check('the item count under the panel counts the photos, not the songs', /— 4 items/.test(label), label);
+    p.inst.destroy(); p.host.remove();
+
+    // A folder that is ONLY music says there are no photos - the existing words - rather than
+    // showing a broken image or sitting on "Loading".
+    const q = mountWith(names.filter((n) => kindOf(n) === 'audio').map((n) => ({ id: n, path: n, name: n, kind: 'audio', url: 'data:,' + n })));
+    await sleep(120);
+    const st = q.host.querySelector('[data-status]');
+    check('*** a folder of only songs says "No photos", draws nothing, and arms no slideshow timer ***',
+      /No photos/.test(st?.textContent || '') && !q.host.querySelector('.stage img, .stage video')
+        && !q.timers.some((t) => t.live && t.ms >= 2000),
+      `status="${st?.textContent}" img=${!!q.host.querySelector('.stage img')}`);
+    q.inst.destroy(); q.host.remove();
+  }
+
   // *** 15 SECONDS BY DEFAULT, AND A NEW PANEL STARTS FROM ONE ALREADY ON THE SCREEN. ***
   // Mike, 2026-09-29: "8 seconds is too short for the default though. Make it 15." and "keep it
   // per panel, copy from existing". Both backends: the server's profile client and the signed-out
@@ -519,7 +591,11 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     check('first shown item logged a play event', initialPlays >= 1, `plays=${initialPlays}`);
 
     // Expected root-album count comes from the agent itself (no hardcoding).
-    const rootItems = (await (await fetch(`${AGENT}/list`)).json()).items;
+    // Only what the slideshow may show: a fixture folder with songs in it lists them too (as
+    // `kind: 'audio'`, since 2026-09-30), and they must NOT surface - checked after the loop.
+    const allRootItems = (await (await fetch(`${AGENT}/list`)).json()).items;
+    const rootItems = slideshowItems(allRootItems);
+    const songs = allRootItems.filter((it) => it.kind === 'audio').map((it) => it.name);
     const expected = rootItems.length;
     check('root album has a pool big enough to exercise anti-repeat', expected >= 4, `count=${expected}`);
 
@@ -539,6 +615,8 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     }
     check('no immediate repeat across 24 advances', !immediateRepeat);
     check(`coverage: all ${expected} items surfaced`, seen.size === expected, `seen=${[...seen].join(',')}`);
+    check(`no song from the real agent's listing ever surfaced (${songs.length} in the folder)`,
+      !songs.some((n) => seen.has(n)), `songs=${songs.join(',')} seen=${[...seen].join(',')}`);
 
     // prev() should step back to the previously shown item
     const beforePrev = base(curSrc());

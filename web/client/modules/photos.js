@@ -141,6 +141,19 @@ export function listingFailure(err, source = {}, album = '') {
   return { text: `Source “${source.label}” unreachable`, retry: true, action: null };
 }
 
+// *** WHAT THE SLIDESHOW MAY SHOW: IMAGES AND VIDEOS, AND NOTHING ELSE. ***
+//
+// `render` draws a <video> for a video and an <img> for ANYTHING else. That was safe while the
+// listers only ever returned those two kinds; on 2026-09-30 they learned `audio` (so a music
+// folder is not empty), and without this filter every song in a mixed folder would have become a
+// broken image on the screen that outranks everything. So it is a list of what IS shown, not of
+// what is not: a kind added to the listers later, or an item with no kind at all, is left out
+// rather than drawn as a broken box. Exported so the rule is checked without a browser.
+export const SLIDESHOW_KINDS = Object.freeze(['image', 'video']);
+export function slideshowItems(items) {
+  return (Array.isArray(items) ? items : []).filter((it) => it && SLIDESHOW_KINDS.includes(it.kind));
+}
+
 registerModule(
   // CRITICAL, and it is not a compliment - it is the audit's threshold. CLAUDE.md: *"PHOTOS
   // outrank every game/feature."* Somebody may be at this screen around the clock and it is their
@@ -537,7 +550,7 @@ registerModule(
         return;
       }
       if (seq !== loadSeq) return;
-      items = listing.items;
+      items = slideshowItems(listing.items);   // songs in the same folder are not photos
       byId = Object.fromEntries(items.map((it) => [it.id, it]));
       ids = items.map((it) => it.id);
       channels = Object.fromEntries(items.map((it) => [it.id, albumOf(it.path)]));

@@ -27,16 +27,41 @@ const DB_NAME = 'nimrod-media';
 const DB_VERSION = 1;
 const STORE = 'folders';
 
-const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'avif'];
-const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'm4v', 'ogv'];
+// *** THESE THREE LISTS ARE MIRRORED IN web/media_agent/agent.py, AND A TEST HOLDS THEM EQUAL. ***
+// `media_agent/test_agent.py` reads these arrays out of this file and compares them with the
+// agent's sets, and both sides check `dev/media_kinds.json` (one table, two languages). A folder
+// source and an agent source listing the same folder must give the same kinds, or a song plays
+// from one and not the other with nothing anywhere to say why.
+export const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'avif'];
+export const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'm4v', 'ogv'];
+// AUDIO (2026-09-30). Before this a music folder listed as EMPTY: an .mp3 was skipped here, so a
+// music favourite pointing at a folder and game music's folder mode found nothing to play.
+//   IN:  mp3, m4a, aac, ogg, oga, opus, wav, flac - what Chromium (the kiosk) plays natively, and
+//        what people's music folders are actually full of.
+//   OUT: webm - it stays VIDEO. It is a container, a listing cannot see inside it, and moving it
+//        would pull every video .webm out of the photo slideshow. game_music.js's `isAudioPath`
+//        still accepts it by extension, so an audio-only .webm in a music folder still plays.
+//        ogv stays video for the same reason (it is the video spelling; .ogg/.oga are audio).
+//   OUT: wma, aiff/aif, mid, ape, alac-in-.caf - Chromium will not play them, and listing a file
+//        that cannot play only produces an error-and-skip in the player.
+// EVERY CONSUMER FILTERS BY KIND. photos.js shows image + video only (see `slideshowItems`);
+// adding this kind without that filter would have put songs into the slideshow as broken images.
+export const AUDIO_EXTS = ['mp3', 'm4a', 'aac', 'ogg', 'oga', 'opus', 'wav', 'flac'];
 
 // Case-insensitive, like the agent. A past bug hid ~497 uppercase .JPG files behind a
 // case-sensitive filter; the same mistake is very easy to repeat here.
-const extOf = (name) => String(name).toLowerCase().split('.').pop();
+const extOf = (name) => {
+  // Like Python's os.path.splitext, so the two sides agree on odd names too: leading dots are part
+  // of the name, not an extension, and a name with no dot has no extension ("mp3" is not a song).
+  const s = String(name).toLowerCase().replace(/^\.+/, '');
+  const dot = s.lastIndexOf('.');
+  return dot > 0 ? s.slice(dot + 1) : '';
+};
 export const kindOf = (name) => {
   const e = extOf(name);
   if (IMAGE_EXTS.includes(e)) return 'image';
   if (VIDEO_EXTS.includes(e)) return 'video';
+  if (AUDIO_EXTS.includes(e)) return 'audio';
   return null;
 };
 

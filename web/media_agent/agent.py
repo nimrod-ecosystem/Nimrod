@@ -58,9 +58,15 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse, parse_qs
 
 # Media we recognize. Lower-cased comparison, so .JPG / .Jpg / .jpg all match.
+# MIRRORED in web/client/folder_source.js (IMAGE_EXTS / VIDEO_EXTS / AUDIO_EXTS). test_agent.py
+# reads that file and fails if the two drift, and both check web/client/dev/media_kinds.json.
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".heic", ".heif", ".avif"}
 VIDEO_EXTS = {".mp4", ".mov", ".webm", ".m4v", ".ogv"}
-MEDIA_EXTS = IMAGE_EXTS | VIDEO_EXTS
+# Audio (2026-09-30), so a music folder is not listed as empty. .webm stays video (a container
+# the listing cannot see inside); the list and its reasons are in folder_source.js. Every
+# client consumer filters by kind - the photo slideshow shows image + video only.
+AUDIO_EXTS = {".mp3", ".m4a", ".aac", ".ogg", ".oga", ".opus", ".wav", ".flac"}
+MEDIA_EXTS = IMAGE_EXTS | VIDEO_EXTS | AUDIO_EXTS
 
 # Set once in main(); the handler reads them. Kept as globals because
 # BaseHTTPRequestHandler is instantiated per-request by the server.
@@ -74,6 +80,8 @@ def kind_of(name: str) -> str | None:
         return "image"
     if ext in VIDEO_EXTS:
         return "video"
+    if ext in AUDIO_EXTS:
+        return "audio"
     return None
 
 

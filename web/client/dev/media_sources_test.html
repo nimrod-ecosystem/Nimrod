@@ -24,6 +24,9 @@ Agent URL from <code>?agent=</code> (default <code>http://127.0.0.1:8770</code>)
 <script type="module">
 import { createMediaSourcesClient, resolveListing, sourceHealth, mediaUrl }
   from '../media_sources.js';
+import { kindOf, IMAGE_EXTS, VIDEO_EXTS, AUDIO_EXTS } from '../folder_source.js';
+import { slideshowItems } from '../modules/photos.js';
+import { isAudioPath } from '../game_music.js';
 
 const params = new URLSearchParams(location.search);
 const AGENT = (params.get('agent') || 'http://127.0.0.1:8770').replace(/\/+$/, '');
@@ -74,6 +77,43 @@ async function loadsAsImage(url) {
 }
 
 (async () => {
+  // *** WHAT KIND A FILE IS - PURE, SO IT RUNS BEFORE ANYTHING THAT NEEDS A SERVER. ***
+  //
+  // 2026-09-30: a music folder listed as EMPTY, because this lister and the media agent only knew
+  // images and videos. `dev/media_kinds.json` is ONE table; `media_agent/test_agent.py` checks the
+  // agent's `kind_of` against the same rows, so the two listers cannot drift apart silently.
+  {
+    let table = null;
+    try { table = await (await fetch('./media_kinds.json', { cache: 'no-store' })).json(); }
+    catch (e) { check('media_kinds.json loads', false, String(e)); }
+    if (table) {
+      const wrong = table.cases.filter(([name, want]) => kindOf(name) !== want)
+        .map(([name, want]) => `${name}: want ${want}, got ${kindOf(name)}`);
+      check(`*** folder_source kindOf agrees with every row of media_kinds.json (${table.cases.length}) ***`,
+        wrong.length === 0, wrong.join('; '));
+      const listed = new Set(table.cases.filter(([, k]) => k).map(([n]) => n.toLowerCase().split('.').pop()));
+      const unlisted = [...IMAGE_EXTS, ...VIDEO_EXTS, ...AUDIO_EXTS].filter((e) => !listed.has(e));
+      check('every extension kindOf knows has a row in the table', unlisted.length === 0, unlisted.join(','));
+    }
+    check('an .mp3 is audio, and audio is neither an image nor a video',
+      kindOf('a.mp3') === 'audio' && !IMAGE_EXTS.includes('mp3') && !VIDEO_EXTS.includes('mp3'));
+    check('no extension is in two kinds at once',
+      new Set([...IMAGE_EXTS, ...VIDEO_EXTS, ...AUDIO_EXTS]).size
+        === IMAGE_EXTS.length + VIDEO_EXTS.length + AUDIO_EXTS.length);
+    // The music players pick tracks by extension (game_music's `isAudioPath`), so every file
+    // the listers call audio must be one they will actually take.
+    check('every audio extension the lister knows is one the music players will play',
+      AUDIO_EXTS.every((e) => isAudioPath(`x.${e}`)), AUDIO_EXTS.filter((e) => !isAudioPath(`x.${e}`)).join(','));
+
+    // A MIXED LISTING THROUGH THE SLIDESHOW'S FILTER: the same items a folder or agent now returns.
+    const mixed = ['a.jpg', 'b.mp4', 'c.mp3', 'd.flac', 'e.PNG', 'f.m4a']
+      .map((n) => ({ id: n, path: n, name: n, kind: kindOf(n), url: `u:${n}` }));
+    mixed.push({ id: 'g', path: 'g.xyz', name: 'g', kind: 'document', url: 'u:g' }, { id: 'h', path: 'h', name: 'h', url: 'u:h' });
+    const shown = slideshowItems(mixed).map((it) => it.path);
+    check('*** the photo slideshow takes only the images and videos out of a mixed listing ***',
+      shown.join() === 'a.jpg,b.mp4,e.PNG', shown.join());
+  }
+
   const client = createMediaSourcesClient({ user: USER });
   try {
     // Clean slate: remove any leftover TEST- sources from a prior run.

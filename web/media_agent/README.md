@@ -120,6 +120,8 @@ a case-sensitive filter — fixed here by design):
 
 - **images:** jpg jpeg png gif webp bmp heic heif avif
 - **videos:** mp4 mov webm m4v ogv
+- **audio:** mp3 m4a aac ogg oga opus wav flac (listed as `kind: "audio"`; the photo
+  slideshow skips them, the music players use them)
 
 Dotfiles and non-media files are skipped.
 

@@ -16,12 +16,12 @@
 //
 // A missing arbiter means it plays at full volume - never that it will not play (audio_bus.js's rule).
 //
-// *** WHAT DOES NOT WORK YET, AND WHY (found writing this, 2026-09-30). *** A FOLDER favourite asks the
-// media source for a listing, and neither lister returns audio today: `folder_source.js`'s `kindOf` and
-// the media agent's `kind_of` (web/media_agent/agent.py) only know images and videos, so an .mp3 is
-// skipped before it reaches this file (only .webm, listed as video, gets through). A single FILE
-// favourite does work: `resolveItemUrl` fetches one path by name and never consults the kind filter.
-// The fix is two lines in those two files plus a filter in photos.js - listed for Mike, not made here.
+// *** FOLDERS OF MUSIC LIST NOW (fixed 2026-09-30). *** A FOLDER favourite asks the media source for a
+// listing, and until that day neither lister returned audio - `folder_source.js`'s `kindOf` and the media
+// agent's `kind_of` knew only images and videos, so an .mp3 never reached this file. Both now list
+// mp3/m4a/aac/ogg/oga/opus/wav/flac as `kind: 'audio'` (one table, `dev/media_kinds.json`, checked on
+// both sides), and photos.js keeps them out of the slideshow (`slideshowItems`). Tracks are still picked
+// here by extension (`isAudioPath`), which is a superset of the listers' audio kind and also takes .webm.
 
 import { resolveListing, resolveItemUrl } from './media_sources.js';
 import { isAudioPath } from './game_music.js';

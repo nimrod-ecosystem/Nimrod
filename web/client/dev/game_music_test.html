@@ -30,6 +30,7 @@
 
 <script type="module">
 import { createGameMusic, isAudioPath, MUSIC_MODES } from '../game_music.js';
+import { kindOf } from '../folder_source.js';
 import { createAudioBus, DUCK_TO, MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 
 const out = document.getElementById('results');
@@ -132,6 +133,22 @@ const RESOLVE = (items) => async () => ({ items, count: items.length });
       check('one track ending starts the next', log.length === 2);
       check('*** and never the same one twice running — the one thing a listener notices ***',
         log[0] !== log[1], JSON.stringify(log));
+    }
+    {
+      // *** FOLDER MODE FINDS MP3s NOW (2026-09-30). *** Before, the listers skipped audio, so this
+      // mode always fell back to ambient. A mixed listing classified by the real `kindOf`: the songs
+      // are taken, the photos and the video are not.
+      const names = ['a.mp3', 'b.M4A', 'c.ogg', 'd.opus', 'cover.JPG', 'holiday.mp4', 'readme.txt'];
+      const items = names.map((n) => ({ path: n, name: n, kind: kindOf(n), url: '/' + n })).filter((it) => it.kind);
+      check('PRECONDITION: the lister lists the four songs as audio',
+        items.filter((it) => it.kind === 'audio').map((it) => it.path).join() === 'a.mp3,b.M4A,c.ogg,d.opus',
+        JSON.stringify(items));
+      const m = createGameMusic({ sources: SOURCES(items), resolve: RESOLVE(items),
+        makeContext: () => fakeContext().ctx, makeAudio: fakeAudio([]) });
+      const r = await m.useFolder('s1', '');
+      check('*** a mixed music folder gives four tracks and stays on the folder, not ambient ***',
+        r.tracks === 4 && m.state().mode === 'folder' && !m.state().note, JSON.stringify({ r, s: m.state() }));
+      m.destroy();
     }
 
     section('*** falling back is not failing, and it says why ***');

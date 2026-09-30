@@ -63,6 +63,11 @@ def main():
     # One nested album, so "the root album" is a meaningful phrase rather than "everything".
     for i in range(1, 3):
         write(os.path.join(photos, 'Holiday', 'holiday-%02d.png' % i), PNG)
+    # SONGS IN THE PHOTO FOLDER, on purpose (2026-09-30). The agent lists audio now (`kind:
+    # "audio"`), and photos_test asserts none of these ever reaches the slideshow - a song drawn
+    # as an <img> is a broken image on the panel that outranks everything.
+    write(os.path.join(photos, 'song-01.mp3'), b'ID3\x03\x00\x00\x00\x00\x00\x00')
+    write(os.path.join(photos, 'song-02.m4a'), b'\x00\x00\x00\x18ftypM4A ')
 
     # --- the personal-video agent (:8771) ----------------------------------------------
     # personal_test asserts EXACTLY TWO video clips and that non-video files are skipped, so
@@ -74,6 +79,8 @@ def main():
     write(os.path.join(personal, 'message-02.mp4'), MP4)
     write(os.path.join(personal, 'message-03.amr'), b'#!AMR\n')
     write(os.path.join(personal, 'notes'), b'not media at all')
+    # Listed as audio since 2026-09-30; personal plays videos only, so still exactly two clips.
+    write(os.path.join(personal, 'voicemail.mp3'), b'ID3\x03\x00\x00\x00\x00\x00\x00')
 
     print('fixtures written under %s\n' % BASE)
     print('Now run BOTH agents (each in its own terminal), then open the suites:\n')
