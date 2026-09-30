@@ -16,25 +16,12 @@
   .g-note{margin:0 0 18px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface-alt);
     color:var(--text-soft);font-size:.95rem}
   .g-note a{color:var(--link)}
-  .g-steps{list-style:none;margin:0 0 26px;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:step}
-  .g-step{counter-increment:step;display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--border);
-    border-radius:14px;background:var(--surface)}
-  .g-step::before{content:counter(step);flex:none;display:flex;align-items:center;justify-content:center;width:34px;height:34px;
-    border-radius:50%;border:2px solid var(--border);font-weight:800;color:var(--text-soft)}
-  .g-step[data-done]::before{content:"\2713";border-color:var(--accent);background:var(--accent);color:var(--on-dark)}
-  .g-what{flex:1;min-width:0}
-  .g-what b{display:block;color:var(--text-strong)}
-  .g-what span{display:block;color:var(--text-soft);font-size:.95rem}
   .g-btn{flex:none;padding:9px 16px;border:1px solid var(--accent);border-radius:10px;background:var(--accent);color:var(--on-dark);
     font:inherit;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap}
-  .g-btn[aria-disabled="true"],.g-btn:disabled{opacity:.45;cursor:default}
-  .g-step[data-done] .g-btn:not(.g-go){background:transparent;color:var(--text-soft);border-color:var(--border)}
   .g-try{padding:16px 18px;border:1px solid var(--border);border-radius:14px;background:var(--surface-alt)}
   .g-try ul{margin:0;padding-left:1.2em}
   .g-try li{margin:.35em 0}
   .g-try kbd{padding:0 .35em;border:1px solid var(--border);border-radius:5px;background:var(--surface);font:inherit;font-size:.9em}
-  .g-status{min-height:1.5em;margin:14px 0 0;color:var(--text-soft)}
-  .g-status.bad{color:var(--accent-warm-deep);font-weight:700}
   .g-cat{display:flex;align-items:center;gap:14px;margin:0 0 22px;padding:12px 16px;border:1px solid var(--border);
     border-radius:14px;background:var(--surface)}
   .g-cat img{flex:none;width:56px;height:56px}
@@ -44,9 +31,10 @@
   .g-cat-set summary{cursor:pointer;padding:4px 0}
   .g-cat-set label{display:flex;align-items:center;gap:10px;margin:8px 0}
   .g-cat-set select{font:inherit}
+  .g-open{margin:0 0 22px}
+  .g-open .g-btn{display:inline-block}
   .g-foot{margin-top:28px;font-size:.95rem;color:var(--text-soft)}
   .g-foot a{color:var(--link)}
-  @media (max-width:560px){ .g-step{flex-wrap:wrap} .g-btn{margin-left:48px} }
 </style>
 </head>
 <body>
@@ -54,20 +42,20 @@
   <p class="g-kicker">The Nimrod game</p>
   <h1>Step 1: your profile</h1>
   <p class="g-lead">Your profile is your first dashboard: a screen that is yours, with a room behind it,
-    your picture on the wall and your name on a sign. These buttons build it for real. Every one of them
-    is safe to press again: it finds what it already made instead of making another, and it leaves the rest of your screens alone.</p>
-  <!-- Row 2.29 (2026-09-30): Home is where the profile lives now -- it opens there on first sign-in,
-       as a preview, and Save makes exactly what these buttons make (the same game.js). The buttons stay
-       for now because Nimrod the cat's walk (cat_steps.js) points at them. -->
-  <p class="g-note g-home">Signed in, your profile is on <a href="/modules.html">Home</a> now: it opens
-    there, you change it there, and Save makes it. These buttons still work, and make the same thing.</p>
+    your picture on the wall and your name on a sign. It lives on Home: it opens there as a preview, you
+    change it there, and Save makes it. Saving again never makes a second one.</p>
+  <!-- Rows 2.29/2.30 follow-up (2026-09-30): THE FOUR BUTTONS THAT WERE HERE ARE GONE. Make it, Hang it,
+       Put it up and Open it built the same profile Home's Save builds (the same game.js), so they were a
+       second way to do one thing, and Nimrod's walk now points at Home's real controls instead
+       (cat_steps.js). This page keeps what is still its own: what the game is, and the cat's settings. -->
+  <p class="g-open"><a class="g-btn g-go" href="/modules.html?m=profile" data-home-link>Open my profile on Home</a></p>
   <div id="note"></div>
   <!-- NIMROD THE CAT. He appears only when this is pressed (or a later quest step asks for him),
-       never on his own; see cat_guide.js. -->
+       never on his own; see cat_guide.js. His walk is on Home, so here he offers the way there. -->
   <section class="g-cat" aria-label="Nimrod the cat">
     <img src="../design-assets/nimrod-cat/idle.svg" alt="" width="56" height="56">
-    <p><b>Nimrod the cat</b> can walk you through this, and then show you the bar and the settings
-      menu on your new profile.</p>
+    <p><b>Nimrod the cat</b> can walk you through your profile on Home: making it, the bar, and the
+      settings menu. It is also under Show me how in the ⚙ menu there.</p>
     <button type="button" class="g-btn" data-cat-ask>Show me how</button>
   </section>
   <details class="g-cat-set">
@@ -84,54 +72,26 @@
     <label>His explanation closes after
       <select data-cat-pref="helpCloseSec"></select></label>
   </details>
-  <ol class="g-steps">
-    <li class="g-step" data-step="profile">
-      <div class="g-what"><b>Make my profile</b>
-        <span>An empty screen called “My profile”, with a room as its background.</span></div>
-      <button type="button" class="g-btn" data-do="profile">Make it</button>
-    </li>
-    <li class="g-step" data-step="picture">
-      <div class="g-what"><b>Hang your picture</b>
-        <span>A picture frame on the wall. You choose the picture yourself, in its settings.</span></div>
-      <button type="button" class="g-btn" data-do="picture">Hang it</button>
-    </li>
-    <li class="g-step" data-step="sign">
-      <div class="g-what"><b>Put up your name sign</b>
-        <span>A sign with your name on it.</span></div>
-      <button type="button" class="g-btn" data-do="sign">Put it up</button>
-    </li>
-    <li class="g-step" data-step="open">
-      <div class="g-what"><b>Open my profile</b>
-        <span>Your profile, on the real screen, with the bar along the bottom.</span></div>
-      <a class="g-btn g-go" data-open aria-disabled="true">Open it</a>
-    </li>
-  </ol>
   <section class="g-try" aria-labelledby="try-h">
     <h2 id="try-h">Two things to try there</h2>
     <ul>
-      <li><b>Pick your room.</b> Press <kbd>⚙</kbd> on the bar (or <kbd>M</kbd>), then press
+      <li><b>Pick your room.</b> Press <kbd>⚙ Edit</kbd> on the bar (or <kbd>M</kbd>), then press
         <b>Colours</b> until you find a room you like. The live ones move.</li>
       <li><b>Make the sign yours.</b> Press <b>Panel ▸</b> on the bar until the sign has the outline
-        around it, press <kbd>⚙</kbd>, and change its <b>Words</b>, its <b>Font</b> and the
-        <b>Colour of the words</b>. The picture works the same way: select it, then choose
-        <b>Picture</b> and <b>Frame</b>.</li>
+        around it, and change its <b>Words</b>, its <b>Font</b> and the <b>Colour of the words</b> in
+        the menu. The picture works the same way: <b>Picture</b> and <b>Frame</b>. Then press
+        <b>Save</b>.</li>
     </ul>
   </section>
-  <p class="g-status" id="status" role="status" aria-live="polite"></p>
   <p class="g-foot">More of the game is on its way.
     <a href="../home.html">Back to Home</a></p>
 </main>
 
 <script type="module">
 import { applyTheme, DEFAULT_THEME } from '../theme.js';
-import { createProfilesClient } from '../profile.js';
-import { createState } from '../state.js';
-import { createLocalBackend } from '../local_store.js';
 import { authHeaders } from '../auth.js';
-import { pickCurrent, readLastPerson } from '../people.js';
-import { createGame, signWords } from './game.js';
 import { mountCat, readCatPrefs, writeCatPrefs, CHATTINESS, REST_CHOICES, WHERE, HELP_CLOSE_CHOICES } from '../cat_guide.js';
-import { CAT_STEPS, GAME_PAGE, catGoThere, rememberCatProfile } from './cat_steps.js';
+import { CAT_STEPS, GAME_PAGE, catGoThere } from './cat_steps.js';
 import { createOutputBus } from '../output.js';
 import { defaultChannels } from '../output_channels.js';
 
@@ -180,124 +140,21 @@ document.querySelector('[data-cat-ask]').addEventListener('click', () => {
 }
 
 const $ = (s) => document.querySelector(s);
-const statusEl = $('#status');
-const say = (text, bad = false) => { statusEl.textContent = text || ''; statusEl.classList.toggle('bad', !!bad); };
 
-// SIGNED IN OR NOT: the same question home.html asks, the same way. A 401 is not a dead end — the
-// whole game runs on this browser's own storage, exactly like the signed-out Home page.
-async function backendFor() {
-  const params = new URLSearchParams(location.search);
-  const r = await fetch('/api/me', { headers: authHeaders(params.get('user')) });
-  if (r.status === 401) {
-    const b = createLocalBackend();
-    return {
-      signedIn: false,
-      profiles: b.profiles,
-      makeSettings: (pid) => b.makeSettings(pid),
-      makeInstanceState: (pid, id) => b.makeState(id, {}, pid),
-      makePersonState: (personId, key) => b.makePersonState(personId, key),
-    };
-  }
-  if (!r.ok) throw new Error(`/api/me -> ${r.status}`);
-  const { user } = await r.json();
-  const profiles = createProfilesClient({ user });
-  return {
-    signedIn: true,
-    profiles,
-    makeSettings: (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user }),
-    makeInstanceState: (pid, id) => createState({ url: profiles.stateURL(pid, id), user }),
-    makePersonState: (personId, key) => createState({ url: profiles.personStateURL(personId, key), user }),
-  };
-}
-
+// SIGNED IN OR NOT. Home -- where the profile is made -- is a signed-in page; signed out, the modules
+// page is the parts page, so the link says to sign in first rather than landing somebody on a page
+// with no profile on it. (Making a profile in this browser only, signed out, went with the buttons.)
 (async () => {
-  let game = null;
   try {
-    const backend = await backendFor();
-    const people = await backend.profiles.people();
-    const person = pickCurrent(people, readLastPerson());
-    if (!person) throw new Error('no person on this account');
-    game = createGame({ ...backend, personId: person.id, personName: person.name });
-
-    const notes = [];
-    if (!backend.signedIn) {
-      notes.push('You’re not signed in, so this is saved in this browser only. '
-        + '<a href="/auth/login">Sign in</a> to keep it on your account.');
+    const params = new URLSearchParams(location.search);
+    const r = await fetch('/api/me', { headers: authHeaders(params.get('user')) });
+    if (r.status === 401) {
+      $('#note').innerHTML = '<p class="g-note">Your profile is made on Home, which is there once you '
+        + '<a href="/auth/login">sign in</a>.</p>';
     }
-    if (people.length > 1) {
-      notes.push(`This is <b>${esc(person.name)}</b>’s profile. To make somebody else’s, choose them `
-        + 'on the <a href="../home.html">Home</a> page first.');
-    }
-    $('#note').innerHTML = notes.map((n) => `<p class="g-note">${n}</p>`).join('');
-    const signStep = $('[data-step="sign"] .g-what span');
-    signStep.textContent = signWords(person.name) === 'Your name'
-      ? 'A sign that says “Your name” — you change it to yours in its settings.'
-      : `A sign that says “${signWords(person.name)}”. You can change it in its settings.`;
-  } catch (err) {
-    console.error('game boot failed', err);
-    say('The game could not reach your screens. Reload to try again.', true);
-    document.querySelectorAll('[data-do]').forEach((b) => { b.disabled = true; });
-    return;
-  }
-
-  async function paint() {
-    const st = await game.status();
-    const mark = (step, done) => {
-      const li = $(`[data-step="${step}"]`);
-      if (done) li.dataset.done = ''; else delete li.dataset.done;
-    };
-    rememberCatProfile(st.profileId);
-    mark('profile', !!st.profileId);
-    mark('picture', !!st.pictureId);
-    mark('sign', !!st.signId);
-    $('[data-do="profile"]').textContent = st.profileId ? 'Made' : 'Make it';
-    $('[data-do="picture"]').textContent = st.pictureId ? 'Hung' : 'Hang it';
-    $('[data-do="sign"]').textContent = st.signId ? 'Up' : 'Put it up';
-    const open = $('[data-open]');
-    if (st.profileId) {
-      open.href = game.kioskURL(st.profileId);
-      open.setAttribute('aria-disabled', 'false');
-    } else {
-      open.removeAttribute('href');
-      open.setAttribute('aria-disabled', 'true');
-    }
-    return st;
-  }
-
-  const RUN = {
-    profile: { go: () => game.makeProfile(), made: 'Your profile is ready — an empty room, for now.',
-               had: 'Your profile was already there.' },
-    picture: { go: () => game.hangPicture(), made: 'Your picture frame is on the wall.',
-               had: 'Your picture frame was already up.' },
-    sign:    { go: () => game.putUpSign(), made: 'Your sign is up.', had: 'Your sign was already up.' },
-  };
-  document.addEventListener('click', async (e) => {
-    const b = e.target.closest?.('[data-do]');
-    if (!b || b.disabled) return;
-    const step = RUN[b.dataset.do];
-    const all = [...document.querySelectorAll('[data-do]')];
-    all.forEach((x) => { x.disabled = true; });
-    say('Working…');
-    try {
-      const r = await step.go();
-      say(r.created ? step.made : step.had);
-    } catch (err) {
-      console.error('game step failed', err);
-      say('That did not work — check your connection and press it again (that is safe).', true);
-    } finally {
-      await paint().catch(() => {});
-      all.forEach((x) => { x.disabled = false; });
-    }
-  });
-
-  await paint();
+  } catch { /* offline: the link to Home is still right for anybody who is signed in */ }
   resumeCat();
 })();
-
-function esc(s) {
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
 </script>
 </body>
 </html>

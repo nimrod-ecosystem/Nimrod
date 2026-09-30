@@ -2404,6 +2404,155 @@ const ds = () => root.querySelector('.kiosk').dataset;
     }
   }
 
+  // *** HOME'S HOST (2026-09-30, rows 2.29/2.30 follow-up): A PAGE'S ACTIONS ON THE ONE BAR AND IN THE
+  // ONE MENU, AND THE BAR TUCKING ITSELF AWAY IN FULL SCREEN. *** The page embedding a kiosk (Home) hands
+  // it `host`; the placed bar draws the host's buttons first and says SHELL_HOST, the shell calls the
+  // host's one `press`, and the menu carries the host's section. In full screen the placed bar tucks away
+  // after the host's delay and anything brings it back -- the content never waits on it.
+  {
+    const { EDGE_TOPIC } = await import('../input.js');
+    const { SHELL_HOST } = await import('../shell_verbs.js');
+    const hUser = USER + '-host';
+    const hProfiles = createProfilesClient({ user: hUser });
+    const hp = await hProfiles.create('TEST-host-bar');
+    await hProfiles.addModule(hp.id, 'photos');
+    await hProfiles.addModule(hp.id, 'trivia');
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const presses = [];
+    const subs = new Set();
+    let hideMs = 150;
+    let fullEl = null;
+    const hostObj = {
+      barItems: () => [{ act: 'picker', label: 'Modules: Photos' }, { act: 'save', label: 'Save', primary: true },
+        { act: 'history', label: 'History', disabled: true }, { kind: 'status', text: 'Unsaved changes', dirty: true }],
+      label: (act, st) => (act === 'settings' ? (st.menuOpen ? '⚙ Done editing' : '⚙ Edit')
+        : act === 'fs' ? (st.full ? '⛶ Leave full screen' : '⛶ Full screen') : null),
+      press: (act) => { presses.push(act); },
+      menuItems: () => [{ kind: 'heading', id: 'home-head', label: 'This page (Home)' },
+        { kind: 'item', id: 'home:save', label: 'Save', run: () => presses.push('menu-save') }],
+      barHideMs: () => hideMs,
+      subscribe(fn) { subs.add(fn); return () => { subs.delete(fn); }; },
+    };
+    const hb = document.createElement('div');
+    hb.style.cssText = 'position:relative;width:680px;height:440px;margin:8px 0';
+    document.body.append(hb);
+    const hbus = createBus();
+    let hk = null, plain = null;
+    try {
+      hk = await mountKiosk(hb, { user: hUser, profileId: hp.id, profiles: hProfiles, bus: hbus,
+        embedded: true, dashboardModule: true, storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {},
+        host: hostObj, fullscreenElement: () => fullEl });
+      await settled(() => hk.dashboard?.()?.chrome?.().bar === 'carried' && !!hb.querySelector('.tb-bar .tb-host button'), 3000);
+      const bar = hb.querySelector('.tb-bar');
+      const hostG = bar?.querySelector('.tb-host');
+      check('*** the host’s buttons are IN the placed transport bar, as its first group ***',
+        !!hostG && bar.firstElementChild === hostG
+        && [...hostG.querySelectorAll('button')].map((x) => x.dataset.host).join() === 'picker,save,history');
+      check('a host button that cannot act is DIMMED, not hidden', hostG.querySelector('[data-host="history"]').disabled
+        && !hostG.querySelector('[data-host="history"]').hidden);
+      check('the host’s status is on the bar, in words', hostG.querySelector('[data-host-status]')?.textContent === 'Unsaved changes'
+        && hostG.querySelector('[data-host-status]').classList.contains('dirty'));
+      check('...and the primary one is marked (lit by the page, never bolded: a width change moves buttons)',
+        hostG.querySelector('[data-host="save"]').dataset.primary === '1' && !hostG.querySelector('[data-host="save"]').dataset.on);
+      hostG.querySelector('[data-host="save"]').click();
+      await sleep(30);
+      check('*** pressing Save on the bar is the host’s ONE press (via SHELL_HOST) ***', presses.join() === 'save', presses.join());
+      hbus.publish(SHELL_HOST, { act: 'picker', from: 'a-switch' });
+      check('*** ...and so is anything else saying SHELL_HOST (a switch binding, a room object) ***', presses.join() === 'save,picker');
+      hostG.querySelector('[data-host="history"]').click();
+      check('a disabled one does nothing', presses.length === 2);
+      const gear = bar.querySelector('.tb-actions:not(.tb-host) [data-act="settings"]');
+      const fsb = bar.querySelector('.tb-actions:not(.tb-host) [data-act="fs"]');
+      check('*** Edit IS the gear: it reads "⚙ Edit" (no second button doing the same thing) ***',
+        gear?.textContent === '⚙ Edit' && gear.getAttribute('aria-pressed') === 'false' && !hostG.querySelector('[data-host="view"]'));
+      check('*** Full screen IS ⛶, in words ***', fsb?.textContent === '⛶ Full screen');
+      gear.click();
+      await settled(() => gear.textContent === '⚙ Done editing', 1500);
+      check('*** the menu open (however it opened): the gear says "Done editing" ***',
+        hk.menu.isOpen() && gear.textContent === '⚙ Done editing' && gear.getAttribute('aria-pressed') === 'true', gear.textContent);
+      const hrow = hb.querySelector('.st-item[data-id="home:save"]');
+      check('*** the host’s section is IN the one ⚙ menu ***', !!hrow
+        && [...hb.querySelectorAll('.st-head')].some((h) => /This page/.test(h.textContent)));
+      hrow?.click();
+      check('...and its row does the host’s press', presses.at(-1) === 'menu-save', presses.join());
+      hk.menu.close();
+      await settled(() => gear.textContent === '⚙ Edit', 1500);
+      check('closed again: "⚙ Edit"', gear.textContent === '⚙ Edit');
+      check('the host is listened to by the bar and the menu', subs.size >= 2, String(subs.size));
+      subs.forEach((fn) => fn());
+      check('a host change redraws without throwing, the bar still carrying the host', !!hb.querySelector('.tb-bar .tb-host [data-host="save"]'));
+
+      // ---- full screen: the placed bar tucks itself away, anything brings it back ----------------
+      const tucked = () => bar.dataset.tucked === '1' && bar.style.visibility === 'hidden';
+      check('not in full screen: never tucked', !tucked());
+      fullEl = hb;
+      document.dispatchEvent(new Event('fullscreenchange'));
+      await sleep(40);
+      check('in full screen: shown at first, and ⛶ says how to leave', !tucked() && fsb.textContent === '⛶ Leave full screen', fsb.textContent);
+      await sleep(250);
+      check('*** after the delay it tucks itself away ***', tucked());
+      check('*** ...and the content is still there and showing (the bar hid; nothing else did) ***',
+        !!hb.querySelector('.k-dash .k-stage') && getComputedStyle(hb.querySelector('.k-dash')).display !== 'none'
+        && hb.querySelector('.tb-bar') === bar);
+      document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      check('*** a press anywhere brings it back ***', !tucked());
+      await sleep(250);
+      check('...and it tucks again after the delay', tucked());
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', bubbles: true }));
+      check('*** a key brings it back ***', !tucked());
+      await sleep(250);
+      hbus.publish(EDGE_TOPIC, { at: Date.now(), pressId: 7101, phase: 'down', device: 'switch:0', deviceClass: 'switch',
+        control: 'button:0', bound: true, auto: false });
+      hbus.publish(EDGE_TOPIC, { at: Date.now(), pressId: 7101, phase: 'up', device: 'switch:0', deviceClass: 'switch',
+        control: 'button:0', bound: true, auto: false });
+      check('*** a switch brings it back ***', !tucked());
+      hk.holdBar(true);
+      await sleep(300);
+      check('*** held (the cat pointing at it): it stays ***', !tucked());
+      hk.holdBar(false);
+      await sleep(300);
+      check('let go: it tucks again', tucked());
+      hideMs = 0;
+      document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      await sleep(300);
+      check('*** "Never": it stays ***', !tucked());
+      hideMs = 150;
+      fullEl = null;
+      document.dispatchEvent(new Event('fullscreenchange'));
+      await sleep(250);
+      check('out of full screen: shown, and never tucks', !tucked() && fsb.textContent === '⛶ Full screen');
+      hk.destroy(); hk = null;
+      check('destroyed: nothing keeps listening to the host', subs.size === 0, String(subs.size));
+
+      // Without a host nothing of this exists: the bar is the bar it was.
+      const pb = document.createElement('div');
+      pb.style.cssText = 'position:relative;width:640px;height:420px;margin:8px 0';
+      document.body.append(pb);
+      plain = { b: pb, k: await mountKiosk(pb, { user: hUser, profileId: hp.id, profiles: hProfiles, bus: createBus(),
+        embedded: true, dashboardModule: true, storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {} }) };
+      await settled(() => !!pb.querySelector('.tb-bar'), 3000);
+      check('no host: no host group, and the gear is the plain ⚙', !pb.querySelector('.tb-host')
+        && pb.querySelector('.tb-bar [data-act="settings"]')?.textContent === '⚙');
+      // A host handed to a kiosk NOT on the dashboard path is ignored (no real screen draws a page's buttons).
+      const nb = document.createElement('div');
+      nb.style.cssText = 'position:relative;width:640px;height:420px';
+      document.body.append(nb);
+      const nk = await mountKiosk(nb, { user: hUser, profileId: hp.id, profiles: hProfiles, bus: createBus(),
+        storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {}, host: hostObj });
+      await sleep(100);
+      check('*** a real screen (not the dashboard path) ignores a host entirely ***', !nb.querySelector('.tb-host')
+        && !nb.querySelector('.st-item[data-id="home:save"]') && subs.size === 0);
+      nk.destroy(); nb.remove();
+    } catch (e) {
+      check('the host section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { hk?.destroy(); } catch { /* already gone */ }
+      try { plain?.k?.destroy(); } catch { /* already gone */ }
+      plain?.b?.remove();
+      hb.remove();
+    }
+  }
+
   // *** 2026-09-30: TODAY'S PIECES, WIRED INTO THE KIOSK. *** Built and committed on their own
   // (master_volume.js, mixer.js + mixer_fx.js, listening_cue.js, the room's system/* buttons,
   // cat_help.js), each with its own suite -- and none of it reachable from a real screen until the

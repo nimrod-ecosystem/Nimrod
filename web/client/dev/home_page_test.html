@@ -64,8 +64,14 @@ async function open(query) {
   doc = ifr.contentDocument; win = ifr.contentWindow;
 }
 const $ = (s) => doc.querySelector(s);
-const hb = (k) => $(`#stage-bar [data-home="${k}"]`);
-const status = () => $('#hb-status')?.textContent || '';
+// Home's buttons are ON THE REAL TRANSPORT BAR in the stage since the 2026-09-30 follow-up (the kiosk's
+// placed bar, drawn from the page's host); Edit is that bar's own gear.
+const hb = (k) => (k === 'view' ? $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]')
+  : k === 'fs' ? $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="fs"]')
+  : $(`#stage .tb-bar .tb-host [data-host="${k}"]`));
+const status = () => $('#stage .tb-bar [data-host-status]')?.textContent || '';
+const pickName = () => (hb('picker')?.textContent || '').replace(/^Modules: /, '');
+const hrow = (act) => $(`#stage .st-item[data-id="home:${act}"]`);
 const dlgOpen = () => $('#home-dlg')?.open;
 const dlgBtns = () => [...doc.querySelectorAll('#home-dlg [data-home-dlg]')].map((b) => b.textContent.trim());
 const dlgBtn = (act) => $(`#home-dlg [data-home-dlg="${act}"]`);
@@ -77,14 +83,23 @@ try {
   // ============================================================================================
   section('*** first sign-in: Home, on the profile, in edit view, and it says the profile is optional ***');
   await open(`user=${encodeURIComponent(USER)}`);
-  check('Home is on: the bar above the stage is showing', await until(() => $('#stage-bar') && !$('#stage-bar').hidden));
+  check('*** Home is on: its buttons are IN the real transport bar in the stage ***', await until(() => !!hb('save') && !!hb('picker')));
+  check('Design’s order on that bar: Modules, Save, Save as…, History, then the status',
+    [...doc.querySelectorAll('#stage .tb-bar .tb-host button')].map((b) => b.textContent).join('|') === `Modules: ${pickName()}|Save|Save as…|History`,
+    [...doc.querySelectorAll('#stage .tb-bar .tb-host button')].map((b) => b.textContent).join('|'));
+  check('*** ...and the page’s own bar above the stage is gone (a fallback only) ***', await until(() => $('#stage-bar').hidden));
   check('the page is titled Home', doc.title.includes('Home'), doc.title);
   check('the parts-page header and legend are out of the way', win.getComputedStyle($('.legend')).display === 'none');
-  check('*** it opens on "Your profile" ***', await until(() => $('#hb-name')?.textContent === 'Your profile'), $('#hb-name')?.textContent);
+  check('*** it opens on "Your profile" ***', await until(() => pickName() === 'Your profile'), pickName());
   check('*** the real kiosk is in the stage, the whole profile: two panels (picture and sign) ***',
     await until(() => kiosks() === 1 && doc.querySelectorAll('#stage [data-nbtn]').length >= 2), `kiosks=${kiosks()}`);
   check('*** in EDIT view: its settings menu is open ***', await until(menuShown));
-  check('the view button says how to leave it', hb('view').textContent === 'Done editing' && hb('view').getAttribute('aria-pressed') === 'true');
+  check('*** Edit IS the bar’s gear, and it says how to leave edit view ***',
+    await until(() => hb('view')?.textContent === '⚙ Done editing') && hb('view').getAttribute('aria-pressed') === 'true', hb('view')?.textContent);
+  check('Full screen IS the bar’s ⛶, in words', hb('fs')?.textContent === '⛶ Full screen', hb('fs')?.textContent);
+  check('*** the page settings are a section of the one ⚙ menu (no separate page dialog) ***',
+    !!hrow('set:keepVersions') && !!hrow('set:barHideMs') && !$('#home-settings')
+    && [...doc.querySelectorAll('#stage .st-head')].some((h) => /This page/.test(h.textContent)));
   const w = $('#welcome');
   check('*** the welcome card is up and says the profile is OPTIONAL ***', !w.hidden && /optional/i.test(w.textContent));
   const wb = [...w.querySelectorAll('button')].map((b) => b.textContent.trim());
@@ -130,6 +145,7 @@ try {
   section('*** a setting changed waits for Save; Save over warns; History restores and deletes nothing ***');
   if (!menuShown()) hb('view').click();
   await until(menuShown);
+  check('the gear still reads "Done editing" after the profile was made', await until(() => hb('view')?.textContent === '⚙ Done editing'));
   const panelRow = () => menuRow('Panel backgrounds');
   check('(setup) the screen’s "Panel backgrounds" row is in the menu', await until(() => !!panelRow()));
   panelRow()?.click();
@@ -142,6 +158,11 @@ try {
   const ev = new win.Event('beforeunload', { cancelable: true });
   win.dispatchEvent(ev);
   check('leaving the page now would ask first (beforeunload is refused)', ev.defaultPrevented === true);
+  // *** THE MENU'S Save IS THE BAR'S Save: the same question, from either. ***
+  hrow('save')?.click();
+  check('*** the ⚙ menu’s Save row asks exactly what the bar’s Save asks ***', await until(() => dlgOpen() && /Save over/.test($('#home-dlg h2').textContent)));
+  dlgBtn('cancel').click();
+  await until(() => !dlgOpen());
   hb('save').click();
   check('*** Save over a saved name WARNS: "Save over “My profile”?" ***', await until(() => dlgOpen() && /Save over/.test($('#home-dlg h2').textContent)));
   check('its buttons in order: Cancel, Save as a new name, Save over it', dlgBtns().join('|') === 'Cancel|Save as a new name|Save over it', dlgBtns().join('|'));
@@ -185,17 +206,17 @@ try {
   check('*** switching modules with unsaved changes asks first ***', await until(() => dlgOpen() && /Unsaved/.test($('#home-dlg h2').textContent)));
   check('Cancel first', dlgBtns()[0] === 'Cancel', dlgBtns().join('|'));
   dlgBtn('cancel').click();
-  check('Cancel keeps you where you were, changes intact', $('#hb-name').textContent === 'Your profile' && /unsaved/i.test(status()));
+  check('Cancel keeps you where you were, changes intact', pickName() === 'Your profile' && /unsaved/i.test(status()));
   doc.querySelector('[data-pick="trivia"]').click();
   await until(() => dlgOpen());
   dlgBtn('leave').click();
-  check('Leave without saving goes to Trivia', await until(() => $('#hb-name').textContent === 'Trivia' && !!$('#stage .k-mods .k-dot')));
+  check('Leave without saving goes to Trivia', await until(() => pickName() === 'Trivia' && !!$('#stage .tb-bar .tb-mods .k-dot')), pickName());
   check('...and the profile’s change was dropped, not saved', (await row(prof.id, 'settings')).panelSurface === 'veil');
   const defaultId = (await profiles.list()).find((p) => p.name !== 'My profile').id;
   const countTrivia = async () => (await profiles.get(defaultId)).modules.filter((m) => m.type === 'trivia').length;
   check('*** Trivia is NOT added to your screen by looking at it ***', (await countTrivia()) === 0);
   check('the status says Save adds it', /not on your screen/i.test(status()), status());
-  check('a module opens in LIVE view (menu closed)', !menuShown() && hb('view').textContent === 'Edit');
+  check('a module opens in LIVE view (menu closed)', !menuShown() && hb('view')?.textContent === '⚙ Edit', hb('view')?.textContent);
   check('no welcome card on a module', $('#welcome').hidden);
   hb('save').click();
   await until(() => dlgOpen());
@@ -207,16 +228,24 @@ try {
   check('...and the stage is now the live one', await until(() => /Saved as “Trivia”/.test(status()) && /live/i.test($('#stagenote').textContent)), status());
 
   // ============================================================================================
-  section('the page’s own settings persist; the welcome can be turned off and back on');
-  hb('settings').click();
-  check('Page settings opens', await until(() => !$('#home-settings').hidden));
-  const keepRow = () => $('#hs-rows [data-k="keepVersions"]');
-  check('"Keep the last" shows 20 by default', /20/.test(keepRow().textContent), keepRow().textContent);
+  section('the page’s own settings, in the ⚙ menu, persist; the welcome can be turned off and back on');
+  hb('view').click();
+  check('the gear opens the menu, with This page’s section in it', await until(() => menuShown() && !!hrow('set:keepVersions')));
+  const keepRow = () => hrow('set:keepVersions');
+  check('"Keep the last" shows 20 by default', /20/.test(keepRow()?.textContent), keepRow()?.textContent);
   keepRow().click();
-  check('a press cycles it to 50', await until(() => /50/.test(keepRow().textContent)));
+  check('a press cycles it to 50', await until(() => /50/.test(keepRow()?.textContent)));
   check('...and it is saved on the person', await (async () => { const t = Date.now() + 6000; while (Date.now() < t) { if ((await personRow('home')).keepVersions === 50) return true; await sleep(150); } return false; })());
+  const hideRow = () => hrow('set:barHideMs');
+  check('*** "In full screen, tuck the bar away after": 6 seconds by default ***', /6 seconds/.test(hideRow()?.textContent), hideRow()?.textContent);
+  hideRow().click();
+  check('a press cycles it (to 10 seconds), saved on the person', await until(() => /10 seconds/.test(hideRow()?.textContent))
+    && await (async () => { const t = Date.now() + 6000; while (Date.now() < t) { if ((await personRow('home')).barHideMs === 10000) return true; await sleep(150); } return false; })());
+  check('History’s row says how many are kept now', /50/.test(hrow('history')?.textContent), hrow('history')?.textContent);
+  hb('view').click();
+  await until(() => !menuShown());
   doc.querySelector('[data-pick="profile"]').click();
-  await until(() => $('#hb-name').textContent === 'Your profile' && !$('#welcome').hidden);
+  await until(() => pickName() === 'Your profile' && !$('#welcome').hidden);
   $('#welcome [data-home="nomore"]').click();
   check('*** "Don’t show this again" hides the card and switches the profile to LIVE view ***',
     await until(() => $('#welcome').hidden && !menuShown()));
@@ -224,16 +253,31 @@ try {
 
   await open(`user=${encodeURIComponent(USER)}`);
   check('*** next visit: the profile, in LIVE view, no welcome ***',
-    await until(() => $('#hb-name')?.textContent === 'Your profile' && kiosks() === 1 && /Saved as/.test(status())) && $('#welcome').hidden && !menuShown());
-  hb('settings').click();
-  $('#home-settings [data-home="rewelcome"]').click();
-  check('"Show the welcome again" brings it back', await until(() => !$('#welcome').hidden));
+    await until(() => pickName() === 'Your profile' && kiosks() === 1 && /Saved as/.test(status())) && $('#welcome').hidden && !menuShown());
+  hb('view').click();
+  await until(() => !!hrow('rewelcome'));
+  hrow('rewelcome').click();
+  check('"Show the welcome again" (a ⚙ menu row) brings it back', await until(() => !$('#welcome').hidden));
+
+  // ============================================================================================
+  section('*** Nimrod the cat walks Home’s real controls, started from the ⚙ menu ***');
+  check('the welcome card offers Show me how too', !!$('#welcome [data-home="cat"]'));
+  await until(() => !!hrow('cat'));
+  hrow('cat').click();
+  check('*** Show me how (a menu row, so a switch reaches it) starts him ***', await until(() => !!$('[data-cat]')));
+  check('*** the profile already exists, so he skips "make it" and starts at the bar, ringing it ***',
+    await until(() => /This is the bar/.test($('[data-tour-say]')?.textContent || '')) && !$('[data-tour-ring]')?.hidden,
+    $('[data-tour-say]')?.textContent);
+  $('[data-cat] [data-tour-next]').click();
+  check('Next: Modules, on the same bar', await until(() => /Modules/.test($('[data-tour-say]')?.textContent || '')));
+  $('[data-cat] [data-tour-skip]').click();
+  check('Close ends him', await until(() => !$('[data-cat]')));
 
   // ============================================================================================
   section('a link to one module, and signed out');
   await open(`user=${encodeURIComponent(USER)}&m=photos`);
   check('?m=photos opens Photos, live view, no welcome',
-    await until(() => $('#hb-name')?.textContent === 'Photos' && kiosks() === 1) && $('#welcome').hidden && !menuShown());
+    await until(() => pickName() === 'Photos' && kiosks() === 1) && $('#welcome').hidden && !menuShown());
   await sleep(2500);
   // Photos picks its only source by itself as it starts (a setting, written with nobody touching
   // anything). That is the module setting itself up, not an edit: no "Unsaved changes", no question.

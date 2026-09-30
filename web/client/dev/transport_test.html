@@ -390,6 +390,50 @@ function unreachableChips() {
     root.innerHTML = '';
   }
 
+  // =====================================================================================
+  section('*** a host page’s buttons on the placed bar keep their places (the same-position rule) ***');
+  // Home (2026-09-30 follow-up) puts Modules / Save / Save as / History on the placed transport bar. Its
+  // state changes all the time (Save lights up, History comes and goes, the status words change), and
+  // PRIORITY.md #3 holds for it as for the chips: a button that moves under a switch user's press is a
+  // press spent on the wrong thing. So a redraw keeps every button, in its order, dimmed not removed.
+  {
+    const p = await profiles.create('T-host-positions');
+    await profiles.addModule(p.id, 'photos');
+    let state = { saved: false, dirty: false, busy: false };
+    const subs = new Set();
+    const hostObj = {
+      barItems: () => [{ act: 'picker', label: 'Modules: Photos' },
+        { act: 'save', label: 'Save', primary: state.dirty, disabled: state.busy },
+        { act: 'saveas', label: 'Save as…', disabled: state.busy },
+        { act: 'history', label: 'History', disabled: !state.saved || state.busy },
+        { kind: 'status', text: state.dirty ? 'Unsaved changes' : state.saved ? 'Saved as “x”' : 'Not saved under a name yet' }],
+      press: () => {},
+      subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
+    };
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    root.style.cssText = 'position:relative;width:720px;height:440px';
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), embedded: true,
+      dashboardModule: true, storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {}, host: hostObj });
+    const t0 = Date.now();
+    while (Date.now() - t0 < 3000 && !root.querySelector('.tb-host button')) await sleep(40);
+    const order = () => [...root.querySelectorAll('.tb-host button')].map((b) => b.dataset.host).join();
+    const xs = () => [...root.querySelectorAll('.tb-host button')].map((b) => Math.round(b.getBoundingClientRect().left));
+    const before = { order: order(), xs: xs() };
+    check('four host buttons, in Design’s order', before.order === 'picker,save,saveas,history', before.order);
+    for (const s of [{ dirty: true }, { busy: true }, { saved: true, busy: false, dirty: false }, { dirty: true }]) {
+      state = { ...state, ...s };
+      subs.forEach((fn) => fn());
+      await sleep(20);
+      if (order() !== before.order) break;
+    }
+    check('*** through dirty, busy, saved and dirty again: the same buttons, in the same order ***', order() === before.order, order());
+    check('*** ...and at the same places on the bar ***', JSON.stringify(xs()) === JSON.stringify(before.xs),
+      `${JSON.stringify(before.xs)} -> ${JSON.stringify(xs())}`);
+    kiosk.destroy();
+    root.innerHTML = '';
+    root.style.cssText = '';
+  }
+
   document.getElementById('summary').textContent = failed
     ? `${failed} FAILED / ${passed} passed`
     : `ALL PASS — ${passed} checks`;
